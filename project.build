@@ -1,0 +1,4 @@
+PHONY := __build
+__build:
+	cmake -DBOARD=$(BOARD) -DSUPPORT_SHELL=DISABLE -DAPP=$(APP) .. 
+	make -j

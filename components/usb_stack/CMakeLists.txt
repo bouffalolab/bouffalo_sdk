@@ -1,0 +1,53 @@
+﻿################# Add global include #################
+list(APPEND ADD_INCLUDE 
+"${CMAKE_CURRENT_SOURCE_DIR}/core"
+"${CMAKE_CURRENT_SOURCE_DIR}/common"
+"${CMAKE_CURRENT_SOURCE_DIR}/class/cdc"
+"${CMAKE_CURRENT_SOURCE_DIR}/class/hid" 
+"${CMAKE_CURRENT_SOURCE_DIR}/class/msc" 
+"${CMAKE_CURRENT_SOURCE_DIR}/class/video"
+"${CMAKE_CURRENT_SOURCE_DIR}/class/winusb"
+)
+#######################################################
+
+################# Add private include #################
+# list(APPEND ADD_PRIVATE_INCLUDE
+# )
+#######################################################
+
+############## Add current dir source files ###########
+file(GLOB_RECURSE sources "${CMAKE_CURRENT_SOURCE_DIR}/core/*.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/class/*.c"
+)
+list(APPEND ADD_SRCS  ${sources})
+# aux_source_directory(src ADD_SRCS)
+#######################################################
+
+########### Add required/dependent components #########
+#list(APPEND ADD_REQUIREMENTS BSP_${BOARD}_Driver)
+#######################################################
+
+############ Add static libs ##########################
+# if(CONFIG_COMPONENT1_INCLUDE_STATIC_LIB)
+#     list(APPEND ADD_STATIC_LIB "lib/libtest.a")
+# endif()
+#######################################################
+
+############ Add dynamic libs #########################
+# list(APPEND ADD_DYNAMIC_LIB "lib/arch/v831/libmaix_nn.so"
+#                             "lib/arch/v831/libmaix_cam.so"
+# )
+#######################################################
+
+############ Add global compile option ################
+#add components denpend on this component
+# list(APPEND ADD_DEFINITIONS -DAAAAA222=1
+#                             -DAAAAA333=1)
+#######################################################
+
+############ Add private compile option ################
+#add compile option for this component that won't affect other modules  
+# list(APPEND ADD_DEFINITIONS_PRIVATE -DAAAAA=1)
+#######################################################
+
+generate_library()
