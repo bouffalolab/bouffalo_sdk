@@ -23,6 +23,8 @@
 
 #include "diskio.h"
 #include "bsp_spi_sd.h"
+#include "string.h"
+
 const char * FR_Table[]= 
 {
 	"FR_OK：成功",				                             /* (0) Succeeded */
@@ -107,4 +109,15 @@ void fatfs_sd_driver_register(void)
     pNewDiskioDriver.MMC_disk_ioctl = sd_disk_ioctl;
     pNewDiskioDriver.Translate_Result_Code = Translate_Result_Code;
     disk_driver_callback_init(&pNewDiskioDriver);
+}
+
+int shellGetcwd(char *path, unsigned int len)
+{
+    int err;
+    err = f_getcwd(path, len);
+    if(err)
+    {
+        strcpy(path, "unknow");
+    }
+    return 0;
 }

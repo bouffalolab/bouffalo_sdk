@@ -316,6 +316,7 @@ typedef struct
     } status;
     signed char (*read)(char *);                                /**< shell读函数 */
     void (*write)(const char);                                  /**< shell写函数 */
+    int (*getcwd)(char *path, unsigned int len);
 } Shell;
 
 

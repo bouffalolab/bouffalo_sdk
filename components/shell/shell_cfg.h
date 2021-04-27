@@ -81,7 +81,7 @@
 /**
  * @brief 历史命令记录数量
  */
-#define     SHELL_HISTORY_MAX_NUMBER    30
+#define     SHELL_HISTORY_MAX_NUMBER    5
 
 /**
  * @brief 双击间隔(ms)
@@ -135,5 +135,11 @@
  * @note 使用超时锁定必须保证`SHELL_GET_TICK()`有效
  */
 #define     SHELL_LOCK_TIMEOUT          0 * 60 * 1000
+
+
+/**
+ * @brief shell是否在命令提示符输出路径,需要引用文件系统
+ */
+#define     SHELL_FS          1
 
 #endif

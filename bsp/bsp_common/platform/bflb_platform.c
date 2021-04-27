@@ -52,13 +52,24 @@ void userShellWrite(char data)
     device_write(uart, 0, (uint8_t *)&data, 1);
 }
 
+#if SHELL_FS == 1
+__WEAK__ int shellGetcwd(char *path, unsigned int len)
+{
+    return 0;
+}
+#endif
+
 void shell_init(void)
 {
-
     shell.write = userShellWrite;
+#if SHELL_FS == 1
+    shell.getcwd = shellGetcwd;
+#endif
     shellInit(&shell, shellBuffer, 512);
 }
+
 #else
+
 void uart0_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
     if (state == UART_EVENT_RX_FIFO)
@@ -134,6 +145,12 @@ void bflb_platform_print_set(uint8_t disable)
 {
     uart_dbg_disable=disable;
 }
+
+void bflb_platform_deinit(void)
+{
+
+}
+
 void bflb_platform_dump(uint8_t *data, uint32_t len)
 {
     uint32_t i = 0;

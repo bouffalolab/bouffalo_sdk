@@ -25,8 +25,10 @@
 #define _BFLB_PLATFORM_H
 
 #include "misc.h"
+//#include "mcu_sdk_version.h"
 
 #define MSG(a,...)              bflb_platform_printf(a,##__VA_ARGS__)
+#define MSG_DBG(a,...)          bflb_platform_printf(a,##__VA_ARGS__)
 #define MSG_ERR(a,...)          bflb_platform_printf(a,##__VA_ARGS__)
 #define BL_CASE_FAIL            {MSG(" Case Fail\r\n");while(1){bflb_platform_delay_ms(1);}}
 #define BL_CASE_SUCCESS         {MSG(" Case Success\r\n");while(1){bflb_platform_delay_ms(1);}}
@@ -78,6 +80,7 @@ void check_failed(uint8_t *file, uint32_t line);
 void bflb_platform_init(uint32_t baudrate);
 void bflb_platform_printf(char *fmt,...);
 void bflb_platform_dump(uint8_t *data, uint32_t len);
+void bflb_platform_deinit(void);
 
 void bflb_platform_init_time(void);
 void bflb_platform_clear_time(void);

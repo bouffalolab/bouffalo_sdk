@@ -326,7 +326,15 @@ static void shellWriteCommandLine(Shell *shell)
     {
         shellWriteString(shell, "\r\n");
         shellWriteString(shell, shell->info.user->data.user.name);
-        shellWriteString(shell, "/> ");
+        #if SHELL_FS == 1
+          char path[SHELL_PRINT_BUFFER];
+          shell->getcwd(path, SHELL_PRINT_BUFFER);
+          shellWriteString(shell, ":/");
+          shellWriteString(shell, path);
+          shellWriteString(shell, "$ ");
+        #else
+          shellWriteString(shell, "/$ ");
+        #endif
     }
     else
     {
@@ -1962,7 +1970,7 @@ static unsigned int shellExtParseNumber(char *string)
     if (type == NUM_TYPE_FLOAT && devide != 0)
     {
         valueFloat = (float)valueInt / devide * sign;
-        return (uint32_t)valueFloat;
+        return (unsigned int)valueFloat;
     }
     else
     {
@@ -2082,4 +2090,6 @@ int shellExtRun(Shell *shell, ShellCommand *command, int argc, char *argv[])
         // break;
     }
 }
+
+
 
