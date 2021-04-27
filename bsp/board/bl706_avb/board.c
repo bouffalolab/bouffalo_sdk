@@ -215,7 +215,7 @@ void bl_show_info(void)
     MSG(" |____/ \\___/ \\__,_|_| |_| \\__,_|_|\\___/|_|\\__,_|_.__/ \r\n");
     MSG("\r\n");
     MSG("Build:%s,%s\r\n",__TIME__,__DATE__);
-    MSG("2016 - 2030 Copyright by bouffalolab team\r\n");
+    MSG("Copyright (c) 2021 Bouffalolab team\r\n");
 
 #if 0    
     MSG("root clock:%dM\r\n",system_clock_get(SYSTEM_CLOCK_ROOT_CLOCK)/1000000);

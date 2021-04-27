@@ -34,6 +34,8 @@ void uart1_init(void);
 void uart1_config(uint32_t baudrate,uart_databits_t databits,uart_parity_t parity,uart_stopbits_t stopbits);
 void uart1_dtr_init(void);
 void uart1_rts_init(void);
+void uart1_dtr_deinit(void);
+void uart1_rts_deinit(void);
 void dtr_pin_set(uint8_t status);
 void rts_pin_set(uint8_t status);
 void uart_ringbuffer_init(void);

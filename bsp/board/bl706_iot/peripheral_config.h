@@ -33,7 +33,8 @@
 #define BSP_USING_I2C0
 #define BSP_USING_I2S0
 #define BSP_USING_USB
-#define BSP_USING_PWM0
+#define BSP_USING_PWM_CH2
+#define BSP_USING_TIMER
 /* ----------------------*/
 
 
@@ -59,6 +60,10 @@
 #define BSP_USING_DMA0_CH6
 #endif
 
+#ifdef BSP_USING_TIMER
+#define BSP_USING_TIMER_CH0
+//#define BSP_USING_TIMER_CH1
+#endif
 
 /* PERIPHERAL CONFIG */
 #if defined(BSP_USING_ADC0)
@@ -127,9 +132,9 @@
 #endif
 #endif
 
-#if defined(BSP_USING_PWM0)
-#ifndef PWM_CONFIG_0
-#define PWM_CONFIG_0 \
+#if defined(BSP_USING_PWM_CH2)
+#ifndef PWM_CH2_CONFIG
+#define PWM_CH2_CONFIG \
 {   \
     .ch = 2, \
     .frequency = 1000000, \
@@ -294,6 +299,31 @@
  .id = 0, \
  .mode = I2C_HW_MODE,\
  .phase = 15, \
+}
+#endif
+#endif
+
+
+#if defined (BSP_USING_TIMER_CH0)
+#ifndef TIMER_CH0_CONFIG
+#define TIMER_CH0_CONFIG \
+{  \
+ .id = 0, \
+ .ch = 0, \
+ .cnt_mode = TIMER_CNT_PRELOAD, \
+ .pl_trig_src = TIMER_PL_TRIG_COMP0, \
+}
+#endif
+#endif
+
+#if defined (BSP_USING_TIMER_CH1)
+#ifndef TIMER_CH1_CONFIG
+#define TIMER_CH1_CONFIG \
+{  \
+ .id = 0, \
+ .ch = 1, \
+ .cnt_mode = TIMER_CNT_PRELOAD, \
+ .pl_trig_src = TIMER_PL_TRIG_COMP0, \
 }
 #endif
 #endif

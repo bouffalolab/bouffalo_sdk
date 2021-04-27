@@ -79,7 +79,7 @@ void uart1_init(void)
     {
         device_open(uart1, DEVICE_OFLAG_DMA_TX | DEVICE_OFLAG_INT_RX); //uart0 tx dma mode
         device_set_callback(uart1, uart_irq_callback);
-        device_control(uart1, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT | UART_RTO_IT | UART_RX_FER_IT));
+        device_control(uart1, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT | UART_RTO_IT));
     }
 
     dma_register(DMA0_CH2_INDEX, "ch2", DEVICE_OFLAG_RDWR);
@@ -90,7 +90,7 @@ void uart1_init(void)
         //device_set_callback(dma_ch2, NULL);
         //device_control(dma_ch2, DEVICE_CTRL_SET_INT, NULL);
     }
-    device_control(uart1, DEVICE_CTRL_UART_ATTACH_TX_DMA, dma_ch2);
+    //device_control(uart1, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch2);
 
 }
 
@@ -123,19 +123,27 @@ void uart1_config(uint32_t baudrate, uart_databits_t databits, uart_parity_t par
 
 void uart1_dtr_init(void)
 {
-    gpio_set_mode(GPIO_PIN_21, GPIO_OUTPUT_MODE);
+    gpio_set_mode(GPIO_PIN_22, GPIO_OUTPUT_MODE);
 }
 void uart1_rts_init(void)
 {
-    gpio_set_mode(GPIO_PIN_20, GPIO_OUTPUT_MODE);
+    gpio_set_mode(GPIO_PIN_21, GPIO_OUTPUT_MODE);
+}
+void uart1_dtr_deinit(void)
+{
+    gpio_set_mode(GPIO_PIN_22, GPIO_INPUT_MODE);
+}
+void uart1_rts_deinit(void)
+{
+    gpio_set_mode(GPIO_PIN_21, GPIO_INPUT_MODE);
 }
 void dtr_pin_set(uint8_t status)
 {
-    gpio_write(GPIO_PIN_21, status);
+    gpio_write(GPIO_PIN_22, status);
 }
 void rts_pin_set(uint8_t status)
 {
-    gpio_write(GPIO_PIN_20, status);
+    gpio_write(GPIO_PIN_21, status);
 }
 void ringbuffer_lock()
 {
@@ -180,18 +188,21 @@ static dma_lli_ctrl_t uart_lli_list =
 
 void uart_send_from_ringbuffer(void)
 {
-    if (!device_control(dma_ch2, DMA_CHANNEL_GET_STATUS_CMD, NULL))
+    if(Ring_Buffer_Get_Length(&usb_rx_rb))
     {
-        uint32_t avalibleCnt = Ring_Buffer_Read(&usb_rx_rb, src_buffer, UART_TX_DMA_SIZE);
-        
-        if (avalibleCnt)
+        if (!device_control(dma_ch2, DMA_CHANNEL_GET_STATUS, NULL))
         {
-            dma_channel_stop(dma_ch2);
-            uart_dma_ctrl_cfg.bits.TransferSize = avalibleCnt;
-            memcpy(&uart_lli_list.cfg, &uart_dma_ctrl_cfg, sizeof(dma_control_data_t));
-            device_control(dma_ch2,DMA_CHANNEL_UPDATE_CMD,(void*)((uint32_t)&uart_lli_list));
-            dma_channel_start(dma_ch2);
-            //device_write(uart1, 0, src_buffer, avalibleCnt);
+            uint32_t avalibleCnt = Ring_Buffer_Read(&usb_rx_rb, src_buffer, UART_TX_DMA_SIZE);
+            
+            if (avalibleCnt)
+            {
+                dma_channel_stop(dma_ch2);
+                uart_dma_ctrl_cfg.bits.TransferSize = avalibleCnt;
+                memcpy(&uart_lli_list.cfg, &uart_dma_ctrl_cfg, sizeof(dma_control_data_t));
+                device_control(dma_ch2,DMA_CHANNEL_UPDATE,(void*)((uint32_t)&uart_lli_list));
+                dma_channel_start(dma_ch2);
+            }
         }
     }
+
 }

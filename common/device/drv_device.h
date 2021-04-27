@@ -39,14 +39,21 @@
 #define DEVICE_OFLAG_DMA_TX     0x010 /* open with dma tx */
 #define DEVICE_OFLAG_DMA_RX     0x020 /* open with dma rx */
 
-#define DEVICE_CTRL_SET_INT     0x01    /* set interrupt */
-#define DEVICE_CTRL_CLR_INT     0x02    /* clear interrupt */
-#define DEVICE_CTRL_GET_INT     0x03    /* get interrupt status*/
-#define DEVICE_CTRL_RESUME      0x04    /* resume device */
-#define DEVICE_CTRL_SUSPEND     0x05    /* suspend device */
-#define DEVICE_CTRL_CONFIG      0x06    /* config device */
-#define DEVICE_CTRL_GET_CONFIG  0x07    /* get device configuration */
-
+#define DEVICE_CTRL_SET_INT             0x01    /* set interrupt */
+#define DEVICE_CTRL_CLR_INT             0x02    /* clear interrupt */
+#define DEVICE_CTRL_GET_INT             0x03    /* get interrupt status*/
+#define DEVICE_CTRL_RESUME              0x04    /* resume device */
+#define DEVICE_CTRL_SUSPEND             0x05    /* suspend device */
+#define DEVICE_CTRL_CONFIG              0x06    /* config device */
+#define DEVICE_CTRL_GET_CONFIG          0x07    /* get device configuration */
+#define DEVICE_CTRL_ATTACH_TX_DMA       0x08
+#define DEVICE_CTRL_ATTACH_RX_DMA       0x09
+#define DEVICE_CTRL_TX_DMA_SUSPEND      0x0a
+#define DEVICE_CTRL_RX_DMA_SUSPEND      0x0b
+#define DEVICE_CTRL_TX_DMA_RESUME       0x0c
+#define DEVICE_CTRL_RX_DMA_RESUME       0x0d
+#define DEVICE_CTRL_RESVD1              0x0E
+#define DEVICE_CTRL_RESVD2              0x0F
 /*
  * POSIX Error codes
  */

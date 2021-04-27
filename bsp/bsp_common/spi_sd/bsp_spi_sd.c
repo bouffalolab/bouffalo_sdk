@@ -94,7 +94,7 @@ BL_Err_Type SPI_ReadWriteByte(uint8_t *txBuff, uint8_t *rxBuff, uint32_t length)
     // dma_reload(dma_ch4, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)rxBuff, length);
     // dma_channel_start(dma_ch3);
     // dma_channel_start(dma_ch4);
-    // while (device_control(dma_ch3, DMA_CHANNEL_GET_STATUS_CMD, NULL) || device_control(dma_ch4, DMA_CHANNEL_GET_STATUS_CMD, NULL))
+    // while (device_control(dma_ch3, DMA_CHANNEL_GET_STATUS, NULL) || device_control(dma_ch4, DMA_CHANNEL_GET_STATUS, NULL))
     // {
     // }
     // MSG("SPI_DMA_test 2\r\n");
@@ -122,7 +122,7 @@ BL_Err_Type SPI_ReadWriteByte(uint8_t *txBuff, uint8_t *rxBuff, uint32_t length)
         dma_reload(dma_ch4, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)rxBuff, length);
         dma_channel_start(dma_ch3);
         dma_channel_start(dma_ch4);
-        while(device_control(dma_ch3,DMA_CHANNEL_GET_STATUS_CMD,NULL)||device_control(dma_ch4,DMA_CHANNEL_GET_STATUS_CMD,NULL))
+        while(device_control(dma_ch3,DMA_CHANNEL_GET_STATUS,NULL)||device_control(dma_ch4,DMA_CHANNEL_GET_STATUS,NULL))
         {
         }
         dma_channel_stop(dma_ch3);
@@ -144,13 +144,13 @@ static void SD_SPI_SetSpeed(uint8_t mode)
 {
     switch (mode){
     case (0):
-        device_control(spi0, DEVICE_CTRL_SPI_CONFIG_CLOCK_CMD,(void*)(300 * 1000));
+        device_control(spi0, DEVICE_CTRL_SPI_CONFIG_CLOCK,(void*)(300 * 1000));
         break;
     case (1):
-        device_control(spi0, DEVICE_CTRL_SPI_CONFIG_CLOCK_CMD,(void*)(18 * 1000 * 1000));
+        device_control(spi0, DEVICE_CTRL_SPI_CONFIG_CLOCK,(void*)(18 * 1000 * 1000));
         break;
     case (2):
-        device_control(spi0, DEVICE_CTRL_SPI_CONFIG_CLOCK_CMD,(void*)(40 * 1000 * 1000));
+        device_control(spi0, DEVICE_CTRL_SPI_CONFIG_CLOCK,(void*)(40 * 1000 * 1000));
         break;
     default:
         break;

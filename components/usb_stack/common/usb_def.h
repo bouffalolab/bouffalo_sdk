@@ -470,20 +470,20 @@ struct usb_desc_header {
 	uint8_t bDescriptorType;       /**< descriptor type */
 };
 
-#define USB_DEVICE_DESCRIPTOR_INIT(bcdUSB,idVendor,idProduct,bcdDevice,bNumConfigurations)  \
+#define USB_DEVICE_DESCRIPTOR_INIT(bcdUSB,bDeviceClass,bDeviceSubClass,bDeviceProtocol,idVendor,idProduct,bcdDevice,bNumConfigurations)  \
     0x12,                       /* bLength */ \
     USB_DESCRIPTOR_TYPE_DEVICE, /* bDescriptorType */ \
     WBVAL(bcdUSB),              /* bcdUSB */ \
-    0x00,                       /* bDeviceClass */ \
-    0x00,                       /* bDeviceSubClass */ \
-    0x00,                       /* bDeviceProtocol */ \
+    bDeviceClass,               /* bDeviceClass */ \
+    bDeviceSubClass,            /* bDeviceSubClass */ \
+    bDeviceProtocol,            /* bDeviceProtocol */ \
     0x40,                       /* bMaxPacketSize */ \
     WBVAL(idVendor),            /* idVendor */ \
     WBVAL(idProduct),           /* idProduct */ \
     WBVAL(bcdDevice),           /* bcdDevice */ \
-    USB_STRING_MFC_INDEX,            /* iManufacturer */ \
-    USB_STRING_PRODUCT_INDEX,        /* iProduct */ \
-    USB_STRING_SERIAL_INDEX,         /* iSerial */ \
+    USB_STRING_MFC_INDEX,       /* iManufacturer */ \
+    USB_STRING_PRODUCT_INDEX,   /* iProduct */ \
+    USB_STRING_SERIAL_INDEX,    /* iSerial */ \
     bNumConfigurations          /* bNumConfigurations */
 
 #define USB_CONFIG_DESCRIPTOR_INIT(wTotalLength,bNumInterfaces,bConfigurationValue,bmAttributes,bMaxPower)      \
