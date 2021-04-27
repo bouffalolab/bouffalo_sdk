@@ -81,24 +81,42 @@ bl_mcu_sdk
 
 ## 文档教程
 
-[bl mcu sdk 文档教程](http://bouffalolab.gitee.io/bl_mcu_sdk)
+包含 bl mcu sdk 开发的快速入门教程， api 手册以及驱动框架等详细介绍
+
+- [bl mcu sdk 文档教程](http://bouffalolab.gitee.io/bl_mcu_sdk)
 
 ## 视频教程
 
-- [五分钟带你了解 RISC-V 的指令集架构](https://www.bilibili.com/video/BV1aA411L77o)
-- [BL706 开发板基于 Eclipse 的环境搭建](https://www.bilibili.com/video/BV1HK4y1o7P1)
-- [BL706 开发板基于 CDK 的环境搭建](https://www.bilibili.com/video/BV14U4y1h7d2)
+- [BL706 MCU 开发系列视频教程](https://www.bilibili.com/video/BV1xK4y1P7ur)
 
-## 工具
+## 开发工具
+
+### 命令行开发
+
+命令行开发需要的工具，具体使用方法参考 [linux 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/Linux_quick_start_ubuntu.html)
+
+- [cmake 3.19](https://cmake.org/files/v3.19/)， cmake 编译工具，建议使用 cmake v3.19 以上版本
+
+### Eclipse开发
+
+Eclipse 开发需要的工具，具体使用方法参考 [Eclipse 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/Windows_quick_start_eclipse.html)
 
 - [Eclipse](https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip) Windows 下 eclipse 开发免安装包
-- [CDK](https://occ.t-head.cn/development/activities/cdk) ，平头哥剑池 CDK 集成开发环境，建议使用 CDK v2.8.4 以上版本
-- [cmake 3.19](https://cmake.org/files/v3.19/) ， cmake 编译工具，建议使用 cmake v3.19 以上版本
 - [J-Link v10](https://www.segger.com/downloads/jlink)， J-Link 调试器，用于在线调试芯片，建议使用 J-Link V10 以上版本硬件，软件驱动建议使用 V6.98 版本
 
+### CDK开发
+
+CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/Windows_quick_start_cdk.html)
+
+- [CDK](https://occ.t-head.cn/development/activities/cdk)，平头哥剑池 CDK 集成开发环境，建议使用 CDK v2.8.4 以上版本
+
+### 烧写工具
+
+除了可以使用 CK-link、J-link 以及命令行烧写以外，还支持图形化的烧写工具。
 博流提供的图形化烧写工具：
-- [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.0-win32.zip)
-- [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/bouffalo_build_tool_for_ubuntu_v1.0.0.rar)
+
+- [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.2-win32.zip)
+- [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.2-linux-x86.tar.gz)
 
 ## 论坛
 
