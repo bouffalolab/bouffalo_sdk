@@ -10,21 +10,25 @@
 # -g    Produce debugging information in the operating system’s native format.
 # -Os   Optimize for size. -Os enables all -O2 optimizations.
 # -flto Runs the standard link-time optimizer.
-
-SET(MARCH "rv32imafc")
 SET(MCPU "riscv-e24")
+if(${SUPPORT_FLOAT} STREQUAL "y")
+SET(MARCH "rv32imafc")
 SET(MABI "ilp32f")
+else()
+SET(MARCH "rv32imac")
+SET(MABI "ilp32")
+endif()
 SET(MCU_FLAG "-march=${MARCH} -mabi=${MABI}")
-				 
-SET(COMMON_FLAGS "-O2 -g3 -fshort-enums -fno-common \
+
+SET(COMMON_FLAGS "-Os -g3 -fshort-enums -fno-common \
 -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields \
--Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -fno-jump-tables \
--Wignored-qualifiers -Wswitch-default -Wunused -Wundef -msmall-data-limit=4")
+-Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self \
+-Wignored-qualifiers -Wunused -Wundef -msmall-data-limit=4")
 				 
 # compiler: language specific flags
 set(CMAKE_C_FLAGS "${MCU_FLAG} ${COMMON_FLAGS} -std=c99"  CACHE INTERNAL "c compiler flags")
 set(CMAKE_C_FLAGS_DEBUG "-Og -g" CACHE INTERNAL "c compiler flags: Debug")
-set(CMAKE_C_FLAGS_RELEASE "-Os -flto" CACHE INTERNAL "c compiler flags: Release")
+set(CMAKE_C_FLAGS_RELEASE "-Os" CACHE INTERNAL "c compiler flags: Release")
 
 # message("")
 # message("-----------------------------------------------------------------------------------------------------------------------------------------------------")
@@ -37,7 +41,7 @@ set(CMAKE_C_FLAGS_RELEASE "-Os -flto" CACHE INTERNAL "c compiler flags: Release"
 
 set(CMAKE_CXX_FLAGS "${MCU_FLAG} ${COMMON_FLAGS} -std=c++11 " CACHE INTERNAL "cxx compiler flags")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -g" CACHE INTERNAL "cxx compiler flags: Debug")
-set(CMAKE_CXX_FLAGS_RELEASE "-Os -flto" CACHE INTERNAL "cxx compiler flags: Release")
+set(CMAKE_CXX_FLAGS_RELEASE "-Os" CACHE INTERNAL "cxx compiler flags: Release")
 
 # message("")
 # message("-----------------------------------------------------------------------------------------------------------------------------------------------------")
@@ -50,7 +54,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Os -flto" CACHE INTERNAL "cxx compiler flags: Rele
 
 set(CMAKE_ASM_FLAGS  "${MCU_FLAG} ${COMMON_FLAGS}" CACHE INTERNAL "asm compiler flags")
 set(CMAKE_ASM_FLAGS_DEBUG "-Og -g" CACHE INTERNAL "asm compiler flags: Debug")
-set(CMAKE_ASM_FLAGS_RELEASE "-Os -flto" CACHE INTERNAL "asm compiler flags: Release")
+set(CMAKE_ASM_FLAGS_RELEASE "-Os" CACHE INTERNAL "asm compiler flags: Release")
 
 # message("")
 # message("-----------------------------------------------------------------------------------------------------------------------------------------------------")
@@ -64,7 +68,12 @@ set(CMAKE_ASM_FLAGS_RELEASE "-Os -flto" CACHE INTERNAL "asm compiler flags: Rele
 # --specs=nano.specs    Link with newlib-nano.
 # --specs=nosys.specs   No syscalls, provide empty implementations for the POSIX system calls.
 
-if(${SUPPORT_SHELL} STREQUAL "ENABLE")
+if(${SUPPORT_FLOAT} STREQUAL "y")
+add_definitions(-DBFLB_PRINT_FLOAT_SUPPORT)
+else()
+endif()
+
+if(${SUPPORT_SHELL} STREQUAL "y")
 add_definitions(-DSHELL_SUPPORT)
 else()
 endif()

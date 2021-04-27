@@ -4,8 +4,18 @@ CHIP?=bl702
 INTERFACE?=jlink
 BAUDRATE ?=12000
 
+SUPPORT_SHELL?=n
+SUPPORT_FREERTOS?=n
+SUPPORT_LVGL?=n
+SUPPORT_FLOAT?=n
+
 export BOARD
 export APP
+export SUPPORT_SHELL
+export SUPPORT_FREERTOS
+export SUPPORT_LVGL
+export SUPPORT_FLOAT
+
 # The command to remove a file.
 RM = cmake -E rm -rf
 

@@ -114,7 +114,8 @@ function(generate_bin)
 	set(HEX_FILE ${OUTPUT_DIR}/main.hex)
     set(BIN_FILE ${OUTPUT_DIR}/main.bin)
     set(MAP_FILE ${OUTPUT_DIR}/main.map)
-	
+    set(ASM_FILE ${OUTPUT_DIR}/main.asm)
+
     if(TARGET_REQUIRED_SRCS)
         list(APPEND SRCS ${TARGET_REQUIRED_SRCS})
     endif()
@@ -143,7 +144,7 @@ function(generate_bin)
     # Add libs
     target_link_libraries(${target_name}.elf ${mcu}_driver)
 
-    if(${SUPPORT_SHELL} STREQUAL "ENABLE")
+    if(${SUPPORT_SHELL} STREQUAL "y")
     target_link_libraries(${target_name}.elf shell)
     else()
     include_directories(${CMAKE_SOURCE_DIR}/components/shell)
@@ -157,6 +158,7 @@ function(generate_bin)
 
     add_custom_command(TARGET ${target_name}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${target_name}.elf> ${BIN_FILE}
+        COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${target_name}.elf> >${ASM_FILE}
         # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${mainname}.elf> ${HEX_FILE}
         COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} ${CMAKE_SOURCE_DIR}/tools/bflb_flash_tool/img/project.bin
         COMMENT "Generate ${BIN_FILE}\r\nCopy ${BIN_FILE} into download path")

@@ -6,12 +6,6 @@ list(APPEND ADD_INCLUDE
 
 ################# Add private include #################
 # list(APPEND ADD_PRIVATE_INCLUDE 
-# "${CMAKE_SOURCE_DIR}/BSP_Common/ring_buffer"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/StdDriver/Inc"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/StdDriver/Inc"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/Peripherals"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/RISCV/Device/Bouffalo/${BOARD}/Startup"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/RISCV/Core/Include"
 # )
 #######################################################
 
@@ -23,30 +17,27 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ########### Add required/dependent components #########
-#list(APPEND ADD_REQUIREMENTS BSP_${BOARD}_Driver BSP_Common)
+#list(APPEND ADD_REQUIREMENTS xxx)
 #######################################################
 
 ############ Add static libs ##########################
 # if(CONFIG_COMPONENT1_INCLUDE_STATIC_LIB)
-#     list(APPEND ADD_STATIC_LIB "lib/libtest.a")
+#     list(APPEND ADD_STATIC_LIB "libxxx.a")
 # endif()
 #######################################################
 
 ############ Add dynamic libs #########################
-# list(APPEND ADD_DYNAMIC_LIB "lib/arch/v831/libmaix_nn.so"
-#                             "lib/arch/v831/libmaix_cam.so"
-# )
+# list(APPEND ADD_DYNAMIC_LIB "libxxx.so")
 #######################################################
 
 ############ Add global compile option ################
 #add components denpend on this component
-# list(APPEND ADD_DEFINITIONS -DAAAAA222=1
-#                             -DAAAAA333=1)
+# list(APPEND ADD_DEFINITIONS -Dxxx)
 #######################################################
 
 ############ Add private compile option ################
 #add compile option for this component that won't affect other modules  
-# list(APPEND ADD_DEFINITIONS_PRIVATE -DAAAAA=1)
+# list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
 #######################################################
 
 generate_library()

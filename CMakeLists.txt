@@ -7,16 +7,33 @@ PROJECT(${BOARD} C CXX ASM)
 
 include_directories(${CMAKE_SOURCE_DIR}/common/misc)
 include_directories(${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform)
+
+if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/bsp/board/${BOARD})
 include_directories(${CMAKE_SOURCE_DIR}/bsp/board/${BOARD})
+else()  
+message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/bsp/board/${BOARD} is not exist")
+endif()
 
 add_subdirectory(common)
 add_subdirectory(components/fatfs)
 add_subdirectory(components/usb_stack)
-add_subdirectory(drivers/${mcu}_driver)
 
-if(${SUPPORT_SHELL} STREQUAL "ENABLE")
+if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/drivers/${mcu}_driver)
+add_subdirectory(drivers/${mcu}_driver)
+else()  
+message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/drivers/${mcu}_driver is not exist")
+endif()
+
+if(${SUPPORT_SHELL} STREQUAL "y")
 add_subdirectory(components/shell)
-else()
+endif()
+
+if(${SUPPORT_FREERTOS} STREQUAL "y")
+add_subdirectory(components/freertos)
+endif()
+
+if(${SUPPORT_LVGL} STREQUAL "y")
+add_subdirectory(components/lvgl)
 endif()
 
 search_application(${CMAKE_SOURCE_DIR}/examples)

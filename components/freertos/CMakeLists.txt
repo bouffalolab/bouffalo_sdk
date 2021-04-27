@@ -1,18 +1,13 @@
 ﻿################# Add global include #################
 list(APPEND ADD_INCLUDE 
 "${CMAKE_CURRENT_SOURCE_DIR}"
-"${CMAKE_CURRENT_SOURCE_DIR}/include" 
+"${CMAKE_CURRENT_SOURCE_DIR}/include"
+"${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${mcu}"
 )
 #######################################################
 
 ################# Add private include #################
 # list(APPEND ADD_PRIVATE_INCLUDE 
-# "${CMAKE_SOURCE_DIR}/BSP_Common/ring_buffer"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/StdDriver/Inc"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/StdDriver/Inc"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/Peripherals"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/RISCV/Device/Bouffalo/${BOARD}/Startup"
-# "${CMAKE_SOURCE_DIR}/BSP_Driver/BSP_${BOARD}_Driver/RISCV/Core/Include"
 # )
 #######################################################
 
@@ -24,7 +19,9 @@ file(GLOB_RECURSE sources "${CMAKE_CURRENT_SOURCE_DIR}/croutine.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/queue.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/tasks.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/timers.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/portable/MemMang/heap_5.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/portable/memmang/heap_5.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${mcu}/port.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${mcu}/portASM.S"
 )
 list(APPEND ADD_SRCS  ${sources})
 # aux_source_directory(src ADD_SRCS)
@@ -32,30 +29,28 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ########### Add required/dependent components #########
-#list(APPEND ADD_REQUIREMENTS BSP_${BOARD}_Driver)
+#list(APPEND ADD_REQUIREMENTS xxx)
 #######################################################
 
 ############ Add static libs ##########################
 # if(CONFIG_COMPONENT1_INCLUDE_STATIC_LIB)
-#     list(APPEND ADD_STATIC_LIB "lib/libtest.a")
+#     list(APPEND ADD_STATIC_LIB "libxxx.a")
 # endif()
 #######################################################
 
 ############ Add dynamic libs #########################
-# list(APPEND ADD_DYNAMIC_LIB "lib/arch/v831/libmaix_nn.so"
-#                             "lib/arch/v831/libmaix_cam.so"
+# list(APPEND ADD_DYNAMIC_LIB "libxxx.so"
 # )
 #######################################################
 
 ############ Add global compile option ################
 #add components denpend on this component
-# list(APPEND ADD_DEFINITIONS -DAAAAA222=1
-#                             -DAAAAA333=1)
+list(APPEND ADD_DEFINITIONS -DportasmHANDLE_INTERRUPT=FreeRTOS_Interrupt_Handler)
 #######################################################
 
 ############ Add private compile option ################
 #add compile option for this component that won't affect other modules  
-# list(APPEND ADD_DEFINITIONS_PRIVATE -DAAAAA=1)
+# list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
 #######################################################
 
 generate_library()

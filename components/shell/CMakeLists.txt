@@ -20,30 +20,28 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ########### Add required/dependent components #########
-#list(APPEND ADD_REQUIREMENTS BSP_${BOARD}_Driver)
+#list(APPEND ADD_REQUIREMENTS xxx)
 #######################################################
 
 ############ Add static libs ##########################
 # if(CONFIG_COMPONENT1_INCLUDE_STATIC_LIB)
-#     list(APPEND ADD_STATIC_LIB "lib/libtest.a")
+#     list(APPEND ADD_STATIC_LIB "libxxx.a")
 # endif()
 #######################################################
 
 ############ Add dynamic libs #########################
-# list(APPEND ADD_DYNAMIC_LIB "lib/arch/v831/libmaix_nn.so"
-#                             "lib/arch/v831/libmaix_cam.so"
+# list(APPEND ADD_DYNAMIC_LIB "libxxx.so"
 # )
 #######################################################
 
 ############ Add global compile option ################
 #add components denpend on this component
-#list(APPEND ADD_DEFINITIONS -D${BOARD} -DARCH_RISCV)
+# list(APPEND ADD_DEFINITIONS -Dxxx)
 #######################################################
 
 ############ Add private compile option ################
 #add compile option for this component that won't affect other modules  
-#list(APPEND ADD_DEFINITIONS_PRIVATE -D${BOARD}_DRIVER)
+# list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
 #######################################################
-
 
 generate_library()
