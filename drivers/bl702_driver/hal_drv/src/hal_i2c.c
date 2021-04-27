@@ -138,7 +138,7 @@ int i2c_register(enum i2c_index_type index, const char *name, uint16_t flag)
  * @param num 
  * @return uint32_t 
  */
-uint32_t i2c_transfer(struct device *dev, i2c_msg_t msgs[], uint32_t num)
+int i2c_transfer(struct device *dev, i2c_msg_t msgs[], uint32_t num)
 {
     i2c_msg_t *msg;
     I2C_Transfer_Cfg i2cCfg;

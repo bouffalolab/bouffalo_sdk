@@ -123,6 +123,8 @@ typedef struct adc_device
     adc_data_width_t resWidth;
 } adc_device_t;
 
+#define ADC_DEV(dev) ((adc_device_t*)dev)
+
 int adc_register(enum adc_index_type index, const char *name, uint16_t flag, adc_user_cfg_t *adc_user_cfg);
 
 #endif

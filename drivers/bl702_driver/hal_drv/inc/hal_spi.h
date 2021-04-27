@@ -26,9 +26,7 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
-#define DEVICE_CTRL_SPI_ATTACH_TX_DMA_CMD      0x10
-#define DEVICE_CTRL_SPI_ATTACH_RX_DMA_CMD      0x11
-#define DEVICE_CTRL_SPI_CONFIG_CLOCK_CMD       0x12
+#define DEVICE_CTRL_SPI_CONFIG_CLOCK       0x10
 
 enum spi_index_type
 {
@@ -92,9 +90,12 @@ typedef struct spi_device
     void* rx_dma;
 } spi_device_t;
 
+#define SPI_DEV(dev) ((spi_device_t*)dev)
+
 int spi_register(enum spi_index_type index, const char *name, uint16_t flag);
 
 int spi_transmit(struct device *dev, void *buffer, uint32_t size, uint8_t type);
 int spi_receive(struct device *dev, void *buffer, uint32_t size, uint8_t type);
 int spi_transmit_receive(struct device *dev, const void *send_buf, void *recv_buf, uint32_t length, uint8_t type);
+
 #endif

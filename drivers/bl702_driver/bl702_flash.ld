@@ -1,9 +1,9 @@
 /****************************************************************************************
-* @file map.txt
+* @file bl702_flash.ld
 *
 * @brief This file is the map file (gnuarm or armgcc).
 *
-* Copyright (C) BouffaloLab 2018
+* Copyright (C) BouffaloLab 2021
 *
 ****************************************************************************************
 */
@@ -56,14 +56,14 @@ SECTIONS
         *(.text.*)
         
         /*put .rodata**/
-        *(EXCLUDE_FILE( *bl602_glb.o \
-                        *bl602_pds.o \
-                        *bl602_common.o \
-                        *bl602_sf_cfg.o \
-                        *bl602_sf_ctrl.o \
-                        *bl602_sflash.o \
-                        *bl602_xip_sflash.o \
-                        *bl602_ef_ctrl.o) .rodata*)
+        *(EXCLUDE_FILE( *bl702_glb.o \
+                        *bl702_pds.o \
+                        *bl702_common.o \
+                        *bl702_sf_cfg.o \
+                        *bl702_sf_ctrl.o \
+                        *bl702_sflash.o \
+                        *bl702_xip_sflash.o \
+                        *bl702_ef_ctrl.o) .rodata*)
         *(.rodata)
         *(.rodata.*)
         
@@ -87,14 +87,14 @@ SECTIONS
         *(.sclock_rlt_code)
         *(.sclock_rlt_const)
         
-        *bl602_glb.o*(.rodata*)
-        *bl602_pds.o*(.rodata*)
-        *bl602_common.o*(.rodata*)
-        *bl602_sf_cfg.o*(.rodata*)
-        *bl602_sf_ctrl.o*(.rodata*)
-        *bl602_sflash.o*(.rodata*)
-        *bl602_xip_sflash.o*(.rodata*)
-        *bl602_ef_ctrl.o*(.rodata*)
+        *bl702_glb.o*(.rodata*)
+        *bl702_pds.o*(.rodata*)
+        *bl702_common.o*(.rodata*)
+        *bl702_sf_cfg.o*(.rodata*)
+        *bl702_sf_ctrl.o*(.rodata*)
+        *bl702_sflash.o*(.rodata*)
+        *bl702_xip_sflash.o*(.rodata*)
+        *bl702_ef_ctrl.o*(.rodata*)
         
         . = ALIGN(4);
         __tcm_code_end__ = .;

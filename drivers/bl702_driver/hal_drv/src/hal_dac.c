@@ -157,7 +157,7 @@ int dac_control(struct device *dev, int cmd, void *args)
     case DEVICE_CTRL_SUSPEND /* constant-expression */:
 
         break;
-    case DEVICE_CTRL_DAC_ATTACH_TX_DMA /* constant-expression */:
+    case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
         dac_device->tx_dma = (struct device *)args;
         break;
     default:

@@ -28,8 +28,6 @@
 
 #define DEVICE_CTRL_UART_GET_TX_FIFO        0x10
 #define DEVICE_CTRL_UART_GET_RX_FIFO        0x11
-#define DEVICE_CTRL_UART_ATTACH_TX_DMA      0x12
-#define DEVICE_CTRL_UART_ATTACH_RX_DMA      0x13
 
 enum uart_index_type
 {
@@ -131,6 +129,8 @@ typedef struct uart_device
     void* tx_dma;
     void* rx_dma;
 } uart_device_t;
+
+#define UART_DEV(dev) ((uart_device_t*)dev)
 
 int uart_register(enum uart_index_type index, const char *name, uint16_t flag);
 

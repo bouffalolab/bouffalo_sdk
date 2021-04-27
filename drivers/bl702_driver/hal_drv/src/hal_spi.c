@@ -83,8 +83,8 @@ int spi_open(struct device *dev, uint16_t oflag)
     }
     else
     {
-        clockCfg.dataPhase0Len = length % 2;
-        clockCfg.dataPhase1Len = length / 2;
+        clockCfg.dataPhase0Len = length / 2;
+        clockCfg.dataPhase1Len = length / 2 + 1;
     }
     SPI_ClockConfig(spi_device->id, &clockCfg);
 
@@ -193,15 +193,43 @@ int spi_control(struct device *dev, int cmd, void *args)
         case DEVICE_CTRL_CONFIG /* constant-expression */:
             /* code */
             break;
-        case DEVICE_CTRL_SPI_ATTACH_TX_DMA_CMD /* constant-expression */:
+        case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
             spi_device->tx_dma = (struct device *)args;
             break;
-        case DEVICE_CTRL_SPI_ATTACH_RX_DMA_CMD /* constant-expression */:
+        case DEVICE_CTRL_ATTACH_RX_DMA /* constant-expression */:
             spi_device->rx_dma = (struct device *)args;
             break;
-        case DEVICE_CTRL_SPI_CONFIG_CLOCK_CMD /* constant-expression */:
+        case DEVICE_CTRL_SPI_CONFIG_CLOCK /* constant-expression */:
             SPI_SetClock(spi_device->id,(uint32_t)args);
             break;
+        case DEVICE_CTRL_TX_DMA_SUSPEND:
+        {
+            uint32_t tmpVal = BL_RD_REG(SPI_BASE+spi_device->id*0x100,SPI_FIFO_CONFIG_0);
+            tmpVal = BL_CLR_REG_BIT(tmpVal,SPI_DMA_TX_EN);
+            BL_WR_REG(SPI_BASE+spi_device->id*0x100,SPI_FIFO_CONFIG_0,tmpVal);
+            break;
+        }
+        case DEVICE_CTRL_RX_DMA_SUSPEND:
+        {
+            uint32_t tmpVal = BL_RD_REG(SPI_BASE+spi_device->id*0x100,SPI_FIFO_CONFIG_0);
+            tmpVal = BL_CLR_REG_BIT(tmpVal,SPI_DMA_RX_EN);
+            BL_WR_REG(SPI_BASE+spi_device->id*0x100,SPI_FIFO_CONFIG_0,tmpVal);
+            break;
+        }
+        case DEVICE_CTRL_TX_DMA_RESUME:
+        {
+            uint32_t tmpVal = BL_RD_REG(SPI_BASE+spi_device->id*0x100,SPI_FIFO_CONFIG_0);
+            tmpVal = BL_SET_REG_BIT(tmpVal,SPI_DMA_TX_EN);
+            BL_WR_REG(SPI_BASE+spi_device->id*0x100,SPI_FIFO_CONFIG_0,tmpVal);
+            break;
+        }
+        case DEVICE_CTRL_RX_DMA_RESUME:
+        {
+            uint32_t tmpVal = BL_RD_REG(SPI_BASE+spi_device->id*0x100,SPI_FIFO_CONFIG_0);
+            tmpVal = BL_SET_REG_BIT(tmpVal,SPI_DMA_RX_EN);
+            BL_WR_REG(SPI_BASE+spi_device->id*0x100,SPI_FIFO_CONFIG_0,tmpVal);
+            break;
+        }
         default:
             break;
     }

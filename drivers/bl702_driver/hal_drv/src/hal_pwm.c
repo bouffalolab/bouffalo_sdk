@@ -25,24 +25,23 @@
 #include "bl702_pwm.h"
 #include "bl702_gpio.h"
 #include "bl702_glb.h"
-#include "bl702_config.h"
 #include "pwm_config.h"
 
 pwm_device_t pwmx_device[PWM_MAX_INDEX] = {
-#ifdef BSP_USING_PWM0
-    PWM_CONFIG_0,
+#ifdef BSP_USING_PWM_CH0
+    PWM_CH0_CONFIG,
 #endif
-#ifdef BSP_USING_PWM1
-    PWM_CONFIG_1,
+#ifdef BSP_USING_PWM_CH1
+    PWM_CH1_CONFIG,
 #endif
-#ifdef BSP_USING_PWM2
-    PWM_CONFIG_2,
+#ifdef BSP_USING_PWM_CH2
+    PWM_CH2_CONFIG,
 #endif
-#ifdef BSP_USING_PWM3
-    PWM_CONFIG_3,
+#ifdef BSP_USING_PWM_CH3
+    PWM_CH3_CONFIG,
 #endif
-#ifdef BSP_USING_PWM4
-    PWM_CONFIG_4,
+#ifdef BSP_USING_PWM_CH4
+    PWM_CH4_CONFIG,
 #endif
 };
 
@@ -56,7 +55,6 @@ static void pwm_set(struct device *dev, PWM_CH_CFG_Type * pwmCfg ,uint32_t freq 
     
     pwm_device_t *pwm_device = (pwm_device_t *)dev;
     
-
     switch(unit)
     {
     case HZ:
@@ -183,9 +181,12 @@ int pwm_control(struct device *dev, int cmd, void *args)
 }
 
 
-void pwm_register(enum pwm_index_type index, const char *name, uint16_t flag)
+int pwm_register(enum pwm_index_type index, const char *name, uint16_t flag)
 {
     struct device *dev;
+
+    if (PWM_MAX_INDEX == 0)
+        return -DEVICE_EINVAL;
 
     dev = &(pwmx_device[index].parent);
 
@@ -199,5 +200,5 @@ void pwm_register(enum pwm_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_PWM;
     dev->handle = NULL;
 
-    device_register(dev, name, flag);
+    return device_register(dev, name, flag);
 }

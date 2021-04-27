@@ -26,15 +26,69 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
+enum timer_index_type
+{
+#ifdef BSP_USING_TIMER_CH0
+    TIMER_CH0_INDEX,
+#endif
+#ifdef BSP_USING_TIMER_CH1
+    TIMER_CH1_INDEX,
+#endif
+    TIMER_MAX_INDEX
+};
+
+enum timer_event_type
+{
+    TIMER_EVENT_COMP0,
+    TIMER_EVENT_COMP1,
+    TIMER_EVENT_COMP2,
+    TIMER_EVENT_UNKNOWN
+};
+
+enum timer_it_type
+{
+    TIMER_COMP0_IT = 1 << 0,
+    TIMER_COMP1_IT = 1 << 1,
+    TIMER_COMP2_IT = 1 << 2,
+    TIMER_ALL_IT = 1 << 3
+};
+typedef enum{
+    TIMER_CLK_FCLK,
+    TIMER_CLK_32K,
+    TIMER_CLK_1K,
+    TIMER_CLK_XTAL,
+}timer_clk_src_t;
+
+typedef enum{
+    TIMER_PL_TRIG_NONE,
+    TIMER_PL_TRIG_COMP0,
+    TIMER_PL_TRIG_COMP1,
+    TIMER_PL_TRIG_COMP2,
+}timer_pl_trig_t;
+
+typedef enum{
+    TIMER_CNT_PRELOAD,
+    TIMER_CNT_FREERUN,
+}timer_cnt_mode;
+
+typedef struct {
+    uint32_t timeout_val;
+}timer_user_cfg_t;
+
 
 typedef struct timer_device
 {
     struct device parent;
-    // TIMER_CFG_Type *timerAttr;
+    uint8_t id;
+    uint8_t ch;
+    uint8_t clk_div;
+    timer_cnt_mode cnt_mode;
+    timer_pl_trig_t pl_trig_src;
 } timer_device_t;
 
-void timer_register(timer_device_t *device, const char *name, uint16_t flag);
+#define TIMER_DEV(dev) ((timer_device_t*)dev)
 
-extern timer_device_t timerx_device;
+int timer_register(enum timer_index_type index, const char *name, uint16_t flag, timer_user_cfg_t *timer_user_cfg);
+
 
 #endif

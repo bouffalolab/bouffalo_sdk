@@ -139,15 +139,15 @@ int dma_control(struct device *dev, int cmd, void *args)
 
             break;
         }
-        case DMA_CHANNEL_UPDATE_CMD:
+        case DMA_CHANNEL_UPDATE:
             DMA_LLI_Update(dma_device->ch, (uint32_t)args);
             break;
-        case DMA_CHANNEL_GET_STATUS_CMD /* constant-expression */:
+        case DMA_CHANNEL_GET_STATUS /* constant-expression */:
             return DMA_Channel_Is_Busy(dma_device->ch);
-        case DMA_CHANNEL_START_CMD /* constant-expression */:
+        case DMA_CHANNEL_START /* constant-expression */:
             DMA_Channel_Enable(dma_device->ch);
             break;
-        case DMA_CHANNEL_STOP_CMD /* constant-expression */:
+        case DMA_CHANNEL_STOP /* constant-expression */:
             DMA_Channel_Disable(dma_device->ch);
             break;
         default:

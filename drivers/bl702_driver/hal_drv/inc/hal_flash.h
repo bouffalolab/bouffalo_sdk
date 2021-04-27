@@ -1,8 +1,8 @@
 /**
- * @file hal_dac.h
+ * @file hal_flash.h
  * @brief 
  * 
- * Copyright (c) 2021 Bouffalolab team
+ * Copyright 2019-2030 Bouffalolab team
  * 
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -20,53 +20,15 @@
  * under the License.
  * 
  */
-#ifndef __HAL_DAC__H__
-#define __HAL_DAC__H__
+#ifndef __HAL_FLASH__H__
+#define __HAL_FLASH__H__
 
 #include "drv_device.h"
-#include "bl702_config.h"
 
-enum dac_index_type
-{
-#ifdef BSP_USING_DAC0
-    DAC0_INDEX,
-#endif
-    DAC_MAX_INDEX
-};
+#define FLASH_NOT_DETECT 0x10
 
-typedef struct 
-{
-    uint8_t dac0;
-    uint8_t dac1;
-    uint8_t pin_num;
-} dac_pin_t;
-
-typedef enum {
-    DAC_CHANNEL_0,  
-    DAC_CHANNEL_1,   
-    DAC_CHANNEL_ALL,
-}dac_channel_t;
-
-
-typedef enum {
-    DAC_CLK_500KHZ,  
-    DAC_CLK_44P1KHZ, 
-    DAC_CLK_16KHZ,     
-    DAC_CLK_8KHZ,
-}dac_clk_t;
-
-
-typedef struct dac_device
-{
-    struct device parent;
-    dac_clk_t clk;
-    dac_pin_t pin;
-    
-    void* tx_dma;
-} dac_device_t;
-
-#define DAC_DEV(dev) ((adc_device_t*)dev)
-
-int dac_register(enum dac_index_type index, const char *name, uint16_t flag);
+int flash_erase(uint32_t addr, uint32_t size);
+int flash_read(uint32_t addr, uint8_t *data, uint32_t size);
+int flash_write(uint32_t addr, uint8_t *data, uint32_t size);
 
 #endif

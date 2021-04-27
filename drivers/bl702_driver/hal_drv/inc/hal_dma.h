@@ -26,10 +26,10 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
-#define DMA_CHANNEL_GET_STATUS_CMD  0x10
-#define DMA_CHANNEL_START_CMD       0x11
-#define DMA_CHANNEL_STOP_CMD        0x12
-#define DMA_CHANNEL_UPDATE_CMD      0x13
+#define DMA_CHANNEL_GET_STATUS  0x10
+#define DMA_CHANNEL_START       0x11
+#define DMA_CHANNEL_STOP        0x12
+#define DMA_CHANNEL_UPDATE      0x13
 
 enum dma_index_type
 {
@@ -60,10 +60,10 @@ enum dma_index_type
     DMA_MAX_INDEX
 };
 
-#define dma_channel_start(dev)        device_control(dev,DMA_CHANNEL_START_CMD,NULL)
-#define dma_channel_stop(dev)         device_control(dev,DMA_CHANNEL_STOP_CMD,NULL)
-#define dma_channel_update(dev,list)  device_control(dev,DMA_CHANNEL_UPDATE_CMD,list)
-#define dma_channel_check_busy(dev)   device_control(dev,DMA_CHANNEL_GET_STATUS_CMD,NULL)
+#define dma_channel_start(dev)        device_control(dev,DMA_CHANNEL_START,NULL)
+#define dma_channel_stop(dev)         device_control(dev,DMA_CHANNEL_STOP,NULL)
+#define dma_channel_update(dev,list)  device_control(dev,DMA_CHANNEL_UPDATE,list)
+#define dma_channel_check_busy(dev)   device_control(dev,DMA_CHANNEL_GET_STATUS,NULL)
 
 #define DMA_ADDR_UART0_TDR  (0x4000A000+0x88)
 #define DMA_ADDR_UART0_RDR  (0x4000A000+0x8C)
@@ -184,6 +184,8 @@ typedef struct dma_device
     uint8_t dst_width;
     dma_lli_ctrl_t *lli_cfg;    
 } dma_device_t;
+
+#define DMA_DEV(dev) ((dma_device_t*)dev)
 
 int dma_register(enum dma_index_type, const char *name, uint16_t flag);
 int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_t transfer_size);

@@ -29,20 +29,20 @@
 
 enum pwm_index_type
 {
-#ifdef BSP_USING_UART0
-    PWM0_INDEX,
+#ifdef BSP_USING_PWM_CH0
+    PWM_CH0_INDEX,
 #endif
-#ifdef BSP_USING_UART1
-    PWM1_INDEX,
+#ifdef BSP_USING_PWM_CH1
+    PWM_CH1_INDEX,
 #endif
-#ifdef BSP_USING_UART2
-    PWM2_INDEX,
+#ifdef BSP_USING_PWM_CH2
+    PWM_CH2_INDEX,
 #endif
-#ifdef BSP_USING_UART3
-    PWM3_INDEX,
+#ifdef BSP_USING_PWM_CH3
+    PWM_CH3_INDEX,
 #endif
-#ifdef BSP_USING_UART4
-    PWM4_INDEX,
+#ifdef BSP_USING_PWM_CH4
+    PWM_CH4_INDEX,
 #endif
     PWM_MAX_INDEX
 };
@@ -60,7 +60,8 @@ typedef struct pwm_device
     uint8_t dutyCycle;
 } pwm_device_t;
 
+#define PWM_DEV(dev) ((pwm_device_t*)dev)
 
-void pwm_register(enum pwm_index_type index, const char *name, uint16_t flag);
+int pwm_register(enum pwm_index_type index, const char *name, uint16_t flag);
 
 #endif

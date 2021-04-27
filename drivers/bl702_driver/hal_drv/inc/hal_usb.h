@@ -35,8 +35,9 @@
 #define DEVICE_CTRL_USB_DC_GET_STALL        0X15
 #define DEVICE_CTRL_USB_DC_CLR_NACK         0X16
 #define DEVICE_CTRL_USB_DC_CHECK_EPCAP      0X17
-#define DEVICE_CTRL_USB_DC_TX_FIFO_CNT_GET  0x18
-#define DEVICE_CTRL_USB_DC_RX_FIFO_CNT_GET  0x19
+#define DEVICE_CTRL_USB_DC_GET_TX_FIFO_CNT  0x18
+#define DEVICE_CTRL_USB_DC_GET_RX_FIFO_CNT  0x19
+#define DEVICE_CTRL_USB_DC_GET_EP_FREE      0x20
 
 enum usb_index_type
 {
@@ -214,7 +215,7 @@ int usb_dc_ep_open(struct device *dev, const struct usb_dc_ep_cfg *ep_cfg);
 int usb_dc_ep_is_stalled(struct device *dev, const uint8_t ep, uint8_t *stalled);
 int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, uint32_t data_len, uint32_t *ret_bytes);
 int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t data_len, uint32_t *read_bytes);
-uint16_t usb_dc_receive_to_ringbuffer(struct device *dev,Ring_Buffer_Type* rb,uint8_t ep);
-uint16_t usb_dc_send_from_ringbuffer(struct device *dev,Ring_Buffer_Type* rb,uint8_t ep);
+int usb_dc_receive_to_ringbuffer(struct device *dev,Ring_Buffer_Type* rb,uint8_t ep);
+int usb_dc_send_from_ringbuffer(struct device *dev,Ring_Buffer_Type* rb,uint8_t ep);
 
 #endif

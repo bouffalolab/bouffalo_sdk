@@ -65,7 +65,9 @@ typedef struct i2c_device
     uint32_t phase;
 } i2c_device_t;
 
+#define I2C_DEV(dev) ((i2c_device_t*)dev)
+
 int i2c_register(enum i2c_index_type index, const char *name, uint16_t flag);
-uint32_t i2c_transfer(struct device *dev, i2c_msg_t msgs[], uint32_t num);
+int i2c_transfer(struct device *dev, i2c_msg_t msgs[], uint32_t num);
 
 #endif

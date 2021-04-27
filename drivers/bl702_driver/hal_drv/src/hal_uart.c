@@ -220,12 +220,40 @@ int uart_control(struct device *dev, int cmd, void *args)
     }
     case DEVICE_CTRL_GET_CONFIG /* constant-expression */:
         break;
-    case DEVICE_CTRL_UART_ATTACH_TX_DMA /* constant-expression */:
+    case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
         uart_device->tx_dma = (struct device *)args;
         break;
-    case DEVICE_CTRL_UART_ATTACH_RX_DMA /* constant-expression */:
+    case DEVICE_CTRL_ATTACH_RX_DMA /* constant-expression */:
         uart_device->rx_dma = (struct device *)args;
         break;
+    case DEVICE_CTRL_TX_DMA_SUSPEND:
+    {
+        uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
+        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_DMA_TX_EN);
+        BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
+        break;
+    }        
+    case DEVICE_CTRL_RX_DMA_SUSPEND:
+    {
+        uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
+        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_DMA_RX_EN);
+        BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
+        break;
+    }
+    case DEVICE_CTRL_TX_DMA_RESUME:
+    {
+        uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
+        tmpVal = BL_SET_REG_BIT(tmpVal,UART_DMA_TX_EN);
+        BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
+        break;
+    }
+    case DEVICE_CTRL_RX_DMA_RESUME:
+    {
+        uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
+        tmpVal = BL_SET_REG_BIT(tmpVal,UART_DMA_RX_EN);
+        BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
+        break;
+    }        
     case DEVICE_CTRL_UART_GET_TX_FIFO /* constant-expression */:
         return UART_GetTxFifoCount(uart_device->id);
     case DEVICE_CTRL_UART_GET_RX_FIFO /* constant-expression */:
@@ -369,16 +397,23 @@ void uart_isr(uart_device_t *handle)
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FIFO_MASK))
     {
         uint8_t buffer[UART_FIFO_MAX_LEN];
-        UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
-        handle->parent.callback(&handle->parent, &buffer[0], handle->fifo_threshold, UART_EVENT_RX_FIFO);
+        uint8_t len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
+        if(len)
+        {
+            handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RX_FIFO);
+        }
     }
 
     /* Rx time-out interrupt */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_RTO_MASK))
     {
         uint8_t buffer[UART_FIFO_MAX_LEN];
-        uint8_t len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
-        handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RTO);
+        uint8_t len = UART_ReceiveData(handle->id, buffer, UART_FIFO_MAX_LEN);
+        if(len)
+        {
+            handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RTO);
+        }
+
         BL_WR_REG(UARTx, UART_INT_CLEAR, 0x10);
     }
 

@@ -116,6 +116,8 @@ typedef struct i2s_device
     void* rx_dma;
 } i2s_device_t;
 
+#define UART_DEV(dev) ((uart_device_t*)dev)
+
 int i2s_register(enum i2s_index_type index,const char *name,uint16_t flag);
 
 #endif
