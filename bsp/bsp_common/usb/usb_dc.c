@@ -32,24 +32,13 @@ static void usb_dc_event_callback(struct device *dev, void *args, uint32_t size,
     switch (state)
     {
     case USB_DC_EVENT_ERROR:
+        usbd_event_notify_handler(USB_EVENT_ERROR,NULL);
         break;
     case USB_DC_EVENT_RESET:
-    {
-        struct usbd_endpoint_cfg ep_cfg[2];
-        ep_cfg[0].ep_addr = USB_CONTROL_IN_EP0;
-        ep_cfg[0].ep_mps = USB_CTRL_EP_MPS;
-        ep_cfg[0].ep_type = USBD_EP_TYPE_BULK;
-        ep_cfg[1].ep_addr = USB_CONTROL_OUT_EP0;
-        ep_cfg[1].ep_mps = USB_CTRL_EP_MPS;
-        ep_cfg[1].ep_type = USBD_EP_TYPE_BULK;
-        usbd_ep_open(&ep_cfg[0]);
-        usbd_ep_open(&ep_cfg[1]);
-        usbd_set_address(0);
-
         usbd_event_notify_handler(USB_EVENT_RESET,NULL);
-    }
         break;
     case USB_DC_EVENT_SOF:
+        usbd_event_notify_handler(USB_EVENT_SOF,NULL);
         break;
     case USB_DC_EVENT_SETUP_NOTIFY:
         usbd_event_notify_handler(USB_EVENT_SETUP_NOTIFY,NULL);

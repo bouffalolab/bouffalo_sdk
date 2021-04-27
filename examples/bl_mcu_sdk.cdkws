@@ -17,6 +17,7 @@
   <Project Name="spi_loopback" Path="spi/spi_loopback/cdk/spi_loopback.cdkproj" Active="No"/>
   <Project Name="spi_lcd" Path="spi/spi_lcd/cdk/spi_lcd.cdkproj" Active="No"/>
   <Project Name="uart_dma" Path="uart/uart_dma/cdk/uart_dma.cdkproj" Active="No"/>
+  <Project Name="uart_echo" Path="uart/uart_echo/cdk/uart_echo.cdkproj" Active="No"/>
   <Project Name="uart_poll" Path="uart/uart_poll/cdk/uart_poll.cdkproj" Active="No"/>
   <Project Name="uart_rx_it" Path="uart/uart_rx_it/cdk/uart_rx_it.cdkproj" Active="No"/>
   <Project Name="usb_cdc_loopback" Path="usb/usb_cdc_loopback/cdk/usb_cdc_loopback.cdkproj" Active="No"/>
@@ -44,6 +45,7 @@
       <Project Name="spi_loopback" ConfigName="BuildSet"/>
       <Project Name="spi_lcd" ConfigName="BuildSet"/>
       <Project Name="uart_dma" ConfigName="BuildSet"/>
+      <Project Name="uart_echo" ConfigName="BuildSet"/>
       <Project Name="uart_poll" ConfigName="BuildSet"/>
       <Project Name="uart_rx_it" ConfigName="BuildSet"/>
       <Project Name="usb_cdc_loopback" ConfigName="BuildSet"/>

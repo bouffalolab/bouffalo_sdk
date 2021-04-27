@@ -28,7 +28,6 @@ static const char *parity_name[] = {"N","O","E","M","S"};
 
 /* Device data structure */
 struct cdc_acm_cfg_private {
-	// /* Interface data buffer */
 	/* CDC ACM line coding properties. LE order */
 	struct cdc_line_coding line_coding;
 	/* CDC ACM line state bitmap, DTE side */
@@ -50,6 +49,7 @@ static void usbd_cdc_acm_reset(void)
 	usbd_cdc_acm_cfg.line_coding.bDataBits = 8;
 	usbd_cdc_acm_cfg.line_coding.bParityType = 0;
 	usbd_cdc_acm_cfg.line_coding.bCharFormat = 0;
+	usbd_cdc_acm_cfg.configured = false;
 }
 
 /**
@@ -61,7 +61,7 @@ static void usbd_cdc_acm_reset(void)
  *
  * @return  0 on success, negative errno code on fail.
  */
-int cdc_acm_class_request_handler(struct usb_setup_packet *pSetup,uint8_t **data,uint32_t *len)
+static int cdc_acm_class_request_handler(struct usb_setup_packet *pSetup,uint8_t **data,uint32_t *len)
 {
 	switch (pSetup->bRequest) 
 	{
@@ -123,14 +123,13 @@ int cdc_acm_class_request_handler(struct usb_setup_packet *pSetup,uint8_t **data
 	return 0;
 }
 
-void cdc_notify_handler(uint8_t event, void* arg)
+static void cdc_notify_handler(uint8_t event, void* arg)
 {
 	switch (event)
 	{
 		case USB_EVENT_RESET:
 			usbd_cdc_acm_reset();
 			break;
-		
 		default:
 			break;
 	}	
@@ -166,24 +165,3 @@ void usbd_cdc_add_acm_interface(usbd_class_t *class, usbd_interface_t *intf)
 	usbd_class_add_interface(class,intf);
 }
 
-void usbd_cdc_add_custom_interface(usbd_class_t *class, usbd_interface_t *intf)
-{
-	static usbd_class_t *last_class = NULL;
-
-	if(last_class != class)
-	{
-		last_class = class;		
-		usbd_class_register(class);
-	}
-
-	intf->class_handler = cdc_acm_class_request_handler;
-	intf->custom_handler = NULL;
-	intf->vendor_handler = NULL;
-	intf->notify_handler = cdc_notify_handler;
-	usbd_class_add_interface(class,intf);
-}
-
-void usbd_cdc_add_endpoint(usbd_interface_t *intf, usbd_endpoint_t *ep)
-{
-	usbd_interface_add_endpoint(intf,ep);
-}

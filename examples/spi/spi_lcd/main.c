@@ -24,7 +24,7 @@
 #include "hal_spi.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"
-#include "bsp_il9431.h"
+#include "bsp_il9341.h"
 
 
 uint8_t bo[] = {

@@ -33,13 +33,14 @@
 #define USBD_MAX_POWER 100
 #define USBD_LANGID_STRING     1033
 
-#define USB_CONFIG_SIZE (9 + CDC_ACM_DESCRIPTOR_LEN)
+#define USB_CONFIG_SIZE (9 + CDC_ACM_DESCRIPTOR_LEN + CDC_ACM_DESCRIPTOR_LEN)
 
 USB_DESC_SECTION const uint8_t cdc_descriptor[] =
 {
     USB_DEVICE_DESCRIPTOR_INIT(USB_2_0,0x02,0x02,0x01,USBD_VID,USBD_PID,0x0100,0x01),
-    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE,0x02,0x01,USB_CONFIG_BUS_POWERED,USBD_MAX_POWER),
-    CDC_ACM_DESCRIPTOR_INIT(0x00,CDC_INT_EP,CDC_OUT_EP,CDC_IN_EP,0x02), 
+    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE,0x04,0x01,USB_CONFIG_BUS_POWERED,USBD_MAX_POWER),
+    CDC_ACM_DESCRIPTOR_INIT(0x00,0x85,CDC_OUT_EP,CDC_IN_EP,0x02), 
+    CDC_ACM_DESCRIPTOR_INIT(0x02,0x86,0x04,0x83,0x02), 
     ///////////////////////////////////////
     /// string0 descriptor
     ///////////////////////////////////////
@@ -122,6 +123,7 @@ uint8_t out_buffer[4096];
 void usbd_cdc_acm_bulk_out(uint8_t ep)
 {
     uint32_t actual_read_length = 0;    
+
     if (usbd_ep_read(ep, &out_buffer[rx_pos], 64, &actual_read_length) < 0)
     {
         USBD_LOG_DBG("Read DATA Packet failed\r\n");
@@ -167,23 +169,38 @@ void usbd_cdc_acm_bulk_in(uint8_t ep)
     }
 }
 
-usbd_class_t cdc_class;
-usbd_interface_t cdc_cmd_intf;
-usbd_interface_t cdc_data_intf;
+usbd_class_t cdc_class1;
+usbd_interface_t cdc_cmd_intf1;
+usbd_interface_t cdc_data_intf1;
 
-usbd_endpoint_t cdc_out_ep = 
+usbd_endpoint_t cdc_out_ep1 = 
 {
     .ep_addr = CDC_OUT_EP,
     .ep_cb = usbd_cdc_acm_bulk_out
 };
 
-usbd_endpoint_t cdc_in_ep = 
+usbd_endpoint_t cdc_in_ep1 = 
 {
     .ep_addr = CDC_IN_EP,
     .ep_cb = usbd_cdc_acm_bulk_in
 };
 
-#define USING_POLL_RTX
+usbd_class_t cdc_class2;
+usbd_interface_t cdc_cmd_intf2;
+usbd_interface_t cdc_data_intf2;
+
+usbd_endpoint_t cdc_out_ep2 = 
+{
+    .ep_addr = 0x04,
+    .ep_cb = usbd_cdc_acm_bulk_out
+};
+
+usbd_endpoint_t cdc_in_ep2 = 
+{
+    .ep_addr = 0x83,
+    .ep_cb = usbd_cdc_acm_bulk_in
+};
+
 
 struct device *usb_fs;
 
@@ -194,27 +211,23 @@ int main(void)
 
     usbd_desc_register(cdc_descriptor);
 
-    usbd_cdc_add_acm_interface(&cdc_class,&cdc_cmd_intf);
-    usbd_cdc_add_acm_interface(&cdc_class,&cdc_data_intf);
-    usbd_interface_add_endpoint(&cdc_data_intf,&cdc_out_ep);
-    usbd_interface_add_endpoint(&cdc_data_intf,&cdc_in_ep);
+    usbd_cdc_add_acm_interface(&cdc_class1,&cdc_cmd_intf1);
+    usbd_cdc_add_acm_interface(&cdc_class1,&cdc_data_intf1);
+    usbd_interface_add_endpoint(&cdc_data_intf1,&cdc_out_ep1);
+    usbd_interface_add_endpoint(&cdc_data_intf1,&cdc_in_ep1);
+
+    usbd_cdc_add_acm_interface(&cdc_class2,&cdc_cmd_intf2);
+    usbd_cdc_add_acm_interface(&cdc_class2,&cdc_data_intf2);
+    usbd_interface_add_endpoint(&cdc_data_intf2,&cdc_out_ep2);
+    usbd_interface_add_endpoint(&cdc_data_intf2,&cdc_in_ep2);
 
     usb_fs = usb_dc_init();
     if (usb_fs)
     {
-#ifndef USING_POLL_RTX
-        device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP1_DATA_OUT_IT|USB_EP2_DATA_IN_IT));
-#endif
+        device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP1_DATA_OUT_IT|USB_EP2_DATA_IN_IT|USB_EP4_DATA_OUT_IT|USB_EP3_DATA_IN_IT));
     }
-    while(!usb_device_is_configured());
+
     while (1)
     {
-#ifdef USING_POLL_RTX
-        if(usb_device_is_configured())
-        {
-            device_read(usb_fs,0x01,out_buffer,64);
-            device_write(usb_fs,0x82,out_buffer,64);
-        }
-#endif
     }
 }

@@ -1,9 +1,8 @@
 /**
- * @file adc_key.c
- * @author Boufflao Lab MCU Team (jychen@bouffalolab.com)
+ * @file main.c
  * @brief 
- * @version 0.1
- * @date 2021-03-23
+ * 
+ * Copyright (c) 2021 Bouffalolab team
  * 
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -21,20 +20,19 @@
  * under the License.
  * 
  */
-
 #include "hal_adc.h"
 #include "hal_gpio.h"
 
 
-#define KEY0_ADC_VALUE  0
-#define KEY1_ADC_VALUE  100
-#define KEY2_ADC_VALUE  200
-#define KEY3_ADC_VALUE  300
-#define KEY4_ADC_VALUE  430
-#define KEY_NO_VALUE    3000
-#define KEY_MEASURE_OFFSET    30
+#define KEY0_ADC_VALUE  (0)
+#define KEY1_ADC_VALUE  (100)
+#define KEY2_ADC_VALUE  (200)
+#define KEY3_ADC_VALUE  (300)
+#define KEY4_ADC_VALUE  (430)
+#define KEY_NO_VALUE    (3000)
+#define KEY_MEASURE_OFFSET    (30)
 
-#define KEY_FILTER_NUM  200
+#define KEY_FILTER_NUM  (200)
 typedef struct {
     uint32_t vaildKeyNum;
     uint16_t keyValue[KEY_FILTER_NUM];
@@ -47,13 +45,18 @@ adc_res_val_t result_val;
 
 adc_keys_status key_machine;
 
+struct device* adc_key;
+
+uint32_t adc_value[2] = {0};
+uint32_t key_voltage  = 0;
+
 /**
  * @brief init adc key machine
  * 
  */
 static void key_machine_init(void){
     key_machine.vaildKeyNum = 0;
-    memset(key_machine.keyValue,0xff,KEY_FILTER_NUM);
+    memset(key_machine.keyValue,0xff,KEY_FILTER_NUM*2);
 }
 
 /**
@@ -86,10 +89,10 @@ static uint16_t get_adc_value_range(uint32_t Vmv){
  * @return int 
  */
 static int get_adc_key_value(uint32_t Vmv){
-	volatile uint16_t key_num[5]={0};
-    uint8_t bigger=0,i=0,j=0;
+	volatile uint16_t key_num[5] = {0};
+    uint8_t bigger = 0, i = 0, j = 0;
 
-    if(Vmv>KEY0_ADC_VALUE && Vmv<KEY4_ADC_VALUE+KEY_MEASURE_OFFSET){
+    if(Vmv > KEY0_ADC_VALUE && Vmv < KEY4_ADC_VALUE + KEY_MEASURE_OFFSET){
         key_machine.keyValue[key_machine.vaildKeyNum] = get_adc_value_range(Vmv);
         key_machine.vaildKeyNum++;
 
@@ -126,6 +129,22 @@ static int get_adc_key_value(uint32_t Vmv){
 
 }
 
+// uint32_t sum = 0;
+// static uint32_t adc_val_filter(void)
+// {
+//     static uint32_t cnt_filter = 0;
+//     static uint32_t volt_value = 0;
+
+//     volt_value  += adc_value[0];
+
+//     if( ++cnt_filter >= 20)
+//     {
+//         cnt_filter = 0;
+//         key_voltage = (volt_value / 20 * 30 + key_voltage * 70) / 100;
+//         volt_value = 0;
+//     }
+// }
+
 int main(void)
 {
     bflb_platform_init(0);
@@ -144,26 +163,27 @@ int main(void)
 
     adc_register(ADC0_INDEX, "adc_key", DEVICE_OFLAG_STREAM_RX, &adc_user_cfg);
 
-    struct device* adc_test = device_find("adc_key");
+    adc_key = device_find("adc_key");
 
-    if(adc_test)
+    if(adc_key)
     {
-        device_open(adc_test, DEVICE_OFLAG_STREAM_RX);
+        device_open(adc_key, DEVICE_OFLAG_STREAM_RX);
     }else{
         MSG("device open failed\r\n");
     }
     
-    device_control(adc_test,DEVICE_CTRL_RESUME,0);
+    device_control(adc_key,DEVICE_CTRL_RESUME,0);
 
     key_machine_init();
 
     while (1)
     {
-        device_read(adc_test,0,(void *)&result_val,1);
+        device_read(adc_key,0,(void *)&result_val,1);
         keyValue = get_adc_key_value(result_val.volt * 1000);
         if( keyValue!=KEY_NO_VALUE){
             MSG("key %d pressed\r\n",keyValue);
-        }     
+            MSG("result_val.volt: %0.2f mv\n", (result_val.volt * 1000));
+        }
     }
     
 }

@@ -72,7 +72,7 @@ int main(void)
         device_control(dma_ch2, DEVICE_CTRL_SET_INT, NULL);
     }
 
-    device_control(uart,DEVICE_CTRL_UART_ATTACH_TX_DMA,dma_ch2);
+    device_control(uart,DEVICE_CTRL_ATTACH_TX_DMA,dma_ch2);
     while (1)
     {
         device_write(uart,0,src_buffer,4100);

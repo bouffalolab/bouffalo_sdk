@@ -90,7 +90,7 @@ int main(void)
     }
 
     /* connect dac device and dma device */
-    device_control(dac,DEVICE_CTRL_DAC_ATTACH_TX_DMA,dac_dma);
+    device_control(dac,DEVICE_CTRL_ATTACH_TX_DMA,dac_dma);
 
 
     while(1)

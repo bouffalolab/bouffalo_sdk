@@ -78,6 +78,7 @@ static struct usbd_core_cfg_priv
 static usb_slist_t usbd_class_head= USB_SLIST_OBJECT_INIT(usbd_class_head);
 static struct usb_msosv1_descriptor *msosv1_desc;
 static struct usb_bos_descriptor *bos_desc;
+static volatile uint32_t sof_tick = 0;
 /**
  * @brief print the contents of a setup packet
  *
@@ -840,6 +841,7 @@ static int usbd_vendor_request_handler(struct usb_setup_packet *setup, uint8_t *
 	}
 
 	usb_slist_t *i, *j;
+
 	usb_slist_for_each(i,&usbd_class_head)
     {
 		usbd_class_t* class= usb_slist_entry(i,struct usbd_class,list);
@@ -847,8 +849,10 @@ static int usbd_vendor_request_handler(struct usb_setup_packet *setup, uint8_t *
 		usb_slist_for_each(j,&class->intf_list)
     	{
 			usbd_interface_t* intf = usb_slist_entry(j,struct usbd_interface,list);
-			if(intf->vendor_handler && ((intf->intf_num == (setup->wValue & 0xFF)) || (intf->intf_num == (setup->wIndex & 0xFF))))
-				return intf->vendor_handler(setup, data, len);
+			if(intf->vendor_handler && !intf->vendor_handler(setup, data, len))
+			{
+				return 0;
+			}
 		}			
 	}
 
@@ -1162,12 +1166,16 @@ void usbd_event_notify_handler(uint8_t event, void* arg)
 {
 	switch (event)
 	{
+		case USB_EVENT_SOF:
+			sof_tick++;
+			USBD_LOG_DBG("tick: %d\r\n", sof_tick);
+		break;
 		case USB_EVENT_RESET:
+			usbd_set_address(0);
 #if USBD_EP_CALLBACK_SEARCH_METHOD == 1
 			usbd_ep_callback_register();
 #endif
 		case USB_EVENT_ERROR:
-		case USB_EVENT_SOF:
 		case USB_EVENT_CONNECTED:
 		case USB_EVENT_CONFIGURED:
 		case USB_EVENT_SUSPEND:
@@ -1229,4 +1237,14 @@ void usbd_class_add_interface(usbd_class_t *class,usbd_interface_t *intf)
 void usbd_interface_add_endpoint(usbd_interface_t *intf,usbd_endpoint_t *ep)
 {
 	usb_slist_add_tail(&intf->ep_list,&ep->list);
+}
+
+bool usb_device_is_configured(void)
+{
+	return usbd_core_cfg.configured;
+}
+
+uint32_t usbd_get_sof_tick(void)
+{
+	return sof_tick;
 }
