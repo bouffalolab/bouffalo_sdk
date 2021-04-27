@@ -207,13 +207,21 @@ API 分层模型
 
 .. code-block:: C
 
-    #define DEVICE_CTRL_SET_INT     0x01    /* 设置中断 */
-    #define DEVICE_CTRL_CLR_INT     0x02    /* 清中断 */
-    #define DEVICE_CTRL_GET_INT     0x03    /* 获取中断状态 */
-    #define DEVICE_CTRL_RESUME      0x04    /* 恢复设备 */
-    #define DEVICE_CTRL_SUSPEND     0x05    /* 挂起设备 */
-    #define DEVICE_CTRL_CONFIG      0x06    /* 配置设备 */
-    #define DEVICE_CTRL_GET_CONFIG  0x07    /* 获取设备配置 */
+    #define DEVICE_CTRL_SET_INT             0x01    /* set interrupt */
+    #define DEVICE_CTRL_CLR_INT             0x02    /* clear interrupt */
+    #define DEVICE_CTRL_GET_INT             0x03    /* get interrupt status*/
+    #define DEVICE_CTRL_RESUME              0x04    /* resume device */
+    #define DEVICE_CTRL_SUSPEND             0x05    /* suspend device */
+    #define DEVICE_CTRL_CONFIG              0x06    /* config device */
+    #define DEVICE_CTRL_GET_CONFIG          0x07    /* get device configuration */
+    #define DEVICE_CTRL_ATTACH_TX_DMA       0x08
+    #define DEVICE_CTRL_ATTACH_RX_DMA       0x09
+    #define DEVICE_CTRL_TX_DMA_SUSPEND      0x0a
+    #define DEVICE_CTRL_RX_DMA_SUSPEND      0x0b
+    #define DEVICE_CTRL_TX_DMA_RESUME       0x0c
+    #define DEVICE_CTRL_RX_DMA_RESUME       0x0d
+    #define DEVICE_CTRL_RESVD1              0x0E
+    #define DEVICE_CTRL_RESVD2              0x0F
 
 **device_write**
 ^^^^^^^^^^^^^^^^
@@ -371,7 +379,7 @@ GPIO 全称 General Purpose Input Output（通用输入 / 输出），博流系�
 
 bl mcu sdk 的引脚配置方式分为两种。
 
-- GPIO 复用功能通过专门的 **pinmux table** ，用户只需要修改 table 中的相关引脚和工功能，程序会自动配置这些引脚。**pinmux table** 位于 ``bsp/board/xxx_board`` 目录下 ``pinmux_config.h`` 文件。
+- GPIO 复用功能通过专门的 **pinmux table** ，用户只需要修改 table 中的相关引脚的功能，程序会自动配置这些引脚。**pinmux table** 位于 ``bsp/board/xxx_board`` 目录下 ``pinmux_config.h`` 文件。
 - 通过标准的 GPIO 设备接口配置引脚，缺点是只能配置普通的输入输出和中断功能，复用功能建议还是使用 table 进行配置。
 
 GPIO 设备接口
@@ -514,7 +522,7 @@ UART 设备结构体定义
 - parity 校验位
 - fifo_threshold fifo 阈值,不同 mcu 最大值不同
 - tx_dma 附加的发送 dma 句柄
-- rx_dma 附加的发送 dma 句柄
+- rx_dma 附加的接收 dma 句柄
 
 databits 提供以下类型
 
@@ -679,8 +687,6 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
     #define DEVICE_CTRL_UART_GET_TX_FIFO        0x10
     #define DEVICE_CTRL_UART_GET_RX_FIFO        0x11
-    #define DEVICE_CTRL_UART_ATTACH_TX_DMA      0x12
-    #define DEVICE_CTRL_UART_ATTACH_RX_DMA      0x13
 
 ``args`` 根据不同的 ``cmd`` 传入不同，具体如下：
 
@@ -693,9 +699,9 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 +---------------------------------------+--------------------------------------+
 |     DEVICE_CTRL_CONFIG                |         uart_param_cfg_t             |
 +---------------------------------------+--------------------------------------+
-|     DEVICE_CTRL_UART_ATTACH_TX_DMA    |         dma句柄                      |
+|     DEVICE_CTRL_ATTACH_TX_DMA         |         dma句柄                      |
 +---------------------------------------+--------------------------------------+
-|     DEVICE_CTRL_UART_ATTACH_RX_DMA    |         dma句柄                      |
+|     DEVICE_CTRL_ATTACH_RX_DMA         |         dma句柄                      |
 +---------------------------------------+--------------------------------------+
 |     DEVICE_CTRL_UART_GET_TX_FIFO      |         缓存变量                     |
 +---------------------------------------+--------------------------------------+

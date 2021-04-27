@@ -23,7 +23,7 @@ Linux 环境开发指南
    $ wget -c https://dev.bouffalolab.com/media/upload/download/riscv64-elf-x86_64-20210120.tar.gz
    $ mkdir -p riscv64-elf-20210120
    $ tar -zxvf riscv64-elf-x86_64-20210120.tar.gz -C riscv64-elf-20210120
-   $ sudo cp ~/riscv64-elf-20210120  /usr/bin
+   $ sudo cp -rf ~/riscv64-elf-20210120  /usr/bin
    $ echo "export PATH=\"$PATH:/usr/bin/riscv64-elf-20210120/bin\""  >> ~/.bashrc
    $ source ~/.bashrc
 
@@ -39,7 +39,7 @@ Linux 环境开发指南
    $ cd ~
    $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz 
    $ tar -zxvf cmake-3.19.3-Linux-x86_64.tar.gz
-   $ sudo cp ~/cmake-3.19.3-Linux-x86_64  /usr/bin
+   $ sudo cp -rf ~/cmake-3.19.3-Linux-x86_64  /usr/bin
    $ echo "export PATH=\"$PATH:/usr/bin/cmake-3.19.3-Linux-x86_64/bin\""  >> ~/.bashrc
    $ source ~/.bashrc
 

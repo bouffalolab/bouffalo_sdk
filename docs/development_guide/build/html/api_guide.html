@@ -406,13 +406,21 @@
 <li><p>return 不同的控制命令返回的意义不同。</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">cmd</span></code> 提供了以下标准命令，除此之外，不同外设还具有自己的命令</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_SET_INT     0x01    </span><span class="cm">/* 设置中断 */</span><span class="cp"></span>
-<span class="cp">#define DEVICE_CTRL_CLR_INT     0x02    </span><span class="cm">/* 清中断 */</span><span class="cp"></span>
-<span class="cp">#define DEVICE_CTRL_GET_INT     0x03    </span><span class="cm">/* 获取中断状态 */</span><span class="cp"></span>
-<span class="cp">#define DEVICE_CTRL_RESUME      0x04    </span><span class="cm">/* 恢复设备 */</span><span class="cp"></span>
-<span class="cp">#define DEVICE_CTRL_SUSPEND     0x05    </span><span class="cm">/* 挂起设备 */</span><span class="cp"></span>
-<span class="cp">#define DEVICE_CTRL_CONFIG      0x06    </span><span class="cm">/* 配置设备 */</span><span class="cp"></span>
-<span class="cp">#define DEVICE_CTRL_GET_CONFIG  0x07    </span><span class="cm">/* 获取设备配置 */</span><span class="cp"></span>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_SET_INT             0x01    </span><span class="cm">/* set interrupt */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_CLR_INT             0x02    </span><span class="cm">/* clear interrupt */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_GET_INT             0x03    </span><span class="cm">/* get interrupt status*/</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_RESUME              0x04    </span><span class="cm">/* resume device */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_SUSPEND             0x05    </span><span class="cm">/* suspend device */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_CONFIG              0x06    </span><span class="cm">/* config device */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_GET_CONFIG          0x07    </span><span class="cm">/* get device configuration */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_ATTACH_TX_DMA       0x08</span>
+<span class="cp">#define DEVICE_CTRL_ATTACH_RX_DMA       0x09</span>
+<span class="cp">#define DEVICE_CTRL_TX_DMA_SUSPEND      0x0a</span>
+<span class="cp">#define DEVICE_CTRL_RX_DMA_SUSPEND      0x0b</span>
+<span class="cp">#define DEVICE_CTRL_TX_DMA_RESUME       0x0c</span>
+<span class="cp">#define DEVICE_CTRL_RX_DMA_RESUME       0x0d</span>
+<span class="cp">#define DEVICE_CTRL_RESVD1              0x0E</span>
+<span class="cp">#define DEVICE_CTRL_RESVD2              0x0F</span>
 </pre></div>
 </div>
 </div>
@@ -554,7 +562,7 @@
 </ul>
 <p>bl mcu sdk 的引脚配置方式分为两种。</p>
 <ul class="simple">
-<li><p>GPIO 复用功能通过专门的 <strong>pinmux table</strong> ，用户只需要修改 table 中的相关引脚和工功能，程序会自动配置这些引脚。<strong>pinmux table</strong> 位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx_board</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">pinmux_config.h</span></code> 文件。</p></li>
+<li><p>GPIO 复用功能通过专门的 <strong>pinmux table</strong> ，用户只需要修改 table 中的相关引脚的功能，程序会自动配置这些引脚。<strong>pinmux table</strong> 位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx_board</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">pinmux_config.h</span></code> 文件。</p></li>
 <li><p>通过标准的 GPIO 设备接口配置引脚，缺点是只能配置普通的输入输出和中断功能，复用功能建议还是使用 table 进行配置。</p></li>
 </ul>
 </div>
@@ -683,7 +691,7 @@
 <li><p>parity 校验位</p></li>
 <li><p>fifo_threshold fifo 阈值,不同 mcu 最大值不同</p></li>
 <li><p>tx_dma 附加的发送 dma 句柄</p></li>
-<li><p>rx_dma 附加的发送 dma 句柄</p></li>
+<li><p>rx_dma 附加的接收 dma 句柄</p></li>
 </ul>
 <p>databits 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span>
@@ -827,8 +835,6 @@
 <p>串口设备除了标准的控制命令，还具有自己特殊的控制命令。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_UART_GET_TX_FIFO        0x10</span>
 <span class="cp">#define DEVICE_CTRL_UART_GET_RX_FIFO        0x11</span>
-<span class="cp">#define DEVICE_CTRL_UART_ATTACH_TX_DMA      0x12</span>
-<span class="cp">#define DEVICE_CTRL_UART_ATTACH_RX_DMA      0x13</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">args</span></code> 根据不同的 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 传入不同，具体如下：</p>
@@ -852,10 +858,10 @@
 <tr class="row-even"><td><p>DEVICE_CTRL_CONFIG</p></td>
 <td><p>uart_param_cfg_t</p></td>
 </tr>
-<tr class="row-odd"><td><p>DEVICE_CTRL_UART_ATTACH_TX_DMA</p></td>
+<tr class="row-odd"><td><p>DEVICE_CTRL_ATTACH_TX_DMA</p></td>
 <td><p>dma句柄</p></td>
 </tr>
-<tr class="row-even"><td><p>DEVICE_CTRL_UART_ATTACH_RX_DMA</p></td>
+<tr class="row-even"><td><p>DEVICE_CTRL_ATTACH_RX_DMA</p></td>
 <td><p>dma句柄</p></td>
 </tr>
 <tr class="row-odd"><td><p>DEVICE_CTRL_UART_GET_TX_FIFO</p></td>
