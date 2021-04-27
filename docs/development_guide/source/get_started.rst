@@ -16,6 +16,12 @@ BL706_Iot 开发板如下图所示
    
    BL706_IoT
 
+BL706_AVB 开发板如下图所示
+
+.. figure:: img/bl706_avb.png
+   :alt:
+   
+   BL706_AVB
 
 -  一个支持标准 JTAG 功能的调试器：
 
