@@ -49,14 +49,8 @@ int adc_open(struct device *dev, uint16_t oflag)
  
     ADC_Disable();
     ADC_Reset();
-    /*
-    MSG("adc_user_cfg->pinList = %d \r\n",adc_user_cfg->pinList[0]);
-    MSG("adc_user_cfg->pinList = %d \r\n",adc_user_cfg->pinList[1]);
-    MSG("adc_user_cfg->posChList = %d \r\n",adc_user_cfg->posChList[0]);
-    MSG("adc_user_cfg->negChList = %d \r\n",adc_user_cfg->negChList[0]);
-    MSG("adc_user_cfg->num = %d \r\n", adc_user_cfg->num);
-    */
-    GLB_GPIO_Func_Init(GPIO_FUN_ANALOG, (GLB_GPIO_Type *)&adc_user_cfg->pinList, adc_user_cfg->num);
+
+    GLB_GPIO_Func_Init(GPIO_FUN_ANALOG, (GLB_GPIO_Type *)adc_user_cfg->pinList, adc_user_cfg->num);
 
     switch (adc_device->clk)
     {
