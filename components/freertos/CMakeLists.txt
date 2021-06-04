@@ -2,7 +2,7 @@
 list(APPEND ADD_INCLUDE 
 "${CMAKE_CURRENT_SOURCE_DIR}"
 "${CMAKE_CURRENT_SOURCE_DIR}/include"
-"${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${mcu}"
+"${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}"
 )
 #######################################################
 

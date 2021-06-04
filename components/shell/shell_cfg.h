@@ -140,6 +140,6 @@
 /**
  * @brief shell是否在命令提示符输出路径,需要引用文件系统
  */
-#define     SHELL_FS          1
+#define     SHELL_FS          0
 
 #endif

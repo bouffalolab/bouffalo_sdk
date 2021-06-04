@@ -91,6 +91,7 @@ not need to be guarded with a critical section. */
 
 
 /* Scheduler utilities. */
+extern BaseType_t TrapNetCounter;
 extern void vTaskSwitchContext( void );
 #define portYIELD() __asm volatile( "ecall" );
 #define portEND_SWITCHING_ISR( xSwitchRequired ) if( xSwitchRequired ) vTaskSwitchContext()
@@ -154,6 +155,11 @@ not necessary for to use this port.  They are defined so the common demo files
 #endif
 
 #define portMEMORY_BARRIER() __asm volatile( "" ::: "memory" )
+
+portFORCE_INLINE static BaseType_t xPortIsInsideInterrupt( void )
+{
+    return TrapNetCounter ? 1 : 0;
+}
 
 #ifdef __cplusplus
 }

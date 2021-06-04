@@ -96,6 +96,7 @@ at the top of this file. */
 .extern Timer_IRQHandler
 .extern pullMachineTimerCompareRegister
 .extern pullNextTime
+ .extern pTrapNetCounter
 .extern uxTimerIncrementsForOneTick /* size_t type so 32-bit on 32-bit core and 64-bits on 64-bit core. */
 .extern xISRStackTop
 .extern portasmHANDLE_INTERRUPT
@@ -140,6 +141,11 @@ freertos_risc_v_trap_handler:
 	store_x t0, 29 * portWORD_SIZE( sp )
 
 	portasmSAVE_ADDITIONAL_REGISTERS	/* Defined in freertos_risc_v_chip_specific_extensions.h to save any registers unique to the RISC-V implementation. */
+
+         load_x  t0, pTrapNetCounter
+         lw   t1, 0( t0 )
+         addi   t1, t1, 1
+         store_x t1, 0( t0 )
 
 	load_x  t0, pxCurrentTCB			/* Load pxCurrentTCB. */
 	store_x  sp, 0( t0 )				/* Write sp to first TCB member. */
@@ -238,6 +244,12 @@ as_yet_unhandled:
 	j as_yet_unhandled
 
 processed_source:
+
+         load_x  t0, pTrapNetCounter
+         lw   t1, 0 ( t0 )
+         addi   t1, t1, -1
+         store_x t1, 0( t0 )
+         
 	load_x  t1, pxCurrentTCB			/* Load pxCurrentTCB. */
 	load_x  sp, 0( t1 )				 	/* Read sp from first TCB member. */
 
