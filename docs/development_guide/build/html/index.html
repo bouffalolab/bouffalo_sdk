@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>BL MCU SDK 开发指南 &mdash; BL_MCU_SDK 开发指南 0.1 文档</title>
+  <title>BL MCU SDK 开发指南 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
   
 
   
@@ -39,7 +39,7 @@
     
     <link rel="index" title="索引" href="genindex.html" />
     <link rel="search" title="搜索" href="search.html" />
-    <link rel="next" title="1. 开发前的准备" href="get_started.html" /> 
+    <link rel="next" title="1. 开发前的准备" href="get_started/get_started.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.1
+                0.2
               </div>
             
           
@@ -90,25 +90,46 @@
             
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Linux_quick_start_ubuntu.html">4. Linux 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">5. 硬件连接</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/connecting_hardware.html">7. 硬件连接</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html">1. API 分层模型</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html#id5">2. 时钟树</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html#gpio">3. GPIO 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html#uart">4. UART 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html#pwm">5. PWM设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_structure.html">1. API 分层模型</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_clock.html">2. 时钟树</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_gpio.html">3. GPIO 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_uart.html">4. UART 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_pwm.html">5. PWM 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_dma.html">6. DMA 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_i2c.html">7. I2C 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_spi.html">8. SPI 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_adc.html">9. ADC 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_dac.html">10. DAC 设备</a></li>
 </ul>
-<p class="caption"><span class="caption-text">示例代码</span></p>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="blink_demo_introduce.html">1. 流水灯示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="breath_pwm_demo_introduce.html">2. 呼吸灯示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="uart_loopback_demo_introduce.html">3. 串口自收发示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/blink_demo.html">1. GPIO 输出 - 流水灯</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/button_demo.html">2. GPIO 中断 - 按键检测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/breath_pwm_demo.html">3. PWM - 呼吸灯</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/uart_loopback_demo.html">4. UART - 数据自收发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/mtimer_demo.html">5. MTIMER - 内核定时器</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/dma_m2m_demo.html">6. DMA - RAM间数据搬运</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/i2c_eeprom_demo.html">7. I2C - AT24CXX 读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/spi_lcd_demo.html">8. SPI - TFT LCD 显示</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/adc_key_demo.html">9. ADC - 按键检测电压</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/shell_demo.html">1. SHELL 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/fatfs_demo.html">2. FATFS 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/lowpower_demo.html">3. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/ble_scan_demo.html">4. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
 </ul>
 
             
@@ -185,29 +206,52 @@
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Linux_quick_start_ubuntu.html">4. Linux 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">5. 硬件连接</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started/connecting_hardware.html">7. 硬件连接</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html">1. API 分层模型</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html#id5">2. 时钟树</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html#gpio">3. GPIO 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html#uart">4. UART 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_guide.html#pwm">5. PWM设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_structure.html">1. API 分层模型</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_clock.html">2. 时钟树</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_gpio.html">3. GPIO 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_uart.html">4. UART 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_pwm.html">5. PWM 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_dma.html">6. DMA 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_i2c.html">7. I2C 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_spi.html">8. SPI 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_adc.html">9. ADC 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference/api_dac.html">10. DAC 设备</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">示例代码</span></p>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="blink_demo_introduce.html">1. 流水灯示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="breath_pwm_demo_introduce.html">2. 呼吸灯示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="uart_loopback_demo_introduce.html">3. 串口自收发示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/blink_demo.html">1. GPIO 输出 - 流水灯</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/button_demo.html">2. GPIO 中断 - 按键检测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/breath_pwm_demo.html">3. PWM - 呼吸灯</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/uart_loopback_demo.html">4. UART - 数据自收发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/mtimer_demo.html">5. MTIMER - 内核定时器</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/dma_m2m_demo.html">6. DMA - RAM间数据搬运</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/i2c_eeprom_demo.html">7. I2C - AT24CXX 读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/spi_lcd_demo.html">8. SPI - TFT LCD 显示</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/basic%20samples/adc_key_demo.html">9. ADC - 按键检测电压</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/shell_demo.html">1. SHELL 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/fatfs_demo.html">2. FATFS 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/lowpower_demo.html">3. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/ble_scan_demo.html">4. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1"><a class="reference internal" href="samples/advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
 </ul>
 </div>
 </div>
@@ -218,7 +262,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="get_started.html" class="btn btn-neutral float-right" title="1. 开发前的准备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="get_started/get_started.html" class="btn btn-neutral float-right" title="1. 开发前的准备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

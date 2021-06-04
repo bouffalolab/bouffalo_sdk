@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3. LowPower 低功耗评估 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="4. BLE 客户端和服务端互连" href="ble_scan_demo.html" />
+    <link rel="prev" title="2. FATFS 文件系统读写" href="fatfs_demo.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK 开发指南
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">快速开发指南</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">7. 硬件连接</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 手册</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_structure.html">1. API 分层模型</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_clock.html">2. 时钟树</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_gpio.html">3. GPIO 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_uart.html">4. UART 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_pwm.html">5. PWM 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_dma.html">6. DMA 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_i2c.html">7. I2C 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_spi.html">8. SPI 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_adc.html">9. ADC 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_dac.html">10. DAC 设备</a></li>
+</ul>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/blink_demo.html">1. GPIO 输出 - 流水灯</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/button_demo.html">2. GPIO 中断 - 按键检测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/breath_pwm_demo.html">3. PWM - 呼吸灯</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/uart_loopback_demo.html">4. UART - 数据自收发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/mtimer_demo.html">5. MTIMER - 内核定时器</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/dma_m2m_demo.html">6. DMA - RAM间数据搬运</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/i2c_eeprom_demo.html">7. I2C - AT24CXX 读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/spi_lcd_demo.html">8. SPI - TFT LCD 显示</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/adc_key_demo.html">9. ADC - 按键检测电压</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="shell_demo.html">1. SHELL 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fatfs_demo.html">2. FATFS 文件系统读写</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. LowPower 低功耗评估</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">3.1. 简介</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">3.2. <strong>低功耗示例测试方法</strong></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">3.2.1. <strong>编译低功耗示例代码</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">3.2.2. <strong>准备低功耗测试所需的硬件环境</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#xshell">3.2.3. <strong>使用Xshell开始评估低功耗性能</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ble_scan_demo.html">4. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boot2_iap_info.html">5. BOOT2 IAP</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK 开发指南</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">3. </span>LowPower 低功耗评估</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/samples/advance samples/lowpower_demo.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="lowpower">
+<h1><span class="section-number">3. </span>LowPower 低功耗评估<a class="headerlink" href="#lowpower" title="永久链接至标题">¶</a></h1>
+<div class="section" id="id1">
+<h2><span class="section-number">3.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<p>博流系列芯片拥有丰富的低功耗特性，以适配不同的低功耗应用场合。为了方便用户快速的评测使用 bl 系列 MCU 低功耗性能 bl_mcu_sdk 提供了一套抽象的低功耗接口，将低功耗等级分为四个等级，分别为</p>
+<ol class="arabic simple">
+<li><p>Running : Running 为代码正常运行时的功耗，由客户应用代码决定功耗。</p></li>
+<li><p>WFI ：WFI 模式，只关闭了 CPU 以节省功耗，当用户退出 WFI 模式的时候程序将会继续运行。</p></li>
+<li><p>PDS : PDS 模式，关闭了芯片上大多数电源域，同时关闭了 CPU ，可以通过内部 RTC 进行唤醒，或者使用特定的唤醒引脚唤醒。</p></li>
+<li><p>HBN : HBN 模式，关闭了芯片上绝大多数电源域，关闭了 CPU ，可以通过内部 RTC 进行唤醒，或者使用特定的唤醒引脚唤醒。</p></li>
+</ol>
+<p>如下表所示</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>模式</p></th>
+<th class="head"><p>参考电流</p></th>
+<th class="head"><p>对应基础模式</p></th>
+<th class="head"><p>唤醒源</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>running</p></td>
+<td><p>6.28 mA</p></td>
+<td><p>run</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>WFI</p></td>
+<td><p>5.14 mA</p></td>
+<td><p>WFI</p></td>
+<td><p>任意中断</p></td>
+</tr>
+<tr class="row-even"><td><p>PDS</p></td>
+<td><p>10 uA</p></td>
+<td><p>PDS 31</p></td>
+<td><p>内部RTC/引脚中断</p></td>
+</tr>
+<tr class="row-odd"><td><p>HBN</p></td>
+<td><p>1 uA</p></td>
+<td><p>HBN 1</p></td>
+<td><p>内部RTC/引脚中断</p></td>
+</tr>
+</tbody>
+</table>
+<p>bl_mcu_sdk 提供了一个简单的低功耗参考示例 (bl_mcu_sdk Examples/power/powerTest/) ，旨在帮助用户快速评估低功耗功能，如果需要进一步适配自身的低功耗场景，采取不同的低功耗策略，请查阅相关 datasheet 或者寻找 Boufflao Lab 的技术支持。</p>
+<p>上表中的参考电流是通过示例固件测试得出的。符合 bl70x 系列 MCU 的 spec 的描述， run wfi pds hbn 四种等级的定义简化了原先的 hbn level以及 pds level的设定。</p>
+<p>见 bl702_bl704_bl706_DS_EN_Combo_1.9.pdf page 28</p>
+<div class="figure align-default">
+<img alt="../../_images/powerTable.png" src="../../_images/powerTable.png" />
+</div>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">3.2. </span><strong>低功耗示例测试方法</strong><a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id3">
+<h3><span class="section-number">3.2.1. </span><strong>编译低功耗示例代码</strong><a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<p>在工程目录下键入 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">APP=lowpower_test</span>&#160; <span class="pre">SUPPORT_SHELL=y</span> <span class="pre">BOARD=bl706_lp</span></code> 完成低功耗示例 bl706 的编译。或者直接使用CDK工程，完成编译下载
+您可以参考本文档《快速开发指南》来获取更多编译烧写的信息。</p>
+<p>当编译并烧写成功后，连接串口到电脑端，并复位芯片，Xshell 会出现如下图所示的页面。</p>
+<div class="figure align-default">
+<img alt="../../_images/xShell页面.png" src="../../_images/xShell页面.png" />
+</div>
+</div>
+<div class="section" id="id4">
+<h3><span class="section-number">3.2.2. </span><strong>准备低功耗测试所需的硬件环境</strong><a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li><p>可以串联电流表到电源端的电路板</p></li>
+<li><p>电流表</p></li>
+<li><p>一台 PC 主机（运行 Windows 或者 Linux 系统）</p></li>
+<li><p>TTL转USB</p></li>
+</ul>
+<p>如下图所示，将电流表串联进入 bl706 模组的供电线路，通过PC端的串口调试助手软件，下发不同的低功耗指令，使得 bl706 进入对应的低功耗模式
+观察电流表示值，完成评估。</p>
+<div class="figure align-default">
+<img alt="../../_images/低功耗示意图.png" src="../../_images/低功耗示意图.png" />
+</div>
+</div>
+<div class="section" id="xshell">
+<h3><span class="section-number">3.2.3. </span><strong>使用Xshell开始评估低功耗性能</strong><a class="headerlink" href="#xshell" title="永久链接至标题">¶</a></h3>
+<p>用户可以通过在 Xshell输入下述指令，进入对应的低功耗模式。</p>
+<p><code class="docutils literal notranslate"><span class="pre">run</span></code></p>
+<ul class="simple">
+<li><p>复位芯片之后，默认进入run模式，没有进入任何低功耗模式，芯片实际在运行 while(1); 语句。</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">wfi</span></code></p>
+<ul class="simple">
+<li><p>进入wfi模式，后面不加任何参数，进入之后，关闭CPU，降低功耗</p></li>
+<li><p>进入wfi模式后，任何中断会唤醒，例如uart中断。在Xshell中敲击回车会触发 bl706 UART RX中断，因此可以通过此方法唤醒wfi低功耗模式。</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">pds</span> <span class="pre">sleepTim</span></code></p>
+<ul class="simple">
+<li><p>pds 可以选择带一个 sleepTim 的参数，决定其内部 RTC 唤醒时间。如果指令不带此参数，那么默认不使用 RTC 内部唤醒，目前的固件仅支持上电复位唤醒。</p></li>
+<li><p>如果指令包含 sleepTim 参数，pds 将会在sleepTim * clock_period 的时刻被唤醒，表现为复位芯片，重新打印起始报文。</p></li>
+<li><p>进入低功耗模式后，RTC的时钟是32K ，因此 sleepTim 为32768时，表现为睡眠 1S 后唤醒。</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">hbn</span> <span class="pre">sleepTim</span></code></p>
+<ul class="simple">
+<li><p>hbn 可以选择带一个 sleepTim 的参数，决定其内部RTC唤醒时间。如果指令不带此参数，那么默认不使用 RTC 内部唤醒，目前的固件仅支持上电复位唤醒。</p></li>
+<li><p>如果指令包含 sleepTim 参数，hbn 将会在 sleepTim * clock_period 的时刻被唤醒，表现为复位芯片，重新打印起始报文。</p></li>
+<li><p>进入低功耗模式后，RTC的时钟是32K ，因此 sleepTim 为32768时，表现为睡眠1S 后唤醒。</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="ble_scan_demo.html" class="btn btn-neutral float-right" title="4. BLE 客户端和服务端互连" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="fatfs_demo.html" class="btn btn-neutral float-left" title="2. FATFS 文件系统读写" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; 版权所有 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

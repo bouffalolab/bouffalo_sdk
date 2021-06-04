@@ -1,0 +1,136 @@
+Linux OR WSL 环境开发指南
+=============================
+
+本文档介绍了如何在 Linux 安装配置 BL702 系列 MCU 需要的软件开发工具。而 WSL 的安装配置方式与 linux 下一样。唯一的区别就是一个运行在linux上，比如 Ubuntu ，一个运行在 windows 上。如果不想装虚拟机或者linux系统，可以选择 WSL。
+
+**Windows Subsystem for Linux** （简称 WSL ）是一个在 Windows 10 上能够运行原生 Linux 二进制可执行文件（ELF格式）的兼容层。它是由微软与Canonical公司合作开发，其目标是使纯正的Ubuntu 14.04 "Trusty Tahr"映像能下载和解压到用户的本地计算机，并且映像内的工具和实用工具能在此子系统上原生运行。因此，在 WSL 下的操作方式和 linux 下的操作方式是完全相同的。
+
+
+
+需要的软硬件环境
+-----------------------------
+
+-  一根 mini USB 数据线
+-  一个 USB-TTL 串口模块
+-  杜邦线若干
+
+配置 RISC-V 工具链
+-----------------------------
+
+.. code-block:: bash
+   :linenos:
+   :emphasize-lines: 4-6
+
+   $ cd ~
+   $ wget -c https://dev.bouffalolab.com/media/upload/download/riscv64-elf-x86_64-20210120.tar.gz
+   $ mkdir -p riscv64-elf-20210120
+   $ tar -zxvf riscv64-elf-x86_64-20210120.tar.gz -C riscv64-elf-20210120
+   $ sudo cp ~/riscv64-elf-20210120  /usr/bin
+   $ echo "export PATH=\"$PATH:/usr/bin/riscv64-elf-20210120/bin\""  >> ~/.bashrc
+   $ source ~/.bashrc
+
+配置 cmake & make 工具
+----------------------------
+
+.. code-block:: bash
+   :linenos:
+   :emphasize-lines: 5-7
+
+   $ sudo apt update
+   $ sudo apt install make
+   $ cd ~
+   $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz 
+   $ tar -zxvf cmake-3.19.3-Linux-x86_64.tar.gz
+   $ sudo cp ~/cmake-3.19.3-Linux-x86_64  /usr/bin
+   $ echo "export PATH=\"$PATH:/usr/bin/cmake-3.19.3-Linux-x86_64/bin\""  >> ~/.bashrc
+   $ source ~/.bashrc
+
+
+硬件连接
+----------------------
+
+-  具体开发板的连接, 请参考 :ref:`connect_hardware` 部分
+-  请确保开发板正确设置后再进行下面的步骤 (建议 Linux 下采用串口连接)
+
+
+获取 bl_mcu_sdk
+---------------------------
+
+-  打开终端输入以下命令获取 bl_mcu_sdk
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd ~
+    $ git clone https://gitee.com/bouffalolab/bl_mcu_sdk.git  --recursive
+
+
+测试 Hello World 工程
+------------------------------
+
+打开 Hello World
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+-  获取到 SDK 后，进入 sdk 中的 ``examples/hellowd/helloworld`` 目录下，打开 ``main.c``，即可编辑 helloworld 的相关代码。
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd ~/bl_mcu_sdk/examples/hellowd/helloworld
+    $ vi main.c
+
+-  若编辑完成后，保存修改并关闭文件，接下来进行编译
+
+编译 Hello World
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd ~/bl_mcu_sdk
+    $ make build BOARD=bl706_iot APP=helloworld
+
+
+烧写 Hello World
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+-  烧写前请先确认烧写方式，若采用串口烧写，请先按住板子上的 ``boot`` 键不要释放，此时在按下 ``rst`` 键，然后释放两个键，此时板子进入 boot_rom 状态。
+-  这时在终端中输入以下命令进行烧写
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd ~/bl_mcu_sdk
+    $ make download INTERFACE=uart
+
+-  如果下载失败请检查：
+
+   -  1. 是否使用串口烧写，开发板是否供电，硬件连接是否正确。
+   -  2. 烧写命令是否在 ``bl_mcu_sdk`` 目录下执行
+   -  3. 是否进入 boot_rom 模式
+   -  4. 串口是否被占用
+
+运行 Hello World
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+-  打开新的终端，安装、运行串口工具
+
+.. code-block:: bash
+   :linenos:
+
+    $ sudo apt install picocom   # 若已经安装请忽略
+    $ picocom -b 2000000 /dev/ttyUSB0 
+
+-  按一下开发板上的 ``rst`` 按键，即可在串口终端中看到 ``hello world！``
+
+.. figure:: img/linux1.png
+   :alt:
+
+   helloworld!
+
+
+调试 Hello World
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+

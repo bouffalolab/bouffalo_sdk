@@ -21,10 +21,10 @@ project = 'BL_MCU_SDK 开发指南'
 copyright = '2021, BouffaloLab Co., Ltd'
 author = 'BouffaloLab MCU Team'
 
-version = '0.1'
+version = '0.2'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '0.2'
 
 
 # -- General configuration ---------------------------------------------------
@@ -67,7 +67,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 man_pages = [
     (master_doc, 'bl702', 'BouffaloLab Documentation',
