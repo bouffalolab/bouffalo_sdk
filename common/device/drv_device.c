@@ -29,58 +29,7 @@
 #define dev_control (dev->control)
 
 dlist_t device_head = DLIST_OBJECT_INIT(device_head);
-/**
- * This function will copy string no more than n bytes.
- *
- * @param dst the string to copy
- * @param src the string to be copied
- * @param n the maximum copied length
- *
- * @return the result
- */
-static char *device_strncpy(char *dst, const char *src, uint32_t n)
-{
-    if (n != 0)
-    {
-        char *d = dst;
-        const char *s = src;
 
-        do
-        {
-            if ((*d++ = *s++) == 0)
-            {
-                /* NUL pad the remaining n-1 bytes */
-                while (--n != 0)
-                    *d++ = 0;
-                break;
-            }
-        } while (--n != 0);
-    }
-
-    return (dst);
-}
-/**
- * This function will compare string no more than n bytes.
- *
- * @param dst the string to copy
- * @param src the string to be copied
- * @param n the maximum copied length
- *
- * @return the result
- */
-static int32_t device_strncmp(const char *cs, const char *ct, uint32_t count)
-{
-    signed char __res = 0;
-
-    while (count)
-    {
-        if ((__res = *cs - *ct++) != 0 || !*cs++)
-            break;
-        count--;
-    }
-
-    return __res;
-}
 /**
  * This function registers a device driver with specified name.
  *
@@ -108,7 +57,7 @@ int device_register(struct device *dev, const char *name, uint16_t flag)
     }
 
     dev->oflag = flag;
-    device_strncpy(dev->name, name, NAME_MAX);
+    strncpy(dev->name, name, NAME_MAX);
 
     dlist_insert_after(&device_head, &(dev->list));
     dev->status = DEVICE_REGISTERED;
@@ -160,7 +109,7 @@ struct device *device_find(const char *name)
     dlist_for_each(node, &device_head)
     {
         dev = dlist_entry(node, struct device, list);
-        if (device_strncmp(dev->name, name, NAME_MAX) == 0)
+        if (strncmp(dev->name, name, NAME_MAX) == 0)
         {
             return dev;
         }

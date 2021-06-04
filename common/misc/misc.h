@@ -38,12 +38,12 @@
 /**
  * @brief Memory access macro
  */
-#define BL_RD_WORD(addr)                             (*((volatile uint32_t*)(addr)))
-#define BL_WR_WORD(addr,val)                         ((*(volatile uint32_t*)(addr))=(val))
-#define BL_RD_SHORT(addr)                            (*((volatile uint16_t*)(addr)))
-#define BL_WR_SHORT(addr,val)                        ((*(volatile uint16_t*)(addr))=(val))
-#define BL_RD_BYTE(addr)                             (*((volatile uint8_t*)(addr)))
-#define BL_WR_BYTE(addr,val)                         ((*(volatile uint8_t*)(addr))=(val))
+#define BL_RD_WORD(addr)                             (*((volatile uint32_t*)(uintptr_t)(addr)))
+#define BL_WR_WORD(addr,val)                         ((*(volatile uint32_t*)(uintptr_t)(addr))=(val))
+#define BL_RD_SHORT(addr)                            (*((volatile uint16_t*)(uintptr_t)(addr)))
+#define BL_WR_SHORT(addr,val)                        ((*(volatile uint16_t*)(uintptr_t)(addr))=(val))
+#define BL_RD_BYTE(addr)                             (*((volatile uint8_t*)(uintptr_t)(addr)))
+#define BL_WR_BYTE(addr,val)                         ((*(volatile uint8_t*)(uintptr_t)(addr))=(val))
 #define BL_RDWD_FRM_BYTEP(p)                         ((p[3]<<24)|(p[2]<<16)|(p[1]<<8)|(p[0]))
 #define BL_WRWD_TO_BYTEP(p,val)                      {p[0]=val&0xff;p[1]=(val>>8)&0xff;p[2]=(val>>16)&0xff;p[3]=(val>>24)&0xff;}
 /**
@@ -70,6 +70,8 @@
 #define ATTR_EALIGN(x)                                __attribute((aligned (x)))
 #define ATTR_FALLTHROUGH()                            __attribute__((fallthrough))
 #define ATTR_USED                                     __attribute__((__used__))
+
+#define BIT(x)                                      (1<<(x))
 
 __attribute__( ( always_inline ) ) __STATIC_INLINE__ void enable_irq(void)
 {

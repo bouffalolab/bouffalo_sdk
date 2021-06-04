@@ -33,8 +33,12 @@
 #define __STATIC__          static
 #define __STATIC_INLINE__   static inline
 
+#ifndef  likely
 #define likely(x)           __builtin_expect(!!(x), 1)
+#endif
+#ifndef likely
 #define unlikely(x)         __builtin_expect(!!(x), 0)
+#endif
 #define __UNUSED__          __attribute__((__unused__))
 #define __USED__            __attribute__((__used__))
 #define __PACKED__          __attribute__((packed))

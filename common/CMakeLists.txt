@@ -10,6 +10,7 @@ list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}/misc"
 "${CMAKE_CURRENT_SOURCE_DIR}/list"
 "${CMAKE_CURRENT_SOURCE_DIR}/device"
+"${CMAKE_CURRENT_SOURCE_DIR}/partition"
 )
 #######################################################
 
