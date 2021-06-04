@@ -153,7 +153,7 @@
 		<buildTargets>
 			<target name="bl_make" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make</buildCommand>
-				<buildArguments>BOARD=bl706_iot</buildArguments>
+				<buildArguments>build BOARD=bl706_iot</buildArguments>
 				<buildTarget>APP=helloworld</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -161,6 +161,7 @@
 			</target>
 			<target name="bl_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make</buildCommand>
+				<buildArguments/>
 				<buildTarget>clean</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>

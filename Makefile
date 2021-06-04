@@ -1,20 +1,30 @@
 BOARD?=bl706_iot
-APP?=helloworld
 CHIP?=bl702
-INTERFACE?=jlink
-BAUDRATE ?=12000
+APP_DIR?=examples
+APP?=helloworld
+CPU_ID?=m0
 
 SUPPORT_SHELL?=n
 SUPPORT_FREERTOS?=n
 SUPPORT_LVGL?=n
 SUPPORT_FLOAT?=n
+SUPPORT_BLE?=n
+SUPPORT_XZ?=n
+
+INTERFACE?=jlink
+BAUDRATE ?=12000
 
 export BOARD
+export CHIP
+export APP_DIR
 export APP
+export CPU_ID
 export SUPPORT_SHELL
 export SUPPORT_FREERTOS
 export SUPPORT_LVGL
 export SUPPORT_FLOAT
+export SUPPORT_BLE
+export SUPPORT_XZ
 
 # The command to remove a file.
 RM = cmake -E rm -rf

@@ -2,6 +2,7 @@ out/*
 build/*
 .vscode/settings.json
 .settings
+*.pyc
 
 **/.cdk
 **/Lst
@@ -9,7 +10,6 @@ build/*
 
 examples/**/*.mk
 examples/**/*.cdkws
-!examples/bl_mcu_sdk.cdkws
 examples/**/*.mk
 examples/**/*.bat
 examples/**/cdk/*.txt

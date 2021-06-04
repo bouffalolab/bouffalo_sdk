@@ -1,17 +1,21 @@
 function(generate_library)
     get_filename_component(library_name ${CMAKE_CURRENT_LIST_DIR} NAME)
-    message(STATUS "[register library component: ${library_name} ], path:${CMAKE_CURRENT_LIST_DIR}")
+    message(STATUS "[register library component: ${library_name}], path:${CMAKE_CURRENT_LIST_DIR}")
 
     # Add src to lib
     if(ADD_SRCS)
         add_library(${library_name} STATIC ${ADD_SRCS})
         set(include_type PUBLIC)
-    else()
-        add_library(${library_name} INTERFACE)
-        set(include_type INTERFACE)
+
+        foreach(f ${ADD_SRCS})
+            if(${f} MATCHES ".S|.s")
+            set_property(SOURCE ${f} PROPERTY LANGUAGE C)
+            endif()
+        endforeach()
     endif()
 
-    # Add include
+    # Add global config include
+    if(ADD_INCLUDE)
     foreach(include_dir ${ADD_INCLUDE})
         get_filename_component(abs_dir ${include_dir} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_LIST_DIR})
         if(NOT IS_DIRECTORY ${abs_dir})
@@ -19,78 +23,73 @@ function(generate_library)
         endif()
         target_include_directories(${library_name} ${include_type} ${abs_dir})
     endforeach()
+    endif()
 
     # Add private include
+    if(ADD_PRIVATE_INCLUDE)
     foreach(include_dir ${ADD_PRIVATE_INCLUDE})
-        if(${include_type} STREQUAL INTERFACE)
-            message(FATAL_ERROR "${CMAKE_CURRENT_LIST_FILE}: ADD_PRIVATE_INCLUDE set but no source file！")
-        endif()
         get_filename_component(abs_dir ${include_dir} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_LIST_DIR})
         if(NOT IS_DIRECTORY ${abs_dir})
             message(FATAL_ERROR "${CMAKE_CURRENT_LIST_FILE}: ${include_dir} not found!")
         endif()
         target_include_directories(${library_name} PRIVATE ${abs_dir})
     endforeach()
-
-    # Add global config include
-    target_include_directories(${library_name} PUBLIC ${global_config_dir})
-
-    # Add requirements
-    target_link_libraries(${library_name} ${ADD_REQUIREMENTS})
+    endif()
 
     # Add definitions public
-    foreach(difinition ${ADD_DEFINITIONS})
-        target_compile_options(${library_name} PUBLIC ${difinition})
-    endforeach()
+    if(ADD_DEFINITIONS)
+    target_compile_options(${library_name} PUBLIC ${ADD_DEFINITIONS})
+    endif()
 
     # Add definitions private
-    foreach(difinition ${ADD_DEFINITIONS_PRIVATE})
-        target_compile_options(${library_name} PRIVATE ${difinition})
-    endforeach()
+    if(ADD_DEFINITIONS_PRIVATE)
+        target_compile_options(${library_name} PRIVATE ${ADD_DEFINITIONS_PRIVATE})
+    endif()
+
+    # Add requirements
+    if(ADD_REQUIREMENTS)
+        foreach(lib ${ADD_REQUIREMENTS})
+            if(TARGET ${lib})
+            add_dependencies(${library_name} ${lib})
+            target_link_libraries(${library_name} ${lib})
+            else()
+            message(FATAL_ERROR "${lib} is not a target")            
+            endif()
+        endforeach()
+    endif()
 
     # Add static lib
     if(ADD_STATIC_LIB)
         foreach(lib ${ADD_STATIC_LIB})
             if(NOT EXISTS "${lib}")
-                prepend(lib_full "${CMAKE_CURRENT_LIST_DIR}/" ${lib})
-                if(NOT EXISTS "${lib_full}")
-                    message(FATAL_ERROR "Can not find ${lib} or ${lib_full}")
-                endif()
-                set(lib ${lib_full})
+                message(FATAL_ERROR "Can not find ${lib}")
             endif()
-            target_link_libraries(${library_name} ${lib})
+            get_filename_component(static_lib_relative_dir ${lib} DIRECTORY)
+            get_filename_component(static_lib_name ${lib} NAME)
+            target_link_directories(${library_name} PUBLIC ${static_lib_relative_dir})
+            target_link_libraries(${library_name} ${static_lib_name})
         endforeach()
     endif()
+
     # Add dynamic lib
     if(ADD_DYNAMIC_LIB)
-        set(dynamic_libs ${g_dynamic_libs})
         foreach(lib ${ADD_DYNAMIC_LIB})
             if(NOT EXISTS "${lib}")
-                prepend(lib_full "${CMAKE_CURRENT_LIST_DIR}/" ${lib})
-                if(NOT EXISTS "${lib_full}")
-                    message(FATAL_ERROR "Can not find ${lib} or ${lib_full}")
-                endif()
-                set(lib ${lib_full})
+                message(FATAL_ERROR "Can not find ${lib}")
             endif()
-            list(APPEND dynamic_libs ${lib})
-            get_filename_component(lib_dir ${lib} DIRECTORY)
-            get_filename_component(lib_name ${lib} NAME)
-            target_link_libraries(${library_name} -L${lib_dir} ${lib_name})
+            get_filename_component(dynamic_lib_relative_dir ${lib} DIRECTORY)
+            get_filename_component(dynamic_lib_name ${lib} NAME)
+            target_link_directories(${library_name} PUBLIC ${dynamic_lib_relative_dir})
+            target_link_libraries(${library_name} ${dynamic_lib_name})
         endforeach()
-        set(g_dynamic_libs ${dynamic_libs}  CACHE INTERNAL "g_dynamic_libs")
     endif()
 endfunction()
 
 function(generate_bin)
 
     get_filename_component(current_relative_dir_name ${CMAKE_CURRENT_LIST_DIR} NAME)
-
-    #上面写法等价于string(REGEX REPLACE ".*/(.*)" "\\1" current_relative_dir_name ${CMAKE_CURRENT_LIST_DIR})
     string(REGEX REPLACE "(.*)/${current_relative_dir_name}$" "\\1" above_absolute_dir ${CMAKE_CURRENT_LIST_DIR})
-    
     get_filename_component(above_relative_dir_name ${above_absolute_dir} NAME)
-
-    set(platform ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/bflb_platform.c)
 
     foreach(mainfile IN LISTS mains)
     # Get file name without directory
@@ -101,31 +100,39 @@ function(generate_bin)
         set(target_name firmware)
     else()
         if(${above_relative_dir_name} STREQUAL "examples")
-            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${current_relative_dir_name})
+            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${current_relative_dir_name})
             set(target_name ${current_relative_dir_name}_${mainname})
         else()
-            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${above_relative_dir_name}/${current_relative_dir_name})
+            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${above_relative_dir_name}/${current_relative_dir_name})
             set(target_name ${current_relative_dir_name}_${mainname})
         endif()
 
     endif()
 	
 	file(MAKE_DIRECTORY ${OUTPUT_DIR})    
-	set(HEX_FILE ${OUTPUT_DIR}/main.hex)
-    set(BIN_FILE ${OUTPUT_DIR}/main.bin)
-    set(MAP_FILE ${OUTPUT_DIR}/main.map)
-    set(ASM_FILE ${OUTPUT_DIR}/main.asm)
+	set(HEX_FILE ${OUTPUT_DIR}/${target_name}.hex)
+    set(BIN_FILE ${OUTPUT_DIR}/${target_name}.bin)
+    set(MAP_FILE ${OUTPUT_DIR}/${target_name}.map)
+    set(ASM_FILE ${OUTPUT_DIR}/${target_name}.asm)
 
     if(TARGET_REQUIRED_SRCS)
-        list(APPEND SRCS ${TARGET_REQUIRED_SRCS})
+        foreach(src ${TARGET_REQUIRED_SRCS})
+            if((NOT EXISTS ${src}) AND (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${src}))
+            message(FATAL_ERROR "${src} not exist,maybe you should autocomplete your path\r\n")
+            endif()
+            list(APPEND SRCS ${src})
+        endforeach()
+        
     endif()
 
+    list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/bflb_platform.c)
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/board/${BOARD}/board.c)
 
-    add_executable(${target_name}.elf ${mainfile} ${SRCS} ${platform})
+    add_executable(${target_name}.elf ${mainfile} ${SRCS})
 
-    set_target_properties(${target_name}.elf PROPERTIES LINK_FLAGS "-T${LINKER_SCRIPT}")
+    set_target_properties(${target_name}.elf PROPERTIES LINK_FLAGS "-T${LINKER_SCRIPT} -Wl,-Map=${MAP_FILE}")
     set_target_properties(${target_name}.elf PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
+
     set_target_properties(${target_name}.elf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OUTPUT_DIR}")
 
     # Add private include
@@ -138,11 +145,13 @@ function(generate_bin)
     endforeach()
 
     # Add definitions private
-    foreach(difinition ${TARGET_REQUIRED_PRIVATE_OPTIONS})
-        target_compile_options(${target_name}.elf PRIVATE ${difinition})
-    endforeach()   
+    if(TARGET_REQUIRED_PRIVATE_OPTIONS)   
+    target_compile_options(${target_name}.elf PRIVATE ${TARGET_REQUIRED_PRIVATE_OPTIONS})        
+    endif()
+
+    add_dependencies(${target_name}.elf ${CHIP}_driver)
     # Add libs
-    target_link_libraries(${target_name}.elf ${mcu}_driver)
+    target_link_libraries(${target_name}.elf ${CHIP}_driver)
 
     if(${SUPPORT_SHELL} STREQUAL "y")
     target_link_libraries(${target_name}.elf shell)
@@ -154,8 +163,8 @@ function(generate_bin)
         target_link_libraries(${target_name}.elf ${TARGET_REQUIRED_LIBS})       
     endif()
     
-    target_link_libraries(${target_name}.elf "-Wl,-Map=${MAP_FILE}")
-
+    target_link_libraries(${target_name}.elf m)
+    
     add_custom_command(TARGET ${target_name}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${target_name}.elf> ${BIN_FILE}
         COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${target_name}.elf> >${ASM_FILE}
@@ -176,11 +185,11 @@ if(DEFINED APP)
     get_filename_component(app_relative_dir ${cmakelists_file} DIRECTORY)
     get_filename_component(app_name ${app_relative_dir} NAME)
         if(${APP} STREQUAL "all")
-            message("[run app:${app_name}],path:${app_relative_dir}")
+            message(STATUS "[run app:${app_name}], path:${app_relative_dir}")
             add_subdirectory(${app_relative_dir})
             set(app_find_ok 1)
         elseif(${app_name} MATCHES "^${APP}")
-            message("[run app:${app_name}],path:${app_relative_dir}")
+            message(STATUS "[run app:${app_name}], path:${app_relative_dir}")
             add_subdirectory(${app_relative_dir})
             set(app_find_ok 1)
         endif()
