@@ -70,7 +70,7 @@
 
 #define BCD(x) ((((x) / 10) << 4) | ((x) % 10))
 
-#define BIT(n)  (1UL << (n))
+#define BIT(x) (1<<(x))
 
 #define ARRAY_SIZE(array) \
 	((int)((sizeof(array) / sizeof((array)[0]))))

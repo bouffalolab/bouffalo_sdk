@@ -6,6 +6,7 @@ list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}/class/hid" 
 "${CMAKE_CURRENT_SOURCE_DIR}/class/msc" 
 "${CMAKE_CURRENT_SOURCE_DIR}/class/video"
+"${CMAKE_CURRENT_SOURCE_DIR}/class/audio"
 #"${CMAKE_CURRENT_SOURCE_DIR}/class/vendor" 
 "${CMAKE_CURRENT_SOURCE_DIR}/class/winusb"
 )

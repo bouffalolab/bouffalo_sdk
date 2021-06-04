@@ -13,9 +13,9 @@ extern "C" {
 #endif
 
 /* HID Class Descriptor Types */
-#define USB_DESCRIPTOR_TYPE_HID		 		0x21
-#define USB_DESCRIPTOR_TYPE_HID_REPORT	 	0x22
-#define USB_DESCRIPTOR_TYPE_HID_PHYSICAL 	0x23
+#define HID_DESCRIPTOR_TYPE_HID		 		0x21
+#define HID_DESCRIPTOR_TYPE_HID_REPORT	 	0x22
+#define HID_DESCRIPTOR_TYPE_HID_PHYSICAL 	0x23
 
 /* HID Class Specific Requests */
 #define HID_REQUEST_GET_REPORT		0x01
@@ -393,4 +393,9 @@ enum hid_kbd_led {
 }
 #endif
 
+void usbd_hid_descriptor_register(const uint8_t* desc);
+void usbd_hid_report_descriptor_register(const uint8_t* desc, uint32_t desc_len);
+void usbd_hid_add_interface(usbd_class_t *class, usbd_interface_t *intf);
+void usbd_hid_reset_state(void);
+void usbd_hid_send_report(uint8_t ep, uint8_t* data, uint8_t len);
 #endif /* _USB_HID_H_ */

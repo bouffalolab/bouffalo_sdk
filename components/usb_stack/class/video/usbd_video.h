@@ -816,8 +816,9 @@ struct video_still_probe_and_commit_controls
                                           receive in a single payload transfer.*/
 } __packed;
 
-void usbd_video_isoch_in(uint8_t ep);
-void usbd_video_class_init(const char *name,uint8_t in_ep);
+void usbd_video_sof_callback(void);
+void usbd_video_set_interface_callback(uint8_t value);
+void usbd_video_add_interface(usbd_class_t *class, usbd_interface_t *intf);
 #ifdef __cplusplus
 }
 #endif

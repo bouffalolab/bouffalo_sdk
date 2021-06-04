@@ -20,72 +20,116 @@ extern "C" {
 /** Audio Interface Subclass Codes
  * Refer to Table A-2 from audio10.pdf
  */
-enum usb_audio_int_subclass_codes {
-	USB_AUDIO_SUBCLASS_UNDEFINED	= 0x00,
-	USB_AUDIO_AUDIOCONTROL		= 0x01,
-	USB_AUDIO_AUDIOSTREAMING	= 0x02,
-	USB_AUDIO_MIDISTREAMING		= 0x03
-};
+#define AUDIO_SUBCLASS_UNDEFINED 		0x00
+#define AUDIO_SUBCLASS_AUDIOCONTROL 	0x01
+#define AUDIO_SUBCLASS_AUDIOSTREAMING 	0x02
+#define AUDIO_SUBCLASS_MIDISTREAMING 	0x03
 
-/** Audio Class-Specific AC Interface Descriptor Subtypes
+#define AUDIO_PROTOCOL_UNDEFINED        0x00U
+
+#define AUDIO_ENDPOINT_GENERAL          0x01U
+
+/** Audio Class-Specific Control Interface Descriptor Subtypes
  * Refer to Table A-5 from audio10.pdf
  */
-enum usb_audio_cs_ac_int_desc_subtypes {
-	USB_AUDIO_AC_DESCRIPTOR_UNDEFINED	= 0x00,
-	USB_AUDIO_HEADER			= 0x01,
-	USB_AUDIO_INPUT_TERMINAL		= 0x02,
-	USB_AUDIO_OUTPUT_TERMINAL		= 0x03,
-	USB_AUDIO_MIXER_UNIT			= 0x04,
-	USB_AUDIO_SELECTOR_UNIT			= 0x05,
-	USB_AUDIO_FEATURE_UNIT			= 0x06,
-	USB_AUDIO_PROCESSING_UNIT		= 0x07,
-	USB_AUDIO_EXTENSION_UNIT		= 0x08
-};
+#define AUDIO_CONTROL_UNDEFINED                     0x01U
+#define AUDIO_CONTROL_HEADER                        0x01U
+#define AUDIO_CONTROL_INPUT_TERMINAL                0x02U
+#define AUDIO_CONTROL_OUTPUT_TERMINAL               0x03U
+#define AUDIO_CONTROL_MIXER_UNIT                 	0x04U
+#define AUDIO_CONTROL_SELECTOR_UNIT                 0x05U
+#define AUDIO_CONTROL_FEATURE_UNIT                  0x06U
+#define AUDIO_CONTROL_PROCESSING_UNIT               0x07U
+#define AUDIO_CONTROL_EXTENSION_UNIT                0x08U
 
 /** Audio Class-Specific AS Interface Descriptor Subtypes
  * Refer to Table A-6 from audio10.pdf
  */
-enum usb_audio_cs_as_int_desc_subtypes {
-	USB_AUDIO_AS_DESCRIPTOR_UNDEFINED	= 0x00,
-	USB_AUDIO_AS_GENERAL			= 0x01,
-	USB_AUDIO_FORMAT_TYPE			= 0x02,
-	USB_AUDIO_FORMAT_SPECIFIC		= 0x03
-};
+#define AUDIO_STREAMING_UNDEFINED                    0x00U
+#define AUDIO_STREAMING_GENERAL                      0x01U
+#define AUDIO_STREAMING_FORMAT_TYPE                  0x02U
+#define AUDIO_STREAMING_FORMAT_SPECIFIC              0x03U
 
 /** Audio Class-Specific Request Codes
  * Refer to Table A-9 from audio10.pdf
  */
-enum usb_audio_cs_req_codes {
-	USB_AUDIO_REQUEST_CODE_UNDEFINED	= 0x00,
-	USB_AUDIO_SET_CUR			= 0x01,
-	USB_AUDIO_GET_CUR			= 0x81,
-	USB_AUDIO_SET_MIN			= 0x02,
-	USB_AUDIO_GET_MIN			= 0x82,
-	USB_AUDIO_SET_MAX			= 0x03,
-	USB_AUDIO_GET_MAX			= 0x83,
-	USB_AUDIO_SET_RES			= 0x04,
-	USB_AUDIO_GET_RES			= 0x84,
-	USB_AUDIO_SET_MEM			= 0x05,
-	USB_AUDIO_GET_MEM			= 0x85,
-	USB_AUDIO_GET_STAT			= 0xFF
-};
+#define AUDIO_REQUEST_UNDEFINED                     0x00
+#define AUDIO_REQUEST_SET_CUR                       0x01
+#define AUDIO_REQUEST_GET_CUR                       0x81
+#define AUDIO_REQUEST_SET_MIN                       0x02
+#define AUDIO_REQUEST_GET_MIN                       0x82
+#define AUDIO_REQUEST_SET_MAX                       0x03
+#define AUDIO_REQUEST_GET_MAX                       0x83
+#define AUDIO_REQUEST_SET_RES                       0x04
+#define AUDIO_REQUEST_GET_RES                       0x84
+#define AUDIO_REQUEST_SET_MEM                       0x05
+#define AUDIO_REQUEST_GET_MEM                       0x85
+#define AUDIO_REQUEST_GET_STAT                      0xFF
+
+/* Feature Unit Control Bits */
+#define AUDIO_CONTROL_MUTE                      0x0001
+#define AUDIO_CONTROL_VOLUME                    0x0002
+#define AUDIO_CONTROL_BASS                      0x0004
+#define AUDIO_CONTROL_MID                       0x0008
+#define AUDIO_CONTROL_TREBLE                    0x0010
+#define AUDIO_CONTROL_GRAPHIC_EQUALIZER         0x0020
+#define AUDIO_CONTROL_AUTOMATIC_GAIN            0x0040
+#define AUDIO_CONTROL_DEALY                     0x0080
+#define AUDIO_CONTROL_BASS_BOOST                0x0100
+#define AUDIO_CONTROL_LOUDNESS                  0x0200
+
 
 /** Feature Unit Control Selectors
  * Refer to Table A-11 from audio10.pdf
  */
-enum usb_audio_fucs {
-	USB_AUDIO_FU_CONTROL_UNDEFINED		= 0x00,
-	USB_AUDIO_FU_MUTE_CONTROL		= 0x01,
-	USB_AUDIO_FU_VOLUME_CONTROL		= 0x02,
-	USB_AUDIO_FU_BASS_CONTROL		= 0x03,
-	USB_AUDIO_FU_MID_CONTROL		= 0x04,
-	USB_AUDIO_FU_TREBLE_CONTROL		= 0x05,
-	USB_AUDIO_FU_GRAPHIC_EQUALIZER_CONTROL	= 0x06,
-	USB_AUDIO_FU_AUTOMATIC_GAIN_CONTROL	= 0x07,
-	USB_AUDIO_FU_DELAY_CONTROL		= 0x08,
-	USB_AUDIO_FU_BASS_BOOST_CONTROL		= 0x09,
-	USB_AUDIO_FU_LOUDNESS_CONTROL		= 0x0A
-};
+#define AUDIO_FU_CONTROL_MUTE                      0x01
+#define AUDIO_FU_CONTROL_VOLUME                    0x02
+#define AUDIO_FU_CONTROL_BASS                      0x03
+#define AUDIO_FU_CONTROL_MID                       0x04
+#define AUDIO_FU_CONTROL_TREBLE                    0x05
+#define AUDIO_FU_CONTROL_GRAPHIC_EQUALIZER         0x06
+#define AUDIO_FU_CONTROL_AUTOMATIC_GAIN            0x07
+#define AUDIO_FU_CONTROL_DELAY                     0x08
+#define AUDIO_FU_CONTROL_BASS_BOOST                0x09
+#define AUDIO_FU_CONTROL_LOUDNESS                  0x0A
+
+
+/* Audio Descriptor Types */
+#define AUDIO_UNDEFINED_DESCRIPTOR_TYPE         0x20
+#define AUDIO_DEVICE_DESCRIPTOR_TYPE            0x21
+#define AUDIO_CONFIGURATION_DESCRIPTOR_TYPE     0x22
+#define AUDIO_STRING_DESCRIPTOR_TYPE            0x23
+#define AUDIO_INTERFACE_DESCRIPTOR_TYPE         0x24
+#define AUDIO_ENDPOINT_DESCRIPTOR_TYPE          0x25
+
+
+/* Audio Data Format Type I Codes */
+#define AUDIO_FORMAT_TYPE_I_UNDEFINED           0x0000
+#define AUDIO_FORMAT_PCM                        0x0001
+#define AUDIO_FORMAT_PCM8                       0x0002
+#define AUDIO_FORMAT_IEEE_FLOAT                 0x0003
+#define AUDIO_FORMAT_ALAW                       0x0004
+#define AUDIO_FORMAT_MULAW                      0x0005
+
+/* Predefined Audio Channel Configuration Bits */
+#define AUDIO_CHANNEL_M                         0x0000  /* Mono */
+#define AUDIO_CHANNEL_L                         0x0001  /* Left Front */
+#define AUDIO_CHANNEL_R                         0x0002  /* Right Front */
+#define AUDIO_CHANNEL_C                         0x0004  /* Center Front */
+#define AUDIO_CHANNEL_LFE                       0x0008  /* Low Freq. Enhance. */
+#define AUDIO_CHANNEL_LS                        0x0010  /* Left Surround */
+#define AUDIO_CHANNEL_RS                        0x0020  /* Right Surround */
+#define AUDIO_CHANNEL_LC                        0x0040  /* Left of Center */
+#define AUDIO_CHANNEL_RC                        0x0080  /* Right of Center */
+#define AUDIO_CHANNEL_S                         0x0100  /* Surround */
+#define AUDIO_CHANNEL_SL                        0x0200  /* Side Left */
+#define AUDIO_CHANNEL_SR                        0x0400  /* Side Right */
+#define AUDIO_CHANNEL_T                         0x0800  /* Top */
+
+#define AUDIO_FORMAT_TYPE_I                     0x01
+#define AUDIO_FORMAT_TYPE_II                    0x02
+#define AUDIO_FORMAT_TYPE_III                   0x03
+
 
 /** USB Terminal Types
  * Refer to Table 2-1 - Table 2-4 from termt10.pdf
@@ -122,21 +166,6 @@ enum usb_audio_terminal_types {
 	USB_AUDIO_IO_SPEAKERPHONE_ECHO_NONE	= 0x0403,
 	USB_AUDIO_IO_SPEAKERPHONE_ECHO_SUP	= 0x0404,
 	USB_AUDIO_IO_SPEAKERPHONE_ECHO_CAN	= 0x0405,
-};
-
-enum usb_audio_direction {
-	USB_AUDIO_IN = 0x00,
-	USB_AUDIO_OUT = 0x01
-};
-
-/**
- * Addressable logical object inside an audio function.
- * Entity is one of: Terminal or Unit.
- * Refer to 1.4 Terms and Abbreviations from audio10.pdf
- */
-struct usb_audio_entity {
-	enum usb_audio_cs_ac_int_desc_subtypes subtype;
-	uint8_t id;
 };
 
 /**
@@ -233,8 +262,20 @@ struct cs_as_ad_ep_descriptor {
 	uint8_t bLockDelayUnits;
 	uint16_t wLockDelay;
 } __packed;
+
+struct usbd_audio_control_info
+{
+	uint16_t vol_min;
+	uint16_t vol_max;
+	uint16_t vol_res;
+	uint16_t vol_current;
+	uint8_t mute;
+};
+
 #ifdef __cplusplus
 }
 #endif
 
+void usbd_audio_add_interface(usbd_class_t *class, usbd_interface_t *intf);
+void usbd_audio_set_interface_callback(uint8_t value);
 #endif /* _USB_AUDIO_H_ */

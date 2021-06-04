@@ -23,8 +23,8 @@
 #include "usbd_core.h"
 #include "usbd_cdc.h"
 
-static const char *stop_name[] = {"1", "1.5", "2"};
-static const char *parity_name[] = {"N","O","E","M","S"};
+const char *stop_name[] = {"1", "1.5", "2"};
+const char *parity_name[] = {"N","O","E","M","S"};
 
 /* Device data structure */
 struct cdc_acm_cfg_private {
@@ -40,8 +40,10 @@ struct cdc_acm_cfg_private {
 	bool configured;
 	/* CDC ACM suspended flag */
 	bool suspended;
+	uint32_t uart_first_init_flag;
 
 } usbd_cdc_acm_cfg;
+
 
 static void usbd_cdc_acm_reset(void)
 {
@@ -50,6 +52,7 @@ static void usbd_cdc_acm_reset(void)
 	usbd_cdc_acm_cfg.line_coding.bParityType = 0;
 	usbd_cdc_acm_cfg.line_coding.bCharFormat = 0;
 	usbd_cdc_acm_cfg.configured = false;
+	usbd_cdc_acm_cfg.uart_first_init_flag = 0;
 }
 
 /**
@@ -83,8 +86,14 @@ static int cdc_acm_class_request_handler(struct usb_setup_packet *pSetup,uint8_t
         /*                                        4 - Space                            */
         /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
         /*******************************************************************************/	
+		if(usbd_cdc_acm_cfg.uart_first_init_flag == 0)
+		{
+			usbd_cdc_acm_cfg.uart_first_init_flag = 1;
+			return 0;
+		}
+		
 		memcpy(&usbd_cdc_acm_cfg.line_coding,*data, sizeof(usbd_cdc_acm_cfg.line_coding));
-		USBD_LOG("CDC_SET_LINE_CODING <%d %d %s %s>\r\n",
+		USBD_LOG_DBG("CDC_SET_LINE_CODING <%d %d %s %s>\r\n",
 			usbd_cdc_acm_cfg.line_coding.dwDTERate,
 			usbd_cdc_acm_cfg.line_coding.bDataBits,
 			parity_name[usbd_cdc_acm_cfg.line_coding.bParityType],
@@ -98,7 +107,7 @@ static int cdc_acm_class_request_handler(struct usb_setup_packet *pSetup,uint8_t
 		usbd_cdc_acm_cfg.line_state = (uint8_t)pSetup->wValue;
 		bool dtr = (pSetup->wValue & 0x01);
 		bool rts = (pSetup->wValue & 0x02);
-		USBD_LOG("DTR 0x%x,RTS 0x%x\r\n",
+		USBD_LOG_DBG("DTR 0x%x,RTS 0x%x\r\n",
 		 	dtr,rts);
 		usbd_cdc_acm_set_dtr(dtr);
 		usbd_cdc_acm_set_rts(rts);

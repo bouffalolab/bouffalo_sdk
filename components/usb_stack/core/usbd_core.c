@@ -78,7 +78,7 @@ static struct usbd_core_cfg_priv
 static usb_slist_t usbd_class_head= USB_SLIST_OBJECT_INIT(usbd_class_head);
 static struct usb_msosv1_descriptor *msosv1_desc;
 static struct usb_bos_descriptor *bos_desc;
-static volatile uint32_t sof_tick = 0;
+
 /**
  * @brief print the contents of a setup packet
  *
@@ -962,7 +962,7 @@ static void usbd_send_to_host(uint16_t len)
 		if ((!usbd_core_cfg.ep0_data_buf_residue) && !(usbd_core_cfg.ep0_data_buf_len % USB_CTRL_EP_MPS)) 
 		{
 				/* Transfers a zero-length packet */
-				// LOG_DBG("ZLP, requested %u , length %u ",
+				// USBD_LOG("ZLP, requested %u , length %u ",
 				// 	len, usb_dev.ep0_data_buf_len);
 				usbd_core_cfg.zlp_flag = true;
 		}
@@ -1010,7 +1010,7 @@ static void usbd_ep0_setup_handler(void)
 	if (setup->wLength &&
 		setup->bmRequestType_b.Dir == USB_REQUEST_HOST_TO_DEVICE)
 	{
-		USBD_LOG_DBG("D\r\n");
+		USBD_LOG_DBG("prepare to out data\r\n");
 		/*set ep ack to recv next data*/
 		usbd_ep_read(USB_CONTROL_OUT_EP0,NULL,0,NULL);
 		return;
@@ -1036,23 +1036,23 @@ static void usbd_ep0_out_handler(void)
 	uint32_t chunk = 0U;
 	struct usb_setup_packet *setup = &usbd_core_cfg.setup;
 
-	/* OUT transfer, data or status packets */
-	if (usbd_core_cfg.ep0_data_buf_residue <= 0)
+	/* OUT transfer, status packets */
+	if (usbd_core_cfg.ep0_data_buf_residue == 0)
 	{
 		/* absorb zero-length status message */
-		USBD_LOG_DBG("Z\r\n");
+		USBD_LOG_DBG("recv status\r\n");
 		if (usbd_ep_read(USB_CONTROL_OUT_EP0,
-						    usbd_core_cfg.ep0_data_buf,
-						    0, &chunk) < 0)
+						    NULL,
+						    0, NULL) < 0)
 		{
 			USBD_LOG_ERR("Read DATA Packet failed\r\n");
 			usbd_ep_set_stall(USB_CONTROL_IN_EP0);
-			return;
 		}
+		return;
 	}
-
 	usbd_core_cfg.ep0_data_buf = usbd_core_cfg.req_data;
-	/* OUT transfer, data or status packets */
+	
+	/* OUT transfer, data packets */
 	if (usbd_ep_read(USB_CONTROL_OUT_EP0,
 						usbd_core_cfg.ep0_data_buf,
 						usbd_core_cfg.ep0_data_buf_residue, &chunk) < 0)
@@ -1064,7 +1064,7 @@ static void usbd_ep0_out_handler(void)
 
 	usbd_core_cfg.ep0_data_buf += chunk;
 	usbd_core_cfg.ep0_data_buf_residue -= chunk;
-
+	
 	if (usbd_core_cfg.ep0_data_buf_residue == 0) 
 	{
 		/* Received all, send data to handler */
@@ -1166,16 +1166,13 @@ void usbd_event_notify_handler(uint8_t event, void* arg)
 {
 	switch (event)
 	{
-		case USB_EVENT_SOF:
-			sof_tick++;
-			USBD_LOG_DBG("tick: %d\r\n", sof_tick);
-		break;
 		case USB_EVENT_RESET:
 			usbd_set_address(0);
 #if USBD_EP_CALLBACK_SEARCH_METHOD == 1
 			usbd_ep_callback_register();
 #endif
 		case USB_EVENT_ERROR:
+		case USB_EVENT_SOF:
 		case USB_EVENT_CONNECTED:
 		case USB_EVENT_CONFIGURED:
 		case USB_EVENT_SUSPEND:
@@ -1242,9 +1239,4 @@ void usbd_interface_add_endpoint(usbd_interface_t *intf,usbd_endpoint_t *ep)
 bool usb_device_is_configured(void)
 {
 	return usbd_core_cfg.configured;
-}
-
-uint32_t usbd_get_sof_tick(void)
-{
-	return sof_tick;
 }

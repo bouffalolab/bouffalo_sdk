@@ -131,10 +131,6 @@ void usbd_msosv1_desc_register(struct usb_msosv1_descriptor *desc);
 void usbd_class_add_interface(usbd_class_t *class,usbd_interface_t *intf);
 void usbd_interface_add_endpoint(usbd_interface_t *intf,usbd_endpoint_t *ep);
 bool usb_device_is_configured(void);
-uint32_t usbd_get_sof_tick(void);
-/**
- * @}
- */
 
 #ifdef __cplusplus
 }
