@@ -1,5 +1,5 @@
 /**
- * @file xip2046.h
+ * @file touch.h
  * @brief 
  * 
  * Copyright (c) 2021 Bouffalolab team
@@ -20,31 +20,19 @@
  * under the License.
  * 
  */
-#ifndef _XPT2046_H_
-#define _XPT2046_H_
 
-#include "bflb_platform.h"
+#ifndef _TOUCH_H_
+#define _TOUCH_H_
 
-#define TOUCH_PIN_CS  GPIO_PIN_11
-//#define TOUCH_PIN_PEN GPIO_PIN_11
+#define TOUCH_CONTROLLER_XPT2046
 
-#define XPT2046_TOUCH_THRESHOLD 500 // Threshold for touch detection
 
-#define XPT2046_AVG_NUM 5
+#ifdef  TOUCH_CONTROLLER_XPT2046
+  #include "xpt2046.h"
+#endif
 
-#define TOUCH_ROT_NONE  0
-#define TOUCH_ROT_90    1
-#define TOUCH_ROT_180   2
-#define TOUCH_ROT_270   3
 
-#define XPT2046_X_MIN           310
-#define XPT2046_Y_MIN           175
-#define XPT2046_X_MAX           3850
-#define XPT2046_Y_MAX           3700
-
-extern struct device* touch_spi;
-
-void xpt2046_init(void);
-uint8_t xpt2046_read(int16_t * x, int16_t * y);
+void touch_init(void);
+uint8_t touch_read(int16_t * x, int16_t * y);
 
 #endif

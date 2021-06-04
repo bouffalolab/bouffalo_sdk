@@ -79,6 +79,7 @@ int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
 }
 int usbd_ep_close(const uint8_t ep)
 {
+    device_control(usb,DEVICE_CTRL_USB_DC_SET_NACK,(void*)(uint32_t)ep);
     return 0;
 }
 int usbd_ep_set_stall(const uint8_t ep)

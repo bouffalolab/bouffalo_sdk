@@ -35,7 +35,7 @@ static uint8_t uart_dbg_disable=0;
 Shell shell;
 char shellBuffer[512];
 
-void uart0_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
+void uart_iqr_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
     uint8_t data;
 
@@ -70,7 +70,7 @@ void shell_init(void)
 
 #else
 
-void uart0_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
+void uart_iqr_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
     if (state == UART_EVENT_RX_FIFO)
     {
@@ -88,22 +88,25 @@ __WEAK__ void bl_show_info(void)
 
 }
 
+__WEAK__ enum uart_index_type board_get_debug_uart_index(void)
+{
+    return 0;
+}
+
 void bflb_platform_init(uint32_t baudrate)
 {
     disable_irq();
 
     board_init();
 
-    mtimer_init();
-
     if(!uart_dbg_disable){
-        uart_register(UART0_INDEX, "debug_log", DEVICE_OFLAG_RDWR);
+        uart_register(board_get_debug_uart_index(), "debug_log", DEVICE_OFLAG_RDWR);
         struct device *uart = device_find("debug_log");
 
         if (uart)
         {
             device_open(uart, DEVICE_OFLAG_STREAM_TX | DEVICE_OFLAG_INT_RX);
-            device_set_callback(uart, uart0_irq_callback);
+            device_set_callback(uart, uart_iqr_callback);
             device_control(uart, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT));
         }
 
@@ -116,7 +119,7 @@ void bflb_platform_init(uint32_t baudrate)
 
     if (!mmheap_init_with_pool(&_HeapBase, (size_t)&_HeapSize))
     {
-        MSG("dynamic memory init success,heap size = 0x%x \r\n", &_HeapSize);
+        // MSG("dynamic memory init success,heap size = 0x%x \r\n", &_HeapSize);
     }
     else
     {
@@ -146,6 +149,11 @@ void bflb_platform_print_set(uint8_t disable)
     uart_dbg_disable=disable;
 }
 
+uint8_t bflb_platform_print_get(void)
+{
+    return uart_dbg_disable;
+}
+
 void bflb_platform_deinit(void)
 {
 
@@ -170,12 +178,12 @@ void bflb_platform_dump(uint8_t *data, uint32_t len)
 
 void bflb_platform_init_time()
 {
-   mtimer_init();
+   
 }
 
 void bflb_platform_deinit_time()
 {
-    mtimer_deinit();
+    
 }
 
 void bflb_platform_set_alarm_time(uint64_t time,void( *interruptFun )( void ))
@@ -185,17 +193,17 @@ void bflb_platform_set_alarm_time(uint64_t time,void( *interruptFun )( void ))
 
 void bflb_platform_clear_time()
 {
-    mtimer_clear_time();
+    
 }
 
 void bflb_platform_start_time()
 {
-    mtimer_start();
+   
 }
 
 void bflb_platform_stop_time()
 {
-    mtimer_stop();
+   
 }
 
 uint64_t  bflb_platform_get_time_ms()

@@ -111,6 +111,10 @@ void lv_port_disp_init(void)
     /*Set the resolution of the display*/
     Disp_Drv.hor_res = 240;
     Disp_Drv.ver_res = 320;
+    /* hardware rotation */
+    Disp_Drv.sw_rotate = 0;
+    /*  rotation */
+    Disp_Drv.rotated = LV_DISP_ROT_NONE;
 
     /*Used to copy the buffer's content to the display*/
     Disp_Drv.flush_cb = disp_flush;
@@ -163,15 +167,21 @@ void disp_init(void)
 static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
 {
     /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
-
+    static uint8_t rotated_dir = 0;
     uint32_t length = (area->y2 - area->y1 +1) * (area->x2 - area->x1 +1) ;
+
+    if(rotated_dir != disp_drv->rotated)
+    {
+        rotated_dir = disp_drv->rotated;
+        LCD_Set_Dir(rotated_dir);
+    }
 
     LCD_Set_Addr(area->x1,area->y1,area->x2,area->y2);
 
     device_control(lcd_spi,DEVICE_CTRL_TX_DMA_RESUME,NULL);
+    device_control(lcd_dma_tx, DEVICE_CTRL_SET_INT, NULL);
     CS1_LOW;
     DC_HIGH;
-    device_control(lcd_dma_tx, DEVICE_CTRL_SET_INT, NULL);
     dma_reload(lcd_dma_tx, (uint32_t)color_p, (uint32_t)DMA_ADDR_SPI_TDR, length*2);
     dma_channel_start(lcd_dma_tx);
 

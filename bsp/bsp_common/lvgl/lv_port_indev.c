@@ -10,11 +10,7 @@
  *      INCLUDES
  *********************/
 #include "lv_port_indev.h"
-#include "xpt2046.h"
 #include "bflb_platform.h"
-
-#include "bl702_glb.h"
-#include "bl702_spi.h"
 
 /*********************
  *      DEFINES
@@ -38,9 +34,9 @@ static lv_coord_t touchpad_get_xy(lv_coord_t * x, lv_coord_t * y);
 // static bool mouse_is_pressed(void);
 // static void mouse_get_xy(lv_coord_t * x, lv_coord_t * y);
 
-// static void keypad_init(void);
-// static bool keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
-// static uint32_t keypad_get_key(void);
+static void keypad_init(void);
+static bool keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+static uint32_t keypad_get_key(void);
 
 // static void encoder_init(void);
 // static bool encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
@@ -55,10 +51,10 @@ static lv_coord_t touchpad_get_xy(lv_coord_t * x, lv_coord_t * y);
  *  STATIC VARIABLES
  **********************/
 lv_indev_t * indev_touchpad;
-lv_indev_t * indev_mouse;
+//lv_indev_t * indev_mouse;
 lv_indev_t * indev_keypad;
-lv_indev_t * indev_encoder;
-lv_indev_t * indev_button;
+//lv_indev_t * indev_encoder;
+//lv_indev_t * indev_button;
 
 // static int32_t encoder_diff;
 // static lv_indev_state_t encoder_state;
@@ -122,13 +118,13 @@ void lv_port_indev_init(void)
      * -----------------*/
 
     /*Initialize your keypad or keyboard if you have*/
-    // keypad_init();
+    keypad_init();
 
     /*Register a keypad input device*/
-    // lv_indev_drv_init(&indev_drv);
-    // indev_drv.type = LV_INDEV_TYPE_KEYPAD;
-    // indev_drv.read_cb = keypad_read;
-    // indev_keypad = lv_indev_drv_register(&indev_drv);
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_KEYPAD;
+    indev_drv.read_cb = keypad_read;
+    indev_keypad = lv_indev_drv_register(&indev_drv);
 
     /* Later you should create group(s) with `lv_group_t * group = lv_group_create()`,
      * add objects to the group with `lv_group_add_obj(group, obj)`
@@ -181,6 +177,8 @@ void lv_port_indev_init(void)
 /*------------------
  * Touchpad
  * -----------------*/
+#include "touch.h"
+#include "hal_spi.h"
 
 /*Initialize your touchpad*/
 static void touchpad_init(void)
@@ -225,27 +223,14 @@ static lv_coord_t touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
 {
     /*Your code comes here*/
     lv_disp_t  *p_disp_drv_cb;
-    lv_disp_rot_t rotate;
     uint8_t res;
-    SPI_ClockCfg_Type clockCfg =
-    {
-        2,  /* Length of start condition */
-        2,  /* Length of stop condition */
-        2, /* Length of data phase 0,affecting clock */
-        2, /* Length of data phase 1,affecting clock */
-        2   /* Length of interval between frame */
-    };
 
     p_disp_drv_cb = lv_disp_get_default();
-    rotate = lv_disp_get_rotation(p_disp_drv_cb);
+
     while(p_disp_drv_cb->driver.buffer->flushing);
-    clockCfg.dataPhase0Len = 5;
-    clockCfg.dataPhase1Len = 5;
-    SPI_ClockConfig(SPI_ID_0, &clockCfg);
-    res = xpt2046_read((uint16_t*)x,(uint16_t*)y,rotate);
-    clockCfg.dataPhase0Len = 1;
-    clockCfg.dataPhase1Len = 1;
-    SPI_ClockConfig(SPI_ID_0, &clockCfg);
+    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void*)3600000);
+    res = touch_read(x,y);
+    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void*)36000000);
     return res;
 }
 
@@ -296,63 +281,130 @@ static lv_coord_t touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
 /*------------------
  * Keypad
  * -----------------*/
+#include "hal_adc.h"
+#include "hal_gpio.h"
+uint8_t PinList[] = {GPIO_PIN_18};
+adc_channel_t posChList[] = {ADC_CHANNEL8};
+adc_channel_t negChList[] = {ADC_CHANNEL_GND};
+
+adc_channel_val_t result_val;
+struct device* adc_key;
+
+uint16_t key_value[] = {283,89,198,0,406};
 
 /* Initialize your keypad */
-// static void keypad_init(void)
-// {
-//     /*Your code comes here*/
-// }
+static void keypad_init(void)
+{
+    /*Your code comes here*/
+    adc_channel_cfg_t adc_channel_cfg;
 
-/* Will be called by the library to read the mouse */
-// static bool keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
-// {
-//     static uint32_t last_key = 0;
+    adc_channel_cfg.pos_channel = posChList;
+    adc_channel_cfg.neg_channel = negChList;
+    adc_channel_cfg.num = 1;
 
-//     /*Get the current x and y coordinates*/
-//     mouse_get_xy(&data->point.x, &data->point.y);
+    adc_register(ADC0_INDEX, "adc_key", DEVICE_OFLAG_STREAM_RX);
 
-//     /*Get whether the a key is pressed and save the pressed key*/
-//     uint32_t act_key = keypad_get_key();
-//     if(act_key != 0) {
-//         data->state = LV_INDEV_STATE_PR;
+    adc_key = device_find("adc_key");
+    if(adc_key)
+    {
+        ADC_DEV(adc_key)->continuous_conv_mode = ENABLE;
+        device_open(adc_key, DEVICE_OFLAG_STREAM_RX);
+        device_control(adc_key,DEVICE_CTRL_ADC_CHANNEL_CONFIG,&adc_channel_cfg);
+        adc_channel_start(adc_key);
+    }
+}
 
-//         /*Translate the keys to LVGL control characters according to your key definitions*/
-//         switch(act_key) {
-//         case 1:
-//             act_key = LV_KEY_NEXT;
-//             break;
-//         case 2:
-//             act_key = LV_KEY_PREV;
-//             break;
-//         case 3:
-//             act_key = LV_KEY_LEFT;
-//             break;
-//         case 4:
-//             act_key = LV_KEY_RIGHT;
-//             break;
-//         case 5:
-//             act_key = LV_KEY_ENTER;
-//             break;
-//         }
+/* Will be called by the library to read the keypad */
+static bool keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
+{
+    static uint32_t last_key = 0;
 
-//         last_key = act_key;
-//     } else {
-//         data->state = LV_INDEV_STATE_REL;
-//     }
+    /*Get the current x and y coordinates*/
+    //mouse_get_xy(&data->point.x, &data->point.y);
 
-//     data->key = last_key;
+    /*Get whether the a key is pressed and save the pressed key*/
+    uint32_t act_key = keypad_get_key();
+    if(act_key != 0) {
+        data->state = LV_INDEV_STATE_PR;
+        /*Translate the keys to LVGL control characters according to your key definitions*/
+        switch(act_key) {
+        case 1:
+            act_key = LV_KEY_LEFT;
+            break;
+        case 2:
+            act_key = LV_KEY_RIGHT;
+            break;
+        case 3:
+            act_key = LV_KEY_UP;
+            break;
+        case 4:
+            act_key = LV_KEY_DOWN;
+            break;
+        case 5:
+            act_key = LV_KEY_ENTER;
+            break;
+        default:
+            break;
+        }
+        last_key = act_key;
+        
+    } else {
+        data->state = LV_INDEV_STATE_REL;
+    }
 
-//     /*Return `false` because we are not buffering and no more data to read*/
-//     return false;
-// }
+    data->key = last_key;
+
+    /*Return `false` because we are not buffering and no more data to read*/
+    return false;
+}
 
 /*Get the currently being pressed key.  0 if no key is pressed*/
-// static uint32_t keypad_get_key(void)
-// {
-//     /*Your code comes here*/
+static uint32_t keypad_get_key(void)
+{
+    static uint8_t old_key_v = 0;
+    static uint8_t old_key_num = 0;
+    static uint8_t last_key;
+    uint8_t key;
+    uint16_t key_voltage;
+    /*Your code comes here*/
+    device_read(adc_key, 0, (void *)&result_val,sizeof(result_val)/sizeof(adc_channel_val_t));
+    key_voltage = result_val.volt * 1000;
 
-//     return 0;
-// }
+    for(key=0;key<sizeof(key_value)/sizeof(key_value[0]);key++)
+    {
+        if(DIFF(key_voltage,key_value[key]) < KEY_ADC_DIFF_MAX )
+        {
+            break;
+        }
+    }
+    key+=1;
+    if( key > sizeof(key_value))
+    {
+        key = 0;
+    }
+
+    if(key == last_key)
+    {
+        old_key_v = key;
+        old_key_num = 0;
+    }
+    else if(key==old_key_v)
+    {
+        old_key_num++;
+        if(old_key_num >= KEY_NOISE_NUM_MAX)
+        {
+            last_key = key;
+            old_key_num = 0;
+        }
+    }
+    else 
+    {
+        old_key_num = 0;
+        old_key_v = key;
+    }
+    
+    return last_key;
+}
 
 /*------------------
  * Encoder

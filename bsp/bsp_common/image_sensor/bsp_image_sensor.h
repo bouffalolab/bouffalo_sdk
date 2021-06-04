@@ -1,5 +1,5 @@
 /**
- * @file audio_core.h
+ * @file bsp_gc0308.h
  * @brief 
  * 
  * Copyright (c) 2021 Bouffalolab team
@@ -20,26 +20,17 @@
  * under the License.
  * 
  */
+#ifndef _IMAGE_SENSOR_H_
+#define _IMAGE_SENSOR_H_
 
-#ifndef __AUDIO_PROTO__
-#define __AUDIO_PROTO__
+#include "bflb_platform.h"
+#include "bl702_cam.h"
+#include "bl702_mjpeg.h"
+#include "hal_cam.h"
+#include "hal_mjpeg.h"
 
-#include "misc.h"
+uint8_t image_sensor_init(BL_Fun_Type mjpeg_en, cam_device_t *cam_cfg, mjpeg_device_t *mjpeg_cfg);
+void cam_clk_out(void);
+void trigger_init(void);
 
-typedef struct{
-
-    uint8_t *buff1;
-    uint8_t *buff2;
-    uint32_t buff_size;  
-
-    struct device * audio_dma;
-    struct device * audio_device;
-    
-    int (*buffer_ready_callback)(char bufIndex);
-    
-}audio_core_t;
-
-int audio_core_init(audio_core_t * audio_core_cfg);
-int audio_core_start(void);
-int audio_core_stop(void);
 #endif

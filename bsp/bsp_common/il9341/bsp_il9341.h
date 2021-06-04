@@ -75,6 +75,7 @@ void LCD_WR_Cmd(uint8_t command);
 void LCD_WR_Byte(uint8_t data);
 void LCD_WR_HalfWord(uint16_t data);
 void LCD_WR_Word(uint32_t data);
+void LCD_Set_Dir(uint8_t dir);
 void LCD_Set_Addr(uint32_t x1,uint32_t y1,uint32_t x2,uint32_t y2);
 void LCD_Init(void);
 void LCD_Clear(uint16_t color);
@@ -84,6 +85,8 @@ void LCD_DrawRectangle(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,uint16_t 
 void LCD_DrawCircle(uint16_t x,uint16_t y,uint16_t r,uint16_t color);
 void LCD_DrawArea(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,uint16_t color);
 void LCD_DrawPicture(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,uint16_t* picture);
+void LCD_DrawPicture_cam(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,uint16_t* picture);
+void LCD_WR_SPI_DMA(uint16_t *img, uint32_t len);
 // void LCD_UartDrawPicture(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,UART_ID_Type uartId);
 void LCD_DrawChinese(uint16_t x,uint16_t y,uint8_t* character,uint16_t bColor,uint16_t cColor);
 

@@ -32,6 +32,7 @@ extern Ring_Buffer_Type uart1_rx_rb;
 
 void uart1_init(void);
 void uart1_config(uint32_t baudrate,uart_databits_t databits,uart_parity_t parity,uart_stopbits_t stopbits);
+void uart1_set_dtr_rts(uint8_t dtr, uint8_t rts);
 void uart1_dtr_init(void);
 void uart1_rts_init(void);
 void uart1_dtr_deinit(void);

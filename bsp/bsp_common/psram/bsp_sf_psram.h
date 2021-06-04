@@ -1,5 +1,5 @@
 /**
- * @file xip2046.h
+ * @file bsp_sf_psram.h
  * @brief 
  * 
  * Copyright (c) 2021 Bouffalolab team
@@ -20,31 +20,27 @@
  * under the License.
  * 
  */
-#ifndef _XPT2046_H_
-#define _XPT2046_H_
 
-#include "bflb_platform.h"
+#ifndef __BSP_SF_PSRAM_H__
+#define __BSP_SF_PSRAM_H__
 
-#define TOUCH_PIN_CS  GPIO_PIN_11
-//#define TOUCH_PIN_PEN GPIO_PIN_11
+#include "bl702.h"
 
-#define XPT2046_TOUCH_THRESHOLD 500 // Threshold for touch detection
+#define BSP_PSRAM_BASE                         BL702_PSRAM_XIP_BASE
 
-#define XPT2046_AVG_NUM 5
+#define PSRAM_SIZE                             2*1024*1024
 
-#define TOUCH_ROT_NONE  0
-#define TOUCH_ROT_90    1
-#define TOUCH_ROT_180   2
-#define TOUCH_ROT_270   3
+#define BFLB_EXTFLASH_CS_GPIO                  GLB_GPIO_PIN_25
+#define BFLB_EXTPSRAM_CLK_GPIO                 GLB_GPIO_PIN_27
+#define BFLB_EXTPSRAM_CS_GPIO                  GLB_GPIO_PIN_17
+#define BFLB_EXTPSRAM_DATA0_GPIO               GLB_GPIO_PIN_28
+#define BFLB_EXTPSRAM_DATA1_GPIO               GLB_GPIO_PIN_24
+#define BFLB_EXTPSRAM_DATA2_GPIO               GLB_GPIO_PIN_23
+#define BFLB_EXTPSRAM_DATA3_GPIO               GLB_GPIO_PIN_26
 
-#define XPT2046_X_MIN           310
-#define XPT2046_Y_MIN           175
-#define XPT2046_X_MAX           3850
-#define XPT2046_Y_MAX           3700
+void bsp_sf_psram_gpio_init(void);
+void bsp_sf_psram_init(uint8_t sw_reset);
+void bsp_sf_psram_read_id(uint8_t *data);
 
-extern struct device* touch_spi;
 
-void xpt2046_init(void);
-uint8_t xpt2046_read(int16_t * x, int16_t * y);
-
-#endif
+#endif  /* __BSP_SF_PSRAM_H__ */

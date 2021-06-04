@@ -27,6 +27,7 @@
 #include "misc.h"
 //#include "mcu_sdk_version.h"
 
+#define printf(a,...)           bflb_platform_printf(a,##__VA_ARGS__)
 #define MSG(a,...)              bflb_platform_printf(a,##__VA_ARGS__)
 #define MSG_DBG(a,...)          bflb_platform_printf(a,##__VA_ARGS__)
 #define MSG_ERR(a,...)          bflb_platform_printf(a,##__VA_ARGS__)
@@ -79,6 +80,8 @@ void check_failed(uint8_t *file, uint32_t line);
 
 void bflb_platform_init(uint32_t baudrate);
 void bflb_platform_printf(char *fmt,...);
+void bflb_platform_print_set(uint8_t disable);
+uint8_t bflb_platform_print_get(void);
 void bflb_platform_dump(uint8_t *data, uint32_t len);
 void bflb_platform_deinit(void);
 

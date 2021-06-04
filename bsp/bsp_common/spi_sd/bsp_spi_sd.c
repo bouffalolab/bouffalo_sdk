@@ -27,27 +27,41 @@
 #include "bl702_spi.h"
 #include "bsp_spi_sd.h"
 
-struct device* spi0;
-struct device* dma_ch3;
-struct device* dma_ch4;
+static struct device* spi0;
+static struct device* dma_ch3;
+static struct device* dma_ch4;
 
 SD_CardInfoTypedef  SD_CardInfo = {0};
 
 
 uint8_t SD_SPI_Init(void)
 {
-    spi_register(0,"spi0",DEVICE_OFLAG_RDWR);
-    dma_register(DMA0_CH3_INDEX, "ch3", DEVICE_OFLAG_RDWR);
-    dma_register(DMA0_CH4_INDEX, "ch4", DEVICE_OFLAG_RDWR);
     gpio_set_mode(SPI_PIN_CS,GPIO_OUTPUT_MODE);
     gpio_write(SPI_PIN_CS,1);
+
     spi0 = device_find("spi0");
     if(spi0)
     {
-        device_open(spi0,DEVICE_OFLAG_DMA_TX|DEVICE_OFLAG_DMA_RX);
+        device_close(spi0);
+    }
+    else{
+        spi_register(SPI0_INDEX,"spi0",DEVICE_OFLAG_RDWR);
+        spi0 = device_find("spi0");
+    }
+    if(spi0)
+    {
+        device_open(spi0,DEVICE_OFLAG_STREAM_TX|DEVICE_OFLAG_STREAM_RX);
     }
 
-    dma_ch3 = device_find("ch3");
+    dma_ch3 = device_find("dma0_ch3");
+    if(dma_ch3)
+    {
+        device_close(dma_ch3);
+    }
+    else{
+        dma_register(DMA0_CH3_INDEX, "dma0_ch3", DEVICE_OFLAG_RDWR);
+        dma_ch3 = device_find("dma0_ch3");
+    }
     if (dma_ch3)
     {
         ((dma_device_t*)dma_ch3)->direction = DMA_MEMORY_TO_PERIPH;
@@ -57,11 +71,17 @@ uint8_t SD_SPI_Init(void)
         ((dma_device_t*)dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         ((dma_device_t*)dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch3, 0);
-        device_set_callback(dma_ch3, NULL);
-        device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
     }
 
-    dma_ch4 = device_find("ch4");
+    dma_ch4 = device_find("dma0_ch4");
+    if(dma_ch4)
+    {
+        device_close(dma_ch4);
+    }
+    else{
+        dma_register(DMA0_CH4_INDEX, "dma0_ch4", DEVICE_OFLAG_RDWR);
+        dma_ch4 = device_find("dma0_ch4");
+    }
     if (dma_ch4)
     {
 		((dma_device_t*)dma_ch4)->direction = DMA_PERIPH_TO_MEMORY;
@@ -71,62 +91,34 @@ uint8_t SD_SPI_Init(void)
         ((dma_device_t*)dma_ch4)->src_width = DMA_TRANSFER_WIDTH_8BIT ;
         ((dma_device_t*)dma_ch4)->dst_width = DMA_TRANSFER_WIDTH_8BIT ;
         device_open(dma_ch4, 0);
-        device_set_callback(dma_ch4, NULL);
-        device_control(dma_ch4, DEVICE_CTRL_SET_INT, NULL);
     }
-
     return SUCCESS;
 }
 
 BL_Err_Type SPI_ReadWriteByte(uint8_t *txBuff, uint8_t *rxBuff, uint32_t length)
 {
-    static SPI_FifoCfg_Type SPI_fifoconfig={
-        .txFifoThreshold = 1,
-        .rxFifoThreshold = 1,
-        .txFifoDmaEnable = ENABLE,
-        .rxFifoDmaEnable = ENABLE,
-    };
 
-    // DMA自动与手动无法同时使用，DmaEnable开启后，一旦进行手动发送，之后DMA发送就会卡死
-    // test code：
-    // MSG("SPI_DMA_test 1\r\n");
-    // dma_reload(dma_ch3, (uint32_t)txBuff, (uint32_t)DMA_ADDR_SPI_TDR, length);
-    // dma_reload(dma_ch4, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)rxBuff, length);
-    // dma_channel_start(dma_ch3);
-    // dma_channel_start(dma_ch4);
-    // while (device_control(dma_ch3, DMA_CHANNEL_GET_STATUS, NULL) || device_control(dma_ch4, DMA_CHANNEL_GET_STATUS, NULL))
-    // {
-    // }
-    // MSG("SPI_DMA_test 2\r\n");
-    // spi_transmit_receive(spi0,txBuff,rxBuff,length,SPI_DATASIZE_8BIT);
-    // MSG("SPI_DMA_test 3\r\n");
+    while(device_control(dma_ch3,DMA_CHANNEL_GET_STATUS,NULL)||device_control(dma_ch4,DMA_CHANNEL_GET_STATUS,NULL));
 
     if(length<500)
     {
-        if(SPI_fifoconfig.txFifoDmaEnable == ENABLE || SPI_fifoconfig.rxFifoDmaEnable == ENABLE)
-        {
-            SPI_fifoconfig.txFifoDmaEnable = DISABLE;
-            SPI_fifoconfig.rxFifoDmaEnable = DISABLE;
-            SPI_FifoConfig(SPI_ID_0,&SPI_fifoconfig);
-        }
         spi_transmit_receive(spi0,txBuff,rxBuff,length,SPI_DATASIZE_8BIT);
     }
-    else{
-        if(SPI_fifoconfig.txFifoDmaEnable == DISABLE || SPI_fifoconfig.rxFifoDmaEnable == DISABLE)
-        {
-            SPI_fifoconfig.txFifoDmaEnable = ENABLE;
-            SPI_fifoconfig.rxFifoDmaEnable = ENABLE;
-            SPI_FifoConfig(SPI_ID_0,&SPI_fifoconfig);
-        }
+    else
+    {
+        device_control(spi0, DEVICE_CTRL_TX_DMA_RESUME, NULL);
+        device_control(spi0, DEVICE_CTRL_RX_DMA_RESUME, NULL);
+        device_control(dma_ch3, DEVICE_CTRL_CLR_INT, NULL);
+        device_control(dma_ch4, DEVICE_CTRL_CLR_INT, NULL);
+
         dma_reload(dma_ch3, (uint32_t)txBuff, (uint32_t)DMA_ADDR_SPI_TDR, length);
         dma_reload(dma_ch4, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)rxBuff, length);
         dma_channel_start(dma_ch3);
         dma_channel_start(dma_ch4);
-        while(device_control(dma_ch3,DMA_CHANNEL_GET_STATUS,NULL)||device_control(dma_ch4,DMA_CHANNEL_GET_STATUS,NULL))
-        {
-        }
-        dma_channel_stop(dma_ch3);
-        dma_channel_stop(dma_ch4);
+
+        while(device_control(dma_ch3,DMA_CHANNEL_GET_STATUS,NULL)||device_control(dma_ch4,DMA_CHANNEL_GET_STATUS,NULL));
+        device_control(spi0, DEVICE_CTRL_TX_DMA_SUSPEND, NULL);
+        device_control(spi0, DEVICE_CTRL_RX_DMA_SUSPEND, NULL);
     }
 
     return SUCCESS;

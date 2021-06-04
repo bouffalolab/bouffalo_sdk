@@ -73,14 +73,20 @@ static uint16_t xpt2046_cmd(uint8_t cmd)
 void xpt2046_init(void)
 {
     gpio_set_mode(TOUCH_PIN_CS,GPIO_OUTPUT_MODE);
-    gpio_write(TOUCH_PIN_CS,1); //CS2
+    gpio_write(TOUCH_PIN_CS,1); 
     touch_spi = device_find("spi0");
     if(touch_spi)
     {
-        return ;
+        device_close(touch_spi);
     }
-    spi_register(SPI0_INDEX,"spi0",DEVICE_OFLAG_RDWR);
-    device_open(touch_spi,DEVICE_OFLAG_STREAM_TX|DEVICE_OFLAG_STREAM_RX);
+    else{
+        spi_register(SPI0_INDEX,"spi0",DEVICE_OFLAG_RDWR);
+        touch_spi = device_find("spi0");
+    }
+    if(touch_spi)
+    {
+        device_open(touch_spi,DEVICE_OFLAG_STREAM_TX|DEVICE_OFLAG_STREAM_RX);
+    }
 
 }
 
@@ -97,7 +103,6 @@ static uint8_t xpt2048_is_touch_detected()
     // check pressure if we are pressure or IRQ and pressure
     uint16_t z1 = xpt2046_cmd(CMD_Z1_READ) ;
     uint16_t z2 = xpt2046_cmd(CMD_Z2_READ) ;
-
 
     // this is not what the confusing datasheet says but it seems to
     // be enough to detect real touches on the panel
@@ -122,7 +127,7 @@ static uint8_t xpt2048_is_touch_detected()
  * @return 
  *
 *******************************************************************************/
-static uint8_t xpt2046_ads_get(uint16_t *x, uint16_t *y)
+static uint8_t xpt2046_ads_get(int16_t *x, int16_t *y)
 {
     for(uint8_t i=0; i<XPT2046_AVG_NUM; i++)
     {
@@ -134,9 +139,9 @@ static uint8_t xpt2046_ads_get(uint16_t *x, uint16_t *y)
         avg_buf_y[i] = xpt2046_cmd(CMD_Y_READ);
     }
 
-    uint16_t x_min=avg_buf_x[0],x_max=avg_buf_x[0];
-    uint16_t y_min=avg_buf_y[0],y_max=avg_buf_y[0];
-    uint32_t x_sum=avg_buf_x[0],y_sum=avg_buf_y[0]; 
+    int16_t x_min=avg_buf_x[0],x_max=avg_buf_x[0];
+    int16_t y_min=avg_buf_y[0],y_max=avg_buf_y[0];
+    int32_t x_sum=avg_buf_x[0],y_sum=avg_buf_y[0]; 
 
     for(uint8_t i=1; i<XPT2046_AVG_NUM; i++)
     {
@@ -164,7 +169,7 @@ static uint8_t xpt2046_ads_get(uint16_t *x, uint16_t *y)
  * @return 
  *
 *******************************************************************************/
-static uint8_t xpt2046_corr(uint16_t * x, uint16_t * y, int8_t rotated)
+static uint8_t xpt2046_adc2xy(int16_t * x, int16_t * y )
 {
     if((*x) > XPT2046_X_MIN)
         (*x) -= XPT2046_X_MIN;
@@ -176,35 +181,11 @@ static uint8_t xpt2046_corr(uint16_t * x, uint16_t * y, int8_t rotated)
     else
         (*y) = 0;
 
-    if(rotated==TOUCH_ROT_90 || rotated==TOUCH_ROT_270)
-    {
-        uint16_t temp = *x;
-        *x = *y;
-        *y = temp;
-    }
-
-    (*x) = (uint32_t)((uint32_t)(*x) * LV_HOR_RES) /
+    (*x) = (uint32_t)((uint32_t)(*x) * 240) /
            (XPT2046_X_MAX - XPT2046_X_MIN);
 
-    (*y) = (uint32_t)((uint32_t)(*y) * LV_VER_RES) /
+    (*y) = (uint32_t)((uint32_t)(*y) * 320) /
            (XPT2046_Y_MAX - XPT2046_Y_MIN);
-
-    switch (rotated)
-    {
-    case TOUCH_ROT_NONE:
-        break;
-    case TOUCH_ROT_90:
-        *y = -*y;
-        break;
-    case TOUCH_ROT_180:
-        *x = -*x;
-        *y = -*y;
-        break;
-    case TOUCH_ROT_270:
-        *x = -*x;
-    default:
-        break;
-    }
 
     return 1;
 }
@@ -217,18 +198,18 @@ static uint8_t xpt2046_corr(uint16_t * x, uint16_t * y, int8_t rotated)
  * @return 
  *
 *******************************************************************************/
-uint8_t xpt2046_read(uint16_t * x, uint16_t * y, int8_t rotated)
+uint8_t xpt2046_read(int16_t * x, int16_t * y)
 {
-    static uint16_t xt=0,yt=0;
+    static int16_t xt=0,yt=0;
     static uint8_t avg_last = 0;
-    uint16_t x1,y1;
+    int16_t x1,y1;
 
     if(xpt2046_ads_get(&x1, &y1)==0)
     {
         goto end;
     }
 
-    if(xpt2046_corr(&x1,&y1,rotated)==0)
+    if(xpt2046_adc2xy(&x1,&y1)==0)
     {
         goto end;
     }

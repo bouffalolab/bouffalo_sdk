@@ -78,6 +78,7 @@ void uart1_init(void)
     if (uart1)
     {
         device_open(uart1, DEVICE_OFLAG_DMA_TX | DEVICE_OFLAG_INT_RX); //uart0 tx dma mode
+        device_control(uart1, DEVICE_CTRL_SUSPEND, NULL);
         device_set_callback(uart1, uart_irq_callback);
         device_control(uart1, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT | UART_RTO_IT));
     }
@@ -121,29 +122,38 @@ void uart1_config(uint32_t baudrate, uart_databits_t databits, uart_parity_t par
     device_control(uart1, DEVICE_CTRL_CONFIG, &cfg);
 }
 
+static uint8_t uart1_dtr;
+static uint8_t uart1_rts;
+
+void uart1_set_dtr_rts(uint8_t dtr, uint8_t rts)
+{
+    uart1_dtr = dtr;
+    uart1_rts = rts;
+}
+
 void uart1_dtr_init(void)
 {
-    gpio_set_mode(GPIO_PIN_22, GPIO_OUTPUT_MODE);
+    gpio_set_mode(uart1_dtr, GPIO_OUTPUT_MODE);
 }
 void uart1_rts_init(void)
 {
-    gpio_set_mode(GPIO_PIN_21, GPIO_OUTPUT_MODE);
+    gpio_set_mode(uart1_rts, GPIO_OUTPUT_MODE);
 }
 void uart1_dtr_deinit(void)
 {
-    gpio_set_mode(GPIO_PIN_22, GPIO_INPUT_MODE);
+    gpio_set_mode(uart1_dtr, GPIO_INPUT_MODE);
 }
 void uart1_rts_deinit(void)
 {
-    gpio_set_mode(GPIO_PIN_21, GPIO_INPUT_MODE);
+    gpio_set_mode(uart1_rts, GPIO_INPUT_MODE);
 }
 void dtr_pin_set(uint8_t status)
 {
-    gpio_write(GPIO_PIN_22, status);
+    gpio_write(uart1_dtr, status);
 }
 void rts_pin_set(uint8_t status)
 {
-    gpio_write(GPIO_PIN_21, status);
+    gpio_write(uart1_rts, status);
 }
 void ringbuffer_lock()
 {

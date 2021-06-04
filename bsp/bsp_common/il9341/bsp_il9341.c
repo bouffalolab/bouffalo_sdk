@@ -24,6 +24,7 @@
 #include "bsp_il9341.h"
 #include "hal_spi.h"
 #include "hal_dma.h"
+
 /** @addtogroup  BL702_Peripheral_Case
  *  @{
  */
@@ -66,9 +67,14 @@
  *  @{
  */
 
-struct device* spi0;
-struct device* dma_ch3;
-struct device* dma_ch4;
+static struct device* spi0;
+static struct device* dma_ch3;
+static struct device* dma_ch4;
+
+void dma_ch3_callback(struct device *dev, void *args, uint32_t size, uint32_t event)
+{
+
+}
 
 /*@} end of group TFT_LCD_Private_Functions */
 
@@ -77,43 +83,64 @@ struct device* dma_ch4;
  */
 void spi0_init(void)
 {
-
-    spi_register(SPI0_INDEX,"spi0",DEVICE_OFLAG_RDWR);
-    dma_register(DMA0_CH3_INDEX, "dma0_ch3", DEVICE_OFLAG_RDWR);
-    dma_register(DMA0_CH4_INDEX, "dma0_ch4", DEVICE_OFLAG_RDWR);
     gpio_set_mode(LCD_CS_PIN,GPIO_OUTPUT_MODE);
     gpio_set_mode(LCD_DC_PIN,GPIO_OUTPUT_MODE);
     gpio_write(LCD_CS_PIN,1); //CS1
-    gpio_write(LCD_DC_PIN,1);//DC
+    gpio_write(LCD_DC_PIN,1); //DC
+
     spi0 = device_find("spi0");
+    if(spi0)
+    {
+        device_close(spi0);
+    }
+    else{
+        spi_register(SPI0_INDEX,"spi0",DEVICE_OFLAG_RDWR);
+        spi0 = device_find("spi0");
+    }
     if(spi0)
     {
         device_open(spi0,DEVICE_OFLAG_STREAM_TX|DEVICE_OFLAG_STREAM_RX);
     }
 
     dma_ch3 = device_find("dma0_ch3");
+    if(dma_ch3)
+    {
+        device_close(dma_ch3);
+    }
+    else{
+        dma_register(DMA0_CH3_INDEX, "dma0_ch3", DEVICE_OFLAG_RDWR);
+        dma_ch3 = device_find("dma0_ch3");
+    }
     if (dma_ch3)
     {
-        ((dma_device_t*)dma_ch3)->direction = DMA_MEMORY_TO_PERIPH;
-        ((dma_device_t*)dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
-        ((dma_device_t*)dma_ch3)->src_req = DMA_REQUEST_NONE;
-        ((dma_device_t*)dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
-        ((dma_device_t*)dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
-        ((dma_device_t*)dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->direction = DMA_MEMORY_TO_PERIPH;
+        DMA_DEV(dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch3)->src_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
+        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch3, 0);
         device_set_callback(dma_ch3, NULL);
         device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
     }
 
     dma_ch4 = device_find("dma0_ch4");
+    if(dma_ch4)
+    {
+        device_close(dma_ch4);
+    }
+    else{
+        dma_register(DMA0_CH4_INDEX, "dma0_ch4", DEVICE_OFLAG_RDWR);
+        dma_ch4 = device_find("dma0_ch4");
+    }
     if (dma_ch4)
     {
-		((dma_device_t*)dma_ch4)->direction = DMA_PERIPH_TO_MEMORY;
-        ((dma_device_t*)dma_ch4)->transfer_mode = DMA_LLI_ONCE_MODE;
-        ((dma_device_t*)dma_ch4)->src_req = DMA_REQUEST_SPI0_RX;
-        ((dma_device_t*)dma_ch4)->dst_req = DMA_REQUEST_NONE;
-        ((dma_device_t*)dma_ch4)->src_width = DMA_TRANSFER_WIDTH_8BIT ;
-        ((dma_device_t*)dma_ch4)->dst_width = DMA_TRANSFER_WIDTH_8BIT ;
+		DMA_DEV(dma_ch4)->direction = DMA_PERIPH_TO_MEMORY;
+        DMA_DEV(dma_ch4)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch4)->src_req = DMA_REQUEST_SPI0_RX;
+        DMA_DEV(dma_ch4)->dst_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch4)->src_width = DMA_TRANSFER_WIDTH_8BIT ;
+        DMA_DEV(dma_ch4)->dst_width = DMA_TRANSFER_WIDTH_8BIT ;
         device_open(dma_ch4, 0);
         device_set_callback(dma_ch4, NULL);
         device_control(dma_ch4, DEVICE_CTRL_CLR_INT, NULL);
@@ -187,6 +214,50 @@ void LCD_WR_Word(uint32_t data)
     CS1_HIGH;
 }
 
+void LCD_WR_SPI_DMA(uint16_t *img, uint32_t len)
+{    
+    DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_32BIT;
+    DMA_DEV(dma_ch3)->src_burst_size =0;
+    DMA_DEV(dma_ch3)->dst_burst_size =1;
+    device_control(spi0,DEVICE_CTRL_TX_DMA_RESUME,NULL);
+    CS1_LOW;
+    DC_HIGH;
+    dma_reload(dma_ch3, (uint32_t)img, (uint32_t)DMA_ADDR_SPI_TDR, len);
+    dma_channel_start(dma_ch3);
+    while(dma_channel_check_busy(dma_ch3));
+    device_control(spi0,DEVICE_CTRL_TX_DMA_SUSPEND,NULL);
+    CS1_HIGH;
+}
+
+/****************************************************************************//**
+ * @brief  LCD set dir
+ *
+ * @param  dir: dir
+ *
+ * @return None
+ *
+*******************************************************************************/
+void LCD_Set_Dir(uint8_t dir )
+{ 
+    LCD_WR_Cmd(0x36);
+    switch (dir)
+    {
+    case 0 :
+        LCD_WR_Byte(0x08);
+        break;
+    case 1 :
+        LCD_WR_Byte(0xA8);
+        break;
+    case 2 :
+        LCD_WR_Byte(0xC8);
+        break;
+    case 3 :
+        LCD_WR_Byte(0x68);
+        break;
+    default:
+        break;
+    }
+}
 
 /****************************************************************************//**
  * @brief  LCD set address
@@ -201,6 +272,7 @@ void LCD_WR_Word(uint32_t data)
 *******************************************************************************/
 void LCD_Set_Addr(uint32_t x1,uint32_t y1,uint32_t x2,uint32_t y2)
 { 
+
    LCD_WR_Cmd(0x2a);
    LCD_WR_Word(x2<<24 | (x2<<8&0xff0000) | (x1<<8&0xff00) | (x1>>8&0xff));
 
@@ -265,6 +337,8 @@ void LCD_Init(void)
     LCD_WR_HalfWord(0x1800);
     LCD_WR_Cmd(0xb6);                 /* Display Function Control */
     LCD_WR_HalfWord(0xa20a);
+    LCD_WR_Cmd(0x0c);                 /* display pixel format */
+    LCD_WR_Byte(0xd5);                /* RGB 16bits,MCU 16bits */
     LCD_WR_Cmd(0xf2);                 /* 3Gamma Function Disable */
     LCD_WR_Byte(0x00);
     LCD_WR_Cmd(0xf7);
@@ -474,6 +548,17 @@ void LCD_DrawPicture(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,uint16_t* p
     }
 }
 
+void LCD_DrawPicture_cam(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,uint16_t* picture)
+{
+    uint32_t i;
+    LCD_Set_Addr(x1,y1,x2,y2);
+    for(i=0;i<ABS16((x2-x1+1)*(y2-y1+1));i++)
+    {
+        // LCD_WR_Byte(picture[i]);
+        // LCD_WR_Word(picture[i]);
+        LCD_WR_HalfWord(picture[i]);
+    }
+}
 
 /****************************************************************************//**
  * @brief  LCD use uart to receive picture data and send to display
