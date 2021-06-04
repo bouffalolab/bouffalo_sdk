@@ -172,13 +172,13 @@ static void board_pin_mux_init(void)
 
     gpio_cfg.drive = 0;
     gpio_cfg.smtCtrl = 1;
-    gpio_cfg.gpioMode = GPIO_MODE_AF;
-    gpio_cfg.pullType = GPIO_PULL_UP;
 
     for (int i = 0; i < sizeof(af_pin_table)/sizeof(af_pin_table[0]); i++)
     {
-        gpio_cfg.gpioPin = af_pin_table[i].pin;
-        gpio_cfg.gpioFun = af_pin_table[i].func;
+        gpio_cfg.gpioMode = GPIO_MODE_AF;
+        gpio_cfg.pullType = GPIO_PULL_UP;
+        gpio_cfg.gpioPin  = af_pin_table[i].pin;
+        gpio_cfg.gpioFun  = af_pin_table[i].func;
 
         if(af_pin_table[i].func == GPIO_FUN_UNUSED)
         {
@@ -188,11 +188,24 @@ static void board_pin_mux_init(void)
         {
             gpio_cfg.pullType = GPIO_PULL_DOWN;
         }
+        else if((af_pin_table[i].func == GPIO_FUN_DAC)|| (af_pin_table[i].func == GPIO_FUN_DAC))
+        {
+            gpio_cfg.gpioFun  = GPIO_FUN_ANALOG;
+            gpio_cfg.gpioMode = GPIO_MODE_ANALOG;
+        }
         else if((af_pin_table[i].func & 0x70) == 0x70)
         {
             gpio_cfg.gpioFun = GPIO_FUN_UART;
             uint8_t sig = af_pin_table[i].func & 0x07;
-            GLB_UART_Fun_Sel((gpio_cfg.gpioPin % 8), sig);
+            
+            if (gpio_cfg.gpioPin > 31)
+            {
+                GLB_UART_Fun_Sel(((gpio_cfg.gpioPin-9) % 8), sig);
+            }
+            else
+            {
+                GLB_UART_Fun_Sel((gpio_cfg.gpioPin % 8), sig);
+            }
         }
         GLB_GPIO_Init(&gpio_cfg);
     }

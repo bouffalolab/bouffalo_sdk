@@ -1,0 +1,1 @@
+make build SUPPORT_XZ=y APP=boot2 BOARD=bl706_avb

@@ -11,9 +11,10 @@
 #define BSP_USING_I2S0
 #define BSP_USING_USB
 #define BSP_USING_PWM_CH2
-#define BSP_USING_TIMER
+#define BSP_USING_TIMER_CH0
+#define BSP_USING_TIMER_CH1
+#define BSP_USING_CAM
 /* ----------------------*/
-
 
 /* PERIPHERAL With DMA LIST */
 
@@ -37,19 +38,19 @@
 #define BSP_USING_DMA0_CH6
 #endif
 
-#ifdef BSP_USING_TIMER
-#define BSP_USING_TIMER_CH0
-//#define BSP_USING_TIMER_CH1
-#endif
 
 /* PERIPHERAL CONFIG */
 #if defined(BSP_USING_ADC0)
-#ifndef ADC_CONFIG
-#define ADC_CONFIG \
+#ifndef ADC0_CONFIG
+#define ADC0_CONFIG \
 {   \
-    .clk = ADC_CLK_500KHZ,\
+    .clk_div = ADC_CLOCK_DIV_32,\
     .vref = ADC_VREF_3P2V,\
-    .resWidth = ADC_DATA_WIDTH_16_WITH_256_AVERAGE,\
+    .continuous_conv_mode = DISABLE,\
+    .differential_mode = DISABLE,\
+    .data_width = ADC_DATA_WIDTH_16B_WITH_256_AVERAGE,\
+    .fifo_threshold = ADC_FIFO_THRESHOLD_1BYTE,\
+    .gain = ADC_GAIN_1\
 }
 #endif
 #endif
@@ -104,7 +105,7 @@
  .clk_polaraity = SPI_POLARITY_LOW, \
  .clk_phase = SPI_PHASE_1EDGE, \
  .datasize = SPI_DATASIZE_8BIT, \
- .fifo_threshold = 1, \
+ .fifo_threshold = 4, \
 }
 #endif
 #endif
@@ -115,7 +116,7 @@
 {   \
     .ch = 2, \
     .frequency = 1000000, \
-    .dutyCycle = 0, \
+    .dutycycle = 0, \
 }
 #endif
 #endif
@@ -300,7 +301,7 @@
  .id = 0, \
  .ch = 1, \
  .cnt_mode = TIMER_CNT_PRELOAD, \
- .pl_trig_src = TIMER_PL_TRIG_COMP0, \
+ .pl_trig_src = TIMER_PL_TRIG_COMP2, \
 }
 #endif
 #endif
