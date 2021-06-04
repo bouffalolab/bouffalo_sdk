@@ -29,7 +29,7 @@
 #include "bl702_glb.h"
 #include "dac_config.h"
 
-dac_device_t dacx_device[] = {
+static dac_device_t dacx_device[] = {
 #ifdef BSP_USING_DAC0
     DAC_CONFIG,
 #endif
@@ -37,8 +37,8 @@ dac_device_t dacx_device[] = {
 
 int dac_open(struct device *dev, uint16_t oflag)
 {
-    GLB_GPIP_DAC_ChanA_Cfg_Type chCfg;
-    GLB_GPIP_DAC_Cfg_Type dacCfg ;
+    GLB_GPIP_DAC_ChanA_Cfg_Type chCfg = {0};
+    GLB_GPIP_DAC_Cfg_Type dacCfg = {0} ;
     dac_device_t *dac_device = (dac_device_t *)dev;
     uint8_t dac_ext_ref_pin =0;
 

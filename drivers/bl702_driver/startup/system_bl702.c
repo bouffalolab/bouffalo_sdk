@@ -168,6 +168,9 @@ void SystemInit (void)
     //GLB_Power_On_LDO18_IO();
 #endif
 	
+    /* release 64K OCARAM for appliction */
+    GLB_Set_EM_Sel(GLB_EM_0KB);
+    
 }
 void System_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t SubPriority)
 {

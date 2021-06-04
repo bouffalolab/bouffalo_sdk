@@ -25,84 +25,123 @@
 #include "bl702_glb.h"
 #include "hal_flash.h"
 
-/**
- * @brief erase flash memory addr should be 4k aligned or will erase more than size Byte 
- *        each block have 4K Byte
- * 
- * @param addr flash memory block addr
- * @param size erase bytes number
- * @return int success or not
- */
-int flash_erase(uint32_t addr, uint32_t size)
-{
 
-    SPI_Flash_Cfg_Type flashCfg;
-    uint32_t ret = 0;
-
-    XIP_SFlash_Opt_Enter();
-    ret = SF_Cfg_Flash_Identify(1, 1, 0, 0, &flashCfg);
-    XIP_SFlash_Opt_Exit();
-
-    if ((ret & BFLB_FLASH_ID_VALID_FLAG) == 0)
-    {
-        return -FLASH_NOT_DETECT;
-    }
-
-    XIP_SFlash_Erase_With_Lock(&flashCfg, SF_CTRL_DO_MODE, addr, size - 1);
-
-    return 0;
-}
+static SPI_Flash_Cfg_Type g_boot2_flash_cfg;
 
 /**
- * @brief read data form flash
+ * @brief flash_init
  * 
- * @param addr read flash addr
- * @param data read data pointer
- * @param size read data size
  * @return int 
  */
-int flash_read(uint32_t addr, uint8_t *data, uint32_t size)
+int flash_init(void)
 {
-    SPI_Flash_Cfg_Type flashCfg;
-    uint32_t ret = 0;
-
-    XIP_SFlash_Opt_Enter();
-    ret = SF_Cfg_Flash_Identify(1, 1, 0, 0, &flashCfg);
-    XIP_SFlash_Opt_Exit();
-
-    if ((ret & BFLB_FLASH_ID_VALID_FLAG) == 0)
-    {
-        return -FLASH_NOT_DETECT;
-    }
-
-    XIP_SFlash_Read_With_Lock(&flashCfg, SF_CTRL_DO_MODE, addr, data, size);
+    L1C_Cache_Flush(0xf);
+    SF_Cfg_Get_Flash_Cfg_Need_Lock(0,&g_boot2_flash_cfg);
+    g_boot2_flash_cfg.ioMode=g_boot2_flash_cfg.ioMode&0x0f;
+    L1C_Cache_Flush(0xf);
 
     return 0;
 }
 
 /**
- * @brief write data to flash
+ * @brief read jedec id
  * 
- * @param addr write flash addr
- * @param data write data pointer
- * @param size write data size
+ * @param data 
  * @return int 
  */
-int flash_write(uint32_t addr, uint8_t *data, uint32_t size)
+int flash_read_jedec_id(uint8_t *data)
 {
-    SPI_Flash_Cfg_Type flashCfg;
-    uint32_t ret = 0;
-
-    XIP_SFlash_Opt_Enter();
-    ret = SF_Cfg_Flash_Identify(1, 1, 0, 0, &flashCfg);
-    XIP_SFlash_Opt_Exit();
-
-    if ((ret & BFLB_FLASH_ID_VALID_FLAG) == 0)
-    {
-        return -FLASH_NOT_DETECT;
-    }
-
-    XIP_SFlash_Write_With_Lock(&flashCfg, SF_CTRL_DO_MODE, addr, data, size);
+    uint32_t jid = 0;
+    XIP_SFlash_GetJedecId_Need_Lock(&g_boot2_flash_cfg,g_boot2_flash_cfg.ioMode & 0x0f,(uint8_t *)&jid);
+    jid &= 0xFFFFFF;
+    BL702_MemCpy(data, (void *)&jid, 4);
 
     return 0;
 }
+
+
+/**
+ * @brief read xip data
+ * 
+ * @param addr 
+ * @param data 
+ * @param len 
+ * @return BL_Err_Type 
+ */
+BL_Err_Type flash_read_xip(uint32_t addr,uint8_t *data, uint32_t len)
+{
+    BL702_MemCpy_Fast(data,
+                      (uint8_t *)(BL702_FLASH_XIP_BASE+addr-SF_Ctrl_Get_Flash_Image_Offset()),
+                      len);
+    return 0;
+}
+
+
+/**
+ * @brief write xip data
+ * 
+ * @param addr 
+ * @param data 
+ * @param len 
+ * @return BL_Err_Type 
+ */
+BL_Err_Type flash_write_xip(uint32_t addr, uint8_t *data, uint32_t len)
+{
+    return XIP_SFlash_Write_With_Lock(&g_boot2_flash_cfg,g_boot2_flash_cfg.ioMode & 0x0f,addr,data,len);
+}
+
+/**
+ * @brief erase xip data
+ * 
+ * @param startaddr 
+ * @param endaddr 
+ * @return BL_Err_Type 
+ */
+BL_Err_Type flash_erase_xip(uint32_t startaddr,uint32_t endaddr)
+{
+    return XIP_SFlash_Erase_With_Lock(&g_boot2_flash_cfg,g_boot2_flash_cfg.ioMode & 0x0f,startaddr,endaddr-startaddr+1);
+}
+
+
+/**
+ * @brief set flash cache
+ * 
+ * @param cont_read 
+ * @param cache_enable 
+ * @param cache_way_disable 
+ * @param flash_offset 
+ * @return BL_Err_Type 
+ */
+BL_Err_Type ATTR_TCM_SECTION flash_set_cache(uint8_t cont_read,uint8_t cache_enable,uint8_t cache_way_disable, uint32_t flash_offset)
+{
+    uint32_t tmp[1];
+    BL_Err_Type stat;
+
+    /* To make it simple, exit cont read anyway */
+    SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
+
+    SFlash_Reset_Continue_Read(&g_boot2_flash_cfg);
+    if(g_boot2_flash_cfg.cReadSupport==0){
+        cont_read=0;
+    }
+    
+    if(cont_read==1){
+        stat=SFlash_Read(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode &  0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
+        if(SUCCESS!=stat){
+            return 0xff;
+        }
+    }
+
+    /* Set default value */
+    L1C_Cache_Enable_Set(0xf);
+
+
+    if(cache_enable){
+        SF_Ctrl_Set_Flash_Image_Offset(flash_offset);
+        SFlash_Cache_Read_Enable(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode &  0xf, cont_read, cache_way_disable);
+    }
+
+
+    return 0;
+}
+

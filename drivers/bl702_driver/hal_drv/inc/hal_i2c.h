@@ -31,9 +31,6 @@ enum i2c_index_type
 #ifdef BSP_USING_I2C0
     I2C0_INDEX,
 #endif
-#ifdef BSP_USING_I2C1
-    I2C1_INDEX,
-#endif
     I2C_MAX_INDEX
 };
 

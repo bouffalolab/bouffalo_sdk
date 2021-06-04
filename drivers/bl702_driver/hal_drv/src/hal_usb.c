@@ -21,6 +21,7 @@
  * 
  */
 #include "hal_usb.h"
+#include "hal_dma.h"
 #include "hal_mtimer.h"
 #include "bl702_usb.h"
 #include "bl702_glb.h"
@@ -35,6 +36,24 @@
 #define USB_DC_LOG(a, ...)
 
 usb_dc_device_t usb_fs_device;
+
+static dma_lli_ctrl_t usb_lli_list = 
+{
+    .src_addr = 0,
+    .dst_addr = 0,
+    .nextlli = 0,
+    .cfg.bits.fix_cnt = 0,
+    .cfg.bits.dst_min_mode = 0,
+    .cfg.bits.dst_add_mode = 0,
+    .cfg.bits.SI = 0,
+    .cfg.bits.DI = 0,
+    .cfg.bits.SWidth = DMA_TRANSFER_WIDTH_8BIT,
+    .cfg.bits.DWidth = DMA_TRANSFER_WIDTH_8BIT,
+    .cfg.bits.SBSize = 0,
+    .cfg.bits.DBSize = 0,
+    .cfg.bits.I = 0,
+    .cfg.bits.TransferSize = 0
+};
 
 static void usb_set_power_up(void)
 {
@@ -192,7 +211,7 @@ static void usb_xcvr_config(BL_Fun_Type NewState)
  */
 int usb_open(struct device *dev, uint16_t oflag)
 {
-    USB_Config_Type usbCfg;
+    USB_Config_Type usbCfg = {0};
 
     usb_set_power_off();
     mtimer_delay_ms(10);
@@ -305,6 +324,7 @@ int usb_close(struct device *dev)
  */
 int usb_control(struct device *dev, int cmd, void *args)
 {
+    struct usb_dc_device *usb_device = (struct usb_dc_device *)dev;
     switch (cmd)
     {
         case DEVICE_CTRL_SET_INT /* constant-expression */:
@@ -379,6 +399,18 @@ int usb_control(struct device *dev, int cmd, void *args)
             return USB_Get_EPx_RX_FIFO_CNT(((uint32_t)args) & 0x7f);
         case DEVICE_CTRL_USB_DC_GET_EP_FREE:
             return USB_Is_EPx_RDY_Free(((uint32_t)args) & 0x7f);
+        case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
+            usb_device->tx_dma = (struct device *)args;
+            break;
+        case DEVICE_CTRL_ATTACH_RX_DMA /* constant-expression */:
+            usb_device->rx_dma = (struct device *)args;
+            break;
+        case DEVICE_CTRL_USB_DC_SET_TX_DMA /* constant-expression */:
+            USB_Set_EPx_TX_DMA_Interface_Config(((uint32_t)args) & 0x7f,ENABLE);
+            break;
+        case DEVICE_CTRL_USB_DC_SET_RX_DMA /* constant-expression */:
+            USB_Set_EPx_RX_DMA_Interface_Config(((uint32_t)args) & 0x7f,ENABLE);
+            break;
         default:
             break;
     }
@@ -387,66 +419,56 @@ int usb_control(struct device *dev, int cmd, void *args)
 
 int usb_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
-    uint8_t ret = 0;
-    uint8_t *p = (uint8_t*)buffer;
+    struct usb_dc_device *usb_device = (struct usb_dc_device *)dev;
+    uint8_t ep_idx = USB_EP_GET_IDX(pos);
 
-    while(size)
+    if(usb_device->in_ep[ep_idx].ep_cfg.ep_type == USBD_EP_TYPE_ISOC)
     {
-        if(USB_Is_EPx_RDY_Free(pos & 0x7f))
-        {
-            uint8_t len = USB_Get_EPx_TX_FIFO_CNT(pos & 0x7f);
-            if(len)
-            {
-                if(len < size)
-                {
-                    ret = usb_dc_ep_write(dev,pos,p,len,NULL);
-                    size -= len;
-                    p += len;
-                }
-                else
-                {
-                    ret = usb_dc_ep_write(dev,pos,p,size,NULL);
-                    p += size;
-                    size = 0;
-                }
+        uint32_t usb_ep_addr = USB_BASE + 0x308 + ep_idx * 0x10;
 
-            }
-        }
+        dma_channel_stop(usb_device->tx_dma);
+        usb_lli_list.src_addr = (uint32_t)buffer;
+        usb_lli_list.dst_addr = usb_ep_addr;
+        usb_lli_list.cfg.bits.TransferSize = size;
+        usb_lli_list.cfg.bits.DI = 0;
+        usb_lli_list.cfg.bits.SI = 1;
+        usb_lli_list.cfg.bits.SBSize = DMA_BURST_16BYTE;
+        usb_lli_list.cfg.bits.DBSize = DMA_BURST_1BYTE;
+        device_control(usb_device->tx_dma,DMA_CHANNEL_UPDATE,(void*)((uint32_t)&usb_lli_list));
+        dma_channel_start(usb_device->tx_dma);
     }
-    if(!(size%64))
+    else
     {
-        ret = usb_dc_ep_write(dev,pos,NULL,0,NULL);
+
     }
-    return ret;
+    return 0;
 }
 
 int usb_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
-    uint32_t total_rx_len = 0;
-    uint8_t ret = 0;
-    uint8_t *p = (uint8_t*)buffer;
+    struct usb_dc_device *usb_device = (struct usb_dc_device *)dev;
+    uint8_t ep_idx = USB_EP_GET_IDX(pos);
 
-    while(total_rx_len < size)
+    if(usb_device->out_ep[ep_idx].ep_cfg.ep_type == USBD_EP_TYPE_ISOC)
     {
-        if(USB_Is_EPx_RDY_Free(pos))
-        {
-            uint8_t len = USB_Get_EPx_RX_FIFO_CNT(pos);
-            if(len)
-            {
-                ret = usb_dc_ep_read(dev,pos,p,len,NULL);
-                ret = usb_dc_ep_read(dev,pos,NULL,0,NULL);
-                total_rx_len += len;
-                p += len;
-            }
-            else
-            {
-                ret = usb_dc_ep_read(dev,pos,NULL,0,NULL);
-            }
-        }
+        uint32_t usb_ep_addr = USB_BASE + 0x308 + ep_idx * 0x1c;
+
+        dma_channel_stop(usb_device->tx_dma);
+        usb_lli_list.src_addr = usb_ep_addr;
+        usb_lli_list.dst_addr = (uint32_t)buffer;
+        usb_lli_list.cfg.bits.TransferSize = size;
+        usb_lli_list.cfg.bits.DI = 1;
+        usb_lli_list.cfg.bits.SI = 0;
+        usb_lli_list.cfg.bits.SBSize = DMA_BURST_1BYTE;
+        usb_lli_list.cfg.bits.DBSize = DMA_BURST_16BYTE;
+        device_control(usb_device->rx_dma,DMA_CHANNEL_UPDATE,(void*)((uint32_t)&usb_lli_list));
+        dma_channel_start(usb_device->rx_dma);
     }
-
-    return ret;
-
+    else
+    {
+        
+    }
+    return 0;
 }
 
 /**
@@ -675,7 +697,7 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
     do
     {
         uint32_t avail_space = USB_Get_EPx_TX_FIFO_CNT(ep_idx);
-        if (avail_space == usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps)
+        if (avail_space >= usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps)
         {
             break;
         }
@@ -755,10 +777,23 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
         USB_DC_LOG_ERR("Not enabled endpoint\r\n");
         return -1;
     }
-    
+    /*common process for other ep out*/
     if(ep_idx)
     {
         while (!USB_Is_EPx_RDY_Free(ep_idx))
+        {
+            timeout--;
+            if (!timeout)
+            {
+                USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
+                return -USB_DC_EP_TIMEOUT_ERR;
+            }
+        }
+    }
+    /*special process for ep0 out*/
+    else if(read_bytes && data_len && (ep_idx == 0))
+    {
+        while(((BL_RD_WORD(0x4000D800) & (1 << 28)) >> 28))
         {
             timeout--;
             if (!timeout)

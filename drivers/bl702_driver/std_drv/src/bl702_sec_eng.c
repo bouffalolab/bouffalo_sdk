@@ -1455,6 +1455,39 @@ BL_Err_Type Sec_Eng_Trng_Read(uint8_t data[32])
 }
 
 /****************************************************************************//**
+ * @brief  TRNG get random data out
+ *
+ * @param  data: TRNG output data buffer
+ *
+ * @param  len: total length to get in bytes
+ *
+ * @return SUCCESS
+ *
+*******************************************************************************/
+BL_Err_Type Sec_Eng_Trng_Get_Random(uint8_t *data,uint32_t len)
+{
+    uint8_t tmpBuf[32];
+    uint32_t readLen = 0;
+    uint32_t i = 0, cnt = 0;
+
+    while(readLen < len){
+        if(Sec_Eng_Trng_Read(tmpBuf) != SUCCESS){
+            return -1;
+        }
+        cnt = len - readLen;
+        if(cnt > sizeof(tmpBuf)){
+            cnt = sizeof(tmpBuf);
+        }
+        for(i = 0; i < cnt; i ++){
+            data[readLen + i] = tmpBuf[i];
+        }
+        readLen += cnt;
+    }
+
+    return 0;
+}
+
+/****************************************************************************//**
  * @brief  TRNG Interrupt Read Trigger
  *
  * @param  None

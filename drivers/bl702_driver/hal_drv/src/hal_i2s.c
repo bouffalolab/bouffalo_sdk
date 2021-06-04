@@ -26,7 +26,7 @@
 #include "bl702_glb.h"
 #include "i2s_config.h"
 
-i2s_device_t i2sx_device[I2S_MAX_INDEX] = 
+static i2s_device_t i2sx_device[I2S_MAX_INDEX] = 
 {
 #ifdef BSP_USING_I2S0
     I2S0_CONFIG,
@@ -36,8 +36,8 @@ i2s_device_t i2sx_device[I2S_MAX_INDEX] =
 int i2s_open(struct device *dev, uint16_t oflag)
 {
     i2s_device_t *i2s_device = (i2s_device_t *)dev;
-    I2S_CFG_Type i2sCfg;
-    I2S_FifoCfg_Type fifoCfg;
+    I2S_CFG_Type i2sCfg = {0};
+    I2S_FifoCfg_Type fifoCfg = {0};
 
     GLB_Set_Chip_Out_0_CLK_Sel(GLB_CHIP_CLK_OUT_I2S_REF_CLK);
     GLB_Set_I2S_CLK(ENABLE,GLB_I2S_OUT_REF_CLK_SRC);

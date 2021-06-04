@@ -29,13 +29,13 @@
 #include "uart_config.h"
 
 #ifdef BSP_USING_UART0
-void UART0_IRQ(void);
+static void UART0_IRQ(void);
 #endif
 #ifdef BSP_USING_UART1
-void UART1_IRQ(void);
+static void UART1_IRQ(void);
 #endif
 
-uart_device_t uartx_device[UART_MAX_INDEX] =
+static uart_device_t uartx_device[UART_MAX_INDEX] =
 {
 #ifdef BSP_USING_UART0
         UART0_CONFIG,
@@ -54,8 +54,8 @@ uart_device_t uartx_device[UART_MAX_INDEX] =
 int uart_open(struct device *dev, uint16_t oflag)
 {
     uart_device_t *uart_device = (uart_device_t *)dev;
-    UART_FifoCfg_Type fifoCfg;
-    UART_CFG_Type uart_cfg;
+    UART_FifoCfg_Type fifoCfg = {0};
+    UART_CFG_Type uart_cfg = {0};
 
     /* disable all interrupt */
     UART_IntMask(uart_device->id, UART_INT_ALL, MASK);
@@ -184,6 +184,12 @@ int uart_control(struct device *dev, int cmd, void *args)
     case DEVICE_CTRL_GET_INT /* constant-expression */:
         /* code */
         break;
+    case DEVICE_CTRL_RESUME /* constant-expression */:
+        UART_Enable(uart_device->id, UART_TXRX);
+        break;
+    case DEVICE_CTRL_SUSPEND /* constant-expression */:
+        UART_Disable(uart_device->id, UART_TXRX);
+        break;
     case DEVICE_CTRL_CONFIG /* constant-expression */:
     {
         uart_param_cfg_t* cfg = (uart_param_cfg_t *)args;
@@ -305,7 +311,7 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
  * @param size 
  * @return int 
  */
-int uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
+int ATTR_TCM_SECTION uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
     uart_device_t *uart_device = (uart_device_t *)dev;
     if (dev->oflag & DEVICE_OFLAG_DMA_RX)
@@ -361,7 +367,7 @@ int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
  * 
  * @param handle 
  */
-void uart_isr(uart_device_t *handle)
+void ATTR_TCM_SECTION uart_isr(uart_device_t *handle)
 {
     uint32_t tmpVal = 0;
     uint32_t maskVal = 0;
@@ -442,7 +448,7 @@ void uart_isr(uart_device_t *handle)
  * @brief 
  * 
  */
-void UART0_IRQ(void)
+void ATTR_TCM_SECTION UART0_IRQ(void)
 {
     uart_isr(&uartx_device[UART0_INDEX]);
 }

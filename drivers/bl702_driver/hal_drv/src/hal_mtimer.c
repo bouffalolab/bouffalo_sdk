@@ -22,68 +22,55 @@
  */
 #include "hal_mtimer.h"
 #include "bl702_glb.h"
-/**
- * @brief 
- * 
- */
-void mtimer_init(void)
+
+static void (*systick_callback)(void);
+static uint64_t next_compare_tick = 0;
+static uint64_t current_set_ticks = 0;
+
+static void Systick_Handler(void)
 {
-    NVIC_DisableIRQ(MTIME_IRQn);
-    /* Set MTimer the same frequency as SystemCoreClock */
-    GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 7);
-    *(volatile uint64_t *)(CLIC_CTRL_ADDR + CLIC_MTIME) = 0;
+    *(volatile uint64_t *)(CLIC_CTRL_ADDR + CLIC_MTIMECMP) = next_compare_tick;
+    systick_callback();
+    next_compare_tick += current_set_ticks;
 }
-/**
- * @brief 
- * 
- */
-void mtimer_deinit()
-{
-    NVIC_DisableIRQ(MTIME_IRQn);
-    mtimer_stop();
-}
+
 /**
  * @brief 
  * 
  * @param time 
  * @param interruptFun 
  */
-void mtimer_set_alarm_time(uint64_t time, void (*interruptFun)(void))
+void mtimer_set_alarm_time(uint64_t ticks, void (*interruptfun)(void))
 {
-    uint32_t tmp;
+    NVIC_DisableIRQ(MTIME_IRQn);
 
-    tmp = (SystemCoreClockGet() / (GLB_Get_BCLK_Div() + 1));
-    tmp = (tmp >> 3) / 1000;
+	uint32_t ulCurrentTimeHigh, ulCurrentTimeLow;
+	volatile uint32_t * const pulTimeHigh = ( volatile uint32_t * const ) ( CLIC_CTRL_ADDR + CLIC_MTIME + 4 );
+	volatile uint32_t * const pulTimeLow = ( volatile uint32_t * const ) ( CLIC_CTRL_ADDR + CLIC_MTIME );
+	volatile uint32_t ulHartId = 0;
 
-    time = time * tmp;
+    current_set_ticks = ticks;
+    systick_callback = interruptfun;
 
-    *(volatile uint64_t *)(CLIC_CTRL_ADDR + CLIC_MTIMECMP) = (*(volatile uint64_t *)(CLIC_CTRL_ADDR + CLIC_MTIME) + time);
+    __asm volatile( "csrr %0, mhartid" : "=r"( ulHartId ) );
+    do
+    {
+        ulCurrentTimeHigh = *pulTimeHigh;
+        ulCurrentTimeLow = *pulTimeLow;
+    } while( ulCurrentTimeHigh != *pulTimeHigh );
 
-    Interrupt_Handler_Register(MTIME_IRQn, interruptFun);
+    next_compare_tick = ( uint64_t ) ulCurrentTimeHigh;
+    next_compare_tick <<= 32ULL;
+    next_compare_tick |= ( uint64_t ) ulCurrentTimeLow;
+    next_compare_tick += ( uint64_t ) current_set_ticks;
+
+    *(volatile uint64_t *)(CLIC_CTRL_ADDR + CLIC_MTIMECMP) = next_compare_tick;
+
+    /* Prepare the time to use after the next tick interrupt. */
+    next_compare_tick += ( uint64_t ) current_set_ticks;
+    
+    Interrupt_Handler_Register(MTIME_IRQn, Systick_Handler);
     NVIC_EnableIRQ(MTIME_IRQn);
-}
-/**
- * @brief 
- * 
- */
-void mtimer_start()
-{
-    *(volatile uint64_t *)(CLIC_CTRL_ADDR + CLIC_MTIME) = 0;
-}
-/**
- * @brief 
- * 
- */
-void mtimer_stop()
-{
-}
-/**
- * @brief 
- * 
- */
-void mtimer_clear_time()
-{
-    *(volatile uint64_t *)(CLIC_CTRL_ADDR + CLIC_MTIME) = 0;
 }
 
 /**
@@ -103,33 +90,17 @@ uint64_t mtimer_get_time_ms()
 uint64_t mtimer_get_time_us()
 {
 
-    uint32_t tmpValLow, tmpValHigh, tmpValLow1, tmpValHigh1;
-    uint32_t cnt = 0, tmp;
+    uint32_t tmpValLow, tmpValHigh, tmpValHigh1;
 
     do
     {
         tmpValLow = *(volatile uint32_t *)(CLIC_CTRL_ADDR + CLIC_MTIME);
         tmpValHigh = *(volatile uint32_t *)(CLIC_CTRL_ADDR + CLIC_MTIME + 4);
-        tmpValLow1 = *(volatile uint32_t *)(CLIC_CTRL_ADDR + CLIC_MTIME);
         tmpValHigh1 = *(volatile uint32_t *)(CLIC_CTRL_ADDR + CLIC_MTIME + 4);
-        cnt++;
-        if (cnt > 4)
-        {
-            break;
-        }
-    } while (tmpValLow > tmpValLow1 || tmpValHigh > tmpValHigh1);
+    } while (tmpValHigh != tmpValHigh1);
 
-    tmp = (SystemCoreClockGet() / (GLB_Get_BCLK_Div() + 1));
-    tmp = (tmp >> 3) / 1000 / 1000;
+    return (((uint64_t)tmpValHigh << 32) + tmpValLow);
 
-    if (tmpValHigh1 == 0)
-    {
-        return (uint64_t)(tmpValLow1 / tmp);
-    }
-    else
-    {
-        return (((uint64_t)tmpValHigh1 << 32) + tmpValLow1) / tmp;
-    }
 }
 /**
  * @brief 

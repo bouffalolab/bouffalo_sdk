@@ -157,8 +157,8 @@ typedef enum
     GPIO_FUN_UART1_CTS      = 0x75 ,
     GPIO_FUN_UART1_TX       = 0x76 ,
     GPIO_FUN_UART1_RX       = 0x77 ,
-    GPIO_FUN_GPIO_OUTPUT    = 0x80,
-    GPIO_FUN_GPIO_INPUT     = 0x81,
+    GPIO_FUN_DAC            = 0xa0,
+    GPIO_FUN_ADC            = 0xa1,    
     GPIO_FUN_UNUSED         = 255
 }GLB_GPIO_FUNC_Type;
 

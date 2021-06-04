@@ -28,10 +28,10 @@
 #include "spi_config.h"
 
 #ifdef BSP_USING_SPI0
-void SPI0_IRQ(void);
+static void SPI0_IRQ(void);
 #endif
 
-spi_device_t spix_device[SPI_MAX_INDEX] =
+static spi_device_t spix_device[SPI_MAX_INDEX] =
 {
 #ifdef BSP_USING_SPI0
     SPI0_CONFIG,
@@ -47,8 +47,8 @@ spi_device_t spix_device[SPI_MAX_INDEX] =
 int spi_open(struct device *dev, uint16_t oflag)
 {
     spi_device_t *spi_device = (spi_device_t *)dev;
-    SPI_CFG_Type spiCfg;
-    SPI_FifoCfg_Type fifoCfg;
+    SPI_CFG_Type spiCfg = {0};
+    SPI_FifoCfg_Type fifoCfg = {0};
 #if SPI_SWAP_ENABLE
     GLB_Swap_SPI_0_MOSI_With_MISO(ENABLE);
 #endif

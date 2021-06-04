@@ -10,39 +10,7 @@
 /**
   * @brief Configuration of the Processor and Core Peripherals
    */
-/**
- * @brief Memory access macro
- */
-#define BL_RD_WORD(addr)                             (*((volatile uint32_t*)(addr)))
-#define BL_WR_WORD(addr,val)                         ((*(volatile uint32_t*)(addr))=(val))
-#define BL_RD_SHORT(addr)                            (*((volatile uint16_t*)(addr)))
-#define BL_WR_SHORT(addr,val)                        ((*(volatile uint16_t*)(addr))=(val))
-#define BL_RD_BYTE(addr)                             (*((volatile uint8_t*)(addr)))
-#define BL_WR_BYTE(addr,val)                         ((*(volatile uint8_t*)(addr))=(val))
-#define BL_RDWD_FRM_BYTEP(p)                         ((p[3]<<24)|(p[2]<<16)|(p[1]<<8)|(p[0]))
-#define BL_WRWD_TO_BYTEP(p,val)                      {p[0]=val&0xff;p[1]=(val>>8)&0xff;p[2]=(val>>16)&0xff;p[3]=(val>>24)&0xff;}
-/**
- * @brief Register access macro
- */
-#define BL_RD_REG16(addr,regname)                    BL_RD_SHORT(addr+regname##_OFFSET)
-#define BL_WR_REG16(addr,regname,val)                BL_WR_SHORT(addr+regname##_OFFSET,val)
-#define BL_RD_REG(addr,regname)                      BL_RD_WORD(addr+regname##_OFFSET)
-#define BL_WR_REG(addr,regname,val)                  BL_WR_WORD(addr+regname##_OFFSET,val)
-#define BL_SET_REG_BIT(val,bitname)                  ( (val) |(1U<<bitname##_POS))
-#define BL_CLR_REG_BIT(val,bitname)                  ( (val) & bitname##_UMSK )
-#define BL_GET_REG_BITS_VAL(val,bitname)             ( ((val) & bitname##_MSK) >> bitname##_POS )
-#define BL_SET_REG_BITS_VAL(val,bitname,bitval)      ( ((val)&bitname##_UMSK) | ((uint32_t)(bitval)<<bitname##_POS) )
-#define BL_IS_REG_BIT_SET(val,bitname)               ( ((val)&(1U<<(bitname##_POS))) !=0 )
-#define BL_DRV_DUMMY                                 {__NOP();__NOP();__NOP();__NOP();}
-
-/* Std driver attribute macro*/
-#define ATTR_CLOCK_SECTION                          __attribute__((section(".sclock_rlt_code")))
-#define ATTR_CLOCK_CONST_SECTION                    __attribute__((section(".sclock_rlt_const")))
-#define ATTR_TCM_SECTION                            __attribute__((section(".tcm_code")))
-#define ATTR_TCM_CONST_SECTION                      __attribute__((section(".tcm_const")))
-#define ATTR_DTCM_SECTION                           __attribute__((section(".tcm_data")))
-#define ATTR_HSRAM_SECTION                          __attribute__((section(".hsram_code")))
-
+  
 /* fix 57.6M */
 #define SystemCoreClockSet(val)                     if(val==57*6000*1000){                      \
                                                         BL_WR_WORD(0x4000F108,57.6*1000*1000);  \

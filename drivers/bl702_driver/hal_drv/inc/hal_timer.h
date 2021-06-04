@@ -26,6 +26,12 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
+#define DEVICE_OFLAG_INT             0x01
+#define DEVICE_OFLAG_POLL            0x02
+#define DEVICE_CTRL_TIMER_CH_START   0x80
+#define DEVICE_CTRL_TIMER_CH_STOP    0x81
+#define DEVICE_CTRL_GET_MATCH_STATUS 0x82
+
 enum timer_index_type
 {
 #ifdef BSP_USING_TIMER_CH0
@@ -73,6 +79,7 @@ typedef enum{
 
 typedef struct {
     uint32_t timeout_val;
+    uint32_t comp_it;
 }timer_user_cfg_t;
 
 
@@ -88,7 +95,7 @@ typedef struct timer_device
 
 #define TIMER_DEV(dev) ((timer_device_t*)dev)
 
-int timer_register(enum timer_index_type index, const char *name, uint16_t flag, timer_user_cfg_t *timer_user_cfg);
+int timer_register(enum timer_index_type index, const char *name, uint16_t flag);
 
 
 #endif

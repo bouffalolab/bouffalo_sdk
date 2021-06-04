@@ -22,14 +22,15 @@
  */
 #include "hal_adc.h"
 #include "hal_gpio.h"
+#include "hal_clock.h"
 #include "bl702_glb.h"
 #include "bl702_dma.h"
 #include "bl702_adc.h"
 #include "adc_config.h"
 
-adc_device_t adcx_device[ADC_MAX_INDEX] = {
+static adc_device_t adcx_device[ADC_MAX_INDEX] = {
 #ifdef BSP_USING_ADC0
-    ADC_CONFIG,
+    ADC0_CONFIG,
 #endif
 };
 
@@ -43,40 +44,17 @@ adc_device_t adcx_device[ADC_MAX_INDEX] = {
 int adc_open(struct device *dev, uint16_t oflag)
 {
     adc_device_t *adc_device = (adc_device_t *)dev;
-    adc_user_cfg_t *adc_user_cfg = ((adc_user_cfg_t *)(adc_device->parent.handle));
-    ADC_CFG_Type adc_cfg;
-    ADC_FIFO_Cfg_Type adc_fifo_cfg;
+    ADC_CFG_Type adc_cfg = {0};
+    ADC_FIFO_Cfg_Type adc_fifo_cfg = {0};
  
     ADC_Disable();
     ADC_Reset();
 
-    GLB_GPIO_Func_Init(GPIO_FUN_ANALOG, (GLB_GPIO_Type *)adc_user_cfg->pinList, adc_user_cfg->num);
+    adc_cfg.clkDiv = adc_device->clk_div;
 
-    switch (adc_device->clk)
-    {
-    case ADC_CLK_500KHZ:
-        GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
-        adc_cfg.clkDiv = ADC_CLK_DIV_32;
-        break;
-    case ADC_CLK_1MHZ:
-        GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
-        adc_cfg.clkDiv = ADC_CLK_DIV_16;
-        break;
-    case ADC_CLK_1P3MHZ:
-        GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 2);
-        adc_cfg.clkDiv = ADC_CLK_DIV_8;
-        break;
-    case ADC_CLK_2MHZ:
-        GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
-        adc_cfg.clkDiv = ADC_CLK_DIV_8;
-        break;
-    default:
-        break;
-    }
-    
     adc_cfg.vref = adc_device->vref;
-    adc_cfg.resWidth = adc_device->resWidth;
-    adc_cfg.inputMode = adc_user_cfg->in_mode;
+    adc_cfg.resWidth = adc_device->data_width;
+    adc_cfg.inputMode = adc_device->differential_mode;
 
     adc_cfg.v18Sel = ADC_V18_SELECT;
     adc_cfg.v11Sel = ADC_V11_SELECT;
@@ -88,35 +66,31 @@ int adc_open(struct device *dev, uint16_t oflag)
     adc_cfg.offsetCalibEn = ADC_OFFSET_CALIB_EN;
     adc_cfg.offsetCalibVal = ADC_OFFSER_CALIB_VAL;
 
-    if(adc_user_cfg->dma_en)
+    adc_fifo_cfg.dmaEn = DISABLE;
+
+    if (oflag & DEVICE_OFLAG_STREAM_TX)
+    {
+    }
+    if ((oflag & DEVICE_OFLAG_INT_TX) || (oflag & DEVICE_OFLAG_INT_RX))
+    {
+
+    }
+    if (oflag & DEVICE_OFLAG_DMA_TX)
+    {
+
+    }
+    if (oflag & DEVICE_OFLAG_DMA_RX)
     {
         adc_fifo_cfg.dmaEn = ENABLE;
     }
-    else
-    {
-        adc_fifo_cfg.dmaEn = DISABLE;
-    }
-    adc_fifo_cfg.fifoThreshold = ADC_FIFO_THRESHOLD_1;
+
+    adc_fifo_cfg.fifoThreshold = adc_device->fifo_threshold;
 
     ADC_Init(&adc_cfg);
-    if(adc_user_cfg->num == 1)
-    {
-        ADC_Channel_Config((ADC_Chan_Type)adc_user_cfg->posChList[0],(ADC_Chan_Type)adc_user_cfg->negChList[0], adc_user_cfg->conv_mode);
-    }
-    else if(adc_user_cfg->num > 1)
-    {
-        ADC_Scan_Channel_Config((ADC_Chan_Type*)(adc_user_cfg->posChList), (ADC_Chan_Type*)(adc_user_cfg->negChList),adc_user_cfg->num,adc_user_cfg->conv_mode);
-    }
-    
+
     ADC_FIFO_Cfg(&adc_fifo_cfg);
     
-    if((ADC_Chan_Type)adc_user_cfg->posChList[0] == ADC_CHAN_VABT_HALF)
-    {
-        ADC_Vbat_Enable();
-    }
-    
     ADC_Enable();
-
     return 0;
 }
 /**
@@ -140,7 +114,8 @@ int adc_close(struct device *dev)
  */
 int adc_control(struct device *dev, int cmd, void *args)
 {
-    //adc_device_t *adc_device = (adc_device_t *)dev;
+    adc_device_t* adc_device = (adc_device_t *)dev;
+    adc_channel_cfg_t* adc_channel_cfg = (adc_channel_cfg_t *)args;
 
     switch (cmd)
     {
@@ -148,8 +123,6 @@ int adc_control(struct device *dev, int cmd, void *args)
 
         break;
     case DEVICE_CTRL_CLR_INT /* constant-expression */:
-        /* code */
-        /* Enable UART interrupt*/
 
         break;
     case DEVICE_CTRL_GET_INT /* constant-expression */:
@@ -158,13 +131,33 @@ int adc_control(struct device *dev, int cmd, void *args)
     case DEVICE_CTRL_CONFIG /* constant-expression */:
         /* code */
         break;
-    case DEVICE_CTRL_RESUME /* constant-expression */:
+    case DEVICE_CTRL_ADC_CHANNEL_CONFIG /* constant-expression */:
+        if(adc_channel_cfg->num == 1)
+            ADC_Channel_Config(*adc_channel_cfg->pos_channel,*adc_channel_cfg->neg_channel,adc_device->continuous_conv_mode);
+        else
+        {
+            ADC_Scan_Channel_Config(adc_channel_cfg->pos_channel, adc_channel_cfg->neg_channel,adc_channel_cfg->num,adc_device->continuous_conv_mode);
+        }
+        break;
+    case DEVICE_CTRL_ADC_CHANNEL_START /* constant-expression */:
         /* code */
         ADC_Start();
         break;
-    case DEVICE_CTRL_SUSPEND /* constant-expression */:
+    case DEVICE_CTRL_ADC_CHANNEL_STOP /* constant-expression */:
         /* code */
         ADC_Stop();
+        break;
+    case DEVICE_CTRL_ADC_VBAT_ON:
+        ADC_Vbat_Enable();
+        break;
+    case DEVICE_CTRL_ADC_VBAT_OFF:
+        ADC_Vbat_Disable();
+        break;
+    case DEVICE_CTRL_ADC_TSEN_ON:
+        ADC_Tsen_Init(ADC_TSEN_MOD_INTERNAL_DIODE);
+        break;
+    case DEVICE_CTRL_ADC_TSEN_OFF:
+
         break;
     default:
         break;
@@ -205,6 +198,17 @@ int adc_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     }
     return 0;
 }
+
+int adc_trim_tsen(uint16_t * tsen_offset)
+{
+    return ADC_Trim_TSEN(tsen_offset);
+}
+
+float adc_get_tsen(uint16_t tsen_offset)
+{
+    return TSEN_Get_Temp(tsen_offset);
+}
+
 /**
  * @brief 
  * 
@@ -214,7 +218,7 @@ int adc_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
  * @param adc_user_cfg 
  * @return int 
  */
-int adc_register(enum adc_index_type index, const char *name, uint16_t flag, adc_user_cfg_t *adc_user_cfg)
+int adc_register(enum adc_index_type index, const char *name, uint16_t flag)
 {
     struct device *dev;
 
@@ -231,7 +235,7 @@ int adc_register(enum adc_index_type index, const char *name, uint16_t flag, adc
 
     dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_ADC;
-    dev->handle = adc_user_cfg;
+    dev->handle = NULL;
 
     return device_register(dev, name, flag);
 }

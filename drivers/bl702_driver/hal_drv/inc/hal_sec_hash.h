@@ -1,8 +1,8 @@
 /**
- * @file hal_mtimer.h
+ * @file hal_sec_hash.h
  * @brief 
  * 
- * Copyright (c) 2021 Bouffalolab team
+ * Copyright 2019-2030 Bouffalolab team
  * 
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -20,14 +20,36 @@
  * under the License.
  * 
  */
-#ifndef __HAL_MTIMER__H__
-#define __HAL_MTIMER__H__
+#ifndef __HAL_SEC_HASH__H__
+#define __HAL_SEC_HASH__H__
 
-#include "stdint.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
-void mtimer_set_alarm_time(uint64_t ticks, void (*interruptfun)(void));
-uint64_t mtimer_get_time_ms();
-uint64_t mtimer_get_time_us();
-void mtimer_delay_ms(uint32_t time);
-void mtimer_delay_us(uint32_t time);
+enum sec_hash_index_type
+{
+    SEC_HASH0_INDEX,
+    SEC_HASH_MAX_INDEX
+};
+
+enum sec_hash_type
+{
+    SEC_HASH_SHA1,
+    SEC_HASH_SHA224,
+    SEC_HASH_SHA256,
+    SEC_HASH_SHA384,
+    SEC_HASH_SHA512,
+    SEC_HASH_UNKNOWN
+};
+
+typedef struct sec_hash_device
+{
+    struct device parent;
+    uint32_t  shaBuf[64/4];                  /*!< Data not processed but in this temp buffer */
+    uint32_t  shaPadding[64/4];              /*!< Padding data */
+    uint8_t  type;                        /*!< Sha has feed data */
+} sec_hash_device_t;
+
+int sec_hash_register(enum sec_hash_index_type index, const char *name, uint16_t flag);
+
 #endif

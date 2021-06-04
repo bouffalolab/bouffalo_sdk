@@ -26,6 +26,7 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
+#define DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG 0x10
 
 enum pwm_index_type
 {
@@ -47,17 +48,29 @@ enum pwm_index_type
     PWM_MAX_INDEX
 };
 
+#define pwm_channel_start(dev)                  device_control(dev,DEVICE_CTRL_RESUME,NULL)
+#define pwm_channel_stop(dev)                   device_control(dev,DEVICE_CTRL_SUSPEND,NULL)
+#define pwm_channel_update(dev,cfg)             device_control(dev,DEVICE_CTRL_CONFIG,cfg)
+#define pwm_it_pulse_count_update(dev,count)    device_control(dev,DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG,(void*)count)
+
+enum pwm_event_type
+{
+    PWM_EVENT_COMPLETE,
+};
+
 typedef struct
 {
     uint32_t frequency;
-    uint8_t dutyCycle;
+    uint8_t dutycycle;
 } pwm_config_t;
+
 typedef struct pwm_device
 {
     struct device parent;
     uint8_t ch;
     uint32_t frequency;
-    uint8_t dutyCycle;
+    uint8_t dutycycle;
+    uint16_t it_pulse_count;
 } pwm_device_t;
 
 #define PWM_DEV(dev) ((pwm_device_t*)dev)

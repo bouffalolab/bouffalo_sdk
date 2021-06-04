@@ -972,7 +972,7 @@ BL_Err_Type UART_SendDataBlock(UART_ID_Type uartId, uint8_t* data,uint32_t len)
  * @return The length of the received buffer
  *
 *******************************************************************************/
-uint32_t UART_ReceiveData(UART_ID_Type uartId,uint8_t* data,uint32_t maxLen)
+uint32_t ATTR_TCM_SECTION UART_ReceiveData(UART_ID_Type uartId,uint8_t* data,uint32_t maxLen)
 {
     uint32_t rxLen = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -1039,7 +1039,7 @@ uint8_t UART_GetTxFifoCount(UART_ID_Type uartId)
  * @return Rx fifo occupied count value
  *
 *******************************************************************************/
-uint8_t UART_GetRxFifoCount(UART_ID_Type uartId)
+uint8_t ATTR_TCM_SECTION UART_GetRxFifoCount(UART_ID_Type uartId)
 {
     uint32_t UARTx = uartAddr[uartId];
 

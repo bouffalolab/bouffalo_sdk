@@ -27,7 +27,7 @@
 #include "bl702_glb.h"
 #include "pwm_config.h"
 
-pwm_device_t pwmx_device[PWM_MAX_INDEX] = {
+static pwm_device_t pwmx_device[PWM_MAX_INDEX] = {
 #ifdef BSP_USING_PWM_CH0
     PWM_CH0_CONFIG,
 #endif
@@ -44,104 +44,81 @@ pwm_device_t pwmx_device[PWM_MAX_INDEX] = {
     PWM_CH4_CONFIG,
 #endif
 };
+static void PWM_IRQ(void);
 
-typedef enum{
-    HZ=0,
-    KHZ,
-    MHZ,
-}frequency_unit_t;
+static void pwm_channel_config(uint8_t ch,uint32_t frequence,uint8_t dutycycle)
+{
+    PWM_CH_CFG_Type pwmCfg = {0};
 
-static void pwm_set(struct device *dev, PWM_CH_CFG_Type * pwmCfg ,uint32_t freq ,frequency_unit_t unit, uint8_t duty){
-    
-    pwm_device_t *pwm_device = (pwm_device_t *)dev;
-    
-    switch(unit)
+    if(frequence <= 70)
     {
-    case HZ:
-        if(freq <= 70){
-            pwmCfg->clkDiv = 1200;
-            pwmCfg->period = 60000/freq;
-            pwmCfg->threshold2 = 600*duty/freq;
-        }else if(freq <= 140){
-            pwmCfg->clkDiv = 16;
-            pwmCfg->period = 4500000/freq;
-            pwmCfg->threshold2 = 45000*duty/freq;
-        }else if(freq <= 275){
-            pwmCfg->clkDiv = 8;
-            pwmCfg->period = 9000000/freq;
-            pwmCfg->threshold2 = 90000*duty/freq;
-        }else if(freq <=550){
-            pwmCfg->clkDiv = 4;
-            pwmCfg->period = 18000000/freq;
-            pwmCfg->threshold2 = 180000*duty/freq;
-        }else if(freq <=1100){
-            pwmCfg->clkDiv = 2;
-            pwmCfg->period = 36000000/freq;
-            pwmCfg->threshold2 = 360000*duty/freq;
-        }else{
-            pwmCfg->clkDiv = 1;
-            pwmCfg->period = 72000000/freq;
-            pwmCfg->threshold2 = 720000*duty/freq;
-        }
-        break;
-    case KHZ:
-        if(freq <= 2){
-            pwmCfg->clkDiv = 2;
-            pwmCfg->period = 36000/freq;
-            pwmCfg->threshold2 = 360*duty/freq;
-        }else{
-            pwmCfg->clkDiv = 1;
-            pwmCfg->period = 72000/freq;
-            pwmCfg->threshold2 = 720*duty/freq;
-        }
-        break;
-    case MHZ:
-        pwmCfg->clkDiv = 1;
-        pwmCfg->period = 72/freq;
-        pwmCfg->threshold2 = 72*duty/freq/100;
-        break;
-    default:
-        break;
-        }
+        pwmCfg.clkDiv = 1200;
+        pwmCfg.period = 60000/frequence;
+        pwmCfg.threshold2 = 600*dutycycle/frequence;
+    }
+    else if(frequence <= 140)
+    {
+        pwmCfg.clkDiv = 16;
+        pwmCfg.period = 4500000/frequence;
+        pwmCfg.threshold2 = 45000*dutycycle/frequence;
+    }
+    else if(frequence <= 275)
+    {
+        pwmCfg.clkDiv = 8;
+        pwmCfg.period = 9000000/frequence;
+        pwmCfg.threshold2 = 90000*dutycycle/frequence;        
+    }
+    else if(frequence <= 550)
+    {
+        pwmCfg.clkDiv = 4;
+        pwmCfg.period = 18000000/frequence;
+        pwmCfg.threshold2 = 180000*dutycycle/frequence;        
+    }
+    else if(frequence <= 1100)
+    {
+        pwmCfg.clkDiv = 2;
+        pwmCfg.period = 36000000/frequence;
+        pwmCfg.threshold2 = 360000*dutycycle/frequence;        
+    }
+    else
+    {
+        pwmCfg.clkDiv = 1;
+        pwmCfg.period = 72000000/frequence;
+        pwmCfg.threshold2 = 720000*dutycycle/frequence;
+    }
 
-    PWM_Channel_Set_Div(pwm_device->ch  ,pwmCfg->clkDiv);
-    PWM_Channel_Update(pwm_device->ch  ,pwmCfg->period,0,pwmCfg->threshold2);
+    PWM_Channel_Set_Div(ch,pwmCfg.clkDiv);
+    PWM_Channel_Update(ch,pwmCfg.period,0,pwmCfg.threshold2);
     
 }
 
 int pwm_open(struct device *dev, uint16_t oflag)
 {
-    PWM_CH_CFG_Type pwmCfg = {
-		0,                                   			     /* PWM channel */
-		PWM_CLK_BCLK,                                        /* PWM Clock */
-		PWM_STOP_GRACEFUL,                                   /* PWM Stop Mode */
-		PWM_POL_NORMAL,                                      /* PWM mode type */
-		1,                                                   /* PWM clkDiv num */
-		100,                                                 /* PWM period set */
-		0,                                                   /* PWM threshold1 num */
-		50,                                                  /* PWM threshold2 num */
-		0,                                                   /* PWM interrupt pulse count */
-	};
     pwm_device_t *pwm_device = (pwm_device_t *)dev;
+
+    PWM_CH_CFG_Type pwmCfg = {0};
+
+    PWM_Channel_Disable(pwm_device->ch);
+    PWM_IntMask(pwm_device->ch,PWM_INT_ALL,MASK);
+    NVIC_DisableIRQ(PWM_IRQn);
 
     pwmCfg.ch = pwm_device->ch;
     /* todo clk init at clock tree now clk fix set as bclk*/
     pwmCfg.clk = PWM_CLK_BCLK;
-
     pwmCfg.stopMode = PWM_STOP_MODE_SEL;
     pwmCfg.pol = PWM_POL_SEL;
 
-
-    if(pwm_device->frequency < 1000){
-        pwm_set(dev,&pwmCfg,pwm_device->frequency,HZ,pwm_device->dutyCycle);
-    }else if(pwm_device->frequency < 999999){
-        pwm_set(dev,&pwmCfg,pwm_device->frequency /1000,KHZ,pwm_device->dutyCycle);
-    }else{
-        pwm_set(dev,&pwmCfg,pwm_device->frequency /1000000,MHZ,pwm_device->dutyCycle);
-    }
-	
     PWM_Channel_Init(&pwmCfg);
-    PWM_Channel_Enable(pwm_device->ch);
+    pwm_channel_config(pwm_device->ch,pwm_device->frequency,pwm_device->dutycycle);
+
+    if (oflag & DEVICE_OFLAG_INT_TX)
+    {
+        pwmCfg.intPulseCnt = pwm_device->it_pulse_count;
+        Interrupt_Handler_Register(PWM_IRQn,PWM_IRQ);
+        PWM_IntMask(pwm_device->ch,PWM_INT_PULSE_CNT,UNMASK);
+        NVIC_EnableIRQ(PWM_IRQn);
+    }
+
     return 0;
 }
 int pwm_close(struct device *dev)
@@ -155,17 +132,10 @@ int pwm_control(struct device *dev, int cmd, void *args)
 {
     pwm_device_t *pwm_device = (pwm_device_t *)dev;
     pwm_config_t *pwm_config = (pwm_config_t *)args;
-    PWM_CH_CFG_Type pwmCfg;
     switch (cmd)
     {
     case DEVICE_CTRL_CONFIG/* constant-expression */:
-        if(pwm_device->frequency < 1000){
-            pwm_set(dev,&pwmCfg,pwm_config->frequency,HZ,pwm_config->dutyCycle);
-        }else if(pwm_device->frequency < 999999){
-            pwm_set(dev,&pwmCfg,pwm_config->frequency /1000,KHZ,pwm_config->dutyCycle);
-        }else{
-            pwm_set(dev,&pwmCfg,pwm_config->frequency /1000000,MHZ,pwm_config->dutyCycle);
-        }
+        pwm_channel_config(pwm_device->ch,pwm_config->frequency,pwm_config->dutycycle);
         break;
     case DEVICE_CTRL_RESUME /* constant-expression */:
         PWM_Channel_Enable(pwm_device->ch);
@@ -173,6 +143,25 @@ int pwm_control(struct device *dev, int cmd, void *args)
     case DEVICE_CTRL_SUSPEND /* constant-expression */:
         PWM_Channel_Disable(pwm_device->ch);
         break;    
+    case DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG:
+    {
+        /* Config interrupt pulse count */
+        uint32_t pwm_ch_addr = PWM_BASE+PWM_CHANNEL_OFFSET+(pwm_device->ch)*0x20;
+        uint32_t tmpVal = BL_RD_REG(pwm_ch_addr, PWM_INTERRUPT);
+        BL_WR_REG(pwm_ch_addr, PWM_INTERRUPT, BL_SET_REG_BITS_VAL(tmpVal, PWM_INT_PERIOD_CNT, (uint32_t)args));
+
+        if((uint32_t)args)
+        {
+            PWM_IntMask(pwm_device->ch,PWM_INT_PULSE_CNT,UNMASK);
+            NVIC_EnableIRQ(PWM_IRQn);
+        }
+        else
+        {
+            PWM_IntMask(pwm_device->ch,PWM_INT_PULSE_CNT,MASK);
+            NVIC_DisableIRQ(PWM_IRQn);
+        }
+        break;    
+    }
     default:
         break;
     }
@@ -201,4 +190,45 @@ int pwm_register(enum pwm_index_type index, const char *name, uint16_t flag)
     dev->handle = NULL;
 
     return device_register(dev, name, flag);
+}
+
+static void pwm_isr(pwm_device_t *handle)
+{
+    uint32_t i;
+    uint32_t tmpVal;
+    uint32_t timeoutCnt = 160*1000;
+    /* Get channel register */
+    uint32_t PWMx = PWM_BASE;
+    
+    for (i = 0; i < PWM_MAX_INDEX; i++) {
+        tmpVal = BL_RD_REG(PWMx, PWM_INT_CONFIG);
+        if ((BL_GET_REG_BITS_VAL(tmpVal, PWM_INTERRUPT_STS) & (1 << handle[i].ch)) != 0) {
+            /* Clear interrupt */
+            tmpVal |= (1 << (handle[i].ch + PWM_INT_CLEAR_POS));
+            BL_WR_REG(PWMx, PWM_INT_CONFIG, tmpVal);
+            /* FIXME: we need set pwm_int_clear to 0 by software and 
+               before this,we must make sure pwm_interrupt_sts is 0*/
+            do{
+                tmpVal = BL_RD_REG(PWMx, PWM_INT_CONFIG);
+                timeoutCnt--;
+                if(timeoutCnt == 0){
+                    break;
+                }
+            }while(BL_GET_REG_BITS_VAL(tmpVal,PWM_INTERRUPT_STS)&(1 << handle[i].ch));
+            
+            tmpVal &= (~(1 << (handle[i].ch + PWM_INT_CLEAR_POS)));
+            BL_WR_REG(PWMx, PWM_INT_CONFIG, tmpVal);
+
+            if (handle[i].parent.callback)
+            {
+                handle[i].parent.callback(&handle[i].parent, NULL, 0, PWM_EVENT_COMPLETE);
+            }
+                
+        }
+    }
+}
+
+static void PWM_IRQ(void)
+{
+    pwm_isr(&pwmx_device[0]);
 }

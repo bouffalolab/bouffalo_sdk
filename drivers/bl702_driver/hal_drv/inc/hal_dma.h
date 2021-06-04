@@ -107,8 +107,16 @@ enum dma_index_type
 #define DMA_REQUEST_SPI0_TX     0x0000000B /*!< DMA request peripheral:SPI TX */
 #define DMA_REQUEST_I2S_RX      0x00000014 /*!< DMA request peripheral:I2S RX */ 
 #define DMA_REQUEST_I2S_TX      0x00000015 /*!< DMA request peripheral:I2S TX */ 
-#define DMA_REQUEST_ADC0        0x00000016 /*!< DMA request peripheral:GPADC0 */
-#define DMA_REQUEST_DAC0        0x00000017 /*!< DMA request peripheral:GPADC1 */
+#define DMA_REQUEST_ADC0        0x00000016 /*!< DMA request peripheral:ADC0 */
+#define DMA_REQUEST_DAC0        0x00000017 /*!< DMA request peripheral:DAC0 */
+#define DMA_REQUEST_USB_EP0     0x00000018 /*!< DMA request peripheral:USB EP0*/
+#define DMA_REQUEST_USB_EP1     0x00000019 /*!< DMA request peripheral:USB EP1*/
+#define DMA_REQUEST_USB_EP2     0x0000001A /*!< DMA request peripheral:USB EP2*/
+#define DMA_REQUEST_USB_EP3     0x0000001B /*!< DMA request peripheral:USB EP3*/
+#define DMA_REQUEST_USB_EP4     0x0000001C /*!< DMA request peripheral:USB EP4*/
+#define DMA_REQUEST_USB_EP5     0x0000001D /*!< DMA request peripheral:USB EP5*/
+#define DMA_REQUEST_USB_EP6     0x0000001E /*!< DMA request peripheral:USB EP6*/
+#define DMA_REQUEST_USB_EP7     0x0000001F /*!< DMA request peripheral:USB EP7 */
 
 #define DMA_BURST_1BYTE     0
 #define DMA_BURST_4BYTE     1

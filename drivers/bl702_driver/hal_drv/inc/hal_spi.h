@@ -75,6 +75,13 @@ enum spi_index_type
 #define SPI_TRANSFER_TPYE_24BIT   2
 #define SPI_TRANSFER_TYPE_32BIT   3
 
+enum spi_event_type
+{
+	SPI_EVENT_TX_FIFO,
+  	SPI_EVENT_RX_FIFO,
+  	SPI_EVENT_UNKNOWN
+};
+
 typedef struct spi_device
 {
     struct device parent;

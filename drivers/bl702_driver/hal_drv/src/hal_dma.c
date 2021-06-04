@@ -24,11 +24,11 @@
 #include "drv_mmheap.h"
 #include "bl702_dma.h"
 
-dma_control_data_t dma_ctrl_cfg;
+static dma_control_data_t dma_ctrl_cfg;
 
-void DMA0_IRQ(void);
+static void DMA0_IRQ(void);
 
-dma_device_t dmax_device[DMA_MAX_INDEX] =
+static dma_device_t dmax_device[DMA_MAX_INDEX] =
 {
 #ifdef BSP_USING_DMA0_CH0
     DMA0_CH0_CONFIG,
@@ -66,7 +66,7 @@ int dma_open(struct device *dev, uint16_t oflag)
 {
     dma_device_t *dma_device = (dma_device_t *)dev;
 
-    DMA_LLI_Cfg_Type lliCfg;
+    DMA_LLI_Cfg_Type lliCfg = {0};
 
     /* Disable all interrupt */
     DMA_IntMask(dma_device->ch, DMA_INT_ALL, MASK);
@@ -129,7 +129,7 @@ int dma_control(struct device *dev, int cmd, void *args)
         case DEVICE_CTRL_CONFIG /* constant-expression */:
         {
             dma_ctrl_param_t *cfg = (dma_ctrl_param_t *)args;
-            DMA_LLI_Cfg_Type lliCfg;
+            DMA_LLI_Cfg_Type lliCfg = {0};
 
             lliCfg.dir = cfg->direction;
             lliCfg.srcPeriph = cfg->src_req;
@@ -429,7 +429,7 @@ void dma_isr(dma_device_t *handle)
     if (handle->id == 0)
     {
         uint32_t DMAChs = DMA_BASE;
-        for (uint8_t i = 0; i < DMA_CH_MAX; i++)
+        for (uint8_t i = 0; i < DMA_MAX_INDEX; i++)
         {
             tmpVal = BL_RD_REG(DMAChs, DMA_INTTCSTATUS);
             if ((BL_GET_REG_BITS_VAL(tmpVal, DMA_INTTCSTATUS) & (1 << handle[i].ch)) != 0)
@@ -446,7 +446,7 @@ void dma_isr(dma_device_t *handle)
             }
         }
 
-        for (uint8_t i = 0; i < DMA_CH_MAX; i++)
+        for (uint8_t i = 0; i < DMA_MAX_INDEX; i++)
         {
             tmpVal = BL_RD_REG(DMAChs, DMA_INTERRORSTATUS);
             if ((BL_GET_REG_BITS_VAL(tmpVal, DMA_INTERRORSTATUS) & (1 << handle[i].ch)) != 0)

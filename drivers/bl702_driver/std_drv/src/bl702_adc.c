@@ -1036,6 +1036,76 @@ void ADC_Tsen_Init(ADC_TSEN_MOD_Type tsenMod)
 }
 
 /****************************************************************************//**
+ * @brief  ADC TSEN Enable
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ADC_Tsen_Enable(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG2);
+    tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_TS_EN);
+    BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG2,tmpVal);
+}
+
+
+/****************************************************************************//**
+ * @brief  ADC TSEN Disable
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ADC_Tsen_Disable(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG2);
+    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_TS_EN);
+    BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG2,tmpVal);
+}
+
+/****************************************************************************//**
+ * @brief  ADC Clear fifo 
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ADC_FIFO_Clear(void)
+{
+    uint32_t tmpVal;
+
+    /* clear fifo by SET GPIP_GPADC_FIFO_CLR bit*/
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPADC_CONFIG);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GPIP_GPADC_FIFO_CLR);
+    BL_WR_REG(GPIP_BASE, GPIP_GPADC_CONFIG, tmpVal);
+}
+
+/****************************************************************************//**
+ * @brief  config pga
+ *
+ * @param  pga_vcmi_enable: enable or not vcmi 
+ * @param  pga_os_cal: pga os cal value
+ * @return None
+ *
+*******************************************************************************/
+void ADC_PGA_Config(uint8_t pga_vcmi_enable , uint8_t  pga_os_cal){
+
+    uint32_t tmpVal;
+
+    tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG2);
+
+    if(pga_vcmi_enable){
+        tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_PGA_VCMI_EN);
+    }else{
+        tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_PGA_VCMI_EN);        
+    }
+    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_GPADC_PGA_OS_CAL,pga_os_cal);
+
+    BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG2,tmpVal);
+}
+/****************************************************************************//**
  * @brief  TSEN_Get_V_Error
  *
  * @param  None

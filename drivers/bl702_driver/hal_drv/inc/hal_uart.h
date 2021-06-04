@@ -37,15 +37,6 @@ enum uart_index_type
 #ifdef BSP_USING_UART1
     UART1_INDEX,
 #endif
-#ifdef BSP_USING_UART2
-    UART2_INDEX,
-#endif
-#ifdef BSP_USING_UART3
-    UART3_INDEX,
-#endif
-#ifdef BSP_USING_UART4
-    UART4_INDEX,
-#endif
     UART_MAX_INDEX
 };
 
@@ -70,8 +61,8 @@ typedef enum
 typedef enum  
 {
     UART_STOP_ONE = 0,  /*!< One stop bit */
-    UART_STOP_ONE_D_FIVE = 0,  /*!< 1.5 stop bit */
-    UART_STOP_TWO = 1   /*!< Two stop bits */
+    UART_STOP_ONE_D_FIVE = 1,  /*!< 1.5 stop bit */
+    UART_STOP_TWO = 2   /*!< Two stop bits */
 } uart_stopbits_t;
 
 /*!

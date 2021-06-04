@@ -38,6 +38,8 @@
 #define DEVICE_CTRL_USB_DC_GET_TX_FIFO_CNT  0x18
 #define DEVICE_CTRL_USB_DC_GET_RX_FIFO_CNT  0x19
 #define DEVICE_CTRL_USB_DC_GET_EP_FREE      0x20
+#define DEVICE_CTRL_USB_DC_SET_TX_DMA       0x21
+#define DEVICE_CTRL_USB_DC_SET_RX_DMA       0x22
 
 enum usb_index_type
 {
@@ -207,6 +209,8 @@ typedef struct usb_dc_device
     uint8_t id;
     usb_dc_ep_state_t in_ep[8];  /*!< IN endpoint parameters             */
     usb_dc_ep_state_t out_ep[8]; /*!< OUT endpoint parameters            */
+	void *tx_dma;
+	void *rx_dma;
 } usb_dc_device_t;
 
 int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag);

@@ -23,8 +23,21 @@
 #include "bl702_glb.h"
 #include "bl702_gpio.h"
 #include "hal_gpio.h"
+#include "drv_mmheap.h"
 
-gpio_device_t gpio_device;
+static gpio_device_t gpio_device;
+
+static void GPIO_IRQ(void);
+
+struct gpio_int_cfg_private
+{
+    slist_t list;
+    uint32_t pin;
+    void (*cbfun)(uint32_t pin);
+};
+
+static slist_t gpio_int_head = SLIST_OBJECT_INIT(gpio_int_head);
+
 /**
  * @brief 
  * 
@@ -71,7 +84,7 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
 
             gpio_cfg.gpioMode = GPIO_MODE_INPUT;
 
-            GLB_GPIO_INT0_IRQHandler_Install();
+            Interrupt_Handler_Register(GPIO_INT0_IRQn,GPIO_IRQ);
             if (mode == GPIO_ASYNC_RISING_TRIGER_INT_MODE)
             {
                 gpio_cfg.pullType = GPIO_PULL_DOWN;
@@ -163,9 +176,12 @@ int gpio_read(uint32_t pin)
  * @param pin 
  * @param cbFun 
  */
-void gpio_attach_irq(uint32_t pin, void (*cbFun)(void))
+void gpio_attach_irq(uint32_t pin, void (*cbfun)(uint32_t pin))
 {
-    GLB_GPIO_INT0_Callback_Install(pin, cbFun);
+    struct gpio_int_cfg_private* int_cfg = mmheap_alloc(sizeof(struct gpio_int_cfg_private));
+    int_cfg->cbfun = cbfun;
+    int_cfg->pin = pin;
+    slist_add_tail(&gpio_int_head,&int_cfg->list);
 }
 /**
  * @brief 
@@ -186,6 +202,7 @@ void gpio_irq_enable(uint32_t pin, uint8_t enabled)
 
 }
 
+
 void pin_register(const char *name, uint16_t flag)
 {
     struct device *dev;
@@ -202,4 +219,30 @@ void pin_register(const char *name, uint16_t flag)
     dev->handle = NULL;
 
     device_register(dev, name, flag);
+}
+
+static void GPIO_IRQ(void)
+{
+	slist_t *i;
+    uint32_t timeOut=0;
+#define GLB_GPIO_INT0_CLEAR_TIMEOUT     (32)
+	slist_for_each(i,&gpio_int_head)
+    {
+        struct gpio_int_cfg_private* int_cfg = slist_entry(i,struct gpio_int_cfg_private,list);
+        if(SET==GLB_Get_GPIO_IntStatus(int_cfg->pin))
+        {
+            int_cfg->cbfun(int_cfg->pin);
+            GLB_GPIO_IntClear(int_cfg->pin,SET);
+            /* timeout check */
+            timeOut=GLB_GPIO_INT0_CLEAR_TIMEOUT;
+            do{
+                timeOut--;
+            }while((SET==GLB_Get_GPIO_IntStatus(int_cfg->pin))&&timeOut);
+            if(!timeOut){
+                MSG("WARNING: Clear GPIO interrupt status fail.\r\n");
+            }
+            GLB_GPIO_IntClear(int_cfg->pin,RESET);
+        }
+    }
+    
 }

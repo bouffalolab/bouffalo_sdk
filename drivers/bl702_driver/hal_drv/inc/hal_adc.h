@@ -26,6 +26,14 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
+#define DEVICE_CTRL_ADC_CHANNEL_START   0x10
+#define DEVICE_CTRL_ADC_CHANNEL_STOP    0x11
+#define DEVICE_CTRL_ADC_CHANNEL_CONFIG  0x12
+#define DEVICE_CTRL_ADC_VBAT_ON         0x13
+#define DEVICE_CTRL_ADC_VBAT_OFF        0x14
+#define DEVICE_CTRL_ADC_TSEN_ON         0x15
+#define DEVICE_CTRL_ADC_TSEN_OFF        0x16
+
 enum adc_index_type
 {
 #ifdef BSP_USING_ADC0
@@ -34,9 +42,9 @@ enum adc_index_type
     ADC_MAX_INDEX
 };
 
-#define ADC_CLK_MAX (2000000)
-
-#define LEFT_SHIFT_BIT(x) (1 << x)
+#define adc_channel_start(dev)              device_control(dev,DEVICE_CTRL_ADC_CHANNEL_START,NULL)
+#define adc_channel_stop(dev)               device_control(dev,DEVICE_CTRL_ADC_CHANNEL_STOP,NULL)
+#define adc_channel_config(dev,list)        device_control(dev,DEVICE_CTRL_ADC_CHANNEL_CONFIG,list)
 
 typedef enum {
     ADC_CHANNEL0,                              /* GPIO 0, ADC channel 0 */
@@ -66,65 +74,84 @@ typedef enum {
 }adc_channel_t;
 
 typedef enum {
-    ADC_CLK_2MHZ,
-    ADC_CLK_1P3MHZ,
-    ADC_CLK_1MHZ,
-    ADC_CLK_500KHZ,   
-}adc_clk_t;
+    ADC_CLOCK_DIV_1,                          /*!< ADC clock:on 32M clock is 32M */
+    ADC_CLOCK_DIV_4,                          /*!< ADC clock:on 32M clock is 8M */
+    ADC_CLOCK_DIV_8,                          /*!< ADC clock:on 32M clock is 4M */
+    ADC_CLOCK_DIV_12,                         /*!< ADC clock:on 32M clock is 2.666M */
+    ADC_CLOCK_DIV_16,                         /*!< ADC clock:on 32M clock is 2M */
+    ADC_CLOCK_DIV_20,                         /*!< ADC clock:on 32M clock is 1.6M */
+    ADC_CLOCK_DIV_24,                         /*!< ADC clock:on 32M clock is 1.333M */
+    ADC_CLOCK_DIV_32,                         /*!< ADC clock:on 32M clock is 1M */
+}adc_clk_div_t;
 
 typedef enum {
     ADC_VREF_3P2V = 0,                          /* ADC select 3.2V as reference voltage */
     ADC_VREF_2P0V = 1,                          /* ADC select 2V as reference voltage */
 }adc_vref_t;
 
-typedef enum {
-    ADC_ONE_CONV = 0,                           /* ADC One shot conversion mode  */
-    ADC_CON_CONV = 1,                           /* ADC Continuous conversion mode */
-}adc_conv_t;
-
 /**
  *  @brief ADC data width type definition
  */
 typedef enum {
-    ADC_DATA_WD_12,                      /*!< ADC 12 bits */
-    ADC_DATA_WD_14_WITH_16_AVERAGE,      /*!< ADC 14 bits,and the value is average of 16 converts */
-    ADC_DATA_WD_16_WITH_64_AVERAGE,      /*!< ADC 16 bits,and the value is average of 64 converts */
-    ADC_DATA_WD_16_WITH_128_AVERAGE,     /*!< ADC 16 bits,and the value is average of 128 converts */
-    ADC_DATA_WD_16_WITH_256_AVERAGE,     /*!< ADC 16 bits,and the value is average of 256 converts */
+    ADC_DATA_WIDTH_12B,                      /*!< ADC 12 bits */
+    ADC_DATA_WIDTH_14B_WITH_16_AVERAGE,      /*!< ADC 14 bits,and the value is average of 16 converts */
+    ADC_DATA_WIDTH_16B_WITH_64_AVERAGE,      /*!< ADC 16 bits,and the value is average of 64 converts */
+    ADC_DATA_WIDTH_16B_WITH_128_AVERAGE,     /*!< ADC 16 bits,and the value is average of 128 converts */
+    ADC_DATA_WIDTH_16B_WITH_256_AVERAGE,     /*!< ADC 16 bits,and the value is average of 256 converts */
 }adc_data_width_t;
 
+/**
+ *  @brief ADC FIFO threshold type definition
+ */
 typedef enum {
-    ADC_SINGLE_ENDED_IN = 0,                    /* ADC signal is single-ended input */
-    ADC_DIFFERENTIAL_IN = 1,                    /* ADC signal is differential input*/
-}adc_inputmode_t;
+    ADC_FIFO_THRESHOLD_1BYTE,                   /*!< ADC FIFO threshold is 1 */
+    ADC_FIFO_THRESHOLD_4BYTE,                   /*!< ADC FIFO threshold is 4 */
+    ADC_FIFO_THRESHOLD_8BYTE,                   /*!< ADC FIFO threshold is 8 */
+    ADC_FIFO_THRESHOLD_16BYTE,                  /*!< ADC FIFO threshold is 16 */
+}adc_fifo_threshold_t;
+
+/**
+ *  @brief ADC PGA gain type definition
+ */
+typedef enum {
+    ADC_GAIN_NONE,                      /*!< No PGA gain */
+    ADC_GAIN_1,                         /*!< PGA gain 1 */
+    ADC_GAIN_2,                         /*!< PGA gain 2 */
+    ADC_GAIN_4,                         /*!< PGA gain 4 */
+    ADC_GAIN_8,                         /*!< PGA gain 8 */
+    ADC_GAIN_16,                        /*!< PGA gain 16 */
+    ADC_GAIN_32,                        /*!< PGA gain 32 */
+}adc_pga_gain_t;
 
 typedef struct {
-    uint8_t *pinList;
-    uint8_t *posChList;
-    uint8_t *negChList;
+    uint8_t *pos_channel;
+    uint8_t *neg_channel;
     uint8_t  num;
-    uint8_t  dma_en;    
-    adc_conv_t   conv_mode;
-    adc_inputmode_t in_mode;    
-} adc_user_cfg_t;
+} adc_channel_cfg_t;
 
 typedef struct {
     int8_t posChan;                         /*!< Positive channel */
     int8_t negChan;                         /*!< Negative channel */
     uint16_t value;                         /*!< ADC value */
     float volt;                             /*!< ADC voltage result */
-}adc_res_val_t;
+}adc_channel_val_t;
 
 typedef struct adc_device
 {
     struct device parent;
-    adc_clk_t  clk;                  /* CLK is not more than 2Mhz */
+    adc_clk_div_t  clk_div;          /* CLK is not more than 2Mhz */
     adc_vref_t vref;                 /* ADC voltage reference*/
-    adc_data_width_t resWidth;
+	bool continuous_conv_mode;       /** conversion mode: shot conversion mode or continuous conversion mode. */
+	bool differential_mode;          /** Channel type: single-ended or differential. */
+    adc_data_width_t data_width;
+    adc_fifo_threshold_t fifo_threshold;
+    adc_pga_gain_t gain;
 } adc_device_t;
 
 #define ADC_DEV(dev) ((adc_device_t*)dev)
 
-int adc_register(enum adc_index_type index, const char *name, uint16_t flag, adc_user_cfg_t *adc_user_cfg);
+int adc_register(enum adc_index_type index, const char *name, uint16_t flag);
+int adc_trim_tsen(uint16_t * tsen_offset);
+float adc_get_tsen(uint16_t tsen_offset);
 
 #endif

@@ -94,6 +94,6 @@ void gpio_set_mode(uint32_t pin, uint32_t mode);
 void gpio_write(uint32_t pin, uint32_t value);
 void gpio_toggle(uint32_t pin);
 int  gpio_read(uint32_t pin);
-void gpio_attach_irq(uint32_t pin, void (*cbFun)(void));
+void gpio_attach_irq(uint32_t pin, void (*cbfun)(uint32_t pin));
 void gpio_irq_enable(uint32_t pin,uint8_t enabled);
 #endif

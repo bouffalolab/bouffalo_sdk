@@ -482,6 +482,7 @@ BL_Err_Type Sec_Eng_Trng_Enable(void);
 void Sec_Eng_Trng_Int_Enable(void);
 void Sec_Eng_Trng_Int_Disable(void);
 BL_Err_Type Sec_Eng_Trng_Read(uint8_t data[32]);
+BL_Err_Type Sec_Eng_Trng_Get_Random(uint8_t *data,uint32_t len);
 void Sec_Eng_Trng_Int_Read_Trigger(void);
 void Sec_Eng_Trng_Int_Read(uint8_t data[32]);
 void Sec_Eng_Trng_Disable(void);
