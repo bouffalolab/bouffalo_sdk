@@ -3,6 +3,23 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.2.0
+----------------------------
+
+新增功能说明：
+    1. 新增 xz、ble 组件
+    2. usb_stack 中新增 usb video、hid、audio 驱动
+    3. 新增 bl602 driver 和 bl602_iot board
+    4. 为 examples 补全 cdk 工程
+    5. 新增 ble、psram、camera、boot2_iap、emac、usb_video、usb_audio、usb_hid、gpio_int、pwm_it、flash读写、lowpower、pka、systick、timer demo
+    6. 更新 flash Tools
+    7. 更新 cmake 文件
+    8. 更新 mtimer 时钟频率为1M，便于计算
+    9. 文档更新
+
+修复问题说明：
+    1. 修复若干已知问题
+
 
 bl mcu sdk Release V1.1.0
 ----------------------------
@@ -27,3 +44,4 @@ bl mcu sdk Release V1.0.0
 支持 bl706_avb、bl706_iot 开发板的开发工作；
 该项目也支持使用 CDK、eclipse 编译、烧写、调试代码；
 该项目中还包含烧录工具、调试脚本、flash 算法文件以及构建 cmake 需要的一些工具。
+
