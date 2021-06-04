@@ -38,10 +38,9 @@ typedef struct {
     uint16_t keyValue[KEY_FILTER_NUM];
 }adc_keys_status;
 
-uint8_t PinList[] = {GPIO_PIN_18};
 adc_channel_t posChList[] = {ADC_CHANNEL8};
 adc_channel_t negChList[] = {ADC_CHANNEL_GND};
-adc_res_val_t result_val;
+adc_channel_val_t result_val;
 
 adc_keys_status key_machine;
 
@@ -92,7 +91,7 @@ static int get_adc_key_value(uint32_t Vmv){
 	volatile uint16_t key_num[5] = {0};
     uint8_t bigger = 0, i = 0, j = 0;
 
-    if(Vmv > KEY0_ADC_VALUE && Vmv < KEY4_ADC_VALUE + KEY_MEASURE_OFFSET){
+    if(Vmv >= KEY0_ADC_VALUE && Vmv <= KEY4_ADC_VALUE + KEY_MEASURE_OFFSET){
         key_machine.keyValue[key_machine.vaildKeyNum] = get_adc_value_range(Vmv);
         key_machine.vaildKeyNum++;
 
@@ -150,31 +149,29 @@ int main(void)
     bflb_platform_init(0);
     uint16_t keyValue=0;
 
-    adc_user_cfg_t adc_user_cfg;
+    adc_channel_cfg_t adc_channel_cfg;
 
-    adc_user_cfg.dma_en = DISABLE;              
-    adc_user_cfg.conv_mode = ADC_CON_CONV;      
-    adc_user_cfg.in_mode = ADC_SINGLE_ENDED_IN;
-    
-    adc_user_cfg.pinList = PinList;
-    adc_user_cfg.posChList = posChList;
-    adc_user_cfg.negChList = negChList;
-    adc_user_cfg.num = sizeof(posChList)/sizeof(adc_channel_t);
+    adc_channel_cfg.pos_channel = posChList;
+    adc_channel_cfg.neg_channel = negChList;
+    adc_channel_cfg.num = 1;
 
-    adc_register(ADC0_INDEX, "adc_key", DEVICE_OFLAG_STREAM_RX, &adc_user_cfg);
+    adc_register(ADC0_INDEX, "adc_key", DEVICE_OFLAG_STREAM_RX);
 
     adc_key = device_find("adc_key");
 
     if(adc_key)
     {
+        ADC_DEV(adc_key)->continuous_conv_mode = ENABLE;
         device_open(adc_key, DEVICE_OFLAG_STREAM_RX);
+        device_control(adc_key,DEVICE_CTRL_ADC_CHANNEL_CONFIG,&adc_channel_cfg);
+        
     }else{
         MSG("device open failed\r\n");
     }
     
-    device_control(adc_key,DEVICE_CTRL_RESUME,0);
-
     key_machine_init();
+    
+    adc_channel_start(adc_key);
 
     while (1)
     {

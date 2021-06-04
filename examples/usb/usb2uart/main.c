@@ -25,6 +25,8 @@
 #include "usbd_cdc.h"
 #include "uart_interface.h"
 #include "bl702_ef_ctrl.h"
+#include "bl702_glb.h"
+#include "hal_gpio.h"
 
 #define CDC_IN_EP 0x82
 #define CDC_OUT_EP 0x01
@@ -154,19 +156,19 @@ uint32_t usbd_cdc_filter_callback(uint8_t* data, uint32_t len)
         uart1_rts_init();
         
         if(data[pattern_len]=='0'||data[pattern_len]==0){
-            usbd_cdc_acm_set_dtr(0);
+            dtr_pin_set(1);
             MSG("DTR0\r\n");
         }
         if(data[pattern_len]=='1'||data[pattern_len]==1){
-            usbd_cdc_acm_set_dtr(1);
+            dtr_pin_set(0);
             MSG("DTR1\r\n");
         }
         if(data[pattern_len+1]=='0'||data[pattern_len+1]==0){
-            usbd_cdc_acm_set_rts(0);
+            rts_pin_set(1);
             MSG("RTS0\r\n");
         }
         if(data[pattern_len+1]=='1'||data[pattern_len+1]==1){
-            usbd_cdc_acm_set_rts(1);
+            rts_pin_set(0);
             MSG("RTS1\r\n");
         }
         //delay=atoi(( char *)&data[pattern_len+1]);
@@ -175,11 +177,11 @@ uint32_t usbd_cdc_filter_callback(uint8_t* data, uint32_t len)
         }
         bflb_platform_delay_ms(delay);
         if(data[pattern_len+1]=='0'||data[pattern_len+1]==0){
-            usbd_cdc_acm_set_rts(1);
+            rts_pin_set(0);
             MSG("RTS1\r\n");
         }
         if(data[pattern_len+1]=='1'||data[pattern_len+1]==1){
-            usbd_cdc_acm_set_rts(0);
+            rts_pin_set(1);
             MSG("RTS0\r\n");
         }
         bflb_platform_delay_ms(delay);
@@ -220,12 +222,12 @@ void usbd_cdc_acm_set_line_coding(uint32_t baudrate, uint8_t databits, uint8_t p
 
 void usbd_cdc_acm_set_dtr(bool dtr)
 {
-    dtr_pin_set(!dtr);
+    //dtr_pin_set(!dtr);
 }
 
 void usbd_cdc_acm_set_rts(bool rts)
 {
-    rts_pin_set(!rts);
+    //rts_pin_set(!rts);
 }
 
 usbd_class_t cdc_class;
@@ -246,14 +248,27 @@ usbd_endpoint_t cdc_in_ep =
 
 extern struct device* usb_dc_init(void);
 
+// #define BL702
+
+#ifdef BL702
+#define UART_DTR_PIN GPIO_PIN_37
+#define UART_RTS_PIN GPIO_PIN_33
+#else
+#define UART_DTR_PIN GPIO_PIN_22
+#define UART_RTS_PIN GPIO_PIN_21
+#endif
+
 int main(void)
 {
     uint8_t chipid[8];
     uint8_t chipid2[6];
-
+#ifdef BL702
+    GLB_Select_Internal_Flash();
+#endif
     bflb_platform_init(0);
     uart_ringbuffer_init();
     uart1_init();
+    uart1_set_dtr_rts(UART_DTR_PIN,UART_RTS_PIN);
     uart1_dtr_deinit();
     uart1_rts_deinit();
 
@@ -281,6 +296,7 @@ int main(void)
         device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP1_DATA_OUT_IT | USB_EP2_DATA_IN_IT));
     }
     while(!usb_device_is_configured());
+
     while (1)
     {
         uart_send_from_ringbuffer();

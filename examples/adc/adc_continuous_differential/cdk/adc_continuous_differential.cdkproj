@@ -32,9 +32,6 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
       <FileOption/>
     </File>
-    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_camera.c">
-      <FileOption/>
-    </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
       <FileOption/>
     </File>
@@ -71,6 +68,10 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
       <FileOption/>
     </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="std">
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_acomp.c">

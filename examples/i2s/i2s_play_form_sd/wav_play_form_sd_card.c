@@ -1,3 +1,26 @@
+/**
+ * @file wav_play_form_sd_card.c
+ * @brief 
+ * 
+ * Copyright (c) 2021 Bouffalolab team
+ * 
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ * 
+ */
+
 #include "bsp_es8388.h"
 #include "hal_i2s.h"
 #include "hal_dma.h"
@@ -108,6 +131,7 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR* path)
 
     audio_dev->buff_using = 1;
     audio_dev->device = (struct device*)NULL;
+    audio_dev->audio_state = 0;
 
     f_close(&Wav_Fp);
     res = f_open(&Wav_Fp, path, FA_READ);
@@ -119,6 +143,7 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR* path)
         MSG("wav file open error\r\n");
         return 1;
     }
+    /* Parse the WAV file */
     res = wav_data_parser(buff, &Wav_Information);
     if (res == 0)
     {
@@ -136,11 +161,27 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR* path)
         return 1;
     }
     
-    i2s_register(I2S0_INDEX,"I2S",DEVICE_OFLAG_RDWR);
     audio_dev->device = device_find("I2S");
+    if(audio_dev->device)
+    {
+        device_close(audio_dev->device);
+    }
+    else
+    {
+        i2s_register(I2S0_INDEX,"I2S",DEVICE_OFLAG_RDWR);
+        audio_dev->device = device_find("I2S");
+    }
 
-    dma_register(DMA0_CH2_INDEX, "i2s_ch2", DEVICE_OFLAG_RDWR);
     struct device *dma_ch2 = device_find("i2s_ch2");
+    if(dma_ch2)
+    {
+        device_close(dma_ch2);
+    }
+    else
+    {
+        dma_register(DMA0_CH2_INDEX, "i2s_ch2", DEVICE_OFLAG_RDWR);
+        dma_ch2 = device_find("i2s_ch2");
+    }
 
     if((audio_dev->device) && dma_ch2)
     {
@@ -223,6 +264,7 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR* path)
             f_read(&Wav_Fp,audio_dev->buff[1], audio_dev->buff_size_max, &num);
             audio_dev->buff_data_size[1] = num;
         }
+        audio_dev->audio_state = 1;
     }
     else{
         return 1;
@@ -236,15 +278,26 @@ static int sd_wav_play_control(struct audio_dev *audio_dev, AUDIO_CMD_t cmd, voi
     switch (cmd)
     {
     case AUDIO_CMD_START:
-        res = device_write(audio_dev->device,0,audio_dev->buff[!audio_dev->buff_using],audio_dev->buff_data_size[!audio_dev->buff_using]);
-        audio_dev->audio_state = 1;
+        if(audio_dev->audio_state)
+        {
+            res = device_write(audio_dev->device,0,audio_dev->buff[!audio_dev->buff_using],audio_dev->buff_data_size[!audio_dev->buff_using]);
+            audio_dev->audio_state = 2;
+            res = 0;
+        }
         break;
     case AUDIO_CMD_STOP:
-        audio_dev->audio_state = 0;
-        res=0;
+        if(audio_dev->audio_state)
+        {
+            audio_dev->audio_state = 1;
+            res=0;
+        }
         break;
-    case AUDIO_CMD_VOLUME:   
-        res = ES8388_Set_Voice_Volume((uint32_t)args);
+    case AUDIO_CMD_VOLUME: 
+        if(audio_dev->audio_state)  
+        {
+            res = ES8388_Set_Voice_Volume((uint32_t)args);
+            res=0;
+        }
         break;
     default:
         break;
@@ -258,12 +311,13 @@ static int sd_wav_play_callback(audio_dev_t *audio_dev)
     uint8_t buff_using = audio_dev->buff_using;
     if(audio_dev->buff_data_size[!buff_using] )
     {
-        if(audio_dev->audio_state)
+        /* start i2s-dma */
+        if(audio_dev->audio_state == 2 && audio_dev->buff[!buff_using])
         {
             device_write(audio_dev->device, 0, audio_dev->buff[!buff_using], audio_dev->buff_data_size[!buff_using]);
             audio_dev->buff_using = !buff_using;
         }
-
+        /* fill data */
         if (audio_dev->wav_information->chunk_format.bits_per_sample / 8 == 3)
         {
             f_read(&Wav_Fp, audio_dev->buff[buff_using], audio_dev->buff_size_max / 4 * 3, &num);
@@ -275,9 +329,25 @@ static int sd_wav_play_callback(audio_dev_t *audio_dev)
         }
         audio_dev->buff_data_size[buff_using] = num;
     }
-
-    if(num==0 && audio_dev->buff_data_size[0]==0 && audio_dev->buff_data_size[1]==0)
+    /* play end, refill the buff for next time*/
+    if(num==0 && audio_dev->buff_data_size[!buff_using]==0 )
     {
+        f_lseek(&Wav_Fp, audio_dev->wav_information->chunk_data_offset+sizeof(chunk_data_t));
+        if(audio_dev->wav_information->chunk_format.bits_per_sample/8 == 3)
+        {
+            f_read(&Wav_Fp,audio_dev->buff[0], audio_dev->buff_size_max/4*3, &num);
+            audio_dev->buff_data_size[0] = pcm_24bit_to_32bit(audio_dev->buff[0],num);
+            f_read(&Wav_Fp,audio_dev->buff[1], audio_dev->buff_size_max/4*3, &num);
+            audio_dev->buff_data_size[1] = pcm_24bit_to_32bit(audio_dev->buff[1],num);
+        }
+        else
+        {
+            f_read(&Wav_Fp,audio_dev->buff[0], audio_dev->buff_size_max, &num);
+            audio_dev->buff_data_size[0] = num;
+            f_read(&Wav_Fp,audio_dev->buff[1], audio_dev->buff_size_max, &num);
+            audio_dev->buff_data_size[1] = num;
+        }
+        audio_dev->audio_state = 1;
         MSG("End of the play\r\n");
     }
     return 0;
@@ -294,6 +364,7 @@ int sd_wav_play_register(audio_dev_t *audio_dev)
     audio_dev->buff[1] = Data_Buff1;
     audio_dev->buff_data_size[0] = 0;
     audio_dev->buff_data_size[1] = 0;
+    audio_dev->audio_state = 0;
     audio_dev->buff_size_max = sizeof(Data_Buff1);
     return 0;
 }

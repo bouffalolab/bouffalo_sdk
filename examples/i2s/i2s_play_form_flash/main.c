@@ -20,19 +20,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  * 
+ * Note:
+ * 
+ * This Case is currently based on BL706_AVB development board with ili9341 controller screen. 
+ * If you use other hardware platforms, please modify the pin Settings by yourself.
+ * 
+ * This routine audio playback requires transcoding the audio into PCM encoding and exporting it as an audio array.
+ * See fhm_onechannel_16k_20.h for audio array examples , and i2s/script for transcoding scripts.
+ * 
+ * Your should Short connect func1 and func2 jump cap on 706_AVB Board,and Plug the Audio Codec Board(ES8388) whit speaker into the HD11 interface.
+ * Audio default configuration is
+ * 
+ *                   bitwith= 16 
+ *                   datarate = 16khz ,
+ *                   channel number= 1 ,
+ * 
+ * if you want to play different wav format source , pleases modify this case .
+ * 
  */
-/***************************************************************************
- * 此例程当前基于 bl706_avb 开发板开发，若使用其他硬件平台，请自行修改管脚设置
- * 此例程音频播放需要将音频转码为 pcm 编码，并导出为音频数组
- * 可参考 fhm_onechannel_16k_20.h 和 i2s/script 目录下转码脚本
- * 
- * 如使用 bl706_avb 开发板测试此例程：
- * 1. 需要将开发板上的 func1 和 func2 分别用跳帽短接
- * 2. 同时还需将音频 Decode 子板插入 HD11 接口上（Decode 芯片型号为 ES8388）
- * 3. 子板上需要连接相应的扬声器即可
- * 4. 如需播放自定义的音频，注意需要修改为正确的采样率，默认采样率为：16kHz “sampl_freq_hz = 16*1000”
- * 
- * *************************************************************************/
 #include "hal_i2s.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"

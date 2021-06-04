@@ -32,9 +32,6 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
       <FileOption/>
     </File>
-    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_camera.c">
-      <FileOption/>
-    </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
       <FileOption/>
     </File>
@@ -69,6 +66,12 @@ Board: bl70x_iot
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
       <FileOption/>
     </File>
   </VirtualDirectory>
@@ -645,7 +648,7 @@ Board: bl70x_iot
       <Asm>
         <Define/>
         <Undefine/>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/Source/include;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl706_iot;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/Source/include;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl706_iot;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl602_driver/startup;$(ProjectPath)../../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl602_driver/regs;$(ProjectPath)../../../../drivers/bl602_driver/std_drv/inc</IncludePath>
         <OtherFlags/>
         <DebugLevel>gdwarf2</DebugLevel>
       </Asm>
@@ -711,7 +714,7 @@ Board: bl70x_iot
       <Flash>
         <InitFile/>
         <Erase>Erase Sectors</Erase>
-        <Algorithms Path="">bl702_flasher.elf</Algorithms>
+        <Algorithms Path="">bl70x_flasher.elf</Algorithms>
         <Program>yes</Program>
         <Verify>yes</Verify>
         <ResetAndRun>no</ResetAndRun>

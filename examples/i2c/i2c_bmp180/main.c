@@ -49,6 +49,5 @@ int main(void)
     {
         MSG("\r\n i2c case\r\n");
         bflb_platform_delay_ms(1000);
-        //   DEBUG("GPIO_PIN_RESET\r\n");
     }
 }

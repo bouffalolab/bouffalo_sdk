@@ -25,11 +25,10 @@
 
 #define ADC_SCAN_NUM (100)
 
-uint8_t PinList[] = {GPIO_PIN_11};
 adc_channel_t posChList[] = {ADC_CHANNEL3};
 adc_channel_t negChList[] = {ADC_CHANNEL_GND};
 
-adc_res_val_t result_val;
+adc_channel_val_t result_val;
 
 struct device* adc_test;
 
@@ -37,31 +36,27 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    adc_user_cfg_t adc_user_cfg;
+    adc_channel_cfg_t adc_channel_cfg;
 
-    adc_user_cfg.dma_en = DISABLE;              // disable dma
-    adc_user_cfg.conv_mode = ADC_ONE_CONV;      // single conversion
-    adc_user_cfg.in_mode = ADC_SINGLE_ENDED_IN; // single-ended input mode
-    
-    adc_user_cfg.pinList = PinList;
-    adc_user_cfg.posChList = posChList;
-    adc_user_cfg.negChList = negChList;
-    adc_user_cfg.num = sizeof(posChList)/sizeof(adc_channel_t);
+    adc_channel_cfg.pos_channel = posChList;
+    adc_channel_cfg.neg_channel = negChList;
+    adc_channel_cfg.num = 1;
 
     MSG("adc one-shot single ended test case \r\n");
-    adc_register(ADC0_INDEX, "adc_one_single", DEVICE_OFLAG_STREAM_RX, &adc_user_cfg);
+    adc_register(ADC0_INDEX, "adc_one_single", DEVICE_OFLAG_STREAM_RX);
 
     adc_test = device_find("adc_one_single");
     if(adc_test)
     {
         device_open(adc_test, DEVICE_OFLAG_STREAM_RX);
+        device_control(adc_test,DEVICE_CTRL_ADC_CHANNEL_CONFIG,&adc_channel_cfg);
         MSG("adc device find success\r\n");
     }
 
     for(uint32_t i = 0; i < ADC_SCAN_NUM; i++ )
     {
-        device_control(adc_test,DEVICE_CTRL_RESUME,0);
-        device_read(adc_test, 0, (void *)&result_val,sizeof(result_val)/sizeof(adc_res_val_t));
+        adc_channel_start(adc_test);
+        device_read(adc_test, 0, (void *)&result_val,sizeof(result_val)/sizeof(adc_channel_val_t));
         MSG("PosId = %d NegId = %d V= %d mV \r\n",result_val.posChan,result_val.negChan,(uint32_t)(result_val.volt * 1000));
         bflb_platform_delay_ms(500);
     }

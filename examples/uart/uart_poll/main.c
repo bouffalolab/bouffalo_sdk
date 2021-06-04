@@ -30,7 +30,7 @@ int main(void)
 
     if (uart1)
     {
-        device_open(uart1, DEVICE_OFLAG_STREAM_TX); //uart0 tx dma mode
+        device_open(uart1, DEVICE_OFLAG_STREAM_TX);
         MSG("device find success\r\n");
     }
     device_write(uart1,0,buffer,10);

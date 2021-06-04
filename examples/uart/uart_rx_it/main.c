@@ -54,19 +54,19 @@ int main(void)
 
     bflb_platform_init(0);
     uart_register(UART1_INDEX, "uart1", DEVICE_OFLAG_RDWR);
-    struct device *uart = device_find("uart1");
+    struct device *uart1 = device_find("uart1");
 
-    if (uart)
+    if (uart1)
     {
 
-        device_open(uart, DEVICE_OFLAG_STREAM_TX | DEVICE_OFLAG_INT_RX); //uart0 tx dma mode
-        device_set_callback(uart, uart_irq_callback);
-        device_control(uart, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT|UART_RTO_IT));
+        device_open(uart1, DEVICE_OFLAG_STREAM_TX | DEVICE_OFLAG_INT_RX);
+        device_set_callback(uart1, uart_irq_callback);
+        device_control(uart1, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT|UART_RTO_IT));
     }
 
     while (1)
     {
-        device_write(uart,0,string,strlen(string));
+        device_write(uart1,0,string,strlen(string));
         bflb_platform_delay_ms(1000);
     }
 }

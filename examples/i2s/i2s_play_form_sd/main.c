@@ -19,19 +19,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  * 
+ * Note:
+ * 
+ * This Case is currently based on BL706_AVB development board with ili9341 controller screen. 
+ * If you use other hardware platforms, please modify the pin Settings by yourself.
+ * 
+ * This routine audio playback requires transcoding the audio into PCM encoding and exporting it as an audio array.
+ * See fhm_onechannel_16k_20.h for audio array examples , and i2s/script for transcoding scripts.
+ * 
+ * Your should Short connect func1 and func2 jump cap on 706_AVB Board,and Plug the Audio Codec Board(ES8388) whit speaker into the HD11 interface , and connect SD Card with SPI ports.
+ * 
+ * You need to fill in the correct audio file path which in SD Card file systems in audio_init(), please refer to line 58 of this code, this version only support Engilsh path.
+ * 
+ * This case use shell module to complete human-computer interaction.
  */
-/***************************************************************************
- * 此例程当前基于 bl706_avb 开发板开发，若使用其他硬件平台，请自行修改管脚设置
- * 当前例程音频播放仅适配了 WAV 格式
- * 
- * 如使用 bl706_avb 开发板测试此例程：
- * 1. 需要将开发板上的 func1 和 func2 分别用跳帽短接
- * 2. 需要将 SD 卡通过杜邦线连接到 HD13 接口中的 SPI 管脚，详情参考 bl706_avb pinout 图
- * 2. 同时还需将音频 Decode 子板插入 HD11 接口上（Decode 芯片型号为 ES8388）
- * 3. 子板上需要连接相应的扬声器即可
- * 4. 需要将正确的文件路径填入 audio_init() 中，请参考本文件第 54 行，当前仅支持英文路径
- * 
- * *************************************************************************/
 #include "ff.h"
 #include "wav_play_form_sd_card.h"
 
@@ -49,10 +50,13 @@ int main(void)
     fatfs_sd_driver_register();
     sd_wav_play_register(&Audio_Dev);
 
-    res = f_mount(&Fs_1,"1:",1);
+    res = f_mount(&Fs_1,"sd:",1);
+    f_chdrive("sd:");
+    f_chdir("./wav_test");
+
     if(res==FR_OK)
     {
-        if(Audio_Dev.audio_init(&Audio_Dev,"1:wav_test/test9_44100_stereo_s32(24bit).wav") == 0)
+        if(Audio_Dev.audio_init(&Audio_Dev,"sd:/wav_test/test9_44100_stereo_s32(24bit).wav") == 0)
         {
             MSG("Audio Init success\r\n");
         }else{
@@ -66,13 +70,16 @@ int main(void)
 
     /* start/stop test */
     Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_START,NULL);
+    /*
     bflb_platform_delay_ms(10000);
     Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_STOP,NULL);
     bflb_platform_delay_ms(5000);
     Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_START,NULL);
     bflb_platform_delay_ms(5000);
+    */
     
     /* volume test */
+    /*
     for(uint32_t vol=0; vol<80; vol++)
     {
         Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_VOLUME,(void *)vol);
@@ -83,6 +90,7 @@ int main(void)
         Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_VOLUME,(void *)vol);
         bflb_platform_delay_ms(100);
     }
+    */
 
     Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_VOLUME,(void *)30);
 

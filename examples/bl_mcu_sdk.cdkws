@@ -7,23 +7,30 @@
   <Project Name="adc_one_shot_single_ended" Path="adc/adc_one_shot_single_ended/cdk/adc_one_shot_single_ended.cdkproj" Active="No"/>
   <Project Name="adc_scan_single_ended" Path="adc/adc_scan_single_ended/cdk/adc_scan_single_ended.cdkproj" Active="No"/>
   <Project Name="adc_vbat_poll" Path="adc/adc_vbat_poll/cdk/adc_vbat_poll.cdkproj" Active="No"/>
+  <Project Name="coremark" Path="coremark/cdk/coremark.cdkproj" Active="No"/>
   <Project Name="dac_dma" Path="dac/dac_dma/cdk/dac_dma.cdkproj" Active="No"/>
+  <Project Name="dhrystone" Path="dhrystone/cdk/dhrystone.cdkproj" Active="No"/>
   <Project Name="dma_m2m" Path="dma/dma_m2m/cdk/dma_m2m.cdkproj" Active="No"/>
   <Project Name="gpio_blink" Path="gpio/gpio_blink/cdk/gpio_blink.cdkproj" Active="No"/>
   <Project Name="i2c_at24cxx" Path="i2c/i2c_at24cxx/cdk/i2c_at24cxx.cdkproj" Active="No"/>
   <Project Name="i2c_bmp180" Path="i2c/i2c_bmp180/cdk/i2c_bmp180.cdkproj" Active="No"/>
+  <Project Name="i2s_dma" Path="i2s/i2s_dma/cdk/i2s_dma.cdkproj" Active="No"/>
   <Project Name="memheap" Path="memheap/cdk/memheap.cdkproj" Active="No"/>
   <Project Name="spi_dma_sd" Path="spi/spi_dma_sd/cdk/spi_dma_sd.cdkproj" Active="No"/>
   <Project Name="spi_loopback" Path="spi/spi_loopback/cdk/spi_loopback.cdkproj" Active="No"/>
   <Project Name="spi_lcd" Path="spi/spi_lcd/cdk/spi_lcd.cdkproj" Active="No"/>
   <Project Name="uart_dma" Path="uart/uart_dma/cdk/uart_dma.cdkproj" Active="No"/>
-  <Project Name="uart_echo" Path="uart/uart_echo/cdk/uart_echo.cdkproj" Active="No"/>
   <Project Name="uart_poll" Path="uart/uart_poll/cdk/uart_poll.cdkproj" Active="No"/>
   <Project Name="uart_rx_it" Path="uart/uart_rx_it/cdk/uart_rx_it.cdkproj" Active="No"/>
   <Project Name="usb_cdc_loopback" Path="usb/usb_cdc_loopback/cdk/usb_cdc_loopback.cdkproj" Active="No"/>
   <Project Name="usb_cdc_msc" Path="usb/usb_cdc_msc/cdk/usb_cdc_msc.cdkproj" Active="No"/>
   <Project Name="usb_msc_ram" Path="usb/usb_msc_ram/cdk/usb_msc_ram.cdkproj" Active="No"/>
+  <Project Name="usb_msc_sd" Path="usb/usb_msc_sd/cdk/usb_msc_sd.cdkproj" Active="No"/>
+  <Project Name="usb2uart_ftdi" Path="usb/usb2uart_ft232r/cdk/usb2uart_ftdi.cdkproj" Active="No"/>
+  <Project Name="usb2uart_st" Path="usb/usb2uart/cdk/usb2uart_st.cdkproj" Active="No"/>
+  <Project Name="usb_video" Path="usb/usb_video/cdk/usb_video.cdkproj" Active="No"/>
   <Project Name="pwm_breath_led" Path="pwm/pwm_breath_led/cdk/pwm_breath_led.cdkproj" Active="No"/>
+  <Project Name="flash_rw_test" Path="flash/flash_rw_test/cdk/flash_rw_test.cdkproj" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
@@ -34,24 +41,31 @@
       <Project Name="adc_one_shot_single_ended" ConfigName="BuildSet"/>
       <Project Name="adc_scan_single_ended" ConfigName="BuildSet"/>
       <Project Name="adc_vbat_poll" ConfigName="BuildSet"/>
+      <Project Name="coremark" ConfigName="BuildSet"/>
       <Project Name="dac_dma" ConfigName="BuildSet"/>
       <Project Name="dac_poll" ConfigName="BuildSet"/>
+      <Project Name="dhrystone" ConfigName="BuildSet"/>
       <Project Name="dma_m2m" ConfigName="BuildSet"/>
       <Project Name="gpio_blink" ConfigName="BuildSet"/>
       <Project Name="i2c_at24cxx" ConfigName="BuildSet"/>
       <Project Name="i2c_bmp180" ConfigName="BuildSet"/>
+      <Project Name="i2s_dma" ConfigName="BuildSet"/>
       <Project Name="memheap" ConfigName="BuildSet"/>
       <Project Name="spi_dma_sd" ConfigName="BuildSet"/>
       <Project Name="spi_loopback" ConfigName="BuildSet"/>
       <Project Name="spi_lcd" ConfigName="BuildSet"/>
       <Project Name="uart_dma" ConfigName="BuildSet"/>
-      <Project Name="uart_echo" ConfigName="BuildSet"/>
       <Project Name="uart_poll" ConfigName="BuildSet"/>
       <Project Name="uart_rx_it" ConfigName="BuildSet"/>
       <Project Name="usb_cdc_loopback" ConfigName="BuildSet"/>
       <Project Name="usb_cdc_msc" ConfigName="BuildSet"/>
-      <Project Name="pwm_breath_led" ConfigName="BuildSet"/>
       <Project Name="usb_msc_ram" ConfigName="BuildSet"/>
+      <Project Name="usb_msc_sd" ConfigName="BuildSet"/>
+      <Project Name="usb2uart_ftdi" ConfigName="BuildSet"/>
+      <Project Name="usb2uart_st" ConfigName="BuildSet"/>
+      <Project Name="usb_video" ConfigName="BuildSet"/>
+      <Project Name="pwm_breath_led" ConfigName="BuildSet"/>
+      <Project Name="flash_rw_test" ConfigName="BuildSet"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CDK_Workspace>

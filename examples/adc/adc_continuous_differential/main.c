@@ -25,11 +25,10 @@
 
 #define ADC_SCAN_NUM (50)
 
-uint8_t PinList[] = {GPIO_PIN_11, GPIO_PIN_12};
 adc_channel_t posChList[] = {ADC_CHANNEL3};
 adc_channel_t negChList[] = {ADC_CHANNEL4};
 
-adc_res_val_t result_val;
+adc_channel_val_t result_val;
 
 struct device* adc_test;
 
@@ -37,31 +36,29 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    adc_user_cfg_t adc_user_cfg;
+    adc_channel_cfg_t adc_channel_cfg;
 
-    adc_user_cfg.dma_en = DISABLE;              // disable dma
-    adc_user_cfg.conv_mode = ADC_CON_CONV;      // continuous conversion
-    adc_user_cfg.in_mode = ADC_DIFFERENTIAL_IN; // differential input mode
-    
-    adc_user_cfg.pinList = PinList;
-    adc_user_cfg.posChList = posChList;
-    adc_user_cfg.negChList = negChList;
-    adc_user_cfg.num = sizeof(posChList)/sizeof(adc_channel_t);
+    adc_channel_cfg.pos_channel = posChList;
+    adc_channel_cfg.neg_channel = negChList;
+    adc_channel_cfg.num = 1;
 
     MSG("adc one-shot differential test case \r\n");
-    adc_register(ADC0_INDEX, "adc_one_diff", DEVICE_OFLAG_STREAM_RX, &adc_user_cfg);
+    adc_register(ADC0_INDEX, "adc_one_diff", DEVICE_OFLAG_STREAM_RX);
 
     adc_test = device_find("adc_one_diff");
     if(adc_test)
     {
+        ADC_DEV(adc_test)->differential_mode = ENABLE;
+        ADC_DEV(adc_test)->continuous_conv_mode = ENABLE;
         device_open(adc_test, DEVICE_OFLAG_STREAM_RX);
+        device_control(adc_test,DEVICE_CTRL_ADC_CHANNEL_CONFIG,&adc_channel_cfg);
         MSG("adc device find success\r\n");
     }
 
-    device_control(adc_test,DEVICE_CTRL_RESUME,0);
+    adc_channel_start(adc_test);
     while (1)
     {
-        device_read(adc_test, 0, (void *)&result_val,sizeof(result_val)/sizeof(adc_res_val_t));
+        device_read(adc_test, 0, (void *)&result_val,sizeof(result_val)/sizeof(adc_channel_val_t));
         if(result_val.volt <= 0)
         {
             result_val.volt = -result_val.volt;

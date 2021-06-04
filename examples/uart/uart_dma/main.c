@@ -24,13 +24,8 @@
 #include "hal_uart.h"
 #include "hal_dma.h"
 
-struct device *dma_ch2;
-
-uint8_t src_buffer[4100] __attribute__((section(".system_ram")));
-uint8_t mmheap_default_pool[2048] __attribute__((section(".system_ram")));
-
-uint8_t dma_tc_flag0 = 0;
-uint8_t dma_tc_flag1 = 0;
+static uint8_t src_buffer[4100] __attribute__((section(".system_ram")));
+static uint8_t dma_tc_flag0 = 0;
 
 void dma_ch2_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
@@ -64,7 +59,7 @@ int main(void)
     }
 
     dma_register(DMA0_CH2_INDEX, "ch2", DEVICE_OFLAG_RDWR);
-    dma_ch2 = device_find("ch2");
+    struct device* dma_ch2 = device_find("ch2");
     if (dma_ch2)
     {
         device_open(dma_ch2, 0);

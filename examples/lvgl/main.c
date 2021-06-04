@@ -19,32 +19,41 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  * 
+ * Note:
+ * 
+ * This Case is currently based on BL706_AVB development board with ili9341 controller screen. 
+ * If you use other hardware platforms, please modify the pin Settings by yourself
+ * 
+ * Your should Short connect func1 and func2 jump cap on 706_AVB Board,and Plug the screen into the HD13 interface
+ * Then the hardware for lvgl case testing is available.
+ * 
+ * 
  */
-/***************************************************************************
- * 此例程当前基于 bl706_avb 开发板开发，若使用其他硬件平台，请自行修改管脚设置
- * 当前例程仅适配 ili9341 屏幕
- * 
- * 如使用 bl706_avb 开发板测试此例程：
- * 1. 需要将开发板上的 func1 和 func2 分别用跳帽短接
- * 2. 需要将 SPI 屏插入 HD13 接口即可
- * 
- * *************************************************************************/
-// #include "drv_shell.h"
+
 #include "hal_spi.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"
-#include "lv_port_disp.h"
+
 #include "bsp_il9341.h"
+#include "xpt2046.h"
+#include "lv_port_disp.h"
+#include "lv_port_indev.h"
 #include "lvgl.h"
 #include "lv_examples.h"
-
 
 /* lvgl log cb */
 void lv_log_print_g_cb(lv_log_level_t level, const char *path, uint32_t line, const char *name, const char *str)
 {
-    MSG("L:%d,",level);
-    MSG("N:%s,",name);
-    MSG("D:%s\r\n,",str);
+    switch (level)
+    {
+        case LV_LOG_LEVEL_ERROR: MSG("ERROR: ");   break;
+        case LV_LOG_LEVEL_WARN:  MSG("WARNING: "); break;
+        case LV_LOG_LEVEL_INFO:  MSG("INFO: ");    break;
+        case LV_LOG_LEVEL_TRACE: MSG("TRACE: ");   break;
+        default: break;   
+    }
+    MSG("%s- ",name);
+    MSG(" %s\r\n,",str);
 }
 
 int main(void)
@@ -52,9 +61,10 @@ int main(void)
     bflb_platform_init(0);
 
     lv_log_register_print_cb(lv_log_print_g_cb);
-
+    
     lv_init();
     lv_port_disp_init();
+    lv_port_indev_init();
     
     lv_demo_benchmark();
 

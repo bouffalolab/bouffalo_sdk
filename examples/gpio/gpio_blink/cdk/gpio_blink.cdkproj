@@ -32,9 +32,6 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
       <FileOption/>
     </File>
-    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_camera.c">
-      <FileOption/>
-    </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
       <FileOption/>
     </File>
@@ -69,6 +66,12 @@ Board: bl70x_iot
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
       <FileOption/>
     </File>
   </VirtualDirectory>
@@ -455,7 +458,7 @@ Board: bl70x_iot
     </File>
   </VirtualDirectory>
   <MonitorProgress>
-    <DebugLaunch>154</DebugLaunch>
+    <DebugLaunch>80</DebugLaunch>
     <FlashOperate>104</FlashOperate>
   </MonitorProgress>
   <VirtualDirectory Name="components">
@@ -504,32 +507,6 @@ Board: bl70x_iot
     </VirtualDirectory>
   </VirtualDirectory>
   <Dependencies Name="BuildSet"/>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs>
-      <Tab disFormat="Hex">glb</Tab>
-      <Tab disFormat="Hex">uart</Tab>
-    </peripheralTabs>
-    <WatchDisplayFormat>1</WatchDisplayFormat>
-    <LocalDisplayFormat>1</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs>
-      <Tab disFormat="Hex">glb</Tab>
-      <Tab disFormat="Hex">uart</Tab>
-    </peripheralTabs>
-    <WatchDisplayFormat>1</WatchDisplayFormat>
-    <LocalDisplayFormat>1</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
   <BuildConfigs>
     <BuildConfig Name="BuildSet">
       <Target>
@@ -620,8 +597,8 @@ Board: bl70x_iot
           <UserProgName/>
         </BeforeMake>
         <AfterMake>
-          <RunUserProg>no</RunUserProg>
-          <UserProgName>$(ProjectPath)../../../../tools/bflb_flash_tool/bflb_mcu_tool.exe  --chipname=bl702 --firmware="D:/BouffaloLabWS/cdk_ws/bl_mcu_sdk/examples/hellowd/Obj/helloworld.bin" </UserProgName>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>$(ProjectPath)../../../../tools/bflb_flash_tool/bflb_mcu_tool.exe  --chipname=bl702 --interface=openocd --firmware="$(ProjectPath)/Obj/$(ProjectName).bin" </UserProgName>
         </AfterMake>
       </User>
       <Compiler>
@@ -661,7 +638,7 @@ Board: bl70x_iot
       </Linker>
       <Debug>
         <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
-        <Connector>ICE</Connector>
+        <Connector>OpenOCD</Connector>
         <StopAt>yes</StopAt>
         <StopAtText>main</StopAtText>
         <InitFile/>
@@ -700,18 +677,18 @@ Board: bl70x_iot
           <SimTrace>no</SimTrace>
         </ConfigSIM>
         <ConfigOpenOCD>
-          <OpenOCDExecutablePath>openocd-bl702</OpenOCDExecutablePath>
+          <OpenOCDExecutablePath>openocd-mingw32</OpenOCDExecutablePath>
           <OpenOCDTelnetPortEnable>no</OpenOCDTelnetPortEnable>
           <OpenOCDTelnetPort>4444</OpenOCDTelnetPort>
           <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
           <OpenOCDTclPort>6666</OpenOCDTclPort>
-          <OpenOCDConfigOptions>-f openocd_bl702_evb.cfg</OpenOCDConfigOptions>
+          <OpenOCDConfigOptions>-f ../../../../tools/openocd/if_702_hack.cfg -f ../../../../tools/openocd/tgt_702.cfg</OpenOCDConfigOptions>
         </ConfigOpenOCD>
       </Debug>
       <Flash>
         <InitFile/>
         <Erase>Erase Sectors</Erase>
-        <Algorithms Path="">bl702_flasher.elf</Algorithms>
+        <Algorithms Path="">bl70x_flasher.elf</Algorithms>
         <Program>yes</Program>
         <Verify>yes</Verify>
         <ResetAndRun>no</ResetAndRun>
@@ -723,4 +700,30 @@ Board: bl70x_iot
       </Flash>
     </BuildConfig>
   </BuildConfigs>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs>
+      <Tab disFormat="Hex">glb</Tab>
+      <Tab disFormat="Hex">uart</Tab>
+    </peripheralTabs>
+    <WatchDisplayFormat>1</WatchDisplayFormat>
+    <LocalDisplayFormat>1</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs>
+      <Tab disFormat="Hex">glb</Tab>
+      <Tab disFormat="Hex">uart</Tab>
+    </peripheralTabs>
+    <WatchDisplayFormat>1</WatchDisplayFormat>
+    <LocalDisplayFormat>1</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
 </Project>

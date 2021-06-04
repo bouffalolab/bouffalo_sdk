@@ -20,14 +20,17 @@
  * under the License.
  * 
  */
+
 #include "hal_uart.h"
+
 int main(void)
 {
     bflb_platform_init(0);
-    MSG("hello world!\r\n");
+
     while(1)
     {
-
+    	MSG("hello world!\r\n");
+    	bflb_platform_delay_ms(1000);
     } 
 }
 

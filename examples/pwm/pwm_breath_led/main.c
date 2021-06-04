@@ -46,17 +46,18 @@ int main(void)
 
     if (led_breath)
     {
-        device_open(led_breath, 0);
+        device_open(led_breath, DEVICE_OFLAG_STREAM_TX);
+        pwm_channel_start(led_breath);
     }
 
     while (1)
     {
-        for (pwm_cfg.dutyCycle = 0; pwm_cfg.dutyCycle < 100; pwm_cfg.dutyCycle++)
+        for (pwm_cfg.dutycycle = 0; pwm_cfg.dutycycle < 100; pwm_cfg.dutycycle++)
         {
             device_control(led_breath, DEVICE_CTRL_CONFIG, &pwm_cfg);
             bflb_platform_delay_ms(10);
         }
-        for (pwm_cfg.dutyCycle = 100; pwm_cfg.dutyCycle > 0; pwm_cfg.dutyCycle--)
+        for (pwm_cfg.dutycycle = 100; pwm_cfg.dutycycle > 0; pwm_cfg.dutycycle--)
         {
             device_control(led_breath, DEVICE_CTRL_CONFIG, &pwm_cfg);
             bflb_platform_delay_ms(10);

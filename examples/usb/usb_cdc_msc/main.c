@@ -128,7 +128,7 @@ USB_DESC_SECTION const uint8_t cdc_msc_descriptor[] =
 };
 
 #define BLOCK_SIZE  512
-#define BLOCK_COUNT 48
+#define BLOCK_COUNT 32
 
 typedef struct
 {
