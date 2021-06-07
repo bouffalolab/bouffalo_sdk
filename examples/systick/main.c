@@ -36,6 +36,7 @@ int main(void)
     bflb_platform_set_alarm_time(1000000,systick_isr);
     while(1)
     {   
+        __asm volatile ("nop");
     } 
 }
 

@@ -52,7 +52,6 @@ int main(void)
 
     while (1)
     {
+        __asm volatile ("nop");
     }
-
-    BL_CASE_SUCCESS;
 }

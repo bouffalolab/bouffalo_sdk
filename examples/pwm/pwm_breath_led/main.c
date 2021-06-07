@@ -63,6 +63,4 @@ int main(void)
             bflb_platform_delay_ms(10);
         }
     }
-
-    BL_CASE_SUCCESS;
 }

@@ -14,29 +14,19 @@
 #define BSP_USING_TIMER_CH0
 #define BSP_USING_TIMER_CH1
 #define BSP_USING_CAM
+
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */
 
 #define BSP_USING_DMA0_CH0
 #define BSP_USING_DMA0_CH1
-
-#ifdef BSP_USING_UART1
 #define BSP_USING_DMA0_CH2
-#endif
-
-#ifdef BSP_USING_SPI0
 #define BSP_USING_DMA0_CH3
 #define BSP_USING_DMA0_CH4
-#endif
-
-#ifdef BSP_USING_I2S0
-#define BSP_USING_DMA0_CH2
-#endif
-
-#ifdef BSP_USING_DAC0
+#define BSP_USING_DMA0_CH5
 #define BSP_USING_DMA0_CH6
-#endif
+#define BSP_USING_DMA0_CH7
 
 
 /* PERIPHERAL CONFIG */

@@ -174,7 +174,7 @@ static void board_pin_mux_init(void)
         {
             gpio_cfg.pullType = GPIO_PULL_DOWN;
         }
-        // else if((af_pin_table[i].func == GPIO_FUN_DAC)|| (af_pin_table[i].func == GPIO_FUN_DAC))
+        // else if((af_pin_table[i].func == GPIO_FUN_DAC)|| (af_pin_table[i].func == GPIO_FUN_ADC))
         // {
         //     gpio_cfg.gpioFun  = GPIO_FUN_ANALOG;
         //     gpio_cfg.gpioMode = GPIO_MODE_ANALOG;
