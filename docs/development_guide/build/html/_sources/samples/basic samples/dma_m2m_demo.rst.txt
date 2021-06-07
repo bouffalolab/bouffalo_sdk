@@ -1,7 +1,7 @@
 DMA - RAM间数据搬运
 ====================
 
-    本demo基于DMA，方向为memory to memory 模式，进行数据的搬运。
+本 demo 基于 DMA，方向为 memory to memory 模式，进行数据的搬运。
 
 硬件连接
 -----------------------------
@@ -11,8 +11,6 @@ DMA - RAM间数据搬运
 -----------------------------
 
 -  软件代码见 ``examples/dma/dma_m2m``
-
--  ``DMA`` 设备配置由板级描述文件 ``bsp/board/bl706_iot/peripheral_config.h`` 来配置
 
 .. code-block:: C
     :linenos:
@@ -34,6 +32,8 @@ DMA - RAM间数据搬运
     }
     #endif
     #endif
+
+-  使能 ``BSP_USING_DMA0_CH0`` 并配置 ``DMA`` 设备配置，见 ``bsp/board/bl706_iot/peripheral_config.h``
 
 .. code-block:: C
     :linenos:
@@ -110,4 +110,4 @@ DMA - RAM间数据搬运
 
 实验现象
 -----------------------------
-``dma_src_buffer`` 数组中的数据通过DMA 通道0 ，以源32位宽、目标32位宽传输到 ``dma_dst_buffer`` 数组中，数据传输完成并完整，串口打印 ``dma transfer success``。
+``dma_src_buffer`` 数组中的数据通过 DMA 通道 0 ，以源 32 位宽、目标 32 位宽传输到 ``dma_dst_buffer`` 数组中，数据传输完成并完整，串口打印 ``dma transfer success``。

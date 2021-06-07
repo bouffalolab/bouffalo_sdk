@@ -92,12 +92,10 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/connecting_hardware.html">7. 硬件连接</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul class="current">
@@ -220,7 +218,7 @@
 <ul class="simple">
 <li><p>灵活配置的从机地址 <code class="docutils literal notranslate"><span class="pre">slaveAddr</span></code> 、寄存器地址 <code class="docutils literal notranslate"><span class="pre">subAddr</span></code></p></li>
 <li><p>可以灵活调整的时钟频率</p></li>
-<li><p>支持轮询、中断、DMA传输</p></li>
+<li><p>支持轮询、中断、DMA 传输</p></li>
 </ul>
 </div>
 <div class="section" id="id2">
@@ -236,15 +234,15 @@
 </div>
 <ul class="simple">
 <li><p>parent    继承父类属性</p></li>
-<li><p>ch        i2c id，0表示i2c0,1表示i2c1</p></li>
-<li><p>mode      i2c传输模式，0 为使用硬件i2c，1为使用软件i2c，当前软件i2c暂时无效</p></li>
+<li><p>ch        i2c id，0 表示 i2c0,1 表示 i2c1</p></li>
+<li><p>mode      i2c 传输模式，0 为使用硬件 i2c，1 为使用软件 i2c，当前软件 i2c 暂时无效</p></li>
 <li><p>phase</p></li>
 <li><p>其他待补充</p></li>
 </ul>
 </div>
 <div class="section" id="id3">
 <h2><span class="section-number">7.3. </span>I2C 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
-<p>每一个 I2C 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,变量定义位于 <code class="docutils literal notranslate"><span class="pre">hal_pwm.c</span></code> 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2C0</span></code> ，<code class="docutils literal notranslate"><span class="pre">I2C0_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">I2C</span></code> 设备就可以进行注册和使用了。</p>
+<p>每一个 I2C 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,变量定义位于 <code class="docutils literal notranslate"><span class="pre">hal_i2c.c</span></code> 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2C0</span></code> ，<code class="docutils literal notranslate"><span class="pre">I2C0_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">I2C</span></code> 设备就可以进行注册和使用了。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*参数配置宏*/</span>
 <span class="cp">#if defined(BSP_USING_I2C0)</span>
 <span class="cp">#ifndef I2C0_CONFIG</span>
@@ -319,7 +317,7 @@
 </div>
 <div class="section" id="i2c-transfer">
 <h3><span class="section-number">7.4.3. </span><strong>i2c_transfer</strong><a class="headerlink" href="#i2c-transfer" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">i2c_transfer</span></code> 用于设备的数据传输，形参中 <code class="docutils literal notranslate"><span class="pre">msgs</span></code> 中的成员 <code class="docutils literal notranslate"><span class="pre">flags</span></code> 指示传输的方向是写还是读，并且指定寄存器地址长度是0、1、2。</p>
+<p><code class="docutils literal notranslate"><span class="pre">i2c_transfer</span></code> 用于设备的数据传输，形参中 <code class="docutils literal notranslate"><span class="pre">msgs</span></code> 中的成员 <code class="docutils literal notranslate"><span class="pre">flags</span></code> 指示传输的方向是写还是读，并且指定寄存器地址长度是 0、1、2。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">i2c_transfer</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="n">i2c_msg_t</span> <span class="n">msgs</span><span class="p">[],</span> <span class="kt">uint32_t</span> <span class="n">num</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -341,8 +339,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>slaveaddr i2c从设备7位从机地址</p></li>
-<li><p>subaddr i2c从设备寄存器地址</p></li>
+<li><p>slaveaddr i2c 从设备7位从机地址</p></li>
+<li><p>subaddr i2c 从设备寄存器地址</p></li>
 <li><p>flags 读写模式以及寄存器地址长度</p></li>
 <li><p>len 传输数据长度</p></li>
 <li><p>buf 数据缓冲区</p></li>

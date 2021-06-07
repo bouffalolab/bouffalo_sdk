@@ -1,7 +1,7 @@
 BLE 客户端和服务端互连
 =======================
 
-   本 demo 基于 **bl702** 演示 **ble server** 和 **ble client** 连接和数据收发。
+本 demo 基于 **bl702** 演示 **ble server** 和 **ble client** 连接和数据收发。
 
 准备工具
 -----------------------
@@ -153,9 +153,9 @@ BLE server 软件实现
     $ make BOARD=bl706_iot APP=ble_central SUPPORT_FREERTOS=y SUPPORT_FLOAT=y SUPPORT_BLE=y
 
 
-- **烧录**
+-  **烧录**
 
-    见 ``使用bouffalo_dev_cube烧录代码``
+   详见 :ref:`bl_dev_cube`
 
 实验现象
 -----------------------------

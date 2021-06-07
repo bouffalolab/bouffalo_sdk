@@ -11,7 +11,7 @@ API 分层模型
 
 整体的代码分层框架如图所示：
 
-.. figure:: img/api1.png
+.. figure:: img/sw_arch.png
     :alt:
 
     code structure

@@ -22,14 +22,12 @@ PWM - 呼吸灯
 
 -  软件代码见 ``examples/pwm/pwm_breath_led``
 
--  ``PWM`` 复用引脚由板级描述文件 ``bsp/board/bl706_iot/pinmux_config.h`` 来配置
-
 .. code-block:: C
     :linenos:
 
     #define CONFIG_GPIO22_FUNC GPIO_FUN_PWM
 
--  ``PWM`` 设备配置由板级描述文件 ``bsp/board/bl706_iot/peripheral_config.h`` 来配置
+-  配置 ``PWM`` 设备复用引脚，见 ``bsp/board/bl706_iot/pinmux_config.h`` 
 
 .. code-block:: C
     :linenos:
@@ -47,6 +45,8 @@ PWM - 呼吸灯
     }
     #endif
     #endif
+
+-  使能 ``BSP_USING_PWM_CH2`` 并配置 ``PWM`` 设备配置，见 ``bsp/board/bl706_iot/peripheral_config.h``
 
 .. code-block:: C
     :linenos:
@@ -76,7 +76,7 @@ PWM - 呼吸灯
     
     device_control(led_breath, DEVICE_CTRL_CONFIG, &pwm_cfg);  
 
-- 使用 ``device_contorl`` 函数，配合 ``DEVICE_CTRL_CONFIG`` 指令，可以修改当前PWM通道的频率和占空比。
+- 使用 ``device_contorl`` 函数，配合 ``DEVICE_CTRL_CONFIG`` 指令，可以修改当前 PWM 通道的频率和占空比。
 
 编译和烧录
 -----------------------------
@@ -102,6 +102,12 @@ PWM - 呼吸灯
 
 实验现象
 -----------------------------
+
+
+.. figure:: img/pwm_demo.gif 
+   :alt:
+
+pwm breath led!
 
 见视频展示：
 

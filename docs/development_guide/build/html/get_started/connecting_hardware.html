@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>7. 硬件连接 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
+  <title>5. 硬件连接指南 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
   
 
   
@@ -40,7 +40,7 @@
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
     <link rel="next" title="1. API 分层模型" href="../api_reference/api_structure.html" />
-    <link rel="prev" title="6. 基于 cmake 框架构建自己的工程" href="cmake_quick_start.html" /> 
+    <link rel="prev" title="4. 基于 cmake 框架新建工程指南" href="cmake_quick_start.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,21 +92,19 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">7. 硬件连接</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#bl706-iot">7.1. BL706_IOT 开发板</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ck-link">7.1.1. 使用 CK-Link 烧写、调试连接方法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#j-link">7.1.2. 使用 J-Link 烧写、调试连接方法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">7.1.3. 使用串口烧写程序连接方法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. 硬件连接指南</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#bl706-iot">5.1. BL706_IOT 开发板</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ck-link">5.1.1. 使用 CK-Link 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#j-link">5.1.2. 使用 J-Link 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">5.1.3. 使用串口烧写程序连接方法</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#bl702-avb">7.2. BL702_AVB 开发板</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id3">7.2.1. 使用 CK-Link 烧写、调试连接方法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">7.2.2. 使用串口烧写程序连接方法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bl702-avb">5.2. BL702_AVB 开发板</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">5.2.1. 使用 CK-Link 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">5.2.2. 使用串口烧写程序连接方法</a></li>
 </ul>
 </li>
 </ul>
@@ -192,7 +190,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">7. </span>硬件连接</li>
+      <li><span class="section-number">5. </span>硬件连接指南</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -212,12 +210,12 @@
            <div itemprop="articleBody">
             
   <div class="section" id="connect-hardware">
-<span id="id1"></span><h1><span class="section-number">7. </span>硬件连接<a class="headerlink" href="#connect-hardware" title="永久链接至标题">¶</a></h1>
+<span id="id1"></span><h1><span class="section-number">5. </span>硬件连接指南<a class="headerlink" href="#connect-hardware" title="永久链接至标题">¶</a></h1>
 <p>本文档介绍了如何连接 BL70x 系列 MCU 的开发板</p>
 <div class="section" id="bl706-iot">
-<h2><span class="section-number">7.1. </span>BL706_IOT 开发板<a class="headerlink" href="#bl706-iot" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">5.1. </span>BL706_IOT 开发板<a class="headerlink" href="#bl706-iot" title="永久链接至标题">¶</a></h2>
 <div class="section" id="ck-link">
-<h3><span class="section-number">7.1.1. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#ck-link" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.1.1. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#ck-link" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>将 CK-Link USB 接口使用合适的 USB 数据线正确连接到 PC 主机</p></li>
 <li><p>将 Iot 开发板的 <code class="docutils literal notranslate"><span class="pre">HD3</span></code> 组的标准 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚使用杜邦线与 <code class="docutils literal notranslate"><span class="pre">CK-Link</span></code> 对应的 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚连接起来</p></li>
@@ -239,7 +237,7 @@
 </div>
 </div>
 <div class="section" id="j-link">
-<h3><span class="section-number">7.1.2. </span>使用 J-Link 烧写、调试连接方法<a class="headerlink" href="#j-link" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.1.2. </span>使用 J-Link 烧写、调试连接方法<a class="headerlink" href="#j-link" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>将 j-link 的 USB 接口使用合适的 USB 数据线正确连接到 PC 主机</p></li>
 <li><p>将 Iot 开发板的 <code class="docutils literal notranslate"><span class="pre">HD3</span></code> 组的标准 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚使用杜邦线与 <code class="docutils literal notranslate"><span class="pre">j-link</span></code> 对应的 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚连接起来</p></li>
@@ -261,7 +259,7 @@
 </div>
 </div>
 <div class="section" id="id2">
-<h3><span class="section-number">7.1.3. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.1.3. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>使用串口烧写前，请确保正确安装了 <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code> 或命令行烧写工具</p>
 <ul>
@@ -287,15 +285,15 @@
 </div>
 </div>
 <div class="section" id="bl702-avb">
-<h2><span class="section-number">7.2. </span>BL702_AVB 开发板<a class="headerlink" href="#bl702-avb" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">5.2. </span>BL702_AVB 开发板<a class="headerlink" href="#bl702-avb" title="永久链接至标题">¶</a></h2>
 <div class="section" id="id3">
-<h3><span class="section-number">7.2.1. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.1. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">TO</span> <span class="pre">DO</span></code></p></li>
 </ul>
 </div>
 <div class="section" id="id4">
-<h3><span class="section-number">7.2.2. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.2. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">TO</span> <span class="pre">DO</span></code></p></li>
 </ul>
@@ -310,7 +308,7 @@
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="../api_reference/api_structure.html" class="btn btn-neutral float-right" title="1. API 分层模型" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="cmake_quick_start.html" class="btn btn-neutral float-left" title="6. 基于 cmake 框架构建自己的工程" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cmake_quick_start.html" class="btn btn-neutral float-left" title="4. 基于 cmake 框架新建工程指南" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

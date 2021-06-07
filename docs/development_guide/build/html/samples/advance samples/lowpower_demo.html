@@ -92,12 +92,10 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">7. 硬件连接</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
@@ -133,7 +131,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#id2">3.2. <strong>低功耗示例测试方法</strong></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id3">3.2.1. <strong>编译低功耗示例代码</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id4">3.2.2. <strong>准备低功耗测试所需的硬件环境</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#xshell">3.2.3. <strong>使用Xshell开始评估低功耗性能</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#xshell">3.2.3. <strong>使用 Xshell 开始评估低功耗性能</strong></a></li>
 </ul>
 </li>
 </ul>
@@ -213,51 +211,59 @@
 <h2><span class="section-number">3.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>博流系列芯片拥有丰富的低功耗特性，以适配不同的低功耗应用场合。为了方便用户快速的评测使用 bl 系列 MCU 低功耗性能 bl_mcu_sdk 提供了一套抽象的低功耗接口，将低功耗等级分为四个等级，分别为</p>
 <ol class="arabic simple">
-<li><p>Running : Running 为代码正常运行时的功耗，由客户应用代码决定功耗。</p></li>
-<li><p>WFI ：WFI 模式，只关闭了 CPU 以节省功耗，当用户退出 WFI 模式的时候程序将会继续运行。</p></li>
-<li><p>PDS : PDS 模式，关闭了芯片上大多数电源域，同时关闭了 CPU ，可以通过内部 RTC 进行唤醒，或者使用特定的唤醒引脚唤醒。</p></li>
-<li><p>HBN : HBN 模式，关闭了芯片上绝大多数电源域，关闭了 CPU ，可以通过内部 RTC 进行唤醒，或者使用特定的唤醒引脚唤醒。</p></li>
+<li><p>Running : Running 为 CPU 正常运行时的功耗，由客户应用代码执行的功能决定功耗。</p></li>
+<li><p>WFI ：WFI 模式，CPU 的 clock 处于被 Gating 状态，CPU 停止运行，当用户退出WFI模式的时候程序将会继续运行。</p></li>
+<li><p>PDS : PDS 模式，关闭了芯片上大多数电源域，同时关闭了 CPU，和 CPU 处于同一个电源域的 ITCM，DTCM 等 RAM 不可使用，只有 64K 的 OCTAM 可以保存数据，可以通过内部 RTC 进行唤醒，或者使用 GPIO 引脚(在 GPIO 电源域没有关闭的情况下)唤醒。</p></li>
+<li><p>HBN : HBN 模式，关闭了芯片上绝大多数电源域，关闭了 CPU 以及 64K OCRAM，只有位于 AON 域的 4K RAM 可以保存数据，可以通过内部 RTC 进行唤醒，或者使用特定的唤醒引脚(位于 AON 域的引脚)唤醒。</p></li>
 </ol>
-<p>如下表所示</p>
-<table class="docutils align-default">
+<p>bl_mcu_sdk 提供了一个简单的低功耗参考示例(bl_mcu_sdk examples/power/lowpower_test/)，旨在帮助用户快速评估低功耗功能，如果需要进一步适配自身的低功耗场景，采取不同的低功耗策略，请查阅相关 datasheet 或者寻找 Boufflao Lab 的技术支持。
+在该示例中，外设及 CPU 的时钟选择均是晶振 32M。基于该示例的功耗测量结果如下表所示:</p>
+<blockquote>
+<div><table class="docutils align-default">
 <colgroup>
-<col style="width: 21%" />
-<col style="width: 21%" />
-<col style="width: 21%" />
-<col style="width: 37%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 25%" />
+<col style="width: 32%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>模式</p></th>
 <th class="head"><p>参考电流</p></th>
 <th class="head"><p>对应基础模式</p></th>
 <th class="head"><p>唤醒源</p></th>
+<th class="head"><p>备注</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>running</p></td>
-<td><p>6.28 mA</p></td>
-<td><p>run</p></td>
+<tr class="row-even"><td><p>Running</p></td>
+<td><p>5.68 mA</p></td>
+<td><p>Run</p></td>
 <td></td>
+<td><p>所有外设时钟都打开</p></td>
 </tr>
 <tr class="row-odd"><td><p>WFI</p></td>
-<td><p>5.14 mA</p></td>
+<td><p>3.14 mA</p></td>
 <td><p>WFI</p></td>
 <td><p>任意中断</p></td>
+<td><p>除串口外，其它外设时钟关闭</p></td>
 </tr>
 <tr class="row-even"><td><p>PDS</p></td>
 <td><p>10 uA</p></td>
 <td><p>PDS 31</p></td>
 <td><p>内部RTC/引脚中断</p></td>
+<td><p>64K OCRAM保存数据</p></td>
 </tr>
 <tr class="row-odd"><td><p>HBN</p></td>
 <td><p>1 uA</p></td>
 <td><p>HBN 1</p></td>
 <td><p>内部RTC/引脚中断</p></td>
+<td><p>4K AON RAM保存数据</p></td>
 </tr>
 </tbody>
 </table>
-<p>bl_mcu_sdk 提供了一个简单的低功耗参考示例 (bl_mcu_sdk Examples/power/powerTest/) ，旨在帮助用户快速评估低功耗功能，如果需要进一步适配自身的低功耗场景，采取不同的低功耗策略，请查阅相关 datasheet 或者寻找 Boufflao Lab 的技术支持。</p>
-<p>上表中的参考电流是通过示例固件测试得出的。符合 bl70x 系列 MCU 的 spec 的描述， run wfi pds hbn 四种等级的定义简化了原先的 hbn level以及 pds level的设定。</p>
+</div></blockquote>
+<p>上表中的参考电流是通过示例固件测试得出的。符合 bl70x 系列 MCU 的 spec 的描述，run wfi pds hbn 四种等级的定义简化了原先的 hbn level 以及 pds level 的设定。</p>
 <p>见 bl702_bl704_bl706_DS_EN_Combo_1.9.pdf page 28</p>
 <div class="figure align-default">
 <img alt="../../_images/powerTable.png" src="../../_images/powerTable.png" />
@@ -267,11 +273,11 @@
 <h2><span class="section-number">3.2. </span><strong>低功耗示例测试方法</strong><a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <div class="section" id="id3">
 <h3><span class="section-number">3.2.1. </span><strong>编译低功耗示例代码</strong><a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
-<p>在工程目录下键入 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">APP=lowpower_test</span>&#160; <span class="pre">SUPPORT_SHELL=y</span> <span class="pre">BOARD=bl706_lp</span></code> 完成低功耗示例 bl706 的编译。或者直接使用CDK工程，完成编译下载
+<p>在工程目录下键入 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">APP=lowpower_test</span>&#160; <span class="pre">SUPPORT_SHELL=y</span> <span class="pre">BOARD=bl706_lp</span></code> 完成低功耗示例 bl706 的编译。或者直接使用 CDK 工程，完成编译下载
 您可以参考本文档《快速开发指南》来获取更多编译烧写的信息。</p>
 <p>当编译并烧写成功后，连接串口到电脑端，并复位芯片，Xshell 会出现如下图所示的页面。</p>
 <div class="figure align-default">
-<img alt="../../_images/xShell页面.png" src="../../_images/xShell页面.png" />
+<img alt="../../_images/xShell_lowpower.png" src="../../_images/xShell_lowpower.png" />
 </div>
 </div>
 <div class="section" id="id4">
@@ -280,37 +286,37 @@
 <li><p>可以串联电流表到电源端的电路板</p></li>
 <li><p>电流表</p></li>
 <li><p>一台 PC 主机（运行 Windows 或者 Linux 系统）</p></li>
-<li><p>TTL转USB</p></li>
+<li><p>TTL 转 USB</p></li>
 </ul>
-<p>如下图所示，将电流表串联进入 bl706 模组的供电线路，通过PC端的串口调试助手软件，下发不同的低功耗指令，使得 bl706 进入对应的低功耗模式
+<p>如下图所示，将电流表串联进入 bl706 模组的供电线路，通过 PC 端的串口调试助手软件，下发不同的低功耗指令，使得 bl706 进入对应的低功耗模式
 观察电流表示值，完成评估。</p>
 <div class="figure align-default">
-<img alt="../../_images/低功耗示意图.png" src="../../_images/低功耗示意图.png" />
+<img alt="../../_images/lowpower_arch.png" src="../../_images/lowpower_arch.png" />
 </div>
 </div>
 <div class="section" id="xshell">
-<h3><span class="section-number">3.2.3. </span><strong>使用Xshell开始评估低功耗性能</strong><a class="headerlink" href="#xshell" title="永久链接至标题">¶</a></h3>
-<p>用户可以通过在 Xshell输入下述指令，进入对应的低功耗模式。</p>
+<h3><span class="section-number">3.2.3. </span><strong>使用 Xshell 开始评估低功耗性能</strong><a class="headerlink" href="#xshell" title="永久链接至标题">¶</a></h3>
+<p>用户可以通过在 Xshell 输入下述指令，进入对应的低功耗模式。</p>
 <p><code class="docutils literal notranslate"><span class="pre">run</span></code></p>
 <ul class="simple">
-<li><p>复位芯片之后，默认进入run模式，没有进入任何低功耗模式，芯片实际在运行 while(1); 语句。</p></li>
+<li><p>复位芯片之后，默认进入 run 模式，没有进入任何低功耗模式，芯片实际在运行 while(1); 语句。</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">wfi</span></code></p>
 <ul class="simple">
-<li><p>进入wfi模式，后面不加任何参数，进入之后，关闭CPU，降低功耗</p></li>
-<li><p>进入wfi模式后，任何中断会唤醒，例如uart中断。在Xshell中敲击回车会触发 bl706 UART RX中断，因此可以通过此方法唤醒wfi低功耗模式。</p></li>
+<li><p>进入 wfi 模式，后面不加任何参数，进入之后，CPU 处于 clock gating 状态，降低功耗</p></li>
+<li><p>进入 wfi 模式后，任何中断会唤醒，例如 uart 中断。在 Xshell 中敲击回车会触发 BL706 UART RX 中断，因此可以通过此方法唤醒 wfi 低功耗模式。</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">pds</span> <span class="pre">sleepTim</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">pds</span> <span class="pre">sleeptime</span></code></p>
 <ul class="simple">
-<li><p>pds 可以选择带一个 sleepTim 的参数，决定其内部 RTC 唤醒时间。如果指令不带此参数，那么默认不使用 RTC 内部唤醒，目前的固件仅支持上电复位唤醒。</p></li>
-<li><p>如果指令包含 sleepTim 参数，pds 将会在sleepTim * clock_period 的时刻被唤醒，表现为复位芯片，重新打印起始报文。</p></li>
-<li><p>进入低功耗模式后，RTC的时钟是32K ，因此 sleepTim 为32768时，表现为睡眠 1S 后唤醒。</p></li>
+<li><p>pds 可以选择带一个 sleeptime 的参数，决定其内部 RTC 唤醒时间。如果指令不带此参数，那么默认不使用 RTC 内部唤醒，目前的固件仅支持上电复位唤醒。</p></li>
+<li><p>如果指令包含 sleeptime 参数，pds 将会在``sleeptime * clock_period`` 的时刻被唤醒，表现为复位芯片，重新打印起始报文。</p></li>
+<li><p>进入低功耗模式后，RTC 的时钟是 32K，因此 sleeptime 为 32768 时，表现为睡眠 1S 后唤醒。</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">hbn</span> <span class="pre">sleepTim</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">hbn</span> <span class="pre">sleeptime</span></code></p>
 <ul class="simple">
-<li><p>hbn 可以选择带一个 sleepTim 的参数，决定其内部RTC唤醒时间。如果指令不带此参数，那么默认不使用 RTC 内部唤醒，目前的固件仅支持上电复位唤醒。</p></li>
-<li><p>如果指令包含 sleepTim 参数，hbn 将会在 sleepTim * clock_period 的时刻被唤醒，表现为复位芯片，重新打印起始报文。</p></li>
-<li><p>进入低功耗模式后，RTC的时钟是32K ，因此 sleepTim 为32768时，表现为睡眠1S 后唤醒。</p></li>
+<li><p>hbn 可以选择带一个 sleeptime 的参数，决定其内部 RTC 唤醒时间。如果指令不带此参数，那么默认不使用 RTC 内部唤醒，目前的固件仅支持上电复位唤醒。</p></li>
+<li><p>如果指令包含 sleeptime 参数，hbn 将会在``sleeptime * clock_period`` 的时刻被唤醒，表现为复位芯片，重新打印起始报文。</p></li>
+<li><p>进入低功耗模式后，RTC 的时钟是 32K，因此 sleeptime 为 32768 时，表现为睡眠 1S 后唤醒。</p></li>
 </ul>
 </div>
 </div>

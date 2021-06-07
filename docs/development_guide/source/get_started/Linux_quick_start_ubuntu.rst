@@ -1,9 +1,9 @@
 Linux OR WSL 环境开发指南
 =============================
 
-本文档介绍了如何在 Linux 安装配置 BL702 系列 MCU 需要的软件开发工具。而 WSL 的安装配置方式与 linux 下一样。唯一的区别就是一个运行在linux上，比如 Ubuntu ，一个运行在 windows 上。如果不想装虚拟机或者linux系统，可以选择 WSL。
+本文档介绍了如何在 Linux 安装配置 BL702 系列 MCU 需要的软件开发工具。而 WSL 系统下的安装配置方式与 linux 下一样，WSL 系统的安装请自行查阅网络资料安装。其区别就是一个运行在纯 linux 系统上，一个运行在 windows 上。如果不想装虚拟机或者 linux 系统，可以选择 WSL。
 
-**Windows Subsystem for Linux** （简称 WSL ）是一个在 Windows 10 上能够运行原生 Linux 二进制可执行文件（ELF格式）的兼容层。它是由微软与Canonical公司合作开发，其目标是使纯正的Ubuntu 14.04 "Trusty Tahr"映像能下载和解压到用户的本地计算机，并且映像内的工具和实用工具能在此子系统上原生运行。因此，在 WSL 下的操作方式和 linux 下的操作方式是完全相同的。
+**Windows Subsystem for Linux** （简称 WSL ）是一个在 Windows 10 上能够运行原生 Linux 二进制可执行文件（ELF 格式）的兼容层。它是由微软与 Canonical 公司合作开发，其目标是使纯正的 Ubuntu 映像能下载和解压到用户的本地计算机，并且映像内的工具和实用工具能在此子系统上原生运行。因此，在 WSL 下的操作方式和 linux 下的操作方式是完全相同的。
 
 
 

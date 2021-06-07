@@ -92,12 +92,10 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">7. 硬件连接</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
@@ -206,23 +204,25 @@
             
   <div class="section" id="adc">
 <h1><span class="section-number">9. </span>ADC - 按键检测电压<a class="headerlink" href="#adc" title="永久链接至标题">¶</a></h1>
-<blockquote>
-<div><p>本demo基于ADC，使用按键的方式检测外部输入引脚的电压值。</p>
-</div></blockquote>
+<p>本 demo 主要介绍一个基于 ADC 的按键功能，使用 ADC 检测按键输入引脚的电压值，根据不同的分压值判断相应的按键是否按下</p>
 <div class="section" id="id1">
 <h2><span class="section-number">9.1. </span>硬件连接<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
-<p>本demo基于BL706_AVB开发板:</p>
+<p>本 demo 基于 BL706_AVB 开发板:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
 <span class="o">----------------------------------</span>
     <span class="n">ADC</span> <span class="n">CH8</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO18</span>
 </pre></div>
+</div>
+<p><strong>分压电路：</strong></p>
+<div class="figure align-default" id="id5">
+<img alt="" src="../../_images/adc_key_demo.png" />
+<p class="caption"><span class="caption-text">adc key</span><a class="headerlink" href="#id5" title="永久链接至图片">¶</a></p>
 </div>
 </div>
 <div class="section" id="id2">
 <h2><span class="section-number">9.2. </span>软件实现<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/adc/adc_key</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ADC</span></code> 设备的时钟源由板级描述文件 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/clock_config.h</span></code> 来配置</p></li>
 </ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_ADC_CLOCK_SOURCE  ROOT_CLOCK_SOURCE_XCLK</span>
@@ -230,13 +230,13 @@
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ADC</span></code> 设备的复用引脚由板级描述文件 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code> 来配置</p></li>
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">ADC</span></code> 设备时钟源，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/clock_config.h</span></code></p></li>
 </ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define CONFIG_GPIO18_FUNC GPIO_FUN_ADC</span>
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ADC</span></code> 设备配置由板级描述文件 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/peripheral_config.h</span></code> 来配置</p></li>
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">ADC</span></code> 设备复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code></p></li>
 </ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -271,6 +271,9 @@
 <span class="cp">#endif</span>
 </pre></div>
 </td></tr></table></div>
+<ul class="simple">
+<li><p>使能 <code class="docutils literal notranslate"><span class="pre">BSP_USING_ADC0</span></code> 并配置 <code class="docutils literal notranslate"><span class="pre">ADC</span></code> 设备配置，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/peripheral_config.h</span></code></p></li>
+</ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -311,9 +314,9 @@
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p>首先调用 <code class="docutils literal notranslate"><span class="pre">adc_register</span></code> 函数注册 <code class="docutils literal notranslate"><span class="pre">adc_key</span></code> 设备，当前注册为ADC0</p></li>
+<li><p>首先调用 <code class="docutils literal notranslate"><span class="pre">adc_register</span></code> 函数注册 <code class="docutils literal notranslate"><span class="pre">adc_key</span></code> 设备，当前注册为 ADC0</p></li>
 <li><p>然后通过 <code class="docutils literal notranslate"><span class="pre">find</span></code> 函数找到设备对应的句柄，保存于 <code class="docutils literal notranslate"><span class="pre">adc_key</span></code> 句柄中</p></li>
-<li><p>然后使用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 以轮询模式来打开 <code class="docutils literal notranslate"><span class="pre">adc_key</span></code> 设备，调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> 完成ADC相关的配置</p></li>
+<li><p>然后使用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 以轮询模式来打开 <code class="docutils literal notranslate"><span class="pre">adc_key</span></code> 设备，调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> 完成 ADC 相关的配置</p></li>
 <li><p>最后调用 <code class="docutils literal notranslate"><span class="pre">adc_channel_start</span></code> 启用ADC的转换</p></li>
 </ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
@@ -358,13 +361,13 @@
 </div>
 <div class="section" id="id4">
 <h2><span class="section-number">9.4. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
-<p>本实验依次按下开发板上的SW1 ~ SW5会得到不同的电压值:</p>
+<p>本实验依次按下开发板上的 SW1 ~ SW5 会得到不同的电压值:</p>
 <ul class="simple">
-<li><p>key 0: 0V左右</p></li>
-<li><p>key 1: 0.1V左右</p></li>
-<li><p>key 2: 0.2V左右</p></li>
-<li><p>key 3: 0.3V左右</p></li>
-<li><p>key 4: 0.43V左右</p></li>
+<li><p>key 0: 0V 左右</p></li>
+<li><p>key 1: 0.1V 左右</p></li>
+<li><p>key 2: 0.2V 左右</p></li>
+<li><p>key 3: 0.3V 左右</p></li>
+<li><p>key 4: 0.43V 左右</p></li>
 </ul>
 <p>实际运行结果如下图所示：</p>
 <div class="figure align-default">

@@ -1,7 +1,7 @@
 BOOT2 IAP
 ============================
 
-IAP 是 In Application Programming 的首字母缩写，IAP 是用户自己的程序在运行过程中对 User Flash的部分区域进行烧写，
+IAP 是 In Application Programming 的首字母缩写，IAP 是用户自己的程序在运行过程中对 User Flash 的部分区域进行烧写，
 目的是为了在产品发布后可以方便地通过预留的通信口对产品中的固件程序进行更新升级。
 
 通常在用户需要实现 IAP 功能时，即用户程序运行中作自身的更新操作，需要在设计固件程序时编写两个项目代码，
@@ -25,4 +25,4 @@ bl_mcu_sdk 开源了 boot2_iap 的软件源码，用户可以到 examples/boot2_
 实验现象
 -----------------------------
 
-使用 Dev Cube 完成 IAP 功能的具体步骤，请参阅 `DevCube用户手册 <https://dev.bouffalolab.com/media/upload/doc/DevCube%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8Cv1.2.pdf>`_ <IAP程序下载>章节。
+使用 Dev Cube 完成 IAP 功能的具体步骤，请参阅 `DevCube用户手册 <https://dev.bouffalolab.com/media/upload/doc/DevCube%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8Cv1.2.pdf>`_ <IAP 程序下载>章节。

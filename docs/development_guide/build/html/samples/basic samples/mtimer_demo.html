@@ -92,12 +92,10 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">7. 硬件连接</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
@@ -206,9 +204,7 @@
             
   <div class="section" id="mtimer">
 <h1><span class="section-number">5. </span>MTIMER - 内核定时器<a class="headerlink" href="#mtimer" title="永久链接至标题">¶</a></h1>
-<blockquote>
-<div><p>本demo基于 risc-v 内核自带的一个64位定时器（MTIMER）编写。MTIMER最大可以定时500年，本demo可以为后面os tick提供参考。</p>
-</div></blockquote>
+<p>本 demo 基于 risc-v 内核自带的一个 64 位定时器（MTIMER）编写。本 demo 可以为后面 os tick 提供参考。</p>
 <div class="section" id="id1">
 <h2><span class="section-number">5.1. </span>硬件连接<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>无</p>
@@ -217,8 +213,11 @@
 <h2><span class="section-number">5.2. </span>软件实现<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/systick</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mtimer</span></code> 时钟默认经过分频以后为 1M，方便后面使用，减少计算时间。</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">注解</p>
+<p><code class="docutils literal notranslate"><span class="pre">mtimer</span></code> 时钟默认经过分频以后为 1M，方便后面使用，减少计算时间。</p>
+</div>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -237,7 +236,7 @@
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p>使用上述代码设置mtimer定时时间为1s，并且注册中断回调函数。</p></li>
+<li><p>使用上述代码设置 mtimer 定时时间为 1s，并且注册中断回调函数。</p></li>
 </ul>
 </div>
 <div class="section" id="id3">
@@ -262,7 +261,7 @@
 </div>
 <div class="section" id="id4">
 <h2><span class="section-number">5.4. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">tick</span></code> 值每秒自增1并通过串口打印。</p>
+<p><code class="docutils literal notranslate"><span class="pre">tick</span></code> 值每秒自增 1 并通过串口打印。</p>
 </div>
 </div>
 

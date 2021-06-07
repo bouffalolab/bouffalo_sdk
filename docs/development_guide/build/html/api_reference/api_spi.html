@@ -92,12 +92,10 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/connecting_hardware.html">7. 硬件连接</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul class="current">
@@ -232,7 +230,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 <li><p>可配置 MSB/LSB 优先传输</p></li>
 <li><p>接收过滤功能</p></li>
 <li><p>从设备下的超时机制</p></li>
-<li><p>支持轮询、中断、DMA传输</p></li>
+<li><p>支持轮询、中断、DMA 传输</p></li>
 </ul>
 </div>
 <div class="section" id="id2">
@@ -255,14 +253,14 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 <ul class="simple">
 <li><p>parent        继承父类属性</p></li>
-<li><p>id            SPI id，0表示 SPI0</p></li>
+<li><p>id            SPI id，0 表示 SPI0</p></li>
 <li><p>clk           SPI 时钟频率</p></li>
 <li><p>mode          主机模式或者从机模式</p></li>
 <li><p>direction     传输先行模式</p></li>
 <li><p>clk_polaraity 时钟极性</p></li>
 <li><p>clk_phase     时钟相位</p></li>
 <li><p>datasize      数据传输位宽</p></li>
-<li><p>fifo_threshold fifo 阈值, 最大为4</p></li>
+<li><p>fifo_threshold fifo 阈值, 最大为 4</p></li>
 <li><p>tx_dma        附加的发送 dma 句柄</p></li>
 <li><p>rx_dma        附加的接收 dma 句柄</p></li>
 </ul>
@@ -298,7 +296,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 <div class="section" id="id3">
 <h2><span class="section-number">8.3. </span>SPI 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
-<p>每一个 SPI 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,变量定义位于 <code class="docutils literal notranslate"><span class="pre">hal_uart.c</span></code> 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_SPI0</span></code> ，<code class="docutils literal notranslate"><span class="pre">SPI0_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">SPI0</span></code> 设备就可以进行注册和使用了。</p>
+<p>每一个 SPI 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,变量定义位于 <code class="docutils literal notranslate"><span class="pre">hal_spi.c</span></code> 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_SPI0</span></code> ，<code class="docutils literal notranslate"><span class="pre">SPI0_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">SPI0</span></code> 设备就可以进行注册和使用了。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*参数配置宏*/</span>
 <span class="cp">#if defined(BSP_USING_SPI0)</span>
 <span class="cp">#ifndef SPI0_CONFIG</span>

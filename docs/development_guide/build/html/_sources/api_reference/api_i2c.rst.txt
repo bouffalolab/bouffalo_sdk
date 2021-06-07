@@ -11,7 +11,7 @@ I2C (Inter-Intergrated Circuit) 是一种串行通讯总线，使用多主从架
 
 - 灵活配置的从机地址 ``slaveAddr`` 、寄存器地址 ``subAddr``
 - 可以灵活调整的时钟频率
-- 支持轮询、中断、DMA传输
+- 支持轮询、中断、DMA 传输
 
 
 I2C 设备结构体定义
@@ -28,15 +28,15 @@ I2C 设备结构体定义
     } i2c_device_t;
 
 - parent    继承父类属性
-- ch        i2c id，0表示i2c0,1表示i2c1
-- mode      i2c传输模式，0 为使用硬件i2c，1为使用软件i2c，当前软件i2c暂时无效
+- ch        i2c id，0 表示 i2c0,1 表示 i2c1
+- mode      i2c 传输模式，0 为使用硬件 i2c，1 为使用软件 i2c，当前软件 i2c 暂时无效
 - phase 
 - 其他待补充
 
 I2C 设备参数配置表
 ------------------------
 
-每一个 I2C 设备都有一个参数配置宏,宏定义位于 ``bsp/board/xxx`` 目录下 ``peripheral_config.h`` 文件,变量定义位于 ``hal_pwm.c`` 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 ``BSP_USING_I2C0`` ，``I2C0_CONFIG`` 即生效，同时 ``I2C`` 设备就可以进行注册和使用了。
+每一个 I2C 设备都有一个参数配置宏,宏定义位于 ``bsp/board/xxx`` 目录下 ``peripheral_config.h`` 文件,变量定义位于 ``hal_i2c.c`` 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 ``BSP_USING_I2C0`` ，``I2C0_CONFIG`` 即生效，同时 ``I2C`` 设备就可以进行注册和使用了。
 
 .. code-block:: C
 
@@ -120,7 +120,7 @@ I2C 设备标准接口当前仅使用 ``device_open`` , 并提供标准的数据
 **i2c_transfer**
 ^^^^^^^^^^^^^^^^
 
-``i2c_transfer`` 用于设备的数据传输，形参中 ``msgs`` 中的成员 ``flags`` 指示传输的方向是写还是读，并且指定寄存器地址长度是0、1、2。
+``i2c_transfer`` 用于设备的数据传输，形参中 ``msgs`` 中的成员 ``flags`` 指示传输的方向是写还是读，并且指定寄存器地址长度是 0、1、2。
 
 .. code-block:: C
 
@@ -144,8 +144,8 @@ I2C 设备标准接口当前仅使用 ``device_open`` , 并提供标准的数据
         uint8_t *buf;
     } i2c_msg_t;
 
-- slaveaddr i2c从设备7位从机地址
-- subaddr i2c从设备寄存器地址
+- slaveaddr i2c 从设备7位从机地址
+- subaddr i2c 从设备寄存器地址
 - flags 读写模式以及寄存器地址长度
 - len 传输数据长度
 - buf 数据缓冲区

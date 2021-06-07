@@ -16,7 +16,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 - 可配置 MSB/LSB 优先传输
 - 接收过滤功能
 - 从设备下的超时机制
-- 支持轮询、中断、DMA传输
+- 支持轮询、中断、DMA 传输
 
 SPI 设备结构体定义
 ------------------------
@@ -39,14 +39,14 @@ SPI 设备结构体定义
     } spi_device_t;
 
 - parent        继承父类属性
-- id            SPI id，0表示 SPI0
+- id            SPI id，0 表示 SPI0
 - clk           SPI 时钟频率
 - mode          主机模式或者从机模式
 - direction     传输先行模式
 - clk_polaraity 时钟极性
 - clk_phase     时钟相位
 - datasize      数据传输位宽
-- fifo_threshold fifo 阈值, 最大为4
+- fifo_threshold fifo 阈值, 最大为 4
 - tx_dma        附加的发送 dma 句柄
 - rx_dma        附加的接收 dma 句柄
 
@@ -93,7 +93,7 @@ SPI 设备结构体定义
 SPI 设备参数配置表
 ------------------------
 
-每一个 SPI 设备都有一个参数配置宏,宏定义位于 ``bsp/board/xxx`` 目录下 ``peripheral_config.h`` 文件,变量定义位于 ``hal_uart.c`` 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 ``BSP_USING_SPI0`` ，``SPI0_CONFIG`` 即生效，同时 ``SPI0`` 设备就可以进行注册和使用了。
+每一个 SPI 设备都有一个参数配置宏,宏定义位于 ``bsp/board/xxx`` 目录下 ``peripheral_config.h`` 文件,变量定义位于 ``hal_spi.c`` 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 ``BSP_USING_SPI0`` ，``SPI0_CONFIG`` 即生效，同时 ``SPI0`` 设备就可以进行注册和使用了。
 
 .. code-block:: C
 

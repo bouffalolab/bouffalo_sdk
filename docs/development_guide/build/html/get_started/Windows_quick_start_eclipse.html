@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3. Windows 下使用 Eclipse 开发指南 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
+  <title>2.2. Windows 下使用 Eclipse 开发指南 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
-    <link rel="next" title="4. Linux OR WSL 环境开发指南" href="Linux_quick_start_ubuntu.html" />
-    <link rel="prev" title="2. Windows 下使用 CDK (类 MDK Keil)开发指南" href="Windows_quick_start_cdk.html" /> 
+    <link rel="next" title="2.3. Linux OR WSL 环境开发指南" href="Linux_quick_start_ubuntu.html" />
+    <link rel="prev" title="2.1. Windows 下使用 CDK (类 MDK Keil)开发指南" href="Windows_quick_start_cdk.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,29 +92,32 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Windows_quick_start_cdk.html">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Windows 下使用 Eclipse 开发指南</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">3.1. 需要的软硬件环境</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#eclipse">3.2. 下载 Eclipse 安装包</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#bl-mcu-sdk">3.3. 下载 bl_mcu_sdk</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">3.4. 配置 eclipse 开发环境</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">3.5. 导入 bl_mcu_sdk</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id5">3.6. 硬件连接</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hello-world">3.7. 测试 Hello World 工程</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id6">3.7.1. 打开 Hello World</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id7">3.7.2. 编译 Hello World</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id8">3.7.3. 烧写 Hello World</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id9">3.7.4. 运行 Hello World</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id10">3.7.5. 调试 Hello World</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. 开发环境搭建指南</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Windows_quick_start_cdk.html">2.1. Windows_CDK</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.2. Windows_eclipse</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">2.2.1. 需要的软硬件环境</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#eclipse">2.2.2. 下载 Eclipse 安装包</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bl-mcu-sdk">2.2.3. 下载 bl_mcu_sdk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">2.2.4. 配置 eclipse 开发环境</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">2.2.5. 导入 bl_mcu_sdk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">2.2.6. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hello-world">2.2.7. 测试 Hello World 工程</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id6">2.2.7.1. 打开 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">2.2.7.2. 编译 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id8">2.2.7.3. 烧写 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id9">2.2.7.4. 运行 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id10">2.2.7.5. 调试 Hello World</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id11">3.8. 编译烧写不同的目标工程</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">2.2.8. 编译烧写不同的目标工程</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
-<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">7. 硬件连接</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Linux_quick_start_ubuntu.html">2.3. Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">5. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
@@ -196,7 +199,9 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">3. </span>Windows 下使用 Eclipse 开发指南</li>
+          <li><a href="index.html"><span class="section-number">2. </span>开发环境搭建指南</a> &raquo;</li>
+        
+      <li><span class="section-number">2.2. </span>Windows 下使用 Eclipse 开发指南</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -216,10 +221,10 @@
            <div itemprop="articleBody">
             
   <div class="section" id="windows-eclipse">
-<h1><span class="section-number">3. </span>Windows 下使用 Eclipse 开发指南<a class="headerlink" href="#windows-eclipse" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">2.2. </span>Windows 下使用 Eclipse 开发指南<a class="headerlink" href="#windows-eclipse" title="永久链接至标题">¶</a></h1>
 <p>本文档介绍了如何在 Windows 下使用 eclipse，构建 BL702 系列 MCU 的软件开发环境。</p>
 <div class="section" id="id1">
-<h2><span class="section-number">3.1. </span>需要的软硬件环境<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2.1. </span>需要的软硬件环境<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>Eclipse 免安装软件包</p></li>
 <li><p>串口助手软件</p></li>
@@ -230,13 +235,13 @@
 </ul>
 </div>
 <div class="section" id="eclipse">
-<h2><span class="section-number">3.2. </span>下载 Eclipse 安装包<a class="headerlink" href="#eclipse" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2.2. </span>下载 Eclipse 安装包<a class="headerlink" href="#eclipse" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>从 Bouffalo Lab 开发者社区下载带有 RISC-V 工具链的 <a class="reference external" href="https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip">Eclipse https://dev.bouffalolab.com/download</a> 安装包。</p></li>
 </ul>
 </div>
 <div class="section" id="bl-mcu-sdk">
-<h2><span class="section-number">3.3. </span>下载 bl_mcu_sdk<a class="headerlink" href="#bl-mcu-sdk" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2.3. </span>下载 bl_mcu_sdk<a class="headerlink" href="#bl-mcu-sdk" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>从开源社区下载 <a class="reference external" href="https://gitee.com/bouffalolab/bl_mcu_sdk.git">bl_mcu_sdk</a> 软件开发包。</p></li>
 <li><p>可以使用 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> 或者直接 <code class="docutils literal notranslate"><span class="pre">download</span></code> 的方式下 SDK</p></li>
@@ -247,7 +252,7 @@
 </td></tr></table></div>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">3.4. </span>配置 eclipse 开发环境<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2.4. </span>配置 eclipse 开发环境<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <ul>
 <li><p>将获取到的 eclipse 压缩包拷贝到您的工作目录，解压 eclipse 压缩包</p></li>
 <li><p>进入 eclipse 目录，双击 <code class="docutils literal notranslate"><span class="pre">eclipse.exe</span></code> 启动 eclipse</p></li>
@@ -274,7 +279,7 @@
 </ul>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">3.5. </span>导入 bl_mcu_sdk<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2.5. </span>导入 bl_mcu_sdk<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <ul>
 <li><p>点击 菜单栏 <code class="docutils literal notranslate"><span class="pre">File-&gt;Import</span></code> ，打开导入项目的配置界面</p>
 <div class="figure align-default">
@@ -309,22 +314,22 @@
 </ul>
 </div>
 <div class="section" id="id5">
-<h2><span class="section-number">3.6. </span>硬件连接<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2.6. </span>硬件连接<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
-<li><p>具体开发板的连接, 请参考 <a class="reference internal" href="connecting_hardware.html#connect-hardware"><span class="std std-ref">硬件连接</span></a> 部分；（eclipse 环境建议使用 <code class="docutils literal notranslate"><span class="pre">j-link</span></code> 烧写、调试）</p></li>
+<li><p>具体开发板的连接, 请参考 <a class="reference internal" href="connecting_hardware.html#connect-hardware"><span class="std std-ref">硬件连接指南</span></a> 部分；（eclipse 环境建议使用 <code class="docutils literal notranslate"><span class="pre">j-link</span></code> 烧写、调试）</p></li>
 <li><p>请确保开发板正确设置后再进行下面的步骤</p></li>
 </ul>
 </div>
 <div class="section" id="hello-world">
-<h2><span class="section-number">3.7. </span>测试 Hello World 工程<a class="headerlink" href="#hello-world" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2.7. </span>测试 Hello World 工程<a class="headerlink" href="#hello-world" title="永久链接至标题">¶</a></h2>
 <div class="section" id="id6">
-<h3><span class="section-number">3.7.1. </span>打开 Hello World<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.2.7.1. </span>打开 Hello World<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>打开 <code class="docutils literal notranslate"><span class="pre">examples/hellowd/helloworld/main.c</span></code> 文件，即可编辑、修改 <code class="docutils literal notranslate"><span class="pre">helloworld</span></code> 测试 demo 的代码，若修改了，请保存后在执行编译</p></li>
 </ul>
 </div>
 <div class="section" id="id7">
-<h3><span class="section-number">3.7.2. </span>编译 Hello World<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.2.7.2. </span>编译 Hello World<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>双击 <code class="docutils literal notranslate"><span class="pre">bl_make</span></code> 即可编 helloworld 工程</p></li>
 <li><p>编译成功后 <code class="docutils literal notranslate"><span class="pre">Console</span></code> 窗口可以看到如下图所示的 log 信息</p></li>
@@ -334,7 +339,7 @@
 </div>
 </div>
 <div class="section" id="id8">
-<h3><span class="section-number">3.7.3. </span>烧写 Hello World<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.2.7.3. </span>烧写 Hello World<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>双击 <code class="docutils literal notranslate"><span class="pre">download</span></code> 即可烧写 helloworld 工程 <code class="docutils literal notranslate"><span class="pre">bin</span></code> 文件到芯片中</p></li>
 <li><p>下载成功后 <code class="docutils literal notranslate"><span class="pre">Console</span></code> 窗口可以看到如下图所示的 log 信息</p></li>
@@ -344,7 +349,7 @@
 </div>
 </div>
 <div class="section" id="id9">
-<h3><span class="section-number">3.7.4. </span>运行 Hello World<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.2.7.4. </span>运行 Hello World<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>将开发板的 <code class="docutils literal notranslate"><span class="pre">TXD0</span></code>、<code class="docutils literal notranslate"><span class="pre">RXD0</span></code> 和 <code class="docutils literal notranslate"><span class="pre">GND</span></code> 引脚使用杜邦线连接到 USB-TTL 串口模块，将串口模块插入 PC 主机， 使用任意的串口助手软件打开串口</p></li>
 <li><p>烧写成功后，按下板子上的 <code class="docutils literal notranslate"><span class="pre">rst</span></code> 按键，如果下载正确，即可在串口助手软件中看到如下图所示的 log 信息。</p></li>
@@ -354,7 +359,7 @@
 </div>
 </div>
 <div class="section" id="id10">
-<h3><span class="section-number">3.7.5. </span>调试 Hello World<a class="headerlink" href="#id10" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.2.7.5. </span>调试 Hello World<a class="headerlink" href="#id10" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>点击 eclipse 工具栏中的 <code class="docutils literal notranslate"><span class="pre">Debug</span></code> 按钮，进入 debug 配置窗口</p></li>
 <li><p>选择 <code class="docutils literal notranslate"><span class="pre">GDB</span> <span class="pre">SEGGER</span> <span class="pre">J-Link</span> <span class="pre">Debugging-&gt;Jlink_bl_mcu_sdk</span></code>  Debug 配置，在 <code class="docutils literal notranslate"><span class="pre">C/C++</span> <span class="pre">Application:</span></code> 选项中选择需要调试的 <code class="docutils literal notranslate"><span class="pre">.elf</span></code> 文件</p></li>
@@ -373,7 +378,7 @@
 </div>
 </div>
 <div class="section" id="id11">
-<h2><span class="section-number">3.8. </span>编译烧写不同的目标工程<a class="headerlink" href="#id11" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2.8. </span>编译烧写不同的目标工程<a class="headerlink" href="#id11" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>当右击 <code class="docutils literal notranslate"><span class="pre">bl_make</span></code> 按钮，点击 <code class="docutils literal notranslate"><span class="pre">Edit</span></code> 后，会弹出更换目标工程的配置界面，如下图所示</p></li>
 </ul>
@@ -394,8 +399,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="Linux_quick_start_ubuntu.html" class="btn btn-neutral float-right" title="4. Linux OR WSL 环境开发指南" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="Windows_quick_start_cdk.html" class="btn btn-neutral float-left" title="2. Windows 下使用 CDK (类 MDK Keil)开发指南" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Linux_quick_start_ubuntu.html" class="btn btn-neutral float-right" title="2.3. Linux OR WSL 环境开发指南" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Windows_quick_start_cdk.html" class="btn btn-neutral float-left" title="2.1. Windows 下使用 CDK (类 MDK Keil)开发指南" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

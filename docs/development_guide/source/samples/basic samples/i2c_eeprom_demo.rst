@@ -4,7 +4,7 @@ I2C - AT24CXX 读写
 硬件连接
 -----------------------------
 
-本 demo 基于BL706_IOT开发板，自行添加 AT24CXX 电路，连接方式如下
+本 demo 基于 BL706_IOT 开发板，自行添加 AT24CXX 电路，连接方式如下
 
 ::
 
@@ -19,15 +19,13 @@ I2C - AT24CXX 读写
 
 -  软件代码见 ``examples/i2c/i2c_at24cxx``
 
--  ``I2C`` 设备的时钟源由板级描述文件 ``bsp/board/bl706_iot/clock_config.h`` 来配置
-
 .. code-block:: C
     :linenos:
 
     #define BSP_I2C_CLOCK_SOURCE  ROOT_CLOCK_SOURCE_BCLK
     #define BSP_I2C_CLOCK_DIV  0
 
--  ``I2C`` 设备的复用引脚由板级描述文件 ``bsp/board/bl706_iot/pinmux_config.h`` 来配置
+-  配置 ``I2C`` 设备时钟源，见 ``bsp/board/bl706_iot/clock_config.h`` 
 
 .. code-block:: C
     :linenos:
@@ -35,8 +33,7 @@ I2C - AT24CXX 读写
     #define CONFIG_GPIO11_FUNC GPIO_FUN_I2C
     #define CONFIG_GPIO16_FUNC GPIO_FUN_I2C
 
-
--  ``I2C`` 设备配置由板级描述文件 ``bsp/board/bl706_iot/peripheral_config.h`` 来配置
+-  配置 ``I2C`` 设备复用引脚，见 ``bsp/board/bl706_iot/peripheral_config.h`` 
 
 .. code-block:: C
     :linenos:
@@ -53,6 +50,8 @@ I2C - AT24CXX 读写
     }
     #endif
     #endif
+
+-  使能 ``BSP_USING_I2C0`` 并配置 ``I2C`` 设备配置，见 ``bsp/board/bl706_iot/peripheral_config.h``
 
 .. code-block:: C
     :linenos:
@@ -90,7 +89,7 @@ I2C - AT24CXX 读写
     if (i2c_transfer(i2c0, &msg[0], 2) == 0)
         MSG("\r\n read:%0x\r\n", msg[1].buf[0] << 8 | msg[1].buf[1]);
 
-- 调用 ``i2c_transfer`` 传输两个 ``msg``，一个 ``msg`` 代表向 eeprom 写入8字节数据，一个 ``msg`` 代表从 eeprom 读取8字节数据，
+- 调用 ``i2c_transfer`` 传输两个 ``msg``，一个 ``msg`` 代表向 eeprom 写入 8 字节数据，一个 ``msg`` 代表从 eeprom 读取 8 字节数据，
 
 编译和烧录
 -----------------------------

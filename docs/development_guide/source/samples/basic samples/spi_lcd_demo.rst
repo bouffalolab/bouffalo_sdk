@@ -4,7 +4,7 @@ SPI - TFT LCD 显示
 硬件连接
 -----------------------------
 
-本 demo 基于BL706_AVB开发板，**其中 MISO 和MOSI 默认进行了调换**，连接方式如下
+本 demo 基于 BL706_AVB 开发板，连接方式如下
 
 ::
 
@@ -22,15 +22,13 @@ SPI - TFT LCD 显示
 
 -  软件代码见 ``examples/spi/spi_lcd``
 
--  ``SPI`` 设备的时钟源由板级描述文件 ``bsp/board/bl706_avb/clock_config.h`` 来配置
-
 .. code-block:: C
     :linenos:
 
     #define BSP_SPI_CLOCK_SOURCE  ROOT_CLOCK_SOURCE_BCLK
     #define BSP_SPI_CLOCK_DIV  0
 
--  ``SPI`` 设备的复用引脚由板级描述文件 ``bsp/board/bl706_avb/pinmux_config.h`` 来配置
+-  配置 ``SPI`` 设备时钟源，见 ``bsp/board/bl706_avb/clock_config.h`` 
 
 .. code-block:: C
     :linenos:
@@ -39,8 +37,11 @@ SPI - TFT LCD 显示
     #define CONFIG_GPIO20_FUNC GPIO_FUN_SPI
     #define CONFIG_GPIO21_FUNC GPIO_FUN_SPI
 
+-  配置 ``SPI`` 设备复用引脚，见 ``bsp/board/bl706_avb/pinmux_config.h`` 
 
--  ``SPI`` 设备配置由板级描述文件 ``bsp/board/bl706_avb/peripheral_config.h`` 来配置
+.. note::  ``bsp/board/bl706_avb/pinmux_config.h`` 当前给所有的示例demo使用，所以，需要先选定 ``PINMUX_SELECT`` 为 ``PINMUX_LVGL``，开启其中一个 demo
+
+.. note:: 为适配 bl702_avb 硬件, SPI 的 MOSI 和 MISO 默认进行了调换，如果想要恢复默认，修改 ``drivers/bl702_driver/hal_drv/default_config/spi_config.h`` 中 ``SPI_SWAP_ENABLE`` 为 0
 
 .. code-block:: C
     :linenos:
@@ -63,6 +64,7 @@ SPI - TFT LCD 显示
     #endif
     #endif
 
+-  使能 ``BSP_USING_SPI0`` 并配置 ``SPI`` 设备配置，见 ``bsp/board/bl706_avb/peripheral_config.h``
 
 .. code-block:: C
     :linenos:
@@ -143,3 +145,8 @@ SPI - TFT LCD 显示
 
 实验现象
 -----------------------------
+
+.. figure:: img/spi_lcd.png 
+   :alt:
+
+spi display!

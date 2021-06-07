@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>2. Windows 下使用 CDK (类 MDK Keil)开发指南 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
+  <title>2.1. Windows 下使用 CDK (类 MDK Keil)开发指南 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
-    <link rel="next" title="3. Windows 下使用 Eclipse 开发指南" href="Windows_quick_start_eclipse.html" />
-    <link rel="prev" title="1. 开发前的准备" href="get_started.html" /> 
+    <link rel="next" title="2.2. Windows 下使用 Eclipse 开发指南" href="Windows_quick_start_eclipse.html" />
+    <link rel="prev" title="2. 开发环境搭建指南" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,26 +92,29 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Windows 下使用 CDK (类 MDK Keil)开发指南</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id2">2.1. 需要的软硬件环境</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cdk">2.2. 下载剑池 CDK 软件安装包</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#bl-mcu-sdk">2.3. 下载 bl_mcu_sdk 软件开发包</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">2.4. 硬件连接</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#hello-world">2.5. 测试 Hello World 工程</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id5">2.5.1. 打开 Hello World</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id6">2.5.2. 编译 Hello World</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id7">2.5.3. 烧写 Hello World</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id8">2.5.4. 运行 Hello World</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id9">2.5.5. 调试 Hello World</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. 开发环境搭建指南</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.1. Windows_CDK</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">2.1.1. 需要的软硬件环境</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cdk">2.1.2. 下载剑池 CDK 软件安装包</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bl-mcu-sdk">2.1.3. 下载 bl_mcu_sdk 软件开发包</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">2.1.4. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hello-world">2.1.5. 测试 Hello World 工程</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id5">2.1.5.1. 打开 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">2.1.5.2. 编译 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">2.1.5.3. 烧写 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id8">2.1.5.4. 运行 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id9">2.1.5.5. 调试 Hello World</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Windows_quick_start_eclipse.html">3. Windows 下使用 Eclipse 开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Linux_quick_start_ubuntu.html">4. Linux OR WSL 环境开发指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">5. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">6. 基于 cmake 框架构建自己的工程</a></li>
-<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">7. 硬件连接</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Windows_quick_start_eclipse.html">2.2. Windows_eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Linux_quick_start_ubuntu.html">2.3. Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">5. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
@@ -193,7 +196,9 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">2. </span>Windows 下使用 CDK (类 MDK Keil)开发指南</li>
+          <li><a href="index.html"><span class="section-number">2. </span>开发环境搭建指南</a> &raquo;</li>
+        
+      <li><span class="section-number">2.1. </span>Windows 下使用 CDK (类 MDK Keil)开发指南</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -213,12 +218,12 @@
            <div itemprop="articleBody">
             
   <div class="section" id="windows-cdk-mdk-keil">
-<span id="windows-cdk-quick-start"></span><h1><span class="section-number">2. </span>Windows 下使用 CDK (类 MDK Keil)开发指南<a class="headerlink" href="#windows-cdk-mdk-keil" title="永久链接至标题">¶</a></h1>
+<span id="windows-cdk-quick-start"></span><h1><span class="section-number">2.1. </span>Windows 下使用 CDK (类 MDK Keil)开发指南<a class="headerlink" href="#windows-cdk-mdk-keil" title="永久链接至标题">¶</a></h1>
 <p>本文档介绍了如何在 Windows 下使用 <a class="reference external" href="https://www.t-heah.cn/about">平头哥半导体</a> 开发的 CDK 集成开发环境，
 来完成博流 BL702 系列 MCU 的相关软件开发工作。</p>
 <p>关于剑池 CDK ，这是一款由平头哥半导体开发打造的集成开发环境。它拥有和传统 MCU 开发环境十分近似的操作和设置，旨在不改变用户开发习惯的基础上，全面接入云端开发资源，结合图形化的 OSTracer、Profiling 等调试分析工具，加速用户产品开发。</p>
 <div class="section" id="id2">
-<h2><span class="section-number">2.1. </span>需要的软硬件环境<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.1.1. </span>需要的软硬件环境<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>剑池 CDK 软件</p></li>
 <li><p>一根 USB Type-A 数据线</p></li>
@@ -228,14 +233,14 @@
 </ul>
 </div>
 <div class="section" id="cdk">
-<h2><span class="section-number">2.2. </span>下载剑池 CDK 软件安装包<a class="headerlink" href="#cdk" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.1.2. </span>下载剑池 CDK 软件安装包<a class="headerlink" href="#cdk" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://occ.t-head.cn/development/series/download?id=3864775351511420928&amp;type=kind&amp;softPlatformType=4#sticky">剑池CDK</a> 软件安装可以从平头哥半导体 OCC 官网获取到。</p></li>
 <li><p>下载完成后，解压缩，双击 <code class="docutils literal notranslate"><span class="pre">setup.exe</span></code>，按照其提示，完成软件安装即可。</p></li>
 </ul>
 </div>
 <div class="section" id="bl-mcu-sdk">
-<h2><span class="section-number">2.3. </span>下载 bl_mcu_sdk 软件开发包<a class="headerlink" href="#bl-mcu-sdk" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.1.3. </span>下载 bl_mcu_sdk 软件开发包<a class="headerlink" href="#bl-mcu-sdk" title="永久链接至标题">¶</a></h2>
 <ul>
 <li><p>从开源社区下载 bl_mcu_sdk 软件开发包。</p>
 <ul class="simple">
@@ -249,22 +254,22 @@
 </ul>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">2.4. </span>硬件连接<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.1.4. </span>硬件连接<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
-<li><p>具体开发板的连接, 请参考 <a class="reference internal" href="connecting_hardware.html#connect-hardware"><span class="std std-ref">硬件连接</span></a> 部分</p></li>
+<li><p>具体开发板的连接, 请参考 <a class="reference internal" href="connecting_hardware.html#connect-hardware"><span class="std std-ref">硬件连接指南</span></a> 部分</p></li>
 <li><p>请确保开发板被正确设置后再进行下面的步骤</p></li>
 </ul>
 </div>
 <div class="section" id="hello-world">
-<h2><span class="section-number">2.5. </span>测试 Hello World 工程<a class="headerlink" href="#hello-world" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.1.5. </span>测试 Hello World 工程<a class="headerlink" href="#hello-world" title="永久链接至标题">¶</a></h2>
 <div class="section" id="id5">
-<h3><span class="section-number">2.5.1. </span>打开 Hello World<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.1.5.1. </span>打开 Hello World<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>获取到 SDK 后，进入 sdk 中的 <code class="docutils literal notranslate"><span class="pre">examples/hellowd/helloworld/cdk</span></code> 目录下，双击 <code class="docutils literal notranslate"><span class="pre">helloworld.cdkproj</span></code>，即可打开 <code class="docutils literal notranslate"><span class="pre">Helloworld</span></code> 工程。</p></li>
 </ul>
 </div>
 <div class="section" id="id6">
-<h3><span class="section-number">2.5.2. </span>编译 Hello World<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.1.5.2. </span>编译 Hello World<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
 <div class="figure align-default" id="id10">
 <img alt="" src="../_images/cdk1.png" />
 <p class="caption"><span class="caption-text">helloworld.cdkproj</span><a class="headerlink" href="#id10" title="永久链接至图片">¶</a></p>
@@ -282,7 +287,7 @@
 </ul>
 </div>
 <div class="section" id="id7">
-<h3><span class="section-number">2.5.3. </span>烧写 Hello World<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.1.5.3. </span>烧写 Hello World<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
 <ul>
 <li><p>由于目前 CDK 软件中还没有包含我们的 flash 算法，所以需要我们手动将 flash 算法放到 CDK 安装目录，具体操作如下：</p>
 <ul class="simple">
@@ -339,7 +344,7 @@
 </ul>
 </div>
 <div class="section" id="id8">
-<h3><span class="section-number">2.5.4. </span>运行 Hello World<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.1.5.4. </span>运行 Hello World<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>从 CDK 的菜单栏 <code class="docutils literal notranslate"><span class="pre">View-&gt;Serial</span> <span class="pre">Pane</span></code>，打开串口面板，在打开的 <code class="docutils literal notranslate"><span class="pre">Serial</span> <span class="pre">Pane</span></code> 中右击，进行串口设置，选择你对应的串口号和波特率</p></li>
 </ul>
@@ -359,7 +364,7 @@
 </div>
 </div>
 <div class="section" id="id9">
-<h3><span class="section-number">2.5.5. </span>调试 Hello World<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.1.5.5. </span>调试 Hello World<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>点击工具栏上方的 <code class="docutils literal notranslate"><span class="pre">Start/Stop</span> <span class="pre">Debugger</span></code> 按钮，进入 debug 界面，如下图所示</p></li>
 </ul>
@@ -388,8 +393,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="Windows_quick_start_eclipse.html" class="btn btn-neutral float-right" title="3. Windows 下使用 Eclipse 开发指南" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="get_started.html" class="btn btn-neutral float-left" title="1. 开发前的准备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Windows_quick_start_eclipse.html" class="btn btn-neutral float-right" title="2.2. Windows 下使用 Eclipse 开发指南" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="2. 开发环境搭建指南" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

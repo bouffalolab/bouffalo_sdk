@@ -19,9 +19,7 @@ BL MCU SDK 将为您提供博流 BL70X 系列 MCU 开发的全方位支持。
    :numbered:
 
    get_started/get_started
-   get_started/Windows_quick_start_cdk
-   get_started/Windows_quick_start_eclipse
-   get_started/Linux_quick_start_ubuntu
+   get_started/index
    get_started/bl_dev_cube
    get_started/cmake_quick_start
    get_started/connecting_hardware

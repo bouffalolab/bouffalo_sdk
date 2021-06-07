@@ -23,11 +23,11 @@ BL706_AVB 开发板如下图所示
    
    BL706_AVB
 
--  一个支持标准 JTAG 功能的调试器：
+-  一个支持标准 JTAG 功能的调试器，下面几款调试器中选择一款与开发环境适合即可：
 
-  - CK-Link 仿真器，or
-  - Jlink V11 仿真器，or
-  - Sipeed USB-JTAG/TTL 调试器，or
+  - CK-Link 仿真器
+  - Jlink V11 仿真器
+  - Sipeed USB-JTAG/TTL 调试器
   - Bouffalo Lab Debugger 调试器
 
 -  一台 PC 主机（运行 Windows 或者 Linux 系统）
