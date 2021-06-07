@@ -1,7 +1,3 @@
-list(APPEND ADD_INCLUDE 
-"${CMAKE_CURRENT_SOURCE_DIR}"
-)
-
 set(TARGET_REQUIRED_LIBS xz)
 
 list(APPEND TARGET_REQUIRED_SRCS blsp_common.c blsp_media_boot.c )
