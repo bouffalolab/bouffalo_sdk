@@ -9,10 +9,10 @@ list(APPEND GLOBAL_LD_FLAGS -Wl,--cref -Wl,--gc-sections -nostartfiles -g3)
 list(APPEND GLOBAL_LD_FLAGS -fms-extensions -ffunction-sections -fdata-sections)
 list(APPEND GLOBAL_LD_FLAGS -Wall -Wchar-subscripts -std=c99)
 
-# Add common options
-add_compile_options(${GLOBAL_C_FLAGS})
-add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=c99>)
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
-add_link_options(${GLOBAL_LD_FLAGS})
+if(${SUPPORT_FLOAT} STREQUAL "y")
+list(APPEND GLOBAL_C_FLAGS -DBFLB_PRINT_FLOAT_SUPPORT)
+endif()
 
-
+if(${SUPPORT_SHELL} STREQUAL "y")
+list(APPEND GLOBAL_C_FLAGS -DSHELL_SUPPORT)
+endif()

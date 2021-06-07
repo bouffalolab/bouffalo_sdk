@@ -2,10 +2,11 @@ function(generate_library)
     get_filename_component(library_name ${CMAKE_CURRENT_LIST_DIR} NAME)
     message(STATUS "[register library component: ${library_name}], path:${CMAKE_CURRENT_LIST_DIR}")
 
+    add_library(${library_name})
+
     # Add src to lib
     if(ADD_SRCS)
-        add_library(${library_name} STATIC ${ADD_SRCS})
-        set(include_type PUBLIC)
+        target_sources(${library_name} PRIVATE ${ADD_SRCS})
 
         foreach(f ${ADD_SRCS})
             if(${f} MATCHES ".S|.s")
@@ -21,7 +22,7 @@ function(generate_library)
         if(NOT IS_DIRECTORY ${abs_dir})
             message(FATAL_ERROR "${CMAKE_CURRENT_LIST_FILE}: ${include_dir} not found!")
         endif()
-        target_include_directories(${library_name} ${include_type} ${abs_dir})
+        target_include_directories(${library_name} PUBLIC ${abs_dir})
     endforeach()
     endif()
 
@@ -42,7 +43,7 @@ function(generate_library)
     endif()
 
     # Add definitions private
-    if(ADD_DEFINITIONS_PRIVATE)
+    if(ADD_PRIVATE_DEFINITIONS)
         target_compile_options(${library_name} PRIVATE ${ADD_DEFINITIONS_PRIVATE})
     endif()
 
@@ -90,6 +91,13 @@ function(generate_bin)
     get_filename_component(current_relative_dir_name ${CMAKE_CURRENT_LIST_DIR} NAME)
     string(REGEX REPLACE "(.*)/${current_relative_dir_name}$" "\\1" above_absolute_dir ${CMAKE_CURRENT_LIST_DIR})
     get_filename_component(above_relative_dir_name ${above_absolute_dir} NAME)
+    
+    # Add common options
+    add_compile_options(${GLOBAL_C_FLAGS})
+    add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=c99>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+
+    check_all_library()
 
     foreach(mainfile IN LISTS mains)
     # Get file name without directory
@@ -129,7 +137,7 @@ function(generate_bin)
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/board/${BOARD}/board.c)
 
     add_executable(${target_name}.elf ${mainfile} ${SRCS})
-
+    target_link_options(${target_name}.elf PRIVATE ${GLOBAL_LD_FLAGS})
     set_target_properties(${target_name}.elf PROPERTIES LINK_FLAGS "-T${LINKER_SCRIPT} -Wl,-Map=${MAP_FILE}")
     set_target_properties(${target_name}.elf PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
@@ -156,7 +164,7 @@ function(generate_bin)
     if(${SUPPORT_SHELL} STREQUAL "y")
     target_link_libraries(${target_name}.elf shell)
     else()
-    include_directories(${CMAKE_SOURCE_DIR}/components/shell)
+    target_include_directories(${target_name}.elf PRIVATE ${CMAKE_SOURCE_DIR}/components/shell)
     endif()
 
     if(TARGET_REQUIRED_LIBS)
@@ -202,3 +210,53 @@ add_subdirectory($ENV{PROJECT_DIR}/src src)
 endif()
 
 endfunction()
+
+function(check_add_library target_name directory)
+    if(NOT TARGET ${target_name})
+    add_subdirectory(${directory} ${CMAKE_SOURCE_DIR}/build/libraries/${target_name})
+    endif()
+endfunction()
+
+function(check_all_library)
+    check_add_library(common ${CMAKE_SOURCE_DIR}/common)
+    check_add_library(fatfs ${CMAKE_SOURCE_DIR}/components/fatfs)
+    check_add_library(usb_stack ${CMAKE_SOURCE_DIR}/components/usb_stack)
+
+    if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/drivers/${CHIP}_driver)
+    check_add_library(${CHIP}_driver ${CMAKE_SOURCE_DIR}/drivers/${CHIP}_driver)
+    endif()
+
+    if(${SUPPORT_SHELL} STREQUAL "y")
+    check_add_library(shell ${CMAKE_SOURCE_DIR}/components/shell)
+    endif()
+    if(${SUPPORT_FREERTOS} STREQUAL "y")
+    check_add_library(freertos ${CMAKE_SOURCE_DIR}/components/freertos)
+    endif()
+
+    if(${SUPPORT_CRYPTO} STREQUAL "sw" OR ${SUPPORT_CRYPTO} STREQUAL "hw")
+    check_add_library(bflb_port ${CMAKE_SOURCE_DIR}/components/mbedtls/bflb_port)
+    endif()
+
+    if(${SUPPORT_LVGL} STREQUAL "y")
+    check_add_library(lvgl ${CMAKE_SOURCE_DIR}/components/lvgl)
+    endif()
+
+    if(${SUPPORT_XZ} STREQUAL "y")
+    check_add_library(xz ${CMAKE_SOURCE_DIR}/components/xz)
+    endif()
+
+    if(${SUPPORT_BLE} STREQUAL "y")
+    if(${SUPPORT_FREERTOS} STREQUAL "n")
+    message(FATAL_ERROR "ble need freertos,so you should set SUPPORT_FREERTOS=y")
+    endif()
+    check_add_library(ble ${CMAKE_SOURCE_DIR}/components/ble)
+    endif()
+
+    if(${SUPPORT_LWIP} STREQUAL "y")
+    if(${SUPPORT_FREERTOS} STREQUAL "n")
+    message(FATAL_ERROR "lwip need freertos,so you should set SUPPORT_FREERTOS=y")
+    endif()
+    check_add_library(lwip ${CMAKE_SOURCE_DIR}/components/lwip)
+    endif()
+
+endfunction(check_all_library)
