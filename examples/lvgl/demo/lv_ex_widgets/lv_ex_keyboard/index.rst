@@ -1,7 +1,7 @@
 C
 ^
 
-Keyboard with text area 
+Keyboard with text area
 """""""""""""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_keyboard/lv_ex_keyboard_1

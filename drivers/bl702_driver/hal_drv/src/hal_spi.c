@@ -1,24 +1,24 @@
 /**
  * @file hal_spi.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_spi.h"
 #include "hal_dma.h"
@@ -38,11 +38,11 @@ static spi_device_t spix_device[SPI_MAX_INDEX] =
 #endif
 };
 /**
- * @brief 
- * 
- * @param dev 
- * @param oflag 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
  */
 int spi_open(struct device *dev, uint16_t oflag)
 {
@@ -148,10 +148,10 @@ int spi_open(struct device *dev, uint16_t oflag)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @return int
  */
 int spi_close(struct device *dev)
 {
@@ -161,12 +161,12 @@ int spi_close(struct device *dev)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param cmd 
- * @param args 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param cmd
+ * @param args
+ * @return int
  */
 int spi_control(struct device *dev, int cmd, void *args)
 {
@@ -189,7 +189,7 @@ int spi_control(struct device *dev, int cmd, void *args)
             break;
         case DEVICE_CTRL_SUSPEND:
             SPI_Disable(spi_device->id, spi_device->mode);
-            break;            
+            break;
         case DEVICE_CTRL_CONFIG /* constant-expression */:
             /* code */
             break;
@@ -237,13 +237,13 @@ int spi_control(struct device *dev, int cmd, void *args)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int spi_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
@@ -300,13 +300,13 @@ int spi_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
     return -2;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int spi_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
@@ -331,12 +331,12 @@ int spi_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     return -2;
 }
 /**
- * @brief 
- * 
- * @param index 
- * @param name 
- * @param flag 
- * @return int 
+ * @brief
+ *
+ * @param index
+ * @param name
+ * @param flag
+ * @return int
  */
 int spi_register(enum spi_index_type index, const char *name, uint16_t flag)
 {
@@ -361,13 +361,13 @@ int spi_register(enum spi_index_type index, const char *name, uint16_t flag)
 }
 
 /**
- * @brief 
- * 
- * @param dev 
- * @param buffer 
- * @param size 
- * @param type 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param buffer
+ * @param size
+ * @param type
+ * @return int
  */
 int spi_transmit(struct device *dev, void *buffer, uint32_t size, uint8_t type)
 {
@@ -391,13 +391,13 @@ int spi_transmit(struct device *dev, void *buffer, uint32_t size, uint8_t type)
     return -1;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param buffer 
- * @param size 
- * @param type 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param buffer
+ * @param size
+ * @param type
+ * @return int
  */
 int spi_receive(struct device *dev, void *buffer, uint32_t size, uint8_t type)
 {
@@ -422,14 +422,14 @@ int spi_receive(struct device *dev, void *buffer, uint32_t size, uint8_t type)
 }
 
 /**
- * @brief 
- * 
- * @param dev 
- * @param send_buf 
- * @param recv_buf 
- * @param length 
- * @param type 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param send_buf
+ * @param recv_buf
+ * @param length
+ * @param type
+ * @return int
  */
 int spi_transmit_receive(struct device *dev, const void *send_buf, void *recv_buf, uint32_t length, uint8_t type)
 {
@@ -453,9 +453,9 @@ int spi_transmit_receive(struct device *dev, const void *send_buf, void *recv_bu
     return -1;
 }
 /**
- * @brief 
- * 
- * @param handle 
+ * @brief
+ *
+ * @param handle
  */
 void spi_isr(spi_device_t *handle)
 {

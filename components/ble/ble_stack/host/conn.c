@@ -426,7 +426,7 @@ bool le_check_valid_conn(void)
     for(i= 0; i < ARRAY_SIZE(conns); i++){
         if(atomic_get(&conns[i].ref)){
             return true;
-        }       
+        }
     }
 
     return false;
@@ -441,7 +441,7 @@ void bt_notify_disconnected(void)
         if(atomic_get(&conns[i].ref)){
 			conns[i].err = BT_HCI_ERR_UNSPECIFIED;
             notify_disconnected(&conns[i]);
-        }  
+        }
     }
 }
 #endif//#if defined(BFLB_HOST_ASSISTANT)
@@ -1528,7 +1528,7 @@ static void conn_cleanup(struct bt_conn *conn)
 	bt_conn_reset_rx_state(conn);
 
     k_delayed_work_submit(&conn->update_work, K_NO_WAIT);
-    
+
 	#ifdef BFLB_BLE_PATCH_FREE_ALLOCATED_BUFFER_IN_OS
     k_queue_free(&conn->tx_queue._queue);
    // k_queue_free(&conn->tx_notify._queue);
@@ -2646,14 +2646,14 @@ int bt_conn_init(void)
 	}
 
 	bt_att_init();
-    
+
     #if defined(CONFIG_BT_SMP)
 	err = bt_smp_init();
 	if (err) {
 		return err;
 	}
     #endif
-    
+
 	bt_l2cap_init();
 
 	/* Initialize background scan */

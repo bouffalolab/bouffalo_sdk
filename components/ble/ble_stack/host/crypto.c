@@ -112,7 +112,7 @@ int bt_rand(void *buf, size_t len)
 	if (ret == TC_CRYPTO_SUCCESS) {
 		return 0;
 	}
-    
+
 	return -EIO;
 #endif
 }

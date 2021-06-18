@@ -160,9 +160,9 @@ typedef struct {
     DMA_Chan_Type ch;                        /*!< Channel select 0-4 */
     DMA_Trans_Width_Type srcTransfWidth;     /*!< Transfer width. 0: 8  bits, 1: 16  bits, 2: 32  bits */
     DMA_Trans_Width_Type dstTransfWidth;     /*!< Transfer width. 0: 8  bits, 1: 16  bits, 2: 32  bits */
-    DMA_Burst_Size_Type srcBurstSzie;        /*!< Number of data items for burst transaction length. Each item width is as same as tansfer width. 
+    DMA_Burst_Size_Type srcBurstSzie;        /*!< Number of data items for burst transaction length. Each item width is as same as tansfer width.
                                                  0: 1 item, 1: 4 items, 2: 8 items, 3: 16 items */
-    DMA_Burst_Size_Type dstBurstSzie;        /*!< Number of data items for burst transaction length. Each item width is as same as tansfer width. 
+    DMA_Burst_Size_Type dstBurstSzie;        /*!< Number of data items for burst transaction length. Each item width is as same as tansfer width.
                                                  0: 1 item, 1: 4 items, 2: 8 items, 3: 16 items */
     uint8_t srcAddrInc;                      /*!< Source address increment. 0: No change, 1: Increment */
     uint8_t destAddrInc;                     /*!< Destination address increment. 0: No change, 1: Increment */
@@ -209,7 +209,7 @@ typedef struct {
     DMA_LLI_Cfg_Type *DMA_LLI_Cfg;           /*!< LLI Config parameter */
     uint32_t operatePeriphAddr;              /*!< Operate Peripheral register address */
     uint32_t chache_buf_addr[2];             /*!< Ping-Pong structure chache */
-    BL_Fun_Type is_single_mode;              /*!< is Ping-pong running forever or single mode ,if is single mode ping-pong will run only once 
+    BL_Fun_Type is_single_mode;              /*!< is Ping-pong running forever or single mode ,if is single mode ping-pong will run only once
                                                  after one start */
 }DMA_LLI_PP_Struct;
 

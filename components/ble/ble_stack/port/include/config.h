@@ -20,28 +20,28 @@
 #if defined(CONFIG_BT_STACK_PTS)
 
 #ifndef  PTS_CHARC_LEN_EQUAL_MTU_SIZE
-#define  PTS_CHARC_LEN_EQUAL_MTU_SIZE	
+#define  PTS_CHARC_LEN_EQUAL_MTU_SIZE
 #endif
 
 
 //#ifndef  CONFIG_BT_STACK_PTS_SM_SLA_KDU_BI_01
-//#define  CONFIG_BT_STACK_PTS_SM_SLA_KDU_BI_01	
+//#define  CONFIG_BT_STACK_PTS_SM_SLA_KDU_BI_01
 //#endif
 
 //#ifndef  PTS_GAP_SLAVER_CONFIG_READ_CHARC
-//#define  PTS_GAP_SLAVER_CONFIG_READ_CHARC		
+//#define  PTS_GAP_SLAVER_CONFIG_READ_CHARC
 //#endif
 
 //#ifndef  PTS_GAP_SLAVER_CONFIG_WRITE_CHARC
-//#define  PTS_GAP_SLAVER_CONFIG_WRITE_CHARC		
+//#define  PTS_GAP_SLAVER_CONFIG_WRITE_CHARC
 //#endif
 
 //#ifndef  PTS_GAP_SLAVER_CONFIG_NOTIFY_CHARC
-//#define  PTS_GAP_SLAVER_CONFIG_NOTIFY_CHARC		
+//#define  PTS_GAP_SLAVER_CONFIG_NOTIFY_CHARC
 //#endif
 
 //#ifndef  PTS_GAP_SLAVER_CONFIG_INDICATE_CHARC
-//#define  PTS_GAP_SLAVER_CONFIG_INDICATE_CHARC	
+//#define  PTS_GAP_SLAVER_CONFIG_INDICATE_CHARC
 //#endif
 #define CONFIG_BT_GATT_READ_MULTIPLE 1
 #endif
@@ -165,10 +165,10 @@
 #define CONFIG_BT_CONN 1
 #endif
 
-#ifdef CONFIG_BT_CONN 
+#ifdef CONFIG_BT_CONN
 
 #ifndef CONFIG_BT_CREATE_CONN_TIMEOUT
-#define CONFIG_BT_CREATE_CONN_TIMEOUT 3 
+#define CONFIG_BT_CREATE_CONN_TIMEOUT 3
 #endif
 
 #if defined(BFLB_BLE)
@@ -589,7 +589,7 @@ happens, which cause memory leak issue.*/
 /*To avoid duplicated pubkey callback.*/
 #define BFLB_BLE_PATCH_AVOID_DUPLI_PUBKEY_CB
 /*The flag @conn_ref is not clean up after disconnect*/
-#define BFLB_BLE_PATCH_CLEAN_UP_CONNECT_REF 
+#define BFLB_BLE_PATCH_CLEAN_UP_CONNECT_REF
 /*To avoid sevice changed indication sent at the very beginning, without any new service added.*/
 #define BFLB_BLE_PATCH_SET_SCRANGE_CHAGD_ONLY_IN_CONNECTED_STATE
 #ifdef CONFIG_BT_SETTINGS
@@ -604,7 +604,7 @@ happens, which cause memory leak issue.*/
 #endif
 
 #define BFLB_RELEASE_CMD_SEM_IF_CONN_DISC
-/*Fix the issue when local auth_req is 0(no boinding), 
+/*Fix the issue when local auth_req is 0(no boinding),
 BT_SMP_DIST_ENC_KEY bit is not cleared while remote ENC_KEY is received.*/
 #define BFLB_BLE_PATCH_CLEAR_REMOTE_KEY_BIT
 

@@ -378,7 +378,7 @@ static void recv_thread(void *p1)
 			/* process regular node from radio */
 			buf = process_node(node_rx);
 		}
-        
+
 		if (buf) {
 			if (buf->len) {
 				BT_DBG("Packet in: type:%u len:%u",
@@ -459,7 +459,7 @@ static int hci_driver_send(struct net_buf *buf)
 #endif /* CONFIG_BT_CONN */
 	case BT_BUF_CMD:
 		err = cmd_handle(buf);
-        
+
 		break;
 	default:
 		BT_ERR("Unknown HCI type %u", type);
@@ -467,7 +467,7 @@ static int hci_driver_send(struct net_buf *buf)
 	}
 
 	if (!err) {
-        
+
 		net_buf_unref(buf);
 	}
     else
@@ -481,7 +481,7 @@ static int hci_driver_send(struct net_buf *buf)
 
 static int hci_driver_open(void)
 {
-#if !defined(BFLB_BLE) 
+#if !defined(BFLB_BLE)
 	u32_t err;
 
 	DEBUG_INIT();
@@ -495,7 +495,7 @@ static int hci_driver_open(void)
 	}
 #endif
 
-#if !defined(BFLB_BLE) 
+#if !defined(BFLB_BLE)
 #if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
 	hci_init(&hbuf_signal);
 #else

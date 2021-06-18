@@ -21,7 +21,7 @@
 /** @defgroup  COMMON_Public_Constants
  *  @{
  */
- 
+
 /** @defgroup DRIVER_INT_PERIPH
  *  @{
  */
@@ -29,7 +29,7 @@
 
 /*@} end of group DRIVER_INT_PERIPH */
 
-/** @defgroup DRIVER_INT_MASK     
+/** @defgroup DRIVER_INT_MASK
  *  @{
  */
 #define IS_BL_MASK_TYPE(type)          (((type) == MASK) || ((type) == UNMASK))

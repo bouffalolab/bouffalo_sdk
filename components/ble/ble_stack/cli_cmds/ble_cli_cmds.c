@@ -130,7 +130,7 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     [Mode, 0:discov, 1:non-discov]\r\n\
     [Adv Interval Min,0x0020-4000,e.g.0030]\r\n\
     [Adv Interval Max,0x0020-4000,e.g.0060]\r\n", blecli_start_advertise},
-     
+
     {"ble_stop_adv", "\r\nble_stop_adv:[Stop advertising]\r\nParameter[Null]\r\n", blecli_stop_advertise},
 
     {"ble_read_local_address", "\r\nble_read_local_address:[Read local address]\r\n", blecli_read_local_address},
@@ -142,15 +142,15 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
      [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
      [Address value, e.g.112233AABBCC]\r\n", blecli_connect},
 #endif //CONFIG_BT_CENTRAL
-    
+
     {"ble_disconnect", "\r\nble_disconnect:[Disconnect remote device]\r\n\
     [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
     [Address value,e.g.112233AABBCC]\r\n", blecli_disconnect},
-	
+
     {"ble_select_conn", "\r\nble_select_conn:[Select a specific connection]\r\n\
     [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
     [Address value, e.g.112233AABBCC]\r\n", blecli_select_conn},
-     
+
     {"ble_unpair", "\r\nble_unpair:[Unpair connection]\r\n\
     [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
     [Address value, all 0: unpair all connection, otherwise:unpair specific connection]\r\n", blecli_unpair},
@@ -161,7 +161,7 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     [Conn Latency,0x0000-01f3,e.g.0004]\r\n\
     [Supervision Timeout,0x000A-0C80,e.g.0010]\r\n", blecli_conn_update},
 #endif //CONFIG_BT_CONN
- 
+
 #if defined(CONFIG_BT_SMP)
     {"ble_security", "\r\nble_security:[Start security]\r\n\
     [Security level, Default value 4, 2:BT_SECURITY_MEDIUM, 3:BT_SECURITY_HIGH, 4:BT_SECURITY_FIPS]\r\n", blecli_security},
@@ -228,7 +228,7 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
 
 #else
     {"ble_init", "", blecli_init},
-        
+
 #if defined(CONFIG_BLE_TP_SERVER)
     {"ble_tp_start", "", blecli_tp_start},
 #endif
@@ -425,13 +425,13 @@ static void blecli_set_default_phy(char *pcWriteBuffer, int xWriteBufferLen, int
 {
     u8_t phy = 0;
     u8_t default_phy = 0;
-    
+
     if(!default_conn){
         vOutputString("Not connected \r\n");
         return;
     }
     get_uint8_from_string(&argv[1], &phy);
-    
+
     if(phy == 0){
         default_phy = BT_HCI_LE_PHY_PREFER_1M;
     }else if(phy == 1){
@@ -441,7 +441,7 @@ static void blecli_set_default_phy(char *pcWriteBuffer, int xWriteBufferLen, int
     }else{
         vOutputString("Invaild parameter\r\n");
     }
-    
+
     if(!hci_le_set_default_phy(default_conn,default_phy)){
         vOutputString("Set ble default(2M) Phy successfully \r\n");
     }else{
@@ -477,7 +477,7 @@ static void blecli_set_device_name(char *pcWriteBuffer, int xWriteBufferLen, int
 static void blecli_tp_start(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
     extern u8_t tp_start;
-    
+
     get_uint8_from_string(&argv[1], &tp_start);
     if( tp_start == 1 ){
         vOutputString("Ble Throughput enable\r\n");
@@ -501,7 +501,7 @@ static bool data_cb(struct bt_data *data, void *user_data)
 	case BT_DATA_NAME_COMPLETE:
         len = (data->data_len > NAME_LEN - 1)?(NAME_LEN - 1):(data->data_len);
 		memcpy(name, data->data, len);
-		return false;		
+		return false;
 	default:
 		return true;
 	}
@@ -517,7 +517,7 @@ static void device_found(const bt_addr_le_t *addr, s8_t rssi, u8_t evtype,
 	(void)memset(name, 0, sizeof(name));
 	bt_data_parse(buf, data_cb, name);
 	bt_addr_le_to_str(addr, le_addr, sizeof(le_addr));
-	
+
 	vOutputString("[DEVICE]: %s, AD evt type %u, RSSI %i %s \r\n",le_addr, evtype, rssi, name);
 }
 
@@ -534,15 +534,15 @@ static void blecli_start_scan(char *pcWriteBuffer, int xWriteBufferLen, int argc
     }
 
     get_uint8_from_string(&argv[1], &scan_param.type);
-    
+
     get_uint8_from_string(&argv[2], &scan_param.filter_dup);
-    
+
     get_uint16_from_string(&argv[3], &scan_param.interval);
-    
+
     get_uint16_from_string(&argv[4], &scan_param.window);
 
     err = bt_le_scan_start(&scan_param, device_found);
-    
+
     if(err){
         vOutputString("Failed to start scan (err %d) \r\n", err);
     }else{
@@ -554,7 +554,7 @@ static void blecli_start_scan(char *pcWriteBuffer, int xWriteBufferLen, int argc
 static void blecli_stop_scan(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
 	int err;
-    
+
 	err = bt_le_scan_stop();
 	if (err) {
 		vOutputString("Stopping scanning failed (err %d)\r\n", err);
@@ -573,9 +573,9 @@ static void blecli_scan_filter_size(char *pcWriteBuffer, int xWriteBufferLen, in
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    
+
     get_uint8_from_string(&argv[1], &size);
-    
+
 	err = ble_controller_set_scan_filter_table_size(size);
 	if (err) {
 		vOutputString("Set failed (err %d)\r\n", err);
@@ -633,7 +633,7 @@ static void blecli_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, int
     size_t ad_len;
     int err = -1;
     uint8_t adv_type, mode;
-	
+
     if(argc != 3 && argc != 5){
         vOutputString("Number of Parameters is not correct\r\n");
         return;
@@ -656,12 +656,12 @@ static void blecli_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, int
         vOutputString("Arg1 is invalid\r\n");
         return;
     }
-    
+
     /*Get mode, 0:General discoverable,  1:non discoverable, 2:limit discoverable*/
     get_uint8_from_string(&argv[2], &mode);
     vOutputString("mode 0x%x\r\n",mode);
     if(mode == 0 || mode == 1 || mode == 2){
-    
+
         if(mode == 0){
             struct bt_data gen_disc_data = (struct bt_data)BT_DATA_BYTES(BT_DATA_FLAGS,(BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL));
             ad_discov[0] = gen_disc_data;
@@ -674,11 +674,11 @@ static void blecli_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, int
         }else{
 			vOutputString("Invalied AD Mode 0x%x\r\n",mode);
         }
-        
+
         const char *name = bt_get_name();
         struct bt_data data = (struct bt_data)BT_DATA(BT_DATA_NAME_COMPLETE,name, strlen(name));
         ad_discov[1] = data;
-       	
+
         ad = ad_discov;
         ad_len = ARRAY_SIZE(ad_discov);
 
@@ -691,15 +691,15 @@ static void blecli_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, int
         get_uint16_from_string(&argv[3], &param.interval_min);
         get_uint16_from_string(&argv[4], &param.interval_max);
 
-      	vOutputString("interval min 0x%x\r\n",param.interval_min);  
-      	vOutputString("interval max 0x%x\r\n",param.interval_max);  
+      	vOutputString("interval min 0x%x\r\n",param.interval_min);
+      	vOutputString("interval max 0x%x\r\n",param.interval_max);
     }
-	
+
     if(adv_type == 1 || adv_type == 0){
         #if defined(CONFIG_BLE_MULTI_ADV)
         if(ble_adv_id == 0){
             err = bt_le_multi_adv_start(&param, ad, ad_len, &ad_discov[0], 1, &ble_adv_id);
-        }        
+        }
         #else
         err = bt_le_adv_start(&param, ad, ad_len, &ad_discov[0], 1);
         #endif/*CONFIG_BLE_MULTI_ADV*/
@@ -712,7 +712,7 @@ static void blecli_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, int
         err = bt_le_adv_start(&param, ad, ad_len, NULL, 0);
         #endif
     }
- 
+
     if(err){
         vOutputString("Failed to start advertising (err %d) \r\n", err);
     }else{
@@ -733,8 +733,8 @@ static void blecli_stop_advertise(char *pcWriteBuffer, int xWriteBufferLen, int 
 #else
     if(bt_le_adv_stop()){
 #endif
-        vOutputString("Failed to stop advertising\r\n");	
-    }else{ 
+        vOutputString("Failed to stop advertising\r\n");
+    }else{
         vOutputString("Advertising stopped\r\n");
     }
 }
@@ -831,7 +831,7 @@ static void blecli_connect(char *pcWriteBuffer, int xWriteBufferLen, int argc, c
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-       
+
     get_uint8_from_string(&argv[1], (u8_t *)&type);
 
 	/*Get addr type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND*/
@@ -841,9 +841,9 @@ static void blecli_connect(char *pcWriteBuffer, int xWriteBufferLen, int argc, c
      for(i=0;i<6;i++){
 		vOutputString("addr[%d]:[0x%x]\r\n",i,addr_val[i]);
     }
-	
+
     reverse_bytearray(addr_val, addr.a.val, 6);
-   
+
     conn = bt_conn_create_le(&addr, /*BT_LE_CONN_PARAM_DEFAULT*/&param);
 
     if(!conn){
@@ -861,7 +861,7 @@ static void blecli_disconnect(char *pcWriteBuffer, int xWriteBufferLen, int argc
     u8_t  addr_val[6];
     struct bt_conn *conn;
 	s8_t  type = -1;
-	
+
     if(argc != 3){
         vOutputString("Number of Parameters is not correct\r\n");
         return;
@@ -908,9 +908,9 @@ static void blecli_select_conn(char *pcWriteBuffer, int xWriteBufferLen, int arg
     get_bytearray_from_string(&argv[2], addr_val,6);
 
     reverse_bytearray(addr_val, addr.a.val, 6);
-    
+
     conn = bt_conn_lookup_addr_le(selected_id, &addr);
-           
+
     if(!conn){
         vOutputString("No matching connection found\r\n");
         return;
@@ -936,11 +936,11 @@ static void blecli_unpair(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
 
     /*Get addr type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND*/
     get_uint8_from_string(&argv[1], &addr.type);
-    
+
     get_bytearray_from_string(&argv[2], addr_val,6);
 
     reverse_bytearray(addr_val, addr.a.val, 6);
-        
+
     err = bt_unpair(selected_id, &addr);
 
     if(err){
@@ -962,7 +962,7 @@ static void blecli_conn_update(char *pcWriteBuffer, int xWriteBufferLen, int arg
     get_uint16_from_string(&argv[1], &param.interval_min);
     get_uint16_from_string(&argv[2], &param.interval_max);
     get_uint16_from_string(&argv[3], &param.latency);
-    get_uint16_from_string(&argv[4], &param.timeout);	
+    get_uint16_from_string(&argv[4], &param.timeout);
     err = bt_conn_le_param_update(default_conn, &param);
 
 	if (err) {
@@ -986,7 +986,7 @@ static void blecli_security(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
 
     if(argc == 2)
         get_uint8_from_string(&argv[1], &sec_level);
-    
+
     err = bt_conn_set_security(default_conn, sec_level);
 
     if(err){
@@ -1000,7 +1000,7 @@ static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
 {
     char addr[BT_ADDR_LE_STR_LEN];
 
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));    
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
     vOutputString("passkey_str is: %06u\r\n", passkey);
 }
@@ -1028,7 +1028,7 @@ static void auth_cancel(struct bt_conn *conn)
 	char addr[BT_ADDR_LE_STR_LEN];
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-	
+
 	vOutputString("Pairing cancelled: %s\r\n", addr);
 }
 
@@ -1084,7 +1084,7 @@ static void blecli_auth(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
 static void blecli_auth_cancel(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
 	struct bt_conn *conn;
-    
+
 	if (default_conn) {
 		conn = default_conn;
 	}else {
@@ -1101,7 +1101,7 @@ static void blecli_auth_cancel(char *pcWriteBuffer, int xWriteBufferLen, int arg
 
 static void blecli_auth_passkey_confirm(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    
+
 	if (!default_conn) {
         vOutputString("Not connected\r\n");
 		return;
@@ -1112,7 +1112,7 @@ static void blecli_auth_passkey_confirm(char *pcWriteBuffer, int xWriteBufferLen
 
 static void blecli_auth_pairing_confirm(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-   
+
 	if (!default_conn) {
         vOutputString("Not connected\r\n");
 		return;
@@ -1129,7 +1129,7 @@ static void blecli_auth_passkey(char *pcWriteBuffer, int xWriteBufferLen, int ar
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    
+
 	if (!default_conn) {
         vOutputString("Not connected\r\n");
 		return;
@@ -1158,7 +1158,7 @@ static struct bt_gatt_exchange_params exchange_params;
 static void blecli_exchange_mtu(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
 	int err;
-    
+
 	if (!default_conn) {
 		vOutputString("Not connected\r\n");
 		return;
@@ -1264,7 +1264,7 @@ static void blecli_discover(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    
+
 	if (!default_conn) {
 		vOutputString("Not connected\r\n");
 		return;
@@ -1290,7 +1290,7 @@ static void blecli_discover(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
         return;
     }
     get_uint16_from_string(&argv[2], &uuid.val);
-	
+
     if(uuid.val)
         discover_params.uuid = &uuid.uuid;
     else
@@ -1313,12 +1313,12 @@ static u8_t read_func(struct bt_conn *conn, u8_t err, struct bt_gatt_read_params
 {
 	vOutputString("Read complete: err %u length %u \r\n", err, length);
 
-	char str[22]; 
+	char str[22];
 	u8_t *buf = (u8_t *)data;
     int i=0;
 
 	memset(str,0,15);
-	
+
 	if(length > 0 && length <= sizeof(str)){
 		memcpy(str,buf,length);
 		vOutputString("device name : %s \r\n",str);
@@ -1343,7 +1343,7 @@ static void blecli_read(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    
+
 	if (!default_conn) {
 		vOutputString("Not connected\r\n");
 		return;
@@ -1383,7 +1383,7 @@ static void blecli_write(char *pcWriteBuffer, int xWriteBufferLen, int argc, cha
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    
+
 	if (!default_conn) {
 		vOutputString("Not connected\r\n");
 		return;
@@ -1394,7 +1394,7 @@ static void blecli_write(char *pcWriteBuffer, int xWriteBufferLen, int argc, cha
 		return;
 	}
 
-    get_uint16_from_string(&argv[1], &write_params.handle);  
+    get_uint16_from_string(&argv[1], &write_params.handle);
     get_uint16_from_string(&argv[2], &write_params.offset);
     get_uint16_from_string(&argv[3], &write_params.length);
     data_len = write_params.length;
@@ -1405,15 +1405,15 @@ static void blecli_write(char *pcWriteBuffer, int xWriteBufferLen, int argc, cha
         return;
     }
     get_bytearray_from_string(&argv[4], gatt_write_buf,data_len);
-    
+
 	write_params.data = k_malloc(data_len);;
 	write_params.length = data_len;
 	write_params.func = write_func;
-	
+
 	err = bt_gatt_write(default_conn, &write_params);
 
     k_free(gatt_write_buf);
-    
+
 	if (err) {
 		vOutputString("Write failed (err %d)\r\n", err);
 	} else {
@@ -1433,7 +1433,7 @@ static void blecli_write_without_rsp(char *pcWriteBuffer, int xWriteBufferLen, i
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-   
+
 	if (!default_conn) {
 		vOutputString("Not connected\r\n");
 		return;
@@ -1449,7 +1449,7 @@ static void blecli_write_without_rsp(char *pcWriteBuffer, int xWriteBufferLen, i
         return;
     }
 	get_bytearray_from_string(&argv[4], gatt_write_buf,len);
-	
+
 	err = bt_gatt_write_without_response(default_conn, handle, gatt_write_buf, len, sign);
 
     k_free(gatt_write_buf);
@@ -1466,7 +1466,7 @@ static u8_t notify_func(struct bt_conn *conn,
 #if defined(CONFIG_BLE_TP_TEST)
     static u32_t time = 0;
     static int len = 0;
-#endif  
+#endif
 
     if (!params->value) {
         vOutputString("Unsubscribed\r\n");
@@ -1474,7 +1474,7 @@ static u8_t notify_func(struct bt_conn *conn,
         return BT_GATT_ITER_STOP;
     }
 
-#if defined(CONFIG_BLE_TP_TEST)    
+#if defined(CONFIG_BLE_TP_TEST)
     if(!time){
         time = k_now_ms();
     }
@@ -1484,7 +1484,7 @@ static u8_t notify_func(struct bt_conn *conn,
         time = k_now_ms();
         len = 0;
     }
-#endif   
+#endif
 
     //vOutputString("Notification: data length %u\r\n", length);
     return BT_GATT_ITER_CONTINUE;
@@ -1619,7 +1619,7 @@ static void blecli_set_tx_pwr(char *pcWriteBuffer, int xWriteBufferLen, int argc
 	else{
 		vOutputString("ble_set_tx_pwr, Set tx power successfully\r\n");
 	}
-    
+
 }
 #endif
 

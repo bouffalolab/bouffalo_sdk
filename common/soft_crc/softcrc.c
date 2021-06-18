@@ -1,33 +1,33 @@
 /**
  * @file softcrc.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "softcrc.h"
 #include "misc.h"
 // ---------------- POPULAR POLYNOMIALS ----------------
 // CCITT:      x^16 + x^12 + x^5 + x^0                 (0x1021,init 0x0000)
 // CRC-16:     x^16 + x^15 + x^2 + x^0                 (0x8005,init 0xFFFF)
-// we use 0x8005 here and 
+// we use 0x8005 here and
 
-const uint8_t chCRCHTalbe[] = 
+const uint8_t chCRCHTalbe[] =
 {
 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41,
 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
@@ -53,7 +53,7 @@ const uint8_t chCRCHTalbe[] =
 0x00, 0xC1, 0x81, 0x40
 };
 
-const uint8_t chCRCLTalbe[] = 
+const uint8_t chCRCLTalbe[] =
 {
 0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06, 0x07, 0xC7,
 0x05, 0xC5, 0xC4, 0x04, 0xCC, 0x0C, 0x0D, 0xCD, 0x0F, 0xCF, 0xCE, 0x0E,
@@ -81,9 +81,9 @@ const uint8_t chCRCLTalbe[] =
 
 uint16_t BFLB_Soft_CRC16(void * dataIn, uint32_t len)
 {
-    uint8_t chCRCHi = 0xFF; 
-    uint8_t chCRCLo = 0xFF; 
-    uint16_t wIndex;   
+    uint8_t chCRCHi = 0xFF;
+    uint8_t chCRCLo = 0xFF;
+    uint16_t wIndex;
     uint8_t* data=(uint8_t *) dataIn;
 
     while (len--){
@@ -148,7 +148,7 @@ uint32_t BFLB_Soft_CRC32_Table( void *dataIn, uint32_t len)
 {
     uint32_t crc=0;
     uint8_t *data=(uint8_t *)dataIn;
-    
+
     crc = crc ^ 0xffffffff;
 
     while (len--)
@@ -173,7 +173,7 @@ uint32_t ATTR_TCM_SECTION BFLB_Soft_CRC32(void *dataIn, uint32_t len)
     uint8_t i;
     uint32_t crc = 0xffffffff;        // Initial value
     uint8_t *data=(uint8_t *)dataIn;
-    
+
     while(len--){
         crc ^= *data++;                // crc ^= *data; data++;
         for (i = 0; i < 8; ++i){

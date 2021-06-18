@@ -18,7 +18,7 @@
 
 struct multi_adv_instant {
     uint8_t inuse_flag;
-       
+
     /* for parameters  */
     struct bt_le_adv_param param;
     uint8_t ad[MAX_AD_DATA_LEN];
@@ -29,7 +29,7 @@ struct multi_adv_instant {
     /* own address maybe used */
     bt_addr_t own_addr;
     uint8_t own_addr_valid;
-    
+
     /* for schedule */
     int instant_id;
     int instant_interval;

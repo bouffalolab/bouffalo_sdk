@@ -1,24 +1,24 @@
 /**
  * @file hal_pwm.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_pwm.h"
 #include "hal_gpio.h"
@@ -66,19 +66,19 @@ static void pwm_channel_config(uint8_t ch,uint32_t frequence,uint8_t dutycycle)
     {
         pwmCfg.clkDiv = 8;
         pwmCfg.period = 9000000/frequence;
-        pwmCfg.threshold2 = 90000*dutycycle/frequence;        
+        pwmCfg.threshold2 = 90000*dutycycle/frequence;
     }
     else if(frequence <= 550)
     {
         pwmCfg.clkDiv = 4;
         pwmCfg.period = 18000000/frequence;
-        pwmCfg.threshold2 = 180000*dutycycle/frequence;        
+        pwmCfg.threshold2 = 180000*dutycycle/frequence;
     }
     else if(frequence <= 1100)
     {
         pwmCfg.clkDiv = 2;
         pwmCfg.period = 36000000/frequence;
-        pwmCfg.threshold2 = 360000*dutycycle/frequence;        
+        pwmCfg.threshold2 = 360000*dutycycle/frequence;
     }
     else
     {
@@ -89,7 +89,7 @@ static void pwm_channel_config(uint8_t ch,uint32_t frequence,uint8_t dutycycle)
 
     PWM_Channel_Set_Div(ch,pwmCfg.clkDiv);
     PWM_Channel_Update(ch,pwmCfg.period,0,pwmCfg.threshold2);
-    
+
 }
 
 int pwm_open(struct device *dev, uint16_t oflag)
@@ -142,7 +142,7 @@ int pwm_control(struct device *dev, int cmd, void *args)
         break;
     case DEVICE_CTRL_SUSPEND /* constant-expression */:
         PWM_Channel_Disable(pwm_device->ch);
-        break;    
+        break;
     case DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG:
     {
         /* Config interrupt pulse count */
@@ -160,7 +160,7 @@ int pwm_control(struct device *dev, int cmd, void *args)
             PWM_IntMask(pwm_device->ch,PWM_INT_PULSE_CNT,MASK);
             NVIC_DisableIRQ(PWM_IRQn);
         }
-        break;    
+        break;
     }
     default:
         break;
@@ -199,14 +199,14 @@ static void pwm_isr(pwm_device_t *handle)
     uint32_t timeoutCnt = 160*1000;
     /* Get channel register */
     uint32_t PWMx = PWM_BASE;
-    
+
     for (i = 0; i < PWM_MAX_INDEX; i++) {
         tmpVal = BL_RD_REG(PWMx, PWM_INT_CONFIG);
         if ((BL_GET_REG_BITS_VAL(tmpVal, PWM_INTERRUPT_STS) & (1 << handle[i].ch)) != 0) {
             /* Clear interrupt */
             tmpVal |= (1 << (handle[i].ch + PWM_INT_CLEAR_POS));
             BL_WR_REG(PWMx, PWM_INT_CONFIG, tmpVal);
-            /* FIXME: we need set pwm_int_clear to 0 by software and 
+            /* FIXME: we need set pwm_int_clear to 0 by software and
                before this,we must make sure pwm_interrupt_sts is 0*/
             do{
                 tmpVal = BL_RD_REG(PWMx, PWM_INT_CONFIG);
@@ -215,7 +215,7 @@ static void pwm_isr(pwm_device_t *handle)
                     break;
                 }
             }while(BL_GET_REG_BITS_VAL(tmpVal,PWM_INTERRUPT_STS)&(1 << handle[i].ch));
-            
+
             tmpVal &= (~(1 << (handle[i].ch + PWM_INT_CLEAR_POS)));
             BL_WR_REG(PWMx, PWM_INT_CONFIG, tmpVal);
 
@@ -223,7 +223,7 @@ static void pwm_isr(pwm_device_t *handle)
             {
                 handle[i].parent.callback(&handle[i].parent, NULL, 0, PWM_EVENT_COMPLETE);
             }
-                
+
         }
     }
 }

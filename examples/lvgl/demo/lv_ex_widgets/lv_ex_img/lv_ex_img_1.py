@@ -10,7 +10,7 @@ with open('img_cogwheel_argb.png','rb') as f:
 
 png_img_dsc = lv.img_dsc_t({
     'data_size': len(png_data),
-    'data': png_data 
+    'data': png_data
 })
 
 # Create an image using the decoder

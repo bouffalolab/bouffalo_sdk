@@ -7,7 +7,7 @@ class counting_button(lv.btn):
         self.label = lv.label(self, None)     # Add a label to the button
         self.label.set_text("Button")         # Set the labels text
         self.cnt=0
-        
+
     def btn_event_cb(self,btn,event):
         if event == lv.EVENT.CLICKED:
             self.cnt += 1

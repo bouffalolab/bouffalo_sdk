@@ -21,7 +21,7 @@ except:
 
 png_img_dsc = lv.img_dsc_t({
   'data_size': len(png_data),
-  'data': png_data 
+  'data': png_data
 })
 
 style = lv.style_t()

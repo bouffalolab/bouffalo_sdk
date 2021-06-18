@@ -209,7 +209,7 @@ void I2C_Enable(I2C_ID_Type i2cNo)
 
     tmpVal = BL_RD_REG(I2Cx, I2C_CONFIG);
     tmpVal = BL_SET_REG_BIT(tmpVal, I2C_CR_I2C_M_EN);
-    
+
     BL_WR_REG(I2Cx, I2C_CONFIG, tmpVal);
 }
 

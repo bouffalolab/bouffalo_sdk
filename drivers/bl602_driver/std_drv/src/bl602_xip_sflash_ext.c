@@ -106,7 +106,7 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Init(SPI_Flash_Cfg_Type *pFlashCfg)
     }else{
         memcpy(&flashCfg,pFlashCfg,sizeof(flashCfg));
     }
-    
+
     return SUCCESS;
 }
 

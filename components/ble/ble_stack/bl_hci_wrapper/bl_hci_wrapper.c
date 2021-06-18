@@ -37,10 +37,10 @@ struct rx_msg_struct* bl_find_valid_queued_entry(void)
 {
     struct rx_msg_struct empty_msg;
     memset(&empty_msg, 0, sizeof(struct rx_msg_struct));
-    
+
     for(int i = 0; i < sizeof(msg_array)/(sizeof(struct rx_msg_struct)); i++){
         if(!memcmp(&msg_array[i], &empty_msg, sizeof(struct rx_msg_struct)))
-            return (msg_array + i);    
+            return (msg_array + i);
     }
 
     return NULL;
@@ -58,10 +58,10 @@ void bl_handle_queued_msg(void)
     buf = bt_buf_get_rx(BT_BUF_ACL_IN, K_NO_WAIT);
     if(!buf)
         return;
-    
+
     msg = k_fifo_get(&msg_queue, K_NO_WAIT);
     BT_ASSERT(buf);
-	
+
     bl_onchiphci_rx_packet_handler(msg->pkt_type, msg->src_id, msg->param, msg->param_len, buf);
     if(msg->param){
         k_free(msg->param);
@@ -72,7 +72,7 @@ void bl_handle_queued_msg(void)
 void bl_onchiphci_interface_deinit(void)
 {
     struct rx_msg_struct *msg;
-    
+
     do{
         msg = k_fifo_get(&msg_queue, K_NO_WAIT);
         if(msg){
@@ -83,7 +83,7 @@ void bl_onchiphci_interface_deinit(void)
             break;
         }
     }while(1);
-    
+
     k_queue_free(&msg_queue);
 }
 #endif
@@ -109,7 +109,7 @@ int bl_onchiphci_send_2_controller(struct net_buf *buf)
   switch(buf_type)
   {
     case BT_BUF_CMD:
-    {	
+    {
         struct bt_hci_cmd_hdr *chdr;
 
         if(buf->len < sizeof(struct bt_hci_cmd_hdr))
@@ -148,7 +148,7 @@ int bl_onchiphci_send_2_controller(struct net_buf *buf)
         pkt.p.hci_cmd.opcode = opcode;
         pkt.p.hci_cmd.param_len = chdr->param_len;
         pkt.p.hci_cmd.params = buf->data;
-		
+
 		break;
 		break;
   	}
@@ -160,7 +160,7 @@ int bl_onchiphci_send_2_controller(struct net_buf *buf)
 
         if(buf->len < sizeof(struct bt_hci_acl_hdr))
             return -EINVAL;
-		
+
         pkt_type = BT_HCI_ACL_DATA;
         acl = (void *)buf->data;
         tlt_len = sys_le16_to_cpu(acl->len);
@@ -180,7 +180,7 @@ int bl_onchiphci_send_2_controller(struct net_buf *buf)
 
 	break;
 	}
-	
+
     default:
 		return -EINVAL;
   }
@@ -211,7 +211,7 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
     if(!rx_buf)
     {
     #endif
-    buf_type = (pkt_type == BT_HCI_ACL_DATA)? BT_BUF_ACL_IN: BT_BUF_EVT; 
+    buf_type = (pkt_type == BT_HCI_ACL_DATA)? BT_BUF_ACL_IN: BT_BUF_EVT;
 
     if(pkt_type == BT_HCI_CMD_CMP_EVT || pkt_type == BT_HCI_CMD_STAT_EVT)
     {
@@ -221,8 +221,8 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
     {
         do{
                 // When deal with LE ADV report, Don't use reserve buf
-                if(((pkt_type == BT_HCI_LE_EVT && param[0] == BT_HCI_EVT_LE_ADVERTISING_REPORT) 
-			|| (pkt_type == BT_HCI_ACL_DATA)) && 
+                if(((pkt_type == BT_HCI_LE_EVT && param[0] == BT_HCI_EVT_LE_ADVERTISING_REPORT)
+			|| (pkt_type == BT_HCI_ACL_DATA)) &&
 			(bt_buf_get_rx_avail_cnt() <= CONFIG_BT_RX_BUF_RSV_COUNT))
                 {
                     break;
@@ -232,7 +232,7 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
                 buf = bt_buf_get_rx(buf_type, K_NO_WAIT);
         }while(0);
     }
-    
+
     if(!buf){
         if(((++monitor)&0xff) == 0)
         {
@@ -264,7 +264,7 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
                 k_fifo_put(&msg_queue, rx_msg);
                 return;
             }
-        }       
+        }
         #else//OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER
         return;
         #endif
@@ -278,13 +278,13 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
         buf = rx_buf;
     }
     #endif
-    
+
     buf_data = net_buf_tail(buf);
-	
+
     #if defined(OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER)
         bt_buf_set_rx_adv(buf, false);
     #endif
-	
+
     switch(pkt_type)
     {
         case BT_HCI_CMD_CMP_EVT:
@@ -294,7 +294,7 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
             *buf_data++ = BT_HCI_CCEVT_HDR_PARLEN + param_len;
             *buf_data++ = nb_h2c_cmd_pkts;
             sys_put_le16(src_id, buf_data);
-            buf_data += 2; 
+            buf_data += 2;
             memcpy(buf_data, param, param_len);
             break;
         }
@@ -323,7 +323,7 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
             tlt_len = BT_HCI_EVT_LE_PARAM_OFFSET + param_len;
             *buf_data++ = BT_HCI_EVT_LE_META_EVENT;
             *buf_data++ = param_len;
-            memcpy(buf_data, param, param_len);	
+            memcpy(buf_data, param, param_len);
             break;
         }
         case BT_HCI_EVT:
@@ -343,7 +343,7 @@ static void bl_onchiphci_rx_packet_handler(uint8_t pkt_type, uint16_t src_id, ui
         {
             prio = false;
             bt_buf_set_type(buf, BT_BUF_ACL_IN);
-            #if defined(OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER) 
+            #if defined(OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER)
             tlt_len = bt_onchiphci_hanlde_rx_acl(param, buf_data);
             #else
             tlt_len = param_len;

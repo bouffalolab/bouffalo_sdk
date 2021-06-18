@@ -11,7 +11,7 @@ MTIMER - 内核定时器
 -----------------------------
 
 -  软件代码见 ``examples/systick``
-    
+
 .. note:: ``mtimer`` 时钟默认经过分频以后为 1M，方便后面使用，减少计算时间。
 
 .. code-block:: C
@@ -34,7 +34,7 @@ MTIMER - 内核定时器
 -  **CDK 编译**
 
    打开项目中提供的工程文件：systick.cdkproj
-   
+
    参照 :ref:`windows_cdk_quick_start` 的步骤编译下载即可
 
 -  **命令行编译**
@@ -44,7 +44,7 @@ MTIMER - 内核定时器
 
     $ cd <sdk_path>/bl_mcu_sdk
     $ make BOARD=bl706_iot APP=systick
-    
+
 -  **烧录**
 
    详见 :ref:`bl_dev_cube`
@@ -52,4 +52,4 @@ MTIMER - 内核定时器
 实验现象
 -----------------------------
 
-``tick`` 值每秒自增 1 并通过串口打印。 
+``tick`` 值每秒自增 1 并通过串口打印。

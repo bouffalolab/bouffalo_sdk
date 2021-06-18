@@ -1,24 +1,24 @@
 /**
  * @file main.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_uart.h"
 #include <FreeRTOS.h>
@@ -31,9 +31,9 @@
 extern uint8_t _heap_start;
 extern uint8_t _heap_size; // @suppress("Type cannot be resolved")
 static HeapRegion_t xHeapRegions[] =
-{        
-       { &_heap_start, (unsigned int) &_heap_size },        
-       { NULL, 0 }, /* Terminates the array. */        
+{
+       { &_heap_start, (unsigned int) &_heap_size },
+       { NULL, 0 }, /* Terminates the array. */
        { NULL, 0 } /* Terminates the array. */
 };
 
@@ -110,7 +110,7 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
 }
 
 int ble_start_adv(void)
-{    
+{
     struct bt_le_adv_param adv_param = {
         //options:3, connectable undirected, adv one time
         .options = 3, \
@@ -118,7 +118,7 @@ int ble_start_adv(void)
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_3, \
     };
 
-	
+
     char *adv_name = "BL_TEST_01"; // This name must be the same as adv_name in ble_central
     uint8_t data[1] = {(BT_LE_AD_LIMITED | BT_LE_AD_NO_BREDR)};
     uint8_t data_uuid[2] = {0x12, 0x18};//0x1812
@@ -148,21 +148,21 @@ extern int hci_driver_init(void);
 
 void ble_stack_start(void)
 {
-  
+
     MSG("[OS] ble_controller_init...\r\n");
     GLB_Set_EM_Sel(GLB_EM_8KB);
     ble_controller_init(configMAX_PRIORITIES - 1);
-    
+
     // Initialize BLE Host stack
     MSG("[OS] hci_driver_init...\r\n");
     hci_driver_init();
-  
+
    MSG("[OS] bt_enable...\r\n");
     bt_enable(bt_enable_cb);
 }
 
 void ble_init(void)
-{	
+{
       extern void ble_stack_start(void);
       ble_stack_start();
 }
@@ -178,17 +178,17 @@ int main(void)
 {
     static StackType_t ble_init_stack[1024];
     static StaticTask_t ble_init_task_h;
-    
+
     bflb_platform_init(0);
-    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);   
+    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
     GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 17);
 
     vPortDefineHeapRegions(xHeapRegions);
-   
+
     MSG("[OS] ble_init_task.....\r\n");
     xTaskCreateStatic(ble_init_task, (char*)"ble_init", sizeof(ble_init_stack)/4, NULL, 15, ble_init_stack, &ble_init_task_h);
-   
-    vTaskStartScheduler();  
+
+    vTaskStartScheduler();
     while(1)
     {
     }

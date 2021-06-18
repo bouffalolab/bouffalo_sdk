@@ -65,7 +65,7 @@ uip_main(void)
 
   timer_set(&periodic_timer, CLOCK_SECOND / 2);
   timer_set(&arp_timer, CLOCK_SECOND * 10);
-  
+
   tapdev_init();
   uip_init();
 
@@ -79,16 +79,16 @@ uip_main(void)
   memcpy(uip_ethaddr.addr, emacCfg.macAddr, 6);
 
   httpd_init();
-  
+
   /*  telnetd_init();*/
-  
+
   /*  hello_world_init();*/
 
   /*  {
       u8_t mac[6] = {1,2,3,4,5,6};
       dhcpc_init(&mac, 6);
       }*/
-  
+
   /*uip_ipaddr(ipaddr, 127,0,0,1);
   smtp_configure("localhost", ipaddr);
   SMTP_SEND("adam@sics.se", NULL, "uip-testing@example.com",
@@ -103,7 +103,7 @@ uip_main(void)
     resolv_query("www.sics.se");*/
 
 
-  
+
   while(1) {
     uip_len = tapdev_read();
     if(uip_len > 0) {
@@ -169,7 +169,7 @@ void
 resolv_found(char *name, u16_t *ipaddr)
 {
   u16_t *ipaddr2;
-  
+
   if(ipaddr == NULL) {
     MSG("Host '%s' not found.\n", name);
   } else {

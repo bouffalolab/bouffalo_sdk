@@ -874,7 +874,7 @@ static void le_conn_req(struct bt_l2cap *l2cap, u8_t ident,
 		goto rsp;
 	}
     #endif
-    
+
 	if (!L2CAP_LE_CID_IS_DYN(scid)) {
 		rsp->result = sys_cpu_to_le16(BT_L2CAP_LE_ERR_INVALID_SCID);
 		goto rsp;
@@ -1345,7 +1345,7 @@ static void l2cap_chan_le_send_resume(struct bt_l2cap_le_chan *ch)
 		#endif
 
 		BT_DBG("buf %p sent %u", buf, sent);
-		
+
 		sent = l2cap_chan_le_send_sdu(ch, &buf, sent);
 		if (sent < 0) {
 			if (sent == -EAGAIN) {
@@ -1476,7 +1476,7 @@ static int l2cap_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
 #if defined(BFLB_BLE)
 		__attribute__((fallthrough));
 #endif
-		
+
 	/* Fall-through */
 	default:
 		BT_WARN("Unknown L2CAP PDU code 0x%02x", hdr->code);

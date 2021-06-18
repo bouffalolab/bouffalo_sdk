@@ -108,14 +108,14 @@ static BL_Err_Type PWM_IntHandler(IRQn_Type intPeriph)
     uint32_t timeoutCnt = PWM_INT_TIMEOUT_COUNT;
     /* Get channel register */
     uint32_t PWMx = PWM_BASE;
-    
+
     for (i = 0; i < PWM_CH_MAX; i++) {
         tmpVal = BL_RD_REG(PWMx, PWM_INT_CONFIG);
         if ((BL_GET_REG_BITS_VAL(tmpVal, PWM_INTERRUPT_STS) & (1 << i)) != 0) {
             /* Clear interrupt */
             tmpVal |= (1 << (i + PWM_INT_CLEAR_POS));
             BL_WR_REG(PWMx, PWM_INT_CONFIG, tmpVal);
-            /* FIXME: we need set pwm_int_clear to 0 by software and 
+            /* FIXME: we need set pwm_int_clear to 0 by software and
                before this,we must make sure pwm_interrupt_sts is 0*/
             do{
                 tmpVal = BL_RD_REG(PWMx, PWM_INT_CONFIG);
@@ -124,7 +124,7 @@ static BL_Err_Type PWM_IntHandler(IRQn_Type intPeriph)
                     break;
                 }
             }while(BL_GET_REG_BITS_VAL(tmpVal,PWM_INTERRUPT_STS)&(1 << i));
-            
+
             tmpVal &= (~(1 << (i + PWM_INT_CLEAR_POS)));
             BL_WR_REG(PWMx, PWM_INT_CONFIG, tmpVal);
             if (PWMIntCbfArra[i][PWM_INT_PULSE_CNT] != NULL) {
@@ -240,7 +240,7 @@ void PWM_Channel_Set_Div(PWM_CH_ID_Type ch,uint16_t div)
 
     /* Check the parameters */
     CHECK_PARAM(IS_PWM_CH_ID_TYPE(ch));
-    
+
     BL_WR_REG(PWMx, PWM_CLKDIV, div);
 }
 
@@ -378,7 +378,7 @@ void PWM_Channel_Disable(PWM_CH_ID_Type ch)
     /* Config pwm clock to disable pwm */
     tmpVal = BL_RD_REG(PWMx, PWM_CONFIG);
     BL_WR_REG(PWMx, PWM_CONFIG, BL_SET_REG_BIT(tmpVal, PWM_STOP_EN));
-    PWM_IntMask(ch,PWM_INT_PULSE_CNT,MASK);  
+    PWM_IntMask(ch,PWM_INT_PULSE_CNT,MASK);
 }
 
 /****************************************************************************//**
@@ -398,7 +398,7 @@ void PWM_SW_Mode(PWM_CH_ID_Type ch,BL_Fun_Type enable)
 
     /* Check the parameters */
     CHECK_PARAM(IS_PWM_CH_ID_TYPE(ch));
-    
+
     tmpVal = BL_RD_REG(PWMx,PWM_CONFIG);
     BL_WR_REG(PWMx,PWM_CONFIG,BL_SET_REG_BITS_VAL(tmpVal,PWM_SW_MODE,enable));
 }
@@ -420,7 +420,7 @@ void PWM_SW_Force_Value(PWM_CH_ID_Type ch,uint8_t value)
 
     /* Check the parameters */
     CHECK_PARAM(IS_PWM_CH_ID_TYPE(ch));
-    
+
     tmpVal = BL_RD_REG(PWMx,PWM_CONFIG);
     BL_WR_REG(PWMx,PWM_CONFIG,BL_SET_REG_BITS_VAL(tmpVal,PWM_SW_FORCE_VAL,value));
 }
@@ -528,7 +528,7 @@ BL_Err_Type PWM_Smart_Configure(PWM_CH_ID_Type ch,uint32_t frequency,uint8_t dut
     uint32_t timeoutCnt = PWM_STOP_TIMEOUT_COUNT;
     /* Get channel register */
     uint32_t PWMx = PWM_Get_Channel_Reg(ch);
-    
+
     if(frequency <= 78){
         clkDiv = 1250;
         period = 64000/frequency;
@@ -554,7 +554,7 @@ BL_Err_Type PWM_Smart_Configure(PWM_CH_ID_Type ch,uint32_t frequency,uint8_t dut
         period = 80000000/frequency;
         threshold2 = 800000*dutyCycle/frequency;
     }
-    
+
     tmpVal = BL_RD_REG(PWMx, PWM_CONFIG);
     if(BL_GET_REG_BITS_VAL(tmpVal, PWM_REG_CLK_SEL) != 1){
         BL_WR_REG(PWMx, PWM_CONFIG, BL_SET_REG_BIT(tmpVal, PWM_STOP_EN));
@@ -577,7 +577,7 @@ BL_Err_Type PWM_Smart_Configure(PWM_CH_ID_Type ch,uint32_t frequency,uint8_t dut
     BL_WR_REG(PWMx, PWM_PERIOD, period);
     BL_WR_REG(PWMx, PWM_THRE1, 0);
     BL_WR_REG(PWMx, PWM_THRE2, threshold2);
-    
+
     return SUCCESS;
 }
 

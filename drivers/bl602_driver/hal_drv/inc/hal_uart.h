@@ -3,12 +3,12 @@
  * @file hal_uart.h
  * @version 0.1
  * @date 2021-03-01
- * @brief 
+ * @brief
  * *****************************************************************************
  * @attention
- * 
+ *
  *  <h2><center>&copy; COPYRIGHT(c) 2020 Bouffalo Lab</center></h2>
- * 
+ *
  *  Redistribution and use in source and binary forms, with or without modification,
  *  are permitted provided that the following conditions are met:
  *    1. Redistributions of source code must retain the above copyright notice,
@@ -19,7 +19,7 @@
  *    3. Neither the name of Bouffalo Lab nor the names of its contributors
  *       may be used to endorse or promote products derived from this software
  *       without specific prior written permission.
- * 
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,7 +30,7 @@
  *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  *  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * *****************************************************************************
  */
 #ifndef __HAL_UART__H__
@@ -69,7 +69,7 @@ enum uart_index_type
  *
  *  This enumeration defines the UART data lengths.
  */
-typedef enum  
+typedef enum
 {
     UART_DATA_LEN_5 = 0,  /*!< Data length is 5 bits */
     UART_DATA_LEN_6 = 1,  /*!< Data length is 6 bits */
@@ -82,7 +82,7 @@ typedef enum
  *
  *  This enumeration defines the UART stop bits.
  */
-typedef enum  
+typedef enum
 {
     UART_STOP_ONE = 0,  /*!< One stop bit */
     UART_STOP_ONE_D_FIVE = 0,  /*!< 1.5 stop bit */
@@ -94,7 +94,7 @@ typedef enum
  *
  *  This enumeration defines the UART parity types.
  */
-typedef enum  
+typedef enum
 {
     UART_PAR_NONE = 0,  /*!< No parity */
     UART_PAR_ODD  = 1,  /*!< Parity bit is odd */
@@ -111,7 +111,7 @@ enum uart_event_type
     UART_EVENT_UNKNOWN
 };
 
-typedef struct 
+typedef struct
 {
     uint8_t tx;
     uint8_t rx;
@@ -132,12 +132,12 @@ enum uart_it_type
     UART_ALL_IT = 1 << 8
 };
 
-typedef struct 
+typedef struct
 {
     uint32_t baudrate;
     uart_databits_t databits;
     uart_stopbits_t stopbits;
-    uart_parity_t parity;    
+    uart_parity_t parity;
 }uart_param_cfg_t;
 
 typedef struct uart_device

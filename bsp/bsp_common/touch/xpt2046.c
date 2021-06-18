@@ -1,24 +1,24 @@
 /**
  * @file xip2046.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 #include "hal_spi.h"
@@ -73,7 +73,7 @@ static uint16_t xpt2046_cmd(uint8_t cmd)
 void xpt2046_init(void)
 {
     gpio_set_mode(TOUCH_PIN_CS,GPIO_OUTPUT_MODE);
-    gpio_write(TOUCH_PIN_CS,1); 
+    gpio_write(TOUCH_PIN_CS,1);
     touch_spi = device_find("spi0");
     if(touch_spi)
     {
@@ -93,9 +93,9 @@ void xpt2046_init(void)
 /******************************************************************************
  * @brief  xpt2046_touch_detect_t
  *
- * @param  
+ * @param
  *
- * @return 
+ * @return
  *
 *******************************************************************************/
 static uint8_t xpt2048_is_touch_detected()
@@ -122,9 +122,9 @@ static uint8_t xpt2048_is_touch_detected()
 /******************************************************************************
  * @brief  xpt2046_ads_get
  *
- * @param  
+ * @param
  *
- * @return 
+ * @return
  *
 *******************************************************************************/
 static uint8_t xpt2046_ads_get(int16_t *x, int16_t *y)
@@ -141,7 +141,7 @@ static uint8_t xpt2046_ads_get(int16_t *x, int16_t *y)
 
     int16_t x_min=avg_buf_x[0],x_max=avg_buf_x[0];
     int16_t y_min=avg_buf_y[0],y_max=avg_buf_y[0];
-    int32_t x_sum=avg_buf_x[0],y_sum=avg_buf_y[0]; 
+    int32_t x_sum=avg_buf_x[0],y_sum=avg_buf_y[0];
 
     for(uint8_t i=1; i<XPT2046_AVG_NUM; i++)
     {
@@ -164,9 +164,9 @@ static uint8_t xpt2046_ads_get(int16_t *x, int16_t *y)
 /******************************************************************************
  * @brief  xpt2046_corr
  *
- * @param  
+ * @param
  *
- * @return 
+ * @return
  *
 *******************************************************************************/
 static uint8_t xpt2046_adc2xy(int16_t * x, int16_t * y )
@@ -193,9 +193,9 @@ static uint8_t xpt2046_adc2xy(int16_t * x, int16_t * y )
 /******************************************************************************
  * @brief  xpt2046_read
  *
- * @param  
+ * @param
  *
- * @return 
+ * @return
  *
 *******************************************************************************/
 uint8_t xpt2046_read(int16_t * x, int16_t * y)
@@ -217,7 +217,7 @@ uint8_t xpt2046_read(int16_t * x, int16_t * y)
     if(avg_last == 0)
     {
         avg_last = 1;
-        return 0;        
+        return 0;
     }
     else
     {

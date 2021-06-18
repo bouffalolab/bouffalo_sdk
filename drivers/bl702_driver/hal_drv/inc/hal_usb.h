@@ -1,24 +1,24 @@
 /**
  * @file hal_usb.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #ifndef __HAL_USB__H__
 #define __HAL_USB__H__
@@ -112,24 +112,24 @@ enum usb_index_type
 #define USB_DC_EP7_IN_DR        (0x4000D800+0x178)
 #define USB_DC_EP7_OUT_DR       (0x4000D800+0x17c)
 
-enum usb_dc_event_type 
+enum usb_dc_event_type
 {
 	/** USB error reported by the controller */
 	USB_DC_EVENT_ERROR,
 	/** USB reset */
 	USB_DC_EVENT_RESET,
 	/** Start of Frame received */
-	USB_DC_EVENT_SOF,		
+	USB_DC_EVENT_SOF,
 	/** USB connection established, hardware enumeration is completed */
 	USB_DC_EVENT_CONNECTED,
 	/** USB configuration done */
-	USB_DC_EVENT_CONFIGURED,	
+	USB_DC_EVENT_CONFIGURED,
 	/** USB connection suspended by the HOST */
 	USB_DC_EVENT_SUSPEND,
 	/** USB connection lost */
-	USB_DC_EVENT_DISCONNECTED,	
+	USB_DC_EVENT_DISCONNECTED,
 	/** USB connection resumed by the HOST */
-	USB_DC_EVENT_RESUME,	
+	USB_DC_EVENT_RESUME,
 
 	/** setup packet received */
 	USB_DC_EVENT_SETUP_NOTIFY,
@@ -168,9 +168,9 @@ enum usb_error_type
 {
     USB_DC_OK = 0,
     USB_DC_EP_DIR_ERR = 1,
-    USB_DC_EP_EN_ERR = 2,   
-    USB_DC_EP_TIMEOUT_ERR = 3,     
-    USB_DC_RB_SIZE_SMALL_ERR = 4,    
+    USB_DC_EP_EN_ERR = 2,
+    USB_DC_EP_TIMEOUT_ERR = 3,
+    USB_DC_RB_SIZE_SMALL_ERR = 4,
     USB_DC_ZLP_ERR = 5,
 };
 /**

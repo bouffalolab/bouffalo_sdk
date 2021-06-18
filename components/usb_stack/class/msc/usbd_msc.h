@@ -86,7 +86,7 @@ struct CSW {
     in_ep,                         /* bEndpointAddress */\
     0x02,                          /* bmAttributes */\
     0x40, 0x00,                    /* wMaxPacketSize */\
-    0x01                           /* bInterval */            
+    0x01                           /* bInterval */
 
 
 void usbd_msc_class_init(uint8_t out_ep, uint8_t in_ep);

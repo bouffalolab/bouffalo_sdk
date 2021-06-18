@@ -111,7 +111,7 @@ static intCallback_Type * irIntCbfArra[IR_INT_ALL]= {NULL,NULL};
 void IRRX_IRQHandler(void)
 {
     uint32_t tmpVal;
-    
+
     tmpVal = BL_RD_REG(IR_BASE,IRRX_INT_STS);
     if(BL_IS_REG_BIT_SET(tmpVal,IRRX_END_INT) && !BL_IS_REG_BIT_SET(tmpVal,IR_CR_IRRX_END_MASK)){
         BL_WR_REG(IR_BASE,IRRX_INT_STS,BL_SET_REG_BIT(tmpVal,IR_CR_IRRX_END_CLR));
@@ -134,7 +134,7 @@ void IRRX_IRQHandler(void)
 void IRTX_IRQHandler(void)
 {
     uint32_t tmpVal;
-    
+
     tmpVal = BL_RD_REG(IR_BASE,IRTX_INT_STS);
     if(BL_IS_REG_BIT_SET(tmpVal,IRTX_END_INT) && !BL_IS_REG_BIT_SET(tmpVal,IR_CR_IRTX_END_MASK)){
         BL_WR_REG(IR_BASE,IRTX_INT_STS,BL_SET_REG_BIT(tmpVal,IR_CR_IRTX_END_CLR));
@@ -156,7 +156,7 @@ void IRTX_IRQHandler(void)
 BL_Err_Type IR_TxInit(IR_TxCfg_Type *irTxCfg)
 {
     uint32_t tmpVal;
-    
+
     tmpVal = BL_RD_REG(IR_BASE,IRTX_CONFIG);
     /* Set data bit */
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRTX_DATA_NUM,irTxCfg->dataBits-1);
@@ -175,7 +175,7 @@ BL_Err_Type IR_TxInit(IR_TxCfg_Type *irTxCfg)
     ENABLE == irTxCfg->outputModulation ? (tmpVal=BL_SET_REG_BIT(tmpVal,IR_CR_IRTX_MOD_EN)):(tmpVal=BL_CLR_REG_BIT(tmpVal,IR_CR_IRTX_MOD_EN));
     /* Enable or disable output inverse */
     ENABLE == irTxCfg->outputInverse ? (tmpVal=BL_SET_REG_BIT(tmpVal,IR_CR_IRTX_OUT_INV)):(tmpVal=BL_CLR_REG_BIT(tmpVal,IR_CR_IRTX_OUT_INV));
-    
+
     /* Write back */
     BL_WR_REG(IR_BASE,IRTX_CONFIG,tmpVal);
 
@@ -196,7 +196,7 @@ BL_Err_Type IR_TxInit(IR_TxCfg_Type *irTxCfg)
 BL_Err_Type IR_TxPulseWidthConfig(IR_TxPulseWidthCfg_Type *irTxPulseWidthCfg)
 {
     uint32_t tmpVal;
-    
+
     tmpVal = BL_RD_REG(IR_BASE,IRTX_PW);
     /* Set logic 0 pulse phase 0 width */
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRTX_LOGIC0_PH0_W,irTxPulseWidthCfg->logic0PulseWidth_0-1);
@@ -215,7 +215,7 @@ BL_Err_Type IR_TxPulseWidthConfig(IR_TxPulseWidthCfg_Type *irTxPulseWidthCfg)
     /* Set tail pulse phase 1 width */
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRTX_TAIL_PH1_W,irTxPulseWidthCfg->tailPulseWidth_1-1);
     BL_WR_REG(IR_BASE,IRTX_PW,tmpVal);
-    
+
     tmpVal = BL_RD_REG(IR_BASE,IRTX_PULSE_WIDTH);
     /* Set modulation phase 0 width */
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRTX_MOD_PH0_W,irTxPulseWidthCfg->moduWidth_0-1);
@@ -224,7 +224,7 @@ BL_Err_Type IR_TxPulseWidthConfig(IR_TxPulseWidthCfg_Type *irTxPulseWidthCfg)
     /* Set pulse width unit */
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRTX_PW_UNIT,irTxPulseWidthCfg->pulseWidthUnit-1);
     BL_WR_REG(IR_BASE,IRTX_PULSE_WIDTH,tmpVal);
-    
+
     return SUCCESS;
 }
 
@@ -247,7 +247,7 @@ BL_Err_Type IR_TxSWMPulseWidthConfig(IR_TxSWMPulseWidthCfg_Type *irTxSWMPulseWid
     BL_WR_REG(IR_BASE,IRTX_SWM_PW_5,irTxSWMPulseWidthCfg->swmData5);
     BL_WR_REG(IR_BASE,IRTX_SWM_PW_6,irTxSWMPulseWidthCfg->swmData6);
     BL_WR_REG(IR_BASE,IRTX_SWM_PW_7,irTxSWMPulseWidthCfg->swmData7);
-    
+
     return SUCCESS;
 }
 
@@ -262,10 +262,10 @@ BL_Err_Type IR_TxSWMPulseWidthConfig(IR_TxSWMPulseWidthCfg_Type *irTxSWMPulseWid
 BL_Err_Type IR_RxInit(IR_RxCfg_Type *irRxCfg)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_RXMODE_TYPE(irRxCfg->rxMode));
-    
+
     tmpVal = BL_RD_REG(IR_BASE,IRRX_CONFIG);
     /* Set rx mode */
     switch(irRxCfg->rxMode)
@@ -290,7 +290,7 @@ BL_Err_Type IR_RxInit(IR_RxCfg_Type *irRxCfg)
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRRX_DEG_CNT,irRxCfg->DeglitchCnt);
     /* Write back */
     BL_WR_REG(IR_BASE,IRRX_CONFIG,tmpVal);
-    
+
     tmpVal = BL_RD_REG(IR_BASE,IRRX_PW_CONFIG);
     /* Set pulse width threshold to trigger end condition */
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRRX_END_TH,irRxCfg->endThreshold-1);
@@ -317,7 +317,7 @@ BL_Err_Type IR_RxInit(IR_RxCfg_Type *irRxCfg)
 BL_Err_Type IR_DeInit(void)
 {
     GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_IRR);
-    
+
     return SUCCESS;
 }
 
@@ -332,10 +332,10 @@ BL_Err_Type IR_DeInit(void)
 BL_Err_Type IR_Enable(IR_Direction_Type direct)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_DIRECTION_TYPE(direct));
-    
+
     if(direct == IR_TX || direct == IR_TXRX){
         /* Enable ir tx unit */
         tmpVal = BL_RD_REG(IR_BASE,IRTX_CONFIG);
@@ -347,7 +347,7 @@ BL_Err_Type IR_Enable(IR_Direction_Type direct)
         tmpVal = BL_RD_REG(IR_BASE,IRRX_CONFIG);
         BL_WR_REG(IR_BASE,IRRX_CONFIG,BL_SET_REG_BIT(tmpVal,IR_CR_IRRX_EN));
     }
-    
+
     return SUCCESS;
 }
 
@@ -362,10 +362,10 @@ BL_Err_Type IR_Enable(IR_Direction_Type direct)
 BL_Err_Type IR_Disable(IR_Direction_Type direct)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_DIRECTION_TYPE(direct));
-    
+
     if(direct == IR_TX || direct == IR_TXRX){
         /* Disable ir tx unit */
         tmpVal = BL_RD_REG(IR_BASE,IRTX_CONFIG);
@@ -377,7 +377,7 @@ BL_Err_Type IR_Disable(IR_Direction_Type direct)
         tmpVal = BL_RD_REG(IR_BASE,IRRX_CONFIG);
         BL_WR_REG(IR_BASE,IRRX_CONFIG,BL_CLR_REG_BIT(tmpVal,IR_CR_IRRX_EN));
     }
-    
+
     return SUCCESS;
 }
 
@@ -392,7 +392,7 @@ BL_Err_Type IR_Disable(IR_Direction_Type direct)
 BL_Err_Type IR_TxSWM(BL_Fun_Type txSWM)
 {
     uint32_t tmpVal;
-    
+
     /* Enable or disable tx swm */
     tmpVal = BL_RD_REG(IR_BASE,IRTX_CONFIG);
     if(ENABLE == txSWM){
@@ -400,7 +400,7 @@ BL_Err_Type IR_TxSWM(BL_Fun_Type txSWM)
     }else{
         BL_WR_REG(IR_BASE,IRTX_CONFIG,BL_CLR_REG_BIT(tmpVal,IR_CR_IRTX_SWM_EN));
     }
-    
+
     return SUCCESS;
 }
 
@@ -415,11 +415,11 @@ BL_Err_Type IR_TxSWM(BL_Fun_Type txSWM)
 BL_Err_Type IR_RxFIFOClear(void)
 {
     uint32_t tmpVal;
-    
+
     /* Clear rx fifo */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_SWM_FIFO_CONFIG_0);
     BL_WR_REG(IR_BASE,IRRX_SWM_FIFO_CONFIG_0,BL_SET_REG_BIT(tmpVal,IR_RX_FIFO_CLR));
-    
+
     return SUCCESS;
 }
 
@@ -436,7 +436,7 @@ BL_Err_Type IR_SendData(IR_Word_Type irWord,uint32_t data)
 {
     /* Check the parameters */
     CHECK_PARAM(IS_IR_WORD_TYPE(irWord));
-    
+
     /* Write word 0 or word 1 */
     if(IR_WORD_0 == irWord){
         BL_WR_REG(IR_BASE,IRTX_DATA_WORD0,data);
@@ -444,7 +444,7 @@ BL_Err_Type IR_SendData(IR_Word_Type irWord,uint32_t data)
     else{
         BL_WR_REG(IR_BASE,IRTX_DATA_WORD1,data);
     }
-    
+
     return SUCCESS;
 }
 
@@ -464,18 +464,18 @@ BL_Err_Type IR_SWMSendData(uint16_t *data,uint8_t length)
     uint32_t tmpVal;
     uint32_t pwVal = 0;
     uint32_t count = (length+7)/8;
-    
+
     /* Search for min value */
     for(i=1;i<length;i++){
         if(minData>data[i] && data[i]!=0){
             minData = data[i];
         }
     }
-    
+
     /* Set pulse width unit */
     tmpVal = BL_RD_REG(IR_BASE,IRTX_PULSE_WIDTH);
     BL_WR_REG(IR_BASE,IRTX_PULSE_WIDTH,BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRTX_PW_UNIT,minData));
-    
+
     /* Set tx SWM pulse width data as multiples of pulse width unit */
     for(i=0;i<count;i++){
         pwVal = 0;
@@ -493,7 +493,7 @@ BL_Err_Type IR_SWMSendData(uint16_t *data,uint8_t length)
             *(volatile uint32_t*)(IR_BASE+IRTX_SWM_PW_0_OFFSET+i*4) = pwVal;
         }
     }
-    
+
     return SUCCESS;
 }
 
@@ -509,36 +509,36 @@ BL_Err_Type IR_SWMSendData(uint16_t *data,uint8_t length)
 BL_Err_Type IR_SendCommand(uint32_t word1,uint32_t word0)
 {
     uint32_t timeoutCnt = IR_TX_INT_TIMEOUT_COUNT;
-    
+
     /* Write data */
     IR_SendData(IR_WORD_1,word1);
     IR_SendData(IR_WORD_0,word0);
-    
+
     /* Mask tx interrupt */
     IR_IntMask(IR_INT_TX,MASK);
-    
+
     /* Clear tx interrupt */
     IR_ClrIntStatus(IR_INT_TX);
-    
+
     /* Enable ir tx */
     IR_Enable(IR_TX);
-    
+
     /* Wait for tx interrupt */
     while(SET != IR_GetIntStatus(IR_INT_TX)){
         timeoutCnt--;
         if(timeoutCnt == 0){
             IR_Disable(IR_TX);
-            
+
             return TIMEOUT;
         }
     }
-    
+
     /* Disable ir tx */
     IR_Disable(IR_TX);
-    
+
     /* Clear tx interrupt */
     IR_ClrIntStatus(IR_INT_TX);
-    
+
     return SUCCESS;
 }
 
@@ -554,35 +554,35 @@ BL_Err_Type IR_SendCommand(uint32_t word1,uint32_t word0)
 BL_Err_Type IR_SWMSendCommand(uint16_t* data,uint8_t length)
 {
     uint32_t timeoutCnt = IR_TX_INT_TIMEOUT_COUNT;
-    
+
     /* Write fifo */
     IR_SWMSendData(data,length);
-    
+
     /* Mask tx interrupt */
     IR_IntMask(IR_INT_TX,MASK);
-    
+
     /* Clear tx interrupt */
     IR_ClrIntStatus(IR_INT_TX);
-    
+
     /* Enable ir tx */
     IR_Enable(IR_TX);
-    
+
     /* Wait for tx interrupt */
     while(SET != IR_GetIntStatus(IR_INT_TX)){
         timeoutCnt--;
         if(timeoutCnt == 0){
             IR_Disable(IR_TX);
-            
+
             return TIMEOUT;
         }
     }
-    
+
     /* Disable ir tx */
     IR_Disable(IR_TX);
-    
+
     /* Clear tx interrupt */
     IR_ClrIntStatus(IR_INT_TX);
-    
+
     return SUCCESS;
 }
 
@@ -598,9 +598,9 @@ BL_Err_Type IR_SWMSendCommand(uint16_t* data,uint8_t length)
 BL_Err_Type IR_SendNEC(uint8_t address,uint8_t command)
 {
     uint32_t tmpVal = ((~command&0xff)<<24)+(command<<16)+((~address&0xff)<<8)+address;
-    
+
     IR_SendCommand(0,tmpVal);
-    
+
     return SUCCESS;
 }
 
@@ -616,10 +616,10 @@ BL_Err_Type IR_SendNEC(uint8_t address,uint8_t command)
 BL_Err_Type IR_IntMask(IR_INT_Type intType,BL_Mask_Type intMask)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_INT_TYPE(intType));
-    
+
     if(intType == IR_INT_TX || intType == IR_INT_ALL){
         /* Mask or unmask tx interrupt */
         tmpVal = BL_RD_REG(IR_BASE,IRTX_INT_STS);
@@ -631,7 +631,7 @@ BL_Err_Type IR_IntMask(IR_INT_Type intType,BL_Mask_Type intMask)
         tmpVal = BL_RD_REG(IR_BASE,IRRX_INT_STS);
         BL_WR_REG(IR_BASE,IRRX_INT_STS,BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRRX_END_MASK,intMask));
     }
-    
+
     return SUCCESS;
 }
 
@@ -646,10 +646,10 @@ BL_Err_Type IR_IntMask(IR_INT_Type intType,BL_Mask_Type intMask)
 BL_Err_Type IR_ClrIntStatus(IR_INT_Type intType)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_INT_TYPE(intType));
-    
+
     if(intType == IR_INT_TX || intType == IR_INT_ALL){
         /* Clear tx interrupt */
         tmpVal = BL_RD_REG(IR_BASE,IRTX_INT_STS);
@@ -661,7 +661,7 @@ BL_Err_Type IR_ClrIntStatus(IR_INT_Type intType)
         tmpVal = BL_RD_REG(IR_BASE,IRRX_INT_STS);
         BL_WR_REG(IR_BASE,IRRX_INT_STS,BL_SET_REG_BIT(tmpVal,IR_CR_IRRX_END_CLR));
     }
-    
+
     return SUCCESS;
 }
 
@@ -678,9 +678,9 @@ BL_Err_Type IR_Int_Callback_Install(IR_INT_Type intType,intCallback_Type *cbFun)
 {
     /* Check the parameters */
     CHECK_PARAM(IS_IR_INT_TYPE(intType));
-    
+
     irIntCbfArra[intType] = cbFun;
-    
+
     return SUCCESS;
 }
 
@@ -695,10 +695,10 @@ BL_Err_Type IR_Int_Callback_Install(IR_INT_Type intType,intCallback_Type *cbFun)
 BL_Sts_Type IR_GetIntStatus(IR_INT_Type intType)
 {
     uint32_t tmpVal = 0;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_INT_TYPE(intType));
-    
+
     /* Read tx or rx interrupt status */
     if(IR_INT_TX == intType){
         tmpVal = BL_RD_REG(IR_BASE,IRTX_INT_STS);
@@ -708,7 +708,7 @@ BL_Sts_Type IR_GetIntStatus(IR_INT_Type intType)
         tmpVal = BL_RD_REG(IR_BASE,IRRX_INT_STS);
         tmpVal = BL_GET_REG_BITS_VAL(tmpVal,IRRX_END_INT);
     }
-    
+
     if(tmpVal)
     {
         return SET;
@@ -728,10 +728,10 @@ BL_Sts_Type IR_GetIntStatus(IR_INT_Type intType)
 BL_Sts_Type IR_GetRxFIFOStatus(IR_FifoStatus_Type fifoSts)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_FIFOSTATUS_TYPE(fifoSts));
-    
+
     /* Read rx fifo status */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_SWM_FIFO_CONFIG_0);
     if(fifoSts == IR_RX_FIFO_UNDERFLOW){
@@ -739,7 +739,7 @@ BL_Sts_Type IR_GetRxFIFOStatus(IR_FifoStatus_Type fifoSts)
     }else{
         tmpVal = BL_GET_REG_BITS_VAL(tmpVal,IR_RX_FIFO_OVERFLOW);
     }
-    
+
     if(tmpVal){
         return SET;
     }else{
@@ -758,10 +758,10 @@ BL_Sts_Type IR_GetRxFIFOStatus(IR_FifoStatus_Type fifoSts)
 uint32_t IR_ReceiveData(IR_Word_Type irWord)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_WORD_TYPE(irWord));
-    
+
     /* Read word 0 or word 1 */
     if(IR_WORD_0 == irWord){
         tmpVal = BL_RD_REG(IR_BASE,IRRX_DATA_WORD0);
@@ -784,7 +784,7 @@ uint32_t IR_ReceiveData(IR_Word_Type irWord)
 uint8_t IR_SWMReceiveData(uint16_t* data,uint8_t length)
 {
     uint8_t rxLen = 0;
-    
+
     while(rxLen<length && IR_GetRxFIFOCount()>0){
         /* Read data */
         data[rxLen++] = BL_RD_REG(IR_BASE,IRRX_SWM_FIFO_RDATA)&0xffff;
@@ -804,14 +804,14 @@ uint8_t IR_SWMReceiveData(uint16_t* data,uint8_t length)
 BL_Err_Type IR_ReceiveNEC(uint8_t* address,uint8_t* command)
 {
     uint32_t tmpVal = IR_ReceiveData(IR_WORD_0);
-    
+
     *address = tmpVal&0xff;
     *command = (tmpVal>>16)&0xff;
-    
+
     if((~(*address)&0xff) != ((tmpVal>>8)&0xff) || (~(*command)&0xff) != ((tmpVal>>24)&0xff)){
         return ERROR;
     }
-    
+
     return SUCCESS;
 }
 
@@ -826,11 +826,11 @@ BL_Err_Type IR_ReceiveNEC(uint8_t* address,uint8_t* command)
 uint8_t IR_GetRxDataBitCount(void)
 {
     uint32_t tmpVal;
-    
+
     /* Read rx data bit count */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_DATA_COUNT);
     tmpVal = BL_GET_REG_BITS_VAL(tmpVal,IR_STS_IRRX_DATA_CNT);
-    
+
     return tmpVal;
 }
 
@@ -845,11 +845,11 @@ uint8_t IR_GetRxDataBitCount(void)
 uint8_t IR_GetRxFIFOCount(void)
 {
     uint32_t tmpVal;
-    
+
     /* Read rx fifo count */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_SWM_FIFO_CONFIG_0);
     tmpVal = BL_GET_REG_BITS_VAL(tmpVal,IR_RX_FIFO_CNT);
-    
+
     return tmpVal;
 }
 
@@ -866,7 +866,7 @@ IR_RxMode_Type IR_LearnToInit(uint32_t* data,uint8_t* length)
 {
     uint32_t tmpVal;
     uint32_t timeoutCnt = IR_RX_INT_TIMEOUT_COUNT;
-    
+
     /* Disable rx,set rx in software mode and enable rx input inverse */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_CONFIG);
     tmpVal = BL_CLR_REG_BIT(tmpVal,IR_CR_IRRX_EN);
@@ -876,38 +876,38 @@ IR_RxMode_Type IR_LearnToInit(uint32_t* data,uint8_t* length)
     /* Set pulse width threshold to trigger end condition */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_PW_CONFIG);
     BL_WR_REG(IR_BASE,IRRX_PW_CONFIG,BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRRX_END_TH,19999));
-    
+
     /* Clear and mask rx interrupt */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_INT_STS);
     tmpVal = BL_SET_REG_BIT(tmpVal,IR_CR_IRRX_END_MASK);
     BL_WR_REG(IR_BASE,IRRX_INT_STS,BL_SET_REG_BIT(tmpVal,IR_CR_IRRX_END_CLR));
-    
+
     /* Enable rx */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_CONFIG);
     BL_WR_REG(IR_BASE,IRRX_CONFIG,BL_SET_REG_BIT(tmpVal,IR_CR_IRRX_EN));
-    
+
     /* Wait for rx interrupt */
     while(SET != IR_GetIntStatus(IR_INT_RX)){
         timeoutCnt--;
         if(timeoutCnt == 0){
             IR_Disable(IR_RX);
-            
+
             return TIMEOUT;
         }
     }
-    
+
     /* Disable rx */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_CONFIG);
     BL_WR_REG(IR_BASE,IRRX_CONFIG,BL_CLR_REG_BIT(tmpVal,IR_CR_IRRX_EN));
-    
+
     /* Clear rx interrupt */
     tmpVal = BL_RD_REG(IR_BASE,IRRX_INT_STS);
     BL_WR_REG(IR_BASE,IRRX_INT_STS,BL_SET_REG_BIT(tmpVal,IR_CR_IRRX_END_CLR));
-    
+
     /*Receive data */
     *length = IR_GetRxFIFOCount();
     *length = IR_SWMReceiveData((uint16_t*)data,*length);
-    
+
     /* Judge protocol type */
     if(NEC_HEAD_H_MIN<(data[0]&0xffff)&&(data[0]&0xffff)<NEC_HEAD_H_MAX&&NEC_HEAD_L_MIN<(data[0]>>16)&&(data[0]>>16)<NEC_HEAD_L_MAX&&NEC_BIT0_H_MIN<(data[1]&0xffff)&&(data[1]&0xffff)<NEC_BIT0_H_MAX){
         /* Set rx in NEC mode */
@@ -922,7 +922,7 @@ IR_RxMode_Type IR_LearnToInit(uint32_t* data,uint8_t* length)
         BL_WR_REG(IR_BASE,IRTX_PW,0x7f2000);
         /* Set modulation phase width and pulse width unit */
         BL_WR_REG(IR_BASE,IRTX_PULSE_WIDTH,0x22110464);
-        
+
         return IR_RX_NEC;
     }
     else if(RC5_ONE_PLUSE_MIN<(data[0]&0xffff)&&(data[0]&0xffff)<RC5_ONE_PLUSE_MAX&&((RC5_ONE_PLUSE_MIN<(data[0]>>16)&&(data[0]>>16)<RC5_ONE_PLUSE_MAX)||(RC5_TWO_PLUSE_MIN<(data[0]>>16)&&(data[0]>>16)<RC5_TWO_PLUSE_MAX))&& \
@@ -939,7 +939,7 @@ IR_RxMode_Type IR_LearnToInit(uint32_t* data,uint8_t* length)
         BL_WR_REG(IR_BASE,IRTX_PW,0);
         /* Set modulation phase width and pulse width unit */
         BL_WR_REG(IR_BASE,IRTX_PULSE_WIDTH,0x221106f1);
-        
+
         return IR_RX_RC5;
     }else if((data[0]>>16) != 0){
         /* Set tx in software mode */
@@ -947,7 +947,7 @@ IR_RxMode_Type IR_LearnToInit(uint32_t* data,uint8_t* length)
         BL_WR_REG(IR_BASE,IRTX_CONFIG,*length<<12 | 0xc);
         /* Set modulation phase width */
         BL_WR_REG(IR_BASE,IRTX_PULSE_WIDTH,0x22110000);
-        
+
         return IR_RX_SWM;
     }else{
         tmpVal = BL_RD_REG(IR_BASE,IRRX_CONFIG);
@@ -975,36 +975,36 @@ uint8_t IR_LearnToReceive(IR_RxMode_Type mode,uint32_t* data)
 {
     uint8_t length = 0;
     uint32_t timeoutCnt = IR_RX_INT_TIMEOUT_COUNT;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_RXMODE_TYPE(mode));
-    
+
     /* Disable ir rx */
     IR_Disable(IR_RX);
-    
+
     /* Clear and mask rx interrupt */
     IR_ClrIntStatus(IR_INT_RX);
     IR_IntMask(IR_INT_RX,MASK);
-    
+
     /* Enable ir rx */
     IR_Enable(IR_RX);
-    
+
     /* Wait for rx interrupt */
     while(SET != IR_GetIntStatus(IR_INT_RX)){
         timeoutCnt--;
         if(timeoutCnt == 0){
             IR_Disable(IR_RX);
-            
+
             return TIMEOUT;
         }
     }
-    
+
     /* Disable ir rx */
     IR_Disable(IR_RX);
-    
+
     /* Clear rx interrupt */
     IR_ClrIntStatus(IR_INT_RX);
-    
+
     /* Receive data according to mode */
     if(mode == IR_RX_NEC || mode == IR_RX_RC5){
         /* Get data bit count */
@@ -1015,7 +1015,7 @@ uint8_t IR_LearnToReceive(IR_RxMode_Type mode,uint32_t* data)
         length = IR_GetRxFIFOCount();
         length = IR_SWMReceiveData((uint16_t*)data,length);
     }
-    
+
     return length;
 }
 
@@ -1033,21 +1033,21 @@ uint8_t IR_LearnToReceive(IR_RxMode_Type mode,uint32_t* data)
 BL_Err_Type IR_LearnToSend(IR_RxMode_Type mode,uint32_t* data,uint8_t length)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_IR_RXMODE_TYPE(mode));
-    
+
     /* Set send length */
     tmpVal = BL_RD_REG(IR_BASE,IRTX_CONFIG);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,IR_CR_IRTX_DATA_NUM,length-1);
     BL_WR_REG(IR_BASE,IRTX_CONFIG,tmpVal);
-    
+
     if(mode == IR_RX_NEC || mode == IR_RX_RC5){
         IR_SendCommand(0,data[0]);
     }else{
         IR_SWMSendCommand((uint16_t*)data,length);
     }
-    
+
     return SUCCESS;
 }
 
@@ -1080,7 +1080,7 @@ BL_Sts_Type IR_LEDInit(HBN_XCLK_CLK_Type clk,uint8_t div,uint8_t unit,uint8_t co
         DISABLE,                                             /* Disable signal of output modulation */
         ENABLE                                               /* Enable signal of output inverse */
     };
-    
+
     IR_TxPulseWidthCfg_Type txPWCfg = {
         code0L,                                              /* Pulse width of logic 0 pulse phase 1 */
         code0H,                                              /* Pulse width of logic 0 pulse phase 0 */
@@ -1094,17 +1094,17 @@ BL_Sts_Type IR_LEDInit(HBN_XCLK_CLK_Type clk,uint8_t div,uint8_t unit,uint8_t co
         1,                                                   /* Modulation phase 0 width */
         unit                                                 /* Pulse width unit */
     };
-    
+
     HBN_Set_XCLK_CLK_Sel(clk);
     GLB_Set_IR_CLK(ENABLE,GLB_IR_CLK_SRC_XCLK,div-1);
-    
+
     /* Disable ir before config */
     IR_Disable(IR_TXRX);
 
     /* IR tx init */
     IR_TxInit(&txCfg);
     IR_TxPulseWidthConfig(&txPWCfg);
-    
+
     return SUCCESS;
 }
 
@@ -1125,7 +1125,7 @@ BL_Sts_Type IR_LEDSend(uint32_t data)
     data = ((data>>4)&0x0f0f0f0f)|((data<<4)&0xf0f0f0f0);
     data = ((data>>16)&0xff)|(data&0xff00)|((data<<16)&0xff0000);
     IR_SendCommand(0,data);
-    
+
     return SUCCESS;
 }
 

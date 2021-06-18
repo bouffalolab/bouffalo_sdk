@@ -34,7 +34,7 @@
 struct bt_hfp_hf_cb *bt_hf;
 bool hfp_codec_msbc = 0;
 
-#if !defined(BFLB_DYNAMIC_ALLOC_MEM) 
+#if !defined(BFLB_DYNAMIC_ALLOC_MEM)
 NET_BUF_POOL_FIXED_DEFINE(hf_pool, CONFIG_BT_MAX_CONN + 1,
 			  BT_RFCOMM_BUF_SIZE(BT_HF_CLIENT_MAX_PDU), NULL);
 #else

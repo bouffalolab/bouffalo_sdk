@@ -1,24 +1,24 @@
 /**
  * @file hal_dma.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #ifndef __HAL_DMA__H__
 #define __HAL_DMA__H__
@@ -105,8 +105,8 @@ enum dma_index_type
 #define DMA_REQUEST_I2C0_TX     0x00000007 /*!< DMA request peripheral:I2C TX */
 #define DMA_REQUEST_SPI0_RX     0x0000000A /*!< DMA request peripheral:SPI RX */
 #define DMA_REQUEST_SPI0_TX     0x0000000B /*!< DMA request peripheral:SPI TX */
-#define DMA_REQUEST_I2S_RX      0x00000014 /*!< DMA request peripheral:I2S RX */ 
-#define DMA_REQUEST_I2S_TX      0x00000015 /*!< DMA request peripheral:I2S TX */ 
+#define DMA_REQUEST_I2S_RX      0x00000014 /*!< DMA request peripheral:I2S RX */
+#define DMA_REQUEST_I2S_TX      0x00000015 /*!< DMA request peripheral:I2S TX */
 #define DMA_REQUEST_ADC0        0x00000016 /*!< DMA request peripheral:ADC0 */
 #define DMA_REQUEST_DAC0        0x00000017 /*!< DMA request peripheral:DAC0 */
 #define DMA_REQUEST_USB_EP0     0x00000018 /*!< DMA request peripheral:USB EP0*/
@@ -127,7 +127,7 @@ enum dma_index_type
 #define DMA_TRANSFER_WIDTH_16BIT 1
 #define DMA_TRANSFER_WIDTH_32BIT 2
 
-#define DMA_LLI_ONCE_MODE     0 
+#define DMA_LLI_ONCE_MODE     0
 #define DMA_LLI_CYCLE_MODE    1
 
 /**
@@ -166,7 +166,7 @@ typedef struct
 {
     uint32_t src_addr;
     uint32_t dst_addr;
-    uint32_t nextlli;     
+    uint32_t nextlli;
     dma_control_data_t cfg;
 } dma_lli_ctrl_t;
 
@@ -190,7 +190,7 @@ typedef struct dma_device
     uint8_t dst_burst_size;
     uint8_t src_width;
     uint8_t dst_width;
-    dma_lli_ctrl_t *lli_cfg;    
+    dma_lli_ctrl_t *lli_cfg;
 } dma_device_t;
 
 #define DMA_DEV(dev) ((dma_device_t*)dev)

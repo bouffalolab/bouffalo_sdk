@@ -90,10 +90,10 @@
 void Sec_Dbg_Read_Chip_ID(uint8_t id[8])
 {
     uint32_t idLow,idHigh;
-    
+
     idLow=BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_CHIP_ID_LOW);
     BL_WRWD_TO_BYTEP(id,idLow);
-    
+
     idHigh=BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_CHIP_ID_HIGH);
     BL_WRWD_TO_BYTEP((id+4),idHigh);
 }
@@ -109,10 +109,10 @@ void Sec_Dbg_Read_Chip_ID(uint8_t id[8])
 void Sec_Dbg_Read_WiFi_MAC(uint8_t macAddr[6])
 {
     uint32_t macLow,macHigh;
-    
+
     macLow=BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_WIFI_MAC_LOW);
     BL_WRWD_TO_BYTEP(macAddr,macLow);
-    
+
     macHigh=BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_WIFI_MAC_HIGH);
     macAddr[4]=(macHigh>>0)&0xff;
     macAddr[5]=(macHigh>>8)&0xff;

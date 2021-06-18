@@ -1,18 +1,18 @@
 ﻿################# Add global include #################
-list(APPEND ADD_INCLUDE 
+list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}"
 
 )
 #######################################################
 
 ################# Add private include #################
-# list(APPEND ADD_PRIVATE_INCLUDE 
+# list(APPEND ADD_PRIVATE_INCLUDE
 
 # )
 #######################################################
 
 ############## Add current dir source files ###########
-file(GLOB_RECURSE sources 
+file(GLOB_RECURSE sources
 "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 #aux_source_directory(. sources)
 list(APPEND ADD_SRCS  ${sources})
@@ -40,7 +40,7 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ############ Add private compile option ################
-#add compile option for this component that won't affect other modules  
+#add compile option for this component that won't affect other modules
 # list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
 #######################################################
 

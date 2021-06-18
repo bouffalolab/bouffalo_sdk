@@ -2,7 +2,7 @@
 #define BLE_LIB_API_H_
 
 #include <stdbool.h>
-#include <stdint.h> 
+#include <stdint.h>
 
 void ble_controller_init(uint8_t task_priority);
 void ble_controller_deinit(void);

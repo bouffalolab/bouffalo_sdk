@@ -140,7 +140,7 @@ static int att_send(struct bt_conn *conn, struct net_buf *buf,
 	hdr = (void *)buf->data;
 
 	BT_DBG("code 0x%02x", hdr->code);
-    
+
     #if defined(CONFIG_BT_SMP) && defined(CONFIG_BT_SIGNING)
 	if (hdr->code == BT_ATT_OP_SIGNED_WRITE_CMD) {
 		int err;
@@ -305,9 +305,9 @@ static u8_t att_mtu_req(struct bt_att *att, struct net_buf *buf)
 
     #if defined(BFLB_BLE_MTU_CHANGE_CB)
     if(att->chan.chan.ops->mtu_changed)
-        att->chan.chan.ops->mtu_changed(&(att->chan.chan), att->chan.rx.mtu);    
+        att->chan.chan.ops->mtu_changed(&(att->chan.chan), att->chan.rx.mtu);
     #endif
-    
+
 	return 0;
 }
 
@@ -707,14 +707,14 @@ static u8_t att_find_type_rsp(struct bt_att *att, u16_t start_handle,
 	}
 
 	#if defined(CONFIG_BT_STACK_PTS)
-	/*when PTS sends a request to the iut discover all primary services it contains, set event flag 
+	/*when PTS sends a request to the iut discover all primary services it contains, set event flag
 	 * to @att_find_by_type_value_ind make it easy for the user to check whether the messages is correct in the console.
 	 */
 	if(event_flag == att_find_by_type_value_ind){
 		u8_t i = 0;
 		u8_t *req_val = (u8_t *)data.value;
 		u8_t src[20];
-		
+
 		(void)memcpy(src, req_val, data.value_len);
 
         BT_PTS("uuid = [");
@@ -722,13 +722,13 @@ static u8_t att_find_type_rsp(struct bt_att *att, u16_t start_handle,
                 BT_PTS("%02x", src[value_len-1-i]);
         }
         BT_PTS("]\r\n");\
-	
+
 		BT_PTS("start_handle = [0x%04x] end_handle = [0x%04x]\r\n", data.buf->data[1] | data.buf->data[2] << 8,
 																			  data.buf->data[3] | data.buf->data[4] << 8);
-		
+
 	}
 	#endif
-	
+
 	(void)bt_l2cap_send_cb(conn, BT_L2CAP_CID_ATT, data.buf, att_rsp_sent,
 			       NULL);
 
@@ -864,7 +864,7 @@ static u8_t att_read_type_rsp(struct bt_att *att, struct bt_uuid *uuid,
 {
 	struct bt_conn *conn = att->chan.chan.conn;
 	struct read_type_data data;
-		
+
 	(void)memset(&data, 0, sizeof(data));
 
 	data.buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_TYPE_RSP,
@@ -893,7 +893,7 @@ static u8_t att_read_type_rsp(struct bt_att *att, struct bt_uuid *uuid,
 
 	#if defined(CONFIG_BT_STACK_PTS)
 	if(event_flag == att_read_by_type_ind)
-		BT_PTS("handle : [0x%04x]\r\n",data.rsp->data->handle);	
+		BT_PTS("handle : [0x%04x]\r\n",data.rsp->data->handle);
 	#endif
 
 	(void)bt_l2cap_send_cb(conn, BT_L2CAP_CID_ATT, data.buf, att_rsp_sent,
@@ -1127,7 +1127,7 @@ static u8_t read_group_cb(const struct bt_gatt_attr *attr, void *user_data)
 		if (data->group &&
 		    attr->handle > sys_le16_to_cpu(data->group->end_handle)) {
 			data->group->end_handle = sys_cpu_to_le16(attr->handle);
-			
+
 		}
 		return BT_GATT_ITER_CONTINUE;
 	}
@@ -1153,7 +1153,7 @@ static u8_t read_group_cb(const struct bt_gatt_attr *attr, void *user_data)
 	data->group->start_handle = sys_cpu_to_le16(attr->handle);
 	data->group->end_handle = sys_cpu_to_le16(attr->handle);
 
-	
+
 	/* Read attribute value and store in the buffer */
 	read = attr->read(conn, attr, data->buf->data + data->buf->len,
 			  att->chan.tx.mtu - data->buf->len, 0);
@@ -1199,7 +1199,7 @@ static u8_t att_read_group_rsp(struct bt_att *att, struct bt_uuid *uuid,
 
 	bt_gatt_foreach_attr(start_handle, end_handle, read_group_cb, &data);
 
-	
+
 	if (!data.rsp->len) {
 		net_buf_unref(data.buf);
 		/* Respond here since handle is set */
@@ -1787,7 +1787,7 @@ static u8_t att_notify(struct bt_att *att, struct net_buf *buf)
 {
 	struct bt_conn *conn = att->chan.chan.conn;
 	u16_t handle;
-    
+
 	handle = net_buf_pull_le16(buf);
 	BT_DBG("handle 0x%04x", handle);
 
@@ -2226,7 +2226,7 @@ static void bt_att_disconnected(struct bt_l2cap_chan *chan)
     	k_queue_free(&att->tx_queue._queue);
     	att->tx_queue._queue.hdl = NULL;
    	}
-   	
+
     if(att->tx_sem.sem.hdl)
         k_sem_delete(&att->tx_sem);
     #endif
@@ -2297,7 +2297,7 @@ static int bt_att_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 #endif /* CONFIG_BT_SMP */
 #if defined(BFLB_BLE_MTU_CHANGE_CB)
         .mtu_changed = bt_att_mtu_changed,
-#endif     
+#endif
 	};
 
 	BT_DBG("conn %p handle %u", conn, conn->handle);
@@ -2333,7 +2333,7 @@ void bt_att_init(void)
 		.cid		= BT_L2CAP_CID_ATT,
 		.accept		= bt_att_accept,
 	};
-    
+
 	bt_l2cap_le_fixed_chan_register(&chan);
     #endif
 

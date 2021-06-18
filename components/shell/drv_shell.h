@@ -4,9 +4,9 @@
  * @brief letter shell
  * @version 3.0.0
  * @date 2019-12-30
- * 
+ *
  * @Copyright (c) 2020 Letter
- * 
+ *
  */
 
 #ifndef     __SHELL_H__
@@ -19,7 +19,7 @@
 
 /**
  * @brief shell 断言
- * 
+ *
  * @param expr 表达式
  * @param action 断言失败操作
  */
@@ -30,7 +30,7 @@
 
 /**
  * @brief shell 命令权限
- * 
+ *
  * @param permission 权限级别
  */
 #define     SHELL_CMD_PERMISSION(permission) \
@@ -38,7 +38,7 @@
 
 /**
  * @brief shell 命令类型
- * 
+ *
  * @param type 类型
  */
 #define     SHELL_CMD_TYPE(type) \
@@ -86,7 +86,7 @@
 
 /**
  * @brief shell代理函数定义
- * 
+ *
  * @param _func 被代理的函数
  * @param ... 代理参数
  */
@@ -98,7 +98,7 @@
 
     /**
      * @brief shell 命令定义
-     * 
+     *
      * @param _attr 命令属性
      * @param _name 命令名
      * @param _func 命令函数
@@ -118,7 +118,7 @@
 
     /**
      * @brief shell 代理命令定义
-     * 
+     *
      * @param _attr 命令属性
      * @param _name 命令名
      * @param _func 命令函数
@@ -131,7 +131,7 @@
 
     /**
      * @brief shell 变量定义
-     * 
+     *
      * @param _attr 变量属性
      * @param _name 变量名
      * @param _value 变量值
@@ -151,7 +151,7 @@
 
     /**
      * @brief shell 用户定义
-     * 
+     *
      * @param _attr 用户属性
      * @param _name 用户名
      * @param _password 用户密码
@@ -172,7 +172,7 @@
 
     /**
      * @brief shell 按键定义
-     * 
+     *
      * @param _attr 按键属性
      * @param _value 按键键值
      * @param _func 按键函数
@@ -191,7 +191,7 @@
 #else
     /**
      * @brief shell 命令item定义
-     * 
+     *
      * @param _attr 命令属性
      * @param _name 命令名
      * @param _func 命令函数
@@ -207,7 +207,7 @@
 
     /**
      * @brief shell 变量item定义
-     * 
+     *
      * @param _attr 变量属性
      * @param _name 变量名
      * @param _value 变量值
@@ -223,7 +223,7 @@
 
     /**
      * @brief shell 用户item定义
-     * 
+     *
      * @param _attr 用户属性
      * @param _name 用户名
      * @param _password 用户密码
@@ -239,7 +239,7 @@
 
     /**
      * @brief shell 按键item定义
-     * 
+     *
      * @param _attr 按键属性
      * @param _value 按键键值
      * @param _func 按键函数
@@ -364,7 +364,7 @@ typedef struct shell_command
             void (*function)(Shell *);                          /**< 按键执行函数 */
             const char *desc;                                   /**< 按键描述 */
         } key;                                                  /**< 按键定义 */
-    } data; 
+    } data;
 } ShellCommand;
 
 
@@ -376,7 +376,7 @@ void shellTask(void *param);
 
 /**
  * @brief 数字类型
- * 
+ *
  */
 typedef enum
 {

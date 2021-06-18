@@ -373,8 +373,8 @@ pt_table_error_type pt_table_dump(void)
 
     gp_pt_table_flash_read(BFLB_PT_TABLE0_ADDRESS,(uint8_t *)&pt_stuff[0],sizeof(pt_table_stuff_config));
     pt_valid[0]=pt_table_valid(&pt_stuff[0]);
-    
-    
+
+
     gp_pt_table_flash_read(BFLB_PT_TABLE1_ADDRESS,(uint8_t *)&pt_stuff[1],sizeof(pt_table_stuff_config));
     pt_valid[1]=pt_table_valid(&pt_stuff[1]);
 
@@ -387,8 +387,8 @@ pt_table_error_type pt_table_dump(void)
         MSG("PT TABLE1 valid\r\n");
     else
         MSG("PT TABLE1 invalid\r\n");
-    
-    
+
+
     for(int i = 0; i < 2; i++)
     {
         if(pt_valid[i] == 1)
@@ -411,7 +411,7 @@ pt_table_error_type pt_table_dump(void)
                 MSG("ptStuff[%d].pt_entries[%d].age 0x%08x\r\n",i,j,pt_stuff[i].pt_entries[j].age);
             }
         }
-        
+
     }
 
     return PT_ERROR_SUCCESS;
@@ -427,8 +427,8 @@ pt_table_error_type pt_table_get_iap_para(pt_table_iap_param_type * para)
 
     gp_pt_table_flash_read(BFLB_PT_TABLE0_ADDRESS,(uint8_t *)&pt_stuff[0],sizeof(pt_table_stuff_config));
     pt_valid[0]=pt_table_valid(&pt_stuff[0]);
-    
-    
+
+
     gp_pt_table_flash_read(BFLB_PT_TABLE1_ADDRESS,(uint8_t *)&pt_stuff[1],sizeof(pt_table_stuff_config));
     pt_valid[1]=pt_table_valid(&pt_stuff[1]);
 
@@ -438,14 +438,14 @@ pt_table_error_type pt_table_get_iap_para(pt_table_iap_param_type * para)
             para->iap_write_addr = para->iap_start_addr = pt_stuff[0].pt_entries[0].start_address[!(active_index&0x01)];
             para->inactive_index = !(active_index&0x01);
             para->inactive_table_index = 1;
-            
+
         }else{
             active_index = pt_stuff[1].pt_entries[0].active_index;
             para->iap_write_addr = para->iap_start_addr =  pt_stuff[1].pt_entries[0].start_address[!(active_index&0x01)];
             para->inactive_index = !(active_index&0x01);
             para->inactive_table_index = 0;
         }
-        
+
     }else if(pt_valid[1] == 1){
         active_index = pt_stuff[1].pt_entries[0].active_index;
         para->iap_write_addr = para->iap_start_addr =  pt_stuff[1].pt_entries[0].start_address[!(active_index&0x01)];
@@ -476,7 +476,7 @@ pt_table_error_type pt_table_set_iap_para(pt_table_iap_param_type * para)
     if(para->inactive_table_index == 1){
         gp_pt_table_flash_read(BFLB_PT_TABLE0_ADDRESS,(uint8_t *)&pt_stuff,sizeof(pt_table_stuff_config));
     }else if(para->inactive_table_index == 0){
-        gp_pt_table_flash_read(BFLB_PT_TABLE1_ADDRESS,(uint8_t *)&pt_stuff,sizeof(pt_table_stuff_config));    
+        gp_pt_table_flash_read(BFLB_PT_TABLE1_ADDRESS,(uint8_t *)&pt_stuff,sizeof(pt_table_stuff_config));
     }
 
     ARCH_MemCpy_Fast((void *)&pt_stuff_write, (void *)&pt_stuff, sizeof(pt_table_stuff_config));
@@ -487,7 +487,7 @@ pt_table_error_type pt_table_set_iap_para(pt_table_iap_param_type * para)
     //pt_stuff_write.crc32 = BFLB_Soft_CRC32((uint8_t*)pt_stuff_write.pt_entries,entries_len);
     p_crc32 = (uint32_t *)((uintptr_t)pt_stuff_write.pt_entries+entries_len);
     *p_crc32 =BFLB_Soft_CRC32((uint8_t*)pt_stuff_write.pt_entries,entries_len);
-        
+
     if(para->inactive_table_index == 1){
         ret=gp_pt_table_flash_erase(BFLB_PT_TABLE1_ADDRESS,BFLB_PT_TABLE1_ADDRESS+sizeof(pt_table_stuff_config)-1);
         if(ret!=SUCCESS){

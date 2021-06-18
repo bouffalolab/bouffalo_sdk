@@ -7,7 +7,7 @@
  *
  * Copyright (C) Bouffalo Lab 2018
  *
- * History: 2020-12-31 crealted by caofp 
+ * History: 2020-12-31 crealted by caofp
  *
  ****************************************************************************************
  */
@@ -32,21 +32,21 @@ static void oad_subscribe(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
 static void oad_start_update(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
 
 const struct cli_command oadCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
-    {"oad_start_indentity",  "", oad_start_identity}, 
+    {"oad_start_indentity",  "", oad_start_identity},
     {"oad_discovery",        "", oad_discovery},
     {"oad_subscribe",        "", oad_subscribe},
-    {"oad_start_update",     "", oad_start_update}, 
+    {"oad_start_update",     "", oad_start_update},
 };
 
 void oad_send_data_to_uart(uint8_t cmd_type, uint8_t *data, uint8_t len)
 {
-    uint8_t final_data[128]; 
+    uint8_t final_data[128];
 
     if(len + 2 > 128){
         return;
     }
     memset(final_data,0,128);
-    
+
     final_data[0] = cmd_type;
     final_data[1] = len;
     memcpy(&final_data[2], data, len);
@@ -64,11 +64,11 @@ void oad_start_to_uart(void)
 }
 
 void oad_image_identity_to_uart(struct oad_file_info* file_info)
-{    
+{
     struct oad_cmdproc_req_t req;
     req.cmd_id = OAD_CMDPROC_IMAGE_IDENTITY;
     memcpy(&req.q.file_info, file_info, sizeof(*file_info));
-    oad_send_data_to_uart(CMDPROC_TYPE_OAD, (uint8_t *)&req, sizeof(req)); 
+    oad_send_data_to_uart(CMDPROC_TYPE_OAD, (uint8_t *)&req, sizeof(req));
 }
 
 void oad_block_req_to_uart(struct oad_file_info* file_info, uint32_t file_offset, uint8_t data_len)
@@ -79,7 +79,7 @@ void oad_block_req_to_uart(struct oad_file_info* file_info, uint32_t file_offset
     memcpy(&req.q.block_req.file_info, file_info, sizeof(*file_info));
     req.q.block_req.file_offset = file_offset;
     req.q.block_req.data_len = data_len;
-    oad_send_data_to_uart(CMDPROC_TYPE_OAD, (uint8_t *)&req, sizeof(req)); 
+    oad_send_data_to_uart(CMDPROC_TYPE_OAD, (uint8_t *)&req, sizeof(req));
 }
 
 void oad_upgrd_end_to_uart(uint8_t status, struct oad_file_info* file_info)
@@ -90,14 +90,14 @@ void oad_upgrd_end_to_uart(uint8_t status, struct oad_file_info* file_info)
     req.q.upgrd_end.status = status;
     memcpy(&req.q.upgrd_end.file_info, file_info, sizeof(*file_info));
 
-    oad_send_data_to_uart(CMDPROC_TYPE_OAD, (uint8_t *)&req, sizeof(req)); 
+    oad_send_data_to_uart(CMDPROC_TYPE_OAD, (uint8_t *)&req, sizeof(req));
 }
 
 static void oad_start_identity(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
     uint8_t buf[50];
     int len = 0;
-    
+
     if(!default_conn)
         return;
 
@@ -108,20 +108,20 @@ static void oad_start_identity(char *pcWriteBuffer, int xWriteBufferLen, int arg
         BT_WARN("Failed to receved data\r\n");
         return;
     }
-    
+
     oad_send_image_identity_to_servicer(default_conn,buf,len+2);
 }
 
 static void oad_start_update(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
     uint8_t buf[MAX_ATT_SIZE];
-    
+
     if(!default_conn)
         return;
-        
+
     memset(buf,0,MAX_ATT_SIZE);
     get_bytearray_from_string(&argv[1],buf,MAX_ATT_SIZE);
-   
+
     oad_send_block_resp_to_servicer(default_conn,buf,MAX_ATT_SIZE);
 }
 
@@ -149,7 +149,7 @@ static u8_t oad_discover_func(struct bt_conn *conn, const struct bt_gatt_attr *a
 		gatt_service = attr->user_data;
 		bt_uuid_to_str(gatt_service->uuid, str, sizeof(str));
 		BT_WARN("Service %s found: attr handle %x, end_handle %x\r\n", str, attr->handle, gatt_service->end_handle);
-        
+
 		break;
 	case BT_GATT_DISCOVER_CHARACTERISTIC:
 		gatt_chrc = attr->user_data;
@@ -165,13 +165,13 @@ static u8_t oad_discover_func(struct bt_conn *conn, const struct bt_gatt_attr *a
 		break;
 	default:
 		bt_uuid_to_str(attr->uuid, str, sizeof(str));
-        
+
         if(!bt_uuid_cmp(attr->uuid, uuid_in)){
             in_handle = attr->handle;
         }else if(!bt_uuid_cmp(attr->uuid, uuid_out)){
             out_handle = attr->handle;
         }
-        
+
 		BT_WARN("Descriptor %s found: handle %x\r\n", str, attr->handle);
 		break;
 	}
@@ -184,17 +184,17 @@ static void oad_discovery(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
 {
     int err;
     u8_t disc_type;
-    
+
     if (!default_conn) {
 		BT_WARN("Not connected\r\n");
 		return;
 	}
-    
+
     discover_params.func = oad_discover_func;
 	discover_params.start_handle = 0x1;
 	discover_params.end_handle = 0xffff;
     discover_params.uuid = NULL;
-    
+
     get_uint8_from_string(&argv[1], &disc_type);
     BT_WARN("disc_type = [%d]\r\n",disc_type);
     if(disc_type == 0){
@@ -227,7 +227,7 @@ static u8_t oad_client_recv_data(struct bt_conn *conn,
 			const void *data, u16_t length)
 {
     u8_t *pdata = data;
-        
+
     if (!params->value) {
         BT_WARN("Unsubscribed\r\n");
         params->value_handle = 0U;
@@ -235,7 +235,7 @@ static u8_t oad_client_recv_data(struct bt_conn *conn,
     }
     BT_WARN("oad_client_recv_data:%s\r\n",bt_hex(pdata,length));
     oad_client_notify_handler(data,length);
-    
+
     return BT_GATT_ITER_CONTINUE;
 }
 
@@ -246,10 +246,10 @@ static void oad_subscribe(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
         BT_WARN("Not connected\r\n");
         return;
     }
-    
+
     subscribe_params.ccc_handle = out_handle + 1;
     subscribe_params.value_handle = out_handle;
-    subscribe_params.value = 0x01; 
+    subscribe_params.value = 0x01;
 
     subscribe_params.notify = oad_client_recv_data;
 
@@ -269,12 +269,12 @@ void oad_client_notify_handler(void *buf,u16_t len)
     struct oad_image_identity_t identity;
     struct oad_block_req_t req;
     struct oad_upgrd_end_t upgrd_end;
-    
+
     if(!buf){
         BT_WARN("BUF is NULL\r\n");
-        return; 
+        return;
     }
-    
+
     cmd_id = pdata[0];
     switch(cmd_id){
         case OAD_CMD_IMAG_IDENTITY:
@@ -322,7 +322,7 @@ void oad_send_image_identity_to_servicer(struct bt_conn *conn,u8_t *data, u16_t 
 
     if(!conn)
         return;
-    
+
     data[0] = OAD_CMD_IMAG_IDENTITY;
     bt_gatt_write_without_response(conn, handle, data, len, false);
 }
@@ -331,17 +331,17 @@ void oad_send_block_resp_to_servicer(struct bt_conn *conn, u8_t *data, u8_t len)
 {
     u16_t handle = in_handle;
     u8_t slen = 0;
-    
+
     if(!conn)
         return;
-    
+
     data[0] = OAD_CMD_IMAG_BLOCK_RESP;
     if(len <= bt_gatt_get_mtu(conn))
         slen = len;
     else{
         slen = bt_gatt_get_mtu(conn);
     }
-    
+
     bt_gatt_write_without_response(conn, handle, data, slen, false);
 }
 

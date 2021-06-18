@@ -19,6 +19,6 @@ roller.set_options("January\n"
                    "December",
                    lv.roller.MODE.INIFINITE)
 roller.set_visible_row_count(4)
-roller.align(None,lv.ALIGN.CENTER,0,0)              
-roller.set_event_cb(event_handler)              
+roller.align(None,lv.ALIGN.CENTER,0,0)
+roller.set_event_cb(event_handler)
 

@@ -102,14 +102,14 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Set_Wrap(BL_Fun_Type wrap)
 {
     uint32_t tmpVal = 0;
     uint8_t cacheEn = 0;
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
     cacheEn = BL_IS_REG_BIT_SET(L1C_BASE,L1C_CACHEABLE);
     if(cacheEn != 0){
         tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CACHEABLE);
         BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
     }
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
     if(wrap == ENABLE){
         tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_WRAP_DIS);
@@ -117,7 +117,7 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Set_Wrap(BL_Fun_Type wrap)
         tmpVal=BL_SET_REG_BIT(tmpVal,L1C_WRAP_DIS);
     }
     BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
-    
+
     if(cacheEn != 0){
         tmpVal=BL_SET_REG_BIT(tmpVal,L1C_CACHEABLE);
         BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
@@ -141,18 +141,18 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Set_Way_Disable(uint8_t disableVal)
 {
     uint32_t tmpVal = 0;
     uint8_t cacheEn = 0;
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
     cacheEn = BL_IS_REG_BIT_SET(L1C_BASE,L1C_CACHEABLE);
     if(cacheEn != 0){
         tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CACHEABLE);
         BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
     }
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,L1C_WAY_DIS,disableVal);
     BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
-    
+
     if(cacheEn != 0){
         tmpVal=BL_SET_REG_BIT(tmpVal,L1C_CACHEABLE);
         BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
@@ -175,7 +175,7 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION L1C_IROM_2T_Access_Set(uint8_t enable)
 {
     uint32_t tmpVal = 0;
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
     if(enable){
         tmpVal=BL_SET_REG_BIT(tmpVal,L1C_IROM_2T_ACCESS);
@@ -183,7 +183,7 @@ BL_Err_Type ATTR_TCM_SECTION L1C_IROM_2T_Access_Set(uint8_t enable)
         tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_IROM_2T_ACCESS);
     }
     BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
-    
+
     return SUCCESS;
 }
 #endif
@@ -199,20 +199,20 @@ BL_Err_Type ATTR_TCM_SECTION L1C_IROM_2T_Access_Set(uint8_t enable)
 BL_Err_Type L1C_BMX_Init(L1C_BMX_Cfg_Type *l1cBmxCfg)
 {
     uint32_t tmpVal = 0;
-    
+
     CHECK_PARAM((l1cBmxCfg->timeoutEn)<=0xF);
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,L1C_BMX_TIMEOUT_EN,l1cBmxCfg->timeoutEn);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,L1C_BMX_ERR_EN,l1cBmxCfg->errEn);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,L1C_BMX_ARB_MODE,l1cBmxCfg->arbMod);
     BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
-    
+
 #ifndef BFLB_USE_HAL_DRIVER
     Interrupt_Handler_Register(L1C_BMX_ERR_IRQn,L1C_BMX_ERR_IRQHandler);
     Interrupt_Handler_Register(L1C_BMX_TO_IRQn,L1C_BMX_TO_IRQHandler);
 #endif
-    
+
     return SUCCESS;
 }
 
@@ -227,11 +227,11 @@ BL_Err_Type L1C_BMX_Init(L1C_BMX_Cfg_Type *l1cBmxCfg)
 BL_Err_Type L1C_BMX_Addr_Monitor_Enable(void)
 {
     uint32_t tmpVal = 0;
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN);
     tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_BMX_ERR_ADDR_DIS);
     BL_WR_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN,tmpVal);
-    
+
     return SUCCESS;
 }
 
@@ -246,11 +246,11 @@ BL_Err_Type L1C_BMX_Addr_Monitor_Enable(void)
 BL_Err_Type L1C_BMX_Addr_Monitor_Disable(void)
 {
     uint32_t tmpVal = 0;
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN);
     tmpVal=BL_SET_REG_BIT(tmpVal,L1C_BMX_ERR_ADDR_DIS);
     BL_WR_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN,tmpVal);
-    
+
     return SUCCESS;
 }
 
@@ -265,11 +265,11 @@ BL_Err_Type L1C_BMX_Addr_Monitor_Disable(void)
 BL_Err_Type L1C_BMX_BusErrResponse_Enable(void)
 {
     uint32_t tmpVal = 0;
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
     tmpVal=BL_SET_REG_BIT(tmpVal,L1C_BMX_ERR_EN);
     BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
-    
+
     return SUCCESS;
 }
 
@@ -284,11 +284,11 @@ BL_Err_Type L1C_BMX_BusErrResponse_Enable(void)
 BL_Err_Type L1C_BMX_BusErrResponse_Disable(void)
 {
     uint32_t tmpVal = 0;
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
     tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_BMX_ERR_EN);
     BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
-    
+
     return SUCCESS;
 }
 
@@ -303,9 +303,9 @@ BL_Err_Type L1C_BMX_BusErrResponse_Disable(void)
 BL_Sts_Type L1C_BMX_Get_Status(L1C_BMX_BUS_ERR_Type errType)
 {
     uint32_t tmpVal = 0;
-    
+
     CHECK_PARAM(IS_L1C_BMX_BUS_ERR_TYPE(errType));
-    
+
     tmpVal=BL_RD_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN);
     if(errType==L1C_BMX_BUS_ERR_TRUSTZONE_DECODE){
         return BL_GET_REG_BITS_VAL(tmpVal,L1C_BMX_ERR_TZ)?SET:RESET;
@@ -341,7 +341,7 @@ BL_Err_Type L1C_BMX_ERR_INT_Callback_Install(L1C_BMX_ERR_INT_Type intType,intCal
     CHECK_PARAM(IS_L1C_BMX_ERR_INT_TYPE(intType));
 
     l1cBmxErrIntCbfArra[intType] = cbFun;
-    
+
     return SUCCESS;
 }
 
@@ -357,13 +357,13 @@ BL_Err_Type L1C_BMX_ERR_INT_Callback_Install(L1C_BMX_ERR_INT_Type intType,intCal
 void L1C_BMX_ERR_IRQHandler(void)
 {
     L1C_BMX_ERR_INT_Type intType;
-    
+
     for(intType=L1C_BMX_ERR_INT_ERR;intType<L1C_BMX_ERR_INT_ALL;intType++){
         if(l1cBmxErrIntCbfArra[intType]!=NULL){
             l1cBmxErrIntCbfArra[intType]();
         }
     }
-    
+
     while(1){
         MSG("L1C_BMX_ERR_IRQHandler\r\n");
         BL602_Delay_MS(1000);
@@ -385,7 +385,7 @@ BL_Err_Type L1C_BMX_TIMEOUT_INT_Callback_Install(L1C_BMX_TO_INT_Type intType,int
     CHECK_PARAM(IS_L1C_BMX_TO_INT_TYPE(intType));
 
     l1cBmxToIntCbfArra[intType] = cbFun;
-    
+
     return SUCCESS;
 }
 
@@ -401,13 +401,13 @@ BL_Err_Type L1C_BMX_TIMEOUT_INT_Callback_Install(L1C_BMX_TO_INT_Type intType,int
 void L1C_BMX_TO_IRQHandler(void)
 {
     L1C_BMX_TO_INT_Type intType;
-    
+
     for(intType=L1C_BMX_TO_INT_TIMEOUT;intType<L1C_BMX_TO_INT_ALL;intType++){
         if(l1cBmxToIntCbfArra[intType]!=NULL){
             l1cBmxToIntCbfArra[intType]();
         }
     }
-    
+
     while(1){
         MSG("L1C_BMX_TO_IRQHandler\r\n");
         BL602_Delay_MS(1000);

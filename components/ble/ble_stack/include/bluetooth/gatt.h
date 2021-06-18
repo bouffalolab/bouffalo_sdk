@@ -990,7 +990,7 @@ int bt_gatt_exchange_mtu(struct bt_conn *conn,
 			 struct bt_gatt_exchange_params *params);
 
 #if defined(CONFIG_BLE_AT_CMD)
-int bt_at_gatt_exchange_mtu(struct bt_conn *conn, struct bt_gatt_exchange_params *params,u16_t mtu_size);			 
+int bt_at_gatt_exchange_mtu(struct bt_conn *conn, struct bt_gatt_exchange_params *params,u16_t mtu_size);
 #endif
 
 struct bt_gatt_discover_params;

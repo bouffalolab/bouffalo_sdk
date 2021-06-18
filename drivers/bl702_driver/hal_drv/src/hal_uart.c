@@ -1,24 +1,24 @@
 /**
  * @file hal_uart.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_uart.h"
 #include "hal_dma.h"
@@ -45,11 +45,11 @@ static uart_device_t uartx_device[UART_MAX_INDEX] =
 #endif
 };
 /**
- * @brief 
- * 
- * @param dev 
- * @param oflag 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
  */
 int uart_open(struct device *dev, uint16_t oflag)
 {
@@ -61,7 +61,7 @@ int uart_open(struct device *dev, uint16_t oflag)
     UART_IntMask(uart_device->id, UART_INT_ALL, MASK);
     /* disable uart before config */
     UART_Disable(uart_device->id, UART_TXRX);
-    
+
     uint32_t uart_clk = peripheral_clock_get(PERIPHERAL_CLOCK_UART);
     uart_cfg.baudRate = uart_device->baudrate;
     uart_cfg.dataBits = uart_device->databits;
@@ -98,8 +98,8 @@ int uart_open(struct device *dev, uint16_t oflag)
 #ifdef BSP_USING_UART0
         if (uart_device->id == UART0_ID)
             Interrupt_Handler_Register(UART0_IRQn, UART0_IRQ);
-#endif   
-#ifdef BSP_USING_UART1         
+#endif
+#ifdef BSP_USING_UART1
         if (uart_device->id == UART1_ID)
             Interrupt_Handler_Register(UART1_IRQn, UART1_IRQ);
 #endif
@@ -119,10 +119,10 @@ int uart_open(struct device *dev, uint16_t oflag)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @return int
  */
 int uart_close(struct device *dev)
 {
@@ -132,12 +132,12 @@ int uart_close(struct device *dev)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param cmd 
- * @param args 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param cmd
+ * @param args
+ * @return int
  */
 int uart_control(struct device *dev, int cmd, void *args)
 {
@@ -215,8 +215,8 @@ int uart_control(struct device *dev, int cmd, void *args)
 #ifdef BSP_USING_UART0
         if (uart_device->id == UART0_ID)
             Interrupt_Handler_Register(UART0_IRQn, UART0_IRQ);
-#endif   
-#ifdef BSP_USING_UART1         
+#endif
+#ifdef BSP_USING_UART1
         if (uart_device->id == UART1_ID)
             Interrupt_Handler_Register(UART1_IRQn, UART1_IRQ);
 #endif
@@ -238,7 +238,7 @@ int uart_control(struct device *dev, int cmd, void *args)
         tmpVal = BL_CLR_REG_BIT(tmpVal,UART_DMA_TX_EN);
         BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
         break;
-    }        
+    }
     case DEVICE_CTRL_RX_DMA_SUSPEND:
     {
         uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
@@ -259,7 +259,7 @@ int uart_control(struct device *dev, int cmd, void *args)
         tmpVal = BL_SET_REG_BIT(tmpVal,UART_DMA_RX_EN);
         BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
         break;
-    }        
+    }
     case DEVICE_CTRL_UART_GET_TX_FIFO /* constant-expression */:
         return UART_GetTxFifoCount(uart_device->id);
     case DEVICE_CTRL_UART_GET_RX_FIFO /* constant-expression */:
@@ -271,13 +271,13 @@ int uart_control(struct device *dev, int cmd, void *args)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
@@ -287,7 +287,7 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
         struct device *dma_ch = (struct device *)uart_device->tx_dma;
         if (!dma_ch)
             return -1;
-            
+
         if(uart_device->id == 0)
         {
             dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART0_TDR, size);
@@ -303,13 +303,13 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
     return UART_SendData(uart_device->id, (uint8_t *)buffer, size);
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int ATTR_TCM_SECTION uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
@@ -319,7 +319,7 @@ int ATTR_TCM_SECTION uart_read(struct device *dev, uint32_t pos, void *buffer, u
         struct device *dma_ch = (struct device *)uart_device->rx_dma;
         if (!dma_ch)
             return -1;
-                    
+
         if(uart_device->id == 0)
         {
             dma_reload(dma_ch, (uint32_t)DMA_ADDR_UART0_RDR, (uint32_t)buffer, size);
@@ -334,12 +334,12 @@ int ATTR_TCM_SECTION uart_read(struct device *dev, uint32_t pos, void *buffer, u
     return UART_ReceiveData(uart_device->id, (uint8_t *)buffer, size);
 }
 /**
- * @brief 
- * 
- * @param index 
- * @param name 
- * @param flag 
- * @return int 
+ * @brief
+ *
+ * @param index
+ * @param name
+ * @param flag
+ * @return int
  */
 int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
 {
@@ -363,9 +363,9 @@ int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
     return device_register(dev, name, flag);
 }
 /**
- * @brief 
- * 
- * @param handle 
+ * @brief
+ *
+ * @param handle
  */
 void ATTR_TCM_SECTION uart_isr(uart_device_t *handle)
 {
@@ -445,8 +445,8 @@ void ATTR_TCM_SECTION uart_isr(uart_device_t *handle)
 
 #ifdef BSP_USING_UART0
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void ATTR_TCM_SECTION UART0_IRQ(void)
 {
@@ -455,8 +455,8 @@ void ATTR_TCM_SECTION UART0_IRQ(void)
 #endif
 #ifdef BSP_USING_UART1
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void UART1_IRQ(void)
 {

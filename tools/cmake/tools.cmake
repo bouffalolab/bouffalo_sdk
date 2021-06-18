@@ -54,7 +54,7 @@ function(generate_library)
             add_dependencies(${library_name} ${lib})
             target_link_libraries(${library_name} ${lib})
             else()
-            message(FATAL_ERROR "${lib} is not a target")            
+            message(FATAL_ERROR "${lib} is not a target")
             endif()
         endforeach()
     endif()
@@ -91,7 +91,7 @@ function(generate_bin)
     get_filename_component(current_relative_dir_name ${CMAKE_CURRENT_LIST_DIR} NAME)
     string(REGEX REPLACE "(.*)/${current_relative_dir_name}$" "\\1" above_absolute_dir ${CMAKE_CURRENT_LIST_DIR})
     get_filename_component(above_relative_dir_name ${above_absolute_dir} NAME)
-    
+
     # Add common options
     add_compile_options(${GLOBAL_C_FLAGS})
     add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=c99>)
@@ -116,8 +116,8 @@ function(generate_bin)
         endif()
 
     endif()
-	
-	file(MAKE_DIRECTORY ${OUTPUT_DIR})    
+
+	file(MAKE_DIRECTORY ${OUTPUT_DIR})
 	set(HEX_FILE ${OUTPUT_DIR}/${target_name}.hex)
     set(BIN_FILE ${OUTPUT_DIR}/${target_name}.bin)
     set(MAP_FILE ${OUTPUT_DIR}/${target_name}.map)
@@ -130,7 +130,7 @@ function(generate_bin)
             endif()
             list(APPEND SRCS ${src})
         endforeach()
-        
+
     endif()
 
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/bflb_platform.c)
@@ -153,8 +153,8 @@ function(generate_bin)
     endforeach()
 
     # Add definitions private
-    if(TARGET_REQUIRED_PRIVATE_OPTIONS)   
-    target_compile_options(${target_name}.elf PRIVATE ${TARGET_REQUIRED_PRIVATE_OPTIONS})        
+    if(TARGET_REQUIRED_PRIVATE_OPTIONS)
+    target_compile_options(${target_name}.elf PRIVATE ${TARGET_REQUIRED_PRIVATE_OPTIONS})
     endif()
 
     add_dependencies(${target_name}.elf ${CHIP}_driver)
@@ -168,11 +168,11 @@ function(generate_bin)
     endif()
 
     if(TARGET_REQUIRED_LIBS)
-        target_link_libraries(${target_name}.elf ${TARGET_REQUIRED_LIBS})       
+        target_link_libraries(${target_name}.elf ${TARGET_REQUIRED_LIBS})
     endif()
-    
+
     target_link_libraries(${target_name}.elf m)
-    
+
     add_custom_command(TARGET ${target_name}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${target_name}.elf> ${BIN_FILE}
         COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${target_name}.elf> >${ASM_FILE}

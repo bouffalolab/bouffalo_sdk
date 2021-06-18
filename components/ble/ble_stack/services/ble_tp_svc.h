@@ -35,5 +35,5 @@ NOTES
 void ble_tp_init();
 struct bt_gatt_attr *get_attr(u8_t index);
 
-#endif 
+#endif
 

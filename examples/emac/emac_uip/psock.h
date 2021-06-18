@@ -109,17 +109,17 @@ struct psock {
 			    psock functions. */
   const u8_t *sendptr;   /* Pointer to the next data to be sent. */
   u8_t *readptr;         /* Pointer to the next data to be read. */
-  
+
   char *bufptr;          /* Pointer to the buffer used for buffering
 			    incoming data. */
-  
+
   u16_t sendlen;         /* The number of bytes left to be sent. */
   u16_t readlen;         /* The number of bytes left to be read. */
 
   struct psock_buf buf;  /* The structure holding the state of the
 			    input buffer. */
   unsigned int bufsize;  /* The size of the input buffer. */
-  
+
   unsigned char state;   /* The state of the protosocket. */
 };
 
@@ -353,13 +353,13 @@ char psock_newdata(struct psock *s);
    PSOCK_BEGIN(s);
 
    PSOCK_WAIT_UNTIL(s, PSOCK_NEWADATA(s) || timer_expired(t));
-   
+
    if(PSOCK_NEWDATA(s)) {
      PSOCK_READTO(s, '\n');
    } else {
      handle_timed_out(s);
    }
-   
+
    PSOCK_END(s);
  }
  \endcode

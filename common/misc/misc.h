@@ -1,24 +1,24 @@
 /**
  * @file misc.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #ifndef _MISC_H
 #define _MISC_H
@@ -86,9 +86,9 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE__ void disable_irq(void)
 /**
  * @brief Error type definition
  */
-typedef enum 
+typedef enum
 {
-  SUCCESS  = 0, 
+  SUCCESS  = 0,
   ERROR   = 1,
   TIMEOUT = 2,
   INVALID = 3, /* invalid arguments */
@@ -98,49 +98,49 @@ typedef enum
 /**
  * @brief Functional type definition
  */
-typedef enum 
+typedef enum
 {
-  DISABLE  = 0, 
+  DISABLE  = 0,
   ENABLE   = 1,
 }BL_Fun_Type;
 
 /**
  * @brief Status type definition
  */
-typedef enum 
+typedef enum
 {
-  RESET  = 0, 
+  RESET  = 0,
   SET   = 1,
 }BL_Sts_Type;
 
 /**
  * @brief Mask type definition
  */
-typedef enum 
+typedef enum
 {
-  UNMASK = 0, 
+  UNMASK = 0,
   MASK = 1
 }BL_Mask_Type;
 
 /**
  * @brief Logical status Type definition
  */
-typedef enum 
+typedef enum
 {
-  LOGIC_LO = 0, 
+  LOGIC_LO = 0,
   LOGIC_HI = !LOGIC_LO
 }LogicalStatus;
 
 /**
  * @brief Active status Type definition
  */
-typedef enum 
+typedef enum
 {
-  DEACTIVE = 0, 
+  DEACTIVE = 0,
   ACTIVE = !DEACTIVE
 }ActiveStatus;
 
-/**  
+/**
  *  @brief Interrupt callback function type
  */
 typedef void (intCallback_Type)(void);
@@ -152,7 +152,7 @@ typedef void( *pFunc )( void );
 #ifndef NULL
 #define NULL   0
 #endif
- 
+
 /*@} end of group COMMON_Public_Constants */
 
 /** @defgroup  COMMON_Public_Macros

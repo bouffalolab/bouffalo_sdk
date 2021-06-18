@@ -347,7 +347,7 @@ static bool keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
             break;
         }
         last_key = act_key;
-        
+
     } else {
         data->state = LV_INDEV_STATE_REL;
     }
@@ -397,12 +397,12 @@ static uint32_t keypad_get_key(void)
             old_key_num = 0;
         }
     }
-    else 
+    else
     {
         old_key_num = 0;
         old_key_v = key;
     }
-    
+
     return last_key;
 }
 

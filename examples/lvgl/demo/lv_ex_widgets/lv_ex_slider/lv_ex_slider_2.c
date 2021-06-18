@@ -13,13 +13,13 @@ void lv_ex_slider_2(void)
     lv_obj_align(slider, NULL, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_event_cb(slider, slider_event_cb);
     lv_slider_set_range(slider, 0, 100);
-    
+
     /* Create a label below the slider */
     slider_label = lv_label_create(lv_scr_act(), NULL);
     lv_label_set_text(slider_label, "0");
     lv_obj_set_auto_realign(slider_label, true);
     lv_obj_align(slider_label, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
-    
+
     /* Create an informative label */
     lv_obj_t * info = lv_label_create(lv_scr_act(), NULL);
     lv_label_set_text(info, "Welcome to the slider+label demo!\n"

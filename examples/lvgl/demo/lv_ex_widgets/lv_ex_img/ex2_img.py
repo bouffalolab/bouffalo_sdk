@@ -12,7 +12,7 @@ except:
       cogwheel_img_data = f.read()
   except:
     print("Could not find binary img_cogwheel file")
-    
+
 # create the cogwheel image data
 
 cogwheel_img_dsc = lv.img_dsc_t(
@@ -25,21 +25,21 @@ cogwheel_img_dsc = lv.img_dsc_t(
 
 def slider_event_cb(slider,event):
     if event == lv.EVENT.VALUE_CHANGED:
-      # Recolor the image based on the sliders' values 
+      # Recolor the image based on the sliders' values
       color  = lv.color_make(red_slider.get_value(), green_slider.get_value(), blue_slider.get_value())
       intense = intense_slider.get_value()
       img1.set_style_local_image_recolor_opa(lv.img.PART.MAIN, lv.STATE.DEFAULT, intense)
       img1.set_style_local_image_recolor(lv.img.PART.MAIN, lv.STATE.DEFAULT, color)
 
-# Create a set of RGB sliders 
-# Use the red one as a base for all the settings 
+# Create a set of RGB sliders
+# Use the red one as a base for all the settings
 red_slider = lv.slider(lv.scr_act(), None)
 red_slider.set_range(0, 255)
 red_slider.set_size(SLIDER_WIDTH, 200)   # Be sure it's a vertical slider
 red_slider.set_style_local_bg_color(lv.slider.PART.INDIC, lv.STATE.DEFAULT, lv_colors.RED)
 red_slider.set_event_cb(slider_event_cb)
 
-# Copy it for the other three sliders 
+# Copy it for the other three sliders
 green_slider = lv.slider(lv.scr_act(), red_slider)
 green_slider.set_style_local_bg_color(lv.slider.PART.INDIC, lv.STATE.DEFAULT, lv_colors.LIME)
 green_slider.set_event_cb(slider_event_cb)

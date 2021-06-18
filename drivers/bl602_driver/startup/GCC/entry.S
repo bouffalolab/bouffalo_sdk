@@ -48,7 +48,7 @@ _enter:
      * called. */
     .weak __StackTop
     la sp, __StackTop
-    
+
     /* Intial the mtvt, MUST BE 64 bytes aligned*/
     .weak __Vectors
     la t0, __Vectors

@@ -1,24 +1,24 @@
 /**
  * @file hal_sec_hash.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright 2019-2030 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_sec_hash.h"
 #include "bl702_sec_eng.h"
@@ -31,11 +31,11 @@ static sec_hash_device_t sec_hashx_device[SEC_HASH_MAX_INDEX] =
 };
 static SEC_Eng_SHA256_Ctx shaCtx;
 /**
- * @brief 
- * 
- * @param dev 
- * @param oflag 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
  */
 int sec_hash_open(struct device *dev, uint16_t oflag)
 {
@@ -61,15 +61,15 @@ int sec_hash_open(struct device *dev, uint16_t oflag)
             break;
         default:
             ret=-1;
-            break;            
+            break;
     }
     return ret;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @return int
  */
 int sec_hash_close(struct device *dev)
 {
@@ -79,12 +79,12 @@ int sec_hash_close(struct device *dev)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param cmd 
- * @param args 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param cmd
+ * @param args
+ * @return int
  */
 int sec_hash_control(struct device *dev, int cmd, void *args)
 {
@@ -93,13 +93,13 @@ int sec_hash_control(struct device *dev, int cmd, void *args)
 }
 
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int sec_hash_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
@@ -123,19 +123,19 @@ int sec_hash_write(struct device *dev, uint32_t pos, const void *buffer, uint32_
             break;
         default:
             ret=-1;
-            break;            
+            break;
     }
     return ret;
 }
 
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int sec_hash_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
@@ -161,19 +161,19 @@ int sec_hash_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
             break;
         default:
             ret=-1;
-            break;            
+            break;
     }
     return ret;
 }
 
 /**
- * @brief 
- * 
- * @param index 
- * @param type 
- * @param name 
- * @param flag 
- * @return int 
+ * @brief
+ *
+ * @param index
+ * @param type
+ * @param name
+ * @param flag
+ * @return int
  */
 static int sec_hash_sha_register(enum sec_hash_index_type index, enum sec_hash_type type,const char *name, uint16_t flag)
 {
@@ -199,12 +199,12 @@ static int sec_hash_sha_register(enum sec_hash_index_type index, enum sec_hash_t
 }
 
 /**
- * @brief 
- * 
- * @param index 
- * @param name 
- * @param flag 
- * @return int 
+ * @brief
+ *
+ * @param index
+ * @param name
+ * @param flag
+ * @return int
  */
 int sec_hash_sha256_register(enum sec_hash_index_type index, const char *name, uint16_t flag)
 {
@@ -212,12 +212,12 @@ int sec_hash_sha256_register(enum sec_hash_index_type index, const char *name, u
 }
 
 /**
- * @brief 
- * 
- * @param index 
- * @param name 
- * @param flag 
- * @return int 
+ * @brief
+ *
+ * @param index
+ * @param name
+ * @param flag
+ * @return int
  */
 int sec_hash_sha224_register(enum sec_hash_index_type index, const char *name, uint16_t flag)
 {
@@ -225,17 +225,17 @@ int sec_hash_sha224_register(enum sec_hash_index_type index, const char *name, u
 }
 
 /**
- * @brief 
- * 
- * @param handle 
+ * @brief
+ *
+ * @param handle
  */
 void sec_hash_isr(sec_hash_device_t *handle)
 {
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void SEC_SHA_IRQ(void)
 {

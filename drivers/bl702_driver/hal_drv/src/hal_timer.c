@@ -1,24 +1,24 @@
 /**
  * @file hal_timer.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_timer.h"
 #include "timer_config.h"
@@ -31,10 +31,10 @@
 void TIMER_CH0_IRQ(void);
 void TIMER_CH1_IRQ(void);
 
-static timer_device_t timerx_device[TIMER_MAX_INDEX] = 
+static timer_device_t timerx_device[TIMER_MAX_INDEX] =
 {
 #ifdef BSP_USING_TIMER_CH0
-    TIMER_CH0_CONFIG,    
+    TIMER_CH0_CONFIG,
 #endif
 #ifdef BSP_USING_TIMER_CH1
     TIMER_CH1_CONFIG,
@@ -42,11 +42,11 @@ static timer_device_t timerx_device[TIMER_MAX_INDEX] =
 };
 
 /**
- * @brief 
- * 
- * @param dev 
- * @param oflag 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
  */
 int timer_open(struct device *dev, uint16_t oflag)
 {
@@ -91,10 +91,10 @@ int timer_open(struct device *dev, uint16_t oflag)
 }
 
 /**
- * @brief 
- * 
- * @param dev 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @return int
  */
 int timer_close(struct device *dev)
 {
@@ -104,12 +104,12 @@ int timer_close(struct device *dev)
 }
 
 /**
- * @brief 
- * 
- * @param dev 
- * @param cmd 
- * @param args 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param cmd
+ * @param args
+ * @return int
  */
 int timer_control(struct device *dev, int cmd, void *args)
 {
@@ -178,7 +178,7 @@ int timer_control(struct device *dev, int cmd, void *args)
         uint32_t offset = __builtin_ctz((uint32_t)timer_user_cfg->comp_it);
         uint32_t timeout = (timer_user_cfg->timeout_val * 144);
         TIMER_SetPreloadValue(timer_device->ch, 0);
-        
+
         while((0 <= offset) && (offset < 4))
         {
             if((uint32_t)timer_user_cfg->comp_it & (1 << offset))
@@ -245,12 +245,12 @@ int timer_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 
 /**
  * @brief timer register
- * 
- * @param index 
- * @param name 
- * @param flag 
- * @param timer_user_cfg 
- * @return int 
+ *
+ * @param index
+ * @param name
+ * @param flag
+ * @param timer_user_cfg
+ * @return int
  */
 
 int timer_register(enum timer_index_type index, const char *name, uint16_t flag)
@@ -267,7 +267,7 @@ int timer_register(enum timer_index_type index, const char *name, uint16_t flag)
     dev->control = timer_control;
     // dev->write = NULL;
     // dev->read = NULL;
-    
+
     dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_TIMER;
     dev->handle = NULL;
@@ -306,13 +306,13 @@ void timer_isr(timer_device_t *handle)
         BL_WR_WORD(tmpAddr,BL_SET_REG_BIT(tmpVal,TIMER_TCLR_2));
         handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP2);
     }
-    
+
 }
 
 #ifdef BSP_USING_TIMER_CH0
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void TIMER_CH0_IRQ(void)
 {
@@ -324,8 +324,8 @@ void TIMER_CH0_IRQ(void)
 
 #ifdef BSP_USING_TIMER_CH1
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void TIMER_CH1_IRQ(void)
 {

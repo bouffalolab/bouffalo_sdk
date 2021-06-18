@@ -33,7 +33,7 @@
   *
   ******************************************************************************
   */
-  
+
 #include "bl602_romdriver.h"
 #include <string.h>
 
@@ -60,14 +60,14 @@
 
 /** @defgroup ROMDRIVER_Private_Variables
  *  @{
- */                               
+ */
 
 /*@} end of group ROMDRIVER_Private_Variables */
 
 /** @defgroup ROMDRIVER_Global_Variables
  *  @{
- */ 
- 
+ */
+
 
 uint32_t const romDriverTable[]={
     0x06020002,

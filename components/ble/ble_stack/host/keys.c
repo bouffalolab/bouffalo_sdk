@@ -257,9 +257,9 @@ void bt_keys_clear(struct bt_keys *keys)
     if (keys->keys & BT_KEYS_IRK) {
 		bt_id_del(keys);
 	}
-    
+
     memset(keys, 0, sizeof(*keys));
-    
+
     #if defined (CONFIG_BT_SETTINGS)
     ef_del_env(NV_KEY_POOL);
     #endif
@@ -316,7 +316,7 @@ int bt_keys_store(struct bt_keys *keys)
 {
 #if defined(BFLB_BLE)
     int err;
-    err = bt_settings_set_bin(NV_KEY_POOL, (const u8_t *)&key_pool[0], sizeof(key_pool)); 
+    err = bt_settings_set_bin(NV_KEY_POOL, (const u8_t *)&key_pool[0], sizeof(key_pool));
     return err;
 #else
 	char val[BT_SETTINGS_SIZE(BT_KEYS_STORAGE_LEN)];
@@ -470,11 +470,11 @@ static int keys_commit(void)
 
 //SETTINGS_STATIC_HANDLER_DEFINE(bt_keys, "bt/keys", NULL, keys_set, keys_commit,
 //			       NULL);
-				   
+
 #if defined(BFLB_BLE)
 int bt_keys_load(void)
 {
-    return bt_settings_get_bin(NV_KEY_POOL, (u8_t *)&key_pool[0], sizeof(key_pool), NULL);    
+    return bt_settings_get_bin(NV_KEY_POOL, (u8_t *)&key_pool[0], sizeof(key_pool), NULL);
 }
 #endif
 

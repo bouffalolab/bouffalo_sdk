@@ -183,7 +183,7 @@ typedef struct __packed
   uint8_t block_descriptor_len;
 } scsi_mode_sense6_resp_t;
 
-typedef struct 
+typedef struct
 {
   uint8_t cmd_code;
 
@@ -206,7 +206,7 @@ typedef struct
   uint8_t control;
 }scsi_mode_sense_10_cmd_t;
 
-typedef struct 
+typedef struct
 {
   uint8_t mode_data_length_high;
   uint8_t mode_data_length_low;

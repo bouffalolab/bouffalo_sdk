@@ -36,7 +36,7 @@ static void work_queue_main(void *p1)
 {
     struct k_work *work;
     UNUSED(p1);
-    
+
     while (1) {
         work = k_fifo_get(&g_work_queue_main.fifo, K_FOREVER);
 
@@ -77,7 +77,7 @@ static void work_timeout(void *timer)
 	if(w->work_q == NULL){
         return;
     }
-	
+
     /* submit work to workqueue */
 	if(!atomic_test_bit(w->work.flags, K_WORK_STATE_PERIODIC)){
 	    k_work_submit_to_queue(w->work_q, &w->work);
@@ -184,7 +184,7 @@ s32_t k_delayed_work_remaining_get(struct k_delayed_work *work)
     }
 
     timer = &work->timer;
-    remain = timer->timeout - (k_now_ms() - timer->start_ms); 
+    remain = timer->timeout - (k_now_ms() - timer->start_ms);
     if (remain < 0) {
         remain = 0;
     }
@@ -195,7 +195,7 @@ void k_delayed_work_del_timer(struct k_delayed_work *work)
 {
     if(NULL == work || NULL == work->timer.timer.hdl)
         return;
-    
+
     k_timer_delete(&work->timer);
     work->timer.timer.hdl = NULL;
 }

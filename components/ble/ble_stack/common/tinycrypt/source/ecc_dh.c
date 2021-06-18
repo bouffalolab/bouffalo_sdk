@@ -1,6 +1,6 @@
 /* ec_dh.c - TinyCrypt implementation of EC-DH */
 
-/* 
+/*
  * Copyright (c) 2014, Kenneth MacKay
  * All rights reserved.
  *
@@ -63,7 +63,7 @@
 #include <string.h>
 #if defined(BL_MCU_SDK)
 #include "ecc_platform_specific.h"
-#endif 
+#endif
 
 #if default_RNG_defined
 static uECC_RNG_Function g_rng_function = &default_CSPRNG;

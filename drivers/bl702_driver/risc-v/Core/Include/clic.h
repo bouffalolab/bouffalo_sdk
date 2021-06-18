@@ -18,4 +18,4 @@
 #define CLIC_INTCFG         0x800
 #define CLIC_CFG            0xc00
 
-#endif /* _SIFIVE_CLIC_H */ 
+#endif /* _SIFIVE_CLIC_H */

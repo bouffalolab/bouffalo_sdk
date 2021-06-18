@@ -4,7 +4,7 @@ def event_handler(source,evt):
             print("State: checked")
         else:
             print("State: unchecked")
-            
+
 # create a checkbox
 cb = lv.checkbox(lv.scr_act(),None)
 cb.set_text("I agree to terms\nand conditions.")

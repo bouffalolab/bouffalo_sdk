@@ -63,10 +63,10 @@ static u8_t notify_func(struct bt_conn *conn,
 
     if (!params->value) {
         BT_WARN("Unsubscribed\r\n");
-        params->value_handle = 0U;      
+        params->value_handle = 0U;
         return BT_GATT_ITER_STOP;
     }
-   
+
     if(!time){
         time = k_now_ms();
     }
@@ -76,7 +76,7 @@ static u8_t notify_func(struct bt_conn *conn,
         time = k_now_ms();
         len = 0;
     }
-          
+
    BT_WARN("Notification: data length %u\r\n", length);
    if(length)
     {
@@ -95,7 +95,7 @@ static void ble_write_data_task(void *pvParameters)
     uint8_t buf[20] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
      while(1)
      {
-            k_sem_take(&write_data_poll_sem, K_FOREVER);      
+            k_sem_take(&write_data_poll_sem, K_FOREVER);
             BT_WARN("ble_write_data\r\n");
             // Send data to server
             error =  bt_gatt_write_without_response(ble_tp_conn,char_hdl.tp_wr_hdl,buf,20,0);
@@ -130,13 +130,13 @@ static void ble_subscribe()
     {
         created_write_data_task = 1;
         BT_WARN("Create write data  task success .\n");
-    }       
-    else        
-    {      
+    }
+    else
+    {
          created_write_data_task = 0;
          BT_WARN("Create write data taskfail .\n");
      }
-          
+
 }
 
 /*************************************************************************
@@ -166,10 +166,10 @@ static uint8_t ble_discover_func(struct bt_conn *conn, const struct bt_gatt_attr
     switch (params->type) {
         case BT_GATT_DISCOVER_PRIMARY:
             break;
-            
+
         case BT_GATT_DISCOVER_SECONDARY:
             break;
-            
+
         case BT_GATT_DISCOVER_CHARACTERISTIC:
             gatt_chrc = attr->user_data;
             bt_uuid_to_str(gatt_chrc->uuid, str, sizeof(str));
@@ -189,9 +189,9 @@ static uint8_t ble_discover_func(struct bt_conn *conn, const struct bt_gatt_attr
             {
                 char_hdl.tp_notify_hdl = gatt_chrc->value_handle;
                 BT_WARN("TP SERVICE, char_hdl.tp_notify_hdl: %d\n",  char_hdl.tp_notify_hdl);
-            }            
+            }
             break;
-            
+
         case BT_GATT_DISCOVER_INCLUDE:
             break;
 
@@ -200,10 +200,10 @@ static uint8_t ble_discover_func(struct bt_conn *conn, const struct bt_gatt_attr
             {
                char_hdl.tp_ccc_hdl = attr->handle;
                BT_WARN("TP SERVICE,  char_hdl.tp_ccc_hdl: %d\n",   char_hdl.tp_ccc_hdl);
-               
+
             }
             break;
-            
+
         default:
             break;
     }
@@ -291,15 +291,15 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
 	} else {
 		BT_WARN("ble tp exchange mtu size failure, err: %d\n", ret);
 	}
-        
+
 }
 
 /*************************************************************************
-NAME    
+NAME
     ble_tp_disconnected
 */
 static void ble_tp_disconnected(struct bt_conn *conn, u8_t reason)
-{   
+{
      BT_WARN("%s\n",__func__);
      ble_tp_conn = NULL;
      if(created_write_data_task)
@@ -312,7 +312,7 @@ static void ble_tp_disconnected(struct bt_conn *conn, u8_t reason)
 
 
 /*************************************************************************
-NAME    
+NAME
     ble_tp_init
 */
 void ble_tp_init()

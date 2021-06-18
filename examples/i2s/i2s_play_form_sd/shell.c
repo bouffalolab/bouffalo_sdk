@@ -29,7 +29,7 @@
   #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
-const char * fatfs_table[]= 
+const char * fatfs_table[]=
 {
 	"FR_OK：成功",				                             /* (0) Succeeded */
 	"FR_DISK_ERR：底层硬件错误",			                 /* (1) A hard error occurred in the low level disk I/O layer */
@@ -161,7 +161,7 @@ static int cmd_pwd( size_t argc, char **argv)
 		return -1;
 	}
 	MSG( "%s\r\n", path);
-	
+
 	return 0;
 }
 
@@ -172,7 +172,7 @@ static int cmd_trunc( size_t argc, char **argv)
 	int err;
 	uint32_t temp;
 
-	if (argc > 2) 
+	if (argc > 2)
 	{
 		strcpy(path, argv[1]);
 		length = strtol(argv[2], NULL, 0);
@@ -315,7 +315,7 @@ static int cmd_read( size_t argc, char **argv)
 		}
 	}
 
-	while (count > 0) 
+	while (count > 0)
 	{
 		uint32_t read;
 		uint8_t buf[16];
@@ -385,7 +385,7 @@ static int cmd_write( size_t argc, char **argv)
 	}
 
 	if (offset < 0) {
-		err = f_lseek(&file, f_size(&file)); // set seek end 
+		err = f_lseek(&file, f_size(&file)); // set seek end
 	} else {
 		err = f_lseek(&file, offset);
 	}

@@ -377,7 +377,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Chip_Erase(SPI_Flash_Cfg_Type *flashCfg)
     if(stat!=SUCCESS){
         return stat;
     }
-    
+
     if(((uint32_t)&flashCmd)%4==0){
         BL602_MemSet4((uint32_t *)&flashCmd,0,sizeof(flashCmd)/4);
     }else{
@@ -416,7 +416,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Sector_Erase(SPI_Flash_Cfg_Type *flashCfg,ui
 {
     uint32_t cnt=0;
     SF_Ctrl_Cmd_Cfg_Type flashCmd;
-    
+
     BL_Err_Type stat=SFlash_Write_Enable(flashCfg);
     if(stat!=SUCCESS){
         return stat;
@@ -463,7 +463,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Blk32_Erase(SPI_Flash_Cfg_Type *flashCfg,uin
     if(stat!=SUCCESS){
         return stat;
     }
-    
+
     if(((uint32_t)&flashCmd)%4==0){
         BL602_MemSet4((uint32_t *)&flashCmd,0,sizeof(flashCmd)/4);
     }else{
@@ -622,7 +622,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Program(SPI_Flash_Cfg_Type *flashCfg,
     flashCmd.addrSize=3;
 
     for(i=0;i<len;){
-        
+
         /* Write enable is needed for every program */
         stat=SFlash_Write_Enable(flashCfg);
         if(stat!=SUCCESS){
@@ -1085,7 +1085,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Set_IDbus_Cfg(SPI_Flash_Cfg_Type *flashCfg,
                 }else{
                     flashCmd.cmdBuf[1]=((!flashCfg->cReadMode)<<24);
                 }
-            }            
+            }
             flashCmd.addrSize++;
         }
     }
@@ -1172,7 +1172,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Cache_Enable_Set(uint8_t wayDisable)
     tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_WAY_DIS);
     tmpVal=BL_SET_REG_BIT(tmpVal,L1C_CNT_EN);
     BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
-    
+
     tmpVal|=(wayDisable<<L1C_WAY_DIS_POS);
     /* If way disable is 0x0f, cacheable can't be set */
     if(wayDisable!=0x0f){
@@ -1357,7 +1357,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Read(SPI_Flash_Cfg_Type *flashCfg,
                 }else{
                     flashCmd.cmdBuf[1]=((!flashCfg->cReadMode)<<24);
                 }
-            }            
+            }
             flashCmd.addrSize++;
         }
     }

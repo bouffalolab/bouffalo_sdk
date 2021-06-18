@@ -1,24 +1,24 @@
 /**
  * @file hal_adc.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_adc.h"
 #include "hal_gpio.h"
@@ -35,18 +35,18 @@ static adc_device_t adcx_device[ADC_MAX_INDEX] = {
 };
 
 /**
- * @brief 
- * 
- * @param dev 
- * @param oflag 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
  */
 int adc_open(struct device *dev, uint16_t oflag)
 {
     adc_device_t *adc_device = (adc_device_t *)dev;
     ADC_CFG_Type adc_cfg = {0};
     ADC_FIFO_Cfg_Type adc_fifo_cfg = {0};
- 
+
     ADC_Disable();
     ADC_Reset();
 
@@ -89,15 +89,15 @@ int adc_open(struct device *dev, uint16_t oflag)
     ADC_Init(&adc_cfg);
 
     ADC_FIFO_Cfg(&adc_fifo_cfg);
-    
+
     ADC_Enable();
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @return int
  */
 int adc_close(struct device *dev)
 {
@@ -105,12 +105,12 @@ int adc_close(struct device *dev)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param cmd 
- * @param args 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param cmd
+ * @param args
+ * @return int
  */
 int adc_control(struct device *dev, int cmd, void *args)
 {
@@ -171,13 +171,13 @@ int adc_control(struct device *dev, int cmd, void *args)
 //     return 0;
 // }
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int adc_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
@@ -210,13 +210,13 @@ float adc_get_tsen(uint16_t tsen_offset)
 }
 
 /**
- * @brief 
- * 
- * @param index 
- * @param name 
- * @param flag 
- * @param adc_user_cfg 
- * @return int 
+ * @brief
+ *
+ * @param index
+ * @param name
+ * @param flag
+ * @param adc_user_cfg
+ * @return int
  */
 int adc_register(enum adc_index_type index, const char *name, uint16_t flag)
 {

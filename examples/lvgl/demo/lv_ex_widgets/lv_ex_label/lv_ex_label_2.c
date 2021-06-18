@@ -25,7 +25,7 @@ void lv_ex_label_2(void)
 
     /* Position the main label */
     lv_obj_align(main_label, NULL, LV_ALIGN_CENTER, 0, 0);
-    
+
     /* Shift the second label down and to the right by 2 pixel */
     lv_obj_align(shadow_label, main_label, LV_ALIGN_IN_TOP_LEFT, 1, 1);
 }

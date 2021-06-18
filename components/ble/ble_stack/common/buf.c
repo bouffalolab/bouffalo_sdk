@@ -135,9 +135,9 @@ void net_buf_init(struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_si
     struct net_buf_pool_fixed *buf_fixed;
     buf_pool->alloc = (struct net_buf_data_alloc *)k_malloc(sizeof(void *));
     buf_pool->alloc->alloc_data = (struct net_buf_pool_fixed *)k_malloc(sizeof(void *));
-    
+
     buf_fixed = (struct net_buf_pool_fixed *)buf_pool->alloc->alloc_data;
-    
+
     buf_pool->alloc->cb = &net_buf_fixed_cb;
     buf_fixed->data_size = data_size;
     buf_fixed->data_pool = (u8_t *)k_malloc(buf_count * data_size);
@@ -147,7 +147,7 @@ void net_buf_init(struct net_buf_pool *buf_pool, u16_t buf_count, size_t data_si
     #if defined(CONFIG_NET_BUF_POOL_USAGE)
     buf_pool->avail_count = buf_count;
     #endif
-    buf_pool->destroy = destroy;  
+    buf_pool->destroy = destroy;
 }
 
 void net_buf_deinit(struct net_buf_pool *buf_pool)
@@ -686,7 +686,7 @@ void net_buf_unref(struct net_buf *buf)
 		buf->data = NULL;
 		buf->frags = NULL;
 
-		pool = net_buf_pool_get(buf->pool_id); 
+		pool = net_buf_pool_get(buf->pool_id);
 
 #if defined(CONFIG_NET_BUF_POOL_USAGE)
 		pool->avail_count++;
@@ -706,7 +706,7 @@ void net_buf_unref(struct net_buf *buf)
             bl_handle_queued_msg();
             return;
         }
-        #endif  
+        #endif
 	}
 }
 

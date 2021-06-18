@@ -110,7 +110,7 @@ static int32_t blsp_boot2_fw_decompress(uint32_t src_address,uint32_t dest_addre
     struct xz_buf b;
     struct xz_dec *s;
     enum xz_ret ret;
-    
+
     *p_dest_size=0;
     if(dest_max_size>0){
         flash_erase_xip(dest_address,dest_address+dest_max_size-1);

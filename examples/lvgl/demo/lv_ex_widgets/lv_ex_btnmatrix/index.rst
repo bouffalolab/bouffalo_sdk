@@ -1,7 +1,7 @@
 C
 ^
 
-Simple Button matrix 
+Simple Button matrix
 """"""""""""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_btnmatrix/lv_ex_btnmatrix_1

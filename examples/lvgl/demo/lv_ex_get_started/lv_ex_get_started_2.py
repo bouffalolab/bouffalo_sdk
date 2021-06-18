@@ -55,7 +55,7 @@ btn = lv.btn(lv.scr_act(), None)                            # Add a button the c
 btn.set_pos(10, 10)                                         # Set its position
 btn.set_size(120, 50)                                       # Set its size
 btn.reset_style_list(lv.btn.PART.MAIN)                      # Remove the styles coming from the theme
-btn.add_style(lv.btn.PART.MAIN, style_btn) 
+btn.add_style(lv.btn.PART.MAIN, style_btn)
 
 label = lv.label(btn, None)                                 # Add a label to the button
 label.set_text("Button")                                    # Set the labels text
@@ -66,7 +66,7 @@ btn2.set_pos(10, 80)
 btn2.set_size(120, 50)                                       # Set its size
 btn2.reset_style_list(lv.btn.PART.MAIN)                      # Remove the styles coming from the theme
 btn2.add_style(lv.btn.PART.MAIN, style_btn)
-btn2.add_style(lv.btn.PART.MAIN, style_btn_red)              # Add the red style on top of the current 
+btn2.add_style(lv.btn.PART.MAIN, style_btn_red)              # Add the red style on top of the current
 btn2.set_style_local_radius(lv.btn.PART.MAIN, lv.STATE.DEFAULT, lv.RADIUS.CIRCLE); # Add a local style
 
 label = lv.label(btn2, None)                                 # Add a label to the button

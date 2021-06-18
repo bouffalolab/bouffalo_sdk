@@ -55,7 +55,7 @@ bl_mcu_sdk
     ├── cdk_flashloader
     ├── cmake
     └── openocd
-    
+
 ```
 
 - bsp 存放板级相关的配置文件和驱动。

@@ -103,7 +103,7 @@ void lv_port_disp_init(void)
      * Register the display in LVGL
      *----------------------------------*/
 
-    
+
     lv_disp_drv_init(&Disp_Drv);                    /*Basic initialization*/
 
     /*Set up the functions to access to your display*/

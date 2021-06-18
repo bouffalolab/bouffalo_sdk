@@ -99,15 +99,15 @@
 #define MIP_HEIP            (1 << IRQ_H_EXT)
 #define MIP_MEIP            (1 << IRQ_M_EXT)
 
-#define MIE_SSIE            MIP_SSIP 
-#define MIE_HSIE            MIP_HSIP 
-#define MIE_MSIE            MIP_MSIP 
-#define MIE_STIE            MIP_STIP 
-#define MIE_HTIE            MIP_HTIP 
-#define MIE_MTIE            MIP_MTIP 
-#define MIE_SEIE            MIP_SEIP 
-#define MIE_HEIE            MIP_HEIP 
-#define MIE_MEIE            MIP_MEIP 
+#define MIE_SSIE            MIP_SSIP
+#define MIE_HSIE            MIP_HSIP
+#define MIE_MSIE            MIP_MSIP
+#define MIE_STIE            MIP_STIP
+#define MIE_HTIE            MIP_HTIP
+#define MIE_MTIE            MIP_MTIP
+#define MIE_SEIE            MIP_SEIP
+#define MIE_HEIE            MIP_HEIP
+#define MIE_MEIE            MIP_MEIP
 
 #define SIP_SSIP MIP_SSIP
 #define SIP_STIP MIP_STIP
@@ -176,7 +176,7 @@
 
 #ifdef __GNUC__
 
-#define asm     __asm 
+#define asm     __asm
 
 #define read_fpu(reg) ({ unsigned long __tmp; \
   asm volatile ("fmv.x.w %0, " #reg : "=r"(__tmp)); \
@@ -187,7 +187,7 @@
     asm volatile ("fmv.w.x " #reg ", %0" :: "i"(val)); \
   else \
     asm volatile ("fmv.w.x " #reg ", %0" :: "r"(val)); })
-    
+
 
 #define read_csr(reg) ({ unsigned long __tmp; \
   asm volatile ("csrr %0, " #reg : "=r"(__tmp)); \
@@ -1136,28 +1136,28 @@ DECLARE_INSN(custom0_rs1, MATCH_CUSTOM0_RS1, MASK_CUSTOM0_RS1)
 DECLARE_INSN(custom0_rs1_rs2, MATCH_CUSTOM0_RS1_RS2, MASK_CUSTOM0_RS1_RS2)
 DECLARE_INSN(custom0_rd, MATCH_CUSTOM0_RD, MASK_CUSTOM0_RD)
 DECLARE_INSN(custom0_rd_rs1, MATCH_CUSTOM0_RD_RS1, MASK_CUSTOM0_RD_RS1)
-DECLARE_INSN(custom0_rd_rs1_rs2, MATCH_CUSTOM0_RD_RS1_RS2, 
+DECLARE_INSN(custom0_rd_rs1_rs2, MATCH_CUSTOM0_RD_RS1_RS2,
 MASK_CUSTOM0_RD_RS1_RS2)
 DECLARE_INSN(custom1, MATCH_CUSTOM1, MASK_CUSTOM1)
 DECLARE_INSN(custom1_rs1, MATCH_CUSTOM1_RS1, MASK_CUSTOM1_RS1)
 DECLARE_INSN(custom1_rs1_rs2, MATCH_CUSTOM1_RS1_RS2, MASK_CUSTOM1_RS1_RS2)
 DECLARE_INSN(custom1_rd, MATCH_CUSTOM1_RD, MASK_CUSTOM1_RD)
 DECLARE_INSN(custom1_rd_rs1, MATCH_CUSTOM1_RD_RS1, MASK_CUSTOM1_RD_RS1)
-DECLARE_INSN(custom1_rd_rs1_rs2, MATCH_CUSTOM1_RD_RS1_RS2, 
+DECLARE_INSN(custom1_rd_rs1_rs2, MATCH_CUSTOM1_RD_RS1_RS2,
 MASK_CUSTOM1_RD_RS1_RS2)
 DECLARE_INSN(custom2, MATCH_CUSTOM2, MASK_CUSTOM2)
 DECLARE_INSN(custom2_rs1, MATCH_CUSTOM2_RS1, MASK_CUSTOM2_RS1)
 DECLARE_INSN(custom2_rs1_rs2, MATCH_CUSTOM2_RS1_RS2, MASK_CUSTOM2_RS1_RS2)
 DECLARE_INSN(custom2_rd, MATCH_CUSTOM2_RD, MASK_CUSTOM2_RD)
 DECLARE_INSN(custom2_rd_rs1, MATCH_CUSTOM2_RD_RS1, MASK_CUSTOM2_RD_RS1)
-DECLARE_INSN(custom2_rd_rs1_rs2, MATCH_CUSTOM2_RD_RS1_RS2, 
+DECLARE_INSN(custom2_rd_rs1_rs2, MATCH_CUSTOM2_RD_RS1_RS2,
 MASK_CUSTOM2_RD_RS1_RS2)
 DECLARE_INSN(custom3, MATCH_CUSTOM3, MASK_CUSTOM3)
 DECLARE_INSN(custom3_rs1, MATCH_CUSTOM3_RS1, MASK_CUSTOM3_RS1)
 DECLARE_INSN(custom3_rs1_rs2, MATCH_CUSTOM3_RS1_RS2, MASK_CUSTOM3_RS1_RS2)
 DECLARE_INSN(custom3_rd, MATCH_CUSTOM3_RD, MASK_CUSTOM3_RD)
 DECLARE_INSN(custom3_rd_rs1, MATCH_CUSTOM3_RD_RS1, MASK_CUSTOM3_RD_RS1)
-DECLARE_INSN(custom3_rd_rs1_rs2, MATCH_CUSTOM3_RD_RS1_RS2, 
+DECLARE_INSN(custom3_rd_rs1_rs2, MATCH_CUSTOM3_RD_RS1_RS2,
 MASK_CUSTOM3_RD_RS1_RS2)
 #endif
 #ifdef DECLARE_CSR

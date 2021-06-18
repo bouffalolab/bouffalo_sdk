@@ -106,7 +106,7 @@ static ADC_Gain_Coeff_Type adcGainCoeffCal = {
 void ADC_Reset(void)
 {
     uint32_t regCmd;
-    
+
     /* reset ADC */
     regCmd=BL_RD_REG(AON_BASE,AON_GPADC_REG_CMD);
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,BL_SET_REG_BIT(regCmd,AON_GPADC_SOFT_RST));
@@ -125,7 +125,7 @@ void ADC_Reset(void)
 void ADC_Enable(void)
 {
     uint32_t tmpVal;
-    
+
     tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CMD);
     tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_GLOBAL_EN);
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal);
@@ -142,7 +142,7 @@ void ADC_Enable(void)
 void ADC_Disable(void)
 {
     uint32_t tmpVal;
-    
+
     tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CMD);
     tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_GLOBAL_EN);
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal);
@@ -168,13 +168,13 @@ void ADC_Init(ADC_CFG_Type* cfg)
     CHECK_PARAM(IS_ADC_CLK_TYPE(cfg->clkDiv));
     CHECK_PARAM(IS_ADC_PGA_GAIN_TYPE(cfg->gain1));
     CHECK_PARAM(IS_ADC_PGA_GAIN_TYPE(cfg->gain2));
-    CHECK_PARAM(IS_ADC_CHOP_MOD_TYPE(cfg->chopMode));    
+    CHECK_PARAM(IS_ADC_CHOP_MOD_TYPE(cfg->chopMode));
     CHECK_PARAM(IS_ADC_BIAS_SEL_TYPE(cfg->biasSel));
     CHECK_PARAM(IS_ADC_PGA_VCM_TYPE(cfg->vcm));
     CHECK_PARAM(IS_ADC_VREF_TYPE(cfg->vref));
     CHECK_PARAM(IS_ADC_SIG_INPUT_TYPE(cfg->inputMode));
     CHECK_PARAM(IS_ADC_DATA_WIDTH_TYPE(cfg->resWidth));
-    
+
     /* config 1 */
     regCfg1=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG1);
     regCfg1=BL_SET_REG_BITS_VAL(regCfg1,AON_GPADC_V18_SEL,cfg->v18Sel);
@@ -188,7 +188,7 @@ void ADC_Init(ADC_CFG_Type* cfg)
     regCfg1=BL_SET_REG_BITS_VAL(regCfg1,AON_GPADC_RES_SEL,cfg->resWidth);
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG1,regCfg1);
     AON_CLK_SET_DUMMY_WAIT;
-    
+
     /* config 2 */
     regCfg2=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG2);
     regCfg2=BL_SET_REG_BITS_VAL(regCfg2,AON_GPADC_DLY_SEL,0);
@@ -200,7 +200,7 @@ void ADC_Init(ADC_CFG_Type* cfg)
     if((cfg->gain1!=ADC_PGA_GAIN_NONE)||(cfg->gain2!=ADC_PGA_GAIN_NONE)){
         regCfg2=BL_SET_REG_BITS_VAL(regCfg2,AON_GPADC_CHOP_MODE,2);
     }else{
-        regCfg2=BL_SET_REG_BITS_VAL(regCfg2,AON_GPADC_CHOP_MODE,1);        
+        regCfg2=BL_SET_REG_BITS_VAL(regCfg2,AON_GPADC_CHOP_MODE,1);
     }
     /* pga_vcmi_en is for mic */
     regCfg2=BL_CLR_REG_BIT(regCfg2,AON_GPADC_PGA_VCMI_EN);
@@ -216,7 +216,7 @@ void ADC_Init(ADC_CFG_Type* cfg)
     regCfg2=BL_SET_REG_BITS_VAL(regCfg2,AON_GPADC_DIFF_MODE,cfg->inputMode);
 
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG2,regCfg2);
-    
+
     /* calibration offset */
     regCalib=BL_RD_REG(AON_BASE,AON_GPADC_REG_DEFINE);
     regCalib=BL_SET_REG_BITS_VAL(regCalib,AON_GPADC_OS_CAL_DATA,cfg->offsetCalibVal);
@@ -243,16 +243,16 @@ void ADC_Channel_Config(ADC_Chan_Type posCh,ADC_Chan_Type negCh,BL_Fun_Type cont
 {
     uint32_t regCmd;
     uint32_t regCfg1;
-    
+
     CHECK_PARAM(IS_AON_ADC_CHAN_TYPE(posCh));
     CHECK_PARAM(IS_AON_ADC_CHAN_TYPE(negCh));
-    
+
     /* set channel */
     regCmd=BL_RD_REG(AON_BASE,AON_GPADC_REG_CMD);
     regCmd=BL_SET_REG_BITS_VAL(regCmd,AON_GPADC_POS_SEL,posCh);
     regCmd=BL_SET_REG_BITS_VAL(regCmd,AON_GPADC_NEG_SEL,negCh);
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,regCmd);
-    
+
     /* set continuous mode */
     regCfg1=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG1);
     regCfg1=BL_SET_REG_BITS_VAL(regCfg1,AON_GPADC_CONT_CONV_EN,contEn);
@@ -276,9 +276,9 @@ void ADC_Scan_Channel_Config(ADC_Chan_Type posChList[],ADC_Chan_Type negChList[]
 {
     uint32_t tmpVal,i;
     uint32_t dealLen;
-    
+
     CHECK_PARAM((scanLength<13));
-    
+
     /* Deal with the first 6 */
     dealLen=6;
     if(scanLength<dealLen){
@@ -291,14 +291,14 @@ void ADC_Scan_Channel_Config(ADC_Chan_Type posChList[],ADC_Chan_Type negChList[]
         tmpVal|=(posChList[i]<<(i*5));
     }
     BL_WR_REG(AON_BASE,AON_GPADC_REG_SCN_POS1,tmpVal);
-    
+
     tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_SCN_NEG1);
     for(i=0;i<dealLen;i++){
         tmpVal=tmpVal&(~(0x1F<<(i*5)));
         tmpVal|=(negChList[i]<<(i*5));
     }
     BL_WR_REG(AON_BASE,AON_GPADC_REG_SCN_NEG1,tmpVal);
-    
+
     /* Set the left channels */
     if(scanLength>dealLen){
         tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_SCN_POS2);
@@ -307,7 +307,7 @@ void ADC_Scan_Channel_Config(ADC_Chan_Type posChList[],ADC_Chan_Type negChList[]
             tmpVal|=(posChList[i+dealLen]<<(i*5));
         }
         BL_WR_REG(AON_BASE,AON_GPADC_REG_SCN_POS2,tmpVal);
-        
+
         tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_SCN_NEG2);
         for(i=0;i<scanLength-dealLen;i++){
             tmpVal=tmpVal&(~(0x1F<<(i*5)));
@@ -317,7 +317,7 @@ void ADC_Scan_Channel_Config(ADC_Chan_Type posChList[],ADC_Chan_Type negChList[]
     }
 
     /* Scan mode */
-    tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG1);     
+    tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG1);
     tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_CLK_ANA_INV);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_GPADC_SCAN_LENGTH,scanLength-1);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_GPADC_CONT_CONV_EN,contEn);
@@ -362,7 +362,7 @@ void ADC_Start(void)
 void ADC_Stop(void)
 {
     uint32_t regCmd;
-    
+
     /* disable convert start */
     regCmd=BL_RD_REG(AON_BASE,AON_GPADC_REG_CMD);
     regCmd=BL_CLR_REG_BIT(regCmd,AON_GPADC_CONV_START);
@@ -388,13 +388,13 @@ void ADC_FIFO_Cfg(ADC_FIFO_Cfg_Type *fifoCfg)
      *  DMA enable : ,When the fifo data is exceeded to fifoThreshold DMA request will occur
      *  DMA disable : fifoThreshold determine how many data will raise FIFO ready interrupt
      */
-    
+
     tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPADC_FIFO_THL,fifoCfg->fifoThreshold);
-    
+
     /* Enable DMA */
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPADC_DMA_EN,fifoCfg->dmaEn);
-    
+
     BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
 
     /* clear fifo by SET GPIP_GPADC_FIFO_CLR bit*/
@@ -415,9 +415,9 @@ void ADC_FIFO_Cfg(ADC_FIFO_Cfg_Type *fifoCfg)
 uint8_t ADC_Get_FIFO_Count(void)
 {
     uint32_t tmpVal;
-     
+
     tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
-    
+
     return BL_GET_REG_BITS_VAL(tmpVal,GPIP_GPADC_FIFO_DATA_COUNT);
 }
 
@@ -432,9 +432,9 @@ uint8_t ADC_Get_FIFO_Count(void)
 BL_Sts_Type ADC_FIFO_Is_Full(void)
 {
     uint32_t tmpVal;
-     
+
     tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
-    
+
     if(BL_IS_REG_BIT_SET(tmpVal,GPIP_GPADC_FIFO_FULL)){
         return SET;
     }else{
@@ -453,9 +453,9 @@ BL_Sts_Type ADC_FIFO_Is_Full(void)
 BL_Sts_Type ADC_FIFO_Is_Empty(void)
 {
     uint32_t tmpVal;
-     
+
     tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
-    
+
     if(BL_IS_REG_BIT_SET(tmpVal,GPIP_GPADC_FIFO_NE)){
         return RESET;
     }else{
@@ -575,7 +575,7 @@ void ADC_IntMask(ADC_INT_Type intType, BL_Mask_Type intMask)
     /* Check the parameters */
     CHECK_PARAM(IS_GPIP_ADC_INT_TYPE(intType));
     CHECK_PARAM(IS_BL_MASK_TYPE(intMask));
-    
+
     switch(intType)
     {
         case ADC_INT_POS_SATURATION:
@@ -601,7 +601,7 @@ void ADC_IntMask(ADC_INT_Type intType, BL_Mask_Type intMask)
             BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
             break;
         case ADC_INT_FIFO_UNDERRUN:
-            tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG); 
+            tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
             if(intMask == UNMASK){
                 /* Enable this interrupt */
                 tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_FIFO_UNDERRUN_MASK);
@@ -612,7 +612,7 @@ void ADC_IntMask(ADC_INT_Type intType, BL_Mask_Type intMask)
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
             break;
         case ADC_INT_FIFO_OVERRUN:
-            tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG); 
+            tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
             if(intMask == UNMASK){
                 /* Enable this interrupt */
                 tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_FIFO_OVERRUN_MASK);
@@ -623,7 +623,7 @@ void ADC_IntMask(ADC_INT_Type intType, BL_Mask_Type intMask)
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
             break;
         case ADC_INT_ADC_READY:
-            tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG); 
+            tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
             if(intMask == UNMASK){
                 /* Enable this interrupt */
                 tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_RDY_MASK);
@@ -640,8 +640,8 @@ void ADC_IntMask(ADC_INT_Type intType, BL_Mask_Type intMask)
                 tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_POS_SATUR_MASK);
                 tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_NEG_SATUR_MASK);
                 BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
-                
-                tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);   
+
+                tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
                 tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_FIFO_UNDERRUN_MASK);
                 tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_FIFO_OVERRUN_MASK);
                 tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_RDY_MASK);
@@ -652,8 +652,8 @@ void ADC_IntMask(ADC_INT_Type intType, BL_Mask_Type intMask)
                 tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_POS_SATUR_MASK);
                 tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_NEG_SATUR_MASK);
                 BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
-                
-                tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG); 
+
+                tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
                 tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_FIFO_OVERRUN_MASK);
                 tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_FIFO_UNDERRUN_MASK);
                 tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_RDY_MASK);
@@ -679,14 +679,14 @@ void ADC_IntClr(ADC_INT_Type intType)
 
     /* Check the parameters */
     CHECK_PARAM(IS_GPIP_ADC_INT_TYPE(intType));
-    
+
     switch(intType)
     {
         case ADC_INT_POS_SATURATION:
             tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_ISR);
             tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_POS_SATUR_CLR);
             BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
-            
+
             tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_POS_SATUR_CLR);
             BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
 
@@ -699,8 +699,8 @@ void ADC_IntClr(ADC_INT_Type intType)
         case ADC_INT_NEG_SATURATION:
             tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_ISR);
             tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_NEG_SATUR_CLR);
-            BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);            
-            
+            BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
+
             tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_NEG_SATUR_CLR);
             BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
 
@@ -709,12 +709,12 @@ void ADC_IntClr(ADC_INT_Type intType)
             tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_NEG_SATUR_CLR);
             BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
 
-            break;            
+            break;
         case ADC_INT_FIFO_UNDERRUN:
             tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
             tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_FIFO_UNDERRUN_CLR);
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
-            
+
             tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_FIFO_UNDERRUN_CLR);
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
 
@@ -728,8 +728,8 @@ void ADC_IntClr(ADC_INT_Type intType)
             tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
             tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_FIFO_OVERRUN_CLR);
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
-            
-            tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_FIFO_OVERRUN_CLR);            
+
+            tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_FIFO_OVERRUN_CLR);
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
 
             /*Manual reset*/
@@ -742,7 +742,7 @@ void ADC_IntClr(ADC_INT_Type intType)
             tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
             tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_RDY_CLR);
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
-            
+
             tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_RDY_CLR);
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
 
@@ -754,14 +754,14 @@ void ADC_IntClr(ADC_INT_Type intType)
             break;
         case ADC_INT_ALL:
             tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_ISR);
-            tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_POS_SATUR_CLR);            
+            tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_POS_SATUR_CLR);
             tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_NEG_SATUR_CLR);
-            BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);          
-                        
+            BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
+
             tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_POS_SATUR_CLR);
             tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_NEG_SATUR_CLR);
             BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
-            
+
             /*Manual reset*/
             tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_ISR);
             tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_POS_SATUR_CLR);
@@ -769,12 +769,12 @@ void ADC_IntClr(ADC_INT_Type intType)
             BL_WR_REG(AON_BASE,AON_GPADC_REG_ISR,tmpVal);
 
 
-            tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);            
+            tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPADC_CONFIG);
             tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_FIFO_UNDERRUN_CLR);
             tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_FIFO_OVERRUN_CLR);
-            tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_RDY_CLR);            
+            tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPADC_RDY_CLR);
             BL_WR_REG(GPIP_BASE,GPIP_GPADC_CONFIG,tmpVal);
-            
+
             tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_FIFO_UNDERRUN_CLR);
             tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_FIFO_OVERRUN_CLR);
             tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPADC_RDY_CLR);
@@ -809,7 +809,7 @@ BL_Sts_Type ADC_GetIntStatus(ADC_INT_Type intType)
 
     /* Check the parameters */
     CHECK_PARAM(IS_GPIP_ADC_INT_TYPE(intType));
-    
+
     switch(intType)
     {
         case ADC_INT_POS_SATURATION:
@@ -837,7 +837,7 @@ BL_Sts_Type ADC_GetIntStatus(ADC_INT_Type intType)
         default:
             break;
     }
-    
+
     return bitStatus;
 }
 
@@ -854,7 +854,7 @@ void ADC_Int_Callback_Install(ADC_INT_Type intType,intCallback_Type* cbFun)
 {
     /* Check the parameters */
     CHECK_PARAM(IS_GPIP_ADC_INT_TYPE(intType));
-    
+
     adcIntCbfArra[intType] = cbFun;
 }
 
@@ -881,21 +881,21 @@ void GPADC_DMA_IRQHandler(void)
             adcIntCbfArra[ADC_INT_NEG_SATURATION]();
         }
     }
-    
+
     if( ADC_GetIntStatus(ADC_INT_FIFO_UNDERRUN)==SET ){
         ADC_IntClr(ADC_INT_FIFO_UNDERRUN);
         if(adcIntCbfArra[ADC_INT_FIFO_UNDERRUN] != NULL){
             adcIntCbfArra[ADC_INT_FIFO_UNDERRUN]();
         }
     }
-    
+
     if( ADC_GetIntStatus(ADC_INT_FIFO_OVERRUN)==SET ){
         ADC_IntClr(ADC_INT_FIFO_OVERRUN);
         if(adcIntCbfArra[ADC_INT_FIFO_OVERRUN] != NULL){
             adcIntCbfArra[ADC_INT_FIFO_OVERRUN]();
         }
     }
-    
+
     if( ADC_GetIntStatus(ADC_INT_ADC_READY)==SET ){
         ADC_IntClr(ADC_INT_ADC_READY);
         if(adcIntCbfArra[ADC_INT_ADC_READY] != NULL){
@@ -916,7 +916,7 @@ void GPADC_DMA_IRQHandler(void)
 void ADC_Vbat_Enable(void)
 {
     uint32_t tmpVal;
-    
+
     tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG2);
     tmpVal=BL_SET_REG_BIT(tmpVal,AON_GPADC_VBAT_EN);
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG2,tmpVal);
@@ -933,7 +933,7 @@ void ADC_Vbat_Enable(void)
 void ADC_Vbat_Disable(void)
 {
     uint32_t tmpVal;
-    
+
     tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG2);
     tmpVal=BL_CLR_REG_BIT(tmpVal,AON_GPADC_VBAT_EN);
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG2,tmpVal);
@@ -950,7 +950,7 @@ void ADC_Vbat_Disable(void)
 void ADC_Tsen_Init(ADC_TSEN_MOD_Type tsenMod)
 {
     uint32_t tmpVal;
-    
+
     CHECK_PARAM(IS_AON_ADC_TSEN_MOD_TYPE(type));
 
     /* config gpadc_reg_cmd */
@@ -987,20 +987,20 @@ void ADC_Tsen_Init(ADC_TSEN_MOD_Type tsenMod)
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_GPADC_PGA_OS_CAL,0);
 
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG2,tmpVal);
-    
+
     /* config 3 */
     tmpVal=BL_RD_REG(AON_BASE,AON_GPADC_REG_CONFIG1);
     /* set gpadc_dither_en */
     tmpVal = BL_SET_REG_BIT(tmpVal,AON_GPADC_DITHER_EN);
     BL_WR_REG(AON_BASE,AON_GPADC_REG_CONFIG1,tmpVal);
 
-    /* set 4000F90C[19](gpadc_mic2_diff) = 1 
-     * debug advise form Ran 
+    /* set 4000F90C[19](gpadc_mic2_diff) = 1
+     * debug advise form Ran
      * 2020.08.26
      */
     tmpVal = BL_RD_REG(AON_BASE,AON_GPADC_REG_CMD);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal,AON_GPADC_MIC2_DIFF,1);
-    BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal);   
+    BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal);
 }
 
 
@@ -1049,7 +1049,7 @@ uint32_t TSEN_Get_V_Error(void)
     ADC_Start();
     while (ADC_Get_FIFO_Count() == 0)
         ;
-    regVal = ADC_Read_FIFO();    
+    regVal = ADC_Read_FIFO();
     gainCalEnabled=adcGainCoeffCal.adcGainCoeffEnable;
     adcGainCoeffCal.adcGainCoeffEnable=0;
     ADC_Parse_Result(&regVal, 1, &result);
@@ -1077,25 +1077,25 @@ BL_Err_Type ATTR_CLOCK_SECTION ADC_Trim_TSEN(uint16_t * tsen_offset)
     uint32_t tmpVal=0;
     float A1=0.0,A2=0.0,C=0.0,delta=0.0;
     Efuse_TSEN_Refcode_Corner_Type trim;
-    
+
     EF_Ctrl_Read_TSEN_Trim(&trim);
-    
+
     if(trim.tsenRefcodeCornerEn){
         if(trim.tsenRefcodeCornerParity==EF_Ctrl_Get_Trim_Parity(trim.tsenRefcodeCorner,12)){
-            
+
             MSG("TSEN ATE Version = %d\r\n",trim.tsenRefcodeCornerVersion);
 
             *tsen_offset = trim.tsenRefcodeCorner;
 
             if(trim.tsenRefcodeCornerVersion == 0){
                 /* debug advise by ran
-                 * 2020.9.04 
+                 * 2020.9.04
                  */
- 
+
                 //set 4000F90C[19](gpadc_mic2_diff) = 0
                 tmpVal = BL_RD_REG(AON_BASE,AON_GPADC_REG_CMD);
                 tmpVal = BL_SET_REG_BITS_VAL(tmpVal,AON_GPADC_MIC2_DIFF,0);
-                BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal);   
+                BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal);
 
                 for(average_index=0;average_index<50;average_index++){
                     v_error_sum += TSEN_Get_V_Error();
@@ -1111,13 +1111,13 @@ BL_Err_Type ATTR_CLOCK_SECTION ADC_Trim_TSEN(uint16_t * tsen_offset)
                 //set 4000F90C[19](gpadc_mic2_diff) = 1
                 tmpVal = BL_RD_REG(AON_BASE,AON_GPADC_REG_CMD);
                 tmpVal = BL_SET_REG_BITS_VAL(tmpVal,AON_GPADC_MIC2_DIFF,1);
-                BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal);   
+                BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal);
 
                 for(average_index=0;average_index<50;average_index++){
                     v_error_sum += TSEN_Get_V_Error();
                 }
 
-                v_error_sum /= 50;                
+                v_error_sum /= 50;
 
                 MSG("A2 = %d\r\n",v_error_sum);
                 A2 = v_error_sum;
@@ -1135,7 +1135,7 @@ BL_Err_Type ATTR_CLOCK_SECTION ADC_Trim_TSEN(uint16_t * tsen_offset)
             return SUCCESS;
         }
     }
-    
+
     return ERROR;
 }
 
@@ -1199,7 +1199,7 @@ float TSEN_Get_Temp(uint32_t tsen_offset)
     while (ADC_Get_FIFO_Count() == 0)
         ;
     regVal = ADC_Read_FIFO();
-    
+
     gainCalEnabled=adcGainCoeffCal.adcGainCoeffEnable;
     adcGainCoeffCal.adcGainCoeffEnable=0;
     ADC_Parse_Result(&regVal, 1, &result);
@@ -1277,7 +1277,7 @@ BL_Err_Type ADC_Mic_Init(ADC_MIC_Type * adc_mic_config)
 
     tmpVal1=BL_SET_REG_BITS_VAL(tmpVal1,AON_GPADC_MICBIAS_EN,adc_mic_config->micBiasEn);
 
-    BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal1);    
+    BL_WR_REG(AON_BASE,AON_GPADC_REG_CMD,tmpVal1);
 
     return SUCCESS;
 
@@ -1332,9 +1332,9 @@ BL_Err_Type ATTR_CLOCK_SECTION ADC_Gain_Trim(void)
 {
     Efuse_ADC_Gain_Coeff_Type trim;
     uint32_t tmp;
-    
+
     EF_Ctrl_Read_ADC_Gain_Trim(&trim);
-    
+
     if(trim.adcGainCoeffEn){
         if(trim.adcGainCoeffParity==EF_Ctrl_Get_Trim_Parity(trim.adcGainCoeff,12)){
             adcGainCoeffCal.adcGainCoeffEnable = ENABLE;
@@ -1348,14 +1348,14 @@ BL_Err_Type ATTR_CLOCK_SECTION ADC_Gain_Trim(void)
                 adcGainCoeffCal.coe=(1.0+((float)tmp/2048.0));
                 //printf("coe==%0f\r\n",adcGainCoeffCal.coe);
             }else{
-                adcGainCoeffCal.coe=(1.0-((float)tmp/2048.0));    
-                //printf("coe==%0f\r\n",adcGainCoeffCal.coe);     
+                adcGainCoeffCal.coe=(1.0-((float)tmp/2048.0));
+                //printf("coe==%0f\r\n",adcGainCoeffCal.coe);
             }
 
             return SUCCESS;
         }
     }
-    
+
     return ERROR;
 }
 

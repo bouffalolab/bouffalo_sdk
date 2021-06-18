@@ -407,7 +407,7 @@ int32_t ATTR_TCM_SECTION blsp_boot2_set_cache(uint8_t cont_read,SPI_Flash_Cfg_Ty
     if(flash_cfg->cReadSupport==0){
         cont_read=0;
     }
-    
+
     if(cont_read==1){
         stat=SFlash_Read(flash_cfg, flash_cfg->ioMode&0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
         if(SUCCESS!=stat){
@@ -535,7 +535,7 @@ void ATTR_TCM_SECTION blsp_sboot_finish(void)
 void blsp_fix_invalid_msp_pc(void)
 {
     uint32_t i=0;
-    
+
     for(i=0;i<BFLB_BOOT2_CPU_MAX;i++){
         if(!blsp_is_msp_valid(g_boot_img_cfg[i].msp_val)){
             g_boot_img_cfg[i].msp_val=0;
@@ -590,7 +590,7 @@ uint8_t  ATTR_TCM_SECTION blsp_boot2_get_feature_flag(void)
 {
     static uint8_t boot2_flag=0xff;
     uint8_t *p=((uint8_t *)&__Vectors[10]+0);
-    
+
     if(boot2_flag==0xff){
         boot2_flag=*p;
     }
@@ -608,7 +608,7 @@ uint8_t  ATTR_TCM_SECTION blsp_boot2_get_feature_flag(void)
 uint8_t ATTR_TCM_SECTION blsp_boot2_get_log_disable_flag(void)
 {
     uint8_t *p=((uint8_t *)&__Vectors[10]+1);
-    
+
     return *p;
 }
 
@@ -623,7 +623,7 @@ uint8_t ATTR_TCM_SECTION blsp_boot2_get_log_disable_flag(void)
 uint8_t ATTR_TCM_SECTION blsp_boot2_8m_support_flag(void)
 {
     uint8_t *p=((uint8_t *)&__Vectors[10]+2);
-    
+
     return *p;
 }
 

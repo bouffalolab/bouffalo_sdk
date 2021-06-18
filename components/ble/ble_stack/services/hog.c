@@ -175,25 +175,25 @@ int hog_notify(struct bt_conn *conn, uint16_t hid_usage,uint8_t press)
 	struct bt_gatt_attr *attr;
 	struct hids_remote_key *remote_key = NULL;
 	u8_t len = 4, data[4];
-	
+
 	for(int i = 0; i < (sizeof(remote_kbd_map_tab)/sizeof(remote_kbd_map_tab[0])); i++){
- 
+
 		if(remote_kbd_map_tab[i].hid_usage == hid_usage){
 			remote_key = &remote_kbd_map_tab[i];
 			break;
 		}
 	}
- 
+
 	if(!remote_key)
 		return EINVAL;
- 
+
 	if(remote_key->hid_page == HID_PAGE_KBD){
 		attr = &attrs[BT_CHAR_BLE_HID_REPORT_ATTR_VAL_INDEX];
-		len = 3;		
+		len = 3;
 	}
 	else
-		return EINVAL;	
-	
+		return EINVAL;
+
 	sys_put_le16(hid_usage, data);
 	data[2] = 0;
 	data[3] = 0;

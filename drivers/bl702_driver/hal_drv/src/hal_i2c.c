@@ -1,24 +1,24 @@
 /**
  * @file hal_i2c.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_i2c.h"
 #include "hal_gpio.h"
@@ -36,11 +36,11 @@ static i2c_device_t i2cx_device[I2C_MAX_INDEX] =
 #endif
 };
 /**
- * @brief 
- * 
- * @param dev 
- * @param oflag 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
  */
 int i2c_open(struct device *dev, uint16_t oflag)
 {
@@ -102,12 +102,12 @@ int i2c_open(struct device *dev, uint16_t oflag)
 //     return 0;
 // }
 /**
- * @brief 
- * 
- * @param index 
- * @param name 
- * @param flag 
- * @return int 
+ * @brief
+ *
+ * @param index
+ * @param name
+ * @param flag
+ * @return int
  */
 int i2c_register(enum i2c_index_type index, const char *name, uint16_t flag)
 {
@@ -131,12 +131,12 @@ int i2c_register(enum i2c_index_type index, const char *name, uint16_t flag)
     return device_register(dev, name, flag);
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param msgs 
- * @param num 
- * @return uint32_t 
+ * @brief
+ *
+ * @param dev
+ * @param msgs
+ * @param num
+ * @return uint32_t
  */
 int i2c_transfer(struct device *dev, i2c_msg_t msgs[], uint32_t num)
 {

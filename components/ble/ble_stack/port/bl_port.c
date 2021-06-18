@@ -63,7 +63,7 @@ void k_queue_insert(struct k_queue *queue, void *prev, void *data)
 {
     BaseType_t ret;
     (void) ret;
-    
+
     ret = xQueueSend(queue->hdl, &data, portMAX_DELAY);
     BT_ASSERT(ret == pdPASS);
 }
@@ -76,7 +76,7 @@ void k_queue_append(struct k_queue *queue, void *data)
 void k_queue_insert_from_isr(struct k_queue *queue, void *prev, void *data)
 {
     BaseType_t xHigherPriorityTaskWoken;
-    
+
     xQueueSendFromISR(queue->hdl, &data, &xHigherPriorityTaskWoken);
     if(xHigherPriorityTaskWoken == pdTRUE)
     {
@@ -96,7 +96,7 @@ void k_queue_free(struct k_queue *queue)
         BT_ERR("Queue is NULL\n");
         return;
     }
-    
+
     vQueueDelete(queue->hdl);
     queue->hdl = NULL;
     return;
@@ -184,7 +184,7 @@ int k_sem_give(struct k_sem *sem)
 {
     BaseType_t ret;
     (void) ret;
-    
+
     if (NULL == sem) {
         BT_ERR("sem is NULL\n");
         return -EINVAL;
@@ -240,7 +240,7 @@ int k_thread_create(struct k_thread *new_thread, const char *name,
 {
     stack_size /= sizeof(StackType_t);
     xTaskCreate(entry, name, stack_size, NULL, prio, (void *)(&new_thread->task));
-    
+
     return new_thread->task? 0 : -1;
 }
 
@@ -251,7 +251,7 @@ void k_thread_delete(struct k_thread *new_thread)
         BT_ERR("task is NULL\n");
         return;
     }
-    
+
     vTaskDelete((void *)(new_thread->task));
     new_thread->task = 0;
     return;
@@ -299,7 +299,7 @@ void k_timer_init(k_timer_t *timer, k_timer_handler_t handle, void *args)
     timer->handler = handle;
     timer->args = args;
 	/* Set args as timer id */
-    timer->timer.hdl = xTimerCreate("Timer", pdMS_TO_TICKS(1000), 0, args, (TimerCallbackFunction_t)(timer->handler)); 
+    timer->timer.hdl = xTimerCreate("Timer", pdMS_TO_TICKS(1000), 0, args, (TimerCallbackFunction_t)(timer->handler));
     BT_ASSERT(timer->timer.hdl != NULL);
 }
 
@@ -312,7 +312,7 @@ void k_timer_start(k_timer_t *timer, uint32_t timeout)
 {
     BaseType_t ret;
     (void) ret;
-    
+
     BT_ASSERT(timer != NULL);
     timer->timeout = timeout;
     timer->start_ms = k_now_ms();
@@ -329,7 +329,7 @@ void k_timer_reset(k_timer_t *timer)
 
     (void) ret;
     BT_ASSERT(timer != NULL);
-  
+
     ret = xTimerReset(timer->timer.hdl, 0);
     BT_ASSERT(ret == pdPASS);
 }
@@ -340,7 +340,7 @@ void k_timer_stop(k_timer_t *timer)
 
     (void) ret;
     BT_ASSERT(timer != NULL);
-  
+
     ret = xTimerStop(timer->timer.hdl, 0);
     BT_ASSERT(ret == pdPASS);
 }
@@ -349,16 +349,16 @@ void k_timer_delete(k_timer_t *timer)
 {
     BaseType_t ret;
     (void) ret;
-    
+
     BT_ASSERT(timer != NULL);
-    
+
     ret = xTimerDelete(timer->timer.hdl, 0);
     BT_ASSERT(ret == pdPASS);
 }
 
 long long k_now_ms(void)
 {
-    return (long long)(xTaskGetTickCount() * 1000)/configTICK_RATE_HZ;   
+    return (long long)(xTaskGetTickCount() * 1000)/configTICK_RATE_HZ;
 }
 
 void k_get_random_byte_array(uint8_t *buf, size_t len)

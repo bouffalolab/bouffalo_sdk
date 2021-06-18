@@ -1,24 +1,24 @@
 /**
  * @file drv_mmheap.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #ifndef _DRV_MMHEAP_H_
 #define _DRV_MMHEAP_H_
@@ -66,7 +66,7 @@
 #define MMHEAP_BLOCK_SIZE_MASK        ~(MMHEAP_BLOCK_CURR_FREE | MMHEAP_BLOCK_PREV_FREE)
 #define MMHEAP_BLOCK_STATE_MASK       (MMHEAP_BLOCK_CURR_FREE | MMHEAP_BLOCK_PREV_FREE)
 
-typedef struct 
+typedef struct
 {
     uint32_t    used; /* space is used */
     uint32_t    free; /* space is free */
@@ -107,7 +107,7 @@ typedef struct mmheap_blk_st {
 /**
  * memory heap control
  */
-typedef struct 
+typedef struct
 {
     int             pool_cnt;
     void           *pool_start[MMHEAP_POOL_MAX];

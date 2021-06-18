@@ -334,7 +334,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Program_Security_Register(SPI_Flash_Cfg_Type
     cmd=pSecRegCfg->programCmd;
 
     for(i=0;i<len;){
-        
+
         /* Write enable is needed for every program */
         stat=SFlash_Write_Enable(pFlashCfg);
         if(stat!=SUCCESS){

@@ -234,7 +234,7 @@ typedef void (*k_thread_entry_t)(void *args);
 int k_thread_create(struct k_thread *new_thread, const char *name,
                     size_t stack_size, k_thread_entry_t entry,
                     int prio);
-               
+
 void k_thread_delete(struct k_thread *new_thread);
 
 /**

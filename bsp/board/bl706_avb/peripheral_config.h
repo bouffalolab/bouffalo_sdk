@@ -71,7 +71,7 @@
 #endif
 
 #if defined(BSP_USING_UART1)
-#ifndef UART1_CONFIG 
+#ifndef UART1_CONFIG
 #define UART1_CONFIG \
 {   \
  .id = 1, \
@@ -80,7 +80,7 @@
  .stopbits = UART_STOP_ONE, \
  .parity = UART_PAR_NONE, \
  .fifo_threshold = 64, \
-} 
+}
 #endif
 #endif
 

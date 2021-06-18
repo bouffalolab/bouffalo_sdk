@@ -17,7 +17,7 @@
 void bt_monitor_send(uint16_t opcode, const void *data, size_t len)
 {
     const uint8_t *buf = data;
-    
+
     BT_WARN("[Hci]:pkt_type:[0x%x],pkt_data:[%s]\r\n",opcode,bt_hex(buf,len));
 }
 

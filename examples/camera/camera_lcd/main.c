@@ -1,24 +1,24 @@
 /**
  * @file main.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 #include "bflb_platform.h"
@@ -69,27 +69,27 @@ static cam_device_t camera_cfg =
 static mjpeg_device_t mjpeg_cfg;
 
 
-#define RANGE_INT(iVal, iMin, iMax)                     ( ( ( iVal ) > ( iMin ) ) ? ( ( ( iVal ) <= ( iMax ) ) ? ( iVal ) : ( iMax ) ) : ( iMin ) )  
-#define ROUND_SHR_POSITIVE(Dividend, iShiftRightCount)  ( ( ( Dividend ) & ( 1 << ( ( iShiftRightCount ) - 1 ) ) ) ? ( ( Dividend ) >> ( iShiftRightCount ) ) + 1 : ( ( Dividend ) >> ( iShiftRightCount ) ) )  
-#define ROUND_SHR_NEGATIVE(Dividend, iShiftRightCount)  ( -( ( ( -( Dividend ) ) & ( 1 << ( ( iShiftRightCount ) - 1 ) ) ) ? ( ( -( Dividend ) ) >> ( iShiftRightCount ) ) + 1 : ( ( -( Dividend ) ) >> ( iShiftRightCount ) ) ) )  
-#define ROUND_SHR(Dividend, iShiftRightCount)           ( ( ( Dividend ) >= 0 ) ? ROUND_SHR_POSITIVE( Dividend, iShiftRightCount ) : ROUND_SHR_NEGATIVE( Dividend, iShiftRightCount ) ) 
+#define RANGE_INT(iVal, iMin, iMax)                     ( ( ( iVal ) > ( iMin ) ) ? ( ( ( iVal ) <= ( iMax ) ) ? ( iVal ) : ( iMax ) ) : ( iMin ) )
+#define ROUND_SHR_POSITIVE(Dividend, iShiftRightCount)  ( ( ( Dividend ) & ( 1 << ( ( iShiftRightCount ) - 1 ) ) ) ? ( ( Dividend ) >> ( iShiftRightCount ) ) + 1 : ( ( Dividend ) >> ( iShiftRightCount ) ) )
+#define ROUND_SHR_NEGATIVE(Dividend, iShiftRightCount)  ( -( ( ( -( Dividend ) ) & ( 1 << ( ( iShiftRightCount ) - 1 ) ) ) ? ( ( -( Dividend ) ) >> ( iShiftRightCount ) ) + 1 : ( ( -( Dividend ) ) >> ( iShiftRightCount ) ) ) )
+#define ROUND_SHR(Dividend, iShiftRightCount)           ( ( ( Dividend ) >= 0 ) ? ROUND_SHR_POSITIVE( Dividend, iShiftRightCount ) : ROUND_SHR_NEGATIVE( Dividend, iShiftRightCount ) )
 
-void YCbCrConvertToRGB(int Y, int Cb, int Cr, int* R, int* G, int* B)  
-{  
-    int iTmpR = 0;  
-    int iTmpG = 0;  
-    int iTmpB = 0;  
+void YCbCrConvertToRGB(int Y, int Cb, int Cr, int* R, int* G, int* B)
+{
+    int iTmpR = 0;
+    int iTmpG = 0;
+    int iTmpB = 0;
 
-    iTmpR = (((int)Y) << 14) + 22970*(((int)Cr) - 128);  
-    iTmpG = (((int)Y) << 14) -  5638*(((int)Cb) - 128) - 11700*(((int)Cr) - 128);  
-    iTmpB = (((int)Y) << 14) + 29032*(((int)Cb) - 128);  
+    iTmpR = (((int)Y) << 14) + 22970*(((int)Cr) - 128);
+    iTmpG = (((int)Y) << 14) -  5638*(((int)Cb) - 128) - 11700*(((int)Cr) - 128);
+    iTmpB = (((int)Y) << 14) + 29032*(((int)Cb) - 128);
 
-    iTmpR = ROUND_SHR(iTmpR, 14);  
-    iTmpG = ROUND_SHR(iTmpG, 14);  
-    iTmpB = ROUND_SHR(iTmpB, 14);  
+    iTmpR = ROUND_SHR(iTmpR, 14);
+    iTmpG = ROUND_SHR(iTmpG, 14);
+    iTmpB = ROUND_SHR(iTmpB, 14);
 
-    *R = (int)RANGE_INT(iTmpR, 0, 255);  
-    *G = (int)RANGE_INT(iTmpG, 0, 255);  
+    *R = (int)RANGE_INT(iTmpR, 0, 255);
+    *G = (int)RANGE_INT(iTmpG, 0, 255);
     *B = (int)RANGE_INT(iTmpB, 0, 255);
 }
 
@@ -102,8 +102,8 @@ void YCbCrConvertToRGB(int Y, int Cb, int Cr, int* R, int* G, int* B)
 static long U[256], V[256], Y1[256], Y2[256];
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void init_yuv422p_table(void)
 {
@@ -111,7 +111,7 @@ void init_yuv422p_table(void)
 
     // Initialize table
     for (i = 0; i < 256; i++)
-    { 
+    {
         V[i]  = 15938 * i - 2221300;
         U[i]  = 20238 * i - 2771300;
         Y1[i] = 11644 * i;
@@ -136,12 +136,12 @@ memory structure
 */
 
 /**
- * @brief 
- * 
- * @param yuv422sp 
- * @param rgb 
- * @param width 
- * @param height 
+ * @brief
+ *
+ * @param yuv422sp
+ * @param rgb
+ * @param width
+ * @param height
  */
 void yuv422sp_to_rgb24(unsigned char* yuv422sp, unsigned char* rgb, int width, int height)
 {
@@ -154,7 +154,7 @@ void yuv422sp_to_rgb24(unsigned char* yuv422sp, unsigned char* rgb, int width, i
     static int init_yuv422sp = 0;    // just do it once
 
     p_y = yuv422sp;
-    p_uv = p_y + width * height;    
+    p_uv = p_y + width * height;
     p_rgb = rgb;
 
     if (init_yuv422sp == 0)
@@ -167,7 +167,7 @@ void yuv422sp_to_rgb24(unsigned char* yuv422sp, unsigned char* rgb, int width, i
     {
         y  = p_y[0];
         cb = p_uv[0];
-        cr = p_uv[1];    
+        cr = p_uv[1];
 
         r = MAX (0, MIN (255, (V[cr] + Y1[y])/10000));   //R value
         b = MAX (0, MIN (255, (U[cb] + Y1[y])/10000));   //B value
@@ -196,10 +196,10 @@ void yuv422sp_to_rgb24(unsigned char* yuv422sp, unsigned char* rgb, int width, i
 }
 
 /**
- * @brief 
- * 
- * @param rgb24 
- * @param rgb16 
+ * @brief
+ *
+ * @param rgb24
+ * @param rgb16
  */
 void rgb24_to_rgb565(uint8_t *rgb24, uint8_t *rgb16)
 {
@@ -215,9 +215,9 @@ void rgb24_to_rgb565(uint8_t *rgb24, uint8_t *rgb16)
 }
 
 /**
- * @brief 
- * 
- * @return int 
+ * @brief
+ *
+ * @return int
  */
 int main(void)
 {
@@ -248,7 +248,7 @@ int main(void)
         BL_CASE_FAIL;
     }
     cam_start();
-    
+
     LCD_Set_Addr(0,0,240,320);
     while(1)
     {

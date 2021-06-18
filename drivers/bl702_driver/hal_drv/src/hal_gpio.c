@@ -1,24 +1,24 @@
 /**
  * @file hal_gpio.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "bl702_glb.h"
 #include "bl702_gpio.h"
@@ -39,10 +39,10 @@ struct gpio_int_cfg_private
 static slist_t gpio_int_head = SLIST_OBJECT_INIT(gpio_int_head);
 
 /**
- * @brief 
- * 
- * @param pin 
- * @param mode 
+ * @brief
+ *
+ * @param pin
+ * @param mode
  */
 void gpio_set_mode(uint32_t pin, uint32_t mode)
 {
@@ -142,39 +142,39 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
     GLB_GPIO_Init(&gpio_cfg);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param value 
+ * @brief
+ *
+ * @param pin
+ * @param value
  */
 void gpio_write(uint32_t pin, uint32_t value)
 {
     GLB_GPIO_Write(pin, value);
 }
 /**
- * @brief 
- * 
- * @param pin 
+ * @brief
+ *
+ * @param pin
  */
 void gpio_toggle(uint32_t pin)
 {
 
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @return int 
+ * @brief
+ *
+ * @param pin
+ * @return int
  */
 int gpio_read(uint32_t pin)
 {
     return GLB_GPIO_Read(pin);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param cbFun 
+ * @brief
+ *
+ * @param pin
+ * @param cbFun
  */
 void gpio_attach_irq(uint32_t pin, void (*cbfun)(uint32_t pin))
 {
@@ -184,10 +184,10 @@ void gpio_attach_irq(uint32_t pin, void (*cbfun)(uint32_t pin))
     slist_add_tail(&gpio_int_head,&int_cfg->list);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param enabled 
+ * @brief
+ *
+ * @param pin
+ * @param enabled
  */
 void gpio_irq_enable(uint32_t pin, uint8_t enabled)
 {
@@ -244,5 +244,5 @@ static void GPIO_IRQ(void)
             GLB_GPIO_IntClear(int_cfg->pin,RESET);
         }
     }
-    
+
 }

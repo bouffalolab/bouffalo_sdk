@@ -49,7 +49,7 @@ void SystemInit (void)
             .errEn=DISABLE,
             .arbMod=L1C_BMX_ARB_FIX,
     };
-    
+
     /* NP boot log Flag */
     p= (uint32_t *)(BFLB_BOOTROM_NP_BOOT_LOG_ADDR);
     *p=0x5A5AA5A5;

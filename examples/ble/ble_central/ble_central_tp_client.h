@@ -44,5 +44,5 @@ struct tp_char_hdl
 #define BT_CHAR_BLE_TP_NOT_ATTR_VAL_INDEX	(9)
 
 void ble_tp_init();
-#endif 
+#endif
 

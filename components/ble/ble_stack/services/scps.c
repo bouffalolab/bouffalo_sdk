@@ -50,24 +50,24 @@ static struct bt_gatt_attr attrs[]= {
 static struct bt_gatt_service scps = BT_GATT_SERVICE(attrs);
 
 bool scps_init(u16_t scan_intvl, u16_t scan_win)
-{	
+{
     int err;
-    
+
     if (scan_intvl < 0x0004 || scan_intvl > 0x4000) {
         return false;
     }
-    
+
     if (scan_win < 0x0004 || scan_win > 0x4000) {
         return false;
     }
-    
+
     if (scan_win > scan_intvl) {
         return false;
     }
 
     intvl_win.scan_intvl = scan_intvl;
     intvl_win.scan_win = scan_win;
-    
+
     err = bt_gatt_service_register(&scps);
 
     return err?false:true;

@@ -29,7 +29,7 @@ labels.append(label)
 
 class TextChanger:
     """Changes texts of all labels every second"""
-    def __init__(self, labels, 
+    def __init__(self, labels,
                 texts=["Text", "A very long text", "A text with\nmultiple\nlines"],
                 rate=1000):
         self.texts = texts

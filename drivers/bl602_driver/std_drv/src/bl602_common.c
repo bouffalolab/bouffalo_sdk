@@ -125,7 +125,7 @@ void Interrupt_Handler(void)
     function was called. */
     __asm volatile( "csrr %0, mepc" : "=r"( ulMEPC ) );
     __asm volatile( "csrr %0, mcause" : "=r"( ulMCAUSE ) );
-    
+
     if((ulMCAUSE&0x80000000)==0){
         /*Exception*/
         MSG("Exception should not be here\r\n");
@@ -154,7 +154,7 @@ void FreeRTOS_Interrupt_Handler(void)
 }
 
 /****************************************************************************//**
- * @brief      delay us 
+ * @brief      delay us
  *
  * @param[in]  core:  systemcoreclock
  *
@@ -225,9 +225,9 @@ void ATTR_TCM_SECTION ASM_Delay_Us(uint32_t core,uint32_t cnt)
 {
     uint32_t codeAddress = 0;
     uint32_t divVal = 40;
-    
+
     codeAddress = (uint32_t)&ASM_Delay_Us;
-    
+
     /* 1M=100K*10, so multiple is 10 */
     /* loop function take 4 instructions, so instructionNum is 4 */
     /* if codeAddress locate at IROM space and irom_2t_access is 1, then irom2TAccess=2, else irom2TAccess=1 */
@@ -239,7 +239,7 @@ void ATTR_TCM_SECTION ASM_Delay_Us(uint32_t core,uint32_t cnt)
             divVal = 80;
         }
     }
-    
+
     __asm__ __volatile__(
         ".align 4\n\t"
         "lw       a4,%1\n\t"
@@ -278,7 +278,7 @@ void ATTR_TCM_SECTION ASM_Delay_Us(uint32_t core,uint32_t cnt)
 
 
 /****************************************************************************//**
- * @brief      delay us 
+ * @brief      delay us
  *
  * @param[in]  cnt:  delay cnt us
  *
@@ -292,7 +292,7 @@ void ATTR_TCM_SECTION BL602_Delay_US(uint32_t cnt)
 }
 
 /****************************************************************************//**
- * @brief      delay ms 
+ * @brief      delay ms
  *
  * @param[in]  cnt:  delay cnt ms
  *
@@ -304,7 +304,7 @@ void ATTR_TCM_SECTION BL602_Delay_MS(uint32_t cnt)
 {
     uint32_t i = 0;
     uint32_t count = 0;
-    
+
     if(cnt>=1024){
         /* delay (n*1024) ms */
         count = 1024;

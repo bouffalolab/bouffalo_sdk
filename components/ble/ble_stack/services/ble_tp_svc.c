@@ -97,13 +97,13 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
 }
 
 /*************************************************************************
-NAME    
+NAME
     ble_tp_disconnected
 */
 static void ble_tp_disconnected(struct bt_conn *conn, u8_t reason)
-{ 
+{
 	BT_WARN("%s\n",__func__);
-	
+
 	ble_tp_conn = NULL;
 }
 
@@ -153,9 +153,9 @@ static int ble_tp_recv_wr(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 }
 
 /*************************************************************************
-NAME    
+NAME
     indicate_rsp /bl_tp_send_indicate
-*/ 
+*/
 void indicate_rsp(struct bt_conn *conn, const struct bt_gatt_attr *attr,	u8_t err)
 {
    BT_WARN("receive confirm, err:%d\n", err);
@@ -208,28 +208,28 @@ static void ble_tp_notify_task(void *pvParameters)
 }
 
 /*************************************************************************
-NAME    
+NAME
     ble_tp_not_ccc_changed
-*/ 
+*/
 static void ble_tp_not_ccc_changed(const struct bt_gatt_attr *attr, u16_t value)
 {
     BT_WARN("ccc:value=[%d]\r\n",value);
-    
+
     if(tp_start){
-   
+
         if(value == BT_GATT_CCC_NOTIFY) {
             if(xTaskCreate(ble_tp_notify_task, (char*)"bletp", 256, NULL, 15, &ble_tp_task_h) == pdPASS)
             {
                 created_tp_task = 1;
                 BT_WARN("Create throughput tx task success .\n");
-            }       
-            else        
-            {      
+            }
+            else
+            {
                 created_tp_task = 0;
                 BT_WARN("Create throughput tx taskfail .\n");
             }
         } else {
-            
+
             if(created_tp_task){
                 BT_WARN("Delete throughput tx task .\n");
                 vTaskDelete(ble_tp_task_h);
@@ -247,7 +247,7 @@ static void ble_tp_not_ccc_changed(const struct bt_gatt_attr *attr, u16_t value)
 }
 
 /*************************************************************************
-*  DEFINE : attrs 
+*  DEFINE : attrs
 */
 static struct bt_gatt_attr attrs[]= {
 	BT_GATT_PRIMARY_SERVICE(BT_UUID_SVC_BLE_TP),
@@ -281,13 +281,13 @@ static struct bt_gatt_attr attrs[]= {
 							NULL,
 							NULL,
 							NULL),
-							
+
 	BT_GATT_CCC(ble_tp_not_ccc_changed, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE)
 
 };
 
 /*************************************************************************
-NAME    
+NAME
     get_attr
 */
 struct bt_gatt_attr *get_attr(u8_t index)
@@ -300,7 +300,7 @@ struct bt_gatt_service ble_tp_server = BT_GATT_SERVICE(attrs);
 
 
 /*************************************************************************
-NAME    
+NAME
     ble_tp_init
 */
 void ble_tp_init()

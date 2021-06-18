@@ -10,7 +10,7 @@
 /**
   * @brief Configuration of the Processor and Core Peripherals
    */
-  
+
 /* fix 57.6M */
 #define SystemCoreClockSet(val)                     if(val==57*6000*1000){                      \
                                                         BL_WR_WORD(0x4000F108,57.6*1000*1000);  \

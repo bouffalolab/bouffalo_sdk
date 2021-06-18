@@ -1,24 +1,24 @@
 /**
  * @file wav_play_form_sd_card.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 #include "bsp_es8388.h"
@@ -160,7 +160,7 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR* path)
         MSG("wav file parse error\r\n");
         return 1;
     }
-    
+
     audio_dev->device = device_find("I2S");
     if(audio_dev->device)
     {
@@ -214,9 +214,9 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR* path)
             return 1;
             break;
         }
-        
+
         ES8388_Init(&ES8388Cfg);
-        ES8388_Set_Voice_Volume(20);  
+        ES8388_Set_Voice_Volume(20);
 
         MSG("sampl_freq_hz : %d\r\n",((i2s_device_t*)(audio_dev->device))->sampl_freq_hz);
         MSG("channel_num   : %d\r\n",((i2s_device_t*)(audio_dev->device))->channel_num);
@@ -292,8 +292,8 @@ static int sd_wav_play_control(struct audio_dev *audio_dev, AUDIO_CMD_t cmd, voi
             res=0;
         }
         break;
-    case AUDIO_CMD_VOLUME: 
-        if(audio_dev->audio_state)  
+    case AUDIO_CMD_VOLUME:
+        if(audio_dev->audio_state)
         {
             res = ES8388_Set_Voice_Volume((uint32_t)args);
             res=0;

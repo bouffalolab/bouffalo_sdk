@@ -109,7 +109,7 @@ void blsp_dump_data(void *datain,int len)
     int i=0;
     uint8_t *data=(uint8_t *)datain;
     data = data;
-    
+
     for(i=0;i<len;i++){
         if(i%16==0&&i!=0){
             bflb_eflash_loader_printf("\r\n");
@@ -131,13 +131,13 @@ int32_t blsp_mediaboot_pre_jump(void)
 {
     /* Sec eng deinit*/
     blsp_boot2_reset_sec_eng();
-    
+
     /* Platform deinit */
-    bflb_platform_deinit(); 
-    
+    bflb_platform_deinit();
+
     /* Jump to entry */
     blsp_boot2_jump_entry();
-    
+
     return BFLB_BOOT2_SUCCESS;
 }
 
@@ -150,20 +150,20 @@ int32_t blsp_mediaboot_pre_jump(void)
  *
 *******************************************************************************/
 void blsp_boot2_exit(void)
-{    
+{
     uint32_t i=0;
-    
+
     blsp_sboot_finish();
     /* Prepare release Other CPUs anyway */
     /* Deal Other CPU's entry point */
     for(i=1;i<g_cpu_count;i++){
         BL_WR_WORD(g_boot_cpu_cfg[i].msp_store_addr,0);
         BL_WR_WORD(g_boot_cpu_cfg[i].pc_store_addr,0);
-    }    
+    }
     /* Release other CPUs*/
     if(g_cpu_count!=1&&!g_boot_img_cfg[0].halt_cpu1){
         blsp_boot2_releae_other_cpu();
-    }    
+    }
     /* Stay here */
     while(1){
         /* Use soft delay only */
@@ -184,9 +184,9 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
     pentry_t  pentry;
     uint32_t i=0;
     int32_t ret;
-    
-    blsp_sboot_finish();    
-        
+
+    blsp_sboot_finish();
+
     /*Note:enable cache with flash offset, after this, should be no flash directl read,
       If need read, should take flash offset into consideration */
     if(0!=g_efuse_cfg.encrypted[0]){
@@ -199,7 +199,7 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
     if(ret!=BFLB_BOOT2_SUCCESS){
         return;
     }
-    
+
     /* Deal Other CPUs' entry point */
     /* Prepare release CPU1 anyway */
     for(i=1;i<g_cpu_count;i++){
@@ -224,7 +224,7 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
         if(pentry!=NULL){
             pentry();
         }
-    }   
+    }
     /* Release other CPUs unless user halt it */
     if(g_cpu_count!=1&&!g_boot_img_cfg[0].halt_cpu1){
         blsp_boot2_releae_other_cpu();

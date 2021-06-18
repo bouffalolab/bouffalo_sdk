@@ -1,24 +1,24 @@
 /**
  * @file hal_uart.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #ifndef __HAL_UART__H__
 #define __HAL_UART__H__
@@ -45,7 +45,7 @@ enum uart_index_type
  *
  *  This enumeration defines the UART data lengths.
  */
-typedef enum  
+typedef enum
 {
     UART_DATA_LEN_5 = 0,  /*!< Data length is 5 bits */
     UART_DATA_LEN_6 = 1,  /*!< Data length is 6 bits */
@@ -58,7 +58,7 @@ typedef enum
  *
  *  This enumeration defines the UART stop bits.
  */
-typedef enum  
+typedef enum
 {
     UART_STOP_ONE = 0,  /*!< One stop bit */
     UART_STOP_ONE_D_FIVE = 1,  /*!< 1.5 stop bit */
@@ -70,7 +70,7 @@ typedef enum
  *
  *  This enumeration defines the UART parity types.
  */
-typedef enum  
+typedef enum
 {
     UART_PAR_NONE = 0,  /*!< No parity */
     UART_PAR_ODD  = 1,  /*!< Parity bit is odd */
@@ -100,12 +100,12 @@ enum uart_it_type
     UART_ALL_IT = 1 << 8
 };
 
-typedef struct 
+typedef struct
 {
     uint32_t baudrate;
     uart_databits_t databits;
     uart_stopbits_t stopbits;
-    uart_parity_t parity;    
+    uart_parity_t parity;
 }uart_param_cfg_t;
 
 typedef struct uart_device

@@ -4,7 +4,7 @@ LV_VER_RES=240
 def event_handler(source,evt):
     if  evt == lv.EVENT.VALUE_CHANGED:
         print("Value:",textarea.get_text())
-            
+
 # create a keyboard and apply the styles
 keyb = lv.keyboard(lv.scr_act(),None)
 keyb.set_cursor_manage(True)
@@ -18,5 +18,5 @@ if ta.get_height() > max_h:
     ta.set_height(max_h)
 
 # Assign the text area to the keyboard*/
-keyb.set_textarea(ta)    
+keyb.set_textarea(ta)
 

@@ -1,7 +1,7 @@
 #include "byteorder.h"
 #include "oad_service.h"
 #include "oad.h"
- 
+
 oad_upper_recv_cb upper_recv_cb;
 oad_disc_cb disc_cb;
 struct bt_conn *ble_oad_conn = NULL;
@@ -32,14 +32,14 @@ static int oad_recv(struct bt_conn *conn,
 			  u16_t len, u16_t offset, u8_t flags)
 {
     (upper_recv_cb)(conn, buf, len);
-    
+
     return 0;
 }
 
 static void oad_ccc_changed(const struct bt_gatt_attr *attr, u16_t value)
 {
     BT_WARN("oad ccc:value=[%d]\r\n",value);
-    
+
 }
 
 static struct bt_gatt_attr oad_attrs[] = {
@@ -56,7 +56,7 @@ static struct bt_gatt_attr oad_attrs[] = {
 
 static struct bt_gatt_service oad_svc = BT_GATT_SERVICE(oad_attrs);
 
-void bt_oad_notify(struct bt_conn *conn, const void *data, u16_t len)  
+void bt_oad_notify(struct bt_conn *conn, const void *data, u16_t len)
 {
     bt_gatt_notify(conn, &oad_attrs[3], data, len);
 }

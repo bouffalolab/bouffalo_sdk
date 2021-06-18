@@ -23,7 +23,7 @@ int multi_adv_get_instant_num(void)
 {
     int i, num = 0;
     struct multi_adv_instant *inst = &(g_multi_adv_list[0]);
-    
+
     for (i = 0; i < MAX_MULTI_ADV_INSTANT; i++) {
         if (inst[i].inuse_flag)
             num++;
@@ -50,21 +50,21 @@ int multi_adv_delete_instant_by_id(int instant_id)
 {
     int i;
     struct multi_adv_instant *inst = &(g_multi_adv_list[0]);
-    
+
     for (i = 0; i < MAX_MULTI_ADV_INSTANT; i++) {
         if ((inst[i].inuse_flag) && (instant_id == (inst[i].instant_id))) {
             inst[i].inuse_flag = 0;
             return 0;
         }
     }
-    return -1;       
+    return -1;
 }
 
 struct multi_adv_instant *multi_adv_find_instant_by_id(int instant_id)
 {
     int i;
     struct multi_adv_instant *inst = &(g_multi_adv_list[0]);
-    
+
     for (i = 0; i < MAX_MULTI_ADV_INSTANT; i++) {
         if ((inst[i].inuse_flag) && (instant_id == (inst[i].instant_id))) {
             return &(inst[i]);
@@ -77,7 +77,7 @@ struct multi_adv_instant *multi_adv_find_instant_by_order(int order)
 {
 
     struct multi_adv_instant *inst = &(g_multi_adv_list[0]);
-    
+
     if (inst[order].inuse_flag) {
         return &(inst[order]);
     }
@@ -133,32 +133,32 @@ int calculate_min_multi(int a, int b)
         y = z;
     }
 
-    return a*b/x; 
+    return a*b/x;
 }
 
 void multi_adv_reorder(int inst_num, uint16_t inst_interval[], uint8_t inst_order[])
 {
     int i, j;
-    
+
     for (i = 0; i < inst_num; i++) {
         int max = inst_interval[0];
         int max_idx = 0;
         int temp;
-        
+
         for (j = 1; j < inst_num-i ; j++) {
             if (max < inst_interval[j]) {
                 max = inst_interval[j];
                 max_idx = j;
             }
         }
-            
+
         temp = inst_interval[inst_num-i-1];
         inst_interval[inst_num-i-1] = inst_interval[max_idx];
         inst_interval[max_idx] = temp;
-    
+
         temp = inst_order[inst_num-i-1];
         inst_order[inst_num-i-1] = inst_order[max_idx];
-        inst_order[max_idx] = temp;        
+        inst_order[max_idx] = temp;
     }
 }
 
@@ -230,8 +230,8 @@ void multi_adv_schedule_table(int inst_num, uint16_t inst_interval[], uint16_t i
 int multi_adv_start_adv_instant(struct multi_adv_instant *adv_instant)
 {
     int ret;
-    
-    ret = bt_le_adv_start_instant(&adv_instant->param, 
+
+    ret = bt_le_adv_start_instant(&adv_instant->param,
                                 adv_instant->ad, adv_instant->ad_len,
                                 adv_instant->sd, adv_instant->sd_len);
     if (ret) {
@@ -268,7 +268,7 @@ int multi_adv_schedule_timer_start(int timeout)
 
     k_delayed_work_submit(&g_multi_adv_timer, timeout);
     adv_scheduler->schedule_timer_active = 1;
-    
+
     return 1;
 }
 
@@ -354,12 +354,12 @@ void multi_adv_schedule_timeslot(struct multi_adv_scheduler *adv_scheduler)
         }
         next_slot = match*inst_interval[i]+inst_offset[i];
         if (next_slot < min_next_slot) {
-            min_next_slot = next_slot; 
-        } 
+            min_next_slot = next_slot;
+        }
     }
     adv_scheduler->next_slot_offset = 0;
     adv_scheduler->next_slot_clock = min_next_slot;
- 
+
     next_slot = (adv_scheduler->next_slot_clock - adv_scheduler->slot_clock)*TIME_PRIOD_MS+(adv_scheduler->next_slot_offset-adv_scheduler->slot_offset);
     multi_adv_schedule_timer_start(next_slot);
     return;
@@ -376,7 +376,7 @@ void multi_adv_schedule_stop(void)
 void multi_adv_schedule_start(void)
 {
     struct multi_adv_scheduler *adv_scheduler = &g_multi_adv_scheduler;
-    
+
     /* get all instant and calculate ticks and */
     if (adv_scheduler->schedule_state == SCHEDULE_START) {
         multi_adv_schedule_stop();
@@ -412,7 +412,7 @@ void multi_adv_new_schedule(void)
                 high_duty_instant = adv_instant;
                 break;
             }
-        
+
             inst_interval[inst_num] = change_to_tick(adv_instant->param.interval_min, adv_instant->param.interval_max);
             inst_order[inst_num] = i;
             inst_num++;
@@ -487,11 +487,11 @@ int bt_le_multi_adv_start(const struct bt_le_adv_param *param,
     adv_instant->sd_len = multi_adv_set_ad_data(adv_instant->sd, sd, sd_len);
 
     multi_adv_new_schedule();
-    
-    *instant_id = adv_instant->instant_id;  
+
+    *instant_id = adv_instant->instant_id;
     return 0;
 }
-                    
+
 int bt_le_multi_adv_stop(int instant_id)
 {
     if (multi_adv_find_instant_by_id(instant_id) == 0)
@@ -508,7 +508,7 @@ bool bt_le_multi_adv_id_is_vaild(int instant_id)
 {
     int i;
     struct multi_adv_instant *inst = &(g_multi_adv_list[0]);
-    
+
     for (i = 0; i < MAX_MULTI_ADV_INSTANT; i++) {
         if ((inst[i].inuse_flag) && (instant_id == (inst[i].instant_id))) {
             return true;

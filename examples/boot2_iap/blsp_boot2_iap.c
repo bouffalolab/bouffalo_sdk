@@ -143,7 +143,7 @@ static void blsp_boot2_on_error(void *log)
  * @brief  Boot2 Dump partition entry
  *
  * @param  ptEntry: Partition entry pointer to dump
- * 
+ *
  * @return None
  *
 *******************************************************************************/
@@ -339,9 +339,9 @@ int main(void)
     //boot_clk_config clk_cfg;
     uint8_t flash_cfg_buf[4+sizeof(SPI_Flash_Cfg_Type)+4]={0};
 
-    
+
 	bflb_eflash_loader_uart_init();
-    bflb_platform_init(0);	
+    bflb_platform_init(0);
     flash_init();
 
     bflb_platform_print_set(blsp_boot2_get_log_disable_flag());
@@ -389,28 +389,28 @@ int main(void)
         /* Set flash operation function, read via xip */
         pt_table_set_flash_operation(flash_erase_xip,flash_write_xip,flash_read_xip);
     }
-    
+
     while(1){
-        
+
         temp_mode=0;
         do{
             active_id=pt_table_get_active_partition_need_lock(pt_table_stuff);
-            
+
             if(PT_TABLE_ID_INVALID==active_id){
                 blsp_boot2_on_error("No valid PT\r\n");
             }
             MSG_DBG("Active PT:%d,%d\r\n",active_id,pt_table_stuff[active_id].pt_table.age);
-            
-            
+
+
             pt_parsed=blsp_boot2_deal_one_fw(active_id,&pt_table_stuff[active_id],&pt_entry[0],NULL,PT_ENTRY_FW_CPU0);
             if(pt_parsed==0){
                 continue;
             }
-           
+
             pt_parsed=1;
         }while(pt_parsed==0);
 
-        
+
 
         /* Pass data to App*/
         blsp_boot2_pass_parameter(NULL,0);
@@ -425,9 +425,9 @@ int main(void)
             /* Include magic and CRC32 */
             blsp_boot2_pass_parameter(flash_cfg_buf,sizeof(flash_cfg_buf));
         }
-        
+
         MSG_DBG("Boot start\r\n");
-        
+
         for(i=0;i<g_cpu_count;i++){
             boot_header_addr[i]=pt_entry[i].start_address[pt_entry[i].active_index];
         }
@@ -441,8 +441,8 @@ int main(void)
 #else
         ret=blsp_mediaboot_main(boot_header_addr,boot_rollback,0);
 #endif
-        
-        
+
+
         /* Fail in temp mode,continue to boot normal image */
         if(temp_mode==1){
             continue;
@@ -469,7 +469,7 @@ int main(void)
 #else
         break;
 #endif
-        
+
     }
     /* We should never get here unless boot fail */
     MSG_ERR("Media boot return %d\r\n",ret);
@@ -480,7 +480,7 @@ int main(void)
         MSG_ERR("BLSP boot2 fail\r\n");
         ARCH_Delay_MS(500);
     }
-    
+
 }
 
 void bfl_main()

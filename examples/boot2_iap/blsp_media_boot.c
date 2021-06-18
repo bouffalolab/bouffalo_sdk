@@ -110,14 +110,14 @@ static int32_t blsp_mediaboot_cal_hash(uint32_t start_addr,uint32_t total_len)
     uint32_t addr=start_addr;
     int32_t ret;
     uint32_t dump_cnt=0;
-    
+
     while(deal_len<total_len){
 
         read_len=total_len-deal_len;
         if(read_len>BFLB_BOOT2_READBUF_SIZE){
             read_len=BFLB_BOOT2_READBUF_SIZE;
         }
-        
+
         ret=blsp_mediaboot_read(addr,g_boot2_read_buf,read_len);
         if(ret!=BFLB_BOOT2_SUCCESS){
             return ret;
@@ -131,7 +131,7 @@ static int32_t blsp_mediaboot_cal_hash(uint32_t start_addr,uint32_t total_len)
         /* Update hash*/
         Sec_Eng_SHA256_Update(&g_sha_ctx,SEC_ENG_SHA_ID0,(uint8_t *)g_boot2_read_buf,read_len);
         //blsp_dump_data((uint8_t *)g_boot2_read_buf,readLen);
-        
+
         addr+=read_len;
         deal_len+=read_len;
     }
@@ -153,7 +153,7 @@ static int32_t BLSP_MediaBoot_Read_Signaure(uint32_t addr,uint32_t *len)
     int32_t ret=BFLB_BOOT2_SUCCESS;
     uint32_t sig_len=0;
     uint8_t *ptmp;
-    
+
     /* Read signature*/
     ret=blsp_mediaboot_read(addr,(uint8_t*)&sig_len,sizeof(sig_len));
     if(ret!=BFLB_BOOT2_SUCCESS){
@@ -172,7 +172,7 @@ static int32_t BLSP_MediaBoot_Read_Signaure(uint32_t addr,uint32_t *len)
     ARCH_MemCpy_Fast(g_boot2_read_buf,&sig_len,sizeof(sig_len));
     addr+=(sig_len+4);
     *len=sig_len;
-    
+
     return ret;
 }
 #endif
@@ -191,7 +191,7 @@ static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg,uint3
     uint32_t addr=boot_header_addr;
     int32_t ret;
 //    uint32_t sig_len=0;
-    
+
     /* Read boot header*/
     MSG_DBG("R header from %08x\r\n",addr);
     ret=blsp_mediaboot_read(addr,g_boot2_read_buf,sizeof(boot_header_config));
@@ -201,7 +201,7 @@ static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg,uint3
     if(blsp_boot2_dump_critical_flag()){
         blsp_dump_data(g_boot2_read_buf,sizeof(boot_header_config));
     }
-    
+
     addr+=sizeof(boot_header_config);
     ret=blsp_boot_parse_bootheader(boot_img_cfg,(uint8_t *)g_boot2_read_buf);
     if(ret!=BFLB_BOOT2_SUCCESS){
@@ -227,12 +227,12 @@ static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg,uint3
 //        ret=blsp_boot_parser_check_signature(g_boot_img_cfg);
 //        if(ret!=BFLB_BOOT2_SUCCESS){
 //            return ret;
-//        }               
+//        }
         boot_img_cfg->img_valid=1;
     }else{
         boot_img_cfg->img_valid=0;
-    } 
-    
+    }
+
     return ret;
 }
 
@@ -283,7 +283,7 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX],ui
         cpu_roll_back[i]=0;
     }
     g_boot_img_cfg[0].halt_cpu1=0;
-    
+
     /* Try to boot from flash */
     for(i=0;i<g_cpu_count;i++){
         if(boot_header_addr[i]==0){
@@ -302,7 +302,7 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX],ui
     if(valid_img_found!=g_cpu_count && 1==roll_back){
         /* For CP and DP, found CPU0 image is taken as correct when the other not found, others as wrong and try to rollback */
         if(boot_header_addr[1]==0 && valid_img_found==1){
-            MSG_DBG("Found One img Only\r\n");            
+            MSG_DBG("Found One img Only\r\n");
         }else{
             MSG_ERR("Image roll back\r\n");
             return BFLB_BOOT2_IMG_Roll_Back;
@@ -312,8 +312,8 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX],ui
         MSG_ERR("no valid img found\r\n");
         return BFLB_BOOT2_IMG_ALL_INVALID_ERROR;
     }
-    
-    
+
+
     /* Get msp and pc value */
     for(i=0;i<g_cpu_count;i++){
         if(g_boot_img_cfg[i].img_valid){
@@ -345,15 +345,15 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX],ui
     MSG_DBG("%08x,%08x\r\n",g_boot_img_cfg[1].img_start.flash_offset,g_boot_img_cfg[1].cache_way_disable);
     MSG_DBG("CPU Count %d,%d\r\n",g_cpu_count,g_boot_img_cfg[0].halt_cpu1);
     blsp_boot2_show_timer();
-    
+
     /* Fix invalid pc and msp */
-    blsp_fix_invalid_msp_pc();   
+    blsp_fix_invalid_msp_pc();
     if(BFLB_EFLASH_LOADER_HANDSHAKE_SUSS == bflb_eflash_loader_uart_handshake_poll()){
             bflb_eflash_loader_main();
-        }       
+        }
     /* Prepare jump to entry*/
     blsp_mediaboot_pre_jump();
-    
+
     /* We should never get here unless something is wrong */
     return BFLB_BOOT2_FAIL;
 }

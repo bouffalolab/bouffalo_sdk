@@ -90,11 +90,11 @@
 void TZC_Sboot_Set(uint8_t Val)
 {
     uint32_t tmpVal;
-    
+
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_SBOOT_DONE,Val);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL,tmpVal);
 }
 
@@ -111,24 +111,24 @@ void TZC_Sboot_Set(uint8_t Val)
 void TZC_Set_Rom0_R0_Protect(uint32_t start,uint32_t end)
 {
     uint32_t tmpVal;
-    
+
     /* Set Range */
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM0_R0);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R0_START,start>>10);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R0_END,end>>10);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM0_R0,tmpVal);
-    
-    
+
+
     /* Enable */
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R0_ID0_EN,0);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R0_ID1_EN,0);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R0_EN,1);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R0_LOCK,1);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL,tmpVal);
 }
 
@@ -145,24 +145,24 @@ void TZC_Set_Rom0_R0_Protect(uint32_t start,uint32_t end)
 void TZC_Set_Rom0_R1_Protect(uint32_t start,uint32_t end)
 {
     uint32_t tmpVal;
-    
+
     /* Set Range */
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM0_R1);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R1_START,start>>10);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R1_END,end>>10);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM0_R1,tmpVal);
-    
-    
+
+
     /* Enable */
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R1_ID0_EN,0);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R1_ID1_EN,0);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R1_EN,1);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM0_R1_LOCK,1);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL,tmpVal);
 }
 
@@ -179,24 +179,24 @@ void TZC_Set_Rom0_R1_Protect(uint32_t start,uint32_t end)
 void TZC_Set_Rom1_R0_Protect(uint32_t start,uint32_t end)
 {
     uint32_t tmpVal;
-    
+
     /* Set Range */
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM1_R0);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R0_START,start>>10);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R0_END,end>>10);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM1_R0,tmpVal);
-    
-    
+
+
     /* Enable */
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R0_ID0_EN,0);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R0_ID1_EN,0);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R0_EN,1);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R0_LOCK,1);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL,tmpVal);
 }
 
@@ -213,24 +213,24 @@ void TZC_Set_Rom1_R0_Protect(uint32_t start,uint32_t end)
 void TZC_Set_Rom1_R1_Protect(uint32_t start,uint32_t end)
 {
     uint32_t tmpVal;
-    
+
     /* Set Range */
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM1_R1);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R1_START,start>>10);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R1_END,end>>10);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM1_R1,tmpVal);
-    
-    
+
+
     /* Enable */
     tmpVal=BL_RD_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL);
-    
+
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R1_ID0_EN,0);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R1_ID1_EN,0);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R1_EN,1);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,TZC_SEC_TZC_ROM1_R1_LOCK,1);
-    
+
     BL_WR_REG(TZC_SEC_BASE,TZC_SEC_TZC_ROM_CTRL,tmpVal);
 }
 

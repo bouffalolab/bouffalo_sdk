@@ -244,7 +244,7 @@ struct bt_l2cap_chan_ops {
 	 *  @param status The channel status
 	 */
 	void (*status)(struct bt_l2cap_chan *chan, atomic_t *status);
-    
+
     #if defined(BFLB_BLE_MTU_CHANGE_CB)
     void (*mtu_changed)(struct bt_l2cap_chan *chan, u16_t mtu);
     #endif

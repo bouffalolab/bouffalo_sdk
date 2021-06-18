@@ -1,24 +1,24 @@
 /**
  * @file ring_buffer.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "ring_buffer.h"
 
@@ -86,20 +86,20 @@ BL_Err_Type Ring_Buffer_Init(Ring_Buffer_Type* rbType,uint8_t* buffer,uint32_t s
 {
     /* Init ring buffer pointer */
     rbType->pointer = buffer;
-    
+
     /* Init read/write mirror and index */
     rbType->readMirror = 0;
     rbType->readIndex = 0;
     rbType->writeMirror = 0;
     rbType->writeIndex = 0;
-    
+
     /* Set ring buffer size */
     rbType->size = size;
-    
+
     /* Set lock and unlock callback function */
     rbType->lock = lockCb;
     rbType->unlock = unlockCb;
-    
+
     return SUCCESS;
 }
 
@@ -117,17 +117,17 @@ BL_Err_Type Ring_Buffer_Reset(Ring_Buffer_Type* rbType)
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Clear read/write mirror and index */
     rbType->readMirror = 0;
     rbType->readIndex = 0;
     rbType->writeMirror = 0;
     rbType->writeIndex = 0;
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
-    
+
     return SUCCESS;
 }
 
@@ -146,15 +146,15 @@ BL_Err_Type Ring_Buffer_Reset(Ring_Buffer_Type* rbType)
 uint32_t Ring_Buffer_Write_Callback(Ring_Buffer_Type* rbType,uint32_t length,ringBuffer_Write_Callback* writeCb,void* parameter)
 {
     uint32_t sizeRemained = Ring_Buffer_Get_Empty_Length(rbType);
-    
+
     if(writeCb == NULL){
         return 0;
     }
-    
+
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Ring buffer has no space for new data */
     if(sizeRemained == 0){
         if(rbType->unlock != NULL){
@@ -162,15 +162,15 @@ uint32_t Ring_Buffer_Write_Callback(Ring_Buffer_Type* rbType,uint32_t length,rin
         }
         return 0;
     }
-    
+
     /* Drop part of data when length out of space remained */
     if(length > sizeRemained){
         length = sizeRemained;
     }
-    
+
     /* Get size of space remained in current mirror */
     sizeRemained = rbType->size - rbType->writeIndex;
-    
+
     if(sizeRemained > length){
         /* Space remained is enough for data in current mirror */
         writeCb(parameter,&rbType->pointer[rbType->writeIndex],length);
@@ -182,7 +182,7 @@ uint32_t Ring_Buffer_Write_Callback(Ring_Buffer_Type* rbType,uint32_t length,rin
         rbType->writeIndex = length-sizeRemained;
         rbType->writeMirror = ~rbType->writeMirror;
     }
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
@@ -203,7 +203,7 @@ uint32_t Ring_Buffer_Write_Callback(Ring_Buffer_Type* rbType,uint32_t length,rin
 static void Ring_Buffer_Write_Copy(void* parameter,uint8_t* dest,uint32_t length)
 {
     uint8_t **src = (uint8_t **)parameter;
-    
+
     ARCH_MemCpy_Fast(dest,*src,length);
     *src += length;
 }
@@ -239,7 +239,7 @@ uint32_t Ring_Buffer_Write_Byte(Ring_Buffer_Type* rbType,const uint8_t data)
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Ring buffer has no space for new data */
     if(!Ring_Buffer_Get_Empty_Length(rbType)){
         if(rbType->unlock != NULL){
@@ -247,9 +247,9 @@ uint32_t Ring_Buffer_Write_Byte(Ring_Buffer_Type* rbType,const uint8_t data)
         }
         return 0;
     }
-    
+
     rbType->pointer[rbType->writeIndex] = data;
-    
+
     /* Judge to change index and mirror */
     if(rbType->writeIndex != (rbType->size-1)){
         rbType->writeIndex++;
@@ -257,7 +257,7 @@ uint32_t Ring_Buffer_Write_Byte(Ring_Buffer_Type* rbType,const uint8_t data)
         rbType->writeIndex = 0;
         rbType->writeMirror = ~rbType->writeMirror;
     }
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
@@ -280,22 +280,22 @@ uint32_t Ring_Buffer_Write_Force(Ring_Buffer_Type* rbType,const uint8_t* data,ui
 {
     uint32_t sizeRemained = Ring_Buffer_Get_Empty_Length(rbType);
     uint32_t indexRemained = rbType->size - rbType->writeIndex;
-    
+
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Drop extra data when data length is large than size of ring buffer */
     if(length > rbType->size){
         data = &data[length - rbType->size];
         length = rbType->size;
     }
-    
+
     if(indexRemained > length){
         /* Space remained is enough for data in current mirror */
         ARCH_MemCpy_Fast(&rbType->pointer[rbType->writeIndex],data,length);
         rbType->writeIndex += length;
-        
+
         /* Update read index */
         if(length > sizeRemained){
             rbType->readIndex = rbType->writeIndex;
@@ -306,14 +306,14 @@ uint32_t Ring_Buffer_Write_Force(Ring_Buffer_Type* rbType,const uint8_t* data,ui
         ARCH_MemCpy_Fast(&rbType->pointer[0],&data[indexRemained],length-indexRemained);
         rbType->writeIndex = length-indexRemained;
         rbType->writeMirror = ~rbType->writeMirror;
-        
+
         /* Update read index and mirror */
         if(length > sizeRemained){
             rbType->readIndex = rbType->writeIndex;
             rbType->readMirror = ~rbType->readMirror;
         }
     }
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
@@ -334,18 +334,18 @@ uint32_t Ring_Buffer_Write_Force(Ring_Buffer_Type* rbType,const uint8_t* data,ui
 uint32_t Ring_Buffer_Write_Byte_Force(Ring_Buffer_Type* rbType,const uint8_t data)
 {
     Ring_Buffer_Status_Type status = Ring_Buffer_Get_Status(rbType);
-    
+
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     rbType->pointer[rbType->writeIndex] = data;
-    
+
     /* Judge to change index and mirror */
     if(rbType->writeIndex == rbType->size-1){
         rbType->writeIndex = 0;
         rbType->writeMirror = ~rbType->writeMirror;
-        
+
         /* Update read index and mirror */
         if(status == RING_BUFFER_FULL){
             rbType->readIndex = rbType->writeIndex;
@@ -353,13 +353,13 @@ uint32_t Ring_Buffer_Write_Byte_Force(Ring_Buffer_Type* rbType,const uint8_t dat
         }
     }else{
         rbType->writeIndex++;
-        
+
         /* Update read index */
         if(status == RING_BUFFER_FULL){
             rbType->readIndex = rbType->writeIndex;
         }
     }
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
@@ -381,15 +381,15 @@ uint32_t Ring_Buffer_Write_Byte_Force(Ring_Buffer_Type* rbType,const uint8_t dat
 uint32_t Ring_Buffer_Read_Callback(Ring_Buffer_Type* rbType,uint32_t length,ringBuffer_Read_Callback* readCb,void* parameter)
 {
     uint32_t size = Ring_Buffer_Get_Length(rbType);
-    
+
     if(readCb == NULL){
         return 0;
     }
-    
+
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Ring buffer has no data */
     if(!size){
         if(rbType->unlock != NULL){
@@ -397,15 +397,15 @@ uint32_t Ring_Buffer_Read_Callback(Ring_Buffer_Type* rbType,uint32_t length,ring
         }
         return 0;
     }
-    
+
     /* Ring buffer do not have enough data */
     if(size < length){
         length = size;
     }
-    
+
     /* Get size of space remained in current mirror */
     size = rbType->size - rbType->readIndex;
-    
+
     if(size > length){
         /* Read all data needed */
         readCb(parameter,&rbType->pointer[rbType->readIndex],length);
@@ -417,7 +417,7 @@ uint32_t Ring_Buffer_Read_Callback(Ring_Buffer_Type* rbType,uint32_t length,ring
         rbType->readIndex = length-size;
         rbType->readMirror = ~rbType->readMirror;
     }
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
@@ -438,7 +438,7 @@ uint32_t Ring_Buffer_Read_Callback(Ring_Buffer_Type* rbType,uint32_t length,ring
 static void Ring_Buffer_Read_Copy(void* parameter,uint8_t* data,uint32_t length)
 {
     uint8_t **dest = (uint8_t **)parameter;
-    
+
     ARCH_MemCpy_Fast(*dest,data,length);
     *dest += length;
 }
@@ -474,7 +474,7 @@ uint32_t Ring_Buffer_Read_Byte(Ring_Buffer_Type* rbType,uint8_t* data)
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Ring buffer has no data */
     if(!Ring_Buffer_Get_Length(rbType)){
         if(rbType->unlock != NULL){
@@ -482,10 +482,10 @@ uint32_t Ring_Buffer_Read_Byte(Ring_Buffer_Type* rbType,uint8_t* data)
         }
         return 0;
     }
-    
+
     /* Read data */
     *data = rbType->pointer[rbType->readIndex];
-    
+
     /* Update read index and mirror */
     if(rbType->readIndex == rbType->size-1){
         rbType->readIndex = 0;
@@ -493,7 +493,7 @@ uint32_t Ring_Buffer_Read_Byte(Ring_Buffer_Type* rbType,uint8_t* data)
     }else{
         rbType->readIndex++;
     }
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
@@ -514,11 +514,11 @@ uint32_t Ring_Buffer_Read_Byte(Ring_Buffer_Type* rbType,uint8_t* data)
 uint32_t Ring_Buffer_Peek(Ring_Buffer_Type* rbType,uint8_t* data,uint32_t length)
 {
     uint32_t size = Ring_Buffer_Get_Length(rbType);
-    
+
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Ring buffer has no data */
     if(!size){
         if(rbType->unlock != NULL){
@@ -526,15 +526,15 @@ uint32_t Ring_Buffer_Peek(Ring_Buffer_Type* rbType,uint8_t* data,uint32_t length
         }
         return 0;
     }
-    
+
     /* Ring buffer do not have enough data */
     if(size < length){
         length = size;
     }
-    
+
     /* Get size of space remained in current mirror */
     size = rbType->size - rbType->readIndex;
-    
+
     if(size > length){
         /* Read all data needed */
         ARCH_MemCpy_Fast(data,&rbType->pointer[rbType->readIndex],length);
@@ -543,7 +543,7 @@ uint32_t Ring_Buffer_Peek(Ring_Buffer_Type* rbType,uint8_t* data,uint32_t length
         ARCH_MemCpy_Fast(data,&rbType->pointer[rbType->readIndex],size);
         ARCH_MemCpy_Fast(&data[size],&rbType->pointer[0],length-size);
     }
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
@@ -565,7 +565,7 @@ uint32_t Ring_Buffer_Peek_Byte(Ring_Buffer_Type* rbType,uint8_t* data)
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Ring buffer has no data */
     if(!Ring_Buffer_Get_Length(rbType)){
         if(rbType->unlock != NULL){
@@ -573,10 +573,10 @@ uint32_t Ring_Buffer_Peek_Byte(Ring_Buffer_Type* rbType,uint8_t* data)
         }
         return 0;
     }
-    
+
     /* Read data */
     *data = rbType->pointer[rbType->readIndex];
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
@@ -599,21 +599,21 @@ uint32_t Ring_Buffer_Get_Length(Ring_Buffer_Type* rbType)
     uint32_t readIndex = 0;
     uint32_t writeIndex = 0;
     uint32_t size = 0;
-    
+
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     readMirror = rbType->readMirror;
     writeMirror = rbType->writeMirror;
     readIndex = rbType->readIndex;
     writeIndex = rbType->writeIndex;
     size = rbType->size;
-    
+
     if(rbType->unlock != NULL){
         rbType->unlock();
     }
-    
+
     if(readMirror == writeMirror){
         return writeIndex - readIndex;
     }else{
@@ -649,7 +649,7 @@ Ring_Buffer_Status_Type Ring_Buffer_Get_Status(Ring_Buffer_Type* rbType)
     if(rbType->lock != NULL){
         rbType->lock();
     }
-    
+
     /* Judge empty or full */
     if(rbType->readIndex == rbType->writeIndex){
         if(rbType->readMirror == rbType->writeMirror){

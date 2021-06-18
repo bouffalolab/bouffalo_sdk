@@ -1,24 +1,24 @@
 /**
  * @file hal_cam.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 #include "bl702_cam.h"
@@ -26,13 +26,13 @@
 #include "hal_cam.h"
 
 /**
- * @brief 
- * 
- * @param cam_cfg 
+ * @brief
+ *
+ * @param cam_cfg
  */
 void cam_init(cam_device_t *cam_cfg)
 {
-    CAM_CFG_Type camera_cfg = 
+    CAM_CFG_Type camera_cfg =
     {
         .swMode    = cam_cfg->software_mode,
         .swIntCnt  = 0,
@@ -55,8 +55,8 @@ void cam_init(cam_device_t *cam_cfg)
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void cam_start(void)
 {
@@ -64,8 +64,8 @@ void cam_start(void)
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void cam_stop(void)
 {
@@ -73,10 +73,10 @@ void cam_stop(void)
 }
 
 /**
- * @brief 
- * 
- * @param pic 
- * @param len 
+ * @brief
+ *
+ * @param pic
+ * @param len
  */
 uint8_t cam_get_one_frame_interleave(uint8_t **pic, uint32_t *len)
 {
@@ -117,12 +117,12 @@ uint8_t cam_get_one_frame_planar(CAM_YUV_Mode_Type yuv, uint8_t **picYY, uint32_
             return ERROR;
         }
     }
-    
+
     *picYY = (uint8_t*)(info.curFrameAddr0);
     *lenYY = info.curFrameBytes0;
     *picUV = (uint8_t*)(info.curFrameAddr1);
     *lenUV = info.curFrameBytes1;
-    
+
     return SUCCESS;
 }
 

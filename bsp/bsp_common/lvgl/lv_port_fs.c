@@ -26,7 +26,7 @@
  * If you are using a File System library
  * it already should have a File type.
  * For example FatFS has `file_t `. In this case use `typedef file_t  file_t`*/
-typedef FIL  file_t; 
+typedef FIL  file_t;
 
 /*Similarly to `file_t` create a type for directory reading too */
 typedef DIR  dir_t;
@@ -179,14 +179,14 @@ static lv_fs_res_t fs_open (lv_fs_drv_t * drv, void * file_p, const char * path,
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
     BYTE fatfs_mode;
     char *path_buf = NULL;
-    
+
     switch (drv->letter)
     {
     case 'S':
   		path_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(path) + 4));
     	sprintf(path_buf, "SD:/%s", path);
         break;
-    
+
     default:
         return LV_FS_RES_NOT_EX;
         break;
@@ -337,7 +337,7 @@ static lv_fs_res_t fs_remove (lv_fs_drv_t * drv, const char *path)
 
     /* Add your code here*/
     char *path_buf = NULL;
-    
+
     switch (drv->letter)
     {
     case 'S':
@@ -370,7 +370,7 @@ static lv_fs_res_t fs_trunc (lv_fs_drv_t * drv, void * file_p)
     /* Add your code here*/
     res = f_truncate((file_t *)file_p);
     res = res_fatfs_to_lv(res);
-    
+
     return res;
 }
 
@@ -388,7 +388,7 @@ static lv_fs_res_t fs_rename (lv_fs_drv_t * drv, const char * oldname, const cha
     /* Add your code here*/
     char *path_old_buf = NULL;
     char *path_new_buf = NULL;
-    
+
     switch (drv->letter)
     {
     case 'S':
@@ -435,7 +435,7 @@ static lv_fs_res_t fs_free (lv_fs_drv_t * drv, uint32_t * total_p, uint32_t * fr
         return LV_FS_RES_NOT_EX;
         break;
     }
-    
+
     res = f_getfree(path , free_p, &fs_obj);
     *free_p = (fs_obj->csize) * (*free_p) / 1024;
     *total_p = (fs_obj->csize) * (fs_obj->n_fatent - 2) /1024;
@@ -457,7 +457,7 @@ static lv_fs_res_t fs_dir_open (lv_fs_drv_t * drv, void * rddir_p, const char *p
 
     /* Add your code here*/
     char *path_buf = NULL;
-    
+
     switch (drv->letter)
     {
     case 'S':

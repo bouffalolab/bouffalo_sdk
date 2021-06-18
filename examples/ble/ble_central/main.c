@@ -1,24 +1,24 @@
 /**
  * @file main.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_uart.h"
 #include <FreeRTOS.h>
@@ -35,9 +35,9 @@
 extern uint8_t _heap_start;
 extern uint8_t _heap_size; // @suppress("Type cannot be resolved")
 static HeapRegion_t xHeapRegions[] =
-{        
-       { &_heap_start, (unsigned int) &_heap_size },        
-       { NULL, 0 }, /* Terminates the array. */        
+{
+       { &_heap_start, (unsigned int) &_heap_size },
+       { NULL, 0 }, /* Terminates the array. */
        { NULL, 0 } /* Terminates the array. */
 };
 
@@ -121,7 +121,7 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
 
 
 /*************************************************************************
-NAME    
+NAME
     data_cb
 */
 static bool data_cb(struct bt_data *data, void *user_data)
@@ -134,14 +134,14 @@ static bool data_cb(struct bt_data *data, void *user_data)
 	case BT_DATA_NAME_COMPLETE:
         len = (data->data_len > NAME_LEN - 1)?(NAME_LEN - 1):(data->data_len);
 		memcpy(name, data->data, len);
-		return false;		
+		return false;
 	default:
 		return true;
 	}
 }
 
 /*************************************************************************
-NAME    
+NAME
     device_found
 */
 
@@ -156,7 +156,7 @@ static void device_found(const bt_addr_le_t *addr, s8_t rssi, u8_t evtype,
 	(void)memset(name, 0, sizeof(name));
 	bt_data_parse(buf, data_cb, name);
 	bt_addr_le_to_str(addr, le_addr, sizeof(le_addr));
-	
+
 	BT_WARN("[DEVICE]: %s, AD evt type %u, RSSI %i %s \r\n",le_addr, evtype, rssi, name);
          if(strcmp(name,adv_name) == 0)
          {
@@ -183,11 +183,11 @@ static void device_found(const bt_addr_le_t *addr, s8_t rssi, u8_t evtype,
 }
 
 /*************************************************************************
-NAME    
+NAME
      ble_start_scan
 */
 static void ble_start_scan(void)
-{    
+{
     int err;
     struct bt_le_scan_param scan_param = {
         .type = 0, \
@@ -204,7 +204,7 @@ static void ble_start_scan(void)
 }
 
 /*************************************************************************
-NAME    
+NAME
      bt_enable_cb
 */
 
@@ -213,33 +213,33 @@ static void bt_enable_cb(int err)
 
  ble_tp_init();
  ble_start_scan();
- 
+
 }
 
 /*************************************************************************
-NAME    
+NAME
      ble_stack_start
 */
 void ble_stack_start(void)
 {
-   
+
     GLB_Set_EM_Sel(GLB_EM_8KB);
-    
+
       // Initialize BLE controller
     MSG("[OS] ble_controller_init...\r\n");
     ble_controller_init(configMAX_PRIORITIES - 1);
-    
+
     // Initialize BLE Host stack
     MSG("[OS] hci_driver_init...\r\n");
-    
+
     hci_driver_init();
-    
+
     MSG("[OS] bt_enable...\r\n");
     bt_enable(bt_enable_cb);
 }
 
 /*************************************************************************
-NAME    
+NAME
     ble_init
 */
 void ble_init(void)
@@ -249,7 +249,7 @@ void ble_init(void)
 }
 
 /*************************************************************************
-NAME    
+NAME
     ble_init_task
 */
 static void ble_init_task(void *pvParameters)
@@ -262,17 +262,17 @@ int main(void)
 {
     static StackType_t ble_init_stack[1024];
     static StaticTask_t ble_init_task_h;
-    
+
     bflb_platform_init(0);
-    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);   
+    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
     GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 17);
-   
+
     vPortDefineHeapRegions(xHeapRegions);
-   
+
     MSG("[OS] ble init  task...\r\n");
     xTaskCreateStatic(ble_init_task, (char*)"ble_init", sizeof(ble_init_stack)/4, NULL, 15, ble_init_stack, &ble_init_task_h);
-   
-    vTaskStartScheduler();  
+
+    vTaskStartScheduler();
     while(1)
     {
     }

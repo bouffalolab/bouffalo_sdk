@@ -1,28 +1,28 @@
 /**
  * @file wav_play_form_sd_card.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
-#ifndef __MAV_PLAY_H__ 
-#define __MAV_PLAY_H__ 
+#ifndef __MAV_PLAY_H__
+#define __MAV_PLAY_H__
 
 #include "hal_i2s.h"
 
@@ -46,7 +46,7 @@ typedef struct __attribute__((packed))
     uint32_t sample_rate;     /* 采样率;0X1F40,表示 8Khz */
     uint32_t byte_rate;       /* 字节速率 */
     uint16_t block_align;     /*块对齐(字节)*/
-    uint16_t bits_per_sample;  /*单个采样数据大小;4 位 ADPCM,设置为 4*/ 
+    uint16_t bits_per_sample;  /*单个采样数据大小;4 位 ADPCM,设置为 4*/
 }chunk_format_t;
 
 //fact (Fact Chunk)
@@ -74,7 +74,7 @@ typedef enum
 }mav_chunk_t;
 
 //.wav information
-typedef struct 
+typedef struct
 {
     int            chunk_riff_offset;  //在数据里的位置偏移，-1表示没有此块
     chunk_riff_t   chunk_riff;
@@ -104,8 +104,8 @@ typedef struct audio_dev{
     uint8_t audio_state;        //状态
     uint8_t audio_type;         //类型
 
-    int (*audio_init)(struct audio_dev *audio_dev, const TCHAR* path);     
-    int (*audio_control)(struct audio_dev *audio_dev, AUDIO_CMD_t cmd, void *args);  
+    int (*audio_init)(struct audio_dev *audio_dev, const TCHAR* path);
+    int (*audio_control)(struct audio_dev *audio_dev, AUDIO_CMD_t cmd, void *args);
 
     int (*audio_callback)(struct audio_dev *audio_dev); //中断回调函数，用来重新装载buff，
 

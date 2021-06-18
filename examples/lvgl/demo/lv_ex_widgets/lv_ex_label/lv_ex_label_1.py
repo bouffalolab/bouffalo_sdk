@@ -3,7 +3,7 @@ label1.set_long_mode(lv.label.LONG.BREAK)  # Break the long lines
 label1.set_recolor(True)                   # Enable re-coloring by commands in the text
 label1.set_align(lv.label.ALIGN.CENTER)        # Center aligned lines
 label1.set_text(
-"""#0000ff Re-color# #ff00ff words# #ff0000 of a# label 
+"""#0000ff Re-color# #ff00ff words# #ff0000 of a# label
 and  wrap long text automatically.""")
 label1.set_width(150)
 label1.align(None,lv.ALIGN.CENTER, 0, -30)

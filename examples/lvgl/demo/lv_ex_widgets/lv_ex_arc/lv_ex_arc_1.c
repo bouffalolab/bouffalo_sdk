@@ -2,7 +2,7 @@
 
 #if LV_USE_ARC
 
-void lv_ex_arc_1(void) 
+void lv_ex_arc_1(void)
 {
   /*Create an Arc*/
   lv_obj_t * arc = lv_arc_create(lv_scr_act(), NULL);

@@ -19,7 +19,7 @@ static struct blhast_le_adv_data blhast_le_sd;
 static bt_le_scan_cb_t *blhast_le_scan_cb;
 
 static void blhast_ble_scan_assist_cb(const struct bt_le_scan_param *param, bt_le_scan_cb_t cb);
-static void blhast_ble_adv_assist_cb(const struct bt_le_adv_param *param, const struct bt_data *ad, 
+static void blhast_ble_adv_assist_cb(const struct bt_le_adv_param *param, const struct bt_data *ad,
 		size_t ad_len, const struct bt_data *sd, size_t sd_len);
 
 static struct blhast_cb assist_cb = {
@@ -48,7 +48,7 @@ static void blhast_ble_get_ad(const struct bt_data *ad, size_t ad_len,  uint8_t 
 		data_len++;
 
 		memcpy(output + data_len, ad[i].data, ad[i].data_len);
-		
+
 		data_len += ad[i].data_len;
 	}
 }
@@ -58,7 +58,7 @@ static void blhast_ble_construct_ad(struct blhast_le_adv_data *adv_data, struct 
      int i;
      size_t ad_len = adv_data->ad_len;
 	 u8_t *p_ad = adv_data->ad;
-	 
+
 
 	 for(i = 0; i < ad_len; i++){
          memcpy(&output[i], p_ad, 2);//type, data_len
@@ -68,12 +68,12 @@ static void blhast_ble_construct_ad(struct blhast_le_adv_data *adv_data, struct 
 	 }
 }
 
-static void blhast_ble_adv_assist_cb(const struct bt_le_adv_param *param, const struct bt_data *ad, 
+static void blhast_ble_adv_assist_cb(const struct bt_le_adv_param *param, const struct bt_data *ad,
 		size_t ad_len, const struct bt_data *sd, size_t sd_len)
 {
     memcpy(&blhast_le_adv_param, param, sizeof(struct bt_le_adv_param));
 
-	if(ad){	
+	if(ad){
     	blhast_le_ad.ad_len = ad_len;
     	memset(blhast_le_ad.ad, 0, sizeof(blhast_le_ad.ad));
     	blhast_ble_get_ad(ad, ad_len, blhast_le_ad.ad);
@@ -88,10 +88,10 @@ static void blhast_ble_adv_assist_cb(const struct bt_le_adv_param *param, const 
 
 static int blhast_common_reset(void)
 {
-    
+
 	struct net_buf *rsp;
 	int err;
-	
+
     if (!(bt_dev.drv->quirks & BT_QUIRK_NO_RESET)) {
 		/* Send HCI_RESET */
 		err = bt_hci_cmd_send_sync(BT_HCI_OP_RESET, NULL, &rsp);
@@ -182,14 +182,14 @@ static int blhast_ble_reset(void)
 
 #if defined(CONFIG_BT_BREDR)
 static int blhast_br_reset(void)
-{  
+{
     struct net_buf *buf;
 	struct bt_hci_cp_write_ssp_mode *ssp_cp;
 	struct bt_hci_cp_write_inquiry_mode *inq_cp;
 	struct bt_hci_write_local_name *name_cp;
 	int err;
 
-    
+
     /* Set SSP mode */
 	buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_SSP_MODE, sizeof(*ssp_cp));
 	if (!buf) {
@@ -244,7 +244,7 @@ static int blhast_br_reset(void)
 		return err;
 	}
 
-	
+
 	/* Enable BR/EDR SC if supported */
 	if (BT_FEAT_SC(bt_dev.features)) {
 		struct bt_hci_cp_write_sc_host_supp *sc_cp;
@@ -266,7 +266,7 @@ static int blhast_br_reset(void)
 	}
 
 	return 0;
-	
+
 }
 #endif
 
@@ -277,7 +277,7 @@ static int  blhast_host_hci_reset(void)
 	memcpy(old_flags, bt_dev.flags, sizeof(old_flags));
 
 	err = blhast_common_reset();
-	
+
 	if (err) {
 		return err;
 	}
@@ -302,7 +302,7 @@ static int  blhast_host_hci_reset(void)
 	}
 
     memcpy(bt_dev.flags, old_flags, sizeof(old_flags));
-	
+
 	return 0;
 }
 
@@ -321,7 +321,7 @@ static void blhast_host_state_restore(void)
 	#endif
 
     atomic_set_bit(bt_dev.flags, BT_DEV_ASSIST_RUN);
-	
+
     #if defined(CONFIG_BT_OBSERVER)
 	if(atomic_test_bit(bt_dev.flags, BT_DEV_EXPLICIT_SCAN))
 	{
@@ -331,7 +331,7 @@ static void blhast_host_state_restore(void)
 		bt_le_scan_start((const struct bt_le_scan_param *)&blhast_le_scan_param, blhast_le_scan_cb);
 	}
     #endif
-	
+
 	if(atomic_test_and_clear_bit(bt_dev.flags, BT_DEV_ADVERTISING))
 	{
 	     BT_WARN("Restore BLE advertising\r\n");
@@ -345,7 +345,7 @@ static void blhast_host_state_restore(void)
 		    sd = k_malloc(sizeof(struct bt_data) * blhast_le_sd.ad_len);
 	        blhast_ble_construct_ad(&blhast_le_sd, sd);
 		}
-			
+
         bt_le_adv_start((const struct bt_le_adv_param *)&blhast_le_adv_param, ad,
 			blhast_le_ad.ad_len, sd, blhast_le_sd.ad_len);
 

@@ -56,8 +56,8 @@ void bflb_eflash_loader_main();
 
 
 typedef enum{
-    BFLB_EFLASH_LOADER_HANDSHAKE_SUSS = 0,              
-    BFLB_EFLASH_LOADER_HANDSHAKE_FAIL,              
+    BFLB_EFLASH_LOADER_HANDSHAKE_SUSS = 0,
+    BFLB_EFLASH_LOADER_HANDSHAKE_FAIL,
 }eflash_handshake_ret;
 
 

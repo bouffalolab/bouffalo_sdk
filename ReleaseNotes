@@ -11,7 +11,7 @@ bl mcu sdk Release V1.2.1
     2. 更新 cmake 运行顺序
     3. 更新 cdk flashloader 和 openocd cfg
     4. 更新文档
-    
+
 修复问题说明：
     1. 修复 board.c 中 ADC 的引脚初始化
     2. 修复 ble 静态库依赖问题

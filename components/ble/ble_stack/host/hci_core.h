@@ -198,7 +198,7 @@ struct bt_dev {
 typedef enum __packed{
 	dir_connect_req 		= 0x01, /*Send a direct connection require while the Lower test enters direct mode .*/
 
-	ad_type_service_uuid 	= 0x02,    
+	ad_type_service_uuid 	= 0x02,
 	ad_type_local_name   	= 0x03,
 	ad_type_flags     	 	= 0x04,
 	ad_type_manu_data   	= 0x05,
@@ -209,14 +209,14 @@ typedef enum __packed{
 	gatt_discover_chara		= 0x09,
 	gatt_exec_write_req		= 0x0a,
 	gatt_cancel_write_req	= 0x0b,
-	att_read_by_group_type_ind = 0x0c, /* CASE : GATT/SR/GAD/BV-01-C. Indicate PTS sends a GATT discover all primary services request to iut */ 
-	att_find_by_type_value_ind = 0x0d, /* CASE : GATT/SR/GAD/BV-02-C. Indicate PTS sends a request to iut for discover it contains Primary Services by Service UUID */ 
-	att_read_by_type_ind = 0x0e, /* CASE : GATT/SR/GAD/BV-04-C. Indicate PTS sends a request to iut for discover all characteristics of a specified service.*/ 
+	att_read_by_group_type_ind = 0x0c, /* CASE : GATT/SR/GAD/BV-01-C. Indicate PTS sends a GATT discover all primary services request to iut */
+	att_find_by_type_value_ind = 0x0d, /* CASE : GATT/SR/GAD/BV-02-C. Indicate PTS sends a request to iut for discover it contains Primary Services by Service UUID */
+	att_read_by_type_ind = 0x0e, /* CASE : GATT/SR/GAD/BV-04-C. Indicate PTS sends a request to iut for discover all characteristics of a specified service.*/
 
 	own_addr_type_random = 0x0f
 }event_id;
 
-#endif 
+#endif
 
 extern struct bt_dev bt_dev;
 #if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
@@ -274,7 +274,7 @@ int bt_set_tx_pwr(int8_t power);
 #if defined(BFLB_HOST_ASSISTANT)
 struct blhast_cb{
     void (*le_scan_cb)(const struct bt_le_scan_param *param, bt_le_scan_cb_t cb);
-    void (*le_adv_cb)(const struct bt_le_adv_param *param, const struct bt_data *ad, 
+    void (*le_adv_cb)(const struct bt_le_adv_param *param, const struct bt_data *ad,
 		size_t ad_len, const struct bt_data *sd, size_t sd_len);
 };
 int bt_set_flow_control(void);

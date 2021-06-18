@@ -95,7 +95,7 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_State_Save(SPI_Flash_Cfg_Type *pFlashCfg
     /* XIP_SFlash_Delay */
     volatile uint32_t i=32*2;
     while(i--);
-    
+
     SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
     /* Exit form continous read for accepting command */
     SFlash_Reset_Continue_Read(pFlashCfg);

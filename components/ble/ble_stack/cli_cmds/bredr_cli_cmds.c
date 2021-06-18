@@ -164,14 +164,14 @@ static void bredr_discoverable(char *p_write_buffer, int write_buffer_len, int a
 {
     int err;
     uint8_t action;
-    
+
     if(argc != 2){
         printf("Number of parameters is not correct\n");
         return;
     }
 
     get_uint8_from_string(&argv[1], &action);
-    
+
     if (action == 1) {
         err = bt_br_set_discoverable(true);
     } else if (action == 0) {
@@ -192,14 +192,14 @@ static void bredr_connectable(char *p_write_buffer, int write_buffer_len, int ar
 {
     int err;
     uint8_t action;
-    
+
     if(argc != 2){
         printf("Number of parameters is not correct\n");
         return;
     }
 
     get_uint8_from_string(&argv[1], &action);
-    
+
     if (action == 1) {
         err = bt_br_set_connectable(true);
     } else if (action == 0) {
@@ -225,4 +225,4 @@ int bredr_cli_register(void)
     //aos_cli_register_commands(bredr_cmd_set, sizeof(bredr_cmd_set)/sizeof(bredr_cmd_set[0]));
     return 0;
 }
-		       
+

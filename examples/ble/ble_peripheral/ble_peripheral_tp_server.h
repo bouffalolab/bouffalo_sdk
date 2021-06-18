@@ -37,5 +37,5 @@ struct bt_gatt_attr *get_attr(u8_t index);
 void ble_write_data(void);
 
 
-#endif 
+#endif
 

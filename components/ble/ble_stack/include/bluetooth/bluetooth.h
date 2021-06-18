@@ -262,7 +262,7 @@ enum {
 	 *  connection happens. If this option is not set the stack will
 	 *  take care of keeping advertising enabled even as connections
 	 *  occur.
-	 */ 
+	 */
 	/* if defined CONFIG_BLE_MULTI_ADV , Only support adv one time.*/
 	BT_LE_ADV_OPT_ONE_TIME = BIT(1),
 

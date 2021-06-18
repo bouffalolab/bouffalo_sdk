@@ -1,24 +1,24 @@
 /**
  * @file bsp_sf_psram.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 #include "bsp_sf_psram.h"
@@ -73,10 +73,10 @@ SF_Ctrl_Psram_Cfg sfCtrlPsramCfg = {
 
 /* bsp sf psram gpio init */
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @return None
- * 
+ *
  */
 void ATTR_TCM_SECTION bsp_sf_psram_gpio_init(void)
 {
@@ -113,12 +113,12 @@ void ATTR_TCM_SECTION bsp_sf_psram_gpio_init(void)
 
 /* bsp sf psram init */
 /**
- * @brief 
- * 
- * @param sw_reset 
- * 
+ * @brief
+ *
+ * @param sw_reset
+ *
  * @return None
- * 
+ *
  */
 void ATTR_TCM_SECTION bsp_sf_psram_init(uint8_t sw_reset)
 {
@@ -131,7 +131,7 @@ void ATTR_TCM_SECTION bsp_sf_psram_init(uint8_t sw_reset)
     }
     Psram_ReadId(&apMemory1604, psramId);
     Psram_Cache_Write_Set(&apMemory1604, SF_CTRL_QIO_MODE, ENABLE, DISABLE, DISABLE);
-    L1C_Cache_Enable_Set(L1C_WAY_DISABLE_NONE); 
+    L1C_Cache_Enable_Set(L1C_WAY_DISABLE_NONE);
 }
 
 void ATTR_TCM_SECTION bsp_sf_psram_read_id(uint8_t *data)

@@ -551,7 +551,7 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Set_IV(uint8_t region,uint8_t *iv,uint32_t add
     /* Do flash key eco*/
     uint32_t regionRegBase=SF_Ctrl_Get_AES_Region(SF_CTRL_BASE,!region);
     uint32_t tmpVal,i=3;
-    
+
     if(iv!=NULL){
         tmpVal=SF_CTRL_SF_AES_IV_W3_OFFSET;
         while(i--){
@@ -588,7 +588,7 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Set_IV_BE(uint8_t region,uint8_t *iv,uint32_t 
     /* Do flash key eco*/
     uint32_t regionRegBase=SF_Ctrl_Get_AES_Region(SF_CTRL_BASE,!region);
     uint32_t tmpVal,i=3;
-    
+
     if(iv!=NULL){
         tmpVal=SF_CTRL_SF_AES_IV_W0_OFFSET;
         while(i--){
@@ -765,7 +765,7 @@ void ATTR_TCM_SECTION SF_Ctrl_SendCmd(SF_Ctrl_Cmd_Cfg_Type *cfg)
     tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_CMD_EN);
     tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_CMD_BYTE,0);
 
-    /* Configure address */ 
+    /* Configure address */
     if(cfg->addrSize != 0){
         tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_ADR_EN);
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_ADR_BYTE,cfg->addrSize-1);
@@ -884,7 +884,7 @@ void ATTR_TCM_SECTION SF_Ctrl_Icache_Set(SF_Ctrl_Cmd_Cfg_Type *cfg,uint8_t cmdVa
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_CMD_BYTE,0);
     }
 
-    /* Configure address */ 
+    /* Configure address */
     if(cfg->addrSize != 0){
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_ADR_EN,1);
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_ADR_BYTE,cfg->addrSize-1);

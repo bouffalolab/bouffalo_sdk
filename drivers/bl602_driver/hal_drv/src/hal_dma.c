@@ -1,24 +1,24 @@
 /**
  * @file hal_dma.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_dma.h"
 #include "drv_mmheap.h"
@@ -56,11 +56,11 @@ dma_device_t dmax_device[DMA_MAX_INDEX] =
 #endif
 };
 /**
- * @brief 
- * 
- * @param dev 
- * @param oflag 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
  */
 int dma_open(struct device *dev, uint16_t oflag)
 {
@@ -94,12 +94,12 @@ int dma_open(struct device *dev, uint16_t oflag)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param cmd 
- * @param args 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param cmd
+ * @param args
+ * @return int
  */
 int dma_control(struct device *dev, int cmd, void *args)
 {
@@ -157,10 +157,10 @@ int dma_control(struct device *dev, int cmd, void *args)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @return int
  */
 int dma_close(struct device *dev)
 {
@@ -248,13 +248,13 @@ int dma_allocate_register(const char *name, uint16_t flag)
 }
 
 /**
- * @brief 
- * 
- * @param dev 
- * @param src_addr 
- * @param dst_addr 
- * @param transfer_size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param src_addr
+ * @param dst_addr
+ * @param transfer_size
+ * @return int
  */
 int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_t transfer_size)
 {
@@ -416,9 +416,9 @@ int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_
     return 0;
 }
 /**
- * @brief 
- * 
- * @param handle 
+ * @brief
+ *
+ * @param handle
  */
 void dma_isr(dma_device_t *handle)
 {
@@ -468,8 +468,8 @@ void dma_isr(dma_device_t *handle)
     }
 }
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void DMA0_IRQ(void)
 {

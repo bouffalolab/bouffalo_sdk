@@ -3,12 +3,12 @@
  * @file hal_gpio.c
  * @version 0.1
  * @date 2021-03-01
- * @brief 
+ * @brief
  * *****************************************************************************
  * @attention
- * 
+ *
  *  <h2><center>&copy; COPYRIGHT(c) 2020 Bouffalo Lab</center></h2>
- * 
+ *
  *  Redistribution and use in source and binary forms, with or without modification,
  *  are permitted provided that the following conditions are met:
  *    1. Redistributions of source code must retain the above copyright notice,
@@ -19,7 +19,7 @@
  *    3. Neither the name of Bouffalo Lab nor the names of its contributors
  *       may be used to endorse or promote products derived from this software
  *       without specific prior written permission.
- * 
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,7 +30,7 @@
  *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  *  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * *****************************************************************************
  */
 #include "bl602_glb.h"
@@ -39,10 +39,10 @@
 
 gpio_device_t gpio_device;
 /**
- * @brief 
- * 
- * @param pin 
- * @param mode 
+ * @brief
+ *
+ * @param pin
+ * @param mode
  */
 void gpio_set_mode(uint32_t pin, uint32_t mode)
 {
@@ -142,49 +142,49 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
     GLB_GPIO_Init(&gpio_cfg);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param value 
+ * @brief
+ *
+ * @param pin
+ * @param value
  */
 void gpio_write(uint32_t pin, uint32_t value)
 {
     GLB_GPIO_Write(pin, value);
 }
 /**
- * @brief 
- * 
- * @param pin 
+ * @brief
+ *
+ * @param pin
  */
 void gpio_toggle(uint32_t pin)
 {
 
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @return int 
+ * @brief
+ *
+ * @param pin
+ * @return int
  */
 int gpio_read(uint32_t pin)
 {
     return GLB_GPIO_Read(pin);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param cbFun 
+ * @brief
+ *
+ * @param pin
+ * @param cbFun
  */
 void gpio_attach_irq(uint32_t pin, void (*cbFun)(void))
 {
     GLB_GPIO_INT0_Callback_Install(pin, cbFun);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param enabled 
+ * @brief
+ *
+ * @param pin
+ * @param enabled
  */
 void gpio_irq_enable(uint32_t pin, uint8_t enabled)
 {

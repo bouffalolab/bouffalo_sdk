@@ -124,10 +124,10 @@ typedef struct {
  *  @brief Partition table iap param definition
  */
 typedef struct {
-    uint32_t  iap_start_addr;    
+    uint32_t  iap_start_addr;
     uint32_t  iap_write_addr;
     uint32_t  iap_img_len;
-    uint8_t   inactive_index;    
+    uint8_t   inactive_index;
     uint8_t   inactive_table_index;
 }pt_table_iap_param_type;
 

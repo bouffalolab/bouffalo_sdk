@@ -302,7 +302,7 @@ void TIMER_SetPreloadTrigSrc(TIMER_Chan_Type timerCh, TIMER_PreLoad_Trig_Type pl
  *
 *******************************************************************************/
 void TIMER_SetCountMode(TIMER_Chan_Type timerCh, TIMER_CountMode_Type countMode)
-{  
+{
     uint32_t tmpval;
 
     /* Check the parameters */

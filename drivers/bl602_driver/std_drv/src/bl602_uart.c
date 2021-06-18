@@ -1126,7 +1126,7 @@ uint32_t UART_GetBaudrate(UART_ID_Type uartId)
     uint32_t div1 = 1;
     uint32_t div2 = 1;
     uint32_t UARTx = uartAddr[uartId];
-    
+
     /* Get uart clock */
     tmpVal = BL_RD_REG(GLB_BASE,GLB_CLK_CFG2);
     div2 = BL_GET_REG_BITS_VAL(tmpVal,GLB_UART_CLK_DIV)+1;
@@ -1164,11 +1164,11 @@ uint32_t UART_GetBaudrate(UART_ID_Type uartId)
         clock /= div1;
     }
     clock /= div2;
-    
+
     /* Get uart bit period */
     tmpVal = BL_RD_REG(UARTx,UART_BIT_PRD);
     tmpVal = BL_GET_REG_BITS_VAL(tmpVal,UART_CR_UTX_BIT_PRD)+1;
-    
+
     return(clock/tmpVal);
 }
 

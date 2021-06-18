@@ -366,7 +366,7 @@ struct cdc_ecm_descriptor {
     in_ep,                                          /* bEndpointAddress */\
     0x02,                                           /* bmAttributes */\
     0x40, 0x00,                                     /* wMaxPacketSize */\
-    0x01                                            /* bInterval */            
+    0x01                                            /* bInterval */
 
 void usbd_cdc_add_acm_interface(usbd_class_t *class, usbd_interface_t *intf);
 

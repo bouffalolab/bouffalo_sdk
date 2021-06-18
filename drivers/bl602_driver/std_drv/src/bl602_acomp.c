@@ -96,16 +96,16 @@
 void AON_ACOMP_Init(AON_ACOMP_ID_Type acompNo,AON_ACOMP_CFG_Type *cfg)
 {
     uint32_t tmpVal = 0;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_AON_ACOMP_ID_TYPE(acompNo));
-    
+
     if(acompNo==AON_ACOMP0_ID){
         /* Disable ACOMP first */
         tmpVal=BL_RD_REG(AON_BASE,AON_ACOMP0_CTRL);
         tmpVal=BL_CLR_REG_BIT(tmpVal,AON_ACOMP0_EN);
         tmpVal=BL_WR_REG(AON_BASE,AON_ACOMP0_CTRL,tmpVal);
-        
+
         /* Set ACOMP config */
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP0_MUXEN,cfg->muxEn);
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP0_POS_SEL,cfg->posChanSel);
@@ -114,15 +114,15 @@ void AON_ACOMP_Init(AON_ACOMP_ID_Type acompNo,AON_ACOMP_CFG_Type *cfg)
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP0_BIAS_PROG,cfg->biasProg);
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP0_HYST_SELP,cfg->hysteresisPosVolt);
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP0_HYST_SELN,cfg->hysteresisNegVolt);
-        
+
         tmpVal=BL_WR_REG(AON_BASE,AON_ACOMP0_CTRL,tmpVal);
-    
+
     }else{
         /* Disable ACOMP first */
         tmpVal=BL_RD_REG(AON_BASE,AON_ACOMP1_CTRL);
         tmpVal=BL_CLR_REG_BIT(tmpVal,AON_ACOMP1_EN);
         tmpVal=BL_WR_REG(AON_BASE,AON_ACOMP1_CTRL,tmpVal);
-        
+
         /* Set ACOMP config */
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP1_MUXEN,cfg->muxEn);
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP1_POS_SEL,cfg->posChanSel);
@@ -131,7 +131,7 @@ void AON_ACOMP_Init(AON_ACOMP_ID_Type acompNo,AON_ACOMP_CFG_Type *cfg)
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP1_BIAS_PROG,cfg->biasProg);
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP1_HYST_SELP,cfg->hysteresisPosVolt);
         tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_ACOMP1_HYST_SELN,cfg->hysteresisNegVolt);
-        
+
         tmpVal=BL_WR_REG(AON_BASE,AON_ACOMP1_CTRL,tmpVal);
     }
 }
@@ -147,10 +147,10 @@ void AON_ACOMP_Init(AON_ACOMP_ID_Type acompNo,AON_ACOMP_CFG_Type *cfg)
 void AON_ACOMP_Enable(AON_ACOMP_ID_Type acompNo)
 {
     uint32_t tmpVal = 0;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_AON_ACOMP_ID_TYPE(acompNo));
-    
+
     if(acompNo==AON_ACOMP0_ID){
         tmpVal=BL_RD_REG(AON_BASE,AON_ACOMP0_CTRL);
         tmpVal=BL_SET_REG_BIT(tmpVal,AON_ACOMP0_EN);
@@ -173,10 +173,10 @@ void AON_ACOMP_Enable(AON_ACOMP_ID_Type acompNo)
 BL_Sts_Type AON_ACOMP_Get_Result(AON_ACOMP_ID_Type acompNo)
 {
     uint32_t tmpVal = 0;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_AON_ACOMP_ID_TYPE(acompNo));
-    
+
     tmpVal=BL_RD_REG(AON_BASE,AON_ACOMP_CTRL);
     /* Disable ACOMP first */
     if(acompNo==AON_ACOMP0_ID){

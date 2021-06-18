@@ -1,24 +1,24 @@
 /**
  * @file hal_mtimer.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_mtimer.h"
 #include "bl602_glb.h"
@@ -35,10 +35,10 @@ static void Systick_Handler(void)
 }
 
 /**
- * @brief 
- * 
- * @param time 
- * @param interruptFun 
+ * @brief
+ *
+ * @param time
+ * @param interruptFun
  */
 void mtimer_set_alarm_time(uint64_t ticks, void (*interruptfun)(void))
 {
@@ -68,24 +68,24 @@ void mtimer_set_alarm_time(uint64_t ticks, void (*interruptfun)(void))
 
     /* Prepare the time to use after the next tick interrupt. */
     next_compare_tick += ( uint64_t ) current_set_ticks;
-    
+
     Interrupt_Handler_Register(MTIME_IRQn, Systick_Handler);
     NVIC_EnableIRQ(MTIME_IRQn);
 }
 
 /**
- * @brief 
- * 
- * @return uint64_t 
+ * @brief
+ *
+ * @return uint64_t
  */
 uint64_t mtimer_get_time_ms()
 {
     return mtimer_get_time_us()/1000;
 }
 /**
- * @brief 
- * 
- * @return uint64_t 
+ * @brief
+ *
+ * @return uint64_t
  */
 uint64_t mtimer_get_time_us()
 {
@@ -103,9 +103,9 @@ uint64_t mtimer_get_time_us()
 
 }
 /**
- * @brief 
- * 
- * @param time 
+ * @brief
+ *
+ * @param time
  */
 void mtimer_delay_ms(uint32_t time)
 {
@@ -124,9 +124,9 @@ void mtimer_delay_ms(uint32_t time)
     }
 }
 /**
- * @brief 
- * 
- * @param time 
+ * @brief
+ *
+ * @param time
  */
 void mtimer_delay_us(uint32_t time)
 {
