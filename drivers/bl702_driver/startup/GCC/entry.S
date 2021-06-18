@@ -52,7 +52,8 @@ _enter:
     /* Intial the mtvt, MUST BE 64 bytes aligned*/
     .weak __Vectors
     la t0, __Vectors
-    csrw mtvt, t0
+    // From drivers/bl702_driver/risc-v/Core/Include/riscv_encoding.h
+    csrw CSR_MTVT, t0
 
 #ifdef __riscv_float_abi_single
     /* deal with FP */
