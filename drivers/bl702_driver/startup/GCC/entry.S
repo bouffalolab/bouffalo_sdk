@@ -48,13 +48,14 @@ _enter:
      * called. */
     .weak __StackTop
     la sp, __StackTop
-    
+
     /* Intial the mtvt, MUST BE 64 bytes aligned*/
     .weak __Vectors
     la t0, __Vectors
-    csrw mtvt, t0
+    // From drivers/bl702_driver/risc-v/Core/Include/riscv_encoding.h
+    csrw CSR_MTVT, t0
 
-#if __riscv_float_abi_single
+#if defined(__riscv_float_abi_single)
     /* deal with FP */
     /* Is F extension present? */
     csrr t0, misa
