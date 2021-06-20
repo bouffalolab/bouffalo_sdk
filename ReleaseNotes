@@ -3,6 +3,21 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.2.2
+----------------------------
+
+新增功能说明：
+    1. 新增 pwm 驱动 dc motor 和 step motor、dht11、custom hid 、shell demo
+    2. 为所有的 examples 添加 cdk 工程
+    3. 为 cdk 工程添加 openocd 支持
+    4. 更新文档
+    5. 使用 clang-format 格式化代码
+
+修复问题说明：
+    1. 修复 __riscv_float_abi_single 未定义带来的 warning
+    2. 修改 bl702_flash.ld 中 heap 的 分配方式
+    3. 更新 shell 组件，添加使用时删除中间字符的功能
+
 bl mcu sdk Release V1.2.1
 ----------------------------
 
@@ -11,7 +26,7 @@ bl mcu sdk Release V1.2.1
     2. 更新 cmake 运行顺序
     3. 更新 cdk flashloader 和 openocd cfg
     4. 更新文档
-    
+
 修复问题说明：
     1. 修复 board.c 中 ADC 的引脚初始化
     2. 修复 ble 静态库依赖问题

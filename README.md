@@ -55,27 +55,39 @@ bl_mcu_sdk
     ├── cdk_flashloader
     ├── cmake
     └── openocd
-    
+
 ```
 
-- bsp 存放板级相关的配置文件和驱动。
-- common 存放一些常见的函数库
-- components 存放第三方库
-- drivers 存放芯片外设驱动库
-- examples 存放外设 demo
-- out 存放目标文件输出路径
-- tools 存放一些工具包
+- bsp/bsp_common 存放一些板级相关的常用外设驱动代码
+- bsp/board 存放板级描述文件 clock_config.h(描述时钟配置文件) pinmux_config.h(描述io功能文件) peripheral_config.h(描述外设默认配置文件) 这几个文件共同形成board文件夹描述特定应用的所有硬件信息。
+- common 存放一些常见的与硬件无关的算法函数库
+- components 存放第三方库公共组件库
+- drivers 存放博流智能提供的公共芯片底层驱动库
+- examples 存放官方提供的示例代码
+- out 中间文件，用来存放编译链接后的产生的bin文件
+- tools 存放编译下载相关的工具包
+- docs 存放教程文档以及其他帮助信息
+
+更多文件目录参考信息，请查阅 [bl mcu sdk 文档教程](http://bouffalolab.gitee.io/bl_mcu_sdk)
+## 层次结构
+
+[![RpUVoj.png](https://z3.ax1x.com/2021/06/18/RpUVoj.png)](https://imgtu.com/i/RpUVoj)
 
 # 资源
 
 ## 硬件资源
 
 - BL706 IOT 开发板
-- BL706 AVB 开发板
+[![RpUI0g.png](https://z3.ax1x.com/2021/06/18/RpUI0g.png)](https://imgtu.com/i/RpUI0g)
 
+- BL706 AVB 开发板
+[![Rpa7DO.jpg](https://z3.ax1x.com/2021/06/18/Rpa7DO.jpg)](https://imgtu.com/i/Rpa7DO)
+
+
+目前暂时没有提供官方的购买渠道，如果想获得上述开发板，可到任意开源社区留言申请。
 ## 芯片手册
 
-[芯片参考手册](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_706_RM_zh_CN_1.1.pdf)|[芯片数据手册](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_BL706_DS_zh_CN_Combo_1.7.pdf)
+[芯片参考手册](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_706_RM_zh_CN_1.1.pdf)|[芯片数据手册](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_BL706_DS_zh_CN_Combo_2.0.pdf)
 
 更多资料请访问 BouffaloLab 开发者网站: [https://dev.bouffalolab.com/](https://dev.bouffalolab.com/)
 
@@ -93,20 +105,20 @@ bl_mcu_sdk
 
 ### 命令行开发
 
-命令行开发需要的工具，具体使用方法参考 [linux 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/Linux_quick_start_ubuntu.html)
+命令行开发需要的工具，具体使用方法参考 [linux 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Linux_quick_start_ubuntu.html)
 
 - [cmake 3.19](https://cmake.org/files/v3.19/)， cmake 编译工具，建议使用 cmake v3.19 以上版本
 
 ### Eclipse开发
 
-Eclipse 开发需要的工具，具体使用方法参考 [Eclipse 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/Windows_quick_start_eclipse.html)
+Eclipse 开发需要的工具，具体使用方法参考 [Eclipse 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_eclipse.html)
 
 - [Eclipse](https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip) Windows 下 eclipse 开发免安装包
 - [J-Link v10](https://www.segger.com/downloads/jlink)， J-Link 调试器，用于在线调试芯片，建议使用 J-Link V10 以上版本硬件，软件驱动建议使用 V6.98 版本
 
 ### CDK开发
 
-CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/Windows_quick_start_cdk.html)
+CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_cdk.html)
 
 - [CDK](https://occ.t-head.cn/development/activities/cdk)，平头哥剑池 CDK 集成开发环境，建议使用 CDK v2.8.4 以上版本
 
@@ -115,8 +127,8 @@ CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](http://b
 除了可以使用 CK-link、J-link 以及命令行烧写以外，还支持图形化的烧写工具。
 博流提供的图形化烧写工具：
 
-- [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.2-win32.zip)
-- [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.2-linux-x86.tar.gz)
+- [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-win32.zip)
+- [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-linux-x86.tar.gz)
 
 ## 论坛
 
