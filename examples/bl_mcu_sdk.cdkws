@@ -14,7 +14,6 @@
   <Project Name="gpio_blink" Path="gpio/gpio_blink/cdk/gpio_blink.cdkproj" Active="No"/>
   <Project Name="i2c_at24cxx" Path="i2c/i2c_at24cxx/cdk/i2c_at24cxx.cdkproj" Active="No"/>
   <Project Name="i2c_bmp180" Path="i2c/i2c_bmp180/cdk/i2c_bmp180.cdkproj" Active="No"/>
-  <Project Name="i2s_dma" Path="i2s/i2s_dma/cdk/i2s_dma.cdkproj" Active="No"/>
   <Project Name="memheap" Path="memheap/cdk/memheap.cdkproj" Active="No"/>
   <Project Name="spi_dma_sd" Path="spi/spi_dma_sd/cdk/spi_dma_sd.cdkproj" Active="No"/>
   <Project Name="spi_loopback" Path="spi/spi_loopback/cdk/spi_loopback.cdkproj" Active="No"/>
@@ -49,7 +48,6 @@
       <Project Name="gpio_blink" ConfigName="BuildSet"/>
       <Project Name="i2c_at24cxx" ConfigName="BuildSet"/>
       <Project Name="i2c_bmp180" ConfigName="BuildSet"/>
-      <Project Name="i2s_dma" ConfigName="BuildSet"/>
       <Project Name="memheap" ConfigName="BuildSet"/>
       <Project Name="spi_dma_sd" ConfigName="BuildSet"/>
       <Project Name="spi_loopback" ConfigName="BuildSet"/>
