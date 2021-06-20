@@ -74,14 +74,14 @@ static mjpeg_device_t mjpeg_cfg;
 #define ROUND_SHR(Dividend, iShiftRightCount)          (((Dividend) >= 0) ? ROUND_SHR_POSITIVE(Dividend, iShiftRightCount) : ROUND_SHR_NEGATIVE(Dividend, iShiftRightCount))
 
 /**
- * @brief 
- * 
- * @param Y 
- * @param Cb 
- * @param Cr 
- * @param R 
- * @param G 
- * @param B 
+ * @brief
+ *
+ * @param Y
+ * @param Cb
+ * @param Cr
+ * @param R
+ * @param G
+ * @param B
  */
 void YCbCrConvertToRGB(int Y, int Cb, int Cr, int *R, int *G, int *B)
 {

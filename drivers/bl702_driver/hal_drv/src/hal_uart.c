@@ -1,24 +1,24 @@
 /**
  * @file hal_uart.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_uart.h"
 #include "hal_dma.h"
@@ -44,11 +44,11 @@ static uart_device_t uartx_device[UART_MAX_INDEX] = {
 #endif
 };
 /**
- * @brief 
- * 
- * @param dev 
- * @param oflag 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
  */
 int uart_open(struct device *dev, uint16_t oflag)
 {
@@ -114,10 +114,10 @@ int uart_open(struct device *dev, uint16_t oflag)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @return int
  */
 int uart_close(struct device *dev)
 {
@@ -127,12 +127,12 @@ int uart_close(struct device *dev)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param cmd 
- * @param args 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param cmd
+ * @param args
+ * @return int
  */
 int uart_control(struct device *dev, int cmd, void *args)
 {
@@ -254,13 +254,13 @@ int uart_control(struct device *dev, int cmd, void *args)
     return 0;
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
@@ -282,13 +282,13 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
     return UART_SendData(uart_device->id, (uint8_t *)buffer, size);
 }
 /**
- * @brief 
- * 
- * @param dev 
- * @param pos 
- * @param buffer 
- * @param size 
- * @return int 
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
  */
 int ATTR_TCM_SECTION uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
@@ -309,12 +309,12 @@ int ATTR_TCM_SECTION uart_read(struct device *dev, uint32_t pos, void *buffer, u
     return UART_ReceiveData(uart_device->id, (uint8_t *)buffer, size);
 }
 /**
- * @brief 
- * 
- * @param index 
- * @param name 
- * @param flag 
- * @return int 
+ * @brief
+ *
+ * @param index
+ * @param name
+ * @param flag
+ * @return int
  */
 int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
 {
@@ -338,9 +338,9 @@ int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
     return device_register(dev, name, flag);
 }
 /**
- * @brief 
- * 
- * @param handle 
+ * @brief
+ *
+ * @param handle
  */
 void ATTR_TCM_SECTION uart_isr(uart_device_t *handle)
 {
@@ -410,8 +410,8 @@ void ATTR_TCM_SECTION uart_isr(uart_device_t *handle)
 
 #ifdef BSP_USING_UART0
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void UART0_IRQ(void)
 {
@@ -420,8 +420,8 @@ void UART0_IRQ(void)
 #endif
 #ifdef BSP_USING_UART1
 /**
- * @brief 
- * 
+ * @brief
+ *
  */
 void UART1_IRQ(void)
 {

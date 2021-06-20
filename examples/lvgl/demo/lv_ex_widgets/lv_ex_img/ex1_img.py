@@ -7,7 +7,7 @@ except:
       cogwheel_img_data = f.read()
   except:
     print("Could not find binary img_cogwheel file")
-    
+
 # create the cogwheel image data
 
 cogwheel_img_dsc = lv.img_dsc_t(

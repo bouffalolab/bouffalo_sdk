@@ -1,7 +1,7 @@
 C
 ^
 
-Simple Image button 
+Simple Image button
 """""""""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_imgbtn/lv_ex_imgbtn_1

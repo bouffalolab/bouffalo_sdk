@@ -1,7 +1,7 @@
 def event_handler(source,evt):
     if  evt == lv.EVENT.VALUE_CHANGED:
         print("Value:",slider.get_value())
-            
+
 # create a slider
 slider = lv.slider(lv.scr_act(),None)
 slider.set_width(200)

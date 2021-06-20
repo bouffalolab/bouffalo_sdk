@@ -1,7 +1,7 @@
 C
 ^
 
-Page with scrollbar 
+Page with scrollbar
 """""""""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_page/lv_ex_page_1

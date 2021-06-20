@@ -4,7 +4,7 @@ table.set_row_cnt(4)
 table.set_size(200,200)
 table.align(lv.scr_act(), lv.ALIGN.CENTER, -15, 0)
 
-# Make the cells of the first row center aligned 
+# Make the cells of the first row center aligned
 table.set_col_width(0,100)
 table.set_cell_align(0, 0, lv.label.ALIGN.CENTER)
 table.set_cell_align(0, 1, lv.label.ALIGN.CENTER)

@@ -15,7 +15,7 @@ def ta_event_cb(ta,event):
             rest = txt[colon_pos:]
             if len(rest) > 3:
                 ta.del_char()
-            
+
         if len(txt) < 2:
             return
         if ":" in txt:
@@ -25,7 +25,7 @@ def ta_event_cb(ta,event):
             if len(txt) == 2 or txt[2] != ':' :
                 ta.set_cursor_pos(2)
                 ta.add_char(ord(':'))
-                        
+
 # create a textarea
 ta = lv.textarea(lv.scr_act(),None)
 ta.set_event_cb(ta_event_cb)

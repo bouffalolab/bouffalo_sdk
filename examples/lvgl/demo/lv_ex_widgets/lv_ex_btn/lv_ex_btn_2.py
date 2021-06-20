@@ -18,7 +18,7 @@ path_ease_in_out = lv.anim_path_t()
 path_ease_in_out.init()
 path_overshoot.set_cb(lv.anim_path_t.ease_in_out)
 
-# Gum line button    
+# Gum line button
 style_gum = lv.style_t()
 style_gum.init()
 style_gum.set_transform_width(lv.STATE.PRESSED, 10)

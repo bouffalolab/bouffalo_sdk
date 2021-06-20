@@ -3,7 +3,7 @@ def event_handler(source,evt):
         date = lv.calendar.get_pressed_date(source)
         if date:
             print("Clicked date: %02d.%02d.%02d"%(date.day, date.month, date.year))
-            
+
 # create a calendar
 calendar = lv.calendar(lv.scr_act(),None)
 calendar.set_size(235,235)

@@ -4,7 +4,7 @@ def event_handler(source,evt):
             print("State: checked")
         else:
             print("State: unchecked")
-            
+
 # create a simple bar
 bar1 = lv.bar(lv.scr_act(),None)
 bar1.set_size(200,20)

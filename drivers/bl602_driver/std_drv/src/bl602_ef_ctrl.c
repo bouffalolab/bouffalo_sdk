@@ -383,11 +383,11 @@ BL_Err_Type EF_Ctrl_Read_Ldo11VoutSel_Opt(uint8_t *Ldo11VoutSelValue)
 
     /* Switch to AHB clock */
     EF_Ctrl_Sw_AHB_Clk_0();
-	
+
 	EF_CTRL_LOAD_BEFORE_READ_R0;
 
     tmp=(BL_RD_REG(EF_DATA_BASE,EF_DATA_0_EF_KEY_SLOT_4_W3))>>7;
-    
+
 
     if(trim->en){
         if(trim->parity==EF_Ctrl_Get_Trim_Parity(trim->sel_value,4)){
@@ -409,12 +409,12 @@ BL_Err_Type EF_Ctrl_Read_Ldo11VoutSel_Opt(uint8_t *Ldo11VoutSelValue)
 BL_Err_Type EF_Ctrl_Read_TxPower_ATE(int8_t *TxPower)
 {
     uint32_t tmp;
-    Efuse_TxPower_Info_Type *trim=(Efuse_TxPower_Info_Type *)&tmp; 
+    Efuse_TxPower_Info_Type *trim=(Efuse_TxPower_Info_Type *)&tmp;
 
 
     /* Switch to AHB clock */
     EF_Ctrl_Sw_AHB_Clk_0();
-	
+
 	EF_CTRL_LOAD_BEFORE_READ_R0;
 
     tmp=(BL_RD_REG(EF_DATA_BASE,EF_DATA_0_EF_KEY_SLOT_4_W3))>>0;
@@ -426,9 +426,9 @@ BL_Err_Type EF_Ctrl_Read_TxPower_ATE(int8_t *TxPower)
                 *TxPower=trim->txpower - 32;
             }
             else{
-                *TxPower=trim->txpower;    
+                *TxPower=trim->txpower;
             }
-            
+
             return SUCCESS;
         }
     }

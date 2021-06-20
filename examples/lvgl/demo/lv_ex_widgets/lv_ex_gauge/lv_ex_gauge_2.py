@@ -11,8 +11,8 @@ except:
     except:
         print("Could not find img_hand file")
         sys.exit()
-    
-    
+
+
 # create the hands image data
 
 img_hand_dsc = lv.img_dsc_t(

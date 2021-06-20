@@ -22,7 +22,7 @@ txt.set_text(
 You can add control buttons to
 the window header
 
-The content area becomes automatically 
+The content area becomes automatically
 scrollable if it's large enough.
 
 You can scroll the content

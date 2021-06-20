@@ -4,7 +4,7 @@ SUB_MODULE_OUT_DIR:= $(MODULE_OUT_DIR)/xz
 SUB_MODULE_SRC_DIR := $(SUB_MODULE_DIR)
 
 COMMON_INCLUDE += -I $(MODULE_DIR)/xz
-                  
+
 xz_sources := xz_crc32.c xz_dec_lzma2.c xz_dec_stream.c xz_decompress.c xz_port.c
 
 xz_objs := $(addprefix $(SUB_MODULE_OUT_DIR)/, $(subst .c,.o,$(xz_sources)))

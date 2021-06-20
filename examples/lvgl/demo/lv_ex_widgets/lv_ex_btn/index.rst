@@ -1,7 +1,7 @@
 C
 ^
 
-Simple Buttons 
+Simple Buttons
 """"""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_btn/lv_ex_btn_1

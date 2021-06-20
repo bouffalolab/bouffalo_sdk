@@ -2,7 +2,7 @@ def event_handler(source,evt):
     if evt == lv.EVENT.VALUE_CHANGED:
         # print(slider.get_value())
         slider_label.set_text(str(slider.get_value()))
-            
+
 # Create a slider in the center of the display
 slider = lv.slider(lv.scr_act(),None)
 slider.set_width(200)
@@ -21,7 +21,7 @@ info_label=lv.label(lv.scr_act(), None)
 info_label.set_text(
 """Welcome to the slider +
 label demo!
-Move the slider 
+Move the slider
 and see that the label
 updates to match it."""
 )

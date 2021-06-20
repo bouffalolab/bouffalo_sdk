@@ -17,4 +17,4 @@ label.set_text("Lorem ipsum dolor sit amet, consectetur adipiscing elit,\n"
                "Excepteur sint occaecat cupidatat non proident, sunt in culpa\n"
                "qui officia deserunt mollit anim id est laborum.")
 
-    
+

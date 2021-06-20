@@ -1,7 +1,7 @@
 C
 ^
 
-Simple Tabview 
+Simple Tabview
 """""""""""""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_tabview/lv_ex_tabview_1

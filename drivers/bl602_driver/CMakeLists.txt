@@ -1,5 +1,5 @@
 ﻿################# Add global include #################
-list(APPEND ADD_INCLUDE 
+list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}"
 "${CMAKE_CURRENT_SOURCE_DIR}/std_drv/inc"
 "${CMAKE_CURRENT_SOURCE_DIR}/hal_drv/inc"
@@ -10,13 +10,13 @@ list(APPEND ADD_INCLUDE
 #######################################################
 
 ################# Add private include #################
-list(APPEND ADD_PRIVATE_INCLUDE 
+list(APPEND ADD_PRIVATE_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}/hal_drv/default_config"
 )
 #######################################################
 
 ############## Add current dir source files ###########
-file(GLOB_RECURSE sources 
+file(GLOB_RECURSE sources
 "${CMAKE_CURRENT_SOURCE_DIR}/std_drv/src/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/hal_drv/src/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/startup/interrupt.c"
@@ -54,7 +54,7 @@ list(APPEND ADD_DEFINITIONS -DARCH_RISCV)
 #######################################################
 
 ############ Add private compile option ################
-#add compile option for this component that won't affect other modules  
+#add compile option for this component that won't affect other modules
 # list(APPEND ADD_DEFINITIONS_PRIVATE -DAAAAA=1)
 #######################################################
 
