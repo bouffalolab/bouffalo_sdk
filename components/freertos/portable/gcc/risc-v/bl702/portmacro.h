@@ -54,7 +54,7 @@ extern "C" {
 #define portBASE_TYPE  int /* int32_t */
 #define portUBASE_TYPE uint32_t
 #define portMAX_DELAY  (TickType_t)0xffffffffUL
-#if __riscv_float_abi_single
+#ifdef __riscv_float_abi_single
 /* better to use float replace double here,
  * so that it will generates floating point instructions
  */

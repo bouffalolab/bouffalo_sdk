@@ -54,7 +54,7 @@ _enter:
     la t0, __Vectors
     csrw mtvt, t0
 
-#if __riscv_float_abi_single
+#ifdef __riscv_float_abi_single
     /* deal with FP */
     /* Is F extension present? */
     csrr t0, misa
