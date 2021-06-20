@@ -25,7 +25,7 @@ Linux OR WSL 环境开发指南
    $ wget -c https://dev.bouffalolab.com/media/upload/download/riscv64-elf-x86_64-20210120.tar.gz
    $ mkdir -p riscv64-elf-20210120
    $ tar -zxvf riscv64-elf-x86_64-20210120.tar.gz -C riscv64-elf-20210120
-   $ sudo cp ~/riscv64-elf-20210120  /usr/bin
+   $ sudo cp -rf ~/riscv64-elf-20210120  /usr/bin
    $ echo "export PATH=\"$PATH:/usr/bin/riscv64-elf-20210120/bin\""  >> ~/.bashrc
    $ source ~/.bashrc
 
@@ -39,9 +39,9 @@ Linux OR WSL 环境开发指南
    $ sudo apt update
    $ sudo apt install make
    $ cd ~
-   $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz 
+   $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
    $ tar -zxvf cmake-3.19.3-Linux-x86_64.tar.gz
-   $ sudo cp ~/cmake-3.19.3-Linux-x86_64  /usr/bin
+   $ sudo cp -rf ~/cmake-3.19.3-Linux-x86_64  /usr/bin
    $ echo "export PATH=\"$PATH:/usr/bin/cmake-3.19.3-Linux-x86_64/bin\""  >> ~/.bashrc
    $ source ~/.bashrc
 
@@ -119,7 +119,7 @@ Linux OR WSL 环境开发指南
    :linenos:
 
     $ sudo apt install picocom   # 若已经安装请忽略
-    $ picocom -b 2000000 /dev/ttyUSB0 
+    $ picocom -b 2000000 /dev/ttyUSB0 # 注意你的可用串口号 （如使用 Sipeed RV-debugger）
 
 -  按一下开发板上的 ``rst`` 按键，即可在串口终端中看到 ``hello world！``
 

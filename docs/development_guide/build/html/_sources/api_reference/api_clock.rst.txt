@@ -46,9 +46,9 @@
 - type 获取的外设时钟频率类型
 
 ``type`` 提供以下几种类型
-    
+
 .. code-block:: C
-    
+
     enum peripheral_clock_type
     {
         PERIPHERAL_CLOCK_UART = 0,

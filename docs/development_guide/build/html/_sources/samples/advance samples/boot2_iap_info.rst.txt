@@ -25,4 +25,4 @@ bl_mcu_sdk 开源了 boot2_iap 的软件源码，用户可以到 examples/boot2_
 实验现象
 -----------------------------
 
-使用 Dev Cube 完成 IAP 功能的具体步骤，请参阅 `DevCube用户手册 <https://dev.bouffalolab.com/media/upload/doc/DevCube%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8Cv1.2.pdf>`_ <IAP 程序下载>章节。
+使用 Dev Cube 完成 IAP 功能的具体步骤，请参阅 `DevCube用户手册 <https://dev.bouffalolab.com/media/upload/doc/DevCube%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8Cv1.3.pdf>`_ <IAP 程序下载>章节。

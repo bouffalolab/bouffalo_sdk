@@ -144,7 +144,7 @@ Windows 下使用 Eclipse 开发指南
 
 -  点击 eclipse 工具栏中的 ``Debug`` 按钮，进入 debug 配置窗口
 -  选择 ``GDB SEGGER J-Link Debugging->Jlink_bl_mcu_sdk``  Debug 配置，在 ``C/C++ Application:`` 选项中选择需要调试的 ``.elf`` 文件
--  先点击 ``Apply`` 后，在点击 ``Debug`` 即可进行 ``Debug`` 
+-  先点击 ``Apply`` 后，在点击 ``Debug`` 即可进行 ``Debug``
 
 .. figure:: img/pic14.png
    :alt:
@@ -153,7 +153,7 @@ Windows 下使用 Eclipse 开发指南
 
 .. figure:: img/pic15.png
    :alt:
-   
+
    Eclipse Debugging
 
 

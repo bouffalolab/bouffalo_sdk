@@ -102,9 +102,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#id2">5.1.3. 使用串口烧写程序连接方法</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#bl702-avb">5.2. BL702_AVB 开发板</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id3">5.2.1. 使用 CK-Link 烧写、调试连接方法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">5.2.2. 使用串口烧写程序连接方法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bl706-avb">5.2. BL706_AVB 开发板</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sipeed-rv-debugger-plus">5.2.1. 使用 Sipeed RV-Debugger Plus 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">5.2.2. 使用 CK-Link 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">5.2.3. 使用串口烧写程序连接方法</a></li>
 </ul>
 </li>
 </ul>
@@ -125,15 +126,14 @@
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/blink_demo.html">1. GPIO 输出 - 流水灯</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/button_demo.html">2. GPIO 中断 - 按键检测</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/breath_pwm_demo.html">3. PWM - 呼吸灯</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart_loopback_demo.html">4. UART - 数据自收发</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer_demo.html">5. MTIMER - 内核定时器</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma_m2m_demo.html">6. DMA - RAM间数据搬运</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c_eeprom_demo.html">7. I2C - AT24CXX 读写</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi_lcd_demo.html">8. SPI - TFT LCD 显示</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc_key_demo.html">9. ADC - 按键检测电压</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -284,18 +284,75 @@
 </ul>
 </div>
 </div>
-<div class="section" id="bl702-avb">
-<h2><span class="section-number">5.2. </span>BL702_AVB 开发板<a class="headerlink" href="#bl702-avb" title="永久链接至标题">¶</a></h2>
-<div class="section" id="id3">
-<h3><span class="section-number">5.2.1. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<div class="section" id="bl706-avb">
+<h2><span class="section-number">5.2. </span>BL706_AVB 开发板<a class="headerlink" href="#bl706-avb" title="永久链接至标题">¶</a></h2>
+<div class="admonition important">
+<p class="admonition-title">重要</p>
+<p>BL706_AVB 开发板有多个引脚存在复用情况，请仔细检查所需功能引脚是否被复用了；FUNC1:「Default: PIX; Connect: I2S/JTAG」，FUNC2:「Default: I2S; Connect: SPI」; <strong>如果需要调试，请务必记得将 FUNC1 跳帽连接</strong></p>
+</div>
+<div class="section" id="sipeed-rv-debugger-plus">
+<h3><span class="section-number">5.2.1. </span>使用 Sipeed RV-Debugger Plus 烧写、调试连接方法<a class="headerlink" href="#sipeed-rv-debugger-plus" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">TO</span> <span class="pre">DO</span></code></p></li>
+<li><p>将 BL706_AVB 开发板先供电</p></li>
+<li><p>将 RV-Debugger Plus 调试器连接到电脑 USB 口，如没有正确安装驱动，请参考 <a class="reference internal" href="get_started.html#sipeed-rv-debugger-plus"><span class="std std-ref">调试器驱动安装设置</span></a> 部分，设置好驱动程序，在进行下面的步骤</p></li>
+<li><p>将调试器和 BL706_AVB 开发板使用排线连接起来（如下图所示）</p></li>
 </ul>
+<div class="admonition important">
+<p class="admonition-title">重要</p>
+<p>使用调试功能是一定要将 FUNC1 跳帽连接，否则引脚被复用其他功能，不能使用 JTAG 功能；串口功能可以正常使用</p>
+</div>
+<div class="figure align-default" id="id7">
+<img alt="" src="../_images/bl706_avb_rv_debugger_plus.png" />
+<p class="caption"><span class="caption-text">RV-Debugger connect bl706_avb board</span><a class="headerlink" href="#id7" title="永久链接至图片">¶</a></p>
+</div>
+</div>
+<div class="section" id="id3">
+<h3><span class="section-number">5.2.2. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li><p>将 CK-Link USB 接口使用合适的 USB 数据线正确连接到 PC 主机</p></li>
+<li><p>将 bl706_avb 开发板的 FUNC1 跳帽短接</p></li>
+<li><p>将 <code class="docutils literal notranslate"><span class="pre">HD8</span></code> 组的引脚使用排线引到转接板</p></li>
+<li><p>将转接板的标准 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚使用杜邦线与 <code class="docutils literal notranslate"><span class="pre">CK-Link</span></code> 对应的 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚连接起来</p></li>
+<li><p>若没有使用 CK-Link 给开发板供电，需要给开发板单独供电</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bl706</span><span class="o">-</span><span class="n">avb</span> <span class="n">board</span>         <span class="n">CK</span><span class="o">-</span><span class="n">Link</span>
+<span class="o">-------------------------------</span>
+    <span class="n">JTAG_TDI</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TDI</span>
+    <span class="n">JTAG_TDO</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TDO</span>
+    <span class="n">JTAG_TCK</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TCK</span>
+    <span class="n">JTAG_TMS</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TMS</span>
+    <span class="n">VDD33</span>        <span class="o">&lt;--&gt;</span>     <span class="n">VREF</span>
+    <span class="n">GND</span>          <span class="o">&lt;--&gt;</span>     <span class="n">GND</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id8">
+<img alt="" src="../_images/bl706_avb_ck_link.png" />
+<p class="caption"><span class="caption-text">ck_link connect bl706_avb board</span><a class="headerlink" href="#id8" title="永久链接至图片">¶</a></p>
+</div>
 </div>
 <div class="section" id="id4">
-<h3><span class="section-number">5.2.2. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.3. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">TO</span> <span class="pre">DO</span></code></p></li>
+<li><p>使用串口烧写前，请确保正确安装了 <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code> 或命令行烧写工具</p>
+<ul>
+<li><p>使用 <code class="docutils literal notranslate"><span class="pre">Type-C</span> <span class="pre">USB</span></code> 数据线 or <code class="docutils literal notranslate"><span class="pre">Mini</span> <span class="pre">USB</span></code> 数据线连接到开发板上对应的 <code class="docutils literal notranslate"><span class="pre">Type-C</span></code> 接口 or <code class="docutils literal notranslate"><span class="pre">Mini</span></code> 接口上。</p></li>
+<li><p>按下开发板上的 <code class="docutils literal notranslate"><span class="pre">Boot</span></code> 键，不要释放</p></li>
+<li><p>按下开发板上的 <code class="docutils literal notranslate"><span class="pre">RST</span></code> 键，此时已经进入 <code class="docutils literal notranslate"><span class="pre">Boot</span> <span class="pre">ROM</span></code>，可以释放两个按键</p></li>
+<li><p>这时就可以从 <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code> 中看到相应的串口 <code class="docutils literal notranslate"><span class="pre">COM</span></code> 号，如没有出现，请点击 <code class="docutils literal notranslate"><span class="pre">Refresh</span></code> 按钮刷新一下</p></li>
+</ul>
+</li>
+<li><p>如没有合适的数据线，也可以使用一些常见的 <code class="docutils literal notranslate"><span class="pre">USB-TTL</span></code> 模块，连接到开发板的 <code class="docutils literal notranslate"><span class="pre">UART0</span></code> 端口进行烧写。 <code class="docutils literal notranslate"><span class="pre">UART0</span></code> 在 <code class="docutils literal notranslate"><span class="pre">HD12</span></code> 组上，连接方法如下：</p></li>
+<li><p>如果使用 Sipeed RV-Debugger Plus 通过排线连接了 BL706_AVB 开发板，则也可以使用 Sipeed RV Debugger Plus 的串口</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">USB</span><span class="o">-</span><span class="n">TTL</span>      <span class="n">BL706_AVB</span>
+<span class="o">----------------------</span>
+  <span class="n">TXD</span>   <span class="o">&lt;--&gt;</span>   <span class="n">RX0</span>
+  <span class="n">RXD</span>   <span class="o">&lt;--&gt;</span>   <span class="n">TX0</span>
+  <span class="n">GND</span>   <span class="o">&lt;--&gt;</span>   <span class="n">GND</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li></li>
 </ul>
 </div>
 </div>

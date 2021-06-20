@@ -20,7 +20,7 @@ UART 设备结构体定义
 ------------------------
 
 .. code-block:: C
-    
+
     typedef struct uart_device
     {
         struct device parent;
@@ -48,7 +48,7 @@ UART 设备结构体定义
 
 .. code-block:: C
 
-    typedef enum  
+    typedef enum
     {
         UART_DATA_LEN_5 = 0,  /*!< Data length is 5 bits */
         UART_DATA_LEN_6 = 1,  /*!< Data length is 6 bits */
@@ -59,8 +59,8 @@ UART 设备结构体定义
 ``stopbits`` 提供以下类型
 
 .. code-block:: C
-    
-    typedef enum  
+
+    typedef enum
     {
         UART_STOP_ONE = 0,  /*!< One stop bit */
         UART_STOP_ONE_D_FIVE = 1,  /*!< 1.5 stop bit */
@@ -70,8 +70,8 @@ UART 设备结构体定义
 ``parity`` 提供以下类型
 
 .. code-block:: C
-    
-    typedef enum  
+
+    typedef enum
     {
         UART_PAR_NONE = 0,  /*!< No parity */
         UART_PAR_ODD  = 1,  /*!< Parity bit is odd */
@@ -120,11 +120,11 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 **uart_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 ``uart_register`` 用来注册一个 UART 设备，在注册之前需要打开对应 UART 设备的宏定义。例如定义宏 ``BSP_USING_UART0`` 方可使用 ``UART0`` 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 ``UART0`` 设备。
 
 .. code-block:: C
-    
+
     int uart_register(enum uart_index_type index, const char *name, uint16_t flag);
 
 - index 要注册的设备索引
@@ -134,7 +134,7 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 ``index`` 用来选择 UART 设备配置，一个 index 对应一个 UART 设备配置，比如 ``UART0_INDEX`` 对应 ``UART0_CONFIG`` 配置，``index`` 有如下可选类型
 
 .. code-block:: C
-    
+
     enum uart_index_type
     {
     #ifdef BSP_USING_UART0
@@ -153,7 +153,7 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int device_open(struct device *dev, uint16_t oflag);   
+    int device_open(struct device *dev, uint16_t oflag);
 
 - dev 设备句柄
 - oflag 设备的打开方式
@@ -177,11 +177,11 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int device_close(struct device *dev);   
+    int device_close(struct device *dev);
 
 - dev 设备句柄
 - return 错误码，0 表示关闭成功，其他表示错误
-    
+
 **device_control**
 ^^^^^^^^^^^^^^^^^^^
 
@@ -189,7 +189,7 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int device_control(struct device *dev, int cmd, void *args);   
+    int device_control(struct device *dev, int cmd, void *args);
 
 - dev 设备句柄
 - cmd 设备控制命令
@@ -209,9 +209,9 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 +---------------------------------+---------------------+------------------------------+
 |cmd                              |args                 |description                   |
 +=================================+=====================+==============================+
-|DEVICE_CTRL_SET_INT              |uart_it_type         |开启spi设备中断               |
+|DEVICE_CTRL_SET_INT              |uart_it_type         |开启uart设备中断              |
 +---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_CLR_INT              |uart_it_type         |关闭spi设备中断               |
+|DEVICE_CTRL_CLR_INT              |uart_it_type         |关闭uart设备中断              |
 +---------------------------------+---------------------+------------------------------+
 |DEVICE_CTRL_CONFIG               |uart_param_cfg_t*    |修改串口配置                  |
 +---------------------------------+---------------------+------------------------------+
@@ -241,7 +241,7 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);  
+    int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);
 
 - dev 设备句柄
 - pos 无作用
@@ -256,7 +256,7 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size);  
+    int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size);
 
 - dev 设备句柄
 - pos 无作用
@@ -279,7 +279,7 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
     - dev 设备句柄
     - args 接收发送缓冲区，数据类型为 uint8_t*
     - size 传输长度
-    - event 中断事件类型    
+    - event 中断事件类型
 
 串口设备 ``event`` 类型如下
 

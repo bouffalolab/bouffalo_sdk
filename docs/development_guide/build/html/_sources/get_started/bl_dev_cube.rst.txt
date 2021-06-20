@@ -59,17 +59,17 @@ BLDevCube 烧录工具指南
 -  硬件连接需要更改为支持 Openocd 的调试器连接（本教程以 Sipeed RV Debugger 为例）：
 
    -  1. 首先将 RV 调试器连接到电脑的 USB 接口，打开设备管理器，会发现调试器被识别为两个串口（注：不是开发板上的串口）
-   
+
    .. figure:: img/sipeed_rv_debugger_1.png
 
    -  2. 从 sipeed 下载 ``zadig-2.4`` 替换驱动程序。下载地址：`http://dl.sipeed.com/MAIX/tools/sipeed-rv-debugger/zadig-2.4.exe <http://dl.sipeed.com/MAIX/tools/sipeed-rv-debugger/zadig-2.4.exe>`_
    -  3. 下载好双击打开 ``zadig-2.4.exe``，选择 Options 勾选 List All Devices.
-   
+
    .. figure:: img/sipeed_rv_debugger_3.png
-   
+
    -  4. 找到 JTAG Debugger(Interface 0)，然后选择替换的驱动为 WinUSB 点击 Replace Driver 替换
    -  5. 再次打开设备管理器， 看到其中一个串口被替换成通用串行总线设备就说明安装成功
-   
+
    .. figure:: img/sipeed_rv_debugger_2.png
 
    -  6.将调试器的 JTAG 引脚与开发板的 JTAG 引脚连接起来

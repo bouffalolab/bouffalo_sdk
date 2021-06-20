@@ -27,7 +27,7 @@ GPIO 设备接口
 ``gpio_set_mode`` 用来配置 gpio 的模式。
 
 .. code-block:: C
-    
+
     void gpio_set_mode(uint32_t pin, uint32_t mode);
 
 - pin 要配置的引脚
@@ -36,7 +36,7 @@ GPIO 设备接口
 ``mode`` 提供以下几种类型
 
 .. code-block:: C
-    
+
     #define GPIO_OUTPUT_MODE                        0
     #define GPIO_OUTPUT_PP_MODE                     1
     #define GPIO_OUTPUT_PD_MODE                     2
@@ -58,31 +58,31 @@ GPIO 设备接口
 ``gpio_write`` 设置引脚电平
 
 .. code-block:: C
-    
+
     void gpio_write(uint32_t pin, uint32_t value);
 
 
 - pin 要设置的引脚
 - value 要设置的电平
-  
+
 **gpio_toggle**
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``gpio_toggle`` 翻转引脚电平
 
 .. code-block:: C
-    
+
     void gpio_toggle(uint32_t pin);
 
 - pin 要翻转的引脚
 
 **gpio_read**
 ^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 ``gpio_read`` 读取引脚电平
 
 .. code-block:: C
-    
+
     int  gpio_read(uint32_t pin);
 
 
@@ -91,11 +91,11 @@ GPIO 设备接口
 
 **gpio_attach_irq**
 ^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 ``gpio_attach_irq`` 为中断引脚附加中断回调函数
 
 .. code-block:: C
-    
+
     void gpio_attach_irq(uint32_t pin, void (*cbfun)(uint32_t pin));
 
 - pin 要附加中断回调的引脚
@@ -103,11 +103,11 @@ GPIO 设备接口
 
 **gpio_irq_enable**
 ^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 ``gpio_irq_enable`` 开启gpio某个引脚的中断
 
 .. code-block:: C
-    
+
     void gpio_irq_enable(uint32_t pin,uint8_t enabled);
 
 - pin 要开启或者关闭中断的引脚

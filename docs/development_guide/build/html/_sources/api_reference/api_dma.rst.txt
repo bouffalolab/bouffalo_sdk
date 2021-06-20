@@ -29,7 +29,7 @@ DMA 设备结构体定义
         uint8_t dst_burst_size;
         uint8_t src_width;
         uint8_t dst_width;
-        dma_lli_ctrl_t *lli_cfg;    
+        dma_lli_ctrl_t *lli_cfg;
     } dma_device_t;
 
 - parent        继承父类属性
@@ -60,7 +60,7 @@ DMA 设备结构体定义
 
 .. code-block:: C
 
-    #define DMA_LLI_ONCE_MODE     0 
+    #define DMA_LLI_ONCE_MODE     0
     #define DMA_LLI_CYCLE_MODE    1
 
 ``src_req`` 提供以下类型
@@ -76,8 +76,8 @@ DMA 设备结构体定义
     #define DMA_REQUEST_I2C0_TX     0x00000007 /*!< DMA request peripheral:I2C TX */
     #define DMA_REQUEST_SPI0_RX     0x0000000A /*!< DMA request peripheral:SPI RX */
     #define DMA_REQUEST_SPI0_TX     0x0000000B /*!< DMA request peripheral:SPI TX */
-    #define DMA_REQUEST_I2S_RX      0x00000014 /*!< DMA request peripheral:I2S RX */ 
-    #define DMA_REQUEST_I2S_TX      0x00000015 /*!< DMA request peripheral:I2S TX */ 
+    #define DMA_REQUEST_I2S_RX      0x00000014 /*!< DMA request peripheral:I2S RX */
+    #define DMA_REQUEST_I2S_TX      0x00000015 /*!< DMA request peripheral:I2S TX */
     #define DMA_REQUEST_ADC0        0x00000016 /*!< DMA request peripheral:ADC0 */
     #define DMA_REQUEST_DAC0        0x00000017 /*!< DMA request peripheral:DAC0 */
     #define DMA_REQUEST_USB_EP0     0x00000018 /*!< DMA request peripheral:USB EP0*/
@@ -102,8 +102,8 @@ DMA 设备结构体定义
     #define DMA_REQUEST_I2C0_TX     0x00000007 /*!< DMA request peripheral:I2C TX */
     #define DMA_REQUEST_SPI0_RX     0x0000000A /*!< DMA request peripheral:SPI RX */
     #define DMA_REQUEST_SPI0_TX     0x0000000B /*!< DMA request peripheral:SPI TX */
-    #define DMA_REQUEST_I2S_RX      0x00000014 /*!< DMA request peripheral:I2S RX */ 
-    #define DMA_REQUEST_I2S_TX      0x00000015 /*!< DMA request peripheral:I2S TX */ 
+    #define DMA_REQUEST_I2S_RX      0x00000014 /*!< DMA request peripheral:I2S RX */
+    #define DMA_REQUEST_I2S_TX      0x00000015 /*!< DMA request peripheral:I2S TX */
     #define DMA_REQUEST_ADC0        0x00000016 /*!< DMA request peripheral:ADC0 */
     #define DMA_REQUEST_DAC0        0x00000017 /*!< DMA request peripheral:DAC0 */
     #define DMA_REQUEST_USB_EP0     0x00000018 /*!< DMA request peripheral:USB EP0*/
@@ -172,7 +172,7 @@ DMA 设备参数配置表
     }
     #endif
     #endif
-    
+
 
     /*变量定义*/
     static dma_device_t dmax_device[DMA_MAX_INDEX] =
@@ -212,11 +212,11 @@ DMA 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 **dma_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
-    
+
 ``dma_register`` 用来注册一个 DMA 设备的一个通道，在注册之前需要打开对应 DMA 设备的通道宏定义。例如定义宏 ``BSP_USING_DMA_CH0`` 方可使用 ``DMA`` 设备的 0 通道,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 ``DMA`` 设备的 0 通道。
 
 .. code-block:: C
-    
+
     int dma_register(enum dma_index_type index, const char *name, uint16_t flag);
 
 - index 要注册的设备索引
@@ -226,7 +226,7 @@ DMA 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 ``index`` 用来选择 DMA 设备某个通道的配置，一个 index 对应一个 DMA 设备的一个通道配置，比如 ``DMA_CH0_INDEX`` 对应 DMA 通道0 配置，``index`` 有如下可选类型
 
 .. code-block:: C
-    
+
     enum dma_index_type
     {
     #ifdef BSP_USING_DMA0_CH0
@@ -263,7 +263,7 @@ DMA 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 .. code-block:: C
 
-    int device_open(struct device *dev, uint16_t oflag);   
+    int device_open(struct device *dev, uint16_t oflag);
 
 - dev 设备句柄
 - oflag 设备的打开方式
@@ -287,11 +287,11 @@ DMA 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 .. code-block:: C
 
-    int device_close(struct device *dev);   
+    int device_close(struct device *dev);
 
 - dev 设备句柄
 - return 错误码，0 表示关闭成功，其他表示错误
-    
+
 **device_control**
 ^^^^^^^^^^^^^^^^^^^
 
@@ -299,7 +299,7 @@ DMA 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 .. code-block:: C
 
-    int device_control(struct device *dev, int cmd, void *args);   
+    int device_control(struct device *dev, int cmd, void *args);
 
 - dev 设备句柄
 - cmd 设备控制命令
@@ -348,7 +348,7 @@ DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。
     - dev 设备句柄
     - args 无用
     - size 无用
-    - event 中断事件类型    
+    - event 中断事件类型
 
 DMA 设备 ``event`` 类型如下
 

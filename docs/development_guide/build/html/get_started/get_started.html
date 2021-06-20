@@ -94,6 +94,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">1. 开发前的准备</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id2">1.1. 硬件环境准备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id3">1.2. 软件环境准备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sipeed-rv-debugger-plus">1.3. 调试器驱动安装设置</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="index.html">2. 开发环境搭建指南</a></li>
@@ -116,15 +117,14 @@
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/blink_demo.html">1. GPIO 输出 - 流水灯</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/button_demo.html">2. GPIO 中断 - 按键检测</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/breath_pwm_demo.html">3. PWM - 呼吸灯</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart_loopback_demo.html">4. UART - 数据自收发</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer_demo.html">5. MTIMER - 内核定时器</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma_m2m_demo.html">6. DMA - RAM间数据搬运</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c_eeprom_demo.html">7. I2C - AT24CXX 读写</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi_lcd_demo.html">8. SPI - TFT LCD 显示</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc_key_demo.html">9. ADC - 按键检测电压</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -205,22 +205,22 @@
 <div class="section" id="id2">
 <h2><span class="section-number">1.1. </span>硬件环境准备<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
-<li><p>一块 BL702 系列 MCU 的开发板：</p>
+<li><p>至少有一块 BL702 系列 MCU 的开发板：</p>
 <ul>
-<li><p>BL706_IOT 开发板， or</p></li>
+<li><p>BL706_IOT 开发板</p></li>
 <li><p>BL706_AVB 开发板</p></li>
 </ul>
 </li>
 </ul>
 <p>BL706_Iot 开发板如下图所示</p>
-<div class="figure align-default" id="id4">
+<div class="figure align-default" id="id5">
 <img alt="" src="../_images/bl702_iot.png" />
-<p class="caption"><span class="caption-text">BL706_IoT</span><a class="headerlink" href="#id4" title="永久链接至图片">¶</a></p>
+<p class="caption"><span class="caption-text">BL706_IoT</span><a class="headerlink" href="#id5" title="永久链接至图片">¶</a></p>
 </div>
 <p>BL706_AVB 开发板如下图所示</p>
-<div class="figure align-default" id="id5">
+<div class="figure align-default" id="id6">
 <img alt="" src="../_images/bl706_avb.png" />
-<p class="caption"><span class="caption-text">BL706_AVB</span><a class="headerlink" href="#id5" title="永久链接至图片">¶</a></p>
+<p class="caption"><span class="caption-text">BL706_AVB</span><a class="headerlink" href="#id6" title="永久链接至图片">¶</a></p>
 </div>
 <ul class="simple">
 <li><p>一个支持标准 JTAG 功能的调试器，下面几款调试器中选择一款与开发环境适合即可：</p></li>
@@ -229,7 +229,7 @@
 <div><ul class="simple">
 <li><p>CK-Link 仿真器</p></li>
 <li><p>Jlink V11 仿真器</p></li>
-<li><p>Sipeed USB-JTAG/TTL 调试器</p></li>
+<li><p>Sipeed RV-Debugger Plus 调试器</p></li>
 <li><p>Bouffalo Lab Debugger 调试器</p></li>
 </ul>
 </div></blockquote>
@@ -239,11 +239,94 @@
 </div>
 <div class="section" id="id3">
 <h2><span class="section-number">1.2. </span>软件环境准备<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
-<p>为了更好的进行 BL702 系列 MCU 的开发，建议您应当具备以下开发环境：</p>
+<p>为了更好的进行 BL702 系列 MCU 的开发，建议您应当至少具备以下一种开发环境：</p>
 <ul class="simple">
-<li><p>Windows 使用 <a class="reference external" href="Windows_quick_start_cdk.html">CDK</a> 环境开发 (建议 Windows 7 以上版本。) ，or</p></li>
-<li><p><a class="reference external" href="Windows_quick_start_eclipse.html">Windows</a> 使用 Eclipse 环境开发 (建议 Windows 7 以上版本。) ，or</p></li>
+<li><p>Windows 使用 <a class="reference external" href="Windows_quick_start_cdk.html">CDK</a> 环境开发 (建议 Windows 7 以上版本)</p></li>
+<li><p><a class="reference external" href="Windows_quick_start_eclipse.html">Windows</a> 使用 Eclipse 环境开发 (建议 Windows 7 以上版本)</p></li>
 <li><p><a class="reference external" href="Linux_quick_start_ubuntu.html">Linux</a> (建议使用 Ubuntu 18 以上的 LTS 版本)</p></li>
+</ul>
+</div>
+<div class="section" id="sipeed-rv-debugger-plus">
+<span id="id4"></span><h2><span class="section-number">1.3. </span>调试器驱动安装设置<a class="headerlink" href="#sipeed-rv-debugger-plus" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>本节主要介绍 <strong>Sipeed RV-Debugger Plus</strong> 调试器的驱动安装设置，若使用 <strong>CK-Link</strong> 或者 <strong>J-Link</strong> 无需阅读本节内容</p></li>
+</ul>
+<div class="figure align-default" id="id7">
+<img alt="" src="../_images/sipeed_rv_debugger_plus.png" />
+<p class="caption"><span class="caption-text">Sipeed RV-Debugger plus</span><a class="headerlink" href="#id7" title="永久链接至图片">¶</a></p>
+</div>
+<p><strong>Windows</strong></p>
+<ul>
+<li><p>Sipeed RV-Debugger Plus 调试器在 Windows 系统中所以时我们需要将驱动更换为 <code class="docutils literal notranslate"><span class="pre">Win</span> <span class="pre">USB</span></code> 驱动</p>
+<ul class="simple">
+<li><ol class="arabic simple">
+<li><p>首先，将调试器 Type-C USB 接口使用 USB 数据线连接到 PC 主机，打开 PC 的设备管理器，在端口一栏可以看到调试器被识别为两个串口（<em>注：不是开发板上的串口</em>），或者在 <code class="docutils literal notranslate"><span class="pre">通用串行总线控制器</span></code> 看到 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> 和 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code></p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_1.png" src="../_images/sipeed_rv_debugger_1.png" />
+</div>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_4.png" src="../_images/sipeed_rv_debugger_4.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="2">
+<li><p>从 sipeed 网站下载 <code class="docutils literal notranslate"><span class="pre">zadig-2.4</span></code> 替换驱动程序。下载地址：<a class="reference external" href="http://dl.sipeed.com/MAIX/tools/sipeed-rv-debugger/zadig-2.4.exe">http://dl.sipeed.com/MAIX/tools/sipeed-rv-debugger/zadig-2.4.exe</a></p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="3">
+<li><p>下载好双击打开 <code class="docutils literal notranslate"><span class="pre">zadig-2.4.exe</span></code>，选择 Options 勾选 List All Devices.</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_3.png" src="../_images/sipeed_rv_debugger_3.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="4">
+<li><p>找到 JTAG Debugger(Interface 0)，然后选择替换的驱动为 <code class="docutils literal notranslate"><span class="pre">WinUSB</span></code> 点击 Replace Driver 替换</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="5">
+<li><p>再次打开设备管理器， 看到其中一个串口被替换成通用串行总线设备就说明安装成功</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_2.png" src="../_images/sipeed_rv_debugger_2.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="6">
+<li><p>到这里 Sipeed RV-Debugger Plus 的设备驱动就更换好了，接下来就可以愉快的玩耍啦~</p></li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>可能出现的问题:</strong></p>
+<div class="admonition caution">
+<p class="admonition-title">警告</p>
+<ol class="arabic simple">
+<li><p>调试器接上时没有出现两个串口，调试器上有一个 LED 常亮，那么应该是进入了 Boot 模式。请将调试器断电重新上电，注意先不要将调试器连接到目标板；调试器上电后，正常情况下两个 LED 灯会闪烁一下熄灭；此时再看一下任务管理器中的设备是否正确。</p></li>
+</ol>
+</div>
+<div class="admonition caution">
+<p class="admonition-title">警告</p>
+<ol class="arabic simple" start="2">
+<li><p>在设备管理器中没有看到任何串口，但是在``通用串行总线控制器``中看到 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> 和 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code>；遇到这种情况，请到 <a class="reference external" href="https://ftdichip.com/drivers/vcp-drivers/">FTDI 官网</a> 下载与系统匹配的驱动，将 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code> 重新安装为串口；<code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> 也即 Interface 0，使用 <code class="docutils literal notranslate"><span class="pre">zadig-2.4.exe</span></code> 替换为 WinUSB 驱动。</p></li>
+</ol>
+</div>
+<p><strong>Linux</strong></p>
+<ul class="simple">
+<li><p>安装 Openocd 及其需要的依赖项</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ apt install openocd  libusb-dev libftdi-dev libhidapi-dev
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>重新插拔调试器使修改生效</p></li>
+<li><p>打开 Terminal，在终端中输入 lsusb 命令，即可看到如下信息的设备</p></li>
 </ul>
 </div>
 </div>

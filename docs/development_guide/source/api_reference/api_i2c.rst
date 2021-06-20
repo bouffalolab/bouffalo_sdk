@@ -30,7 +30,7 @@ I2C 设备结构体定义
 - parent    继承父类属性
 - ch        i2c id，0 表示 i2c0,1 表示 i2c1
 - mode      i2c 传输模式，0 为使用硬件 i2c，1 为使用软件 i2c，当前软件 i2c 暂时无效
-- phase 
+- phase
 - 其他待补充
 
 I2C 设备参数配置表
@@ -70,11 +70,11 @@ I2C 设备标准接口当前仅使用 ``device_open`` , 并提供标准的数据
 
 **i2c_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 ``i2c_register`` 用来注册一个 I2C 设备，在注册之前需要打开对应 I2C 设备的宏定义。例如定义宏 ``BSP_USING_I2C0`` 方可使用 ``I2C0`` 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 ``I2C0`` 设备。
 
 .. code-block:: C
-    
+
     int i2c_register(enum i2c_index_type index, const char *name, uint16_t flag);
 
 - index 要注册的设备索引
@@ -84,7 +84,7 @@ I2C 设备标准接口当前仅使用 ``device_open`` , 并提供标准的数据
 ``index`` 用来选择 I2C 设备,一个 index 对应一个 I2C 设备配置，比如 ``I2C0_INDEX`` 对应 ``I2C0_CONFIG`` 配置，``index`` 有如下可选类型
 
 .. code-block:: C
-    
+
     enum i2c_index_type
     {
     #ifdef BSP_USING_I2C0
@@ -100,7 +100,7 @@ I2C 设备标准接口当前仅使用 ``device_open`` , 并提供标准的数据
 
 .. code-block:: C
 
-    int device_open(struct device *dev, uint16_t oflag);   
+    int device_open(struct device *dev, uint16_t oflag);
 
 - dev 设备句柄
 - oflag 设备的打开方式
@@ -124,7 +124,7 @@ I2C 设备标准接口当前仅使用 ``device_open`` , 并提供标准的数据
 
 .. code-block:: C
 
-    int i2c_transfer(struct device *dev, i2c_msg_t msgs[], uint32_t num);   
+    int i2c_transfer(struct device *dev, i2c_msg_t msgs[], uint32_t num);
 
 - dev 设备句柄
 - msgs 需要传输的消息

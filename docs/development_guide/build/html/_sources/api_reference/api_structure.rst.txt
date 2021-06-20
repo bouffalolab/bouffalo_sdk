@@ -110,7 +110,7 @@ API 分层模型
 
 .. code-block:: C
 
-    int device_register(struct device *dev, const char *name, uint16_t flag);   
+    int device_register(struct device *dev, const char *name, uint16_t flag);
 
 - dev 设备句柄。
 - name 设备名称。
@@ -133,7 +133,7 @@ API 分层模型
 
 .. code-block:: C
 
-    int device_unregister(const char *name);   
+    int device_unregister(const char *name);
 
 - dev 设备句柄
 - name 要删除的设备名称
@@ -160,7 +160,7 @@ API 分层模型
 
 .. code-block:: C
 
-    int device_open(struct device *dev, uint16_t oflag);   
+    int device_open(struct device *dev, uint16_t oflag);
 
 - dev 设备句柄
 - oflag 设备的打开方式
@@ -184,11 +184,11 @@ API 分层模型
 
 .. code-block:: C
 
-    int device_close(struct device *dev);   
+    int device_close(struct device *dev);
 
 - dev 设备句柄
 - return 错误码，0 表示关闭成功，其他表示错误
-    
+
 **device_control**
 ^^^^^^^^^^^^^^^^^^^
 
@@ -196,7 +196,7 @@ API 分层模型
 
 .. code-block:: C
 
-    int device_control(struct device *dev, int cmd, void *args);   
+    int device_control(struct device *dev, int cmd, void *args);
 
 - dev 设备句柄
 - cmd 设备控制命令
@@ -230,7 +230,7 @@ API 分层模型
 
 .. code-block:: C
 
-    int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);  
+    int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);
 
 - dev 设备句柄
 - pos 不同的设备 pos 的意义不同
@@ -245,7 +245,7 @@ API 分层模型
 
 .. code-block:: C
 
-    int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size);  
+    int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size);
 
 - dev 设备句柄
 - pos 不同的设备 pos 的意义不同

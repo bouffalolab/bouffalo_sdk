@@ -48,7 +48,7 @@ BLE client 软件实现
         uint8_t buf[20] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
         while(1)
        {
-            k_sem_take(&write_data_poll_sem, K_FOREVER);      
+            k_sem_take(&write_data_poll_sem, K_FOREVER);
             BT_WARN("ble_write_data\r\n");
             // Send data to server
             error =  bt_gatt_write_without_response(ble_tp_conn,char_hdl.tp_wr_hdl,buf,20,0);
@@ -75,7 +75,7 @@ BLE server 软件实现
     :linenos:
 
     int ble_start_adv(void)
-    {    
+    {
         struct bt_le_adv_param adv_param = {
             //options:3, connectable undirected, adv one time
             .options = 3, \
@@ -83,7 +83,7 @@ BLE server 软件实现
             .interval_max = BT_GAP_ADV_FAST_INT_MAX_3, \
         };
 
-        
+
         char *adv_name = "BL_TEST_01"; // This name must be the same as adv_name in ble_central
         uint8_t data[1] = {(BT_LE_AD_LIMITED | BT_LE_AD_NO_BREDR)};
         uint8_t data_uuid[2] = {0x12, 0x18};//0x1812
@@ -119,8 +119,8 @@ BLE server 软件实现
         char data[244] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
         k_sem_give(&notify_poll_sem);
         while(1)
-        {  
-            k_sem_take(&notify_poll_sem, K_FOREVER); 
+        {
+            k_sem_take(&notify_poll_sem, K_FOREVER);
             //send data to client
             err = bt_gatt_notify(ble_tp_conn, get_attr(BT_CHAR_BLE_TP_NOT_ATTR_VAL_INDEX), data, (tx_mtu_size - 3));
             BT_WARN("ble tp send notify : %d\n", err);
@@ -168,7 +168,7 @@ BLE server 软件实现
 .. figure:: img/ble_server.png
     :alt:
 
-    
+
 - **手机连接 bl702**
 
 .. figure:: img/phone_connect.jpg

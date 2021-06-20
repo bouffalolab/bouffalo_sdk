@@ -6,7 +6,7 @@ PWM 设备
 
 脉冲宽度调制（Pulse width modulation，简称 PWM）是一种用数字方式实现模拟电压控制的技术。它是通过对一系列脉冲的宽度进行调制，等效出所需要的波形（包含形状以及幅值），对模拟信号电平进行数字编码，也就是说通过调节占空比的变化来调节信号、能量等的变化，占空比就是指在一个周期内，信号处于高电平的时间占据整个信号周期的百分比，例如方波的占空比就是50%。博流系列 MCU 中 DMA 设备具有以下特性：
 
-- 支持5通道PWM信号生成
+- 支持5通道 PWM 信号生成
 - 三种时钟源可选择（总线时钟 <bclk>、晶振时钟 <xtal_ck>、慢速时钟 <32k>），搭配 16-bit 时钟分频器
 - 双门限值域设定，增加脉冲弹性
 
@@ -15,20 +15,28 @@ PWM 设备结构体定义
 
 .. code-block:: C
 
-    typedef struct pwm_device
-    {
+    typedef struct pwm_device {
         struct device parent;
         uint8_t ch;
-        uint32_t frequency;
-        uint8_t dutycycle;
+        uint8_t polarity_invert_mode;
+        uint16_t period;
+        uint16_t threshold_low;
+        uint16_t threshold_high;
         uint16_t it_pulse_count;
+
     } pwm_device_t;
 
 - parent    继承父类属性
 - ch        通道号，使能PWM通道0则ch为0，使能PWM通道0则ch为1，以此类推
-- frequency 默认频率
-- dutycycle 默认占空比（0-100）
+- polarity_invert_mode 极性翻转使能
+- period    PWM 周期值
+- threshold_low PWM 低门限阈值
+- threshold_high PWM 高门限阈值
 - it_pulse_count 触发中断条件的周期计数值
+
+.. note:: PWM 实际频率 = PWM 时钟源/分频/period ，period 非 PWM 实际周期，
+
+.. note:: PWM 占空比 = threshold_low/threshold_high * 100%
 
 PWM 设备参数配置表
 ------------------------
@@ -40,14 +48,18 @@ PWM 设备参数配置表
     /*参数配置宏*/
     #if defined(BSP_USING_PWM_CH2)
     #ifndef PWM_CH2_CONFIG
-    #define PWM_CH2_CONFIG \
-    {   \
-        .ch = 2, \
-        .frequency = 1000000, \
-        .dutycycle = 0, \
-    }
+    #define PWM_CH2_CONFIG                   \
+        {                                    \
+            .ch = 2,                         \
+            .polarity_invert_mode = DISABLE, \
+            .period = 0,                     \
+            .threshold_low = 0,              \
+            .threshold_high = 0,             \
+            .it_pulse_count = 0,             \
+        }
     #endif
     #endif
+
 
     /*变量定义*/
     static pwm_device_t pwmx_device[PWM_MAX_INDEX] = {
@@ -77,11 +89,11 @@ PWM 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 **pwm_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 ``pwm_register`` 用来注册一个 PWM 设备的一个通道，在注册之前需要打开对应 PWM 设备某个通道的宏定义,例如定义 ``BSP_USING_PWM_CH0`` 方可使用 ``PWM`` 通道0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 PWM 设备。
 
 .. code-block:: C
-    
+
     int pwm_register(enum pwm_index_type index, const char *name, uint16_t flag);
 
 - index 要注册的设备索引
@@ -91,7 +103,7 @@ PWM 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 ``index`` 用来选择 PWM 设备某个通道的配置，一个 index 对应一个 PWM 设备的一个通道配置，比如 ``PWM_CH0_INDEX`` 对应 PWM 通道0 配置，``index`` 有如下可选类型
 
 .. code-block:: C
-    
+
     enum pwm_index_type
     {
     #ifdef BSP_USING_PWM_CH0
@@ -119,7 +131,7 @@ PWM 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 .. code-block:: C
 
-    int device_open(struct device *dev, uint16_t oflag);   
+    int device_open(struct device *dev, uint16_t oflag);
 
 - dev 设备句柄
 - oflag 设备的打开方式
@@ -143,11 +155,11 @@ PWM 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 .. code-block:: C
 
-    int device_close(struct device *dev);   
+    int device_close(struct device *dev);
 
 - dev 设备句柄
 - return 错误码，0 表示关闭成功，其他表示错误
-    
+
 **device_control**
 ^^^^^^^^^^^^^^^^^^^
 
@@ -155,7 +167,7 @@ PWM 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 .. code-block:: C
 
-    int device_control(struct device *dev, int cmd, void *args);   
+    int device_control(struct device *dev, int cmd, void *args);
 
 - dev 设备句柄
 - cmd 设备控制命令
@@ -170,21 +182,23 @@ PWM 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
 ``args`` 根据不同的 ``cmd`` 传入不同，具体如下：
 
-+------------------------------------------+-----------------+----------------------------+
-|cmd                                       |args             |description                 |
-+==========================================+=================+============================+
-|DEVICE_CTRL_SET_INT                       |NULL             |开启pwm传输完成中断         |
-+------------------------------------------+-----------------+----------------------------+
-|DEVICE_CTRL_CLR_INT                       |NULL             |关闭pwm传输完成中断         |
-+------------------------------------------+-----------------+----------------------------+
-|DEVICE_CTRL_RESUME                        |NULL             |恢复pwm通道                 |
-+------------------------------------------+-----------------+----------------------------+
-|DEVICE_CTRL_SUSPEND                       |NULL             |挂起pwm通道                 |
-+------------------------------------------+-----------------+----------------------------+
-|DEVICE_CTRL_CONFIG                        |pwm_config_t     |配置pwm通道频率和占空比     |
-+------------------------------------------+-----------------+----------------------------+
-|DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG     |uint32_t*        |配置中断计数阈值            |
-+------------------------------------------+-----------------+----------------------------+
++------------------------------------------+---------------------------+--------------------------+
+|cmd                                       |args                       |description               |
++==========================================+===========================+==========================+
+|DEVICE_CTRL_SET_INT                       |NULL                       |弃用                      |
++------------------------------------------+---------------------------+--------------------------+
+|DEVICE_CTRL_CLR_INT                       |NULL                       |弃用                      |
++------------------------------------------+---------------------------+--------------------------+
+|DEVICE_CTRL_RESUME                        |NULL                       |开启当前PWM通道           |
++------------------------------------------+---------------------------+--------------------------+
+|DEVICE_CTRL_SUSPEND                       |NULL                       |关闭当前PWM通道           |
++------------------------------------------+---------------------------+--------------------------+
+|DEIVCE_CTRL_PWM_FREQUENCE_CONFIG          |uint32_t                   |配置当前PWM通道周期值     |
++------------------------------------------+---------------------------+--------------------------+
+|DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG          |pwm_dutycycle_config_t     |配置当前PWM通道占空比     |
++------------------------------------------+---------------------------+--------------------------+
+|DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG     |uint32_t                   |配置触发PWM中断周期值     |
++------------------------------------------+---------------------------+--------------------------+
 
 **device_set_callback**
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -201,7 +215,7 @@ PWM 设备除了标准的控制命令，还具有自己特殊的控制命令。
     - dev 设备句柄
     - args 无用
     - size 无用
-    - event 中断事件类型    
+    - event 中断事件类型
 
 PWM设备 ``event`` 类型如下
 

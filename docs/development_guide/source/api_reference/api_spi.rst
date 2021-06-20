@@ -22,7 +22,7 @@ SPI 设备结构体定义
 ------------------------
 
 .. code-block:: C
-    
+
     typedef struct spi_device
     {
         struct device parent;
@@ -84,7 +84,7 @@ SPI 设备结构体定义
 ``datasize`` 提供以下类型
 
 .. code-block:: C
-    
+
     #define SPI_DATASIZE_8BIT                            0
     #define SPI_DATASIZE_16BIT                           1
     #define SPI_DATASIZE_24BIT                           2
@@ -132,11 +132,11 @@ SPI 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 **spi_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
- 
+
 ``spi_register`` 用来注册一个 SPI 设备，在注册之前需要打开对应 SPI 设备的宏定义,例如定义宏 ``BSP_USING_SPI0`` 方可使用 SPI0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 SPI 设备。
 
 .. code-block:: C
-    
+
     int spi_register(enum spi_index_type index, const char *name, uint16_t flag);
 
 - index 要注册的设备索引
@@ -146,7 +146,7 @@ SPI 设备接口全部遵循标准设备驱动管理层提供的接口。
 ``index`` 用来选择 SPI 设备配置，一个 index 对应一个 SPI 设备配置，比如 ``SPI0_INDEX`` 对应 ``SPI0_CONFIG`` 配置，``index`` 有如下可选类型
 
 .. code-block:: C
-    
+
     enum spi_index_type
     {
     #ifdef BSP_USING_SPI0
@@ -162,7 +162,7 @@ SPI 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int device_open(struct device *dev, uint16_t oflag);   
+    int device_open(struct device *dev, uint16_t oflag);
 
 - dev 设备句柄
 - oflag 设备的打开方式
@@ -186,11 +186,11 @@ SPI 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int device_close(struct device *dev);   
+    int device_close(struct device *dev);
 
 - dev 设备句柄
 - return 错误码，0 表示关闭成功，其他表示错误
-    
+
 **device_control**
 ^^^^^^^^^^^^^^^^^^^
 
@@ -198,7 +198,7 @@ SPI 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int device_control(struct device *dev, int cmd, void *args);   
+    int device_control(struct device *dev, int cmd, void *args);
 
 - dev 设备句柄
 - cmd 设备控制命令
@@ -246,7 +246,7 @@ SPI 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
 .. code-block:: C
 
-    int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);  
+    int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);
 
 - dev 设备句柄
 - pos 无作用
@@ -261,7 +261,7 @@ SPI 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
 .. code-block:: C
 
-    int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size);  
+    int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size);
 
 - dev 设备句柄
 - pos 无作用
@@ -284,7 +284,7 @@ SPI 设备除了标准的控制命令，还具有自己特殊的控制命令。
     - dev 设备句柄
     - args 接收发送缓冲区，数据类型为 uint8_t*
     - size 传输长度
-    - event 中断事件类型    
+    - event 中断事件类型
 
 SPI 设备 ``event`` 类型如下
 
