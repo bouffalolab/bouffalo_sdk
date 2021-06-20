@@ -169,7 +169,7 @@
 			</target>
 			<target name="download" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make</buildCommand>
-				<buildArguments>INTERFACE=jlink</buildArguments>
+				<buildArguments>INTERFACE=uart</buildArguments>
 				<buildTarget>download</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>

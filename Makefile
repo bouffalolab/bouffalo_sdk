@@ -6,13 +6,18 @@ CPU_ID?=m0
 
 SUPPORT_SHELL?=n
 SUPPORT_FREERTOS?=n
+SUPPORT_CRYPTO?=n
 SUPPORT_LVGL?=n
 SUPPORT_FLOAT?=n
 SUPPORT_BLE?=n
 SUPPORT_XZ?=n
+SUPPORT_LWIP?=n
+SUPPORT_TFLITE?=n
 
-INTERFACE?=jlink
-BAUDRATE ?=12000
+INTERFACE?=uart
+BAUDRATE ?=2000000
+
+FORMAT_DIR?=.
 
 export BOARD
 export CHIP
@@ -21,10 +26,13 @@ export APP
 export CPU_ID
 export SUPPORT_SHELL
 export SUPPORT_FREERTOS
+export SUPPORT_CRYPTO
 export SUPPORT_LVGL
 export SUPPORT_FLOAT
 export SUPPORT_BLE
 export SUPPORT_XZ
+export SUPPORT_LWIP
+export SUPPORT_TFLITE
 
 # The command to remove a file.
 RM = cmake -E rm -rf
@@ -36,9 +44,13 @@ build:
 
 download:
 	./tools/bflb_flash_tool/bflb_mcu_tool --chipname=$(CHIP) --interface=$(INTERFACE) --baudrate=$(BAUDRATE)
-	
+
+format:
+	find $(FORMAT_DIR)/ -name "*.c" -o -name "*.h" | xargs clang-format -style=file -i
+
 clean:
 	$(RM) out
 	$(RM) build
-.PHONY:build clean download
+
+.PHONY:build clean download format
 

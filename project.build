@@ -3,15 +3,18 @@ cmake_definition+= -DCPU_ID=$(CPU_ID)
 cmake_definition+= -DBOARD=$(BOARD)
 cmake_definition+= -DSUPPORT_FLOAT=$(SUPPORT_FLOAT)
 cmake_definition+= -DSUPPORT_SHELL=$(SUPPORT_SHELL)
-cmake_definition+= -DSUPPORT_FREERTOS=$(SUPPORT_FREERTOS) 
+cmake_definition+= -DSUPPORT_FREERTOS=$(SUPPORT_FREERTOS)
+cmake_definition+= -DSUPPORT_CRYPTO=$(SUPPORT_CRYPTO)
 cmake_definition+= -DSUPPORT_LVGL=$(SUPPORT_LVGL)
 cmake_definition+= -DSUPPORT_BLE=$(SUPPORT_BLE)
 cmake_definition+= -DSUPPORT_XZ=$(SUPPORT_XZ)
+cmake_definition+= -DSUPPORT_LWIP=$(SUPPORT_LWIP)
+cmake_definition+= -DSUPPORT_TFLITE=$(SUPPORT_TFLITE)
 cmake_definition+= -DAPP_DIR=$(APP_DIR)
 cmake_definition+= -DAPP=$(APP)
 
 __build:
-	cmake $(cmake_definition) .. 
+	cmake $(cmake_definition) ..
 	make -j4
 
 .PHONY:__build

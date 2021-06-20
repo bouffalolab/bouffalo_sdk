@@ -6,13 +6,14 @@ include(${CMAKE_SOURCE_DIR}/tools/cmake/tools.cmake)
 PROJECT(${BOARD} C CXX ASM)
 
 # set(CMAKE_VERBOSE_MAKEFILE ON)
- 
+ENABLE_LANGUAGE(ASM)
+
 include_directories(${CMAKE_SOURCE_DIR}/common/misc)
 include_directories(${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform)
 
 if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/bsp/board/${BOARD})
 include_directories(${CMAKE_SOURCE_DIR}/bsp/board/${BOARD})
-else()  
+else()
 message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/bsp/board/${BOARD} is not exist")
 endif()
 
