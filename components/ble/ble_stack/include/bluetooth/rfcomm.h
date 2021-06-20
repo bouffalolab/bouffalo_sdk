@@ -26,96 +26,96 @@ extern "C" {
 
 /* RFCOMM channels (1-30): pre-allocated for profiles to avoid conflicts */
 enum {
-	BT_RFCOMM_CHAN_HFP_HF = 1,
-	BT_RFCOMM_CHAN_HFP_AG,
-	BT_RFCOMM_CHAN_HSP_AG,
-	BT_RFCOMM_CHAN_HSP_HS,
-	BT_RFCOMM_CHAN_SPP,
+    BT_RFCOMM_CHAN_HFP_HF = 1,
+    BT_RFCOMM_CHAN_HFP_AG,
+    BT_RFCOMM_CHAN_HSP_AG,
+    BT_RFCOMM_CHAN_HSP_HS,
+    BT_RFCOMM_CHAN_SPP,
 };
 
 struct bt_rfcomm_dlc;
 
 /** @brief RFCOMM DLC operations structure. */
 struct bt_rfcomm_dlc_ops {
-	/** DLC connected callback
-	 *
-	 *  If this callback is provided it will be called whenever the
-	 *  connection completes.
-	 *
-	 *  @param dlc The dlc that has been connected
-	 */
-	void (*connected)(struct bt_rfcomm_dlc *dlc);
+    /** DLC connected callback
+     *
+     *  If this callback is provided it will be called whenever the
+     *  connection completes.
+     *
+     *  @param dlc The dlc that has been connected
+     */
+    void (*connected)(struct bt_rfcomm_dlc *dlc);
 
-	/** DLC disconnected callback
-	 *
-	 *  If this callback is provided it will be called whenever the
-	 *  dlc is disconnected, including when a connection gets
-	 *  rejected or cancelled (both incoming and outgoing)
-	 *
-	 *  @param dlc The dlc that has been Disconnected
-	 */
-	void (*disconnected)(struct bt_rfcomm_dlc *dlc);
+    /** DLC disconnected callback
+     *
+     *  If this callback is provided it will be called whenever the
+     *  dlc is disconnected, including when a connection gets
+     *  rejected or cancelled (both incoming and outgoing)
+     *
+     *  @param dlc The dlc that has been Disconnected
+     */
+    void (*disconnected)(struct bt_rfcomm_dlc *dlc);
 
-	/** DLC recv callback
-	 *
-	 *  @param dlc The dlc receiving data.
-	 *  @param buf Buffer containing incoming data.
-	 */
-	void (*recv)(struct bt_rfcomm_dlc *dlc, struct net_buf *buf);
+    /** DLC recv callback
+     *
+     *  @param dlc The dlc receiving data.
+     *  @param buf Buffer containing incoming data.
+     */
+    void (*recv)(struct bt_rfcomm_dlc *dlc, struct net_buf *buf);
 };
 
 /** @brief Role of RFCOMM session and dlc. Used only by internal APIs
  */
 typedef enum bt_rfcomm_role {
-	BT_RFCOMM_ROLE_ACCEPTOR,
-	BT_RFCOMM_ROLE_INITIATOR
+    BT_RFCOMM_ROLE_ACCEPTOR,
+    BT_RFCOMM_ROLE_INITIATOR
 } __packed bt_rfcomm_role_t;
 
 /** @brief RFCOMM DLC structure. */
 struct bt_rfcomm_dlc {
-	/* Response Timeout eXpired (RTX) timer */
-	struct k_delayed_work      rtx_work;
+    /* Response Timeout eXpired (RTX) timer */
+    struct k_delayed_work rtx_work;
 
-	/* Queue for outgoing data */
-	struct k_fifo              tx_queue;
+    /* Queue for outgoing data */
+    struct k_fifo tx_queue;
 
-	/* TX credits, Reuse as a binary sem for MSC FC if CFC is not enabled */
-	struct k_sem               tx_credits;
+    /* TX credits, Reuse as a binary sem for MSC FC if CFC is not enabled */
+    struct k_sem tx_credits;
 
-	struct bt_rfcomm_session  *session;
-	struct bt_rfcomm_dlc_ops  *ops;
-	struct bt_rfcomm_dlc      *_next;
+    struct bt_rfcomm_session *session;
+    struct bt_rfcomm_dlc_ops *ops;
+    struct bt_rfcomm_dlc *_next;
 
-	bt_security_t              required_sec_level;
-	bt_rfcomm_role_t           role;
+    bt_security_t required_sec_level;
+    bt_rfcomm_role_t role;
 
-	uint16_t                      mtu;
-	uint8_t                       dlci;
-	uint8_t                       state;
-	uint8_t                       rx_credit;
+    uint16_t mtu;
+    uint8_t dlci;
+    uint8_t state;
+    uint8_t rx_credit;
 
-	/* Stack & kernel data for TX thread */
-	struct k_thread            tx_thread;
-	//K_KERNEL_STACK_MEMBER(stack, 256); //MBHJ
+    /* Stack & kernel data for TX thread */
+    struct k_thread tx_thread;
+    //K_KERNEL_STACK_MEMBER(stack, 256); //MBHJ
 };
 
 struct bt_rfcomm_server {
-	/** Server Channel */
-	uint8_t channel;
+    /** Server Channel */
+    uint8_t channel;
 
-	/** Server accept callback
-	 *
-	 *  This callback is called whenever a new incoming connection requires
-	 *  authorization.
-	 *
-	 *  @param conn The connection that is requesting authorization
-	 *  @param dlc Pointer to received the allocated dlc
-	 *
-	 *  @return 0 in case of success or negative value in case of error.
-	 */
-	int (*accept)(struct bt_conn *conn, struct bt_rfcomm_dlc **dlc);
+    /** Server accept callback
+     *
+     *  This callback is called whenever a new incoming connection requires
+     *  authorization.
+     *
+     *  @param conn The connection that is requesting authorization
+     *  @param dlc Pointer to received the allocated dlc
+     *
+     *  @return 0 in case of success or negative value in case of error.
+     */
+    int (*accept)(struct bt_conn *conn, struct bt_rfcomm_dlc **dlc);
 
-	struct bt_rfcomm_server	*_next;
+    struct bt_rfcomm_server *_next;
 };
 
 /** @brief Register RFCOMM server
@@ -143,7 +143,7 @@ int bt_rfcomm_server_register(struct bt_rfcomm_server *server);
  *  @return 0 in case of success or negative value in case of error.
  */
 int bt_rfcomm_dlc_connect(struct bt_conn *conn, struct bt_rfcomm_dlc *dlc,
-			  uint8_t channel);
+                          uint8_t channel);
 
 /** @brief Send data to RFCOMM
  *

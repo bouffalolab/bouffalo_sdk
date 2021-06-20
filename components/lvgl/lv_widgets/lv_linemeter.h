@@ -27,12 +27,13 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 /*Data of line meter*/
-typedef struct {
+typedef struct
+{
     /*No inherited ext.*/ /*Ext. of ancestor*/
     /*New data for this type */
     uint16_t scale_angle; /*Angle of the scale in deg. (0..360)*/
     uint16_t angle_ofs;
-    uint16_t line_cnt;     /*Count of lines */
+    uint16_t line_cnt; /*Count of lines */
     int32_t cur_value;
     int32_t min_value;
     int32_t max_value;
@@ -58,7 +59,7 @@ typedef uint8_t lv_linemeter_part_t;
  * it
  * @return pointer to the created line meter
  */
-lv_obj_t * lv_linemeter_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_linemeter_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*=====================
  * Setter functions
@@ -69,7 +70,7 @@ lv_obj_t * lv_linemeter_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param lmeter pointer to a line meter object
  * @param value new value
  */
-void lv_linemeter_set_value(lv_obj_t * lmeter, int32_t value);
+void lv_linemeter_set_value(lv_obj_t *lmeter, int32_t value);
 
 /**
  * Set minimum and the maximum values of a line meter
@@ -77,7 +78,7 @@ void lv_linemeter_set_value(lv_obj_t * lmeter, int32_t value);
  * @param min minimum value
  * @param max maximum value
  */
-void lv_linemeter_set_range(lv_obj_t * lmeter, int32_t min, int32_t max);
+void lv_linemeter_set_range(lv_obj_t *lmeter, int32_t min, int32_t max);
 
 /**
  * Set the scale settings of a line meter
@@ -85,21 +86,21 @@ void lv_linemeter_set_range(lv_obj_t * lmeter, int32_t min, int32_t max);
  * @param angle angle of the scale (0..360)
  * @param line_cnt number of lines
  */
-void lv_linemeter_set_scale(lv_obj_t * lmeter, uint16_t angle, uint16_t line_cnt);
+void lv_linemeter_set_scale(lv_obj_t *lmeter, uint16_t angle, uint16_t line_cnt);
 
 /**
  * Set the set an offset for the line meter's angles to rotate it.
  * @param lmeter pointer to a line meter object
  * @param angle angle offset (0..360), rotates clockwise
  */
-void lv_linemeter_set_angle_offset(lv_obj_t * lmeter, uint16_t angle);
+void lv_linemeter_set_angle_offset(lv_obj_t *lmeter, uint16_t angle);
 
 /**
  * Set the orientation of the meter growth, clockwise or counterclockwise (mirrored)
  * @param lmeter pointer to a line meter object
  * @param mirror mirror setting
  */
-void lv_linemeter_set_mirror(lv_obj_t * lmeter, bool mirror);
+void lv_linemeter_set_mirror(lv_obj_t *lmeter, bool mirror);
 
 /*=====================
  * Getter functions
@@ -110,51 +111,51 @@ void lv_linemeter_set_mirror(lv_obj_t * lmeter, bool mirror);
  * @param lmeter pointer to a line meter object
  * @return the value of the line meter
  */
-int32_t lv_linemeter_get_value(const lv_obj_t * lmeter);
+int32_t lv_linemeter_get_value(const lv_obj_t *lmeter);
 
 /**
  * Get the minimum value of a line meter
  * @param lmeter pointer to a line meter object
  * @return the minimum value of the line meter
  */
-int32_t lv_linemeter_get_min_value(const lv_obj_t * lmeter);
+int32_t lv_linemeter_get_min_value(const lv_obj_t *lmeter);
 
 /**
  * Get the maximum value of a line meter
  * @param lmeter pointer to a line meter object
  * @return the maximum value of the line meter
  */
-int32_t lv_linemeter_get_max_value(const lv_obj_t * lmeter);
+int32_t lv_linemeter_get_max_value(const lv_obj_t *lmeter);
 
 /**
  * Get the scale number of a line meter
  * @param lmeter pointer to a line meter object
  * @return number of the scale units
  */
-uint16_t lv_linemeter_get_line_count(const lv_obj_t * lmeter);
+uint16_t lv_linemeter_get_line_count(const lv_obj_t *lmeter);
 
 /**
  * Get the scale angle of a line meter
  * @param lmeter pointer to a line meter object
  * @return angle of the scale
  */
-uint16_t lv_linemeter_get_scale_angle(const lv_obj_t * lmeter);
+uint16_t lv_linemeter_get_scale_angle(const lv_obj_t *lmeter);
 
 /**
  * Get the offset for the line meter.
  * @param lmeter pointer to a line meter object
  * @return angle offset (0..360)
  */
-uint16_t lv_linemeter_get_angle_offset(lv_obj_t * lmeter);
+uint16_t lv_linemeter_get_angle_offset(lv_obj_t *lmeter);
 
-void lv_linemeter_draw_scale(lv_obj_t * lmeter, const lv_area_t * clip_area, uint8_t part);
+void lv_linemeter_draw_scale(lv_obj_t *lmeter, const lv_area_t *clip_area, uint8_t part);
 
 /**
  * get the mirror setting for the line meter
  * @param lmeter pointer to a line meter object
  * @return mirror (true or false)
  */
-bool lv_linemeter_get_mirror(lv_obj_t * lmeter);
+bool lv_linemeter_get_mirror(lv_obj_t *lmeter);
 
 /**********************
  *      MACROS

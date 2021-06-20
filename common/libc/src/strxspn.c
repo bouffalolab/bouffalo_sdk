@@ -14,20 +14,23 @@
 
 size_t __strxspn(const char *s, const char *map, int parity)
 {
-	char matchmap[UCHAR_MAX + 1];
-	size_t n = 0;
+    char matchmap[UCHAR_MAX + 1];
+    size_t n = 0;
 
-	/* Create bitmap */
-	memset(matchmap, 0, sizeof matchmap);
-	while (*map)
-		matchmap[(unsigned char)*map++] = 1;
+    /* Create bitmap */
+    memset(matchmap, 0, sizeof matchmap);
 
-	/* Make sure the null character never matches */
-	matchmap[0] = parity;
+    while (*map) {
+        matchmap[(unsigned char)*map++] = 1;
+    }
 
-	/* Calculate span length */
-	while (matchmap[(unsigned char)*s++] ^ parity)
-		n++;
+    /* Make sure the null character never matches */
+    matchmap[0] = parity;
 
-	return n;
+    /* Calculate span length */
+    while (matchmap[(unsigned char)*s++] ^ parity) {
+        n++;
+    }
+
+    return n;
 }

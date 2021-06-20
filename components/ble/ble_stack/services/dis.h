@@ -16,12 +16,12 @@
 extern "C" {
 #endif
 
-#define AR_VENDOR_ID    0x0001
-#define AR_PRODUCT_ID   0x0002
+#define AR_VENDOR_ID  0x0001
+#define AR_PRODUCT_ID 0x0002
 
-enum{
+enum {
     DIS_PNP_VID_SRC = 0x01,
-    USB_IMPL_VID    
+    USB_IMPL_VID
 };
 void dis_init(u8_t vid_src, u16_t vid, u16_t pid, u16_t pnp_ver);
 #ifdef __cplusplus

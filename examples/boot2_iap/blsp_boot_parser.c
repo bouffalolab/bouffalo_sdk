@@ -64,8 +64,8 @@
 /** @defgroup  BLSP_BOOT_PARSER_Private_Variables
  *  @{
  */
-static uint32_t g_sha_tmp_buf[16]={0};
-static uint32_t g_padding[16]={0};
+static uint32_t g_sha_tmp_buf[16] = { 0 };
+static uint32_t g_padding[16] = { 0 };
 SEC_Eng_SHA256_Ctx g_sha_ctx;
 extern uint32_t g_user_hash_ignored;
 /*@} end of group BLSP_BOOT_PARSER_Private_Variables */
@@ -92,7 +92,7 @@ extern uint32_t g_user_hash_ignored;
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Check if the input public key is the same as  burned in the efuse
  *
  * @param  cpu_type: CPU Type
@@ -101,18 +101,18 @@ extern uint32_t g_user_hash_ignored;
  * @return 1 for valid and 0 for invalid
  *
 *******************************************************************************/
-static uint32_t blsp_boot_parse_is_pkhash_valid(uint8_t cpu_type,uint8_t *pkhash)
-{    
-    if(cpu_type==BFLB_BOOT2_CPU_0){
-        if(0==memcmp(g_efuse_cfg.pk_hash_cpu0,pkhash,BFLB_BOOT2_PK_HASH_SIZE)){
+static uint32_t blsp_boot_parse_is_pkhash_valid(uint8_t cpu_type, uint8_t *pkhash)
+{
+    if (cpu_type == BFLB_BOOT2_CPU_0) {
+        if (0 == memcmp(g_efuse_cfg.pk_hash_cpu0, pkhash, BFLB_BOOT2_PK_HASH_SIZE)) {
             return 1;
         }
-    }else if(cpu_type==BFLB_BOOT2_CPU_1){
-        if(0==memcmp(g_efuse_cfg.pk_hash_cpu1,pkhash,BFLB_BOOT2_PK_HASH_SIZE)){
+    } else if (cpu_type == BFLB_BOOT2_CPU_1) {
+        if (0 == memcmp(g_efuse_cfg.pk_hash_cpu1, pkhash, BFLB_BOOT2_PK_HASH_SIZE)) {
             return 1;
         }
     }
-    
+
     return 0;
 }
 
@@ -122,7 +122,7 @@ static uint32_t blsp_boot_parse_is_pkhash_valid(uint8_t cpu_type,uint8_t *pkhash
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Check if the input public key is the same as  burned in the efuse
  *
  * @param  g_boot_img_cfg: Boot image config pointer
@@ -131,121 +131,124 @@ static uint32_t blsp_boot_parse_is_pkhash_valid(uint8_t cpu_type,uint8_t *pkhash
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parse_bootheader(boot_image_config *g_boot_img_cfg,uint8_t *data)
+int32_t blsp_boot_parse_bootheader(boot_image_config *g_boot_img_cfg, uint8_t *data)
 {
-    boot_header_config *header=(boot_header_config *)data;
+    boot_header_config *header = (boot_header_config *)data;
     uint32_t crc;
-    uint32_t crc_pass=0;
-    uint32_t i=0;
-    uint32_t *phash=(uint32_t *)header->hash;
-        
-    if(header->bootCfg.bval.crcIgnore==1&&header->crc32==BFLB_BOOT2_DEADBEEF_VAL){
+    uint32_t crc_pass = 0;
+    uint32_t i = 0;
+    uint32_t *phash = (uint32_t *)header->hash;
+
+    if (header->bootCfg.bval.crcIgnore == 1 && header->crc32 == BFLB_BOOT2_DEADBEEF_VAL) {
         MSG_DBG("Crc ignored\r\n");
-        crc_pass=1;
-    }else{
-        crc=BFLB_Soft_CRC32((uint8_t *)header,sizeof(boot_header_config)-sizeof(header->crc32));
-        if(header->crc32==crc){
-            crc_pass=1;
+        crc_pass = 1;
+    } else {
+        crc = BFLB_Soft_CRC32((uint8_t *)header, sizeof(boot_header_config) - sizeof(header->crc32));
+
+        if (header->crc32 == crc) {
+            crc_pass = 1;
         }
     }
-    if(crc_pass){
-        if(header->bootCfg.bval.notLoadInBoot){
+
+    if (crc_pass) {
+        if (header->bootCfg.bval.notLoadInBoot) {
             return BFLB_BOOT2_IMG_BOOTHEADER_NOT_LOAD_ERROR;
         }
-        
+
         /* Get which CPU's img it is*/
-        for(i=0;i<BFLB_BOOT2_CPU_MAX;i++){
-            if(0==memcmp((void *)&header->magicCode,BFLB_BOOT2_CPU0_MAGIC,
-                sizeof(header->magicCode))){
+        for (i = 0; i < BFLB_BOOT2_CPU_MAX; i++) {
+            if (0 == memcmp((void *)&header->magicCode, BFLB_BOOT2_CPU0_MAGIC,
+                            sizeof(header->magicCode))) {
                 break;
-            }else if(0==memcmp((void *)&header->magicCode,BFLB_BOOT2_CPU1_MAGIC,
-                sizeof(header->magicCode))){
+            } else if (0 == memcmp((void *)&header->magicCode, BFLB_BOOT2_CPU1_MAGIC,
+                                   sizeof(header->magicCode))) {
                 break;
             }
         }
-        
-        if(i==BFLB_BOOT2_CPU_MAX){
+
+        if (i == BFLB_BOOT2_CPU_MAX) {
             /* No cpu img magic match */
             MSG_ERR("Magic code error\r\n");
             return BFLB_BOOT2_IMG_BOOTHEADER_MAGIC_ERROR;
         }
-        
-        g_boot_img_cfg->cpu_type=i;        
-        g_boot_img_cfg->entry_point=0;
+
+        g_boot_img_cfg->cpu_type = i;
+        g_boot_img_cfg->entry_point = 0;
         /* Set image valid 0 as default */
-        g_boot_img_cfg->img_valid=0;
-        
+        g_boot_img_cfg->img_valid = 0;
+
         /* Deal with pll config */
 
         /* Encrypt and sign */
-        g_boot_img_cfg->encrypt_type=header->bootCfg.bval.encrypt_type;
-        g_boot_img_cfg->sign_type=header->bootCfg.bval.sign;
-        g_boot_img_cfg->key_sel=header->bootCfg.bval.key_sel;
-                
-        /* Xip relative */
-        g_boot_img_cfg->no_segment=header->bootCfg.bval.no_segment;
-        g_boot_img_cfg->cache_enable=header->bootCfg.bval.cache_enable;
-        g_boot_img_cfg->aes_region_lock=header->bootCfg.bval.aes_region_lock;
-        g_boot_img_cfg->halt_cpu1=header->bootCfg.bval.halt_cpu1;
-        g_boot_img_cfg->cache_way_disable=header->bootCfg.bval.cache_way_disable;
-        g_boot_img_cfg->hash_ignore=header->bootCfg.bval.hash_ignore;
-        
-        /* Firmware len*/
-        g_boot_img_cfg->img_segment_info.img_len=header->img_segment_info.img_len;
-        
-        /* Boot entry and flash offset */
-        g_boot_img_cfg->entry_point=header->bootEntry; 
-        g_boot_img_cfg->img_start.flash_offset=header->img_start.flash_offset;
+        g_boot_img_cfg->encrypt_type = header->bootCfg.bval.encrypt_type;
+        g_boot_img_cfg->sign_type = header->bootCfg.bval.sign;
+        g_boot_img_cfg->key_sel = header->bootCfg.bval.key_sel;
 
-        MSG_DBG("sign %d,encrypt:%d\r\n",g_boot_img_cfg->sign_type,
-                            g_boot_img_cfg->encrypt_type);
-                            
+        /* Xip relative */
+        g_boot_img_cfg->no_segment = header->bootCfg.bval.no_segment;
+        g_boot_img_cfg->cache_enable = header->bootCfg.bval.cache_enable;
+        g_boot_img_cfg->aes_region_lock = header->bootCfg.bval.aes_region_lock;
+        g_boot_img_cfg->halt_cpu1 = header->bootCfg.bval.halt_cpu1;
+        g_boot_img_cfg->cache_way_disable = header->bootCfg.bval.cache_way_disable;
+        g_boot_img_cfg->hash_ignore = header->bootCfg.bval.hash_ignore;
+
+        /* Firmware len*/
+        g_boot_img_cfg->img_segment_info.img_len = header->img_segment_info.img_len;
+
+        /* Boot entry and flash offset */
+        g_boot_img_cfg->entry_point = header->bootEntry;
+        g_boot_img_cfg->img_start.flash_offset = header->img_start.flash_offset;
+
+        MSG_DBG("sign %d,encrypt:%d\r\n", g_boot_img_cfg->sign_type,
+                g_boot_img_cfg->encrypt_type);
+
         /* Check encrypt and sign match*/
-        if(g_efuse_cfg.encrypted[i]!=0){
-            if(g_boot_img_cfg->encrypt_type==0){
+        if (g_efuse_cfg.encrypted[i] != 0) {
+            if (g_boot_img_cfg->encrypt_type == 0) {
                 MSG_ERR("Encrypt not fit\r\n");
                 return BFLB_BOOT2_IMG_BOOTHEADER_ENCRYPT_NOTFIT;
             }
         }
-        
-        if(g_efuse_cfg.sign[i]^g_boot_img_cfg->sign_type){
+
+        if (g_efuse_cfg.sign[i] ^ g_boot_img_cfg->sign_type) {
             MSG_ERR("sign not fit\r\n");
-            g_boot_img_cfg->sign_type=g_efuse_cfg.sign[i];
+            g_boot_img_cfg->sign_type = g_efuse_cfg.sign[i];
             return BFLB_BOOT2_IMG_BOOTHEADER_SIGN_NOTFIT;
         }
-                
-        if(g_ps_mode==BFLB_PSM_HBN && (!g_efuse_cfg.hbn_check_sign)){
+
+        if (g_ps_mode == BFLB_PSM_HBN && (!g_efuse_cfg.hbn_check_sign)) {
             /* In HBN Mode, if user select to ignore hash and sign*/
-            g_boot_img_cfg->hash_ignore=1;
-        }else if((g_boot_img_cfg->hash_ignore==1&& *phash!=BFLB_BOOT2_DEADBEEF_VAL)||
-            g_efuse_cfg.sign[i]!=0 ){
+            g_boot_img_cfg->hash_ignore = 1;
+        } else if ((g_boot_img_cfg->hash_ignore == 1 && *phash != BFLB_BOOT2_DEADBEEF_VAL) ||
+                   g_efuse_cfg.sign[i] != 0) {
             /* If signed or user not really want to ignore, hash can't be ignored*/
-            g_boot_img_cfg->hash_ignore=0;
-        }
-        if(g_user_hash_ignored){
-            g_boot_img_cfg->hash_ignore=1;
+            g_boot_img_cfg->hash_ignore = 0;
         }
 
-        ARCH_MemCpy_Fast(g_boot_img_cfg->img_hash,header->hash,sizeof(header->hash));
-        
-        if(g_boot_img_cfg->img_segment_info.img_len==0){
+        if (g_user_hash_ignored) {
+            g_boot_img_cfg->hash_ignore = 1;
+        }
+
+        ARCH_MemCpy_Fast(g_boot_img_cfg->img_hash, header->hash, sizeof(header->hash));
+
+        if (g_boot_img_cfg->img_segment_info.img_len == 0) {
             return BFLB_BOOT2_IMG_SEGMENT_CNT_ERROR;
         }
-        
+
         /* Start hash here*/
-        Sec_Eng_SHA256_Init(&g_sha_ctx,SEC_ENG_SHA_ID0,SEC_ENG_SHA256, g_sha_tmp_buf,g_padding);
+        Sec_Eng_SHA256_Init(&g_sha_ctx, SEC_ENG_SHA_ID0, SEC_ENG_SHA256, g_sha_tmp_buf, g_padding);
         Sec_Eng_SHA_Start(SEC_ENG_SHA_ID0);
 
-    }else{
+    } else {
         MSG_ERR("bootheader crc error\r\n");
-        blsp_dump_data((uint8_t *)&crc,4);
+        blsp_dump_data((uint8_t *)&crc, 4);
         return BFLB_BOOT2_IMG_BOOTHEADER_CRC_ERROR;
     }
 
     return BFLB_BOOT2_SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Parse public key
  *
  * @param  g_boot_img_cfg: Boot image config pointer
@@ -255,33 +258,33 @@ int32_t blsp_boot_parse_bootheader(boot_image_config *g_boot_img_cfg,uint8_t *da
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parse_pkey(boot_image_config *g_boot_img_cfg,uint8_t *data,uint8_t own)
+int32_t blsp_boot_parse_pkey(boot_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own)
 {
-    boot_pk_config *cfg=(boot_pk_config*)data;    
-    uint32_t pk_hash[BFLB_BOOT2_PK_HASH_SIZE/4];
-    
-    if(cfg->crc32==BFLB_Soft_CRC32((uint8_t*)cfg,sizeof(boot_pk_config)-4)){
+    boot_pk_config *cfg = (boot_pk_config *)data;
+    uint32_t pk_hash[BFLB_BOOT2_PK_HASH_SIZE / 4];
 
+    if (cfg->crc32 == BFLB_Soft_CRC32((uint8_t *)cfg, sizeof(boot_pk_config) - 4)) {
         /* Check public key with data info in OTP*/
-        Sec_Eng_SHA256_Update(&g_sha_ctx,SEC_ENG_SHA_ID0,data,BFLB_BOOT2_ECC_KEYXSIZE+BFLB_BOOT2_ECC_KEYYSIZE);
-        Sec_Eng_SHA256_Finish(&g_sha_ctx,SEC_ENG_SHA_ID0,(uint8_t *)pk_hash);
-        
-        Sec_Eng_SHA256_Init(&g_sha_ctx,SEC_ENG_SHA_ID0,SEC_ENG_SHA256, g_sha_tmp_buf,g_padding);
+        Sec_Eng_SHA256_Update(&g_sha_ctx, SEC_ENG_SHA_ID0, data, BFLB_BOOT2_ECC_KEYXSIZE + BFLB_BOOT2_ECC_KEYYSIZE);
+        Sec_Eng_SHA256_Finish(&g_sha_ctx, SEC_ENG_SHA_ID0, (uint8_t *)pk_hash);
+
+        Sec_Eng_SHA256_Init(&g_sha_ctx, SEC_ENG_SHA_ID0, SEC_ENG_SHA256, g_sha_tmp_buf, g_padding);
         Sec_Eng_SHA_Start(SEC_ENG_SHA_ID0);
-        
+
         /* Check pk is valid */
-        if(own==1){
-            if(1!=blsp_boot_parse_is_pkhash_valid(g_boot_img_cfg->cpu_type,
-                                                    (uint8_t *)pk_hash)){
+        if (own == 1) {
+            if (1 != blsp_boot_parse_is_pkhash_valid(g_boot_img_cfg->cpu_type,
+                                                     (uint8_t *)pk_hash)) {
                 MSG_ERR("PK sha error\r\n");
                 return BFLB_BOOT2_IMG_PK_HASH_ERROR;
             }
         }
-        if(own==1){
-            ARCH_MemCpy_Fast(g_boot_img_cfg->eckye_x,cfg->eckye_x,sizeof(cfg->eckye_x));
-            ARCH_MemCpy_Fast(g_boot_img_cfg->eckey_y,cfg->eckey_y,sizeof(cfg->eckey_y));
+
+        if (own == 1) {
+            ARCH_MemCpy_Fast(g_boot_img_cfg->eckye_x, cfg->eckye_x, sizeof(cfg->eckye_x));
+            ARCH_MemCpy_Fast(g_boot_img_cfg->eckey_y, cfg->eckey_y, sizeof(cfg->eckey_y));
         }
-     }else{
+    } else {
         MSG_ERR("PK crc error\r\n");
         return BFLB_BOOT2_IMG_PK_CRC_ERROR;
     }
@@ -289,7 +292,7 @@ int32_t blsp_boot_parse_pkey(boot_image_config *g_boot_img_cfg,uint8_t *data,uin
     return BFLB_BOOT2_SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Parse signature
  *
  * @param  g_boot_img_cfg: Boot image config pointer
@@ -299,25 +302,27 @@ int32_t blsp_boot_parse_pkey(boot_image_config *g_boot_img_cfg,uint8_t *data,uin
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parse_signature(boot_image_config *g_boot_img_cfg,uint8_t *data,uint8_t own)
+int32_t blsp_boot_parse_signature(boot_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own)
 {
-    boot_sign_config *cfg=(boot_sign_config*)data;
+    boot_sign_config *cfg = (boot_sign_config *)data;
     uint32_t crc;
-    if(cfg->sig_len>sizeof(g_boot_img_cfg->signature)){
+
+    if (cfg->sig_len > sizeof(g_boot_img_cfg->signature)) {
         return BFLB_BOOT2_IMG_SIGNATURE_LEN_ERROR;
     }
-    
+
     /* CRC include sig_len*/
-    crc=BFLB_Soft_CRC32((uint8_t *)&cfg->sig_len,cfg->sig_len+sizeof(cfg->sig_len));
-    if(memcmp(&crc,&cfg->signature[cfg->sig_len],4)==0){
-        if(own==1){
-            ARCH_MemCpy_Fast(g_boot_img_cfg->signature,cfg->signature,cfg->sig_len);
-            g_boot_img_cfg->sig_len=cfg->sig_len;
-        }else{
-            ARCH_MemCpy_Fast(g_boot_img_cfg->signature2,cfg->signature,cfg->sig_len);
-            g_boot_img_cfg->sig_len2=cfg->sig_len;
+    crc = BFLB_Soft_CRC32((uint8_t *)&cfg->sig_len, cfg->sig_len + sizeof(cfg->sig_len));
+
+    if (memcmp(&crc, &cfg->signature[cfg->sig_len], 4) == 0) {
+        if (own == 1) {
+            ARCH_MemCpy_Fast(g_boot_img_cfg->signature, cfg->signature, cfg->sig_len);
+            g_boot_img_cfg->sig_len = cfg->sig_len;
+        } else {
+            ARCH_MemCpy_Fast(g_boot_img_cfg->signature2, cfg->signature, cfg->sig_len);
+            g_boot_img_cfg->sig_len2 = cfg->sig_len;
         }
-    }else{
+    } else {
         MSG_ERR("SIG crc error\r\n");
         return BFLB_BOOT2_IMG_SIGNATURE_CRC_ERROR;
     }
@@ -325,7 +330,7 @@ int32_t blsp_boot_parse_signature(boot_image_config *g_boot_img_cfg,uint8_t *dat
     return BFLB_BOOT2_SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Parse ASE IV
  *
  * @param  g_boot_img_cfg: Boot image config pointer
@@ -334,17 +339,18 @@ int32_t blsp_boot_parse_signature(boot_image_config *g_boot_img_cfg,uint8_t *dat
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parse_aesiv(boot_image_config *g_boot_img_cfg,uint8_t *data)
+int32_t blsp_boot_parse_aesiv(boot_image_config *g_boot_img_cfg, uint8_t *data)
 {
-    boot_aes_config *cfg=(boot_aes_config *)data;
+    boot_aes_config *cfg = (boot_aes_config *)data;
 
-    if(cfg->crc32==BFLB_Soft_CRC32(cfg->aes_iv,sizeof(cfg->aes_iv))){
-        memcpy(g_boot_img_cfg->aes_iv,cfg->aes_iv,sizeof(boot_aes_config));        
+    if (cfg->crc32 == BFLB_Soft_CRC32(cfg->aes_iv, sizeof(cfg->aes_iv))) {
+        memcpy(g_boot_img_cfg->aes_iv, cfg->aes_iv, sizeof(boot_aes_config));
+
         /* Update image hash */
-        if(!g_boot_img_cfg->hash_ignore){
-            Sec_Eng_SHA256_Update(&g_sha_ctx,SEC_ENG_SHA_ID0,data,sizeof(boot_aes_config));
+        if (!g_boot_img_cfg->hash_ignore) {
+            Sec_Eng_SHA256_Update(&g_sha_ctx, SEC_ENG_SHA_ID0, data, sizeof(boot_aes_config));
         }
-    }else{
+    } else {
         MSG_ERR("AES IV crc error\r\n");
         return BFLB_BOOT2_IMG_AES_IV_CRC_ERROR;
     }
@@ -363,39 +369,47 @@ int32_t blsp_boot_parse_aesiv(boot_image_config *g_boot_img_cfg,uint8_t *data)
 *******************************************************************************/
 int32_t blsp_boot_parser_check_signature(boot_image_config *g_boot_img_cfg)
 {
-    int32_t ret=0;
-    uint64_t startTime=0;
+    int32_t ret = 0;
+    uint64_t startTime = 0;
     BFLB_ECDSA_Handle_t ecdsaHandle;
 
-    MSG_DBG("%d,%d\r\n",g_ps_mode,g_efuse_cfg.hbn_check_sign);
-    if(g_ps_mode==BFLB_PSM_HBN&&(!g_efuse_cfg.hbn_check_sign)){
+    MSG_DBG("%d,%d\r\n", g_ps_mode, g_efuse_cfg.hbn_check_sign);
+
+    if(g_ps_mode == BFLB_PSM_HBN && (!g_efuse_cfg.hbn_check_sign))
+    {
         return BFLB_BOOT2_SUCCESS;
     }
-    if(g_boot_img_cfg->sign_type){
-        MSG_DBG("Check sig1\r\n");
-        startTime=bflb_platform_get_time_ms();
 
-        bflb_ecdsa_init(&ecdsaHandle,ECP_SECP256R1);
-        ecdsaHandle.publicKeyx=(uint32_t *)g_boot_img_cfg->eckye_x;
-        ecdsaHandle.publicKeyy=(uint32_t *)g_boot_img_cfg->eckey_y;
-        bflb_ecdsa_verify(&ecdsaHandle,(uint32_t *)g_boot_img_cfg->img_hash,sizeof(g_boot_img_cfg->img_hash)/4,
-                          (uint32_t *)g_boot_img_cfg->signature,(uint32_t *)&g_boot_img_cfg->signature[32]);
+    if(g_boot_img_cfg->sign_type)
+    {
+        MSG_DBG("Check sig1\r\n");
+        startTime = bflb_platform_get_time_ms();
+
+        bflb_ecdsa_init(&ecdsaHandle, ECP_SECP256R1);
+        ecdsaHandle.publicKeyx = (uint32_t *)g_boot_img_cfg->eckye_x;
+        ecdsaHandle.publicKeyy = (uint32_t *)g_boot_img_cfg->eckey_y;
+        bflb_ecdsa_verify(&ecdsaHandle, (uint32_t *)g_boot_img_cfg->img_hash, sizeof(g_boot_img_cfg->img_hash) / 4,
+                          (uint32_t *)g_boot_img_cfg->signature, (uint32_t *)&g_boot_img_cfg->signature[32]);
+
         //ret=bflb_ecdsa_verify(0,(uint32_t *)g_boot_img_cfg->img_hash,sizeof(g_boot_img_cfg->img_hash),
         //                        (uint32_t *)g_boot_img_cfg->eckye_x,(uint32_t *)g_boot_img_cfg->eckey_y,
         //                        (uint32_t *)g_boot_img_cfg->signature,(uint32_t *)&g_boot_img_cfg->signature[32]);
-        if (ret!=0) {
+        if(ret != 0)
+        {
             MSG_ERR("verify failed\n");
             return BFLB_BOOT2_IMG_SIGN_ERROR;
         }
-        MSG_DBG("Time=%d ms\r\n",(unsigned int)(bflb_platform_get_time_ms()-startTime));
+
+        MSG_DBG("Time=%d ms\r\n", (unsigned int)(bflb_platform_get_time_ms() - startTime));
     }
+
     MSG_DBG("Success\r\n");
     return BFLB_BOOT2_SUCCESS;
 }
 
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Check hash is valid
  *
  * @param  g_boot_img_cfg: Boot image config pointer
@@ -405,17 +419,18 @@ int32_t blsp_boot_parser_check_signature(boot_image_config *g_boot_img_cfg)
 *******************************************************************************/
 int32_t blsp_boot_parser_check_hash(boot_image_config *g_boot_img_cfg)
 {
-    uint32_t img_hash_cal[BFLB_BOOT2_HASH_SIZE/4];
-    
-    if(!g_boot_img_cfg->hash_ignore){
-        Sec_Eng_SHA256_Finish(&g_sha_ctx,SEC_ENG_SHA_ID0,(uint8_t *)img_hash_cal);
-        if(memcmp(img_hash_cal,g_boot_img_cfg->img_hash ,
-          sizeof(g_boot_img_cfg->img_hash))!=0){
+    uint32_t img_hash_cal[BFLB_BOOT2_HASH_SIZE / 4];
+
+    if (!g_boot_img_cfg->hash_ignore) {
+        Sec_Eng_SHA256_Finish(&g_sha_ctx, SEC_ENG_SHA_ID0, (uint8_t *)img_hash_cal);
+
+        if (memcmp(img_hash_cal, g_boot_img_cfg->img_hash,
+                   sizeof(g_boot_img_cfg->img_hash)) != 0) {
             MSG_ERR("Hash error\r\n");
-            blsp_dump_data(img_hash_cal,BFLB_BOOT2_HASH_SIZE);
-            blsp_dump_data(g_boot_img_cfg->img_hash,BFLB_BOOT2_HASH_SIZE);
+            blsp_dump_data(img_hash_cal, BFLB_BOOT2_HASH_SIZE);
+            blsp_dump_data(g_boot_img_cfg->img_hash, BFLB_BOOT2_HASH_SIZE);
             return BFLB_BOOT2_IMG_HASH_ERROR;
-        }else{
+        } else {
             MSG_DBG("Success\r\n");
         }
     }

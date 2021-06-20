@@ -23,7 +23,6 @@
   $Revision: #1 $
 ***********************************************************************************/
 
-
 /**
 @file
 Function prototypes and macro definitions for manipulating input and output
@@ -58,63 +57,62 @@ INLINE void OI_BITSTREAM_WriteUINT(OI_BITSTREAM *bs,
  * Use knowledge that the bitstream is aligned to optimize the write of a byte
  */
 PRIVATE void OI_BITSTREAM_WriteUINT8Aligned(OI_BITSTREAM *bs,
-        OI_UINT8 datum);
+                                            OI_UINT8 datum);
 
 /*
  * Use knowledge that the bitstream is aligned to optimize the write pair of nibbles
  */
 PRIVATE void OI_BITSTREAM_Write2xUINT4Aligned(OI_BITSTREAM *bs,
-        OI_UINT8 datum1,
-        OI_UINT8 datum2);
+                                              OI_UINT8 datum1,
+                                              OI_UINT8 datum2);
 
 /** Internally the bitstream looks ahead in the stream. When
  * OI_SBC_ReadScalefactors() goes to temporarily break the abstraction, it will
  * need to know where the "logical" pointer is in the stream.
  */
 #define OI_BITSTREAM_GetWritePtr(bs) ((bs)->ptr.w - 3)
-#define OI_BITSTREAM_GetReadPtr(bs) ((bs)->ptr.r - 3)
+#define OI_BITSTREAM_GetReadPtr(bs)  ((bs)->ptr.r - 3)
 
 /** This is declared here as a macro because decoder.c breaks the bitsream
  * encapsulation for efficiency reasons.
  */
 #define OI_BITSTREAM_READUINT(result, bits, ptr, value, bitPtr) \
-do { \
-    OI_ASSERT((bits) <= 16); \
-    OI_ASSERT((bitPtr) < 16); \
-    OI_ASSERT((bitPtr) >= 8); \
-    \
-    result = (value) << (bitPtr); \
-    result >>= 32 - (bits); \
-    \
-    bitPtr += (bits); \
-    while (bitPtr >= 16) { \
-        value = ((value) << 8) | *ptr++; \
-        bitPtr -= 8; \
-    } \
-    OI_ASSERT((bits == 0) || (result < (1u << (bits)))); \
-} while (0)
-
+    do {                                                        \
+        OI_ASSERT((bits) <= 16);                                \
+        OI_ASSERT((bitPtr) < 16);                               \
+        OI_ASSERT((bitPtr) >= 8);                               \
+                                                                \
+        result = (value) << (bitPtr);                           \
+        result >>= 32 - (bits);                                 \
+                                                                \
+        bitPtr += (bits);                                       \
+        while (bitPtr >= 16) {                                  \
+            value = ((value) << 8) | *ptr++;                    \
+            bitPtr -= 8;                                        \
+        }                                                       \
+        OI_ASSERT((bits == 0) || (result < (1u << (bits))));    \
+    } while (0)
 
 #define OI_BITSTREAM_WRITEUINT(ptr, value, bitPtr, datum, bits) \
-do {\
-    bitPtr -= bits;\
-    value |= datum << bitPtr;\
-    \
-    while (bitPtr <= 16) {\
-        bitPtr += 8;\
-        *ptr++ = (OI_UINT8)(value >> 24);\
-        value <<= 8;\
-    }\
-} while (0)
+    do {                                                        \
+        bitPtr -= bits;                                         \
+        value |= datum << bitPtr;                               \
+                                                                \
+        while (bitPtr <= 16) {                                  \
+            bitPtr += 8;                                        \
+            *ptr++ = (OI_UINT8)(value >> 24);                   \
+            value <<= 8;                                        \
+        }                                                       \
+    } while (0)
 
 #define OI_BITSTREAM_WRITEFLUSH(ptr, value, bitPtr) \
-do {\
-    while (bitPtr < 32) {\
-        bitPtr += 8;\
-        *ptr++ = (OI_UINT8)(value >> 24);\
-        value <<= 8;\
-    }\
-} while (0)
+    do {                                            \
+        while (bitPtr < 32) {                       \
+            bitPtr += 8;                            \
+            *ptr++ = (OI_UINT8)(value >> 24);       \
+            value <<= 8;                            \
+        }                                           \
+    } while (0)
 
 /**
 @}

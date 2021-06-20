@@ -52,7 +52,134 @@ Checksum and header-related functions.
 #ifdef USE_WIDE_CRC
 /* Save space if a char is 16 bits, such as on the C54x */
 const OI_BYTE crc8_wide[128] = {
-    0x001d, 0x3a27, 0x7469, 0x4e53, 0xe8f5, 0xd2cf, 0x9c81, 0xa6bb, 0xcdd0, 0xf7ea, 0xb9a4, 0x839e, 0x2538, 0x1f02, 0x514c, 0x6b76, 0x879a, 0xbda0, 0xf3ee, 0xc9d4, 0x6f72, 0x5548, 0x1b06, 0x213c, 0x4a57, 0x706d, 0x3e23, 0x0419, 0xa2bf, 0x9885, 0xd6cb, 0xecf1, 0x130e, 0x2934, 0x677a, 0x5d40, 0xfbe6, 0xc1dc, 0x8f92, 0xb5a8, 0xdec3, 0xe4f9, 0xaab7, 0x908d, 0x362b, 0x0c11, 0x425f, 0x7865, 0x9489, 0xaeb3, 0xe0fd, 0xdac7, 0x7c61, 0x465b, 0x0815, 0x322f, 0x5944, 0x637e, 0x2d30, 0x170a, 0xb1ac, 0x8b96, 0xc5d8, 0xffe2, 0x263b, 0x1c01, 0x524f, 0x6875, 0xced3, 0xf4e9, 0xbaa7, 0x809d, 0xebf6, 0xd1cc, 0x9f82, 0xa5b8, 0x031e, 0x3924, 0x776a, 0x4d50, 0xa1bc, 0x9b86, 0xd5c8, 0xeff2, 0x4954, 0x736e, 0x3d20, 0x071a, 0x6c71, 0x564b, 0x1805, 0x223f, 0x8499, 0xbea3, 0xf0ed, 0xcad7, 0x3528, 0x0f12, 0x415c, 0x7b66, 0xddc0, 0xe7fa, 0xa9b4, 0x938e, 0xf8e5, 0xc2df, 0x8c91, 0xb6ab, 0x100d, 0x2a37, 0x6479, 0x5e43, 0xb2af, 0x8895, 0xc6db, 0xfce1, 0x5a47, 0x607d, 0x2e33, 0x1409, 0x7f62, 0x4558, 0x0b16, 0x312c, 0x978a, 0xadb0, 0xe3fe, 0xd9c4,
+    0x001d,
+    0x3a27,
+    0x7469,
+    0x4e53,
+    0xe8f5,
+    0xd2cf,
+    0x9c81,
+    0xa6bb,
+    0xcdd0,
+    0xf7ea,
+    0xb9a4,
+    0x839e,
+    0x2538,
+    0x1f02,
+    0x514c,
+    0x6b76,
+    0x879a,
+    0xbda0,
+    0xf3ee,
+    0xc9d4,
+    0x6f72,
+    0x5548,
+    0x1b06,
+    0x213c,
+    0x4a57,
+    0x706d,
+    0x3e23,
+    0x0419,
+    0xa2bf,
+    0x9885,
+    0xd6cb,
+    0xecf1,
+    0x130e,
+    0x2934,
+    0x677a,
+    0x5d40,
+    0xfbe6,
+    0xc1dc,
+    0x8f92,
+    0xb5a8,
+    0xdec3,
+    0xe4f9,
+    0xaab7,
+    0x908d,
+    0x362b,
+    0x0c11,
+    0x425f,
+    0x7865,
+    0x9489,
+    0xaeb3,
+    0xe0fd,
+    0xdac7,
+    0x7c61,
+    0x465b,
+    0x0815,
+    0x322f,
+    0x5944,
+    0x637e,
+    0x2d30,
+    0x170a,
+    0xb1ac,
+    0x8b96,
+    0xc5d8,
+    0xffe2,
+    0x263b,
+    0x1c01,
+    0x524f,
+    0x6875,
+    0xced3,
+    0xf4e9,
+    0xbaa7,
+    0x809d,
+    0xebf6,
+    0xd1cc,
+    0x9f82,
+    0xa5b8,
+    0x031e,
+    0x3924,
+    0x776a,
+    0x4d50,
+    0xa1bc,
+    0x9b86,
+    0xd5c8,
+    0xeff2,
+    0x4954,
+    0x736e,
+    0x3d20,
+    0x071a,
+    0x6c71,
+    0x564b,
+    0x1805,
+    0x223f,
+    0x8499,
+    0xbea3,
+    0xf0ed,
+    0xcad7,
+    0x3528,
+    0x0f12,
+    0x415c,
+    0x7b66,
+    0xddc0,
+    0xe7fa,
+    0xa9b4,
+    0x938e,
+    0xf8e5,
+    0xc2df,
+    0x8c91,
+    0xb6ab,
+    0x100d,
+    0x2a37,
+    0x6479,
+    0x5e43,
+    0xb2af,
+    0x8895,
+    0xc6db,
+    0xfce1,
+    0x5a47,
+    0x607d,
+    0x2e33,
+    0x1409,
+    0x7f62,
+    0x4558,
+    0x0b16,
+    0x312c,
+    0x978a,
+    0xadb0,
+    0xe3fe,
+    0xd9c4,
 };
 #elif defined(USE_NIBBLEWISE_CRC)
 const OI_BYTE crc8_narrow[16] = {
@@ -66,42 +193,41 @@ const OI_BYTE crc8_narrow[256] = {
 const OI_UINT32 dequant_long_scaled[17] = {
     0,
     0,
-    0x1ee9e116,  /* bits=2  0.24151243  1/3      * (1/1.38019122262781) (0x00000008)*/
-    0x0d3fa99c,  /* bits=3  0.10350533  1/7      * (1/1.38019122262781) (0x00000013)*/
-    0x062ec69e,  /* bits=4  0.04830249  1/15     * (1/1.38019122262781) (0x00000029)*/
-    0x02fddbfa,  /* bits=5  0.02337217  1/31     * (1/1.38019122262781) (0x00000055)*/
-    0x0178d9f5,  /* bits=6  0.01150059  1/63     * (1/1.38019122262781) (0x000000ad)*/
-    0x00baf129,  /* bits=7  0.00570502  1/127    * (1/1.38019122262781) (0x0000015e)*/
-    0x005d1abe,  /* bits=8  0.00284132  1/255    * (1/1.38019122262781) (0x000002bf)*/
-    0x002e760d,  /* bits=9  0.00141788  1/511    * (1/1.38019122262781) (0x00000582)*/
-    0x00173536,  /* bits=10 0.00070825  1/1023   * (1/1.38019122262781) (0x00000b07)*/
-    0x000b9928,  /* bits=11 0.00035395  1/2047   * (1/1.38019122262781) (0x00001612)*/
-    0x0005cc37,  /* bits=12 0.00017693  1/4095   * (1/1.38019122262781) (0x00002c27)*/
-    0x0002e604,  /* bits=13 0.00008846  1/8191   * (1/1.38019122262781) (0x00005852)*/
-    0x000172fc,  /* bits=14 0.00004422  1/16383  * (1/1.38019122262781) (0x0000b0a7)*/
-    0x0000b97d,  /* bits=15 0.00002211  1/32767  * (1/1.38019122262781) (0x00016150)*/
-    0x00005cbe,  /* bits=16 0.00001106  1/65535  * (1/1.38019122262781) (0x0002c2a5)*/
+    0x1ee9e116, /* bits=2  0.24151243  1/3      * (1/1.38019122262781) (0x00000008)*/
+    0x0d3fa99c, /* bits=3  0.10350533  1/7      * (1/1.38019122262781) (0x00000013)*/
+    0x062ec69e, /* bits=4  0.04830249  1/15     * (1/1.38019122262781) (0x00000029)*/
+    0x02fddbfa, /* bits=5  0.02337217  1/31     * (1/1.38019122262781) (0x00000055)*/
+    0x0178d9f5, /* bits=6  0.01150059  1/63     * (1/1.38019122262781) (0x000000ad)*/
+    0x00baf129, /* bits=7  0.00570502  1/127    * (1/1.38019122262781) (0x0000015e)*/
+    0x005d1abe, /* bits=8  0.00284132  1/255    * (1/1.38019122262781) (0x000002bf)*/
+    0x002e760d, /* bits=9  0.00141788  1/511    * (1/1.38019122262781) (0x00000582)*/
+    0x00173536, /* bits=10 0.00070825  1/1023   * (1/1.38019122262781) (0x00000b07)*/
+    0x000b9928, /* bits=11 0.00035395  1/2047   * (1/1.38019122262781) (0x00001612)*/
+    0x0005cc37, /* bits=12 0.00017693  1/4095   * (1/1.38019122262781) (0x00002c27)*/
+    0x0002e604, /* bits=13 0.00008846  1/8191   * (1/1.38019122262781) (0x00005852)*/
+    0x000172fc, /* bits=14 0.00004422  1/16383  * (1/1.38019122262781) (0x0000b0a7)*/
+    0x0000b97d, /* bits=15 0.00002211  1/32767  * (1/1.38019122262781) (0x00016150)*/
+    0x00005cbe, /* bits=16 0.00001106  1/65535  * (1/1.38019122262781) (0x0002c2a5)*/
 };
-
 
 const OI_UINT32 dequant_long_unscaled[17] = {
     0,
     0,
-    0x2aaaaaab,  /* bits=2  0.33333333  1/3      (0x00000005)*/
-    0x12492492,  /* bits=3  0.14285714  1/7      (0x0000000e)*/
-    0x08888889,  /* bits=4  0.06666667  1/15     (0x0000001d)*/
-    0x04210842,  /* bits=5  0.03225806  1/31     (0x0000003e)*/
-    0x02082082,  /* bits=6  0.01587302  1/63     (0x0000007e)*/
-    0x01020408,  /* bits=7  0.00787402  1/127    (0x000000fe)*/
-    0x00808081,  /* bits=8  0.00392157  1/255    (0x000001fd)*/
-    0x00402010,  /* bits=9  0.00195695  1/511    (0x000003fe)*/
-    0x00200802,  /* bits=10 0.00097752  1/1023   (0x000007fe)*/
-    0x00100200,  /* bits=11 0.00048852  1/2047   (0x00000ffe)*/
-    0x00080080,  /* bits=12 0.00024420  1/4095   (0x00001ffe)*/
-    0x00040020,  /* bits=13 0.00012209  1/8191   (0x00003ffe)*/
-    0x00020008,  /* bits=14 0.00006104  1/16383  (0x00007ffe)*/
-    0x00010002,  /* bits=15 0.00003052  1/32767  (0x0000fffe)*/
-    0x00008001,  /* bits=16 0.00001526  1/65535  (0x0001fffc)*/
+    0x2aaaaaab, /* bits=2  0.33333333  1/3      (0x00000005)*/
+    0x12492492, /* bits=3  0.14285714  1/7      (0x0000000e)*/
+    0x08888889, /* bits=4  0.06666667  1/15     (0x0000001d)*/
+    0x04210842, /* bits=5  0.03225806  1/31     (0x0000003e)*/
+    0x02082082, /* bits=6  0.01587302  1/63     (0x0000007e)*/
+    0x01020408, /* bits=7  0.00787402  1/127    (0x000000fe)*/
+    0x00808081, /* bits=8  0.00392157  1/255    (0x000001fd)*/
+    0x00402010, /* bits=9  0.00195695  1/511    (0x000003fe)*/
+    0x00200802, /* bits=10 0.00097752  1/1023   (0x000007fe)*/
+    0x00100200, /* bits=11 0.00048852  1/2047   (0x00000ffe)*/
+    0x00080080, /* bits=12 0.00024420  1/4095   (0x00001ffe)*/
+    0x00040020, /* bits=13 0.00012209  1/8191   (0x00003ffe)*/
+    0x00020008, /* bits=14 0.00006104  1/16383  (0x00007ffe)*/
+    0x00010002, /* bits=15 0.00003052  1/32767  (0x0000fffe)*/
+    0x00008001, /* bits=16 0.00001526  1/65535  (0x0001fffc)*/
 };
 
 #if defined(OI_DEBUG) || defined(PRINT_SAMPLES) || defined(PRINT_SCALEFACTORS)
@@ -115,6 +241,7 @@ static INLINE OI_CHAR crc_iterate(OI_UINT8 oldcrc, OI_UINT8 next)
     OI_UINT idx;
     idx = oldcrc ^ next;
     crc = crc8_wide[idx >> 1];
+
     if (idx % 2) {
         crc &= 0xff;
     } else {
@@ -130,6 +257,7 @@ static INLINE OI_CHAR crc_iterate_top4(OI_UINT8 oldcrc, OI_UINT8 next)
     OI_UINT idx;
     idx = (oldcrc ^ next) >> 4;
     crc = crc8_wide[idx >> 1];
+
     if (idx % 2) {
         crc &= 0xff;
     } else {
@@ -150,21 +278,20 @@ static INLINE OI_UINT8 crc_iterate_top4(OI_UINT8 oldcrc, OI_UINT8 next)
 static INLINE OI_UINT8 crc_iterate(OI_UINT8 crc, OI_UINT8 next)
 {
     crc = (crc << 4) ^ crc8_narrow[(crc ^ next) >> 4];
-    crc = (crc << 4) ^ crc8_narrow[((crc >> 4)^next) & 0xf];
+    crc = (crc << 4) ^ crc8_narrow[((crc >> 4) ^ next) & 0xf];
 
     return crc;
 }
 
-#else   // USE_NIBBLEWISE_CRC
+#else // USE_NIBBLEWISE_CRC
 static INLINE OI_UINT8 crc_iterate(OI_UINT8 crc, OI_UINT8 next)
 {
     return crc8_narrow[crc ^ next];
 }
 
-#endif  // USE_NIBBLEWISE_CRC
+#endif // USE_NIBBLEWISE_CRC
 
 #endif // USE_WIDE_CRC
-
 
 PRIVATE OI_UINT8 OI_SBC_CalculateChecksum(OI_CODEC_SBC_FRAME_INFO *frame, OI_BYTE const *data)
 {
@@ -206,19 +333,18 @@ void OI_SBC_ExpandFrameFields(OI_CODEC_SBC_FRAME_INFO *frame)
 /**
  * Unrolled macro to copy 4 32-bit aligned 32-bit values backward in memory
  */
-#define COPY4WORDS_BACK(_dest, _src)            \
-    do {                                        \
-            OI_INT32 _a, _b, _c, _d;            \
-            _a = *--_src;                       \
-            _b = *--_src;                       \
-            _c = *--_src;                       \
-            _d = *--_src;                       \
-            *--_dest = _a;                      \
-            *--_dest = _b;                      \
-            *--_dest = _c;                      \
-            *--_dest = _d;                      \
+#define COPY4WORDS_BACK(_dest, _src) \
+    do {                             \
+        OI_INT32 _a, _b, _c, _d;     \
+        _a = *--_src;                \
+        _b = *--_src;                \
+        _c = *--_src;                \
+        _d = *--_src;                \
+        *--_dest = _a;               \
+        *--_dest = _b;               \
+        *--_dest = _c;               \
+        *--_dest = _d;               \
     } while (0)
-
 
 #if defined(USE_PLATFORM_MEMMOVE) || defined(USE_PLATFORM_MEMCPY)
 #include <string.h>
@@ -243,6 +369,7 @@ PRIVATE void shift_buffer(SBC_BUFFER_T *dest, SBC_BUFFER_T *src, OI_UINT wordCou
     do {
         COPY4WORDS_BACK(d, s);
     } while (--n);
+
 #endif
 }
 /**

@@ -14,5 +14,5 @@ extern unsigned short __rand48_seed[3];
 
 long mrand48(void)
 {
-	return jrand48(__rand48_seed);
+    return jrand48(__rand48_seed);
 }

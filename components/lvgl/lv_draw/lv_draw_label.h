@@ -26,11 +26,12 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-typedef struct {
+typedef struct
+{
     lv_color_t color;
     lv_color_t sel_color;
     lv_color_t sel_bg_color;
-    const lv_font_t * font;
+    const lv_font_t *font;
     lv_opa_t opa;
     lv_style_int_t line_space;
     lv_style_int_t letter_space;
@@ -49,7 +50,8 @@ typedef struct {
  * all the previous characters needs to be checked to calculate the positions.
  * This structure stores an earlier (e.g. at -1000 px) coordinate and the index of that line.
  * Therefore the calculations can start from here.*/
-typedef struct {
+typedef struct
+{
     /** Index of the line at `y` coordinate*/
     int32_t line_start;
 
@@ -67,7 +69,7 @@ typedef struct {
 
 //! @cond Doxygen_Suppress
 
-LV_ATTRIBUTE_FAST_MEM void lv_draw_label_dsc_init(lv_draw_label_dsc_t * dsc);
+LV_ATTRIBUTE_FAST_MEM void lv_draw_label_dsc_init(lv_draw_label_dsc_t *dsc);
 
 /**
  * Write a text
@@ -78,9 +80,9 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label_dsc_init(lv_draw_label_dsc_t * dsc);
  * @param hint pointer to a `lv_draw_label_hint_t` variable.
  * It is managed by the drawer to speed up the drawing of very long texts (thousands of lines).
  */
-LV_ATTRIBUTE_FAST_MEM void lv_draw_label(const lv_area_t * coords, const lv_area_t * mask,
-                                         const lv_draw_label_dsc_t * dsc,
-                                         const char * txt, lv_draw_label_hint_t * hint);
+LV_ATTRIBUTE_FAST_MEM void lv_draw_label(const lv_area_t *coords, const lv_area_t *mask,
+                                         const lv_draw_label_dsc_t *dsc,
+                                         const char *txt, lv_draw_label_hint_t *hint);
 
 //! @endcond
 /***********************

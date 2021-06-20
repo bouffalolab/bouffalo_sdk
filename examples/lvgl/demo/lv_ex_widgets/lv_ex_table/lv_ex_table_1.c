@@ -3,7 +3,7 @@
 
 void lv_ex_table_1(void)
 {
-    lv_obj_t * table = lv_table_create(lv_scr_act(), NULL);
+    lv_obj_t *table = lv_table_create(lv_scr_act(), NULL);
     lv_table_set_col_cnt(table, 2);
     lv_table_set_row_cnt(table, 4);
     lv_obj_align(table, NULL, LV_ALIGN_CENTER, 0, 0);
@@ -20,7 +20,6 @@ void lv_ex_table_1(void)
     lv_table_set_cell_type(table, 0, 0, 2);
     lv_table_set_cell_type(table, 0, 1, 2);
 
-
     /*Fill the first column*/
     lv_table_set_cell_value(table, 0, 0, "Name");
     lv_table_set_cell_value(table, 1, 0, "Apple");
@@ -33,7 +32,7 @@ void lv_ex_table_1(void)
     lv_table_set_cell_value(table, 2, 1, "$4");
     lv_table_set_cell_value(table, 3, 1, "$6");
 
-    lv_table_ext_t * ext = lv_obj_get_ext_attr(table);
+    lv_table_ext_t *ext = lv_obj_get_ext_attr(table);
     ext->row_h[0] = 20;
 }
 

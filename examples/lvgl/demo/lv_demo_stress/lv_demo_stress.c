@@ -12,7 +12,7 @@
 /*********************
  *      DEFINES
  *********************/
-#define TIME_STEP   50
+#define TIME_STEP 50
 
 /**********************
  *      TYPEDEFS
@@ -21,16 +21,16 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static void auto_del(lv_obj_t * obj, uint32_t delay);
+static void auto_del(lv_obj_t *obj, uint32_t delay);
 static void obj_test_task_cb(lv_task_t *);
 
 /**********************
  *  STATIC VARIABLES
  **********************/
-static lv_obj_t * main_page;
-static lv_obj_t * ta;
+static lv_obj_t *main_page;
+static lv_obj_t *ta;
 static lv_style_t style_slow_trans;
-static const char * mbox_btns[] = {"Ok", "Cancel", ""};
+static const char *mbox_btns[] = { "Ok", "Cancel", "" };
 static uint32_t mem_free_start = 0;
 /**********************
  *      MACROS
@@ -59,27 +59,27 @@ void lv_demo_stress(void)
  *   STATIC FUNCTIONS
  **********************/
 
-static void obj_test_task_cb(lv_task_t * param)
+static void obj_test_task_cb(lv_task_t *param)
 {
-    (void) param;    /*Unused*/
+    (void)param; /*Unused*/
     static int16_t state = -1;
 
     lv_anim_t a;
-    lv_obj_t * obj;
+    lv_obj_t *obj;
 
-    switch(state) {
-        case -1:
-        {
+    switch (state) {
+        case -1: {
             lv_res_t res = lv_mem_test();
-            if(res != LV_RES_OK) {
+
+            if (res != LV_RES_OK) {
                 LV_LOG_ERROR("Memory integrity error");
             }
 
             lv_mem_monitor_t mon;
             lv_mem_monitor(&mon);
-            LV_LOG_USER("mem leak since start: %d, frag: %3d %%",  mem_free_start - mon.free_size, mon.frag_pct);
-        }
-            break;
+            LV_LOG_USER("mem leak since start: %d, frag: %3d %%", mem_free_start - mon.free_size, mon.frag_pct);
+        } break;
+
         case 0:
             /* Holder for all object types */
             main_page = lv_page_create(lv_scr_act(), NULL);
@@ -87,33 +87,32 @@ static void obj_test_task_cb(lv_task_t * param)
             lv_obj_set_size(main_page, LV_HOR_RES / 2, LV_VER_RES);
             lv_page_set_scrl_layout(main_page, LV_LAYOUT_PRETTY_MID);
 
-
             obj = lv_btn_create(main_page, NULL);
             lv_obj_set_size(obj, 100, 70);
             obj = lv_label_create(obj, NULL);
-            lv_label_set_text(obj, "Multi line\n"LV_SYMBOL_OK LV_SYMBOL_CLOSE LV_SYMBOL_WIFI);
+            lv_label_set_text(obj, "Multi line\n" LV_SYMBOL_OK LV_SYMBOL_CLOSE LV_SYMBOL_WIFI);
             break;
 
         case 1:
-              obj = lv_tabview_create(lv_scr_act(), NULL);
-              lv_obj_set_size(obj, LV_HOR_RES / 2, LV_VER_RES / 2);
-              lv_obj_align(obj, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, 0, 0);
-              {
-                  lv_obj_t * t = lv_tabview_add_tab(obj, "First");
+            obj = lv_tabview_create(lv_scr_act(), NULL);
+            lv_obj_set_size(obj, LV_HOR_RES / 2, LV_VER_RES / 2);
+            lv_obj_align(obj, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, 0, 0);
+            {
+                lv_obj_t *t = lv_tabview_add_tab(obj, "First");
 
-                  t = lv_tabview_add_tab(obj, "Second");
-                  lv_obj_t * c = lv_cpicker_create(t, NULL);
-                  lv_obj_set_size(c,  150, 150);
-                  c = lv_led_create(t, NULL);
-                  lv_obj_set_pos(c, 160, 20);
-                  t = lv_tabview_add_tab(obj, LV_SYMBOL_EDIT " Edit");
-                  t = lv_tabview_add_tab(obj, LV_SYMBOL_CLOSE);
+                t = lv_tabview_add_tab(obj, "Second");
+                lv_obj_t *c = lv_cpicker_create(t, NULL);
+                lv_obj_set_size(c, 150, 150);
+                c = lv_led_create(t, NULL);
+                lv_obj_set_pos(c, 160, 20);
+                t = lv_tabview_add_tab(obj, LV_SYMBOL_EDIT " Edit");
+                t = lv_tabview_add_tab(obj, LV_SYMBOL_CLOSE);
 
-                  lv_tabview_set_anim_time(obj, TIME_STEP * 2);
-                  lv_tabview_set_tab_act(obj, 1, LV_ANIM_ON);
-              }
-              auto_del(obj, TIME_STEP * 5 + 30);
-              break;
+                lv_tabview_set_anim_time(obj, TIME_STEP * 2);
+                lv_tabview_set_tab_act(obj, 1, LV_ANIM_ON);
+            }
+            auto_del(obj, TIME_STEP * 5 + 30);
+            break;
 
         case 2:
             obj = lv_btn_create(main_page, NULL);
@@ -152,7 +151,7 @@ static void obj_test_task_cb(lv_task_t * param)
             obj = lv_btn_create(main_page, NULL);
             lv_obj_set_size(obj, 100, 70);
             lv_obj_set_style_local_value_str(obj, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, "Text from\nstyle");
-            lv_obj_del_async(obj);  /*Delete on next call of `lv_task_handler` (so not now)*/
+            lv_obj_del_async(obj); /*Delete on next call of `lv_task_handler` (so not now)*/
 
             obj = lv_btn_create(main_page, obj);
             lv_btn_set_fit(obj, LV_FIT_TIGHT);
@@ -165,6 +164,7 @@ static void obj_test_task_cb(lv_task_t * param)
         case 5:
             lv_textarea_set_one_line(ta, true);
             break;
+
         case 6:
             lv_page_set_scrl_layout(main_page, LV_LAYOUT_COLUMN_LEFT);
             break;
@@ -180,7 +180,7 @@ static void obj_test_task_cb(lv_task_t * param)
 
             obj = lv_slider_create(main_page, NULL);
             lv_bar_set_anim_time(obj, 100);
-            lv_bar_set_value(obj, 5000, LV_ANIM_ON);    /*Animate to out of range value*/
+            lv_bar_set_value(obj, 5000, LV_ANIM_ON); /*Animate to out of range value*/
             auto_del(obj, TIME_STEP * 5 + 22);
 
             obj = lv_switch_create(main_page, NULL);
@@ -192,20 +192,22 @@ static void obj_test_task_cb(lv_task_t * param)
             break;
 
         case 8:
-              obj = lv_win_create(lv_scr_act(), NULL);
-              lv_obj_set_size(obj, LV_HOR_RES / 2, LV_VER_RES / 2);
-              lv_obj_align(obj, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, 0, 0);
-              lv_win_set_title(obj, "Window title");
-              lv_win_add_btn(obj, LV_SYMBOL_CLOSE);
-              lv_win_add_btn(obj, LV_SYMBOL_DOWN);
-              auto_del(obj, TIME_STEP * 3 + 5);
+            obj = lv_win_create(lv_scr_act(), NULL);
+            lv_obj_set_size(obj, LV_HOR_RES / 2, LV_VER_RES / 2);
+            lv_obj_align(obj, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, 0, 0);
+            lv_win_set_title(obj, "Window title");
+            lv_win_add_btn(obj, LV_SYMBOL_CLOSE);
+            lv_win_add_btn(obj, LV_SYMBOL_DOWN);
+            auto_del(obj, TIME_STEP * 3 + 5);
 
-              obj = lv_calendar_create(obj, NULL);
-              break;
+            obj = lv_calendar_create(obj, NULL);
+            break;
+
         case 9:
             lv_textarea_set_text(ta, "A very very long text which will should make the text area scrollable"
-                    "Here area some dummy sentences to be sure the text area will be really scrollable.");
+                                     "Here area some dummy sentences to be sure the text area will be really scrollable.");
             break;
+
         case 10:
             obj = lv_keyboard_create(lv_scr_act(), NULL);
             lv_keyboard_set_mode(obj, LV_KEYBOARD_MODE_TEXT_UPPER);
@@ -276,31 +278,28 @@ static void obj_test_task_cb(lv_task_t * param)
             lv_textarea_set_one_line(ta, false);
             break;
 
-        case 16:
-        {
-              lv_obj_t * tv = lv_tileview_create(lv_scr_act(), NULL);
-              static lv_point_t valid_pos[] = {{0,0}, {0, 1}, {1,1}};
-              lv_tileview_set_valid_positions(tv, valid_pos, 3);
-              lv_tileview_set_anim_time(tv, TIME_STEP * 2);
-              auto_del(tv, TIME_STEP * 3 + 5);
+        case 16: {
+            lv_obj_t *tv = lv_tileview_create(lv_scr_act(), NULL);
+            static lv_point_t valid_pos[] = { { 0, 0 }, { 0, 1 }, { 1, 1 } };
+            lv_tileview_set_valid_positions(tv, valid_pos, 3);
+            lv_tileview_set_anim_time(tv, TIME_STEP * 2);
+            auto_del(tv, TIME_STEP * 3 + 5);
 
-              obj = lv_label_create(tv, NULL);
-              lv_label_set_text(obj, "Tile: 0;0");
+            obj = lv_label_create(tv, NULL);
+            lv_label_set_text(obj, "Tile: 0;0");
 
-              obj = lv_label_create(tv, NULL);
-              lv_label_set_text(obj, "Tile: 0;1");
-              lv_obj_set_pos(tv, 0, LV_VER_RES);
+            obj = lv_label_create(tv, NULL);
+            lv_label_set_text(obj, "Tile: 0;1");
+            lv_obj_set_pos(tv, 0, LV_VER_RES);
 
-              obj = lv_label_create(tv, NULL);
-              lv_label_set_text(obj, "Tile: 1;1");
-              lv_obj_set_pos(tv, LV_HOR_RES, LV_VER_RES);
+            obj = lv_label_create(tv, NULL);
+            lv_label_set_text(obj, "Tile: 1;1");
+            lv_obj_set_pos(tv, LV_HOR_RES, LV_VER_RES);
 
-              lv_tileview_set_tile_act(tv, 1, 1, LV_ANIM_ON);
-        }
-        break;
+            lv_tileview_set_tile_act(tv, 1, 1, LV_ANIM_ON);
+        } break;
 
-        case 17:
-        {
+        case 17: {
             static lv_color_t needle_colors[2];
             needle_colors[0] = LV_COLOR_RED;
             needle_colors[1] = LV_COLOR_BLUE;
@@ -310,12 +309,12 @@ static void obj_test_task_cb(lv_task_t * param)
             lv_gauge_set_value(obj, 1, 60);
             lv_page_focus(main_page, obj, LV_ANIM_ON);
             auto_del(obj, TIME_STEP * 2 + 16);
-        }
-            break;
+        } break;
+
         case 18:
-            obj =  lv_list_create(main_page, NULL);
+            obj = lv_list_create(main_page, NULL);
             {
-                lv_obj_t * b;
+                lv_obj_t *b;
                 b = lv_list_add_btn(obj, LV_SYMBOL_OK, "1. Some very long text to scroll");
                 auto_del(b, 10);
                 lv_list_add_btn(obj, LV_SYMBOL_OK, "2. Some very long text to scroll");
@@ -326,7 +325,7 @@ static void obj_test_task_cb(lv_task_t * param)
                 auto_del(b, TIME_STEP + 90);
                 b = lv_list_add_btn(obj, LV_SYMBOL_OK, "6. Some very long text to scroll");
                 auto_del(b, TIME_STEP + 10);
-                lv_list_focus(lv_list_get_prev_btn(obj, NULL),  LV_ANIM_ON);
+                lv_list_focus(lv_list_get_prev_btn(obj, NULL), LV_ANIM_ON);
             }
             auto_del(obj, TIME_STEP * 5 + 15);
 
@@ -335,7 +334,7 @@ static void obj_test_task_cb(lv_task_t * param)
             lv_obj_set_pos(obj, 0, 0);
             lv_obj_set_width(obj, LV_HOR_RES);
             lv_list_add_btn(obj, LV_SYMBOL_OK, "1. Horizontal list button");
-            lv_list_focus(lv_list_get_prev_btn(obj, NULL),  LV_ANIM_ON);
+            lv_list_focus(lv_list_get_prev_btn(obj, NULL), LV_ANIM_ON);
             lv_list_add_btn(obj, LV_SYMBOL_OK, "2. Horizontal list button");
             lv_list_add_btn(obj, LV_SYMBOL_OK, "3. Horizontal list button");
 
@@ -344,7 +343,7 @@ static void obj_test_task_cb(lv_task_t * param)
 
         case 19:
             lv_textarea_set_cursor_pos(ta, 10);
-            lv_textarea_set_text(ta, "__INSERTED TEXT" LV_SYMBOL_EDIT"__");
+            lv_textarea_set_text(ta, "__INSERTED TEXT" LV_SYMBOL_EDIT "__");
             break;
 
         case 20:
@@ -399,7 +398,7 @@ static void obj_test_task_cb(lv_task_t * param)
         case 23:
             obj = lv_chart_create(main_page, NULL);
             {
-                lv_chart_series_t * s1 = lv_chart_add_series(obj, LV_COLOR_RED);
+                lv_chart_series_t *s1 = lv_chart_add_series(obj, LV_COLOR_RED);
                 lv_chart_set_next(obj, s1, 36);
                 lv_chart_set_next(obj, s1, -29);
                 lv_chart_set_next(obj, s1, 51);
@@ -437,7 +436,8 @@ static void obj_test_task_cb(lv_task_t * param)
             lv_textarea_set_cursor_pos(ta, 20);
             {
                 uint16_t i;
-                for(i = 0; i < 64; i++) {
+
+                for (i = 0; i < 64; i++) {
                     lv_textarea_del_char_forward(ta);
                 }
             }
@@ -446,24 +446,27 @@ static void obj_test_task_cb(lv_task_t * param)
         case 26:
             lv_textarea_set_one_line(ta, true);
             break;
+
         case 29:
             lv_page_clean(main_page);
             lv_obj_del(ta);
             ta = NULL;
             break;
+
         case 31:
             lv_obj_clean(lv_scr_act());
             main_page = NULL;
             state = -2;
             break;
+
         default:
             break;
     }
 
-    state ++;
+    state++;
 }
 
-static void auto_del(lv_obj_t * obj, uint32_t delay)
+static void auto_del(lv_obj_t *obj, uint32_t delay)
 {
     lv_anim_t a;
     lv_anim_init(&a);
@@ -472,7 +475,6 @@ static void auto_del(lv_obj_t * obj, uint32_t delay)
     lv_anim_set_delay(&a, delay);
     lv_anim_set_ready_cb(&a, lv_obj_del_anim_ready_cb);
     lv_anim_start(&a);
-
 }
 
 #endif /* LV_USE_DEMO_STRESS */

@@ -59,11 +59,10 @@
 /** @defgroup  QDEC_Private_Variables
  *  @{
  */
-static const uint32_t qdecAddr[QDEC_ID_MAX] = {QDEC0_BASE,QDEC1_BASE,QDEC2_BASE};
-static intCallback_Type * qdecIntCbfArra[QDEC_ID_MAX][QDEC_INT_ALL]= {{NULL,NULL,NULL,NULL},
-                                                                      {NULL,NULL,NULL,NULL},
-                                                                      {NULL,NULL,NULL,NULL}};
-
+static const uint32_t qdecAddr[QDEC_ID_MAX] = { QDEC0_BASE, QDEC1_BASE, QDEC2_BASE };
+static intCallback_Type *qdecIntCbfArra[QDEC_ID_MAX][QDEC_INT_ALL] = { { NULL, NULL, NULL, NULL },
+                                                                       { NULL, NULL, NULL, NULL },
+                                                                       { NULL, NULL, NULL, NULL } };
 
 /*@} end of group QDEC_Private_Variables */
 
@@ -83,7 +82,7 @@ static intCallback_Type * qdecIntCbfArra[QDEC_ID_MAX][QDEC_INT_ALL]= {{NULL,NULL
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC init
  *
  * @param  qdecId: QDEC ID
@@ -92,43 +91,43 @@ static intCallback_Type * qdecIntCbfArra[QDEC_ID_MAX][QDEC_INT_ALL]= {{NULL,NULL
  * @return None
  *
 *******************************************************************************/
-void QDEC_Init(QDEC_ID_Type qdecId,QDEC_CFG_Type *qdecCfg)
+void QDEC_Init(QDEC_ID_Type qdecId, QDEC_CFG_Type *qdecCfg)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     CHECK_PARAM(IS_QDEC_SAMPLE_MODE_TYPE(qdecCfg->sampleCfg.sampleMod));
     CHECK_PARAM(IS_QDEC_SAMPLE_PERIOD_TYPE(qdecCfg->sampleCfg.samplePeriod));
     CHECK_PARAM(IS_QDEC_REPORT_MODE_TYPE(qdecCfg->reportCfg.reportMod));
-    CHECK_PARAM((qdecCfg->ledCfg.ledPeriod)<=0x1FF);
-    CHECK_PARAM((qdecCfg->deglitchCfg.deglitchStrength)<=0xF);
-    
+    CHECK_PARAM((qdecCfg->ledCfg.ledPeriod) <= 0x1FF);
+    CHECK_PARAM((qdecCfg->deglitchCfg.deglitchStrength) <= 0xF);
+
     /* qdec_ctrl */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_CTRL0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_SPL_PERIOD,qdecCfg->sampleCfg.samplePeriod);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_RPT_PERIOD,qdecCfg->reportCfg.reportPeriod);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_LED_EN,qdecCfg->ledCfg.ledEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_LED_POL,qdecCfg->ledCfg.ledSwap);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_DEG_EN,qdecCfg->deglitchCfg.deglitchEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_DEG_CNT,qdecCfg->deglitchCfg.deglitchStrength);
-    BL_WR_REG(QDECx,QDEC0_CTRL0,tmpVal);
-    
+    tmpVal = BL_RD_REG(QDECx, QDEC0_CTRL0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_SPL_PERIOD, qdecCfg->sampleCfg.samplePeriod);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_RPT_PERIOD, qdecCfg->reportCfg.reportPeriod);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_LED_EN, qdecCfg->ledCfg.ledEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_LED_POL, qdecCfg->ledCfg.ledSwap);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_DEG_EN, qdecCfg->deglitchCfg.deglitchEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_DEG_CNT, qdecCfg->deglitchCfg.deglitchStrength);
+    BL_WR_REG(QDECx, QDEC0_CTRL0, tmpVal);
+
     /* qdec_ctrl1 */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_CTRL1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_SPL_MODE,qdecCfg->sampleCfg.sampleMod);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_RPT_MODE,qdecCfg->reportCfg.reportMod);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_LED_PERIOD,qdecCfg->ledCfg.ledPeriod);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_ACC_MODE,qdecCfg->accMod);
-    BL_WR_REG(QDECx,QDEC0_CTRL1,tmpVal);
+    tmpVal = BL_RD_REG(QDECx, QDEC0_CTRL1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_SPL_MODE, qdecCfg->sampleCfg.sampleMod);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_RPT_MODE, qdecCfg->reportCfg.reportMod);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_LED_PERIOD, qdecCfg->ledCfg.ledPeriod);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_ACC_MODE, qdecCfg->accMod);
+    BL_WR_REG(QDECx, QDEC0_CTRL1, tmpVal);
 
 #ifndef BFLB_USE_HAL_DRIVER
-    Interrupt_Handler_Register(QDEC0_IRQn,QDEC0_IRQHandler);
-    Interrupt_Handler_Register(QDEC1_IRQn,QDEC1_IRQHandler);
-    Interrupt_Handler_Register(QDEC2_IRQn,QDEC2_IRQHandler);
+    Interrupt_Handler_Register(QDEC0_IRQn, QDEC0_IRQHandler);
+    Interrupt_Handler_Register(QDEC1_IRQn, QDEC1_IRQHandler);
+    Interrupt_Handler_Register(QDEC2_IRQn, QDEC2_IRQHandler);
 #endif
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC deinit
  *
  * @param  qdecId: QDEC ID
@@ -138,57 +137,57 @@ void QDEC_Init(QDEC_ID_Type qdecId,QDEC_CFG_Type *qdecCfg)
 *******************************************************************************/
 void QDEC_DeInit(QDEC_ID_Type qdecId)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     /* deconfig qdec */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_CTRL0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_RPT_PERIOD,10);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_SPL_PERIOD,2);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_DEG_CNT,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_DEG_EN,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_LED_POL,1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_LED_EN,0);
-    BL_WR_REG(QDECx,QDEC0_CTRL0,tmpVal);
-    tmpVal=BL_RD_REG(QDECx,QDEC0_CTRL1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_LED_PERIOD,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_INPUT_SWAP,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_RPT_MODE,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_SPL_MODE,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_ACC_MODE,1);
-    BL_WR_REG(QDECx,QDEC0_CTRL1,tmpVal);
-    
+    tmpVal = BL_RD_REG(QDECx, QDEC0_CTRL0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_RPT_PERIOD, 10);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_SPL_PERIOD, 2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_DEG_CNT, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_DEG_EN, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_LED_POL, 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_LED_EN, 0);
+    BL_WR_REG(QDECx, QDEC0_CTRL0, tmpVal);
+    tmpVal = BL_RD_REG(QDECx, QDEC0_CTRL1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_LED_PERIOD, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_INPUT_SWAP, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_RPT_MODE, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_SPL_MODE, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_ACC_MODE, 1);
+    BL_WR_REG(QDECx, QDEC0_CTRL1, tmpVal);
+
     /* enable qdec */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_CTRL0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_EN,1);
-    BL_WR_REG(QDECx,QDEC0_CTRL0,tmpVal);
-    
+    tmpVal = BL_RD_REG(QDECx, QDEC0_CTRL0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_EN, 1);
+    BL_WR_REG(QDECx, QDEC0_CTRL0, tmpVal);
+
     /* deconfig interrupt */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_INT_EN);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_OVERFLOW_EN,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_DBL_RDY_EN,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_SPL_RDY_EN,0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_RPT_RDY_EN,1);
-    BL_WR_REG(QDECx,QDEC0_INT_EN,tmpVal);
-    
+    tmpVal = BL_RD_REG(QDECx, QDEC0_INT_EN);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_OVERFLOW_EN, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_DBL_RDY_EN, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_SPL_RDY_EN, 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_RPT_RDY_EN, 1);
+    BL_WR_REG(QDECx, QDEC0_INT_EN, tmpVal);
+
     /* clear status */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_INT_CLR);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_OVERFLOW_CLR,1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_DBL_RDY_CLR,1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_SPL_RDY_CLR,1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_RPT_RDY_CLR,1);
-    BL_WR_REG(QDECx,QDEC0_INT_STS,tmpVal);
-    
+    tmpVal = BL_RD_REG(QDECx, QDEC0_INT_CLR);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_OVERFLOW_CLR, 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_DBL_RDY_CLR, 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_SPL_RDY_CLR, 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_RPT_RDY_CLR, 1);
+    BL_WR_REG(QDECx, QDEC0_INT_STS, tmpVal);
+
     /* clear value */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_VALUE);
-    
+    tmpVal = BL_RD_REG(QDECx, QDEC0_VALUE);
+
     /* disable qdec */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_CTRL0);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_EN,0);
-    BL_WR_REG(QDECx,QDEC0_CTRL0,tmpVal);
+    tmpVal = BL_RD_REG(QDECx, QDEC0_CTRL0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_EN, 0);
+    BL_WR_REG(QDECx, QDEC0_CTRL0, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC enable
  *
  * @param  qdecId: QDEC ID
@@ -198,16 +197,16 @@ void QDEC_DeInit(QDEC_ID_Type qdecId)
 *******************************************************************************/
 void QDEC_Enable(QDEC_ID_Type qdecId)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     /* qdec_ctrl */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_CTRL0);
-    tmpVal=BL_SET_REG_BIT(tmpVal,QDEC_EN);
-    BL_WR_REG(QDECx,QDEC0_CTRL0,tmpVal);
+    tmpVal = BL_RD_REG(QDECx, QDEC0_CTRL0);
+    tmpVal = BL_SET_REG_BIT(tmpVal, QDEC_EN);
+    BL_WR_REG(QDECx, QDEC0_CTRL0, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC disable
  *
  * @param  qdecId: QDEC ID
@@ -217,16 +216,16 @@ void QDEC_Enable(QDEC_ID_Type qdecId)
 *******************************************************************************/
 void QDEC_Disable(QDEC_ID_Type qdecId)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     /* qdec_ctrl */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_CTRL0);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,QDEC_EN);
-    BL_WR_REG(QDECx,QDEC0_CTRL0,tmpVal);
+    tmpVal = BL_RD_REG(QDECx, QDEC0_CTRL0);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, QDEC_EN);
+    BL_WR_REG(QDECx, QDEC0_CTRL0, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  set QDEC interrupt mask
  *
  * @param  qdecId: QDEC ID
@@ -236,39 +235,41 @@ void QDEC_Disable(QDEC_ID_Type qdecId)
  * @return None
  *
 *******************************************************************************/
-void QDEC_SetIntMask(QDEC_ID_Type qdecId,QDEC_INT_Type intType,BL_Mask_Type intMask)
+void QDEC_SetIntMask(QDEC_ID_Type qdecId, QDEC_INT_Type intType, BL_Mask_Type intMask)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     CHECK_PARAM(IS_QDEC_INT_TYPE(intType));
-    
+
     /* qdec_int_en */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_INT_EN);
-    switch(intType){
+    tmpVal = BL_RD_REG(QDECx, QDEC0_INT_EN);
+
+    switch (intType) {
         case QDEC_INT_REPORT:
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_RPT_RDY_EN,(intMask?0:1));
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_RPT_RDY_EN, (intMask ? 0 : 1));
             break;
-        
+
         case QDEC_INT_SAMPLE:
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_SPL_RDY_EN,(intMask?0:1));
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_SPL_RDY_EN, (intMask ? 0 : 1));
             break;
-        
+
         case QDEC_INT_ERROR:
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_DBL_RDY_EN,(intMask?0:1));
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_DBL_RDY_EN, (intMask ? 0 : 1));
             break;
-        
+
         case QDEC_INT_OVERFLOW:
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,QDEC_OVERFLOW_EN,(intMask?0:1));
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, QDEC_OVERFLOW_EN, (intMask ? 0 : 1));
             break;
-        
-        default :
+
+        default:
             break;
     }
-    BL_WR_REG(QDECx,QDEC0_INT_EN,tmpVal);
+
+    BL_WR_REG(QDECx, QDEC0_INT_EN, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  get QDEC interrupt mask
  *
  * @param  qdecId: QDEC ID
@@ -277,34 +278,35 @@ void QDEC_SetIntMask(QDEC_ID_Type qdecId,QDEC_INT_Type intType,BL_Mask_Type intM
  * @return MASK or UNMASK
  *
 *******************************************************************************/
-BL_Mask_Type QDEC_GetIntMask(QDEC_ID_Type qdecId,QDEC_INT_Type intType)
+BL_Mask_Type QDEC_GetIntMask(QDEC_ID_Type qdecId, QDEC_INT_Type intType)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     CHECK_PARAM(IS_QDEC_INT_TYPE(intType));
-    
+
     /* qdec_int_en */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_INT_EN);
-    switch(intType){
+    tmpVal = BL_RD_REG(QDECx, QDEC0_INT_EN);
+
+    switch (intType) {
         case QDEC_INT_REPORT:
-            return BL_GET_REG_BITS_VAL(tmpVal,QDEC_RPT_RDY_EN)?UNMASK:MASK;
-        
+            return BL_GET_REG_BITS_VAL(tmpVal, QDEC_RPT_RDY_EN) ? UNMASK : MASK;
+
         case QDEC_INT_SAMPLE:
-            return BL_GET_REG_BITS_VAL(tmpVal,QDEC_SPL_RDY_EN)?UNMASK:MASK;
-        
+            return BL_GET_REG_BITS_VAL(tmpVal, QDEC_SPL_RDY_EN) ? UNMASK : MASK;
+
         case QDEC_INT_ERROR:
-            return BL_GET_REG_BITS_VAL(tmpVal,QDEC_DBL_RDY_EN)?UNMASK:MASK;
-        
+            return BL_GET_REG_BITS_VAL(tmpVal, QDEC_DBL_RDY_EN) ? UNMASK : MASK;
+
         case QDEC_INT_OVERFLOW:
-            return BL_GET_REG_BITS_VAL(tmpVal,QDEC_OVERFLOW_EN)?UNMASK:MASK;
-        
-        default :
+            return BL_GET_REG_BITS_VAL(tmpVal, QDEC_OVERFLOW_EN) ? UNMASK : MASK;
+
+        default:
             return UNMASK;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC interrupt callback install
  *
  * @param  qdecId: QDEC ID
@@ -314,12 +316,12 @@ BL_Mask_Type QDEC_GetIntMask(QDEC_ID_Type qdecId,QDEC_INT_Type intType)
  * @return None
  *
 *******************************************************************************/
-void QDEC_Int_Callback_Install(QDEC_ID_Type qdecId,QDEC_INT_Type intType,intCallback_Type* cbFun)
+void QDEC_Int_Callback_Install(QDEC_ID_Type qdecId, QDEC_INT_Type intType, intCallback_Type *cbFun)
 {
-    qdecIntCbfArra[qdecId][intType]= cbFun;
+    qdecIntCbfArra[qdecId][intType] = cbFun;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC get interrupt status
  *
  * @param  qdecId: QDEC ID
@@ -328,34 +330,35 @@ void QDEC_Int_Callback_Install(QDEC_ID_Type qdecId,QDEC_INT_Type intType,intCall
  * @return SET or RESET
  *
 *******************************************************************************/
-BL_Sts_Type QDEC_Get_Int_Status(QDEC_ID_Type qdecId,QDEC_INT_Type intType)
+BL_Sts_Type QDEC_Get_Int_Status(QDEC_ID_Type qdecId, QDEC_INT_Type intType)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     CHECK_PARAM(IS_QDEC_INT_TYPE(intType));
-    
+
     /* qdec_int_sts */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_INT_STS);
-    switch(intType){
+    tmpVal = BL_RD_REG(QDECx, QDEC0_INT_STS);
+
+    switch (intType) {
         case QDEC_INT_REPORT:
-            return BL_GET_REG_BITS_VAL(tmpVal,QDEC_RPT_RDY_STS)?SET:RESET;
-        
+            return BL_GET_REG_BITS_VAL(tmpVal, QDEC_RPT_RDY_STS) ? SET : RESET;
+
         case QDEC_INT_SAMPLE:
-            return BL_GET_REG_BITS_VAL(tmpVal,QDEC_SPL_RDY_STS)?SET:RESET;
-        
+            return BL_GET_REG_BITS_VAL(tmpVal, QDEC_SPL_RDY_STS) ? SET : RESET;
+
         case QDEC_INT_ERROR:
-            return BL_GET_REG_BITS_VAL(tmpVal,QDEC_DBL_RDY_STS)?SET:RESET;
-        
+            return BL_GET_REG_BITS_VAL(tmpVal, QDEC_DBL_RDY_STS) ? SET : RESET;
+
         case QDEC_INT_OVERFLOW:
-            return BL_GET_REG_BITS_VAL(tmpVal,QDEC_OVERFLOW_STS)?SET:RESET;
-        
-        default :
+            return BL_GET_REG_BITS_VAL(tmpVal, QDEC_OVERFLOW_STS) ? SET : RESET;
+
+        default:
             return RESET;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC clear interrupt status
  *
  * @param  qdecId: QDEC ID
@@ -364,39 +367,41 @@ BL_Sts_Type QDEC_Get_Int_Status(QDEC_ID_Type qdecId,QDEC_INT_Type intType)
  * @return None
  *
 *******************************************************************************/
-void QDEC_Clr_Int_Status(QDEC_ID_Type qdecId,QDEC_INT_Type intType)
+void QDEC_Clr_Int_Status(QDEC_ID_Type qdecId, QDEC_INT_Type intType)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     CHECK_PARAM(IS_QDEC_INT_TYPE(intType));
-    
+
     /* qdec_int_clr */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_INT_CLR);
-    switch(intType){
+    tmpVal = BL_RD_REG(QDECx, QDEC0_INT_CLR);
+
+    switch (intType) {
         case QDEC_INT_REPORT:
-            tmpVal=BL_SET_REG_BIT(tmpVal,QDEC_RPT_RDY_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, QDEC_RPT_RDY_CLR);
             break;
-        
+
         case QDEC_INT_SAMPLE:
-            tmpVal=BL_SET_REG_BIT(tmpVal,QDEC_SPL_RDY_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, QDEC_SPL_RDY_CLR);
             break;
-        
+
         case QDEC_INT_ERROR:
-            tmpVal=BL_SET_REG_BIT(tmpVal,QDEC_DBL_RDY_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, QDEC_DBL_RDY_CLR);
             break;
-        
+
         case QDEC_INT_OVERFLOW:
-            tmpVal=BL_SET_REG_BIT(tmpVal,QDEC_OVERFLOW_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, QDEC_OVERFLOW_CLR);
             break;
-        
-        default :
+
+        default:
             break;
     }
-    BL_WR_REG(QDECx,QDEC0_INT_CLR,tmpVal);
+
+    BL_WR_REG(QDECx, QDEC0_INT_CLR, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC get sample direction
  *
  * @param  qdecId: QDEC ID
@@ -406,16 +411,16 @@ void QDEC_Clr_Int_Status(QDEC_ID_Type qdecId,QDEC_INT_Type intType)
 *******************************************************************************/
 QDEC_DIRECTION_Type QDEC_Get_Sample_Direction(QDEC_ID_Type qdecId)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     /* qdec_value */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_VALUE);
-    
-    return (QDEC_DIRECTION_Type)BL_GET_REG_BITS_VAL(tmpVal,QDEC_SPL_VAL);
+    tmpVal = BL_RD_REG(QDECx, QDEC0_VALUE);
+
+    return (QDEC_DIRECTION_Type)BL_GET_REG_BITS_VAL(tmpVal, QDEC_SPL_VAL);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC get error count
  *
  * @param  qdecId: QDEC ID
@@ -425,16 +430,16 @@ QDEC_DIRECTION_Type QDEC_Get_Sample_Direction(QDEC_ID_Type qdecId)
 *******************************************************************************/
 uint8_t QDEC_Get_Err_Cnt(QDEC_ID_Type qdecId)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     /* qdec_value */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_VALUE);
-    
-    return BL_GET_REG_BITS_VAL(tmpVal,QDEC_ACC2_VAL);
+    tmpVal = BL_RD_REG(QDECx, QDEC0_VALUE);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, QDEC_ACC2_VAL);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC get sample value
  *
  * @param  qdecId: QDEC ID
@@ -444,16 +449,16 @@ uint8_t QDEC_Get_Err_Cnt(QDEC_ID_Type qdecId)
 *******************************************************************************/
 uint16_t QDEC_Get_Sample_Val(QDEC_ID_Type qdecId)
 {
-    uint32_t tmpVal=0;
+    uint32_t tmpVal = 0;
     uint32_t QDECx = qdecAddr[qdecId];
-    
+
     /* qdec_value */
-    tmpVal=BL_RD_REG(QDECx,QDEC0_VALUE);
-    
-    return BL_GET_REG_BITS_VAL(tmpVal,QDEC_ACC1_VAL);
+    tmpVal = BL_RD_REG(QDECx, QDEC0_VALUE);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, QDEC_ACC1_VAL);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC interrupt handler
  *
  * @param  qdecId: QDEC ID
@@ -462,17 +467,18 @@ uint16_t QDEC_Get_Sample_Val(QDEC_ID_Type qdecId)
  * @return None
  *
 *******************************************************************************/
-void QDEC_IntHandler(QDEC_ID_Type qdecId,QDEC_INT_Type intType)
+void QDEC_IntHandler(QDEC_ID_Type qdecId, QDEC_INT_Type intType)
 {
-    if(SET==QDEC_Get_Int_Status(qdecId,intType)){
-        QDEC_Clr_Int_Status(qdecId,intType);
-        if(qdecIntCbfArra[qdecId][intType]!=NULL){
+    if (SET == QDEC_Get_Int_Status(qdecId, intType)) {
+        QDEC_Clr_Int_Status(qdecId, intType);
+
+        if (qdecIntCbfArra[qdecId][intType] != NULL) {
             qdecIntCbfArra[qdecId][intType]();
         }
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC0 interrupt handler
  *
  * @param  None
@@ -484,16 +490,16 @@ void QDEC_IntHandler(QDEC_ID_Type qdecId,QDEC_INT_Type intType)
 void QDEC0_IRQHandler(void)
 {
     QDEC_INT_Type intType;
-    
-    for(intType=QDEC_INT_REPORT;intType<QDEC_INT_ALL;intType++){
-        if(UNMASK==QDEC_GetIntMask(QDEC0_ID,intType)){
-            QDEC_IntHandler(QDEC0_ID,intType);
+
+    for (intType = QDEC_INT_REPORT; intType < QDEC_INT_ALL; intType++) {
+        if (UNMASK == QDEC_GetIntMask(QDEC0_ID, intType)) {
+            QDEC_IntHandler(QDEC0_ID, intType);
         }
     }
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC1 interrupt handler
  *
  * @param  None
@@ -505,16 +511,16 @@ void QDEC0_IRQHandler(void)
 void QDEC1_IRQHandler(void)
 {
     QDEC_INT_Type intType;
-    
-    for(intType=QDEC_INT_REPORT;intType<QDEC_INT_ALL;intType++){
-        if(UNMASK==QDEC_GetIntMask(QDEC1_ID,intType)){
-            QDEC_IntHandler(QDEC1_ID,intType);
+
+    for (intType = QDEC_INT_REPORT; intType < QDEC_INT_ALL; intType++) {
+        if (UNMASK == QDEC_GetIntMask(QDEC1_ID, intType)) {
+            QDEC_IntHandler(QDEC1_ID, intType);
         }
     }
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  QDEC2 interrupt handler
  *
  * @param  None
@@ -526,10 +532,10 @@ void QDEC1_IRQHandler(void)
 void QDEC2_IRQHandler(void)
 {
     QDEC_INT_Type intType;
-    
-    for(intType=QDEC_INT_REPORT;intType<QDEC_INT_ALL;intType++){
-        if(UNMASK==QDEC_GetIntMask(QDEC2_ID,intType)){
-            QDEC_IntHandler(QDEC2_ID,intType);
+
+    for (intType = QDEC_INT_REPORT; intType < QDEC_INT_ALL; intType++) {
+        if (UNMASK == QDEC_GetIntMask(QDEC2_ID, intType)) {
+            QDEC_IntHandler(QDEC2_ID, intType);
         }
     }
 }

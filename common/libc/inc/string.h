@@ -13,7 +13,7 @@ __extern void memswap(void *m1, void *m2, size_t n);
 __extern void *memmem(const void *haystack, size_t n, const void *needle, size_t m);
 __extern char *strtok_r(char *, const char *, char **);
 __extern char *strsep(char **, const char *);
-#   include_next <string.h>
+#include_next <string.h>
 #else
 __extern void *memccpy(void *, const void *, int, size_t);
 __extern void *memchr(const void *, int, size_t);
@@ -49,4 +49,4 @@ __extern char *strtok_r(char *, const char *, char **);
 char *index(const char *s, int c);
 #endif /* __riscv_xlen == 64 */
 
-#endif				/* _STRING_H */
+#endif /* _STRING_H */

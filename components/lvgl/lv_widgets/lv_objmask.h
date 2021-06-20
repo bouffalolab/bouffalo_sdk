@@ -28,15 +28,17 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-typedef struct {
-    void * param;
+typedef struct
+{
+    void *param;
 } lv_objmask_mask_t;
 
 /*Data of object mask*/
-typedef struct {
+typedef struct
+{
     lv_cont_ext_t cont; /*Ext. of ancestor*/
     /*New data for this type */
-    lv_ll_t mask_ll;    /*Store the created masks*/
+    lv_ll_t mask_ll; /*Store the created masks*/
 
 } lv_objmask_ext_t;
 
@@ -56,7 +58,7 @@ typedef uint8_t lv_objmask_part_t;
  * @param copy pointer to a object mask object, if not NULL then the new object will be copied from it
  * @return pointer to the created object mask
  */
-lv_obj_t * lv_objmask_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_objmask_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*======================
  * Add/remove functions
@@ -68,7 +70,7 @@ lv_obj_t * lv_objmask_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param param an initialized mask parameter
  * @return pointer to the added mask
  */
-lv_objmask_mask_t * lv_objmask_add_mask(lv_obj_t * objmask, void * param);
+lv_objmask_mask_t *lv_objmask_add_mask(lv_obj_t *objmask, void *param);
 
 /**
  * Update an already created mask
@@ -76,7 +78,7 @@ lv_objmask_mask_t * lv_objmask_add_mask(lv_obj_t * objmask, void * param);
  * @param mask pointer to created mask (returned by `lv_objmask_add_mask`)
  * @param param an initialized mask parameter (initialized by `lv_draw_mask_line/angle/.../_init`)
  */
-void lv_objmask_update_mask(lv_obj_t * objmask, lv_objmask_mask_t * mask, void * param);
+void lv_objmask_update_mask(lv_obj_t *objmask, lv_objmask_mask_t *mask, void *param);
 
 /**
  * Remove a mask
@@ -84,7 +86,7 @@ void lv_objmask_update_mask(lv_obj_t * objmask, lv_objmask_mask_t * mask, void *
  * @param mask pointer to created mask (returned by `lv_objmask_add_mask`)
  * If `NULL` passed all masks will be deleted.
  */
-void lv_objmask_remove_mask(lv_obj_t * objmask, lv_objmask_mask_t * mask);
+void lv_objmask_remove_mask(lv_obj_t *objmask, lv_objmask_mask_t *mask);
 
 /*=====================
  * Setter functions

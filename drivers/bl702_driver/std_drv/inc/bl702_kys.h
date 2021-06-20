@@ -55,23 +55,24 @@
  *  @brief KYS keycode type definition
  */
 typedef enum {
-    KYS_KEYCODE_0,                           /*!< KYS keycode 0 */
-    KYS_KEYCODE_1,                           /*!< KYS keycode 1 */
-    KYS_KEYCODE_2,                           /*!< KYS keycode 2 */
-    KYS_KEYCODE_3,                           /*!< KYS keycode 3 */
-}KYS_Keycode_Type;
+    KYS_KEYCODE_0, /*!< KYS keycode 0 */
+    KYS_KEYCODE_1, /*!< KYS keycode 1 */
+    KYS_KEYCODE_2, /*!< KYS keycode 2 */
+    KYS_KEYCODE_3, /*!< KYS keycode 3 */
+} KYS_Keycode_Type;
 
 /**
  *  @brief KYS configuration structure type definition
  */
-typedef struct {
-    uint8_t col;                             /*!< Col of keyboard,max:20 */
-    uint8_t row;                             /*!< Row of keyboard,max:8 */
-    uint8_t idleDuration;                    /*!< Idle duration between column scans */
-    BL_Fun_Type ghostEn;                     /*!< Enable or disable ghost key event detection */
-    BL_Fun_Type deglitchEn;                  /*!< Enable or disable deglitch function */
-    uint8_t deglitchCnt;                     /*!< Deglitch count */
-}KYS_CFG_Type;
+typedef struct
+{
+    uint8_t col;            /*!< Col of keyboard,max:20 */
+    uint8_t row;            /*!< Row of keyboard,max:8 */
+    uint8_t idleDuration;   /*!< Idle duration between column scans */
+    BL_Fun_Type ghostEn;    /*!< Enable or disable ghost key event detection */
+    BL_Fun_Type deglitchEn; /*!< Enable or disable deglitch function */
+    uint8_t deglitchCnt;    /*!< Deglitch count */
+} KYS_CFG_Type;
 
 /*@} end of group KYS_Public_Types */
 
@@ -82,10 +83,10 @@ typedef struct {
 /** @defgroup  KYS_KEYCODE_TYPE
  *  @{
  */
-#define IS_KYS_KEYCODE_TYPE(type)                        (((type) == KYS_KEYCODE_0) || \
-                                                          ((type) == KYS_KEYCODE_1) || \
-                                                          ((type) == KYS_KEYCODE_2) || \
-                                                          ((type) == KYS_KEYCODE_3))
+#define IS_KYS_KEYCODE_TYPE(type) (((type) == KYS_KEYCODE_0) || \
+                                   ((type) == KYS_KEYCODE_1) || \
+                                   ((type) == KYS_KEYCODE_2) || \
+                                   ((type) == KYS_KEYCODE_3))
 
 /*@} end of group KYS_Public_Constants */
 
@@ -112,7 +113,7 @@ BL_Err_Type KYS_IntMask(BL_Mask_Type intMask);
 BL_Err_Type KYS_IntClear(void);
 BL_Err_Type KYS_Int_Callback_Install(intCallback_Type *cbFun);
 uint8_t KYS_GetIntStatus(void);
-uint8_t KYS_GetKeycode(KYS_Keycode_Type keycode,uint8_t *col,uint8_t *row);
+uint8_t KYS_GetKeycode(KYS_Keycode_Type keycode, uint8_t *col, uint8_t *row);
 
 /*@} end of group KYS_Public_Functions */
 

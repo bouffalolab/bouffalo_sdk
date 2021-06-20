@@ -19,14 +19,14 @@
 
 typedef struct _lv_async_info_t {
     lv_async_cb_t cb;
-    void * user_data;
+    void *user_data;
 } lv_async_info_t;
 
 /**********************
  *  STATIC PROTOTYPES
  **********************/
 
-static void lv_async_task_cb(lv_task_t * task);
+static void lv_async_task_cb(lv_task_t *task);
 
 /**********************
  *  STATIC VARIABLES
@@ -40,19 +40,20 @@ static void lv_async_task_cb(lv_task_t * task);
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_res_t lv_async_call(lv_async_cb_t async_xcb, void * user_data)
+lv_res_t lv_async_call(lv_async_cb_t async_xcb, void *user_data)
 {
     /*Allocate an info structure */
-    lv_async_info_t * info = lv_mem_alloc(sizeof(lv_async_info_t));
+    lv_async_info_t *info = lv_mem_alloc(sizeof(lv_async_info_t));
 
-    if(info == NULL)
+    if (info == NULL) {
         return LV_RES_INV;
+    }
 
     /* Create a new task */
     /* Use highest priority so that it will run before a refresh */
-    lv_task_t * task = lv_task_create(lv_async_task_cb, 0, LV_TASK_PRIO_HIGHEST, info);
+    lv_task_t *task = lv_task_create(lv_async_task_cb, 0, LV_TASK_PRIO_HIGHEST, info);
 
-    if(task == NULL) {
+    if (task == NULL) {
         lv_mem_free(info);
         return LV_RES_INV;
     }
@@ -68,9 +69,9 @@ lv_res_t lv_async_call(lv_async_cb_t async_xcb, void * user_data)
  *   STATIC FUNCTIONS
  **********************/
 
-static void lv_async_task_cb(lv_task_t * task)
+static void lv_async_task_cb(lv_task_t *task)
 {
-    lv_async_info_t * info = (lv_async_info_t *)task->user_data;
+    lv_async_info_t *info = (lv_async_info_t *)task->user_data;
 
     info->cb(info->user_data);
 

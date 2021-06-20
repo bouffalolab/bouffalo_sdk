@@ -58,13 +58,14 @@ enum {
 typedef uint8_t lv_spinner_dir_t;
 
 /*Data of spinner*/
-typedef struct {
+typedef struct
+{
     lv_arc_ext_t arc; /*Ext. of ancestor*/
     /*New data for this type */
     lv_anim_value_t arc_length;      /*Length of the spinning indicator in degree*/
     uint16_t time;                   /*Time of one round*/
     lv_spinner_type_t anim_type : 2; /*Type of the arc animation*/
-    lv_spinner_dir_t anim_dir : 1;   /*Animation Direction*/
+    lv_spinner_dir_t anim_dir   : 1; /*Animation Direction*/
 } lv_spinner_ext_t;
 
 /*Parts of the spinner*/
@@ -88,7 +89,7 @@ typedef uint8_t lv_spinner_style_t;
  * it
  * @return pointer to the created spinner
  */
-lv_obj_t * lv_spinner_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_spinner_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*======================
  * Add/remove functions
@@ -99,14 +100,14 @@ lv_obj_t * lv_spinner_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param spinner pointer to a spinner object
  * @param deg length of the arc
  */
-void lv_spinner_set_arc_length(lv_obj_t * spinner, lv_anim_value_t deg);
+void lv_spinner_set_arc_length(lv_obj_t *spinner, lv_anim_value_t deg);
 
 /**
  * Set the spin time of the arc
  * @param spinner pointer to a spinner object
  * @param time time of one round in milliseconds
  */
-void lv_spinner_set_spin_time(lv_obj_t * spinner, uint16_t time);
+void lv_spinner_set_spin_time(lv_obj_t *spinner, uint16_t time);
 
 /*=====================
  * Setter functions
@@ -117,14 +118,14 @@ void lv_spinner_set_spin_time(lv_obj_t * spinner, uint16_t time);
  * @param spinner pointer to spinner object
  * @param type animation type of the spinner
  *  */
-void lv_spinner_set_type(lv_obj_t * spinner, lv_spinner_type_t type);
+void lv_spinner_set_type(lv_obj_t *spinner, lv_spinner_type_t type);
 
 /**
  * Set the animation direction of a spinner
  * @param spinner pointer to spinner object
  * @param direction animation direction of the spinner
  */
-void lv_spinner_set_dir(lv_obj_t * spinner, lv_spinner_dir_t dir);
+void lv_spinner_set_dir(lv_obj_t *spinner, lv_spinner_dir_t dir);
 
 /*=====================
  * Getter functions
@@ -134,27 +135,27 @@ void lv_spinner_set_dir(lv_obj_t * spinner, lv_spinner_dir_t dir);
  * Get the arc length [degree] of the a spinner
  * @param spinner pointer to a spinner object
  */
-lv_anim_value_t lv_spinner_get_arc_length(const lv_obj_t * spinner);
+lv_anim_value_t lv_spinner_get_arc_length(const lv_obj_t *spinner);
 
 /**
  * Get the spin time of the arc
  * @param spinner pointer to a spinner object [milliseconds]
  */
-uint16_t lv_spinner_get_spin_time(const lv_obj_t * spinner);
+uint16_t lv_spinner_get_spin_time(const lv_obj_t *spinner);
 
 /**
  * Get the animation type of a spinner.
  * @param spinner pointer to spinner object
  * @return animation type
  *  */
-lv_spinner_type_t lv_spinner_get_type(lv_obj_t * spinner);
+lv_spinner_type_t lv_spinner_get_type(lv_obj_t *spinner);
 
 /**
  * Get the animation direction of a spinner
  * @param spinner pointer to spinner object
  * @return animation direction
  */
-lv_spinner_dir_t lv_spinner_get_dir(lv_obj_t * spinner);
+lv_spinner_dir_t lv_spinner_get_dir(lv_obj_t *spinner);
 
 /*=====================
  * Other functions
@@ -165,7 +166,7 @@ lv_spinner_dir_t lv_spinner_get_dir(lv_obj_t * spinner);
  * @param ptr pointer to spinner
  * @param val the current desired value [0..360]
  */
-void lv_spinner_anim_cb(void * ptr, lv_anim_value_t val);
+void lv_spinner_anim_cb(void *ptr, lv_anim_value_t val);
 
 /**********************
  *      MACROS

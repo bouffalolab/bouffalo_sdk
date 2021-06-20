@@ -14,16 +14,18 @@ int bflb_strcmp(const char *s1, const char *s2)
 int strcmp(const char *s1, const char *s2)
 #endif
 {
-	const unsigned char *c1 = (const unsigned char *)s1;
-	const unsigned char *c2 = (const unsigned char *)s2;
-	unsigned char ch;
-	int d = 0;
+    const unsigned char *c1 = (const unsigned char *)s1;
+    const unsigned char *c2 = (const unsigned char *)s2;
+    unsigned char ch;
+    int d = 0;
 
-	while (1) {
-		d = (int)(ch = *c1++) - (int)*c2++;
-		if (d || !ch)
-			break;
-	}
+    while (1) {
+        d = (int)(ch = *c1++) - (int)*c2++;
 
-	return d;
+        if (d || !ch) {
+            break;
+        }
+    }
+
+    return d;
 }

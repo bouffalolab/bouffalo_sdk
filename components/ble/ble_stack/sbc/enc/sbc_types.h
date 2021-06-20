@@ -52,6 +52,6 @@ typedef int64_t SINT64;
 
 #endif
 
-#define abs32(x) ( (x >= 0) ? x : (-x) )
+#define abs32(x) ((x >= 0) ? x : (-x))
 
 #endif

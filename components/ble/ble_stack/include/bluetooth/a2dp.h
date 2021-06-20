@@ -18,69 +18,69 @@ extern "C" {
 
 /** @brief Stream Structure */
 struct bt_a2dp_stream {
-	/* TODO */
+    /* TODO */
 };
 
 /** @brief Codec ID */
 enum bt_a2dp_codec_id {
-	/** Codec SBC */
-	BT_A2DP_SBC = 0x00,
-	/** Codec MPEG-1 */
-	BT_A2DP_MPEG1 = 0x01,
-	/** Codec MPEG-2 */
-	BT_A2DP_MPEG2 = 0x02,
-	/** Codec ATRAC */
-	BT_A2DP_ATRAC = 0x04,
-	/** Codec Non-A2DP */
-	BT_A2DP_VENDOR = 0xff
+    /** Codec SBC */
+    BT_A2DP_SBC = 0x00,
+    /** Codec MPEG-1 */
+    BT_A2DP_MPEG1 = 0x01,
+    /** Codec MPEG-2 */
+    BT_A2DP_MPEG2 = 0x02,
+    /** Codec ATRAC */
+    BT_A2DP_ATRAC = 0x04,
+    /** Codec Non-A2DP */
+    BT_A2DP_VENDOR = 0xff
 };
 
 /** @brief Media Codec Type */
 enum MEDIA_CODEC_TYPE {
-	/** SBC codec type */
-	BT_A2DP_CODEC_TYPE_SBC = 0x00,
-	/** AAC codec type */
-	BT_A2DP_CODEC_TYPE_AAC = 0x02,
-	/** AAC codec type */
-	BT_A2DP_CODEC_TYPE_VENDOR = 0xff,
+    /** SBC codec type */
+    BT_A2DP_CODEC_TYPE_SBC = 0x00,
+    /** AAC codec type */
+    BT_A2DP_CODEC_TYPE_AAC = 0x02,
+    /** AAC codec type */
+    BT_A2DP_CODEC_TYPE_VENDOR = 0xff,
 };
 
 /** @brief Preset for the endpoint */
 struct bt_a2dp_preset {
-	/** Length of preset */
-	uint8_t len;
-	/** Preset */
-	uint8_t preset[0];
+    /** Length of preset */
+    uint8_t len;
+    /** Preset */
+    uint8_t preset[0];
 };
 
 /** @brief Stream End Point */
 struct bt_a2dp_endpoint {
-	/** Code ID */
-	uint8_t codec_id;
-	/** Stream End Point Information */
-	struct bt_avdtp_seid_lsep info;
-	/** Pointer to preset codec chosen */
-	struct bt_a2dp_preset *preset;
-	/** Capabilities */
-	struct bt_a2dp_preset *caps;
+    /** Code ID */
+    uint8_t codec_id;
+    /** Stream End Point Information */
+    struct bt_avdtp_seid_lsep info;
+    /** Pointer to preset codec chosen */
+    struct bt_a2dp_preset *preset;
+    /** Capabilities */
+    struct bt_a2dp_preset *caps;
 };
 
 /** @brief Stream End Point Media Type */
 enum MEDIA_TYPE {
-	/** Audio Media Type */
-	BT_A2DP_AUDIO = 0x00,
-	/** Video Media Type */
-	BT_A2DP_VIDEO = 0x01,
-	/** Multimedia Media Type */
-	BT_A2DP_MULTIMEDIA = 0x02
+    /** Audio Media Type */
+    BT_A2DP_AUDIO = 0x00,
+    /** Video Media Type */
+    BT_A2DP_VIDEO = 0x01,
+    /** Multimedia Media Type */
+    BT_A2DP_MULTIMEDIA = 0x02
 };
 
 /** @brief Stream End Point Role */
 enum ROLE_TYPE {
-	/** Source Role */
-	BT_A2DP_SOURCE = 0,
-	/** Sink Role */
-	BT_A2DP_SINK = 1
+    /** Source Role */
+    BT_A2DP_SOURCE = 0,
+    /** Sink Role */
+    BT_A2DP_SINK = 1
 };
 
 /** @brief A2DP structure */
@@ -112,7 +112,7 @@ struct bt_a2dp *bt_a2dp_connect(struct bt_conn *conn);
  *  @return 0 in case of success and error code in case of error.
  */
 int bt_a2dp_register_endpoint(struct bt_a2dp_endpoint *endpoint,
-			      uint8_t media_type, uint8_t role);
+                              uint8_t media_type, uint8_t role);
 
 /** @brief SBC decode init.
  *
@@ -124,7 +124,7 @@ int a2dp_sbc_decode_init();
  *
  *  @return 0 in case of success and error code in case of error.
  */
-int a2dp_sbc_decode_process(uint8_t* media_data, uint16_t data_len);
+int a2dp_sbc_decode_process(uint8_t *media_data, uint16_t data_len);
 
 #ifdef __cplusplus
 }

@@ -50,20 +50,20 @@ extern "C" {
 #define A2DP_SBC_ALLOC_MTHD_SNR      BIT(1)
 #define A2DP_SBC_ALLOC_MTHD_LOUDNESS BIT(0)
 
-#define BT_A2DP_SBC_SAMP_FREQ(preset)    ((preset->config[0] >> 4) & 0x0f)
-#define BT_A2DP_SBC_CHAN_MODE(preset)    ((preset->config[0]) & 0x0f)
-#define BT_A2DP_SBC_BLK_LEN(preset)      ((preset->config[1] >> 4) & 0x0f)
-#define BT_A2DP_SBC_SUB_BAND(preset)     ((preset->config[1] >> 2) & 0x03)
-#define BT_A2DP_SBC_ALLOC_MTHD(preset)   ((preset->config[1]) & 0x03)
+#define BT_A2DP_SBC_SAMP_FREQ(preset)  ((preset->config[0] >> 4) & 0x0f)
+#define BT_A2DP_SBC_CHAN_MODE(preset)  ((preset->config[0]) & 0x0f)
+#define BT_A2DP_SBC_BLK_LEN(preset)    ((preset->config[1] >> 4) & 0x0f)
+#define BT_A2DP_SBC_SUB_BAND(preset)   ((preset->config[1] >> 2) & 0x03)
+#define BT_A2DP_SBC_ALLOC_MTHD(preset) ((preset->config[1]) & 0x03)
 
 /** @brief SBC Codec */
 struct bt_a2dp_codec_sbc_params {
-	/** First two octets of configuration */
-	uint8_t config[2];
-	/** Minimum Bitpool Value */
-	uint8_t min_bitpool;
-	/** Maximum Bitpool Value */
-	uint8_t max_bitpool;
+    /** First two octets of configuration */
+    uint8_t config[2];
+    /** Minimum Bitpool Value */
+    uint8_t min_bitpool;
+    /** Maximum Bitpool Value */
+    uint8_t max_bitpool;
 } __packed;
 
 #ifdef __cplusplus

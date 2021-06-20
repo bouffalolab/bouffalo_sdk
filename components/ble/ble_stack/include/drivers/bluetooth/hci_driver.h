@@ -26,8 +26,8 @@ extern "C" {
 #endif
 
 enum {
-	/* The host should never send HCI_Reset */
-	BT_QUIRK_NO_RESET = BIT(0),
+    /* The host should never send HCI_Reset */
+    BT_QUIRK_NO_RESET = BIT(0),
 };
 
 /**
@@ -46,18 +46,19 @@ enum {
  */
 static inline bool bt_hci_evt_is_prio(u8_t evt)
 {
-	switch (evt) {
-	case BT_HCI_EVT_CMD_COMPLETE:
-	case BT_HCI_EVT_CMD_STATUS:
-		/* fallthrough */
+    switch (evt) {
+        case BT_HCI_EVT_CMD_COMPLETE:
+        case BT_HCI_EVT_CMD_STATUS:
+            /* fallthrough */
 #if defined(CONFIG_BT_CONN)
-	case BT_HCI_EVT_NUM_COMPLETED_PACKETS:
-	case BT_HCI_EVT_DATA_BUF_OVERFLOW:
+        case BT_HCI_EVT_NUM_COMPLETED_PACKETS:
+        case BT_HCI_EVT_DATA_BUF_OVERFLOW:
 #endif
-		return true;
-	default:
-		return false;
-	}
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 /**
@@ -96,16 +97,16 @@ int bt_recv_prio(struct net_buf *buf);
 
 /** Possible values for the 'bus' member of the bt_hci_driver struct */
 enum bt_hci_driver_bus {
-	BT_HCI_DRIVER_BUS_VIRTUAL       = 0,
-	BT_HCI_DRIVER_BUS_USB           = 1,
-	BT_HCI_DRIVER_BUS_PCCARD        = 2,
-	BT_HCI_DRIVER_BUS_UART          = 3,
-	BT_HCI_DRIVER_BUS_RS232         = 4,
-	BT_HCI_DRIVER_BUS_PCI           = 5,
-	BT_HCI_DRIVER_BUS_SDIO          = 6,
-	BT_HCI_DRIVER_BUS_SPI           = 7,
-	BT_HCI_DRIVER_BUS_I2C           = 8,
-	BT_HCI_DRIVER_BUS_IPM           = 9,
+    BT_HCI_DRIVER_BUS_VIRTUAL = 0,
+    BT_HCI_DRIVER_BUS_USB = 1,
+    BT_HCI_DRIVER_BUS_PCCARD = 2,
+    BT_HCI_DRIVER_BUS_UART = 3,
+    BT_HCI_DRIVER_BUS_RS232 = 4,
+    BT_HCI_DRIVER_BUS_PCI = 5,
+    BT_HCI_DRIVER_BUS_SDIO = 6,
+    BT_HCI_DRIVER_BUS_SPI = 7,
+    BT_HCI_DRIVER_BUS_I2C = 8,
+    BT_HCI_DRIVER_BUS_IPM = 9,
 };
 
 /**
@@ -115,47 +116,47 @@ enum bt_hci_driver_bus {
  * controller.
  */
 struct bt_hci_driver {
-	/** Name of the driver */
-	const char *name;
+    /** Name of the driver */
+    const char *name;
 
-	/** Bus of the transport (BT_HCI_DRIVER_BUS_*) */
-	enum bt_hci_driver_bus bus;
+    /** Bus of the transport (BT_HCI_DRIVER_BUS_*) */
+    enum bt_hci_driver_bus bus;
 
-	/** Specific controller quirks. These are set by the HCI driver
-	 *  and acted upon by the host. They can either be statically
-	 *  set at buildtime, or set at runtime before the HCI driver's
-	 *  open() callback returns.
-	 */
-	u32_t quirks;
+    /** Specific controller quirks. These are set by the HCI driver
+     *  and acted upon by the host. They can either be statically
+     *  set at buildtime, or set at runtime before the HCI driver's
+     *  open() callback returns.
+     */
+    u32_t quirks;
 
-	/**
-	 * @brief Open the HCI transport.
-	 *
-	 * Opens the HCI transport for operation. This function must not
-	 * return until the transport is ready for operation, meaning it
-	 * is safe to start calling the send() handler.
-	 *
-	 * If the driver uses its own RX thread, i.e.
-	 * CONFIG_BT_RECV_IS_RX_THREAD is set, then this
-	 * function is expected to start that thread.
-	 *
-	 * @return 0 on success or negative error number on failure.
-	 */
-	int (*open)(void);
+    /**
+     * @brief Open the HCI transport.
+     *
+     * Opens the HCI transport for operation. This function must not
+     * return until the transport is ready for operation, meaning it
+     * is safe to start calling the send() handler.
+     *
+     * If the driver uses its own RX thread, i.e.
+     * CONFIG_BT_RECV_IS_RX_THREAD is set, then this
+     * function is expected to start that thread.
+     *
+     * @return 0 on success or negative error number on failure.
+     */
+    int (*open)(void);
 
-	/**
-	 * @brief Send HCI buffer to controller.
-	 *
-	 * Send an HCI command or ACL data to the controller. The exact
-	 * type of the data can be checked with the help of bt_buf_get_type().
-	 *
-	 * @note This function must only be called from a cooperative thread.
-	 *
-	 * @param buf Buffer containing data to be sent to the controller.
-	 *
-	 * @return 0 on success or negative error number on failure.
-	 */
-	int (*send)(struct net_buf *buf);
+    /**
+     * @brief Send HCI buffer to controller.
+     *
+     * Send an HCI command or ACL data to the controller. The exact
+     * type of the data can be checked with the help of bt_buf_get_type().
+     *
+     * @note This function must only be called from a cooperative thread.
+     *
+     * @param buf Buffer containing data to be sent to the controller.
+     *
+     * @return 0 on success or negative error number on failure.
+     */
+    int (*send)(struct net_buf *buf);
 };
 
 /**
@@ -183,7 +184,7 @@ int bt_hci_driver_register(const struct bt_hci_driver *drv);
  * @return 0 on success, negative error value on failure
  */
 int bt_hci_transport_setup(struct device *dev);
-#endif 
+#endif
 
 #if defined(BFLB_BLE)
 /**
@@ -203,6 +204,5 @@ void co_tx_thread();
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* __BT_HCI_DRIVER_H */

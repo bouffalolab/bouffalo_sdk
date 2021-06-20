@@ -23,27 +23,29 @@
 
 #undef __in_section_unique
 #define __in_section_unique(seg) \
-	__attribute__((section("." STRINGIFY(seg) "." STRINGIFY(__COUNTER__))))
+    __attribute__((section("." STRINGIFY(seg) "." STRINGIFY(__COUNTER__))))
 
 #ifndef __GCC_LINKER_CMD__
 #include <xtensa/config/core.h>
 
 /*
- * XCC does not define the following macros with the expected names, but the
- * HAL defines similar ones. Thus we include it and define the missing macros
- * ourselves.
- */
+    * XCC does not define the following macros with the expected names, but the
+    * HAL defines similar ones. Thus we include it and define the missing macros
+    * ourselves.
+    */
 #if XCHAL_MEMORY_ORDER == XTHAL_BIGENDIAN
-#define __BYTE_ORDER__		__ORDER_BIG_ENDIAN__
+#define __BYTE_ORDER__ __ORDER_BIG_ENDIAN__
 #elif XCHAL_MEMORY_ORDER == XTHAL_LITTLEENDIAN
-#define __BYTE_ORDER__		__ORDER_LITTLE_ENDIAN__
+#define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
 #else
 #error "Cannot determine __BYTE_ORDER__"
 #endif
 
 #endif /* __GCC_LINKER_CMD__ */
 
-#define __builtin_unreachable() do { __ASSERT(false, "Unreachable code"); } \
-	while (true)
+#define __builtin_unreachable()              \
+    do {                                     \
+        __ASSERT(false, "Unreachable code"); \
+    } while (true)
 
 #endif

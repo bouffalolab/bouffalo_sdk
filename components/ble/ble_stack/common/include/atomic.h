@@ -39,15 +39,15 @@ typedef atomic_t atomic_val_t;
  */
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline int atomic_cas(atomic_t *target, atomic_val_t old_value,
-			  atomic_val_t new_value)
+                             atomic_val_t new_value)
 {
-	return __atomic_compare_exchange_n(target, &old_value, new_value,
-					   0, __ATOMIC_SEQ_CST,
-					   __ATOMIC_SEQ_CST);
+    return __atomic_compare_exchange_n(target, &old_value, new_value,
+                                       0, __ATOMIC_SEQ_CST,
+                                       __ATOMIC_SEQ_CST);
 }
 #else
 extern int atomic_cas(atomic_t *target, atomic_val_t old_value,
-		      atomic_val_t new_value);
+                      atomic_val_t new_value);
 #endif
 
 /**
@@ -64,7 +64,7 @@ extern int atomic_cas(atomic_t *target, atomic_val_t old_value,
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_add(atomic_t *target, atomic_val_t value)
 {
-	return __atomic_fetch_add(target, value, __ATOMIC_SEQ_CST);
+    return __atomic_fetch_add(target, value, __ATOMIC_SEQ_CST);
 }
 #else
 extern atomic_val_t atomic_add(atomic_t *target, atomic_val_t value);
@@ -84,7 +84,7 @@ extern atomic_val_t atomic_add(atomic_t *target, atomic_val_t value);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value)
 {
-	return __atomic_fetch_sub(target, value, __ATOMIC_SEQ_CST);
+    return __atomic_fetch_sub(target, value, __ATOMIC_SEQ_CST);
 }
 #else
 extern atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value);
@@ -103,7 +103,7 @@ extern atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_inc(atomic_t *target)
 {
-	return atomic_add(target, 1);
+    return atomic_add(target, 1);
 }
 #else
 extern atomic_val_t atomic_inc(atomic_t *target);
@@ -122,7 +122,7 @@ extern atomic_val_t atomic_inc(atomic_t *target);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_dec(atomic_t *target)
 {
-	return atomic_sub(target, 1);
+    return atomic_sub(target, 1);
 }
 #else
 extern atomic_val_t atomic_dec(atomic_t *target);
@@ -141,7 +141,7 @@ extern atomic_val_t atomic_dec(atomic_t *target);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_get(const atomic_t *target)
 {
-	return __atomic_load_n(target, __ATOMIC_SEQ_CST);
+    return __atomic_load_n(target, __ATOMIC_SEQ_CST);
 }
 #else
 extern atomic_val_t atomic_get(const atomic_t *target);
@@ -162,11 +162,11 @@ extern atomic_val_t atomic_get(const atomic_t *target);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_set(atomic_t *target, atomic_val_t value)
 {
-	/* This builtin, as described by Intel, is not a traditional
-	 * test-and-set operation, but rather an atomic exchange operation. It
-	 * writes value into *ptr, and returns the previous contents of *ptr.
-	 */
-	return __atomic_exchange_n(target, value, __ATOMIC_SEQ_CST);
+    /* This builtin, as described by Intel, is not a traditional
+     * test-and-set operation, but rather an atomic exchange operation. It
+     * writes value into *ptr, and returns the previous contents of *ptr.
+     */
+    return __atomic_exchange_n(target, value, __ATOMIC_SEQ_CST);
 }
 #else
 extern atomic_val_t atomic_set(atomic_t *target, atomic_val_t value);
@@ -186,7 +186,7 @@ extern atomic_val_t atomic_set(atomic_t *target, atomic_val_t value);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_clear(atomic_t *target)
 {
-	return atomic_set(target, 0);
+    return atomic_set(target, 0);
 }
 #else
 extern atomic_val_t atomic_clear(atomic_t *target);
@@ -207,7 +207,7 @@ extern atomic_val_t atomic_clear(atomic_t *target);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_or(atomic_t *target, atomic_val_t value)
 {
-	return __atomic_fetch_or(target, value, __ATOMIC_SEQ_CST);
+    return __atomic_fetch_or(target, value, __ATOMIC_SEQ_CST);
 }
 #else
 extern atomic_val_t atomic_or(atomic_t *target, atomic_val_t value);
@@ -228,7 +228,7 @@ extern atomic_val_t atomic_or(atomic_t *target, atomic_val_t value);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value)
 {
-	return __atomic_fetch_xor(target, value, __ATOMIC_SEQ_CST);
+    return __atomic_fetch_xor(target, value, __ATOMIC_SEQ_CST);
 }
 #else
 extern atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value);
@@ -249,7 +249,7 @@ extern atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_and(atomic_t *target, atomic_val_t value)
 {
-	return __atomic_fetch_and(target, value, __ATOMIC_SEQ_CST);
+    return __atomic_fetch_and(target, value, __ATOMIC_SEQ_CST);
 }
 #else
 extern atomic_val_t atomic_and(atomic_t *target, atomic_val_t value);
@@ -270,12 +270,11 @@ extern atomic_val_t atomic_and(atomic_t *target, atomic_val_t value);
 #ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
 static inline atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value)
 {
-	return __atomic_fetch_nand(target, value, __ATOMIC_SEQ_CST);
+    return __atomic_fetch_nand(target, value, __ATOMIC_SEQ_CST);
 }
 #else
 extern atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value);
 #endif
-
 
 /**
  * @brief Initialize an atomic variable.
@@ -291,8 +290,8 @@ extern atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value);
  * @cond INTERNAL_HIDDEN
  */
 
-#define ATOMIC_BITS (sizeof(atomic_val_t) * 8)
-#define ATOMIC_MASK(bit) (1 << ((bit) & (ATOMIC_BITS - 1)))
+#define ATOMIC_BITS            (sizeof(atomic_val_t) * 8)
+#define ATOMIC_MASK(bit)       (1 << ((bit) & (ATOMIC_BITS - 1)))
 #define ATOMIC_ELEM(addr, bit) ((addr) + ((bit) / ATOMIC_BITS))
 
 /**
@@ -313,7 +312,7 @@ extern atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value);
  * @param num_bits Number of bits needed.
  */
 #define ATOMIC_DEFINE(name, num_bits) \
-	atomic_t name[1 + ((num_bits) - 1) / ATOMIC_BITS]
+    atomic_t name[1 + ((num_bits)-1) / ATOMIC_BITS]
 
 /**
  * @brief Atomically test a bit.
@@ -328,9 +327,9 @@ extern atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value);
  */
 static inline int atomic_test_bit(const atomic_t *target, int bit)
 {
-	atomic_val_t val = atomic_get(ATOMIC_ELEM(target, bit));
+    atomic_val_t val = atomic_get(ATOMIC_ELEM(target, bit));
 
-	return (1 & (val >> (bit & (ATOMIC_BITS - 1))));
+    return (1 & (val >> (bit & (ATOMIC_BITS - 1))));
 }
 
 /**
@@ -346,12 +345,12 @@ static inline int atomic_test_bit(const atomic_t *target, int bit)
  */
 static inline int atomic_test_and_clear_bit(atomic_t *target, int bit)
 {
-	atomic_val_t mask = ATOMIC_MASK(bit);
-	atomic_val_t old;
+    atomic_val_t mask = ATOMIC_MASK(bit);
+    atomic_val_t old;
 
-	old = atomic_and(ATOMIC_ELEM(target, bit), ~mask);
+    old = atomic_and(ATOMIC_ELEM(target, bit), ~mask);
 
-	return (old & mask) != 0;
+    return (old & mask) != 0;
 }
 
 /**
@@ -367,12 +366,12 @@ static inline int atomic_test_and_clear_bit(atomic_t *target, int bit)
  */
 static inline int atomic_test_and_set_bit(atomic_t *target, int bit)
 {
-	atomic_val_t mask = ATOMIC_MASK(bit);
-	atomic_val_t old;
+    atomic_val_t mask = ATOMIC_MASK(bit);
+    atomic_val_t old;
 
-	old = atomic_or(ATOMIC_ELEM(target, bit), mask);
+    old = atomic_or(ATOMIC_ELEM(target, bit), mask);
 
-	return (old & mask) != 0;
+    return (old & mask) != 0;
 }
 
 /**
@@ -388,9 +387,9 @@ static inline int atomic_test_and_set_bit(atomic_t *target, int bit)
  */
 static inline void atomic_clear_bit(atomic_t *target, int bit)
 {
-	atomic_val_t mask = ATOMIC_MASK(bit);
+    atomic_val_t mask = ATOMIC_MASK(bit);
 
-	atomic_and(ATOMIC_ELEM(target, bit), ~mask);
+    atomic_and(ATOMIC_ELEM(target, bit), ~mask);
 }
 
 /**
@@ -406,9 +405,9 @@ static inline void atomic_clear_bit(atomic_t *target, int bit)
  */
 static inline void atomic_set_bit(atomic_t *target, int bit)
 {
-	atomic_val_t mask = ATOMIC_MASK(bit);
+    atomic_val_t mask = ATOMIC_MASK(bit);
 
-	atomic_or(ATOMIC_ELEM(target, bit), mask);
+    atomic_or(ATOMIC_ELEM(target, bit), mask);
 }
 
 /**
@@ -425,13 +424,13 @@ static inline void atomic_set_bit(atomic_t *target, int bit)
  */
 static inline void atomic_set_bit_to(atomic_t *target, int bit, bool val)
 {
-	atomic_val_t mask = ATOMIC_MASK(bit);
+    atomic_val_t mask = ATOMIC_MASK(bit);
 
-	if (val) {
-		(void)atomic_or(ATOMIC_ELEM(target, bit), mask);
-	} else {
-		(void)atomic_and(ATOMIC_ELEM(target, bit), ~mask);
-	}
+    if (val) {
+        (void)atomic_or(ATOMIC_ELEM(target, bit), mask);
+    } else {
+        (void)atomic_and(ATOMIC_ELEM(target, bit), ~mask);
+    }
 }
 
 /**

@@ -20,11 +20,10 @@ void lv_ex_style_6(void)
     lv_style_set_value_ofs_y(&style, LV_STATE_DEFAULT, 10);
 
     /*Create an object with the new style*/
-    lv_obj_t * obj = lv_obj_create(lv_scr_act(), NULL);
+    lv_obj_t *obj = lv_obj_create(lv_scr_act(), NULL);
     lv_obj_add_style(obj, LV_OBJ_PART_MAIN, &style);
     lv_obj_align(obj, NULL, LV_ALIGN_CENTER, 0, 0);
 
     /*Add a value text to the local style. This way every object can have different text*/
     lv_obj_set_style_local_value_str(obj, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, "Text");
 }
-

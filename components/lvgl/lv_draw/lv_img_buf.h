@@ -29,9 +29,9 @@ extern "C" {
 #define LV_IMG_PX_SIZE_ALPHA_BYTE 4
 #endif
 
-#define LV_IMG_BUF_SIZE_TRUE_COLOR(w, h) ((LV_COLOR_SIZE / 8) * w * h)
+#define LV_IMG_BUF_SIZE_TRUE_COLOR(w, h)              ((LV_COLOR_SIZE / 8) * w * h)
 #define LV_IMG_BUF_SIZE_TRUE_COLOR_CHROMA_KEYED(w, h) ((LV_COLOR_SIZE / 8) * w * h)
-#define LV_IMG_BUF_SIZE_TRUE_COLOR_ALPHA(w, h) (LV_IMG_PX_SIZE_ALPHA_BYTE * w * h)
+#define LV_IMG_BUF_SIZE_TRUE_COLOR_ALPHA(w, h)        (LV_IMG_PX_SIZE_ALPHA_BYTE * w * h)
 
 /*+ 1: to be sure no fractional row*/
 #define LV_IMG_BUF_SIZE_ALPHA_1BIT(w, h) ((((w / 8) + 1) * h))
@@ -45,10 +45,10 @@ extern "C" {
 #define LV_IMG_BUF_SIZE_INDEXED_4BIT(w, h) (LV_IMG_BUF_SIZE_ALPHA_4BIT(w, h) + 4 * 16)
 #define LV_IMG_BUF_SIZE_INDEXED_8BIT(w, h) (LV_IMG_BUF_SIZE_ALPHA_8BIT(w, h) + 4 * 256)
 
-#define LV_IMG_ZOOM_NONE   256
+#define LV_IMG_ZOOM_NONE 256
 
 #define _LV_TRANSFORM_TRIGO_SHIFT 10
-#define _LV_ZOOM_INV_UPSCALE 5
+#define _LV_ZOOM_INV_UPSCALE      5
 
 /**********************
  *      TYPEDEFS
@@ -79,24 +79,24 @@ enum {
     LV_IMG_CF_ALPHA_4BIT, /**< Can have one color but 16 different alpha value*/
     LV_IMG_CF_ALPHA_8BIT, /**< Can have one color but 256 different alpha value*/
 
-    LV_IMG_CF_RESERVED_15,              /**< Reserved for further use. */
-    LV_IMG_CF_RESERVED_16,              /**< Reserved for further use. */
-    LV_IMG_CF_RESERVED_17,              /**< Reserved for further use. */
-    LV_IMG_CF_RESERVED_18,              /**< Reserved for further use. */
-    LV_IMG_CF_RESERVED_19,              /**< Reserved for further use. */
-    LV_IMG_CF_RESERVED_20,              /**< Reserved for further use. */
-    LV_IMG_CF_RESERVED_21,              /**< Reserved for further use. */
-    LV_IMG_CF_RESERVED_22,              /**< Reserved for further use. */
-    LV_IMG_CF_RESERVED_23,              /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_15, /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_16, /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_17, /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_18, /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_19, /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_20, /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_21, /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_22, /**< Reserved for further use. */
+    LV_IMG_CF_RESERVED_23, /**< Reserved for further use. */
 
-    LV_IMG_CF_USER_ENCODED_0,          /**< User holder encoding format. */
-    LV_IMG_CF_USER_ENCODED_1,          /**< User holder encoding format. */
-    LV_IMG_CF_USER_ENCODED_2,          /**< User holder encoding format. */
-    LV_IMG_CF_USER_ENCODED_3,          /**< User holder encoding format. */
-    LV_IMG_CF_USER_ENCODED_4,          /**< User holder encoding format. */
-    LV_IMG_CF_USER_ENCODED_5,          /**< User holder encoding format. */
-    LV_IMG_CF_USER_ENCODED_6,          /**< User holder encoding format. */
-    LV_IMG_CF_USER_ENCODED_7,          /**< User holder encoding format. */
+    LV_IMG_CF_USER_ENCODED_0, /**< User holder encoding format. */
+    LV_IMG_CF_USER_ENCODED_1, /**< User holder encoding format. */
+    LV_IMG_CF_USER_ENCODED_2, /**< User holder encoding format. */
+    LV_IMG_CF_USER_ENCODED_3, /**< User holder encoding format. */
+    LV_IMG_CF_USER_ENCODED_4, /**< User holder encoding format. */
+    LV_IMG_CF_USER_ENCODED_5, /**< User holder encoding format. */
+    LV_IMG_CF_USER_ENCODED_6, /**< User holder encoding format. */
+    LV_IMG_CF_USER_ENCODED_7, /**< User holder encoding format. */
 };
 typedef uint8_t lv_img_cf_t;
 
@@ -109,20 +109,20 @@ typedef uint8_t lv_img_cf_t;
  * the end of the struct.
  * */
 #if LV_BIG_ENDIAN_SYSTEM
-typedef struct {
-
-    uint32_t h : 11; /*Height of the image map*/
-    uint32_t w : 11; /*Width of the image map*/
-    uint32_t reserved : 2; /*Reserved to be used later*/
-    uint32_t always_zero : 3; /*It the upper bits of the first byte. Always zero to look like a
+typedef struct
+{
+    uint32_t h           : 11; /*Height of the image map*/
+    uint32_t w           : 11; /*Width of the image map*/
+    uint32_t reserved    : 2;  /*Reserved to be used later*/
+    uint32_t always_zero : 3;  /*It the upper bits of the first byte. Always zero to look like a
                                  non-printable character*/
-    uint32_t cf : 5;          /* Color format: See `lv_img_color_format_t`*/
+    uint32_t cf          : 5;  /* Color format: See `lv_img_color_format_t`*/
 
 } lv_img_header_t;
 #else
-typedef struct {
-
-    uint32_t cf : 5;          /* Color format: See `lv_img_color_format_t`*/
+typedef struct
+{
+    uint32_t cf          : 5; /* Color format: See `lv_img_color_format_t`*/
     uint32_t always_zero : 3; /*It the upper bits of the first byte. Always zero to look like a
                                  non-printable character*/
 
@@ -135,32 +135,37 @@ typedef struct {
 
 /** Image header it is compatible with
  * the result from image converter utility*/
-typedef struct {
+typedef struct
+{
     lv_img_header_t header;
     uint32_t data_size;
-    const uint8_t * data;
+    const uint8_t *data;
 } lv_img_dsc_t;
 
-typedef struct {
-    struct {
-        const void * src;           /*image source (array of pixels)*/
-        lv_coord_t src_w;           /*width of the image source*/
-        lv_coord_t src_h;           /*height of the image source*/
-        lv_coord_t pivot_x;         /*pivot x*/
-        lv_coord_t pivot_y;         /* pivot y*/
-        int16_t angle;              /*angle to rotate*/
-        uint16_t zoom;              /*256 no zoom, 128 half size, 512 double size*/
-        lv_color_t color;           /*a color used for `LV_IMG_CF_INDEXED_1/2/4/8BIT` color formats*/
-        lv_img_cf_t cf;             /*color format of the image to rotate*/
+typedef struct
+{
+    struct
+    {
+        const void *src;    /*image source (array of pixels)*/
+        lv_coord_t src_w;   /*width of the image source*/
+        lv_coord_t src_h;   /*height of the image source*/
+        lv_coord_t pivot_x; /*pivot x*/
+        lv_coord_t pivot_y; /* pivot y*/
+        int16_t angle;      /*angle to rotate*/
+        uint16_t zoom;      /*256 no zoom, 128 half size, 512 double size*/
+        lv_color_t color;   /*a color used for `LV_IMG_CF_INDEXED_1/2/4/8BIT` color formats*/
+        lv_img_cf_t cf;     /*color format of the image to rotate*/
         bool antialias;
     } cfg;
 
-    struct {
+    struct
+    {
         lv_color_t color;
         lv_opa_t opa;
     } res;
 
-    struct {
+    struct
+    {
         lv_img_dsc_t img_dsc;
         int32_t pivot_x_256;
         int32_t pivot_y_256;
@@ -168,7 +173,7 @@ typedef struct {
         int32_t cosma;
 
         uint8_t chroma_keyed : 1;
-        uint8_t has_alpha : 1;
+        uint8_t has_alpha    : 1;
         uint8_t native_color : 1;
 
         uint32_t zoom_inv;
@@ -194,7 +199,7 @@ typedef struct {
  * @param cf a color format (`LV_IMG_CF_...`)
  * @return an allocated image, or NULL on failure
  */
-lv_img_dsc_t * lv_img_buf_alloc(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf);
+lv_img_dsc_t *lv_img_buf_alloc(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf);
 
 /**
  * Get the color of an image's pixel
@@ -206,7 +211,7 @@ lv_img_dsc_t * lv_img_buf_alloc(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf);
  * @param safe true: check out of bounds
  * @return color of the point
  */
-lv_color_t lv_img_buf_get_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_color_t color);
+lv_color_t lv_img_buf_get_px_color(lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y, lv_color_t color);
 
 /**
  * Get the alpha value of an image's pixel
@@ -216,7 +221,7 @@ lv_color_t lv_img_buf_get_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t 
  * @param safe true: check out of bounds
  * @return alpha value of the point
  */
-lv_opa_t lv_img_buf_get_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y);
+lv_opa_t lv_img_buf_get_px_alpha(lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y);
 
 /**
  * Set the color of a pixel of an image. The alpha channel won't be affected.
@@ -226,7 +231,7 @@ lv_opa_t lv_img_buf_get_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y)
  * @param c color of the point
  * @param safe true: check out of bounds
  */
-void lv_img_buf_set_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_color_t c);
+void lv_img_buf_set_px_color(lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y, lv_color_t c);
 
 /**
  * Set the alpha value of a pixel of an image. The color won't be affected
@@ -236,7 +241,7 @@ void lv_img_buf_set_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
  * @param opa the desired opacity
  * @param safe true: check out of bounds
  */
-void lv_img_buf_set_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_opa_t opa);
+void lv_img_buf_set_px_alpha(lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y, lv_opa_t opa);
 
 /**
  * Set the palette color of an indexed image. Valid only for `LV_IMG_CF_INDEXED1/2/4/8`
@@ -248,13 +253,13 @@ void lv_img_buf_set_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
  *   - for `LV_IMG_CF_INDEXED8`: 0..255
  * @param c the color to set
  */
-void lv_img_buf_set_palette(lv_img_dsc_t * dsc, uint8_t id, lv_color_t c);
+void lv_img_buf_set_palette(lv_img_dsc_t *dsc, uint8_t id, lv_color_t c);
 
 /**
  * Free an allocated image buffer
  * @param dsc image buffer to free
  */
-void lv_img_buf_free(lv_img_dsc_t * dsc);
+void lv_img_buf_free(lv_img_dsc_t *dsc);
 
 /**
  * Get the memory consumption of a raw bitmap, given color format and dimensions.
@@ -270,13 +275,13 @@ uint32_t lv_img_buf_get_img_size(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf);
  * Initialize a descriptor to rotate an image
  * @param dsc pointer to an `lv_img_transform_dsc_t` variable whose `cfg` field is initialized
  */
-void _lv_img_buf_transform_init(lv_img_transform_dsc_t * dsc);
+void _lv_img_buf_transform_init(lv_img_transform_dsc_t *dsc);
 
 /**
  * Continue transformation by taking the neighbors into account
  * @param dsc pointer to the transformation descriptor
  */
-bool _lv_img_buf_transform_anti_alias(lv_img_transform_dsc_t * dsc);
+bool _lv_img_buf_transform_anti_alias(lv_img_transform_dsc_t *dsc);
 
 /**
  * Get which color and opa would come to a pixel if it were rotated
@@ -286,9 +291,9 @@ bool _lv_img_buf_transform_anti_alias(lv_img_transform_dsc_t * dsc);
  * @return true: there is valid pixel on these x/y coordinates; false: the rotated pixel was out of the image
  * @note the result is written back to `dsc->res_color` and `dsc->res_opa`
  */
-static inline bool _lv_img_buf_transform(lv_img_transform_dsc_t * dsc, lv_coord_t x, lv_coord_t y)
+static inline bool _lv_img_buf_transform(lv_img_transform_dsc_t *dsc, lv_coord_t x, lv_coord_t y)
 {
-    const uint8_t * src_u8 = (const uint8_t *)dsc->cfg.src;
+    const uint8_t *src_u8 = (const uint8_t *)dsc->cfg.src;
 
     /*Get the target point relative coordinates to the pivot*/
     int32_t xt = x - dsc->cfg.pivot_x;
@@ -296,18 +301,17 @@ static inline bool _lv_img_buf_transform(lv_img_transform_dsc_t * dsc, lv_coord_
 
     int32_t xs;
     int32_t ys;
-    if(dsc->cfg.zoom == LV_IMG_ZOOM_NONE) {
+
+    if (dsc->cfg.zoom == LV_IMG_ZOOM_NONE) {
         /*Get the source pixel from the upscaled image*/
         xs = ((dsc->tmp.cosma * xt - dsc->tmp.sinma * yt) >> (_LV_TRANSFORM_TRIGO_SHIFT - 8)) + dsc->tmp.pivot_x_256;
         ys = ((dsc->tmp.sinma * xt + dsc->tmp.cosma * yt) >> (_LV_TRANSFORM_TRIGO_SHIFT - 8)) + dsc->tmp.pivot_y_256;
-    }
-    else if(dsc->cfg.angle == 0) {
+    } else if (dsc->cfg.angle == 0) {
         xt = (int32_t)((int32_t)xt * dsc->tmp.zoom_inv) >> _LV_ZOOM_INV_UPSCALE;
         yt = (int32_t)((int32_t)yt * dsc->tmp.zoom_inv) >> _LV_ZOOM_INV_UPSCALE;
         xs = xt + dsc->tmp.pivot_x_256;
         ys = yt + dsc->tmp.pivot_y_256;
-    }
-    else {
+    } else {
         xt = (int32_t)((int32_t)xt * dsc->tmp.zoom_inv) >> _LV_ZOOM_INV_UPSCALE;
         yt = (int32_t)((int32_t)yt * dsc->tmp.zoom_inv) >> _LV_ZOOM_INV_UPSCALE;
         xs = ((dsc->tmp.cosma * xt - dsc->tmp.sinma * yt) >> (_LV_TRANSFORM_TRIGO_SHIFT)) + dsc->tmp.pivot_x_256;
@@ -318,41 +322,51 @@ static inline bool _lv_img_buf_transform(lv_img_transform_dsc_t * dsc, lv_coord_
     int32_t xs_int = xs >> 8;
     int32_t ys_int = ys >> 8;
 
-    if(xs_int >= dsc->cfg.src_w) return false;
-    else if(xs_int < 0) return false;
+    if (xs_int >= dsc->cfg.src_w) {
+        return false;
+    } else if (xs_int < 0) {
+        return false;
+    }
 
-    if(ys_int >= dsc->cfg.src_h) return false;
-    else if(ys_int < 0) return false;
+    if (ys_int >= dsc->cfg.src_h) {
+        return false;
+    } else if (ys_int < 0) {
+        return false;
+    }
 
     uint8_t px_size;
     uint32_t pxi;
-    if(dsc->tmp.native_color) {
-        if(dsc->tmp.has_alpha == 0) {
+
+    if (dsc->tmp.native_color) {
+        if (dsc->tmp.has_alpha == 0) {
             px_size = LV_COLOR_SIZE >> 3;
 
-            pxi     = dsc->cfg.src_w * ys_int * px_size + xs_int * px_size;
+            pxi = dsc->cfg.src_w * ys_int * px_size + xs_int * px_size;
             _lv_memcpy_small(&dsc->res.color, &src_u8[pxi], px_size);
-        }
-        else {
+        } else {
             px_size = LV_IMG_PX_SIZE_ALPHA_BYTE;
-            pxi     = dsc->cfg.src_w * ys_int * px_size + xs_int * px_size;
+            pxi = dsc->cfg.src_w * ys_int * px_size + xs_int * px_size;
             _lv_memcpy_small(&dsc->res.color, &src_u8[pxi], px_size - 1);
             dsc->res.opa = src_u8[pxi + px_size - 1];
         }
-    }
-    else {
-        pxi = 0; /*unused*/
-        px_size = 0;    /*unused*/
+    } else {
+        pxi = 0;     /*unused*/
+        px_size = 0; /*unused*/
         dsc->res.color = lv_img_buf_get_px_color(&dsc->tmp.img_dsc, xs_int, ys_int, dsc->cfg.color);
         dsc->res.opa = lv_img_buf_get_px_alpha(&dsc->tmp.img_dsc, xs_int, ys_int);
     }
 
-    if(dsc->tmp.chroma_keyed) {
+    if (dsc->tmp.chroma_keyed) {
         lv_color_t ct = LV_COLOR_TRANSP;
-        if(dsc->res.color.full == ct.full) return false;
+
+        if (dsc->res.color.full == ct.full) {
+            return false;
+        }
     }
 
-    if(dsc->cfg.antialias == false) return true;
+    if (dsc->cfg.antialias == false) {
+        return true;
+    }
 
     dsc->tmp.xs = xs;
     dsc->tmp.ys = ys;
@@ -376,8 +390,8 @@ static inline bool _lv_img_buf_transform(lv_img_transform_dsc_t * dsc, lv_coord_
  * @param zoom zoom, (256 no zoom)
  * @param pivot x,y pivot coordinates of rotation
  */
-void _lv_img_buf_get_transformed_area(lv_area_t * res, lv_coord_t w, lv_coord_t h, int16_t angle, uint16_t zoom,
-                                      const lv_point_t * pivot);
+void _lv_img_buf_get_transformed_area(lv_area_t *res, lv_coord_t w, lv_coord_t h, int16_t angle, uint16_t zoom,
+                                      const lv_point_t *pivot);
 
 /**********************
  *      MACROS

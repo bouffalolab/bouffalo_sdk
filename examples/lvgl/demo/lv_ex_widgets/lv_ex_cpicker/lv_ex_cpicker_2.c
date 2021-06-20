@@ -3,7 +3,7 @@
 
 void lv_ex_cpicker_2(void)
 {
-    lv_obj_t * cpicker;
+    lv_obj_t *cpicker;
 
     cpicker = lv_cpicker_create(lv_scr_act(), NULL);
     lv_cpicker_set_type(cpicker, LV_CPICKER_TYPE_RECT);

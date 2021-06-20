@@ -18,7 +18,6 @@ OUTPUT_ARCH( "riscv" )
 ENTRY(_enter)
 
 StackSize = 0x1000; /*  4KB */
-HeapSize  = 0x1000; /*  4KB */
 
 MEMORY
 {
@@ -39,11 +38,16 @@ SECTIONS
         
         KEEP (*(.text.metal.init.enter))
         KEEP (*(SORT_NONE(.init)))
-        /* section information for finsh shell */
+        /* section information for shell */
         . = ALIGN(4);
-        _shell_command_start = .;
-        KEEP(*(shellCommand))
-        _shell_command_end = .;
+        __fsymtab_start = .;
+        KEEP(*(FSymTab))
+        __fsymtab_end = .;
+
+        . = ALIGN(4);
+        __vsymtab_start = .;
+        KEEP(*(VSymTab))
+        __vsymtab_end = .;
 
         /* section information for usb desc */
         . = ALIGN(4);
@@ -114,22 +118,6 @@ SECTIONS
         __tcm_data_end__ = .;
     } > dtcm_memory
 
-    /* .heap_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of heap sections, and assign
-     * values to heap symbols later */
-    .heap_dummy (NOLOAD):
-    {
-        . = ALIGN(0x4);
-        . = . + HeapSize;
-        . = ALIGN(0x4);
-    } > dtcm_memory
-
-    _HeapBase = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory) - StackSize - HeapSize;  
-    _HeapSize = HeapSize;
-    
-    /* Check if data + heap + stack exceeds RAM limit */
-    ASSERT(_HeapBase >= __tcm_data_end__, "region RAM overflowed with stack")
-    
     /*************************************************************************/
     /* .stack_dummy section doesn't contains any symbols. It is only
      * used for linker to calculate size of stack sections, and assign
@@ -208,20 +196,22 @@ SECTIONS
         . = ALIGN(4);
         __noinit_data_end__ = .;
     } > ram_memory
-    
+
     .heap (NOLOAD):
     {
         . = ALIGN(4);
         __HeapBase = .;
         
-        /*__end__ = .;*/
-        /*end = __end__;*/
         KEEP(*(.heap*))
         
         . = ALIGN(4);
         __HeapLimit = .;
     } > ram_memory
+    
+    PROVIDE (__heap_min_size = 0x400);
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
+
+    ASSERT((__HeapLimit -  __HeapBase ) >= __heap_min_size, "heap size is too short.")
     
 }
 

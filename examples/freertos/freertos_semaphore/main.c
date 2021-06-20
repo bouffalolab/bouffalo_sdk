@@ -1,24 +1,24 @@
 /**
  * @file main.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_uart.h"
 #include <FreeRTOS.h>
@@ -26,11 +26,10 @@
 
 static uint8_t freertos_heap[4096];
 
-static HeapRegion_t xHeapRegions[] =
-{
-        { (uint8_t *)freertos_heap, 0},
-        { NULL, 0 }, /* Terminates the array. */
-        { NULL, 0 } /* Terminates the array. */
+static HeapRegion_t xHeapRegions[] = {
+    { (uint8_t *)freertos_heap, 0 },
+    { NULL, 0 }, /* Terminates the array. */
+    { NULL, 0 }  /* Terminates the array. */
 };
 static StackType_t consumer_stack[512];
 static StaticTask_t consumer_handle;
@@ -45,7 +44,9 @@ SemaphoreHandle_t mtx_lock = NULL;
 void vAssertCalled(void)
 {
     MSG("vAssertCalled\r\n");
-    while( 1 );
+
+    while (1)
+        ;
 }
 
 void vApplicationTickHook(void)
@@ -56,13 +57,17 @@ void vApplicationTickHook(void)
 void vApplicationStackOverflowHook(void)
 {
     MSG("vApplicationStackOverflowHook\r\n");
-    while( 1 );
+
+    while (1)
+        ;
 }
 
 void vApplicationMallocFailedHook(void)
 {
     MSG("vApplicationMallocFailedHook\r\n");
-    while( 1 );
+
+    while (1)
+        ;
 }
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {
@@ -70,7 +75,7 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackTyp
     function then they must be declared static - otherwise they will be allocated on
     the stack and so not exists after this function exits. */
     static StaticTask_t xIdleTaskTCB;
-    static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+    static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
 
     /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
     state will be stored. */
@@ -94,7 +99,7 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
     function then they must be declared static - otherwise they will be allocated on
     the stack and so not exists after this function exits. */
     static StaticTask_t xTimerTaskTCB;
-    static StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
+    static StackType_t uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
 
     /* Pass out a pointer to the StaticTask_t structure in which the Timer
     task's state will be stored. */
@@ -115,14 +120,14 @@ static void consumer_task(void *pvParameters)
     vTaskDelay(1000);
     MSG("Consumer task start \r\n");
     MSG("begin to loop %s\n", __FILE__);
-    
-    while(1){
-        if( xSemaphoreTake( sem_full, portMAX_DELAY ) == pdTRUE ){
-            xSemaphoreTake(mtx_lock,portMAX_DELAY);
-            MSG("Consumer get:%s\r\n",sharedBuf);
+
+    while (1) {
+        if (xSemaphoreTake(sem_full, portMAX_DELAY) == pdTRUE) {
+            xSemaphoreTake(mtx_lock, portMAX_DELAY);
+            MSG("Consumer get:%s\r\n", sharedBuf);
             xSemaphoreGive(mtx_lock);
             xSemaphoreGive(sem_empty);
-        }else{
+        } else {
             MSG("Take sem_full fail\r\n");
         }
     }
@@ -133,54 +138,52 @@ static void consumer_task(void *pvParameters)
 static void producer_task(void *pvParameters)
 {
     uint8_t buf = 100;
-    
+
     MSG("Producer task enter \r\n");
     vTaskDelay(1000);
     MSG("Producer task start \r\n");
 
-    while(1){
-        if( xSemaphoreTake(sem_empty, portMAX_DELAY) == pdTRUE ){
-            xSemaphoreTake(mtx_lock,portMAX_DELAY);
+    while (1) {
+        if (xSemaphoreTake(sem_empty, portMAX_DELAY) == pdTRUE) {
+            xSemaphoreTake(mtx_lock, portMAX_DELAY);
             buf++;
-            sprintf((char *)sharedBuf,"%d",buf);
-            MSG("Producer generates:%s\r\n",sharedBuf);
+            sprintf((char *)sharedBuf, "%d", buf);
+            MSG("Producer generates:%s\r\n", sharedBuf);
             xSemaphoreGive(mtx_lock);
             xSemaphoreGive(sem_full);
             vTaskDelay(buf);
-        }else{
+        } else {
             MSG("Take sem_empty fail\r\n");
         }
     }
-    
+
     vTaskDelete(NULL);
 }
-
 
 int main(void)
 {
     bflb_platform_init(0);
 
-    xHeapRegions[0].xSizeInBytes=4096;
+    xHeapRegions[0].xSizeInBytes = 4096;
     vPortDefineHeapRegions(xHeapRegions);
-    
+
     /* Create semaphore */
     vSemaphoreCreateBinary(sem_empty);
     vSemaphoreCreateBinary(sem_full);
     vSemaphoreCreateBinary(mtx_lock);
-    if(sem_empty==NULL||sem_full==NULL||mtx_lock==NULL){
+
+    if (sem_empty == NULL || sem_full == NULL || mtx_lock == NULL) {
         MSG("Create sem fail\r\n");
         BL_CASE_FAIL;
     }
 
     MSG("[OS] Starting consumer task...\r\n");
-    xTaskCreateStatic(consumer_task, (char*)"consumer_task", sizeof(consumer_stack)/4, NULL, 16, consumer_stack, &consumer_handle);
+    xTaskCreateStatic(consumer_task, (char *)"consumer_task", sizeof(consumer_stack) / 4, NULL, 16, consumer_stack, &consumer_handle);
     MSG("[OS] Starting producer task...\r\n");
-    xTaskCreateStatic(producer_task, (char*)"producer_task", sizeof(producer_stack)/4, NULL, 15, producer_stack, &producer_handle);
+    xTaskCreateStatic(producer_task, (char *)"producer_task", sizeof(producer_stack) / 4, NULL, 15, producer_stack, &producer_handle);
 
     vTaskStartScheduler();
-    
-    while (1)
-    {
 
+    while (1) {
     }
 }

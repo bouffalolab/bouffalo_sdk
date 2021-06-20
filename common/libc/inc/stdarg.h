@@ -10,5 +10,5 @@
 
 /* Older gcc considers this an extension, so it's double underbar only */
 #ifndef va_copy
-#define va_copy(d,s) __va_copy(d,s)
+#define va_copy(d, s) __va_copy(d, s)
 #endif

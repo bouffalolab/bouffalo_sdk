@@ -70,10 +70,10 @@
 
 #define BCD(x) ((((x) / 10) << 4) | ((x) % 10))
 
-#define BIT(x) (1<<(x))
+#define BIT(x) (1 << (x))
 
 #define ARRAY_SIZE(array) \
-	((int)((sizeof(array) / sizeof((array)[0]))))
+    ((int)((sizeof(array) / sizeof((array)[0]))))
 
 #define USB_DESC_SECTION __attribute__((section("usb_desc"))) __used __aligned(1)
 
@@ -81,44 +81,41 @@
 #define BSWAP32(u32) (__builtin_bswap32(u32))
 
 #define GET_BE16(field) \
-  (((uint16_t)(field)[0] << 8) | ((uint16_t)(field)[1]))
+    (((uint16_t)(field)[0] << 8) | ((uint16_t)(field)[1]))
 
 #define GET_BE32(field) \
-  (((uint32_t)(field)[0] << 24) | ((uint32_t)(field)[1] << 16) | ((uint32_t)(field)[2] << 8) | ((uint32_t)(field)[3] << 0))
+    (((uint32_t)(field)[0] << 24) | ((uint32_t)(field)[1] << 16) | ((uint32_t)(field)[2] << 8) | ((uint32_t)(field)[3] << 0))
 
-#define SET_BE16(field, value)            \
-  do                                      \
-  {                                       \
-    (field)[0] = (uint8_t)((value) >> 8); \
-    (field)[1] = (uint8_t)((value) >> 0); \
-  } while (0)
+#define SET_BE16(field, value)                \
+    do {                                      \
+        (field)[0] = (uint8_t)((value) >> 8); \
+        (field)[1] = (uint8_t)((value) >> 0); \
+    } while (0)
 
-#define SET_BE24(field, value)             \
-  do                                       \
-  {                                        \
-    (field)[0] = (uint8_t)((value) >> 16); \
-    (field)[1] = (uint8_t)((value) >> 8);  \
-    (field)[2] = (uint8_t)((value) >> 0);  \
-  } while (0)
+#define SET_BE24(field, value)                 \
+    do {                                       \
+        (field)[0] = (uint8_t)((value) >> 16); \
+        (field)[1] = (uint8_t)((value) >> 8);  \
+        (field)[2] = (uint8_t)((value) >> 0);  \
+    } while (0)
 
-#define SET_BE32(field, value)             \
-  do                                       \
-  {                                        \
-    (field)[0] = (uint8_t)((value) >> 24); \
-    (field)[1] = (uint8_t)((value) >> 16); \
-    (field)[2] = (uint8_t)((value) >> 8);  \
-    (field)[3] = (uint8_t)((value) >> 0);  \
-  } while (0)
+#define SET_BE32(field, value)                 \
+    do {                                       \
+        (field)[0] = (uint8_t)((value) >> 24); \
+        (field)[1] = (uint8_t)((value) >> 16); \
+        (field)[2] = (uint8_t)((value) >> 8);  \
+        (field)[3] = (uint8_t)((value) >> 0);  \
+    } while (0)
 
-#define REQTYPE_GET_DIR(x) (((x) >> 7) & 0x01)
-#define REQTYPE_GET_TYPE(x) (((x) >> 5) & 0x03U)
+#define REQTYPE_GET_DIR(x)   (((x) >> 7) & 0x01)
+#define REQTYPE_GET_TYPE(x)  (((x) >> 5) & 0x03U)
 #define REQTYPE_GET_RECIP(x) ((x)&0x1F)
 
-#define GET_DESC_TYPE(x) (((x) >> 8) & 0xFFU)
+#define GET_DESC_TYPE(x)  (((x) >> 8) & 0xFFU)
 #define GET_DESC_INDEX(x) ((x)&0xFFU)
 
-#define WBVAL(x) (x & 0xFF),((x >> 8) & 0xFF)
-#define DBVAL(x) (x & 0xFF),((x >> 8) & 0xFF),((x >> 16) & 0xFF),((x >> 24) & 0xFF)
+#define WBVAL(x) (x & 0xFF), ((x >> 8) & 0xFF)
+#define DBVAL(x) (x & 0xFF), ((x >> 8) & 0xFF), ((x >> 16) & 0xFF), ((x >> 24) & 0xFF)
 
 #if 0
 #define USBD_LOG_WRN(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
@@ -126,9 +123,9 @@
 #define USBD_LOG_ERR(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
 #else
 #define USBD_LOG_WRN(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
-#define USBD_LOG_DBG(a, ...)  
+#define USBD_LOG_DBG(a, ...)
 #define USBD_LOG_ERR(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
-#define USBD_LOG(a, ...) 	bflb_platform_printf(a, ##__VA_ARGS__)
+#define USBD_LOG(a, ...)     bflb_platform_printf(a, ##__VA_ARGS__)
 #endif
 
 #endif

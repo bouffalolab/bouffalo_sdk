@@ -60,15 +60,15 @@
 /**
  *  @brief I2C Functions
  */
-void I2C_GPIO_Sim_Init(GLB_GPIO_Type sclGPIOPin,GLB_GPIO_Type  sdaGPIOPin);
+void I2C_GPIO_Sim_Init(GLB_GPIO_Type sclGPIOPin, GLB_GPIO_Type sdaGPIOPin);
 int I2C_Start(void);
 void I2C_Stop(void);
 uint8_t I2C_GetAck(void);
 void I2C_SendByte(uint8_t Data);
 uint8_t I2C_ReadByte(uint8_t ack);
-int SCCB_Init(GLB_GPIO_Type sclGPIOPin,GLB_GPIO_Type  sdaGPIOPin);
-int SCCB_Write(uint8_t slave_addr, uint8_t* data,uint32_t wrsize);
-int SCCB_Read(uint8_t slave_addr, uint8_t* data,uint32_t rdsize);
+int SCCB_Init(GLB_GPIO_Type sclGPIOPin, GLB_GPIO_Type sdaGPIOPin);
+int SCCB_Write(uint8_t slave_addr, uint8_t *data, uint32_t wrsize);
+int SCCB_Read(uint8_t slave_addr, uint8_t *data, uint32_t rdsize);
 
 /*@} end of group I2C_GPIO_SIM_Public_Functions */
 

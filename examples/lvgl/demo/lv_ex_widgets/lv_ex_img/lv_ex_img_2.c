@@ -4,10 +4,10 @@
 #define SLIDER_WIDTH 20
 
 static void create_sliders(void);
-static void slider_event_cb(lv_obj_t * slider, lv_event_t event);
+static void slider_event_cb(lv_obj_t *slider, lv_event_t event);
 
-static lv_obj_t * red_slider, * green_slider, * blue_slider, * intense_slider;
-static lv_obj_t * img1;
+static lv_obj_t *red_slider, *green_slider, *blue_slider, *intense_slider;
+static lv_obj_t *img1;
 LV_IMG_DECLARE(img_cogwheel_argb);
 
 void lv_ex_img_2(void)
@@ -21,11 +21,11 @@ void lv_ex_img_2(void)
     lv_obj_align(img1, NULL, LV_ALIGN_IN_RIGHT_MID, -20, 0);
 }
 
-static void slider_event_cb(lv_obj_t * slider, lv_event_t event)
+static void slider_event_cb(lv_obj_t *slider, lv_event_t event)
 {
-    if(event == LV_EVENT_VALUE_CHANGED) {
+    if (event == LV_EVENT_VALUE_CHANGED) {
         /* Recolor the image based on the sliders' values */
-        lv_color_t color  = lv_color_make(lv_slider_get_value(red_slider), lv_slider_get_value(green_slider), lv_slider_get_value(blue_slider));
+        lv_color_t color = lv_color_make(lv_slider_get_value(red_slider), lv_slider_get_value(green_slider), lv_slider_get_value(blue_slider));
         lv_opa_t intense = lv_slider_get_value(intense_slider);
         lv_obj_set_style_local_image_recolor_opa(img1, LV_IMG_PART_MAIN, LV_STATE_DEFAULT, intense);
         lv_obj_set_style_local_image_recolor(img1, LV_IMG_PART_MAIN, LV_STATE_DEFAULT, color);

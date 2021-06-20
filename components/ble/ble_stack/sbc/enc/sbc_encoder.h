@@ -44,8 +44,8 @@
 #define SBC_MAX_NUM_OF_CHANNELS 2
 #define SBC_MAX_NUM_OF_BLOCKS   16
 
-#define SBC_LOUDNESS    0
-#define SBC_SNR 1
+#define SBC_LOUDNESS 0
+#define SBC_SNR      1
 
 #define SUB_BANDS_8 8
 #define SUB_BANDS_4 4
@@ -55,23 +55,23 @@
 #define SBC_sf44100 2
 #define SBC_sf48000 3
 
-#define SBC_MONO    0
-#define SBC_DUAL    1
-#define SBC_STEREO  2
-#define SBC_JOINT_STEREO    3
+#define SBC_MONO         0
+#define SBC_DUAL         1
+#define SBC_STEREO       2
+#define SBC_JOINT_STEREO 3
 
 #define SBC_BLOCK_0 4
 #define SBC_BLOCK_1 8
 #define SBC_BLOCK_2 12
 #define SBC_BLOCK_3 16
 
-#define SBC_NULL    0
+#define SBC_NULL 0
 
-#define SBC_MODE_STD      0
-#define SBC_MODE_MSBC     1
+#define SBC_MODE_STD  0
+#define SBC_MODE_MSBC 1
 
-#define SBC_SYNC_WORD_STD        (0x9C)
-#define SBC_SYNC_WORD_MSBC       (0xAD)
+#define SBC_SYNC_WORD_STD  (0x9C)
+#define SBC_SYNC_WORD_MSBC (0xAD)
 
 #ifndef SBC_MAX_NUM_FRAME
 #define SBC_MAX_NUM_FRAME 1
@@ -111,25 +111,25 @@
 /* Debug only: set SBC_IS_64_MULT_IN_WINDOW_ACCU to TRUE to use 64 bit multiplication in the windowing */
 /* -> not recomended, more MIPS for the same restitution.  */
 #ifndef SBC_IS_64_MULT_IN_WINDOW_ACCU
-#define SBC_IS_64_MULT_IN_WINDOW_ACCU  FALSE
+#define SBC_IS_64_MULT_IN_WINDOW_ACCU FALSE
 #endif /*SBC_IS_64_MULT_IN_WINDOW_ACCU */
 
 /* Set SBC_IS_64_MULT_IN_IDCT to TRUE to use 64 bits multiplication in the DCT of Matrixing */
 /* -> more MIPS required for a better audio quality. comparasion with the SIG utilities shows a division by 10 of the RMS */
 /* CAUTION: It only apply in the if SBC_FAST_DCT is set to TRUE */
 #ifndef SBC_IS_64_MULT_IN_IDCT
-#define SBC_IS_64_MULT_IN_IDCT  FALSE
+#define SBC_IS_64_MULT_IN_IDCT FALSE
 #endif /*SBC_IS_64_MULT_IN_IDCT */
 
 /* set SBC_IS_64_MULT_IN_QUANTIZER to TRUE to use 64 bits multiplication in the quantizer */
 /* setting this flag to FALSE add whistling noise at 5.5 and 11 KHz usualy not perceptible by human's hears. */
 #ifndef SBC_IS_64_MULT_IN_QUANTIZER
-#define SBC_IS_64_MULT_IN_QUANTIZER  TRUE
+#define SBC_IS_64_MULT_IN_QUANTIZER TRUE
 #endif /*SBC_IS_64_MULT_IN_IDCT */
 
 /* Debug only: set this flag to FALSE to disable fast DCT algorithm */
 #ifndef SBC_FAST_DCT
-#define SBC_FAST_DCT  TRUE
+#define SBC_FAST_DCT TRUE
 #endif /*SBC_FAST_DCT */
 
 /* In case we do not use joint stereo mode the flag save some RAM and ROM in case it is set to FALSE */
@@ -142,7 +142,7 @@
 #define SBC_NO_PCM_CPY_OPTION FALSE
 #endif
 
-#define MINIMUM_ENC_VX_BUFFER_SIZE (8*10*2)
+#define MINIMUM_ENC_VX_BUFFER_SIZE (8 * 10 * 2)
 #ifndef ENC_VX_BUFFER_SIZE
 #define ENC_VX_BUFFER_SIZE (MINIMUM_ENC_VX_BUFFER_SIZE + 64)
 /*#define ENC_VX_BUFFER_SIZE MINIMUM_ENC_VX_BUFFER_SIZE + 1024*/
@@ -158,19 +158,19 @@
 #include "sbc_types.h"
 
 typedef struct SBC_ENC_PARAMS_TAG {
-    SINT16 s16SamplingFreq;                         /* 16k, 32k, 44.1k or 48k*/
-    SINT16 s16ChannelMode;                          /* mono, dual, streo or joint streo*/
-    SINT16 s16NumOfSubBands;                        /* 4 or 8 */
+    SINT16 s16SamplingFreq;  /* 16k, 32k, 44.1k or 48k*/
+    SINT16 s16ChannelMode;   /* mono, dual, streo or joint streo*/
+    SINT16 s16NumOfSubBands; /* 4 or 8 */
     SINT16 s16NumOfChannels;
-    SINT16 s16NumOfBlocks;                          /* 4, 8, 12 or 16*/
-    SINT16 s16AllocationMethod;                     /* loudness or SNR*/
-    SINT16 s16BitPool;                              /* 16*numOfSb for mono & dual;
+    SINT16 s16NumOfBlocks;      /* 4, 8, 12 or 16*/
+    SINT16 s16AllocationMethod; /* loudness or SNR*/
+    SINT16 s16BitPool;          /* 16*numOfSb for mono & dual;
                                                        32*numOfSb for stereo & joint stereo */
     UINT16 u16BitRate;
-    UINT8  sbc_mode;                                /* SBC_MODE_STD or SBC_MODE_MSBC */
-    UINT8   u8NumPacketToEncode;                    /* number of sbc frame to encode. Default is 1 */
+    UINT8 sbc_mode;            /* SBC_MODE_STD or SBC_MODE_MSBC */
+    UINT8 u8NumPacketToEncode; /* number of sbc frame to encode. Default is 1 */
 #if (SBC_JOINT_STE_INCLUDED == TRUE)
-    SINT16 as16Join[SBC_MAX_NUM_OF_SUBBANDS];       /*1 if JS, 0 otherwise*/
+    SINT16 as16Join[SBC_MAX_NUM_OF_SUBBANDS]; /*1 if JS, 0 otherwise*/
 #endif
 
     SINT16 s16MaxBitNeed;
@@ -183,22 +183,21 @@ typedef struct SBC_ENC_PARAMS_TAG {
     SINT16 as16PcmBuffer[SBC_MAX_NUM_FRAME * SBC_MAX_NUM_OF_BLOCKS * SBC_MAX_NUM_OF_CHANNELS * SBC_MAX_NUM_OF_SUBBANDS];
 #endif
 
-    SINT16  s16ScartchMemForBitAlloc[16];
+    SINT16 s16ScartchMemForBitAlloc[16];
 
-    SINT32  s32SbBuffer[SBC_MAX_NUM_OF_CHANNELS * SBC_MAX_NUM_OF_SUBBANDS * SBC_MAX_NUM_OF_BLOCKS];
+    SINT32 s32SbBuffer[SBC_MAX_NUM_OF_CHANNELS * SBC_MAX_NUM_OF_SUBBANDS * SBC_MAX_NUM_OF_BLOCKS];
 
     SINT16 as16Bits[SBC_MAX_NUM_OF_CHANNELS * SBC_MAX_NUM_OF_SUBBANDS];
 
-    UINT8  *pu8Packet;
-    UINT8  *pu8NextPacket;
+    UINT8 *pu8Packet;
+    UINT8 *pu8NextPacket;
     UINT16 FrameHeader;
     UINT16 u16PacketLength;
 
 } SBC_ENC_PARAMS;
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 extern void SBC_Encoder(SBC_ENC_PARAMS *strEncParams);
 extern void SBC_Encoder_Init(SBC_ENC_PARAMS *strEncParams);

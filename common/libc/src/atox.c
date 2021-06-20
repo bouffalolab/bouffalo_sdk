@@ -15,5 +15,5 @@
 
 TYPE NAME(const char *nptr)
 {
-	return (TYPE) strntoumax(nptr, (char **)NULL, 10, ~(size_t) 0);
+    return (TYPE)strntoumax(nptr, (char **)NULL, 10, ~(size_t)0);
 }

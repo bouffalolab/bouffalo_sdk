@@ -42,7 +42,7 @@ typedef void (*lv_async_cb_t)(void *);
  *                  the `func_name(object, callback, ...)` convention)
  * @param user_data custom parameter
  */
-lv_res_t lv_async_call(lv_async_cb_t async_xcb, void * user_data);
+lv_res_t lv_async_call(lv_async_cb_t async_xcb, void *user_data);
 
 /**********************
  *      MACROS

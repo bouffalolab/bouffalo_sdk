@@ -54,54 +54,56 @@
 /**
  *  @brief L1C configuration structure type definition
  */
-typedef struct {
-    BL_Fun_Type wrapDis;                    /*!< wrap disable */
-    BL_Fun_Type bypassEn;                   /*!< bypass cache enable */
-    uint8_t wayDis;                         /*!< Disable part of cache ways & used as ITCM */
-    BL_Fun_Type cntEn;                      /*!< l1c count enable */
-}L1C_CACHE_Cfg_Type;
+typedef struct
+{
+    BL_Fun_Type wrapDis;  /*!< wrap disable */
+    BL_Fun_Type bypassEn; /*!< bypass cache enable */
+    uint8_t wayDis;       /*!< Disable part of cache ways & used as ITCM */
+    BL_Fun_Type cntEn;    /*!< l1c count enable */
+} L1C_CACHE_Cfg_Type;
 
 /**
  *  @brief L1C BMX arb mode type definition
  */
 typedef enum {
-    L1C_BMX_ARB_FIX,                        /*!< 0->fix */
-    L1C_BMX_ARB_ROUND_ROBIN,                /*!< 2->round-robin */
-    L1C_BMX_ARB_RANDOM,                     /*!< 3->random */
-}L1C_BMX_ARB_Type;
+    L1C_BMX_ARB_FIX,         /*!< 0->fix */
+    L1C_BMX_ARB_ROUND_ROBIN, /*!< 2->round-robin */
+    L1C_BMX_ARB_RANDOM,      /*!< 3->random */
+} L1C_BMX_ARB_Type;
 
 /**
  *  @brief L1C BMX configuration structure type definition
  */
-typedef struct {
-    uint8_t timeoutEn;                      /*!< Bus timeout enable: detect slave no reaponse in 1024 cycles */
-    BL_Fun_Type errEn;                      /*!< Bus error response enable */
-    L1C_BMX_ARB_Type arbMod;                /*!< 0->fix, 2->round-robin, 3->random */
-}L1C_BMX_Cfg_Type;
+typedef struct
+{
+    uint8_t timeoutEn;       /*!< Bus timeout enable: detect slave no reaponse in 1024 cycles */
+    BL_Fun_Type errEn;       /*!< Bus error response enable */
+    L1C_BMX_ARB_Type arbMod; /*!< 0->fix, 2->round-robin, 3->random */
+} L1C_BMX_Cfg_Type;
 
 /**
  *  @brief L1C BMX bus err type definition
  */
 typedef enum {
-    L1C_BMX_BUS_ERR_TRUSTZONE_DECODE,       /*!< Bus trustzone decode error */
-    L1C_BMX_BUS_ERR_ADDR_DECODE,            /*!< Bus addr decode error */
-}L1C_BMX_BUS_ERR_Type;
+    L1C_BMX_BUS_ERR_TRUSTZONE_DECODE, /*!< Bus trustzone decode error */
+    L1C_BMX_BUS_ERR_ADDR_DECODE,      /*!< Bus addr decode error */
+} L1C_BMX_BUS_ERR_Type;
 
 /**
  *  @brief L1C BMX bus err interrupt type definition
  */
 typedef enum {
-    L1C_BMX_ERR_INT_ERR,                    /*!< L1C BMX bus err interrupt */
-    L1C_BMX_ERR_INT_ALL,                    /*!< L1C BMX bus err interrupt max num */
-}L1C_BMX_ERR_INT_Type;
+    L1C_BMX_ERR_INT_ERR, /*!< L1C BMX bus err interrupt */
+    L1C_BMX_ERR_INT_ALL, /*!< L1C BMX bus err interrupt max num */
+} L1C_BMX_ERR_INT_Type;
 
 /**
  *  @brief L1C BMX time out interrupt type definition
  */
 typedef enum {
-    L1C_BMX_TO_INT_TIMEOUT,                 /*!< L1C_BMX timeout interrupt */
-    L1C_BMX_TO_INT_ALL,                     /*!< L1C_BMX timeout interrupt max num */
-}L1C_BMX_TO_INT_Type;
+    L1C_BMX_TO_INT_TIMEOUT, /*!< L1C_BMX timeout interrupt */
+    L1C_BMX_TO_INT_ALL,     /*!< L1C_BMX timeout interrupt max num */
+} L1C_BMX_TO_INT_Type;
 
 /*@} end of group L1C_Public_Types */
 
@@ -112,27 +114,27 @@ typedef enum {
 /** @defgroup  L1C_BMX_ARB_TYPE
  *  @{
  */
-#define IS_L1C_BMX_ARB_TYPE(type)                        (((type) == L1C_BMX_ARB_FIX) || \
-                                                          ((type) == L1C_BMX_ARB_ROUND_ROBIN) || \
-                                                          ((type) == L1C_BMX_ARB_RANDOM))
+#define IS_L1C_BMX_ARB_TYPE(type) (((type) == L1C_BMX_ARB_FIX) ||         \
+                                   ((type) == L1C_BMX_ARB_ROUND_ROBIN) || \
+                                   ((type) == L1C_BMX_ARB_RANDOM))
 
 /** @defgroup  L1C_BMX_BUS_ERR_TYPE
  *  @{
  */
-#define IS_L1C_BMX_BUS_ERR_TYPE(type)                    (((type) == L1C_BMX_BUS_ERR_TRUSTZONE_DECODE) || \
-                                                          ((type) == L1C_BMX_BUS_ERR_ADDR_DECODE))
+#define IS_L1C_BMX_BUS_ERR_TYPE(type) (((type) == L1C_BMX_BUS_ERR_TRUSTZONE_DECODE) || \
+                                       ((type) == L1C_BMX_BUS_ERR_ADDR_DECODE))
 
 /** @defgroup  L1C_BMX_ERR_INT_TYPE
  *  @{
  */
-#define IS_L1C_BMX_ERR_INT_TYPE(type)                    (((type) == L1C_BMX_ERR_INT_ERR) || \
-                                                          ((type) == L1C_BMX_ERR_INT_ALL))
+#define IS_L1C_BMX_ERR_INT_TYPE(type) (((type) == L1C_BMX_ERR_INT_ERR) || \
+                                       ((type) == L1C_BMX_ERR_INT_ALL))
 
 /** @defgroup  L1C_BMX_TO_INT_TYPE
  *  @{
  */
-#define IS_L1C_BMX_TO_INT_TYPE(type)                     (((type) == L1C_BMX_TO_INT_TIMEOUT) || \
-                                                          ((type) == L1C_BMX_TO_INT_ALL))
+#define IS_L1C_BMX_TO_INT_TYPE(type) (((type) == L1C_BMX_TO_INT_TIMEOUT) || \
+                                      ((type) == L1C_BMX_TO_INT_ALL))
 
 /*@} end of group L1C_Public_Constants */
 
@@ -141,14 +143,14 @@ typedef enum {
  */
 #if 1
 /*NP config address */
-#define L1C_CONF_REG_NP                          (L1C_BASE+0x00)
-#define L1C_HIT_CNT_LSB_REG_NP                   (L1C_BASE+0x04)
-#define L1C_HIT_CNT_MSB_REG_NP                   (L1C_BASE+0x08)
-#define L1C_MISS_CNT_REG_NP                      (L1C_BASE+0x0C)
+#define L1C_CONF_REG_NP        (L1C_BASE + 0x00)
+#define L1C_HIT_CNT_LSB_REG_NP (L1C_BASE + 0x04)
+#define L1C_HIT_CNT_MSB_REG_NP (L1C_BASE + 0x08)
+#define L1C_MISS_CNT_REG_NP    (L1C_BASE + 0x0C)
 /* Get miss and hit count */
-#define L1C_Get_Miss_Cnt_NP()                    BL602_REG_RD(L1C_MISS_CNT_REG_NP)
-#define L1C_Get_Hit_Cnt_LSB_NP()                 BL602_REG_RD(L1C_HIT_CNT_LSB_REG_NP)
-#define L1C_Get_Hit_Cnt_MSB_NP()                 BL602_REG_RD(L1C_HIT_CNT_MSB_REG_NP)
+#define L1C_Get_Miss_Cnt_NP()    BL602_REG_RD(L1C_MISS_CNT_REG_NP)
+#define L1C_Get_Hit_Cnt_LSB_NP() BL602_REG_RD(L1C_HIT_CNT_LSB_REG_NP)
+#define L1C_Get_Hit_Cnt_MSB_NP() BL602_REG_RD(L1C_HIT_CNT_MSB_REG_NP)
 #endif
 
 /*@} end of group L1C_Public_Macros */
@@ -173,9 +175,9 @@ BL_Err_Type L1C_BMX_BusErrResponse_Enable(void);
 BL_Err_Type L1C_BMX_BusErrResponse_Disable(void);
 BL_Sts_Type L1C_BMX_Get_Status(L1C_BMX_BUS_ERR_Type errType);
 uint32_t L1C_BMX_Get_Err_Addr(void);
-BL_Err_Type L1C_BMX_ERR_INT_Callback_Install(L1C_BMX_ERR_INT_Type intType,intCallback_Type* cbFun);
+BL_Err_Type L1C_BMX_ERR_INT_Callback_Install(L1C_BMX_ERR_INT_Type intType, intCallback_Type *cbFun);
 BL_Err_Type L1C_BMX_TIMEOUT_INT_Callback_Install(L1C_BMX_TO_INT_Type intType,
-                                                 intCallback_Type* cbFun);
+                                                 intCallback_Type *cbFun);
 /*----------*/;
 
 /*@} end of group L1C_Public_Functions */

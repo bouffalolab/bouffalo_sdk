@@ -53,8 +53,8 @@ extern "C" {
  *         null character. A value equal or larger than count indicates truncation. Only when the returned value
  *         is non-negative and less than count, the string has been completely written.
  */
-int  lv_snprintf(char * buffer, size_t count, const char * format, ...);
-int lv_vsnprintf(char * buffer, size_t count, const char * format, va_list va);
+int lv_snprintf(char *buffer, size_t count, const char *format, ...);
+int lv_vsnprintf(char *buffer, size_t count, const char *format, va_list va);
 
 #else
 #include LV_SPRINTF_INCLUDE
@@ -64,4 +64,4 @@ int lv_vsnprintf(char * buffer, size_t count, const char * format, va_list va);
 }
 #endif
 
-#endif  // _LV_PRINTF_H_
+#endif // _LV_PRINTF_H_

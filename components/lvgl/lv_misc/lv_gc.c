@@ -26,8 +26,8 @@
  *  STATIC VARIABLES
  **********************/
 
-#if(!defined(LV_ENABLE_GC)) || LV_ENABLE_GC == 0
-    LV_ROOTS
+#if (!defined(LV_ENABLE_GC)) || LV_ENABLE_GC == 0
+LV_ROOTS
 #endif /* LV_ENABLE_GC */
 
 /**********************

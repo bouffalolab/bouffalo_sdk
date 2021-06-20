@@ -1,24 +1,24 @@
 /**
  * @file bsp_spi_sd.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 #ifndef __SPI_SD_H__
@@ -28,46 +28,46 @@
 
 //SD传输数据结束后是否释放总线宏定义
 #define NO_RELEASE 0
-#define RELEASE 1
+#define RELEASE    1
 // SD卡类型定义
-#define SD_TYPE_MMC 0
-#define SD_TYPE_V1 1
-#define SD_TYPE_V2 2
+#define SD_TYPE_MMC  0
+#define SD_TYPE_V1   1
+#define SD_TYPE_V2   2
 #define SD_TYPE_V2HC 4
 
-#define CMD0 0    // Resets the SD memory card.
-#define CMD1 1    // Sends host capacity support information and activates the card's initialization process.
-#define CMD8 8    // Sends SD Memory Card interface condition, which includes host supply voltage information and asks the card whether card supports voltage.
-#define CMD9 9    // Addressed card sends its card specific data (CSD) on the CMD line.
-#define CMD10 10  // Addressed card sends its card identification (CID) on the CMD line.
-#define CMD12 12  // Forces the card to stop transmission.
-#define CMD16 16  // Sets the block length (in bytes for SDSC) for all following block commands (read, write, lock).
-                  // Default block length is fixed to 512 Bytes. Not effective  for SDHS and SDXC
-#define CMD17 17  // Reads single block of size selected by SET_BLOCKLEN in case of SDSC, and a block of fixed 512 bytes in case of SDHC and SDXC
-#define CMD18 18  // Continuously transfers data blocks from card to host until interrupted by STOP_TRANSMISSION command
+#define CMD0  0  // Resets the SD memory card.
+#define CMD1  1  // Sends host capacity support information and activates the card's initialization process.
+#define CMD8  8  // Sends SD Memory Card interface condition, which includes host supply voltage information and asks the card whether card supports voltage.
+#define CMD9  9  // Addressed card sends its card specific data (CSD) on the CMD line.
+#define CMD10 10 // Addressed card sends its card identification (CID) on the CMD line.
+#define CMD12 12 // Forces the card to stop transmission.
+#define CMD16 16 // Sets the block length (in bytes for SDSC) for all following block commands (read, write, lock).
+// Default block length is fixed to 512 Bytes. Not effective  for SDHS and SDXC
+#define CMD17  17 // Reads single block of size selected by SET_BLOCKLEN in case of SDSC, and a block of fixed 512 bytes in case of SDHC and SDXC
+#define CMD18  18 // Continuously transfers data blocks from card to host until interrupted by STOP_TRANSMISSION command
 #define ACMD23 23 // Specify block count for CMD18 and CMD25
-#define CMD24 24  // Writes single block of size selected by SET_BLOCKLEN in case of SDSC, and a block of fixed 512 bytes in case of SDHC and SDXC.
-#define CMD25 25  // Continuously writes blocks of data until a STOP_TRANSMISSION follows.
+#define CMD24  24 // Writes single block of size selected by SET_BLOCKLEN in case of SDSC, and a block of fixed 512 bytes in case of SDHC and SDXC.
+#define CMD25  25 // Continuously writes blocks of data until a STOP_TRANSMISSION follows.
 #define ACMD41 41 //
-#define CMD55 55  // Indicates to the card that the next command is an application specific command rather than a standard command.
-#define CMD58 58  // get OCR
-#define CMD59 59  // enable/disable crc
+#define CMD55  55 // Indicates to the card that the next command is an application specific command rather than a standard command.
+#define CMD58  58 // get OCR
+#define CMD59  59 // enable/disable crc
 
 //数据写入回应字意义
-#define MSD_DATA_OK 0x05
-#define MSD_DATA_CRC_ERROR 0x0B
+#define MSD_DATA_OK          0x05
+#define MSD_DATA_CRC_ERROR   0x0B
 #define MSD_DATA_WRITE_ERROR 0x0D
 #define MSD_DATA_OTHER_ERROR 0xFF
 //SD卡回应标记字
-#define MSD_RESPONSE_NO_ERROR 0x00    // Card state is ready
-#define MSD_IN_IDLE_STATE 0x01        // Card is in identification state
-#define MSD_ERASE_RESET 0x02          // Card is in standby state
-#define MSD_ILLEGAL_COMMAND 0x04      // Card is in transfer state
-#define MSD_COM_CRC_ERROR 0x08        // Card is sending an operation
+#define MSD_RESPONSE_NO_ERROR    0x00 // Card state is ready
+#define MSD_IN_IDLE_STATE        0x01 // Card is in identification state
+#define MSD_ERASE_RESET          0x02 // Card is in standby state
+#define MSD_ILLEGAL_COMMAND      0x04 // Card is in transfer state
+#define MSD_COM_CRC_ERROR        0x08 // Card is sending an operation
 #define MSD_ERASE_SEQUENCE_ERROR 0x10 // Card is receiving operation information
-#define MSD_ADDRESS_ERROR 0x20        // Card is in programming state
-#define MSD_PARAMETER_ERROR 0x40      // Card is disconnected
-#define MSD_RESPONSE_FAILURE 0xFF     // Card is in error state
+#define MSD_ADDRESS_ERROR        0x20 // Card is in programming state
+#define MSD_PARAMETER_ERROR      0x40 // Card is disconnected
+#define MSD_RESPONSE_FAILURE     0xFF // Card is in error state
 
 typedef struct
 {
@@ -128,8 +128,7 @@ typedef struct
 
 } SD_CIDTypedef;
 
-typedef struct SD_CardInfoTypedef
-{
+typedef struct SD_CardInfoTypedef {
     SD_CSDTypedef SD_csd;   /*!< SD card specific data register         */
     SD_CIDTypedef SD_cid;   /*!< SD card identification number register */
     uint64_t CardCapacity;  /*!< Card capacity                          */

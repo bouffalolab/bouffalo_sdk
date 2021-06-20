@@ -5,19 +5,19 @@
 #include "bluetooth.h"
 
 #if defined(OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER)
-struct rx_msg_struct{
+struct rx_msg_struct {
     uint8_t pkt_type;
     uint16_t src_id;
     uint8_t *param;
     uint8_t param_len;
-}__packed;
+} __packed;
 #endif
 
 typedef enum {
-  DATA_TYPE_COMMAND = 1,
-  DATA_TYPE_ACL     = 2,
-  DATA_TYPE_SCO     = 3,
-  DATA_TYPE_EVENT   = 4
+    DATA_TYPE_COMMAND = 1,
+    DATA_TYPE_ACL = 2,
+    DATA_TYPE_SCO = 3,
+    DATA_TYPE_EVENT = 4
 } serial_data_type_t;
 
 uint8_t bl_onchiphci_interface_init(void);

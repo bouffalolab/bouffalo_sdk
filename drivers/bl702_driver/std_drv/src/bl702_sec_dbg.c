@@ -79,7 +79,7 @@
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Sec Dbg read chip ID
  *
  * @param  id[8]: chip ID buffer
@@ -89,16 +89,16 @@
 *******************************************************************************/
 void Sec_Dbg_Read_Chip_ID(uint8_t id[8])
 {
-    uint32_t idLow,idHigh;
-    
-    idLow=BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_CHIP_ID_LOW);
-    BL_WRWD_TO_BYTEP(id,idLow);
-    
-    idHigh=BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_CHIP_ID_HIGH);
-    BL_WRWD_TO_BYTEP((id+4),idHigh);
+    uint32_t idLow, idHigh;
+
+    idLow = BL_RD_REG(SEC_DBG_BASE, SEC_DBG_SD_CHIP_ID_LOW);
+    BL_WRWD_TO_BYTEP(id, idLow);
+
+    idHigh = BL_RD_REG(SEC_DBG_BASE, SEC_DBG_SD_CHIP_ID_HIGH);
+    BL_WRWD_TO_BYTEP((id + 4), idHigh);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Sec Dbg read MAC address
  *
  * @param  macAddr[6]: MAC address buffer
@@ -108,17 +108,17 @@ void Sec_Dbg_Read_Chip_ID(uint8_t id[8])
 *******************************************************************************/
 void Sec_Dbg_Read_WiFi_MAC(uint8_t macAddr[6])
 {
-    uint32_t macLow,macHigh;
-    
-    macLow=BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_WIFI_MAC_LOW);
-    BL_WRWD_TO_BYTEP(macAddr,macLow);
-    
-    macHigh=BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_WIFI_MAC_HIGH);
-    macAddr[4]=(macHigh>>0)&0xff;
-    macAddr[5]=(macHigh>>8)&0xff;
+    uint32_t macLow, macHigh;
+
+    macLow = BL_RD_REG(SEC_DBG_BASE, SEC_DBG_SD_WIFI_MAC_LOW);
+    BL_WRWD_TO_BYTEP(macAddr, macLow);
+
+    macHigh = BL_RD_REG(SEC_DBG_BASE, SEC_DBG_SD_WIFI_MAC_HIGH);
+    macAddr[4] = (macHigh >> 0) & 0xff;
+    macAddr[5] = (macHigh >> 8) & 0xff;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Sec Dbg read debug mode
  *
  * @param  None
@@ -128,10 +128,10 @@ void Sec_Dbg_Read_WiFi_MAC(uint8_t macAddr[6])
 *******************************************************************************/
 uint32_t Sec_Dbg_Read_Dbg_Mode(void)
 {
-    return BL_GET_REG_BITS_VAL(BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_STATUS),SEC_DBG_SD_DBG_MODE);
+    return BL_GET_REG_BITS_VAL(BL_RD_REG(SEC_DBG_BASE, SEC_DBG_SD_STATUS), SEC_DBG_SD_DBG_MODE);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Sec Dbg read debug enable status
  *
  * @param  None
@@ -141,7 +141,7 @@ uint32_t Sec_Dbg_Read_Dbg_Mode(void)
 *******************************************************************************/
 uint32_t Sec_Dbg_Read_Dbg_Enable(void)
 {
-    return BL_GET_REG_BITS_VAL(BL_RD_REG(SEC_DBG_BASE,SEC_DBG_SD_STATUS),SEC_DBG_SD_DBG_ENA);
+    return BL_GET_REG_BITS_VAL(BL_RD_REG(SEC_DBG_BASE, SEC_DBG_SD_STATUS), SEC_DBG_SD_DBG_ENA);
 }
 
 /*@} end of group SEC_DBG_Public_Functions */

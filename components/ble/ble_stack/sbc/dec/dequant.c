@@ -117,7 +117,7 @@ const OI_UINT32 dequant_long_unscaled[17];
 /** Scales x by y bits to the right, adding a rounding factor.
  */
 #ifndef SCALE
-#define SCALE(x, y) (((x) + (1 <<((y)-1))) >> (y))
+#define SCALE(x, y) (((x) + (1 << ((y)-1))) >> (y))
 #endif
 
 #ifdef DEBUG_DEQUANTIZATION
@@ -141,7 +141,6 @@ static INLINE float dequant_float(OI_UINT32 raw, OI_UINT scale_factor, OI_UINT b
 }
 
 #endif
-
 
 INLINE OI_INT32 OI_SBC_Dequant(OI_UINT32 raw, OI_UINT scale_factor, OI_UINT bits)
 {
@@ -190,15 +189,14 @@ INLINE OI_INT32 OI_SBC_Dequant_Unscaled(OI_UINT32 raw, OI_UINT scale_factor, OI_
     OI_ASSERT(scale_factor <= 15);
     OI_ASSERT(bits <= 16);
 
-
     if (bits <= 1) {
         return 0;
     }
+
     if (bits == 16) {
         result = (raw << 16) + raw - 0x7fff7fff;
         return SCALE(result, 24 - scale_factor);
     }
-
 
     d = (raw * 2) + 1;
     d *= dequant_long_unscaled[bits];

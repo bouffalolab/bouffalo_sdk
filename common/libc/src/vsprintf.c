@@ -11,5 +11,5 @@
 
 int vsprintf(char *buffer, const char *format, va_list ap)
 {
-	return vsnprintf(buffer, (~(unsigned int) 0)>>1, format, ap);
+    return vsnprintf(buffer, (~(unsigned int)0) >> 1, format, ap);
 }

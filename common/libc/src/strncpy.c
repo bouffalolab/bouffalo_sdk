@@ -10,19 +10,21 @@
 
 char *strncpy(char *dst, const char *src, size_t n)
 {
-	char *q = dst;
-	const char *p = src;
-	char ch;
+    char *q = dst;
+    const char *p = src;
+    char ch;
 
-	while (n) {
-		n--;
-		*q++ = ch = *p++;
-		if (!ch)
-			break;
-	}
+    while (n) {
+        n--;
+        *q++ = ch = *p++;
 
-	/* The specs say strncpy() fills the entire buffer with NUL.  Sigh. */
-	memset(q, 0, n);
+        if (!ch) {
+            break;
+        }
+    }
 
-	return dst;
+    /* The specs say strncpy() fills the entire buffer with NUL.  Sigh. */
+    memset(q, 0, n);
+
+    return dst;
 }

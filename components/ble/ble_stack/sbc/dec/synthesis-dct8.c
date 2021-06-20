@@ -37,18 +37,18 @@
 
 #if defined(SBC_DEC_INCLUDED)
 
-#define AAN_C4_FIX (759250125)/* S1.30  759250125   0.707107*/
+#define AAN_C4_FIX (759250125) /* S1.30  759250125   0.707107*/
 
-#define AAN_C6_FIX (410903207)/* S1.30  410903207   0.382683*/
+#define AAN_C6_FIX (410903207) /* S1.30  410903207   0.382683*/
 
-#define AAN_Q0_FIX (581104888)/* S1.30  581104888   0.541196*/
+#define AAN_Q0_FIX (581104888) /* S1.30  581104888   0.541196*/
 
-#define AAN_Q1_FIX (1402911301)/* S1.30 1402911301   1.306563*/
+#define AAN_Q1_FIX (1402911301) /* S1.30 1402911301   1.306563*/
 
 /** Scales x by y bits to the right, adding a rounding factor.
  */
 #ifndef SCALE
-#define SCALE(x, y) (((x) + (1 <<((y)-1))) >> (y))
+#define SCALE(x, y) (((x) + (1 << ((y)-1))) >> (y))
 #endif
 
 /**
@@ -66,8 +66,10 @@ static INLINE OI_INT32 default_mul_32s_32s_hi(OI_INT32 u, OI_INT32 v)
     OI_UINT32 u0, v0;
     OI_INT32 u1, v1, w1, w2, t;
 
-    u0 = u & 0xFFFF; u1 = u >> 16;
-    v0 = v & 0xFFFF; v1 = v >> 16;
+    u0 = u & 0xFFFF;
+    u1 = u >> 16;
+    v0 = v & 0xFFFF;
+    v1 = v >> 16;
     t = u0 * v0;
     t = u1 * v0 + ((OI_UINT32)t >> 16);
     w1 = t & 0xFFFF;
@@ -78,14 +80,17 @@ static INLINE OI_INT32 default_mul_32s_32s_hi(OI_INT32 u, OI_INT32 v)
 
 #define MUL_32S_32S_HI(_x, _y) default_mul_32s_32s_hi(_x, _y)
 
-
 #ifdef DEBUG_DCT
 PRIVATE void float_dct2_8(float *RESTRICT out, OI_INT32 const *RESTRICT in)
 {
-#define FIX(x,bits) (((int)floor(0.5f+((x)*((float)(1<<bits)))))/((float)(1<<bits)))
-#define FLOAT_BUTTERFLY(x,y) x += y; y = x - (y*2); OI_ASSERT(VALID_INT32(x)); OI_ASSERT(VALID_INT32(y));
-#define FLOAT_MULT_DCT(K, sample) (FIX(K,20) * sample)
-#define FLOAT_SCALE(x, y) (((x) / (double)(1 << (y))))
+#define FIX(x, bits) (((int)floor(0.5f + ((x) * ((float)(1 << bits))))) / ((float)(1 << bits)))
+#define FLOAT_BUTTERFLY(x, y)  \
+    x += y;                    \
+    y = x - (y * 2);           \
+    OI_ASSERT(VALID_INT32(x)); \
+    OI_ASSERT(VALID_INT32(y));
+#define FLOAT_MULT_DCT(K, sample) (FIX(K, 20) * sample)
+#define FLOAT_SCALE(x, y)         (((x) / (double)(1 << (y))))
 
     double L00, L01, L02, L03, L04, L05, L06, L07;
     double L25;
@@ -93,74 +98,109 @@ PRIVATE void float_dct2_8(float *RESTRICT out, OI_INT32 const *RESTRICT in)
     double in0, in1, in2, in3;
     double in4, in5, in6, in7;
 
-    in0 = FLOAT_SCALE(in[0], DCTII_8_SHIFT_IN); OI_ASSERT(VALID_INT32(in0));
-    in1 = FLOAT_SCALE(in[1], DCTII_8_SHIFT_IN); OI_ASSERT(VALID_INT32(in1));
-    in2 = FLOAT_SCALE(in[2], DCTII_8_SHIFT_IN); OI_ASSERT(VALID_INT32(in2));
-    in3 = FLOAT_SCALE(in[3], DCTII_8_SHIFT_IN); OI_ASSERT(VALID_INT32(in3));
-    in4 = FLOAT_SCALE(in[4], DCTII_8_SHIFT_IN); OI_ASSERT(VALID_INT32(in4));
-    in5 = FLOAT_SCALE(in[5], DCTII_8_SHIFT_IN); OI_ASSERT(VALID_INT32(in5));
-    in6 = FLOAT_SCALE(in[6], DCTII_8_SHIFT_IN); OI_ASSERT(VALID_INT32(in6));
-    in7 = FLOAT_SCALE(in[7], DCTII_8_SHIFT_IN); OI_ASSERT(VALID_INT32(in7));
+    in0 = FLOAT_SCALE(in[0], DCTII_8_SHIFT_IN);
+    OI_ASSERT(VALID_INT32(in0));
+    in1 = FLOAT_SCALE(in[1], DCTII_8_SHIFT_IN);
+    OI_ASSERT(VALID_INT32(in1));
+    in2 = FLOAT_SCALE(in[2], DCTII_8_SHIFT_IN);
+    OI_ASSERT(VALID_INT32(in2));
+    in3 = FLOAT_SCALE(in[3], DCTII_8_SHIFT_IN);
+    OI_ASSERT(VALID_INT32(in3));
+    in4 = FLOAT_SCALE(in[4], DCTII_8_SHIFT_IN);
+    OI_ASSERT(VALID_INT32(in4));
+    in5 = FLOAT_SCALE(in[5], DCTII_8_SHIFT_IN);
+    OI_ASSERT(VALID_INT32(in5));
+    in6 = FLOAT_SCALE(in[6], DCTII_8_SHIFT_IN);
+    OI_ASSERT(VALID_INT32(in6));
+    in7 = FLOAT_SCALE(in[7], DCTII_8_SHIFT_IN);
+    OI_ASSERT(VALID_INT32(in7));
 
-    L00 = (in0 + in7); OI_ASSERT(VALID_INT32(L00));
-    L01 = (in1 + in6); OI_ASSERT(VALID_INT32(L01));
-    L02 = (in2 + in5); OI_ASSERT(VALID_INT32(L02));
-    L03 = (in3 + in4); OI_ASSERT(VALID_INT32(L03));
+    L00 = (in0 + in7);
+    OI_ASSERT(VALID_INT32(L00));
+    L01 = (in1 + in6);
+    OI_ASSERT(VALID_INT32(L01));
+    L02 = (in2 + in5);
+    OI_ASSERT(VALID_INT32(L02));
+    L03 = (in3 + in4);
+    OI_ASSERT(VALID_INT32(L03));
 
-    L04 = (in3 - in4); OI_ASSERT(VALID_INT32(L04));
-    L05 = (in2 - in5); OI_ASSERT(VALID_INT32(L05));
-    L06 = (in1 - in6); OI_ASSERT(VALID_INT32(L06));
-    L07 = (in0 - in7); OI_ASSERT(VALID_INT32(L07));
+    L04 = (in3 - in4);
+    OI_ASSERT(VALID_INT32(L04));
+    L05 = (in2 - in5);
+    OI_ASSERT(VALID_INT32(L05));
+    L06 = (in1 - in6);
+    OI_ASSERT(VALID_INT32(L06));
+    L07 = (in0 - in7);
+    OI_ASSERT(VALID_INT32(L07));
 
     FLOAT_BUTTERFLY(L00, L03);
     FLOAT_BUTTERFLY(L01, L02);
 
-    L02 += L03; OI_ASSERT(VALID_INT32(L02));
+    L02 += L03;
+    OI_ASSERT(VALID_INT32(L02));
 
-    L02 = FLOAT_MULT_DCT(AAN_C4_FLOAT, L02); OI_ASSERT(VALID_INT32(L02));
+    L02 = FLOAT_MULT_DCT(AAN_C4_FLOAT, L02);
+    OI_ASSERT(VALID_INT32(L02));
 
     FLOAT_BUTTERFLY(L00, L01);
 
-    out[0] = (float)FLOAT_SCALE(L00, DCTII_8_SHIFT_0); OI_ASSERT(VALID_INT16(out[0]));
-    out[4] = (float)FLOAT_SCALE(L01, DCTII_8_SHIFT_4); OI_ASSERT(VALID_INT16(out[4]));
+    out[0] = (float)FLOAT_SCALE(L00, DCTII_8_SHIFT_0);
+    OI_ASSERT(VALID_INT16(out[0]));
+    out[4] = (float)FLOAT_SCALE(L01, DCTII_8_SHIFT_4);
+    OI_ASSERT(VALID_INT16(out[4]));
 
     FLOAT_BUTTERFLY(L03, L02);
-    out[6] = (float)FLOAT_SCALE(L02, DCTII_8_SHIFT_6); OI_ASSERT(VALID_INT16(out[6]));
-    out[2] = (float)FLOAT_SCALE(L03, DCTII_8_SHIFT_2); OI_ASSERT(VALID_INT16(out[2]));
+    out[6] = (float)FLOAT_SCALE(L02, DCTII_8_SHIFT_6);
+    OI_ASSERT(VALID_INT16(out[6]));
+    out[2] = (float)FLOAT_SCALE(L03, DCTII_8_SHIFT_2);
+    OI_ASSERT(VALID_INT16(out[2]));
 
-    L04 += L05; OI_ASSERT(VALID_INT32(L04));
-    L05 += L06; OI_ASSERT(VALID_INT32(L05));
-    L06 += L07; OI_ASSERT(VALID_INT32(L06));
+    L04 += L05;
+    OI_ASSERT(VALID_INT32(L04));
+    L05 += L06;
+    OI_ASSERT(VALID_INT32(L05));
+    L06 += L07;
+    OI_ASSERT(VALID_INT32(L06));
 
     L04 /= 2;
     L05 /= 2;
     L06 /= 2;
     L07 /= 2;
 
-    L05 = FLOAT_MULT_DCT(AAN_C4_FLOAT, L05); OI_ASSERT(VALID_INT32(L05));
+    L05 = FLOAT_MULT_DCT(AAN_C4_FLOAT, L05);
+    OI_ASSERT(VALID_INT32(L05));
 
-    L25 = L06 - L04; OI_ASSERT(VALID_INT32(L25));
-    L25 = FLOAT_MULT_DCT(AAN_C6_FLOAT, L25); OI_ASSERT(VALID_INT32(L25));
+    L25 = L06 - L04;
+    OI_ASSERT(VALID_INT32(L25));
+    L25 = FLOAT_MULT_DCT(AAN_C6_FLOAT, L25);
+    OI_ASSERT(VALID_INT32(L25));
 
-    L04 = FLOAT_MULT_DCT(AAN_Q0_FLOAT, L04); OI_ASSERT(VALID_INT32(L04));
-    L04 -= L25; OI_ASSERT(VALID_INT32(L04));
+    L04 = FLOAT_MULT_DCT(AAN_Q0_FLOAT, L04);
+    OI_ASSERT(VALID_INT32(L04));
+    L04 -= L25;
+    OI_ASSERT(VALID_INT32(L04));
 
-    L06 = FLOAT_MULT_DCT(AAN_Q1_FLOAT, L06); OI_ASSERT(VALID_INT32(L06));
-    L06 -= L25; OI_ASSERT(VALID_INT32(L25));
+    L06 = FLOAT_MULT_DCT(AAN_Q1_FLOAT, L06);
+    OI_ASSERT(VALID_INT32(L06));
+    L06 -= L25;
+    OI_ASSERT(VALID_INT32(L25));
 
     FLOAT_BUTTERFLY(L07, L05);
 
     FLOAT_BUTTERFLY(L05, L04);
-    out[3] = (float)(FLOAT_SCALE(L04, DCTII_8_SHIFT_3 - 1)); OI_ASSERT(VALID_INT16(out[3]));
-    out[5] = (float)(FLOAT_SCALE(L05, DCTII_8_SHIFT_5 - 1)); OI_ASSERT(VALID_INT16(out[5]));
+    out[3] = (float)(FLOAT_SCALE(L04, DCTII_8_SHIFT_3 - 1));
+    OI_ASSERT(VALID_INT16(out[3]));
+    out[5] = (float)(FLOAT_SCALE(L05, DCTII_8_SHIFT_5 - 1));
+    OI_ASSERT(VALID_INT16(out[5]));
 
     FLOAT_BUTTERFLY(L07, L06);
-    out[7] = (float)(FLOAT_SCALE(L06, DCTII_8_SHIFT_7 - 1)); OI_ASSERT(VALID_INT16(out[7]));
-    out[1] = (float)(FLOAT_SCALE(L07, DCTII_8_SHIFT_1 - 1)); OI_ASSERT(VALID_INT16(out[1]));
+    out[7] = (float)(FLOAT_SCALE(L06, DCTII_8_SHIFT_7 - 1));
+    OI_ASSERT(VALID_INT16(out[7]));
+    out[1] = (float)(FLOAT_SCALE(L07, DCTII_8_SHIFT_1 - 1));
+    OI_ASSERT(VALID_INT16(out[1]));
 }
 #undef BUTTERFLY
 #endif
-
 
 /*
  * This function calculates the AAN DCT. Its inputs are in S16.15 format, as
@@ -209,8 +249,10 @@ PRIVATE void float_dct2_8(float *RESTRICT out, OI_INT32 const *RESTRICT in)
  */
 PRIVATE void dct2_8(SBC_BUFFER_T *RESTRICT out, OI_INT32 const *RESTRICT in)
 {
-#define BUTTERFLY(x,y) x += y; y = x - (y<<1);
-#define FIX_MULT_DCT(K, x) (MUL_32S_32S_HI(K,x)<<2)
+#define BUTTERFLY(x, y) \
+    x += y;             \
+    y = x - (y << 1);
+#define FIX_MULT_DCT(K, x) (MUL_32S_32S_HI(K, x) << 2)
 
     OI_INT32 L00, L01, L02, L03, L04, L05, L06, L07;
     OI_INT32 L25;

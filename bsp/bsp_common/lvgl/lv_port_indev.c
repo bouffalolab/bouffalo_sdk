@@ -3,7 +3,7 @@
  *
  */
 
- /*Copy this file as "lv_port_indev.c" and set this value to "1" to enable content*/
+/*Copy this file as "lv_port_indev.c" and set this value to "1" to enable content*/
 #if 1
 
 /*********************
@@ -25,9 +25,9 @@
  **********************/
 
 static void touchpad_init(void);
-static bool touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+static bool touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
 //static bool touchpad_is_pressed(void);
-static lv_coord_t touchpad_get_xy(lv_coord_t * x, lv_coord_t * y);
+static lv_coord_t touchpad_get_xy(lv_coord_t *x, lv_coord_t *y);
 
 // static void mouse_init(void);
 // static bool mouse_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
@@ -35,7 +35,7 @@ static lv_coord_t touchpad_get_xy(lv_coord_t * x, lv_coord_t * y);
 // static void mouse_get_xy(lv_coord_t * x, lv_coord_t * y);
 
 static void keypad_init(void);
-static bool keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+static bool keypad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
 static uint32_t keypad_get_key(void);
 
 // static void encoder_init(void);
@@ -50,9 +50,9 @@ static uint32_t keypad_get_key(void);
 /**********************
  *  STATIC VARIABLES
  **********************/
-lv_indev_t * indev_touchpad;
+lv_indev_t *indev_touchpad;
 //lv_indev_t * indev_mouse;
-lv_indev_t * indev_keypad;
+lv_indev_t *indev_keypad;
 //lv_indev_t * indev_encoder;
 //lv_indev_t * indev_button;
 
@@ -188,14 +188,14 @@ static void touchpad_init(void)
 }
 
 /* Will be called by the library to read the touchpad */
-static bool touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
+static bool touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
 {
     static lv_coord_t last_x = 0;
     static lv_coord_t last_y = 0;
-    lv_coord_t xt,yt;
+    lv_coord_t xt, yt;
 
     /*Save the pressed coordinates and the state*/
-    if(touchpad_get_xy(&xt,&yt)) {
+    if (touchpad_get_xy(&xt, &yt)) {
         last_x = xt;
         last_y = yt;
         data->state = LV_INDEV_STATE_PR;
@@ -208,7 +208,7 @@ static bool touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
     data->point.y = last_y;
 
     /*Return `false` because we are not buffering and no more data to read*/
-     return false;
+    return false;
 }
 
 /*Return true is the touchpad is pressed*/
@@ -219,18 +219,20 @@ static bool touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 // }
 
 /*Get the x and y coordinates if the touchpad is pressed*/
-static lv_coord_t touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
+static lv_coord_t touchpad_get_xy(lv_coord_t *x, lv_coord_t *y)
 {
     /*Your code comes here*/
-    lv_disp_t  *p_disp_drv_cb;
+    lv_disp_t *p_disp_drv_cb;
     uint8_t res;
 
     p_disp_drv_cb = lv_disp_get_default();
 
-    while(p_disp_drv_cb->driver.buffer->flushing);
-    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void*)3600000);
-    res = touch_read(x,y);
-    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void*)36000000);
+    while (p_disp_drv_cb->driver.buffer->flushing)
+        ;
+
+    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void *)3600000);
+    res = touch_read(x, y);
+    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void *)36000000);
     return res;
 }
 
@@ -283,14 +285,14 @@ static lv_coord_t touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
  * -----------------*/
 #include "hal_adc.h"
 #include "hal_gpio.h"
-uint8_t PinList[] = {GPIO_PIN_18};
-adc_channel_t posChList[] = {ADC_CHANNEL8};
-adc_channel_t negChList[] = {ADC_CHANNEL_GND};
+uint8_t PinList[] = { GPIO_PIN_18 };
+adc_channel_t posChList[] = { ADC_CHANNEL8 };
+adc_channel_t negChList[] = { ADC_CHANNEL_GND };
 
 adc_channel_val_t result_val;
-struct device* adc_key;
+struct device *adc_key;
 
-uint16_t key_value[] = {283,89,198,0,406};
+uint16_t key_value[] = { 283, 89, 198, 0, 406 };
 
 /* Initialize your keypad */
 static void keypad_init(void)
@@ -305,17 +307,17 @@ static void keypad_init(void)
     adc_register(ADC0_INDEX, "adc_key", DEVICE_OFLAG_STREAM_RX);
 
     adc_key = device_find("adc_key");
-    if(adc_key)
-    {
+
+    if (adc_key) {
         ADC_DEV(adc_key)->continuous_conv_mode = ENABLE;
         device_open(adc_key, DEVICE_OFLAG_STREAM_RX);
-        device_control(adc_key,DEVICE_CTRL_ADC_CHANNEL_CONFIG,&adc_channel_cfg);
+        device_control(adc_key, DEVICE_CTRL_ADC_CHANNEL_CONFIG, &adc_channel_cfg);
         adc_channel_start(adc_key);
     }
 }
 
 /* Will be called by the library to read the keypad */
-static bool keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
+static bool keypad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
 {
     static uint32_t last_key = 0;
 
@@ -324,30 +326,38 @@ static bool keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 
     /*Get whether the a key is pressed and save the pressed key*/
     uint32_t act_key = keypad_get_key();
-    if(act_key != 0) {
+
+    if (act_key != 0) {
         data->state = LV_INDEV_STATE_PR;
+
         /*Translate the keys to LVGL control characters according to your key definitions*/
-        switch(act_key) {
-        case 1:
-            act_key = LV_KEY_LEFT;
-            break;
-        case 2:
-            act_key = LV_KEY_RIGHT;
-            break;
-        case 3:
-            act_key = LV_KEY_UP;
-            break;
-        case 4:
-            act_key = LV_KEY_DOWN;
-            break;
-        case 5:
-            act_key = LV_KEY_ENTER;
-            break;
-        default:
-            break;
+        switch (act_key) {
+            case 1:
+                act_key = LV_KEY_LEFT;
+                break;
+
+            case 2:
+                act_key = LV_KEY_RIGHT;
+                break;
+
+            case 3:
+                act_key = LV_KEY_UP;
+                break;
+
+            case 4:
+                act_key = LV_KEY_DOWN;
+                break;
+
+            case 5:
+                act_key = LV_KEY_ENTER;
+                break;
+
+            default:
+                break;
         }
+
         last_key = act_key;
-        
+
     } else {
         data->state = LV_INDEV_STATE_REL;
     }
@@ -367,42 +377,36 @@ static uint32_t keypad_get_key(void)
     uint8_t key;
     uint16_t key_voltage;
     /*Your code comes here*/
-    device_read(adc_key, 0, (void *)&result_val,sizeof(result_val)/sizeof(adc_channel_val_t));
+    device_read(adc_key, 0, (void *)&result_val, sizeof(result_val) / sizeof(adc_channel_val_t));
     key_voltage = result_val.volt * 1000;
 
-    for(key=0;key<sizeof(key_value)/sizeof(key_value[0]);key++)
-    {
-        if(DIFF(key_voltage,key_value[key]) < KEY_ADC_DIFF_MAX )
-        {
+    for (key = 0; key < sizeof(key_value) / sizeof(key_value[0]); key++) {
+        if (DIFF(key_voltage, key_value[key]) < KEY_ADC_DIFF_MAX) {
             break;
         }
     }
-    key+=1;
-    if( key > sizeof(key_value))
-    {
+
+    key += 1;
+
+    if (key > sizeof(key_value)) {
         key = 0;
     }
 
-    if(key == last_key)
-    {
+    if (key == last_key) {
         old_key_v = key;
         old_key_num = 0;
-    }
-    else if(key==old_key_v)
-    {
+    } else if (key == old_key_v) {
         old_key_num++;
-        if(old_key_num >= KEY_NOISE_NUM_MAX)
-        {
+
+        if (old_key_num >= KEY_NOISE_NUM_MAX) {
             last_key = key;
             old_key_num = 0;
         }
-    }
-    else 
-    {
+    } else {
         old_key_num = 0;
         old_key_v = key;
     }
-    
+
     return last_key;
 }
 

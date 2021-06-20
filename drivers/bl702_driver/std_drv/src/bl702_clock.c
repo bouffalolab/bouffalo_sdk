@@ -85,7 +85,7 @@ static Clock_Cfg_Type clkCfg;
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set System Clock
  *
  * @param  type: System clock type
@@ -94,14 +94,14 @@ static Clock_Cfg_Type clkCfg;
  * @return None
  *
 *******************************************************************************/
-void Clock_System_Clock_Set(BL_System_Clock_Type type,uint32_t clock)
+void Clock_System_Clock_Set(BL_System_Clock_Type type, uint32_t clock)
 {
-    if(type<BL_SYSTEM_CLOCK_MAX){
-        clkCfg.systemClock[type]=clock/1000000;
+    if (type < BL_SYSTEM_CLOCK_MAX) {
+        clkCfg.systemClock[type] = clock / 1000000;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set Peripheral Clock
  *
  * @param  type: Peripheral clock type
@@ -110,18 +110,18 @@ void Clock_System_Clock_Set(BL_System_Clock_Type type,uint32_t clock)
  * @return None
  *
 *******************************************************************************/
-void Clock_Peripheral_Clock_Set(BL_AHB_Slave1_Type type,uint32_t clock)
+void Clock_Peripheral_Clock_Set(BL_AHB_Slave1_Type type, uint32_t clock)
 {
-    if(type<BL_AHB_SLAVE1_MAX){
-        if(type==BL_AHB_SLAVE1_I2S){
-            clkCfg.i2sClock=clock;
-        }else{
-            clkCfg.peripheralClock[type]=clock/1000000;
+    if (type < BL_AHB_SLAVE1_MAX) {
+        if (type == BL_AHB_SLAVE1_I2S) {
+            clkCfg.i2sClock = clock;
+        } else {
+            clkCfg.peripheralClock[type] = clock / 1000000;
         }
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get System Clock
  *
  * @param  type: System clock type
@@ -130,15 +130,15 @@ void Clock_Peripheral_Clock_Set(BL_AHB_Slave1_Type type,uint32_t clock)
  *
 *******************************************************************************/
 uint32_t Clock_System_Clock_Get(BL_System_Clock_Type type)
-{    
-    if(type<BL_SYSTEM_CLOCK_MAX){
-        return clkCfg.systemClock[type]*1000000;
+{
+    if (type < BL_SYSTEM_CLOCK_MAX) {
+        return clkCfg.systemClock[type] * 1000000;
     }
 
     return 0;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get Peripheral Clock
  *
  * @param  type: Peripheral clock type
@@ -148,11 +148,11 @@ uint32_t Clock_System_Clock_Get(BL_System_Clock_Type type)
 *******************************************************************************/
 uint32_t Clock_Peripheral_Clock_Get(BL_AHB_Slave1_Type type)
 {
-    if(type<BL_AHB_SLAVE1_MAX){
-        if(type==BL_AHB_SLAVE1_I2S){
+    if (type < BL_AHB_SLAVE1_MAX) {
+        if (type == BL_AHB_SLAVE1_I2S) {
             return clkCfg.i2sClock;
-        }else{
-            return clkCfg.peripheralClock[type]*1000000;
+        } else {
+            return clkCfg.peripheralClock[type] * 1000000;
         }
     }
 

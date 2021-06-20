@@ -35,20 +35,21 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-typedef void (*lv_gauge_format_cb_t)(lv_obj_t * gauge, char * buf, int bufsize, int32_t value);
+typedef void (*lv_gauge_format_cb_t)(lv_obj_t *gauge, char *buf, int bufsize, int32_t value);
 
 /*Data of gauge*/
-typedef struct {
+typedef struct
+{
     lv_linemeter_ext_t lmeter; /*Ext. of ancestor*/
     /*New data for this type */
-    int32_t * values;        /*Array of the set values (for needles) */
-    const lv_color_t * needle_colors; /*Color of the needles (lv_color_t my_colors[needle_num])*/
-    const void * needle_img;
+    int32_t *values;                 /*Array of the set values (for needles) */
+    const lv_color_t *needle_colors; /*Color of the needles (lv_color_t my_colors[needle_num])*/
+    const void *needle_img;
     lv_point_t needle_img_pivot;
     lv_style_list_t style_needle;
     lv_style_list_t style_strong;
-    uint8_t needle_count;             /*Number of needles*/
-    uint8_t label_count;              /*Number of labels on the scale*/
+    uint8_t needle_count; /*Number of needles*/
+    uint8_t label_count;  /*Number of labels on the scale*/
     lv_gauge_format_cb_t format_cb;
 } lv_gauge_ext_t;
 
@@ -72,7 +73,7 @@ typedef uint8_t lv_gauge_style_t;
  * @param copy pointer to a gauge object, if not NULL then the new object will be copied from it
  * @return pointer to the created gauge
  */
-lv_obj_t * lv_gauge_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_gauge_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*=====================
  * Setter functions
@@ -84,7 +85,7 @@ lv_obj_t * lv_gauge_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param needle_cnt new count of needles
  * @param colors an array of colors for needles (with 'num' elements)
  */
-void lv_gauge_set_needle_count(lv_obj_t * gauge, uint8_t needle_cnt, const lv_color_t colors[]);
+void lv_gauge_set_needle_count(lv_obj_t *gauge, uint8_t needle_cnt, const lv_color_t colors[]);
 
 /**
  * Set the value of a needle
@@ -92,7 +93,7 @@ void lv_gauge_set_needle_count(lv_obj_t * gauge, uint8_t needle_cnt, const lv_co
  * @param needle_id the id of the needle
  * @param value the new value
  */
-void lv_gauge_set_value(lv_obj_t * gauge, uint8_t needle_id, int32_t value);
+void lv_gauge_set_value(lv_obj_t *gauge, uint8_t needle_id, int32_t value);
 
 /**
  * Set minimum and the maximum values of a gauge
@@ -100,7 +101,7 @@ void lv_gauge_set_value(lv_obj_t * gauge, uint8_t needle_id, int32_t value);
  * @param min minimum value
  * @param max maximum value
  */
-static inline void lv_gauge_set_range(lv_obj_t * gauge, int32_t min, int32_t max)
+static inline void lv_gauge_set_range(lv_obj_t *gauge, int32_t min, int32_t max)
 {
     lv_linemeter_set_range(gauge, min, max);
 }
@@ -110,7 +111,7 @@ static inline void lv_gauge_set_range(lv_obj_t * gauge, int32_t min, int32_t max
  * @param gauge pointer to a gauge object
  * @param value the critical value
  */
-static inline void lv_gauge_set_critical_value(lv_obj_t * gauge, int32_t value)
+static inline void lv_gauge_set_critical_value(lv_obj_t *gauge, int32_t value)
 {
     lv_linemeter_set_value(gauge, value - 1);
 }
@@ -124,14 +125,14 @@ static inline void lv_gauge_set_critical_value(lv_obj_t * gauge, int32_t value)
  * `line_cnt = (sub_div + 1) * (label_cnt - 1) + 1 `
  * @param label_cnt count of scale labels.
  */
-void lv_gauge_set_scale(lv_obj_t * gauge, uint16_t angle, uint8_t line_cnt, uint8_t label_cnt);
+void lv_gauge_set_scale(lv_obj_t *gauge, uint16_t angle, uint8_t line_cnt, uint8_t label_cnt);
 
 /**
  * Set the set an offset for the gauge's angles to rotate it.
  * @param gauge pointer to a line meter object
  * @param angle angle offset (0..360), rotates clockwise
  */
-static inline void lv_gauge_set_angle_offset(lv_obj_t * gauge, uint16_t angle)
+static inline void lv_gauge_set_angle_offset(lv_obj_t *gauge, uint16_t angle)
 {
     lv_linemeter_set_angle_offset(gauge, angle);
 }
@@ -145,14 +146,14 @@ static inline void lv_gauge_set_angle_offset(lv_obj_t * gauge, uint16_t angle)
  * @param pivot_x the X coordinate of rotation center of the image
  * @param pivot_y the Y coordinate of rotation center of the image
  */
-void lv_gauge_set_needle_img(lv_obj_t * gauge, const void * img, lv_coord_t pivot_x, lv_coord_t pivot_y);
+void lv_gauge_set_needle_img(lv_obj_t *gauge, const void *img, lv_coord_t pivot_x, lv_coord_t pivot_y);
 
 /**
  * Assign a function to format gauge values
  * @param gauge pointer to a gauge object
  * @param format_cb pointer to function of lv_gauge_format_cb_t
  */
-void lv_gauge_set_formatter_cb(lv_obj_t * gauge, lv_gauge_format_cb_t format_cb);
+void lv_gauge_set_formatter_cb(lv_obj_t *gauge, lv_gauge_format_cb_t format_cb);
 
 /*=====================
  * Getter functions
@@ -164,21 +165,21 @@ void lv_gauge_set_formatter_cb(lv_obj_t * gauge, lv_gauge_format_cb_t format_cb)
  * @param needle the id of the needle
  * @return the value of the needle [min,max]
  */
-int32_t lv_gauge_get_value(const lv_obj_t * gauge, uint8_t needle);
+int32_t lv_gauge_get_value(const lv_obj_t *gauge, uint8_t needle);
 
 /**
  * Get the count of needles on a gauge
  * @param gauge pointer to gauge
  * @return count of needles
  */
-uint8_t lv_gauge_get_needle_count(const lv_obj_t * gauge);
+uint8_t lv_gauge_get_needle_count(const lv_obj_t *gauge);
 
 /**
  * Get the minimum value of a gauge
  * @param gauge pointer to a gauge object
  * @return the minimum value of the gauge
  */
-static inline int32_t lv_gauge_get_min_value(const lv_obj_t * lmeter)
+static inline int32_t lv_gauge_get_min_value(const lv_obj_t *lmeter)
 {
     return lv_linemeter_get_min_value(lmeter);
 }
@@ -188,7 +189,7 @@ static inline int32_t lv_gauge_get_min_value(const lv_obj_t * lmeter)
  * @param gauge pointer to a gauge object
  * @return the maximum value of the gauge
  */
-static inline int32_t lv_gauge_get_max_value(const lv_obj_t * lmeter)
+static inline int32_t lv_gauge_get_max_value(const lv_obj_t *lmeter)
 {
     return lv_linemeter_get_max_value(lmeter);
 }
@@ -198,7 +199,7 @@ static inline int32_t lv_gauge_get_max_value(const lv_obj_t * lmeter)
  * @param gauge pointer to a gauge object
  * @return the critical value
  */
-static inline int32_t lv_gauge_get_critical_value(const lv_obj_t * gauge)
+static inline int32_t lv_gauge_get_critical_value(const lv_obj_t *gauge)
 {
     return lv_linemeter_get_value(gauge);
 }
@@ -208,14 +209,14 @@ static inline int32_t lv_gauge_get_critical_value(const lv_obj_t * gauge)
  * @param gauge pointer to a gauge object
  * @return count of labels
  */
-uint8_t lv_gauge_get_label_count(const lv_obj_t * gauge);
+uint8_t lv_gauge_get_label_count(const lv_obj_t *gauge);
 
 /**
  * Get the scale number of a gauge
  * @param gauge pointer to a gauge object
  * @return number of the scale units
  */
-static inline uint16_t lv_gauge_get_line_count(const lv_obj_t * gauge)
+static inline uint16_t lv_gauge_get_line_count(const lv_obj_t *gauge)
 {
     return lv_linemeter_get_line_count(gauge);
 }
@@ -225,7 +226,7 @@ static inline uint16_t lv_gauge_get_line_count(const lv_obj_t * gauge)
  * @param gauge pointer to a gauge object
  * @return angle of the scale
  */
-static inline uint16_t lv_gauge_get_scale_angle(const lv_obj_t * gauge)
+static inline uint16_t lv_gauge_get_scale_angle(const lv_obj_t *gauge)
 {
     return lv_linemeter_get_scale_angle(gauge);
 }
@@ -235,7 +236,7 @@ static inline uint16_t lv_gauge_get_scale_angle(const lv_obj_t * gauge)
  * @param gauge pointer to a gauge object
  * @return angle offset (0..360)
  */
-static inline uint16_t lv_gauge_get_angle_offset(lv_obj_t * gauge)
+static inline uint16_t lv_gauge_get_angle_offset(lv_obj_t *gauge)
 {
     return lv_linemeter_get_angle_offset(gauge);
 }
@@ -246,21 +247,21 @@ static inline uint16_t lv_gauge_get_angle_offset(lv_obj_t * gauge)
  * @return pointer to an `lv_img_dsc_t` variable or a path to an image
  *        (not an `lv_img` object). `NULL` if not used.
  */
-const void * lv_gauge_get_needle_img(lv_obj_t * gauge);
+const void *lv_gauge_get_needle_img(lv_obj_t *gauge);
 
 /**
  * Get the X coordinate of the rotation center of the needle image
  * @param gauge pointer to a gauge object
  * @return the X coordinate of rotation center of the image
  */
-lv_coord_t lv_gauge_get_needle_img_pivot_x(lv_obj_t * gauge);
+lv_coord_t lv_gauge_get_needle_img_pivot_x(lv_obj_t *gauge);
 
 /**
  * Get the Y coordinate of the rotation center of the needle image
  * @param gauge pointer to a gauge object
  * @return the X coordinate of rotation center of the image
  */
-lv_coord_t lv_gauge_get_needle_img_pivot_y(lv_obj_t * gauge);
+lv_coord_t lv_gauge_get_needle_img_pivot_y(lv_obj_t *gauge);
 
 /**********************
  *      MACROS

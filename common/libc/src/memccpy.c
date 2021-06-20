@@ -13,15 +13,17 @@
 
 void *memccpy(void *dst, const void *src, int c, size_t n)
 {
-	char *q = (char *)dst;
-	const char *p = (char *)src;
-	char ch;
+    char *q = (char *)dst;
+    const char *p = (char *)src;
+    char ch;
 
-	while (n--) {
-		*q++ = ch = *p++;
-		if (ch == (char)c)
-			return q;
-	}
+    while (n--) {
+        *q++ = ch = *p++;
 
-	return NULL;		/* No instance of "c" found */
+        if (ch == (char)c) {
+            return q;
+        }
+    }
+
+    return NULL; /* No instance of "c" found */
 }

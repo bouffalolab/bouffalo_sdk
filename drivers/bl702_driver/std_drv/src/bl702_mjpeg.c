@@ -61,8 +61,7 @@
 /** @defgroup  MJPEG_Private_Variables
  *  @{
  */
-static intCallback_Type * mjpegIntCbfArra[MJPEG_INT_ALL] = {NULL};
-
+static intCallback_Type *mjpegIntCbfArra[MJPEG_INT_ALL] = { NULL };
 
 /*@} end of group MJPEG_Private_Variables */
 
@@ -88,7 +87,7 @@ static intCallback_Type * mjpegIntCbfArra[MJPEG_INT_ALL] = {NULL};
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Mjpeg module init
  *
  * @param  cfg: Mjpeg configuration structure pointer
@@ -101,7 +100,7 @@ void MJPEG_Init(MJPEG_CFG_Type *cfg)
     uint32_t tmpVal;
 
     /* Disable clock gate */
-    GLB_AHB_Slave1_Clock_Gate(DISABLE,BL_AHB_SLAVE1_MJPEG);
+    GLB_AHB_Slave1_Clock_Gate(DISABLE, BL_AHB_SLAVE1_MJPEG);
 
     /* disable mjpeg */
     tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_1);
@@ -122,38 +121,42 @@ void MJPEG_Init(MJPEG_CFG_Type *cfg)
     BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_1, tmpVal);
 
     tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_2);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_MJPEG_WAIT_CYCLE,cfg->waitCount);
-    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_2,tmpVal);
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_FRAME_SIZE);
-    switch(cfg->yuv)
-    {
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_MJPEG_WAIT_CYCLE, cfg->waitCount);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_2, tmpVal);
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_FRAME_SIZE);
+
+    switch (cfg->yuv) {
         case MJPEG_YUV422_INTERLEAVE:
         case MJPEG_YUV422_PLANAR:
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_WBLK, (cfg->resolutionX+15)>>4);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_HBLK, (cfg->resolutionY+7)>>3);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_WBLK, (cfg->resolutionX + 15) >> 4);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_HBLK, (cfg->resolutionY + 7) >> 3);
             break;
+
         case MJPEG_YUV420:
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_WBLK, (cfg->resolutionX+15)>>4);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_HBLK, (cfg->resolutionY+15)>>4);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_WBLK, (cfg->resolutionX + 15) >> 4);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_HBLK, (cfg->resolutionY + 15) >> 4);
             break;
+
         case MJPEG_YUV400:
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_WBLK, (cfg->resolutionX+7)>>3);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_HBLK, (cfg->resolutionY+7)>>3);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_WBLK, (cfg->resolutionX + 7) >> 3);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_HBLK, (cfg->resolutionY + 7) >> 3);
             break;
+
         default:
             break;
     }
-    BL_WR_REG(MJPEG_BASE,MJPEG_FRAME_SIZE,tmpVal);
-    
+
+    BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_SIZE, tmpVal);
+
     tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_SWAP_MODE);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_W_SWAP_MODE,cfg->swapModeEnable);
-    BL_WR_REG(MJPEG_BASE, MJPEG_SWAP_MODE,tmpVal);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_W_SWAP_MODE, cfg->swapModeEnable);
+    BL_WR_REG(MJPEG_BASE, MJPEG_SWAP_MODE, tmpVal);
 
     /*align buffer to 16 bytes boundary, should be kept the same as CAM module*/
     BL_WR_REG(MJPEG_BASE, MJPEG_YY_FRAME_ADDR, (cfg->bufferCamYY & 0xFFFFFFF0));
     BL_WR_REG(MJPEG_BASE, MJPEG_UV_FRAME_ADDR, (cfg->bufferCamUV & 0xFFFFFFF0));
-    BL_WR_REG(MJPEG_BASE, MJPEG_YUV_MEM, (cfg->sizeCamUV<<16)+cfg->sizeCamYY);
+    BL_WR_REG(MJPEG_BASE, MJPEG_YUV_MEM, (cfg->sizeCamUV << 16) + cfg->sizeCamYY);
 
     /*align buffer to 16 bytes boundary*/
     BL_WR_REG(MJPEG_BASE, MJPEG_JPEG_FRAME_ADDR, (cfg->bufferMjpeg & 0xFFFFFFF0));
@@ -161,14 +164,14 @@ void MJPEG_Init(MJPEG_CFG_Type *cfg)
     BL_WR_REG(MJPEG_BASE, MJPEG_JPEG_STORE_MEMORY, cfg->sizeMjpeg >> 6);
 
     /* Clear interrupt */
-    BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP,0x3F00);
+    BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 0x3F00);
 
 #ifndef BFLB_USE_HAL_DRIVER
-    Interrupt_Handler_Register(MJPEG_IRQn,MJPEG_IRQHandler);
+    Interrupt_Handler_Register(MJPEG_IRQn, MJPEG_IRQHandler);
 #endif
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Mjpeg packet mode configure
  *
  * @param  cfg: Packet configuration
@@ -179,22 +182,22 @@ void MJPEG_Init(MJPEG_CFG_Type *cfg)
 void MJPEG_Packet_Config(MJPEG_Packet_Type *cfg)
 {
     uint32_t tmpVal;
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_PAKET_CTRL);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_PKET_EN,cfg->packetEnable);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_JEND_TO_PEND,cfg->endToTail);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_PKET_BODY_BYTE,cfg->packetBody);
-    BL_WR_REG(MJPEG_BASE,MJPEG_PAKET_CTRL,tmpVal);
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_HEADER_BYTE);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_HEAD_BYTE,cfg->frameHead);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_TAIL_EXP,cfg->frameTail);
-    BL_WR_REG(MJPEG_BASE,MJPEG_HEADER_BYTE,tmpVal);
-    
-    BL_WR_REG(MJPEG_BASE,MJPEG_PAKET_HEAD_TAIL,(cfg->packetTail<<16)+cfg->packetHead);
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_PAKET_CTRL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_PKET_EN, cfg->packetEnable);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_JEND_TO_PEND, cfg->endToTail);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_PKET_BODY_BYTE, cfg->packetBody);
+    BL_WR_REG(MJPEG_BASE, MJPEG_PAKET_CTRL, tmpVal);
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_HEADER_BYTE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_HEAD_BYTE, cfg->frameHead);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_TAIL_EXP, cfg->frameTail);
+    BL_WR_REG(MJPEG_BASE, MJPEG_HEADER_BYTE, tmpVal);
+
+    BL_WR_REG(MJPEG_BASE, MJPEG_PAKET_HEAD_TAIL, (cfg->packetTail << 16) + cfg->packetHead);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Mjpeg set YUYV order, only work in interleave mode
  *
  * @param  y0: Y0 order
@@ -205,21 +208,21 @@ void MJPEG_Packet_Config(MJPEG_Packet_Type *cfg)
  * @return None
  *
 *******************************************************************************/
-void MJPEG_Set_YUYV_Order_Interleave(uint8_t y0,uint8_t u0,uint8_t y1,uint8_t v0)
+void MJPEG_Set_YUYV_Order_Interleave(uint8_t y0, uint8_t u0, uint8_t y1, uint8_t v0)
 {
     uint32_t tmpVal;
-    
+
     tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_1);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_Y0_ORDER, y0);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_U0_ORDER, u0);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_Y1_ORDER, y1);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_V0_ORDER, v0);
     BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_1, tmpVal);
-    
-    MJPEG_Set_YUYV_Order_Planar(0,1);
+
+    MJPEG_Set_YUYV_Order_Planar(0, 1);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Mjpeg set YY/UV order, only work in planar mode
  *
  * @param  yy: YY order
@@ -228,19 +231,19 @@ void MJPEG_Set_YUYV_Order_Interleave(uint8_t y0,uint8_t u0,uint8_t y1,uint8_t v0
  * @return None
  *
 *******************************************************************************/
-void MJPEG_Set_YUYV_Order_Planar(uint8_t yy,uint8_t uv)
+void MJPEG_Set_YUYV_Order_Planar(uint8_t yy, uint8_t uv)
 {
     uint32_t tmpVal;
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_CONTROL_2);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_YY_DVP2AHB_LSEL,yy);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_YY_DVP2AHB_FSEL,yy);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_UV_DVP2AHB_LSEL,uv);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_UV_DVP2AHB_FSEL,uv);
-    BL_WR_REG(MJPEG_BASE,MJPEG_CONTROL_2,tmpVal);
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_YY_DVP2AHB_LSEL, yy);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_YY_DVP2AHB_FSEL, yy);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_UV_DVP2AHB_LSEL, uv);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_UV_DVP2AHB_FSEL, uv);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_2, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Deinit mjpeg module
  *
  * @param  None
@@ -253,7 +256,7 @@ void MJPEG_Deinit(void)
     //GLB_AHB_Slave2_Reset(BL_AHB_SLAVE2_MJPEG);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable mjpeg module
  *
  * @param  None
@@ -268,10 +271,10 @@ void MJPEG_Enable(void)
     /* Enable mjpeg module */
     tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_1);
     tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_MJPEG_ENABLE);
-    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_1, tmpVal);   
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_1, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable mjpeg module
  *
  * @param  None
@@ -289,7 +292,7 @@ void MJPEG_Disable(void)
     BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_1, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable&disable mjpeg software mode and set frame count
  *
  * @param  count: Frame count
@@ -300,16 +303,16 @@ void MJPEG_Disable(void)
 void MJPEG_SW_Enable(uint8_t count)
 {
     uint32_t tmpVal;
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_CONTROL_2);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_SW_FRAME,count);
-    tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_MJPEG_SW_MODE);
-    BL_WR_REG(MJPEG_BASE,MJPEG_CONTROL_2,tmpVal);
-    tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_MJPEG_SW_MODE);
-    BL_WR_REG(MJPEG_BASE,MJPEG_CONTROL_2,tmpVal);
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_SW_FRAME, count);
+    tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_MJPEG_SW_MODE);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_2, tmpVal);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_MJPEG_SW_MODE);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_2, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  MJPEG software mode run, software mode enable first
  *
  * @param  None
@@ -320,15 +323,15 @@ void MJPEG_SW_Enable(uint8_t count)
 void MJPEG_SW_Run(void)
 {
     uint32_t tmpVal;
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_CONTROL_2);
-    tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_MJPEG_SW_RUN);
-    BL_WR_REG(MJPEG_BASE,MJPEG_CONTROL_2,tmpVal);
-    tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_MJPEG_SW_RUN);
-    BL_WR_REG(MJPEG_BASE,MJPEG_CONTROL_2,tmpVal);
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_2);
+    tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_MJPEG_SW_RUN);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_2, tmpVal);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_MJPEG_SW_RUN);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_2, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get one mjpeg frame
  *
  * @param  info: Mjpeg frame infomation pointer
@@ -344,12 +347,12 @@ void MJPEG_Get_Frame_Info(MJPEG_Frame_Info *info)
 
     info->validFrames = BL_GET_REG_BITS_VAL(tmpVal, MJPEG_FRAME_VALID_CNT);
     info->curFrameAddr = BL_RD_REG(MJPEG_BASE, MJPEG_START_ADDR0);
-    info->curFrameBytes = (BL_RD_REG(MJPEG_BASE, MJPEG_BIT_CNT0)+7)>>3;
-    info->curFrameQ = BL_RD_REG(MJPEG_BASE, MJPEG_Q_MODE0)&0x3f;
+    info->curFrameBytes = (BL_RD_REG(MJPEG_BASE, MJPEG_BIT_CNT0) + 7) >> 3;
+    info->curFrameQ = BL_RD_REG(MJPEG_BASE, MJPEG_Q_MODE0) & 0x3f;
     info->status = tmpVal;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get available count of frames
  *
  * @param  None
@@ -362,7 +365,7 @@ uint8_t MJPEG_Get_Frame_Count(void)
     return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_3), MJPEG_FRAME_VALID_CNT);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Pop one mjpeg frame
  *
  * @param  None
@@ -372,10 +375,10 @@ uint8_t MJPEG_Get_Frame_Count(void)
 *******************************************************************************/
 void MJPEG_Pop_Frame(void)
 {
-    BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP,1);
+    BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 1);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Free current read memory block
  *
  * @param  None
@@ -385,10 +388,10 @@ void MJPEG_Pop_Frame(void)
 *******************************************************************************/
 void MJPEG_Current_Block_Clear(void)
 {
-    BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP,0x2);
+    BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 0x2);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Current read memory block index
  *
  * @param  None
@@ -398,10 +401,10 @@ void MJPEG_Current_Block_Clear(void)
 *******************************************************************************/
 MJPEG_Swap_Block_Type MJPEG_Get_Current_Block(void)
 {
-    return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE,MJPEG_SWAP_MODE),MJPEG_STS_READ_SWAP_IDX);
+    return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE, MJPEG_SWAP_MODE), MJPEG_STS_READ_SWAP_IDX);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get block status, full or not full
  *
  * @param  block: Block number
@@ -412,15 +415,15 @@ MJPEG_Swap_Block_Type MJPEG_Get_Current_Block(void)
 BL_Sts_Type MJPEG_Block_Is_Full(MJPEG_Swap_Block_Type block)
 {
     CHECK_PARAM(IS_MJPEG_SWAP_BLOCK_TYPE(block));
-    
-    if(MJPEG_BLOCK_0 == block){
-        return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE,MJPEG_SWAP_MODE),MJPEG_STS_SWAP0_FULL);
-    }else{
-        return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE,MJPEG_SWAP_MODE),MJPEG_STS_SWAP1_FULL);
+
+    if (MJPEG_BLOCK_0 == block) {
+        return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE, MJPEG_SWAP_MODE), MJPEG_STS_SWAP0_FULL);
+    } else {
+        return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE, MJPEG_SWAP_MODE), MJPEG_STS_SWAP1_FULL);
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Current read memory block is frame start
  *
  * @param  None
@@ -430,10 +433,10 @@ BL_Sts_Type MJPEG_Block_Is_Full(MJPEG_Swap_Block_Type block)
 *******************************************************************************/
 BL_Sts_Type MJPEG_Current_Block_Is_Start(void)
 {
-    return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE,MJPEG_SWAP_MODE),MJPEG_STS_SWAP_FSTART);
+    return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE, MJPEG_SWAP_MODE), MJPEG_STS_SWAP_FSTART);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Current read memory block is frame end
  *
  * @param  None
@@ -443,10 +446,10 @@ BL_Sts_Type MJPEG_Current_Block_Is_Start(void)
 *******************************************************************************/
 BL_Sts_Type MJPEG_Current_Block_Is_End(void)
 {
-    return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE,MJPEG_SWAP_MODE),MJPEG_STS_SWAP_FEND);
+    return BL_GET_REG_BITS_VAL(BL_RD_REG(MJPEG_BASE, MJPEG_SWAP_MODE), MJPEG_STS_SWAP_FEND);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get frame remain bit count in last block, only valid when current read memory block is
  *         frame end
  *
@@ -457,10 +460,10 @@ BL_Sts_Type MJPEG_Current_Block_Is_End(void)
 *******************************************************************************/
 uint32_t MJPEG_Get_Remain_Bit(void)
 {
-    return BL_RD_REG(MJPEG_BASE,MJPEG_SWAP_BIT_CNT);
+    return BL_RD_REG(MJPEG_BASE, MJPEG_SWAP_BIT_CNT);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set frame threshold to issue normal interrupt
  *
  * @param  count: Frame threshold
@@ -471,13 +474,13 @@ uint32_t MJPEG_Get_Remain_Bit(void)
 void MJPEG_Set_Frame_Threshold(uint8_t count)
 {
     uint32_t tmpVal;
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_CONTROL_3);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,MJPEG_REG_FRAME_CNT_TRGR_INT,count);
-    BL_WR_REG(MJPEG_BASE,MJPEG_CONTROL_3,tmpVal);
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_3);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MJPEG_REG_FRAME_CNT_TRGR_INT, count);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_3, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  MJPEG Enable Disable Interrupt
  *
  * @param  intType: MJPEG Interrupt Type
@@ -494,96 +497,104 @@ void MJPEG_IntMask(MJPEG_INT_Type intType, BL_Mask_Type intMask)
     CHECK_PARAM(IS_MJPEG_INT_TYPE(intType));
     CHECK_PARAM(IS_BL_MASK_TYPE(intMask));
 
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_CONTROL_3);
-    switch(intType)
-    {
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_3);
+
+    switch (intType) {
         case MJPEG_INT_NORMAL:
-            if(intMask == UNMASK){
+            if (intMask == UNMASK) {
                 /* Enable this interrupt */
-                tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_NORMAL_EN);
-            }else{
+                tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_NORMAL_EN);
+            } else {
                 /* Disable this interrupt */
-                tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_INT_NORMAL_EN);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_NORMAL_EN);
             }
+
             break;
 
         case MJPEG_INT_CAM_OVERWRITE:
-            if(intMask == UNMASK){
+            if (intMask == UNMASK) {
                 /* Enable this interrupt */
-                tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_CAM_EN);
-            }else{
+                tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_CAM_EN);
+            } else {
                 /* Disable this interrupt */
-                tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_INT_CAM_EN);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_CAM_EN);
             }
+
             break;
 
         case MJPEG_INT_MEM_OVERWRITE:
-            if(intMask == UNMASK){
+            if (intMask == UNMASK) {
                 /* Enable this interrupt */
-                tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_MEM_EN);
-            }else{
+                tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_MEM_EN);
+            } else {
                 /* Disable this interrupt */
-                tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_INT_MEM_EN);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_MEM_EN);
             }
+
             break;
 
         case MJPEG_INT_FRAME_OVERWRITE:
-            if(intMask == UNMASK){
+            if (intMask == UNMASK) {
                 /* Enable this interrupt */
-                tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_FRAME_EN);
-            }else{
+                tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_FRAME_EN);
+            } else {
                 /* Disable this interrupt */
-                tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_INT_FRAME_EN);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_FRAME_EN);
             }
+
             break;
 
         case MJPEG_INT_BACK_IDLE:
-            if(intMask == UNMASK){
+            if (intMask == UNMASK) {
                 /* Enable this interrupt */
-                tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_IDLE_EN);
-            }else{
+                tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_IDLE_EN);
+            } else {
                 /* Disable this interrupt */
-                tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_INT_IDLE_EN);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_IDLE_EN);
             }
+
             break;
 
         case MJPEG_INT_SWAP:
-            if(intMask == UNMASK){
+            if (intMask == UNMASK) {
                 /* Enable this interrupt */
-                tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_SWAP_EN);
-            }else{
+                tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_SWAP_EN);
+            } else {
                 /* Disable this interrupt */
-                tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_INT_SWAP_EN);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_SWAP_EN);
             }
+
             break;
 
         case MJPEG_INT_ALL:
-            if(intMask == UNMASK){
+            if (intMask == UNMASK) {
                 /* Enable all interrupt */
                 tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_NORMAL_EN);
                 tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_CAM_EN);
                 tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_MEM_EN);
                 tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_FRAME_EN);
-                tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_IDLE_EN);
-                tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_SWAP_EN);
-            }else{
+                tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_IDLE_EN);
+                tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_SWAP_EN);
+            } else {
                 /* Disable all interrupt */
                 tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_NORMAL_EN);
                 tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_CAM_EN);
                 tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_MEM_EN);
                 tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_FRAME_EN);
-                tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_INT_IDLE_EN);
-                tmpVal = BL_CLR_REG_BIT(tmpVal,MJPEG_REG_INT_SWAP_EN);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_IDLE_EN);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_INT_SWAP_EN);
             }
+
             break;
 
         default:
             break;
     }
-    BL_WR_REG(MJPEG_BASE,MJPEG_CONTROL_3,tmpVal);
+
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_3, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  MJPEG Interrupt Clear
  *
  * @param  intType: MJPEG Interrupt Type
@@ -594,39 +605,47 @@ void MJPEG_IntMask(MJPEG_INT_Type intType, BL_Mask_Type intMask)
 void MJPEG_IntClr(MJPEG_INT_Type intType)
 {
     uint32_t tmpVal;
-    
+
     CHECK_PARAM(IS_MJPEG_INT_TYPE(intType));
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_FRAME_FIFO_POP);
-    switch(intType)
-    {
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP);
+
+    switch (intType) {
         case MJPEG_INT_NORMAL:
-            tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_NORMAL_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_NORMAL_CLR);
             break;
+
         case MJPEG_INT_CAM_OVERWRITE:
-            tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_CAM_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_CAM_CLR);
             break;
+
         case MJPEG_INT_MEM_OVERWRITE:
-            tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_MEM_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_MEM_CLR);
             break;
+
         case MJPEG_INT_FRAME_OVERWRITE:
-            tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_FRAME_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_FRAME_CLR);
             break;
+
         case MJPEG_INT_BACK_IDLE:
-            tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_IDLE_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_IDLE_CLR);
             break;
+
         case MJPEG_INT_SWAP:
-            tmpVal = BL_SET_REG_BIT(tmpVal,MJPEG_REG_INT_SWAP_CLR);
+            tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_INT_SWAP_CLR);
             break;
+
         case MJPEG_INT_ALL:
             tmpVal = 0x3F00;
+
         default:
             break;
     }
-    BL_WR_REG(MJPEG_BASE,MJPEG_FRAME_FIFO_POP,tmpVal);
+
+    BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Install mjpeg interrupt callback function
  *
  * @param  intType: MJPEG interrupt type
@@ -635,7 +654,7 @@ void MJPEG_IntClr(MJPEG_INT_Type intType)
  * @return None
  *
 *******************************************************************************/
-void MJPEG_Int_Callback_Install(MJPEG_INT_Type intType,intCallback_Type* cbFun)
+void MJPEG_Int_Callback_Install(MJPEG_INT_Type intType, intCallback_Type *cbFun)
 {
     /* Check the parameters */
     CHECK_PARAM(IS_MJPEG_INT_TYPE(intType));
@@ -643,7 +662,7 @@ void MJPEG_Int_Callback_Install(MJPEG_INT_Type intType,intCallback_Type* cbFun)
     mjpegIntCbfArra[intType] = cbFun;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Mjpeg interrupt handler
  *
  * @param  None
@@ -655,51 +674,58 @@ void MJPEG_Int_Callback_Install(MJPEG_INT_Type intType,intCallback_Type* cbFun)
 void MJPEG_IRQHandler(void)
 {
     uint32_t tmpVal;
-    
-    tmpVal = BL_RD_REG(MJPEG_BASE,MJPEG_CONTROL_3);
-    if( BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_NORMAL_INT) ){
-        BL_WR_REG(MJPEG_BASE,MJPEG_FRAME_FIFO_POP,0x100);
-        if(mjpegIntCbfArra[MJPEG_INT_NORMAL] != NULL) {
+
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_3);
+
+    if (BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_NORMAL_INT)) {
+        BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 0x100);
+
+        if (mjpegIntCbfArra[MJPEG_INT_NORMAL] != NULL) {
             /* call the callback function */
             mjpegIntCbfArra[MJPEG_INT_NORMAL]();
         }
     }
-    
-    if( BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_CAM_INT) ){
-        BL_WR_REG(MJPEG_BASE,MJPEG_FRAME_FIFO_POP,0x200);
-        if(mjpegIntCbfArra[MJPEG_INT_CAM_OVERWRITE] != NULL) {
+
+    if (BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_CAM_INT)) {
+        BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 0x200);
+
+        if (mjpegIntCbfArra[MJPEG_INT_CAM_OVERWRITE] != NULL) {
             /* call the callback function */
             mjpegIntCbfArra[MJPEG_INT_CAM_OVERWRITE]();
         }
     }
-    
-    if( BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_MEM_INT) ){
-        BL_WR_REG(MJPEG_BASE,MJPEG_FRAME_FIFO_POP,0x400);
-        if(mjpegIntCbfArra[MJPEG_INT_MEM_OVERWRITE] != NULL) {
+
+    if (BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_MEM_INT)) {
+        BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 0x400);
+
+        if (mjpegIntCbfArra[MJPEG_INT_MEM_OVERWRITE] != NULL) {
             /* call the callback function */
             mjpegIntCbfArra[MJPEG_INT_MEM_OVERWRITE]();
         }
     }
-    
-    if( BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_FRAME_INT) ){
-        BL_WR_REG(MJPEG_BASE,MJPEG_FRAME_FIFO_POP,0x800);
-        if(mjpegIntCbfArra[MJPEG_INT_FRAME_OVERWRITE] != NULL) {
+
+    if (BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_FRAME_INT)) {
+        BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 0x800);
+
+        if (mjpegIntCbfArra[MJPEG_INT_FRAME_OVERWRITE] != NULL) {
             /* call the callback function */
             mjpegIntCbfArra[MJPEG_INT_FRAME_OVERWRITE]();
         }
     }
-    
-    if( BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_IDLE_INT) ){
-        BL_WR_REG(MJPEG_BASE,MJPEG_FRAME_FIFO_POP,0x1000);
-        if(mjpegIntCbfArra[MJPEG_INT_BACK_IDLE] != NULL) {
+
+    if (BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_IDLE_INT)) {
+        BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 0x1000);
+
+        if (mjpegIntCbfArra[MJPEG_INT_BACK_IDLE] != NULL) {
             /* call the callback function */
             mjpegIntCbfArra[MJPEG_INT_BACK_IDLE]();
         }
     }
-    
-    if( BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_SWAP_INT) ){
-        BL_WR_REG(MJPEG_BASE,MJPEG_FRAME_FIFO_POP,0x2000);
-        if(mjpegIntCbfArra[MJPEG_INT_SWAP] != NULL) {
+
+    if (BL_IS_REG_BIT_SET(tmpVal, MJPEG_STS_SWAP_INT)) {
+        BL_WR_REG(MJPEG_BASE, MJPEG_FRAME_FIFO_POP, 0x2000);
+
+        if (mjpegIntCbfArra[MJPEG_INT_SWAP] != NULL) {
             /* call the callback function */
             mjpegIntCbfArra[MJPEG_INT_SWAP]();
         }

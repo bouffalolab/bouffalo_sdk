@@ -17,14 +17,13 @@
 #include <timers.h>
 
 #if defined(BL_MCU_SDK)
-#define TRNG_LOOP_COUNTER   (17)
-extern BL_Err_Type Sec_Eng_Trng_Get_Random(uint8_t *data,uint32_t len);
+#define TRNG_LOOP_COUNTER (17)
+extern BL_Err_Type Sec_Eng_Trng_Get_Random(uint8_t *data, uint32_t len);
 extern BL_Err_Type Sec_Eng_Trng_Enable(void);
 int bl_rand();
 #else
 extern int bl_rand();
 #endif
-
 
 #if defined(BL_MCU_SDK)
 int bl_rand()
@@ -33,16 +32,20 @@ int bl_rand()
     int counter = 0;
     int32_t ret = 0;
     Sec_Eng_Trng_Enable();
+
     do {
-        ret = Sec_Eng_Trng_Get_Random((uint8_t*)&val,4);
-        if(ret < -1){
-               return -1;
+        ret = Sec_Eng_Trng_Get_Random((uint8_t *)&val, 4);
+
+        if (ret < -1) {
+            return -1;
         }
+
         if ((counter++) > TRNG_LOOP_COUNTER) {
             break;
         }
     } while (0 == val);
-    val >>= 1;//leave signe bit alone
+
+    val >>= 1; //leave signe bit alone
     return val;
 }
 #endif
@@ -51,7 +54,6 @@ void k_queue_init(struct k_queue *queue, int size)
 {
     //int size = 20;
     uint8_t blk_size = sizeof(void *) + 1;
-
 
     queue->hdl = xQueueCreate(size, blk_size);
     BT_ASSERT(queue->hdl != NULL);
@@ -62,8 +64,8 @@ void k_queue_init(struct k_queue *queue, int size)
 void k_queue_insert(struct k_queue *queue, void *prev, void *data)
 {
     BaseType_t ret;
-    (void) ret;
-    
+    (void)ret;
+
     ret = xQueueSend(queue->hdl, &data, portMAX_DELAY);
     BT_ASSERT(ret == pdPASS);
 }
@@ -76,10 +78,10 @@ void k_queue_append(struct k_queue *queue, void *data)
 void k_queue_insert_from_isr(struct k_queue *queue, void *prev, void *data)
 {
     BaseType_t xHigherPriorityTaskWoken;
-    
+
     xQueueSendFromISR(queue->hdl, &data, &xHigherPriorityTaskWoken);
-    if(xHigherPriorityTaskWoken == pdTRUE)
-    {
+
+    if (xHigherPriorityTaskWoken == pdTRUE) {
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
 }
@@ -91,12 +93,11 @@ void k_queue_append_from_isr(struct k_queue *queue, void *data)
 
 void k_queue_free(struct k_queue *queue)
 {
-    if(NULL == queue || NULL == queue->hdl)
-    {
+    if (NULL == queue || NULL == queue->hdl) {
         BT_ERR("Queue is NULL\n");
         return;
     }
-    
+
     vQueueDelete(queue->hdl);
     queue->hdl = NULL;
     return;
@@ -122,7 +123,7 @@ void *k_queue_get(struct k_queue *queue, s32_t timeout)
     unsigned int t = timeout;
     BaseType_t ret;
 
-    (void) ret;
+    (void)ret;
 
     if (timeout == K_FOREVER) {
         t = BL_WAIT_FOREVER;
@@ -131,6 +132,7 @@ void *k_queue_get(struct k_queue *queue, s32_t timeout)
     }
 
     ret = xQueueReceive(queue->hdl, &msg, t == BL_WAIT_FOREVER ? portMAX_DELAY : ms2tick(t));
+
     if (ret == pdPASS) {
         return msg;
     } else {
@@ -140,12 +142,12 @@ void *k_queue_get(struct k_queue *queue, s32_t timeout)
 
 int k_queue_is_empty(struct k_queue *queue)
 {
-     return uxQueueMessagesWaiting(queue->hdl)? 0:1;
+    return uxQueueMessagesWaiting(queue->hdl) ? 0 : 1;
 }
 
 int k_queue_get_cnt(struct k_queue *queue)
 {
-     return uxQueueMessagesWaiting(queue->hdl);
+    return uxQueueMessagesWaiting(queue->hdl);
 }
 
 int k_sem_init(struct k_sem *sem, unsigned int initial_count, unsigned int limit)
@@ -165,14 +167,15 @@ int k_sem_take(struct k_sem *sem, uint32_t timeout)
     BaseType_t ret;
     unsigned int t = timeout;
 
-    (void) ret;
+    (void)ret;
+
     if (timeout == K_FOREVER) {
         t = BL_WAIT_FOREVER;
     } else if (timeout == K_NO_WAIT) {
         t = BL_NO_WAIT;
     }
 
-    if(NULL == sem){
+    if (NULL == sem) {
         return -1;
     }
 
@@ -183,15 +186,15 @@ int k_sem_take(struct k_sem *sem, uint32_t timeout)
 int k_sem_give(struct k_sem *sem)
 {
     BaseType_t ret;
-    (void) ret;
-    
+    (void)ret;
+
     if (NULL == sem) {
         BT_ERR("sem is NULL\n");
         return -EINVAL;
     }
 
     ret = xSemaphoreGive(sem->sem.hdl);
-    return  ret == pdPASS ? 0 : -1;
+    return ret == pdPASS ? 0 : -1;
 }
 
 int k_sem_delete(struct k_sem *sem)
@@ -213,10 +216,9 @@ unsigned int k_sem_count_get(struct k_sem *sem)
 
 void k_mutex_init(struct k_mutex *mutex)
 {
-
     if (NULL == mutex) {
         BT_ERR("mutex is NULL\n");
-        return ;
+        return;
     }
 
     mutex->mutex.hdl = xSemaphoreCreateMutex();
@@ -240,18 +242,17 @@ int k_thread_create(struct k_thread *new_thread, const char *name,
 {
     stack_size /= sizeof(StackType_t);
     xTaskCreate(entry, name, stack_size, NULL, prio, (void *)(&new_thread->task));
-    
-    return new_thread->task? 0 : -1;
+
+    return new_thread->task ? 0 : -1;
 }
 
 void k_thread_delete(struct k_thread *new_thread)
 {
-    if(NULL == new_thread || 0 == new_thread->task)
-    {
+    if (NULL == new_thread || 0 == new_thread->task) {
         BT_ERR("task is NULL\n");
         return;
     }
-    
+
     vTaskDelete((void *)(new_thread->task));
     new_thread->task = 0;
     return;
@@ -272,23 +273,23 @@ void k_sleep(s32_t dur_ms)
 
 unsigned int irq_lock(void)
 {
-	taskENTER_CRITICAL();
+    taskENTER_CRITICAL();
     return 1;
 }
 
 void irq_unlock(unsigned int key)
 {
-	taskEXIT_CRITICAL();
+    taskEXIT_CRITICAL();
 }
 
 int k_is_in_isr(void)
 {
-    #if defined(ARCH_RISCV)
+#if defined(ARCH_RISCV)
     return (xPortIsInsideInterrupt());
-    #else
+#else
     /* IRQs + PendSV (14) + SYSTICK (15) are interrupts. */
     return (__get_IPSR() > 13);
-    #endif
+#endif
 
     return 0;
 }
@@ -298,21 +299,21 @@ void k_timer_init(k_timer_t *timer, k_timer_handler_t handle, void *args)
     BT_ASSERT(timer != NULL);
     timer->handler = handle;
     timer->args = args;
-	/* Set args as timer id */
-    timer->timer.hdl = xTimerCreate("Timer", pdMS_TO_TICKS(1000), 0, args, (TimerCallbackFunction_t)(timer->handler)); 
+    /* Set args as timer id */
+    timer->timer.hdl = xTimerCreate("Timer", pdMS_TO_TICKS(1000), 0, args, (TimerCallbackFunction_t)(timer->handler));
     BT_ASSERT(timer->timer.hdl != NULL);
 }
 
-void* k_timer_get_id(void* hdl)
+void *k_timer_get_id(void *hdl)
 {
-	return pvTimerGetTimerID((TimerHandle_t)hdl);
+    return pvTimerGetTimerID((TimerHandle_t)hdl);
 }
 
 void k_timer_start(k_timer_t *timer, uint32_t timeout)
 {
     BaseType_t ret;
-    (void) ret;
-    
+    (void)ret;
+
     BT_ASSERT(timer != NULL);
     timer->timeout = timeout;
     timer->start_ms = k_now_ms();
@@ -327,9 +328,9 @@ void k_timer_reset(k_timer_t *timer)
 {
     BaseType_t ret;
 
-    (void) ret;
+    (void)ret;
     BT_ASSERT(timer != NULL);
-  
+
     ret = xTimerReset(timer->timer.hdl, 0);
     BT_ASSERT(ret == pdPASS);
 }
@@ -338,9 +339,9 @@ void k_timer_stop(k_timer_t *timer)
 {
     BaseType_t ret;
 
-    (void) ret;
+    (void)ret;
     BT_ASSERT(timer != NULL);
-  
+
     ret = xTimerStop(timer->timer.hdl, 0);
     BT_ASSERT(ret == pdPASS);
 }
@@ -348,24 +349,23 @@ void k_timer_stop(k_timer_t *timer)
 void k_timer_delete(k_timer_t *timer)
 {
     BaseType_t ret;
-    (void) ret;
-    
+    (void)ret;
+
     BT_ASSERT(timer != NULL);
-    
+
     ret = xTimerDelete(timer->timer.hdl, 0);
     BT_ASSERT(ret == pdPASS);
 }
 
 long long k_now_ms(void)
 {
-    return (long long)(xTaskGetTickCount() * 1000)/configTICK_RATE_HZ;   
+    return (long long)(xTaskGetTickCount() * 1000) / configTICK_RATE_HZ;
 }
 
 void k_get_random_byte_array(uint8_t *buf, size_t len)
 {
     // bl_rand() return a word, but *buf may not be word-aligned
-    for(int i = 0; i < len; i++)
-    {
+    for (int i = 0; i < len; i++) {
         *(buf + i) = (uint8_t)(bl_rand() & 0xFF);
     }
 }

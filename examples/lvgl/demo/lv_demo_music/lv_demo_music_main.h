@@ -27,7 +27,7 @@ extern "C" {
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
-lv_obj_t * _lv_demo_music_main_create(lv_obj_t * parent);
+lv_obj_t *_lv_demo_music_main_create(lv_obj_t *parent);
 void _lv_demo_music_play(uint32_t id);
 void _lv_demo_music_resume(void);
 void _lv_demo_music_pause(void);
@@ -37,7 +37,6 @@ void _lv_demo_music_album_next(bool next);
  *      MACROS
  **********************/
 #endif /*LV_USE_DEMO_MUSIC*/
-
 
 #ifdef __cplusplus
 } /* extern "C" */

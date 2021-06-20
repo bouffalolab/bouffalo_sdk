@@ -16,7 +16,7 @@ extern "C" {
 #define LVGL_VERSION_MAJOR 7
 #define LVGL_VERSION_MINOR 11
 #define LVGL_VERSION_PATCH 0
-#define LVGL_VERSION_INFO "dev"
+#define LVGL_VERSION_INFO  "dev"
 
 /*********************
  *      INCLUDES
@@ -118,7 +118,7 @@ extern "C" {
  * #endif
  *
  * */
-#define LV_VERSION_CHECK(x,y,z) (x == LVGL_VERSION_MAJOR && (y < LVGL_VERSION_MINOR || (y == LVGL_VERSION_MINOR && z <= LVGL_VERSION_PATCH)))
+#define LV_VERSION_CHECK(x, y, z) (x == LVGL_VERSION_MAJOR && (y < LVGL_VERSION_MINOR || (y == LVGL_VERSION_MINOR && z <= LVGL_VERSION_PATCH)))
 
 /**
  * Wrapper functions for VERSION macros

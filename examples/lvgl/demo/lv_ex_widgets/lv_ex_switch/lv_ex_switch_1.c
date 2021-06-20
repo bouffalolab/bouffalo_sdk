@@ -2,9 +2,9 @@
 #include "bflb_platform.h"
 #if LV_USE_SWITCH
 
-static void event_handler(lv_obj_t * obj, lv_event_t event)
+static void event_handler(lv_obj_t *obj, lv_event_t event)
 {
-    if(event == LV_EVENT_VALUE_CHANGED) {
+    if (event == LV_EVENT_VALUE_CHANGED) {
         //MSG("State: %s\n", lv_switch_get_state(obj) ? "On" : "Off");
     }
 }

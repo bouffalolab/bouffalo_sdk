@@ -38,6 +38,5 @@
 #include "oi_time.h"
 #include "oi_osinterface.h"
 
-
 /*****************************************************************************/
 #endif /* _OI_COMMON_H */

@@ -28,7 +28,7 @@ extern "C" {
 #define LV_TXT_COLOR_CMD "#"
 #endif
 
-#define LV_TXT_ENC_UTF8 1
+#define LV_TXT_ENC_UTF8  1
 #define LV_TXT_ENC_ASCII 2
 
 /**********************
@@ -38,12 +38,12 @@ extern "C" {
  * Options for text rendering.
  */
 enum {
-    LV_TXT_FLAG_NONE    = 0x00,
+    LV_TXT_FLAG_NONE = 0x00,
     LV_TXT_FLAG_RECOLOR = 0x01, /**< Enable parsing of recolor command*/
-    LV_TXT_FLAG_EXPAND  = 0x02, /**< Ignore max-width to avoid automatic word wrapping*/
-    LV_TXT_FLAG_CENTER  = 0x04, /**< Align the text to the middle*/
-    LV_TXT_FLAG_RIGHT   = 0x08, /**< Align the text to the right*/
-    LV_TXT_FLAG_FIT     = 0x10, /**< Max-width is already equal to the longest line. (Used to skip some calculation)*/
+    LV_TXT_FLAG_EXPAND = 0x02,  /**< Ignore max-width to avoid automatic word wrapping*/
+    LV_TXT_FLAG_CENTER = 0x04,  /**< Align the text to the middle*/
+    LV_TXT_FLAG_RIGHT = 0x08,   /**< Align the text to the right*/
+    LV_TXT_FLAG_FIT = 0x10,     /**< Max-width is already equal to the longest line. (Used to skip some calculation)*/
 };
 typedef uint8_t lv_txt_flag_t;
 
@@ -71,7 +71,7 @@ typedef uint8_t lv_txt_cmd_state_t;
  * @param max_width max with of the text (break the lines to fit this size) Set CORD_MAX to avoid
  * line breaks
  */
-void _lv_txt_get_size(lv_point_t * size_res, const char * text, const lv_font_t * font, lv_coord_t letter_space,
+void _lv_txt_get_size(lv_point_t *size_res, const char *text, const lv_font_t *font, lv_coord_t letter_space,
                       lv_coord_t line_space, lv_coord_t max_width, lv_txt_flag_t flag);
 
 /**
@@ -85,7 +85,7 @@ void _lv_txt_get_size(lv_point_t * size_res, const char * text, const lv_font_t 
  * @return the index of the first char of the new line (in byte index not letter index. With UTF-8
  * they are different)
  */
-uint32_t _lv_txt_get_next_line(const char * txt, const lv_font_t * font, lv_coord_t letter_space, lv_coord_t max_width,
+uint32_t _lv_txt_get_next_line(const char *txt, const lv_font_t *font, lv_coord_t letter_space, lv_coord_t max_width,
                                lv_txt_flag_t flag);
 
 /**
@@ -98,7 +98,7 @@ uint32_t _lv_txt_get_next_line(const char * txt, const lv_font_t * font, lv_coor
  * @param flags settings for the text from 'txt_flag_t' enum
  * @return length of a char_num long text
  */
-lv_coord_t _lv_txt_get_width(const char * txt, uint32_t length, const lv_font_t * font, lv_coord_t letter_space,
+lv_coord_t _lv_txt_get_width(const char *txt, uint32_t length, const lv_font_t *font, lv_coord_t letter_space,
                              lv_txt_flag_t flag);
 
 /**
@@ -109,7 +109,7 @@ lv_coord_t _lv_txt_get_width(const char * txt, uint32_t length, const lv_font_t 
  * @return true: the character is part of a command and should not be written,
  *         false: the character should be written
  */
-bool _lv_txt_is_cmd(lv_txt_cmd_state_t * state, uint32_t c);
+bool _lv_txt_is_cmd(lv_txt_cmd_state_t *state, uint32_t c);
 
 /**
  * Insert a string into an other
@@ -117,7 +117,7 @@ bool _lv_txt_is_cmd(lv_txt_cmd_state_t * state, uint32_t c);
  * @param pos position to insert (0: before the original text, 1: after the first char etc.)
  * @param ins_txt text to insert
  */
-void _lv_txt_ins(char * txt_buf, uint32_t pos, const char * ins_txt);
+void _lv_txt_ins(char *txt_buf, uint32_t pos, const char *ins_txt);
 
 /**
  * Delete a part of a string
@@ -126,14 +126,14 @@ void _lv_txt_ins(char * txt_buf, uint32_t pos, const char * ins_txt);
  * char etc.)
  * @param len number of characters to delete
  */
-void _lv_txt_cut(char * txt, uint32_t pos, uint32_t len);
+void _lv_txt_cut(char *txt, uint32_t pos, uint32_t len);
 
 /**
  * return a new formatted text. Memory will be allocated to store the text.
  * @param fmt `printf`-like format
  * @return pointer to the allocated text string.
  */
-char * _lv_txt_set_text_vfmt(const char * fmt, va_list ap);
+char *_lv_txt_set_text_vfmt(const char *fmt, va_list ap);
 
 /***************************************************************
  *  GLOBAL FUNCTION POINTERS FOR CHARACTER ENCODING INTERFACE

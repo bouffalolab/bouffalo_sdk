@@ -82,7 +82,7 @@ static uint8_t aesEnable;
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Read data from flash with lock
  *
  * @param  pFlashCfg:Flash config pointer
@@ -95,22 +95,23 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Init(SPI_Flash_Cfg_Type *pFlashCfg)
 {
     uint32_t ret;
 
-    if(pFlashCfg==NULL){
+    if (pFlashCfg == NULL) {
         /* Get flash config identify */
         XIP_SFlash_Opt_Enter(&aesEnable);
-        ret=SF_Cfg_Flash_Identify_Ext(1,1,0,0,&flashCfg);
+        ret = SF_Cfg_Flash_Identify_Ext(1, 1, 0, 0, &flashCfg);
         XIP_SFlash_Opt_Exit(aesEnable);
-        if((ret&BFLB_FLASH_ID_VALID_FLAG)==0){
+
+        if ((ret & BFLB_FLASH_ID_VALID_FLAG) == 0) {
             return ERROR;
         }
-    }else{
-        memcpy(&flashCfg,pFlashCfg,sizeof(flashCfg));
+    } else {
+        memcpy(&flashCfg, pFlashCfg, sizeof(flashCfg));
     }
-    
+
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Read data from flash with lock
  *
  * @param  addr: flash read start address
@@ -131,7 +132,7 @@ int ATTR_TCM_SECTION XIP_SFlash_Read(uint32_t addr, uint8_t *dst, int len)
     return 0;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Program flash one region with lock
  *
  * @param  addr: Start address to be programed
@@ -152,7 +153,7 @@ int ATTR_TCM_SECTION XIP_SFlash_Write(uint32_t addr, uint8_t *src, int len)
     return 0;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Erase flash one region with lock
  *
  * @param  addr: Start address to be erased

@@ -91,7 +91,8 @@ extern "C" {
  * The following list is generated using
  * cat src/lv_font/lv_symbol_def.h | sed -E -n 's/^#define\s+LV_(SYMBOL_\w+).*".*$/    _LV_STR_\1,/p'
  */
-enum {
+enum
+{
     _LV_STR_SYMBOL_AUDIO,
     _LV_STR_SYMBOL_VIDEO,
     _LV_STR_SYMBOL_LIST,

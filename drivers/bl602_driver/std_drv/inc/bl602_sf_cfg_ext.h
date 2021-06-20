@@ -69,9 +69,9 @@
 /** @defgroup  SF_CFG_EXT_Public_Functions
  *  @{
  */
-BL_Err_Type SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID,SPI_Flash_Cfg_Type * pFlashCfg);
-uint32_t SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash,uint32_t autoScan,uint32_t flashPinCfg,
-                                   uint8_t restoreDefault,SPI_Flash_Cfg_Type * pFlashCfg);
+BL_Err_Type SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID, SPI_Flash_Cfg_Type *pFlashCfg);
+uint32_t SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash, uint32_t autoScan, uint32_t flashPinCfg,
+                                   uint8_t restoreDefault, SPI_Flash_Cfg_Type *pFlashCfg);
 
 /*@} end of group SF_CFG_EXT_Public_Functions */
 

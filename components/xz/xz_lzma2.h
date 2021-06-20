@@ -12,12 +12,12 @@
 #define XZ_LZMA2_H
 
 /* Range coder constants */
-#define RC_SHIFT_BITS 8
-#define RC_TOP_BITS 24
-#define RC_TOP_VALUE (1 << RC_TOP_BITS)
+#define RC_SHIFT_BITS           8
+#define RC_TOP_BITS             24
+#define RC_TOP_VALUE            (1 << RC_TOP_BITS)
 #define RC_BIT_MODEL_TOTAL_BITS 11
-#define RC_BIT_MODEL_TOTAL (1 << RC_BIT_MODEL_TOTAL_BITS)
-#define RC_MOVE_BITS 5
+#define RC_BIT_MODEL_TOTAL      (1 << RC_BIT_MODEL_TOTAL_BITS)
+#define RC_MOVE_BITS            5
 
 /*
  * Maximum number of position states. A position state is the lowest pb
@@ -40,18 +40,18 @@
  * either short or long repeated match, and NONLIT means any non-literal.
  */
 enum lzma_state {
-	STATE_LIT_LIT,
-	STATE_MATCH_LIT_LIT,
-	STATE_REP_LIT_LIT,
-	STATE_SHORTREP_LIT_LIT,
-	STATE_MATCH_LIT,
-	STATE_REP_LIT,
-	STATE_SHORTREP_LIT,
-	STATE_LIT_MATCH,
-	STATE_LIT_LONGREP,
-	STATE_LIT_SHORTREP,
-	STATE_NONLIT_MATCH,
-	STATE_NONLIT_REP
+    STATE_LIT_LIT,
+    STATE_MATCH_LIT_LIT,
+    STATE_REP_LIT_LIT,
+    STATE_SHORTREP_LIT_LIT,
+    STATE_MATCH_LIT,
+    STATE_REP_LIT,
+    STATE_SHORTREP_LIT,
+    STATE_LIT_MATCH,
+    STATE_LIT_LONGREP,
+    STATE_LIT_SHORTREP,
+    STATE_NONLIT_MATCH,
+    STATE_NONLIT_REP
 };
 
 /* Total number of states */
@@ -63,36 +63,37 @@ enum lzma_state {
 /* Indicate that the latest symbol was a literal. */
 static inline void lzma_state_literal(enum lzma_state *state)
 {
-	if (*state <= STATE_SHORTREP_LIT_LIT)
-		*state = STATE_LIT_LIT;
-	else if (*state <= STATE_LIT_SHORTREP)
-		*state = (enum lzma_state)(*state-3);
-	else
-		*state = (enum lzma_state)(*state-6);
+    if (*state <= STATE_SHORTREP_LIT_LIT) {
+        *state = STATE_LIT_LIT;
+    } else if (*state <= STATE_LIT_SHORTREP) {
+        *state = (enum lzma_state)(*state - 3);
+    } else {
+        *state = (enum lzma_state)(*state - 6);
+    }
 }
 
 /* Indicate that the latest symbol was a match. */
 static inline void lzma_state_match(enum lzma_state *state)
 {
-	*state = *state < LIT_STATES ? STATE_LIT_MATCH : STATE_NONLIT_MATCH;
+    *state = *state < LIT_STATES ? STATE_LIT_MATCH : STATE_NONLIT_MATCH;
 }
 
 /* Indicate that the latest state was a long repeated match. */
 static inline void lzma_state_long_rep(enum lzma_state *state)
 {
-	*state = *state < LIT_STATES ? STATE_LIT_LONGREP : STATE_NONLIT_REP;
+    *state = *state < LIT_STATES ? STATE_LIT_LONGREP : STATE_NONLIT_REP;
 }
 
 /* Indicate that the latest symbol was a short match. */
 static inline void lzma_state_short_rep(enum lzma_state *state)
 {
-	*state = *state < LIT_STATES ? STATE_LIT_SHORTREP : STATE_NONLIT_REP;
+    *state = *state < LIT_STATES ? STATE_LIT_SHORTREP : STATE_NONLIT_REP;
 }
 
 /* Test if the previous symbol was a literal. */
 static inline bool lzma_state_is_literal(enum lzma_state state)
 {
-	return state < LIT_STATES;
+    return state < LIT_STATES;
 }
 
 /* Each literal coder is divided in three sections:
@@ -118,13 +119,13 @@ static inline bool lzma_state_is_literal(enum lzma_state state)
  * 10-17     5 = Choice=1 + Choice2=0 + 3 bits
  * 18-273   10 = Choice=1 + Choice2=1 + 8 bits
  */
-#define LEN_LOW_BITS 3
-#define LEN_LOW_SYMBOLS (1 << LEN_LOW_BITS)
-#define LEN_MID_BITS 3
-#define LEN_MID_SYMBOLS (1 << LEN_MID_BITS)
-#define LEN_HIGH_BITS 8
+#define LEN_LOW_BITS     3
+#define LEN_LOW_SYMBOLS  (1 << LEN_LOW_BITS)
+#define LEN_MID_BITS     3
+#define LEN_MID_SYMBOLS  (1 << LEN_MID_BITS)
+#define LEN_HIGH_BITS    8
 #define LEN_HIGH_SYMBOLS (1 << LEN_HIGH_BITS)
-#define LEN_SYMBOLS (LEN_LOW_SYMBOLS + LEN_MID_SYMBOLS + LEN_HIGH_SYMBOLS)
+#define LEN_SYMBOLS      (LEN_LOW_SYMBOLS + LEN_MID_SYMBOLS + LEN_HIGH_SYMBOLS)
 
 /*
  * Maximum length of a match is 273 which is a result of the encoding
@@ -146,8 +147,7 @@ static inline bool lzma_state_is_literal(enum lzma_state state)
  */
 static inline uint32_t lzma_get_dist_state(uint32_t len)
 {
-	return len < DIST_STATES + MATCH_LEN_MIN
-			? len - MATCH_LEN_MIN : DIST_STATES - 1;
+    return len < DIST_STATES + MATCH_LEN_MIN ? len - MATCH_LEN_MIN : DIST_STATES - 1;
 }
 
 /*
@@ -156,7 +156,7 @@ static inline uint32_t lzma_get_dist_state(uint32_t len)
  * value takes 6-36 bits, larger values taking more bits.
  */
 #define DIST_SLOT_BITS 6
-#define DIST_SLOTS (1 << DIST_SLOT_BITS)
+#define DIST_SLOTS     (1 << DIST_SLOT_BITS)
 
 /* Match distances up to 127 are fully encoded using probabilities. Since
  * the highest two bits (distance slot) are always encoded using six bits,
@@ -181,7 +181,7 @@ static inline uint32_t lzma_get_dist_state(uint32_t len)
 
 /* Distance slots that indicate a distance <= 127. */
 #define FULL_DISTANCES_BITS (DIST_MODEL_END / 2)
-#define FULL_DISTANCES (1 << FULL_DISTANCES_BITS)
+#define FULL_DISTANCES      (1 << FULL_DISTANCES_BITS)
 
 /*
  * For match distances greater than 127, only the highest two bits and the

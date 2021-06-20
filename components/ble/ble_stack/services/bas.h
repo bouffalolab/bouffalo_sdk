@@ -45,7 +45,6 @@ u8_t bt_gatt_bas_get_battery_level(void);
  */
 int bt_gatt_bas_set_battery_level(u8_t level);
 
-
 #ifdef __cplusplus
 }
 #endif

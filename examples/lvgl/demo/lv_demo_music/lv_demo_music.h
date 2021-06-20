@@ -20,8 +20,8 @@ extern "C" {
 /*********************
  *      DEFINES
  *********************/
-#define LV_DEMO_MUSIC_LANDSCAPE    (LV_HOR_RES_MAX > LV_VER_RES_MAX ? 1 : 0)
-#define LV_DEMO_LIST_CTRL_OVERLAP  60
+#define LV_DEMO_MUSIC_LANDSCAPE   (LV_HOR_RES_MAX > LV_VER_RES_MAX ? 1 : 0)
+#define LV_DEMO_LIST_CTRL_OVERLAP 60
 
 /**********************
  *      TYPEDEFS
@@ -32,9 +32,9 @@ extern "C" {
  **********************/
 
 void lv_demo_music(void);
-const char * _lv_demo_music_get_title(uint32_t track_id);
-const char * _lv_demo_music_get_artist(uint32_t track_id);
-const char * _lv_demo_music_get_genre(uint32_t track_id);
+const char *_lv_demo_music_get_title(uint32_t track_id);
+const char *_lv_demo_music_get_artist(uint32_t track_id);
+const char *_lv_demo_music_get_genre(uint32_t track_id);
 uint32_t _lv_demo_music_get_track_length(uint32_t track_id);
 
 /**********************

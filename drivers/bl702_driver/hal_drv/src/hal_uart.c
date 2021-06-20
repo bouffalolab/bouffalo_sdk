@@ -35,13 +35,12 @@ static void UART0_IRQ(void);
 static void UART1_IRQ(void);
 #endif
 
-static uart_device_t uartx_device[UART_MAX_INDEX] =
-{
+static uart_device_t uartx_device[UART_MAX_INDEX] = {
 #ifdef BSP_USING_UART0
-        UART0_CONFIG,
+    UART0_CONFIG,
 #endif
 #ifdef BSP_USING_UART1
-        UART1_CONFIG,
+    UART1_CONFIG,
 #endif
 };
 /**
@@ -54,14 +53,14 @@ static uart_device_t uartx_device[UART_MAX_INDEX] =
 int uart_open(struct device *dev, uint16_t oflag)
 {
     uart_device_t *uart_device = (uart_device_t *)dev;
-    UART_FifoCfg_Type fifoCfg = {0};
-    UART_CFG_Type uart_cfg = {0};
+    UART_FifoCfg_Type fifoCfg = { 0 };
+    UART_CFG_Type uart_cfg = { 0 };
 
     /* disable all interrupt */
     UART_IntMask(uart_device->id, UART_INT_ALL, MASK);
     /* disable uart before config */
     UART_Disable(uart_device->id, UART_TXRX);
-    
+
     uint32_t uart_clk = peripheral_clock_get(PERIPHERAL_CLOCK_UART);
     uart_cfg.baudRate = uart_device->baudrate;
     uart_cfg.dataBits = uart_device->databits;
@@ -90,26 +89,22 @@ int uart_open(struct device *dev, uint16_t oflag)
     fifoCfg.rxFifoDmaThreshold = uart_device->fifo_threshold;
     fifoCfg.rxFifoDmaEnable = DISABLE;
 
-    if (oflag & DEVICE_OFLAG_STREAM_TX)
-    {
+    if (oflag & DEVICE_OFLAG_STREAM_TX) {
     }
-    if ((oflag & DEVICE_OFLAG_INT_TX) || (oflag & DEVICE_OFLAG_INT_RX))
-    {
+    if ((oflag & DEVICE_OFLAG_INT_TX) || (oflag & DEVICE_OFLAG_INT_RX)) {
 #ifdef BSP_USING_UART0
         if (uart_device->id == UART0_ID)
             Interrupt_Handler_Register(UART0_IRQn, UART0_IRQ);
-#endif   
-#ifdef BSP_USING_UART1         
+#endif
+#ifdef BSP_USING_UART1
         if (uart_device->id == UART1_ID)
             Interrupt_Handler_Register(UART1_IRQn, UART1_IRQ);
 #endif
     }
-    if (oflag & DEVICE_OFLAG_DMA_TX)
-    {
+    if (oflag & DEVICE_OFLAG_DMA_TX) {
         fifoCfg.txFifoDmaEnable = ENABLE;
     }
-    if (oflag & DEVICE_OFLAG_DMA_RX)
-    {
+    if (oflag & DEVICE_OFLAG_DMA_RX) {
         fifoCfg.rxFifoDmaEnable = ENABLE;
     }
 
@@ -143,129 +138,117 @@ int uart_control(struct device *dev, int cmd, void *args)
 {
     uart_device_t *uart_device = (uart_device_t *)dev;
 
-    switch (cmd)
-    {
-    case DEVICE_CTRL_SET_INT /* constant-expression */:
-    {
-        uint32_t offset = __builtin_ctz((uint32_t)args);
-        while ((0 <= offset) && (offset < 9))
-        {
-            if ((uint32_t)args & (1 << offset))
-            {
-                UART_IntMask(uart_device->id, offset, UNMASK);
+    switch (cmd) {
+        case DEVICE_CTRL_SET_INT /* constant-expression */: {
+            uint32_t offset = __builtin_ctz((uint32_t)args);
+            while ((0 <= offset) && (offset < 9)) {
+                if ((uint32_t)args & (1 << offset)) {
+                    UART_IntMask(uart_device->id, offset, UNMASK);
+                }
+                offset++;
             }
-            offset++;
-        }
-        if (uart_device->id == UART0_ID)
-            NVIC_EnableIRQ(UART0_IRQn);
-        else if (uart_device->id == UART1_ID)
-            NVIC_EnableIRQ(UART1_IRQn);
+            if (uart_device->id == UART0_ID)
+                NVIC_EnableIRQ(UART0_IRQn);
+            else if (uart_device->id == UART1_ID)
+                NVIC_EnableIRQ(UART1_IRQn);
 
-        break;
-    }
-    case DEVICE_CTRL_CLR_INT /* constant-expression */:
-    {
-        uint32_t offset = __builtin_ctz((uint32_t)args);
-        while ((0 <= offset) && (offset < 9))
-        {
-            if ((uint32_t)args & (1 << offset))
-            {
-                UART_IntMask(uart_device->id, offset, MASK);
+            break;
+        }
+        case DEVICE_CTRL_CLR_INT /* constant-expression */: {
+            uint32_t offset = __builtin_ctz((uint32_t)args);
+            while ((0 <= offset) && (offset < 9)) {
+                if ((uint32_t)args & (1 << offset)) {
+                    UART_IntMask(uart_device->id, offset, MASK);
+                }
+                offset++;
             }
-            offset++;
+            if (uart_device->id == UART0_ID)
+                NVIC_DisableIRQ(UART0_IRQn);
+            else if (uart_device->id == UART1_ID)
+                NVIC_DisableIRQ(UART1_IRQn);
+
+            break;
         }
-        if (uart_device->id == UART0_ID)
-            NVIC_DisableIRQ(UART0_IRQn);
-        else if (uart_device->id == UART1_ID)
-            NVIC_DisableIRQ(UART1_IRQn);
+        case DEVICE_CTRL_GET_INT /* constant-expression */:
+            /* code */
+            break;
+        case DEVICE_CTRL_RESUME /* constant-expression */:
+            UART_Enable(uart_device->id, UART_TXRX);
+            break;
+        case DEVICE_CTRL_SUSPEND /* constant-expression */:
+            UART_Disable(uart_device->id, UART_TXRX);
+            break;
+        case DEVICE_CTRL_CONFIG /* constant-expression */: {
+            uart_param_cfg_t *cfg = (uart_param_cfg_t *)args;
+            UART_CFG_Type uart_cfg;
 
-        break;
-    }
-    case DEVICE_CTRL_GET_INT /* constant-expression */:
-        /* code */
-        break;
-    case DEVICE_CTRL_RESUME /* constant-expression */:
-        UART_Enable(uart_device->id, UART_TXRX);
-        break;
-    case DEVICE_CTRL_SUSPEND /* constant-expression */:
-        UART_Disable(uart_device->id, UART_TXRX);
-        break;
-    case DEVICE_CTRL_CONFIG /* constant-expression */:
-    {
-        uart_param_cfg_t* cfg = (uart_param_cfg_t *)args;
-        UART_CFG_Type uart_cfg;
+            /* Disable uart before config */
+            UART_Disable(uart_device->id, UART_TXRX);
+            uint32_t uart_clk = peripheral_clock_get(PERIPHERAL_CLOCK_UART);
 
-        /* Disable uart before config */
-        UART_Disable(uart_device->id, UART_TXRX);
-        uint32_t uart_clk = peripheral_clock_get(PERIPHERAL_CLOCK_UART);
-
-        uart_cfg.uartClk = uart_clk;
-        uart_cfg.baudRate = cfg->baudrate;
-        uart_cfg.stopBits = cfg->stopbits;
-        uart_cfg.parity = cfg->parity;
-        uart_cfg.dataBits = cfg->databits;
-        uart_cfg.ctsFlowControl = UART_CTS_FLOWCONTROL_ENABLE;
-        uart_cfg.rtsSoftwareControl = UART_RTS_FLOWCONTROL_ENABLE;
-        uart_cfg.byteBitInverse = UART_MSB_FIRST_ENABLE;
-        uart_cfg.txSoftwareControl = UART_TX_SWCONTROL_ENABLE;
-        uart_cfg.txLinMode = UART_TX_LINMODE_ENABLE;
-        uart_cfg.rxLinMode = UART_RX_LINMODE_ENABLE;
-        uart_cfg.txBreakBitCnt = UART_TX_BREAKBIT_CNT;
-        UART_Init(uart_device->id, &uart_cfg);
+            uart_cfg.uartClk = uart_clk;
+            uart_cfg.baudRate = cfg->baudrate;
+            uart_cfg.stopBits = cfg->stopbits;
+            uart_cfg.parity = cfg->parity;
+            uart_cfg.dataBits = cfg->databits;
+            uart_cfg.ctsFlowControl = UART_CTS_FLOWCONTROL_ENABLE;
+            uart_cfg.rtsSoftwareControl = UART_RTS_FLOWCONTROL_ENABLE;
+            uart_cfg.byteBitInverse = UART_MSB_FIRST_ENABLE;
+            uart_cfg.txSoftwareControl = UART_TX_SWCONTROL_ENABLE;
+            uart_cfg.txLinMode = UART_TX_LINMODE_ENABLE;
+            uart_cfg.rxLinMode = UART_RX_LINMODE_ENABLE;
+            uart_cfg.txBreakBitCnt = UART_TX_BREAKBIT_CNT;
+            UART_Init(uart_device->id, &uart_cfg);
 #ifdef BSP_USING_UART0
-        if (uart_device->id == UART0_ID)
-            Interrupt_Handler_Register(UART0_IRQn, UART0_IRQ);
-#endif   
-#ifdef BSP_USING_UART1         
-        if (uart_device->id == UART1_ID)
-            Interrupt_Handler_Register(UART1_IRQn, UART1_IRQ);
+            if (uart_device->id == UART0_ID)
+                Interrupt_Handler_Register(UART0_IRQn, UART0_IRQ);
 #endif
-        /* Enable uart */
-        UART_Enable(uart_device->id, UART_TXRX);
-        break;
-    }
-    case DEVICE_CTRL_GET_CONFIG /* constant-expression */:
-        break;
-    case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
-        uart_device->tx_dma = (struct device *)args;
-        break;
-    case DEVICE_CTRL_ATTACH_RX_DMA /* constant-expression */:
-        uart_device->rx_dma = (struct device *)args;
-        break;
-    case DEVICE_CTRL_TX_DMA_SUSPEND:
-    {
-        uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
-        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_DMA_TX_EN);
-        BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
-        break;
-    }        
-    case DEVICE_CTRL_RX_DMA_SUSPEND:
-    {
-        uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
-        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_DMA_RX_EN);
-        BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
-        break;
-    }
-    case DEVICE_CTRL_TX_DMA_RESUME:
-    {
-        uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
-        tmpVal = BL_SET_REG_BIT(tmpVal,UART_DMA_TX_EN);
-        BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
-        break;
-    }
-    case DEVICE_CTRL_RX_DMA_RESUME:
-    {
-        uint32_t tmpVal = BL_RD_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0);
-        tmpVal = BL_SET_REG_BIT(tmpVal,UART_DMA_RX_EN);
-        BL_WR_REG(UART0_BASE+uart_device->id*0x100,UART_FIFO_CONFIG_0,tmpVal);
-        break;
-    }        
-    case DEVICE_CTRL_UART_GET_TX_FIFO /* constant-expression */:
-        return UART_GetTxFifoCount(uart_device->id);
-    case DEVICE_CTRL_UART_GET_RX_FIFO /* constant-expression */:
-        return UART_GetRxFifoCount(uart_device->id);
-    default:
-        break;
+#ifdef BSP_USING_UART1
+            if (uart_device->id == UART1_ID)
+                Interrupt_Handler_Register(UART1_IRQn, UART1_IRQ);
+#endif
+            /* Enable uart */
+            UART_Enable(uart_device->id, UART_TXRX);
+            break;
+        }
+        case DEVICE_CTRL_GET_CONFIG /* constant-expression */:
+            break;
+        case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
+            uart_device->tx_dma = (struct device *)args;
+            break;
+        case DEVICE_CTRL_ATTACH_RX_DMA /* constant-expression */:
+            uart_device->rx_dma = (struct device *)args;
+            break;
+        case DEVICE_CTRL_TX_DMA_SUSPEND: {
+            uint32_t tmpVal = BL_RD_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, UART_DMA_TX_EN);
+            BL_WR_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0, tmpVal);
+            break;
+        }
+        case DEVICE_CTRL_RX_DMA_SUSPEND: {
+            uint32_t tmpVal = BL_RD_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, UART_DMA_RX_EN);
+            BL_WR_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0, tmpVal);
+            break;
+        }
+        case DEVICE_CTRL_TX_DMA_RESUME: {
+            uint32_t tmpVal = BL_RD_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0);
+            tmpVal = BL_SET_REG_BIT(tmpVal, UART_DMA_TX_EN);
+            BL_WR_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0, tmpVal);
+            break;
+        }
+        case DEVICE_CTRL_RX_DMA_RESUME: {
+            uint32_t tmpVal = BL_RD_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0);
+            tmpVal = BL_SET_REG_BIT(tmpVal, UART_DMA_RX_EN);
+            BL_WR_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0, tmpVal);
+            break;
+        }
+        case DEVICE_CTRL_UART_GET_TX_FIFO /* constant-expression */:
+            return UART_GetTxFifoCount(uart_device->id);
+        case DEVICE_CTRL_UART_GET_RX_FIFO /* constant-expression */:
+            return UART_GetRxFifoCount(uart_device->id);
+        default:
+            break;
     }
 
     return 0;
@@ -282,19 +265,15 @@ int uart_control(struct device *dev, int cmd, void *args)
 int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
     uart_device_t *uart_device = (uart_device_t *)dev;
-    if (dev->oflag & DEVICE_OFLAG_DMA_TX)
-    {
+    if (dev->oflag & DEVICE_OFLAG_DMA_TX) {
         struct device *dma_ch = (struct device *)uart_device->tx_dma;
         if (!dma_ch)
             return -1;
-            
-        if(uart_device->id == 0)
-        {
+
+        if (uart_device->id == 0) {
             dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART0_TDR, size);
             dma_channel_start(dma_ch);
-        }
-        else if(uart_device->id == 1)
-        {
+        } else if (uart_device->id == 1) {
             dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART1_TDR, size);
             dma_channel_start(dma_ch);
         }
@@ -314,20 +293,16 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
 int ATTR_TCM_SECTION uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
     uart_device_t *uart_device = (uart_device_t *)dev;
-    if (dev->oflag & DEVICE_OFLAG_DMA_RX)
-    {
+    if (dev->oflag & DEVICE_OFLAG_DMA_RX) {
         struct device *dma_ch = (struct device *)uart_device->rx_dma;
         if (!dma_ch)
             return -1;
-                    
-        if(uart_device->id == 0)
-        {
+
+        if (uart_device->id == 0) {
             dma_reload(dma_ch, (uint32_t)DMA_ADDR_UART0_RDR, (uint32_t)buffer, size);
             dma_channel_start(dma_ch);
-        }
-        else if(uart_device->id == 1)
-        {
-            dma_reload(dma_ch,(uint32_t)DMA_ADDR_UART1_RDR, (uint32_t)buffer, size);
+        } else if (uart_device->id == 1) {
+            dma_reload(dma_ch, (uint32_t)DMA_ADDR_UART1_RDR, (uint32_t)buffer, size);
             dma_channel_start(dma_ch);
         }
     }
@@ -345,8 +320,8 @@ int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
 {
     struct device *dev;
 
-    if(UART_MAX_INDEX == 0)
-    return -DEVICE_EINVAL;
+    if (UART_MAX_INDEX == 0)
+        return -DEVICE_EINVAL;
 
     dev = &(uartx_device[index].parent);
 
@@ -380,43 +355,36 @@ void ATTR_TCM_SECTION uart_isr(uart_device_t *handle)
         return;
 
     /* Length of uart tx data transfer arrived interrupt */
-    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_END_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_END_MASK))
-    {
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_END_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_END_MASK)) {
         BL_WR_REG(UARTx, UART_INT_CLEAR, 0x1);
         handle->parent.callback(&handle->parent, NULL, 0, UART_EVENT_TX_END);
     }
 
     /* Length of uart rx data transfer arrived interrupt */
-    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_END_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_END_MASK))
-    {
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_END_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_END_MASK)) {
         BL_WR_REG(UARTx, UART_INT_CLEAR, 0x2);
-        handle->parent.callback(&handle->parent,NULL, 0, UART_EVENT_RX_END);
+        handle->parent.callback(&handle->parent, NULL, 0, UART_EVENT_RX_END);
     }
 
     /* Tx fifo ready interrupt,auto-cleared when data is pushed */
-    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FIFO_MASK))
-    {
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FIFO_MASK)) {
         handle->parent.callback(&handle->parent, NULL, 0, UART_EVENT_TX_FIFO);
     }
 
     /* Rx fifo ready interrupt,auto-cleared when data is popped */
-    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FIFO_MASK))
-    {
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FIFO_MASK)) {
         uint8_t buffer[UART_FIFO_MAX_LEN];
         uint8_t len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
-        if(len)
-        {
+        if (len) {
             handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RX_FIFO);
         }
     }
 
     /* Rx time-out interrupt */
-    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_RTO_MASK))
-    {
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_RTO_MASK)) {
         uint8_t buffer[UART_FIFO_MAX_LEN];
         uint8_t len = UART_ReceiveData(handle->id, buffer, UART_FIFO_MAX_LEN);
-        if(len)
-        {
+        if (len) {
             handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RTO);
         }
 
@@ -424,21 +392,18 @@ void ATTR_TCM_SECTION uart_isr(uart_device_t *handle)
     }
 
     /* Rx parity check error interrupt */
-    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_PCE_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_PCE_MASK))
-    {
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_PCE_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_PCE_MASK)) {
         BL_WR_REG(UARTx, UART_INT_CLEAR, 0x20);
         handle->parent.callback(&handle->parent, NULL, 0, UART_PCE_IT);
     }
 
     /* Tx fifo overflow/underflow error interrupt */
-    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FER_MASK))
-    {
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FER_MASK)) {
         handle->parent.callback(&handle->parent, NULL, 0, UART_TX_FER_IT);
     }
 
     /* Rx fifo overflow/underflow error interrupt */
-    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FER_MASK))
-    {
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FER_MASK)) {
         handle->parent.callback(&handle->parent, NULL, 0, UART_RX_FER_IT);
     }
 }
@@ -448,7 +413,7 @@ void ATTR_TCM_SECTION uart_isr(uart_device_t *handle)
  * @brief 
  * 
  */
-void ATTR_TCM_SECTION UART0_IRQ(void)
+void UART0_IRQ(void)
 {
     uart_isr(&uartx_device[UART0_INDEX]);
 }

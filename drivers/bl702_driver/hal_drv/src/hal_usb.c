@@ -1,24 +1,24 @@
 /**
  * @file hal_usb.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_usb.h"
 #include "hal_dma.h"
@@ -35,10 +35,10 @@
 #define USB_DC_LOG_ERR(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
 #define USB_DC_LOG(a, ...)
 
-usb_dc_device_t usb_fs_device;
+static usb_dc_device_t usb_fs_device;
+static void USB_FS_IRQ(void);
 
-static dma_lli_ctrl_t usb_lli_list = 
-{
+static dma_lli_ctrl_t usb_lli_list = {
     .src_addr = 0,
     .dst_addr = 0,
     .nextlli = 0,
@@ -79,13 +79,10 @@ static uint8_t usb_ep_is_enabled(uint8_t ep)
 
     /* Check if ep enabled */
     if ((USB_EP_DIR_IS_OUT(ep)) &&
-            usb_fs_device.out_ep[ep_idx].ep_ena)
-    {
+        usb_fs_device.out_ep[ep_idx].ep_ena) {
         return 1;
-    }
-    else if ((USB_EP_DIR_IS_IN(ep)) &&
-             usb_fs_device.in_ep[ep_idx].ep_ena)
-    {
+    } else if ((USB_EP_DIR_IS_IN(ep)) &&
+               usb_fs_device.in_ep[ep_idx].ep_ena) {
         return 1;
     }
 
@@ -96,8 +93,7 @@ static void usb_xcvr_config(BL_Fun_Type NewState)
 {
     uint32_t tmpVal = 0;
 
-    if (NewState != DISABLE)
-    {
+    if (NewState != DISABLE) {
 #if defined(USE_EXTERNAL_TRANSCEIVER)
         tmpVal = BL_RD_REG(GLB_BASE, GLB_USB_XCVR_CONFIG);
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_USB_USE_XCVR, 0); //use external tranceiver
@@ -170,9 +166,7 @@ static void usb_xcvr_config(BL_Fun_Type NewState)
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_USB_ENUM, 1);
         BL_WR_REG(GLB_BASE, GLB_USB_XCVR, tmpVal);
 #endif
-    }
-    else
-    {
+    } else {
 #ifdef USE_INTERNAL_TRANSCEIVER
         tmpVal = BL_RD_REG(GLB_BASE, GLB_USB_XCVR);
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_USB_ENUM, 0);
@@ -211,7 +205,7 @@ static void usb_xcvr_config(BL_Fun_Type NewState)
  */
 int usb_open(struct device *dev, uint16_t oflag)
 {
-    USB_Config_Type usbCfg = {0};
+    USB_Config_Type usbCfg = { 0 };
 
     usb_set_power_off();
     mtimer_delay_ms(10);
@@ -238,7 +232,7 @@ int usb_open(struct device *dev, uint16_t oflag)
     usb_fs_device.out_ep[0].ep_cfg.ep_type = USBD_EP_TYPE_CTRL;
     usb_fs_device.in_ep[0].ep_cfg.ep_mps = USB_CTRL_EP_MPS;
     usb_fs_device.in_ep[0].ep_cfg.ep_type = USBD_EP_TYPE_CTRL;
-    
+
     /* USB interrupt enable config */
     USB_IntEn(USB_INT_ALL, DISABLE);           //all
     USB_IntEn(USB_INT_RESET, ENABLE);          //1
@@ -282,8 +276,8 @@ int usb_open(struct device *dev, uint16_t oflag)
 #endif
     /*Clear pending interrupts*/
     USB_Clr_IntStatus(USB_INT_ALL);
-    
-    Interrupt_Handler_Register(USB_IRQn, USB_IRQHandler);
+
+    Interrupt_Handler_Register(USB_IRQn, USB_FS_IRQ);
     NVIC_EnableIRQ(USB_IRQn);
     USB_Enable();
 
@@ -325,95 +319,106 @@ int usb_close(struct device *dev)
 int usb_control(struct device *dev, int cmd, void *args)
 {
     struct usb_dc_device *usb_device = (struct usb_dc_device *)dev;
-    switch (cmd)
-    {
-        case DEVICE_CTRL_SET_INT /* constant-expression */:
-        {
+
+    switch (cmd) {
+        case DEVICE_CTRL_SET_INT /* constant-expression */: {
             uint32_t offset = __builtin_ctz((uint32_t)args);
-            while (offset < 24)
-            {
-                if ((uint32_t)args & (1 << offset))
-                {
+
+            while (offset < 24) {
+                if ((uint32_t)args & (1 << offset)) {
                     USB_IntEn(offset, ENABLE);
                     USB_IntMask(offset, UNMASK); //11
                     //USB_DC_LOG("offset:%d\r\n",offset);
                 }
+
                 offset++;
             }
-        }
-        break;
+        } break;
+
         case DEVICE_CTRL_CLR_INT /* constant-expression */:
             /* code */
 
             break;
+
         case DEVICE_CTRL_GET_INT /* constant-expression */:
             /* code */
             break;
+
         case DEVICE_CTRL_CONFIG /* constant-expression */:
             break;
+
         case DEVICE_CTRL_GET_CONFIG /* constant-expression */:
             break;
+
         case DEVICE_CTRL_USB_DC_SET_ADDR /* constant-expression */:
             USB_Set_Device_Addr(((uint32_t)args) & 0x7f);
             return 0;
+
         case DEVICE_CTRL_USB_DC_SET_ACK /* constant-expression */:
             USB_Set_EPx_Status(USB_EP_GET_IDX(((uint32_t)args) & 0x7f), USB_EP_STATUS_ACK);
             return 0;
+
         case DEVICE_CTRL_USB_DC_SET_NACK /* constant-expression */:
             USB_Set_EPx_Status(USB_EP_GET_IDX(((uint32_t)args) & 0x7f), USB_EP_STATUS_NACK);
             return 0;
-        case DEVICE_CTRL_USB_DC_SET_STALL /* constant-expression */:
-        {
+
+        case DEVICE_CTRL_USB_DC_SET_STALL /* constant-expression */: {
             uint8_t ep_idx = USB_EP_GET_IDX(((uint32_t)args) & 0x7f);
 
-            if (USB_EP_DIR_IS_OUT(((uint32_t)args) & 0x7f))
-            {
+            if (USB_EP_DIR_IS_OUT(((uint32_t)args) & 0x7f)) {
                 USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_STALL);
                 usb_fs_device.out_ep[ep_idx].is_stalled = 1U;
-            }
-            else
-            {
+            } else {
                 USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_STALL);
                 usb_fs_device.in_ep[ep_idx].is_stalled = 1U;
             }
         }
-        return 0;
-        case DEVICE_CTRL_USB_DC_CLR_STALL /* constant-expression */:
-        {
+
+            return 0;
+
+        case DEVICE_CTRL_USB_DC_CLR_STALL /* constant-expression */: {
             uint8_t ep_idx = USB_EP_GET_IDX(((uint32_t)args) & 0x7f);
-            if (USB_EP_DIR_IS_OUT(((uint32_t)args) & 0x7f))
-            {
+
+            if (USB_EP_DIR_IS_OUT(((uint32_t)args) & 0x7f)) {
                 USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_NSTALL);
                 usb_fs_device.out_ep[ep_idx].is_stalled = 0;
-            }
-            else
-            {
+            } else {
                 USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_NSTALL);
                 usb_fs_device.in_ep[ep_idx].is_stalled = 0;
             }
         }
-        return 0;
+
+            return 0;
+
         case DEVICE_CTRL_USB_DC_GET_TX_FIFO_CNT:
             return USB_Get_EPx_TX_FIFO_CNT(((uint32_t)args) & 0x7f);
+
         case DEVICE_CTRL_USB_DC_GET_RX_FIFO_CNT:
             return USB_Get_EPx_RX_FIFO_CNT(((uint32_t)args) & 0x7f);
+
         case DEVICE_CTRL_USB_DC_GET_EP_FREE:
             return USB_Is_EPx_RDY_Free(((uint32_t)args) & 0x7f);
+
         case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
             usb_device->tx_dma = (struct device *)args;
             break;
+
         case DEVICE_CTRL_ATTACH_RX_DMA /* constant-expression */:
             usb_device->rx_dma = (struct device *)args;
             break;
+
         case DEVICE_CTRL_USB_DC_SET_TX_DMA /* constant-expression */:
-            USB_Set_EPx_TX_DMA_Interface_Config(((uint32_t)args) & 0x7f,ENABLE);
+            USB_Set_EPx_TX_DMA_Interface_Config(((uint32_t)args) & 0x7f, ENABLE);
             break;
+
         case DEVICE_CTRL_USB_DC_SET_RX_DMA /* constant-expression */:
-            USB_Set_EPx_RX_DMA_Interface_Config(((uint32_t)args) & 0x7f,ENABLE);
+            USB_Set_EPx_RX_DMA_Interface_Config(((uint32_t)args) & 0x7f, ENABLE);
             break;
+
         default:
             break;
     }
+
     return 0;
 }
 
@@ -422,8 +427,7 @@ int usb_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
     struct usb_dc_device *usb_device = (struct usb_dc_device *)dev;
     uint8_t ep_idx = USB_EP_GET_IDX(pos);
 
-    if(usb_device->in_ep[ep_idx].ep_cfg.ep_type == USBD_EP_TYPE_ISOC)
-    {
+    if (usb_device->in_ep[ep_idx].ep_cfg.ep_type == USBD_EP_TYPE_ISOC) {
         uint32_t usb_ep_addr = USB_BASE + 0x308 + ep_idx * 0x10;
 
         dma_channel_stop(usb_device->tx_dma);
@@ -434,13 +438,11 @@ int usb_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
         usb_lli_list.cfg.bits.SI = 1;
         usb_lli_list.cfg.bits.SBSize = DMA_BURST_16BYTE;
         usb_lli_list.cfg.bits.DBSize = DMA_BURST_1BYTE;
-        device_control(usb_device->tx_dma,DMA_CHANNEL_UPDATE,(void*)((uint32_t)&usb_lli_list));
+        device_control(usb_device->tx_dma, DMA_CHANNEL_UPDATE, (void *)((uint32_t)&usb_lli_list));
         dma_channel_start(usb_device->tx_dma);
+    } else {
     }
-    else
-    {
 
-    }
     return 0;
 }
 
@@ -449,8 +451,7 @@ int usb_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     struct usb_dc_device *usb_device = (struct usb_dc_device *)dev;
     uint8_t ep_idx = USB_EP_GET_IDX(pos);
 
-    if(usb_device->out_ep[ep_idx].ep_cfg.ep_type == USBD_EP_TYPE_ISOC)
-    {
+    if (usb_device->out_ep[ep_idx].ep_cfg.ep_type == USBD_EP_TYPE_ISOC) {
         uint32_t usb_ep_addr = USB_BASE + 0x308 + ep_idx * 0x1c;
 
         dma_channel_stop(usb_device->tx_dma);
@@ -461,13 +462,11 @@ int usb_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
         usb_lli_list.cfg.bits.SI = 0;
         usb_lli_list.cfg.bits.SBSize = DMA_BURST_1BYTE;
         usb_lli_list.cfg.bits.DBSize = DMA_BURST_16BYTE;
-        device_control(usb_device->rx_dma,DMA_CHANNEL_UPDATE,(void*)((uint32_t)&usb_lli_list));
+        device_control(usb_device->rx_dma, DMA_CHANNEL_UPDATE, (void *)((uint32_t)&usb_lli_list));
         dma_channel_start(usb_device->rx_dma);
+    } else {
     }
-    else
-    {
-        
-    }
+
     return 0;
 }
 
@@ -483,8 +482,9 @@ int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag)
 {
     struct device *dev;
 
-    if (USB_MAX_INDEX == 0)
+    if (USB_MAX_INDEX == 0) {
         return -DEVICE_EINVAL;
+    }
 
     dev = &(usb_fs_device.parent);
 
@@ -507,7 +507,7 @@ int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag)
  * endpoint descriptor and then enables it for data transfers.
  *
  * @param dev
- * @param ep_cfg  ep_cfg Endpoint 
+ * @param ep_cfg  ep_cfg Endpoint
  * @return int
  */
 int usb_dc_ep_open(struct device *dev, const struct usb_dc_ep_cfg *ep_cfg)
@@ -515,72 +515,65 @@ int usb_dc_ep_open(struct device *dev, const struct usb_dc_ep_cfg *ep_cfg)
     uint8_t ep;
     EP_Config_Type epCfg;
 
-    if (!ep_cfg)
-    {
+    if (!ep_cfg) {
         return -1;
     }
+
     ep = ep_cfg->ep_addr;
 
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
 
     USB_DC_LOG_DBG("%s ep %x, mps %d, type %d\r\n", __func__, ep, ep_cfg->ep_mps, ep_cfg->ep_type);
 
-    if (USB_EP_DIR_IS_OUT(ep))
-    {
+    if (USB_EP_DIR_IS_OUT(ep)) {
         epCfg.dir = EP_OUT;
         epCfg.EPMaxPacketSize = ep_cfg->ep_mps;
         usb_fs_device.out_ep[ep_idx].ep_cfg.ep_mps = ep_cfg->ep_mps;
         usb_fs_device.out_ep[ep_idx].ep_cfg.ep_type = ep_cfg->ep_type;
-    }
-    else
-    {
+    } else {
         epCfg.dir = EP_IN;
         epCfg.EPMaxPacketSize = ep_cfg->ep_mps;
         usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps = ep_cfg->ep_mps;
         usb_fs_device.in_ep[ep_idx].ep_cfg.ep_type = ep_cfg->ep_type;
     }
 
-    if (ep_idx)
-    {
-        switch (ep_cfg->ep_type)
-        {
+    if (ep_idx) {
+        switch (ep_cfg->ep_type) {
             case USBD_EP_TYPE_CTRL:
                 epCfg.type = USB_DC_EP_TYPE_CTRL;
                 break;
+
             case USBD_EP_TYPE_ISOC:
                 epCfg.type = USB_DC_EP_TYPE_ISOC;
                 break;
+
             case USBD_EP_TYPE_BULK:
                 epCfg.type = USB_DC_EP_TYPE_BULK;
                 break;
+
             case USBD_EP_TYPE_INTR:
                 epCfg.type = USB_DC_EP_TYPE_INTR;
                 break;
+
             default:
                 return -1;
         }
+
         USB_Set_EPx_Config(ep_idx, &epCfg);
-        if (USB_EP_DIR_IS_OUT(ep))
-        {
+
+        if (USB_EP_DIR_IS_OUT(ep)) {
             /* Clear NAK and enable ep */
             USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
             usb_fs_device.out_ep[ep_idx].ep_ena = 1U;
-        }
-        else
-        {
+        } else {
             //USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
             USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_NACK);
             usb_fs_device.in_ep[ep_idx].ep_ena = 1U;
         }
-    }
-    else
-    {
-        if (USB_EP_DIR_IS_OUT(ep))
-        {
+    } else {
+        if (USB_EP_DIR_IS_OUT(ep)) {
             usb_fs_device.out_ep[ep_idx].ep_ena = 1U;
-        }
-        else
-        {
+        } else {
             usb_fs_device.in_ep[ep_idx].ep_ena = 1U;
         }
     }
@@ -602,21 +595,20 @@ int usb_dc_ep_is_stalled(struct device *dev, const uint8_t ep, uint8_t *stalled)
 {
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
 
-    if (!stalled)
-    {
+    if (!stalled) {
         return -1;
     }
 
     *stalled = 0U;
-    if (USB_EP_DIR_IS_OUT(ep))
-    {
-        if (USB_Get_EPx_Status(ep_idx) & USB_EP_STATUS_STALL && usb_fs_device.out_ep[ep_idx].is_stalled)
+
+    if (USB_EP_DIR_IS_OUT(ep)) {
+        if (USB_Get_EPx_Status(ep_idx) & USB_EP_STATUS_STALL && usb_fs_device.out_ep[ep_idx].is_stalled) {
             *stalled = 1U;
-    }
-    else
-    {
-        if (USB_Get_EPx_Status(ep_idx) & USB_EP_STATUS_STALL && usb_fs_device.in_ep[ep_idx].is_stalled)
+        }
+    } else {
+        if (USB_Get_EPx_Status(ep_idx) & USB_EP_STATUS_STALL && usb_fs_device.in_ep[ep_idx].is_stalled) {
             *stalled = 1U;
+        }
     }
 
     return 0;
@@ -648,62 +640,54 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
     uint32_t ep_tx_fifo_addr;
 
     ep_idx = USB_EP_GET_IDX(ep);
+
     /* Check if IN ep */
-    if (USB_EP_GET_DIR(ep) != USB_EP_DIR_IN)
-    {
+    if (USB_EP_GET_DIR(ep) != USB_EP_DIR_IN) {
         return -1;
     }
 
     /* Check if ep enabled */
-    if (!usb_ep_is_enabled(ep))
-    {
+    if (!usb_ep_is_enabled(ep)) {
         return -2;
     }
 
-    while (!USB_Is_EPx_RDY_Free(ep_idx))
-    {
+    while (!USB_Is_EPx_RDY_Free(ep_idx)) {
         timeout--;
-        if (!timeout)
-        {
+
+        if (!timeout) {
             USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
             return -3;
         }
     }
 
     // key = irq_lock();
-    if (!data)
-    {
-        if (!data_len)
-        {
+    if (!data) {
+        if (!data_len) {
             /* Zero length packet */
             /* Clear NAK and enable ep */
             USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
             return 0;
-        }
-        else
-        {
+        } else {
             USB_DC_LOG_ERR("data is null\r\n");
             return -4;
         }
     }
 
-    if (data_len > usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps)
-    {
+    if (data_len > usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps) {
         /* Check if transfer len is too big */
         data_len = usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps;
     }
 
     /* Wait for FIFO space available */
-    do
-    {
+    do {
         uint32_t avail_space = USB_Get_EPx_TX_FIFO_CNT(ep_idx);
-        if (avail_space >= usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps)
-        {
+
+        if (avail_space >= usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps) {
             break;
         }
+
         //USB_DC_LOG_ERR("EP%d have remain data\r\n", ep_idx);
-    }
-    while (1);
+    } while (1);
 
     /*
      * Write data to FIFO, make sure that we are protected against
@@ -716,13 +700,10 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
      */
     ep_tx_fifo_addr = USB_BASE + USB_EP0_TX_FIFO_WDATA_OFFSET + ep_idx * 0x10;
 
-    if((data_len == 1) && (ep_idx == 0))
-    {
-        USB_Set_EPx_Xfer_Size(EP_ID0,1);
-    }
-    else if(ep_idx == 0)
-    {
-        USB_Set_EPx_Xfer_Size(EP_ID0,64);
+    if ((data_len == 1) && (ep_idx == 0)) {
+        USB_Set_EPx_Xfer_Size(EP_ID0, 1);
+    } else if (ep_idx == 0) {
+        USB_Set_EPx_Xfer_Size(EP_ID0, 64);
     }
 
     memcopy_to_fifo((void *)ep_tx_fifo_addr, (uint8_t *)data, data_len);
@@ -731,8 +712,7 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
 
     USB_DC_LOG_DBG("EP%d write %u bytes\r\n", ep_idx, data_len);
 
-    if (ret_bytes)
-    {
+    if (ret_bytes) {
         *ret_bytes = data_len;
     }
 
@@ -746,7 +726,7 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
  * clear the endpoint NAKs so that the consumer is not bogged down by further
  * upcalls till he is done with the processing of the data. The caller should
  * reactivate ep by invoking usb_dc_ep_read_continue() do so.
- * 
+ *
  * @param dev
  * @param[in]  ep           Endpoint address corresponding to the one
  *                          listed in the device configuration table
@@ -764,40 +744,36 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
     uint32_t read_count;
     uint32_t ep_rx_fifo_addr;
     uint32_t timeout = 0x00FFFFFF;
+
     /* Check if OUT ep */
-    if (USB_EP_GET_DIR(ep) != USB_EP_DIR_OUT)
-    {
+    if (USB_EP_GET_DIR(ep) != USB_EP_DIR_OUT) {
         USB_DC_LOG_ERR("Wrong endpoint direction\r\n");
         return -1;
     }
 
     /* Check if ep enabled */
-    if (!usb_ep_is_enabled(ep))
-    {
+    if (!usb_ep_is_enabled(ep)) {
         USB_DC_LOG_ERR("Not enabled endpoint\r\n");
         return -1;
     }
+
     /*common process for other ep out*/
-    if(ep_idx)
-    {
-        while (!USB_Is_EPx_RDY_Free(ep_idx))
-        {
+    if (ep_idx) {
+        while (!USB_Is_EPx_RDY_Free(ep_idx)) {
             timeout--;
-            if (!timeout)
-            {
+
+            if (!timeout) {
                 USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
                 return -USB_DC_EP_TIMEOUT_ERR;
             }
         }
     }
     /*special process for ep0 out*/
-    else if(read_bytes && data_len && (ep_idx == 0))
-    {
-        while(((BL_RD_WORD(0x4000D800) & (1 << 28)) >> 28))
-        {
+    else if (read_bytes && data_len && (ep_idx == 0)) {
+        while (((BL_RD_WORD(0x4000D800) & (1 << 28)) >> 28)) {
             timeout--;
-            if (!timeout)
-            {
+
+            if (!timeout) {
                 USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
                 return -USB_DC_EP_TIMEOUT_ERR;
             }
@@ -805,8 +781,7 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
     }
 
     /* Allow to read 0 bytes */
-    if (!data_len)
-    {
+    if (!data_len) {
         /* Clear NAK and enable ep */
         USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
         return 0;
@@ -820,8 +795,7 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
     fifocopy_to_mem((void *)ep_rx_fifo_addr, data, read_count);
     USB_DC_LOG_DBG("Read EP%d, req %d, read %d bytes\r\n", ep, data_len, read_count);
 
-    if (read_bytes)
-    {
+    if (read_bytes) {
         *read_bytes = read_count;
     }
 
@@ -843,46 +817,41 @@ int usb_dc_receive_to_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8
     static bool overflow_flag = false;
 
     /* Check if OUT ep */
-    if (USB_EP_GET_DIR(ep) != USB_EP_DIR_OUT)
-    {
+    if (USB_EP_GET_DIR(ep) != USB_EP_DIR_OUT) {
         USB_DC_LOG_ERR("Wrong endpoint direction\r\n");
         return -USB_DC_EP_DIR_ERR;
     }
+
     /* Check if ep enabled */
-    if (!usb_ep_is_enabled(ep))
-    {
+    if (!usb_ep_is_enabled(ep)) {
         return -USB_DC_EP_EN_ERR;
     }
 
     ep_idx = USB_EP_GET_IDX(ep);
 
-    while (!USB_Is_EPx_RDY_Free(ep_idx))
-    {
+    while (!USB_Is_EPx_RDY_Free(ep_idx)) {
         timeout--;
-        if (!timeout)
-        {
+
+        if (!timeout) {
             USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
             return -USB_DC_EP_TIMEOUT_ERR;
         }
     }
+
     recv_len = USB_Get_EPx_RX_FIFO_CNT(ep_idx);
-    
+
     /*if rx fifo count equal 0,it means last is send nack and ringbuffer is smaller than 64,
     * so,if ringbuffer is larger than 64,set ack to recv next data.
     */
-    if(overflow_flag && (Ring_Buffer_Get_Empty_Length(rb)>64) && (!recv_len))
-    {
+    if (overflow_flag && (Ring_Buffer_Get_Empty_Length(rb) > 64) && (!recv_len)) {
         overflow_flag = false;
         USB_Set_EPx_Rdy(ep_idx);
         return 0;
-    }
-    else
-    {
+    } else {
         uint32_t addr = USB_BASE + 0x11C + (ep_idx - 1) * 0x10;
         Ring_Buffer_Write_Callback(rb, recv_len, fifocopy_to_mem, (void *)addr);
 
-        if(Ring_Buffer_Get_Empty_Length(rb) < 64)
-        {
+        if (Ring_Buffer_Get_Empty_Length(rb) < 64) {
             overflow_flag = true;
             return -USB_DC_RB_SIZE_SMALL_ERR;
         }
@@ -909,22 +878,19 @@ int usb_dc_send_from_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8_
     ep_idx = USB_EP_GET_IDX(ep);
 
     /* Check if IN ep */
-    if (USB_EP_GET_DIR(ep) != USB_EP_DIR_IN)
-    {
+    if (USB_EP_GET_DIR(ep) != USB_EP_DIR_IN) {
         return -USB_DC_EP_DIR_ERR;
     }
 
     /* Check if ep enabled */
-    if (!usb_ep_is_enabled(ep))
-    {
+    if (!usb_ep_is_enabled(ep)) {
         return -USB_DC_EP_EN_ERR;
     }
-    
-    while (!USB_Is_EPx_RDY_Free(ep_idx))
-    {
+
+    while (!USB_Is_EPx_RDY_Free(ep_idx)) {
         timeout--;
-        if (!timeout)
-        {
+
+        if (!timeout) {
             USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
             return -USB_DC_EP_TIMEOUT_ERR;
         }
@@ -932,29 +898,22 @@ int usb_dc_send_from_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8_
 
     uint32_t addr = USB_BASE + 0x118 + (ep_idx - 1) * 0x10;
 
-    if(zlp_flag == false)
-    {
-        if ((USB_Get_EPx_TX_FIFO_CNT(ep_idx) == USB_FS_MAX_PACKET_SIZE) && Ring_Buffer_Get_Length(rb))
-        {
-            uint32_t actual_len = Ring_Buffer_Read_Callback(rb, USB_FS_MAX_PACKET_SIZE, memcopy_to_fifo, (void *)addr); 
+    if (zlp_flag == false) {
+        if ((USB_Get_EPx_TX_FIFO_CNT(ep_idx) == USB_FS_MAX_PACKET_SIZE) && Ring_Buffer_Get_Length(rb)) {
+            uint32_t actual_len = Ring_Buffer_Read_Callback(rb, USB_FS_MAX_PACKET_SIZE, memcopy_to_fifo, (void *)addr);
             send_total_len += actual_len;
 
-            if(!Ring_Buffer_Get_Length(rb) && (!(send_total_len % 64)))
-            {
+            if (!Ring_Buffer_Get_Length(rb) && (!(send_total_len % 64))) {
                 zlp_flag = true;
             }
 
             USB_Set_EPx_Rdy(ep_idx);
             return 0;
-        }
-        else
-        {
+        } else {
             return -USB_DC_RB_SIZE_SMALL_ERR;
         }
-    }
-    else
-    {
-        zlp_flag = false; 
+    } else {
+        zlp_flag = false;
         send_total_len = 0;
         USB_Set_EPx_Rdy(ep_idx);
         return -USB_DC_ZLP_ERR;
@@ -977,50 +936,43 @@ void usb_dc_isr(usb_dc_device_t *device)
     USB_EP_ID epnum = EP_ID0;
 
     /* EP1_DONE -> EP2_DONE -> ...... -> EP7_DONE*/
-    for (USB_INT_Type epint = USB_INT_EP1_DONE; epint <= USB_INT_EP7_DONE; epint += 2)
-    {
-        if (USB_Get_IntStatus(epint))
-        {
+    for (USB_INT_Type epint = USB_INT_EP1_DONE; epint <= USB_INT_EP7_DONE; epint += 2) {
+        if (USB_Get_IntStatus(epint)) {
             epnum = (epint - USB_INT_EP0_OUT_CMD) >> 1;
-            device->parent.callback(&device->parent,(void*)((uint32_t)USB_SET_EP_OUT(epnum)),0,USB_DC_EVENT_EP_OUT_NOTIFY);
+            device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_OUT(epnum)), 0, USB_DC_EVENT_EP_OUT_NOTIFY);
             USB_Clr_IntStatus(epint);
             return;
         }
     }
 
     /* EP1_CMD -> EP2_CMD -> ...... -> EP7_CMD*/
-    for (USB_INT_Type epint = USB_INT_EP1_CMD; epint <= USB_INT_EP7_CMD; epint += 2)
-    {
-        if (USB_Get_IntStatus(epint))
-        {
+    for (USB_INT_Type epint = USB_INT_EP1_CMD; epint <= USB_INT_EP7_CMD; epint += 2) {
+        if (USB_Get_IntStatus(epint)) {
             epnum = (epint - USB_INT_EP0_OUT_CMD) >> 1;
-            device->parent.callback(&device->parent,(void*)((uint32_t)USB_SET_EP_IN(epnum)),0,USB_DC_EVENT_EP_IN_NOTIFY);
+            device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_IN(epnum)), 0, USB_DC_EVENT_EP_IN_NOTIFY);
             USB_Clr_IntStatus(epint);
             return;
         }
     }
 
     /* reset */
-    if (USB_Get_IntStatus(USB_INT_SOF))
-    {
+    if (USB_Get_IntStatus(USB_INT_SOF)) {
         USB_DC_LOG("sof\r\n");
-        device->parent.callback(&device->parent,NULL,0,USB_DC_EVENT_SOF);
+        device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_SOF);
         USB_Clr_IntStatus(USB_INT_SOF);
         return;
     }
 
     /* reset */
-    if (USB_Get_IntStatus(USB_INT_RESET))
-    {
+    if (USB_Get_IntStatus(USB_INT_RESET)) {
         USB_DC_LOG("reset\r\n");
-        device->parent.callback(&device->parent,NULL,0,USB_DC_EVENT_RESET);
+        device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_RESET);
         USB_Clr_IntStatus(USB_INT_RESET);
         return;
     }
 
     /* vbus toggle */
-    if (USB_Get_IntStatus(USB_INT_VBUS_TGL))
-    {
+    if (USB_Get_IntStatus(USB_INT_VBUS_TGL)) {
         USB_DC_LOG("vbus toggle\r\n");
         /*************************************/
         /*************************************/
@@ -1029,36 +981,32 @@ void usb_dc_isr(usb_dc_device_t *device)
     }
 
     /* EP0 setup done */
-    if (USB_Get_IntStatus(USB_INT_EP0_SETUP_DONE))
-    {
+    if (USB_Get_IntStatus(USB_INT_EP0_SETUP_DONE)) {
         USB_DC_LOG("S\r\n");
-        device->parent.callback(&device->parent,NULL,0,USB_DC_EVENT_SETUP_NOTIFY);
+        device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_SETUP_NOTIFY);
         USB_Clr_IntStatus(USB_INT_EP0_SETUP_DONE);
         return;
     }
 
     /* EP0 in done */
-    if (USB_Get_IntStatus(USB_INT_EP0_IN_DONE))
-    {
+    if (USB_Get_IntStatus(USB_INT_EP0_IN_DONE)) {
         USB_DC_LOG("I\r\n");
-        device->parent.callback(&device->parent,(void*)0x80,0,USB_DC_EVENT_EP0_IN_NOTIFY);
+        device->parent.callback(&device->parent, (void *)0x80, 0, USB_DC_EVENT_EP0_IN_NOTIFY);
         USB_Clr_IntStatus(USB_INT_EP0_IN_DONE);
         return;
     }
 
     /* EP0 out done */
-    if (USB_Get_IntStatus(USB_INT_EP0_OUT_DONE))
-    {
+    if (USB_Get_IntStatus(USB_INT_EP0_OUT_DONE)) {
         USB_DC_LOG("O\r\n");
-        device->parent.callback(&device->parent,(void*)0x00,0,USB_DC_EVENT_EP0_OUT_NOTIFY);
+        device->parent.callback(&device->parent, (void *)0x00, 0, USB_DC_EVENT_EP0_OUT_NOTIFY);
         /*************************************/
         USB_Clr_IntStatus(USB_INT_EP0_OUT_DONE);
         return;
     }
 
     /* reset end */
-    if (USB_Get_IntStatus(USB_INT_RESET_END))
-    {
+    if (USB_Get_IntStatus(USB_INT_RESET_END)) {
         USB_DC_LOG("re\r\n");
         /*************************************/
         USB_Set_EPx_Rdy(EP_ID0);
@@ -1069,8 +1017,7 @@ void usb_dc_isr(usb_dc_device_t *device)
 
     /* LPM wakeup */
     /* usb wakeup interrupt, need update by reg_excel_files */
-    if (USB_Get_IntStatus(USB_INT_LPM_WAKEUP))
-    {
+    if (USB_Get_IntStatus(USB_INT_LPM_WAKEUP)) {
         /*************************************/
         /*set wInterrupt_Mask global variable*/
         //HAL_PCD_ResumeCallback(hpcd);
@@ -1081,35 +1028,33 @@ void usb_dc_isr(usb_dc_device_t *device)
 
     /* LPM packet */
     /* usb suspend interrupt, need update by reg_excel_files */
-    if (USB_Get_IntStatus(USB_INT_LPM_PACKET))
-    {
+    if (USB_Get_IntStatus(USB_INT_LPM_PACKET)) {
         /*************************************/
         /* Force low-power mode in the macrocell */
-        if (USB_Get_IntStatus(USB_INT_LPM_WAKEUP) == 0)
-        {
+        if (USB_Get_IntStatus(USB_INT_LPM_WAKEUP) == 0) {
             //HAL_PCD_SuspendCallback(hpcd);
         }
+
         /*************************************/
         USB_Clr_IntStatus(USB_INT_LPM_PACKET);
         return;
     }
 
     /* lost 3 SOF */
-    if (USB_Get_IntStatus(USB_INT_LOST_SOF_3_TIMES))
-    {
+    if (USB_Get_IntStatus(USB_INT_LOST_SOF_3_TIMES)) {
         USB_DC_LOG_ERR("Lost 3 SOFs\r\n");
         /*************************************/
         /*************************************/
         USB_Clr_IntStatus(USB_INT_LOST_SOF_3_TIMES);
         return;
     }
+
     /* error */
-    if (USB_Get_IntStatus(USB_INT_ERROR))
-    {
+    if (USB_Get_IntStatus(USB_INT_ERROR)) {
         USB_DC_LOG("USB bus error 0x%08x; EP2 fifo status 0x%08x\r\n", *(volatile uint32_t *)(0x4000D81C), *(volatile uint32_t *)(0x4000D920));
         /*************************************/
         /*************************************/
-        device->parent.callback(&device->parent,NULL,0,USB_DC_EVENT_ERROR);
+        device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_ERROR);
         USB_Clr_IntStatus(USB_INT_ERROR);
         return;
     }
@@ -1118,7 +1063,7 @@ void usb_dc_isr(usb_dc_device_t *device)
  * @brief
  *
  */
-void USB_IRQHandler(void)
+void USB_FS_IRQ(void)
 {
     usb_dc_isr(&usb_fs_device);
 }

@@ -45,18 +45,20 @@ enum {
     LV_KEYBOARD_MODE_SPECIAL,
     LV_KEYBOARD_MODE_NUM
 #if LV_USE_ARABIC_PERSIAN_CHARS == 1
-    , LV_KEYBOARD_MODE_TEXT_ARABIC
+    ,
+    LV_KEYBOARD_MODE_TEXT_ARABIC
 #endif
 };
 typedef uint8_t lv_keyboard_mode_t;
 
 /*Data of keyboard*/
-typedef struct {
+typedef struct
+{
     lv_btnmatrix_ext_t btnm; /*Ext. of ancestor*/
     /*New data for this type */
-    lv_obj_t * ta;          /*Pointer to the assigned text area*/
-    lv_keyboard_mode_t mode;      /*Key map type*/
-    uint8_t cursor_mng : 1; /*1: automatically show/hide cursor when a text area is assigned or left*/
+    lv_obj_t *ta;            /*Pointer to the assigned text area*/
+    lv_keyboard_mode_t mode; /*Key map type*/
+    uint8_t cursor_mng : 1;  /*1: automatically show/hide cursor when a text area is assigned or left*/
 } lv_keyboard_ext_t;
 
 enum {
@@ -75,7 +77,7 @@ typedef uint8_t lv_keyboard_style_t;
  * @param copy pointer to a keyboard object, if not NULL then the new object will be copied from it
  * @return pointer to the created keyboard
  */
-lv_obj_t * lv_keyboard_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_keyboard_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*=====================
  * Setter functions
@@ -86,21 +88,21 @@ lv_obj_t * lv_keyboard_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param kb pointer to a Keyboard object
  * @param ta pointer to a Text Area object to write there
  */
-void lv_keyboard_set_textarea(lv_obj_t * kb, lv_obj_t * ta);
+void lv_keyboard_set_textarea(lv_obj_t *kb, lv_obj_t *ta);
 
 /**
  * Set a new a mode (text or number map)
  * @param kb pointer to a Keyboard object
  * @param mode the mode from 'lv_keyboard_mode_t'
  */
-void lv_keyboard_set_mode(lv_obj_t * kb, lv_keyboard_mode_t mode);
+void lv_keyboard_set_mode(lv_obj_t *kb, lv_keyboard_mode_t mode);
 
 /**
  * Automatically hide or show the cursor of the current Text Area
  * @param kb pointer to a Keyboard object
  * @param en true: show cursor on the current text area, false: hide cursor
  */
-void lv_keyboard_set_cursor_manage(lv_obj_t * kb, bool en);
+void lv_keyboard_set_cursor_manage(lv_obj_t *kb, bool en);
 
 /**
  * Set a new map for the keyboard
@@ -109,7 +111,7 @@ void lv_keyboard_set_cursor_manage(lv_obj_t * kb, bool en);
  * @param map pointer to a string array to describe the map.
  *            See 'lv_btnmatrix_set_map()' for more info.
  */
-void lv_keyboard_set_map(lv_obj_t * kb, lv_keyboard_mode_t mode, const char * map[]);
+void lv_keyboard_set_map(lv_obj_t *kb, lv_keyboard_mode_t mode, const char *map[]);
 
 /**
  * Set the button control map (hidden, disabled etc.) for the keyboard. The
@@ -120,7 +122,7 @@ void lv_keyboard_set_map(lv_obj_t * kb, lv_keyboard_mode_t mode, const char * ma
  * @param ctrl_map pointer to an array of `lv_btn_ctrl_t` control bytes.
  *                 See: `lv_btnmatrix_set_ctrl_map` for more details.
  */
-void lv_keyboard_set_ctrl_map(lv_obj_t * kb, lv_keyboard_mode_t mode, const lv_btnmatrix_ctrl_t ctrl_map[]);
+void lv_keyboard_set_ctrl_map(lv_obj_t *kb, lv_keyboard_mode_t mode, const lv_btnmatrix_ctrl_t ctrl_map[]);
 
 /*=====================
  * Getter functions
@@ -131,28 +133,28 @@ void lv_keyboard_set_ctrl_map(lv_obj_t * kb, lv_keyboard_mode_t mode, const lv_b
  * @param kb pointer to a Keyboard object
  * @return pointer to the assigned Text Area object
  */
-lv_obj_t * lv_keyboard_get_textarea(const lv_obj_t * kb);
+lv_obj_t *lv_keyboard_get_textarea(const lv_obj_t *kb);
 
 /**
  * Set a new a mode (text or number map)
  * @param kb pointer to a Keyboard object
  * @return the current mode from 'lv_keyboard_mode_t'
  */
-lv_keyboard_mode_t lv_keyboard_get_mode(const lv_obj_t * kb);
+lv_keyboard_mode_t lv_keyboard_get_mode(const lv_obj_t *kb);
 
 /**
  * Get the current cursor manage mode.
  * @param kb pointer to a Keyboard object
  * @return true: show cursor on the current text area, false: hide cursor
  */
-bool lv_keyboard_get_cursor_manage(const lv_obj_t * kb);
+bool lv_keyboard_get_cursor_manage(const lv_obj_t *kb);
 
 /**
  * Get the current map of a keyboard
  * @param kb pointer to a keyboard object
  * @return the current map
  */
-static inline const char ** lv_keyboard_get_map_array(const lv_obj_t * kb)
+static inline const char **lv_keyboard_get_map_array(const lv_obj_t *kb)
 {
     return lv_btnmatrix_get_map_array(kb);
 }
@@ -168,7 +170,7 @@ static inline const char ** lv_keyboard_get_map_array(const lv_obj_t * kb)
  * @param kb pointer to a keyboard
  * @param event the triggering event
  */
-void lv_keyboard_def_event_cb(lv_obj_t * kb, lv_event_t event);
+void lv_keyboard_def_event_cb(lv_obj_t *kb, lv_event_t event);
 
 /**********************
  *      MACROS

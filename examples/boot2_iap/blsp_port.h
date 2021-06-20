@@ -70,12 +70,12 @@
 //#define BFLB_BOOT2_CPU1_APP_PC_ADDR             (BL60X_SRAM_END-4)
 //#define BFLB_BOOT2_CPU1_APP_MSP_ADDR            (BL60X_SRAM_END-8)
 //#define BFLB_BOOT2_CPU1_DBG_INFO_ADDR           (BL60X_SRAM_END-12)
-#define BFLB_BOOT2_CPU1_APP_PC_ADDR             (0)
-#define BFLB_BOOT2_CPU1_APP_MSP_ADDR            (0)
-#define BFLB_BOOT2_CPU1_DBG_INFO_ADDR           (0)
-#define MFG_START_REQUEST_OFFSET                ((4+184)*1024)
-#define BLSP_BOOT2_XIP_BASE                     BL702_FLASH_XIP_BASE
-#define ARCH_Delay_MS                           BL702_Delay_MS
+#define BFLB_BOOT2_CPU1_APP_PC_ADDR   (0)
+#define BFLB_BOOT2_CPU1_APP_MSP_ADDR  (0)
+#define BFLB_BOOT2_CPU1_DBG_INFO_ADDR (0)
+#define MFG_START_REQUEST_OFFSET      ((4 + 184) * 1024)
+#define BLSP_BOOT2_XIP_BASE           BL702_FLASH_XIP_BASE
+#define ARCH_Delay_MS                 BL702_Delay_MS
 
 /*@} end of group BLSP_PORT_Public_Constants */
 
@@ -96,14 +96,15 @@ void blsp_boot2_reset_sec_eng(void);
 void blsp_boot2_init_sec_eng_pka(void);
 uint32_t blsp_boot2_get_cpu_count(void);
 uint8_t blsp_read_power_save_mode(void);
-void blsp_boot2_pass_parameter(void *data,uint32_t len);
+void blsp_boot2_pass_parameter(void *data, uint32_t len);
 uint32_t blsp_boot2_get_xip_offset();
-uint8_t* blsp_get_user_specified_fw(void);
+uint8_t *blsp_get_user_specified_fw(void);
 void blsp_clr_user_specified_fw(void);
 void blsp_boot2_releae_other_cpu(void);
 int32_t blsp_is_msp_valid(uint32_t msp_val);
 int32_t blsp_is_pc_valid(uint32_t pc_val);
-void ATTR_TCM_SECTION blsp_sboot_finish(void);;
+void ATTR_TCM_SECTION blsp_sboot_finish(void);
+;
 void blsp_fix_invalid_msp_pc(void);
 uint8_t blsp_boot2_get_tx_gpio(void);
 uint8_t blsp_boot2_get_uart_port(void);

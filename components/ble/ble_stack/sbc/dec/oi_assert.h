@@ -29,14 +29,12 @@
   $Revision: #1 $
 ***********************************************************************************/
 
-
 /** \addtogroup Debugging Debugging APIs */
 /**@{*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 #ifdef OI_DEBUG
 
@@ -46,21 +44,23 @@ extern "C" {
 */
 void OI_AssertFail(char *file, int line, char *reason);
 
+#define OI_ASSERT(condition)                               \
+    {                                                      \
+        if (!(condition))                                  \
+            OI_AssertFail(__FILE__, __LINE__, #condition); \
+    }
 
-#define OI_ASSERT(condition) \
-    { if (!(condition)) OI_AssertFail(__FILE__, __LINE__, #condition); }
-
-#define OI_ASSERT_FAIL(msg) \
-    { OI_AssertFail(__FILE__, __LINE__, msg); }
+#define OI_ASSERT_FAIL(msg)                     \
+    {                                           \
+        OI_AssertFail(__FILE__, __LINE__, msg); \
+    }
 
 #else
-
 
 #define OI_ASSERT(condition)
 #define OI_ASSERT_FAIL(msg)
 
 #endif
-
 
 /**
    C_ASSERT() can be used to perform many compile-time assertions: type sizes, field offsets, etc.
@@ -73,7 +73,6 @@ void OI_AssertFail(char *file, int line, char *reason);
 // #define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
 // #define C_ASSERT(e)
 #endif
-
 
 /*****************************************************************************/
 #ifdef __cplusplus

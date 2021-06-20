@@ -45,7 +45,6 @@
 extern "C" {
 #endif
 
-
 /**
  * Terminates execution.
  *
@@ -76,7 +75,6 @@ void OI_LogError(OI_MODULE module, OI_INT lineno, OI_STATUS status);
  */
 void OI_InitDebugCodeHandler(void);
 
-
 /**
  * This function reads the time from the real time clock.
  *
@@ -103,17 +101,16 @@ void OI_Time_Now(OI_TIME *now);
  */
 void OI_Sleep(OI_UINT32 milliseconds);
 
-
 /**
  * Defines for message type codes.
  */
-#define OI_MSG_CODE_APPLICATION               0   /**< Application output */
-#define OI_MSG_CODE_ERROR                     1   /**< Error message output */
-#define OI_MSG_CODE_WARNING                   2   /**< Warning message output */
-#define OI_MSG_CODE_TRACE                     3   /**< User API function trace output */
-#define OI_MSG_CODE_PRINT1                    4   /**< Catagory 1 debug print output */
-#define OI_MSG_CODE_PRINT2                    5   /**< Catagory 2 debug print output */
-#define OI_MSG_CODE_HEADER                    6   /**< Error/Debug output header */
+#define OI_MSG_CODE_APPLICATION 0 /**< Application output */
+#define OI_MSG_CODE_ERROR       1 /**< Error message output */
+#define OI_MSG_CODE_WARNING     2 /**< Warning message output */
+#define OI_MSG_CODE_TRACE       3 /**< User API function trace output */
+#define OI_MSG_CODE_PRINT1      4 /**< Catagory 1 debug print output */
+#define OI_MSG_CODE_PRINT2      5 /**< Catagory 2 debug print output */
+#define OI_MSG_CODE_HEADER      6 /**< Error/Debug output header */
 
 /**
  * This function is used to indicate the type of text being output with
@@ -153,7 +150,7 @@ void OI_Print_ConsoleInput(OI_CHAR const *str);
 /**
  *  This function computes the CRC16 of the program image.
  */
-OI_UINT16  OI_ProgramImageCRC16(void);
+OI_UINT16 OI_ProgramImageCRC16(void);
 
 /**
  * Writes an integer to stdout in hex. This macro is intended
@@ -164,16 +161,19 @@ OI_UINT16  OI_ProgramImageCRC16(void);
  * @param n  the integer to print
  */
 
-#define OI_Print_Int(n) \
-{ \
-    static const OI_CHAR _digits[] = "0123456789ABCDEF"; \
-    OI_CHAR _buf[9]; \
-    OI_CHAR *_str = &_buf[8]; \
-    OI_UINT32 _i = n; \
-    *_str = 0; \
-    do { *(--_str) = _digits[(_i & 0xF)]; _i >>= 4; } while (_i); \
-    OI_Print(_str); \
-}
+#define OI_Print_Int(n)                                      \
+    {                                                        \
+        static const OI_CHAR _digits[] = "0123456789ABCDEF"; \
+        OI_CHAR _buf[9];                                     \
+        OI_CHAR *_str = &_buf[8];                            \
+        OI_UINT32 _i = n;                                    \
+        *_str = 0;                                           \
+        do {                                                 \
+            *(--_str) = _digits[(_i & 0xF)];                 \
+            _i >>= 4;                                        \
+        } while (_i);                                        \
+        OI_Print(_str);                                      \
+    }
 
 /**
  *  Application Dynamic Memory allocation.

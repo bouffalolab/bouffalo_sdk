@@ -85,7 +85,7 @@
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Init serial psram control interface
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -107,7 +107,7 @@ void ATTR_TCM_SECTION Psram_Init(SPI_Psram_Cfg_Type *psramCfg, SF_Ctrl_Cmds_Cfg 
 }
 //#endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Read psram register
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -123,20 +123,22 @@ void ATTR_TCM_SECTION Psram_ReadReg(SPI_Psram_Cfg_Type *psramCfg, uint8_t *regVa
     /* Check the parameters */
     CHECK_PARAM(IS_PSRAM_CTRL_MODE(psramCfg->ctrlMode));
 
-    uint8_t * const psramCtrlBuf=(uint8_t *)SF_CTRL_BUF_BASE;
+    uint8_t *const psramCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
     SF_Ctrl_Cmd_Cfg_Type psramCmd;
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    if(psramCfg->ctrlMode == PSRAM_QPI_CTRL_MODE){
+    if (psramCfg->ctrlMode == PSRAM_QPI_CTRL_MODE) {
         psramCmd.cmdMode = SF_CTRL_CMD_4_LINES;
         psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
         psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
     }
-    psramCmd.cmdBuf[0] = (psramCfg->readRegCmd)<<24;
+
+    psramCmd.cmdBuf[0] = (psramCfg->readRegCmd) << 24;
     psramCmd.rwFlag = SF_CTRL_READ;
     psramCmd.addrSize = 3;
     psramCmd.dummyClks = psramCfg->readRegDmyClk;
@@ -144,14 +146,14 @@ void ATTR_TCM_SECTION Psram_ReadReg(SPI_Psram_Cfg_Type *psramCfg, uint8_t *regVa
 
     SF_Ctrl_SendCmd(&psramCmd);
 
-    while(SET==SF_Ctrl_GetBusyState()){
+    while (SET == SF_Ctrl_GetBusyState()) {
     }
 
     BL702_MemCpy(regValue, psramCtrlBuf, 1);
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Write psram register
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -167,21 +169,24 @@ void ATTR_TCM_SECTION Psram_WriteReg(SPI_Psram_Cfg_Type *psramCfg, uint8_t *regV
     /* Check the parameters */
     CHECK_PARAM(IS_PSRAM_CTRL_MODE(psramCfg->ctrlMode));
 
-    uint8_t * const psramCtrlBuf=(uint8_t *)SF_CTRL_BUF_BASE;
+    uint8_t *const psramCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
     SF_Ctrl_Cmd_Cfg_Type psramCmd;
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
+
     BL702_MemCpy(psramCtrlBuf, regValue, 1);
 
-    if(psramCfg->ctrlMode == PSRAM_QPI_CTRL_MODE){
+    if (psramCfg->ctrlMode == PSRAM_QPI_CTRL_MODE) {
         psramCmd.cmdMode = SF_CTRL_CMD_4_LINES;
         psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
         psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
     }
-    psramCmd.cmdBuf[0] = (psramCfg->writeRegCmd)<<24;
+
+    psramCmd.cmdBuf[0] = (psramCfg->writeRegCmd) << 24;
     psramCmd.rwFlag = SF_CTRL_WRITE;
     psramCmd.addrSize = 3;
     psramCmd.nbData = 1;
@@ -190,7 +195,7 @@ void ATTR_TCM_SECTION Psram_WriteReg(SPI_Psram_Cfg_Type *psramCfg, uint8_t *regV
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set psram driver strength
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -202,12 +207,13 @@ void ATTR_TCM_SECTION Psram_WriteReg(SPI_Psram_Cfg_Type *psramCfg, uint8_t *regV
 __WEAK
 BL_Err_Type ATTR_TCM_SECTION Psram_SetDriveStrength(SPI_Psram_Cfg_Type *psramCfg)
 {
-    uint32_t stat=0;
+    uint32_t stat = 0;
     /* Check the parameters */
     CHECK_PARAM(IS_PSRAM_DRIVE_STRENGTH(psramCfg->driveStrength));
 
     Psram_ReadReg(psramCfg, (uint8_t *)&stat);
-    if((stat & 0x3) == psramCfg->driveStrength){
+
+    if ((stat & 0x3) == psramCfg->driveStrength) {
         return SUCCESS;
     }
 
@@ -219,7 +225,7 @@ BL_Err_Type ATTR_TCM_SECTION Psram_SetDriveStrength(SPI_Psram_Cfg_Type *psramCfg
 
     Psram_ReadReg(psramCfg, (uint8_t *)&stat);
 
-    if((stat & 0x3) == psramCfg->driveStrength){
+    if ((stat & 0x3) == psramCfg->driveStrength) {
         return SUCCESS;
     }
 
@@ -227,7 +233,7 @@ BL_Err_Type ATTR_TCM_SECTION Psram_SetDriveStrength(SPI_Psram_Cfg_Type *psramCfg
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set psram burst wrap size
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -239,24 +245,25 @@ BL_Err_Type ATTR_TCM_SECTION Psram_SetDriveStrength(SPI_Psram_Cfg_Type *psramCfg
 __WEAK
 BL_Err_Type ATTR_TCM_SECTION Psram_SetBurstWrap(SPI_Psram_Cfg_Type *psramCfg)
 {
-    uint32_t stat=0;
+    uint32_t stat = 0;
     /* Check the parameters */
     CHECK_PARAM(IS_PSRAM_BURST_LENGTH(psramCfg->burstLength));
 
     Psram_ReadReg(psramCfg, (uint8_t *)&stat);
-    if(((stat>>5) & 0x3) == psramCfg->burstLength){
+
+    if (((stat >> 5) & 0x3) == psramCfg->burstLength) {
         return SUCCESS;
     }
 
-    stat &= (~(0x3<<5));
-    stat |= (psramCfg->burstLength<<5);
+    stat &= (~(0x3 << 5));
+    stat |= (psramCfg->burstLength << 5);
 
     Psram_WriteReg(psramCfg, (uint8_t *)&stat);
     /* Wait for write done */
 
     Psram_ReadReg(psramCfg, (uint8_t *)&stat);
 
-    if(((stat>>5) & 0x3) == psramCfg->burstLength){
+    if (((stat >> 5) & 0x3) == psramCfg->burstLength) {
         return SUCCESS;
     }
 
@@ -264,7 +271,7 @@ BL_Err_Type ATTR_TCM_SECTION Psram_SetBurstWrap(SPI_Psram_Cfg_Type *psramCfg)
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get psram ID
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -277,16 +284,16 @@ BL_Err_Type ATTR_TCM_SECTION Psram_SetBurstWrap(SPI_Psram_Cfg_Type *psramCfg)
 __WEAK
 void ATTR_TCM_SECTION Psram_ReadId(SPI_Psram_Cfg_Type *psramCfg, uint8_t *data)
 {
-    uint8_t * const psramCtrlBuf=(uint8_t *)SF_CTRL_BUF_BASE;
+    uint8_t *const psramCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
     SF_Ctrl_Cmd_Cfg_Type psramCmd;
 
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    psramCmd.cmdBuf[0] = (psramCfg->readIdCmd)<<24;
+    psramCmd.cmdBuf[0] = (psramCfg->readIdCmd) << 24;
     psramCmd.rwFlag = SF_CTRL_READ;
     psramCmd.addrSize = 3;
     psramCmd.dummyClks = psramCfg->readIdDmyClk;
@@ -294,14 +301,14 @@ void ATTR_TCM_SECTION Psram_ReadId(SPI_Psram_Cfg_Type *psramCfg, uint8_t *data)
 
     SF_Ctrl_SendCmd(&psramCmd);
 
-    while(SET==SF_Ctrl_GetBusyState()){
+    while (SET == SF_Ctrl_GetBusyState()) {
     }
 
     BL702_MemCpy(data, psramCtrlBuf, 8);
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Psram enter quad mode
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -315,24 +322,25 @@ BL_Err_Type ATTR_TCM_SECTION Psram_EnterQuadMode(SPI_Psram_Cfg_Type *psramCfg)
 {
     SF_Ctrl_Cmd_Cfg_Type psramCmd;
 
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    psramCmd.cmdBuf[0] = (psramCfg->enterQuadModeCmd)<<24;
+    psramCmd.cmdBuf[0] = (psramCfg->enterQuadModeCmd) << 24;
     psramCmd.rwFlag = SF_CTRL_READ;
 
     SF_Ctrl_SendCmd(&psramCmd);
 
-    while(SET==SF_Ctrl_GetBusyState()){
+    while (SET == SF_Ctrl_GetBusyState()) {
     }
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Psram exit quad mode
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -346,9 +354,9 @@ BL_Err_Type ATTR_TCM_SECTION Psram_ExitQuadMode(SPI_Psram_Cfg_Type *psramCfg)
 {
     SF_Ctrl_Cmd_Cfg_Type psramCmd;
 
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
@@ -356,18 +364,19 @@ BL_Err_Type ATTR_TCM_SECTION Psram_ExitQuadMode(SPI_Psram_Cfg_Type *psramCfg)
     psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
     psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
 
-    psramCmd.cmdBuf[0] = (psramCfg->exitQuadModeCmd)<<24;
+    psramCmd.cmdBuf[0] = (psramCfg->exitQuadModeCmd) << 24;
     psramCmd.rwFlag = SF_CTRL_READ;
 
     SF_Ctrl_SendCmd(&psramCmd);
 
-    while(SET==SF_Ctrl_GetBusyState()){
+    while (SET == SF_Ctrl_GetBusyState()) {
     }
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Psram toggle burst length
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -384,30 +393,31 @@ BL_Err_Type ATTR_TCM_SECTION Psram_ToggleBurstLength(SPI_Psram_Cfg_Type *psramCf
     /* Check the parameters */
     CHECK_PARAM(IS_PSRAM_CTRL_MODE(ctrlMode));
 
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    if(ctrlMode == PSRAM_QPI_CTRL_MODE){
+    if (ctrlMode == PSRAM_QPI_CTRL_MODE) {
         psramCmd.cmdMode = SF_CTRL_CMD_4_LINES;
         psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
         psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
     }
 
-    psramCmd.cmdBuf[0] = (psramCfg->burstToggleCmd)<<24;
+    psramCmd.cmdBuf[0] = (psramCfg->burstToggleCmd) << 24;
     psramCmd.rwFlag = SF_CTRL_READ;
 
     SF_Ctrl_SendCmd(&psramCmd);
 
-    while(SET==SF_Ctrl_GetBusyState()){
+    while (SET == SF_Ctrl_GetBusyState()) {
     }
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Psram software reset
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -424,34 +434,36 @@ BL_Err_Type ATTR_TCM_SECTION Psram_SoftwareReset(SPI_Psram_Cfg_Type *psramCfg, P
     /* Check the parameters */
     CHECK_PARAM(IS_PSRAM_CTRL_MODE(ctrlMode));
 
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    if(ctrlMode == PSRAM_QPI_CTRL_MODE){
+    if (ctrlMode == PSRAM_QPI_CTRL_MODE) {
         psramCmd.cmdMode = SF_CTRL_CMD_4_LINES;
         psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
         psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
     }
 
     /* Reset enable */
-    psramCmd.cmdBuf[0] = (psramCfg->resetEnableCmd)<<24;
+    psramCmd.cmdBuf[0] = (psramCfg->resetEnableCmd) << 24;
     /* rwFlag don't care */
     psramCmd.rwFlag = SF_CTRL_READ;
     /* Wait for write done */
 
     SF_Ctrl_SendCmd(&psramCmd);
-    while(SET==SF_Ctrl_GetBusyState()){
+
+    while (SET == SF_Ctrl_GetBusyState()) {
     }
 
     /* Reset */
-    psramCmd.cmdBuf[0] = (psramCfg->resetCmd)<<24;
+    psramCmd.cmdBuf[0] = (psramCfg->resetCmd) << 24;
     /* rwFlag don't care */
     psramCmd.rwFlag = SF_CTRL_READ;
     SF_Ctrl_SendCmd(&psramCmd);
-    while(SET==SF_Ctrl_GetBusyState()){
+
+    while (SET == SF_Ctrl_GetBusyState()) {
     }
 
     BL702_Delay_US(50);
@@ -459,7 +471,7 @@ BL_Err_Type ATTR_TCM_SECTION Psram_SoftwareReset(SPI_Psram_Cfg_Type *psramCfg, P
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Psram set IDbus config
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -473,9 +485,9 @@ BL_Err_Type ATTR_TCM_SECTION Psram_SoftwareReset(SPI_Psram_Cfg_Type *psramCfg, P
 #ifndef BFLB_USE_ROM_DRIVER
 __WEAK
 BL_Err_Type ATTR_TCM_SECTION Psram_Set_IDbus_Cfg(SPI_Psram_Cfg_Type *psramCfg,
-    SF_Ctrl_IO_Type ioMode, uint32_t addr, uint32_t len)
+                                                 SF_Ctrl_IO_Type ioMode, uint32_t addr, uint32_t len)
 {
-    uint8_t cmd,dummyClks;
+    uint8_t cmd, dummyClks;
     SF_Ctrl_Cmd_Cfg_Type psramCmd;
     uint8_t cmdValid = 1;
     /* Check the parameters */
@@ -484,55 +496,55 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Set_IDbus_Cfg(SPI_Psram_Cfg_Type *psramCfg,
     SF_Ctrl_Set_Owner(SF_CTRL_OWNER_IAHB);
 
     /* read mode cache set */
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    if(SF_CTRL_NIO_MODE == ioMode){
+    if (SF_CTRL_NIO_MODE == ioMode) {
         cmd = psramCfg->fReadCmd;
         dummyClks = psramCfg->fReadDmyClk;
-    }else if(SF_CTRL_QIO_MODE == ioMode){
+    } else if (SF_CTRL_QIO_MODE == ioMode) {
         psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
         psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
         cmd = psramCfg->fReadQuadCmd;
         dummyClks = psramCfg->fReadQuadDmyClk;
-    }else{
+    } else {
         return ERROR;
     }
 
     /* prepare command */
     psramCmd.rwFlag = SF_CTRL_READ;
     psramCmd.addrSize = 3;
-    psramCmd.cmdBuf[0] = (cmd<<24)|addr;
+    psramCmd.cmdBuf[0] = (cmd << 24) | addr;
     psramCmd.dummyClks = dummyClks;
     psramCmd.nbData = len;
     SF_Ctrl_Psram_Read_Icache_Set(&psramCmd, cmdValid);
 
     /* write mode cache set */
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    if(SF_CTRL_NIO_MODE == ioMode)
-    {
+    if (SF_CTRL_NIO_MODE == ioMode) {
         cmd = psramCfg->writeCmd;
-    }else if(SF_CTRL_QIO_MODE==ioMode){
+    } else if (SF_CTRL_QIO_MODE == ioMode) {
         psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
         psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
         cmd = psramCfg->quadWriteCmd;
-    }else{
+    } else {
         return ERROR;
     }
+
     dummyClks = 0;
 
     /* prepare command */
     psramCmd.rwFlag = SF_CTRL_WRITE;
     psramCmd.addrSize = 3;
-    psramCmd.cmdBuf[0] = (cmd<<24)|addr;
+    psramCmd.cmdBuf[0] = (cmd << 24) | addr;
     psramCmd.dummyClks = dummyClks;
     psramCmd.nbData = len;
     SF_Ctrl_Psram_Write_Icache_Set(&psramCmd, cmdValid);
@@ -540,7 +552,7 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Set_IDbus_Cfg(SPI_Psram_Cfg_Type *psramCfg,
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set cache write to psram with cache
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -555,13 +567,14 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Set_IDbus_Cfg(SPI_Psram_Cfg_Type *psramCfg,
 #ifndef BFLB_USE_ROM_DRIVER
 __WEAK
 BL_Err_Type ATTR_TCM_SECTION Psram_Cache_Write_Set(SPI_Psram_Cfg_Type *psramCfg, SF_Ctrl_IO_Type ioMode,
-    BL_Fun_Type wtEn, BL_Fun_Type wbEn, BL_Fun_Type waEn)
+                                                   BL_Fun_Type wtEn, BL_Fun_Type wbEn, BL_Fun_Type waEn)
 {
     BL_Err_Type stat;
 
     /* Cache now only support 32 bytes read */
     stat = Psram_Set_IDbus_Cfg(psramCfg, ioMode, 0, 32);
-    if(SUCCESS != stat){
+
+    if (SUCCESS != stat) {
         return stat;
     }
 
@@ -570,7 +583,7 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Cache_Write_Set(SPI_Psram_Cfg_Type *psramCfg,
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Write psram one region
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -585,30 +598,29 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Cache_Write_Set(SPI_Psram_Cfg_Type *psramCfg,
 #ifndef BFLB_USE_ROM_DRIVER
 __WEAK
 BL_Err_Type ATTR_TCM_SECTION Psram_Write(SPI_Psram_Cfg_Type *psramCfg,
-    SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t *data, uint32_t len)
+                                         SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t *data, uint32_t len)
 {
-    uint8_t * const psramCtrlBuf=(uint8_t *)SF_CTRL_BUF_BASE;
-    uint32_t i = 0,curLen = 0;
+    uint8_t *const psramCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
+    uint32_t i = 0, curLen = 0;
     uint32_t burstLen = 512;
     uint8_t cmd;
     SF_Ctrl_Cmd_Cfg_Type psramCmd;
     /* Check the parameters */
     CHECK_PARAM(IS_SF_CTRL_IO_TYPE(ioMode));
 
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
         BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    if(SF_CTRL_NIO_MODE == ioMode)
-    {
+    if (SF_CTRL_NIO_MODE == ioMode) {
         cmd = psramCfg->writeCmd;
-    }else if(SF_CTRL_QIO_MODE==ioMode){
+    } else if (SF_CTRL_QIO_MODE == ioMode) {
         psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
         psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
         cmd = psramCfg->quadWriteCmd;
-    }else{
+    } else {
         return ERROR;
     }
 
@@ -616,26 +628,27 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Write(SPI_Psram_Cfg_Type *psramCfg,
     psramCmd.rwFlag = SF_CTRL_WRITE;
     psramCmd.addrSize = 3;
 
-    if(psramCfg->burstLength == PSRAM_BURST_LENGTH_16_BYTES){
+    if (psramCfg->burstLength == PSRAM_BURST_LENGTH_16_BYTES) {
         burstLen = 16;
-    }else if(psramCfg->burstLength == PSRAM_BURST_LENGTH_32_BYTES){
+    } else if (psramCfg->burstLength == PSRAM_BURST_LENGTH_32_BYTES) {
         burstLen = 32;
-    }else if(psramCfg->burstLength == PSRAM_BURST_LENGTH_64_BYTES){
+    } else if (psramCfg->burstLength == PSRAM_BURST_LENGTH_64_BYTES) {
         burstLen = 64;
-    }else if(psramCfg->burstLength == PSRAM_BURST_LENGTH_512_BYTES){
+    } else if (psramCfg->burstLength == PSRAM_BURST_LENGTH_512_BYTES) {
         burstLen = 512;
     }
 
-    for(i = 0;i < len;){
+    for (i = 0; i < len;) {
         /* Get current programmed length within page size */
         curLen = burstLen - addr % burstLen;
-        if(curLen > len - i){
+
+        if (curLen > len - i) {
             curLen = len - i;
         }
 
         /* Prepare command */
         BL702_MemCpy_Fast(psramCtrlBuf, data, curLen);
-        psramCmd.cmdBuf[0] = (cmd<<24)|(addr);
+        psramCmd.cmdBuf[0] = (cmd << 24) | (addr);
         psramCmd.nbData = curLen;
 
         SF_Ctrl_SendCmd(&psramCmd);
@@ -652,7 +665,7 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Write(SPI_Psram_Cfg_Type *psramCfg,
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Read data from psram
  *
  * @param  psramCfg: Serial psram parameter configuration pointer
@@ -667,31 +680,31 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Write(SPI_Psram_Cfg_Type *psramCfg,
 #ifndef BFLB_USE_ROM_DRIVER
 __WEAK
 BL_Err_Type ATTR_TCM_SECTION Psram_Read(SPI_Psram_Cfg_Type *psramCfg,
-    SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t *data, uint32_t len)
+                                        SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t *data, uint32_t len)
 {
-    uint8_t * const psramCtrlBuf=(uint8_t *)SF_CTRL_BUF_BASE;
-    uint32_t curLen,i;
+    uint8_t *const psramCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
+    uint32_t curLen, i;
     uint32_t burstLen = 512;
-    uint8_t cmd,dummyClks;
+    uint8_t cmd, dummyClks;
     SF_Ctrl_Cmd_Cfg_Type psramCmd;
     /* Check the parameters */
     CHECK_PARAM(IS_SF_CTRL_IO_TYPE(ioMode));
 
-    if(((uint32_t)&psramCmd)%4 == 0){
-        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd)/4);
-    }else{
-        BL702_MemSet(&psramCmd,0, sizeof(psramCmd));
+    if (((uint32_t)&psramCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&psramCmd, 0, sizeof(psramCmd) / 4);
+    } else {
+        BL702_MemSet(&psramCmd, 0, sizeof(psramCmd));
     }
 
-    if(SF_CTRL_NIO_MODE == ioMode){
+    if (SF_CTRL_NIO_MODE == ioMode) {
         cmd = psramCfg->fReadCmd;
         dummyClks = psramCfg->fReadDmyClk;
-    }else if(SF_CTRL_QIO_MODE == ioMode){
+    } else if (SF_CTRL_QIO_MODE == ioMode) {
         psramCmd.addrMode = SF_CTRL_ADDR_4_LINES;
         psramCmd.dataMode = SF_CTRL_DATA_4_LINES;
         cmd = psramCfg->fReadQuadCmd;
         dummyClks = psramCfg->fReadQuadDmyClk;
-    }else{
+    } else {
         return ERROR;
     }
 
@@ -700,36 +713,39 @@ BL_Err_Type ATTR_TCM_SECTION Psram_Read(SPI_Psram_Cfg_Type *psramCfg,
     psramCmd.addrSize = 3;
     psramCmd.dummyClks = dummyClks;
 
-    if(psramCfg->burstLength == PSRAM_BURST_LENGTH_16_BYTES){
+    if (psramCfg->burstLength == PSRAM_BURST_LENGTH_16_BYTES) {
         burstLen = 16;
-    }else if(psramCfg->burstLength == PSRAM_BURST_LENGTH_32_BYTES){
+    } else if (psramCfg->burstLength == PSRAM_BURST_LENGTH_32_BYTES) {
         burstLen = 32;
-    }else if(psramCfg->burstLength == PSRAM_BURST_LENGTH_64_BYTES){
+    } else if (psramCfg->burstLength == PSRAM_BURST_LENGTH_64_BYTES) {
         burstLen = 64;
-    }else if(psramCfg->burstLength == PSRAM_BURST_LENGTH_512_BYTES){
+    } else if (psramCfg->burstLength == PSRAM_BURST_LENGTH_512_BYTES) {
         burstLen = 512;
     }
 
     /* Read data */
-    for(i=0;i<len;){
+    for (i = 0; i < len;) {
         /* Prepare command */
-        psramCmd.cmdBuf[0] = (cmd<<24)|(addr);
+        psramCmd.cmdBuf[0] = (cmd << 24) | (addr);
         curLen = burstLen - addr % burstLen;
-        if(curLen > len - i){
+
+        if (curLen > len - i) {
             curLen = len - i;
         }
-        if(curLen >= FLASH_CTRL_BUF_SIZE){
+
+        if (curLen >= FLASH_CTRL_BUF_SIZE) {
             curLen = FLASH_CTRL_BUF_SIZE;
             psramCmd.nbData = curLen;
-        }else{
+        } else {
             /* Make sf_ctrl word read */
-            psramCmd.nbData = ((curLen+3)>>2)<<2;
+            psramCmd.nbData = ((curLen + 3) >> 2) << 2;
         }
 
         SF_Ctrl_SendCmd(&psramCmd);
 
-        while(SET == SF_Ctrl_GetBusyState()){
+        while (SET == SF_Ctrl_GetBusyState()) {
         }
+
         BL702_MemCpy_Fast(data, psramCtrlBuf, curLen);
 
         addr += curLen;

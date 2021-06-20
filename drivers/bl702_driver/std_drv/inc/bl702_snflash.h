@@ -47,91 +47,93 @@
 #include "ff.h"
 #include "diskio.h"
 
-#define FLASH_WRITE_READ_SIZE					(2560)
-#define READ_PRINT_OPEN							(0)
+#define FLASH_WRITE_READ_SIZE (2560)
+#define READ_PRINT_OPEN       (0)
 
-#define SPI_PIN_CLK                             GLB_GPIO_PIN_11
-#define SPI_PIN_MOSI                            GLB_GPIO_PIN_12
-#define SPI_PIN_MISO                            GLB_GPIO_PIN_21
-#define SPI_PIN_CS                              GLB_GPIO_PIN_10
+#define SPI_PIN_CLK  GLB_GPIO_PIN_11
+#define SPI_PIN_MOSI GLB_GPIO_PIN_12
+#define SPI_PIN_MISO GLB_GPIO_PIN_21
+#define SPI_PIN_CS   GLB_GPIO_PIN_10
 
-#define NANDFLASH_WRITE_ENABLE                  (0x06)
-#define NANDFLASH_WRITE_DISABLE                 (0x04)
-#define NANDFLASH_GET_FEATURES                  (0x0F)
-#define NANDFLASH_SET_FEATURES                  (0x1F)
-#define NANDFLASH_PAGE_READ_TO_CACHE            (0x13)
-#define NANDFLASH_READ_FROM_CACHE               (0x03)
-#define NANDFLASH_READ_ID                       (0x9F)
-#define NANDFLASH_PROGRAM_LOAD                  (0x02)
-#define NANDFLASH_PROGRAM_LOAD_RANDOM_DATA      (0x84)
-#define NANDFLASH_PROGRAM_EXECUTE               (0x10)
-#define NANDFLASH_BLOCK_ERASE                   (0xD8)
-#define NANDFLASH_RESET                         (0xFF)
+#define NANDFLASH_WRITE_ENABLE             (0x06)
+#define NANDFLASH_WRITE_DISABLE            (0x04)
+#define NANDFLASH_GET_FEATURES             (0x0F)
+#define NANDFLASH_SET_FEATURES             (0x1F)
+#define NANDFLASH_PAGE_READ_TO_CACHE       (0x13)
+#define NANDFLASH_READ_FROM_CACHE          (0x03)
+#define NANDFLASH_READ_ID                  (0x9F)
+#define NANDFLASH_PROGRAM_LOAD             (0x02)
+#define NANDFLASH_PROGRAM_LOAD_RANDOM_DATA (0x84)
+#define NANDFLASH_PROGRAM_EXECUTE          (0x10)
+#define NANDFLASH_BLOCK_ERASE              (0xD8)
+#define NANDFLASH_RESET                    (0xFF)
 
-#define NANDFLASH_BLOCK_LOCK_ADDR               (0xA0)
-#define NANDFLASH_FEATURE_ADDR                  (0xB0)
-#define NANDFLASH_STATUS_ADDR                   (0xC0)
-#define NANDFLASH_DUMMY_BYTE                    (0x00)
-#define NANDFLASH_PAGE_SIZE                     (2048)
-#define NANDFLASH_PAGE_TOTAL_SIZE               (2048 + 64)
-#define NANDFLASH_BLOCK_SIZE                    (128 * 1024)
-#define NANDFLASH_PAGES_PER_BLOCK               (64)
+#define NANDFLASH_BLOCK_LOCK_ADDR (0xA0)
+#define NANDFLASH_FEATURE_ADDR    (0xB0)
+#define NANDFLASH_STATUS_ADDR     (0xC0)
+#define NANDFLASH_DUMMY_BYTE      (0x00)
+#define NANDFLASH_PAGE_SIZE       (2048)
+#define NANDFLASH_PAGE_TOTAL_SIZE (2048 + 64)
+#define NANDFLASH_BLOCK_SIZE      (128 * 1024)
+#define NANDFLASH_PAGES_PER_BLOCK (64)
 
-typedef struct {
+typedef struct
+{
     SPI_ID_Type spiNo;
     SPI_CFG_Type spiCfg;
     SPI_ClockCfg_Type clockCfg;
-}NANDFLASH_CFG_Type;
+} NANDFLASH_CFG_Type;
 
 extern NANDFLASH_CFG_Type nfCfg;
 
-typedef struct {
-    uint8_t Reserved0       :  1;
-    uint8_t CMP             :  1;
-    uint8_t INV             :  1;
-    uint8_t BP0             :  1;
-    uint8_t BP1             :  1;
-    uint8_t BP2             :  1;
-    uint8_t Reserved6       :  1;
-    uint8_t BRWD            :  1;
-}NANDFLASH_BLOCK_LOCK_Type;
-
-typedef struct {
-    uint8_t QE              :  1;
-    uint8_t Reserved1       :  1;
-    uint8_t Reserved2       :  1;
-    uint8_t Reserved3       :  1;
-    uint8_t ECC_EN          :  1;
-    uint8_t Reserved5       :  1;
-    uint8_t OTP_EN          :  1;
-    uint8_t OTP_PRT         :  1;
-}NANDFLASH_FEATURE_Type;
-
-typedef struct {
-    uint8_t OIP             :  1;
-    uint8_t WEL             :  1;
-    uint8_t EFAIL_ECCS0     :  1;
-    uint8_t PFAIL_ECCS1     :  1;
-    uint8_t ECCS2           :  1;
-    uint8_t ECCS3           :  1;
-    uint8_t Reserved6       :  1;
-    uint8_t Reserved7       :  1;
-}NANDFLASH_STATUS_Type;
-
-
-typedef enum
+typedef struct
 {
-  NO_BIT_ERROR                               = 0,
-  ONE_BIT_ERROR_DETECTED_AND_CORRECTED       = 1,
-  TWO_BIT_ERROR_DETECTED_AND_CORRECTED       = 2,
-  THREE_BIT_ERROR_DETECTED_AND_CORRECTED     = 3,
-  FOUR_BIT_ERROR_DETECTED_AND_CORRECTED      = 4,
-  FIVE_BIT_ERROR_DETECTED_AND_CORRECTED      = 5,
-  SIX_BIT_ERROR_DETECTED_AND_CORRECTED       = 6,
-  SEVEN_BIT_ERROR_DETECTED_AND_CORRECTED     = 7,
-  BIT_ERROR_DETECTED_AND_NOT_CORRECTED       = 8,
-  EIGHT_BIT_ERROR_DETECTED_AND_CORRECTED_MAX = 9
-}NANDFLASH_ECC_Type;
+    uint8_t Reserved0 : 1;
+    uint8_t CMP       : 1;
+    uint8_t INV       : 1;
+    uint8_t BP0       : 1;
+    uint8_t BP1       : 1;
+    uint8_t BP2       : 1;
+    uint8_t Reserved6 : 1;
+    uint8_t BRWD      : 1;
+} NANDFLASH_BLOCK_LOCK_Type;
+
+typedef struct
+{
+    uint8_t QE        : 1;
+    uint8_t Reserved1 : 1;
+    uint8_t Reserved2 : 1;
+    uint8_t Reserved3 : 1;
+    uint8_t ECC_EN    : 1;
+    uint8_t Reserved5 : 1;
+    uint8_t OTP_EN    : 1;
+    uint8_t OTP_PRT   : 1;
+} NANDFLASH_FEATURE_Type;
+
+typedef struct
+{
+    uint8_t OIP         : 1;
+    uint8_t WEL         : 1;
+    uint8_t EFAIL_ECCS0 : 1;
+    uint8_t PFAIL_ECCS1 : 1;
+    uint8_t ECCS2       : 1;
+    uint8_t ECCS3       : 1;
+    uint8_t Reserved6   : 1;
+    uint8_t Reserved7   : 1;
+} NANDFLASH_STATUS_Type;
+
+typedef enum {
+    NO_BIT_ERROR = 0,
+    ONE_BIT_ERROR_DETECTED_AND_CORRECTED = 1,
+    TWO_BIT_ERROR_DETECTED_AND_CORRECTED = 2,
+    THREE_BIT_ERROR_DETECTED_AND_CORRECTED = 3,
+    FOUR_BIT_ERROR_DETECTED_AND_CORRECTED = 4,
+    FIVE_BIT_ERROR_DETECTED_AND_CORRECTED = 5,
+    SIX_BIT_ERROR_DETECTED_AND_CORRECTED = 6,
+    SEVEN_BIT_ERROR_DETECTED_AND_CORRECTED = 7,
+    BIT_ERROR_DETECTED_AND_NOT_CORRECTED = 8,
+    EIGHT_BIT_ERROR_DETECTED_AND_CORRECTED_MAX = 9
+} NANDFLASH_ECC_Type;
 
 void ATTR_TCM_SECTION Nandflash_Psram_Cfg(void);
 void Nandflash_Init(void);
@@ -179,6 +181,3 @@ int Nandflash_Disk_Ioctl(BYTE cmd, void *buff);
 DSTATUS Nandflash_Translate_Result_Code(int result);
 
 #endif
-
-
-

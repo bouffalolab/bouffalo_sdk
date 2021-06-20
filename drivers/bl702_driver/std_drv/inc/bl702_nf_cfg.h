@@ -45,5 +45,4 @@
  */
 uint32_t NF_Cfg_Flash_Identify(uint8_t callFromFlash, uint32_t autoScan, uint32_t flashPinCfg, uint8_t restoreDefault, Nand_Flash_Cfg_Type *pFlashCfg);
 
-
 #endif /* __BL702_NF_CFG_H__ */

@@ -15,16 +15,13 @@ extern "C" {
 #define usb_container_of(ptr, type, member) \
     ((type *)((char *)(ptr) - (unsigned long)(&((type *)0)->member)))
 
-
 /**
  * Single List structure
  */
-struct usb_slist_node
-{
-    struct usb_slist_node *next;                         /**< point to next node. */
+struct usb_slist_node {
+    struct usb_slist_node *next; /**< point to next node. */
 };
-typedef struct usb_slist_node usb_slist_t;                /**< Type for single list. */
-
+typedef struct usb_slist_node usb_slist_t; /**< Type for single list. */
 
 /**
  * @brief initialize a single list
@@ -38,13 +35,15 @@ static inline void usb_slist_init(usb_slist_t *l)
 
 static inline void usb_slist_add_head(usb_slist_t *l, usb_slist_t *n)
 {
-    n->next   = l->next;
-    l->next  = n;
+    n->next = l->next;
+    l->next = n;
 }
 
 static inline void usb_slist_add_tail(usb_slist_t *l, usb_slist_t *n)
 {
-    while (l->next) l = l->next;
+    while (l->next) {
+        l = l->next;
+    }
 
     /* append the node to the tail */
     l->next = n;
@@ -53,18 +52,15 @@ static inline void usb_slist_add_tail(usb_slist_t *l, usb_slist_t *n)
 
 static inline void usb_slist_insert(usb_slist_t *l, usb_slist_t *next, usb_slist_t *n)
 {
-    if (!next) 
-    {
+    if (!next) {
         usb_slist_add_tail(next, l);
         return;
     }
 
-    while (l->next) 
-    {       
-        if (l->next == next) 
-        {
-            l->next  = n;
-            n->next  = next;
+    while (l->next) {
+        if (l->next == next) {
+            l->next = n;
+            n->next = next;
         }
 
         l = l->next;
@@ -74,10 +70,14 @@ static inline void usb_slist_insert(usb_slist_t *l, usb_slist_t *next, usb_slist
 static inline usb_slist_t *usb_slist_remove(usb_slist_t *l, usb_slist_t *n)
 {
     /* remove slist head */
-    while (l->next && l->next != n) l = l->next;
+    while (l->next && l->next != n) {
+        l = l->next;
+    }
 
     /* remove node */
-    if (l->next != (usb_slist_t *)0) l->next = l->next->next;
+    if (l->next != (usb_slist_t *)0) {
+        l->next = l->next->next;
+    }
 
     return l;
 }
@@ -86,10 +86,10 @@ static inline unsigned int usb_slist_len(const usb_slist_t *l)
 {
     unsigned int len = 0;
     const usb_slist_t *list = l->next;
-    while (list != NULL)
-    {
+
+    while (list != NULL) {
         list = list->next;
-        len ++;
+        len++;
     }
 
     return len;
@@ -97,10 +97,8 @@ static inline unsigned int usb_slist_len(const usb_slist_t *l)
 
 static inline unsigned int usb_slist_contains(usb_slist_t *l, usb_slist_t *n)
 {
-    while (l->next) 
-    {
-        if (l->next == n) 
-        {     
+    while (l->next) {
+        if (l->next == n) {
             return 0;
         }
 
@@ -117,7 +115,9 @@ static inline usb_slist_t *usb_slist_head(usb_slist_t *l)
 
 static inline usb_slist_t *usb_slist_tail(usb_slist_t *l)
 {
-    while (l->next) l = l->next;
+    while (l->next) {
+        l = l->next;
+    }
 
     return l;
 }
@@ -135,14 +135,17 @@ static inline int usb_slist_isempty(usb_slist_t *l)
 /**
  * @brief initialize a slist object
  */
-#define USB_SLIST_OBJECT_INIT(object) { NULL }
+#define USB_SLIST_OBJECT_INIT(object) \
+    {                                 \
+        NULL                          \
+    }
 
 /**
  * @brief initialize a slist object
  */
 #define USB_SLIST_DEFINE(slist) \
     usb_slist_t slist = { NULL }
-    
+
 /**
  * @brief get the struct for this single list node
  * @param node the entry point
@@ -193,9 +196,9 @@ static inline int usb_slist_isempty(usb_slist_t *l)
 #define usb_slist_for_each(pos, head) \
     for (pos = (head)->next; pos != NULL; pos = pos->next)
 
-#define usb_slist_for_each_safe(pos, next, head) \
+#define usb_slist_for_each_safe(pos, next, head)    \
     for (pos = (head)->next, next = pos->next; pos; \
-            pos = next, next = pos->next)
+         pos = next, next = pos->next)
 
 /**
  * usb_slist_for_each_entry  -   iterate over single list of given type
@@ -203,16 +206,16 @@ static inline int usb_slist_isempty(usb_slist_t *l)
  * @head:   the head for your single list.
  * @member: the name of the list_struct within the struct.
  */
-#define usb_slist_for_each_entry(pos, head, member) \
+#define usb_slist_for_each_entry(pos, head, member)                 \
     for (pos = usb_slist_entry((head)->next, typeof(*pos), member); \
-         &pos->member != (NULL); \
+         &pos->member != (NULL);                                    \
          pos = usb_slist_entry(pos->member.next, typeof(*pos), member))
 
-#define usb_slist_for_each_entry_safe(pos, n, head, member) \
-    for (pos = usb_slist_entry((head)->next, typeof(*pos), member), \
-            n = usb_slist_entry(pos->member.next, typeof(*pos), member); \
-            &pos->member != (NULL); \
-            pos = n, n = usb_slist_entry(pos->member.next, typeof(*pos), member))
+#define usb_slist_for_each_entry_safe(pos, n, head, member)          \
+    for (pos = usb_slist_entry((head)->next, typeof(*pos), member),  \
+        n = usb_slist_entry(pos->member.next, typeof(*pos), member); \
+         &pos->member != (NULL);                                     \
+         pos = n, n = usb_slist_entry(pos->member.next, typeof(*pos), member))
 
 #ifdef __cplusplus
 }

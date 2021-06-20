@@ -23,7 +23,7 @@
 /* Use TASK_ENTRY_CPP to tag task entry points defined in C++ files. */
 
 #ifdef __cplusplus
-#define TASK_ENTRY_CPP  extern "C"
+#define TASK_ENTRY_CPP extern "C"
 #endif
 
 /*
@@ -38,13 +38,13 @@
  */
 
 #ifdef _ASMLANGUAGE
-  #define REQUIRES(sym) .set sym ## _Requires, sym
+#define REQUIRES(sym) .set sym##_Requires, sym
 #else
-  #define REQUIRES(sym) __asm__ (".set " # sym "_Requires, " # sym "\n\t");
+#define REQUIRES(sym) __asm__(".set " #sym "_Requires, " #sym "\n\t");
 #endif
 
 #ifdef _ASMLANGUAGE
-  #define SECTION .section
+#define SECTION .section
 #endif
 
 #define CONFIG_RISCV 1
@@ -55,68 +55,68 @@
 
 #ifdef _ASMLANGUAGE
 
-  #if defined(CONFIG_X86)
+#if defined(CONFIG_X86)
 
-    #ifdef PERF_OPT
-      #define PERFOPT_ALIGN .balign 16
-    #else
-      #define PERFOPT_ALIGN .balign  1
-    #endif
+#ifdef PERF_OPT
+#define PERFOPT_ALIGN .balign 16
+#else
+#define PERFOPT_ALIGN .balign 1
+#endif
 
-  #elif defined(CONFIG_ARM)
+#elif defined(CONFIG_ARM)
 
-    #define PERFOPT_ALIGN .balign  4
+#define PERFOPT_ALIGN .balign 4
 
-  #elif defined(CONFIG_ARC)
+#elif defined(CONFIG_ARC)
 
-    #define PERFOPT_ALIGN .balign  4
+#define PERFOPT_ALIGN .balign 4
 
-  #elif defined(CONFIG_NIOS2) || defined(CONFIG_RISCV) || \
-	  defined(CONFIG_XTENSA)
-    #define PERFOPT_ALIGN .balign 4
+#elif defined(CONFIG_NIOS2) || defined(CONFIG_RISCV) || \
+    defined(CONFIG_XTENSA)
+#define PERFOPT_ALIGN .balign 4
 
-  #elif defined(CONFIG_ARCH_POSIX)
+#elif defined(CONFIG_ARCH_POSIX)
 
-  #else
+#else
 
-    #error Architecture unsupported
+#error Architecture unsupported
 
-  #endif
+#endif
 
-  #define GC_SECTION(sym) SECTION .text.##sym, "ax"
+#define GC_SECTION(sym) SECTION.text.##sym, "ax"
 
 #endif /* _ASMLANGUAGE */
 
 /* force inlining a function */
 
 #if !defined(_ASMLANGUAGE)
-  #ifdef CONFIG_COVERAGE
-    /*
-     * The always_inline attribute forces a function to be inlined,
-     * even ignoring -fno-inline. So for code coverage, do not
-     * force inlining of these functions to keep their bodies around
-     * so their number of executions can be counted.
-     *
-     * Note that "inline" is kept here for kobject_hash.c and
-     * priv_stacks_hash.c. These are built without compiler flags
-     * used for coverage. ALWAYS_INLINE cannot be empty as compiler
-     * would complain about unused functions. Attaching unused
-     * attribute would result in their text sections ballon more than
-     * 10 times in size, as those functions are kept in text section.
-     * So just keep "inline" here.
-     */
-    #define ALWAYS_INLINE inline
-  #else
-    #define ALWAYS_INLINE inline __attribute__((always_inline))
-  #endif
+#ifdef CONFIG_COVERAGE
+/*
+        * The always_inline attribute forces a function to be inlined,
+        * even ignoring -fno-inline. So for code coverage, do not
+        * force inlining of these functions to keep their bodies around
+        * so their number of executions can be counted.
+        *
+        * Note that "inline" is kept here for kobject_hash.c and
+        * priv_stacks_hash.c. These are built without compiler flags
+        * used for coverage. ALWAYS_INLINE cannot be empty as compiler
+        * would complain about unused functions. Attaching unused
+        * attribute would result in their text sections ballon more than
+        * 10 times in size, as those functions are kept in text section.
+        * So just keep "inline" here.
+        */
+#define ALWAYS_INLINE inline
+#else
+#define ALWAYS_INLINE inline __attribute__((always_inline))
+#endif
 #endif
 
 #define Z_STRINGIFY(x) #x
-#define STRINGIFY(s) Z_STRINGIFY(s)
+#define STRINGIFY(s)   Z_STRINGIFY(s)
 
 /* concatenate the values of the arguments into one */
-#define _DO_CONCAT(x, y) x ## y
-#define _CONCAT(x, y) _DO_CONCAT(x, y)
+#define _DO_CONCAT(x, y) x##y
+#define _CONCAT(x, y)    _DO_CONCAT(x, y)
 
 /* Additionally used as a sentinel by gen_syscalls.py to identify what
  * functions are system calls
@@ -135,10 +135,10 @@
 
 #ifndef BUILD_ASSERT
 /* compile-time assertion that makes the build fail */
-#define BUILD_ASSERT(EXPR) \
-	enum _CONCAT(__build_assert_enum, __COUNTER__) { \
-		_CONCAT(__build_assert, __COUNTER__) = 1 / !!(EXPR) \
-	}
+#define BUILD_ASSERT(EXPR)                                  \
+    enum _CONCAT(__build_assert_enum, __COUNTER__) {        \
+        _CONCAT(__build_assert, __COUNTER__) = 1 / !!(EXPR) \
+    }
 #endif
 #ifndef BUILD_ASSERT_MSG
 /* build assertion with message -- common implementation swallows message. */
@@ -170,8 +170,9 @@
  * The subsection is "static" and the subsubsection is the variable name.
  */
 #define Z_STRUCT_SECTION_ITERABLE(struct_type, name) \
-	Z_DECL_ALIGN(struct struct_type) name \
-	__in_section(_##struct_type, static, name) __used
+    Z_DECL_ALIGN(struct struct_type)                 \
+    name                                             \
+        __in_section(_##struct_type, static, name) __used
 
 /*
  * Itterator for structure instances gathered by Z_STRUCT_SECTION_ITERABLE().
@@ -179,14 +180,14 @@
  * _<struct_type>_list_end symbol to mark the start and the end of the
  * list of struct objects to iterate over.
  */
-#define Z_STRUCT_SECTION_FOREACH(struct_type, iterator) \
-	extern struct struct_type _CONCAT(_##struct_type, _list_start)[]; \
-	extern struct struct_type _CONCAT(_##struct_type, _list_end)[]; \
-	for (struct struct_type *iterator = \
-			_CONCAT(_##struct_type, _list_start); \
-	     ({ __ASSERT(iterator <= _CONCAT(_##struct_type, _list_end), \
-			 "unexpected list end location"); \
-		iterator < _CONCAT(_##struct_type, _list_end); }); \
-	     iterator++)
+#define Z_STRUCT_SECTION_FOREACH(struct_type, iterator)               \
+    extern struct struct_type _CONCAT(_##struct_type, _list_start)[]; \
+    extern struct struct_type _CONCAT(_##struct_type, _list_end)[];   \
+    for (struct struct_type *iterator =                               \
+             _CONCAT(_##struct_type, _list_start);                    \
+         ({ __ASSERT(iterator <= _CONCAT(_##struct_type, _list_end), \
+                "unexpected list end location"); \
+        iterator < _CONCAT(_##struct_type, _list_end); });                                                       \
+         iterator++)
 
 #endif /* ZEPHYR_INCLUDE_TOOLCHAIN_COMMON_H_ */

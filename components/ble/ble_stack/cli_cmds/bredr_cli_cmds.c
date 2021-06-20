@@ -19,8 +19,6 @@
 #include "a2dp.h"
 #endif
 
-
-
 static void bredr_connected(struct bt_conn *conn, u8_t err);
 static void bredr_disconnected(struct bt_conn *conn, u8_t reason);
 
@@ -41,19 +39,16 @@ static void bredr_write_eir(char *p_write_buffer, int write_buffer_len, int argc
 static void bredr_discoverable(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
 static void bredr_connectable(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
 
-
-
 const struct cli_command bredr_cmd_set[] STATIC_CLI_CMD_ATTRIBUTE = {
-    #if PCM_PRINTF
-    {"pcm", "", pcm},
-    #endif
-    {"bredr_init", "", bredr_init},
-    {"bredr_eir", "", bredr_write_eir},
-    {"bredr_connectable", "", bredr_connectable},
-    {"bredr_discoverable", "", bredr_discoverable},
+#if PCM_PRINTF
+    { "pcm", "", pcm },
+#endif
+    { "bredr_init", "", bredr_init },
+    { "bredr_eir", "", bredr_write_eir },
+    { "bredr_connectable", "", bredr_connectable },
+    { "bredr_discoverable", "", bredr_discoverable },
 
 };
-
 
 #if PCM_PRINTF
 extern OI_BYTE sbc_frame[];
@@ -77,17 +72,15 @@ static void pcm(char *p_write_buffer, int write_buffer_len, int argc, char **arg
     printf("SAMPLERATE: 44100\n");
     printf("NORMALIZED: FALSE\n");
 
-    for(int i = 0; i < samps; i ++)
-    {
+    for (int i = 0; i < samps; i++) {
         printf("%d\n", cool_edit[i]);
     }
-
 }
 #endif
 
 static void bredr_init(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-    if(init){
+    if (init) {
         printf("bredr has initialized\n");
         return;
     }
@@ -98,7 +91,6 @@ static void bredr_init(char *pcWriteBuffer, int xWriteBufferLen, int argc, char 
     init = true;
     printf("bredr init successfully\n");
 }
-
 
 static void bredr_connected(struct bt_conn *conn, u8_t err)
 {
@@ -114,8 +106,7 @@ static void bredr_connected(struct bt_conn *conn, u8_t err)
 
     printf("bredr connected: %s \r\n", addr);
 
-    if (!default_conn)
-    {
+    if (!default_conn) {
         default_conn = conn;
     }
 }
@@ -129,8 +120,7 @@ static void bredr_disconnected(struct bt_conn *conn, u8_t reason)
 
     printf("bredr disconnected: %s (reason %u) \r\n", addr, reason);
 
-    if (default_conn == conn)
-    {
+    if (default_conn == conn) {
         default_conn = NULL;
     }
 }
@@ -140,19 +130,20 @@ static void bredr_write_eir(char *p_write_buffer, int write_buffer_len, int argc
     int err;
     char *name = "Bouffalolab-bl606p-classic-bt";
     uint8_t rec = 1;
-    uint8_t data[32] = {0};
+    uint8_t data[32] = { 0 };
 
     data[0] = 30;
     data[1] = 0x09;
-    memcpy(data+2, name, strlen(name));
+    memcpy(data + 2, name, strlen(name));
 
-    for(int i = 0; i < strlen(name); i++)
-    {
-        printf("0x%02x ", data[2+i]);
+    for (int i = 0; i < strlen(name); i++) {
+        printf("0x%02x ", data[2 + i]);
     }
+
     printf("\n");
 
     err = bt_br_write_eir(rec, data);
+
     if (err) {
         printf("BR/EDR write EIR failed, (err %d)\n", err);
     } else {
@@ -164,14 +155,14 @@ static void bredr_discoverable(char *p_write_buffer, int write_buffer_len, int a
 {
     int err;
     uint8_t action;
-    
-    if(argc != 2){
+
+    if (argc != 2) {
         printf("Number of parameters is not correct\n");
         return;
     }
 
     get_uint8_from_string(&argv[1], &action);
-    
+
     if (action == 1) {
         err = bt_br_set_discoverable(true);
     } else if (action == 0) {
@@ -184,7 +175,7 @@ static void bredr_discoverable(char *p_write_buffer, int write_buffer_len, int a
     if (err) {
         printf("BR/EDR set discoverable failed, (err %d)\n", err);
     } else {
-    	printf("BR/EDR set discoverable done.\n");
+        printf("BR/EDR set discoverable done.\n");
     }
 }
 
@@ -192,14 +183,14 @@ static void bredr_connectable(char *p_write_buffer, int write_buffer_len, int ar
 {
     int err;
     uint8_t action;
-    
-    if(argc != 2){
+
+    if (argc != 2) {
         printf("Number of parameters is not correct\n");
         return;
     }
 
     get_uint8_from_string(&argv[1], &action);
-    
+
     if (action == 1) {
         err = bt_br_set_connectable(true);
     } else if (action == 0) {
@@ -212,10 +203,9 @@ static void bredr_connectable(char *p_write_buffer, int write_buffer_len, int ar
     if (err) {
         printf("BR/EDR set connectable failed, (err %d)\n", err);
     } else {
-    	printf("BR/EDR set connectable done.\n");
+        printf("BR/EDR set connectable done.\n");
     }
 }
-
 
 int bredr_cli_register(void)
 {
@@ -225,4 +215,3 @@ int bredr_cli_register(void)
     //aos_cli_register_commands(bredr_cmd_set, sizeof(bredr_cmd_set)/sizeof(bredr_cmd_set[0]));
     return 0;
 }
-		       

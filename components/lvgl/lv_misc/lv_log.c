@@ -14,7 +14,7 @@
 #include "lv_printf.h"
 
 #if LV_LOG_PRINTF
-    #include <stdio.h>
+#include <stdio.h>
 #endif
 
 /*********************
@@ -62,11 +62,13 @@ void lv_log_register_print_cb(lv_log_print_g_cb_t print_cb)
  * @param format printf-like format string
  * @param ... parameters for `format`
  */
-void _lv_log_add(lv_log_level_t level, const char * file, int line, const char * func, const char * format, ...)
+void _lv_log_add(lv_log_level_t level, const char *file, int line, const char *func, const char *format, ...)
 {
-    if(level >= _LV_LOG_LEVEL_NUM) return; /*Invalid level*/
+    if (level >= _LV_LOG_LEVEL_NUM) {
+        return; /*Invalid level*/
+    }
 
-    if(level >= LV_LOG_LEVEL) {
+    if (level >= LV_LOG_LEVEL) {
         va_list args;
         va_start(args, format);
         char buf[256];
@@ -76,17 +78,22 @@ void _lv_log_add(lv_log_level_t level, const char * file, int line, const char *
 #if LV_LOG_PRINTF
         /*Use only the file name not the path*/
         size_t p;
-        for(p = strlen(file); p > 0; p--) {
-            if(file[p] == '/' || file[p] == '\\') {
-                p++;    /*Skip the slash*/
+
+        for (p = strlen(file); p > 0; p--) {
+            if (file[p] == '/' || file[p] == '\\') {
+                p++; /*Skip the slash*/
                 break;
             }
         }
 
-        static const char * lvl_prefix[] = {"Trace", "Info", "Warn", "Error", "User"};
+        static const char *lvl_prefix[] = { "Trace", "Info", "Warn", "Error", "User" };
         printf("%s: %s \t(%s #%d %s())\n", lvl_prefix[level], buf, &file[p], line, func);
 #else
-        if(custom_print_cb) custom_print_cb(level, file, line, func, buf);
+
+        if (custom_print_cb) {
+            custom_print_cb(level, file, line, func, buf);
+        }
+
 #endif
     }
 }

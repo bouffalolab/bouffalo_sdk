@@ -13,4 +13,4 @@
 
 #define __alias(x) __attribute__((weak, alias(x)))
 
-#endif				/* _EXTERN_H */
+#endif /* _EXTERN_H */

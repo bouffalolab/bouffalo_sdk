@@ -56,22 +56,23 @@
  *  @brief System clock type definition
  */
 typedef enum {
-    BL_SYSTEM_CLOCK_FCLK,                   /*!< Fast clock/CPU clock */
-    BL_SYSTEM_CLOCK_BCLK,                   /*!< BUS clock */
-    BL_SYSTEM_CLOCK_F32K,                   /*!< F32K clock */
-    BL_SYSTEM_CLOCK_XCLK,                   /*!< XCLK:RC32M or XTAL */
-    BL_SYSTEM_CLOCK_XTAL,                   /*!< XTAL clock */
-    BL_SYSTEM_CLOCK_MAX,                    /*!< MAX type of system clock */
-}BL_System_Clock_Type;
+    BL_SYSTEM_CLOCK_FCLK, /*!< Fast clock/CPU clock */
+    BL_SYSTEM_CLOCK_BCLK, /*!< BUS clock */
+    BL_SYSTEM_CLOCK_F32K, /*!< F32K clock */
+    BL_SYSTEM_CLOCK_XCLK, /*!< XCLK:RC32M or XTAL */
+    BL_SYSTEM_CLOCK_XTAL, /*!< XTAL clock */
+    BL_SYSTEM_CLOCK_MAX,  /*!< MAX type of system clock */
+} BL_System_Clock_Type;
 
 /**
  *  @brief SOC clock config type
  */
-typedef struct {
-    uint16_t systemClock[BL_SYSTEM_CLOCK_MAX];    /*!< System lock value */
-    uint16_t peripheralClock[BL_AHB_SLAVE1_MAX];    /*!< Pewripherals clock value */
-    uint32_t i2sClock;                      /*!< I2S clock */
-}Clock_Cfg_Type;
+typedef struct
+{
+    uint16_t systemClock[BL_SYSTEM_CLOCK_MAX];   /*!< System lock value */
+    uint16_t peripheralClock[BL_AHB_SLAVE1_MAX]; /*!< Pewripherals clock value */
+    uint32_t i2sClock;                           /*!< I2S clock */
+} Clock_Cfg_Type;
 
 /*@} end of group GLB_Public_Types */
 
@@ -82,12 +83,12 @@ typedef struct {
 /** @defgroup  BL_SYSTEM_CLOCK_TYPE
  *  @{
  */
-#define IS_BL_SYSTEM_CLOCK_TYPE(type)                    (((type) == BL_SYSTEM_CLOCK_FCLK) || \
-                                                          ((type) == BL_SYSTEM_CLOCK_BCLK) || \
-                                                          ((type) == BL_SYSTEM_CLOCK_F32K) || \
-                                                          ((type) == BL_SYSTEM_CLOCK_XCLK) || \
-                                                          ((type) == BL_SYSTEM_CLOCK_XTAL) || \
-                                                          ((type) == BL_SYSTEM_CLOCK_MAX))
+#define IS_BL_SYSTEM_CLOCK_TYPE(type) (((type) == BL_SYSTEM_CLOCK_FCLK) || \
+                                       ((type) == BL_SYSTEM_CLOCK_BCLK) || \
+                                       ((type) == BL_SYSTEM_CLOCK_F32K) || \
+                                       ((type) == BL_SYSTEM_CLOCK_XCLK) || \
+                                       ((type) == BL_SYSTEM_CLOCK_XTAL) || \
+                                       ((type) == BL_SYSTEM_CLOCK_MAX))
 
 /*@} end of group GLB_Public_Constants */
 
@@ -100,8 +101,8 @@ typedef struct {
 /** @defgroup  GLB_Public_Functions
  *  @{
  */
-void Clock_System_Clock_Set(BL_System_Clock_Type type,uint32_t clock);
-void Clock_Peripheral_Clock_Set(BL_AHB_Slave1_Type type,uint32_t clock);
+void Clock_System_Clock_Set(BL_System_Clock_Type type, uint32_t clock);
+void Clock_Peripheral_Clock_Set(BL_AHB_Slave1_Type type, uint32_t clock);
 uint32_t Clock_System_Clock_Get(BL_System_Clock_Type type);
 uint32_t Clock_Peripheral_Clock_Get(BL_AHB_Slave1_Type type);
 

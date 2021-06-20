@@ -3,7 +3,7 @@
  *
  */
 
- /*Copy this file as "lv_port_fs.c" and set this value to "1" to enable content*/
+/*Copy this file as "lv_port_fs.c" and set this value to "1" to enable content*/
 #if 1
 
 /*********************
@@ -26,10 +26,10 @@
  * If you are using a File System library
  * it already should have a File type.
  * For example FatFS has `file_t `. In this case use `typedef file_t  file_t`*/
-typedef FIL  file_t; 
+typedef FIL file_t;
 
 /*Similarly to `file_t` create a type for directory reading too */
-typedef DIR  dir_t;
+typedef DIR dir_t;
 
 FATFS FS_OBJ_SD;
 
@@ -38,20 +38,20 @@ FATFS FS_OBJ_SD;
  **********************/
 static void fs_init(void);
 
-static lv_fs_res_t fs_open (lv_fs_drv_t * drv, void * file_p, const char * path, lv_fs_mode_t mode);
-static lv_fs_res_t fs_close (lv_fs_drv_t * drv, void * file_p);
-static lv_fs_res_t fs_read (lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br);
-static lv_fs_res_t fs_write(lv_fs_drv_t * drv, void * file_p, const void * buf, uint32_t btw, uint32_t * bw);
-static lv_fs_res_t fs_seek (lv_fs_drv_t * drv, void * file_p, uint32_t pos);
-static lv_fs_res_t fs_size (lv_fs_drv_t * drv, void * file_p, uint32_t * size_p);
-static lv_fs_res_t fs_tell (lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p);
-static lv_fs_res_t fs_remove (lv_fs_drv_t * drv, const char *path);
-static lv_fs_res_t fs_trunc (lv_fs_drv_t * drv, void * file_p);
-static lv_fs_res_t fs_rename (lv_fs_drv_t * drv, const char * oldname, const char * newname);
-static lv_fs_res_t fs_free (lv_fs_drv_t * drv, uint32_t * total_p, uint32_t * free_p);
-static lv_fs_res_t fs_dir_open (lv_fs_drv_t * drv, void * rddir_p, const char *path);
-static lv_fs_res_t fs_dir_read (lv_fs_drv_t * drv, void * rddir_p, char *fn);
-static lv_fs_res_t fs_dir_close (lv_fs_drv_t * drv, void * rddir_p);
+static lv_fs_res_t fs_open(lv_fs_drv_t *drv, void *file_p, const char *path, lv_fs_mode_t mode);
+static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p);
+static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br);
+static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf, uint32_t btw, uint32_t *bw);
+static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos);
+static lv_fs_res_t fs_size(lv_fs_drv_t *drv, void *file_p, uint32_t *size_p);
+static lv_fs_res_t fs_tell(lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p);
+static lv_fs_res_t fs_remove(lv_fs_drv_t *drv, const char *path);
+static lv_fs_res_t fs_trunc(lv_fs_drv_t *drv, void *file_p);
+static lv_fs_res_t fs_rename(lv_fs_drv_t *drv, const char *oldname, const char *newname);
+static lv_fs_res_t fs_free(lv_fs_drv_t *drv, uint32_t *total_p, uint32_t *free_p);
+static lv_fs_res_t fs_dir_open(lv_fs_drv_t *drv, void *rddir_p, const char *path);
+static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *rddir_p, char *fn);
+static lv_fs_res_t fs_dir_close(lv_fs_drv_t *drv, void *rddir_p);
 
 extern void fatfs_sd_driver_register(void);
 
@@ -115,45 +115,52 @@ void lv_port_fs_init(void)
  **********************/
 lv_fs_res_t res_fatfs_to_lv(FRESULT res)
 {
-    if(res==FR_OK)
-    {
+    if (res == FR_OK) {
         return LV_FS_RES_OK;
     }
 
-    switch (res)
-    {
-    case (FR_DISK_ERR):
-        res = LV_FS_RES_HW_ERR;
-        break;
-    case (FR_NO_FILE):
-        res = LV_FS_RES_NOT_EX;
-        break;
-    case (FR_NO_PATH):
-        res = LV_FS_RES_NOT_EX;
-        break;
-    case (FR_NOT_ENOUGH_CORE):
-        res = LV_FS_RES_OUT_OF_MEM;
-        break;
-    case (FR_LOCKED):
-        res = LV_FS_RES_LOCKED;
-    case (FR_TOO_MANY_OPEN_FILES):
-        res = LV_FS_RES_LOCKED;
-        break;
-    case (FR_NO_FILESYSTEM):
-        res = LV_FS_RES_FS_ERR;
-        break;
-    case (FR_WRITE_PROTECTED):
-        res = LV_FS_RES_DENIED;
-        break;
-    case (FR_TIMEOUT):
-        res = LV_FS_RES_TOUT;
-        break;
-    default:
-        res = LV_FS_RES_UNKNOWN;
+    switch (res) {
+        case (FR_DISK_ERR):
+            res = LV_FS_RES_HW_ERR;
+            break;
+
+        case (FR_NO_FILE):
+            res = LV_FS_RES_NOT_EX;
+            break;
+
+        case (FR_NO_PATH):
+            res = LV_FS_RES_NOT_EX;
+            break;
+
+        case (FR_NOT_ENOUGH_CORE):
+            res = LV_FS_RES_OUT_OF_MEM;
+            break;
+
+        case (FR_LOCKED):
+            res = LV_FS_RES_LOCKED;
+
+        case (FR_TOO_MANY_OPEN_FILES):
+            res = LV_FS_RES_LOCKED;
+            break;
+
+        case (FR_NO_FILESYSTEM):
+            res = LV_FS_RES_FS_ERR;
+            break;
+
+        case (FR_WRITE_PROTECTED):
+            res = LV_FS_RES_DENIED;
+            break;
+
+        case (FR_TIMEOUT):
+            res = LV_FS_RES_TOUT;
+            break;
+
+        default:
+            res = LV_FS_RES_UNKNOWN;
     }
+
     return res;
 }
-
 
 /* Initialize your Storage device and File system. */
 static void fs_init(void)
@@ -162,8 +169,7 @@ static void fs_init(void)
 
     /*You code here*/
     fatfs_sd_driver_register();
-    f_mount(&FS_OBJ_SD,"sd:",1);
-
+    f_mount(&FS_OBJ_SD, "sd:", 1);
 }
 
 /**
@@ -174,38 +180,39 @@ static void fs_init(void)
  * @param mode read: FS_MODE_RD, write: FS_MODE_WR, both: FS_MODE_RD | FS_MODE_WR
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_open (lv_fs_drv_t * drv, void * file_p, const char * path, lv_fs_mode_t mode)
+static lv_fs_res_t fs_open(lv_fs_drv_t *drv, void *file_p, const char *path, lv_fs_mode_t mode)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
     BYTE fatfs_mode;
     char *path_buf = NULL;
-    
-    switch (drv->letter)
-    {
-    case 'S':
-  		path_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(path) + 4));
-    	sprintf(path_buf, "SD:/%s", path);
-        break;
-    
-    default:
-        return LV_FS_RES_NOT_EX;
-        break;
+
+    switch (drv->letter) {
+        case 'S':
+            path_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(path) + 4));
+            sprintf(path_buf, "SD:/%s", path);
+            break;
+
+        default:
+            return LV_FS_RES_NOT_EX;
+            break;
     }
 
-    switch (mode)
-    {
-    case (LV_FS_MODE_RD):
-        fatfs_mode = FA_READ;
-        break;
-    case (LV_FS_MODE_WR):
-        fatfs_mode = FA_WRITE;
-        break;
-    case (LV_FS_MODE_WR|LV_FS_MODE_RD):
-        fatfs_mode = FA_WRITE|FA_READ;
-        break;
-    default:
-        fatfs_mode = LV_FS_MODE_RD;
-        break;
+    switch (mode) {
+        case (LV_FS_MODE_RD):
+            fatfs_mode = FA_READ;
+            break;
+
+        case (LV_FS_MODE_WR):
+            fatfs_mode = FA_WRITE;
+            break;
+
+        case (LV_FS_MODE_WR | LV_FS_MODE_RD):
+            fatfs_mode = FA_WRITE | FA_READ;
+            break;
+
+        default:
+            fatfs_mode = LV_FS_MODE_RD;
+            break;
     }
 
     res = f_open((file_t *)file_p, path_buf, fatfs_mode);
@@ -222,7 +229,7 @@ static lv_fs_res_t fs_open (lv_fs_drv_t * drv, void * file_p, const char * path,
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_close (lv_fs_drv_t * drv, void * file_p)
+static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
@@ -243,7 +250,7 @@ static lv_fs_res_t fs_close (lv_fs_drv_t * drv, void * file_p)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_read (lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br)
+static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
@@ -263,7 +270,7 @@ static lv_fs_res_t fs_read (lv_fs_drv_t * drv, void * file_p, void * buf, uint32
  * @param br the number of real written bytes (Bytes Written). NULL if unused.
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_write(lv_fs_drv_t * drv, void * file_p, const void * buf, uint32_t btw, uint32_t * bw)
+static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf, uint32_t btw, uint32_t *bw)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
@@ -282,7 +289,7 @@ static lv_fs_res_t fs_write(lv_fs_drv_t * drv, void * file_p, const void * buf, 
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_seek (lv_fs_drv_t * drv, void * file_p, uint32_t pos)
+static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
@@ -300,7 +307,7 @@ static lv_fs_res_t fs_seek (lv_fs_drv_t * drv, void * file_p, uint32_t pos)
  * @param size pointer to a variable to store the size
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_size (lv_fs_drv_t * drv, void * file_p, uint32_t * size_p)
+static lv_fs_res_t fs_size(lv_fs_drv_t *drv, void *file_p, uint32_t *size_p)
 {
     //lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
@@ -316,7 +323,7 @@ static lv_fs_res_t fs_size (lv_fs_drv_t * drv, void * file_p, uint32_t * size_p)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_tell (lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
+static lv_fs_res_t fs_tell(lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p)
 {
     //lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
@@ -331,22 +338,22 @@ static lv_fs_res_t fs_tell (lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
  * @param path path of the file to delete
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_remove (lv_fs_drv_t * drv, const char *path)
+static lv_fs_res_t fs_remove(lv_fs_drv_t *drv, const char *path)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
     /* Add your code here*/
     char *path_buf = NULL;
-    
-    switch (drv->letter)
-    {
-    case 'S':
-  		path_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(path) + 4));
-    	sprintf(path_buf, "SD:/%s", path);
-        break;
-    default:
-        return LV_FS_RES_NOT_EX;
-        break;
+
+    switch (drv->letter) {
+        case 'S':
+            path_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(path) + 4));
+            sprintf(path_buf, "SD:/%s", path);
+            break;
+
+        default:
+            return LV_FS_RES_NOT_EX;
+            break;
     }
 
     res = f_unlink(path_buf);
@@ -363,14 +370,14 @@ static lv_fs_res_t fs_remove (lv_fs_drv_t * drv, const char *path)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_trunc (lv_fs_drv_t * drv, void * file_p)
+static lv_fs_res_t fs_trunc(lv_fs_drv_t *drv, void *file_p)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
     /* Add your code here*/
     res = f_truncate((file_t *)file_p);
     res = res_fatfs_to_lv(res);
-    
+
     return res;
 }
 
@@ -381,25 +388,25 @@ static lv_fs_res_t fs_trunc (lv_fs_drv_t * drv, void * file_p)
  * @param newname path with the new name
  * @return LV_FS_RES_OK or any error from 'fs_res_t'
  */
-static lv_fs_res_t fs_rename (lv_fs_drv_t * drv, const char * oldname, const char * newname)
+static lv_fs_res_t fs_rename(lv_fs_drv_t *drv, const char *oldname, const char *newname)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
     /* Add your code here*/
     char *path_old_buf = NULL;
     char *path_new_buf = NULL;
-    
-    switch (drv->letter)
-    {
-    case 'S':
-  		path_old_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(oldname) + 4));
-        path_new_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(newname) + 4));
-    	sprintf(path_old_buf, "SD:/%s", oldname);
-        sprintf(path_new_buf, "SD:/%s", newname);
-        break;
-    default:
-        return LV_FS_RES_NOT_EX;
-        break;
+
+    switch (drv->letter) {
+        case 'S':
+            path_old_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(oldname) + 4));
+            path_new_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(newname) + 4));
+            sprintf(path_old_buf, "SD:/%s", oldname);
+            sprintf(path_new_buf, "SD:/%s", newname);
+            break;
+
+        default:
+            return LV_FS_RES_NOT_EX;
+            break;
     }
 
     res = f_rename(path_old_buf, path_new_buf);
@@ -418,27 +425,27 @@ static lv_fs_res_t fs_rename (lv_fs_drv_t * drv, const char * oldname, const cha
  * @param free_p pointer to store the free size [kB]
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_free (lv_fs_drv_t * drv, uint32_t * total_p, uint32_t * free_p)
+static lv_fs_res_t fs_free(lv_fs_drv_t *drv, uint32_t *total_p, uint32_t *free_p)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
     char *path = NULL;
     FATFS *fs_obj;
 
     /* Add your code here*/
-    switch (drv->letter)
-    {
-    case 'S':
-        path = "SD:";
-        fs_obj = &FS_OBJ_SD;
-        break;
-    default:
-        return LV_FS_RES_NOT_EX;
-        break;
+    switch (drv->letter) {
+        case 'S':
+            path = "SD:";
+            fs_obj = &FS_OBJ_SD;
+            break;
+
+        default:
+            return LV_FS_RES_NOT_EX;
+            break;
     }
-    
-    res = f_getfree(path , free_p, &fs_obj);
+
+    res = f_getfree(path, free_p, &fs_obj);
     *free_p = (fs_obj->csize) * (*free_p) / 1024;
-    *total_p = (fs_obj->csize) * (fs_obj->n_fatent - 2) /1024;
+    *total_p = (fs_obj->csize) * (fs_obj->n_fatent - 2) / 1024;
 
     res = res_fatfs_to_lv(res);
     return res;
@@ -451,22 +458,22 @@ static lv_fs_res_t fs_free (lv_fs_drv_t * drv, uint32_t * total_p, uint32_t * fr
  * @param path path to a directory
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_dir_open (lv_fs_drv_t * drv, void * rddir_p, const char *path)
+static lv_fs_res_t fs_dir_open(lv_fs_drv_t *drv, void *rddir_p, const char *path)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
     /* Add your code here*/
     char *path_buf = NULL;
-    
-    switch (drv->letter)
-    {
-    case 'S':
-  		path_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(path) + 4));
-    	sprintf(path_buf, "SD:/%s", path);
-        break;
-    default:
-        return LV_FS_RES_NOT_EX;
-        break;
+
+    switch (drv->letter) {
+        case 'S':
+            path_buf = (char *)lv_mem_alloc(sizeof(char) * (strlen(path) + 4));
+            sprintf(path_buf, "SD:/%s", path);
+            break;
+
+        default:
+            return LV_FS_RES_NOT_EX;
+            break;
     }
 
     res = f_opendir(rddir_p, path_buf);
@@ -484,7 +491,7 @@ static lv_fs_res_t fs_dir_open (lv_fs_drv_t * drv, void * rddir_p, const char *p
  * @param fn pointer to a buffer to store the filename
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_dir_read (lv_fs_drv_t * drv, void * rddir_p, char *fn)
+static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *rddir_p, char *fn)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
     FILINFO entry;
@@ -493,9 +500,8 @@ static lv_fs_res_t fs_dir_read (lv_fs_drv_t * drv, void * rddir_p, char *fn)
     res = f_readdir(rddir_p, &entry);
     res = res_fatfs_to_lv(res);
 
-    if(res == LV_FS_RES_OK)
-    {
-        sprintf(fn,"%s%s",(entry.fattrib & AM_DIR)? "/" : "", entry.fname);
+    if (res == LV_FS_RES_OK) {
+        sprintf(fn, "%s%s", (entry.fattrib & AM_DIR) ? "/" : "", entry.fname);
     }
 
     return res;
@@ -507,12 +513,12 @@ static lv_fs_res_t fs_dir_read (lv_fs_drv_t * drv, void * rddir_p, char *fn)
  * @param rddir_p pointer to an initialized 'lv_fs_dir_t' variable
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_dir_close (lv_fs_drv_t * drv, void * rddir_p)
+static lv_fs_res_t fs_dir_close(lv_fs_drv_t *drv, void *rddir_p)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
     /* Add your code here*/
-    f_closedir((dir_t*)rddir_p);
+    f_closedir((dir_t *)rddir_p);
     res = res_fatfs_to_lv(res);
     return res;
 }

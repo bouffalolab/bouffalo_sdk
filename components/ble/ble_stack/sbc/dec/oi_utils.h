@@ -48,7 +48,6 @@ extern "C" {
  */
 typedef OI_UINT32 OI_CALLBACK_HANDLE;
 
-
 /**
  * Function prototype for a timed procedure callback.
  *
@@ -56,7 +55,6 @@ typedef OI_UINT32 OI_CALLBACK_HANDLE;
  *
  */
 typedef void (*OI_SCHEDULED_CALLBACK)(void *arg);
-
 
 /**
  * Registers a function to be called when a timeout expires. This API uses BLUEmagic's internal
@@ -77,10 +75,9 @@ typedef void (*OI_SCHEDULED_CALLBACK)(void *arg);
  * @return                    OI_OK if the function was reqistered, or an error status.
  */
 OI_STATUS OI_ScheduleCallbackFunction(OI_SCHEDULED_CALLBACK callbackFunction,
-                                      void                 *arg,
-                                      OI_INTERVAL           timeout,
-                                      OI_CALLBACK_HANDLE   *handle);
-
+                                      void *arg,
+                                      OI_INTERVAL timeout,
+                                      OI_CALLBACK_HANDLE *handle);
 
 /**
  * Cancels a function registered with OI_ScheduleCallbackFunction() before its timer expires.
@@ -90,7 +87,6 @@ OI_STATUS OI_ScheduleCallbackFunction(OI_SCHEDULED_CALLBACK callbackFunction,
  * @return                    OI_OK if the function was cancelled, or an error status.
  */
 OI_STATUS OI_CancelCallbackFunction(OI_CALLBACK_HANDLE handle);
-
 
 /**
  * Registers a function to be called when a timeout expires. This version does not return a handle
@@ -106,8 +102,7 @@ OI_STATUS OI_CancelCallbackFunction(OI_CALLBACK_HANDLE handle);
  *
  * @return                    OI_OK if the function was reqistered, or an error status.
  */
-#define OI_ScheduleCallback(f, a, t)  OI_ScheduleCallbackFunction(f, a, t, NULL);
-
+#define OI_ScheduleCallback(f, a, t) OI_ScheduleCallbackFunction(f, a, t, NULL);
 
 /**
  * Cancels a function registered with OI_ScheduleCallback() before its timer expires. This
@@ -119,7 +114,6 @@ OI_STATUS OI_CancelCallbackFunction(OI_CALLBACK_HANDLE handle);
  */
 OI_STATUS OI_CancelCallback(OI_SCHEDULED_CALLBACK callbackFunction);
 
-
 /**
  * Parse a Bluetooth device address from the specified string.
  *
@@ -130,7 +124,7 @@ OI_STATUS OI_CancelCallback(OI_SCHEDULED_CALLBACK callbackFunction);
  */
 
 OI_BOOL OI_ParseBdAddr(const OI_CHAR *str,
-                       OI_BD_ADDR    *addr) ;
+                       OI_BD_ADDR *addr);
 
 /**
  * Printf function for platforms which have no stdio or printf available.
@@ -208,7 +202,6 @@ OI_BOOL OI_ParseBdAddr(const OI_CHAR *str,
  */
 void OI_Printf(const OI_CHAR *format, ...);
 
-
 /**
  * Var-args version OI_Printf
  *
@@ -217,7 +210,6 @@ void OI_Printf(const OI_CHAR *format, ...);
  * @param argp     Var-args list.
  */
 void OI_VPrintf(const OI_CHAR *format, va_list argp);
-
 
 /**
  * Writes a formatted string to a buffer. This function supports the same format specifiers as
@@ -234,7 +226,6 @@ void OI_VPrintf(const OI_CHAR *format, va_list argp);
 OI_INT32 OI_SNPrintf(OI_CHAR *buffer,
                      OI_UINT16 bufLen,
                      const OI_CHAR *format, ...);
-
 
 /**
  * Var-args version OI_SNPrintf
@@ -253,7 +244,6 @@ OI_INT32 OI_VSNPrintf(OI_CHAR *buffer,
                       OI_UINT16 bufLen,
                       const OI_CHAR *format, va_list argp);
 
-
 /**
  * Convert a string to an integer.
  *
@@ -262,7 +252,6 @@ OI_INT32 OI_VSNPrintf(OI_CHAR *buffer,
  * @return the integer value of the string or 0 if the string could not be parsed
  */
 OI_INT OI_atoi(const OI_CHAR *str);
-
 
 /**
  * Parse a signed integer in a string.
@@ -279,7 +268,6 @@ OI_INT OI_atoi(const OI_CHAR *str);
  */
 const OI_CHAR *OI_ScanInt(const OI_CHAR *str,
                           OI_INT32 *val);
-
 
 /**
  * Parse an unsigned integer in a string.
@@ -310,7 +298,6 @@ const OI_CHAR *OI_ScanUInt(const OI_CHAR *str,
 const OI_CHAR *OI_ScanStr(const OI_CHAR *str,
                           OI_CHAR *outStr,
                           OI_UINT16 len);
-
 
 /**
  * Parse a string for one of a set of alternative value. Skips leading whitespace (space and tabs
@@ -345,7 +332,6 @@ const OI_CHAR *OI_ScanAlt(const OI_CHAR *str,
 const OI_CHAR *OI_ScanBdAddr(const OI_CHAR *str,
                              OI_BD_ADDR *addr);
 
-
 /** Get a character from a digit integer value (0 - 9). */
 #define OI_DigitToChar(d) ((d) + '0')
 
@@ -357,15 +343,15 @@ const OI_CHAR *OI_ScanBdAddr(const OI_CHAR *str,
  *
  * @return the max or min value between a & b
  */
-#define OI_MAX(a, b) (((a) < (b)) ? (b) : (a) )
-#define OI_MIN(a, b) (((a) > (b)) ? (b) : (a) )
+#define OI_MAX(a, b) (((a) < (b)) ? (b) : (a))
+#define OI_MIN(a, b) (((a) > (b)) ? (b) : (a))
 
 /**
  * Compare two BD_ADDRs
  * SAME_BD_ADDR - Boolean: TRUE if they are the same address
  */
 
-#define SAME_BD_ADDR(x, y)      (0 == OI_MemCmp((x),(y),OI_BD_ADDR_BYTE_SIZE) )
+#define SAME_BD_ADDR(x, y) (0 == OI_MemCmp((x), (y), OI_BD_ADDR_BYTE_SIZE))
 
 #ifdef __cplusplus
 }

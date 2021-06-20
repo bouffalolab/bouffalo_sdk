@@ -32,7 +32,7 @@ extern "C" {
  *--------------------*/
 #if LV_USE_API_EXTENSION_V6
 
-static inline void lv_task_once(lv_task_t * task)
+static inline void lv_task_once(lv_task_t *task)
 {
     lv_task_set_repeat_count(task, 1);
 }
@@ -51,16 +51,22 @@ static inline void lv_task_once(lv_task_t * task)
 
 #if LV_USE_DROPDOWN
 
-static inline void lv_dropdown_set_draw_arrow(lv_obj_t * ddlist, bool en)
+static inline void lv_dropdown_set_draw_arrow(lv_obj_t *ddlist, bool en)
 {
-    if(en) lv_dropdown_set_symbol(ddlist, LV_SYMBOL_DOWN);
-    else lv_dropdown_set_symbol(ddlist, NULL);
+    if (en) {
+        lv_dropdown_set_symbol(ddlist, LV_SYMBOL_DOWN);
+    } else {
+        lv_dropdown_set_symbol(ddlist, NULL);
+    }
 }
 
-static inline bool lv_dropdown_get_draw_arrow(lv_obj_t * ddlist)
+static inline bool lv_dropdown_get_draw_arrow(lv_obj_t *ddlist)
 {
-    if(lv_dropdown_get_symbol(ddlist)) return true;
-    else return false;
+    if (lv_dropdown_get_symbol(ddlist)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 #define lv_dropdown_set_static_options lv_dropdown_set_options_static
@@ -76,12 +82,13 @@ static inline bool lv_dropdown_get_draw_arrow(lv_obj_t * ddlist)
  * @param en true: enable disable symmetric behavior; false: disable
  * @deprecated As of v7.0, you should use `lv_bar_set_type` instead.
  */
-static inline void lv_bar_set_sym(lv_obj_t * bar, bool en)
+static inline void lv_bar_set_sym(lv_obj_t *bar, bool en)
 {
-    if(en)
+    if (en) {
         lv_bar_set_type(bar, LV_BAR_TYPE_SYMMETRICAL);
-    else
+    } else {
         lv_bar_set_type(bar, LV_BAR_TYPE_NORMAL);
+    }
 }
 
 /**
@@ -90,7 +97,7 @@ static inline void lv_bar_set_sym(lv_obj_t * bar, bool en)
  * @return true: symmetric is enabled; false: disable
  * @deprecated As of v7.0, you should use `lv_bar_get_type` instead.
  */
-static inline bool lv_bar_get_sym(lv_obj_t * bar)
+static inline bool lv_bar_get_sym(lv_obj_t *bar)
 {
     return lv_bar_get_type(bar) == LV_BAR_TYPE_SYMMETRICAL;
 }
@@ -112,7 +119,7 @@ static inline bool lv_bar_get_sym(lv_obj_t * bar)
  * @param en true: enable disable symmetric behavior; false: disable
  * @deprecated As of v7.0, you should use `lv_slider_set_type` instead.
  */
-static inline void lv_slider_set_sym(lv_obj_t * slider, bool en)
+static inline void lv_slider_set_sym(lv_obj_t *slider, bool en)
 {
     lv_bar_set_sym(slider, en);
 }
@@ -123,7 +130,7 @@ static inline void lv_slider_set_sym(lv_obj_t * slider, bool en)
  * @return true: symmetric is enabled; false: disable
  * @deprecated As of v7.0, you should use `lv_slider_get_type` instead.
  */
-static inline bool lv_slider_get_sym(lv_obj_t * slider)
+static inline bool lv_slider_get_sym(lv_obj_t *slider)
 {
     return lv_bar_get_sym(slider);
 }
@@ -138,7 +145,7 @@ static inline bool lv_slider_get_sym(lv_obj_t * slider)
  * @param w width
  * @deprecated As of v7.0, you should use `lv_roller_set_auto_fit` and set the width normally instead.
  */
-static inline void lv_roller_set_fix_width(lv_obj_t * roller, lv_coord_t w)
+static inline void lv_roller_set_fix_width(lv_obj_t *roller, lv_coord_t w)
 {
     lv_roller_set_auto_fit(roller, false);
     lv_obj_set_width(roller, w);
@@ -156,16 +163,16 @@ static inline void lv_roller_set_fix_width(lv_obj_t * roller, lv_coord_t w)
 #define LV_SCRLBAR_MODE_HIDE   LV_SCROLLBAR_MODE_HIDE
 #define LV_SCRLBAR_MODE_UNHIDE LV_SCROLLBAR_MODE_UNHIDE
 
-static inline void lv_page_set_scrlbar_mode(lv_obj_t * page, lv_scrlbar_mode_t sb_mode)
+static inline void lv_page_set_scrlbar_mode(lv_obj_t *page, lv_scrlbar_mode_t sb_mode)
 {
     lv_page_set_scrollbar_mode(page, sb_mode);
 }
-static inline lv_scrollbar_mode_t lv_page_get_scrlbar_mode(lv_obj_t * page)
+static inline lv_scrollbar_mode_t lv_page_get_scrlbar_mode(lv_obj_t *page)
 {
     return lv_page_get_scrollbar_mode(page);
 }
 
-static inline lv_obj_t * lv_page_get_scrl(lv_obj_t * page)
+static inline lv_obj_t *lv_page_get_scrl(lv_obj_t *page)
 {
     return lv_page_get_scrollable(page);
 }
@@ -184,7 +191,7 @@ static inline lv_obj_t * lv_page_get_scrl(lv_obj_t * page)
 
 #if LV_USE_WIN
 
-static inline lv_obj_t * lv_win_add_btn(lv_obj_t * win, const void * img_src)
+static inline lv_obj_t *lv_win_add_btn(lv_obj_t *win, const void *img_src)
 {
     return lv_win_add_btn_right(win, img_src);
 }
@@ -192,30 +199,30 @@ static inline lv_obj_t * lv_win_add_btn(lv_obj_t * win, const void * img_src)
 #endif
 
 #if LV_USE_CHART
-static inline void lv_chart_set_range(lv_obj_t * chart, lv_coord_t ymin, lv_coord_t ymax)
+static inline void lv_chart_set_range(lv_obj_t *chart, lv_coord_t ymin, lv_coord_t ymax)
 {
-    lv_chart_set_y_range(chart, LV_CHART_AXIS_PRIMARY_Y, ymin,  ymax);
+    lv_chart_set_y_range(chart, LV_CHART_AXIS_PRIMARY_Y, ymin, ymax);
 }
 
-static inline void lv_chart_clear_serie(lv_obj_t * chart, lv_chart_series_t * series)
+static inline void lv_chart_clear_serie(lv_obj_t *chart, lv_chart_series_t *series)
 {
     lv_chart_clear_series(chart, series);
 }
 
 #endif
 
-static inline void lv_obj_align_origo(lv_obj_t * obj, const lv_obj_t * base, lv_align_t align, lv_coord_t x_ofs,
+static inline void lv_obj_align_origo(lv_obj_t *obj, const lv_obj_t *base, lv_align_t align, lv_coord_t x_ofs,
                                       lv_coord_t y_ofs)
 {
     lv_obj_align_mid(obj, base, align, x_ofs, y_ofs);
 }
 
-static inline void lv_obj_align_origo_x(lv_obj_t * obj, const lv_obj_t * base, lv_align_t align, lv_coord_t x_ofs)
+static inline void lv_obj_align_origo_x(lv_obj_t *obj, const lv_obj_t *base, lv_align_t align, lv_coord_t x_ofs)
 {
     lv_obj_align_mid_y(obj, base, align, x_ofs);
 }
 
-static inline void lv_obj_align_origo_y(lv_obj_t * obj, const lv_obj_t * base, lv_align_t align, lv_coord_t y_ofs)
+static inline void lv_obj_align_origo_y(lv_obj_t *obj, const lv_obj_t *base, lv_align_t align, lv_coord_t y_ofs)
 {
     lv_obj_align_mid_y(obj, base, align, y_ofs);
 }

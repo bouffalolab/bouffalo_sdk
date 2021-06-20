@@ -3,12 +3,12 @@
  * @file hal_gpio.h
  * @version 0.1
  * @date 2021-03-01
- * @brief 
+ * @brief
  * *****************************************************************************
  * @attention
- * 
+ *
  *  <h2><center>&copy; COPYRIGHT(c) 2020 Bouffalo Lab</center></h2>
- * 
+ *
  *  Redistribution and use in source and binary forms, with or without modification,
  *  are permitted provided that the following conditions are met:
  *    1. Redistributions of source code must retain the above copyright notice,
@@ -19,7 +19,7 @@
  *    3. Neither the name of Bouffalo Lab nor the names of its contributors
  *       may be used to endorse or promote products derived from this software
  *       without specific prior written permission.
- * 
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,7 +30,7 @@
  *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  *  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * *****************************************************************************
  */
 #ifndef __HAL_GPIO__H__
@@ -38,8 +38,7 @@
 
 #include "drv_device.h"
 
-typedef enum
-{
+typedef enum {
     GPIO_PIN_0 = 0,
     GPIO_PIN_1,
     GPIO_PIN_2,
@@ -79,26 +78,24 @@ typedef enum
     GPIO_PIN_36,
     GPIO_PIN_37,
     GPIO_PIN_MAX,
-}gpio_pin_type;
+} gpio_pin_type;
 
+#define GPIO_OUTPUT_MODE                   0
+#define GPIO_OUTPUT_PP_MODE                1
+#define GPIO_OUTPUT_PD_MODE                2
+#define GPIO_INPUT_MODE                    3
+#define GPIO_INPUT_PP_MODE                 4
+#define GPIO_INPUT_PD_MODE                 5
+#define GPIO_ASYNC_RISING_TRIGER_INT_MODE  6
+#define GPIO_ASYNC_FALLING_TRIGER_INT_MODE 7
+#define GPIO_ASYNC_HIGH_LEVEL_INT_MODE     8
+#define GPIO_ASYNC_LOW_LEVEL_INT_MODE      9
+#define GPIO_SYNC_RISING_TRIGER_INT_MODE   10
+#define GPIO_SYNC_FALLING_TRIGER_INT_MODE  11
+#define GPIO_SYNC_HIGH_LEVEL_INT_MODE      12
+#define GPIO_SYNC_LOW_LEVEL_INT_MODE       13
 
-#define GPIO_OUTPUT_MODE                        0
-#define GPIO_OUTPUT_PP_MODE                     1
-#define GPIO_OUTPUT_PD_MODE                     2
-#define GPIO_INPUT_MODE                         3
-#define GPIO_INPUT_PP_MODE                      4
-#define GPIO_INPUT_PD_MODE                      5
-#define GPIO_ASYNC_RISING_TRIGER_INT_MODE       6
-#define GPIO_ASYNC_FALLING_TRIGER_INT_MODE      7
-#define GPIO_ASYNC_HIGH_LEVEL_INT_MODE          8
-#define GPIO_ASYNC_LOW_LEVEL_INT_MODE           9
-#define GPIO_SYNC_RISING_TRIGER_INT_MODE        10
-#define GPIO_SYNC_FALLING_TRIGER_INT_MODE       11
-#define GPIO_SYNC_HIGH_LEVEL_INT_MODE           12
-#define GPIO_SYNC_LOW_LEVEL_INT_MODE            13
-
-typedef struct gpio_device
-{
+typedef struct gpio_device {
     struct device parent;
 } gpio_device_t;
 
@@ -107,7 +104,7 @@ void gpio_register(const char *name, uint16_t flag);
 void gpio_set_mode(uint32_t pin, uint32_t mode);
 void gpio_write(uint32_t pin, uint32_t value);
 void gpio_toggle(uint32_t pin);
-int  gpio_read(uint32_t pin);
+int gpio_read(uint32_t pin);
 void gpio_attach_irq(uint32_t pin, void (*cbFun)(void));
-void gpio_irq_enable(uint32_t pin,uint8_t enabled);
+void gpio_irq_enable(uint32_t pin, uint8_t enabled);
 #endif

@@ -67,7 +67,7 @@
 /** @defgroup  BLSP_BOOT_DECOMPRESS_Public_Functions
  *  @{
  */
-int32_t blsp_boot2_update_fw(pt_table_id_type activeID,pt_table_stuff_config *ptStuff,pt_table_entry_config *ptEntry);
+int32_t blsp_boot2_update_fw(pt_table_id_type activeID, pt_table_stuff_config *ptStuff, pt_table_entry_config *ptEntry);
 int blsp_boot2_verify_xz_header(uint8_t *buffer);
 
 /*@} end of group BLSP_BOOT_DECOMPRESS_Public_Functions */

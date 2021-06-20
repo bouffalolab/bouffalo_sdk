@@ -1,55 +1,62 @@
 /**
  * @file drv_mmheap.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "drv_mmheap.h"
 
-mmheap_ctl_t      mmheap_ctl;
+mmheap_ctl_t mmheap_ctl;
 
 static int generic_fls(uint32_t x)
 {
     int r = 32;
-    if (!x)
+
+    if (!x) {
         return 0;
+    }
 
     if (!(x & 0xffff0000u)) {
         x <<= 16;
         r -= 16;
     }
+
     if (!(x & 0xff000000u)) {
         x <<= 8;
         r -= 8;
     }
+
     if (!(x & 0xf0000000u)) {
         x <<= 4;
         r -= 4;
     }
+
     if (!(x & 0xc0000000u)) {
         x <<= 2;
         r -= 2;
     }
+
     if (!(x & 0x80000000u)) {
         x <<= 1;
         r -= 1;
     }
+
     return r;
 }
 
@@ -73,9 +80,9 @@ static inline void blk_set_size(mmheap_blk_t *blk, size_t size)
     blk->size = size | (blk->size & MMHEAP_BLOCK_STATE_MASK);
 }
 
-static inline int blk_is_last(const mmheap_blk_t* blk)
+static inline int blk_is_last(const mmheap_blk_t *blk)
 {
-	return blk_size(blk) == 0;
+    return blk_size(blk) == 0;
 }
 
 static inline int blk_is_free(const mmheap_blk_t *blk)
@@ -180,7 +187,7 @@ static inline size_t align_down(size_t x, size_t align)
 
 static inline void *align_ptr(const void *ptr, size_t align)
 {
-    return (void *)(((uint32_t)ptr + (align -1)) & ~(align -1));
+    return (void *)(((uint32_t)ptr + (align - 1)) & ~(align - 1));
 }
 
 /*
@@ -196,6 +203,7 @@ static size_t adjust_request_size(size_t size, size_t align)
     }
 
     adjust_size = align_up(size, align);
+
     if (adjust_size > MMHEAP_BLK_SIZE_MAX) {
         return 0;
     }
@@ -221,6 +229,7 @@ static void mapping_insert(size_t size, int *fli, int *sli)
         sl = ((int)size >> (fl - MMHEAP_SL_INDEX_COUNT_LOG2)) ^ (1 << MMHEAP_SL_INDEX_COUNT_LOG2);
         fl -= (MMHEAP_FL_INDEX_SHIFT - 1);
     }
+
     *fli = fl;
     *sli = sl;
 }
@@ -234,6 +243,7 @@ static void mapping_search(size_t size, int *fli, int *sli)
         round = (1 << (__fls(size) - MMHEAP_SL_INDEX_COUNT_LOG2)) - 1;
         size += round;
     }
+
     mapping_insert(size, fli, sli);
 }
 
@@ -245,14 +255,16 @@ static mmheap_blk_t *blk_search_suitable(int *fli, int *sli)
     fl = *fli;
     sl = *sli;
 
-	/*
-	** First, search for a block in the list associated with the given
-	** fl/sl index.
-	*/
+    /*
+    ** First, search for a block in the list associated with the given
+    ** fl/sl index.
+    */
     sl_map = mmheap_ctl.sl_bitmap[fl] & (~0U << sl);
+
     if (!sl_map) {
         /* No block exists. Search in the next largest first-level list. */
         fl_map = mmheap_ctl.fl_bitmap & (~0U << (fl + 1));
+
         if (!fl_map) {
             /* No free blocks available, memory has been exhausted. */
             return 0;
@@ -262,6 +274,7 @@ static mmheap_blk_t *blk_search_suitable(int *fli, int *sli)
         *fli = fl;
         sl_map = mmheap_ctl.sl_bitmap[fl];
     }
+
     sl = __ffs(sl_map);
     *sli = sl;
 
@@ -279,10 +292,10 @@ static void insert_free_block(mmheap_blk_t *blk, int fl, int sl)
     blk->prev_free = &mmheap_ctl.block_null;
     curr->prev_free = blk;
 
-	/*
-	** Insert the new block at the head of the list, and mark the first-
-	** and second-level bitmaps appropriately.
-	*/
+    /*
+    ** Insert the new block at the head of the list, and mark the first-
+    ** and second-level bitmaps appropriately.
+    */
     mmheap_ctl.blocks[fl][sl] = blk;
     mmheap_ctl.fl_bitmap |= (1 << fl);
     mmheap_ctl.sl_bitmap[fl] |= (1 << sl);
@@ -341,11 +354,11 @@ static int blk_can_split(mmheap_blk_t *blk, size_t size)
 /* Split a block into two, the second of which is free. */
 static mmheap_blk_t *blk_split(mmheap_blk_t *blk, size_t size)
 {
-    mmheap_blk_t   *remaining;
-    size_t          remain_size;
+    mmheap_blk_t *remaining;
+    size_t remain_size;
 
     /* Calculate the amount of space left in the remaining block. */
-    remaining   = offset_to_blk(blk_to_ptr(blk), size - MMHEAP_BLK_HEADER_OVERHEAD);
+    remaining = offset_to_blk(blk_to_ptr(blk), size - MMHEAP_BLK_HEADER_OVERHEAD);
     remain_size = blk_size(blk) - (size + MMHEAP_BLK_HEADER_OVERHEAD);
 
     blk_set_size(remaining, remain_size);
@@ -384,6 +397,7 @@ static mmheap_blk_t *blk_merge_next(mmheap_blk_t *blk)
     mmheap_blk_t *next_blk;
 
     next_blk = blk_next(blk);
+
     if (blk_is_free(next_blk)) {
         blk_remove(next_blk);
         blk = blk_absorb(blk, next_blk);
@@ -425,6 +439,7 @@ static mmheap_blk_t *blk_trim_free_leading(mmheap_blk_t *blk, size_t size)
     mmheap_blk_t *remaining_blk;
 
     remaining_blk = blk;
+
     if (blk_can_split(blk, size)) {
         /* We want the 2nd block. */
         remaining_blk = blk_split(blk, size - MMHEAP_BLK_HEADER_OVERHEAD);
@@ -470,6 +485,7 @@ static void *blk_prepare_used(mmheap_blk_t *blk, size_t size)
     if (!blk) {
         return NULL;
     }
+
     blk_trim_free(blk, size);
     blk_mark_as_used(blk);
     return blk_to_ptr(blk);
@@ -480,6 +496,7 @@ static void control_construct(void)
     int i, j;
 
     mmheap_ctl.pool_cnt = 0u;
+
     for (i = 0; i < MMHEAP_POOL_MAX; ++i) {
         mmheap_ctl.pool_start[i] = (void *)NULL;
     }
@@ -488,8 +505,10 @@ static void control_construct(void)
     mmheap_ctl.block_null.prev_free = &mmheap_ctl.block_null;
 
     mmheap_ctl.fl_bitmap = 0;
+
     for (i = 0; i < MMHEAP_FL_INDEX_COUNT; ++i) {
         mmheap_ctl.sl_bitmap[i] = 0;
+
         for (j = 0; j < MMHEAP_SL_INDEX_COUNT; ++j) {
             mmheap_ctl.blocks[i][j] = &mmheap_ctl.block_null;
         }
@@ -510,6 +529,7 @@ static int mmheap_pool_is_exist(void *pool_start)
             return 1;
         }
     }
+
     return 0;
 }
 
@@ -527,12 +547,13 @@ static void mmheap_pool_unrecord(void *pool_start)
             break;
         }
     }
+
     if (i != mmheap_ctl.pool_cnt - 1) {
         mmheap_ctl.pool_start[i] = mmheap_ctl.pool_start[mmheap_ctl.pool_cnt - 1];
     }
+
     --mmheap_ctl.pool_cnt;
 }
-
 
 int mmheap_init_with_pool(void *pool_start, size_t pool_size)
 {
@@ -543,11 +564,12 @@ int mmheap_init_with_pool(void *pool_start, size_t pool_size)
 
 void *mmheap_alloc(size_t size)
 {
-    size_t          adjust_size;
-    mmheap_blk_t   *blk;
+    size_t adjust_size;
+    mmheap_blk_t *blk;
 
-    adjust_size     = adjust_request_size(size, MMHEAP_ALIGN_SIZE);
-    blk             = blk_locate_free(adjust_size);
+    adjust_size = adjust_request_size(size, MMHEAP_ALIGN_SIZE);
+    blk = blk_locate_free(adjust_size);
+
     if (!blk) {
         return NULL;
     }
@@ -560,6 +582,7 @@ void *mmheap_calloc(size_t num, size_t size)
     void *ptr;
 
     ptr = mmheap_alloc(num * size);
+
     if (ptr) {
         memset(ptr, 0, num * size);
     }
@@ -574,12 +597,13 @@ void *mmheap_aligned_alloc(size_t size, size_t align)
     size_t adjust_size, aligned_size;
     size_t gap_minimum, size_with_gap, gap, gap_remain, offset;
 
-    adjust_size     = adjust_request_size(size, MMHEAP_ALIGN_SIZE);
-    gap_minimum     = sizeof(mmheap_blk_t);
-    size_with_gap   = adjust_request_size(adjust_size + align + gap_minimum, align);
-    aligned_size    = (adjust_size && align > MMHEAP_ALIGN_SIZE) ? size_with_gap : adjust_size;
+    adjust_size = adjust_request_size(size, MMHEAP_ALIGN_SIZE);
+    gap_minimum = sizeof(mmheap_blk_t);
+    size_with_gap = adjust_request_size(adjust_size + align + gap_minimum, align);
+    aligned_size = (adjust_size && align > MMHEAP_ALIGN_SIZE) ? size_with_gap : adjust_size;
 
     blk = blk_locate_free(aligned_size);
+
     if (!blk) {
         return NULL;
     }
@@ -643,6 +667,7 @@ void *mmheap_realloc(void *ptr, size_t size)
 
     if (adjust_size > curr_size && (!blk_is_free(next_blk) || adjust_size > combined_size)) {
         p = mmheap_alloc(size);
+
         if (p) {
             min_size = curr_size < size ? curr_size : size;
             memcpy(p, ptr, min_size);
@@ -663,9 +688,9 @@ void *mmheap_realloc(void *ptr, size_t size)
 
 int mmheap_pool_add(void *pool_start, size_t pool_size)
 {
-    mmheap_blk_t   *curr_blk;
-    mmheap_blk_t   *next_blk;
-    size_t          size_aligned;
+    mmheap_blk_t *curr_blk;
+    mmheap_blk_t *next_blk;
+    size_t size_aligned;
 
     if (mmheap_pool_is_full()) {
         return MEMHEAP_STATUS_OVERFLOW;
@@ -708,7 +733,7 @@ int mmheap_pool_add(void *pool_start, size_t pool_size)
     return MEMHEAP_STATUS_OK;
 }
 
- int mmheap_pool_rmv(void *pool_start)
+int mmheap_pool_rmv(void *pool_start)
 {
     int fl = 0, sl = 0;
     mmheap_blk_t *blk;
@@ -725,9 +750,9 @@ int mmheap_pool_add(void *pool_start, size_t pool_size)
     return MEMHEAP_STATUS_OK;
 }
 
- int mmheap_pool_check(void *pool_start, mmheap_info_t *info)
+int mmheap_pool_check(void *pool_start, mmheap_info_t *info)
 {
-    mmheap_blk_t* blk;
+    mmheap_blk_t *blk;
 
     memset(info, 0, sizeof(mmheap_info_t));
 
@@ -739,12 +764,12 @@ int mmheap_pool_add(void *pool_start, size_t pool_size)
         } else {
             info->used += blk_size(blk);
         }
+
         blk = blk_next(blk);
     }
 
     return MEMHEAP_STATUS_OK;
 }
-
 
 int mmheap_check(mmheap_info_t *info)
 {
@@ -756,6 +781,7 @@ int mmheap_check(mmheap_info_t *info)
 
     for (i = 0; i < mmheap_ctl.pool_cnt; ++i) {
         err = mmheap_pool_check(mmheap_ctl.pool_start[i], &pool_info);
+
         if (err != MEMHEAP_STATUS_OK) {
             return err;
         }

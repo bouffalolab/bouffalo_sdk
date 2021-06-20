@@ -18,7 +18,7 @@
  *********************/
 #define LV_OBJX_NAME "lv_led"
 
-#define LV_LED_WIDTH_DEF (LV_DPI / 3)
+#define LV_LED_WIDTH_DEF  (LV_DPI / 3)
 #define LV_LED_HEIGHT_DEF (LV_DPI / 3)
 
 /**********************
@@ -28,8 +28,8 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static lv_design_res_t lv_led_design(lv_obj_t * led, const lv_area_t * clip_area, lv_design_mode_t mode);
-static lv_res_t lv_led_signal(lv_obj_t * led, lv_signal_t sign, void * param);
+static lv_design_res_t lv_led_design(lv_obj_t *led, const lv_area_t *clip_area, lv_design_mode_t mode);
+static lv_res_t lv_led_signal(lv_obj_t *led, lv_signal_t sign, void *param);
 
 /**********************
  *  STATIC VARIABLES
@@ -51,22 +51,31 @@ static lv_signal_cb_t ancestor_signal;
  * @param copy pointer to a led object, if not NULL then the new object will be copied from it
  * @return pointer to the created led
  */
-lv_obj_t * lv_led_create(lv_obj_t * par, const lv_obj_t * copy)
+lv_obj_t *lv_led_create(lv_obj_t *par, const lv_obj_t *copy)
 {
     LV_LOG_TRACE("led create started");
 
     /*Create the ancestor basic object*/
-    lv_obj_t * led = lv_obj_create(par, copy);
+    lv_obj_t *led = lv_obj_create(par, copy);
     LV_ASSERT_MEM(led);
-    if(led == NULL) return NULL;
 
-    if(ancestor_signal == NULL) ancestor_signal = lv_obj_get_signal_cb(led);
-    if(ancestor_design == NULL) ancestor_design = lv_obj_get_design_cb(led);
+    if (led == NULL) {
+        return NULL;
+    }
+
+    if (ancestor_signal == NULL) {
+        ancestor_signal = lv_obj_get_signal_cb(led);
+    }
+
+    if (ancestor_design == NULL) {
+        ancestor_design = lv_obj_get_design_cb(led);
+    }
 
     /*Allocate the object type specific extended data*/
-    lv_led_ext_t * ext = lv_obj_allocate_ext_attr(led, sizeof(lv_led_ext_t));
+    lv_led_ext_t *ext = lv_obj_allocate_ext_attr(led, sizeof(lv_led_ext_t));
     LV_ASSERT_MEM(ext);
-    if(ext == NULL) {
+
+    if (ext == NULL) {
         lv_obj_del(led);
         return NULL;
     }
@@ -77,15 +86,15 @@ lv_obj_t * lv_led_create(lv_obj_t * par, const lv_obj_t * copy)
     lv_obj_set_design_cb(led, lv_led_design);
 
     /*Init the new led object*/
-    if(copy == NULL) {
+    if (copy == NULL) {
         lv_obj_set_size(led, LV_LED_WIDTH_DEF, LV_LED_HEIGHT_DEF);
 
         lv_theme_apply(led, LV_THEME_LED);
     }
     /*Copy an existing object*/
     else {
-        lv_led_ext_t * copy_ext = lv_obj_get_ext_attr(copy);
-        ext->bright             = copy_ext->bright;
+        lv_led_ext_t *copy_ext = lv_obj_get_ext_attr(copy);
+        ext->bright = copy_ext->bright;
 
         /*Refresh the style with new signal function*/
         lv_obj_refresh_style(led, LV_OBJ_PART_ALL, LV_STYLE_PROP_ALL);
@@ -105,16 +114,24 @@ lv_obj_t * lv_led_create(lv_obj_t * par, const lv_obj_t * copy)
  * @param led pointer to a LED object
  * @param bright LV_LED_BRIGHT_MIN (max. dark) ... LV_LED_BRIGHT_MAX (max. light)
  */
-void lv_led_set_bright(lv_obj_t * led, uint8_t bright)
+void lv_led_set_bright(lv_obj_t *led, uint8_t bright)
 {
     LV_ASSERT_OBJ(led, LV_OBJX_NAME);
 
     /*Set the brightness*/
-    lv_led_ext_t * ext = lv_obj_get_ext_attr(led);
-    if(ext->bright == bright) return;
+    lv_led_ext_t *ext = lv_obj_get_ext_attr(led);
 
-    if(bright <= LV_LED_BRIGHT_MIN) bright = LV_LED_BRIGHT_MIN;
-    if(bright >= LV_LED_BRIGHT_MAX) bright = LV_LED_BRIGHT_MAX;
+    if (ext->bright == bright) {
+        return;
+    }
+
+    if (bright <= LV_LED_BRIGHT_MIN) {
+        bright = LV_LED_BRIGHT_MIN;
+    }
+
+    if (bright >= LV_LED_BRIGHT_MAX) {
+        bright = LV_LED_BRIGHT_MAX;
+    }
 
     ext->bright = bright;
 
@@ -126,7 +143,7 @@ void lv_led_set_bright(lv_obj_t * led, uint8_t bright)
  * Light on a LED
  * @param led pointer to a LED object
  */
-void lv_led_on(lv_obj_t * led)
+void lv_led_on(lv_obj_t *led)
 {
     LV_ASSERT_OBJ(led, LV_OBJX_NAME);
 
@@ -137,7 +154,7 @@ void lv_led_on(lv_obj_t * led)
  * Light off a LED
  * @param led pointer to a LED object
  */
-void lv_led_off(lv_obj_t * led)
+void lv_led_off(lv_obj_t *led)
 {
     LV_ASSERT_OBJ(led, LV_OBJX_NAME);
 
@@ -148,15 +165,17 @@ void lv_led_off(lv_obj_t * led)
  * Toggle the state of a LED
  * @param led pointer to a LED object
  */
-void lv_led_toggle(lv_obj_t * led)
+void lv_led_toggle(lv_obj_t *led)
 {
     LV_ASSERT_OBJ(led, LV_OBJX_NAME);
 
     uint8_t bright = lv_led_get_bright(led);
-    if(bright > (LV_LED_BRIGHT_MIN + LV_LED_BRIGHT_MAX) >> 1)
+
+    if (bright > (LV_LED_BRIGHT_MIN + LV_LED_BRIGHT_MAX) >> 1) {
         lv_led_off(led);
-    else
+    } else {
         lv_led_on(led);
+    }
 }
 
 /*=====================
@@ -168,11 +187,11 @@ void lv_led_toggle(lv_obj_t * led)
  * @param led pointer to LED object
  * @return bright 0 (max. dark) ... 255 (max. light)
  */
-uint8_t lv_led_get_bright(const lv_obj_t * led)
+uint8_t lv_led_get_bright(const lv_obj_t *led)
 {
     LV_ASSERT_OBJ(led, LV_OBJX_NAME);
 
-    lv_led_ext_t * ext = lv_obj_get_ext_attr(led);
+    lv_led_ext_t *ext = lv_obj_get_ext_attr(led);
     return ext->bright;
 }
 
@@ -190,23 +209,22 @@ uint8_t lv_led_get_bright(const lv_obj_t * led)
  *             LV_DESIGN_DRAW_POST: drawing after every children are drawn
  * @param return an element of `lv_design_res_t`
  */
-static lv_design_res_t lv_led_design(lv_obj_t * led, const lv_area_t * clip_area, lv_design_mode_t mode)
+static lv_design_res_t lv_led_design(lv_obj_t *led, const lv_area_t *clip_area, lv_design_mode_t mode)
 {
-    if(mode == LV_DESIGN_COVER_CHK) {
+    if (mode == LV_DESIGN_COVER_CHK) {
         /*Return false if the object is not covers the clip_area area*/
         return ancestor_design(led, clip_area, mode);
-    }
-    else if(mode == LV_DESIGN_DRAW_MAIN) {
+    } else if (mode == LV_DESIGN_DRAW_MAIN) {
         /*Make darker colors in a temporary style according to the brightness*/
-        lv_led_ext_t * ext       = lv_obj_get_ext_attr(led);
+        lv_led_ext_t *ext = lv_obj_get_ext_attr(led);
 
         lv_draw_rect_dsc_t rect_dsc;
         lv_draw_rect_dsc_init(&rect_dsc);
         lv_obj_init_draw_rect_dsc(led, LV_LED_PART_MAIN, &rect_dsc);
 
         /*Mix. the color with black proportionally with brightness*/
-        rect_dsc.bg_color   = lv_color_mix(rect_dsc.bg_color, LV_COLOR_BLACK, ext->bright);
-        rect_dsc.bg_grad_color   = lv_color_mix(rect_dsc.bg_grad_color, LV_COLOR_BLACK, ext->bright);
+        rect_dsc.bg_color = lv_color_mix(rect_dsc.bg_color, LV_COLOR_BLACK, ext->bright);
+        rect_dsc.bg_grad_color = lv_color_mix(rect_dsc.bg_grad_color, LV_COLOR_BLACK, ext->bright);
         rect_dsc.border_color = lv_color_mix(rect_dsc.border_color, LV_COLOR_BLACK, ext->bright);
         rect_dsc.shadow_color = lv_color_mix(rect_dsc.shadow_color, LV_COLOR_BLACK, ext->bright);
 
@@ -219,6 +237,7 @@ static lv_design_res_t lv_led_design(lv_obj_t * led, const lv_area_t * clip_area
 
         lv_draw_rect(&led->coords, clip_area, &rect_dsc);
     }
+
     return LV_DESIGN_RES_OK;
 }
 
@@ -229,20 +248,28 @@ static lv_design_res_t lv_led_design(lv_obj_t * led, const lv_area_t * clip_area
  * @param param pointer to a signal specific variable
  * @return LV_RES_OK: the object is not deleted in the function; LV_RES_INV: the object is deleted
  */
-static lv_res_t lv_led_signal(lv_obj_t * led, lv_signal_t sign, void * param)
+static lv_res_t lv_led_signal(lv_obj_t *led, lv_signal_t sign, void *param)
 {
     lv_res_t res;
 
     /* Include the ancient signal function */
     res = ancestor_signal(led, sign, param);
-    if(res != LV_RES_OK) return res;
 
-    if(sign == LV_SIGNAL_GET_TYPE) {
-        lv_obj_type_t * buf = param;
+    if (res != LV_RES_OK) {
+        return res;
+    }
+
+    if (sign == LV_SIGNAL_GET_TYPE) {
+        lv_obj_type_t *buf = param;
         uint8_t i;
-        for(i = 0; i < LV_MAX_ANCESTOR_NUM - 1; i++) { /*Find the last set data*/
-            if(buf->type[i] == NULL) break;
+
+        for (i = 0; i < LV_MAX_ANCESTOR_NUM - 1; i++) /*Find the last set data*/
+        {
+            if (buf->type[i] == NULL) {
+                break;
+            }
         }
+
         buf->type[i] = "lv_led";
     }
 

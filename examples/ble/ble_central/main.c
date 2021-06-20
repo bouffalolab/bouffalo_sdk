@@ -1,24 +1,24 @@
 /**
  * @file main.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_uart.h"
 #include <FreeRTOS.h>
@@ -29,30 +29,28 @@
 #include "ble_central_tp_client.h"
 #include "conn.h"
 #include "log.h"
+#include "ble_lib_api.h"
+#include "hci_driver.h"
 
-#define 		NAME_LEN 			30
+#define NAME_LEN 30
 
 extern uint8_t _heap_start;
 extern uint8_t _heap_size; // @suppress("Type cannot be resolved")
-static HeapRegion_t xHeapRegions[] =
-{        
-       { &_heap_start, (unsigned int) &_heap_size },        
-       { NULL, 0 }, /* Terminates the array. */        
-       { NULL, 0 } /* Terminates the array. */
+static HeapRegion_t xHeapRegions[] = {
+    { &_heap_start, (unsigned int)&_heap_size },
+    { NULL, 0 }, /* Terminates the array. */
+    { NULL, 0 }  /* Terminates the array. */
 };
 
 uint8_t sharedBuf[16];
 
-extern void ble_controller_init(uint8_t task_priority);
-#if defined(BFLB_BLE)
-extern int hci_driver_init(void);
-#endif
-
-void user_vAssertCalled(void) __attribute__ ((weak, alias ("vAssertCalled")));
+void user_vAssertCalled(void) __attribute__((weak, alias("vAssertCalled")));
 void vAssertCalled(void)
 {
     MSG("vAssertCalled\r\n");
-    while( 1 );
+
+    while (1)
+        ;
 }
 
 void vApplicationTickHook(void)
@@ -60,19 +58,24 @@ void vApplicationTickHook(void)
     //MSG("vApplicationTickHook\r\n");
 }
 
-void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName )
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
     MSG("vApplicationStackOverflowHook\r\n");
-    if(pcTaskName){
-		MSG("Stack name %s\r\n", pcTaskName);
-	}
-    while( 1 );
+
+    if (pcTaskName) {
+        MSG("Stack name %s\r\n", pcTaskName);
+    }
+
+    while (1)
+        ;
 }
 
 void vApplicationMallocFailedHook(void)
 {
     MSG("vApplicationMallocFailedHook\r\n");
-    while( 1 );
+
+    while (1)
+        ;
 }
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {
@@ -80,7 +83,7 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackTyp
     function then they must be declared static - otherwise they will be allocated on
     the stack and so not exists after this function exits. */
     static StaticTask_t xIdleTaskTCB;
-    static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+    static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
 
     /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
     state will be stored. */
@@ -104,7 +107,7 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
     function then they must be declared static - otherwise they will be allocated on
     the stack and so not exists after this function exits. */
     static StaticTask_t xTimerTaskTCB;
-    static StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
+    static StackType_t uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
 
     /* Pass out a pointer to the StaticTask_t structure in which the Timer
     task's state will be stored. */
@@ -119,137 +122,137 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
     *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
 
-
 /*************************************************************************
-NAME    
+NAME
     data_cb
 */
 static bool data_cb(struct bt_data *data, void *user_data)
 {
-	char *name = user_data;
-         u8_t len;
+    char *name = user_data;
+    u8_t len;
 
-	switch (data->type) {
-	case BT_DATA_NAME_SHORTENED:
-	case BT_DATA_NAME_COMPLETE:
-        len = (data->data_len > NAME_LEN - 1)?(NAME_LEN - 1):(data->data_len);
-		memcpy(name, data->data, len);
-		return false;		
-	default:
-		return true;
-	}
-}
+    switch (data->type) {
+        case BT_DATA_NAME_SHORTENED:
+        case BT_DATA_NAME_COMPLETE:
+            len = (data->data_len > NAME_LEN - 1) ? (NAME_LEN - 1) : (data->data_len);
+            memcpy(name, data->data, len);
+            return false;
 
-/*************************************************************************
-NAME    
-    device_found
-*/
-
-static void device_found(const bt_addr_le_t *addr, s8_t rssi, u8_t evtype,
-			 struct net_buf_simple *buf)
-{
-	char le_addr[BT_ADDR_LE_STR_LEN];
-	char name[30];
-         int err;
-         char *adv_name = "BL_TEST_01"; //This name must be the same as adv_name in ble_central
-
-	(void)memset(name, 0, sizeof(name));
-	bt_data_parse(buf, data_cb, name);
-	bt_addr_le_to_str(addr, le_addr, sizeof(le_addr));
-	
-	BT_WARN("[DEVICE]: %s, AD evt type %u, RSSI %i %s \r\n",le_addr, evtype, rssi, name);
-         if(strcmp(name,adv_name) == 0)
-         {
-              struct bt_conn *conn;
-              struct bt_le_conn_param param = {
-                      .interval_min =  BT_GAP_INIT_CONN_INT_MIN,\
-                      .interval_max =  BT_GAP_INIT_CONN_INT_MAX,\
-                     .latency = 0,\
-                     .timeout = 400,\
-               };
-               err = bt_le_scan_stop();
-	if (err) {
-		BT_WARN("Stopping scanning failed (err %d)\r\n", err);
-	} else {
-		BT_WARN("Scan successfully stopped \r\n");
-	}
-              conn = bt_conn_create_le(addr, &param);
-              if(!conn) {
-                   BT_WARN("Connection failed\r\n");
-              }else{
-                  BT_WARN("Connection pending\r\n");
-              }
-         }
-}
-
-/*************************************************************************
-NAME    
-     ble_start_scan
-*/
-static void ble_start_scan(void)
-{    
-    int err;
-    struct bt_le_scan_param scan_param = {
-        .type = 0, \
-        .filter_dup = 1,\
-        .interval = BT_GAP_SCAN_FAST_INTERVAL, \
-        .window = BT_GAP_SCAN_FAST_WINDOW, \
-    };
-    err = bt_le_scan_start(&scan_param, device_found);
-     if(err){
-        BT_WARN("Failed to start scan (err %d) \r\n", err);
-    }else{
-       BT_WARN("Start scan successfully \r\n");
+        default:
+            return true;
     }
 }
 
 /*************************************************************************
-NAME    
+NAME
+    device_found
+*/
+
+static void device_found(const bt_addr_le_t *addr, s8_t rssi, u8_t evtype,
+                         struct net_buf_simple *buf)
+{
+    char le_addr[BT_ADDR_LE_STR_LEN];
+    char name[30];
+    int err;
+    char *adv_name = "BL_TEST_01"; //This name must be the same as adv_name in ble_central
+
+    (void)memset(name, 0, sizeof(name));
+    bt_data_parse(buf, data_cb, name);
+    bt_addr_le_to_str(addr, le_addr, sizeof(le_addr));
+
+    BT_WARN("[DEVICE]: %s, AD evt type %u, RSSI %i %s", le_addr, evtype, rssi, name);
+
+    if (strcmp(name, adv_name) == 0) {
+        struct bt_conn *conn;
+        struct bt_le_conn_param param = {
+            .interval_min = BT_GAP_INIT_CONN_INT_MIN,
+            .interval_max = BT_GAP_INIT_CONN_INT_MAX,
+            .latency = 0,
+            .timeout = 400,
+        };
+        err = bt_le_scan_stop();
+
+        if (err) {
+            BT_WARN("Stopping scanning failed (err %d)", err);
+        } else {
+            BT_WARN("Scan successfully stopped");
+        }
+
+        conn = bt_conn_create_le(addr, &param);
+
+        if (!conn) {
+            BT_WARN("Connection failed");
+        } else {
+            BT_WARN("Connection pending");
+        }
+    }
+}
+
+/*************************************************************************
+NAME
+     ble_start_scan
+*/
+static void ble_start_scan(void)
+{
+    int err;
+    struct bt_le_scan_param scan_param = {
+        .type = 0,
+        .filter_dup = 1,
+        .interval = BT_GAP_SCAN_FAST_INTERVAL,
+        .window = BT_GAP_SCAN_FAST_WINDOW,
+    };
+    err = bt_le_scan_start(&scan_param, device_found);
+
+    if (err) {
+        BT_WARN("Failed to start scan (err %d)", err);
+    } else {
+        BT_WARN("Start scan successfully");
+    }
+}
+
+/*************************************************************************
+NAME
      bt_enable_cb
 */
 
 static void bt_enable_cb(int err)
 {
-
- ble_tp_init();
- ble_start_scan();
- 
+    ble_tp_init();
+    ble_start_scan();
 }
 
 /*************************************************************************
-NAME    
+NAME
      ble_stack_start
 */
 void ble_stack_start(void)
 {
-   
     GLB_Set_EM_Sel(GLB_EM_8KB);
-    
-      // Initialize BLE controller
+
+    // Initialize BLE controller
     MSG("[OS] ble_controller_init...\r\n");
     ble_controller_init(configMAX_PRIORITIES - 1);
-    
+
     // Initialize BLE Host stack
     MSG("[OS] hci_driver_init...\r\n");
-    
+
     hci_driver_init();
-    
+
     MSG("[OS] bt_enable...\r\n");
     bt_enable(bt_enable_cb);
 }
 
 /*************************************************************************
-NAME    
+NAME
     ble_init
 */
 void ble_init(void)
 {
-     extern void ble_stack_start(void);
-     ble_stack_start();
+    ble_stack_start();
 }
 
 /*************************************************************************
-NAME    
+NAME
     ble_init_task
 */
 static void ble_init_task(void *pvParameters)
@@ -262,18 +265,17 @@ int main(void)
 {
     static StackType_t ble_init_stack[1024];
     static StaticTask_t ble_init_task_h;
-    
+
     bflb_platform_init(0);
-    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);   
-    GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 17);
-   
+    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
+
     vPortDefineHeapRegions(xHeapRegions);
-   
+
     MSG("[OS] ble init  task...\r\n");
-    xTaskCreateStatic(ble_init_task, (char*)"ble_init", sizeof(ble_init_stack)/4, NULL, 15, ble_init_stack, &ble_init_task_h);
-   
-    vTaskStartScheduler();  
-    while(1)
-    {
+    xTaskCreateStatic(ble_init_task, (char *)"ble_init", sizeof(ble_init_stack) / 4, NULL, 15, ble_init_stack, &ble_init_task_h);
+
+    vTaskStartScheduler();
+
+    while (1) {
     }
 }

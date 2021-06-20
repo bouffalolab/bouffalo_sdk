@@ -28,19 +28,20 @@ extern "C" {
  **********************/
 
 /*Data of tileview*/
-typedef struct {
+typedef struct
+{
     lv_page_ext_t page;
     /*New data for this type */
-    const lv_point_t * valid_pos;
+    const lv_point_t *valid_pos;
     uint16_t valid_pos_cnt;
 #if LV_USE_ANIMATION
     uint16_t anim_time;
 #endif
     lv_point_t act_id;
-    uint8_t drag_top_en : 1;
+    uint8_t drag_top_en    : 1;
     uint8_t drag_bottom_en : 1;
-    uint8_t drag_left_en : 1;
-    uint8_t drag_right_en : 1;
+    uint8_t drag_left_en   : 1;
+    uint8_t drag_right_en  : 1;
 } lv_tileview_ext_t;
 
 /*Parts of the Tileview*/
@@ -62,7 +63,7 @@ enum {
  * @param copy pointer to a tileview object, if not NULL then the new object will be copied from it
  * @return pointer to the created tileview
  */
-lv_obj_t * lv_tileview_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_tileview_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*======================
  * Add/remove functions
@@ -73,7 +74,7 @@ lv_obj_t * lv_tileview_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param tileview pointer to a Tileview object
  * @param element pointer to an object
  */
-void lv_tileview_add_element(lv_obj_t * tileview, lv_obj_t * element);
+void lv_tileview_add_element(lv_obj_t *tileview, lv_obj_t *element);
 
 /*=====================
  * Setter functions
@@ -86,7 +87,7 @@ void lv_tileview_add_element(lv_obj_t * tileview, lv_obj_t * element);
  *  Only the pointer is saved so can't be a local variable.
  * @param valid_pos_cnt number of elements in `valid_pos` array
  */
-void lv_tileview_set_valid_positions(lv_obj_t * tileview, const lv_point_t valid_pos[], uint16_t valid_pos_cnt);
+void lv_tileview_set_valid_positions(lv_obj_t *tileview, const lv_point_t valid_pos[], uint16_t valid_pos_cnt);
 
 /**
  * Set the tile to be shown
@@ -95,14 +96,14 @@ void lv_tileview_set_valid_positions(lv_obj_t * tileview, const lv_point_t valid
  * @param y line id (0, 1, 2...)
  * @param anim LV_ANIM_ON: set the value with an animation; LV_ANIM_OFF: change the value immediately
  */
-void lv_tileview_set_tile_act(lv_obj_t * tileview, lv_coord_t x, lv_coord_t y, lv_anim_enable_t anim);
+void lv_tileview_set_tile_act(lv_obj_t *tileview, lv_coord_t x, lv_coord_t y, lv_anim_enable_t anim);
 
 /**
  * Enable the edge flash effect. (Show an arc when the an edge is reached)
  * @param tileview pointer to a Tileview
  * @param en true or false to enable/disable end flash
  */
-static inline void lv_tileview_set_edge_flash(lv_obj_t * tileview, bool en)
+static inline void lv_tileview_set_edge_flash(lv_obj_t *tileview, bool en)
 {
     lv_page_set_edge_flash(tileview, en);
 }
@@ -112,7 +113,7 @@ static inline void lv_tileview_set_edge_flash(lv_obj_t * tileview, bool en)
  * @param tileview pointer to a page object
  * @param anim_time animation time in milliseconds
  */
-static inline void lv_tileview_set_anim_time(lv_obj_t * tileview, uint16_t anim_time)
+static inline void lv_tileview_set_anim_time(lv_obj_t *tileview, uint16_t anim_time)
 {
     lv_page_set_anim_time(tileview, anim_time);
 }
@@ -126,13 +127,13 @@ static inline void lv_tileview_set_anim_time(lv_obj_t * tileview, uint16_t anim_
 * @param x column id (0, 1, 2...)
 * @param y line id (0, 1, 2...)
 */
-void lv_tileview_get_tile_act(lv_obj_t * tileview, lv_coord_t * x, lv_coord_t * y);
+void lv_tileview_get_tile_act(lv_obj_t *tileview, lv_coord_t *x, lv_coord_t *y);
 /**
  * Get the scroll propagation property
  * @param tileview pointer to a Tileview
  * @return true or false
  */
-static inline bool lv_tileview_get_edge_flash(lv_obj_t * tileview)
+static inline bool lv_tileview_get_edge_flash(lv_obj_t *tileview)
 {
     return lv_page_get_edge_flash(tileview);
 }
@@ -142,7 +143,7 @@ static inline bool lv_tileview_get_edge_flash(lv_obj_t * tileview)
  * @param tileview pointer to a page object
  * @return animation time in milliseconds
  */
-static inline uint16_t lv_tileview_get_anim_time(lv_obj_t * tileview)
+static inline uint16_t lv_tileview_get_anim_time(lv_obj_t *tileview)
 {
     return lv_page_get_anim_time(tileview);
 }

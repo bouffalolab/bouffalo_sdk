@@ -98,7 +98,7 @@ typedef enum {
 #endif
 #if LV_USE_MSGBOX
     LV_THEME_MSGBOX,
-    LV_THEME_MSGBOX_BTNS,   /*The button matrix of the buttons are initialized separately*/
+    LV_THEME_MSGBOX_BTNS, /*The button matrix of the buttons are initialized separately*/
 #endif
 #if LV_USE_OBJMASK
     LV_THEME_OBJMASK,
@@ -114,7 +114,7 @@ typedef enum {
 #endif
 #if LV_USE_SPINBOX
     LV_THEME_SPINBOX,
-    LV_THEME_SPINBOX_BTN,   /*Control button for the spinbox*/
+    LV_THEME_SPINBOX_BTN, /*Control button for the spinbox*/
 #endif
 #if LV_USE_SPINNER
     LV_THEME_SPINNER,
@@ -127,7 +127,7 @@ typedef enum {
 #endif
 #if LV_USE_TABVIEW
     LV_THEME_TABVIEW,
-    LV_THEME_TABVIEW_PAGE,  /*The tab pages are initialized separately*/
+    LV_THEME_TABVIEW_PAGE, /*The tab pages are initialized separately*/
 #endif
 #if LV_USE_TEXTAREA
     LV_THEME_TEXTAREA,
@@ -137,7 +137,7 @@ typedef enum {
 #endif
 #if LV_USE_WIN
     LV_THEME_WIN,
-    LV_THEME_WIN_BTN,   /*The buttons are initialized separately*/
+    LV_THEME_WIN_BTN, /*The buttons are initialized separately*/
 #endif
 
     _LV_THEME_BUILTIN_LAST,
@@ -154,15 +154,15 @@ typedef void (*lv_theme_apply_xcb_t)(lv_obj_t *, lv_theme_style_t); /*Deprecated
 typedef struct _lv_theme_t {
     lv_theme_apply_cb_t apply_cb;
     lv_theme_apply_xcb_t apply_xcb; /*Deprecated: use `apply_cb` instead*/
-    struct _lv_theme_t * base;    /**< Apply the current theme's style on top of this theme.*/
+    struct _lv_theme_t *base;       /**< Apply the current theme's style on top of this theme.*/
     lv_color_t color_primary;
     lv_color_t color_secondary;
-    const lv_font_t * font_small;
-    const lv_font_t * font_normal;
-    const lv_font_t * font_subtitle;
-    const lv_font_t * font_title;
+    const lv_font_t *font_small;
+    const lv_font_t *font_normal;
+    const lv_font_t *font_subtitle;
+    const lv_font_t *font_title;
     uint32_t flags;
-    void * user_data;
+    void *user_data;
 } lv_theme_t;
 
 /**********************
@@ -174,20 +174,20 @@ typedef struct _lv_theme_t {
  * From now, all the created objects will use styles from this theme by default
  * @param th pointer to theme (return value of: 'lv_theme_init_xxx()')
  */
-void lv_theme_set_act(lv_theme_t * th);
+void lv_theme_set_act(lv_theme_t *th);
 
 /**
  * Get the current system theme.
  * @return pointer to the current system theme. NULL if not set.
  */
-lv_theme_t * lv_theme_get_act(void);
+lv_theme_t *lv_theme_get_act(void);
 
 /**
  * Apply the active theme on an object
  * @param obj pointer to an object
  * @param name the name of the theme element to apply. E.g. `LV_THEME_BTN`
  */
-void lv_theme_apply(lv_obj_t * obj, lv_theme_style_t name);
+void lv_theme_apply(lv_obj_t *obj, lv_theme_style_t name);
 
 /**
  * Copy a theme to an other or initialize a theme
@@ -195,7 +195,7 @@ void lv_theme_apply(lv_obj_t * obj, lv_theme_style_t name);
  * @param copy pointer to a theme to copy
  *             or `NULL` to initialize `theme` to empty
  */
-void lv_theme_copy(lv_theme_t * theme, const lv_theme_t * copy);
+void lv_theme_copy(lv_theme_t *theme, const lv_theme_t *copy);
 
 /**
  * Set a base theme for a theme.
@@ -204,7 +204,7 @@ void lv_theme_copy(lv_theme_t * theme, const lv_theme_t * copy);
  * @param new_theme pointer to theme which base should be set
  * @param base pointer to the base theme
  */
-void lv_theme_set_base(lv_theme_t * new_theme, lv_theme_t * base);
+void lv_theme_set_base(lv_theme_t *new_theme, lv_theme_t *base);
 
 /**
  * Set an apply callback for a theme.
@@ -212,31 +212,31 @@ void lv_theme_set_base(lv_theme_t * new_theme, lv_theme_t * base);
  * @param theme pointer to theme which callback should be set
  * @param apply_cb pointer to the callback
  */
-void lv_theme_set_apply_cb(lv_theme_t * theme, lv_theme_apply_cb_t apply_cb);
+void lv_theme_set_apply_cb(lv_theme_t *theme, lv_theme_apply_cb_t apply_cb);
 
 /**
  * Get the small font of the theme
  * @return pointer to the font
  */
-const lv_font_t * lv_theme_get_font_small(void);
+const lv_font_t *lv_theme_get_font_small(void);
 
 /**
  * Get the normal font of the theme
  * @return pointer to the font
  */
-const lv_font_t * lv_theme_get_font_normal(void);
+const lv_font_t *lv_theme_get_font_normal(void);
 
 /**
  * Get the subtitle font of the theme
  * @return pointer to the font
  */
-const lv_font_t * lv_theme_get_font_subtitle(void);
+const lv_font_t *lv_theme_get_font_subtitle(void);
 
 /**
  * Get the title font of the theme
  * @return pointer to the font
  */
-const lv_font_t * lv_theme_get_font_title(void);
+const lv_font_t *lv_theme_get_font_title(void);
 
 /**
  * Get the primary color of the theme

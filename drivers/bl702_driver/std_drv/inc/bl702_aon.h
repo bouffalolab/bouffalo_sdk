@@ -77,7 +77,7 @@ BL_Err_Type AON_Power_On_MBG(void);
 BL_Err_Type AON_Power_Off_MBG(void);
 /*----------*/
 BL_Err_Type AON_Power_On_XTAL(void);
-BL_Err_Type AON_Set_Xtal_CapCode(uint8_t capIn,uint8_t capOut);
+BL_Err_Type AON_Set_Xtal_CapCode(uint8_t capIn, uint8_t capOut);
 uint8_t AON_Get_Xtal_CapCode(void);
 BL_Err_Type AON_Power_Off_XTAL(void);
 /*----------*/

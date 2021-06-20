@@ -47,7 +47,17 @@
 /** @defgroup  AON_Private_Macros
  *  @{
  */
-#define AON_CLK_SET_DUMMY_WAIT          {__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();}
+#define AON_CLK_SET_DUMMY_WAIT \
+    {                          \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+    }
 
 /*@} end of group AON_Private_Macros */
 
@@ -85,7 +95,7 @@
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power on MXX band gap
  *
  * @param  None
@@ -98,19 +108,19 @@ __WEAK
 BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_MBG(void)
 {
     uint32_t tmpVal = 0;
-    
+
     /* Power up RF for PLL to work */
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_MBG_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
-    
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_MBG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
     BL602_Delay_US(55);
-    
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power off MXX band gap
  *
  * @param  None
@@ -125,15 +135,15 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_MBG(void)
     uint32_t tmpVal = 0;
 
     /* Power OFF */
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_MBG_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
-    
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_MBG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power on XTAL
  *
  * @param  None
@@ -146,21 +156,21 @@ __WEAK
 BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
 {
     uint32_t tmpVal = 0;
-    uint32_t timeOut=0;
+    uint32_t timeOut = 0;
 
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_XTAL_AON);
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_XTAL_BUF_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_XTAL_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_XTAL_BUF_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
 
     /* Polling for ready */
-    do{
+    do {
         BL602_Delay_US(10);
         timeOut++;
-        tmpVal=BL_RD_REG(AON_BASE,AON_TSEN);
-    }while(!BL_IS_REG_BIT_SET(tmpVal,AON_XTAL_RDY)&&timeOut<120);
+        tmpVal = BL_RD_REG(AON_BASE, AON_TSEN);
+    } while (!BL_IS_REG_BIT_SET(tmpVal, AON_XTAL_RDY) && timeOut < 120);
 
-    if(timeOut>=120){
+    if (timeOut >= 120) {
         return TIMEOUT;
     }
 
@@ -168,7 +178,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set XTAL cap code
  *
  * @param  capIn: Cap code in
@@ -179,22 +189,22 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
 *******************************************************************************/
 #ifndef BFLB_USE_ROM_DRIVER
 __WEAK
-BL_Err_Type ATTR_CLOCK_SECTION AON_Set_Xtal_CapCode(uint8_t capIn,uint8_t capOut)
+BL_Err_Type ATTR_CLOCK_SECTION AON_Set_Xtal_CapCode(uint8_t capIn, uint8_t capOut)
 {
     uint32_t tmpVal = 0;
-    
-    tmpVal=BL_RD_REG(AON_BASE,AON_XTAL_CFG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_XTAL_CAPCODE_IN_AON,capIn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_XTAL_CAPCODE_OUT_AON,capOut);
-    BL_WR_REG(AON_BASE,AON_XTAL_CFG,tmpVal);
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON, capIn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_OUT_AON, capOut);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
 
     BL602_Delay_US(100);
-    
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get XTAL cap code
  *
  * @param  None
@@ -208,13 +218,13 @@ uint8_t ATTR_CLOCK_SECTION AON_Get_Xtal_CapCode(void)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(AON_BASE,AON_XTAL_CFG);
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
 
-    return BL_GET_REG_BITS_VAL(tmpVal,AON_XTAL_CAPCODE_IN_AON);
+    return BL_GET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON);
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power off XTAL
  *
  * @param  None
@@ -227,17 +237,17 @@ __WEAK
 BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_XTAL(void)
 {
     uint32_t tmpVal = 0;
-    
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_XTAL_AON);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_XTAL_BUF_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
-    
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_XTAL_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_XTAL_BUF_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power on bandgap system
  *
  * @param  None
@@ -250,19 +260,19 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION AON_Power_On_BG(void)
 {
     uint32_t tmpVal = 0;
-    
+
     /* power up RF for PLL to work */
-    tmpVal=BL_RD_REG(AON_BASE,AON_BG_SYS_TOP);
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_BG_SYS_AON);
-    BL_WR_REG(AON_BASE,AON_BG_SYS_TOP,tmpVal);
-    
+    tmpVal = BL_RD_REG(AON_BASE, AON_BG_SYS_TOP);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_BG_SYS_AON);
+    BL_WR_REG(AON_BASE, AON_BG_SYS_TOP, tmpVal);
+
     BL602_Delay_US(55);
-    
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power off bandgap system
  *
  * @param  None
@@ -275,19 +285,19 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_BG(void)
 {
     uint32_t tmpVal = 0;
-    
+
     /* power up RF for PLL to work */
-    tmpVal=BL_RD_REG(AON_BASE,AON_BG_SYS_TOP);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_BG_SYS_AON);
-    BL_WR_REG(AON_BASE,AON_BG_SYS_TOP,tmpVal);
-    
+    tmpVal = BL_RD_REG(AON_BASE, AON_BG_SYS_TOP);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_BG_SYS_AON);
+    BL_WR_REG(AON_BASE, AON_BG_SYS_TOP, tmpVal);
+
     BL602_Delay_US(55);
-    
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power on LDO11
  *
  * @param  None
@@ -300,18 +310,18 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION AON_Power_On_LDO11_SOC(void)
 {
     uint32_t tmpVal = 0;
-    
-    tmpVal=BL_RD_REG(AON_BASE,AON_LDO11SOC_AND_DCTEST);
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_LDO11SOC_AON);
-    BL_WR_REG(AON_BASE,AON_LDO11SOC_AND_DCTEST,tmpVal);
-    
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_LDO11SOC_AND_DCTEST);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_LDO11SOC_AON);
+    BL_WR_REG(AON_BASE, AON_LDO11SOC_AND_DCTEST, tmpVal);
+
     BL602_Delay_US(55);
-    
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power off LDO11
  *
  * @param  None
@@ -324,18 +334,18 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_LDO11_SOC(void)
 {
     uint32_t tmpVal = 0;
-    
-    tmpVal=BL_RD_REG(AON_BASE,AON_LDO11SOC_AND_DCTEST);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_LDO11SOC_AON);
-    BL_WR_REG(AON_BASE,AON_LDO11SOC_AND_DCTEST,tmpVal);
-    
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_LDO11SOC_AND_DCTEST);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_LDO11SOC_AON);
+    BL_WR_REG(AON_BASE, AON_LDO11SOC_AND_DCTEST, tmpVal);
+
     BL602_Delay_US(55);
-    
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power on LDO15_RF
  *
  * @param  None
@@ -348,19 +358,19 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION AON_Power_On_LDO15_RF(void)
 {
     uint32_t tmpVal = 0;
-    
+
     /* ldo15rf power on */
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_LDO15RF_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
-    
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_LDO15RF_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
     BL602_Delay_US(90);
-    
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power off LDO15_RF
  *
  * @param  None
@@ -373,17 +383,17 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_LDO15_RF(void)
 {
     uint32_t tmpVal = 0;
-    
+
     /* ldo15rf power off */
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_LDO15RF_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
-    
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_LDO15RF_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  power on source follow regular
  *
  * @param  None
@@ -396,19 +406,19 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION AON_Power_On_SFReg(void)
 {
     uint32_t tmpVal = 0;
-    
+
     /* power on sfreg */
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_SFREG_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
-    
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_SFREG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
     BL602_Delay_US(10);
-    
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  power off source follow regular
  *
  * @param  None
@@ -421,17 +431,17 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_SFReg(void)
 {
     uint32_t tmpVal = 0;
-    
+
     /* power off sfreg */
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_SFREG_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
-    
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_SFREG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power off the power can be shut down in PDS0
  *
  * @param  None
@@ -446,27 +456,27 @@ BL_Err_Type ATTR_TCM_SECTION AON_LowPower_Enter_PDS0(void)
     uint32_t tmpVal = 0;
 
     /* power off sfreg */
-    tmpVal=BL_RD_REG(AON_BASE,AON_MISC);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_SW_WB_EN_AON);
-    BL_WR_REG(AON_BASE,AON_MISC,tmpVal);
+    tmpVal = BL_RD_REG(AON_BASE, AON_MISC);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_SW_WB_EN_AON);
+    BL_WR_REG(AON_BASE, AON_MISC, tmpVal);
 
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_SFREG_AON);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_LDO15RF_AON);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,AON_PU_MBG_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_SFREG_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_LDO15RF_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_MBG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
 
     /* gating Clock */
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_CGEN_CFG0);
-    tmpVal=tmpVal&(~(1<<6));
-    tmpVal=tmpVal&(~(1<<7));
-    BL_WR_REG(GLB_BASE,GLB_CGEN_CFG0,tmpVal);
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_CGEN_CFG0);
+    tmpVal = tmpVal & (~(1 << 6));
+    tmpVal = tmpVal & (~(1 << 7));
+    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG0, tmpVal);
 
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power on the power powered down in PDS0
  *
  * @param  None
@@ -480,39 +490,39 @@ BL_Err_Type ATTR_TCM_SECTION AON_LowPower_Exit_PDS0(void)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(AON_BASE,AON_RF_TOP_AON);
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
 
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_MBG_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_MBG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
 
     BL602_Delay_US(20);
 
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_LDO15RF_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_LDO15RF_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
 
     BL602_Delay_US(60);
 
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_PU_SFREG_AON);
-    BL_WR_REG(AON_BASE,AON_RF_TOP_AON,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_SFREG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
 
     BL602_Delay_US(20);
 
     /* power on wb */
-    tmpVal=BL_RD_REG(AON_BASE,AON_MISC);
-    tmpVal=BL_SET_REG_BIT(tmpVal,AON_SW_WB_EN_AON);
-    BL_WR_REG(AON_BASE,AON_MISC,tmpVal);
+    tmpVal = BL_RD_REG(AON_BASE, AON_MISC);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_SW_WB_EN_AON);
+    BL_WR_REG(AON_BASE, AON_MISC, tmpVal);
 
     /* ungating Clock */
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_CGEN_CFG0);
-    tmpVal=tmpVal|((1<<6));
-    tmpVal=tmpVal|((1<<7));
-    BL_WR_REG(GLB_BASE,GLB_CGEN_CFG0,tmpVal);
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_CGEN_CFG0);
+    tmpVal = tmpVal | ((1 << 6));
+    tmpVal = tmpVal | ((1 << 7));
+    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG0, tmpVal);
 
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Power on the power powered down in PDS0
  *
  * @param  delay: None
@@ -523,13 +533,13 @@ BL_Err_Type ATTR_TCM_SECTION AON_LowPower_Exit_PDS0(void)
 BL_Err_Type ATTR_TCM_SECTION AON_Set_LDO11_SOC_Sstart_Delay(uint8_t delay)
 {
     uint32_t tmpVal = 0;
-    
-    CHECK_PARAM((delay<=0x3));
-    
+
+    CHECK_PARAM((delay <= 0x3));
+
     /* config ldo11soc_sstart_delay_aon */
-    tmpVal=BL_RD_REG(AON_BASE,AON_LDO11SOC_AND_DCTEST);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,AON_LDO11SOC_SSTART_DELAY_AON,delay);
-    BL_WR_REG(AON_BASE,AON_LDO11SOC_AND_DCTEST,tmpVal);
+    tmpVal = BL_RD_REG(AON_BASE, AON_LDO11SOC_AND_DCTEST);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_LDO11SOC_SSTART_DELAY_AON, delay);
+    BL_WR_REG(AON_BASE, AON_LDO11SOC_AND_DCTEST, tmpVal);
 
     return SUCCESS;
 }

@@ -36,13 +36,15 @@ LV_EXPORT_CONST_INT(LV_COORD_MIN);
 /**
  * Represents a point on the screen.
  */
-typedef struct {
+typedef struct
+{
     lv_coord_t x;
     lv_coord_t y;
 } lv_point_t;
 
 /** Represents an area of the screen. */
-typedef struct {
+typedef struct
+{
     lv_coord_t x1;
     lv_coord_t y1;
     lv_coord_t x2;
@@ -87,14 +89,14 @@ typedef uint8_t lv_align_t;
  * @param x2 right coordinate of the area
  * @param y2 bottom coordinate of the area
  */
-void lv_area_set(lv_area_t * area_p, lv_coord_t x1, lv_coord_t y1, lv_coord_t x2, lv_coord_t y2);
+void lv_area_set(lv_area_t *area_p, lv_coord_t x1, lv_coord_t y1, lv_coord_t x2, lv_coord_t y2);
 
 /**
  * Copy an area
  * @param dest pointer to the destination area
  * @param src pointer to the source area
  */
-inline static void lv_area_copy(lv_area_t * dest, const lv_area_t * src)
+inline static void lv_area_copy(lv_area_t *dest, const lv_area_t *src)
 {
     _lv_memcpy_small(dest, src, sizeof(lv_area_t));
 }
@@ -104,7 +106,7 @@ inline static void lv_area_copy(lv_area_t * dest, const lv_area_t * src)
  * @param area_p pointer to an area
  * @return the width of the area (if x1 == x2 -> width = 1)
  */
-static inline lv_coord_t lv_area_get_width(const lv_area_t * area_p)
+static inline lv_coord_t lv_area_get_width(const lv_area_t *area_p)
 {
     return (lv_coord_t)(area_p->x2 - area_p->x1 + 1);
 }
@@ -114,7 +116,7 @@ static inline lv_coord_t lv_area_get_width(const lv_area_t * area_p)
  * @param area_p pointer to an area
  * @return the height of the area (if y1 == y2 -> height = 1)
  */
-static inline lv_coord_t lv_area_get_height(const lv_area_t * area_p)
+static inline lv_coord_t lv_area_get_height(const lv_area_t *area_p)
 {
     return (lv_coord_t)(area_p->y2 - area_p->y1 + 1);
 }
@@ -124,14 +126,14 @@ static inline lv_coord_t lv_area_get_height(const lv_area_t * area_p)
  * @param area_p pointer to an area
  * @param w the new width of the area (w == 1 makes x1 == x2)
  */
-void lv_area_set_width(lv_area_t * area_p, lv_coord_t w);
+void lv_area_set_width(lv_area_t *area_p, lv_coord_t w);
 
 /**
  * Set the height of an area
  * @param area_p pointer to an area
  * @param h the new height of the area (h == 1 makes y1 == y2)
  */
-void lv_area_set_height(lv_area_t * area_p, lv_coord_t h);
+void lv_area_set_height(lv_area_t *area_p, lv_coord_t h);
 
 /**
  * Set the position of an area (width and height will be kept)
@@ -139,14 +141,14 @@ void lv_area_set_height(lv_area_t * area_p, lv_coord_t h);
  * @param x the new x coordinate of the area
  * @param y the new y coordinate of the area
  */
-void _lv_area_set_pos(lv_area_t * area_p, lv_coord_t x, lv_coord_t y);
+void _lv_area_set_pos(lv_area_t *area_p, lv_coord_t x, lv_coord_t y);
 
 /**
  * Return with area of an area (x * y)
  * @param area_p pointer to an area
  * @return size of area
  */
-uint32_t lv_area_get_size(const lv_area_t * area_p);
+uint32_t lv_area_get_size(const lv_area_t *area_p);
 
 /**
  * Get the common parts of two areas
@@ -155,7 +157,7 @@ uint32_t lv_area_get_size(const lv_area_t * area_p);
  * @param a2_p pointer to the second area
  * @return false: the two area has NO common parts, res_p is invalid
  */
-bool _lv_area_intersect(lv_area_t * res_p, const lv_area_t * a1_p, const lv_area_t * a2_p);
+bool _lv_area_intersect(lv_area_t *res_p, const lv_area_t *a1_p, const lv_area_t *a2_p);
 
 /**
  * Join two areas into a third which involves the other two
@@ -163,7 +165,7 @@ bool _lv_area_intersect(lv_area_t * res_p, const lv_area_t * a1_p, const lv_area
  * @param a1_p pointer to the first area
  * @param a2_p pointer to the second area
  */
-void _lv_area_join(lv_area_t * a_res_p, const lv_area_t * a1_p, const lv_area_t * a2_p);
+void _lv_area_join(lv_area_t *a_res_p, const lv_area_t *a1_p, const lv_area_t *a2_p);
 
 /**
  * Check if a point is on an area
@@ -172,7 +174,7 @@ void _lv_area_join(lv_area_t * a_res_p, const lv_area_t * a1_p, const lv_area_t 
  * @param radius radius of area (e.g. for rounded rectangle)
  * @return false:the point is out of the area
  */
-bool _lv_area_is_point_on(const lv_area_t * a_p, const lv_point_t * p_p, lv_coord_t radius);
+bool _lv_area_is_point_on(const lv_area_t *a_p, const lv_point_t *p_p, lv_coord_t radius);
 
 /**
  * Check if two area has common parts
@@ -180,7 +182,7 @@ bool _lv_area_is_point_on(const lv_area_t * a_p, const lv_point_t * p_p, lv_coor
  * @param a2_p pointer to an other area
  * @return false: a1_p and a2_p has no common parts
  */
-bool _lv_area_is_on(const lv_area_t * a1_p, const lv_area_t * a2_p);
+bool _lv_area_is_on(const lv_area_t *a1_p, const lv_area_t *a2_p);
 
 /**
  * Check if an area is fully on an other
@@ -189,7 +191,7 @@ bool _lv_area_is_on(const lv_area_t * a1_p, const lv_area_t * a2_p);
  * @param radius radius of `aholder_p` (e.g. for rounded rectangle)
  * @return true: `ain_p` is fully inside `aholder_p`
  */
-bool _lv_area_is_in(const lv_area_t * ain_p, const lv_area_t * aholder_p, lv_coord_t radius);
+bool _lv_area_is_in(const lv_area_t *ain_p, const lv_area_t *aholder_p, lv_coord_t radius);
 
 /**
  * Align an area to an other
@@ -198,7 +200,7 @@ bool _lv_area_is_in(const lv_area_t * ain_p, const lv_area_t * aholder_p, lv_coo
  * @param align `LV_ALIGN_...`
  * @param res x/y coordinates where `to_align` align area should be placed
  */
-void _lv_area_align(const lv_area_t * base, const lv_area_t * to_align, lv_align_t align, lv_point_t * res);
+void _lv_area_align(const lv_area_t *base, const lv_area_t *to_align, lv_align_t align, lv_point_t *res);
 
 /**********************
  *      MACROS

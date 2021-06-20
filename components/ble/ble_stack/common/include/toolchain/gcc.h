@@ -22,43 +22,42 @@
 #ifndef _LINKER
 
 #ifndef __ORDER_BIG_ENDIAN__
-#define __ORDER_BIG_ENDIAN__            (1)
+#define __ORDER_BIG_ENDIAN__ (1)
 #endif
 
 #ifndef __ORDER_LITTLE_ENDIAN__
-#define __ORDER_LITTLE_ENDIAN__         (2)
+#define __ORDER_LITTLE_ENDIAN__ (2)
 #endif
 
 #ifndef __BYTE_ORDER__
-#if defined(__BIG_ENDIAN__) || defined(__ARMEB__) || \
+#if defined(__BIG_ENDIAN__) || defined(__ARMEB__) ||  \
     defined(__THUMBEB__) || defined(__AARCH64EB__) || \
     defined(__MIPSEB__) || defined(__TC32EB__)
 
-#define __BYTE_ORDER__                  __ORDER_BIG_ENDIAN__
+#define __BYTE_ORDER__ __ORDER_BIG_ENDIAN__
 
 #elif defined(__LITTLE_ENDIAN__) || defined(__ARMEL__) || \
-      defined(__THUMBEL__) || defined(__AARCH64EL__) || \
-      defined(__MIPSEL__) || defined(__TC32EL__)
+    defined(__THUMBEL__) || defined(__AARCH64EL__) ||     \
+    defined(__MIPSEL__) || defined(__TC32EL__)
 
-#define __BYTE_ORDER__                  __ORDER_LITTLE_ENDIAN__
+#define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
 
 #else
 #error "__BYTE_ORDER__ is not defined and cannot be automatically resolved"
 #endif
 #endif
 
-
 /* C++11 has static_assert built in */
 #ifdef __cplusplus
-#define BUILD_ASSERT(EXPR) static_assert(EXPR, "")
+#define BUILD_ASSERT(EXPR)          static_assert(EXPR, "")
 #define BUILD_ASSERT_MSG(EXPR, MSG) static_assert(EXPR, MSG)
 /*
- * GCC 4.6 and higher have the C11 _Static_assert built in, and its
- * output is easier to understand than the common BUILD_ASSERT macros.
- */
+    * GCC 4.6 and higher have the C11 _Static_assert built in, and its
+    * output is easier to understand than the common BUILD_ASSERT macros.
+    */
 #elif (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) || \
-	(__STDC_VERSION__) >= 201100
-#define BUILD_ASSERT(EXPR) _Static_assert(EXPR, "")
+    (__STDC_VERSION__) >= 201100
+#define BUILD_ASSERT(EXPR)          _Static_assert(EXPR, "")
 #define BUILD_ASSERT_MSG(EXPR, MSG) _Static_assert(EXPR, MSG)
 #endif
 
@@ -68,42 +67,41 @@
 #define ALIAS_OF(of) __attribute__((alias(#of)))
 
 #define FUNC_ALIAS(real_func, new_alias, return_type) \
-	return_type new_alias() ALIAS_OF(real_func)
+    return_type new_alias() ALIAS_OF(real_func)
 
 #if defined(CONFIG_ARCH_POSIX)
 #include <arch/posix/posix_trace.h>
 
 /*let's not segfault if this were to happen for some reason*/
-#define CODE_UNREACHABLE \
-{\
-	posix_print_error_and_exit("CODE_UNREACHABLE reached from %s:%d\n",\
-		__FILE__, __LINE__);\
-	__builtin_unreachable(); \
-}
+#define CODE_UNREACHABLE                                                    \
+    {                                                                       \
+        posix_print_error_and_exit("CODE_UNREACHABLE reached from %s:%d\n", \
+                                   __FILE__, __LINE__);                     \
+        __builtin_unreachable();                                            \
+    }
 #else
 #define CODE_UNREACHABLE __builtin_unreachable()
 #endif
-#define FUNC_NORETURN    __attribute__((__noreturn__))
+#define FUNC_NORETURN __attribute__((__noreturn__))
 
 /* The GNU assembler for Cortex-M3 uses # for immediate values, not
  * comments, so the @nobits# trick does not work.
  */
 #if defined(CONFIG_ARM)
-#define _NODATA_SECTION(segment)  __attribute__((section(#segment)))
+#define _NODATA_SECTION(segment) __attribute__((section(#segment)))
 #else
-#define _NODATA_SECTION(segment)				\
-	__attribute__((section(#segment ",\"wa\",@nobits#")))
+#define _NODATA_SECTION(segment) \
+    __attribute__((section(#segment ",\"wa\",@nobits#")))
 #endif
 
 /* Unaligned access */
-#define UNALIGNED_GET(p)						\
-__extension__ ({							\
-	struct  __attribute__((__packed__)) {				\
-		__typeof__(*(p)) __v;					\
-	} *__p = (__typeof__(__p)) (p);					\
-	__p->__v;							\
-})
-
+#define UNALIGNED_GET(p)                     \
+    __extension__({                          \
+        struct __attribute__((__packed__)) { \
+            __typeof__(*(p)) __v;            \
+        } *__p = (__typeof__(__p))(p);       \
+        __p->__v;                            \
+    })
 
 #if __GNUC__ >= 7 && defined(CONFIG_ARM)
 
@@ -116,24 +114,24 @@ __extension__ ({							\
  * compilers in question do this optimization ignoring __packed__
  * attribute).
  */
-#define UNALIGNED_PUT(v, p)                                             \
-do {                                                                    \
-	struct __attribute__((__packed__)) {                            \
-		__typeof__(*p) __v;                                     \
-	} *__p = (__typeof__(__p)) (p);                                 \
-	__p->__v = (v);                                                 \
-	compiler_barrier();                                             \
-} while (false)
+#define UNALIGNED_PUT(v, p)                  \
+    do {                                     \
+        struct __attribute__((__packed__)) { \
+            __typeof__(*p) __v;              \
+        } *__p = (__typeof__(__p))(p);       \
+        __p->__v = (v);                      \
+        compiler_barrier();                  \
+    } while (false)
 
 #else
 
-#define UNALIGNED_PUT(v, p)                                             \
-do {                                                                    \
-	struct __attribute__((__packed__)) {                            \
-		__typeof__(*p) __v;                                     \
-	} *__p = (__typeof__(__p)) (p);                                 \
-	__p->__v = (v);                                               \
-} while (false)
+#define UNALIGNED_PUT(v, p)                  \
+    do {                                     \
+        struct __attribute__((__packed__)) { \
+            __typeof__(*p) __v;              \
+        } *__p = (__typeof__(__p))(p);       \
+        __p->__v = (v);                      \
+    } while (false)
 
 #endif
 
@@ -144,9 +142,7 @@ do {                                                                    \
 #define Z_GENERIC_SECTION(segment) __GENERIC_SECTION(segment)
 
 #define ___in_section(a, b, c) \
-	__attribute__((section("." Z_STRINGIFY(a)			\
-				"." Z_STRINGIFY(b)			\
-				"." Z_STRINGIFY(c))))
+    __attribute__((section("." Z_STRINGIFY(a) "." Z_STRINGIFY(b) "." Z_STRINGIFY(c))))
 #define __in_section(a, b, c) ___in_section(a, b, c)
 
 #define __in_section_unique(seg) ___in_section(seg, __FILE__, __COUNTER__)
@@ -160,33 +156,32 @@ do {                                                                    \
 #if !defined(CONFIG_XIP)
 #define __ramfunc
 #elif defined(CONFIG_ARCH_HAS_RAMFUNC_SUPPORT)
-#define __ramfunc	__attribute__((noinline))			\
-			__attribute__((long_call, section(".ramfunc")))
+#define __ramfunc __attribute__((noinline)) \
+    __attribute__((long_call, section(".ramfunc")))
 #endif /* !CONFIG_XIP */
 
 #ifndef __packed
-#define __packed        __attribute__((__packed__))
+#define __packed __attribute__((__packed__))
 #endif
 #ifndef __aligned
-#define __aligned(x)	__attribute__((__aligned__(x)))
+#define __aligned(x) __attribute__((__aligned__(x)))
 #endif
-#define __may_alias     __attribute__((__may_alias__))
+#define __may_alias __attribute__((__may_alias__))
 #ifndef __printf_like
-#define __printf_like(f, a)   __attribute__((format (printf, f, a)))
+#define __printf_like(f, a) __attribute__((format(printf, f, a)))
 #endif
-#define __used		__attribute__((__used__))
+#define __used __attribute__((__used__))
 #ifndef __deprecated
-#define __deprecated	__attribute__((deprecated))
+#define __deprecated __attribute__((deprecated))
 #endif
 #define ARG_UNUSED(x) (void)(x)
 
-#ifndef  likely
-#define  likely(x)   __builtin_expect((bool)!!(x), true)
+#ifndef likely
+#define likely(x) __builtin_expect((bool)!!(x), true)
 #endif
 #ifndef unlikely
-#define  unlikely(x) __builtin_expect((bool)!!(x), false)
+#define unlikely(x) __builtin_expect((bool)!!(x), false)
 #endif
-
 
 #define popcount(x) __builtin_popcount(x)
 
@@ -203,11 +198,11 @@ do {                                                                    \
 #define HAS_BUILTIN___builtin_div_overflow 1
 #endif
 #if __GNUC__ >= 4
-#define HAS_BUILTIN___builtin_clz 1
-#define HAS_BUILTIN___builtin_clzl 1
+#define HAS_BUILTIN___builtin_clz   1
+#define HAS_BUILTIN___builtin_clzl  1
 #define HAS_BUILTIN___builtin_clzll 1
-#define HAS_BUILTIN___builtin_ctz 1
-#define HAS_BUILTIN___builtin_ctzl 1
+#define HAS_BUILTIN___builtin_ctz   1
+#define HAS_BUILTIN___builtin_ctzl  1
 #define HAS_BUILTIN___builtin_ctzll 1
 #endif
 
@@ -256,47 +251,61 @@ do {                                                                    \
 
 #if defined(_ASMLANGUAGE)
 
-#if defined(CONFIG_ARM) || defined(CONFIG_NIOS2) || defined(CONFIG_RISCV) \
-	|| defined(CONFIG_XTENSA)
-#define GTEXT(sym) .global sym; .type sym, %function
-#define GDATA(sym) .global sym; .type sym, %object
-#define WTEXT(sym) .weak sym; .type sym, %function
-#define WDATA(sym) .weak sym; .type sym, %object
+#if defined(CONFIG_ARM) || defined(CONFIG_NIOS2) || defined(CONFIG_RISCV) || defined(CONFIG_XTENSA)
+#define GTEXT(sym) \
+    .global sym;   \
+    .type sym, % function
+#define GDATA(sym) \
+    .global sym;   \
+    .type sym, % object
+#define WTEXT(sym) \
+    .weak sym;     \
+    .type sym, % function
+#define WDATA(sym) \
+    .weak sym;     \
+    .type sym, % object
 #elif defined(CONFIG_ARC)
 /*
- * Need to use assembly macros because ';' is interpreted as the start of
- * a single line comment in the ARC assembler.
- */
+    * Need to use assembly macros because ';' is interpreted as the start of
+    * a single line comment in the ARC assembler.
+    */
 
 .macro glbl_text symbol
-	.globl \symbol
-	.type \symbol, %function
-.endm
+    .globl \symbol
+    .type \symbol,
+    % function
+            .endm
 
-.macro glbl_data symbol
-	.globl \symbol
-	.type \symbol, %object
-.endm
+            .macro glbl_data symbol
+            .globl \symbol
+            .type \symbol,
+    % object
+            .endm
 
-.macro weak_data symbol
-	.weak \symbol
-	.type \symbol, %object
-.endm
+            .macro weak_data symbol
+            .weak \symbol
+            .type \symbol,
+    % object
+            .endm
 
 #define GTEXT(sym) glbl_text sym
 #define GDATA(sym) glbl_data sym
 #define WDATA(sym) weak_data sym
 
-#else  /* !CONFIG_ARM && !CONFIG_ARC */
-#define GTEXT(sym) .globl sym; .type sym, @function
-#define GDATA(sym) .globl sym; .type sym, @object
+#else /* !CONFIG_ARM && !CONFIG_ARC */
+#define GTEXT(sym) \
+    .globl sym;    \
+    .type sym, @function
+#define GDATA(sym) \
+    .globl sym;    \
+    .type sym, @object
 #endif
 
 /*
  * These macros specify the section in which a given function or variable
  * resides.
  *
- * - SECTION_FUNC	allows only one function to reside in a sub-section
+ * - SECTION_FUNC   allows only one function to reside in a sub-section
  * - SECTION_SUBSEC_FUNC allows multiple functions to reside in a sub-section
  *   This ensures that garbage collection only discards the section
  *   if all functions in the sub-section are not referenced.
@@ -311,39 +320,41 @@ do {                                                                    \
  * correct substitution of the 'section' variable.
  */
 
-.macro section_var section, symbol
-	.section .\section\().\symbol
-	\symbol :
-.endm
+.macro section_var section, symbol.section.\section\().\symbol
+\symbol :.endm
 
-.macro section_func section, symbol
-	.section .\section\().\symbol, "ax"
-	FUNC_CODE()
-	PERFOPT_ALIGN
-	\symbol :
-	FUNC_INSTR(\symbol)
-.endm
+              .macro section_func section,
+    symbol
+        .section.\section\()
+        .\symbol,
+    "ax" FUNC_CODE()
+        PERFOPT_ALIGN
+\symbol : FUNC_INSTR(\symbol)
+               .endm
 
-.macro section_subsec_func section, subsection, symbol
-	.section .\section\().\subsection, "ax"
-	PERFOPT_ALIGN
-	\symbol :
-.endm
+               .macro section_subsec_func section,
+    subsection, symbol.section.\section\().\subsection, "ax" PERFOPT_ALIGN
+\symbol :.endm
 
-#define SECTION_VAR(sect, sym) section_var sect, sym
+#define SECTION_VAR(sect, sym)  section_var sect, sym
 #define SECTION_FUNC(sect, sym) section_func sect, sym
 #define SECTION_SUBSEC_FUNC(sect, subsec, sym) \
-	section_subsec_func sect, subsec, sym
+    section_subsec_func sect, subsec, sym
 #else /* !CONFIG_ARC */
 
-#define SECTION_VAR(sect, sym)  .section .sect.##sym; sym :
-#define SECTION_FUNC(sect, sym)						\
-	.section .sect.sym, "ax";					\
-				FUNC_CODE()				\
-				PERFOPT_ALIGN; sym :		\
-							FUNC_INSTR(sym)
-#define SECTION_SUBSEC_FUNC(sect, subsec, sym)				\
-		.section .sect.subsec, "ax"; PERFOPT_ALIGN; sym :
+#define SECTION_VAR(sect, sym) \
+    .section.sect.##sym;       \
+    sym:
+#define SECTION_FUNC(sect, sym) \
+    .section.sect.sym, "ax";    \
+    FUNC_CODE()                 \
+    PERFOPT_ALIGN;              \
+    sym:                        \
+    FUNC_INSTR(sym)
+#define SECTION_SUBSEC_FUNC(sect, subsec, sym) \
+    .section.sect.subsec, "ax";                \
+    PERFOPT_ALIGN;                             \
+    sym:
 
 #endif /* CONFIG_ARC */
 
@@ -352,9 +363,14 @@ do {                                                                    \
 #if defined(CONFIG_ARM) && defined(_ASMLANGUAGE)
 #if defined(CONFIG_ISA_THUMB2)
 /* '.syntax unified' is a gcc-ism used in thumb-2 asm files */
-#define _ASM_FILE_PROLOGUE .text; .syntax unified; .thumb
+#define _ASM_FILE_PROLOGUE \
+    .text;                 \
+    .syntax unified;       \
+    .thumb
 #else
-#define _ASM_FILE_PROLOGUE .text; .code 32
+#define _ASM_FILE_PROLOGUE \
+    .text;                 \
+    .code 32
 #endif
 #endif
 
@@ -367,10 +383,9 @@ do {                                                                    \
 #define GEN_OFFSET_EXTERN(name) extern const char name[]
 
 #define GEN_ABS_SYM_BEGIN(name) \
-	EXTERN_C void name(void); \
-	void name(void)         \
-	{
-
+    EXTERN_C void name(void);   \
+    void name(void)             \
+    {
 #define GEN_ABS_SYM_END }
 
 #if defined(CONFIG_ARM)
@@ -383,66 +398,76 @@ do {                                                                    \
  * to output (value) in the ARM specific GEN_OFFSET macro.
  */
 
-#define GEN_ABSOLUTE_SYM(name, value)               \
-	__asm__(".globl\t" #name "\n\t.equ\t" #name \
-		",%B0"                              \
-		"\n\t.type\t" #name ",%%object" :  : "n"(~(value)))
+#define GEN_ABSOLUTE_SYM(name, value)           \
+    __asm__(".globl\t" #name "\n\t.equ\t" #name \
+            ",%B0"                              \
+            "\n\t.type\t" #name ",%%object"     \
+            :                                   \
+            : "n"(~(value)))
 
 #elif defined(CONFIG_X86) || defined(CONFIG_ARC)
 
-#define GEN_ABSOLUTE_SYM(name, value)               \
-	__asm__(".globl\t" #name "\n\t.equ\t" #name \
-		",%c0"                              \
-		"\n\t.type\t" #name ",@object" :  : "n"(value))
+#define GEN_ABSOLUTE_SYM(name, value)           \
+    __asm__(".globl\t" #name "\n\t.equ\t" #name \
+            ",%c0"                              \
+            "\n\t.type\t" #name ",@object"      \
+            :                                   \
+            : "n"(value))
 
 #elif defined(CONFIG_NIOS2) || defined(CONFIG_RISCV) || defined(CONFIG_XTENSA)
 
 /* No special prefixes necessary for constants in this arch AFAICT */
-#define GEN_ABSOLUTE_SYM(name, value)		\
-	__asm__(".globl\t" #name "\n\t.equ\t" #name \
-		",%0"                              \
-		"\n\t.type\t" #name ",%%object" :  : "n"(value))
+#define GEN_ABSOLUTE_SYM(name, value)           \
+    __asm__(".globl\t" #name "\n\t.equ\t" #name \
+            ",%0"                               \
+            "\n\t.type\t" #name ",%%object"     \
+            :                                   \
+            : "n"(value))
 
 #elif defined(CONFIG_ARCH_POSIX)
-#define GEN_ABSOLUTE_SYM(name, value)               \
-	__asm__(".globl\t" #name "\n\t.equ\t" #name \
-		",%c0"                              \
-		"\n\t.type\t" #name ",@object" :  : "n"(value))
+#define GEN_ABSOLUTE_SYM(name, value)           \
+    __asm__(".globl\t" #name "\n\t.equ\t" #name \
+            ",%c0"                              \
+            "\n\t.type\t" #name ",@object"      \
+            :                                   \
+            : "n"(value))
 #else
 #error processor architecture not supported
 #endif
 
-#define compiler_barrier() do { \
-	__asm__ __volatile__ ("" ::: "memory"); \
-} while (false)
+#define compiler_barrier()                    \
+    do {                                      \
+        __asm__ __volatile__("" ::            \
+                                 : "memory"); \
+    } while (false)
 
 /** @brief Return larger value of two provided expressions.
  *
  * Macro ensures that expressions are evaluated only once.
  *
  * @note Macro has limited usage compared to the standard macro as it cannot be
- *	 used:
- *	 - to generate constant integer, e.g. __aligned(Z_MAX(4,5))
- *	 - static variable, e.g. array like static u8_t array[Z_MAX(...)];
+ *   used:
+ *   - to generate constant integer, e.g. __aligned(Z_MAX(4,5))
+ *   - static variable, e.g. array like static u8_t array[Z_MAX(...)];
  */
-#define Z_MAX(a, b) ({ \
-		/* random suffix to avoid naming conflict */ \
-		__typeof__(a) _value_a_ = (a); \
-		__typeof__(b) _value_b_ = (b); \
-		_value_a_ > _value_b_ ? _value_a_ : _value_b_; \
-	})
+#define Z_MAX(a, b) ({                             \
+    /* random suffix to avoid naming conflict */   \
+    __typeof__(a) _value_a_ = (a);                 \
+    __typeof__(b) _value_b_ = (b);                 \
+    _value_a_ > _value_b_ ? _value_a_ : _value_b_; \
+})
 
 /** @brief Return smaller value of two provided expressions.
  *
  * Macro ensures that expressions are evaluated only once. See @ref Z_MAX for
  * macro limitations.
  */
-#define Z_MIN(a, b) ({ \
-		/* random suffix to avoid naming conflict */ \
-		__typeof__(a) _value_a_ = (a); \
-		__typeof__(b) _value_b_ = (b); \
-		_value_a_ < _value_b_ ? _value_a_ : _value_b_; \
-	})
+#define Z_MIN(a, b) ({                             \
+    /* random suffix to avoid naming conflict */   \
+    __typeof__(a) _value_a_ = (a);                 \
+    __typeof__(b) _value_b_ = (b);                 \
+    _value_a_ < _value_b_ ? _value_a_ : _value_b_; \
+})
 
 #endif /* !_LINKER */
 #endif /* ZEPHYR_INCLUDE_TOOLCHAIN_GCC_H_ */

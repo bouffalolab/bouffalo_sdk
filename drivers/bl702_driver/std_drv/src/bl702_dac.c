@@ -47,7 +47,17 @@
 /** @defgroup  DAC_Private_Macros
  *  @{
  */
-#define GPIP_CLK_SET_DUMMY_WAIT          {__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();__NOP();}
+#define GPIP_CLK_SET_DUMMY_WAIT \
+    {                           \
+        __NOP();                \
+        __NOP();                \
+        __NOP();                \
+        __NOP();                \
+        __NOP();                \
+        __NOP();                \
+        __NOP();                \
+        __NOP();                \
+    }
 
 /*@} end of group DAC_Private_Macros */
 
@@ -85,7 +95,7 @@
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  DAC initialization
  *
  * @param  cfg: DAC configuration pointer
@@ -96,37 +106,39 @@
 void GLB_DAC_Init(GLB_DAC_Cfg_Type *cfg)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_GLB_DAC_REF_SEL_TYPE(cfg->refSel));
-    
+
     /* Set DAC config */
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_GPDAC_CTRL);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_REF_SEL,cfg->refSel);
-    if(ENABLE==cfg->resetChanA){
-        tmpVal=BL_CLR_REG_BIT(tmpVal,GLB_GPDACA_RSTN_ANA);        
-        tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_CTRL,tmpVal);
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_CTRL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_REF_SEL, cfg->refSel);
+
+    if (ENABLE == cfg->resetChanA) {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_GPDACA_RSTN_ANA);
+        tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_CTRL, tmpVal);
         __NOP();
         __NOP();
         __NOP();
         __NOP();
     }
-    if(ENABLE==cfg->resetChanB){
-        tmpVal=BL_CLR_REG_BIT(tmpVal,GLB_GPDACB_RSTN_ANA);        
-        tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_CTRL,tmpVal);
+
+    if (ENABLE == cfg->resetChanB) {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_GPDACB_RSTN_ANA);
+        tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_CTRL, tmpVal);
         __NOP();
         __NOP();
         __NOP();
         __NOP();
     }
-    
+
     /* Clear reset */
-    tmpVal=BL_SET_REG_BIT(tmpVal,GLB_GPDACA_RSTN_ANA);
-    tmpVal=BL_SET_REG_BIT(tmpVal,GLB_GPDACB_RSTN_ANA);    
-    tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_CTRL,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDACA_RSTN_ANA);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDACB_RSTN_ANA);
+    tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_CTRL, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  DAC channel A initialization
  *
  * @param  cfg: DAC channel configuration pointer
@@ -137,20 +149,20 @@ void GLB_DAC_Init(GLB_DAC_Cfg_Type *cfg)
 void GLB_DAC_Set_ChanA_Config(GLB_DAC_Chan_Cfg_Type *cfg)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_GLB_DAC_CHAN_TYPE(cfg->outMux));
-    
+
     /* Set channel A config */
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_GPDAC_ACTRL);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_A_OUTMUX,cfg->outMux);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_IOA_EN,cfg->outputEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_A_EN,cfg->chanEn);
-    
-    tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_ACTRL,tmpVal);
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_ACTRL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_A_OUTMUX, cfg->outMux);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_IOA_EN, cfg->outputEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_A_EN, cfg->chanEn);
+
+    tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_ACTRL, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  DAC channel B initialization
  *
  * @param  cfg: DAC channel configuration pointer
@@ -161,20 +173,20 @@ void GLB_DAC_Set_ChanA_Config(GLB_DAC_Chan_Cfg_Type *cfg)
 void GLB_DAC_Set_ChanB_Config(GLB_DAC_Chan_Cfg_Type *cfg)
 {
     uint32_t tmpVal;
-    
+
     /* Check the parameters */
     CHECK_PARAM(IS_GLB_DAC_CHAN_TYPE(cfg->outMux));
-    
+
     /* Set channel A config */
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_GPDAC_BCTRL);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_B_OUTMUX,cfg->outMux);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_IOB_EN,cfg->outputEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_B_EN,cfg->chanEn);
-    
-    tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_BCTRL,tmpVal);
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_BCTRL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_B_OUTMUX, cfg->outMux);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_IOB_EN, cfg->outputEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_B_EN, cfg->chanEn);
+
+    tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_BCTRL, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Select DAC channel B source
  *
  * @param  src: DAC channel B source selection type
@@ -185,15 +197,15 @@ void GLB_DAC_Set_ChanB_Config(GLB_DAC_Chan_Cfg_Type *cfg)
 void GPIP_Set_DAC_ChanB_SRC_SEL(GPIP_DAC_ChanB_SRC_Type src)
 {
     uint32_t tmpVal;
-    
+
     CHECK_PARAM(IS_GPIP_DAC_CHANB_SRC_TYPE(src));
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_CH_B_SEL,src);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_CH_B_SEL, src);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Select DAC channel A source
  *
  * @param  src: DAC channel A source selection type
@@ -204,15 +216,15 @@ void GPIP_Set_DAC_ChanB_SRC_SEL(GPIP_DAC_ChanB_SRC_Type src)
 void GPIP_Set_DAC_ChanA_SRC_SEL(GPIP_DAC_ChanA_SRC_Type src)
 {
     uint32_t tmpVal;
-    
+
     CHECK_PARAM(IS_GPIP_DAC_CHANA_SRC_TYPE(src));
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_CH_A_SEL,src);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_CH_A_SEL, src);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable DAC channel B
  *
  * @param  None
@@ -223,13 +235,13 @@ void GPIP_Set_DAC_ChanA_SRC_SEL(GPIP_DAC_ChanA_SRC_Type src)
 void GPIP_DAC_ChanB_Enable(void)
 {
     uint32_t tmpVal;
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPDAC_EN2);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GPIP_GPDAC_EN2);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable DAC channel B
  *
  * @param  None
@@ -240,13 +252,13 @@ void GPIP_DAC_ChanB_Enable(void)
 void GPIP_DAC_ChanB_Disable(void)
 {
     uint32_t tmpVal;
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPDAC_EN2);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, GPIP_GPDAC_EN2);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable DAC channel A
  *
  * @param  None
@@ -257,13 +269,13 @@ void GPIP_DAC_ChanB_Disable(void)
 void GPIP_DAC_ChanA_Enable(void)
 {
     uint32_t tmpVal;
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPDAC_EN);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GPIP_GPDAC_EN);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable DAC channel A
  *
  * @param  None
@@ -274,13 +286,13 @@ void GPIP_DAC_ChanA_Enable(void)
 void GPIP_DAC_ChanA_Disable(void)
 {
     uint32_t tmpVal;
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPDAC_EN);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, GPIP_GPDAC_EN);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Select DAC DMA TX format
  *
  * @param  fmt: DAC DMA TX format selection type
@@ -291,15 +303,15 @@ void GPIP_DAC_ChanA_Disable(void)
 void GPIP_Set_DAC_DMA_TX_FORMAT_SEL(GPIP_DAC_DMA_TX_FORMAT_Type fmt)
 {
     uint32_t tmpVal;
-    
+
     CHECK_PARAM(IS_GPIP_DAC_DMA_TX_FORMAT_TYPE(fmt));
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_DMA_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_DMA_FORMAT,fmt);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_DMA_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_DMA_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_DMA_FORMAT, fmt);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_DMA_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable DAC DMA TX
  *
  * @param  None
@@ -310,13 +322,13 @@ void GPIP_Set_DAC_DMA_TX_FORMAT_SEL(GPIP_DAC_DMA_TX_FORMAT_Type fmt)
 void GPIP_Set_DAC_DMA_TX_Enable(void)
 {
     uint32_t tmpVal;
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_DMA_CONFIG);
-    tmpVal=BL_SET_REG_BIT(tmpVal,GPIP_GPDAC_DMA_TX_EN);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_DMA_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_DMA_CONFIG);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GPIP_GPDAC_DMA_TX_EN);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_DMA_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable DAC DMA TX
  *
  * @param  None
@@ -327,13 +339,13 @@ void GPIP_Set_DAC_DMA_TX_Enable(void)
 void GPIP_Set_DAC_DMA_TX_Disable(void)
 {
     uint32_t tmpVal;
-    
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_DMA_CONFIG);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,GPIP_GPDAC_DMA_TX_EN);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_DMA_CONFIG,tmpVal);
+
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_DMA_CONFIG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, GPIP_GPDAC_DMA_TX_EN);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_DMA_CONFIG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable DAC DMA TX
  *
  * @param  data: The data to be send
@@ -343,10 +355,10 @@ void GPIP_Set_DAC_DMA_TX_Disable(void)
 *******************************************************************************/
 void GPIP_DAC_DMA_WriteData(uint32_t data)
 {
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_DMA_WDATA,data);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_DMA_WDATA, data);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  AON and GPIP DAC config
  *
  * @param  cfg: AON and GPIP DAC configuration
@@ -354,54 +366,56 @@ void GPIP_DAC_DMA_WriteData(uint32_t data)
  * @return config success or not
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIP_DAC_Init(GLB_GPIP_DAC_Cfg_Type* cfg)
+BL_Err_Type GLB_GPIP_DAC_Init(GLB_GPIP_DAC_Cfg_Type *cfg)
 {
     uint32_t tmpVal;
-    
+
     CHECK_PARAM(IS_GLB_DAC_REF_SEL_TYPE(cfg->refSel));
     CHECK_PARAM(IS_GPIP_DAC_MOD_TYPE(cfg->div));
     CHECK_PARAM(IS_GPIP_DAC_DMA_TX_FORMAT_TYPE(cfg->dmaFmt));
-    
+
     /* AON Set DAC config */
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_GPDAC_CTRL);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_REF_SEL,cfg->refSel);
-    if(ENABLE==cfg->resetChanA){
-        tmpVal=BL_CLR_REG_BIT(tmpVal,GLB_GPDACA_RSTN_ANA);        
-        tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_CTRL,tmpVal);
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_CTRL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_REF_SEL, cfg->refSel);
+
+    if (ENABLE == cfg->resetChanA) {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_GPDACA_RSTN_ANA);
+        tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_CTRL, tmpVal);
         __NOP();
         __NOP();
         __NOP();
         __NOP();
     }
-    if(ENABLE==cfg->resetChanB){
-        tmpVal=BL_CLR_REG_BIT(tmpVal,GLB_GPDACB_RSTN_ANA);        
-        tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_CTRL,tmpVal);
+
+    if (ENABLE == cfg->resetChanB) {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_GPDACB_RSTN_ANA);
+        tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_CTRL, tmpVal);
         __NOP();
         __NOP();
         __NOP();
         __NOP();
     }
-    
+
     /* AON Clear reset */
-    tmpVal=BL_SET_REG_BIT(tmpVal,GLB_GPDACA_RSTN_ANA);
-    tmpVal=BL_SET_REG_BIT(tmpVal,GLB_GPDACB_RSTN_ANA);    
-    tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_CTRL,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDACA_RSTN_ANA);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDACB_RSTN_ANA);
+    tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_CTRL, tmpVal);
 
     /* GPIP Set DAC config */
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_MODE,cfg->div);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
-    
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_MODE, cfg->div);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
+
     /* GPIP Set DMA config */
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_DMA_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_DMA_TX_EN,cfg->dmaEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_DMA_FORMAT,cfg->dmaFmt);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_DMA_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_DMA_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_DMA_TX_EN, cfg->dmaEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_DMA_FORMAT, cfg->dmaFmt);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_DMA_CONFIG, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  AON and GPIP DAC channel A config
  *
  * @param  cfg: AON and GPIP DAC channel A configuration
@@ -412,27 +426,27 @@ BL_Err_Type GLB_GPIP_DAC_Init(GLB_GPIP_DAC_Cfg_Type* cfg)
 void GLB_GPIP_DAC_Set_ChanA_Config(GLB_GPIP_DAC_ChanA_Cfg_Type *cfg)
 {
     uint32_t tmpVal;
-    
+
     CHECK_PARAM(IS_GPIP_DAC_CHANA_SRC_TYPE(cfg->src));
-    
+
     /* GPIP select source */
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_CH_A_SEL,cfg->src);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
-    
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_CH_A_SEL, cfg->src);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
+
     /* GPIP enable or disable channel */
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_EN,cfg->chanEn);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
-    
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_EN, cfg->chanEn);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
+
     /* AON enable or disable channel */
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_GPDAC_ACTRL);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_IOA_EN,cfg->outputEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_A_EN,cfg->chanCovtEn);
-    tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_ACTRL,tmpVal);
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_ACTRL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_IOA_EN, cfg->outputEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_A_EN, cfg->chanCovtEn);
+    tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_ACTRL, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  AON and GPIP DAC channel B config
  *
  * @param  cfg: AON and GPIP DAC channel B configuration
@@ -443,27 +457,27 @@ void GLB_GPIP_DAC_Set_ChanA_Config(GLB_GPIP_DAC_ChanA_Cfg_Type *cfg)
 void GLB_GPIP_DAC_Set_ChanB_Config(GLB_GPIP_DAC_ChanB_Cfg_Type *cfg)
 {
     uint32_t tmpVal;
-    
+
     CHECK_PARAM(IS_GPIP_DAC_CHANB_SRC_TYPE(cfg->src));
-    
+
     /* GPIP select source */
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_CH_B_SEL,cfg->src);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
-    
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_CH_B_SEL, cfg->src);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
+
     /* GPIP enable or disable channel */
-    tmpVal=BL_RD_REG(GPIP_BASE,GPIP_GPDAC_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GPIP_GPDAC_EN2,cfg->chanEn);
-    BL_WR_REG(GPIP_BASE,GPIP_GPDAC_CONFIG,tmpVal);
-    
+    tmpVal = BL_RD_REG(GPIP_BASE, GPIP_GPDAC_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GPIP_GPDAC_EN2, cfg->chanEn);
+    BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
+
     /* AON enable or disable channel */
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_GPDAC_BCTRL);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_IOB_EN,cfg->outputEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_B_EN,cfg->chanCovtEn);
-    tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_BCTRL,tmpVal);
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_BCTRL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_IOB_EN, cfg->outputEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_B_EN, cfg->chanCovtEn);
+    tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_BCTRL, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  DAC channel A set value
  *
  * @param  val: DAC value
@@ -474,13 +488,13 @@ void GLB_GPIP_DAC_Set_ChanB_Config(GLB_GPIP_DAC_ChanB_Cfg_Type *cfg)
 void GLB_DAC_Set_ChanA_Value(uint16_t val)
 {
     uint32_t tmpVal;
-    
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_GPDAC_DATA);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_A_DATA,val);    
-    tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_DATA,tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_DATA);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_A_DATA, val);
+    tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_DATA, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  DAC channel B set value
  *
  * @param  val: DAC value
@@ -491,10 +505,10 @@ void GLB_DAC_Set_ChanA_Value(uint16_t val)
 void GLB_DAC_Set_ChanB_Value(uint16_t val)
 {
     uint32_t tmpVal;
-    
-    tmpVal=BL_RD_REG(GLB_BASE,GLB_GPDAC_DATA);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,GLB_GPDAC_B_DATA,val);
-    tmpVal=BL_WR_REG(GLB_BASE,GLB_GPDAC_DATA,tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_DATA);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_B_DATA, val);
+    tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_DATA, tmpVal);
 }
 
 /*@} end of group DAC_Public_Functions */

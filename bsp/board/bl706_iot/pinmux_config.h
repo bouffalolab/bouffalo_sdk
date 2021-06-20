@@ -1,24 +1,24 @@
 /**
  * @file pinmux_config.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #ifndef _PINMUX_CONFIG_H
 #define _PINMUX_CONFIG_H
@@ -39,7 +39,7 @@
 
 // <q> GPIO3 <2> [GPIO_FUN_UNUSED//GPIO_FUN_I2S//GPIO_FUN_SPI//GPIO_FUN_I2C//GPIO_FUN_PWM//GPIO_FUN_CAM//GPIO_FUN_UART0_RX//GPIO_FUN_UART1_RX//GPIO_FUN_QDEC]
 // <i> config gpio3 function
-#define CONFIG_GPIO3_FUNC GPIO_FUN_UNUSED
+#define CONFIG_GPIO3_FUNC GPIO_FUN_PWM
 
 // <q> GPIO4 <2> [GPIO_FUN_UNUSED//GPIO_FUN_I2S//GPIO_FUN_SPI//GPIO_FUN_I2C//GPIO_FUN_PWM//GPIO_FUN_CAM//GPIO_FUN_UART0_RTS//GPIO_FUN_UART1_RTS//GPIO_FUN_QDEC]
 // <i> config gpio4 function
@@ -67,15 +67,15 @@
 
 // <q> GPIO10 <2> [GPIO_FUN_UNUSED//GPIO_FUN_I2S//GPIO_FUN_SPI//GPIO_FUN_I2C//GPIO_FUN_PWM//GPIO_FUN_ANALOG//GPIO_FUN_UART0_RTS//GPIO_FUN_UART1_RTS//GPIO_FUN_QDEC]
 // <i> config gpio10 function
-#define CONFIG_GPIO10_FUNC GPIO_FUN_UNUSED
+#define CONFIG_GPIO10_FUNC GPIO_FUN_PWM
 
 // <q> GPIO11 <2> [GPIO_FUN_UNUSED//GPIO_FUN_I2S//GPIO_FUN_SPI//GPIO_FUN_I2C//GPIO_FUN_PWM//GPIO_FUN_ANALOG//GPIO_FUN_UART0_RTS//GPIO_FUN_UART1_RTS//GPIO_FUN_QDEC]
 // <i> config gpio11 function
-#define CONFIG_GPIO11_FUNC GPIO_FUN_ADC
+#define CONFIG_GPIO11_FUNC GPIO_FUN_PWM
 
 // <q> GPIO12 <2> [GPIO_FUN_UNUSED//GPIO_FUN_I2S//GPIO_FUN_SPI//GPIO_FUN_I2C//GPIO_FUN_PWM//GPIO_FUN_CAM//GPIO_FUN_ANALOG//GPIO_FUN_UART0_RTS//GPIO_FUN_UART1_RTS//GPIO_FUN_QDEC]
 // <i> config gpio12 function
-#define CONFIG_GPIO12_FUNC GPIO_FUN_ADC
+#define CONFIG_GPIO12_FUNC GPIO_FUN_PWM
 
 // <q> GPIO13 <2> [GPIO_FUN_UNUSED//GPIO_FUN_I2S//GPIO_FUN_SPI//GPIO_FUN_I2C//GPIO_FUN_PWM//GPIO_FUN_UART0_RTS//GPIO_FUN_UART1_RTS//GPIO_FUN_QDEC]
 // <i> config gpio13 function
@@ -115,7 +115,7 @@
 
 // <q> GPIO22 <2> [GPIO_FUN_UNUSED//GPIO_FUN_I2S//GPIO_FUN_SPI//GPIO_FUN_I2C//GPIO_FUN_PWM//GPIO_FUN_ANALOG//GPIO_FUN_UART0_RTS//GPIO_FUN_UART1_RTS//GPIO_FUN_ETHER_MAC//GPIO_FUN_QDEC]
 // <i> config gpio22 function
-#define CONFIG_GPIO22_FUNC GPIO_FUN_PWM
+#define CONFIG_GPIO22_FUNC GPIO_FUN_UNUSED
 
 // <q> GPIO23 <2> [GPIO_FUN_UNUSED//GPIO_FUN_I2S//GPIO_FUN_SPI//GPIO_FUN_I2C//GPIO_FUN_PWM//GPIO_FUN_CAM//GPIO_FUN_ANALOG//GPIO_FUN_UART0_RTS//GPIO_FUN_UART1_RTS//GPIO_FUN_QDEC]
 // <i> config gpio23 function

@@ -10,20 +10,20 @@
 
 #include <iso.h>
 
-#define BT_ISO_DATA_PATH_DISABLED			0xFF
+#define BT_ISO_DATA_PATH_DISABLED 0xFF
 
 struct iso_data {
-	/** BT_BUF_ISO_IN */
-	uint8_t  type;
+    /** BT_BUF_ISO_IN */
+    uint8_t type;
 
-	/* Index into the bt_conn storage array */
-	uint8_t  index;
+    /* Index into the bt_conn storage array */
+    uint8_t index;
 
-	/** ISO connection handle */
-	uint16_t handle;
+    /** ISO connection handle */
+    uint16_t handle;
 
-	/** ISO timestamp */
-	uint32_t ts;
+    /** ISO timestamp */
+    uint32_t ts;
 };
 
 #define iso(buf) ((struct iso_data *)net_buf_user_data(buf))
@@ -59,49 +59,49 @@ void bt_iso_disconnected(struct bt_conn *conn);
 /* Allocate ISO PDU */
 #if defined(CONFIG_NET_BUF_LOG)
 struct net_buf *bt_iso_create_pdu_timeout_debug(struct net_buf_pool *pool,
-						size_t reserve,
-						k_timeout_t timeout,
-						const char *func, int line);
-#define bt_iso_create_pdu_timeout(_pool, _reserve, _timeout) \
-	bt_iso_create_pdu_timeout_debug(_pool, _reserve, _timeout, \
-					__func__, __LINE__)
+                                                size_t reserve,
+                                                k_timeout_t timeout,
+                                                const char *func, int line);
+#define bt_iso_create_pdu_timeout(_pool, _reserve, _timeout)   \
+    bt_iso_create_pdu_timeout_debug(_pool, _reserve, _timeout, \
+                                    __func__, __LINE__)
 
-#define bt_iso_create_pdu(_pool, _reserve) \
-	bt_iso_create_pdu_timeout_debug(_pool, _reserve, K_FOREVER, \
-					__func__, __line__)
+#define bt_iso_create_pdu(_pool, _reserve)                      \
+    bt_iso_create_pdu_timeout_debug(_pool, _reserve, K_FOREVER, \
+                                    __func__, __line__)
 #else
 struct net_buf *bt_iso_create_pdu_timeout(struct net_buf_pool *pool,
-					  size_t reserve, uint32_t timeout);
+                                          size_t reserve, uint32_t timeout);
 
 #define bt_iso_create_pdu(_pool, _reserve) \
-	bt_iso_create_pdu_timeout(_pool, _reserve, K_FOREVER)
+    bt_iso_create_pdu_timeout(_pool, _reserve, K_FOREVER)
 #endif
 
 /* Allocate ISO Fragment */
 #if defined(CONFIG_NET_BUF_LOG)
 struct net_buf *bt_iso_create_frag_timeout_debug(size_t reserve,
-						 k_timeout_t timeout,
-						 const char *func, int line);
+                                                 k_timeout_t timeout,
+                                                 const char *func, int line);
 
-#define bt_iso_create_frag_timeout(_reserve, _timeout) \
-	bt_iso_create_frag_timeout_debug(_reserve, _timeout, \
-					 __func__, __LINE__)
+#define bt_iso_create_frag_timeout(_reserve, _timeout)   \
+    bt_iso_create_frag_timeout_debug(_reserve, _timeout, \
+                                     __func__, __LINE__)
 
-#define bt_iso_create_frag(_reserve) \
-	bt_iso_create_frag_timeout_debug(_reserve, K_FOREVER, \
-					 __func__, __LINE__)
+#define bt_iso_create_frag(_reserve)                      \
+    bt_iso_create_frag_timeout_debug(_reserve, K_FOREVER, \
+                                     __func__, __LINE__)
 #else
 struct net_buf *bt_iso_create_frag_timeout(size_t reserve, uint32_t timeout);
 
 #define bt_iso_create_frag(_reserve) \
-	bt_iso_create_frag_timeout(_reserve, K_FOREVER)
+    bt_iso_create_frag_timeout(_reserve, K_FOREVER)
 #endif
 
 #if defined(CONFIG_BT_AUDIO_DEBUG_ISO)
 void bt_iso_chan_set_state_debug(struct bt_iso_chan *chan, uint8_t state,
-				 const char *func, int line);
+                                 const char *func, int line);
 #define bt_iso_chan_set_state(_chan, _state) \
-	bt_iso_chan_set_state_debug(_chan, _state, __func__, __LINE__)
+    bt_iso_chan_set_state_debug(_chan, _state, __func__, __LINE__)
 #else
 void bt_iso_chan_set_state(struct bt_iso_chan *chan, uint8_t state);
 #endif /* CONFIG_BT_AUDIO_DEBUG_ISO */

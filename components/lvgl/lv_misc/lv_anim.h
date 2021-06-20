@@ -41,7 +41,7 @@ typedef lv_coord_t lv_anim_value_t;
 
 #if LV_USE_ANIMATION
 
-#define LV_ANIM_REPEAT_INFINITE      0xFFFF
+#define LV_ANIM_REPEAT_INFINITE 0xFFFF
 
 struct _lv_anim_t;
 struct _lv_anim_path_t;
@@ -50,7 +50,7 @@ typedef lv_anim_value_t (*lv_anim_path_cb_t)(const struct _lv_anim_path_t *, con
 
 typedef struct _lv_anim_path_t {
     lv_anim_path_cb_t cb;
-    void * user_data;
+    void *user_data;
 } lv_anim_path_t;
 
 /** Generic prototype of "animator" functions.
@@ -73,28 +73,28 @@ typedef void (*lv_anim_start_cb_t)(struct _lv_anim_t *);
 
 /** Describes an animation*/
 typedef struct _lv_anim_t {
-    void * var;                  /**<Variable to animate*/
+    void *var;                   /**<Variable to animate*/
     lv_anim_exec_xcb_t exec_cb;  /**< Function to execute to animate*/
     lv_anim_start_cb_t start_cb; /**< Call it when the animation is starts (considering `delay`)*/
     lv_anim_ready_cb_t ready_cb; /**< Call it when the animation is ready*/
 #if LV_USE_USER_DATA
     lv_anim_user_data_t user_data; /**< Custom user data*/
 #endif
-    lv_anim_path_t path;         /**< Describe the path (curve) of animations*/
-    int32_t start;               /**< Start value*/
-    int32_t current;             /**< Current value */
-    int32_t end;                 /**< End value*/
-    int32_t time;                /**< Animation time in ms*/
-    int32_t act_time;            /**< Current time in animation. Set to negative to make delay.*/
-    uint32_t playback_delay;     /**< Wait before play back*/
-    uint32_t playback_time;      /**< Duration of playback animation*/
-    uint32_t repeat_delay;       /**< Wait before repeat*/
-    uint16_t repeat_cnt;         /**< Repeat count for the animation*/
-    uint8_t early_apply  : 1;    /**< 1: Apply start value immediately even is there is `delay` */
+    lv_anim_path_t path;     /**< Describe the path (curve) of animations*/
+    int32_t start;           /**< Start value*/
+    int32_t current;         /**< Current value */
+    int32_t end;             /**< End value*/
+    int32_t time;            /**< Animation time in ms*/
+    int32_t act_time;        /**< Current time in animation. Set to negative to make delay.*/
+    uint32_t playback_delay; /**< Wait before play back*/
+    uint32_t playback_time;  /**< Duration of playback animation*/
+    uint32_t repeat_delay;   /**< Wait before repeat*/
+    uint16_t repeat_cnt;     /**< Repeat count for the animation*/
+    uint8_t early_apply : 1; /**< 1: Apply start value immediately even is there is `delay` */
 
     /*Animation system use these - user shouldn't set*/
     uint8_t playback_now : 1; /**< Play back is in progress*/
-    uint8_t run_round : 1;    /**< Indicates the animation has run in this round*/
+    uint8_t run_round    : 1; /**< Indicates the animation has run in this round*/
     uint32_t time_orig;
 } lv_anim_t;
 
@@ -115,14 +115,14 @@ void _lv_anim_core_init(void);
  * lv_anim_set_...(&a);
  * @param a pointer to an `lv_anim_t` variable to initialize
  */
-void lv_anim_init(lv_anim_t * a);
+void lv_anim_init(lv_anim_t *a);
 
 /**
  * Set a variable to animate
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param var pointer to a variable to animate
  */
-static inline void lv_anim_set_var(lv_anim_t * a, void * var)
+static inline void lv_anim_set_var(lv_anim_t *a, void *var)
 {
     a->var = var;
 }
@@ -134,7 +134,7 @@ static inline void lv_anim_set_var(lv_anim_t * a, void * var)
  *                LittelvGL's built-in functions can be used.
  *                E.g. lv_obj_set_x
  */
-static inline void lv_anim_set_exec_cb(lv_anim_t * a, lv_anim_exec_xcb_t exec_cb)
+static inline void lv_anim_set_exec_cb(lv_anim_t *a, lv_anim_exec_xcb_t exec_cb)
 {
     a->exec_cb = exec_cb;
 }
@@ -144,7 +144,7 @@ static inline void lv_anim_set_exec_cb(lv_anim_t * a, lv_anim_exec_xcb_t exec_cb
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param duration duration of the animation in milliseconds
  */
-static inline void lv_anim_set_time(lv_anim_t * a, uint32_t duration)
+static inline void lv_anim_set_time(lv_anim_t *a, uint32_t duration)
 {
     a->time = duration;
 }
@@ -154,7 +154,7 @@ static inline void lv_anim_set_time(lv_anim_t * a, uint32_t duration)
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param delay delay before the animation in milliseconds
  */
-static inline void lv_anim_set_delay(lv_anim_t * a, uint32_t delay)
+static inline void lv_anim_set_delay(lv_anim_t *a, uint32_t delay)
 {
     a->act_time = -(int32_t)(delay);
 }
@@ -165,7 +165,7 @@ static inline void lv_anim_set_delay(lv_anim_t * a, uint32_t delay)
  * @param start the start value
  * @param end the end value
  */
-static inline void lv_anim_set_values(lv_anim_t * a, lv_anim_value_t start, lv_anim_value_t end)
+static inline void lv_anim_set_values(lv_anim_t *a, lv_anim_value_t start, lv_anim_value_t end)
 {
     a->start = start;
     a->current = start;
@@ -181,9 +181,9 @@ static inline void lv_anim_set_values(lv_anim_t * a, lv_anim_value_t start, lv_a
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param exec_cb a function to execute.
  */
-static inline void lv_anim_set_custom_exec_cb(lv_anim_t * a, lv_anim_custom_exec_cb_t exec_cb)
+static inline void lv_anim_set_custom_exec_cb(lv_anim_t *a, lv_anim_custom_exec_cb_t exec_cb)
 {
-    a->var     = a;
+    a->var = a;
     a->exec_cb = (lv_anim_exec_xcb_t)exec_cb;
 }
 
@@ -193,7 +193,7 @@ static inline void lv_anim_set_custom_exec_cb(lv_anim_t * a, lv_anim_custom_exec
  * @param path a function the get the current value of the animation.
  *             The built in functions starts with `lv_anim_path_...`
  */
-static inline void lv_anim_set_path(lv_anim_t * a, const lv_anim_path_t * path)
+static inline void lv_anim_set_path(lv_anim_t *a, const lv_anim_path_t *path)
 {
     _lv_memcpy_small(&a->path, path, sizeof(lv_anim_path_t));
 }
@@ -203,7 +203,7 @@ static inline void lv_anim_set_path(lv_anim_t * a, const lv_anim_path_t * path)
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param start_cb a function call when the animation starts
  */
-static inline void lv_anim_set_start_cb(lv_anim_t * a, lv_anim_ready_cb_t start_cb)
+static inline void lv_anim_set_start_cb(lv_anim_t *a, lv_anim_ready_cb_t start_cb)
 {
     a->start_cb = start_cb;
 }
@@ -213,7 +213,7 @@ static inline void lv_anim_set_start_cb(lv_anim_t * a, lv_anim_ready_cb_t start_
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param ready_cb a function call when the animation is ready
  */
-static inline void lv_anim_set_ready_cb(lv_anim_t * a, lv_anim_ready_cb_t ready_cb)
+static inline void lv_anim_set_ready_cb(lv_anim_t *a, lv_anim_ready_cb_t ready_cb)
 {
     a->ready_cb = ready_cb;
 }
@@ -223,7 +223,7 @@ static inline void lv_anim_set_ready_cb(lv_anim_t * a, lv_anim_ready_cb_t ready_
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param time the duration of the playback animation in in milliseconds. 0: disable playback
  */
-static inline void lv_anim_set_playback_time(lv_anim_t * a, uint32_t time)
+static inline void lv_anim_set_playback_time(lv_anim_t *a, uint32_t time)
 {
     a->playback_time = time;
 }
@@ -233,7 +233,7 @@ static inline void lv_anim_set_playback_time(lv_anim_t * a, uint32_t time)
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param delay delay in milliseconds before starting the playback animation.
  */
-static inline void lv_anim_set_playback_delay(lv_anim_t * a, uint32_t delay)
+static inline void lv_anim_set_playback_delay(lv_anim_t *a, uint32_t delay)
 {
     a->playback_delay = delay;
 }
@@ -243,7 +243,7 @@ static inline void lv_anim_set_playback_delay(lv_anim_t * a, uint32_t delay)
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param cnt repeat count or `LV_ANIM_REPEAT_INFINITE` for infinite repetition. 0: to disable repetition.
  */
-static inline void lv_anim_set_repeat_count(lv_anim_t * a, uint16_t cnt)
+static inline void lv_anim_set_repeat_count(lv_anim_t *a, uint16_t cnt)
 {
     a->repeat_cnt = cnt;
 }
@@ -253,7 +253,7 @@ static inline void lv_anim_set_repeat_count(lv_anim_t * a, uint16_t cnt)
  * @param a pointer to an initialized `lv_anim_t` variable
  * @param delay delay in milliseconds before repeating the animation.
  */
-static inline void lv_anim_set_repeat_delay(lv_anim_t * a, uint32_t delay)
+static inline void lv_anim_set_repeat_delay(lv_anim_t *a, uint32_t delay)
 {
     a->repeat_delay = delay;
 }
@@ -262,13 +262,13 @@ static inline void lv_anim_set_repeat_delay(lv_anim_t * a, uint32_t delay)
  * Create an animation
  * @param a an initialized 'anim_t' variable. Not required after call.
  */
-void lv_anim_start(lv_anim_t * a);
+void lv_anim_start(lv_anim_t *a);
 
 /**
  * Initialize an animation path
  * @param path pointer to path
  */
-static inline void lv_anim_path_init(lv_anim_path_t * path)
+static inline void lv_anim_path_init(lv_anim_path_t *path)
 {
     _lv_memset_00(path, sizeof(lv_anim_path_t));
 }
@@ -278,7 +278,7 @@ static inline void lv_anim_path_init(lv_anim_path_t * path)
  * @param path pointer to an initialized path
  * @param cb the callback
  */
-static inline void lv_anim_path_set_cb(lv_anim_path_t * path, lv_anim_path_cb_t cb)
+static inline void lv_anim_path_set_cb(lv_anim_path_t *path, lv_anim_path_cb_t cb)
 {
     path->cb = cb;
 }
@@ -288,7 +288,7 @@ static inline void lv_anim_path_set_cb(lv_anim_path_t * path, lv_anim_path_cb_t 
  * @param path pointer to an initialized path
  * @param user_data pointer to the user data
  */
-static inline void lv_anim_path_set_user_data(lv_anim_path_t * path, void * user_data)
+static inline void lv_anim_path_set_user_data(lv_anim_path_t *path, void *user_data)
 {
     path->user_data = user_data;
 }
@@ -298,7 +298,7 @@ static inline void lv_anim_path_set_user_data(lv_anim_path_t * path, void * user
  * @param a pointer to an initialized `lv_anim_t` variable
  * @return delay before the animation in milliseconds
  */
-static inline uint32_t lv_anim_get_delay(lv_anim_t * a)
+static inline uint32_t lv_anim_get_delay(lv_anim_t *a)
 {
     return -a->act_time;
 }
@@ -310,7 +310,7 @@ static inline uint32_t lv_anim_get_delay(lv_anim_t * a)
  *           or NULL to ignore it and delete all the animations of 'var
  * @return true: at least 1 animation is deleted, false: no animation is deleted
  */
-bool lv_anim_del(void * var, lv_anim_exec_xcb_t exec_cb);
+bool lv_anim_del(void *var, lv_anim_exec_xcb_t exec_cb);
 
 /**
  * Get the animation of a variable and its `exec_cb`.
@@ -319,7 +319,7 @@ bool lv_anim_del(void * var, lv_anim_exec_xcb_t exec_cb);
  *           or NULL to delete all the animations of 'var'
  * @return pointer to the animation.
  */
-lv_anim_t * lv_anim_get(void * var, lv_anim_exec_xcb_t exec_cb);
+lv_anim_t *lv_anim_get(void *var, lv_anim_exec_xcb_t exec_cb);
 
 /**
  * Delete an animation by getting the animated variable from `a`.
@@ -332,7 +332,7 @@ lv_anim_t * lv_anim_get(void * var, lv_anim_exec_xcb_t exec_cb);
  *           or NULL to ignore it and delete all the animations of 'var
  * @return true: at least 1 animation is deleted, false: no animation is deleted
  */
-static inline bool lv_anim_custom_del(lv_anim_t * a, lv_anim_custom_exec_cb_t exec_cb)
+static inline bool lv_anim_custom_del(lv_anim_t *a, lv_anim_custom_exec_cb_t exec_cb)
 {
     return lv_anim_del(a->var, (lv_anim_exec_xcb_t)exec_cb);
 }
@@ -365,42 +365,42 @@ void lv_anim_refr_now(void);
  * @param a pointer to an animation
  * @return the current value to set
  */
-lv_anim_value_t lv_anim_path_linear(const lv_anim_path_t * path, const lv_anim_t * a);
+lv_anim_value_t lv_anim_path_linear(const lv_anim_path_t *path, const lv_anim_t *a);
 
 /**
  * Calculate the current value of an animation slowing down the start phase
  * @param a pointer to an animation
  * @return the current value to set
  */
-lv_anim_value_t lv_anim_path_ease_in(const lv_anim_path_t * path, const lv_anim_t * a);
+lv_anim_value_t lv_anim_path_ease_in(const lv_anim_path_t *path, const lv_anim_t *a);
 
 /**
  * Calculate the current value of an animation slowing down the end phase
  * @param a pointer to an animation
  * @return the current value to set
  */
-lv_anim_value_t lv_anim_path_ease_out(const lv_anim_path_t * path, const lv_anim_t * a);
+lv_anim_value_t lv_anim_path_ease_out(const lv_anim_path_t *path, const lv_anim_t *a);
 
 /**
  * Calculate the current value of an animation applying an "S" characteristic (cosine)
  * @param a pointer to an animation
  * @return the current value to set
  */
-lv_anim_value_t lv_anim_path_ease_in_out(const lv_anim_path_t * path, const lv_anim_t * a);
+lv_anim_value_t lv_anim_path_ease_in_out(const lv_anim_path_t *path, const lv_anim_t *a);
 
 /**
  * Calculate the current value of an animation with overshoot at the end
  * @param a pointer to an animation
  * @return the current value to set
  */
-lv_anim_value_t lv_anim_path_overshoot(const lv_anim_path_t * path, const lv_anim_t * a);
+lv_anim_value_t lv_anim_path_overshoot(const lv_anim_path_t *path, const lv_anim_t *a);
 
 /**
  * Calculate the current value of an animation with 3 bounces
  * @param a pointer to an animation
  * @return the current value to set
  */
-lv_anim_value_t lv_anim_path_bounce(const lv_anim_path_t * path, const lv_anim_t * a);
+lv_anim_value_t lv_anim_path_bounce(const lv_anim_path_t *path, const lv_anim_t *a);
 
 /**
  * Calculate the current value of an animation applying step characteristic.
@@ -408,7 +408,7 @@ lv_anim_value_t lv_anim_path_bounce(const lv_anim_path_t * path, const lv_anim_t
  * @param a pointer to an animation
  * @return the current value to set
  */
-lv_anim_value_t lv_anim_path_step(const lv_anim_path_t * path, const lv_anim_t * a);
+lv_anim_value_t lv_anim_path_step(const lv_anim_path_t *path, const lv_anim_t *a);
 
 /**********************
  *   GLOBAL VARIABLES

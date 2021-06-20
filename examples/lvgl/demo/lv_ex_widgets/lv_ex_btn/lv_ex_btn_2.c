@@ -33,7 +33,7 @@ void lv_ex_btn_2(void)
     lv_style_set_transition_prop_2(&style_gum, LV_STATE_DEFAULT, LV_STYLE_TRANSFORM_HEIGHT);
     lv_style_set_transition_prop_3(&style_gum, LV_STATE_DEFAULT, LV_STYLE_VALUE_LETTER_SPACE);
 
-    lv_obj_t * btn1 = lv_btn_create(lv_scr_act(), NULL);
+    lv_obj_t *btn1 = lv_btn_create(lv_scr_act(), NULL);
     lv_obj_align(btn1, NULL, LV_ALIGN_CENTER, 0, -80);
     lv_obj_add_style(btn1, LV_BTN_PART_MAIN, &style_gum);
 
@@ -49,12 +49,12 @@ void lv_ex_btn_2(void)
     lv_style_set_outline_width(&style_halo, LV_STATE_DEFAULT, 0);
     lv_style_set_outline_width(&style_halo, LV_STATE_PRESSED, 20);
     lv_style_set_outline_opa(&style_halo, LV_STATE_DEFAULT, LV_OPA_COVER);
-    lv_style_set_outline_opa(&style_halo, LV_STATE_FOCUSED, LV_OPA_COVER);   /*Just to be sure, the theme might use it*/
+    lv_style_set_outline_opa(&style_halo, LV_STATE_FOCUSED, LV_OPA_COVER); /*Just to be sure, the theme might use it*/
     lv_style_set_outline_opa(&style_halo, LV_STATE_PRESSED, LV_OPA_TRANSP);
     lv_style_set_transition_prop_1(&style_halo, LV_STATE_DEFAULT, LV_STYLE_OUTLINE_OPA);
     lv_style_set_transition_prop_2(&style_halo, LV_STATE_DEFAULT, LV_STYLE_OUTLINE_WIDTH);
 
-    lv_obj_t * btn2 = lv_btn_create(lv_scr_act(), NULL);
+    lv_obj_t *btn2 = lv_btn_create(lv_scr_act(), NULL);
     lv_obj_align(btn2, NULL, LV_ALIGN_CENTER, 0, 0);
     lv_obj_add_style(btn2, LV_BTN_PART_MAIN, &style_halo);
     lv_obj_set_style_local_value_str(btn2, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, "Halo");
@@ -79,7 +79,7 @@ void lv_ex_btn_2(void)
     lv_style_set_transition_prop_2(&style_ripple, LV_STATE_DEFAULT, LV_STYLE_TRANSFORM_WIDTH);
     lv_style_set_transition_prop_3(&style_ripple, LV_STATE_DEFAULT, LV_STYLE_TRANSFORM_HEIGHT);
 
-    lv_obj_t * btn3 = lv_btn_create(lv_scr_act(), NULL);
+    lv_obj_t *btn3 = lv_btn_create(lv_scr_act(), NULL);
     lv_obj_align(btn3, NULL, LV_ALIGN_CENTER, 0, 80);
     lv_obj_add_style(btn3, LV_BTN_PART_MAIN, &style_ripple);
     lv_obj_set_style_local_value_str(btn3, LV_BTN_PART_MAIN, LV_STATE_DEFAULT, "Ripple");

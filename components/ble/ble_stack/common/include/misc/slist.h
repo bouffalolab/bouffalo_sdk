@@ -24,16 +24,15 @@
 extern "C" {
 #endif
 
-
 struct _snode {
-	struct _snode *next;
+    struct _snode *next;
 };
 
 typedef struct _snode sys_snode_t;
 
 struct _slist {
-	sys_snode_t *head;
-	sys_snode_t *tail;
+    sys_snode_t *head;
+    sys_snode_t *tail;
 };
 
 typedef struct _slist sys_slist_t;
@@ -53,9 +52,9 @@ typedef struct _slist sys_slist_t;
  * @param __sl A pointer on a sys_slist_t to iterate on
  * @param __sn A sys_snode_t pointer to peek each node of the list
  */
-#define SYS_SLIST_FOR_EACH_NODE(__sl, __sn)				\
-	for (__sn = sys_slist_peek_head(__sl); __sn;			\
-	     __sn = sys_slist_peek_next(__sn))
+#define SYS_SLIST_FOR_EACH_NODE(__sl, __sn)      \
+    for (__sn = sys_slist_peek_head(__sl); __sn; \
+         __sn = sys_slist_peek_next(__sn))
 
 /**
  * @brief Provide the primitive to iterate on a list, from a node in the list
@@ -77,11 +76,10 @@ typedef struct _slist sys_slist_t;
  * @param __sn A sys_snode_t pointer to peek each node of the list
  *             it contains the starting node, or NULL to start from the head
  */
-#define SYS_SLIST_ITERATE_FROM_NODE(__sl, __sn)				\
-	for (__sn = __sn ? sys_slist_peek_next_no_check(__sn)		\
-			 : sys_slist_peek_head(__sl);			\
-	     __sn;							\
-	     __sn = sys_slist_peek_next(__sn))
+#define SYS_SLIST_ITERATE_FROM_NODE(__sl, __sn)                                        \
+    for (__sn = __sn ? sys_slist_peek_next_no_check(__sn) : sys_slist_peek_head(__sl); \
+         __sn;                                                                         \
+         __sn = sys_slist_peek_next(__sn))
 
 /**
  * @brief Provide the primitive to safely iterate on a list
@@ -99,11 +97,11 @@ typedef struct _slist sys_slist_t;
  * @param __sn A sys_snode_t pointer to peek each node of the list
  * @param __sns A sys_snode_t pointer for the loop to run safely
  */
-#define SYS_SLIST_FOR_EACH_NODE_SAFE(__sl, __sn, __sns)			\
-	for (__sn = sys_slist_peek_head(__sl),				\
-		     __sns = sys_slist_peek_next(__sn);			\
-	     __sn; __sn = __sns,					\
-		     __sns = sys_slist_peek_next(__sn))
+#define SYS_SLIST_FOR_EACH_NODE_SAFE(__sl, __sn, __sns) \
+    for (__sn = sys_slist_peek_head(__sl),              \
+        __sns = sys_slist_peek_next(__sn);              \
+         __sn; __sn = __sns,                            \
+        __sns = sys_slist_peek_next(__sn))
 
 /*
  * @brief Provide the primitive to resolve the container of a list node
@@ -114,7 +112,7 @@ typedef struct _slist sys_slist_t;
  * @param __n The field name of sys_node_t within the container struct
  */
 #define SYS_SLIST_CONTAINER(__ln, __cn, __n) \
-	((__ln) ? CONTAINER_OF((__ln), __typeof__(*(__cn)), __n) : NULL)
+    ((__ln) ? CONTAINER_OF((__ln), __typeof__(*(__cn)), __n) : NULL)
 /*
  * @brief Provide the primitive to peek container of the list head
  *
@@ -123,7 +121,7 @@ typedef struct _slist sys_slist_t;
  * @param __n The field name of sys_node_t within the container struct
  */
 #define SYS_SLIST_PEEK_HEAD_CONTAINER(__sl, __cn, __n) \
-	SYS_SLIST_CONTAINER(sys_slist_peek_head(__sl), __cn, __n)
+    SYS_SLIST_CONTAINER(sys_slist_peek_head(__sl), __cn, __n)
 
 /*
  * @brief Provide the primitive to peek container of the list tail
@@ -133,7 +131,7 @@ typedef struct _slist sys_slist_t;
  * @param __n The field name of sys_node_t within the container struct
  */
 #define SYS_SLIST_PEEK_TAIL_CONTAINER(__sl, __cn, __n) \
-	SYS_SLIST_CONTAINER(sys_slist_peek_tail(__sl), __cn, __n)
+    SYS_SLIST_CONTAINER(sys_slist_peek_tail(__sl), __cn, __n)
 
 /*
  * @brief Provide the primitive to peek the next container
@@ -142,9 +140,10 @@ typedef struct _slist sys_slist_t;
  * @param __n The field name of sys_node_t within the container struct
  */
 
-#define SYS_SLIST_PEEK_NEXT_CONTAINER(__cn, __n) \
-	((__cn) ? SYS_SLIST_CONTAINER(sys_slist_peek_next(&((__cn)->__n)), \
-				      __cn, __n) : NULL)
+#define SYS_SLIST_PEEK_NEXT_CONTAINER(__cn, __n)                       \
+    ((__cn) ? SYS_SLIST_CONTAINER(sys_slist_peek_next(&((__cn)->__n)), \
+                                  __cn, __n) :                         \
+              NULL)
 
 /**
  * @brief Provide the primitive to iterate on a list under a container
@@ -160,9 +159,9 @@ typedef struct _slist sys_slist_t;
  * @param __cn A pointer to peek each entry of the list
  * @param __n The field name of sys_node_t within the container struct
  */
-#define SYS_SLIST_FOR_EACH_CONTAINER(__sl, __cn, __n)			\
-	for (__cn = SYS_SLIST_PEEK_HEAD_CONTAINER(__sl, __cn, __n); __cn; \
-	     __cn = SYS_SLIST_PEEK_NEXT_CONTAINER(__cn, __n))
+#define SYS_SLIST_FOR_EACH_CONTAINER(__sl, __cn, __n)                 \
+    for (__cn = SYS_SLIST_PEEK_HEAD_CONTAINER(__sl, __cn, __n); __cn; \
+         __cn = SYS_SLIST_PEEK_NEXT_CONTAINER(__cn, __n))
 
 /**
  * @brief Provide the primitive to safely iterate on a list under a container
@@ -179,10 +178,11 @@ typedef struct _slist sys_slist_t;
  * @param __cns A pointer for the loop to run safely
  * @param __n The field name of sys_node_t within the container struct
  */
-#define SYS_SLIST_FOR_EACH_CONTAINER_SAFE(__sl, __cn, __cns, __n)	\
-	for (__cn = SYS_SLIST_PEEK_HEAD_CONTAINER(__sl, __cn, __n),	\
-	     __cns = SYS_SLIST_PEEK_NEXT_CONTAINER(__cn, __n); __cn;	\
-	     __cn = __cns, __cns = SYS_SLIST_PEEK_NEXT_CONTAINER(__cn, __n))
+#define SYS_SLIST_FOR_EACH_CONTAINER_SAFE(__sl, __cn, __cns, __n) \
+    for (__cn = SYS_SLIST_PEEK_HEAD_CONTAINER(__sl, __cn, __n),   \
+        __cns = SYS_SLIST_PEEK_NEXT_CONTAINER(__cn, __n);         \
+         __cn;                                                    \
+         __cn = __cns, __cns = SYS_SLIST_PEEK_NEXT_CONTAINER(__cn, __n))
 
 /**
  * @brief Initialize a list
@@ -191,11 +191,14 @@ typedef struct _slist sys_slist_t;
  */
 static inline void sys_slist_init(sys_slist_t *list)
 {
-	list->head = NULL;
-	list->tail = NULL;
+    list->head = NULL;
+    list->tail = NULL;
 }
 
-#define SYS_SLIST_STATIC_INIT(ptr_to_list) {NULL, NULL}
+#define SYS_SLIST_STATIC_INIT(ptr_to_list) \
+    {                                      \
+        NULL, NULL                         \
+    }
 
 /**
  * @brief Test if the given list is empty
@@ -206,7 +209,7 @@ static inline void sys_slist_init(sys_slist_t *list)
  */
 static inline bool sys_slist_is_empty(sys_slist_t *list)
 {
-	return (!list->head);
+    return (!list->head);
 }
 
 /**
@@ -218,7 +221,7 @@ static inline bool sys_slist_is_empty(sys_slist_t *list)
  */
 static inline sys_snode_t *sys_slist_peek_head(sys_slist_t *list)
 {
-	return list->head;
+    return list->head;
 }
 
 /**
@@ -230,7 +233,7 @@ static inline sys_snode_t *sys_slist_peek_head(sys_slist_t *list)
  */
 static inline sys_snode_t *sys_slist_peek_tail(sys_slist_t *list)
 {
-	return list->tail;
+    return list->tail;
 }
 
 /**
@@ -244,7 +247,7 @@ static inline sys_snode_t *sys_slist_peek_tail(sys_slist_t *list)
  */
 static inline sys_snode_t *sys_slist_peek_next_no_check(sys_snode_t *node)
 {
-	return node->next;
+    return node->next;
 }
 
 /**
@@ -256,7 +259,7 @@ static inline sys_snode_t *sys_slist_peek_next_no_check(sys_snode_t *node)
  */
 static inline sys_snode_t *sys_slist_peek_next(sys_snode_t *node)
 {
-	return node ? sys_slist_peek_next_no_check(node) : NULL;
+    return node ? sys_slist_peek_next_no_check(node) : NULL;
 }
 
 /**
@@ -268,14 +271,14 @@ static inline sys_snode_t *sys_slist_peek_next(sys_snode_t *node)
  * @param node A pointer on the node to prepend
  */
 static inline void sys_slist_prepend(sys_slist_t *list,
-				     sys_snode_t *node)
+                                     sys_snode_t *node)
 {
-	node->next = list->head;
-	list->head = node;
+    node->next = list->head;
+    list->head = node;
 
-	if (!list->tail) {
-		list->tail = list->head;
-	}
+    if (!list->tail) {
+        list->tail = list->head;
+    }
 }
 
 /**
@@ -287,17 +290,17 @@ static inline void sys_slist_prepend(sys_slist_t *list,
  * @param node A pointer on the node to append
  */
 static inline void sys_slist_append(sys_slist_t *list,
-				    sys_snode_t *node)
+                                    sys_snode_t *node)
 {
-	node->next = NULL;
+    node->next = NULL;
 
-	if (!list->tail) {
-		list->tail = node;
-		list->head = node;
-	} else {
-		list->tail->next = node;
-		list->tail = node;
-	}
+    if (!list->tail) {
+        list->tail = node;
+        list->head = node;
+    } else {
+        list->tail->next = node;
+        list->tail = node;
+    }
 }
 
 /**
@@ -312,15 +315,15 @@ static inline void sys_slist_append(sys_slist_t *list,
  * @param tail A pointer to the last element of the list to append
  */
 static inline void sys_slist_append_list(sys_slist_t *list,
-					 void *head, void *tail)
+                                         void *head, void *tail)
 {
-	if (!list->tail) {
-		list->head = (sys_snode_t *)head;
-		list->tail = (sys_snode_t *)tail;
-	} else {
-		list->tail->next = (sys_snode_t *)head;
-		list->tail = (sys_snode_t *)tail;
-	}
+    if (!list->tail) {
+        list->head = (sys_snode_t *)head;
+        list->tail = (sys_snode_t *)tail;
+    } else {
+        list->tail->next = (sys_snode_t *)head;
+        list->tail = (sys_snode_t *)tail;
+    }
 }
 
 /**
@@ -333,11 +336,11 @@ static inline void sys_slist_append_list(sys_slist_t *list,
  * @param list_to_append A pointer to the list to append.
  */
 static inline void sys_slist_merge_slist(sys_slist_t *list,
-					 sys_slist_t *list_to_append)
+                                         sys_slist_t *list_to_append)
 {
-	sys_slist_append_list(list, list_to_append->head,
-				    list_to_append->tail);
-	sys_slist_init(list_to_append);
+    sys_slist_append_list(list, list_to_append->head,
+                          list_to_append->tail);
+    sys_slist_init(list_to_append);
 }
 
 /**
@@ -350,17 +353,17 @@ static inline void sys_slist_merge_slist(sys_slist_t *list,
  * @param node A pointer on the node to insert
  */
 static inline void sys_slist_insert(sys_slist_t *list,
-				    sys_snode_t *prev,
-				    sys_snode_t *node)
+                                    sys_snode_t *prev,
+                                    sys_snode_t *node)
 {
-	if (!prev) {
-		sys_slist_prepend(list, node);
-	} else if (!prev->next) {
-		sys_slist_append(list, node);
-	} else {
-		node->next = prev->next;
-		prev->next = node;
-	}
+    if (!prev) {
+        sys_slist_prepend(list, node);
+    } else if (!prev->next) {
+        sys_slist_append(list, node);
+    } else {
+        node->next = prev->next;
+        prev->next = node;
+    }
 }
 
 /**
@@ -375,14 +378,15 @@ static inline void sys_slist_insert(sys_slist_t *list,
  */
 static inline sys_snode_t *sys_slist_get_not_empty(sys_slist_t *list)
 {
-	sys_snode_t *node = list->head;
+    sys_snode_t *node = list->head;
 
-	list->head = node->next;
-	if (list->tail == node) {
-		list->tail = list->head;
-	}
+    list->head = node->next;
 
-	return node;
+    if (list->tail == node) {
+        list->tail = list->head;
+    }
+
+    return node;
 }
 
 /**
@@ -396,7 +400,7 @@ static inline sys_snode_t *sys_slist_get_not_empty(sys_slist_t *list)
  */
 static inline sys_snode_t *sys_slist_get(sys_slist_t *list)
 {
-	return sys_slist_is_empty(list) ? NULL : sys_slist_get_not_empty(list);
+    return sys_slist_is_empty(list) ? NULL : sys_slist_get_not_empty(list);
 }
 
 /**
@@ -410,26 +414,26 @@ static inline sys_snode_t *sys_slist_get(sys_slist_t *list)
  * @param node A pointer on the node to remove
  */
 static inline void sys_slist_remove(sys_slist_t *list,
-				    sys_snode_t *prev_node,
-				    sys_snode_t *node)
+                                    sys_snode_t *prev_node,
+                                    sys_snode_t *node)
 {
-	if (!prev_node) {
-		list->head = node->next;
+    if (!prev_node) {
+        list->head = node->next;
 
-		/* Was node also the tail? */
-		if (list->tail == node) {
-			list->tail = list->head;
-		}
-	} else {
-		prev_node->next = node->next;
+        /* Was node also the tail? */
+        if (list->tail == node) {
+            list->tail = list->head;
+        }
+    } else {
+        prev_node->next = node->next;
 
-		/* Was node the tail? */
-		if (list->tail == node) {
-			list->tail = prev_node;
-		}
-	}
+        /* Was node the tail? */
+        if (list->tail == node) {
+            list->tail = prev_node;
+        }
+    }
 
-	node->next = NULL;
+    node->next = NULL;
 }
 
 /**
@@ -443,23 +447,23 @@ static inline void sys_slist_remove(sys_slist_t *list,
  * @return true if node was removed
  */
 static inline bool sys_slist_find_and_remove(sys_slist_t *list,
-					     sys_snode_t *node)
+                                             sys_snode_t *node)
 {
-	sys_snode_t *prev = NULL;
-	sys_snode_t *test;
+    sys_snode_t *prev = NULL;
+    sys_snode_t *test;
 
-	SYS_SLIST_FOR_EACH_NODE(list, test) {
-		if (test == node) {
-			sys_slist_remove(list, prev, node);
-			return true;
-		}
+    SYS_SLIST_FOR_EACH_NODE(list, test)
+    {
+        if (test == node) {
+            sys_slist_remove(list, prev, node);
+            return true;
+        }
 
-		prev = test;
-	}
+        prev = test;
+    }
 
-	return false;
+    return false;
 }
-
 
 #ifdef __cplusplus
 }

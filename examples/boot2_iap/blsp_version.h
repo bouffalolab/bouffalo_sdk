@@ -36,6 +36,6 @@
 #ifndef __MCU_SDK_VERSION_H__
 #define __MCU_SDK_VERSION_H__
 
-#define BL_SDK_VER           "1.00"
+#define BL_SDK_VER "1.00"
 
 #endif

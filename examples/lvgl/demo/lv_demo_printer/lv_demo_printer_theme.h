@@ -20,13 +20,13 @@ extern "C" {
  *      DEFINES
  *********************/
 /*Colors*/
-#define LV_DEMO_PRINTER_WHITE           lv_color_hex(0xffffff)
-#define LV_DEMO_PRINTER_LIGHT           lv_color_hex(0xf3f8fe)
-#define LV_DEMO_PRINTER_GRAY            lv_color_hex(0x8a8a8a)
-#define LV_DEMO_PRINTER_LIGHT_GRAY      lv_color_hex(0xc4c4c4)
-#define LV_DEMO_PRINTER_BLUE            lv_color_hex(0x2f3243) //006fb6
-#define LV_DEMO_PRINTER_GREEN           lv_color_hex(0x4cb242)
-#define LV_DEMO_PRINTER_RED             lv_color_hex(0xd51732)
+#define LV_DEMO_PRINTER_WHITE      lv_color_hex(0xffffff)
+#define LV_DEMO_PRINTER_LIGHT      lv_color_hex(0xf3f8fe)
+#define LV_DEMO_PRINTER_GRAY       lv_color_hex(0x8a8a8a)
+#define LV_DEMO_PRINTER_LIGHT_GRAY lv_color_hex(0xc4c4c4)
+#define LV_DEMO_PRINTER_BLUE       lv_color_hex(0x2f3243) //006fb6
+#define LV_DEMO_PRINTER_GREEN      lv_color_hex(0x4cb242)
+#define LV_DEMO_PRINTER_RED        lv_color_hex(0xd51732)
 
 /**********************
  *      TYPEDEFS
@@ -39,12 +39,11 @@ typedef enum {
     LV_DEMO_PRINTER_THEME_BTN_CIRCLE,
     LV_DEMO_PRINTER_THEME_BOX_BORDER,
     LV_DEMO_PRINTER_THEME_BTN_BACK
-}lv_demo_printer_theme_t;
+} lv_demo_printer_theme_t;
 
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
-
 
 /**
  * Initialize the default
@@ -57,9 +56,9 @@ typedef enum {
  * @param font_title pointer to a extra large font
  * @return a pointer to reference this theme later
  */
-lv_theme_t * lv_demo_printer_theme_init(lv_color_t color_primary, lv_color_t color_secondary, uint32_t flags,
-                                    const lv_font_t * font_small, const lv_font_t * font_normal, const lv_font_t * font_subtitle,
-                                    const lv_font_t * font_title);
+lv_theme_t *lv_demo_printer_theme_init(lv_color_t color_primary, lv_color_t color_secondary, uint32_t flags,
+                                       const lv_font_t *font_small, const lv_font_t *font_normal, const lv_font_t *font_subtitle,
+                                       const lv_font_t *font_title);
 /**********************
  *      MACROS
  **********************/
@@ -71,4 +70,3 @@ lv_theme_t * lv_demo_printer_theme_init(lv_color_t color_primary, lv_color_t col
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-

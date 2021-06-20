@@ -57,7 +57,7 @@ typedef unsigned long useconds_t;
  * Some headers seem to require this...
  */
 #ifndef BITS_PER_LONG
-# define BITS_PER_LONG 32
+#define BITS_PER_LONG 32
 #endif
 
 /*
@@ -73,21 +73,21 @@ typedef unsigned long useconds_t;
  */
 #ifndef FD_SET
 #ifndef FD_SETSIZE
-#define  FD_SETSIZE      64
+#define FD_SETSIZE 64
 #endif
-#define FD_SET(n, p)  ((p)->fd_bits[(n)/8] |=  (1 << ((n) & 7)))
-#define FD_CLR(n, p)  ((p)->fd_bits[(n)/8] &= ~(1 << ((n) & 7)))
-#define FD_ISSET(n, p) ((p)->fd_bits[(n)/8] &   (1 << ((n) & 7)))
-#define FD_ZERO(p)    memset((void *)(p), 0, sizeof(*(p)))
+#define FD_SET(n, p)   ((p)->fd_bits[(n) / 8] |= (1 << ((n)&7)))
+#define FD_CLR(n, p)   ((p)->fd_bits[(n) / 8] &= ~(1 << ((n)&7)))
+#define FD_ISSET(n, p) ((p)->fd_bits[(n) / 8] & (1 << ((n)&7)))
+#define FD_ZERO(p)     memset((void *)(p), 0, sizeof(*(p)))
 
 typedef struct fd_set {
-	unsigned char fd_bits[(FD_SETSIZE + 7) / 8];
+    unsigned char fd_bits[(FD_SETSIZE + 7) / 8];
 } fd_set;
 #endif /* FD_SET */
 
 #ifndef __ICCARM__
 /* wmsdk: Added from sys/times.h and machine/types.h */
-#define	_CLOCK_T_	unsigned long		/* clock() */
+#define _CLOCK_T_ unsigned long /* clock() */
 #ifndef __clock_t_defined
 typedef _CLOCK_T_ clock_t;
 #define __clock_t_defined

@@ -30,7 +30,7 @@ extern "C" {
 /** Container layout options*/
 enum {
     LV_LAYOUT_OFF = 0, /**< No layout */
-    LV_LAYOUT_CENTER, /**< Center objects */
+    LV_LAYOUT_CENTER,  /**< Center objects */
 
     /**
      * COLUMN:
@@ -38,9 +38,9 @@ enum {
      * - Keep `pad_top` space on the top
      * - Keep `pad_inner` space between the objects
      */
-    LV_LAYOUT_COLUMN_LEFT,      /**< Column left align*/
-    LV_LAYOUT_COLUMN_MID,       /**< Column middle align*/
-    LV_LAYOUT_COLUMN_RIGHT,     /**< Column right align*/
+    LV_LAYOUT_COLUMN_LEFT,  /**< Column left align*/
+    LV_LAYOUT_COLUMN_MID,   /**< Column middle align*/
+    LV_LAYOUT_COLUMN_RIGHT, /**< Column right align*/
 
     /**
      * ROW:
@@ -50,9 +50,9 @@ enum {
      * - If the object which applies the layout has `base_dir == LV_BIDI_DIR_RTL`
      *   the row will start from the right applying `pad.right` space
      */
-    LV_LAYOUT_ROW_TOP,          /**< Row top align*/
-    LV_LAYOUT_ROW_MID,          /**< Row middle align*/
-    LV_LAYOUT_ROW_BOTTOM,       /**< Row bottom align*/
+    LV_LAYOUT_ROW_TOP,    /**< Row top align*/
+    LV_LAYOUT_ROW_MID,    /**< Row middle align*/
+    LV_LAYOUT_ROW_BOTTOM, /**< Row bottom align*/
 
     /**
      * PRETTY:
@@ -63,9 +63,9 @@ enum {
      * - Keep `pad_inner` space between the objects in rows
      * - Divide the remaining horizontal space equally
      */
-    LV_LAYOUT_PRETTY_TOP,       /**< Row top align*/
-    LV_LAYOUT_PRETTY_MID,       /**< Row middle align*/
-    LV_LAYOUT_PRETTY_BOTTOM,    /**< Row bottom align*/
+    LV_LAYOUT_PRETTY_TOP,    /**< Row top align*/
+    LV_LAYOUT_PRETTY_MID,    /**< Row middle align*/
+    LV_LAYOUT_PRETTY_BOTTOM, /**< Row bottom align*/
 
     /**
      * GRID
@@ -77,7 +77,7 @@ enum {
      * - Unlike `PRETTY`, `GRID` always keep `pad_inner` space horizontally between objects
      *   so it doesn't divide the remaining horizontal space equally
      */
-    LV_LAYOUT_GRID,   /**< Align same-sized object into a grid*/
+    LV_LAYOUT_GRID, /**< Align same-sized object into a grid*/
 
     _LV_LAYOUT_LAST
 };
@@ -87,22 +87,23 @@ typedef uint8_t lv_layout_t;
  * How to resize the container around the children.
  */
 enum {
-    LV_FIT_NONE,  /**< Do not change the size automatically*/
-    LV_FIT_TIGHT, /**< Shrink wrap around the children */
+    LV_FIT_NONE,   /**< Do not change the size automatically*/
+    LV_FIT_TIGHT,  /**< Shrink wrap around the children */
     LV_FIT_PARENT, /**< Align the size to the parent's edge*/
-    LV_FIT_MAX,  /**< Align the size to the parent's edge first but if there is an object out of it
+    LV_FIT_MAX,    /**< Align the size to the parent's edge first but if there is an object out of it
                      then get larger */
     _LV_FIT_LAST
 };
 typedef uint8_t lv_fit_t;
 
-typedef struct {
+typedef struct
+{
     /*Inherited from 'base_obj' so no inherited ext. */ /*Ext. of ancestor*/
     /*New data for this type */
-    lv_layout_t layout : 4;     /*A layout from 'lv_layout_t' enum*/
-    lv_fit_t fit_left : 2;   /*A fit type from `lv_fit_t` enum */
-    lv_fit_t fit_right : 2;  /*A fit type from `lv_fit_t` enum */
-    lv_fit_t fit_top : 2;    /*A fit type from `lv_fit_t` enum */
+    lv_layout_t layout  : 4; /*A layout from 'lv_layout_t' enum*/
+    lv_fit_t fit_left   : 2; /*A fit type from `lv_fit_t` enum */
+    lv_fit_t fit_right  : 2; /*A fit type from `lv_fit_t` enum */
+    lv_fit_t fit_top    : 2; /*A fit type from `lv_fit_t` enum */
     lv_fit_t fit_bottom : 2; /*A fit type from `lv_fit_t` enum */
 } lv_cont_ext_t;
 
@@ -123,7 +124,7 @@ enum {
  * @param copy pointer to a container object, if not NULL then the new object will be copied from it
  * @return pointer to the created container
  */
-lv_obj_t * lv_cont_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_cont_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*=====================
  * Setter functions
@@ -134,7 +135,7 @@ lv_obj_t * lv_cont_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param cont pointer to a container object
  * @param layout a layout from 'lv_cont_layout_t'
  */
-void lv_cont_set_layout(lv_obj_t * cont, lv_layout_t layout);
+void lv_cont_set_layout(lv_obj_t *cont, lv_layout_t layout);
 
 /**
  * Set the fit policy in all 4 directions separately.
@@ -145,7 +146,7 @@ void lv_cont_set_layout(lv_obj_t * cont, lv_layout_t layout);
  * @param top top fit policy from `lv_fit_t`
  * @param bottom bottom fit policy from `lv_fit_t`
  */
-void lv_cont_set_fit4(lv_obj_t * cont, lv_fit_t left, lv_fit_t right, lv_fit_t top, lv_fit_t bottom);
+void lv_cont_set_fit4(lv_obj_t *cont, lv_fit_t left, lv_fit_t right, lv_fit_t top, lv_fit_t bottom);
 
 /**
  * Set the fit policy horizontally and vertically separately.
@@ -154,7 +155,7 @@ void lv_cont_set_fit4(lv_obj_t * cont, lv_fit_t left, lv_fit_t right, lv_fit_t t
  * @param hor horizontal fit policy from `lv_fit_t`
  * @param ver vertical fit policy from `lv_fit_t`
  */
-static inline void lv_cont_set_fit2(lv_obj_t * cont, lv_fit_t hor, lv_fit_t ver)
+static inline void lv_cont_set_fit2(lv_obj_t *cont, lv_fit_t hor, lv_fit_t ver)
 {
     lv_cont_set_fit4(cont, hor, hor, ver, ver);
 }
@@ -165,7 +166,7 @@ static inline void lv_cont_set_fit2(lv_obj_t * cont, lv_fit_t hor, lv_fit_t ver)
  * @param cont pointer to a container object
  * @param fit fit policy from `lv_fit_t`
  */
-static inline void lv_cont_set_fit(lv_obj_t * cont, lv_fit_t fit)
+static inline void lv_cont_set_fit(lv_obj_t *cont, lv_fit_t fit)
 {
     lv_cont_set_fit4(cont, fit, fit, fit, fit);
 }
@@ -179,35 +180,35 @@ static inline void lv_cont_set_fit(lv_obj_t * cont, lv_fit_t fit)
  * @param cont pointer to container object
  * @return the layout from 'lv_cont_layout_t'
  */
-lv_layout_t lv_cont_get_layout(const lv_obj_t * cont);
+lv_layout_t lv_cont_get_layout(const lv_obj_t *cont);
 
 /**
  * Get left fit mode of a container
  * @param cont pointer to a container object
  * @return an element of `lv_fit_t`
  */
-lv_fit_t lv_cont_get_fit_left(const lv_obj_t * cont);
+lv_fit_t lv_cont_get_fit_left(const lv_obj_t *cont);
 
 /**
  * Get right fit mode of a container
  * @param cont pointer to a container object
  * @return an element of `lv_fit_t`
  */
-lv_fit_t lv_cont_get_fit_right(const lv_obj_t * cont);
+lv_fit_t lv_cont_get_fit_right(const lv_obj_t *cont);
 
 /**
  * Get top fit mode of a container
  * @param cont pointer to a container object
  * @return an element of `lv_fit_t`
  */
-lv_fit_t lv_cont_get_fit_top(const lv_obj_t * cont);
+lv_fit_t lv_cont_get_fit_top(const lv_obj_t *cont);
 
 /**
  * Get bottom fit mode of a container
  * @param cont pointer to a container object
  * @return an element of `lv_fit_t`
  */
-lv_fit_t lv_cont_get_fit_bottom(const lv_obj_t * cont);
+lv_fit_t lv_cont_get_fit_bottom(const lv_obj_t *cont);
 
 /**********************
  *      MACROS

@@ -8,16 +8,17 @@ struct k_work_q {
     struct k_fifo fifo;
 };
 
-typedef struct{
+typedef struct
+{
     bl_timer_t timer;
     struct k_delayed_work *delay_work;
-}timer_rec_d;
+} timer_rec_d;
 
 int k_work_q_start();
 
 enum {
     K_WORK_STATE_PENDING,
-	K_WORK_STATE_PERIODIC,
+    K_WORK_STATE_PERIODIC,
 };
 struct k_work;
 /* work define*/
@@ -29,14 +30,13 @@ struct k_work {
 };
 
 #define _K_WORK_INITIALIZER(work_handler) \
-        { \
-        ._reserved = NULL, \
-        .handler = work_handler, \
-        .flags = { 0 } \
-        }
+    {                                     \
+        ._reserved = NULL,                \
+        .handler = work_handler,          \
+        .flags = { 0 }                    \
+    }
 
 #define K_WORK_INITIALIZER __DEPRECATED_MACRO _K_WORK_INITIALIZER
-
 
 int k_work_init(struct k_work *work, k_work_handler_t handler);
 void k_work_submit(struct k_work *work);

@@ -1,9 +1,8 @@
 #include "../../../lv_examples.h"
 #if LV_USE_CANVAS
 
-
 #define CANVAS_WIDTH  200
-#define CANVAS_HEIGHT  150
+#define CANVAS_HEIGHT 150
 
 void lv_ex_canvas_1(void)
 {
@@ -27,7 +26,7 @@ void lv_ex_canvas_1(void)
 
     static lv_color_t cbuf[LV_CANVAS_BUF_SIZE_TRUE_COLOR(CANVAS_WIDTH, CANVAS_HEIGHT)];
 
-    lv_obj_t * canvas = lv_canvas_create(lv_scr_act(), NULL);
+    lv_obj_t *canvas = lv_canvas_create(lv_scr_act(), NULL);
     lv_canvas_set_buffer(canvas, cbuf, CANVAS_WIDTH, CANVAS_HEIGHT, LV_IMG_CF_TRUE_COLOR);
     lv_obj_align(canvas, NULL, LV_ALIGN_CENTER, 0, 0);
     lv_canvas_fill_bg(canvas, LV_COLOR_SILVER, LV_OPA_COVER);

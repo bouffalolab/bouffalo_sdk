@@ -25,7 +25,6 @@
  * 1 tab == 4 spaces!
  */
 
-
 #ifndef PORTMACRO_H
 #define PORTMACRO_H
 
@@ -45,28 +44,27 @@ extern "C" {
 
 /* Type definitions. */
 #if __riscv_xlen == 64
-	#define portSTACK_TYPE			uint64_t
-	#define portBASE_TYPE			int64_t
-	#define portUBASE_TYPE			uint64_t
-	#define portMAX_DELAY 			( TickType_t ) 0xffffffffffffffffUL
-	#define portPOINTER_SIZE_TYPE 	uint64_t
+#define portSTACK_TYPE        uint64_t
+#define portBASE_TYPE         int64_t
+#define portUBASE_TYPE        uint64_t
+#define portMAX_DELAY         (TickType_t)0xffffffffffffffffUL
+#define portPOINTER_SIZE_TYPE uint64_t
 #elif __riscv_xlen == 32
-	#define portSTACK_TYPE	uint32_t
-	#define portBASE_TYPE	int    /* int32_t */
-	#define portUBASE_TYPE	uint32_t
-	#define portMAX_DELAY ( TickType_t ) 0xffffffffUL
-	#if __riscv_float_abi_single
-	    /* better to use float replace double here,
-		 * so that it will generates floating point instructions
-		 */
-	    #define portDOUBLE      float /* double */
-	#else
-	    #define portDOUBLE      double
-	#endif
+#define portSTACK_TYPE uint32_t
+#define portBASE_TYPE  int /* int32_t */
+#define portUBASE_TYPE uint32_t
+#define portMAX_DELAY  (TickType_t)0xffffffffUL
+#if __riscv_float_abi_single
+/* better to use float replace double here,
+ * so that it will generates floating point instructions
+ */
+#define portDOUBLE float /* double */
 #else
-	#error Assembler did not define __riscv_xlen
+#define portDOUBLE double
 #endif
-
+#else
+#error Assembler did not define __riscv_xlen
+#endif
 
 typedef portSTACK_TYPE StackType_t;
 typedef portBASE_TYPE BaseType_t;
@@ -79,84 +77,84 @@ not need to be guarded with a critical section. */
 /*-----------------------------------------------------------*/
 
 /* Architecture specifics. */
-#define portSTACK_GROWTH			( -1 )
-#define portTICK_PERIOD_MS			( ( TickType_t ) 1000 / configTICK_RATE_HZ )
+#define portSTACK_GROWTH   (-1)
+#define portTICK_PERIOD_MS ((TickType_t)1000 / configTICK_RATE_HZ)
 #ifdef __riscv64
-	#error This is the RV32 port that has not yet been adapted for 64.
-	#define portBYTE_ALIGNMENT			16
+#error This is the RV32 port that has not yet been adapted for 64.
+#define portBYTE_ALIGNMENT 16
 #else
-	#define portBYTE_ALIGNMENT			16
+#define portBYTE_ALIGNMENT 16
 #endif
 /*-----------------------------------------------------------*/
 
-
 /* Scheduler utilities. */
 extern BaseType_t TrapNetCounter;
-extern void vTaskSwitchContext( void );
-#define portYIELD() __asm volatile( "ecall" );
-#define portEND_SWITCHING_ISR( xSwitchRequired ) if( xSwitchRequired ) vTaskSwitchContext()
-#define portYIELD_FROM_ISR( x ) portEND_SWITCHING_ISR( x )
+extern void vTaskSwitchContext(void);
+#define portYIELD() __asm volatile("ecall");
+#define portEND_SWITCHING_ISR(xSwitchRequired) \
+    if (xSwitchRequired)                       \
+    vTaskSwitchContext()
+#define portYIELD_FROM_ISR(x) portEND_SWITCHING_ISR(x)
 /*-----------------------------------------------------------*/
 
-
 /* Critical section management. */
-#define portCRITICAL_NESTING_IN_TCB					1
-extern void vTaskEnterCritical( void );
-extern void vTaskExitCritical( void );
+#define portCRITICAL_NESTING_IN_TCB 1
+extern void vTaskEnterCritical(void);
+extern void vTaskExitCritical(void);
 
-#define portSET_INTERRUPT_MASK_FROM_ISR() 0
-#define portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedStatusValue ) ( void ) uxSavedStatusValue
-#define portDISABLE_INTERRUPTS()	__asm volatile( "csrc mstatus, 8" )
-#define portENABLE_INTERRUPTS()		__asm volatile( "csrs mstatus, 8" )
-#define portENTER_CRITICAL()	vTaskEnterCritical()
-#define portEXIT_CRITICAL()		vTaskExitCritical()
+#define portSET_INTERRUPT_MASK_FROM_ISR()                     0
+#define portCLEAR_INTERRUPT_MASK_FROM_ISR(uxSavedStatusValue) (void)uxSavedStatusValue
+#define portDISABLE_INTERRUPTS()                              __asm volatile("csrc mstatus, 8")
+#define portENABLE_INTERRUPTS()                               __asm volatile("csrs mstatus, 8")
+#define portENTER_CRITICAL()                                  vTaskEnterCritical()
+#define portEXIT_CRITICAL()                                   vTaskExitCritical()
 
 /*-----------------------------------------------------------*/
 
 /* Architecture specific optimisations. */
 #ifndef configUSE_PORT_OPTIMISED_TASK_SELECTION
-	#define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #endif
 
-#if( configUSE_PORT_OPTIMISED_TASK_SELECTION == 1 )
+#if (configUSE_PORT_OPTIMISED_TASK_SELECTION == 1)
 
-	/* Check the configuration. */
-	#if( configMAX_PRIORITIES > 32 )
-		#error configUSE_PORT_OPTIMISED_TASK_SELECTION can only be set to 1 when configMAX_PRIORITIES is less than or equal to 32.  It is very rare that a system requires more than 10 to 15 difference priorities as tasks that share a priority will time slice.
-	#endif
+/* Check the configuration. */
+#if (configMAX_PRIORITIES > 32)
+#error configUSE_PORT_OPTIMISED_TASK_SELECTION can only be set to 1 when configMAX_PRIORITIES is less than or equal to 32.  It is very rare that a system requires more than 10 to 15 difference priorities as tasks that share a priority will time slice.
+#endif
 
-	/* Store/clear the ready priorities in a bit map. */
-	#define portRECORD_READY_PRIORITY( uxPriority, uxReadyPriorities ) ( uxReadyPriorities ) |= ( 1UL << ( uxPriority ) )
-	#define portRESET_READY_PRIORITY( uxPriority, uxReadyPriorities ) ( uxReadyPriorities ) &= ~( 1UL << ( uxPriority ) )
+/* Store/clear the ready priorities in a bit map. */
+#define portRECORD_READY_PRIORITY(uxPriority, uxReadyPriorities) (uxReadyPriorities) |= (1UL << (uxPriority))
+#define portRESET_READY_PRIORITY(uxPriority, uxReadyPriorities)  (uxReadyPriorities) &= ~(1UL << (uxPriority))
 
-	/*-----------------------------------------------------------*/
+/*-----------------------------------------------------------*/
 
-	#define portGET_HIGHEST_PRIORITY( uxTopPriority, uxReadyPriorities ) uxTopPriority = ( 31UL - __builtin_clz( uxReadyPriorities ) )
+#define portGET_HIGHEST_PRIORITY(uxTopPriority, uxReadyPriorities) uxTopPriority = (31UL - __builtin_clz(uxReadyPriorities))
 
 #endif /* configUSE_PORT_OPTIMISED_TASK_SELECTION */
-
 
 /*-----------------------------------------------------------*/
 
 /* Task function macros as described on the FreeRTOS.org WEB site.  These are
 not necessary for to use this port.  They are defined so the common demo files
 (which build with all the ports) will build. */
-#define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
-#define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
+#define portTASK_FUNCTION_PROTO(vFunction, pvParameters) void vFunction(void *pvParameters)
+#define portTASK_FUNCTION(vFunction, pvParameters)       void vFunction(void *pvParameters)
 
 /*-----------------------------------------------------------*/
 
-#define portNOP() __asm volatile 	( " nop " )
+#define portNOP() __asm volatile(" nop ")
 
-#define portINLINE	__inline
+#define portINLINE __inline
 
 #ifndef portFORCE_INLINE
-	#define portFORCE_INLINE inline __attribute__(( always_inline))
+#define portFORCE_INLINE inline __attribute__((always_inline))
 #endif
 
-#define portMEMORY_BARRIER() __asm volatile( "" ::: "memory" )
+#define portMEMORY_BARRIER() __asm volatile("" :: \
+                                                : "memory")
 
-portFORCE_INLINE static BaseType_t xPortIsInsideInterrupt( void )
+portFORCE_INLINE static BaseType_t xPortIsInsideInterrupt(void)
 {
     return TrapNetCounter ? 1 : 0;
 }
@@ -166,4 +164,3 @@ portFORCE_INLINE static BaseType_t xPortIsInsideInterrupt( void )
 #endif
 
 #endif /* PORTMACRO_H */
-

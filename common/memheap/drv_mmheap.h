@@ -1,24 +1,24 @@
 /**
  * @file drv_mmheap.h
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #ifndef _DRV_MMHEAP_H_
 #define _DRV_MMHEAP_H_
@@ -26,23 +26,23 @@
 #include "stdint.h"
 #include "string.h"
 
-#define MEMHEAP_STATUS_OK 0
-#define MEMHEAP_STATUS_INVALID_ADDR -1
-#define MEMHEAP_STATUS_INVALID_SIZE -2
-#define MEMHEAP_STATUS_OVERFLOW -3
+#define MEMHEAP_STATUS_OK                0
+#define MEMHEAP_STATUS_INVALID_ADDR      -1
+#define MEMHEAP_STATUS_INVALID_SIZE      -2
+#define MEMHEAP_STATUS_OVERFLOW          -3
 #define MEMHEAP_STATUS_ALREADY_NOT_EXIST -4
-#define MEMHEAP_STATUS_ALREADY_EXIST -5
+#define MEMHEAP_STATUS_ALREADY_EXIST     -5
 
 /**
  * log2 of number of linear subdivisions of block sizes. Larger
  * values require more memory in the control structure. Values of
  * 4 or 5 are typical.
  */
-#define MMHEAP_SL_INDEX_COUNT_LOG2    5
+#define MMHEAP_SL_INDEX_COUNT_LOG2 5
 
 /* All allocation sizes and addresses are aligned to 4 bytes. */
-#define MMHEAP_ALIGN_SIZE_LOG2        2
-#define MMHEAP_ALIGN_SIZE             (1 << MMHEAP_ALIGN_SIZE_LOG2)
+#define MMHEAP_ALIGN_SIZE_LOG2 2
+#define MMHEAP_ALIGN_SIZE      (1 << MMHEAP_ALIGN_SIZE_LOG2)
 
 /*
  * We support allocations of sizes up to (1 << MMHEAP_FL_INDEX_MAX) bits.
@@ -54,22 +54,22 @@
  * Instead, we calculate the minimum threshold size, and place all
  * blocks below that size into the 0th first-level list.
  */
-#define MMHEAP_FL_INDEX_MAX           30
-#define MMHEAP_SL_INDEX_COUNT         (1 << MMHEAP_SL_INDEX_COUNT_LOG2)
-#define MMHEAP_FL_INDEX_SHIFT         (MMHEAP_SL_INDEX_COUNT_LOG2 + MMHEAP_ALIGN_SIZE_LOG2)
-#define MMHEAP_FL_INDEX_COUNT         (MMHEAP_FL_INDEX_MAX - MMHEAP_FL_INDEX_SHIFT + 1)
+#define MMHEAP_FL_INDEX_MAX   30
+#define MMHEAP_SL_INDEX_COUNT (1 << MMHEAP_SL_INDEX_COUNT_LOG2)
+#define MMHEAP_FL_INDEX_SHIFT (MMHEAP_SL_INDEX_COUNT_LOG2 + MMHEAP_ALIGN_SIZE_LOG2)
+#define MMHEAP_FL_INDEX_COUNT (MMHEAP_FL_INDEX_MAX - MMHEAP_FL_INDEX_SHIFT + 1)
 
-#define MMHEAP_SMALL_BLOCK_SIZE       (1 << MMHEAP_FL_INDEX_SHIFT)
+#define MMHEAP_SMALL_BLOCK_SIZE (1 << MMHEAP_FL_INDEX_SHIFT)
 
-#define MMHEAP_BLOCK_CURR_FREE        (1 << 0)
-#define MMHEAP_BLOCK_PREV_FREE        (1 << 1)
-#define MMHEAP_BLOCK_SIZE_MASK        ~(MMHEAP_BLOCK_CURR_FREE | MMHEAP_BLOCK_PREV_FREE)
-#define MMHEAP_BLOCK_STATE_MASK       (MMHEAP_BLOCK_CURR_FREE | MMHEAP_BLOCK_PREV_FREE)
+#define MMHEAP_BLOCK_CURR_FREE  (1 << 0)
+#define MMHEAP_BLOCK_PREV_FREE  (1 << 1)
+#define MMHEAP_BLOCK_SIZE_MASK  ~(MMHEAP_BLOCK_CURR_FREE | MMHEAP_BLOCK_PREV_FREE)
+#define MMHEAP_BLOCK_STATE_MASK (MMHEAP_BLOCK_CURR_FREE | MMHEAP_BLOCK_PREV_FREE)
 
-typedef struct 
+typedef struct
 {
-    uint32_t    used; /* space is used */
-    uint32_t    free; /* space is free */
+    uint32_t used; /* space is used */
+    uint32_t free; /* space is free */
 } mmheap_info_t;
 
 /**
@@ -96,28 +96,28 @@ typedef struct mmheap_blk_st {
  * the prev_phys_block field, and no larger than the number of addressable
  * bits for FL_INDEX.
  */
-#define MMHEAP_BLK_SIZE_MIN           (sizeof(mmheap_blk_t) - sizeof(mmheap_blk_t *))
-#define MMHEAP_BLK_SIZE_MAX           (1 << MMHEAP_FL_INDEX_MAX)
+#define MMHEAP_BLK_SIZE_MIN (sizeof(mmheap_blk_t) - sizeof(mmheap_blk_t *))
+#define MMHEAP_BLK_SIZE_MAX (1 << MMHEAP_FL_INDEX_MAX)
 
-#define MMHEAP_BLK_HEADER_OVERHEAD    (sizeof(size_t))
-#define MMHEAP_BLK_START_OFFSET       (((uint32_t)&(((mmheap_blk_t *)0)->size))+ sizeof(size_t))
+#define MMHEAP_BLK_HEADER_OVERHEAD (sizeof(size_t))
+#define MMHEAP_BLK_START_OFFSET    (((uint32_t) & (((mmheap_blk_t *)0)->size)) + sizeof(size_t))
 
-#define MMHEAP_POOL_MAX               3
+#define MMHEAP_POOL_MAX 3
 
 /**
  * memory heap control
  */
-typedef struct 
+typedef struct
 {
-    int             pool_cnt;
-    void           *pool_start[MMHEAP_POOL_MAX];
+    int pool_cnt;
+    void *pool_start[MMHEAP_POOL_MAX];
 
-    mmheap_blk_t    block_null; /**< Empty lists point at this block to indicate they are free. */
+    mmheap_blk_t block_null; /**< Empty lists point at this block to indicate they are free. */
 
-    uint32_t        fl_bitmap; /**< Bitmaps for free lists. */
-    uint32_t        sl_bitmap[MMHEAP_FL_INDEX_COUNT];
+    uint32_t fl_bitmap; /**< Bitmaps for free lists. */
+    uint32_t sl_bitmap[MMHEAP_FL_INDEX_COUNT];
 
-    mmheap_blk_t   *blocks[MMHEAP_FL_INDEX_COUNT][MMHEAP_SL_INDEX_COUNT]; /**< Head of free lists. */
+    mmheap_blk_t *blocks[MMHEAP_FL_INDEX_COUNT][MMHEAP_SL_INDEX_COUNT]; /**< Head of free lists. */
 } mmheap_ctl_t;
 
 /**
@@ -143,9 +143,9 @@ int mmheap_pool_add(void *pool_start, size_t pool_size);
  *
  * @return  the pointer to the allocated memory.
  */
-void   *mmheap_alloc(size_t size);
+void *mmheap_alloc(size_t size);
 
-void   *mmheap_calloc(size_t num, size_t size);
+void *mmheap_calloc(size_t num, size_t size);
 
 /**
  * @brief Alloc start address aligned memory from the heap.
@@ -158,7 +158,7 @@ void   *mmheap_calloc(size_t num, size_t size);
  *
  * @return  the pointer to the allocated memory.
  */
-void   *mmheap_aligned_alloc(size_t size, size_t align);
+void *mmheap_aligned_alloc(size_t size, size_t align);
 
 /**
  * @brief Realloc memory from the heap.
@@ -175,7 +175,7 @@ void   *mmheap_aligned_alloc(size_t size, size_t align);
  *
  * @return  the new pointer to the allocated memory.
  */
-void   *mmheap_realloc(void *ptr, size_t size);
+void *mmheap_realloc(void *ptr, size_t size);
 
 /**
  * @brief Free the memory.
@@ -187,10 +187,8 @@ void   *mmheap_realloc(void *ptr, size_t size);
  *
  * @return  None.
  */
-void    mmheap_free(void *ptr);
-
+void mmheap_free(void *ptr);
 
 int mmheap_init_with_pool(void *pool_start, size_t pool_size);
-
 
 #endif /* _DRV_MMHEAP_H_ */

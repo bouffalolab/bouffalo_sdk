@@ -47,7 +47,7 @@ list(APPEND ADD_REQUIREMENTS common)
 
 ############ Add global compile option ################
 #add components denpend on this component
-list(APPEND ADD_DEFINITIONS -DARCH_RISCV)
+list(APPEND ADD_DEFINITIONS -DARCH_RISCV -DBFLB_USE_HAL_DRIVER)
 #######################################################
 
 ############ Add private compile option ################

@@ -43,7 +43,7 @@
  * This type of situation can be resolved using the __ASSERT_EVAL() macro.
  *
  * __ASSERT_EVAL ((void) foo(),
- *		  int x = foo(),
+ *        int x = foo(),
  *                x != 0,
  *                "foo() returned zero!");
  *
@@ -74,38 +74,38 @@
 
 #if __ASSERT_ON
 #include <misc/printk.h>
-#define __ASSERT(test, fmt, ...)                                   \
-	do {                                                       \
-		if (!(test)) {                                     \
-			printk("ASSERTION FAIL [%s] @ %s:%d:\n\t", \
-			       _STRINGIFY(test),                   \
-			       __FILE__,                           \
-			       __LINE__);                          \
-			printk(fmt, ##__VA_ARGS__);                \
-			for (;;)                                   \
-				; /* spin thread */                \
-		}                                                  \
-	} while ((0))
+#define __ASSERT(test, fmt, ...)                       \
+    do {                                               \
+        if (!(test)) {                                 \
+            printk("ASSERTION FAIL [%s] @ %s:%d:\n\t", \
+                   _STRINGIFY(test),                   \
+                   __FILE__,                           \
+                   __LINE__);                          \
+            printk(fmt, ##__VA_ARGS__);                \
+            for (;;)                                   \
+                ; /* spin thread */                    \
+        }                                              \
+    } while ((0))
 
-#define __ASSERT_EVAL(expr1, expr2, test, fmt, ...)                \
-	do {                                                       \
-		expr2;                                             \
-		__ASSERT(test, fmt, ##__VA_ARGS__);                \
-	} while (0)
+#define __ASSERT_EVAL(expr1, expr2, test, fmt, ...) \
+    do {                                            \
+        expr2;                                      \
+        __ASSERT(test, fmt, ##__VA_ARGS__);         \
+    } while (0)
 
 #if (__ASSERT_ON == 1)
 #warning "__ASSERT() statements are ENABLED"
 #endif
 #else
 #define __ASSERT(test, fmt, ...) \
-	do {/* nothing */        \
-	} while ((0))
+    do { /* nothing */           \
+    } while ((0))
 #define __ASSERT_EVAL(expr1, expr2, test, fmt, ...) expr1
 #endif
 #else
 #define __ASSERT(test, fmt, ...) \
-	do {/* nothing */        \
-	} while ((0))
+    do { /* nothing */           \
+    } while ((0))
 #define __ASSERT_EVAL(expr1, expr2, test, fmt, ...) expr1
 #endif
 

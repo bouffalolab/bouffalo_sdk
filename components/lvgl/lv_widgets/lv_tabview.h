@@ -49,13 +49,14 @@ enum {
 typedef uint8_t lv_tabview_btns_pos_t;
 
 /*Data of tab*/
-typedef struct {
+typedef struct
+{
     /*Ext. of ancestor*/
     /*New data for this type */
-    lv_obj_t * btns;
-    lv_obj_t * indic;
-    lv_obj_t * content; /*A background page which holds tab's pages*/
-    const char ** tab_name_ptr;
+    lv_obj_t *btns;
+    lv_obj_t *indic;
+    lv_obj_t *content; /*A background page which holds tab's pages*/
+    const char **tab_name_ptr;
     lv_point_t point_last;
     uint16_t tab_cur;
     uint16_t tab_cnt;
@@ -87,7 +88,7 @@ typedef uint8_t lv_tabview_part_t;
  * @param copy pointer to a tab object, if not NULL then the new object will be copied from it
  * @return pointer to the created tab
  */
-lv_obj_t * lv_tabview_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_tabview_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*======================
  * Add/remove functions
@@ -99,13 +100,13 @@ lv_obj_t * lv_tabview_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param name the text on the tab button
  * @return pointer to the created page object (lv_page). You can create your content here
  */
-lv_obj_t * lv_tabview_add_tab(lv_obj_t * tabview, const char * name);
+lv_obj_t *lv_tabview_add_tab(lv_obj_t *tabview, const char *name);
 
 /**
  * Delete all children of a tab created by `lv_tabview_add_tab`.
  * @param tab pointer to a tab
  */
-void lv_tabview_clean_tab(lv_obj_t * tab);
+void lv_tabview_clean_tab(lv_obj_t *tab);
 
 /*=====================
  * Setter functions
@@ -117,7 +118,7 @@ void lv_tabview_clean_tab(lv_obj_t * tab);
  * @param id index of a tab to load
  * @param anim LV_ANIM_ON: set the value with an animation; LV_ANIM_OFF: change the value immediately
  */
-void lv_tabview_set_tab_act(lv_obj_t * tabview, uint16_t id, lv_anim_enable_t anim);
+void lv_tabview_set_tab_act(lv_obj_t *tabview, uint16_t id, lv_anim_enable_t anim);
 
 /**
  * Set the name of a tab.
@@ -125,21 +126,21 @@ void lv_tabview_set_tab_act(lv_obj_t * tabview, uint16_t id, lv_anim_enable_t an
  * @param id index of the tab the name should be set
  * @param name new tab name
  */
-void lv_tabview_set_tab_name(lv_obj_t * tabview, uint16_t id, char * name);
+void lv_tabview_set_tab_name(lv_obj_t *tabview, uint16_t id, char *name);
 
 /**
  * Set the animation time of tab view when a new tab is loaded
  * @param tabview pointer to Tab view object
  * @param anim_time time of animation in milliseconds
  */
-void lv_tabview_set_anim_time(lv_obj_t * tabview, uint16_t anim_time);
+void lv_tabview_set_anim_time(lv_obj_t *tabview, uint16_t anim_time);
 
 /**
  * Set the position of tab select buttons
  * @param tabview pointer to a tab view object
  * @param btns_pos which button position
  */
-void lv_tabview_set_btns_pos(lv_obj_t * tabview, lv_tabview_btns_pos_t btns_pos);
+void lv_tabview_set_btns_pos(lv_obj_t *tabview, lv_tabview_btns_pos_t btns_pos);
 
 /*=====================
  * Getter functions
@@ -150,34 +151,34 @@ void lv_tabview_set_btns_pos(lv_obj_t * tabview, lv_tabview_btns_pos_t btns_pos)
  * @param tabview pointer to Tab view object
  * @return the active tab index
  */
-uint16_t lv_tabview_get_tab_act(const lv_obj_t * tabview);
+uint16_t lv_tabview_get_tab_act(const lv_obj_t *tabview);
 
 /**
  * Get the number of tabs
  * @param tabview pointer to Tab view object
  * @return tab count
  */
-uint16_t lv_tabview_get_tab_count(const lv_obj_t * tabview);
+uint16_t lv_tabview_get_tab_count(const lv_obj_t *tabview);
 /**
  * Get the page (content area) of a tab
  * @param tabview pointer to Tab view object
  * @param id index of the tab (>= 0)
  * @return pointer to page (lv_page) object
  */
-lv_obj_t * lv_tabview_get_tab(const lv_obj_t * tabview, uint16_t id);
+lv_obj_t *lv_tabview_get_tab(const lv_obj_t *tabview, uint16_t id);
 
 /**
  * Get the animation time of tab view when a new tab is loaded
  * @param tabview pointer to Tab view object
  * @return time of animation in milliseconds
  */
-uint16_t lv_tabview_get_anim_time(const lv_obj_t * tabview);
+uint16_t lv_tabview_get_anim_time(const lv_obj_t *tabview);
 
 /**
  * Get position of tab select buttons
  * @param tabview pointer to a ab view object
  */
-lv_tabview_btns_pos_t lv_tabview_get_btns_pos(const lv_obj_t * tabview);
+lv_tabview_btns_pos_t lv_tabview_get_btns_pos(const lv_obj_t *tabview);
 
 /**********************
  *      MACROS

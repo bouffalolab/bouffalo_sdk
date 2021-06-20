@@ -22,8 +22,8 @@ extern "C" {
  *********************/
 
 #define LV_DMA2D_ARGB8888 0
-#define LV_DMA2D_RGB888 1
-#define LV_DMA2D_RGB565 2
+#define LV_DMA2D_RGB888   1
+#define LV_DMA2D_RGB565   2
 #define LV_DMA2D_ARGB1555 3
 #define LV_DMA2D_ARGB4444 4
 
@@ -49,7 +49,7 @@ void lv_gpu_stm32_dma2d_init(void);
  * @param fill_h height to fill in pixels
  * @note `buf_w - fill_w` is offset to the next line after fill
  */
-void lv_gpu_stm32_dma2d_fill(lv_color_t * buf, lv_coord_t buf_w, lv_color_t color, lv_coord_t fill_w,
+void lv_gpu_stm32_dma2d_fill(lv_color_t *buf, lv_coord_t buf_w, lv_color_t color, lv_coord_t fill_w,
                              lv_coord_t fill_h);
 
 /**
@@ -63,7 +63,7 @@ void lv_gpu_stm32_dma2d_fill(lv_color_t * buf, lv_coord_t buf_w, lv_color_t colo
  * @param fill_h height to fill in pixels
  * @note `buf_w - fill_w` is offset to the next line after fill
  */
-void lv_gpu_stm32_dma2d_fill_mask(lv_color_t * buf, lv_coord_t buf_w, lv_color_t color, const lv_opa_t * mask,
+void lv_gpu_stm32_dma2d_fill_mask(lv_color_t *buf, lv_coord_t buf_w, lv_color_t color, const lv_opa_t *mask,
                                   lv_opa_t opa, lv_coord_t fill_w, lv_coord_t fill_h);
 
 /**
@@ -76,7 +76,7 @@ void lv_gpu_stm32_dma2d_fill_mask(lv_color_t * buf, lv_coord_t buf_w, lv_color_t
  * @param copy_h height of the area to copy in pixels
  * @note `map_w - fill_w` is offset to the next line after copy
  */
-void lv_gpu_stm32_dma2d_copy(lv_color_t * buf, lv_coord_t buf_w, const lv_color_t * map, lv_coord_t map_w,
+void lv_gpu_stm32_dma2d_copy(lv_color_t *buf, lv_coord_t buf_w, const lv_color_t *map, lv_coord_t map_w,
                              lv_coord_t copy_w, lv_coord_t copy_h);
 /**
  * Blend a map (e.g. ARGB image or RGB image with opacity) to a buffer
@@ -89,14 +89,14 @@ void lv_gpu_stm32_dma2d_copy(lv_color_t * buf, lv_coord_t buf_w, const lv_color_
  * @param copy_h height of the area to copy in pixels
  * @note `map_w - fill_w` is offset to the next line after copy
  */
-void lv_gpu_stm32_dma2d_blend(lv_color_t * buf, lv_coord_t buf_w, const lv_color_t * map, lv_opa_t opa,
+void lv_gpu_stm32_dma2d_blend(lv_color_t *buf, lv_coord_t buf_w, const lv_color_t *map, lv_opa_t opa,
                               lv_coord_t map_w, lv_coord_t copy_w, lv_coord_t copy_h);
 
 /**
  * Can be used as `gpu_wait_cb` in display driver to
  * let the MCU run while the GPU is working
  */
-void lv_gpu_stm32_dma2d_wait_cb(lv_disp_drv_t * drv);
+void lv_gpu_stm32_dma2d_wait_cb(lv_disp_drv_t *drv);
 
 /**********************
  *      MACROS

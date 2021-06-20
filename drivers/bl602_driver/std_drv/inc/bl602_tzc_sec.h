@@ -69,7 +69,7 @@
  *  @{
  */
 void TZC_Sboot_Set(uint8_t Val);
-void TZC_Set_Rom0_R0_Protect(uint32_t start,uint32_t end);
+void TZC_Set_Rom0_R0_Protect(uint32_t start, uint32_t end);
 
 /*@} end of group TZC_SEC_Public_Functions */
 

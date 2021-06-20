@@ -69,33 +69,36 @@ static void stereoBitAllocation(OI_CODEC_SBC_COMMON_CONTEXT *common)
     }
     sbL = 0;
     sbR = nrof_subbands;
+
     while (sbL < nrof_subbands) {
         excess = allocAdjustedBits(&common->bits.uint8[sbL], bitneeds.uint8[sbL] + bitadjust, excess);
         ++sbL;
         excess = allocAdjustedBits(&common->bits.uint8[sbR], bitneeds.uint8[sbR] + bitadjust, excess);
         ++sbR;
     }
+
     sbL = 0;
     sbR = nrof_subbands;
+
     while (excess) {
         excess = allocExcessBits(&common->bits.uint8[sbL], excess);
         ++sbL;
+
         if (!excess) {
             break;
         }
+
         excess = allocExcessBits(&common->bits.uint8[sbR], excess);
         ++sbR;
     }
-
 }
 
 static const BIT_ALLOC balloc[] = {
-    monoBitAllocation,    /* SBC_MONO */
-    dualBitAllocation,    /* SBC_DUAL_CHANNEL */
-    stereoBitAllocation,  /* SBC_STEREO */
-    stereoBitAllocation   /* SBC_JOINT_STEREO */
+    monoBitAllocation,   /* SBC_MONO */
+    dualBitAllocation,   /* SBC_DUAL_CHANNEL */
+    stereoBitAllocation, /* SBC_STEREO */
+    stereoBitAllocation  /* SBC_JOINT_STEREO */
 };
-
 
 PRIVATE void OI_SBC_ComputeBitAllocation(OI_CODEC_SBC_COMMON_CONTEXT *common)
 {
@@ -144,10 +147,12 @@ OI_UINT16 OI_CODEC_SBC_CalculateBitpool(OI_CODEC_SBC_FRAME_INFO *frame,
         } else {
             hdr = 8 * nrof_subbands;
         }
+
         if (frame->mode == SBC_DUAL_CHANNEL) {
             nrof_blocks *= 2;
         }
     }
+
     bits = 8 * (frameLen - SBC_HEADER_LEN) - hdr;
     return DIVIDE(bits, nrof_blocks);
 }
@@ -156,7 +161,6 @@ OI_UINT16 OI_CODEC_SBC_CalculatePcmBytes(OI_CODEC_SBC_COMMON_CONTEXT *common)
 {
     return sizeof(OI_INT16) * common->pcmStride * common->frameInfo.nrof_subbands * common->frameInfo.nrof_blocks;
 }
-
 
 OI_UINT16 OI_CODEC_SBC_CalculateFramelen(OI_CODEC_SBC_FRAME_INFO *frame)
 {

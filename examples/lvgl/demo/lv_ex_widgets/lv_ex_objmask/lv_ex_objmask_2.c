@@ -1,17 +1,16 @@
 #include "../../../lv_examples.h"
 #if LV_USE_OBJMASK
 
-#define MASK_WIDTH 100
+#define MASK_WIDTH  100
 #define MASK_HEIGHT 50
 
 void lv_ex_objmask_2(void)
 {
-
     /* Create the mask of a text by drawing it to a canvas*/
     static lv_opa_t mask_map[MASK_WIDTH * MASK_HEIGHT];
 
     /*Create a "8 bit alpha" canvas and clear it*/
-    lv_obj_t * canvas = lv_canvas_create(lv_scr_act(), NULL);
+    lv_obj_t *canvas = lv_canvas_create(lv_scr_act(), NULL);
     lv_canvas_set_buffer(canvas, mask_map, MASK_WIDTH, MASK_HEIGHT, LV_IMG_CF_ALPHA_8BIT);
     lv_canvas_fill_bg(canvas, LV_COLOR_BLACK, LV_OPA_TRANSP);
 
@@ -25,7 +24,7 @@ void lv_ex_objmask_2(void)
     lv_obj_del(canvas);
 
     /*Create an object mask which will use the created mask*/
-    lv_obj_t * om = lv_objmask_create(lv_scr_act(), NULL);
+    lv_obj_t *om = lv_objmask_create(lv_scr_act(), NULL);
     lv_obj_set_size(om, MASK_WIDTH, MASK_HEIGHT);
     lv_obj_align(om, NULL, LV_ALIGN_CENTER, 0, 0);
 
@@ -49,11 +48,10 @@ void lv_ex_objmask_2(void)
 
     /* Create and object with the gradient style on the object mask.
      * The text will be masked from the gradient*/
-    lv_obj_t * bg = lv_obj_create(om, NULL);
+    lv_obj_t *bg = lv_obj_create(om, NULL);
     lv_obj_reset_style_list(bg, LV_OBJ_PART_MAIN);
     lv_obj_add_style(bg, LV_OBJ_PART_MAIN, &style_bg);
     lv_obj_set_size(bg, MASK_WIDTH, MASK_HEIGHT);
-
 }
 
 #endif

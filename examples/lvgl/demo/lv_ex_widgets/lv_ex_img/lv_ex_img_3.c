@@ -6,10 +6,10 @@ LV_IMG_DECLARE(img_cogwheel_argb);
 void lv_ex_img_3(void)
 {
     /* Now create the actual image */
-    lv_obj_t * img = lv_img_create(lv_scr_act(), NULL);
+    lv_obj_t *img = lv_img_create(lv_scr_act(), NULL);
     lv_img_set_src(img, &img_cogwheel_argb);
     lv_obj_align(img, NULL, LV_ALIGN_CENTER, 50, 50);
-    lv_img_set_pivot(img, 0, 0);    /*Rotate around the top left corner*/
+    lv_img_set_pivot(img, 0, 0); /*Rotate around the top left corner*/
 
     lv_anim_t a;
     lv_anim_init(&a);
@@ -24,7 +24,6 @@ void lv_ex_img_3(void)
     lv_anim_set_values(&a, 128, 400);
     lv_anim_set_playback_time(&a, 1000);
     lv_anim_start(&a);
-
 }
 
 #endif

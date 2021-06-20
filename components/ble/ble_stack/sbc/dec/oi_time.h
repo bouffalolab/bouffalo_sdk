@@ -40,7 +40,6 @@
 
 #include "oi_stddefs.h"
 
-
 /** \addtogroup Misc Miscellaneous APIs */
 /**@{*/
 
@@ -48,47 +47,45 @@
 extern "C" {
 #endif
 
-
-
 /**
  * Within the core stack timeouts are specified in intervals of tenths of seconds
  */
 
 typedef OI_UINT16 OI_INTERVAL;
-#define OI_INTERVALS_PER_SECOND     10
-#define MSECS_PER_OI_INTERVAL       (1000 / OI_INTERVALS_PER_SECOND)
+#define OI_INTERVALS_PER_SECOND 10
+#define MSECS_PER_OI_INTERVAL   (1000 / OI_INTERVALS_PER_SECOND)
 
 /** maximum interval (54 min 36.7 sec) */
-#define OI_MAX_INTERVAL   0x7fff
-
+#define OI_MAX_INTERVAL 0x7fff
 
 /**
  * Macro to convert seconds to OI_INTERVAL time units
  */
 
-#define OI_SECONDS(n)    ((OI_INTERVAL) ((n) * OI_INTERVALS_PER_SECOND))
+#define OI_SECONDS(n) ((OI_INTERVAL)((n)*OI_INTERVALS_PER_SECOND))
 
 /**
  * Macro to convert milliseconds to OI_INTERVAL time units (Rounded Up)
  */
 
-#define OI_MSECONDS(n)   ((OI_INTERVAL) ((n + MSECS_PER_OI_INTERVAL - 1) / MSECS_PER_OI_INTERVAL))
+#define OI_MSECONDS(n) ((OI_INTERVAL)((n + MSECS_PER_OI_INTERVAL - 1) / MSECS_PER_OI_INTERVAL))
 
 /**
  * Macro to convert minutes to OI_INTERVAL time units
  */
 
-#define OI_MINUTES(n)    ((OI_INTERVAL) ((n) * OI_SECONDS(60)))
+#define OI_MINUTES(n) ((OI_INTERVAL)((n)*OI_SECONDS(60)))
 
 /** Convert an OI_INTERVAL to milliseconds. */
-#define OI_INTERVAL_TO_MILLISECONDS(i) ((i) * MSECS_PER_OI_INTERVAL)
+#define OI_INTERVAL_TO_MILLISECONDS(i) ((i)*MSECS_PER_OI_INTERVAL)
 
 /**
  * The stack depends on relative not absolute time. Any mapping between the
  * stack's real-time clock and absolute time and date is implementation-dependent.
  */
 
-typedef struct {
+typedef struct
+{
     OI_INT32 seconds;
     OI_INT16 mseconds;
 } OI_TIME;
@@ -101,7 +98,6 @@ typedef struct {
  * @return the time in milliseconds
  */
 OI_UINT32 OI_Time_ToMS(OI_TIME *t);
-
 
 /**
  * This function compares two time values.
@@ -121,7 +117,6 @@ OI_UINT32 OI_Time_ToMS(OI_TIME *t);
 OI_INT16 OI_Time_Compare(OI_TIME *T1,
                          OI_TIME *T2);
 
-
 /**
  * This function returns the interval between two times to a granularity of 0.1 seconds.
  *
@@ -137,8 +132,6 @@ OI_INT16 OI_Time_Compare(OI_TIME *T1,
 
 OI_INTERVAL OI_Time_Interval(OI_TIME *Sooner,
                              OI_TIME *Later);
-
-
 
 /**
  * This function returns the interval between two times to a granularity of milliseconds.
@@ -156,8 +149,6 @@ OI_INTERVAL OI_Time_Interval(OI_TIME *Sooner,
 OI_UINT32 OI_Time_IntervalMsecs(OI_TIME *Sooner,
                                 OI_TIME *Later);
 
-
-
 /**
  * This function answers the question, Have we reached or gone past the target time?
  *
@@ -167,22 +158,21 @@ OI_UINT32 OI_Time_IntervalMsecs(OI_TIME *Sooner,
  *          FALSE means target time is still some time in the future
  */
 
-OI_BOOL  OI_Time_NowReachedTime(OI_TIME *pTargetTime);
+OI_BOOL OI_Time_NowReachedTime(OI_TIME *pTargetTime);
 
 /**
  *  Convert seconds to the Link Manager 1.28-second units
  *  Approximate by using 1.25 conversion factor.
  */
 
-#define OI_SECONDS_TO_LM_TIME_UNITS(lmUnits) ((lmUnits)<4?(lmUnits):(lmUnits)-((lmUnits)>>2))
-
+#define OI_SECONDS_TO_LM_TIME_UNITS(lmUnits) ((lmUnits) < 4 ? (lmUnits) : (lmUnits) - ((lmUnits) >> 2))
 
 /**
  *  Convert Link Manager 1.28-second units to seconds.
  *  Approximate by using 1.25 conversion factor.
  */
 
-#define OI_LM_TIME_UNITS_TO_SECONDS(lmUnits) ((lmUnits) + ((lmUnits)>>2))
+#define OI_LM_TIME_UNITS_TO_SECONDS(lmUnits) ((lmUnits) + ((lmUnits) >> 2))
 
 #ifdef __cplusplus
 }

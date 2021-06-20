@@ -10,7 +10,7 @@
 
 char *strtok(char *s, const char *delim)
 {
-	static char *holder;
+    static char *holder;
 
-	return strtok_r(s, delim, &holder);
+    return strtok_r(s, delim, &holder);
 }

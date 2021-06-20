@@ -1,24 +1,24 @@
 /**
  * @file main.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 #include "hal_usb.h"
@@ -29,43 +29,41 @@
 #include "hal_gpio.h"
 #include "bsp_image_sensor.h"
 
-#define MJPEG_ENDADDR                  (0x42030000)
-#define CAMERA_RESOLUTION_X            (640)
-#define CAMERA_RESOLUTION_Y            (480)
-#define CAMERA_FRAME_SIZE              (CAMERA_RESOLUTION_X * CAMERA_RESOLUTION_Y * 2)
-#define CAMERA_WRITE_ADDR              (0x42017C00)
-#define MJPEG_READ_ADDR                CAMERA_WRITE_ADDR 
-#define MJPEG_READ_SIZE                2
-#define YUV_USE                        1
+#define MJPEG_ENDADDR       (0x42030000)
+#define CAMERA_RESOLUTION_X (640)
+#define CAMERA_RESOLUTION_Y (480)
+#define CAMERA_FRAME_SIZE   (CAMERA_RESOLUTION_X * CAMERA_RESOLUTION_Y * 2)
+#define CAMERA_WRITE_ADDR   (0x42017C00)
+#define MJPEG_READ_ADDR     CAMERA_WRITE_ADDR
+#define MJPEG_READ_SIZE     2
+#define YUV_USE             1
 
-#if(YUV_USE == 1)
-#define CAMERA_BUFFER_SIZE_WHEN_MJPEG  (CAMERA_RESOLUTION_X * 2 * 8 * MJPEG_READ_SIZE)
+#if (YUV_USE == 1)
+#define CAMERA_BUFFER_SIZE_WHEN_MJPEG (CAMERA_RESOLUTION_X * 2 * 8 * MJPEG_READ_SIZE)
 #else
-#define CAMERA_BUFFER_SIZE_WHEN_MJPEG  (CAMERA_RESOLUTION_X * 8 * MJPEG_READ_SIZE)
+#define CAMERA_BUFFER_SIZE_WHEN_MJPEG (CAMERA_RESOLUTION_X * 8 * MJPEG_READ_SIZE)
 #endif
 
-#define MJPEG_WRITE_ADDR               (CAMERA_WRITE_ADDR + CAMERA_BUFFER_SIZE_WHEN_MJPEG)
-#define MJPEG_WRITE_SIZE               (MJPEG_ENDADDR - MJPEG_WRITE_ADDR - CAMERA_BUFFER_SIZE_WHEN_MJPEG)
+#define MJPEG_WRITE_ADDR (CAMERA_WRITE_ADDR + CAMERA_BUFFER_SIZE_WHEN_MJPEG)
+#define MJPEG_WRITE_SIZE (MJPEG_ENDADDR - MJPEG_WRITE_ADDR - CAMERA_BUFFER_SIZE_WHEN_MJPEG)
 
-static mjpeg_device_t mjpeg_cfg =
-{
+static mjpeg_device_t mjpeg_cfg = {
     .quality = 15,
     .yuv_format = MJPEG_YUV_FORMAT_YUV422_INTERLEAVE,
     .write_buffer_addr = MJPEG_WRITE_ADDR,
     .write_buffer_size = MJPEG_WRITE_SIZE,
-    .read_buffer_addr  = MJPEG_READ_ADDR,
-    .read_buffer_size  = MJPEG_READ_SIZE,
-    .resolution_x      = CAMERA_RESOLUTION_X,
-    .resolution_y      = CAMERA_RESOLUTION_Y,
-    
-    .packet_cut_mode   = 0,
+    .read_buffer_addr = MJPEG_READ_ADDR,
+    .read_buffer_size = MJPEG_READ_SIZE,
+    .resolution_x = CAMERA_RESOLUTION_X,
+    .resolution_y = CAMERA_RESOLUTION_Y,
+
+    .packet_cut_mode = 0,
 };
 
-static cam_device_t camera_cfg =
-{
+static cam_device_t camera_cfg = {
     .software_mode = CAM_AUTO_MODE,
-    .frame_mode    = CAM_FRAME_INTERLEAVE_MODE,
-    .yuv_format    = CAM_YUV_FORMAT_YUV422,
+    .frame_mode = CAM_FRAME_INTERLEAVE_MODE,
+    .yuv_format = CAM_YUV_FORMAT_YUV422,
     .cam_write_ram_addr = CAMERA_WRITE_ADDR,
     .cam_write_ram_size = CAMERA_BUFFER_SIZE_WHEN_MJPEG,
     .cam_frame_size = CAMERA_FRAME_SIZE,
@@ -75,22 +73,21 @@ static cam_device_t camera_cfg =
     .cam_frame_size1 = 0,
 };
 
-#define CDC_IN_EP 0x82
+#define CDC_IN_EP  0x82
 #define CDC_OUT_EP 0x01
 #define CDC_INT_EP 0x83
 
-#define USBD_VID     0xFFFF
-#define USBD_PID     0xFFFF
-#define USBD_MAX_POWER 100
-#define USBD_LANGID_STRING     1033
+#define USBD_VID           0xFFFF
+#define USBD_PID           0xFFFF
+#define USBD_MAX_POWER     100
+#define USBD_LANGID_STRING 1033
 
 #define USB_CONFIG_SIZE (9 + CDC_ACM_DESCRIPTOR_LEN)
 
-USB_DESC_SECTION const uint8_t cdc_descriptor[] =
-{
-    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0,0x02,0x02,0x01,USBD_VID,USBD_PID,0x0100,0x01),
-    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE,0x02,0x01,USB_CONFIG_BUS_POWERED,USBD_MAX_POWER),
-    CDC_ACM_DESCRIPTOR_INIT(0x00,CDC_INT_EP,CDC_OUT_EP,CDC_IN_EP,0x02), 
+USB_DESC_SECTION const uint8_t cdc_descriptor[] = {
+    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0x02, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
+    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, 0x02, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
+    CDC_ACM_DESCRIPTOR_INIT(0x00, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, 0x02),
     ///////////////////////////////////////
     /// string0 descriptor
     ///////////////////////////////////////
@@ -168,7 +165,7 @@ ATTR_DTCM_SECTION uint8_t frame_tail[] = "pictureend";
 uint32_t picture[256];
 
 bool zlp_flag = false;
-uint32_t actual_read_length = 1024*1024;
+uint32_t actual_read_length = 1024 * 1024;
 uint32_t total_recv_length = 0;
 uint8_t out_buffer[64];
 void CamUsbSend(uint8_t *pic, uint32_t len);
@@ -177,12 +174,13 @@ void usbd_cdc_acm_bulk_out(uint8_t ep)
 {
     static uint32_t out = 0;
     MSG("out:%d\r\n", out++);
-    if (usbd_ep_read(ep, out_buffer, 64, &actual_read_length) < 0)
-    {
+
+    if (usbd_ep_read(ep, out_buffer, 64, &actual_read_length) < 0) {
         USBD_LOG_DBG("Read DATA Packet failed\r\n");
         usbd_ep_set_stall(ep);
         return;
     }
+
     usbd_ep_read(ep, NULL, 0, NULL);
 }
 
@@ -209,35 +207,29 @@ usbd_class_t cdc_class;
 usbd_interface_t cdc_cmd_intf;
 usbd_interface_t cdc_data_intf;
 
-usbd_endpoint_t cdc_out_ep = 
-{
+usbd_endpoint_t cdc_out_ep = {
     .ep_addr = CDC_OUT_EP,
     .ep_cb = usbd_cdc_acm_bulk_out
 };
 
-usbd_endpoint_t cdc_in_ep = 
-{
+usbd_endpoint_t cdc_in_ep = {
     .ep_addr = CDC_IN_EP,
     .ep_cb = usbd_cdc_acm_bulk_in
 };
 
-
 struct device *usb_fs;
-extern struct device* usb_dc_init(void);
-void CamUsbSend(uint8_t * pic, uint32_t len)
+extern struct device *usb_dc_init(void);
+void CamUsbSend(uint8_t *pic, uint32_t len)
 {
-    while(len >= 64)
-    {
+    while (len >= 64) {
         usbd_ep_write(0x82, pic, 64, NULL);
         pic += 64;
         len -= 64;
     }
-    if(len > 0)
-    {
+
+    if (len > 0) {
         usbd_ep_write(0x82, pic, len, NULL);
-    }
-    else
-    {
+    } else {
         usbd_ep_write(0x82, NULL, 0, NULL);
     }
 }
@@ -251,17 +243,17 @@ int main(void)
     bflb_platform_init(0);
     usbd_desc_register(cdc_descriptor);
 
-    usbd_cdc_add_acm_interface(&cdc_class,&cdc_cmd_intf);
-    usbd_cdc_add_acm_interface(&cdc_class,&cdc_data_intf);
-    usbd_interface_add_endpoint(&cdc_data_intf,&cdc_out_ep);
-    usbd_interface_add_endpoint(&cdc_data_intf,&cdc_in_ep);
-    
-    memset(out_buffer,'a',64);
+    usbd_cdc_add_acm_interface(&cdc_class, &cdc_cmd_intf);
+    usbd_cdc_add_acm_interface(&cdc_class, &cdc_data_intf);
+    usbd_interface_add_endpoint(&cdc_data_intf, &cdc_out_ep);
+    usbd_interface_add_endpoint(&cdc_data_intf, &cdc_in_ep);
+
+    memset(out_buffer, 'a', 64);
     usb_fs = usb_dc_init();
-    if (usb_fs)
-    {
+
+    if (usb_fs) {
         device_open(usb_fs, 0);
-        device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP2_DATA_IN_IT|USB_EP1_DATA_OUT_IT));
+        device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP2_DATA_IN_IT | USB_EP1_DATA_OUT_IT));
     }
 
     trigger_init();
@@ -269,46 +261,46 @@ int main(void)
 
     MSG("MJPEG CASE IN INTERLEAVE MODE:\r\n");
 
-    if(SUCCESS != image_sensor_init(ENABLE,&camera_cfg,&mjpeg_cfg))
-    {
+    if (SUCCESS != image_sensor_init(ENABLE, &camera_cfg, &mjpeg_cfg)) {
         MSG("Camera Init error!\n");
         BL_CASE_FAIL;
     }
+
     MSG("Camera Init success!\n");
     mjpeg_start();
     cam_start();
 
-    while (1)
-    {
+    while (1) {
         static uint8_t aaa = 0;
-        while (SUCCESS != mjpeg_get_one_frame(&picture, &length, &q))
-        {
+
+        while (SUCCESS != mjpeg_get_one_frame(&picture, &length, &q)) {
         }
-        if(flag == 0)
-        {
+
+        if (flag == 0) {
             mjpeg_drop_one_frame();
             continue;
         }
+
         flag = 0;
-        if(++aaa < 2)
-        {
+
+        if (++aaa < 2) {
             mjpeg_drop_one_frame();
             continue;
         }
+
         aaa = 0;
         gpio_write(GPIO_PIN_22, 1);
         mjpeg_drop_one_frame();
         CamUsbSend(frame_head, sizeof(frame_head));
-        if((uint32_t)(picture + length) >= MJPEG_ENDADDR)
-        {
+
+        if ((uint32_t)(picture + length) >= MJPEG_ENDADDR) {
             uint32_t len = (uint32_t)(picture + length) - MJPEG_ENDADDR;
             CamUsbSend(picture, MJPEG_ENDADDR - (uint32_t)picture);
             CamUsbSend((uint8_t *)MJPEG_WRITE_ADDR, len);
-        }
-        else
-        {
+        } else {
             CamUsbSend(picture, length);
         }
+
         CamUsbSend(frame_tail, sizeof(frame_tail));
         gpio_write(GPIO_PIN_22, 0);
     }

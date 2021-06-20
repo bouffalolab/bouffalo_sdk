@@ -2,14 +2,14 @@
 #define BLE_LIB_API_H_
 
 #include <stdbool.h>
-#include <stdint.h> 
+#include <stdint.h>
 
 void ble_controller_init(uint8_t task_priority);
 void ble_controller_deinit(void);
 #if defined(CFG_BT_RESET)
 void ble_controller_reset(void);
 #endif
-char * ble_controller_get_lib_ver(void);
+char *ble_controller_get_lib_ver(void);
 
 // return sleep duration, in unit of 1/32768s
 // if 0, means not allow sleep
@@ -20,55 +20,49 @@ bool ble_controller_sleep_is_ongoing(void);
 void ble_controller_set_tx_pwr(int ble_tx_power);
 void ble_rf_set_tx_channel(uint16_t tx_channel);
 
-
 #if defined(CONFIG_BLE_MFG)
-enum
-{
-    BLE_TEST_TX                  = 0x00,
+enum {
+    BLE_TEST_TX = 0x00,
     BLE_TEST_RX,
     BLE_TEST_RXTX,
     BLE_TEST_END
 };
 
 ///HCI LE Receiver Test Command parameters structure
-struct le_rx_test_cmd
-{
+struct le_rx_test_cmd {
     ///RX frequency for Rx test
-    uint8_t        rx_freq;
+    uint8_t rx_freq;
 };
 
 ///HCI LE Transmitter Test Command parameters structure
-struct le_tx_test_cmd
-{
+struct le_tx_test_cmd {
     ///TX frequency for Tx test
-    uint8_t        tx_freq;
+    uint8_t tx_freq;
     ///TX test data length
-    uint8_t        test_data_len;
+    uint8_t test_data_len;
     ///TX test payload type - see enum
-    uint8_t        pk_payload_type;
+    uint8_t pk_payload_type;
 };
 
-struct le_enhanced_rx_test_cmd
-{
+struct le_enhanced_rx_test_cmd {
     ///RX frequency for Rx test
-    uint8_t        rx_freq;
+    uint8_t rx_freq;
     ///RX PHY for Rx test
-    uint8_t        rx_phy;
+    uint8_t rx_phy;
     ///Modulation index: Assume transmitter will have a standard or stable modulation index
-    uint8_t        modulation_index;
+    uint8_t modulation_index;
 };
 
 ///HCI LE Enhanced Transmitter Test Command parameters structure
-struct le_enhanced_tx_test_cmd
-{
+struct le_enhanced_tx_test_cmd {
     ///TX frequency for Tx test
-    uint8_t        tx_freq;
+    uint8_t tx_freq;
     ///TX test data length
-    uint8_t        test_data_len;
+    uint8_t test_data_len;
     ///TX test payload type - see enum
-    uint8_t        pk_payload_type;
+    uint8_t pk_payload_type;
     ///TX PHY for Rx test
-    uint8_t        tx_phy;
+    uint8_t tx_phy;
 };
 
 int le_rx_test_cmd_handler(uint16_t src_id, void *param, bool from_hci);

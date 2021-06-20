@@ -14,32 +14,32 @@ extern "C" {
  * @{
  */
 /**< maximum packet size (MPS) for EP 0 */
-#define USB_CTRL_EP_MPS	64   
+#define USB_CTRL_EP_MPS 64
 /**
  * USB endpoint Transfer Type mask.
  */
-#define USBD_EP_TYPE_CTRL                                 0
-#define USBD_EP_TYPE_ISOC                                 1
-#define USBD_EP_TYPE_BULK                                 2
-#define USBD_EP_TYPE_INTR                                 3
-#define USBD_EP_TYPE_MASK                                 3
+#define USBD_EP_TYPE_CTRL 0
+#define USBD_EP_TYPE_ISOC 1
+#define USBD_EP_TYPE_BULK 2
+#define USBD_EP_TYPE_INTR 3
+#define USBD_EP_TYPE_MASK 3
 
 /* Default USB control EP, always 0 and 0x80 */
-#define USB_CONTROL_OUT_EP0         0
-#define USB_CONTROL_IN_EP0          0x80
+#define USB_CONTROL_OUT_EP0 0
+#define USB_CONTROL_IN_EP0  0x80
 
 /**
  * @brief USB Endpoint Transfer Type
  */
 enum usb_dc_ep_transfer_type {
-	/** Control type endpoint */
-	USB_DC_EP_CONTROL = 0,
-	/** Isochronous type endpoint */
-	USB_DC_EP_ISOCHRONOUS,
-	/** Bulk type endpoint */
-	USB_DC_EP_BULK,
-	/** Interrupt type endpoint  */
-	USB_DC_EP_INTERRUPT
+    /** Control type endpoint */
+    USB_DC_EP_CONTROL = 0,
+    /** Isochronous type endpoint */
+    USB_DC_EP_ISOCHRONOUS,
+    /** Bulk type endpoint */
+    USB_DC_EP_BULK,
+    /** Interrupt type endpoint  */
+    USB_DC_EP_INTERRUPT
 };
 
 /**
@@ -48,18 +48,18 @@ enum usb_dc_ep_transfer_type {
  * Structure containing the USB endpoint configuration.
  */
 struct usbd_endpoint_cfg {
-	/** The number associated with the EP in the device
-	 *  configuration structure
-	 *       IN  EP = 0x80 | \<endpoint number\>
-	 *       OUT EP = 0x00 | \<endpoint number\>
-	 */
-	uint8_t ep_addr;
-	/** Endpoint max packet size */
-	uint16_t ep_mps;
-	/** Endpoint Transfer Type.
-	 * May be Bulk, Interrupt, Control or Isochronous
-	 */
-	enum usb_dc_ep_transfer_type ep_type;
+    /** The number associated with the EP in the device
+     *  configuration structure
+     *       IN  EP = 0x80 | \<endpoint number\>
+     *       OUT EP = 0x00 | \<endpoint number\>
+     */
+    uint8_t ep_addr;
+    /** Endpoint max packet size */
+    uint16_t ep_mps;
+    /** Endpoint Transfer Type.
+     * May be Bulk, Interrupt, Control or Isochronous
+     */
+    enum usb_dc_ep_transfer_type ep_type;
 };
 
 /**
@@ -166,7 +166,7 @@ int usbd_ep_write(const uint8_t ep, const uint8_t *data, uint32_t data_len, uint
  *
  * @return 0 on success, negative errno code on fail.
  */
-int usbd_ep_read(const uint8_t ep, uint8_t *data, uint32_t max_data_len,uint32_t *read_bytes);
+int usbd_ep_read(const uint8_t ep, uint8_t *data, uint32_t max_data_len, uint32_t *read_bytes);
 
 /**
  * @}
@@ -177,4 +177,3 @@ int usbd_ep_read(const uint8_t ep, uint8_t *data, uint32_t max_data_len,uint32_t
 #endif
 
 #endif
-

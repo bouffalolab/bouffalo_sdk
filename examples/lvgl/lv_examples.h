@@ -21,7 +21,7 @@ extern "C" {
 
 #if defined(LV_EX_CONF_PATH)
 #define __LV_TO_STR_AUX(x) #x
-#define __LV_TO_STR(x) __LV_TO_STR_AUX(x)
+#define __LV_TO_STR(x)     __LV_TO_STR_AUX(x)
 #include __LV_TO_STR(LV_EX_CONF_PATH)
 #undef __LV_TO_STR_AUX
 #undef __LV_TO_STR
@@ -57,11 +57,9 @@ extern "C" {
  * GLOBAL PROTOTYPES
  **********************/
 
-
 /**********************
  *      MACROS
  **********************/
-
 
 #ifdef __cplusplus
 } /* extern "C" */

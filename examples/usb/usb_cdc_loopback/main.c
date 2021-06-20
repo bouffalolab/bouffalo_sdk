@@ -1,45 +1,44 @@
 /**
  * @file main.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_usb.h"
 #include "usbd_core.h"
 #include "usbd_cdc.h"
 
-#define CDC_IN_EP 0x82
+#define CDC_IN_EP  0x82
 #define CDC_OUT_EP 0x01
 #define CDC_INT_EP 0x83
 
-#define USBD_VID     0xFFFF
-#define USBD_PID     0xFFFF
-#define USBD_MAX_POWER 100
-#define USBD_LANGID_STRING     1033
+#define USBD_VID           0xFFFF
+#define USBD_PID           0xFFFF
+#define USBD_MAX_POWER     100
+#define USBD_LANGID_STRING 1033
 
 #define USB_CONFIG_SIZE (9 + CDC_ACM_DESCRIPTOR_LEN)
 
-USB_DESC_SECTION const uint8_t cdc_descriptor[] =
-{
-    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0,0x02,0x02,0x01,USBD_VID,USBD_PID,0x0100,0x01),
-    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE,0x02,0x01,USB_CONFIG_BUS_POWERED,USBD_MAX_POWER),
-    CDC_ACM_DESCRIPTOR_INIT(0x00,CDC_INT_EP,CDC_OUT_EP,CDC_IN_EP,0x02), 
+USB_DESC_SECTION const uint8_t cdc_descriptor[] = {
+    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0x02, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
+    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, 0x02, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
+    CDC_ACM_DESCRIPTOR_INIT(0x00, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, 0x02),
     ///////////////////////////////////////
     /// string0 descriptor
     ///////////////////////////////////////
@@ -121,47 +120,43 @@ uint8_t out_buffer[4096];
 
 void usbd_cdc_acm_bulk_out(uint8_t ep)
 {
-    uint32_t actual_read_length = 0;    
-    if (usbd_ep_read(ep, &out_buffer[rx_pos], 64, &actual_read_length) < 0)
-    {
+    uint32_t actual_read_length = 0;
+
+    if (usbd_ep_read(ep, &out_buffer[rx_pos], 64, &actual_read_length) < 0) {
         USBD_LOG_DBG("Read DATA Packet failed\r\n");
         usbd_ep_set_stall(ep);
         return;
     }
-	usbd_ep_read(ep,NULL,0,NULL);
+
+    usbd_ep_read(ep, NULL, 0, NULL);
     rx_pos += actual_read_length;
     total_recv_length += actual_read_length;
     actual_write_length = total_recv_length;
 
-    if(rx_pos > 4096)
+    if (rx_pos > 4096) {
         rx_pos = 0;
+    }
 }
 
 void usbd_cdc_acm_bulk_in(uint8_t ep)
 {
-    if ((zlp_flag == false) && actual_write_length)
-    {
-        if(actual_write_length > 64)
-        {
-            usbd_ep_write(ep, (uint8_t*)&out_buffer[tx_pos], 64, NULL);
+    if ((zlp_flag == false) && actual_write_length) {
+        if (actual_write_length > 64) {
+            usbd_ep_write(ep, (uint8_t *)&out_buffer[tx_pos], 64, NULL);
             actual_write_length -= 64;
-            tx_pos+=64;
-        }
-        else
-        {
-            usbd_ep_write(ep, (uint8_t*)&out_buffer[tx_pos], actual_write_length, NULL);
+            tx_pos += 64;
+        } else {
+            usbd_ep_write(ep, (uint8_t *)&out_buffer[tx_pos], actual_write_length, NULL);
             actual_write_length = 0;
             tx_pos = 0;
             total_recv_length = 0;
         }
-        if (!actual_write_length && !(total_recv_length % 64))
-        {
+
+        if (!actual_write_length && !(total_recv_length % 64)) {
             MSG("zlp\r\n");
             zlp_flag = true;
         }
-    }
-    else if (zlp_flag)
-    {
+    } else if (zlp_flag) {
         usbd_ep_write(ep, NULL, 0, NULL);
         zlp_flag = false;
     }
@@ -171,14 +166,12 @@ usbd_class_t cdc_class;
 usbd_interface_t cdc_cmd_intf;
 usbd_interface_t cdc_data_intf;
 
-usbd_endpoint_t cdc_out_ep = 
-{
+usbd_endpoint_t cdc_out_ep = {
     .ep_addr = CDC_OUT_EP,
     .ep_cb = usbd_cdc_acm_bulk_out
 };
 
-usbd_endpoint_t cdc_in_ep = 
-{
+usbd_endpoint_t cdc_in_ep = {
     .ep_addr = CDC_IN_EP,
     .ep_cb = usbd_cdc_acm_bulk_in
 };
@@ -187,34 +180,37 @@ usbd_endpoint_t cdc_in_ep =
 
 struct device *usb_fs;
 
-extern struct device* usb_dc_init(void);
+extern struct device *usb_dc_init(void);
 int main(void)
 {
     bflb_platform_init(0);
 
     usbd_desc_register(cdc_descriptor);
 
-    usbd_cdc_add_acm_interface(&cdc_class,&cdc_cmd_intf);
-    usbd_cdc_add_acm_interface(&cdc_class,&cdc_data_intf);
-    usbd_interface_add_endpoint(&cdc_data_intf,&cdc_out_ep);
-    usbd_interface_add_endpoint(&cdc_data_intf,&cdc_in_ep);
+    usbd_cdc_add_acm_interface(&cdc_class, &cdc_cmd_intf);
+    usbd_cdc_add_acm_interface(&cdc_class, &cdc_data_intf);
+    usbd_interface_add_endpoint(&cdc_data_intf, &cdc_out_ep);
+    usbd_interface_add_endpoint(&cdc_data_intf, &cdc_in_ep);
 
     usb_fs = usb_dc_init();
-    if (usb_fs)
-    {
+
+    if (usb_fs) {
 #ifndef USING_POLL_RTX
-        device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP1_DATA_OUT_IT|USB_EP2_DATA_IN_IT));
+        device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP1_DATA_OUT_IT | USB_EP2_DATA_IN_IT));
 #endif
     }
-    while(!usb_device_is_configured());
-    while (1)
-    {
+
+    while (!usb_device_is_configured()) {
+    }
+
+    while (1) {
 #ifdef USING_POLL_RTX
-        if(usb_device_is_configured())
-        {
-            device_read(usb_fs,0x01,out_buffer,64);
-            device_write(usb_fs,0x82,out_buffer,64);
+
+        if (usb_device_is_configured()) {
+            device_read(usb_fs, 0x01, out_buffer, 64);
+            device_write(usb_fs, 0x82, out_buffer, 64);
         }
+
 #endif
     }
 }

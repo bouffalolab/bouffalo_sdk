@@ -23,7 +23,8 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-typedef struct {
+typedef struct
+{
     lv_style_int_t radius;
 
     /*Background*/
@@ -41,7 +42,7 @@ typedef struct {
     lv_style_int_t border_side;
     lv_opa_t border_opa;
     lv_blend_mode_t border_blend_mode;
-    uint8_t border_post : 1;        /*There is a border it will be drawn later. */
+    uint8_t border_post : 1; /*There is a border it will be drawn later. */
 
     /*Outline*/
     lv_color_t outline_color;
@@ -60,8 +61,8 @@ typedef struct {
     lv_blend_mode_t shadow_blend_mode;
 
     /*Pattern*/
-    const void * pattern_image;
-    const lv_font_t * pattern_font;
+    const void *pattern_image;
+    const lv_font_t *pattern_font;
     lv_color_t pattern_recolor;
     lv_opa_t pattern_opa;
     lv_opa_t pattern_recolor_opa;
@@ -69,8 +70,8 @@ typedef struct {
     lv_blend_mode_t pattern_blend_mode;
 
     /*Value*/
-    const char * value_str;
-    const lv_font_t * value_font;
+    const char *value_str;
+    const lv_font_t *value_font;
     lv_opa_t value_opa;
     lv_color_t value_color;
     lv_style_int_t value_ofs_x;
@@ -85,7 +86,7 @@ typedef struct {
  * GLOBAL PROTOTYPES
  **********************/
 
-LV_ATTRIBUTE_FAST_MEM void lv_draw_rect_dsc_init(lv_draw_rect_dsc_t * dsc);
+LV_ATTRIBUTE_FAST_MEM void lv_draw_rect_dsc_init(lv_draw_rect_dsc_t *dsc);
 
 //! @endcond
 
@@ -95,7 +96,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_rect_dsc_init(lv_draw_rect_dsc_t * dsc);
  * @param mask the rectangle will be drawn only in this mask
  * @param dsc pointer to an initialized `lv_draw_rect_dsc_t` variable
  */
-void lv_draw_rect(const lv_area_t * coords, const lv_area_t * mask, const lv_draw_rect_dsc_t * dsc);
+void lv_draw_rect(const lv_area_t *coords, const lv_area_t *mask, const lv_draw_rect_dsc_t *dsc);
 
 /**
  * Draw a pixel
@@ -103,7 +104,7 @@ void lv_draw_rect(const lv_area_t * coords, const lv_area_t * mask, const lv_dra
  * @param mask the pixel will be drawn only in this mask
  * @param style pointer to a style
  */
-void lv_draw_px(const lv_point_t * point, const lv_area_t * clip_area, const lv_style_t * style);
+void lv_draw_px(const lv_point_t *point, const lv_area_t *clip_area, const lv_style_t *style);
 
 /**********************
  *      MACROS

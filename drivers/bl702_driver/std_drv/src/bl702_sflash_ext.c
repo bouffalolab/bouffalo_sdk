@@ -86,7 +86,7 @@
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Read flash register with read command
  *
  * @param  flashCfg: Serial flash parameter configuration pointer
@@ -98,37 +98,38 @@
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION SFlash_Read_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg,uint8_t readRegCmd,uint8_t *regValue,uint8_t regLen)
+BL_Err_Type ATTR_TCM_SECTION SFlash_Read_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t readRegCmd, uint8_t *regValue, uint8_t regLen)
 {
-    uint8_t * const flashCtrlBuf=(uint8_t *)SF_CTRL_BUF_BASE;
+    uint8_t *const flashCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
     SF_Ctrl_Cmd_Cfg_Type flashCmd;
-    uint32_t cnt=0;
+    uint32_t cnt = 0;
 
-    if(((uint32_t)&flashCmd)%4==0){
-        BL702_MemSet4((uint32_t *)&flashCmd,0,sizeof(flashCmd)/4);
-    }else{
-        BL702_MemSet(&flashCmd,0,sizeof(flashCmd));
+    if (((uint32_t)&flashCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&flashCmd, 0, sizeof(flashCmd) / 4);
+    } else {
+        BL702_MemSet(&flashCmd, 0, sizeof(flashCmd));
     }
 
-    flashCmd.cmdBuf[0]=readRegCmd<<24;
-    flashCmd.rwFlag=SF_CTRL_READ;
-    flashCmd.nbData=regLen;
+    flashCmd.cmdBuf[0] = readRegCmd << 24;
+    flashCmd.rwFlag = SF_CTRL_READ;
+    flashCmd.nbData = regLen;
 
     SF_Ctrl_SendCmd(&flashCmd);
 
-    while(SET==SF_Ctrl_GetBusyState()){
+    while (SET == SF_Ctrl_GetBusyState()) {
         BL702_Delay_US(1);
         cnt++;
-        if(cnt>1000){
+
+        if (cnt > 1000) {
             return ERROR;
         }
     }
 
-    BL702_MemCpy(regValue,flashCtrlBuf,regLen);
+    BL702_MemCpy(regValue, flashCtrlBuf, regLen);
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Write flash register with write command
  *
  * @param  flashCfg: Serial flash parameter configuration pointer
@@ -140,30 +141,32 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Read_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashC
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION SFlash_Write_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg,uint8_t writeRegCmd,uint8_t *regValue,uint8_t regLen)
+BL_Err_Type ATTR_TCM_SECTION SFlash_Write_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t writeRegCmd, uint8_t *regValue, uint8_t regLen)
 {
-    uint8_t * const flashCtrlBuf=(uint8_t *)SF_CTRL_BUF_BASE;
-    uint32_t cnt=0;
+    uint8_t *const flashCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
+    uint32_t cnt = 0;
     SF_Ctrl_Cmd_Cfg_Type flashCmd;
 
-    if(((uint32_t)&flashCmd)%4==0){
-        BL702_MemSet4((uint32_t *)&flashCmd,0,sizeof(flashCmd)/4);
-    }else{
-        BL702_MemSet(&flashCmd,0,sizeof(flashCmd));
+    if (((uint32_t)&flashCmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&flashCmd, 0, sizeof(flashCmd) / 4);
+    } else {
+        BL702_MemSet(&flashCmd, 0, sizeof(flashCmd));
     }
-    BL702_MemCpy(flashCtrlBuf,regValue,regLen);
 
-    flashCmd.cmdBuf[0]=writeRegCmd<<24;
-    flashCmd.rwFlag=SF_CTRL_WRITE;
-    flashCmd.nbData=regLen;
+    BL702_MemCpy(flashCtrlBuf, regValue, regLen);
+
+    flashCmd.cmdBuf[0] = writeRegCmd << 24;
+    flashCmd.rwFlag = SF_CTRL_WRITE;
+    flashCmd.nbData = regLen;
 
     SF_Ctrl_SendCmd(&flashCmd);
 
     /* take 40ms for tw(write status register) as default */
-    while(SET==SFlash_Busy(flashCfg)){
+    while (SET == SFlash_Busy(flashCfg)) {
         BL702_Delay_US(100);
         cnt++;
-        if(cnt>400){
+
+        if (cnt > 400) {
             return ERROR;
         }
     }

@@ -1,24 +1,24 @@
 /**
  * @file hal_i2s.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "hal_i2s.h"
 #include "hal_dma.h"
@@ -26,8 +26,7 @@
 #include "bl702_glb.h"
 #include "i2s_config.h"
 
-static i2s_device_t i2sx_device[I2S_MAX_INDEX] = 
-{
+static i2s_device_t i2sx_device[I2S_MAX_INDEX] = {
 #ifdef BSP_USING_I2S0
     I2S0_CONFIG,
 #endif
@@ -36,175 +35,187 @@ static i2s_device_t i2sx_device[I2S_MAX_INDEX] =
 int i2s_open(struct device *dev, uint16_t oflag)
 {
     i2s_device_t *i2s_device = (i2s_device_t *)dev;
-    I2S_CFG_Type i2sCfg = {0};
-    I2S_FifoCfg_Type fifoCfg = {0};
+    I2S_CFG_Type i2sCfg = { 0 };
+    I2S_FifoCfg_Type fifoCfg = { 0 };
 
     GLB_Set_Chip_Out_0_CLK_Sel(GLB_CHIP_CLK_OUT_I2S_REF_CLK);
-    GLB_Set_I2S_CLK(ENABLE,GLB_I2S_OUT_REF_CLK_SRC);
+    GLB_Set_I2S_CLK(ENABLE, GLB_I2S_OUT_REF_CLK_SRC);
 
     /*Finding the right frequency*/
-    if(12288000 %(i2s_device->sampl_freq_hz) == 0)
-    {
+    if (12288000 % (i2s_device->sampl_freq_hz) == 0) {
         i2sCfg.audioFreqHz = 12288000;
         PDS_Set_Audio_PLL_Freq(AUDIO_PLL_12288000_HZ);
-    }
-    else if(11289600%(i2s_device->sampl_freq_hz) == 0)
-    {
+    } else if (11289600 % (i2s_device->sampl_freq_hz) == 0) {
         i2sCfg.audioFreqHz = 11289600;
         PDS_Set_Audio_PLL_Freq(AUDIO_PLL_11289600_HZ);
-    }
-    else if(5644800%(i2s_device->sampl_freq_hz) == 0)
-    {
+    } else if (5644800 % (i2s_device->sampl_freq_hz) == 0) {
         i2sCfg.audioFreqHz = 5644800;
         PDS_Set_Audio_PLL_Freq(AUDIO_PLL_5644800_HZ);
-    }
-    else
-    {
-        switch (I2S_ADUIO_PLL_DEFAULT)
-        {
-        case AUDIO_PLL_12288000_HZ:
-            i2sCfg.audioFreqHz = 12288000;
-            break;
-        case AUDIO_PLL_11289600_HZ:
-            i2sCfg.audioFreqHz = 11289600;
-            break;
-        case AUDIO_PLL_5644800_HZ:
-            i2sCfg.audioFreqHz = 5644800;
-            break;
-        default:
-            return ERROR;
-            break;
+    } else {
+        switch (I2S_ADUIO_PLL_DEFAULT) {
+            case AUDIO_PLL_12288000_HZ:
+                i2sCfg.audioFreqHz = 12288000;
+                break;
+
+            case AUDIO_PLL_11289600_HZ:
+                i2sCfg.audioFreqHz = 11289600;
+                break;
+
+            case AUDIO_PLL_5644800_HZ:
+                i2sCfg.audioFreqHz = 5644800;
+                break;
+
+            default:
+                return ERROR;
+                break;
         }
+
         PDS_Set_Audio_PLL_Freq(I2S_ADUIO_PLL_DEFAULT);
     }
+
     i2sCfg.sampleFreqHz = i2s_device->sampl_freq_hz;
 
     /*!< default I2S msb first */
     i2sCfg.endianType = I2S_DATA_ENDIAN;
 
     /* Config the I2S type */
-    switch (i2s_device->interface_mode)
-    {
-    case I2S_MODE_STD:
-        i2sCfg.modeType = I2S_MODE_I2S_LEFT;
-        i2sCfg.fsMode = I2S_FS_MODE_EVEN;
-        i2sCfg.dataOffset = 1;
-        break;
-    case I2S_MODE_LEFT:
-        i2sCfg.modeType = I2S_MODE_I2S_LEFT;
-        i2sCfg.fsMode = I2S_FS_MODE_EVEN;
-        i2sCfg.dataOffset = 0;
-        break;
-    case I2S_MODE_RIGHT:
-        i2sCfg.modeType = I2S_MODE_I2S_RIGHT;
-        i2sCfg.fsMode = I2S_FS_MODE_EVEN;
-        i2sCfg.dataOffset = 0;
-        break;
-    case I2S_MODE_DSP_A:
-        i2sCfg.modeType = I2S_MODE_I2S_DSP;
-        i2sCfg.fsMode = I2S_FS_MODE_1T;
-        i2sCfg.dataOffset = 1;
-        break;
-    case I2S_MODE_DSP_B:
-        i2sCfg.modeType = I2S_MODE_I2S_DSP;
-        i2sCfg.fsMode = I2S_FS_MODE_1T;
-        i2sCfg.dataOffset = 0;
-        break;
-    default:
-        return ERROR;
-        break;
+    switch (i2s_device->interface_mode) {
+        case I2S_MODE_STD:
+            i2sCfg.modeType = I2S_MODE_I2S_LEFT;
+            i2sCfg.fsMode = I2S_FS_MODE_EVEN;
+            i2sCfg.dataOffset = 1;
+            break;
+
+        case I2S_MODE_LEFT:
+            i2sCfg.modeType = I2S_MODE_I2S_LEFT;
+            i2sCfg.fsMode = I2S_FS_MODE_EVEN;
+            i2sCfg.dataOffset = 0;
+            break;
+
+        case I2S_MODE_RIGHT:
+            i2sCfg.modeType = I2S_MODE_I2S_RIGHT;
+            i2sCfg.fsMode = I2S_FS_MODE_EVEN;
+            i2sCfg.dataOffset = 0;
+            break;
+
+        case I2S_MODE_DSP_A:
+            i2sCfg.modeType = I2S_MODE_I2S_DSP;
+            i2sCfg.fsMode = I2S_FS_MODE_1T;
+            i2sCfg.dataOffset = 1;
+            break;
+
+        case I2S_MODE_DSP_B:
+            i2sCfg.modeType = I2S_MODE_I2S_DSP;
+            i2sCfg.fsMode = I2S_FS_MODE_1T;
+            i2sCfg.dataOffset = 0;
+            break;
+
+        default:
+            return ERROR;
+            break;
     }
 
     /* Config the frame/data Size */
-    switch (i2s_device->frame_size)
-    {
-    case I2S_FRAME_LEN_8:
-        i2sCfg.frameSize = I2S_SIZE_FRAME_8;
-        break;
-    case I2S_FRAME_LEN_16:
-        i2sCfg.frameSize = I2S_SIZE_FRAME_16;
-        break;
-    case I2S_FRAME_LEN_24:
-        i2sCfg.frameSize = I2S_SIZE_FRAME_24;
-        break;
-    case I2S_FRAME_LEN_32:
-        i2sCfg.frameSize = I2S_SIZE_FRAME_32;
-        break;
-    default:
-        return ERROR;
-        break;
-    }
-    switch (i2s_device->data_size)
-    {
-    case I2S_DATA_LEN_8:
-        i2sCfg.dataSize = I2S_SIZE_DATA_8;
-        break;
-    case I2S_DATA_LEN_16:
-        i2sCfg.dataSize = I2S_SIZE_DATA_16;
-        break;
-    case I2S_DATA_LEN_24:
-        i2sCfg.dataSize = I2S_SIZE_DATA_24;
-        break;
-    case I2S_DATA_LEN_32:
-        i2sCfg.dataSize = I2S_SIZE_DATA_32;
-        break;
-    default:
-        return ERROR;
-        break;
+    switch (i2s_device->frame_size) {
+        case I2S_FRAME_LEN_8:
+            i2sCfg.frameSize = I2S_SIZE_FRAME_8;
+            break;
 
+        case I2S_FRAME_LEN_16:
+            i2sCfg.frameSize = I2S_SIZE_FRAME_16;
+            break;
+
+        case I2S_FRAME_LEN_24:
+            i2sCfg.frameSize = I2S_SIZE_FRAME_24;
+            break;
+
+        case I2S_FRAME_LEN_32:
+            i2sCfg.frameSize = I2S_SIZE_FRAME_32;
+            break;
+
+        default:
+            return ERROR;
+            break;
+    }
+
+    switch (i2s_device->data_size) {
+        case I2S_DATA_LEN_8:
+            i2sCfg.dataSize = I2S_SIZE_DATA_8;
+            break;
+
+        case I2S_DATA_LEN_16:
+            i2sCfg.dataSize = I2S_SIZE_DATA_16;
+            break;
+
+        case I2S_DATA_LEN_24:
+            i2sCfg.dataSize = I2S_SIZE_DATA_24;
+            break;
+
+        case I2S_DATA_LEN_32:
+            i2sCfg.dataSize = I2S_SIZE_DATA_32;
+            break;
+
+        default:
+            return ERROR;
+            break;
     }
 
     fifoCfg.lRMerge = DISABLE;
     fifoCfg.frameDataExchange = DISABLE;
 
     /* Config the Channel number */
-    switch (i2s_device->channel_num)
-    {
-    case I2S_FS_CHANNELS_NUM_MONO:
-        i2sCfg.monoMode = ENABLE;
-        i2sCfg.fsChannel = I2S_FS_CHANNELS_2; 
-        i2sCfg.monoModeChannel = I2S_MONO_CHANNEL;
-        break;
-    case I2S_FS_CHANNELS_NUM_2:
-        i2sCfg.monoMode = DISABLE;
-        i2sCfg.fsChannel = I2S_FS_CHANNELS_2; 
-        if(i2s_device->data_size==I2S_DATA_LEN_8 || i2s_device->data_size==I2S_DATA_LEN_16)
-        {
-            fifoCfg.lRMerge = ENABLE;
-            fifoCfg.frameDataExchange = I2S_LR_EXCHANGE;
-        }
-        break;
-    case I2S_FS_CHANNELS_NUM_3:
-        if((i2s_device->interface_mode !=I2S_MODE_DSP_A) && (i2s_device->interface_mode !=I2S_MODE_DSP_B))
-           return ERROR; 
-        i2sCfg.monoMode = DISABLE;
-        i2sCfg.fsChannel = I2S_FS_CHANNELS_3;
-        break;
-    case I2S_FS_CHANNELS_NUM_4:
-        if((i2s_device->interface_mode !=I2S_MODE_DSP_A) && (i2s_device->interface_mode !=I2S_MODE_DSP_B))
-           return ERROR; 
-        i2sCfg.monoMode = DISABLE;
-        i2sCfg.fsChannel = I2S_FS_CHANNELS_4;
-    default:
-        return ERROR;
-        break;
+    switch (i2s_device->channel_num) {
+        case I2S_FS_CHANNELS_NUM_MONO:
+            i2sCfg.monoMode = ENABLE;
+            i2sCfg.fsChannel = I2S_FS_CHANNELS_2;
+            i2sCfg.monoModeChannel = I2S_MONO_CHANNEL;
+            break;
+
+        case I2S_FS_CHANNELS_NUM_2:
+            i2sCfg.monoMode = DISABLE;
+            i2sCfg.fsChannel = I2S_FS_CHANNELS_2;
+
+            if (i2s_device->data_size == I2S_DATA_LEN_8 || i2s_device->data_size == I2S_DATA_LEN_16) {
+                fifoCfg.lRMerge = ENABLE;
+                fifoCfg.frameDataExchange = I2S_LR_EXCHANGE;
+            }
+
+            break;
+
+        case I2S_FS_CHANNELS_NUM_3:
+            if ((i2s_device->interface_mode != I2S_MODE_DSP_A) && (i2s_device->interface_mode != I2S_MODE_DSP_B)) {
+                return ERROR;
+            }
+
+            i2sCfg.monoMode = DISABLE;
+            i2sCfg.fsChannel = I2S_FS_CHANNELS_3;
+            break;
+
+        case I2S_FS_CHANNELS_NUM_4:
+            if ((i2s_device->interface_mode != I2S_MODE_DSP_A) && (i2s_device->interface_mode != I2S_MODE_DSP_B)) {
+                return ERROR;
+            }
+
+            i2sCfg.monoMode = DISABLE;
+            i2sCfg.fsChannel = I2S_FS_CHANNELS_4;
+
+        default:
+            return ERROR;
+            break;
     }
 
     /* Config the bclk/fs invert */
     i2sCfg.bclkInvert = I2S_BCLK_INVERT;
     i2sCfg.fsInvert = I2S_FS_INVERT;
 
-    if(oflag & DEVICE_OFLAG_INT_TX)
-    {
-
-    }
-    if(oflag & DEVICE_OFLAG_INT_RX)
-    {
-
+    if (oflag & DEVICE_OFLAG_INT_TX) {
     }
 
-    fifoCfg.txfifoDmaEnable = (oflag & DEVICE_OFLAG_DMA_TX)?ENABLE:DISABLE;
-    fifoCfg.rxfifoDmaEnable = (oflag & DEVICE_OFLAG_DMA_RX)?ENABLE:DISABLE;
+    if (oflag & DEVICE_OFLAG_INT_RX) {
+    }
+
+    fifoCfg.txfifoDmaEnable = (oflag & DEVICE_OFLAG_DMA_TX) ? ENABLE : DISABLE;
+    fifoCfg.rxfifoDmaEnable = (oflag & DEVICE_OFLAG_DMA_RX) ? ENABLE : DISABLE;
     fifoCfg.rxFifoLevel = i2s_device->fifo_threshold;
 
     /* I2S Init */
@@ -224,120 +235,130 @@ int i2s_close(struct device *dev)
 
 int i2s_control(struct device *dev, int cmd, void *args)
 {
-    i2s_device_t* i2s_device = (i2s_device_t*)dev;
-    switch (cmd)
-    {
-    case DEVICE_CTRL_SET_INT:
-        for(uint16_t i=0,j=1; i<8; i++,j<<=1)
-        {
-            if((uint32_t)args & j)
-            {
-                /* code */
+    i2s_device_t *i2s_device = (i2s_device_t *)dev;
+
+    switch (cmd) {
+        case DEVICE_CTRL_SET_INT:
+            for (uint16_t i = 0, j = 1; i < 8; i++, j <<= 1) {
+                if ((uint32_t)args & j) {
+                    /* code */
+                }
             }
-        }
-        break;
-    case DEVICE_CTRL_CLR_INT:
-        for(uint16_t i=0,j=1; i<8; i++,j<<=1)
-        {
-            if((uint32_t)args & j)
-            {
-                /* code */
-            }
-        }
-        break;
-    case DEVICE_CTRL_GET_INT:
-        /* code */
-        break;
-    case DEVICE_CTRL_RESUME:
-        /* code */
-        break;
-    case DEVICE_CTRL_SUSPEND:
-        /* code */
-        break;
-    case DEVICE_CTRL_CONFIG:
-        /* code */
-        break;
-    case DEVICE_CTRL_I2S_ATTACH_TX_DMA /* constant-expression */:
-        i2s_device->tx_dma = (struct device *)args;
-        break;
-    case DEVICE_CTRL_I2S_ATTACH_RX_DMA /* constant-expression */:
-        i2s_device->rx_dma = (struct device *)args;
-        break;
-    case DEVICE_CTRL_GET_CONFIG:
-        switch((uint32_t)args)
-        {
-        case I2S_GET_TX_FIFO_CMD: 
-            return I2S_GetTxFIFO_AvlCnt();
-        case I2S_GET_RX_FIFO_CMD: 
-            return I2S_GetRxFIFO_AvlCnt();
-        default:
+
             break;
-        }
-        break;
-    default:
-        return ERROR;
-        break;
+
+        case DEVICE_CTRL_CLR_INT:
+            for (uint16_t i = 0, j = 1; i < 8; i++, j <<= 1) {
+                if ((uint32_t)args & j) {
+                    /* code */
+                }
+            }
+
+            break;
+
+        case DEVICE_CTRL_GET_INT:
+            /* code */
+            break;
+
+        case DEVICE_CTRL_RESUME:
+            /* code */
+            break;
+
+        case DEVICE_CTRL_SUSPEND:
+            /* code */
+            break;
+
+        case DEVICE_CTRL_CONFIG:
+            /* code */
+            break;
+
+        case DEVICE_CTRL_I2S_ATTACH_TX_DMA /* constant-expression */:
+            i2s_device->tx_dma = (struct device *)args;
+            break;
+
+        case DEVICE_CTRL_I2S_ATTACH_RX_DMA /* constant-expression */:
+            i2s_device->rx_dma = (struct device *)args;
+            break;
+
+        case DEVICE_CTRL_GET_CONFIG:
+            switch ((uint32_t)args) {
+                case I2S_GET_TX_FIFO_CMD:
+                    return I2S_GetTxFIFO_AvlCnt();
+
+                case I2S_GET_RX_FIFO_CMD:
+                    return I2S_GetRxFIFO_AvlCnt();
+
+                default:
+                    break;
+            }
+
+            break;
+
+        default:
+            return ERROR;
+            break;
     }
+
     return SUCCESS;
 }
 
-
 int i2s_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
-    i2s_device_t* i2s_device = (i2s_device_t*)dev;
-    if (dev->oflag & DEVICE_OFLAG_DMA_TX)
-    {
+    i2s_device_t *i2s_device = (i2s_device_t *)dev;
+
+    if (dev->oflag & DEVICE_OFLAG_DMA_TX) {
         struct device *dma_ch = (struct device *)i2s_device->tx_dma;
-        if (!dma_ch)
+
+        if (!dma_ch) {
             return -1;
-            
-        if(i2s_device->id == 0)
-        {
+        }
+
+        if (i2s_device->id == 0) {
+            dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_I2S_TDR, size);
+            dma_channel_start(dma_ch);
+        } else if (i2s_device->id == 1) {
             dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_I2S_TDR, size);
             dma_channel_start(dma_ch);
         }
-        else if(i2s_device->id == 1)
-        {
-            dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_I2S_TDR, size);
-            dma_channel_start(dma_ch);
-        }
+
+        return 0;
+    } else {
         return 0;
     }
-    else
-    return 0;
 }
 
 int i2s_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
-    i2s_device_t* i2s_device = (i2s_device_t*)dev;
-    if (dev->oflag & DEVICE_OFLAG_DMA_RX)
-    {
+    i2s_device_t *i2s_device = (i2s_device_t *)dev;
+
+    if (dev->oflag & DEVICE_OFLAG_DMA_RX) {
         struct device *dma_ch = (struct device *)i2s_device->rx_dma;
-        if (!dma_ch)
+
+        if (!dma_ch) {
             return -1;
-            
-        if(i2s_device->id == 0)
-        {
+        }
+
+        if (i2s_device->id == 0) {
+            dma_reload(dma_ch, (uint32_t)DMA_ADDR_I2S_RDR, (uint32_t)buffer, size);
+            dma_channel_start(dma_ch);
+        } else if (i2s_device->id == 1) {
             dma_reload(dma_ch, (uint32_t)DMA_ADDR_I2S_RDR, (uint32_t)buffer, size);
             dma_channel_start(dma_ch);
         }
-        else if(i2s_device->id == 1)
-        {
-            dma_reload(dma_ch, (uint32_t)DMA_ADDR_I2S_RDR, (uint32_t)buffer, size);
-            dma_channel_start(dma_ch);
-        }
+
+        return 0;
+    } else {
         return 0;
     }
-    else
-    return 0;
 }
 
-int i2s_register(enum i2s_index_type index,const char *name,uint16_t flag)
+int i2s_register(enum i2s_index_type index, const char *name, uint16_t flag)
 {
     struct device *dev;
 
-    if (I2S_MAX_INDEX == 0)
+    if (I2S_MAX_INDEX == 0) {
         return -DEVICE_EINVAL;
+    }
 
     dev = &(i2sx_device[index].parent);
 
@@ -348,21 +369,18 @@ int i2s_register(enum i2s_index_type index,const char *name,uint16_t flag)
     dev->read = i2s_read;
 
     dev->status = DEVICE_UNREGISTER;
-    dev->type = DEVICE_CLASS_I2S;   
-    dev->handle = NULL; 
+    dev->type = DEVICE_CLASS_I2S;
+    dev->handle = NULL;
 
-    return device_register(dev,name,flag);
-
+    return device_register(dev, name, flag);
 }
 
 void i2s_isr(i2s_device_t *handle)
 {
-    return ;
+    return;
 }
 
 void I2S_IRQ(void)
 {
     i2s_isr(&i2sx_device[0]);
 }
-
-

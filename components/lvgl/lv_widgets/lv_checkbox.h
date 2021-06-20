@@ -39,16 +39,17 @@ extern "C" {
  **********************/
 
 /*Data of check box*/
-typedef struct {
+typedef struct
+{
     lv_btn_ext_t bg_btn; /*Ext. of ancestor*/
     /*New data for this type */
-    lv_obj_t * bullet; /*Pointer to button*/
-    lv_obj_t * label;  /*Pointer to label*/
+    lv_obj_t *bullet; /*Pointer to button*/
+    lv_obj_t *label;  /*Pointer to label*/
 } lv_checkbox_ext_t;
 
 /** Checkbox styles. */
 enum {
-    LV_CHECKBOX_PART_BG = LV_BTN_PART_MAIN,  /**< Style of object background. */
+    LV_CHECKBOX_PART_BG = LV_BTN_PART_MAIN, /**< Style of object background. */
     _LV_CHECKBOX_PART_VIRTUAL_LAST,
     LV_CHECKBOX_PART_BULLET = _LV_BTN_PART_REAL_LAST, /**< Style of box (released). */
     _LV_CHECKBOX_PART_REAL_LAST
@@ -65,7 +66,7 @@ typedef uint8_t lv_checkbox_style_t;
  * @param copy pointer to a check box object, if not NULL then the new object will be copied from it
  * @return pointer to the created check box
  */
-lv_obj_t * lv_checkbox_create(lv_obj_t * par, const lv_obj_t * copy);
+lv_obj_t *lv_checkbox_create(lv_obj_t *par, const lv_obj_t *copy);
 
 /*=====================
  * Setter functions
@@ -77,7 +78,7 @@ lv_obj_t * lv_checkbox_create(lv_obj_t * par, const lv_obj_t * copy);
  * @param cb pointer to a check box
  * @param txt the text of the check box. NULL to refresh with the current text.
  */
-void lv_checkbox_set_text(lv_obj_t * cb, const char * txt);
+void lv_checkbox_set_text(lv_obj_t *cb, const char *txt);
 
 /**
  * Set the text of a check box. `txt` must not be deallocated during the life
@@ -85,27 +86,27 @@ void lv_checkbox_set_text(lv_obj_t * cb, const char * txt);
  * @param cb pointer to a check box
  * @param txt the text of the check box. NULL to refresh with the current text.
  */
-void lv_checkbox_set_text_static(lv_obj_t * cb, const char * txt);
+void lv_checkbox_set_text_static(lv_obj_t *cb, const char *txt);
 
 /**
  * Set the state of the check box
  * @param cb pointer to a check box object
  * @param checked true: make the check box checked; false: make it unchecked
  */
-void lv_checkbox_set_checked(lv_obj_t * cb, bool checked);
+void lv_checkbox_set_checked(lv_obj_t *cb, bool checked);
 
 /**
  * Make the check box inactive (disabled)
  * @param cb pointer to a check box object
  */
-void lv_checkbox_set_disabled(lv_obj_t * cb);
+void lv_checkbox_set_disabled(lv_obj_t *cb);
 
 /**
  * Set the state of a check box
  * @param cb pointer to a check box object
  * @param state the new state of the check box (from lv_btn_state_t enum)
  */
-void lv_checkbox_set_state(lv_obj_t * cb, lv_btn_state_t state);
+void lv_checkbox_set_state(lv_obj_t *cb, lv_btn_state_t state);
 /*=====================
  * Getter functions
  *====================*/
@@ -115,14 +116,14 @@ void lv_checkbox_set_state(lv_obj_t * cb, lv_btn_state_t state);
  * @param cb pointer to check box object
  * @return pointer to the text of the check box
  */
-const char * lv_checkbox_get_text(const lv_obj_t * cb);
+const char *lv_checkbox_get_text(const lv_obj_t *cb);
 
 /**
  * Get the current state of the check box
  * @param cb pointer to a check box object
  * @return true: checked; false: not checked
  */
-static inline bool lv_checkbox_is_checked(const lv_obj_t * cb)
+static inline bool lv_checkbox_is_checked(const lv_obj_t *cb)
 {
     return lv_btn_get_state(cb) == LV_BTN_STATE_RELEASED ? false : true;
 }
@@ -132,7 +133,7 @@ static inline bool lv_checkbox_is_checked(const lv_obj_t * cb)
  * @param cb pointer to a check box object
  * @return true: inactive; false: not inactive
  */
-static inline bool lv_checkbox_is_inactive(const lv_obj_t * cb)
+static inline bool lv_checkbox_is_inactive(const lv_obj_t *cb)
 {
     return lv_btn_get_state(cb) == LV_BTN_STATE_DISABLED ? true : false;
 }
@@ -142,7 +143,7 @@ static inline bool lv_checkbox_is_inactive(const lv_obj_t * cb)
  * @param cb pointer to a check box object
  * @return the state of the check box (from lv_btn_state_t enum)
  */
-static inline lv_btn_state_t lv_checkbox_get_state(const lv_obj_t * cb)
+static inline lv_btn_state_t lv_checkbox_get_state(const lv_obj_t *cb)
 {
     return lv_btn_get_state(cb);
 }

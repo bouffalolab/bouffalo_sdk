@@ -11,13 +11,15 @@
 
 void *memchr(const void *s, int c, size_t n)
 {
-	const unsigned char *sp = (unsigned char *)s;
+    const unsigned char *sp = (unsigned char *)s;
 
-	while (n--) {
-		if (*sp == (unsigned char)c)
-			return (void *)sp;
-		sp++;
-	}
+    while (n--) {
+        if (*sp == (unsigned char)c) {
+            return (void *)sp;
+        }
 
-	return NULL;
+        sp++;
+    }
+
+    return NULL;
 }

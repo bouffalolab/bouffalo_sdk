@@ -54,7 +54,7 @@ void _lv_refr_init(void);
  * (e.g. progress bar) this function can be called when the screen should be updated.
  * @param disp pointer to display to refresh. NULL to refresh all displays.
  */
-void lv_refr_now(lv_disp_t * disp);
+void lv_refr_now(lv_disp_t *disp);
 
 /**
  * Invalidate an area on display to redraw it
@@ -62,13 +62,13 @@ void lv_refr_now(lv_disp_t * disp);
  * @param disp pointer to display where the area should be invalidated (NULL can be used if there is
  * only one display)
  */
-void _lv_inv_area(lv_disp_t * disp, const lv_area_t * area_p);
+void _lv_inv_area(lv_disp_t *disp, const lv_area_t *area_p);
 
 /**
  * Get the display which is being refreshed
  * @return the display being refreshed
  */
-lv_disp_t * _lv_refr_get_disp_refreshing(void);
+lv_disp_t *_lv_refr_get_disp_refreshing(void);
 
 /**
  * Set the display which is being refreshed.
@@ -76,7 +76,7 @@ lv_disp_t * _lv_refr_get_disp_refreshing(void);
  * It can be used to trick the drawing functions about there is an active display.
  * @param the display being refreshed
  */
-void _lv_refr_set_disp_refreshing(lv_disp_t * disp);
+void _lv_refr_set_disp_refreshing(lv_disp_t *disp);
 
 #if LV_USE_PERF_MONITOR
 /**
@@ -90,7 +90,7 @@ uint32_t lv_refr_get_fps_avg(void);
  * Called periodically to handle the refreshing
  * @param task pointer to the task itself
  */
-void _lv_disp_refr_task(lv_task_t * task);
+void _lv_disp_refr_task(lv_task_t *task);
 
 /**********************
  *   STATIC FUNCTIONS

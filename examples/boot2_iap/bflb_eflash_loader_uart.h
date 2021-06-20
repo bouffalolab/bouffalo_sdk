@@ -42,31 +42,27 @@ int32_t bflb_eflash_loader_uart_init();
 
 int32_t bflb_eflash_loader_uart_handshake_poll();
 
-uint32_t *bflb_eflash_loader_uart_recv(uint32_t *recv_len,uint32_t maxlen,uint32_t timeout);
+uint32_t *bflb_eflash_loader_uart_recv(uint32_t *recv_len, uint32_t maxlen, uint32_t timeout);
 
-int32_t bflb_eflash_loader_uart_send(uint32_t *data,uint32_t len);
+int32_t bflb_eflash_loader_uart_send(uint32_t *data, uint32_t len);
 
 int32_t bflb_eflash_loader_usart_wait_tx_idle(uint32_t timeout);
 
-int32_t bflb_eflash_loader_uart_change_rate(uint32_t oldval,uint32_t newval);
+int32_t bflb_eflash_loader_uart_change_rate(uint32_t oldval, uint32_t newval);
 
 int32_t bflb_eflash_loader_uart_deinit(void);
 
 void bflb_eflash_loader_main();
 
+typedef enum {
+    BFLB_EFLASH_LOADER_HANDSHAKE_SUSS = 0,
+    BFLB_EFLASH_LOADER_HANDSHAKE_FAIL,
+} eflash_handshake_ret;
 
-typedef enum{
-    BFLB_EFLASH_LOADER_HANDSHAKE_SUSS = 0,              
-    BFLB_EFLASH_LOADER_HANDSHAKE_FAIL,              
-}eflash_handshake_ret;
-
-
-#define AUTO_BAUDRATE_CHECK_TIME_MAX_MS                 2
-#define BFLB_EFLASH_LOADER_IF_TX_IDLE_TIMEOUT           4       /*ms*/
-#define BFLB_EFLASH_LOADER_IF_UART_RX_TIMEOUT           8000    /*ms*/
-#define BFLB_EFLASH_LOADER_HAND_SHAKE_BYTE              0x55
-#define BFLB_EFLASH_LAODER_HAND_SHAKE_SUSS_COUNT        5
-
-
+#define AUTO_BAUDRATE_CHECK_TIME_MAX_MS          2
+#define BFLB_EFLASH_LOADER_IF_TX_IDLE_TIMEOUT    4    /*ms*/
+#define BFLB_EFLASH_LOADER_IF_UART_RX_TIMEOUT    8000 /*ms*/
+#define BFLB_EFLASH_LOADER_HAND_SHAKE_BYTE       0x55
+#define BFLB_EFLASH_LAODER_HAND_SHAKE_SUSS_COUNT 5
 
 #endif

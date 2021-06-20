@@ -44,9 +44,9 @@ SECTIONS
         _shell_command_start = .;
         KEEP(*(shellCommand))
         _shell_command_end = .;
-    
-        *(.text)
-        *(.text.*)
+        
+        *(EXCLUDE_FILE ( *bl702_uart.c.obj* *hal_uart.c.obj* ) .text*)  
+       
         *(.rodata)
         *(.rodata.*)
         *(.srodata)
@@ -73,6 +73,8 @@ SECTIONS
         *bl602_romapi.o(.rodata.*)
         *bl602_romapi.o(.srodata)
         *bl602_romapi.o(.srodata.*)
+        *bl702_uart.c.obj* (.text*)
+        *hal_uart.c.obj* (.text*)
         . = ALIGN(4);
         __tcm_code_end__ = .;
 

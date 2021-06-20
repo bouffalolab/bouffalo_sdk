@@ -59,8 +59,8 @@
 /** @defgroup  SF_CTRL_Private_Variables
  *  @{
  */
-#define SF_CTRL_BUSY_STATE_TIMEOUT               (5*160*1000)
-#define SF_Ctrl_Get_AES_Region(addr,r)           (addr+SF_CTRL_AES_REGION_OFFSET+(r)*0x100)
+#define SF_CTRL_BUSY_STATE_TIMEOUT      (5 * 160 * 1000)
+#define SF_Ctrl_Get_AES_Region(addr, r) (addr + SF_CTRL_AES_REGION_OFFSET + (r)*0x100)
 
 /*@} end of group SF_CTRL_Private_Variables */
 
@@ -86,7 +86,7 @@
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable serail flash controller
  *
  * @param  cfg: serial flash controller config
@@ -101,118 +101,121 @@ void ATTR_TCM_SECTION SF_Ctrl_Enable(const SF_Ctrl_Cfg_Type *cfg)
     uint32_t tmpVal = 0;
     uint32_t timeOut = 0;
 
-    if(cfg==NULL){
+    if (cfg == NULL) {
         return;
     }
+
     /* Check the parameters */
     CHECK_PARAM(IS_SF_CTRL_OWNER_TYPE(cfg->owner));
 
     timeOut = SF_CTRL_BUSY_STATE_TIMEOUT;
-    while(SET==SF_Ctrl_GetBusyState()){
+
+    while (SET == SF_Ctrl_GetBusyState()) {
         timeOut--;
-        if(timeOut == 0){
+
+        if (timeOut == 0) {
             return;
         }
     }
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_0);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_0);
 
-    if(cfg->clkDelay>0){
-        tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_READ_DLY_EN);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_READ_DLY_N,cfg->clkDelay-1);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_IF_READ_DLY_EN);
+    if (cfg->clkDelay > 0) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_IF_READ_DLY_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_READ_DLY_N, cfg->clkDelay - 1);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_IF_READ_DLY_EN);
     }
 
     /* Serail out inverted, so sf ctrl send on negative edge */
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_CLK_OUT_INV_SEL,cfg->clkInvert);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_CLK_SF_RX_INV_SEL,cfg->rxClkInvert);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_CLK_OUT_INV_SEL, cfg->clkInvert);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_CLK_SF_RX_INV_SEL, cfg->rxClkInvert);
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_0,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_0, tmpVal);
 
     /* Set do di and oe delay */
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IO_DLY_1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_0_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_0_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_0_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IO_DLY_1,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IO_DLY_1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_0_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_0_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_0_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IO_DLY_1, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IO_DLY_2);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_1_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_1_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_1_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IO_DLY_2,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IO_DLY_2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_1_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_1_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_1_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IO_DLY_2, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IO_DLY_3);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_2_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_2_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_2_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IO_DLY_3,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IO_DLY_3);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_2_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_2_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_2_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IO_DLY_3, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IO_DLY_4);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_3_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_3_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IO_3_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IO_DLY_4,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IO_DLY_4);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_3_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_3_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IO_3_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IO_DLY_4, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF2_IF_IO_DLY_1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_0_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_0_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_0_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF2_IF_IO_DLY_1,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF2_IF_IO_DLY_1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_0_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_0_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_0_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF2_IF_IO_DLY_1, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF2_IF_IO_DLY_2);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_1_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_1_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_1_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF2_IF_IO_DLY_2,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF2_IF_IO_DLY_2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_1_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_1_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_1_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF2_IF_IO_DLY_2, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF2_IF_IO_DLY_3);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_2_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_2_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_2_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF2_IF_IO_DLY_3,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF2_IF_IO_DLY_3);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_2_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_2_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_2_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF2_IF_IO_DLY_3, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF2_IF_IO_DLY_4);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_3_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_3_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF2_IO_3_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF2_IF_IO_DLY_4,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF2_IF_IO_DLY_4);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_3_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_3_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF2_IO_3_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF2_IF_IO_DLY_4, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF3_IF_IO_DLY_1);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_0_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_0_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_0_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF3_IF_IO_DLY_1,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF3_IF_IO_DLY_1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_0_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_0_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_0_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF3_IF_IO_DLY_1, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF3_IF_IO_DLY_2);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_1_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_1_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_1_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF3_IF_IO_DLY_2,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF3_IF_IO_DLY_2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_1_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_1_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_1_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF3_IF_IO_DLY_2, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF3_IF_IO_DLY_3);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_2_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_2_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_2_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF3_IF_IO_DLY_3,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF3_IF_IO_DLY_3);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_2_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_2_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_2_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF3_IF_IO_DLY_3, tmpVal);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF3_IF_IO_DLY_4);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_3_DO_DLY_SEL,cfg->doDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_3_DI_DLY_SEL,cfg->diDelay);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF3_IO_3_OE_DLY_SEL,cfg->oeDelay);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF3_IF_IO_DLY_4,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF3_IF_IO_DLY_4);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_3_DO_DLY_SEL, cfg->doDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_3_DI_DLY_SEL, cfg->diDelay);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF3_IO_3_OE_DLY_SEL, cfg->oeDelay);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF3_IF_IO_DLY_4, tmpVal);
 
     /* Enable AHB access sram buffer and enable sf interface */
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_1);
-    tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_AHB2SRAM_EN);
-    tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_EN);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_1,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_1);
+    tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_AHB2SRAM_EN);
+    tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_IF_EN);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_1, tmpVal);
 
     SF_Ctrl_Set_Owner(cfg->owner);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Flash pad select
  *
  * @param  sel: pad type
@@ -228,12 +231,12 @@ void ATTR_TCM_SECTION SF_Ctrl_Select_Pad(SF_Ctrl_Pad_Sel sel)
     /* Check the parameters */
     CHECK_PARAM(IS_SF_CTRL_PAD_SEL(sel));
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_2);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_PAD_SEL,sel);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_2,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_PAD_SEL, sel);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_2, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set flash controller owner:I/D AHB or system AHB
  *
  * @param  owner: owner type
@@ -251,29 +254,31 @@ void ATTR_TCM_SECTION SF_Ctrl_Set_Owner(SF_Ctrl_Owner_Type owner)
     CHECK_PARAM(IS_SF_CTRL_OWNER_TYPE(owner));
 
     timeOut = SF_CTRL_BUSY_STATE_TIMEOUT;
-    while(SET==SF_Ctrl_GetBusyState()){
+
+    while (SET == SF_Ctrl_GetBusyState()) {
         timeOut--;
-        if(timeOut == 0){
+
+        if (timeOut == 0) {
             return;
         }
     }
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_1);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_1);
 
     /* Set owner */
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_FN_SEL,owner);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_FN_SEL, owner);
 
     /* Set iahb to flash interface */
-    if(owner==SF_CTRL_OWNER_IAHB){
-        tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_AHB2SIF_EN);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_AHB2SIF_EN);
+    if (owner == SF_CTRL_OWNER_IAHB) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_AHB2SIF_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_AHB2SIF_EN);
     }
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_1,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_1, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable flash controller
  *
  * @param  None
@@ -286,14 +291,14 @@ void ATTR_TCM_SECTION SF_Ctrl_Disable(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_1);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_1);
 
-    tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_IF_EN);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_IF_EN);
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_1,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_1, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable flash controller AES with big indian
  *
  * @param  None
@@ -306,16 +311,16 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Enable_BE(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_0);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_0);
 
-    tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_AES_KEY_ENDIAN);
-    tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_AES_IV_ENDIAN);
-    tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_AES_DOUT_ENDIAN);
+    tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_AES_KEY_ENDIAN);
+    tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_AES_IV_ENDIAN);
+    tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_AES_DOUT_ENDIAN);
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_0,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_0, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable flash controller AES with little indian
  *
  * @param  None
@@ -328,16 +333,16 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Enable_LE(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_0);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_0);
 
-    tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_AES_KEY_ENDIAN);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_AES_IV_ENDIAN);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_AES_DOUT_ENDIAN);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_AES_KEY_ENDIAN);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_AES_IV_ENDIAN);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_AES_DOUT_ENDIAN);
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_0,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_0, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Serial flash controller set AES region
  *
  * @param  region: region number
@@ -351,26 +356,26 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Enable_LE(void)
  *
 *******************************************************************************/
 __WEAK
-void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Region(uint8_t region,uint8_t enable,
-    uint8_t hwKey,uint32_t startAddr,uint32_t endAddr,uint8_t locked)
+void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Region(uint8_t region, uint8_t enable,
+                                             uint8_t hwKey, uint32_t startAddr, uint32_t endAddr, uint8_t locked)
 {
     /* Do flash key eco*/
-    uint32_t regionRegBase=SF_Ctrl_Get_AES_Region(SF_CTRL_BASE,!region);
+    uint32_t regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, !region);
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(regionRegBase,SF_CTRL_SF_AES_CFG);
+    tmpVal = BL_RD_REG(regionRegBase, SF_CTRL_SF_AES_CFG);
 
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_AES_REGION_HW_KEY_EN,hwKey);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_AES_REGION_START,startAddr/1024);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_HW_KEY_EN, hwKey);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_START, startAddr / 1024);
     /* sf_aes_end =1 means 1,11,1111,1111 */
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_AES_REGION_END,endAddr/1024);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_AES_REGION_EN,enable);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_AES_REGION_LOCK,locked);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_END, endAddr / 1024);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_EN, enable);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_LOCK, locked);
 
-    BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_CFG,tmpVal);
+    BL_WR_REG(regionRegBase, SF_CTRL_SF_AES_CFG, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Serial flash controller set AES key
  *
  * @param  region: region number
@@ -381,79 +386,81 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Region(uint8_t region,uint8_t enable,
  *
 *******************************************************************************/
 __WEAK
-void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Key(uint8_t region,uint8_t *key, SF_Ctrl_AES_Key_Type keyType)
+void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Key(uint8_t region, uint8_t *key, SF_Ctrl_AES_Key_Type keyType)
 {
     /* Do flash key eco*/
-    uint32_t regionRegBase=SF_Ctrl_Get_AES_Region(SF_CTRL_BASE,!region);
-    uint32_t tmpVal,i=0;
+    uint32_t regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, !region);
+    uint32_t tmpVal, i = 0;
 
     /* Check the parameters */
     CHECK_PARAM(IS_SF_CTRL_AES_KEY_TYPE(keyType));
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_AES);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_AES_MODE,keyType);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_AES,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_AES);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_MODE, keyType);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_AES, tmpVal);
 
-    if(NULL!=key){
-        if(keyType==SF_CTRL_AES_128BITS){
-            i=4;
+    if (NULL != key) {
+        if (keyType == SF_CTRL_AES_128BITS) {
+            i = 4;
             /*
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_7,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_6,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            */
-        }else if(keyType==SF_CTRL_AES_256BITS){
-            i=8;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_7,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_6,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			*/
+        } else if (keyType == SF_CTRL_AES_256BITS) {
+            i = 8;
             /*
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_7,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_6,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_1,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_0,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            */
-        }else if(keyType==SF_CTRL_AES_192BITS){
-            i=6;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_7,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_6,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_1,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_0,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			*/
+        } else if (keyType == SF_CTRL_AES_192BITS) {
+            i = 6;
             /*
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_7,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_6,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            */
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_7,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_6,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,__REV(BL_RDWD_FRM_BYTEP(key)));
+			key+=4;
+			*/
         }
-        tmpVal=SF_CTRL_SF_AES_KEY_7_OFFSET;
-        while(i--){
-            BL_WR_WORD(regionRegBase+tmpVal,__REV(BL_RDWD_FRM_BYTEP(key)));
-            key+=4;
-            tmpVal-=4;
+
+        tmpVal = SF_CTRL_SF_AES_KEY_7_OFFSET;
+
+        while (i--) {
+            BL_WR_WORD(regionRegBase + tmpVal, __REV(BL_RDWD_FRM_BYTEP(key)));
+            key += 4;
+            tmpVal -= 4;
         }
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Serial flash controller set AES key with big endian
  *
  * @param  region: region number
@@ -464,78 +471,80 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Key(uint8_t region,uint8_t *key, SF_Ctrl_A
  *
 *******************************************************************************/
 __WEAK
-void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Key_BE(uint8_t region,uint8_t *key, SF_Ctrl_AES_Key_Type keyType)
+void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Key_BE(uint8_t region, uint8_t *key, SF_Ctrl_AES_Key_Type keyType)
 {
     /* Do flash key eco*/
-    uint32_t regionRegBase=SF_Ctrl_Get_AES_Region(SF_CTRL_BASE,!region);
-    uint32_t tmpVal,i=0;
+    uint32_t regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, !region);
+    uint32_t tmpVal, i = 0;
 
     /* Check the parameters */
     CHECK_PARAM(IS_SF_CTRL_AES_KEY_TYPE(keyType));
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_AES);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_AES_MODE,keyType);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_AES,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_AES);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_MODE, keyType);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_AES, tmpVal);
 
-    if(NULL!=key){
-        if(keyType==SF_CTRL_AES_128BITS){
-            i=4;
+    if (NULL != key) {
+        if (keyType == SF_CTRL_AES_128BITS) {
+            i = 4;
             /*
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_0,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_1,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            */
-        } else if(keyType==SF_CTRL_AES_256BITS){
-            i=8;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_0,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_1,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			*/
+        } else if (keyType == SF_CTRL_AES_256BITS) {
+            i = 8;
             /*
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_0,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_1,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_6,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_7,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            */
-        }else if(keyType==SF_CTRL_AES_192BITS){
-            i=6;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_0,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_1,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_6,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_7,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			*/
+        } else if (keyType == SF_CTRL_AES_192BITS) {
+            i = 6;
             /*
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_0,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_1,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,BL_RDWD_FRM_BYTEP(key));
-            */
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_0,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_1,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_2,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_3,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_4,BL_RDWD_FRM_BYTEP(key));
+			key+=4;
+			BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_KEY_5,BL_RDWD_FRM_BYTEP(key));
+			*/
         }
-        tmpVal=SF_CTRL_SF_AES_KEY_0_OFFSET;
-        while(i--){
-            BL_WR_WORD(regionRegBase+tmpVal,BL_RDWD_FRM_BYTEP(key));
-            key+=4;
-            tmpVal+=4;
+
+        tmpVal = SF_CTRL_SF_AES_KEY_0_OFFSET;
+
+        while (i--) {
+            BL_WR_WORD(regionRegBase + tmpVal, BL_RDWD_FRM_BYTEP(key));
+            key += 4;
+            tmpVal += 4;
         }
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Serial flash controller set AES iv
  *
  * @param  region: region number
@@ -546,33 +555,35 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Set_Key_BE(uint8_t region,uint8_t *key, SF_Ctr
  *
 *******************************************************************************/
 __WEAK
-void ATTR_TCM_SECTION SF_Ctrl_AES_Set_IV(uint8_t region,uint8_t *iv,uint32_t addrOffset)
+void ATTR_TCM_SECTION SF_Ctrl_AES_Set_IV(uint8_t region, uint8_t *iv, uint32_t addrOffset)
 {
     /* Do flash key eco*/
-    uint32_t regionRegBase=SF_Ctrl_Get_AES_Region(SF_CTRL_BASE,!region);
-    uint32_t tmpVal,i=3;
-    
-    if(iv!=NULL){
-        tmpVal=SF_CTRL_SF_AES_IV_W3_OFFSET;
-        while(i--){
-            BL_WR_WORD(regionRegBase+tmpVal,__REV(BL_RDWD_FRM_BYTEP(iv)));
-            iv+=4;
-            tmpVal-=4;
+    uint32_t regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, !region);
+    uint32_t tmpVal, i = 3;
+
+    if (iv != NULL) {
+        tmpVal = SF_CTRL_SF_AES_IV_W3_OFFSET;
+
+        while (i--) {
+            BL_WR_WORD(regionRegBase + tmpVal, __REV(BL_RDWD_FRM_BYTEP(iv)));
+            iv += 4;
+            tmpVal -= 4;
         }
+
         /*
-        BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W3,__REV(BL_RDWD_FRM_BYTEP(iv)));
-        iv+=4;
-        BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W2,__REV(BL_RDWD_FRM_BYTEP(iv)));
-        iv+=4;
-        BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W1,__REV(BL_RDWD_FRM_BYTEP(iv)));
-        iv+=4;
-        */
-        BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W0,addrOffset);
-        iv+=4;
+		BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W3,__REV(BL_RDWD_FRM_BYTEP(iv)));
+		iv+=4;
+		BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W2,__REV(BL_RDWD_FRM_BYTEP(iv)));
+		iv+=4;
+		BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W1,__REV(BL_RDWD_FRM_BYTEP(iv)));
+		iv+=4;
+		*/
+        BL_WR_REG(regionRegBase, SF_CTRL_SF_AES_IV_W0, addrOffset);
+        iv += 4;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Serial flash controller set AES iv with big endian
  *
  * @param  region: region number
@@ -583,33 +594,35 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Set_IV(uint8_t region,uint8_t *iv,uint32_t add
  *
 *******************************************************************************/
 __WEAK
-void ATTR_TCM_SECTION SF_Ctrl_AES_Set_IV_BE(uint8_t region,uint8_t *iv,uint32_t addrOffset)
+void ATTR_TCM_SECTION SF_Ctrl_AES_Set_IV_BE(uint8_t region, uint8_t *iv, uint32_t addrOffset)
 {
     /* Do flash key eco*/
-    uint32_t regionRegBase=SF_Ctrl_Get_AES_Region(SF_CTRL_BASE,!region);
-    uint32_t tmpVal,i=3;
-    
-    if(iv!=NULL){
-        tmpVal=SF_CTRL_SF_AES_IV_W0_OFFSET;
-        while(i--){
-            BL_WR_WORD(regionRegBase+tmpVal,BL_RDWD_FRM_BYTEP(iv));
-            iv+=4;
-            tmpVal+=4;
+    uint32_t regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, !region);
+    uint32_t tmpVal, i = 3;
+
+    if (iv != NULL) {
+        tmpVal = SF_CTRL_SF_AES_IV_W0_OFFSET;
+
+        while (i--) {
+            BL_WR_WORD(regionRegBase + tmpVal, BL_RDWD_FRM_BYTEP(iv));
+            iv += 4;
+            tmpVal += 4;
         }
+
         /*
-        BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W0,BL_RDWD_FRM_BYTEP(iv));
-        iv+=4;
-        BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W1,BL_RDWD_FRM_BYTEP(iv));
-        iv+=4;
-        BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W2,BL_RDWD_FRM_BYTEP(iv));
-        iv+=4;
-        */
-        BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W3,__REV(addrOffset));
-        iv+=4;
+		BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W0,BL_RDWD_FRM_BYTEP(iv));
+		iv+=4;
+		BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W1,BL_RDWD_FRM_BYTEP(iv));
+		iv+=4;
+		BL_WR_REG(regionRegBase,SF_CTRL_SF_AES_IV_W2,BL_RDWD_FRM_BYTEP(iv));
+		iv+=4;
+		*/
+        BL_WR_REG(regionRegBase, SF_CTRL_SF_AES_IV_W3, __REV(addrOffset));
+        iv += 4;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable serial flash controller AES
  *
  * @param  None
@@ -622,13 +635,13 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Enable(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_AES);
-    tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_AES_EN);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_AES);
+    tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_AES_EN);
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_AES,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_AES, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable serial flash controller AES
  *
  * @param  None
@@ -641,13 +654,13 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Disable(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_AES);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_AES_EN);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_AES);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_AES_EN);
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_AES,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_AES, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set flash image offset
  *
  * @param  addrOffset: Address offset value
@@ -658,10 +671,10 @@ void ATTR_TCM_SECTION SF_Ctrl_AES_Disable(void)
 __WEAK
 void ATTR_TCM_SECTION SF_Ctrl_Set_Flash_Image_Offset(uint32_t addrOffset)
 {
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_ID0_OFFSET,addrOffset);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_ID0_OFFSET, addrOffset);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get flash image offset
  *
  * @param  None
@@ -672,10 +685,10 @@ void ATTR_TCM_SECTION SF_Ctrl_Set_Flash_Image_Offset(uint32_t addrOffset)
 __WEAK
 uint32_t ATTR_TCM_SECTION SF_Ctrl_Get_Flash_Image_Offset(void)
 {
-    return BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_ID0_OFFSET);
+    return BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_ID0_OFFSET);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  SF controller send one command
  *
  * @param  sahbType: Serial flash controller clock sahb sram select
@@ -688,16 +701,18 @@ void ATTR_TCM_SECTION SF_Ctrl_Select_Clock(SF_Ctrl_Sahb_Type sahbType)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_0);
-    if(sahbType==SF_CTRL_SAHB_CLOCK){
-        tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_CLK_SAHB_SRAM_SEL);
-    }else if(sahbType==SF_CTRL_FLASH_CLOCK){
-        tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_CLK_SAHB_SRAM_SEL);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_0);
+
+    if (sahbType == SF_CTRL_SAHB_CLOCK) {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_CLK_SAHB_SRAM_SEL);
+    } else if (sahbType == SF_CTRL_FLASH_CLOCK) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_CLK_SAHB_SRAM_SEL);
     }
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_0,tmpVal);
+
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_0, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  SF controller send one command
  *
  * @param  cfg: Serial flash controller command configuration pointer
@@ -718,103 +733,108 @@ void ATTR_TCM_SECTION SF_Ctrl_SendCmd(SF_Ctrl_Cmd_Cfg_Type *cfg)
     CHECK_PARAM(IS_SF_CTRL_DATA_MODE_TYPE(cfg->dataMode));
 
     timeOut = SF_CTRL_BUSY_STATE_TIMEOUT;
-    while(SET==SF_Ctrl_GetBusyState()){
+
+    while (SET == SF_Ctrl_GetBusyState()) {
         timeOut--;
-        if(timeOut == 0){
+
+        if (timeOut == 0) {
             return;
         }
     }
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_1);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_1);
 
-    if(BL_GET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_FN_SEL)!=SF_CTRL_OWNER_SAHB){
+    if (BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_FN_SEL) != SF_CTRL_OWNER_SAHB) {
         return;
     }
 
     /* Clear trigger */
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_SAHB_0);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_TRIG);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_SAHB_0,tmpVal);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_SAHB_0);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_TRIG);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_SAHB_0, tmpVal);
 
     /* Copy command buffer */
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_SAHB_1,cfg->cmdBuf[0]);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_SAHB_2,cfg->cmdBuf[1]);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_SAHB_1, cfg->cmdBuf[0]);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_SAHB_2, cfg->cmdBuf[1]);
 
     /* Configure SPI and IO mode*/
-    if(SF_CTRL_CMD_1_LINE==cfg->cmdMode){
-          tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_QPI_MODE_EN,SF_CTRL_SPI_MODE);
-    }else{
-          tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_QPI_MODE_EN,SF_CTRL_QPI_MODE);
+    if (SF_CTRL_CMD_1_LINE == cfg->cmdMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_QPI_MODE_EN, SF_CTRL_SPI_MODE);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_QPI_MODE_EN, SF_CTRL_QPI_MODE);
     }
 
-    if(SF_CTRL_ADDR_1_LINE==cfg->addrMode){
-        if(SF_CTRL_DATA_1_LINE==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_SPI_MODE,SF_CTRL_NIO_MODE);
-        }else if(SF_CTRL_DATA_2_LINES==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_SPI_MODE,SF_CTRL_DO_MODE);
-        }else if(SF_CTRL_DATA_4_LINES==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_SPI_MODE,SF_CTRL_QO_MODE);
+    if (SF_CTRL_ADDR_1_LINE == cfg->addrMode) {
+        if (SF_CTRL_DATA_1_LINE == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_SPI_MODE, SF_CTRL_NIO_MODE);
+        } else if (SF_CTRL_DATA_2_LINES == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_SPI_MODE, SF_CTRL_DO_MODE);
+        } else if (SF_CTRL_DATA_4_LINES == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_SPI_MODE, SF_CTRL_QO_MODE);
         }
-    }else if(SF_CTRL_ADDR_2_LINES==cfg->addrMode){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_SPI_MODE,SF_CTRL_DIO_MODE);
-    }else if(SF_CTRL_ADDR_4_LINES==cfg->addrMode){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_SPI_MODE,SF_CTRL_QIO_MODE);
+    } else if (SF_CTRL_ADDR_2_LINES == cfg->addrMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_SPI_MODE, SF_CTRL_DIO_MODE);
+    } else if (SF_CTRL_ADDR_4_LINES == cfg->addrMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_SPI_MODE, SF_CTRL_QIO_MODE);
     }
 
     /* Configure cmd */
-    tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_CMD_EN);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_CMD_BYTE,0);
+    tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_CMD_EN);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_CMD_BYTE, 0);
 
-    /* Configure address */ 
-    if(cfg->addrSize != 0){
-        tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_ADR_EN);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_ADR_BYTE,cfg->addrSize-1);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_ADR_EN);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_ADR_BYTE,0);
+    /* Configure address */
+    if (cfg->addrSize != 0) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_ADR_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_ADR_BYTE, cfg->addrSize - 1);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_ADR_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_ADR_BYTE, 0);
     }
 
     /* Configure dummy */
-    if(cfg->dummyClks !=0){
-        tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_DMY_EN);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_DMY_BYTE,cfg->dummyClks-1);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_DMY_EN);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_DMY_BYTE,0);
+    if (cfg->dummyClks != 0) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_DMY_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_DMY_BYTE, cfg->dummyClks - 1);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_DMY_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_DMY_BYTE, 0);
     }
 
     /* Configure data */
-    if(cfg->nbData !=0){
-        tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_DAT_EN);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_DAT_BYTE,cfg->nbData-1);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_DAT_EN);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_DAT_BYTE,0);
+    if (cfg->nbData != 0) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_DAT_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_DAT_BYTE, cfg->nbData - 1);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_DAT_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_DAT_BYTE, 0);
     }
 
     /* Set read write flag */
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_0_DAT_RW,cfg->rwFlag);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_SAHB_0,tmpVal);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_0_DAT_RW, cfg->rwFlag);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_SAHB_0, tmpVal);
 
     //switch sf_clk_sahb_sram_sel = 1
     SF_Ctrl_Select_Clock(SF_CTRL_FLASH_CLOCK);
     /* Trigger */
-    tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_0_TRIG);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_SAHB_0,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_IF_0_TRIG);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_SAHB_0, tmpVal);
 
     timeOut = SF_CTRL_BUSY_STATE_TIMEOUT;
-    while(SET==SF_Ctrl_GetBusyState()){
+
+    while (SET == SF_Ctrl_GetBusyState()) {
         timeOut--;
-        if(timeOut == 0){
+
+        if (timeOut == 0) {
             SF_Ctrl_Select_Clock(SF_CTRL_SAHB_CLOCK);
             return;
         }
     }
+
     //switch sf_clk_sahb_sram_sel = 0
     SF_Ctrl_Select_Clock(SF_CTRL_SAHB_CLOCK);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Config SF controller for I/D cache read
  *
  * @param  cfg: Serial flash controller command configuration pointer
@@ -824,7 +844,7 @@ void ATTR_TCM_SECTION SF_Ctrl_SendCmd(SF_Ctrl_Cmd_Cfg_Type *cfg)
  *
 *******************************************************************************/
 __WEAK
-void ATTR_TCM_SECTION SF_Ctrl_Icache_Set(SF_Ctrl_Cmd_Cfg_Type *cfg,uint8_t cmdValid)
+void ATTR_TCM_SECTION SF_Ctrl_Icache_Set(SF_Ctrl_Cmd_Cfg_Type *cfg, uint8_t cmdValid)
 {
     uint32_t tmpVal = 0;
     uint32_t timeOut = 0;
@@ -836,86 +856,88 @@ void ATTR_TCM_SECTION SF_Ctrl_Icache_Set(SF_Ctrl_Cmd_Cfg_Type *cfg,uint8_t cmdVa
     CHECK_PARAM(IS_SF_CTRL_DATA_MODE_TYPE(cfg->dataMode));
 
     timeOut = SF_CTRL_BUSY_STATE_TIMEOUT;
-    while(SET==SF_Ctrl_GetBusyState()){
+
+    while (SET == SF_Ctrl_GetBusyState()) {
         timeOut--;
-        if(timeOut == 0){
+
+        if (timeOut == 0) {
             return;
         }
     }
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_1);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_1);
 
-    if(BL_GET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_FN_SEL)!=SF_CTRL_OWNER_IAHB){
+    if (BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_FN_SEL) != SF_CTRL_OWNER_IAHB) {
         return;
     }
 
     /* Copy command buffer */
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IAHB_1,cfg->cmdBuf[0]);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IAHB_2,cfg->cmdBuf[1]);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IAHB_1, cfg->cmdBuf[0]);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IAHB_2, cfg->cmdBuf[1]);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IAHB_0);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IAHB_0);
 
     /* Configure SPI and IO mode*/
-    if(SF_CTRL_CMD_1_LINE==cfg->cmdMode){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_QPI_MODE_EN,SF_CTRL_SPI_MODE);
-    }else{
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_QPI_MODE_EN,SF_CTRL_QPI_MODE);
+    if (SF_CTRL_CMD_1_LINE == cfg->cmdMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_QPI_MODE_EN, SF_CTRL_SPI_MODE);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_QPI_MODE_EN, SF_CTRL_QPI_MODE);
     }
 
-    if(SF_CTRL_ADDR_1_LINE==cfg->addrMode){
-        if(SF_CTRL_DATA_1_LINE==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_SPI_MODE,SF_CTRL_NIO_MODE);
-        }else if(SF_CTRL_DATA_2_LINES==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_SPI_MODE,SF_CTRL_DO_MODE);
-        }else if(SF_CTRL_DATA_4_LINES==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_SPI_MODE,SF_CTRL_QO_MODE);
+    if (SF_CTRL_ADDR_1_LINE == cfg->addrMode) {
+        if (SF_CTRL_DATA_1_LINE == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_SPI_MODE, SF_CTRL_NIO_MODE);
+        } else if (SF_CTRL_DATA_2_LINES == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_SPI_MODE, SF_CTRL_DO_MODE);
+        } else if (SF_CTRL_DATA_4_LINES == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_SPI_MODE, SF_CTRL_QO_MODE);
         }
-    }else if(SF_CTRL_ADDR_2_LINES==cfg->addrMode){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_SPI_MODE,SF_CTRL_DIO_MODE);
-    }else if(SF_CTRL_ADDR_4_LINES==cfg->addrMode){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_SPI_MODE,SF_CTRL_QIO_MODE);
+    } else if (SF_CTRL_ADDR_2_LINES == cfg->addrMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_SPI_MODE, SF_CTRL_DIO_MODE);
+    } else if (SF_CTRL_ADDR_4_LINES == cfg->addrMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_SPI_MODE, SF_CTRL_QIO_MODE);
     }
 
-    if(cmdValid){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_CMD_EN,1);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_CMD_BYTE,0);
-    }else{
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_CMD_EN,0);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_CMD_BYTE,0);
+    if (cmdValid) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_CMD_EN, 1);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_CMD_BYTE, 0);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_CMD_EN, 0);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_CMD_BYTE, 0);
     }
 
-    /* Configure address */ 
-    if(cfg->addrSize != 0){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_ADR_EN,1);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_ADR_BYTE,cfg->addrSize-1);
-    }else{
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_ADR_EN,0);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_ADR_BYTE,0);
+    /* Configure address */
+    if (cfg->addrSize != 0) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_ADR_EN, 1);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_ADR_BYTE, cfg->addrSize - 1);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_ADR_EN, 0);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_ADR_BYTE, 0);
     }
 
     /* configure dummy */
-    if(cfg->dummyClks !=0){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_DMY_EN,1);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_DMY_BYTE,cfg->dummyClks-1);
-    }else{
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_DMY_EN,0);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_DMY_BYTE,0);
+    if (cfg->dummyClks != 0) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_DMY_EN, 1);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_DMY_BYTE, cfg->dummyClks - 1);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_DMY_EN, 0);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_DMY_BYTE, 0);
     }
 
     /* Configure data */
-    if(cfg->nbData !=0){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_DAT_EN,1);
+    if (cfg->nbData != 0) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_DAT_EN, 1);
     } else {
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_DAT_EN,0);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_DAT_EN, 0);
     }
 
     /* Set read write flag */
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_1_DAT_RW,cfg->rwFlag);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_1_DAT_RW, cfg->rwFlag);
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IAHB_0,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IAHB_0, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Config SF controller for I/D cache write
  *
  * @param  cfg: Serial flash controller command configuration pointer
@@ -925,7 +947,7 @@ void ATTR_TCM_SECTION SF_Ctrl_Icache_Set(SF_Ctrl_Cmd_Cfg_Type *cfg,uint8_t cmdVa
  *
 *******************************************************************************/
 __WEAK
-void ATTR_TCM_SECTION SF_Ctrl_Icache2_Set(SF_Ctrl_Cmd_Cfg_Type *cfg,uint8_t cmdValid)
+void ATTR_TCM_SECTION SF_Ctrl_Icache2_Set(SF_Ctrl_Cmd_Cfg_Type *cfg, uint8_t cmdValid)
 {
     uint32_t tmpVal = 0;
     uint32_t timeOut = 0;
@@ -937,86 +959,88 @@ void ATTR_TCM_SECTION SF_Ctrl_Icache2_Set(SF_Ctrl_Cmd_Cfg_Type *cfg,uint8_t cmdV
     CHECK_PARAM(IS_SF_CTRL_DATA_MODE_TYPE(cfg->dataMode));
 
     timeOut = SF_CTRL_BUSY_STATE_TIMEOUT;
-    while(SET==SF_Ctrl_GetBusyState()){
+
+    while (SET == SF_Ctrl_GetBusyState()) {
         timeOut--;
-        if(timeOut == 0){
+
+        if (timeOut == 0) {
             return;
         }
     }
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_1);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_1);
 
-    if(BL_GET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_FN_SEL)!=SF_CTRL_OWNER_IAHB){
+    if (BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_FN_SEL) != SF_CTRL_OWNER_IAHB) {
         return;
     }
 
     /* Copy command buffer */
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IAHB_4,cfg->cmdBuf[0]);
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IAHB_5,cfg->cmdBuf[1]);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IAHB_4, cfg->cmdBuf[0]);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IAHB_5, cfg->cmdBuf[1]);
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IAHB_3);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IAHB_3);
 
     /* Configure SPI and IO mode*/
-    if(SF_CTRL_CMD_1_LINE==cfg->cmdMode){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_QPI_MODE_EN,SF_CTRL_SPI_MODE);
-    }else{
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_QPI_MODE_EN,SF_CTRL_QPI_MODE);
+    if (SF_CTRL_CMD_1_LINE == cfg->cmdMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_QPI_MODE_EN, SF_CTRL_SPI_MODE);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_QPI_MODE_EN, SF_CTRL_QPI_MODE);
     }
 
-    if(SF_CTRL_ADDR_1_LINE==cfg->addrMode){
-        if(SF_CTRL_DATA_1_LINE==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_SPI_MODE,SF_CTRL_NIO_MODE);
-        }else if(SF_CTRL_DATA_2_LINES==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_SPI_MODE,SF_CTRL_DO_MODE);
-        }else if(SF_CTRL_DATA_4_LINES==cfg->dataMode){
-            tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_SPI_MODE,SF_CTRL_QO_MODE);
+    if (SF_CTRL_ADDR_1_LINE == cfg->addrMode) {
+        if (SF_CTRL_DATA_1_LINE == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_SPI_MODE, SF_CTRL_NIO_MODE);
+        } else if (SF_CTRL_DATA_2_LINES == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_SPI_MODE, SF_CTRL_DO_MODE);
+        } else if (SF_CTRL_DATA_4_LINES == cfg->dataMode) {
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_SPI_MODE, SF_CTRL_QO_MODE);
         }
-    }else if(SF_CTRL_ADDR_2_LINES==cfg->addrMode){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_SPI_MODE,SF_CTRL_DIO_MODE);
-    }else if(SF_CTRL_ADDR_4_LINES==cfg->addrMode){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_SPI_MODE,SF_CTRL_QIO_MODE);
+    } else if (SF_CTRL_ADDR_2_LINES == cfg->addrMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_SPI_MODE, SF_CTRL_DIO_MODE);
+    } else if (SF_CTRL_ADDR_4_LINES == cfg->addrMode) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_SPI_MODE, SF_CTRL_QIO_MODE);
     }
 
-    if(cmdValid){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_CMD_EN,1);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_CMD_BYTE,0);
-    }else{
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_CMD_EN,0);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_CMD_BYTE,0);
+    if (cmdValid) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_CMD_EN, 1);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_CMD_BYTE, 0);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_CMD_EN, 0);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_CMD_BYTE, 0);
     }
 
     /* Configure address */
-    if(cfg->addrSize != 0){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_ADR_EN,1);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_ADR_BYTE,cfg->addrSize-1);
-    }else{
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_ADR_EN,0);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_ADR_BYTE,0);
+    if (cfg->addrSize != 0) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_ADR_EN, 1);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_ADR_BYTE, cfg->addrSize - 1);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_ADR_EN, 0);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_ADR_BYTE, 0);
     }
 
     /* configure dummy */
-    if(cfg->dummyClks !=0){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_DMY_EN,1);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_DMY_BYTE,cfg->dummyClks-1);
-    }else{
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_DMY_EN,0);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_DMY_BYTE,0);
+    if (cfg->dummyClks != 0) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_DMY_EN, 1);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_DMY_BYTE, cfg->dummyClks - 1);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_DMY_EN, 0);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_DMY_BYTE, 0);
     }
 
     /* Configure data */
-    if(cfg->nbData !=0){
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_DAT_EN,1);
+    if (cfg->nbData != 0) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_DAT_EN, 1);
     } else {
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_DAT_EN,0);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_DAT_EN, 0);
     }
 
     /* Set read write flag */
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_2_DAT_RW,cfg->rwFlag);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_2_DAT_RW, cfg->rwFlag);
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_IAHB_3,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_IAHB_3, tmpVal);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get SF Ctrl busy state
  *
  * @param  None
@@ -1029,16 +1053,16 @@ BL_Sts_Type ATTR_TCM_SECTION SF_Ctrl_GetBusyState(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_IF_SAHB_0);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_IF_SAHB_0);
 
-    if( BL_IS_REG_BIT_SET(tmpVal,SF_CTRL_SF_IF_BUSY)){
+    if (BL_IS_REG_BIT_SET(tmpVal, SF_CTRL_SF_IF_BUSY)) {
         return SET;
-    }else{
+    } else {
         return RESET;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Check is serial flash controller AES enable
  *
  * @param  None
@@ -1051,11 +1075,11 @@ uint8_t ATTR_TCM_SECTION SF_Ctrl_Is_AES_Enable(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_SF_AES);
-    return BL_IS_REG_BIT_SET(tmpVal,SF_CTRL_SF_AES_EN);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_AES);
+    return BL_IS_REG_BIT_SET(tmpVal, SF_CTRL_SF_AES_EN);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get flash controller clock delay value
  *
  * @param  None
@@ -1068,16 +1092,16 @@ uint8_t ATTR_TCM_SECTION SF_Ctrl_Get_Clock_Delay(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_0);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_0);
 
-    if(BL_GET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_READ_DLY_EN)==0){
+    if (BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_READ_DLY_EN) == 0) {
         return 0;
-    }else{
-        return BL_GET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_READ_DLY_N) +1;
+    } else {
+        return BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_READ_DLY_N) + 1;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set flash controller clock delay value
  *
  * @param  delay: Clock delay value
@@ -1090,20 +1114,20 @@ void ATTR_TCM_SECTION SF_Ctrl_Set_Clock_Delay(uint8_t delay)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(SF_CTRL_BASE,SF_CTRL_0);
+    tmpVal = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_0);
 
-    if(delay>0){
-        tmpVal=BL_SET_REG_BIT(tmpVal,SF_CTRL_SF_IF_READ_DLY_EN);
-        tmpVal=BL_SET_REG_BITS_VAL(tmpVal,SF_CTRL_SF_IF_READ_DLY_N,delay-1);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,SF_CTRL_SF_IF_READ_DLY_EN);
+    if (delay > 0) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, SF_CTRL_SF_IF_READ_DLY_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_IF_READ_DLY_N, delay - 1);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, SF_CTRL_SF_IF_READ_DLY_EN);
     }
 
-    BL_WR_REG(SF_CTRL_BASE,SF_CTRL_0,tmpVal);
+    BL_WR_REG(SF_CTRL_BASE, SF_CTRL_0, tmpVal);
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  SF Controller interrupt handler
  *
  * @param  None

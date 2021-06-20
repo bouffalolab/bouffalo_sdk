@@ -18,7 +18,7 @@ extern "C" {
  *      DEFINES
  *********************/
 
-#if defined(__cplusplus) || __STDC_VERSION__ >= 199901L  // If c99 or newer, use stdint.h to determine arch size
+#if defined(__cplusplus) || __STDC_VERSION__ >= 199901L // If c99 or newer, use stdint.h to determine arch size
 #include <stdint.h>
 #endif
 
@@ -72,13 +72,13 @@ typedef uint32_t lv_uintptr_t;
  *      MACROS
  **********************/
 
-#define LV_UNUSED(x) ((void) x)
+#define LV_UNUSED(x) ((void)x)
 
-#define _LV_CONCAT(x, y) x ## y
-#define LV_CONCAT(x, y) _LV_CONCAT(x, y)
+#define _LV_CONCAT(x, y) x##y
+#define LV_CONCAT(x, y)  _LV_CONCAT(x, y)
 
-#define _LV_CONCAT3(x, y, z) x ## y ## z
-#define LV_CONCAT3(x, y, z) _LV_CONCAT3(x, y, z)
+#define _LV_CONCAT3(x, y, z) x##y##z
+#define LV_CONCAT3(x, y, z)  _LV_CONCAT3(x, y, z)
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -29,7 +29,8 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-typedef struct {
+typedef struct
+{
     lv_opa_t opa;
 
     uint16_t angle;
@@ -41,14 +42,14 @@ typedef struct {
 
     lv_blend_mode_t blend_mode;
 
-    uint8_t antialias       : 1;
+    uint8_t antialias : 1;
 } lv_draw_img_dsc_t;
 
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
 
-void lv_draw_img_dsc_init(lv_draw_img_dsc_t * dsc);
+void lv_draw_img_dsc_init(lv_draw_img_dsc_t *dsc);
 /**
  * Draw an image
  * @param coords the coordinates of the image
@@ -56,7 +57,7 @@ void lv_draw_img_dsc_init(lv_draw_img_dsc_t * dsc);
  * @param src pointer to a lv_color_t array which contains the pixels of the image
  * @param dsc pointer to an initialized `lv_draw_img_dsc_t` variable
  */
-void lv_draw_img(const lv_area_t * coords, const lv_area_t * mask, const void * src, const lv_draw_img_dsc_t * dsc);
+void lv_draw_img(const lv_area_t *coords, const lv_area_t *mask, const void *src, const lv_draw_img_dsc_t *dsc);
 
 /**
  * Get the type of an image source
@@ -66,7 +67,7 @@ void lv_draw_img(const lv_area_t * coords, const lv_area_t * mask, const void * 
  *  - or a symbol (e.g. LV_SYMBOL_CLOSE)
  * @return type of the image source LV_IMG_SRC_VARIABLE/FILE/SYMBOL/UNKNOWN
  */
-lv_img_src_t lv_img_src_get_type(const void * src);
+lv_img_src_t lv_img_src_get_type(const void *src);
 
 /**
  * Get the pixel size of a color format in bits

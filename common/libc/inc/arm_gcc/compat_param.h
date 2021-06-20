@@ -3,4 +3,4 @@
 
 #include <sys/param.h> /* need this to define BSD */
 
-#endif  /* _COMPAT_PARAM_H */
+#endif /* _COMPAT_PARAM_H */

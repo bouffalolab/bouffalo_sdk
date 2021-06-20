@@ -29,46 +29,46 @@ extern "C" {
 /* Helper to pass a int as a pointer or vice-versa.
  * Those are available for 32 bits architectures:
  */
-#define POINTER_TO_UINT(x) ((u32_t) (x))
-#define UINT_TO_POINTER(x) ((void *) (x))
-#define POINTER_TO_INT(x)  ((s32_t) (x))
-#define INT_TO_POINTER(x)  ((void *) (x))
+#define POINTER_TO_UINT(x) ((u32_t)(x))
+#define UINT_TO_POINTER(x) ((void *)(x))
+#define POINTER_TO_INT(x)  ((s32_t)(x))
+#define INT_TO_POINTER(x)  ((void *)(x))
 
 /* Evaluates to 0 if cond is true-ish; compile error otherwise */
-#define ZERO_OR_COMPILE_ERROR(cond) ((int) sizeof(char[1 - 2 * !(cond)]) - 1)
+#define ZERO_OR_COMPILE_ERROR(cond) ((int)sizeof(char[1 - 2 * !(cond)]) - 1)
 
 /* Evaluates to 0 if array is an array; compile error if not array (e.g.
  * pointer)
  */
-#define IS_ARRAY(array) \
-	ZERO_OR_COMPILE_ERROR( \
-		!__builtin_types_compatible_p(__typeof__(array), \
-					      __typeof__(&(array)[0])))
+#define IS_ARRAY(array)                                  \
+    ZERO_OR_COMPILE_ERROR(                               \
+        !__builtin_types_compatible_p(__typeof__(array), \
+                                      __typeof__(&(array)[0])))
 
 /* Evaluates to number of elements in an array; compile error if not
  * an array (e.g. pointer)
  */
-#define ARRAY_SIZE(array) \
-	((unsigned long) (IS_ARRAY(array) + \
-		(sizeof(array) / sizeof((array)[0]))))
+#define ARRAY_SIZE(array)              \
+    ((unsigned long)(IS_ARRAY(array) + \
+                     (sizeof(array) / sizeof((array)[0]))))
 
 /* Evaluates to 1 if ptr is part of array, 0 otherwise; compile error if
  * "array" argument is not an array (e.g. "ptr" and "array" mixed up)
  */
 #define PART_OF_ARRAY(array, ptr) \
-	((ptr) && ((ptr) >= &array[0] && (ptr) < &array[ARRAY_SIZE(array)]))
+    ((ptr) && ((ptr) >= &array[0] && (ptr) < &array[ARRAY_SIZE(array)]))
 
 #define CONTAINER_OF(ptr, type, field) \
-	((type *)(((char *)(ptr)) - offsetof(type, field)))
+    ((type *)(((char *)(ptr)) - offsetof(type, field)))
 
 /* round "x" up/down to next multiple of "align" (which must be a power of 2) */
-#define ROUND_UP(x, align)                                   \
-	(((unsigned long)(x) + ((unsigned long)align - 1)) & \
-	 ~((unsigned long)align - 1))
+#define ROUND_UP(x, align)                               \
+    (((unsigned long)(x) + ((unsigned long)align - 1)) & \
+     ~((unsigned long)align - 1))
 #define ROUND_DOWN(x, align) ((unsigned long)(x) & ~((unsigned long)align - 1))
 
 #define ceiling_fraction(numerator, divider) \
-	(((numerator) + ((divider) - 1)) / (divider))
+    (((numerator) + ((divider)-1)) / (divider))
 
 #ifdef INLINED
 #define INLINE inline
@@ -84,35 +84,35 @@ extern "C" {
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
-void get_bytearray_from_string(char** params, uint8_t *result,int array_size);
-void get_uint8_from_string(char** params, uint8_t *result);
-void get_uint16_from_string(char** params, uint16_t *result);
-void get_uint32_from_string(char** params, uint32_t *result);
+void get_bytearray_from_string(char **params, uint8_t *result, int array_size);
+void get_uint8_from_string(char **params, uint8_t *result);
+void get_uint16_from_string(char **params, uint16_t *result);
+void get_uint32_from_string(char **params, uint32_t *result);
 void reverse_bytearray(uint8_t *src, uint8_t *result, int array_size);
 void reverse_bytearray(uint8_t *src, uint8_t *result, int array_size);
 unsigned int find_lsb_set(uint32_t data);
 
 static inline int is_power_of_two(unsigned int x)
 {
-	return (x != 0) && !(x & (x - 1));
+    return (x != 0) && !(x & (x - 1));
 }
 
 static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
 {
-	s64_t sign_ext;
+    s64_t sign_ext;
 
-	if (shift == 0) {
-		return value;
-	}
+    if (shift == 0) {
+        return value;
+    }
 
-	/* extract sign bit */
-	sign_ext = (value >> 63) & 1;
+    /* extract sign bit */
+    sign_ext = (value >> 63) & 1;
 
-	/* make all bits of sign_ext be the same as the value's sign bit */
-	sign_ext = -sign_ext;
+    /* make all bits of sign_ext be the same as the value's sign bit */
+    sign_ext = -sign_ext;
 
-	/* shift value and fill opened bit positions with sign bit */
-	return (value >> shift) | (sign_ext << (64 - shift));
+    /* shift value and fill opened bit positions with sign bit */
+    return (value >> shift) | (sign_ext << (64 - shift));
 }
 
 #endif /* !_ASMLANGUAGE */
@@ -123,7 +123,7 @@ static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
 #define GB(x) (MB(x) << 10)
 
 /* KHZ, MHZ */
-#define KHZ(x) ((x) * 1000)
+#define KHZ(x) ((x)*1000)
 #define MHZ(x) (KHZ(x) * 1000)
 
 #define BIT_MASK(n) (BIT(n) - 1)
@@ -190,9 +190,9 @@ static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
  * http://stackoverflow.com/a/12540675
  */
 #define UTIL_EMPTY(...)
-#define UTIL_DEFER(...) __VA_ARGS__ UTIL_EMPTY()
+#define UTIL_DEFER(...)    __VA_ARGS__ UTIL_EMPTY()
 #define UTIL_OBSTRUCT(...) __VA_ARGS__ UTIL_DEFER(UTIL_EMPTY)()
-#define UTIL_EXPAND(...) __VA_ARGS__
+#define UTIL_EXPAND(...)   __VA_ARGS__
 
 #define UTIL_EVAL(...)  UTIL_EVAL1(UTIL_EVAL1(UTIL_EVAL1(__VA_ARGS__)))
 #define UTIL_EVAL1(...) UTIL_EVAL2(UTIL_EVAL2(UTIL_EVAL2(__VA_ARGS__)))
@@ -201,20 +201,20 @@ static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
 #define UTIL_EVAL4(...) UTIL_EVAL5(UTIL_EVAL5(UTIL_EVAL5(__VA_ARGS__)))
 #define UTIL_EVAL5(...) __VA_ARGS__
 
-#define UTIL_CAT(a, ...) UTIL_PRIMITIVE_CAT(a, __VA_ARGS__)
+#define UTIL_CAT(a, ...)           UTIL_PRIMITIVE_CAT(a, __VA_ARGS__)
 #define UTIL_PRIMITIVE_CAT(a, ...) a##__VA_ARGS__
 
 #define UTIL_INC(x) UTIL_PRIMITIVE_CAT(UTIL_INC_, x)
-#define UTIL_INC_0 1
-#define UTIL_INC_1 2
-#define UTIL_INC_2 3
-#define UTIL_INC_3 4
-#define UTIL_INC_4 5
-#define UTIL_INC_5 6
-#define UTIL_INC_6 7
-#define UTIL_INC_7 8
-#define UTIL_INC_8 9
-#define UTIL_INC_9 10
+#define UTIL_INC_0  1
+#define UTIL_INC_1  2
+#define UTIL_INC_2  3
+#define UTIL_INC_3  4
+#define UTIL_INC_4  5
+#define UTIL_INC_5  6
+#define UTIL_INC_6  7
+#define UTIL_INC_7  8
+#define UTIL_INC_8  9
+#define UTIL_INC_9  10
 #define UTIL_INC_10 11
 #define UTIL_INC_11 12
 #define UTIL_INC_12 13
@@ -227,16 +227,16 @@ static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
 #define UTIL_INC_19 19
 
 #define UTIL_DEC(x) UTIL_PRIMITIVE_CAT(UTIL_DEC_, x)
-#define UTIL_DEC_0 0
-#define UTIL_DEC_1 0
-#define UTIL_DEC_2 1
-#define UTIL_DEC_3 2
-#define UTIL_DEC_4 3
-#define UTIL_DEC_5 4
-#define UTIL_DEC_6 5
-#define UTIL_DEC_7 6
-#define UTIL_DEC_8 7
-#define UTIL_DEC_9 8
+#define UTIL_DEC_0  0
+#define UTIL_DEC_1  0
+#define UTIL_DEC_2  1
+#define UTIL_DEC_3  2
+#define UTIL_DEC_4  3
+#define UTIL_DEC_5  4
+#define UTIL_DEC_6  5
+#define UTIL_DEC_7  6
+#define UTIL_DEC_8  7
+#define UTIL_DEC_9  8
 #define UTIL_DEC_10 9
 #define UTIL_DEC_11 10
 #define UTIL_DEC_12 11
@@ -249,18 +249,18 @@ static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
 #define UTIL_DEC_19 18
 
 #define UTIL_CHECK_N(x, n, ...) n
-#define UTIL_CHECK(...) UTIL_CHECK_N(__VA_ARGS__, 0,)
+#define UTIL_CHECK(...)         UTIL_CHECK_N(__VA_ARGS__, 0, )
 
 #define UTIL_NOT(x) UTIL_CHECK(UTIL_PRIMITIVE_CAT(UTIL_NOT_, x))
-#define UTIL_NOT_0 ~, 1,
+#define UTIL_NOT_0  ~, 1,
 
 #define UTIL_COMPL(b) UTIL_PRIMITIVE_CAT(UTIL_COMPL_, b)
-#define UTIL_COMPL_0 1
-#define UTIL_COMPL_1 0
+#define UTIL_COMPL_0  1
+#define UTIL_COMPL_1  0
 
 #define UTIL_BOOL(x) UTIL_COMPL(UTIL_NOT(x))
 
-#define UTIL_IIF(c) UTIL_PRIMITIVE_CAT(UTIL_IIF_, c)
+#define UTIL_IIF(c)        UTIL_PRIMITIVE_CAT(UTIL_IIF_, c)
 #define UTIL_IIF_0(t, ...) __VA_ARGS__
 #define UTIL_IIF_1(t, ...) t
 
@@ -268,20 +268,17 @@ static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
 
 #define UTIL_EAT(...)
 #define UTIL_EXPAND(...) __VA_ARGS__
-#define UTIL_WHEN(c) UTIL_IF(c)(UTIL_EXPAND, UTIL_EAT)
+#define UTIL_WHEN(c) \
+    UTIL_IF(c)       \
+    (UTIL_EXPAND, UTIL_EAT)
 
-#define UTIL_REPEAT(count, macro, ...)			    \
-	UTIL_WHEN(count)				    \
-	(						    \
-		UTIL_OBSTRUCT(UTIL_REPEAT_INDIRECT) ()	    \
-		(					    \
-			UTIL_DEC(count), macro, __VA_ARGS__ \
-		)					    \
-		UTIL_OBSTRUCT(macro)			    \
-		(					    \
-			UTIL_DEC(count), __VA_ARGS__	    \
-		)					    \
-	)
+#define UTIL_REPEAT(count, macro, ...)           \
+    UTIL_WHEN(count)                             \
+    (                                            \
+        UTIL_OBSTRUCT(UTIL_REPEAT_INDIRECT)()(   \
+            UTIL_DEC(count), macro, __VA_ARGS__) \
+            UTIL_OBSTRUCT(macro)(                \
+                UTIL_DEC(count), __VA_ARGS__))
 #define UTIL_REPEAT_INDIRECT() UTIL_REPEAT
 
 /**

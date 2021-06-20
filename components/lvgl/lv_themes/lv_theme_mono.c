@@ -20,7 +20,8 @@
  *      TYPEDEFS
  **********************/
 
-typedef struct {
+typedef struct
+{
     lv_style_t scr;
     lv_style_t bg;
     lv_style_t clip_corner;
@@ -29,7 +30,7 @@ typedef struct {
     lv_style_t no_radius;
     lv_style_t fg_color;
     lv_style_t border_none;
-    lv_style_t big_line_space;       /*In roller or dropdownlist*/
+    lv_style_t big_line_space; /*In roller or dropdownlist*/
     lv_style_t pad_none;
     lv_style_t pad_normal;
     lv_style_t pad_small;
@@ -80,22 +81,22 @@ typedef struct {
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name);
+static void theme_apply(lv_theme_t *th, lv_obj_t *obj, lv_theme_style_t name);
 
 /**********************
  *  STATIC VARIABLES
  **********************/
 static lv_theme_t theme;
-static theme_styles_t * styles;
+static theme_styles_t *styles;
 
 /**********************
  *      MACROS
  **********************/
-#define COLOR_INV(c)    ((c).ch.red == 0 ? LV_COLOR_WHITE : LV_COLOR_BLACK)
-#define BG_COLOR        theme.color_primary.ch.red == 0 ? LV_COLOR_WHITE : LV_COLOR_BLACK
-#define FG_COLOR        COLOR_INV(BG_COLOR)
-#define RADIUS          (LV_MATH_MAX(LV_DPI / 30, 2))
-#define BORDER_WIDTH    (LV_MATH_MAX(LV_DPI / 60, 1))
+#define COLOR_INV(c) ((c).ch.red == 0 ? LV_COLOR_WHITE : LV_COLOR_BLACK)
+#define BG_COLOR     theme.color_primary.ch.red == 0 ? LV_COLOR_WHITE : LV_COLOR_BLACK
+#define FG_COLOR     COLOR_INV(BG_COLOR)
+#define RADIUS       (LV_MATH_MAX(LV_DPI / 30, 2))
+#define BORDER_WIDTH (LV_MATH_MAX(LV_DPI / 60, 1))
 
 /**********************
  *   STATIC FUNCTIONS
@@ -248,7 +249,7 @@ static void calendar_init(void)
     lv_style_set_value_align(&styles->calendar_date, LV_STATE_CHECKED, LV_ALIGN_IN_TOP_RIGHT);
     lv_style_set_value_color(&styles->calendar_date, LV_STATE_CHECKED, FG_COLOR);
     lv_style_set_value_ofs_y(&styles->calendar_date, LV_STATE_CHECKED,
-                             - lv_font_get_line_height(LV_THEME_DEFAULT_FONT_TITLE) / 4);
+                             -lv_font_get_line_height(LV_THEME_DEFAULT_FONT_TITLE) / 4);
     lv_style_set_bg_color(&styles->calendar_date, LV_STATE_CHECKED, BG_COLOR);
     lv_style_set_text_color(&styles->calendar_date, LV_STATE_CHECKED, FG_COLOR);
     lv_style_set_value_color(&styles->calendar_date, LV_STATE_CHECKED | LV_STATE_PRESSED, BG_COLOR);
@@ -489,17 +490,20 @@ static void win_init(void)
  * @param font_title pointer to a extra large font
  * @return a pointer to reference this theme later
  */
-lv_theme_t * lv_theme_mono_init(lv_color_t color_primary, lv_color_t color_secondary, uint32_t flags,
-                                const lv_font_t * font_small, const lv_font_t * font_normal, const lv_font_t * font_subtitle,
-                                const lv_font_t * font_title)
+lv_theme_t *lv_theme_mono_init(lv_color_t color_primary, lv_color_t color_secondary, uint32_t flags,
+                               const lv_font_t *font_small, const lv_font_t *font_normal, const lv_font_t *font_subtitle,
+                               const lv_font_t *font_title)
 {
-
     /* This trick is required only to avoid the garbage collection of
      * styles' data if LVGL is used in a binding (e.g. Micropython)
      * In a general case styles could be simple `static lv_style_t my style` variables*/
-    if(styles == NULL) {
+    if (styles == NULL) {
         styles = lv_mem_alloc(sizeof(theme_styles_t));
-        if(styles == NULL) return NULL;
+
+        if (styles == NULL) {
+            return NULL;
+        }
+
         _lv_memset_00(styles, sizeof(theme_styles_t));
         LV_GC_ROOT(_lv_theme_mono_styles) = styles;
     }
@@ -554,13 +558,13 @@ lv_theme_t * lv_theme_mono_init(lv_color_t color_primary, lv_color_t color_secon
  *   STATIC FUNCTIONS
  **********************/
 
-static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
+static void theme_apply(lv_theme_t *th, lv_obj_t *obj, lv_theme_style_t name)
 {
     LV_UNUSED(th);
 
-    lv_style_list_t * list;
+    lv_style_list_t *list;
 
-    switch(name) {
+    switch (name) {
         case LV_THEME_NONE:
             break;
 
@@ -568,11 +572,13 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
             list = lv_obj_get_style_list(obj, LV_OBJ_PART_MAIN);
             _lv_style_list_add_style(list, &styles->scr);
             break;
+
         case LV_THEME_OBJ:
             list = lv_obj_get_style_list(obj, LV_OBJ_PART_MAIN);
             _lv_style_list_add_style(list, &styles->bg);
             break;
 #if LV_USE_CONT
+
         case LV_THEME_CONT:
             list = lv_obj_get_style_list(obj, LV_CONT_PART_MAIN);
             _lv_style_list_add_style(list, &styles->bg);
@@ -580,6 +586,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_BTN
+
         case LV_THEME_BTN:
             list = lv_obj_get_style_list(obj, LV_BTN_PART_MAIN);
             _lv_style_list_add_style(list, &styles->bg);
@@ -589,6 +596,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_BTNMATRIX
+
         case LV_THEME_BTNMATRIX:
             list = lv_obj_get_style_list(obj, LV_BTNMATRIX_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -601,6 +609,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_KEYBOARD
+
         case LV_THEME_KEYBOARD:
             list = lv_obj_get_style_list(obj, LV_KEYBOARD_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -613,6 +622,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_BAR
+
         case LV_THEME_BAR:
             list = lv_obj_get_style_list(obj, LV_BAR_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -627,6 +637,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_SWITCH
+
         case LV_THEME_SWITCH:
             list = lv_obj_get_style_list(obj, LV_SWITCH_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -645,36 +656,42 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_CANVAS
+
         case LV_THEME_CANVAS:
             list = lv_obj_get_style_list(obj, LV_CANVAS_PART_MAIN);
             break;
 #endif
 
 #if LV_USE_IMG
+
         case LV_THEME_IMAGE:
             list = lv_obj_get_style_list(obj, LV_IMG_PART_MAIN);
             break;
 #endif
 
 #if LV_USE_IMGBTN
+
         case LV_THEME_IMGBTN:
             list = lv_obj_get_style_list(obj, LV_IMG_PART_MAIN);
             break;
 #endif
 
 #if LV_USE_LABEL
+
         case LV_THEME_LABEL:
             list = lv_obj_get_style_list(obj, LV_LABEL_PART_MAIN);
             break;
 #endif
 
 #if LV_USE_LINE
+
         case LV_THEME_LINE:
             list = lv_obj_get_style_list(obj, LV_LABEL_PART_MAIN);
             break;
 #endif
 
 #if LV_USE_ARC
+
         case LV_THEME_ARC:
             list = lv_obj_get_style_list(obj, LV_ARC_PART_BG);
             _lv_style_list_add_style(list, &styles->arc_bg);
@@ -685,6 +702,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_SPINNER
+
         case LV_THEME_SPINNER:
             list = lv_obj_get_style_list(obj, LV_SPINNER_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -698,6 +716,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_SLIDER
+
         case LV_THEME_SLIDER:
             list = lv_obj_get_style_list(obj, LV_SLIDER_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -716,6 +735,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_CHECKBOX
+
         case LV_THEME_CHECKBOX:
             list = lv_obj_get_style_list(obj, LV_CHECKBOX_PART_BG);
             _lv_style_list_add_style(list, &styles->pad_small);
@@ -728,6 +748,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_MSGBOX
+
         case LV_THEME_MSGBOX:
             list = lv_obj_get_style_list(obj, LV_MSGBOX_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -745,6 +766,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 
 #endif
 #if LV_USE_LED
+
         case LV_THEME_LED:
             list = lv_obj_get_style_list(obj, LV_LED_PART_MAIN);
             _lv_style_list_add_style(list, &styles->bg);
@@ -752,6 +774,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
             break;
 #endif
 #if LV_USE_PAGE
+
         case LV_THEME_PAGE:
             list = lv_obj_get_style_list(obj, LV_PAGE_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -764,6 +787,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
             break;
 #endif
 #if LV_USE_TABVIEW
+
         case LV_THEME_TABVIEW:
             list = lv_obj_get_style_list(obj, LV_TABVIEW_PART_BG);
             _lv_style_list_add_style(list, &styles->scr);
@@ -786,6 +810,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_TILEVIEW
+
         case LV_THEME_TILEVIEW:
             list = lv_obj_get_style_list(obj, LV_TILEVIEW_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -799,6 +824,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_ROLLER
+
         case LV_THEME_ROLLER:
             list = lv_obj_get_style_list(obj, LV_ROLLER_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -812,12 +838,14 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_OBJMASK
+
         case LV_THEME_OBJMASK:
             list = lv_obj_get_style_list(obj, LV_OBJMASK_PART_MAIN);
             break;
 #endif
 
 #if LV_USE_LIST
+
         case LV_THEME_LIST:
             list = lv_obj_get_style_list(obj, LV_LIST_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -839,6 +867,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_DROPDOWN
+
         case LV_THEME_DROPDOWN:
             list = lv_obj_get_style_list(obj, LV_DROPDOWN_PART_MAIN);
             _lv_style_list_add_style(list, &styles->bg);
@@ -859,6 +888,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_CHART
+
         case LV_THEME_CHART:
             list = lv_obj_get_style_list(obj, LV_CHART_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -872,24 +902,29 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
             break;
 #endif
 #if LV_USE_TABLE
-        case LV_THEME_TABLE: {
-                list = lv_obj_get_style_list(obj, LV_TABLE_PART_BG);
-                _lv_style_list_add_style(list, &styles->bg);
 
-                int idx = 1; /* start value should be 1, not zero, since cell styles
-                            start at 1 due to presence of LV_TABLE_PART_BG=0
-                            in the enum (lv_table.h) */
-                /* declaring idx outside loop to work with older compilers */
-                for(; idx <= LV_TABLE_CELL_STYLE_CNT; idx ++) {
-                    list = lv_obj_get_style_list(obj, idx);
-                    _lv_style_list_add_style(list, &styles->bg);
-                    _lv_style_list_add_style(list, &styles->no_radius);
-                }
-                break;
+        case LV_THEME_TABLE: {
+            list = lv_obj_get_style_list(obj, LV_TABLE_PART_BG);
+            _lv_style_list_add_style(list, &styles->bg);
+
+            int idx = 1; /* start value should be 1, not zero, since cell styles
+start at 1 due to presence of LV_TABLE_PART_BG=0
+in the enum (lv_table.h) */
+
+            /* declaring idx outside loop to work with older compilers */
+            for (; idx <= LV_TABLE_CELL_STYLE_CNT; idx++) {
+                list = lv_obj_get_style_list(obj, idx);
+                _lv_style_list_add_style(list, &styles->bg);
+                _lv_style_list_add_style(list, &styles->no_radius);
             }
+
+            break;
+        }
+
 #endif
 
 #if LV_USE_WIN
+
         case LV_THEME_WIN:
             list = lv_obj_get_style_list(obj, LV_WIN_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -912,6 +947,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_TEXTAREA
+
         case LV_THEME_TEXTAREA:
             list = lv_obj_get_style_list(obj, LV_TEXTAREA_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -925,6 +961,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_SPINBOX
+
         case LV_THEME_SPINBOX:
             list = lv_obj_get_style_list(obj, LV_SPINBOX_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -946,6 +983,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_CALENDAR
+
         case LV_THEME_CALENDAR:
             list = lv_obj_get_style_list(obj, LV_CALENDAR_PART_BG);
             _lv_style_list_add_style(list, &styles->bg);
@@ -967,6 +1005,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
             break;
 #endif
 #if LV_USE_CPICKER
+
         case LV_THEME_CPICKER:
             list = lv_obj_get_style_list(obj, LV_CPICKER_PART_MAIN);
             _lv_style_list_add_style(list, &styles->bg);
@@ -978,6 +1017,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
 #endif
 
 #if LV_USE_LINEMETER
+
         case LV_THEME_LINEMETER:
             list = lv_obj_get_style_list(obj, LV_LINEMETER_PART_MAIN);
             _lv_style_list_add_style(list, &styles->bg);
@@ -986,6 +1026,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
             break;
 #endif
 #if LV_USE_GAUGE
+
         case LV_THEME_GAUGE:
             list = lv_obj_get_style_list(obj, LV_GAUGE_PART_MAIN);
             _lv_style_list_add_style(list, &styles->bg);
@@ -998,12 +1039,12 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj, lv_theme_style_t name)
             _lv_style_list_add_style(list, &styles->gauge_needle);
             break;
 #endif
+
         default:
             break;
     }
 
     lv_obj_refresh_style(obj, LV_OBJ_PART_ALL, LV_STYLE_PROP_ALL);
-
 }
 
 #endif

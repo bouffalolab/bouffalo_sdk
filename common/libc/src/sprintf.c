@@ -11,12 +11,12 @@
 
 int sprintf(char *buffer, const char *format, ...)
 {
-	va_list ap;
-	int rv;
+    va_list ap;
+    int rv;
 
-	va_start(ap, format);
-	rv = vsnprintf(buffer, (~(unsigned int) 0)>>1, format, ap);
-	va_end(ap);
+    va_start(ap, format);
+    rv = vsnprintf(buffer, (~(unsigned int)0) >> 1, format, ap);
+    va_end(ap);
 
-	return rv;
+    return rv;
 }

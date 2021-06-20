@@ -42,7 +42,6 @@
 extern "C" {
 #endif
 
-
 /*
  * If we are using Native malloc(), we must also use
  * native Ansi string.h functions for memory manipulation.
@@ -55,15 +54,15 @@ extern "C" {
 
 #ifdef USE_NATIVE_MEMCPY
 
-#define OI_MemCopy(to, from, size)    memcpy((to), (from), (size))
-#define OI_MemSet(block, val, size)   memset((block), (val), (size))
-#define OI_MemZero(block, size)       memset((block), 0, (size))
-#define OI_MemCmp(s1, s2, n)          memcmp((s1), (s2), (n))
-#define OI_Strcpy(dest, src)          strcpy((dest),(src))
-#define OI_Strcat(dest, src)          strcat((dest),(src))
-#define OI_StrLen(str)                strlen((str))
-#define OI_Strcmp(s1, s2)             strcmp((s1), (s2))
-#define OI_Strncmp(s1, s2, n)         strncmp((s1), (s2), (n))
+#define OI_MemCopy(to, from, size)  memcpy((to), (from), (size))
+#define OI_MemSet(block, val, size) memset((block), (val), (size))
+#define OI_MemZero(block, size)     memset((block), 0, (size))
+#define OI_MemCmp(s1, s2, n)        memcmp((s1), (s2), (n))
+#define OI_Strcpy(dest, src)        strcpy((dest), (src))
+#define OI_Strcat(dest, src)        strcat((dest), (src))
+#define OI_StrLen(str)              strlen((str))
+#define OI_Strcmp(s1, s2)           strcmp((s1), (s2))
+#define OI_Strncmp(s1, s2, n)       strncmp((s1), (s2), (n))
 
 #else
 
@@ -76,7 +75,6 @@ extern "C" {
  */
 void OI_MemCopy(void *To, void const *From, OI_UINT32 Size);
 
-
 /*
  * OI_MemSet
  *
@@ -84,14 +82,12 @@ void OI_MemCopy(void *To, void const *From, OI_UINT32 Size);
  */
 void OI_MemSet(void *Block, OI_UINT8 Val, OI_UINT32 Size);
 
-
 /*
  * OI_MemZero
  *
  * Sets all bytes in a block of memory to zero
  */
 void OI_MemZero(void *Block, OI_UINT32 Size);
-
 
 /*
  * OI_MemCmp
@@ -123,7 +119,7 @@ OI_CHAR *OI_Strcpy(OI_CHAR *pDest,
  */
 
 OI_CHAR *OI_Strcat(OI_CHAR *pDest,
-                   OI_CHAR const *pStr) ;
+                   OI_CHAR const *pStr);
 
 /*
  * OI_StrLen
@@ -131,7 +127,7 @@ OI_CHAR *OI_Strcat(OI_CHAR *pDest,
  * Calculates the number of OI_CHARs in pStr (not including
  * the Null terminator) and returns the value.
  */
-OI_UINT OI_StrLen(OI_CHAR const *pStr) ;
+OI_UINT OI_StrLen(OI_CHAR const *pStr);
 
 /*
  * OI_Strcmp
@@ -158,8 +154,7 @@ OI_INT OI_Strcmp(OI_CHAR const *s1,
  */
 OI_INT OI_Strncmp(OI_CHAR const *s1,
                   OI_CHAR const *s2,
-                  OI_UINT32      len);
-
+                  OI_UINT32 len);
 
 #endif /* USE_NATIVE_MEMCPY */
 
@@ -193,9 +188,7 @@ OI_INT OI_StrcmpInsensitive(OI_CHAR const *s1,
  */
 OI_INT OI_StrncmpInsensitive(OI_CHAR const *s1,
                              OI_CHAR const *s2,
-                             OI_UINT        len);
-
-
+                             OI_UINT len);
 
 #ifdef __cplusplus
 }

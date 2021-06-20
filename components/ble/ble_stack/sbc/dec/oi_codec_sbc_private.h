@@ -43,13 +43,21 @@ Function prototypes and macro definitions used internally by the codec.
 
 #ifdef CODEC_DEBUG
 #include <stdio.h>
-#define ERROR(x) do {BT_WARN x; BT_WARN("\n"); } while (0)
+#define ERROR(x)       \
+    do {               \
+        BT_WARN x;     \
+        BT_WARN("\n"); \
+    } while (0)
 #else
 #define ERROR(x)
 #endif
 
 #ifdef TRACE_EXECUTION
-#define TRACE(x) do { BT_WARN x; BT_WARN("\n"); } while (0)
+#define TRACE(x)       \
+    do {               \
+        BT_WARN x;     \
+        BT_WARN("\n"); \
+    } while (0)
 #else
 #define TRACE(x)
 #endif
@@ -83,17 +91,17 @@ typedef union {
     OI_UINT32 uint32[2 * SBC_MAX_BANDS / 4];
 } BITNEED_UNION2;
 
-static const OI_UINT16 freq_values[] =    { 16000, 32000, 44100, 48000 };
-static const OI_UINT8 block_values[] =    { 4, 8, 12, 16 };
-static const OI_UINT8 channel_values[] =  { 1, 2, 2, 2 };
-static const OI_UINT8 band_values[] =     { 4, 8 };
+static const OI_UINT16 freq_values[] = { 16000, 32000, 44100, 48000 };
+static const OI_UINT8 block_values[] = { 4, 8, 12, 16 };
+static const OI_UINT8 channel_values[] = { 1, 2, 2, 2 };
+static const OI_UINT8 band_values[] = { 4, 8 };
 
-
-#define TEST_MODE_SENTINEL "OINA"
+#define TEST_MODE_SENTINEL        "OINA"
 #define TEST_MODE_SENTINEL_LENGTH 4
 
 /** Used internally. */
-typedef struct {
+typedef struct
+{
     union {
         const OI_UINT8 *r;
         OI_UINT8 *w;
@@ -102,12 +110,11 @@ typedef struct {
     OI_UINT bitPtr;
 } OI_BITSTREAM;
 
-
 #define VALID_INT16(x) (((x) >= OI_INT16_MIN) && ((x) <= OI_INT16_MAX))
 #define VALID_INT32(x) (((x) >= OI_INT32_MIN) && ((x) <= OI_INT32_MAX))
 
-#define DCTII_8_SHIFT_IN 0
-#define DCTII_8_SHIFT_OUT 16-DCTII_8_SHIFT_IN
+#define DCTII_8_SHIFT_IN  0
+#define DCTII_8_SHIFT_OUT 16 - DCTII_8_SHIFT_IN
 
 #define DCTII_8_SHIFT_0 (DCTII_8_SHIFT_OUT)
 #define DCTII_8_SHIFT_1 (DCTII_8_SHIFT_OUT)
@@ -115,15 +122,15 @@ typedef struct {
 #define DCTII_8_SHIFT_3 (DCTII_8_SHIFT_OUT)
 #define DCTII_8_SHIFT_4 (DCTII_8_SHIFT_OUT)
 #define DCTII_8_SHIFT_5 (DCTII_8_SHIFT_OUT)
-#define DCTII_8_SHIFT_6 (DCTII_8_SHIFT_OUT-1)
-#define DCTII_8_SHIFT_7 (DCTII_8_SHIFT_OUT-2)
+#define DCTII_8_SHIFT_6 (DCTII_8_SHIFT_OUT - 1)
+#define DCTII_8_SHIFT_7 (DCTII_8_SHIFT_OUT - 2)
 
 #define DCT_SHIFT 15
 
-#define DCTIII_4_SHIFT_IN 2
+#define DCTIII_4_SHIFT_IN  2
 #define DCTIII_4_SHIFT_OUT 15
 
-#define DCTIII_8_SHIFT_IN 3
+#define DCTIII_8_SHIFT_IN  3
 #define DCTIII_8_SHIFT_OUT 14
 
 OI_UINT computeBitneed(OI_CODEC_SBC_COMMON_CONTEXT *common,
@@ -136,7 +143,6 @@ void oneChannelBitAllocation(OI_CODEC_SBC_COMMON_CONTEXT *common,
                              OI_UINT ch,
                              OI_UINT bitcount);
 
-
 OI_INT adjustToFitBitpool(const OI_UINT bitpool,
                           OI_UINT32 *bitneeds,
                           const OI_UINT subbands,
@@ -144,11 +150,11 @@ OI_INT adjustToFitBitpool(const OI_UINT bitpool,
                           OI_UINT *excess);
 
 OI_INT allocAdjustedBits(OI_UINT8 *dest,
-                                OI_INT bits,
-                                OI_INT excess);
+                         OI_INT bits,
+                         OI_INT excess);
 
 OI_INT allocExcessBits(OI_UINT8 *dest,
-                              OI_INT excess);
+                       OI_INT excess);
 
 PRIVATE OI_UINT32 internal_CalculateBitrate(OI_CODEC_SBC_FRAME_INFO *frame);
 
@@ -166,12 +172,12 @@ PRIVATE OI_STATUS internal_DecodeRaw(OI_CODEC_SBC_DECODER_CONTEXT *context,
                                      OI_UINT32 *pcmBytes);
 
 OI_STATUS internal_DecoderReset(OI_CODEC_SBC_DECODER_CONTEXT *context,
-                                       OI_UINT32 *decoderData,
-                                       OI_UINT32 decoderDataBytes,
-                                       OI_BYTE maxChannels,
-                                       OI_BYTE pcmStride,
-                                       OI_BOOL enhanced,
-                                       OI_BOOL msbc_enable);
+                                OI_UINT32 *decoderData,
+                                OI_UINT32 decoderDataBytes,
+                                OI_BYTE maxChannels,
+                                OI_BYTE pcmStride,
+                                OI_BOOL enhanced,
+                                OI_BOOL msbc_enable);
 
 OI_UINT16 OI_SBC_CalculateFrameAndHeaderlen(OI_CODEC_SBC_FRAME_INFO *frame, OI_UINT *headerLen_);
 
@@ -200,9 +206,9 @@ PRIVATE void analyze8_generated(SBC_BUFFER_T analysisBuffer[RESTRICT 80],
 
 #ifdef SBC_ENHANCED
 PRIVATE void analyze8_enhanced_generated(SBC_BUFFER_T analysisBuffer[RESTRICT 112],
-        OI_INT16 *pcm,
-        OI_UINT strideShift,
-        OI_INT32 subband[8]);
+                                         OI_INT16 *pcm,
+                                         OI_UINT strideShift,
+                                         OI_INT32 subband[8]);
 #endif
 
 /* Decoder functions */

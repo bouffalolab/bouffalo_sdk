@@ -48,7 +48,7 @@
 /** @defgroup  UART_Private_Macros
  *  @{
  */
-#define UART_TX_TIMEOUT_COUNT          (160*1000)
+#define UART_TX_TIMEOUT_COUNT (160 * 1000)
 
 /*@} end of group UART_Private_Macros */
 
@@ -61,11 +61,11 @@
 /** @defgroup  UART_Private_Variables
  *  @{
  */
-static const uint32_t uartAddr[2] = {UART0_BASE,UART1_BASE};
-static intCallback_Type * uartIntCbfArra[2][UART_INT_ALL]= {
-    {NULL},{NULL}
+static const uint32_t uartAddr[2] = { UART0_BASE, UART1_BASE };
+static intCallback_Type *uartIntCbfArra[2][UART_INT_ALL] = {
+    { NULL },
+    { NULL }
 };
-
 
 /*@} end of group UART_Private_Variables */
 
@@ -88,7 +88,7 @@ static void UART_IntHandler(UART_ID_Type uartId);
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART interrupt common handler function
  *
  * @param  uartId: UART ID type
@@ -103,79 +103,83 @@ static void UART_IntHandler(UART_ID_Type uartId)
     uint32_t maskVal = 0;
     uint32_t UARTx = uartAddr[uartId];
 
-    tmpVal = BL_RD_REG(UARTx,UART_INT_STS);
-    maskVal = BL_RD_REG(UARTx,UART_INT_MASK);
+    tmpVal = BL_RD_REG(UARTx, UART_INT_STS);
+    maskVal = BL_RD_REG(UARTx, UART_INT_MASK);
 
     /* Length of uart tx data transfer arrived interrupt */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_UTX_END_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_UTX_END_MASK)){
-        BL_WR_REG(UARTx,UART_INT_CLEAR,0x1);
-        if(uartIntCbfArra[uartId][UART_INT_TX_END] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_END_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_END_MASK)) {
+        BL_WR_REG(UARTx, UART_INT_CLEAR, 0x1);
+
+        if (uartIntCbfArra[uartId][UART_INT_TX_END] != NULL) {
             uartIntCbfArra[uartId][UART_INT_TX_END]();
         }
     }
 
     /* Length of uart rx data transfer arrived interrupt */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_URX_END_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_URX_END_MASK)){
-        BL_WR_REG(UARTx,UART_INT_CLEAR,0x2);
-        if(uartIntCbfArra[uartId][UART_INT_RX_END] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_END_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_END_MASK)) {
+        BL_WR_REG(UARTx, UART_INT_CLEAR, 0x2);
+
+        if (uartIntCbfArra[uartId][UART_INT_RX_END] != NULL) {
             uartIntCbfArra[uartId][UART_INT_RX_END]();
         }
     }
 
     /* Tx fifo ready interrupt,auto-cleared when data is pushed */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_UTX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_UTX_FIFO_MASK)){
-        if(uartIntCbfArra[uartId][UART_INT_TX_FIFO_REQ] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FIFO_MASK)) {
+        if (uartIntCbfArra[uartId][UART_INT_TX_FIFO_REQ] != NULL) {
             uartIntCbfArra[uartId][UART_INT_TX_FIFO_REQ]();
         }
     }
 
     /* Rx fifo ready interrupt,auto-cleared when data is popped */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_URX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_URX_FIFO_MASK)){
-        if(uartIntCbfArra[uartId][UART_INT_RX_FIFO_REQ] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FIFO_MASK)) {
+        if (uartIntCbfArra[uartId][UART_INT_RX_FIFO_REQ] != NULL) {
             uartIntCbfArra[uartId][UART_INT_RX_FIFO_REQ]();
         }
     }
 
     /* Rx time-out interrupt */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_URX_RTO_MASK)){
-        BL_WR_REG(UARTx,UART_INT_CLEAR,0x10);
-        if(uartIntCbfArra[uartId][UART_INT_RTO] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_RTO_MASK)) {
+        BL_WR_REG(UARTx, UART_INT_CLEAR, 0x10);
+
+        if (uartIntCbfArra[uartId][UART_INT_RTO] != NULL) {
             uartIntCbfArra[uartId][UART_INT_RTO]();
         }
     }
 
     /* Rx parity check error interrupt */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_URX_PCE_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_URX_PCE_MASK)){
-        BL_WR_REG(UARTx,UART_INT_CLEAR,0x20);
-        if(uartIntCbfArra[uartId][UART_INT_PCE] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_PCE_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_PCE_MASK)) {
+        BL_WR_REG(UARTx, UART_INT_CLEAR, 0x20);
+
+        if (uartIntCbfArra[uartId][UART_INT_PCE] != NULL) {
             uartIntCbfArra[uartId][UART_INT_PCE]();
         }
     }
 
     /* Tx fifo overflow/underflow error interrupt */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_UTX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_UTX_FER_MASK)){
-        if(uartIntCbfArra[uartId][UART_INT_TX_FER] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FER_MASK)) {
+        if (uartIntCbfArra[uartId][UART_INT_TX_FER] != NULL) {
             uartIntCbfArra[uartId][UART_INT_TX_FER]();
         }
     }
 
     /* Rx fifo overflow/underflow error interrupt */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_URX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_URX_FER_MASK)){
-        if(uartIntCbfArra[uartId][UART_INT_RX_FER] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FER_MASK)) {
+        if (uartIntCbfArra[uartId][UART_INT_RX_FER] != NULL) {
             uartIntCbfArra[uartId][UART_INT_RX_FER]();
         }
     }
 
     /* Rx lin mode sync field error interrupt */
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_URX_LSE_INT) && !BL_IS_REG_BIT_SET(maskVal,UART_CR_URX_LSE_MASK)){
-        BL_WR_REG(UARTx,UART_INT_CLEAR,0x100);
-        if(uartIntCbfArra[uartId][UART_INT_LSE] != NULL){
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_LSE_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_LSE_MASK)) {
+        BL_WR_REG(UARTx, UART_INT_CLEAR, 0x100);
+
+        if (uartIntCbfArra[uartId][UART_INT_LSE] != NULL) {
             uartIntCbfArra[uartId][UART_INT_LSE]();
         }
     }
 }
 #endif
-
 
 /*@} end of group UART_Private_Functions */
 
@@ -183,7 +187,7 @@ static void UART_IntHandler(UART_ID_Type uartId)
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART initialization function
  *
  * @param  uartId: UART ID type
@@ -192,7 +196,7 @@ static void UART_IntHandler(UART_ID_Type uartId)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_Init(UART_ID_Type uartId,UART_CFG_Type* uartCfg)
+BL_Err_Type UART_Init(UART_ID_Type uartId, UART_CFG_Type *uartCfg)
 {
     uint32_t tmpValTxCfg = 0;
     uint32_t tmpValRxCfg = 0;
@@ -210,88 +214,94 @@ BL_Err_Type UART_Init(UART_ID_Type uartId,UART_CFG_Type* uartCfg)
     /* Cal the baud rate divisor */
     fraction = uartCfg->uartClk * 10 / uartCfg->baudRate % 10;
     baudRateDivisor = uartCfg->uartClk / uartCfg->baudRate;
-    if(fraction >= 5){
+
+    if (fraction >= 5) {
         ++baudRateDivisor;
     }
 
     /* Set the baud rate register value */
-    BL_WR_REG(UARTx,UART_BIT_PRD,((baudRateDivisor-1)<<0x10)|((baudRateDivisor-1)&0xFFFF));
+    BL_WR_REG(UARTx, UART_BIT_PRD, ((baudRateDivisor - 1) << 0x10) | ((baudRateDivisor - 1) & 0xFFFF));
 
     /* Configure parity type */
-    tmpValTxCfg = BL_RD_REG(UARTx,UART_UTX_CONFIG);
-    tmpValRxCfg = BL_RD_REG(UARTx,UART_URX_CONFIG);
-    switch(uartCfg->parity)
-    {
+    tmpValTxCfg = BL_RD_REG(UARTx, UART_UTX_CONFIG);
+    tmpValRxCfg = BL_RD_REG(UARTx, UART_URX_CONFIG);
+
+    switch (uartCfg->parity) {
         case UART_PARITY_NONE:
-            tmpValTxCfg = BL_CLR_REG_BIT(tmpValTxCfg,UART_CR_UTX_PRT_EN);
-            tmpValRxCfg = BL_CLR_REG_BIT(tmpValRxCfg,UART_CR_URX_PRT_EN);
+            tmpValTxCfg = BL_CLR_REG_BIT(tmpValTxCfg, UART_CR_UTX_PRT_EN);
+            tmpValRxCfg = BL_CLR_REG_BIT(tmpValRxCfg, UART_CR_URX_PRT_EN);
             break;
+
         case UART_PARITY_ODD:
-            tmpValTxCfg = BL_SET_REG_BIT(tmpValTxCfg,UART_CR_UTX_PRT_EN);
-            tmpValTxCfg = BL_SET_REG_BIT(tmpValTxCfg,UART_CR_UTX_PRT_SEL);
-            tmpValRxCfg = BL_SET_REG_BIT(tmpValRxCfg,UART_CR_URX_PRT_EN);
-            tmpValRxCfg = BL_SET_REG_BIT(tmpValRxCfg,UART_CR_URX_PRT_SEL);
+            tmpValTxCfg = BL_SET_REG_BIT(tmpValTxCfg, UART_CR_UTX_PRT_EN);
+            tmpValTxCfg = BL_SET_REG_BIT(tmpValTxCfg, UART_CR_UTX_PRT_SEL);
+            tmpValRxCfg = BL_SET_REG_BIT(tmpValRxCfg, UART_CR_URX_PRT_EN);
+            tmpValRxCfg = BL_SET_REG_BIT(tmpValRxCfg, UART_CR_URX_PRT_SEL);
             break;
+
         case UART_PARITY_EVEN:
-            tmpValTxCfg = BL_SET_REG_BIT(tmpValTxCfg,UART_CR_UTX_PRT_EN);
-            tmpValTxCfg = BL_CLR_REG_BIT(tmpValTxCfg,UART_CR_UTX_PRT_SEL);
-            tmpValRxCfg = BL_SET_REG_BIT(tmpValRxCfg,UART_CR_URX_PRT_EN);
-            tmpValRxCfg = BL_CLR_REG_BIT(tmpValRxCfg,UART_CR_URX_PRT_SEL);
+            tmpValTxCfg = BL_SET_REG_BIT(tmpValTxCfg, UART_CR_UTX_PRT_EN);
+            tmpValTxCfg = BL_CLR_REG_BIT(tmpValTxCfg, UART_CR_UTX_PRT_SEL);
+            tmpValRxCfg = BL_SET_REG_BIT(tmpValRxCfg, UART_CR_URX_PRT_EN);
+            tmpValRxCfg = BL_CLR_REG_BIT(tmpValRxCfg, UART_CR_URX_PRT_SEL);
             break;
+
         default:
             break;
     }
 
     /* Configure data bits */
-    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg,UART_CR_UTX_BIT_CNT_D,(uartCfg->dataBits+4));
-    tmpValRxCfg = BL_SET_REG_BITS_VAL(tmpValRxCfg,UART_CR_URX_BIT_CNT_D,(uartCfg->dataBits+4));
+    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_UTX_BIT_CNT_D, (uartCfg->dataBits + 4));
+    tmpValRxCfg = BL_SET_REG_BITS_VAL(tmpValRxCfg, UART_CR_URX_BIT_CNT_D, (uartCfg->dataBits + 4));
 
     /* Configure tx stop bits */
-    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg,UART_CR_UTX_BIT_CNT_P,(uartCfg->stopBits+1));
+    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_UTX_BIT_CNT_P, (uartCfg->stopBits + 1));
 
     /* Configure tx cts flow control function */
-    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg,UART_CR_UTX_CTS_EN,uartCfg->ctsFlowControl);
+    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_UTX_CTS_EN, uartCfg->ctsFlowControl);
 
     /* Configure rx input de-glitch function */
-    tmpValRxCfg = BL_SET_REG_BITS_VAL(tmpValRxCfg,UART_CR_URX_DEG_EN,uartCfg->rxDeglitch);
+    tmpValRxCfg = BL_SET_REG_BITS_VAL(tmpValRxCfg, UART_CR_URX_DEG_EN, uartCfg->rxDeglitch);
 
     /* Configure tx lin mode function */
-    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg,UART_CR_UTX_LIN_EN,uartCfg->txLinMode);
+    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_UTX_LIN_EN, uartCfg->txLinMode);
 
     /* Configure rx lin mode function */
-    tmpValRxCfg = BL_SET_REG_BITS_VAL(tmpValRxCfg,UART_CR_URX_LIN_EN,uartCfg->rxLinMode);
+    tmpValRxCfg = BL_SET_REG_BITS_VAL(tmpValRxCfg, UART_CR_URX_LIN_EN, uartCfg->rxLinMode);
 
     /* Set tx break bit count for lin protocol */
-    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg,UART_CR_UTX_BIT_CNT_B,uartCfg->txBreakBitCnt);
+    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_UTX_BIT_CNT_B, uartCfg->txBreakBitCnt);
 
     /* Write back */
-    BL_WR_REG(UARTx,UART_UTX_CONFIG,tmpValTxCfg);
-    BL_WR_REG(UARTx,UART_URX_CONFIG,tmpValRxCfg);
+    BL_WR_REG(UARTx, UART_UTX_CONFIG, tmpValTxCfg);
+    BL_WR_REG(UARTx, UART_URX_CONFIG, tmpValRxCfg);
 
     /* Configure LSB-first or MSB-first */
-    tmpValTxCfg = BL_RD_REG(UARTx,UART_DATA_CONFIG);
-    if(UART_MSB_FIRST == uartCfg->byteBitInverse){
-        tmpValTxCfg = BL_SET_REG_BIT(tmpValTxCfg,UART_CR_UART_BIT_INV);
-    }else{
-        tmpValTxCfg = BL_CLR_REG_BIT(tmpValTxCfg,UART_CR_UART_BIT_INV);
-    }
-    BL_WR_REG(UARTx,UART_DATA_CONFIG,tmpValTxCfg);
+    tmpValTxCfg = BL_RD_REG(UARTx, UART_DATA_CONFIG);
 
-    tmpValTxCfg = BL_RD_REG(UARTx,UART_SW_MODE);
+    if (UART_MSB_FIRST == uartCfg->byteBitInverse) {
+        tmpValTxCfg = BL_SET_REG_BIT(tmpValTxCfg, UART_CR_UART_BIT_INV);
+    } else {
+        tmpValTxCfg = BL_CLR_REG_BIT(tmpValTxCfg, UART_CR_UART_BIT_INV);
+    }
+
+    BL_WR_REG(UARTx, UART_DATA_CONFIG, tmpValTxCfg);
+
+    tmpValTxCfg = BL_RD_REG(UARTx, UART_SW_MODE);
     /* Configure rx rts output SW control mode */
-    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg,UART_CR_URX_RTS_SW_MODE,uartCfg->rtsSoftwareControl);
+    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_URX_RTS_SW_MODE, uartCfg->rtsSoftwareControl);
     /* Configure tx output SW control mode */
-    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg,UART_CR_UTX_TXD_SW_MODE,uartCfg->txSoftwareControl);
-    BL_WR_REG(UARTx,UART_SW_MODE,tmpValTxCfg);
+    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_UTX_TXD_SW_MODE, uartCfg->txSoftwareControl);
+    BL_WR_REG(UARTx, UART_SW_MODE, tmpValTxCfg);
 
 #ifndef BFLB_USE_HAL_DRIVER
-    Interrupt_Handler_Register(UART0_IRQn,UART0_IRQHandler);
-    Interrupt_Handler_Register(UART1_IRQn,UART1_IRQHandler);
+    Interrupt_Handler_Register(UART0_IRQn, UART0_IRQHandler);
+    Interrupt_Handler_Register(UART1_IRQn, UART1_IRQHandler);
 #endif
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART set default value of all registers function
  *
  * @param  uartId: UART ID type
@@ -301,16 +311,16 @@ BL_Err_Type UART_Init(UART_ID_Type uartId,UART_CFG_Type* uartCfg)
 *******************************************************************************/
 BL_Err_Type UART_DeInit(UART_ID_Type uartId)
 {
-    if(UART0_ID==uartId){
+    if (UART0_ID == uartId) {
         GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_UART0);
-    }else if(UART1_ID==uartId){
+    } else if (UART1_ID == uartId) {
         GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_UART1);
     }
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART configure fifo function
  *
  * @param  uartId: UART ID type
@@ -319,7 +329,7 @@ BL_Err_Type UART_DeInit(UART_ID_Type uartId)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_FifoConfig(UART_ID_Type uartId,UART_FifoCfg_Type* fifoCfg)
+BL_Err_Type UART_FifoConfig(UART_ID_Type uartId, UART_FifoCfg_Type *fifoCfg)
 {
     uint32_t tmpVal = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -328,32 +338,35 @@ BL_Err_Type UART_FifoConfig(UART_ID_Type uartId,UART_FifoCfg_Type* fifoCfg)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Deal with uart fifo configure register */
-    tmpVal = BL_RD_REG(UARTx,UART_FIFO_CONFIG_1);
+    tmpVal = BL_RD_REG(UARTx, UART_FIFO_CONFIG_1);
     /* Configure dma tx fifo threshold */
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,UART_TX_FIFO_TH,fifoCfg->txFifoDmaThreshold-1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, UART_TX_FIFO_TH, fifoCfg->txFifoDmaThreshold - 1);
     /* Configure dma rx fifo threshold */
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,UART_RX_FIFO_TH,fifoCfg->rxFifoDmaThreshold-1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, UART_RX_FIFO_TH, fifoCfg->rxFifoDmaThreshold - 1);
     /* Write back */
-    BL_WR_REG(UARTx,UART_FIFO_CONFIG_1,tmpVal);
+    BL_WR_REG(UARTx, UART_FIFO_CONFIG_1, tmpVal);
 
     /* Enable or disable uart fifo dma function */
-    tmpVal = BL_RD_REG(UARTx,UART_FIFO_CONFIG_0);
-    if(ENABLE == fifoCfg->txFifoDmaEnable){
-        tmpVal = BL_SET_REG_BIT(tmpVal,UART_DMA_TX_EN);
-    }else{
-        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_DMA_TX_EN);
+    tmpVal = BL_RD_REG(UARTx, UART_FIFO_CONFIG_0);
+
+    if (ENABLE == fifoCfg->txFifoDmaEnable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, UART_DMA_TX_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, UART_DMA_TX_EN);
     }
-    if(ENABLE == fifoCfg->rxFifoDmaEnable){
-        tmpVal = BL_SET_REG_BIT(tmpVal,UART_DMA_RX_EN);
-    }else{
-        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_DMA_RX_EN);
+
+    if (ENABLE == fifoCfg->rxFifoDmaEnable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, UART_DMA_RX_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, UART_DMA_RX_EN);
     }
-    BL_WR_REG(UARTx,UART_FIFO_CONFIG_0,tmpVal);
+
+    BL_WR_REG(UARTx, UART_FIFO_CONFIG_0, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART configure infra function
  *
  * @param  uartId: UART ID type
@@ -362,7 +375,7 @@ BL_Err_Type UART_FifoConfig(UART_ID_Type uartId,UART_FifoCfg_Type* fifoCfg)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_IrConfig(UART_ID_Type uartId, UART_IrCfg_Type* irCfg)
+BL_Err_Type UART_IrConfig(UART_ID_Type uartId, UART_IrCfg_Type *irCfg)
 {
     uint32_t tmpVal = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -371,43 +384,49 @@ BL_Err_Type UART_IrConfig(UART_ID_Type uartId, UART_IrCfg_Type* irCfg)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Configure tx ir mode */
-    tmpVal = BL_RD_REG(UARTx,UART_UTX_CONFIG);
-    if(ENABLE == irCfg->txIrEnable){
-        tmpVal = BL_SET_REG_BIT(tmpVal,UART_CR_UTX_IR_EN);
-    }else{
-        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_CR_UTX_IR_EN);
+    tmpVal = BL_RD_REG(UARTx, UART_UTX_CONFIG);
+
+    if (ENABLE == irCfg->txIrEnable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, UART_CR_UTX_IR_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, UART_CR_UTX_IR_EN);
     }
-    if(ENABLE == irCfg->txIrInverse){
-        tmpVal = BL_SET_REG_BIT(tmpVal,UART_CR_UTX_IR_INV);
-    }else{
-        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_CR_UTX_IR_INV);
+
+    if (ENABLE == irCfg->txIrInverse) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, UART_CR_UTX_IR_INV);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, UART_CR_UTX_IR_INV);
     }
-    BL_WR_REG(UARTx,UART_UTX_CONFIG,tmpVal);
+
+    BL_WR_REG(UARTx, UART_UTX_CONFIG, tmpVal);
 
     /* Configure rx ir mode */
-    tmpVal = BL_RD_REG(UARTx,UART_URX_CONFIG);
-    if(ENABLE == irCfg->rxIrEnable){
-        tmpVal = BL_SET_REG_BIT(tmpVal,UART_CR_URX_IR_EN);
-    }else{
-        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_CR_URX_IR_EN);
+    tmpVal = BL_RD_REG(UARTx, UART_URX_CONFIG);
+
+    if (ENABLE == irCfg->rxIrEnable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, UART_CR_URX_IR_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, UART_CR_URX_IR_EN);
     }
-    if(ENABLE == irCfg->rxIrInverse){
-        tmpVal = BL_SET_REG_BIT(tmpVal,UART_CR_URX_IR_INV);
-    }else{
-        tmpVal = BL_CLR_REG_BIT(tmpVal,UART_CR_URX_IR_INV);
+
+    if (ENABLE == irCfg->rxIrInverse) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, UART_CR_URX_IR_INV);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, UART_CR_URX_IR_INV);
     }
-    BL_WR_REG(UARTx,UART_URX_CONFIG,tmpVal);
+
+    BL_WR_REG(UARTx, UART_URX_CONFIG, tmpVal);
 
     /* Configure tx ir pulse start and stop position */
-    BL_WR_REG(UARTx,UART_UTX_IR_POSITION,irCfg->txIrPulseStop<<0x10|irCfg->txIrPulseStart);
+    BL_WR_REG(UARTx, UART_UTX_IR_POSITION, irCfg->txIrPulseStop << 0x10 | irCfg->txIrPulseStart);
 
     /* Configure rx ir pulse start position */
-    BL_WR_REG(UARTx,UART_URX_IR_POSITION,irCfg->rxIrPulseStart);
+    BL_WR_REG(UARTx, UART_URX_IR_POSITION, irCfg->rxIrPulseStart);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable UART
  *
  * @param  uartId: UART ID type
@@ -416,7 +435,7 @@ BL_Err_Type UART_IrConfig(UART_ID_Type uartId, UART_IrCfg_Type* irCfg)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_Enable(UART_ID_Type uartId,UART_Direction_Type direct)
+BL_Err_Type UART_Enable(UART_ID_Type uartId, UART_Direction_Type direct)
 {
     uint32_t tmpVal = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -425,22 +444,22 @@ BL_Err_Type UART_Enable(UART_ID_Type uartId,UART_Direction_Type direct)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
     CHECK_PARAM(IS_UART_DIRECTION_TYPE(direct));
 
-    if(direct == UART_TX || direct == UART_TXRX){
+    if (direct == UART_TX || direct == UART_TXRX) {
         /* Enable UART tx unit */
-        tmpVal = BL_RD_REG(UARTx,UART_UTX_CONFIG);
-        BL_WR_REG(UARTx,UART_UTX_CONFIG,BL_SET_REG_BIT(tmpVal,UART_CR_UTX_EN));
+        tmpVal = BL_RD_REG(UARTx, UART_UTX_CONFIG);
+        BL_WR_REG(UARTx, UART_UTX_CONFIG, BL_SET_REG_BIT(tmpVal, UART_CR_UTX_EN));
     }
 
-    if(direct == UART_RX || direct == UART_TXRX){
+    if (direct == UART_RX || direct == UART_TXRX) {
         /* Enable UART rx unit */
-        tmpVal = BL_RD_REG(UARTx,UART_URX_CONFIG);
-        BL_WR_REG(UARTx,UART_URX_CONFIG,BL_SET_REG_BIT(tmpVal,UART_CR_URX_EN));
+        tmpVal = BL_RD_REG(UARTx, UART_URX_CONFIG);
+        BL_WR_REG(UARTx, UART_URX_CONFIG, BL_SET_REG_BIT(tmpVal, UART_CR_URX_EN));
     }
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable UART
  *
  * @param  uartId: UART ID type
@@ -449,7 +468,7 @@ BL_Err_Type UART_Enable(UART_ID_Type uartId,UART_Direction_Type direct)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_Disable(UART_ID_Type uartId,UART_Direction_Type direct)
+BL_Err_Type UART_Disable(UART_ID_Type uartId, UART_Direction_Type direct)
 {
     uint32_t tmpVal = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -458,22 +477,22 @@ BL_Err_Type UART_Disable(UART_ID_Type uartId,UART_Direction_Type direct)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
     CHECK_PARAM(IS_UART_DIRECTION_TYPE(direct));
 
-    if(direct == UART_TX || direct == UART_TXRX){
+    if (direct == UART_TX || direct == UART_TXRX) {
         /* Disable UART tx unit */
-        tmpVal = BL_RD_REG(UARTx,UART_UTX_CONFIG);
-        BL_WR_REG(UARTx,UART_UTX_CONFIG,BL_CLR_REG_BIT(tmpVal,UART_CR_UTX_EN));
+        tmpVal = BL_RD_REG(UARTx, UART_UTX_CONFIG);
+        BL_WR_REG(UARTx, UART_UTX_CONFIG, BL_CLR_REG_BIT(tmpVal, UART_CR_UTX_EN));
     }
 
-    if(direct == UART_RX || direct == UART_TXRX){
+    if (direct == UART_RX || direct == UART_TXRX) {
         /* Disable UART rx unit */
-        tmpVal = BL_RD_REG(UARTx,UART_URX_CONFIG);
-        BL_WR_REG(UARTx,UART_URX_CONFIG,BL_CLR_REG_BIT(tmpVal,UART_CR_URX_EN));
+        tmpVal = BL_RD_REG(UARTx, UART_URX_CONFIG);
+        BL_WR_REG(UARTx, UART_URX_CONFIG, BL_CLR_REG_BIT(tmpVal, UART_CR_URX_EN));
     }
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART set length of tx data transfer,tx end interrupt will assert when this length is
  *         reached
  *
@@ -483,7 +502,7 @@ BL_Err_Type UART_Disable(UART_ID_Type uartId,UART_Direction_Type direct)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_SetTxDataLength(UART_ID_Type uartId,uint16_t length)
+BL_Err_Type UART_SetTxDataLength(UART_ID_Type uartId, uint16_t length)
 {
     uint32_t tmpVal = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -492,13 +511,13 @@ BL_Err_Type UART_SetTxDataLength(UART_ID_Type uartId,uint16_t length)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Set length */
-    tmpVal = BL_RD_REG(UARTx,UART_UTX_CONFIG);
-    BL_WR_REG(UARTx,UART_UTX_CONFIG,BL_SET_REG_BITS_VAL(tmpVal,UART_CR_UTX_LEN,length-1));
+    tmpVal = BL_RD_REG(UARTx, UART_UTX_CONFIG);
+    BL_WR_REG(UARTx, UART_UTX_CONFIG, BL_SET_REG_BITS_VAL(tmpVal, UART_CR_UTX_LEN, length - 1));
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART set length of rx data transfer,rx end interrupt will assert when this length is
  *         reached
  *
@@ -508,7 +527,7 @@ BL_Err_Type UART_SetTxDataLength(UART_ID_Type uartId,uint16_t length)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_SetRxDataLength(UART_ID_Type uartId,uint16_t length)
+BL_Err_Type UART_SetRxDataLength(UART_ID_Type uartId, uint16_t length)
 {
     uint32_t tmpVal = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -517,13 +536,13 @@ BL_Err_Type UART_SetRxDataLength(UART_ID_Type uartId,uint16_t length)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Set length */
-    tmpVal = BL_RD_REG(UARTx,UART_URX_CONFIG);
-    BL_WR_REG(UARTx,UART_URX_CONFIG,BL_SET_REG_BITS_VAL(tmpVal,UART_CR_URX_LEN,length-1));
+    tmpVal = BL_RD_REG(UARTx, UART_URX_CONFIG);
+    BL_WR_REG(UARTx, UART_URX_CONFIG, BL_SET_REG_BITS_VAL(tmpVal, UART_CR_URX_LEN, length - 1));
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART set rx time-out value for triggering RTO interrupt
  *
  * @param  uartId: UART ID type
@@ -532,7 +551,7 @@ BL_Err_Type UART_SetRxDataLength(UART_ID_Type uartId,uint16_t length)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_SetRxTimeoutValue(UART_ID_Type uartId,uint8_t time)
+BL_Err_Type UART_SetRxTimeoutValue(UART_ID_Type uartId, uint8_t time)
 {
     uint32_t UARTx = uartAddr[uartId];
     uint32_t tmpVal;
@@ -541,14 +560,14 @@ BL_Err_Type UART_SetRxTimeoutValue(UART_ID_Type uartId,uint8_t time)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Set time-out value */
-    tmpVal = BL_RD_REG(UARTx,UART_URX_RTO_TIMER);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,UART_CR_URX_RTO_VALUE,time-1);
-    BL_WR_REG(UARTx,UART_URX_RTO_TIMER,tmpVal);
+    tmpVal = BL_RD_REG(UARTx, UART_URX_RTO_TIMER);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, UART_CR_URX_RTO_VALUE, time - 1);
+    BL_WR_REG(UARTx, UART_URX_RTO_TIMER, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART set de-glitch function cycle count value
  *
  * @param  uartId: UART ID type
@@ -557,7 +576,7 @@ BL_Err_Type UART_SetRxTimeoutValue(UART_ID_Type uartId,uint8_t time)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_SetDeglitchCount(UART_ID_Type uartId,uint8_t deglitchCnt)
+BL_Err_Type UART_SetDeglitchCount(UART_ID_Type uartId, uint8_t deglitchCnt)
 {
     uint32_t UARTx = uartAddr[uartId];
     uint32_t tmpVal;
@@ -566,14 +585,14 @@ BL_Err_Type UART_SetDeglitchCount(UART_ID_Type uartId,uint8_t deglitchCnt)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Set count value */
-    tmpVal = BL_RD_REG(UARTx,UART_URX_CONFIG);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal,UART_CR_URX_DEG_CNT,deglitchCnt-1);
-    BL_WR_REG(UARTx,UART_URX_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(UARTx, UART_URX_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, UART_CR_URX_DEG_CNT, deglitchCnt - 1);
+    BL_WR_REG(UARTx, UART_URX_CONFIG, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART set tx and rx baudrate according to auto baudrate detection value
  *
  * @param  uartId: UART ID type
@@ -582,7 +601,7 @@ BL_Err_Type UART_SetDeglitchCount(UART_ID_Type uartId,uint8_t deglitchCnt)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_SetBaudrate(UART_ID_Type uartId,UART_AutoBaudDetection_Type autoBaudDet)
+BL_Err_Type UART_SetBaudrate(UART_ID_Type uartId, UART_AutoBaudDetection_Type autoBaudDet)
 {
     uint32_t UARTx = uartAddr[uartId];
     uint16_t tmpVal;
@@ -591,15 +610,15 @@ BL_Err_Type UART_SetBaudrate(UART_ID_Type uartId,UART_AutoBaudDetection_Type aut
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Get detection value */
-    tmpVal = UART_GetAutoBaudCount(uartId,autoBaudDet);
+    tmpVal = UART_GetAutoBaudCount(uartId, autoBaudDet);
 
     /* Set tx baudrate */
-    BL_WR_REG(UARTx,UART_BIT_PRD,tmpVal<<0x10 | tmpVal);
+    BL_WR_REG(UARTx, UART_BIT_PRD, tmpVal << 0x10 | tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART set rx rts output software control value
  *
  * @param  uartId: UART ID type
@@ -616,13 +635,13 @@ BL_Err_Type UART_SetRtsValue(UART_ID_Type uartId)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Rts set 1*/
-    tmpVal = BL_RD_REG(UARTx,UART_SW_MODE);
-    BL_WR_REG(UARTx,UART_SW_MODE,BL_SET_REG_BIT(tmpVal,UART_CR_URX_RTS_SW_VAL));
+    tmpVal = BL_RD_REG(UARTx, UART_SW_MODE);
+    BL_WR_REG(UARTx, UART_SW_MODE, BL_SET_REG_BIT(tmpVal, UART_CR_URX_RTS_SW_VAL));
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART clear rx rts output software control value
  *
  * @param  uartId: UART ID type
@@ -639,13 +658,13 @@ BL_Err_Type UART_ClrRtsValue(UART_ID_Type uartId)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Rts clear 0 */
-    tmpVal = BL_RD_REG(UARTx,UART_SW_MODE);
-    BL_WR_REG(UARTx,UART_SW_MODE,BL_CLR_REG_BIT(tmpVal,UART_CR_URX_RTS_SW_VAL));
+    tmpVal = BL_RD_REG(UARTx, UART_SW_MODE);
+    BL_WR_REG(UARTx, UART_SW_MODE, BL_CLR_REG_BIT(tmpVal, UART_CR_URX_RTS_SW_VAL));
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART set tx output software control value
  *
  * @param  uartId: UART ID type
@@ -662,13 +681,13 @@ BL_Err_Type UART_SetTxValue(UART_ID_Type uartId)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Tx set 1*/
-    tmpVal = BL_RD_REG(UARTx,UART_SW_MODE);
-    BL_WR_REG(UARTx,UART_SW_MODE,BL_SET_REG_BIT(tmpVal,UART_CR_UTX_TXD_SW_VAL));
+    tmpVal = BL_RD_REG(UARTx, UART_SW_MODE);
+    BL_WR_REG(UARTx, UART_SW_MODE, BL_SET_REG_BIT(tmpVal, UART_CR_UTX_TXD_SW_VAL));
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART clear tx output software control value
  *
  * @param  uartId: UART ID type
@@ -685,13 +704,13 @@ BL_Err_Type UART_ClrTxValue(UART_ID_Type uartId)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Rts clear 0 */
-    tmpVal = BL_RD_REG(UARTx,UART_SW_MODE);
-    BL_WR_REG(UARTx,UART_SW_MODE,BL_CLR_REG_BIT(tmpVal,UART_CR_UTX_TXD_SW_VAL));
+    tmpVal = BL_RD_REG(UARTx, UART_SW_MODE);
+    BL_WR_REG(UARTx, UART_SW_MODE, BL_CLR_REG_BIT(tmpVal, UART_CR_UTX_TXD_SW_VAL));
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART configure tx free run mode function
  *
  * @param  uartId: UART ID type
@@ -700,7 +719,7 @@ BL_Err_Type UART_ClrTxValue(UART_ID_Type uartId)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_TxFreeRun(UART_ID_Type uartId,BL_Fun_Type txFreeRun)
+BL_Err_Type UART_TxFreeRun(UART_ID_Type uartId, BL_Fun_Type txFreeRun)
 {
     uint32_t tmpVal = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -709,17 +728,18 @@ BL_Err_Type UART_TxFreeRun(UART_ID_Type uartId,BL_Fun_Type txFreeRun)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Enable or disable tx free run mode */
-    tmpVal = BL_RD_REG(UARTx,UART_UTX_CONFIG);
-    if(ENABLE == txFreeRun){
-        BL_WR_REG(UARTx,UART_UTX_CONFIG,BL_SET_REG_BIT(tmpVal,UART_CR_UTX_FRM_EN));
-    }else{
-        BL_WR_REG(UARTx,UART_UTX_CONFIG,BL_CLR_REG_BIT(tmpVal,UART_CR_UTX_FRM_EN));
+    tmpVal = BL_RD_REG(UARTx, UART_UTX_CONFIG);
+
+    if (ENABLE == txFreeRun) {
+        BL_WR_REG(UARTx, UART_UTX_CONFIG, BL_SET_REG_BIT(tmpVal, UART_CR_UTX_FRM_EN));
+    } else {
+        BL_WR_REG(UARTx, UART_UTX_CONFIG, BL_CLR_REG_BIT(tmpVal, UART_CR_UTX_FRM_EN));
     }
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART configure auto baud rate detection function
  *
  * @param  uartId: UART ID type
@@ -728,7 +748,7 @@ BL_Err_Type UART_TxFreeRun(UART_ID_Type uartId,BL_Fun_Type txFreeRun)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_AutoBaudDetection(UART_ID_Type uartId,BL_Fun_Type autoBaud)
+BL_Err_Type UART_AutoBaudDetection(UART_ID_Type uartId, BL_Fun_Type autoBaud)
 {
     uint32_t tmpVal = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -737,17 +757,18 @@ BL_Err_Type UART_AutoBaudDetection(UART_ID_Type uartId,BL_Fun_Type autoBaud)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Enable or disable auto baud rate detection function */
-    tmpVal = BL_RD_REG(UARTx,UART_URX_CONFIG);
-    if(ENABLE == autoBaud){
-        BL_WR_REG(UARTx,UART_URX_CONFIG,BL_SET_REG_BIT(tmpVal,UART_CR_URX_ABR_EN));
-    }else{
-        BL_WR_REG(UARTx,UART_URX_CONFIG,BL_CLR_REG_BIT(tmpVal,UART_CR_URX_ABR_EN));
+    tmpVal = BL_RD_REG(UARTx, UART_URX_CONFIG);
+
+    if (ENABLE == autoBaud) {
+        BL_WR_REG(UARTx, UART_URX_CONFIG, BL_SET_REG_BIT(tmpVal, UART_CR_URX_ABR_EN));
+    } else {
+        BL_WR_REG(UARTx, UART_URX_CONFIG, BL_CLR_REG_BIT(tmpVal, UART_CR_URX_ABR_EN));
     }
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART tx fifo clear
  *
  * @param  uartId: UART ID type
@@ -764,13 +785,13 @@ BL_Err_Type UART_TxFifoClear(UART_ID_Type uartId)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Clear tx fifo */
-    tmpVal = BL_RD_REG(UARTx,UART_FIFO_CONFIG_0);
-    BL_WR_REG(UARTx,UART_FIFO_CONFIG_0,BL_SET_REG_BIT(tmpVal,UART_TX_FIFO_CLR));
+    tmpVal = BL_RD_REG(UARTx, UART_FIFO_CONFIG_0);
+    BL_WR_REG(UARTx, UART_FIFO_CONFIG_0, BL_SET_REG_BIT(tmpVal, UART_TX_FIFO_CLR));
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART rx fifo clear
  *
  * @param  uartId: UART ID type
@@ -787,13 +808,13 @@ BL_Err_Type UART_RxFifoClear(UART_ID_Type uartId)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Clear rx fifo */
-    tmpVal = BL_RD_REG(UARTx,UART_FIFO_CONFIG_0);
-    BL_WR_REG(UARTx,UART_FIFO_CONFIG_0,BL_SET_REG_BIT(tmpVal,UART_RX_FIFO_CLR));
+    tmpVal = BL_RD_REG(UARTx, UART_FIFO_CONFIG_0);
+    BL_WR_REG(UARTx, UART_FIFO_CONFIG_0, BL_SET_REG_BIT(tmpVal, UART_RX_FIFO_CLR));
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART mask or unmask certain or all interrupt
  *
  * @param  uartId: UART ID type
@@ -803,7 +824,7 @@ BL_Err_Type UART_RxFifoClear(UART_ID_Type uartId)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_IntMask(UART_ID_Type uartId,UART_INT_Type intType,BL_Mask_Type intMask)
+BL_Err_Type UART_IntMask(UART_ID_Type uartId, UART_INT_Type intType, BL_Mask_Type intMask)
 {
     uint32_t tmpVal;
     uint32_t UARTx = uartAddr[uartId];
@@ -813,30 +834,30 @@ BL_Err_Type UART_IntMask(UART_ID_Type uartId,UART_INT_Type intType,BL_Mask_Type 
     CHECK_PARAM(IS_UART_INT_TYPE(intType));
     CHECK_PARAM(IS_BL_MASK_TYPE(intMask));
 
-    tmpVal = BL_RD_REG(UARTx,UART_INT_MASK);
+    tmpVal = BL_RD_REG(UARTx, UART_INT_MASK);
 
     /* Mask or unmask certain or all interrupt */
-    if(UART_INT_ALL == intType){
-        if(MASK == intMask){
+    if (UART_INT_ALL == intType) {
+        if (MASK == intMask) {
             tmpVal |= 0x1ff;
-        }else{
+        } else {
             tmpVal &= 0;
         }
-    }else{
-        if(MASK == intMask){
-            tmpVal |= 1<<intType;
-        }else{
-            tmpVal &= ~(1<<intType);
+    } else {
+        if (MASK == intMask) {
+            tmpVal |= 1 << intType;
+        } else {
+            tmpVal &= ~(1 << intType);
         }
     }
 
     /* Write back */
-    BL_WR_REG(UARTx,UART_INT_MASK,tmpVal);
+    BL_WR_REG(UARTx, UART_INT_MASK, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART clear certain or all interrupt
  *
  * @param  uartId: UART ID type
@@ -845,7 +866,7 @@ BL_Err_Type UART_IntMask(UART_ID_Type uartId,UART_INT_Type intType,BL_Mask_Type 
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_IntClear(UART_ID_Type uartId,UART_INT_Type intType)
+BL_Err_Type UART_IntClear(UART_ID_Type uartId, UART_INT_Type intType)
 {
     uint32_t tmpVal;
     uint32_t UARTx = uartAddr[uartId];
@@ -854,22 +875,22 @@ BL_Err_Type UART_IntClear(UART_ID_Type uartId,UART_INT_Type intType)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
     CHECK_PARAM(IS_UART_INT_TYPE(intType));
 
-    tmpVal = BL_RD_REG(UARTx,UART_INT_CLEAR);
+    tmpVal = BL_RD_REG(UARTx, UART_INT_CLEAR);
 
     /* Clear certain or all interrupt */
-    if(UART_INT_ALL == intType){
+    if (UART_INT_ALL == intType) {
         tmpVal |= 0x1ff;
-    }else{
-        tmpVal |= 1<<intType;
+    } else {
+        tmpVal |= 1 << intType;
     }
 
     /* Write back */
-    BL_WR_REG(UARTx,UART_INT_CLEAR,tmpVal);
+    BL_WR_REG(UARTx, UART_INT_CLEAR, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Install uart interrupt callback function
  *
  * @param  uartId: UART ID type
@@ -879,7 +900,7 @@ BL_Err_Type UART_IntClear(UART_ID_Type uartId,UART_INT_Type intType)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_Int_Callback_Install(UART_ID_Type uartId,UART_INT_Type intType,intCallback_Type* cbFun)
+BL_Err_Type UART_Int_Callback_Install(UART_ID_Type uartId, UART_INT_Type intType, intCallback_Type *cbFun)
 {
     /* Check the parameters */
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
@@ -890,7 +911,7 @@ BL_Err_Type UART_Int_Callback_Install(UART_ID_Type uartId,UART_INT_Type intType,
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART send data to tx fifo
  *
  * @param  uartId: UART ID type
@@ -900,7 +921,7 @@ BL_Err_Type UART_Int_Callback_Install(UART_ID_Type uartId,UART_INT_Type intType,
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_SendData(UART_ID_Type uartId, uint8_t* data,uint32_t len)
+BL_Err_Type UART_SendData(UART_ID_Type uartId, uint8_t *data, uint32_t len)
 {
     uint32_t txLen = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -910,22 +931,23 @@ BL_Err_Type UART_SendData(UART_ID_Type uartId, uint8_t* data,uint32_t len)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Send data */
-    while(txLen<len){
-        if(UART_GetTxFifoCount(uartId)>0){
-            BL_WR_BYTE(UARTx+UART_FIFO_WDATA_OFFSET,data[txLen++]);
+    while (txLen < len) {
+        if (UART_GetTxFifoCount(uartId) > 0) {
+            BL_WR_BYTE(UARTx + UART_FIFO_WDATA_OFFSET, data[txLen++]);
             timeoutCnt = UART_TX_TIMEOUT_COUNT;
-        }else{
+        } else {
             timeoutCnt--;
-            if(timeoutCnt == 0){
+
+            if (timeoutCnt == 0) {
                 return TIMEOUT;
             }
         }
     }
-    
+
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART send data to tx fifo in block mode
  *
  * @param  uartId: UART ID type
@@ -935,7 +957,7 @@ BL_Err_Type UART_SendData(UART_ID_Type uartId, uint8_t* data,uint32_t len)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_SendDataBlock(UART_ID_Type uartId, uint8_t* data,uint32_t len)
+BL_Err_Type UART_SendDataBlock(UART_ID_Type uartId, uint8_t *data, uint32_t len)
 {
     uint32_t txLen = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -945,24 +967,26 @@ BL_Err_Type UART_SendDataBlock(UART_ID_Type uartId, uint8_t* data,uint32_t len)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Send data */
-    while(txLen<len){
-        if(UART_GetTxFifoCount(uartId)>0){
-            BL_WR_BYTE(UARTx+UART_FIFO_WDATA_OFFSET,data[txLen++]);
+    while (txLen < len) {
+        if (UART_GetTxFifoCount(uartId) > 0) {
+            BL_WR_BYTE(UARTx + UART_FIFO_WDATA_OFFSET, data[txLen++]);
             timeoutCnt = UART_TX_TIMEOUT_COUNT;
-        }else{
+        } else {
             timeoutCnt--;
-            if(timeoutCnt == 0){
+
+            if (timeoutCnt == 0) {
                 return TIMEOUT;
             }
         }
     }
-    
-    while(UART_GetTxBusBusyStatus(uartId) == SET){}
-    
+
+    while (UART_GetTxBusBusyStatus(uartId) == SET) {
+    }
+
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART receive data from rx fifo
  *
  * @param  uartId: UART ID type
@@ -972,7 +996,7 @@ BL_Err_Type UART_SendDataBlock(UART_ID_Type uartId, uint8_t* data,uint32_t len)
  * @return The length of the received buffer
  *
 *******************************************************************************/
-uint32_t ATTR_TCM_SECTION UART_ReceiveData(UART_ID_Type uartId,uint8_t* data,uint32_t maxLen)
+uint32_t UART_ReceiveData(UART_ID_Type uartId, uint8_t *data, uint32_t maxLen)
 {
     uint32_t rxLen = 0;
     uint32_t UARTx = uartAddr[uartId];
@@ -981,14 +1005,14 @@ uint32_t ATTR_TCM_SECTION UART_ReceiveData(UART_ID_Type uartId,uint8_t* data,uin
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Receive data */
-    while(rxLen<maxLen && UART_GetRxFifoCount(uartId)>0){
-        data[rxLen++] = BL_RD_BYTE(UARTx+UART_FIFO_RDATA_OFFSET);
+    while (rxLen < maxLen && UART_GetRxFifoCount(uartId) > 0) {
+        data[rxLen++] = BL_RD_BYTE(UARTx + UART_FIFO_RDATA_OFFSET);
     }
 
     return rxLen;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART get auto baud count value
  *
  * @param  uartId: UART ID type
@@ -997,7 +1021,7 @@ uint32_t ATTR_TCM_SECTION UART_ReceiveData(UART_ID_Type uartId,uint8_t* data,uin
  * @return Bit period of auto baudrate detection
  *
 *******************************************************************************/
-uint16_t UART_GetAutoBaudCount(UART_ID_Type uartId,UART_AutoBaudDetection_Type autoBaudDet)
+uint16_t UART_GetAutoBaudCount(UART_ID_Type uartId, UART_AutoBaudDetection_Type autoBaudDet)
 {
     uint32_t UARTx = uartAddr[uartId];
 
@@ -1006,14 +1030,14 @@ uint16_t UART_GetAutoBaudCount(UART_ID_Type uartId,UART_AutoBaudDetection_Type a
     CHECK_PARAM(IS_UART_AUTOBAUDDETECTION_TYPE(autoBaudDet));
 
     /* Select 0x55 or start bit detection value */
-    if(UART_AUTOBAUD_0X55 == autoBaudDet){
-        return BL_RD_REG(UARTx,UART_STS_URX_ABR_PRD)>>0x10&0xffff;
-    }else{
-        return BL_RD_REG(UARTx,UART_STS_URX_ABR_PRD)&0xffff;
+    if (UART_AUTOBAUD_0X55 == autoBaudDet) {
+        return BL_RD_REG(UARTx, UART_STS_URX_ABR_PRD) >> 0x10 & 0xffff;
+    } else {
+        return BL_RD_REG(UARTx, UART_STS_URX_ABR_PRD) & 0xffff;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART get tx fifo unoccupied count value
  *
  * @param  uartId: UART ID type
@@ -1028,10 +1052,10 @@ uint8_t UART_GetTxFifoCount(UART_ID_Type uartId)
     /* Check the parameter */
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
-    return BL_GET_REG_BITS_VAL(BL_RD_REG(UARTx,UART_FIFO_CONFIG_1),UART_TX_FIFO_CNT);
+    return BL_GET_REG_BITS_VAL(BL_RD_REG(UARTx, UART_FIFO_CONFIG_1), UART_TX_FIFO_CNT);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART get rx fifo occupied count value
  *
  * @param  uartId: UART ID type
@@ -1039,17 +1063,17 @@ uint8_t UART_GetTxFifoCount(UART_ID_Type uartId)
  * @return Rx fifo occupied count value
  *
 *******************************************************************************/
-uint8_t ATTR_TCM_SECTION UART_GetRxFifoCount(UART_ID_Type uartId)
+uint8_t UART_GetRxFifoCount(UART_ID_Type uartId)
 {
     uint32_t UARTx = uartAddr[uartId];
 
     /* Check the parameter */
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
-    return BL_GET_REG_BITS_VAL(BL_RD_REG(UARTx,UART_FIFO_CONFIG_1),UART_RX_FIFO_CNT);
+    return BL_GET_REG_BITS_VAL(BL_RD_REG(UARTx, UART_FIFO_CONFIG_1), UART_RX_FIFO_CNT);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get uart interrupt status
  *
  * @param  uartId: UART ID type
@@ -1058,7 +1082,7 @@ uint8_t ATTR_TCM_SECTION UART_GetRxFifoCount(UART_ID_Type uartId)
  * @return Status of interrupt
  *
 *******************************************************************************/
-BL_Sts_Type UART_GetIntStatus(UART_ID_Type uartId,UART_INT_Type intType)
+BL_Sts_Type UART_GetIntStatus(UART_ID_Type uartId, UART_INT_Type intType)
 {
     uint32_t tmpVal;
     uint32_t UARTx = uartAddr[uartId];
@@ -1068,25 +1092,24 @@ BL_Sts_Type UART_GetIntStatus(UART_ID_Type uartId,UART_INT_Type intType)
     CHECK_PARAM(IS_UART_INT_TYPE(intType));
 
     /* Get certain or all interrupt status */
-    tmpVal = BL_RD_REG(UARTx,UART_INT_STS);
-    if(UART_INT_ALL == intType){
-        if((tmpVal&0x1ff) != 0)
-        {
+    tmpVal = BL_RD_REG(UARTx, UART_INT_STS);
+
+    if (UART_INT_ALL == intType) {
+        if ((tmpVal & 0x1ff) != 0) {
             return SET;
-        }else{
+        } else {
             return RESET;
         }
-    }else{
-        if((tmpVal&(1U<<intType)) != 0)
-        {
+    } else {
+        if ((tmpVal & (1U << intType)) != 0) {
             return SET;
-        }else{
+        } else {
             return RESET;
         }
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get indicator of uart tx bus busy
  *
  * @param  uartId: UART ID type
@@ -1103,16 +1126,16 @@ BL_Sts_Type UART_GetTxBusBusyStatus(UART_ID_Type uartId)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Get tx bus busy status */
-    tmpVal = BL_RD_REG(UARTx,UART_STATUS);
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_STS_UTX_BUS_BUSY))
-    {
+    tmpVal = BL_RD_REG(UARTx, UART_STATUS);
+
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_STS_UTX_BUS_BUSY)) {
         return SET;
-    }else{
+    } else {
         return RESET;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get indicator of uart rx bus busy
  *
  * @param  uartId: UART ID type
@@ -1129,16 +1152,16 @@ BL_Sts_Type UART_GetRxBusBusyStatus(UART_ID_Type uartId)
     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
 
     /* Get rx bus busy status */
-    tmpVal = BL_RD_REG(UARTx,UART_STATUS);
-    if(BL_IS_REG_BIT_SET(tmpVal,UART_STS_URX_BUS_BUSY))
-    {
+    tmpVal = BL_RD_REG(UARTx, UART_STATUS);
+
+    if (BL_IS_REG_BIT_SET(tmpVal, UART_STS_URX_BUS_BUSY)) {
         return SET;
-    }else{
+    } else {
         return RESET;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get tx/rx fifo overflow or underflow status
  *
  * @param  uartId: UART ID type
@@ -1147,7 +1170,7 @@ BL_Sts_Type UART_GetRxBusBusyStatus(UART_ID_Type uartId)
  * @return Status of tx/rx fifo
  *
 *******************************************************************************/
-BL_Sts_Type UART_GetOverflowStatus(UART_ID_Type uartId,UART_Overflow_Type overflow)
+BL_Sts_Type UART_GetOverflowStatus(UART_ID_Type uartId, UART_Overflow_Type overflow)
 {
     uint32_t tmpVal;
     uint32_t UARTx = uartAddr[uartId];
@@ -1157,16 +1180,16 @@ BL_Sts_Type UART_GetOverflowStatus(UART_ID_Type uartId,UART_Overflow_Type overfl
     CHECK_PARAM(IS_UART_OVERFLOW_TYPE(overflow));
 
     /* Get tx/rx fifo overflow or underflow status */
-    tmpVal = BL_RD_REG(UARTx,UART_FIFO_CONFIG_0);
-    if((tmpVal&(1U<<(overflow+4))) !=0)
-    {
+    tmpVal = BL_RD_REG(UARTx, UART_FIFO_CONFIG_0);
+
+    if ((tmpVal & (1U << (overflow + 4))) != 0) {
         return SET;
-    }else{
+    } else {
         return RESET;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART0 interrupt handler
  *
  * @param  None
@@ -1181,7 +1204,7 @@ void UART0_IRQHandler(void)
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  UART1 interrupt handler
  *
  * @param  None
@@ -1195,7 +1218,6 @@ void UART1_IRQHandler(void)
     UART_IntHandler(UART1_ID);
 }
 #endif
-
 
 /*@} end of group UART_Public_Functions */
 

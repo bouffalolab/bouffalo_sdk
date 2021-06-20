@@ -56,56 +56,57 @@
  *  @brief Psram drive strength type definition
  */
 typedef enum {
-    PSRAM_DRIVE_STRENGTH_50_OHMS,            /*!< Drive strength 50 ohms(default) */
-    PSRAM_DRIVE_STRENGTH_100_OHMS,           /*!< Drive strength 100 ohms */
-    PSRAM_DRIVE_STRENGTH_200_OHMS,           /*!< Drive strength 200 ohms */
-}PSRAM_Drive_Strength;
+    PSRAM_DRIVE_STRENGTH_50_OHMS,  /*!< Drive strength 50 ohms(default) */
+    PSRAM_DRIVE_STRENGTH_100_OHMS, /*!< Drive strength 100 ohms */
+    PSRAM_DRIVE_STRENGTH_200_OHMS, /*!< Drive strength 200 ohms */
+} PSRAM_Drive_Strength;
 
 /**
  *  @brief Psram burst length size type definition
  */
 typedef enum {
-    PSRAM_BURST_LENGTH_16_BYTES,             /*!< Burst Length 16 bytes */
-    PSRAM_BURST_LENGTH_32_BYTES,             /*!< Burst Length 32 bytes */
-    PSRAM_BURST_LENGTH_64_BYTES,             /*!< Burst Length 64 bytes */
-    PSRAM_BURST_LENGTH_512_BYTES,            /*!< Burst Length 512 bytes(default) */
-}PSRAM_Burst_Length;
+    PSRAM_BURST_LENGTH_16_BYTES,  /*!< Burst Length 16 bytes */
+    PSRAM_BURST_LENGTH_32_BYTES,  /*!< Burst Length 32 bytes */
+    PSRAM_BURST_LENGTH_64_BYTES,  /*!< Burst Length 64 bytes */
+    PSRAM_BURST_LENGTH_512_BYTES, /*!< Burst Length 512 bytes(default) */
+} PSRAM_Burst_Length;
 
 /**
  *  @brief Psram ctrl mode type definition
  */
 typedef enum {
-    PSRAM_SPI_CTRL_MODE,                     /*!< Psram SPI ctrl mode */
-    PSRAM_QPI_CTRL_MODE,                     /*!< Psram QPI ctrl mode */
-}PSRAM_Ctrl_Mode;
+    PSRAM_SPI_CTRL_MODE, /*!< Psram SPI ctrl mode */
+    PSRAM_QPI_CTRL_MODE, /*!< Psram QPI ctrl mode */
+} PSRAM_Ctrl_Mode;
 
 /**
  *  @brief Psram ctrl configuration structure type definition
  */
-typedef struct {
-    uint8_t readIdCmd;                       /*!< Read ID command */
-    uint8_t readIdDmyClk;                    /*!< Read ID command dummy clock */
-    uint8_t burstToggleCmd;                  /*!< Burst toggle length command */
-    uint8_t resetEnableCmd;                  /*!< Psram reset enable command */
-    uint8_t resetCmd;                        /*!< Psram reset command */
-    uint8_t enterQuadModeCmd;                /*!< Psram enter quad mode command */
-    uint8_t exitQuadModeCmd;                 /*!< Psram exit quad mode command */
-    uint8_t readRegCmd;                      /*!< Read register command */
-    uint8_t readRegDmyClk;                   /*!< Read register command dummy clock */
-    uint8_t writeRegCmd;                     /*!< Write register command */
-    uint8_t readCmd;                         /*!< Psram read command */
-    uint8_t readDmyClk;                      /*!< Psram read command dummy clock */
-    uint8_t fReadCmd;                        /*!< Psram fast read command */
-    uint8_t fReadDmyClk;                     /*!< Psram fast read command dummy clock */
-    uint8_t fReadQuadCmd;                    /*!< Psram fast read quad command */
-    uint8_t fReadQuadDmyClk;                 /*!< Psram fast read quad command dummy clock */
-    uint8_t writeCmd;                        /*!< Psram write command */
-    uint8_t quadWriteCmd;                    /*!< Psram quad write command */
-    uint16_t pageSize;                       /*!< Psram page size */
-    PSRAM_Ctrl_Mode ctrlMode;                /*!< Psram ctrl mode */
-    PSRAM_Drive_Strength driveStrength;      /*!< Psram drive strength */
-    PSRAM_Burst_Length burstLength;          /*!< Psram burst length size */
-}SPI_Psram_Cfg_Type;
+typedef struct
+{
+    uint8_t readIdCmd;                  /*!< Read ID command */
+    uint8_t readIdDmyClk;               /*!< Read ID command dummy clock */
+    uint8_t burstToggleCmd;             /*!< Burst toggle length command */
+    uint8_t resetEnableCmd;             /*!< Psram reset enable command */
+    uint8_t resetCmd;                   /*!< Psram reset command */
+    uint8_t enterQuadModeCmd;           /*!< Psram enter quad mode command */
+    uint8_t exitQuadModeCmd;            /*!< Psram exit quad mode command */
+    uint8_t readRegCmd;                 /*!< Read register command */
+    uint8_t readRegDmyClk;              /*!< Read register command dummy clock */
+    uint8_t writeRegCmd;                /*!< Write register command */
+    uint8_t readCmd;                    /*!< Psram read command */
+    uint8_t readDmyClk;                 /*!< Psram read command dummy clock */
+    uint8_t fReadCmd;                   /*!< Psram fast read command */
+    uint8_t fReadDmyClk;                /*!< Psram fast read command dummy clock */
+    uint8_t fReadQuadCmd;               /*!< Psram fast read quad command */
+    uint8_t fReadQuadDmyClk;            /*!< Psram fast read quad command dummy clock */
+    uint8_t writeCmd;                   /*!< Psram write command */
+    uint8_t quadWriteCmd;               /*!< Psram quad write command */
+    uint16_t pageSize;                  /*!< Psram page size */
+    PSRAM_Ctrl_Mode ctrlMode;           /*!< Psram ctrl mode */
+    PSRAM_Drive_Strength driveStrength; /*!< Psram drive strength */
+    PSRAM_Burst_Length burstLength;     /*!< Psram burst length size */
+} SPI_Psram_Cfg_Type;
 
 /*@} end of group PSRAM_Public_Types */
 
@@ -116,23 +117,23 @@ typedef struct {
 /** @defgroup  PSRAM_DRIVE_STRENGTH
  *  @{
  */
-#define IS_PSRAM_DRIVE_STRENGTH(type)                    (((type) == PSRAM_DRIVE_STRENGTH_50_OHMS) || \
-                                                          ((type) == PSRAM_DRIVE_STRENGTH_100_OHMS) || \
-                                                          ((type) == PSRAM_DRIVE_STRENGTH_200_OHMS))
+#define IS_PSRAM_DRIVE_STRENGTH(type) (((type) == PSRAM_DRIVE_STRENGTH_50_OHMS) ||  \
+                                       ((type) == PSRAM_DRIVE_STRENGTH_100_OHMS) || \
+                                       ((type) == PSRAM_DRIVE_STRENGTH_200_OHMS))
 
 /** @defgroup  PSRAM_BURST_LENGTH
  *  @{
  */
-#define IS_PSRAM_BURST_LENGTH(type)                      (((type) == PSRAM_BURST_LENGTH_16_BYTES) || \
-                                                          ((type) == PSRAM_BURST_LENGTH_32_BYTES) || \
-                                                          ((type) == PSRAM_BURST_LENGTH_64_BYTES) || \
-                                                          ((type) == PSRAM_BURST_LENGTH_512_BYTES))
+#define IS_PSRAM_BURST_LENGTH(type) (((type) == PSRAM_BURST_LENGTH_16_BYTES) || \
+                                     ((type) == PSRAM_BURST_LENGTH_32_BYTES) || \
+                                     ((type) == PSRAM_BURST_LENGTH_64_BYTES) || \
+                                     ((type) == PSRAM_BURST_LENGTH_512_BYTES))
 
 /** @defgroup  PSRAM_CTRL_MODE
  *  @{
  */
-#define IS_PSRAM_CTRL_MODE(type)                         (((type) == PSRAM_SPI_CTRL_MODE) || \
-                                                          ((type) == PSRAM_QPI_CTRL_MODE))
+#define IS_PSRAM_CTRL_MODE(type) (((type) == PSRAM_SPI_CTRL_MODE) || \
+                                  ((type) == PSRAM_QPI_CTRL_MODE))
 
 /*@} end of group PSRAM_Public_Constants */
 

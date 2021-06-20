@@ -38,13 +38,13 @@ This file exposes OINA-specific interfaces to decoder functions.
 #if defined(SBC_DEC_INCLUDED)
 
 OI_STATUS OI_CODEC_SBC_DecoderConfigureRaw(OI_CODEC_SBC_DECODER_CONTEXT *context,
-        OI_BOOL enhanced,
-        OI_UINT8 frequency,
-        OI_UINT8 mode,
-        OI_UINT8 subbands,
-        OI_UINT8 blocks,
-        OI_UINT8 alloc,
-        OI_UINT8 maxBitpool)
+                                           OI_BOOL enhanced,
+                                           OI_UINT8 frequency,
+                                           OI_UINT8 mode,
+                                           OI_UINT8 subbands,
+                                           OI_UINT8 blocks,
+                                           OI_UINT8 alloc,
+                                           OI_UINT8 maxBitpool)
 {
     if (frequency > SBC_FREQ_48000) {
         return OI_STATUS_INVALID_PARAMETERS;
@@ -52,9 +52,11 @@ OI_STATUS OI_CODEC_SBC_DecoderConfigureRaw(OI_CODEC_SBC_DECODER_CONTEXT *context
 
     if (enhanced) {
 #ifdef SBC_ENHANCED
+
         if (subbands != SBC_SUBBANDS_8) {
             return OI_STATUS_INVALID_PARAMETERS;
         }
+
 #else
         return OI_STATUS_INVALID_PARAMETERS;
 #endif
@@ -97,8 +99,6 @@ OI_STATUS OI_CODEC_SBC_DecoderConfigureRaw(OI_CODEC_SBC_DECODER_CONTEXT *context
     return OI_OK;
 }
 
-
-
 OI_STATUS OI_CODEC_SBC_DecodeRaw(OI_CODEC_SBC_DECODER_CONTEXT *context,
                                  OI_UINT8 bitpool,
                                  const OI_BYTE **frameData,
@@ -115,8 +115,8 @@ OI_STATUS OI_CODEC_SBC_DecodeRaw(OI_CODEC_SBC_DECODER_CONTEXT *context,
 }
 
 OI_STATUS OI_CODEC_SBC_DecoderLimit(OI_CODEC_SBC_DECODER_CONTEXT *context,
-                                    OI_BOOL                       enhanced,
-                                    OI_UINT8                      subbands)
+                                    OI_BOOL enhanced,
+                                    OI_UINT8 subbands)
 {
     if (enhanced) {
 #ifdef SBC_ENHANCED
@@ -127,11 +127,11 @@ OI_STATUS OI_CODEC_SBC_DecoderLimit(OI_CODEC_SBC_DECODER_CONTEXT *context,
     } else {
         context->enhancedEnabled = FALSE;
     }
+
     context->restrictSubbands = subbands;
     context->limitFrameFormat = TRUE;
     return OI_OK;
 }
-
 
 /**
 @}

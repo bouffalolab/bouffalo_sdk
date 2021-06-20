@@ -3,12 +3,12 @@
  * @file hal_gpio.c
  * @version 0.1
  * @date 2021-03-01
- * @brief 
+ * @brief
  * *****************************************************************************
  * @attention
- * 
+ *
  *  <h2><center>&copy; COPYRIGHT(c) 2020 Bouffalo Lab</center></h2>
- * 
+ *
  *  Redistribution and use in source and binary forms, with or without modification,
  *  are permitted provided that the following conditions are met:
  *    1. Redistributions of source code must retain the above copyright notice,
@@ -19,7 +19,7 @@
  *    3. Neither the name of Bouffalo Lab nor the names of its contributors
  *       may be used to endorse or promote products derived from this software
  *       without specific prior written permission.
- * 
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,7 +30,7 @@
  *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  *  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * *****************************************************************************
  */
 #include "bl602_glb.h"
@@ -39,10 +39,10 @@
 
 gpio_device_t gpio_device;
 /**
- * @brief 
- * 
- * @param pin 
- * @param mode 
+ * @brief
+ *
+ * @param pin
+ * @param mode
  */
 void gpio_set_mode(uint32_t pin, uint32_t mode)
 {
@@ -52,32 +52,38 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
     gpio_cfg.gpioPin = pin;
     gpio_cfg.drive = 0;
     gpio_cfg.smtCtrl = 1;
-    switch (mode)
-    {
+
+    switch (mode) {
         case GPIO_OUTPUT_MODE:
             gpio_cfg.gpioMode = GPIO_MODE_OUTPUT;
             gpio_cfg.pullType = GPIO_PULL_NONE;
             break;
+
         case GPIO_OUTPUT_PP_MODE:
             gpio_cfg.gpioMode = GPIO_MODE_OUTPUT;
             gpio_cfg.pullType = GPIO_PULL_UP;
             break;
+
         case GPIO_OUTPUT_PD_MODE:
             gpio_cfg.gpioMode = GPIO_MODE_OUTPUT;
             gpio_cfg.pullType = GPIO_PULL_DOWN;
             break;
+
         case GPIO_INPUT_MODE:
             gpio_cfg.gpioMode = GPIO_MODE_INPUT;
             gpio_cfg.pullType = GPIO_PULL_NONE;
             break;
+
         case GPIO_INPUT_PP_MODE:
             gpio_cfg.gpioMode = GPIO_MODE_INPUT;
             gpio_cfg.pullType = GPIO_PULL_UP;
             break;
+
         case GPIO_INPUT_PD_MODE:
             gpio_cfg.gpioMode = GPIO_MODE_INPUT;
             gpio_cfg.pullType = GPIO_PULL_DOWN;
             break;
+
         default:
             NVIC_DisableIRQ(GPIO_INT0_IRQn);
             GLB_GPIO_IntMask(pin, MASK);
@@ -85,118 +91,108 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
             gpio_cfg.gpioMode = GPIO_MODE_INPUT;
 
             GLB_GPIO_INT0_IRQHandler_Install();
-            if (mode == GPIO_ASYNC_RISING_TRIGER_INT_MODE)
-            {
+
+            if (mode == GPIO_ASYNC_RISING_TRIGER_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_DOWN;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_POS_PULSE);
             }
 
-            else if (mode == GPIO_ASYNC_FALLING_TRIGER_INT_MODE)
-            {
+            else if (mode == GPIO_ASYNC_FALLING_TRIGER_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_UP;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_NEG_PULSE);
             }
 
-            else if (mode == GPIO_ASYNC_HIGH_LEVEL_INT_MODE)
-            {
+            else if (mode == GPIO_ASYNC_HIGH_LEVEL_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_DOWN;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_POS_LEVEL);
             }
 
-            else if (mode == GPIO_ASYNC_LOW_LEVEL_INT_MODE)
-            {
+            else if (mode == GPIO_ASYNC_LOW_LEVEL_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_UP;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_NEG_LEVEL);
             }
 
-            else if (mode == GPIO_SYNC_RISING_TRIGER_INT_MODE)
-            {
+            else if (mode == GPIO_SYNC_RISING_TRIGER_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_DOWN;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_SYNC, GLB_GPIO_INT_TRIG_POS_PULSE);
             }
 
-            else if (mode == GPIO_SYNC_FALLING_TRIGER_INT_MODE)
-            {
+            else if (mode == GPIO_SYNC_FALLING_TRIGER_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_UP;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_SYNC, GLB_GPIO_INT_TRIG_NEG_PULSE);
             }
 
-            else if (mode == GPIO_SYNC_HIGH_LEVEL_INT_MODE)
-            {
+            else if (mode == GPIO_SYNC_HIGH_LEVEL_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_DOWN;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_SYNC, GLB_GPIO_INT_TRIG_POS_LEVEL);
             }
 
-            else if (mode == GPIO_SYNC_LOW_LEVEL_INT_MODE)
-            {
+            else if (mode == GPIO_SYNC_LOW_LEVEL_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_UP;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_SYNC, GLB_GPIO_INT_TRIG_NEG_LEVEL);
             }
 
-            else
+            else {
                 return;
+            }
+
             NVIC_EnableIRQ(GPIO_INT0_IRQn);
             break;
-
     }
+
     GLB_GPIO_Init(&gpio_cfg);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param value 
+ * @brief
+ *
+ * @param pin
+ * @param value
  */
 void gpio_write(uint32_t pin, uint32_t value)
 {
     GLB_GPIO_Write(pin, value);
 }
 /**
- * @brief 
- * 
- * @param pin 
+ * @brief
+ *
+ * @param pin
  */
 void gpio_toggle(uint32_t pin)
 {
-
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @return int 
+ * @brief
+ *
+ * @param pin
+ * @return int
  */
 int gpio_read(uint32_t pin)
 {
     return GLB_GPIO_Read(pin);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param cbFun 
+ * @brief
+ *
+ * @param pin
+ * @param cbFun
  */
 void gpio_attach_irq(uint32_t pin, void (*cbFun)(void))
 {
     GLB_GPIO_INT0_Callback_Install(pin, cbFun);
 }
 /**
- * @brief 
- * 
- * @param pin 
- * @param enabled 
+ * @brief
+ *
+ * @param pin
+ * @param enabled
  */
 void gpio_irq_enable(uint32_t pin, uint8_t enabled)
 {
-    if (enabled)
-    {
+    if (enabled) {
         GLB_GPIO_IntMask(pin, UNMASK);
-    }
-    else
-    {
+    } else {
         GLB_GPIO_IntMask(pin, MASK);
     }
-
 }
 
 void pin_register(const char *name, uint16_t flag)

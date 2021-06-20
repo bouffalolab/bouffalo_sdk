@@ -38,8 +38,8 @@ extern "C" {
  * @param clip_area the arc will be drawn only in this area
  * @param dsc pointer to an initialized `lv_draw_line_dsc_t` variable
  */
-void lv_draw_arc(lv_coord_t center_x, lv_coord_t center_y, uint16_t radius,  uint16_t start_angle, uint16_t end_angle,
-                 const lv_area_t * clip_area, const lv_draw_line_dsc_t * dsc);
+void lv_draw_arc(lv_coord_t center_x, lv_coord_t center_y, uint16_t radius, uint16_t start_angle, uint16_t end_angle,
+                 const lv_area_t *clip_area, const lv_draw_line_dsc_t *dsc);
 
 /**********************
  *      MACROS

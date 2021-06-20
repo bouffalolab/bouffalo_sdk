@@ -60,9 +60,8 @@
 /** @defgroup  L1C_Private_Variables
  *  @{
  */
-static intCallback_Type * l1cBmxErrIntCbfArra[L1C_BMX_ERR_INT_ALL]={NULL};
-static intCallback_Type * l1cBmxToIntCbfArra[L1C_BMX_TO_INT_ALL]={NULL};
-
+static intCallback_Type *l1cBmxErrIntCbfArra[L1C_BMX_ERR_INT_ALL] = { NULL };
+static intCallback_Type *l1cBmxToIntCbfArra[L1C_BMX_TO_INT_ALL] = { NULL };
 
 /*@} end of group L1C_Private_Variables */
 
@@ -88,7 +87,7 @@ static intCallback_Type * l1cBmxToIntCbfArra[L1C_BMX_TO_INT_ALL]={NULL};
  *  @{
  */
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Enable cache
  *
  * @param  wayDisable: cache way disable config
@@ -106,7 +105,7 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Enable_Set(uint8_t wayDisable)
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C cache write set
  *
  * @param  wtEn: L1C write through enable
@@ -122,27 +121,31 @@ void ATTR_TCM_SECTION L1C_Cache_Write_Set(BL_Fun_Type wtEn, BL_Fun_Type wbEn, BL
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    if(wtEn){
-        tmpVal=BL_SET_REG_BIT(tmpVal,L1C_WT_EN);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_WT_EN);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+
+    if (wtEn) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WT_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WT_EN);
     }
-    if(wbEn){
-        tmpVal=BL_SET_REG_BIT(tmpVal,L1C_WB_EN);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_WB_EN);
+
+    if (wbEn) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WB_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WB_EN);
     }
-    if(waEn){
-        tmpVal=BL_SET_REG_BIT(tmpVal,L1C_WA_EN);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_WA_EN);
+
+    if (waEn) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WA_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WA_EN);
     }
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Flush cache
  *
  * @param  wayDisable: cache way disable config
@@ -155,93 +158,97 @@ __WEAK
 BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush(uint8_t wayDisable)
 {
     uint32_t tmpVal;
-    uint32_t cnt=0;
-    uint8_t finWayDisable=0;
+    uint32_t cnt = 0;
+    uint8_t finWayDisable = 0;
 
-
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CACHEABLE);
-    tmpVal=BL_SET_REG_BIT(tmpVal,L1C_BYPASS);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_WAY_DIS);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CNT_EN);
-    finWayDisable=BL_GET_REG_BITS_VAL(tmpVal,L1C_WAY_DIS);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_CACHEABLE);
+    tmpVal = BL_SET_REG_BIT(tmpVal, L1C_BYPASS);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WAY_DIS);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_CNT_EN);
+    finWayDisable = BL_GET_REG_BITS_VAL(tmpVal, L1C_WAY_DIS);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
     /*Set Tag RAM to zero */
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_INVALID_EN);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_INVALID_EN);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
     /* Left space for hardware change status*/
     __NOP();
     __NOP();
     __NOP();
     __NOP();
-    tmpVal=BL_SET_REG_BIT(tmpVal,L1C_INVALID_EN);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, L1C_INVALID_EN);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
     /* Left space for hardware change status*/
     __NOP();
     __NOP();
     __NOP();
     __NOP();
+
     /* Polling for invalid done */
-    do{
+    do {
         BL702_Delay_US(1);
         cnt++;
-        tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    }while(!BL_IS_REG_BIT_SET(tmpVal,L1C_INVALID_DONE)&&cnt<100);
+        tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    } while (!BL_IS_REG_BIT_SET(tmpVal, L1C_INVALID_DONE) && cnt < 100);
 
     /* data flush */
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_FLUSH_EN);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_FLUSH_EN);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
     /* Left space for hardware change status*/
     __NOP();
     __NOP();
     __NOP();
     __NOP();
-    tmpVal=BL_SET_REG_BIT(tmpVal,L1C_FLUSH_EN);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, L1C_FLUSH_EN);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
     /* Left space for hardware change status*/
     __NOP();
     __NOP();
     __NOP();
     __NOP();
+
     /* Polling for flush done */
-    do{
+    do {
         BL702_Delay_US(1);
         cnt++;
-        tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    }while(!BL_IS_REG_BIT_SET(tmpVal,L1C_FLUSH_DONE)&&cnt<100);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_FLUSH_EN);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+        tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    } while (!BL_IS_REG_BIT_SET(tmpVal, L1C_FLUSH_DONE) && cnt < 100);
 
-    tmpVal=BL_SET_REG_BIT(tmpVal,L1C_BYPASS);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_FLUSH_EN);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_BYPASS);
-    tmpVal=BL_SET_REG_BIT(tmpVal,L1C_CNT_EN);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_SET_REG_BIT(tmpVal, L1C_BYPASS);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
-    if(wayDisable!=0xff){
-        finWayDisable=wayDisable;
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_BYPASS);
+    tmpVal = BL_SET_REG_BIT(tmpVal, L1C_CNT_EN);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
+
+    if (wayDisable != 0xff) {
+        finWayDisable = wayDisable;
     }
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_WAY_DIS);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WAY_DIS);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
-    tmpVal|=(finWayDisable<<L1C_WAY_DIS_POS);
+    tmpVal |= (finWayDisable << L1C_WAY_DIS_POS);
+
     /* If way disable is 0x0f, cacheable can't be set */
-    if(finWayDisable!=0x0f){
-       tmpVal=BL_SET_REG_BIT(tmpVal,L1C_CACHEABLE);
-    }else{
-       tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CACHEABLE);
+    if (finWayDisable != 0x0f) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_CACHEABLE);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_CACHEABLE);
     }
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get cache hit count
  *
  * @param  hitCountLow: hit count low 32 bits pointer
@@ -252,14 +259,14 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush(uint8_t wayDisable)
 *******************************************************************************/
 #ifndef BFLB_USE_ROM_DRIVER
 __WEAK
-void ATTR_TCM_SECTION L1C_Cache_Hit_Count_Get(uint32_t *hitCountLow,uint32_t *hitCountHigh)
+void ATTR_TCM_SECTION L1C_Cache_Hit_Count_Get(uint32_t *hitCountLow, uint32_t *hitCountHigh)
 {
-    *hitCountLow=BL_RD_REG(L1C_BASE,L1C_HIT_CNT_LSB);
-    *hitCountHigh=BL_RD_REG(L1C_BASE,L1C_HIT_CNT_MSB);
+    *hitCountLow = BL_RD_REG(L1C_BASE, L1C_HIT_CNT_LSB);
+    *hitCountHigh = BL_RD_REG(L1C_BASE, L1C_HIT_CNT_MSB);
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get cache miss count
  *
  * @param  None
@@ -271,11 +278,11 @@ void ATTR_TCM_SECTION L1C_Cache_Hit_Count_Get(uint32_t *hitCountLow,uint32_t *hi
 __WEAK
 uint32_t ATTR_TCM_SECTION L1C_Cache_Miss_Count_Get(void)
 {
-    return BL_RD_REG(L1C_BASE,L1C_MISS_CNT);
+    return BL_RD_REG(L1C_BASE, L1C_MISS_CNT);
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Disable read from flash or psram with cache
  *
  * @param  None
@@ -289,13 +296,13 @@ void ATTR_TCM_SECTION L1C_Cache_Read_Disable(void)
 {
     uint32_t tmpVal;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CACHEABLE);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_CACHEABLE);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  wrap set
  *
  * @param  wrap: ENABLE or DISABLE
@@ -310,31 +317,34 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Set_Wrap(BL_Fun_Type wrap)
     uint32_t tmpVal = 0;
     uint8_t cacheEn = 0;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    cacheEn = BL_IS_REG_BIT_SET(L1C_BASE,L1C_CACHEABLE);
-    if(cacheEn != 0){
-        tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CACHEABLE);
-        BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    cacheEn = BL_IS_REG_BIT_SET(L1C_BASE, L1C_CACHEABLE);
+
+    if (cacheEn != 0) {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_CACHEABLE);
+        BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
     }
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    if(wrap == ENABLE){
-        tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_WRAP_DIS);
-    }else{
-        tmpVal=BL_SET_REG_BIT(tmpVal,L1C_WRAP_DIS);
-    }
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
 
-    if(cacheEn != 0){
-        tmpVal=BL_SET_REG_BIT(tmpVal,L1C_CACHEABLE);
-        BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    if (wrap == ENABLE) {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WRAP_DIS);
+    } else {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WRAP_DIS);
+    }
+
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
+
+    if (cacheEn != 0) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_CACHEABLE);
+        BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
     }
 
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  cache way disable set
  *
  * @param  disableVal: cache way disable value
@@ -348,26 +358,27 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Set_Way_Disable(uint8_t disableVal)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CACHEABLE);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_CACHEABLE);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,L1C_WAY_DIS,disableVal);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, L1C_WAY_DIS, disableVal);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
-    if(disableVal!=0x0f){
-       tmpVal=BL_SET_REG_BIT(tmpVal,L1C_CACHEABLE);
-    }else{
-       tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_CACHEABLE);
+    if (disableVal != 0x0f) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_CACHEABLE);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_CACHEABLE);
     }
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Set for ROM 2T access if CPU freq >120MHz
  *
  * @param  enable: ENABLE or DISABLE
@@ -381,19 +392,21 @@ BL_Err_Type ATTR_TCM_SECTION L1C_IROM_2T_Access_Set(uint8_t enable)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    if(enable){
-        tmpVal=BL_SET_REG_BIT(tmpVal,L1C_IROM_2T_ACCESS);
-    }else{
-        tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_IROM_2T_ACCESS);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+
+    if (enable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_IROM_2T_ACCESS);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_IROM_2T_ACCESS);
     }
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
     return SUCCESS;
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX init
  *
  * @param  l1cBmxCfg: L1C BMX config
@@ -405,23 +418,23 @@ BL_Err_Type L1C_BMX_Init(L1C_BMX_Cfg_Type *l1cBmxCfg)
 {
     uint32_t tmpVal = 0;
 
-    CHECK_PARAM((l1cBmxCfg->timeoutEn)<=0xF);
+    CHECK_PARAM((l1cBmxCfg->timeoutEn) <= 0xF);
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,L1C_BMX_TIMEOUT_EN,l1cBmxCfg->timeoutEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,L1C_BMX_ERR_EN,l1cBmxCfg->errEn);
-    tmpVal=BL_SET_REG_BITS_VAL(tmpVal,L1C_BMX_ARB_MODE,l1cBmxCfg->arbMod);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
-    
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, L1C_BMX_TIMEOUT_EN, l1cBmxCfg->timeoutEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, L1C_BMX_ERR_EN, l1cBmxCfg->errEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, L1C_BMX_ARB_MODE, l1cBmxCfg->arbMod);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
+
 #ifndef BFLB_USE_HAL_DRIVER
-    Interrupt_Handler_Register(L1C_BMX_ERR_IRQn,L1C_BMX_ERR_IRQHandler);
-    Interrupt_Handler_Register(L1C_BMX_TO_IRQn,L1C_BMX_TO_IRQHandler);
+    Interrupt_Handler_Register(L1C_BMX_ERR_IRQn, L1C_BMX_ERR_IRQHandler);
+    Interrupt_Handler_Register(L1C_BMX_TO_IRQn, L1C_BMX_TO_IRQHandler);
 #endif
-    
+
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX address monitor enable
  *
  * @param  None
@@ -433,14 +446,14 @@ BL_Err_Type L1C_BMX_Addr_Monitor_Enable(void)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_BMX_ERR_ADDR_DIS);
-    BL_WR_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_BMX_ERR_ADDR_EN);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_BMX_ERR_ADDR_DIS);
+    BL_WR_REG(L1C_BASE, L1C_BMX_ERR_ADDR_EN, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX address monitor disable
  *
  * @param  None
@@ -452,14 +465,14 @@ BL_Err_Type L1C_BMX_Addr_Monitor_Disable(void)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN);
-    tmpVal=BL_SET_REG_BIT(tmpVal,L1C_BMX_ERR_ADDR_DIS);
-    BL_WR_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_BMX_ERR_ADDR_EN);
+    tmpVal = BL_SET_REG_BIT(tmpVal, L1C_BMX_ERR_ADDR_DIS);
+    BL_WR_REG(L1C_BASE, L1C_BMX_ERR_ADDR_EN, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX bus error response enable
  *
  * @param  None
@@ -471,14 +484,14 @@ BL_Err_Type L1C_BMX_BusErrResponse_Enable(void)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    tmpVal=BL_SET_REG_BIT(tmpVal,L1C_BMX_ERR_EN);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    tmpVal = BL_SET_REG_BIT(tmpVal, L1C_BMX_ERR_EN);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX bus error response disable
  *
  * @param  None
@@ -490,14 +503,14 @@ BL_Err_Type L1C_BMX_BusErrResponse_Disable(void)
 {
     uint32_t tmpVal = 0;
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_CONFIG);
-    tmpVal=BL_CLR_REG_BIT(tmpVal,L1C_BMX_ERR_EN);
-    BL_WR_REG(L1C_BASE,L1C_CONFIG,tmpVal);
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_BMX_ERR_EN);
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
 
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get L1C BMX error status
  *
  * @param  errType: L1C BMX error status type
@@ -511,15 +524,16 @@ BL_Sts_Type L1C_BMX_Get_Status(L1C_BMX_BUS_ERR_Type errType)
 
     CHECK_PARAM(IS_L1C_BMX_BUS_ERR_TYPE(errType));
 
-    tmpVal=BL_RD_REG(L1C_BASE,L1C_BMX_ERR_ADDR_EN);
-    if(errType==L1C_BMX_BUS_ERR_TRUSTZONE_DECODE){
-        return BL_GET_REG_BITS_VAL(tmpVal,L1C_BMX_ERR_TZ)?SET:RESET;
-    }else{
-        return BL_GET_REG_BITS_VAL(tmpVal,L1C_BMX_ERR_DEC)?SET:RESET;
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_BMX_ERR_ADDR_EN);
+
+    if (errType == L1C_BMX_BUS_ERR_TRUSTZONE_DECODE) {
+        return BL_GET_REG_BITS_VAL(tmpVal, L1C_BMX_ERR_TZ) ? SET : RESET;
+    } else {
+        return BL_GET_REG_BITS_VAL(tmpVal, L1C_BMX_ERR_DEC) ? SET : RESET;
     }
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Get L1C BMX error address
  *
  * @param  None
@@ -529,10 +543,10 @@ BL_Sts_Type L1C_BMX_Get_Status(L1C_BMX_BUS_ERR_Type errType)
 *******************************************************************************/
 uint32_t L1C_BMX_Get_Err_Addr(void)
 {
-    return BL_RD_REG(L1C_BASE,L1C_BMX_ERR_ADDR);
+    return BL_RD_REG(L1C_BASE, L1C_BMX_ERR_ADDR);
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX error interrupt callback install
  *
  * @param  intType: L1C BMX error interrupt type
@@ -541,7 +555,7 @@ uint32_t L1C_BMX_Get_Err_Addr(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type L1C_BMX_ERR_INT_Callback_Install(L1C_BMX_ERR_INT_Type intType,intCallback_Type* cbFun)
+BL_Err_Type L1C_BMX_ERR_INT_Callback_Install(L1C_BMX_ERR_INT_Type intType, intCallback_Type *cbFun)
 {
     CHECK_PARAM(IS_L1C_BMX_ERR_INT_TYPE(intType));
 
@@ -550,7 +564,7 @@ BL_Err_Type L1C_BMX_ERR_INT_Callback_Install(L1C_BMX_ERR_INT_Type intType,intCal
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX ERR interrupt IRQ handler
  *
  * @param  None
@@ -563,20 +577,20 @@ void L1C_BMX_ERR_IRQHandler(void)
 {
     L1C_BMX_ERR_INT_Type intType;
 
-    for(intType=L1C_BMX_ERR_INT_ERR;intType<L1C_BMX_ERR_INT_ALL;intType++){
-        if(l1cBmxErrIntCbfArra[intType]!=NULL){
+    for (intType = L1C_BMX_ERR_INT_ERR; intType < L1C_BMX_ERR_INT_ALL; intType++) {
+        if (l1cBmxErrIntCbfArra[intType] != NULL) {
             l1cBmxErrIntCbfArra[intType]();
         }
     }
 
-    while(1){
+    while (1) {
         MSG("L1C_BMX_ERR_IRQHandler\r\n");
         BL702_Delay_MS(1000);
     }
 }
 #endif
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX timeout interrupt callback install
  *
  * @param  intType: L1C BMX timeout interrupt type
@@ -585,7 +599,7 @@ void L1C_BMX_ERR_IRQHandler(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type L1C_BMX_TIMEOUT_INT_Callback_Install(L1C_BMX_TO_INT_Type intType,intCallback_Type* cbFun)
+BL_Err_Type L1C_BMX_TIMEOUT_INT_Callback_Install(L1C_BMX_TO_INT_Type intType, intCallback_Type *cbFun)
 {
     CHECK_PARAM(IS_L1C_BMX_TO_INT_TYPE(intType));
 
@@ -594,7 +608,7 @@ BL_Err_Type L1C_BMX_TIMEOUT_INT_Callback_Install(L1C_BMX_TO_INT_Type intType,int
     return SUCCESS;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  L1C BMX Time Out interrupt IRQ handler
  *
  * @param  None
@@ -607,13 +621,13 @@ void L1C_BMX_TO_IRQHandler(void)
 {
     L1C_BMX_TO_INT_Type intType;
 
-    for(intType=L1C_BMX_TO_INT_TIMEOUT;intType<L1C_BMX_TO_INT_ALL;intType++){
-        if(l1cBmxToIntCbfArra[intType]!=NULL){
+    for (intType = L1C_BMX_TO_INT_TIMEOUT; intType < L1C_BMX_TO_INT_ALL; intType++) {
+        if (l1cBmxToIntCbfArra[intType] != NULL) {
             l1cBmxToIntCbfArra[intType]();
         }
     }
 
-    while(1){
+    while (1) {
         MSG("L1C_BMX_TO_IRQHandler\r\n");
         BL702_Delay_MS(1000);
     }

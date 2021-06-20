@@ -61,15 +61,15 @@
 /** @defgroup  BLSP_COMMON_Public_Macros
  *  @{
  */
-#define BLSP_BOOT2_CP_FLAG          0x02
-#define BLSP_BOOT2_MP_FLAG          0x01
-#define BLSP_BOOT2_SP_FLAG          0x00
+#define BLSP_BOOT2_CP_FLAG 0x02
+#define BLSP_BOOT2_MP_FLAG 0x01
+#define BLSP_BOOT2_SP_FLAG 0x00
 /*@} end of group BLSP_COMMON_Public_Macros */
 
 /** @defgroup  BLSP_COMMON_Public_Functions
  *  @{
  */
-void blsp_dump_data(void *datain,int len);
+void blsp_dump_data(void *datain, int len);
 void blsp_fix_invalid_msp_pc(void);
 void blsp_boot2_jump_entry(void);
 int32_t blsp_mediaboot_pre_jump(void);
@@ -78,7 +78,7 @@ uint8_t blsp_boot2_get_log_disable_flag(void);
 uint8_t blsp_boot2_8m_support_flag(void);
 uint8_t blsp_boot2_dump_critical_flag(void);
 uint32_t blsp_boot2_get_baudrate(void);
-uint8_t  blsp_boot2_get_tx_gpio(void);
+uint8_t blsp_boot2_get_tx_gpio(void);
 
 /*@} end of group BLSP_COMMON_Public_Functions */
 

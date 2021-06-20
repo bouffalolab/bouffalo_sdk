@@ -14,13 +14,12 @@
 
 #include <zephyr.h>
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define snprintk snprintf
-#define printk printf
+#define printk   printf
 
 #ifdef __cplusplus
 }

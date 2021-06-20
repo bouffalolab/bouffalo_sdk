@@ -11,7 +11,7 @@
 
 /* The actual IO functions are not included. */
 #if __riscv_xlen == 64
-#   include_next <stdio.h>
+#include_next <stdio.h>
 #else
 __extern int sprintf(char *, const char *, ...);
 __extern int vsprintf(char *, const char *, va_list);
@@ -21,4 +21,4 @@ __extern int sscanf(const char *, const char *, ...);
 __extern int vsscanf(const char *, const char *, va_list);
 #endif /* __riscv_xlen == 64 */
 
-#endif				/* _STDIO_H */
+#endif /* _STDIO_H */
