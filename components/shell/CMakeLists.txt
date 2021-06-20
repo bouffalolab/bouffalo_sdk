@@ -1,7 +1,6 @@
 ﻿################# Add global include #################
 list(APPEND ADD_INCLUDE 
 "${CMAKE_CURRENT_SOURCE_DIR}"
-
 )
 #######################################################
 
@@ -16,7 +15,6 @@ file(GLOB_RECURSE sources
 "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 #aux_source_directory(. sources)
 list(APPEND ADD_SRCS  ${sources})
-#list(REMOVE_ITEM ADD_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/libc/src/strtox.c" "${CMAKE_CURRENT_SOURCE_DIR}/libc/src/atox.c")
 #######################################################
 
 ########### Add required/dependent components #########
