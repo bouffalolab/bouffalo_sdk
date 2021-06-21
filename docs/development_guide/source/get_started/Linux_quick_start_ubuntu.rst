@@ -101,14 +101,14 @@ Linux OR WSL 环境开发指南
    :linenos:
 
     $ cd ~/bl_mcu_sdk
-    $ make download INTERFACE=uart
+    $ make download INTERFACE=uart COMx=/dev/ttyUSB1
 
 -  如果下载失败请检查：
 
    -  1. 是否使用串口烧写，开发板是否供电，硬件连接是否正确。
    -  2. 烧写命令是否在 ``bl_mcu_sdk`` 目录下执行
    -  3. 是否进入 boot_rom 模式
-   -  4. 串口是否被占用
+   -  4. 串口是否被占用，以及你的可用串口是否选择正确，如果你的串口不是 ``ttyUSB1``，那么请指定正确的串口
 
 运行 Hello World
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -119,7 +119,7 @@ Linux OR WSL 环境开发指南
    :linenos:
 
     $ sudo apt install picocom   # 若已经安装请忽略
-    $ picocom -b 2000000 /dev/ttyUSB0 # 注意你的可用串口号 （如使用 Sipeed RV-debugger）
+    $ picocom -b 2000000 /dev/ttyUSB1 # 注意你的可用串口号 （如使用 Sipeed RV-debugger Plus 的串口那么就是 ``ttyUSB1``）
 
 -  按一下开发板上的 ``rst`` 按键，即可在串口终端中看到 ``hello world！``
 

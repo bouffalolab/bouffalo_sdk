@@ -317,7 +317,7 @@ $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
 </ul>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> ~/bl_mcu_sdk
- $ make download <span class="nv">INTERFACE</span><span class="o">=</span>uart
+ $ make download <span class="nv">INTERFACE</span><span class="o">=</span>uart <span class="nv">COMx</span><span class="o">=</span>/dev/ttyUSB1
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
@@ -336,7 +336,7 @@ $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
 </ol>
 </li>
 <li><ol class="arabic simple" start="4">
-<li><p>串口是否被占用</p></li>
+<li><p>串口是否被占用，以及你的可用串口是否选择正确，如果你的串口不是 <code class="docutils literal notranslate"><span class="pre">ttyUSB1</span></code>，那么请指定正确的串口</p></li>
 </ol>
 </li>
 </ul>
@@ -350,7 +350,7 @@ $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
 </ul>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ sudo apt install picocom   <span class="c1"># 若已经安装请忽略</span>
- $ picocom -b <span class="m">2000000</span> /dev/ttyUSB0 <span class="c1"># 注意你的可用串口号 （如使用 Sipeed RV-debugger）</span>
+ $ picocom -b <span class="m">2000000</span> /dev/ttyUSB1 <span class="c1"># 注意你的可用串口号 （如使用 Sipeed RV-debugger Plus 的串口那么就是 ``ttyUSB1``）</span>
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
