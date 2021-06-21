@@ -60,6 +60,8 @@ BL706_AVB 开发板如下图所示
 
    -  1. 首先，将调试器 Type-C USB 接口使用 USB 数据线连接到 PC 主机，打开 PC 的设备管理器，在端口一栏可以看到调试器被识别为两个串口（*注：不是开发板上的串口*），或者在 ``通用串行总线控制器`` 看到 ``USB Serial Converter A`` 和 ``USB Serial Converter B``
 
+      .. important:: **注意:** 若在设备管理器中看到的串口名称为 “``USB 串行设备(COM*)``”，说明调试器进入了 ``Boot`` 模式。请将调试器断电重新上电，注意先不要将调试器连接到目标板；此时在到设备管理器中看是否正常
+
    .. figure:: img/sipeed_rv_debugger_1.png
 
    .. figure:: img/sipeed_rv_debugger_4.png
@@ -82,6 +84,8 @@ BL706_AVB 开发板如下图所示
 .. caution:: 1. 调试器接上时没有出现两个串口，调试器上有一个 LED 常亮，那么应该是进入了 Boot 模式。请将调试器断电重新上电，注意先不要将调试器连接到目标板；调试器上电后，正常情况下两个 LED 灯会闪烁一下熄灭；此时再看一下任务管理器中的设备是否正确。
 
 .. caution:: 2. 在设备管理器中没有看到任何串口，但是在``通用串行总线控制器``中看到 ``USB Serial Converter A`` 和 ``USB Serial Converter B``；遇到这种情况，请到 `FTDI 官网 <https://ftdichip.com/drivers/vcp-drivers/>`_ 下载与系统匹配的驱动，将 ``USB Serial Converter B`` 重新安装为串口；``USB Serial Converter A`` 也即 Interface 0，使用 ``zadig-2.4.exe`` 替换为 WinUSB 驱动。
+
+.. caution:: 3. 如果经过上面的操作还是不能正常使用，没有出现正确的现象，那么建议从 Sipeed 官方 `GitHub <https://github.com/sipeed/RV-Debugger-BL702>`_ 仓库获取固件，重新烧写；按住调试器上的 ``Boot`` 键不要释放，将调试器插入电脑上电，使调试器进入 Boot 模式，重新刷入固件后；断电重启
 
 **Linux**
 

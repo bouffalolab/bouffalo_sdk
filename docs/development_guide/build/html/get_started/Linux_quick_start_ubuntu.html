@@ -102,11 +102,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#id2">2.3.4. 硬件连接</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bl-mcu-sdk">2.3.5. 获取 bl_mcu_sdk</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hello-world">2.3.6. 测试 Hello World 工程</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id3">2.3.6.1. 打开 Hello World</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id4">2.3.6.2. 编译 Hello World</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id5">2.3.6.3. 烧写 Hello World</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id6">2.3.6.4. 运行 Hello World</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id7">2.3.6.5. 调试 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">打开 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">编译 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5">烧写 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">运行 Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">调试 Hello World</a></li>
 </ul>
 </li>
 </ul>
@@ -288,7 +288,7 @@ $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
 <div class="section" id="hello-world">
 <h2><span class="section-number">2.3.6. </span>测试 Hello World 工程<a class="headerlink" href="#hello-world" title="永久链接至标题">¶</a></h2>
 <div class="section" id="id3">
-<h3><span class="section-number">2.3.6.1. </span>打开 Hello World<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<h3>打开 Hello World<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>获取到 SDK 后，进入 sdk 中的 <code class="docutils literal notranslate"><span class="pre">examples/hellowd/helloworld</span></code> 目录下，打开 <code class="docutils literal notranslate"><span class="pre">main.c</span></code>，即可编辑 helloworld 的相关代码。</p></li>
 </ul>
@@ -302,7 +302,7 @@ $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
 </ul>
 </div>
 <div class="section" id="id4">
-<h3><span class="section-number">2.3.6.2. </span>编译 Hello World<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
+<h3>编译 Hello World<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> ~/bl_mcu_sdk
  $ make build <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>helloworld
@@ -310,7 +310,7 @@ $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
 </td></tr></table></div>
 </div>
 <div class="section" id="id5">
-<h3><span class="section-number">2.3.6.3. </span>烧写 Hello World<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
+<h3>烧写 Hello World<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>烧写前请先确认烧写方式，若采用串口烧写，请先按住板子上的 <code class="docutils literal notranslate"><span class="pre">boot</span></code> 键不要释放，此时在按下 <code class="docutils literal notranslate"><span class="pre">rst</span></code> 键，然后释放两个键，此时板子进入 boot_rom 状态。</p></li>
 <li><p>这时在终端中输入以下命令进行烧写</p></li>
@@ -344,7 +344,7 @@ $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
 </ul>
 </div>
 <div class="section" id="id6">
-<h3><span class="section-number">2.3.6.4. </span>运行 Hello World<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
+<h3>运行 Hello World<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>打开新的终端，安装、运行串口工具</p></li>
 </ul>
@@ -362,7 +362,7 @@ $ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
 </div>
 </div>
 <div class="section" id="id7">
-<h3><span class="section-number">2.3.6.5. </span>调试 Hello World<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
+<h3>调试 Hello World<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
 </div>
 </div>
 </div>

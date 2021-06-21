@@ -16,7 +16,7 @@ BL MCU SDK 将为您提供博流 BL70X 系列 MCU 开发的全方位支持。
 .. toctree::
    :maxdepth: 1
    :caption: 快速开发指南
-   :numbered:
+   :numbered: 3
 
    get_started/get_started
    get_started/index

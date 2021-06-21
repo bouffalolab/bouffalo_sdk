@@ -258,10 +258,14 @@
 <p><strong>Windows</strong></p>
 <ul>
 <li><p>Sipeed RV-Debugger Plus 调试器在 Windows 系统中所以时我们需要将驱动更换为 <code class="docutils literal notranslate"><span class="pre">Win</span> <span class="pre">USB</span></code> 驱动</p>
-<ul class="simple">
+<ul>
 <li><ol class="arabic simple">
 <li><p>首先，将调试器 Type-C USB 接口使用 USB 数据线连接到 PC 主机，打开 PC 的设备管理器，在端口一栏可以看到调试器被识别为两个串口（<em>注：不是开发板上的串口</em>），或者在 <code class="docutils literal notranslate"><span class="pre">通用串行总线控制器</span></code> 看到 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> 和 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code></p></li>
 </ol>
+<div class="admonition important">
+<p class="admonition-title">重要</p>
+<p><strong>注意:</strong> 若在设备管理器中看到的串口名称为 “<code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">串行设备(COM*)</span></code>”，说明调试器进入了 <code class="docutils literal notranslate"><span class="pre">Boot</span></code> 模式。请将调试器断电重新上电，注意先不要将调试器连接到目标板；此时在到设备管理器中看是否正常</p>
+</div>
 </li>
 </ul>
 <div class="figure align-default">
@@ -315,6 +319,12 @@
 <p class="admonition-title">警告</p>
 <ol class="arabic simple" start="2">
 <li><p>在设备管理器中没有看到任何串口，但是在``通用串行总线控制器``中看到 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> 和 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code>；遇到这种情况，请到 <a class="reference external" href="https://ftdichip.com/drivers/vcp-drivers/">FTDI 官网</a> 下载与系统匹配的驱动，将 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code> 重新安装为串口；<code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> 也即 Interface 0，使用 <code class="docutils literal notranslate"><span class="pre">zadig-2.4.exe</span></code> 替换为 WinUSB 驱动。</p></li>
+</ol>
+</div>
+<div class="admonition caution">
+<p class="admonition-title">警告</p>
+<ol class="arabic simple" start="3">
+<li><p>如果经过上面的操作还是不能正常使用，没有出现正确的现象，那么建议从 Sipeed 官方 <a class="reference external" href="https://github.com/sipeed/RV-Debugger-BL702">GitHub</a> 仓库获取固件，重新烧写；按住调试器上的 <code class="docutils literal notranslate"><span class="pre">Boot</span></code> 键不要释放，将调试器插入电脑上电，使调试器进入 Boot 模式，重新刷入固件后；断电重启</p></li>
 </ol>
 </div>
 <p><strong>Linux</strong></p>
