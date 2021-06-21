@@ -3,6 +3,7 @@ CHIP?=bl702
 APP_DIR?=examples
 APP?=helloworld
 CPU_ID?=m0
+COMx?=
 
 SUPPORT_SHELL?=n
 SUPPORT_FREERTOS?=n
@@ -43,7 +44,7 @@ build:
 	make -C ./build -f ./project.build
 
 download:
-	./tools/bflb_flash_tool/bflb_mcu_tool --chipname=$(CHIP) --interface=$(INTERFACE) --baudrate=$(BAUDRATE)
+	./tools/bflb_flash_tool/bflb_mcu_tool --chipname=$(CHIP) --interface=$(INTERFACE) --port=$(COMx) --baudrate=$(BAUDRATE)
 
 format:
 	find $(FORMAT_DIR)/ -name "*.c" -o -name "*.h" | xargs clang-format -style=file -i
