@@ -477,7 +477,7 @@ Board: bl70x_iot
       </File>
     </VirtualDirectory>
     <VirtualDirectory Name="shell">
-      <File Name="../../../../components/shell/drv_shell.c">
+      <File Name="../../../../components/shell/shell.c">
         <FileOption/>
       </File>
     </VirtualDirectory>
@@ -788,7 +788,7 @@ Board: bl70x_iot
           <UserProgName/>
         </BeforeMake>
         <AfterMake>
-          <RunUserProg>yes</RunUserProg>
+          <RunUserProg>no</RunUserProg>
           <UserProgName>$(ProjectPath)../../../../tools/bflb_flash_tool/bflb_mcu_tool.exe  --chipname=bl702 --interface=openocd --firmware="$(ProjectPath)/Obj/$(ProjectName).bin" </UserProgName>
         </AfterMake>
       </User>

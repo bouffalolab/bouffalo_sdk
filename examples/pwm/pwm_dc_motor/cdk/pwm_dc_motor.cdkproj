@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Project Name="camera_interleave_psram" Version="1" Language="C">
+<Project Name="pwm_dc_motor" Version="1" Language="C">
   <Description>CPU: RV32IMAFC
 Chip: bl70x
 Board: bl70x_iot
@@ -198,12 +198,6 @@ Board: bl70x_iot
     <File Name="../../../../bsp/bsp_common/platform/bflb_platform.c">
       <FileOption/>
     </File>
-    <File Name="../../../../bsp/bsp_common/image_sensor/bsp_image_sensor.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../../bsp/bsp_common/psram/bsp_sf_psram.c">
-      <FileOption/>
-    </File>
   </VirtualDirectory>
   <VirtualDirectory Name="common">
     <File Name="../../../../common/device/drv_device.c">
@@ -218,7 +212,7 @@ Board: bl70x_iot
     <File Name="../../../../common/soft_crc/softcrc.c">
       <FileOption/>
     </File>
-    <VirtualDirectory Name="libc" ExcludeProjConfig="">
+    <VirtualDirectory Name="libc">
       <File Name="../../../../common/libc/src/atof.c">
         <FileOption/>
       </File>
@@ -464,7 +458,7 @@ Board: bl70x_iot
     </File>
   </VirtualDirectory>
   <MonitorProgress>
-    <DebugLaunch>154</DebugLaunch>
+    <DebugLaunch>155</DebugLaunch>
     <FlashOperate>104</FlashOperate>
   </MonitorProgress>
   <VirtualDirectory Name="components">
@@ -799,11 +793,11 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>BL702;ARCH_RISCV;</Define>
+        <Define>ARCH_RISCV;</Define>
         <Undefine/>
-        <Optim>Optimize size (-Os)</Optim>
+        <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/Source/include;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl706_iot;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../bsp/bsp_common/image_sensor;$(ProjectPath)../../../../bsp/bsp_common/psram;$(ProjectPath)../../../../common/libc/inc;$(ProjectPath)../../../../common/libc/inc/arm_gcc;$(ProjectPath)../../../../common/libc/inc/bits;$(ProjectPath)../../../../common/libc/inc/sys;$(ProjectPath)../../../../common/libc/src;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/Source/include;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl706_iot;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/libc/inc;$(ProjectPath)../../../../common/libc/inc/arm_gcc;$(ProjectPath)../../../../common/libc/inc/bits;$(ProjectPath)../../../../common/libc/inc/sys;$(ProjectPath)../../../../common/libc/src;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl602_driver/regs;$(ProjectPath)../../../../drivers/bl602_driver/std_drv/inc</IncludePath>
         <OtherFlags>-fshort-enums -fno-common -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -fno-jump-tables -Wignored-qualifiers -Wswitch-default -Wunused -Wundef -msmall-data-limit=4</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -826,10 +820,10 @@ Board: bl70x_iot
       <Linker>
         <Garbage>yes</Garbage>
         <Garbage2>yes</Garbage2>
-        <LDFile>$(ProjectPath)/../bl706_camera_psram.ld</LDFile>
+        <LDFile>$(ProjectPath)../../../../drivers/bl702_driver/bl702_flash.ld</LDFile>
         <LibName/>
         <LibPath/>
-        <OtherFlags>--specs=nano.specs</OtherFlags>
+        <OtherFlags/>
         <AutoLDFile>no</AutoLDFile>
         <LinkType/>
       </Linker>
@@ -885,7 +879,7 @@ Board: bl70x_iot
       <Flash>
         <InitFile/>
         <Erase>Erase Sectors</Erase>
-        <Algorithms Path="">bl702_flasher.elf</Algorithms>
+        <Algorithms Path="">bl70x_flasher.elf</Algorithms>
         <Program>yes</Program>
         <Verify>yes</Verify>
         <ResetAndRun>no</ResetAndRun>

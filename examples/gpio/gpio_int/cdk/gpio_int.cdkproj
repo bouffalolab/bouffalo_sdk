@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Project Name="pwm_step_motor" Version="1" Language="C">
+<Project Name="gpio_int" Version="1" Language="C">
   <Description>CPU: RV32IMAFC
 Chip: bl70x
 Board: bl70x_iot
@@ -458,7 +458,7 @@ Board: bl70x_iot
     </File>
   </VirtualDirectory>
   <MonitorProgress>
-    <DebugLaunch>155</DebugLaunch>
+    <DebugLaunch>154</DebugLaunch>
     <FlashOperate>104</FlashOperate>
   </MonitorProgress>
   <VirtualDirectory Name="components">
@@ -477,7 +477,7 @@ Board: bl70x_iot
       </File>
     </VirtualDirectory>
     <VirtualDirectory Name="shell">
-      <File Name="../../../../components/shell/drv_shell.c">
+      <File Name="../../../../components/shell/shell.c">
         <FileOption/>
       </File>
     </VirtualDirectory>

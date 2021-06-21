@@ -486,7 +486,7 @@ Board: bl70x_iot
       </File>
     </VirtualDirectory>
     <VirtualDirectory Name="shell">
-      <File Name="../../../../components/shell/drv_shell.c">
+      <File Name="../../../../components/shell/shell.c">
         <FileOption/>
       </File>
     </VirtualDirectory>
@@ -807,7 +807,7 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>BL702;BL702_EVB;ARCH_RISCV;</Define>
+        <Define>ARCH_RISCV;</Define>
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
