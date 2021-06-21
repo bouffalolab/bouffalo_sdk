@@ -14,7 +14,7 @@ This the first tab\n
 If the content
 of a tab
 become too long
-then it 
+then it
 automatically
 becomes
 scrollable.

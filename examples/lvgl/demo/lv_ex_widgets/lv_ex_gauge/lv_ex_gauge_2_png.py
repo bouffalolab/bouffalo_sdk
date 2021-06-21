@@ -13,7 +13,7 @@ with open('img_hand.png','rb') as f:
 
 img_hand_dsc = lv.img_dsc_t({
     'data_size': len(png_data),
-    'data': png_data 
+    'data': png_data
 })
 # needle colors
 needle_colors=[lv_colors.BLUE,lv_colors.ORANGE,lv_colors.PURPLE]

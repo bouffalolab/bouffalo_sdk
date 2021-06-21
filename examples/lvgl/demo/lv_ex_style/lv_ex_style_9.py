@@ -12,7 +12,7 @@ except:
     except:
         print("Could not find img_cogwheel binary image file")
         sys.exit()
-    
+
 # create the cogwheel image data
 
 cogwheel_img_dsc = lv.img_dsc_t(
@@ -46,7 +46,7 @@ lv.img.cache_set_size(2)
 obj.add_style(lv.img.PART.MAIN, style)
 obj.set_src(cogwheel_img_dsc)
 obj.align(None, lv.ALIGN.CENTER, 0, 0)
-    
+
 while True:
      lv.task_handler()
      time.sleep_ms(10)

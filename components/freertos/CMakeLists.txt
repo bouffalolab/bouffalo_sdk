@@ -1,5 +1,5 @@
 ﻿################# Add global include #################
-list(APPEND ADD_INCLUDE 
+list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}"
 "${CMAKE_CURRENT_SOURCE_DIR}/include"
 "${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}"
@@ -7,7 +7,7 @@ list(APPEND ADD_INCLUDE
 #######################################################
 
 ################# Add private include #################
-# list(APPEND ADD_PRIVATE_INCLUDE 
+# list(APPEND ADD_PRIVATE_INCLUDE
 # )
 #######################################################
 
@@ -33,9 +33,7 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ############ Add static libs ##########################
-# if(CONFIG_COMPONENT1_INCLUDE_STATIC_LIB)
-#     list(APPEND ADD_STATIC_LIB "libxxx.a")
-# endif()
+#list(APPEND ADD_STATIC_LIB "libxxx.a")
 #######################################################
 
 ############ Add dynamic libs #########################
@@ -49,8 +47,8 @@ list(APPEND ADD_DEFINITIONS -DportasmHANDLE_INTERRUPT=FreeRTOS_Interrupt_Handler
 #######################################################
 
 ############ Add private compile option ################
-#add compile option for this component that won't affect other modules  
-# list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
+#add compile option for this component that won't affect other modules
+# list(APPEND ADD_PRIVATE_DEFINITIONS -Dxxx)
 #######################################################
 
 generate_library()

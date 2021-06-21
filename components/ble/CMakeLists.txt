@@ -170,8 +170,8 @@ list(APPEND ADD_DEFINITIONS ${CFLAGS})
 #######################################################
 
 ############ Add private compile option ################
-#add compile option for this component that won't affect other modules  
-# list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
+#add compile option for this component that won't affect other modules
+# list(APPEND ADD_PRIVATE_DEFINITIONS -Dxxx)
 #######################################################
 
 generate_library()

@@ -1,7 +1,7 @@
 C
 ^
 
-Simple window 
+Simple window
 """""""""""""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_win/lv_ex_win_1

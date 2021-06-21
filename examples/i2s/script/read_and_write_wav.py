@@ -10,7 +10,7 @@ import os
 import wave
 import struct
 import time
-import re 
+import re
 import subprocess
 import binascii
 
@@ -18,7 +18,7 @@ import binascii
 
 from pydub import AudioSegment
 filePath = './'
- 
+
 # 操作函数
 def get_wav_make(dataDir):
     sound= AudioSegment.from_wav(dataDir)
@@ -65,7 +65,7 @@ def gen_wave_table(wav_file_list, target_file_name, scale_bits=8):
 def get_wave_info(filename):
     wave_read = wave.open(filename, "r")
     nchannels, sampwidth, framerate, nframes, comptype, compname = wave_read.getparams()
-    
+
     print('nchannels:{}'.format(nchannels))
     print('sampwidth:{}'.format(sampwidth))
     print('framerate:{}Hz'.format(framerate))
@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
     #         amr_file = wave2amr('fhm_onechannel_8k.wav')
     #         if amr_file!=0:
-    
+
     get_wav_make('fhm_onechannel_8k.wav')
     wave2amr('fhm_onechannel_8k_10.wav')
     file2array('fhm_onechannel_8k_10.wav')

@@ -1,7 +1,7 @@
 def increment_event_cb(source,evt):
     if evt == lv.EVENT.SHORT_CLICKED or evt == lv.EVENT.LONG_PRESSED_REPEAT:
         spinbox.increment()
-        
+
 def decrement_event_cb(source,evt):
     if evt == lv.EVENT.SHORT_CLICKED or evt == lv.EVENT.LONG_PRESSED_REPEAT:
         spinbox.decrement()

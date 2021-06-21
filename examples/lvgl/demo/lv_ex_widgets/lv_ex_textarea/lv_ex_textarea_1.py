@@ -7,7 +7,7 @@ class TextArea():
         self.ta.align(None,lv.ALIGN.CENTER,0,0)
         self.ta.set_text("A text in a Text Area")
         self.ta.set_event_cb(self.event_handler)
-      
+
     def event_handler(self,source,event):
         if  event == lv.EVENT.VALUE_CHANGED:
             print("i= ",self.i)
@@ -18,6 +18,6 @@ class TextArea():
             if self.i < len(txt):
                 self.ta.add_char(ord(txt[self.i]))
                 self.i += 1
-       
+
 TextArea()
 

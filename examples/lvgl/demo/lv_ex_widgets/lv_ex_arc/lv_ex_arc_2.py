@@ -6,7 +6,7 @@ def arc_loader(task,arc):
         task._del()
     else:
         arc.set_value(angle)
-    
+
 # create an arc which acts as a loader
 
 arc = lv.arc(lv.scr_act(),None)

@@ -35,5 +35,5 @@ to control memory used, following opt should be considerated:
         Display,    in  human-readable  format,  how  much physical	memory
         (RAM) xz thinks the system has and the memory usage  limits  for
         compression and decompression, and exit successfully.
-        
+
 xz --keep --check=crc32 --memlimit-decompress=32KiB   --lzma2=dict=32KiB toxz.bin

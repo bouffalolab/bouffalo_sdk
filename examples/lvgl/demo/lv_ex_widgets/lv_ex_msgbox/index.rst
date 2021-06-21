@@ -1,7 +1,7 @@
 C
 ^
 
-Simple Message box 
+Simple Message box
 """""""""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_msgbox/lv_ex_msgbox_1
@@ -9,7 +9,7 @@ Simple Message box
 
 
 
-Modal 
+Modal
 """"""""""""""""
 
 .. lv_example:: lv_ex_widgets/lv_ex_msgbox/lv_ex_msgbox_2

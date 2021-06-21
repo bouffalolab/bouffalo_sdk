@@ -1,8 +1,8 @@
 ﻿################# Add global include #################
-list(APPEND ADD_INCLUDE 
-"${CMAKE_CURRENT_SOURCE_DIR}/libc/inc" 
-"${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer" 
-"${CMAKE_CURRENT_SOURCE_DIR}/soft_crc" 
+list(APPEND ADD_INCLUDE
+"${CMAKE_CURRENT_SOURCE_DIR}/libc/inc"
+"${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer"
+"${CMAKE_CURRENT_SOURCE_DIR}/soft_crc"
 "${CMAKE_CURRENT_SOURCE_DIR}/memheap"
 "${CMAKE_CURRENT_SOURCE_DIR}/libc/inc/arm_gcc"
 "${CMAKE_CURRENT_SOURCE_DIR}/libc/inc/bits"
@@ -15,14 +15,14 @@ list(APPEND ADD_INCLUDE
 #######################################################
 
 ################# Add private include #################
-# list(APPEND ADD_PRIVATE_INCLUDE 
+# list(APPEND ADD_PRIVATE_INCLUDE
 # )
 #######################################################
 
 ############## Add current dir source files ###########
-file(GLOB_RECURSE sources 
-"${CMAKE_CURRENT_SOURCE_DIR}/libc/src/*.c" 
-"${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer/*.c" 
+file(GLOB_RECURSE sources
+"${CMAKE_CURRENT_SOURCE_DIR}/libc/src/*.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/soft_crc/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/memheap/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/misc/*.c"
@@ -32,7 +32,7 @@ file(GLOB_RECURSE sources
 
 #aux_source_directory(. sources)
 list(APPEND ADD_SRCS  ${sources})
-list(REMOVE_ITEM ADD_SRCS 
+list(REMOVE_ITEM ADD_SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/libc/src/strtox.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/libc/src/atox.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/libc/src/stdlib.c")
@@ -43,9 +43,7 @@ list(REMOVE_ITEM ADD_SRCS
 #######################################################
 
 ############ Add static libs ##########################
-# if(CONFIG_COMPONENT1_INCLUDE_STATIC_LIB)
-#     list(APPEND ADD_STATIC_LIB "libxxx.a")
-# endif()
+#list(APPEND ADD_STATIC_LIB "libxxx.a")
 #######################################################
 
 ############ Add dynamic libs #########################
@@ -59,8 +57,8 @@ list(REMOVE_ITEM ADD_SRCS
 #######################################################
 
 ############ Add private compile option ################
-#add compile option for this component that won't affect other modules  
-# list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
+#add compile option for this component that won't affect other modules
+# list(APPEND ADD_PRIVATE_DEFINITIONS -Dxxx)
 #######################################################
 
 generate_library()

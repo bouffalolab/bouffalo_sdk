@@ -12,7 +12,7 @@ except:
     except:
         print("Cannot open green buttom image file")
         sys.exit()
-          
+
 # create the blue image data
 try:
     with open('../../../assets/imgbtn_blue_argb.bin','rb') as f:
@@ -24,7 +24,7 @@ except:
     except:
         print("Cannot open green buttom image file")
         sys.exit()
-        
+
 imgbtn_green_dsc = lv.img_dsc_t(
     {
         "header": {"always_zero": 0, "w": 125, "h": 40, "cf": lv.img.CF.TRUE_COLOR_ALPHA},
