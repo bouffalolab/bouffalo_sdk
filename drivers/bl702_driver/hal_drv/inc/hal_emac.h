@@ -60,7 +60,7 @@ typedef enum _BD_TYPE_ {
     EMAC_BD_TYPE_MAX = 0x7FFFFFFF
 } EMAC_BD_TYPE_e;
 
-int32_t emac_init(emac_device_t *emac_cfg);
+int emac_init(emac_device_t *emac_cfg);
 int emac_bd_init(uint8_t *ethTxBuff, uint8_t txBufCount, uint8_t *ethRxBuff, uint8_t rxBufCount);
 int emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in);
 int emac_bd_rx_dequeue(uint32_t flags, uint32_t *len, uint8_t *data_out);
