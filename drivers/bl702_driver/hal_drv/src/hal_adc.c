@@ -47,9 +47,6 @@ int adc_open(struct device *dev, uint16_t oflag)
     ADC_CFG_Type adc_cfg = { 0 };
     ADC_FIFO_Cfg_Type adc_fifo_cfg = { 0 };
 
-    ADC_Disable();
-    ADC_Reset();
-
     adc_cfg.clkDiv = adc_device->clk_div;
 
     adc_cfg.vref = adc_device->vref;
@@ -83,11 +80,15 @@ int adc_open(struct device *dev, uint16_t oflag)
 
     adc_fifo_cfg.fifoThreshold = adc_device->fifo_threshold;
 
+    ADC_Disable();
+    ADC_Enable();
+
+    ADC_Reset();
+
     ADC_Init(&adc_cfg);
 
     ADC_FIFO_Cfg(&adc_fifo_cfg);
 
-    ADC_Enable();
     return 0;
 }
 /**

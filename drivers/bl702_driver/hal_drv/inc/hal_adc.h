@@ -46,18 +46,18 @@ enum adc_index_type {
 #define adc_channel_config(dev, list) device_control(dev, DEVICE_CTRL_ADC_CHANNEL_CONFIG, list)
 
 typedef enum {
-    ADC_CHANNEL0,          /* GPIO 0, ADC channel 0 */
-    ADC_CHANNEL1,          /* GPIO 1, ADC channel 1 */
-    ADC_CHANNEL2,          /* GPIO 2, ADC channel 2 */
-    ADC_CHANNEL3,          /* GPIO 3, ADC channel 3 */
-    ADC_CHANNEL4,          /* GPIO 4, ADC channel 4 */
-    ADC_CHANNEL5,          /* GPIO 5, ADC channel 5 */
-    ADC_CHANNEL6,          /* GPIO 6, ADC channel 6 */
-    ADC_CHANNEL7,          /* GPIO 7, ADC channel 7 */
-    ADC_CHANNEL8,          /* GPIO 8, ADC channel 8 */
-    ADC_CHANNEL9,          /* GPIO 9, ADC channel 9 */
-    ADC_CHANNEL10,         /* GPIO 10, ADC channel 10 */
-    ADC_CHANNEL11,         /* GPIO 11, ADC channel 11 */
+    ADC_CHANNEL0,          /* ADC channel 0 */
+    ADC_CHANNEL1,          /* ADC channel 1 */
+    ADC_CHANNEL2,          /* ADC channel 2 */
+    ADC_CHANNEL3,          /* ADC channel 3 */
+    ADC_CHANNEL4,          /* ADC channel 4 */
+    ADC_CHANNEL5,          /* ADC channel 5 */
+    ADC_CHANNEL6,          /* ADC channel 6 */
+    ADC_CHANNEL7,          /* ADC channel 7 */
+    ADC_CHANNEL8,          /* ADC channel 8 */
+    ADC_CHANNEL9,          /* ADC channel 9 */
+    ADC_CHANNEL10,         /* ADC channel 10 */
+    ADC_CHANNEL11,         /* ADC channel 11 */
     ADC_CHANNEL_DAC_OUTA,  /* DACA, ADC channel 12 */
     ADC_CHANNEL_DAC_OUTB,  /* DACB, ADC channel 13 */
     ADC_CHANNEL_TSEN_P,    /* TSenp, ADC channel 14 */
