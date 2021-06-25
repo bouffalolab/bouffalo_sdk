@@ -70,53 +70,51 @@ int main(void)
     /* We use following test vector to show how BFLB_ECDSA works��
      * this can be found in https://tools.ietf.org/html/rfc6979#page-33 */
 #if 0
-    A.2.5.  ECDSA, 256 Bits(Prime Field)
+    A.2.5.  ECDSA, 256 Bits (Prime Field)
 
-Key pair:
+    Key pair:
 
-curve:
-    NIST P - 256
+    curve: NIST P-256
 
     q = FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
-        (qlen = 256 bits)
+    (qlen = 256 bits)
 
     private key:
 
-        x = C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721
+    x = C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721
 
-        public key:
-            U = xG
+    public key: U = xG
 
-                Ux = 60FED4BA255A9D31C961EB74C6356D68C049B8923B61FA6CE669622E60F29FB6
+    Ux = 60FED4BA255A9D31C961EB74C6356D68C049B8923B61FA6CE669622E60F29FB6
 
-                     Uy = 7903FE1008B8BC99A41AE9E95628BC64F2F1B20C2D7E9F5177A3C294D4462299
+    Uy = 7903FE1008B8BC99A41AE9E95628BC64F2F1B20C2D7E9F5177A3C294D4462299
 
-                      Signatures:
+    Signatures:
 
-                      With SHA - 1, message = "sample":
-                                  k = 882905F1227FD620FBF2ABF21244F0BA83D0DC3A9103DBBEE43A1FB858109DB4
-                                      r = 61340C88C3AAEBEB4F6D667F672CA9759A6CCAA9FA8811313039EE4A35471D32
-                                          s = 6D7F147DAC089441BB2E2FE8F7A3FA264B9C475098FDCF6E00D7C996E1B8B7EB
+    With SHA-1, message = "sample":
+    k = 882905F1227FD620FBF2ABF21244F0BA83D0DC3A9103DBBEE43A1FB858109DB4
+    r = 61340C88C3AAEBEB4F6D667F672CA9759A6CCAA9FA8811313039EE4A35471D32
+    s = 6D7F147DAC089441BB2E2FE8F7A3FA264B9C475098FDCF6E00D7C996E1B8B7EB
 
-                                              With SHA - 224, message = "sample":
-                                                          k = 103F90EE9DC52E5E7FB5132B7033C63066D194321491862059967C715985D473
-                                                                  r = 53B2FFF5D1752B2C689DF257C04C40A587FABABB3F6FC2702F1343AF7CA9AA3F
-                                                                          s = B9AFB64FDC03DC1A131C7D2386D11E349F070AA432A4ACC918BEA988BF75C74C
+    With SHA-224, message = "sample":
+    k = 103F90EE9DC52E5E7FB5132B7033C63066D194321491862059967C715985D473
+    r = 53B2FFF5D1752B2C689DF257C04C40A587FABABB3F6FC2702F1343AF7CA9AA3F
+    s = B9AFB64FDC03DC1A131C7D2386D11E349F070AA432A4ACC918BEA988BF75C74C
 
-                                                                              With SHA - 256, message = "sample":
-                                                                                          k = A6E3C57DD01ABE90086538398355DD4C3B17AA873382B0F24D6129493D8AAD60
-                                                                                                  r = EFD48B2AACB6A8FD1140DD9CD45E81D69D2C877B56AAF991C34D0EA84EAF3716
-                                                                                                          s = F7CB1C942D657C41D436C7A1B6E29F65F3E900DBB9AFF4064DC4AB2F843ACDA8
+    With SHA-256, message = "sample":
+    k = A6E3C57DD01ABE90086538398355DD4C3B17AA873382B0F24D6129493D8AAD60
+    r = EFD48B2AACB6A8FD1140DD9CD45E81D69D2C877B56AAF991C34D0EA84EAF3716
+    s = F7CB1C942D657C41D436C7A1B6E29F65F3E900DBB9AFF4064DC4AB2F843ACDA8
 
-                                                                                                              With SHA - 384, message = "sample":
-                                                                                                                          k = 09F634B188CEFD98E7EC88B1AA9852D734D0BC272F7D2A47DECC6EBEB375AAD4
-                                                                                                                                  r = 0EAFEA039B20E9B42309FB1D89E213057CBF973DC0CFC8F129EDDDC800EF7719
-                                                                                                                                          s = 4861F0491E6998B9455193E34E7B0D284DDD7149A74B95B9261F13ABDE940954
+    With SHA-384, message = "sample":
+    k = 09F634B188CEFD98E7EC88B1AA9852D734D0BC272F7D2A47DECC6EBEB375AAD4
+    r = 0EAFEA039B20E9B42309FB1D89E213057CBF973DC0CFC8F129EDDDC800EF7719
+    s = 4861F0491E6998B9455193E34E7B0D284DDD7149A74B95B9261F13ABDE940954
 
-                                                                                                                                              With SHA - 512, message = "sample":
-                                                                                                                                                          k = 5FA81C63109BADB88C1F367B47DA606DA28CAD69AA22C4FE6AD7DF73A7173AA5
-                                                                                                                                                                  r = 8496A60B5E9B47C825488827E0495B0E3FA109EC4568FD3F8D1097678EB97F00
-                                                                                                                                                                          s = 2362AB1ADBE2B8ADF9CB9EDAB740EA6049C028114F2460F96554F61FAE3302FE
+    With SHA-512, message = "sample":
+    k = 5FA81C63109BADB88C1F367B47DA606DA28CAD69AA22C4FE6AD7DF73A7173AA5
+    r = 8496A60B5E9B47C825488827E0495B0E3FA109EC4568FD3F8D1097678EB97F00
+    s = 2362AB1ADBE2B8ADF9CB9EDAB740EA6049C028114F2460F96554F61FAE3302FE
 #endif
     uint32_t i = 0;
     uint8_t *p;

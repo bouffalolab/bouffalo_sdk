@@ -576,7 +576,7 @@ Board: bl70x_iot
           </RAM5>
         </RAMBank>
         <CPU>rv32imafc</CPU>
-        <UseMiniLib>no</UseMiniLib>
+        <UseMiniLib>yes</UseMiniLib>
         <Endian>little</Endian>
         <UseHardFloat>no</UseHardFloat>
         <UseEnhancedLRW>no</UseEnhancedLRW>
@@ -636,9 +636,9 @@ Board: bl70x_iot
         <Garbage>yes</Garbage>
         <Garbage2>yes</Garbage2>
         <LDFile>$(ProjectPath)../../../../drivers/bl702_driver/bl702_flash.ld</LDFile>
-        <LibName/>
+        <LibName>c</LibName>
         <LibPath/>
-        <OtherFlags/>
+        <OtherFlags>--specs=nano.specs</OtherFlags>
         <AutoLDFile>no</AutoLDFile>
         <LinkType/>
       </Linker>
@@ -767,7 +767,7 @@ Board: bl70x_iot
           </RAM5>
         </RAMBank>
         <CPU>rv32imafc</CPU>
-        <UseMiniLib>no</UseMiniLib>
+        <UseMiniLib>yes</UseMiniLib>
         <Endian>little</Endian>
         <UseHardFloat>no</UseHardFloat>
         <UseEnhancedLRW>no</UseEnhancedLRW>
@@ -827,7 +827,7 @@ Board: bl70x_iot
         <Garbage>yes</Garbage>
         <Garbage2>yes</Garbage2>
         <LDFile>$(ProjectPath)/../bl706_camera_psram.ld</LDFile>
-        <LibName/>
+        <LibName>c</LibName>
         <LibPath/>
         <OtherFlags>--specs=nano.specs</OtherFlags>
         <AutoLDFile>no</AutoLDFile>
