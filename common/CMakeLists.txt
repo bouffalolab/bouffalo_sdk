@@ -1,12 +1,12 @@
 ﻿################# Add global include #################
 list(APPEND ADD_INCLUDE
-"${CMAKE_CURRENT_SOURCE_DIR}/libc/inc"
+# "${CMAKE_CURRENT_SOURCE_DIR}/libc/inc"
 "${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer"
 "${CMAKE_CURRENT_SOURCE_DIR}/soft_crc"
 "${CMAKE_CURRENT_SOURCE_DIR}/memheap"
-"${CMAKE_CURRENT_SOURCE_DIR}/libc/inc/arm_gcc"
-"${CMAKE_CURRENT_SOURCE_DIR}/libc/inc/bits"
-"${CMAKE_CURRENT_SOURCE_DIR}/libc/inc/sys"
+# "${CMAKE_CURRENT_SOURCE_DIR}/libc/inc/arm_gcc"
+# "${CMAKE_CURRENT_SOURCE_DIR}/libc/inc/bits"
+# "${CMAKE_CURRENT_SOURCE_DIR}/libc/inc/sys"
 "${CMAKE_CURRENT_SOURCE_DIR}/misc"
 "${CMAKE_CURRENT_SOURCE_DIR}/list"
 "${CMAKE_CURRENT_SOURCE_DIR}/device"
@@ -21,7 +21,7 @@ list(APPEND ADD_INCLUDE
 
 ############## Add current dir source files ###########
 file(GLOB_RECURSE sources
-"${CMAKE_CURRENT_SOURCE_DIR}/libc/src/*.c"
+# "${CMAKE_CURRENT_SOURCE_DIR}/libc/src/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/ring_buffer/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/soft_crc/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/memheap/*.c"

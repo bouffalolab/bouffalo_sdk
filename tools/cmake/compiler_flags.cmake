@@ -8,9 +8,11 @@ list(APPEND GLOBAL_C_FLAGS -msmall-data-limit=4)
 list(APPEND GLOBAL_LD_FLAGS -Wl,--cref -Wl,--gc-sections -nostartfiles -g3)
 list(APPEND GLOBAL_LD_FLAGS -fms-extensions -ffunction-sections -fdata-sections)
 list(APPEND GLOBAL_LD_FLAGS -Wall -Wchar-subscripts -std=c99)
+list(APPEND GLOBAL_LD_FLAGS --specs=nano.specs)
+
 
 if(${SUPPORT_FLOAT} STREQUAL "y")
-list(APPEND GLOBAL_C_FLAGS -DBFLB_PRINT_FLOAT_SUPPORT)
+list(APPEND GLOBAL_LD_FLAGS -u _printf_float)
 endif()
 
 if(${SUPPORT_SHELL} STREQUAL "y")

@@ -7,12 +7,6 @@ function(generate_library)
     # Add src to lib
     if(ADD_SRCS)
         target_sources(${library_name} PRIVATE ${ADD_SRCS})
-
-        foreach(f ${ADD_SRCS})
-            if(${f} MATCHES ".S|.s")
-            set_property(SOURCE ${f} PROPERTY LANGUAGE C)
-            endif()
-        endforeach()
     endif()
 
     # Add global config include
@@ -96,6 +90,9 @@ function(generate_bin)
     add_compile_options(${GLOBAL_C_FLAGS})
     add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=c99>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-nostdlib>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
 
     check_all_library()
 
@@ -134,6 +131,7 @@ function(generate_bin)
     endif()
 
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/bflb_platform.c)
+    list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/syscalls.c)
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/board/${BOARD}/board.c)
 
     add_executable(${target_name}.elf ${mainfile} ${SRCS})
@@ -159,13 +157,7 @@ function(generate_bin)
 
     add_dependencies(${target_name}.elf ${CHIP}_driver)
     # Add libs
-    target_link_libraries(${target_name}.elf ${CHIP}_driver)
-
-    if(${SUPPORT_SHELL} STREQUAL "y")
-    target_link_libraries(${target_name}.elf shell)
-    else()
-    target_include_directories(${target_name}.elf PRIVATE ${CMAKE_SOURCE_DIR}/components/shell)
-    endif()
+    target_link_libraries(${target_name}.elf ${CHIP}_driver c)
 
     if(TARGET_REQUIRED_LIBS)
         target_link_libraries(${target_name}.elf ${TARGET_REQUIRED_LIBS})
@@ -233,6 +225,10 @@ function(check_all_library)
     check_add_library(freertos ${CMAKE_SOURCE_DIR}/components/freertos)
     endif()
 
+    if(${SUPPORT_CRYPTO} STREQUAL "sw" OR ${SUPPORT_CRYPTO} STREQUAL "hw")
+    check_add_library(bflb_port ${CMAKE_SOURCE_DIR}/components/mbedtls/bflb_port)
+    endif()
+
     if(${SUPPORT_LVGL} STREQUAL "y")
     check_add_library(lvgl ${CMAKE_SOURCE_DIR}/components/lvgl)
     endif()
@@ -246,6 +242,17 @@ function(check_all_library)
     message(FATAL_ERROR "ble need freertos,so you should set SUPPORT_FREERTOS=y")
     endif()
     check_add_library(ble ${CMAKE_SOURCE_DIR}/components/ble)
+    endif()
+
+    if(${SUPPORT_LWIP} STREQUAL "y")
+    if(${SUPPORT_FREERTOS} STREQUAL "n")
+    message(FATAL_ERROR "lwip need freertos,so you should set SUPPORT_FREERTOS=y")
+    endif()
+    check_add_library(lwip ${CMAKE_SOURCE_DIR}/components/lwip)
+    endif()
+
+    if(${SUPPORT_TFLITE} STREQUAL "y")
+    check_add_library(xz ${CMAKE_SOURCE_DIR}/components/tflite)
     endif()
 
 endfunction(check_all_library)
