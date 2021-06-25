@@ -129,8 +129,6 @@ static void ble_subscribe()
         BT_WARN("Subscribed");
     }
 
-    k_sem_init(&write_data_poll_sem, 0, 1);
-
     if (!created_write_data_task && (xTaskCreate(ble_write_data_task, (char *)"ble_write_data", 512, NULL, 15, &ble_write_data_task_h) == pdPASS)) {
         created_write_data_task = 1;
         BT_WARN("Create write data  task success");
@@ -286,5 +284,6 @@ void ble_tp_init()
     if (!isRegister) {
         isRegister = 1;
         bt_conn_cb_register(&ble_tp_conn_callbacks);
+        k_sem_init(&write_data_poll_sem, 0, 1);
     }
 }

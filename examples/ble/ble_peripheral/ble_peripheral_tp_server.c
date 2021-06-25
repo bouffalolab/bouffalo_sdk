@@ -220,7 +220,6 @@ static void ble_tp_notify_ccc_changed(const struct bt_gatt_attr *attr, u16_t val
     BT_WARN("ccc:value=[%d]", value);
 
     if (value == BT_GATT_CCC_NOTIFY) {
-        k_sem_init(&notify_poll_sem, 0, 1);
 
         if (xTaskCreate(ble_tp_notify_task, (char *)"bletp", 512, NULL, 15, &ble_tp_task_h) == pdPASS) {
             created_tp_task = 1;
@@ -299,5 +298,6 @@ void ble_tp_init()
         isRegister = 1;
         bt_conn_cb_register(&ble_tp_conn_callbacks);
         bt_gatt_service_register(&ble_tp_server);
+        k_sem_init(&notify_poll_sem, 0, 1);
     }
 }
