@@ -1,6 +1,6 @@
 ![License](https://img.shields.io/badge/License-Apache--2.0-brightgreen)
 
-[English Version](README_en.md)
+[English Version](README.md)
 
 # 简介
 
