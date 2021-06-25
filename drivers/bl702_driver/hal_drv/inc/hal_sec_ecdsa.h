@@ -55,5 +55,8 @@ int sec_ecdh_deinit(sec_ecdh_handle_t *handle);
 int sec_ecdh_get_encrypt_key(sec_ecdh_handle_t *handle, const uint32_t *pkX, const uint32_t *pkY, const uint32_t *private_key, const uint32_t *pRx, const uint32_t *pRy);
 int sec_ecdh_get_public_key(sec_ecdh_handle_t *handle, const uint32_t *private_key, const uint32_t *pRx, const uint32_t *pRy);
 int sec_ecc_get_random_value(uint32_t *randomData, uint32_t *maxRef, uint32_t size);
+int sec_eng_trng_enable(void);
+void sec_eng_trng_disable(void);
+int sec_eng_trng_read(uint8_t data[32]);
 
 #endif

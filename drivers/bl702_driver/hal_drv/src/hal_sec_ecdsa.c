@@ -1204,6 +1204,21 @@ int sec_ecc_get_random_value(uint32_t *randomData, uint32_t *maxRef, uint32_t si
     return -1;
 }
 
+int sec_eng_trng_enable(void)
+{
+    return Sec_Eng_Trng_Enable();
+}
+
+void sec_eng_trng_disable(void)
+{
+    Sec_Eng_Trng_Disable();
+}
+
+int sec_eng_trng_read(uint8_t data[32])
+{
+    return Sec_Eng_Trng_Read(data);
+}
+
 int sec_ecdh_init(sec_ecdh_handle_t *handle, sec_ecp_type id)
 {
     Sec_Eng_PKA_Reset();
