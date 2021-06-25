@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>2. Board 配置系统 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="3. Peripheral" href="peripheral/index.html" />
+    <link rel="prev" title="1. API 概述" href="api_overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK 开发指南
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">快速开发指南</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 手册</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Board 配置系统</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">2.1. Board 配置系统的文件组成</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#board-c">2.1.1. <strong>board.c</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#blxxx-config-h">2.1.2. <strong>blxxx_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clock-config-h">2.1.3. <strong>clock_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#peripheral-config-h">2.1.4. <strong>peripheral_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pinmux-config-h">2.1.5. <strong>pinmux_config.h</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#stm32cubemx">2.2. 与 STM32CUBEMX 配置工具的区别</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="peripheral/index.html">3. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shell/api_shell.html">4. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bluetooth/api_ble.html">6. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK 开发指南</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">2. </span>Board 配置系统</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api_reference/board.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="board">
+<h1><span class="section-number">2. </span>Board 配置系统<a class="headerlink" href="#board" title="永久链接至标题">¶</a></h1>
+<p>为了践行 <strong>一切皆文件</strong> 的思想，我们针对嵌入式应用不同的硬件配置需求，提出了一套 Board 配置系统。 <strong>Board 配置系统</strong> 主要是用于嵌入式应用中的时钟、GPIO 、外设默认配置三个基本元素进行初始化的配置系统。</p>
+<p><strong>Board 配置系统</strong>  包含三个配置文件，以及一个 <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> 图形化配置软件</p>
+<ul class="simple">
+<li><p>clock_config.h 时钟配置头文件</p></li>
+<li><p>peripheral_config.h 外设配置头文件</p></li>
+<li><p>pinmux_config.h 引脚功能配置头文件</p></li>
+<li><p>bl_config_wizard 图形化界面配置上述三类文件</p></li>
+</ul>
+<p>用户只需要修改三个配置文件，系统会自动初始化。从而无需在用户程序中，调用一系列的复杂冗长的初始化函数， Boufflao Lab 为方便用户快速简便的生成项目对应的 board 文件，提供了 <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> 配置软件，但目前正处于开发阶段。</p>
+<div class="figure align-default" id="id2">
+<img alt="" src="../_images/config_wizard.png" />
+<p class="caption"><span class="caption-text">bl_config_wizard 软件预览</span><a class="headerlink" href="#id2" title="永久链接至图片">¶</a></p>
+</div>
+<div class="section" id="id1">
+<h2><span class="section-number">2.1. </span>Board 配置系统的文件组成<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<p>Board 系统主要针对不同的板子来使用，不同的板子创建不同的 board 文件，放在 <code class="docutils literal notranslate"><span class="pre">bsp/board</span></code> 目录下，并且一个 board 文件，在 <strong>引脚不冲突</strong> 的情况下，可以共享给不同的 demo 使用，无需再创建多个工程，减少工程文件大小。</p>
+<div class="admonition error">
+<p class="admonition-title">错误</p>
+<p>如果引脚冲突，并且非要使用一个 board 文件，请自行修改引脚</p>
+</div>
+<div class="section" id="board-c">
+<h3><span class="section-number">2.1.1. </span><strong>board.c</strong><a class="headerlink" href="#board-c" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">board.c</span></code> 主要对时钟、引脚进行初始化</p>
+</div>
+<div class="section" id="blxxx-config-h">
+<h3><span class="section-number">2.1.2. </span><strong>blxxx_config.h</strong><a class="headerlink" href="#blxxx-config-h" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">blxxx_config.h</span></code> 主要是包含一些头文件，给 HAL 层驱动使用。</p>
+<div class="admonition hint">
+<p class="admonition-title">提示</p>
+<p>以上两个文件无需用户更改，并且相同的 MCU 可以直接复制粘贴到自己的 board 目录使用</p>
+</div>
+</div>
+<div class="section" id="clock-config-h">
+<h3><span class="section-number">2.1.3. </span><strong>clock_config.h</strong><a class="headerlink" href="#clock-config-h" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">clock_config.h</span></code> 主要配置系统和外设的时钟源以及分频系统。</p>
+</div>
+<div class="section" id="peripheral-config-h">
+<h3><span class="section-number">2.1.4. </span><strong>peripheral_config.h</strong><a class="headerlink" href="#peripheral-config-h" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 主要包含外设的使能以及参数的配置。</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>以 <code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">BSP_USING_XXX</span></code> 开头的宏，用来开启外设的配置，如果没有使能宏，则无法使用该外设的所有函数</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>以 <code class="docutils literal notranslate"><span class="pre">XXX_CONFIG</span></code> 开头的宏，用来初始化外设的配置，后面调用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 来使用该配置</p>
+</div>
+</div>
+<div class="section" id="pinmux-config-h">
+<h3><span class="section-number">2.1.5. </span><strong>pinmux_config.h</strong><a class="headerlink" href="#pinmux-config-h" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pinmux_config.h</span></code> 主要配置外设的 GPIO 引脚功能。</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>在 mcu sdk 中，所有 demo 共享这个文件，因此有些 demo 是不能使用的，需要频繁修改该文件的引脚功能配置。如果用户已经定好了引脚的分配，则不用频繁修改。</p>
+</div>
+</div>
+</div>
+<div class="section" id="stm32cubemx">
+<h2><span class="section-number">2.2. </span>与 STM32CUBEMX 配置工具的区别<a class="headerlink" href="#stm32cubemx" title="永久链接至标题">¶</a></h2>
+<p>STM32CUBEMX 也是一个配置时钟、外设和 GPIO 初始化的工具，最终生成一个完整的工程，初始化都放在 <code class="docutils literal notranslate"><span class="pre">main.c</span></code> 的最开始 ，GPIO 和外设初始化底层会调用到 <code class="docutils literal notranslate"><span class="pre">stm32xxx_hal_msp.c</span></code> 中。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/* MCU Configuration--------------------------------------------------------*/</span>
+
+<span class="cm">/* Reset of all peripherals, Initializes the Flash interface and the Systick. */</span>
+<span class="n">HAL_Init</span><span class="p">();</span>
+
+<span class="cm">/* USER CODE BEGIN Init */</span>
+
+<span class="cm">/* USER CODE END Init */</span>
+
+<span class="cm">/* Configure the system clock */</span>
+<span class="n">SystemClock_Config</span><span class="p">();</span>
+
+<span class="cm">/* USER CODE BEGIN SysInit */</span>
+
+<span class="cm">/* USER CODE END SysInit */</span>
+
+<span class="cm">/* Initialize all configured peripherals */</span>
+<span class="n">MX_GPIO_Init</span><span class="p">();</span>
+<span class="n">MX_USART1_UART_Init</span><span class="p">();</span>
+<span class="n">MX_QUADSPI_Init</span><span class="p">();</span>
+</pre></div>
+</div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">HAL_UART_MspInit</span><span class="p">(</span><span class="n">UART_HandleTypeDef</span><span class="o">*</span> <span class="n">huart</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">GPIO_InitTypeDef</span> <span class="n">GPIO_InitStruct</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">huart</span><span class="o">-&gt;</span><span class="n">Instance</span><span class="o">==</span><span class="n">UART5</span><span class="p">)</span>
+    <span class="p">{</span>
+    <span class="cm">/* USER CODE BEGIN UART5_MspInit 0 */</span>
+
+    <span class="cm">/* USER CODE END UART5_MspInit 0 */</span>
+        <span class="cm">/* Peripheral clock enable */</span>
+        <span class="n">__HAL_RCC_UART5_CLK_ENABLE</span><span class="p">();</span>
+
+        <span class="n">__HAL_RCC_GPIOB_CLK_ENABLE</span><span class="p">();</span>
+        <span class="cm">/**UART5 GPIO Configuration</span>
+<span class="cm">        PB12     ------&gt; UART5_RX</span>
+<span class="cm">        PB13     ------&gt; UART5_TX</span>
+<span class="cm">        */</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Pin</span> <span class="o">=</span> <span class="n">GPIO_PIN_12</span><span class="o">|</span><span class="n">GPIO_PIN_13</span><span class="p">;</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Mode</span> <span class="o">=</span> <span class="n">GPIO_MODE_AF_PP</span><span class="p">;</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Pull</span> <span class="o">=</span> <span class="n">GPIO_NOPULL</span><span class="p">;</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Speed</span> <span class="o">=</span> <span class="n">GPIO_SPEED_FREQ_LOW</span><span class="p">;</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Alternate</span> <span class="o">=</span> <span class="n">GPIO_AF14_UART5</span><span class="p">;</span>
+        <span class="n">HAL_GPIO_Init</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">GPIO_InitStruct</span><span class="p">);</span>
+
+        <span class="cm">/* UART5 interrupt Init */</span>
+        <span class="n">HAL_NVIC_SetPriority</span><span class="p">(</span><span class="n">UART5_IRQn</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="n">HAL_NVIC_EnableIRQ</span><span class="p">(</span><span class="n">UART5_IRQn</span><span class="p">);</span>
+    <span class="cm">/* USER CODE BEGIN UART5_MspInit 1 */</span>
+
+    <span class="cm">/* USER CODE END UART5_MspInit 1 */</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">提示</p>
+<p>stm32 生成的工程都是对一个工程起作用，不能够同时编译多个工程。如果使用多个工程，就要生成多个上述两个文件。在使用多个工程时，会间接增加文件大小，增加重复文件。</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="peripheral/index.html" class="btn btn-neutral float-right" title="3. Peripheral" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_overview.html" class="btn btn-neutral float-left" title="1. API 概述" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; 版权所有 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

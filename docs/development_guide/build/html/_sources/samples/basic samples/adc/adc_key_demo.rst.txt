@@ -38,7 +38,7 @@ ADC - 按键检测电压
 
     #define CONFIG_GPIO18_FUNC GPIO_FUN_ADC
 
--  配置 ``ADC`` 设备复用引脚，见 ``bsp/board/bl706_iot/pinmux_config.h``
+-  配置 ``ADC`` 设备复用引脚，见 ``bsp/board/bl706_avb/pinmux_config.h``
 
 .. code-block:: C
     :linenos:
@@ -60,7 +60,7 @@ ADC - 按键检测电压
     #endif
     #endif
 
--  使能 ``BSP_USING_ADC0`` 并配置 ``ADC`` 设备配置，见 ``bsp/board/bl706_iot/peripheral_config.h``
+-  使能 ``BSP_USING_ADC0`` 并配置 ``ADC`` 设备配置，见 ``bsp/board/bl706_avb/peripheral_config.h``
 
 .. code-block:: C
     :linenos:
@@ -120,7 +120,7 @@ ADC - 按键检测电压
    :linenos:
 
     $ cd <sdk_path>/bl_mcu_sdk
-    $ make BOARD=bl706_avb APP=adc_key
+    $ make BOARD=bl706_avb APP=adc_key SUPPORT_FLOAT=y
 
 -  **烧录**
 

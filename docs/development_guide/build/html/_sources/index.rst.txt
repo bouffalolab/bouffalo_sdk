@@ -32,19 +32,12 @@ BL MCU SDK 将为您提供博流 BL70X 系列 MCU 开发的全方位支持。
    :caption: API 手册
    :numbered:
 
-   api_reference/api_structure
-   api_reference/api_clock
-   api_reference/api_gpio
-   api_reference/api_uart
-   api_reference/api_pwm
-   api_reference/api_dma
-   api_reference/api_i2c
-   api_reference/api_spi
-   api_reference/api_adc
-   api_reference/api_dac
-   .. api_reference/api_ble
-
-
+   api_reference/api_overview
+   api_reference/board
+   api_reference/peripheral/index
+   api_reference/shell/api_shell
+   api_reference/usb stack/api_usb_stack
+   api_reference/bluetooth/api_ble
 
 .. toctree::
    :maxdepth: 1
@@ -69,6 +62,8 @@ BL MCU SDK 将为您提供博流 BL70X 系列 MCU 开发的全方位支持。
 
    samples/advance samples/shell_demo
    samples/advance samples/fatfs_demo
+   samples/advance samples/usb/index
    samples/advance samples/lowpower_demo
-   samples/advance samples/ble_scan_demo
    samples/advance samples/boot2_iap_info
+   samples/advance samples/ble_scan_demo
+

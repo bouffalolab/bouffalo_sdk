@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>4. BLE 客户端和服务端互连 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
+  <title>6. BLE 客户端和服务端互连 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,7 @@
     
     <link rel="index" title="索引" href="../../genindex.html" />
     <link rel="search" title="搜索" href="../../search.html" />
-    <link rel="next" title="5. BOOT2 IAP" href="boot2_iap_info.html" />
-    <link rel="prev" title="3. LowPower 低功耗评估" href="lowpower_demo.html" /> 
+    <link rel="prev" title="5. BOOT2 IAP" href="boot2_iap_info.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -64,7 +63,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -99,16 +98,12 @@
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_structure.html">1. API 分层模型</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_clock.html">2. 时钟树</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_gpio.html">3. GPIO 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_uart.html">4. UART 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_pwm.html">5. PWM 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_dma.html">6. DMA 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_i2c.html">7. I2C 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_spi.html">8. SPI 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_adc.html">9. ADC 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_dac.html">10. DAC 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/board.html">2. Board 配置系统</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/peripheral/index.html">3. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/shell/api_shell.html">4. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/bluetooth/api_ble.html">6. BLE</a></li>
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
@@ -123,21 +118,22 @@
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="shell_demo.html">1. SHELL 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fatfs_demo.html">2. FATFS 文件系统读写</a></li>
-<li class="toctree-l1"><a class="reference internal" href="lowpower_demo.html">3. LowPower 低功耗评估</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">4. BLE 客户端和服务端互连</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">4.1. 准备工具</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">4.2. 软件实现</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ble-client">4.2.1. BLE client 软件实现</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ble-server">4.2.2. BLE server 软件实现</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">4.3. 编译和烧录</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">4.4. 实验现象</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="shell_demo.html">1. Shell 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lowpower_demo.html">4. LowPower 低功耗评估</a></li>
 <li class="toctree-l1"><a class="reference internal" href="boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. BLE 客户端和服务端互连</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">6.1. 准备工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">6.2. 软件实现</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ble-client">6.2.1. BLE client 软件实现</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ble-server">6.2.2. BLE server 软件实现</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">6.3. 编译和烧录</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">6.4. 实验现象</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -186,7 +182,7 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">4. </span>BLE 客户端和服务端互连</li>
+      <li><span class="section-number">6. </span>BLE 客户端和服务端互连</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -206,18 +202,18 @@
            <div itemprop="articleBody">
             
   <div class="section" id="ble">
-<h1><span class="section-number">4. </span>BLE 客户端和服务端互连<a class="headerlink" href="#ble" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">6. </span>BLE 客户端和服务端互连<a class="headerlink" href="#ble" title="永久链接至标题">¶</a></h1>
 <p>本 demo 基于 <strong>bl702</strong> 演示 <strong>ble server</strong> 和 <strong>ble client</strong> 连接和数据收发。</p>
 <div class="section" id="id1">
-<h2><span class="section-number">4.1. </span>准备工具<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">6.1. </span>准备工具<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>两块 bl702 开发板 or 一块 bl702 开发板 + 手机 app</p></li>
 </ul>
 </div>
 <div class="section" id="id2">
-<h2><span class="section-number">4.2. </span>软件实现<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">6.2. </span>软件实现<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <div class="section" id="ble-client">
-<h3><span class="section-number">4.2.1. </span>BLE client 软件实现<a class="headerlink" href="#ble-client" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">6.2.1. </span>BLE client 软件实现<a class="headerlink" href="#ble-client" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/ble/ble_central</span></code></p></li>
 </ul>
@@ -291,7 +287,7 @@
 </ul>
 </div>
 <div class="section" id="ble-server">
-<h3><span class="section-number">4.2.2. </span>BLE server 软件实现<a class="headerlink" href="#ble-server" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">6.2.2. </span>BLE server 软件实现<a class="headerlink" href="#ble-server" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/ble/ble_peripheral</span></code></p></li>
 </ul>
@@ -392,7 +388,7 @@
 </div>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">4.3. </span>编译和烧录<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">6.3. </span>编译和烧录<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <ul>
 <li><p><strong>CDK工具编译</strong></p>
 <blockquote>
@@ -418,7 +414,7 @@
 </ul>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">4.4. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">6.4. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p><strong>两个 bl702 对连</strong></p></li>
 </ul>
@@ -467,8 +463,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="boot2_iap_info.html" class="btn btn-neutral float-right" title="5. BOOT2 IAP" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="lowpower_demo.html" class="btn btn-neutral float-left" title="3. LowPower 低功耗评估" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="boot2_iap_info.html" class="btn btn-neutral float-left" title="5. BOOT2 IAP" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

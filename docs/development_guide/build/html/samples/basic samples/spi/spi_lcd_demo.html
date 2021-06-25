@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>6.1. SPI - TFT LCD 显示 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
+  <title>6.1. SPI - TFT LCD 显示 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -99,16 +99,12 @@
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_structure.html">1. API 分层模型</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_clock.html">2. 时钟树</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_gpio.html">3. GPIO 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_uart.html">4. UART 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_pwm.html">5. PWM 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_dma.html">6. DMA 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_i2c.html">7. I2C 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_spi.html">8. SPI 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_adc.html">9. ADC 设备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_dac.html">10. DAC 设备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/board.html">2. Board 配置系统</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/peripheral/index.html">3. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/shell/api_shell.html">4. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/bluetooth/api_ble.html">6. BLE</a></li>
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul class="current">
@@ -132,11 +128,12 @@
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/shell_demo.html">1. SHELL 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. FATFS 文件系统读写</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">3. LowPower 低功耗评估</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_scan_demo.html">4. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
 </ul>
 
             
@@ -208,6 +205,7 @@
             
   <div class="section" id="spi-tft-lcd">
 <h1><span class="section-number">6.1. </span>SPI - TFT LCD 显示<a class="headerlink" href="#spi-tft-lcd" title="永久链接至标题">¶</a></h1>
+<p>本 demo 演示通过 SPI 驱动带 il9431 芯片的TFT 屏显示。</p>
 <div class="section" id="id1">
 <h2><span class="section-number">6.1.1. </span>硬件连接<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>本 demo 基于 BL706_AVB 开发板，连接方式如下</p>
@@ -242,12 +240,8 @@
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p>配置 <code class="docutils literal notranslate"><span class="pre">SPI</span></code> 设备复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/pinmux_config.h</span></code></p></li>
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">SPI</span></code> 设备复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/pinmux_config.h</span></code>,，如有改动，请自行修改</p></li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">注解</p>
-<p><code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/pinmux_config.h</span></code> 当前给所有的示例demo使用，所以，需要先选定 <code class="docutils literal notranslate"><span class="pre">PINMUX_SELECT</span></code> 为 <code class="docutils literal notranslate"><span class="pre">PINMUX_LVGL</span></code>，开启其中一个 demo</p>
-</div>
 <div class="admonition note">
 <p class="admonition-title">注解</p>
 <p>为适配 bl702_avb 硬件, SPI 的 MOSI 和 MISO 默认进行了调换，如果想要恢复默认，修改 <code class="docutils literal notranslate"><span class="pre">drivers/bl702_driver/hal_drv/default_config/spi_config.h</span></code> 中 <code class="docutils literal notranslate"><span class="pre">SPI_SWAP_ENABLE</span></code> 为 0</p>

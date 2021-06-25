@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3.5. DMA 设备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="3.6. I2C 设备" href="api_i2c.html" />
+    <link rel="prev" title="3.4. PWM 设备" href="api_pwm.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK 开发指南
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">快速开发指南</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 手册</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../board.html">2. Board 配置系统</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. Peripheral</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_clock.html">3.1. 时钟树</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">3.2. GPIO 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_uart.html">3.3. UART 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_pwm.html">3.4. PWM 设备</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.5. DMA 设备</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">3.5.1. 简介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">3.5.2. DMA 设备结构体定义</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">3.5.3. DMA 设备参数配置表</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">3.5.4. DMA 设备接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dma-register">3.5.4.1. <strong>dma_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">3.5.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-close">3.5.4.3. <strong>device_close</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-control">3.5.4.4. <strong>device_control</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">3.5.4.5. <strong>device_set_callback</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dma-channel-start">3.5.4.6. <strong>dma_channel_start</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dma-channel-stop">3.5.4.7. <strong>dma_channel_stop</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dma-channel-update">3.5.4.8. <strong>dma_channel_update</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dma-channel-check-busy">3.5.4.9. <strong>dma_channel_check_busy</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dma-reload">3.5.4.10. <strong>dma_reload</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">3.6. I2C 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_spi.html">3.7. SPI 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">3.8. ADC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">3.9. DAC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_timer.html">3.10. TIMER 设备</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">4. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">6. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK 开发指南</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">3. </span>Peripheral</a> &raquo;</li>
+        
+      <li><span class="section-number">3.5. </span>DMA 设备</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/api_reference/peripheral/api_dma.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dma">
+<h1><span class="section-number">3.5. </span>DMA 设备<a class="headerlink" href="#dma" title="永久链接至标题">¶</a></h1>
+<div class="section" id="id1">
+<h2><span class="section-number">3.5.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<p>DMA(Direct Memory Access) 是一种内存存取技术，可以独立地直接读写系统内存，而不需处理器介入处理。在同等
+程度的处理器负担下，DMA 是一种快速的数据传送方式。博流系列 MCU 中 DMA 设备具有以下特性：</p>
+<ul class="simple">
+<li><p>控制器有 8 组独立专用通道</p></li>
+<li><p>四种传输方向：内存至内存、内存至外设、外设至内存、外设到外设</p></li>
+<li><p>LLI 链表工作模式。</p></li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">3.5.2. </span>DMA 设备结构体定义<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">dma_device</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">id</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">ch</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">direction</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">transfer_mode</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">src_req</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">dst_req</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">src_burst_size</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">dst_burst_size</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">src_width</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">dst_width</span><span class="p">;</span>
+    <span class="n">dma_lli_ctrl_t</span> <span class="o">*</span><span class="n">lli_cfg</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">dma_device_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>parent        继承父类属性</p></li>
+<li><p>id            DMA id号，默认0，当前只有一个DMA</p></li>
+<li><p>ch            通道号</p></li>
+<li><p>direction     传输方向</p></li>
+<li><p>transfer_mode 传输模式</p></li>
+<li><p>src_req       源请求</p></li>
+<li><p>dst_req       目标请求</p></li>
+<li><p>src_burst_size 源突发字节数</p></li>
+<li><p>dst_burst_size 目标突发字节数</p></li>
+<li><p>src_width     源传输位宽</p></li>
+<li><p>dst_width     目标传输位宽</p></li>
+<li><p>lli_cfg       用来存储dma通道的一些信息，用户不用管</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">direction</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
+    <span class="n">DMA_MEMORY_TO_MEMORY</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>                        <span class="cm">/*!&lt; DMA transfer tyep:memory to memory */</span>
+    <span class="n">DMA_MEMORY_TO_PERIPH</span><span class="p">,</span>                            <span class="cm">/*!&lt; DMA transfer tyep:memory to peripheral */</span>
+    <span class="n">DMA_PERIPH_TO_MEMORY</span><span class="p">,</span>                            <span class="cm">/*!&lt; DMA transfer tyep:peripheral to memory */</span>
+    <span class="n">DMA_PERIPH_TO_PERIPH</span><span class="p">,</span>                            <span class="cm">/*!&lt; DMA transfer tyep:peripheral to peripheral */</span>
+<span class="p">}</span><span class="n">dma_transfer_dir_type</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">transfer_mode</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_LLI_ONCE_MODE     0</span>
+<span class="cp">#define DMA_LLI_CYCLE_MODE    1</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">src_req</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_REQUEST_NONE        0x00000000 </span><span class="cm">/*!&lt; DMA request peripheral:None */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_UART0_RX    0x00000000 </span><span class="cm">/*!&lt; DMA request peripheral:UART0 RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_UART0_TX    0x00000001 </span><span class="cm">/*!&lt; DMA request peripheral:UART0 TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_UART1_RX    0x00000002 </span><span class="cm">/*!&lt; DMA request peripheral:UART1 RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_UART1_TX    0x00000003 </span><span class="cm">/*!&lt; DMA request peripheral:UART1 TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_I2C0_RX     0x00000006 </span><span class="cm">/*!&lt; DMA request peripheral:I2C RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_I2C0_TX     0x00000007 </span><span class="cm">/*!&lt; DMA request peripheral:I2C TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_SPI0_RX     0x0000000A </span><span class="cm">/*!&lt; DMA request peripheral:SPI RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_SPI0_TX     0x0000000B </span><span class="cm">/*!&lt; DMA request peripheral:SPI TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_I2S_RX      0x00000014 </span><span class="cm">/*!&lt; DMA request peripheral:I2S RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_I2S_TX      0x00000015 </span><span class="cm">/*!&lt; DMA request peripheral:I2S TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_ADC0        0x00000016 </span><span class="cm">/*!&lt; DMA request peripheral:ADC0 */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_DAC0        0x00000017 </span><span class="cm">/*!&lt; DMA request peripheral:DAC0 */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP0     0x00000018 </span><span class="cm">/*!&lt; DMA request peripheral:USB EP0*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP1     0x00000019 </span><span class="cm">/*!&lt; DMA request peripheral:USB EP1*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP2     0x0000001A </span><span class="cm">/*!&lt; DMA request peripheral:USB EP2*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP3     0x0000001B </span><span class="cm">/*!&lt; DMA request peripheral:USB EP3*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP4     0x0000001C </span><span class="cm">/*!&lt; DMA request peripheral:USB EP4*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP5     0x0000001D </span><span class="cm">/*!&lt; DMA request peripheral:USB EP5*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP6     0x0000001E </span><span class="cm">/*!&lt; DMA request peripheral:USB EP6*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP7     0x0000001F </span><span class="cm">/*!&lt; DMA request peripheral:USB EP7 */</span><span class="cp"></span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dst_req</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_REQUEST_NONE        0x00000000 </span><span class="cm">/*!&lt; DMA request peripheral:None */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_UART0_RX    0x00000000 </span><span class="cm">/*!&lt; DMA request peripheral:UART0 RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_UART0_TX    0x00000001 </span><span class="cm">/*!&lt; DMA request peripheral:UART0 TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_UART1_RX    0x00000002 </span><span class="cm">/*!&lt; DMA request peripheral:UART1 RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_UART1_TX    0x00000003 </span><span class="cm">/*!&lt; DMA request peripheral:UART1 TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_I2C0_RX     0x00000006 </span><span class="cm">/*!&lt; DMA request peripheral:I2C RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_I2C0_TX     0x00000007 </span><span class="cm">/*!&lt; DMA request peripheral:I2C TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_SPI0_RX     0x0000000A </span><span class="cm">/*!&lt; DMA request peripheral:SPI RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_SPI0_TX     0x0000000B </span><span class="cm">/*!&lt; DMA request peripheral:SPI TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_I2S_RX      0x00000014 </span><span class="cm">/*!&lt; DMA request peripheral:I2S RX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_I2S_TX      0x00000015 </span><span class="cm">/*!&lt; DMA request peripheral:I2S TX */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_ADC0        0x00000016 </span><span class="cm">/*!&lt; DMA request peripheral:ADC0 */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_DAC0        0x00000017 </span><span class="cm">/*!&lt; DMA request peripheral:DAC0 */</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP0     0x00000018 </span><span class="cm">/*!&lt; DMA request peripheral:USB EP0*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP1     0x00000019 </span><span class="cm">/*!&lt; DMA request peripheral:USB EP1*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP2     0x0000001A </span><span class="cm">/*!&lt; DMA request peripheral:USB EP2*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP3     0x0000001B </span><span class="cm">/*!&lt; DMA request peripheral:USB EP3*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP4     0x0000001C </span><span class="cm">/*!&lt; DMA request peripheral:USB EP4*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP5     0x0000001D </span><span class="cm">/*!&lt; DMA request peripheral:USB EP5*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP6     0x0000001E </span><span class="cm">/*!&lt; DMA request peripheral:USB EP6*/</span><span class="cp"></span>
+<span class="cp">#define DMA_REQUEST_USB_EP7     0x0000001F </span><span class="cm">/*!&lt; DMA request peripheral:USB EP7 */</span><span class="cp"></span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">src_burst_size</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_BURST_1BYTE     0</span>
+<span class="cp">#define DMA_BURST_4BYTE     1</span>
+<span class="cp">#define DMA_BURST_8BYTE     2</span>
+<span class="cp">#define DMA_BURST_16BYTE    3</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dst_burst_size</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_BURST_1BYTE     0</span>
+<span class="cp">#define DMA_BURST_4BYTE     1</span>
+<span class="cp">#define DMA_BURST_8BYTE     2</span>
+<span class="cp">#define DMA_BURST_16BYTE    3</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">src_width</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_TRANSFER_WIDTH_8BIT  0</span>
+<span class="cp">#define DMA_TRANSFER_WIDTH_16BIT 1</span>
+<span class="cp">#define DMA_TRANSFER_WIDTH_32BIT 2</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dst_width</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_TRANSFER_WIDTH_8BIT  0</span>
+<span class="cp">#define DMA_TRANSFER_WIDTH_16BIT 1</span>
+<span class="cp">#define DMA_TRANSFER_WIDTH_32BIT 2</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">3.5.3. </span>DMA 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>每一个 DMA 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,变量定义位于 <code class="docutils literal notranslate"><span class="pre">hal_dma.c</span></code> 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_DMA0_CH0</span></code> ，<code class="docutils literal notranslate"><span class="pre">DMA0_CH0_CONFIG</span></code> 即生效，同时DMA 通道0设备就可以进行注册和使用了。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*参数配置宏*/</span>
+<span class="cp">#if defined(BSP_USING_DMA0_CH0)</span>
+<span class="cp">#ifndef DMA0_CH0_CONFIG</span>
+<span class="cp">#define DMA0_CH0_CONFIG \</span>
+<span class="cp">{   \</span>
+<span class="cp"> .id = 0, \</span>
+<span class="cp"> .ch = 0,\</span>
+<span class="cp"> .direction = DMA_MEMORY_TO_MEMORY,\</span>
+<span class="cp"> .transfer_mode = DMA_LLI_ONCE_MODE, \</span>
+<span class="cp"> .src_req = DMA_REQUEST_NONE, \</span>
+<span class="cp"> .dst_req = DMA_REQUEST_NONE, \</span>
+<span class="cp"> .src_width = DMA_TRANSFER_WIDTH_32BIT , \</span>
+<span class="cp"> .dst_width = DMA_TRANSFER_WIDTH_32BIT , \</span>
+<span class="cp">}</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+
+<span class="cm">/*变量定义*/</span>
+<span class="k">static</span> <span class="n">dma_device_t</span> <span class="n">dmax_device</span><span class="p">[</span><span class="n">DMA_MAX_INDEX</span><span class="p">]</span> <span class="o">=</span>
+<span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH0</span>
+    <span class="n">DMA0_CH0_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH1</span>
+    <span class="n">DMA0_CH1_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH2</span>
+    <span class="n">DMA0_CH2_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH3</span>
+    <span class="n">DMA0_CH3_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH4</span>
+    <span class="n">DMA0_CH4_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH5</span>
+    <span class="n">DMA0_CH5_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH6</span>
+    <span class="n">DMA0_CH6_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH7</span>
+    <span class="n">DMA0_CH7_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注解</p>
+<p>上述配置可以通过 <code class="docutils literal notranslate"><span class="pre">DMA_DEV(dev)-&gt;xxx</span></code> 进行修改，只能在调用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 之前使用。</p>
+</div>
+</div>
+<div class="section" id="id4">
+<h2><span class="section-number">3.5.4. </span>DMA 设备接口<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>DMA 设备接口全部遵循标准设备驱动管理层提供的接口。并且为了方便用户调用，将某些标准接口使用宏来重定义。</p>
+<div class="section" id="dma-register">
+<h3><span class="section-number">3.5.4.1. </span><strong>dma_register</strong><a class="headerlink" href="#dma-register" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dma_register</span></code> 用来注册一个 DMA 设备的一个通道，注册该设备需要使用的标准接口，在注册之前需要打开对应 DMA 设备的通道宏定义。例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_DMA_CH0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">DMA</span></code> 设备的 0 通道,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 <code class="docutils literal notranslate"><span class="pre">DMA</span></code> 设备的 0 通道。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">dma_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">dma_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">flag</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>index 要注册的设备索引</p></li>
+<li><p>name 为注册的设备命名</p></li>
+<li><p>flag 默认可读可写属性</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">index</span></code> 用来选择 DMA 设备某个通道的配置，一个 index 对应一个 DMA 设备的一个通道配置，比如 <code class="docutils literal notranslate"><span class="pre">DMA_CH0_INDEX</span></code> 对应 DMA 通道0 配置，<code class="docutils literal notranslate"><span class="pre">index</span></code> 有如下可选类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">dma_index_type</span>
+<span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH0</span>
+    <span class="n">DMA0_CH0_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH1</span>
+    <span class="n">DMA0_CH1_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH2</span>
+    <span class="n">DMA0_CH2_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH3</span>
+    <span class="n">DMA0_CH3_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH4</span>
+    <span class="n">DMA0_CH4_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH5</span>
+    <span class="n">DMA0_CH5_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH6</span>
+    <span class="n">DMA0_CH6_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_DMA0_CH7</span>
+    <span class="n">DMA0_CH7_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+    <span class="n">DMA_MAX_INDEX</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-open">
+<h3><span class="section-number">3.5.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">dma_open</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 设备句柄</p></li>
+<li><p>oflag 设备的打开方式</p></li>
+<li><p>return 错误码，0 表示打开成功，其他表示错误</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 可以写入以下参数：</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* 设备以轮训发送模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* 设备以轮训接收模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* 设备以中断发送模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_RX     0x008 </span><span class="cm">/* 设备以中断接收模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* 设备以 DMA 发送模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_RX     0x020 </span><span class="cm">/* 设备以 DMA 接收模式打开 */</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-close">
+<h3><span class="section-number">3.5.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于设备的关闭。实际调用 <code class="docutils literal notranslate"><span class="pre">dma_close</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 设备句柄</p></li>
+<li><p>return 错误码，0 表示关闭成功，其他表示错误</p></li>
+</ul>
+</div>
+<div class="section" id="device-control">
+<h3><span class="section-number">3.5.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于根据命令对设备进行控制和参数的修改。实际调用 <code class="docutils literal notranslate"><span class="pre">dma_control</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 设备句柄</p></li>
+<li><p>cmd 设备控制命令</p></li>
+<li><p>args 控制参数</p></li>
+<li><p>return 不同的控制命令返回的意义不同。</p></li>
+</ul>
+<p>DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_CHANNEL_GET_STATUS  0x10</span>
+<span class="cp">#define DMA_CHANNEL_START       0x11</span>
+<span class="cp">#define DMA_CHANNEL_STOP        0x12</span>
+<span class="cp">#define DMA_CHANNEL_UPDATE      0x13</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">args</span></code> 根据不同的 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 传入不同，具体如下：</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 20%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>cmd</p></th>
+<th class="head"><p>args</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DEVICE_CTRL_SET_INT</p></td>
+<td><p>NULL</p></td>
+<td><p>开启dma传输完成中断</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_CLR_INT</p></td>
+<td><p>NULL</p></td>
+<td><p>关闭dma传输完成中断</p></td>
+</tr>
+<tr class="row-even"><td><p>DMA_CHANNEL_GET_STATUS</p></td>
+<td><p>NULL</p></td>
+<td><p>获取dma通道完成状态</p></td>
+</tr>
+<tr class="row-odd"><td><p>DMA_CHANNEL_START</p></td>
+<td><p>NULL</p></td>
+<td><p>开启dma通道</p></td>
+</tr>
+<tr class="row-even"><td><p>DMA_CHANNEL_STOP</p></td>
+<td><p>NULL</p></td>
+<td><p>关闭dma通道</p></td>
+</tr>
+<tr class="row-odd"><td><p>DMA_CHANNEL_UPDATE</p></td>
+<td><p>uint32_t</p></td>
+<td><p>更新dma传输配置</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="device-set-callback">
+<h3><span class="section-number">3.5.4.5. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 用于注册一个DMA通道中断回调函数。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
+</pre></div>
+</div>
+<ul>
+<li><p>dev 设备句柄</p></li>
+<li><p>callback 要注册的中断回调函数</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>dev 设备句柄</p></li>
+<li><p>args 无用</p></li>
+<li><p>size 无用</p></li>
+<li><p>event 中断事件类型</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>DMA 设备 <code class="docutils literal notranslate"><span class="pre">event</span></code> 类型如下</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">dma_event_type</span>
+<span class="p">{</span>
+    <span class="n">DMA_EVENT_COMPLETE</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dma-channel-start">
+<h3><span class="section-number">3.5.4.6. </span><strong>dma_channel_start</strong><a class="headerlink" href="#dma-channel-start" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dma_channel_start</span></code> 用于开启DMA通道。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_START</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dma_channel_start</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 需要开启的pwm通道句柄</p></li>
+</ul>
+</div>
+<div class="section" id="dma-channel-stop">
+<h3><span class="section-number">3.5.4.7. </span><strong>dma_channel_stop</strong><a class="headerlink" href="#dma-channel-stop" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dma_channel_stop</span></code> 用于关闭DMA通道。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_STOP</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dma_channel_stop</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 需要关闭的pwm通道句柄</p></li>
+</ul>
+</div>
+<div class="section" id="dma-channel-update">
+<h3><span class="section-number">3.5.4.8. </span><strong>dma_channel_update</strong><a class="headerlink" href="#dma-channel-update" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dma_channel_update</span></code> 用于更新DMA配置。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_UPDATE</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dma_channel_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">list</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 需要更新的pwm通道句柄</p></li>
+<li><p>list dma_lli_ctrl_t句柄</p></li>
+</ul>
+</div>
+<div class="section" id="dma-channel-check-busy">
+<h3><span class="section-number">3.5.4.9. </span><strong>dma_channel_check_busy</strong><a class="headerlink" href="#dma-channel-check-busy" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dma_channel_check_busy</span></code> 用于查询当前使用的DMA通道是否传输完成。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_GET_STATUS</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dma_channel_check_busy</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 需要查询的DMA通道句柄</p></li>
+<li><p>返回当前DMA状态，0为传输完成，1为未传输完成</p></li>
+</ul>
+</div>
+<div class="section" id="dma-reload">
+<h3><span class="section-number">3.5.4.10. </span><strong>dma_reload</strong><a class="headerlink" href="#dma-reload" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dma_reload</span></code> 用于更新DMA某个通道的配置，相比于 <code class="docutils literal notranslate"><span class="pre">dma_channel_update</span></code> ,该函数无需用户传递很多参数，只需要填入源地址和目标地址，以及长度，内部会自己计算后再进行配置。此函数调用后，DMA通道是没有开启的，需要手动调用 <code class="docutils literal notranslate"><span class="pre">dma_channel_start</span></code> 函数。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">dma_reload</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">src_addr</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">dst_addr</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">transfer_size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 需要查询的DMA通道句柄</p></li>
+<li><p>src_addr 传输源地址</p></li>
+<li><p>dst_addr 传输目标地址</p></li>
+<li><p>transfer_size 传输字节总长度，如果传输的位数是16位、32位，这里需要进行转换成字节长度。</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api_i2c.html" class="btn btn-neutral float-right" title="3.6. I2C 设备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_pwm.html" class="btn btn-neutral float-left" title="3.4. PWM 设备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; 版权所有 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

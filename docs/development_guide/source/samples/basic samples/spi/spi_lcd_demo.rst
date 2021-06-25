@@ -1,6 +1,8 @@
 SPI - TFT LCD 显示
 ====================
 
+本 demo 演示通过 SPI 驱动带 il9431 芯片的TFT 屏显示。
+
 硬件连接
 -----------------------------
 
@@ -37,9 +39,7 @@ SPI - TFT LCD 显示
     #define CONFIG_GPIO20_FUNC GPIO_FUN_SPI
     #define CONFIG_GPIO21_FUNC GPIO_FUN_SPI
 
--  配置 ``SPI`` 设备复用引脚，见 ``bsp/board/bl706_avb/pinmux_config.h``
-
-.. note::  ``bsp/board/bl706_avb/pinmux_config.h`` 当前给所有的示例demo使用，所以，需要先选定 ``PINMUX_SELECT`` 为 ``PINMUX_LVGL``，开启其中一个 demo
+-  配置 ``SPI`` 设备复用引脚，见 ``bsp/board/bl706_avb/pinmux_config.h``,，如有改动，请自行修改
 
 .. note:: 为适配 bl702_avb 硬件, SPI 的 MOSI 和 MISO 默认进行了调换，如果想要恢复默认，修改 ``drivers/bl702_driver/hal_drv/default_config/spi_config.h`` 中 ``SPI_SWAP_ENABLE`` 为 0
 

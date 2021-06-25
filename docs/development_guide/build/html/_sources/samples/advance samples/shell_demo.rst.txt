@@ -1,16 +1,7 @@
-SHELL 命令行调试
+Shell 命令行调试
 ====================
 
-为方便用户使用 pc 或者其他控制器对开发板进行功能的调试（非仿真器调试），我们为用户提供了 shell 命令行组件，类似于在 linux 下进行命令行操作。用户在 PC 端或者其他控制端进行命令的发送，通过串口、usb、以太网、蓝牙、wifi等方式，将数据发送给开发板的 shell 中，shell 会读取接收的命令进行解析并对已经注册的内部函数扫描，扫描到与之匹配的函数以后，执行匹配的函数，并实时返回传入的键值和函数执行的结果给 pc or 控制端。其中需要注意，控制器端需要发送标准键盘的键值。
-本 demo 将演示如何使用 **shell** 通过串口进行命令行调试。
-
-本 shell 组件有以下功能：
-
-- 支持标准键盘字符控制
-- 支持命令自动补全
-- 支持上下键查看历史命令
-- 支持左右键修改命令
-- 支持文件系统、网络系统调试
+本 demo 将演示如何使用 shell 通过串口进行命令行调试。
 
 准备工具
 -----------------------
@@ -137,11 +128,7 @@ shell 移植到串口
 SHELL 命令注册
 ^^^^^^^^^^^^^^^^^^^^
 
-shell 命令注册使用以下两个宏
-
-- **SHELL_CMD_EXPORT**
-
-``SHELL_CMD_EXPORT`` 有两个参数，``command`` 代表需要注册的函数名，pc 或者控制器将发送 ``command`` 对设备进行命令控制，desc`` 是对该注册函数的描述，
+以下两种注册方式任选
 
 .. code-block:: C
     :linenos:
@@ -150,11 +137,20 @@ shell 命令注册使用以下两个宏
     {
         MSG("hello World\r\n");
     }
+
+    int echo(int argc, char *argv[])
+    {
+        MSG("%dparameter(s)\r\n", argc);
+
+        for (uint8_t i = 1; i < argc; i++) {
+            MSG("%s\r\n", argv[i]);
+        }
+
+        return 0;
+    }
+
     SHELL_CMD_EXPORT(hellowd, hellowd test)
-
-- **SHELL_CMD_EXPORT_ALIAS**
-
-``SHELL_CMD_EXPORT_ALIAS`` 有三个参数，``command`` 代表需要注册的函数名，``alias`` 是对该注册函数名重命名，pc 或者控制器将发送 ``alias`` 对设备进行命令控制，``desc`` 是对该注册函数的描述，
+    SHELL_CMD_EXPORT(echo, echo test)
 
 .. code-block:: C
     :linenos:
@@ -163,7 +159,20 @@ shell 命令注册使用以下两个宏
     {
         MSG("hello World\r\n");
     }
+
+    int cmd_echo(int argc, char *argv[])
+    {
+        MSG("%dparameter(s)\r\n", argc);
+
+        for (uint8_t i = 1; i < argc; i++) {
+            MSG("%s\r\n", argv[i]);
+        }
+
+        return 0;
+    }
+
     SHELL_CMD_EXPORT_ALIAS(hellowd, hellwd,hellowd test)
+    SHELL_CMD_EXPORT_ALIAS(cmd_echo, echo,echo test)
 
 
 编译和烧录

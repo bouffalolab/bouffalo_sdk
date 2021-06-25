@@ -1,0 +1,374 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>5. USB Stack &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="6. BLE" href="../bluetooth/api_ble.html" />
+    <link rel="prev" title="4. Shell" href="../shell/api_shell.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK 开发指南
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">快速开发指南</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 手册</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../board.html">2. Board 配置系统</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../peripheral/index.html">3. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">4. Shell</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. USB Stack</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usb-device-porting">5.1. USB Device Porting 接口</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-set-address">5.1.1. <strong>usbd_set_address</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-ep-open">5.1.2. <strong>usbd_ep_open</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-ep-close">5.1.3. <strong>usbd_ep_close</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-ep-set-stall">5.1.4. <strong>usbd_ep_set_stall</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-ep-clear-stall">5.1.5. <strong>usbd_ep_clear_stall</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-ep-is-stalled">5.1.6. <strong>usbd_ep_is_stalled</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-ep-write">5.1.7. <strong>usbd_ep_write</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-ep-read">5.1.8. <strong>usbd_ep_read</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usbd-event-notify-handler">5.1.9. <strong>usbd_event_notify_handler</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#usb-device">5.2. USB Device 应用层接口</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">5.2.1. USB Device 控制器接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usb-dc-init">5.2.1.1. <strong>usb_dc_init</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">5.2.2. USB Device 通用接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-desc-register">5.2.2.1. <strong>usbd_desc_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-msosv1-desc-register">5.2.2.2. <strong>usbd_msosv1_desc_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-class-add-interface">5.2.2.3. <strong>usbd_class_add_interface</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-interface-add-endpoint">5.2.2.4. <strong>usbd_interface_add_endpoint</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usb-device-is-configured">5.2.2.5. <strong>usb_device_is_configured</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-cdc">5.2.3. USB Device CDC 类接口</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-msc">5.2.4. USB Device MSC 类接口</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-hid">5.2.5. USB Device HID 类接口</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-audio">5.2.6. USB Device AUDIO 类接口</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-video">5.2.7. USB Device VIDEO 类接口</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">6. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK 开发指南</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">5. </span>USB Stack</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/api_reference/usb stack/api_usb_stack.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usb-stack">
+<h1><span class="section-number">5. </span>USB Stack<a class="headerlink" href="#usb-stack" title="永久链接至标题">¶</a></h1>
+<p>USB Stack 是一个跨平台的、用于嵌入式 MCU 的 USB 协议栈，该协议栈对标准设备请求、CLASS 请求、VENDOR 请求规范了一套统一的函数框架，从而对复合设备或者使用自定义设备类时，能够在极短的时间内进行添加和移植。此外，该协议栈代码优美，内存占用小（不使用静态数组），通用性非常高，提供了一套标准的 porting 接口，供给不同的 MCU 使用。其中，usb device 协议栈当前具有以下功能：</p>
+<ul class="simple">
+<li><p>支持 USB2.0 全速和高速设备</p></li>
+<li><p>支持端点中断注册功能，porting 给用户自己处理中断里的数据</p></li>
+<li><p>支持复合设备</p></li>
+<li><p>支持 Communication Class (CDC)</p></li>
+<li><p>支持 Human Interface Device (HID)</p></li>
+<li><p>支持 Custom human Interface Device (HID)</p></li>
+<li><p>支持 Mass Storage Class (MSC)</p></li>
+<li><p>支持 USB VIDEO CLASS (UVC)</p></li>
+<li><p>支持 USB AUDIO CLASS (UAC)</p></li>
+<li><p>支持 vendor 类 class</p></li>
+<li><p>支持 WINUSB1.0、WINUSB2.0</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">注解</p>
+<p>USB DEVICE 协议栈的代码实现过程参考 <a class="reference external" href="https://www.bilibili.com/video/BV1Ef4y1t73d">https://www.bilibili.com/video/BV1Ef4y1t73d</a></p>
+</div>
+<div class="section" id="usb-device-porting">
+<h2><span class="section-number">5.1. </span>USB Device Porting 接口<a class="headerlink" href="#usb-device-porting" title="永久链接至标题">¶</a></h2>
+<blockquote>
+<div><p>USB Device Porting 接口在 <code class="docutils literal notranslate"><span class="pre">usb_stack/common/usb_dc.h</span></code> 文件中声明，用户根据自己的 MCU 进行实现</p>
+</div></blockquote>
+<div class="section" id="usbd-set-address">
+<h3><span class="section-number">5.1.1. </span><strong>usbd_set_address</strong><a class="headerlink" href="#usbd-set-address" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usbd-ep-open">
+<h3><span class="section-number">5.1.2. </span><strong>usbd_ep_open</strong><a class="headerlink" href="#usbd-ep-open" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usbd-ep-close">
+<h3><span class="section-number">5.1.3. </span><strong>usbd_ep_close</strong><a class="headerlink" href="#usbd-ep-close" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usbd-ep-set-stall">
+<h3><span class="section-number">5.1.4. </span><strong>usbd_ep_set_stall</strong><a class="headerlink" href="#usbd-ep-set-stall" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usbd-ep-clear-stall">
+<h3><span class="section-number">5.1.5. </span><strong>usbd_ep_clear_stall</strong><a class="headerlink" href="#usbd-ep-clear-stall" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usbd-ep-is-stalled">
+<h3><span class="section-number">5.1.6. </span><strong>usbd_ep_is_stalled</strong><a class="headerlink" href="#usbd-ep-is-stalled" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usbd-ep-write">
+<h3><span class="section-number">5.1.7. </span><strong>usbd_ep_write</strong><a class="headerlink" href="#usbd-ep-write" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usbd-ep-read">
+<h3><span class="section-number">5.1.8. </span><strong>usbd_ep_read</strong><a class="headerlink" href="#usbd-ep-read" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usbd-event-notify-handler">
+<h3><span class="section-number">5.1.9. </span><strong>usbd_event_notify_handler</strong><a class="headerlink" href="#usbd-event-notify-handler" title="永久链接至标题">¶</a></h3>
+</div>
+</div>
+<div class="section" id="usb-device">
+<h2><span class="section-number">5.2. </span>USB Device 应用层接口<a class="headerlink" href="#usb-device" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id1">
+<h3><span class="section-number">5.2.1. </span>USB Device 控制器接口<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h3>
+<div class="section" id="usb-dc-init">
+<h4><span class="section-number">5.2.1.1. </span><strong>usb_dc_init</strong><a class="headerlink" href="#usb-dc-init" title="永久链接至标题">¶</a></h4>
+</div>
+</div>
+<div class="section" id="id2">
+<h3><span class="section-number">5.2.2. </span>USB Device 通用接口<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
+<div class="section" id="usbd-desc-register">
+<h4><span class="section-number">5.2.2.1. </span><strong>usbd_desc_register</strong><a class="headerlink" href="#usbd-desc-register" title="永久链接至标题">¶</a></h4>
+</div>
+<div class="section" id="usbd-msosv1-desc-register">
+<h4><span class="section-number">5.2.2.2. </span><strong>usbd_msosv1_desc_register</strong><a class="headerlink" href="#usbd-msosv1-desc-register" title="永久链接至标题">¶</a></h4>
+</div>
+<div class="section" id="usbd-class-add-interface">
+<h4><span class="section-number">5.2.2.3. </span><strong>usbd_class_add_interface</strong><a class="headerlink" href="#usbd-class-add-interface" title="永久链接至标题">¶</a></h4>
+</div>
+<div class="section" id="usbd-interface-add-endpoint">
+<h4><span class="section-number">5.2.2.4. </span><strong>usbd_interface_add_endpoint</strong><a class="headerlink" href="#usbd-interface-add-endpoint" title="永久链接至标题">¶</a></h4>
+</div>
+<div class="section" id="usb-device-is-configured">
+<h4><span class="section-number">5.2.2.5. </span><strong>usb_device_is_configured</strong><a class="headerlink" href="#usb-device-is-configured" title="永久链接至标题">¶</a></h4>
+</div>
+</div>
+<div class="section" id="usb-device-cdc">
+<h3><span class="section-number">5.2.3. </span>USB Device CDC 类接口<a class="headerlink" href="#usb-device-cdc" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usb-device-msc">
+<h3><span class="section-number">5.2.4. </span>USB Device MSC 类接口<a class="headerlink" href="#usb-device-msc" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usb-device-hid">
+<h3><span class="section-number">5.2.5. </span>USB Device HID 类接口<a class="headerlink" href="#usb-device-hid" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usb-device-audio">
+<h3><span class="section-number">5.2.6. </span>USB Device AUDIO 类接口<a class="headerlink" href="#usb-device-audio" title="永久链接至标题">¶</a></h3>
+</div>
+<div class="section" id="usb-device-video">
+<h3><span class="section-number">5.2.7. </span>USB Device VIDEO 类接口<a class="headerlink" href="#usb-device-video" title="永久链接至标题">¶</a></h3>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../bluetooth/api_ble.html" class="btn btn-neutral float-right" title="6. BLE" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../shell/api_shell.html" class="btn btn-neutral float-left" title="4. Shell" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; 版权所有 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
