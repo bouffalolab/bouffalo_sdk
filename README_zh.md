@@ -1,4 +1,5 @@
-![License](https://img.shields.io/badge/License-Apache--2.0-brightgreen)
+[![License](https://img.shields.io/badge/License-Apache--2.0-brightgreen)](LICENSE)
+[![Release](https://img.shields.io/github/v/tag/bouffalolab/bl_mcu_sdk?color=s&label=release)]()
 
 [English Version](README.md)
 
@@ -19,7 +20,6 @@ bl_mcu_sdk
 │   └── bsp_common
 ├── common
 │   ├── device
-│   ├── libc
 │   ├── list
 │   ├── memheap
 │   ├── misc
@@ -27,6 +27,7 @@ bl_mcu_sdk
 │   ├── ring_buffer
 │   └── soft_crc
 ├── components
+│   ├── ble
 │   ├── fatfs
 │   ├── freertos
 │   ├── shell
@@ -41,9 +42,7 @@ bl_mcu_sdk
 │   ├── adc
 │   ├── audio
 │   ├── camera
-│   ├── coremark
 │   ├── dac
-│   ├── dhrystone
 │   ├── dma
 │   ├── gpio
 │   ├── hellowd
@@ -75,17 +74,17 @@ bl_mcu_sdk
 更多文件目录参考信息，请查阅 [bl mcu sdk 文档教程](http://bouffalolab.gitee.io/bl_mcu_sdk)
 ## 层次结构
 
-[![RpUVoj.png](https://z3.ax1x.com/2021/06/18/RpUVoj.png)](https://imgtu.com/i/RpUVoj)
+[![层次结构](https://z3.ax1x.com/2021/06/18/RpUVoj.png)](https://imgtu.com/i/RpUVoj)
 
 # 资源
 
 ## 硬件资源
 
 - BL706 IOT 开发板
-[![RpUI0g.png](https://z3.ax1x.com/2021/06/18/RpUI0g.png)](https://imgtu.com/i/RpUI0g)
+[![BL706_IOT](https://z3.ax1x.com/2021/06/18/RpUI0g.png)](https://imgtu.com/i/RpUI0g)
 
 - BL706 AVB 开发板
-[![Rpa7DO.jpg](https://z3.ax1x.com/2021/06/18/Rpa7DO.jpg)](https://imgtu.com/i/Rpa7DO)
+[![BL706_AVB](https://z3.ax1x.com/2021/06/18/Rpa7DO.jpg)](https://imgtu.com/i/Rpa7DO)
 
 
 目前暂时没有提供官方的购买渠道，如果想获得上述开发板，可到任意开源社区留言申请。

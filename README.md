@@ -1,4 +1,5 @@
-![License](https://img.shields.io/badge/License-Apache--2.0-brightgreen)
+[![License](https://img.shields.io/badge/License-Apache--2.0-brightgreen)](LICENSE)
+[![Release](https://img.shields.io/github/v/tag/bouffalolab/bl_mcu_sdk?color=s&label=release)]()
 
 [中文版](README_zh.md)
 
@@ -19,7 +20,6 @@ bl_mcu_sdk
 │ └── bsp_common
 ├── common
 │ ├── device
-│ ├── libc
 │ ├── list
 │ ├── memheap
 │ ├── misc
@@ -27,6 +27,7 @@ bl_mcu_sdk
 │ ├── ring_buffer
 │ └── soft_crc
 ├── components
+│ ├── ble
 │ ├── fatfs
 │ ├── freertos
 │ ├── shell
@@ -41,9 +42,7 @@ bl_mcu_sdk
 │ ├── adc
 │ ├── audio
 │ ├── camera
-│ ├── coremark
 │ ├── dac
-│ ├── dhrystone
 │ ├── dma
 │ ├── gpio
 │ ├── hellowd
@@ -76,17 +75,17 @@ For more file directory reference information, please refer to [bl mcu sdk docum
 
 ## Hierarchy
 
-[![RpUVoj.png](https://z3.ax1x.com/2021/06/18/RpUVoj.png)](https://imgtu.com/i/RpUVoj)
+[![Hierarchy](https://z3.ax1x.com/2021/06/18/RpUVoj.png)](https://imgtu.com/i/RpUVoj)
 
 # Resources
 
 ## Hardware Resources
 
 - BL706 IOT Development board
-[![RpUI0g.png](https://z3.ax1x.com/2021/06/18/RpUI0g.png)](https://imgtu.com/i/RpUI0g)
+[![BL706_IOT](https://z3.ax1x.com/2021/06/18/RpUI0g.png)](https://imgtu.com/i/RpUI0g)
 
 - BL706 AVB Development Board
-[![Rpa7DO.jpg](https://z3.ax1x.com/2021/06/18/Rpa7DO.jpg)](https://imgtu.com/i/Rpa7DO)
+[![BL706_AVB](https://z3.ax1x.com/2021/06/18/Rpa7DO.jpg)](https://imgtu.com/i/Rpa7DO)
 
 
 There is currently no official purchase channel. If you want to get the above development board, you can apply for it in any open source community.
@@ -104,19 +103,19 @@ Contains a quick start tutorial for bl mcu sdk development, api manual and a det
 
 - [bl mcu sdk documentation tutorial](http://bouffalolab.gitee.io/bl_mcu_sdk)
 
-## Video tutorial
+## Video Tutorial
 
 - [BL706 MCU Development Series Video Tutorial](https://www.bilibili.com/video/BV1xK4y1P7ur)
 
-## development tools
+## Development Tools
 
-### Command line development
+### Command Line Development
 
 For the tools needed for command line development, please refer to [linux development guide](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Linux_quick_start_ubuntu.html)
 
 - [cmake 3.19](https://cmake.org/files/v3.19/), cmake compilation tool, it is recommended to use cmake v3.19 or above
 
-### Eclipse development
+### Eclipse Development
 
 For the tools needed for Eclipse development, please refer to [Eclipse Development Guide](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_eclipse.html)
 
@@ -127,12 +126,12 @@ For the tools needed for Eclipse development, please refer to [Eclipse Developme
 
 For tools needed for CDK development, please refer to  [CDK Development Guide](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_cdk.html)
 
-- [CDK](https://occ.t-head.cn/development/activities/cdk), CDK integrated development environment of Pingtou Gejianchi, it is recommended to use CDK v2.8.4 or above
+- [CDK](https://occ.t-head.cn/development/activities/cdk), Jianchi CDK integrated development environment of T-Head , it is recommended to use CDK v2.8.4 or above
 
-### Burning tool
+### Flash Tool
 
 In addition to using CK-link, J-link and command line programming, it also supports graphical programming tools.
-Graphical programming tools provided by Boliu:
+Graphical programming tools provided by Bouffalolab:
 
 - [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-win32.zip)
 - [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-linux-x86.tar.gz)
