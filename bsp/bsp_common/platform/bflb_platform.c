@@ -49,6 +49,12 @@ void bflb_platform_init(uint32_t baudrate)
 
     board_init();
 
+    uint8_t ret = 0;
+
+    if (mmheap_init_with_pool(&__HeapBase, (size_t)&__HeapLimit - (size_t)&__HeapBase)) {
+        ret = 1;
+    }
+
     if (!uart_dbg_disable) {
         uart_register(board_get_debug_uart_index(), "debug_log", DEVICE_OFLAG_RDWR);
         struct device *uart = device_find("debug_log");
@@ -62,11 +68,10 @@ void bflb_platform_init(uint32_t baudrate)
         bl_show_info();
     }
 
-    if (!mmheap_init_with_pool(&__HeapBase, (size_t)&__HeapLimit - (size_t)&__HeapBase)) {
+    if (!ret)
         MSG("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1000);
-    } else {
+    else
         MSG("dynamic memory init error\r\n");
-    }
 
     enable_irq();
 }

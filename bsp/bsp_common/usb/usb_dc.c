@@ -77,7 +77,7 @@ struct device *usb_dc_init(void)
 
 int usbd_set_address(const uint8_t addr)
 {
-    return device_control(usb, DEVICE_CTRL_USB_DC_SET_ADDR, (void *)(uint32_t)addr);
+    return usb_dc_set_dev_address(addr);
 }
 
 int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
@@ -86,16 +86,15 @@ int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
 }
 int usbd_ep_close(const uint8_t ep)
 {
-    device_control(usb, DEVICE_CTRL_USB_DC_SET_NACK, (void *)(uint32_t)ep);
-    return 0;
+    return usb_dc_ep_close(ep);
 }
 int usbd_ep_set_stall(const uint8_t ep)
 {
-    return device_control(usb, DEVICE_CTRL_USB_DC_SET_STALL, (void *)(uint32_t)ep);
+    return usb_dc_ep_set_stall(ep);
 }
 int usbd_ep_clear_stall(const uint8_t ep)
 {
-    return device_control(usb, DEVICE_CTRL_USB_DC_CLR_STALL, (void *)(uint32_t)ep);
+    return usb_dc_ep_clear_stall(ep);
 }
 int usbd_ep_is_stalled(const uint8_t ep, uint8_t *stalled)
 {

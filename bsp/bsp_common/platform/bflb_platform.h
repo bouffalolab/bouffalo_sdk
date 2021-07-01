@@ -31,23 +31,16 @@ extern "C" {
 #include "misc.h"
 //#include "mcu_sdk_version.h"
 
-#define printf(a, ...)  bflb_platform_printf(a, ##__VA_ARGS__)
 #define MSG(a, ...)     bflb_platform_printf(a, ##__VA_ARGS__)
 #define MSG_DBG(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
 #define MSG_ERR(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
-#define BL_CASE_FAIL                   \
-    {                                  \
-        MSG(" Case Fail\r\n");         \
-        while (1) {                    \
-            bflb_platform_delay_ms(1); \
-        }                              \
+#define BL_CASE_FAIL          \
+    {                         \
+        MSG("case fail\r\n"); \
     }
-#define BL_CASE_SUCCESS                \
-    {                                  \
-        MSG(" Case Success\r\n");      \
-        while (1) {                    \
-            bflb_platform_delay_ms(1); \
-        }                              \
+#define BL_CASE_SUCCESS          \
+    {                            \
+        MSG("case success\r\n"); \
     }
 
 /* compatible with old version */
