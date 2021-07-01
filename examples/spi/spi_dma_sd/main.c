@@ -229,7 +229,9 @@ int main(void)
     /*unmount*/
     f_mount(NULL, "1:", 1);
 
+    BL_CASE_SUCCESS;
     while (1) {
+        bflb_platform_delay_ms(100);
     }
 }
 

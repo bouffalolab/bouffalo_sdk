@@ -202,7 +202,11 @@ int main(void)
     MSG("DSA verify time=%dms\r\n", (unsigned int)bflb_platform_get_time_ms());
 
     MSG("Finished\r\n");
+
     BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }
 
 /*@} end of group SEC_DSA_Private_Functions */

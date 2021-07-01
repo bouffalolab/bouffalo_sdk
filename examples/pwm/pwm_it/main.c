@@ -49,7 +49,8 @@ int main(void)
         pwm_channel_start(pwm);
     }
 
+    BL_CASE_SUCCESS;
     while (1) {
-        __asm volatile("nop");
+        bflb_platform_delay_ms(100);
     }
 }

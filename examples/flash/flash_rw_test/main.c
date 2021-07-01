@@ -52,7 +52,8 @@ int main(void)
         }
     }
 
-    MSG("flash write and read test success\r\n");
-
     BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }

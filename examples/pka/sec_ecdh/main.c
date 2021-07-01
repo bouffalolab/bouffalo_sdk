@@ -184,6 +184,9 @@ int main(void)
     }
 
     BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }
 
 /*@} end of group SEC_ECDH_Private_Functions */

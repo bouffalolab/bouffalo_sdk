@@ -94,4 +94,7 @@ int main(void)
     cam_stop();
 
     BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }

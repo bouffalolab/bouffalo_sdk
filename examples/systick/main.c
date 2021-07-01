@@ -35,7 +35,8 @@ int main(void)
     bflb_platform_init(0);
     bflb_platform_set_alarm_time(1000000, systick_isr);
 
+    BL_CASE_SUCCESS;
     while (1) {
-        __asm volatile("nop");
+        bflb_platform_delay_ms(100);
     }
 }

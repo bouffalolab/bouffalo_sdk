@@ -43,7 +43,8 @@ int main(void)
     gpio_irq_enable(GPIO_PIN_12, ENABLE);
     MSG("gpio int test !\r\n");
 
+    BL_CASE_SUCCESS;
     while (1) {
-        __asm volatile("nop");
+        bflb_platform_delay_ms(100);
     }
 }

@@ -22,7 +22,8 @@
  */
 #include "hal_uart.h"
 
-const uint8_t buffer[10] = "12345678\r\n";
+static uint8_t buffer[100];
+
 int main(void)
 {
     bflb_platform_init(0);
@@ -30,14 +31,15 @@ int main(void)
     struct device *uart1 = device_find("uart1");
 
     if (uart1) {
-        device_open(uart1, DEVICE_OFLAG_STREAM_TX);
+        device_open(uart1, DEVICE_OFLAG_STREAM_TX | DEVICE_OFLAG_STREAM_RX);
         MSG("device find success\r\n");
     }
 
+    device_read(uart1, 0, buffer, 10);
     device_write(uart1, 0, buffer, 10);
 
+    BL_CASE_SUCCESS;
     while (1) {
-        MSG("\r\n uart0 and uart1 poll tx case\r\n");
-        bflb_platform_delay_ms(1000);
+        bflb_platform_delay_ms(100);
     }
 }

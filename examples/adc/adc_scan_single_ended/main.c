@@ -58,10 +58,10 @@ int main(void)
         adc_channel_start(adc_test);
         device_read(adc_test, 0, (void *)&result_val, sizeof(result_val) / sizeof(adc_channel_val_t));
         MSG("PosId = %d NegId = %d V= %d mV \r\n", result_val.posChan, result_val.negChan, (uint32_t)(result_val.volt * 1000));
-        // bflb_platform_delay_ms(10);
     }
 
+    BL_CASE_SUCCESS;
     while (1) {
-        return SUCCESS;
+        bflb_platform_delay_ms(100);
     }
 }

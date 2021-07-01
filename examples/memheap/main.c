@@ -53,12 +53,12 @@ int main(void)
 
     MSG("memheap test\r\n");
     if (!memheap_test()) {
-        MSG("memheap test success\r\n");
+        BL_CASE_SUCCESS;
     } else {
-        MSG("memheap test failed\r\n");
+        BL_CASE_FAIL;
     }
 
     while (1) {
-        __asm volatile("nop");
+        bflb_platform_delay_ms(100);
     }
 }

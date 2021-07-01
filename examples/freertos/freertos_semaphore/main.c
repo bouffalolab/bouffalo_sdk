@@ -184,6 +184,8 @@ int main(void)
 
     vTaskStartScheduler();
 
+    BL_CASE_SUCCESS;
     while (1) {
+        bflb_platform_delay_ms(100);
     }
 }

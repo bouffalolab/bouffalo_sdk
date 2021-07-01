@@ -47,8 +47,8 @@ void main(void)
         device_write(uart, 0, (uint8_t *)(&image[i * 104]), 104);
     }
 
-    while (1) {
-    }
-
     BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }

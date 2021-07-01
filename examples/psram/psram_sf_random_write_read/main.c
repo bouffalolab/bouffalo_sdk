@@ -167,7 +167,7 @@ int main(void)
     BL_Err_Type stat;
     bflb_platform_init(0);
 
-    MSG("PSRAM write read case \n");
+    MSG("PSRAM write read case \r\n");
 
     bsp_sf_psram_init(1);
     bsp_sf_psram_read_id(psram_id);
@@ -178,14 +178,12 @@ int main(void)
         stat = Psram_Random_Write_Read();
 
         if (stat == ERROR) {
-            MSG("psram random write read fail\n");
+            BL_CASE_FAIL;
         }
-
+        BL_CASE_SUCCESS;
         L1C_Cache_Hit_Count_Get(&hitCountLow, &hitCountHigh);
         missCount = L1C_Cache_Miss_Count_Get();
         MSG("Hit count low=%08x, high=%08x, Miss count=%08x\r\n", hitCountLow, hitCountHigh, missCount);
         MSG("System time%dms\r\n", bflb_platform_get_time_ms());
     }
-
-    BL_CASE_SUCCESS;
 }

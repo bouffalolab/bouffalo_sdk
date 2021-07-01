@@ -468,22 +468,27 @@ int main(void)
         if (play_status == 1) {
             if (music_tx_flag == 0) {
                 musci_size = sizeof(music);
-                frame_count = musci_size / AUDIO_IN_PACKET;
-                last_frame_size = musci_size % AUDIO_IN_PACKET;
+                frame_count = musci_size / 4064;
+                last_frame_size = musci_size % 4064;
                 frame_cnt = 0;
-                //MSG("frame_count:%d,last_frame_size:%d\r\n",frame_count,last_frame_size);
+                audio_pos = 0;
+
+                if (last_frame_size % AUDIO_IN_PACKET) {
+                    MSG("data len is not AUDIO_IN_PACKET multiple\r\n");
+                    while (1) {
+                    }
+                }
+
+                MSG("frame_count:%d,last_frame_size:%d\r\n", frame_count, last_frame_size);
                 music_tx_flag = 1;
             }
-
             if (!device_control(dma_ch2, DMA_CHANNEL_GET_STATUS, NULL)) {
                 if (frame_cnt < frame_count) {
-                    device_write(usb_fs, AUDIO_IN_EP, &music[audio_pos], AUDIO_IN_PACKET);
+                    device_write(usb_fs, AUDIO_IN_EP, &music[audio_pos], 4064);
                     frame_cnt++;
-                    audio_pos += AUDIO_IN_PACKET;
+                    audio_pos += 4064;
                 } else {
                     device_write(usb_fs, AUDIO_IN_EP, &music[audio_pos], last_frame_size);
-                    frame_cnt = 0;
-                    audio_pos = 0;
                     music_tx_flag = 0;
                 }
             }

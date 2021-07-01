@@ -52,10 +52,10 @@ int main(void)
 
     if (i2c_transfer(i2c0, &msg[0], 2) == 0) {
         MSG("\r\n read:%0x\r\n", msg[1].buf[0] << 8 | msg[1].buf[1]);
-        MSG("\r\n i2c case success\r\n");
+        BL_CASE_SUCCESS;
     } else
-        MSG("\r\n i2c case failed\r\n");
+        BL_CASE_FAIL;
     while (1) {
-        __asm volatile("nop");
+        bflb_platform_delay_ms(100);
     }
 }

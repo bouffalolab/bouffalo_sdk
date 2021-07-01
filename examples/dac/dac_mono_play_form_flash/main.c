@@ -61,4 +61,7 @@ int main(void)
     device_write(dac, DAC_CHANNEL_0, zfb_source, sizeof(zfb_source));
 
     BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }

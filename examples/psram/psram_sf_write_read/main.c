@@ -39,10 +39,9 @@ void test32(void)
         MSG("addr = 0x%08X, val = 0x%08X\r\n", (BSP_PSRAM_BASE + i), *((volatile uint32_t *)(BSP_PSRAM_BASE + i)));
 
         if (i / 4 != val) {
-            MSG("Error!\r\n");
-
-            while (1)
-                ;
+            BL_CASE_FAIL;
+            while (1) {
+            }
         }
     }
 }
@@ -61,10 +60,9 @@ void test8(void)
         MSG("addr = 0x%08X, val = 0x%08X\r\n", (BSP_PSRAM_BASE + i), *((volatile uint8_t *)(BSP_PSRAM_BASE + i)));
 
         if ((uint8_t)i != val) {
-            MSG("Error!\r\n");
-
-            while (1)
-                ;
+            BL_CASE_FAIL;
+            while (1) {
+            }
         }
     }
 }
@@ -84,7 +82,7 @@ int main(void)
     test8();
 
     BL_CASE_SUCCESS;
-
-    while (1)
-        ;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }

@@ -116,8 +116,10 @@ int main(void)
     MSG("pds wakeTim\r\n");
     MSG("hbn wakeTim\r\n\r\n");
 
-    while (1)
-        ;
+    BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }
 
 SHELL_CMD_EXPORT(wfi, enter wfi mode)

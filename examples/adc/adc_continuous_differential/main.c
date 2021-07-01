@@ -66,7 +66,5 @@ int main(void)
         } else {
             MSG("PosId = %d NegId = %d V= %d mV \r\n", result_val.posChan, result_val.negChan, (uint32_t)(result_val.volt * 1000));
         }
-
-        // bflb_platform_delay_ms(500);
     }
 }

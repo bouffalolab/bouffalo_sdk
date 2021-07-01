@@ -114,6 +114,8 @@ int main(void)
 
     LCD_Display_Test();
 
+    BL_CASE_SUCCESS;
     while (1) {
+        bflb_platform_delay_ms(100);
     }
 }

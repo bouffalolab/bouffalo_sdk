@@ -106,6 +106,8 @@ int main(void)
     /* Disable spi master mode */
     device_close(spi);
 
+    BL_CASE_SUCCESS;
     while (1) {
+        bflb_platform_delay_ms(100);
     }
 }

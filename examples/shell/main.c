@@ -42,8 +42,9 @@ int main(void)
         device_control(uart, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT));
     }
 
+    BL_CASE_SUCCESS;
     while (1) {
-        __asm volatile("nop");
+        bflb_platform_delay_ms(100);
     }
 }
 

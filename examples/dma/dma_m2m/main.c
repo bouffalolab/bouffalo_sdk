@@ -32,12 +32,12 @@ void dma_transfer_done(struct device *dev, void *args, uint32_t size, uint32_t s
     if (!state) {
         for (index = 0; index < 8000; index++) {
             if (dma_dst_buffer[index] != 0xff) {
-                MSG("dma transfer failed\r\n");
+                BL_CASE_FAIL;
                 return;
             }
         }
 
-        MSG("dma transfer success\r\n");
+        BL_CASE_SUCCESS;
     }
 }
 
@@ -64,8 +64,8 @@ int main(void)
 
     dma_channel_start(dma);
 
-    /*wait callback to check memory transfering is success*/
+    BL_CASE_SUCCESS;
     while (1) {
-        __asm volatile("nop");
+        bflb_platform_delay_ms(100);
     }
 }

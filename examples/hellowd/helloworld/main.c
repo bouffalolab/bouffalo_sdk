@@ -27,8 +27,13 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    while (1) {
+    for (uint8_t i = 0; i < 10; i++) {
         MSG("hello world!\r\n");
-        bflb_platform_delay_ms(1000);
+        bflb_platform_delay_ms(200);
+    }
+
+    BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
     }
 }

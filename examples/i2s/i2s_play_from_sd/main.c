@@ -33,13 +33,30 @@
  *
  * This case use shell module to complete human-computer interaction.
  */
+
 #include "ff.h"
-#include "wav_play_form_sd_card.h"
+#include "fatfs_posix_api.h"
+#include "wav_play_from_sd_card.h"
+
+#ifdef SHELL_SUPPORT
+#include "hal_uart.h"
+#include "shell.h"
+#endif
 
 FATFS Fs_1;
 audio_dev_t Audio_Dev;
-
 void fatfs_sd_driver_register(void);
+
+#ifdef SHELL_SUPPORT
+void shell_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
+{
+    uint8_t data;
+    if (state == UART_EVENT_RX_FIFO) {
+        data = *(uint8_t *)args;
+        shell_handler(data);
+    }
+}
+#endif
 
 int main(void)
 {
@@ -49,6 +66,15 @@ int main(void)
 
     fatfs_sd_driver_register();
     sd_wav_play_register(&Audio_Dev);
+
+#ifdef SHELL_SUPPORT
+    shell_init();
+    struct device *uart = device_find("debug_log");
+    if (uart) {
+        device_set_callback(uart, shell_irq_callback);
+        device_control(uart, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT));
+    }
+#endif
 
     res = f_mount(&Fs_1, "sd:", 1);
     f_chdrive("sd:");
@@ -64,8 +90,9 @@ int main(void)
         MSG("fatfs open ERROR\r\n");
     }
 
-    /* start/stop test */
     Audio_Dev.audio_control(&Audio_Dev, AUDIO_CMD_START, NULL);
+
+    /* start/stop test */
     /*
     bflb_platform_delay_ms(10000);
     Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_STOP,NULL);
@@ -91,4 +118,7 @@ int main(void)
     Audio_Dev.audio_control(&Audio_Dev, AUDIO_CMD_VOLUME, (void *)30);
 
     BL_CASE_SUCCESS;
+    while (1) {
+        bflb_platform_delay_ms(100);
+    }
 }

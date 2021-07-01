@@ -43,6 +43,7 @@ void uart_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t s
         }
 
         MSG("\r\n");
+    } else {
     }
 }
 
