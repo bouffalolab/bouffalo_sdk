@@ -24,7 +24,7 @@ MEMORY
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
     itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 16K
     dtcm_memory (rx)  : ORIGIN = 0x42018000, LENGTH = 16K
-    ram_memory  (!rx) : ORIGIN = 0x4201C000, LENGTH = 96K
+    ram_memory  (!rx) : ORIGIN = 0x4201C000, LENGTH = 80K
 }
 
 SECTIONS
