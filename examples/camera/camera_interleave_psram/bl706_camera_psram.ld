@@ -23,9 +23,9 @@ HeapSize  = 0x1000; /*  4KB */
 MEMORY
 {
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
-    itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 10K
-    dtcm_memory (rx)  : ORIGIN = 0x42016800, LENGTH = 10K
-    ram_memory  (!rx) : ORIGIN = 0x42019000, LENGTH = 20K
+    itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 12K
+    dtcm_memory (rx)  : ORIGIN = 0x42017000, LENGTH = 10K
+    ram_memory  (!rx) : ORIGIN = 0x42019800, LENGTH = 18K
 }
 
 SECTIONS
