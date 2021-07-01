@@ -3,6 +3,20 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.2.3
+----------------------------
+
+新增功能说明：
+    1. 增加 case 输出成功和失败的 log 提示
+    2. 更新 cdk 工程，使用 minilibc 替代本地 libc
+    3. 更新 usb api 及其他文档说明
+
+修复问题说明：
+    1. 修改 bl702_flash.ld 文件中 ram 的实际大小
+    2. 修复 main 函数返回时一直重入的问题
+    3. 删除 hal driver 中不需要的内容
+    4. 修复 cdk 工程中编译 camera case 存在的问题
+
 bl mcu sdk Release V1.2.2
 ----------------------------
 
