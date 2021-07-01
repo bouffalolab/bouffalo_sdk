@@ -333,72 +333,33 @@ int usb_control(struct device *dev, int cmd, void *args)
 
                 offset++;
             }
-        } break;
-
+            break;
+        }
         case DEVICE_CTRL_CLR_INT /* constant-expression */:
-            /* code */
-
             break;
-
-        case DEVICE_CTRL_GET_INT /* constant-expression */:
-            /* code */
-            break;
-
-        case DEVICE_CTRL_CONFIG /* constant-expression */:
-            break;
-
-        case DEVICE_CTRL_GET_CONFIG /* constant-expression */:
-            break;
-
-        case DEVICE_CTRL_USB_DC_SET_ADDR /* constant-expression */:
-            USB_Set_Device_Addr(((uint32_t)args) & 0x7f);
-            return 0;
 
         case DEVICE_CTRL_USB_DC_SET_ACK /* constant-expression */:
             USB_Set_EPx_Status(USB_EP_GET_IDX(((uint32_t)args) & 0x7f), USB_EP_STATUS_ACK);
             return 0;
-
-        case DEVICE_CTRL_USB_DC_SET_NACK /* constant-expression */:
-            USB_Set_EPx_Status(USB_EP_GET_IDX(((uint32_t)args) & 0x7f), USB_EP_STATUS_NACK);
+        case DEVICE_CTRL_USB_DC_ENUM_ON: {
+            uint32_t tmpVal;
+            tmpVal = BL_RD_REG(GLB_BASE, GLB_USB_XCVR);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_USB_ENUM, 1);
+            BL_WR_REG(GLB_BASE, GLB_USB_XCVR, tmpVal);
             return 0;
-
-        case DEVICE_CTRL_USB_DC_SET_STALL /* constant-expression */: {
-            uint8_t ep_idx = USB_EP_GET_IDX(((uint32_t)args) & 0x7f);
-
-            if (USB_EP_DIR_IS_OUT(((uint32_t)args) & 0x7f)) {
-                USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_STALL);
-                usb_fs_device.out_ep[ep_idx].is_stalled = 1U;
-            } else {
-                USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_STALL);
-                usb_fs_device.in_ep[ep_idx].is_stalled = 1U;
-            }
         }
-
+        case DEVICE_CTRL_USB_DC_ENUM_OFF: {
+            uint32_t tmpVal;
+            tmpVal = BL_RD_REG(GLB_BASE, GLB_USB_XCVR);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_USB_ENUM, 0);
+            BL_WR_REG(GLB_BASE, GLB_USB_XCVR, tmpVal);
             return 0;
-
-        case DEVICE_CTRL_USB_DC_CLR_STALL /* constant-expression */: {
-            uint8_t ep_idx = USB_EP_GET_IDX(((uint32_t)args) & 0x7f);
-
-            if (USB_EP_DIR_IS_OUT(((uint32_t)args) & 0x7f)) {
-                USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_NSTALL);
-                usb_fs_device.out_ep[ep_idx].is_stalled = 0;
-            } else {
-                USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_NSTALL);
-                usb_fs_device.in_ep[ep_idx].is_stalled = 0;
-            }
         }
-
-            return 0;
-
-        case DEVICE_CTRL_USB_DC_GET_TX_FIFO_CNT:
+        case DEVICE_CTRL_USB_DC_GET_EP_TX_FIFO_CNT:
             return USB_Get_EPx_TX_FIFO_CNT(((uint32_t)args) & 0x7f);
 
-        case DEVICE_CTRL_USB_DC_GET_RX_FIFO_CNT:
+        case DEVICE_CTRL_USB_DC_GET_EP_RX_FIFO_CNT:
             return USB_Get_EPx_RX_FIFO_CNT(((uint32_t)args) & 0x7f);
-
-        case DEVICE_CTRL_USB_DC_GET_EP_FREE:
-            return USB_Is_EPx_RDY_Free(((uint32_t)args) & 0x7f);
-
         case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
             usb_device->tx_dma = (struct device *)args;
             break;
@@ -502,6 +463,19 @@ int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag)
 }
 
 /**
+ * @brief Set USB device address
+ *
+ * @param[in] addr Device address
+ *
+ * @return 0 on success, negative errno code on fail.
+ */
+int usb_dc_set_dev_address(const uint8_t addr)
+{
+    USB_Set_Device_Addr(addr);
+    return 0;
+}
+
+/**
  * @brief configure and enable endpoint
  * This function sets endpoint configuration according to one specified in USB
  * endpoint descriptor and then enables it for data transfers.
@@ -581,6 +555,54 @@ int usb_dc_ep_open(struct device *dev, const struct usb_dc_ep_cfg *ep_cfg)
     return 0;
 }
 
+int usb_dc_ep_close(const uint8_t ep)
+{
+    return 0;
+}
+
+/**
+ * @brief Set stall condition for the selected endpoint
+ *
+ * @param[in] ep Endpoint address corresponding to the one
+ *               listed in the device configuration table
+ *
+ * @return 0 on success, negative errno code on fail.
+ */
+int usb_dc_ep_set_stall(const uint8_t ep)
+{
+    uint8_t ep_idx = USB_EP_GET_IDX(ep);
+
+    if (USB_EP_DIR_IS_OUT(ep)) {
+        USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_STALL);
+        usb_fs_device.out_ep[ep_idx].is_stalled = 1U;
+    } else {
+        USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_STALL);
+        usb_fs_device.in_ep[ep_idx].is_stalled = 1U;
+    }
+    return 0;
+}
+/**
+ * @brief Clear stall condition for the selected endpoint
+ *
+ * @param[in] ep Endpoint address corresponding to the one
+ *               listed in the device configuration table
+ *
+ * @return 0 on success, negative errno code on fail.
+ */
+int usb_dc_ep_clear_stall(const uint8_t ep)
+{
+    uint8_t ep_idx = USB_EP_GET_IDX(ep);
+
+    if (USB_EP_DIR_IS_OUT(ep)) {
+        USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_NSTALL);
+        usb_fs_device.out_ep[ep_idx].is_stalled = 0;
+    } else {
+        USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_NSTALL);
+        usb_fs_device.in_ep[ep_idx].is_stalled = 0;
+    }
+    return 0;
+}
+
 /**
  * @brief Check if the selected endpoint is stalled
  *
@@ -643,12 +665,12 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
 
     /* Check if IN ep */
     if (USB_EP_GET_DIR(ep) != USB_EP_DIR_IN) {
-        return -1;
+        return -USB_DC_EP_DIR_ERR;
     }
 
     /* Check if ep enabled */
     if (!usb_ep_is_enabled(ep)) {
-        return -2;
+        return -USB_DC_EP_EN_ERR;
     }
 
     while (!USB_Is_EPx_RDY_Free(ep_idx)) {
@@ -656,21 +678,20 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
 
         if (!timeout) {
             USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
-            return -3;
+            return -USB_DC_EP_TIMEOUT_ERR;
         }
     }
 
-    // key = irq_lock();
-    if (!data) {
-        if (!data_len) {
-            /* Zero length packet */
-            /* Clear NAK and enable ep */
-            USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
-            return 0;
-        } else {
-            USB_DC_LOG_ERR("data is null\r\n");
-            return -4;
-        }
+    if (!data_len) {
+        /* Zero length packet */
+        /* Clear NAK and enable ep */
+        USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
+        return USB_DC_OK;
+    }
+
+    if (!data && data_len) {
+        USB_DC_LOG_ERR("data is null\r\n");
+        return -USB_DC_ADDR_ERR;
     }
 
     if (data_len > usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps) {
@@ -716,7 +737,7 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
         *ret_bytes = data_len;
     }
 
-    return 0;
+    return USB_DC_OK;
 }
 
 /**
@@ -748,13 +769,13 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
     /* Check if OUT ep */
     if (USB_EP_GET_DIR(ep) != USB_EP_DIR_OUT) {
         USB_DC_LOG_ERR("Wrong endpoint direction\r\n");
-        return -1;
+        return -USB_DC_EP_DIR_ERR;
     }
 
     /* Check if ep enabled */
     if (!usb_ep_is_enabled(ep)) {
         USB_DC_LOG_ERR("Not enabled endpoint\r\n");
-        return -1;
+        return -USB_DC_EP_EN_ERR;
     }
 
     /*common process for other ep out*/
@@ -784,7 +805,12 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
     if (!data_len) {
         /* Clear NAK and enable ep */
         USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
-        return 0;
+        return USB_DC_OK;
+    }
+
+    if (!data && data_len) {
+        USB_DC_LOG_ERR("data is null\r\n");
+        return -USB_DC_ADDR_ERR;
     }
 
     read_count = USB_Get_EPx_RX_FIFO_CNT(ep_idx);
@@ -799,7 +825,7 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
         *read_bytes = read_count;
     }
 
-    return 0;
+    return USB_DC_OK;
 }
 /**
  * @brief

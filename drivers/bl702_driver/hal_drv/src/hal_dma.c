@@ -89,7 +89,8 @@ int dma_open(struct device *dev, uint16_t oflag)
     DMA_Enable();
 
     Interrupt_Handler_Register(DMA_ALL_IRQn, DMA0_IRQ);
-
+    /* Enable uart interrupt*/
+    NVIC_EnableIRQ(DMA_ALL_IRQn);
     return 0;
 }
 /**
@@ -110,8 +111,6 @@ int dma_control(struct device *dev, int cmd, void *args)
             DMA_IntMask(dma_device->ch, DMA_INT_TCOMPLETED, UNMASK);
             DMA_IntMask(dma_device->ch, DMA_INT_ERR, UNMASK);
 
-            /* Enable uart interrupt*/
-            NVIC_EnableIRQ(DMA_ALL_IRQn);
             break;
 
         case DEVICE_CTRL_CLR_INT /* constant-expression */:
@@ -119,8 +118,6 @@ int dma_control(struct device *dev, int cmd, void *args)
             DMA_IntMask(dma_device->ch, DMA_INT_TCOMPLETED, MASK);
             DMA_IntMask(dma_device->ch, DMA_INT_ERR, MASK);
 
-            /* Enable uart interrupt*/
-            NVIC_DisableIRQ(DMA_ALL_IRQn);
             break;
 
         case DEVICE_CTRL_GET_INT /* constant-expression */:

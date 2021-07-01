@@ -87,21 +87,10 @@ _enter:
     li a2, 0
     call main
 
-    /* If we've made it back here then there's probably something wrong.  We
-     * allow the METAL to register a handler here. */
-    .weak __metal_after_main
-    la ra, __metal_after_main
-    beqz ra, 1f
-    jalr ra
-1:
+    csrci mstatus, (1 << 3)
 
-    /* If that handler returns then there's not a whole lot we can do.  Just
-     * try to make some noise. */
-     la t0, 1f
-     csrw mtvec, t0
-1:
-     lw t1, 0(x0)
-     j 1b
+__exit:
+    j __exit
 
     .cfi_endproc
 

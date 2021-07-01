@@ -39,7 +39,7 @@ int i2s_open(struct device *dev, uint16_t oflag)
     I2S_FifoCfg_Type fifoCfg = { 0 };
 
     GLB_Set_Chip_Out_0_CLK_Sel(GLB_CHIP_CLK_OUT_I2S_REF_CLK);
-    GLB_Set_I2S_CLK(ENABLE, GLB_I2S_OUT_REF_CLK_SRC);
+    GLB_Set_I2S_CLK(ENABLE, GLB_I2S_OUT_REF_CLK_NONE);
 
     /*Finding the right frequency*/
     if (12288000 % (i2s_device->sampl_freq_hz) == 0) {

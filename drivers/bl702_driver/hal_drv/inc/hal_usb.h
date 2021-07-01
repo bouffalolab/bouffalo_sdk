@@ -27,19 +27,13 @@
 #include "ring_buffer.h"
 #include "bl702_config.h"
 
-#define DEVICE_CTRL_USB_DC_SET_ADDR        0X10
-#define DEVICE_CTRL_USB_DC_SET_ACK         0X11
-#define DEVICE_CTRL_USB_DC_SET_NACK        0X12
-#define DEVICE_CTRL_USB_DC_SET_STALL       0X13
-#define DEVICE_CTRL_USB_DC_CLR_STALL       0X14
-#define DEVICE_CTRL_USB_DC_GET_STALL       0X15
-#define DEVICE_CTRL_USB_DC_CLR_NACK        0X16
-#define DEVICE_CTRL_USB_DC_CHECK_EPCAP     0X17
-#define DEVICE_CTRL_USB_DC_GET_TX_FIFO_CNT 0x18
-#define DEVICE_CTRL_USB_DC_GET_RX_FIFO_CNT 0x19
-#define DEVICE_CTRL_USB_DC_GET_EP_FREE     0x20
-#define DEVICE_CTRL_USB_DC_SET_TX_DMA      0x21
-#define DEVICE_CTRL_USB_DC_SET_RX_DMA      0x22
+#define DEVICE_CTRL_USB_DC_SET_ACK            0X10
+#define DEVICE_CTRL_USB_DC_ENUM_ON            0X11
+#define DEVICE_CTRL_USB_DC_ENUM_OFF           0X12
+#define DEVICE_CTRL_USB_DC_GET_EP_TX_FIFO_CNT 0x13
+#define DEVICE_CTRL_USB_DC_GET_EP_RX_FIFO_CNT 0x14
+#define DEVICE_CTRL_USB_DC_SET_TX_DMA         0x15
+#define DEVICE_CTRL_USB_DC_SET_RX_DMA         0x16
 
 enum usb_index_type {
 #ifdef BSP_USING_USB
@@ -166,8 +160,9 @@ enum usb_error_type {
     USB_DC_EP_DIR_ERR = 1,
     USB_DC_EP_EN_ERR = 2,
     USB_DC_EP_TIMEOUT_ERR = 3,
-    USB_DC_RB_SIZE_SMALL_ERR = 4,
-    USB_DC_ZLP_ERR = 5,
+    USB_DC_ADDR_ERR = 4,
+    USB_DC_RB_SIZE_SMALL_ERR = 5,
+    USB_DC_ZLP_ERR = 6,
 };
 /**
  * @brief USB Endpoint Configuration.
@@ -210,7 +205,11 @@ typedef struct usb_dc_device {
 
 int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag);
 
+int usb_dc_set_dev_address(const uint8_t addr);
 int usb_dc_ep_open(struct device *dev, const struct usb_dc_ep_cfg *ep_cfg);
+int usb_dc_ep_close(const uint8_t ep);
+int usb_dc_ep_set_stall(const uint8_t ep);
+int usb_dc_ep_clear_stall(const uint8_t ep);
 int usb_dc_ep_is_stalled(struct device *dev, const uint8_t ep, uint8_t *stalled);
 int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, uint32_t data_len, uint32_t *ret_bytes);
 int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t data_len, uint32_t *read_bytes);
