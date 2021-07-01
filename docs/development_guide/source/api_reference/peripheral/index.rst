@@ -11,7 +11,9 @@ Peripheral
     PWM 设备 <api_pwm>
     DMA 设备 <api_dma>
     I2C 设备 <api_i2c>
+    I2S 设备 <api_i2s>
     SPI 设备 <api_spi>
     ADC 设备 <api_adc>
     DAC 设备 <api_dac>
     TIMER 设备 <api_timer>
+    USB 设备 <api_usb>

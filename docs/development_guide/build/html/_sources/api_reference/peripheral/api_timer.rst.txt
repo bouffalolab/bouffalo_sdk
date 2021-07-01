@@ -120,7 +120,7 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 **timer_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-``timer_register`` 用来注册一个 TIMER 设备，注册该设备需要使用的标准接口，在注册之前需要打开对应 TIMER 设备的宏定义。例如定义宏 ``BSP_USING_TIMER_CH0`` 方可使用 ``TIMER_CH0_INDEX`` 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 ``TIMER_CH0_INDEX`` 设备。
+``timer_register`` 用来注册 TIMER 设备标准驱动接口，在注册之前需要打开对应 TIMER 设备的宏定义。例如定义宏 ``BSP_USING_TIMER_CH0`` 方可使用 ``TIMER_CH0_INDEX`` 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 ``TIMER_CH0_INDEX`` 设备。
 
 .. code-block:: C
 

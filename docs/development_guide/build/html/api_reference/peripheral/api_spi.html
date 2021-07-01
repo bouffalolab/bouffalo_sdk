@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3.7. SPI 设备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>3.8. SPI 设备 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../../genindex.html" />
     <link rel="search" title="搜索" href="../../search.html" />
-    <link rel="next" title="3.8. ADC 设备" href="api_adc.html" />
-    <link rel="prev" title="3.6. I2C 设备" href="api_i2c.html" /> 
+    <link rel="next" title="3.9. ADC 设备" href="api_adc.html" />
+    <link rel="prev" title="3.7. I2S 设备" href="api_i2s.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.3
+                0.2
               </div>
             
           
@@ -108,28 +108,30 @@
 <li class="toctree-l2"><a class="reference internal" href="api_pwm.html">3.4. PWM 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_dma.html">3.5. DMA 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_i2c.html">3.6. I2C 设备</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">3.7. SPI 设备</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">3.7.1. 简介</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">3.7.2. SPI 设备结构体定义</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">3.7.3. SPI 设备参数配置表</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">3.7.4. SPI 设备接口</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#spi-register">3.7.4.1. <strong>spi_register</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-open">3.7.4.2. <strong>device_open</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-close">3.7.4.3. <strong>device_close</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-control">3.7.4.4. <strong>device_control</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-write">3.7.4.5. <strong>device_write</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-read">3.7.4.6. <strong>device_read</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">3.7.4.7. <strong>device_set_callback</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#spi-transmit">3.7.4.8. <strong>spi_transmit</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#spi-receive">3.7.4.9. <strong>spi_receive</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#spi-transmit-receive">3.7.4.10. <strong>spi_transmit_receive</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2s.html">3.7. I2S 设备</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.8. SPI 设备</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">3.8.1. 简介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">3.8.2. SPI 设备结构体定义</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">3.8.3. SPI 设备参数配置表</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">3.8.4. SPI 设备接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#spi-register">3.8.4.1. <strong>spi_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">3.8.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-close">3.8.4.3. <strong>device_close</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-control">3.8.4.4. <strong>device_control</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-write">3.8.4.5. <strong>device_write</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-read">3.8.4.6. <strong>device_read</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">3.8.4.7. <strong>device_set_callback</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spi-transmit">3.8.4.8. <strong>spi_transmit</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spi-receive">3.8.4.9. <strong>spi_receive</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spi-transmit-receive">3.8.4.10. <strong>spi_transmit_receive</strong></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="api_adc.html">3.8. ADC 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_dac.html">3.9. DAC 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_timer.html">3.10. TIMER 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">3.9. ADC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">3.10. DAC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_timer.html">3.11. TIMER 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">3.12. USB 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">4. Shell</a></li>
@@ -205,7 +207,7 @@
         
           <li><a href="index.html"><span class="section-number">3. </span>Peripheral</a> &raquo;</li>
         
-      <li><span class="section-number">3.7. </span>SPI 设备</li>
+      <li><span class="section-number">3.8. </span>SPI 设备</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -225,9 +227,9 @@
            <div itemprop="articleBody">
             
   <div class="section" id="spi">
-<h1><span class="section-number">3.7. </span>SPI 设备<a class="headerlink" href="#spi" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">3.8. </span>SPI 设备<a class="headerlink" href="#spi" title="永久链接至标题">¶</a></h1>
 <div class="section" id="id1">
-<h2><span class="section-number">3.7.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">3.8.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>串行外设接口（Serial Peripheral Interface Bus, SPI）是一种用于短程通信的同步串行通信接口规范，装置之间使用全
 双工模式通信，是一个主机和一个或多个从机的主从模式。需要至少 4 根线，事实上 3 根也可以（单向传输时）, 包括
 SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选）。博流系列 MCU 中 SPI 设备具有以下特性：</p>
@@ -244,7 +246,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </ul>
 </div>
 <div class="section" id="id2">
-<h2><span class="section-number">3.7.2. </span>SPI 设备结构体定义<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">3.8.2. </span>SPI 设备结构体定义<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">spi_device</span>
 <span class="p">{</span>
     <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
@@ -305,7 +307,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">3.7.3. </span>SPI 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">3.8.3. </span>SPI 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <p>每一个 SPI 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,变量定义位于 <code class="docutils literal notranslate"><span class="pre">hal_spi.c</span></code> 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_SPI0</span></code> ，<code class="docutils literal notranslate"><span class="pre">SPI0_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">SPI0</span></code> 设备就可以进行注册和使用了。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*参数配置宏*/</span>
 <span class="cp">#if defined(BSP_USING_SPI0)</span>
@@ -339,11 +341,11 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">3.7.4. </span>SPI 设备接口<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">3.8.4. </span>SPI 设备接口<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <p>SPI 设备接口全部遵循标准设备驱动管理层提供的接口。</p>
 <div class="section" id="spi-register">
-<h3><span class="section-number">3.7.4.1. </span><strong>spi_register</strong><a class="headerlink" href="#spi-register" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">spi_register</span></code> 用来注册一个 SPI 设备，注册该设备需要使用的标准接口，在注册之前需要打开对应 SPI 设备的宏定义,例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_SPI0</span></code> 方可使用 SPI0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 SPI 设备。</p>
+<h3><span class="section-number">3.8.4.1. </span><strong>spi_register</strong><a class="headerlink" href="#spi-register" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">spi_register</span></code> 用来注册 SPI 设备标准驱动接口，在注册之前需要打开对应 SPI 设备的宏定义,例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_SPI0</span></code> 方可使用 SPI0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 SPI 设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">spi_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">flag</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -364,7 +366,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 </div>
 <div class="section" id="device-open">
-<h3><span class="section-number">3.7.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">spi_open</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
 </pre></div>
@@ -385,7 +387,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 </div>
 <div class="section" id="device-close">
-<h3><span class="section-number">3.7.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于设备的关闭。实际调用 <code class="docutils literal notranslate"><span class="pre">spi_close</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
 </pre></div>
@@ -396,7 +398,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </ul>
 </div>
 <div class="section" id="device-control">
-<h3><span class="section-number">3.7.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于根据命令对设备进行控制和参数的修改。实际调用 <code class="docutils literal notranslate"><span class="pre">spi_control</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
 </pre></div>
@@ -473,7 +475,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </table>
 </div>
 <div class="section" id="device-write">
-<h3><span class="section-number">3.7.4.5. </span><strong>device_write</strong><a class="headerlink" href="#device-write" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.5. </span><strong>device_write</strong><a class="headerlink" href="#device-write" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_write</span></code> 用于 SPI 设备数据的发送，发送方式根据打开方式可以是轮询、中断、dma。实际调用 <code class="docutils literal notranslate"><span class="pre">spi_write</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_write</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
 </pre></div>
@@ -487,7 +489,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </ul>
 </div>
 <div class="section" id="device-read">
-<h3><span class="section-number">3.7.4.6. </span><strong>device_read</strong><a class="headerlink" href="#device-read" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.6. </span><strong>device_read</strong><a class="headerlink" href="#device-read" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_read</span></code> 用于 SPI 设备数据的接收，接收方式根据打开方式可以是轮询、中断、dma。实际调用 <code class="docutils literal notranslate"><span class="pre">spi_read</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_read</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
 </pre></div>
@@ -501,7 +503,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </ul>
 </div>
 <div class="section" id="device-set-callback">
-<h3><span class="section-number">3.7.4.7. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.7. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 用于注册一个 SPI 设备中断回调函数。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
 </pre></div>
@@ -530,7 +532,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 </div>
 <div class="section" id="spi-transmit">
-<h3><span class="section-number">3.7.4.8. </span><strong>spi_transmit</strong><a class="headerlink" href="#spi-transmit" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.8. </span><strong>spi_transmit</strong><a class="headerlink" href="#spi-transmit" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">spi_transmit</span></code> 用于 SPI 设备数据的发送。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_transmit</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">type</span><span class="p">);</span>
 </pre></div>
@@ -550,7 +552,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 </div>
 <div class="section" id="spi-receive">
-<h3><span class="section-number">3.7.4.9. </span><strong>spi_receive</strong><a class="headerlink" href="#spi-receive" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.9. </span><strong>spi_receive</strong><a class="headerlink" href="#spi-receive" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">spi_receive</span></code> 用于 SPI 设备数据的接收。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_receive</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">type</span><span class="p">);</span>
 </pre></div>
@@ -563,7 +565,7 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </ul>
 </div>
 <div class="section" id="spi-transmit-receive">
-<h3><span class="section-number">3.7.4.10. </span><strong>spi_transmit_receive</strong><a class="headerlink" href="#spi-transmit-receive" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.8.4.10. </span><strong>spi_transmit_receive</strong><a class="headerlink" href="#spi-transmit-receive" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">spi_transmit_receive</span></code> 用于 SPI 设备数据的发送和接收。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_transmit_receive</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">send_buf</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">recv_buf</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">length</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">type</span><span class="p">);</span>
 </pre></div>
@@ -585,8 +587,8 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="api_adc.html" class="btn btn-neutral float-right" title="3.8. ADC 设备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="api_i2c.html" class="btn btn-neutral float-left" title="3.6. I2C 设备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_adc.html" class="btn btn-neutral float-right" title="3.9. ADC 设备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_i2s.html" class="btn btn-neutral float-left" title="3.7. I2S 设备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

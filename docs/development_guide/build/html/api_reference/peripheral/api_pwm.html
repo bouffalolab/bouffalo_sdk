@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3.4. PWM 设备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>3.4. PWM 设备 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.3
+                0.2
               </div>
             
           
@@ -125,10 +125,12 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api_dma.html">3.5. DMA 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_i2c.html">3.6. I2C 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_spi.html">3.7. SPI 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_adc.html">3.8. ADC 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_dac.html">3.9. DAC 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_timer.html">3.10. TIMER 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2s.html">3.7. I2S 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_spi.html">3.8. SPI 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">3.9. ADC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">3.10. DAC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_timer.html">3.11. TIMER 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">3.12. USB 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">4. Shell</a></li>
@@ -315,7 +317,7 @@
 <p>PWM 设备接口全部遵循标准设备驱动管理层提供的接口。并且为了方便用户调用，将某些标准接口使用宏来重定义。</p>
 <div class="section" id="pwm-register">
 <h3><span class="section-number">3.4.4.1. </span><strong>pwm_register</strong><a class="headerlink" href="#pwm-register" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">pwm_register</span></code> 用来注册一个 PWM 设备的一个通道，注册该设备需要使用的标准接口，在注册之前需要打开对应 PWM 设备某个通道的宏定义,例如定义 <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">PWM</span></code> 通道0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 PWM 设备。</p>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_register</span></code> 用来注册 PWM 设备的一个通道的标准驱动接口，在注册之前需要打开对应 PWM 设备某个通道的宏定义,例如定义 <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">PWM</span></code> 通道0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 PWM 设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">pwm_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">pwm_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">flag</span><span class="p">);</span>
 </pre></div>
 </div>
