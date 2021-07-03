@@ -197,6 +197,26 @@ typedef struct
     uint32_t rsvd    : 24; /*!< Reserved */
 } Efuse_Capcode_Info_Type;
 
+/**
+ *  @brief Efuse Ldo11 Vout Sel Trim definition
+ */
+typedef struct {
+    uint32_t sel_value                              :  4;    /*!< value trim */
+    uint32_t parity                                  :  1;    /*!< Parity of capcode */
+    uint32_t en                                      :  1;    /*!< Enable status */
+    uint32_t rsvd                                    : 26;    /*!< Reserved */
+}Efuse_Ldo11VoutSelTrim_Info_Type;
+
+/**
+ *  @brief Efuse Tx Power definition
+ */
+typedef struct {
+    uint32_t txpower                                 :  5;    /*!< txpower value  */
+    uint32_t parity                                  :  1;    /*!< Parity of capcode */
+    uint32_t en                                      :  1;    /*!< Enable status */
+    uint32_t rsvd                                    : 25;    /*!< Reserved */
+}Efuse_TxPower_Info_Type;
+
 /*@} end of group EF_CTRL_Public_Types */
 
 /** @defgroup  EF_CTRL_Public_Constants
