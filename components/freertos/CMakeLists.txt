@@ -19,7 +19,7 @@ file(GLOB_RECURSE sources "${CMAKE_CURRENT_SOURCE_DIR}/croutine.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/queue.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/tasks.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/timers.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/portable/memmang/heap_5.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/portable/MemMang/heap_5.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${mcu}/port.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${mcu}/portASM.S"
 )
