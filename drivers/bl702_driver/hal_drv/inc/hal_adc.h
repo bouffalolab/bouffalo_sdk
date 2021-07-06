@@ -41,6 +41,14 @@ enum adc_index_type {
     ADC_MAX_INDEX
 };
 
+enum ADC_event_type {
+    ADC_EVENT_FIFO_READY,
+    ADC_EVENT_OVERRUN,
+    ADC_EVENT_UNDERRUN,
+    ADC_EVEN_INT_POS_SATURATION,
+    ADC_EVEN_INT_NEG_SATURATION,
+};
+
 #define adc_channel_start(dev)        device_control(dev, DEVICE_CTRL_ADC_CHANNEL_START, NULL)
 #define adc_channel_stop(dev)         device_control(dev, DEVICE_CTRL_ADC_CHANNEL_STOP, NULL)
 #define adc_channel_config(dev, list) device_control(dev, DEVICE_CTRL_ADC_CHANNEL_CONFIG, list)
@@ -84,8 +92,8 @@ typedef enum {
 } adc_clk_div_t;
 
 typedef enum {
-    ADC_VREF_3P2V = 0, /* ADC select 3.2V as reference voltage */
-    ADC_VREF_2P0V = 1, /* ADC select 2V as reference voltage */
+    ADC_VREF_3V2 = 0, /* ADC select 3.2V as reference voltage */
+    ADC_VREF_2V = 1,  /* ADC select 2V as reference voltage */
 } adc_vref_t;
 
 /**

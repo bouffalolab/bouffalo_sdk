@@ -3080,6 +3080,7 @@ BL_Err_Type GLB_IR_LED_Driver_Ibias(uint8_t ibias)
 BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
 {
     uint8_t gpioPin = cfg->gpioPin;
+    uint8_t realPin;
     uint32_t *pOut;
     uint32_t pos;
     uint32_t tmpOut;
@@ -3099,8 +3100,15 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
     tmpOut &= (~(1 << pos));
     *pOut = tmpOut;
 
-    tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + gpioPin / 2 * 4);
-    if (gpioPin % 2 == 0) {
+    realPin = gpioPin;
+    /* sf pad use exclusive ie/pd/pu/drive/smtctrl */
+    if (gpioPin >= 23 && gpioPin <= 28) {
+        if ((BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (gpioPin - 23))) > 0) {
+            realPin += 9;
+        }
+    }
+    tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + realPin / 2 * 4);
+    if (realPin % 2 == 0) {
         if (cfg->gpioMode != GPIO_MODE_ANALOG) {
             /* not analog mode */
 
@@ -3173,7 +3181,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_GPIO_1_SMT, cfg->smtCtrl);
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_GPIO_1_FUNC_SEL, cfg->gpioFun);
     }
-    BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + gpioPin / 2 * 4, tmpVal);
+    BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + realPin / 2 * 4, tmpVal);
 
     *pOut = tmpOut;
 
@@ -3200,10 +3208,8 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
         BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
     }
 
-    if (gpioPin >= 32 && gpioPin <= 37) {
-        if (BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (gpioPin - 32))) {
-            gpioPin -= 9;
-
+    if (gpioPin >= 23 && gpioPin <= 28) {
+        if ((BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (gpioPin - 23))) > 0) {
             tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + gpioPin / 2 * 4);
             if (gpioPin % 2 == 0) {
                 tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_GPIO_0_FUNC_SEL, cfg->gpioFun);
@@ -3212,7 +3218,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
             }
             BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + gpioPin / 2 * 4, tmpVal);
 
-            /* GPIO32-GPIO37 use GPIO23-GPIO28 pinmux&&outputEn */
+            /* sf pad use GPIO23-GPIO28 pinmux&&outputEn */
             pOut = (uint32_t *)(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET + ((gpioPin >> 5) << 2));
             pos = gpioPin % 32;
             tmpOut = *pOut;
@@ -3352,13 +3358,6 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_OUTPUT_Enable(GLB_GPIO_Type gpioPin)
 {
     uint32_t tmpVal;
 
-    /* GPIO32-GPIO37 use GPIO23-GPIO28 pinmux&&outputEn */
-    if (gpioPin >= 32 && gpioPin <= 37) {
-        if (BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (gpioPin - 32))) {
-            gpioPin -= 9;
-        }
-    }
-
     tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_CFGCTL34);
     tmpVal = tmpVal | (1 << gpioPin);
     BL_WR_REG(GLB_BASE, GLB_GPIO_CFGCTL34, tmpVal);
@@ -3377,13 +3376,6 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_OUTPUT_Enable(GLB_GPIO_Type gpioPin)
 BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_OUTPUT_Disable(GLB_GPIO_Type gpioPin)
 {
     uint32_t tmpVal;
-
-    /* GPIO32-GPIO37 use GPIO23-GPIO28 pinmux&&outputEn */
-    if (gpioPin >= 32 && gpioPin <= 37) {
-        if (BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (gpioPin - 32))) {
-            gpioPin -= 9;
-        }
-    }
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_CFGCTL34);
     tmpVal = tmpVal & ~(1 << gpioPin);
@@ -3419,7 +3411,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Set_HZ(GLB_GPIO_Type gpioPin)
     }
 
     realPin = gpioPin;
-    /* GPIO32-GPIO37 use exclusive ie/pd/pu/drive/smtctrl */
+    /* sf pad use exclusive ie/pd/pu/drive/smtctrl */
     if (gpioPin >= 23 && gpioPin <= 28) {
         if ((BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (gpioPin - 23))) > 0) {
             realPin += 9;
@@ -3463,6 +3455,78 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Set_HZ(GLB_GPIO_Type gpioPin)
     return SUCCESS;
 }
 
+BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Pad_HZ(void)
+{
+    uint32_t tmpVal;
+    uint32_t offset;
+
+    for(offset=23; offset<=28; offset++){
+        tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
+        /* pu=0, pd=0, ie=0 */
+        if (offset % 2 == 0) {
+            tmpVal = (tmpVal & 0xffffff00);
+        } else {
+            tmpVal = (tmpVal & 0xff00ffff);
+        }
+        BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4, tmpVal);
+
+        if ((BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (offset - 23))) == 0) {
+            tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
+            /* func_sel=swgpio */
+            if (offset % 2 == 0) {
+                tmpVal = (tmpVal & 0xffff00ff);
+                tmpVal |= 0x0B00;
+            } else {
+                tmpVal = (tmpVal & 0x00ffffff);
+                tmpVal |= (0x0B00 << 16);
+            }
+            BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4, tmpVal);
+        }
+    }
+
+    tmpVal = BL_RD_WORD(GLB_BASE+GLB_GPIO_OUTPUT_EN_OFFSET);
+    tmpVal &= 0xE07FFFFF;
+    BL_WR_WORD(GLB_BASE+GLB_GPIO_OUTPUT_EN_OFFSET, tmpVal);
+
+    return SUCCESS;
+}
+
+BL_Err_Type ATTR_TCM_SECTION GLB_Set_Psram_Pad_HZ(void)
+{
+    uint32_t tmpVal;
+    uint32_t offset;
+
+    for(offset=32; offset<=37; offset++){
+        tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
+        /* pu=0, pd=0, ie=0 */
+        if (offset % 2 == 0) {
+            tmpVal = (tmpVal & 0xffffff00);
+        } else {
+            tmpVal = (tmpVal & 0xff00ffff);
+        }
+        BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4, tmpVal);
+
+        if ((BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (offset - 32))) > 0) {
+            tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset-9) / 2 * 4);
+            /* func_sel=swgpio */
+            if ((offset-9) % 2 == 0) {
+                tmpVal = (tmpVal & 0xffff00ff);
+                tmpVal |= 0x0B00;
+            } else {
+                tmpVal = (tmpVal & 0x00ffffff);
+                tmpVal |= (0x0B00 << 16);
+            }
+            BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset-9) / 2 * 4, tmpVal);
+        }
+    }
+
+    tmpVal = BL_RD_WORD(GLB_BASE+GLB_GPIO_OUTPUT_EN_OFFSET+4);
+    tmpVal &= 0xFFFFFFC0;
+    BL_WR_WORD(GLB_BASE+GLB_GPIO_OUTPUT_EN_OFFSET+4, tmpVal);
+
+    return SUCCESS;
+}
+
 /****************************************************************************/ /**
  * @brief  Get GPIO function
  *
@@ -3498,11 +3562,6 @@ uint8_t ATTR_TCM_SECTION GLB_GPIO_Get_Fun(GLB_GPIO_Type gpioPin)
 *******************************************************************************/
 BL_Err_Type GLB_GPIO_Write(GLB_GPIO_Type gpioPin, uint32_t val)
 {
-    if (gpioPin >= 32 && gpioPin <= 37) {
-        if (BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (gpioPin - 32))) {
-            gpioPin -= 9;
-        }
-    }
     uint32_t *pOut = (uint32_t *)(GLB_BASE + GLB_GPIO_OUTPUT_OFFSET + ((gpioPin >> 5) << 2));
     uint32_t pos = gpioPin % 32;
     uint32_t tmpOut;
@@ -3528,11 +3587,6 @@ BL_Err_Type GLB_GPIO_Write(GLB_GPIO_Type gpioPin, uint32_t val)
 *******************************************************************************/
 uint32_t GLB_GPIO_Read(GLB_GPIO_Type gpioPin)
 {
-    if (gpioPin >= 32 && gpioPin <= 37) {
-        if (BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (gpioPin - 32))) {
-            gpioPin -= 9;
-        }
-    }
     uint32_t *p = (uint32_t *)(GLB_BASE + GLB_GPIO_INPUT_OFFSET + ((gpioPin >> 5) << 2));
     uint32_t pos = gpioPin % 32;
 
@@ -3654,7 +3708,7 @@ BL_Err_Type GLB_Set_GPIO_IntMod(GLB_GPIO_Type gpioPin, GLB_GPIO_INT_CONTROL_Type
         tmpVal = (tmpVal & ~(0x7 << (3 * tmpGpioPin))) | (((intCtlMod << 2) | intTrgMod) << (3 * tmpGpioPin));
         BL_WR_REG(GLB_BASE, GLB_GPIO_INT_MODE_SET3, tmpVal);
     } else {
-        /* GPIO30 ~ GPIO31, GPIO32 ~ GPIO37 not recommend */
+        /* GPIO30 ~ GPIO31 not recommend */
         tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_INT_MODE_SET4);
         tmpGpioPin = gpioPin - GLB_GPIO_PIN_30;
         tmpVal = (tmpVal & ~(0x7 << (3 * tmpGpioPin))) | (((intCtlMod << 2) | intTrgMod) << (3 * tmpGpioPin));
@@ -3696,7 +3750,7 @@ GLB_GPIO_INT_CONTROL_Type GLB_Get_GPIO_IntCtlMod(GLB_GPIO_Type gpioPin)
         tmpVal = (tmpVal & (0x7 << (bitVal * 3))) >> (bitVal * 3);
         return (tmpVal >> 2) ? GLB_GPIO_INT_CONTROL_ASYNC : GLB_GPIO_INT_CONTROL_SYNC;
     } else {
-        /* GPIO30 ~ GPIO31, GPIO32 ~ GPIO37 not recommend */
+        /* GPIO30 ~ GPIO31 not recommend */
         bitVal = gpioPin - 30;
         tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_INT_MODE_SET4);
         tmpVal = (tmpVal & (0x7 << (bitVal * 3))) >> (bitVal * 3);
@@ -3815,7 +3869,7 @@ BL_Err_Type GLB_Set_GPIO_Int2Mod(GLB_GPIO_Type gpioPin, GLB_GPIO_INT_CONTROL_Typ
         tmpVal = (tmpVal & ~(0x7 << (3 * tmpGpioPin))) | (((intCtlMod << 2) | intTrgMod) << (3 * tmpGpioPin));
         BL_WR_REG(GLB_BASE, GLB_GPIO_INT2_MODE_SET3, tmpVal);
     } else {
-        /* GPIO30 ~ GPIO31, GPIO32 ~ GPIO37 not recommend */
+        /* GPIO30 ~ GPIO31 not recommend */
         tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_INT2_MODE_SET4);
         tmpGpioPin = gpioPin - GLB_GPIO_PIN_30;
         tmpVal = (tmpVal & ~(0x7 << (3 * tmpGpioPin))) | (((intCtlMod << 2) | intTrgMod) << (3 * tmpGpioPin));
@@ -3857,7 +3911,7 @@ GLB_GPIO_INT_CONTROL_Type GLB_Get_GPIO_Int2CtlMod(GLB_GPIO_Type gpioPin)
         tmpVal = (tmpVal & (0x7 << (bitVal * 3))) >> (bitVal * 3);
         return (tmpVal >> 2) ? GLB_GPIO_INT_CONTROL_ASYNC : GLB_GPIO_INT_CONTROL_SYNC;
     } else {
-        /* GPIO30 ~ GPIO31, GPIO32 ~ GPIO37 not recommend */
+        /* GPIO30 ~ GPIO31 not recommend */
         bitVal = gpioPin - 30;
         tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_INT2_MODE_SET4);
         tmpVal = (tmpVal & (0x7 << (bitVal * 3))) >> (bitVal * 3);

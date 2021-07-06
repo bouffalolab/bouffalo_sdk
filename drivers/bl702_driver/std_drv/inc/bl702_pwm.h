@@ -185,6 +185,8 @@ void PWM_Channel_Disable(PWM_CH_ID_Type ch);
 void PWM_SW_Mode(PWM_CH_ID_Type ch, BL_Fun_Type enable);
 void PWM_SW_Force_Value(PWM_CH_ID_Type ch, uint8_t value);
 void PWM_Int_Callback_Install(PWM_CH_ID_Type ch, uint32_t intType, intCallback_Type *cbFun);
+BL_Err_Type PWM_Smart_Configure(PWM_CH_ID_Type ch, uint32_t frequency, uint8_t dutyCycle);
+
 
 /*@} end of group PWM_Public_Functions */
 

@@ -25,12 +25,16 @@
 #include "bl702_glb.h"
 #include "hal_cam.h"
 
+static intCallback_Type *camIntCbfArra[CAM_INT_ALL] = { NULL };
+
+void CAMERA_IRQ(void);
+
 /**
  * @brief
  *
  * @param cam_cfg
  */
-void cam_init(cam_device_t *cam_cfg)
+void cam_init(cam_device_t *cam_cfg, uint16_t oflag)
 {
     CAM_CFG_Type camera_cfg = {
         .swMode = cam_cfg->software_mode,
@@ -51,6 +55,10 @@ void cam_init(cam_device_t *cam_cfg)
         .frameSize1 = cam_cfg->cam_frame_size1,
     };
     CAM_Init(&camera_cfg);
+
+    if (oflag == DEVICE_OFLAG_INT) {
+        Interrupt_Handler_Register(CAM_IRQn, CAMERA_IRQ);
+    }
 }
 
 /**
@@ -138,3 +146,101 @@ void cam_vsync_crop(uint16_t start, uint16_t end)
 {
     CAM_Vsync_Crop(start, end);
 }
+
+void cam_hw_mode_wrap(uint8_t enable)
+{
+    CAM_HW_Mode_Wrap(enable);
+}
+
+void cam_isr(cam_device_t *handle)
+{
+}
+
+#ifdef BSP_USING_CAM
+
+void CAM_Int_Callback_set(CAM_INT_Type intType, intCallback_Type *cbFun)
+{
+    /* Check the parameters */
+    CHECK_PARAM(IS_CAM_INT_TYPE(intType));
+
+    camIntCbfArra[intType] = cbFun;
+}
+
+void CAMERA_IRQ(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(CAM_BASE, CAM_DVP_STATUS_AND_ERROR);
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_NORMAL_INT_0)) {
+        CAM_IntClr(CAM_INT_NORMAL_0);
+        if (camIntCbfArra[CAM_INT_NORMAL_0] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_NORMAL_0]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_NORMAL_INT_1)) {
+        CAM_IntClr(CAM_INT_NORMAL_1);
+        if (camIntCbfArra[CAM_INT_NORMAL_1] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_NORMAL_1]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_MEM_INT_0)) {
+        CAM_IntClr(CAM_INT_MEMORY_OVERWRITE_0);
+        if (camIntCbfArra[CAM_INT_MEMORY_OVERWRITE_0] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_MEMORY_OVERWRITE_0]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_MEM_INT_1)) {
+        CAM_IntClr(CAM_INT_MEMORY_OVERWRITE_1);
+        if (camIntCbfArra[CAM_INT_MEMORY_OVERWRITE_1] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_MEMORY_OVERWRITE_1]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_FRAME_INT_0)) {
+        CAM_IntClr(CAM_INT_FRAME_OVERWRITE_0);
+        if (camIntCbfArra[CAM_INT_FRAME_OVERWRITE_0] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_FRAME_OVERWRITE_0]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_FRAME_INT_1)) {
+        CAM_IntClr(CAM_INT_FRAME_OVERWRITE_1);
+        if (camIntCbfArra[CAM_INT_FRAME_OVERWRITE_1] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_FRAME_OVERWRITE_1]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_FIFO_INT_0)) {
+        CAM_IntClr(CAM_INT_FIFO_OVERWRITE_0);
+        if (camIntCbfArra[CAM_INT_FIFO_OVERWRITE_0] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_FIFO_OVERWRITE_0]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_FIFO_INT_1)) {
+        CAM_IntClr(CAM_INT_FIFO_OVERWRITE_1);
+        if (camIntCbfArra[CAM_INT_FIFO_OVERWRITE_1] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_FIFO_OVERWRITE_1]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_HCNT_INT)) {
+        CAM_IntClr(CAM_INT_HSYNC_CNT_ERROR);
+        if (camIntCbfArra[CAM_INT_HSYNC_CNT_ERROR] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_HSYNC_CNT_ERROR]();
+        }
+    }
+    if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_VCNT_INT)) {
+        CAM_IntClr(CAM_INT_VSYNC_CNT_ERROR);
+        if (camIntCbfArra[CAM_INT_VSYNC_CNT_ERROR] != NULL) {
+            /* call the callback function */
+            camIntCbfArra[CAM_INT_VSYNC_CNT_ERROR]();
+        }
+    }
+}
+
+#endif

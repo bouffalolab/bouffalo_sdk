@@ -58,12 +58,6 @@ enum gpio_pin_type {
     GPIO_PIN_29,
     GPIO_PIN_30,
     GPIO_PIN_31,
-    GPIO_PIN_32,
-    GPIO_PIN_33,
-    GPIO_PIN_34,
-    GPIO_PIN_35,
-    GPIO_PIN_36,
-    GPIO_PIN_37,
     GPIO_PIN_MAX,
 };
 

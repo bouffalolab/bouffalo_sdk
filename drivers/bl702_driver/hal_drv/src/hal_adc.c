@@ -102,6 +102,50 @@ int adc_close(struct device *dev)
     ADC_Disable();
     return 0;
 }
+
+/**
+ * @brief Check whether Channel Corresponding IO is configed success by Board System
+ *
+ * @param pos_list pos channel list
+ * @param neg_list negative channel list
+ * @param channelNum channel number
+ */
+uint8_t adc_check_channel_status(uint8_t *pos_list, uint8_t *neg_list, uint16_t channelNum)
+{
+    uint16_t i = 0;
+
+    uint8_t channel_io_reference_table[] = {
+        GPIO_PIN_8,  /* CH0 IO */
+        GPIO_PIN_15, /* CH1 IO */
+        GPIO_PIN_17, /* CH2 IO */
+        GPIO_PIN_11, /* CH3 IO */
+        GPIO_PIN_12, /* CH4 IO */
+        GPIO_PIN_14, /* CH5 IO */
+        0xff,        /* CH6 IO */
+        0xff,        /* CH7 IO */
+        GPIO_PIN_18, /* CH8 IO */
+        GPIO_PIN_19, /* CH9 IO */
+        GPIO_PIN_20, /* CH10 IO */
+        GPIO_PIN_21, /* CH11 IO */
+
+    };
+
+    for (i = 0; i < channelNum; i++) {
+        if (pos_list[i] > ADC_CHANNEL11) {
+            continue;
+        }
+
+        if (channel_io_reference_table[pos_list[i]] == 0xff) {
+            return ERROR;
+        }
+
+        if (GLB_GPIO_Get_Fun(channel_io_reference_table[pos_list[i]]) != GPIO_FUN_ANALOG) {
+            return ERROR;
+        }
+    }
+
+    return SUCCESS;
+}
 /**
  * @brief
  *
@@ -114,6 +158,7 @@ int adc_control(struct device *dev, int cmd, void *args)
 {
     adc_device_t *adc_device = (adc_device_t *)dev;
     adc_channel_cfg_t *adc_channel_cfg = (adc_channel_cfg_t *)args;
+    uint8_t rlt = 0;
 
     switch (cmd) {
         case DEVICE_CTRL_SET_INT /* constant-expression */:
@@ -135,8 +180,10 @@ int adc_control(struct device *dev, int cmd, void *args)
         case DEVICE_CTRL_ADC_CHANNEL_CONFIG /* constant-expression */:
             if (adc_channel_cfg->num == 1) {
                 ADC_Channel_Config(*adc_channel_cfg->pos_channel, *adc_channel_cfg->neg_channel, adc_device->continuous_conv_mode);
+                rlt = adc_check_channel_status(adc_channel_cfg->pos_channel, adc_channel_cfg->neg_channel, 1);
             } else {
                 ADC_Scan_Channel_Config(adc_channel_cfg->pos_channel, adc_channel_cfg->neg_channel, adc_channel_cfg->num, adc_device->continuous_conv_mode);
+                rlt = adc_check_channel_status(adc_channel_cfg->pos_channel, adc_channel_cfg->neg_channel, adc_channel_cfg->num);
             }
 
             break;
@@ -171,7 +218,7 @@ int adc_control(struct device *dev, int cmd, void *args)
             break;
     }
 
-    return 0;
+    return rlt;
 }
 // int adc_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 // {
@@ -247,3 +294,45 @@ int adc_register(enum adc_index_type index, const char *name, uint16_t flag)
 
     return device_register(dev, name, flag);
 }
+
+/**
+ * @brief
+ *
+ * @param handle
+ */
+void adc_isr(adc_device_t *handle)
+{
+    if (!handle->parent.callback)
+        return;
+
+    if (ADC_GetIntStatus(ADC_INT_POS_SATURATION) == SET && ADC_IntGetMask(ADC_INT_POS_SATURATION) == UNMASK) {
+        ADC_IntClr(ADC_INT_POS_SATURATION);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_POS_SATURATION);
+    }
+
+    if (ADC_GetIntStatus(ADC_INT_NEG_SATURATION) == SET && ADC_IntGetMask(ADC_INT_NEG_SATURATION) == UNMASK) {
+        ADC_IntClr(ADC_INT_NEG_SATURATION);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_NEG_SATURATION);
+    }
+
+    if (ADC_GetIntStatus(ADC_INT_FIFO_UNDERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_UNDERRUN) == UNMASK) {
+        ADC_IntClr(ADC_INT_FIFO_UNDERRUN);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_FIFO_UNDERRUN);
+    }
+
+    if (ADC_GetIntStatus(ADC_INT_FIFO_OVERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_OVERRUN) == UNMASK) {
+        ADC_IntClr(ADC_INT_FIFO_OVERRUN);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_FIFO_OVERRUN);
+    }
+
+    if (ADC_GetIntStatus(ADC_INT_FIFO_READY) == SET && ADC_IntGetMask(ADC_INT_FIFO_READY) == UNMASK) {
+        ADC_IntClr(ADC_INT_FIFO_READY);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_FIFO_READY);
+    }
+}
+#ifdef BSP_USING_ADC0
+void ADC_IRQ(void)
+{
+    adc_isr(&adcx_device[ADC0_INDEX]);
+}
+#endif

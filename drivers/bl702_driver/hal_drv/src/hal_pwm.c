@@ -95,12 +95,6 @@ int pwm_control(struct device *dev, int cmd, void *args)
 
     switch (cmd) {
         case DEVICE_CTRL_CONFIG /* constant-expression */:
-            if (pwm_device->period > peripheral_clock_get(PERIPHERAL_CLOCK_PWM))
-                return -1;
-
-            BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_PERIOD, (uint32_t)args);
-            BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_THRE1, pwm_detycycle_config->threshold_low);
-            BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_THRE2, pwm_detycycle_config->threshold_high);
             break;
         case DEVICE_CTRL_RESUME /* constant-expression */:
             PWM_Channel_Enable(pwm_device->ch);
@@ -111,9 +105,9 @@ int pwm_control(struct device *dev, int cmd, void *args)
             break;
         case DEIVCE_CTRL_PWM_FREQUENCE_CONFIG:
 
-            if (pwm_device->period > peripheral_clock_get(PERIPHERAL_CLOCK_PWM))
+            if ((uint32_t)args > peripheral_clock_get(PERIPHERAL_CLOCK_PWM))
                 return -1;
-
+            pwm_device->period = (uint32_t)args;
             BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_PERIOD, (uint32_t)args);
             break;
         case DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG:

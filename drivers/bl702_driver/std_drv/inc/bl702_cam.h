@@ -282,6 +282,7 @@ void CAM_Planar_Pop_Frame(void);
 void CAM_IntMask(CAM_INT_Type intType, BL_Mask_Type intMask);
 void CAM_IntClr(CAM_INT_Type intType);
 void CAM_Int_Callback_Install(CAM_INT_Type intType, intCallback_Type *cbFun);
+void CAM_HW_Mode_Wrap(BL_Fun_Type enable);
 
 /*@} end of group CAM_Public_Functions */
 

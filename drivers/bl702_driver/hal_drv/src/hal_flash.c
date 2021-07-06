@@ -59,6 +59,23 @@ int flash_read_jedec_id(uint8_t *data)
 }
 
 /**
+ * @brief read flash data via xip
+ *
+ * @param addr
+ * @param data
+ * @param len
+ * @return BL_Err_Type
+ */
+BL_Err_Type flash_read_via_xip(uint32_t addr, uint8_t *data, uint32_t len)
+{
+    L1C_Cache_Flush(0xf);
+    XIP_SFlash_Read_Via_Cache_Need_Lock(addr, data, len);
+    L1C_Cache_Flush(0x0);
+
+    return 0;
+}
+
+/**
  * @brief read xip data
  *
  * @param addr
@@ -68,10 +85,7 @@ int flash_read_jedec_id(uint8_t *data)
  */
 BL_Err_Type flash_read_xip(uint32_t addr, uint8_t *data, uint32_t len)
 {
-    BL702_MemCpy_Fast(data,
-                      (uint8_t *)(BL702_FLASH_XIP_BASE + addr - SF_Ctrl_Get_Flash_Image_Offset()),
-                      len);
-    return 0;
+    return XIP_SFlash_Read_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, addr, data, len);
 }
 
 /**
@@ -94,9 +108,9 @@ BL_Err_Type flash_write_xip(uint32_t addr, uint8_t *data, uint32_t len)
  * @param endaddr
  * @return BL_Err_Type
  */
-BL_Err_Type flash_erase_xip(uint32_t startaddr, uint32_t endaddr)
+BL_Err_Type flash_erase_xip(uint32_t startaddr, uint32_t len)
 {
-    return XIP_SFlash_Erase_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, startaddr, endaddr - startaddr + 1);
+    return XIP_SFlash_Erase_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, startaddr, len);
 }
 
 /**

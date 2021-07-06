@@ -272,11 +272,11 @@ int i2s_control(struct device *dev, int cmd, void *args)
             /* code */
             break;
 
-        case DEVICE_CTRL_I2S_ATTACH_TX_DMA /* constant-expression */:
+        case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
             i2s_device->tx_dma = (struct device *)args;
             break;
 
-        case DEVICE_CTRL_I2S_ATTACH_RX_DMA /* constant-expression */:
+        case DEVICE_CTRL_ATTACH_RX_DMA /* constant-expression */:
             i2s_device->rx_dma = (struct device *)args;
             break;
 

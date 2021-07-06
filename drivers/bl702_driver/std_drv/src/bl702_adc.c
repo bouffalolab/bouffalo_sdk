@@ -522,8 +522,8 @@ void ADC_Parse_Result(uint32_t *orgVal, uint32_t len, ADC_Result_Type *result)
     dataType = BL_GET_REG_BITS_VAL(tmpVal1, AON_GPADC_RES_SEL);
     sigType = BL_GET_REG_BITS_VAL(tmpVal2, AON_GPADC_DIFF_MODE);
 
-    if (BL_GET_REG_BITS_VAL(tmpVal2, AON_GPADC_VREF_SEL) == ADC_VREF_3P3V) {
-        ref = 3.3;
+    if (BL_GET_REG_BITS_VAL(tmpVal2, AON_GPADC_VREF_SEL) == ADC_VREF_3P2V) {
+        ref = 3.2;
     }
 
     if (sigType == ADC_INPUT_SINGLE_END) {
@@ -569,6 +569,58 @@ void ADC_Parse_Result(uint32_t *orgVal, uint32_t len, ADC_Result_Type *result)
                 result[i].volt = -result[i].volt;
             }
         }
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  ADC mask or unmask certain or all interrupt
+ *
+ * @param  intType: interrupt type
+ * @param  intMask: mask or unmask
+ *
+ * @return None
+ *  
+*******************************************************************************/
+BL_Mask_Type ADC_IntGetMask(ADC_INT_Type intType)
+{
+    uint32_t tmpVal;
+
+    /* Check the parameters */
+    CHECK_PARAM(IS_GPIP_ADC_INT_TYPE(intType));
+    CHECK_PARAM(IS_BL_MASK_TYPE(intMask));
+
+    switch (intType) {
+        case ADC_INT_POS_SATURATION:
+            tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_ISR);
+            return BL_IS_REG_BIT_SET(tmpVal, AON_GPADC_POS_SATUR_MASK);
+            break;
+
+        case ADC_INT_NEG_SATURATION:
+            tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_ISR);
+            return BL_IS_REG_BIT_SET(tmpVal, AON_GPADC_NEG_SATUR_MASK);
+            break;
+
+        case ADC_INT_FIFO_UNDERRUN:
+            tmpVal = BL_RD_REG(AON_BASE, GPIP_GPADC_CONFIG);
+            return BL_IS_REG_BIT_SET(tmpVal, GPIP_GPADC_FIFO_UNDERRUN_MASK);
+            break;
+
+        case ADC_INT_FIFO_OVERRUN:
+            tmpVal = BL_RD_REG(AON_BASE, GPIP_GPADC_CONFIG);
+            return BL_IS_REG_BIT_SET(tmpVal, GPIP_GPADC_FIFO_OVERRUN_MASK);
+            break;
+
+        case ADC_INT_ADC_READY:
+            tmpVal = BL_RD_REG(AON_BASE, GPIP_GPADC_CONFIG);
+            return BL_IS_REG_BIT_SET(tmpVal, GPIP_GPADC_RDY_MASK);
+            break;
+
+        case ADC_INT_FIFO_READY:
+            tmpVal = BL_RD_REG(AON_BASE, GPIP_GPADC_CONFIG);
+            return BL_IS_REG_BIT_SET(tmpVal, GPIP_GPADC_FIFO_RDY_MASK);
+            break;
+        default:
+            break;
     }
 }
 

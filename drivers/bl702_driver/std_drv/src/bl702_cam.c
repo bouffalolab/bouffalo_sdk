@@ -633,6 +633,22 @@ void CAM_Int_Callback_Install(CAM_INT_Type intType, intCallback_Type *cbFun)
 }
 
 /****************************************************************************/ /**
+ * @brief  CAM hardware mode with frame start address wrap to memory address start function enable or disable
+ *
+ * @param  enable: Enable or disable
+ * @return None
+ *
+*******************************************************************************/
+void CAM_HW_Mode_Wrap(BL_Fun_Type enable)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(CAM_BASE, CAM_DVP2AXI_CONFIGUE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CAM_REG_HW_MODE_FWRAP, enable);
+    BL_WR_REG(CAM_BASE, CAM_DVP2AXI_CONFIGUE, tmpVal);
+}
+
+/****************************************************************************/ /**
  * @brief  Camera interrupt handler
  *
  * @param  None

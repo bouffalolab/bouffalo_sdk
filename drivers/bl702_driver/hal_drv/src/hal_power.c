@@ -1433,19 +1433,6 @@ int lp_enter_pds(uint32_t sleep_time, void (*preCbFun)(void), void (*postCbFun)(
     return 0;
 }
 
-/****************************************************************************/ /**
- * @brief  Make buf word
- *
- * @param  data: Data
- *
- * @return Word data
- *
-*******************************************************************************/
-static uint32_t put_word_buf(uint8_t data)
-{
-    return (data << 24) + (data << 16) + (data << 8) + data;
-}
-
 /**
  * @brief enter cpu into hbn mode
  *

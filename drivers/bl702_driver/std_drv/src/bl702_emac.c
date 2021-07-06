@@ -260,9 +260,9 @@ BL_Err_Type EMAC_Init(EMAC_CFG_Type *cfg)
 
     EMAC_SetMACAddress(cfg->macAddr);
 
-#ifndef BFLB_USE_HAL_DRIVER
+    void EMAC_IRQHandler(void);
     Interrupt_Handler_Register(EMAC_IRQn, EMAC_IRQHandler);
-#endif
+
     return SUCCESS;
 }
 

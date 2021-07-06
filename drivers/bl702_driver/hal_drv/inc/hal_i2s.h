@@ -26,10 +26,8 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
-#define I2S_GET_TX_FIFO_CMD           0x10
-#define I2S_GET_RX_FIFO_CMD           0x11
-#define DEVICE_CTRL_I2S_ATTACH_TX_DMA 0x12
-#define DEVICE_CTRL_I2S_ATTACH_RX_DMA 0x13
+#define I2S_GET_TX_FIFO_CMD 0x10
+#define I2S_GET_RX_FIFO_CMD 0x11
 
 enum i2s_index_type {
 #ifdef BSP_USING_I2S0

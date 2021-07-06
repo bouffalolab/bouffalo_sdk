@@ -304,8 +304,6 @@ int usb_close(struct device *dev)
     usb_set_power_off();
 
     usb_xcvr_config(DISABLE);
-    GLB_Set_USB_CLK(DISABLE);
-
     return 0;
 }
 /**
@@ -672,7 +670,7 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
     if (!usb_ep_is_enabled(ep)) {
         return -USB_DC_EP_EN_ERR;
     }
-
+    /* Check if ep free */
     while (!USB_Is_EPx_RDY_Free(ep_idx)) {
         timeout--;
 
@@ -777,27 +775,13 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
         USB_DC_LOG_ERR("Not enabled endpoint\r\n");
         return -USB_DC_EP_EN_ERR;
     }
+    /* Check if ep free */
+    while (!USB_Is_EPx_RDY_Free(ep_idx)) {
+        timeout--;
 
-    /*common process for other ep out*/
-    if (ep_idx) {
-        while (!USB_Is_EPx_RDY_Free(ep_idx)) {
-            timeout--;
-
-            if (!timeout) {
-                USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
-                return -USB_DC_EP_TIMEOUT_ERR;
-            }
-        }
-    }
-    /*special process for ep0 out*/
-    else if (read_bytes && data_len && (ep_idx == 0)) {
-        while (((BL_RD_WORD(0x4000D800) & (1 << 28)) >> 28)) {
-            timeout--;
-
-            if (!timeout) {
-                USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
-                return -USB_DC_EP_TIMEOUT_ERR;
-            }
+        if (!timeout) {
+            USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
+            return -USB_DC_EP_TIMEOUT_ERR;
         }
     }
 

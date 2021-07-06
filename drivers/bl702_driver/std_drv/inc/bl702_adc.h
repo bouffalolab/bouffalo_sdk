@@ -56,18 +56,18 @@
  *  @brief ADC channel type definition
  */
 typedef enum {
-    ADC_CHAN0,          /*!< GPIO 0, ADC channel 0 */
-    ADC_CHAN1,          /*!< GPIO 1, ADC channel 1 */
-    ADC_CHAN2,          /*!< GPIO 2, ADC channel 2 */
-    ADC_CHAN3,          /*!< GPIO 3, ADC channel 3 */
-    ADC_CHAN4,          /*!< GPIO 4, ADC channel 4 */
-    ADC_CHAN5,          /*!< GPIO 5, ADC channel 5 */
-    ADC_CHAN6,          /*!< GPIO 6, ADC channel 6 */
-    ADC_CHAN7,          /*!< GPIO 7, ADC channel 7 */
-    ADC_CHAN8,          /*!< GPIO 8, ADC channel 8 */
-    ADC_CHAN9,          /*!< GPIO 9, ADC channel 9 */
-    ADC_CHAN10,         /*!< GPIO 10, ADC channel 10 */
-    ADC_CHAN11,         /*!< GPIO 11, ADC channel 11 */
+    ADC_CHAN0,          /*!< ADC channel 0 */
+    ADC_CHAN1,          /*!< ADC channel 1 */
+    ADC_CHAN2,          /*!< ADC channel 2 */
+    ADC_CHAN3,          /*!< ADC channel 3 */
+    ADC_CHAN4,          /*!< ADC channel 4 */
+    ADC_CHAN5,          /*!< ADC channel 5 */
+    ADC_CHAN6,          /*!< ADC channel 6 */
+    ADC_CHAN7,          /*!< ADC channel 7 */
+    ADC_CHAN8,          /*!< ADC channel 8 */
+    ADC_CHAN9,          /*!< ADC channel 9 */
+    ADC_CHAN10,         /*!< ADC channel 10 */
+    ADC_CHAN11,         /*!< ADC channel 11 */
     ADC_CHAN_DAC_OUTA,  /*!< DACA, ADC channel 12 */
     ADC_CHAN_DAC_OUTB,  /*!< DACB, ADC channel 13 */
     ADC_CHAN_TSEN_P,    /*!< TSenp, ADC channel 14 */
@@ -183,8 +183,8 @@ typedef enum {
  *  @brief ADC voltage reference type definition
  */
 typedef enum {
-    ADC_VREF_3P3V, /*!< ADC select 3.3V as reference voltage */
-    ADC_VREF_2V,   /*!< ADC select 2V as reference voltage */
+    ADC_VREF_3P2V, /*!< ADC select 3.2V as reference voltage */
+    ADC_VREF_2P0V, /*!< ADC select 2V as reference voltage */
 } ADC_VREF_Type;
 
 /**
@@ -525,6 +525,7 @@ void ADC_FIFO_Clear(void);
 uint32_t ADC_Read_FIFO(void);
 void ADC_Parse_Result(uint32_t *orgVal, uint32_t len, ADC_Result_Type *result);
 void ADC_IntClr(ADC_INT_Type intType);
+BL_Mask_Type ADC_IntGetMask(ADC_INT_Type intType);
 BL_Sts_Type ADC_GetIntStatus(ADC_INT_Type intType);
 void ADC_Int_Callback_Install(ADC_INT_Type intType, intCallback_Type *cbFun);
 void ADC_IntMask(ADC_INT_Type intType, BL_Mask_Type intMask);

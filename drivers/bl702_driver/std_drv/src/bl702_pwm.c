@@ -523,6 +523,76 @@ void PWM_Int_Callback_Install(PWM_CH_ID_Type ch, uint32_t intType, intCallback_T
 }
 
 /****************************************************************************/ /**
+ * @brief  PWM smart configure according to frequency and duty cycle function
+ *
+ * @param  ch: PWM channel number
+ * @param  frequency: PWM frequency
+ * @param  dutyCycle: PWM duty cycle
+ *
+ * @return SUCCESS or TIMEOUT
+ *
+*******************************************************************************/
+BL_Err_Type PWM_Smart_Configure(PWM_CH_ID_Type ch, uint32_t frequency, uint8_t dutyCycle)
+{
+    uint32_t tmpVal;
+    uint16_t clkDiv, period, threshold2;
+    uint32_t timeoutCnt = PWM_STOP_TIMEOUT_COUNT;
+    /* Get channel register */
+    uint32_t PWMx = PWM_Get_Channel_Reg(ch);
+
+    if (frequency <= 32) {
+        clkDiv = 500;
+        period = 64000 / frequency;
+        threshold2 = 640 * dutyCycle / frequency;
+    } else if (frequency <= 62) {
+        clkDiv = 16;
+        period = 2000000 / frequency;
+        threshold2 = 20000 * dutyCycle / frequency;
+    } else if (frequency <= 124) {
+        clkDiv = 8;
+        period = 4000000 / frequency;
+        threshold2 = 40000 * dutyCycle / frequency;
+    } else if (frequency <= 246) {
+        clkDiv = 4;
+        period = 8000000 / frequency;
+        threshold2 = 80000 * dutyCycle / frequency;
+    } else if (frequency <= 490) {
+        clkDiv = 2;
+        period = 16000000 / frequency;
+        threshold2 = 160000 * dutyCycle / frequency;
+    } else {
+        clkDiv = 1;
+        period = 32000000 / frequency;
+        threshold2 = 320000 * dutyCycle / frequency;
+    }
+
+    tmpVal = BL_RD_REG(PWMx, PWM_CONFIG);
+    if (BL_GET_REG_BITS_VAL(tmpVal, PWM_REG_CLK_SEL) != PWM_CLK_XCLK) {
+        BL_WR_REG(PWMx, PWM_CONFIG, BL_SET_REG_BIT(tmpVal, PWM_STOP_EN));
+        while (!BL_IS_REG_BIT_SET(BL_RD_REG(PWMx, PWM_CONFIG), PWM_STS_TOP)) {
+            timeoutCnt--;
+            if (timeoutCnt == 0) {
+                return TIMEOUT;
+            }
+        }
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PWM_REG_CLK_SEL, PWM_CLK_XCLK);
+    }
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PWM_OUT_INV, PWM_POL_NORMAL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PWM_STOP_MODE, PWM_STOP_GRACEFUL);
+    BL_WR_REG(PWMx, PWM_CONFIG, tmpVal);
+
+    /* Config pwm division */
+    BL_WR_REG(PWMx, PWM_CLKDIV, clkDiv);
+
+    /* Config pwm period and duty */
+    BL_WR_REG(PWMx, PWM_PERIOD, period);
+    BL_WR_REG(PWMx, PWM_THRE1, 0);
+    BL_WR_REG(PWMx, PWM_THRE2, threshold2);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  PWM interrupt function
  *
  * @param  None

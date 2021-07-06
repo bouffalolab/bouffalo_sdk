@@ -791,6 +791,8 @@ BL_Err_Type GLB_GPIO_INPUT_Disable(GLB_GPIO_Type gpioPin);
 BL_Err_Type GLB_GPIO_OUTPUT_Enable(GLB_GPIO_Type gpioPin);
 BL_Err_Type GLB_GPIO_OUTPUT_Disable(GLB_GPIO_Type gpioPin);
 BL_Err_Type GLB_GPIO_Set_HZ(GLB_GPIO_Type gpioPin);
+BL_Err_Type GLB_Set_Flash_Pad_HZ(void);
+BL_Err_Type GLB_Set_Psram_Pad_HZ(void);
 uint8_t GLB_GPIO_Get_Fun(GLB_GPIO_Type gpioPin);
 BL_Err_Type GLB_GPIO_Write(GLB_GPIO_Type gpioPin, uint32_t val);
 uint32_t GLB_GPIO_Read(GLB_GPIO_Type gpioPin);
