@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3.4. PWM 设备 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
+  <title>3.4. PWM 设备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -117,8 +117,9 @@
 <li class="toctree-l4"><a class="reference internal" href="#device-set-callback">3.4.4.5. <strong>device_set_callback</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pwm-channel-start">3.4.4.6. <strong>pwm_channel_start</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pwm-channel-stop">3.4.4.7. <strong>pwm_channel_stop</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-update">3.4.4.8. <strong>pwm_channel_update</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pwm-it-pulse-count-update">3.4.4.9. <strong>pwm_it_pulse_count_update</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-freq-update">3.4.4.8. <strong>pwm_channel_freq_update</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-dutycycle-update">3.4.4.9. <strong>pwm_channel_dutycycle_update</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-it-pulse-count-update">3.4.4.10. <strong>pwm_it_pulse_count_update</strong></a></li>
 </ul>
 </li>
 </ul>
@@ -489,19 +490,30 @@
 <li><p>dev 需要关闭的pwm通道句柄</p></li>
 </ul>
 </div>
-<div class="section" id="pwm-channel-update">
-<h3><span class="section-number">3.4.4.8. </span><strong>pwm_channel_update</strong><a class="headerlink" href="#pwm-channel-update" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">pwm_channel_update</span></code> 用于更新PWM通道的频率和占空比。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEVICE_CTRL_CONFIG</span></code>。</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">cfg</span><span class="p">)</span>
+<div class="section" id="pwm-channel-freq-update">
+<h3><span class="section-number">3.4.4.8. </span><strong>pwm_channel_freq_update</strong><a class="headerlink" href="#pwm-channel-freq-update" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_channel_freq_update</span></code> 用于更新PWM通道的频率。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_FREQUENCE_CONFIG</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_freq_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">count</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>dev 需要更新的pwm通道句柄</p></li>
-<li><p>cfg pwm_config_t句柄</p></li>
+<li><p>count 周期值 ，实际频率=pwm_clk/pwm_div/count</p></li>
+</ul>
+</div>
+<div class="section" id="pwm-channel-dutycycle-update">
+<h3><span class="section-number">3.4.4.9. </span><strong>pwm_channel_dutycycle_update</strong><a class="headerlink" href="#pwm-channel-dutycycle-update" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_channel_dutycycle_update</span></code> 用于更新PWM通道的频率。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_dutycycle_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 需要更新周期计数值的pwm通道句柄</p></li>
+<li><p>cfg pwm_dutycycle_config_t句柄</p></li>
 </ul>
 </div>
 <div class="section" id="pwm-it-pulse-count-update">
-<h3><span class="section-number">3.4.4.9. </span><strong>pwm_it_pulse_count_update</strong><a class="headerlink" href="#pwm-it-pulse-count-update" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">3.4.4.10. </span><strong>pwm_it_pulse_count_update</strong><a class="headerlink" href="#pwm-it-pulse-count-update" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pwm_it_pulse_count_update</span></code> 用于更新PWM通道的计数值，需要先使能PWM中断才起作用，当pwm计数达到设置的周期计数值则会产生中断。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_it_pulse_count_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">count</span><span class="p">)</span>
 </pre></div>

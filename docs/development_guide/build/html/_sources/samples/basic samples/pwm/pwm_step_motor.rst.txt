@@ -66,7 +66,7 @@ PWM - 驱动步进电机
 .. code-block:: C
     :linenos:
 
-    #define BSP_PWM_CLOCK_SOURCE  ROOT_CLOCK_SOURCE_RC_32K
+    #define BSP_PWM_CLOCK_SOURCE  ROOT_CLOCK_SOURCE_32K_CLK
     #define BSP_PWM_CLOCK_DIV  32
 
 -  配置 ``PWM`` 设备时钟源，见 ``bsp/board/bl706_iot/clock_config.h``

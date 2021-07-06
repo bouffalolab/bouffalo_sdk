@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>1. 开发前的准备 &mdash; BL_MCU_SDK 开发指南 0.2 文档</title>
+  <title>1. 开发前的准备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -287,7 +287,7 @@
 <div class="admonition important">
 <p class="admonition-title">重要</p>
 <ol class="arabic simple" start="3">
-<li><p>若在设备管理器中没有串口，显示其他设备，请到 <a class="reference external" href="https://ftdichip.com/drivers/vcp-drivers/">FTDI 官网</a> 下载与系统匹配的驱动</p></li>
+<li><p>若在设备管理器中没有显示串口，只显示其他设备，或者只在通用串行总线控制器中看到 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> 和 <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code>,请到 <a class="reference external" href="https://ftdichip.com/drivers/vcp-drivers/">FTDI 官网</a> 下载与系统匹配的驱动</p></li>
 </ol>
 </div>
 <div class="figure align-default">
@@ -338,7 +338,7 @@
 <div class="section" id="id6">
 <h3><span class="section-number">1.3.2. </span><strong>Linux</strong><a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
-<li><p>首先，将调试器 Type-C USB 接口使用 USB 数据线连接到 PC 主机，执行以下命令，查看是否存在</p></li>
+<li><p>首先，将调试器 Type-C USB 接口使用 USB 数据线连接到 PC 主机，打开 Terminal，在终端中输入 lsusb 命令，即可看到如下信息的设备</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ lsusb
 </pre></div>
@@ -347,15 +347,19 @@
 <img alt="../_images/sipeed_rv_debugger_8.png" src="../_images/sipeed_rv_debugger_8.png" />
 </div>
 <ul class="simple">
-<li><p>安装 Openocd 及其需要的依赖项</p></li>
+<li><p>如果上述图中不显示 FT2232C 字样，需要安装 ftdi 驱动</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ apt install openocd  libusb-dev libftdi-dev libhidapi-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ sudo apt install libusb-dev libftdi-dev libhidapi-dev
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>重新插拔调试器使修改生效</p></li>
-<li><p>打开 Terminal，在终端中输入 lsusb 命令，即可看到如下信息的设备</p></li>
+<li><p>调试代码需要安装 openocd，使用 openocd 0.11 版本</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">注解</p>
+<p>在 linux 中，串口是使用 /dev/ttyUSB1,调试口使用 /dev/ttyUSB0，如果显示 /dev/ttyACM0 则表示进入 boot 模式</p>
+</div>
 </div>
 </div>
 </div>

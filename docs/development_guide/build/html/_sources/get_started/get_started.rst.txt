@@ -70,7 +70,7 @@ Sipeed RV-Debugger Plus 调试器在 Windows 系统中所以时我们需要将�
 
    .. figure:: img/sipeed_rv_debugger_7.png
 
-   .. important:: 3. 若在设备管理器中没有串口，显示其他设备，请到 `FTDI 官网 <https://ftdichip.com/drivers/vcp-drivers/>`_ 下载与系统匹配的驱动
+   .. important:: 3. 若在设备管理器中没有显示串口，只显示其他设备，或者只在通用串行总线控制器中看到 ``USB Serial Converter A`` 和 ``USB Serial Converter B``,请到 `FTDI 官网 <https://ftdichip.com/drivers/vcp-drivers/>`_ 下载与系统匹配的驱动
 
    .. figure:: img/sipeed_rv_debugger_6.png
 
@@ -96,7 +96,7 @@ Sipeed RV-Debugger Plus 调试器在 Windows 系统中所以时我们需要将�
 **Linux**
 ^^^^^^^^^^^^^^^^^^^
 
-- 首先，将调试器 Type-C USB 接口使用 USB 数据线连接到 PC 主机，执行以下命令，查看是否存在
+- 首先，将调试器 Type-C USB 接口使用 USB 数据线连接到 PC 主机，打开 Terminal，在终端中输入 lsusb 命令，即可看到如下信息的设备
 
 .. code-block:: bash
 
@@ -104,16 +104,14 @@ Sipeed RV-Debugger Plus 调试器在 Windows 系统中所以时我们需要将�
 
 .. figure:: img/sipeed_rv_debugger_8.png
 
--  安装 Openocd 及其需要的依赖项
+- 如果上述图中不显示 FT2232C 字样，需要安装 ftdi 驱动
 
 .. code-block:: bash
 
-    $ apt install openocd  libusb-dev libftdi-dev libhidapi-dev
+    $ sudo apt install libusb-dev libftdi-dev libhidapi-dev
 
 -  重新插拔调试器使修改生效
--  打开 Terminal，在终端中输入 lsusb 命令，即可看到如下信息的设备
 
-.. code-block::bash
+- 调试代码需要安装 openocd，使用 openocd 0.11 版本
 
-    $ Bus 001 Device 003: ID 0403:6010 Future Technology Devices International, Ltd FT2232C Dual USB-UART/FIFO IC
-
+.. note:: 在 linux 中，串口是使用 /dev/ttyUSB1,调试口使用 /dev/ttyUSB0，如果显示 /dev/ttyACM0 则表示进入 boot 模式

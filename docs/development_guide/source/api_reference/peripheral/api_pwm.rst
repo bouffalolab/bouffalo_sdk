@@ -250,17 +250,29 @@ PWM设备 ``event`` 类型如下
 - dev 需要关闭的pwm通道句柄
 
 
-**pwm_channel_update**
-^^^^^^^^^^^^^^^^^^^^^^^
+**pwm_channel_freq_update**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``pwm_channel_update`` 用于更新PWM通道的频率和占空比。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DEVICE_CTRL_CONFIG``。
+``pwm_channel_freq_update`` 用于更新PWM通道的频率。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DEIVCE_CTRL_PWM_FREQUENCE_CONFIG``。
 
 .. code-block:: C
 
-    pwm_channel_update(dev,cfg)
+    pwm_channel_freq_update(dev,count)
 
 - dev 需要更新的pwm通道句柄
-- cfg pwm_config_t句柄
+- count 周期值 ，实际频率=pwm_clk/pwm_div/count
+
+**pwm_channel_dutycycle_update**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``pwm_channel_dutycycle_update`` 用于更新PWM通道的频率。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG``。
+
+.. code-block:: C
+
+    pwm_channel_dutycycle_update(dev,cfg)
+
+- dev 需要更新周期计数值的pwm通道句柄
+- cfg pwm_dutycycle_config_t句柄
 
 
 **pwm_it_pulse_count_update**

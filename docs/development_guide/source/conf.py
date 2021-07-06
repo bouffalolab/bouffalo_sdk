@@ -21,10 +21,10 @@ project = 'BL_MCU_SDK 开发指南'
 copyright = '2021, BouffaloLab Co., Ltd'
 author = 'BouffaloLab MCU Team'
 
-version = '0.2'
+version = '0.3'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2'
+release = '0.3'
 
 
 # -- General configuration ---------------------------------------------------
