@@ -76,39 +76,39 @@ BL_Err_Type flash_read_via_xip(uint32_t addr, uint8_t *data, uint32_t len)
 }
 
 /**
- * @brief read xip data
+ * @brief read data
  *
  * @param addr
  * @param data
  * @param len
  * @return BL_Err_Type
  */
-BL_Err_Type flash_read_xip(uint32_t addr, uint8_t *data, uint32_t len)
+BL_Err_Type flash_read(uint32_t addr, uint8_t *data, uint32_t len)
 {
     return XIP_SFlash_Read_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, addr, data, len);
 }
 
 /**
- * @brief write xip data
+ * @brief write data
  *
  * @param addr
  * @param data
  * @param len
  * @return BL_Err_Type
  */
-BL_Err_Type flash_write_xip(uint32_t addr, uint8_t *data, uint32_t len)
+BL_Err_Type flash_write(uint32_t addr, uint8_t *data, uint32_t len)
 {
     return XIP_SFlash_Write_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, addr, data, len);
 }
 
 /**
- * @brief erase xip data
+ * @brief erase
  *
  * @param startaddr
  * @param endaddr
  * @return BL_Err_Type
  */
-BL_Err_Type flash_erase_xip(uint32_t startaddr, uint32_t len)
+BL_Err_Type flash_erase(uint32_t startaddr, uint32_t len)
 {
     return XIP_SFlash_Erase_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, startaddr, len);
 }

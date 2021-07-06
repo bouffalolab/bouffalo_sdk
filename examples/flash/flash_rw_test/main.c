@@ -36,15 +36,15 @@ int main(void)
     flash_init();
 
     /* erase 0x00010000 16k flash */
-    flash_erase_xip(0x00010000, 0x00010000 + (16 * 1024) - 1);
+    flash_erase(0x00010000, 16 * 1024);
 
     /* write 0x00010000 flash data */
-    flash_write_xip(0x00010000, writeTestData, sizeof(writeTestData));
+    flash_write(0x00010000, writeTestData, sizeof(writeTestData));
 
     memset(readTestData, 0, 256);
 
     /* read 0x00010000 flash data */
-    flash_read_xip(0x00010000, readTestData, sizeof(readTestData));
+    flash_read(0x00010000, readTestData, sizeof(readTestData));
 
     for (i = 0; i < 256; i++) {
         if (readTestData[i] != i) {
