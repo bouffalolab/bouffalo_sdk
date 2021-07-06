@@ -96,19 +96,6 @@ static const struct pin_mux_cfg af_pin_table[] = {
       .func = CONFIG_GPIO30_FUNC },
     { .pin = GPIO_PIN_31,
       .func = CONFIG_GPIO31_FUNC },
-    { .pin = GPIO_PIN_32,
-      .func = CONFIG_GPIO32_FUNC },
-    { .pin = GPIO_PIN_33,
-      .func = CONFIG_GPIO33_FUNC },
-    { .pin = GPIO_PIN_34,
-      .func = CONFIG_GPIO34_FUNC },
-    { .pin = GPIO_PIN_35,
-      .func = CONFIG_GPIO35_FUNC },
-    { .pin = GPIO_PIN_36,
-      .func = CONFIG_GPIO36_FUNC },
-    { .pin = GPIO_PIN_37,
-      .func = CONFIG_GPIO37_FUNC }
-
 };
 
 static void board_pin_mux_init(void)
@@ -135,11 +122,7 @@ static void board_pin_mux_init(void)
             gpio_cfg.gpioFun = GPIO_FUN_UART;
             uint8_t sig = af_pin_table[i].func & 0x07;
 
-            if (gpio_cfg.gpioPin > 31) {
-                GLB_UART_Fun_Sel(((gpio_cfg.gpioPin - 9) % 8), sig);
-            } else {
-                GLB_UART_Fun_Sel((gpio_cfg.gpioPin % 8), sig);
-            }
+            GLB_UART_Fun_Sel((gpio_cfg.gpioPin % 8), sig);
         }
 
         GLB_GPIO_Init(&gpio_cfg);

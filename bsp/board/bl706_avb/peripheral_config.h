@@ -56,7 +56,7 @@
 #define ADC0_CONFIG                                        \
     {                                                      \
         .clk_div = ADC_CLOCK_DIV_32,                       \
-        .vref = ADC_VREF_3P2V,                             \
+        .vref = ADC_VREF_3V2,                              \
         .continuous_conv_mode = DISABLE,                   \
         .differential_mode = DISABLE,                      \
         .data_width = ADC_DATA_WIDTH_16B_WITH_256_AVERAGE, \
