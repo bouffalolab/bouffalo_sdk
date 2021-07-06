@@ -33,9 +33,14 @@
 #define IMAGE_SENSOR_GC0308 1
 #define IMAGE_SENSOR_USE    IMAGE_SENSOR_GC0308
 
+#define CAM_USING_INT_MODE  0
+#define CAM_USING_POLL_MODE 1
+#define CAM_MODE            CAM_USING_INT_MODE
+
 /* sensor out format */
 #define RGB565     0
 #define UYVY       1
+#define YUYV       2
 #define FORMAT_SEL RGB565
 
 #if (IMAGE_SENSOR_USE == IMAGE_SENSOR_BF2013)
@@ -54,9 +59,13 @@ static const uint8_t sensorRegList[][2] = {
     { 0x12, 0x80 },
     { 0x67, 0x00 },
     { 0x68, 0x00 },
-    //{0xb9, 0x80},//use Test pattern
-    //{0x69,0x20},
+//{0xb9, 0x80},//use Test pattern
+//{0x69,0x20},
+#if (FORMAT_SEL == UYVY)
     { 0x3a, 0x02 },
+#elif (FORMAT_SEL == YUYV)
+    { 0x3a, 0x00 },
+#endif
     { 0x09, 0x01 },
     { 0x15, 0x02 },
     { 0x12, 0x00 },
@@ -295,6 +304,8 @@ static const uint8_t sensorRegList[][2] = {
     { 0x24, 0xa6 }, //a6 RGB565
 #elif FORMAT_SEL == UYVY
     { 0x24, 0xa0 }, //a0 Cb Y Cr Y
+#elif FORMAT_SEL == YUYV
+    { 0x24, 0xa2 }, //a2 Y Cb Y Cr
 #endif
     { 0x25, 0x0f },
     //output sync_mode
@@ -671,10 +682,18 @@ uint8_t image_sensor_init(BL_Fun_Type mjpeg_en, cam_device_t *cam_cfg, mjpeg_dev
     mjpeg_stop();
 
     if (mjpeg_en) {
-        cam_init(cam_cfg);
+#if (CAM_MODE == CAM_USING_INT_MODE)
+        cam_init(cam_cfg, DEVICE_OFLAG_INT);
+#elif (CAM_MODE == CAM_USING_POLL_MODE)
+        cam_init(cam_cfg, DEVICE_OFLAG_POLL);
+#endif
         mjpeg_init(mjpeg_cfg);
     } else {
-        cam_init(cam_cfg);
+#if (CAM_MODE == CAM_USING_INT_MODE)
+        cam_init(cam_cfg, DEVICE_OFLAG_INT);
+#elif (CAM_MODE == CAM_USING_POLL_MODE)
+        cam_init(cam_cfg, DEVICE_OFLAG_POLL);
+#endif
     }
 
     return SUCCESS;
@@ -736,7 +755,17 @@ uint8_t image_sensor_read_byte(uint8_t cmd)
 static uint8_t image_sensor_read_id(void)
 {
     uint8_t buf[2] = { 0 };
+#if (IMAGE_SENSOR_USE == IMAGE_SENSOR_BF2013)
+    buf[0] = image_sensor_read_byte(BF2013_ID_MSB);
+    bflb_platform_delay_ms(10);
+    buf[1] = image_sensor_read_byte(BF2013_ID_LSB);
 
+    if (buf[0] == 0x37 && buf[1] == 0x03) {
+        return SUCCESS;
+    } else {
+        return ERROR;
+    }
+#elif (IMAGE_SENSOR_USE == IMAGE_SENSOR_GC0308)
     buf[0] = image_sensor_read_byte(GC0308_ID);
 
     // MSG("image_sensor id:0x%2x\r\n",buf[0]);
@@ -745,6 +774,7 @@ static uint8_t image_sensor_read_id(void)
     } else {
         return ERROR;
     }
+#endif
 }
 
 static uint8_t image_sensor_regs_config(void)

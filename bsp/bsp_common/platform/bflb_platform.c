@@ -76,6 +76,20 @@ void bflb_platform_init(uint32_t baudrate)
     enable_irq();
 }
 
+#if ((defined BOOTROM) || (defined BFLB_EFLASH_LOADER))
+static uint8_t eflash_loader_logbuf[2048] __attribute__((section(".system_ram_noinit")));
+static uint32_t log_len = 0;
+uint32_t bflb_platform_get_log(uint8_t *data, uint32_t maxlen)
+{
+    uint32_t len = log_len;
+    if (len > maxlen) {
+        len = maxlen;
+    }
+    memcpy(data, eflash_loader_logbuf, len);
+    return len;
+}
+#endif
+
 void bflb_platform_printf(char *fmt, ...)
 {
     struct device *uart = device_find("debug_log");
@@ -86,7 +100,13 @@ void bflb_platform_printf(char *fmt, ...)
         va_start(ap, fmt);
         vsnprintf(print_buf, sizeof(print_buf) - 1, fmt, ap);
         va_end(ap);
-
+#if ((defined BOOTROM) || (defined BFLB_EFLASH_LOADER))
+        uint32_t len = strlen(print_buf);
+        if (log_len + len < sizeof(eflash_loader_logbuf)) {
+            memcpy(eflash_loader_logbuf + log_len, print_buf, len);
+            log_len += len;
+        }
+#endif
         device_write(uart, 0, (uint8_t *)print_buf, strlen(print_buf));
     }
 }
