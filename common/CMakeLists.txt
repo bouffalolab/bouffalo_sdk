@@ -11,6 +11,7 @@ list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}/list"
 "${CMAKE_CURRENT_SOURCE_DIR}/device"
 "${CMAKE_CURRENT_SOURCE_DIR}/partition"
+"${CMAKE_CURRENT_SOURCE_DIR}/bl_math"
 )
 #######################################################
 
@@ -28,6 +29,7 @@ file(GLOB_RECURSE sources
 "${CMAKE_CURRENT_SOURCE_DIR}/misc/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/device/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/partition/*.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/bl_math/*.c"
 )
 
 #aux_source_directory(. sources)
