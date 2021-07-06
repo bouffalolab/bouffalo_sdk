@@ -36,7 +36,7 @@ int main(void)
     flash_init();
 
     /* erase 0x00010000 16k flash */
-    flash_erase_xip(0x00010000, 0x00010000 + 16 * 1024);
+    flash_erase_xip(0x00010000, 0x00010000 + (16 * 1024) - 1);
 
     /* write 0x00010000 flash data */
     flash_write_xip(0x00010000, writeTestData, sizeof(writeTestData));

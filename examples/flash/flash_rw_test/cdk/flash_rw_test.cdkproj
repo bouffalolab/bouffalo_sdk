@@ -148,7 +148,7 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_qdec.c">
       <FileOption/>
     </File>
-    <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c" ExcludeProjConfig="BuildSet;CK_Link_Debug;OpenOCD_Debug">
+    <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c" ExcludeProjConfig="BuildSet">
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romdriver.c">
