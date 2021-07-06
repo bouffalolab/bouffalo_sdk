@@ -65,7 +65,7 @@
 // #define CAMERA_FRAME_SIZE (YUV400_FRAME_SIZE / 2)
 
 // pingpong buf
-static uint8_t pingpong_buff[2][CAMERA_FRAME_SIZE] __attribute__((section(".system_ram"), aligned(4)));
+static uint8_t pingpong_buff[2][480 * 20] __attribute__((section(".system_ram"), aligned(4)));
 
 struct device *dma_cam;
 
