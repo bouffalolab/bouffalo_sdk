@@ -220,7 +220,7 @@ static int blsp_boot2_do_fw_copy(pt_table_id_type active_id, pt_table_stuff_conf
     uint32_t deal_len = 0;
     uint32_t cur_len = 0;
 
-    if (SUCCESS != flash_erase_xip(dest_address, dest_address + dest_max_size - 1)) {
+    if (SUCCESS != flash_erase_xip(dest_address, dest_max_size)) {
         MSG_ERR("Erase flash fail");
         return BFLB_BOOT2_FLASH_ERASE_ERROR;
     }

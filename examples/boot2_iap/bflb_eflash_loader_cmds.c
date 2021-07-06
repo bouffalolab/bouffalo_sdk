@@ -164,7 +164,7 @@ static int32_t bflb_eflash_loader_cmd_erase_flash(uint16_t cmd, uint8_t *data, u
 
         bflb_eflash_loader_printd("from%08xto%08x\n", p_iap_param.iap_start_addr, p_iap_param.iap_start_addr + p_iap_param.iap_img_len - 1);
 
-        if (SUCCESS != flash_erase_xip(p_iap_param.iap_start_addr, p_iap_param.iap_start_addr + p_iap_param.iap_img_len - 1)) {
+        if (SUCCESS != flash_erase_xip(p_iap_param.iap_start_addr, p_iap_param.iap_img_len)) {
             bflb_eflash_loader_printe("fail\n");
             ret = BFLB_EFLASH_LOADER_FLASH_ERASE_ERROR;
         }

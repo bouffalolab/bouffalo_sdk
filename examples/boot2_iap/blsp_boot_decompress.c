@@ -113,7 +113,7 @@ static int32_t blsp_boot2_fw_decompress(uint32_t src_address, uint32_t dest_addr
     *p_dest_size = 0;
 
     if (dest_max_size > 0) {
-        flash_erase_xip(dest_address, dest_address + dest_max_size - 1);
+        flash_erase_xip(dest_address, dest_max_size);
     }
 
     xz_crc32_init();

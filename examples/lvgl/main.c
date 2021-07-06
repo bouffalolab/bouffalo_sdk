@@ -81,6 +81,8 @@ int main(void)
 
     lv_demo_benchmark();
 
+    BL_CASE_SUCCESS;
+
     while (1) {
         lv_task_handler();
     }
