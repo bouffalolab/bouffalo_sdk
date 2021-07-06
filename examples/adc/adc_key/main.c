@@ -181,7 +181,13 @@ int main(void)
     if (adc_key) {
         ADC_DEV(adc_key)->continuous_conv_mode = ENABLE;
         device_open(adc_key, DEVICE_OFLAG_STREAM_RX);
-        device_control(adc_key, DEVICE_CTRL_ADC_CHANNEL_CONFIG, &adc_channel_cfg);
+
+        if (device_control(adc_key, DEVICE_CTRL_ADC_CHANNEL_CONFIG, &adc_channel_cfg) == ERROR) {
+            MSG("ADC channel config error , Please check the channel corresponding to IO is initial success by board system or Channel is invaild \r\n");
+            BL_CASE_FAIL;
+            while (1)
+                ;
+        }
 
     } else {
         MSG("device open failed\r\n");

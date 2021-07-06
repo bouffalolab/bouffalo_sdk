@@ -51,7 +51,14 @@ int main(void)
         ADC_DEV(adc_test)->differential_mode = ENABLE;
         ADC_DEV(adc_test)->continuous_conv_mode = ENABLE;
         device_open(adc_test, DEVICE_OFLAG_STREAM_RX);
-        device_control(adc_test, DEVICE_CTRL_ADC_CHANNEL_CONFIG, &adc_channel_cfg);
+
+        if (device_control(adc_test, DEVICE_CTRL_ADC_CHANNEL_CONFIG, &adc_channel_cfg) == ERROR) {
+            MSG("ADC channel config error , Please check the channel corresponding to IO is initial success by board system or Channel is invaild \r\n");
+            BL_CASE_FAIL;
+            while (1)
+                ;
+        }
+
         MSG("adc device find success\r\n");
     }
 
@@ -66,5 +73,6 @@ int main(void)
         } else {
             MSG("PosId = %d NegId = %d V= %d mV \r\n", result_val.posChan, result_val.negChan, (uint32_t)(result_val.volt * 1000));
         }
+        bflb_platform_delay_ms(500);
     }
 }
