@@ -85,8 +85,8 @@ int main(void)
         DMA_DEV(dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch3)->src_req = DMA_REQUEST_I2S_RX;
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_NONE;
-        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_16BIT;
-        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
+        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_32BIT;
+        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
         device_open(dma_ch3, 0);
 
         /* connect i2s device and dma device */
@@ -104,8 +104,8 @@ int main(void)
         DMA_DEV(dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch2)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_I2S_TX;
-        DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_16BIT;
-        DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
+        DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_32BIT;
+        DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
         device_open(dma_ch2, 0);
 
         /* connect i2s device and dma device */
