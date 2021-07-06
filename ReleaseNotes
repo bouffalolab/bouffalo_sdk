@@ -3,6 +3,25 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.2.4
+----------------------------
+
+新增功能说明：
+    1. 增加部分 math 库函数对 arm dsp api 的兼容，以及优化 math 库效率
+    2. 增加 bl702 adc、camera 中断，重定义 clock tree 的相关宏，
+    3. 删除 GPIO32-GPIO37，更新 GPIO 初始化和读写函数，更新 sf flash 引脚初始化
+    4. 增加 i2s 双通道支持
+    5. 增加 adc、pwm、camera 相关 api
+    6. 增加 camera pingpong buffer case
+    7. cdk 工程更新
+    8. 更新 openocd cfg 文件，适配 openocd 0.11 版本
+
+修复问题说明：
+    1. 对 pwm readme 说明修改
+    2. 修复 hal_usb 中对端点 0 状态的判断逻辑
+    3. 修复 flash 擦除扇区时多擦除扇区的问题
+    4. ble、lvgl、usb、boot2iap、adc 相关 demo 的修改
+
 bl mcu sdk Release V1.2.3
 ----------------------------
 
