@@ -110,56 +110,24 @@ USB_DESC_SECTION const uint8_t cdc_descriptor[] = {
     0x00
 };
 
-bool zlp_flag = false;
-
-uint32_t actual_write_length = 0;
-uint32_t total_recv_length = 0;
-uint32_t rx_pos = 0;
-uint8_t tx_pos = 0;
-uint8_t out_buffer[4096];
-
 void usbd_cdc_acm_bulk_out(uint8_t ep)
 {
     uint32_t actual_read_length = 0;
+    uint8_t out_buffer[64];
 
-    if (usbd_ep_read(ep, &out_buffer[rx_pos], 64, &actual_read_length) < 0) {
+    if (usbd_ep_read(ep, out_buffer, 64, &actual_read_length) < 0) {
         USBD_LOG_DBG("Read DATA Packet failed\r\n");
         usbd_ep_set_stall(ep);
         return;
     }
 
     usbd_ep_read(ep, NULL, 0, NULL);
-    rx_pos += actual_read_length;
-    total_recv_length += actual_read_length;
-    actual_write_length = total_recv_length;
 
-    if (rx_pos > 4096) {
-        rx_pos = 0;
-    }
+    usbd_ep_write(CDC_IN_EP, out_buffer, actual_read_length, NULL);
 }
 
 void usbd_cdc_acm_bulk_in(uint8_t ep)
 {
-    if ((zlp_flag == false) && actual_write_length) {
-        if (actual_write_length > 64) {
-            usbd_ep_write(ep, (uint8_t *)&out_buffer[tx_pos], 64, NULL);
-            actual_write_length -= 64;
-            tx_pos += 64;
-        } else {
-            usbd_ep_write(ep, (uint8_t *)&out_buffer[tx_pos], actual_write_length, NULL);
-            actual_write_length = 0;
-            tx_pos = 0;
-            total_recv_length = 0;
-        }
-
-        if (!actual_write_length && !(total_recv_length % 64)) {
-            MSG("zlp\r\n");
-            zlp_flag = true;
-        }
-    } else if (zlp_flag) {
-        usbd_ep_write(ep, NULL, 0, NULL);
-        zlp_flag = false;
-    }
 }
 
 usbd_class_t cdc_class;
@@ -173,10 +141,8 @@ usbd_endpoint_t cdc_out_ep = {
 
 usbd_endpoint_t cdc_in_ep = {
     .ep_addr = CDC_IN_EP,
-    .ep_cb = usbd_cdc_acm_bulk_in
+    .ep_cb = NULL
 };
-
-#define USING_POLL_RTX
 
 struct device *usb_fs;
 
@@ -195,22 +161,12 @@ int main(void)
     usb_fs = usb_dc_init();
 
     if (usb_fs) {
-#ifndef USING_POLL_RTX
-        device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP1_DATA_OUT_IT | USB_EP2_DATA_IN_IT));
-#endif
+        device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP1_DATA_OUT_IT));
     }
 
     while (!usb_device_is_configured()) {
     }
 
     while (1) {
-#ifdef USING_POLL_RTX
-
-        if (usb_device_is_configured()) {
-            device_read(usb_fs, 0x01, out_buffer, 64);
-            device_write(usb_fs, 0x82, out_buffer, 64);
-        }
-
-#endif
     }
 }
