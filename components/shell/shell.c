@@ -1,26 +1,30 @@
 /**
  * @file shell.c
- * @brief 
- * 
+ * @brief
+ *
  * Copyright (c) 2021 Bouffalolab team
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.  The
  * ASF licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 #include "shell.h"
+
+#if defined(SHELL_USING_FS)
+#include "ff.h"
+#endif
 
 struct shell_syscall *_syscall_table_begin = NULL;
 struct shell_syscall *_syscall_table_end = NULL;
@@ -58,12 +62,13 @@ static char *shell_get_prompt(void)
 {
     static char shell_prompt[SHELL_CONSOLEBUF_SIZE + 1] = { 0 };
 
-    strcpy(shell_prompt, SHELL_NAME);
+    strcpy(shell_prompt, "\r\n");
+    strcat(shell_prompt, SHELL_NAME);
 
 #if defined(SHELL_USING_FS)
     /* get current working directory */
-    getcwd(&shell_prompt[strlen(shell_prompt)],
-           SHELL_CONSOLEBUF_SIZE - strlen(shell_prompt));
+    f_getcwd(&shell_prompt[strlen(shell_prompt)],
+             SHELL_CONSOLEBUF_SIZE - strlen(shell_prompt));
 #endif
 
     strcat(shell_prompt, "/>");
@@ -135,25 +140,24 @@ static void shell_push_history(struct shell *shell)
 
 void shell_auto_complete_path(char *path)
 {
-    DIR *dir = RT_NULL;
-    struct dirent *dirent = RT_NULL;
+    DIR dir;
+    FILINFO fno;
     char *full_path, *ptr, *index;
+    char str_buff[256];
 
     if (!path)
         return;
 
-    full_path = (char *)rt_malloc(256);
-    if (full_path == RT_NULL)
-        return; /* out of memory */
+    full_path = str_buff;
 
-    if (*path != '/') {
-        getcwd(full_path, 256);
-        if (full_path[rt_strlen(full_path) - 1] != '/')
-            strcat(full_path, "/");
-    } else
-        *full_path = '\0';
+    // if (*path != '/') {
+    //     f_getcwd(full_path, 256);
+    //     if (full_path[strlen(full_path) - 1] != '/')
+    //         strcat(full_path, "/");
+    // } else
+    *full_path = '\0';
 
-    index = RT_NULL;
+    index = NULL;
     ptr = path;
     for (;;) {
         if (*ptr == '/')
@@ -163,10 +167,10 @@ void shell_auto_complete_path(char *path)
 
         ptr++;
     }
-    if (index == RT_NULL)
+    if (index == NULL)
         index = path;
 
-    if (index != RT_NULL) {
+    if (index != NULL) {
         char *dest = index;
 
         /* fill the parent path */
@@ -176,12 +180,10 @@ void shell_auto_complete_path(char *path)
 
         for (index = path; index != dest;)
             *ptr++ = *index++;
-        *ptr = '\0';
+        *(ptr - 1) = '\0';
 
-        dir = opendir(full_path);
-        if (dir == RT_NULL) /* open directory failed! */
+        if (f_opendir(&dir, full_path)) /* open directory failed! */
         {
-            rt_free(full_path);
             return;
         }
 
@@ -192,31 +194,32 @@ void shell_auto_complete_path(char *path)
     /* auto complete the file or directory name */
     if (*index == '\0') /* display all of files and directories */
     {
+        f_rewinddir(&dir);
         for (;;) {
-            dirent = readdir(dir);
-            if (dirent == RT_NULL)
+            f_readdir(&dir, &fno);
+            if (fno.fname[0] == '\0')
                 break;
 
-            SHELL_PRINTF("%s\n", dirent->d_name);
+            SHELL_PRINTF("%s%s%s\r\n", fno.fname, (fno.fattrib & AM_DIR) ? "/" : "", (fno.fattrib & AM_HID) ? "(Hidden)" : "");
         }
     } else {
-        rt_size_t length, min_length;
+        uint32_t length, min_length = 0;
 
-        min_length = 0;
+        f_rewinddir(&dir);
         for (;;) {
-            dirent = readdir(dir);
-            if (dirent == RT_NULL)
+            f_readdir(&dir, &fno);
+            if (fno.fname[0] == '\0')
                 break;
 
             /* matched the prefix string */
-            if (strncmp(index, dirent->d_name, rt_strlen(index)) == 0) {
+            if (strncmp(index, fno.fname, strlen(index)) == 0) {
                 if (min_length == 0) {
-                    min_length = rt_strlen(dirent->d_name);
+                    min_length = strlen(fno.fname);
                     /* save dirent name */
-                    strcpy(full_path, dirent->d_name);
+                    strcpy(full_path, fno.fname);
                 }
 
-                length = str_common(dirent->d_name, full_path);
+                length = str_common(fno.fname, full_path);
 
                 if (length < min_length) {
                     min_length = length;
@@ -225,17 +228,16 @@ void shell_auto_complete_path(char *path)
         }
 
         if (min_length) {
-            if (min_length < rt_strlen(full_path)) {
+            if (min_length < strlen(full_path)) {
                 /* list the candidate */
-                rewinddir(dir);
-
+                f_rewinddir(&dir);
                 for (;;) {
-                    dirent = readdir(dir);
-                    if (dirent == RT_NULL)
+                    f_readdir(&dir, &fno);
+                    if (fno.fname[0] == '\0')
                         break;
 
-                    if (strncmp(index, dirent->d_name, rt_strlen(index)) == 0)
-                        SHELL_PRINTF("%s\n", dirent->d_name);
+                    if (strncmp(index, fno.fname, strlen(index)) == 0)
+                        SHELL_PRINTF("%s%s%s\r\n", fno.fname, (fno.fattrib & AM_DIR) ? "/" : "", (fno.fattrib & AM_HID) ? "(Hidden)" : "");
                 }
             }
 
@@ -245,8 +247,7 @@ void shell_auto_complete_path(char *path)
         }
     }
 
-    closedir(dir);
-    rt_free(full_path);
+    f_closedir(&dir);
 }
 #endif
 
@@ -529,11 +530,11 @@ int shell_exec(char *cmd, uint32_t length)
     }
 
 #ifdef SHELL_USING_FS
-    extern int shell_exec_script(char *cmd, uint32_t length);
+    // extern int shell_exec_script(char *cmd, uint32_t length);
 
-    if (shell_exec_script(cmd, length) == 0) {
-        return 0;
-    }
+    // if (shell_exec_script(cmd, length) == 0) {
+    //     return 0;
+    // }
 
 #endif
 
@@ -633,7 +634,6 @@ void shell_handler(uint8_t data)
                 SHELL_PRINTF("%c", shell->line[shell->line_curpos]);
                 shell->line_curpos++;
             }
-
             return;
         }
     }
