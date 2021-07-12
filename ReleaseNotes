@@ -3,6 +3,26 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.2.5
+----------------------------
+
+新增功能说明：
+    1. 添加 tensorflow lite 支持
+    2. gpio_set_mode 添加高阻模式
+    3. 添加 keyscan hal 驱动
+    4. 新增 shell 文件系统
+    5. 更新 clock tree 宏定义、更新 board.c 中 pinmux 初始化配置
+    6. es8388 驱动增加双通道支持
+    7. il9341 增加字库，支持大字号显示
+
+修复问题说明：
+    1. 修复 usb msc 中 interface num 为 0
+    2. 修复 uart 和 spi 开关 dma 时未设置 oflag 状态
+    3. 修改 CPU_ID 默认值，当不使用多核时默认为 none
+    4. 修复 adc 浮点输出问题
+    5. 修复 hal pwm 相关宏书写错误
+
+
 bl mcu sdk Release V1.2.4
 ----------------------------
 
