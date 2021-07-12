@@ -103,18 +103,18 @@ int pwm_control(struct device *dev, int cmd, void *args)
         case DEVICE_CTRL_SUSPEND /* constant-expression */:
             PWM_Channel_Disable(pwm_device->ch);
             break;
-        case DEIVCE_CTRL_PWM_FREQUENCE_CONFIG:
+        case DEVICE_CTRL_PWM_FREQUENCE_CONFIG:
 
             if ((uint32_t)args > peripheral_clock_get(PERIPHERAL_CLOCK_PWM))
                 return -1;
             pwm_device->period = (uint32_t)args;
             BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_PERIOD, (uint32_t)args);
             break;
-        case DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG:
+        case DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG:
             BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_THRE1, pwm_detycycle_config->threshold_low);
             BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_THRE2, pwm_detycycle_config->threshold_high);
             break;
-        case DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG: {
+        case DEVICE_CTRL_PWM_IT_PULSE_COUNT_CONFIG: {
             /* Config interrupt pulse count */
             uint32_t pwm_ch_addr = PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20;
             uint32_t tmpVal = BL_RD_REG(pwm_ch_addr, PWM_INTERRUPT);

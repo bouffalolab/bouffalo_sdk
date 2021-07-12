@@ -26,9 +26,9 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
-#define DEIVCE_CTRL_PWM_FREQUENCE_CONFIG      0x10
-#define DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG      0x11
-#define DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG 0x12
+#define DEVICE_CTRL_PWM_FREQUENCE_CONFIG      0x10
+#define DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG      0x11
+#define DEVICE_CTRL_PWM_IT_PULSE_COUNT_CONFIG 0x12
 
 enum pwm_index_type {
 #ifdef BSP_USING_PWM_CH0
