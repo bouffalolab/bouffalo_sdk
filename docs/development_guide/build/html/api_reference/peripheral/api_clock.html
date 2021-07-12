@@ -95,7 +95,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul class="current">
@@ -138,6 +139,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -220,7 +222,7 @@
 <h1><span class="section-number">3.1. </span>时钟树<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
 <div class="section" id="id2">
 <h2><span class="section-number">3.1.1. </span>简介<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
-<p>博流系列芯片拥有丰富的时钟源选择，为方便用户配置，提供了时钟树配置表，不需要用户手动调用时钟设置接口，用户只需要关心最终的系统时钟和外设时钟频率即可。时钟配置表位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx_board</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">xxx_clock_config.h</span></code> 文件。</p>
+<p>博流系列芯片拥有丰富的时钟源选择，为方便用户配置，提供了时钟树配置表，不需要用户手动调用时钟设置接口，用户只需要关心最终的系统时钟和外设时钟频率即可。时钟配置表位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx_board</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">clock_config.h</span></code> 文件。</p>
 </div>
 <div class="section" id="id3">
 <h2><span class="section-number">3.1.2. </span>时钟频率获取接口<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
@@ -240,6 +242,8 @@
     <span class="n">SYSTEM_CLOCK_FCLK</span><span class="p">,</span>
     <span class="n">SYSTEM_CLOCK_BCLK</span><span class="p">,</span>
     <span class="n">SYSTEM_CLOCK_XCLK</span><span class="p">,</span>
+    <span class="n">SYSTEM_CLOCK_32K_CLK</span><span class="p">,</span>
+    <span class="n">SYSTEM_CLOCK_AUPLL</span><span class="p">,</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -262,6 +266,8 @@
     <span class="n">PERIPHERAL_CLOCK_ADC</span><span class="p">,</span>
     <span class="n">PERIPHERAL_CLOCK_DAC</span><span class="p">,</span>
     <span class="n">PERIPHERAL_CLOCK_I2S</span><span class="p">,</span>
+    <span class="n">PERIPHERAL_CLOCK_PWM</span><span class="p">,</span>
+    <span class="n">PERIPHERAL_CLOCK_CAM</span><span class="p">,</span>
 <span class="p">};</span>
 </pre></div>
 </div>

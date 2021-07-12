@@ -136,7 +136,10 @@ BLE server 软件实现
 
 - **CDK工具编译**
 
-    暂不支持
+   打开项目中提供的工程文件：ble_contral.cdkproj、ble_peripheral.cdkproj
+
+   参照 :ref:`windows_cdk_quick_start` 的步骤编译下载即可
+
 
 - **命令行编译**
 

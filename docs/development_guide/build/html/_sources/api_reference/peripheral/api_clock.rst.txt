@@ -4,7 +4,7 @@
 简介
 ------------------------
 
-博流系列芯片拥有丰富的时钟源选择，为方便用户配置，提供了时钟树配置表，不需要用户手动调用时钟设置接口，用户只需要关心最终的系统时钟和外设时钟频率即可。时钟配置表位于 ``bsp/board/xxx_board`` 目录下 ``xxx_clock_config.h`` 文件。
+博流系列芯片拥有丰富的时钟源选择，为方便用户配置，提供了时钟树配置表，不需要用户手动调用时钟设置接口，用户只需要关心最终的系统时钟和外设时钟频率即可。时钟配置表位于 ``bsp/board/xxx_board`` 目录下 ``clock_config.h`` 文件。
 
 
 时钟频率获取接口
@@ -31,6 +31,8 @@
         SYSTEM_CLOCK_FCLK,
         SYSTEM_CLOCK_BCLK,
         SYSTEM_CLOCK_XCLK,
+        SYSTEM_CLOCK_32K_CLK,
+        SYSTEM_CLOCK_AUPLL,
     };
 
 
@@ -57,4 +59,6 @@
         PERIPHERAL_CLOCK_ADC,
         PERIPHERAL_CLOCK_DAC,
         PERIPHERAL_CLOCK_I2S,
+        PERIPHERAL_CLOCK_PWM,
+        PERIPHERAL_CLOCK_CAM,
     };

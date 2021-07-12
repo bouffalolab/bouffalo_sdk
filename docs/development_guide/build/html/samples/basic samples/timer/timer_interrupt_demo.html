@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>9.1. TIMER - 定时器中断 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="1. Shell 命令行调试" href="../../advance%20samples/shell_demo.html" />
+    <link rel="prev" title="9. TIMER 示例" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> BL_MCU_SDK 开发指南
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">快速开发指南</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/index.html">2. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 手册</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/board.html">2. Board 配置系统</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/peripheral/index.html">3. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/shell/api_shell.html">4. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/bluetooth/api_ble.html">6. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adc/index.html">8. ADC 示例</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">9. TIMER 示例</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">9.1. TIMER - 定时器中断</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">9.1.1. 软件实现</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">9.1.2. 编译和烧录</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">9.1.3. 实验现象</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BL_MCU_SDK 开发指南</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">9. </span>TIMER 示例</a> &raquo;</li>
+        
+      <li><span class="section-number">9.1. </span>TIMER - 定时器中断</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../_sources/samples/basic samples/timer/timer_interrupt_demo.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="timer">
+<h1><span class="section-number">9.1. </span>TIMER - 定时器中断<a class="headerlink" href="#timer" title="永久链接至标题">¶</a></h1>
+<p>本 demo 基于 TIMER 外设周期性触发中断模式编写。</p>
+<div class="section" id="id1">
+<h2><span class="section-number">9.1.1. </span>软件实现<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/timer/timer_int</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define TIMER_CLK_SRC   (0)</span>
+<span class="cp">#define TIMER_CLK_DIV   (0)</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">TIMER</span></code> 设备时钟源，见 <code class="docutils literal notranslate"><span class="pre">drivers\bl702_driver\hal_drv\default_config\timer_config.h``和``drivers\bl702_driver\hal_drv\src\hal_timer.c</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define CONFIG_GPIO14_FUNC GPIO_FUN_UART0_TX</span>
+<span class="cp">#define CONFIG_GPIO15_FUNC GPIO_FUN_UART0_RX</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">UART</span></code> 设备复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_TIMER_CH0</span>
+
+<span class="cp">#if defined(BSP_USING_TIMER_CH0)</span>
+<span class="cp">#ifndef TIMER_CH0_CONFIG</span>
+<span class="cp">#define TIMER_CH0_CONFIG                    \</span>
+<span class="cp">    {                                       \</span>
+<span class="cp">        .id = 0,                            \</span>
+<span class="cp">        .ch = 0,                            \</span>
+<span class="cp">        .cnt_mode = TIMER_CNT_PRELOAD,      \</span>
+<span class="cp">        .pl_trig_src = TIMER_PL_TRIG_COMP0, \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>使能 <code class="docutils literal notranslate"><span class="pre">BSP_USING_TIMER_CH0</span></code> 并配置 <code class="docutils literal notranslate"><span class="pre">TIMER</span></code> 设备配置，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/peripheral_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">timer_ch0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">device_open</span><span class="p">(</span><span class="n">timer_ch0</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_INT</span><span class="p">);</span>
+    <span class="n">device_set_callback</span><span class="p">(</span><span class="n">timer_ch0</span><span class="p">,</span> <span class="n">timer_ch0_irq_callback</span><span class="p">);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">timer_ch0</span><span class="p">,</span> <span class="n">DEVICE_CTRL_SET_INT</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">timer_ch0</span><span class="p">,</span> <span class="n">DEVICE_CTRL_TIMER_CH_START</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">timer_user_cfg</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>通过 <code class="docutils literal notranslate"><span class="pre">timer_ch0_irq_callback</span></code> 函数，注册用户指定的 <code class="docutils literal notranslate"><span class="pre">TIMER0</span></code> 中断服务函数。通过 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> 函数使能中断和配置定时周期。</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">timer_ch0_irq_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">state</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;timer ch0 interrupt! </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">TIMER_EVENT_COMP0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">cnt</span><span class="o">++</span><span class="p">;</span>
+        <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;timer event comp0! cnt=%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">cnt</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">TIMER_EVENT_COMP1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;timer event comp1! </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">TIMER_EVENT_COMP2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;timer event comp2! </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p>此函数是示例的中断服务函数，作用是判断具体是哪个 COMP 触发的中断和打印 COMP0 触发中断的次数。</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">state</span></code> 会输入 <code class="docutils literal notranslate"><span class="pre">TIMER</span></code> 设备的 EVENT 类型</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">args</span></code> 包含了返回数据指针</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> 包含返回数据的长度</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dev</span></code> 为中断的 <code class="docutils literal notranslate"><span class="pre">TIMER</span></code> 设备句柄</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">9.1.2. </span>编译和烧录<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p><strong>CDK 编译</strong></p>
+<p>打开项目中提供的工程文件：timer_int.cdkproj</p>
+<p>参照 <a class="reference internal" href="../../../get_started/Windows_quick_start_cdk.html#windows-cdk-quick-start"><span class="std std-ref">Windows 下使用 CDK (类 MDK Keil)开发指南</span></a> 的步骤编译下载即可</p>
+</li>
+<li><p><strong>命令行编译</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>timer_int
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>烧录</strong></p>
+<p>详见 <a class="reference internal" href="../../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube 烧录工具指南</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">9.1.3. </span>实验现象<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<blockquote>
+<div><p>每 1 秒触发 1 次 <code class="docutils literal notranslate"><span class="pre">timer</span> <span class="pre">ch0</span></code> <code class="docutils literal notranslate"><span class="pre">COMP0</span></code> 中断，每次触发 <code class="docutils literal notranslate"><span class="pre">TIMER</span></code> 中断都会打印一次 <code class="docutils literal notranslate"><span class="pre">timer</span> <span class="pre">ch0</span> <span class="pre">interrupt!</span></code> ，并且 <code class="docutils literal notranslate"><span class="pre">cnt</span></code> 值每次都会加 1 。
+串口打印：</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">timer</span> <span class="pre">ch0</span> <span class="pre">interrupt!</span> <span class="pre">timer</span> <span class="pre">event</span> <span class="pre">comp0!</span> <span class="pre">cnt=1</span></code>
+<code class="docutils literal notranslate"><span class="pre">timer</span> <span class="pre">ch0</span> <span class="pre">interrupt!</span> <span class="pre">timer</span> <span class="pre">event</span> <span class="pre">comp0!</span> <span class="pre">cnt=2</span></code>
+<code class="docutils literal notranslate"><span class="pre">timer</span> <span class="pre">ch0</span> <span class="pre">interrupt!</span> <span class="pre">timer</span> <span class="pre">event</span> <span class="pre">comp0!</span> <span class="pre">cnt=3</span></code></p>
+</div></blockquote>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../../advance%20samples/shell_demo.html" class="btn btn-neutral float-right" title="1. Shell 命令行调试" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="9. TIMER 示例" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; 版权所有 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

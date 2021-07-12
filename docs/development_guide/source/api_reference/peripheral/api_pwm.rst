@@ -30,13 +30,13 @@ PWM 设备结构体定义
 - ch        通道号，使能PWM通道0则ch为0，使能PWM通道0则ch为1，以此类推
 - polarity_invert_mode 极性翻转使能
 - period    PWM 周期值
-- threshold_low PWM 低门限阈值
-- threshold_high PWM 高门限阈值
+- threshold_low PWM 低门限阈值,不能大于period
+- threshold_high PWM 高门限阈值,不能大于period
 - it_pulse_count 触发中断条件的周期计数值
 
 .. note:: PWM 实际频率 = PWM 时钟源/分频/period ，period 非 PWM 实际周期，
 
-.. note:: PWM 占空比 = threshold_low/threshold_high * 100%
+.. note:: PWM 占空比 = (threshold_high-threshold_low)/period * 100%
 
 PWM 设备参数配置表
 ------------------------
@@ -193,11 +193,11 @@ PWM 设备除了标准的控制命令，还具有自己特殊的控制命令。
 +------------------------------------------+---------------------------+--------------------------+
 |DEVICE_CTRL_SUSPEND                       |NULL                       |关闭当前PWM通道           |
 +------------------------------------------+---------------------------+--------------------------+
-|DEIVCE_CTRL_PWM_FREQUENCE_CONFIG          |uint32_t                   |配置当前PWM通道周期值     |
+|DEVICE_CTRL_PWM_FREQUENCE_CONFIG          |uint32_t                   |配置当前PWM通道周期值     |
 +------------------------------------------+---------------------------+--------------------------+
-|DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG          |pwm_dutycycle_config_t     |配置当前PWM通道占空比     |
+|DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG          |pwm_dutycycle_config_t     |配置当前PWM通道占空比     |
 +------------------------------------------+---------------------------+--------------------------+
-|DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG     |uint32_t                   |配置触发PWM中断周期值     |
+|DEVICE_CTRL_PWM_IT_PULSE_COUNT_CONFIG     |uint32_t                   |配置触发PWM中断周期值     |
 +------------------------------------------+---------------------------+--------------------------+
 
 **device_set_callback**

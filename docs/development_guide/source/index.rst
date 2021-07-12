@@ -22,6 +22,7 @@ BL MCU SDK 将为您提供博流 BL70X 系列 MCU 开发的全方位支持。
    get_started/index
    get_started/bl_dev_cube
    get_started/cmake_quick_start
+   get_started/cdk_new_project_quick_start
    get_started/connecting_hardware
 
 
@@ -52,7 +53,7 @@ BL MCU SDK 将为您提供博流 BL70X 系列 MCU 开发的全方位支持。
    samples/basic samples/spi/index
    samples/basic samples/i2c/index
    samples/basic samples/adc/index
-
+   samples/basic samples/timer/index
 
 
 .. toctree::

@@ -95,7 +95,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">5. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul class="current">
@@ -148,6 +149,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -256,8 +258,8 @@
 <li><p>ch        通道号，使能PWM通道0则ch为0，使能PWM通道0则ch为1，以此类推</p></li>
 <li><p>polarity_invert_mode 极性翻转使能</p></li>
 <li><p>period    PWM 周期值</p></li>
-<li><p>threshold_low PWM 低门限阈值</p></li>
-<li><p>threshold_high PWM 高门限阈值</p></li>
+<li><p>threshold_low PWM 低门限阈值,不能大于period</p></li>
+<li><p>threshold_high PWM 高门限阈值,不能大于period</p></li>
 <li><p>it_pulse_count 触发中断条件的周期计数值</p></li>
 </ul>
 <div class="admonition note">
@@ -266,7 +268,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">注解</p>
-<p>PWM 占空比 = threshold_low/threshold_high * 100%</p>
+<p>PWM 占空比 = (threshold_high-threshold_low)/period * 100%</p>
 </div>
 </div>
 <div class="section" id="id3">
@@ -428,15 +430,15 @@
 <td><p>NULL</p></td>
 <td><p>关闭当前PWM通道</p></td>
 </tr>
-<tr class="row-even"><td><p>DEIVCE_CTRL_PWM_FREQUENCE_CONFIG</p></td>
+<tr class="row-even"><td><p>DEVICE_CTRL_PWM_FREQUENCE_CONFIG</p></td>
 <td><p>uint32_t</p></td>
 <td><p>配置当前PWM通道周期值</p></td>
 </tr>
-<tr class="row-odd"><td><p>DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</p></td>
+<tr class="row-odd"><td><p>DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG</p></td>
 <td><p>pwm_dutycycle_config_t</p></td>
 <td><p>配置当前PWM通道占空比</p></td>
 </tr>
-<tr class="row-even"><td><p>DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG</p></td>
+<tr class="row-even"><td><p>DEVICE_CTRL_PWM_IT_PULSE_COUNT_CONFIG</p></td>
 <td><p>uint32_t</p></td>
 <td><p>配置触发PWM中断周期值</p></td>
 </tr>

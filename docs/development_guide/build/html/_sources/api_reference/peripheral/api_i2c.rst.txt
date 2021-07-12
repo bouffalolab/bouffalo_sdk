@@ -30,7 +30,7 @@ I2C 设备结构体定义
 - parent    继承父类属性
 - ch        i2c id，0 表示 i2c0,1 表示 i2c1
 - mode      i2c 传输模式，0 为使用硬件 i2c，1 为使用软件 i2c，当前软件 i2c 暂时无效
-- phase
+- phase     用来计算 i2c 实际时序时钟 ，公式：i2c_clk = i2c_source_clk/(4*(phase+1))
 - 其他待补充
 
 I2C 设备参数配置表
