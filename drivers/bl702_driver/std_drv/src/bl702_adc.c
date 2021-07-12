@@ -579,7 +579,7 @@ void ADC_Parse_Result(uint32_t *orgVal, uint32_t len, ADC_Result_Type *result)
  * @param  intMask: mask or unmask
  *
  * @return None
- *  
+ *
 *******************************************************************************/
 BL_Mask_Type ADC_IntGetMask(ADC_INT_Type intType)
 {
@@ -622,6 +622,7 @@ BL_Mask_Type ADC_IntGetMask(ADC_INT_Type intType)
         default:
             break;
     }
+    return 0;
 }
 
 /****************************************************************************/ /**

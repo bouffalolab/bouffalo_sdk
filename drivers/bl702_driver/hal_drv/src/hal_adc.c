@@ -121,8 +121,8 @@ uint8_t adc_check_channel_status(uint8_t *pos_list, uint8_t *neg_list, uint16_t 
         GPIO_PIN_11, /* CH3 IO */
         GPIO_PIN_12, /* CH4 IO */
         GPIO_PIN_14, /* CH5 IO */
-        0xff,        /* CH6 IO */
-        0xff,        /* CH7 IO */
+        GPIO_PIN_7,  /* CH6 IO */
+        GPIO_PIN_9,  /* CH7 IO */
         GPIO_PIN_18, /* CH8 IO */
         GPIO_PIN_19, /* CH9 IO */
         GPIO_PIN_20, /* CH10 IO */
@@ -133,10 +133,6 @@ uint8_t adc_check_channel_status(uint8_t *pos_list, uint8_t *neg_list, uint16_t 
     for (i = 0; i < channelNum; i++) {
         if (pos_list[i] > ADC_CHANNEL11) {
             continue;
-        }
-
-        if (channel_io_reference_table[pos_list[i]] == 0xff) {
-            return ERROR;
         }
 
         if (GLB_GPIO_Get_Fun(channel_io_reference_table[pos_list[i]]) != GPIO_FUN_ANALOG) {
