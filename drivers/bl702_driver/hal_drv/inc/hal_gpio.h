@@ -75,6 +75,7 @@ enum gpio_pin_type {
 #define GPIO_SYNC_FALLING_TRIGER_INT_MODE  11
 #define GPIO_SYNC_HIGH_LEVEL_INT_MODE      12
 #define GPIO_SYNC_LOW_LEVEL_INT_MODE       13
+#define GPIO_HZ_MODE                       14
 
 typedef struct gpio_device {
     struct device parent;
