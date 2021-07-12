@@ -201,6 +201,7 @@ int spi_control(struct device *dev, int cmd, void *args)
             uint32_t tmpVal = BL_RD_REG(SPI_BASE + spi_device->id * 0x100, SPI_FIFO_CONFIG_0);
             tmpVal = BL_CLR_REG_BIT(tmpVal, SPI_DMA_TX_EN);
             BL_WR_REG(SPI_BASE + spi_device->id * 0x100, SPI_FIFO_CONFIG_0, tmpVal);
+            dev->oflag &= ~DEVICE_OFLAG_DMA_TX;
             break;
         }
 
@@ -208,6 +209,7 @@ int spi_control(struct device *dev, int cmd, void *args)
             uint32_t tmpVal = BL_RD_REG(SPI_BASE + spi_device->id * 0x100, SPI_FIFO_CONFIG_0);
             tmpVal = BL_CLR_REG_BIT(tmpVal, SPI_DMA_RX_EN);
             BL_WR_REG(SPI_BASE + spi_device->id * 0x100, SPI_FIFO_CONFIG_0, tmpVal);
+            dev->oflag &= ~DEVICE_OFLAG_DMA_RX;
             break;
         }
 
@@ -215,6 +217,7 @@ int spi_control(struct device *dev, int cmd, void *args)
             uint32_t tmpVal = BL_RD_REG(SPI_BASE + spi_device->id * 0x100, SPI_FIFO_CONFIG_0);
             tmpVal = BL_SET_REG_BIT(tmpVal, SPI_DMA_TX_EN);
             BL_WR_REG(SPI_BASE + spi_device->id * 0x100, SPI_FIFO_CONFIG_0, tmpVal);
+            dev->oflag |= DEVICE_OFLAG_DMA_TX;
             break;
         }
 
@@ -222,6 +225,7 @@ int spi_control(struct device *dev, int cmd, void *args)
             uint32_t tmpVal = BL_RD_REG(SPI_BASE + spi_device->id * 0x100, SPI_FIFO_CONFIG_0);
             tmpVal = BL_SET_REG_BIT(tmpVal, SPI_DMA_RX_EN);
             BL_WR_REG(SPI_BASE + spi_device->id * 0x100, SPI_FIFO_CONFIG_0, tmpVal);
+            dev->oflag |= DEVICE_OFLAG_DMA_RX;
             break;
         }
 
@@ -258,34 +262,34 @@ int spi_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
 
         return 0;
     } else {
-        if (spi_device->datasize == SPI_DATASIZE_32BIT) {
-            SPI_Send_32bits(spi_device->id, (uint32_t *)buffer, size, SPI_TIMEOUT_DISABLE);
-            return 0;
-        } else if (spi_device->datasize == SPI_DATASIZE_24BIT) {
-        } else if (spi_device->datasize == SPI_DATASIZE_16BIT) {
-            uint32_t residue32 = size % 2;
-            uint32_t trade32 = size / 2;
-            SPI_Send_32bits(spi_device->id, (uint32_t *)buffer, trade32, SPI_TIMEOUT_DISABLE);
-            buffer += sizeof(uint32_t) * trade32;
-            SPI_Send_16bits(spi_device->id, (uint16_t *)buffer, residue32, SPI_TIMEOUT_DISABLE);
-            return 0;
-        } else if (spi_device->datasize == SPI_DATASIZE_8BIT) {
-            uint32_t residue32 = size % 4;
-            uint32_t trade32 = size / 4;
-            SPI_Send_32bits(spi_device->id, (uint32_t *)buffer, trade32, SPI_TIMEOUT_DISABLE);
-            buffer += sizeof(uint32_t) * trade32;
+        // if (spi_device->datasize == SPI_DATASIZE_32BIT) {
+        //     SPI_Send_32bits(spi_device->id, (uint32_t *)buffer, size, SPI_TIMEOUT_DISABLE);
+        //     return 0;
+        // } else if (spi_device->datasize == SPI_DATASIZE_24BIT) {
+        // } else if (spi_device->datasize == SPI_DATASIZE_16BIT) {
+        //     uint32_t residue32 = size % 2;
+        //     uint32_t trade32 = size / 2;
+        //     SPI_Send_32bits(spi_device->id, (uint32_t *)buffer, trade32, SPI_TIMEOUT_DISABLE);
+        //     buffer += sizeof(uint32_t) * trade32;
+        //     SPI_Send_16bits(spi_device->id, (uint16_t *)buffer, residue32, SPI_TIMEOUT_DISABLE);
+        //     return 0;
+        // } else if (spi_device->datasize == SPI_DATASIZE_8BIT) {
+        //     uint32_t residue32 = size % 4;
+        //     uint32_t trade32 = size / 4;
+        //     SPI_Send_32bits(spi_device->id, (uint32_t *)buffer, trade32, SPI_TIMEOUT_DISABLE);
+        //     buffer += sizeof(uint32_t) * trade32;
 
-            uint32_t residue16 = residue32 % 2;
-            uint32_t trade16 = residue32 / 2;
-            SPI_Send_16bits(spi_device->id, (uint16_t *)buffer, trade16, SPI_TIMEOUT_DISABLE);
-            buffer += sizeof(uint16_t) * trade16;
+        //     uint32_t residue16 = residue32 % 2;
+        //     uint32_t trade16 = residue32 / 2;
+        //     SPI_Send_16bits(spi_device->id, (uint16_t *)buffer, trade16, SPI_TIMEOUT_DISABLE);
+        //     buffer += sizeof(uint16_t) * trade16;
 
-            SPI_Send_8bits(spi_device->id, (uint8_t *)buffer, residue16, SPI_TIMEOUT_DISABLE);
-            return 0;
-        }
+        //     SPI_Send_8bits(spi_device->id, (uint8_t *)buffer, residue16, SPI_TIMEOUT_DISABLE);
+        //     return 0;
+        // }
+
+        return -2;
     }
-
-    return -2;
 }
 /**
  * @brief
@@ -314,9 +318,8 @@ int spi_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 
         return 0;
     } else {
+        return -2;
     }
-
-    return -2;
 }
 /**
  * @brief

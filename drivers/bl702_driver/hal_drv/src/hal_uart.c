@@ -223,24 +223,28 @@ int uart_control(struct device *dev, int cmd, void *args)
             uint32_t tmpVal = BL_RD_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0);
             tmpVal = BL_CLR_REG_BIT(tmpVal, UART_DMA_TX_EN);
             BL_WR_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0, tmpVal);
+            dev->oflag &= ~DEVICE_OFLAG_DMA_TX;
             break;
         }
         case DEVICE_CTRL_RX_DMA_SUSPEND: {
             uint32_t tmpVal = BL_RD_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0);
             tmpVal = BL_CLR_REG_BIT(tmpVal, UART_DMA_RX_EN);
             BL_WR_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0, tmpVal);
+            dev->oflag &= ~DEVICE_OFLAG_DMA_RX;
             break;
         }
         case DEVICE_CTRL_TX_DMA_RESUME: {
             uint32_t tmpVal = BL_RD_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0);
             tmpVal = BL_SET_REG_BIT(tmpVal, UART_DMA_TX_EN);
             BL_WR_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0, tmpVal);
+            dev->oflag |= DEVICE_OFLAG_DMA_TX;
             break;
         }
         case DEVICE_CTRL_RX_DMA_RESUME: {
             uint32_t tmpVal = BL_RD_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0);
             tmpVal = BL_SET_REG_BIT(tmpVal, UART_DMA_RX_EN);
             BL_WR_REG(UART0_BASE + uart_device->id * 0x100, UART_FIFO_CONFIG_0, tmpVal);
+            dev->oflag |= DEVICE_OFLAG_DMA_RX;
             break;
         }
         case DEVICE_CTRL_UART_GET_TX_FIFO /* constant-expression */:
@@ -278,10 +282,10 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
             dma_channel_start(dma_ch);
         }
         return 0;
-    } else if (dev->oflag & DEVICE_OFLAG_STREAM_TX) {
-        return UART_SendData(uart_device->id, (uint8_t *)buffer, size);
+    } else if (dev->oflag & DEVICE_OFLAG_INT_TX) {
+        return -2;
     } else
-        return -1;
+        return UART_SendData(uart_device->id, (uint8_t *)buffer, size);
 }
 /**
  * @brief
@@ -308,14 +312,15 @@ int uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
             dma_channel_start(dma_ch);
         }
         return 0;
-    } else if (dev->oflag & DEVICE_OFLAG_STREAM_RX) {
+    } else if (dev->oflag & DEVICE_OFLAG_INT_RX) {
+        return -2;
+    } else {
         uint32_t rx_len = 0;
         while (rx_len < size) {
             rx_len += UART_ReceiveData(uart_device->id, (uint8_t *)buffer + rx_len, size - rx_len);
         }
         return 0;
     }
-    return -1;
 }
 /**
  * @brief
