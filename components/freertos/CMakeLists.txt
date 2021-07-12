@@ -1,4 +1,4 @@
-﻿################# Add global include #################
+################# Add global include #################
 list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}"
 "${CMAKE_CURRENT_SOURCE_DIR}/include"
@@ -20,10 +20,15 @@ file(GLOB_RECURSE sources "${CMAKE_CURRENT_SOURCE_DIR}/croutine.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/tasks.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/timers.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/portable/MemMang/heap_5.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/port.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/portASM.S"
 )
 list(APPEND ADD_SRCS  ${sources})
+if(CPU_ID)
+list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/${CPU_ID}/port.c)
+list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/${CPU_ID}/portASM.S)
+else()
+list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/port.c)
+list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/portASM.S)
+endif()
 # aux_source_directory(src ADD_SRCS)
 # list(REMOVE_ITEM ADD_SRCS "${CMAKE_CURRENT_SOURCE_DIR}")
 #######################################################
