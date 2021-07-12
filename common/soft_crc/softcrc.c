@@ -155,7 +155,7 @@ uint32_t BFLB_Soft_CRC32_Table(void *dataIn, uint32_t len)
 
     return crc ^ 0xffffffff;
 }
-#ifndef BFLB_USE_ROM_DRIVER
+
 /******************************************************************************
 * Name:    CRC-32  x32+x26+x23+x22+x16+x12+x11+x10+x8+x7+x5+x4+x2+x+1
 * Poly:    0x4C11DB7
@@ -166,16 +166,14 @@ uint32_t BFLB_Soft_CRC32_Table(void *dataIn, uint32_t len)
 * Alias:   CRC_32/ADCCP
 * Use:     WinRAR,ect.
 *****************************************************************************/
-__WEAK__
-uint32_t ATTR_TCM_SECTION BFLB_Soft_CRC32(void *dataIn, uint32_t len)
+uint32_t ATTR_TCM_SECTION BFLB_Soft_CRC32_Ex(uint32_t initial, void *dataIn, uint32_t len)
 {
     uint8_t i;
-    uint32_t crc = 0xffffffff; // Initial value
+    uint32_t crc = ~initial; // Initial value
     uint8_t *data = (uint8_t *)dataIn;
 
     while (len--) {
         crc ^= *data++; // crc ^= *data; data++;
-
         for (i = 0; i < 8; ++i) {
             if (crc & 1) {
                 crc = (crc >> 1) ^ 0xEDB88320; // 0xEDB88320= reverse 0x04C11DB7
@@ -184,7 +182,13 @@ uint32_t ATTR_TCM_SECTION BFLB_Soft_CRC32(void *dataIn, uint32_t len)
             }
         }
     }
-
     return ~crc;
+}
+
+#ifndef BFLB_USE_ROM_DRIVER
+__WEAK__
+uint32_t ATTR_TCM_SECTION BFLB_Soft_CRC32(void *dataIn, uint32_t len)
+{
+    return BFLB_Soft_CRC32_Ex(0, dataIn, len);
 }
 #endif

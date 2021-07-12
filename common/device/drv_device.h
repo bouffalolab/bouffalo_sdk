@@ -38,6 +38,7 @@
 #define DEVICE_OFLAG_INT_RX    0x008 /* open with interrupt rx */
 #define DEVICE_OFLAG_DMA_TX    0x010 /* open with dma tx */
 #define DEVICE_OFLAG_DMA_RX    0x020 /* open with dma rx */
+#define DEVICE_OFLAG_DEFAULT   0x040 /* open with default  */
 
 #define DEVICE_CTRL_SET_INT        0x01 /* set interrupt */
 #define DEVICE_CTRL_CLR_INT        0x02 /* clear interrupt */
@@ -96,6 +97,7 @@ enum device_class_type {
     DEVICE_CLASS_I2S,
     DEVICE_CLASS_CAMERA,
     DEVICE_CLASS_SEC_HASH,
+    DEVICE_CLASS_KEYSCAN,
 };
 
 enum device_status_type {

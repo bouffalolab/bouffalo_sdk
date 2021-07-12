@@ -23,8 +23,6 @@
 
 #include "arm_dsp_wrapper.h"
 
-#include "arm_dsp_wrapper.h"
-
 void arm_fill_f32(float32_t value, float32_t *pDst, uint32_t blockSize)
 {
     uint32_t blkCnt = blockSize >> 2u;
