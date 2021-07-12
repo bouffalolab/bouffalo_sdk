@@ -182,13 +182,13 @@ void peripheral_clock_init(void)
 #endif
 #endif
 
-#if defined(BSP_USING_QDEC)
-#if BSP_QDEC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_32K_CLK
-    GLB_Set_QDEC_CLK(ENABLE, GLB_QDEC_CLK_F32K, BSP_QDEC_CLOCK_DIV);
-#elif BSP_QDEC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
-    GLB_Set_QDEC_CLK(ENABLE, GLB_QDEC_CLK_XCLK, BSP_QDEC_CLOCK_DIV);
+#if defined(BSP_USING_QDEC) || defined(BSP_USING_KEYSCAN)
+#if BSP_QDEC_KEYSCAN_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_32K_CLK
+    GLB_Set_QDEC_CLK(GLB_QDEC_CLK_F32K, BSP_QDEC_KEYSCAN_CLOCK_DIV);
+#elif BSP_QDEC_KEYSCAN_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
+    GLB_Set_QDEC_CLK(GLB_QDEC_CLK_XCLK, BSP_QDEC_KEYSCAN_CLOCK_DIV);
 #else
-#error "please select correct qdec clock source"
+#error "please select correct qdec or keyscan clock source"
 #endif
 #endif
 

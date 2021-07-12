@@ -134,6 +134,8 @@ typedef enum {
     GPIO_FUN_CAM = 9,
     GPIO_FUN_ANALOG = 10,
     GPIO_FUN_USB = 10,
+    GPIO_FUN_DAC = 10,
+    GPIO_FUN_ADC = 10,
     GPIO_FUN_GPIO = 11,
     GPIO_FUN_RF_TEST = 12,
     GPIO_FUN_SCAN = 13,
@@ -146,7 +148,9 @@ typedef enum {
     GPIO_FUN_EMAC = 19,
     GPIO_FUN_QDEC = 20,
     GPIO_FUN_KEY_SCAN_IN = 21,
+    GPIO_FUN_KEY_SCAN_ROW = 21,
     GPIO_FUN_KEY_SCAN_DRIVE = 22,
+    GPIO_FUN_KEY_SCAN_COL = 22,
     GPIO_FUN_CAM_MISC = 23,
     GPIO_FUN_GPIO_INPUT_UP = 0x0B,
     GPIO_FUN_GPIO_INPUT_DOWN = 0x1B,
@@ -166,8 +170,6 @@ typedef enum {
     GPIO_FUN_UART1_CTS = 0x75,
     GPIO_FUN_UART1_TX = 0x76,
     GPIO_FUN_UART1_RX = 0x77,
-    GPIO_FUN_DAC = 0xa0,
-    GPIO_FUN_ADC = 0xa1,
     GPIO_FUN_UNUSED = 255
 } GLB_GPIO_FUNC_Type;
 
