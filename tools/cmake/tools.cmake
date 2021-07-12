@@ -252,7 +252,7 @@ function(check_all_library)
     endif()
 
     if(${SUPPORT_TFLITE} STREQUAL "y")
-    check_add_library(xz ${CMAKE_SOURCE_DIR}/components/tflite)
+    check_add_library(tflite ${CMAKE_SOURCE_DIR}/components/tflite)
     endif()
 
 endfunction(check_all_library)

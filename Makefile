@@ -2,7 +2,7 @@ BOARD?=bl706_iot
 CHIP?=bl702
 APP_DIR?=examples
 APP?=helloworld
-CPU_ID?=m0
+CPU_ID?=none
 COMx?=
 
 SUPPORT_SHELL?=n
@@ -47,7 +47,7 @@ download:
 	./tools/bflb_flash_tool/bflb_mcu_tool --chipname=$(CHIP) --interface=$(INTERFACE) --port=$(COMx) --baudrate=$(BAUDRATE)
 
 format:
-	find $(FORMAT_DIR)/ -name "*.c" -o -name "*.h" | xargs clang-format -style=file -i
+	find $(FORMAT_DIR)/ -name "*.c" -o -name "*.h" -o -name "*.cc" -o -name "*.cpp"| xargs clang-format -style=file -i
 
 clean:
 	$(RM) out

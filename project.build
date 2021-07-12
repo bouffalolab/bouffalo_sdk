@@ -1,5 +1,8 @@
-cmake_definition+= -DCHIP=$(CHIP)
+ifneq ($(CPU_ID),none)
 cmake_definition+= -DCPU_ID=$(CPU_ID)
+endif
+
+cmake_definition+= -DCHIP=$(CHIP)
 cmake_definition+= -DBOARD=$(BOARD)
 cmake_definition+= -DSUPPORT_FLOAT=$(SUPPORT_FLOAT)
 cmake_definition+= -DSUPPORT_SHELL=$(SUPPORT_SHELL)
