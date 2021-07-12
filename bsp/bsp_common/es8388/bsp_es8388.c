@@ -158,15 +158,16 @@ void ES8388_Codec_Mode(ES8388_Cfg_Type *cfg)
          * if user want to use LINPUT2 and RINPUT2 as input
          * please set 0x0a register as 0x50
          */
-        ES8388_Write_Reg(0x0A, 0x00); //select lin1 and rin1 as micphone input
+        ES8388_Write_Reg(0x0A, 0xf8);
+        ES8388_Write_Reg(0x0B, 0x88); //analog mono mix to left ADC
     } else {
         /*
          * defualt select LIN1 and RIN1 as Mic diff input
          * if user want to use LIN2 and RIN2 as input
          * please set 0x0b register as 0x82
          */
-        ES8388_Write_Reg(0x0A, 0xf0); //set micphone input as difference mode
-        ES8388_Write_Reg(0x0B, 0x02); //set LIN1 and RIN1 as micphone different input
+        ES8388_Write_Reg(0x0A, 0xf8); // Fixed stereo problems
+        ES8388_Write_Reg(0x0B, 0x82); // stereo
     }
 
     tempVal = cfg->data_width;

@@ -89,7 +89,8 @@ void LCD_DrawPicture_cam(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uin
 void LCD_WR_SPI_DMA(uint16_t *img, uint32_t len);
 // void LCD_UartDrawPicture(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,UART_ID_Type uartId);
 void LCD_DrawChinese(uint16_t x, uint16_t y, uint8_t *character, uint16_t bColor, uint16_t cColor);
-
+void LCD_DrawFont(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uint8_t *str, uint8_t num);
+void LCD_DrawFont_64x32(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uint8_t *str, uint8_t num);
 /*@} end of group TFT_LCD_Public_Functions */
 
 /*@} end of group TFT_LCD */

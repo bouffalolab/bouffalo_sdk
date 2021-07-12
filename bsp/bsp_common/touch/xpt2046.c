@@ -25,7 +25,7 @@
 #include "hal_gpio.h"
 #include "bl702_spi.h"
 #include "xpt2046.h"
-#include "lvgl.h"
+// #include "lvgl.h"
 
 #define CMD_Y_READ  0b10010000 // NOTE: XPT2046 data sheet says this is actually Y
 #define CMD_X_READ  0b11010000 // NOTE: XPT2046 data sheet says this is actually X

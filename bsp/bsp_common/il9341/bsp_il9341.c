@@ -24,6 +24,7 @@
 #include "bsp_il9341.h"
 #include "hal_spi.h"
 #include "hal_dma.h"
+#include "font_ascii_16x8.h"
 
 /** @addtogroup  BL702_Peripheral_Case
  *  @{
@@ -602,7 +603,7 @@ void LCD_DrawPicture_cam(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uin
  * @return None
  *
 *******************************************************************************/
-void LCD_DrawChinese(uint16_t x, uint16_t y, uint8_t *character, uint16_t bColor, uint16_t cColor)
+void LCD_DrawChinese(uint16_t x, uint16_t y, uint8_t *character, uint16_t bk_color, uint16_t color)
 {
     uint8_t i, j;
     LCD_Set_Addr(x, y, x + 31, y + 31);
@@ -610,13 +611,127 @@ void LCD_DrawChinese(uint16_t x, uint16_t y, uint8_t *character, uint16_t bColor
     for (j = 0; j < 128; j++) {
         for (i = 0; i < 8; i++) {
             if ((*character & (1 << i)) != 0) {
-                LCD_WR_HalfWord(cColor);
+                LCD_WR_HalfWord(color);
             } else {
-                LCD_WR_HalfWord(bColor);
+                LCD_WR_HalfWord(bk_color);
             }
         }
 
         character++;
+    }
+}
+
+//高效优化的混合字符串显示函数
+// color为字体颜色，bk_color为背景颜色,num为最大显示数量(汉字算两个)
+void LCD_DrawFont(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uint8_t *str, uint8_t num)
+{
+    uint8_t i, j, k, l, x0 = x;
+    uint8_t temp, m;
+
+    for (i = 0; i < num && *str; i++, str++) {
+        if (*str < 128) {
+            if (x > LCD_W - 7) {
+                x = x0;
+                y += 16;
+            }
+            if (x > LCD_W - 7 || y >= LCD_H - 16)
+                break; //空间不足
+
+            LCD_Set_Addr(x, y, x + 7, y + 15); //设置显示区
+
+            m = *str;
+            if (m > ' ')
+                m = m - ' ';
+            else
+                m = 0;
+
+            for (j = 0; j < 16; j++) //16字节点阵数据
+            {
+                temp = ascii_16x8[m * 16 + j];
+                for (k = 0; k < 8; k++) {
+                    if (temp & (0x80 >> k))
+                        LCD_WR_HalfWord(color);
+
+                    else
+                        LCD_WR_HalfWord(bk_color);
+                }
+            }
+            x += 8;
+        }
+        /*
+        //中文字符
+        else {
+            if (x > LCD_W - 15) {
+                x = x0;
+                y += 16;
+            } //自动换行
+            if (x > LCD_W - 15 || y >= LCD_H - 16)
+                break; //空间不足
+
+            Lcd_SetRegion(x, y, x + 15, y + 15); //设置显示区
+
+            for (j = 0; j < GBK_1616_WORD_NUM; j++) //检索法
+            {
+                if (GBK_1616[j].name[0] == str[0] && (GBK_1616[j].name[1] == str[1]))
+                    break;
+            }
+            if (j < GBK_1616_WORD_NUM)   //检索成功
+                for (k = 0; k < 32; k++) //32个字节点阵数据
+                {
+                    temp = GBK_1616[j].dat[k];
+                    for (l = 0; l < 8; l++) {
+                        if (temp & (0x80 >> l))
+                            LCD_WriteData_16Bit(color);
+                        else
+                            LCD_WriteData_16Bit(bk_color);
+                    }
+                }
+
+            else //检索成功失败，直接显示背景色
+                for (j = 0; j < 16; j++)
+                    for (k = 0; k < 16; k++)
+                        LCD_WriteData_16Bit(bk_color);
+            //汉字码两字节，需要额外加1
+            str++;
+            x += 16;
+        }
+        */
+    }
+}
+
+void LCD_DrawFont_64x32(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uint8_t *str, uint8_t num)
+{
+    uint16_t i, j, k, l, x0 = x;
+    uint8_t temp, m;
+
+    for (i = 0; i < num && *str; i++, str++) {
+        if (x > LCD_W - 31) {
+            x = x0;
+            y += 64;
+        }
+        if (x > LCD_W - 31 || y >= LCD_H - 64)
+            break; //空间不足
+
+        LCD_Set_Addr(x, y, x + 31, y + 63); //设置显示区
+
+        m = *str;
+        if (m > '0')
+            m = m - '0';
+        else
+            m = 0;
+
+        for (j = 0; j < 256; j++) //128字节点阵数据
+        {
+            temp = ascii_64x32[m * 256 + j];
+            for (k = 0; k < 8; k++) {
+                if (temp & (0x80 >> k))
+                    LCD_WR_HalfWord(color);
+
+                else
+                    LCD_WR_HalfWord(bk_color);
+            }
+        }
+        x += 32;
     }
 }
 
