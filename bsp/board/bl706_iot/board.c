@@ -111,20 +111,67 @@ static void board_pin_mux_init(void)
         gpio_cfg.gpioPin = af_pin_table[i].pin;
         gpio_cfg.gpioFun = af_pin_table[i].func;
 
+        /*if reset state*/
         if (af_pin_table[i].func == GPIO_FUN_UNUSED) {
             continue;
         } else if (af_pin_table[i].func == GPIO_FUN_PWM) {
+            /*if pwm func*/
             gpio_cfg.pullType = GPIO_PULL_DOWN;
-        } else if ((af_pin_table[i].func == GPIO_FUN_DAC) || (af_pin_table[i].func == GPIO_FUN_ADC)) {
+        } else if ((af_pin_table[i].func == GPIO_FUN_USB) || (af_pin_table[i].func == GPIO_FUN_DAC) || (af_pin_table[i].func == GPIO_FUN_ADC)) {
+            /*if analog func , for usb、adc、dac*/
             gpio_cfg.gpioFun = GPIO_FUN_ANALOG;
             gpio_cfg.gpioMode = GPIO_MODE_ANALOG;
+            gpio_cfg.pullType = GPIO_PULL_NONE;
         } else if ((af_pin_table[i].func & 0x70) == 0x70) {
+            /*if uart func*/
             gpio_cfg.gpioFun = GPIO_FUN_UART;
             uint8_t sig = af_pin_table[i].func & 0x07;
-
+            /*link to one uart sig*/
             GLB_UART_Fun_Sel((gpio_cfg.gpioPin % 8), sig);
+        } else if (af_pin_table[i].func == GPIO_FUN_CLK_OUT) {
+            if (af_pin_table[i].pin % 2) {
+                /*odd gpio output clock*/
+                GLB_Set_Chip_Out_1_CLK_Sel(GLB_CHIP_CLK_OUT_I2S_REF_CLK);
+            } else {
+                /*even gpio output clock*/
+                GLB_Set_Chip_Out_0_CLK_Sel(GLB_CHIP_CLK_OUT_I2S_REF_CLK);
+            }
+        } else if ((af_pin_table[i].func == GPIO_FUN_GPIO_INPUT_UP) || (af_pin_table[i].func == GPIO_FUN_GPIO_EXTI_FALLING_EDGE) || (af_pin_table[i].func == GPIO_FUN_GPIO_EXTI_LOW_LEVEL)) {
+            /*if common gpio func,include input、output and exti*/
+            gpio_cfg.gpioFun = GPIO_FUN_GPIO;
+            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.pullType = GPIO_PULL_UP;
+            if (af_pin_table[i].func == GPIO_FUN_GPIO_EXTI_FALLING_EDGE) {
+                GLB_Set_GPIO_IntMod(af_pin_table[i].pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_NEG_PULSE);
+            } else if (af_pin_table[i].func == GPIO_FUN_GPIO_EXTI_LOW_LEVEL) {
+                GLB_Set_GPIO_IntMod(af_pin_table[i].pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_NEG_LEVEL);
+            }
+        } else if ((af_pin_table[i].func == GPIO_FUN_GPIO_INPUT_DOWN) || (af_pin_table[i].func == GPIO_FUN_GPIO_EXTI_RISING_EDGE) || (af_pin_table[i].func == GPIO_FUN_GPIO_EXTI_HIGH_LEVEL)) {
+            gpio_cfg.gpioFun = GPIO_FUN_GPIO;
+            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.pullType = GPIO_PULL_DOWN;
+            if (af_pin_table[i].func == GPIO_FUN_GPIO_EXTI_RISING_EDGE) {
+                GLB_Set_GPIO_IntMod(af_pin_table[i].pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_POS_PULSE);
+            } else if (af_pin_table[i].func == GPIO_FUN_GPIO_EXTI_HIGH_LEVEL) {
+                GLB_Set_GPIO_IntMod(af_pin_table[i].pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_POS_LEVEL);
+            }
+        } else if (af_pin_table[i].func == GPIO_FUN_GPIO_INPUT_NONE) {
+            gpio_cfg.gpioFun = GPIO_FUN_GPIO;
+            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.pullType = GPIO_PULL_NONE;
+        } else if (af_pin_table[i].func == GPIO_FUN_GPIO_OUTPUT_UP) {
+            gpio_cfg.gpioFun = GPIO_FUN_GPIO;
+            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.pullType = GPIO_PULL_UP;
+        } else if (af_pin_table[i].func == GPIO_FUN_GPIO_OUTPUT_DOWN) {
+            gpio_cfg.gpioFun = GPIO_FUN_GPIO;
+            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.pullType = GPIO_PULL_DOWN;
+        } else if (af_pin_table[i].func == GPIO_FUN_GPIO_OUTPUT_NONE) {
+            gpio_cfg.gpioFun = GPIO_FUN_GPIO;
+            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.pullType = GPIO_PULL_NONE;
         }
-
         GLB_GPIO_Init(&gpio_cfg);
     }
 }

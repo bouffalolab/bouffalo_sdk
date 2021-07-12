@@ -36,7 +36,7 @@
 #define BSP_USING_TIMER_CH0
 #define BSP_USING_TIMER_CH1
 #define BSP_USING_CAM
-
+#define BSP_USING_KEYSCAN
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */
@@ -352,6 +352,17 @@
         .ch = 1,                            \
         .cnt_mode = TIMER_CNT_PRELOAD,      \
         .pl_trig_src = TIMER_PL_TRIG_COMP2, \
+    }
+#endif
+#endif
+
+#if defined(BSP_USING_KEYSCAN)
+#ifndef KEYSCAN_CONFIG
+#define KEYSCAN_CONFIG        \
+    {                         \
+        .col_num = COL_NUM_4, \
+        .row_num = ROW_NUM_4, \
+        .deglitch_count = 0,  \
     }
 #endif
 #endif
