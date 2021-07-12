@@ -368,6 +368,10 @@ BL_Err_Type TIMER_Init(TIMER_CFG_Type *timerCfg)
     CHECK_PARAM(IS_TIMER_PRELOAD_TRIG_TYPE(timerCfg->plTrigSrc));
     CHECK_PARAM(IS_TIMER_COUNTMODE_TYPE(timerCfg->countMode));
 
+    if (timerCfg->matchVal0 < 2 || timerCfg->matchVal1 < 2 || timerCfg->matchVal2 < 2) {
+        return ERROR;
+    }
+
     /* Configure timer clock source */
     tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCCR);
 
@@ -402,9 +406,9 @@ BL_Err_Type TIMER_Init(TIMER_CFG_Type *timerCfg)
     }
 
     /* Configure match compare values */
-    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_0, timerCfg->matchVal0);
-    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_1, timerCfg->matchVal1);
-    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_2, timerCfg->matchVal2);
+    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_0, timerCfg->matchVal0 - 2);
+    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_1, timerCfg->matchVal1 - 2);
+    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_2, timerCfg->matchVal2 - 2);
 
 #ifndef BFLB_USE_HAL_DRIVER
     Interrupt_Handler_Register(TIMER_CH0_IRQn, TIMER_CH0_IRQHandler);

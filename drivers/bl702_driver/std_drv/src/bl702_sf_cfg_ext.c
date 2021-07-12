@@ -368,7 +368,7 @@ BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID
             }
         }
     } else {
-        if (SF_Cfg_Get_Flash_Cfg_Need_Lock(flashID, pFlashCfg)) {
+        if (SF_Cfg_Get_Flash_Cfg_Need_Lock(flashID, pFlashCfg) == SUCCESS) {
             return SUCCESS;
         }
 
