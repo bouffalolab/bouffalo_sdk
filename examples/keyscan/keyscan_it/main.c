@@ -42,7 +42,7 @@ int main(void)
     if (keyscan) {
         KEYSCAN_DEV(keyscan)->col_num = COL_NUM_4;
         KEYSCAN_DEV(keyscan)->row_num = ROW_NUM_4;
-        device_open(keyscan, 0); //current scan latency is 32M/1/8 = 4Khz
+        device_open(keyscan, 0); //current scan latency is 32K/1/8 = 4Khz
         device_set_callback(keyscan, keyscan_irq_callback);
         device_control(keyscan, DEVICE_CTRL_SET_INT, NULL);
         device_control(keyscan, DEVICE_CTRL_RESUME, NULL);
