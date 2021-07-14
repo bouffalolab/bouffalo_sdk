@@ -1,5 +1,5 @@
 /**
- * @file bl702_config.h
+ * @file bl602_config.h
  * @brief
  *
  * Copyright (c) 2021 Bouffalolab team
@@ -21,10 +21,17 @@
  *
  */
 
-#ifndef __BL702_CONFIG_H__
-#define __BL702_CONFIG_H__
+#ifndef __BL602_CONFIG_H__
+#define __BL602_CONFIG_H__
 
-#include "peripheral_config.h"
-#include "clock_config.h"
+#if defined(bl602_iot)
+#include "bl602_iot/peripheral_config.h"
+#include "bl602_iot/clock_config.h"
+#include "bl602_iot/pinmux_config.h"
+#else
+#include "bl602_custom/peripheral_config.h"
+#include "bl602_custom/clock_config.h"
+#include "bl602_custom/pinmux_config.h"
+#endif
 
 #endif

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CDK_Workspace Name="bl_mcu_sdk" Database="">
-  <Project Name="helloworld" Path="hellowd/helloworld/cdk/helloworld.cdkproj" Active="Yes"/>
+  <Project Name="helloworld" Path="hellowd/helloworld/cdk/helloworld.cdkproj" Active="No"/>
   <Project Name="adc_continuous_differential" Path="adc/adc_continuous_differential/cdk/adc_continuous_differential.cdkproj" Active="No"/>
   <Project Name="adc_continuous_single_ended" Path="adc/adc_continuous_single_ended/cdk/adc_continuous_single_ended.cdkproj" Active="No"/>
   <Project Name="adc_one_shot_differential" Path="adc/adc_one_shot_differential/cdk/adc_one_shot_differential.cdkproj" Active="No"/>
@@ -23,7 +23,6 @@
   <Project Name="usb_cdc_msc" Path="usb/usb_cdc_msc/cdk/usb_cdc_msc.cdkproj" Active="No"/>
   <Project Name="usb_msc_ram" Path="usb/usb_msc_ram/cdk/usb_msc_ram.cdkproj" Active="No"/>
   <Project Name="usb_msc_sd" Path="usb/usb_msc_sd/cdk/usb_msc_sd.cdkproj" Active="No"/>
-  <Project Name="usb2uart" Path="usb/usb2uart/cdk/usb2uart.cdkproj" Active="No"/>
   <Project Name="usb_video" Path="usb/usb_video/cdk/usb_video.cdkproj" Active="No"/>
   <Project Name="pwm_breath_led" Path="pwm/pwm_breath_led/cdk/pwm_breath_led.cdkproj" Active="No"/>
   <Project Name="flash_rw_test" Path="flash/flash_rw_test/cdk/flash_rw_test.cdkproj" Active="No"/>
@@ -43,7 +42,7 @@
   <Project Name="shell" Path="shell/cdk/shell.cdkproj" Active="No"/>
   <Project Name="timer_basic" Path="timer/timer_basic/cdk/timer_basic.cdkproj" Active="No"/>
   <Project Name="timer_int" Path="timer/timer_int/cdk/timer_int.cdkproj" Active="No"/>
-  <Project Name="camera_lcd" Path="camera/camera_lcd/cdk/camera_lcd.cdkproj" Active="No"/>
+  <Project Name="camera_lcd" Path="camera/camera_lcd/cdk/camera_lcd.cdkproj" Active="Yes"/>
   <Project Name="camera_interleave" Path="camera/camera_interleave/cdk/camera_interleave.cdkproj" Active="No"/>
   <Project Name="camera_interleave_psram" Path="camera/camera_interleave_psram/cdk/camera_interleave_psram.cdkproj" Active="No"/>
   <BuildMatrix>
@@ -72,7 +71,7 @@
       <Project Name="usb_cdc_msc" ConfigName="OpenOCD_Debug"/>
       <Project Name="usb_msc_ram" ConfigName="OpenOCD_Debug"/>
       <Project Name="usb_msc_sd" ConfigName="OpenOCD_Debug"/>
-      <Project Name="usb2uart" ConfigName="OpenOCD_Debug"/>
+      <Project Name="usb2uart_st" ConfigName="OpenOCD_Debug"/>
       <Project Name="usb_video" ConfigName="OpenOCD_Debug"/>
       <Project Name="pwm_breath_led" ConfigName="OpenOCD_Debug"/>
       <Project Name="flash_rw_test" ConfigName="OpenOCD_Debug"/>

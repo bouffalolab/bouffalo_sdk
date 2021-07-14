@@ -24,7 +24,22 @@
 #ifndef __BL702_CONFIG_H__
 #define __BL702_CONFIG_H__
 
-#include "peripheral_config.h"
-#include "clock_config.h"
+#if defined(bl706_avb)
+#include "bl706_avb/peripheral_config.h"
+#include "bl706_avb/clock_config.h"
+#include "bl706_avb/pinmux_config.h"
+#elif defined(bl706_iot)
+#include "bl706_iot/peripheral_config.h"
+#include "bl706_iot/clock_config.h"
+#include "bl706_iot/pinmux_config.h"
+#elif defined(bl706_lp)
+#include "bl706_lp/peripheral_config.h"
+#include "bl706_lp/clock_config.h"
+#include "bl706_lp/pinmux_config.h"
+#else
+#include "bl70x_custom/peripheral_config.h"
+#include "bl70x_custom/clock_config.h"
+#include "bl70x_custom/pinmux_config.h"
+#endif
 
 #endif

@@ -70,46 +70,11 @@
 #define EF_DATA_0_EF_NO_HD_BOOT_EN_LEN    (1U)
 #define EF_DATA_0_EF_NO_HD_BOOT_EN_MSK    (((1U << EF_DATA_0_EF_NO_HD_BOOT_EN_LEN) - 1) << EF_DATA_0_EF_NO_HD_BOOT_EN_POS)
 #define EF_DATA_0_EF_NO_HD_BOOT_EN_UMSK   (~(((1U << EF_DATA_0_EF_NO_HD_BOOT_EN_LEN) - 1) << EF_DATA_0_EF_NO_HD_BOOT_EN_POS))
-#define EF_DATA_0_EF_SDU_DIS              EF_DATA_0_EF_SDU_DIS
-#define EF_DATA_0_EF_SDU_DIS_POS          (14U)
-#define EF_DATA_0_EF_SDU_DIS_LEN          (1U)
-#define EF_DATA_0_EF_SDU_DIS_MSK          (((1U << EF_DATA_0_EF_SDU_DIS_LEN) - 1) << EF_DATA_0_EF_SDU_DIS_POS)
-#define EF_DATA_0_EF_SDU_DIS_UMSK         (~(((1U << EF_DATA_0_EF_SDU_DIS_LEN) - 1) << EF_DATA_0_EF_SDU_DIS_POS))
-#define EF_DATA_0_EF_BLE_DIS              EF_DATA_0_EF_BLE_DIS
-#define EF_DATA_0_EF_BLE_DIS_POS          (15U)
-#define EF_DATA_0_EF_BLE_DIS_LEN          (1U)
-#define EF_DATA_0_EF_BLE_DIS_MSK          (((1U << EF_DATA_0_EF_BLE_DIS_LEN) - 1) << EF_DATA_0_EF_BLE_DIS_POS)
-#define EF_DATA_0_EF_BLE_DIS_UMSK         (~(((1U << EF_DATA_0_EF_BLE_DIS_LEN) - 1) << EF_DATA_0_EF_BLE_DIS_POS))
-#define EF_DATA_0_EF_WIFI_DIS             EF_DATA_0_EF_WIFI_DIS
-#define EF_DATA_0_EF_WIFI_DIS_POS         (16U)
-#define EF_DATA_0_EF_WIFI_DIS_LEN         (1U)
-#define EF_DATA_0_EF_WIFI_DIS_MSK         (((1U << EF_DATA_0_EF_WIFI_DIS_LEN) - 1) << EF_DATA_0_EF_WIFI_DIS_POS)
-#define EF_DATA_0_EF_WIFI_DIS_UMSK        (~(((1U << EF_DATA_0_EF_WIFI_DIS_LEN) - 1) << EF_DATA_0_EF_WIFI_DIS_POS))
 #define EF_DATA_0_EF_0_KEY_ENC_EN         EF_DATA_0_EF_0_KEY_ENC_EN
 #define EF_DATA_0_EF_0_KEY_ENC_EN_POS     (17U)
 #define EF_DATA_0_EF_0_KEY_ENC_EN_LEN     (1U)
 #define EF_DATA_0_EF_0_KEY_ENC_EN_MSK     (((1U << EF_DATA_0_EF_0_KEY_ENC_EN_LEN) - 1) << EF_DATA_0_EF_0_KEY_ENC_EN_POS)
 #define EF_DATA_0_EF_0_KEY_ENC_EN_UMSK    (~(((1U << EF_DATA_0_EF_0_KEY_ENC_EN_LEN) - 1) << EF_DATA_0_EF_0_KEY_ENC_EN_POS))
-#define EF_DATA_0_EF_SF_DIS               EF_DATA_0_EF_SF_DIS
-#define EF_DATA_0_EF_SF_DIS_POS           (19U)
-#define EF_DATA_0_EF_SF_DIS_LEN           (1U)
-#define EF_DATA_0_EF_SF_DIS_MSK           (((1U << EF_DATA_0_EF_SF_DIS_LEN) - 1) << EF_DATA_0_EF_SF_DIS_POS)
-#define EF_DATA_0_EF_SF_DIS_UMSK          (~(((1U << EF_DATA_0_EF_SF_DIS_LEN) - 1) << EF_DATA_0_EF_SF_DIS_POS))
-#define EF_DATA_0_EF_CPU_RST_DBG_DIS      EF_DATA_0_EF_CPU_RST_DBG_DIS
-#define EF_DATA_0_EF_CPU_RST_DBG_DIS_POS  (21U)
-#define EF_DATA_0_EF_CPU_RST_DBG_DIS_LEN  (1U)
-#define EF_DATA_0_EF_CPU_RST_DBG_DIS_MSK  (((1U << EF_DATA_0_EF_CPU_RST_DBG_DIS_LEN) - 1) << EF_DATA_0_EF_CPU_RST_DBG_DIS_POS)
-#define EF_DATA_0_EF_CPU_RST_DBG_DIS_UMSK (~(((1U << EF_DATA_0_EF_CPU_RST_DBG_DIS_LEN) - 1) << EF_DATA_0_EF_CPU_RST_DBG_DIS_POS))
-#define EF_DATA_0_EF_SE_DBG_DIS           EF_DATA_0_EF_SE_DBG_DIS
-#define EF_DATA_0_EF_SE_DBG_DIS_POS       (22U)
-#define EF_DATA_0_EF_SE_DBG_DIS_LEN       (1U)
-#define EF_DATA_0_EF_SE_DBG_DIS_MSK       (((1U << EF_DATA_0_EF_SE_DBG_DIS_LEN) - 1) << EF_DATA_0_EF_SE_DBG_DIS_POS)
-#define EF_DATA_0_EF_SE_DBG_DIS_UMSK      (~(((1U << EF_DATA_0_EF_SE_DBG_DIS_LEN) - 1) << EF_DATA_0_EF_SE_DBG_DIS_POS))
-#define EF_DATA_0_EF_EFUSE_DBG_DIS        EF_DATA_0_EF_EFUSE_DBG_DIS
-#define EF_DATA_0_EF_EFUSE_DBG_DIS_POS    (23U)
-#define EF_DATA_0_EF_EFUSE_DBG_DIS_LEN    (1U)
-#define EF_DATA_0_EF_EFUSE_DBG_DIS_MSK    (((1U << EF_DATA_0_EF_EFUSE_DBG_DIS_LEN) - 1) << EF_DATA_0_EF_EFUSE_DBG_DIS_POS)
-#define EF_DATA_0_EF_EFUSE_DBG_DIS_UMSK   (~(((1U << EF_DATA_0_EF_EFUSE_DBG_DIS_LEN) - 1) << EF_DATA_0_EF_EFUSE_DBG_DIS_POS))
 #define EF_DATA_0_EF_DBG_JTAG_0_DIS       EF_DATA_0_EF_DBG_JTAG_0_DIS
 #define EF_DATA_0_EF_DBG_JTAG_0_DIS_POS   (26U)
 #define EF_DATA_0_EF_DBG_JTAG_0_DIS_LEN   (2U)
@@ -476,16 +441,16 @@ struct ef_data_0_reg {
             uint32_t ef_cpu0_enc_en     : 1; /* [    7],        r/w,        0x0 */
             uint32_t reserved_8_11      : 4; /* [11: 8],       rsvd,        0x0 */
             uint32_t ef_sw_usage_1      : 2; /* [13:12],        r/w,        0x0 */
-            uint32_t ef_sdu_dis         : 1; /* [   14],        r/w,        0x0 */
-            uint32_t ef_ble_dis         : 1; /* [   15],        r/w,        0x0 */
-            uint32_t ef_wifi_dis        : 1; /* [   16],        r/w,        0x0 */
+            uint32_t rsvd0              : 1; /* [   14],        r/w,        0x0 */
+            uint32_t rsvd1              : 1; /* [   15],        r/w,        0x0 */
+            uint32_t rsvd2              : 1; /* [   16],        r/w,        0x0 */
             uint32_t ef_0_key_enc_en    : 1; /* [   17],        r/w,        0x0 */
             uint32_t reserved_18        : 1; /* [   18],       rsvd,        0x0 */
-            uint32_t ef_sf_dis          : 1; /* [   19],        r/w,        0x0 */
+            uint32_t rsvd3              : 1; /* [   19],        r/w,        0x0 */
             uint32_t reserved_20        : 1; /* [   20],       rsvd,        0x0 */
-            uint32_t ef_cpu_rst_dbg_dis : 1; /* [   21],        r/w,        0x0 */
-            uint32_t ef_se_dbg_dis      : 1; /* [   22],        r/w,        0x0 */
-            uint32_t ef_efuse_dbg_dis   : 1; /* [   23],        r/w,        0x0 */
+            uint32_t rsvd4              : 1; /* [   21],        r/w,        0x0 */
+            uint32_t rsvd5              : 1; /* [   22],        r/w,        0x0 */
+            uint32_t rsvd6              : 1; /* [   23],        r/w,        0x0 */
             uint32_t reserved_24_25     : 2; /* [25:24],       rsvd,        0x0 */
             uint32_t ef_dbg_jtag_0_dis  : 2; /* [27:26],        r/w,        0x0 */
             uint32_t ef_dbg_mode        : 4; /* [31:28],        r/w,        0x0 */

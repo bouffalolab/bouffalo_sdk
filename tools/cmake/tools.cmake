@@ -88,6 +88,7 @@ function(generate_bin)
 
     # Add common options
     add_compile_options(${GLOBAL_C_FLAGS})
+    add_compile_options(-D${BOARD})
     add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=c99>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++11>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-nostdlib>)
@@ -132,7 +133,12 @@ function(generate_bin)
 
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/bflb_platform.c)
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/syscalls.c)
-    list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/board/${BOARD}/board.c)
+
+    if(${CHIP} STREQUAL "bl702")
+    list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/board/bl70x/board.c)
+    else()
+    list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/board/${CHIP}/board.c)
+    endif()
 
     add_executable(${target_name}.elf ${mainfile} ${SRCS})
     target_link_options(${target_name}.elf PRIVATE ${GLOBAL_LD_FLAGS})
