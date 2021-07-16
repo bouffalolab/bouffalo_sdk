@@ -179,8 +179,8 @@ typedef struct
     uint32_t rsvd_21_0   : 22; /*!< Reserved */
     uint32_t sf_swap_cfg : 2;  /*!< 0:swap none, 1:swap SF2_CS & SF2_IO2, 2:swap SF2_IO0 & SF2_IO3, 3:swap both */
     uint32_t psram_cfg   : 2;  /*!< 0:no psram, 1:2MB psram, 2:external psram, 3:reserved */
-    uint32_t flash_cfg   : 2;  /*!< 0:external flash SF2, 1:0.5MB flash, 2:1MB flash, 3:external flash SF1 */
-    uint32_t rsvd_29_28  : 2;  /*!< Reserved */
+    uint32_t flash_cfg   : 3;  /*!< 0:external flash SF2, 1:0.5MB flash, 2:1MB flash, 3:external flash SF1 */
+    uint32_t rsvd_29     : 1;  /*!< Reserved */
     uint32_t pkg_info    : 2;  /*!< 0:QFN32, 1:QFN40, 2:QFN48, 3:reserved */
 } Efuse_Device_Info_Type;
 

@@ -59,11 +59,16 @@ void system_bor_init(void)
     HBN_BOR_CFG_Type borCfg = { 1 /* pu_bor */, 0 /* irq_bor_en */, 1 /* bor_vth */, 1 /* bor_sel */ };
     HBN_Set_BOR_Cfg(&borCfg);
 }
+
 void SystemInit(void)
 {
     uint32_t *p;
     uint32_t i = 0;
     uint32_t tmpVal = 0;
+    uint8_t flashCfg = 0;
+    uint8_t psramCfg = 0;
+    uint8_t isInternalFlash = 0;
+    uint8_t isInternalPsram = 0;
 
     /* disable hardware_pullup_pull_down (reg_en_hw_pu_pd = 0) */
     tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
@@ -106,6 +111,28 @@ void SystemInit(void)
     for (i = 0; i < (IRQn_LAST + 3) / 4; i++) {
         p[i] = 0;
     }
+
+    /* SF io select from efuse value */
+    tmpVal = BL_RD_WORD(0x40007074);
+    flashCfg = ((tmpVal>>26)&7);
+    psramCfg = ((tmpVal>>24)&3);
+    if (flashCfg==1 || flashCfg==2) {
+        isInternalFlash = 1;
+    } else {
+        isInternalFlash = 0;
+    }
+    if (psramCfg == 1) {
+        isInternalPsram = 1;
+    } else {
+        isInternalPsram = 0;
+    }
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO);
+    if(isInternalFlash==1 && isInternalPsram==0){
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CFG_GPIO_USE_PSRAM_IO, 0x3f);
+    }else{
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CFG_GPIO_USE_PSRAM_IO, 0x00);
+    }
+    BL_WR_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO, tmpVal);
 
 #ifdef BFLB_EFLASH_LOADER
     Interrupt_Handler_Register(USB_IRQn, USB_DoNothing_IRQHandler);

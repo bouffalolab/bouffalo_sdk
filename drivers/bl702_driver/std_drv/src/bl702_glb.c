@@ -168,7 +168,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_System_CLK_Div(uint8_t hclkDiv, uint8_t b
     BL_WR_REG(GLB_BASE, GLB_CLK_CFG0, tmpVal);
     GLB_REG_BCLK_DIS_TRUE;
     GLB_REG_BCLK_DIS_FALSE;
-    SystemCoreClockSet(SystemCoreClockGet() / ((uint16_t)hclkDiv + 1));
+    //SystemCoreClockSet(SystemCoreClockGet() / ((uint16_t)hclkDiv + 1));
     GLB_CLK_SET_DUMMY_WAIT;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG0);
