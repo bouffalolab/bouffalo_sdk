@@ -8,9 +8,9 @@ type = 0
 name = "FW"
 device = 0
 address0 = 0x3000
-size0 = 0x8D000
-address1 = 0x90000
-size1 = 0x63000
+size0 = 0x90000
+address1 = 0x93000
+size1 = 0x66000
 # compressed image must set len,normal image can left it to 0
 len = 0
 activeindex = 0
@@ -20,8 +20,8 @@ age = 0
 type = 1
 name = "mfg"
 device = 0
-address0 = 0x90000
-size0 = 0x63000
+address0 = 0x93000
+size0 = 0x66000
 address1 = 0
 size1 = 0
 # compressed image must set len,normal image can left it to 0
@@ -31,10 +31,10 @@ age = 0
 
 [[pt_entry]]
 type = 2
-name = "media"
+name = "PSM"
 device = 0
-address0 = 0xF3000
-size0 = 0x5000
+address0 = 0xF9000
+size0 = 0x2000
 address1 = 0
 size1 = 0
 # compressed image must set len,normal image can left it to 0
@@ -44,9 +44,9 @@ age = 0
 
 [[pt_entry]]
 type = 3
-name = "PSM"
+name = "media"
 device = 0
-address0 = 0xF8000
+address0 = 0xFB000
 size0 = 0x4000
 address1 = 0
 size1 = 0
@@ -59,8 +59,8 @@ age = 0
 type = 4
 name = "factory"
 device = 0
-address0 = 0xFC000
-size0 = 0x4000
+address0 = 0xFF000
+size0 = 0x1000
 address1 = 0
 size1 = 0
 # compressed image must set len,normal image can left it to 0

@@ -17,5 +17,5 @@ bflb_iot_tool.exe --chipname=bl602 --port=COM9 --xtal=40M --firmware="D:\\bouffa
 --single：单文件烧写
 --addr：烧写地址默认0
 --config：eflash_loader_cfg.ini
-
+--ota：Haier ota文件输出路径
 
