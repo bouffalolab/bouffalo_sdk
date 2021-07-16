@@ -33,7 +33,7 @@ I2C - AT24CXX 读写
     #define CONFIG_GPIO11_FUNC GPIO_FUN_I2C
     #define CONFIG_GPIO16_FUNC GPIO_FUN_I2C
 
--  配置 ``I2C`` 设备复用引脚，见 ``bsp/board/bl706_iot/peripheral_config.h``
+-  配置 ``I2C`` 设备复用引脚，见 ``bsp/board/bl706_iot/pinmux_config.h``
 
 .. code-block:: C
     :linenos:
@@ -56,7 +56,7 @@ I2C - AT24CXX 读写
 .. code-block:: C
     :linenos:
 
-    i2c_register(I2C0_INDEX, "i2c", DEVICE_OFLAG_RDWR);
+    i2c_register(I2C0_INDEX, "i2c");
     struct device *i2c0 = device_find("i2c");
 
     if (i2c0)

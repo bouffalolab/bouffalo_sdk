@@ -38,7 +38,7 @@ DMA - RAM间数据搬运
 .. code-block:: C
     :linenos:
 
-    dma_register(DMA0_CH0_INDEX, "DMA", DEVICE_OFLAG_RDWR);
+    dma_register(DMA0_CH0_INDEX, "DMA");
 
     struct device *dma = device_find("DMA");
 

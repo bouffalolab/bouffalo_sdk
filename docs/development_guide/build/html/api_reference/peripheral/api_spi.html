@@ -348,13 +348,12 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 <div class="section" id="spi-register">
 <h3><span class="section-number">3.8.4.1. </span><strong>spi_register</strong><a class="headerlink" href="#spi-register" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">spi_register</span></code> 用来注册 SPI 设备标准驱动接口，在注册之前需要打开对应 SPI 设备的宏定义,例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_SPI0</span></code> 方可使用 SPI0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 SPI 设备。</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">spi_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">flag</span><span class="p">);</span>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">spi_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>index 要注册的设备索引</p></li>
 <li><p>name 为注册的设备命名</p></li>
-<li><p>flag 默认可读可写属性</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">index</span></code> 用来选择 SPI 设备配置，一个 index 对应一个 SPI 设备配置，比如 <code class="docutils literal notranslate"><span class="pre">SPI0_INDEX</span></code> 对应 <code class="docutils literal notranslate"><span class="pre">SPI0_CONFIG</span></code> 配置，<code class="docutils literal notranslate"><span class="pre">index</span></code> 有如下可选类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">spi_index_type</span>

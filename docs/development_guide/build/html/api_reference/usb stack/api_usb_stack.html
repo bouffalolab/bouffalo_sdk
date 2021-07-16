@@ -260,7 +260,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">usb_dc_init</span></code> 用来注册 USB 设备和初始化 USB 硬件相关寄存器，注册 usb 中断回调函数。在注册之前需要打开对应 USB 设备的宏定义,例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_USB</span></code> 方可使用 USB 设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">usb_dc_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="n">usb_dc_register</span><span class="p">(</span><span class="n">USB_INDEX</span><span class="p">,</span> <span class="s">&quot;usb&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+    <span class="n">usb_dc_register</span><span class="p">(</span><span class="n">USB_INDEX</span><span class="p">,</span> <span class="s">&quot;usb&quot;</span><span class="p">);</span>
     <span class="n">usb</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;usb&quot;</span><span class="p">);</span>
     <span class="n">device_set_callback</span><span class="p">(</span><span class="n">usb</span><span class="p">,</span> <span class="n">usb_dc_event_callback</span><span class="p">);</span>
     <span class="n">device_open</span><span class="p">(</span><span class="n">usb</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>

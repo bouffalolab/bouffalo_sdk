@@ -236,7 +236,7 @@
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p>配置 <code class="docutils literal notranslate"><span class="pre">I2C</span></code> 设备复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/peripheral_config.h</span></code></p></li>
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">I2C</span></code> 设备复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code></p></li>
 </ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -273,7 +273,7 @@
 <span class="normal">5</span>
 <span class="normal">6</span>
 <span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">i2c_register</span><span class="p">(</span><span class="n">I2C0_INDEX</span><span class="p">,</span> <span class="s">&quot;i2c&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">i2c_register</span><span class="p">(</span><span class="n">I2C0_INDEX</span><span class="p">,</span> <span class="s">&quot;i2c&quot;</span><span class="p">);</span>
 <span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">i2c0</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;i2c&quot;</span><span class="p">);</span>
 
 <span class="k">if</span> <span class="p">(</span><span class="n">i2c0</span><span class="p">)</span>

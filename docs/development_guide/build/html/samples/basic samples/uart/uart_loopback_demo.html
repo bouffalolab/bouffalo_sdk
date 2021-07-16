@@ -287,7 +287,7 @@
 <span class="normal">6</span>
 <span class="normal">7</span>
 <span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="n">uart_register</span><span class="p">(</span><span class="n">board_get_debug_uart_index</span><span class="p">(),</span> <span class="s">&quot;debug_log&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="n">uart_register</span><span class="p">(</span><span class="n">board_get_debug_uart_index</span><span class="p">(),</span> <span class="s">&quot;debug_log&quot;</span><span class="p">);</span>
     <span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">uart</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;debug_log&quot;</span><span class="p">);</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">uart</span><span class="p">)</span>

@@ -307,13 +307,12 @@
 <div class="section" id="usb-dc-register">
 <h3><span class="section-number">3.12.3.1. </span><strong>usb_dc_register</strong><a class="headerlink" href="#usb-dc-register" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">usb_dc_register</span></code> 用来注册 USB 设备标准驱动接口，在注册之前需要打开对应 USB 设备的宏定义,例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_USB</span></code> 方可使用 USB 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 USB 设备。</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">usb_dc_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">usb_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">flag</span><span class="p">);</span>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">usb_dc_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">usb_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>index     要注册的设备索引</p></li>
 <li><p>name      为注册的设备命名</p></li>
-<li><p>flag      默认可读可写属性</p></li>
 <li><p>return    错误码，0表示成功，其他表示失败</p></li>
 </ul>
 </div>

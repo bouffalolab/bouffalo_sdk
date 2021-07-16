@@ -75,11 +75,10 @@ I2C 设备标准接口当前仅使用 ``device_open`` , 并提供标准的数据
 
 .. code-block:: C
 
-    int i2c_register(enum i2c_index_type index, const char *name, uint16_t flag);
+    int i2c_register(enum i2c_index_type index, const char *name);
 
 - index 要注册的设备索引
 - name 为注册的设备命名
-- flag 默认可读可写属性
 
 ``index`` 用来选择 I2C 设备,一个 index 对应一个 I2C 设备配置，比如 ``I2C0_INDEX`` 对应 ``I2C0_CONFIG`` 配置，``index`` 有如下可选类型
 

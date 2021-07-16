@@ -124,11 +124,10 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int timer_register(enum timer_index_type index, const char *name, uint16_t flag);
+    int timer_register(enum timer_index_type index, const char *name);
 
 - index 要注册的设备索引
 - name 为注册的设备命名
-- flag 默认可读可写属性
 
 ``index`` 用来选择 TIMER 设备配置，一个 index 对应一个 TIMER 设备配置，比如 ``TIMER_CH0_INDEX`` 对应 ``TIMER_CH0_CONFIG`` 配置，``index`` 有如下可选类型
 

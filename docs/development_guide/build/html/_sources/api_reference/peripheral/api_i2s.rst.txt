@@ -144,11 +144,10 @@ I2S 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int i2s_register(enum i2s_index_type index, const char *name, uint16_t flag);
+    int i2s_register(enum i2s_index_type index, const char *name);
 
 - index 要注册的设备索引
 - name 为注册的设备命名
-- flag 默认可读可写属性
 
 ``index`` 用来选择 I2S 设备配置，一个 index 对应一个 I2S 设备配置，比如 ``I2S0_INDEX`` 对应 ``I2S0_CONFIG`` 配置。index 有如下可选类型
 

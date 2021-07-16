@@ -314,7 +314,7 @@
     <span class="n">device_close</span><span class="p">(</span><span class="n">spi0</span><span class="p">);</span>
 <span class="p">}</span>
 <span class="k">else</span><span class="p">{</span>
-    <span class="n">spi_register</span><span class="p">(</span><span class="n">SPI0_INDEX</span><span class="p">,</span><span class="s">&quot;spi0&quot;</span><span class="p">,</span><span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+    <span class="n">spi_register</span><span class="p">(</span><span class="n">SPI0_INDEX</span><span class="p">,</span><span class="s">&quot;spi0&quot;</span><span class="p">);</span>
     <span class="n">spi0</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;spi0&quot;</span><span class="p">);</span>
 <span class="p">}</span>
 <span class="k">if</span><span class="p">(</span><span class="n">spi0</span><span class="p">)</span>

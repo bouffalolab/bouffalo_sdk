@@ -77,7 +77,7 @@ shell 移植到串口
 .. code-block:: C
     :linenos:
 
-        uart_register(board_get_debug_uart_index(), "debug_log", DEVICE_OFLAG_RDWR);
+        uart_register(board_get_debug_uart_index(), "debug_log");
         struct device *uart = device_find("debug_log");
 
         if (uart)

@@ -59,7 +59,7 @@ PWM - 呼吸灯
 .. code-block:: C
     :linenos:
 
-    pwm_register(PWM_CH2_INDEX, "led_breath", DEVICE_OFLAG_RDWR);
+    pwm_register(PWM_CH2_INDEX, "led_breath");
 
     struct device *led_breath = device_find("led_breath");
 

@@ -42,7 +42,7 @@ USB DEVICE 控制器接口
 
     struct device *usb_dc_init(void)
     {
-        usb_dc_register(USB_INDEX, "usb", DEVICE_OFLAG_RDWR);
+        usb_dc_register(USB_INDEX, "usb");
         usb = device_find("usb");
         device_set_callback(usb, usb_dc_event_callback);
         device_open(usb, 0);

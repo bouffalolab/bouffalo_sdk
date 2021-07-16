@@ -81,11 +81,10 @@ USB 设备接口遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag);
+    int usb_dc_register(enum usb_index_type index, const char *name);
 
 - index     要注册的设备索引
 - name      为注册的设备命名
-- flag      默认可读可写属性
 - return    错误码，0表示成功，其他表示失败
 
 **device_open**

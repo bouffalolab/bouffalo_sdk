@@ -217,11 +217,10 @@ DMA 设备接口全部遵循标准设备驱动管理层提供的接口。并且�
 
 .. code-block:: C
 
-    int dma_register(enum dma_index_type index, const char *name, uint16_t flag);
+    int dma_register(enum dma_index_type index, const char *name);
 
 - index 要注册的设备索引
 - name 为注册的设备命名
-- flag 默认可读可写属性
 
 ``index`` 用来选择 DMA 设备某个通道的配置，一个 index 对应一个 DMA 设备的一个通道配置，比如 ``DMA_CH0_INDEX`` 对应 DMA 通道0 配置，``index`` 有如下可选类型
 

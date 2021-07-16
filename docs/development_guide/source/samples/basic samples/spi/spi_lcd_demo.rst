@@ -80,7 +80,7 @@ SPI - TFT LCD 显示
         device_close(spi0);
     }
     else{
-        spi_register(SPI0_INDEX,"spi0",DEVICE_OFLAG_RDWR);
+        spi_register(SPI0_INDEX,"spi0");
         spi0 = device_find("spi0");
     }
     if(spi0)

@@ -107,25 +107,15 @@ API 概述
 **device_register**
 ^^^^^^^^^^^^^^^^^^^^
 
-``device_register`` 用于设备的注册，将设备信息注册到链表当中。
+``device_register`` 用于设备标准驱动的注册，并将设备信息注册到链表当中。
 
 .. code-block:: C
 
-    int device_register(struct device *dev, const char *name, uint16_t flag);
+    int device_register(struct device *dev, const char *name);
 
 - dev 设备句柄。
 - name 设备名称。
-- flag 设备的读写属性
 - return 返回错误码，0 表示注册成功，其他表示错误。
-
-``flag`` 可以写入以下参数，表示：**只读**、**只写**、**可读可写**。
-
-.. code-block:: C
-
-    #define DEVICE_OFLAG_RDONLY 0x1000 /* 以只读方式打开设备 */
-    #define DEVICE_OFLAG_WRONLY 0x2000 /* 以只写方式打开设备 */
-    #define DEVICE_OFLAG_RDWR   0x3000 /* 以读写方式打开设备 */
-
 
 **device_unregister**
 ^^^^^^^^^^^^^^^^^^^^^^^

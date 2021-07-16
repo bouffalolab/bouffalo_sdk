@@ -125,11 +125,10 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    int uart_register(enum uart_index_type index, const char *name, uint16_t flag);
+    int uart_register(enum uart_index_type index, const char *name);
 
 - index 要注册的设备索引
 - name 为注册的设备命名
-- flag 默认可读可写属性
 
 ``index`` 用来选择 UART 设备配置，一个 index 对应一个 UART 设备配置，比如 ``UART0_INDEX`` 对应 ``UART0_CONFIG`` 配置，``index`` 有如下可选类型
 

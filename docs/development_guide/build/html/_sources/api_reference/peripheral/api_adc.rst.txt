@@ -79,17 +79,16 @@ ADC 设备接口
 ADC 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 
-**ADC_register**
+**adc_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``adc_register`` 用来注册 ADC 设备标准驱动接口，在注册之前需要打开对应 ADC 设备的宏定义。例如定义宏 ``BSP_USING_ADC0`` 方可使用 ``ADC0`` 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 ``ADC0`` 设备。
 
 .. code-block:: C
 
-    int ADC_register(enum ADC_index_type index, const char *name, uint16_t flag);
+    int adc_register(enum ADC_index_type index, const char *name);
 
 - index 要注册的设备索引
-- name 为注册的设备命名
 - flag 默认可读可写属性
 
 ``index`` 用来选择 ADC 设备配置，一个 index 对应一个 ADC 设备配置，比如 ``ADC0_INDEX`` 对应 ``ADC0_CONFIG`` 配置，``index`` 有如下可选类型
