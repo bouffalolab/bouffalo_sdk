@@ -71,7 +71,7 @@
       <Project Name="usb_cdc_msc" ConfigName="OpenOCD_Debug"/>
       <Project Name="usb_msc_ram" ConfigName="OpenOCD_Debug"/>
       <Project Name="usb_msc_sd" ConfigName="OpenOCD_Debug"/>
-      <Project Name="usb2uart_st" ConfigName="OpenOCD_Debug"/>
+      <Project Name="usb2uart" ConfigName="OpenOCD_Debug"/>
       <Project Name="usb_video" ConfigName="OpenOCD_Debug"/>
       <Project Name="pwm_breath_led" ConfigName="OpenOCD_Debug"/>
       <Project Name="flash_rw_test" ConfigName="OpenOCD_Debug"/>
