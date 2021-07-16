@@ -26,10 +26,6 @@
 #include "bl702_hbn.h"
 #include "system_bl702.h"
 
-#ifdef BOOTROM
-#include "bflb_bootrom.h"
-#endif
-
 #ifdef BFLB_EFLASH_LOADER
 #include "bl702_usb.h"
 void USB_DoNothing_IRQHandler(void)
@@ -144,18 +140,11 @@ void SystemInit(void)
     /* init bor for all platform */
     system_bor_init();
 
-#ifdef BOOTROM
-    /*Power up soc 11 power domain,TODO: This should be optional */
-    //AON_Power_On_SOC_11();
-    /* Record LDO18 pu flag before power up. This maybe not neccessary but copy from 606*/
-    //BL_WR_WORD(BFLB_BOOTROM_AP_BOOT_LOG_ADDR,GLB->ldo18io.BF.pu_ldo18io);
-    /* Power up flash power*/
-    //GLB_Power_On_LDO18_IO();
-#endif
-
     /* release 64K OCARAM for appliction */
     GLB_Set_EM_Sel(GLB_EM_0KB);
 }
+
 void System_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t SubPriority)
 {
+    
 }

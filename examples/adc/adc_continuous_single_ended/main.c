@@ -41,7 +41,7 @@ int main(void)
     adc_channel_cfg.num = 1;
 
     MSG("adc continue single ended test case \r\n");
-    adc_register(ADC0_INDEX, "adc_continue_single", DEVICE_OFLAG_STREAM_RX);
+    adc_register(ADC0_INDEX, "adc_continue_single");
 
     adc_test = device_find("adc_continue_single");
 

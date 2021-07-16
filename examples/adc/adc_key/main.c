@@ -174,7 +174,7 @@ int main(void)
     adc_channel_cfg.neg_channel = negChList;
     adc_channel_cfg.num = 1;
 
-    adc_register(ADC0_INDEX, "adc_key", DEVICE_OFLAG_STREAM_RX);
+    adc_register(ADC0_INDEX, "adc_key");
 
     adc_key = device_find("adc_key");
 

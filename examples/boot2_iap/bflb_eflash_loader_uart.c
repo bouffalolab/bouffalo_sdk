@@ -76,7 +76,7 @@ static void ATTR_TCM_SECTION uart0_irq_callback(struct device *dev, void *args, 
 
 static void bflb_eflash_loader_usart_if_init(uint32_t bdrate)
 {
-    uart_register(0, "download_uart", DEVICE_OFLAG_RDWR);
+    uart_register(0, "download_uart");
     download_uart = device_find("download_uart");
 
     if (download_uart) {

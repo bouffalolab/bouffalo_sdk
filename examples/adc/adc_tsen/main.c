@@ -43,7 +43,7 @@ int main(void)
     adc_channel_cfg.num = 1;
 
     MSG("adc tsen test case \r\n");
-    adc_register(ADC0_INDEX, "adc_tsen", DEVICE_OFLAG_STREAM_RX);
+    adc_register(ADC0_INDEX, "adc_tsen");
 
     adc_tsen = device_find("adc_tsen");
 

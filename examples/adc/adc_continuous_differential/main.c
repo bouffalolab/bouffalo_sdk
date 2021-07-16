@@ -43,7 +43,7 @@ int main(void)
     adc_channel_cfg.num = 1;
 
     MSG("adc one-shot differential test case \r\n");
-    adc_register(ADC0_INDEX, "adc_one_diff", DEVICE_OFLAG_STREAM_RX);
+    adc_register(ADC0_INDEX, "adc_one_diff");
 
     adc_test = device_find("adc_one_diff");
 
