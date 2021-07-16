@@ -112,6 +112,7 @@ static uint8_t pt_table_valid(pt_table_stuff_config *pt_stuff)
             return 0;
         }
 
+        /* ToDo it is a trap here, when entryCnt > 8, crc32 will overflow, comment by zhangcheng */
         p_crc32 = (uint32_t *)((uintptr_t)pt_entries + entriesLen);
 
         if (*p_crc32 != BFLB_Soft_CRC32((uint8_t *)pt_entries, entriesLen)) {
@@ -318,7 +319,8 @@ pt_table_error_type pt_table_update_entry(pt_table_id_type target_table_id,
 
     /* Write back to flash */
     /* Erase flash first */
-    ret = gp_pt_table_flash_erase(write_addr, write_addr + sizeof(pt_table_config) + entries_len + 4 - 1);
+    //ret = gp_pt_table_flash_erase(write_addr, write_addr + sizeof(pt_table_config) + entries_len + 4 - 1);
+    ret = gp_pt_table_flash_erase(write_addr, sizeof(pt_table_config) + entries_len + 4);
 
     if (ret != SUCCESS) {
         MSG_ERR("Flash Erase error\r\n");
@@ -367,7 +369,8 @@ pt_table_error_type pt_table_create(pt_table_id_type pt_id)
     pt_table.age = 0;
     pt_table.crc32 = BFLB_Soft_CRC32((uint8_t *)&pt_table, sizeof(pt_table_config) - 4);
     /* Write back to flash */
-    ret = gp_pt_table_flash_erase(write_addr, write_addr + sizeof(pt_table_config) - 1);
+    //ret = gp_pt_table_flash_erase(write_addr, write_addr + sizeof(pt_table_config) - 1);
+    ret = gp_pt_table_flash_erase(write_addr,sizeof(pt_table_config));
 
     if (ret != SUCCESS) {
         MSG_ERR("Flash Erase error\r\n");
@@ -499,7 +502,8 @@ pt_table_error_type pt_table_set_iap_para(pt_table_iap_param_type *para)
     *p_crc32 = BFLB_Soft_CRC32((uint8_t *)pt_stuff_write.pt_entries, entries_len);
 
     if (para->inactive_table_index == 1) {
-        ret = gp_pt_table_flash_erase(BFLB_PT_TABLE1_ADDRESS, BFLB_PT_TABLE1_ADDRESS + sizeof(pt_table_stuff_config) - 1);
+        //ret = gp_pt_table_flash_erase(BFLB_PT_TABLE1_ADDRESS, BFLB_PT_TABLE1_ADDRESS + sizeof(pt_table_stuff_config) - 1);
+        ret = gp_pt_table_flash_erase(BFLB_PT_TABLE1_ADDRESS, sizeof(pt_table_stuff_config));
 
         if (ret != SUCCESS) {
             MSG_ERR("Flash Erase error\r\n");
@@ -513,7 +517,8 @@ pt_table_error_type pt_table_set_iap_para(pt_table_iap_param_type *para)
             return PT_ERROR_FALSH_WRITE;
         }
     } else if (para->inactive_table_index == 0) {
-        ret = gp_pt_table_flash_erase(BFLB_PT_TABLE0_ADDRESS, BFLB_PT_TABLE0_ADDRESS + sizeof(pt_table_stuff_config) - 1);
+        //ret = gp_pt_table_flash_erase(BFLB_PT_TABLE0_ADDRESS, BFLB_PT_TABLE0_ADDRESS + sizeof(pt_table_stuff_config) - 1);
+        ret = gp_pt_table_flash_erase(BFLB_PT_TABLE0_ADDRESS, sizeof(pt_table_stuff_config));
 
         if (ret != SUCCESS) {
             MSG_ERR("Flash Erase error\r\n");
