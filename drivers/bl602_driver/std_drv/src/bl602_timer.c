@@ -399,12 +399,45 @@ BL_Err_Type TIMER_Init(TIMER_CFG_Type *timerCfg)
     if (timerCfg->countMode == TIMER_COUNT_PRELOAD) {
         /* Configure timer preload value */
         TIMER_SetPreloadValue(timerCh, timerCfg->preLoadVal);
-    }
 
-    /* Configure match compare values */
-    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_0, timerCfg->matchVal0);
-    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_1, timerCfg->matchVal1);
-    TIMER_SetCompValue(timerCh, TIMER_COMP_ID_2, timerCfg->matchVal2);
+        /* Configure match compare values */
+        if (timerCfg->matchVal0 > 1 + timerCfg->preLoadVal) {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_0, timerCfg->matchVal0 - 2);
+        } else {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_0, timerCfg->matchVal0);
+        }
+
+        if (timerCfg->matchVal1 > 1 + timerCfg->preLoadVal) {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_1, timerCfg->matchVal1 - 2);
+        } else {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_1, timerCfg->matchVal1);
+        }
+
+        if (timerCfg->matchVal2 > 1 + timerCfg->preLoadVal) {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_2, timerCfg->matchVal2 - 2);
+        } else {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_2, timerCfg->matchVal2);
+        }
+    } else {
+        /* Configure match compare values */
+        if (timerCfg->matchVal0 > 1) {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_0, timerCfg->matchVal0 - 2);
+        } else {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_0, timerCfg->matchVal0);
+        }
+
+        if (timerCfg->matchVal1 > 1) {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_1, timerCfg->matchVal1 - 2);
+        } else {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_1, timerCfg->matchVal1);
+        }
+
+        if (timerCfg->matchVal2 > 1) {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_2, timerCfg->matchVal2 - 2);
+        } else {
+            TIMER_SetCompValue(timerCh, TIMER_COMP_ID_2, timerCfg->matchVal2);
+        }
+    }
 
 #ifndef BFLB_USE_HAL_DRIVER
     Interrupt_Handler_Register(TIMER_CH0_IRQn, TIMER_CH0_IRQHandler);

@@ -27,7 +27,7 @@ void main(void)
 
 static BL_Err_Type PtTable_Flash_Read(uint32_t addr, uint8_t *data, uint32_t len)
 {
-    XIP_SFlash_Read_Need_Lock(pFlashCfg, addr, data, len);
+    XIP_SFlash_Read_Need_Lock_Ext(pFlashCfg, addr, data, len);
     return SUCCESS;
 }
 
@@ -68,14 +68,14 @@ static int8_t mfg_flash_program(void)
 
     mfg_print("mfg_flash_write\r\n");
 
-    ret = XIP_SFlash_Erase_Need_Lock(pFlashCfg, rf_para_addr, rf_para_addr + 15);
+    ret = XIP_SFlash_Erase_Need_Lock_Ext(pFlashCfg, rf_para_addr, rf_para_addr + 15);
 
     if (ret != SUCCESS) {
         mfg_print("Flash erase error\r\n");
         return -1;
     }
 
-    ret = XIP_SFlash_Write_Need_Lock(pFlashCfg, rf_para_addr, (uint8_t *)&rf_para, sizeof(rf_para));
+    ret = XIP_SFlash_Write_Need_Lock_Ext(pFlashCfg, rf_para_addr, (uint8_t *)&rf_para, sizeof(rf_para));
 
     if (ret != SUCCESS) {
         mfg_print("Flash write error\r\n");
@@ -91,7 +91,7 @@ static int8_t mfg_flash_read(void)
 
     mfg_print("mfg_flash_read\r\n");
 
-    ret = XIP_SFlash_Read_Need_Lock(pFlashCfg, rf_para_addr, (uint8_t *)&rf_para, sizeof(rf_para));
+    ret = XIP_SFlash_Read_Need_Lock_Ext(pFlashCfg, rf_para_addr, (uint8_t *)&rf_para, sizeof(rf_para));
 
     if (ret != SUCCESS) {
         mfg_print("Flash write error\r\n");
