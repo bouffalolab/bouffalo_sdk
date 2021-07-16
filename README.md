@@ -61,15 +61,15 @@ bl_mcu_sdk
 
 ```
 
-- bsp/bsp_common : stores some common peripheral driver codes related to the board
-- bsp/board : stores the board-level description file such as `clock_config.h` (describes the clock configuration file) `pinmux_config.h` (describes the io function file) `peripheral_config.h` (describes the default configuration file of the peripheral) , These files together describe the board hardware information.
-- common : stores some common algorithm function libraries that have nothing to do with hardware
-- components : store the third-party library public component library
-- drivers store the public chip underlying driver library provided by Boliu Intelligence
-- examples : store the official sample code
+- bsp/bsp_common : some common peripheral driver codes for boards
+- bsp/board : the board-level description file such as `clock_config.h` (describes the clock configuration file) `pinmux_config.h` (describes the io function file) `peripheral_config.h` (describes the default configuration file of the peripheral) , These files together describe the board hardware information.
+- common : some common algorithm function libraries that have nothing to do with hardware
+- components : the third-party library public component library
+- drivers: bouffalolab mcu drivers
+- examples : peripheral demos
 - out : intermediate file, used to store the bin file generated after compiling and linking
-- tools : store toolkits related to compiling and downloading
-- docs : store tutorial documents and other help information
+- tools : tools for compiling and downloading
+- docs : tutorial documents and other help information
 
 For more file directory reference information, please refer to [bl mcu sdk documentation tutorial](http://bouffalolab.gitee.io/bl_mcu_sdk)
 
