@@ -65,8 +65,8 @@ void dma_ch2_irq_callback(struct device *dev, void *args, uint32_t size, uint32_
 
 uint8_t spi_init(void)
 {
-    spi_register(SPI0_INDEX, "spi0", DEVICE_OFLAG_RDWR);
-    dma_register(DMA0_CH3_INDEX, "ch2", DEVICE_OFLAG_RDWR);
+    spi_register(SPI0_INDEX, "spi0");
+    dma_register(DMA0_CH3_INDEX, "ch2");
     spi0 = device_find("spi0");
 
     if (spi0) {
@@ -100,7 +100,7 @@ uint8_t spi_init(void)
 
 void i2c_init(void)
 {
-    i2c_register(I2C0_INDEX, "i2c", DEVICE_OFLAG_RDWR);
+    i2c_register(I2C0_INDEX, "i2c");
     i2c0 = device_find("i2c");
 
     if (i2c0) {

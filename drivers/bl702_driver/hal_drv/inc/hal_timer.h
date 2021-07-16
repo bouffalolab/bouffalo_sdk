@@ -91,6 +91,6 @@ typedef struct timer_device {
 
 #define TIMER_DEV(dev) ((timer_device_t *)dev)
 
-int timer_register(enum timer_index_type index, const char *name, uint16_t flag);
+int timer_register(enum timer_index_type index, const char *name);
 
 #endif

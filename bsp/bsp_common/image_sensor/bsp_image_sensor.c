@@ -661,7 +661,7 @@ void cam_clk_out(void)
 
 uint8_t image_sensor_init(BL_Fun_Type mjpeg_en, cam_device_t *cam_cfg, mjpeg_device_t *mjpeg_cfg)
 {
-    i2c_register(I2C0_INDEX, "i2c", DEVICE_OFLAG_RDWR);
+    i2c_register(I2C0_INDEX, "i2c");
     image_sensor_i2c = device_find("i2c");
 
     if (image_sensor_i2c) {
@@ -836,7 +836,7 @@ void tr_timer_init(void)
     timer_user_cfg.timeout_val = 1000 * 1000; /* us */
     timer_user_cfg.comp_it = TIMER_COMP0_IT;
 
-    timer_register(TIMER_CH0_INDEX, "timer_ch0_comp2", DEVICE_OFLAG_RDWR);
+    timer_register(TIMER_CH0_INDEX, "timer_ch0_comp2");
 
     timer_ch0_comp2 = device_find("timer_ch0_comp2");
 

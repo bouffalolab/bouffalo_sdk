@@ -173,7 +173,7 @@ int dma_close(struct device *dev)
     return 0;
 }
 
-int dma_register(enum dma_index_type index, const char *name, uint16_t flag)
+int dma_register(enum dma_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -193,7 +193,7 @@ int dma_register(enum dma_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_DMA;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 static BL_Err_Type dma_scan_unregister_device(uint8_t *allocate_index)
@@ -227,7 +227,7 @@ static BL_Err_Type dma_scan_unregister_device(uint8_t *allocate_index)
     return ERROR;
 }
 
-int dma_allocate_register(const char *name, uint16_t flag)
+int dma_allocate_register(const char *name)
 {
     struct device *dev;
     uint8_t index;
@@ -252,7 +252,7 @@ int dma_allocate_register(const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_DMA;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 /**

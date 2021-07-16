@@ -52,7 +52,7 @@ const char *string = "uart1 poll tx and rx irq test\r\n";
 int main(void)
 {
     bflb_platform_init(0);
-    uart_register(UART1_INDEX, "uart1", DEVICE_OFLAG_RDWR);
+    uart_register(UART1_INDEX, "uart1");
     struct device *uart1 = device_find("uart1");
 
     if (uart1) {

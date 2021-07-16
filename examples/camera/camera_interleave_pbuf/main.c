@@ -173,7 +173,7 @@ int ATTR_TCM_SECTION main(void)
 
     struct device *uart0 = device_find("debug_log");
 
-    dma_register(DMA0_CH0_INDEX, "dma_cam", DEVICE_OFLAG_RDWR);
+    dma_register(DMA0_CH0_INDEX, "dma_cam");
 
     dma_cam = device_find("dma_cam");
 

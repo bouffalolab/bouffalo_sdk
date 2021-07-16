@@ -203,7 +203,7 @@ typedef struct usb_dc_device {
     void *rx_dma;
 } usb_dc_device_t;
 
-int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag);
+int usb_dc_register(enum usb_index_type index, const char *name);
 
 int usb_dc_set_dev_address(const uint8_t addr);
 int usb_dc_ep_open(struct device *dev, const struct usb_dc_ep_cfg *ep_cfg);

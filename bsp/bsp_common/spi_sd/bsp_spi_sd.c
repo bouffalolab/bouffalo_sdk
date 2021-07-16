@@ -43,7 +43,7 @@ uint8_t SD_SPI_Init(void)
     if (spi0) {
         device_close(spi0);
     } else {
-        spi_register(SPI0_INDEX, "spi0", DEVICE_OFLAG_RDWR);
+        spi_register(SPI0_INDEX, "spi0");
         spi0 = device_find("spi0");
     }
 
@@ -56,7 +56,7 @@ uint8_t SD_SPI_Init(void)
     if (dma_ch3) {
         device_close(dma_ch3);
     } else {
-        dma_register(DMA0_CH3_INDEX, "dma0_ch3", DEVICE_OFLAG_RDWR);
+        dma_register(DMA0_CH3_INDEX, "dma0_ch3");
         dma_ch3 = device_find("dma0_ch3");
     }
 
@@ -75,7 +75,7 @@ uint8_t SD_SPI_Init(void)
     if (dma_ch4) {
         device_close(dma_ch4);
     } else {
-        dma_register(DMA0_CH4_INDEX, "dma0_ch4", DEVICE_OFLAG_RDWR);
+        dma_register(DMA0_CH4_INDEX, "dma0_ch4");
         dma_ch4 = device_find("dma0_ch4");
     }
 

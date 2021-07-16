@@ -60,7 +60,7 @@ int main(void)
     bflb_platform_init(0);
 
     /* register & open dac device */
-    dac_register(DAC0_INDEX, "dac", DEVICE_OFLAG_RDWR);
+    dac_register(DAC0_INDEX, "dac");
     struct device *dac = device_find("dac");
 
     if (dac) {
@@ -69,7 +69,7 @@ int main(void)
     }
 
     /* register & open dma device */
-    if (dma_allocate_register("dac_dma", DEVICE_OFLAG_RDWR) == SUCCESS) {
+    if (dma_allocate_register("dac_dma") == SUCCESS) {
         MSG("dma allocate success\r\n");
     }
 

@@ -329,7 +329,7 @@ int spi_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
  * @param flag
  * @return int
  */
-int spi_register(enum spi_index_type index, const char *name, uint16_t flag)
+int spi_register(enum spi_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -349,7 +349,7 @@ int spi_register(enum spi_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_SPI;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 /**

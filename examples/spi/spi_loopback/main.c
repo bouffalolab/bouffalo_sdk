@@ -32,7 +32,7 @@ uint32_t i;
 int main(void)
 {
     bflb_platform_init(0);
-    spi_register(SPI0_INDEX, "spi", DEVICE_OFLAG_RDWR);
+    spi_register(SPI0_INDEX, "spi");
     spi = device_find("spi");
 
     if (spi) {

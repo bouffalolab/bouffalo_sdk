@@ -109,6 +109,6 @@ typedef struct i2s_device {
 
 #define I2S_DEV(dev) ((i2s_device_t *)dev)
 
-int i2s_register(enum i2s_index_type index, const char *name, uint16_t flag);
+int i2s_register(enum i2s_index_type index, const char *name);
 
 #endif

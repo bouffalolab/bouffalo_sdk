@@ -77,12 +77,6 @@ enum gpio_pin_type {
 #define GPIO_SYNC_LOW_LEVEL_INT_MODE       13
 #define GPIO_HZ_MODE                       14
 
-typedef struct gpio_device {
-    struct device parent;
-} gpio_device_t;
-
-void gpio_register(const char *name, uint16_t flag);
-
 void gpio_set_mode(uint32_t pin, uint32_t mode);
 void gpio_write(uint32_t pin, uint32_t value);
 void gpio_toggle(uint32_t pin);

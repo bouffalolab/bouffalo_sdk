@@ -45,7 +45,7 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    dma_register(DMA0_CH0_INDEX, "DMA", DEVICE_OFLAG_RDWR);
+    dma_register(DMA0_CH0_INDEX, "DMA");
 
     struct device *dma = device_find("DMA");
 

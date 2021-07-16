@@ -133,12 +133,7 @@ function(generate_bin)
 
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/bflb_platform.c)
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform/syscalls.c)
-
-    if(${CHIP} STREQUAL "bl702")
-    list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/board/bl70x/board.c)
-    else()
     list(APPEND SRCS ${CMAKE_SOURCE_DIR}/bsp/board/${CHIP}/board.c)
-    endif()
 
     add_executable(${target_name}.elf ${mainfile} ${SRCS})
     target_link_options(${target_name}.elf PRIVATE ${GLOBAL_LD_FLAGS})

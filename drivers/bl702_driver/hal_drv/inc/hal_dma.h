@@ -192,7 +192,8 @@ typedef struct dma_device {
 
 #define DMA_DEV(dev) ((dma_device_t *)dev)
 
-int dma_register(enum dma_index_type, const char *name, uint16_t flag);
+int dma_register(enum dma_index_type, const char *name);
+int dma_allocate_register(const char *name);
 int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_t transfer_size);
-int dma_allocate_register(const char *name, uint16_t flag);
+
 #endif

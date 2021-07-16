@@ -116,6 +116,6 @@ typedef struct uart_device {
 
 #define UART_DEV(dev) ((uart_device_t *)dev)
 
-int uart_register(enum uart_index_type index, const char *name, uint16_t flag);
+int uart_register(enum uart_index_type index, const char *name);
 
 #endif

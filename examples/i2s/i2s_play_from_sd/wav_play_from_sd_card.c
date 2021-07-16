@@ -169,7 +169,7 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR *path)
     if (audio_dev->device) {
         device_close(audio_dev->device);
     } else {
-        i2s_register(I2S0_INDEX, "I2S", DEVICE_OFLAG_RDWR);
+        i2s_register(I2S0_INDEX, "I2S");
         audio_dev->device = device_find("I2S");
     }
 
@@ -178,7 +178,7 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR *path)
     if (dma_ch2) {
         device_close(dma_ch2);
     } else {
-        dma_register(DMA0_CH2_INDEX, "i2s_ch2", DEVICE_OFLAG_RDWR);
+        dma_register(DMA0_CH2_INDEX, "i2s_ch2");
         dma_ch2 = device_find("i2s_ch2");
     }
 

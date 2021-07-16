@@ -56,7 +56,7 @@ void bflb_platform_init(uint32_t baudrate)
     }
 
     if (!uart_dbg_disable) {
-        uart_register(board_get_debug_uart_index(), "debug_log", DEVICE_OFLAG_RDWR);
+        uart_register(board_get_debug_uart_index(), "debug_log");
         struct device *uart = device_find("debug_log");
 
         if (uart) {

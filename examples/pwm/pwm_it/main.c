@@ -34,7 +34,7 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    pwm_register(PWM_CH2_INDEX, "pwm", DEVICE_OFLAG_RDWR);
+    pwm_register(PWM_CH2_INDEX, "pwm");
 
     struct device *pwm = device_find("pwm");
 

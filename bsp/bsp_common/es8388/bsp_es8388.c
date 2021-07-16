@@ -417,7 +417,7 @@ int ES8388_Set_Voice_Volume(int volume)
 *******************************************************************************/
 void ES8388_I2C_Init(void)
 {
-    i2c_register(I2C0_INDEX, "i2c", DEVICE_OFLAG_RDWR);
+    i2c_register(I2C0_INDEX, "i2c");
     es8388_i2c = device_find("i2c");
 
     if (es8388_i2c) {

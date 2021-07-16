@@ -138,7 +138,7 @@ int pwm_control(struct device *dev, int cmd, void *args)
     return 0;
 }
 
-int pwm_register(enum pwm_index_type index, const char *name, uint16_t flag)
+int pwm_register(enum pwm_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -158,7 +158,7 @@ int pwm_register(enum pwm_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_PWM;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 static void pwm_isr(pwm_device_t *handle)

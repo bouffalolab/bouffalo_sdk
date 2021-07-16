@@ -452,7 +452,7 @@ int main(void)
         //device_control(usb_fs, DEVICE_CTRL_SET_INT, (void *)(USB_EP2_DATA_IN_IT));
     }
 
-    dma_register(DMA0_CH2_INDEX, "ch2", DEVICE_OFLAG_RDWR);
+    dma_register(DMA0_CH2_INDEX, "ch2");
     dma_ch2 = device_find("ch2");
 
     if (dma_ch2) {

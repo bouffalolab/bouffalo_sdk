@@ -39,11 +39,8 @@ dlist_t device_head = DLIST_OBJECT_INIT(device_head);
  *
  * @return the error code, DEVICE_EOK on initialization successfully.
  */
-int device_register(struct device *dev, const char *name, uint16_t flag)
+int device_register(struct device *dev, const char *name)
 {
-#define OBJECT_DEVICE_TYPE  0
-#define OBJECT_FLAG_DEFAULT 0
-
     dlist_t *node;
 
     dlist_for_each(node, &device_head)
@@ -56,7 +53,6 @@ int device_register(struct device *dev, const char *name, uint16_t flag)
         }
     }
 
-    dev->oflag = flag;
     strncpy(dev->name, name, NAME_MAX);
 
     dlist_insert_after(&device_head, &(dev->list));

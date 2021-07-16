@@ -35,6 +35,45 @@ static adc_device_t adcx_device[ADC_MAX_INDEX] = {
 };
 
 /**
+ * @brief Check whether Channel Corresponding IO is configed success by Board System
+ *
+ * @param pos_list pos channel list
+ * @param neg_list negative channel list
+ * @param channelNum channel number
+ */
+uint8_t adc_check_channel_status(uint8_t *pos_list, uint8_t *neg_list, uint16_t channelNum)
+{
+    uint16_t i = 0;
+
+    uint8_t channel_io_reference_table[] = {
+        GPIO_PIN_8,  /* CH0 IO */
+        GPIO_PIN_15, /* CH1 IO */
+        GPIO_PIN_17, /* CH2 IO */
+        GPIO_PIN_11, /* CH3 IO */
+        GPIO_PIN_12, /* CH4 IO */
+        GPIO_PIN_14, /* CH5 IO */
+        GPIO_PIN_7,  /* CH6 IO */
+        GPIO_PIN_9,  /* CH7 IO */
+        GPIO_PIN_18, /* CH8 IO */
+        GPIO_PIN_19, /* CH9 IO */
+        GPIO_PIN_20, /* CH10 IO */
+        GPIO_PIN_21, /* CH11 IO */
+
+    };
+
+    for (i = 0; i < channelNum; i++) {
+        if (pos_list[i] > ADC_CHANNEL11) {
+            continue;
+        }
+
+        if (GLB_GPIO_Get_Fun(channel_io_reference_table[pos_list[i]]) != GPIO_FUN_ANALOG) {
+            return ERROR;
+        }
+    }
+
+    return SUCCESS;
+}
+/**
  * @brief
  *
  * @param dev
@@ -103,45 +142,6 @@ int adc_close(struct device *dev)
     return 0;
 }
 
-/**
- * @brief Check whether Channel Corresponding IO is configed success by Board System
- *
- * @param pos_list pos channel list
- * @param neg_list negative channel list
- * @param channelNum channel number
- */
-uint8_t adc_check_channel_status(uint8_t *pos_list, uint8_t *neg_list, uint16_t channelNum)
-{
-    uint16_t i = 0;
-
-    uint8_t channel_io_reference_table[] = {
-        GPIO_PIN_8,  /* CH0 IO */
-        GPIO_PIN_15, /* CH1 IO */
-        GPIO_PIN_17, /* CH2 IO */
-        GPIO_PIN_11, /* CH3 IO */
-        GPIO_PIN_12, /* CH4 IO */
-        GPIO_PIN_14, /* CH5 IO */
-        GPIO_PIN_7,  /* CH6 IO */
-        GPIO_PIN_9,  /* CH7 IO */
-        GPIO_PIN_18, /* CH8 IO */
-        GPIO_PIN_19, /* CH9 IO */
-        GPIO_PIN_20, /* CH10 IO */
-        GPIO_PIN_21, /* CH11 IO */
-
-    };
-
-    for (i = 0; i < channelNum; i++) {
-        if (pos_list[i] > ADC_CHANNEL11) {
-            continue;
-        }
-
-        if (GLB_GPIO_Get_Fun(channel_io_reference_table[pos_list[i]]) != GPIO_FUN_ANALOG) {
-            return ERROR;
-        }
-    }
-
-    return SUCCESS;
-}
 /**
  * @brief
  *
@@ -268,7 +268,7 @@ float adc_get_tsen(uint16_t tsen_offset)
  * @param adc_user_cfg
  * @return int
  */
-int adc_register(enum adc_index_type index, const char *name, uint16_t flag)
+int adc_register(enum adc_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -288,7 +288,7 @@ int adc_register(enum adc_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_ADC;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 /**

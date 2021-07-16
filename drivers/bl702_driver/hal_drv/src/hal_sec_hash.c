@@ -185,7 +185,7 @@ int sec_hash_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
  * @param flag
  * @return int
  */
-static int sec_hash_sha_register(enum sec_hash_index_type index, enum sec_hash_type type, const char *name, uint16_t flag)
+static int sec_hash_sha_register(enum sec_hash_index_type index, enum sec_hash_type type, const char *name)
 {
     struct device *dev;
 
@@ -206,7 +206,7 @@ static int sec_hash_sha_register(enum sec_hash_index_type index, enum sec_hash_t
     dev->type = DEVICE_CLASS_SEC_HASH;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 /**
@@ -217,9 +217,9 @@ static int sec_hash_sha_register(enum sec_hash_index_type index, enum sec_hash_t
  * @param flag
  * @return int
  */
-int sec_hash_sha256_register(enum sec_hash_index_type index, const char *name, uint16_t flag)
+int sec_hash_sha256_register(enum sec_hash_index_type index, const char *name)
 {
-    return sec_hash_sha_register(index, SEC_HASH_SHA256, name, flag);
+    return sec_hash_sha_register(index, SEC_HASH_SHA256, name);
 }
 
 /**
@@ -230,9 +230,9 @@ int sec_hash_sha256_register(enum sec_hash_index_type index, const char *name, u
  * @param flag
  * @return int
  */
-int sec_hash_sha224_register(enum sec_hash_index_type index, const char *name, uint16_t flag)
+int sec_hash_sha224_register(enum sec_hash_index_type index, const char *name)
 {
-    return sec_hash_sha_register(index, SEC_HASH_SHA224, name, flag);
+    return sec_hash_sha_register(index, SEC_HASH_SHA224, name);
 }
 
 /**

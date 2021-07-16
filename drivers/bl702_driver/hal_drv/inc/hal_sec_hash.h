@@ -47,6 +47,7 @@ typedef struct sec_hash_device {
     uint8_t type;                /*!< Sha has feed data */
 } sec_hash_device_t;
 
-int sec_hash_register(enum sec_hash_index_type index, const char *name, uint16_t flag);
+int sec_hash_register(enum sec_hash_index_type index, const char *name);
+int sec_hash_sha256_register(enum sec_hash_index_type index, const char *name);
 
 #endif

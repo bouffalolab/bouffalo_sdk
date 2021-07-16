@@ -50,7 +50,7 @@ int main(void)
     timer_user_cfg.timeout_val = 1000 * 1000; /* us */
     timer_user_cfg.comp_it = TIMER_COMP0_IT;
 
-    timer_register(TIMER_CH0_INDEX, "timer_ch0", DEVICE_OFLAG_RDWR);
+    timer_register(TIMER_CH0_INDEX, "timer_ch0");
 
     timer_ch0 = device_find("timer_ch0");
 

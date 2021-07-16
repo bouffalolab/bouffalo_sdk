@@ -90,6 +90,7 @@ void bflb_platform_printf(char *fmt, ...);
 void bflb_platform_print_set(uint8_t disable);
 uint8_t bflb_platform_print_get(void);
 void bflb_platform_dump(uint8_t *data, uint32_t len);
+uint32_t bflb_platform_get_log(uint8_t *data, uint32_t maxlen);
 void bflb_platform_deinit(void);
 
 void bflb_platform_init_time(void);

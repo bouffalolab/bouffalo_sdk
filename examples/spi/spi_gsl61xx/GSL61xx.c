@@ -553,7 +553,7 @@ void FP_GPIO_Configuration(void)
 
 uint8_t FP_Spi_Init()
 {
-    spi_register(SPI0_INDEX, "spi", DEVICE_OFLAG_RDWR);
+    spi_register(SPI0_INDEX, "spi");
 
     struct device *spi = device_find("spi");
 

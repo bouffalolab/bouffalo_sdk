@@ -50,14 +50,14 @@ int main(void)
     bflb_platform_init(0);
     sram_init();
 
-    uart_register(UART1_INDEX, "uart1", DEVICE_OFLAG_RDWR);
+    uart_register(UART1_INDEX, "uart1");
     struct device *uart = device_find("uart1");
 
     if (uart) {
         device_open(uart, DEVICE_OFLAG_DMA_TX);
     }
 
-    dma_register(DMA0_CH2_INDEX, "ch2", DEVICE_OFLAG_RDWR);
+    dma_register(DMA0_CH2_INDEX, "ch2");
     struct device *dma_ch2 = device_find("ch2");
 
     if (dma_ch2) {

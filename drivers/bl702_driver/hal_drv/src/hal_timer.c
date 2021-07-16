@@ -254,7 +254,7 @@ int timer_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
  * @return int
  */
 
-int timer_register(enum timer_index_type index, const char *name, uint16_t flag)
+int timer_register(enum timer_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -274,7 +274,7 @@ int timer_register(enum timer_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_TIMER;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 void timer_isr(timer_device_t *handle)

@@ -437,7 +437,7 @@ int usb_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
  * @param flag
  * @return int
  */
-int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag)
+int usb_dc_register(enum usb_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -457,7 +457,7 @@ int usb_dc_register(enum usb_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_USB;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 /**

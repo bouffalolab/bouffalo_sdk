@@ -68,15 +68,6 @@ typedef enum {
     GPIO_PIN_26,
     GPIO_PIN_27,
     GPIO_PIN_28,
-    GPIO_PIN_29,
-    GPIO_PIN_30,
-    GPIO_PIN_31,
-    GPIO_PIN_32,
-    GPIO_PIN_33,
-    GPIO_PIN_34,
-    GPIO_PIN_35,
-    GPIO_PIN_36,
-    GPIO_PIN_37,
     GPIO_PIN_MAX,
 } gpio_pin_type;
 
@@ -94,12 +85,6 @@ typedef enum {
 #define GPIO_SYNC_FALLING_TRIGER_INT_MODE  11
 #define GPIO_SYNC_HIGH_LEVEL_INT_MODE      12
 #define GPIO_SYNC_LOW_LEVEL_INT_MODE       13
-
-typedef struct gpio_device {
-    struct device parent;
-} gpio_device_t;
-
-void gpio_register(const char *name, uint16_t flag);
 
 void gpio_set_mode(uint32_t pin, uint32_t mode);
 void gpio_write(uint32_t pin, uint32_t value);

@@ -77,7 +77,7 @@ void xpt2046_init(void)
     if (touch_spi) {
         device_close(touch_spi);
     } else {
-        spi_register(SPI0_INDEX, "spi0", DEVICE_OFLAG_RDWR);
+        spi_register(SPI0_INDEX, "spi0");
         touch_spi = device_find("spi0");
     }
 

@@ -90,10 +90,10 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    pwm_register(PWM_CH0_INDEX, "motor_ch0", DEVICE_OFLAG_RDWR);
-    pwm_register(PWM_CH1_INDEX, "motor_ch1", DEVICE_OFLAG_RDWR);
-    pwm_register(PWM_CH2_INDEX, "motor_ch2", DEVICE_OFLAG_RDWR);
-    pwm_register(PWM_CH3_INDEX, "motor_ch3", DEVICE_OFLAG_RDWR);
+    pwm_register(PWM_CH0_INDEX, "motor_ch0");
+    pwm_register(PWM_CH1_INDEX, "motor_ch1");
+    pwm_register(PWM_CH2_INDEX, "motor_ch2");
+    pwm_register(PWM_CH3_INDEX, "motor_ch3");
 
     motor_ch0 = device_find("motor_ch0");
     motor_ch1 = device_find("motor_ch1");

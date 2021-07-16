@@ -315,11 +315,7 @@ int uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     } else if (dev->oflag & DEVICE_OFLAG_INT_RX) {
         return -2;
     } else {
-        uint32_t rx_len = 0;
-        while (rx_len < size) {
-            rx_len += UART_ReceiveData(uart_device->id, (uint8_t *)buffer + rx_len, size - rx_len);
-        }
-        return 0;
+        return UART_ReceiveData(uart_device->id, (uint8_t *)buffer, size);
     }
 }
 /**
@@ -330,7 +326,7 @@ int uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
  * @param flag
  * @return int
  */
-int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
+int uart_register(enum uart_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -349,7 +345,7 @@ int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_UART;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 /**
  * @brief

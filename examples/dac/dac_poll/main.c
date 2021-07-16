@@ -57,7 +57,7 @@ uint16_t sinList[] = {
 int main(void)
 {
     bflb_platform_init(0);
-    dac_register(DAC0_INDEX, "dac", DEVICE_OFLAG_RDWR);
+    dac_register(DAC0_INDEX, "dac");
     struct device *dac = device_find("dac");
 
     if (dac) {

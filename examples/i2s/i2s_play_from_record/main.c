@@ -64,7 +64,7 @@ int main(void)
     ES8388_Set_Voice_Volume(60);
 
     /* register & open i2s device */
-    i2s_register(I2S0_INDEX, "I2S", DEVICE_OFLAG_RDWR);
+    i2s_register(I2S0_INDEX, "I2S");
     i2s = device_find("I2S");
     if (i2s) {
         I2S_DEV(i2s)->iis_mode = I2S_MODE_MASTER;
@@ -78,7 +78,7 @@ int main(void)
     }
 
     /* register & open dma device */
-    dma_register(DMA0_CH3_INDEX, "dma_ch3_i2s_rx", DEVICE_OFLAG_RDWR);
+    dma_register(DMA0_CH3_INDEX, "dma_ch3_i2s_rx");
     dma_ch3 = device_find("dma_ch3_i2s_rx");
     if (dma_ch3) {
         DMA_DEV(dma_ch3)->direction = DMA_PERIPH_TO_MEMORY;
@@ -97,7 +97,7 @@ int main(void)
         device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
     }
 
-    dma_register(DMA0_CH2_INDEX, "dma_ch2_i2s_tx", DEVICE_OFLAG_RDWR);
+    dma_register(DMA0_CH2_INDEX, "dma_ch2_i2s_tx");
     dma_ch2 = device_find("dma_ch2_i2s_tx");
     if (dma_ch2) {
         DMA_DEV(dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;

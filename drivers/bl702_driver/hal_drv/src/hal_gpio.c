@@ -25,8 +25,6 @@
 #include "hal_gpio.h"
 #include "drv_mmheap.h"
 
-static gpio_device_t gpio_device;
-
 static void GPIO_IRQ(void);
 
 struct gpio_int_cfg_private {
@@ -196,24 +194,6 @@ void gpio_irq_enable(uint32_t pin, uint8_t enabled)
     } else {
         GLB_GPIO_IntMask(pin, MASK);
     }
-}
-
-void pin_register(const char *name, uint16_t flag)
-{
-    struct device *dev;
-    dev = &(gpio_device.parent);
-
-    dev->open = NULL;
-    dev->close = NULL;
-    dev->control = NULL;
-    dev->write = NULL;
-    dev->read = NULL;
-
-    dev->status = DEVICE_UNREGISTER;
-    dev->type = DEVICE_CLASS_GPIO;
-    dev->handle = NULL;
-
-    device_register(dev, name, flag);
 }
 
 static void GPIO_IRQ(void)

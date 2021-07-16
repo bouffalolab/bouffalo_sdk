@@ -158,7 +158,7 @@ typedef struct adc_device {
 
 #define ADC_DEV(dev) ((adc_device_t *)dev)
 
-int adc_register(enum adc_index_type index, const char *name, uint16_t flag);
+int adc_register(enum adc_index_type index, const char *name);
 int adc_trim_tsen(uint16_t *tsen_offset);
 float adc_get_tsen(uint16_t tsen_offset);
 

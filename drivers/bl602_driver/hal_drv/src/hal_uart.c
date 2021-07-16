@@ -223,14 +223,12 @@ int uart_control(struct device *dev, int cmd, void *args)
             if (uart_device->id == UART0_ID) {
                 Interrupt_Handler_Register(UART0_IRQn, UART0_IRQ);
             }
-
 #endif
 #ifdef BSP_USING_UART1
 
             if (uart_device->id == UART1_ID) {
                 Interrupt_Handler_Register(UART1_IRQn, UART1_IRQ);
             }
-
 #endif
             /* Enable uart */
             UART_Enable(uart_device->id, UART_TXRX);
@@ -289,9 +287,10 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
         }
 
         return 0;
-    }
-
-    return UART_SendData(uart_device->id, (uint8_t *)buffer, size);
+    } else if (dev->oflag & DEVICE_OFLAG_INT_TX) {
+        return -2;
+    } else
+        return UART_SendData(uart_device->id, (uint8_t *)buffer, size);
 }
 /**
  * @brief
@@ -312,9 +311,12 @@ int uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
         if (!dma_ch) {
             return -1;
         }
+        return 0;
+    } else if (dev->oflag & DEVICE_OFLAG_INT_RX) {
+        return -2;
+    } else {
+        return UART_ReceiveData(uart_device->id, (uint8_t *)buffer, size);
     }
-
-    return UART_ReceiveData(uart_device->id, (uint8_t *)buffer, size);
 }
 /**
  * @brief
@@ -324,7 +326,7 @@ int uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
  * @param flag
  * @return int
  */
-int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
+int uart_register(enum uart_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -344,7 +346,7 @@ int uart_register(enum uart_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_UART;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 /**
  * @brief

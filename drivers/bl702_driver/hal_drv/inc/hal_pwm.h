@@ -78,6 +78,6 @@ typedef struct pwm_device {
 
 #define PWM_DEV(dev) ((pwm_device_t *)dev)
 
-int pwm_register(enum pwm_index_type index, const char *name, uint16_t flag);
+int pwm_register(enum pwm_index_type index, const char *name);
 
 #endif

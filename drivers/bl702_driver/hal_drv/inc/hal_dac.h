@@ -63,6 +63,6 @@ typedef struct dac_device {
 
 #define DAC_DEV(dev) ((adc_device_t *)dev)
 
-int dac_register(enum dac_index_type index, const char *name, uint16_t flag);
+int dac_register(enum dac_index_type index, const char *name);
 
 #endif

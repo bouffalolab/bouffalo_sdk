@@ -30,7 +30,7 @@ int main(void)
 
     bflb_platform_init(0);
 
-    i2c_register(I2C0_INDEX, "i2c", DEVICE_OFLAG_RDWR);
+    i2c_register(I2C0_INDEX, "i2c");
     struct device *i2c0 = device_find("i2c");
 
     if (i2c0) {

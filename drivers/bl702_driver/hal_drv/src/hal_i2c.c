@@ -108,7 +108,7 @@ int i2c_open(struct device *dev, uint16_t oflag)
  * @param flag
  * @return int
  */
-int i2c_register(enum i2c_index_type index, const char *name, uint16_t flag)
+int i2c_register(enum i2c_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -128,7 +128,7 @@ int i2c_register(enum i2c_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_I2C;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 /**
  * @brief

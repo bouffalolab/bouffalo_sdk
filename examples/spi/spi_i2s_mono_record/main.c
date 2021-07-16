@@ -97,8 +97,8 @@ void uart0_rx_irq_callback(struct device *dev, void *args, uint32_t size, uint32
 
 uint8_t spi_init(void)
 {
-    spi_register(SPI0_INDEX, "spi0", DEVICE_OFLAG_RDWR);
-    dma_register(DMA0_CH3_INDEX, "ch3", DEVICE_OFLAG_RDWR);
+    spi_register(SPI0_INDEX, "spi0");
+    dma_register(DMA0_CH3_INDEX, "ch3");
     spi0 = device_find("spi0");
 
     if (spi0) {
@@ -133,13 +133,13 @@ uint8_t spi_init(void)
 
 void uart_init(void)
 {
-    dma_register(DMA0_CH2_INDEX, "ch2", DEVICE_OFLAG_RDWR);
+    dma_register(DMA0_CH2_INDEX, "ch2");
     uart0 = device_find("debug_log");
 
     if (uart0) {
         device_close(uart0);
     } else {
-        uart_register(UART0_INDEX, "debug_log", DEVICE_OFLAG_RDWR);
+        uart_register(UART0_INDEX, "debug_log");
     }
 
     uart0 = device_find("debug_log");
@@ -171,7 +171,7 @@ void uart_init(void)
 
 void i2c_init(void)
 {
-    i2c_register(I2C0_INDEX, "i2c", DEVICE_OFLAG_RDWR);
+    i2c_register(I2C0_INDEX, "i2c");
     i2c0 = device_find("i2c");
 
     if (i2c0) {

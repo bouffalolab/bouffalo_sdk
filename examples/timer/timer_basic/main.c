@@ -41,7 +41,7 @@ int main(void)
     timer_user_cfg2.timeout_val = 1000 * 1000; /* us */
     timer_user_cfg2.comp_it = TIMER_COMP2_IT;
 
-    timer_register(TIMER_CH1_INDEX, "timer_ch1", DEVICE_OFLAG_RDWR);
+    timer_register(TIMER_CH1_INDEX, "timer_ch1");
 
     struct device *timer_ch1 = device_find("timer_ch1");
 

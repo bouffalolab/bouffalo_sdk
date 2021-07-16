@@ -36,8 +36,8 @@ int main(void)
 
     bflb_platform_init(0);
 
-    pwm_register(PWM_CH0_INDEX, "dc_motor_ch0", DEVICE_OFLAG_RDWR);
-    pwm_register(PWM_CH1_INDEX, "dc_motor_ch1", DEVICE_OFLAG_RDWR);
+    pwm_register(PWM_CH0_INDEX, "dc_motor_ch0");
+    pwm_register(PWM_CH1_INDEX, "dc_motor_ch1");
 
     struct device *dc_motor_ch0 = device_find("dc_motor_ch0");
     struct device *dc_motor_ch1 = device_find("dc_motor_ch1");

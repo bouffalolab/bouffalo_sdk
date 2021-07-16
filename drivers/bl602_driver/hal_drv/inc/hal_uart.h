@@ -147,6 +147,6 @@ typedef struct uart_device {
     void *rx_dma;
 } uart_device_t;
 
-int uart_register(enum uart_index_type index, const char *name, uint16_t flag);
+int uart_register(enum uart_index_type index, const char *name);
 
 #endif

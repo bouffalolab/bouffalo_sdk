@@ -145,7 +145,7 @@ int keyscan_register(enum keyscan_index_type index, const char *name)
     dev->type = DEVICE_CLASS_KEYSCAN;
     dev->handle = NULL;
 
-    return device_register(dev, name, 0);
+    return device_register(dev, name);
 }
 
 #if defined(BSP_USING_KEYSCAN)

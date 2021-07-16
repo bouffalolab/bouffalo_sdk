@@ -96,7 +96,7 @@ typedef struct spi_device {
 
 #define SPI_DEV(dev) ((spi_device_t *)dev)
 
-int spi_register(enum spi_index_type index, const char *name, uint16_t flag);
+int spi_register(enum spi_index_type index, const char *name);
 
 int spi_transmit(struct device *dev, void *buffer, uint32_t size, uint8_t type);
 int spi_receive(struct device *dev, void *buffer, uint32_t size, uint8_t type);

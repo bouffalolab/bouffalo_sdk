@@ -25,10 +25,11 @@
 #include "bl702_glb.h"
 #include "hal_cam.h"
 
+#ifdef BSP_USING_CAM
 static intCallback_Type *camIntCbfArra[CAM_INT_ALL] = { NULL };
 
 void CAMERA_IRQ(void);
-
+#endif
 /**
  * @brief
  *
@@ -57,7 +58,9 @@ void cam_init(cam_device_t *cam_cfg, uint16_t oflag)
     CAM_Init(&camera_cfg);
 
     if (oflag == DEVICE_OFLAG_INT) {
+#ifdef BSP_USING_CAM
         Interrupt_Handler_Register(CAM_IRQn, CAMERA_IRQ);
+#endif
     }
 }
 

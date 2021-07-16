@@ -40,7 +40,7 @@ int main(void)
     gpio_write(GPIO_PIN_30, 0);
     gpio_write(GPIO_PIN_31, 0);
 
-    pwm_register(PWM_CH2_INDEX, "led_breath", DEVICE_OFLAG_RDWR);
+    pwm_register(PWM_CH2_INDEX, "led_breath");
 
     struct device *led_breath = device_find("led_breath");
 

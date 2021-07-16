@@ -222,7 +222,11 @@ int i2s_open(struct device *dev, uint16_t oflag)
     I2S_Disable();
     I2S_Init(&i2sCfg);
     I2S_FifoConfig(&fifoCfg);
-    I2S_Enable(I2S_ROLE_MASTER);
+
+    if (i2s_device->iis_mode == I2S_MODE_MASTER)
+        I2S_Enable(I2S_ROLE_MASTER);
+    else if (i2s_device->iis_mode == I2S_MODE_SLAVE)
+        I2S_Enable(I2S_ROLE_SLAVE);
     return SUCCESS;
 }
 
@@ -352,7 +356,7 @@ int i2s_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     }
 }
 
-int i2s_register(enum i2s_index_type index, const char *name, uint16_t flag)
+int i2s_register(enum i2s_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -372,7 +376,7 @@ int i2s_register(enum i2s_index_type index, const char *name, uint16_t flag)
     dev->type = DEVICE_CLASS_I2S;
     dev->handle = NULL;
 
-    return device_register(dev, name, flag);
+    return device_register(dev, name);
 }
 
 void i2s_isr(i2s_device_t *handle)

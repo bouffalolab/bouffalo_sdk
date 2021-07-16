@@ -219,7 +219,7 @@ int dac_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     return 0;
 }
 
-int dac_register(enum dac_index_type index, const char *name, uint16_t flag)
+int dac_register(enum dac_index_type index, const char *name)
 {
     struct device *dev;
 
@@ -236,10 +236,10 @@ int dac_register(enum dac_index_type index, const char *name, uint16_t flag)
     dev->read = NULL;
 
     dev->status = DEVICE_UNREGISTER;
-    dev->type = DEVICE_CLASS_ADC;
+    dev->type = DEVICE_CLASS_DAC;
     dev->handle = NULL;
 
-    device_register(dev, name, flag);
+    device_register(dev, name);
 
     return 0;
 }
