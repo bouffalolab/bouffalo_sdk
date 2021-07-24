@@ -29,7 +29,7 @@
 #include "ble_peripheral_tp_server.h"
 #include "ble_lib_api.h"
 #include "hci_driver.h"
-
+#include "hal_gpio.h"
 extern uint8_t _heap_start;
 extern uint8_t _heap_size; // @suppress("Type cannot be resolved")
 static HeapRegion_t xHeapRegions[] = {
@@ -153,7 +153,6 @@ void ble_stack_start(void)
     MSG("[OS] bt_enable...\r\n");
     bt_enable(bt_enable_cb);
 }
-
 void ble_init(void)
 {
     ble_stack_start();
@@ -177,11 +176,12 @@ int main(void)
 
     MSG("[OS] ble_init_task.....\r\n");
     xTaskCreateStatic(ble_init_task, (char *)"ble_init", sizeof(ble_init_stack) / 4, NULL, 15, ble_init_stack, &ble_init_task_h);
-
+    MSG("[OS] ble_init_task.....\r\n");
     vTaskStartScheduler();
-
+    MSG("[OS] ble_init_task.....ok\r\n");
     BL_CASE_SUCCESS;
     while (1) {
         bflb_platform_delay_ms(100);
+        MSG("[OS] writing_ble...\r\n");
     }
 }
