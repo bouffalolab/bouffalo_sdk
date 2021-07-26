@@ -832,18 +832,15 @@ void timer_ch0_irq_callback(struct device *dev, void *args, uint32_t size, uint3
 
 void tr_timer_init(void)
 {
-    timer_user_cfg_t timer_user_cfg;
-    timer_user_cfg.timeout_val = 1000 * 1000; /* us */
-    timer_user_cfg.comp_it = TIMER_COMP0_IT;
-
-    timer_register(TIMER_CH0_INDEX, "timer_ch0_comp2");
+    timer_register(TIMER0_INDEX, "timer_ch0_comp2");
 
     timer_ch0_comp2 = device_find("timer_ch0_comp2");
 
     if (timer_ch0_comp2) {
+        TIMER_DEV(timer_ch0_comp2)->timeout1 = 1000;
+        TIMER_DEV(timer_ch0_comp2)->trigger = TIMER_PRELOAD_TRIGGER_COMP0;
         device_open(timer_ch0_comp2, 0);
         device_set_callback(timer_ch0_comp2, timer_ch0_irq_callback);
-        device_control(timer_ch0_comp2, DEVICE_CTRL_TIMER_CH_START, (void *)(&timer_user_cfg));
     }
 }
 
