@@ -182,8 +182,6 @@ int uart_control(struct device *dev, int cmd, void *args)
             uart_param_cfg_t *cfg = (uart_param_cfg_t *)args;
             UART_CFG_Type uart_cfg;
 
-            /* Disable uart before config */
-            UART_Disable(uart_device->id, UART_TXRX);
             uint32_t uart_clk = peripheral_clock_get(PERIPHERAL_CLOCK_UART);
 
             uart_cfg.uartClk = uart_clk;
@@ -199,16 +197,6 @@ int uart_control(struct device *dev, int cmd, void *args)
             uart_cfg.rxLinMode = UART_RX_LINMODE_ENABLE;
             uart_cfg.txBreakBitCnt = UART_TX_BREAKBIT_CNT;
             UART_Init(uart_device->id, &uart_cfg);
-#ifdef BSP_USING_UART0
-            if (uart_device->id == UART0_ID)
-                Interrupt_Handler_Register(UART0_IRQn, UART0_IRQ);
-#endif
-#ifdef BSP_USING_UART1
-            if (uart_device->id == UART1_ID)
-                Interrupt_Handler_Register(UART1_IRQn, UART1_IRQ);
-#endif
-            /* Enable uart */
-            UART_Enable(uart_device->id, UART_TXRX);
             break;
         }
         case DEVICE_CTRL_GET_CONFIG /* constant-expression */:
