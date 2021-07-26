@@ -402,7 +402,7 @@ int usb_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
     } else {
     }
 
-    return 0;
+    return -1;
 }
 
 int usb_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
@@ -426,7 +426,7 @@ int usb_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     } else {
     }
 
-    return 0;
+    return -1;
 }
 
 /**
@@ -823,7 +823,6 @@ int usb_dc_receive_to_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8
 {
     uint8_t ep_idx;
     uint8_t recv_len;
-    uint32_t timeout = 0x00FFFFFF;
     static bool overflow_flag = false;
 
     /* Check if OUT ep */
@@ -838,15 +837,6 @@ int usb_dc_receive_to_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8
     }
 
     ep_idx = USB_EP_GET_IDX(ep);
-
-    while (!USB_Is_EPx_RDY_Free(ep_idx)) {
-        timeout--;
-
-        if (!timeout) {
-            USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
-            return -USB_DC_EP_TIMEOUT_ERR;
-        }
-    }
 
     recv_len = USB_Get_EPx_RX_FIFO_CNT(ep_idx);
 
@@ -881,7 +871,6 @@ int usb_dc_receive_to_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8
 int usb_dc_send_from_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8_t ep)
 {
     uint8_t ep_idx;
-    uint32_t timeout = 0x00FFFFFF;
     static bool zlp_flag = false;
     static uint32_t send_total_len = 0;
 
@@ -895,15 +884,6 @@ int usb_dc_send_from_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8_
     /* Check if ep enabled */
     if (!usb_ep_is_enabled(ep)) {
         return -USB_DC_EP_EN_ERR;
-    }
-
-    while (!USB_Is_EPx_RDY_Free(ep_idx)) {
-        timeout--;
-
-        if (!timeout) {
-            USB_DC_LOG_ERR("ep%d wait free timeout\r\n", ep);
-            return -USB_DC_EP_TIMEOUT_ERR;
-        }
     }
 
     uint32_t addr = USB_BASE + 0x118 + (ep_idx - 1) * 0x10;
@@ -949,6 +929,10 @@ void usb_dc_isr(usb_dc_device_t *device)
     for (USB_INT_Type epint = USB_INT_EP1_DONE; epint <= USB_INT_EP7_DONE; epint += 2) {
         if (USB_Get_IntStatus(epint)) {
             epnum = (epint - USB_INT_EP0_OUT_CMD) >> 1;
+            if (!USB_Is_EPx_RDY_Free(epnum)) {
+                USB_DC_LOG_DBG("ep%d out busy\r\n", epnum);
+                return;
+            }
             device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_OUT(epnum)), 0, USB_DC_EVENT_EP_OUT_NOTIFY);
             USB_Clr_IntStatus(epint);
             return;
@@ -959,6 +943,10 @@ void usb_dc_isr(usb_dc_device_t *device)
     for (USB_INT_Type epint = USB_INT_EP1_CMD; epint <= USB_INT_EP7_CMD; epint += 2) {
         if (USB_Get_IntStatus(epint)) {
             epnum = (epint - USB_INT_EP0_OUT_CMD) >> 1;
+            if (!USB_Is_EPx_RDY_Free(epnum)) {
+                USB_DC_LOG_DBG("ep%d in busy\r\n", epnum);
+                return;
+            }
             device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_IN(epnum)), 0, USB_DC_EVENT_EP_IN_NOTIFY);
             USB_Clr_IntStatus(epint);
             return;
@@ -993,6 +981,10 @@ void usb_dc_isr(usb_dc_device_t *device)
     /* EP0 setup done */
     if (USB_Get_IntStatus(USB_INT_EP0_SETUP_DONE)) {
         USB_DC_LOG("S\r\n");
+        if (!USB_Is_EPx_RDY_Free(0)) {
+            USB_DC_LOG_DBG("ep0 setup busy\r\n");
+            return;
+        }
         device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_SETUP_NOTIFY);
         USB_Clr_IntStatus(USB_INT_EP0_SETUP_DONE);
         return;
@@ -1001,6 +993,10 @@ void usb_dc_isr(usb_dc_device_t *device)
     /* EP0 in done */
     if (USB_Get_IntStatus(USB_INT_EP0_IN_DONE)) {
         USB_DC_LOG("I\r\n");
+        if (!USB_Is_EPx_RDY_Free(0)) {
+            USB_DC_LOG_DBG("ep0 in busy\r\n");
+            return;
+        }
         device->parent.callback(&device->parent, (void *)0x80, 0, USB_DC_EVENT_EP0_IN_NOTIFY);
         USB_Clr_IntStatus(USB_INT_EP0_IN_DONE);
         return;
@@ -1009,6 +1005,10 @@ void usb_dc_isr(usb_dc_device_t *device)
     /* EP0 out done */
     if (USB_Get_IntStatus(USB_INT_EP0_OUT_DONE)) {
         USB_DC_LOG("O\r\n");
+        if (!USB_Is_EPx_RDY_Free(0)) {
+            USB_DC_LOG_DBG("ep0 out busy\r\n");
+            return;
+        }
         device->parent.callback(&device->parent, (void *)0x00, 0, USB_DC_EVENT_EP0_OUT_NOTIFY);
         /*************************************/
         USB_Clr_IntStatus(USB_INT_EP0_OUT_DONE);
