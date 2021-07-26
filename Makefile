@@ -5,16 +5,7 @@ APP?=helloworld
 CPU_ID?=none
 COMx?=
 
-SUPPORT_SHELL?=n
-SUPPORT_FREERTOS?=n
-SUPPORT_CRYPTO?=n
-SUPPORT_LVGL?=n
 SUPPORT_FLOAT?=n
-SUPPORT_BLE?=n
-SUPPORT_XZ?=n
-SUPPORT_LWIP?=n
-SUPPORT_TFLITE?=n
-
 INTERFACE?=uart
 BAUDRATE ?=2000000
 
@@ -25,15 +16,7 @@ export CHIP
 export APP_DIR
 export APP
 export CPU_ID
-export SUPPORT_SHELL
-export SUPPORT_FREERTOS
-export SUPPORT_CRYPTO
-export SUPPORT_LVGL
 export SUPPORT_FLOAT
-export SUPPORT_BLE
-export SUPPORT_XZ
-export SUPPORT_LWIP
-export SUPPORT_TFLITE
 
 # The command to remove a file.
 RM = cmake -E rm -rf

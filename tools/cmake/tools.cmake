@@ -95,8 +95,18 @@ function(generate_bin)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
 
-    check_all_library()
+    # add basic library which is built by add_library
+    check_add_library(common ${CMAKE_SOURCE_DIR}/common)
+    check_add_library(${CHIP}_driver ${CMAKE_SOURCE_DIR}/drivers/${CHIP}_driver)
 
+    # add other libraries which are target or extern library
+    if(TARGET_REQUIRED_LIBS)
+        foreach(lib ${TARGET_REQUIRED_LIBS})
+        check_add_library(${lib} ${CMAKE_SOURCE_DIR}/components/${lib})
+        endforeach()
+    endif()
+
+    # list mains to execute,now is executing one elf
     foreach(mainfile IN LISTS mains)
     # Get file name without directory
     get_filename_component(mainname ${mainfile} NAME_WE)
@@ -107,12 +117,10 @@ function(generate_bin)
     else()
         if(${above_relative_dir_name} STREQUAL "examples")
             set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${current_relative_dir_name})
-            set(target_name ${current_relative_dir_name}_${mainname})
         else()
             set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${above_relative_dir_name}/${current_relative_dir_name})
-            set(target_name ${current_relative_dir_name}_${mainname})
         endif()
-
+        set(target_name ${current_relative_dir_name})
     endif()
 
 	file(MAKE_DIRECTORY ${OUTPUT_DIR})
@@ -205,55 +213,17 @@ endif()
 endfunction()
 
 function(check_add_library target_name directory)
-    if(NOT TARGET ${target_name})
-    add_subdirectory(${directory} ${CMAKE_SOURCE_DIR}/build/libraries/${target_name})
+    if(IS_DIRECTORY ${directory})
+        if(NOT TARGET ${target_name})
+        add_subdirectory(${directory} ${CMAKE_SOURCE_DIR}/build/libraries/${target_name})
+        endif()
+    elseif()
+        if(EXISTS ${target_name})
+        get_filename_component(lib_relative_dir ${target_name} DIRECTORY)
+        get_filename_component(library_name ${target_name} NAME_WE)
+        message(STATUS "[register extern library component: ${library_name}], path:${lib_relative_dir}")
+        endif()
+    else()
+    message(FATAL_ERROR "both ${target_name} and ${directory} is not exist")
     endif()
 endfunction()
-
-function(check_all_library)
-    check_add_library(common ${CMAKE_SOURCE_DIR}/common)
-    check_add_library(fatfs ${CMAKE_SOURCE_DIR}/components/fatfs)
-    check_add_library(usb_stack ${CMAKE_SOURCE_DIR}/components/usb_stack)
-
-    if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/drivers/${CHIP}_driver)
-    check_add_library(${CHIP}_driver ${CMAKE_SOURCE_DIR}/drivers/${CHIP}_driver)
-    endif()
-
-    if(${SUPPORT_SHELL} STREQUAL "y")
-    check_add_library(shell ${CMAKE_SOURCE_DIR}/components/shell)
-    endif()
-    if(${SUPPORT_FREERTOS} STREQUAL "y")
-    check_add_library(freertos ${CMAKE_SOURCE_DIR}/components/freertos)
-    endif()
-
-    if(${SUPPORT_CRYPTO} STREQUAL "sw" OR ${SUPPORT_CRYPTO} STREQUAL "hw")
-    check_add_library(bflb_port ${CMAKE_SOURCE_DIR}/components/mbedtls/bflb_port)
-    endif()
-
-    if(${SUPPORT_LVGL} STREQUAL "y")
-    check_add_library(lvgl ${CMAKE_SOURCE_DIR}/components/lvgl)
-    endif()
-
-    if(${SUPPORT_XZ} STREQUAL "y")
-    check_add_library(xz ${CMAKE_SOURCE_DIR}/components/xz)
-    endif()
-
-    if(${SUPPORT_BLE} STREQUAL "y")
-    if(${SUPPORT_FREERTOS} STREQUAL "n")
-    message(FATAL_ERROR "ble need freertos,so you should set SUPPORT_FREERTOS=y")
-    endif()
-    check_add_library(ble ${CMAKE_SOURCE_DIR}/components/ble)
-    endif()
-
-    if(${SUPPORT_LWIP} STREQUAL "y")
-    if(${SUPPORT_FREERTOS} STREQUAL "n")
-    message(FATAL_ERROR "lwip need freertos,so you should set SUPPORT_FREERTOS=y")
-    endif()
-    check_add_library(lwip ${CMAKE_SOURCE_DIR}/components/lwip)
-    endif()
-
-    if(${SUPPORT_TFLITE} STREQUAL "y")
-    check_add_library(tflite ${CMAKE_SOURCE_DIR}/components/tflite)
-    endif()
-
-endfunction(check_all_library)

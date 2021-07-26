@@ -1,5 +1,3 @@
-include(${CMAKE_SOURCE_DIR}/drivers/${CHIP}_driver/cpu_flags.cmake)
-
 list(APPEND GLOBAL_C_FLAGS -Os -g3)
 list(APPEND GLOBAL_C_FLAGS -fshort-enums -fno-common -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -ffast-math)
 list(APPEND GLOBAL_C_FLAGS -Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -Wignored-qualifiers -Wunused -Wundef)
@@ -15,7 +13,9 @@ if(${SUPPORT_FLOAT} STREQUAL "y")
 list(APPEND GLOBAL_LD_FLAGS -u _printf_float)
 endif()
 
+# if(${SUPPORT_BACKTRACE} STREQUAL "y")
+# list(APPEND GLOBAL_C_FLAGS -fno-omit-frame-pointer)
+# endif()
 
-if(${SUPPORT_SHELL} STREQUAL "y")
-list(APPEND GLOBAL_C_FLAGS -DSHELL_SUPPORT)
-endif()
+
+
