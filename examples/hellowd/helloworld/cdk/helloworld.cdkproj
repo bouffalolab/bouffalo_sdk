@@ -235,7 +235,7 @@ Board: bl70x_iot
     </File>
   </VirtualDirectory>
   <MonitorProgress>
-    <DebugLaunch>80</DebugLaunch>
+    <DebugLaunch>70</DebugLaunch>
     <FlashOperate>25</FlashOperate>
   </MonitorProgress>
   <VirtualDirectory Name="components">
@@ -286,32 +286,6 @@ Board: bl70x_iot
   <Dependencies Name="BuildSet"/>
   <Dependencies Name="CK_Link_Debug"/>
   <Dependencies Name="OpenOCD_Debug"/>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs>
-      <Tab disFormat="Hex">glb</Tab>
-      <Tab disFormat="Hex">uart</Tab>
-    </peripheralTabs>
-    <WatchDisplayFormat>1</WatchDisplayFormat>
-    <LocalDisplayFormat>1</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs>
-      <Tab disFormat="Hex">glb</Tab>
-      <Tab disFormat="Hex">uart</Tab>
-    </peripheralTabs>
-    <WatchDisplayFormat>1</WatchDisplayFormat>
-    <LocalDisplayFormat>1</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
   <BuildConfigs>
     <BuildConfig Name="OpenOCD_Debug">
       <Target>
@@ -407,7 +381,7 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;bl706_avb</Define>
+        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;bl706_iot</Define>
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -442,7 +416,7 @@ Board: bl70x_iot
         <LinkType/>
       </Linker>
       <Debug>
-        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
+        <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
         <Connector>OpenOCD</Connector>
         <StopAt>yes</StopAt>
         <StopAtText>main</StopAtText>
@@ -598,7 +572,7 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;bl706_avb</Define>
+        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;bl706_hwc</Define>
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -633,8 +607,8 @@ Board: bl70x_iot
         <LinkType/>
       </Linker>
       <Debug>
-        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
-        <Connector>ICE</Connector>
+        <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
+        <Connector>Remote ICE</Connector>
         <StopAt>yes</StopAt>
         <StopAtText>main</StopAtText>
         <InitFile/>
@@ -685,15 +659,41 @@ Board: bl70x_iot
         <InitFile/>
         <Erase>Erase Sectors</Erase>
         <Algorithms Path="">bl70x_flasher.elf</Algorithms>
-        <Program>yes</Program>
-        <Verify>yes</Verify>
+        <Program>no</Program>
+        <Verify>no</Verify>
         <ResetAndRun>no</ResetAndRun>
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal/>
-        <External>yes</External>
+        <External>no</External>
         <Command>$(ProjectPath)/../../../../tools/bflb_flash_tool/bflb_mcu_tool.exe</Command>
         <Arguments>--chipname=bl702 --firmware="$(ProjectPath)/Obj/$(ProjectName).bin" </Arguments>
       </Flash>
     </BuildConfig>
   </BuildConfigs>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs>
+      <Tab disFormat="Hex">glb</Tab>
+      <Tab disFormat="Hex">uart</Tab>
+    </peripheralTabs>
+    <WatchDisplayFormat>1</WatchDisplayFormat>
+    <LocalDisplayFormat>1</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs>
+      <Tab disFormat="Hex">glb</Tab>
+      <Tab disFormat="Hex">uart</Tab>
+    </peripheralTabs>
+    <WatchDisplayFormat>1</WatchDisplayFormat>
+    <LocalDisplayFormat>1</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
 </Project>
