@@ -39,7 +39,7 @@
 #include "stdint.h"
 #include "stdio.h"
 #include "string.h"
-
+#include "blsp_bootinfo.h"
 /** @addtogroup  BL606_BLSP_Boot2
  *  @{
  */
@@ -72,7 +72,7 @@
 int32_t blsp_mediaboot_read(uint32_t addr, uint8_t *data, uint32_t len);
 //uint32_t BLSP_MediaBoot_Get_Flash_Cfg(uint32_t bootheaderAddr);
 //int32_t BLSP_MediaBoot_Cache_Enable(uint8_t contRead);
-int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], uint8_t cpu_roll_back[BFLB_BOOT2_CPU_MAX], uint8_t roll_back);
+int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], uint8_t cpu_roll_back[BFLB_BOOT2_CPU_MAX],uint8_t roll_back);
 void blsp_boot2_show_timer(void);
 //int32_t ATTR_TCM_SECTION BLSP_MediaBoot_Set_Encrypt(uint8_t index,boot_image_config *g_boot_img_cfg);
 

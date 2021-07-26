@@ -70,7 +70,6 @@
  *  @{
  */
 void blsp_dump_data(void *datain, int len);
-void blsp_fix_invalid_msp_pc(void);
 void blsp_boot2_jump_entry(void);
 int32_t blsp_mediaboot_pre_jump(void);
 uint8_t blsp_boot2_get_feature_flag(void);

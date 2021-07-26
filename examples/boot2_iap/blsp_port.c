@@ -43,135 +43,9 @@
 #include "blsp_common.h"
 #include "blsp_media_boot.h"
 #include "tzc_sec_reg.h"
+#include "hal_boot2.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
-
-/** @addtogroup  BLSP_PORT
- *  @{
- */
-
-/** @defgroup  BLSP_PORT_Private_Macros
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Private_Macros */
-
-/** @defgroup  BLSP_PORT_Private_Types
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Private_Types */
-
-/** @defgroup  BLSP_PORT_Private_Variables
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Private_Variables */
-
-/** @defgroup  BLSP_PORT_Global_Variables
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Global_Variables */
-
-/** @defgroup  BLSP_PORT_Private_Fun_Declaration
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Private_Fun_Declaration */
-
-/** @defgroup  BLSP_PORT_Private_Functions_User_Define
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Private_Functions_User_Define */
-
-/** @defgroup  BLSP_PORT_Private_Functions
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Private_Functions */
-
-/** @defgroup  BLSP_PORT_Public_Functions
- *  @{
- */
-/****************************************************************************/ /**
- * @brief  Boot2 init timer for cal boot time
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-void blsp_boot2_init_timer(void)
-{
-    TIMER_CFG_Type timer_cfg = {
-        TIMER_CH0,               /* timer channel 0 */
-        TIMER_CLKSRC_FCLK,       /* timer clock source:bus clock */
-        TIMER_PRELOAD_TRIG_NONE, /* reaload on comaparator 2  */
-        TIMER_COUNT_FREERUN,     /* preload when match occur */
-        159,                     /* clock divider */
-        0xfffffffe,              /* match value 0  */
-        0xfffffffe,              /* match value 1 */
-        0xfffffffe,              /* match value 2 */
-        0,                       /* preload value */
-    };
-
-    /* Disable all interrupt */
-    TIMER_IntMask(timer_cfg.timerCh, TIMER_INT_ALL, MASK);
-
-    /* Disable timer before config */
-    TIMER_Disable(timer_cfg.timerCh);
-
-    /* Timer init with default configuration */
-    TIMER_Init(&timer_cfg);
-
-    /* Enable timer */
-    TIMER_Enable(timer_cfg.timerCh);
-}
-
-/****************************************************************************/ /**
-* @brief  Boot2 Disable other CPU cache
-*
-* @param  None
-*
-* @return None
-*
-*******************************************************************************/
-void blsp_boot2_disable_other_cache(void)
-{
-}
-
-/****************************************************************************/ /**
-* @brief  Boot2 Flash Boot2 cache
-*
-* @param  None
-*
-* @return None
-*
-*******************************************************************************/
-void blsp_boot2_flush_xip_cache()
-{
-    L1C_Cache_Flush(0xf);
-}
-
-/****************************************************************************/ /**
- * @brief  Boot2 Get fw clock config
- *
- * @param  cfg: Clock config pointer
- *
- * @return boot_error_code
- *
-*******************************************************************************/
-int32_t ATTR_TCM_SECTION blsp_boot2_get_clk_cfg(boot_clk_config *cfg)
-{
-    XIP_SFlash_Read_Via_Cache_Need_Lock(8 + sizeof(boot_flash_config) + BLSP_BOOT2_XIP_BASE,
-                                        (uint8_t *)cfg, sizeof(boot_clk_config));
-
-    return BFLB_BOOT2_SUCCESS;
-}
+extern uint32_t __boot2_pass_param_addr;
 
 /****************************************************************************/ /**
 * @brief  Boot2 show timer for cal boot time
@@ -184,60 +58,6 @@ int32_t ATTR_TCM_SECTION blsp_boot2_get_clk_cfg(boot_clk_config *cfg)
 void blsp_boot2_show_timer(void)
 {
     MSG("Counter value=%d\n", (unsigned int)bflb_platform_get_time_ms());
-}
-
-/****************************************************************************/ /**
-* @brief  Boot2 get efuse config security
-*
-* @param  None
-*
-* @return None
-*
-*******************************************************************************/
-void ATTR_TCM_SECTION blsp_boot2_get_efuse_cfg(boot_efuse_hw_config *g_efuse_cfg)
-{
-    uint32_t tmp;
-
-    HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_XTAL);
-
-    /* Get sign and aes type*/
-    EF_Ctrl_Read_Secure_Boot((EF_Ctrl_Sign_Type *)g_efuse_cfg->sign, (EF_Ctrl_SF_AES_Type *)g_efuse_cfg->encrypted);
-    /* Get hash:aes key slot 0 and slot1*/
-    EF_Ctrl_Read_AES_Key(0, (uint32_t *)g_efuse_cfg->pk_hash_cpu0, 8);
-    EF_Ctrl_Read_Chip_ID(g_efuse_cfg->chip_id);
-    /* Get HBN check sign config */
-    EF_Ctrl_Read_Sw_Usage(0, &tmp);
-    g_efuse_cfg->hbn_check_sign = (tmp >> 22) & 0x01;
-
-    GLB_Set_System_CLK_Div(0, 1);
-    HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_DLL);
-}
-
-/****************************************************************************/ /**
-* @brief  Boot2 reset sec_eng module
-*
-* @param  None
-*
-* @return None
-*
-*******************************************************************************/
-void blsp_boot2_reset_sec_eng(void)
-{
-    GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_SEC);
-}
-
-/****************************************************************************/ /**
-* @brief  Boot2 init sec_eng PKA module
-*
-* @param  None
-*
-* @return None
-*
-*******************************************************************************/
-void BLSP_Boot2_Init_Sec_Eng_PKA(void)
-{
-    Sec_Eng_PKA_Reset();
-    Sec_Eng_PKA_BigEndian_Enable();
 }
 
 /****************************************************************************/ /**
@@ -263,7 +83,7 @@ uint32_t blsp_boot2_get_cpu_count(void)
 *******************************************************************************/
 uint8_t blsp_read_power_save_mode(void)
 {
-    if (HBN_Get_Status_Flag() == HBN_STATUS_WAKEUP_FLAG) {
+    if (hal_hbn_get_status_flag() == HBN_STATUS_WAKEUP_FLAG) {
         return BFLB_PSM_HBN;
     } else {
         return BFLB_PSM_ACTIVE;
@@ -282,56 +102,17 @@ uint8_t blsp_read_power_save_mode(void)
 void blsp_boot2_pass_parameter(void *data, uint32_t len)
 {
     static uint8_t *p_parameter = NULL;
-
+    MSG("boot2_pass_param_addr %08x\r\n", &__boot2_pass_param_addr);
     if (len == 0) {
-        GLB_Set_EM_Sel(0);
-        p_parameter = (uint8_t *)(0x42020000 + 60 * 1024);
+        //GLB_Set_EM_Sel(0); //system init has done
+        //p_parameter = (uint8_t *)(0x42020000 + 60 * 1024);
+        //p_parameter = (uint8_t *)(0x42030000+103*1024);
+        p_parameter = (uint8_t *)&__boot2_pass_param_addr;
         return;
     }
 
     ARCH_MemCpy_Fast(p_parameter, data, len);
     p_parameter += len;
-}
-
-/****************************************************************************/ /**
- * @brief  Boot2 Get XIP offset
- *
- * @param  None
- *
- * @return XIP offset
- *
-*******************************************************************************/
-uint32_t blsp_boot2_get_xip_offset(void)
-{
-    return SF_Ctrl_Get_Flash_Image_Offset();
-}
-
-/****************************************************************************/ /**
- * @brief  Get User specified firmware to boot up
- *
- * @param  None
- *
- * @return User specified firmware name
- *
-*******************************************************************************/
-uint8_t *blsp_get_user_specified_fw(void)
-{
-    return (uint8_t *)(HBN_BASE + HBN_RSV0_OFFSET);
-}
-
-/****************************************************************************/ /**
- * @brief  Clear User specified firmware to boot up
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-void blsp_clr_user_specified_fw(void)
-{
-    uint32_t *p = (uint32_t *)(HBN_BASE + HBN_RSV0_OFFSET);
-
-    *p = 0;
 }
 
 /****************************************************************************/ /**
@@ -385,124 +166,6 @@ int32_t ATTR_TCM_SECTION blsp_boot2_set_encrypt(uint8_t index, boot_image_config
 }
 
 /****************************************************************************/ /**
- * @brief  Media boot set cache according to image config
- *
- * @param  None
- *
- * @return BL_Err_Type
- *
-*******************************************************************************/
-int32_t ATTR_TCM_SECTION blsp_boot2_set_cache(uint8_t cont_read, SPI_Flash_Cfg_Type *flash_cfg, boot_image_config *g_boot_img_cfg)
-{
-    uint32_t tmp[1];
-    uint32_t stat;
-
-    /* To make it simple, exit cont read anyway */
-    SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
-
-    SFlash_Reset_Continue_Read(flash_cfg);
-
-    if (flash_cfg->cReadSupport == 0) {
-        cont_read = 0;
-    }
-
-    if (cont_read == 1) {
-        stat = SFlash_Read(flash_cfg, flash_cfg->ioMode & 0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
-
-        if (SUCCESS != stat) {
-            return BFLB_BOOT2_FAIL;
-        }
-    }
-
-    /* Set default value */
-    L1C_Cache_Enable_Set(0xf);
-
-    if (g_boot_img_cfg[0].cache_enable) {
-        if ((g_boot_img_cfg[0].entry_point & 0xFF000000) == BLSP_BOOT2_XIP_BASE) {
-            SF_Ctrl_Set_Flash_Image_Offset(g_boot_img_cfg[0].img_start.flash_offset);
-            SFlash_Cache_Read_Enable(flash_cfg, flash_cfg->ioMode & 0xf, cont_read, g_boot_img_cfg[0].cache_way_disable);
-        } else {
-        }
-    }
-
-    return BFLB_BOOT2_SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Check if MSP is valid
- *
- * @param  msp_val: MSP value
- *
- * @return 1 for valid and 0 for invalid
- *
-*******************************************************************************/
-int32_t blsp_is_msp_valid(uint32_t msp_val)
-{
-    if (msp_val > BL702_WRAM_BASE && msp_val <= BL702_WRAM_END) {
-        return 1;
-    } else if (msp_val > BL702_WRAM_REMAP0_BASE && msp_val <= BL702_WRAM_REMAP0_END) {
-        return 1;
-    } else if (msp_val > BL702_WRAM_REMAP1_BASE && msp_val <= BL702_WRAM_REMAP1_END) {
-        return 1;
-    } else if (msp_val > BL702_WRAM_REMAP2_BASE && msp_val <= BL702_WRAM_REMAP2_END) {
-        return 1;
-    } else if (msp_val > BL702_TCM_BASE && msp_val <= BL702_TCM_END) {
-        return 1;
-    } else if (msp_val > BL702_TCM_REMAP0_BASE && msp_val <= BL702_TCM_REMAP0_END) {
-        return 1;
-    } else if (msp_val > BL702_TCM_REMAP1_BASE && msp_val <= BL702_TCM_REMAP1_END) {
-        return 1;
-    } else if (msp_val > BL702_TCM_REMAP2_BASE && msp_val <= BL702_TCM_REMAP2_END) {
-        return 1;
-    }
-
-    return 0;
-}
-
-/****************************************************************************/ /**
- * @brief  Check if PC is valid
- *
- * @param  pcVal: PC value
- *
- * @return 1 for valid and 0 for invalid
- *
-*******************************************************************************/
-int32_t blsp_is_pc_valid(uint32_t pc_val)
-{
-    /* Check XIP memory */
-    if (pc_val >= BL702_FLASH_XIP_BASE && pc_val < BL702_FLASH_XIP_END) {
-        return 1;
-    } else if (pc_val >= BL702_FLASH_XIP_REMAP0_BASE && pc_val < BL702_FLASH_XIP_REMAP0_END) {
-        return 1;
-    } else if (pc_val >= BL702_FLASH_XIP_REMAP1_BASE && pc_val < BL702_FLASH_XIP_REMAP1_END) {
-        return 1;
-    } else if (pc_val >= BL702_FLASH_XIP_REMAP2_BASE && pc_val < BL702_FLASH_XIP_REMAP2_END) {
-        return 1;
-    }
-
-    /* Check RAM memory */
-    if (pc_val >= BL702_WRAM_BASE && pc_val < BL702_WRAM_END) {
-        return 1;
-    } else if (pc_val >= BL702_WRAM_REMAP0_BASE && pc_val < BL702_WRAM_REMAP0_END) {
-        return 1;
-    } else if (pc_val >= BL702_WRAM_REMAP1_BASE && pc_val < BL702_WRAM_REMAP1_END) {
-        return 1;
-    } else if (pc_val >= BL702_WRAM_REMAP2_BASE && pc_val < BL702_WRAM_REMAP2_END) {
-        return 1;
-    } else if (pc_val >= BL702_TCM_BASE && pc_val < BL702_TCM_END) {
-        return 1;
-    } else if (pc_val >= BL702_TCM_REMAP0_BASE && pc_val < BL702_TCM_REMAP0_END) {
-        return 1;
-    } else if (pc_val >= BL702_TCM_REMAP1_BASE && pc_val < BL702_TCM_REMAP1_END) {
-        return 1;
-    } else if (pc_val >= BL702_TCM_REMAP2_BASE && pc_val < BL702_TCM_REMAP2_END) {
-        return 1;
-    }
-
-    return 0;
-}
-
-/****************************************************************************/ /**
  * @brief  Security boot finished
  *
  * @param  None
@@ -522,26 +185,27 @@ void ATTR_TCM_SECTION blsp_sboot_finish(void)
 }
 
 /****************************************************************************/ /**
- * @brief  Fix MSP and PC,if they are invalid
+ * @brief  blsp_boot2_pll_init
  *
  * @param  None
  *
  * @return None
  *
 *******************************************************************************/
-void blsp_fix_invalid_msp_pc(void)
+void ATTR_TCM_SECTION blsp_boot2_pll_init(void)
 {
-    uint32_t i = 0;
+    int32_t ret;
+    hal_pll_config clk_cfg;
 
-    for (i = 0; i < BFLB_BOOT2_CPU_MAX; i++) {
-        if (!blsp_is_msp_valid(g_boot_img_cfg[i].msp_val)) {
-            g_boot_img_cfg[i].msp_val = 0;
-        }
+    flash_get_clk_cfg(&clk_cfg);
 
-        if (!blsp_is_pc_valid(g_boot_img_cfg[i].entry_point)) {
-            g_boot_img_cfg[i].entry_point = 0;
-        }
-    }
+    clk_cfg.cfg.pll_clk = BL_SYS_CLK_PLL;
+    clk_cfg.cfg.hclk_div = 0;
+    clk_cfg.cfg.bclk_div = 1;
+    clk_cfg.cfg.flash_clk_type = BL_SFLASH_CLK;
+    clk_cfg.cfg.flash_clk_div = 1;
+    ret = hal_pll_init(&clk_cfg);
+    MSG("hal_pll_init %d\r\n", ret);
 }
 
 typedef void (*pFunc)(void);

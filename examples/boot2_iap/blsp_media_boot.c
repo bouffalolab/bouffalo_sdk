@@ -44,6 +44,7 @@
 #include "blsp_media_boot.h"
 #include "softcrc.h"
 #include "bflb_eflash_loader_uart.h"
+//#include "hal_sec_eng.h"
 
 /** @addtogroup  BL606_BLSP_Boot2
  *  @{
@@ -74,7 +75,7 @@
 /** @defgroup  BLSP_MEDIA_BOOT_Global_Variables
  *  @{
  */
-extern SEC_Eng_SHA256_Ctx g_sha_ctx;
+//extern SEC_Eng_SHA256_Ctx g_sha_ctx;
 
 /*@} end of group BLSP_MEDIA_BOOT_Global_Variables */
 
@@ -93,6 +94,8 @@ extern SEC_Eng_SHA256_Ctx g_sha_ctx;
 /** @defgroup  BLSP_MEDIA_BOOT_Private_Functions
  *  @{
  */
+
+extern struct device *dev_check_hash;
 
 /****************************************************************************/ /**
  * @brief  Media boot calculate hash
@@ -133,7 +136,8 @@ static int32_t blsp_mediaboot_cal_hash(uint32_t start_addr, uint32_t total_len)
         }
 
         /* Update hash*/
-        Sec_Eng_SHA256_Update(&g_sha_ctx, SEC_ENG_SHA_ID0, (uint8_t *)g_boot2_read_buf, read_len);
+        //Sec_Eng_SHA256_Update(&g_sha_ctx, SEC_ENG_SHA_ID0, (uint8_t *)g_boot2_read_buf, read_len);
+        device_write(dev_check_hash, 0, g_boot2_read_buf, read_len);
         //blsp_dump_data((uint8_t *)g_boot2_read_buf,readLen);
 
         addr += read_len;
@@ -152,8 +156,7 @@ static int32_t blsp_mediaboot_cal_hash(uint32_t start_addr, uint32_t total_len)
  * @return BL_Err_Type
  *
 *******************************************************************************/
-#if 0
-static int32_t BLSP_MediaBoot_Read_Signaure(uint32_t addr, uint32_t *len)
+static int32_t blsp_mediaboot_read_signaure(uint32_t addr, uint32_t *len)
 {
     int32_t ret = BFLB_BOOT2_SUCCESS;
     uint32_t sig_len = 0;
@@ -189,7 +192,6 @@ static int32_t BLSP_MediaBoot_Read_Signaure(uint32_t addr, uint32_t *len)
 
     return ret;
 }
-#endif
 /****************************************************************************/ /**
  * @brief  Media boot parse one firmware
  *
@@ -204,10 +206,10 @@ static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg, uint
 {
     uint32_t addr = boot_header_addr;
     int32_t ret;
-    //    uint32_t sig_len=0;
+    uint32_t sig_len=0;
 
     /* Read boot header*/
-    MSG_DBG("R header from %08x\r\n", addr);
+    MSG("R header from %08x\r\n", addr);
     ret = blsp_mediaboot_read(addr, g_boot2_read_buf, sizeof(boot_header_config));
 
     if (ret != BFLB_BOOT2_SUCCESS) {
@@ -227,15 +229,103 @@ static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg, uint
 
     /* Due to OTA, the flash_offset is changed, so copy from partition info */
     boot_img_cfg->img_start.flash_offset = img_addr;
+    
+    /* If sign enable,get pk key and signature*/
+    if(boot_img_cfg->sign_type){
+        /* Read public key */
+        MSG("R PK\r\n");
+        ret=blsp_mediaboot_read(addr,g_boot2_read_buf,sizeof(boot_pk_config));
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+        if(blsp_boot2_dump_critical_flag()){
+            blsp_dump_data(g_boot2_read_buf,sizeof(boot_pk_config));
+        }
+        addr+=sizeof(boot_pk_config);
+        ret=blsp_boot_parse_pkey(boot_img_cfg,(uint8_t *)g_boot2_read_buf,1);
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+#ifdef BOOT2_MC
+        /* Read public key 2*/
+        MSG("R PK2\r\n");
+        ret=blsp_mediaboot_read(addr,g_boot2_read_buf,sizeof(boot_pk_config));
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+        if(blsp_boot2_dump_critical_flag()){
+            blsp_dump_data(g_boot2_read_buf,sizeof(boot_pk_config));
+        }
+        addr+=sizeof(boot_pk_config);
+        ret=blsp_boot_parse_pkey(boot_img_cfg,(uint8_t *)g_boot2_read_buf,0);
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+#endif
+        /* Read signature*/
+        MSG_DBG("R SIG1\r\n");
+        blsp_mediaboot_read_signaure(addr,&sig_len);
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+        if(blsp_boot2_dump_critical_flag()){
+            blsp_dump_data(g_boot2_read_buf,sig_len);
+        }
+        /*len+data+crc*/
+        addr+=sizeof(sig_len);
+        addr+=(sig_len+4);
+        ret=blsp_boot_parse_signature(boot_img_cfg,(uint8_t *)g_boot2_read_buf,1);
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+        
+#ifdef BOOT2_MC
+        /* Read signature2*/
+        MSG_DBG("R SIG2\r\n");
+        blsp_mediaboot_read_signaure(addr,&sig_len);
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+        if(blsp_boot2_dump_critical_flag()){
+            blsp_dump_data(g_boot2_read_buf,sig_len);
+        }
+        /*len+data+crc*/
+        addr+=sizeof(sig_len);
+        addr+=(sig_len+4);
+        ret=blsp_boot_parse_signature(boot_img_cfg,(uint8_t *)g_boot2_read_buf,0);
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+#endif
+    }
+
+    /* If encrypt enable,get AES key*/
+    if(boot_img_cfg->encrypt_type){
+        /* Read aes iv*/
+        MSG_DBG("R IV\r\n");
+        ret=blsp_mediaboot_read(addr,g_boot2_read_buf,sizeof(boot_aes_config));
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }        
+        if(blsp_boot2_dump_critical_flag()){
+            blsp_dump_data(g_boot2_read_buf,sizeof(boot_aes_config));
+        }
+        addr+=sizeof(boot_aes_config);
+        ret=blsp_boot_parse_aesiv(boot_img_cfg,(uint8_t *)g_boot2_read_buf);
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
+    }
 
     if (boot_img_cfg->no_segment) {
         /* Flash image */
         if (!boot_img_cfg->hash_ignore) {
-            MSG_DBG("Cal hash\r\n");
+            MSG("Cal hash\r\n");
             ret = blsp_mediaboot_cal_hash(img_addr,
                                           boot_img_cfg->img_segment_info.img_len);
 
             if (ret != BFLB_BOOT2_SUCCESS) {
+                MSG_ERR("blsp cal hash err\r\n");
                 return ret;
             }
 
@@ -246,10 +336,10 @@ static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg, uint
             }
         }
 
-        //        ret=blsp_boot_parser_check_signature(g_boot_img_cfg);
-        //        if(ret!=BFLB_BOOT2_SUCCESS){
-        //            return ret;
-        //        }
+        ret=blsp_boot_parser_check_signature(boot_img_cfg);
+        if(ret!=BFLB_BOOT2_SUCCESS){
+            return ret;
+        }
         boot_img_cfg->img_valid = 1;
     } else {
         boot_img_cfg->img_valid = 0;
@@ -276,7 +366,7 @@ static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg, uint
 *******************************************************************************/
 int32_t ATTR_TCM_SECTION blsp_mediaboot_read(uint32_t addr, uint8_t *data, uint32_t len)
 {
-    XIP_SFlash_Read_Via_Cache_Need_Lock(BLSP_BOOT2_XIP_BASE + addr, data, len);
+    flash_read(BLSP_BOOT2_XIP_BASE + addr, data, len);
 
     return BFLB_BOOT2_SUCCESS;
 }
@@ -291,13 +381,13 @@ int32_t ATTR_TCM_SECTION blsp_mediaboot_read(uint32_t addr, uint8_t *data, uint3
  * @return BL_Err_Type
  *
 *******************************************************************************/
-int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], uint8_t cpu_roll_back[BFLB_BOOT2_CPU_MAX], uint8_t roll_back)
+int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], uint8_t cpu_roll_back[BFLB_BOOT2_CPU_MAX],uint8_t roll_back)
 {
     int32_t ret;
     uint32_t i = 0;
     uint32_t valid_img_found = 0;
     uint32_t boot_header_addr[BFLB_BOOT2_CPU_MAX];
-    MSG_DBG("Media boot main\r\n");
+    MSG("Media boot main\r\n");
 
     /* Reset some parameters*/
     for (i = 0; i < BFLB_BOOT2_CPU_MAX; i++) {
@@ -328,8 +418,8 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], u
 
     if (valid_img_found != g_cpu_count && 1 == roll_back) {
         /* For CP and DP, found CPU0 image is taken as correct when the other not found, others as wrong and try to rollback */
-        if (boot_header_addr[1] == 0 && valid_img_found == 1) {
-            MSG_DBG("Found One img Only\r\n");
+        if (cpu_roll_back[0] == 0 && valid_img_found == 1) {
+            MSG("Found One img Only\r\n");
         } else {
             MSG_ERR("Image roll back\r\n");
             return BFLB_BOOT2_IMG_Roll_Back;
@@ -368,15 +458,13 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], u
         g_boot_img_cfg[1].cache_way_disable = 0xf;
     }
 
-    MSG_DBG("%08x,%08x\r\n", g_boot_img_cfg[0].msp_val, g_boot_img_cfg[0].entry_point);
-    MSG_DBG("%08x,%08x\r\n", g_boot_img_cfg[1].msp_val, g_boot_img_cfg[1].entry_point);
-    MSG_DBG("%08x,%08x\r\n", g_boot_img_cfg[0].img_start.flash_offset, g_boot_img_cfg[0].cache_way_disable);
-    MSG_DBG("%08x,%08x\r\n", g_boot_img_cfg[1].img_start.flash_offset, g_boot_img_cfg[1].cache_way_disable);
-    MSG_DBG("CPU Count %d,%d\r\n", g_cpu_count, g_boot_img_cfg[0].halt_cpu1);
+    MSG("%08x,%08x\r\n", g_boot_img_cfg[0].msp_val, g_boot_img_cfg[0].entry_point);
+    MSG("%08x,%08x\r\n", g_boot_img_cfg[1].msp_val, g_boot_img_cfg[1].entry_point);
+    MSG("%08x,%08x\r\n", g_boot_img_cfg[0].img_start.flash_offset, g_boot_img_cfg[0].cache_way_disable);
+    MSG("%08x,%08x\r\n", g_boot_img_cfg[1].img_start.flash_offset, g_boot_img_cfg[1].cache_way_disable);
+    MSG("CPU Count %d,%d\r\n", g_cpu_count, g_boot_img_cfg[0].halt_cpu1);
     blsp_boot2_show_timer();
 
-    /* Fix invalid pc and msp */
-    blsp_fix_invalid_msp_pc();
 
     if (BFLB_EFLASH_LOADER_HANDSHAKE_SUSS == bflb_eflash_loader_uart_handshake_poll()) {
         bflb_eflash_loader_main();

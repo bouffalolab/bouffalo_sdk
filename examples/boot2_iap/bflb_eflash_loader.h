@@ -128,18 +128,6 @@ typedef enum tag_eflash_loader_error_code_t {
 #define MAXOF(a, b)          ((a) > (b) ? (a) : (b))
 #define OFFSET(TYPE, MEMBER) ((uint32_t)(&(((TYPE *)0)->MEMBER)))
 
-#ifndef EFLASH_LOADER_FAST
-#define bflb_eflash_loader_printf(...) //bflb_platform_printf(__VA_ARGS__)
-#define bflb_eflash_loader_printe(...) //bflb_platform_printf(__VA_ARGS__)
-#define bflb_eflash_loader_printd(...) //bflb_platform_printf(__VA_ARGS__)
-#else
-#define bflb_eflash_loader_printf(...) //bflb_platform_printf(__VA_ARGS__)
-#define bflb_eflash_loader_printe(...) //bflb_platform_printf(__VA_ARGS__)
-#define bflb_eflash_loader_printd(...) //bflb_platform_printf(__VA_ARGS__)
-#endif
-
-#define bflb_eflash_loader_printw(...) //bflb_platform_printf(__VA_ARGS__)
-#define bflb_eflash_loader_printx(...) //bflb_platform_printx(__VA_ARGS__)
 
 /*read data buffer from flash or boot interface*/
 extern volatile uint32_t g_rx_buf_index;

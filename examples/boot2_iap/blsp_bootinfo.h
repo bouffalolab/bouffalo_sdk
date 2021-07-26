@@ -38,6 +38,8 @@
 
 #include "stdint.h"
 #include "blsp_port.h"
+#include "hal_flash.h"
+#include "hal_boot2.h"
 
 /** @addtogroup  BL606_BLSP_Boot2
  *  @{
@@ -63,10 +65,10 @@
 /* Image owner type */
 #define BFLB_BOOT2_CPU_0   0
 #define BFLB_BOOT2_CPU_1   1
-#define BFLB_BOOT2_CPU_MAX 2
+#define BFLB_BOOT2_CPU_MAX HAL_EFUSE_CPU_MAX
 
 /* Public key hash size */
-#define BFLB_BOOT2_PK_HASH_SIZE 256 / 8
+#define BFLB_BOOT2_PK_HASH_SIZE HAL_EFUSE_PK_HASH_SIZE
 #define BFLB_BOOT2_HASH_SIZE    256 / 8
 /* Public key type */
 #define BFLB_BOOT2_ECC_KEYXSIZE 256 / 8
@@ -136,47 +138,10 @@ typedef enum {
 
 typedef struct
 {
-    uint8_t encrypted[BFLB_BOOT2_CPU_MAX];
-    uint8_t sign[BFLB_BOOT2_CPU_MAX];
-    uint8_t hbn_check_sign;
-    uint8_t rsvd[3];
-    uint8_t chip_id[8];
-    uint8_t pk_hash_cpu0[BFLB_BOOT2_PK_HASH_SIZE];
-    uint8_t pk_hash_cpu1[BFLB_BOOT2_PK_HASH_SIZE];
-} boot_efuse_hw_config;
-
-typedef struct
-{
-    uint32_t magicCode; /*'FCFG'*/
-    SPI_Flash_Cfg_Type cfg;
-    uint32_t crc32;
-} boot_flash_config;
-
-typedef struct
-{
-    uint8_t xtal_type;
-    uint8_t pll_clk;
-    uint8_t hclk_div;
-    uint8_t bclk_div;
-
-    uint8_t flash_clk_type;
-    uint8_t flash_clk_div;
-    uint8_t rsvd[2];
-} boot_sys_clk_config;
-
-typedef struct
-{
-    uint32_t magicCode; /*'PCFG'*/
-    boot_sys_clk_config cfg;
-    uint32_t crc32;
-} boot_clk_config;
-
-typedef struct
-{
     uint32_t magicCode; /*'BFXP'*/
     uint32_t rivison;
-    boot_flash_config flash_cfg;
-    boot_clk_config clk_cfg;
+    hal_flash_config flash_cfg;
+    hal_pll_config clk_cfg;
     __PACKED_UNION
     {
         __PACKED_STRUCT

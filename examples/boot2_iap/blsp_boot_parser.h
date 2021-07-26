@@ -71,7 +71,7 @@ int32_t blsp_boot_parse_bootheader(boot_image_config *g_boot_img_cfg, uint8_t *d
 int32_t blsp_boot_parse_pkey(boot_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own);
 int32_t blsp_boot_parse_signature(boot_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own);
 int32_t blsp_boot_parse_aesiv(boot_image_config *g_boot_img_cfg, uint8_t *data);
-//int32_t blsp_boot_parser_check_signature(boot_image_config *g_boot_img_cfg);
+int32_t blsp_boot_parser_check_signature(boot_image_config *g_boot_img_cfg);
 int32_t blsp_boot_parser_check_hash(boot_image_config *g_boot_img_cfg);
 
 /*@} end of group BLSP_BOOT_PARSER_Public_Functions */

@@ -113,7 +113,7 @@ static int32_t blsp_boot2_fw_decompress(uint32_t src_address, uint32_t dest_addr
     *p_dest_size = 0;
 
     if (dest_max_size > 0) {
-        flash_erase_xip(dest_address, dest_max_size);
+        flash_erase(dest_address, dest_max_size);
     }
 
     xz_crc32_init();
@@ -139,7 +139,7 @@ static int32_t blsp_boot2_fw_decompress(uint32_t src_address, uint32_t dest_addr
 
     while (1) {
         if (b.in_pos == b.in_size) {
-            MSG_DBG("XZ Feeding\r\n");
+            MSG("XZ Feeding\r\n");
 
             if (BFLB_BOOT2_SUCCESS != blsp_mediaboot_read(src_address, g_boot2_read_buf, sizeof(g_boot2_read_buf))) {
                 MSG_ERR("Read XZFW fail\r\n");
@@ -158,10 +158,10 @@ static int32_t blsp_boot2_fw_decompress(uint32_t src_address, uint32_t dest_addr
             //  msg = "Write error\n";
             //  goto error;
             //}
-            MSG_DBG("XZ outputing\r\n");
+            MSG("XZ outputing\r\n");
 
             if (dest_max_size > 0) {
-                flash_write_xip(dest_address, g_xz_output, sizeof(g_xz_output));
+                flash_write(dest_address, g_xz_output, sizeof(g_xz_output));
             }
 
             dest_address += sizeof(g_xz_output);
@@ -180,7 +180,7 @@ static int32_t blsp_boot2_fw_decompress(uint32_t src_address, uint32_t dest_addr
         //}
         if (b.out_pos > 0) {
             if (dest_max_size > 0) {
-                flash_write_xip(dest_address, g_xz_output, b.out_pos);
+                flash_write(dest_address, g_xz_output, b.out_pos);
             }
 
             dest_address += b.out_pos;

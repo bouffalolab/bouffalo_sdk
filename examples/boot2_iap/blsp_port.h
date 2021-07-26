@@ -37,16 +37,18 @@
 #define __BLSP_PORT_H__
 
 #include "stdint.h"
-#include "bl702_glb.h"
-#include "bl702_aon.h"
-#include "bl702_hbn.h"
-#include "bl702_ef_ctrl.h"
-#include "bl702_sflash.h"
-#include "bl702_xip_sflash.h"
-#include "bl702_xip_sflash_ext.h"
-#include "bl702_sf_cfg.h"
-#include "bl702_timer.h"
-#include "bl702_sec_eng.h"
+#include "misc.h"
+#include "hal_flash.h"
+//#include "bl702_glb.h"
+//#include "bl702_aon.h"
+//#include "bl702_hbn.h"
+//#include "bl702_ef_ctrl.h"
+//#include "bl702_sflash.h"
+//#include "bl702_xip_sflash.h"
+//#include "bl702_xip_sflash_ext.h"
+//#include "bl702_sf_cfg.h"
+//#include "bl702_timer.h"
+//#include "bl702_sec_eng.h"
 //#include "bflb_ecdsa.h"
 
 /** @addtogroup  BL606_BLSP_Boot2
@@ -74,8 +76,8 @@
 #define BFLB_BOOT2_CPU1_APP_MSP_ADDR  (0)
 #define BFLB_BOOT2_CPU1_DBG_INFO_ADDR (0)
 #define MFG_START_REQUEST_OFFSET      ((4 + 184) * 1024)
-#define BLSP_BOOT2_XIP_BASE           BL702_FLASH_XIP_BASE
-#define ARCH_Delay_MS                 BL702_Delay_MS
+#define BLSP_BOOT2_XIP_BASE           BL_FLASH_XIP_BASE
+//#define ARCH_Delay_MS                 BL702_Delay_MS
 
 /*@} end of group BLSP_PORT_Public_Constants */
 
@@ -88,21 +90,15 @@
 /** @defgroup  BLSP_PORT_Public_Functions
  *  @{
  */
-void blsp_boot2_init_timer(void);
-void blsp_boot2_disable_other_cache(void);
-void blsp_boot2_flush_xip_cache(void);
 void blsp_boot2_show_timer(void);
-void blsp_boot2_reset_sec_eng(void);
 void blsp_boot2_init_sec_eng_pka(void);
 uint32_t blsp_boot2_get_cpu_count(void);
 uint8_t blsp_read_power_save_mode(void);
 void blsp_boot2_pass_parameter(void *data, uint32_t len);
-uint32_t blsp_boot2_get_xip_offset();
-uint8_t *blsp_get_user_specified_fw(void);
-void blsp_clr_user_specified_fw(void);
 void blsp_boot2_releae_other_cpu(void);
 int32_t blsp_is_msp_valid(uint32_t msp_val);
 int32_t blsp_is_pc_valid(uint32_t pc_val);
+void blsp_boot2_pll_init(void);
 void ATTR_TCM_SECTION blsp_sboot_finish(void);
 ;
 void blsp_fix_invalid_msp_pc(void);

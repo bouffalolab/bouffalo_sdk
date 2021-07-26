@@ -43,6 +43,7 @@
 #include "blsp_common.h"
 #include "blsp_media_boot.h"
 #include "hal_flash.h"
+#include "hal_boot2.h"
 #include "bflb_eflash_loader.h"
 
 /** @addtogroup  BL606_BLSP_Boot2
@@ -75,7 +76,6 @@
  *  @{
  */
 int32_t blsp_boot2_set_encrypt(uint8_t index, boot_image_config *g_boot_img_cfg);
-int32_t blsp_boot2_set_cache(uint8_t cont_read, SPI_Flash_Cfg_Type *flash_cfg, boot_image_config *g_boot_img_cfg);
 
 /*@} end of group BLSP_COMMON_Global_Variables */
 
@@ -112,13 +112,13 @@ void blsp_dump_data(void *datain, int len)
 
     for (i = 0; i < len; i++) {
         if (i % 16 == 0 && i != 0) {
-            bflb_eflash_loader_printf("\r\n");
+            MSG("\r\n");
         }
 
-        bflb_eflash_loader_printf("%02x ", data[i]);
+        MSG("%02x ", data[i]);
     }
 
-    bflb_eflash_loader_printf("\r\n");
+    MSG("\r\n");
 }
 
 /****************************************************************************/ /**
@@ -132,7 +132,7 @@ void blsp_dump_data(void *datain, int len)
 int32_t blsp_mediaboot_pre_jump(void)
 {
     /* Sec eng deinit*/
-    blsp_boot2_reset_sec_eng();
+    hal_reset_sec_eng();
 
     /* Platform deinit */
     bflb_platform_deinit();
