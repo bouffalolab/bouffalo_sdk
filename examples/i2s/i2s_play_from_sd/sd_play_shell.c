@@ -21,7 +21,7 @@
  *
  */
 
-#ifdef SHELL_SUPPORT
+#ifdef SUPPORT_SHELL
 
 #include <string.h>
 #include <stdio.h>

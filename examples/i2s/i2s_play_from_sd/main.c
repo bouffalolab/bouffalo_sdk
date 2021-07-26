@@ -38,7 +38,7 @@
 #include "fatfs_posix_api.h"
 #include "wav_play_from_sd_card.h"
 
-#ifdef SHELL_SUPPORT
+#ifdef SUPPORT_SHELL
 #include "hal_uart.h"
 #include "shell.h"
 #endif
@@ -47,7 +47,7 @@ FATFS Fs_1;
 audio_dev_t Audio_Dev;
 void fatfs_sd_driver_register(void);
 
-#ifdef SHELL_SUPPORT
+#ifdef SUPPORT_SHELL
 void shell_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
     uint8_t data;
@@ -67,7 +67,7 @@ int main(void)
     fatfs_sd_driver_register();
     sd_wav_play_register(&Audio_Dev);
 
-#ifdef SHELL_SUPPORT
+#ifdef SUPPORT_SHELL
     shell_init();
     struct device *uart = device_find("debug_log");
     if (uart) {

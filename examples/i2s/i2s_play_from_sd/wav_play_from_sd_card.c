@@ -251,7 +251,7 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR *path)
         device_open(dma_ch2, 0);
         device_set_callback(dma_ch2, dma_ch2_irq_callback);
         device_control(dma_ch2, DEVICE_CTRL_SET_INT, NULL);
-        device_control((audio_dev->device), DEVICE_CTRL_I2S_ATTACH_TX_DMA, (void *)dma_ch2);
+        device_control((audio_dev->device), DEVICE_CTRL_ATTACH_TX_DMA, (void *)dma_ch2);
 
         /* Fill data frist*/
         f_lseek(&Wav_Fp, audio_dev->wav_information->chunk_data_offset + sizeof(chunk_data_t));
