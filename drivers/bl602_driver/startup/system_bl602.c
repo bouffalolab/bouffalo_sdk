@@ -30,6 +30,11 @@ void SystemInit(void)
     uint32_t i = 0;
     uint32_t tmpVal = 0;
 
+<<<<<<< HEAD
+=======
+    __disable_irq();
+
+>>>>>>> [feat][global_irq] add nesting for global irq enable and disable
     /* disable hardware_pullup_pull_down (reg_en_hw_pu_pd = 0) */
     tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
     tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_REG_EN_HW_PU_PD);
@@ -71,14 +76,12 @@ void SystemInit(void)
         p[i] = 0;
     }
 
-    /* global IRQ enable */
-    __enable_irq();
-
     /* init bor for all platform */
     system_bor_init();
+    /* global IRQ enable */
+    __enable_irq();
 }
 
 void System_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t SubPriority)
 {
-
 }

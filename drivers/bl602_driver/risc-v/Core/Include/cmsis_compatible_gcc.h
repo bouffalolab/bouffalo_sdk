@@ -82,14 +82,20 @@
 //}
 #define __SEV() __ASM volatile("sev") /* This implementation generates debug information */
 
+static uint8_t nesting2 = 0;
+
 __attribute__((always_inline)) __STATIC_INLINE void __enable_irq(void)
 {
-    __ASM volatile("csrsi mstatus, 8");
+    nesting2--;
+    if (nesting2 == 0) {
+        __ASM volatile("csrsi mstatus, 8");
+    }
 }
 
 __attribute__((always_inline)) __STATIC_INLINE void __disable_irq(void)
 {
     __ASM volatile("csrci mstatus, 8");
+    nesting2++;
 }
 
 __attribute__((always_inline)) __STATIC_INLINE uint32_t __REV(uint32_t value)

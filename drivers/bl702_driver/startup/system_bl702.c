@@ -52,7 +52,7 @@ void USB_DoNothing_IRQHandler(void)
 
 void system_bor_init(void)
 {
-    HBN_BOR_CFG_Type borCfg = { 1 /* pu_bor */, 0 /* irq_bor_en */, 1 /* bor_vth */, 1 /* bor_sel */ };
+    HBN_BOR_CFG_Type borCfg = { 0 /* pu_bor */, 0 /* irq_bor_en */, 1 /* bor_vth */, 0 /* bor_sel */ };
     HBN_Set_BOR_Cfg(&borCfg);
 }
 
@@ -65,6 +65,9 @@ void SystemInit(void)
     uint8_t psramCfg = 0;
     uint8_t isInternalFlash = 0;
     uint8_t isInternalPsram = 0;
+
+    /* global IRQ disable */
+    __disable_irq();
 
     /* disable hardware_pullup_pull_down (reg_en_hw_pu_pd = 0) */
     tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
@@ -110,9 +113,9 @@ void SystemInit(void)
 
     /* SF io select from efuse value */
     tmpVal = BL_RD_WORD(0x40007074);
-    flashCfg = ((tmpVal>>26)&7);
-    psramCfg = ((tmpVal>>24)&3);
-    if (flashCfg==1 || flashCfg==2) {
+    flashCfg = ((tmpVal >> 26) & 7);
+    psramCfg = ((tmpVal >> 24) & 3);
+    if (flashCfg == 1 || flashCfg == 2) {
         isInternalFlash = 1;
     } else {
         isInternalFlash = 0;
@@ -123,9 +126,9 @@ void SystemInit(void)
         isInternalPsram = 0;
     }
     tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO);
-    if(isInternalFlash==1 && isInternalPsram==0){
+    if (isInternalFlash == 1 && isInternalPsram == 0) {
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CFG_GPIO_USE_PSRAM_IO, 0x3f);
-    }else{
+    } else {
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CFG_GPIO_USE_PSRAM_IO, 0x00);
     }
     BL_WR_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO, tmpVal);
@@ -133,18 +136,12 @@ void SystemInit(void)
 #ifdef BFLB_EFLASH_LOADER
     Interrupt_Handler_Register(USB_IRQn, USB_DoNothing_IRQHandler);
 #endif
-
-    /* global IRQ enable */
-    __enable_irq();
-
     /* init bor for all platform */
     system_bor_init();
-
-    /* release 64K OCARAM for appliction */
-    GLB_Set_EM_Sel(GLB_EM_0KB);
+    /* global IRQ enable */
+    __enable_irq();
 }
 
 void System_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t SubPriority)
 {
-    
 }

@@ -88,14 +88,20 @@
 
 #define BIT(x) (1 << (x))
 
+static uint8_t nesting = 0;
+
 __attribute__((always_inline)) __STATIC_INLINE__ void enable_irq(void)
 {
-    __ASM__ volatile("csrsi mstatus, 8");
+    nesting--;
+    if (nesting == 0) {
+        __ASM__ volatile("csrsi mstatus, 8");
+    }
 }
 
 __attribute__((always_inline)) __STATIC_INLINE__ void disable_irq(void)
 {
     __ASM__ volatile("csrci mstatus, 8");
+    nesting++;
 }
 
 /**
