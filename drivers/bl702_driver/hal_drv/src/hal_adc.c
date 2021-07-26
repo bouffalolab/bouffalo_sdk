@@ -28,6 +28,10 @@
 #include "bl702_adc.h"
 #include "adc_config.h"
 
+#ifdef BSP_USING_ADC0
+static void ADC_IRQ(void);
+#endif
+
 static adc_device_t adcx_device[ADC_MAX_INDEX] = {
 #ifdef BSP_USING_ADC0
     ADC0_CONFIG,
@@ -119,6 +123,10 @@ int adc_open(struct device *dev, uint16_t oflag)
 
     adc_fifo_cfg.fifoThreshold = adc_device->fifo_threshold;
 
+#ifdef BSP_USING_ADC0
+    Interrupt_Handler_Register(GPADC_DMA_IRQn, ADC_IRQ);
+#endif
+
     ADC_Disable();
     ADC_Enable();
 
@@ -155,13 +163,48 @@ int adc_control(struct device *dev, int cmd, void *args)
     adc_device_t *adc_device = (adc_device_t *)dev;
     adc_channel_cfg_t *adc_channel_cfg = (adc_channel_cfg_t *)args;
     uint8_t rlt = 0;
+    uint32_t mask = 0;
 
     switch (cmd) {
         case DEVICE_CTRL_SET_INT /* constant-expression */:
+            mask = (uint32_t)args;
 
+            if (mask & ADC_EVENT_FIFO_READY_IT) {
+                ADC_IntMask(ADC_EVENT_FIFO_READY, UNMASK);
+            }
+            if (mask & ADC_EVENT_OVERRUN_IT) {
+                ADC_IntMask(ADC_EVENT_OVERRUN, UNMASK);
+            }
+            if (mask & ADC_EVENT_UNDERRUN_IT) {
+                ADC_IntMask(ADC_EVENT_UNDERRUN, UNMASK);
+            }
+            if (mask & ADC_EVEN_INT_POS_SATURATION_IT) {
+                ADC_IntMask(ADC_EVEN_INT_POS_SATURATION, UNMASK);
+            }
+            if (mask & ADC_EVEN_INT_NEG_SATURATION_IT) {
+                ADC_IntMask(ADC_EVEN_INT_NEG_SATURATION, UNMASK);
+            }
+            NVIC_EnableIRQ(GPADC_DMA_IRQn);
             break;
 
         case DEVICE_CTRL_CLR_INT /* constant-expression */:
+            mask = (uint32_t)args;
+
+            if (mask & ADC_EVENT_FIFO_READY_IT) {
+                ADC_IntMask(ADC_EVENT_FIFO_READY, MASK);
+            }
+            if (mask & ADC_EVENT_OVERRUN_IT) {
+                ADC_IntMask(ADC_EVENT_OVERRUN, MASK);
+            }
+            if (mask & ADC_EVENT_UNDERRUN_IT) {
+                ADC_IntMask(ADC_EVENT_UNDERRUN, MASK);
+            }
+            if (mask & ADC_EVEN_INT_POS_SATURATION_IT) {
+                ADC_IntMask(ADC_EVEN_INT_POS_SATURATION, MASK);
+            }
+            if (mask & ADC_EVEN_INT_NEG_SATURATION_IT) {
+                ADC_IntMask(ADC_EVEN_INT_NEG_SATURATION, MASK);
+            }
 
             break;
 
@@ -232,7 +275,7 @@ int adc_control(struct device *dev, int cmd, void *args)
  */
 int adc_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
-    if (dev->oflag & DEVICE_OFLAG_STREAM_RX) {
+    if (dev->oflag & DEVICE_OFLAG_STREAM_RX || dev->oflag & DEVICE_OFLAG_INT_RX) {
         while (ADC_Get_FIFO_Count() == 0)
             ;
 
@@ -302,28 +345,28 @@ void adc_isr(adc_device_t *handle)
         return;
 
     if (ADC_GetIntStatus(ADC_INT_POS_SATURATION) == SET && ADC_IntGetMask(ADC_INT_POS_SATURATION) == UNMASK) {
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVEN_INT_POS_SATURATION);
         ADC_IntClr(ADC_INT_POS_SATURATION);
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_POS_SATURATION);
     }
 
     if (ADC_GetIntStatus(ADC_INT_NEG_SATURATION) == SET && ADC_IntGetMask(ADC_INT_NEG_SATURATION) == UNMASK) {
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVEN_INT_NEG_SATURATION);
         ADC_IntClr(ADC_INT_NEG_SATURATION);
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_NEG_SATURATION);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_UNDERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_UNDERRUN) == UNMASK) {
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_UNDERRUN);
         ADC_IntClr(ADC_INT_FIFO_UNDERRUN);
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_FIFO_UNDERRUN);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_OVERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_OVERRUN) == UNMASK) {
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_OVERRUN);
         ADC_IntClr(ADC_INT_FIFO_OVERRUN);
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_FIFO_OVERRUN);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_READY) == SET && ADC_IntGetMask(ADC_INT_FIFO_READY) == UNMASK) {
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_FIFO_READY);
         ADC_IntClr(ADC_INT_FIFO_READY);
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_INT_FIFO_READY);
     }
 }
 #ifdef BSP_USING_ADC0

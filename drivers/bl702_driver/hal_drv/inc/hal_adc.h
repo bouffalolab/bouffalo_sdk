@@ -41,12 +41,21 @@ enum adc_index_type {
     ADC_MAX_INDEX
 };
 
-enum ADC_event_type {
+enum adc_event_type {
     ADC_EVENT_FIFO_READY,
     ADC_EVENT_OVERRUN,
     ADC_EVENT_UNDERRUN,
     ADC_EVEN_INT_POS_SATURATION,
     ADC_EVEN_INT_NEG_SATURATION,
+    ADC_EVEN_MAX,
+};
+
+enum adc_it_type {
+    ADC_EVENT_FIFO_READY_IT = 1 << 0,
+    ADC_EVENT_OVERRUN_IT = 1 << 1,
+    ADC_EVENT_UNDERRUN_IT = 1 << 2,
+    ADC_EVEN_INT_POS_SATURATION_IT = 1 << 3,
+    ADC_EVEN_INT_NEG_SATURATION_IT = 1 << 4,
 };
 
 #define adc_channel_start(dev)        device_control(dev, DEVICE_CTRL_ADC_CHANNEL_START, NULL)
