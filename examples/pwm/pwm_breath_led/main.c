@@ -54,12 +54,12 @@ int main(void)
 
     while (1) {
         for (pwm_cfg.threshold_high = 0; pwm_cfg.threshold_high <= 32; pwm_cfg.threshold_high++) {
-            device_control(led_breath, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg);
+            device_control(led_breath, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg);
             bflb_platform_delay_ms(50);
         }
 
         for (pwm_cfg.threshold_high = 32; 0 <= pwm_cfg.threshold_high && pwm_cfg.threshold_high <= 32; pwm_cfg.threshold_high--) {
-            device_control(led_breath, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg);
+            device_control(led_breath, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg);
             bflb_platform_delay_ms(50);
         }
     }
