@@ -20,25 +20,24 @@
  * under the License.
  *
  */
-
-#include "hal_timer.h"
 #include "bflb_platform.h"
+#include "hal_timer.h"
 
-struct device *timer_ch0;
+struct device *timer0;
 
 volatile uint32_t cnt = 0;
 
-void timer_ch0_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
+void timer0_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
-    MSG("timer ch0 interrupt! \n");
-
     if (state == TIMER_EVENT_COMP0) {
-        cnt++;
-        MSG("timer event comp0! cnt=%d\n", cnt);
+        MSG("timer event comp0! \r\n");
     } else if (state == TIMER_EVENT_COMP1) {
-        MSG("timer event comp1! \n");
+        MSG("timer event comp1! \r\n");
     } else if (state == TIMER_EVENT_COMP2) {
-        MSG("timer event comp2! \n");
+        BL_CASE_SUCCESS;
+        timer_timeout_cfg_t cfg = { 2, 12000000 }; /*modify compare id 2 timeout 12s*/
+        device_write(dev, 0, &cfg, sizeof(timer_timeout_cfg_t));
+        MSG("timer event comp2! \r\n");
     }
 }
 
@@ -46,28 +45,18 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    timer_user_cfg_t timer_user_cfg;
-    timer_user_cfg.timeout_val = 1000 * 1000; /* us */
-    timer_user_cfg.comp_it = TIMER_COMP0_IT;
+    timer_register(TIMER0_INDEX, "timer0");
 
-    timer_register(TIMER_CH0_INDEX, "timer_ch0");
+    timer0 = device_find("timer0");
 
-    timer_ch0 = device_find("timer_ch0");
-
-    if (timer_ch0) {
-        device_open(timer_ch0, DEVICE_OFLAG_INT);
-        device_set_callback(timer_ch0, timer_ch0_irq_callback);
-        device_control(timer_ch0, DEVICE_CTRL_SET_INT, NULL);
-        device_control(timer_ch0, DEVICE_CTRL_TIMER_CH_START, (void *)(&timer_user_cfg));
+    if (timer0) {
+        device_open(timer0, DEVICE_OFLAG_INT_TX); /* 1s,2s,3s timing*/
+        device_set_callback(timer0, timer0_irq_callback);
+        device_control(timer0, DEVICE_CTRL_SET_INT, (void *)(TIMER_COMP0_IT | TIMER_COMP1_IT | TIMER_COMP2_IT));
     } else {
         MSG("timer device open failed! \n");
     }
 
     while (1) {
-        if (cnt == 10) {
-            device_control(timer_ch0, DEVICE_CTRL_TIMER_CH_STOP, (void *)(&timer_user_cfg));
-            MSG("timer test over! \n");
-            BL_CASE_SUCCESS;
-        }
     }
 }

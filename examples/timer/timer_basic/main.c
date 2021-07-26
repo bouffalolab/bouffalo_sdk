@@ -20,61 +20,26 @@
  * under the License.
  *
  */
-
-#include "hal_timer.h"
 #include "bflb_platform.h"
+#include "hal_timer.h"
 
-volatile uint32_t cnt = 0;
 int main(void)
 {
     bflb_platform_init(0);
 
-    timer_user_cfg_t timer_user_cfg0;
-    timer_user_cfg0.timeout_val = 1000 * 10; /* us */
-    timer_user_cfg0.comp_it = TIMER_COMP0_IT;
+    timer_register(TIMER1_INDEX, "timer1");
 
-    timer_user_cfg_t timer_user_cfg1;
-    timer_user_cfg1.timeout_val = 1000 * 100; /* us */
-    timer_user_cfg1.comp_it = TIMER_COMP1_IT;
+    struct device *timer1 = device_find("timer1");
 
-    timer_user_cfg_t timer_user_cfg2;
-    timer_user_cfg2.timeout_val = 1000 * 1000; /* us */
-    timer_user_cfg2.comp_it = TIMER_COMP2_IT;
-
-    timer_register(TIMER_CH1_INDEX, "timer_ch1");
-
-    struct device *timer_ch1 = device_find("timer_ch1");
-
-    if (timer_ch1) {
-        device_open(timer_ch1, DEVICE_OFLAG_POLL);
-        device_control(timer_ch1, DEVICE_CTRL_TIMER_CH_START, (void *)(&timer_user_cfg0));
-        device_control(timer_ch1, DEVICE_CTRL_TIMER_CH_START, (void *)(&timer_user_cfg1));
-        device_control(timer_ch1, DEVICE_CTRL_TIMER_CH_START, (void *)(&timer_user_cfg2));
+    if (timer1) {
+        device_open(timer1, DEVICE_OFLAG_STREAM_TX); // 1s timing
     } else {
         MSG("timer device open failed! \n");
     }
-
     while (1) {
-        if (SET == device_control(timer_ch1, DEVICE_CTRL_GET_MATCH_STATUS, (void *)TIMER_EVENT_COMP2)) {
-            MSG("Comparator 2 match, timer reload\n");
-            device_control(timer_ch1, DEVICE_CTRL_TIMER_CH_START, (void *)(&timer_user_cfg0));
-            device_control(timer_ch1, DEVICE_CTRL_TIMER_CH_START, (void *)(&timer_user_cfg1));
-            device_control(timer_ch1, DEVICE_CTRL_TIMER_CH_START, (void *)(&timer_user_cfg2));
-            MSG("Counter value=%d,M0=%d, M1=%d,M2=%d \n", device_control(timer_ch1, DEVICE_CTRL_GET_CONFIG, NULL),
-                device_control(timer_ch1, DEVICE_CTRL_GET_MATCH_STATUS, (void *)TIMER_EVENT_COMP0),
-                device_control(timer_ch1, DEVICE_CTRL_GET_MATCH_STATUS, (void *)TIMER_EVENT_COMP1),
-                device_control(timer_ch1, DEVICE_CTRL_GET_MATCH_STATUS, (void *)TIMER_EVENT_COMP2));
-            break;
+        if (device_control(timer1, DEVICE_CTRL_GET_INT, (void *)TIMER_COMP0_IT)) {
+            BL_CASE_SUCCESS;
         }
-
-        MSG("Counter value=%d,M0=%d, M1=%d,M2=%d \n", device_control(timer_ch1, DEVICE_CTRL_GET_CONFIG, NULL),
-            device_control(timer_ch1, DEVICE_CTRL_GET_MATCH_STATUS, (void *)TIMER_EVENT_COMP0),
-            device_control(timer_ch1, DEVICE_CTRL_GET_MATCH_STATUS, (void *)TIMER_EVENT_COMP1),
-            device_control(timer_ch1, DEVICE_CTRL_GET_MATCH_STATUS, (void *)TIMER_EVENT_COMP2));
-    }
-
-    BL_CASE_SUCCESS;
-    while (1) {
         bflb_platform_delay_ms(100);
     }
 }
