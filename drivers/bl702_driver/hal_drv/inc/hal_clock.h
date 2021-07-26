@@ -66,6 +66,8 @@ enum peripheral_clock_type {
     PERIPHERAL_CLOCK_I2S,
     PERIPHERAL_CLOCK_PWM,
     PERIPHERAL_CLOCK_CAM,
+    PERIPHERAL_CLOCK_TIMER0,
+    PERIPHERAL_CLOCK_TIMER1,
 };
 
 void system_clock_init(void);

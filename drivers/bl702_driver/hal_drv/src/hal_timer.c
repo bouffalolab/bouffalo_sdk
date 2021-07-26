@@ -24,19 +24,21 @@
 #include "timer_config.h"
 #include "bl702_glb.h"
 #include "bl702_timer.h"
+#include "hal_clock.h"
 
-#define TIMER_MAX_VALUE (0xFFFFFFFF)
-#define TIMER_CLK_DIV   (0)
-
-void TIMER_CH0_IRQ(void);
-void TIMER_CH1_IRQ(void);
+#ifdef BSP_USING_TIMER0
+void TIMER0_IRQ(void);
+#endif
+#ifdef BSP_USING_TIMER1
+void TIMER1_IRQ(void);
+#endif
 
 static timer_device_t timerx_device[TIMER_MAX_INDEX] = {
-#ifdef BSP_USING_TIMER_CH0
-    TIMER_CH0_CONFIG,
+#ifdef BSP_USING_TIMER0
+    TIMER0_CONFIG,
 #endif
-#ifdef BSP_USING_TIMER_CH1
-    TIMER_CH1_CONFIG,
+#ifdef BSP_USING_TIMER1
+    TIMER1_CONFIG,
 #endif
 };
 
@@ -50,48 +52,117 @@ static timer_device_t timerx_device[TIMER_MAX_INDEX] = {
 int timer_open(struct device *dev, uint16_t oflag)
 {
     timer_device_t *timer_device = (timer_device_t *)dev;
-    TIMER_CFG_Type timer_cfg = { 0 };
 
-    timer_cfg.timerCh = timer_device->ch;
-    timer_cfg.clkSrc = TIMER_CLK_SRC;
-    timer_cfg.plTrigSrc = timer_device->pl_trig_src;
-    timer_cfg.countMode = timer_device->cnt_mode;
-    timer_cfg.clockDivision = TIMER_CLK_DIV;
-    timer_cfg.matchVal0 = TIMER_MAX_VALUE;
-    timer_cfg.matchVal1 = TIMER_MAX_VALUE;
-    timer_cfg.matchVal2 = TIMER_MAX_VALUE;
-    timer_cfg.preLoadVal = TIMER_MAX_VALUE;
+    uint32_t tmpval;
+    uint64_t compare_count1;
+    uint64_t compare_count2;
+    uint64_t compare_count3;
 
     /* Disable all interrupt */
-    TIMER_IntMask(timer_device->ch, TIMER_INT_ALL, MASK);
+    TIMER_IntMask(timer_device->id, TIMER_INT_ALL, MASK);
     /* Disable timer before config */
-    TIMER_Disable(timer_device->ch);
+    TIMER_Disable(timer_device->id);
 
-    /* Timer init with default configuration */
-    TIMER_Init(&timer_cfg);
+    /* Configure timer count mode: preload or free run */
+    tmpval = BL_RD_WORD(TIMER_BASE + TIMER_TCMR_OFFSET);
+    tmpval &= (~(1 << (timer_device->id + 1)));
+    tmpval |= (timer_device->cnt_mode << (timer_device->id + 1));
 
+    BL_WR_WORD(TIMER_BASE + TIMER_TCMR_OFFSET, tmpval);
+
+    /* Configure timer preload trigger source */
+    BL_WR_WORD(TIMER_BASE + TIMER_TPLCR2_OFFSET + 4 * timer_device->id, timer_device->trigger);
+
+    if (timer_device->cnt_mode == TIMER_CNT_PRELOAD) {
+        BL_WR_WORD(TIMER_BASE + TIMER_TPLVR2_OFFSET + 4 * timer_device->id, timer_device->reload);
+
+        if (timer_device->id == TIMER_CH0) {
+            compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
+            compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
+            compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
+
+        } else {
+            compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000)) + timer_device->reload;
+            compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000)) + timer_device->reload;
+            compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000)) + timer_device->reload;
+        }
+
+        /* Configure match compare values */
+        if (compare_count1 > 1) {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1 - 2);
+        } else {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1);
+        }
+
+        if (compare_count2 > 1) {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, compare_count2 - 2);
+        } else {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, timer_device->timeout2);
+        }
+
+        if (compare_count3 > 1) {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, compare_count3 - 2);
+        } else {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, timer_device->timeout3);
+        }
+    } else {
+        if (timer_device->id == TIMER_CH0) {
+            compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000));
+            compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000));
+            compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000));
+
+        } else {
+            compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000));
+            compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000));
+            compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000));
+        }
+        /* Configure match compare values */
+        if (compare_count1 > 1) {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1 - 2);
+        } else {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1);
+        }
+
+        if (compare_count2 > 1) {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, compare_count2 - 2);
+        } else {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, compare_count2);
+        }
+
+        if (compare_count3 > 1) {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, compare_count3 - 2);
+        } else {
+            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, compare_count3);
+        }
+    }
     /* Clear interrupt status*/
-    TIMER_ClearIntStatus(timer_device->ch, TIMER_COMP_ID_0);
-    TIMER_ClearIntStatus(timer_device->ch, TIMER_COMP_ID_1);
-    TIMER_ClearIntStatus(timer_device->ch, TIMER_COMP_ID_2);
+    TIMER_ClearIntStatus(timer_device->id, TIMER_COMP_ID_0);
+    TIMER_ClearIntStatus(timer_device->id, TIMER_COMP_ID_1);
+    TIMER_ClearIntStatus(timer_device->id, TIMER_COMP_ID_2);
 
-#ifdef BSP_USING_TIMER_CH0
+    if (oflag & DEVICE_OFLAG_STREAM_TX) {
+        /* Enable timer match interrupt */
+        /* Note: if not enable match interrupt, TIMER_GetMatchStatus will not work
+      and status bit will not set */
+        TIMER_IntMask(timer_device->id, TIMER_INT_COMP_0, UNMASK);
+        TIMER_IntMask(timer_device->id, TIMER_INT_COMP_1, UNMASK);
+        TIMER_IntMask(timer_device->id, TIMER_INT_COMP_2, UNMASK);
+    }
 
-    if (oflag == DEVICE_OFLAG_INT)
-        if (timer_device->ch == TIMER_CH0) {
-            Interrupt_Handler_Register(TIMER_CH0_IRQn, TIMER_CH0_IRQ);
+    if (oflag & DEVICE_OFLAG_INT_TX) {
+#ifdef BSP_USING_TIMER0
+        if (timer_device->id == TIMER_CH0) {
+            Interrupt_Handler_Register(TIMER_CH0_IRQn, TIMER0_IRQ);
         }
-
 #endif
-#ifdef BSP_USING_TIMER_CH1
-
-    if (oflag == DEVICE_OFLAG_INT)
-        if (timer_device->ch == TIMER_CH1) {
-            Interrupt_Handler_Register(TIMER_CH1_IRQn, TIMER_CH1_IRQ);
+#ifdef BSP_USING_TIMER1
+        if (timer_device->id == TIMER_CH1) {
+            Interrupt_Handler_Register(TIMER_CH1_IRQn, TIMER1_IRQ);
         }
-
 #endif
-
+    }
+    /* Enable timer */
+    TIMER_Enable(timer_device->id);
     return 0;
 }
 
@@ -104,7 +175,7 @@ int timer_open(struct device *dev, uint16_t oflag)
 int timer_close(struct device *dev)
 {
     timer_device_t *timer_device = (timer_device_t *)(dev);
-    TIMER_Disable(timer_device->ch);
+    TIMER_Disable(timer_device->id);
     return 0;
 }
 
@@ -122,10 +193,19 @@ int timer_control(struct device *dev, int cmd, void *args)
 
     switch (cmd) {
         case DEVICE_CTRL_SET_INT /* constant-expression */: {
-            if (timer_device->ch == TIMER_CH0) {
+            uint32_t offset = __builtin_ctz((uint32_t)args);
+
+            while (offset < 3) {
+                if ((uint32_t)args & (1 << offset)) {
+                    TIMER_IntMask(timer_device->id, offset, UNMASK);
+                }
+                offset++;
+            }
+
+            if (timer_device->id == TIMER_CH0) {
                 NVIC_ClearPendingIRQ(TIMER_CH0_IRQn);
                 NVIC_EnableIRQ(TIMER_CH0_IRQn);
-            } else if (timer_device->ch == TIMER_CH1) {
+            } else if (timer_device->id == TIMER_CH1) {
                 NVIC_ClearPendingIRQ(TIMER_CH1_IRQn);
                 NVIC_EnableIRQ(TIMER_CH1_IRQn);
             }
@@ -134,100 +214,47 @@ int timer_control(struct device *dev, int cmd, void *args)
         }
 
         case DEVICE_CTRL_CLR_INT /* constant-expression */: {
-            timer_user_cfg_t *timer_user_cfg = ((timer_user_cfg_t *)(args));
-            uint32_t offset = __builtin_ctz((uint32_t)timer_user_cfg->comp_it);
+            uint32_t offset = __builtin_ctz((uint32_t)args);
 
-            if (timer_device->ch == TIMER_CH0) {
-                NVIC_DisableIRQ(TIMER_CH0_IRQn);
-            } else if (timer_device->ch == TIMER_CH1) {
-                NVIC_DisableIRQ(TIMER_CH1_IRQn);
-            }
-
-            while ((0 <= offset) && (offset < 4)) {
-                if ((uint32_t)timer_user_cfg->comp_it & (1 << offset)) {
-                    TIMER_SetCompValue(timer_device->ch, offset, TIMER_MAX_VALUE);
-                    TIMER_IntMask(timer_device->ch, offset, MASK);
+            while (offset < 3) {
+                if ((uint32_t)args & (1 << offset)) {
+                    TIMER_IntMask(timer_device->id, offset, MASK);
                 }
-
                 offset++;
             }
-
+            if (timer_device->id == TIMER_CH0) {
+                NVIC_DisableIRQ(TIMER_CH0_IRQn);
+            } else if (timer_device->id == TIMER_CH1) {
+                NVIC_DisableIRQ(TIMER_CH1_IRQn);
+            }
             break;
         }
 
-        case DEVICE_CTRL_GET_INT /* constant-expression */:
-            /* code */
-            break;
-
+        case DEVICE_CTRL_GET_INT /* constant-expression */: {
+            uint32_t offset = __builtin_ctz((uint32_t)args);
+            uint32_t intstatus = TIMER_GetMatchStatus(timer_device->id, offset);
+            /* Clear interrupt status*/
+            TIMER_ClearIntStatus(timer_device->id, TIMER_COMP_ID_0);
+            TIMER_ClearIntStatus(timer_device->id, TIMER_COMP_ID_1);
+            TIMER_ClearIntStatus(timer_device->id, TIMER_COMP_ID_2);
+            return intstatus;
+        }
         case DEVICE_CTRL_CONFIG /* constant-expression */:
             /* code */
             break;
 
         case DEVICE_CTRL_RESUME /* constant-expression */: {
             /* Enable timer */
-            TIMER_Enable(timer_device->ch);
+            TIMER_Enable(timer_device->id);
             break;
         }
 
         case DEVICE_CTRL_SUSPEND /* constant-expression */: {
-            TIMER_Disable(timer_device->ch);
+            TIMER_Disable(timer_device->id);
             break;
         }
-
-        case DEVICE_CTRL_TIMER_CH_START: {
-            timer_user_cfg_t *timer_user_cfg = ((timer_user_cfg_t *)(args));
-
-            uint32_t offset = __builtin_ctz((uint32_t)timer_user_cfg->comp_it);
-            uint32_t timeout = (timer_user_cfg->timeout_val * 144);
-            TIMER_SetPreloadValue(timer_device->ch, 0);
-
-            while ((0 <= offset) && (offset < 4)) {
-                if ((uint32_t)timer_user_cfg->comp_it & (1 << offset)) {
-                    TIMER_SetCompValue(timer_device->ch, offset, timeout);
-                    TIMER_IntMask(timer_device->ch, offset, UNMASK);
-                }
-
-                offset++;
-            }
-
-            /* Enable timer */
-            TIMER_Enable(timer_device->ch);
-            break;
-        }
-
-        case DEVICE_CTRL_TIMER_CH_STOP: {
-            timer_user_cfg_t *timer_user_cfg = ((timer_user_cfg_t *)(args));
-            uint32_t offset = __builtin_ctz((uint32_t)timer_user_cfg->comp_it);
-
-            if (timer_device->ch == TIMER_CH0) {
-                NVIC_DisableIRQ(TIMER_CH0_IRQn);
-            } else if (timer_device->ch == TIMER_CH1) {
-                NVIC_DisableIRQ(TIMER_CH1_IRQn);
-            }
-
-            while ((0 <= offset) && (offset < 4)) {
-                if ((uint32_t)timer_user_cfg->comp_it & (1 << offset)) {
-                    TIMER_SetCompValue(timer_device->ch, offset, TIMER_MAX_VALUE);
-                    TIMER_IntMask(timer_device->ch, offset, MASK);
-                }
-
-                offset++;
-            }
-
-            TIMER_Disable(timer_device->ch);
-            break;
-        }
-
         case DEVICE_CTRL_GET_CONFIG:
-            return TIMER_GetCounterValue(timer_device->ch);
-            break;
-
-        case DEVICE_CTRL_GET_MATCH_STATUS: {
-            uint32_t tmpval = (uint32_t)args;
-            return TIMER_GetMatchStatus(timer_device->ch, tmpval);
-            break;
-        }
-
+            return TIMER_GetCounterValue(timer_device->id);
         default:
             break;
     }
@@ -237,6 +264,25 @@ int timer_control(struct device *dev, int cmd, void *args)
 
 int timer_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
+    timer_device_t *timer_device = (timer_device_t *)dev;
+    timer_timeout_cfg_t *timeout_cfg = (timer_timeout_cfg_t *)buffer;
+    uint64_t compare_count;
+
+    if (size % sizeof(timer_timeout_cfg_t)) {
+        return -1;
+    }
+    /* Disable timer before config */
+    TIMER_Disable(timer_device->id);
+
+    for (uint32_t i = 0; i < size / sizeof(timer_timeout_cfg_t); i++) {
+        if (timer_device->id == TIMER_CH0) {
+            compare_count = timeout_cfg->timeout_val * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000));
+        } else {
+            compare_count = timeout_cfg->timeout_val * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000));
+        }
+        TIMER_SetCompValue(timer_device->id, timeout_cfg->timeout_id, compare_count - 2);
+    }
+    TIMER_Enable(timer_device->id);
     return 0;
 }
 int timer_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
@@ -245,15 +291,12 @@ int timer_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 }
 
 /**
- * @brief timer register
+ * @brief
  *
  * @param index
  * @param name
- * @param flag
- * @param timer_user_cfg
  * @return int
  */
-
 int timer_register(enum timer_index_type index, const char *name)
 {
     struct device *dev;
@@ -267,7 +310,7 @@ int timer_register(enum timer_index_type index, const char *name)
     dev->open = timer_open;
     dev->close = timer_close;
     dev->control = timer_control;
-    // dev->write = NULL;
+    dev->write = timer_write;
     // dev->read = NULL;
 
     dev->status = DEVICE_UNREGISTER;
@@ -283,53 +326,53 @@ void timer_isr(timer_device_t *handle)
     uint32_t tmpVal = 0;
     uint32_t tmpAddr = 0;
 
-    intId = BL_RD_WORD(TIMER_BASE + TIMER_TMSR2_OFFSET + 4 * handle->ch);
-    tmpAddr = TIMER_BASE + TIMER_TICR2_OFFSET + 4 * handle->ch;
-    tmpVal = BL_RD_WORD(tmpAddr);
-
     if (!handle->parent.callback) {
         return;
     }
 
+    intId = BL_RD_WORD(TIMER_BASE + TIMER_TMSR2_OFFSET + 4 * handle->id);
+    tmpAddr = TIMER_BASE + TIMER_TICR2_OFFSET + 4 * handle->id;
+    tmpVal = BL_RD_WORD(tmpAddr);
+
     /* Comparator 0 match interrupt */
     if (BL_IS_REG_BIT_SET(intId, TIMER_TMSR_0)) {
-        BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_0));
         handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP0);
+        BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_0));
     }
 
     /* Comparator 1 match interrupt */
     if (BL_IS_REG_BIT_SET(intId, TIMER_TMSR_1)) {
-        BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_1));
         handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP1);
+        BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_1));
     }
 
     /* Comparator 2 match interrupt */
     if (BL_IS_REG_BIT_SET(intId, TIMER_TMSR_2)) {
-        BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_2));
         handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP2);
+        BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_2));
     }
 }
 
-#ifdef BSP_USING_TIMER_CH0
+#ifdef BSP_USING_TIMER0
 /**
  * @brief
  *
  */
-void TIMER_CH0_IRQ(void)
+void TIMER0_IRQ(void)
 {
-    timer_isr(&timerx_device[TIMER_CH0_INDEX]);
+    timer_isr(&timerx_device[TIMER0_INDEX]);
 }
 
 #endif
 
-#ifdef BSP_USING_TIMER_CH1
+#ifdef BSP_USING_TIMER1
 /**
  * @brief
  *
  */
-void TIMER_CH1_IRQ(void)
+void TIMER1_IRQ(void)
 {
-    timer_isr(&timerx_device[TIMER_CH1_INDEX]);
+    timer_isr(&timerx_device[TIMER1_INDEX]);
 }
 
 #endif

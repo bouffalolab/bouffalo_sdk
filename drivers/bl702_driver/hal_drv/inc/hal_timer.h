@@ -26,20 +26,38 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
-#define DEVICE_OFLAG_INT             0x01
-#define DEVICE_OFLAG_POLL            0x02
-#define DEVICE_CTRL_TIMER_CH_START   0x80
-#define DEVICE_CTRL_TIMER_CH_STOP    0x81
-#define DEVICE_CTRL_GET_MATCH_STATUS 0x82
-
 enum timer_index_type {
-#ifdef BSP_USING_TIMER_CH0
-    TIMER_CH0_INDEX,
+#ifdef BSP_USING_TIMER0
+    TIMER0_INDEX,
 #endif
-#ifdef BSP_USING_TIMER_CH1
-    TIMER_CH1_INDEX,
+#ifdef BSP_USING_TIMER1
+    TIMER1_INDEX,
 #endif
     TIMER_MAX_INDEX
+};
+
+enum timer_preload_trigger_type {
+    TIMER_PRELOAD_TRIGGER_NONE,
+    TIMER_PRELOAD_TRIGGER_COMP0,
+    TIMER_PRELOAD_TRIGGER_COMP1,
+    TIMER_PRELOAD_TRIGGER_COMP2,
+};
+
+enum timer_cnt_mode_type {
+    TIMER_CNT_PRELOAD,
+    TIMER_CNT_FREERUN,
+};
+
+enum timer_compare_id_type {
+    TIMER_COMPARE_ID_0,
+    TIMER_COMPARE_ID_1,
+    TIMER_COMPARE_ID_2,
+};
+
+enum timer_it_type {
+    TIMER_COMP0_IT = 1 << 0,
+    TIMER_COMP1_IT = 1 << 1,
+    TIMER_COMP2_IT = 1 << 2,
 };
 
 enum timer_event_type {
@@ -49,44 +67,20 @@ enum timer_event_type {
     TIMER_EVENT_UNKNOWN
 };
 
-enum timer_it_type {
-    TIMER_COMP0_IT = 1 << 0,
-    TIMER_COMP1_IT = 1 << 1,
-    TIMER_COMP2_IT = 1 << 2,
-    TIMER_ALL_IT = 1 << 3
-};
-typedef enum {
-    TIMER_CLK_FCLK,
-    TIMER_CLK_32K,
-    TIMER_CLK_1K,
-    TIMER_CLK_XTAL,
-} timer_clk_src_t;
-
-typedef enum {
-    TIMER_PL_TRIG_NONE,
-    TIMER_PL_TRIG_COMP0,
-    TIMER_PL_TRIG_COMP1,
-    TIMER_PL_TRIG_COMP2,
-} timer_pl_trig_t;
-
-typedef enum {
-    TIMER_CNT_PRELOAD,
-    TIMER_CNT_FREERUN,
-} timer_cnt_mode;
-
-typedef struct
-{
+typedef struct timer_timeout_cfg {
+    enum timer_compare_id_type timeout_id;
     uint32_t timeout_val;
-    uint32_t comp_it;
-} timer_user_cfg_t;
+} timer_timeout_cfg_t;
 
 typedef struct timer_device {
     struct device parent;
     uint8_t id;
-    uint8_t ch;
-    uint8_t clk_div;
-    timer_cnt_mode cnt_mode;
-    timer_pl_trig_t pl_trig_src;
+    enum timer_cnt_mode_type cnt_mode;
+    enum timer_preload_trigger_type trigger;
+    uint32_t reload;
+    uint32_t timeout1;
+    uint32_t timeout2;
+    uint32_t timeout3;
 } timer_device_t;
 
 #define TIMER_DEV(dev) ((timer_device_t *)dev)
