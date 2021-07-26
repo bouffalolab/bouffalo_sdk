@@ -181,6 +181,16 @@ static void board_pin_mux_init(void)
         } else if (af_pin_table[i].func == GPIO_FUN_PWM) {
             /*if pwm func*/
             gpio_cfg.pullType = GPIO_PULL_DOWN;
+        } else if (af_pin_table[i].func == GPIO_FUN_QDEC) {
+            /* if qdec a/b */
+            gpio_cfg.pullType = GPIO_PULL_NONE;
+            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.gpioFun = GPIO_FUN_QDEC;
+        } else if (af_pin_table[i].func == GPIO_FUN_QDEC_LED) {
+            /* if qdec led */
+            gpio_cfg.pullType = GPIO_PULL_NONE;
+            gpio_cfg.gpioMode = GPIO_MODE_OUTPUT;
+            gpio_cfg.gpioFun = GPIO_FUN_QDEC;
         } else if ((af_pin_table[i].func == GPIO_FUN_USB) || (af_pin_table[i].func == GPIO_FUN_DAC) || (af_pin_table[i].func == GPIO_FUN_ADC)) {
             /*if analog func , for usb、adc、dac*/
             gpio_cfg.gpioFun = GPIO_FUN_ANALOG;
@@ -225,15 +235,15 @@ static void board_pin_mux_init(void)
             gpio_cfg.pullType = GPIO_PULL_NONE;
         } else if (af_pin_table[i].func == GPIO_FUN_GPIO_OUTPUT_UP) {
             gpio_cfg.gpioFun = GPIO_FUN_GPIO;
-            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.gpioMode = GPIO_MODE_OUTPUT;
             gpio_cfg.pullType = GPIO_PULL_UP;
         } else if (af_pin_table[i].func == GPIO_FUN_GPIO_OUTPUT_DOWN) {
             gpio_cfg.gpioFun = GPIO_FUN_GPIO;
-            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.gpioMode = GPIO_MODE_OUTPUT;
             gpio_cfg.pullType = GPIO_PULL_DOWN;
         } else if (af_pin_table[i].func == GPIO_FUN_GPIO_OUTPUT_NONE) {
             gpio_cfg.gpioFun = GPIO_FUN_GPIO;
-            gpio_cfg.gpioMode = GPIO_MODE_INPUT;
+            gpio_cfg.gpioMode = GPIO_MODE_OUTPUT;
             gpio_cfg.pullType = GPIO_PULL_NONE;
         }
         GLB_GPIO_Init(&gpio_cfg);
@@ -274,4 +284,18 @@ void board_init(void)
 {
     board_clock_init();
     board_pin_mux_init();
+}
+
+int bflb_get_board_config(uint8_t func, uint8_t *pinlist)
+{
+    uint16_t i = 0;
+    int len = 0;
+
+    for (i = 0; i < sizeof(af_pin_table) / sizeof(struct pin_mux_cfg); i++) {
+        if (af_pin_table[i].func == func) {
+            pinlist[len] = af_pin_table[i].pin;
+            len++;
+        }
+    }
+    return len;
 }

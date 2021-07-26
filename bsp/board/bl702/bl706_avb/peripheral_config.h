@@ -33,10 +33,13 @@
 #define BSP_USING_I2S0
 #define BSP_USING_USB
 #define BSP_USING_PWM_CH2
-#define BSP_USING_TIMER_CH0
-#define BSP_USING_TIMER_CH1
+#define BSP_USING_TIMER0
+#define BSP_USING_TIMER1
 #define BSP_USING_CAM
 #define BSP_USING_KEYSCAN
+#define BSP_USING_QDEC0
+#define BSP_USING_QDEC1
+#define BSP_USING_QDEC2
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */
@@ -332,26 +335,32 @@
 #endif
 #endif
 
-#if defined(BSP_USING_TIMER_CH0)
-#ifndef TIMER_CH0_CONFIG
-#define TIMER_CH0_CONFIG                    \
-    {                                       \
-        .id = 0,                            \
-        .ch = 0,                            \
-        .cnt_mode = TIMER_CNT_PRELOAD,      \
-        .pl_trig_src = TIMER_PL_TRIG_COMP0, \
+#if defined(BSP_USING_TIMER0)
+#ifndef TIMER0_CONFIG
+#define TIMER0_CONFIG                           \
+    {                                           \
+        .id = 0,                                \
+        .cnt_mode = TIMER_CNT_PRELOAD,          \
+        .trigger = TIMER_PRELOAD_TRIGGER_COMP2, \
+        .reload = 0,                            \
+        .timeout1 = 1000000,                    \
+        .timeout2 = 2000000,                    \
+        .timeout3 = 3000000,                    \
     }
 #endif
 #endif
 
-#if defined(BSP_USING_TIMER_CH1)
-#ifndef TIMER_CH1_CONFIG
-#define TIMER_CH1_CONFIG                    \
-    {                                       \
-        .id = 0,                            \
-        .ch = 1,                            \
-        .cnt_mode = TIMER_CNT_PRELOAD,      \
-        .pl_trig_src = TIMER_PL_TRIG_COMP2, \
+#if defined(BSP_USING_TIMER1)
+#ifndef TIMER1_CONFIG
+#define TIMER1_CONFIG                           \
+    {                                           \
+        .id = 1,                                \
+        .cnt_mode = TIMER_CNT_PRELOAD,          \
+        .trigger = TIMER_PRELOAD_TRIGGER_COMP0, \
+        .reload = 0,                            \
+        .timeout1 = 1000000,                    \
+        .timeout2 = 2000000,                    \
+        .timeout3 = 3000000,                    \
     }
 #endif
 #endif
@@ -363,6 +372,60 @@
         .col_num = COL_NUM_4, \
         .row_num = ROW_NUM_4, \
         .deglitch_count = 0,  \
+    }
+#endif
+#endif
+
+#if defined(BSP_USING_QDEC0)
+#ifndef QDEC0_CONFIG
+#define QDEC0_CONFIG                               \
+    {                                              \
+        .id = 0,                                   \
+        .acc_mode = QDEC_ACC_CONTINUE_ACCUMULATE,  \
+        .sample_period = QDEC_SAMPLE_PERIOD_256US, \
+        .report_mode = QDEC_REPORT_TIME_MOD,       \
+        .report_period = 2000,                     \
+        .led_en = ENABLE,                          \
+        .led_swap = DISABLE,                       \
+        .led_period = 7,                           \
+        .deglitch_en = DISABLE,                    \
+        .deglitch_strength = 0x0,                  \
+    }
+#endif
+#endif
+
+#if defined(BSP_USING_QDEC1)
+#ifndef QDEC1_CONFIG
+#define QDEC1_CONFIG                               \
+    {                                              \
+        .id = 1,                                   \
+        .acc_mode = QDEC_ACC_CONTINUE_ACCUMULATE,  \
+        .sample_period = QDEC_SAMPLE_PERIOD_256US, \
+        .report_mode = QDEC_REPORT_TIME_MOD,       \
+        .report_period = 2000,                     \
+        .led_en = ENABLE,                          \
+        .led_swap = DISABLE,                       \
+        .led_period = 7,                           \
+        .deglitch_en = DISABLE,                    \
+        .deglitch_strength = 0x0,                  \
+    }
+#endif
+#endif
+
+#if defined(BSP_USING_QDEC2)
+#ifndef QDEC2_CONFIG
+#define QDEC2_CONFIG                               \
+    {                                              \
+        .id = 2,                                   \
+        .acc_mode = QDEC_ACC_CONTINUE_ACCUMULATE,  \
+        .sample_period = QDEC_SAMPLE_PERIOD_256US, \
+        .report_mode = QDEC_REPORT_TIME_MOD,       \
+        .report_period = 2000,                     \
+        .led_en = ENABLE,                          \
+        .led_swap = DISABLE,                       \
+        .led_period = 7,                           \
+        .deglitch_en = DISABLE,                    \
+        .deglitch_strength = 0x0,                  \
     }
 #endif
 #endif
