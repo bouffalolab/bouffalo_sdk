@@ -76,9 +76,8 @@ int sec_hash_open(struct device *dev, uint16_t oflag)
  */
 int sec_hash_close(struct device *dev)
 {
-    sec_hash_device_t *sec_hash_device = (sec_hash_device_t *)dev;
-    memset(sec_hash_device, 0, sizeof(sec_hash_device_t));
-
+    //sec_hash_device_t *sec_hash_device = (sec_hash_device_t *)dev;
+    //memset(sec_hash_device, 0, sizeof(sec_hash_device_t)); //will cause crash
     return 0;
 }
 /**

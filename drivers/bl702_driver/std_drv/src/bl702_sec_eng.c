@@ -1957,14 +1957,19 @@ static BL_Err_Type Sec_Eng_PKA_Wait_ISR(void)
 #ifndef __GNUC__
 __ASM void Sec_Eng_PKA_Read_Block(uint32_t *dest, const uint32_t *src, uint32_t len)
 {
-    PUSH{ R3 - R6, LR } Start0
-        CMP R2,
-# 4 BLT Finish0
-        LDR R3,
-        [R1] LDR R4, [R1] LDR R5, [R1] LDR R6, [R1] STMIA R0 !, { R3 - R6 } SUBS R2, R2, #4 B Start0 Finish0 POP
-    {
-        R3 - R6, PC
-    }
+    PUSH  {R3-R6,LR}
+Start0
+    CMP  R2,#4
+    BLT  Finish0
+    LDR  R3,[R1]
+    LDR  R4,[R1]
+    LDR  R5,[R1]
+    LDR  R6,[R1]
+    STMIA  R0!,{R3-R6}
+    SUBS R2,R2,#4
+    B  Start0
+Finish0
+    POP  {R3-R6,PC}
 }
 #else
 void Sec_Eng_PKA_Read_Block(uint32_t *dest, const uint32_t *src, uint32_t len)
@@ -2011,14 +2016,19 @@ void Sec_Eng_PKA_Read_Block(uint32_t *dest, const uint32_t *src, uint32_t len)
 #ifndef __GNUC__
 __ASM void Sec_Eng_PKA_Write_Block(uint32_t *dest, const uint32_t *src, uint32_t len)
 {
-    PUSH{ R3 - R6, LR } Start1
-        CMP R2,
-# 4 BLT Finish1
-        LDMIA R1 !,
-        { R3 - R6 } STR R3, [R0] STR R4, [R0] STR R5, [R0] STR R6, [R0] SUBS R2, R2, #4 B Start1 Finish1 POP
-    {
-        R3 - R6, PC
-    }
+    PUSH  {R3-R6,LR}
+Start1
+    CMP  R2,#4
+    BLT  Finish1
+    LDMIA  R1!,{R3-R6}    
+    STR  R3,[R0]
+    STR  R4,[R0]
+    STR  R5,[R0]
+    STR  R6,[R0]
+    SUBS R2,R2,#4
+    B  Start1
+Finish1
+    POP  {R3-R6,PC}
 }
 #else
 void Sec_Eng_PKA_Write_Block(uint32_t *dest, const uint32_t *src, uint32_t len)

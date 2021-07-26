@@ -286,7 +286,7 @@ BL_Err_Type PDS_IntEn(PDS_INT_Type intType, BL_Fun_Type enable)
         case PDS_INT_WAKEUP:
         case PDS_INT_RF_DONE:
         case PDS_INT_PLL_DONE:
-            break;
+            return ERROR;
 
         case PDS_INT_PDS_SLEEP_CNT:
             offset = 16;
@@ -381,7 +381,7 @@ BL_Err_Type PDS_IntMask(PDS_INT_Type intType, BL_Mask_Type intMask)
         case PDS_INT_KYS_QDEC:
         case PDS_INT_MAX:
         default:
-            break;
+            return ERROR;
     }
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
@@ -423,35 +423,35 @@ BL_Sts_Type PDS_Get_IntStatus(PDS_INT_Type intType)
             break;
 
         case PDS_INT_PDS_SLEEP_CNT:
-            offset = 16;
+            offset = 24;
             break;
 
         case PDS_INT_HBN_IRQ_OUT0:
-            offset = 17;
+            offset = 25;
             break;
 
         case PDS_INT_HBN_IRQ_OUT1:
-            offset = 18;
+            offset = 26;
             break;
 
         case PDS_INT_GPIO_IRQ:
-            offset = 19;
+            offset = 27;
             break;
 
         case PDS_INT_IRRX:
-            offset = 20;
+            offset = 28;
             break;
 
         case PDS_INT_BLE_SLP_IRQ:
-            offset = 21;
+            offset = 29;
             break;
 
         case PDS_INT_USB_WKUP:
-            offset = 22;
+            offset = 30;
             break;
 
         case PDS_INT_KYS_QDEC:
-            offset = 23;
+            offset = 31;
             break;
 
         case PDS_INT_MAX:
@@ -660,23 +660,6 @@ BL_Err_Type PDS_Set_Vddcore_GPIO_IntClear(void)
     tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_INT);
     tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_GPIO_INT_CLR);
     BL_WR_REG(PDS_BASE, PDS_GPIO_INT, tmpVal);
-
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  PDS wakeup IRQHandler install
- *
- * @param  None
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type PDS_WAKEUP_IRQHandler_Install(void)
-{
-#ifndef BFLB_USE_HAL_DRIVER
-    Interrupt_Handler_Register(PDS_WAKEUP_IRQn, PDS_WAKEUP_IRQHandler);
-#endif
 
     return SUCCESS;
 }
@@ -1320,7 +1303,6 @@ void ATTR_TCM_SECTION PDS_Manual_Force_Turn_On(PDS_FORCE_Type domain)
  * @return None
  *
 *******************************************************************************/
-#ifndef BFLB_USE_HAL_DRIVER
 void PDS_WAKEUP_IRQHandler(void)
 {
     for (PDS_INT_Type intType = PDS_INT_WAKEUP; intType < PDS_INT_MAX; intType++) {
@@ -1331,7 +1313,20 @@ void PDS_WAKEUP_IRQHandler(void)
 
     PDS_IntClear();
 }
-#endif
+
+/****************************************************************************/ /**
+ * @brief  PDS wakeup IRQHandler install
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type PDS_WAKEUP_IRQHandler_Install(void)
+{
+    Interrupt_Handler_Register(PDS_WAKEUP_IRQn, PDS_WAKEUP_IRQHandler);
+    return SUCCESS;
+}
 
 /*@} end of group PDS_Public_Functions */
 

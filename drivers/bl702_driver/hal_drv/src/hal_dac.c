@@ -64,6 +64,7 @@ int dac_open(struct device *dev, uint16_t oflag)
             /* 12.2880MHZ / 24 / 64 = 8KHZ*/
             GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_AUDIO_PLL, 24);
             dacCfg.div = DAC_CLK_DIV_64;
+	    break;
 
         case DAC_CLK_16KHZ:
             /* set audio pll as 12.288MHZ*/
@@ -71,6 +72,7 @@ int dac_open(struct device *dev, uint16_t oflag)
             /* 12.2880MHZ / 24 / 32 = 16KHZ*/
             GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_AUDIO_PLL, 24);
             dacCfg.div = DAC_CLK_DIV_32;
+	    break;
 
         case DAC_CLK_44P1KHZ:
             /* set audio pll as 11.2896MHZ*/

@@ -1562,23 +1562,6 @@ BL_Err_Type HBN_Clear_Reset_Event(void)
 }
 
 /****************************************************************************/ /**
- * @brief  HBN out0 IRQHandler install
- *
- * @param  None
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_Out0_IRQHandler_Install(void)
-{
-#ifndef BFLB_USE_HAL_DRIVER
-    Interrupt_Handler_Register(HBN_OUT0_IRQn, HBN_OUT0_IRQHandler);
-#endif
-
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
  * @brief  HBN out0 install interrupt callback
  *
  * @param  intType: HBN out0 interrupt type
@@ -1593,23 +1576,6 @@ BL_Err_Type HBN_Out0_Callback_Install(HBN_OUT0_INT_Type intType, intCallback_Typ
     CHECK_PARAM(IS_HBN_OUT0_INT_TYPE(intType));
 
     hbnInt0CbfArra[intType] = cbFun;
-
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  HBN out1 IRQHandler install
- *
- * @param  None
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-BL_Err_Type HBN_Out1_IRQHandler_Install(void)
-{
-#ifndef BFLB_USE_HAL_DRIVER
-    Interrupt_Handler_Register(HBN_OUT1_IRQn, HBN_OUT1_IRQHandler);
-#endif
 
     return SUCCESS;
 }
@@ -1810,7 +1776,6 @@ BL_Err_Type HBN_Set_BOR_Cfg(HBN_BOR_CFG_Type *cfg)
  * @return None
  *
 *******************************************************************************/
-#ifndef BFLB_USE_HAL_DRIVER
 void HBN_OUT0_IRQHandler(void)
 {
     if (SET == HBN_Get_INT_State(HBN_INT_GPIO9)) {
@@ -1862,7 +1827,6 @@ void HBN_OUT0_IRQHandler(void)
         }
     }
 }
-#endif
 
 /****************************************************************************/ /**
  * @brief  HBN OUT1 interrupt handler
@@ -1872,7 +1836,6 @@ void HBN_OUT0_IRQHandler(void)
  * @return None
  *
 *******************************************************************************/
-#ifndef BFLB_USE_HAL_DRIVER
 void HBN_OUT1_IRQHandler(void)
 {
     /* PIR */
@@ -1911,7 +1874,6 @@ void HBN_OUT1_IRQHandler(void)
         }
     }
 }
-#endif
 
 /****************************************************************************/ /**
  * @brief  Enable HBN mode
@@ -2012,6 +1974,34 @@ void ATTR_TCM_SECTION HBN_Enable(uint8_t aGPIOIeCfg, HBN_LDO_LEVEL_Type ldoLevel
     while (1) {
         BL702_Delay_MS(1000);
     }
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN out0 IRQHandler install
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type HBN_Out0_IRQHandler_Install(void)
+{
+    Interrupt_Handler_Register(HBN_OUT0_IRQn, HBN_OUT0_IRQHandler);
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN out1 IRQHandler install
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type HBN_Out1_IRQHandler_Install(void)
+{
+    Interrupt_Handler_Register(HBN_OUT1_IRQn, HBN_OUT1_IRQHandler);
+    return SUCCESS;
 }
 
 /*@} end of group HBN_Public_Functions */

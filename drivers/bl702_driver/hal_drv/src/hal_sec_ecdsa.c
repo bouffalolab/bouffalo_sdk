@@ -651,7 +651,7 @@ static int32_t sec_ecdh_get_scalar_point(uint8_t id, const uint32_t *pkX, const 
     MSG("R.y%n=\r\n");
     bflb_platform_dump(pRy, ECP_SECP256R1_SIZE);
 #endif
-    return -1;
+    return 0;
 }
 
 static int32_t sec_ecc_is_zero(uint8_t *a, uint32_t len)
