@@ -235,8 +235,8 @@ Board: bl70x_iot
     </File>
   </VirtualDirectory>
   <MonitorProgress>
-    <DebugLaunch>70</DebugLaunch>
-    <FlashOperate>25</FlashOperate>
+    <DebugLaunch>90</DebugLaunch>
+    <FlashOperate>37</FlashOperate>
   </MonitorProgress>
   <VirtualDirectory Name="components">
     <VirtualDirectory Name="fatfs">
@@ -286,6 +286,32 @@ Board: bl70x_iot
   <Dependencies Name="BuildSet"/>
   <Dependencies Name="CK_Link_Debug"/>
   <Dependencies Name="OpenOCD_Debug"/>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>0x23000000;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs>
+      <Tab disFormat="Hex">glb</Tab>
+      <Tab disFormat="Hex">uart</Tab>
+    </peripheralTabs>
+    <WatchDisplayFormat>1</WatchDisplayFormat>
+    <LocalDisplayFormat>1</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs>
+      <Tab disFormat="Hex">glb</Tab>
+      <Tab disFormat="Hex">uart</Tab>
+    </peripheralTabs>
+    <WatchDisplayFormat>1</WatchDisplayFormat>
+    <LocalDisplayFormat>1</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
   <BuildConfigs>
     <BuildConfig Name="OpenOCD_Debug">
       <Target>
@@ -416,7 +442,7 @@ Board: bl70x_iot
         <LinkType/>
       </Linker>
       <Debug>
-        <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
+        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
         <Connector>OpenOCD</Connector>
         <StopAt>yes</StopAt>
         <StopAtText>main</StopAtText>
@@ -572,7 +598,7 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;bl706_hwc</Define>
+        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;bl706_iot</Define>
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -607,8 +633,8 @@ Board: bl70x_iot
         <LinkType/>
       </Linker>
       <Debug>
-        <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
-        <Connector>Remote ICE</Connector>
+        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
+        <Connector>ICE</Connector>
         <StopAt>yes</StopAt>
         <StopAtText>main</StopAtText>
         <InitFile/>
@@ -659,8 +685,8 @@ Board: bl70x_iot
         <InitFile/>
         <Erase>Erase Sectors</Erase>
         <Algorithms Path="">bl70x_flasher.elf</Algorithms>
-        <Program>no</Program>
-        <Verify>no</Verify>
+        <Program>yes</Program>
+        <Verify>yes</Verify>
         <ResetAndRun>no</ResetAndRun>
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal/>
@@ -670,30 +696,4 @@ Board: bl70x_iot
       </Flash>
     </BuildConfig>
   </BuildConfigs>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs>
-      <Tab disFormat="Hex">glb</Tab>
-      <Tab disFormat="Hex">uart</Tab>
-    </peripheralTabs>
-    <WatchDisplayFormat>1</WatchDisplayFormat>
-    <LocalDisplayFormat>1</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs>
-      <Tab disFormat="Hex">glb</Tab>
-      <Tab disFormat="Hex">uart</Tab>
-    </peripheralTabs>
-    <WatchDisplayFormat>1</WatchDisplayFormat>
-    <LocalDisplayFormat>1</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
 </Project>
