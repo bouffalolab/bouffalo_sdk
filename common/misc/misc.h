@@ -30,6 +30,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "gcc.h"
+#include "cmsis_compatible_gcc.h"
+
 /*@} end of group COMMON_Public_Types */
 
 /** @defgroup  COMMON_Public_Constants
@@ -87,22 +89,6 @@
 #define ATTR_USED                __attribute__((__used__))
 
 #define BIT(x) (1 << (x))
-
-static uint8_t nesting = 0;
-
-__attribute__((always_inline)) __STATIC_INLINE__ void enable_irq(void)
-{
-    nesting--;
-    if (nesting == 0) {
-        __ASM__ volatile("csrsi mstatus, 8");
-    }
-}
-
-__attribute__((always_inline)) __STATIC_INLINE__ void disable_irq(void)
-{
-    __ASM__ volatile("csrci mstatus, 8");
-    nesting++;
-}
 
 /**
  * @brief Error type definition

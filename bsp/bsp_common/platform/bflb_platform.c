@@ -38,6 +38,11 @@ __WEAK__ void bl_show_info(void)
 {
 }
 
+__WEAK__ int bflb_get_board_config(uint8_t func, uint8_t *pinlist)
+{
+    return 0;
+}
+
 __WEAK__ enum uart_index_type board_get_debug_uart_index(void)
 {
     return 0;
@@ -45,7 +50,7 @@ __WEAK__ enum uart_index_type board_get_debug_uart_index(void)
 
 void bflb_platform_init(uint32_t baudrate)
 {
-    disable_irq();
+    __disable_irq();
 
     board_init();
 
@@ -73,7 +78,7 @@ void bflb_platform_init(uint32_t baudrate)
     else
         MSG("dynamic memory init error\r\n");
 
-    enable_irq();
+    __enable_irq();
 }
 
 #if ((defined BOOTROM) || (defined BFLB_EFLASH_LOADER))
