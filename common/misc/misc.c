@@ -96,7 +96,7 @@ void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n
             i++;
         }
     } else {
-        memcpy(dst, src, n);
+        arch_memcpy(dst, src, n);
     }
 
     return dst;
