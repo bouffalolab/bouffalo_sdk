@@ -1,8 +1,8 @@
+#if defined(SHELL_USING_FS)
 #include "shell.h"
 #include "ff.h"
 #include "fatfs_posix_api.h"
 
-#if defined(SHELL_USING_FS)
 /*
 static void *(*shell_malloc)(size_t size) = mmheap_alloc;
 static void (*shell_free)(void *ptr) = mmheap_free;

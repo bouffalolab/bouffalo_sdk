@@ -18,7 +18,7 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ########### Add required/dependent components #########
-#list(APPEND ADD_REQUIREMENTS xxx)
+# list(APPEND ADD_REQUIREMENTS fatfs)
 #######################################################
 
 ############ Add static libs ##########################
@@ -32,7 +32,7 @@ list(APPEND ADD_SRCS  ${sources})
 
 ############ Add global compile option ################
 #add components denpend on this component
-# list(APPEND ADD_DEFINITIONS -Dxxx)
+list(APPEND ADD_DEFINITIONS -DSUPPORT_SHELL)
 #######################################################
 
 ############ Add private compile option ################
