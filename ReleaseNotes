@@ -3,6 +3,32 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.2.6
+----------------------------
+
+新增功能说明：
+    1. 重构 board 系统目录结构
+    2. 删除 SUPPORT_XXX 功能，改成 cmake 自动识别组件库并参与编译，识别参数为 TARGET_REQUIRED_LIBS
+    3. 删除 device_register 中 flag 选项
+    4. 重构 timer hal 层, clock tree 和 demo
+    5. 添加 自动识别内外部 flash 并切换引脚功能
+    6. 添加 2线 flash 下载支持
+    7. 默认使能 cpu 浮点支持（非打印浮点支持）
+    8. 添加 bl702 qfn32 的 board 文件
+    9. 添加 boot2 hal 封装层
+    10. 添加 pid 算法
+    11. 添加 qdec hal 和 demo
+
+修复问题说明：
+    1. 修复 开关全局中断嵌套带来的问题
+    2. 修复 使用 shell 功能时编译报错
+    3. memcpy 改用 romapi
+    4. 修复 cdk 中编译 ble demo 编译报错，未添加 board 支持
+    5. 修复 pwm demo 相关宏书写错误
+    6. 修复 std 和 hal 中 switch case 返回的一些 bug
+    7. cdk 相关 demo 改用 bl706_iot board
+    8. 修改 keyscan 默认时钟和分配
+
 bl mcu sdk Release V1.2.5
 ----------------------------
 
