@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>6. 硬件连接指南 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>2. 硬件连接指南 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
-    <link rel="next" title="1. API 概述" href="../api_reference/api_overview.html" />
-    <link rel="prev" title="5. 基于 CDK 新建工程指南" href="cdk_new_project_quick_start.html" /> 
+    <link rel="next" title="3. 开发环境搭建指南" href="index.html" />
+    <link rel="prev" title="1. 开发前的准备" href="get_started.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,34 +92,34 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html">2. 开发环境搭建指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. 硬件连接指南</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#bl706-iot">2.1. BL706_IOT 开发板</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ck-link">2.1.1. 使用 CK-Link 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#j-link">2.1.2. 使用 J-Link 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">2.1.3. 使用串口烧写程序连接方法</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bl706-avb">2.2. BL706_AVB 开发板</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sipeed-rv-debugger-plus">2.2.1. 使用 Sipeed RV-Debugger Plus 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">2.2.2. 使用 CK-Link 烧写、调试连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">2.2.3. 使用串口烧写程序连接方法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">3. 开发环境搭建指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">6. 硬件连接指南</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#bl706-iot">6.1. BL706_IOT 开发板</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ck-link">6.1.1. 使用 CK-Link 烧写、调试连接方法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#j-link">6.1.2. 使用 J-Link 烧写、调试连接方法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">6.1.3. 使用串口烧写程序连接方法</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#bl706-avb">6.2. BL706_AVB 开发板</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#sipeed-rv-debugger-plus">6.2.1. 使用 Sipeed RV-Debugger Plus 烧写、调试连接方法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">6.2.2. 使用 CK-Link 烧写、调试连接方法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">6.2.3. 使用串口烧写程序连接方法</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board 配置系统使用指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API 概述</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api_reference/board.html">2. Board 配置系统</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">3. Peripheral</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api_reference/shell/api_shell.html">4. Shell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api_reference/usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">6. BLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">5. BLE</a></li>
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
@@ -130,8 +130,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">10. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -189,7 +190,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">6. </span>硬件连接指南</li>
+      <li><span class="section-number">2. </span>硬件连接指南</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -209,12 +210,12 @@
            <div itemprop="articleBody">
             
   <div class="section" id="connect-hardware">
-<span id="id1"></span><h1><span class="section-number">6. </span>硬件连接指南<a class="headerlink" href="#connect-hardware" title="永久链接至标题">¶</a></h1>
+<span id="id1"></span><h1><span class="section-number">2. </span>硬件连接指南<a class="headerlink" href="#connect-hardware" title="永久链接至标题">¶</a></h1>
 <p>本文档介绍了如何连接 BL70x 系列 MCU 的开发板</p>
 <div class="section" id="bl706-iot">
-<h2><span class="section-number">6.1. </span>BL706_IOT 开发板<a class="headerlink" href="#bl706-iot" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.1. </span>BL706_IOT 开发板<a class="headerlink" href="#bl706-iot" title="永久链接至标题">¶</a></h2>
 <div class="section" id="ck-link">
-<h3><span class="section-number">6.1.1. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#ck-link" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.1.1. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#ck-link" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>将 CK-Link USB 接口使用合适的 USB 数据线正确连接到 PC 主机</p></li>
 <li><p>将 Iot 开发板的 <code class="docutils literal notranslate"><span class="pre">HD3</span></code> 组的标准 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚使用杜邦线与 <code class="docutils literal notranslate"><span class="pre">CK-Link</span></code> 对应的 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚连接起来</p></li>
@@ -236,7 +237,7 @@
 </div>
 </div>
 <div class="section" id="j-link">
-<h3><span class="section-number">6.1.2. </span>使用 J-Link 烧写、调试连接方法<a class="headerlink" href="#j-link" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.1.2. </span>使用 J-Link 烧写、调试连接方法<a class="headerlink" href="#j-link" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>将 j-link 的 USB 接口使用合适的 USB 数据线正确连接到 PC 主机</p></li>
 <li><p>将 Iot 开发板的 <code class="docutils literal notranslate"><span class="pre">HD3</span></code> 组的标准 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚使用杜邦线与 <code class="docutils literal notranslate"><span class="pre">j-link</span></code> 对应的 <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> 引脚连接起来</p></li>
@@ -258,7 +259,7 @@
 </div>
 </div>
 <div class="section" id="id2">
-<h3><span class="section-number">6.1.3. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.1.3. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>使用串口烧写前，请确保正确安装了 <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code> 或命令行烧写工具</p>
 <ul>
@@ -284,13 +285,13 @@
 </div>
 </div>
 <div class="section" id="bl706-avb">
-<h2><span class="section-number">6.2. </span>BL706_AVB 开发板<a class="headerlink" href="#bl706-avb" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.2. </span>BL706_AVB 开发板<a class="headerlink" href="#bl706-avb" title="永久链接至标题">¶</a></h2>
 <div class="admonition important">
 <p class="admonition-title">重要</p>
 <p>BL706_AVB 开发板有多个引脚存在复用情况，请仔细检查所需功能引脚是否被复用了；FUNC1:「Default: PIX; Connect: I2S/JTAG」，FUNC2:「Default: I2S; Connect: SPI」; <strong>如果需要调试，请务必记得将 FUNC1 跳帽连接</strong></p>
 </div>
 <div class="section" id="sipeed-rv-debugger-plus">
-<h3><span class="section-number">6.2.1. </span>使用 Sipeed RV-Debugger Plus 烧写、调试连接方法<a class="headerlink" href="#sipeed-rv-debugger-plus" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.2.1. </span>使用 Sipeed RV-Debugger Plus 烧写、调试连接方法<a class="headerlink" href="#sipeed-rv-debugger-plus" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>将 BL706_AVB 开发板先供电</p></li>
 <li><p>将 RV-Debugger Plus 调试器连接到电脑 USB 口，如没有正确安装驱动，请参考 <a class="reference internal" href="get_started.html#sipeed-rv-debugger-plus"><span class="std std-ref">调试器驱动安装设置</span></a> 部分，设置好驱动程序，在进行下面的步骤</p></li>
@@ -306,7 +307,7 @@
 </div>
 </div>
 <div class="section" id="id3">
-<h3><span class="section-number">6.2.2. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.2.2. </span>使用 CK-Link 烧写、调试连接方法<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>将 CK-Link USB 接口使用合适的 USB 数据线正确连接到 PC 主机</p></li>
 <li><p>将 bl706_avb 开发板的 FUNC1 跳帽短接</p></li>
@@ -330,7 +331,7 @@
 </div>
 </div>
 <div class="section" id="id4">
-<h3><span class="section-number">6.2.3. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.2.3. </span>使用串口烧写程序连接方法<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
 <li><p>使用串口烧写前，请确保正确安装了 <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code> 或命令行烧写工具</p>
 <ul>
@@ -363,8 +364,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../api_reference/api_overview.html" class="btn btn-neutral float-right" title="1. API 概述" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="cdk_new_project_quick_start.html" class="btn btn-neutral float-left" title="5. 基于 CDK 新建工程指南" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-right" title="3. 开发环境搭建指南" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="get_started.html" class="btn btn-neutral float-left" title="1. 开发前的准备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

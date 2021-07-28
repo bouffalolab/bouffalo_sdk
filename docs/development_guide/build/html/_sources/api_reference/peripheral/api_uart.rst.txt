@@ -204,34 +204,46 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 ``args`` 根据不同的 ``cmd`` 传入不同，具体如下：
 
+.. list-table:: table1
+    :widths: 15 10 30
+    :header-rows: 1
 
-+---------------------------------+---------------------+------------------------------+
-|cmd                              |args                 |description                   |
-+=================================+=====================+==============================+
-|DEVICE_CTRL_SET_INT              |uart_it_type         |开启uart设备中断              |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_CLR_INT              |uart_it_type         |关闭uart设备中断              |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_CONFIG               |uart_param_cfg_t*    |修改串口配置                  |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_ATTACH_TX_DMA        |struct device*       |链接发送dma设备               |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_ATTACH_RX_DMA        |struct device*       |链接接收dma设备               |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_ATTACH_RX_DMA        |struct device*       |链接接收dma设备               |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_TX_DMA_SUSPEND       |NULL                 |挂起uart tx dma模式           |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_RX_DMA_SUSPEND       |NULL                 |挂起uart rx dma模式           |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_TX_DMA_RESUME        |NULL                 |恢复uart tx dma模式           |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_RX_DMA_RESUME        |NULL                 |恢复uart rx dma模式           |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_UART_GET_TX_FIFO     |uint32_t*            |获取uart 发送fifo数据个数     |
-+---------------------------------+---------------------+------------------------------+
-|DEVICE_CTRL_UART_GET_RX_FIFO     |uint32_t*            |获取uart 接收fifo数据个数     |
-+---------------------------------+---------------------+------------------------------+
+    * - cmd
+      - args
+      - description
+    * - DEVICE_CTRL_SET_INT
+      - uart_it_type
+      - 开启 uart 设备中断
+    * - DEVICE_CTRL_CLR_INT
+      - uart_it_type
+      - 关闭 uart 设备中断
+    * - DEVICE_CTRL_CONFIG
+      - uart_param_cfg_t*
+      - 修改串口配置
+    * - DEVICE_CTRL_ATTACH_TX_DMA
+      - NULL
+      - 链接发送 dma 设备
+    * - DEVICE_CTRL_ATTACH_RX_DMA
+      - NULL
+      - 链接接收 dma 设备
+    * - DEVICE_CTRL_TX_DMA_SUSPEND
+      - NULL
+      - 挂起uart tx dma模式
+    * - DEVICE_CTRL_RX_DMA_SUSPEND
+      - NULL
+      - 挂起uart rx dma模式
+    * - DEVICE_CTRL_TX_DMA_RESUME
+      - NULL
+      - 恢复uart tx dma模式
+    * - DEVICE_CTRL_RX_DMA_RESUME
+      - NULL
+      - 恢复uart rx dma模式
+    * - DEVICE_CTRL_UART_GET_TX_FIFO
+      - uint32_t*
+      - 获取uart tx fifo 数据个数
+    * - DEVICE_CTRL_UART_GET_RX_FIFO
+      - uint32_t*
+      - 获取uart rx fifo 数据个数
 
 **device_write**
 ^^^^^^^^^^^^^^^^

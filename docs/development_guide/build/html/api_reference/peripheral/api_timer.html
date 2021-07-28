@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3.11. TIMER 设备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>2.11. TIMER 设备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../../genindex.html" />
     <link rel="search" title="搜索" href="../../search.html" />
-    <link rel="next" title="3.12. USB 设备" href="api_usb.html" />
-    <link rel="prev" title="3.10. DAC 设备" href="api_dac.html" /> 
+    <link rel="next" title="2.12. USB 设备" href="api_usb.html" />
+    <link rel="prev" title="2.10. DAC 设备" href="api_dac.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,47 +92,48 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. 开发环境搭建指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board 配置系统使用指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API 概述</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../board.html">2. Board 配置系统</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. Peripheral</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api_clock.html">3.1. 时钟树</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">3.2. GPIO 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_uart.html">3.3. UART 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_pwm.html">3.4. PWM 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_dma.html">3.5. DMA 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">3.6. I2C 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_i2s.html">3.7. I2S 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_spi.html">3.8. SPI 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_adc.html">3.9. ADC 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_dac.html">3.10. DAC 设备</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">3.11. TIMER 设备</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">3.11.1. 简介</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">3.11.2. TIMER 设备结构体定义</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">3.11.3. TIMER 设备参数配置表</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">3.11.4. TIMER 设备接口</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#timer-register">3.11.4.1. <strong>timer_register</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-open">3.11.4.2. <strong>device_open</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-close">3.11.4.3. <strong>device_close</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-control">3.11.4.4. <strong>device_control</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">3.11.4.5. <strong>device_set_callback</strong></a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. Peripheral</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_clock.html">2.1. 时钟树</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">2.2. GPIO 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_uart.html">2.3. UART 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_pwm.html">2.4. PWM 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dma.html">2.5. DMA 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">2.6. I2C 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2s.html">2.7. I2S 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_spi.html">2.8. SPI 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.9. ADC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.10. DAC 设备</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.11. TIMER 设备</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">2.11.1. 简介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">2.11.2. TIMER 设备结构体定义</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">2.11.3. TIMER 设备参数配置表</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">2.11.4. TIMER 设备接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#timer-register">2.11.4.1. <strong>timer_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">2.11.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-close">2.11.4.3. <strong>device_close</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-control">2.11.4.4. <strong>device_control</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-write">2.11.4.5. <strong>device_write</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">2.11.4.6. <strong>device_set_callback</strong></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="api_usb.html">3.12. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.12. USB 设备</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">4. Shell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">6. BLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">5. BLE</a></li>
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
@@ -143,8 +144,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">10. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -202,9 +204,9 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="index.html"><span class="section-number">3. </span>Peripheral</a> &raquo;</li>
+          <li><a href="index.html"><span class="section-number">2. </span>Peripheral</a> &raquo;</li>
         
-      <li><span class="section-number">3.11. </span>TIMER 设备</li>
+      <li><span class="section-number">2.11. </span>TIMER 设备</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -224,9 +226,9 @@
            <div itemprop="articleBody">
             
   <div class="section" id="timer">
-<h1><span class="section-number">3.11. </span>TIMER 设备<a class="headerlink" href="#timer" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">2.11. </span>TIMER 设备<a class="headerlink" href="#timer" title="永久链接至标题">¶</a></h1>
 <div class="section" id="id1">
-<h2><span class="section-number">3.11.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.11.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>TIMER 通用定时器，博流系列 MCU 中 TIMER 设备具有以下特性：</p>
 <ul class="simple">
 <li><p>多种时钟来源选择</p></li>
@@ -240,87 +242,96 @@
 </ul>
 </div>
 <div class="section" id="id2">
-<h2><span class="section-number">3.11.2. </span>TIMER 设备结构体定义<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.11.2. </span>TIMER 设备结构体定义<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">timer_device</span> <span class="p">{</span>
     <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">id</span><span class="p">;</span>
-    <span class="kt">uint8_t</span> <span class="n">ch</span><span class="p">;</span>
-    <span class="kt">uint8_t</span> <span class="n">clk_div</span><span class="p">;</span>
-    <span class="n">timer_cnt_mode</span> <span class="n">cnt_mode</span><span class="p">;</span>
-    <span class="n">timer_pl_trig_t</span> <span class="n">pl_trig_src</span><span class="p">;</span>
+    <span class="k">enum</span> <span class="n">timer_cnt_mode_type</span> <span class="n">cnt_mode</span><span class="p">;</span>
+    <span class="k">enum</span> <span class="n">timer_preload_trigger_type</span> <span class="n">trigger</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">reload</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">timeout1</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">timeout2</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">timeout3</span><span class="p">;</span>
 <span class="p">}</span> <span class="n">timer_device_t</span><span class="p">;</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>parent        继承父类属性</p></li>
 <li><p>id            定时器 id ，使能定时器 0 则 id 为 0 ，使能定时器 1 则 id 为 1 ，以此类推</p></li>
-<li><p>ch            timer 的通道号</p></li>
-<li><p>clk_div       时钟分频系数</p></li>
-<li><p>cnt_mode      计数模式</p></li>
-<li><p>pl_trig_src   比较器的触发源</p></li>
+<li><p>cnt_mode      计数模式：FreeRun 和 PreLoad</p></li>
+<li><p>trigger   比较器的触发源</p></li>
+<li><p>reload    重装载值,只有在 PreLoad 模式下有效</p></li>
+<li><p>timeout1  COMP0 超时时间，单位 us</p></li>
+<li><p>timeout2  COMP1 超时时间，单位 us</p></li>
+<li><p>timeout3  COMP2 超时时间，单位 us</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">ch</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_index_type</span> <span class="p">{</span>
-    <span class="n">TIMER_CH0_INDEX</span><span class="p">,</span>
-    <span class="n">TIMER_CH1_INDEX</span><span class="p">,</span>
+    <span class="n">TIMER0_INDEX</span><span class="p">,</span>
+    <span class="n">TIMER1_INDEX</span><span class="p">,</span>
     <span class="n">TIMER_MAX_INDEX</span>
 <span class="p">};</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">cnt_mode</span></code> 提供以下类型</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_cnt_mode_type</span> <span class="p">{</span>
     <span class="n">TIMER_CNT_PRELOAD</span><span class="p">,</span>
     <span class="n">TIMER_CNT_FREERUN</span><span class="p">,</span>
-<span class="p">}</span> <span class="n">timer_cnt_mode</span><span class="p">;</span>
+<span class="p">};</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">pl_trig_src</span></code> 提供以下类型</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
-    <span class="n">TIMER_PL_TRIG_NONE</span><span class="p">,</span>
-    <span class="n">TIMER_PL_TRIG_COMP0</span><span class="p">,</span>
-    <span class="n">TIMER_PL_TRIG_COMP1</span><span class="p">,</span>
-    <span class="n">TIMER_PL_TRIG_COMP2</span><span class="p">,</span>
-<span class="p">}</span> <span class="n">timer_pl_trig_t</span><span class="p">;</span>
+<p><code class="docutils literal notranslate"><span class="pre">trigger</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_preload_trigger_type</span> <span class="p">{</span>
+    <span class="n">TIMER_PRELOAD_TRIGGER_NONE</span><span class="p">,</span>
+    <span class="n">TIMER_PRELOAD_TRIGGER_COMP0</span><span class="p">,</span>
+    <span class="n">TIMER_PRELOAD_TRIGGER_COMP1</span><span class="p">,</span>
+    <span class="n">TIMER_PRELOAD_TRIGGER_COMP2</span><span class="p">,</span>
+<span class="p">};</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">3.11.3. </span>TIMER 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.11.3. </span>TIMER 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <p>每一个 TIMER 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,变量定义位于 <code class="docutils literal notranslate"><span class="pre">hal_timer.c</span></code> 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_TIMER_CH0</span></code> ，<code class="docutils literal notranslate"><span class="pre">TIMER_CH0_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_INDEX</span></code> 设备就可以进行注册和使用了。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*参数配置宏*/</span>
-<span class="cp">#if defined(BSP_USING_TIMER_CH0)</span>
-<span class="cp">#ifndef TIMER_CH0_CONFIG</span>
-<span class="cp">#define TIMER_CH0_CONFIG                    \</span>
-<span class="cp">    {                                       \</span>
-<span class="cp">        .id = 0,                            \</span>
-<span class="cp">        .ch = 0,                            \</span>
-<span class="cp">        .cnt_mode = TIMER_CNT_PRELOAD,      \</span>
-<span class="cp">        .pl_trig_src = TIMER_PL_TRIG_COMP0, \</span>
+<span class="cp">#if defined(BSP_USING_TIMER0)</span>
+<span class="cp">#ifndef TIMER0_CONFIG</span>
+<span class="cp">#define TIMER0_CONFIG                           \</span>
+<span class="cp">    {                                           \</span>
+<span class="cp">        .id = 0,                                \</span>
+<span class="cp">        .cnt_mode = TIMER_CNT_PRELOAD,          \</span>
+<span class="cp">        .trigger = TIMER_PRELOAD_TRIGGER_COMP2, \</span>
+<span class="cp">        .reload = 0,                            \</span>
+<span class="cp">        .timeout1 = 1000000,                    \</span>
+<span class="cp">        .timeout2 = 2000000,                    \</span>
+<span class="cp">        .timeout3 = 3000000,                    \</span>
 <span class="cp">    }</span>
 <span class="cp">#endif</span>
 <span class="cp">#endif</span>
 
-<span class="cp">#if defined(BSP_USING_TIMER_CH1)</span>
-<span class="cp">#ifndef TIMER_CH1_CONFIG</span>
-<span class="cp">#define TIMER_CH1_CONFIG                    \</span>
-<span class="cp">    {                                       \</span>
-<span class="cp">        .id = 0,                            \</span>
-<span class="cp">        .ch = 1,                            \</span>
-<span class="cp">        .cnt_mode = TIMER_CNT_PRELOAD,      \</span>
-<span class="cp">        .pl_trig_src = TIMER_PL_TRIG_COMP2, \</span>
+<span class="cp">#if defined(BSP_USING_TIMER1)</span>
+<span class="cp">#ifndef TIMER1_CONFIG</span>
+<span class="cp">#define TIMER1_CONFIG                           \</span>
+<span class="cp">    {                                           \</span>
+<span class="cp">        .id = 1,                                \</span>
+<span class="cp">        .cnt_mode = TIMER_CNT_PRELOAD,          \</span>
+<span class="cp">        .trigger = TIMER_PRELOAD_TRIGGER_COMP0, \</span>
+<span class="cp">        .reload = 0,                            \</span>
+<span class="cp">        .timeout1 = 1000000,                    \</span>
+<span class="cp">        .timeout2 = 2000000,                    \</span>
+<span class="cp">        .timeout3 = 3000000,                    \</span>
 <span class="cp">    }</span>
 <span class="cp">#endif</span>
 <span class="cp">#endif</span>
 
 <span class="cm">/*变量定义*/</span>
-<span class="k">enum</span> <span class="n">timer_index_type</span> <span class="p">{</span>
-<span class="cp">#ifdef BSP_USING_TIMER_CH0</span>
-    <span class="n">TIMER_CH0_INDEX</span><span class="p">,</span>
+<span class="k">static</span> <span class="n">timer_device_t</span> <span class="n">timerx_device</span><span class="p">[</span><span class="n">TIMER_MAX_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_TIMER0</span>
+    <span class="n">TIMER0_CONFIG</span><span class="p">,</span>
 <span class="cp">#endif</span>
-<span class="cp">#ifdef BSP_USING_TIMER_CH1</span>
-    <span class="n">TIMER_CH1_INDEX</span><span class="p">,</span>
+<span class="cp">#ifdef BSP_USING_TIMER1</span>
+    <span class="n">TIMER1_CONFIG</span><span class="p">,</span>
 <span class="cp">#endif</span>
-    <span class="n">TIMER_MAX_INDEX</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -330,11 +341,11 @@
 </div>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">3.11.4. </span>TIMER 设备接口<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.11.4. </span>TIMER 设备接口<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <p>TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。</p>
 <div class="section" id="timer-register">
-<h3><span class="section-number">3.11.4.1. </span><strong>timer_register</strong><a class="headerlink" href="#timer-register" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">timer_register</span></code> 用来注册 TIMER 设备标准驱动接口，在注册之前需要打开对应 TIMER 设备的宏定义。例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_TIMER_CH0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_INDEX</span></code> 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_INDEX</span></code> 设备。</p>
+<h3><span class="section-number">2.11.4.1. </span><strong>timer_register</strong><a class="headerlink" href="#timer-register" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">timer_register</span></code> 用来注册 TIMER 设备标准驱动接口，在注册之前需要打开对应 TIMER 设备的宏定义。例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_TIMER0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">TIMER0_INDEX</span></code> 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 <code class="docutils literal notranslate"><span class="pre">TIMER0_INDEX</span></code> 设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">timer_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">timer_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -342,13 +353,13 @@
 <li><p>index 要注册的设备索引</p></li>
 <li><p>name 为注册的设备命名</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">index</span></code> 用来选择 TIMER 设备配置，一个 index 对应一个 TIMER 设备配置，比如 <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_INDEX</span></code> 对应 <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_CONFIG</span></code> 配置，<code class="docutils literal notranslate"><span class="pre">index</span></code> 有如下可选类型</p>
+<p><code class="docutils literal notranslate"><span class="pre">index</span></code> 用来选择 TIMER 设备配置，一个 index 对应一个 TIMER 设备配置，比如 <code class="docutils literal notranslate"><span class="pre">TIMER0_INDEX</span></code> 对应 <code class="docutils literal notranslate"><span class="pre">TIMER0_CONFIG</span></code> 配置，<code class="docutils literal notranslate"><span class="pre">index</span></code> 有如下可选类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_index_type</span> <span class="p">{</span>
-<span class="cp">#ifdef BSP_USING_TIMER_CH0</span>
-    <span class="n">TIMER_CH0_INDEX</span><span class="p">,</span>
+<span class="cp">#ifdef BSP_USING_TIMER0</span>
+    <span class="n">TIMER0_INDEX</span><span class="p">,</span>
 <span class="cp">#endif</span>
-<span class="cp">#ifdef BSP_USING_TIMER_CH1</span>
-    <span class="n">TIMER_CH1_INDEX</span><span class="p">,</span>
+<span class="cp">#ifdef BSP_USING_TIMER1</span>
+    <span class="n">TIMER1_INDEX</span><span class="p">,</span>
 <span class="cp">#endif</span>
     <span class="n">TIMER_MAX_INDEX</span>
 <span class="p">};</span>
@@ -356,7 +367,7 @@
 </div>
 </div>
 <div class="section" id="device-open">
-<h3><span class="section-number">3.11.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.11.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于 TIMER 设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">timer_open</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
 </pre></div>
@@ -367,16 +378,17 @@
 <li><p>return 错误码，0 表示打开成功，其他表示错误</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 可以写入以下参数：</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_INT             0x01</span>
-<span class="cp">#define DEVICE_OFLAG_POLL            0x02</span>
-<span class="cp">#define DEVICE_CTRL_TIMER_CH_START   0x80</span>
-<span class="cp">#define DEVICE_CTRL_TIMER_CH_STOP    0x81</span>
-<span class="cp">#define DEVICE_CTRL_GET_MATCH_STATUS 0x82</span>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* 设备以轮训发送模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* 设备以轮训接收模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* 设备以中断发送模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_RX     0x008 </span><span class="cm">/* 设备以中断接收模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* 设备以 DMA 发送模式打开 */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_RX     0x020 </span><span class="cm">/* 设备以 DMA 接收模式打开 */</span><span class="cp"></span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="device-close">
-<h3><span class="section-number">3.11.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.11.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于设备的关闭。实际调用 <code class="docutils literal notranslate"><span class="pre">timer_close</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
 </pre></div>
@@ -387,7 +399,7 @@
 </ul>
 </div>
 <div class="section" id="device-control">
-<h3><span class="section-number">3.11.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.11.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于根据命令对 TIMER 设备进行控制和参数的修改。实际调用 <code class="docutils literal notranslate"><span class="pre">timer_control</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
 </pre></div>
@@ -398,12 +410,6 @@
 <li><p>args 控制参数</p></li>
 <li><p>return 不同的控制命令返回的意义不同。</p></li>
 </ul>
-<p>TIMER 设备除了标准的控制命令，还具有私有的控制命令。</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_TIMER_CH_START   0x80</span>
-<span class="cp">#define DEVICE_CTRL_TIMER_CH_STOP    0x81</span>
-<span class="cp">#define DEVICE_CTRL_GET_MATCH_STATUS 0x82</span>
-</pre></div>
-</div>
 <p><code class="docutils literal notranslate"><span class="pre">args</span></code> 根据不同的 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 传入不同，具体如下：</p>
 <table class="colwidths-given docutils align-default" id="id5">
 <caption><span class="caption-text">table1</span><a class="headerlink" href="#id5" title="永久链接至表格">¶</a></caption>
@@ -427,35 +433,41 @@
 <td><p>NULL</p></td>
 <td><p>关闭 TIMER 中断</p></td>
 </tr>
-<tr class="row-even"><td><p>DEVICE_CTRL_RESUME</p></td>
+<tr class="row-even"><td><p>DEVICE_CTRL_GET_INT</p></td>
 <td><p>NULL</p></td>
-<td><p>开启 TIMER</p></td>
+<td><p>获取当前中断状态</p></td>
 </tr>
-<tr class="row-odd"><td><p>DEVICE_CTRL_SUSPEND</p></td>
+<tr class="row-odd"><td><p>DEVICE_CTRL_RESUME</p></td>
 <td><p>NULL</p></td>
-<td><p>关闭 TIMER</p></td>
+<td><p>开启 TIMER 设备</p></td>
 </tr>
-<tr class="row-even"><td><p>DEVICE_CTRL_TIMER_CH_START</p></td>
-<td><p>timer_user_cfg_t</p></td>
-<td><p>开启 TIMER 及其中断</p></td>
+<tr class="row-even"><td><p>DEVICE_CTRL_SUSPEND</p></td>
+<td><p>NULL</p></td>
+<td><p>关闭 TIMER 设备</p></td>
 </tr>
-<tr class="row-odd"><td><p>DEVICE_CTRL_TIMER_CH_STOP</p></td>
-<td><p>timer_user_cfg_t</p></td>
-<td><p>关闭 TIMER 及其中断</p></td>
-</tr>
-<tr class="row-even"><td><p>DEVICE_CTRL_GET_CONFIG</p></td>
+<tr class="row-odd"><td><p>DEVICE_CTRL_GET_CONFIG</p></td>
 <td><p>NULL</p></td>
 <td><p>获取 TIMER 当前的计数值</p></td>
-</tr>
-<tr class="row-odd"><td><p>DEVICE_CTRL_GET_MATCH_STATUS</p></td>
-<td><p>uint32_t</p></td>
-<td><p>获取 TIMER 比较器的状态</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<div class="section" id="device-write">
+<h3><span class="section-number">2.11.4.5. </span><strong>device_write</strong><a class="headerlink" href="#device-write" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_write</span></code> 用于 Timer 设备配置超时时间。实际调用 <code class="docutils literal notranslate"><span class="pre">timer_write</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_write</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev 设备句柄</p></li>
+<li><p>pos 无作用</p></li>
+<li><p>buffer timer_timeout_cfg_t 句柄</p></li>
+<li><p>size timer_timeout_cfg_t 个数</p></li>
+<li><p>return 错误码，0 表示写入成功，其他表示错误</p></li>
+</ul>
+</div>
 <div class="section" id="device-set-callback">
-<h3><span class="section-number">3.11.4.5. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.11.4.6. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 用于注册一个 TIMER 中断回调函数。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
 </pre></div>
@@ -492,8 +504,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="api_usb.html" class="btn btn-neutral float-right" title="3.12. USB 设备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="api_dac.html" class="btn btn-neutral float-left" title="3.10. DAC 设备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_usb.html" class="btn btn-neutral float-right" title="2.12. USB 设备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_dac.html" class="btn btn-neutral float-left" title="2.10. DAC 设备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

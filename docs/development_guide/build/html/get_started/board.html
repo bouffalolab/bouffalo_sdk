@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>2. Board 配置系统 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>7. Board 配置系统使用指南 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
-    <link rel="next" title="3. Peripheral" href="peripheral/index.html" />
-    <link rel="prev" title="1. API 概述" href="api_overview.html" /> 
+    <link rel="next" title="1. API 概述" href="../api_reference/api_overview.html" />
+    <link rel="prev" title="6. BLDevCube 烧录工具指南" href="bl_dev_cube.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -90,33 +90,39 @@
             
             
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/index.html">2. 开发环境搭建指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">3. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">7. Board 配置系统使用指南</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">7.1. Board 配置系统中各文件功能介绍</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#board-c">7.1.1. <strong>board.c</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#blxxx-config-h">7.1.2. <strong>blxxx_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clock-config-h">7.1.3. <strong>clock_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#peripheral-config-h">7.1.4. <strong>peripheral_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pinmux-config-h">7.1.5. <strong>pinmux_config.h</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#board-bl-config-wizard">7.2. Board 配置工具 <strong>bl_config_wizard</strong> 的使用</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">7.2.1. 生成一个新的 <strong>pinmux_config.h</strong> 文件</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">7.2.2. 修改原有的 <strong>pinmux_config.h</strong> 文件</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cdk-pinmux-config-h">7.2.3. 在 CDK 工具中修改 <strong>pinmux_config.h</strong> 文件</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#stm32cubemx">7.3. 与 STM32CUBEMX 配置工具的区别</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="api_overview.html">1. API 概述</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Board 配置系统</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">2.1. Board 配置系统的文件组成</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#board-c">2.1.1. <strong>board.c</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#blxxx-config-h">2.1.2. <strong>blxxx_config.h</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#clock-config-h">2.1.3. <strong>clock_config.h</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#peripheral-config-h">2.1.4. <strong>peripheral_config.h</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pinmux-config-h">2.1.5. <strong>pinmux_config.h</strong></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#stm32cubemx">2.2. 与 STM32CUBEMX 配置工具的区别</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="peripheral/index.html">3. Peripheral</a></li>
-<li class="toctree-l1"><a class="reference internal" href="shell/api_shell.html">4. Shell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bluetooth/api_ble.html">6. BLE</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">5. BLE</a></li>
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
@@ -127,8 +133,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">10. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -186,13 +193,13 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">2. </span>Board 配置系统</li>
+      <li><span class="section-number">7. </span>Board 配置系统使用指南</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/api_reference/board.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/get_started/board.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -206,33 +213,34 @@
            <div itemprop="articleBody">
             
   <div class="section" id="board">
-<h1><span class="section-number">2. </span>Board 配置系统<a class="headerlink" href="#board" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">7. </span>Board 配置系统使用指南<a class="headerlink" href="#board" title="永久链接至标题">¶</a></h1>
 <p>为了践行 <strong>一切皆文件</strong> 的思想，我们针对嵌入式应用不同的硬件配置需求，提出了一套 Board 配置系统。 <strong>Board 配置系统</strong> 主要是用于嵌入式应用中的时钟、GPIO 、外设默认配置三个基本元素进行初始化的配置系统。</p>
 <p><strong>Board 配置系统</strong>  包含三个配置文件，以及一个 <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> 图形化配置软件</p>
 <ul class="simple">
-<li><p>clock_config.h 时钟配置头文件</p></li>
-<li><p>peripheral_config.h 外设配置头文件</p></li>
-<li><p>pinmux_config.h 引脚功能配置头文件</p></li>
-<li><p>bl_config_wizard 图形化界面配置上述三类文件</p></li>
+<li><p><strong>clock_config.h</strong> 时钟配置头文件</p></li>
+<li><p><strong>peripheral_config.h</strong> 外设配置头文件</p></li>
+<li><p><strong>pinmux_config.h</strong> 引脚功能配置头文件</p></li>
+<li><p><strong>bl_config_wizard</strong> 图形化界面配置上述三类文件</p></li>
 </ul>
-<p>用户只需要修改三个配置文件，系统会自动初始化。从而无需在用户程序中，调用一系列的复杂冗长的初始化函数， Boufflao Lab 为方便用户快速简便的生成项目对应的 board 文件，提供了 <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> 配置软件，但目前正处于开发阶段。</p>
-<div class="figure align-default" id="id2">
+<p>用户只需要修改三个配置文件，系统会自动初始化，从而无需在用户程序中，调用一系列的复杂冗长的初始化函数。 Boufflao Lab 为方便用户快速简便的生成项目对应的配置文件，提供了 <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> 配置软件，目前已支持引脚配置功能，但时钟配置和外设配置功能正处于开发阶段。</p>
+<p><a class="reference external" href="https://dev.bouffalolab.com/media/config/index.html">bl_config_wizard</a> 支持 PC 端在线配置，目前不支持移动终端在线配置。</p>
+<div class="figure align-default" id="id4">
 <img alt="" src="../_images/config_wizard.png" />
-<p class="caption"><span class="caption-text">bl_config_wizard 软件预览</span><a class="headerlink" href="#id2" title="永久链接至图片">¶</a></p>
+<p class="caption"><span class="caption-text">bl_config_wizard 软件预览</span><a class="headerlink" href="#id4" title="永久链接至图片">¶</a></p>
 </div>
 <div class="section" id="id1">
-<h2><span class="section-number">2.1. </span>Board 配置系统的文件组成<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">7.1. </span>Board 配置系统中各文件功能介绍<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>Board 系统主要针对不同的板子来使用，不同的板子创建不同的 board 文件，放在 <code class="docutils literal notranslate"><span class="pre">bsp/board</span></code> 目录下，并且一个 board 文件，在 <strong>引脚不冲突</strong> 的情况下，可以共享给不同的 demo 使用，无需再创建多个工程，减少工程文件大小。</p>
 <div class="admonition error">
 <p class="admonition-title">错误</p>
 <p>如果引脚冲突，并且非要使用一个 board 文件，请自行修改引脚</p>
 </div>
 <div class="section" id="board-c">
-<h3><span class="section-number">2.1.1. </span><strong>board.c</strong><a class="headerlink" href="#board-c" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">7.1.1. </span><strong>board.c</strong><a class="headerlink" href="#board-c" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">board.c</span></code> 主要对时钟、引脚进行初始化</p>
 </div>
 <div class="section" id="blxxx-config-h">
-<h3><span class="section-number">2.1.2. </span><strong>blxxx_config.h</strong><a class="headerlink" href="#blxxx-config-h" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">7.1.2. </span><strong>blxxx_config.h</strong><a class="headerlink" href="#blxxx-config-h" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">blxxx_config.h</span></code> 主要是包含一些头文件，给 HAL 层驱动使用。</p>
 <div class="admonition hint">
 <p class="admonition-title">提示</p>
@@ -240,11 +248,11 @@
 </div>
 </div>
 <div class="section" id="clock-config-h">
-<h3><span class="section-number">2.1.3. </span><strong>clock_config.h</strong><a class="headerlink" href="#clock-config-h" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">7.1.3. </span><strong>clock_config.h</strong><a class="headerlink" href="#clock-config-h" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">clock_config.h</span></code> 主要配置系统和外设的时钟源以及分频系统。</p>
 </div>
 <div class="section" id="peripheral-config-h">
-<h3><span class="section-number">2.1.4. </span><strong>peripheral_config.h</strong><a class="headerlink" href="#peripheral-config-h" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">7.1.4. </span><strong>peripheral_config.h</strong><a class="headerlink" href="#peripheral-config-h" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 主要包含外设的使能以及参数的配置。</p>
 <div class="admonition warning">
 <p class="admonition-title">警告</p>
@@ -256,7 +264,7 @@
 </div>
 </div>
 <div class="section" id="pinmux-config-h">
-<h3><span class="section-number">2.1.5. </span><strong>pinmux_config.h</strong><a class="headerlink" href="#pinmux-config-h" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">7.1.5. </span><strong>pinmux_config.h</strong><a class="headerlink" href="#pinmux-config-h" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pinmux_config.h</span></code> 主要配置外设的 GPIO 引脚功能。</p>
 <div class="admonition warning">
 <p class="admonition-title">警告</p>
@@ -264,8 +272,61 @@
 </div>
 </div>
 </div>
+<div class="section" id="board-bl-config-wizard">
+<h2><span class="section-number">7.2. </span>Board 配置工具 <strong>bl_config_wizard</strong> 的使用<a class="headerlink" href="#board-bl-config-wizard" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id2">
+<h3><span class="section-number">7.2.1. </span>生成一个新的 <strong>pinmux_config.h</strong> 文件<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
+<ol class="arabic simple">
+<li><p>在窗口栏选择 <code class="docutils literal notranslate"><span class="pre">引脚&amp;外设配置</span></code>；</p></li>
+<li><p>选择 MCU 型号，目前支持 <code class="docutils literal notranslate"><span class="pre">BL706引脚配置</span></code>、 <code class="docutils literal notranslate"><span class="pre">BL704引脚配置</span></code> 、 <code class="docutils literal notranslate"><span class="pre">BL702引脚配置</span></code> ；</p></li>
+<li><p>选择引脚的功能，以 <code class="docutils literal notranslate"><span class="pre">BL706引脚配置</span></code> 为例，点击 <strong>PAD_GPIO_XX</strong> 的下拉框，选择需要的功能，如图所示；</p></li>
+</ol>
+<div class="figure align-default" id="id5">
+<img alt="" src="../_images/config_wizard_example1.png" />
+<p class="caption"><span class="caption-text">选择引脚功能图</span><a class="headerlink" href="#id5" title="永久链接至图片">¶</a></p>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>配置好所有引脚功能后，点击 <code class="docutils literal notranslate"><span class="pre">导出配置文件</span></code> ，然后可在弹框内选择路径和修改文件名，如图所示；</p></li>
+</ol>
+<div class="figure align-default" id="id6">
+<img alt="" src="../_images/config_wizard_example2.png" />
+<p class="caption"><span class="caption-text">导出配置文件图</span><a class="headerlink" href="#id6" title="永久链接至图片">¶</a></p>
+</div>
+</div>
+<div class="section" id="id3">
+<h3><span class="section-number">7.2.2. </span>修改原有的 <strong>pinmux_config.h</strong> 文件<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<p>往往在使用中，我们不是生成一个新的 <strong>pinmux_config.h</strong> 文件，而是在原有的 <strong>pinmux_config.h</strong> 文件基础上做修改，<code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> 支持这样的需求。</p>
+<ol class="arabic simple">
+<li><p>在窗口栏选择 <code class="docutils literal notranslate"><span class="pre">引脚&amp;外设配置</span></code>；</p></li>
+<li><p>选择 MCU 型号，目前支持 <code class="docutils literal notranslate"><span class="pre">BL706引脚配置</span></code>、 <code class="docutils literal notranslate"><span class="pre">BL704引脚配置</span></code> 、 <code class="docutils literal notranslate"><span class="pre">BL702引脚配置</span></code> ；</p></li>
+<li><p>点击 <code class="docutils literal notranslate"><span class="pre">导入配置文件</span></code>，然后在弹框内选择 <strong>pinmux_config.h</strong> 文件；</p></li>
+<li><p>选择需要修改的引脚，点击其下拉框，更改引脚功能；</p></li>
+<li><p>修改完成后，点击 <code class="docutils literal notranslate"><span class="pre">导出配置文件</span></code> ，然后可在弹框内选择路径和修改文件名。</p></li>
+</ol>
+</div>
+<div class="section" id="cdk-pinmux-config-h">
+<h3><span class="section-number">7.2.3. </span>在 CDK 工具中修改 <strong>pinmux_config.h</strong> 文件<a class="headerlink" href="#cdk-pinmux-config-h" title="永久链接至标题">¶</a></h3>
+<ul>
+<li><p><strong>pinmux_config.h</strong>  同时还支持在 CDK 使用图形配置向导进行相应引脚功能的调整</p></li>
+<li><p>直接将 <strong>pinmux_config.h</strong> 文件拖入 CDK 文本编辑界面，在文本编辑下方即可看到 <code class="docutils literal notranslate"><span class="pre">Configuration</span> <span class="pre">Wizard</span></code> 标签</p>
+<div class="figure align-default" id="id7">
+<img alt="" src="../_images/configuration_wizard_1.png" />
+<p class="caption"><span class="caption-text">图形配置向导</span><a class="headerlink" href="#id7" title="永久链接至图片">¶</a></p>
+</div>
+</li>
+<li><p>点击 <code class="docutils literal notranslate"><span class="pre">Configuration</span> <span class="pre">Wizard</span></code> 标签，即可打开图形配置向导界面</p></li>
+<li><p>通过选择下拉框即可选择该引脚支持的功能</p>
+<div class="figure align-default" id="id8">
+<img alt="" src="../_images/configuration_wizard_2.png" />
+<p class="caption"><span class="caption-text">图形配置向导设置引脚功能</span><a class="headerlink" href="#id8" title="永久链接至图片">¶</a></p>
+</div>
+</li>
+<li><p>图形配置向导的具体功能和代码规则，详情请参考 CDK Help 的图形配置向导章节</p></li>
+</ul>
+</div>
+</div>
 <div class="section" id="stm32cubemx">
-<h2><span class="section-number">2.2. </span>与 STM32CUBEMX 配置工具的区别<a class="headerlink" href="#stm32cubemx" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">7.3. </span>与 STM32CUBEMX 配置工具的区别<a class="headerlink" href="#stm32cubemx" title="永久链接至标题">¶</a></h2>
 <p>STM32CUBEMX 也是一个配置时钟、外设和 GPIO 初始化的工具，最终生成一个完整的工程，初始化都放在 <code class="docutils literal notranslate"><span class="pre">main.c</span></code> 的最开始 ，GPIO 和外设初始化底层会调用到 <code class="docutils literal notranslate"><span class="pre">stm32xxx_hal_msp.c</span></code> 中。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/* MCU Configuration--------------------------------------------------------*/</span>
 
@@ -336,8 +397,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="peripheral/index.html" class="btn btn-neutral float-right" title="3. Peripheral" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="api_overview.html" class="btn btn-neutral float-left" title="1. API 概述" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../api_reference/api_overview.html" class="btn btn-neutral float-right" title="1. API 概述" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="bl_dev_cube.html" class="btn btn-neutral float-left" title="6. BLDevCube 烧录工具指南" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

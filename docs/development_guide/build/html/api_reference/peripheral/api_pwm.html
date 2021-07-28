@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3.4. PWM 设备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>2.4. PWM 设备 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../../genindex.html" />
     <link rel="search" title="搜索" href="../../search.html" />
-    <link rel="next" title="3.5. DMA 设备" href="api_dma.html" />
-    <link rel="prev" title="3.3. UART 设备" href="api_uart.html" /> 
+    <link rel="next" title="2.5. DMA 设备" href="api_dma.html" />
+    <link rel="prev" title="2.3. UART 设备" href="api_uart.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,52 +92,52 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. 开发环境搭建指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board 配置系统使用指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API 概述</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../board.html">2. Board 配置系统</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. Peripheral</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="api_clock.html">3.1. 时钟树</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">3.2. GPIO 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_uart.html">3.3. UART 设备</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">3.4. PWM 设备</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">3.4.1. 简介</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">3.4.2. PWM 设备结构体定义</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">3.4.3. PWM 设备参数配置表</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">3.4.4. PWM 设备接口</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#pwm-register">3.4.4.1. <strong>pwm_register</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-open">3.4.4.2. <strong>device_open</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-close">3.4.4.3. <strong>device_close</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-control">3.4.4.4. <strong>device_control</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">3.4.4.5. <strong>device_set_callback</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-start">3.4.4.6. <strong>pwm_channel_start</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-stop">3.4.4.7. <strong>pwm_channel_stop</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-freq-update">3.4.4.8. <strong>pwm_channel_freq_update</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-dutycycle-update">3.4.4.9. <strong>pwm_channel_dutycycle_update</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pwm-it-pulse-count-update">3.4.4.10. <strong>pwm_it_pulse_count_update</strong></a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. Peripheral</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_clock.html">2.1. 时钟树</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">2.2. GPIO 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_uart.html">2.3. UART 设备</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.4. PWM 设备</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">2.4.1. 简介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">2.4.2. PWM 设备结构体定义</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">2.4.3. PWM 设备参数配置表</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">2.4.4. PWM 设备接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-register">2.4.4.1. <strong>pwm_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">2.4.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-close">2.4.4.3. <strong>device_close</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-control">2.4.4.4. <strong>device_control</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">2.4.4.5. <strong>device_set_callback</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-start">2.4.4.6. <strong>pwm_channel_start</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-stop">2.4.4.7. <strong>pwm_channel_stop</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-freq-update">2.4.4.8. <strong>pwm_channel_freq_update</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-dutycycle-update">2.4.4.9. <strong>pwm_channel_dutycycle_update</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-it-pulse-count-update">2.4.4.10. <strong>pwm_it_pulse_count_update</strong></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="api_dma.html">3.5. DMA 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">3.6. I2C 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_i2s.html">3.7. I2S 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_spi.html">3.8. SPI 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_adc.html">3.9. ADC 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_dac.html">3.10. DAC 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_timer.html">3.11. TIMER 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_usb.html">3.12. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dma.html">2.5. DMA 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">2.6. I2C 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2s.html">2.7. I2S 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_spi.html">2.8. SPI 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.9. ADC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.10. DAC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.11. TIMER 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.12. USB 设备</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">4. Shell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">6. BLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">5. BLE</a></li>
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
@@ -148,8 +148,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">10. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -207,9 +208,9 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="index.html"><span class="section-number">3. </span>Peripheral</a> &raquo;</li>
+          <li><a href="index.html"><span class="section-number">2. </span>Peripheral</a> &raquo;</li>
         
-      <li><span class="section-number">3.4. </span>PWM 设备</li>
+      <li><span class="section-number">2.4. </span>PWM 设备</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -229,9 +230,9 @@
            <div itemprop="articleBody">
             
   <div class="section" id="pwm">
-<h1><span class="section-number">3.4. </span>PWM 设备<a class="headerlink" href="#pwm" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">2.4. </span>PWM 设备<a class="headerlink" href="#pwm" title="永久链接至标题">¶</a></h1>
 <div class="section" id="id1">
-<h2><span class="section-number">3.4.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.4.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>脉冲宽度调制（Pulse width modulation，简称 PWM）是一种用数字方式实现模拟电压控制的技术。它是通过对一系列脉冲的宽度进行调制，等效出所需要的波形（包含形状以及幅值），对模拟信号电平进行数字编码，也就是说通过调节占空比的变化来调节信号、能量等的变化，占空比就是指在一个周期内，信号处于高电平的时间占据整个信号周期的百分比，例如方波的占空比就是50%。博流系列 MCU 中 DMA 设备具有以下特性：</p>
 <ul class="simple">
 <li><p>支持5通道 PWM 信号生成</p></li>
@@ -240,7 +241,7 @@
 </ul>
 </div>
 <div class="section" id="id2">
-<h2><span class="section-number">3.4.2. </span>PWM 设备结构体定义<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.4.2. </span>PWM 设备结构体定义<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">pwm_device</span> <span class="p">{</span>
     <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">ch</span><span class="p">;</span>
@@ -272,7 +273,7 @@
 </div>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">3.4.3. </span>PWM 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.4.3. </span>PWM 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <p>每一个 PWM 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,变量定义位于 <code class="docutils literal notranslate"><span class="pre">hal_pwm.c</span></code> 中，因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH2</span></code> ，<code class="docutils literal notranslate"><span class="pre">PWM_CH2_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">PWM</span></code> 设备的通道2就可以进行注册和使用了。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*参数配置宏*/</span>
 <span class="cp">#if defined(BSP_USING_PWM_CH2)</span>
@@ -316,10 +317,10 @@
 </div>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">3.4.4. </span>PWM 设备接口<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">2.4.4. </span>PWM 设备接口<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <p>PWM 设备接口全部遵循标准设备驱动管理层提供的接口。并且为了方便用户调用，将某些标准接口使用宏来重定义。</p>
 <div class="section" id="pwm-register">
-<h3><span class="section-number">3.4.4.1. </span><strong>pwm_register</strong><a class="headerlink" href="#pwm-register" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.1. </span><strong>pwm_register</strong><a class="headerlink" href="#pwm-register" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pwm_register</span></code> 用来注册 PWM 设备的一个通道的标准驱动接口，在注册之前需要打开对应 PWM 设备某个通道的宏定义,例如定义 <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">PWM</span></code> 通道0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 PWM 设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">pwm_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">pwm_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
@@ -352,7 +353,7 @@
 </div>
 </div>
 <div class="section" id="device-open">
-<h3><span class="section-number">3.4.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">pwm_open</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
 </pre></div>
@@ -373,7 +374,7 @@
 </div>
 </div>
 <div class="section" id="device-close">
-<h3><span class="section-number">3.4.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于设备的关闭。实际调用 <code class="docutils literal notranslate"><span class="pre">pwm_close</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
 </pre></div>
@@ -384,7 +385,7 @@
 </ul>
 </div>
 <div class="section" id="device-control">
-<h3><span class="section-number">3.4.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于根据命令对设备进行控制和参数的修改。实际调用 <code class="docutils literal notranslate"><span class="pre">pwm_control</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
 </pre></div>
@@ -400,11 +401,12 @@
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">args</span></code> 根据不同的 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 传入不同，具体如下：</p>
-<table class="docutils align-default">
+<table class="colwidths-given docutils align-default" id="id5">
+<caption><span class="caption-text">table1</span><a class="headerlink" href="#id5" title="永久链接至表格">¶</a></caption>
 <colgroup>
-<col style="width: 44%" />
-<col style="width: 28%" />
 <col style="width: 27%" />
+<col style="width: 18%" />
+<col style="width: 55%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>cmd</p></th>
@@ -413,39 +415,31 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>DEVICE_CTRL_SET_INT</p></td>
-<td><p>NULL</p></td>
-<td><p>弃用</p></td>
-</tr>
-<tr class="row-odd"><td><p>DEVICE_CTRL_CLR_INT</p></td>
-<td><p>NULL</p></td>
-<td><p>弃用</p></td>
-</tr>
 <tr class="row-even"><td><p>DEVICE_CTRL_RESUME</p></td>
 <td><p>NULL</p></td>
-<td><p>开启当前PWM通道</p></td>
+<td><p>开启当前 PWM 通道</p></td>
 </tr>
 <tr class="row-odd"><td><p>DEVICE_CTRL_SUSPEND</p></td>
 <td><p>NULL</p></td>
-<td><p>关闭当前PWM通道</p></td>
+<td><p>关闭当前 PWM 通道</p></td>
 </tr>
 <tr class="row-even"><td><p>DEVICE_CTRL_PWM_FREQUENCE_CONFIG</p></td>
-<td><p>uint32_t</p></td>
-<td><p>配置当前PWM通道周期值</p></td>
+<td><p>NULL</p></td>
+<td><p>配置当前 PWM 通道周期值</p></td>
 </tr>
 <tr class="row-odd"><td><p>DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG</p></td>
-<td><p>pwm_dutycycle_config_t</p></td>
-<td><p>配置当前PWM通道占空比</p></td>
+<td><p>NULL</p></td>
+<td><p>配置当前 PWM 通道占空比</p></td>
 </tr>
 <tr class="row-even"><td><p>DEVICE_CTRL_PWM_IT_PULSE_COUNT_CONFIG</p></td>
-<td><p>uint32_t</p></td>
-<td><p>配置触发PWM中断周期值</p></td>
+<td><p>NULL</p></td>
+<td><p>配置触发 PWM 中断周期值</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="device-set-callback">
-<h3><span class="section-number">3.4.4.5. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.5. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 用于注册一个PWM通道中断回调函数。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
 </pre></div>
@@ -472,7 +466,7 @@
 </div>
 </div>
 <div class="section" id="pwm-channel-start">
-<h3><span class="section-number">3.4.4.6. </span><strong>pwm_channel_start</strong><a class="headerlink" href="#pwm-channel-start" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.6. </span><strong>pwm_channel_start</strong><a class="headerlink" href="#pwm-channel-start" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pwm_channel_start</span></code> 用于开启PWM通道。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEVICE_CTRL_RESUME</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_start</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
 </pre></div>
@@ -482,7 +476,7 @@
 </ul>
 </div>
 <div class="section" id="pwm-channel-stop">
-<h3><span class="section-number">3.4.4.7. </span><strong>pwm_channel_stop</strong><a class="headerlink" href="#pwm-channel-stop" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.7. </span><strong>pwm_channel_stop</strong><a class="headerlink" href="#pwm-channel-stop" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pwm_channel_stop</span></code> 用于关闭PWM通道。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEVICE_CTRL_SUSPEND</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_stop</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
 </pre></div>
@@ -492,7 +486,7 @@
 </ul>
 </div>
 <div class="section" id="pwm-channel-freq-update">
-<h3><span class="section-number">3.4.4.8. </span><strong>pwm_channel_freq_update</strong><a class="headerlink" href="#pwm-channel-freq-update" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.8. </span><strong>pwm_channel_freq_update</strong><a class="headerlink" href="#pwm-channel-freq-update" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pwm_channel_freq_update</span></code> 用于更新PWM通道的频率。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_FREQUENCE_CONFIG</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_freq_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">count</span><span class="p">)</span>
 </pre></div>
@@ -503,7 +497,7 @@
 </ul>
 </div>
 <div class="section" id="pwm-channel-dutycycle-update">
-<h3><span class="section-number">3.4.4.9. </span><strong>pwm_channel_dutycycle_update</strong><a class="headerlink" href="#pwm-channel-dutycycle-update" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.9. </span><strong>pwm_channel_dutycycle_update</strong><a class="headerlink" href="#pwm-channel-dutycycle-update" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pwm_channel_dutycycle_update</span></code> 用于更新PWM通道的频率。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_dutycycle_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">cfg</span><span class="p">)</span>
 </pre></div>
@@ -514,7 +508,7 @@
 </ul>
 </div>
 <div class="section" id="pwm-it-pulse-count-update">
-<h3><span class="section-number">3.4.4.10. </span><strong>pwm_it_pulse_count_update</strong><a class="headerlink" href="#pwm-it-pulse-count-update" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">2.4.4.10. </span><strong>pwm_it_pulse_count_update</strong><a class="headerlink" href="#pwm-it-pulse-count-update" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pwm_it_pulse_count_update</span></code> 用于更新PWM通道的计数值，需要先使能PWM中断才起作用，当pwm计数达到设置的周期计数值则会产生中断。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_it_pulse_count_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">count</span><span class="p">)</span>
 </pre></div>
@@ -533,8 +527,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="api_dma.html" class="btn btn-neutral float-right" title="3.5. DMA 设备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="api_uart.html" class="btn btn-neutral float-left" title="3.3. UART 设备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_dma.html" class="btn btn-neutral float-right" title="2.5. DMA 设备" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_uart.html" class="btn btn-neutral float-left" title="2.3. UART 设备" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

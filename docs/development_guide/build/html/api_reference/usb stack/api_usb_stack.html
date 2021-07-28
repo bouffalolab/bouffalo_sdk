@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>5. USB Stack &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>4. USB Stack &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../../genindex.html" />
     <link rel="search" title="搜索" href="../../search.html" />
-    <link rel="next" title="6. BLE" href="../bluetooth/api_ble.html" />
-    <link rel="prev" title="4. Shell" href="../shell/api_shell.html" /> 
+    <link rel="next" title="5. BLE" href="../bluetooth/api_ble.html" />
+    <link rel="prev" title="3. Shell" href="../shell/api_shell.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,43 +92,58 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. 开发环境搭建指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board 配置系统使用指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API 概述</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../board.html">2. Board 配置系统</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../peripheral/index.html">3. Peripheral</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">4. Shell</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">5. USB Stack</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#usb-device-porting">5.1. USB DEVICE 协议栈 porting 接口</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#usb-device">5.2. USB DEVICE 控制器接口</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#usb-dc-init">5.2.1. <strong>usb_dc_init</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. USB Stack</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#usb-device-porting">4.1. USB DEVICE 协议栈 porting 接口</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usb-device">4.2. USB DEVICE 控制器接口</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usb-dc-init">4.2.1. <strong>usb_dc_init</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">5.3. USB DEVICE 应用层接口</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id2">5.3.1. USB DEVICE 通用接口</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#usbd-desc-register">5.3.1.1. <strong>usbd_desc_register</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usbd-msosv1-desc-register">5.3.1.2. <strong>usbd_msosv1_desc_register</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usbd-class-add-interface">5.3.1.3. <strong>usbd_class_add_interface</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usbd-interface-add-endpoint">5.3.1.4. <strong>usbd_interface_add_endpoint</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usb-device-is-configured">5.3.1.5. <strong>usb_device_is_configured</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">4.3. USB DEVICE 应用层接口</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">4.3.1. USB DEVICE 通用接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-desc-register">4.3.1.1. <strong>usbd_desc_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-msosv1-desc-register">4.3.1.2. <strong>usbd_msosv1_desc_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-class-add-interface">4.3.1.3. <strong>usbd_class_add_interface</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-interface-add-endpoint">4.3.1.4. <strong>usbd_interface_add_endpoint</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usb-device-is-configured">4.3.1.5. <strong>usb_device_is_configured</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#usb-device-cdc">5.3.2. USB Device CDC 类接口</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usb-device-msc">5.3.3. USB Device MSC 类接口</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usb-device-hid">5.3.4. USB Device HID 类接口</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usb-device-audio">5.3.5. USB Device AUDIO 类接口</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usb-device-video">5.3.6. USB Device VIDEO 类接口</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-cdc">4.3.2. USB Device CDC 类接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-cdc-add-acm-interface">4.3.2.1. <strong>usbd_cdc_add_acm_interface</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-msc">4.3.3. USB Device MSC 类接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-msc-class-init">4.3.3.1. <strong>usbd_msc_class_init</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-hid">4.3.4. USB Device HID 类接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-hid-add-interface">4.3.4.1. <strong>usbd_hid_add_interface</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-audio">4.3.5. USB Device AUDIO 类接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-audio-add-interface">4.3.5.1. <strong>usbd_audio_add_interface</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#usb-device-video">4.3.6. USB Device VIDEO 类接口</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-video-add-interface">4.3.6.1. <strong>usbd_video_add_interface</strong></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">6. BLE</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">5. BLE</a></li>
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul>
@@ -139,8 +154,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">10. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -198,7 +214,7 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">5. </span>USB Stack</li>
+      <li><span class="section-number">4. </span>USB Stack</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -218,7 +234,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="usb-stack">
-<h1><span class="section-number">5. </span>USB Stack<a class="headerlink" href="#usb-stack" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">4. </span>USB Stack<a class="headerlink" href="#usb-stack" title="永久链接至标题">¶</a></h1>
 <p>USB Stack 是一个跨平台的、用于嵌入式 MCU 的 USB 协议栈。其中 DEVICE 协议栈对标准设备请求、CLASS 请求、VENDOR 请求规范了一套统一的函数框架，从而对复合设备或者使用自定义设备类时，能够在极短的时间内进行添加和移植。同时提供了一套标准的 dcd porting 接口，供给不同的 MCU 使用,因此，通用性也非常高。此外在代码优美方面，以及内存占用方面也是相当出色。USB DEVICE 协议栈当前具有以下功能：</p>
 <ul class="simple">
 <li><p>支持 USB2.0 全速和高速设备</p></li>
@@ -238,7 +254,7 @@
 <p>USB DEVICE 协议栈的代码实现过程参考 <a class="reference external" href="https://www.bilibili.com/video/BV1Ef4y1t73d">https://www.bilibili.com/video/BV1Ef4y1t73d</a></p>
 </div>
 <div class="section" id="usb-device-porting">
-<h2><span class="section-number">5.1. </span>USB DEVICE 协议栈 porting 接口<a class="headerlink" href="#usb-device-porting" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">4.1. </span>USB DEVICE 协议栈 porting 接口<a class="headerlink" href="#usb-device-porting" title="永久链接至标题">¶</a></h2>
 <p>USB DEVICE 协议栈 porting 接口在 <code class="docutils literal notranslate"><span class="pre">usb_stack/common/usb_dc.h</span></code> 文件中声明，用户根据自己的 MCU 实现以下接口</p>
 <blockquote>
 <div><ul class="simple">
@@ -254,9 +270,9 @@
 </div></blockquote>
 </div>
 <div class="section" id="usb-device">
-<h2><span class="section-number">5.2. </span>USB DEVICE 控制器接口<a class="headerlink" href="#usb-device" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">4.2. </span>USB DEVICE 控制器接口<a class="headerlink" href="#usb-device" title="永久链接至标题">¶</a></h2>
 <div class="section" id="usb-dc-init">
-<h3><span class="section-number">5.2.1. </span><strong>usb_dc_init</strong><a class="headerlink" href="#usb-dc-init" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">4.2.1. </span><strong>usb_dc_init</strong><a class="headerlink" href="#usb-dc-init" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">usb_dc_init</span></code> 用来注册 USB 设备和初始化 USB 硬件相关寄存器，注册 usb 中断回调函数。在注册之前需要打开对应 USB 设备的宏定义,例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_USB</span></code> 方可使用 USB 设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">usb_dc_init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
@@ -274,39 +290,185 @@
 </div>
 </div>
 <div class="section" id="id1">
-<h2><span class="section-number">5.3. </span>USB DEVICE 应用层接口<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">4.3. </span>USB DEVICE 应用层接口<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <div class="section" id="id2">
-<h3><span class="section-number">5.3.1. </span>USB DEVICE 通用接口<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">4.3.1. </span>USB DEVICE 通用接口<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
 <div class="section" id="usbd-desc-register">
-<h4><span class="section-number">5.3.1.1. </span><strong>usbd_desc_register</strong><a class="headerlink" href="#usbd-desc-register" title="永久链接至标题">¶</a></h4>
+<h4><span class="section-number">4.3.1.1. </span><strong>usbd_desc_register</strong><a class="headerlink" href="#usbd-desc-register" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_desc_register</span></code> 用来注册 USB 描述符，描述符种类包括：设备描述符、配置描述符、接口描述符、字符串描述符、设备限定描述符。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_desc_register</span><span class="p">(</span><span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">desc</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>desc  描述符的句柄</p></li>
+</ul>
 </div>
 <div class="section" id="usbd-msosv1-desc-register">
-<h4><span class="section-number">5.3.1.2. </span><strong>usbd_msosv1_desc_register</strong><a class="headerlink" href="#usbd-msosv1-desc-register" title="永久链接至标题">¶</a></h4>
+<h4><span class="section-number">4.3.1.2. </span><strong>usbd_msosv1_desc_register</strong><a class="headerlink" href="#usbd-msosv1-desc-register" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_msosv1_desc_register</span></code> 用来注册一个 WINUSB 描述符，格式按照 <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">usb_msosv1_descriptor</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_msosv1_desc_register</span><span class="p">(</span><span class="k">struct</span> <span class="nc">usb_msosv1_descriptor</span> <span class="o">*</span><span class="n">desc</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>desc  描述符句柄</p></li>
+</ul>
 </div>
 <div class="section" id="usbd-class-add-interface">
-<h4><span class="section-number">5.3.1.3. </span><strong>usbd_class_add_interface</strong><a class="headerlink" href="#usbd-class-add-interface" title="永久链接至标题">¶</a></h4>
+<h4><span class="section-number">4.3.1.3. </span><strong>usbd_class_add_interface</strong><a class="headerlink" href="#usbd-class-add-interface" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_class_add_interface</span></code> 用来给 USB 设备类增加接口，并将接口信息挂载在类的链表上。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_class_add_interface</span><span class="p">(</span><span class="n">usbd_class_t</span> <span class="o">*</span><span class="n">class</span><span class="p">,</span> <span class="n">usbd_interface_t</span> <span class="o">*</span><span class="n">intf</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>class  USB 设备类的句柄</p></li>
+<li><p>intf   USB 设备接口的句柄</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_class_t</span></code> 定义如下</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">usbd_class</span> <span class="p">{</span>
+    <span class="n">usb_slist_t</span> <span class="n">list</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">;</span>
+    <span class="n">usb_slist_t</span> <span class="n">intf_list</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">usbd_class_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>list 类的链表节点</p></li>
+<li><p>name 类的名称</p></li>
+<li><p>intf_list 接口的链表节点</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_interface_t</span></code> 定义如下</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">usbd_interface</span> <span class="p">{</span>
+    <span class="n">usb_slist_t</span> <span class="n">list</span><span class="p">;</span>
+    <span class="cm">/** Handler for USB Class specific Control (EP 0) communications */</span>
+    <span class="n">usbd_request_handler</span> <span class="n">class_handler</span><span class="p">;</span>
+    <span class="cm">/** Handler for USB Vendor specific commands */</span>
+    <span class="n">usbd_request_handler</span> <span class="n">vendor_handler</span><span class="p">;</span>
+    <span class="cm">/** Handler for USB custom specific commands */</span>
+    <span class="n">usbd_request_handler</span> <span class="n">custom_handler</span><span class="p">;</span>
+    <span class="cm">/** Handler for USB event notify commands */</span>
+    <span class="n">usbd_notify_handler</span> <span class="n">notify_handler</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">intf_num</span><span class="p">;</span>
+    <span class="n">usb_slist_t</span> <span class="n">ep_list</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">usbd_interface_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>list 接口的链表节点</p></li>
+<li><p>class_handler class setup 请求回调函数</p></li>
+<li><p>vendor_handler vendor setup 请求回调函数</p></li>
+<li><p>custom_handler custom setup 请求回调函数</p></li>
+<li><p>notify_handler 中断标志、协议栈相关状态回调函数</p></li>
+<li><p>intf_num 当前接口偏移</p></li>
+<li><p>ep_list 端点的链表节点</p></li>
+</ul>
 </div>
 <div class="section" id="usbd-interface-add-endpoint">
-<h4><span class="section-number">5.3.1.4. </span><strong>usbd_interface_add_endpoint</strong><a class="headerlink" href="#usbd-interface-add-endpoint" title="永久链接至标题">¶</a></h4>
+<h4><span class="section-number">4.3.1.4. </span><strong>usbd_interface_add_endpoint</strong><a class="headerlink" href="#usbd-interface-add-endpoint" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_interface_add_endpoint</span></code> 用来给 USB 接口增加端点，并将端点信息挂载在接口的链表上。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_interface_add_endpoint</span><span class="p">(</span><span class="n">usbd_interface_t</span> <span class="o">*</span><span class="n">intf</span><span class="p">,</span> <span class="n">usbd_endpoint_t</span> <span class="o">*</span><span class="n">ep</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>intf  USB 设备接口的句柄</p></li>
+<li><p>ep    USB 设备端点的句柄</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_class_t</span></code> 定义如下</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">usbd_endpoint</span> <span class="p">{</span>
+    <span class="n">usb_slist_t</span> <span class="n">list</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">ep_addr</span><span class="p">;</span>
+    <span class="n">usbd_endpoint_callback</span> <span class="n">ep_cb</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">usbd_endpoint_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>list 端点的链表节点</p></li>
+<li><p>ep_addr 端点地址</p></li>
+<li><p>ep_cb 端点中断回调函数</p></li>
+</ul>
 </div>
 <div class="section" id="usb-device-is-configured">
-<h4><span class="section-number">5.3.1.5. </span><strong>usb_device_is_configured</strong><a class="headerlink" href="#usb-device-is-configured" title="永久链接至标题">¶</a></h4>
+<h4><span class="section-number">4.3.1.5. </span><strong>usb_device_is_configured</strong><a class="headerlink" href="#usb-device-is-configured" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usb_device_is_configured</span></code> 用来检查 USB 设备是否被配置（枚举）。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span> <span class="nf">usb_device_is_configured</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>return 配置状态， 0 表示未配置， 1 表示配置成功</p></li>
+</ul>
 </div>
 </div>
 <div class="section" id="usb-device-cdc">
-<h3><span class="section-number">5.3.2. </span>USB Device CDC 类接口<a class="headerlink" href="#usb-device-cdc" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">4.3.2. </span>USB Device CDC 类接口<a class="headerlink" href="#usb-device-cdc" title="永久链接至标题">¶</a></h3>
+<div class="section" id="usbd-cdc-add-acm-interface">
+<h4><span class="section-number">4.3.2.1. </span><strong>usbd_cdc_add_acm_interface</strong><a class="headerlink" href="#usbd-cdc-add-acm-interface" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_cdc_add_acm_interface</span></code> 用来给 USB CDC ACM 类添加接口，并重写该接口相关的函数。重写的函数包括 <code class="docutils literal notranslate"><span class="pre">cdc_acm_class_request_handler</span></code> 和 <code class="docutils literal notranslate"><span class="pre">cdc_notify_handler</span></code>，
+其中 <code class="docutils literal notranslate"><span class="pre">cdc_acm_class_request_handler</span></code> 用于处理 USB CDC ACM Setup 中断请求， <code class="docutils literal notranslate"><span class="pre">cdc_notify_handler</span></code> 用于实现 USB CDC 其他中断回调函数。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_cdc_add_acm_interface</span><span class="p">(</span><span class="n">usbd_class_t</span> <span class="o">*</span><span class="n">class</span><span class="p">,</span> <span class="n">usbd_interface_t</span> <span class="o">*</span><span class="n">intf</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>class 类的句柄</p></li>
+<li><p>intf  接口句柄</p></li>
+</ul>
+</div>
 </div>
 <div class="section" id="usb-device-msc">
-<h3><span class="section-number">5.3.3. </span>USB Device MSC 类接口<a class="headerlink" href="#usb-device-msc" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">4.3.3. </span>USB Device MSC 类接口<a class="headerlink" href="#usb-device-msc" title="永久链接至标题">¶</a></h3>
+<div class="section" id="usbd-msc-class-init">
+<h4><span class="section-number">4.3.3.1. </span><strong>usbd_msc_class_init</strong><a class="headerlink" href="#usbd-msc-class-init" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_msc_class_init</span></code> 用于初始化 USB MSC 类，注册 USB CDC ACM 设备并为其添加接口，且为接口添加 BLUK OUT 、BULK IN 端点及其回调函数。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_msc_class_init</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">out_ep</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">in_ep</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>out_ep     输出端点的地址</p></li>
+<li><p>in_ep      输入端点的地址</p></li>
+</ul>
+</div>
 </div>
 <div class="section" id="usb-device-hid">
-<h3><span class="section-number">5.3.4. </span>USB Device HID 类接口<a class="headerlink" href="#usb-device-hid" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">4.3.4. </span>USB Device HID 类接口<a class="headerlink" href="#usb-device-hid" title="永久链接至标题">¶</a></h3>
+<div class="section" id="usbd-hid-add-interface">
+<h4><span class="section-number">4.3.4.1. </span><strong>usbd_hid_add_interface</strong><a class="headerlink" href="#usbd-hid-add-interface" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_hid_add_interface</span></code>  用来给 USB HID 类添加接口，并重写该接口相关的函数。重写的函数包括 <code class="docutils literal notranslate"><span class="pre">hid_class_request_handler</span></code> 、 <code class="docutils literal notranslate"><span class="pre">hid_custom_request_handler</span></code>
+和 <code class="docutils literal notranslate"><span class="pre">hid_notify_handler</span></code>，其中 <code class="docutils literal notranslate"><span class="pre">hid_class_request_handler</span></code> 用来处理 USB HID 类的 Setup 中断请求， <code class="docutils literal notranslate"><span class="pre">hid_custom_request_handler</span></code> 用来处理 USB HID 获取描述符请求，
+<code class="docutils literal notranslate"><span class="pre">hid_notify_handler</span></code>  用来处理 USB HID 类的其他中断回调函数。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_hid_add_interface</span><span class="p">(</span><span class="n">usbd_class_t</span> <span class="o">*</span><span class="n">class</span><span class="p">,</span> <span class="n">usbd_interface_t</span> <span class="o">*</span><span class="n">intf</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>class 类的句柄</p></li>
+<li><p>intf  接口句柄</p></li>
+</ul>
+</div>
 </div>
 <div class="section" id="usb-device-audio">
-<h3><span class="section-number">5.3.5. </span>USB Device AUDIO 类接口<a class="headerlink" href="#usb-device-audio" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">4.3.5. </span>USB Device AUDIO 类接口<a class="headerlink" href="#usb-device-audio" title="永久链接至标题">¶</a></h3>
+<div class="section" id="usbd-audio-add-interface">
+<h4><span class="section-number">4.3.5.1. </span><strong>usbd_audio_add_interface</strong><a class="headerlink" href="#usbd-audio-add-interface" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_audio_add_interface</span></code>  用来给 USB Audio 类添加接口，并重写该接口相关的函数。重写的函数包括 <code class="docutils literal notranslate"><span class="pre">audio_class_request_handler</span></code> 和 <code class="docutils literal notranslate"><span class="pre">audio_notify_handler</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_audio_add_interface</span><span class="p">(</span><span class="n">usbd_class_t</span> <span class="o">*</span><span class="n">class</span><span class="p">,</span> <span class="n">usbd_interface_t</span> <span class="o">*</span><span class="n">intf</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>class 类的句柄</p></li>
+<li><p>intf  接口句柄</p></li>
+</ul>
+</div>
 </div>
 <div class="section" id="usb-device-video">
-<h3><span class="section-number">5.3.6. </span>USB Device VIDEO 类接口<a class="headerlink" href="#usb-device-video" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">4.3.6. </span>USB Device VIDEO 类接口<a class="headerlink" href="#usb-device-video" title="永久链接至标题">¶</a></h3>
+<div class="section" id="usbd-video-add-interface">
+<h4><span class="section-number">4.3.6.1. </span><strong>usbd_video_add_interface</strong><a class="headerlink" href="#usbd-video-add-interface" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_video_add_interface</span></code>  用来给 USB Video 类添加接口，并重写该接口相关的函数。重写的函数包括 <code class="docutils literal notranslate"><span class="pre">video_class_request_handler</span></code> 和 <code class="docutils literal notranslate"><span class="pre">video_notify_handler</span></code>。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_video_add_interface</span><span class="p">(</span><span class="n">usbd_class_t</span> <span class="o">*</span><span class="n">class</span><span class="p">,</span> <span class="n">usbd_interface_t</span> <span class="o">*</span><span class="n">intf</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>class 类的句柄</p></li>
+<li><p>intf  接口句柄</p></li>
+</ul>
+</div>
 </div>
 </div>
 </div>
@@ -317,8 +479,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../bluetooth/api_ble.html" class="btn btn-neutral float-right" title="6. BLE" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../shell/api_shell.html" class="btn btn-neutral float-left" title="4. Shell" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../bluetooth/api_ble.html" class="btn btn-neutral float-right" title="5. BLE" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../shell/api_shell.html" class="btn btn-neutral float-left" title="3. Shell" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

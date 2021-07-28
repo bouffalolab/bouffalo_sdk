@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>6. BLE &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>5. BLE &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -40,7 +40,7 @@
     <link rel="index" title="索引" href="../../genindex.html" />
     <link rel="search" title="搜索" href="../../search.html" />
     <link rel="next" title="1. GPIO 示例" href="../../samples/basic%20samples/gpio/index.html" />
-    <link rel="prev" title="5. USB Stack" href="../usb%20stack/api_usb_stack.html" /> 
+    <link rel="prev" title="4. USB Stack" href="../usb%20stack/api_usb_stack.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,60 +92,60 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">2. 开发环境搭建指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. 开发环境搭建指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board 配置系统使用指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API 概述</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../board.html">2. Board 配置系统</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../peripheral/index.html">3. Peripheral</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">4. Shell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">6. BLE</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">6.1. 概述</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">6.2. BLE 接口</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ble-controller-init">6.2.1. <strong>ble_controller_init</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hci-driver-init">6.2.2. <strong>hci_driver_init</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-enable">6.2.3. <strong>bt_enable</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-adv-start">6.2.4. <strong>bt_le_adv_start</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-adv-update-data">6.2.5. <strong>bt_le_adv_update_data</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-adv-stop">6.2.6. <strong>bt_le_adv_stop</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-scan-start">6.2.7. <strong>bt_le_scan_start</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-scan-stop">6.2.8. <strong>bt_le_scan_stop</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-whitelist-add">6.2.9. <strong>bt_le_whitelist_add</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-whitelist-rem">6.2.10. <strong>bt_le_whitelist_rem</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-whitelist-clear">6.2.11. <strong>bt_le_whitelist_clear</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-set-chan-map">6.2.12. <strong>bt_le_set_chan_map</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-unpair">6.2.13. <strong>bt_unpair</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-get-info">6.2.14. <strong>bt_conn_get_info</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-get-remote-dev-info">6.2.15. <strong>bt_conn_get_remote_dev_info</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-le-param-update">6.2.16. <strong>bt_conn_le_param_update</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-disconnect">6.2.17. <strong>bt_conn_disconnect</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-create-le">6.2.18. <strong>bt_conn_create_le</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-create-auto-le">6.2.19. <strong>bt_conn_create_auto_le</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-create-auto-stop">6.2.20. <strong>bt_conn_create_auto_stop</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-set-auto-conn">6.2.21. <strong>bt_le_set_auto_conn</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-create-slave-le">6.2.22. <strong>bt_conn_create_slave_le</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-set-security">6.2.23. <strong>bt_conn_set_security</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-get-security">6.2.24. <strong>bt_conn_get_security</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-enc-key-size">6.2.25. <strong>bt_conn_enc_key_size</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-cb-register">6.2.26. <strong>bt_conn_cb_register</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-set-bondable">6.2.27. <strong>bt_set_bondable</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-cb-register">6.2.28. <strong>bt_conn_auth_cb_register</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-passkey-entry">6.2.29. <strong>bt_conn_auth_passkey_entry</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-cancel">6.2.30. <strong>bt_conn_auth_cancel</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-passkey-confirm">6.2.31. <strong>bt_conn_auth_passkey_confirm</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-pincode-entry">6.2.32. <strong>bt_conn_auth_pincode_entry</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-le-read-rssi">6.2.33. <strong>bt_le_read_rssi</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-get-local-address">6.2.34. <strong>bt_get_local_address</strong></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bt-set-tx-pwr">6.2.35. <strong>bt_set_tx_pwr</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. BLE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">5.1. 概述</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">5.2. BLE 接口</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ble-controller-init">5.2.1. <strong>ble_controller_init</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hci-driver-init">5.2.2. <strong>hci_driver_init</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-enable">5.2.3. <strong>bt_enable</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-adv-start">5.2.4. <strong>bt_le_adv_start</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-adv-update-data">5.2.5. <strong>bt_le_adv_update_data</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-adv-stop">5.2.6. <strong>bt_le_adv_stop</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-scan-start">5.2.7. <strong>bt_le_scan_start</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-scan-stop">5.2.8. <strong>bt_le_scan_stop</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-whitelist-add">5.2.9. <strong>bt_le_whitelist_add</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-whitelist-rem">5.2.10. <strong>bt_le_whitelist_rem</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-whitelist-clear">5.2.11. <strong>bt_le_whitelist_clear</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-set-chan-map">5.2.12. <strong>bt_le_set_chan_map</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-unpair">5.2.13. <strong>bt_unpair</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-get-info">5.2.14. <strong>bt_conn_get_info</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-get-remote-dev-info">5.2.15. <strong>bt_conn_get_remote_dev_info</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-le-param-update">5.2.16. <strong>bt_conn_le_param_update</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-disconnect">5.2.17. <strong>bt_conn_disconnect</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-create-le">5.2.18. <strong>bt_conn_create_le</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-create-auto-le">5.2.19. <strong>bt_conn_create_auto_le</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-create-auto-stop">5.2.20. <strong>bt_conn_create_auto_stop</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-set-auto-conn">5.2.21. <strong>bt_le_set_auto_conn</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-create-slave-le">5.2.22. <strong>bt_conn_create_slave_le</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-set-security">5.2.23. <strong>bt_conn_set_security</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-get-security">5.2.24. <strong>bt_conn_get_security</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-enc-key-size">5.2.25. <strong>bt_conn_enc_key_size</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-cb-register">5.2.26. <strong>bt_conn_cb_register</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-set-bondable">5.2.27. <strong>bt_set_bondable</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-cb-register">5.2.28. <strong>bt_conn_auth_cb_register</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-passkey-entry">5.2.29. <strong>bt_conn_auth_passkey_entry</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-cancel">5.2.30. <strong>bt_conn_auth_cancel</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-passkey-confirm">5.2.31. <strong>bt_conn_auth_passkey_confirm</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-conn-auth-pincode-entry">5.2.32. <strong>bt_conn_auth_pincode_entry</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-le-read-rssi">5.2.33. <strong>bt_le_read_rssi</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-get-local-address">5.2.34. <strong>bt_get_local_address</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bt-set-tx-pwr">5.2.35. <strong>bt_set_tx_pwr</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">6.3. 数据结构参考</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">5.3. 数据结构参考</a></li>
 </ul>
 </li>
 </ul>
@@ -158,8 +158,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC 示例</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">10. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -217,7 +218,7 @@
     
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li><span class="section-number">6. </span>BLE</li>
+      <li><span class="section-number">5. </span>BLE</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -237,9 +238,9 @@
            <div itemprop="articleBody">
             
   <div class="section" id="ble">
-<span id="ble-index"></span><h1><span class="section-number">6. </span>BLE<a class="headerlink" href="#ble" title="永久链接至标题">¶</a></h1>
+<span id="ble-index"></span><h1><span class="section-number">5. </span>BLE<a class="headerlink" href="#ble" title="永久链接至标题">¶</a></h1>
 <div class="section" id="id1">
-<h2><span class="section-number">6.1. </span>概述<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">5.1. </span>概述<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <ul>
 <li><dl class="simple">
 <dt>BLE支持的特性：</dt><dd><ul class="simple">
@@ -346,9 +347,9 @@
 </ul>
 </div>
 <div class="section" id="id2">
-<h2><span class="section-number">6.2. </span>BLE 接口<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">5.2. </span>BLE 接口<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <div class="section" id="ble-controller-init">
-<h3><span class="section-number">6.2.1. </span><strong>ble_controller_init</strong><a class="headerlink" href="#ble-controller-init" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.1. </span><strong>ble_controller_init</strong><a class="headerlink" href="#ble-controller-init" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">ble_controller_init</span></code> 主要是对 ble controller 层初始化。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">ble_controller_init</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">task_priority</span><span class="p">);</span>
 </pre></div>
@@ -358,14 +359,14 @@
 </ul>
 </div>
 <div class="section" id="hci-driver-init">
-<h3><span class="section-number">6.2.2. </span><strong>hci_driver_init</strong><a class="headerlink" href="#hci-driver-init" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.2. </span><strong>hci_driver_init</strong><a class="headerlink" href="#hci-driver-init" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">hci_driver_init</span></code> 主要是对 HCI 接口驱动初始化。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">hci_driver_init</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="bt-enable">
-<h3><span class="section-number">6.2.3. </span><strong>bt_enable</strong><a class="headerlink" href="#bt-enable" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.3. </span><strong>bt_enable</strong><a class="headerlink" href="#bt-enable" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_enable</span></code> 用来使能 ble 。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_enable</span><span class="p">(</span><span class="n">bt_ready_cb_t</span> <span class="n">cb</span><span class="p">);</span>
 </pre></div>
@@ -375,7 +376,7 @@
 </ul>
 </div>
 <div class="section" id="bt-le-adv-start">
-<h3><span class="section-number">6.2.4. </span><strong>bt_le_adv_start</strong><a class="headerlink" href="#bt-le-adv-start" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.4. </span><strong>bt_le_adv_start</strong><a class="headerlink" href="#bt-le-adv-start" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_adv_start</span></code> 用来开启 BLE 广播。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_adv_start</span><span class="p">(</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_le_adv_param</span> <span class="o">*</span><span class="n">param</span><span class="p">,</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_data</span> <span class="o">*</span><span class="n">ad</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">ad_len</span><span class="p">,</span>
                         <span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_data</span> <span class="o">*</span><span class="n">sd</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">sd_len</span><span class="p">);</span>
@@ -390,7 +391,7 @@
 </ul>
 </div>
 <div class="section" id="bt-le-adv-update-data">
-<h3><span class="section-number">6.2.5. </span><strong>bt_le_adv_update_data</strong><a class="headerlink" href="#bt-le-adv-update-data" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.5. </span><strong>bt_le_adv_update_data</strong><a class="headerlink" href="#bt-le-adv-update-data" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_adv_update_data</span></code> 用来更新 BLE 广播数据。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_adv_update_data</span><span class="p">(</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_data</span> <span class="o">*</span><span class="n">ad</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">ad_len</span><span class="p">,</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_data</span> <span class="o">*</span><span class="n">sd</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">sd_len</span><span class="p">);</span>
 </pre></div>
@@ -403,14 +404,14 @@
 </ul>
 </div>
 <div class="section" id="bt-le-adv-stop">
-<h3><span class="section-number">6.2.6. </span><strong>bt_le_adv_stop</strong><a class="headerlink" href="#bt-le-adv-stop" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.6. </span><strong>bt_le_adv_stop</strong><a class="headerlink" href="#bt-le-adv-stop" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_adv_stop</span></code> 用来停止 BLE 广播。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_adv_stop</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="bt-le-scan-start">
-<h3><span class="section-number">6.2.7. </span><strong>bt_le_scan_start</strong><a class="headerlink" href="#bt-le-scan-start" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.7. </span><strong>bt_le_scan_start</strong><a class="headerlink" href="#bt-le-scan-start" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_scan_start</span></code> 用来开启 BLE 扫描。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_scan_start</span><span class="p">(</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_le_scan_param</span> <span class="o">*</span><span class="n">param</span><span class="p">,</span> <span class="n">bt_le_scan_cb_t</span> <span class="n">cb</span><span class="p">);</span>
 </pre></div>
@@ -421,14 +422,14 @@
 </ul>
 </div>
 <div class="section" id="bt-le-scan-stop">
-<h3><span class="section-number">6.2.8. </span><strong>bt_le_scan_stop</strong><a class="headerlink" href="#bt-le-scan-stop" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.8. </span><strong>bt_le_scan_stop</strong><a class="headerlink" href="#bt-le-scan-stop" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_scan_stop</span></code> 用来停止 BLE 扫描。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_scan_stop</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="bt-le-whitelist-add">
-<h3><span class="section-number">6.2.9. </span><strong>bt_le_whitelist_add</strong><a class="headerlink" href="#bt-le-whitelist-add" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.9. </span><strong>bt_le_whitelist_add</strong><a class="headerlink" href="#bt-le-whitelist-add" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_whitelist_add</span></code> 用来通过地址添加设备到白名单列表中。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_whitelist_add</span><span class="p">(</span><span class="k">const</span> <span class="n">bt_addr_le_t</span> <span class="o">*</span><span class="n">addr</span><span class="p">);</span>
 </pre></div>
@@ -438,7 +439,7 @@
 </ul>
 </div>
 <div class="section" id="bt-le-whitelist-rem">
-<h3><span class="section-number">6.2.10. </span><strong>bt_le_whitelist_rem</strong><a class="headerlink" href="#bt-le-whitelist-rem" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.10. </span><strong>bt_le_whitelist_rem</strong><a class="headerlink" href="#bt-le-whitelist-rem" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_whitelist_rem</span></code> 用来将设备从白名单列表中移除。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_whitelist_rem</span><span class="p">(</span><span class="k">const</span> <span class="n">bt_addr_le_t</span> <span class="o">*</span><span class="n">addr</span><span class="p">);</span>
 </pre></div>
@@ -448,14 +449,14 @@
 </ul>
 </div>
 <div class="section" id="bt-le-whitelist-clear">
-<h3><span class="section-number">6.2.11. </span><strong>bt_le_whitelist_clear</strong><a class="headerlink" href="#bt-le-whitelist-clear" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.11. </span><strong>bt_le_whitelist_clear</strong><a class="headerlink" href="#bt-le-whitelist-clear" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_whitelist_clear</span></code> 用来清除白名单列表。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_whitelist_clear</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="bt-le-set-chan-map">
-<h3><span class="section-number">6.2.12. </span><strong>bt_le_set_chan_map</strong><a class="headerlink" href="#bt-le-set-chan-map" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.12. </span><strong>bt_le_set_chan_map</strong><a class="headerlink" href="#bt-le-set-chan-map" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_set_chan_map</span></code> 用来设置(LE)通道映射。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_set_chan_map</span><span class="p">(</span><span class="n">u8_t</span> <span class="n">chan_map</span><span class="p">[</span><span class="mi">5</span><span class="p">]);</span>
 </pre></div>
@@ -465,7 +466,7 @@
 </ul>
 </div>
 <div class="section" id="bt-unpair">
-<h3><span class="section-number">6.2.13. </span><strong>bt_unpair</strong><a class="headerlink" href="#bt-unpair" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.13. </span><strong>bt_unpair</strong><a class="headerlink" href="#bt-unpair" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_unpair</span></code> 用来清除配对信息。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_unpair</span><span class="p">(</span><span class="n">u8_t</span> <span class="n">id</span><span class="p">,</span> <span class="k">const</span> <span class="n">bt_addr_le_t</span> <span class="o">*</span><span class="n">addr</span><span class="p">);</span>
 </pre></div>
@@ -476,7 +477,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-get-info">
-<h3><span class="section-number">6.2.14. </span><strong>bt_conn_get_info</strong><a class="headerlink" href="#bt-conn-get-info" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.14. </span><strong>bt_conn_get_info</strong><a class="headerlink" href="#bt-conn-get-info" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_get_info</span></code> 用来获取当前连接设备的信息。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_get_info</span><span class="p">(</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">bt_conn_info</span> <span class="o">*</span><span class="n">info</span><span class="p">);</span>
 </pre></div>
@@ -487,7 +488,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-get-remote-dev-info">
-<h3><span class="section-number">6.2.15. </span><strong>bt_conn_get_remote_dev_info</strong><a class="headerlink" href="#bt-conn-get-remote-dev-info" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.15. </span><strong>bt_conn_get_remote_dev_info</strong><a class="headerlink" href="#bt-conn-get-remote-dev-info" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_get_remote_dev_info</span></code> 用来获取已连接设备的信息。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_get_remote_dev_info</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn_info</span> <span class="o">*</span><span class="n">info</span><span class="p">);</span>
 </pre></div>
@@ -497,7 +498,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-le-param-update">
-<h3><span class="section-number">6.2.16. </span><strong>bt_conn_le_param_update</strong><a class="headerlink" href="#bt-conn-le-param-update" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.16. </span><strong>bt_conn_le_param_update</strong><a class="headerlink" href="#bt-conn-le-param-update" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_le_param_update</span></code> 用来更新连接参数。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_le_param_update</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">,</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_le_conn_param</span> <span class="o">*</span><span class="n">param</span><span class="p">);</span>
 </pre></div>
@@ -508,7 +509,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-disconnect">
-<h3><span class="section-number">6.2.17. </span><strong>bt_conn_disconnect</strong><a class="headerlink" href="#bt-conn-disconnect" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.17. </span><strong>bt_conn_disconnect</strong><a class="headerlink" href="#bt-conn-disconnect" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_disconnect</span></code> 用来断开当前连接。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_disconnect</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">,</span> <span class="n">u8_t</span> <span class="n">reason</span><span class="p">);</span>
 </pre></div>
@@ -519,7 +520,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-create-le">
-<h3><span class="section-number">6.2.18. </span><strong>bt_conn_create_le</strong><a class="headerlink" href="#bt-conn-create-le" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.18. </span><strong>bt_conn_create_le</strong><a class="headerlink" href="#bt-conn-create-le" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_create_le</span></code> 用来创建连接。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">bt_conn_create_le</span><span class="p">(</span><span class="k">const</span> <span class="n">bt_addr_le_t</span> <span class="o">*</span><span class="n">peer</span><span class="p">,</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_le_conn_param</span> <span class="o">*</span><span class="n">param</span><span class="p">);</span>
 </pre></div>
@@ -531,7 +532,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-create-auto-le">
-<h3><span class="section-number">6.2.19. </span><strong>bt_conn_create_auto_le</strong><a class="headerlink" href="#bt-conn-create-auto-le" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.19. </span><strong>bt_conn_create_auto_le</strong><a class="headerlink" href="#bt-conn-create-auto-le" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_create_auto_le</span></code> 用来自动创建连接白名单列表中的设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_create_auto_le</span><span class="p">(</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_le_conn_param</span> <span class="o">*</span><span class="n">param</span><span class="p">);</span>
 </pre></div>
@@ -541,14 +542,14 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-create-auto-stop">
-<h3><span class="section-number">6.2.20. </span><strong>bt_conn_create_auto_stop</strong><a class="headerlink" href="#bt-conn-create-auto-stop" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.20. </span><strong>bt_conn_create_auto_stop</strong><a class="headerlink" href="#bt-conn-create-auto-stop" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_create_auto_stop</span></code> 用来停止自动创建连接白名单列表中的设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_create_auto_stop</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="bt-le-set-auto-conn">
-<h3><span class="section-number">6.2.21. </span><strong>bt_le_set_auto_conn</strong><a class="headerlink" href="#bt-le-set-auto-conn" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.21. </span><strong>bt_le_set_auto_conn</strong><a class="headerlink" href="#bt-le-set-auto-conn" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_set_auto_conn</span></code> 用来自动创建连接远端设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_set_auto_conn</span><span class="p">(</span><span class="k">const</span> <span class="n">bt_addr_le_t</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_le_conn_param</span> <span class="o">*</span><span class="n">param</span><span class="p">);</span>
 </pre></div>
@@ -559,7 +560,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-create-slave-le">
-<h3><span class="section-number">6.2.22. </span><strong>bt_conn_create_slave_le</strong><a class="headerlink" href="#bt-conn-create-slave-le" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.22. </span><strong>bt_conn_create_slave_le</strong><a class="headerlink" href="#bt-conn-create-slave-le" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_create_slave_le</span></code> 用来发起定向的广播包给远端设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">bt_conn_create_slave_le</span><span class="p">(</span><span class="k">const</span> <span class="n">bt_addr_le_t</span> <span class="o">*</span><span class="n">peer</span><span class="p">,</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_le_adv_param</span> <span class="o">*</span><span class="n">param</span><span class="p">);</span>
 </pre></div>
@@ -571,7 +572,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-set-security">
-<h3><span class="section-number">6.2.23. </span><strong>bt_conn_set_security</strong><a class="headerlink" href="#bt-conn-set-security" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.23. </span><strong>bt_conn_set_security</strong><a class="headerlink" href="#bt-conn-set-security" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_set_security</span></code> 用来设置连接安全等级。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_set_security</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">,</span> <span class="n">bt_security_t</span> <span class="n">sec</span><span class="p">);</span>
 </pre></div>
@@ -582,7 +583,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-get-security">
-<h3><span class="section-number">6.2.24. </span><strong>bt_conn_get_security</strong><a class="headerlink" href="#bt-conn-get-security" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.24. </span><strong>bt_conn_get_security</strong><a class="headerlink" href="#bt-conn-get-security" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_get_security</span></code> 用来获取当前连接的安全等级。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">bt_security_t</span> <span class="nf">bt_conn_get_security</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">);</span>
 </pre></div>
@@ -592,7 +593,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-enc-key-size">
-<h3><span class="section-number">6.2.25. </span><strong>bt_conn_enc_key_size</strong><a class="headerlink" href="#bt-conn-enc-key-size" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.25. </span><strong>bt_conn_enc_key_size</strong><a class="headerlink" href="#bt-conn-enc-key-size" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_enc_key_size</span></code> 用来获取当前连接的加密key的大小。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">u8_t</span> <span class="nf">bt_conn_enc_key_size</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">);</span>
 </pre></div>
@@ -603,7 +604,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-cb-register">
-<h3><span class="section-number">6.2.26. </span><strong>bt_conn_cb_register</strong><a class="headerlink" href="#bt-conn-cb-register" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.26. </span><strong>bt_conn_cb_register</strong><a class="headerlink" href="#bt-conn-cb-register" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_cb_register</span></code> 用来注册连接回调函数。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">bt_conn_cb_register</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn_cb</span> <span class="o">*</span><span class="n">cb</span><span class="p">);</span>
 </pre></div>
@@ -613,7 +614,7 @@
 </ul>
 </div>
 <div class="section" id="bt-set-bondable">
-<h3><span class="section-number">6.2.27. </span><strong>bt_set_bondable</strong><a class="headerlink" href="#bt-set-bondable" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.27. </span><strong>bt_set_bondable</strong><a class="headerlink" href="#bt-set-bondable" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_set_bondable</span></code> 用来设置/清除SMP配对请求/响应数据认证需求中的绑定标志。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">bt_set_bondable</span><span class="p">(</span><span class="kt">bool</span> <span class="n">enable</span><span class="p">);</span>
 </pre></div>
@@ -623,7 +624,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-auth-cb-register">
-<h3><span class="section-number">6.2.28. </span><strong>bt_conn_auth_cb_register</strong><a class="headerlink" href="#bt-conn-auth-cb-register" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.28. </span><strong>bt_conn_auth_cb_register</strong><a class="headerlink" href="#bt-conn-auth-cb-register" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_auth_cb_register</span></code> 用来注册认证回调函数。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_auth_cb_register</span><span class="p">(</span><span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_conn_auth_cb</span> <span class="o">*</span><span class="n">cb</span><span class="p">);</span>
 </pre></div>
@@ -633,7 +634,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-auth-passkey-entry">
-<h3><span class="section-number">6.2.29. </span><strong>bt_conn_auth_passkey_entry</strong><a class="headerlink" href="#bt-conn-auth-passkey-entry" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.29. </span><strong>bt_conn_auth_passkey_entry</strong><a class="headerlink" href="#bt-conn-auth-passkey-entry" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_auth_passkey_entry</span></code> 用密钥回复对方。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_auth_passkey_entry</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">passkey</span><span class="p">);</span>
 </pre></div>
@@ -644,7 +645,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-auth-cancel">
-<h3><span class="section-number">6.2.30. </span><strong>bt_conn_auth_cancel</strong><a class="headerlink" href="#bt-conn-auth-cancel" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.30. </span><strong>bt_conn_auth_cancel</strong><a class="headerlink" href="#bt-conn-auth-cancel" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_auth_cancel</span></code> 用来取消认证过程。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_auth_cancel</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">);</span>
 </pre></div>
@@ -654,7 +655,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-auth-passkey-confirm">
-<h3><span class="section-number">6.2.31. </span><strong>bt_conn_auth_passkey_confirm</strong><a class="headerlink" href="#bt-conn-auth-passkey-confirm" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.31. </span><strong>bt_conn_auth_passkey_confirm</strong><a class="headerlink" href="#bt-conn-auth-passkey-confirm" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_auth_passkey_confirm</span></code> 用来当密码匹配时，回复对方。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_auth_passkey_confirm</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">);</span>
 </pre></div>
@@ -664,7 +665,7 @@
 </ul>
 </div>
 <div class="section" id="bt-conn-auth-pincode-entry">
-<h3><span class="section-number">6.2.32. </span><strong>bt_conn_auth_pincode_entry</strong><a class="headerlink" href="#bt-conn-auth-pincode-entry" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.32. </span><strong>bt_conn_auth_pincode_entry</strong><a class="headerlink" href="#bt-conn-auth-pincode-entry" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_conn_auth_pincode_entry</span></code> 用 PIN 码进行回复对方。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_conn_auth_pincode_entry</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">pin</span><span class="p">);</span>
 </pre></div>
@@ -675,7 +676,7 @@
 </ul>
 </div>
 <div class="section" id="bt-le-read-rssi">
-<h3><span class="section-number">6.2.33. </span><strong>bt_le_read_rssi</strong><a class="headerlink" href="#bt-le-read-rssi" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.33. </span><strong>bt_le_read_rssi</strong><a class="headerlink" href="#bt-le-read-rssi" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_read_rssi</span></code> 用来读取对方 RSSI 值。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_le_read_rssi</span><span class="p">(</span><span class="n">u16_t</span> <span class="n">handle</span><span class="p">,</span><span class="kt">int8_t</span> <span class="o">*</span><span class="n">rssi</span><span class="p">);</span>
 </pre></div>
@@ -686,7 +687,7 @@
 </ul>
 </div>
 <div class="section" id="bt-get-local-address">
-<h3><span class="section-number">6.2.34. </span><strong>bt_get_local_address</strong><a class="headerlink" href="#bt-get-local-address" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.34. </span><strong>bt_get_local_address</strong><a class="headerlink" href="#bt-get-local-address" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_get_local_address</span></code> 用来读取本机的地址。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_get_local_address</span><span class="p">(</span><span class="n">bt_addr_le_t</span> <span class="o">*</span><span class="n">adv_addr</span><span class="p">);</span>
 </pre></div>
@@ -696,7 +697,7 @@
 </ul>
 </div>
 <div class="section" id="bt-set-tx-pwr">
-<h3><span class="section-number">6.2.35. </span><strong>bt_set_tx_pwr</strong><a class="headerlink" href="#bt-set-tx-pwr" title="永久链接至标题">¶</a></h3>
+<h3><span class="section-number">5.2.35. </span><strong>bt_set_tx_pwr</strong><a class="headerlink" href="#bt-set-tx-pwr" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bt_set_tx_pwr</span></code> 用来设置本机发射功率。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">bt_set_tx_pwr</span><span class="p">(</span><span class="kt">int8_t</span> <span class="n">power</span><span class="p">);</span>
 </pre></div>
@@ -707,7 +708,7 @@
 </div>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">6.3. </span>数据结构参考<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">5.3. </span>数据结构参考<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">bt_le_adv_param</span></code> 数据结构：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/** LE Advertising Parameters. */</span>
 <span class="k">struct</span> <span class="nc">bt_le_adv_param</span> <span class="p">{</span>
@@ -960,7 +961,7 @@ timeout：连接超时时间。</p>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="../../samples/basic%20samples/gpio/index.html" class="btn btn-neutral float-right" title="1. GPIO 示例" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../usb%20stack/api_usb_stack.html" class="btn btn-neutral float-left" title="5. USB Stack" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../usb%20stack/api_usb_stack.html" class="btn btn-neutral float-left" title="4. USB Stack" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

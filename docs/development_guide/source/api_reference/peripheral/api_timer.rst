@@ -23,27 +23,30 @@ TIMER 设备结构体定义
     typedef struct timer_device {
         struct device parent;
         uint8_t id;
-        uint8_t ch;
-        uint8_t clk_div;
-        timer_cnt_mode cnt_mode;
-        timer_pl_trig_t pl_trig_src;
+        enum timer_cnt_mode_type cnt_mode;
+        enum timer_preload_trigger_type trigger;
+        uint32_t reload;
+        uint32_t timeout1;
+        uint32_t timeout2;
+        uint32_t timeout3;
     } timer_device_t;
 
 - parent        继承父类属性
 - id            定时器 id ，使能定时器 0 则 id 为 0 ，使能定时器 1 则 id 为 1 ，以此类推
-- ch            timer 的通道号
-- clk_div       时钟分频系数
-- cnt_mode      计数模式
-- pl_trig_src   比较器的触发源
-
+- cnt_mode      计数模式：FreeRun 和 PreLoad
+- trigger   比较器的触发源
+- reload    重装载值,只有在 PreLoad 模式下有效
+- timeout1  COMP0 超时时间，单位 us
+- timeout2  COMP1 超时时间，单位 us
+- timeout3  COMP2 超时时间，单位 us
 
 ``ch`` 提供以下类型
 
 .. code-block:: C
 
     enum timer_index_type {
-        TIMER_CH0_INDEX,
-        TIMER_CH1_INDEX,
+        TIMER0_INDEX,
+        TIMER1_INDEX,
         TIMER_MAX_INDEX
     };
 
@@ -51,21 +54,21 @@ TIMER 设备结构体定义
 
 .. code-block:: C
 
-    typedef enum {
+    enum timer_cnt_mode_type {
         TIMER_CNT_PRELOAD,
         TIMER_CNT_FREERUN,
-    } timer_cnt_mode;
+    };
 
-``pl_trig_src`` 提供以下类型
+``trigger`` 提供以下类型
 
 .. code-block:: C
 
-    typedef enum {
-        TIMER_PL_TRIG_NONE,
-        TIMER_PL_TRIG_COMP0,
-        TIMER_PL_TRIG_COMP1,
-        TIMER_PL_TRIG_COMP2,
-    } timer_pl_trig_t;
+    enum timer_preload_trigger_type {
+        TIMER_PRELOAD_TRIGGER_NONE,
+        TIMER_PRELOAD_TRIGGER_COMP0,
+        TIMER_PRELOAD_TRIGGER_COMP1,
+        TIMER_PRELOAD_TRIGGER_COMP2,
+    };
 
 TIMER 设备参数配置表
 ------------------------
@@ -75,39 +78,44 @@ TIMER 设备参数配置表
 .. code-block:: C
 
     /*参数配置宏*/
-    #if defined(BSP_USING_TIMER_CH0)
-    #ifndef TIMER_CH0_CONFIG
-    #define TIMER_CH0_CONFIG                    \
-        {                                       \
-            .id = 0,                            \
-            .ch = 0,                            \
-            .cnt_mode = TIMER_CNT_PRELOAD,      \
-            .pl_trig_src = TIMER_PL_TRIG_COMP0, \
+    #if defined(BSP_USING_TIMER0)
+    #ifndef TIMER0_CONFIG
+    #define TIMER0_CONFIG                           \
+        {                                           \
+            .id = 0,                                \
+            .cnt_mode = TIMER_CNT_PRELOAD,          \
+            .trigger = TIMER_PRELOAD_TRIGGER_COMP2, \
+            .reload = 0,                            \
+            .timeout1 = 1000000,                    \
+            .timeout2 = 2000000,                    \
+            .timeout3 = 3000000,                    \
         }
     #endif
     #endif
 
-    #if defined(BSP_USING_TIMER_CH1)
-    #ifndef TIMER_CH1_CONFIG
-    #define TIMER_CH1_CONFIG                    \
-        {                                       \
-            .id = 0,                            \
-            .ch = 1,                            \
-            .cnt_mode = TIMER_CNT_PRELOAD,      \
-            .pl_trig_src = TIMER_PL_TRIG_COMP2, \
+    #if defined(BSP_USING_TIMER1)
+    #ifndef TIMER1_CONFIG
+    #define TIMER1_CONFIG                           \
+        {                                           \
+            .id = 1,                                \
+            .cnt_mode = TIMER_CNT_PRELOAD,          \
+            .trigger = TIMER_PRELOAD_TRIGGER_COMP0, \
+            .reload = 0,                            \
+            .timeout1 = 1000000,                    \
+            .timeout2 = 2000000,                    \
+            .timeout3 = 3000000,                    \
         }
     #endif
     #endif
 
     /*变量定义*/
-    enum timer_index_type {
-    #ifdef BSP_USING_TIMER_CH0
-        TIMER_CH0_INDEX,
+    static timer_device_t timerx_device[TIMER_MAX_INDEX] = {
+    #ifdef BSP_USING_TIMER0
+        TIMER0_CONFIG,
     #endif
-    #ifdef BSP_USING_TIMER_CH1
-        TIMER_CH1_INDEX,
+    #ifdef BSP_USING_TIMER1
+        TIMER1_CONFIG,
     #endif
-        TIMER_MAX_INDEX
     };
 
 .. note:: 上述配置可以通过 ``TIMER_DEV(dev)->xxx`` 进行修改，只能在调用 ``device_open`` 之前使用。
@@ -120,7 +128,7 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 **timer_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-``timer_register`` 用来注册 TIMER 设备标准驱动接口，在注册之前需要打开对应 TIMER 设备的宏定义。例如定义宏 ``BSP_USING_TIMER_CH0`` 方可使用 ``TIMER_CH0_INDEX`` 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 ``TIMER_CH0_INDEX`` 设备。
+``timer_register`` 用来注册 TIMER 设备标准驱动接口，在注册之前需要打开对应 TIMER 设备的宏定义。例如定义宏 ``BSP_USING_TIMER0`` 方可使用 ``TIMER0_INDEX`` 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 ``TIMER0_INDEX`` 设备。
 
 .. code-block:: C
 
@@ -129,16 +137,16 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 - index 要注册的设备索引
 - name 为注册的设备命名
 
-``index`` 用来选择 TIMER 设备配置，一个 index 对应一个 TIMER 设备配置，比如 ``TIMER_CH0_INDEX`` 对应 ``TIMER_CH0_CONFIG`` 配置，``index`` 有如下可选类型
+``index`` 用来选择 TIMER 设备配置，一个 index 对应一个 TIMER 设备配置，比如 ``TIMER0_INDEX`` 对应 ``TIMER0_CONFIG`` 配置，``index`` 有如下可选类型
 
 .. code-block:: C
 
     enum timer_index_type {
-    #ifdef BSP_USING_TIMER_CH0
-        TIMER_CH0_INDEX,
+    #ifdef BSP_USING_TIMER0
+        TIMER0_INDEX,
     #endif
-    #ifdef BSP_USING_TIMER_CH1
-        TIMER_CH1_INDEX,
+    #ifdef BSP_USING_TIMER1
+        TIMER1_INDEX,
     #endif
         TIMER_MAX_INDEX
     };
@@ -160,11 +168,12 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 
 .. code-block:: C
 
-    #define DEVICE_OFLAG_INT             0x01
-    #define DEVICE_OFLAG_POLL            0x02
-    #define DEVICE_CTRL_TIMER_CH_START   0x80
-    #define DEVICE_CTRL_TIMER_CH_STOP    0x81
-    #define DEVICE_CTRL_GET_MATCH_STATUS 0x82
+    #define DEVICE_OFLAG_STREAM_TX  0x001 /* 设备以轮训发送模式打开 */
+    #define DEVICE_OFLAG_STREAM_RX  0x002 /* 设备以轮训接收模式打开 */
+    #define DEVICE_OFLAG_INT_TX     0x004 /* 设备以中断发送模式打开 */
+    #define DEVICE_OFLAG_INT_RX     0x008 /* 设备以中断接收模式打开 */
+    #define DEVICE_OFLAG_DMA_TX     0x010 /* 设备以 DMA 发送模式打开 */
+    #define DEVICE_OFLAG_DMA_RX     0x020 /* 设备以 DMA 接收模式打开 */
 
 **device_close**
 ^^^^^^^^^^^^^^^^
@@ -192,14 +201,6 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 - args 控制参数
 - return 不同的控制命令返回的意义不同。
 
-TIMER 设备除了标准的控制命令，还具有私有的控制命令。
-
-.. code-block:: C
-
-    #define DEVICE_CTRL_TIMER_CH_START   0x80
-    #define DEVICE_CTRL_TIMER_CH_STOP    0x81
-    #define DEVICE_CTRL_GET_MATCH_STATUS 0x82
-
 ``args`` 根据不同的 ``cmd`` 传入不同，具体如下：
 
 .. list-table:: table1
@@ -215,25 +216,33 @@ TIMER 设备除了标准的控制命令，还具有私有的控制命令。
     * - DEVICE_CTRL_CLR_INT
       - NULL
       - 关闭 TIMER 中断
+    * - DEVICE_CTRL_GET_INT
+      - NULL
+      - 获取当前中断状态
     * - DEVICE_CTRL_RESUME
       - NULL
-      - 开启 TIMER
+      - 开启 TIMER 设备
     * - DEVICE_CTRL_SUSPEND
       - NULL
-      - 关闭 TIMER
-    * - DEVICE_CTRL_TIMER_CH_START
-      - timer_user_cfg_t
-      - 开启 TIMER 及其中断
-    * - DEVICE_CTRL_TIMER_CH_STOP
-      - timer_user_cfg_t
-      - 关闭 TIMER 及其中断
+      - 关闭 TIMER 设备
     * - DEVICE_CTRL_GET_CONFIG
       - NULL
       - 获取 TIMER 当前的计数值
-    * - DEVICE_CTRL_GET_MATCH_STATUS
-      - uint32_t
-      - 获取 TIMER 比较器的状态
 
+**device_write**
+^^^^^^^^^^^^^^^^
+
+``device_write`` 用于 Timer 设备配置超时时间。实际调用 ``timer_write``。
+
+.. code-block:: C
+
+    int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);
+
+- dev 设备句柄
+- pos 无作用
+- buffer timer_timeout_cfg_t 句柄
+- size timer_timeout_cfg_t 个数
+- return 错误码，0 表示写入成功，其他表示错误
 
 **device_set_callback**
 ^^^^^^^^^^^^^^^^^^^^^^^^

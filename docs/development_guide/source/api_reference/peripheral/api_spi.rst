@@ -212,31 +212,46 @@ SPI 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
 ``args`` 根据不同的 ``cmd`` 传入不同，具体如下：
 
-+---------------------------------+-------------------+-----------------------+
-|cmd                              |args               |description            |
-+=================================+===================+=======================+
-|DEVICE_CTRL_SET_INT              |NULL               |开启spi设备中断        |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_CLR_INT              |NULL               |关闭spi设备中断        |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_RESUME               |NULL               |恢复spi设备            |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_SUSPEND              |NULL               |挂起spi设备            |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_ATTACH_TX_DMA        |struct device*     |链接发送dma设备        |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_ATTACH_RX_DMA        |struct device*     |链接接收dma设备        |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_SPI_CONFIG_CLOCK     |uint32_t           |修改SPI设备时钟        |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_TX_DMA_SUSPEND       |NULL               |挂起spi tx dma模式     |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_RX_DMA_SUSPEND       |NULL               |挂起spi rx dma模式     |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_TX_DMA_RESUME        |NULL               |恢复spi tx dma模式     |
-+---------------------------------+-------------------+-----------------------+
-|DEVICE_CTRL_RX_DMA_RESUME        |NULL               |恢复spi rx dma模式     |
-+---------------------------------+-------------------+-----------------------+
+.. list-table:: table1
+    :widths: 15 10 30
+    :header-rows: 1
+
+    * - cmd
+      - args
+      - description
+    * - DEVICE_CTRL_SET_INT
+      - NULL
+      - 开启 spi 设备中断
+    * - DEVICE_CTRL_CLR_INT
+      - NULL
+      - 关闭 spi 设备中断
+    * - DEVICE_CTRL_RESUME
+      - NULL
+      - 恢复 spi 设备
+    * - DEVICE_CTRL_SUSPEND
+      - NULL
+      - 挂起 spi 设备
+    * - DEVICE_CTRL_ATTACH_TX_DMA
+      - NULL
+      - 链接发送 dma 设备
+    * - DEVICE_CTRL_ATTACH_RX_DMA
+      - NULL
+      - 链接接收 dma 设备
+    * - DEVICE_CTRL_SPI_CONFIG_CLOCK
+      - NULL
+      - 修改 spi 设备时钟
+    * - DEVICE_CTRL_TX_DMA_SUSPEND
+      - NULL
+      - 挂起spi tx dma模式
+    * - DEVICE_CTRL_RX_DMA_SUSPEND
+      - NULL
+      - 挂起spi rx dma模式
+    * - DEVICE_CTRL_TX_DMA_RESUME
+      - NULL
+      - 恢复spi tx dma模式
+    * - DEVICE_CTRL_RX_DMA_RESUME
+      - NULL
+      - 恢复spi rx dma模式
 
 **device_write**
 ^^^^^^^^^^^^^^^^

@@ -62,29 +62,191 @@ USB DEVICE 通用接口
 **usbd_desc_register**
 """"""""""""""""""""""""""""""""""""
 
+``usbd_desc_register`` 用来注册 USB 描述符，描述符种类包括：设备描述符、配置描述符、接口描述符、字符串描述符、设备限定描述符。
+
+.. code-block:: C
+
+    void usbd_desc_register(const uint8_t *desc);
+
+- desc  描述符的句柄
+
+
 **usbd_msosv1_desc_register**
 """"""""""""""""""""""""""""""""""""
+
+``usbd_msosv1_desc_register`` 用来注册一个 WINUSB 描述符，格式按照 ``struct usb_msosv1_descriptor``。
+
+.. code-block:: C
+
+    void usbd_msosv1_desc_register(struct usb_msosv1_descriptor *desc);
+
+- desc  描述符句柄
+
 
 **usbd_class_add_interface**
 """"""""""""""""""""""""""""""""""""
 
+``usbd_class_add_interface`` 用来给 USB 设备类增加接口，并将接口信息挂载在类的链表上。
+
+.. code-block:: C
+
+    void usbd_class_add_interface(usbd_class_t *class, usbd_interface_t *intf);
+
+- class  USB 设备类的句柄
+- intf   USB 设备接口的句柄
+
+``usbd_class_t`` 定义如下
+
+.. code-block:: C
+
+    typedef struct usbd_class {
+        usb_slist_t list;
+        const char *name;
+        usb_slist_t intf_list;
+    } usbd_class_t;
+
+- list 类的链表节点
+- name 类的名称
+- intf_list 接口的链表节点
+
+``usbd_interface_t`` 定义如下
+
+.. code-block:: C
+
+    typedef struct usbd_interface {
+        usb_slist_t list;
+        /** Handler for USB Class specific Control (EP 0) communications */
+        usbd_request_handler class_handler;
+        /** Handler for USB Vendor specific commands */
+        usbd_request_handler vendor_handler;
+        /** Handler for USB custom specific commands */
+        usbd_request_handler custom_handler;
+        /** Handler for USB event notify commands */
+        usbd_notify_handler notify_handler;
+        uint8_t intf_num;
+        usb_slist_t ep_list;
+    } usbd_interface_t;
+
+- list 接口的链表节点
+- class_handler class setup 请求回调函数
+- vendor_handler vendor setup 请求回调函数
+- custom_handler custom setup 请求回调函数
+- notify_handler 中断标志、协议栈相关状态回调函数
+- intf_num 当前接口偏移
+- ep_list 端点的链表节点
+
 **usbd_interface_add_endpoint**
 """"""""""""""""""""""""""""""""""""
+
+``usbd_interface_add_endpoint`` 用来给 USB 接口增加端点，并将端点信息挂载在接口的链表上。
+
+.. code-block:: C
+
+    void usbd_interface_add_endpoint(usbd_interface_t *intf, usbd_endpoint_t *ep);
+
+
+- intf  USB 设备接口的句柄
+- ep    USB 设备端点的句柄
+
+``usbd_class_t`` 定义如下
+
+.. code-block:: C
+
+    typedef struct usbd_endpoint {
+        usb_slist_t list;
+        uint8_t ep_addr;
+        usbd_endpoint_callback ep_cb;
+    } usbd_endpoint_t;
+
+- list 端点的链表节点
+- ep_addr 端点地址
+- ep_cb 端点中断回调函数
 
 **usb_device_is_configured**
 """"""""""""""""""""""""""""""""""""
 
+``usb_device_is_configured`` 用来检查 USB 设备是否被配置（枚举）。
+
+.. code-block:: C
+
+    bool usb_device_is_configured(void);
+
+- return 配置状态， 0 表示未配置， 1 表示配置成功
+
+
 USB Device CDC 类接口
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**usbd_cdc_add_acm_interface**
+""""""""""""""""""""""""""""""""""""
+
+``usbd_cdc_add_acm_interface`` 用来给 USB CDC ACM 类添加接口，并重写该接口相关的函数。重写的函数包括 ``cdc_acm_class_request_handler`` 和 ``cdc_notify_handler``，
+其中 ``cdc_acm_class_request_handler`` 用于处理 USB CDC ACM Setup 中断请求， ``cdc_notify_handler`` 用于实现 USB CDC 其他中断回调函数。
+
+.. code-block:: C
+
+    void usbd_cdc_add_acm_interface(usbd_class_t *class, usbd_interface_t *intf);
+
+- class 类的句柄
+- intf  接口句柄
 
 USB Device MSC 类接口
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+**usbd_msc_class_init**
+""""""""""""""""""""""""""""""""""""
+``usbd_msc_class_init`` 用于初始化 USB MSC 类，注册 USB CDC ACM 设备并为其添加接口，且为接口添加 BLUK OUT 、BULK IN 端点及其回调函数。
+
+.. code-block:: C
+
+    void usbd_msc_class_init(uint8_t out_ep, uint8_t in_ep);
+
+- out_ep     输出端点的地址
+- in_ep      输入端点的地址
+
+
 USB Device HID 类接口
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**usbd_hid_add_interface**
+""""""""""""""""""""""""""""""""""""
+``usbd_hid_add_interface``  用来给 USB HID 类添加接口，并重写该接口相关的函数。重写的函数包括 ``hid_class_request_handler`` 、 ``hid_custom_request_handler``
+和 ``hid_notify_handler``，其中 ``hid_class_request_handler`` 用来处理 USB HID 类的 Setup 中断请求， ``hid_custom_request_handler`` 用来处理 USB HID 获取描述符请求，
+``hid_notify_handler``  用来处理 USB HID 类的其他中断回调函数。
+
+.. code-block:: C
+
+    void usbd_hid_add_interface(usbd_class_t *class, usbd_interface_t *intf);
+
+- class 类的句柄
+- intf  接口句柄
+
 
 USB Device AUDIO 类接口
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+**usbd_audio_add_interface**
+""""""""""""""""""""""""""""""""""""
+``usbd_audio_add_interface``  用来给 USB Audio 类添加接口，并重写该接口相关的函数。重写的函数包括 ``audio_class_request_handler`` 和 ``audio_notify_handler``。
+
+.. code-block:: C
+
+    void usbd_audio_add_interface(usbd_class_t *class, usbd_interface_t *intf);
+
+- class 类的句柄
+- intf  接口句柄
+
+
 USB Device VIDEO 类接口
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**usbd_video_add_interface**
+""""""""""""""""""""""""""""""""""""
+``usbd_video_add_interface``  用来给 USB Video 类添加接口，并重写该接口相关的函数。重写的函数包括 ``video_class_request_handler`` 和 ``video_notify_handler``。
+
+.. code-block:: C
+
+    void usbd_video_add_interface(usbd_class_t *class, usbd_interface_t *intf);
+
+- class 类的句柄
+- intf  接口句柄

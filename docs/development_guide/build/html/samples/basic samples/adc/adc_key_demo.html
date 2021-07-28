@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>8.1. ADC - 按键检测电压 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>9.1. ADC - 按键检测电压 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
-    <link rel="next" title="9. TIMER 示例" href="../timer/index.html" />
-    <link rel="prev" title="8. ADC 示例" href="index.html" /> 
+    <link rel="next" title="10. TIMER 示例" href="../timer/index.html" />
+    <link rel="prev" title="9. ADC 示例" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,20 +92,20 @@
               <p class="caption"><span class="caption-text">快速开发指南</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../get_started/get_started.html">1. 开发前的准备</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../get_started/index.html">2. 开发环境搭建指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../get_started/bl_dev_cube.html">3. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/index.html">3. 开发环境搭建指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../get_started/connecting_hardware.html">6. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/board.html">7. Board 配置系统使用指南</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API 手册</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_overview.html">1. API 概述</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/board.html">2. Board 配置系统</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/peripheral/index.html">3. Peripheral</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/shell/api_shell.html">4. Shell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/usb%20stack/api_usb_stack.html">5. USB Stack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/bluetooth/api_ble.html">6. BLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/bluetooth/api_ble.html">5. BLE</a></li>
 </ul>
 <p class="caption"><span class="caption-text">基础外设例程</span></p>
 <ul class="current">
@@ -116,17 +116,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../dma/index.html">5. DMA 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../spi/index.html">6. SPI 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../i2c/index.html">7. I2C 示例</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">8. ADC 示例</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">8.1. ADC - 按键检测电压</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">8.1.1. 硬件连接</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">8.1.2. 软件实现</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">8.1.3. 编译和烧录</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">8.1.4. 实验现象</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">9. ADC 示例</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">9.1. ADC - 按键检测电压</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">9.1.1. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">9.1.2. 软件实现</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">9.1.3. 编译和烧录</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">9.1.4. 实验现象</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../timer/index.html">9. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timer/index.html">10. TIMER 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
@@ -184,9 +185,9 @@
     
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="index.html"><span class="section-number">8. </span>ADC 示例</a> &raquo;</li>
+          <li><a href="index.html"><span class="section-number">9. </span>ADC 示例</a> &raquo;</li>
         
-      <li><span class="section-number">8.1. </span>ADC - 按键检测电压</li>
+      <li><span class="section-number">9.1. </span>ADC - 按键检测电压</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -206,10 +207,10 @@
            <div itemprop="articleBody">
             
   <div class="section" id="adc">
-<h1><span class="section-number">8.1. </span>ADC - 按键检测电压<a class="headerlink" href="#adc" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">9.1. </span>ADC - 按键检测电压<a class="headerlink" href="#adc" title="永久链接至标题">¶</a></h1>
 <p>本 demo 主要介绍一个基于 ADC 的按键功能，使用 ADC 检测按键输入引脚的电压值，根据不同的分压值判断相应的按键是否按下</p>
 <div class="section" id="id1">
-<h2><span class="section-number">8.1.1. </span>硬件连接<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">9.1.1. </span>硬件连接<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>本 demo 基于 BL706_AVB 开发板:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
 <span class="o">----------------------------------</span>
@@ -223,7 +224,7 @@
 </div>
 </div>
 <div class="section" id="id2">
-<h2><span class="section-number">8.1.2. </span>软件实现<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">9.1.2. </span>软件实现<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/adc/adc_key</span></code></p></li>
 </ul>
@@ -343,7 +344,7 @@
 </ul>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">8.1.3. </span>编译和烧录<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">9.1.3. </span>编译和烧录<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <ul>
 <li><p><strong>CDK工具编译</strong></p>
 <p>打开项目中提供的工程文件：adc_key.cdkproj</p>
@@ -363,7 +364,7 @@
 </ul>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">8.1.4. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">9.1.4. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <p>本实验依次按下开发板上的 SW1 ~ SW5 会得到不同的电压值:</p>
 <ul class="simple">
 <li><p>key 0: 0V 左右</p></li>
@@ -386,8 +387,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../timer/index.html" class="btn btn-neutral float-right" title="9. TIMER 示例" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="index.html" class="btn btn-neutral float-left" title="8. ADC 示例" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../timer/index.html" class="btn btn-neutral float-right" title="10. TIMER 示例" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="9. ADC 示例" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
