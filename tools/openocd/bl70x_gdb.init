@@ -2,6 +2,7 @@ set mem inaccessible-by-default off
 set architecture riscv:rv32
 set remotetimeout 250
 
+mon reset
 
 set $pc=0x21000000
 set $mie=0
