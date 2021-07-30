@@ -333,13 +333,13 @@ uint32_t system_clock_get(enum system_clock_type type)
 {
     switch (type) {
         case SYSTEM_CLOCK_ROOT_CLOCK:
-            return SystemCoreClockGet();
+            return SystemCoreClockGet() * (GLB_Get_HCLK_Div() + 1);
 
         case SYSTEM_CLOCK_FCLK:
-            return (SystemCoreClockGet() / (GLB_Get_HCLK_Div() + 1));
+            return SystemCoreClockGet();
 
         case SYSTEM_CLOCK_BCLK:
-            return (SystemCoreClockGet() / ((GLB_Get_HCLK_Div() + 1) * (GLB_Get_BCLK_Div() + 1)));
+            return SystemCoreClockGet() / (GLB_Get_BCLK_Div() + 1);
 
         case SYSTEM_CLOCK_XCLK:
             return 32000000;
@@ -377,7 +377,7 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
             return system_clock_get(SYSTEM_CLOCK_FCLK) / (GLB_Get_HCLK_Div() + 1));
 #endif
 #endif
-
+            break;
         case PERIPHERAL_CLOCK_SPI:
 #if defined(BSP_USING_SPI0)
 #if BSP_SPI_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_BCLK
@@ -386,7 +386,7 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
             return system_clock_get(SYSTEM_CLOCK_BCLK) / (div + 1);
 #endif
 #endif
-
+            break;
         case PERIPHERAL_CLOCK_I2C:
 #if defined(BSP_USING_I2C0)
 #if BSP_I2C_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_BCLK
@@ -395,7 +395,7 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
             return system_clock_get(SYSTEM_CLOCK_BCLK) / (div + 1);
 #endif
 #endif
-
+            break;
         case PERIPHERAL_CLOCK_I2S:
             return system_clock_get(SYSTEM_CLOCK_AUPLL);
 
@@ -411,7 +411,7 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
             return system_clock_get(SYSTEM_CLOCK_AUPLL) / div;
 #endif
 #endif
-
+            break;
         case PERIPHERAL_CLOCK_DAC:
 #if defined(BSP_USING_DAC0)
 #if BSP_DAC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
@@ -424,6 +424,7 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
             return system_clock_get(SYSTEM_CLOCK_AUPLL) / div;
 #endif
 #endif
+            break;
         case PERIPHERAL_CLOCK_TIMER0:
 #if BSP_TIMER0_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_FCLK
             tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);

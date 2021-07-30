@@ -50,10 +50,10 @@
 #define ROOT_CLOCK_SOURCE_AUPLL_24000000_HZ 13
 
 enum system_clock_type {
-    SYSTEM_CLOCK_ROOT_CLOCK = 0,
-    SYSTEM_CLOCK_FCLK,
-    SYSTEM_CLOCK_BCLK,
-    SYSTEM_CLOCK_XCLK,
+    SYSTEM_CLOCK_ROOT_CLOCK = 0, /* clock source before fclk_div*/
+    SYSTEM_CLOCK_FCLK,           /* clock source after fclk_div*/
+    SYSTEM_CLOCK_BCLK,           /* clock source after bclk_div*/
+    SYSTEM_CLOCK_XCLK,           /* xtal clock*/
     SYSTEM_CLOCK_32K_CLK,
     SYSTEM_CLOCK_AUPLL,
 };

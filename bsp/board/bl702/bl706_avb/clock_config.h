@@ -31,11 +31,6 @@
 #define BSP_FCLK_DIV 0
 #define BSP_BCLK_DIV 1
 
-#if defined(BSP_ROOT_CLOCK_SOURCE)
-#define BSP_HCLK_DIV 0
-#define BSP_BCLK_DIV 1
-#endif
-
 #if defined(BSP_USING_UART0) || defined(BSP_USING_UART1)
 #define BSP_UART_CLOCK_SOURCE ROOT_CLOCK_SOURCE_PLL_96M
 #define BSP_UART_CLOCK_DIV    0
