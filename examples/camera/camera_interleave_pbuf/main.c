@@ -192,7 +192,7 @@ int ATTR_TCM_SECTION main(void)
     CAM_IntMask(CAM_INT_ALL, MASK);
     CAM_Int_Callback_set(CAM_INT_NORMAL_0, &CAM_Interrupt_Normal);
     CAM_IntMask(CAM_INT_NORMAL_0, UNMASK);
-    NVIC_EnableIRQ(CAM_IRQn);
+    CPU_Interrupt_Enable(CAM_IRQn);
     System_NVIC_SetPriority(CAM_IRQn, 4, 1);
 
     if (SUCCESS != image_sensor_init(DISABLE, &camera_cfg, &mjpeg_cfg)) {

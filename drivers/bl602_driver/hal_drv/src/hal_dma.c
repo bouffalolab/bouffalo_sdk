@@ -70,7 +70,7 @@ int dma_open(struct device *dev, uint16_t oflag)
     /* Disable all interrupt */
     DMA_IntMask(dma_device->ch, DMA_INT_ALL, MASK);
     /* Enable uart interrupt*/
-    NVIC_DisableIRQ(DMA_ALL_IRQn);
+    CPU_Interrupt_Disable(DMA_ALL_IRQn);
 
     DMA_Disable();
 
@@ -111,7 +111,7 @@ int dma_control(struct device *dev, int cmd, void *args)
             DMA_IntMask(dma_device->ch, DMA_INT_ERR, UNMASK);
 
             /* Enable uart interrupt*/
-            NVIC_EnableIRQ(DMA_ALL_IRQn);
+            CPU_Interrupt_Enable(DMA_ALL_IRQn);
             break;
 
         case DEVICE_CTRL_CLR_INT /* constant-expression */:
@@ -120,7 +120,7 @@ int dma_control(struct device *dev, int cmd, void *args)
             DMA_IntMask(dma_device->ch, DMA_INT_ERR, MASK);
 
             /* Enable uart interrupt*/
-            NVIC_DisableIRQ(DMA_ALL_IRQn);
+            CPU_Interrupt_Disable(DMA_ALL_IRQn);
             break;
 
         case DEVICE_CTRL_GET_INT /* constant-expression */:

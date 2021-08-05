@@ -204,10 +204,10 @@ int timer_control(struct device *dev, int cmd, void *args)
 
             if (timer_device->id == TIMER_CH0) {
                 NVIC_ClearPendingIRQ(TIMER_CH0_IRQn);
-                NVIC_EnableIRQ(TIMER_CH0_IRQn);
+                CPU_Interrupt_Enable(TIMER_CH0_IRQn);
             } else if (timer_device->id == TIMER_CH1) {
                 NVIC_ClearPendingIRQ(TIMER_CH1_IRQn);
-                NVIC_EnableIRQ(TIMER_CH1_IRQn);
+                CPU_Interrupt_Enable(TIMER_CH1_IRQn);
             }
 
             break;
@@ -223,9 +223,9 @@ int timer_control(struct device *dev, int cmd, void *args)
                 offset++;
             }
             if (timer_device->id == TIMER_CH0) {
-                NVIC_DisableIRQ(TIMER_CH0_IRQn);
+                CPU_Interrupt_Disable(TIMER_CH0_IRQn);
             } else if (timer_device->id == TIMER_CH1) {
-                NVIC_DisableIRQ(TIMER_CH1_IRQn);
+                CPU_Interrupt_Disable(TIMER_CH1_IRQn);
             }
             break;
         }

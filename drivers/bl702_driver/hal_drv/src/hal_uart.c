@@ -151,9 +151,9 @@ int uart_control(struct device *dev, int cmd, void *args)
                 offset++;
             }
             if (uart_device->id == UART0_ID)
-                NVIC_EnableIRQ(UART0_IRQn);
+                CPU_Interrupt_Enable(UART0_IRQn);
             else if (uart_device->id == UART1_ID)
-                NVIC_EnableIRQ(UART1_IRQn);
+                CPU_Interrupt_Enable(UART1_IRQn);
 
             break;
         }
@@ -166,9 +166,9 @@ int uart_control(struct device *dev, int cmd, void *args)
                 offset++;
             }
             if (uart_device->id == UART0_ID)
-                NVIC_DisableIRQ(UART0_IRQn);
+                CPU_Interrupt_Disable(UART0_IRQn);
             else if (uart_device->id == UART1_ID)
-                NVIC_DisableIRQ(UART1_IRQn);
+                CPU_Interrupt_Disable(UART1_IRQn);
 
             break;
         }

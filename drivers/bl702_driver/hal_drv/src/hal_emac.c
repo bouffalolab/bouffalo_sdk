@@ -344,7 +344,7 @@ int emac_init(emac_device_t *emac_cfg)
 
     EMAC_Int_Callback_Install(EMAC_INT_RX_BUSY_IDX, emac_rx_busy_callback);
 
-    NVIC_EnableIRQ(EMAC_IRQn);
+    CPU_Interrupt_Enable(EMAC_IRQn);
 
     EMAC_ClrIntStatus(EMAC_INT_ALL);
     EMAC_IntMask(EMAC_INT_ALL, UNMASK);

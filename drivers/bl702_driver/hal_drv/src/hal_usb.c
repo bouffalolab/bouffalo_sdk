@@ -214,7 +214,7 @@ int usb_open(struct device *dev, uint16_t oflag)
     usb_xcvr_config(DISABLE);
     usb_xcvr_config(ENABLE);
 
-    NVIC_DisableIRQ(USB_IRQn);
+    CPU_Interrupt_Disable(USB_IRQn);
 
     usbCfg.DeviceAddress = 0;
     usbCfg.EnumInEn = ENABLE;
@@ -278,7 +278,7 @@ int usb_open(struct device *dev, uint16_t oflag)
     USB_Clr_IntStatus(USB_INT_ALL);
 
     Interrupt_Handler_Register(USB_IRQn, USB_FS_IRQ);
-    NVIC_EnableIRQ(USB_IRQn);
+    CPU_Interrupt_Enable(USB_IRQn);
     USB_Enable();
 
     return 0;
@@ -292,7 +292,7 @@ int usb_open(struct device *dev, uint16_t oflag)
 int usb_close(struct device *dev)
 {
     /* disable all interrupts and force USB reset */
-    NVIC_DisableIRQ(USB_IRQn);
+    CPU_Interrupt_Disable(USB_IRQn);
     USB_IntMask(USB_INT_LPM_WAKEUP, MASK);
     USB_IntMask(USB_INT_LPM_PACKET, MASK);
 

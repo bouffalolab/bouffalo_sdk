@@ -85,12 +85,12 @@ int keyscan_control(struct device *dev, int cmd, void *args)
             Interrupt_Handler_Register(KYS_IRQn, KeyScan_IRQ);
 #endif
             BL_WR_REG(KYS_BASE, KYS_KS_INT_EN, 1);
-            NVIC_EnableIRQ(KYS_IRQn);
+            CPU_Interrupt_Enable(KYS_IRQn);
             break;
         case DEVICE_CTRL_CLR_INT /* constant-expression */:
             Interrupt_Handler_Register(KYS_IRQn, NULL);
             BL_WR_REG(KYS_BASE, KYS_KS_INT_EN, 0);
-            NVIC_DisableIRQ(KYS_IRQn);
+            CPU_Interrupt_Disable(KYS_IRQn);
             break;
         case DEVICE_CTRL_GET_INT:
             return (BL_RD_REG(KYS_BASE, KYS_KS_INT_STS) & 0xf);

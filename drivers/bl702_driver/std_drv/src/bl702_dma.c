@@ -476,7 +476,7 @@ BL_Err_Type DMA_LLI_PpStruct_Set_Transfer_Len(DMA_LLI_PP_Struct *dmaPpStruct, ui
 *******************************************************************************/
 void DMA_LLI_PpBuf_Start_New_Transmit(DMA_LLI_PP_Buf *dmaPpBuf)
 {
-    NVIC_DisableIRQ(DMA_ALL_IRQn);
+    CPU_Interrupt_Disable(DMA_ALL_IRQn);
 
     if (dmaPpBuf->lliListHeader[dmaPpBuf->idleIndex] != NULL) {
         DMA_LLI_Update(dmaPpBuf->dmaChan, (uint32_t)dmaPpBuf->lliListHeader[dmaPpBuf->idleIndex]);
@@ -484,7 +484,7 @@ void DMA_LLI_PpBuf_Start_New_Transmit(DMA_LLI_PP_Buf *dmaPpBuf)
         dmaPpBuf->idleIndex = (dmaPpBuf->idleIndex == 0) ? 1 : 0;
     }
 
-    NVIC_EnableIRQ(DMA_ALL_IRQn);
+    CPU_Interrupt_Enable(DMA_ALL_IRQn);
 }
 
 /****************************************************************************/ /**
@@ -497,10 +497,10 @@ void DMA_LLI_PpBuf_Start_New_Transmit(DMA_LLI_PP_Buf *dmaPpBuf)
 *******************************************************************************/
 DMA_LLI_Ctrl_Type *DMA_LLI_PpBuf_Remove_Completed_List(DMA_LLI_PP_Buf *dmaPpBuf)
 {
-    NVIC_DisableIRQ(DMA_ALL_IRQn);
+    CPU_Interrupt_Disable(DMA_ALL_IRQn);
 
     dmaPpBuf->lliListHeader[!dmaPpBuf->idleIndex] = NULL;
-    NVIC_EnableIRQ(DMA_ALL_IRQn);
+    CPU_Interrupt_Enable(DMA_ALL_IRQn);
     return dmaPpBuf->lliListHeader[!dmaPpBuf->idleIndex];
 }
 
@@ -516,7 +516,7 @@ DMA_LLI_Ctrl_Type *DMA_LLI_PpBuf_Remove_Completed_List(DMA_LLI_PP_Buf *dmaPpBuf)
 void DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliList)
 {
     DMA_LLI_Ctrl_Type *pLliList = NULL;
-    NVIC_DisableIRQ(DMA_ALL_IRQn);
+    CPU_Interrupt_Disable(DMA_ALL_IRQn);
 
     pLliList = dmaPpBuf->lliListHeader[dmaPpBuf->idleIndex];
 
@@ -537,7 +537,7 @@ void DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliLis
     }
 
     if (DMA_Channel_Is_Busy(dmaPpBuf->dmaChan) == RESET) {
-        /* DMA stopped: maybe stop just a few minutes ago(not enter INT due to NVIC_DisableIRQ)
+        /* DMA stopped: maybe stop just a few minutes ago(not enter INT due to CPU_Interrupt_Disable)
            or has already stopped before this function is called */
         if (dmaPpBuf->lliListHeader[!dmaPpBuf->idleIndex] == NULL) {
             /* DMA has already stopped before this function is called */
@@ -545,7 +545,7 @@ void DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliLis
         }
     }
 
-    NVIC_EnableIRQ(DMA_ALL_IRQn);
+    CPU_Interrupt_Enable(DMA_ALL_IRQn);
 }
 
 /****************************************************************************/ /**

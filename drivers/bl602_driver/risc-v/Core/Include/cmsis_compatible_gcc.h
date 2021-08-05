@@ -120,9 +120,9 @@ extern void clic_disable_interrupt(uint32_t source);
 extern void clic_set_pending(uint32_t source);
 extern void clic_clear_pending(uint32_t source);
 
-#define NVIC_EnableIRQ clic_enable_interrupt
+#define CPU_Interrupt_Enable clic_enable_interrupt
 
-#define NVIC_DisableIRQ clic_disable_interrupt
+#define CPU_Interrupt_Disable clic_disable_interrupt
 
 #define NVIC_ClearPendingIRQ clic_clear_pending
 

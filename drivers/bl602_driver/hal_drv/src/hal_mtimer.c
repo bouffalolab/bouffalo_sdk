@@ -42,7 +42,7 @@ static void Systick_Handler(void)
  */
 void mtimer_set_alarm_time(uint64_t ticks, void (*interruptfun)(void))
 {
-    NVIC_DisableIRQ(MTIME_IRQn);
+    CPU_Interrupt_Disable(MTIME_IRQn);
 
     uint32_t ulCurrentTimeHigh, ulCurrentTimeLow;
     volatile uint32_t *const pulTimeHigh = (volatile uint32_t *const)(CLIC_CTRL_ADDR + CLIC_MTIME + 4);
@@ -71,7 +71,7 @@ void mtimer_set_alarm_time(uint64_t ticks, void (*interruptfun)(void))
     next_compare_tick += (uint64_t)current_set_ticks;
 
     Interrupt_Handler_Register(MTIME_IRQn, Systick_Handler);
-    NVIC_EnableIRQ(MTIME_IRQn);
+    CPU_Interrupt_Enable(MTIME_IRQn);
 }
 
 /**

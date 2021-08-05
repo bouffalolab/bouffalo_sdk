@@ -184,7 +184,7 @@ int adc_control(struct device *dev, int cmd, void *args)
             if (mask & ADC_EVEN_INT_NEG_SATURATION_IT) {
                 ADC_IntMask(ADC_EVEN_INT_NEG_SATURATION, UNMASK);
             }
-            NVIC_EnableIRQ(GPADC_DMA_IRQn);
+            CPU_Interrupt_Enable(GPADC_DMA_IRQn);
             break;
 
         case DEVICE_CTRL_CLR_INT /* constant-expression */:

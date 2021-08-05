@@ -81,7 +81,7 @@ int qdec_open(struct device *dev, uint16_t oflag)
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_SAMPLE, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_ERROR, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_OVERFLOW, MASK);
-            // NVIC_EnableIRQ(QDEC1_IRQn);
+            // CPU_Interrupt_Enable(QDEC1_IRQn);
         }
 #endif
 #ifdef BSP_USING_QDEC2
@@ -91,7 +91,7 @@ int qdec_open(struct device *dev, uint16_t oflag)
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_SAMPLE, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_ERROR, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_OVERFLOW, MASK);
-            // NVIC_EnableIRQ(QDEC2_IRQn);
+            // CPU_Interrupt_Enable(QDEC2_IRQn);
         }
 #endif
     }
@@ -128,22 +128,22 @@ int qdec_control(struct device *dev, int cmd, void *args)
                 QDEC_SetIntMask(qdec_device->id, QDEC_INT_OVERFLOW, UNMASK);
             }
             if (qdec_device->id == QDEC0_ID) {
-                NVIC_EnableIRQ(QDEC0_IRQn);
+                CPU_Interrupt_Enable(QDEC0_IRQn);
             } else if (qdec_device->id == QDEC1_ID) {
-                NVIC_EnableIRQ(QDEC1_IRQn);
+                CPU_Interrupt_Enable(QDEC1_IRQn);
             } else if (qdec_device->id == QDEC2_ID) {
-                NVIC_EnableIRQ(QDEC2_IRQn);
+                CPU_Interrupt_Enable(QDEC2_IRQn);
             }
             break;
         }
 
         case DEVICE_CTRL_CLR_INT: {
             if (qdec_device->id == QDEC0_ID) {
-                NVIC_DisableIRQ(QDEC0_IRQn);
+                CPU_Interrupt_Disable(QDEC0_IRQn);
             } else if (qdec_device->id == QDEC1_ID) {
-                NVIC_DisableIRQ(QDEC1_IRQn);
+                CPU_Interrupt_Disable(QDEC1_IRQn);
             } else if (qdec_device->id == QDEC2_ID) {
-                NVIC_DisableIRQ(QDEC2_IRQn);
+                CPU_Interrupt_Disable(QDEC2_IRQn);
             }
             break;
         }

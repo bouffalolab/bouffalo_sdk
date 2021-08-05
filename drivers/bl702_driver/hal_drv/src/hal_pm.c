@@ -134,8 +134,8 @@ void pm_hbn_irq_register(void (*hbn_irq)(uint8_t event))
     hbn_irq_callback = hbn_irq;
     Interrupt_Handler_Register(HBN_OUT0_IRQn, HBN_OUT0_IRQ);
     Interrupt_Handler_Register(HBN_OUT1_IRQn, HBN_OUT1_IRQ);
-    NVIC_EnableIRQ(HBN_OUT0_IRQn);
-    NVIC_EnableIRQ(HBN_OUT1_IRQn);
+    CPU_Interrupt_Enable(HBN_OUT0_IRQn);
+    CPU_Interrupt_Enable(HBN_OUT1_IRQn);
 }
 
 static void HBN_OUT0_IRQ(void)

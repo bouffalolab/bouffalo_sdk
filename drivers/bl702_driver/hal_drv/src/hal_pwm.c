@@ -76,7 +76,7 @@ int pwm_open(struct device *dev, uint16_t oflag)
         BL_WR_REG(PWMx, PWM_INTERRUPT, BL_SET_REG_BITS_VAL(tmpVal, PWM_INT_PERIOD_CNT, pwm_device->it_pulse_count));
         Interrupt_Handler_Register(PWM_IRQn, PWM_IRQ);
         PWM_IntMask(pwm_device->ch, PWM_INT_PULSE_CNT, UNMASK);
-        NVIC_EnableIRQ(PWM_IRQn);
+        CPU_Interrupt_Enable(PWM_IRQn);
     }
 
     return 0;
@@ -122,10 +122,10 @@ int pwm_control(struct device *dev, int cmd, void *args)
 
             if ((uint32_t)args) {
                 PWM_IntMask(pwm_device->ch, PWM_INT_PULSE_CNT, UNMASK);
-                NVIC_EnableIRQ(PWM_IRQn);
+                CPU_Interrupt_Enable(PWM_IRQn);
             } else {
                 PWM_IntMask(pwm_device->ch, PWM_INT_PULSE_CNT, MASK);
-                NVIC_DisableIRQ(PWM_IRQn);
+                CPU_Interrupt_Disable(PWM_IRQn);
             }
 
             break;

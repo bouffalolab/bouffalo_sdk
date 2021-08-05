@@ -32,7 +32,7 @@
 #include "power_config.h"
 #include "hal_power.h"
 
-#define ALWAYS_DISABLE_AON_PAD_9     (0)
+#define ALWAYS_DISABLE_AON_PAD_9 (0)
 
 /**
  * @brief gating peripheral clock for power saving
@@ -1074,7 +1074,6 @@ static ATTR_TCM_SECTION void PDS_Power_On_Flash(PDS_APP_CFG_Type *cfg)
 void ATTR_TCM_SECTION PDS_Mode_Enter(PDS_APP_CFG_Type *cfg)
 {
     PDS_DEFAULT_LV_CFG_Type *pPdsCfg = NULL;
-    uint32_t tmpVal = 0, tmpVal2 = 0;
 
     if (cfg->useXtal32k) {
         HBN_32K_Sel(HBN_32K_XTAL);
@@ -1106,6 +1105,8 @@ void ATTR_TCM_SECTION PDS_Mode_Enter(PDS_APP_CFG_Type *cfg)
     }
 
 #if ALWAYS_DISABLE_AON_PAD_9
+    uint32_t tmpVal = 0, tmpVal2 = 0;
+
     /* always disable and mask aon_pad_GPIO9, mask/unmask and ie_enable/ie_disable */
     tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
     tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MASK);
@@ -1428,7 +1429,7 @@ int lp_enter_pds(uint32_t sleep_time, void (*preCbFun)(void), void (*postCbFun)(
     HBN_Clear_IRQ(HBN_INT_GPIO13);
 
     /* enable PDS interrupt to wakeup CPU (PDS1:CPU not powerdown, CPU __WFI) */
-    NVIC_EnableIRQ(PDS_WAKEUP_IRQn);
+    CPU_Interrupt_Enable(PDS_WAKEUP_IRQn);
 
     /* clear and mask PDS int */
     PDS_IntMask(PDS_INT_WAKEUP, UNMASK);
@@ -1456,7 +1457,7 @@ int lp_enter_pds(uint32_t sleep_time, void (*preCbFun)(void), void (*postCbFun)(
  *
  * @note now default hbn level is hbn1
  */
-int lp_enter_hbn(uint32_t sleepTime , uint8_t hbn_level)
+int lp_enter_hbn(uint32_t sleepTime, uint8_t hbn_level)
 {
     HBN_APP_CFG_Type cfg = {
         .useXtal32k = 0,                                      /*!< Wheather use xtal 32K as 32K clock source,otherwise use rc32k */

@@ -54,7 +54,7 @@ int spi_open(struct device *dev, uint16_t oflag)
 
     SPI_IntMask(spi_device->id, SPI_INT_ALL, MASK);
     /* Enable uart interrupt*/
-    NVIC_DisableIRQ(SPI_IRQn);
+    CPU_Interrupt_Disable(SPI_IRQn);
 
     SPI_Disable(spi_device->id, spi_device->mode);
 

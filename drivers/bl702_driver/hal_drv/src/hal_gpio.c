@@ -83,7 +83,7 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
         case GPIO_HZ_MODE:
             GLB_GPIO_Set_HZ(pin);
         default:
-            NVIC_DisableIRQ(GPIO_INT0_IRQn);
+            CPU_Interrupt_Disable(GPIO_INT0_IRQn);
             GLB_GPIO_IntMask(pin, MASK);
 
             gpio_cfg.gpioMode = GPIO_MODE_INPUT;
@@ -134,7 +134,7 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
                 return;
             }
 
-            NVIC_EnableIRQ(GPIO_INT0_IRQn);
+            CPU_Interrupt_Enable(GPIO_INT0_IRQn);
             break;
     }
 
