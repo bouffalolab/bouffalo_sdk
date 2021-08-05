@@ -132,9 +132,11 @@ int device_open(struct device *dev, uint16_t oflag)
             retval = dev_open(dev, oflag);
             dev->status = DEVICE_OPENED;
             dev->oflag |= oflag;
+        } else {
+            retval = -DEVICE_EFAULT;
         }
     } else {
-        retval = -DEVICE_EFAULT;
+        retval = -DEVICE_EINVAL;
     }
 
     return retval;
@@ -155,9 +157,11 @@ int device_close(struct device *dev)
             retval = dev_close(dev);
             dev->status = DEVICE_CLOSED;
             dev->oflag = 0;
+        } else {
+            retval = -DEVICE_EFAULT;
         }
     } else {
-        retval = -DEVICE_EFAULT;
+        retval = -DEVICE_EINVAL;
     }
 
     return retval;
@@ -175,12 +179,14 @@ int device_control(struct device *dev, int cmd, void *args)
 {
     int retval = DEVICE_EOK;
 
-    if (dev->status >= DEVICE_REGISTERED) {
+    if (dev->status > DEVICE_UNREGISTER) {
         if (dev_control != NULL) {
             retval = dev_control(dev, cmd, args);
+        } else {
+            retval = -DEVICE_EFAULT;
         }
     } else {
-        retval = -DEVICE_EFAULT;
+        retval = -DEVICE_EINVAL;
     }
 
     return retval;
@@ -202,9 +208,11 @@ int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t 
     if (dev->status == DEVICE_OPENED) {
         if (dev_write != NULL) {
             retval = dev_write(dev, pos, buffer, size);
+        } else {
+            retval = -DEVICE_EFAULT;
         }
     } else {
-        retval = -DEVICE_EFAULT;
+        retval = -DEVICE_EINVAL;
     }
 
     return retval;
@@ -226,9 +234,11 @@ int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     if (dev->status == DEVICE_OPENED) {
         if (dev_read != NULL) {
             retval = dev_read(dev, pos, buffer, size);
+        } else {
+            retval = -DEVICE_EFAULT;
         }
     } else {
-        retval = -DEVICE_EFAULT;
+        retval = -DEVICE_EINVAL;
     }
 
     return retval;
@@ -250,9 +260,11 @@ int device_set_callback(struct device *dev, void (*callback)(struct device *dev,
     if (dev->status > DEVICE_UNREGISTER) {
         if (callback != NULL) {
             dev->callback = callback;
+        } else {
+            retval = -DEVICE_EFAULT;
         }
     } else {
-        retval = -DEVICE_EFAULT;
+        retval = -DEVICE_EINVAL;
     }
 
     return retval;
