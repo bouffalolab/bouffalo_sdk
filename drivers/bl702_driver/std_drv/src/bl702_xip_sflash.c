@@ -88,7 +88,7 @@ static uint8_t aesEnable;
  * @return None
  *
 *******************************************************************************/
-void XIP_SFlash_Opt_Enter(void)
+void ATTR_TCM_SECTION XIP_SFlash_Opt_Enter(void)
 {
     aesEnable = SF_Ctrl_Is_AES_Enable();
 
@@ -105,7 +105,7 @@ void XIP_SFlash_Opt_Enter(void)
  * @return None
  *
 *******************************************************************************/
-void XIP_SFlash_Opt_Exit(void)
+void ATTR_TCM_SECTION XIP_SFlash_Opt_Exit(void)
 {
     if (aesEnable) {
         SF_Ctrl_AES_Enable();

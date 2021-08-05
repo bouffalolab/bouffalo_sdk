@@ -20,42 +20,136 @@
  * under the License.
  *
  */
-#include "bl702_xip_sflash.h"
-#include "bl702_sf_cfg.h"
 #include "bl702_glb.h"
+#include "bl702_xip_sflash.h"
+#include "bl702_xip_sflash_ext.h"
+#include "bl702_sf_cfg.h"
+#include "bl702_sf_cfg_ext.h"
 #include "hal_flash.h"
 
-static SPI_Flash_Cfg_Type g_boot2_flash_cfg;
+static SPI_Flash_Cfg_Type g_flash_cfg;
 
 /**
- * @brief flash_init
+ * @brief flash_get_cfg
  *
- * @return int
+ * @return BL_Err_Type
  */
-int flash_init(void)
+BL_Err_Type flash_get_cfg(uint8_t **cfg_addr,uint32_t *len)
 {
-    L1C_Cache_Flush(0xf);
-    SF_Cfg_Get_Flash_Cfg_Need_Lock(0, &g_boot2_flash_cfg);
-    g_boot2_flash_cfg.ioMode = g_boot2_flash_cfg.ioMode & 0x0f;
-    L1C_Cache_Flush(0x0);
+    *cfg_addr = (uint8_t *)&g_flash_cfg;
+    *len = sizeof(SPI_Flash_Cfg_Type);
 
-    return 0;
+    return SUCCESS;
+}
+
+/**
+ * @brief flash_set_qspi_enable
+ *
+ * @return BL_Err_Type
+ */
+static BL_Err_Type ATTR_TCM_SECTION flash_set_qspi_enable(SPI_Flash_Cfg_Type *p_flash_cfg)
+{
+     if ((p_flash_cfg->ioMode & 0x0f) == SF_CTRL_QO_MODE || (p_flash_cfg->ioMode & 0x0f) == SF_CTRL_QIO_MODE) {
+         SFlash_Qspi_Enable(p_flash_cfg);
+     }
+
+    return SUCCESS;
+}
+
+/**
+ * @brief flash_l1c_set_wrap
+ *
+ * @return BL_Err_Type
+ */
+static BL_Err_Type ATTR_TCM_SECTION flash_l1c_set_wrap(SPI_Flash_Cfg_Type *p_flash_cfg)
+{
+    if (((p_flash_cfg->ioMode >> 4) & 0x01) == 1) {
+        L1C_Set_Wrap(DISABLE);
+    } else {
+        L1C_Set_Wrap(ENABLE);
+        if((p_flash_cfg->ioMode&0x0f)==SF_CTRL_QO_MODE || (p_flash_cfg->ioMode&0x0f)==SF_CTRL_QIO_MODE) {
+            SFlash_SetBurstWrap(p_flash_cfg);
+        }
+    }
+
+    return SUCCESS;
+}
+
+/**
+ * @brief flash_config_init
+ *
+ * @return BL_Err_Type
+ */
+static BL_Err_Type ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flash_cfg, uint8_t *jedec_id)
+{
+    BL_Err_Type ret = ERROR;
+    uint32_t jid = 0;
+    uint32_t offset = 0;
+
+    __disable_irq();
+    XIP_SFlash_Opt_Enter();
+    XIP_SFlash_State_Save(p_flash_cfg, &offset);
+    SFlash_GetJedecId(p_flash_cfg, (uint8_t *)&jid);
+    arch_memcpy(jedec_id, (uint8_t *)&jid, 3);
+    jid &= 0xFFFFFF;
+    ret = SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(jid, p_flash_cfg);
+
+    /* Set flash controler from p_flash_cfg */
+    flash_set_qspi_enable(p_flash_cfg);
+    flash_l1c_set_wrap(p_flash_cfg);
+    XIP_SFlash_State_Restore(p_flash_cfg, p_flash_cfg->ioMode & 0x0f, offset);
+    XIP_SFlash_Opt_Exit();
+    __enable_irq();
+
+    return ret;
+}
+
+/**
+ * @brief multi flash adapter
+ *
+ * @return BL_Err_Type
+ */
+BL_Err_Type ATTR_TCM_SECTION flash_init(void)
+{
+    BL_Err_Type ret = ERROR;
+    uint32_t jedec_id = 0;
+
+    __disable_irq();
+    L1C_Cache_Flush_Ext();
+    SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(0, &g_flash_cfg);
+    g_flash_cfg.ioMode = g_flash_cfg.ioMode & 0x0f;
+    L1C_Cache_Flush_Ext();
+    __enable_irq();
+
+    ret = flash_config_init(&g_flash_cfg, (uint8_t *)&jedec_id);
+    MSG("flash ID = %08x\r\n", jedec_id);
+    bflb_platform_dump((uint8_t *)&g_flash_cfg, sizeof(g_flash_cfg));
+    if (ret != SUCCESS) {
+        MSG("flash config init fail!\r\n");
+    }
+
+    return ret;
 }
 
 /**
  * @brief read jedec id
  *
  * @param data
- * @return int
+ * @return BL_Err_Type
  */
-int flash_read_jedec_id(uint8_t *data)
+BL_Err_Type ATTR_TCM_SECTION flash_read_jedec_id(uint8_t *data)
 {
     uint32_t jid = 0;
-    XIP_SFlash_GetJedecId_Need_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, (uint8_t *)&jid);
-    jid &= 0xFFFFFF;
-    BL702_MemCpy(data, (void *)&jid, 4);
 
-    return 0;
+    __disable_irq();
+    XIP_SFlash_Opt_Enter();
+    XIP_SFlash_GetJedecId_Need_Lock(&g_flash_cfg, g_flash_cfg.ioMode & 0x0f, (uint8_t *)&jid);
+    XIP_SFlash_Opt_Exit();
+    __enable_irq();
+    jid &= 0xFFFFFF;
+    arch_memcpy(data, (void *)&jid, 4);
+
+    return SUCCESS;
 }
 
 /**
@@ -66,51 +160,71 @@ int flash_read_jedec_id(uint8_t *data)
  * @param len
  * @return BL_Err_Type
  */
-BL_Err_Type flash_read_via_xip(uint32_t addr, uint8_t *data, uint32_t len)
+BL_Err_Type ATTR_TCM_SECTION flash_read_via_xip(uint32_t addr, uint8_t *data, uint32_t len)
 {
-    L1C_Cache_Flush(0xf);
+    __disable_irq();
+    L1C_Cache_Flush_Ext();
     XIP_SFlash_Read_Via_Cache_Need_Lock(addr, data, len);
-    L1C_Cache_Flush(0x0);
+    L1C_Cache_Flush_Ext();
+    __enable_irq();
 
-    return 0;
+    return SUCCESS;
 }
 
 /**
- * @brief read data
+ * @brief flash read data
  *
  * @param addr
  * @param data
  * @param len
  * @return BL_Err_Type
  */
-BL_Err_Type flash_read(uint32_t addr, uint8_t *data, uint32_t len)
+BL_Err_Type ATTR_TCM_SECTION flash_read(uint32_t addr, uint8_t *data, uint32_t len)
 {
-    return XIP_SFlash_Read_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, addr, data, len);
+    BL_Err_Type ret = ERROR;
+
+    XIP_SFlash_Opt_Enter();
+    ret = XIP_SFlash_Read_With_Lock(&g_flash_cfg, g_flash_cfg.ioMode & 0x0f, addr, data, len);
+    XIP_SFlash_Opt_Exit();
+
+    return ret;
 }
 
 /**
- * @brief write data
+ * @brief flash write data
  *
  * @param addr
  * @param data
  * @param len
  * @return BL_Err_Type
  */
-BL_Err_Type flash_write(uint32_t addr, uint8_t *data, uint32_t len)
+BL_Err_Type ATTR_TCM_SECTION flash_write(uint32_t addr, uint8_t *data, uint32_t len)
 {
-    return XIP_SFlash_Write_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, addr, data, len);
+    BL_Err_Type ret = ERROR;
+
+    XIP_SFlash_Opt_Enter();
+    ret = XIP_SFlash_Write_With_Lock(&g_flash_cfg, g_flash_cfg.ioMode & 0x0f, addr, data, len);
+    XIP_SFlash_Opt_Exit();
+
+    return ret;
 }
 
 /**
- * @brief erase
+ * @brief flash erase
  *
  * @param startaddr
  * @param endaddr
  * @return BL_Err_Type
  */
-BL_Err_Type flash_erase(uint32_t startaddr, uint32_t len)
+BL_Err_Type ATTR_TCM_SECTION flash_erase(uint32_t startaddr, uint32_t len)
 {
-    return XIP_SFlash_Erase_With_Lock(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0x0f, startaddr, len);
+    BL_Err_Type ret = ERROR;
+
+    XIP_SFlash_Opt_Enter();
+    ret = XIP_SFlash_Erase_With_Lock(&g_flash_cfg, g_flash_cfg.ioMode & 0x0f, startaddr, len);
+    XIP_SFlash_Opt_Exit();
+
+    return ret;
 }
 
 /**
@@ -127,20 +241,22 @@ BL_Err_Type ATTR_TCM_SECTION flash_set_cache(uint8_t cont_read, uint8_t cache_en
     uint32_t tmp[1];
     BL_Err_Type stat;
 
-    /* To make it simple, exit cont read anyway */
     SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
 
-    SFlash_Reset_Continue_Read(&g_boot2_flash_cfg);
+    XIP_SFlash_Opt_Enter();
+    /* To make it simple, exit cont read anyway */
+    SFlash_Reset_Continue_Read(&g_flash_cfg);
 
-    if (g_boot2_flash_cfg.cReadSupport == 0) {
+    if (g_flash_cfg.cReadSupport == 0) {
         cont_read = 0;
     }
 
     if (cont_read == 1) {
-        stat = SFlash_Read(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
+        stat = SFlash_Read(&g_flash_cfg, g_flash_cfg.ioMode & 0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
 
         if (SUCCESS != stat) {
-            return 0xff;
+            XIP_SFlash_Opt_Exit();
+            return ERROR;
         }
     }
 
@@ -149,8 +265,9 @@ BL_Err_Type ATTR_TCM_SECTION flash_set_cache(uint8_t cont_read, uint8_t cache_en
 
     if (cache_enable) {
         SF_Ctrl_Set_Flash_Image_Offset(flash_offset);
-        SFlash_Cache_Read_Enable(&g_boot2_flash_cfg, g_boot2_flash_cfg.ioMode & 0xf, cont_read, cache_way_disable);
+        SFlash_Cache_Read_Enable(&g_flash_cfg, g_flash_cfg.ioMode & 0xf, cont_read, cache_way_disable);
     }
+    XIP_SFlash_Opt_Exit();
 
-    return 0;
+    return SUCCESS;
 }
