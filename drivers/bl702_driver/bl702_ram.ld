@@ -1,9 +1,9 @@
 /****************************************************************************************
-* @file map.txt
+* @file bl702_ram.ld
 *
 * @brief This file is the map file (gnuarm or armgcc).
 *
-* Copyright (C) BouffaloLab 2018
+* Copyright (C) BouffaloLab 2021
 *
 ****************************************************************************************
 */
@@ -18,7 +18,6 @@ OUTPUT_ARCH( "riscv" )
 ENTRY(_enter)
 
 StackSize = 0x0400; /*  1KB */
-HeapSize  = 0x1000; /*  4KB */
 
 MEMORY
 {
@@ -81,22 +80,6 @@ SECTIONS
         . = ALIGN(4);
         __tcm_data_end__ = .;
     } > dtcm_memory
-
-    /* .heap_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of heap sections, and assign
-     * values to heap symbols later */
-    .heap_dummy (NOLOAD):
-    {
-        . = ALIGN(0x4);
-        . = . + HeapSize;
-        . = ALIGN(0x4);
-    } > dtcm_memory
-
-    _HeapBase = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory) - StackSize - HeapSize;
-    _HeapSize = HeapSize;
-
-    /* Check if data + heap + stack exceeds RAM limit */
-    ASSERT(_HeapBase >= __tcm_data_end__, "region RAM overflowed with stack")
 
     /*************************************************************************/
     /* .stack_dummy section doesn't contains any symbols. It is only
@@ -188,6 +171,11 @@ SECTIONS
         . = ALIGN(4);
         __HeapLimit = .;
     } > ram_memory
+
+    PROVIDE (__heap_min_size = 0x400);
+    __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
+
+    ASSERT((__HeapLimit -  __HeapBase ) >= __heap_min_size, "heap size is too short.")
 
 }
 
