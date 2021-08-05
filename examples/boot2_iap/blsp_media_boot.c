@@ -44,57 +44,8 @@
 #include "blsp_media_boot.h"
 #include "softcrc.h"
 #include "bflb_eflash_loader_uart.h"
-//#include "hal_sec_eng.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
-
-/** @addtogroup  BLSP_MEDIA_BOOT
- *  @{
- */
-
-/** @defgroup  BLSP_MEDIA_BOOT_Private_Macros
- *  @{
- */
-
-/*@} end of group BLSP_MEDIA_BOOT_Private_Macros */
-
-/** @defgroup  BLSP_MEDIA_BOOT_Private_Types
- *  @{
- */
-
-/*@} end of group BLSP_MEDIA_BOOT_Private_Types */
-
-/** @defgroup  BLSP_MEDIA_BOOT_Private_Variables
- *  @{
- */
-
-/*@} end of group BLSP_MEDIA_BOOT_Private_Variables */
-
-/** @defgroup  BLSP_MEDIA_BOOT_Global_Variables
- *  @{
- */
-//extern SEC_Eng_SHA256_Ctx g_sha_ctx;
-
-/*@} end of group BLSP_MEDIA_BOOT_Global_Variables */
-
-/** @defgroup  BLSP_MEDIA_BOOT_Private_Fun_Declaration
- *  @{
- */
-
-/*@} end of group BLSP_MEDIA_BOOT_Private_Fun_Declaration */
-
-/** @defgroup  BLSP_MEDIA_BOOT_Private_Functions_User_Define
- *  @{
- */
-
-/*@} end of group BLSP_MEDIA_BOOT_Private_Functions_User_Define */
-
-/** @defgroup  BLSP_MEDIA_BOOT_Private_Functions
- *  @{
- */
-
+extern int main(void);
 extern struct device *dev_check_hash;
 
 /****************************************************************************/ /**
@@ -202,7 +153,7 @@ static int32_t blsp_mediaboot_read_signaure(uint32_t addr, uint32_t *len)
  * @return BL_Err_Type
  *
 *******************************************************************************/
-static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg, uint32_t boot_header_addr, uint32_t img_addr)
+static int32_t blsp_mediaboot_parse_one_fw(boot2_image_config *boot_img_cfg, uint32_t boot_header_addr, uint32_t img_addr)
 {
     uint32_t addr = boot_header_addr;
     int32_t ret;
@@ -348,12 +299,6 @@ static int32_t blsp_mediaboot_parse_one_fw(boot_image_config *boot_img_cfg, uint
     return ret;
 }
 
-/*@} end of group BLSP_MEDIA_BOOT_Private_Functions */
-
-/** @defgroup  BLSP_MEDIA_BOOT_Public_Functions
- *  @{
- */
-
 /****************************************************************************/ /**
  * @brief  Media boot read data
  *
@@ -442,7 +387,7 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], u
                                     (uint8_t *)&g_boot_img_cfg[i].entry_point, 4);
 #endif
 #ifdef ARCH_RISCV
-                g_boot_img_cfg[i].entry_point = g_boot_cpu_cfg[i].default_xip_addr;
+                g_boot_img_cfg[i].entry_point = ((uint32_t )main) & 0xff000000;
 #endif
             }
         }
@@ -477,8 +422,6 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], u
     return BFLB_BOOT2_FAIL;
 }
 
-/*@} end of group BLSP_MEDIA_BOOT_Public_Functions */
 
-/*@} end of group BLSP_MEDIA_BOOT */
 
-/*@} end of group BL606_BLSP_Boot2 */
+

@@ -49,6 +49,8 @@
 
 #define ARCH_Delay_US BL702_Delay_US
 #define ARCH_Delay_MS BL702_Delay_MS
+#define arch_delay_us BL702_Delay_US
+#define arch_delay_ms BL702_Delay_MS
 
 void Interrupt_Handler_Register(IRQn_Type irq, pFunc interruptFun);
 void ASM_Delay_Us(uint32_t core, uint32_t cnt);

@@ -38,46 +38,16 @@
 
 #include "stdint.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
+int32_t blsp_boot_parse_bootheader(boot2_image_config *g_boot_img_cfg, uint8_t *data);
+int32_t blsp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own);
+int32_t blsp_boot_parse_signature(boot2_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own);
+int32_t blsp_boot_parse_aesiv(boot2_image_config *g_boot_img_cfg, uint8_t *data);
+int32_t blsp_boot_parser_check_signature(boot2_image_config *g_boot_img_cfg);
+int32_t blsp_boot_parser_check_hash(boot2_image_config *g_boot_img_cfg);
 
-/** @addtogroup  BLSP_BOOT_PARSER
- *  @{
- */
 
-/** @defgroup  BLSP_BOOT_PARSER_Public_Types
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_PARSER_Public_Types */
-
-/** @defgroup  BLSP_BOOT_PARSER_Public_Constants
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_PARSER_Public_Constants */
-
-/** @defgroup  BLSP_BOOT_PARSER_Public_Macros
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_PARSER_Public_Macros */
-
-/** @defgroup  BLSP_BOOT_PARSER_Public_Functions
- *  @{
- */
-int32_t blsp_boot_parse_bootheader(boot_image_config *g_boot_img_cfg, uint8_t *data);
-int32_t blsp_boot_parse_pkey(boot_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own);
-int32_t blsp_boot_parse_signature(boot_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own);
-int32_t blsp_boot_parse_aesiv(boot_image_config *g_boot_img_cfg, uint8_t *data);
-int32_t blsp_boot_parser_check_signature(boot_image_config *g_boot_img_cfg);
-int32_t blsp_boot_parser_check_hash(boot_image_config *g_boot_img_cfg);
-
-/*@} end of group BLSP_BOOT_PARSER_Public_Functions */
-
-/*@} end of group BLSP_BOOT_PARSER */
-
-/*@} end of group BL606_BLSP_Boot2 */
 
 #endif /* __BLSP_BOOT_PARSER_H__ */
+
+
+

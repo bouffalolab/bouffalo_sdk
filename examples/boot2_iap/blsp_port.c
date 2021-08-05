@@ -83,7 +83,7 @@ uint32_t blsp_boot2_get_cpu_count(void)
 *******************************************************************************/
 uint8_t blsp_read_power_save_mode(void)
 {
-    if (hal_hbn_get_status_flag() == HBN_STATUS_WAKEUP_FLAG) {
+    if (hal_boot2_get_psmode_status() == HBN_STATUS_WAKEUP_FLAG) {
         return BFLB_PSM_HBN;
     } else {
         return BFLB_PSM_ACTIVE;
@@ -136,7 +136,7 @@ void ATTR_TCM_SECTION blsp_boot2_releae_other_cpu(void)
  * @return BL_Err_Type
  *
 *******************************************************************************/
-int32_t ATTR_TCM_SECTION blsp_boot2_set_encrypt(uint8_t index, boot_image_config *g_boot_img_cfg)
+int32_t ATTR_TCM_SECTION blsp_boot2_set_encrypt(uint8_t index, boot2_image_config *g_boot_img_cfg)
 {
     uint32_t aes_enabled = 0;
     uint32_t len = 0;
@@ -163,49 +163,6 @@ int32_t ATTR_TCM_SECTION blsp_boot2_set_encrypt(uint8_t index, boot_image_config
     }
 
     return BFLB_BOOT2_SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Security boot finished
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-void ATTR_TCM_SECTION blsp_sboot_finish(void)
-{
-    uint32_t tmp_val;
-
-    tmp_val = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_CTRL);
-
-    tmp_val = BL_SET_REG_BITS_VAL(tmp_val, TZC_SEC_TZC_SBOOT_DONE, 0xf);
-
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_CTRL, tmp_val);
-}
-
-/****************************************************************************/ /**
- * @brief  blsp_boot2_pll_init
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-void ATTR_TCM_SECTION blsp_boot2_pll_init(void)
-{
-    int32_t ret;
-    hal_pll_config clk_cfg;
-
-    flash_get_clk_cfg(&clk_cfg);
-
-    clk_cfg.cfg.pll_clk = BL_SYS_CLK_PLL;
-    clk_cfg.cfg.hclk_div = 0;
-    clk_cfg.cfg.bclk_div = 1;
-    clk_cfg.cfg.flash_clk_type = BL_SFLASH_CLK;
-    clk_cfg.cfg.flash_clk_div = 1;
-    ret = hal_pll_init(&clk_cfg);
-    MSG("hal_pll_init %d\r\n", ret);
 }
 
 typedef void (*pFunc)(void);
@@ -320,8 +277,5 @@ uint32_t ATTR_TCM_SECTION blsp_boot2_get_baudrate(void)
     return *p;
 }
 
-/*@} end of group BLSP_PORT_Public_Functions */
 
-/*@} end of group BLSP_PORT */
 
-/*@} end of group BL606_BLSP_Boot2 */

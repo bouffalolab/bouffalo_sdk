@@ -41,17 +41,7 @@
 #include "hal_flash.h"
 #include "hal_boot2.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
 
-/** @addtogroup  BLSP_BOOTINFO
- *  @{
- */
-
-/** @defgroup  BLSP_BOOTINFO_Public_Macros
- *  @{
- */
 #define BFLB_BOOT2_CPU0_MAGIC        "BFNP"
 #define BFLB_BOOT2_CPU1_MAGIC        "BFAP"
 #define BFLB_BOOT2_FLASH_CFG_MAGIC   "FCFG"
@@ -61,6 +51,7 @@
 
 #define BFLB_BOOT2_READBUF_SIZE         4 * 1024
 #define BFLB_FW_IMG_OFFSET_AFTER_HEADER 4 * 1024
+
 
 /* Image owner type */
 #define BFLB_BOOT2_CPU_0   0
@@ -79,11 +70,8 @@
 #define BFLB_PSM_ACTIVE 0
 #define BFLB_PSM_HBN    1
 
-/*@} end of group BLSP_BOOTINFO_Public_Macros */
 
-/** @defgroup  BLSP_BOOTINFO_Public_Types
- *  @{
- */
+
 typedef enum {
     BFLB_BOOT2_SUCCESS = 0x00,
 
@@ -256,7 +244,7 @@ typedef struct
     uint8_t signature[BFLB_BOOT2_SIGN_MAXSIZE];  //signature in boot header
     uint8_t signature2[BFLB_BOOT2_SIGN_MAXSIZE]; //signature in boot header
 
-} boot_image_config;
+} boot2_image_config;
 
 typedef struct
 {
@@ -267,29 +255,15 @@ typedef struct
 
 typedef void (*pentry_t)(void);
 
-extern boot_cpu_config g_boot_cpu_cfg[2];
-extern boot_image_config g_boot_img_cfg[2];
-extern boot_efuse_hw_config g_efuse_cfg;
+extern boot2_image_config g_boot_img_cfg[2];
+extern boot2_efuse_hw_config g_efuse_cfg;
 extern uint8_t g_ps_mode;
 extern uint8_t g_cpu_count;
 extern uint8_t g_boot2_read_buf[BFLB_BOOT2_READBUF_SIZE];
 
-/*@} end of group BLSP_BOOTINFO_Public_Types */
 
-/** @defgroup  BLSP_BOOTINFO_Public_Constants
- *  @{
- */
-
-/*@} end of group BLSP_BOOTINFO_Public_Constants */
-
-/** @defgroup  BLSP_BOOTINFO_Public_Functions
- *  @{
- */
-
-/*@} end of group BLSP_BOOTINFO_Public_Functions */
-
-/*@} end of group BLSP_BOOTINFO */
-
-/*@} end of group BL606_BLSP_Boot2 */
 
 #endif /* __BLSP_BOOTINFO_H__ */
+
+
+

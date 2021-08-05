@@ -38,37 +38,10 @@
 
 #include "stdint.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
-
-/** @addtogroup  BLSP_COMMON
- *  @{
- */
-
-/** @defgroup  BLSP_COMMON_Public_Types
- *  @{
- */
-
-/*@} end of group BLSP_COMMON_Public_Types */
-
-/** @defgroup  BLSP_COMMON_Public_Constants
- *  @{
- */
-
-/*@} end of group BLSP_COMMON_Public_Constants */
-
-/** @defgroup  BLSP_COMMON_Public_Macros
- *  @{
- */
 #define BLSP_BOOT2_CP_FLAG 0x02
 #define BLSP_BOOT2_MP_FLAG 0x01
 #define BLSP_BOOT2_SP_FLAG 0x00
-/*@} end of group BLSP_COMMON_Public_Macros */
 
-/** @defgroup  BLSP_COMMON_Public_Functions
- *  @{
- */
 void blsp_dump_data(void *datain, int len);
 void blsp_boot2_jump_entry(void);
 int32_t blsp_mediaboot_pre_jump(void);
@@ -79,10 +52,9 @@ uint8_t blsp_boot2_dump_critical_flag(void);
 uint32_t blsp_boot2_get_baudrate(void);
 uint8_t blsp_boot2_get_tx_gpio(void);
 
-/*@} end of group BLSP_COMMON_Public_Functions */
 
-/*@} end of group BLSP_COMMON */
-
-/*@} end of group BL606_BLSP_Boot2 */
 
 #endif /* __BLSP_COMMON_H__ */
+
+
+

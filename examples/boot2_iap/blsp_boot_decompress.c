@@ -43,55 +43,12 @@
 #include "partition.h"
 #include "hal_flash.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
+#define BFLB_BOOT2_XZ_MALLOC_BUF_SIZE   64*1024
 
-/** @addtogroup  BLSP_BOOT_DECOMPRESS
- *  @{
- */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Private_Macros
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS_Private_Macros */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Private_Types
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS_Private_Types */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Private_Variables
- *  @{
- */
 static uint8_t g_xz_output[BFLB_BOOT2_READBUF_SIZE] __attribute__((section(".noinit_data")));
-static uint8_t g_malloc_buf[64 * 1024] __attribute__((section(".noinit_data")));
+static uint8_t g_malloc_buf[BFLB_BOOT2_XZ_MALLOC_BUF_SIZE] __attribute__((section(".noinit_data")));
 
-/*@} end of group BLSP_BOOT_DECOMPRESS_Private_Variables */
 
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Global_Variables
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS_Global_Variables */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Private_Fun_Declaration
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS_Private_Fun_Declaration */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Private_Functions_User_Define
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS_Private_Functions_User_Define */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Private_Functions
- *  @{
- */
 
 /****************************************************************************/ /**
  * @brief  Decompress XZ Firmware
@@ -224,11 +181,6 @@ error:
     return BFLB_BOOT2_FAIL;
 }
 
-/*@} end of group BLSP_BOOT_DECOMPRESS_Private_Functions */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Public_Functions
- *  @{
- */
 
 /****************************************************************************/ /**
  * @brief  Update decompressed firmware to flash according to XZ firmware
@@ -245,12 +197,13 @@ int32_t blsp_boot2_update_fw(pt_table_id_type active_id, pt_table_stuff_config *
     uint8_t active_index = pt_entry->active_index;
     uint32_t new_fw_len;
     int32_t ret;
-#ifdef BLSP_BOOT2_ROLLBACK
+
 
     /* Try to check Image integrity: try to decompress */
     if (BFLB_BOOT2_SUCCESS != blsp_boot2_fw_decompress(pt_entry->start_address[active_index],
                                                        pt_entry->start_address[!(active_index & 0x01)],
                                                        0, &new_fw_len)) {
+#ifdef BLSP_BOOT2_ROLLBACK                                                       
         /* Decompress fail, try to rollback to old one */
         pt_entry->active_index = !(active_index & 0x01);
         pt_entry->age++;
@@ -260,11 +213,11 @@ int32_t blsp_boot2_update_fw(pt_table_id_type active_id, pt_table_stuff_config *
             MSG_ERR("Rollback Update Partition table entry fail\r\n");
             return BFLB_BOOT2_FAIL;
         }
-
+#endif
         return BFLB_BOOT2_SUCCESS;
     }
 
-#endif
+
 
     /* Do decompress */
     if (BFLB_BOOT2_SUCCESS == blsp_boot2_fw_decompress(pt_entry->start_address[active_index],
@@ -309,8 +262,5 @@ int blsp_boot2_verify_xz_header(uint8_t *buffer)
     return 0;
 }
 
-/*@} end of group BLSP_BOOT_DECOMPRESS_Public_Functions */
 
-/*@} end of group BLSP_BOOT_DECOMPRESS */
 
-/*@} end of group BL606_BLSP_Boot2 */

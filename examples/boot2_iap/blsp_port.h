@@ -39,82 +39,28 @@
 #include "stdint.h"
 #include "misc.h"
 #include "hal_flash.h"
-//#include "bl702_glb.h"
-//#include "bl702_aon.h"
-//#include "bl702_hbn.h"
-//#include "bl702_ef_ctrl.h"
-//#include "bl702_sflash.h"
-//#include "bl702_xip_sflash.h"
-//#include "bl702_xip_sflash_ext.h"
-//#include "bl702_sf_cfg.h"
-//#include "bl702_timer.h"
-//#include "bl702_sec_eng.h"
-//#include "bflb_ecdsa.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
 
-/** @addtogroup  BLSP_PORT
- *  @{
- */
 
-/** @defgroup  BLSP_PORT_Public_Types
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Public_Types */
-
-/** @defgroup  BLSP_PORT_Public_Constants
- *  @{
- */
-/*CPU1's MSP and PC from NP bootrom*/
-//#define BFLB_BOOT2_CPU1_APP_PC_ADDR             (BL60X_SRAM_END-4)
-//#define BFLB_BOOT2_CPU1_APP_MSP_ADDR            (BL60X_SRAM_END-8)
-//#define BFLB_BOOT2_CPU1_DBG_INFO_ADDR           (BL60X_SRAM_END-12)
-#define BFLB_BOOT2_CPU1_APP_PC_ADDR   (0)
-#define BFLB_BOOT2_CPU1_APP_MSP_ADDR  (0)
-#define BFLB_BOOT2_CPU1_DBG_INFO_ADDR (0)
 #define MFG_START_REQUEST_OFFSET      ((4 + 184) * 1024)
 #define BLSP_BOOT2_XIP_BASE           BL_FLASH_XIP_BASE
-//#define ARCH_Delay_MS                 BL702_Delay_MS
+#define BLSP_BOOT2_ROLLBACK
+#define BLSP_BOOT2_SUPPORT_DECOMPRESS HAL_BOOT2_SUPPORT_DECOMPRESS
+#define BOOT2_MODE_RELEASE              0x01
+#define BOOT2_MODE_DEBUG                0x02
+#define BOOT2_MODE_DEEP_DEBUG           0x04
+#define BLSP_BOOT2_MODE                 BOOT2_MODE_RELEASE
 
-/*@} end of group BLSP_PORT_Public_Constants */
 
-/** @defgroup  BLSP_PORT_Public_Macros
- *  @{
- */
-
-/*@} end of group BLSP_PORT_Public_Macros */
-
-/** @defgroup  BLSP_PORT_Public_Functions
- *  @{
- */
-void blsp_boot2_show_timer(void);
-void blsp_boot2_init_sec_eng_pka(void);
 uint32_t blsp_boot2_get_cpu_count(void);
 uint8_t blsp_read_power_save_mode(void);
 void blsp_boot2_pass_parameter(void *data, uint32_t len);
 void blsp_boot2_releae_other_cpu(void);
-int32_t blsp_is_msp_valid(uint32_t msp_val);
-int32_t blsp_is_pc_valid(uint32_t pc_val);
-void blsp_boot2_pll_init(void);
-void ATTR_TCM_SECTION blsp_sboot_finish(void);
-;
-void blsp_fix_invalid_msp_pc(void);
-uint8_t blsp_boot2_get_tx_gpio(void);
-uint8_t blsp_boot2_get_uart_port(void);
-uint8_t blsp_boot2_get_feature_flag(void);
-uint8_t blsp_boot2_get_log_disable_flag(void);
-uint8_t blsp_boot2_8m_support_flag(void);
-uint8_t blsp_boot2_dump_critical_flag(void);
-uint32_t blsp_boot2_get_baudrate(void);
-void blsp_boot2_init_gpio_for_bootrom();
+void blsp_boot2_show_timer(void);
+void blsp_boot2_init_sec_eng_pka(void);
 
-/*@} end of group BLSP_PORT_Public_Functions */
-
-/*@} end of group BLSP_PORT */
-
-/*@} end of group BL606_BLSP_Boot2 */
 
 #endif /* __BLSP_PORT_H__ */
+
+
+

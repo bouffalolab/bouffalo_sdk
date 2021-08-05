@@ -35,86 +35,29 @@
   */
 
 #include "bflb_platform.h"
+#include "bflb_eflash_loader_uart.h"
 #include "blsp_port.h"
 #include "blsp_bootinfo.h"
 #include "blsp_media_boot.h"
-#include "partition.h"
 #include "blsp_boot_decompress.h"
 #include "blsp_common.h"
+#include "blsp_version.h"
+#include "partition.h"
 #include "softcrc.h"
-#include "bflb_eflash_loader_uart.h"
 #include "hal_uart.h"
 #include "hal_flash.h"
 #include "hal_boot2.h"
-#include "blsp_version.h"
+#include "hal_clock.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
 
-/** @addtogroup  BLSP_BOOT2
- *  @{
- */
-
-/** @defgroup  BLSP_BOOT2_Private_Macros
- *  @{
- */
-
-/*@} end of group BLSP_BOOT2_Private_Macros */
-
-/** @defgroup  BLSP_BOOT2_Private_Types
- *  @{
- */
-
-/*@} end of group BLSP_BOOT2_Private_Types */
-
-/** @defgroup  BLSP_BOOT2_Private_Variables
- *  @{
- */
-
-/*@} end of group BLSP_BOOT2_Private_Variables */
-
-/** @defgroup  BLSP_BOOT2_Global_Variables
- *  @{
- */
 uint8_t g_boot2_read_buf[BFLB_BOOT2_READBUF_SIZE] __attribute__((section(".noinit_data")));
-boot_image_config g_boot_img_cfg[2];
-boot_cpu_config g_boot_cpu_cfg[2] = {
-    /*CPU0 boot cfg*/
-    {
-        .msp_store_addr = 0,
-        .pc_store_addr = 0,
-        .default_xip_addr = 0x23000000,
-    },
-    /*CPU1 boot cfg*/
-    {
-        .msp_store_addr = BFLB_BOOT2_CPU1_APP_MSP_ADDR,
-        .pc_store_addr = BFLB_BOOT2_CPU1_APP_PC_ADDR,
-        .default_xip_addr = 0x23000000,
-    }
-};
-boot_efuse_hw_config g_efuse_cfg;
+boot2_image_config g_boot_img_cfg[2];
+boot2_efuse_hw_config g_efuse_cfg;
 uint8_t g_ps_mode = BFLB_PSM_ACTIVE;
 uint8_t g_cpu_count;
 uint32_t g_user_hash_ignored = 0;
 
-/*@} end of group BLSP_BOOT2_Global_Variables */
 
-/** @defgroup  BLSP_BOOT2_Private_Fun_Declaration
- *  @{
- */
-
-/*@} end of group BLSP_BOOT2_Private_Fun_Declaration */
-
-/** @defgroup  BLSP_BOOT2_Private_Functions_User_Define
- *  @{
- */
-
-/*@} end of group BLSP_BOOT2_Private_Functions_User_Define */
-
-/** @defgroup  BLSP_BOOT2_Private_Functions
- *  @{
- */
 
 /****************************************************************************/ /**
  * @brief  Boot2 runs error call back function
@@ -162,8 +105,8 @@ static void blsp_dump_pt_entry(pt_table_entry_config *pt_entry)
  * @return 1 for find XZ FW and decompress success, 0 for other cases
  *
 *******************************************************************************/
-#if 0
-static int BLSP_Boot2_Check_XZ_FW(pt_table_id_type activeID, pt_table_stuff_config *ptStuff, pt_table_entry_config *ptEntry)
+#if BLSP_BOOT2_SUPPORT_DECOMPRESS
+static int blsp_boot2_check_xz_fw(pt_table_id_type activeID, pt_table_stuff_config *ptStuff, pt_table_entry_config *ptEntry)
 {
     uint8_t buf[6];
 
@@ -199,6 +142,7 @@ static int BLSP_Boot2_Check_XZ_FW(pt_table_id_type activeID, pt_table_stuff_conf
     return 0;
 }
 #endif
+
 /****************************************************************************/ /**
  * @brief  Boot2 copy firmware from OTA region to normal region
  *
@@ -280,13 +224,23 @@ static int blsp_boot2_deal_one_fw(pt_table_id_type active_id, pt_table_stuff_con
     } else {
         blsp_dump_pt_entry(pt_entry);
         MSG("Check Img\r\n");
-
-        //if(BLSP_Boot2_Check_XZ_FW(activeID,ptStuff,ptEntry)==1){
-        //return 0;
-        //}
+#if BLSP_BOOT2_SUPPORT_DECOMPRESS
+        if(blsp_boot2_check_xz_fw(active_id,pt_stuff,pt_entry)==1){
+            return 0;
+        }
+#endif        
         /* Check if this partition need copy */
         if (pt_entry->active_index >= 2) {
             if (BFLB_BOOT2_SUCCESS == blsp_boot2_do_fw_copy(active_id, pt_stuff, pt_entry)) {
+                
+                pt_entry->active_index = !(pt_entry->active_index & 0x01);
+                pt_entry->age++;
+                ret = pt_table_update_entry((pt_table_id_type)(!active_id), pt_stuff, pt_entry);
+
+                if (ret != PT_ERROR_SUCCESS) {
+                    MSG_ERR("Update Partition table entry fail, After Image Copy\r\n");
+                    return BFLB_BOOT2_FAIL;
+                }
                 return 0;
             }
         }
@@ -357,12 +311,6 @@ static void blsp_boot2_get_mfg_startreq(pt_table_id_type active_id, pt_table_stu
     }
 }
 
-/*@} end of group BLSP_BOOT2_Private_Functions */
-
-/** @defgroup  BLSP_BOOT2_Public_Functions
- *  @{
- */
-
 /****************************************************************************/ /**
  * @brief  Boot2 main function
  *
@@ -385,18 +333,36 @@ int main(void)
 #ifdef BLSP_BOOT2_ROLLBACK
     uint8_t roll_backed = 0;
 #endif
+
     uint8_t mfg_mode_flag = 0;
     //boot_clk_config clk_cfg;
     uint8_t flash_cfg_buf[4 + sizeof(SPI_Flash_Cfg_Type) + 4] = { 0 };
+    uint32_t crc;
+    uint8_t *flash_cfg = NULL;
+    uint32_t flash_cfg_len = 0;
 
-    bflb_platform_init(0);
-    hal_boot2_custom();
+    system_mtimer_clock_init();
+    peripheral_clock_init();
+
+#if (BLSP_BOOT2_MODE == BOOT2_MODE_RELEASE)
+    bflb_platform_print_set(1);
+#endif
+
+#if (BLSP_BOOT2_MODE == BOOT2_MODE_DEBUG)
+    bflb_platform_print_set(0);
+#endif
+
+#if (BLSP_BOOT2_MODE == BOOT2_MODE_DEEP_DEBUG)
+    bflb_platform_print_set(0);
+    hal_boot2_debug_uart_gpio_init();
+#endif
+    hal_boot2_uart_gpio_init();
     bflb_eflash_loader_uart_init();
-    blsp_boot2_pll_init();
+    hal_boot2_custom();
     flash_init();
-    bflb_platform_print_set(blsp_boot2_get_log_disable_flag());
+    
     bflb_platform_deinit_time();
-
+    
     if (blsp_boot2_get_feature_flag() == BLSP_BOOT2_CP_FLAG) {
         MSG("BLSP_Boot2_CP:%s,%s\r\n", __DATE__, __TIME__);
     } else if (blsp_boot2_get_feature_flag() == BLSP_BOOT2_MP_FLAG) {
@@ -406,22 +372,19 @@ int main(void)
     }
 
 #ifdef BL_SDK_VER
-    MSG("SDK:%s\r\n", BL_SDK_VER);
+    MSG("sdk:%s\r\n", BL_SDK_VER);
 #else
     MSG("MCU SDK:%s\r\n", MCU_SDK_VERSION);
     MSG("BSP Driver:%s\r\n", BSP_DRIVER_VERSION);
     MSG("BSP Common:%s\r\n", BSP_COMMON_VERSION);
 #endif
 
-    if (blsp_boot2_dump_critical_flag()) {
-        //blsp_dump_data(&clk_cfg,16);
-    }
 
     MSG("Get efuse config\r\n");
-    efuse_get_boot2_cfg(&g_efuse_cfg);
+    hal_boot2_get_efuse_cfg(&g_efuse_cfg);
 
     /* Reset Sec_Eng for using */
-    hal_reset_sec_eng();
+    hal_boot2_reset_sec_eng();
     if (blsp_boot2_get_feature_flag() != BLSP_BOOT2_SP_FLAG) {
         /* Get cpu count info */
         g_cpu_count = blsp_boot2_get_cpu_count();
@@ -433,14 +396,11 @@ int main(void)
     g_ps_mode = blsp_read_power_save_mode();
 
     /* Get User specified FW */
-    arch_memcpy(user_fw_name, hal_hbn_get_user_specified_fw(), 4);
-    if (blsp_boot2_8m_support_flag()) {
-        /* Set flash operation function, read via sbus */
-        pt_table_set_flash_operation(flash_erase, flash_write, flash_read);
-    } else {
-        /* Set flash operation function, read via xip */
-        pt_table_set_flash_operation(flash_erase, flash_write, flash_read);
-    }
+    arch_memcpy(user_fw_name, hal_boot2_get_user_fw(), 4);
+    
+
+    /* Set flash operation function, read via xip */
+    pt_table_set_flash_operation(flash_erase, flash_write, flash_read);
 
     while (1) {
         mfg_mode_flag = 0;
@@ -463,7 +423,7 @@ int main(void)
                 if (pt_parsed == 0) {
                     continue;
                 } else {
-                    hal_hbn_clr_user_specified_fw();
+                    hal_boot2_clr_user_fw();
                 }
                 mfg_mode_flag = 1;
                 user_fw_name[0] = 0;
@@ -473,7 +433,7 @@ int main(void)
                 if (pt_parsed == 0) {
                     continue;
                 } else {
-                    hal_hbn_clr_user_specified_fw();
+                    hal_boot2_clr_user_fw();
                 }
                 mfg_mode_flag = 1;
                 user_fw_name[0] = 0;
@@ -501,8 +461,13 @@ int main(void)
 
         /* Pass flash config */
         if (pt_entry[0].start_address[pt_entry[0].active_index] != 0) {
-            flash_read(BLSP_BOOT2_XIP_BASE + pt_entry[0].start_address[pt_entry[0].active_index] + 8, flash_cfg_buf, sizeof(flash_cfg_buf));
+            //flash_read(BLSP_BOOT2_XIP_BASE + pt_entry[0].start_address[pt_entry[0].active_index] + 8, flash_cfg_buf, sizeof(flash_cfg_buf));
             /* Include magic and CRC32 */
+            flash_get_cfg(&flash_cfg,&flash_cfg_len);
+            arch_memcpy(flash_cfg_buf, "FCFG", 4);
+            arch_memcpy(flash_cfg_buf+4, flash_cfg, flash_cfg_len);
+            crc = BFLB_Soft_CRC32(flash_cfg, flash_cfg_len);
+            arch_memcpy(flash_cfg_buf+4+flash_cfg_len, &crc, sizeof(crc));
             blsp_boot2_pass_parameter(flash_cfg_buf, sizeof(flash_cfg_buf));
         }
 
@@ -575,8 +540,6 @@ void bfl_main()
     main();
 }
 
-/*@} end of group BLSP_BOOT2_Public_Functions */
 
-/*@} end of group BLSP_BOOT2 */
 
-/*@} end of group BL606_BLSP_Boot2 */
+

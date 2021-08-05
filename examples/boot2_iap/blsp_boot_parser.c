@@ -41,60 +41,10 @@
 #include "softcrc.h"
 #include "blsp_port.h"
 #include "hal_sec_hash.h"
-//#include "hal_sec_eng.h"
 #include "hal_sec_ecdsa.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
 
-/** @addtogroup  BLSP_BOOT_PARSER
- *  @{
- */
-
-/** @defgroup  BLSP_BOOT_PARSER_Private_Macros
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_PARSER_Private_Macros */
-
-/** @defgroup  BLSP_BOOT_PARSER_Private_Types
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_PARSER_Private_Types */
-
-/** @defgroup  BLSP_BOOT_PARSER_Private_Variables
- *  @{
- */
-//static uint32_t g_sha_tmp_buf[16] = { 0 };
-//static uint32_t g_padding[16] = { 0 };
-//SEC_Eng_SHA256_Ctx g_sha_ctx;
 extern uint32_t g_user_hash_ignored;
-/*@} end of group BLSP_BOOT_PARSER_Private_Variables */
-
-/** @defgroup  BLSP_BOOT_PARSER_Global_Variables
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_PARSER_Global_Variables */
-
-/** @defgroup  BLSP_BOOT_PARSER_Private_Fun_Declaration
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_PARSER_Private_Fun_Declaration */
-
-/** @defgroup  BLSP_BOOT_PARSER_Private_Functions_User_Define
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_PARSER_Private_Functions_User_Define */
-
-/** @defgroup  BLSP_BOOT_PARSER_Private_Functions
- *  @{
- */
-
 struct device *dev_check_hash;
 
 /****************************************************************************/ /**
@@ -121,12 +71,6 @@ static uint32_t blsp_boot_parse_is_pkhash_valid(uint8_t cpu_type, uint8_t *pkhas
     return 0;
 }
 
-/*@} end of group BLSP_BOOT_PARSER_Private_Functions */
-
-/** @defgroup  BLSP_BOOT_PARSER_Public_Functions
- *  @{
- */
-
 /****************************************************************************/ /**
  * @brief  Check if the input public key is the same as  burned in the efuse
  *
@@ -136,7 +80,7 @@ static uint32_t blsp_boot_parse_is_pkhash_valid(uint8_t cpu_type, uint8_t *pkhas
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parse_bootheader(boot_image_config *boot_img_cfg, uint8_t *data)
+int32_t blsp_boot_parse_bootheader(boot2_image_config *boot_img_cfg, uint8_t *data)
 {
     boot_header_config *header = (boot_header_config *)data;
     uint32_t crc;
@@ -271,7 +215,7 @@ int32_t blsp_boot_parse_bootheader(boot_image_config *boot_img_cfg, uint8_t *dat
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parse_pkey(boot_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own)
+int32_t blsp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own)
 {
     boot_pk_config *cfg = (boot_pk_config *)data;
     uint32_t pk_hash[BFLB_BOOT2_PK_HASH_SIZE / 4];
@@ -320,7 +264,7 @@ int32_t blsp_boot_parse_pkey(boot_image_config *g_boot_img_cfg, uint8_t *data, u
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parse_signature(boot_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own)
+int32_t blsp_boot_parse_signature(boot2_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own)
 {
     boot_sign_config *cfg = (boot_sign_config *)data;
     uint32_t crc;
@@ -357,7 +301,7 @@ int32_t blsp_boot_parse_signature(boot_image_config *g_boot_img_cfg, uint8_t *da
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parse_aesiv(boot_image_config *g_boot_img_cfg, uint8_t *data)
+int32_t blsp_boot_parse_aesiv(boot2_image_config *g_boot_img_cfg, uint8_t *data)
 {
     boot_aes_config *cfg = (boot_aes_config *)data;
 
@@ -385,7 +329,7 @@ int32_t blsp_boot_parse_aesiv(boot_image_config *g_boot_img_cfg, uint8_t *data)
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parser_check_signature(boot_image_config *g_boot_img_cfg)
+int32_t blsp_boot_parser_check_signature(boot2_image_config *g_boot_img_cfg)
 {
     int32_t ret = 0;
     uint64_t startTime = 0;
@@ -434,7 +378,7 @@ int32_t blsp_boot_parser_check_signature(boot_image_config *g_boot_img_cfg)
  * @return boot_error_code type
  *
 *******************************************************************************/
-int32_t blsp_boot_parser_check_hash(boot_image_config *g_boot_img_cfg)
+int32_t blsp_boot_parser_check_hash(boot2_image_config *g_boot_img_cfg)
 {
     uint32_t img_hash_cal[BFLB_BOOT2_HASH_SIZE / 4];
 
@@ -457,8 +401,7 @@ int32_t blsp_boot_parser_check_hash(boot_image_config *g_boot_img_cfg)
     return BFLB_BOOT2_SUCCESS;
 }
 
-/*@} end of group BLSP_BOOT_PARSER_Public_Functions */
 
-/*@} end of group BLSP_BOOT_PARSER */
 
-/*@} end of group BL606_BLSP_Boot2 */
+
+

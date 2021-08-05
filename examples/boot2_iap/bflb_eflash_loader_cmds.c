@@ -490,11 +490,11 @@ static int32_t bflb_eflash_loader_cmd_reset(uint16_t cmd, uint8_t *data, uint16_
     bflb_eflash_loader_usart_wait_tx_idle(BFLB_EFLASH_LOADER_IF_TX_IDLE_TIMEOUT);
 
     /* add for bl702, will impact on boot pin read */
-    hal_hbn_set_status_flag(0x594c440B);
+    hal_boot2_set_psmode_status(0x594c440B);
 
     /* FPGA POR RST NOT work,so add system reset */
     bflb_platform_delay_us(10);
-    hal_sw_system_reset();
+    hal_boot2_sw_system_reset();
 
     return ret;
 }

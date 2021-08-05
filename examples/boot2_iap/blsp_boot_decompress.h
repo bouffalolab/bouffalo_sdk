@@ -37,43 +37,10 @@
 #define __BLSP_BOOT_DECOMPRESS_H__
 
 #include "stdint.h"
+#include "partition.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
-
-/** @addtogroup  BLSP_BOOT_DECOMPRESS
- *  @{
- */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Public_Types
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS_Public_Types */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Public_Constants
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS_Public_Constants */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Public_Macros
- *  @{
- */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS_Public_Macros */
-
-/** @defgroup  BLSP_BOOT_DECOMPRESS_Public_Functions
- *  @{
- */
 int32_t blsp_boot2_update_fw(pt_table_id_type activeID, pt_table_stuff_config *ptStuff, pt_table_entry_config *ptEntry);
 int blsp_boot2_verify_xz_header(uint8_t *buffer);
 
-/*@} end of group BLSP_BOOT_DECOMPRESS_Public_Functions */
-
-/*@} end of group BLSP_BOOT_DECOMPRESS */
-
-/*@} end of group BL606_BLSP_Boot2 */
 
 #endif /* __BLSP_BOOT_DECOMPRESS_H__ */

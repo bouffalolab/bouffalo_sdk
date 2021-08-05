@@ -46,54 +46,7 @@
 #include "hal_boot2.h"
 #include "bflb_eflash_loader.h"
 
-/** @addtogroup  BL606_BLSP_Boot2
- *  @{
- */
-
-/** @addtogroup  BLSP_COMMON
- *  @{
- */
-
-/** @defgroup  BLSP_COMMON_Private_Macros
- *  @{
- */
-
-/*@} end of group BLSP_COMMON_Private_Macros */
-
-/** @defgroup  BLSP_COMMON_Private_Types
- *  @{
- */
-
-/*@} end of group BLSP_COMMON_Private_Types */
-
-/** @defgroup  BLSP_COMMON_Private_Variables
- *  @{
- */
-
-/*@} end of group BLSP_COMMON_Private_Variables */
-
-/** @defgroup  BLSP_COMMON_Global_Variables
- *  @{
- */
-int32_t blsp_boot2_set_encrypt(uint8_t index, boot_image_config *g_boot_img_cfg);
-
-/*@} end of group BLSP_COMMON_Global_Variables */
-
-/** @defgroup  BLSP_COMMON_Private_Fun_Declaration
- *  @{
- */
-
-/*@} end of group BLSP_COMMON_Private_Fun_Declaration */
-
-/** @defgroup  BLSP_COMMON_Private_Functions_User_Define
- *  @{
- */
-
-/*@} end of group BLSP_COMMON_Private_Functions_User_Define */
-
-/** @defgroup  BLSP_COMMON_Private_Functions
- *  @{
- */
+int32_t blsp_boot2_set_encrypt(uint8_t index, boot2_image_config *g_boot_img_cfg);
 
 /****************************************************************************/ /**
  * @brief  Dump data
@@ -132,7 +85,7 @@ void blsp_dump_data(void *datain, int len)
 int32_t blsp_mediaboot_pre_jump(void)
 {
     /* Sec eng deinit*/
-    hal_reset_sec_eng();
+    hal_boot2_reset_sec_eng();
 
     /* Platform deinit */
     bflb_platform_deinit();
@@ -153,16 +106,8 @@ int32_t blsp_mediaboot_pre_jump(void)
 *******************************************************************************/
 void blsp_boot2_exit(void)
 {
-    uint32_t i = 0;
 
-    blsp_sboot_finish();
-
-    /* Prepare release Other CPUs anyway */
-    /* Deal Other CPU's entry point */
-    for (i = 1; i < g_cpu_count; i++) {
-        BL_WR_WORD(g_boot_cpu_cfg[i].msp_store_addr, 0);
-        BL_WR_WORD(g_boot_cpu_cfg[i].pc_store_addr, 0);
-    }
+    hal_boot2_sboot_finish();
 
     /* Release other CPUs*/
     if (g_cpu_count != 1 && !g_boot_img_cfg[0].halt_cpu1) {
@@ -190,7 +135,7 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
     uint32_t i = 0;
     int32_t ret;
 
-    blsp_sboot_finish();
+    hal_boot2_sboot_finish();
 
     /*Note:enable cache with flash offset, after this, should be no flash directl read,
       If need read, should take flash offset into consideration */
@@ -205,16 +150,31 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
     if (ret != BFLB_BOOT2_SUCCESS) {
         return;
     }
-
-    /* Deal Other CPUs' entry point */
-    /* Prepare release CPU1 anyway */
-    for (i = 1; i < g_cpu_count; i++) {
-        if (g_boot_img_cfg[i].img_valid) {
-            BL_WR_WORD(g_boot_cpu_cfg[i].msp_store_addr, g_boot_img_cfg[i].msp_val);
-            BL_WR_WORD(g_boot_cpu_cfg[i].pc_store_addr, g_boot_img_cfg[i].entry_point);
-        } else {
-            BL_WR_WORD(g_boot_cpu_cfg[i].msp_store_addr, 0);
-            BL_WR_WORD(g_boot_cpu_cfg[i].pc_store_addr, 0);
+    /* Set decryption before read MSP and PC*/
+    if(0!=g_efuse_cfg.encrypted[0]){
+        blsp_boot2_set_encrypt(0,&g_boot_img_cfg[0]);
+        blsp_boot2_set_encrypt(1,&g_boot_img_cfg[1]);
+        /* Get msp and pc value */
+        for(i=0;i<g_cpu_count;i++){
+            if(g_boot_img_cfg[i].img_valid){
+                //if(bootImgCfg[i].entryPoint==0){
+#ifdef     ARCH_ARM
+                    blsp_mediaboot_read(g_boot_img_cfg[i].img_start.flash_offset,
+                                            (uint8_t *)&g_boot_img_cfg[i].msp_val,4);
+                    blsp_mediaboot_read(bootImgCfg[i].imgStart.flashOffset+4,
+                                            (uint8_t *)&g_boot_img_cfg[i].entry_point,4);
+#endif
+                //}
+            }
+        }
+        if(blsp_boot2_get_feature_flag()==BLSP_BOOT2_CP_FLAG){
+            /*co-processor*/
+            g_boot_img_cfg[1].img_start.flash_offset=g_boot_img_cfg[0].img_start.flash_offset;
+            g_boot_img_cfg[1].msp_val=g_boot_img_cfg[0].msp_val;
+            g_boot_img_cfg[1].entry_point=g_boot_img_cfg[0].entry_point;
+            g_boot_img_cfg[1].cache_enable=g_boot_img_cfg[0].cache_enable;
+            g_boot_img_cfg[1].img_valid=1;
+            g_boot_img_cfg[1].cache_way_disable=0xf;
         }
     }
 
@@ -248,8 +208,5 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
     }
 }
 
-/*@} end of group BLSP_COMMON_Public_Functions */
 
-/*@} end of group BLSP_COMMON */
 
-/*@} end of group BL606_BLSP_Boot2 */
