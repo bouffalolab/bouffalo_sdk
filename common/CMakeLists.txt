@@ -9,6 +9,7 @@ list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}/partition"
 "${CMAKE_CURRENT_SOURCE_DIR}/bl_math"
 "${CMAKE_CURRENT_SOURCE_DIR}/pid"
+"${CMAKE_CURRENT_SOURCE_DIR}/timestamp"
 )
 #######################################################
 
@@ -27,6 +28,7 @@ file(GLOB_RECURSE sources
 "${CMAKE_CURRENT_SOURCE_DIR}/partition/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/bl_math/*.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/pid/*.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/timestamp/*.c"
 )
 
 #aux_source_directory(. sources)
