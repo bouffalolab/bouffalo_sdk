@@ -100,7 +100,7 @@ typedef struct mmheap_blk_st {
 #define MMHEAP_BLK_SIZE_MAX (1 << MMHEAP_FL_INDEX_MAX)
 
 #define MMHEAP_BLK_HEADER_OVERHEAD (sizeof(size_t))
-#define MMHEAP_BLK_START_OFFSET    (((uint32_t) & (((mmheap_blk_t *)0)->size)) + sizeof(size_t))
+#define MMHEAP_BLK_START_OFFSET    (((uint32_t)(uintptr_t) & (((mmheap_blk_t *)0)->size)) + sizeof(size_t))
 
 #define MMHEAP_POOL_MAX 3
 

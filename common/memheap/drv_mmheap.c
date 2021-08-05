@@ -117,18 +117,18 @@ static void blk_set_prev_used(mmheap_blk_t *blk)
 
 static inline mmheap_blk_t *blk_from_ptr(const void *ptr)
 {
-    return (mmheap_blk_t *)((uint32_t)ptr - MMHEAP_BLK_START_OFFSET);
+    return (mmheap_blk_t *)((uint32_t)(uintptr_t)ptr - MMHEAP_BLK_START_OFFSET);
 }
 
 static inline void *blk_to_ptr(const mmheap_blk_t *blk)
 {
-    return (void *)((uint32_t)blk + MMHEAP_BLK_START_OFFSET);
+    return (void *)((uint32_t)(uintptr_t)blk + MMHEAP_BLK_START_OFFSET);
 }
 
 /* Return location of next block after block of given size. */
 static inline mmheap_blk_t *offset_to_blk(const void *ptr, int diff)
 {
-    return (mmheap_blk_t *)((uint32_t)ptr + diff);
+    return (mmheap_blk_t *)(uintptr_t)((uint32_t)(uintptr_t)ptr + diff);
 }
 
 /* Return location of previous block. */
@@ -187,7 +187,7 @@ static inline size_t align_down(size_t x, size_t align)
 
 static inline void *align_ptr(const void *ptr, size_t align)
 {
-    return (void *)(((uint32_t)ptr + (align - 1)) & ~(align - 1));
+    return (void *)(((uint32_t)(uintptr_t)ptr + (align - 1)) & ~(align - 1));
 }
 
 /*
@@ -610,15 +610,15 @@ void *mmheap_aligned_alloc(size_t size, size_t align)
 
     ptr = blk_to_ptr(blk);
     aligned = align_ptr(ptr, align);
-    gap = (size_t)((uint32_t)aligned - (uint32_t)ptr);
+    gap = (size_t)((uint32_t)(uintptr_t)aligned - (uint32_t)(uintptr_t)ptr);
 
     if (gap && gap < gap_minimum) {
         gap_remain = gap_minimum - gap;
         offset = gap_remain > align ? gap_remain : align;
-        next_aligned = (void *)((uint32_t)aligned + offset);
+        next_aligned = (void *)((uint32_t)(uintptr_t)aligned + offset);
 
         aligned = align_ptr(next_aligned, align);
-        gap = (size_t)((uint32_t)aligned - (uint32_t)ptr);
+        gap = (size_t)((uint32_t)(uintptr_t)aligned - (uint32_t)(uintptr_t)ptr);
     }
 
     if (gap) {
@@ -702,7 +702,7 @@ int mmheap_pool_add(void *pool_start, size_t pool_size)
 
     size_aligned = align_down(pool_size - 2 * MMHEAP_BLK_HEADER_OVERHEAD, MMHEAP_ALIGN_SIZE);
 
-    if (((uint32_t)pool_start % MMHEAP_ALIGN_SIZE) != 0u) {
+    if (((uint32_t)(uintptr_t)pool_start % MMHEAP_ALIGN_SIZE) != 0u) {
         return MEMHEAP_STATUS_INVALID_ADDR;
     }
 
@@ -716,7 +716,7 @@ int mmheap_pool_add(void *pool_start, size_t pool_size)
      ** so that the prev_phys_block field falls outside of the pool -
      ** it will never be used.
      */
-    curr_blk = offset_to_blk(pool_start, -MMHEAP_BLK_HEADER_OVERHEAD);
+    curr_blk = offset_to_blk(pool_start, -(int)MMHEAP_BLK_HEADER_OVERHEAD);
     blk_set_size(curr_blk, size_aligned);
     blk_set_free(curr_blk);
     blk_set_prev_used(curr_blk);
@@ -742,7 +742,7 @@ int mmheap_pool_rmv(void *pool_start)
         return MEMHEAP_STATUS_ALREADY_NOT_EXIST;
     }
 
-    blk = offset_to_blk(pool_start, -MMHEAP_BLK_HEADER_OVERHEAD);
+    blk = offset_to_blk(pool_start, -(int)MMHEAP_BLK_HEADER_OVERHEAD);
     mapping_insert(blk_size(blk), &fl, &sl);
     remove_free_block(blk, fl, sl);
 
@@ -756,7 +756,7 @@ int mmheap_pool_check(void *pool_start, mmheap_info_t *info)
 
     memset(info, 0, sizeof(mmheap_info_t));
 
-    blk = offset_to_blk(pool_start, -MMHEAP_BLK_HEADER_OVERHEAD);
+    blk = offset_to_blk(pool_start, -(int)MMHEAP_BLK_HEADER_OVERHEAD);
 
     while (blk && !blk_is_last(blk)) {
         if (blk_is_free(blk)) {

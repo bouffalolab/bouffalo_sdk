@@ -86,7 +86,7 @@ void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n
     uint8_t *dst = (uint8_t *)pdst;
     uint8_t *src = (uint8_t *)psrc;
 
-    if (((uint32_t)dst & 0x3) == 0 && ((uint32_t)src & 0x3) == 0) {
+    if (((uint32_t)(uintptr_t)dst & 0x3) == 0 && ((uint32_t)(uintptr_t)src & 0x3) == 0) {
         arch_memcpy4((uint32_t *)dst, (const uint32_t *)src, n >> 2);
         left = n % 4;
         done = n - left;
