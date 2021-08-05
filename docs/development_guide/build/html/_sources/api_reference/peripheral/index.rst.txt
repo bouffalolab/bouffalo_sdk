@@ -16,4 +16,5 @@ Peripheral
     ADC 设备 <api_adc>
     DAC 设备 <api_dac>
     TIMER 设备 <api_timer>
+    QDEC 设备 <api_qdec>
     USB 设备 <api_usb>

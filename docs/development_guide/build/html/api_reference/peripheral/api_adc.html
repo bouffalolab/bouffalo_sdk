@@ -128,7 +128,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.10. DAC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.11. TIMER 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.12. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_qdec.html">2.12. QDEC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.13. USB 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
@@ -230,7 +231,7 @@
 <div class="section" id="id1">
 <h2><span class="section-number">2.9.1. </span>简介<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <p>ADC (Analog-to-digital Converter) 是用于将模拟形式的连续信号转换为数字形式的离散信号的一类设备,他可以将外围电路传感器产生的模拟信号转化为机器可识别的数字信号。
-博流系列MCU中的ADC设备具有以下特性</p>
+博流系列 MCU 中的 ADC 设备具有以下特性</p>
 <ul class="simple">
 <li><p>可以选择 12/14/16 bits 转换结果输出</p></li>
 <li><p>ADC最大工作时钟为 2MHZ</p></li>
@@ -258,14 +259,14 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>parent                继承父类属性</p></li>
-<li><p>clk_div               ADC 模块时钟内部分频</p></li>
-<li><p>vref                  参考电压选择 2.0/3.2V 可选</p></li>
-<li><p>continuous_conv_mode  是否选择为连续模式，若为连续模式，则一次 adc_start 操作， ADC 连续工作，直到 adc_stop 。否则，每 adc_start 一次，adc 仅转换一次结果。</p></li>
-<li><p>differential_mode     选择是否为差分模式，若为差分模式，则可以测量负电压。</p></li>
-<li><p>data_width            测量宽度选择，ADC 实际精度为12 bits ，但是通过 OSR 多次取平均可以达到 14bits / 16bits 的精度，注意，当选择更高的数据宽度后，频率会因为取平均而下降。详情可参考枚举信息。</p></li>
-<li><p>fifo_threshold        此参数影响 DMA 搬运阈值以及 ADC FIFO 中断阈值</p></li>
-<li><p>gain                  ADC 对输入信号的增益选择</p></li>
+<li><p><strong>parent</strong>                继承父类属性</p></li>
+<li><p><strong>clk_div</strong>               ADC 模块时钟内部分频</p></li>
+<li><p><strong>vref</strong>                  参考电压选择 2.0/3.2V 可选</p></li>
+<li><p><strong>continuous_conv_mode</strong>  是否选择为连续模式，若为连续模式，则一次 adc_start 操作， ADC 连续工作，直到 adc_stop 。否则，每 adc_start 一次，adc 仅转换一次结果。</p></li>
+<li><p><strong>differential_mode</strong>     选择是否为差分模式，若为差分模式，则可以测量负电压。</p></li>
+<li><p><strong>data_width</strong>            测量宽度选择，ADC 实际精度为12 bits ，但是通过 OSR 多次取平均可以达到 14bits / 16bits 的精度，注意，当选择更高的数据宽度后，频率会因为取平均而下降。详情可参考枚举信息。</p></li>
+<li><p><strong>fifo_threshold</strong>        此参数影响 DMA 搬运阈值以及 ADC FIFO 中断阈值</p></li>
+<li><p><strong>gain</strong>                  ADC 对输入信号的增益选择</p></li>
 <li><p>其他待补充</p></li>
 </ul>
 </div>
@@ -307,15 +308,15 @@
 <div class="section" id="adc-register">
 <h3><span class="section-number">2.9.4.1. </span><strong>adc_register</strong><a class="headerlink" href="#adc-register" title="永久链接至标题">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">adc_register</span></code> 用来注册 ADC 设备标准驱动接口，在注册之前需要打开对应 ADC 设备的宏定义。例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_ADC0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">ADC0</span></code> 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 <code class="docutils literal notranslate"><span class="pre">ADC0</span></code> 设备。</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">adc_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">ADC_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">adc_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">adc_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>index 要注册的设备索引</p></li>
-<li><p>flag 默认可读可写属性</p></li>
+<li><p><strong>index</strong> 要注册的设备索引</p></li>
+<li><p><strong>flag</strong> 默认可读可写属性</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">index</span></code> 用来选择 ADC 设备配置，一个 index 对应一个 ADC 设备配置，比如 <code class="docutils literal notranslate"><span class="pre">ADC0_INDEX</span></code> 对应 <code class="docutils literal notranslate"><span class="pre">ADC0_CONFIG</span></code> 配置，<code class="docutils literal notranslate"><span class="pre">index</span></code> 有如下可选类型</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">ADC_index_type</span>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">adc_index_type</span>
 <span class="p">{</span>
 <span class="cp">#ifdef BSP_USING_ADC0</span>
     <span class="n">ADC0_INDEX</span><span class="p">,</span>
@@ -327,16 +328,16 @@
 </div>
 <div class="section" id="device-open">
 <h3><span class="section-number">2.9.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于 ADC 设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">adc_open</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于打开一个 ADC 设备，实际调用 <code class="docutils literal notranslate"><span class="pre">adc_open</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>oflag 设备的打开方式</p></li>
-<li><p>return    错误码，0表示成功，其他表示失败</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>oflag</strong> 设备的打开方式</p></li>
+<li><p><strong>return</strong>    错误码，0表示成功，其他表示失败</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 可以写入以下参数：</p>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* 设备以轮训发送模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* 设备以轮训接收模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* 设备以中断发送模式打开 */</span><span class="cp"></span>
@@ -348,28 +349,28 @@
 </div>
 <div class="section" id="device-close">
 <h3><span class="section-number">2.9.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于设备的关闭。实际调用 <code class="docutils literal notranslate"><span class="pre">adc_close</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于关闭一个 ADC 设备，实际调用 <code class="docutils literal notranslate"><span class="pre">adc_close</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>return    错误码，0表示成功，其他表示失败</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>return</strong>    错误码，0表示成功，其他表示失败</p></li>
 </ul>
 </div>
 <div class="section" id="device-control">
 <h3><span class="section-number">2.9.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于根据命令对 ADC 设备进行控制和参数的修改。实际调用 <code class="docutils literal notranslate"><span class="pre">adc_control</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于对 ADC 设备的进行控制和参数的修改，实际调用 <code class="docutils literal notranslate"><span class="pre">adc_control</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>cmd 设备控制命令</p></li>
-<li><p>args 控制参数</p></li>
-<li><p>return 不同的控制命令返回的意义不同。</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>cmd</strong> 设备控制命令</p></li>
+<li><p><strong>args</strong> 控制参数</p></li>
+<li><p><strong>return</strong> 不同的控制命令返回的意义不同。</p></li>
 </ul>
-<p>串口设备除了标准的控制命令，还具有自己特殊的控制命令。</p>
+<p>ADC 设备除了标准的控制命令，还具有自己特殊的控制命令。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_ADC_CHANNEL_START  0x10</span>
 <span class="cp">#define DEVICE_CTRL_ADC_CHANNEL_STOP   0x11</span>
 <span class="cp">#define DEVICE_CTRL_ADC_CHANNEL_CONFIG 0x12</span>
@@ -380,11 +381,12 @@
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">args</span></code> 根据不同的 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 传入不同，具体如下：</p>
-<table class="docutils align-default">
+<table class="colwidths-given docutils align-default" id="id5">
+<caption><span class="caption-text">table1</span><a class="headerlink" href="#id5" title="永久链接至表格">¶</a></caption>
 <colgroup>
-<col style="width: 37%" />
-<col style="width: 23%" />
-<col style="width: 40%" />
+<col style="width: 27%" />
+<col style="width: 18%" />
+<col style="width: 55%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>cmd</p></th>
@@ -394,27 +396,27 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p>DEVICE_CTRL_SET_INT</p></td>
-<td><p>ADC_it_type</p></td>
+<td><p>adc_it_type</p></td>
 <td><p>开启 ADC 设备中断</p></td>
 </tr>
 <tr class="row-odd"><td><p>DEVICE_CTRL_CLR_INT</p></td>
-<td><p>ADC_it_type</p></td>
+<td><p>adc_it_type</p></td>
 <td><p>关闭 ADC 设备中断</p></td>
 </tr>
 <tr class="row-even"><td><p>DEVICE_CTRL_CONFIG</p></td>
-<td><p>ADC_param_cfg_t*</p></td>
+<td><p>ADC_param_cfg_t</p></td>
 <td><p>修改 ADC 配置</p></td>
 </tr>
 <tr class="row-odd"><td><p>DEVICE_CTRL_ADC_CHANNEL_CONFIG</p></td>
-<td><p>adc_channel_cfg_t*</p></td>
-<td><p>配置 ADC 通道信息</p></td>
+<td><p>adc_channel_cfg_t</p></td>
+<td><p>修改 ADC 通道配置</p></td>
 </tr>
 <tr class="row-even"><td><p>DEVICE_CTRL_ATTACH_RX_DMA</p></td>
 <td><p>struct device*</p></td>
 <td><p>链接接收 DMA 设备</p></td>
 </tr>
 <tr class="row-odd"><td><p>DEVICE_CTRL_ADC_CHANNEL_START</p></td>
-<td><p>struct device*</p></td>
+<td><p>NULL</p></td>
 <td><p>开始/继续 ADC 转换</p></td>
 </tr>
 <tr class="row-even"><td><p>DEVICE_CTRL_ADC_CHANNEL_STOP</p></td>
@@ -434,7 +436,7 @@
 <td><p>打开内部温度测量电路(需硬件支持)</p></td>
 </tr>
 <tr class="row-even"><td><p>DEVICE_CTRL_ADC_TSEN_OFF</p></td>
-<td><p>uint32_t*</p></td>
+<td><p>NULL</p></td>
 <td><p>关闭内部温度测量电路(需硬件支持)</p></td>
 </tr>
 </tbody>
@@ -447,11 +449,11 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>pos 无作用</p></li>
-<li><p>buffer 要读入的 buffer 缓冲区</p></li>
-<li><p>size 要读入的长度</p></li>
-<li><p>return 错误码，0 表示读入成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>pos</strong> 无作用</p></li>
+<li><p><strong>buffer</strong> 要读入的 buffer 缓冲区</p></li>
+<li><p><strong>size</strong> 要读入的长度</p></li>
+<li><p><strong>return</strong> 错误码，0 表示读入成功，其他表示错误</p></li>
 </ul>
 </div>
 <div class="section" id="device-set-callback">
@@ -461,19 +463,19 @@
 </pre></div>
 </div>
 <ul>
-<li><p>dev 设备句柄</p></li>
-<li><p>callback 要注册的中断回调函数</p>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>callback</strong> 要注册的中断回调函数</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>args 接收发送缓冲区，数据类型为 uint8_t*</p></li>
-<li><p>size 传输长度</p></li>
-<li><p>event 中断事件类型</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>args</strong> 接收发送缓冲区，数据类型为 uint8_t*</p></li>
+<li><p><strong>size</strong> 传输长度</p></li>
+<li><p><strong>event</strong> 中断事件类型</p></li>
 </ul>
 </div></blockquote>
 </li>
 </ul>
-<p>串口设备 <code class="docutils literal notranslate"><span class="pre">event</span></code> 类型如下</p>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> 类型如下</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">ADC_event_type</span>
 <span class="p">{</span>
     <span class="n">ADC_EVENT_FIFO_READY</span><span class="p">,</span>

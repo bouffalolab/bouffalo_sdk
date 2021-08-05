@@ -128,7 +128,8 @@
 <li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.9. ADC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.10. DAC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.11. TIMER 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.12. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_qdec.html">2.12. QDEC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.13. USB 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
@@ -259,17 +260,17 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>parent 继承父类属性</p></li>
-<li><p>id 外设 id 号, 0 表示 I2S0</p></li>
-<li><p>iis_mode 主从模式选择</p></li>
-<li><p>interface_mode  协议类型</p></li>
-<li><p>sampl_freq_hz  音频数据采样率</p></li>
-<li><p>channel_num  音频通道数，非 DSP 模式下最高 2 通道</p></li>
-<li><p>frame_size  帧格式长度，即每个通道音频的 BCLK 个数</p></li>
-<li><p>data_size 实际的有效音频数据位宽，不能大于 frame_size</p></li>
-<li><p>fifo_threshold  收发数据的 fifo 深度阈值</p></li>
-<li><p>tx_dma  附加的发送 dma 句柄</p></li>
-<li><p>rx_dma  附加的接收 dma 句柄</p></li>
+<li><p><strong>parent</strong> 继承父类属性</p></li>
+<li><p><strong>id</strong> 外设 id 号, 0 表示 I2S0</p></li>
+<li><p><strong>iis_mode</strong> 主从模式选择</p></li>
+<li><p><strong>interface_mode</strong>  协议类型</p></li>
+<li><p><strong>sampl_freq_hz</strong>  音频数据采样率</p></li>
+<li><p><strong>channel_num</strong>  音频通道数，非 DSP 模式下最高 2 通道</p></li>
+<li><p><strong>frame_size</strong>  帧格式长度，即每个通道音频的 BCLK 个数</p></li>
+<li><p><strong>data_size</strong> 实际的有效音频数据位宽，不能大于 frame_size</p></li>
+<li><p><strong>fifo_threshold</strong>  收发数据的 fifo 深度阈值</p></li>
+<li><p><strong>tx_dma</strong>  附加的发送 dma 句柄</p></li>
+<li><p><strong>rx_dma</strong>  附加的接收 dma 句柄</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">iis_mode</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
@@ -320,7 +321,7 @@
 <h2><span class="section-number">2.7.3. </span>I2S 设备参数配置表<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <p>每一个 I2S 设备都有一个参数配置宏,宏定义位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> 文件,
 因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。
-例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2S0</span></code> ，<code class="docutils literal notranslate"><span class="pre">I2S0_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">I2S0</span></code> 设备就可以进行注册和使用了。</p>
+例如打开宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2S0</span></code> ， <code class="docutils literal notranslate"><span class="pre">I2S0_CONFIG</span></code> 即生效，同时 <code class="docutils literal notranslate"><span class="pre">I2S0</span></code> 设备就可以进行注册和使用了。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#if defined(BSP_USING_I2S0)</span>
 <span class="cp">#ifndef I2S0_CONFIG</span>
 <span class="cp">#define I2S0_CONFIG                              \</span>
@@ -354,7 +355,7 @@
 <p>I2S 设备接口全部遵循标准设备驱动管理层提供的接口。</p>
 <div class="section" id="i2s-register">
 <h3><span class="section-number">2.7.4.1. </span><strong>i2s_register</strong><a class="headerlink" href="#i2s-register" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">i2s_register</span></code> 用来注册 I2S 标准驱动接口，在注册之前需要打开对应 I2S 设备的宏定义,例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2S0</span></code> 方可使用 I2S0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 I2S 设备。</p>
+<p><code class="docutils literal notranslate"><span class="pre">i2s_register</span></code> 用来注册一个 I2S 标准驱动接口，在注册之前需要打开对应 I2S 设备的宏定义,例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2S0</span></code> 方可使用 I2S0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 I2S 设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">i2s_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">i2s_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -374,16 +375,16 @@
 </div>
 <div class="section" id="device-open">
 <h3><span class="section-number">2.7.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">i2s_open</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于开启一个 I2S 设备，实际调用 <code class="docutils literal notranslate"><span class="pre">i2s_open</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>oflag 设备的打开方式</p></li>
-<li><p>return 错误码，0 表示打开成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>oflag</strong> 设备的打开方式</p></li>
+<li><p><strong>return</strong> 错误码，0 表示打开成功，其他表示错误</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 可以写入以下参数：</p>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* 设备以轮训发送模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* 设备以轮训接收模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* 设备以 DMA 发送模式打开 */</span><span class="cp"></span>
@@ -393,26 +394,26 @@
 </div>
 <div class="section" id="device-close">
 <h3><span class="section-number">2.7.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于设备的关闭。实际调用 <code class="docutils literal notranslate"><span class="pre">i2s_close</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于关闭一个 I2S 设备，实际调用 <code class="docutils literal notranslate"><span class="pre">i2s_close</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>return 错误码，0 表示关闭成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>return</strong> 错误码，0 表示关闭成功，其他表示错误</p></li>
 </ul>
 </div>
 <div class="section" id="device-control">
 <h3><span class="section-number">2.7.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于根据命令对设备进行控制和参数的修改。实际调用 <code class="docutils literal notranslate"><span class="pre">i2s_control</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于对 I2S 设备的进行控制和参数的修改，实际调用 <code class="docutils literal notranslate"><span class="pre">i2s_control</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>cmd 设备控制命令</p></li>
-<li><p>args 控制参数</p></li>
-<li><p>return 不同的控制命令返回的意义不同。</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>cmd</strong> 设备控制命令</p></li>
+<li><p><strong>args</strong> 控制参数</p></li>
+<li><p><strong>return</strong> 不同的控制命令返回的意义不同。</p></li>
 </ul>
 <p>I2S 设备除了标准的控制命令，还具有自己特殊的控制命令。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define I2S_GET_TX_FIFO_CMD           0x10</span>
@@ -460,11 +461,11 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>pos 无作用</p></li>
-<li><p>buffer 要写入的 buffer 缓冲区</p></li>
-<li><p>size 要写入的长度</p></li>
-<li><p>return 错误码，0 表示写入成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>pos</strong> 无作用</p></li>
+<li><p><strong>buffer</strong> 要写入的 buffer 缓冲区</p></li>
+<li><p><strong>size</strong> 要写入的长度</p></li>
+<li><p><strong>return</strong> 错误码，0 表示写入成功，其他表示错误</p></li>
 </ul>
 </div>
 <div class="section" id="device-read">
@@ -474,11 +475,11 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>pos 无作用</p></li>
-<li><p>buffer 要读入的 buffer 缓冲区</p></li>
-<li><p>size 要读入的长度</p></li>
-<li><p>return 错误码，0 表示读入成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>pos</strong> 无作用</p></li>
+<li><p><strong>buffer</strong> 要读入的 buffer 缓冲区</p></li>
+<li><p><strong>size</strong> 要读入的长度</p></li>
+<li><p><strong>return</strong> 错误码，0 表示读入成功，其他表示错误</p></li>
 </ul>
 </div>
 </div>

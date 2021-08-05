@@ -13,7 +13,7 @@ GPIO 全称 General Purpose Input Output（通用输入 / 输出），博流系�
 - 硬件消抖
 - 驱动能力控制
 
-bl mcu sdk 的引脚配置方式分为两种。
+**bl mcu sdk** 的引脚配置方式分为两种。
 
 - GPIO 复用功能通过专门的 **pinmux table** ，用户只需要修改 table 中的相关引脚的功能，程序会自动配置这些引脚。**pinmux table** 位于 ``bsp/board/xxx_board`` 目录下 ``pinmux_config.h`` 文件。
 - 通过标准的 GPIO 设备接口配置引脚，缺点是只能配置普通的输入输出和中断功能，复用功能建议还是使用 table 进行配置。
@@ -30,8 +30,8 @@ GPIO 设备接口
 
     void gpio_set_mode(uint32_t pin, uint32_t mode);
 
-- pin 要配置的引脚
-- mode 要配置的引脚功能
+- **pin** 要配置的引脚
+- **mode** 要配置的引脚功能
 
 ``mode`` 提供以下几种类型
 
@@ -62,8 +62,8 @@ GPIO 设备接口
     void gpio_write(uint32_t pin, uint32_t value);
 
 
-- pin 要设置的引脚
-- value 要设置的电平
+- **pin** 要设置的引脚
+- **value** 要设置的电平
 
 **gpio_toggle**
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,7 +74,7 @@ GPIO 设备接口
 
     void gpio_toggle(uint32_t pin);
 
-- pin 要翻转的引脚
+- **pin** 要翻转的引脚
 
 **gpio_read**
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -86,8 +86,8 @@ GPIO 设备接口
     int  gpio_read(uint32_t pin);
 
 
-- pin 要读取电平的引脚
-- return 0 为低电平，1 为高电平
+- **pin** 要读取电平的引脚
+- **return** 0 为低电平，1 为高电平
 
 **gpio_attach_irq**
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,8 +98,8 @@ GPIO 设备接口
 
     void gpio_attach_irq(uint32_t pin, void (*cbfun)(uint32_t pin));
 
-- pin 要附加中断回调的引脚
-- cbfun 要注册的中断回调函数
+- **pin** 要附加中断回调的引脚
+- **cbfun** 要注册的中断回调函数
 
 **gpio_irq_enable**
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -110,5 +110,5 @@ GPIO 设备接口
 
     void gpio_irq_enable(uint32_t pin,uint8_t enabled);
 
-- pin 要开启或者关闭中断的引脚
-- enabled 0 为关闭中断，1 为打开中断
+- **pin** 要开启或者关闭中断的引脚
+- **enabled** 0 为关闭中断，1 为打开中断

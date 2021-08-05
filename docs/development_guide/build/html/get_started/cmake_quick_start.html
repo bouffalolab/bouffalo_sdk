@@ -307,8 +307,11 @@
 <h2><span class="section-number">4.4. </span>添加有依赖库的新工程<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>添加有依赖库的新工程的步骤与添加单个源文件工程基本步骤一致</p></li>
-<li><p>如使用的依赖库在本 SDK 中已存在，那么就只需要修改 CMakeLists.txt 即可
--  如使用的依赖库不存在则需要自行添加，详见后续说明</p></li>
+<li><p>如使用的依赖库在本 SDK 中已存在，那么就只需要修改 CMakeLists.txt 即可</p>
+<ul>
+<li><p>如使用的依赖库不存在则需要自行添加，详见后续说明</p></li>
+</ul>
+</li>
 </ul>
 <p>已存在的情况下，目录结构如下：</p>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>

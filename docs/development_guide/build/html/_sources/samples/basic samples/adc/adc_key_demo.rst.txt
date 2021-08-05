@@ -69,7 +69,7 @@ ADC - 按键检测电压
     adc_channel_cfg.pos_channel = posChList;
     adc_channel_cfg.neg_channel = negChList;
 
-    adc_register(ADC0_INDEX, "adc_key", DEVICE_OFLAG_STREAM_RX);
+    adc_register(ADC0_INDEX, "adc_key");
 
     adc_key = device_find("adc_key");
 

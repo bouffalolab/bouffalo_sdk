@@ -3,6 +3,7 @@ I2S 设备
 
 简介
 ------------------------
+
 I2S (Inter—IC Sound) 总线, 又称集成电路内置音频总线，为数字音频设备之间的音频数据传输而制定的一种总线标准，
 该总线专门用于音频设备之间的数据传输，广泛应用于各种多媒体系统。博流系列 MCU 中 I2S 设备具有以下特性：
 
@@ -33,17 +34,17 @@ I2S 设备结构体定义
         void        *rx_dma;
     } i2s_device_t;
 
-- parent 继承父类属性
-- id 外设 id 号, 0 表示 I2S0
-- iis_mode 主从模式选择
-- interface_mode  协议类型
-- sampl_freq_hz  音频数据采样率
-- channel_num  音频通道数，非 DSP 模式下最高 2 通道
-- frame_size  帧格式长度，即每个通道音频的 BCLK 个数
-- data_size 实际的有效音频数据位宽，不能大于 frame_size
-- fifo_threshold  收发数据的 fifo 深度阈值
-- tx_dma  附加的发送 dma 句柄
-- rx_dma  附加的接收 dma 句柄
+- **parent** 继承父类属性
+- **id** 外设 id 号, 0 表示 I2S0
+- **iis_mode** 主从模式选择
+- **interface_mode**  协议类型
+- **sampl_freq_hz**  音频数据采样率
+- **channel_num**  音频通道数，非 DSP 模式下最高 2 通道
+- **frame_size**  帧格式长度，即每个通道音频的 BCLK 个数
+- **data_size** 实际的有效音频数据位宽，不能大于 frame_size
+- **fifo_threshold**  收发数据的 fifo 深度阈值
+- **tx_dma**  附加的发送 dma 句柄
+- **rx_dma**  附加的接收 dma 句柄
 
 ``iis_mode`` 提供以下类型
 
@@ -104,7 +105,7 @@ I2S 设备参数配置表
 
 每一个 I2S 设备都有一个参数配置宏,宏定义位于 ``bsp/board/xxx`` 目录下 ``peripheral_config.h`` 文件,
 因此无需用户自己定义变量。当用户打开对应设备的宏，该设备的配置才生效。
-例如打开宏 ``BSP_USING_I2S0`` ，``I2S0_CONFIG`` 即生效，同时 ``I2S0`` 设备就可以进行注册和使用了。
+例如打开宏 ``BSP_USING_I2S0`` ， ``I2S0_CONFIG`` 即生效，同时 ``I2S0`` 设备就可以进行注册和使用了。
 
 .. code-block:: C
 
@@ -140,7 +141,7 @@ I2S 设备接口全部遵循标准设备驱动管理层提供的接口。
 **i2s_register**
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-``i2s_register`` 用来注册 I2S 标准驱动接口，在注册之前需要打开对应 I2S 设备的宏定义,例如定义宏 ``BSP_USING_I2S0`` 方可使用 I2S0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 I2S 设备。
+``i2s_register`` 用来注册一个 I2S 标准驱动接口，在注册之前需要打开对应 I2S 设备的宏定义,例如定义宏 ``BSP_USING_I2S0`` 方可使用 I2S0 设备。注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 I2S 设备。
 
 .. code-block:: C
 
@@ -163,18 +164,18 @@ I2S 设备接口全部遵循标准设备驱动管理层提供的接口。
 **device_open**
 ^^^^^^^^^^^^^^^^
 
-``device_open`` 用于设备的打开，``oflag`` 表示以何种方式打开。实际调用 ``i2s_open``。
+``device_open`` 用于开启一个 I2S 设备，实际调用 ``i2s_open``。
 
 .. code-block:: C
 
     int device_open(struct device *dev, uint16_t oflag);
 
 
-- dev 设备句柄
-- oflag 设备的打开方式
-- return 错误码，0 表示打开成功，其他表示错误
+- **dev** 设备句柄
+- **oflag** 设备的打开方式
+- **return** 错误码，0 表示打开成功，其他表示错误
 
-``oflag`` 可以写入以下参数：
+``oflag`` 提供以下类型
 
 .. code-block:: C
 
@@ -186,28 +187,28 @@ I2S 设备接口全部遵循标准设备驱动管理层提供的接口。
 **device_close**
 ^^^^^^^^^^^^^^^^
 
-``device_close`` 用于设备的关闭。实际调用 ``i2s_close``。
+``device_close`` 用于关闭一个 I2S 设备，实际调用 ``i2s_close``。
 
 .. code-block:: C
 
     int device_close(struct device *dev);
 
-- dev 设备句柄
-- return 错误码，0 表示关闭成功，其他表示错误
+- **dev** 设备句柄
+- **return** 错误码，0 表示关闭成功，其他表示错误
 
 **device_control**
 ^^^^^^^^^^^^^^^^^^^
 
-``device_control`` 用于根据命令对设备进行控制和参数的修改。实际调用 ``i2s_control``。
+``device_control`` 用于对 I2S 设备的进行控制和参数的修改，实际调用 ``i2s_control``。
 
 .. code-block:: C
 
     int device_control(struct device *dev, int cmd, void *args);
 
-- dev 设备句柄
-- cmd 设备控制命令
-- args 控制参数
-- return 不同的控制命令返回的意义不同。
+- **dev** 设备句柄
+- **cmd** 设备控制命令
+- **args** 控制参数
+- **return** 不同的控制命令返回的意义不同。
 
 I2S 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
@@ -247,11 +248,11 @@ I2S 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
     int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);
 
-- dev 设备句柄
-- pos 无作用
-- buffer 要写入的 buffer 缓冲区
-- size 要写入的长度
-- return 错误码，0 表示写入成功，其他表示错误
+- **dev** 设备句柄
+- **pos** 无作用
+- **buffer** 要写入的 buffer 缓冲区
+- **size** 要写入的长度
+- **return** 错误码，0 表示写入成功，其他表示错误
 
 **device_read**
 ^^^^^^^^^^^^^^^^
@@ -262,9 +263,9 @@ I2S 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
     int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size);
 
-- dev 设备句柄
-- pos 无作用
-- buffer 要读入的 buffer 缓冲区
-- size 要读入的长度
-- return 错误码，0 表示读入成功，其他表示错误
+- **dev** 设备句柄
+- **pos** 无作用
+- **buffer** 要读入的 buffer 缓冲区
+- **size** 要读入的长度
+- **return** 错误码，0 表示读入成功，其他表示错误
 

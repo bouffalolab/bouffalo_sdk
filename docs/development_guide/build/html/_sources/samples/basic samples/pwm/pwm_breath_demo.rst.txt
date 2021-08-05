@@ -81,16 +81,16 @@ PWM - 呼吸灯
     :linenos:
 
         for (pwm_cfg.threshold_high = 0; pwm_cfg.threshold_high <= 32; pwm_cfg.threshold_high++) {
-            device_control(led_breath, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg);
+            device_control(led_breath, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg);
             bflb_platform_delay_ms(50);
         }
 
         for (pwm_cfg.threshold_high = 32; 0 <= pwm_cfg.threshold_high && pwm_cfg.threshold_high <= 32; pwm_cfg.threshold_high--) {
-            device_control(led_breath, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg);
+            device_control(led_breath, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg);
             bflb_platform_delay_ms(50);
         }
 
-- 使用 ``device_contorl`` 函数，配合 ``DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG`` 指令，可以修改当前 PWM 通道的占空比。
+- 使用 ``device_contorl`` 函数，配合 ``DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG`` 指令，可以修改当前 PWM 通道的占空比。
 
 编译和烧录
 -----------------------------

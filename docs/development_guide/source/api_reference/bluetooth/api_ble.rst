@@ -12,8 +12,8 @@ BLE
         - 支持配对包括蓝牙4.2中的安全连接特性
         - 支持永久存储蓝牙特定的设置和数据
     + 蓝牙mesh特性
-        - 支持Relay, Friend Node, Low-Power Node (LPN) and GATT Proxy角色
-        - 支持两种Provisioning bearers(PB-ADV & PB-GATT)
+        - TODO
+
 - BLE协议栈的架构：
                         .. figure:: img/image1.png
 

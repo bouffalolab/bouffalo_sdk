@@ -577,15 +577,15 @@
         <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
         <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="p">}</span>
-    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch1</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
-    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch2</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
-    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch3</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">,</span> <span class="n">DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch1</span><span class="p">,</span> <span class="n">DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch2</span><span class="p">,</span> <span class="n">DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch3</span><span class="p">,</span> <span class="n">DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p>使用 <code class="docutils literal notranslate"><span class="pre">device_contorl</span></code> 函数，配合 <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span></code> 指令，修改4个 PWM 通道的的高低阈值。</p></li>
+<li><p>使用 <code class="docutils literal notranslate"><span class="pre">device_contorl</span></code> 函数，配合 <code class="docutils literal notranslate"><span class="pre">DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG</span></code> 指令，修改4个 PWM 通道的的高低阈值。</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">注解</p>

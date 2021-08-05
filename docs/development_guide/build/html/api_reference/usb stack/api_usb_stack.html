@@ -285,7 +285,7 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>device 返回 USB 设备句柄</p></li>
+<li><p><strong>device</strong> 返回 USB 设备句柄</p></li>
 </ul>
 </div>
 </div>
@@ -300,7 +300,7 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>desc  描述符的句柄</p></li>
+<li><p><strong>desc</strong>  描述符的句柄</p></li>
 </ul>
 </div>
 <div class="section" id="usbd-msosv1-desc-register">
@@ -310,7 +310,7 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>desc  描述符句柄</p></li>
+<li><p><strong>desc</strong>  描述符句柄</p></li>
 </ul>
 </div>
 <div class="section" id="usbd-class-add-interface">
@@ -320,8 +320,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>class  USB 设备类的句柄</p></li>
-<li><p>intf   USB 设备接口的句柄</p></li>
+<li><p><strong>class</strong>  USB 设备类的句柄</p></li>
+<li><p><strong>intf</strong>   USB 设备接口的句柄</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">usbd_class_t</span></code> 定义如下</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">usbd_class</span> <span class="p">{</span>
@@ -332,9 +332,9 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>list 类的链表节点</p></li>
-<li><p>name 类的名称</p></li>
-<li><p>intf_list 接口的链表节点</p></li>
+<li><p><strong>list</strong> 类的链表节点</p></li>
+<li><p><strong>name</strong> 类的名称</p></li>
+<li><p><strong>intf_list</strong> 接口的链表节点</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">usbd_interface_t</span></code> 定义如下</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">usbd_interface</span> <span class="p">{</span>
@@ -353,13 +353,13 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>list 接口的链表节点</p></li>
-<li><p>class_handler class setup 请求回调函数</p></li>
-<li><p>vendor_handler vendor setup 请求回调函数</p></li>
-<li><p>custom_handler custom setup 请求回调函数</p></li>
-<li><p>notify_handler 中断标志、协议栈相关状态回调函数</p></li>
-<li><p>intf_num 当前接口偏移</p></li>
-<li><p>ep_list 端点的链表节点</p></li>
+<li><p><strong>list</strong> 接口的链表节点</p></li>
+<li><p><strong>class_handler</strong> class setup 请求回调函数</p></li>
+<li><p><strong>vendor_handler</strong> vendor setup 请求回调函数</p></li>
+<li><p><strong>custom_handler</strong> custom setup 请求回调函数</p></li>
+<li><p><strong>notify_handler</strong> 中断标志、协议栈相关状态回调函数</p></li>
+<li><p><strong>intf_num</strong> 当前接口偏移</p></li>
+<li><p><strong>ep_list</strong> 端点的链表节点</p></li>
 </ul>
 </div>
 <div class="section" id="usbd-interface-add-endpoint">
@@ -369,8 +369,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>intf  USB 设备接口的句柄</p></li>
-<li><p>ep    USB 设备端点的句柄</p></li>
+<li><p><strong>intf</strong>  USB 设备接口的句柄</p></li>
+<li><p><strong>ep</strong>    USB 设备端点的句柄</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">usbd_class_t</span></code> 定义如下</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">usbd_endpoint</span> <span class="p">{</span>
@@ -381,9 +381,9 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>list 端点的链表节点</p></li>
-<li><p>ep_addr 端点地址</p></li>
-<li><p>ep_cb 端点中断回调函数</p></li>
+<li><p><strong>list</strong> 端点的链表节点</p></li>
+<li><p><strong>ep_addr</strong> 端点地址</p></li>
+<li><p><strong>ep_cb</strong> 端点中断回调函数</p></li>
 </ul>
 </div>
 <div class="section" id="usb-device-is-configured">
@@ -393,7 +393,7 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>return 配置状态， 0 表示未配置， 1 表示配置成功</p></li>
+<li><p><strong>return</strong> 配置状态， 0 表示未配置， 1 表示配置成功</p></li>
 </ul>
 </div>
 </div>
@@ -407,8 +407,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>class 类的句柄</p></li>
-<li><p>intf  接口句柄</p></li>
+<li><p><strong>class</strong> 类的句柄</p></li>
+<li><p><strong>intf</strong>  接口句柄</p></li>
 </ul>
 </div>
 </div>
@@ -421,8 +421,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>out_ep     输出端点的地址</p></li>
-<li><p>in_ep      输入端点的地址</p></li>
+<li><p><strong>out_ep</strong>     输出端点的地址</p></li>
+<li><p><strong>in_ep</strong>      输入端点的地址</p></li>
 </ul>
 </div>
 </div>
@@ -437,8 +437,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>class 类的句柄</p></li>
-<li><p>intf  接口句柄</p></li>
+<li><p><strong>class</strong> 类的句柄</p></li>
+<li><p><strong>intf</strong>  接口句柄</p></li>
 </ul>
 </div>
 </div>
@@ -451,8 +451,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>class 类的句柄</p></li>
-<li><p>intf  接口句柄</p></li>
+<li><p><strong>class</strong> 类的句柄</p></li>
+<li><p><strong>intf</strong>  接口句柄</p></li>
 </ul>
 </div>
 </div>
@@ -465,8 +465,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>class 类的句柄</p></li>
-<li><p>intf  接口句柄</p></li>
+<li><p><strong>class</strong> 类的句柄</p></li>
+<li><p><strong>intf</strong>  接口句柄</p></li>
 </ul>
 </div>
 </div>

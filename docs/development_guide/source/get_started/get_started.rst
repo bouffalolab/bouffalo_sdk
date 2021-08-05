@@ -11,7 +11,7 @@
 
 BL706_Iot 开发板如下图所示
 
-.. figure:: img/bl702_iot.png
+.. figure:: img/bl706_iot.png
    :alt:
 
    BL706_IoT
@@ -57,7 +57,7 @@ BL706_AVB 开发板如下图所示
 **Windows**
 ^^^^^^^^^^^^^^^^^^^
 
-Sipeed RV-Debugger Plus 调试器在 Windows 系统中所以时我们需要将驱动更换为 ``Win USB`` 驱动
+Sipeed RV-Debugger Plus 调试器在 Windows 系统中使用时我们需要将驱动更换为 ``Win USB`` 驱动
 
 -  1. 首先，将调试器 Type-C USB 接口使用 USB 数据线连接到 PC 主机，打开 PC 的设备管理器，在端口一栏可以看到调试器被识别为两个串口（*注：不是开发板上的串口*），或者在 ``通用串行总线控制器`` 看到 ``USB Serial Converter A`` 和 ``USB Serial Converter B``
 
@@ -101,6 +101,9 @@ Sipeed RV-Debugger Plus 调试器在 Windows 系统中所以时我们需要将�
 .. code-block:: bash
 
     $ lsusb
+    ...
+    Bus 001 Device 003: ID 0403:6010 Future Technology Devices International, Ltd FT2232C Dual USB-UART/FIFO IC
+    ...
 
 .. figure:: img/sipeed_rv_debugger_8.png
 

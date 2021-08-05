@@ -103,6 +103,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#sipeed-rv-debugger-plus">2.2.1. 使用 Sipeed RV-Debugger Plus 烧写、调试连接方法</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">2.2.2. 使用 CK-Link 烧写、调试连接方法</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id4">2.2.3. 使用串口烧写程序连接方法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">2.2.4. BL706 AVB 开发板与其他子模块的连接方法</a></li>
 </ul>
 </li>
 </ul>
@@ -231,9 +232,9 @@
     <span class="n">GND</span>          <span class="o">&lt;--&gt;</span>     <span class="n">GND</span>
 </pre></div>
 </div>
-<div class="figure align-default" id="id5">
+<div class="figure align-default" id="id6">
 <img alt="" src="../_images/ck_link_connect_bl706_iot.png" />
-<p class="caption"><span class="caption-text">ck_link connect bl706-iot board</span><a class="headerlink" href="#id5" title="永久链接至图片">¶</a></p>
+<p class="caption"><span class="caption-text">ck_link connect bl706-iot board</span><a class="headerlink" href="#id6" title="永久链接至图片">¶</a></p>
 </div>
 </div>
 <div class="section" id="j-link">
@@ -253,9 +254,9 @@
     <span class="n">GND</span>          <span class="o">&lt;--&gt;</span>     <span class="n">GND</span>
 </pre></div>
 </div>
-<div class="figure align-default" id="id6">
+<div class="figure align-default" id="id7">
 <img alt="" src="../_images/jlink_connect_bl706_iot.png" />
-<p class="caption"><span class="caption-text">jlink connect bl706-iot board</span><a class="headerlink" href="#id6" title="永久链接至图片">¶</a></p>
+<p class="caption"><span class="caption-text">jlink connect bl706-iot board</span><a class="headerlink" href="#id7" title="永久链接至图片">¶</a></p>
 </div>
 </div>
 <div class="section" id="id2">
@@ -301,9 +302,9 @@
 <p class="admonition-title">重要</p>
 <p>使用调试功能是一定要将 FUNC1 跳帽连接，否则引脚被复用其他功能，不能使用 JTAG 功能；串口功能可以正常使用</p>
 </div>
-<div class="figure align-default" id="id7">
+<div class="figure align-default" id="id8">
 <img alt="" src="../_images/bl706_avb_rv_debugger_plus.png" />
-<p class="caption"><span class="caption-text">RV-Debugger connect bl706_avb board</span><a class="headerlink" href="#id7" title="永久链接至图片">¶</a></p>
+<p class="caption"><span class="caption-text">RV-Debugger connect bl706_avb board</span><a class="headerlink" href="#id8" title="永久链接至图片">¶</a></p>
 </div>
 </div>
 <div class="section" id="id3">
@@ -325,9 +326,9 @@
     <span class="n">GND</span>          <span class="o">&lt;--&gt;</span>     <span class="n">GND</span>
 </pre></div>
 </div>
-<div class="figure align-default" id="id8">
+<div class="figure align-default" id="id9">
 <img alt="" src="../_images/bl706_avb_ck_link.png" />
-<p class="caption"><span class="caption-text">ck_link connect bl706_avb board</span><a class="headerlink" href="#id8" title="永久链接至图片">¶</a></p>
+<p class="caption"><span class="caption-text">ck_link connect bl706_avb board</span><a class="headerlink" href="#id9" title="永久链接至图片">¶</a></p>
 </div>
 </div>
 <div class="section" id="id4">
@@ -351,9 +352,57 @@
   <span class="n">GND</span>   <span class="o">&lt;--&gt;</span>   <span class="n">GND</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="id5">
+<h3><span class="section-number">2.2.4. </span>BL706 AVB 开发板与其他子模块的连接方法<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
 <ul class="simple">
-<li></li>
+<li><p>本节主要介绍 BL706_AVB 板与其他模块的连接的方法，主要包括摄像头的连接、音频 Codec 模块的连接、SPI 屏幕的连接。</p></li>
 </ul>
+<p><strong>BL706_AVB 连接 GC0308 摄像头模块</strong></p>
+<ul class="simple">
+<li><ol class="arabic simple">
+<li><p>首先，将 BL706_AVB 开发板背面的 <code class="docutils literal notranslate"><span class="pre">J5</span></code> 抽屉式 FPC 排线座黑色的锁扣部分，从边缘将其拔出</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_camera_1.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="2">
+<li><p>完全拔出后，如下图所示；</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_camera_2.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="3">
+<li><p>FPC 排线座是抽屉下接式，因此接下来将摄像头无金属接触点的一面朝上，插入 FPC 排线座</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_camera_3.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="4">
+<li><p>将摄像头插入后，把黑色锁扣压紧</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_camera_4.png" />
+</div>
+<p><strong>BL706_AVB 连接 Audio Codec 模块</strong></p>
+<ul class="simple">
+<li><p>将 Audio Codec 模块的 <code class="docutils literal notranslate"><span class="pre">HD19</span></code> 组排针，插入 BL706_AVB 开发板的 <code class="docutils literal notranslate"><span class="pre">HD11</span></code> 排母座；注意模块是向外延申的。</p></li>
+<li><p>示意图如下：</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_codec_1.png" />
+</div>
 </div>
 </div>
 </div>

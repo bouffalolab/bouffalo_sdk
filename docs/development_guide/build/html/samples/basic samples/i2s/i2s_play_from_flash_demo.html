@@ -39,7 +39,7 @@
     
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
-    <link rel="next" title="9. ADC 示例" href="../adc/index.html" />
+    <link rel="next" title="8.2. I2S - 录音回环播放" href="i2s_play_from_record_demo.html" />
     <link rel="prev" title="8. I2S 示例" href="index.html" /> 
 </head>
 
@@ -124,6 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#id4">8.1.4. 实验现象</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="i2s_play_from_record_demo.html">8.2. I2S - 回环播放</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../adc/index.html">9. ADC 示例</a></li>
@@ -376,7 +377,7 @@
 <span class="normal">11</span>
 <span class="normal">12</span>
 <span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cm">/* register &amp; open i2s device */</span>
-<span class="n">i2s_register</span><span class="p">(</span><span class="n">I2S0_INDEX</span><span class="p">,</span> <span class="s">&quot;I2S&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+<span class="n">i2s_register</span><span class="p">(</span><span class="n">I2S0_INDEX</span><span class="p">,</span> <span class="s">&quot;I2S&quot;</span><span class="p">);</span>
 <span class="n">i2s</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;I2S&quot;</span><span class="p">);</span>
 <span class="k">if</span> <span class="p">(</span><span class="n">i2s</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">I2S_DEV</span><span class="p">(</span><span class="n">i2s</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">iis_mode</span> <span class="o">=</span> <span class="n">I2S_MODE_MASTER</span><span class="p">;</span>
@@ -479,7 +480,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../adc/index.html" class="btn btn-neutral float-right" title="9. ADC 示例" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="i2s_play_from_record_demo.html" class="btn btn-neutral float-right" title="8.2. I2S - 录音回环播放" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="index.html" class="btn btn-neutral float-left" title="8. I2S 示例" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

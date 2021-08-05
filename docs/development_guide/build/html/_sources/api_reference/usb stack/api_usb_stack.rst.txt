@@ -49,7 +49,7 @@ USB DEVICE 控制器接口
         return usb;
     }
 
-- device 返回 USB 设备句柄
+- **device** 返回 USB 设备句柄
 
 .. note::中断处理函数则是调用 ``usbd_event_notify_handler``
 
@@ -68,7 +68,7 @@ USB DEVICE 通用接口
 
     void usbd_desc_register(const uint8_t *desc);
 
-- desc  描述符的句柄
+- **desc**  描述符的句柄
 
 
 **usbd_msosv1_desc_register**
@@ -80,7 +80,7 @@ USB DEVICE 通用接口
 
     void usbd_msosv1_desc_register(struct usb_msosv1_descriptor *desc);
 
-- desc  描述符句柄
+- **desc**  描述符句柄
 
 
 **usbd_class_add_interface**
@@ -92,8 +92,8 @@ USB DEVICE 通用接口
 
     void usbd_class_add_interface(usbd_class_t *class, usbd_interface_t *intf);
 
-- class  USB 设备类的句柄
-- intf   USB 设备接口的句柄
+- **class**  USB 设备类的句柄
+- **intf**   USB 设备接口的句柄
 
 ``usbd_class_t`` 定义如下
 
@@ -105,9 +105,9 @@ USB DEVICE 通用接口
         usb_slist_t intf_list;
     } usbd_class_t;
 
-- list 类的链表节点
-- name 类的名称
-- intf_list 接口的链表节点
+- **list** 类的链表节点
+- **name** 类的名称
+- **intf_list** 接口的链表节点
 
 ``usbd_interface_t`` 定义如下
 
@@ -127,13 +127,13 @@ USB DEVICE 通用接口
         usb_slist_t ep_list;
     } usbd_interface_t;
 
-- list 接口的链表节点
-- class_handler class setup 请求回调函数
-- vendor_handler vendor setup 请求回调函数
-- custom_handler custom setup 请求回调函数
-- notify_handler 中断标志、协议栈相关状态回调函数
-- intf_num 当前接口偏移
-- ep_list 端点的链表节点
+- **list** 接口的链表节点
+- **class_handler** class setup 请求回调函数
+- **vendor_handler** vendor setup 请求回调函数
+- **custom_handler** custom setup 请求回调函数
+- **notify_handler** 中断标志、协议栈相关状态回调函数
+- **intf_num** 当前接口偏移
+- **ep_list** 端点的链表节点
 
 **usbd_interface_add_endpoint**
 """"""""""""""""""""""""""""""""""""
@@ -145,8 +145,8 @@ USB DEVICE 通用接口
     void usbd_interface_add_endpoint(usbd_interface_t *intf, usbd_endpoint_t *ep);
 
 
-- intf  USB 设备接口的句柄
-- ep    USB 设备端点的句柄
+- **intf**  USB 设备接口的句柄
+- **ep**    USB 设备端点的句柄
 
 ``usbd_class_t`` 定义如下
 
@@ -158,9 +158,9 @@ USB DEVICE 通用接口
         usbd_endpoint_callback ep_cb;
     } usbd_endpoint_t;
 
-- list 端点的链表节点
-- ep_addr 端点地址
-- ep_cb 端点中断回调函数
+- **list** 端点的链表节点
+- **ep_addr** 端点地址
+- **ep_cb** 端点中断回调函数
 
 **usb_device_is_configured**
 """"""""""""""""""""""""""""""""""""
@@ -171,7 +171,7 @@ USB DEVICE 通用接口
 
     bool usb_device_is_configured(void);
 
-- return 配置状态， 0 表示未配置， 1 表示配置成功
+- **return** 配置状态， 0 表示未配置， 1 表示配置成功
 
 
 USB Device CDC 类接口
@@ -187,8 +187,8 @@ USB Device CDC 类接口
 
     void usbd_cdc_add_acm_interface(usbd_class_t *class, usbd_interface_t *intf);
 
-- class 类的句柄
-- intf  接口句柄
+- **class** 类的句柄
+- **intf**  接口句柄
 
 USB Device MSC 类接口
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -201,8 +201,8 @@ USB Device MSC 类接口
 
     void usbd_msc_class_init(uint8_t out_ep, uint8_t in_ep);
 
-- out_ep     输出端点的地址
-- in_ep      输入端点的地址
+- **out_ep**     输出端点的地址
+- **in_ep**      输入端点的地址
 
 
 USB Device HID 类接口
@@ -218,8 +218,8 @@ USB Device HID 类接口
 
     void usbd_hid_add_interface(usbd_class_t *class, usbd_interface_t *intf);
 
-- class 类的句柄
-- intf  接口句柄
+- **class** 类的句柄
+- **intf**  接口句柄
 
 
 USB Device AUDIO 类接口
@@ -233,8 +233,8 @@ USB Device AUDIO 类接口
 
     void usbd_audio_add_interface(usbd_class_t *class, usbd_interface_t *intf);
 
-- class 类的句柄
-- intf  接口句柄
+- **class** 类的句柄
+- **intf**  接口句柄
 
 
 USB Device VIDEO 类接口
@@ -248,5 +248,5 @@ USB Device VIDEO 类接口
 
     void usbd_video_add_interface(usbd_class_t *class, usbd_interface_t *intf);
 
-- class 类的句柄
-- intf  接口句柄
+- **class** 类的句柄
+- **intf**  接口句柄

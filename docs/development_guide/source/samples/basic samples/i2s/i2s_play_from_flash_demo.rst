@@ -117,7 +117,7 @@ I2S 的配置与使能:
     :linenos:
 
     /* register & open i2s device */
-    i2s_register(I2S0_INDEX, "I2S", DEVICE_OFLAG_RDWR);
+    i2s_register(I2S0_INDEX, "I2S");
     i2s = device_find("I2S");
     if (i2s) {
         I2S_DEV(i2s)->iis_mode = I2S_MODE_MASTER;

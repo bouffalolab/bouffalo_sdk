@@ -132,7 +132,8 @@
 <li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.9. ADC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.10. DAC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.11. TIMER 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.12. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_qdec.html">2.12. QDEC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.13. USB 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
@@ -267,17 +268,17 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>parent        继承父类属性</p></li>
-<li><p>id            SPI id，0 表示 SPI0</p></li>
-<li><p>clk           SPI 时钟频率</p></li>
-<li><p>mode          主机模式或者从机模式</p></li>
-<li><p>direction     传输先行模式</p></li>
-<li><p>clk_polaraity 时钟极性</p></li>
-<li><p>clk_phase     时钟相位</p></li>
-<li><p>datasize      数据传输位宽</p></li>
-<li><p>fifo_threshold fifo 阈值, 最大为 4</p></li>
-<li><p>tx_dma        附加的发送 dma 句柄</p></li>
-<li><p>rx_dma        附加的接收 dma 句柄</p></li>
+<li><p><strong>parent</strong>        继承父类属性</p></li>
+<li><p><strong>id</strong>            SPI id，0 表示 SPI0</p></li>
+<li><p><strong>clk</strong>           SPI 时钟频率</p></li>
+<li><p><strong>mode</strong>          主机模式或者从机模式</p></li>
+<li><p><strong>direction</strong>     传输先行模式</p></li>
+<li><p><strong>clk_polaraity</strong> 时钟极性</p></li>
+<li><p><strong>clk_phase</strong>     时钟相位</p></li>
+<li><p><strong>datasize</strong>      数据传输位宽</p></li>
+<li><p><strong>fifo_threshold</strong> fifo 阈值, 最大为 4</p></li>
+<li><p><strong>tx_dma</strong>        附加的发送 dma 句柄</p></li>
+<li><p><strong>rx_dma</strong>        附加的接收 dma 句柄</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">mode</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define SPI_SLVAE_MODE                                0</span>
@@ -353,8 +354,8 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>index 要注册的设备索引</p></li>
-<li><p>name 为注册的设备命名</p></li>
+<li><p><strong>index</strong> 要注册的设备索引</p></li>
+<li><p><strong>name</strong> 为注册的设备命名</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">index</span></code> 用来选择 SPI 设备配置，一个 index 对应一个 SPI 设备配置，比如 <code class="docutils literal notranslate"><span class="pre">SPI0_INDEX</span></code> 对应 <code class="docutils literal notranslate"><span class="pre">SPI0_CONFIG</span></code> 配置，<code class="docutils literal notranslate"><span class="pre">index</span></code> 有如下可选类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">spi_index_type</span>
@@ -369,16 +370,16 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 <div class="section" id="device-open">
 <h3><span class="section-number">2.8.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">spi_open</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于打开一个 SPI 设备，实际调用 <code class="docutils literal notranslate"><span class="pre">spi_open</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>oflag 设备的打开方式</p></li>
-<li><p>return 错误码，0 表示打开成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>oflag</strong> 设备的打开方式</p></li>
+<li><p><strong>return</strong> 错误码，0 表示打开成功，其他表示错误</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 可以写入以下参数：</p>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* 设备以轮训发送模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* 设备以轮训接收模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* 设备以中断发送模式打开 */</span><span class="cp"></span>
@@ -390,26 +391,26 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </div>
 <div class="section" id="device-close">
 <h3><span class="section-number">2.8.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于设备的关闭。实际调用 <code class="docutils literal notranslate"><span class="pre">spi_close</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于关闭一个 SPI 设备，实际调用 <code class="docutils literal notranslate"><span class="pre">spi_close</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>return 错误码，0 表示关闭成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>return</strong> 错误码，0 表示关闭成功，其他表示错误</p></li>
 </ul>
 </div>
 <div class="section" id="device-control">
 <h3><span class="section-number">2.8.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于根据命令对设备进行控制和参数的修改。实际调用 <code class="docutils literal notranslate"><span class="pre">spi_control</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于对 SPI 设备进行控制和参数的修改，实际调用 <code class="docutils literal notranslate"><span class="pre">spi_control</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>cmd 设备控制命令</p></li>
-<li><p>args 控制参数</p></li>
-<li><p>return 不同的控制命令返回的意义不同。</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>cmd</strong> 设备控制命令</p></li>
+<li><p><strong>args</strong> 控制参数</p></li>
+<li><p><strong>return</strong> 不同的控制命令返回的意义不同。</p></li>
 </ul>
 <p>SPI 设备除了标准的控制命令，还具有自己特殊的控制命令。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_SPI_CONFIG_CLOCK       0x10</span>
@@ -484,11 +485,11 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>pos 无作用</p></li>
-<li><p>buffer 要写入的 buffer 缓冲区</p></li>
-<li><p>size 要写入的长度</p></li>
-<li><p>return 错误码，0 表示写入成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>pos</strong> 无作用</p></li>
+<li><p><strong>buffer</strong> 要写入的 buffer 缓冲区</p></li>
+<li><p><strong>size</strong> 要写入的长度</p></li>
+<li><p><strong>return</strong> 错误码，0 表示写入成功，其他表示错误</p></li>
 </ul>
 </div>
 <div class="section" id="device-read">
@@ -498,11 +499,11 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>pos 无作用</p></li>
-<li><p>buffer 要读入的 buffer 缓冲区</p></li>
-<li><p>size 要读入的长度</p></li>
-<li><p>return 错误码，0 表示读入成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>pos</strong> 无作用</p></li>
+<li><p><strong>buffer</strong> 要读入的 buffer 缓冲区</p></li>
+<li><p><strong>size</strong> 要读入的长度</p></li>
+<li><p><strong>return</strong> 错误码，0 表示读入成功，其他表示错误</p></li>
 </ul>
 </div>
 <div class="section" id="device-set-callback">
@@ -512,19 +513,19 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </pre></div>
 </div>
 <ul>
-<li><p>dev 设备句柄</p></li>
-<li><p>callback 要注册的中断回调函数</p>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>callback</strong> 要注册的中断回调函数</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>args 接收发送缓冲区，数据类型为 uint8_t*</p></li>
-<li><p>size 传输长度</p></li>
-<li><p>event 中断事件类型</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>args</strong> 接收发送缓冲区，数据类型为 uint8_t*</p></li>
+<li><p><strong>size</strong> 传输长度</p></li>
+<li><p><strong>event</strong> 中断事件类型</p></li>
 </ul>
 </div></blockquote>
 </li>
 </ul>
-<p>SPI 设备 <code class="docutils literal notranslate"><span class="pre">event</span></code> 类型如下</p>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> 类型如下</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">spi_event_type</span>
 <span class="p">{</span>
     <span class="n">SPI_EVENT_TX_FIFO</span><span class="p">,</span>
@@ -541,10 +542,10 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>buffer 发送数据缓冲区</p></li>
-<li><p>size 发送长度</p></li>
-<li><p>type 发送位宽类型</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>buffer</strong> 发送数据缓冲区</p></li>
+<li><p><strong>size</strong> 发送长度</p></li>
+<li><p><strong>type</strong> 发送位宽类型</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">type</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define SPI_TRANSFER_TYPE_8BIT    0</span>
@@ -561,10 +562,10 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>buffer 接收数据缓冲区</p></li>
-<li><p>size 接收长度</p></li>
-<li><p>type 位宽类型</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>buffer</strong> 接收数据缓冲区</p></li>
+<li><p><strong>size</strong> 接收长度</p></li>
+<li><p><strong>type</strong> 位宽类型</p></li>
 </ul>
 </div>
 <div class="section" id="spi-transmit-receive">
@@ -574,11 +575,11 @@ SDI（数据输入）、SDO（数据输出）、SCLK（时钟）、CS（片选�
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>send_buf 发送数据缓冲区</p></li>
-<li><p>recv_buf 接收数据缓冲区</p></li>
-<li><p>length 收发长度</p></li>
-<li><p>type 位宽类型</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>send_buf</strong> 发送数据缓冲区</p></li>
+<li><p><strong>recv_buf</strong> 接收数据缓冲区</p></li>
+<li><p><strong>length</strong> 收发长度</p></li>
+<li><p><strong>type</strong> 位宽类型</p></li>
 </ul>
 </div>
 </div>

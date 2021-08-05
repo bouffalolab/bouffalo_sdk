@@ -124,6 +124,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#dma-reload">2.5.4.10. <strong>dma_reload</strong></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#dma-fifo">2.5.5. DMA 的效率与FIFO</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id5">2.5.5.1. 内存到内存</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">2.5.5.2. 外设到内存 与 内存到外设</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api_i2c.html">2.6. I2C 设备</a></li>
@@ -132,7 +137,8 @@
 <li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.9. ADC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.10. DAC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.11. TIMER 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.12. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_qdec.html">2.12. QDEC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.13. USB 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
@@ -261,18 +267,18 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>parent        继承父类属性</p></li>
-<li><p>id            DMA id号，默认0，当前只有一个DMA</p></li>
-<li><p>ch            通道号</p></li>
-<li><p>direction     传输方向</p></li>
-<li><p>transfer_mode 传输模式</p></li>
-<li><p>src_req       源请求</p></li>
-<li><p>dst_req       目标请求</p></li>
-<li><p>src_burst_size 源突发字节数</p></li>
-<li><p>dst_burst_size 目标突发字节数</p></li>
-<li><p>src_width     源传输位宽</p></li>
-<li><p>dst_width     目标传输位宽</p></li>
-<li><p>lli_cfg       用来存储dma通道的一些信息，用户不用管</p></li>
+<li><p><strong>parent</strong>        继承父类属性</p></li>
+<li><p><strong>id</strong>            DMA id号，默认0，当前只有一个DMA</p></li>
+<li><p><strong>ch</strong>            通道号</p></li>
+<li><p><strong>direction</strong>     传输方向</p></li>
+<li><p><strong>transfer_mode</strong> 传输模式</p></li>
+<li><p><strong>src_req</strong>       源请求</p></li>
+<li><p><strong>dst_req</strong>       目标请求</p></li>
+<li><p><strong>src_burst_size</strong> 源突发字节数</p></li>
+<li><p><strong>dst_burst_size</strong> 目标突发字节数</p></li>
+<li><p><strong>src_width</strong>     源传输位宽</p></li>
+<li><p><strong>dst_width</strong>     目标传输位宽</p></li>
+<li><p><strong>lli_cfg</strong>       用来存储dma通道的一些信息，用户不用管</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">direction</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
@@ -424,13 +430,13 @@
 <p>DMA 设备接口全部遵循标准设备驱动管理层提供的接口。并且为了方便用户调用，将某些标准接口使用宏来重定义。</p>
 <div class="section" id="dma-register">
 <h3><span class="section-number">2.5.4.1. </span><strong>dma_register</strong><a class="headerlink" href="#dma-register" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">dma_register</span></code> 用来注册 DMA 设备标准驱动接口，在注册之前需要打开对应 DMA 设备的通道宏定义。例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_DMA_CH0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">DMA</span></code> 设备的 0 通道,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 <code class="docutils literal notranslate"><span class="pre">DMA</span></code> 设备的 0 通道。</p>
+<p><code class="docutils literal notranslate"><span class="pre">dma_register</span></code> 用来注册一个 DMA 设备标准驱动接口，在注册之前需要打开对应 DMA 设备的通道宏定义。例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_DMA_CH0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">DMA</span></code> 设备的 0 通道,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 <code class="docutils literal notranslate"><span class="pre">DMA</span></code> 设备的 0 通道。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">dma_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">dma_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>index 要注册的设备索引</p></li>
-<li><p>name 为注册的设备命名</p></li>
+<li><p><strong>index</strong> 要注册的设备索引</p></li>
+<li><p><strong>name</strong> 为注册的设备命名</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">index</span></code> 用来选择 DMA 设备某个通道的配置，一个 index 对应一个 DMA 设备的一个通道配置，比如 <code class="docutils literal notranslate"><span class="pre">DMA_CH0_INDEX</span></code> 对应 DMA 通道0 配置，<code class="docutils literal notranslate"><span class="pre">index</span></code> 有如下可选类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">dma_index_type</span>
@@ -466,16 +472,16 @@
 </div>
 <div class="section" id="device-open">
 <h3><span class="section-number">2.5.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">dma_open</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于打开一个 DMA 设备的一个通道，实际调用 <code class="docutils literal notranslate"><span class="pre">dma_open</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>oflag 设备的打开方式</p></li>
-<li><p>return 错误码，0 表示打开成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>oflag</strong> 设备的打开方式</p></li>
+<li><p><strong>return</strong> 错误码，0 表示打开成功，其他表示错误</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 可以写入以下参数：</p>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* 设备以轮训发送模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* 设备以轮训接收模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* 设备以中断发送模式打开 */</span><span class="cp"></span>
@@ -487,26 +493,26 @@
 </div>
 <div class="section" id="device-close">
 <h3><span class="section-number">2.5.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于设备的关闭。实际调用 <code class="docutils literal notranslate"><span class="pre">dma_close</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> 用于关闭 DMA 设备的一个通道，实际调用 <code class="docutils literal notranslate"><span class="pre">dma_close</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>return 错误码，0 表示关闭成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>return</strong> 错误码，0 表示关闭成功，其他表示错误</p></li>
 </ul>
 </div>
 <div class="section" id="device-control">
 <h3><span class="section-number">2.5.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于根据命令对设备进行控制和参数的修改。实际调用 <code class="docutils literal notranslate"><span class="pre">dma_control</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> 用于对 DMA 设备的一个通道进行控制和参数的修改，实际调用 <code class="docutils literal notranslate"><span class="pre">dma_control</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>cmd 设备控制命令</p></li>
-<li><p>args 控制参数</p></li>
-<li><p>return 不同的控制命令返回的意义不同。</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>cmd</strong> 设备控制命令</p></li>
+<li><p><strong>args</strong> 控制参数</p></li>
+<li><p><strong>return</strong> 不同的控制命令返回的意义不同。</p></li>
 </ul>
 <p>DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_CHANNEL_GET_STATUS  0x10</span>
@@ -516,8 +522,8 @@
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">args</span></code> 根据不同的 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 传入不同，具体如下：</p>
-<table class="colwidths-given docutils align-default" id="id5">
-<caption><span class="caption-text">table1</span><a class="headerlink" href="#id5" title="永久链接至表格">¶</a></caption>
+<table class="colwidths-given docutils align-default" id="id7">
+<caption><span class="caption-text">table1</span><a class="headerlink" href="#id7" title="永久链接至表格">¶</a></caption>
 <colgroup>
 <col style="width: 27%" />
 <col style="width: 18%" />
@@ -559,24 +565,24 @@
 </div>
 <div class="section" id="device-set-callback">
 <h3><span class="section-number">2.5.4.5. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 用于注册一个DMA通道中断回调函数。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 用于注册一个 DMA 设备的一个通道中断回调函数。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
 </pre></div>
 </div>
 <ul>
-<li><p>dev 设备句柄</p></li>
-<li><p>callback 要注册的中断回调函数</p>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>callback</strong> 要注册的中断回调函数</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>args 无用</p></li>
-<li><p>size 无用</p></li>
-<li><p>event 中断事件类型</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>args</strong> 无用</p></li>
+<li><p><strong>size</strong> 无用</p></li>
+<li><p><strong>event</strong> 中断事件类型</p></li>
 </ul>
 </div></blockquote>
 </li>
 </ul>
-<p>DMA 设备 <code class="docutils literal notranslate"><span class="pre">event</span></code> 类型如下</p>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> 类型如下</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">dma_event_type</span>
 <span class="p">{</span>
     <span class="n">DMA_EVENT_COMPLETE</span><span class="p">,</span>
@@ -586,58 +592,82 @@
 </div>
 <div class="section" id="dma-channel-start">
 <h3><span class="section-number">2.5.4.6. </span><strong>dma_channel_start</strong><a class="headerlink" href="#dma-channel-start" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">dma_channel_start</span></code> 用于开启DMA通道。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_START</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">dma_channel_start</span></code> 用于开启 DMA 通道。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_START</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dma_channel_start</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 需要开启的pwm通道句柄</p></li>
+<li><p><strong>dev</strong> 需要开启的 dma 通道句柄</p></li>
 </ul>
 </div>
 <div class="section" id="dma-channel-stop">
 <h3><span class="section-number">2.5.4.7. </span><strong>dma_channel_stop</strong><a class="headerlink" href="#dma-channel-stop" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">dma_channel_stop</span></code> 用于关闭DMA通道。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_STOP</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">dma_channel_stop</span></code> 用于关闭一个 DMA 通道。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_STOP</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dma_channel_stop</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 需要关闭的pwm通道句柄</p></li>
+<li><p><strong>dev</strong> 需要关闭的 dma 通道句柄</p></li>
 </ul>
 </div>
 <div class="section" id="dma-channel-update">
 <h3><span class="section-number">2.5.4.8. </span><strong>dma_channel_update</strong><a class="headerlink" href="#dma-channel-update" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">dma_channel_update</span></code> 用于更新DMA配置。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_UPDATE</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">dma_channel_update</span></code> 用于更新 DMA 的一个通道配置。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_UPDATE</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dma_channel_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">list</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 需要更新的pwm通道句柄</p></li>
-<li><p>list dma_lli_ctrl_t句柄</p></li>
+<li><p><strong>dev</strong> 需要更新的 dma 通道句柄</p></li>
+<li><p><strong>list</strong> dma_lli_ctrl_t句柄</p></li>
 </ul>
 </div>
 <div class="section" id="dma-channel-check-busy">
 <h3><span class="section-number">2.5.4.9. </span><strong>dma_channel_check_busy</strong><a class="headerlink" href="#dma-channel-check-busy" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">dma_channel_check_busy</span></code> 用于查询当前使用的DMA通道是否传输完成。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_GET_STATUS</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">dma_channel_check_busy</span></code> 用于查询当前使用的 DMA 通道是否传输完成。实际是调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> ，其中 <code class="docutils literal notranslate"><span class="pre">cmd</span></code> 为 <code class="docutils literal notranslate"><span class="pre">DMA_CHANNEL_GET_STATUS</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dma_channel_check_busy</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 需要查询的DMA通道句柄</p></li>
-<li><p>返回当前DMA状态，0为传输完成，1为未传输完成</p></li>
+<li><p><strong>dev</strong> 需要查询的 dma 通道句柄</p></li>
+<li><p><strong>return</strong> 当前 dma 状态，0为传输完成，1为未传输完成</p></li>
 </ul>
 </div>
 <div class="section" id="dma-reload">
 <h3><span class="section-number">2.5.4.10. </span><strong>dma_reload</strong><a class="headerlink" href="#dma-reload" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">dma_reload</span></code> 用于更新DMA某个通道的配置，相比于 <code class="docutils literal notranslate"><span class="pre">dma_channel_update</span></code> ,该函数无需用户传递很多参数，只需要填入源地址和目标地址，以及长度，内部会自己计算后再进行配置。此函数调用后，DMA通道是没有开启的，需要手动调用 <code class="docutils literal notranslate"><span class="pre">dma_channel_start</span></code> 函数。</p>
+<p><code class="docutils literal notranslate"><span class="pre">dma_reload</span></code> 用于更新 DMA 一个通道的配置，相比于 <code class="docutils literal notranslate"><span class="pre">dma_channel_update</span></code> ,该函数无需用户传递很多参数，只需要填入源地址和目标地址，以及长度，内部会自己计算后再进行配置。此函数调用后，DMA通道是没有开启的，需要手动调用 <code class="docutils literal notranslate"><span class="pre">dma_channel_start</span></code> 函数。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">dma_reload</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">src_addr</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">dst_addr</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">transfer_size</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 需要查询的DMA通道句柄</p></li>
-<li><p>src_addr 传输源地址</p></li>
-<li><p>dst_addr 传输目标地址</p></li>
-<li><p>transfer_size 传输字节总长度，如果传输的位数是16位、32位，这里需要进行转换成字节长度。</p></li>
+<li><p><strong>dev</strong> 需要查询的DMA通道句柄</p></li>
+<li><p><strong>src_addr</strong> 传输源地址</p></li>
+<li><p><strong>dst_addr</strong> 传输目标地址</p></li>
+<li><p><strong>transfer_size</strong> 传输字节总长度，如果传输的位数是16位、32位，这里需要进行转换成字节长度。</p></li>
 </ul>
+</div>
+</div>
+<div class="section" id="dma-fifo">
+<h2><span class="section-number">2.5.5. </span>DMA 的效率与FIFO<a class="headerlink" href="#dma-fifo" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id5">
+<h3><span class="section-number">2.5.5.1. </span>内存到内存<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li><p>DMA在搬运数据时，会以设定的位宽 <code class="docutils literal notranslate"><span class="pre">xxx_width</span></code> 与 设定的突发量 <code class="docutils literal notranslate"><span class="pre">xxx_burst_size</span></code> 去访问总线进行数据读写，在内存到内存的搬运时，一般 source 端与 destination 端的配置相同。</p></li>
+<li><p>在总的数据量(data size)不变的情况下，位宽 <code class="docutils literal notranslate"><span class="pre">xxx_width</span></code> 越大传输速度越快，效率越高，但传输的数据总量(data size)必须是位宽 <code class="docutils literal notranslate"><span class="pre">xxx_width</span></code> 的整倍数，数据的地址也必须是 <code class="docutils literal notranslate"><span class="pre">xxx_width</span></code> 的整倍数(地址对齐)，否则会出错。</p></li>
+<li><p>在连续读写时，burst 突发模式的总线利用效率比 single 单次模式高得多，因此可以尽量提高 <code class="docutils literal notranslate"><span class="pre">xxx_burst_size</span></code>，但注意，DMA0 的每个通道只有 16Byte 的 FIFO，因此 width 乘 burst_size 的积必须小于等于 16Byte。</p></li>
+</ul>
+<p>因此在内存到内存搬运数据时，最高效的是 <code class="docutils literal notranslate"><span class="pre">xxx_width</span></code> 值为 <code class="docutils literal notranslate"><span class="pre">DMA_TRANSFER_WIDTH_32BIT</span></code>, <code class="docutils literal notranslate"><span class="pre">xxx_burst_size</span></code> 值为 <code class="docutils literal notranslate"><span class="pre">DMA_BURST_4BYTE</span></code>,此时完全利用了 DMA 的FIFO，读写最快，总线占用最少，但要求数据量与地址满足对齐要求。</p>
+</div>
+<div class="section" id="id6">
+<h3><span class="section-number">2.5.5.2. </span>外设到内存 与 内存到外设<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
+<p>很多传输接口外设是存在 tx-FIFO 与 rx-FIFO 的，这些 FIFO 可以让外设的使用更加灵活方便，在与 DMA 配合使用时也可以增加效率。</p>
+<ul class="simple">
+<li><p>在使用 DMA-接口外设 发送数据时，注意 DMA 的 <code class="docutils literal notranslate"><span class="pre">des_width</span></code> 与外设的 tx-FIFO 有效数据宽度应当一致，如使用 UART 时一般为 DMA_TRANSFER_WIDTH_8BIT。接收数据时 DMA 的 <code class="docutils literal notranslate"><span class="pre">src_width</span></code> 与 rx-FIFO 有效数据宽度也要一致。</p></li>
+<li><p>外设端的 burst_size 对 外设的 FIFO 深度有要求，burst_size 必须小于等于 外设配置的 <code class="docutils literal notranslate"><span class="pre">fifo_threshold</span></code> 以保证不会出现写溢出或读溢出。</p></li>
+<li><p>内存端配置的 burst_size 和 width 与外设端的可以不相等，但 burst_size 与 width 的乘积必须相等，并且小于 16Byte。内存端配置更高的 <code class="docutils literal notranslate"><span class="pre">xxx_width</span></code> 可以提高传输速度，减少对总线占用，但注意对数据量(data size)与地址的对齐要求。</p></li>
+</ul>
+<p>如对于 I2S ,他的 tx 与 rx 的 FIFO 深度都为 8，I2S 最佳的 <code class="docutils literal notranslate"><span class="pre">fifo_threshold</span></code> 应为 4，DMA 的 <code class="docutils literal notranslate"><span class="pre">xxx_burst_size</span></code> 应该为 <code class="docutils literal notranslate"><span class="pre">DMA_BURST_4BYTE</span></code>，这样能保证 I2S 的 FIFO 能留有一定余量防止出现 rx-FIFO 溢出与 tx-FIFO 欠载，又减少 DMA 了对总线的占用。</p>
+<p>又如对于 SPI ，他的 tx 与 rx 的 FIFO 深度都为 4，若使用 burst_size 为 4 的方式传输，那么 SPI 的 <code class="docutils literal notranslate"><span class="pre">fifo_threshold</span></code> 只能是 4，没有冗余，若此时 CPU 在占用总线导致 DMA 传输不及时，可能会出现SPI传输间歇，在SPI从机模式下还可能出现发送欠载与接收溢出。
+因此对于 SPI 而言，最佳的 <code class="docutils literal notranslate"><span class="pre">fifo_threshold</span></code> 应为 1，DMA 的 <code class="docutils literal notranslate"><span class="pre">xxx_burst_size</span></code> 应为 <code class="docutils literal notranslate"><span class="pre">DMA_BURST_1BYTE</span></code>，此时 DMA 虽然对总线的访问效率一般，但保证了 SPI 的 FIFO 有冗余，不会出现上诉问题。</p>
 </div>
 </div>
 </div>

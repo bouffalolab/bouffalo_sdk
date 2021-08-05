@@ -31,14 +31,14 @@ TIMER 设备结构体定义
         uint32_t timeout3;
     } timer_device_t;
 
-- parent        继承父类属性
-- id            定时器 id ，使能定时器 0 则 id 为 0 ，使能定时器 1 则 id 为 1 ，以此类推
-- cnt_mode      计数模式：FreeRun 和 PreLoad
-- trigger   比较器的触发源
-- reload    重装载值,只有在 PreLoad 模式下有效
-- timeout1  COMP0 超时时间，单位 us
-- timeout2  COMP1 超时时间，单位 us
-- timeout3  COMP2 超时时间，单位 us
+- **parent**        继承父类属性
+- **id**            定时器 id ，使能定时器 0 则 id 为 0 ，使能定时器 1 则 id 为 1 ，以此类推
+- **cnt_mode**      计数模式：FreeRun 和 PreLoad
+- **trigger**   比较器的触发源
+- **reload**    重装载值,只有在 PreLoad 模式下有效
+- **timeout1**  COMP0 超时时间，单位 us
+- **timeout2**  COMP1 超时时间，单位 us
+- **timeout3**  COMP2 超时时间，单位 us
 
 ``ch`` 提供以下类型
 
@@ -134,8 +134,8 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 
     int timer_register(enum timer_index_type index, const char *name);
 
-- index 要注册的设备索引
-- name 为注册的设备命名
+- **index** 要注册的设备索引
+- **name** 为注册的设备命名
 
 ``index`` 用来选择 TIMER 设备配置，一个 index 对应一个 TIMER 设备配置，比如 ``TIMER0_INDEX`` 对应 ``TIMER0_CONFIG`` 配置，``index`` 有如下可选类型
 
@@ -154,17 +154,17 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 **device_open**
 ^^^^^^^^^^^^^^^^
 
-``device_open`` 用于 TIMER 设备的打开，``oflag`` 表示以何种方式打开。实际调用 ``timer_open``。
+``device_open`` 用于打开一个 TIMER 设备，实际调用 ``timer_open``。
 
 .. code-block:: C
 
     int device_open(struct device *dev, uint16_t oflag);
 
-- dev 设备句柄
-- oflag 设备的打开方式
-- return 错误码，0 表示打开成功，其他表示错误
+- **dev** 设备句柄
+- **oflag** 设备的打开方式
+- **return** 错误码，0 表示打开成功，其他表示错误
 
-``oflag`` 可以写入以下参数：
+``oflag`` 提供以下类型
 
 .. code-block:: C
 
@@ -178,28 +178,28 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 **device_close**
 ^^^^^^^^^^^^^^^^
 
-``device_close`` 用于设备的关闭。实际调用 ``timer_close``。
+``device_close`` 用于关闭一个 TIMER 设备，实际调用 ``timer_close``。
 
 .. code-block:: C
 
     int device_close(struct device *dev);
 
-- dev 设备句柄
-- return 错误码，0 表示关闭成功，其他表示错误
+- **dev** 设备句柄
+- **return** 错误码，0 表示关闭成功，其他表示错误
 
 **device_control**
 ^^^^^^^^^^^^^^^^^^^
 
-``device_control`` 用于根据命令对 TIMER 设备进行控制和参数的修改。实际调用 ``timer_control``。
+``device_control`` 用于对 TIMER 设备的进行控制和参数的修改，实际调用 ``timer_control``。
 
 .. code-block:: C
 
     int device_control(struct device *dev, int cmd, void *args);
 
-- dev 设备句柄
-- cmd 设备控制命令
-- args 控制参数
-- return 不同的控制命令返回的意义不同。
+- **dev** 设备句柄
+- **cmd** 设备控制命令
+- **args** 控制参数
+- **return** 不同的控制命令返回的意义不同。
 
 ``args`` 根据不同的 ``cmd`` 传入不同，具体如下：
 
@@ -211,10 +211,10 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
       - args
       - description
     * - DEVICE_CTRL_SET_INT
-      - NULL
+      - timer_it_type
       - 开启 TIMER 中断
     * - DEVICE_CTRL_CLR_INT
-      - NULL
+      - timer_it_type
       - 关闭 TIMER 中断
     * - DEVICE_CTRL_GET_INT
       - NULL
@@ -232,36 +232,36 @@ TIMER 设备接口全部遵循标准设备驱动管理层提供的接口。
 **device_write**
 ^^^^^^^^^^^^^^^^
 
-``device_write`` 用于 Timer 设备配置超时时间。实际调用 ``timer_write``。
+``device_write`` 用于配置 TIMER 设备超时时间，实际调用 ``timer_write``。
 
 .. code-block:: C
 
     int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);
 
-- dev 设备句柄
-- pos 无作用
-- buffer timer_timeout_cfg_t 句柄
-- size timer_timeout_cfg_t 个数
-- return 错误码，0 表示写入成功，其他表示错误
+- **dev** 设备句柄
+- **pos** 无作用
+- **buffer** timer_timeout_cfg_t 句柄
+- **size** timer_timeout_cfg_t 个数
+- **return** 错误码，0 表示写入成功，其他表示错误
 
 **device_set_callback**
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-``device_set_callback`` 用于注册一个 TIMER 中断回调函数。
+``device_set_callback`` 用于注册一个 TIMER 设备中断回调函数。
 
 .. code-block:: C
 
     int device_set_callback(struct device *dev, void (*callback)(struct device *dev, void *args, uint32_t size, uint32_t event));
 
-- dev 设备句柄
-- callback 要注册的中断回调函数
+- **dev** 设备句柄
+- **callback** 要注册的中断回调函数
 
-    - dev 设备句柄
-    - args 接收发送缓冲区，数据类型为 uint8_t*
-    - size 传输长度
-    - event 中断事件类型
+    - **dev** 设备句柄
+    - **args** 无
+    - **size** 无
+    - **event** 中断事件类型
 
-TIMER 设备 ``event`` 类型如下
+``event`` 类型如下
 
 .. code-block:: C
 

@@ -126,7 +126,8 @@
 <li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.9. ADC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.10. DAC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.11. TIMER 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.12. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_qdec.html">2.12. QDEC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.13. USB 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
@@ -236,7 +237,7 @@
 <li><p>硬件消抖</p></li>
 <li><p>驱动能力控制</p></li>
 </ul>
-<p>bl mcu sdk 的引脚配置方式分为两种。</p>
+<p><strong>bl mcu sdk</strong> 的引脚配置方式分为两种。</p>
 <ul class="simple">
 <li><p>GPIO 复用功能通过专门的 <strong>pinmux table</strong> ，用户只需要修改 table 中的相关引脚的功能，程序会自动配置这些引脚。<strong>pinmux table</strong> 位于 <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx_board</span></code> 目录下 <code class="docutils literal notranslate"><span class="pre">pinmux_config.h</span></code> 文件。</p></li>
 <li><p>通过标准的 GPIO 设备接口配置引脚，缺点是只能配置普通的输入输出和中断功能，复用功能建议还是使用 table 进行配置。</p></li>
@@ -251,8 +252,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>pin 要配置的引脚</p></li>
-<li><p>mode 要配置的引脚功能</p></li>
+<li><p><strong>pin</strong> 要配置的引脚</p></li>
+<li><p><strong>mode</strong> 要配置的引脚功能</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">mode</span></code> 提供以下几种类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define GPIO_OUTPUT_MODE                        0</span>
@@ -279,8 +280,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>pin 要设置的引脚</p></li>
-<li><p>value 要设置的电平</p></li>
+<li><p><strong>pin</strong> 要设置的引脚</p></li>
+<li><p><strong>value</strong> 要设置的电平</p></li>
 </ul>
 </div>
 <div class="section" id="gpio-toggle">
@@ -290,7 +291,7 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>pin 要翻转的引脚</p></li>
+<li><p><strong>pin</strong> 要翻转的引脚</p></li>
 </ul>
 </div>
 <div class="section" id="gpio-read">
@@ -300,8 +301,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>pin 要读取电平的引脚</p></li>
-<li><p>return 0 为低电平，1 为高电平</p></li>
+<li><p><strong>pin</strong> 要读取电平的引脚</p></li>
+<li><p><strong>return</strong> 0 为低电平，1 为高电平</p></li>
 </ul>
 </div>
 <div class="section" id="gpio-attach-irq">
@@ -311,8 +312,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>pin 要附加中断回调的引脚</p></li>
-<li><p>cbfun 要注册的中断回调函数</p></li>
+<li><p><strong>pin</strong> 要附加中断回调的引脚</p></li>
+<li><p><strong>cbfun</strong> 要注册的中断回调函数</p></li>
 </ul>
 </div>
 <div class="section" id="gpio-irq-enable">
@@ -322,8 +323,8 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>pin 要开启或者关闭中断的引脚</p></li>
-<li><p>enabled 0 为关闭中断，1 为打开中断</p></li>
+<li><p><strong>pin</strong> 要开启或者关闭中断的引脚</p></li>
+<li><p><strong>enabled</strong> 0 为关闭中断，1 为打开中断</p></li>
 </ul>
 </div>
 </div>

@@ -240,13 +240,13 @@ PWM - 驱动步进电机
             pwm_cfg[3].threshold_low = 0;
             pwm_cfg[3].threshold_high = 0;
         }
-        device_control(motor_ch0, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg[0]);
-        device_control(motor_ch1, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg[1]);
-        device_control(motor_ch2, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg[2]);
-        device_control(motor_ch3, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg[3]);
+        device_control(motor_ch0, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg[0]);
+        device_control(motor_ch1, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg[1]);
+        device_control(motor_ch2, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg[2]);
+        device_control(motor_ch3, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, &pwm_cfg[3]);
     }
 
-- 使用 ``device_contorl`` 函数，配合 ``DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG`` 指令，修改4个 PWM 通道的的高低阈值。
+- 使用 ``device_contorl`` 函数，配合 ``DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG`` 指令，修改4个 PWM 通道的的高低阈值。
 
 .. note:: 该函数的功能主要用于切换步进电机的方向
 

@@ -150,5 +150,43 @@ BL706_AVB 开发板
      RXD   <-->   TX0
      GND   <-->   GND
 
--
+
+BL706 AVB 开发板与其他子模块的连接方法
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+-  本节主要介绍 BL706_AVB 板与其他模块的连接的方法，主要包括摄像头的连接、音频 Codec 模块的连接、SPI 屏幕的连接。
+
+**BL706_AVB 连接 GC0308 摄像头模块**
+
+-  1. 首先，将 BL706_AVB 开发板背面的 ``J5`` 抽屉式 FPC 排线座黑色的锁扣部分，从边缘将其拔出
+
+.. figure:: img/connect_camera_1.png
+   :alt:
+
+
+-  2. 完全拔出后，如下图所示；
+
+.. figure:: img/connect_camera_2.png
+   :alt:
+
+
+-  3. FPC 排线座是抽屉下接式，因此接下来将摄像头无金属接触点的一面朝上，插入 FPC 排线座
+
+.. figure:: img/connect_camera_3.png
+   :alt:
+
+
+-  4. 将摄像头插入后，把黑色锁扣压紧
+
+.. figure:: img/connect_camera_4.png
+   :alt:
+
+
+**BL706_AVB 连接 Audio Codec 模块**
+
+-  将 Audio Codec 模块的 ``HD19`` 组排针，插入 BL706_AVB 开发板的 ``HD11`` 排母座；注意模块是向外延申的。
+-  示意图如下：
+
+.. figure:: img/connect_codec_1.png
+   :alt:
 

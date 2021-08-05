@@ -35,7 +35,7 @@ Shell 接口
 
     void shell_handler(uint8_t data);
 
-- data 接收的数据
+- **data** 接收的数据
 
 **SHELL_CMD_EXPORT**
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -44,8 +44,8 @@ Shell 接口
 
 .. c:macro:: SHELL_CMD_EXPORT(command, desc)
 
-- command 注册的函数名，后面输入 command 来运行该函数
-- desc 对该函数的描述
+- **command** 注册的函数名，后面输入 command 来运行该函数
+- **desc** 对该函数的描述
 
 **SHELL_CMD_EXPORT_ALIAS**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -54,9 +54,9 @@ Shell 接口
 
 .. c:macro:: SHELL_CMD_EXPORT_ALIAS(command, alias, desc)
 
-- command 注册的函数名
-- alias 函数名的别名，后面输入 alias 来运行该函数
-- desc 对该函数的描述
+- **command** 注册的函数名
+- **alias** 函数名的别名，后面输入 alias 来运行该函数
+- **desc** 对该函数的描述
 
 Shell 内置命令
 -----------------

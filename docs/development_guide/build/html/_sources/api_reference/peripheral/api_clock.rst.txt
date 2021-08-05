@@ -19,7 +19,7 @@
 
     uint32_t system_clock_get(enum system_clock_type type);
 
-- type 获取的系统时钟频率类型
+- **type** 获取的系统时钟频率类型
 
 ``type`` 提供以下几种类型
 
@@ -45,7 +45,7 @@
 
     uint32_t peripheral_clock_get(enum peripheral_clock_type type);
 
-- type 获取的外设时钟频率类型
+- **type** 获取的外设时钟频率类型
 
 ``type`` 提供以下几种类型
 

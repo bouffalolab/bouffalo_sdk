@@ -125,7 +125,8 @@
 <li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.9. ADC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.10. DAC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.11. TIMER 设备</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.12. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_qdec.html">2.12. QDEC 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.13. USB 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
@@ -248,10 +249,10 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>parent    继承父类属性</p></li>
-<li><p>ch        i2c id，0 表示 i2c0,1 表示 i2c1</p></li>
-<li><p>mode      i2c 传输模式，0 为使用硬件 i2c，1 为使用软件 i2c，当前软件 i2c 暂时无效</p></li>
-<li><p>phase     用来计算 i2c 实际时序时钟 ，公式：i2c_clk = i2c_source_clk/(4*(phase+1))</p></li>
+<li><p><strong>parent</strong>    继承父类属性</p></li>
+<li><p><strong>ch</strong>        i2c id，0 表示 i2c0,1 表示 i2c1</p></li>
+<li><p><strong>mode</strong>      i2c 传输模式，0 为使用硬件 i2c，1 为使用软件 i2c，当前软件 i2c 暂时无效</p></li>
+<li><p><strong>phase</strong>     用来计算 i2c 实际时序时钟 ，公式：i2c_clk = i2c_source_clk/(4*(phase+1))</p></li>
 <li><p>其他待补充</p></li>
 </ul>
 </div>
@@ -289,13 +290,13 @@
 <p>I2C 设备标准接口当前仅使用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> , 并提供标准的数据收发接口。</p>
 <div class="section" id="i2c-register">
 <h3><span class="section-number">2.6.4.1. </span><strong>i2c_register</strong><a class="headerlink" href="#i2c-register" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">i2c_register</span></code> 用来注册 I2C 设备标准驱动接口，在注册之前需要打开对应 I2C 设备的宏定义。例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2C0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">I2C0</span></code> 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 <code class="docutils literal notranslate"><span class="pre">I2C0</span></code> 设备。</p>
+<p><code class="docutils literal notranslate"><span class="pre">i2c_register</span></code> 用来注册一个 I2C 设备标准驱动接口，在注册之前需要打开对应 I2C 设备的宏定义。例如定义宏 <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2C0</span></code> 方可使用 <code class="docutils literal notranslate"><span class="pre">I2C0</span></code> 设备,注册完成以后才可以使用其他接口，如果没有定义宏，则无法使用 <code class="docutils literal notranslate"><span class="pre">I2C0</span></code> 设备。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">i2c_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">i2c_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>index 要注册的设备索引</p></li>
-<li><p>name 为注册的设备命名</p></li>
+<li><p><strong>index</strong> 要注册的设备索引</p></li>
+<li><p><strong>name</strong> 为注册的设备命名</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">index</span></code> 用来选择 I2C 设备,一个 index 对应一个 I2C 设备配置，比如 <code class="docutils literal notranslate"><span class="pre">I2C0_INDEX</span></code> 对应 <code class="docutils literal notranslate"><span class="pre">I2C0_CONFIG</span></code> 配置，<code class="docutils literal notranslate"><span class="pre">index</span></code> 有如下可选类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">i2c_index_type</span>
@@ -310,16 +311,16 @@
 </div>
 <div class="section" id="device-open">
 <h3><span class="section-number">2.6.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="永久链接至标题">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于设备的打开，<code class="docutils literal notranslate"><span class="pre">oflag</span></code> 表示以何种方式打开。实际调用 <code class="docutils literal notranslate"><span class="pre">i2c_open</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> 用于打开一个 I2C 设备，实际调用 <code class="docutils literal notranslate"><span class="pre">i2c_open</span></code>。</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>oflag 设备的打开方式</p></li>
-<li><p>return 错误码，0 表示打开成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>oflag</strong> 设备的打开方式</p></li>
+<li><p><strong>return</strong> 错误码，0 表示打开成功，其他表示错误</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 可以写入以下参数：</p>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* 设备以轮训发送模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* 设备以轮训接收模式打开 */</span><span class="cp"></span>
 <span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* 设备以中断发送模式打开 */</span><span class="cp"></span>
@@ -336,10 +337,10 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>dev 设备句柄</p></li>
-<li><p>msgs 需要传输的消息</p></li>
-<li><p>num 消息个数</p></li>
-<li><p>return 错误码，0 表示打开成功，其他表示错误</p></li>
+<li><p><strong>dev</strong> 设备句柄</p></li>
+<li><p><strong>msgs</strong> 需要传输的消息</p></li>
+<li><p><strong>num</strong> 消息个数</p></li>
+<li><p><strong>return</strong> 错误码，0 表示打开成功，其他表示错误</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">i2c_msg_t</span></code> 结构体定义如下：</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">i2c_msg</span>
@@ -353,11 +354,11 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>slaveaddr i2c 从设备7位从机地址</p></li>
-<li><p>subaddr i2c 从设备寄存器地址</p></li>
-<li><p>flags 读写模式以及寄存器地址长度</p></li>
-<li><p>len 传输数据长度</p></li>
-<li><p>buf 数据缓冲区</p></li>
+<li><p><strong>slaveaddr</strong> i2c 从设备7位从机地址</p></li>
+<li><p><strong>subaddr</strong> i2c 从设备寄存器地址</p></li>
+<li><p><strong>flags</strong> 读写模式以及寄存器地址长度</p></li>
+<li><p><strong>len</strong> 传输数据长度</p></li>
+<li><p><strong>buf</strong> 数据缓冲区</p></li>
 </ul>
 <p>其中 <code class="docutils literal notranslate"><span class="pre">flags</span></code> 有如下定义：</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*读写模式*/</span>

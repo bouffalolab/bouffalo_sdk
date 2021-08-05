@@ -34,15 +34,15 @@ UART 设备结构体定义
         void* rx_dma;
     } uart_device_t;
 
-- parent    继承父类属性
-- id        串口 id，使能串口0则id为0，使能串口1则id为1，以此类推
-- baudrate  波特率
-- databits  数据位
-- stopbits  停止位
-- parity    校验位
-- fifo_threshold fifo 阈值,不同 mcu 最大值不同
-- tx_dma    附加的发送 dma 句柄
-- rx_dma    附加的接收 dma 句柄
+- **parent**    继承父类属性
+- **id**        串口 id，使能串口0则id为0，使能串口1则id为1，以此类推
+- **baudrate**  波特率
+- **databits**  数据位
+- **stopbits**  停止位
+- **parity**    校验位
+- **fifo_threshold** fifo 阈值,不同 mcu 最大值不同
+- **tx_dma**    附加的发送 dma 句柄
+- **rx_dma**    附加的接收 dma 句柄
 
 ``databits`` 提供以下类型
 
@@ -127,8 +127,8 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
     int uart_register(enum uart_index_type index, const char *name);
 
-- index 要注册的设备索引
-- name 为注册的设备命名
+- **index** 要注册的设备索引
+- **name** 为注册的设备命名
 
 ``index`` 用来选择 UART 设备配置，一个 index 对应一个 UART 设备配置，比如 ``UART0_INDEX`` 对应 ``UART0_CONFIG`` 配置，``index`` 有如下可选类型
 
@@ -148,17 +148,17 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 **device_open**
 ^^^^^^^^^^^^^^^^
 
-``device_open`` 用于 UART 设备的打开，``oflag`` 表示以何种方式打开。实际调用 ``uart_open``。
+``device_open`` 用于打开 UART 设备，实际调用 ``uart_open``。
 
 .. code-block:: C
 
     int device_open(struct device *dev, uint16_t oflag);
 
-- dev 设备句柄
-- oflag 设备的打开方式
-- return 错误码，0 表示打开成功，其他表示错误
+- **dev** 设备句柄
+- **oflag** 设备的打开方式
+- **return** 错误码，0 表示打开成功，其他表示错误
 
-``oflag`` 可以写入以下参数：
+``oflag`` 提供以下类型
 
 .. code-block:: C
 
@@ -172,28 +172,28 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 **device_close**
 ^^^^^^^^^^^^^^^^
 
-``device_close`` 用于设备的关闭。实际调用 ``uart_close``。
+``device_close`` 用于关闭 UART 设备，实际调用 ``uart_close``。
 
 .. code-block:: C
 
     int device_close(struct device *dev);
 
-- dev 设备句柄
-- return 错误码，0 表示关闭成功，其他表示错误
+- **dev** 设备句柄
+- **return** 错误码，0 表示关闭成功，其他表示错误
 
 **device_control**
 ^^^^^^^^^^^^^^^^^^^
 
-``device_control`` 用于根据命令对 UART 设备进行控制和参数的修改。实际调用 ``uart_control``。
+``device_control`` 用于对 UART 设备的进行控制和参数的修改，实际调用 ``uart_control``。
 
 .. code-block:: C
 
     int device_control(struct device *dev, int cmd, void *args);
 
-- dev 设备句柄
-- cmd 设备控制命令
-- args 控制参数
-- return 不同的控制命令返回的意义不同。
+- **dev** 设备句柄
+- **cmd** 设备控制命令
+- **args** 控制参数
+- **return** 不同的控制命令返回的意义不同。
 
 串口设备除了标准的控制命令，还具有自己特殊的控制命令。
 
@@ -254,11 +254,11 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
     int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);
 
-- dev 设备句柄
-- pos 无作用
-- buffer 要写入的 buffer 缓冲区
-- size 要写入的长度
-- return 错误码，0 表示写入成功，其他表示错误
+- **dev** 设备句柄
+- **pos** 无作用
+- **buffer** 要写入的 buffer 缓冲区
+- **size** 要写入的长度
+- **return** 错误码，0 表示写入成功，其他表示错误
 
 **device_read**
 ^^^^^^^^^^^^^^^^
@@ -269,30 +269,30 @@ UART 设备接口全部遵循标准设备驱动管理层提供的接口。
 
     int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size);
 
-- dev 设备句柄
-- pos 无作用
-- buffer 要读入的 buffer 缓冲区
-- size 要读入的长度
-- return 错误码，0 表示读入成功，其他表示错误
+- **dev** 设备句柄
+- **pos** 无作用
+- **buffer** 要读入的 buffer 缓冲区
+- **size** 要读入的长度
+- **return** 错误码，0 表示读入成功，其他表示错误
 
 **device_set_callback**
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-``device_set_callback`` 用于注册一个串口中断回调函数。
+``device_set_callback`` 用于注册一个 UART 设备中断回调函数。
 
 .. code-block:: C
 
     int device_set_callback(struct device *dev, void (*callback)(struct device *dev, void *args, uint32_t size, uint32_t event));
 
-- dev 设备句柄
-- callback 要注册的中断回调函数
+- **dev** 设备句柄
+- **callback** 要注册的中断回调函数
 
-    - dev 设备句柄
-    - args 接收发送缓冲区，数据类型为 uint8_t*
-    - size 传输长度
-    - event 中断事件类型
+    - **dev** 设备句柄
+    - **args** 接收发送缓冲区，数据类型为 uint8_t*
+    - **size** 传输长度
+    - **event** 中断事件类型
 
-串口设备 ``event`` 类型如下
+``event`` 类型如下
 
 .. code-block:: C
 
