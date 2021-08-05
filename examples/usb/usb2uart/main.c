@@ -256,23 +256,14 @@ usbd_endpoint_t cdc_in_ep = {
 
 extern struct device *usb_dc_init(void);
 
-// #define BL702
-
-#ifdef BL702
-#define UART_DTR_PIN GPIO_PIN_37
-#define UART_RTS_PIN GPIO_PIN_33
-#else
 #define UART_DTR_PIN GPIO_PIN_22
 #define UART_RTS_PIN GPIO_PIN_21
-#endif
 
 int main(void)
 {
     uint8_t chipid[8];
     uint8_t chipid2[6];
-#ifdef BL702
-    GLB_Select_Internal_Flash();
-#endif
+
     bflb_platform_init(0);
     uart_ringbuffer_init();
     uart1_init();
