@@ -510,7 +510,7 @@ BL_Err_Type HBN_Clear_RTC_Counter(void);
 BL_Err_Type HBN_Enable_RTC_Counter(void);
 BL_Err_Type HBN_Set_RTC_Timer(HBN_RTC_INT_Delay_Type delay, uint32_t compValLow, uint32_t compValHigh, uint8_t compMode);
 BL_Err_Type HBN_Get_RTC_Timer_Val(uint32_t *valLow, uint32_t *valHigh);
-BL_Err_Type HBN_Clear_RTC_IRQ(void);
+BL_Err_Type HBN_Clear_RTC_INT(void);
 /*----------*/
 BL_Err_Type HBN_GPIO_INT_Enable(HBN_GPIO_INT_Trigger_Type gpioIntTrigType);
 BL_Err_Type HBN_GPIO_INT_Disable(void);
