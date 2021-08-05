@@ -120,9 +120,9 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D = {
     .qpageProgramCmd = 0x32,
     .qppAddrMode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = SF_CTRL_DO_MODE,
+    .ioMode = 0x11,
     .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .clkInvert = 0x01,
 
     .resetEnCmd = 0x66,
     .resetCmd = 0x99,
@@ -220,7 +220,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_MX_KH25 = {
 
     .ioMode = 0x11,
     .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .clkInvert = 0x01,
 
     .resetEnCmd = 0x66,
     .resetCmd = 0x99,
@@ -318,7 +318,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_FM_Q80 = {
 
     .ioMode = SF_CTRL_QIO_MODE,
     .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .clkInvert = 0x01,
 
     .resetEnCmd = 0x66,
     .resetCmd = 0x99,
@@ -416,7 +416,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Winb_16JV = {
 
     .ioMode = SF_CTRL_QIO_MODE,
     .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .clkInvert = 0x01,
 
     .resetEnCmd = 0x66,
     .resetCmd = 0x99,
@@ -503,6 +503,46 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[] = {
         .name = "ZB_VQ16_16_33",
         .cfg = &flashCfg_Winb_16JV,
     },
+    {
+        .jedecID = 0x144020,
+        .name = "XM_25QH80_80_33",
+        .cfg = &flashCfg_Winb_16JV,
+    },
+    {
+        .jedecID = 0x154020,
+        .name = "XM_25QH16_16_33",
+        .cfg = &flashCfg_Winb_16JV,
+    },
+    {
+        .jedecID = 0x164020,
+        .name = "XM_25QH32_32_33",
+        .cfg = &flashCfg_Winb_16JV,
+    },
+    {
+        .jedecID = 0x174020,
+        .name = "XM_25QH64_64_33",
+        .cfg = &flashCfg_Winb_16JV,
+    },
+    {
+        .jedecID = 0x13325E,
+        .name = "ZB_D40B_80_33",
+        .cfg = &flashCfg_MX_KH25,
+    },
+    {
+        .jedecID = 0x14325E,
+        .name = "ZB_D80B_80_33",
+        .cfg = &flashCfg_MX_KH25,
+    },
+    {
+        .jedecID = 0x15405E,
+        .name = "ZB_25Q16B_15_33",
+        .cfg = &flashCfg_Winb_16JV,
+    },
+    {
+        .jedecID = 0x16405E,
+        .name = "ZB_25Q32B_16_33",
+        .cfg = &flashCfg_Winb_16JV,
+    },
 };
 
 /*@} end of group SF_CFG_EXT_Private_Variables */
@@ -585,7 +625,10 @@ BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID
         }
     } else {
         if (SF_Cfg_Get_Flash_Cfg_Need_Lock(flashID, pFlashCfg) == SUCCESS) {
-            return SUCCESS;
+            /* 0x134051 flash cfg is wrong in rom, find again */
+            if ((flashID&0xFFFFFF) != 0x134051) {
+                return SUCCESS;
+            }
         }
 
         for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
@@ -621,7 +664,10 @@ uint32_t ATTR_TCM_SECTION SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash,
     ret = SF_Cfg_Flash_Identify(callFromFlash, autoScan, flashPinCfg, restoreDefault, pFlashCfg);
 
     if ((ret & BFLB_FLASH_ID_VALID_FLAG) != 0) {
-        return ret;
+        /* 0x134051 flash cfg is wrong in rom, find again */
+        if ((ret&0xFFFFFF) != 0x134051) {
+            return ret;
+        }
     }
 
     jdecId = (ret & 0xffffff);

@@ -57,11 +57,11 @@ static BL_Err_Type ATTR_TCM_SECTION flash_set_qspi_enable(SPI_Flash_Cfg_Type *p_
 }
 
 /**
- * @brief flash_l1c_set_wrap
+ * @brief flash_set_l1c_wrap
  *
  * @return BL_Err_Type
  */
-static BL_Err_Type ATTR_TCM_SECTION flash_l1c_set_wrap(SPI_Flash_Cfg_Type *p_flash_cfg)
+static BL_Err_Type ATTR_TCM_SECTION flash_set_l1c_wrap(SPI_Flash_Cfg_Type *p_flash_cfg)
 {
     if (((p_flash_cfg->ioMode >> 4) & 0x01) == 1) {
         L1C_Set_Wrap(DISABLE);
@@ -93,10 +93,13 @@ static BL_Err_Type ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flas
     arch_memcpy(jedec_id, (uint8_t *)&jid, 3);
     jid &= 0xFFFFFF;
     ret = SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(jid, p_flash_cfg);
+    if (ret == SUCCESS) {
+        p_flash_cfg->mid = (jid&0xff);
+    }
 
     /* Set flash controler from p_flash_cfg */
     flash_set_qspi_enable(p_flash_cfg);
-    flash_l1c_set_wrap(p_flash_cfg);
+    flash_set_l1c_wrap(p_flash_cfg);
     XIP_SFlash_State_Restore(p_flash_cfg, p_flash_cfg->ioMode & 0x0f, offset);
     XIP_SFlash_Opt_Exit();
     __enable_irq();
@@ -112,14 +115,21 @@ static BL_Err_Type ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flas
 BL_Err_Type ATTR_TCM_SECTION flash_init(void)
 {
     BL_Err_Type ret = ERROR;
+    uint8_t clkDelay = 1;
+    uint8_t clkInvert = 1;
     uint32_t jedec_id = 0;
 
     __disable_irq();
     L1C_Cache_Flush_Ext();
     SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(0, &g_flash_cfg);
-    g_flash_cfg.ioMode = g_flash_cfg.ioMode & 0x0f;
     L1C_Cache_Flush_Ext();
     __enable_irq();
+    if (g_flash_cfg.mid != 0xff) {
+        return SUCCESS;
+    }
+    clkDelay = g_flash_cfg.clkDelay;
+    clkInvert = g_flash_cfg.clkInvert;
+    g_flash_cfg.ioMode = g_flash_cfg.ioMode & 0x0f;
 
     ret = flash_config_init(&g_flash_cfg, (uint8_t *)&jedec_id);
     MSG("flash ID = %08x\r\n", jedec_id);
@@ -127,6 +137,8 @@ BL_Err_Type ATTR_TCM_SECTION flash_init(void)
     if (ret != SUCCESS) {
         MSG("flash config init fail!\r\n");
     }
+    g_flash_cfg.clkDelay = clkDelay;
+    g_flash_cfg.clkInvert = clkInvert;
 
     return ret;
 }
