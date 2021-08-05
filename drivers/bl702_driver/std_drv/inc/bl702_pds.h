@@ -725,6 +725,7 @@ typedef enum {
 #define PDS_FORCE_GATE_CLK_OFFSET (16)
 #define PDS_INT_MASK_BIT_OFFSET   (8)
 #define PDS_AON_WAKEUP_GPIO_NONE  (0x00)
+#define PDS_AON_WAKEUP_GPIO_9     (0x01)
 #define PDS_AON_WAKEUP_GPIO_10    (0x02)
 #define PDS_AON_WAKEUP_GPIO_11    (0x04)
 #define PDS_AON_WAKEUP_GPIO_12    (0x08)
