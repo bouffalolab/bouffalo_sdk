@@ -18,15 +18,15 @@ INPUT(-lgcc)
 ENTRY(_enter)
 
 StackSize = 0x1000; /*  4KB */
-HeapSize  = 0x1000; /*  4KB */
+HeapSize  = 0x0;    /*  0KB */
 PROVIDE(__boot2_pass_param_addr = 0x4202F000);/* 0x42020000 + 60 * 1024 */
 
 MEMORY
 {
     xip_memory (rx) : 	ORIGIN = 0x23000000, LENGTH = 64K
    	itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 16K
-    dtcm_memory (rx)  : ORIGIN = 0x42018000, LENGTH = 32K
-    ram_memory  (!rx) : ORIGIN = 0x42020000, LENGTH = 60K
+    dtcm_memory (rx)  : ORIGIN = 0x42018000, LENGTH = 4K
+    ram_memory  (!rx) : ORIGIN = 0x42019000/*0x42020000*/, LENGTH = 88K
 }
 
 SECTIONS
