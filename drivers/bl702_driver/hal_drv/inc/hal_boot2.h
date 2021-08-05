@@ -50,6 +50,7 @@
 
 #define BL_FLASH_XIP_BASE BL702_FLASH_XIP_BASE
 #define FLASH_NOT_DETECT  0x10
+#define HAL_BOOT2_SUPPORT_DECOMPRESS  0 /* 1 support decompress, 0 not support */
 
 typedef struct
 {
@@ -60,7 +61,7 @@ typedef struct
     uint8_t chip_id[8];
     uint8_t pk_hash_cpu0[HAL_EFUSE_PK_HASH_SIZE];
     uint8_t pk_hash_cpu1[HAL_EFUSE_PK_HASH_SIZE];
-} boot_efuse_hw_config;
+} boot2_efuse_hw_config;
 
 typedef struct
 {
@@ -89,13 +90,15 @@ typedef struct
 } hal_flash_config;
 
 uint32_t hal_boot2_custom(void);
-void hal_reset_sec_eng(void);
-void hal_sw_system_reset(void);
-int32_t hal_pll_init(hal_pll_config *pll_cfg);
-void hal_hbn_set_status_flag(uint32_t flag);
-uint32_t hal_hbn_get_status_flag(void);
-uint8_t *hal_hbn_get_user_specified_fw(void);
-void hal_hbn_clr_user_specified_fw(void);
-void efuse_get_boot2_cfg(boot_efuse_hw_config *g_efuse_cfg);
-int32_t flash_get_clk_cfg(hal_pll_config *cfg);
+void hal_boot2_reset_sec_eng(void);
+void hal_boot2_sw_system_reset(void);
+void hal_boot2_set_psmode_status(uint32_t flag);
+uint32_t hal_boot2_get_psmode_status(void);
+uint8_t *hal_boot2_get_user_fw(void);
+void hal_boot2_clr_user_fw(void);
+void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *g_efuse_cfg);
+int32_t hal_boot2_get_clk_cfg(hal_pll_config *cfg);
+void hal_boot2_sboot_finish(void);
+void hal_boot2_uart_gpio_init(void);
+void hal_boot2_debug_uart_gpio_init(void);
 #endif
