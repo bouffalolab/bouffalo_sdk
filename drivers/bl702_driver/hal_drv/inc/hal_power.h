@@ -50,6 +50,6 @@ void lp_power_off_dll(void);
 
 int lp_enter_wfi(void);
 int lp_enter_pds(uint32_t sleep_time, void (*preCbFun)(void), void (*postCbFun)(void));
-int lp_enter_hbn(uint32_t sleepTime);
+int lp_enter_hbn(uint32_t sleepTime , uint8_t hbn_level);
 
 #endif

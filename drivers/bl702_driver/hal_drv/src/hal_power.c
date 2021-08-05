@@ -27,9 +27,12 @@
 #include "bl702_ef_ctrl.h"
 #include "bl702_glb.h"
 #include "bl702_pds.h"
+#include "bl702_hbn.h"
 #include "bl702_clock.h"
 #include "power_config.h"
 #include "hal_power.h"
+
+#define ALWAYS_DISABLE_AON_PAD_9     (0)
 
 /**
  * @brief gating peripheral clock for power saving
@@ -1102,6 +1105,7 @@ void ATTR_TCM_SECTION PDS_Mode_Enter(PDS_APP_CFG_Type *cfg)
         HBN_GPIO_INT_Enable(cfg->pdsAonGpioTrigType);
     }
 
+#if ALWAYS_DISABLE_AON_PAD_9
     /* always disable and mask aon_pad_GPIO9, mask/unmask and ie_enable/ie_disable */
     tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
     tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MASK);
@@ -1111,6 +1115,7 @@ void ATTR_TCM_SECTION PDS_Mode_Enter(PDS_APP_CFG_Type *cfg)
     tmpVal2 &= ~(1 << 0);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_REG_AON_PAD_IE_SMT, tmpVal2);
     BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+#endif
 
     /* To make it simple and safe*/
     __disable_irq();
@@ -1412,6 +1417,16 @@ int lp_enter_pds(uint32_t sleep_time, void (*preCbFun)(void), void (*postCbFun)(
 
     PDS_WAKEUP_IRQHandler_Install();
 
+    /* clear aon pads int status */
+    HBN_Hw_Pu_Pd_Cfg(0);
+    HBN_Aon_Pad_IeSmt_Cfg(0);
+    HBN_Pin_WakeUp_Mask(0x1F);
+    HBN_Clear_IRQ(HBN_INT_GPIO9);
+    HBN_Clear_IRQ(HBN_INT_GPIO10);
+    HBN_Clear_IRQ(HBN_INT_GPIO11);
+    HBN_Clear_IRQ(HBN_INT_GPIO12);
+    HBN_Clear_IRQ(HBN_INT_GPIO13);
+
     /* enable PDS interrupt to wakeup CPU (PDS1:CPU not powerdown, CPU __WFI) */
     NVIC_EnableIRQ(PDS_WAKEUP_IRQn);
 
@@ -1441,7 +1456,7 @@ int lp_enter_pds(uint32_t sleep_time, void (*preCbFun)(void), void (*postCbFun)(
  *
  * @note now default hbn level is hbn1
  */
-int lp_enter_hbn(uint32_t sleepTime)
+int lp_enter_hbn(uint32_t sleepTime , uint8_t hbn_level)
 {
     HBN_APP_CFG_Type cfg = {
         .useXtal32k = 0,                                      /*!< Wheather use xtal 32K as 32K clock source,otherwise use rc32k */
@@ -1450,7 +1465,7 @@ int lp_enter_hbn(uint32_t sleepTime)
         .gpioTrigType = DEFAULT_LP_PDS_AON_GPIO_TRIG_TYPE,    /*!< GPIO Triger type */
         .flashCfg = NULL,                                     /*!< Flash config pointer, used when power down flash */
         .flashPinCfg = 0,                                     /*!< 0 ext flash 23-28, 1 internal flash 23-28, 2 internal flash 23-28, 3 ext flash 17-22 */
-        .hbnLevel = 1,                                        /*!< HBN level */
+        .hbnLevel = hbn_level,                                /*!< HBN level */
         .ldoLevel = HBN_LDO_LEVEL_0P90V,                      /*!< LDO level */
     };
 
