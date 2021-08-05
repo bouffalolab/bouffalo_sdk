@@ -1,0 +1,531 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>2.8. ADC &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="2.9. DAC" href="api_dac.html" />
+    <link rel="prev" title="2.7. SPI" href="api_spi.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. Peripheral</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_clock.html">2.1. Clock Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">2.2. GPIO Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_uart.html">2.3. UART Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_pwm.html">2.4. PWM Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dma.html">2.5. DMA Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">2.6. I2C Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_spi.html">2.7. SPI Device</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.8. ADC Device</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">2.8.1. Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adc-device-structure-definition">2.8.2. ADC Device Structure Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adc-device-parameter-configuration-table">2.8.3. ADC Device Parameter Configuration Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adc-device-interface">2.8.4. ADC Device Interface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#adc-register">2.8.4.1. <strong>adc_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">2.8.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-close">2.8.4.3. <strong>device_close</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-control">2.8.4.4. <strong>device_control</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-read">2.8.4.5. <strong>device_read</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">2.8.4.6. <strong>device_set_callback</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.9. DAC Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.10. TIMER Device</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">2. </span>Peripheral</a> &raquo;</li>
+        
+      <li><span class="section-number">2.8. </span>ADC</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/api_reference/peripheral/api_adc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="adc">
+<h1><span class="section-number">2.8. </span>ADC<a class="headerlink" href="#adc" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><span class="section-number">2.8.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>ADC (Analog-to-digital Converter) can convert continuous analog signals into discrete digital signals.</p>
+<p>The ADC module in BL MCU series has the following characteristics:</p>
+<ul class="simple">
+<li><p>Support selecting 12/14/16 bits conversion result output</p></li>
+<li><p>ADC maximum working clock is 2MHZ</p></li>
+<li><p>Support 2.0V, 3.2V optional internal reference voltage</p></li>
+<li><p>DMA support</p></li>
+<li><p>Support four modes: single channel single conversion, continuous single channel conversion, single multi-channel conversion and continuous multi-channel conversion mode</p></li>
+<li><p>Support both single-ended and differential input modes</p></li>
+<li><p>12 external analog channels</p></li>
+<li><p>2 DAC internal channels</p></li>
+<li><p>1 VBAT /2 channel</p></li>
+</ul>
+</div>
+<div class="section" id="adc-device-structure-definition">
+<h2><span class="section-number">2.8.2. </span>ADC Device Structure Definition<a class="headerlink" href="#adc-device-structure-definition" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">adc_device</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
+    <span class="n">adc_clk_div_t</span> <span class="n">clk_div</span><span class="p">;</span>
+    <span class="n">adc_vref_t</span> <span class="n">vref</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">continuous_conv_mode</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">differential_mode</span><span class="p">;</span>
+    <span class="n">adc_data_width_t</span> <span class="n">data_width</span><span class="p">;</span>
+    <span class="n">adc_fifo_threshold_t</span> <span class="n">fifo_threshold</span><span class="p">;</span>
+    <span class="n">adc_pga_gain_t</span> <span class="n">gain</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">adc_device_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>parent</strong>                inherits the properties of the parent class</p></li>
+<li><p><strong>clk_div</strong>               Partial frequency clock in ADC module</p></li>
+<li><p><strong>vref</strong>                  2.0/3.2V reference voltage optional</p></li>
+<li><p><strong>continuous_conv_mode</strong>  Whether to select continuous mode. If it is in continuous mode, once adc_start operation, ADC will continue to work until adc_stop. If it is not in continuous mode, adc will only convert the result once every adc_start.</p></li>
+<li><p><strong>differential_mode</strong>     Whether it is in differential mode, if it is in differential mode, negative voltage can be measured.</p></li>
+<li><p><strong>data_width</strong>            Measurement width selection, the actual accuracy of ADC is 12 bits, but the accuracy of 14bits / 16bits can be achieved by averaging multiple times through OSR. Note that when a higher data width is selected, the frequency will decrease due to averaging. For details, please refer to the enumeration information.</p></li>
+<li><p><strong>fifo_threshold</strong>        This parameter affects the DMA handling threshold and ADC FIFO interrupt threshold</p></li>
+<li><p><strong>gain</strong>                  ADC gain selection for input signal</p></li>
+<li><p>Others to be added</p></li>
+</ul>
+</div>
+<div class="section" id="adc-device-parameter-configuration-table">
+<h2><span class="section-number">2.8.3. </span>ADC Device Parameter Configuration Table<a class="headerlink" href="#adc-device-parameter-configuration-table" title="Permalink to this headline">¶</a></h2>
+<p>Each ADC has a parameter configuration macro, the macro definition is located in the <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> file under the <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> directory, and the variable definition is located in <code class="docutils literal notranslate"><span class="pre">hal_adc.c</span></code>, so there is no need for the user to define it by himself . When the user opens the macro of the corresponding device, the configuration of the device will take effect. For example, open the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_ADC0</span></code> to take effect, and at the same time, the <code class="docutils literal notranslate"><span class="pre">ADC</span></code> device can be registered and used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*Parameter configuration macro*/</span>
+<span class="cp">#if defined(BSP_USING_ADC0)</span>
+<span class="cp">#ifndef ADC0_CONFIG</span>
+<span class="cp">#define ADC0_CONFIG                                        \</span>
+<span class="cp">    {                                                      \</span>
+<span class="cp">        .clk_div = ADC_CLOCK_DIV_32,                       \</span>
+<span class="cp">        .vref = ADC_VREF_3P2V,                             \</span>
+<span class="cp">        .continuous_conv_mode = DISABLE,                   \</span>
+<span class="cp">        .differential_mode = DISABLE,                      \</span>
+<span class="cp">        .data_width = ADC_DATA_WIDTH_16B_WITH_256_AVERAGE, \</span>
+<span class="cp">        .fifo_threshold = ADC_FIFO_THRESHOLD_1BYTE,        \</span>
+<span class="cp">        .gain = ADC_GAIN_1                                 \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+<span class="cm">/*Variable definitions*/</span>
+<span class="k">static</span> <span class="n">adc_device_t</span> <span class="n">adcx_device</span><span class="p">[</span><span class="n">ADC_MAX_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_ADC0</span>
+    <span class="n">ADC0_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above configuration can be modified through <code class="docutils literal notranslate"><span class="pre">ADC_DEV(dev)-&gt;xxx</span></code> and can only be used before <code class="docutils literal notranslate"><span class="pre">device_open</span></code>.</p>
+</div>
+</div>
+<div class="section" id="adc-device-interface">
+<h2><span class="section-number">2.8.4. </span>ADC Device Interface<a class="headerlink" href="#adc-device-interface" title="Permalink to this headline">¶</a></h2>
+<p>ADC device interfaces all follow the interfaces provided by the standard device driver management layer.</p>
+<div class="section" id="adc-register">
+<h3><span class="section-number">2.8.4.1. </span><strong>adc_register</strong><a class="headerlink" href="#adc-register" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">adc_register</span></code> is used to register an ADC device standard driver interface.Before registering, you need to open the macro definition of the corresponding ADC device. For example, define the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_ADC0</span></code> to use the <code class="docutils literal notranslate"><span class="pre">ADC0</span></code> device. After the registration is completed, other interfaces can be used. If no macro is defined, the <code class="docutils literal notranslate"><span class="pre">ADC0</span></code> device cannot be used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">adc_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">adc_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>index</strong> device index to be registered</p></li>
+<li><p><strong>name</strong> device name to be registered</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">index</span></code> is used to select ADC device configuration, one index corresponds to one ADC device configuration, for example, <code class="docutils literal notranslate"><span class="pre">ADC0_INDEX</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">ADC0_CONFIG</span></code> configuration. <code class="docutils literal notranslate"><span class="pre">index</span></code> has the following optional types:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">adc_index_type</span>
+<span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_ADC0</span>
+    <span class="n">ADC0_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+    <span class="n">ADC_MAX_INDEX</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-open">
+<h3><span class="section-number">2.8.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> is used to open an ADC device,this funtion calls <code class="docutils literal notranslate"><span class="pre">adc_open</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>oflag</strong> open mode</p></li>
+<li><p><strong>return</strong> Error code, 0: open successfully, others: error</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* The device is turned on in rotation sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* The device is turned on in rotation receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* The device is turned on in interrupt sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_RX     0x008 </span><span class="cm">/* The device is turned on in interrupt receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* The device is turned on in DMA transmission mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_RX     0x020 </span><span class="cm">/* The device is turned on in DMA receiving mode */</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-close">
+<h3><span class="section-number">2.8.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> is used to close an ADC device,this funtion calls <code class="docutils literal notranslate"><span class="pre">adc_close</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>return</strong> Error code, 0: open successfully, others: error</p></li>
+</ul>
+</div>
+<div class="section" id="device-control">
+<h3><span class="section-number">2.8.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> is used to control and modify the parameters of the adc device according to commands.This funtion calls <code class="docutils literal notranslate"><span class="pre">adc_control</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> Device handle</p></li>
+<li><p><strong>cmd</strong> Device control commands</p></li>
+<li><p><strong>args</strong> Control parameter</p></li>
+<li><p><strong>return</strong> Different control commands return different meanings.</p></li>
+</ul>
+<p>In addition to standard control commands, serial devices also have their own special control commands.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_ADC_CHANNEL_START  0x10</span>
+<span class="cp">#define DEVICE_CTRL_ADC_CHANNEL_STOP   0x11</span>
+<span class="cp">#define DEVICE_CTRL_ADC_CHANNEL_CONFIG 0x12</span>
+<span class="cp">#define DEVICE_CTRL_ADC_VBAT_ON        0x13</span>
+<span class="cp">#define DEVICE_CTRL_ADC_VBAT_OFF       0x14</span>
+<span class="cp">#define DEVICE_CTRL_ADC_TSEN_ON        0x15</span>
+<span class="cp">#define DEVICE_CTRL_ADC_TSEN_OFF       0x16</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">args</span></code> input is different depending on <code class="docutils literal notranslate"><span class="pre">cmd</span></code>, the list is as follows:</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">table1</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 18%" />
+<col style="width: 55%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>cmd</p></th>
+<th class="head"><p>args</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DEVICE_CTRL_SET_INT</p></td>
+<td><p>adc_it_type</p></td>
+<td><p>Enable ADC device interrupt</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_CLR_INT</p></td>
+<td><p>adc_it_type</p></td>
+<td><p>Disable ADC device interrupt</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_CONFIG</p></td>
+<td><p>ADC_param_cfg_t</p></td>
+<td><p>Modify ADC configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_ADC_CHANNEL_CONFIG</p></td>
+<td><p>adc_channel_cfg_t</p></td>
+<td><p>Modify ADC channel configuration</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_ATTACH_RX_DMA</p></td>
+<td><p>struct device*</p></td>
+<td><p>Link receiving DMA device</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_ADC_CHANNEL_START</p></td>
+<td><p>NULL</p></td>
+<td><p>Start/continue ADC conversion</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_ADC_CHANNEL_STOP</p></td>
+<td><p>NULL</p></td>
+<td><p>Stop ADC conversion</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_ADC_VBAT_ON</p></td>
+<td><p>NULL</p></td>
+<td><p>Turn on the internal VDD measurement circuit</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_ADC_VBAT_OFF</p></td>
+<td><p>NULL</p></td>
+<td><p>Turn off the internal VDD measurement circuit</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_ADC_TSEN_ON</p></td>
+<td><p>NULL</p></td>
+<td><p>Turn on the internal temperature measurement circuit (requires hardware support)</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_ADC_TSEN_OFF</p></td>
+<td><p>NULL</p></td>
+<td><p>Turn off the internal temperature measurement circuit (requires hardware support)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="device-read">
+<h3><span class="section-number">2.8.4.5. </span><strong>device_read</strong><a class="headerlink" href="#device-read" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_read</span></code> is used to receive the data of ADC device, the receiving mode can be polling, interrupt, dma.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_read</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> Dvice handle</p></li>
+<li><p><strong>pos</strong> No effect</p></li>
+<li><p><strong>buffer</strong> Buffer to read</p></li>
+<li><p><strong>size</strong> Length to read</p></li>
+<li><p><strong>return</strong> Error code, 0: open successfully, others: error</p></li>
+</ul>
+</div>
+<div class="section" id="device-set-callback">
+<h3><span class="section-number">2.8.4.6. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> is used to register an ADC threshold interrupt callback function.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
+</pre></div>
+</div>
+<ul>
+<li><p><strong>dev</strong> Device handle</p></li>
+<li><p><strong>callback</strong> The interrupt callback function to be registered</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>dev</strong> Device handle</p></li>
+<li><p><strong>args</strong> Receive and send buffer, the data type is uint8_t*</p></li>
+<li><p><strong>size</strong> Transmission length</p></li>
+<li><p><strong>event</strong> Type of interrupt event</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> type is as follows:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">ADC_event_type</span>
+<span class="p">{</span>
+    <span class="n">ADC_EVENT_FIFO_READY</span><span class="p">,</span>
+    <span class="n">ADC_EVENT_OVERRUN</span><span class="p">,</span>
+    <span class="n">ADC_EVENT_UNDERRUN</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api_dac.html" class="btn btn-neutral float-right" title="2.9. DAC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_spi.html" class="btn btn-neutral float-left" title="2.7. SPI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

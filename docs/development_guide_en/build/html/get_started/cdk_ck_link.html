@@ -1,0 +1,394 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Use CDK + CK-Link to compile and debug &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="3.2. Eclipse Development Guide under Windows" href="Windows_quick_start_eclipse.html" />
+    <link rel="prev" title="Use CDK + Sipeed RV-Debugger Plus to compile and debug" href="cdk_rv_debugger_plus.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. Development environment setup guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Windows_quick_start_cdk.html">3.1. Windows_CDK</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Windows_quick_start_cdk.html#software-and-hardware-environment">3.1.1. Software and hardware environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Windows_quick_start_cdk.html#download-cdk">3.1.2. Download CDK</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Windows_quick_start_cdk.html#download-bl-mcu-sdk">3.1.3. Download bl_mcu_sdk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Windows_quick_start_cdk.html#hardware-connection">3.1.4. Hardware connection</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="Windows_quick_start_cdk.html#test-the-hello-world-project">3.1.5. Test the Hello World project</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cdk_rv_debugger_plus.html">Use Sipeed RV-Debugger</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Use CK-Link</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Windows_quick_start_eclipse.html">3.2. Windows_eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Linux_quick_start_ubuntu.html">3.3. Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">3. </span>Development environment setup guide</a> &raquo;</li>
+        
+          <li><a href="Windows_quick_start_cdk.html"><span class="section-number">3.1. </span>Guide to using CDK (like MDK Keil) under Windows</a> &raquo;</li>
+        
+      <li>Use CDK + CK-Link to compile and debug</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/cdk_ck_link.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="use-cdk-ck-link-to-compile-and-debug">
+<h1>Use CDK + CK-Link to compile and debug<a class="headerlink" href="#use-cdk-ck-link-to-compile-and-debug" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="open-hello-world">
+<h2>Open Hello World<a class="headerlink" href="#open-hello-world" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>After obtaining the SDK, enter the <code class="docutils literal notranslate"><span class="pre">examples/hellowd/helloworld/cdk</span></code> directory in the SDK, double-click <code class="docutils literal notranslate"><span class="pre">helloworld.cdkproj</span></code>, and you can open the <code class="docutils literal notranslate"><span class="pre">Helloworld</span></code> project</p></li>
+</ul>
+</div>
+<div class="section" id="compile-hello-world">
+<h2>Compile Hello World<a class="headerlink" href="#compile-hello-world" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-default" id="id1">
+<img alt="" src="../_images/cdk1.png" />
+<p class="caption"><span class="caption-text">helloworld.cdkproj</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<ul>
+<li><p>In the drop-down menu, you can select the <code class="docutils literal notranslate"><span class="pre">CK_Link_Debug</span></code> or <code class="docutils literal notranslate"><span class="pre">OpenOCD_Debug</span></code> project, this tutorial is based on the <code class="docutils literal notranslate"><span class="pre">CK_Link_Debug</span></code> project</p></li>
+<li><p>In the CDK toolbar, click the compile icon to compile the project</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Click the icon <code class="docutils literal notranslate"><span class="pre">Build</span> <span class="pre">Project</span></code> at <code class="docutils literal notranslate"><span class="pre">1</span></code> to compile the currently selected project</p></li>
+<li><p>Click the icon <code class="docutils literal notranslate"><span class="pre">Clean</span> <span class="pre">Project</span></code> at <code class="docutils literal notranslate"><span class="pre">2</span></code> to clear the result of the last compilation</p></li>
+<li><p>Click the <code class="docutils literal notranslate"><span class="pre">3</span></code> icon <code class="docutils literal notranslate"><span class="pre">Flash</span> <span class="pre">Download</span></code> to download the compiled code to the chip</p></li>
+<li><p>Click the icon <code class="docutils literal notranslate"><span class="pre">Start/Stop</span> <span class="pre">Debug</span></code> at <code class="docutils literal notranslate"><span class="pre">4</span></code> to perform debugging related operations (when using <code class="docutils literal notranslate"><span class="pre">CK-Link</span></code>, you can load the code to flash first)</p></li>
+<li><p>Click the <code class="docutils literal notranslate"><span class="pre">5</span></code> icon <code class="docutils literal notranslate"><span class="pre">Start/Stop</span> <span class="pre">Debug</span> <span class="pre">whitout</span> <span class="pre">Download</span></code> to debug directly without loading the current bin file</p></li>
+<li><p>You can also right-click the project name in <code class="docutils literal notranslate"><span class="pre">Project</span></code>, and compile the project through the options in the right-click menu</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="program-hello-world">
+<h2>Program Hello World<a class="headerlink" href="#program-hello-world" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Since our flash algorithm is not currently included in the CDK software, we need to put the flash algorithm in the CDK installation directory. The specific operations are as follows:</p>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li><p>Enter the <code class="docutils literal notranslate"><span class="pre">tools\cdk_flashloader</span></code> directory under the SDK directory</p></li>
+<li><p>Copy the <code class="docutils literal notranslate"><span class="pre">bl70x_flasher.elf</span></code> file in the directory to the <code class="docutils literal notranslate"><span class="pre">C-Sky\CDK\CSKY\Flash</span></code> directory of the CDK tool</p></li>
+</ul>
+</div></blockquote>
+<div class="figure align-default" id="id2">
+<img alt="" src="../_images/cdk7.png" />
+<p class="caption"><span class="caption-text">CDK Flash Loader</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<div class="figure align-default" id="id3">
+<img alt="" src="../_images/cdk8.png" />
+<p class="caption"><span class="caption-text">CDK Project Setting</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<ul class="simple">
+<li><p>Click the project setting button in the <code class="docutils literal notranslate"><span class="pre">Project</span> <span class="pre">View</span></code> to open the <code class="docutils literal notranslate"><span class="pre">Project</span> <span class="pre">Setting</span></code> window, or open it through the <code class="docutils literal notranslate"><span class="pre">Project</span></code> menu bar</p></li>
+<li><p>In the opened <code class="docutils literal notranslate"><span class="pre">Project</span> <span class="pre">Setting</span></code> window, select the <code class="docutils literal notranslate"><span class="pre">Flash</span></code> tab to configure the required Flash algorithm</p></li>
+</ul>
+<div class="figure align-default" id="id4">
+<img alt="" src="../_images/cdk9.png" />
+<p class="caption"><span class="caption-text">CDK Project Flash setting</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+<ul class="simple">
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">Flash</span></code> tab, click the <code class="docutils literal notranslate"><span class="pre">Add</span></code> button, select the <code class="docutils literal notranslate"><span class="pre">bl70x_flash</span></code> algorithm in the opened list, and click <code class="docutils literal notranslate"><span class="pre">Add</span></code> to add it to the project. Others in <code class="docutils literal notranslate"><span class="pre">Flash</span></code> configuration, as shown in the figure:</p></li>
+<li><p>After clicking OK, if the configuration is correct, click <code class="docutils literal notranslate"><span class="pre">Flash</span> <span class="pre">Download</span></code> to download the compiled code to the chip</p></li>
+</ul>
+<div class="figure align-default" id="id5">
+<img alt="" src="../_images/cdk5.png" />
+<p class="caption"><span class="caption-text">CDK Flashdownload Success</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+<ul>
+<li><p>If the download fails, please check:</p>
+<blockquote>
+<div><ul class="simple">
+<li><ol class="arabic simple">
+<li><p>Whether the code is compiled correctly and generate files such as <code class="docutils literal notranslate"><span class="pre">.elf</span></code>, <code class="docutils literal notranslate"><span class="pre">.bin</span></code>, etc.</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="2">
+<li><p>Is the Flash algorithm correctly set?</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="3">
+<li><p>Whether the CK-Link and the board are properly connected</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="4">
+<li><p>Whether the development board is powered normally and whether the power indicator is on</p></li>
+</ol>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="run-hello-world">
+<h2>Run Hello World<a class="headerlink" href="#run-hello-world" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>From the menu bar of the CDK <code class="docutils literal notranslate"><span class="pre">View-&gt;Serial</span> <span class="pre">Pane</span></code>, open the serial port panel, right-click in the opened <code class="docutils literal notranslate"><span class="pre">Serial</span> <span class="pre">Pane</span></code>, set the serial port, select your corresponding serial port number and baud rate</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/cdk4.png" src="../_images/cdk4.png" />
+</div>
+<div class="figure align-default" id="id6">
+<img alt="" src="../_images/cdk3.png" />
+<p class="caption"><span class="caption-text">CDK Serial Pane setting</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</div>
+<ul class="simple">
+<li><p>Press the <code class="docutils literal notranslate"><span class="pre">RST</span></code> key on the board, you can see the result of the code in the serial port</p></li>
+</ul>
+<div class="figure align-default" id="id7">
+<img alt="" src="../_images/cdk6.png" />
+<p class="caption"><span class="caption-text">HelloWorld！</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="debug-hello-world">
+<h2>Debug Hello World<a class="headerlink" href="#debug-hello-world" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Click the <code class="docutils literal notranslate"><span class="pre">Start/Stop</span> <span class="pre">Debugger</span></code> button at the top of the toolbar to enter the debug interface, as shown in the figure below</p></li>
+</ul>
+<div class="figure align-default" id="id8">
+<img alt="" src="../_images/cdk10.png" />
+<p class="caption"><span class="caption-text">Debug HelloWorld！</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+</div>
+<ul class="simple">
+<li><p>In the debug interface, the <code class="docutils literal notranslate"><span class="pre">Register</span></code> window can view the <code class="docutils literal notranslate"><span class="pre">CPU</span></code> internal register data; the <code class="docutils literal notranslate"><span class="pre">Peripherals</span></code> peripheral panel, you can view the corresponding peripheral register data, the top menu bar <code class="docutils literal notranslate"><span class="pre">Peripherals-&gt;</span> <span class="pre">System</span> <span class="pre">Viewer</span></code> can select peripherals; click the relevant debugging button in the upper toolbar to perform operations such as breakpoint setting, single-step debugging, single-step instruction, and full-speed operation. Of course, these operations have corresponding shortcut keys and shortcut setting methods. For details, please refer to <code class="docutils literal notranslate"><span class="pre">CDK</span> <span class="pre">Help</span></code>.</p></li>
+<li><p>We click the single step button to run the code, and we can see that the cursor moves to the next sentence of code, and we can see our output <code class="docutils literal notranslate"><span class="pre">Hello</span> <span class="pre">World!</span></code> displayed in the serial port panel.</p></li>
+</ul>
+<div class="figure align-default" id="id9">
+<img alt="" src="../_images/cdk11.png" />
+<p class="caption"><span class="caption-text">Debug HelloWorld！</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="Windows_quick_start_eclipse.html" class="btn btn-neutral float-right" title="3.2. Eclipse Development Guide under Windows" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cdk_rv_debugger_plus.html" class="btn btn-neutral float-left" title="Use CDK + Sipeed RV-Debugger Plus to compile and debug" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

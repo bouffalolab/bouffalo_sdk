@@ -1,0 +1,456 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3.2. Eclipse Development Guide under Windows &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="3.3. Linux OR WSL environment development guide" href="Linux_quick_start_ubuntu.html" />
+    <link rel="prev" title="Use CDK + CK-Link to compile and debug" href="cdk_ck_link.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. Development environment setup guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Windows_quick_start_cdk.html">3.1. Windows_CDK</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.2. Windows_eclipse</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#software-and-hardware-environment">3.2.1. Software and hardware environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#download-eclipse">3.2.2. Download Eclipse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#download-bl-mcu-sdk">3.2.3. Download bl_mcu_sdk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configure-eclipse">3.2.4. Configure eclipse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#import-bl-mcu-sdk">3.2.5. Import bl_mcu_sdk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hardware-connection">3.2.6. Hardware connection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test-the-hello-world-project">3.2.7. Test the Hello World project</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#open-hello-world">Open Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compile-hello-world">Compile Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#program-hello-world">Program Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run-hello-world">Run Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#debug-hello-world">Debug Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#compile-and-program-different-target-projects">3.2.8. Compile and program different target projects</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Linux_quick_start_ubuntu.html">3.3. Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">3. </span>Development environment setup guide</a> &raquo;</li>
+        
+      <li><span class="section-number">3.2. </span>Eclipse Development Guide under Windows</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/Windows_quick_start_eclipse.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="eclipse-development-guide-under-windows">
+<h1><span class="section-number">3.2. </span>Eclipse Development Guide under Windows<a class="headerlink" href="#eclipse-development-guide-under-windows" title="Permalink to this headline">¶</a></h1>
+<p>This document introduces the use of eclipse under Windows to build a software development environment for BL702 series MCU.</p>
+<div class="section" id="software-and-hardware-environment">
+<h2><span class="section-number">3.2.1. </span>Software and hardware environment<a class="headerlink" href="#software-and-hardware-environment" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Eclipse free installation package</p></li>
+<li><p>Serial port assistant software</p></li>
+<li><p>A USB Type-A data cable</p></li>
+<li><p>A j-link emulator</p></li>
+<li><p>A USB-TTL serial port module</p></li>
+<li><p>Several Dupont lines</p></li>
+</ul>
+</div>
+<div class="section" id="download-eclipse">
+<h2><span class="section-number">3.2.2. </span>Download Eclipse<a class="headerlink" href="#download-eclipse" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Download the installation package with the RISC-V toolchain from the Bouffalo Lab developer community <a class="reference external" href="https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip">Eclipse https://dev.bouffalolab.com/download</a> .</p></li>
+</ul>
+</div>
+<div class="section" id="download-bl-mcu-sdk">
+<h2><span class="section-number">3.2.3. </span>Download bl_mcu_sdk<a class="headerlink" href="#download-bl-mcu-sdk" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Download from the open source community <a class="reference external" href="https://gitee.com/bouffalolab/bl_mcu_sdk.git">bl_mcu_sdk</a>.</p></li>
+<li><p>You can use <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> or directly <code class="docutils literal notranslate"><span class="pre">download</span></code> to download the SDK</p></li>
+<li><p>Before using <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code>, please make sure that <code class="docutils literal notranslate"><span class="pre">git</span></code> has been installed correctly. Open a terminal that supports <code class="docutils literal notranslate"><span class="pre">git</span></code> and enter the following command to get the latest SDK.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="hll">$ git clone https://gitee.com/bouffalolab/bl_mcu_sdk.git  --recursive
+</span></pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="configure-eclipse">
+<h2><span class="section-number">3.2.4. </span>Configure eclipse<a class="headerlink" href="#configure-eclipse" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Copy the eclipse compressed package to the working directory, unzip the eclipse compressed package</p></li>
+<li><p>Enter the eclipse directory, double-click <code class="docutils literal notranslate"><span class="pre">eclipse.exe</span></code> to start eclipse</p></li>
+<li><p>Select your <code class="docutils literal notranslate"><span class="pre">Workspace</span></code> directory, click <code class="docutils literal notranslate"><span class="pre">Launch</span></code> to enter the workspace</p>
+<blockquote>
+<div><div class="figure align-default">
+<img alt="" src="../_images/pic1.png" />
+</div>
+</div></blockquote>
+</li>
+<li><p>Click <code class="docutils literal notranslate"><span class="pre">Window-&gt;preferences</span></code> in the menu bar to open the environment configuration related page, ready to import the related configuration environment</p>
+<blockquote>
+<div><div class="figure align-default">
+<img alt="" src="../_images/pic2.png" />
+</div>
+</div></blockquote>
+</li>
+<li><dl>
+<dt>Click the icon at “1” in the figure below to open the import configuration interface, follow the steps shown in the figure, and select the <code class="docutils literal notranslate"><span class="pre">bflb_mcu_preferences.epf</span></code> configuration file in the <code class="docutils literal notranslate"><span class="pre">eclipse.exe</span></code> directory.</dt><dd><div class="figure align-default">
+<img alt="" src="../_images/pic3.png" />
+</div>
+</dd>
+</dl>
+</li>
+<li><p>After selecting the corresponding file, click <code class="docutils literal notranslate"><span class="pre">Finish</span></code>, select and click <code class="docutils literal notranslate"><span class="pre">cancel</span></code> in the dialog box without restarting.</p>
+<blockquote>
+<div><div class="figure align-default">
+<img alt="" src="../_images/pic4.png" />
+</div>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="import-bl-mcu-sdk">
+<h2><span class="section-number">3.2.5. </span>Import bl_mcu_sdk<a class="headerlink" href="#import-bl-mcu-sdk" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Click on the menu bar <code class="docutils literal notranslate"><span class="pre">File-&gt;Import</span></code> to open the configuration interface of the imported project</p>
+<blockquote>
+<div><div class="figure align-default">
+<img alt="" src="../_images/pic5.png" />
+</div>
+</div></blockquote>
+</li>
+<li><p>In the opened <code class="docutils literal notranslate"><span class="pre">Import</span></code> window, select <code class="docutils literal notranslate"><span class="pre">General-&gt;Existing</span> <span class="pre">Projects</span> <span class="pre">into</span> <span class="pre">Workspace</span></code>, and then click <code class="docutils literal notranslate"><span class="pre">Next</span></code></p>
+<blockquote>
+<div><div class="figure align-default">
+<img alt="" src="../_images/pic6.png" />
+</div>
+</div></blockquote>
+</li>
+<li><p>After loading the project path of bl_mcu_sdk, click <code class="docutils literal notranslate"><span class="pre">Finsh</span></code> to complete the import</p>
+<blockquote>
+<div><div class="figure align-default">
+<img alt="" src="../_images/pic7.png" />
+</div>
+</div></blockquote>
+</li>
+<li><p>After the import is complete, close the <code class="docutils literal notranslate"><span class="pre">Welcome</span></code> window to see the imported project</p>
+<blockquote>
+<div><div class="figure align-default">
+<img alt="" src="../_images/pic8.png" />
+</div>
+<div class="figure align-default">
+<img alt="" src="../_images/pic9.png" />
+</div>
+</div></blockquote>
+</li>
+<li><p>Expand <code class="docutils literal notranslate"><span class="pre">Build</span> <span class="pre">Target</span></code>, you can see the three function buttons <code class="docutils literal notranslate"><span class="pre">bl_clean</span></code>, <code class="docutils literal notranslate"><span class="pre">bl_make</span></code>, and <code class="docutils literal notranslate"><span class="pre">download</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Double-click the <code class="docutils literal notranslate"><span class="pre">bl_clean</span></code> button, it will clear the compilation cache in the <code class="docutils literal notranslate"><span class="pre">build</span></code> and <code class="docutils literal notranslate"><span class="pre">out</span></code> directories</p></li>
+<li><p>Double-click the <code class="docutils literal notranslate"><span class="pre">bl_make</span></code> button, the set case will be compiled normally, if the default configuration is not modified, the <code class="docutils literal notranslate"><span class="pre">helloworld</span></code> project will be compiled</p></li>
+<li><p>Double-click the <code class="docutils literal notranslate"><span class="pre">download</span></code> button, the code will be downloaded to the chip, if it is not compiled successfully, the default or last <code class="docutils literal notranslate"><span class="pre">.bin</span></code> file will be downloaded</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="hardware-connection">
+<h2><span class="section-number">3.2.6. </span>Hardware connection<a class="headerlink" href="#hardware-connection" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>For specific board connection, please refer to <a class="reference internal" href="connecting_hardware.html#connect-hardware"><span class="std std-ref">Hardware connection</span></a>; (The eclipse environment recommends using <code class="docutils literal notranslate"><span class="pre">j-link</span></code> for programming and debugging)</p></li>
+<li><p>Please make sure that the development board is set up correctly before proceeding to the following steps</p></li>
+</ul>
+</div>
+<div class="section" id="test-the-hello-world-project">
+<h2><span class="section-number">3.2.7. </span>Test the Hello World project<a class="headerlink" href="#test-the-hello-world-project" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="open-hello-world">
+<h3>Open Hello World<a class="headerlink" href="#open-hello-world" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Open <code class="docutils literal notranslate"><span class="pre">examples/hellowd/helloworld/main.c</span></code>, you can edit and modify the code of the <code class="docutils literal notranslate"><span class="pre">helloworld</span></code> test demo. If you modify it, please save it and execute the compilation</p></li>
+</ul>
+</div>
+<div class="section" id="compile-hello-world">
+<h3>Compile Hello World<a class="headerlink" href="#compile-hello-world" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Double click <code class="docutils literal notranslate"><span class="pre">bl_make</span></code> to compile the helloworld project</p></li>
+<li><p>After successful compilation, you can see the log information as shown in the figure below in the <code class="docutils literal notranslate"><span class="pre">Console</span></code> window</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/pic10.png" src="../_images/pic10.png" />
+</div>
+</div>
+<div class="section" id="program-hello-world">
+<h3>Program Hello World<a class="headerlink" href="#program-hello-world" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Double-click <code class="docutils literal notranslate"><span class="pre">download</span></code> to program the helloworld project <code class="docutils literal notranslate"><span class="pre">bin</span></code> file to the chip</p></li>
+<li><p>After the download is successful, you can see the log information as shown in the figure below in the <code class="docutils literal notranslate"><span class="pre">Console</span></code> window</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/pic11.png" src="../_images/pic11.png" />
+</div>
+</div>
+<div class="section" id="run-hello-world">
+<h3>Run Hello World<a class="headerlink" href="#run-hello-world" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Connect the <code class="docutils literal notranslate"><span class="pre">TXD0</span></code>, <code class="docutils literal notranslate"><span class="pre">RXD0</span></code> and <code class="docutils literal notranslate"><span class="pre">GND</span></code> pins of the board to the USB-TTL serial port module with a DuPont cable, insert the serial port module into the PC, and use any serial port assistant software to open the serial port</p></li>
+<li><p>After the programming is successful, press the <code class="docutils literal notranslate"><span class="pre">rst</span></code> button on the board. If the download is correct, you can see the log information as shown in the figure below in the serial port assistant software.</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/eclipse_run.png" src="../_images/eclipse_run.png" />
+</div>
+</div>
+<div class="section" id="debug-hello-world">
+<h3>Debug Hello World<a class="headerlink" href="#debug-hello-world" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Click the <code class="docutils literal notranslate"><span class="pre">Debug</span></code> button in the eclipse toolbar to enter the debug configuration window</p></li>
+<li><p>Select <code class="docutils literal notranslate"><span class="pre">GDB</span> <span class="pre">SEGGER</span> <span class="pre">J-Link</span> <span class="pre">Debugging-&gt;Jlink_bl_mcu_sdk</span></code>, select the <code class="docutils literal notranslate"><span class="pre">.elf</span></code> file that needs to be debugged in <code class="docutils literal notranslate"><span class="pre">C/C++</span> <span class="pre">Application:</span></code></p></li>
+<li><p>Click <code class="docutils literal notranslate"><span class="pre">Apply</span></code> first, then click <code class="docutils literal notranslate"><span class="pre">Debug</span></code> to start <code class="docutils literal notranslate"><span class="pre">Debug</span></code></p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/pic14.png" />
+</div>
+<ul class="simple">
+<li><p>After entering the Debug interface, you can see that the program stops at <code class="docutils literal notranslate"><span class="pre">main</span></code>, click the <code class="docutils literal notranslate"><span class="pre">Step</span> <span class="pre">Over</span></code> button in the upper toolbar to perform single-step debugging of the code project.</p></li>
+</ul>
+<div class="figure align-default" id="id1">
+<img alt="" src="../_images/pic15.png" />
+<p class="caption"><span class="caption-text">Eclipse Debugging</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+</div>
+<div class="section" id="compile-and-program-different-target-projects">
+<h2><span class="section-number">3.2.8. </span>Compile and program different target projects<a class="headerlink" href="#compile-and-program-different-target-projects" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>When you right-click the <code class="docutils literal notranslate"><span class="pre">bl_make</span></code> button and click <code class="docutils literal notranslate"><span class="pre">Edit</span></code>, the configuration interface for replacing the target project will pop up, as shown in the figure below</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/pic12.png" />
+</div>
+<ul class="simple">
+<li><p>Where <code class="docutils literal notranslate"><span class="pre">APP=xxx</span></code> can be changed to the name of the target project that needs to be compiled and programmed. For example, if you want to compile and program the <code class="docutils literal notranslate"><span class="pre">gpio/gpio_blink</span></code> project, modify it to <code class="docutils literal notranslate"><span class="pre">APP=gpio_blink</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">BOARD=bl706_iot</span></code> in <code class="docutils literal notranslate"><span class="pre">Build</span> <span class="pre">command</span></code> will specify different Board types to adapt to different types of boards.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Board</span></code> type determines the corresponding <code class="docutils literal notranslate"><span class="pre">borad</span></code> header file when compiling. The default selection is <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">build</span> <span class="pre">BOARD=bl706_iot</span></code></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="Linux_quick_start_ubuntu.html" class="btn btn-neutral float-right" title="3.3. Linux OR WSL environment development guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cdk_ck_link.html" class="btn btn-neutral float-left" title="Use CDK + CK-Link to compile and debug" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

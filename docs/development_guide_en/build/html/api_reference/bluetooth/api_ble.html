@@ -1,0 +1,910 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3. BLE &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="1. GPIO" href="../../samples/basic%20samples/gpio/index.html" />
+    <link rel="prev" title="2.10. TIMER" href="../peripheral/api_timer.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. BLE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">3.1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api">3.2. API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-structure-reference">3.3. Data structure reference</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">3. </span>BLE</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/api_reference/bluetooth/api_ble.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ble">
+<span id="ble-index"></span><h1><span class="section-number">3. </span>BLE<a class="headerlink" href="#ble" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><span class="section-number">3.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><dl class="simple">
+<dt>Features</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>HOST</dt><dd><ul>
+<li><p>GAP support peripheral and Central, Observer and Broadcaster</p></li>
+<li><p>GATT support server and Client</p></li>
+<li><p>Support pairing with the secure connection feature in Bluetooth 4.2</p></li>
+<li><p>Support permanent storage of Bluetooth specific settings and data</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>mesh</dt><dd><ul>
+<li><p>TODO</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>The architecture of the BLE protocol stack:</dt><dd><blockquote>
+<div><div class="figure align-default">
+<img alt="../../_images/image1.png" src="../../_images/image1.png" />
+</div>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>There are 3 main layers, which together form a complete Bluetooth low power protocol stack</dt><dd><ul>
+<li><p>Host: Under the application program, it is composed of multiple (non-real-time) networks and transmission protocols, enabling the application program to communicate with peer devices in a standard and interoperable manner</p></li>
+<li><p>Controller：The controller implements the link layer (LE LL), which is a low-level real-time protocol that provides standard interoperability for over-the-air communication with the radio. LL handles the reception and transmission of packets, guarantees the transfer of data, and handles all LL control procedures</p></li>
+<li><p>Radio Hardware：Implement analog and digital baseband functions, allowing link layer firmware to transmit and receive in the 2.4GHz band of the spectrum</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Master Host:</dt><dd><blockquote>
+<div><div class="figure align-default">
+<img alt="../../_images/image2.png" src="../../_images/image2.png" />
+</div>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The Bluetooth Host layer implements all high-level protocols and configuration files, the most important thing is that it provides high-level APIs for applications</dt><dd><ul>
+<li><p>HCI: Host and controller interface</p></li>
+<li><p>L2CAP: Logical Link Control and Adaptation Protocol</p></li>
+<li><p>GATT: Generic Attribute Profile</p></li>
+<li><p>GAP: Generic Access Profile</p></li>
+<li><p>SMP: Security Manager Specification</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Application</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>The application layer contains the necessary protocol stack parameter settings and api reference. We analyze the two devices separately from the Bluetooth slave and the Bluetooth master</dt><dd><ul>
+<li><dl class="simple">
+<dt>Bluetooth slave</dt><dd><ul>
+<li><p>Hardware and basic service initialization</p></li>
+<li><p>Set broadcast parameters: broadcast data, broadcast interval, scan response, etc</p></li>
+<li><p>Profile settings: add slave services, feature values, and set callback functions to receive host data, etc</p></li>
+<li><p>Set pairing parameters (optional)</p></li>
+<li><p>Start the broadcast, start running</p></li>
+<li><p>Waiting for related events, and event processing, such as receiving data from the host, being linked, etc</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Bluetooth host</dt><dd><ul>
+<li><p>Related hardware and basic service initialization</p></li>
+<li><p>Set scan parameters</p></li>
+<li><p>Set connection parameters</p></li>
+<li><p>Set pairing parameters (optional)</p></li>
+<li><p>Start the protocol stack and start running</p></li>
+<li><p>Wait for related events, and event processing, such as scan events, Notify events from slaves, etc</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="api">
+<h2><span class="section-number">3.2. </span>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>API introduction</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">ble_controller_init(uint8_t</span> <span class="pre">task_priority)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Controller</span> <span class="n">layer</span> <span class="n">initialization</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">task_priority</span><span class="p">:</span> <span class="n">task</span> <span class="n">priority</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="kc">None</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">hci_driver_init(void)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">HCI</span> <span class="n">interface</span> <span class="n">driver</span> <span class="n">initialization</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="kc">None</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_enable(bt_ready_cb_t</span> <span class="pre">cb)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">BLE</span> <span class="n">enable</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">cb</span><span class="p">:</span> <span class="n">Call</span> <span class="n">the</span> <span class="n">callback</span> <span class="n">function</span> <span class="k">if</span> <span class="n">successful</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_adv_start(const</span> <span class="pre">struct</span> <span class="pre">bt_le_adv_param</span> <span class="pre">*param,const</span> <span class="pre">struct</span> <span class="pre">bt_data</span> <span class="pre">*ad,</span> <span class="pre">size_t</span> <span class="pre">ad_len,</span></code></dt><dd><p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">struct</span> <span class="pre">bt_data</span> <span class="pre">*sd,</span> <span class="pre">size_t</span> <span class="pre">sd_len)</span></code></p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Turn</span> <span class="n">on</span> <span class="n">BLE</span> <span class="n">broadcast</span>
+<span class="o">*</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">param</span><span class="p">:</span>  <span class="n">Pointer</span> <span class="n">to</span> <span class="n">broadcast</span> <span class="n">configuration</span> <span class="n">parameter</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">ad</span><span class="p">:</span>     <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">broadcast</span> <span class="n">packet</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">ad_len</span><span class="p">:</span> <span class="n">The</span> <span class="n">length</span> <span class="n">of</span> <span class="n">the</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">broadcast</span> <span class="n">packet</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">sd</span><span class="p">:</span>     <span class="n">Pointer</span> <span class="n">to</span> <span class="n">scan</span> <span class="n">response</span> <span class="n">packet</span> <span class="n">data</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">sd_len</span><span class="p">:</span> <span class="n">Scan</span> <span class="n">response</span> <span class="n">packet</span> <span class="n">data</span> <span class="n">length</span>
+<span class="o">*</span> <span class="nd">@return</span>               <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_adv_update_data(const</span> <span class="pre">struct</span> <span class="pre">bt_data</span> <span class="pre">*ad,</span> <span class="pre">size_t</span> <span class="pre">ad_len,const</span> <span class="pre">struct</span> <span class="pre">bt_data</span> <span class="pre">*sd,</span> <span class="pre">size_t</span> <span class="pre">sd_len)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Update</span> <span class="n">BLE</span> <span class="n">broadcast</span> <span class="n">data</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">ad</span><span class="p">:</span>     <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">broadcast</span> <span class="n">packet</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">ad_len</span><span class="p">:</span> <span class="n">The</span> <span class="n">length</span> <span class="n">of</span> <span class="n">the</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">broadcast</span> <span class="n">packet</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">sd</span><span class="p">:</span>     <span class="n">Pointer</span> <span class="n">to</span> <span class="n">scan</span> <span class="n">response</span> <span class="n">packet</span> <span class="n">data</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">sd_len</span><span class="p">:</span> <span class="n">Scan</span> <span class="n">response</span> <span class="n">packet</span> <span class="n">data</span> <span class="n">length</span>
+<span class="o">*</span> <span class="nd">@return</span>               <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_adv_stop(void)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Stop</span> <span class="n">BLE</span> <span class="n">broadcast</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="kc">None</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_scan_start(const</span> <span class="pre">struct</span> <span class="pre">bt_le_scan_param</span> <span class="pre">*param,</span> <span class="pre">bt_le_scan_cb_t</span> <span class="pre">cb)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Turn</span> <span class="n">on</span> <span class="n">BLE</span> <span class="n">scanning</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">param</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">scan</span> <span class="n">parameter</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">cb</span><span class="p">:</span>    <span class="n">Scan</span> <span class="n">callback</span> <span class="n">function</span>
+<span class="o">*</span> <span class="nd">@return</span>              <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_scan_stop(void)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Stop</span> <span class="n">BLE</span> <span class="n">scanning</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="kc">None</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_whitelist_add(const</span> <span class="pre">bt_addr_le_t</span> <span class="pre">*addr)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Add</span> <span class="n">devices</span> <span class="n">to</span> <span class="n">the</span> <span class="n">whitelist</span> <span class="n">by</span> <span class="n">address</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">addr</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="n">device</span> <span class="n">that</span> <span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="n">added</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_whitelist_rem(const</span> <span class="pre">bt_addr_le_t</span> <span class="pre">*addr)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Remove</span> <span class="n">the</span> <span class="n">device</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">whitelist</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">addr</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="n">device</span> <span class="n">that</span> <span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="n">removed</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_whitelist_clear(void)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Clear</span> <span class="n">the</span> <span class="n">whitelist</span> <span class="nb">list</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="kc">None</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_set_chan_map(u8_t</span> <span class="pre">chan_map[5])</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Set</span> <span class="p">(</span><span class="n">LE</span><span class="p">)</span> <span class="n">channel</span> <span class="n">mapping</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">chan_map</span><span class="p">:</span> <span class="n">channel</span> <span class="n">array</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_unpair(u8_t</span> <span class="pre">id,</span> <span class="pre">const</span> <span class="pre">bt_addr_le_t</span> <span class="pre">*addr)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Clear</span> <span class="n">pairing</span> <span class="n">information</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="nb">id</span><span class="p">:</span> <span class="n">Local</span> <span class="n">ID</span> <span class="p">(</span><span class="n">mostly</span> <span class="n">just</span> <span class="n">the</span> <span class="n">default</span> <span class="n">BT</span> <span class="n">ID</span><span class="p">)</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">addr</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">device</span> <span class="n">address</span><span class="p">,</span> <span class="n">NULL</span> <span class="ow">or</span> <span class="n">BT_ADDR_LE_ANY</span> <span class="n">to</span> <span class="n">clear</span> <span class="nb">all</span> <span class="n">remote</span> <span class="n">devices</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_get_info(const</span> <span class="pre">struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn,</span> <span class="pre">struct</span> <span class="pre">bt_conn_info</span> <span class="pre">*info)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Get</span> <span class="n">the</span> <span class="n">information</span> <span class="n">of</span> <span class="n">the</span> <span class="n">currently</span> <span class="n">connected</span> <span class="n">device</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">current</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">info</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">information</span> <span class="n">of</span> <span class="n">the</span> <span class="n">currently</span> <span class="n">connected</span> <span class="n">device</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_get_remote_dev_info(struct</span> <span class="pre">bt_conn_info</span> <span class="pre">*info)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Get</span> <span class="n">information</span> <span class="n">about</span> <span class="n">connected</span> <span class="n">devices</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">info</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">information</span> <span class="n">of</span> <span class="n">the</span> <span class="n">currently</span> <span class="n">connected</span> <span class="n">device</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="n">Number</span> <span class="n">of</span> <span class="n">connected</span> <span class="n">devices</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_le_param_update(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn,const</span> <span class="pre">struct</span> <span class="pre">bt_le_conn_param</span> <span class="pre">*param)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Update</span> <span class="n">connection</span> <span class="n">parameters</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">current</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">param</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">connection</span> <span class="n">parameter</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_disconnect(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn,</span> <span class="pre">u8_t</span> <span class="pre">reason)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Disconnect</span> <span class="n">current</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">current</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">reason</span><span class="p">:</span> <span class="n">the</span> <span class="n">reason</span> <span class="k">for</span> <span class="n">disconnecting</span> <span class="n">the</span> <span class="n">current</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">bt_conn</span> <span class="pre">*bt_conn_create_le(const</span> <span class="pre">bt_addr_le_t</span> <span class="pre">*peer,const</span> <span class="pre">struct</span> <span class="pre">bt_le_conn_param</span> <span class="pre">*param)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Create</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">peer</span><span class="p">:</span> <span class="n">The</span> <span class="n">pointer</span> <span class="n">of</span> <span class="n">the</span> <span class="n">device</span> <span class="n">address</span> <span class="n">that</span> <span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="n">connected</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">param</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">connection</span> <span class="n">parameter</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="n">Success</span><span class="p">:</span> <span class="n">a</span> <span class="n">valid</span> <span class="n">connection</span> <span class="nb">object</span><span class="p">,</span> <span class="n">otherwise</span> <span class="n">it</span> <span class="n">fails</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_create_auto_le(const</span> <span class="pre">struct</span> <span class="pre">bt_le_conn_param</span> <span class="pre">*param)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Automatically</span> <span class="n">create</span> <span class="ow">and</span> <span class="n">connect</span> <span class="n">to</span> <span class="n">devices</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">whitelist</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">param</span><span class="p">:</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">connection</span> <span class="n">parameter</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_create_auto_stop(void)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Stop</span> <span class="n">automatic</span> <span class="n">creation</span> <span class="ow">and</span> <span class="n">connect</span> <span class="n">to</span> <span class="n">devices</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">whitelist</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="kc">None</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_set_auto_conn(const</span> <span class="pre">bt_addr_le_t</span> <span class="pre">*addr,const</span> <span class="pre">struct</span> <span class="pre">bt_le_conn_param</span> <span class="pre">*param)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Automatically</span> <span class="n">create</span> <span class="n">a</span> <span class="n">connection</span> <span class="n">to</span> <span class="n">the</span> <span class="n">remote</span> <span class="n">device</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">addr</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">device</span> <span class="n">address</span> <span class="n">pointer</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">param</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">connection</span> <span class="n">parameter</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">bt_conn</span> <span class="pre">*bt_conn_create_slave_le(const</span> <span class="pre">bt_addr_le_t</span> <span class="pre">*peer,const</span> <span class="pre">struct</span> <span class="pre">bt_le_adv_param</span> <span class="pre">*param)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Initiate</span> <span class="n">a</span> <span class="n">directed</span> <span class="n">broadcast</span> <span class="n">packet</span> <span class="n">to</span> <span class="n">the</span> <span class="n">remote</span> <span class="n">device</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">peer</span><span class="p">:</span> <span class="n">Remote</span> <span class="n">device</span> <span class="n">address</span> <span class="n">pointer</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">param</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">broadcast</span> <span class="n">parameters</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="n">Success</span><span class="p">:</span> <span class="n">a</span> <span class="n">valid</span> <span class="n">connection</span> <span class="nb">object</span><span class="p">,</span> <span class="n">otherwise</span> <span class="n">it</span> <span class="n">fails</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_set_security(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn,</span> <span class="pre">bt_security_t</span> <span class="pre">sec)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Set</span> <span class="n">the</span> <span class="n">connection</span> <span class="n">security</span> <span class="n">level</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">connection</span> <span class="nb">object</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">sec</span><span class="p">:</span> <span class="n">Security</span> <span class="n">level</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">fail</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bt_security_t</span> <span class="pre">bt_conn_get_security(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Get</span> <span class="n">the</span> <span class="n">security</span> <span class="n">level</span> <span class="n">of</span> <span class="n">the</span> <span class="n">current</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">connection</span> <span class="nb">object</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="n">Security</span> <span class="n">Level</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">u8_t</span> <span class="pre">bt_conn_enc_key_size(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Get</span> <span class="n">the</span> <span class="n">size</span> <span class="n">of</span> <span class="n">the</span> <span class="n">encryption</span> <span class="n">key</span> <span class="n">of</span> <span class="n">the</span> <span class="n">current</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">connection</span> <span class="nb">object</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="n">The</span> <span class="n">size</span> <span class="n">of</span> <span class="n">the</span> <span class="n">encryption</span> <span class="n">key</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">bt_conn_cb_register(struct</span> <span class="pre">bt_conn_cb</span> <span class="pre">*cb)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Register</span> <span class="n">connection</span> <span class="n">callback</span> <span class="n">function</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">cb</span><span class="p">:</span> <span class="n">Connection</span> <span class="n">callback</span> <span class="n">function</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="kc">None</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">bt_set_bondable(bool</span> <span class="pre">enable)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Set</span><span class="o">/</span><span class="n">clear</span> <span class="n">the</span> <span class="n">binding</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">SMP</span> <span class="n">pairing</span> <span class="n">request</span><span class="o">/</span><span class="n">response</span> <span class="n">to</span> <span class="n">the</span> <span class="n">data</span> <span class="n">authentication</span> <span class="n">request</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">enable</span><span class="p">:</span> <span class="mi">1</span><span class="p">:</span> <span class="n">enable</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span> <span class="n">disable</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="kc">None</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_auth_cb_register(const</span> <span class="pre">struct</span> <span class="pre">bt_conn_auth_cb</span> <span class="pre">*cb)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Register</span> <span class="n">authentication</span> <span class="n">callback</span> <span class="n">function</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">cb</span><span class="p">:</span> <span class="n">Callback</span> <span class="n">function</span> <span class="n">pointer</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">failure</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_auth_passkey_entry(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn,</span> <span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">passkey)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Reply</span> <span class="k">with</span> <span class="n">the</span> <span class="n">key</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Connect</span> <span class="nb">object</span> <span class="n">pointer</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">passkey</span><span class="p">:</span> <span class="n">the</span> <span class="n">key</span> <span class="n">entered</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">failure</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_auth_cancel(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Cancel</span> <span class="n">the</span> <span class="n">authentication</span> <span class="n">process</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Connection</span> <span class="nb">object</span> <span class="n">pointer</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">failure</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_auth_passkey_confirm(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">If</span> <span class="n">the</span> <span class="n">password</span> <span class="n">matches</span><span class="p">,</span> <span class="n">reply</span> <span class="n">to</span> <span class="n">the</span> <span class="n">other</span> <span class="n">side</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">connection</span> <span class="nb">object</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">failure</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_conn_auth_pincode_entry(struct</span> <span class="pre">bt_conn</span> <span class="pre">*conn,</span> <span class="pre">const</span> <span class="pre">char</span> <span class="pre">*pin)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Reply</span> <span class="k">with</span> <span class="n">PIN</span> <span class="n">code</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">conn</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">connection</span> <span class="nb">object</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">pin</span><span class="p">:</span> <span class="n">PIN</span> <span class="n">code</span> <span class="n">pointer</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">failure</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_le_read_rssi(u16_t</span> <span class="pre">handle,int8_t</span> <span class="pre">*rssi)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Read</span> <span class="n">the</span> <span class="n">RSSI</span> <span class="n">value</span> <span class="n">of</span> <span class="n">the</span> <span class="n">opposite</span> <span class="n">device</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">handle</span><span class="p">:</span> <span class="n">The</span> <span class="n">handle</span> <span class="n">value</span> <span class="n">of</span> <span class="n">the</span> <span class="n">connection</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">rssi</span><span class="p">:</span> <span class="n">rssi</span> <span class="n">pointer</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">failure</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_get_local_address(bt_addr_le_t</span> <span class="pre">*adv_addr)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Read</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="n">machine</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">adv_addr</span><span class="p">:</span> <span class="n">Pointer</span> <span class="n">to</span> <span class="n">address</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">failure</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">bt_set_tx_pwr(int8_t</span> <span class="pre">power)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/**</span>
+<span class="o">*</span> <span class="n">function</span>      <span class="n">Set</span> <span class="n">the</span> <span class="n">transmit</span> <span class="n">power</span> <span class="n">of</span> <span class="n">this</span> <span class="n">device</span>
+<span class="o">*</span> <span class="nd">@param</span><span class="p">[</span><span class="ow">in</span><span class="p">]</span>    <span class="n">power</span><span class="p">:</span> <span class="n">power</span> <span class="n">value</span>
+<span class="o">*</span> <span class="nd">@return</span>       <span class="mi">0</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span> <span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="n">failure</span>
+<span class="o">*/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="data-structure-reference">
+<h2><span class="section-number">3.3. </span>Data structure reference<a class="headerlink" href="#data-structure-reference" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bt_le_adv_param</span></code>data structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/** LE Advertising Parameters. */</span>
+<span class="k">struct</span> <span class="nc">bt_le_adv_param</span> <span class="p">{</span>
+    <span class="cm">/** Local identity */</span>
+    <span class="n">u8_t</span>  <span class="n">id</span><span class="p">;</span>
+
+    <span class="cm">/** Bit-field of advertising options */</span>
+    <span class="n">u8_t</span>  <span class="n">options</span><span class="p">;</span>
+
+    <span class="cm">/** Minimum Advertising Interval (N * 0.625) */</span>
+    <span class="n">u16_t</span> <span class="n">interval_min</span><span class="p">;</span>
+
+    <span class="cm">/** Maximum Advertising Interval (N * 0.625) */</span>
+    <span class="n">u16_t</span> <span class="n">interval_max</span><span class="p">;</span>
+
+    <span class="cp">#if defined(CONFIG_BT_STACK_PTS)</span>
+    <span class="n">u8_t</span>  <span class="n">addr_type</span><span class="p">;</span>
+    <span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>This data structure is used to configure broadcast parameters, including local identification, broadcast option bit fields, broadcast gaps, etc. The broadcast option bit fields have the following enumerated type parameters to choose from:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="p">{</span>
+    <span class="cm">/** Convenience value when no options are specified. */</span>
+    <span class="n">BT_LE_ADV_OPT_NONE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+
+    <span class="cm">/** Advertise as connectable. Type of advertising is determined by</span>
+<span class="cm">        * providing SCAN_RSP data and/or enabling local privacy support.</span>
+<span class="cm">        */</span>
+    <span class="n">BT_LE_ADV_OPT_CONNECTABLE</span> <span class="o">=</span> <span class="n">BIT</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+
+    <span class="cm">/** Don&#39;t try to resume connectable advertising after a connection.</span>
+<span class="cm">        *  This option is only meaningful when used together with</span>
+<span class="cm">        *  BT_LE_ADV_OPT_CONNECTABLE. If set the advertising will be stopped</span>
+<span class="cm">        *  when bt_le_adv_stop() is called or when an incoming (slave)</span>
+<span class="cm">        *  connection happens. If this option is not set the stack will</span>
+<span class="cm">        *  take care of keeping advertising enabled even as connections</span>
+<span class="cm">        *  occur.</span>
+<span class="cm">        */</span>
+    <span class="n">BT_LE_ADV_OPT_ONE_TIME</span> <span class="o">=</span> <span class="n">BIT</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+
+    <span class="cm">/** Advertise using the identity address as the own address.</span>
+<span class="cm">        *  @warning This will compromise the privacy of the device, so care</span>
+<span class="cm">        *           must be taken when using this option.</span>
+<span class="cm">        */</span>
+    <span class="n">BT_LE_ADV_OPT_USE_IDENTITY</span> <span class="o">=</span> <span class="n">BIT</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+
+    <span class="cm">/** Advertise using GAP device name */</span>
+    <span class="n">BT_LE_ADV_OPT_USE_NAME</span> <span class="o">=</span> <span class="n">BIT</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+
+    <span class="cm">/** Use low duty directed advertising mode, otherwise high duty mode</span>
+<span class="cm">        *  will be used. This option is only effective when used with</span>
+<span class="cm">        *  bt_conn_create_slave_le().</span>
+<span class="cm">        */</span>
+    <span class="n">BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY</span> <span class="o">=</span> <span class="n">BIT</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+
+    <span class="cm">/** Enable use of Resolvable Private Address (RPA) as the target address</span>
+<span class="cm">        *  in directed advertisements when CONFIG_BT_PRIVACY is not enabled.</span>
+<span class="cm">        *  This is required if the remote device is privacy-enabled and</span>
+<span class="cm">        *  supports address resolution of the target address in directed</span>
+<span class="cm">        *  advertisement.</span>
+<span class="cm">        *  It is the responsibility of the application to check that the remote</span>
+<span class="cm">        *  device supports address resolution of directed advertisements by</span>
+<span class="cm">        *  reading its Central Address Resolution characteristic.</span>
+<span class="cm">        */</span>
+    <span class="n">BT_LE_ADV_OPT_DIR_ADDR_RPA</span> <span class="o">=</span> <span class="n">BIT</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+
+    <span class="cm">/** Use whitelist to filter devices that can request scan response</span>
+<span class="cm">        *  data.</span>
+<span class="cm">        */</span>
+    <span class="n">BT_LE_ADV_OPT_FILTER_SCAN_REQ</span> <span class="o">=</span> <span class="n">BIT</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span>
+
+    <span class="cm">/** Use whitelist to filter devices that can connect. */</span>
+    <span class="n">BT_LE_ADV_OPT_FILTER_CONN</span> <span class="o">=</span> <span class="n">BIT</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>If you need to send a broadcast packet, the configuration can be as follows:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">param</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">param</span><span class="p">.</span><span class="n">options</span> <span class="o">=</span> <span class="p">(</span><span class="n">BT_LE_ADV_OPT_CONNECTABLE</span> <span class="o">|</span> <span class="n">BT_LE_ADV_OPT_USE_NAME</span> <span class="o">|</span> <span class="n">BT_LE_ADV_OPT_ONE_TIME</span><span class="p">);</span>
+<span class="n">param</span><span class="p">.</span><span class="n">interval_min</span> <span class="o">=</span> <span class="mh">0x00a0</span><span class="p">;</span>
+<span class="n">param</span><span class="p">.</span><span class="n">interval_max</span> <span class="o">=</span> <span class="mh">0x00f0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bt_data</span></code>data structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">bt_data</span> <span class="p">{</span>
+    <span class="n">u8_t</span> <span class="n">type</span><span class="p">;</span>
+    <span class="n">u8_t</span> <span class="n">data_len</span><span class="p">;</span>
+    <span class="k">const</span> <span class="n">u8_t</span> <span class="o">*</span><span class="n">data</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>This data structure is used to fill the data in the broadcast packet, the specific data packet type can refer to the following:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">Service</span> <span class="n">UUID</span>
+<span class="n">Local</span> <span class="n">Name</span>
+<span class="n">Flags</span>
+<span class="n">Manufacturer</span> <span class="n">Specific</span> <span class="n">Data</span>
+<span class="n">TX</span> <span class="n">Power</span> <span class="n">Level</span>
+<span class="n">Secure</span> <span class="n">Simple</span> <span class="n">Pairing</span> <span class="n">OOB</span>
+<span class="n">Security</span> <span class="n">Manager</span> <span class="n">OOB</span>
+<span class="n">Security</span> <span class="n">Manager</span> <span class="n">TK</span> <span class="n">Value</span>
+<span class="n">Slave</span> <span class="n">Connection</span> <span class="n">Interval</span> <span class="n">Range</span>
+<span class="n">Service</span> <span class="n">Solicitation</span>
+<span class="n">Service</span> <span class="n">Data</span>
+<span class="n">Appearance</span>
+<span class="n">Public</span> <span class="n">Target</span> <span class="n">Address</span>
+<span class="n">Random</span> <span class="n">Target</span> <span class="n">Address</span>
+<span class="n">Advertising</span> <span class="n">Interval</span>
+<span class="n">LE</span> <span class="n">Bluetooth</span> <span class="n">Device</span> <span class="n">Address</span>
+<span class="n">LE</span> <span class="n">Role</span>
+<span class="n">Uniform</span> <span class="n">Resource</span> <span class="n">Identifier</span>
+<span class="n">LE</span> <span class="n">Supported</span> <span class="n">Features</span>
+<span class="n">Channel</span> <span class="n">Map</span> <span class="n">Update</span> <span class="n">Indication</span>
+</pre></div>
+</div>
+<p>Use this data structure to configure a broadcast packet data, as shown below:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">bt_data</span> <span class="n">ad_discov</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">BT_DATA_BYTES</span><span class="p">(</span><span class="n">BT_DATA_FLAGS</span><span class="p">,</span> <span class="p">(</span><span class="n">BT_LE_AD_GENERAL</span> <span class="o">|</span> <span class="n">BT_LE_AD_NO_BREDR</span><span class="p">)),</span>
+    <span class="n">BT_DATA</span><span class="p">(</span><span class="n">BT_DATA_NAME_COMPLETE</span><span class="p">,</span> <span class="s">&quot;BL602-BLE-DEV&quot;</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bt_le_scan_param</span></code>data structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/** LE scan parameters */</span>
+<span class="k">struct</span> <span class="nc">bt_le_scan_param</span> <span class="p">{</span>
+    <span class="cm">/** Scan type (BT_LE_SCAN_TYPE_ACTIVE or BT_LE_SCAN_TYPE_PASSIVE) */</span>
+    <span class="n">u8_t</span>  <span class="n">type</span><span class="p">;</span>
+
+    <span class="cm">/** Bit-field of scanning filter options. */</span>
+    <span class="n">u8_t</span>  <span class="n">filter_dup</span><span class="p">;</span>
+
+    <span class="cm">/** Scan interval (N * 0.625 ms) */</span>
+    <span class="n">u16_t</span> <span class="n">interval</span><span class="p">;</span>
+
+    <span class="cm">/** Scan window (N * 0.625 ms) */</span>
+    <span class="n">u16_t</span> <span class="n">window</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>This data structure is used to fill scan parameters,
+type: There are two types of scan types: BT_LE_SCAN_TYPE_ACTIVE (0x01) and BT_LE_SCAN_TYPE_PASSIVE (0x00)
+filter_dup: 0x00, except for targeted advertisements, accept all broadcast and scan responses, 0x01, only receive broadcast and scan responses from devices in the whitelist
+interval: Scan interval
+window: Scan window</p>
+<p>If the scan request is enabled, it can be configured as follows:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">scan_param</span><span class="p">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">BT_LE_SCAN_TYPE_PASSIVE</span>
+<span class="n">scan_param</span><span class="p">.</span><span class="n">filter_dup</span> <span class="o">=</span> <span class="mh">0x00</span>
+<span class="n">interval</span><span class="o">=</span><span class="n">BT_GAP_SCAN_SLOW_INTERVAL_1</span>
+<span class="n">window</span><span class="o">=</span><span class="n">BT_GAP_SCAN_SLOW_WINDOW_1</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bt_le_conn_param</span></code>data structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/** Connection parameters for LE connections */</span>
+<span class="k">struct</span> <span class="nc">bt_le_conn_param</span> <span class="p">{</span>
+    <span class="n">u16_t</span> <span class="n">interval_min</span><span class="p">;</span>
+    <span class="n">u16_t</span> <span class="n">interval_max</span><span class="p">;</span>
+    <span class="n">u16_t</span> <span class="n">latency</span><span class="p">;</span>
+    <span class="n">u16_t</span> <span class="n">timeout</span><span class="p">;</span>
+
+    <span class="cp">#if defined(CONFIG_BT_STACK_PTS)</span>
+    <span class="n">u8_t</span>  <span class="n">own_address_type</span><span class="p">;</span>
+    <span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>This data structure is used to fill in the connection parameters, interval_min: the minimum value of the connection interval (0x0018), interval_max: the maximum value of the connection interval (0x0028),
+latency: The maximum slave latency allowed for connection events
+timeout: The time for the connection to time out</p>
+<p>Configure the data structure as follows:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">interval_min</span><span class="o">=</span><span class="n">BT_GAP_INIT_CONN_INT_MIN</span><span class="p">(</span><span class="mh">0x0018</span><span class="p">)</span>
+<span class="n">interval_max</span><span class="o">=</span><span class="n">BT_GAP_INIT_CONN_INT_MAX</span><span class="p">(</span><span class="mh">0x0028</span><span class="p">)</span>
+<span class="n">latency</span><span class="o">=</span><span class="mi">0</span>
+<span class="n">timeout</span><span class="o">=</span><span class="mi">400</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bt_conn</span></code>data structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="p">{</span>
+    <span class="n">u16_t</span>                   <span class="n">handle</span><span class="p">;</span>
+    <span class="n">u8_t</span>                    <span class="n">type</span><span class="p">;</span>
+    <span class="n">u8_t</span>                    <span class="n">role</span><span class="p">;</span>
+
+    <span class="n">ATOMIC_DEFINE</span><span class="p">(</span><span class="n">flags</span><span class="p">,</span> <span class="n">BT_CONN_NUM_FLAGS</span><span class="p">);</span>
+
+    <span class="cm">/* Which local identity address this connection uses */</span>
+    <span class="n">u8_t</span>                    <span class="n">id</span><span class="p">;</span>
+
+<span class="cp">#if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)</span>
+    <span class="n">bt_security_t</span>           <span class="n">sec_level</span><span class="p">;</span>
+    <span class="n">bt_security_t</span>           <span class="n">required_sec_level</span><span class="p">;</span>
+    <span class="n">u8_t</span>                    <span class="n">encrypt</span><span class="p">;</span>
+<span class="cp">#endif </span><span class="cm">/* CONFIG_BT_SMP || CONFIG_BT_BREDR */</span><span class="cp"></span>
+
+    <span class="cm">/* Connection error or reason for disconnect */</span>
+    <span class="n">u8_t</span>                    <span class="n">err</span><span class="p">;</span>
+
+    <span class="n">bt_conn_state_t</span>         <span class="n">state</span><span class="p">;</span>
+
+    <span class="n">u16_t</span>                   <span class="n">rx_len</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">net_buf</span>          <span class="o">*</span><span class="n">rx</span><span class="p">;</span>
+
+    <span class="cm">/* Sent but not acknowledged TX packets with a callback */</span>
+    <span class="n">sys_slist_t</span>             <span class="n">tx_pending</span><span class="p">;</span>
+    <span class="cm">/* Sent but not acknowledged TX packets without a callback before</span>
+<span class="cm">    * the next packet (if any) in tx_pending.</span>
+<span class="cm">    */</span>
+    <span class="n">u32_t</span>                   <span class="n">pending_no_cb</span><span class="p">;</span>
+
+    <span class="cm">/* Completed TX for which we need to call the callback */</span>
+    <span class="n">sys_slist_t</span>             <span class="n">tx_complete</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">k_work</span>           <span class="n">tx_complete_work</span><span class="p">;</span>
+
+
+    <span class="cm">/* Queue for outgoing ACL data */</span>
+    <span class="k">struct</span> <span class="nc">k_fifo</span>           <span class="n">tx_queue</span><span class="p">;</span>
+
+    <span class="cm">/* Active L2CAP channels */</span>
+    <span class="n">sys_slist_t</span>             <span class="n">channels</span><span class="p">;</span>
+
+    <span class="n">atomic_t</span>                <span class="n">ref</span><span class="p">;</span>
+
+    <span class="cm">/* Delayed work for connection update and other deferred tasks */</span>
+    <span class="k">struct</span> <span class="nc">k_delayed_work</span>   <span class="n">update_work</span><span class="p">;</span>
+
+    <span class="k">union</span> <span class="p">{</span>
+        <span class="k">struct</span> <span class="nc">bt_conn_le</span>   <span class="n">le</span><span class="p">;</span>
+<span class="cp">#if defined(CONFIG_BT_BREDR)</span>
+        <span class="k">struct</span> <span class="nc">bt_conn_br</span>   <span class="n">br</span><span class="p">;</span>
+        <span class="k">struct</span> <span class="nc">bt_conn_sco</span>  <span class="n">sco</span><span class="p">;</span>
+<span class="cp">#endif</span>
+    <span class="p">};</span>
+
+<span class="cp">#if defined(CONFIG_BT_REMOTE_VERSION)</span>
+    <span class="k">struct</span> <span class="nc">bt_conn_rv</span> <span class="p">{</span>
+        <span class="n">u8_t</span>  <span class="n">version</span><span class="p">;</span>
+        <span class="n">u16_t</span> <span class="n">manufacturer</span><span class="p">;</span>
+        <span class="n">u16_t</span> <span class="n">subversion</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">rv</span><span class="p">;</span>
+<span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>This data structure is the current connection data structure, which includes the parameters related to the BLE connection. After the connection is successful, the data structure can be called by the user.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../../samples/basic%20samples/gpio/index.html" class="btn btn-neutral float-right" title="1. GPIO" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../peripheral/api_timer.html" class="btn btn-neutral float-left" title="2.10. TIMER" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

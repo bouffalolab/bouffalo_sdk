@@ -1,0 +1,450 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>2. Hardware connection &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="3. Development environment setup guide" href="index.html" />
+    <link rel="prev" title="1. Preparation" href="get_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. Preparation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Hardware connection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#bl706-iot">2.1. BL706_IOT</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#use-ck-link-to-programming-and-debug">2.1.1. Use CK-Link to Programming and debug</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-j-link-to-programming-and-debug">2.1.2. Use J-Link to Programming and debug</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-serial-port-to-programming">2.1.3. Use serial port to Programming</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bl706-avb">2.2. BL706_AVB</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#use-sipeed-rv-debugger-plus-to-programming-and-debug">2.2.1. Use Sipeed RV-Debugger Plus to programming and debug</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">2.2.2. Use CK-Link to programming and debug</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">2.2.3. Use serial port to programming</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connect-bl706-avb-sub-modules">2.2.4. Connect BL706 AVB sub-modules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">2. </span>Hardware connection</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/connecting_hardware.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="hardware-connection">
+<span id="connect-hardware"></span><h1><span class="section-number">2. </span>Hardware connection<a class="headerlink" href="#hardware-connection" title="Permalink to this headline">¶</a></h1>
+<p>This document introduces how to connect the board of BL70x series MCU.</p>
+<div class="section" id="bl706-iot">
+<h2><span class="section-number">2.1. </span>BL706_IOT<a class="headerlink" href="#bl706-iot" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="use-ck-link-to-programming-and-debug">
+<h3><span class="section-number">2.1.1. </span>Use CK-Link to Programming and debug<a class="headerlink" href="#use-ck-link-to-programming-and-debug" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Connect the CK-Link USB interface to the PC with a suitable USB data cable</p></li>
+<li><p>Connect the standard <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> pin of the <code class="docutils literal notranslate"><span class="pre">HD3</span></code> group of the Iot board with the <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> pin of <code class="docutils literal notranslate"><span class="pre">CK-Link</span></code> using a DuPont cable</p></li>
+<li><p>If you do not use CK-Link to power the board, you need to power the board separately</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bl706</span><span class="o">-</span><span class="n">iot</span> <span class="n">board</span>         <span class="n">CK</span><span class="o">-</span><span class="n">Link</span>
+<span class="o">-------------------------------</span>
+    <span class="n">JTAG_TDI</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TDI</span>
+    <span class="n">JTAG_TDO</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TDO</span>
+    <span class="n">JTAG_TCK</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TCK</span>
+    <span class="n">JTAG_TMS</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TMS</span>
+    <span class="n">VDD33</span>        <span class="o">&lt;--&gt;</span>     <span class="n">VREF</span>
+    <span class="n">GND</span>          <span class="o">&lt;--&gt;</span>     <span class="n">GND</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id3">
+<img alt="" src="../_images/ck_link_connect_bl706_iot.png" />
+<p class="caption"><span class="caption-text">ck_link connect bl706-iot board</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="use-j-link-to-programming-and-debug">
+<h3><span class="section-number">2.1.2. </span>Use J-Link to Programming and debug<a class="headerlink" href="#use-j-link-to-programming-and-debug" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Connect the USB interface of j-link to the PC with a USB data cable</p></li>
+<li><p>Connect the standard <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> pins of the <code class="docutils literal notranslate"><span class="pre">HD3</span></code> group of the Iot board with the <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> pins of the <code class="docutils literal notranslate"><span class="pre">j-link</span></code> using DuPont wires</p></li>
+<li><p>In the case of j-link connection, the board needs to be independently powered, and the power supply of the board is connected to the <code class="docutils literal notranslate"><span class="pre">VTref</span></code> pin of j-link</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bl706</span><span class="o">-</span><span class="n">iot</span> <span class="n">board</span>          <span class="n">j</span><span class="o">-</span><span class="n">link</span>
+<span class="o">-------------------------------</span>
+    <span class="n">JTAG_TDI</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TDI</span>
+    <span class="n">JTAG_TDO</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TDO</span>
+    <span class="n">JTAG_TCK</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TCK</span>
+    <span class="n">JTAG_TMS</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TMS</span>
+    <span class="n">VDD33</span>        <span class="o">&lt;--&gt;</span>     <span class="n">VTref</span>
+    <span class="n">GND</span>          <span class="o">&lt;--&gt;</span>     <span class="n">GND</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id4">
+<img alt="" src="../_images/jlink_connect_bl706_iot.png" />
+<p class="caption"><span class="caption-text">jlink connect bl706-iot board</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="use-serial-port-to-programming">
+<h3><span class="section-number">2.1.3. </span>Use serial port to Programming<a class="headerlink" href="#use-serial-port-to-programming" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Before using the serial port to Programming, please make sure that <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code> or the command programming tool is installed correctly</p>
+<ul>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">Type-C</span> <span class="pre">USB</span></code> data cable or <code class="docutils literal notranslate"><span class="pre">Mini</span> <span class="pre">USB</span></code> data cable to connect to the <code class="docutils literal notranslate"><span class="pre">Type-C</span></code> interface or <code class="docutils literal notranslate"><span class="pre">Mini</span></code> interface on the board.</p></li>
+<li><p>Press the <code class="docutils literal notranslate"><span class="pre">Boot</span></code> key on the board, don’t release it.</p></li>
+<li><p>Press the <code class="docutils literal notranslate"><span class="pre">RST</span></code> key on the board, now you have entered <code class="docutils literal notranslate"><span class="pre">Boot</span> <span class="pre">ROM</span></code>, you can release the two keys.</p></li>
+<li><p>At this time, you can see the corresponding serial port <code class="docutils literal notranslate"><span class="pre">COM</span></code> number from the <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code>, if it does not appear, please click the <code class="docutils literal notranslate"><span class="pre">Refresh</span></code> key to refresh.</p></li>
+</ul>
+</li>
+<li><p>If you don’t have a suitable data cable, you can also use some common <code class="docutils literal notranslate"><span class="pre">USB-TTL</span></code> modules to connect to the UART0 port of the development board for programming. <code class="docutils literal notranslate"><span class="pre">UART0</span></code> is on the <code class="docutils literal notranslate"><span class="pre">HD1</span></code> group, the connection method is as follows:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">USB</span><span class="o">-</span><span class="n">TTL</span>      <span class="n">BL702_IoT</span>
+<span class="o">----------------------</span>
+  <span class="mi">3</span><span class="n">V3</span>   <span class="o">&lt;--&gt;</span>   <span class="n">VDD</span>
+  <span class="n">TXD</span>   <span class="o">&lt;--&gt;</span>   <span class="n">RX0</span>
+  <span class="n">RXD</span>   <span class="o">&lt;--&gt;</span>   <span class="n">TX0</span>
+  <span class="n">GND</span>   <span class="o">&lt;--&gt;</span>   <span class="n">GND</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>The programming step is the same as above</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="bl706-avb">
+<h2><span class="section-number">2.2. </span>BL706_AVB<a class="headerlink" href="#bl706-avb" title="Permalink to this headline">¶</a></h2>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>BL706_AVB has multiple multiplexed pins, please check carefully whether the required function pins are multiplexed; FUNC1: “Default: PIX; Connect: I2S/JTAG”, FUNC2: “Default: I2S; Connect: SPI” ; <strong>If you need to debug, please remember to connect the FUNC1 jumper</strong></p>
+</div>
+<div class="section" id="use-sipeed-rv-debugger-plus-to-programming-and-debug">
+<h3><span class="section-number">2.2.1. </span>Use Sipeed RV-Debugger Plus to programming and debug<a class="headerlink" href="#use-sipeed-rv-debugger-plus-to-programming-and-debug" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Powering the BL706_AVB</p></li>
+<li><p>Connect the RV-Debugger Plus debugger to the USB port of the computer. If the driver is not installed correctly, please refer to <a class="reference internal" href="get_started.html#sipeed-rv-debugger-plus"><span class="std std-ref">Sipeed RV-Debugger Plus driver installation settings</span></a>, set the driver, and proceed to the following steps</p></li>
+<li><p>Connect the debugger and the BL706_AVB with a cable (as shown in the figure below)</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The FUNC1 jumper must be connected when debugging, otherwise the pins will be multiplexed with other functions and the JTAG function cannot be used; the serial port function can be used normally</p>
+</div>
+<div class="figure align-default" id="id5">
+<img alt="" src="../_images/bl706_avb_rv_debugger_plus.png" />
+<p class="caption"><span class="caption-text">RV-Debugger connect bl706_avb board</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="id1">
+<h3><span class="section-number">2.2.2. </span>Use CK-Link to programming and debug<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Connect the CK-Link USB interface to the PC with a suitable USB data cable</p></li>
+<li><p>Connect the FUNC1 jump caps of the bl706_avb</p></li>
+<li><p>Connect the pins of the <code class="docutils literal notranslate"><span class="pre">HD8</span></code> group to the adapter board using a flat cable</p></li>
+<li><p>Connect the <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> pin of the adapter board with the corresponding <code class="docutils literal notranslate"><span class="pre">JTAG</span></code> pin of <code class="docutils literal notranslate"><span class="pre">CK-Link</span></code> using a Dupont wire</p></li>
+<li><p>If you do not use CK-Link to power the board, you need to power the board separately</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bl706</span><span class="o">-</span><span class="n">avb</span> <span class="n">board</span>         <span class="n">CK</span><span class="o">-</span><span class="n">Link</span>
+<span class="o">-------------------------------</span>
+    <span class="n">JTAG_TDI</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TDI</span>
+    <span class="n">JTAG_TDO</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TDO</span>
+    <span class="n">JTAG_TCK</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TCK</span>
+    <span class="n">JTAG_TMS</span>     <span class="o">&lt;--&gt;</span>     <span class="n">TMS</span>
+    <span class="n">VDD33</span>        <span class="o">&lt;--&gt;</span>     <span class="n">VREF</span>
+    <span class="n">GND</span>          <span class="o">&lt;--&gt;</span>     <span class="n">GND</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id6">
+<img alt="" src="../_images/bl706_avb_ck_link.png" />
+<p class="caption"><span class="caption-text">ck_link connect bl706_avb board</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="id2">
+<h3><span class="section-number">2.2.3. </span>Use serial port to programming<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Before using the serial port to programming, please make sure that <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code> or the command programming tool is installed correctly</p>
+<ul>
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">Type-C</span> <span class="pre">USB</span></code> or <code class="docutils literal notranslate"><span class="pre">Mini</span> <span class="pre">USB</span></code> data cable to connect to the corresponding <code class="docutils literal notranslate"><span class="pre">Type-C</span></code> port or <code class="docutils literal notranslate"><span class="pre">Mini</span></code> port on the board.</p></li>
+<li><p>Press the <code class="docutils literal notranslate"><span class="pre">Boot</span></code> key on the board, don’t release it.</p></li>
+<li><p>Press the <code class="docutils literal notranslate"><span class="pre">RST</span></code> key on the board, now you have entered <code class="docutils literal notranslate"><span class="pre">Boot</span> <span class="pre">ROM</span></code>, you can release the two keys.</p></li>
+<li><p>At this time, you can see the corresponding serial port <code class="docutils literal notranslate"><span class="pre">COM</span></code> number from the <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code>, if it does not appear, please click the <code class="docutils literal notranslate"><span class="pre">Refresh</span></code> button to refresh.</p></li>
+</ul>
+</li>
+<li><p>If you don’t have a suitable data cable, you can also use some common <code class="docutils literal notranslate"><span class="pre">USB-TTL</span></code> modules to connect to the UART0 port of the development board for programming. <code class="docutils literal notranslate"><span class="pre">UART0</span></code> on the <code class="docutils literal notranslate"><span class="pre">HD12</span></code> group, the connection method is as follows:</p></li>
+<li><p>If you use Sipeed RV-Debugger Plus to connect BL706_AVB through a flat cable, you can also use the serial port of Sipeed RV Debugger Plus</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">USB</span><span class="o">-</span><span class="n">TTL</span>      <span class="n">BL706_AVB</span>
+<span class="o">----------------------</span>
+  <span class="n">TXD</span>   <span class="o">&lt;--&gt;</span>   <span class="n">RX0</span>
+  <span class="n">RXD</span>   <span class="o">&lt;--&gt;</span>   <span class="n">TX0</span>
+  <span class="n">GND</span>   <span class="o">&lt;--&gt;</span>   <span class="n">GND</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="connect-bl706-avb-sub-modules">
+<h3><span class="section-number">2.2.4. </span>Connect BL706 AVB sub-modules<a class="headerlink" href="#connect-bl706-avb-sub-modules" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>This section describes how to connect the BL706_AVB board with other modules, mainly including camera connection, Audio Codec module connection, and SPI screen connection.</p></li>
+</ul>
+<p><strong>BL706_AVB Connects to GC0308 Camera Module</strong></p>
+<ul class="simple">
+<li><ol class="arabic simple">
+<li><p>First, take the black locking part of the <code class="docutils literal notranslate"><span class="pre">J5</span></code> drawer type FPC cable holder on the back of the BL706_AVB development board and pull it out from the edge</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_camera_1.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="2">
+<li><p>When fully disconnected, as shown in the figure below.</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_camera_2.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="3">
+<li><p>The FPC cable holder is a drawer down type, so next insert the camera with the side without metal contact points facing upwards into the FPC cable holder</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_camera_3.png" />
+</div>
+<ul class="simple">
+<li><p>After inserting the camera, press the black latch tightly</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_camera_4.png" />
+</div>
+<p><strong>BL706_AVB Connecting Audio Codec Modules</strong></p>
+<ul class="simple">
+<li><p>Insert the <code class="docutils literal notranslate"><span class="pre">HD19</span></code> group of pins of Audio Codec module into the <code class="docutils literal notranslate"><span class="pre">HD11</span></code> row female socket of BL706_AVB development board; note that the module is extended outward.</p></li>
+<li><p>The schematic diagram is as follows：</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../_images/connect_codec_1.png" />
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="index.html" class="btn btn-neutral float-right" title="3. Development environment setup guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="get_started.html" class="btn btn-neutral float-left" title="1. Preparation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

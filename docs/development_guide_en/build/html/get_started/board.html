@@ -1,0 +1,440 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>7. Board Configuration System User Guide &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="1. API Overview" href="../api_reference/api_overview.html" />
+    <link rel="prev" title="6. BLDevCube start guide" href="bl_dev_cube.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">7. Board Configuration System User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-features-of-each-file-in-the-board-configuration-system">7.1. The features of each file in the Board configuration system</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#board-c">7.1.1. <strong>board.c</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#blxxx-config-h">7.1.2. <strong>blxxx_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clock-config-h">7.1.3. <strong>clock_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#peripheral-config-h">7.1.4. <strong>peripheral_config.h</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pinmux-config-h">7.1.5. <strong>pinmux_config.h</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#use-of-the-board-configuration-tool-bl-config-wizard">7.2. Use of the Board configuration tool <strong>bl_config_wizard</strong></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#generate-a-new-pinmux-config-h-file">7.2.1. Generate a new <strong>pinmux_config.h</strong> file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modify-the-original-pinmux-config-h-file">7.2.2. Modify the original <strong>pinmux_config.h</strong> file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modify-the-pinmux-config-h-file-in-the-cdk-tool">7.2.3. Modify the <strong>pinmux_config.h</strong> file in the CDK tool</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#differences-with-stm32cubemx-configuration-tool">7.3. Differences with STM32CUBEMX Configuration Tool</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">7. </span>Board Configuration System User Guide</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/board.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="board-configuration-system-user-guide">
+<h1><span class="section-number">7. </span>Board Configuration System User Guide<a class="headerlink" href="#board-configuration-system-user-guide" title="Permalink to this headline">¶</a></h1>
+<p>In order to implement the idea of <strong>everything is a file</strong>, we propose a Board configuration system for embedded applications with different hardware configuration requirements. The <strong>Board configuration system</strong> is mainly used for initializing the three basic elements of clock, GPIO, and peripheral default configuration in embedded applications.</p>
+<p><strong>Board Configuration System</strong> contains three configuration files, and a <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> graphical configuration software</p>
+<ul class="simple">
+<li><p><strong>clock_config.h</strong> Clock configuration Include file</p></li>
+<li><p><strong>peripheral_config.h</strong> Peripheral configuration Include file</p></li>
+<li><p><strong>pinmux_config.h</strong> Pin Function Configuration Include file</p></li>
+<li><p><strong>bl_config_wizard</strong> The graphical interface configures the above three types of files</p></li>
+</ul>
+<p>The user only needs to modify three configuration files and the system will be initialized automatically, thus eliminating the need to call a series of complex and lengthy initialization functions in the user program. Boufflao Lab provides <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> configuration software for users to quickly and easily generate configuration files for their projects.</p>
+<p><a class="reference external" href="https://dev.bouffalolab.com/media/config/index.html">bl_config_wizard</a> supports PC-side online configuration, but currently does not support mobile terminal online configuration.</p>
+<div class="figure align-default" id="id1">
+<img alt="" src="../_images/config_wizard.png" />
+<p class="caption"><span class="caption-text">bl_config_wizard Preview</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<div class="section" id="the-features-of-each-file-in-the-board-configuration-system">
+<h2><span class="section-number">7.1. </span>The features of each file in the Board configuration system<a class="headerlink" href="#the-features-of-each-file-in-the-board-configuration-system" title="Permalink to this headline">¶</a></h2>
+<p>The board system is mainly used for different boards, different boards create different board files and put them in <code class="docutils literal notranslate"><span class="pre">bsp/board</span></code> directory, and a board file, in the case of <strong>pins not conflicting</strong>, can be shared to different demos, no need to create multiple projects and reduce the project file size.</p>
+<div class="admonition error">
+<p class="admonition-title">Error</p>
+<p>If there is a pin conflict and you have to use the same Board file, please modify the pins yourself</p>
+</div>
+<div class="section" id="board-c">
+<h3><span class="section-number">7.1.1. </span><strong>board.c</strong><a class="headerlink" href="#board-c" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">board.c</span></code> Main initialization of clock and pins</p>
+</div>
+<div class="section" id="blxxx-config-h">
+<h3><span class="section-number">7.1.2. </span><strong>blxxx_config.h</strong><a class="headerlink" href="#blxxx-config-h" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">blxxx_config.h</span></code> Mainly contains some header files for the HAL layer driver.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The above two files do not need to be changed by the user, and the same MCU can be copied and pasted directly into your own board directory for use</p>
+</div>
+</div>
+<div class="section" id="clock-config-h">
+<h3><span class="section-number">7.1.3. </span><strong>clock_config.h</strong><a class="headerlink" href="#clock-config-h" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">clock_config.h</span></code> Mainly configures the clock sources for the system and peripherals as well as the frequency division system.</p>
+</div>
+<div class="section" id="peripheral-config-h">
+<h3><span class="section-number">7.1.4. </span><strong>peripheral_config.h</strong><a class="headerlink" href="#peripheral-config-h" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> It mainly contains the enablement of peripherals and the configuration of parameters.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Macros starting with <code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">BSP_USING_XXX</span></code> are used to enable the configuration of the peripheral, if the macro is not enabled, all functions of the peripheral cannot be used</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Macro starting with <code class="docutils literal notranslate"><span class="pre">XXX_CONFIG</span></code>, used to initialize the configuration of the peripheral, which is later used by calling <code class="docutils literal notranslate"><span class="pre">device_open</span></code></p>
+</div>
+</div>
+<div class="section" id="pinmux-config-h">
+<h3><span class="section-number">7.1.5. </span><strong>pinmux_config.h</strong><a class="headerlink" href="#pinmux-config-h" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pinmux_config.h</span></code> Mainly configures the GPIO pin function of the peripheral.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In mcu sdk, all demos share this file, so some demos are not usable and require frequent changes to the pin function configuration in this file. If the user has already set the pin assignments, there is no need to modify them frequently.</p>
+</div>
+</div>
+</div>
+<div class="section" id="use-of-the-board-configuration-tool-bl-config-wizard">
+<h2><span class="section-number">7.2. </span>Use of the Board configuration tool <strong>bl_config_wizard</strong><a class="headerlink" href="#use-of-the-board-configuration-tool-bl-config-wizard" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> can be accessed by clicking on this link <a class="reference external" href="https://dev.bouffalolab.com/media/config/index.html">https://dev.bouffalolab.com/media/config/index.html</a> wizard in the online version. Chrome, Firefox, Microsoft Edge browsers are recommended.</p></li>
+</ul>
+<div class="section" id="generate-a-new-pinmux-config-h-file">
+<h3><span class="section-number">7.2.1. </span>Generate a new <strong>pinmux_config.h</strong> file<a class="headerlink" href="#generate-a-new-pinmux-config-h-file" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Select <code class="docutils literal notranslate"><span class="pre">Pin</span> <span class="pre">&amp;</span> <span class="pre">Peripheral</span> <span class="pre">Configuration</span></code> in the window bar.</p></li>
+<li><p>Select MCU model, currently supports <code class="docutils literal notranslate"><span class="pre">BL706</span> <span class="pre">pin</span> <span class="pre">configuration</span></code>, <code class="docutils literal notranslate"><span class="pre">BL704</span> <span class="pre">pin</span> <span class="pre">configuration</span></code>, <code class="docutils literal notranslate"><span class="pre">BL702</span> <span class="pre">pin</span> <span class="pre">configuration</span></code>.</p></li>
+<li><p>Select the function of the pin, take <code class="docutils literal notranslate"><span class="pre">BL706</span> <span class="pre">pin</span> <span class="pre">configuration</span></code> as an example, click on the drop-down box of <strong>PAD_GPIO_XX</strong> and select the desired function, as shown in the figure.</p></li>
+</ol>
+<div class="figure align-default" id="id2">
+<img alt="" src="../_images/config_wizard_example1.png" />
+<p class="caption"><span class="caption-text">Select pin function</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>After configuring all the pin functions, click <code class="docutils literal notranslate"><span class="pre">Export</span> <span class="pre">Configuration</span> <span class="pre">File</span></code> and then you can select the path and modify the file name in the pop-up box, as shown in the figure.</p></li>
+</ol>
+<div class="figure align-default" id="id3">
+<img alt="" src="../_images/config_wizard_example2.png" />
+<p class="caption"><span class="caption-text">Exporting configuration files</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="modify-the-original-pinmux-config-h-file">
+<h3><span class="section-number">7.2.2. </span>Modify the original <strong>pinmux_config.h</strong> file<a class="headerlink" href="#modify-the-original-pinmux-config-h-file" title="Permalink to this headline">¶</a></h3>
+<p>Often in use, instead of generating a new <strong>pinmux_config.h</strong> file, we make changes to the original <strong>pinmux_config.h</strong> file, and <code class="docutils literal notranslate"><span class="pre">bl_config_wizard</span></code> supports such a need.</p>
+<ol class="arabic simple">
+<li><p>Select <code class="docutils literal notranslate"><span class="pre">Pin</span> <span class="pre">&amp;</span> <span class="pre">Peripheral</span> <span class="pre">Configuration</span></code> in the window bar.</p></li>
+<li><p>Select MCU model, currently supports <code class="docutils literal notranslate"><span class="pre">BL706</span> <span class="pre">pin</span> <span class="pre">configuration</span></code>, <code class="docutils literal notranslate"><span class="pre">BL704</span> <span class="pre">pin</span> <span class="pre">configuration</span></code>, <code class="docutils literal notranslate"><span class="pre">BL702</span> <span class="pre">pin</span> <span class="pre">configuration</span></code>.</p></li>
+<li><p>Click on <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">configuration</span> <span class="pre">file</span></code> and select the <strong>pinmux_config.h</strong> file in the pop-up box.</p></li>
+<li><p>Select the pin to be modified and click on its drop-down box to change the pin function</p></li>
+<li><p>When you are done, click <code class="docutils literal notranslate"><span class="pre">Export</span> <span class="pre">Profile</span></code> and then you can select the path and modify the file name in the pop-up box.</p></li>
+</ol>
+</div>
+<div class="section" id="modify-the-pinmux-config-h-file-in-the-cdk-tool">
+<h3><span class="section-number">7.2.3. </span>Modify the <strong>pinmux_config.h</strong> file in the CDK tool<a class="headerlink" href="#modify-the-pinmux-config-h-file-in-the-cdk-tool" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p><strong>pinmux_config.h</strong> Also supports the use of graphical configuration wizards in the CDK for adjusting the corresponding pin functions</p></li>
+<li><p>Drag the <strong>pinmux_config.h</strong> file directly into the CDK text editor interface, and you will see the <code class="docutils literal notranslate"><span class="pre">Configuration</span> <span class="pre">Wizard</span></code> tab at the bottom of the text editor</p>
+<div class="figure align-default" id="id4">
+<img alt="" src="../_images/configuration_wizard_1.png" />
+<p class="caption"><span class="caption-text">Configuration Wizard</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+</li>
+<li><p>Click on the <code class="docutils literal notranslate"><span class="pre">Configuration</span> <span class="pre">Wizard</span></code> tab to open the graphical configuration wizard interface</p></li>
+<li><p>The functions supported by the pin can be selected by selecting the drop-down box</p>
+<div class="figure align-default" id="id5">
+<img alt="" src="../_images/configuration_wizard_2.png" />
+<p class="caption"><span class="caption-text">Graphical configuration wizard to set pin functions</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+</li>
+<li><p>Please refer to the Graphical Configuration Wizard section of CDK Help for more information on the specific functions and code rules of the Graphical Configuration Wizard.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="differences-with-stm32cubemx-configuration-tool">
+<h2><span class="section-number">7.3. </span>Differences with STM32CUBEMX Configuration Tool<a class="headerlink" href="#differences-with-stm32cubemx-configuration-tool" title="Permalink to this headline">¶</a></h2>
+<p>STM32CUBEMX is also a tool to configure the clock, peripherals and GPIO initialization, eventually generating a complete project with initialization at the very beginning of <code class="docutils literal notranslate"><span class="pre">main.c</span></code>, and the GPIO and peripheral initialization base will be called in <code class="docutils literal notranslate"><span class="pre">stm32xxx_hal_msp.c</span></code>.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/* MCU Configuration--------------------------------------------------------*/</span>
+
+<span class="cm">/* Reset of all peripherals, Initializes the Flash interface and the Systick. */</span>
+<span class="n">HAL_Init</span><span class="p">();</span>
+
+<span class="cm">/* USER CODE BEGIN Init */</span>
+
+<span class="cm">/* USER CODE END Init */</span>
+
+<span class="cm">/* Configure the system clock */</span>
+<span class="n">SystemClock_Config</span><span class="p">();</span>
+
+<span class="cm">/* USER CODE BEGIN SysInit */</span>
+
+<span class="cm">/* USER CODE END SysInit */</span>
+
+<span class="cm">/* Initialize all configured peripherals */</span>
+<span class="n">MX_GPIO_Init</span><span class="p">();</span>
+<span class="n">MX_USART1_UART_Init</span><span class="p">();</span>
+<span class="n">MX_QUADSPI_Init</span><span class="p">();</span>
+</pre></div>
+</div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">HAL_UART_MspInit</span><span class="p">(</span><span class="n">UART_HandleTypeDef</span><span class="o">*</span> <span class="n">huart</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">GPIO_InitTypeDef</span> <span class="n">GPIO_InitStruct</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">huart</span><span class="o">-&gt;</span><span class="n">Instance</span><span class="o">==</span><span class="n">UART5</span><span class="p">)</span>
+    <span class="p">{</span>
+    <span class="cm">/* USER CODE BEGIN UART5_MspInit 0 */</span>
+
+    <span class="cm">/* USER CODE END UART5_MspInit 0 */</span>
+        <span class="cm">/* Peripheral clock enable */</span>
+        <span class="n">__HAL_RCC_UART5_CLK_ENABLE</span><span class="p">();</span>
+
+        <span class="n">__HAL_RCC_GPIOB_CLK_ENABLE</span><span class="p">();</span>
+        <span class="cm">/**UART5 GPIO Configuration</span>
+<span class="cm">        PB12     ------&gt; UART5_RX</span>
+<span class="cm">        PB13     ------&gt; UART5_TX</span>
+<span class="cm">        */</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Pin</span> <span class="o">=</span> <span class="n">GPIO_PIN_12</span><span class="o">|</span><span class="n">GPIO_PIN_13</span><span class="p">;</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Mode</span> <span class="o">=</span> <span class="n">GPIO_MODE_AF_PP</span><span class="p">;</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Pull</span> <span class="o">=</span> <span class="n">GPIO_NOPULL</span><span class="p">;</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Speed</span> <span class="o">=</span> <span class="n">GPIO_SPEED_FREQ_LOW</span><span class="p">;</span>
+        <span class="n">GPIO_InitStruct</span><span class="p">.</span><span class="n">Alternate</span> <span class="o">=</span> <span class="n">GPIO_AF14_UART5</span><span class="p">;</span>
+        <span class="n">HAL_GPIO_Init</span><span class="p">(</span><span class="n">GPIOB</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">GPIO_InitStruct</span><span class="p">);</span>
+
+        <span class="cm">/* UART5 interrupt Init */</span>
+        <span class="n">HAL_NVIC_SetPriority</span><span class="p">(</span><span class="n">UART5_IRQn</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="n">HAL_NVIC_EnableIRQ</span><span class="p">(</span><span class="n">UART5_IRQn</span><span class="p">);</span>
+    <span class="cm">/* USER CODE BEGIN UART5_MspInit 1 */</span>
+
+    <span class="cm">/* USER CODE END UART5_MspInit 1 */</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The projects generated by stm32 all work for one project and cannot be compiled for more than one project at the same time. If you use more than one project, you have to generate more than one of these two files. When using multiple projects, it will indirectly increase the file size and add duplicate files.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../api_reference/api_overview.html" class="btn btn-neutral float-right" title="1. API Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="bl_dev_cube.html" class="btn btn-neutral float-left" title="6. BLDevCube start guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

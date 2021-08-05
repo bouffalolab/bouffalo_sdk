@@ -1,0 +1,463 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>4. New Project Guide based on cmake framework &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="5. New Project Guide based on CDK" href="cdk_new_project_quick_start.html" />
+    <link rel="prev" title="3.3. Linux OR WSL environment development guide" href="Linux_quick_start_ubuntu.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. New Project Guide based on cmake framework</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#examples-directory-structure">4.1. Examples directory structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-a-single-source-file-project">4.2. Add a single source file project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-multiple-source-file-projects">4.3. Add multiple source file projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-a-new-project-with-dependent-libraries">4.4. Add a new project with dependent libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-a-new-project-and-set-the-private-compilation-option-gcc-option">4.5. Add a new project and set the private compilation option (gcc option)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-a-new-project-and-set-up-a-private-link-script-ld">4.6. Add a new project and set up a private link script (ld)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-a-new-project-and-its-dependent-source-files-and-library-files">4.7. Add a new project and its dependent source files and library files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">4. </span>New Project Guide based on cmake framework</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/cmake_quick_start.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="new-project-guide-based-on-cmake-framework">
+<h1><span class="section-number">4. </span>New Project Guide based on cmake framework<a class="headerlink" href="#new-project-guide-based-on-cmake-framework" title="Permalink to this headline">¶</a></h1>
+<p>This document will introduce how to create a new project based on this SDK.</p>
+<div class="section" id="examples-directory-structure">
+<h2><span class="section-number">4.1. </span>Examples directory structure<a class="headerlink" href="#examples-directory-structure" title="Permalink to this headline">¶</a></h2>
+<p>There are two levels of subdirectories under <code class="docutils literal notranslate"><span class="pre">bl_mcu_sdk/examples</span></code>, the first level is the folders of different peripherals. The second level is a specific test case of the peripheral, and the directory usually contains a <code class="docutils literal notranslate"><span class="pre">CMakeList.txt</span></code> and the source code related to the case.</p>
+</div>
+<div class="section" id="add-a-single-source-file-project">
+<h2><span class="section-number">4.2. </span>Add a single source file project<a class="headerlink" href="#add-a-single-source-file-project" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The source file must contain the c program entry, usually the <code class="docutils literal notranslate"><span class="pre">main</span></code> function, the source file may not be called <code class="docutils literal notranslate"><span class="pre">main.c</span></code></p>
+</div>
+<ul class="simple">
+<li><p>Create a new <code class="docutils literal notranslate"><span class="pre">my_case</span></code> folder under <code class="docutils literal notranslate"><span class="pre">examples</span></code> to store your case</p></li>
+<li><p>Create a new folder that needs to be tested in the <code class="docutils literal notranslate"><span class="pre">my_case</span></code> directory, such as <code class="docutils literal notranslate"><span class="pre">gpio_case</span></code></p></li>
+<li><p>Then add the <code class="docutils literal notranslate"><span class="pre">main.c</span></code> and <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> files in the <code class="docutils literal notranslate"><span class="pre">gpio_case</span></code> directory</p></li>
+</ul>
+<p>The directory structure is as follows:</p>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>bl_mcu_sdk
+├── examples
+    ├── my_case
+        ├── gpio_case
+        │   ├──CMakeLists.txt
+        │   └──main.c
+        └── xxxx_case
+</pre></div>
+</td></tr></table></div>
+<p><cite>CMakeLists.txt</cite>:</p>
+<div class="highlight-cmake notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="hll"><span class="nb">set</span><span class="p">(</span><span class="s">mains</span> <span class="s">main.c</span><span class="p">)</span>
+</span><span class="hll"><span class="nb">generate_bin</span><span class="p">()</span>
+</span></pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After writing the code in main.c, compile it in the bl_mcu_sdk directory. The compilation command is as follows:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>gpio_case
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="add-multiple-source-file-projects">
+<h2><span class="section-number">4.3. </span>Add multiple source file projects<a class="headerlink" href="#add-multiple-source-file-projects" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>One of the source files must contain the c program entry, usually the <code class="docutils literal notranslate"><span class="pre">main</span></code> function, the source file does not need to be called <code class="docutils literal notranslate"><span class="pre">main.c</span></code>. This source file depends on other source files.</p>
+</div>
+<ul class="simple">
+<li><p>The steps for adding a multi-source file project are the same as the basic steps for adding a single source file project</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">test1.c</span></code>, <code class="docutils literal notranslate"><span class="pre">test1.h</span></code>, <code class="docutils literal notranslate"><span class="pre">test2.c</span></code>, <code class="docutils literal notranslate"><span class="pre">test2.h</span></code> and other source files and header files that need to be relied on in the <code class="docutils literal notranslate"><span class="pre">gpio_case</span></code> directory</p></li>
+</ul>
+<p>The directory structure is as follows:</p>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>bl_mcu_sdk
+├── examples
+    ├── my_case
+        ├── gpio_case
+        │   ├──CMakeLists.txt
+        │   ├──test1.c
+        │   ├──test1.h
+        │   ├──test2.c
+        │   ├──test2.h
+        │   └──main.c
+        └── xxxx_case
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>At this time, the <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file needs to add the corresponding dependent source file, the content is as follows:</p></li>
+</ul>
+<p><cite>CMakeLists.txt</cite>:</p>
+<div class="highlight-cmake notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="s">mains</span> <span class="s">main.c</span><span class="p">)</span>
+<span class="hll"><span class="nb">set</span><span class="p">(</span><span class="s">TARGET_REQUIRED_SRCS</span> <span class="s">test1.c</span> <span class="s">test2.c</span><span class="p">)</span>
+</span><span class="nb">generate_bin</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After writing the code, compile it in the bl_mcu_sdk directory. The compilation command is as follows:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>gpio_case
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="add-a-new-project-with-dependent-libraries">
+<h2><span class="section-number">4.4. </span>Add a new project with dependent libraries<a class="headerlink" href="#add-a-new-project-with-dependent-libraries" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>The steps for adding a new project with dependent libraries are the same as the basic steps for adding a single source file project</p></li>
+<li><p>If the dependent library used already exists in this SDK, you only need to modify CMakeLists.txt</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If the dependent library does not exist, you need to add it yourself, please refer to the follow-up instructions for details</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>If it already exists, the directory structure is as follows:</p>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>bl_mcu_sdk
+├── examples
+    ├── my_case
+        ├── gpio_case
+        │   ├──CMakeLists.txt
+        │   └──main.c
+        └── xxxx_case
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>At this time, the <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file needs to add the corresponding dependent library files. For example, we add the FreeRTOS component library, the content is as follows:</p></li>
+</ul>
+<p><cite>CMakeLists.txt</cite>:</p>
+<div class="highlight-cmake notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="hll"><span class="nb">set</span><span class="p">(</span><span class="s">TARGET_REQUIRED_LIBS</span> <span class="s">freertos</span><span class="p">)</span>
+</span><span class="nb">set</span><span class="p">(</span><span class="s">mains</span> <span class="s">main.c</span><span class="p">)</span>
+<span class="nb">generate_bin</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After writing the code, compile it in the bl_mcu_sdk directory. The compilation command is as follows:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>gpio_case  <span class="nv">SUPPORT_FREERTOS</span><span class="o">=</span>y
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="add-a-new-project-and-set-the-private-compilation-option-gcc-option">
+<h2><span class="section-number">4.5. </span>Add a new project and set the private compilation option (gcc option)<a class="headerlink" href="#add-a-new-project-and-set-the-private-compilation-option-gcc-option" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The steps of adding a new project are basically the same as adding a single source file project</p></li>
+<li><p>Mainly modify the CMakeLists.txt file and add private compilation options</p></li>
+</ul>
+<p><cite>CMakeLists.txt</cite>:</p>
+<div class="highlight-cmake notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="s">mains</span> <span class="s">main.c</span><span class="p">)</span>
+<span class="hll"><span class="nb">set</span><span class="p">(</span><span class="s">TARGET_REQUIRED_PRIVATE_OPTIONS</span> <span class="s">-Ofast</span><span class="p">)</span>
+</span><span class="nb">generate_bin</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After writing the code, compile it in the bl_mcu_sdk directory. The compilation command is as follows:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>gpio_case
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="add-a-new-project-and-set-up-a-private-link-script-ld">
+<h2><span class="section-number">4.6. </span>Add a new project and set up a private link script (ld)<a class="headerlink" href="#add-a-new-project-and-set-up-a-private-link-script-ld" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The steps of adding a new project are basically the same as adding a single source file project</p></li>
+<li><p>Add a private link script file, such as <code class="docutils literal notranslate"><span class="pre">gpio_test_case.ld</span></code></p></li>
+</ul>
+<p>The directory structure is as follows:</p>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>bl_mcu_sdk
+├── examples
+    ├── my_case
+        ├── gpio_case
+        │   ├──CMakeLists.txt
+        │   ├──gpio_test_case.ld
+        │   └──main.c
+        └── xxxx_case
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>Modify the CMakeLists.txt file and add private link script settings</p></li>
+</ul>
+<p><cite>CMakeLists.txt</cite>:</p>
+<div class="highlight-cmake notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="hll"><span class="nb">set</span><span class="p">(</span><span class="s">LINKER_SCRIPT</span> <span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/gpio_test_case.ld</span><span class="p">)</span>
+</span><span class="nb">set</span><span class="p">(</span><span class="s">mains</span> <span class="s">main.c</span><span class="p">)</span>
+<span class="nb">generate_bin</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After writing the code, compile it in the bl_mcu_sdk directory. The compilation command is as follows:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>gpio_case
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="add-a-new-project-and-its-dependent-source-files-and-library-files">
+<h2><span class="section-number">4.7. </span>Add a new project and its dependent source files and library files<a class="headerlink" href="#add-a-new-project-and-its-dependent-source-files-and-library-files" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="cdk_new_project_quick_start.html" class="btn btn-neutral float-right" title="5. New Project Guide based on CDK" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Linux_quick_start_ubuntu.html" class="btn btn-neutral float-left" title="3.3. Linux OR WSL environment development guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

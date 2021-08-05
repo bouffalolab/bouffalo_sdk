@@ -1,0 +1,505 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>5. BLE Client And Server Interconnection &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="4. BOOT2 IAP" href="boot2_iap_info.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. BLE Client And Server Interconnection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prepare">5.1. Prepare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#software-implementation">5.2. Software Implementation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ble-client-software-implementation">5.2.1. BLE client software Implementation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ble-server-software-implementation">5.2.2. BLE server software implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#compile-and-program">5.3. Compile and program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#experimental-phenomena">5.4. Experimental phenomena</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">5. </span>BLE Client And Server Interconnection</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/samples/advance samples/ble_scan_demo.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ble-client-and-server-interconnection">
+<h1><span class="section-number">5. </span>BLE Client And Server Interconnection<a class="headerlink" href="#ble-client-and-server-interconnection" title="Permalink to this headline">¶</a></h1>
+<p>This demo is based on <strong>bl702</strong> to demonstrate the connection and data sending and receiving of <strong>ble server</strong> and <strong>ble client</strong>.</p>
+<div class="section" id="prepare">
+<h2><span class="section-number">5.1. </span>Prepare<a class="headerlink" href="#prepare" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Two bl702 boards or one bl702 board + mobile app</p></li>
+</ul>
+</div>
+<div class="section" id="software-implementation">
+<h2><span class="section-number">5.2. </span>Software Implementation<a class="headerlink" href="#software-implementation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ble-client-software-implementation">
+<h3><span class="section-number">5.2.1. </span>BLE client software Implementation<a class="headerlink" href="#ble-client-software-implementation" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>For the software code, see <code class="docutils literal notranslate"><span class="pre">examples/ble/ble_central</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="k">struct</span> <span class="nc">bt_conn_cb</span> <span class="n">ble_tp_conn_callbacks</span> <span class="o">=</span> <span class="p">{</span>
+ <span class="p">.</span><span class="n">connected</span> <span class="o">=</span> <span class="n">ble_tp_connected</span><span class="p">,</span>
+ <span class="p">.</span><span class="n">disconnected</span> <span class="o">=</span> <span class="n">ble_tp_disconnected</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">ble_tp_init</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span> <span class="o">!</span><span class="n">isRegister</span> <span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">isRegister</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">bt_conn_cb_register</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ble_tp_conn_callbacks</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">bt_conn_cb_register</span></code> function, register the <code class="docutils literal notranslate"><span class="pre">callback</span></code> function for successful connection and disconnection</p></li>
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">ble_start_scan</span></code> function, the device will start scanning</p></li>
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">device_found</span></code> function, the device uploads the scanned Bluetooth device, the code uses <code class="docutils literal notranslate"><span class="pre">adv_name</span></code> to find the Bluetooth device that needs to be connected, and initiate the connection</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span> <span class="n">ble_write_data_task</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">pvParameters</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">error</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">buf</span><span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">};</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+   <span class="p">{</span>
+        <span class="n">k_sem_take</span><span class="p">(</span><span class="o">&amp;</span><span class="n">write_data_poll_sem</span><span class="p">,</span> <span class="n">K_FOREVER</span><span class="p">);</span>
+        <span class="n">BT_WARN</span><span class="p">(</span><span class="s">&quot;ble_write_data</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="c1">// Send data to server</span>
+        <span class="n">error</span> <span class="o">=</span>  <span class="n">bt_gatt_write_without_response</span><span class="p">(</span><span class="n">ble_tp_conn</span><span class="p">,</span><span class="n">char_hdl</span><span class="p">.</span><span class="n">tp_wr_hdl</span><span class="p">,</span><span class="n">buf</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+        <span class="n">BT_WARN</span><span class="p">(</span><span class="s">&quot;Write Complete (err %d)</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">error</span><span class="p">);</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After the connection is successful, in the <code class="docutils literal notranslate"><span class="pre">ble_write_data_task</span></code> function, the client sends the data in <code class="docutils literal notranslate"><span class="pre">buf</span></code> to the server</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n">u8_t</span> <span class="n">notify_func</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">,</span><span class="k">struct</span> <span class="nc">bt_gatt_subscribe_params</span> <span class="o">*</span><span class="n">params</span><span class="p">,</span><span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">u16_t</span> <span class="n">length</span><span class="p">);</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After the connection is successful, in the <code class="docutils literal notranslate"><span class="pre">notify_func</span></code> function, the client receives the data from the server, <code class="docutils literal notranslate"><span class="pre">data</span></code> is the data content, <code class="docutils literal notranslate"><span class="pre">length</span></code> is the data length</p></li>
+</ul>
+</div>
+<div class="section" id="ble-server-software-implementation">
+<h3><span class="section-number">5.2.2. </span>BLE server software implementation<a class="headerlink" href="#ble-server-software-implementation" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>See <code class="docutils literal notranslate"><span class="pre">examples/ble/ble_peripheral</span></code> for the software code</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">ble_start_adv</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">bt_le_adv_param</span> <span class="n">adv_param</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1">//options:3, connectable undirected, adv one time</span>
+        <span class="p">.</span><span class="n">options</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> \
+        <span class="p">.</span><span class="n">interval_min</span> <span class="o">=</span> <span class="n">BT_GAP_ADV_FAST_INT_MIN_3</span><span class="p">,</span> \
+        <span class="p">.</span><span class="n">interval_max</span> <span class="o">=</span> <span class="n">BT_GAP_ADV_FAST_INT_MAX_3</span><span class="p">,</span> \
+    <span class="p">};</span>
+
+
+    <span class="kt">char</span> <span class="o">*</span><span class="n">adv_name</span> <span class="o">=</span> <span class="s">&quot;BL_TEST_01&quot;</span><span class="p">;</span> <span class="c1">// This name must be the same as adv_name in ble_central</span>
+    <span class="kt">uint8_t</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">{(</span><span class="n">BT_LE_AD_LIMITED</span> <span class="o">|</span> <span class="n">BT_LE_AD_NO_BREDR</span><span class="p">)};</span>
+    <span class="kt">uint8_t</span> <span class="n">data_uuid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x18</span><span class="p">};</span><span class="c1">//0x1812</span>
+    <span class="kt">uint8_t</span> <span class="n">data_appearance</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x80</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">};</span><span class="c1">//0x0180</span>
+    <span class="kt">uint8_t</span> <span class="n">data_manu</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x71</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x04</span><span class="p">,</span> <span class="mh">0x13</span><span class="p">};</span>
+    <span class="k">struct</span> <span class="nc">bt_data</span> <span class="n">adv_data</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">BT_DATA</span><span class="p">(</span><span class="n">BT_DATA_FLAGS</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">BT_DATA</span><span class="p">(</span><span class="n">BT_DATA_UUID16_ALL</span><span class="p">,</span> <span class="n">data_uuid</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">data_uuid</span><span class="p">)),</span>
+            <span class="n">BT_DATA</span><span class="p">(</span><span class="n">BT_DATA_GAP_APPEARANCE</span><span class="p">,</span> <span class="n">data_appearance</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">data_appearance</span><span class="p">)),</span>
+            <span class="n">BT_DATA</span><span class="p">(</span><span class="n">BT_DATA_NAME_COMPLETE</span><span class="p">,</span> <span class="n">adv_name</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">adv_name</span><span class="p">)),</span>
+            <span class="n">BT_DATA</span><span class="p">(</span><span class="n">BT_DATA_MANUFACTURER_DATA</span><span class="p">,</span> <span class="n">data_manu</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">data_manu</span><span class="p">))</span>
+        <span class="p">};</span>
+
+
+    <span class="k">return</span> <span class="n">bt_le_adv_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">adv_param</span><span class="p">,</span> <span class="n">adv_data</span><span class="p">,</span> <span class="n">ARRAY_SIZE</span><span class="p">(</span><span class="n">adv_data</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>In the <code class="docutils literal notranslate"><span class="pre">ble_start_adv</span></code> function, <code class="docutils literal notranslate"><span class="pre">adv_name</span></code> sets the name of the broadcast device, and the device starts to broadcast</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="n">ble_tp_recv_wr</span><span class="p">(</span><span class="k">struct</span> <span class="nc">bt_conn</span> <span class="o">*</span><span class="n">conn</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="nc">bt_gatt_attr</span> <span class="o">*</span><span class="n">attr</span><span class="p">,</span><span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="n">u16_t</span> <span class="n">len</span><span class="p">,</span> <span class="n">u16_t</span> <span class="n">offset</span><span class="p">,</span> <span class="n">u8_t</span> <span class="n">flags</span><span class="p">);</span>
+</pre></div>
+</td></tr></table></div>
+<p>-After the connection is successful, in <code class="docutils literal notranslate"><span class="pre">ble_tp_recv_wr</span></code>, the server receives the data from the client, <code class="docutils literal notranslate"><span class="pre">buf</span></code> is the data content, <code class="docutils literal notranslate"><span class="pre">len</span></code> is the data length</p>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span> <span class="n">ble_tp_notify_task</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">pvParameters</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">err</span> <span class="o">=</span> <span class="mi">-1</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="mi">244</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x01</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span> <span class="mh">0x03</span><span class="p">,</span> <span class="mh">0x04</span><span class="p">,</span> <span class="mh">0x05</span><span class="p">,</span> <span class="mh">0x06</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span> <span class="mh">0x09</span><span class="p">};</span>
+    <span class="n">k_sem_give</span><span class="p">(</span><span class="o">&amp;</span><span class="n">notify_poll_sem</span><span class="p">);</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">k_sem_take</span><span class="p">(</span><span class="o">&amp;</span><span class="n">notify_poll_sem</span><span class="p">,</span> <span class="n">K_FOREVER</span><span class="p">);</span>
+        <span class="c1">//send data to client</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">bt_gatt_notify</span><span class="p">(</span><span class="n">ble_tp_conn</span><span class="p">,</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">BT_CHAR_BLE_TP_NOT_ATTR_VAL_INDEX</span><span class="p">),</span> <span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">tx_mtu_size</span> <span class="o">-</span> <span class="mi">3</span><span class="p">));</span>
+        <span class="n">BT_WARN</span><span class="p">(</span><span class="s">&quot;ble tp send notify : %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">);</span>
+
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After the connection is successful, in the <code class="docutils literal notranslate"><span class="pre">ble_tp_notify_task</span></code> function, the server sends the data in <code class="docutils literal notranslate"><span class="pre">data</span></code> to the client.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="compile-and-program">
+<h2><span class="section-number">5.3. </span>Compile and program<a class="headerlink" href="#compile-and-program" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p><strong>CDK tool compilation</strong></p>
+<blockquote>
+<div><p>Not currently supported</p>
+</div></blockquote>
+</li>
+<li><p><strong>Command compilation</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>ble_peripheral <span class="nv">SUPPORT_FREERTOS</span><span class="o">=</span>y <span class="nv">SUPPORT_FLOAT</span><span class="o">=</span>y <span class="nv">SUPPORT_BLE</span><span class="o">=</span>y
+</pre></div>
+</td></tr></table></div>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>ble_central <span class="nv">SUPPORT_FREERTOS</span><span class="o">=</span>y <span class="nv">SUPPORT_FLOAT</span><span class="o">=</span>y <span class="nv">SUPPORT_BLE</span><span class="o">=</span>y
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>Program</strong></p>
+<p>See <a class="reference internal" href="../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube start guide</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="experimental-phenomena">
+<h2><span class="section-number">5.4. </span>Experimental phenomena<a class="headerlink" href="#experimental-phenomena" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Two bl702 connections</strong></p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../../_images/ble_client.png" />
+</div>
+<div class="figure align-default">
+<img alt="" src="../../_images/ble_server.png" />
+</div>
+<ul class="simple">
+<li><p><strong>Mobile phone connect bl702</strong></p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../../_images/phone_connect.jpg" />
+</div>
+<ul class="simple">
+<li><p>The connection is successful, as shown in the figure below</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../../_images/phone_connected.png" />
+</div>
+<ul>
+<li><p>Steps to send and receive data</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Click <code class="docutils literal notranslate"><span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">Unknow</span> <span class="pre">Service</span></code> to display specific service properties</p></li>
+<li><p>Click <code class="docutils literal notranslate"><span class="pre">2</span></code> to turn on <code class="docutils literal notranslate"><span class="pre">Notification</span></code>, allowing the server to send data to the client</p></li>
+<li><p>Click <code class="docutils literal notranslate"><span class="pre">3</span></code> where the client sends data to the server, fill in the data you want to send, and click the <code class="docutils literal notranslate"><span class="pre">SEND</span></code> button</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../../_images/ble_data.png" />
+</div>
+<div class="figure align-default">
+<img alt="" src="../../_images/receive_data.png" />
+</div>
+<div class="figure align-default">
+<img alt="" src="../../_images/write_data.jpg" />
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="boot2_iap_info.html" class="btn btn-neutral float-left" title="4. BOOT2 IAP" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

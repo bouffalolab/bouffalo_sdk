@@ -1,0 +1,516 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>1. API Overview &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2. Peripheral" href="peripheral/index.html" />
+    <link rel="prev" title="7. Board Configuration System User Guide" href="../get_started/board.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. API Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">1.1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#device-driver-management-layer">1.2. Device driver management layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#device-driver-management-layer-standard-interface">1.3. Device driver management layer standard interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#device-register">1.3.1. <strong>device_register</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-unregister">1.3.2. <strong>device_unregister</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-find">1.3.3. <strong>device_find</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-open">1.3.4. <strong>device_open</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-close">1.3.5. <strong>device_close</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-control">1.3.6. <strong>device_control</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-write">1.3.7. <strong>device_write</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-read">1.3.8. <strong>device_read</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-set-callback">1.3.9. <strong>device_set_callback</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#peripheral-driver-adaptation-layer">1.4. Peripheral driver adaptation layer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">1. </span>API Overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api_reference/api_overview.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api-overview">
+<h1><span class="section-number">1. </span>API Overview<a class="headerlink" href="#api-overview" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><span class="section-number">1.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p><strong>bl_mcu_sdk</strong> code hierarchy is divided into the following main layers.</p>
+<ul class="simple">
+<li><p>The application layer: codes written by users.</p></li>
+<li><p>The component layer: some opensource components,the interface calls the HAL layer, while the wireless layer is used for wireless functions.</p></li>
+<li><dl class="simple">
+<dt>HAL layer and wireless layer for adaptation to different MCUs, where the HAL layer is divided into two layers</dt><dd><ul>
+<li><p>Device driver management: provides a standard set of interfaces, which are implemented by the peripheral driver adaptation layer</p></li>
+<li><p>Peripheral driver adaptation layer: implements the standard interface of the device driver management and extends its own unique interface</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Standard driver layer based on register packaging</p></li>
+<li><p>Hardware layer, also known as the register layer</p></li>
+</ul>
+<div class="figure align-default" id="id1">
+<img alt="" src="../_images/sw_arch.png" />
+<p class="caption"><span class="caption-text">code structure</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="device-driver-management-layer">
+<h2><span class="section-number">1.2. </span>Device driver management layer<a class="headerlink" href="#device-driver-management-layer" title="Permalink to this headline">¶</a></h2>
+<p>The realization of the device driver management layer adopts the object-oriented idea. First of all, we regard the peripheral as a device or a file, adhering to the concept of <strong>everything is a file</strong>, and files have standard calling interfaces: <code class="docutils literal notranslate"><span class="pre">open</span></code>, <code class="docutils literal notranslate"><span class="pre">close</span></code>, <code class="docutils literal notranslate"><span class="pre">ctrl</span></code>, <code class="docutils literal notranslate"><span class="pre">write</span></code>, <code class="docutils literal notranslate"><span class="pre">read</span></code>, <code class="docutils literal notranslate"><span class="pre">callback</span></code>. Different file types are different (such as serial device, ADC device, SPI device), and the way of opening is also different (such as polling, interrupt, DMA), from this, we can construct a base class (parent class) of an object.</p>
+<p><strong>Base class</strong></p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">device</span>
+<span class="p">{</span>
+    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="n">NAME_MAX</span><span class="p">];</span>            <span class="cm">/*name of device */</span>
+    <span class="n">dlist_t</span> <span class="n">list</span><span class="p">;</span>                   <span class="cm">/*list node of device */</span>
+    <span class="k">enum</span> <span class="n">device_status_type</span> <span class="n">status</span><span class="p">;</span> <span class="cm">/*status of device */</span>
+    <span class="k">enum</span> <span class="n">device_class_type</span> <span class="n">type</span><span class="p">;</span>    <span class="cm">/*type of device */</span>
+    <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">;</span>                 <span class="cm">/*oflag of device */</span>
+
+    <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">open</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">close</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">control</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">write</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">read</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">);</span>
+    <span class="kt">void</span> <span class="o">*</span><span class="n">handle</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>Base class member: name</strong></p>
+<p>Name the device and use <code class="docutils literal notranslate"><span class="pre">device_find</span></code> to find the device.</p>
+<p><strong>Base class member: type</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">type</span></code> records the category of the current device, and the <code class="docutils literal notranslate"><span class="pre">type</span></code> that can be selected are as follows.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">device_class_type</span>
+<span class="p">{</span>
+    <span class="n">DEVICE_CLASS_NONE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_GPIO</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_UART</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_SPI</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_I2C</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_ADC</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_DMA</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_TIMER</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_PWM</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_SDIO</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_USB</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_I2S</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_CAMERA</span><span class="p">,</span>
+    <span class="n">DEVICE_CLASS_SEC_HASH</span><span class="p">,</span>
+<span class="p">}</span> <span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Base class member: status</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">status</span></code> is used to record the current status of the device and provides 4 statuses.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">device_status_type</span>
+<span class="p">{</span>
+    <span class="n">DEVICE_UNREGISTER</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">DEVICE_REGISTERED</span><span class="p">,</span>
+    <span class="n">DEVICE_OPENED</span><span class="p">,</span>
+    <span class="n">DEVICE_CLOSED</span>
+<span class="p">}</span> <span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Base class member: oflag</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> records the flag information filled in during registration and the <code class="docutils literal notranslate"><span class="pre">oflag</span></code> information filled in when using <code class="docutils literal notranslate"><span class="pre">device_open</span></code>.</p>
+<p><strong>Base class members: list</strong></p>
+<p>The addition and deletion of equipment is stored in a doubly linked list, which saves memory.</p>
+<p><strong>Base class members: standard function pointers</strong></p>
+<p>Provides a standard function interface for different peripherals. When the peripheral implements this type of interface and assigns it to the member, the function of rewriting can be achieved.</p>
+</div>
+<div class="section" id="device-driver-management-layer-standard-interface">
+<h2><span class="section-number">1.3. </span>Device driver management layer standard interface<a class="headerlink" href="#device-driver-management-layer-standard-interface" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="device-register">
+<h3><span class="section-number">1.3.1. </span><strong>device_register</strong><a class="headerlink" href="#device-register" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_register</span></code> is used to register the device and register the device information in the linked list.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_register</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev: device handle.</p></li>
+<li><p>name: the name of the device.</p></li>
+<li><p>return: return error code, 0 means registration is successful, others mean errors.</p></li>
+</ul>
+</div>
+<div class="section" id="device-unregister">
+<h3><span class="section-number">1.3.2. </span><strong>device_unregister</strong><a class="headerlink" href="#device-unregister" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_unregister</span></code> is used to delete the device and delete the device information from the linked list.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_unregister</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev: device handle</p></li>
+<li><p>name: the name of the device to be deleted</p></li>
+<li><p>return: error code, 0 means delete, others mean error</p></li>
+</ul>
+</div>
+<div class="section" id="device-find">
+<h3><span class="section-number">1.3.3. </span><strong>device_find</strong><a class="headerlink" href="#device-find" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_find</span></code> is used to find the device from the linked list according to <code class="docutils literal notranslate"><span class="pre">name</span></code>, and return the first address of the device handle.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">device_find</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev: device handle</p></li>
+<li><p>name: the name of the device to be searched</p></li>
+<li><p>return: error code,! 0 means the device handle was found, NULL means the device was not found.</p></li>
+</ul>
+</div>
+<div class="section" id="device-open">
+<h3><span class="section-number">1.3.4. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> is used to open the device, and <code class="docutils literal notranslate"><span class="pre">oflag</span></code> represents the opening method. Currently, there are 6 opening methods available. The bottom layer calls the <code class="docutils literal notranslate"><span class="pre">open</span></code> member in the <code class="docutils literal notranslate"><span class="pre">dev</span></code> handle.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev: device handle</p></li>
+<li><p>oflag: open method</p></li>
+<li><p>return: error code, 0 means opening is successful, others mean errors</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> can write the following parameters:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* The device is turned on in polling sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* The device is turned on in polling receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* The device is turned on in interrupt sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_RX     0x008 </span><span class="cm">/* The device is turned on in interrupt receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* The device is turned on in DMA transmission mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_RX     0x020 </span><span class="cm">/* The device is turned on in DMA receiving mode */</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-close">
+<h3><span class="section-number">1.3.5. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> is used to close the device. The bottom layer calls the <code class="docutils literal notranslate"><span class="pre">close</span></code> member in the <code class="docutils literal notranslate"><span class="pre">dev</span></code> handle.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>-dev: device handle
+-return: error code, 0 means closing is successful, others mean error</p>
+</div>
+<div class="section" id="device-control">
+<h3><span class="section-number">1.3.6. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> is used to control the device and modify parameters according to commands. The bottom layer calls the <code class="docutils literal notranslate"><span class="pre">control</span></code> member in the <code class="docutils literal notranslate"><span class="pre">dev</span></code> handle.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev: device handle</p></li>
+<li><p>cmd: device control command</p></li>
+<li><p>args: control parameters</p></li>
+<li><p>return: Different control commands return different meanings.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">cmd</span></code> provides the following standard commands. In addition, different peripherals also have their own commands</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_SET_INT             0x01    </span><span class="cm">/* set interrupt */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_CLR_INT             0x02    </span><span class="cm">/* clear interrupt */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_GET_INT             0x03    </span><span class="cm">/* get interrupt status*/</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_RESUME              0x04    </span><span class="cm">/* resume device */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_SUSPEND             0x05    </span><span class="cm">/* suspend device */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_CONFIG              0x06    </span><span class="cm">/* config device */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_GET_CONFIG          0x07    </span><span class="cm">/* get device configuration */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_CTRL_ATTACH_TX_DMA       0x08</span>
+<span class="cp">#define DEVICE_CTRL_ATTACH_RX_DMA       0x09</span>
+<span class="cp">#define DEVICE_CTRL_TX_DMA_SUSPEND      0x0a</span>
+<span class="cp">#define DEVICE_CTRL_RX_DMA_SUSPEND      0x0b</span>
+<span class="cp">#define DEVICE_CTRL_TX_DMA_RESUME       0x0c</span>
+<span class="cp">#define DEVICE_CTRL_RX_DMA_RESUME       0x0d</span>
+<span class="cp">#define DEVICE_CTRL_RESVD1              0x0E</span>
+<span class="cp">#define DEVICE_CTRL_RESVD2              0x0F</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-write">
+<h3><span class="section-number">1.3.7. </span><strong>device_write</strong><a class="headerlink" href="#device-write" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_write</span></code> is used to send data, and the sending mode can be polling, interrupt, dma. The bottom layer calls the <code class="docutils literal notranslate"><span class="pre">write</span></code> member in the <code class="docutils literal notranslate"><span class="pre">dev</span></code> handle.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_write</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev: device handle</p></li>
+<li><p>pos: different devices have different meanings for pos</p></li>
+<li><p>buffer: the buffer to be written</p></li>
+<li><p>size: the length to be written</p></li>
+<li><p>return: error code, 0 means writing is successful, others mean errors</p></li>
+</ul>
+</div>
+<div class="section" id="device-read">
+<h3><span class="section-number">1.3.8. </span><strong>device_read</strong><a class="headerlink" href="#device-read" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_read</span></code> is used to receive data, and the receiving mode can be polling, interrupt, dma. The bottom layer calls the <code class="docutils literal notranslate"><span class="pre">read</span></code> member in the <code class="docutils literal notranslate"><span class="pre">dev</span></code> handle.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_read</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>dev: device handle</p></li>
+<li><p>pos: different devices have different meanings for pos</p></li>
+<li><p>buffer: the buffer to be read</p></li>
+<li><p>size: the length to be read</p></li>
+<li><p>return: error code, 0 means successful reading, others mean errors</p></li>
+</ul>
+</div>
+<div class="section" id="device-set-callback">
+<h3><span class="section-number">1.3.9. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> is used to register interrupt callback function. The bottom layer calls the <code class="docutils literal notranslate"><span class="pre">callback</span></code> member in the <code class="docutils literal notranslate"><span class="pre">dev</span></code> handle.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
+</pre></div>
+</div>
+<ul>
+<li><p>dev: device handle</p></li>
+<li><p>callback: the interrupt callback function to be registered</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>dev: device handle</p></li>
+<li><p>args: Different peripherals have different meanings</p></li>
+<li><p>size: transmission length</p></li>
+<li><p>event: interrupt event type</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="peripheral-driver-adaptation-layer">
+<h2><span class="section-number">1.4. </span>Peripheral driver adaptation layer<a class="headerlink" href="#peripheral-driver-adaptation-layer" title="Permalink to this headline">¶</a></h2>
+<p><strong>Subclass inherits from parent class</strong></p>
+<p>The first member of different peripherals is <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">device</span></code>, which is equivalent to the inheritance of the parent class, so that the subclass can be used to access the parent class member. When the subclass is used to modify the members of the parent class, it has its own functions. The realization principle is that the first address of different structures is the address of the first member in the structure.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">xxx_device</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
+
+<span class="p">}</span> <span class="n">xxx_device_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Rewrite standard interface</strong></p>
+<p>Each peripheral has a <code class="docutils literal notranslate"><span class="pre">xxx_register</span></code> function, which is used to rewrite the standard interface.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">dev</span><span class="o">-&gt;</span><span class="n">open</span> <span class="o">=</span> <span class="n">xxx_open</span><span class="p">;</span>
+<span class="n">dev</span><span class="o">-&gt;</span><span class="n">close</span> <span class="o">=</span> <span class="n">xxx_close</span><span class="p">;</span>
+<span class="n">dev</span><span class="o">-&gt;</span><span class="n">control</span> <span class="o">=</span> <span class="n">xxx_control</span><span class="p">;</span>
+<span class="n">dev</span><span class="o">-&gt;</span><span class="n">write</span> <span class="o">=</span> <span class="n">xxx_write</span><span class="p">;</span>
+<span class="n">dev</span><span class="o">-&gt;</span><span class="n">read</span> <span class="o">=</span> <span class="n">xxx_read</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="peripheral/index.html" class="btn btn-neutral float-right" title="2. Peripheral" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../get_started/board.html" class="btn btn-neutral float-left" title="7. Board Configuration System User Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

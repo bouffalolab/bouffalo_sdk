@@ -1,0 +1,626 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>2.7. SPI &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="2.8. ADC" href="api_adc.html" />
+    <link rel="prev" title="2.6. I2C" href="api_i2c.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. Peripheral</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_clock.html">2.1. Clock Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">2.2. GPIO Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_uart.html">2.3. UART Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_pwm.html">2.4. PWM Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dma.html">2.5. DMA Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">2.6. I2C Device</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.7. SPI Device</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">2.7.1. Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spi-device-structure-definition">2.7.2. SPI Device Structure Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spi-device-parameter-configuration-table">2.7.3. SPI Device Parameter Configuration Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spi-device-interface">2.7.4. SPI Device Interface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#spi-register">2.7.4.1. <strong>spi_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">2.7.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-close">2.7.4.3. <strong>device_close</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-control">2.7.4.4. <strong>device_control</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-write">2.7.4.5. <strong>device_write</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-read">2.7.4.6. <strong>device_read</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">2.7.4.7. <strong>device_set_callback</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spi-transmit">2.7.4.8. <strong>spi_transmit</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spi-receive">2.7.4.9. <strong>spi_receive</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spi-transmit-receive">2.7.4.10. <strong>spi_transmit_receive</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.8. ADC Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.9. DAC Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.10. TIMER Device</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">2. </span>Peripheral</a> &raquo;</li>
+        
+      <li><span class="section-number">2.7. </span>SPI</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/api_reference/peripheral/api_spi.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="spi">
+<h1><span class="section-number">2.7. </span>SPI<a class="headerlink" href="#spi" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><span class="section-number">2.7.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Serial Peripheral Interface Bus (SPI) is a synchronous serial communication interface specification for short-range communication. The full-duplex communication mode is used between devices, which is a master-slave mode of one master and one or more slaves, and requires at least 4 wires. In fact, 3 wires are also available (when transmitting in one direction), including SDI (data input), SDO (data output), SCLK (clock), CS (chip select). The SPI devices in the BL series MCU have the following characteristics:</p>
+<ul class="simple">
+<li><p>It can be used as both SPI master and SPI slave.</p></li>
+<li><p>The transmit and receive channels each have a FIFO with a depth of 4 words</p></li>
+<li><p>Both master and slave devices support 4 clock formats (CPOL, CPHA)</p></li>
+<li><p>Both master and slave devices support 1/2/3/4 byte transmission mode</p></li>
+<li><p>Flexible clock configuration, up to 40M clock</p></li>
+<li><p>Configurable MSB/LSB priority transmission</p></li>
+<li><p>Receive filter function</p></li>
+<li><p>Timeout mechanism under slave device</p></li>
+<li><p>Support polling, interrupt, DMA transfer</p></li>
+</ul>
+</div>
+<div class="section" id="spi-device-structure-definition">
+<h2><span class="section-number">2.7.2. </span>SPI Device Structure Definition<a class="headerlink" href="#spi-device-structure-definition" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">spi_device</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">id</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">clk</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">mode</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">direction</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">clk_polaraity</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">clk_phase</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">datasize</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">fifo_threshold</span><span class="p">;</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">tx_dma</span><span class="p">;</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">rx_dma</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">spi_device_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>parent</strong>        inherit the properties of the parent class</p></li>
+<li><p><strong>id</strong>            SPI id, 0 means SPI0</p></li>
+<li><p><strong>clk</strong>           SPI clock frequency</p></li>
+<li><p><strong>mode</strong>          master mode or slave mode</p></li>
+<li><p><strong>direction</strong>     transmission first mode</p></li>
+<li><p><strong>clk_polaraity</strong> clock polarity</p></li>
+<li><p><strong>clk_phase</strong>     clock phase</p></li>
+<li><p><strong>datasize</strong>      data transmission bit width</p></li>
+<li><p><strong>fifo_threshold</strong> fifo threshold, the maximum is 4</p></li>
+<li><p><strong>tx_dma</strong>        additional send dma handle</p></li>
+<li><p><strong>rx_dma</strong>        dditional receive dma handle</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">mode</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define SPI_SLVAE_MODE                                0</span>
+<span class="cp">#define SPI_MASTER_MODE                               1</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">direction</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define SPI_LSB_BYTE0_DIRECTION_FIRST 0</span>
+<span class="cp">#define SPI_LSB_BYTE3_DIRECTION_FIRST 1</span>
+<span class="cp">#define SPI_MSB_BYTE0_DIRECTION_FIRST 2</span>
+<span class="cp">#define SPI_MSB_BYTE3_DIRECTION_FIRST 3</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">clk_polaraity</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define SPI_POLARITY_LOW                              0</span>
+<span class="cp">#define SPI_POLARITY_HIGH                             1</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">clk_phase</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define SPI_PHASE_1EDGE                               0</span>
+<span class="cp">#define SPI_PHASE_2EDGE                               1</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">datasize</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define SPI_DATASIZE_8BIT                            0</span>
+<span class="cp">#define SPI_DATASIZE_16BIT                           1</span>
+<span class="cp">#define SPI_DATASIZE_24BIT                           2</span>
+<span class="cp">#define SPI_DATASIZE_32BIT                           3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="spi-device-parameter-configuration-table">
+<h2><span class="section-number">2.7.3. </span>SPI Device Parameter Configuration Table<a class="headerlink" href="#spi-device-parameter-configuration-table" title="Permalink to this headline">¶</a></h2>
+<p>Each SPI device has a parameter configuration macro, the macro definition is located in the <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> file under the <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> directory, and the variable definition is located in <code class="docutils literal notranslate"><span class="pre">hal_spi.c</span></code>, so the user does not need to define variable. When the user opens the macro of the corresponding device, the configuration of the device will take effect. For example, open the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_SPI0</span></code>, <code class="docutils literal notranslate"><span class="pre">SPI0_CONFIG</span></code> will take effect, and the <code class="docutils literal notranslate"><span class="pre">SPI0</span></code> device can be registered and used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*Parameter configuration macro*/</span>
+<span class="cp">#if defined(BSP_USING_SPI0)</span>
+<span class="cp">#ifndef SPI0_CONFIG</span>
+<span class="cp">#define SPI0_CONFIG \</span>
+<span class="cp">{   \</span>
+<span class="cp">.id = 0, \</span>
+<span class="cp">.clk = 18000000,\</span>
+<span class="cp">.mode = SPI_MASTER_MODE, \</span>
+<span class="cp">.direction = SPI_MSB_BYTE0_DIRECTION_FIRST, \</span>
+<span class="cp">.clk_polaraity = SPI_POLARITY_LOW, \</span>
+<span class="cp">.clk_phase = SPI_PHASE_1EDGE, \</span>
+<span class="cp">.datasize = SPI_DATASIZE_8BIT, \</span>
+<span class="cp">.fifo_threshold = 1, \</span>
+<span class="cp">}</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+<span class="cm">/*Variable definition*/</span>
+<span class="k">static</span> <span class="n">spi_device_t</span> <span class="n">spix_device</span><span class="p">[</span><span class="n">SPI_MAX_INDEX</span><span class="p">]</span> <span class="o">=</span>
+<span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_SPI0</span>
+    <span class="n">SPI0_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above configuration can be modified through <code class="docutils literal notranslate"><span class="pre">SPI_DEV(dev)-&gt;xxx</span></code> and can only be used before calling <code class="docutils literal notranslate"><span class="pre">device_open</span></code>.</p>
+</div>
+</div>
+<div class="section" id="spi-device-interface">
+<h2><span class="section-number">2.7.4. </span>SPI Device Interface<a class="headerlink" href="#spi-device-interface" title="Permalink to this headline">¶</a></h2>
+<p>SPI device interface follows which provided by the standard device driver management layer.</p>
+<div class="section" id="spi-register">
+<h3><span class="section-number">2.7.4.1. </span><strong>spi_register</strong><a class="headerlink" href="#spi-register" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">spi_register</span></code> is used to register an SPI device standard driver interface. Before registering, you need to open the macro definition of the corresponding SPI device. For example, define the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_SPI0</span></code> before you can use the SPI0 device. After the registration is completed, other interfaces can be used. If no macro is defined, the SPI device cannot be used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">spi_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>index</strong> device index to be registered</p></li>
+<li><p><strong>name</strong> device name to be registered</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">index</span></code> is used to select SPI device configuration, one index corresponds to one SPI device configuration, for example, <code class="docutils literal notranslate"><span class="pre">SPI0_INDEX</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">SPI0_CONFIG</span></code> configuration, and <code class="docutils literal notranslate"><span class="pre">index</span></code> has the following optional types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">spi_index_type</span>
+<span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_SPI0</span>
+    <span class="n">SPI0_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+    <span class="n">SPI_MAX_INDEX</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-open">
+<h3><span class="section-number">2.7.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> is used to open the device,this funtion calls <code class="docutils literal notranslate"><span class="pre">spi_open</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>oflag</strong> open mode</p></li>
+<li><p><strong>return</strong> error code, 0 means opening is successful, others mean errors</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* The device is turned on in polling sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* The device is turned on in polling receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* The device is turned on in interrupt sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_RX     0x008 </span><span class="cm">/* The device is turned on in interrupt receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* The device is turned on in DMA transmission mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_RX     0x020 </span><span class="cm">/* The device is turned on in DMA receiving mode */</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-close">
+<h3><span class="section-number">2.7.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> is used to close the device,this funtion calls <code class="docutils literal notranslate"><span class="pre">spi_close</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>return</strong> error code, 0 means closing is successful, others means error</p></li>
+</ul>
+</div>
+<div class="section" id="device-control">
+<h3><span class="section-number">2.7.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> is used to control the device and modify parameters according to commands.This funtion calls <code class="docutils literal notranslate"><span class="pre">spi_control</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>cmd</strong> device control command</p></li>
+<li><p><strong>args</strong> control parameters</p></li>
+<li><p><strong>return</strong> Different control commands return different meanings.</p></li>
+</ul>
+<p>In addition to standard control commands, SPI devices also have their own special control commands.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_SPI_CONFIG_CLOCK       0x10</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">args</span></code> input is different depending on <code class="docutils literal notranslate"><span class="pre">cmd</span></code>, the list is as follows:</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">table1</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 18%" />
+<col style="width: 55%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>cmd</p></th>
+<th class="head"><p>args</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DEVICE_CTRL_SET_INT</p></td>
+<td><p>NULL</p></td>
+<td><p>Enable spi device interrupt</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_CLR_INT</p></td>
+<td><p>NULL</p></td>
+<td><p>Disable spi device interrupt</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_RESUME</p></td>
+<td><p>NULL</p></td>
+<td><p>Resume spi device</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_SUSPEND</p></td>
+<td><p>NULL</p></td>
+<td><p>Suspend spi device</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_ATTACH_TX_DMA</p></td>
+<td><p>NULL</p></td>
+<td><p>Link to tx dma device</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_ATTACH_RX_DMA</p></td>
+<td><p>NULL</p></td>
+<td><p>Link to rx dma device</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_SPI_CONFIG_CLOCK</p></td>
+<td><p>NULL</p></td>
+<td><p>Modify SPI device clock</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_TX_DMA_SUSPEND</p></td>
+<td><p>NULL</p></td>
+<td><p>Suspend spi tx dma mode</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_RX_DMA_SUSPEND</p></td>
+<td><p>NULL</p></td>
+<td><p>Suspend spi rx dma mode</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_TX_DMA_RESUME</p></td>
+<td><p>NULL</p></td>
+<td><p>Resume spi tx dma mode</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_RX_DMA_RESUME</p></td>
+<td><p>NULL</p></td>
+<td><p>Resume spi rx dma mode</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="device-write">
+<h3><span class="section-number">2.7.4.5. </span><strong>device_write</strong><a class="headerlink" href="#device-write" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_write</span></code> is used to send data. The sending mode can be polling, interrupt, dma according to the open mode.This funtion calls <code class="docutils literal notranslate"><span class="pre">spi_write</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_write</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>pos</strong> useless</p></li>
+<li><p><strong>buffer</strong> the buffer to be written</p></li>
+<li><p><strong>size</strong> the length to be written</p></li>
+<li><p><strong>return</strong> error code, 0 means writing is successful, others mean errors</p></li>
+</ul>
+</div>
+<div class="section" id="device-read">
+<h3><span class="section-number">2.7.4.6. </span><strong>device_read</strong><a class="headerlink" href="#device-read" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_read</span></code> is used to receive data, and the receiving mode can be polling, interrupt, dma according to the open mode.This funtion calls <code class="docutils literal notranslate"><span class="pre">spi_read</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_read</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>pos</strong> useless</p></li>
+<li><p><strong>buffer</strong> the buffer to be read</p></li>
+<li><p><strong>size</strong> the length to be read</p></li>
+<li><p><strong>return</strong> error code, 0 means successful reading, others mean errors</p></li>
+</ul>
+</div>
+<div class="section" id="device-set-callback">
+<h3><span class="section-number">2.7.4.7. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> is used to register an SPI device interrupt callback function.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
+</pre></div>
+</div>
+<ul>
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>callback</strong> the interrupt callback function to be registered</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>args</strong> receive and send buffer, the data type is uint8_t*</p></li>
+<li><p><strong>size</strong> transmission length</p></li>
+<li><p><strong>event</strong> interrupt event type</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> type definition is as follows:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">spi_event_type</span>
+<span class="p">{</span>
+    <span class="n">SPI_EVENT_TX_FIFO</span><span class="p">,</span>
+    <span class="n">SPI_EVENT_RX_FIFO</span><span class="p">,</span>
+    <span class="n">SPI_EVENT_UNKNOWN</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="spi-transmit">
+<h3><span class="section-number">2.7.4.8. </span><strong>spi_transmit</strong><a class="headerlink" href="#spi-transmit" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">spi_transmit</span></code> is used to send data from SPI devices.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_transmit</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">type</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>buffer</strong> send data buffer</p></li>
+<li><p><strong>size</strong> send length</p></li>
+<li><p><strong>type</strong> send bit width type</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">type</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define SPI_TRANSFER_TYPE_8BIT    0</span>
+<span class="cp">#define SPI_TRANSFER_TYPE_16BIT   1</span>
+<span class="cp">#define SPI_TRANSFER_TPYE_24BIT   2</span>
+<span class="cp">#define SPI_TRANSFER_TYPE_32BIT   3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="spi-receive">
+<h3><span class="section-number">2.7.4.9. </span><strong>spi_receive</strong><a class="headerlink" href="#spi-receive" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">spi_receive</span></code> is used to receive data from SPI devices.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_receive</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">type</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>buffer</strong> receive data buffer</p></li>
+<li><p><strong>size</strong> receiving length</p></li>
+<li><p><strong>type</strong> bit width type</p></li>
+</ul>
+</div>
+<div class="section" id="spi-transmit-receive">
+<h3><span class="section-number">2.7.4.10. </span><strong>spi_transmit_receive</strong><a class="headerlink" href="#spi-transmit-receive" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">spi_transmit_receive</span></code> is used to send and receive data from SPI devices.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">spi_transmit_receive</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">send_buf</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">recv_buf</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">length</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">type</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>send_buf</strong> send data buffer</p></li>
+<li><p><strong>recv_buf</strong> receive data buffer</p></li>
+<li><p><strong>length</strong> send and receive length</p></li>
+<li><p><strong>type</strong> bit width type</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api_adc.html" class="btn btn-neutral float-right" title="2.8. ADC" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_i2c.html" class="btn btn-neutral float-left" title="2.6. I2C" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

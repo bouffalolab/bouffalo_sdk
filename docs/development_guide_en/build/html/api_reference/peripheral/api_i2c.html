@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>2.6. I2C &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="2.7. SPI" href="api_spi.html" />
+    <link rel="prev" title="2.5. DMA" href="api_dma.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. Peripheral</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_clock.html">2.1. Clock Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">2.2. GPIO Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_uart.html">2.3. UART Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_pwm.html">2.4. PWM Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dma.html">2.5. DMA Device</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.6. I2C Device</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">2.6.1. Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i2c-device-structure-definition">2.6.2. I2C Device Structure Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i2c-device-parameter-configuration-table">2.6.3. I2C Device Parameter Configuration Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i2c-device-interface">2.6.4. I2C Device Interface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#i2c-register">2.6.4.1. <strong>i2c_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">2.6.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#i2c-transfer">2.6.4.3. <strong>i2c_transfer</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_spi.html">2.7. SPI Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.8. ADC Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.9. DAC Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.10. TIMER Device</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">2. </span>Peripheral</a> &raquo;</li>
+        
+      <li><span class="section-number">2.6. </span>I2C</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/api_reference/peripheral/api_i2c.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="i2c">
+<h1><span class="section-number">2.6. </span>I2C<a class="headerlink" href="#i2c" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><span class="section-number">2.6.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>I2C (Inter-Intergrated Circuit) is a serial communication bus that uses a multi-master-slave architecture to connect low-speed peripheral devices. Each device has a unique address identification, and can be used as a transmitter or receiver. Each device connected to the bus can set the address with software through a unique address and the always-existing relationship between master and slave, and the host can be used as a host transmitter or host receiver. If two or more hosts are initialized at the same time, data transmission can prevent data from being destroyed through conflict detection and arbitration. The I2C devices in the BL series MCU have the following characteristics:</p>
+<ul class="simple">
+<li><p>Flexible configuration of slave address <code class="docutils literal notranslate"><span class="pre">slaveAddr</span></code>, register address <code class="docutils literal notranslate"><span class="pre">subAddr</span></code></p></li>
+<li><p>Clock frequency that can be flexibly adjusted</p></li>
+<li><p>Support polling, interrupt, DMA transfer</p></li>
+</ul>
+</div>
+<div class="section" id="i2c-device-structure-definition">
+<h2><span class="section-number">2.6.2. </span>I2C Device Structure Definition<a class="headerlink" href="#i2c-device-structure-definition" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">i2c_device</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">id</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">mode</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">phase</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">i2c_device_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>parent</strong> inherit the properties of the parent class</p></li>
+<li><p><strong>ch</strong> i2c id, 0 means i2c0, 1 means i2c1</p></li>
+<li><p><strong>mode</strong> i2c transmission mode, 0 means using hardware i2c, 1 means using software i2c, current software i2c is temporarily invalid</p></li>
+<li><p><strong>phase</strong> i2c clock phase div, i2c_clk = i2c_source_clk/(4*(phase+1))</p></li>
+<li><p>TODO</p></li>
+</ul>
+</div>
+<div class="section" id="i2c-device-parameter-configuration-table">
+<h2><span class="section-number">2.6.3. </span>I2C Device Parameter Configuration Table<a class="headerlink" href="#i2c-device-parameter-configuration-table" title="Permalink to this headline">¶</a></h2>
+<p>Each I2C device has a parameter configuration macro, the macro definition is located in the <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> file under the <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> directory, and the variable definition is located in <code class="docutils literal notranslate"><span class="pre">hal_i2c.c</span></code>, so the user does not need to define variable. When the user opens the macro of the corresponding device, the configuration of the device will take effect. For example, open the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2C0</span></code>, <code class="docutils literal notranslate"><span class="pre">I2C0_CONFIG</span></code> will take effect, and the <code class="docutils literal notranslate"><span class="pre">I2C</span></code> device can be registered and used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*Parameter configuration macro*/</span>
+<span class="cp">#if defined(BSP_USING_I2C0)</span>
+<span class="cp">#ifndef I2C0_CONFIG</span>
+<span class="cp">#define I2C0_CONFIG \</span>
+<span class="cp">{   \</span>
+<span class="cp">.id = 0, \</span>
+<span class="cp">.mode = I2C_HW_MODE,\</span>
+<span class="cp">.phase = 15, \</span>
+<span class="cp">}</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+<span class="cm">/*Variable definition*/</span>
+<span class="k">static</span> <span class="n">i2c_device_t</span> <span class="n">i2cx_device</span><span class="p">[</span><span class="n">I2C_MAX_INDEX</span><span class="p">]</span> <span class="o">=</span>
+<span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_I2C0</span>
+    <span class="n">I2C0_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above configuration can be modified through <code class="docutils literal notranslate"><span class="pre">I2C_DEV(dev)-&gt;xxx</span></code> and can only be used before calling <code class="docutils literal notranslate"><span class="pre">device_open</span></code>.</p>
+</div>
+</div>
+<div class="section" id="i2c-device-interface">
+<h2><span class="section-number">2.6.4. </span>I2C Device Interface<a class="headerlink" href="#i2c-device-interface" title="Permalink to this headline">¶</a></h2>
+<p>The I2C device standard interface currently only uses <code class="docutils literal notranslate"><span class="pre">device_open</span></code>, and provides a standard data transceiver interface.</p>
+<div class="section" id="i2c-register">
+<h3><span class="section-number">2.6.4.1. </span><strong>i2c_register</strong><a class="headerlink" href="#i2c-register" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">i2c_register</span></code> is used to register an I2C device standard driver interface. The macro definition of the corresponding I2C device needs to be opened before registration. For example, define the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_I2C0</span></code> to use the <code class="docutils literal notranslate"><span class="pre">I2C0</span></code> device. After the registration is completed, other interfaces can be used. If the macro is not defined, the <code class="docutils literal notranslate"><span class="pre">I2C0</span></code> device cannot be used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">i2c_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">i2c_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>index</strong> device index to be registered</p></li>
+<li><p><strong>name</strong> device name to be registered</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">index</span></code> is used to select I2C device, one index corresponds to one I2C device configuration, for example, <code class="docutils literal notranslate"><span class="pre">I2C0_INDEX</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">I2C0_CONFIG</span></code> configuration, <code class="docutils literal notranslate"><span class="pre">index</span></code> has the following optional types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">i2c_index_type</span>
+<span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_I2C0</span>
+    <span class="n">I2C0_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+    <span class="n">I2C_MAX_INDEX</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-open">
+<h3><span class="section-number">2.6.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> is used to open an i2c device, this funtion calls <code class="docutils literal notranslate"><span class="pre">i2c_open</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>oflag</strong> open mode</p></li>
+<li><p><strong>return</strong> error code, 0 means opening is successful, others mean errors</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* The device is turned on in polling sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* The device is turned on in polling receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* The device is turned on in interrupt sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_RX     0x008 </span><span class="cm">/* The device is turned on in interrupt receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* The device is turned on in DMA transmission mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_RX     0x020 </span><span class="cm">/* The device is turned on in DMA receiving mode */</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="i2c-transfer">
+<h3><span class="section-number">2.6.4.3. </span><strong>i2c_transfer</strong><a class="headerlink" href="#i2c-transfer" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">i2c_transfer</span></code> is used to transfer i2c msg. The member <code class="docutils literal notranslate"><span class="pre">flags</span></code> in <code class="docutils literal notranslate"><span class="pre">i2c_msg_t</span></code> structure indicates whether the direction of the transfer is writing or reading, and the length of the specified register address is 0, 1, 2.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">i2c_transfer</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="n">i2c_msg_t</span> <span class="n">msgs</span><span class="p">[],</span> <span class="kt">uint32_t</span> <span class="n">num</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>msgs</strong> message to be transmitted</p></li>
+<li><p><strong>num</strong> the number of messages</p></li>
+<li><p><strong>return</strong> error code, 0 means opening is successful, others mean error</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">i2c_msg_t</span></code> structure is defined as follows:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">i2c_msg</span>
+<span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">slaveaddr</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">subaddr</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">flags</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">len</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">i2c_msg_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>slaveaddr</strong> i2c slave device 7-bit slave address</p></li>
+<li><p><strong>subaddr</strong> i2c slave device register address</p></li>
+<li><p><strong>flags</strong> read and write mode and register address length</p></li>
+<li><p><strong>len</strong> transmission data length</p></li>
+<li><p><strong>buf</strong> data buffer</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">flags</span></code> definition is as follows:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*Read and write mode*/</span>
+<span class="cp">#define I2C_WR 0x0000</span>
+<span class="cp">#define I2C_RD 0x0001</span>
+
+<span class="cm">/*Register address length*/</span>
+<span class="cp">#define SUB_ADDR_0BYTE 0x0010</span>
+<span class="cp">#define SUB_ADDR_1BYTE 0x0020</span>
+<span class="cp">#define SUB_ADDR_2BYTE 0x0040</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api_spi.html" class="btn btn-neutral float-right" title="2.7. SPI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_dma.html" class="btn btn-neutral float-left" title="2.5. DMA" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

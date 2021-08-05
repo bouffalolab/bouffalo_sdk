@@ -1,0 +1,666 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3.2. PWM - 驱动步进电机 &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="4. MTIMER" href="../mtimer/index.html" />
+    <link rel="prev" title="3.1. PWM - Breathing LED" href="pwm_breath_demo.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../uart/index.html">2. UART</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. PWM</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pwm_breath_demo.html">3.1. PWM - Breathing LED</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.2. PWM - Drive Stepper Motor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">3.2.1. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">3.2.2. 软件实现</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">3.2.3. 编译和烧录</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">3.2.4. 实验现象</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">3. </span>PWM</a> &raquo;</li>
+        
+      <li><span class="section-number">3.2. </span>PWM - 驱动步进电机</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../_sources/samples/basic samples/pwm/pwm_step_motor.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pwm">
+<h1><span class="section-number">3.2. </span>PWM - 驱动步进电机<a class="headerlink" href="#pwm" title="Permalink to this headline">¶</a></h1>
+<p>步进电机是一种将电脉冲转化为角位移的执行机构。当步进驱动器接收到一个脉冲信号，它就驱动步进电机按设定的方向转动一个固定的角度（及步进角）。可以通过控制脉冲个来控制角位移量，从而达到准确定位的目的；同时可以通过控制脉冲频率来控制电机转动的速度和加速度，从而达到调速的目的。</p>
+<p>本 demo 采用步进电机 28BYJ48 型四相八拍电机，使用 ULN2003 芯片驱动，电压为 DC5V—DC12V。当对步进电机施加一系列连续不断的控制脉冲时，它可以连续不断地转动。每一个脉冲信号对应步进电机的某一相或两相绕组的通电状态改变一次，也就对应转子转过一定的角度（一个步距角）。当通电状态的改变完成一个循环时，转子转过一个齿距。</p>
+<div class="figure align-default" id="id5">
+<img alt="" src="../../../_images/step_motor.png" />
+<p class="caption"><span class="caption-text">28BYJ48</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="id6">
+<img alt="" src="../../../_images/uln2003.png" />
+<p class="caption"><span class="caption-text">ULN2003</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</div>
+<p>这个步进电机内部有个真正的步进马达转子，每一个脉冲能使这个真正的转子转动5.625°，看下图的数据表格中的减速比是1:64，意思是这个真正的步进马达转子转动64周才能让输出轴转动1周，因此下图的表格中步距角度才写的是5.625°/64，表明的意思是一个脉冲可以让输出轴转动5.625°/64的角度。所以要让马达转一周（360°）， 则需要360/5.625*64=4096个脉冲。
+脉冲(或拍)的数量决定转动的角度，单位时间内脉冲(或拍)的数量决定转动的速度</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/step_motor_info.png" />
+</div>
+<p>四相步进电机可以在不同的通电方式下运行，常见的通电方式有如下三种：</p>
+<ul class="simple">
+<li><p>一相励磁：单（单相绕组通电）四拍（A+,B+,A-,B-……）</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../../../_images/pwm_step_motor1.png" />
+</div>
+<ul class="simple">
+<li><p>二相励磁：双（双相绕组通电）四拍（A+B+,B+A-,A-B-,B-A+……）</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../../../_images/pwm_step_motor2.png" />
+</div>
+<ul class="simple">
+<li><p>一二相励磁：八拍（A+B+,B+,B+A-,A-,A-B-,B-,B-A+,A+……）</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="" src="../../../_images/pwm_step_motor3.png" />
+</div>
+<div class="section" id="id1">
+<h2><span class="section-number">3.2.1. </span>硬件连接<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>本 demo 基于BL706_IOT开发板，连接方式如下</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
+<span class="o">----------------------------------</span>
+    <span class="n">PWM_CH0</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO10</span>
+    <span class="n">PWM_CH1</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO11</span>
+    <span class="n">PWM_CH2</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO12</span>
+    <span class="n">PWM_CH3</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO3</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id7">
+<img alt="" src="../../../_images/pwm_step_motor.png" />
+<p class="caption"><span class="caption-text">参考电路</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">3.2.2. </span>软件实现<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/pwm/pwm_step_motor</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_PWM_CLOCK_SOURCE  ROOT_CLOCK_SOURCE_RC_32K</span>
+<span class="cp">#define BSP_PWM_CLOCK_DIV  32</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">PWM</span></code> 设备时钟源，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/clock_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define CONFIG_GPIO3_FUNC GPIO_FUN_PWM</span>
+<span class="cp">#define CONFIG_GPIO10_FUNC GPIO_FUN_PWM</span>
+<span class="cp">#define CONFIG_GPIO11_FUNC GPIO_FUN_PWM</span>
+<span class="cp">#define CONFIG_GPIO12_FUNC GPIO_FUN_PWM</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">PWM</span></code> 设备复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_PWM_CH0</span>
+<span class="cp">#define BSP_USING_PWM_CH1</span>
+<span class="cp">#define BSP_USING_PWM_CH2</span>
+<span class="cp">#define BSP_USING_PWM_CH3</span>
+
+<span class="cp">#if defined(BSP_USING_PWM_CH0)</span>
+<span class="cp">#ifndef PWM_CH0_CONFIG</span>
+<span class="cp">#define PWM_CH0_CONFIG                   \</span>
+<span class="cp">    {                                    \</span>
+<span class="cp">        .ch = 0,                         \</span>
+<span class="cp">        .polarity_invert_mode = DISABLE, \</span>
+<span class="cp">        .period = 0,                     \</span>
+<span class="cp">        .threshold_low = 0,              \</span>
+<span class="cp">        .threshold_high = 0,             \</span>
+<span class="cp">        .it_pulse_count = 0,             \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+<span class="cp">#if defined(BSP_USING_PWM_CH1)</span>
+<span class="cp">#ifndef PWM_CH1_CONFIG</span>
+<span class="cp">#define PWM_CH1_CONFIG                   \</span>
+<span class="cp">    {                                    \</span>
+<span class="cp">        .ch = 1,                         \</span>
+<span class="cp">        .polarity_invert_mode = DISABLE, \</span>
+<span class="cp">        .period = 0,                     \</span>
+<span class="cp">        .threshold_low = 0,              \</span>
+<span class="cp">        .threshold_high = 0,             \</span>
+<span class="cp">        .it_pulse_count = 0,             \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+<span class="cp">#if defined(BSP_USING_PWM_CH2)</span>
+<span class="cp">#ifndef PWM_CH2_CONFIG</span>
+<span class="cp">#define PWM_CH2_CONFIG                   \</span>
+<span class="cp">    {                                    \</span>
+<span class="cp">        .ch = 2,                         \</span>
+<span class="cp">        .polarity_invert_mode = DISABLE, \</span>
+<span class="cp">        .period = 0,                     \</span>
+<span class="cp">        .threshold_low = 0,              \</span>
+<span class="cp">        .threshold_high = 0,             \</span>
+<span class="cp">        .it_pulse_count = 0,             \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+<span class="cp">#if defined(BSP_USING_PWM_CH3)</span>
+<span class="cp">#ifndef PWM_CH3_CONFIG</span>
+<span class="cp">#define PWM_CH3_CONFIG                   \</span>
+<span class="cp">    {                                    \</span>
+<span class="cp">        .ch = 3,                         \</span>
+<span class="cp">        .polarity_invert_mode = DISABLE, \</span>
+<span class="cp">        .period = 0,                     \</span>
+<span class="cp">        .threshold_low = 0,              \</span>
+<span class="cp">        .threshold_high = 0,             \</span>
+<span class="cp">        .it_pulse_count = 0,             \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>使能 <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH0</span></code>, <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH1</span></code> , <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH2</span></code>, <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH3</span></code> 并配置 <code class="docutils literal notranslate"><span class="pre">PWM</span></code> 设备配置，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/peripheral_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">pwm_register</span><span class="p">(</span><span class="n">PWM_CH0_INDEX</span><span class="p">,</span> <span class="s">&quot;motor_ch0&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+<span class="n">pwm_register</span><span class="p">(</span><span class="n">PWM_CH1_INDEX</span><span class="p">,</span> <span class="s">&quot;motor_ch1&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+<span class="n">pwm_register</span><span class="p">(</span><span class="n">PWM_CH2_INDEX</span><span class="p">,</span> <span class="s">&quot;motor_ch2&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+<span class="n">pwm_register</span><span class="p">(</span><span class="n">PWM_CH3_INDEX</span><span class="p">,</span> <span class="s">&quot;motor_ch3&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+
+<span class="n">motor_ch0</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;motor_ch0&quot;</span><span class="p">);</span>
+<span class="n">motor_ch1</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;motor_ch1&quot;</span><span class="p">);</span>
+<span class="n">motor_ch2</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;motor_ch2&quot;</span><span class="p">);</span>
+<span class="n">motor_ch3</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;motor_ch3&quot;</span><span class="p">);</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">motor_ch0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">period</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">//frequence = 32K/160/8 = 25hz</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">polarity_invert_mode</span> <span class="o">=</span> <span class="n">ENABLE</span><span class="p">;</span>
+    <span class="n">device_open</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_STREAM_TX</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">motor_ch1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch1</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">period</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">//frequence = 32K/160/8 = 25hz</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch1</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch1</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="n">device_open</span><span class="p">(</span><span class="n">motor_ch1</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_STREAM_TX</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">motor_ch2</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">period</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">//frequence = 32K/160/8 = 25hz</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+    <span class="n">device_open</span><span class="p">(</span><span class="n">motor_ch2</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_STREAM_TX</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">motor_ch3</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">period</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">//frequence = 32K/160/8 = 25hz</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">motor_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+    <span class="n">device_open</span><span class="p">(</span><span class="n">motor_ch3</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_STREAM_TX</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="n">pwm_channel_start</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">);</span>
+<span class="n">pwm_channel_start</span><span class="p">(</span><span class="n">motor_ch1</span><span class="p">);</span>
+<span class="n">pwm_channel_start</span><span class="p">(</span><span class="n">motor_ch2</span><span class="p">);</span>
+<span class="n">pwm_channel_start</span><span class="p">(</span><span class="n">motor_ch3</span><span class="p">);</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>首先调用 <code class="docutils literal notranslate"><span class="pre">pwm_register</span></code> 函数注册 <code class="docutils literal notranslate"><span class="pre">PWM</span></code> 设备的一个通道，当前注册 PWM 通道0/1/2/3</p></li>
+<li><p>然后通过 <code class="docutils literal notranslate"><span class="pre">find</span></code> 函数找到设备对应的句柄，保存于4个句柄中</p></li>
+<li><p>设置 4个通道 的频率为 125hz，占空比为37.5%</p></li>
+<li><p>使用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 以轮询模式来打开 4个通道</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">motor_dir_type</span> <span class="p">{</span>
+    <span class="n">CW</span><span class="p">,</span>
+    <span class="n">CCW</span><span class="p">,</span>
+    <span class="n">STOP</span>
+<span class="p">};</span>
+
+<span class="kt">void</span> <span class="nf">motor_set_dir</span><span class="p">(</span><span class="k">enum</span> <span class="n">motor_dir_type</span> <span class="n">dir</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">pwm_dutycycle_config_t</span> <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">dir</span> <span class="o">==</span> <span class="n">CW</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">dir</span> <span class="o">==</span> <span class="n">CCW</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">dir</span> <span class="o">==</span> <span class="n">STOP</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch0</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch1</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch2</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">motor_ch3</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>使用 <code class="docutils literal notranslate"><span class="pre">device_contorl</span></code> 函数，配合 <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span></code> 指令，修改4个 PWM 通道的的高低阈值。</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>该函数的功能主要用于切换步进电机的方向</p>
+</div>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">3.2.3. </span>编译和烧录<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p><strong>CDK 编译</strong></p>
+<p>打开项目中提供的工程文件：pwm_step_motor.cdkproj</p>
+<p>参照 <a class="reference internal" href="../../../get_started/Windows_quick_start_cdk.html#windows-cdk-quick-start"><span class="std std-ref">Guide to using CDK (like MDK Keil) under Windows</span></a> 的步骤编译下载即可</p>
+</li>
+<li><p><strong>命令行编译</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>pwm_step_motor
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>烧录</strong></p>
+<p>详见 <a class="reference internal" href="../../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube start guide</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2><span class="section-number">3.2.4. </span>实验现象<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-default">
+<img alt="" src="../../../_images/pwm_step_motor.gif" />
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../mtimer/index.html" class="btn btn-neutral float-right" title="4. MTIMER" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pwm_breath_demo.html" class="btn btn-neutral float-left" title="3.1. PWM - Breathing LED" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

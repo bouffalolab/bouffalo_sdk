@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3.3. Linux OR WSL environment development guide &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="4. New Project Guide based on cmake framework" href="cmake_quick_start.html" />
+    <link rel="prev" title="3.2. Eclipse Development Guide under Windows" href="Windows_quick_start_eclipse.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. Development environment setup guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Windows_quick_start_cdk.html">3.1. Windows_CDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Windows_quick_start_eclipse.html">3.2. Windows_eclipse</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.3. Linux</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#software-and-hardware-environment">3.3.1. Software and hardware environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configure-risc-v-toolchain">3.3.2. Configure RISC-V toolchain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configure-cmake-make-tools">3.3.3. Configure cmake &amp; make tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hardware-connection">3.3.4. Hardware connection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-bl-mcu-sdk">3.3.5. Get bl_mcu_sdk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test-hello-world-project">3.3.6. Test Hello World project</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#open-hello-world">Open Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compile-hello-world">Compile Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#program-hello-world">Program Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run-hello-world">Run Hello World</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#debug-hello-world">Debug Hello World</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">3. </span>Development environment setup guide</a> &raquo;</li>
+        
+      <li><span class="section-number">3.3. </span>Linux OR WSL environment development guide</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/Linux_quick_start_ubuntu.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="linux-or-wsl-environment-development-guide">
+<h1><span class="section-number">3.3. </span>Linux OR WSL environment development guide<a class="headerlink" href="#linux-or-wsl-environment-development-guide" title="Permalink to this headline">¶</a></h1>
+<p>This document introduces how to install and configure the software development tools needed for BL702 series MCUs in Linux. The installation and configuration method under WSL system is the same as under linux, please install WSL system by yourself. The difference is that one runs on a pure linux system and the other runs on windows. If you don’t want to install a virtual machine or a linux system, you can choose WSL.</p>
+<p><strong>Windows Subsystem for Linux</strong> (WSL) is a compatibility layer that can run native Linux binary executable files (ELF format) on Windows 10. It was developed by Microsoft and Canonical in cooperation. Its goal is to enable the pure Ubuntu image to be downloaded and decompressed to the user’s local computer, and the tools in the image can run on this subsystem. Therefore, the operation mode under WSL is exactly the same as the operation mode under linux.</p>
+<div class="section" id="software-and-hardware-environment">
+<h2><span class="section-number">3.3.1. </span>Software and hardware environment<a class="headerlink" href="#software-and-hardware-environment" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>A mini USB data cable</p></li>
+<li><p>A USB-TTL serial port module</p></li>
+<li><p>Several Dupont lines</p></li>
+</ul>
+</div>
+<div class="section" id="configure-risc-v-toolchain">
+<h2><span class="section-number">3.3.2. </span>Configure RISC-V toolchain<a class="headerlink" href="#configure-risc-v-toolchain" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> ~
+$ wget -c https://dev.bouffalolab.com/media/upload/download/riscv64-elf-x86_64-20210120.tar.gz
+$ mkdir -p riscv64-elf-20210120
+<span class="hll">$ tar -zxvf riscv64-elf-x86_64-20210120.tar.gz -C riscv64-elf-20210120
+</span><span class="hll">$ sudo cp -rf ~/riscv64-elf-20210120  /usr/bin
+</span><span class="hll">$ <span class="nb">echo</span> <span class="s2">&quot;export PATH=\&quot;</span><span class="nv">$PATH</span><span class="s2">:/usr/bin/riscv64-elf-20210120/bin\&quot;&quot;</span>  &gt;&gt; ~/.bashrc
+</span>$ <span class="nb">source</span> ~/.bashrc
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="configure-cmake-make-tools">
+<h2><span class="section-number">3.3.3. </span>Configure cmake &amp; make tools<a class="headerlink" href="#configure-cmake-make-tools" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>$ sudo apt update
+$ sudo apt install make
+$ <span class="nb">cd</span> ~
+$ wget -c https://cmake.org/files/v3.19/cmake-3.19.3-Linux-x86_64.tar.gz
+<span class="hll">$ tar -zxvf cmake-3.19.3-Linux-x86_64.tar.gz
+</span><span class="hll">$ sudo cp -rf ~/cmake-3.19.3-Linux-x86_64  /usr/bin
+</span><span class="hll">$ <span class="nb">echo</span> <span class="s2">&quot;export PATH=\&quot;</span><span class="nv">$PATH</span><span class="s2">:/usr/bin/cmake-3.19.3-Linux-x86_64/bin\&quot;&quot;</span>  &gt;&gt; ~/.bashrc
+</span>$ <span class="nb">source</span> ~/.bashrc
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="hardware-connection">
+<h2><span class="section-number">3.3.4. </span>Hardware connection<a class="headerlink" href="#hardware-connection" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>For the connection of the board, please refer to <a class="reference internal" href="connecting_hardware.html#connect-hardware"><span class="std std-ref">Hardware connection</span></a></p></li>
+<li><p>Please make sure that the board is set correctly before proceeding to the following steps (Serial connection is recommended under Linux)</p></li>
+</ul>
+</div>
+<div class="section" id="get-bl-mcu-sdk">
+<h2><span class="section-number">3.3.5. </span>Get bl_mcu_sdk<a class="headerlink" href="#get-bl-mcu-sdk" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Open the terminal and enter the following command to get bl_mcu_sdk</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> ~
+ $ git clone https://gitee.com/bouffalolab/bl_mcu_sdk.git  --recursive
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="test-hello-world-project">
+<h2><span class="section-number">3.3.6. </span>Test Hello World project<a class="headerlink" href="#test-hello-world-project" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="open-hello-world">
+<h3>Open Hello World<a class="headerlink" href="#open-hello-world" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>After obtaining the SDK, enter <code class="docutils literal notranslate"><span class="pre">examples/hellowd/helloworld</span></code> in the SDK, open <code class="docutils literal notranslate"><span class="pre">main.c</span></code>, and then edit the related code of helloworld.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> ~/bl_mcu_sdk/examples/hellowd/helloworld
+ $ vi main.c
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>After editing, save the changes and close the file, and then compile</p></li>
+</ul>
+</div>
+<div class="section" id="compile-hello-world">
+<h3>Compile Hello World<a class="headerlink" href="#compile-hello-world" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> ~/bl_mcu_sdk
+ $ make build <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>helloworld
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="program-hello-world">
+<h3>Program Hello World<a class="headerlink" href="#program-hello-world" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Please confirm the programming method first. If you use serial programming, please press and hold the <code class="docutils literal notranslate"><span class="pre">boot</span></code> key on the board and don’t release it. At this time, press the <code class="docutils literal notranslate"><span class="pre">rst</span></code> key, and then release the two keys. The board enters the boot_rom state.</p></li>
+<li><p>At this time, enter the following command in the terminal to program</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> ~/bl_mcu_sdk
+ $ make download <span class="nv">INTERFACE</span><span class="o">=</span>uart <span class="nv">COMx</span><span class="o">=</span>/dev/ttyUSB1
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p>If the download fails, please check:</p>
+<blockquote>
+<div><ul class="simple">
+<li><ol class="arabic simple">
+<li><p>Whether the serial port is used for programming, whether the development board is powered, and whether the hardware connection is correct.</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="2">
+<li><p>Is the programming command executed in the <code class="docutils literal notranslate"><span class="pre">bl_mcu_sdk</span></code> directory</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="3">
+<li><p>Whether to enter boot_rom mode</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="4">
+<li><p>Whether the serial port is occupied, and whether your available serial port is selected correctly, if your serial port is not <code class="docutils literal notranslate"><span class="pre">ttyUSB1</span></code>, then please specify the correct serial port</p></li>
+</ol>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="run-hello-world">
+<h3>Run Hello World<a class="headerlink" href="#run-hello-world" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Open a new terminal, install and run the serial port tool</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ sudo apt install picocom   <span class="c1"># Ignore if it is already installed</span>
+ $ picocom -b <span class="m">2000000</span> /dev/ttyUSB1 <span class="c1"># Pay attention to your available serial port number (if you use the serial port of Sipeed RV-debugger Plus, it will be ``ttyUSB1``)</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>Press the <code class="docutils literal notranslate"><span class="pre">rst</span></code> key on the board, you can see <code class="docutils literal notranslate"><span class="pre">hello</span> <span class="pre">world!</span></code> in the serial terminal.</p></li>
+</ul>
+<div class="figure align-default" id="id1">
+<img alt="" src="../_images/linux1.png" />
+<p class="caption"><span class="caption-text">helloworld!</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="debug-hello-world">
+<h3>Debug Hello World<a class="headerlink" href="#debug-hello-world" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="cmake_quick_start.html" class="btn btn-neutral float-right" title="4. New Project Guide based on cmake framework" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Windows_quick_start_eclipse.html" class="btn btn-neutral float-left" title="3.2. Eclipse Development Guide under Windows" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

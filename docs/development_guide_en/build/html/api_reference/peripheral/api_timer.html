@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>2.10. TIMER &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="3. BLE" href="../bluetooth/api_ble.html" />
+    <link rel="prev" title="2.9. DAC" href="api_dac.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. Peripheral</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_clock.html">2.1. Clock Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">2.2. GPIO Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_uart.html">2.3. UART Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_pwm.html">2.4. PWM Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dma.html">2.5. DMA Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">2.6. I2C Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_spi.html">2.7. SPI Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.8. ADC Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.9. DAC Device</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.10. TIMER Device</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">2.10.1. Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#timer-device-structure-definition">2.10.2. TIMER Device Structure Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#timer-device-parameter-configuration-table">2.10.3. TIMER Device Parameter Configuration Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#timer-device-interface">2.10.4. TIMER Device Interface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#timer-register">2.10.4.1. <strong>timer_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">2.10.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-close">2.10.4.3. <strong>device_close</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-control">2.10.4.4. <strong>device_control</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-write">2.10.4.5. <strong>device_write</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">2.10.4.6. <strong>device_set_callback</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">2. </span>Peripheral</a> &raquo;</li>
+        
+      <li><span class="section-number">2.10. </span>TIMER</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/api_reference/peripheral/api_timer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="timer">
+<h1><span class="section-number">2.10. </span>TIMER<a class="headerlink" href="#timer" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><span class="section-number">2.10.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The TIMER device in BL series MCU has the following characteristics:</p>
+<ul class="simple">
+<li><p>Multiple clock source options</p></li>
+<li><p>8-bit clock divider, the division factor is 1-256</p></li>
+<li><p>Two 32-bit timers</p></li>
+<li><p>Each timer can independently set three groups of alarm values</p></li>
+<li><p>Support FreeRun mode and PreLoad mode</p></li>
+<li><p>16-bit watchdog</p></li>
+<li><p>Support write protection to prevent system abnormalities caused by incorrect settings</p></li>
+<li><p>Support two watchdog overflow modes, interrupt or reset</p></li>
+</ul>
+</div>
+<div class="section" id="timer-device-structure-definition">
+<h2><span class="section-number">2.10.2. </span>TIMER Device Structure Definition<a class="headerlink" href="#timer-device-structure-definition" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">timer_device</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">id</span><span class="p">;</span>
+    <span class="k">enum</span> <span class="n">timer_cnt_mode_type</span> <span class="n">cnt_mode</span><span class="p">;</span>
+    <span class="k">enum</span> <span class="n">timer_preload_trigger_type</span> <span class="n">trigger</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">reload</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">timeout1</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">timeout2</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">timeout3</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">timer_device_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>parent</strong> inherit the properties of the parent class</p></li>
+<li><p><strong>id</strong> timer id</p></li>
+<li><p><strong>cnt_mode</strong> counting mode:FreeRun and preload</p></li>
+<li><p><strong>trigger</strong> source of preload comparator</p></li>
+<li><p><strong>reload</strong> reload value in preload mode</p></li>
+<li><p><strong>timeout1</strong> compare source 0 timout value ,unit is us</p></li>
+<li><p><strong>timeout2</strong> compare source 1 timout value ,unit is us</p></li>
+<li><p><strong>timeout3</strong> compare source 2 timout value ,unit is us</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">ch</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_index_type</span> <span class="p">{</span>
+    <span class="n">TIMER0_INDEX</span><span class="p">,</span>
+    <span class="n">TIMER1_INDEX</span><span class="p">,</span>
+    <span class="n">TIMER_MAX_INDEX</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">cnt_mode</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_cnt_mode_type</span> <span class="p">{</span>
+    <span class="n">TIMER_CNT_PRELOAD</span><span class="p">,</span>
+    <span class="n">TIMER_CNT_FREERUN</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">pl_trig_src</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_preload_trigger_type</span> <span class="p">{</span>
+    <span class="n">TIMER_PRELOAD_TRIGGER_NONE</span><span class="p">,</span>
+    <span class="n">TIMER_PRELOAD_TRIGGER_COMP0</span><span class="p">,</span>
+    <span class="n">TIMER_PRELOAD_TRIGGER_COMP1</span><span class="p">,</span>
+    <span class="n">TIMER_PRELOAD_TRIGGER_COMP2</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="timer-device-parameter-configuration-table">
+<h2><span class="section-number">2.10.3. </span>TIMER Device Parameter Configuration Table<a class="headerlink" href="#timer-device-parameter-configuration-table" title="Permalink to this headline">¶</a></h2>
+<p>Each TIMER has a parameter configuration macro, the macro definition is located in the <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> file under the <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> directory, and the variable definition is located in <code class="docutils literal notranslate"><span class="pre">hal_timer.c</span></code>, so the user does not need to define the variable . When the user opens the macro of the corresponding device, the configuration of the device will take effect. For example, open the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_TIMER_CH0</span></code>, <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_CONFIG</span></code> will take effect, and the <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_INDEX</span></code> device can be registered and used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*Parameter configuration macro*/</span>
+<span class="cp">#if defined(BSP_USING_TIMER0)</span>
+<span class="cp">#ifndef TIMER0_CONFIG</span>
+<span class="cp">#define TIMER0_CONFIG                           \</span>
+<span class="cp">    {                                           \</span>
+<span class="cp">        .id = 0,                                \</span>
+<span class="cp">        .cnt_mode = TIMER_CNT_PRELOAD,          \</span>
+<span class="cp">        .trigger = TIMER_PRELOAD_TRIGGER_COMP2, \</span>
+<span class="cp">        .reload = 0,                            \</span>
+<span class="cp">        .timeout1 = 1000000,                    \</span>
+<span class="cp">        .timeout2 = 2000000,                    \</span>
+<span class="cp">        .timeout3 = 3000000,                    \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+<span class="cp">#if defined(BSP_USING_TIMER1)</span>
+<span class="cp">#ifndef TIMER1_CONFIG</span>
+<span class="cp">#define TIMER1_CONFIG                           \</span>
+<span class="cp">    {                                           \</span>
+<span class="cp">        .id = 1,                                \</span>
+<span class="cp">        .cnt_mode = TIMER_CNT_PRELOAD,          \</span>
+<span class="cp">        .trigger = TIMER_PRELOAD_TRIGGER_COMP0, \</span>
+<span class="cp">        .reload = 0,                            \</span>
+<span class="cp">        .timeout1 = 1000000,                    \</span>
+<span class="cp">        .timeout2 = 2000000,                    \</span>
+<span class="cp">        .timeout3 = 3000000,                    \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+<span class="cm">/*Variable definitions*/</span>
+<span class="k">static</span> <span class="n">timer_device_t</span> <span class="n">timerx_device</span><span class="p">[</span><span class="n">TIMER_MAX_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_TIMER0</span>
+    <span class="n">TIMER0_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_TIMER1</span>
+    <span class="n">TIMER1_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above configuration can be modified through <code class="docutils literal notranslate"><span class="pre">TIMER_DEV(dev)-&gt;xxx</span></code> and can only be used before calling <code class="docutils literal notranslate"><span class="pre">device_open</span></code>.</p>
+</div>
+</div>
+<div class="section" id="timer-device-interface">
+<h2><span class="section-number">2.10.4. </span>TIMER Device Interface<a class="headerlink" href="#timer-device-interface" title="Permalink to this headline">¶</a></h2>
+<p>TIMER device interface follows which provided by the standard device driver management layer.</p>
+<div class="section" id="timer-register">
+<h3><span class="section-number">2.10.4.1. </span><strong>timer_register</strong><a class="headerlink" href="#timer-register" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">timer_register</span></code> is used to register a TIMER device standard driver interface. Before registering, you need to open the macro definition of the corresponding TIMER device. For example, define the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_TIMER_CH0</span></code> to use the <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_INDEX</span></code> device. After the registration is completed, other interfaces can be used. If the macro is not defined, the <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_INDEX</span></code> device cannot be used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">timer_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">timer_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>index</strong> the index of the device to be registered</p></li>
+<li><p><strong>name</strong> Name the device</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">index</span></code> is used to select TIMER device configuration, one index corresponds to a TIMER device configuration, for example, <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_INDEX</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">TIMER_CH0_CONFIG</span></code> configuration, and <code class="docutils literal notranslate"><span class="pre">index</span></code> has the following optional types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_index_type</span> <span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_TIMER0</span>
+    <span class="n">TIMER0_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_TIMER1</span>
+    <span class="n">TIMER1_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+    <span class="n">TIMER_MAX_INDEX</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-open">
+<h3><span class="section-number">2.10.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> is used to open a TIMER device, this funtion calls <code class="docutils literal notranslate"><span class="pre">timer_open</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>oflag</strong> open method</p></li>
+<li><p><strong>return</strong> error code, 0 means opening is successful, others mean error</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* The device is turned on in polling sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* The device is turned on in polling receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* The device is turned on in interrupt sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_RX     0x008 </span><span class="cm">/* The device is turned on in interrupt receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* The device is turned on in DMA transmission mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_RX     0x020 </span><span class="cm">/* The device is turned on in DMA receiving mode */</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-close">
+<h3><span class="section-number">2.10.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> is used to close a TIMER device,this funtion calls <code class="docutils literal notranslate"><span class="pre">timer_open</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>return</strong> error code, 0 means closing is successful, others mean error</p></li>
+</ul>
+</div>
+<div class="section" id="device-control">
+<h3><span class="section-number">2.10.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> is used to control and modify the parameters of the TIMER device according to commands.This funtion calls <code class="docutils literal notranslate"><span class="pre">timer_control</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>cmd</strong> device control command</p></li>
+<li><p><strong>args</strong> control parameters</p></li>
+<li><p><strong>return</strong> different control commands return different meanings</p></li>
+</ul>
+<p>In addition to standard control commands, TIMER device also has its own special control commands.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_CTRL_TIMER_CH_START   0x80</span>
+<span class="cp">#define DEVICE_CTRL_TIMER_CH_STOP    0x81</span>
+<span class="cp">#define DEVICE_CTRL_GET_MATCH_STATUS 0x82</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">args</span></code> input is different depending on <code class="docutils literal notranslate"><span class="pre">cmd</span></code>, the list is as follows:</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">table1</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 18%" />
+<col style="width: 55%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>cmd</p></th>
+<th class="head"><p>args</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DEVICE_CTRL_SET_INT</p></td>
+<td><p>timer_it_type</p></td>
+<td><p>Enable TIMER interrupt</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_CLR_INT</p></td>
+<td><p>timer_it_type</p></td>
+<td><p>Disable TIMER interrupt</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_GET_INT</p></td>
+<td><p>NULL</p></td>
+<td><p>Get TIMER interrupt status</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_RESUME</p></td>
+<td><p>NULL</p></td>
+<td><p>Enable TIMER</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_SUSPEND</p></td>
+<td><p>NULL</p></td>
+<td><p>Disable TIMER</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_GET_CONFIG</p></td>
+<td><p>NULL</p></td>
+<td><p>Get TIMER current count</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="device-write">
+<h3><span class="section-number">2.10.4.5. </span><strong>device_write</strong><a class="headerlink" href="#device-write" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_write</span></code> is used to config timer device timeout value.This funtion calls <code class="docutils literal notranslate"><span class="pre">timer_write</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_write</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pos</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>pos</strong> unused</p></li>
+<li><p><strong>buffer</strong> timer_timeout_cfg_t handle</p></li>
+<li><p><strong>size</strong> the length of timer_timeout_cfg_t</p></li>
+<li><p><strong>return</strong> error code, 0 means writing is successful, others mean errors</p></li>
+</ul>
+</div>
+<div class="section" id="device-set-callback">
+<h3><span class="section-number">2.10.4.6. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> is used to register a timer compare interrupt callback function.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
+</pre></div>
+</div>
+<ul>
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>callback</strong> the interrupt callback function to be registered</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>args</strong> unused</p></li>
+<li><p><strong>size</strong> unused</p></li>
+<li><p><strong>event</strong> interrupt event type</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> type definition is as follows:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">timer_event_type</span> <span class="p">{</span>
+    <span class="n">TIMER_EVENT_COMP0</span><span class="p">,</span>
+    <span class="n">TIMER_EVENT_COMP1</span><span class="p">,</span>
+    <span class="n">TIMER_EVENT_COMP2</span><span class="p">,</span>
+    <span class="n">TIMER_EVENT_UNKNOWN</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../bluetooth/api_ble.html" class="btn btn-neutral float-right" title="3. BLE" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_dac.html" class="btn btn-neutral float-left" title="2.9. DAC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

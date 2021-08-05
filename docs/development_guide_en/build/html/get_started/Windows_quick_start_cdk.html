@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3.1. Guide to using CDK (like MDK Keil) under Windows &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Use CDK + Sipeed RV-Debugger Plus to compile and debug" href="cdk_rv_debugger_plus.html" />
+    <link rel="prev" title="3. Development environment setup guide" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. Development environment setup guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.1. Windows_CDK</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#software-and-hardware-environment">3.1.1. Software and hardware environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#download-cdk">3.1.2. Download CDK</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#download-bl-mcu-sdk">3.1.3. Download bl_mcu_sdk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hardware-connection">3.1.4. Hardware connection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#test-the-hello-world-project">3.1.5. Test the Hello World project</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cdk_rv_debugger_plus.html">Use Sipeed RV-Debugger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cdk_ck_link.html">Use CK-Link</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Windows_quick_start_eclipse.html">3.2. Windows_eclipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Linux_quick_start_ubuntu.html">3.3. Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">3. </span>Development environment setup guide</a> &raquo;</li>
+        
+      <li><span class="section-number">3.1. </span>Guide to using CDK (like MDK Keil) under Windows</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/Windows_quick_start_cdk.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="guide-to-using-cdk-like-mdk-keil-under-windows">
+<span id="windows-cdk-quick-start"></span><h1><span class="section-number">3.1. </span>Guide to using CDK (like MDK Keil) under Windows<a class="headerlink" href="#guide-to-using-cdk-like-mdk-keil-under-windows" title="Permalink to this headline">¶</a></h1>
+<p>This document introduces the use of the CDK developed by <a class="reference external" href="https://www.t-heah.cn/about">T-HEAD Semiconductor</a> under Windows to complete the related software development of BL702 series MCU.</p>
+<p>Regarding T-HEAD CDK, this is an integrated development environment developed by T-HEAD. It has operations and settings that are very similar to the traditional MCU development environment, and aims to fully access cloud development resources without changing user development habits, combined with graphical debugging and analysis tools such as OSTracer and Profiling, to accelerate user product development.</p>
+<div class="section" id="software-and-hardware-environment">
+<h2><span class="section-number">3.1.1. </span>Software and hardware environment<a class="headerlink" href="#software-and-hardware-environment" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>T-HEAD CDK software</p></li>
+<li><p>One USB Type-A data cable, one Type-C data cable</p></li>
+<li><p>A CK-Link emulator or a Sipeed RV-Debugger Plus debugger</p></li>
+<li><p>A USB-TTL serial port module</p></li>
+<li><p>Several Dupont lines</p></li>
+</ul>
+</div>
+<div class="section" id="download-cdk">
+<h2><span class="section-number">3.1.2. </span>Download CDK<a class="headerlink" href="#download-cdk" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://occ.t-head.cn/development/series/download?id=3864775351511420928&amp;type=kind&amp;softPlatformType=4#sticky">CDK</a> software can be obtained from the official website of T-HEAD OCC</p></li>
+<li><p>After the download is complete, unzip, double-click <code class="docutils literal notranslate"><span class="pre">setup.exe</span></code>, follow the prompts, and complete the software installation</p></li>
+</ul>
+</div>
+<div class="section" id="download-bl-mcu-sdk">
+<h2><span class="section-number">3.1.3. </span>Download bl_mcu_sdk<a class="headerlink" href="#download-bl-mcu-sdk" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Download bl_mcu_sdk from the open source community.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>You can use <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> or directly <code class="docutils literal notranslate"><span class="pre">download</span></code> to download the SDK</p></li>
+<li><p>Before using <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code>, please make sure that <code class="docutils literal notranslate"><span class="pre">git</span></code> has been installed correctly, open a terminal that supports <code class="docutils literal notranslate"><span class="pre">git</span></code> and enter the following command to get the latest SDK</p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="hll">$ git clone https://gitee.com/bouffalolab/bl_mcu_sdk.git  --recursive
+</span></pre></div>
+</td></tr></table></div>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="hardware-connection">
+<h2><span class="section-number">3.1.4. </span>Hardware connection<a class="headerlink" href="#hardware-connection" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>For specific connection methods, please refer to <a class="reference internal" href="connecting_hardware.html#connect-hardware"><span class="std std-ref">Hardware connection</span></a></p></li>
+<li><p>Please make sure that the board is set up correctly before proceeding to the following steps</p></li>
+</ul>
+</div>
+<div class="section" id="test-the-hello-world-project">
+<h2><span class="section-number">3.1.5. </span>Test the Hello World project<a class="headerlink" href="#test-the-hello-world-project" title="Permalink to this headline">¶</a></h2>
+<p><strong>When using Sipeed RV-Debugger Plus to debug a project, please follow the steps below:</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cdk_rv_debugger_plus.html">Use Sipeed RV-Debugger</a></li>
+</ul>
+</div>
+<p><strong>When using CK-Link to debug the project, please follow the steps below:</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cdk_ck_link.html">Use CK-Link</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="cdk_rv_debugger_plus.html" class="btn btn-neutral float-right" title="Use CDK + Sipeed RV-Debugger Plus to compile and debug" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="3. Development environment setup guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

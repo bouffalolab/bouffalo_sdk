@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>6. BLDevCube start guide &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="7. Board Configuration System User Guide" href="board.html" />
+    <link rel="prev" title="5. New Project Guide based on CDK" href="cdk_new_project_quick_start.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. BLDevCube start guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#download-bouffalo-lab-dev-cube">6.1. Download Bouffalo Lab Dev Cube</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configure-tool-download-method">6.2. Configure tool download method</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#download-with-uart">6.2.1. Download with UART</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#download-with-openocd">6.2.2. Download with Openocd</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#download-with-jlink">6.2.3. Download with Jlink</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">6. </span>BLDevCube start guide</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/bl_dev_cube.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="bldevcube-start-guide">
+<span id="bl-dev-cube"></span><h1><span class="section-number">6. </span>BLDevCube start guide<a class="headerlink" href="#bldevcube-start-guide" title="Permalink to this headline">¶</a></h1>
+<p>This document mainly introduces the use of Bouffalo Lab Dev Cube for code programming. For more details, please refer to <a class="reference external" href="https://dev.bouffalolab.com/media/upload/doc/DevCube%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8Cv1.2.pdf">BLDevCube user manual</a></p>
+<div class="section" id="download-bouffalo-lab-dev-cube">
+<h2><span class="section-number">6.1. </span>Download Bouffalo Lab Dev Cube<a class="headerlink" href="#download-bouffalo-lab-dev-cube" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Download the version suitable for your operating system from the developer community, download address:<a class="reference external" href="https://dev.bouffalolab.com/download">https://dev.bouffalolab.com/download</a></p>
+<ul>
+<li><p>For users who do not have a registered account, click on the guest portal</p></li>
+</ul>
+</li>
+<li><p>After the download is complete, you can use it after decompression</p></li>
+</ul>
+</div>
+<div class="section" id="configure-tool-download-method">
+<h2><span class="section-number">6.2. </span>Configure tool download method<a class="headerlink" href="#configure-tool-download-method" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Double-click <code class="docutils literal notranslate"><span class="pre">BLDevCube.exe</span></code>, in the <code class="docutils literal notranslate"><span class="pre">Chip</span> <span class="pre">Type</span></code> drop-down box, select the corresponding chip model, click <code class="docutils literal notranslate"><span class="pre">Finish</span></code> to enter the <code class="docutils literal notranslate"><span class="pre">Dev</span> <span class="pre">Cube</span></code> interface</p></li>
+<li><p>Enter the interface, select <code class="docutils literal notranslate"><span class="pre">MCU</span></code> under <code class="docutils literal notranslate"><span class="pre">View</span></code> in the menu bar to enter the MCU program download interface</p></li>
+</ul>
+<div class="figure align-default" id="id1">
+<img alt="" src="../_images/dev_cube_view_mcu.png" />
+<p class="caption"><span class="caption-text">select mcu</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<ul class="simple">
+<li><p>Select the corresponding download method in the <code class="docutils literal notranslate"><span class="pre">Interface</span></code> column under <code class="docutils literal notranslate"><span class="pre">Image</span></code>, and choose according to your actual physical connection</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Image</span> <span class="pre">file</span></code> configure the absolute path of the downloaded image, click <code class="docutils literal notranslate"><span class="pre">Browse</span></code> to select the <strong>Bin</strong> file</p></li>
+<li><p>When you click <code class="docutils literal notranslate"><span class="pre">click</span> <span class="pre">here</span> <span class="pre">to</span> <span class="pre">show</span> <span class="pre">advanced</span> <span class="pre">options</span></code>, the advanced mirroring configuration will be expanded, usually keep the default configuration; it should be noted that <code class="docutils literal notranslate"><span class="pre">Flash</span> <span class="pre">Clock</span></code> will affect the clock frequency of Flash and PSRAM at the same time , If you need to use PSRAM, you can increase the clock frequency to get better performance</p></li>
+</ul>
+<div class="section" id="download-with-uart">
+<h3><span class="section-number">6.2.1. </span>Download with UART<a class="headerlink" href="#download-with-uart" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">COM</span> <span class="pre">Port</span></code> is used for UART download, select the COM number connected to the chip, and click <code class="docutils literal notranslate"><span class="pre">Refresh</span></code> to refresh the COM number</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">Uart</span> <span class="pre">Speed</span></code> is used for UART download, configure the appropriate baud rate, the default is 2M</p></li>
+<li><p>Please make sure the hardware configuration is correct before downloading:</p>
+<ul>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">Type-C</span> <span class="pre">USB</span></code> or <code class="docutils literal notranslate"><span class="pre">Mini</span> <span class="pre">USB</span></code> to connect to the corresponding USB <code class="docutils literal notranslate"><span class="pre">Type-C</span></code> port or <code class="docutils literal notranslate"><span class="pre">Mini</span></code> port on the board.</p></li>
+<li><p>Press the <code class="docutils literal notranslate"><span class="pre">Boot</span></code> key on the board, don’t release it</p></li>
+<li><p>Press the <code class="docutils literal notranslate"><span class="pre">RST</span></code> key on the board, now you have entered <code class="docutils literal notranslate"><span class="pre">Boot</span> <span class="pre">ROM</span></code> model, you can release the two keys</p></li>
+<li><p>At this time, you can see the corresponding serial port <code class="docutils literal notranslate"><span class="pre">COM</span></code> number from the <code class="docutils literal notranslate"><span class="pre">Bouffalo</span> <span class="pre">Lab</span> <span class="pre">Dev</span> <span class="pre">Cube</span></code>, if it does not appear, please click the <code class="docutils literal notranslate"><span class="pre">Refresh</span></code> button to refresh</p></li>
+</ul>
+</li>
+<li><p>After completing the above configuration correctly, click the <code class="docutils literal notranslate"><span class="pre">Create&amp;Program</span></code> button to download</p></li>
+<li><p>After the download is successful, you will see the status bar turn green and display <code class="docutils literal notranslate"><span class="pre">Success</span></code></p></li>
+</ul>
+<div class="figure align-default" id="id2">
+<img alt="" src="../_images/dev_cube_download.png" />
+<p class="caption"><span class="caption-text">download success!</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="download-with-openocd">
+<h3><span class="section-number">6.2.2. </span>Download with Openocd<a class="headerlink" href="#download-with-openocd" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p>Download using openocd is basically the same as using serial port download option configuration, just switch <code class="docutils literal notranslate"><span class="pre">Interface</span></code> to <code class="docutils literal notranslate"><span class="pre">Openocd</span></code></p></li>
+<li><p>The hardware connection needs to be changed to a debugger connection that supports Openocd (this tutorial takes Sipeed RV Debugger as an example):</p>
+<blockquote>
+<div><ul class="simple">
+<li><ol class="arabic simple">
+<li><p>Connect the RV debugger to the USB port of the computer, open the device manager, you will find that the debugger is recognized as two serial ports (note: not the serial port on the board)</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_1.png" src="../_images/sipeed_rv_debugger_1.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="2">
+<li><p>Download the <code class="docutils literal notranslate"><span class="pre">zadig-2.4</span></code> replacement driver from sipeed. Download link: <a class="reference external" href="http://dl.sipeed.com/MAIX/tools/sipeed-rv-debugger/zadig-2.4.exe">http://dl.sipeed.com/MAIX/tools/sipeed-rv-debugger/zadig-2.4.exe</a></p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="3">
+<li><p>After downloading, double-click to open <code class="docutils literal notranslate"><span class="pre">zadig-2.4.exe</span></code>, and check List All Devices in Options.</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="4">
+<li><p>Find JTAG Debugger (Interface 0), then select the replacement driver as WinUSB and click Replace Driver to replace</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="5">
+<li><p>Open the device manager again and see that one of the serial ports has been replaced with a universal serial bus device, indicating that the installation is successful</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_2.png" src="../_images/sipeed_rv_debugger_2.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="6">
+<li><p>Connect the JTAG pins of the debugger with the JTAG pins of the board</p></li>
+</ol>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>After completing the above configuration correctly, click the <code class="docutils literal notranslate"><span class="pre">Create&amp;Program</span></code> button to download</p></li>
+<li><p>After the download is successful, you will see the status bar turn green and display <code class="docutils literal notranslate"><span class="pre">Success</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="download-with-jlink">
+<h3><span class="section-number">6.2.3. </span>Download with Jlink<a class="headerlink" href="#download-with-jlink" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p>The tool configuration for downloading using Jlink and Openocd is basically the same, just switch <code class="docutils literal notranslate"><span class="pre">Interface</span></code> to <code class="docutils literal notranslate"><span class="pre">Jlink</span></code></p></li>
+<li><p>The hardware connection needs to be changed to use Jlink connection (this tutorial takes Jlink V11 as an example, it is recommended to use Jlink V10 or later):</p>
+<blockquote>
+<div><ul class="simple">
+<li><ol class="arabic simple">
+<li><p>Download the appropriate Jlink driver from Segger official website and install it</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="2">
+<li><p>Connect the Jlink debugger to the USB port of the computer</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="3">
+<li><p>Connect the JTAG pins of the JLink debugger with the JTAG pins of the board</p></li>
+</ol>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>After completing the above configuration correctly, click the <code class="docutils literal notranslate"><span class="pre">Create&amp;Program</span></code> button to download</p></li>
+<li><p>After the download is successful, you will see the status bar turn green and display <code class="docutils literal notranslate"><span class="pre">Success</span></code></p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="board.html" class="btn btn-neutral float-right" title="7. Board Configuration System User Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cdk_new_project_quick_start.html" class="btn btn-neutral float-left" title="5. New Project Guide based on CDK" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

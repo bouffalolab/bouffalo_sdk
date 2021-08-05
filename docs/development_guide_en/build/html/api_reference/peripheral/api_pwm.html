@@ -1,0 +1,553 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>2.4. PWM &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="2.5. DMA" href="api_dma.html" />
+    <link rel="prev" title="2.3. UART" href="api_uart.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">2. Peripheral</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_clock.html">2.1. Clock Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_gpio.html">2.2. GPIO Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_uart.html">2.3. UART Device</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2.4. PWM Device</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">2.4.1. Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pwm-device-structure-definition">2.4.2. PWM Device Structure Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pwm-device-parameter-configuration-table">2.4.3. PWM Device Parameter Configuration Table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pwm-device-interface">2.4.4. PWM device interface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-register">2.4.4.1. <strong>pwm_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-open">2.4.4.2. <strong>device_open</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-close">2.4.4.3. <strong>device_close</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-control">2.4.4.4. <strong>device_control</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#device-set-callback">2.4.4.5. <strong>device_set_callback</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-start">2.4.4.6. <strong>pwm_channel_start</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-stop">2.4.4.7. <strong>pwm_channel_stop</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-channel-update">2.4.4.8. <strong>pwm_channel_update</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pwm-it-pulse-count-update">2.4.4.9. <strong>pwm_it_pulse_count_update</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_dma.html">2.5. DMA Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_i2c.html">2.6. I2C Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_spi.html">2.7. SPI Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_adc.html">2.8. ADC Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_dac.html">2.9. DAC Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.10. TIMER Device</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">2. </span>Peripheral</a> &raquo;</li>
+        
+      <li><span class="section-number">2.4. </span>PWM</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/api_reference/peripheral/api_pwm.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pwm">
+<h1><span class="section-number">2.4. </span>PWM<a class="headerlink" href="#pwm" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><span class="section-number">2.4.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>PWM is a technology that implements analog voltage control in a digital way. It modulates the width of a series of pulses, equivalent to the required waveform (including shape and amplitude), and digitally encodes the analog signal level. That is to say, by adjusting the change of the duty cycle to adjust the change of the signal, energy, etc. The duty cycle refers to the percentage of the entire signal period when the signal is at a high level. For example, the duty cycle of a square wave is 50%. The DMA device in BL series MCU has the following characteristics:</p>
+<ul class="simple">
+<li><p>Support 5-channel PWM</p></li>
+<li><p>Three clock sources can be selected (bus clock &lt;bclk&gt;, crystal oscillator clock &lt;xtal_ck&gt;, slow clock &lt;32k&gt;), with 16-bit clock divider</p></li>
+<li><p>Double threshold domain setting, increase pulse flexibility</p></li>
+</ul>
+</div>
+<div class="section" id="pwm-device-structure-definition">
+<h2><span class="section-number">2.4.2. </span>PWM Device Structure Definition<a class="headerlink" href="#pwm-device-structure-definition" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">pwm_device</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">ch</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">polarity_invert_mode</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">period</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">threshold_low</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">threshold_high</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">it_pulse_count</span><span class="p">;</span>
+
+<span class="p">}</span> <span class="n">pwm_device_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>parent</strong>                inherit the properties of the parent class</p></li>
+<li><p><strong>ch</strong>                    channel number, ch is 0 if PWM channel 0 is enabled, ch is 1 if PWM channel 1 is enabled, and so on</p></li>
+<li><p><strong>polarity_invert_mode</strong>  polarity invert enable</p></li>
+<li><p><strong>period</strong>                PWM period value</p></li>
+<li><p><strong>threshold_low</strong>         PWM low threshold</p></li>
+<li><p><strong>threshold_high</strong>        PWM high threshold</p></li>
+<li><p><strong>it_pulse_count</strong>        The cycle count value that triggered the interrupt condition</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>PWM actual frequency = pwm_clock_source/frequency_division/period, period is not the actual PWM period,it just has the same name.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>PWM Duty cycle = (threshold_high-threshold_low)/period * 100%</p>
+</div>
+</div>
+<div class="section" id="pwm-device-parameter-configuration-table">
+<h2><span class="section-number">2.4.3. </span>PWM Device Parameter Configuration Table<a class="headerlink" href="#pwm-device-parameter-configuration-table" title="Permalink to this headline">¶</a></h2>
+<p>Each PWM device has a parameter configuration macro, the macro definition is located in the <code class="docutils literal notranslate"><span class="pre">peripheral_config.h</span></code> file under the <code class="docutils literal notranslate"><span class="pre">bsp/board/xxx</span></code> directory, and the variable definition is located in <code class="docutils literal notranslate"><span class="pre">hal_pwm.c</span></code>, so the user does not need to define variable. When the user opens the macro of the corresponding device, the configuration of the device will take effect. For example, open the macro <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH2</span></code>, and <code class="docutils literal notranslate"><span class="pre">PWM_CH2_CONFIG</span></code> will take effect, and at the same time, channel 2 of the <code class="docutils literal notranslate"><span class="pre">PWM</span></code> device can be registered and used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cm">/*Parameter configuration macro*/</span>
+<span class="cp">#if defined(BSP_USING_PWM_CH2)</span>
+<span class="cp">#ifndef PWM_CH2_CONFIG</span>
+<span class="cp">#define PWM_CH2_CONFIG                   \</span>
+<span class="cp">    {                                    \</span>
+<span class="cp">        .ch = 2,                         \</span>
+<span class="cp">        .polarity_invert_mode = DISABLE, \</span>
+<span class="cp">        .period = 0,                     \</span>
+<span class="cp">        .threshold_low = 0,              \</span>
+<span class="cp">        .threshold_high = 0,             \</span>
+<span class="cp">        .it_pulse_count = 0,             \</span>
+<span class="cp">    }</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+
+
+<span class="cm">/*Variable definitions*/</span>
+<span class="k">static</span> <span class="n">pwm_device_t</span> <span class="n">pwmx_device</span><span class="p">[</span><span class="n">PWM_MAX_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH0</span>
+    <span class="n">PWM_CH0_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH1</span>
+    <span class="n">PWM_CH1_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH2</span>
+    <span class="n">PWM_CH2_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH3</span>
+    <span class="n">PWM_CH3_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH4</span>
+    <span class="n">PWM_CH4_CONFIG</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above configuration can be modified through <code class="docutils literal notranslate"><span class="pre">PWM_DEV(dev)-&gt;xxx</span></code>, and can only be used before calling <code class="docutils literal notranslate"><span class="pre">device_open</span></code>.</p>
+</div>
+</div>
+<div class="section" id="pwm-device-interface">
+<h2><span class="section-number">2.4.4. </span>PWM device interface<a class="headerlink" href="#pwm-device-interface" title="Permalink to this headline">¶</a></h2>
+<p>The PWM device interfaces all follow the interfaces provided by the standard device driver management layer. And in order to facilitate the user to call, some standard interfaces are redefined using macros.</p>
+<div class="section" id="pwm-register">
+<h3><span class="section-number">2.4.4.1. </span><strong>pwm_register</strong><a class="headerlink" href="#pwm-register" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_register</span></code> is used to register a channel of the PWM device standard driver interface. Before registering, you need to open the macro definition of a certain channel of the corresponding PWM device. For example, define <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH0</span></code> before you can use the <code class="docutils literal notranslate"><span class="pre">PWM</span></code> channel 0 device. After the registration is completed, other interfaces can be used. If no macro is defined, the PWM device cannot be used.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">pwm_register</span><span class="p">(</span><span class="k">enum</span> <span class="n">pwm_index_type</span> <span class="n">index</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>index</strong> the index of the device to be registered</p></li>
+<li><p><strong>name</strong> name the registered device</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">index</span></code> is used to select the configuration of a certain channel of the PWM device. An index corresponds to a channel configuration of a PWM device. For example, <code class="docutils literal notranslate"><span class="pre">PWM_CH0_INDEX</span></code> corresponds to the configuration of PWM channel 0, and <code class="docutils literal notranslate"><span class="pre">index</span></code> has the following optional types:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">pwm_index_type</span>
+<span class="p">{</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH0</span>
+    <span class="n">PWM_CH0_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH1</span>
+    <span class="n">PWM_CH1_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH2</span>
+    <span class="n">PWM_CH2_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH3</span>
+    <span class="n">PWM_CH3_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+<span class="cp">#ifdef BSP_USING_PWM_CH4</span>
+    <span class="n">PWM_CH4_INDEX</span><span class="p">,</span>
+<span class="cp">#endif</span>
+    <span class="n">PWM_MAX_INDEX</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-open">
+<h3><span class="section-number">2.4.4.2. </span><strong>device_open</strong><a class="headerlink" href="#device-open" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_open</span></code> is used to open a channel of a pwm device,this funtion calls <code class="docutils literal notranslate"><span class="pre">pwm_open</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_open</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="n">oflag</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>oflag</strong> open mode</p></li>
+<li><p><strong>return</strong> error code, 0 means opening is successful, others mean errors</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">oflag</span></code> provides the following types</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEVICE_OFLAG_STREAM_TX  0x001 </span><span class="cm">/* The device is turned on in polling sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_STREAM_RX  0x002 </span><span class="cm">/* The device is turned on in polling receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_TX     0x004 </span><span class="cm">/* The device is turned on in interrupt sending mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_INT_RX     0x008 </span><span class="cm">/* The device is turned on in interrupt receiving mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_TX     0x010 </span><span class="cm">/* The device is turned on in DMA transmission mode */</span><span class="cp"></span>
+<span class="cp">#define DEVICE_OFLAG_DMA_RX     0x020 </span><span class="cm">/* The device is turned on in DMA receiving mode */</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="device-close">
+<h3><span class="section-number">2.4.4.3. </span><strong>device_close</strong><a class="headerlink" href="#device-close" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_close</span></code> is used to close a channel of a pwm device.this funtion calls <code class="docutils literal notranslate"><span class="pre">pwm_close</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_close</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>return</strong> error code, 0 means closing is successful, others mean error</p></li>
+</ul>
+</div>
+<div class="section" id="device-control">
+<h3><span class="section-number">2.4.4.4. </span><strong>device_control</strong><a class="headerlink" href="#device-control" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_control</span></code> is used to control and modify the parameters of the PWM device according to commands.This funtion calls <code class="docutils literal notranslate"><span class="pre">pwm_control</span></code> actually.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_control</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">int</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>cmd</strong> device control command</p></li>
+<li><p><strong>args</strong> control parameters</p></li>
+<li><p><strong>return</strong> different control commands return different meanings</p></li>
+</ul>
+<p>In addition to standard control commands, PWM devices also have their own special control commands.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG 0x10</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">args</span></code> input is different depending on <code class="docutils literal notranslate"><span class="pre">cmd</span></code>, the list is as follows:</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">table1</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 18%" />
+<col style="width: 55%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>cmd</p></th>
+<th class="head"><p>args</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DEVICE_CTRL_RESUME</p></td>
+<td><p>NULL</p></td>
+<td><p>Enable the current PWM channel</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_SUSPEND</p></td>
+<td><p>NULL</p></td>
+<td><p>Disable the current PWM channel</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_PWM_FREQUENCE_CONFIG</p></td>
+<td><p>uint32_t</p></td>
+<td><p>Configure the current PWM channel period</p></td>
+</tr>
+<tr class="row-odd"><td><p>DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG</p></td>
+<td><p>pwm_dutycycle_config_t</p></td>
+<td><p>Configure the current PWM channel duty cycle</p></td>
+</tr>
+<tr class="row-even"><td><p>DEVICE_CTRL_PWM_IT_PULSE_COUNT_CONFIG</p></td>
+<td><p>uint32_t</p></td>
+<td><p>Configure the trigger PWM interrupt period value</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="device-set-callback">
+<h3><span class="section-number">2.4.4.5. </span><strong>device_set_callback</strong><a class="headerlink" href="#device-set-callback" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> is used to register a PWM channel interrupt callback function.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">device_set_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">callback</span><span class="p">)(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">event</span><span class="p">));</span>
+</pre></div>
+</div>
+<ul>
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>callback</strong> the interrupt callback function to be registered</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>dev</strong> device handle</p></li>
+<li><p><strong>args</strong> unused</p></li>
+<li><p><strong>size</strong> unused</p></li>
+<li><p><strong>event</strong> interrupt event type</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> type definition is as follows:</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">pwm_event_type</span>
+<span class="p">{</span>
+    <span class="n">PWM_EVENT_COMPLETE</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pwm-channel-start">
+<h3><span class="section-number">2.4.4.6. </span><strong>pwm_channel_start</strong><a class="headerlink" href="#pwm-channel-start" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_channel_start</span></code> is used to start the PWM channel. It actually calls <code class="docutils literal notranslate"><span class="pre">device_control</span></code>, where <code class="docutils literal notranslate"><span class="pre">cmd</span></code> is <code class="docutils literal notranslate"><span class="pre">DEVICE_CTRL_RESUME</span></code>.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_start</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> pwm channel handle that needs to be opened</p></li>
+</ul>
+</div>
+<div class="section" id="pwm-channel-stop">
+<h3><span class="section-number">2.4.4.7. </span><strong>pwm_channel_stop</strong><a class="headerlink" href="#pwm-channel-stop" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_channel_stop</span></code> is used to close the PWM channel. It actually calls <code class="docutils literal notranslate"><span class="pre">device_control</span></code>, where <code class="docutils literal notranslate"><span class="pre">cmd</span></code> is <code class="docutils literal notranslate"><span class="pre">DEVICE_CTRL_SUSPEND</span></code>.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_stop</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> pwm channel handle that needs to be closed</p></li>
+</ul>
+</div>
+<div class="section" id="pwm-channel-update">
+<h3><span class="section-number">2.4.4.8. </span><strong>pwm_channel_update</strong><a class="headerlink" href="#pwm-channel-update" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_channel_update</span></code> is used to update the frequency and duty cycle of the PWM channel. The actual call is <code class="docutils literal notranslate"><span class="pre">device_control</span></code>, where <code class="docutils literal notranslate"><span class="pre">cmd</span></code> is <code class="docutils literal notranslate"><span class="pre">DEVICE_CTRL_CONFIG</span></code>.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_channel_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> pwm channel handle that needs to be updated</p></li>
+<li><p><strong>cfg</strong> pwm_config_t handle</p></li>
+</ul>
+</div>
+<div class="section" id="pwm-it-pulse-count-update">
+<h3><span class="section-number">2.4.4.9. </span><strong>pwm_it_pulse_count_update</strong><a class="headerlink" href="#pwm-it-pulse-count-update" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pwm_it_pulse_count_update</span></code> is used to update the count value of the PWM channel. The PWM interrupt needs to be enabled before it takes effect. When the PWM count reaches the set period count value, an interrupt will be generated. The actual call is <code class="docutils literal notranslate"><span class="pre">device_control</span></code>, where <code class="docutils literal notranslate"><span class="pre">cmd</span></code> is <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG</span></code>.</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">pwm_it_pulse_count_update</span><span class="p">(</span><span class="n">dev</span><span class="p">,</span><span class="n">count</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dev</strong> pwm channel handle that needs to update the cycle count value</p></li>
+<li><p><strong>count</strong> cycle count value</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="api_dma.html" class="btn btn-neutral float-right" title="2.5. DMA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api_uart.html" class="btn btn-neutral float-left" title="2.3. UART" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

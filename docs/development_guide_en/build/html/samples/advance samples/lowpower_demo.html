@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3. LowPower Evaluation &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="4. BOOT2 IAP" href="boot2_iap_info.html" />
+    <link rel="prev" title="2. FATFS Read And Write" href="fatfs_demo.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. LowPower Evaluation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">3.1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#low-power-consumption-example-test-method">3.2. <strong>Low power consumption example test method</strong></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#compile-low-power-sample-code">3.2.1. <strong>Compile low-power sample code</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prepare-the-hardware-environment-required-for-low-power-testing">3.2.2. <strong>Prepare the hardware environment required for low-power testing</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-xshell-to-start-evaluating-low-power-performance">3.2.3. <strong>Use Xshell to start evaluating low-power performance</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">3. </span>LowPower Evaluation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/samples/advance samples/lowpower_demo.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="lowpower-evaluation">
+<h1><span class="section-number">3. </span>LowPower Evaluation<a class="headerlink" href="#lowpower-evaluation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><span class="section-number">3.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>BL series chips have rich low-power features to adapt to different low-power applications. In order to facilitate users to quickly evaluate and use the low-power performance of bl series MCUs, bl_mcu_sdk provides a set of low-power interfaces. The low-power levels are divided into four levels.</p>
+<ol class="arabic simple">
+<li><p>Running: The power consumption when the CPU is running normally, and the power consumption is determined by the function executed by the customer application code.</p></li>
+<li><p>WFI: WFI mode, the clock of the CPU is in the Gating state, the CPU stops running, and the program will continue to run when the user exits the WFI mode.</p></li>
+<li><p>PDS: In PDS mode, most power domains on the chip are turned off, and the CPU is turned off at the same time. RAMs such as ITCM and DTCM in the same power domain as the CPU cannot be used. Only 64K OCTAM can save data. The internal RTC can be used to wake up, or use GPIO pins (when the GPIO power domain is not turned off) to wake up.</p></li>
+<li><p>HBN: HBN mode, shuts down most of the power domains on the chip, shuts down the CPU and 64K OCRAM, only 4K RAM in the AON domain can save data. The internal RTC can be used to wake up, or a specific wake-up pin (pin located in the AON domain) can be used to wake up.</p></li>
+</ol>
+<p>bl_mcu_sdk provides a simple low-power reference example (bl_mcu_sdk examples/power/lowpower_test/) to help users quickly evaluate low-power features. If you need to further adapt to your own low-power scenarios and adopt different low-power methods, please refer to the relevant datasheet or seek technical support from Boufflao Lab.
+In this example, the clock selection of peripherals and CPU are both crystal oscillator 32M. The power consumption measurement results based on this example are shown in the following table:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 16%" />
+<col style="width: 9%" />
+<col style="width: 22%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>Reference current</p></th>
+<th class="head"><p>Basic mode</p></th>
+<th class="head"><p>Wake-up source</p></th>
+<th class="head"><p>Remark</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Running</p></td>
+<td><p>5.68 mA</p></td>
+<td><p>Run</p></td>
+<td></td>
+<td><p>All peripheral clocks are turned on</p></td>
+</tr>
+<tr class="row-odd"><td><p>WFI</p></td>
+<td><p>3.14 mA</p></td>
+<td><p>WFI</p></td>
+<td><p>Any interruption</p></td>
+<td><p>Except the serial port, other peripheral clocks are closed</p></td>
+</tr>
+<tr class="row-even"><td><p>PDS</p></td>
+<td><p>10 uA</p></td>
+<td><p>PDS 31</p></td>
+<td><p>Internal RTC/pin interrupt</p></td>
+<td><p>64K OCRAM to save data</p></td>
+</tr>
+<tr class="row-odd"><td><p>HBN</p></td>
+<td><p>1 uA</p></td>
+<td><p>HBN 1</p></td>
+<td><p>Internal RTC/pin interrupt</p></td>
+<td><p>4K AON RAM to save data</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The reference current in the above table is obtained through the sample firmware test. The definition of four levels of “run” ” wfi” “pds” “hbn” simplifies the original setting of hbn level and pds level.</p>
+<p>See bl702_bl704_bl706_DS_EN_Combo_1.9.pdf page 28</p>
+<div class="figure align-default">
+<img alt="../../_images/powerTable.png" src="../../_images/powerTable.png" />
+</div>
+</div>
+<div class="section" id="low-power-consumption-example-test-method">
+<h2><span class="section-number">3.2. </span><strong>Low power consumption example test method</strong><a class="headerlink" href="#low-power-consumption-example-test-method" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="compile-low-power-sample-code">
+<h3><span class="section-number">3.2.1. </span><strong>Compile low-power sample code</strong><a class="headerlink" href="#compile-low-power-sample-code" title="Permalink to this headline">¶</a></h3>
+<p>Write <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">APP=lowpower_test</span> <span class="pre">SUPPORT_SHELL=y</span> <span class="pre">BOARD=bl706_lp</span></code> in the project directory to complete the compilation of the low power consumption example bl706, or use the CDK project directly to complete the compilation and download.
+You can refer to this document “Quick Development Guide” to get more information about compiling and programming.</p>
+<p>When the compilation and programming are successful, connect the serial port to the computer and reset the chip, Xshell will display the page as shown in the figure below.</p>
+<div class="figure align-default">
+<img alt="../../_images/xShell_lowpower.png" src="../../_images/xShell_lowpower.png" />
+</div>
+</div>
+<div class="section" id="prepare-the-hardware-environment-required-for-low-power-testing">
+<h3><span class="section-number">3.2.2. </span><strong>Prepare the hardware environment required for low-power testing</strong><a class="headerlink" href="#prepare-the-hardware-environment-required-for-low-power-testing" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>It is possible to connect the ammeter and the circuit board of the power supply side in series</p></li>
+<li><p>Ammeter</p></li>
+<li><p>PC (running Windows or Linux system)</p></li>
+<li><p>TTL to USB</p></li>
+</ul>
+<p>As shown in the figure below, connect the ammeter in series into the power supply circuit of the bl706 module, and issue different low-power commands through the serial debugging assistant software on the PC side, so that the bl706 enters the corresponding low-power mode.
+Observe the indicated current value and complete the evaluation.</p>
+<div class="figure align-default">
+<img alt="../../_images/lowpower_arch.png" src="../../_images/lowpower_arch.png" />
+</div>
+</div>
+<div class="section" id="use-xshell-to-start-evaluating-low-power-performance">
+<h3><span class="section-number">3.2.3. </span><strong>Use Xshell to start evaluating low-power performance</strong><a class="headerlink" href="#use-xshell-to-start-evaluating-low-power-performance" title="Permalink to this headline">¶</a></h3>
+<p>The user can enter the corresponding low power consumption mode by entering the following commands in Xshell.</p>
+<p><code class="docutils literal notranslate"><span class="pre">run</span></code></p>
+<ul class="simple">
+<li><p>After resetting the chip, it enters the run mode by default without entering any low power consumption mode. The chip is actually running the while(1); statement.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">wfi</span></code></p>
+<ul class="simple">
+<li><p>Enter wfi mode without adding any parameters. After entering, the CPU is in clock gating state to reduce power consumption</p></li>
+<li><p>After entering wfi mode, any interrupt will wake up, such as uart interrupt. Pressing Enter in Xshell will trigger the BL706 UART RX interrupt, so the wfi low power consumption mode can be awakened by this method.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">pds</span> <span class="pre">sleeptime</span></code></p>
+<ul class="simple">
+<li><p>pds can choose to take the parameter “sleeptime” to determine its internal RTC wake-up time. If the command does not carry this parameter, the RTC internal wake-up is not used by default. The current firmware only supports power-on reset wake-up.</p></li>
+<li><p>If the instruction contains the sleeptime parameter, pds will be awakened at the moment of <code class="docutils literal notranslate"><span class="pre">sleeptime</span> <span class="pre">*</span> <span class="pre">clock_period</span></code>, which will behave as resetting the chip and reprinting the initial message.</p></li>
+<li><p>After entering the low-power mode, the RTC clock is 32K, so when the sleeptime is 32768, it appears to wake up after a second of sleep.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">hbn</span> <span class="pre">sleeptime</span></code></p>
+<ul class="simple">
+<li><p>hbn can choose to take the parameter “sleeptime” to determine its internal RTC wake-up time. If the command does not carry this parameter, the RTC internal wake-up is not used by default. The current firmware only supports power-on reset wake-up.</p></li>
+<li><p>If the instruction contains the sleeptime parameter, hbn will be awakened at the moment of <code class="docutils literal notranslate"><span class="pre">sleeptime</span> <span class="pre">*</span> <span class="pre">clock_period</span></code>, which will behave as resetting the chip and printing the start message again.</p></li>
+<li><p>After entering the low-power mode, the RTC clock is 32K, so when the sleeptime is 32768, it appears to wake up after a second of sleep.</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="boot2_iap_info.html" class="btn btn-neutral float-right" title="4. BOOT2 IAP" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="fatfs_demo.html" class="btn btn-neutral float-left" title="2. FATFS Read And Write" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

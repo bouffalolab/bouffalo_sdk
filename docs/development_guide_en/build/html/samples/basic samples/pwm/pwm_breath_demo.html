@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>3.1. PWM - Breathing LED &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="3.2. PWM - 驱动步进电机" href="pwm_step_motor.html" />
+    <link rel="prev" title="3. PWM" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/get_started.html">1. Preparation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../uart/index.html">2. UART</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">3. PWM</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.1. PWM - Breathing LED</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hardware-connection">3.1.1. Hardware Connection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#software-implementation">3.1.2. Software Implementation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compile-and-program">3.1.3. Compile and Program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#experimental-phenomena">3.1.4. Experimental Phenomena</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pwm_step_motor.html">3.2. PWM - Drive Stepper Motor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">3. </span>PWM</a> &raquo;</li>
+        
+      <li><span class="section-number">3.1. </span>PWM - Breathing LED</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../_sources/samples/basic samples/pwm/pwm_breath_demo.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pwm-breathing-led">
+<h1><span class="section-number">3.1. </span>PWM - Breathing LED<a class="headerlink" href="#pwm-breathing-led" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><p>This demo is based on PWM polling mode.</p>
+</div></blockquote>
+<div class="section" id="hardware-connection">
+<h2><span class="section-number">3.1.1. </span>Hardware Connection<a class="headerlink" href="#hardware-connection" title="Permalink to this headline">¶</a></h2>
+<p>This demo is based on BL706_IOT, and the connection method is as follows</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
+<span class="o">----------------------------------</span>
+    <span class="n">PWM_CH2</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO22</span>
+</pre></div>
+</div>
+<div class="figure align-default">
+<img alt="" src="../../../_images/blink_breath_sch1.png" />
+</div>
+</div>
+<div class="section" id="software-implementation">
+<h2><span class="section-number">3.1.2. </span>Software Implementation<a class="headerlink" href="#software-implementation" title="Permalink to this headline">¶</a></h2>
+<p>-See <code class="docutils literal notranslate"><span class="pre">examples/pwm/pwm_breath_led</span></code> for the software code</p>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_PWM_CLOCK_SOURCE  ROOT_CLOCK_SOURCE_XCLK</span>
+<span class="cp">#define BSP_PWM_CLOCK_DIV  1</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>Configure the <code class="docutils literal notranslate"><span class="pre">PWM</span></code> device clock source, see <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/clock_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define CONFIG_GPIO22_FUNC GPIO_FUN_PWM</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>Configure <code class="docutils literal notranslate"><span class="pre">PWM</span></code> device multiplexing pins, see <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_PWM_CH2</span>
+
+<span class="cp">#if defined(BSP_USING_PWM_CH2)</span>
+<span class="cp">#ifndef PWM_CH2_CONFIG</span>
+<span class="cp">#define PWM_CH2_CONFIG \</span>
+<span class="cp">{   \</span>
+<span class="cp">    .ch = 2, \</span>
+<span class="cp">    .frequency = 1000000, \</span>
+<span class="cp">    .dutycycle = 0, \</span>
+<span class="cp">    .it_pulse_count = 0,\</span>
+<span class="cp">}</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>Enable <code class="docutils literal notranslate"><span class="pre">BSP_USING_PWM_CH2</span></code> and configure <code class="docutils literal notranslate"><span class="pre">PWM</span></code> device configuration, see <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/peripheral_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">pwm_register</span><span class="p">(</span><span class="n">PWM_CH2_INDEX</span><span class="p">,</span> <span class="s">&quot;led_breath&quot;</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_RDWR</span><span class="p">);</span>
+
+<span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">led_breath</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;led_breath&quot;</span><span class="p">);</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">led_breath</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">led_breath</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">period</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span> <span class="c1">//frequence = 32M/1/32 = 1Mhz</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">led_breath</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_low</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>
+    <span class="n">PWM_DEV</span><span class="p">(</span><span class="n">led_breath</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+    <span class="n">device_open</span><span class="p">(</span><span class="n">led_breath</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_STREAM_TX</span><span class="p">);</span>
+    <span class="n">pwm_channel_start</span><span class="p">(</span><span class="n">led_breath</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>First call the <code class="docutils literal notranslate"><span class="pre">pwm_register</span></code> function to register a channel of the <code class="docutils literal notranslate"><span class="pre">PWM</span></code> device, currently register <code class="docutils literal notranslate"><span class="pre">PWM_CH2</span></code></p></li>
+<li><p>Then use the <code class="docutils literal notranslate"><span class="pre">find</span></code> function to find the handle corresponding to the device and save it in the <code class="docutils literal notranslate"><span class="pre">led_breath</span></code> handle</p></li>
+<li><p>Set the frequency of <code class="docutils literal notranslate"><span class="pre">PWM_CH2</span></code> to 1Mhz, and the duty cycle to 50%</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">device_open</span></code> to open the <code class="docutils literal notranslate"><span class="pre">led_breath</span></code> device in polling mode</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="k">for</span> <span class="p">(</span><span class="n">pwm_cfg</span><span class="p">.</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">pwm_cfg</span><span class="p">.</span><span class="n">threshold_high</span> <span class="o">&lt;=</span> <span class="mi">32</span><span class="p">;</span> <span class="n">pwm_cfg</span><span class="p">.</span><span class="n">threshold_high</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">device_control</span><span class="p">(</span><span class="n">led_breath</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">);</span>
+        <span class="n">bflb_platform_delay_ms</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">pwm_cfg</span><span class="p">.</span><span class="n">threshold_high</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">pwm_cfg</span><span class="p">.</span><span class="n">threshold_high</span> <span class="o">&amp;&amp;</span> <span class="n">pwm_cfg</span><span class="p">.</span><span class="n">threshold_high</span> <span class="o">&lt;=</span> <span class="mi">32</span><span class="p">;</span> <span class="n">pwm_cfg</span><span class="p">.</span><span class="n">threshold_high</span><span class="o">--</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">device_control</span><span class="p">(</span><span class="n">led_breath</span><span class="p">,</span> <span class="n">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pwm_cfg</span><span class="p">);</span>
+        <span class="n">bflb_platform_delay_ms</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
+    <span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">device_contorl</span></code> function with the <code class="docutils literal notranslate"><span class="pre">DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG</span></code> instruction to modify the duty cycle of the current PWM channel.</p></li>
+</ul>
+</div>
+<div class="section" id="compile-and-program">
+<h2><span class="section-number">3.1.3. </span>Compile and Program<a class="headerlink" href="#compile-and-program" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p><strong>CDK compilation</strong></p>
+<p>Open project:pwm_breath_led.cdkproj</p>
+<p>Refer to the steps of <a class="reference internal" href="../../../get_started/Windows_quick_start_cdk.html#windows-cdk-quick-start"><span class="std std-ref">Guide to using CDK (like MDK Keil) under Windows</span></a> to compile and download</p>
+</li>
+<li><p><strong>Command compilation</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>pwm_breath_led
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>Program</strong></p>
+<p>See <a class="reference internal" href="../../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube start guide</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="experimental-phenomena">
+<h2><span class="section-number">3.1.4. </span>Experimental Phenomena<a class="headerlink" href="#experimental-phenomena" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-default">
+<img alt="" src="../../../_images/pwm_demo.gif" />
+</div>
+<p>pwm breath led!</p>
+<p>Video display:</p>
+<iframe src="//player.bilibili.com/player.html?aid=887712205&bvid=BV1xK4y1P7ur&cid=326227924&page=4" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe></div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="pwm_step_motor.html" class="btn btn-neutral float-right" title="3.2. PWM - 驱动步进电机" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="3. PWM" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

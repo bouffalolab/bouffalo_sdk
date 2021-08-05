@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>1. Preparation &mdash; BL_MCU_SDK Development Guide 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2. Hardware connection" href="connecting_hardware.html" />
+    <link rel="prev" title="BL MCU SDK development guide" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> BL_MCU_SDK Development Guide
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Quick Development Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Preparation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hardware-environment">1.1. Hardware environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#software-environment">1.2. Software Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sipeed-rv-debugger-plus-driver-installation-settings">1.3. Sipeed RV-Debugger Plus driver installation settings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_hardware.html">2. Hardware connection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">3. Development environment setup guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_quick_start.html">4. New Project Guide based on cmake framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cdk_new_project_quick_start.html">5. New Project Guide based on CDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bl_dev_cube.html">6. BLDevCube start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="board.html">7. Board Configuration System User Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Manuals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/api_overview.html">1. API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/bluetooth/api_ble.html">3. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Basic Peripheral Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/gpio/index.html">1. GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/uart/index.html">2. UART</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/pwm/index.html">3. PWM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/mtimer/index.html">4. MTIMER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/dma/index.html">5. DMA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/spi/index.html">6. SPI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/i2c/index.html">7. I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/adc/index.html">8. ADC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/basic%20samples/timer/index.html">9. TIMER</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advance Samples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/shell_demo.html">1. SHELL Command Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/fatfs_demo.html">2. FATFS Read And Write</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">3. LowPower Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">4. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">5. BLE Client And Server Interconnection</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BL_MCU_SDK Development Guide</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">1. </span>Preparation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/get_started/get_started.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="preparation">
+<h1><span class="section-number">1. </span>Preparation<a class="headerlink" href="#preparation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="hardware-environment">
+<h2><span class="section-number">1.1. </span>Hardware environment<a class="headerlink" href="#hardware-environment" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>At least one board for BL702 series MCU:</p>
+<ul>
+<li><p>BL706_IOT</p></li>
+<li><p>BL706_AVB</p></li>
+</ul>
+</li>
+</ul>
+<p>BL706_Iot as shown in the figure below</p>
+<div class="figure align-default" id="id1">
+<img alt="" src="../_images/bl706_iot.png" />
+<p class="caption"><span class="caption-text">BL706_IoT</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>BL706_AVB as shown in the figure below</p>
+<div class="figure align-default" id="id2">
+<img alt="" src="../_images/bl706_avb.png" />
+<p class="caption"><span class="caption-text">BL706_AVB</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<ul class="simple">
+<li><p>A debugger that supports standard JTAG, just choose one of the following debuggers:</p>
+<ul>
+<li><p>CK-Link</p></li>
+<li><p>Jlink V11</p></li>
+<li><p>Sipeed RV-Debugger Plus</p></li>
+<li><p>Bouffalo Lab Debugger</p></li>
+</ul>
+</li>
+<li><p>One PC host (Windows or Linux system)</p></li>
+</ul>
+</div>
+<div class="section" id="software-environment">
+<h2><span class="section-number">1.2. </span>Software Environment<a class="headerlink" href="#software-environment" title="Permalink to this headline">¶</a></h2>
+<p>In order to better use the BL702 series MCU, it is recommended that you have at least one of the following development environments:</p>
+<ul class="simple">
+<li><p>Use <a class="reference external" href="Windows_quick_start_cdk.html">CDK</a> for Windows (Windows 7 or above is recommended)</p></li>
+<li><p><a class="reference external" href="Windows_quick_start_eclipse.html">Windows</a> Use Eclipse (Windows 7 or above is recommended)</p></li>
+<li><p><a class="reference external" href="Linux_quick_start_ubuntu.html">Linux</a> (LTS version above Ubuntu 18 is recommended)</p></li>
+</ul>
+</div>
+<div class="section" id="sipeed-rv-debugger-plus-driver-installation-settings">
+<span id="sipeed-rv-debugger-plus"></span><h2><span class="section-number">1.3. </span>Sipeed RV-Debugger Plus driver installation settings<a class="headerlink" href="#sipeed-rv-debugger-plus-driver-installation-settings" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>This section mainly introduces the driver installation settings of the <strong>Sipeed RV-Debugger Plus</strong> debugger. <code class="docutils literal notranslate"><span class="pre">If</span> <span class="pre">you</span> <span class="pre">use</span> <span class="pre">**CK-Link**</span> <span class="pre">or</span> <span class="pre">**J-Link**,</span> <span class="pre">you</span> <span class="pre">don’t</span> <span class="pre">need</span> <span class="pre">to</span> <span class="pre">read</span> <span class="pre">this</span> <span class="pre">section.</span></code></p></li>
+</ul>
+<div class="figure align-default" id="id3">
+<img alt="" src="../_images/sipeed_rv_debugger_plus.png" />
+<p class="caption"><span class="caption-text">Sipeed RV-Debugger plus</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<p><strong>Windows</strong></p>
+<ul>
+<li><p>To use the Sipeed RV-Debugger Plus debugger on Windows we need to change the driver to the <code class="docutils literal notranslate"><span class="pre">Win</span> <span class="pre">USB</span></code> driver</p>
+<ul class="simple">
+<li><ol class="arabic simple">
+<li><p>First, connect the Type-C USB interface of the debugger to the PC with a USB data cable, open the device manager of the PC, and you can see that the debugger is recognized as two serial ports in the port column (<em>Note: not the Serial port of the board’s Boot interface</em>), or in the <code class="docutils literal notranslate"><span class="pre">Universal</span> <span class="pre">Serial</span> <span class="pre">Bus</span> <span class="pre">Controller</span></code>, you see <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code></p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_1.png" src="../_images/sipeed_rv_debugger_1.png" />
+</div>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_4.png" src="../_images/sipeed_rv_debugger_4.png" />
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<ol class="arabic simple">
+<li><p>The debugger port number must start with <code class="docutils literal notranslate"><span class="pre">usb</span> <span class="pre">serial</span> <span class="pre">port</span></code>, if you plug in more than one similar device, please leave only one, confirm the debugger port number</p></li>
+</ol>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<ol class="arabic simple" start="2">
+<li><p>If you see “USB Serial Device (COM*)” in the Device Manager, it means that the debugger has entered the “Boot” mode. Please power off the debugger and power it on again, and be careful not to connect the debugger to the target board; at this time, go to the device manager to see if it is normal</p></li>
+</ol>
+</div>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_7.png" src="../_images/sipeed_rv_debugger_7.png" />
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<ol class="arabic simple" start="3">
+<li><p>If the serial port is not shown in the device manager, only other devices are shown, or if you only see <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">USB</span> <span class="pre">Serial</span> <span class="pre">Converter</span> <span class="pre">B</span></code> in the Universal Serial Bus Controller, please go to the <a class="reference external" href="https://ftdichip.com/drivers/vcp-drivers/">FTDI official website</a> Download the driver that matches your system</p></li>
+</ol>
+</div>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_6.png" src="../_images/sipeed_rv_debugger_6.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="2">
+<li><p>Download the <code class="docutils literal notranslate"><span class="pre">zadig-2.4</span></code> replacement driver from the sipeed website. Download : <a class="reference external" href="http://dl.sipeed.com/MAIX/tools/sipeed-rv-debugger/zadig-2.4.exe">http://dl.sipeed.com/MAIX/tools/sipeed-rv-debugger/zadig-2.4.exe</a></p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="3">
+<li><p>After downloading, double-click to open <code class="docutils literal notranslate"><span class="pre">zadig-2.4.exe</span></code>, select <code class="docutils literal notranslate"><span class="pre">Options</span></code> and check <code class="docutils literal notranslate"><span class="pre">List</span> <span class="pre">All</span> <span class="pre">Devices</span></code>.</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_3.png" src="../_images/sipeed_rv_debugger_3.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="4">
+<li><p>Find JTAG Debugger (Interface 0), then select the replacement driver as <code class="docutils literal notranslate"><span class="pre">WinUSB</span></code> and click <code class="docutils literal notranslate"><span class="pre">Replace</span> <span class="pre">Driver</span></code> to replace</p></li>
+</ol>
+</li>
+<li><ol class="arabic simple" start="5">
+<li><p>Open the device manager again and see that one of the serial ports has been replaced with a universal serial bus device, indicating that the installation is successful</p></li>
+</ol>
+</li>
+</ul>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_2.png" src="../_images/sipeed_rv_debugger_2.png" />
+</div>
+<ul class="simple">
+<li><ol class="arabic simple" start="6">
+<li><p>At this point, the device driver of Sipeed RV-Debugger Plus has been replaced, and then you can play happily~</p></li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Possible problems:</strong></p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<ol class="arabic simple">
+<li><p>There are no two serial ports when the debugger is connected, and an LED on the debugger is always on, then it should be in Boot mode. Please power off the debugger and power it on again. Be careful not to connect the debugger to the target board; after the debugger is powered on, the two LED lights will flicker and go out under normal circumstances; at this time, check whether the device in the task manager is correct.</p></li>
+</ol>
+</div>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<ol class="arabic simple" start="2">
+<li><p>If you still can’t use it normally after the above operations, and there is no correct phenomenon, it is recommended to download from the official Sipeed repository <a class="reference external" href="https://github.com/sipeed/RV-Debugger-BL702">GitHub</a> obtain the firmware and re-write; press and hold the <code class="docutils literal notranslate"><span class="pre">Boot</span></code> button on the debugger without releasing it, insert the debugger into the computer and power on, make the debugger enter the Boot mode, and flash the firmware again; power off and restart</p></li>
+</ol>
+</div>
+<p><strong>Linux</strong></p>
+<ul class="simple">
+<li><p>First, connect the Type-C USB interface of the debugger to the PC host using the USB cable, open Terminal, and enter the command <code class="docutils literal notranslate"><span class="pre">lsusb</span></code> in the terminal to see the device with the following information</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ lsusb
+...
+Bus <span class="m">001</span> Device <span class="m">003</span>: ID <span class="m">0403</span>:6010 Future Technology Devices International, Ltd FT2232C Dual USB-UART/FIFO IC
+...
+</pre></div>
+</div>
+<div class="figure align-default">
+<img alt="../_images/sipeed_rv_debugger_8.png" src="../_images/sipeed_rv_debugger_8.png" />
+</div>
+<ul class="simple">
+<li><p>If the above diagram does not show the <code class="docutils literal notranslate"><span class="pre">FT2232C</span></code>, you need to install the ftdi driver</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ sudo apt install libusb-dev libftdi-dev libhidapi-dev
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Re-plug the debugger to make the changes take effect</p></li>
+<li><p>Debugging code requires openocd to be installed, using openocd version 0.11</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In Linux system, /dev/ttyUSB1 is used for serial port, /dev/ttyUSB0 is used for debug port, if /dev/ttyACM0 is displayed, it means boot mode is entered.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="connecting_hardware.html" class="btn btn-neutral float-right" title="2. Hardware connection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../index.html" class="btn btn-neutral float-left" title="BL MCU SDK development guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
