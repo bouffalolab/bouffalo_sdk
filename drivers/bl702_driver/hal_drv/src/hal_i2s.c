@@ -216,6 +216,7 @@ int i2s_open(struct device *dev, uint16_t oflag)
 
     fifoCfg.txfifoDmaEnable = (oflag & DEVICE_OFLAG_DMA_TX) ? ENABLE : DISABLE;
     fifoCfg.rxfifoDmaEnable = (oflag & DEVICE_OFLAG_DMA_RX) ? ENABLE : DISABLE;
+    fifoCfg.txFifoLevel = i2s_device->fifo_threshold;
     fifoCfg.rxFifoLevel = i2s_device->fifo_threshold;
 
     /* I2S Init */
