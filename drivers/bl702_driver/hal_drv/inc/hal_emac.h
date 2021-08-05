@@ -40,8 +40,17 @@ typedef struct
 {
     uint8_t auto_negotiation; /*!< Speed and mode auto negotiation */
     uint8_t full_duplex;      /*!< Duplex mode */
-    uint16_t speed;           /*!< Speed mode */
-    uint16_t phy_address;     /*!< PHY address */
+#define PHY_STATE_DOWN    (0) /* PHY is not usable */
+#define PHY_STATE_READY   (1) /* PHY is OK, wait for controller */
+#define PHY_STATE_UP      (2) /* Network is ready for TX/RX */
+#define PHY_STATE_RUNNING (3) /* working */
+#define PHY_STATE_NOLINK  (4) /* no cable connected */
+#define PHY_STATE_STOPPED (5) /* PHY has been stopped */
+#define PHY_STATE_TESTING (6) /* in test mode */
+    uint8_t phy_state;    /*!< down,ready,up,running,nolink,halted */
+    uint16_t speed;       /*!< Speed mode */
+    uint16_t phy_address; /*!< PHY address */
+    uint32_t phy_id;      /*!< PHY OUI */
 } emac_phy_cfg_t;
 
 #define EMAC_TX_COMMON_FLAGS (EMAC_BD_FIELD_MSK(TX_RD) |  \
