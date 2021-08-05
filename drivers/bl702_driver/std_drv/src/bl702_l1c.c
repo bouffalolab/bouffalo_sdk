@@ -249,6 +249,30 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush(uint8_t wayDisable)
 #endif
 
 /****************************************************************************/ /**
+ * @brief  Flush cache external api
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush_Ext(void)
+{
+    uint32_t tmpVal;
+
+    /* Disable early respone */
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+    L1C_Cache_Flush((tmpVal >> L1C_WAY_DIS_POS) & 0xf);
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  Get cache hit count
  *
  * @param  hitCountLow: hit count low 32 bits pointer

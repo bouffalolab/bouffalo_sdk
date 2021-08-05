@@ -173,6 +173,7 @@ void L1C_BMX_TO_IRQHandler(void);
 BL_Err_Type L1C_Cache_Enable_Set(uint8_t wayDisable);
 void L1C_Cache_Write_Set(BL_Fun_Type wtEn, BL_Fun_Type wbEn, BL_Fun_Type waEn);
 BL_Err_Type L1C_Cache_Flush(uint8_t wayDisable);
+BL_Err_Type L1C_Cache_Flush_Ext(void);
 void L1C_Cache_Hit_Count_Get(uint32_t *hitCountLow, uint32_t *hitCountHigh);
 uint32_t L1C_Cache_Miss_Count_Get(void);
 void L1C_Cache_Read_Disable(void);
