@@ -74,12 +74,15 @@ int uart_open(struct device *dev, uint16_t oflag)
     uart_cfg.txLinMode = UART_TX_LINMODE_ENABLE;
     uart_cfg.rxLinMode = UART_RX_LINMODE_ENABLE;
     uart_cfg.txBreakBitCnt = UART_TX_BREAKBIT_CNT;
+    uart_cfg.rxDeglitch = ENABLE;
 
     /* uart init with default configuration */
     UART_Init(uart_device->id, &uart_cfg);
 
     /* Enable tx free run mode */
     UART_TxFreeRun(uart_device->id, ENABLE);
+    /*set de-glitch function cycle count value*/
+    UART_SetDeglitchCount(uart_device->id, 2);
 
     /* Set rx time-out value */
     UART_SetRxTimeoutValue(uart_device->id, UART_DEFAULT_RTO_TIMEOUT);

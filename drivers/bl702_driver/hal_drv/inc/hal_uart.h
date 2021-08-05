@@ -26,6 +26,8 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
+#define UART_FIFO_LEN 128
+
 #define DEVICE_CTRL_UART_GET_TX_FIFO 0x10
 #define DEVICE_CTRL_UART_GET_RX_FIFO 0x11
 
