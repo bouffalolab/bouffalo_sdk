@@ -71,6 +71,7 @@ enum peripheral_clock_type {
 };
 
 void system_clock_init(void);
+void system_mtimer_clock_init(void);
 void peripheral_clock_init(void);
 uint32_t system_clock_get(enum system_clock_type type);
 uint32_t peripheral_clock_get(enum peripheral_clock_type type);
