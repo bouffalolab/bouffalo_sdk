@@ -51,13 +51,24 @@ ATTR_TCM_SECTION void pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level)
     __disable_irq();
 
     for (GLB_GPIO_Type pin = GLB_GPIO_PIN_0; pin < GLB_GPIO_PIN_MAX; pin++) {
-        if (pin == GLB_GPIO_PIN_10 || pin == GLB_GPIO_PIN_11 || pin == GLB_GPIO_PIN_12)
-            continue;
+        if ((pin >= GLB_GPIO_PIN_9) && (pin <= GLB_GPIO_PIN_13)) {
+            tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+            if (tmpVal & (1 << (pin - 1))) {
+                continue;
+            }
+        }
         GLB_GPIO_Set_HZ(pin);
     }
 
-    HBN_Clear_IRQ(HBN_INT_GPIO9);
-    HBN_Clear_IRQ(HBN_INT_GPIO13);
+    /* set clear bit */
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_CLR);
+    tmpVal |= (0x10 << 0);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, tmpVal);
+
+    /* unset clear bit */
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_CLR);
+    tmpVal &= (~(0x10 << 0));
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, tmpVal);
 
     if (hbn_level >= PM_HBN_LEVEL_2)
         HBN_Power_Off_RC32K();
