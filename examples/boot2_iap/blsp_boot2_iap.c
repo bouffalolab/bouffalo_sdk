@@ -35,7 +35,7 @@
   */
 
 #include "bflb_platform.h"
-#include "bflb_eflash_loader_uart.h"
+#include "bflb_eflash_loader_interface.h"
 #include "blsp_port.h"
 #include "blsp_bootinfo.h"
 #include "blsp_media_boot.h"
@@ -50,12 +50,13 @@
 #include "hal_clock.h"
 
 
-uint8_t g_boot2_read_buf[BFLB_BOOT2_READBUF_SIZE] __attribute__((section(".noinit_data")));
+uint8_t *g_boot2_read_buf;
 boot2_image_config g_boot_img_cfg[2];
 boot2_efuse_hw_config g_efuse_cfg;
 uint8_t g_ps_mode = BFLB_PSM_ACTIVE;
 uint8_t g_cpu_count;
 uint32_t g_user_hash_ignored = 0;
+uint8_t g_usb_init_flag = 0;
 
 
 
@@ -70,7 +71,19 @@ uint32_t g_user_hash_ignored = 0;
 static void blsp_boot2_on_error(void *log)
 {
     while (1) {
-        if (BFLB_EFLASH_LOADER_HANDSHAKE_SUSS == bflb_eflash_loader_uart_handshake_poll()) {
+#if BLSP_BOOT2_SUPPORT_USB_IAP 
+        bflb_eflash_loader_if_set(BFLB_EFLASH_LOADER_IF_USB);
+        if(0 == g_usb_init_flag){
+            bflb_eflash_loader_if_init();
+            g_usb_init_flag = 1;
+        }
+        
+        if (0 == bflb_eflash_loader_if_handshake_poll(1)) {
+            bflb_eflash_loader_main();
+        }
+#endif
+        bflb_eflash_loader_if_set(BFLB_EFLASH_LOADER_IF_UART);
+        if (0 == bflb_eflash_loader_if_handshake_poll(0)) {
             bflb_eflash_loader_main();
         }
 
@@ -87,12 +100,12 @@ static void blsp_boot2_on_error(void *log)
  * @return None
  *
 *******************************************************************************/
-static void blsp_dump_pt_entry(pt_table_entry_config *pt_entry)
+void blsp_dump_pt_entry(pt_table_entry_config *pt_entry)
 {
     MSG("Name=%s\r\n", pt_entry->name);
     MSG("Age=%d\r\n", (unsigned int)pt_entry->age);
     MSG("active Index=%d\r\n", (unsigned int)pt_entry->active_index);
-    MSG("active start_address=%08x\r\n", (unsigned int)pt_entry->start_address[pt_entry->active_index]);
+    MSG("active start_address=%08x\r\n", (unsigned int)pt_entry->start_address[pt_entry->active_index & 0x01]);
 }
 
 /****************************************************************************/ /**
@@ -163,6 +176,8 @@ static int blsp_boot2_do_fw_copy(pt_table_id_type active_id, pt_table_stuff_conf
     uint32_t deal_len = 0;
     uint32_t cur_len = 0;
 
+    MSG("OTA copy src address %08x, dest address %08x, total len %d\r\n",src_address,dest_address,total_len);
+
     if (SUCCESS != flash_erase(dest_address, dest_max_size)) {
         MSG_ERR("Erase flash fail");
         return BFLB_BOOT2_FLASH_ERASE_ERROR;
@@ -171,8 +186,8 @@ static int blsp_boot2_do_fw_copy(pt_table_id_type active_id, pt_table_stuff_conf
     while (deal_len < total_len) {
         cur_len = total_len - deal_len;
 
-        if (cur_len > sizeof(g_boot2_read_buf)) {
-            cur_len = sizeof(g_boot2_read_buf);
+        if (cur_len > BFLB_BOOT2_READBUF_SIZE) {
+            cur_len = BFLB_BOOT2_READBUF_SIZE;
         }
 
         if (BFLB_BOOT2_SUCCESS != blsp_mediaboot_read(src_address, g_boot2_read_buf, cur_len)) {
@@ -222,7 +237,7 @@ static int blsp_boot2_deal_one_fw(pt_table_id_type active_id, pt_table_stuff_con
     if (PT_ERROR_SUCCESS != ret) {
         MSG_ERR("Entry not found\r\n");
     } else {
-        blsp_dump_pt_entry(pt_entry);
+        //blsp_dump_pt_entry(pt_entry);
         MSG("Check Img\r\n");
 #if BLSP_BOOT2_SUPPORT_DECOMPRESS
         if(blsp_boot2_check_xz_fw(active_id,pt_stuff,pt_entry)==1){
@@ -231,6 +246,7 @@ static int blsp_boot2_deal_one_fw(pt_table_id_type active_id, pt_table_stuff_con
 #endif        
         /* Check if this partition need copy */
         if (pt_entry->active_index >= 2) {
+            MSG("Find OTA image, do image copy\r\n");
             if (BFLB_BOOT2_SUCCESS == blsp_boot2_do_fw_copy(active_id, pt_stuff, pt_entry)) {
                 
                 pt_entry->active_index = !(pt_entry->active_index & 0x01);
@@ -240,7 +256,10 @@ static int blsp_boot2_deal_one_fw(pt_table_id_type active_id, pt_table_stuff_con
                 if (ret != PT_ERROR_SUCCESS) {
                     MSG_ERR("Update Partition table entry fail, After Image Copy\r\n");
                     return BFLB_BOOT2_FAIL;
+                }else{
+                    MSG("OTA image copy done\r\n");
                 }
+                
                 return 0;
             }
         }
@@ -296,7 +315,7 @@ static void blsp_boot2_get_mfg_startreq(pt_table_id_type active_id, pt_table_stu
     ret = pt_table_get_active_entries_by_name(pt_stuff, (uint8_t *)"mfg", pt_entry);
 
     if (PT_ERROR_SUCCESS == ret) {
-        MSG("XIP_SFlash_Read_Need_Lock_Ext:%08x,", pt_entry->start_address[0] + MFG_START_REQUEST_OFFSET);
+        MSG("read mfg flag addr:%08x,", pt_entry->start_address[0] + MFG_START_REQUEST_OFFSET);
         flash_read(pt_entry->start_address[0] + MFG_START_REQUEST_OFFSET, tmp, sizeof(tmp) - 1);
         MSG("%s\r\n", tmp);
         if (tmp[0] == '0' || tmp[0] == '1') {
@@ -330,6 +349,7 @@ int main(void)
     uint8_t boot_need_rollback[BFLB_BOOT2_CPU_MAX] = { 0 };
     uint8_t pt_parsed = 1;
     uint8_t user_fw_name[9] = { 0 };
+    uint32_t user_fw;
 #ifdef BLSP_BOOT2_ROLLBACK
     uint8_t roll_backed = 0;
 #endif
@@ -343,7 +363,8 @@ int main(void)
 
     system_mtimer_clock_init();
     peripheral_clock_init();
-
+    
+    
 #if (BLSP_BOOT2_MODE == BOOT2_MODE_RELEASE)
     bflb_platform_print_set(1);
 #endif
@@ -356,8 +377,17 @@ int main(void)
     bflb_platform_print_set(0);
     hal_boot2_debug_uart_gpio_init();
 #endif
-    hal_boot2_uart_gpio_init();
-    bflb_eflash_loader_uart_init();
+    
+    
+    bflb_eflash_loader_if_set(BFLB_EFLASH_LOADER_IF_UART);
+    bflb_eflash_loader_if_init();
+    
+
+    
+
+    simple_malloc_init(g_malloc_buf, sizeof(g_malloc_buf));
+    g_boot2_read_buf = vmalloc(BFLB_BOOT2_READBUF_SIZE);
+    
     hal_boot2_custom();
     flash_init();
     
@@ -370,7 +400,6 @@ int main(void)
     } else {
         MSG("BLSP_Boot2_SP:%s,%s\r\n", __DATE__, __TIME__);
     }
-
 #ifdef BL_SDK_VER
     MSG("sdk:%s\r\n", BL_SDK_VER);
 #else
@@ -396,11 +425,26 @@ int main(void)
     g_ps_mode = blsp_read_power_save_mode();
 
     /* Get User specified FW */
-    arch_memcpy(user_fw_name, hal_boot2_get_user_fw(), 4);
-    
+    user_fw = hal_boot2_get_user_fw();
+    arch_memcpy(user_fw_name, &user_fw, 4);
+    MSG("user_fw %s\r\n",user_fw_name);
 
     /* Set flash operation function, read via xip */
     pt_table_set_flash_operation(flash_erase, flash_write, flash_read);
+
+#if BLSP_BOOT2_SUPPORT_USB_IAP    
+    if(memcmp(user_fw_name,(char *)"USB",3) == 0){
+        hal_boot2_clr_user_fw();
+        bflb_eflash_loader_if_set(BFLB_EFLASH_LOADER_IF_USB);
+        bflb_eflash_loader_if_init();
+        g_usb_init_flag = 1;
+        if (0 == bflb_eflash_loader_if_handshake_poll(user_fw_name[3])) {
+            bflb_eflash_loader_main();
+        }
+    }
+#endif
+
+    pt_table_dump();
 
     while (1) {
         mfg_mode_flag = 0;
@@ -412,7 +456,7 @@ int main(void)
                 blsp_boot2_on_error("No valid PT\r\n");
             }
 
-            MSG("Active PT:%d,%d\r\n", active_id, pt_table_stuff[active_id].pt_table.age);
+            MSG("Active PT:%d,Age %d\r\n", active_id, pt_table_stuff[active_id].pt_table.age);
 
             blsp_boot2_get_mfg_startreq(active_id, &pt_table_stuff[active_id], &pt_entry[0], user_fw_name);
 
@@ -499,7 +543,7 @@ int main(void)
             break;
         }
 
-        MSG("Boot return %d\r\n", ret);
+        MSG("Boot return 0x%04x\r\n", ret);
         MSG("Check Rollback\r\n");
 
         for (i = 0; i < g_cpu_count; i++) {
@@ -526,7 +570,19 @@ int main(void)
     MSG_ERR("Media boot return %d\r\n", ret);
 
     while (1) {
-        if (BFLB_EFLASH_LOADER_HANDSHAKE_SUSS == bflb_eflash_loader_uart_handshake_poll()) {
+#if BLSP_BOOT2_SUPPORT_USB_IAP 
+        bflb_eflash_loader_if_set(BFLB_EFLASH_LOADER_IF_USB);
+        if(0 == g_usb_init_flag){
+            bflb_eflash_loader_if_init();
+            g_usb_init_flag = 1;
+        }
+        
+        if (0 == bflb_eflash_loader_if_handshake_poll(1)) {
+            bflb_eflash_loader_main();
+        }
+#endif
+        bflb_eflash_loader_if_set(BFLB_EFLASH_LOADER_IF_UART);
+        if (0 == bflb_eflash_loader_if_handshake_poll(0)) {
             bflb_eflash_loader_main();
         }
 

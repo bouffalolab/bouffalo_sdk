@@ -33,9 +33,7 @@
   *
   ******************************************************************************
   */
-#include "bflb_eflash_loader_cmds.h"
 #include "bflb_eflash_loader.h"
-#include "bflb_eflash_loader_uart.h"
 #include "stdio.h"
 #include "stdint.h"
 #include "string.h"
@@ -46,25 +44,22 @@
 #include "hal_sec_hash.h"
 #include "blsp_media_boot.h"
 
-/*for mass read comamnd(flash read and efuse read) is only valid for UART
-  this is due to ack buffer is g_eflash_loader_readbuf */
-#define eflash_loader_cmd_mass_ack_buf g_eflash_loader_readbuf[1]
 #define BFLB_EFLASH_LOADER_CHECK_LEN   2048
 #define BFLB_EFLASH_MAX_SIZE           2 * 1024 * 1024
 
-/*add for verify using SHA-256*/
-uint32_t g_sha_tmp_buf[16] = { 0 };
-uint32_t g_padding[16] = { 0 };
-uint32_t g_sha_in_buf[(BFLB_EFLASH_LOADER_READBUF_SIZE + 3) / 4] = { 0 };
-static uint32_t g_eflash_loader_error = 0;
-static struct image_cfg_t image_cfg;
-static struct bootrom_img_ctrl_t img_ctrl;
-static struct segment_header_t segment_hdr;
 
-uint32_t eflash_loader_cmd_ack_buf[16];
+
+
+
+
 extern struct device *download_uart;
 extern struct device *dev_check_hash;
 
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM
+static struct image_cfg_t image_cfg;
+static struct bootrom_img_ctrl_t img_ctrl;
+static struct segment_header_t segment_hdr;
+uint32_t eflash_loader_cmd_ack_buf[16];
 /*for bl602*/
 static int32_t bflb_bootrom_cmd_get_bootinfo(uint16_t cmd, uint8_t *data, uint16_t len);
 static int32_t bflb_bootrom_cmd_load_bootheader(uint16_t cmd, uint8_t *data, uint16_t len);
@@ -73,7 +68,11 @@ static int32_t bflb_bootrom_cmd_load_segdata(uint16_t cmd, uint8_t *data, uint16
 static int32_t bflb_bootrom_cmd_check_img(uint16_t cmd, uint8_t *data, uint16_t len);
 static int32_t bflb_bootrom_cmd_run(uint16_t cmd, uint8_t *data, uint16_t len);
 static void bflb_bootrom_cmd_ack(uint32_t result);
+#endif
 
+
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH
+static uint32_t g_eflash_loader_error = 0;
 /* for bl702 */
 static int32_t bflb_eflash_loader_cmd_read_jedec_id(uint16_t cmd, uint8_t *data, uint16_t len);
 static int32_t bflb_eflash_loader_cmd_reset(uint16_t cmd, uint8_t *data, uint16_t len);
@@ -86,8 +85,10 @@ static int32_t bflb_eflash_loader_cmd_write_flash_check(uint16_t cmd, uint8_t *d
 static int32_t bflb_eflash_loader_cmd_set_flash_para(uint16_t cmd, uint8_t *data, uint16_t len);
 static int32_t bflb_eflash_loader_cmd_xip_read_flash_start(uint16_t cmd, uint8_t *data, uint16_t len);
 static int32_t bflb_eflash_loader_cmd_xip_read_flash_finish(uint16_t cmd, uint8_t *data, uint16_t len);
+#endif
 
 static const struct eflash_loader_cmd_cfg_t eflash_loader_cmds[] = {
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM    
     /*for bl602*/
     { BFLB_EFLASH_LOADER_CMD_GET_BOOTINFO, EFLASH_LOADER_CMD_ENABLE, bflb_bootrom_cmd_get_bootinfo },
     { BFLB_EFLASH_LOADER_CMD_LOAD_BOOTHEADER, EFLASH_LOADER_CMD_ENABLE, bflb_bootrom_cmd_load_bootheader },
@@ -95,7 +96,9 @@ static const struct eflash_loader_cmd_cfg_t eflash_loader_cmds[] = {
     { BFLB_EFLASH_LOADER_CMD_LOAD_SEGDATA, EFLASH_LOADER_CMD_ENABLE, bflb_bootrom_cmd_load_segdata },
     { BFLB_EFLASH_LOADER_CMD_CHECK_IMG, EFLASH_LOADER_CMD_ENABLE, bflb_bootrom_cmd_check_img },
     { BFLB_EFLASH_LOADER_CMD_RUN, EFLASH_LOADER_CMD_ENABLE, bflb_bootrom_cmd_run },
+#endif
 
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH
     /* for bl702 */
     { BFLB_EFLASH_LOADER_CMD_RESET, EFLASH_LOADER_CMD_ENABLE, bflb_eflash_loader_cmd_reset },
     { BFLB_EFLASH_LOADER_CMD_FLASH_ERASE, EFLASH_LOADER_CMD_ENABLE, bflb_eflash_loader_cmd_erase_flash },
@@ -108,20 +111,22 @@ static const struct eflash_loader_cmd_cfg_t eflash_loader_cmds[] = {
     { BFLB_EFLASH_LOADER_CMD_XIP_READ_START, EFLASH_LOADER_CMD_ENABLE, bflb_eflash_loader_cmd_xip_read_flash_start },
     { BFLB_EFLASH_LOADER_CMD_XIP_READ_FINISH, EFLASH_LOADER_CMD_ENABLE, bflb_eflash_loader_cmd_xip_read_flash_finish },
     { BFLB_EFLASH_LOADER_CMD_FLASH_READ_JEDECID, EFLASH_LOADER_CMD_ENABLE, bflb_eflash_loader_cmd_read_jedec_id },
+#endif        
 };
 
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM 
 /* ack host with command process result */
 static void bflb_bootrom_cmd_ack(uint32_t result)
 {
     if (result == 0) {
         /*OK*/
         eflash_loader_cmd_ack_buf[0] = BFLB_BOOTROM_CMD_ACK;
-        bflb_eflash_loader_uart_send((uint32_t *)eflash_loader_cmd_ack_buf, 2);
+        bflb_eflash_loader_if_write((uint32_t *)eflash_loader_cmd_ack_buf, 2);
         return;
     } else {
         /* FL+Error code(2bytes) */
         eflash_loader_cmd_ack_buf[0] = BFLB_BOOTROM_CMD_NACK | ((result << 16) & 0xffff0000);
-        bflb_eflash_loader_uart_send(eflash_loader_cmd_ack_buf, 4);
+        bflb_eflash_loader_if_write(eflash_loader_cmd_ack_buf, 4);
     }
 }
 
@@ -140,7 +145,7 @@ static int32_t bflb_bootrom_cmd_get_bootinfo(uint16_t cmd, uint8_t *data, uint16
     *((uint32_t *)(bootinfo + 4)) = BFLB_BOOTROM_VERSION;
     memcpy(bootinfo + 8, &otp_cfg, 16);
 
-    bflb_eflash_loader_uart_send(eflash_loader_cmd_ack_buf, bootinfo[2] + 4);
+    bflb_eflash_loader_if_write(eflash_loader_cmd_ack_buf, bootinfo[2] + 4);
 
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
@@ -295,7 +300,7 @@ static int32_t bflb_bootrom_cmd_load_segheader(uint16_t cmd, uint8_t *data, uint
         segdatainfo[2] = sizeof(segment_hdr);
         segdatainfo[3] = 0x00;
         memcpy(&segdatainfo[4], (void *)&segment_hdr, sizeof(segment_hdr));
-        bflb_eflash_loader_uart_send(eflash_loader_cmd_ack_buf, segdatainfo[2] + 4);
+        bflb_eflash_loader_if_write(eflash_loader_cmd_ack_buf, segdatainfo[2] + 4);
     } else {
         bflb_bootrom_cmd_ack(ret);
     }
@@ -442,39 +447,39 @@ static int32_t bflb_bootrom_cmd_run(uint16_t cmd, uint8_t *data, uint16_t len)
     return ret;
 }
 
-/* int boot command control */
-void bflb_eflash_loader_cmd_init()
-{
-    g_eflash_loader_error = BFLB_EFLASH_LOADER_SUCCESS;
-}
+#endif
 
+
+
+
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH
 /* ack host with command process result */
 static void bflb_eflash_loader_cmd_ack(uint32_t result)
 {
     if (result == 0) {
         /*OK*/
         g_eflash_loader_cmd_ack_buf[0] = BFLB_EFLASH_LOADER_CMD_ACK;
-        bflb_eflash_loader_uart_send((uint32_t *)g_eflash_loader_cmd_ack_buf, 2);
+        bflb_eflash_loader_if_write((uint32_t *)g_eflash_loader_cmd_ack_buf, 2);
         return;
     } else {
         /* FL+Error code(2bytes) */
         g_eflash_loader_cmd_ack_buf[0] = BFLB_EFLASH_LOADER_CMD_NACK | ((result << 16) & 0xffff0000);
-        bflb_eflash_loader_uart_send(g_eflash_loader_cmd_ack_buf, 4);
+        bflb_eflash_loader_if_write(g_eflash_loader_cmd_ack_buf, 4);
     }
 }
 
 static int32_t bflb_eflash_loader_cmd_read_jedec_id(uint16_t cmd, uint8_t *data, uint16_t len)
 {
-    uint8_t *ackdata = (uint8_t *)eflash_loader_cmd_mass_ack_buf;
-
+    uint32_t ackdata[2];
+    uint8_t *tmp_buf;
     MSG("JID\n");
-    eflash_loader_cmd_mass_ack_buf[0] = BFLB_EFLASH_LOADER_CMD_ACK;
-
+    ackdata[0] = BFLB_EFLASH_LOADER_CMD_ACK;
+    tmp_buf = (uint8_t *)ackdata;
     /*ack read jedec ID */
-    ackdata[2] = 4;
-    ackdata[3] = 0;
-    flash_read_jedec_id((uint8_t *)&eflash_loader_cmd_mass_ack_buf[1]);
-    bflb_eflash_loader_uart_send((uint32_t *)ackdata, 4 + 4);
+    tmp_buf[2] = 4;
+    tmp_buf[3] = 0;
+    flash_read_jedec_id((uint8_t *)&ackdata[1]);
+    bflb_eflash_loader_if_write((uint32_t *)ackdata, 4 + 4);
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
 
@@ -487,7 +492,7 @@ static int32_t bflb_eflash_loader_cmd_reset(uint16_t cmd, uint8_t *data, uint16_
     MSG("RST\n");
 
     bflb_eflash_loader_cmd_ack(ret);
-    bflb_eflash_loader_usart_wait_tx_idle(BFLB_EFLASH_LOADER_IF_TX_IDLE_TIMEOUT);
+    bflb_eflash_loader_if_wait_tx_idle(BFLB_EFLASH_LOADER_IF_TX_IDLE_TIMEOUT);
 
     /* add for bl702, will impact on boot pin read */
     hal_boot2_set_psmode_status(0x594c440B);
@@ -599,9 +604,9 @@ static int32_t bflb_eflash_loader_cmd_xip_readSha_flash(uint16_t cmd, uint8_t *d
     //SEC_Eng_SHA256_Ctx sha_ctx;
     //SEC_ENG_SHA_ID_Type shaId = SEC_ENG_SHA_ID0;
     uint16_t sha_len = 32;
-    uint8_t *ackdata = (uint8_t *)eflash_loader_cmd_mass_ack_buf;
+    uint8_t ackdata[32+4];
     MSG("XRSha\n");
-
+    uint8_t *g_sha_in_buf = vmalloc(BFLB_EFLASH_LOADER_READBUF_SIZE);
     if (len != 8) {
         ret = BFLB_EFLASH_LOADER_FLASH_WRITE_PARA_ERROR;
         bflb_eflash_loader_cmd_ack(ret);
@@ -613,18 +618,31 @@ static int32_t bflb_eflash_loader_cmd_xip_readSha_flash(uint16_t cmd, uint8_t *d
         /* Init SHA and input SHA temp buffer for scattered data and g_padding buffer */
         //Sec_Eng_SHA256_Init(&sha_ctx, shaId, SEC_ENG_SHA256, g_sha_tmp_buf, g_padding);
         //Sec_Eng_SHA_Start(shaId);
-        device_open(dev_check_hash, 0);
+        device_unregister("dev_check_hash");
+        sec_hash_sha256_register(SEC_HASH0_INDEX,"dev_check_hash");
+        dev_check_hash = device_find("dev_check_hash");
+        if(dev_check_hash){
+            ret = device_open(dev_check_hash, 0);
+            if(ret){
+                MSG_ERR("hash dev open err\r\n");
+                return BFLB_BOOT2_FAIL;
+            }
+        }else{
+            MSG_ERR("hash dev find err\r\n");
+            return BFLB_BOOT2_FAIL;
+        }
+        //device_open(dev_check_hash, 0);
 
         while (read_len > 0) {
             if (read_len > BFLB_EFLASH_LOADER_READBUF_SIZE) {
-                blsp_mediaboot_read(startaddr, (uint8_t *)g_sha_in_buf, BFLB_EFLASH_LOADER_READBUF_SIZE);
+                blsp_mediaboot_read(startaddr, g_sha_in_buf, BFLB_EFLASH_LOADER_READBUF_SIZE);
                 /*cal sha here*/
                 //Sec_Eng_SHA256_Update(&sha_ctx, shaId, (uint8_t *)g_sha_in_buf, BFLB_EFLASH_LOADER_READBUF_SIZE);
                 device_write(dev_check_hash, 0, g_sha_in_buf, BFLB_EFLASH_LOADER_READBUF_SIZE);
                 read_len -= BFLB_EFLASH_LOADER_READBUF_SIZE;
                 startaddr += BFLB_EFLASH_LOADER_READBUF_SIZE;
             } else {
-                blsp_mediaboot_read(startaddr, (uint8_t *)g_sha_in_buf, read_len);
+                blsp_mediaboot_read(startaddr, g_sha_in_buf, read_len);
                 /*cal sha here*/
                 //Sec_Eng_SHA256_Update(&sha_ctx, shaId, (uint8_t *)g_sha_in_buf, read_len);
                 device_write(dev_check_hash, 0, g_sha_in_buf, read_len);
@@ -648,7 +666,7 @@ static int32_t bflb_eflash_loader_cmd_xip_readSha_flash(uint16_t cmd, uint8_t *d
         ackdata[1] = (BFLB_EFLASH_LOADER_CMD_ACK >> 8) & 0xff;
         ackdata[2] = sha_len & 0xff;
         ackdata[3] = (sha_len >> 8) & 0xff;
-        bflb_eflash_loader_uart_send((uint32_t *)ackdata, sha_len + 4);
+        bflb_eflash_loader_if_write((uint32_t *)ackdata, sha_len + 4);
     }
 
     return ret;
@@ -668,6 +686,7 @@ static int32_t bflb_eflash_loader_cmd_set_flash_para(uint16_t cmd, uint8_t *data
     bflb_eflash_loader_cmd_ack(BFLB_EFLASH_LOADER_SUCCESS);
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
+#endif
 
 int32_t bflb_eflash_loader_cmd_process(uint8_t cmdid, uint8_t *data, uint16_t len)
 {

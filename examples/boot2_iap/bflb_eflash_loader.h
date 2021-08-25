@@ -36,6 +36,11 @@
 #ifndef __BFLB_EFLASH_LOADER_H__
 #define __BFLB_EFLASH_LOADER_H__
 
+#include "bflb_eflash_loader_interface.h"
+#include "bflb_eflash_loader_cmds.h"
+#include "bflb_eflash_loader_uart.h"
+#include "bflb_eflash_loader_usb.h"
+
 /*error code definition*/
 typedef enum tag_eflash_loader_error_code_t {
     BFLB_EFLASH_LOADER_SUCCESS = 0x00,
@@ -129,11 +134,7 @@ typedef enum tag_eflash_loader_error_code_t {
 #define OFFSET(TYPE, MEMBER) ((uint32_t)(&(((TYPE *)0)->MEMBER)))
 
 
-/*read data buffer from flash or boot interface*/
-extern volatile uint32_t g_rx_buf_index;
-extern volatile uint32_t g_rx_buf_len;
-extern uint32_t g_eflash_loader_readbuf[2][(BFLB_EFLASH_LOADER_READBUF_SIZE + 3) / 4];
-extern uint32_t g_eflash_loader_cmd_ack_buf[16];
+
 
 uint8_t bootrom_read_boot_mode(void);
 void bflb_eflash_loader_init_uart_gpio(uint8_t eflash_loader_uart_pin_select);

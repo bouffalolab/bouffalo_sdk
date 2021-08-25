@@ -100,7 +100,6 @@
 
 #define BFLB_BOOTROM_IF_TX_IDLE_TIMEOUT 40 /*ms*/
 
-void bflb_eflash_loader_cmd_init(void);
 void bflb_eflash_loader_cmd_disable(uint8_t cmdid);
 void bflb_eflash_loader_cmd_enable(uint8_t cmdid);
 int32_t bflb_eflash_loader_cmd_process(uint8_t cmdid, uint8_t *data, uint16_t len);

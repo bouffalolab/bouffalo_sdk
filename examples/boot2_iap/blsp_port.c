@@ -102,7 +102,7 @@ uint8_t blsp_read_power_save_mode(void)
 void blsp_boot2_pass_parameter(void *data, uint32_t len)
 {
     static uint8_t *p_parameter = NULL;
-    MSG("boot2_pass_param_addr %08x\r\n", &__boot2_pass_param_addr);
+    
     if (len == 0) {
         //GLB_Set_EM_Sel(0); //system init has done
         //p_parameter = (uint8_t *)(0x42020000 + 60 * 1024);
@@ -111,6 +111,7 @@ void blsp_boot2_pass_parameter(void *data, uint32_t len)
         return;
     }
 
+    MSG("pass param addr %08x,len %d\r\n", p_parameter,len);
     ARCH_MemCpy_Fast(p_parameter, data, len);
     p_parameter += len;
 }

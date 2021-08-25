@@ -259,7 +259,7 @@ extern boot2_image_config g_boot_img_cfg[2];
 extern boot2_efuse_hw_config g_efuse_cfg;
 extern uint8_t g_ps_mode;
 extern uint8_t g_cpu_count;
-extern uint8_t g_boot2_read_buf[BFLB_BOOT2_READBUF_SIZE];
+extern uint8_t *g_boot2_read_buf;
 
 
 

@@ -46,6 +46,8 @@
 #include "hal_boot2.h"
 #include "bflb_eflash_loader.h"
 
+uint8_t g_malloc_buf[BFLB_BOOT2_XZ_MALLOC_BUF_SIZE] __attribute__((section(".noinit_data")));
+
 int32_t blsp_boot2_set_encrypt(uint8_t index, boot2_image_config *g_boot_img_cfg);
 
 /****************************************************************************/ /**

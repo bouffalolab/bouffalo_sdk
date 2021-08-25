@@ -87,6 +87,7 @@ int32_t blsp_boot_parse_bootheader(boot2_image_config *boot_img_cfg, uint8_t *da
     uint32_t crc_pass = 0;
     uint32_t i = 0;
     uint32_t *phash = (uint32_t *)header->hash;
+    int32_t ret;
 
     if (header->bootCfg.bval.crcIgnore == 1 && header->crc32 == BFLB_BOOT2_DEADBEEF_VAL) {
         MSG("Crc ignored\r\n");
@@ -187,12 +188,17 @@ int32_t blsp_boot_parse_bootheader(boot2_image_config *boot_img_cfg, uint8_t *da
         /* Start hash here*/
         //Sec_Eng_SHA256_Init(&g_sha_ctx, SEC_ENG_SHA_ID0, SEC_ENG_SHA256, g_sha_tmp_buf, g_padding);
         //Sec_Eng_SHA_Start(SEC_ENG_SHA_ID0);
+        device_unregister("dev_check_hash");
         sec_hash_sha256_register(SEC_HASH0_INDEX,"dev_check_hash");
         dev_check_hash = device_find("dev_check_hash");
         if(dev_check_hash){
-            device_open(dev_check_hash, 0);
+            ret = device_open(dev_check_hash, 0);
+            if(ret){
+                MSG_ERR("hash dev open err\r\n");
+                return BFLB_BOOT2_FAIL;
+            }
         }else{
-            MSG_ERR("hash dev open err\r\n");
+            MSG_ERR("hash dev find err\r\n");
             return BFLB_BOOT2_FAIL;
         }
 
@@ -219,6 +225,7 @@ int32_t blsp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *data, 
 {
     boot_pk_config *cfg = (boot_pk_config *)data;
     uint32_t pk_hash[BFLB_BOOT2_PK_HASH_SIZE / 4];
+    int32_t ret;
     
 
     if (cfg->crc32 == BFLB_Soft_CRC32((uint8_t *)cfg, sizeof(boot_pk_config) - 4)) {
@@ -231,7 +238,20 @@ int32_t blsp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *data, 
         
         device_write(dev_check_hash, 0, data, BFLB_BOOT2_ECC_KEYXSIZE + BFLB_BOOT2_ECC_KEYYSIZE);
         device_read(dev_check_hash,0,pk_hash,0);
-        device_open(dev_check_hash, 0);
+    
+        device_unregister("dev_check_hash");
+        sec_hash_sha256_register(SEC_HASH0_INDEX,"dev_check_hash");
+        dev_check_hash = device_find("dev_check_hash");
+        if(dev_check_hash){
+            ret = device_open(dev_check_hash, 0);
+            if(ret){
+                MSG_ERR("hash dev open err\r\n");
+                return BFLB_BOOT2_FAIL;
+            }
+        }else{
+            MSG_ERR("hash dev find err\r\n");
+            return BFLB_BOOT2_FAIL;
+        }
 
         /* Check pk is valid */
         if (own == 1) {
@@ -335,7 +355,7 @@ int32_t blsp_boot_parser_check_signature(boot2_image_config *g_boot_img_cfg)
     uint64_t startTime = 0;
     sec_ecdsa_handle_t ecdsaHandle;
 
-    MSG("%d,%d\r\n", g_ps_mode, g_efuse_cfg.hbn_check_sign);
+    MSG("ps_mode %d,efuse hbn_check_sign %d\r\n", g_ps_mode, g_efuse_cfg.hbn_check_sign);
 
     if(g_ps_mode == BFLB_PSM_HBN && (!g_efuse_cfg.hbn_check_sign))
     {
@@ -362,10 +382,9 @@ int32_t blsp_boot_parser_check_signature(boot2_image_config *g_boot_img_cfg)
             return BFLB_BOOT2_IMG_SIGN_ERROR;
         }
 
-        MSG("Time=%d ms\r\n", (unsigned int)(bflb_platform_get_time_ms() - startTime));
+        MSG("Sign suss,Time=%d ms\r\n", (unsigned int)(bflb_platform_get_time_ms() - startTime));
     }
 
-    MSG("Success\r\n");
     return BFLB_BOOT2_SUCCESS;
 }
 
@@ -394,7 +413,7 @@ int32_t blsp_boot_parser_check_hash(boot2_image_config *g_boot_img_cfg)
             blsp_dump_data(g_boot_img_cfg->img_hash, BFLB_BOOT2_HASH_SIZE);
             return BFLB_BOOT2_IMG_HASH_ERROR;
         } else {
-            MSG("Success\r\n");
+            MSG("Hash Success\r\n");
         }
     }
 

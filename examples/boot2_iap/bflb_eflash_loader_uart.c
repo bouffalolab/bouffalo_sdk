@@ -33,23 +33,18 @@
   *
   ******************************************************************************
   */
-#include "bflb_eflash_loader_uart.h"
-#include "bflb_eflash_loader_cmds.h"
 #include "bflb_eflash_loader.h"
 #include "bflb_platform.h"
 #include "blsp_port.h"
+#include "blsp_common.h"
 #include "partition.h"
 #include "hal_uart.h"
 #include "drv_device.h"
+#include "hal_boot2.h"
 
 
 static uint32_t g_detected_baudrate;
 
-/* data buffer for read data and decrypt */
-volatile uint32_t g_rx_buf_index = 0;
-volatile uint32_t g_rx_buf_len = 0;
-uint32_t g_eflash_loader_readbuf[2][(BFLB_EFLASH_LOADER_READBUF_SIZE + 3) / 4];
-uint32_t g_eflash_loader_cmd_ack_buf[16];
 static void bflb_eflash_loader_usart_if_deinit();
 struct device *download_uart = NULL;
 
@@ -69,7 +64,7 @@ void bflb_dump_data(uint8_t * buf, uint32_t size)
 }
 static void ATTR_TCM_SECTION uart0_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
-    uint8_t *buf = (uint8_t *)g_eflash_loader_readbuf[g_rx_buf_index];
+    uint8_t *buf = g_eflash_loader_readbuf[g_rx_buf_index];
     if (state == UART_EVENT_RX_FIFO) {
         //g_rx_buf_len += device_read(download_uart,0,buf,BFLB_EFLASH_LOADER_READBUF_SIZE-g_rx_buf_len);
         arch_memcpy(buf + g_rx_buf_len, args, size);
@@ -83,6 +78,7 @@ static void ATTR_TCM_SECTION uart0_irq_callback(struct device *dev, void *args, 
 
 static void bflb_eflash_loader_usart_if_init(uint32_t bdrate)
 {
+    hal_boot2_uart_gpio_init();
 #if ((BLSP_BOOT2_MODE == BOOT2_MODE_RELEASE) || (BLSP_BOOT2_MODE == BOOT2_MODE_DEBUG))
     uart_register(0, "debug_log");
     download_uart = device_find("debug_log");
@@ -196,7 +192,7 @@ int32_t bflb_eflash_loader_uart_init()
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
 
-int32_t bflb_eflash_loader_uart_handshake_poll()
+int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
 {
     uint8_t buf[UART_FIFO_LEN];
     uint32_t i;
@@ -225,11 +221,11 @@ int32_t bflb_eflash_loader_uart_handshake_poll()
 
     if (handshake_count >= BFLB_EFLASH_LAODER_HAND_SHAKE_SUSS_COUNT) {
         //reinit uart
-        MSG("handshake %d 0x55 rcv\r\n", handshake_count);
+        MSG("iap handshake %d 0x55 rcv\r\n", handshake_count);
 
     } else {
-        MSG("handshake err\r\n");
-        return BFLB_EFLASH_LOADER_HANDSHAKE_FAIL;
+        MSG("iap handshake err\r\n");
+        return -1;
     }
 
     /*receive shake hanad signal*/
@@ -242,7 +238,6 @@ int32_t bflb_eflash_loader_uart_handshake_poll()
     /*init rx info */
     g_rx_buf_index = 0;
     g_rx_buf_len = 0;
-    BL_WR_WORD(g_eflash_loader_readbuf[g_rx_buf_index], 0);
     
 #if (BLSP_BOOT2_MODE == BOOT2_MODE_DEBUG)
     bflb_platform_print_set(1);
@@ -255,8 +250,15 @@ int32_t bflb_eflash_loader_uart_handshake_poll()
         device_open(download_uart, DEVICE_OFLAG_STREAM_TX);
     }
 #endif
+
+    simple_malloc_init(g_malloc_buf, sizeof(g_malloc_buf));
+    g_eflash_loader_readbuf[0] = vmalloc(BFLB_EFLASH_LOADER_READBUF_SIZE);
+    g_eflash_loader_readbuf[1] = vmalloc(BFLB_EFLASH_LOADER_READBUF_SIZE);
+    arch_memset(g_eflash_loader_readbuf[0], 0, BFLB_EFLASH_LOADER_READBUF_SIZE);
+    arch_memset(g_eflash_loader_readbuf[1], 0, BFLB_EFLASH_LOADER_READBUF_SIZE);
+    
     bflb_eflash_loader_usart_if_enable_int();
-    return BFLB_EFLASH_LOADER_HANDSHAKE_SUSS;
+    return 0;
 }
 
 uint32_t *bflb_eflash_loader_uart_recv(uint32_t *recv_len, uint32_t maxlen, uint32_t timeout)
@@ -305,77 +307,5 @@ int32_t bflb_eflash_loader_uart_deinit()
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
 
-void bflb_eflash_loader_main()
-{
-    int32_t ret;
-    uint32_t total_len;
-    uint32_t i, tmp, cmd_len;
-    uint8_t *recv_buf = NULL;
-    uint8_t err_cnt = 0;
-    uint8_t to_cnt = 0;
 
-    MSG("bflb_eflash_loader_main\r\n");
-    pt_table_dump();
-    ret = pt_table_get_iap_para(&p_iap_param);
-    if(0 != ret){
-        MSG("no valid partition table\r\n");
-        return; 
-    }
-    bflb_eflash_loader_cmd_init();
 
-    while (1) {
-        to_cnt = 0;
-        total_len = 0;
-
-        do {
-            total_len = 0;
-            recv_buf = (uint8_t *)bflb_eflash_loader_uart_recv(&total_len, BFLB_EFLASH_LOADER_READBUF_SIZE, BFLB_EFLASH_LOADER_IF_UART_RX_TIMEOUT);
-
-            if (total_len <= 0) {
-                to_cnt++;
-            }
-        } while (to_cnt < 2 && total_len <= 0);
-
-        if (to_cnt >= 2 || total_len <= 0) {
-            MSG("rcv err break\r\n");
-            break;
-        }
-
-        MSG("Recv\r\n");
-        //eflash_loader_dump_data(recv_buf,total_len);
-        cmd_len = recv_buf[2] + (recv_buf[3] << 8);
-        MSG("cmd_len %d\r\n", cmd_len);
-
-        /* Check checksum*/
-        if (recv_buf[1] != 0) {
-            tmp = 0;
-
-            for (i = 2; i < cmd_len + 4; i++) {
-                tmp += recv_buf[i];
-            }
-
-            if ((tmp & 0xff) != recv_buf[1]) {
-                /* FL+Error code(2bytes) */
-                MSG("Checksum error %02x\r\n", tmp & 0xff);
-                g_eflash_loader_cmd_ack_buf[0] = BFLB_EFLASH_LOADER_CMD_NACK | ((BFLB_EFLASH_LOADER_CMD_CRC_ERROR << 16) & 0xffff0000);
-                bflb_eflash_loader_uart_send(g_eflash_loader_cmd_ack_buf, 4);
-                continue;
-            }
-        }
-
-        ret = bflb_eflash_loader_cmd_process(recv_buf[0], recv_buf + 4, cmd_len);
-
-        if (ret != BFLB_EFLASH_LOADER_SUCCESS) {
-            MSG(" CMD Pro Ret %d\r\n", ret);
-
-            err_cnt++;
-
-            if (err_cnt > 2) {
-                break;
-            }
-        }
-    }
-
-    /* read data finished,deinit and go on*/
-    bflb_eflash_loader_uart_deinit();
-}

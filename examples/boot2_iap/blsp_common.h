@@ -38,6 +38,8 @@
 
 #include "stdint.h"
 
+#define BFLB_BOOT2_XZ_MALLOC_BUF_SIZE   80*1024
+
 #define BLSP_BOOT2_CP_FLAG 0x02
 #define BLSP_BOOT2_MP_FLAG 0x01
 #define BLSP_BOOT2_SP_FLAG 0x00
@@ -53,6 +55,7 @@ uint32_t blsp_boot2_get_baudrate(void);
 uint8_t blsp_boot2_get_tx_gpio(void);
 
 
+extern uint8_t g_malloc_buf[BFLB_BOOT2_XZ_MALLOC_BUF_SIZE];
 
 #endif /* __BLSP_COMMON_H__ */
 

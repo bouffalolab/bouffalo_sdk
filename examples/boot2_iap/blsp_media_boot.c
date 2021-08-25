@@ -43,7 +43,7 @@
 #include "blsp_boot_parser.h"
 #include "blsp_media_boot.h"
 #include "softcrc.h"
-#include "bflb_eflash_loader_uart.h"
+#include "bflb_eflash_loader_interface.h"
 
 extern int main(void);
 extern struct device *dev_check_hash;
@@ -272,6 +272,7 @@ static int32_t blsp_mediaboot_parse_one_fw(boot2_image_config *boot_img_cfg, uin
         /* Flash image */
         if (!boot_img_cfg->hash_ignore) {
             MSG("Cal hash\r\n");
+            MSG("calc hash addr 0x%08x,len %d\r\n",img_addr,boot_img_cfg->img_segment_info.img_len);
             ret = blsp_mediaboot_cal_hash(img_addr,
                                           boot_img_cfg->img_segment_info.img_len);
 
@@ -281,6 +282,7 @@ static int32_t blsp_mediaboot_parse_one_fw(boot2_image_config *boot_img_cfg, uin
             }
 
             ret = blsp_boot_parser_check_hash(boot_img_cfg);
+            device_unregister("dev_check_hash");
 
             if (ret != BFLB_BOOT2_SUCCESS) {
                 return ret;
@@ -403,15 +405,15 @@ int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], u
         g_boot_img_cfg[1].cache_way_disable = 0xf;
     }
 
-    MSG("%08x,%08x\r\n", g_boot_img_cfg[0].msp_val, g_boot_img_cfg[0].entry_point);
-    MSG("%08x,%08x\r\n", g_boot_img_cfg[1].msp_val, g_boot_img_cfg[1].entry_point);
-    MSG("%08x,%08x\r\n", g_boot_img_cfg[0].img_start.flash_offset, g_boot_img_cfg[0].cache_way_disable);
-    MSG("%08x,%08x\r\n", g_boot_img_cfg[1].img_start.flash_offset, g_boot_img_cfg[1].cache_way_disable);
-    MSG("CPU Count %d,%d\r\n", g_cpu_count, g_boot_img_cfg[0].halt_cpu1);
+    //MSG("%08x,%08x\r\n", g_boot_img_cfg[0].msp_val, g_boot_img_cfg[0].entry_point);
+    //MSG("%08x,%08x\r\n", g_boot_img_cfg[1].msp_val, g_boot_img_cfg[1].entry_point);
+    MSG("flash_offset[0] %08x,cache_dis[0] %02x\r\n", g_boot_img_cfg[0].img_start.flash_offset, g_boot_img_cfg[0].cache_way_disable);
+    MSG("flash_offset[1] %08x,cache_dis[1] %02x\r\n", g_boot_img_cfg[1].img_start.flash_offset, g_boot_img_cfg[1].cache_way_disable);
+    MSG("CPU Count %d,halt_cpu1 %d\r\n", g_cpu_count, g_boot_img_cfg[0].halt_cpu1);
     blsp_boot2_show_timer();
 
 
-    if (BFLB_EFLASH_LOADER_HANDSHAKE_SUSS == bflb_eflash_loader_uart_handshake_poll()) {
+    if (0 == bflb_eflash_loader_if_handshake_poll(0)) {
         bflb_eflash_loader_main();
     }
 

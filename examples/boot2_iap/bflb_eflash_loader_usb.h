@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    blsp_port.h
+  * @file    blsp_eflash_loader_usb.h
   * @version V1.2
   * @date
   * @brief   This file is the peripheral case header file
@@ -33,39 +33,28 @@
   *
   ******************************************************************************
   */
-#ifndef __BLSP_PORT_H__
-#define __BLSP_PORT_H__
+#ifndef __BFLB_EFLASH_LOADER_USB_H__
+#define __BFLB_EFLASH_LOADER_USB_H__
 
 #include "stdint.h"
-#include "misc.h"
-#include "hal_flash.h"
-#include "xz_config.h"
+
+int32_t bflb_eflash_loader_usb_init();
+
+int32_t bflb_eflash_loader_usb_handshake_poll();
+
+uint32_t *bflb_eflash_loader_usb_recv(uint32_t *recv_len, uint32_t maxlen, uint32_t timeout);
+
+int32_t bflb_eflash_loader_usb_send(uint32_t *data, uint32_t len);
+
+int32_t bflb_eflash_loader_usb_wait_tx_idle(uint32_t timeout);
+
+int32_t bflb_eflash_loader_usb_change_rate(uint32_t oldval, uint32_t newval);
+
+int32_t bflb_eflash_loader_usb_deinit(void);
 
 
 
-#define MFG_START_REQUEST_OFFSET                ((4 + 184) * 1024)
-#define BLSP_BOOT2_XIP_BASE                     BL_FLASH_XIP_BASE
-#define BLSP_BOOT2_ROLLBACK
-#define BLSP_BOOT2_SUPPORT_DECOMPRESS           HAL_BOOT2_SUPPORT_DECOMPRESS
-#define BLSP_BOOT2_SUPPORT_USB_IAP              HAL_BOOT2_SUPPORT_USB_IAP
-#define BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM    HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM     
-#define BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH  HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH   
 
-#define BOOT2_MODE_RELEASE              0x01
-#define BOOT2_MODE_DEBUG                0x02
-#define BOOT2_MODE_DEEP_DEBUG           0x04
-#define BLSP_BOOT2_MODE                 BOOT2_MODE_DEBUG
+#define BFLB_EFLASH_LOADER_IF_USB_RX_TIMEOUT    8000 /*ms*/
 
-
-uint32_t blsp_boot2_get_cpu_count(void);
-uint8_t blsp_read_power_save_mode(void);
-void blsp_boot2_pass_parameter(void *data, uint32_t len);
-void blsp_boot2_releae_other_cpu(void);
-void blsp_boot2_show_timer(void);
-void blsp_boot2_init_sec_eng_pka(void);
-
-
-#endif /* __BLSP_PORT_H__ */
-
-
-
+#endif
