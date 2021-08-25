@@ -49,6 +49,8 @@ int main(void)
     for (i = 0; i < 256; i++) {
         if (readTestData[i] != i) {
             BL_CASE_FAIL;
+            while (1) {
+            }
         }
     }
 

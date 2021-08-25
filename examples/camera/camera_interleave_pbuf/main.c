@@ -193,11 +193,12 @@ int ATTR_TCM_SECTION main(void)
     CAM_Int_Callback_set(CAM_INT_NORMAL_0, &CAM_Interrupt_Normal);
     CAM_IntMask(CAM_INT_NORMAL_0, UNMASK);
     CPU_Interrupt_Enable(CAM_IRQn);
-    System_NVIC_SetPriority(CAM_IRQn, 4, 1);
 
     if (SUCCESS != image_sensor_init(DISABLE, &camera_cfg, &mjpeg_cfg)) {
         MSG("Init error!\n");
         BL_CASE_FAIL;
+        while (1) {
+        }
     }
     // MSG("cam init!\n");
     cam_start();

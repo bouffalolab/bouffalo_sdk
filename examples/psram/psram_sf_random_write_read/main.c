@@ -179,6 +179,8 @@ int main(void)
 
         if (stat == ERROR) {
             BL_CASE_FAIL;
+            while (1) {
+            }
         }
         BL_CASE_SUCCESS;
         L1C_Cache_Hit_Count_Get(&hitCountLow, &hitCountHigh);

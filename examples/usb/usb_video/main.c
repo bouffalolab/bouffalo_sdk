@@ -525,6 +525,8 @@ int main(void)
     if (SUCCESS != image_sensor_init(ENABLE, &camera_cfg, &mjpeg_cfg)) {
         MSG("Camera Init error!\r\n");
         BL_CASE_FAIL;
+        while (1) {
+        }
     }
 
     MSG("Camera Init success!\r\n");

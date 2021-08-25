@@ -96,6 +96,7 @@ uint8_t dht11_check(void)
     } else {
         return 0;
     }
+    return 0;
 }
 
 uint8_t dht11_read_bit(void)
@@ -121,6 +122,7 @@ uint8_t dht11_read_bit(void)
     } else {
         return 0;
     }
+    return 0;
 }
 
 uint8_t dht11_read_byte(void)
@@ -157,6 +159,7 @@ uint8_t dht11_read_data(uint8_t *temp, uint8_t *humi)
     } else {
         return 0;
     }
+    return 0;
 }
 
 uint8_t dht11_init(void)

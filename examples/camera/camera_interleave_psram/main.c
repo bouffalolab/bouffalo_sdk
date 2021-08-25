@@ -76,6 +76,8 @@ int main(void)
     if (SUCCESS != image_sensor_init(DISABLE, &camera_cfg, &mjpeg_cfg)) {
         MSG("Init error!\n");
         BL_CASE_FAIL;
+        while (1) {
+        }
     }
 
     cam_start();
