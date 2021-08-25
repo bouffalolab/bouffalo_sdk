@@ -1,5 +1,0 @@
-set(BSP_COMMON_DIR ${CMAKE_SOURCE_DIR}/bsp/bsp_common)
-set(TARGET_REQUIRED_PRIVATE_INCLUDE ${BSP_COMMON_DIR}/ssd1306 examples/my_case/ssd1306)
-set(TARGET_REQUIRED_SRCS ${BSP_COMMON_DIR}/ssd1306/ssd1306.c)
-set(mains main.c)
-generate_bin()

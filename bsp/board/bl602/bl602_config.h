@@ -28,10 +28,6 @@
 #include "bl602_iot/peripheral_config.h"
 #include "bl602_iot/clock_config.h"
 #include "bl602_iot/pinmux_config.h"
-#elif defined(bl602_boot2)
-#include "bl602_iot/peripheral_config.h"
-#include "bl602_iot/clock_config.h"
-#include "bl602_iot/pinmux_config.h"
 #else
 #include "bl602_custom/peripheral_config.h"
 #include "bl602_custom/clock_config.h"
