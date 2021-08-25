@@ -17,7 +17,7 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ########### Add required/dependent components #########
-#list(APPEND ADD_REQUIREMENTS xxx)
+list(APPEND ADD_REQUIREMENTS common)
 #######################################################
 
 ############ Add static libs ##########################
