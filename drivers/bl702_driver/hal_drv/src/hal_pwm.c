@@ -154,7 +154,6 @@ int pwm_register(enum pwm_index_type index, const char *name)
     dev->write = NULL;
     dev->read = NULL;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_PWM;
     dev->handle = NULL;
 

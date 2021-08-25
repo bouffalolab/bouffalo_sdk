@@ -24,6 +24,7 @@ MEMORY
     itcm_memory (rx)  : ORIGIN = 0x22010000, LENGTH = 32K
     dtcm_memory (rx)  : ORIGIN = 0x42018000, LENGTH = 32K
     ram_memory  (!rx) : ORIGIN = 0x42020000, LENGTH = 48K
+    hbn_memory  (rx)  : ORIGIN = 0x40010000, LENGTH = 4K     /* hbn ram 4K*/
 }
 
 SECTIONS
@@ -68,7 +69,19 @@ SECTIONS
         __tcm_code_end__ = .;
     } > itcm_memory
 
-    __dtcm_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
+    __hbn_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
+
+    .hbn_ram_region : AT (__hbn_load_addr)
+    {
+        . = ALIGN(4);
+        __hbn_ram_start__ = .;
+        *(.hbn_ram_code)
+        *(.hbn_data)
+        . = ALIGN(4);
+        __hbn_ram_end__ = .;
+    } > hbn_memory
+
+    __dtcm_load_addr = __hbn_load_addr + SIZEOF(.hbn_ram_region);
 
     .dtcm_region : AT (__dtcm_load_addr)
     {

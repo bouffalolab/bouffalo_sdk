@@ -127,6 +127,11 @@ int uart_close(struct device *dev)
     uart_device_t *uart_device = (uart_device_t *)dev;
 
     UART_Disable(uart_device->id, UART_TXRX);
+    if (uart_device->id == 0) {
+        GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_UART0);
+    } else if (uart_device->id == 1) {
+        GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_UART1);
+    }
     return 0;
 }
 /**
@@ -199,7 +204,10 @@ int uart_control(struct device *dev, int cmd, void *args)
             uart_cfg.txLinMode = UART_TX_LINMODE_ENABLE;
             uart_cfg.rxLinMode = UART_RX_LINMODE_ENABLE;
             uart_cfg.txBreakBitCnt = UART_TX_BREAKBIT_CNT;
+            uart_cfg.rxDeglitch = ENABLE;
             UART_Init(uart_device->id, &uart_cfg);
+            /*set de-glitch function cycle count value*/
+            UART_SetDeglitchCount(uart_device->id, 2);
             break;
         }
         case DEVICE_CTRL_GET_CONFIG /* constant-expression */:
@@ -332,7 +340,6 @@ int uart_register(enum uart_index_type index, const char *name)
     dev->write = uart_write;
     dev->read = uart_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_UART;
     dev->handle = NULL;
 

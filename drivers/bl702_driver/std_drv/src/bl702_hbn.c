@@ -159,6 +159,9 @@ void ATTR_TCM_SECTION HBN_Mode_Enter(HBN_APP_CFG_Type *cfg)
 
     /* HBN RTC config and enable */
     if (cfg->sleepTime != 0) {
+        // set rtc enable flag
+        BL_WR_WORD(0x40010FFC, 0x1);
+
         HBN_Clear_RTC_Counter();
         HBN_Get_RTC_Timer_Val(&valLow, &valHigh);
         val = valLow + ((uint64_t)valHigh << 32);

@@ -48,9 +48,13 @@
 #define BL_SFLASH_CLK         GLB_SFLASH_CLK_72M
 #define HAL_PLL_CFG_MAGICCODE "PCFG"
 
-#define BL_FLASH_XIP_BASE BL702_FLASH_XIP_BASE
-#define FLASH_NOT_DETECT  0x10
-#define HAL_BOOT2_SUPPORT_DECOMPRESS  0 /* 1 support decompress, 0 not support */
+#define BL_FLASH_XIP_BASE                       BL702_FLASH_XIP_BASE
+#define HAL_BOOT2_SUPPORT_DECOMPRESS            0 /* 1 support decompress, 0 not support */
+#define HAL_BOOT2_SUPPORT_USB_IAP               1 /* 1 support decompress, 0 not support */
+#define HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM     0 /* 1 support decompress, 0 not support */
+#define HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH   1 /* 1 support decompress, 0 not support */
+
+
 
 typedef struct
 {
@@ -94,11 +98,14 @@ void hal_boot2_reset_sec_eng(void);
 void hal_boot2_sw_system_reset(void);
 void hal_boot2_set_psmode_status(uint32_t flag);
 uint32_t hal_boot2_get_psmode_status(void);
-uint8_t *hal_boot2_get_user_fw(void);
+uint32_t hal_boot2_get_user_fw(void);
 void hal_boot2_clr_user_fw(void);
 void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *g_efuse_cfg);
 int32_t hal_boot2_get_clk_cfg(hal_pll_config *cfg);
 void hal_boot2_sboot_finish(void);
 void hal_boot2_uart_gpio_init(void);
 void hal_boot2_debug_uart_gpio_init(void);
+#if HAL_BOOT2_SUPPORT_USB_IAP
+void hal_boot2_debug_usb_port_init(void);
+#endif
 #endif

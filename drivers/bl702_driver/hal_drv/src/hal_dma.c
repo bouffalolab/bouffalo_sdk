@@ -21,7 +21,6 @@
  *
  */
 #include "hal_dma.h"
-#include "drv_mmheap.h"
 #include "bl702_dma.h"
 
 static dma_control_data_t dma_ctrl_cfg;
@@ -186,7 +185,6 @@ int dma_register(enum dma_index_type index, const char *name)
     // dev->write = dma_write;
     // dev->read = dma_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_DMA;
     dev->handle = NULL;
 
@@ -330,10 +328,10 @@ int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_
     }
 
     if (dma_device->lli_cfg) {
-        mmheap_free(dma_device->lli_cfg);
-        dma_device->lli_cfg = (dma_lli_ctrl_t *)mmheap_alloc(sizeof(dma_lli_ctrl_t) * malloc_count);
+        free(dma_device->lli_cfg);
+        dma_device->lli_cfg = (dma_lli_ctrl_t *)malloc(sizeof(dma_lli_ctrl_t) * malloc_count);
     } else {
-        dma_device->lli_cfg = (dma_lli_ctrl_t *)mmheap_alloc(sizeof(dma_lli_ctrl_t) * malloc_count);
+        dma_device->lli_cfg = (dma_lli_ctrl_t *)malloc(sizeof(dma_lli_ctrl_t) * malloc_count);
     }
 
     if (dma_device->lli_cfg) {

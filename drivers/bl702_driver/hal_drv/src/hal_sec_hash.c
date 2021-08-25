@@ -201,7 +201,6 @@ static int sec_hash_sha_register(enum sec_hash_index_type index, enum sec_hash_t
     dev->write = sec_hash_write;
     dev->read = sec_hash_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_SEC_HASH;
     dev->handle = NULL;
 

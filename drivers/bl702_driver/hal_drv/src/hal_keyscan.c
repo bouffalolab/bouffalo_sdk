@@ -141,7 +141,6 @@ int keyscan_register(enum keyscan_index_type index, const char *name)
     dev->write = NULL;
     dev->read = NULL;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_KEYSCAN;
     dev->handle = NULL;
 

@@ -26,13 +26,26 @@
 #include "drv_device.h"
 #include "bl702_config.h"
 
-enum pm_hbn_sleep_level {
-    PM_HBN_LEVEL_0, /*!< HBN pd_core */
-    PM_HBN_LEVEL_1, /*!< HBN pd_aon_hbncore + pd_core */
-    PM_HBN_LEVEL_2, /*!< HBN pd_aon_hbncore + pd_core */
+enum pm_pds_sleep_level {
+    PM_PDS_LEVEL_0,
+    PM_PDS_LEVEL_1,
+    PM_PDS_LEVEL_2,
+    PM_PDS_LEVEL_3,
+    PM_PDS_LEVEL_4, /*do not recommend to use*/
+    PM_PDS_LEVEL_5, /*do not recommend to use*/
+    PM_PDS_LEVEL_6, /*do not recommend to use*/
+    PM_PDS_LEVEL_7, /*do not recommend to use*/
+    PM_PDS_LEVEL_31,
 };
 
-enum pm_hbn_event_type {
+enum pm_hbn_sleep_level {
+    PM_HBN_LEVEL_0,
+    PM_HBN_LEVEL_1,
+    PM_HBN_LEVEL_2,
+};
+
+enum pm_event_type {
+    PM_HBN_GPIO9_WAKEUP_EVENT,
     PM_HBN_GPIO10_WAKEUP_EVENT,
     PM_HBN_GPIO11_WAKEUP_EVENT,
     PM_HBN_GPIO12_WAKEUP_EVENT,
@@ -41,6 +54,12 @@ enum pm_hbn_event_type {
     PM_HBN_ACOMP1_WAKEUP_EVENT,
 };
 
-void pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level);
-void pm_hbn_irq_register(void (*hbn_irq)(uint8_t event));
+void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint8_t sleep_time);
+void pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level, uint8_t sleep_time);
+void pm_hbn_set_wakeup_callback(void (*wakeup_callback)(void));
+void pm_hbn_enter_again(bool reset);
+void pm_hbn_out0_irq_register(void);
+void pm_hbn_out1_irq_register(void);
+void pm_irq_callback(enum pm_event_type event);
+
 #endif

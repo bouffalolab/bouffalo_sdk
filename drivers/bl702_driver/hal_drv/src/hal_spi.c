@@ -256,6 +256,25 @@ int spi_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
         }
 
         if (spi_device->id == 0) {
+            /* Set valid width for each fifo entry */
+            uint32_t tmpVal;
+            uint32_t SPIx = SPI_BASE;
+            tmpVal = BL_RD_REG(SPIx, SPI_CONFIG);
+            switch (DMA_DEV(dma_ch)->dst_width) {
+                case DMA_TRANSFER_WIDTH_8BIT:
+                    BL_WR_REG(SPIx, SPI_CONFIG, BL_SET_REG_BITS_VAL(tmpVal, SPI_CR_SPI_FRAME_SIZE, 0));
+                    break;
+                case DMA_TRANSFER_WIDTH_16BIT:
+                    BL_WR_REG(SPIx, SPI_CONFIG, BL_SET_REG_BITS_VAL(tmpVal, SPI_CR_SPI_FRAME_SIZE, 1));
+                    break;
+
+                case DMA_TRANSFER_WIDTH_32BIT:
+                    BL_WR_REG(SPIx, SPI_CONFIG, BL_SET_REG_BITS_VAL(tmpVal, SPI_CR_SPI_FRAME_SIZE, 3));
+                    break;
+                default:
+                    break;
+            }
+
             dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_SPI_TDR, size);
             dma_channel_start(dma_ch);
         }
@@ -296,6 +315,26 @@ int spi_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
         }
 
         if (spi_device->id == 0) {
+            /* Set valid width for each fifo entry */
+            uint32_t tmpVal;
+            uint32_t SPIx = SPI_BASE;
+            tmpVal = BL_RD_REG(SPIx, SPI_CONFIG);
+            switch (DMA_DEV(dma_ch)->src_width) {
+                case DMA_TRANSFER_WIDTH_8BIT:
+                    BL_WR_REG(SPIx, SPI_CONFIG, BL_SET_REG_BITS_VAL(tmpVal, SPI_CR_SPI_FRAME_SIZE, 0));
+                    break;
+                case DMA_TRANSFER_WIDTH_16BIT:
+                    BL_WR_REG(SPIx, SPI_CONFIG, BL_SET_REG_BITS_VAL(tmpVal, SPI_CR_SPI_FRAME_SIZE, 1));
+                    break;
+
+                case DMA_TRANSFER_WIDTH_32BIT:
+                    BL_WR_REG(SPIx, SPI_CONFIG, BL_SET_REG_BITS_VAL(tmpVal, SPI_CR_SPI_FRAME_SIZE, 3));
+                    break;
+                default:
+                    break;
+                    dma_reload(dma_ch, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)buffer, size);
+                    dma_channel_start(dma_ch);
+            }
             dma_reload(dma_ch, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)buffer, size);
             dma_channel_start(dma_ch);
         }
@@ -339,7 +378,6 @@ int spi_register(enum spi_index_type index, const char *name)
     dev->write = spi_write;
     dev->read = spi_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_SPI;
     dev->handle = NULL;
 

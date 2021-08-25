@@ -373,7 +373,6 @@ int i2s_register(enum i2s_index_type index, const char *name)
     dev->write = i2s_write;
     dev->read = i2s_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_I2S;
     dev->handle = NULL;
 

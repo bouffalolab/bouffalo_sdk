@@ -30,9 +30,9 @@
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-#define USB_DC_LOG_WRN(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
+#define USB_DC_LOG_WRN(a, ...) //bflb_platform_printf(a, ##__VA_ARGS__)
 #define USB_DC_LOG_DBG(a, ...)
-#define USB_DC_LOG_ERR(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
+#define USB_DC_LOG_ERR(a, ...) //bflb_platform_printf(a, ##__VA_ARGS__)
 #define USB_DC_LOG(a, ...)
 
 static usb_dc_device_t usb_fs_device;
@@ -453,7 +453,6 @@ int usb_dc_register(enum usb_index_type index, const char *name)
     dev->write = usb_write;
     dev->read = usb_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_USB;
     dev->handle = NULL;
 
@@ -776,7 +775,7 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
         return -USB_DC_EP_EN_ERR;
     }
     /* Check if ep free */
-    while (!USB_Is_EPx_RDY_Free(ep_idx)) {
+    while (!USB_Is_EPx_RDY_Free(ep_idx) && (usb_fs_device.out_ep[ep_idx].ep_cfg.ep_type != USBD_EP_TYPE_ISOC)) {
         timeout--;
 
         if (!timeout) {
@@ -929,8 +928,8 @@ void usb_dc_isr(usb_dc_device_t *device)
     for (USB_INT_Type epint = USB_INT_EP1_DONE; epint <= USB_INT_EP7_DONE; epint += 2) {
         if (USB_Get_IntStatus(epint)) {
             epnum = (epint - USB_INT_EP0_OUT_CMD) >> 1;
-            if (!USB_Is_EPx_RDY_Free(epnum)) {
-                USB_DC_LOG_DBG("ep%d out busy\r\n", epnum);
+            if (!USB_Is_EPx_RDY_Free(epnum) && (device->out_ep[epnum].ep_cfg.ep_type != USBD_EP_TYPE_ISOC)) {
+                USB_DC_LOG_ERR("ep%d out busy\r\n", epnum);
                 return;
             }
             device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_OUT(epnum)), 0, USB_DC_EVENT_EP_OUT_NOTIFY);

@@ -124,7 +124,7 @@ extern void clic_clear_pending(uint32_t source);
 
 #define CPU_Interrupt_Disable clic_disable_interrupt
 
-#define NVIC_ClearPendingIRQ clic_clear_pending
+#define CPU_Interrupt_Pending_Clear clic_clear_pending
 
 //#define __set_MSP(val)                        __ASM volatile ("lw sp,0(%0)":: "r"(val))
 #define __set_MSP(msp) __ASM volatile("add sp, x0, %0" ::"r"(msp))

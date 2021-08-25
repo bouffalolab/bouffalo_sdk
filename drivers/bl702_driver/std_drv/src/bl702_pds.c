@@ -206,7 +206,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_App_Enable(PDS_CTL_Type *cfg, PDS_CTL4_Type *cf
     /* PDS sleep time 1~PDS_WARMUP_LATENCY_CNT <=> error */
     /* PDS sleep time >PDS_WARMUP_LATENCY_CNT <=> correct */
     if (!pdsSleepCnt) {
-        cfg->sleepForever = 1;
+        cfg->sleepForever = 0;
     } else if ((pdsSleepCnt) && (pdsSleepCnt <= PDS_WARMUP_LATENCY_CNT)) {
         return ERROR;
     } else {
@@ -1310,7 +1310,7 @@ void PDS_WAKEUP_IRQHandler(void)
             pdsIntCbfArra[intType][0]();
         }
     }
-
+    PDS_Set_Vddcore_GPIO_IntClear();
     PDS_IntClear();
 }
 

@@ -31,8 +31,16 @@ uint32_t hal_boot2_custom(void)
 void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *g_efuse_cfg)
 {
     uint32_t tmp;
+    uint32_t rootClk;
+    uint8_t hdiv = 0, bdiv = 0;
 
-    HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_XTAL);
+    /* save bclk fclk div and root clock sel */
+    bdiv = GLB_Get_BCLK_Div();
+    hdiv = GLB_Get_HCLK_Div();
+    rootClk = BL_RD_REG(HBN_BASE, HBN_GLB);
+
+    /* change root clock to rc32m for efuse operation */
+    HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_RC32M);
 
     /* Get sign and aes type*/
     EF_Ctrl_Read_Secure_Boot((EF_Ctrl_Sign_Type *)g_efuse_cfg->sign, (EF_Ctrl_SF_AES_Type *)g_efuse_cfg->encrypted);
@@ -43,8 +51,10 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *g_efuse_cfg)
     EF_Ctrl_Read_Sw_Usage(0, &tmp);
     g_efuse_cfg->hbn_check_sign = (tmp >> 22) & 0x01;
 
-    GLB_Set_System_CLK_Div(0, 1);
-    HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_DLL);
+    /* restore bclk fclk div and root clock sel */
+    GLB_Set_System_CLK_Div(hdiv, bdiv);
+    BL_WR_REG(HBN_BASE, HBN_GLB,rootClk);
+    __NOP();__NOP();__NOP();__NOP();
 }
 /**
  * @brief reset sec eng clock
@@ -101,9 +111,9 @@ uint32_t hal_boot2_get_psmode_status(void)
  * @param
  * @return user define flag
  */
-uint8_t *hal_boot2_get_user_fw(void)
+uint32_t hal_boot2_get_user_fw(void)
 {
-    return (uint8_t *)(HBN_BASE + HBN_RSV0_OFFSET);
+    return BL_RD_WORD(HBN_BASE + HBN_RSV0_OFFSET);
 }
 
 /**
@@ -156,7 +166,7 @@ void hal_boot2_uart_gpio_init(void)
  *
  * @return 
  */
- void hal_boot2_debug_uart_gpio_init(void)
+void hal_boot2_debug_uart_gpio_init(void)
 {
     GLB_GPIO_Type gpios[]={GPIO_PIN_17};
 
@@ -164,3 +174,24 @@ void hal_boot2_uart_gpio_init(void)
    
     GLB_UART_Fun_Sel((GPIO_PIN_17 % 8), GLB_UART_SIG_FUN_UART1_TXD);
 }
+
+
+/**
+ * @brief hal_boot2_debug_usb_port_init
+ *
+ * @return 
+ */
+#if HAL_BOOT2_SUPPORT_USB_IAP
+void hal_boot2_debug_usb_port_init(void)
+{
+
+
+    /* must do this , or usb can not be recognized */
+    __disable_irq();
+    __enable_irq();
+
+    GLB_GPIO_Type gpios[]={GPIO_PIN_7,GPIO_PIN_8};
+    GLB_GPIO_Func_Init(GPIO_FUN_ANALOG,gpios,2);
+}
+#endif
+

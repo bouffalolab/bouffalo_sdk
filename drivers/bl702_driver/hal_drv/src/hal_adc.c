@@ -135,6 +135,10 @@ int adc_open(struct device *dev, uint16_t oflag)
     ADC_Init(&adc_cfg);
 
     ADC_FIFO_Cfg(&adc_fifo_cfg);
+    
+    ADC_IntMask(ADC_INT_ALL, MASK);
+
+    CPU_Interrupt_Enable(GPADC_DMA_IRQn);
 
     return 0;
 }
@@ -168,7 +172,7 @@ int adc_control(struct device *dev, int cmd, void *args)
     switch (cmd) {
         case DEVICE_CTRL_SET_INT /* constant-expression */:
             mask = (uint32_t)args;
-
+            
             if (mask & ADC_EVENT_FIFO_READY_IT) {
                 ADC_IntMask(ADC_EVENT_FIFO_READY, UNMASK);
             }
@@ -184,7 +188,7 @@ int adc_control(struct device *dev, int cmd, void *args)
             if (mask & ADC_EVEN_INT_NEG_SATURATION_IT) {
                 ADC_IntMask(ADC_EVEN_INT_NEG_SATURATION, UNMASK);
             }
-            CPU_Interrupt_Enable(GPADC_DMA_IRQn);
+            
             break;
 
         case DEVICE_CTRL_CLR_INT /* constant-expression */:
@@ -327,7 +331,6 @@ int adc_register(enum adc_index_type index, const char *name)
     dev->write = NULL;
     dev->read = adc_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_ADC;
     dev->handle = NULL;
 

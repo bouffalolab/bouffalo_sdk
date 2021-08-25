@@ -23,7 +23,6 @@
 #include "bl702_glb.h"
 #include "bl702_gpio.h"
 #include "hal_gpio.h"
-#include "drv_mmheap.h"
 
 static void GPIO_IRQ(void);
 
@@ -88,8 +87,6 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
 
             gpio_cfg.gpioMode = GPIO_MODE_INPUT;
 
-            Interrupt_Handler_Register(GPIO_INT0_IRQn, GPIO_IRQ);
-
             if (mode == GPIO_ASYNC_RISING_TRIGER_INT_MODE) {
                 gpio_cfg.pullType = GPIO_PULL_DOWN;
                 GLB_Set_GPIO_IntMod(pin, GLB_GPIO_INT_CONTROL_ASYNC, GLB_GPIO_INT_TRIG_POS_PULSE);
@@ -134,7 +131,6 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
                 return;
             }
 
-            CPU_Interrupt_Enable(GPIO_INT0_IRQn);
             break;
     }
 
@@ -148,7 +144,14 @@ void gpio_set_mode(uint32_t pin, uint32_t mode)
  */
 void gpio_write(uint32_t pin, uint32_t value)
 {
-    GLB_GPIO_Write(pin, value);
+    uint32_t tmp = BL_RD_REG(GLB_BASE, GLB_GPIO_OUTPUT);
+
+    if (value)
+        tmp |= (1 << pin);
+    else
+        tmp &= ~(1 << pin);
+
+    BL_WR_REG(GLB_BASE, GLB_GPIO_OUTPUT, tmp);
 }
 /**
  * @brief
@@ -157,6 +160,9 @@ void gpio_write(uint32_t pin, uint32_t value)
  */
 void gpio_toggle(uint32_t pin)
 {
+    uint32_t tmp = BL_RD_REG(GLB_BASE, GLB_GPIO_OUTPUT);
+    tmp ^= (1 << pin);
+    BL_WR_REG(GLB_BASE, GLB_GPIO_OUTPUT, tmp);
 }
 /**
  * @brief
@@ -166,7 +172,7 @@ void gpio_toggle(uint32_t pin)
  */
 int gpio_read(uint32_t pin)
 {
-    return GLB_GPIO_Read(pin);
+    return (BL_RD_REG(GLB_BASE, GLB_GPIO_INPUT) & (1 << pin));
 }
 /**
  * @brief
@@ -176,10 +182,13 @@ int gpio_read(uint32_t pin)
  */
 void gpio_attach_irq(uint32_t pin, void (*cbfun)(uint32_t pin))
 {
-    struct gpio_int_cfg_private *int_cfg = mmheap_alloc(sizeof(struct gpio_int_cfg_private));
+    struct gpio_int_cfg_private *int_cfg = malloc(sizeof(struct gpio_int_cfg_private));
     int_cfg->cbfun = cbfun;
     int_cfg->pin = pin;
     slist_add_tail(&gpio_int_head, &int_cfg->list);
+    CPU_Interrupt_Disable(GPIO_INT0_IRQn);
+    Interrupt_Handler_Register(GPIO_INT0_IRQn, GPIO_IRQ);
+    CPU_Interrupt_Enable(GPIO_INT0_IRQn);
 }
 /**
  * @brief

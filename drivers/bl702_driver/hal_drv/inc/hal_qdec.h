@@ -44,12 +44,12 @@ enum qdec_index_type {
     QDEC_MAX_INDEX,
 };
 
-enum {
-    QDEC_REPORT_EVENT,   /*!< report interrupt */
-    QDEC_SAMPLE_EVENT,   /*!< sample interrupt */
-    QDEC_ERROR_EVENT,    /*!< error interrupt */
-    QDEC_OVERFLOW_EVENT, /*!< ACC1 and ACC2 overflow interrupt */
-    QDEC_ALL_EVENT,      /*!< interrupt max num */
+enum qdec_event_type {
+    QDEC_REPORT_EVENT = 1 << 0,   /*!< report interrupt */
+    QDEC_SAMPLE_EVENT = 1 << 1,   /*!< sample interrupt */
+    QDEC_ERROR_EVENT = 1 << 2,    /*!< error interrupt */
+    QDEC_OVERFLOW_EVENT = 1 << 3, /*!< ACC1 and ACC2 overflow interrupt */
+    QDEC_ALL_EVENT = 1 << 4,      /*!< interrupt max num */
 };
 
 typedef struct qdec_device {

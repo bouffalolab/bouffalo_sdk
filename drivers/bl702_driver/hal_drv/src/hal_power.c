@@ -1359,6 +1359,17 @@ static void ATTR_TCM_SECTION PDS_Post_CallBack(void)
         glb_postCbFun();
     }
 }
+
+int hbn_set_wakeup_addr(uint32_t addr)
+{
+    return HBN_Set_Wakeup_Addr(addr);
+}
+
+int hbn_set_status_flag(uint32_t flag)
+{
+    return HBN_Set_Status_Flag(flag);
+}
+
 /**
  * @brief enter cpu into pds mode
  *

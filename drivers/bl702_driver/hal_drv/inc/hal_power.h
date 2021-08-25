@@ -1,5 +1,5 @@
 /**
- * @file hal_pwm.h
+ * @file hal_power.h
  * @brief
  *
  * Copyright (c) 2021 Bouffalolab team
@@ -48,8 +48,10 @@ int lp_set_clock_gate(uint8_t enable, Clock_Gate_Type clockType);
 void lp_set_all_gpio_hz(void);
 void lp_power_off_dll(void);
 
+int hbn_set_wakeup_addr(uint32_t addr);
+int hbn_set_status_flag(uint32_t flag);
 int lp_enter_wfi(void);
 int lp_enter_pds(uint32_t sleep_time, void (*preCbFun)(void), void (*postCbFun)(void));
-int lp_enter_hbn(uint32_t sleepTime , uint8_t hbn_level);
+int lp_enter_hbn(uint32_t sleepTime, uint8_t hbn_level);
 
 #endif

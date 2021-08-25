@@ -80,7 +80,6 @@ int timer_open(struct device *dev, uint16_t oflag)
             compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
             compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
             compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
-
         } else {
             compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000)) + timer_device->reload;
             compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000)) + timer_device->reload;
@@ -203,10 +202,10 @@ int timer_control(struct device *dev, int cmd, void *args)
             }
 
             if (timer_device->id == TIMER_CH0) {
-                NVIC_ClearPendingIRQ(TIMER_CH0_IRQn);
+                CPU_Interrupt_Pending_Clear(TIMER_CH0_IRQn);
                 CPU_Interrupt_Enable(TIMER_CH0_IRQn);
             } else if (timer_device->id == TIMER_CH1) {
-                NVIC_ClearPendingIRQ(TIMER_CH1_IRQn);
+                CPU_Interrupt_Pending_Clear(TIMER_CH1_IRQn);
                 CPU_Interrupt_Enable(TIMER_CH1_IRQn);
             }
 
@@ -313,7 +312,6 @@ int timer_register(enum timer_index_type index, const char *name)
     dev->write = timer_write;
     // dev->read = NULL;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_TIMER;
     dev->handle = NULL;
 

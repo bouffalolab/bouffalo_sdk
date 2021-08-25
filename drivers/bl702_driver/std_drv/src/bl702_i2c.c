@@ -315,6 +315,42 @@ void I2C_Init(I2C_ID_Type i2cNo, I2C_Direction_Type direct, I2C_Transfer_Cfg *cf
 }
 
 /****************************************************************************/ /**
+ * @brief  Set de-glitch function cycle count value
+ *
+ * @param  i2cNo: I2C ID type
+ * @param  cnt: De-glitch function cycle count
+ *
+ * @return SUCCESS
+ *
+*******************************************************************************/
+BL_Err_Type I2C_SetDeglitchCount(I2C_ID_Type i2cNo, uint8_t cnt)
+{
+    uint32_t tmpVal;
+    uint32_t I2Cx = I2C_BASE;
+
+    /* Check the parameters */
+    CHECK_PARAM(IS_I2C_ID_TYPE(i2cNo));
+
+    tmpVal = BL_RD_REG(I2Cx, I2C_CONFIG);
+
+    if (cnt > 0) {
+        /* enable de-glitch function */
+        tmpVal = BL_SET_REG_BIT(tmpVal, I2C_CR_I2C_DEG_EN);
+    } else if (cnt == 0) {
+        /* disable de-glitch function */
+        tmpVal = BL_CLR_REG_BIT(tmpVal, I2C_CR_I2C_DEG_EN);
+    } else {
+        return ERROR;
+    }
+
+    /* Set count value */
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, I2C_CR_I2C_DEG_CNT, cnt);
+    BL_WR_REG(I2Cx, I2C_CONFIG, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  Set i2c prd
  *
  * @param  i2cNo: I2C ID type

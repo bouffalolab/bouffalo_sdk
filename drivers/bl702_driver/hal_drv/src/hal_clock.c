@@ -57,7 +57,7 @@ static void peripheral_clock_gate_all()
 void system_clock_init(void)
 {
     /*select root clock*/
-    GLB_Set_System_CLK(CLOCK_XTAL, BSP_ROOT_CLOCK_SOURCE - 2);
+    GLB_Set_System_CLK(XTAL_TYPE, BSP_ROOT_CLOCK_SOURCE);
     /*set fclk/hclk and bclk clock*/
     GLB_Set_System_CLK_Div(BSP_FCLK_DIV, BSP_BCLK_DIV);
     /* Set MTimer the same frequency as SystemCoreClock */
@@ -70,8 +70,13 @@ void system_clock_init(void)
     HBN_Power_Off_Xtal_32K();
 #else
     HBN_32K_Sel(HBN_32K_XTAL);
+    HBN_Power_On_Xtal_32K();
 #endif
-    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
+    if ((XTAL_TYPE == INTERNAL_RC_32M) || (XTAL_TYPE == XTAL_NONE)) {
+        HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_RC32M);
+    } else {
+        HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
+    }
 }
 
 void system_mtimer_clock_init(void)
@@ -197,6 +202,45 @@ void peripheral_clock_init(void)
     BL_WR_REG(TIMER_BASE, TIMER_TCDR, tmp1);
 #else
 #error "please select correct timer1 clock source"
+#endif
+#endif
+
+#if defined(BSP_USING_WDT)
+#if BSP_WDT_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_FCLK
+    GLB_AHB_Slave1_Clock_Gate(0, BL_AHB_SLAVE1_TMR);
+    /* Configure watchdog timer clock source */
+    uint32_t tmpwdt = BL_RD_REG(TIMER_BASE, TIMER_TCCR);
+    tmpwdt = BL_SET_REG_BITS_VAL(tmpwdt, TIMER_CS_WDT, TIMER_CLKSRC_FCLK);
+    BL_WR_REG(TIMER_BASE, TIMER_TCCR, tmpwdt);
+
+    /* Configure watchdog timer clock division */
+    tmpwdt = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
+    tmpwdt = BL_SET_REG_BITS_VAL(tmpwdt, TIMER_WCDR, BSP_WDT_CLOCK_DIV);
+    BL_WR_REG(TIMER_BASE, TIMER_TCDR, tmpwdt);
+#elif BSP_WDT_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
+    GLB_AHB_Slave1_Clock_Gate(0, BL_AHB_SLAVE1_TMR);
+    /* Configure watchdog timer clock source */
+    uint32_t tmpwdt = BL_RD_REG(TIMER_BASE, TIMER_TCCR);
+    tmpwdt = BL_SET_REG_BITS_VAL(tmpwdt, TIMER_CS_WDT, TIMER_CLKSRC_XTAL);
+    BL_WR_REG(TIMER_BASE, TIMER_TCCR, tmpwdt);
+
+    /* Configure watchdog timer clock division */
+    tmpwdt = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
+    tmpwdt = BL_SET_REG_BITS_VAL(tmpwdt, TIMER_WCDR, BSP_WDT_CLOCK_DIV);
+    BL_WR_REG(TIMER_BASE, TIMER_TCDR, tmpwdt);
+#elif BSP_WDT_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_32K_CLK
+    GLB_AHB_Slave1_Clock_Gate(0, BL_AHB_SLAVE1_TMR);
+    /* Configure watchdog timer clock source */
+    uint32_t tmpwdt = BL_RD_REG(TIMER_BASE, TIMER_TCCR);
+    tmpwdt = BL_SET_REG_BITS_VAL(tmpwdt, TIMER_CS_WDT, TIMER_CLKSRC_32K);
+    BL_WR_REG(TIMER_BASE, TIMER_TCCR, tmpwdt);
+
+    /* Configure watchdog timer clock division */
+    tmpwdt = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
+    tmpwdt = BL_SET_REG_BITS_VAL(tmpwdt, TIMER_WCDR, BSP_WDT_CLOCK_DIV);
+    BL_WR_REG(TIMER_BASE, TIMER_TCDR, tmpwdt);
+#else
+#error "please select correct watchdog timer clock source"
 #endif
 #endif
 
@@ -385,9 +429,13 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
 #if defined(BSP_USING_UART0) || defined(BSP_USING_UART1)
         case PERIPHERAL_CLOCK_UART:
 #if BSP_UART_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_PLL_96M
-            return 96000000;
+            tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG2);
+            div = BL_GET_REG_BITS_VAL(tmpVal, GLB_UART_CLK_DIV);
+            return 96000000 / (div + 1);
 #elif BSP_UART_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_FCLK
-            return system_clock_get(SYSTEM_CLOCK_FCLK) / (GLB_Get_HCLK_Div() + 1));
+            tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG2);
+            div = BL_GET_REG_BITS_VAL(tmpVal, GLB_UART_CLK_DIV);
+            return system_clock_get(SYSTEM_CLOCK_FCLK) / (div + 1);
 #else
             break;
 #endif
@@ -417,8 +465,6 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
 #if defined(BSP_USING_I2S0)
         case PERIPHERAL_CLOCK_I2S:
             return system_clock_get(SYSTEM_CLOCK_AUPLL);
-#else
-        break;
 #endif
 #if defined(BSP_USING_ADC0)
         case PERIPHERAL_CLOCK_ADC:

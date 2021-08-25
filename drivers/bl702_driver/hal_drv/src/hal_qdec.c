@@ -77,7 +77,7 @@ int qdec_open(struct device *dev, uint16_t oflag)
 #ifdef BSP_USING_QDEC1
         if (qdec_device->id == QDEC1_ID) {
             Interrupt_Handler_Register(QDEC1_IRQn, QDEC1_IRQ);
-            QDEC_SetIntMask(qdec_device->id, QDEC_INT_REPORT, UNMASK);
+            QDEC_SetIntMask(qdec_device->id, QDEC_INT_REPORT, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_SAMPLE, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_ERROR, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_OVERFLOW, MASK);
@@ -87,7 +87,7 @@ int qdec_open(struct device *dev, uint16_t oflag)
 #ifdef BSP_USING_QDEC2
         if (qdec_device->id == QDEC2_ID) {
             Interrupt_Handler_Register(QDEC2_IRQn, QDEC2_IRQ);
-            QDEC_SetIntMask(qdec_device->id, QDEC_INT_REPORT, UNMASK);
+            QDEC_SetIntMask(qdec_device->id, QDEC_INT_REPORT, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_SAMPLE, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_ERROR, MASK);
             QDEC_SetIntMask(qdec_device->id, QDEC_INT_OVERFLOW, MASK);
@@ -113,19 +113,12 @@ int qdec_control(struct device *dev, int cmd, void *args)
 
     switch (cmd) {
         case DEVICE_CTRL_SET_INT: {
-            if ((uint32_t)args == QDEC_REPORT_EVENT) {
-                QDEC_SetIntMask(qdec_device->id, QDEC_INT_REPORT, UNMASK);
-            } else if ((uint32_t)args == QDEC_SAMPLE_EVENT) {
-                QDEC_SetIntMask(qdec_device->id, QDEC_INT_SAMPLE, UNMASK);
-            } else if ((uint32_t)args == QDEC_ERROR_EVENT) {
-                QDEC_SetIntMask(qdec_device->id, QDEC_INT_ERROR, UNMASK);
-            } else if ((uint32_t)args == QDEC_OVERFLOW_EVENT) {
-                QDEC_SetIntMask(qdec_device->id, QDEC_INT_OVERFLOW, UNMASK);
-            } else {
-                QDEC_SetIntMask(qdec_device->id, QDEC_INT_REPORT, UNMASK);
-                QDEC_SetIntMask(qdec_device->id, QDEC_INT_SAMPLE, UNMASK);
-                QDEC_SetIntMask(qdec_device->id, QDEC_INT_ERROR, UNMASK);
-                QDEC_SetIntMask(qdec_device->id, QDEC_INT_OVERFLOW, UNMASK);
+            uint32_t offset = __builtin_ctz((uint32_t)args);
+            while (offset < 5) {
+                if ((uint32_t)args & (1 << offset)) {
+                    QDEC_SetIntMask(qdec_device->id, offset, UNMASK);
+                }
+                offset++;
             }
             if (qdec_device->id == QDEC0_ID) {
                 CPU_Interrupt_Enable(QDEC0_IRQn);
@@ -138,6 +131,13 @@ int qdec_control(struct device *dev, int cmd, void *args)
         }
 
         case DEVICE_CTRL_CLR_INT: {
+            uint32_t offset = __builtin_ctz((uint32_t)args);
+            while (offset < 5) {
+                if ((uint32_t)args & (1 << offset)) {
+                    QDEC_SetIntMask(qdec_device->id, offset, MASK);
+                }
+                offset++;
+            }
             if (qdec_device->id == QDEC0_ID) {
                 CPU_Interrupt_Disable(QDEC0_IRQn);
             } else if (qdec_device->id == QDEC1_ID) {
@@ -201,7 +201,6 @@ int qdec_register(enum qdec_index_type index, const char *name)
     dev->write = NULL;
     dev->read = NULL; //qdec_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_QDEC;
     dev->handle = NULL;
 

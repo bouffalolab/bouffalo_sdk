@@ -177,6 +177,7 @@ void I2C_SendWord(I2C_ID_Type i2cNo, uint32_t data);
 uint32_t I2C_RecieveWord(I2C_ID_Type i2cNo);
 void I2C_Enable(I2C_ID_Type i2cNo);
 void I2C_Disable(I2C_ID_Type i2cNo);
+BL_Err_Type I2C_SetDeglitchCount(I2C_ID_Type i2cNo, uint8_t cnt);
 BL_Err_Type I2C_Reset(I2C_ID_Type i2cNo);
 void I2C_SetPrd(I2C_ID_Type i2cNo, uint8_t phase);
 void I2C_ClockSet(I2C_ID_Type i2cNo, uint32_t clk);

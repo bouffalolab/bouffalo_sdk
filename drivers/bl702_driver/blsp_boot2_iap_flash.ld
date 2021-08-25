@@ -19,7 +19,7 @@ ENTRY(_enter)
 
 StackSize = 0x1000; /*  4KB */
 HeapSize  = 0x0;    /*  0KB */
-PROVIDE(__boot2_pass_param_addr = 0x4202F000);/* 0x42020000 + 60 * 1024 */
+PROVIDE(__boot2_pass_param_addr = 0x4202DC00);
 
 MEMORY
 {
@@ -46,7 +46,15 @@ SECTIONS
         KEEP(*(shellCommand))
         _shell_command_end = .;
 
+
+
         *(EXCLUDE_FILE ( *bl702_uart.c.obj* *hal_uart.c.obj* ) .text*)
+        /* section information for usb desc */
+        . = ALIGN(4);
+        _usb_desc_start = .;
+        KEEP(*(usb_desc))
+        . = ALIGN(4);
+        _usb_desc_end = .;
 
         *(.rodata)
         *(.rodata.*)

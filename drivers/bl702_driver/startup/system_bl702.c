@@ -69,15 +69,26 @@ void SystemInit(void)
     /* global IRQ disable */
     __disable_irq();
 
-    /* disable hardware_pullup_pull_down (reg_en_hw_pu_pd = 0) */
+    /*disable wakeup irq and aon ie*/
     tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MASK, 0x1f);
+    /* disable aon_pad_ie_smt (reg_aon_pad_ie_smt = 0) */
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_REG_AON_PAD_IE_SMT, 0);
+    /* disable hardware_pullup_pull_down (reg_en_hw_pu_pd = 0) */
     tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_REG_EN_HW_PU_PD);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MODE, HBN_GPIO_INT_TRIGGER_ASYNC_FALLING_EDGE);
     BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
 
-    /* disable aon_pad_ie_smt (reg_aon_pad_ie_smt = 0) */
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_REG_AON_PAD_IE_SMT);
-    BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+    tmpVal |= (1 << 8);      /*mask pds wakeup*/
+    tmpVal |= (1 << 10);     /*mask rf done*/
+    tmpVal |= (1 << 11);     /*mask pll done*/
+    tmpVal &= ~(0xff << 16); /*mask all pds wakeup source int*/
+    BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_INT);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_GPIO_INT_MODE, PDS_AON_GPIO_INT_TRIGGER_ASYNC_FALLING_EDGE);
+    BL_WR_REG(PDS_BASE, PDS_GPIO_INT, tmpVal);
 
     /* GLB_Set_EM_Sel(GLB_EM_0KB); */
     tmpVal = BL_RD_REG(GLB_BASE, GLB_SEAM_MISC);
@@ -89,9 +100,6 @@ void SystemInit(void)
     tmpVal = BL_RD_REG(GLB_BASE, GLB_PARM);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_UART_SWAP_SET, UART_SIG_SWAP_NONE);
     BL_WR_REG(GLB_BASE, GLB_PARM, tmpVal);
-    //    GLB_JTAG_Sig_Swap_Set(JTAG_SIG_SWAP_NONE);
-    //    /* update SystemCoreClock value */
-    //    SystemCoreClockSet(SYSTEM_CLOCK);
 
     /* fix 57.6M */
     if (SystemCoreClockGet() == 57 * 6000 * 1000) {
@@ -140,6 +148,17 @@ void SystemInit(void)
     system_bor_init();
     /* global IRQ enable */
     __enable_irq();
+}
+/*identify flash config automaticly*/
+extern BL_Err_Type flash_init(void);
+extern void bflb_platform_print_set(uint8_t disable);
+void System_Post_Init(void)
+{
+    PDS_Trim_RC32M();
+    HBN_Trim_RC32K();
+    bflb_platform_print_set(1);
+    flash_init();
+    bflb_platform_print_set(0);
 }
 
 void System_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t SubPriority)

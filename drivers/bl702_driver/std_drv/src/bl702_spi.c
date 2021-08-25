@@ -437,7 +437,7 @@ BL_Err_Type SPI_SetDeglitchCount(SPI_ID_Type spiNo, uint8_t cnt)
 
     /* Set count value */
     tmpVal = BL_RD_REG(SPIx, SPI_CONFIG);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SPI_CR_SPI_DEG_CNT, cnt - 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SPI_CR_SPI_DEG_CNT, cnt);
     BL_WR_REG(SPIx, SPI_CONFIG, tmpVal);
 
     return SUCCESS;
