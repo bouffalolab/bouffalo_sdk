@@ -25,20 +25,7 @@
 #define _PERIPHERAL_CONFIG_H_
 
 /* PERIPHERAL USING LIST */
-// #define BSP_USING_ADC0
-// #define BSP_USING_DAC0
 #define BSP_USING_UART0
-// #define BSP_USING_UART1
-// #define BSP_USING_SPI0
-// #define BSP_USING_I2C0
-// #define BSP_USING_I2S0
-// #define BSP_USING_USB
-// #define BSP_USING_PWM_CH0
-// #define BSP_USING_PWM_CH1
-// #define BSP_USING_PWM_CH2
-// #define BSP_USING_PWM_CH3
-// #define BSP_USING_TIMER_CH0
-// #define BSP_USING_TIMER_CH1
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */

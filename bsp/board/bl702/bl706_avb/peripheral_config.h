@@ -40,6 +40,7 @@
 #define BSP_USING_QDEC0
 #define BSP_USING_QDEC1
 #define BSP_USING_QDEC2
+#define BSP_USING_WDT
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */
@@ -365,6 +366,16 @@
 #endif
 #endif
 
+#if defined(BSP_USING_WDT)
+#ifndef WDT_CONFIG
+#define WDT_CONFIG           \
+    {                        \
+        .id = 0,             \
+        .wdt_timeout = 6000, \
+    }
+#endif
+#endif
+
 #if defined(BSP_USING_KEYSCAN)
 #ifndef KEYSCAN_CONFIG
 #define KEYSCAN_CONFIG        \
@@ -382,6 +393,7 @@
     {                                              \
         .id = 0,                                   \
         .acc_mode = QDEC_ACC_CONTINUE_ACCUMULATE,  \
+        .sample_mode = QDEC_SAMPLE_SINGLE_MOD,     \
         .sample_period = QDEC_SAMPLE_PERIOD_256US, \
         .report_mode = QDEC_REPORT_TIME_MOD,       \
         .report_period = 2000,                     \
@@ -400,6 +412,7 @@
     {                                              \
         .id = 1,                                   \
         .acc_mode = QDEC_ACC_CONTINUE_ACCUMULATE,  \
+        .sample_mode = QDEC_SAMPLE_SINGLE_MOD,     \
         .sample_period = QDEC_SAMPLE_PERIOD_256US, \
         .report_mode = QDEC_REPORT_TIME_MOD,       \
         .report_period = 2000,                     \
@@ -418,6 +431,7 @@
     {                                              \
         .id = 2,                                   \
         .acc_mode = QDEC_ACC_CONTINUE_ACCUMULATE,  \
+        .sample_mode = QDEC_SAMPLE_SINGLE_MOD,     \
         .sample_period = QDEC_SAMPLE_PERIOD_256US, \
         .report_mode = QDEC_REPORT_TIME_MOD,       \
         .report_period = 2000,                     \
