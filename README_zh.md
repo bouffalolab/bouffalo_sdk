@@ -81,7 +81,7 @@ bl_mcu_sdk
 ## 硬件资源
 
 - BL706 IOT 开发板
-[![BL706_IOT](https://z3.ax1x.com/2021/06/18/RpUI0g.png)](https://imgtu.com/i/RpUI0g)
+[![BL706_IOT](https://z3.ax1x.com/2021/08/06/fnPcLT.png)](https://imgtu.com/i/fnPcLT)
 
 - BL706 AVB 开发板
 [![BL706_AVB](https://z3.ax1x.com/2021/06/18/Rpa7DO.jpg)](https://imgtu.com/i/Rpa7DO)
@@ -110,13 +110,28 @@ bl_mcu_sdk
 
 命令行开发需要的工具，具体使用方法参考 [linux 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Linux_quick_start_ubuntu.html)
 
-- [cmake 3.19](https://cmake.org/files/v3.19/)， cmake 编译工具，建议使用 cmake v3.19 以上版本
+- [cmake 3.19](https://cmake.org/files/v3.19/)， cmake 编译工具，建议使用 cmake v3.15 以上版本
+- [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux), risc-v linux 端工具链，下载方式：
+
+```
+
+git clone https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux.git
+
+```
 
 ### Eclipse开发
 
 Eclipse 开发需要的工具，具体使用方法参考 [Eclipse 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_eclipse.html)
 
 - [Eclipse](https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip) Windows 下 eclipse 开发免安装包
+- [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_sifive_windows), risc-v windows 端工具链，下载方式：
+
+```
+
+git clone https://gitee.com/bouffalolab/toolchain_gcc_sifive_windows.git
+
+```
+
 - [J-Link v10](https://www.segger.com/downloads/jlink)， J-Link 调试器，用于在线调试芯片，建议使用 J-Link V10 以上版本硬件，软件驱动建议使用 V6.98 版本
 
 ### CDK开发
@@ -132,6 +147,47 @@ CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](http://b
 
 - [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-win32.zip)
 - [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-linux-x86.tar.gz)
+
+## 如何将 SDK 作为 submodule 使用
+
+首先使用添加子模块的命令添加到你自己的工程下，然后将 gitmodules 文件提交到远程仓库。
+
+```
+
+git submodule add https://gitee.com/bouffalolab/bl_mcu_sdk.git bl_mcu_sdk
+cd bl_mcu_sdk
+git pull --rebase
+cd ..
+git add .gitmodules
+git add bl_mcu_sdk
+git commit -m "xxx"
+git push
+
+```
+
+最终目录呈现的结果如下：
+
+```
+.
+├── hardware
+├── xxxx
+├── xxxx
+├── xxxx
+├── bl_mcu_sdk
+├── user_code
+│   └── gpio
+│       ├── gpio_blink
+│       ├── gpio_dht11
+│       └── gpio_int
+
+```
+
+### 命令行编译方式
+
+```
+    cd bl_mcu_sdk
+    make APP=xxx APP_DIR=../user_code
+```
 
 ## 论坛
 

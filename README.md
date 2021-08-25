@@ -61,15 +61,15 @@ bl_mcu_sdk
 
 ```
 
-- bsp/bsp_common : some common peripheral driver codes for boards
-- bsp/board : the board-level description file such as `clock_config.h` (describes the clock configuration file) `pinmux_config.h` (describes the io function file) `peripheral_config.h` (describes the default configuration file of the peripheral) , These files together describe the board hardware information.
-- common : some common algorithm function libraries that have nothing to do with hardware
-- components : the third-party library public component library
-- drivers: bouffalolab mcu drivers
-- examples : peripheral demos
+- bsp/bsp_common : stores some common peripheral driver codes related to the board
+- bsp/board : stores the board-level description file such as `clock_config.h` (describes the clock configuration file) `pinmux_config.h` (describes the io function file) `peripheral_config.h` (describes the default configuration file of the peripheral) , These files together describe the board hardware information.
+- common : stores some common algorithm function libraries that have nothing to do with hardware
+- components : store the third-party library public component library
+- drivers store the public chip underlying driver library provided by Boliu Intelligence
+- examples : store the official sample code
 - out : intermediate file, used to store the bin file generated after compiling and linking
-- tools : tools for compiling and downloading
-- docs : tutorial documents and other help information
+- tools : store toolkits related to compiling and downloading
+- docs : store tutorial documents and other help information
 
 For more file directory reference information, please refer to [bl mcu sdk documentation tutorial](http://bouffalolab.gitee.io/bl_mcu_sdk)
 
@@ -82,7 +82,7 @@ For more file directory reference information, please refer to [bl mcu sdk docum
 ## Hardware Resources
 
 - BL706 IOT Development board
-[![BL706_IOT](https://z3.ax1x.com/2021/06/18/RpUI0g.png)](https://imgtu.com/i/RpUI0g)
+[![BL706_IOT](https://z3.ax1x.com/2021/08/06/fnPcLT.png)](https://imgtu.com/i/fnPcLT)
 
 - BL706 AVB Development Board
 [![BL706_AVB](https://z3.ax1x.com/2021/06/18/Rpa7DO.jpg)](https://imgtu.com/i/Rpa7DO)
@@ -113,13 +113,28 @@ Contains a quick start tutorial for bl mcu sdk development, api manual and a det
 
 For the tools needed for command line development, please refer to [linux development guide](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Linux_quick_start_ubuntu.html)
 
-- [cmake 3.19](https://cmake.org/files/v3.19/), cmake compilation tool, it is recommended to use cmake v3.19 or above
+- [cmake 3.19](https://cmake.org/files/v3.19/), cmake compilation tool, it is recommended to use cmake v3.15 or above
+- [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux), risc-v linux toolchain，download command:
+
+```
+
+git clone https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux.git
+
+```
 
 ### Eclipse Development
 
 For the tools needed for Eclipse development, please refer to [Eclipse Development Guide](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_eclipse.html)
 
 - [Eclipse](https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip) eclipse development free installation package under Windows
+- [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_sifive_windows), risc-v windows toolchain，download command:
+
+```
+
+git clone https://gitee.com/bouffalolab/toolchain_gcc_sifive_windows.git
+
+```
+
 - [J-Link v10](https://www.segger.com/downloads/jlink), J-Link debugger, used to debug the chip online, it is recommended to use the hardware of J-Link V10 or above, and the software driver is recommended to use V6 .98 version
 
 ### CDK Development
@@ -135,6 +150,48 @@ Graphical programming tools provided by Bouffalolab:
 
 - [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-win32.zip)
 - [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-linux-x86.tar.gz)
+
+## How to make sdk as submodule
+
+First add bl_mcu_sdk to your own project using the add submodule command, and then commit the gitmodules file to the remote repo.
+
+
+```
+
+git submodule add https://gitee.com/bouffalolab/bl_mcu_sdk.git bl_mcu_sdk
+cd bl_mcu_sdk
+git pull --rebase
+cd ..
+git add .gitmodules
+git add bl_mcu_sdk
+git commit -m "xxx"
+git push
+
+```
+
+The final catalog presents the following results:
+
+```
+.
+├── hardware
+├── xxxx
+├── xxxx
+├── xxxx
+├── bl_mcu_sdk
+├── user_code
+│   └── gpio
+│       ├── gpio_blink
+│       ├── gpio_dht11
+│       └── gpio_int
+
+```
+
+### Command Line compile
+
+```
+    cd bl_mcu_sdk
+    make APP=xxx APP_DIR=../user_code
+```
 
 ## Forum
 
