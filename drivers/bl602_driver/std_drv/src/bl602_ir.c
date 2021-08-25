@@ -905,7 +905,7 @@ IR_RxMode_Type IR_LearnToInit(uint32_t *data, uint8_t *length)
         if (timeoutCnt == 0) {
             IR_Disable(IR_RX);
 
-            return TIMEOUT;
+            return IR_RX_SWM;
         }
     }
 
@@ -1078,7 +1078,7 @@ BL_Err_Type IR_LearnToSend(IR_RxMode_Type mode, uint32_t *data, uint8_t length)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Sts_Type IR_LEDInit(HBN_XCLK_CLK_Type clk, uint8_t div, uint8_t unit, uint8_t code0H, uint8_t code0L, uint8_t code1H, uint8_t code1L)
+BL_Err_Type IR_LEDInit(HBN_XCLK_CLK_Type clk, uint8_t div, uint8_t unit, uint8_t code0H, uint8_t code0L, uint8_t code1H, uint8_t code1L)
 {
     IR_TxCfg_Type txCfg = {
         24,      /* 24-bit data */
@@ -1128,7 +1128,7 @@ BL_Sts_Type IR_LEDInit(HBN_XCLK_CLK_Type clk, uint8_t div, uint8_t unit, uint8_t
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Sts_Type IR_LEDSend(uint32_t data)
+BL_Err_Type IR_LEDSend(uint32_t data)
 {
     /* Change MSB_first to LSB_first */
     data = ((data >> 1) & 0x55555555) | ((data << 1) & 0xaaaaaaaa);

@@ -244,9 +244,9 @@ uint8_t IR_GetRxFIFOCount(void);
 IR_RxMode_Type IR_LearnToInit(uint32_t *data, uint8_t *length);
 BL_Err_Type IR_LearnToSend(IR_RxMode_Type mode, uint32_t *data, uint8_t length);
 uint8_t IR_LearnToReceive(IR_RxMode_Type mode, uint32_t *data);
-BL_Sts_Type IR_LEDInit(HBN_XCLK_CLK_Type clk, uint8_t div, uint8_t unit, uint8_t code0H, uint8_t code0L, uint8_t code1H,
+BL_Err_Type IR_LEDInit(HBN_XCLK_CLK_Type clk, uint8_t div, uint8_t unit, uint8_t code0H, uint8_t code0L, uint8_t code1H,
                        uint8_t code1L);
-BL_Sts_Type IR_LEDSend(uint32_t data);
+BL_Err_Type IR_LEDSend(uint32_t data);
 
 /*@} end of group IR_Public_Functions */
 

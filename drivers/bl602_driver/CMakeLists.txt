@@ -50,6 +50,9 @@ list(APPEND ADD_REQUIREMENTS common)
 
 ############ Add global compile option ################
 #add components denpend on this component
+if("${SUPPORT_ROMAPI}" STREQUAL "y")
+list(APPEND ADD_DEFINITIONS -DBFLB_USE_ROM_DRIVER)
+endif()
 list(APPEND ADD_DEFINITIONS -DARCH_RISCV)
 #######################################################
 

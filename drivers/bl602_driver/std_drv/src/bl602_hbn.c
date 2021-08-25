@@ -940,6 +940,34 @@ BL_Err_Type HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_Type xClk)
 }
 
 /****************************************************************************/ /**
+* @brief  get root clock selection
+*
+* @param  None
+*
+* @return root clock selection
+*
+*******************************************************************************/
+HBN_ROOT_CLK_Type ATTR_CLOCK_SECTION HBN_Get_Root_CLK_Sel(void) 
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+
+    switch (BL_GET_REG_BITS_VAL(tmpVal, HBN_ROOT_CLK_SEL)) {
+        case 0:
+            return HBN_ROOT_CLK_RC32M;
+        case 1:
+            return HBN_ROOT_CLK_XTAL;
+        case 2:
+            return HBN_ROOT_CLK_PLL;
+        case 3:
+            return HBN_ROOT_CLK_PLL;
+        default:
+            return HBN_ROOT_CLK_RC32M;
+    }
+}
+
+/****************************************************************************/ /**
  * @brief  Select root clk source
  *
  * @param  rootClk: root clock type selection

@@ -68,7 +68,7 @@ const pFunc __Vectors[] __attribute__((section(".init"), aligned(64))) = {
     clic_mtimer_handler_Wrapper,        /*         */
     (pFunc)0x00000004,                  /*         */
     (pFunc)0x00001007,                  /*         */
-    (pFunc)0x00010002,                  /*         */
+    (pFunc)0x00010102,                  /*         *///disable log as default
     clic_mext_handler_Wrapper,          /*         */
     clic_csoft_handler_Wrapper,         /*         */
     (pFunc)2000000,                     /*         */

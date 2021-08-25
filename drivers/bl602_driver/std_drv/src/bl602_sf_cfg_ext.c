@@ -121,7 +121,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_FM_25Q08={
 
         .ioMode=SF_CTRL_QIO_MODE,
         .clkDelay=1,
-        .clkInvert=0x3f,
+        .clkInvert=0x01,
 
         .resetEnCmd=0x66,
         .resetCmd=0x99,
@@ -162,7 +162,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_FM_25Q08={
         .timeE32k=1200,
         .timeE64k=1200,
         .timePagePgm=5,
-        .timeCe=20*1000,
+        .timeCe=33000,
         .pdDelay=20,
         .qeData=0,
 };
@@ -217,9 +217,9 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D={
         .qpageProgramCmd=0x32,
         .qppAddrMode=SF_CTRL_ADDR_1_LINE,
 
-        .ioMode=SF_CTRL_DO_MODE,
+        .ioMode=0x11,
         .clkDelay=1,
-        .clkInvert=0x3f,
+        .clkInvert=0x01,
 
         .resetEnCmd=0x66,
         .resetCmd=0x99,
@@ -260,7 +260,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D={
         .timeE32k=1200,
         .timeE64k=1200,
         .timePagePgm=5,
-        .timeCe=20*1000,
+        .timeCe=33000,
         .pdDelay=20,
         .qeData=0,
 };
@@ -317,7 +317,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_XM25QH16={
 
         .ioMode=SF_CTRL_QIO_MODE,
         .clkDelay=1,
-        .clkInvert=0x3f,
+        .clkInvert=0x01,
 
         .resetEnCmd=0x66,
         .resetCmd=0x99,
@@ -358,7 +358,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_XM25QH16={
         .timeE32k=1600,
         .timeE64k=2000,
         .timePagePgm=5,
-        .timeCe=20*1000,
+        .timeCe=33000,
         .pdDelay=3,
         .qeData=0,
 };
@@ -415,7 +415,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_MX_KH25={
 
         .ioMode=0x11,
         .clkDelay=1,
-        .clkInvert=0x3f,
+        .clkInvert=0x01,
 
         .resetEnCmd=0x66,
         .resetCmd=0x99,
@@ -456,7 +456,105 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_MX_KH25={
         .timeE32k=1200,
         .timeE64k=1200,
         .timePagePgm=5,
-        .timeCe=20*1000,
+        .timeCe=33000,
+        .pdDelay=20,
+        .qeData=0,
+};
+
+static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_ZD_25Q16B={
+        .resetCreadCmd=0xff,
+        .resetCreadCmdSize=3,
+        .mid=0xba,
+
+        .deBurstWrapCmd=0x77,
+        .deBurstWrapCmdDmyClk=0x3,
+        .deBurstWrapDataMode=SF_CTRL_DATA_4_LINES,
+        .deBurstWrapData=0xF0,
+
+        /*reg*/
+        .writeEnableCmd=0x06,
+        .wrEnableIndex=0x00,
+        .wrEnableBit=0x01,
+        .wrEnableReadRegLen=0x01,
+
+        .qeIndex=1,
+        .qeBit=0x01,
+        .qeWriteRegLen=0x02,
+        .qeReadRegLen=0x1,
+
+        .busyIndex=0,
+        .busyBit=0x00,
+        .busyReadRegLen=0x1,
+        .releasePowerDown=0xab,
+
+        .readRegCmd[0]=0x05,
+        .readRegCmd[1]=0x35,
+        .writeRegCmd[0]=0x01,
+        .writeRegCmd[1]=0x01,
+
+        .fastReadQioCmd=0xeb,
+        .frQioDmyClk=16/8,
+        .cReadSupport=1,
+        .cReadMode=0xa0,
+
+        .burstWrapCmd=0x77,
+        .burstWrapCmdDmyClk=0x3,
+        .burstWrapDataMode=SF_CTRL_DATA_4_LINES,
+        .burstWrapData=0x40,
+         /*erase*/
+        .chipEraseCmd=0xc7,
+        .sectorEraseCmd=0x20,
+        .blk32EraseCmd=0x52,
+        .blk64EraseCmd=0xd8,
+        /*write*/
+        .pageProgramCmd=0x02,
+        .qpageProgramCmd=0x32,
+        .qppAddrMode=SF_CTRL_ADDR_1_LINE,
+
+        .ioMode=0x14,
+        .clkDelay=1,
+        .clkInvert=0x01,
+
+        .resetEnCmd=0x66,
+        .resetCmd=0x99,
+        .cRExit=0xff,
+        .wrEnableWriteRegLen=0x00,
+
+        /*id*/
+        .jedecIdCmd=0x9f,
+        .jedecIdCmdDmyClk=0,
+        .qpiJedecIdCmd=0x9f,
+        .qpiJedecIdCmdDmyClk=0x00,
+        .sectorSize=4,
+        .pageSize=256,
+
+        /*read*/
+        .fastReadCmd=0x0b,
+        .frDmyClk=8/8,
+        .qpiFastReadCmd =0x0b,
+        .qpiFrDmyClk=8/8,
+        .fastReadDoCmd=0x3b,
+        .frDoDmyClk=8/8,
+        .fastReadDioCmd=0xbb,
+        .frDioDmyClk=0,
+        .fastReadQoCmd=0x6b,
+        .frQoDmyClk=8/8,
+
+        .qpiFastReadQioCmd=0xeb,
+        .qpiFrQioDmyClk=16/8,
+        .qpiPageProgramCmd=0x02,
+        .writeVregEnableCmd=0x50,
+
+        /* qpi mode */
+        .enterQpi=0x38,
+        .exitQpi=0xff,
+
+         /*AC*/
+        .timeEsector=300,
+        .timeE32k=1200,
+        .timeE64k=1200,
+        .timePagePgm=5,
+        .timeCe=33000,
         .pdDelay=20,
         .qeData=0,
 };
@@ -488,6 +586,11 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[]={
         .cfg=&flashCfg_XM25QH16,
     },
     {
+        .jedecID=0x174020,
+        //.name="XM_25QH64_64_33",
+        .cfg=&flashCfg_XM25QH16,
+    },
+    {
         .jedecID=0x1320C2,
         //.name="MX_KH40_04_33",
         .cfg=&flashCfg_MX_KH25,
@@ -513,6 +616,21 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[]={
         .cfg=&flashCfg_MX_KH25,
     },
     {
+        .jedecID=0x15405E,
+        //.name="ZB_25Q16B_15_33",
+        .cfg=&flashCfg_XM25QH16,
+    },
+    {
+        .jedecID=0x16405E,
+        //.name="ZB_25Q32B_16_33",
+        .cfg=&flashCfg_XM25QH16,
+    },
+    {
+        .jedecID=0x17405E,
+        //.name="ZB_25VQ64_64_33",
+        .cfg=&flashCfg_XM25QH16,
+    },
+    {
         .jedecID=0x15605E,
         //.name="ZB_25VQ16_16_33",
         .cfg=&flashCfg_XM25QH16,
@@ -526,6 +644,26 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[]={
         .jedecID=0x1560EB,
         //.name="TH_25Q16",
         .cfg=&flashCfg_FM_25Q08,
+    },
+    {
+        .jedecID=0x1740C8,
+        //.name="GD_25Q64E_64_33",
+        .cfg=&flashCfg_XM25QH16,
+    },
+    {
+        .jedecID=0x176085,
+        //.name="Puya_P25Q64H_64_33",
+        .cfg=&flashCfg_XM25QH16,
+    },
+    {
+        .jedecID=0x17400B,
+        //.name="XT_25F64B",
+        .cfg=&flashCfg_FM_25Q08,
+    },
+    {
+        .jedecID=0x1560BA,
+        //.name="ZD_25Q16B",
+        .cfg=&flashCfg_ZD_25Q16B,
     },
 };
 

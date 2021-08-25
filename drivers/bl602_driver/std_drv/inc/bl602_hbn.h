@@ -440,6 +440,7 @@ BL_Err_Type HBN_Set_Ldo11_All_Vout(HBN_LDO_LEVEL_Type ldoLevel);
 BL_Err_Type HBN_32K_Sel(HBN_32K_CLK_Type clkType);
 BL_Err_Type HBN_Set_UART_CLK_Sel(HBN_UART_CLK_Type clkSel);
 BL_Err_Type HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_Type xClk);
+HBN_ROOT_CLK_Type HBN_Get_Root_CLK_Sel(void);
 BL_Err_Type HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_Type rootClk);
 /*----------*/
 BL_Err_Type HBN_Set_HRAM_slp(void);

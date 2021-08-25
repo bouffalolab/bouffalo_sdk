@@ -108,7 +108,11 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_State_Restore_Ext(SPI_Flash_Cfg_Type *pF
 
     SF_Ctrl_Set_Flash_Image_Offset(offset);
 
-    SFlash_SetBurstWrap(pFlashCfg);
+    if(((pFlashCfg->ioMode>>4)&0x01) == 0) {
+        if((pFlashCfg->ioMode&0x0f)==SF_CTRL_QO_MODE || (pFlashCfg->ioMode&0x0f)==SF_CTRL_QIO_MODE) {
+            SFlash_SetBurstWrap(pFlashCfg);
+        }
+    }
     SFlash_Read(pFlashCfg,ioMode,1,0x0,(uint8_t *)tmp, sizeof(tmp));
     SFlash_Set_IDbus_Cfg(pFlashCfg,ioMode,1,0,32);
 

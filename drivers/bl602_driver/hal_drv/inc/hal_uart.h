@@ -81,9 +81,10 @@ typedef enum {
  *  This enumeration defines the UART stop bits.
  */
 typedef enum {
-    UART_STOP_ONE = 0,        /*!< One stop bit */
-    UART_STOP_ONE_D_FIVE = 0, /*!< 1.5 stop bit */
-    UART_STOP_TWO = 1         /*!< Two stop bits */
+    UART_STOP_ZERO_D_FIVE = 0, /*!< One stop bit */
+    UART_STOP_ONE = 1,         /*!< One stop bit */
+    UART_STOP_ONE_D_FIVE = 2,  /*!< 1.5 stop bit */
+    UART_STOP_TWO = 3          /*!< Two stop bits */
 } uart_stopbits_t;
 
 /*!
@@ -147,6 +148,7 @@ typedef struct uart_device {
     void *rx_dma;
 } uart_device_t;
 
+#define UART_DEV(dev) ((uart_device_t *)dev)
 int uart_register(enum uart_index_type index, const char *name);
 
 #endif

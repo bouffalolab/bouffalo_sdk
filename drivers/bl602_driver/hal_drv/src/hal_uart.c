@@ -342,7 +342,6 @@ int uart_register(enum uart_index_type index, const char *name)
     dev->write = uart_write;
     dev->read = uart_read;
 
-    dev->status = DEVICE_UNREGISTER;
     dev->type = DEVICE_CLASS_UART;
     dev->handle = NULL;
 
@@ -358,6 +357,7 @@ void uart_isr(uart_device_t *handle)
     uint32_t tmpVal = 0;
     uint32_t maskVal = 0;
     uint32_t UARTx = (UART0_BASE + handle->id * 0x100);
+    uint16_t len;
 
     tmpVal = BL_RD_REG(UARTx, UART_INT_STS);
     maskVal = BL_RD_REG(UARTx, UART_INT_MASK);
@@ -386,14 +386,14 @@ void uart_isr(uart_device_t *handle)
     /* Rx fifo ready interrupt,auto-cleared when data is popped */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FIFO_MASK)) {
         uint8_t buffer[UART_FIFO_MAX_LEN];
-        UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
-        handle->parent.callback(&handle->parent, &buffer[0], handle->fifo_threshold, UART_EVENT_RX_FIFO);
+        len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
+        handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RX_FIFO);
     }
 
     /* Rx time-out interrupt */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_RTO_MASK)) {
         uint8_t buffer[UART_FIFO_MAX_LEN];
-        uint8_t len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
+        len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
         handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RTO);
         BL_WR_REG(UARTx, UART_INT_CLEAR, 0x10);
     }

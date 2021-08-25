@@ -9,11 +9,29 @@ static uint32_t mtimer_get_clk_src_div(void)
 void system_clock_init(void)
 {
     /*select root clock*/
-    GLB_Set_System_CLK(CLOCK_XTAL, BSP_ROOT_CLOCK_SOURCE - 2);
+    GLB_Set_System_CLK(XTAL_TYPE, BSP_ROOT_CLOCK_SOURCE);
     /*set fclk/hclk and bclk clock*/
-    GLB_Set_System_CLK_Div(BSP_HCLK_DIV, BSP_BCLK_DIV);
+    GLB_Set_System_CLK_Div(BSP_FCLK_DIV, BSP_BCLK_DIV);
+    GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, mtimer_get_clk_src_div());
+#if 1
+    HBN_32K_Sel(HBN_32K_RC);
+    HBN_Power_Off_Xtal_32K();
+#else
+    HBN_32K_Sel(HBN_32K_XTAL);
+    HBN_Power_On_Xtal_32K();
+#endif
+    if ((XTAL_TYPE == INTERNAL_RC_32M) || (XTAL_TYPE == XTAL_NONE)) {
+        HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_RC32M);
+    } else {
+        HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
+    }
+}
+
+void system_mtimer_clock_init(void)
+{
     GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, mtimer_get_clk_src_div());
 }
+
 void peripheral_clock_init(void)
 {
 #if defined(BSP_USING_UART0) || defined(BSP_USING_UART1)
@@ -67,16 +85,33 @@ uint32_t system_clock_get(enum system_clock_type type)
 {
     switch (type) {
         case SYSTEM_CLOCK_ROOT_CLOCK:
-            return SystemCoreClockGet();
+            return SystemCoreClockGet() * (GLB_Get_HCLK_Div() + 1);
 
         case SYSTEM_CLOCK_FCLK:
-            return (SystemCoreClockGet() / (GLB_Get_HCLK_Div() + 1));
+            return SystemCoreClockGet();
 
         case SYSTEM_CLOCK_BCLK:
             return (SystemCoreClockGet() / ((GLB_Get_HCLK_Div() + 1) * (GLB_Get_BCLK_Div() + 1)));
 
         case SYSTEM_CLOCK_XCLK:
-            return 32000000;
+            switch (XTAL_TYPE) {
+                case XTAL_NONE:
+                    return 32000000;
+                case EXTERNAL_XTAL_24M:
+                    return 24000000;
+                case EXTERNAL_XTAL_32M:
+                    return 32000000;
+                case EXTERNAL_XTAL_38P4M:
+                    return 38400000;
+                case EXTERNAL_XTAL_40M:
+                    return 40000000;
+                case EXTERNAL_XTAL_26M:
+                    return 26000000;
+                case INTERNAL_RC_32M:
+                    return 32000000;
+                default:
+                    break;
+            }
 
         default:
             break;

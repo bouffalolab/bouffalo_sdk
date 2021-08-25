@@ -246,7 +246,7 @@ BL_Err_Type UART_Init(UART_ID_Type uartId, UART_CFG_Type *uartCfg)
     tmpValRxCfg = BL_SET_REG_BITS_VAL(tmpValRxCfg, UART_CR_URX_BIT_CNT_D, (uartCfg->dataBits + 4));
 
     /* Configure tx stop bits */
-    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_UTX_BIT_CNT_P, (uartCfg->stopBits + 1));
+    tmpValTxCfg = BL_SET_REG_BITS_VAL(tmpValTxCfg, UART_CR_UTX_BIT_CNT_P, uartCfg->stopBits);
 
     /* Configure tx cts flow control function */
     if (ENABLE == uartCfg->ctsFlowControl) {
@@ -576,7 +576,7 @@ BL_Err_Type UART_SetDeglitchCount(UART_ID_Type uartId, uint8_t deglitchCnt)
 
     /* Set count value */
     tmpVal = BL_RD_REG(UARTx, UART_URX_CONFIG);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, UART_CR_URX_DEG_CNT, deglitchCnt - 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, UART_CR_URX_DEG_CNT, deglitchCnt);
     BL_WR_REG(UARTx, UART_URX_CONFIG, tmpVal);
 
     return SUCCESS;

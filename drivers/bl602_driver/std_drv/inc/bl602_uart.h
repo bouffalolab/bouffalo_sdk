@@ -92,6 +92,7 @@ typedef enum {
  *  @brief UART stop bits type definiton
  */
 typedef enum {
+    UART_STOPBITS_0_5, /*!< UART data stop bits length:0.5 bits */
     UART_STOPBITS_1,   /*!< UART data stop bits length:1 bits */
     UART_STOPBITS_1_5, /*!< UART data stop bits length:1.5 bits */
     UART_STOPBITS_2,   /*!< UART data stop bits length:2 bits */

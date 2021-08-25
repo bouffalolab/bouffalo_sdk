@@ -26,39 +26,33 @@
 #include "drv_device.h"
 #include "bl602_config.h"
 
-#define EXTERNAL_XTAL_NONE  0
+/*XTAL_TYPE*/
+#define XTAL_NONE           0
 #define EXTERNAL_XTAL_24M   1
 #define EXTERNAL_XTAL_32M   2
 #define EXTERNAL_XTAL_38P4M 3
 #define EXTERNAL_XTAL_40M   4
 #define EXTERNAL_XTAL_26M   5
-#define INTERAL_XTAL_RC32M  6
+#define INTERNAL_RC_32M     6
 
-#define ROOT_CLOCK_SOURCE_RC_32K   0
-#define ROOT_CLOCK_SOURCE_XTAL_32K 1
-#define ROOT_CLOCK_SOURCE_RC_32M   2
+/*CLOCK_32K_XTAL*/
+#define EXTERNAL_XTAL_32K 1
+#define INTERNAL_RC_32K   0
 
-#define ROOT_CLOCK_SOURCE_XTAL_32M 3
-#define ROOT_CLOCK_SOURCE_PLL_48M  4
-#define ROOT_CLOCK_SOURCE_PLL_120M 5
-#define ROOT_CLOCK_SOURCE_PLL_160M 6
-#define ROOT_CLOCK_SOURCE_PLL_192M 7
-
-#define ROOT_CLOCK_SOURCE_XCLK ROOT_CLOCK_SOURCE_XTAL_32M
-#define ROOT_CLOCK_SOURCE_FCLK 8
-#define ROOT_CLOCK_SOURCE_HCLK 8
-#define ROOT_CLOCK_SOURCE_BCLK 9
-
-#define ROOT_CLOCK_SOURCE_AUPLL 9
-
-#define OUTPUT_REF_CLOCK_SOURCE_NONE 0
-#define OUTPUT_REF_CLOCK_SOURCE_I2S  1
-
-#if (BSP_ROOT_CLOCK_SOURCE > 2) && (BSP_ROOT_CLOCK_SOURCE < 8)
-#define CLOCK_XTAL EXTERNAL_XTAL_40M
+/*BSP_ROOT_CLOCK_SOURCE*/
+#if (XTAL_TYPE == INTERNAL_RC_32M) || (XTAL_TYPE == XTAL_NONE)
+#define ROOT_CLOCK_SOURCE_XCLK 0
 #else
-#define CLOCK_XTAL INTERAL_XTAL_RC32M
+#define ROOT_CLOCK_SOURCE_XCLK 1
 #endif
+#define ROOT_CLOCK_SOURCE_PLL_48M  2
+#define ROOT_CLOCK_SOURCE_PLL_120M 3
+#define ROOT_CLOCK_SOURCE_PLL_160M 4
+#define ROOT_CLOCK_SOURCE_PLL_192M 5
+
+/*BSP_XXX_CLOCK_SOURCE*/
+#define ROOT_CLOCK_SOURCE_FCLK 6
+#define ROOT_CLOCK_SOURCE_BCLK 7
 
 enum system_clock_type {
     SYSTEM_CLOCK_ROOT_CLOCK = 0,
@@ -75,6 +69,7 @@ enum peripheral_clock_type {
 };
 
 void system_clock_init(void);
+void system_mtimer_clock_init(void);
 void peripheral_clock_init(void);
 uint32_t system_clock_get(enum system_clock_type type);
 uint32_t peripheral_clock_get(enum peripheral_clock_type type);
