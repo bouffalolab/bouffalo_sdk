@@ -3,6 +3,30 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.3.0
+----------------------------
+
+新增功能说明：
+    1. 新增 acomp、rtc、boot2、wdt、pm hal driver 和 demo
+    2. 新增 romfs demo、usb 麦克风和扬声器双声道 demo、带 tinyjpeg 组件的 spi lcd 显示 demo
+    3. 重构 boot2_iap demo，统一接口
+    4. 使能 romapi，减少 codesize
+    5. 新增 flash 自动识别和配置功能，适配不同的 flash 芯片
+    6. 重构 mcu lcd 驱动层，适配多种 mcu lcd 驱动
+    7. 新增 ssd1306 spi 和 i2c 驱动，新增 ws2812 、wm8978 驱动
+    8. shell 新增颜色显示和自定义打印接口（使用各种终端工具可以查看）
+    9. bl602 和 bl702 驱动库相关更新
+    10. 新增外部 cmake 工程编译方式，从而让 sdk 作为 submodule 使用
+    11. ld 文件的更新
+    12. ble lib 文件更新（需要使用最新的 toolchain（sifive）才能编译 ble demo）
+
+修复问题说明：
+    1. 修复 eclipse openocd 调试时，openocd 版本太低导致无法调试
+    2. case 运行异常时，需要添加死循环
+    3. 驱动库的一些 bug fix
+    4. 开关外设中断的重名名
+    5. fix 重复定义的宏带来的 warning
+
 bl mcu sdk Release V1.2.6
 ----------------------------
 
@@ -27,7 +51,7 @@ bl mcu sdk Release V1.2.6
     5. 修复 pwm demo 相关宏书写错误
     6. 修复 std 和 hal 中 switch case 返回的一些 bug
     7. cdk 相关 demo 改用 bl706_iot board
-    8. 修改 keyscan 默认时钟和分配
+    8. 修改 keyscan 默认时钟和分频
 
 bl mcu sdk Release V1.2.5
 ----------------------------
