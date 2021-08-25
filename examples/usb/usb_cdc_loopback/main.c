@@ -124,6 +124,8 @@ void usbd_cdc_acm_bulk_out(uint8_t ep)
     usbd_ep_read(ep, NULL, 0, NULL);
 
     usbd_ep_write(CDC_IN_EP, out_buffer, actual_read_length, NULL);
+    if (actual_read_length == 64)
+        usbd_ep_write(CDC_IN_EP, NULL, 0, NULL);
 }
 
 void usbd_cdc_acm_bulk_in(uint8_t ep)

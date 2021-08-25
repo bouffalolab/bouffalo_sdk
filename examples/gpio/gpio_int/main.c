@@ -22,25 +22,28 @@
  */
 #include "hal_gpio.h"
 
-static void gpio11_int_callback(uint32_t pin)
+static void gpio_int_callback(uint32_t pin)
 {
-    MSG("gpio rising trigger !\r\n");
-}
-static void gpio12_int_callback(uint32_t pin)
-{
-    MSG("gpio high level int !\r\n");
+    MSG("gpio :%d rising trigger !\r\n", pin);
 }
 
 int main(void)
 {
     bflb_platform_init(0);
 
-    gpio_set_mode(GPIO_PIN_11, GPIO_SYNC_RISING_TRIGER_INT_MODE);
-    gpio_attach_irq(GPIO_PIN_11, gpio11_int_callback);
-    gpio_irq_enable(GPIO_PIN_11, ENABLE);
-    gpio_set_mode(GPIO_PIN_12, GPIO_SYNC_HIGH_LEVEL_INT_MODE);
-    gpio_attach_irq(GPIO_PIN_12, gpio12_int_callback);
-    gpio_irq_enable(GPIO_PIN_12, ENABLE);
+    gpio_set_mode(GPIO_PIN_18, GPIO_SYNC_FALLING_TRIGER_INT_MODE);
+    gpio_attach_irq(GPIO_PIN_18, gpio_int_callback);
+    gpio_irq_enable(GPIO_PIN_18, ENABLE);
+    gpio_set_mode(GPIO_PIN_19, GPIO_SYNC_FALLING_TRIGER_INT_MODE);
+    gpio_attach_irq(GPIO_PIN_19, gpio_int_callback);
+    gpio_irq_enable(GPIO_PIN_19, ENABLE);
+    gpio_set_mode(GPIO_PIN_20, GPIO_SYNC_RISING_TRIGER_INT_MODE);
+    gpio_attach_irq(GPIO_PIN_20, gpio_int_callback);
+    gpio_irq_enable(GPIO_PIN_20, ENABLE);
+    gpio_set_mode(GPIO_PIN_21, GPIO_SYNC_RISING_TRIGER_INT_MODE);
+    gpio_attach_irq(GPIO_PIN_21, gpio_int_callback);
+    gpio_irq_enable(GPIO_PIN_21, ENABLE);
+
     MSG("gpio int test !\r\n");
 
     BL_CASE_SUCCESS;

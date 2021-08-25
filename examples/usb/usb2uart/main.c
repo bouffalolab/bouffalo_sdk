@@ -27,6 +27,7 @@
 #include "bl702_ef_ctrl.h"
 #include "bl702_glb.h"
 #include "hal_gpio.h"
+#include "dev_cfg.h"
 
 #define CDC_IN_EP  0x82
 #define CDC_OUT_EP 0x01
@@ -255,9 +256,6 @@ usbd_endpoint_t cdc_in_ep = {
 };
 
 extern struct device *usb_dc_init(void);
-
-#define UART_DTR_PIN GPIO_PIN_22
-#define UART_RTS_PIN GPIO_PIN_21
 
 int main(void)
 {

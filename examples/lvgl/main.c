@@ -34,7 +34,6 @@
 #include "hal_gpio.h"
 #include "hal_dma.h"
 
-#include "bsp_il9341.h"
 #include "xpt2046.h"
 #include "lv_port_disp.h"
 #include "lv_port_indev.h"
