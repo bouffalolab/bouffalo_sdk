@@ -4,8 +4,11 @@ APP_DIR?=examples
 APP?=helloworld
 CPU_ID?=none
 COMx?=
+BOOTROM?=n
 
 SUPPORT_FLOAT?=n
+SUPPORT_ROMAPI?=y
+
 INTERFACE?=uart
 BAUDRATE ?=2000000
 
@@ -15,8 +18,10 @@ export BOARD
 export CHIP
 export APP_DIR
 export APP
+export BOOTROM
 export CPU_ID
 export SUPPORT_FLOAT
+export SUPPORT_ROMAPI
 
 # The command to remove a file.
 RM = cmake -E rm -rf

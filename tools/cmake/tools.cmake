@@ -86,6 +86,11 @@ function(generate_bin)
     string(REGEX REPLACE "(.*)/${current_relative_dir_name}$" "\\1" above_absolute_dir ${CMAKE_CURRENT_LIST_DIR})
     get_filename_component(above_relative_dir_name ${above_absolute_dir} NAME)
 
+    execute_process(
+    COMMAND git submodule status
+    OUTPUT_VARIABLE GIT_SUBMODULE_INFO
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
     # Add common options
     add_compile_options(${GLOBAL_C_FLAGS})
     add_compile_options(-D${BOARD})
@@ -101,8 +106,25 @@ function(generate_bin)
 
     # add other libraries which are target or extern library
     if(TARGET_REQUIRED_LIBS)
+        file(GLOB_RECURSE lib_cmakelists_files ${CMAKE_SOURCE_DIR}/components/CMakeLists.txt)
         foreach(lib ${TARGET_REQUIRED_LIBS})
-        check_add_library(${lib} ${CMAKE_SOURCE_DIR}/components/${lib})
+            if(${lib} MATCHES "lib.*")
+                get_filename_component(exlib_absolute_dir ${lib} DIRECTORY)
+                get_filename_component(exlibrary_name ${lib} NAME_WE)
+                message(STATUS "[register extern library component: ${exlibrary_name}], path:${exlib_absolute_dir}")
+            elseif(lib_cmakelists_files)
+
+                foreach(lib_cmakelists_file ${lib_cmakelists_files})
+                get_filename_component(lib_absolute_dir ${lib_cmakelists_file} DIRECTORY)
+                get_filename_component(lib_absolute_dir_name ${lib_absolute_dir} NAME)
+
+                if(${lib_absolute_dir_name} STREQUAL "${lib}")
+                    check_add_library(${lib} ${lib_absolute_dir})
+                endif()
+                endforeach()
+            else()
+                message(FATAL_ERROR "${lib} is not a target or a extern library")
+            endif()
         endforeach()
     endif()
 
@@ -115,11 +137,20 @@ function(generate_bin)
         set(OUTPUT_DIR ${OUTPUT})
         set(target_name firmware)
     else()
-        if(${above_relative_dir_name} STREQUAL "examples")
-            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${current_relative_dir_name})
-        else()
-            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${above_relative_dir_name}/${current_relative_dir_name})
+        if(${APP_DIR} MATCHES "../") #if demo is not in sdk path
+            string(REPLACE "../" "" dir ${APP_DIR})
+            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${dir}/${current_relative_dir_name})
+        elseif(${APP_DIR} MATCHES "./")#if demo is in sdk peer path
+            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${current_relative_dir_name})
+        else()  #if demo is in sdk path not in peer path
+            if(${APP_DIR} MATCHES ${above_relative_dir_name}) #if demo has one-Layer Catalog
+                set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${current_relative_dir_name})
+            else() #if demo has Two-Layer Catalog
+                set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${above_relative_dir_name}/${current_relative_dir_name})
+            endif()
         endif()
+
+        file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/submodule_commit_info.txt ${GIT_SUBMODULE_INFO})
         set(target_name ${current_relative_dir_name})
     endif()
 
@@ -169,7 +200,7 @@ function(generate_bin)
     target_link_libraries(${target_name}.elf ${CHIP}_driver c)
 
     if(TARGET_REQUIRED_LIBS)
-        target_link_libraries(${target_name}.elf ${TARGET_REQUIRED_LIBS})
+    target_link_libraries(${target_name}.elf ${TARGET_REQUIRED_LIBS})
     endif()
 
     target_link_libraries(${target_name}.elf m)
@@ -187,25 +218,34 @@ function(search_application component_path)
 
 if(DEFINED APP)
 
-    file(GLOB_RECURSE cmakelists_files ${component_path}/CMakeLists.txt)
-    set(app_find_ok 0)
+    # find CMakeLists in ${component_path}/${APP}/,${APP} is the first directory
+    file(GLOB_RECURSE first_dir_cmakelists ${component_path}/${APP}/CMakeLists.txt)
 
-    foreach(cmakelists_file ${cmakelists_files})
-    get_filename_component(app_relative_dir ${cmakelists_file} DIRECTORY)
-    get_filename_component(app_name ${app_relative_dir} NAME)
-        if("${APP}" STREQUAL "all")
-            message(STATUS "[run app:${app_name}], path:${app_relative_dir}")
-            add_subdirectory(${app_relative_dir})
-            set(app_find_ok 1)
-        elseif(${app_name} MATCHES "^${APP}")
-            message(STATUS "[run app:${app_name}], path:${app_relative_dir}")
-            add_subdirectory(${app_relative_dir})
-            set(app_find_ok 1)
-        endif()
-    endforeach()
-    if(NOT app_find_ok)
-    message(FATAL_ERROR "can not find app:${APP}")
+    if(first_dir_cmakelists)
+    list(APPEND cmakelists_files ${first_dir_cmakelists})
     endif()
+
+    # find CMakeLists in ${component_path}/*/${APP}*/,${APP} is the second directory
+    file(GLOB_RECURSE second_dir_cmakelists ${component_path}/*/${APP}*/CMakeLists.txt)
+
+    if(second_dir_cmakelists)
+    list(APPEND cmakelists_files ${second_dir_cmakelists})
+    endif()
+
+    list(REMOVE_DUPLICATES cmakelists_files)
+
+    if(cmakelists_files)
+        #build app finding
+        foreach(cmakelists_file IN LISTS cmakelists_files)
+        get_filename_component(app_absolute_dir ${cmakelists_file} DIRECTORY)
+        get_filename_component(app_absolute_dir_name ${app_absolute_dir} NAME)
+        message(STATUS "[run app:${app_absolute_dir_name}], path:${app_absolute_dir}")
+        add_subdirectory(${app_absolute_dir} ${CMAKE_SOURCE_DIR}/build/samples/${app_absolute_dir_name})
+        endforeach()
+    else()
+    message(FATAL_ERROR "can not find ${APP} in the first or second directory under the path:${component_path}")
+    endif()
+
 else()
 add_subdirectory($ENV{PROJECT_DIR}/src src)
 endif()
@@ -213,15 +253,7 @@ endif()
 endfunction()
 
 function(check_add_library target_name directory)
-    if(IS_DIRECTORY ${directory})
-        if(NOT TARGET ${target_name})
-        add_subdirectory(${directory} ${CMAKE_SOURCE_DIR}/build/libraries/${target_name})
-        endif()
-    elseif(EXISTS ${target_name})
-        get_filename_component(lib_relative_dir ${target_name} DIRECTORY)
-        get_filename_component(library_name ${target_name} NAME_WE)
-        message(STATUS "[register extern library component: ${library_name}], path:${lib_relative_dir}")
-    else()
-    message(FATAL_ERROR "both ${target_name} and ${directory} is not exist")
+    if(NOT TARGET ${target_name})
+    add_subdirectory(${directory} ${CMAKE_SOURCE_DIR}/build/libraries/${target_name})
     endif()
 endfunction()
