@@ -18,7 +18,6 @@ INPUT(-lgcc)
 ENTRY(_enter)
 
 StackSize = 0x1000; /*  4KB */
-HeapSize  = 0x1000; /*  4KB */
 
 MEMORY
 {
@@ -56,14 +55,14 @@ SECTIONS
         *(.text.*)
 
         /*put .rodata**/
-        *(EXCLUDE_FILE( *bl602_glb.o \
-                        *bl602_pds.o \
-                        *bl602_common.o \
-                        *bl602_sf_cfg.o \
-                        *bl602_sf_ctrl.o \
-                        *bl602_sflash.o \
-                        *bl602_xip_sflash.o \
-                        *bl602_ef_ctrl.o) .rodata*)
+        *(EXCLUDE_FILE( *bl702_glb.o \
+                        *bl702_pds.o \
+                        *bl702_common.o \
+                        *bl702_sf_cfg.o \
+                        *bl702_sf_ctrl.o \
+                        *bl702_sflash.o \
+                        *bl702_xip_sflash.o \
+                        *bl702_ef_ctrl.o) .rodata*)
         *(.rodata)
         *(.rodata.*)
 
@@ -87,14 +86,14 @@ SECTIONS
         *(.sclock_rlt_code)
         *(.sclock_rlt_const)
 
-        *bl602_glb.o*(.rodata*)
-        *bl602_pds.o*(.rodata*)
-        *bl602_common.o*(.rodata*)
-        *bl602_sf_cfg.o*(.rodata*)
-        *bl602_sf_ctrl.o*(.rodata*)
-        *bl602_sflash.o*(.rodata*)
-        *bl602_xip_sflash.o*(.rodata*)
-        *bl602_ef_ctrl.o*(.rodata*)
+        *bl702_glb.o*(.rodata*)
+        *bl702_pds.o*(.rodata*)
+        *bl702_common.o*(.rodata*)
+        *bl702_sf_cfg.o*(.rodata*)
+        *bl702_sf_ctrl.o*(.rodata*)
+        *bl702_sflash.o*(.rodata*)
+        *bl702_xip_sflash.o*(.rodata*)
+        *bl702_ef_ctrl.o*(.rodata*)
 
         . = ALIGN(4);
         __tcm_code_end__ = .;
@@ -113,22 +112,6 @@ SECTIONS
         . = ALIGN(4);
         __tcm_data_end__ = .;
     } > dtcm_memory
-
-    /* .heap_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of heap sections, and assign
-     * values to heap symbols later */
-    .heap_dummy (NOLOAD):
-    {
-        . = ALIGN(0x4);
-        . = . + HeapSize;
-        . = ALIGN(0x4);
-    } > dtcm_memory
-
-    _HeapBase = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory) - StackSize - HeapSize;
-    _HeapSize = HeapSize;
-
-    /* Check if data + heap + stack exceeds RAM limit */
-    ASSERT(_HeapBase >= __tcm_data_end__, "region RAM overflowed with stack")
 
     /*************************************************************************/
     /* .stack_dummy section doesn't contains any symbols. It is only
@@ -214,14 +197,16 @@ SECTIONS
         . = ALIGN(4);
         __HeapBase = .;
 
-        /*__end__ = .;*/
-        /*end = __end__;*/
         KEEP(*(.heap*))
 
         . = ALIGN(4);
         __HeapLimit = .;
     } > ram_memory
+
+    PROVIDE (__heap_min_size = 0x400);
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
+
+    ASSERT((__HeapLimit -  __HeapBase ) >= __heap_min_size, "heap size is too short.")
 
 }
 
