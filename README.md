@@ -101,7 +101,7 @@ For more information, please visit the BouffaloLab developer website: [https://d
 
 Contains a quick start tutorial for bl mcu sdk development, api manual and a detailed introduction to the driver framework, etc.
 
-- [bl mcu sdk documentation tutorial](http://bouffalolab.gitee.io/bl_mcu_sdk)
+- [bl mcu sdk documentation tutorial](https://htmlpreview.github.io/?https://github.com/bouffalolab/bl_mcu_sdk/blob/master/docs/development_guide_en/build/html/index.html)
 
 ## Video Tutorial
 
