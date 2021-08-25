@@ -930,8 +930,12 @@ static void usbd_send_to_host(uint16_t len)
 
     if (usbd_core_cfg.zlp_flag == false) {
         chunk = usbd_core_cfg.ep0_data_buf_residue;
-        usbd_ep_write(USB_CONTROL_IN_EP0, usbd_core_cfg.ep0_data_buf,
-                      usbd_core_cfg.ep0_data_buf_residue, &chunk);
+
+        if (usbd_ep_write(USB_CONTROL_IN_EP0, usbd_core_cfg.ep0_data_buf, usbd_core_cfg.ep0_data_buf_residue, &chunk) < 0) {
+            USBD_LOG_ERR("USB write data failed\r\n");
+            return;
+        }
+
         usbd_core_cfg.ep0_data_buf += chunk;
         usbd_core_cfg.ep0_data_buf_residue -= chunk;
 
@@ -949,7 +953,10 @@ static void usbd_send_to_host(uint16_t len)
         }
     } else {
         usbd_core_cfg.zlp_flag = false;
-        usbd_ep_write(USB_CONTROL_IN_EP0, NULL, 0, NULL);
+        if (usbd_ep_write(USB_CONTROL_IN_EP0, NULL, 0, NULL) < 0) {
+            USBD_LOG_ERR("USB write zlp failed\r\n");
+            return;
+        }
     }
 }
 

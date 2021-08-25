@@ -29,7 +29,9 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ############ Add static libs ##########################
-#list(APPEND ADD_STATIC_LIB "libxxx.a")
+# if(CONFIG_COMPONENT1_INCLUDE_STATIC_LIB)
+#     list(APPEND ADD_STATIC_LIB "libxxx.a")
+# endif()
 #######################################################
 
 ############ Add dynamic libs #########################
@@ -44,7 +46,7 @@ list(APPEND ADD_SRCS  ${sources})
 
 ############ Add private compile option ################
 #add compile option for this component that won't affect other modules
-# list(APPEND ADD_PRIVATE_DEFINITIONS -Dxxx)
+# list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
 #######################################################
 
 generate_library()

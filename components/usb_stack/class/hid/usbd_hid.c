@@ -144,6 +144,7 @@ int hid_class_request_handler(struct usb_setup_packet *setup, uint8_t **data, ui
             break;
         case HID_REQUEST_SET_REPORT:
             current_hid_intf->report = **data;
+            usbd_hid_set_report(*data, *len);
             break;
         case HID_REQUEST_SET_IDLE:
             current_hid_intf->idle_state = setup->wValueH;
@@ -170,6 +171,10 @@ static void hid_notify_handler(uint8_t event, void *arg)
         default:
             break;
     }
+}
+
+__weak void usbd_hid_set_report(uint8_t *data, uint16_t len)
+{
 }
 
 void usbd_hid_reset_state(void)

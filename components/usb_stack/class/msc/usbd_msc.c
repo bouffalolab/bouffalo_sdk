@@ -164,7 +164,7 @@ static bool usbd_msc_send_to_host(uint8_t *buffer, uint16_t size)
     }
 
     if (usbd_ep_write(mass_ep_data[MSD_IN_EP_IDX].ep_addr, buffer, size, NULL)) {
-        USBD_LOG_ERR("USB write failed");
+        USBD_LOG_ERR("USB write failed\r\n");
         return false;
     }
 
