@@ -66,15 +66,6 @@
 #endif
 #define NORETURN __attribute__((noreturn))
 
-/* alignment value should be a power of 2 */
-#define ALIGN(num, align) MASK(num, (typeof(num))align - 1)
-
-#define ALIGN_2(num)  ALIGN(num, 2)
-#define ALIGN_4(num)  ALIGN(num, 4)
-#define ALIGN_8(num)  ALIGN(num, 8)
-#define ALIGN_16(num) ALIGN(num, 16)
-#define ALIGN_32(num) ALIGN(num, 32)
-
 #else /* __GNUC__ */
 
 #define WARN_UNUSED_RET

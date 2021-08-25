@@ -77,18 +77,25 @@
     }
 
 /* Std driver attribute macro*/
-#define ATTR_CLOCK_SECTION       __attribute__((section(".sclock_rlt_code")))
-#define ATTR_CLOCK_CONST_SECTION __attribute__((section(".sclock_rlt_const")))
-#define ATTR_TCM_SECTION         __attribute__((section(".tcm_code")))
-#define ATTR_TCM_CONST_SECTION   __attribute__((section(".tcm_const")))
-#define ATTR_DTCM_SECTION        __attribute__((section(".tcm_data")))
-#define ATTR_HSRAM_SECTION       __attribute__((section(".hsram_code")))
-#define ATTR_DMA_RAM_SECTION     __attribute__((section(".system_ram")))
-#define ATTR_EALIGN(x)           __attribute((aligned(x)))
-#define ATTR_FALLTHROUGH()       __attribute__((fallthrough))
-#define ATTR_USED                __attribute__((__used__))
+#define ATTR_CLOCK_SECTION         __attribute__((section(".sclock_rlt_code")))
+#define ATTR_CLOCK_CONST_SECTION   __attribute__((section(".sclock_rlt_const")))
+#define ATTR_TCM_SECTION           __attribute__((section(".tcm_code")))
+#define ATTR_TCM_CONST_SECTION     __attribute__((section(".tcm_const")))
+#define ATTR_DTCM_SECTION          __attribute__((section(".tcm_data")))
+#define ATTR_HSRAM_SECTION         __attribute__((section(".hsram_code")))
+#define ATTR_DMA_RAM_SECTION       __attribute__((section(".system_ram")))
+#define ATTR_HBN_RAM_SECTION       __attribute__((section(".hbn_ram_code")))
+#define ATTR_HBN_RAM_CONST_SECTION __attribute__((section(".hbn_ram_data")))
+#define ATTR_EALIGN(x)             __attribute((aligned(x)))
+#define ATTR_FALLTHROUGH()         __attribute__((fallthrough))
+#define ATTR_USED                  __attribute__((__used__))
 
-#define BIT(x) (1 << (x))
+#ifdef BIT
+#undef BIT
+#define BIT(n) (1UL << (n))
+#else
+#define BIT(n) (1UL << (n))
+#endif
 
 /**
  * @brief Error type definition

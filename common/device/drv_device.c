@@ -53,7 +53,7 @@ int device_register(struct device *dev, const char *name)
         }
     }
 
-    strncpy(dev->name, name, NAME_MAX);
+    strncpy(dev->name, name, DEVICE_NAME_MAX);
 
     dlist_insert_after(&device_head, &(dev->list));
     dev->status = DEVICE_REGISTERED;
@@ -86,7 +86,7 @@ int device_unregister(const char *name)
     if (!dev) {
         return -DEVICE_ENODEV;
     }
-
+    dev->status = DEVICE_UNREGISTER;
     /* remove from old list */
     dlist_remove(&(dev->list));
     return DEVICE_EOK;
@@ -108,7 +108,7 @@ struct device *device_find(const char *name)
     {
         dev = dlist_entry(node, struct device, list);
 
-        if (strncmp(dev->name, name, NAME_MAX) == 0) {
+        if (strncmp(dev->name, name, DEVICE_NAME_MAX) == 0) {
             return dev;
         }
     }

@@ -48,7 +48,7 @@
  * We support allocations of sizes up to (1 << MMHEAP_FL_INDEX_MAX) bits.
  * However, because we linearly subdivide the second-level lists, and
  * our minimum size granularity is 4 bytes, it doesn't make sense to
- * create first-level lists for sizes smaller than K_MMHEAP_SL_INDEX_COUNT * 4,
+ * create first-level lists for sizes smaller than MMHEAP_SL_INDEX_COUNT * 4,
  * or (1 << (K_MMHEAP_SL_INDEX_COUNT_LOG2 + 2)) bytes, as there we will be
  * trying to split size ranges into more slots than we have available.
  * Instead, we calculate the minimum threshold size, and place all

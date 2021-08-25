@@ -26,7 +26,7 @@
 #include "drv_list.h"
 #include "bflb_platform.h"
 
-#define NAME_MAX 20 /* max device name*/
+#define DEVICE_NAME_MAX 20 /* max device name*/
 
 #define DEVICE_OFLAG_DEFAULT   0x000 /* open with default  */
 #define DEVICE_OFLAG_STREAM_TX 0x001 /* open with poll tx */
@@ -107,7 +107,7 @@ enum device_status_type {
 };
 
 struct device {
-    char name[NAME_MAX];            /*name of device */
+    char name[DEVICE_NAME_MAX];     /*name of device */
     dlist_t list;                   /*list node of device */
     enum device_status_type status; /*status of device */
     enum device_class_type type;    /*type of device */
