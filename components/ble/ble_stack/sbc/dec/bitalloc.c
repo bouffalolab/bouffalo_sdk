@@ -47,7 +47,6 @@ OI_UINT32 OI_SBC_MaxBitpool(OI_CODEC_SBC_FRAME_INFO *frame)
         case SBC_MONO:
         case SBC_DUAL_CHANNEL:
             return 16 * frame->nrof_subbands;
-
         case SBC_STEREO:
         case SBC_JOINT_STEREO:
             return 32 * frame->nrof_subbands;
@@ -70,14 +69,12 @@ PRIVATE OI_UINT16 internal_CalculateFramelen(OI_CODEC_SBC_FRAME_INFO *frame)
         if (frame->mode == SBC_DUAL_CHANNEL) {
             result += nbits;
         }
-
         if (frame->mode == SBC_MONO) {
             result += 4 * nrof_subbands;
         } else {
             result += 8 * nrof_subbands;
         }
     }
-
     return SBC_HEADER_LEN + (result + 7) / 8;
 }
 
@@ -152,51 +149,39 @@ OI_UINT computeBitneed(OI_CODEC_SBC_COMMON_CONTEXT *common,
     if (common->frameInfo.alloc == SBC_SNR) {
         for (sb = 0; sb < nrof_subbands; sb++) {
             OI_INT bits = scale_factor[sb];
-
             if (bits > maxBits) {
                 maxBits = bits;
             }
-
             if ((bitneeds[sb] = bits) > 1) {
                 bitcount += bits;
             }
-
             prefBits += 2 + bits;
         }
     } else {
         const OI_INT8 *offset;
-
         if (nrof_subbands == 4) {
             offset = offset4[common->frameInfo.freqIndex];
         } else {
             offset = offset8[common->frameInfo.freqIndex];
         }
-
         for (sb = 0; sb < nrof_subbands; sb++) {
             OI_INT bits = scale_factor[sb];
-
             if (bits > maxBits) {
                 maxBits = bits;
             }
-
             prefBits += 2 + bits;
-
             if (bits) {
                 bits -= offset[sb];
-
                 if (bits > 0) {
                     bits /= 2;
                 }
-
                 bits += 5;
             }
-
             if ((bitneeds[sb] = bits) > 1) {
                 bitcount += bits;
             }
         }
     }
-
     common->maxBitneed = OI_MAX(maxBits, common->maxBitneed);
     *preferredBitpool += prefBits;
     return bitcount;
@@ -300,7 +285,6 @@ OI_INT adjustToFitBitpool(const OI_UINT bitpool,
         count = (count & 0xFF) + (count >> 8);
 
         chop >>= 1;
-
         if (count > bitpool) {
             bitadjust -= chop;
         } else {
@@ -338,7 +322,6 @@ INLINE OI_INT allocAdjustedBits(OI_UINT8 *dest,
     } else {
         bits = 16;
     }
-
     *dest = (OI_UINT8)bits;
     return excess;
 }
@@ -381,14 +364,11 @@ void oneChannelBitAllocation(OI_CODEC_SBC_COMMON_CONTEXT *common,
     allocBits = &common->bits.uint8[ch ? nrof_subbands : 0];
 
     sb = 0;
-
     while (sb < nrof_subbands) {
         excess = allocAdjustedBits(&allocBits[sb], bitneeds->uint8[sb] + bitadjust, excess);
         ++sb;
     }
-
     sb = 0;
-
     while (excess) {
         excess = allocExcessBits(&allocBits[sb], excess);
         ++sb;

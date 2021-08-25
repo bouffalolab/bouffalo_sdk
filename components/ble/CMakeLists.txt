@@ -16,7 +16,7 @@ list(APPEND ADD_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/ble_stack/cli_cmds")
 list(APPEND ADD_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/ble_stack/services")
 list(APPEND ADD_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/blecontroller/ble_inc")
 
-if(CONFIG_BT_OAD_SERVER AND CONFIG_BT_OAD_CLIENT)
+if(CONFIG_BT_OAD_SERVER OR CONFIG_BT_OAD_CLIENT)
 list(APPEND ADD_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/ble_stack/services/oad")
 endif()
 #######################################################

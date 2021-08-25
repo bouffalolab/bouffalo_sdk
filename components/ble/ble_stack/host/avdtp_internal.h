@@ -114,14 +114,14 @@ struct bt_avdtp_single_sig_hdr {
 
 struct bt_avdtp_ind_cb {
     /*
-     * discovery_ind;
-     * get_capabilities_ind;
-     * set_configuration_ind;
-     * open_ind;
-     * start_ind;
-     * suspend_ind;
-     * close_ind;
-     */
+	 * discovery_ind;
+	 * get_capabilities_ind;
+	 * set_configuration_ind;
+	 * open_ind;
+	 * start_ind;
+	 * suspend_ind;
+	 * close_ind;
+	 */
 };
 
 struct bt_avdtp_cap {

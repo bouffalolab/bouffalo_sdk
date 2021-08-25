@@ -84,14 +84,11 @@ void gf_double(uint8_t *out, uint8_t *in)
     uint8_t carry = (in[0] >> 7) ? gf_wrap : 0;
 
     out += (TC_AES_BLOCK_SIZE - 1);
-
     for (;;) {
         *out-- = (*x << 1) ^ carry;
-
         if (x == in) {
             break;
         }
-
         carry = *x-- >> 7;
     }
 }
@@ -163,11 +160,9 @@ int tc_cmac_update(TCCmacState_t s, const uint8_t *data, size_t data_length)
     if (s == (TCCmacState_t)0) {
         return TC_CRYPTO_FAIL;
     }
-
     if (data_length == 0) {
         return TC_CRYPTO_SUCCESS;
     }
-
     if (data == (const uint8_t *)0) {
         return TC_CRYPTO_FAIL;
     }
@@ -188,7 +183,6 @@ int tc_cmac_update(TCCmacState_t s, const uint8_t *data, size_t data_length)
             s->leftover_offset += data_length;
             return TC_CRYPTO_SUCCESS;
         }
-
         /* leftover block is now full; encrypt it first */
         _copy(&s->leftover[s->leftover_offset],
               remaining_space,
@@ -201,7 +195,6 @@ int tc_cmac_update(TCCmacState_t s, const uint8_t *data, size_t data_length)
         for (i = 0; i < TC_AES_BLOCK_SIZE; ++i) {
             s->iv[i] ^= s->leftover[i];
         }
-
         tc_aes_encrypt(s->iv, s->iv, s->sched);
     }
 
@@ -210,7 +203,6 @@ int tc_cmac_update(TCCmacState_t s, const uint8_t *data, size_t data_length)
         for (i = 0; i < TC_AES_BLOCK_SIZE; ++i) {
             s->iv[i] ^= data[i];
         }
-
         tc_aes_encrypt(s->iv, s->iv, s->sched);
         data += TC_AES_BLOCK_SIZE;
         data_length -= TC_AES_BLOCK_SIZE;
@@ -247,7 +239,6 @@ int tc_cmac_final(uint8_t *tag, TCCmacState_t s)
         s->leftover[s->leftover_offset] = TC_CMAC_PADDING;
         k = (uint8_t *)s->K2;
     }
-
     for (i = 0; i < TC_AES_BLOCK_SIZE; ++i) {
         s->iv[i] ^= s->leftover[i] ^ k[i];
     }

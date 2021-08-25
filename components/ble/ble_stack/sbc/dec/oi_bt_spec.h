@@ -57,8 +57,7 @@ extern "C" {
  *  - array[4] contains bits 15-8, and
  *  - array[5] contains bits 7-0.
  */
-typedef struct
-{
+typedef struct {
     OI_UINT8 addr[OI_BD_ADDR_BYTE_SIZE]; /**< Bluetooth device address represented as an array of 8-bit values */
 } OI_BD_ADDR;
 
@@ -101,8 +100,7 @@ typedef OI_UINT32 OI_UUID32;
  * native on the target (local) device. The remainder of the 128-bit UUID is
  * stored as bytes in big-endian order.
  */
-typedef struct
-{
+typedef struct {
     OI_UINT32 ms32bits;                                    /**< most significant 32 bits of 128-bit UUID */
     OI_UINT8 base[OI_BT_UUID128_SIZE - sizeof(OI_UINT32)]; /**< remainder of 128-bit UUID, array of 8-bit values */
 } OI_UUID128;
@@ -135,16 +133,14 @@ typedef struct
  *  - array[14] contains bits 112- 119, and
  *  - array[15] contains bits 120- 127.
  */
-typedef struct
-{
+typedef struct {
     OI_UINT8 key[OI_BT_LINK_KEY_SIZE]; /**< link key represented as an array of 8-bit values */
 } OI_LINK_KEY;
 
 /** Out-of-band data size - C and R values are 16-bytes each */
 #define OI_BT_OOB_NUM_BYTES 16
 
-typedef struct
-{
+typedef struct {
     OI_UINT8 value[OI_BT_OOB_NUM_BYTES]; /**< same struct used for C and R values */
 } OI_OOB_DATA;
 
@@ -166,8 +162,7 @@ typedef enum {
 #define OI_BT_PIN_CODE_SIZE 16
 
 /** data type for a PIN (PINs are treated as strings, so endianness does not apply.) */
-typedef struct
-{
+typedef struct {
     OI_UINT8 pin[OI_BT_PIN_CODE_SIZE]; /**< PIN represented as an array of 8-bit values */
 } OI_PIN_CODE;
 

@@ -120,7 +120,7 @@ int tc_hmac_prng_init(TCHmacPrng_t prng,
  *  @brief HMAC-PRNG reseed procedure
  *  Mixes seed into prng, enables tc_hmac_prng_generate
  *  @return returns  TC_CRYPTO_SUCCESS (1)
- *          returns TC_CRYPTO_FAIL (0) if:
+ *  	    returns TC_CRYPTO_FAIL (0) if:
  *          prng == NULL,
  *          seed == NULL,
  *          seedlen < MIN_SLEN,

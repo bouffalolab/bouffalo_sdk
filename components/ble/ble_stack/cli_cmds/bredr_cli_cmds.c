@@ -139,11 +139,9 @@ static void bredr_write_eir(char *p_write_buffer, int write_buffer_len, int argc
     for (int i = 0; i < strlen(name); i++) {
         printf("0x%02x ", data[2 + i]);
     }
-
     printf("\n");
 
     err = bt_br_write_eir(rec, data);
-
     if (err) {
         printf("BR/EDR write EIR failed, (err %d)\n", err);
     } else {

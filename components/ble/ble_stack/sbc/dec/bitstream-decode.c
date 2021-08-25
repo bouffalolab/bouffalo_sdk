@@ -71,7 +71,6 @@ PRIVATE OI_UINT8 OI_BITSTREAM_ReadUINT4Aligned(OI_BITSTREAM *bs)
         bs->value = (bs->value << 8) | *bs->ptr.r++;
         bs->bitPtr = 8;
     }
-
     result >>= 28;
     OI_ASSERT(result < (1u << 4));
     return (OI_UINT8)result;

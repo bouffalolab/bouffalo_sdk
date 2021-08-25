@@ -28,14 +28,12 @@ extern "C" {
 #endif
 
 /** Bluetooth Device Address */
-typedef struct
-{
+typedef struct {
     u8_t val[6];
 } bt_addr_t;
 
 /** Bluetooth LE Device Address */
-typedef struct
-{
+typedef struct {
     u8_t type;
     bt_addr_t a;
 } bt_addr_le_t;

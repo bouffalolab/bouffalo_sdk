@@ -29,10 +29,10 @@
 #include <xtensa/config/core.h>
 
 /*
-    * XCC does not define the following macros with the expected names, but the
-    * HAL defines similar ones. Thus we include it and define the missing macros
-    * ourselves.
-    */
+ * XCC does not define the following macros with the expected names, but the
+ * HAL defines similar ones. Thus we include it and define the missing macros
+ * ourselves.
+ */
 #if XCHAL_MEMORY_ORDER == XTHAL_BIGENDIAN
 #define __BYTE_ORDER__ __ORDER_BIG_ENDIAN__
 #elif XCHAL_MEMORY_ORDER == XTHAL_LITTLEENDIAN

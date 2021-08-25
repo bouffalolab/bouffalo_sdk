@@ -44,7 +44,6 @@ static void rekey(uint8_t *key, const uint8_t *new_key, unsigned int key_size)
         key[i] = inner_pad ^ new_key[i];
         key[i + TC_SHA256_BLOCK_SIZE] = outer_pad ^ new_key[i];
     }
-
     for (; i < TC_SHA256_BLOCK_SIZE; ++i) {
         key[i] = inner_pad;
         key[i + TC_SHA256_BLOCK_SIZE] = outer_pad;
@@ -66,12 +65,12 @@ int tc_hmac_set_key(TCHmacState_t ctx, const uint8_t *key,
 
     if (key_size <= TC_SHA256_BLOCK_SIZE) {
         /*
-         * The next three calls are dummy calls just to avoid
-         * certain timing attacks. Without these dummy calls,
-         * adversaries would be able to learn whether the key_size is
-         * greater than TC_SHA256_BLOCK_SIZE by measuring the time
-         * consumed in this process.
-         */
+		 * The next three calls are dummy calls just to avoid
+		 * certain timing attacks. Without these dummy calls,
+		 * adversaries would be able to learn whether the key_size is
+		 * greater than TC_SHA256_BLOCK_SIZE by measuring the time
+		 * consumed in this process.
+		 */
         (void)tc_sha256_init(&dummy_state.hash_state);
         (void)tc_sha256_update(&dummy_state.hash_state,
                                dummy_key,

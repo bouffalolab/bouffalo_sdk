@@ -220,8 +220,7 @@ struct sc_data {
 struct gatt_sc_cfg {
     u8_t id;
     bt_addr_le_t peer;
-    struct
-    {
+    struct {
         u16_t start;
         u16_t end;
     } data;
@@ -262,7 +261,6 @@ static void sc_store(struct gatt_sc_cfg *cfg)
     }
 
     err = settings_save_one(key, (u8_t *)&cfg->data, sizeof(cfg->data));
-
     if (err) {
         BT_ERR("failed to store SC (err %d)", err);
         return;
@@ -300,7 +298,6 @@ static void sc_clear(struct gatt_sc_cfg *cfg)
             }
 
             err = settings_delete(key);
-
             if (err) {
                 BT_ERR("failed to delete SC (err %d)", err);
             } else {
@@ -357,11 +354,9 @@ static void sc_save(u8_t id, bt_addr_le_t *peer, u16_t start, u16_t end)
            end);
 
     cfg = find_sc_cfg(id, peer);
-
     if (!cfg) {
         /* Find and initialize a free sc_cfg entry */
         cfg = find_sc_cfg(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
-
         if (!cfg) {
             BT_ERR("unable to save SC: no cfg left");
             return;
@@ -382,7 +377,6 @@ static void sc_save(u8_t id, bt_addr_le_t *peer, u16_t start, u16_t end)
     modified = update_range(&cfg->data.start, &cfg->data.end, start, end);
 
 done:
-
     if (IS_ENABLED(CONFIG_BT_SETTINGS) &&
         modified && bt_addr_le_is_bonded(cfg->id, &cfg->peer)) {
         sc_store(cfg);
@@ -403,7 +397,6 @@ static bool sc_ccc_cfg_write(struct bt_conn *conn,
 
         /* Clear SC configuration if unsubscribed */
         cfg = find_sc_cfg(conn->id, &conn->le.dst);
-
         if (cfg) {
             sc_clear(cfg);
         }
@@ -461,7 +454,6 @@ static ssize_t cf_read(struct bt_conn *conn, const struct bt_gatt_attr *attr,
     u8_t data[1] = {};
 
     cfg = find_cf_cfg(conn);
-
     if (cfg) {
         memcpy(data, cfg->data, sizeof(data));
     }
@@ -515,7 +507,6 @@ static ssize_t cf_write(struct bt_conn *conn, const struct bt_gatt_attr *attr,
     }
 
     cfg = find_cf_cfg(conn);
-
     if (!cfg) {
         cfg = find_cf_cfg(NULL);
     }
@@ -553,9 +544,8 @@ static u8_t gen_hash_m(const struct bt_gatt_attr *attr, void *user_data)
     ssize_t len;
     u16_t value;
 
-    if (attr->uuid->type != BT_UUID_TYPE_16) {
+    if (attr->uuid->type != BT_UUID_TYPE_16)
         return BT_GATT_ITER_CONTINUE;
-    }
 
     u16 = (struct bt_uuid_16 *)attr->uuid;
 
@@ -567,7 +557,6 @@ static u8_t gen_hash_m(const struct bt_gatt_attr *attr, void *user_data)
         case 0x2803: /* GATT Characteristic */
         case 0x2900: /* GATT Characteristic Extended Properties */
             value = sys_cpu_to_le16(attr->handle);
-
             if (tc_cmac_update(&state->state, (uint8_t *)&value,
                                sizeof(attr->handle)) == TC_CRYPTO_FAIL) {
                 state->err = -EINVAL;
@@ -575,7 +564,6 @@ static u8_t gen_hash_m(const struct bt_gatt_attr *attr, void *user_data)
             }
 
             value = sys_cpu_to_le16(u16->val);
-
             if (tc_cmac_update(&state->state, (uint8_t *)&value,
                                sizeof(u16->val)) == TC_CRYPTO_FAIL) {
                 state->err = -EINVAL;
@@ -583,7 +571,6 @@ static u8_t gen_hash_m(const struct bt_gatt_attr *attr, void *user_data)
             }
 
             len = attr->read(NULL, attr, data, sizeof(data), 0);
-
             if (len < 0) {
                 state->err = len;
                 return BT_GATT_ITER_STOP;
@@ -596,7 +583,6 @@ static u8_t gen_hash_m(const struct bt_gatt_attr *attr, void *user_data)
             }
 
             break;
-
         /* Attributes to hash: handle + UUID */
         case 0x2901: /* GATT Characteristic User Descriptor */
         case 0x2902: /* GATT Client Characteristic Configuration */
@@ -604,7 +590,6 @@ static u8_t gen_hash_m(const struct bt_gatt_attr *attr, void *user_data)
         case 0x2904: /* GATT Characteristic Presentation Format */
         case 0x2905: /* GATT Characteristic Aggregated Format */
             value = sys_cpu_to_le16(attr->handle);
-
             if (tc_cmac_update(&state->state, (uint8_t *)&value,
                                sizeof(attr->handle)) == TC_CRYPTO_FAIL) {
                 state->err = -EINVAL;
@@ -612,15 +597,12 @@ static u8_t gen_hash_m(const struct bt_gatt_attr *attr, void *user_data)
             }
 
             value = sys_cpu_to_le16(u16->val);
-
             if (tc_cmac_update(&state->state, (uint8_t *)&value,
                                sizeof(u16->val)) == TC_CRYPTO_FAIL) {
                 state->err = -EINVAL;
                 return BT_GATT_ITER_STOP;
             }
-
             break;
-
         default:
             return BT_GATT_ITER_CONTINUE;
     }
@@ -633,7 +615,6 @@ static void db_hash_store(void)
     int err;
 
     err = settings_save_one("bt/hash", &db_hash, sizeof(db_hash));
-
     if (err) {
         BT_ERR("Failed to save Database Hash (err %d)", err);
     }
@@ -660,12 +641,12 @@ static void db_hash_gen(bool store)
     }
 
     /**
-     * Core 5.1 does not state the endianess of the hash.
-     * However Vol 3, Part F, 3.3.1 says that multi-octet Characteristic
-     * Values shall be LE unless otherwise defined. PTS expects hash to be
-     * in little endianess as well. bt_smp_aes_cmac calculates the hash in
-     * big endianess so we have to swap.
-     */
+	 * Core 5.1 does not state the endianess of the hash.
+	 * However Vol 3, Part F, 3.3.1 says that multi-octet Characteristic
+	 * Values shall be LE unless otherwise defined. PTS expects hash to be
+	 * in little endianess as well. bt_smp_aes_cmac calculates the hash in
+	 * big endianess so we have to swap.
+	 */
     sys_mem_swap(db_hash, sizeof(db_hash));
 
 #if !defined(BFLB_BLE)
@@ -687,19 +668,19 @@ static ssize_t db_hash_read(struct bt_conn *conn,
                             void *buf, u16_t len, u16_t offset)
 {
     /* Check if db_hash is already pending in which case it shall be
-     * generated immediately instead of waiting the work to complete.
-     */
+	 * generated immediately instead of waiting the work to complete.
+	 */
     if (k_delayed_work_remaining_get(&db_hash_work)) {
         k_delayed_work_cancel(&db_hash_work);
         db_hash_gen(true);
     }
 
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2347:
-     * 2.5.2.1 Robust Caching
-     * A connected client becomes change-aware when...
-     * The client reads the Database Hash characteristic and then the server
-     * receives another ATT request from the client.
-     */
+	 * 2.5.2.1 Robust Caching
+	 * A connected client becomes change-aware when...
+	 * The client reads the Database Hash characteristic and then the server
+	 * receives another ATT request from the client.
+	 */
     bt_gatt_change_aware(conn, true);
 
     return bt_gatt_attr_read(conn, attr, buf, len, offset, db_hash,
@@ -718,17 +699,16 @@ static void remove_cf_cfg(struct bt_conn *conn)
     struct gatt_cf_cfg *cfg;
 
     cfg = find_cf_cfg(conn);
-
     if (!cfg) {
         return;
     }
 
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2405:
-     * For clients with a trusted relationship, the characteristic value
-     * shall be persistent across connections. For clients without a
-     * trusted relationship the characteristic value shall be set to the
-     * default value at each connection.
-     */
+	 * For clients with a trusted relationship, the characteristic value
+	 * shall be persistent across connections. For clients without a
+	 * trusted relationship the characteristic value shall be set to the
+	 * default value at each connection.
+	 */
     if (!bt_addr_le_is_bonded(conn->id, &conn->le.dst)) {
         clear_cf_cfg(cfg);
     } else {
@@ -747,10 +727,10 @@ BT_GATT_SERVICE_DEFINE(_1_gatt_svc,
 
 #if defined(CONFIG_BT_GATT_SERVICE_CHANGED)
     /* Bluetooth 5.0, Vol3 Part G:
-     * The Service Changed characteristic Attribute Handle on the server
-     * shall not change if the server has a trusted relationship with any
-     * client.
-     */
+	 * The Service Changed characteristic Attribute Handle on the server
+	 * shall not change if the server has a trusted relationship with any
+	 * client.
+	 */
     BT_GATT_CHARACTERISTIC(BT_UUID_GATT_SC, BT_GATT_CHRC_INDICATE,
                            BT_GATT_PERM_NONE, NULL, NULL, NULL),
 
@@ -813,7 +793,6 @@ static void gatt_insert(struct bt_gatt_service *svc, u16_t last_handle)
             } else {
                 sys_slist_prepend(&db, &svc->node);
             }
-
             return;
         }
 
@@ -839,7 +818,6 @@ static int gatt_register(struct bt_gatt_service *svc)
     last_handle = handle;
 
 populate:
-
     /* Populate the handles and append them to the list */
     for (; attrs && count; attrs++, count--) {
         if (!attrs->handle) {
@@ -901,17 +879,15 @@ static void sc_indicate_rsp(struct bt_conn *conn,
 
 #if defined(CONFIG_BT_GATT_CACHING)
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2347:
-     * 2.5.2.1 Robust Caching
-     * A connected client becomes change-aware when...
-     * The client receives and confirms a Service Changed indication.
-     */
+	 * 2.5.2.1 Robust Caching
+	 * A connected client becomes change-aware when...
+	 * The client receives and confirms a Service Changed indication.
+	 */
     cfg = find_cf_cfg(conn);
-
     if (cfg && CF_ROBUST_CACHING(cfg)) {
         atomic_set_bit(cfg->flags, CF_CHANGE_AWARE);
         BT_DBG("%s change-aware", bt_addr_le_str(&cfg->peer));
     }
-
 #endif
 }
 
@@ -960,7 +936,6 @@ int service_change_test(struct bt_gatt_indicate_params *params, const struct bt_
         params->attr = &_1_gatt_svc.attrs[2];
 #endif
     }
-
     sc_range[0] = 0x000e;
     sc_range[1] = 0x001e;
 
@@ -1049,18 +1024,17 @@ void bt_gatt_init(void)
     k_delayed_work_init(&db_hash_work, db_hash_process);
 
     /* Submit work to Generate initial hash as there could be static
-     * services already in the database.
-     */
+	 * services already in the database.
+	 */
     k_delayed_work_submit(&db_hash_work, DB_HASH_TIMEOUT);
 #endif /* CONFIG_BT_GATT_CACHING */
 
     if (IS_ENABLED(CONFIG_BT_GATT_SERVICE_CHANGED)) {
         k_delayed_work_init(&gatt_sc.work, sc_process);
-
         if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
             /* Make sure to not send SC indications until SC
-             * settings are loaded
-             */
+			 * settings are loaded
+			 */
             atomic_set_bit(gatt_sc.flags, SC_INDICATE_PENDING);
         }
     }
@@ -1095,19 +1069,15 @@ static void sc_indicate(u16_t start, u16_t end)
 
 #if defined(BFLB_BLE_PATCH_SET_SCRANGE_CHAGD_ONLY_IN_CONNECTED_STATE)
     struct bt_conn *conn = bt_conn_lookup_state_le(NULL, BT_CONN_CONNECTED);
-
     if (conn) {
 #endif
-
         if (!atomic_test_and_set_bit(gatt_sc.flags, SC_RANGE_CHANGED)) {
             gatt_sc.start = start;
             gatt_sc.end = end;
             goto submit;
         }
-
 #if defined(BFLB_BLE_PATCH_SET_SCRANGE_CHAGD_ONLY_IN_CONNECTED_STATE)
     }
-
 #endif
 
     if (!update_range(&gatt_sc.start, &gatt_sc.end, start, end)) {
@@ -1115,14 +1085,12 @@ static void sc_indicate(u16_t start, u16_t end)
     }
 
 submit:
-
     if (atomic_test_bit(gatt_sc.flags, SC_INDICATE_PENDING)) {
         BT_DBG("indicate pending, waiting until complete...");
         return;
     }
 
 #if defined(BFLB_BLE_PATCH_SET_SCRANGE_CHAGD_ONLY_IN_CONNECTED_STATE)
-
     if (conn) {
 #endif
         /* Reschedule since the range has changed */
@@ -1130,7 +1098,6 @@ submit:
 #if defined(BFLB_BLE_PATCH_SET_SCRANGE_CHAGD_ONLY_IN_CONNECTED_STATE)
         bt_conn_unref(conn);
     }
-
 #endif
 }
 #endif /* BT_GATT_DYNAMIC_DB || (BT_GATT_CACHING && BT_SETTINGS) */
@@ -1152,12 +1119,11 @@ static void db_changed(void)
 
         if (CF_ROBUST_CACHING(cfg)) {
             /* Core Spec 5.1 | Vol 3, Part G, 2.5.2.1 Robust Caching
-             *... the database changes again before the client
-             * becomes change-aware in which case the error response
-             * shall be sent again.
-             */
+			 *... the database changes again before the client
+			 * becomes change-aware in which case the error response
+			 * shall be sent again.
+			 */
             atomic_clear_bit(cfg->flags, CF_OUT_OF_SYNC);
-
             if (atomic_test_and_clear_bit(cfg->flags,
                                           CF_CHANGE_AWARE)) {
                 BT_DBG("%s change-unaware",
@@ -1165,7 +1131,6 @@ static void db_changed(void)
             }
         }
     }
-
 #endif
 }
 
@@ -1187,7 +1152,6 @@ int bt_gatt_service_register(struct bt_gatt_service *svc)
     }
 
     err = gatt_register(svc);
-
     if (err < 0) {
         return err;
     }
@@ -1239,19 +1203,16 @@ ssize_t bt_gatt_attr_read(struct bt_conn *conn, const struct bt_gatt_attr *attr,
     memcpy(buf, (u8_t *)value + offset, len);
 
 #if defined(CONFIG_BT_STACK_PTS)
-
     /* PTS sends a request to iut read all primary services it contains.
-     * Set event flags to avoid comflicts when other test cases need to add reference codes.
-     */
+	 * Set event flags to avoid comflicts when other test cases need to add reference codes. 
+	 */
     if (event_flag == att_read_by_group_type_ind) {
         data = (u8_t *)buf;
-
         for (i = 0; i < len; i++) {
             BT_PTS("%s:handle = [0x%04x], data[%d] = [0x%x]\r\n", __func__,
                    attr->handle, i, data[i]);
         }
     }
-
 #endif
 
     return len;
@@ -1333,10 +1294,10 @@ ssize_t bt_gatt_attr_read_included(struct bt_conn *conn,
     value_len = sizeof(pdu.start_handle) + sizeof(pdu.end_handle);
 
     /*
-     * Core 4.2, Vol 3, Part G, 3.2,
-     * The Service UUID shall only be present when the UUID is a
-     * 16-bit Bluetooth UUID.
-     */
+	 * Core 4.2, Vol 3, Part G, 3.2,
+	 * The Service UUID shall only be present when the UUID is a
+	 * 16-bit Bluetooth UUID.
+	 */
     if (uuid->type == BT_UUID_TYPE_16) {
         pdu.uuid16 = sys_cpu_to_le16(BT_UUID_16(uuid)->val);
         value_len += sizeof(pdu.uuid16);
@@ -1366,12 +1327,10 @@ uint16_t bt_gatt_attr_value_handle(const struct bt_gatt_attr *attr)
 
         handle = chrc->value_handle;
 #if !defined(BFLB_BLE_DISABLE_STATIC_ATTR)
-
         if (handle == 0) {
             /* Fall back to Zephyr value handle policy */
             handle = (attr->handle ?: find_static_attr(attr)) + 1U;
         }
-
 #endif
     }
 
@@ -1388,12 +1347,12 @@ ssize_t bt_gatt_attr_read_chrc(struct bt_conn *conn,
 
     pdu.properties = chrc->properties;
     /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part G] page 534:
-     * 3.3.2 Characteristic Value Declaration
-     * The Characteristic Value declaration contains the value of the
-     * characteristic. It is the first Attribute after the characteristic
-     * declaration. All characteristic definitions shall have a
-     * Characteristic Value declaration.
-     */
+	 * 3.3.2 Characteristic Value Declaration
+	 * The Characteristic Value declaration contains the value of the
+	 * characteristic. It is the first Attribute after the characteristic
+	 * declaration. All characteristic definitions shall have a
+	 * Characteristic Value declaration.
+	 */
     pdu.value_handle = sys_cpu_to_le16(bt_gatt_attr_value_handle(attr));
 
     value_len = sizeof(pdu.properties) + sizeof(pdu.value_handle);
@@ -1463,7 +1422,6 @@ static void foreach_attr_type_dyndb(u16_t start_handle, u16_t end_handle,
         struct bt_gatt_service *next;
 
         next = SYS_SLIST_PEEK_NEXT_CONTAINER(svc, node);
-
         if (next) {
             /* Skip ahead if start is not within service handles */
             if (next->attrs[0].handle <= start_handle) {
@@ -1498,9 +1456,7 @@ void bt_gatt_foreach_attr_type(u16_t start_handle, u16_t end_handle,
     if (!num_matches) {
         num_matches = UINT16_MAX;
     }
-
 #if !defined(BFLB_BLE_DISABLE_STATIC_ATTR)
-
     if (start_handle <= last_static_handle) {
         u16_t handle = 1;
 
@@ -1530,7 +1486,6 @@ void bt_gatt_foreach_attr_type(u16_t start_handle, u16_t end_handle,
             }
         }
     }
-
 #endif
     /* Iterate over dynamic db */
     foreach_attr_type_dyndb(start_handle, end_handle, uuid, attr_data,
@@ -1592,7 +1547,6 @@ ssize_t bt_gatt_attr_read_ccc(struct bt_conn *conn,
     u16_t value;
 
     cfg = find_ccc_cfg(conn, ccc);
-
     if (cfg) {
         value = sys_cpu_to_le16(cfg->value);
     } else {
@@ -1620,7 +1574,6 @@ static void gatt_ccc_changed(const struct bt_gatt_attr *attr,
 
     if (value != ccc->value) {
         ccc->value = value;
-
         if (ccc->cfg_changed) {
             ccc->cfg_changed(attr, value);
         }
@@ -1650,18 +1603,16 @@ ssize_t bt_gatt_attr_write_ccc(struct bt_conn *conn,
     }
 
     cfg = find_ccc_cfg(conn, ccc);
-
     if (!cfg) {
         /* If there's no existing entry, but the new value is zero,
-         * we don't need to do anything, since a disabled CCC is
-         * behavioraly the same as no written CCC.
-         */
+		 * we don't need to do anything, since a disabled CCC is
+		 * behavioraly the same as no written CCC.
+		 */
         if (!value) {
             return len;
         }
 
         cfg = find_ccc_cfg(NULL, ccc);
-
         if (!cfg) {
             BT_WARN("No space to store CCC cfg");
             return BT_GATT_ERR(BT_ATT_ERR_INSUFFICIENT_RESOURCES);
@@ -1685,18 +1636,16 @@ ssize_t bt_gatt_attr_write_ccc(struct bt_conn *conn,
         gatt_ccc_changed(attr, ccc);
 
 #if defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
-
         if ((!gatt_ccc_conn_is_queued(conn)) &&
             bt_addr_le_is_bonded(conn->id, &conn->le.dst)) {
             /* Store the connection with the same index it has in
-             * the conns array
-             */
+			 * the conns array
+			 */
             gatt_ccc_store.conn_list[bt_conn_index(conn)] =
                 bt_conn_ref(conn);
             k_delayed_work_submit(&gatt_ccc_store.work,
                                   CCC_STORE_DELAY);
         }
-
 #endif
     }
 
@@ -1755,21 +1704,18 @@ static int gatt_notify(struct bt_conn *conn, u16_t handle,
     struct bt_att_notify *nfy;
 
 #if defined(CONFIG_BT_GATT_ENFORCE_CHANGE_UNAWARE)
-
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2350:
-     * Except for the Handle Value indication, the  server shall not send
-     * notifications and indications to such a client until it becomes
-     * change-aware.
-     */
+	 * Except for the Handle Value indication, the  server shall not send
+	 * notifications and indications to such a client until it becomes
+	 * change-aware.
+	 */
     if (!bt_gatt_change_aware(conn, false)) {
         return -EAGAIN;
     }
-
 #endif
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_NOTIFY,
                             sizeof(*nfy) + params->len);
-
     if (!buf) {
         BT_WARN("No buffer available to send notification");
         return -ENOMEM;
@@ -1825,23 +1771,20 @@ static int gatt_indicate(struct bt_conn *conn, u16_t handle,
     struct bt_att_indicate *ind;
 
 #if defined(CONFIG_BT_GATT_ENFORCE_CHANGE_UNAWARE)
-
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2350:
-     * Except for the Handle Value indication, the  server shall not send
-     * notifications and indications to such a client until it becomes
-     * change-aware.
-     */
+	 * Except for the Handle Value indication, the  server shall not send
+	 * notifications and indications to such a client until it becomes
+	 * change-aware.
+	 */
     if (!(params->func && (params->func == sc_indicate_rsp ||
                            params->func == sc_restore_rsp)) &&
         !bt_gatt_change_aware(conn, false)) {
         return -EAGAIN;
     }
-
 #endif
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_INDICATE,
                             sizeof(*ind) + params->len);
-
     if (!buf) {
         BT_WARN("No buffer available to send indication");
         return -ENOMEM;
@@ -1887,7 +1830,6 @@ static u8_t notify_cb(const struct bt_gatt_attr *attr, void *user_data)
 
             conn = bt_conn_lookup_state_le(&cfg->peer,
                                            BT_CONN_CONNECTED);
-
             if (!conn) {
                 struct sc_data *sc;
 
@@ -1897,7 +1839,6 @@ static u8_t notify_cb(const struct bt_gatt_attr *attr, void *user_data)
                         sys_le16_to_cpu(sc->end));
                 continue;
             }
-
             bt_conn_unref(conn);
         }
     }
@@ -1909,14 +1850,13 @@ static u8_t notify_cb(const struct bt_gatt_attr *attr, void *user_data)
         int err;
 
         /* Check if config value matches data type since consolidated
-         * value may be for a different peer.
-         */
+		 * value may be for a different peer.
+		 */
         if (cfg->value != data->type) {
             continue;
         }
 
         conn = bt_conn_lookup_addr_le(cfg->id, &cfg->peer);
-
         if (!conn) {
             continue;
         }
@@ -1976,11 +1916,9 @@ int bt_gatt_notify_cb(struct bt_conn *conn,
     if (conn && conn->state != BT_CONN_CONNECTED) {
         return -ENOTCONN;
     }
-
 #if !defined(BFLB_BLE_DISABLE_STATIC_ATTR)
     handle = attr->handle ?: find_static_attr(attr);
 #endif
-
     if (!handle) {
         return -ENOENT;
     }
@@ -1991,15 +1929,12 @@ int bt_gatt_notify_cb(struct bt_conn *conn,
 
         bt_gatt_foreach_attr_type(handle, 0xffff, params->uuid,
                                   NULL, 1, match_uuid, &attr);
-
         if (!attr) {
             return -ENOENT;
         }
-
 #if !defined(BFLB_BLE_DISABLE_STATIC_ATTR)
         handle = attr->handle ?: find_static_attr(attr);
 #endif
-
         if (!handle) {
             return -ENOENT;
         }
@@ -2045,11 +1980,9 @@ int bt_gatt_indicate(struct bt_conn *conn,
     if (conn && conn->state != BT_CONN_CONNECTED) {
         return -ENOTCONN;
     }
-
 #if !defined(BFLB_BLE_DISABLE_STATIC_ATTR)
     handle = attr->handle ?: find_static_attr(attr);
 #endif
-
     if (!handle) {
         return -ENOENT;
     }
@@ -2060,15 +1993,12 @@ int bt_gatt_indicate(struct bt_conn *conn,
 
         bt_gatt_foreach_attr_type(handle, 0xffff, params->uuid,
                                   NULL, 1, match_uuid, &attr);
-
         if (!attr) {
             return -ENOENT;
         }
-
 #if !defined(BFLB_BLE_DISABLE_STATIC_ATTR)
         handle = attr->handle ?: find_static_attr(attr);
 #endif
-
         if (!handle) {
             return -ENOENT;
         }
@@ -2118,7 +2048,6 @@ u8_t bt_gatt_check_perm(struct bt_conn *conn, const struct bt_gatt_attr *attr,
     }
 
     mask &= attr->perm;
-
     if (mask & BT_GATT_PERM_AUTHEN_MASK) {
         if (bt_conn_get_security(conn) < BT_SECURITY_L3) {
             return BT_ATT_ERR_AUTHENTICATION;
@@ -2127,11 +2056,9 @@ u8_t bt_gatt_check_perm(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 
     if ((mask & BT_GATT_PERM_ENCRYPT_MASK)) {
 #if defined(CONFIG_BT_SMP)
-
         if (!conn->encrypt) {
             return BT_ATT_ERR_INSUFFICIENT_ENCRYPTION;
         }
-
 #else
         return BT_ATT_ERR_INSUFFICIENT_ENCRYPTION;
 #endif /* CONFIG_BT_SMP */
@@ -2151,17 +2078,15 @@ static void sc_restore_rsp(struct bt_conn *conn,
 
 #if defined(CONFIG_BT_GATT_CACHING)
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2347:
-     * 2.5.2.1 Robust Caching
-     * A connected client becomes change-aware when...
-     * The client receives and confirms a Service Changed indication.
-     */
+	 * 2.5.2.1 Robust Caching
+	 * A connected client becomes change-aware when...
+	 * The client receives and confirms a Service Changed indication.
+	 */
     cfg = find_cf_cfg(conn);
-
     if (cfg && CF_ROBUST_CACHING(cfg)) {
         atomic_set_bit(cfg->flags, CF_CHANGE_AWARE);
         BT_DBG("%s change-aware", bt_addr_le_str(&cfg->peer));
     }
-
 #endif
 }
 
@@ -2174,7 +2099,6 @@ static void sc_restore(struct bt_conn *conn)
     u8_t index;
 
     cfg = find_sc_cfg(conn->id, &conn->le.dst);
-
     if (!cfg) {
         BT_DBG("no SC data found");
         return;
@@ -2236,7 +2160,6 @@ static u8_t update_ccc(const struct bt_gatt_attr *attr, void *user_data)
 
         /* Check if attribute requires encryption/authentication */
         err = bt_gatt_check_perm(conn, attr, BT_GATT_PERM_WRITE_MASK);
-
         if (err) {
             bt_security_t sec;
 
@@ -2257,19 +2180,16 @@ static u8_t update_ccc(const struct bt_gatt_attr *attr, void *user_data)
                 if (data->sec < sec) {
                     data->sec = sec;
                 }
-
                 continue;
             }
         }
 
         if (ccc->cfg[i].value) {
             gatt_ccc_changed(attr, ccc);
-
             if (IS_ENABLED(CONFIG_BT_GATT_SERVICE_CHANGED) &&
                 ccc == &sc_ccc) {
                 sc_restore(conn);
             }
-
             return BT_GATT_ITER_CONTINUE;
         }
     }
@@ -2313,7 +2233,6 @@ static u8_t disconnected_cb(const struct bt_gatt_attr *attr, void *user_data)
 
             /* Skip if there is another peer connected */
             tmp = bt_conn_lookup_addr_le(cfg->id, &cfg->peer);
-
             if (tmp) {
                 if (tmp->state == BT_CONN_CONNECTED) {
                     value_used = true;
@@ -2335,7 +2254,6 @@ static u8_t disconnected_cb(const struct bt_gatt_attr *attr, void *user_data)
     /* If all values are now disabled, reset value while disconnected */
     if (!value_used) {
         ccc->value = 0U;
-
         if (ccc->cfg_changed) {
             ccc->cfg_changed(attr, ccc->value);
         }
@@ -2485,7 +2403,6 @@ int bt_at_gatt_exchange_mtu(struct bt_conn *conn, struct bt_gatt_exchange_params
     }
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_MTU_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -2520,7 +2437,6 @@ int bt_gatt_exchange_mtu(struct bt_conn *conn,
     }
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_MTU_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -2539,13 +2455,11 @@ static void gatt_discover_next(struct bt_conn *conn, u16_t last_handle,
                                struct bt_gatt_discover_params *params)
 {
     /* Skip if last_handle is not set */
-    if (!last_handle) {
+    if (!last_handle)
         goto discover;
-    }
 
     /* Continue from the last found handle */
     params->start_handle = last_handle;
-
     if (params->start_handle < UINT16_MAX) {
         params->start_handle++;
     } else {
@@ -2558,7 +2472,6 @@ static void gatt_discover_next(struct bt_conn *conn, u16_t last_handle,
     }
 
 discover:
-
     /* Discover next range */
     if (!bt_gatt_discover(conn, params)) {
         return;
@@ -2632,7 +2545,6 @@ static int gatt_find_type(struct bt_conn *conn,
     struct bt_uuid *uuid;
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_FIND_TYPE_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -2657,11 +2569,9 @@ static int gatt_find_type(struct bt_conn *conn,
         case BT_UUID_TYPE_16:
             net_buf_add_le16(buf, BT_UUID_16(params->uuid)->val);
             break;
-
         case BT_UUID_TYPE_128:
             net_buf_add_mem(buf, BT_UUID_128(params->uuid)->val, 16);
             break;
-
         default:
             BT_ERR("Unknown UUID type %u", params->uuid->type);
             net_buf_unref(buf);
@@ -2714,7 +2624,6 @@ static void read_included_uuid_cb(struct bt_conn *conn, u8_t err,
     if (params->func(conn, attr, params) == BT_GATT_ITER_STOP) {
         return;
     }
-
 next:
     gatt_discover_next(conn, params->start_handle, params);
 
@@ -2728,7 +2637,6 @@ static int read_included_uuid(struct bt_conn *conn,
     struct bt_att_read_req *req;
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -2759,15 +2667,13 @@ static u16_t parse_include(struct bt_conn *conn, const void *pdu,
         case 8: /* UUID16 */
             u.uuid.type = BT_UUID_TYPE_16;
             break;
-
         case 6: /* UUID128 */
             /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part G] page 550
-             * To get the included service UUID when the included service
-             * uses a 128-bit UUID, the Read Request is used.
-             */
+		 * To get the included service UUID when the included service
+		 * uses a 128-bit UUID, the Read Request is used.
+		 */
             u.uuid.type = BT_UUID_TYPE_128;
             break;
-
         default:
             BT_ERR("Invalid data len %u", rsp->len);
             goto done;
@@ -2781,16 +2687,15 @@ static u16_t parse_include(struct bt_conn *conn, const void *pdu,
         struct gatt_incl *incl = (void *)data->value;
 
         handle = sys_le16_to_cpu(data->handle);
-
         /* Handle 0 is invalid */
         if (!handle) {
             goto done;
         }
 
         /* Convert include data, bt_gatt_incl and gatt_incl
-         * have different formats so the conversion have to be done
-         * field by field.
-         */
+		 * have different formats so the conversion have to be done
+		 * field by field.
+		 */
         value.start_handle = sys_le16_to_cpu(incl->start_handle);
         value.end_handle = sys_le16_to_cpu(incl->end_handle);
 
@@ -2799,7 +2704,6 @@ static u16_t parse_include(struct bt_conn *conn, const void *pdu,
                 value.uuid = &u.uuid;
                 u.u16.val = sys_le16_to_cpu(incl->uuid16);
                 break;
-
             case BT_UUID_TYPE_128:
                 params->_included.attr_handle = handle;
                 params->_included.start_handle = value.start_handle;
@@ -2865,11 +2769,9 @@ static u16_t parse_characteristic(struct bt_conn *conn, const void *pdu,
         case 7: /* UUID16 */
             u.uuid.type = BT_UUID_TYPE_16;
             break;
-
         case 21: /* UUID128 */
             u.uuid.type = BT_UUID_TYPE_128;
             break;
-
         default:
             BT_ERR("Invalid data len %u", rsp->len);
             goto done;
@@ -2883,7 +2785,6 @@ static u16_t parse_characteristic(struct bt_conn *conn, const void *pdu,
         struct gatt_chrc *chrc = (void *)data->value;
 
         handle = sys_le16_to_cpu(data->handle);
-
         /* Handle 0 is invalid */
         if (!handle) {
             goto done;
@@ -2893,7 +2794,6 @@ static u16_t parse_characteristic(struct bt_conn *conn, const void *pdu,
             case BT_UUID_TYPE_16:
                 u.u16.val = sys_le16_to_cpu(chrc->uuid16);
                 break;
-
             case BT_UUID_TYPE_128:
                 memcpy(u.u128.val, chrc->uuid, sizeof(chrc->uuid));
                 break;
@@ -2903,21 +2803,16 @@ static u16_t parse_characteristic(struct bt_conn *conn, const void *pdu,
                bt_uuid_str(&u.uuid), chrc->properties);
 
 #if defined(CONFIG_BT_STACK_PTS)
-
         if (event_flag != gatt_discover_chara) {
             /* Skip if UUID is set but doesn't match */
-            if (params->uuid && bt_uuid_cmp(&u.uuid, params->uuid)) {
+            if (params->uuid && bt_uuid_cmp(&u.uuid, params->uuid))
                 continue;
-            }
         }
-
 #else
-
         /* Skip if UUID is set but doesn't match */
         if (params->uuid && bt_uuid_cmp(&u.uuid, params->uuid)) {
             continue;
         }
-
 #endif
 
         attr = (&(struct bt_gatt_attr)BT_GATT_CHRC(&u.uuid,
@@ -2974,7 +2869,6 @@ static int gatt_read_type(struct bt_conn *conn,
     struct bt_att_read_type_req *req;
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_TYPE_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3012,11 +2906,9 @@ static u16_t parse_service(struct bt_conn *conn, const void *pdu,
         case 6: /* UUID16 */
             u.uuid.type = BT_UUID_TYPE_16;
             break;
-
         case 20: /* UUID128 */
             u.uuid.type = BT_UUID_TYPE_128;
             break;
-
         default:
             BT_ERR("Invalid data len %u", rsp->len);
             goto done;
@@ -3030,13 +2922,11 @@ static u16_t parse_service(struct bt_conn *conn, const void *pdu,
         const struct bt_att_group_data *data = pdu;
 
         start_handle = sys_le16_to_cpu(data->start_handle);
-
         if (!start_handle) {
             goto done;
         }
 
         end_handle = sys_le16_to_cpu(data->end_handle);
-
         if (!end_handle || end_handle < start_handle) {
             goto done;
         }
@@ -3046,7 +2936,6 @@ static u16_t parse_service(struct bt_conn *conn, const void *pdu,
                 memcpy(&u.u16.val, data->value, sizeof(u.u16.val));
                 u.u16.val = sys_le16_to_cpu(u.u16.val);
                 break;
-
             case BT_UUID_TYPE_128:
                 memcpy(u.u128.val, data->value, sizeof(u.u128.val));
                 break;
@@ -3097,7 +2986,6 @@ static void gatt_read_group_rsp(struct bt_conn *conn, u8_t err,
     }
 
     handle = parse_service(conn, pdu, params, length);
-
     if (!handle) {
         return;
     }
@@ -3112,7 +3000,6 @@ static int gatt_read_group(struct bt_conn *conn,
     struct bt_att_read_group_req *req;
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_GROUP_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3165,12 +3052,10 @@ static void gatt_find_info_rsp(struct bt_conn *conn, u8_t err,
             u.uuid.type = BT_UUID_TYPE_16;
             len = sizeof(*info.i16);
             break;
-
         case BT_ATT_INFO_128:
             u.uuid.type = BT_UUID_TYPE_128;
             len = sizeof(*info.i128);
             break;
-
         default:
             BT_ERR("Invalid format %u", rsp->format);
             goto done;
@@ -3200,7 +3085,6 @@ static void gatt_find_info_rsp(struct bt_conn *conn, u8_t err,
             case BT_UUID_TYPE_16:
                 u.u16.val = sys_le16_to_cpu(info.i16->uuid);
                 break;
-
             case BT_UUID_TYPE_128:
                 memcpy(u.u128.val, info.i128->uuid, 16);
                 break;
@@ -3215,8 +3099,8 @@ static void gatt_find_info_rsp(struct bt_conn *conn, u8_t err,
 
         if (params->type == BT_GATT_DISCOVER_DESCRIPTOR) {
             /* Skip attributes that are not considered
-             * descriptors.
-             */
+			 * descriptors.
+			 */
             if (!bt_uuid_cmp(&u.uuid, BT_UUID_GATT_PRIMARY) ||
                 !bt_uuid_cmp(&u.uuid, BT_UUID_GATT_SECONDARY) ||
                 !bt_uuid_cmp(&u.uuid, BT_UUID_GATT_INCLUDE)) {
@@ -3224,8 +3108,8 @@ static void gatt_find_info_rsp(struct bt_conn *conn, u8_t err,
             }
 
             /* If Characteristic Declaration skip ahead as the next
-             * entry must be its value.
-             */
+			 * entry must be its value.
+			 */
             if (!bt_uuid_cmp(&u.uuid, BT_UUID_GATT_CHRC)) {
                 skip = true;
                 continue;
@@ -3256,7 +3140,6 @@ static int gatt_find_info(struct bt_conn *conn,
     struct bt_att_find_info_req *req;
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_FIND_INFO_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3291,15 +3174,11 @@ int bt_gatt_discover(struct bt_conn *conn,
             if (params->uuid) {
                 return gatt_find_type(conn, params);
             }
-
             return gatt_read_group(conn, params);
-
         case BT_GATT_DISCOVER_INCLUDE:
         case BT_GATT_DISCOVER_CHARACTERISTIC:
             return gatt_read_type(conn, params);
-
         case BT_GATT_DISCOVER_DESCRIPTOR:
-
             /* Only descriptors can be filtered */
             if (params->uuid &&
                 (!bt_uuid_cmp(params->uuid, BT_UUID_GATT_PRIMARY) ||
@@ -3313,10 +3192,9 @@ int bt_gatt_discover(struct bt_conn *conn,
             __attribute__((fallthrough));
 #endif
 
-        /* Fallthrough. */
+            /* Fallthrough. */
         case BT_GATT_DISCOVER_ATTRIBUTE:
             return gatt_find_info(conn, params);
-
         default:
             BT_ERR("Invalid discovery type: %u", params->type);
     }
@@ -3399,11 +3277,11 @@ static void gatt_read_rsp(struct bt_conn *conn, u8_t err, const void *pdu,
     }
 
     /*
-     * Core Spec 4.2, Vol. 3, Part G, 4.8.1
-     * If the Characteristic Value is greater than (ATT_MTU - 1) octets
-     * in length, the Read Long Characteristic Value procedure may be used
-     * if the rest of the Characteristic Value is required.
-     */
+	 * Core Spec 4.2, Vol. 3, Part G, 4.8.1
+	 * If the Characteristic Value is greater than (ATT_MTU - 1) octets
+	 * in length, the Read Long Characteristic Value procedure may be used
+	 * if the rest of the Characteristic Value is required.
+	 */
     if (length < (bt_att_get_mtu(conn) - 1)) {
         params->func(conn, 0, params, NULL, 0);
         return;
@@ -3424,7 +3302,6 @@ static int gatt_read_blob(struct bt_conn *conn,
     struct bt_att_read_blob_req *req;
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_BLOB_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3446,7 +3323,6 @@ static int gatt_read_uuid(struct bt_conn *conn,
     struct bt_att_read_type_req *req;
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_TYPE_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3496,7 +3372,6 @@ static int gatt_read_multiple(struct bt_conn *conn,
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_MULT_REQ,
                             params->handle_count * sizeof(u16_t));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3540,7 +3415,6 @@ int bt_gatt_read(struct bt_conn *conn, struct bt_gatt_read_params *params)
     }
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3579,12 +3453,10 @@ int bt_gatt_write_without_response_cb(struct bt_conn *conn, u16_t handle,
     }
 
 #if defined(CONFIG_BT_SMP)
-
     if (conn->encrypt) {
         /* Don't need to sign if already encrypted */
         sign = false;
     }
-
 #endif
 
     if (sign) {
@@ -3594,7 +3466,6 @@ int bt_gatt_write_without_response_cb(struct bt_conn *conn, u16_t handle,
         buf = bt_att_create_pdu(conn, BT_ATT_OP_WRITE_CMD,
                                 sizeof(*cmd) + length);
     }
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3616,20 +3487,16 @@ static int gatt_exec_write(struct bt_conn *conn,
     struct bt_att_exec_write_req *req;
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_EXEC_WRITE_REQ, sizeof(*req));
-
     if (!buf) {
         return -ENOMEM;
     }
 
     req = net_buf_add(buf, sizeof(*req));
 #if defined(CONFIG_BT_STACK_PTS)
-
-    if (event_flag == gatt_cancel_write_req) {
+    if (event_flag == gatt_cancel_write_req)
         req->flags = BT_ATT_FLAG_CANCEL;
-    } else {
+    else
         req->flags = BT_ATT_FLAG_EXEC;
-    }
-
 #else
     req->flags = BT_ATT_FLAG_EXEC;
 #endif
@@ -3652,7 +3519,6 @@ static void gatt_prepare_write_rsp(struct bt_conn *conn, u8_t err,
         params->func(conn, err, params);
         return;
     }
-
     /* If there is no more data execute */
     if (!params->length) {
         gatt_exec_write(conn, params);
@@ -3675,7 +3541,6 @@ static int gatt_prepare_write(struct bt_conn *conn,
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_PREPARE_WRITE_REQ,
                             sizeof(*req) + len);
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3726,7 +3591,6 @@ int bt_gatt_write(struct bt_conn *conn, struct bt_gatt_write_params *params)
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_WRITE_REQ,
                             sizeof(*req) + params->length);
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3782,7 +3646,6 @@ static void gatt_write_ccc_rsp(struct bt_conn *conn, u8_t err,
     else {
         params->notify(conn, params, NULL, 0);
     }
-
 #endif
 }
 
@@ -3795,7 +3658,6 @@ static int gatt_write_ccc(struct bt_conn *conn, u16_t handle, u16_t value,
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_WRITE_REQ,
                             sizeof(*req) + sizeof(u16_t));
-
     if (!buf) {
         return -ENOMEM;
     }
@@ -3848,16 +3710,15 @@ int bt_gatt_subscribe(struct bt_conn *conn,
 
         err = gatt_write_ccc(conn, params->ccc_handle, params->value,
                              gatt_write_ccc_rsp, params);
-
         if (err) {
             return err;
         }
     }
 
     /*
-     * Add subscription before write complete as some implementation were
-     * reported to send notification before reply to CCC write.
-     */
+	 * Add subscription before write complete as some implementation were
+	 * reported to send notification before reply to CCC write.
+	 */
     gatt_subscription_add(conn, params);
 
     return 0;
@@ -3884,13 +3745,11 @@ int bt_gatt_unsubscribe(struct bt_conn *conn,
         if (params == tmp) {
             found = true;
             sys_slist_remove(&subscriptions, prev, &tmp->node);
-
             /* Attempt to cancel if write is pending */
             if (atomic_test_bit(params->flags,
                                 BT_GATT_SUBSCRIBE_FLAG_WRITE_PENDING)) {
                 bt_gatt_cancel(conn, params);
             }
-
             continue;
         } else {
             prev = &tmp->node;
@@ -3936,8 +3795,8 @@ static void add_subscriptions(struct bt_conn *conn)
         }
 
         /* Force write to CCC to workaround devices that don't track
-         * it properly.
-         */
+		 * it properly.
+		 */
         gatt_write_ccc(conn, params->ccc_handle, params->value,
                        gatt_write_ccc_rsp, params);
     }
@@ -3979,7 +3838,6 @@ static void ccc_clear(struct _bt_gatt_ccc *ccc,
     struct bt_gatt_ccc_cfg *cfg;
 
     cfg = ccc_find_cfg(ccc, addr, id);
-
     if (!cfg) {
         BT_DBG("Unable to clear CCC: cfg not found");
         return;
@@ -4012,16 +3870,15 @@ static u8_t ccc_load(const struct bt_gatt_attr *attr, void *user_data)
     /* Skip if value is not for the given attribute */
     if (load->entry->handle != attr->handle) {
         /* If attribute handle is bigger then it means
-         * the attribute no longer exists and cannot
-         * be restored.
-         */
+		 * the attribute no longer exists and cannot
+		 * be restored.
+		 */
         if (load->entry->handle < attr->handle) {
             BT_DBG("Unable to restore CCC: handle 0x%04x cannot be"
                    " found",
                    load->entry->handle);
             goto next;
         }
-
         return BT_GATT_ITER_CONTINUE;
     }
 
@@ -4029,15 +3886,12 @@ static u8_t ccc_load(const struct bt_gatt_attr *attr, void *user_data)
            load->entry->value);
 
     cfg = ccc_find_cfg(ccc, load->addr_with_id.addr, load->addr_with_id.id);
-
     if (!cfg) {
         cfg = ccc_find_cfg(ccc, BT_ADDR_LE_ANY, 0);
-
         if (!cfg) {
             BT_DBG("Unable to restore CCC: no cfg left");
             goto next;
         }
-
         bt_addr_le_copy(&cfg->peer, load->addr_with_id.addr);
         cfg->id = load->addr_with_id.id;
     }
@@ -4072,10 +3926,8 @@ static int ccc_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 
 #if defined(BFLB_BLE)
         err = bt_settings_get_bin(key, (u8_t *)ccc_store, CCC_STORE_MAX, &len);
-
-        if (err) {
+        if (err)
             return err;
-        }
 
         load.addr_with_id.id = id;
         load.addr_with_id.addr = addr;
@@ -4094,7 +3946,6 @@ static int ccc_set(const char *name, size_t len_rd, settings_read_cb read_cb,
         }
 
         err = bt_settings_decode_key(name, &addr);
-
         if (err) {
             BT_ERR("Unable to decode address %s", log_strdup(name));
             return -EINVAL;
@@ -4121,7 +3972,6 @@ static int ccc_set(const char *name, size_t len_rd, settings_read_cb read_cb,
             load.entry = NULL;
             load.count = 0;
         }
-
 #endif
 
         bt_gatt_foreach_attr(0x0001, 0xffff, ccc_load, &load);
@@ -4160,7 +4010,6 @@ static int ccc_set_direct(const char *key, size_t len, settings_read_cb read_cb,
 
         return ccc_set(name, len, read_cb, cb_arg);
     }
-
     return 0;
 }
 #endif
@@ -4197,7 +4046,6 @@ void bt_gatt_connected(struct bt_conn *conn)
             bt_settings_encode_key(key, sizeof(key), "ccc",
                                    &conn->le.dst, NULL);
         }
-
 #if defined(BFLB_BLE)
         ccc_set(key, conn->id, &conn->le.dst);
 #else
@@ -4208,21 +4056,21 @@ void bt_gatt_connected(struct bt_conn *conn)
     bt_gatt_foreach_attr(0x0001, 0xffff, update_ccc, &data);
 
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part C page 2192:
-     *
-     * 10.3.1.1 Handling of GATT indications and notifications
-     *
-     * A client requests a server to send indications and notifications
-     * by appropriately configuring the server via a Client Characteristic
-     * Configuration Descriptor. Since the configuration is persistent
-     * across a disconnection and reconnection, security requirements must
-     * be checked against the configuration upon a reconnection before
-     * sending indications or notifications. When a server reconnects to a
-     * client to send an indication or notification for which security is
-     * required, the server shall initiate or request encryption with the
-     * client prior to sending an indication or notification. If the client
-     * does not have an LTK indicating that the client has lost the bond,
-     * enabling encryption will fail.
-     */
+	 *
+	 * 10.3.1.1 Handling of GATT indications and notifications
+	 *
+	 * A client requests a server to send indications and notifications
+	 * by appropriately configuring the server via a Client Characteristic
+	 * Configuration Descriptor. Since the configuration is persistent
+	 * across a disconnection and reconnection, security requirements must
+	 * be checked against the configuration upon a reconnection before
+	 * sending indications or notifications. When a server reconnects to a
+	 * client to send an indication or notification for which security is
+	 * required, the server shall initiate or request encryption with the
+	 * client prior to sending an indication or notification. If the client
+	 * does not have an LTK indicating that the client has lost the bond,
+	 * enabling encryption will fail.
+	 */
     if (IS_ENABLED(CONFIG_BT_SMP) &&
         bt_conn_get_security(conn) < data.sec) {
         bt_conn_set_security(conn, data.sec);
@@ -4260,7 +4108,6 @@ bool bt_gatt_change_aware(struct bt_conn *conn, bool req)
     struct gatt_cf_cfg *cfg;
 
     cfg = find_cf_cfg(conn);
-
     if (!cfg || !CF_ROBUST_CACHING(cfg)) {
         return true;
     }
@@ -4270,20 +4117,20 @@ bool bt_gatt_change_aware(struct bt_conn *conn, bool req)
     }
 
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2350:
-     * If a change-unaware client sends an ATT command, the server shall
-     * ignore it.
-     */
+	 * If a change-unaware client sends an ATT command, the server shall
+	 * ignore it.
+	 */
     if (!req) {
         return false;
     }
 
     /* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2347:
-     * 2.5.2.1 Robust Caching
-     * A connected client becomes change-aware when...
-     * The server sends the client a response with the error code set to
-     * Database Out Of Sync and then the server receives another ATT
-     * request from the client.
-     */
+	 * 2.5.2.1 Robust Caching
+	 * A connected client becomes change-aware when...
+	 * The server sends the client a response with the error code set to
+	 * Database Out Of Sync and then the server receives another ATT
+	 * request from the client.
+	 */
     if (atomic_test_bit(cfg->flags, CF_OUT_OF_SYNC)) {
         atomic_clear_bit(cfg->flags, CF_OUT_OF_SYNC);
         atomic_set_bit(cfg->flags, CF_CHANGE_AWARE);
@@ -4309,7 +4156,6 @@ static int bt_gatt_store_cf(struct bt_conn *conn)
     int err;
 
     cfg = find_cf_cfg(conn);
-
     if (!cfg) {
         /* No cfg found, just clear it */
         BT_DBG("No config for CF");
@@ -4338,7 +4184,6 @@ static int bt_gatt_store_cf(struct bt_conn *conn)
 #else
     err = settings_save_one(key, str, len);
 #endif
-
     if (err) {
         BT_ERR("Failed to store Client Features (err %d)", err);
         return err;
@@ -4360,7 +4205,6 @@ void bt_gatt_disconnected(struct bt_conn *conn)
     if (gatt_ccc_conn_queue_is_empty()) {
         k_delayed_work_cancel(&gatt_ccc_store.work);
     }
-
 #endif
 
     if (IS_ENABLED(CONFIG_BT_SETTINGS) &&
@@ -4381,9 +4225,8 @@ void bt_gatt_disconnected(struct bt_conn *conn)
 #if defined(BFLB_BLE_MTU_CHANGE_CB)
 void bt_gatt_mtu_changed(struct bt_conn *conn, u16_t mtu)
 {
-    if (gatt_mtu_changed_cb) {
+    if (gatt_mtu_changed_cb)
         gatt_mtu_changed_cb(conn, (int)mtu);
-    }
 }
 
 void bt_gatt_register_mtu_callback(bt_gatt_mtu_changed_cb_t cb)
@@ -4415,7 +4258,6 @@ static u8_t ccc_save(const struct bt_gatt_attr *attr, void *user_data)
 
     /* Check if there is a cfg for the peer */
     cfg = ccc_find_cfg(ccc, save->addr_with_id.addr, save->addr_with_id.id);
-
     if (!cfg) {
         return BT_GATT_ITER_CONTINUE;
     }
@@ -4465,7 +4307,6 @@ int bt_gatt_store_ccc(u8_t id, const bt_addr_le_t *addr)
     }
 
     err = settings_save_one(key, (const u8_t *)str, len);
-
     if (err) {
         BT_ERR("Failed to store CCCs (err %d)", err);
         return err;
@@ -4473,7 +4314,6 @@ int bt_gatt_store_ccc(u8_t id, const bt_addr_le_t *addr)
 
     BT_DBG("Stored CCCs for %s (%s)", bt_addr_le_str(addr),
            log_strdup(key));
-
     if (len) {
         for (int i = 0; i < save.count; i++) {
             BT_DBG("  CCC: handle 0x%04x value 0x%04x",
@@ -4502,7 +4342,6 @@ static u8_t remove_peer_from_attr(const struct bt_gatt_attr *attr,
 
     /* Check if there is a cfg for the peer */
     cfg = ccc_find_cfg(ccc, addr_with_id->addr, addr_with_id->id);
-
     if (cfg) {
         memset(cfg, 0, sizeof(*cfg));
     }
@@ -4568,7 +4407,6 @@ static int bt_gatt_clear_cf(u8_t id, const bt_addr_le_t *addr)
     }
 
     cfg = find_cf_cfg_by_addr(addr);
-
     if (cfg) {
         clear_cf_cfg(cfg);
     }
@@ -4584,12 +4422,10 @@ static int sc_clear_by_addr(u8_t id, const bt_addr_le_t *addr)
         struct gatt_sc_cfg *cfg;
 
         cfg = find_sc_cfg(id, (bt_addr_le_t *)addr);
-
         if (cfg) {
             sc_clear(cfg);
         }
     }
-
     return 0;
 }
 
@@ -4605,7 +4441,6 @@ static void bt_gatt_clear_subscriptions(const bt_addr_le_t *addr)
             prev = &params->node;
             continue;
         }
-
         params->value = 0U;
         gatt_subscription_remove(NULL, prev, params);
     }
@@ -4617,19 +4452,16 @@ int bt_gatt_clear(u8_t id, const bt_addr_le_t *addr)
     int err;
 
     err = bt_gatt_clear_ccc(id, addr);
-
     if (err < 0) {
         return err;
     }
 
     err = sc_clear_by_addr(id, addr);
-
     if (err < 0) {
         return err;
     }
 
     err = bt_gatt_clear_cf(id, addr);
-
     if (err < 0) {
         return err;
     }
@@ -4660,11 +4492,9 @@ static int sc_set(const char *name, size_t len_rd, settings_read_cb read_cb,
     char key[BT_SETTINGS_KEY_MAX];
 
     cfg = find_sc_cfg(id, addr);
-
     if (!cfg) {
         /* Find and initialize a free sc_cfg entry */
         cfg = find_sc_cfg(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
-
         if (!cfg) {
             BT_ERR("Unable to restore SC: no cfg left");
             return -ENOMEM;
@@ -4686,21 +4516,16 @@ static int sc_set(const char *name, size_t len_rd, settings_read_cb read_cb,
     }
 
     err = bt_settings_get_bin(key, (u8_t *)cfg, sizeof(*cfg), NULL);
-
-    if (err) {
+    if (err)
         memset(cfg, 0, sizeof(*cfg));
-    }
-
     return err;
 #else
-
     if (!name) {
         BT_ERR("Insufficient number of arguments");
         return -EINVAL;
     }
 
     err = bt_settings_decode_key(name, &addr);
-
     if (err) {
         BT_ERR("Unable to decode address %s", log_strdup(name));
         return -EINVAL;
@@ -4715,11 +4540,9 @@ static int sc_set(const char *name, size_t len_rd, settings_read_cb read_cb,
     }
 
     cfg = find_sc_cfg(id, &addr);
-
     if (!cfg && len_rd) {
         /* Find and initialize a free sc_cfg entry */
         cfg = find_sc_cfg(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
-
         if (!cfg) {
             BT_ERR("Unable to restore SC: no cfg left");
             return -ENOMEM;
@@ -4731,12 +4554,10 @@ static int sc_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 
     if (len_rd) {
         len = read_cb(cb_arg, &cfg->data, sizeof(cfg->data));
-
         if (len < 0) {
             BT_ERR("Failed to decode value (err %d)", len);
             return len;
         }
-
         BT_DBG("Read SC: len %d", len);
 
         BT_DBG("Restored SC for %s", bt_addr_le_str(&addr));
@@ -4782,17 +4603,14 @@ static int cf_set(const char *name, size_t len_rd, settings_read_cb read_cb,
     }
 
     err = bt_settings_decode_key(name, &addr);
-
     if (err) {
         BT_ERR("Unable to decode address %s", log_strdup(name));
         return -EINVAL;
     }
 
     cfg = find_cf_cfg_by_addr(&addr);
-
     if (!cfg) {
         cfg = find_cf_cfg(NULL);
-
         if (!cfg) {
             BT_ERR("Unable to restore CF: no cfg left");
             return 0;
@@ -4801,7 +4619,6 @@ static int cf_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 
     if (len_rd) {
         len = read_cb(cb_arg, cfg->data, sizeof(cfg->data));
-
         if (len < 0) {
             BT_ERR("Failed to decode value (err %d)", len);
             return len;
@@ -4827,7 +4644,6 @@ static int db_hash_set(const char *name, size_t len_rd,
     int len;
 
     len = read_cb(cb_arg, stored_hash, sizeof(stored_hash));
-
     if (len < 0) {
         BT_ERR("Failed to decode value (err %d)", len);
         return len;
@@ -4856,12 +4672,12 @@ static int db_hash_commit(void)
     BT_HEXDUMP_DBG(db_hash, sizeof(db_hash), "New Hash: ");
 
     /**
-     * GATT database has been modified since last boot, likely due to
-     * a firmware update or a dynamic service that was not re-registered on
-     * boot. Indicate Service Changed to all bonded devices for the full
-     * database range to invalidate client-side cache and force discovery on
-     * reconnect.
-     */
+	 * GATT database has been modified since last boot, likely due to
+	 * a firmware update or a dynamic service that was not re-registered on
+	 * boot. Indicate Service Changed to all bonded devices for the full
+	 * database range to invalidate client-side cache and force discovery on
+	 * reconnect.
+	 */
     sc_indicate(0x0001, 0xffff);
 
     /* Hash did not match overwrite with current hash */

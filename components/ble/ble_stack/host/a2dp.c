@@ -40,8 +40,7 @@ struct bt_a2dp {
     struct bt_avdtp session;
 };
 
-typedef struct
-{
+typedef struct {
     OI_CODEC_SBC_DECODER_CONTEXT decoder_context;
     uint32_t context_data[CODEC_DATA_WORDS(SBC_MAX_CHANNELS, SBC_CODEC_FAST_FILTER_BUFFERS)];
     int16_t decode_buf[15 * SBC_MAX_SAMPLES_PER_FRAME * SBC_MAX_CHANNELS];
@@ -151,7 +150,6 @@ struct bt_a2dp *get_new_connection(struct bt_conn *conn)
     for (i = 0; i < CONFIG_BT_MAX_CONN; i++) {
         if (connection[i].session.br_chan.chan.conn == conn) {
             BT_DBG("Conn already exists");
-
             if (!connection[i].session.streams->chan.chan.conn) {
                 BT_DBG("Create AV stream");
                 return &connection[i];
@@ -186,7 +184,6 @@ int a2dp_accept(struct bt_conn *conn, struct bt_avdtp **session)
     struct bt_a2dp *a2dp_conn;
 
     a2dp_conn = get_new_connection(conn);
-
     if (!a2dp_conn) {
         return -ENOMEM;
     }
@@ -206,7 +203,6 @@ int a2dp_sbc_decode_init()
                                                  2,
                                                  false,
                                                  false);
-
     if (!OI_SUCCESS(status)) {
         BT_ERR("decode init failed with error: %d\n", status);
         return status;
@@ -246,7 +242,6 @@ int a2dp_sbc_decode_process(uint8_t media_data[], uint16_t data_len)
                                                     &data_size,
                                                     pcm,
                                                     &pcm_size);
-
         if (!OI_SUCCESS(status)) {
             BT_ERR("decoding failure with error: %d \n", status);
             return -1;
@@ -278,7 +273,6 @@ int bt_a2dp_init(void)
 
     /* Register event handlers with AVDTP */
     err = bt_avdtp_register(&avdtp_cb);
-
     if (err < 0) {
         BT_ERR("A2DP registration failed");
         return err;
@@ -286,7 +280,6 @@ int bt_a2dp_init(void)
 
     /* Register SDP record */
     err = bt_sdp_register_service(&a2dp_rec);
-
     if (err < 0) {
         BT_ERR("A2DP regist sdp record failed");
         return err;
@@ -294,7 +287,6 @@ int bt_a2dp_init(void)
 
     int reg_1 = bt_a2dp_register_endpoint(&endpoint_1, BT_A2DP_AUDIO, BT_A2DP_SINK);
     int reg_2 = bt_a2dp_register_endpoint(&endpoint_2, BT_A2DP_AUDIO, BT_A2DP_SINK);
-
     if (reg_1 || reg_2) {
         BT_ERR("A2DP registration endpoint 1 failed");
         return err;
@@ -303,7 +295,6 @@ int bt_a2dp_init(void)
     bt_a2dp_set_sbc_codec_info();
 
     err = a2dp_sbc_decode_init();
-
     if (err < 0) {
         BT_ERR("sbc codec init failed");
         return err;
@@ -319,14 +310,12 @@ struct bt_a2dp *bt_a2dp_connect(struct bt_conn *conn)
     int err;
 
     a2dp_conn = get_new_connection(conn);
-
     if (!a2dp_conn) {
         BT_ERR("Cannot allocate memory");
         return NULL;
     }
 
     err = bt_avdtp_connect(conn, &(a2dp_conn->session));
-
     if (err < 0) {
         /* If error occurs, undo the saving and return the error */
         a2d_reset(a2dp_conn);
@@ -346,7 +335,6 @@ int bt_a2dp_register_endpoint(struct bt_a2dp_endpoint *endpoint,
     BT_ASSERT(endpoint);
 
     err = bt_avdtp_register_sep(media_type, role, &(endpoint->info));
-
     if (err < 0) {
         return err;
     }

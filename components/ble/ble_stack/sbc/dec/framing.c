@@ -241,7 +241,6 @@ static INLINE OI_CHAR crc_iterate(OI_UINT8 oldcrc, OI_UINT8 next)
     OI_UINT idx;
     idx = oldcrc ^ next;
     crc = crc8_wide[idx >> 1];
-
     if (idx % 2) {
         crc &= 0xff;
     } else {
@@ -257,7 +256,6 @@ static INLINE OI_CHAR crc_iterate_top4(OI_UINT8 oldcrc, OI_UINT8 next)
     OI_UINT idx;
     idx = (oldcrc ^ next) >> 4;
     crc = crc8_wide[idx >> 1];
-
     if (idx % 2) {
         crc &= 0xff;
     } else {
@@ -369,7 +367,6 @@ PRIVATE void shift_buffer(SBC_BUFFER_T *dest, SBC_BUFFER_T *src, OI_UINT wordCou
     do {
         COPY4WORDS_BACK(d, s);
     } while (--n);
-
 #endif
 }
 /**

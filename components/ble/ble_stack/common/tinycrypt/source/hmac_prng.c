@@ -88,13 +88,10 @@ static void update(TCHmacPrng_t prng, const uint8_t *data, unsigned int datalen,
     (void)tc_hmac_update(&prng->h, prng->v, sizeof(prng->v));
     (void)tc_hmac_update(&prng->h, &separator0, sizeof(separator0));
 
-    if (data && datalen) {
+    if (data && datalen)
         (void)tc_hmac_update(&prng->h, data, datalen);
-    }
-
-    if (additional_data && additional_datalen) {
+    if (additional_data && additional_datalen)
         (void)tc_hmac_update(&prng->h, additional_data, additional_datalen);
-    }
 
     (void)tc_hmac_final(prng->key, sizeof(prng->key), &prng->h);
 
@@ -106,9 +103,8 @@ static void update(TCHmacPrng_t prng, const uint8_t *data, unsigned int datalen,
     (void)tc_hmac_update(&prng->h, prng->v, sizeof(prng->v));
     (void)tc_hmac_final(prng->v, sizeof(prng->v), &prng->h);
 
-    if (data == 0 || datalen == 0) {
+    if (data == 0 || datalen == 0)
         return;
-    }
 
     /* configure the new prng key into the prng's instance of hmac */
     tc_hmac_set_key(&prng->h, prng->key, sizeof(prng->key));
@@ -118,11 +114,8 @@ static void update(TCHmacPrng_t prng, const uint8_t *data, unsigned int datalen,
     (void)tc_hmac_update(&prng->h, prng->v, sizeof(prng->v));
     (void)tc_hmac_update(&prng->h, &separator1, sizeof(separator1));
     (void)tc_hmac_update(&prng->h, data, datalen);
-
-    if (additional_data && additional_datalen) {
+    if (additional_data && additional_datalen)
         (void)tc_hmac_update(&prng->h, additional_data, additional_datalen);
-    }
-
     (void)tc_hmac_final(prng->key, sizeof(prng->key), &prng->h);
 
     /* configure the new prng key into the prng's instance of hmac */
@@ -173,9 +166,9 @@ int tc_hmac_prng_reseed(TCHmacPrng_t prng,
 
     if (additional_input != (const uint8_t *)0) {
         /*
-         * Abort if additional_input is provided but has inappropriate
-         * length
-         */
+		 * Abort if additional_input is provided but has inappropriate
+		 * length
+		 */
         if (additionallen == 0 ||
             additionallen > MAX_ALEN) {
             return TC_CRYPTO_FAIL;

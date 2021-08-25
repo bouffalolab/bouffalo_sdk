@@ -66,16 +66,14 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
     int tx_time = 0x0848;
     int ret = -1;
 
-    if (err) {
+    if (err)
         return;
-    }
 
     printf("%s\n", __func__);
     ble_tp_conn = conn;
 
     //set data length after connected.
     ret = bt_le_set_data_len(ble_tp_conn, tx_octets, tx_time);
-
     if (!ret) {
         BT_WARN("ble tp set data length success.\n");
     } else {
@@ -85,7 +83,6 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
     //exchange mtu size after connected.
     exchg_mtu.func = ble_tp_tx_mtu_size;
     ret = bt_gatt_exchange_mtu(ble_tp_conn, &exchg_mtu);
-
     if (!ret) {
         BT_WARN("ble tp exchange mtu size pending.\n");
     } else {
@@ -94,7 +91,7 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
 }
 
 /*************************************************************************
-NAME
+NAME    
     ble_tp_disconnected
 */
 static void ble_tp_disconnected(struct bt_conn *conn, u8_t reason)
@@ -146,7 +143,7 @@ static int ble_tp_recv_wr(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 }
 
 /*************************************************************************
-NAME
+NAME    
     indicate_rsp /bl_tp_send_indicate
 */
 void indicate_rsp(struct bt_conn *conn, const struct bt_gatt_attr *attr, u8_t err)
@@ -199,7 +196,7 @@ static void ble_tp_notify_task(void *pvParameters)
 }
 
 /*************************************************************************
-NAME
+NAME    
     ble_tp_not_ccc_changed
 */
 static void ble_tp_not_ccc_changed(const struct bt_gatt_attr *attr, u16_t value)
@@ -232,7 +229,7 @@ static void ble_tp_not_ccc_changed(const struct bt_gatt_attr *attr, u16_t value)
 }
 
 /*************************************************************************
-*  DEFINE : attrs
+*  DEFINE : attrs 
 */
 static struct bt_gatt_attr attrs[] = {
     BT_GATT_PRIMARY_SERVICE(BT_UUID_SVC_BLE_TP),
@@ -272,7 +269,7 @@ static struct bt_gatt_attr attrs[] = {
 };
 
 /*************************************************************************
-NAME
+NAME    
     get_attr
 */
 struct bt_gatt_attr *get_attr(u8_t index)
@@ -283,7 +280,7 @@ struct bt_gatt_attr *get_attr(u8_t index)
 struct bt_gatt_service ble_tp_server = BT_GATT_SERVICE(attrs);
 
 /*************************************************************************
-NAME
+NAME    
     ble_tp_init
 */
 void ble_tp_init()

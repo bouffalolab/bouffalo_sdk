@@ -69,25 +69,20 @@ static void stereoBitAllocation(OI_CODEC_SBC_COMMON_CONTEXT *common)
     }
     sbL = 0;
     sbR = nrof_subbands;
-
     while (sbL < nrof_subbands) {
         excess = allocAdjustedBits(&common->bits.uint8[sbL], bitneeds.uint8[sbL] + bitadjust, excess);
         ++sbL;
         excess = allocAdjustedBits(&common->bits.uint8[sbR], bitneeds.uint8[sbR] + bitadjust, excess);
         ++sbR;
     }
-
     sbL = 0;
     sbR = nrof_subbands;
-
     while (excess) {
         excess = allocExcessBits(&common->bits.uint8[sbL], excess);
         ++sbL;
-
         if (!excess) {
             break;
         }
-
         excess = allocExcessBits(&common->bits.uint8[sbR], excess);
         ++sbR;
     }
@@ -147,12 +142,10 @@ OI_UINT16 OI_CODEC_SBC_CalculateBitpool(OI_CODEC_SBC_FRAME_INFO *frame,
         } else {
             hdr = 8 * nrof_subbands;
         }
-
         if (frame->mode == SBC_DUAL_CHANNEL) {
             nrof_blocks *= 2;
         }
     }
-
     bits = 8 * (frameLen - SBC_HEADER_LEN) - hdr;
     return DIVIDE(bits, nrof_blocks);
 }

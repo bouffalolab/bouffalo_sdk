@@ -70,6 +70,5 @@ int _compare(const uint8_t *a, const uint8_t *b, size_t size)
     for (unsigned int i = 0; i < size; i++) {
         result |= tempa[i] ^ tempb[i];
     }
-
     return result;
 }

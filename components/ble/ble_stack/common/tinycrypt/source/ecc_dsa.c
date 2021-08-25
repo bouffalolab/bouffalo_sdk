@@ -81,15 +81,12 @@ static void bits2int(uECC_word_t *native, const uint8_t *bits,
 
     uECC_vli_clear(native, num_n_words);
     uECC_vli_bytesToNative(native, bits, bits_size);
-
     if (bits_size * 8 <= (unsigned)curve->num_n_bits) {
         return;
     }
-
     shift = bits_size * 8 - curve->num_n_bits;
     carry = 0;
     ptr = native + num_n_words;
-
     while (ptr-- > native) {
         uECC_word_t temp = *ptr;
         *ptr = (temp >> shift) | carry;
@@ -123,13 +120,12 @@ int uECC_sign_with_k(const uint8_t *private_key, const uint8_t *message_hash,
 
     carry = regularize_k(k, tmp, s, curve);
     EccPoint_mult(p, curve->G, k2[!carry], 0, num_n_bits + 1, curve);
-
     if (uECC_vli_isZero(p, num_words)) {
         return 0;
     }
 
     /* If an RNG function was specified, get a random number
-    to prevent side channel analysis of k. */
+	to prevent side channel analysis of k. */
     if (!g_rng_function) {
         uECC_vli_clear(tmp, num_n_words);
         tmp[0] = 1;
@@ -138,7 +134,7 @@ int uECC_sign_with_k(const uint8_t *private_key, const uint8_t *message_hash,
     }
 
     /* Prevent side channel analysis of uECC_vli_modInv() to determine
-    bits of k / the private key by premultiplying by a random number */
+	bits of k / the private key by premultiplying by a random number */
     uECC_vli_modMult(k, k, tmp, curve->n, num_n_words); /* k' = rand * k */
     uECC_vli_modInv(k, k, curve->n, num_n_words);       /* k = 1 / k' */
     uECC_vli_modMult(k, k, tmp, curve->n, num_n_words); /* k = 1 / k */
@@ -155,7 +151,6 @@ int uECC_sign_with_k(const uint8_t *private_key, const uint8_t *message_hash,
     bits2int(tmp, message_hash, hash_size, curve);
     uECC_vli_modAdd(s, tmp, s, curve->n, num_n_words); /* s = e + r*d */
     uECC_vli_modMult(s, s, k, curve->n, num_n_words);  /* s = (e + r*d) / k */
-
     if (uECC_vli_numBits(s, num_n_words) > (bitcount_t)curve->num_bytes * 8) {
         return 0;
     }
@@ -174,7 +169,6 @@ int uECC_sign(const uint8_t *private_key, const uint8_t *message_hash,
     for (tries = 0; tries < uECC_RNG_MAX_TRIES; ++tries) {
         /* Generating _random uniformly at random: */
         uECC_RNG_Function rng_function = uECC_get_rng();
-
         if (!rng_function ||
             !rng_function((uint8_t *)_random, 2 * NUM_ECC_WORDS * uECC_WORD_SIZE)) {
             return 0;
@@ -188,7 +182,6 @@ int uECC_sign(const uint8_t *private_key, const uint8_t *message_hash,
             return 1;
         }
     }
-
     return 0;
 }
 
@@ -278,7 +271,6 @@ int uECC_verify(const uint8_t *public_key, const uint8_t *message_hash,
 
         index = (!!uECC_vli_testBit(u1, i)) | ((!!uECC_vli_testBit(u2, i)) << 1);
         point = points[index];
-
         if (point) {
             uECC_vli_set(tx, point, num_words);
             uECC_vli_set(ty, point + num_words, num_words);

@@ -43,7 +43,7 @@
  * This type of situation can be resolved using the __ASSERT_EVAL() macro.
  *
  * __ASSERT_EVAL ((void) foo(),
- *        int x = foo(),
+ *		  int x = foo(),
  *                x != 0,
  *                "foo() returned zero!");
  *

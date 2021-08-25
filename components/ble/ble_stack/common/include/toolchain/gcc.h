@@ -52,9 +52,9 @@
 #define BUILD_ASSERT(EXPR)          static_assert(EXPR, "")
 #define BUILD_ASSERT_MSG(EXPR, MSG) static_assert(EXPR, MSG)
 /*
-    * GCC 4.6 and higher have the C11 _Static_assert built in, and its
-    * output is easier to understand than the common BUILD_ASSERT macros.
-    */
+ * GCC 4.6 and higher have the C11 _Static_assert built in, and its
+ * output is easier to understand than the common BUILD_ASSERT macros.
+ */
 #elif (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) || \
     (__STDC_VERSION__) >= 201100
 #define BUILD_ASSERT(EXPR)          _Static_assert(EXPR, "")
@@ -157,7 +157,7 @@
 #define __ramfunc
 #elif defined(CONFIG_ARCH_HAS_RAMFUNC_SUPPORT)
 #define __ramfunc __attribute__((noinline)) \
-    __attribute__((long_call, section(".ramfunc")))
+__attribute__((long_call, section(".ramfunc")))
 #endif /* !CONFIG_XIP */
 
 #ifndef __packed
@@ -266,9 +266,9 @@
     .type sym, % object
 #elif defined(CONFIG_ARC)
 /*
-    * Need to use assembly macros because ';' is interpreted as the start of
-    * a single line comment in the ARC assembler.
-    */
+ * Need to use assembly macros because ';' is interpreted as the start of
+ * a single line comment in the ARC assembler.
+ */
 
 .macro glbl_text symbol
     .globl \symbol
@@ -305,7 +305,7 @@
  * These macros specify the section in which a given function or variable
  * resides.
  *
- * - SECTION_FUNC   allows only one function to reside in a sub-section
+ * - SECTION_FUNC	allows only one function to reside in a sub-section
  * - SECTION_SUBSEC_FUNC allows multiple functions to reside in a sub-section
  *   This ensures that garbage collection only discards the section
  *   if all functions in the sub-section are not referenced.
@@ -321,20 +321,20 @@
  */
 
 .macro section_var section, symbol.section.\section\().\symbol
-\symbol :.endm
+	\symbol :.endm
 
-              .macro section_func section,
+               .macro section_func section,
     symbol
         .section.\section\()
         .\symbol,
     "ax" FUNC_CODE()
         PERFOPT_ALIGN
-\symbol : FUNC_INSTR(\symbol)
-               .endm
+	\symbol : FUNC_INSTR(\symbol)
+                .endm
 
-               .macro section_subsec_func section,
+                .macro section_subsec_func section,
     subsection, symbol.section.\section\().\subsection, "ax" PERFOPT_ALIGN
-\symbol :.endm
+	\symbol :.endm
 
 #define SECTION_VAR(sect, sym)  section_var sect, sym
 #define SECTION_FUNC(sect, sym) section_func sect, sym
@@ -446,9 +446,9 @@
  * Macro ensures that expressions are evaluated only once.
  *
  * @note Macro has limited usage compared to the standard macro as it cannot be
- *   used:
- *   - to generate constant integer, e.g. __aligned(Z_MAX(4,5))
- *   - static variable, e.g. array like static u8_t array[Z_MAX(...)];
+ *	 used:
+ *	 - to generate constant integer, e.g. __aligned(Z_MAX(4,5))
+ *	 - static variable, e.g. array like static u8_t array[Z_MAX(...)];
  */
 #define Z_MAX(a, b) ({                             \
     /* random suffix to avoid naming conflict */   \

@@ -90,8 +90,8 @@ struct net_buf_simple {
     u16_t size;
 
     /** Start of the data storage. Not to be accessed directly
-     *  (the data pointer should be used instead).
-     */
+	 *  (the data pointer should be used instead).
+	 */
     u8_t *__buf;
 };
 
@@ -566,12 +566,11 @@ struct net_buf {
     u8_t pool_id;
 
     /* Union for convenience access to the net_buf_simple members, also
-     * preserving the old API.
-     */
+	 * preserving the old API.
+	 */
     union {
         /* The ABI of this struct must match net_buf_simple */
-        struct
-        {
+        struct {
             /** Pointer to the start of data in the buffer. */
             u8_t *data;
 
@@ -582,9 +581,9 @@ struct net_buf {
             u16_t size;
 
             /** Start of the data storage. Not to be accessed
-             *  directly (the data pointer should be used
-             *  instead).
-             */
+			 *  directly (the data pointer should be used
+			 *  instead).
+			 */
             u8_t *__buf;
         };
 
@@ -614,7 +613,7 @@ struct net_buf_pool {
     /** LIFO to place the buffer into when free */
     struct k_lifo free;
 
-    /** Number of buffers in pool */
+/** Number of buffers in pool */
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
     u16_t buf_count;
 #else
@@ -1503,7 +1502,6 @@ static inline struct net_buf *net_buf_skip(struct net_buf *buf, u16_t len)
 {
     while (buf && len--) {
         net_buf_pull_u8(buf);
-
         if (!buf->len) {
             buf = net_buf_frag_del(NULL, buf);
         }

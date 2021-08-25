@@ -17,8 +17,7 @@
 #define BL_NO_WAIT      0x0
 #define ms2tick         pdMS_TO_TICKS
 
-typedef struct
-{
+typedef struct {
     void *hdl;
 } bl_hdl_t;
 

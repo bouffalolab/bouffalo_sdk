@@ -8,8 +8,7 @@ struct k_work_q {
     struct k_fifo fifo;
 };
 
-typedef struct
-{
+typedef struct {
     bl_timer_t timer;
     struct k_delayed_work *delay_work;
 } timer_rec_d;

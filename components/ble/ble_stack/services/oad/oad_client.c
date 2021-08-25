@@ -7,7 +7,7 @@
  *
  * Copyright (C) Bouffalo Lab 2018
  *
- * History: 2020-12-31 crealted by caofp
+ * History: 2020-12-31 crealted by caofp 
  *
  ****************************************************************************************
  */
@@ -45,7 +45,6 @@ void oad_send_data_to_uart(uint8_t cmd_type, uint8_t *data, uint8_t len)
     if (len + 2 > 128) {
         return;
     }
-
     memset(final_data, 0, 128);
 
     final_data[0] = cmd_type;
@@ -98,14 +97,12 @@ static void oad_start_identity(char *pcWriteBuffer, int xWriteBufferLen, int arg
     uint8_t buf[50];
     int len = 0;
 
-    if (!default_conn) {
+    if (!default_conn)
         return;
-    }
 
     memset(buf, 0, 50);
     get_bytearray_from_string(&argv[1], buf, 50);
     len = buf[1];
-
     if (len + 2 >= 50) {
         BT_WARN("Failed to receved data\r\n");
         return;
@@ -118,9 +115,8 @@ static void oad_start_update(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 {
     uint8_t buf[MAX_ATT_SIZE];
 
-    if (!default_conn) {
+    if (!default_conn)
         return;
-    }
 
     memset(buf, 0, MAX_ATT_SIZE);
     get_bytearray_from_string(&argv[1], buf, MAX_ATT_SIZE);
@@ -154,21 +150,18 @@ static u8_t oad_discover_func(struct bt_conn *conn, const struct bt_gatt_attr *a
             BT_WARN("Service %s found: attr handle %x, end_handle %x\r\n", str, attr->handle, gatt_service->end_handle);
 
             break;
-
         case BT_GATT_DISCOVER_CHARACTERISTIC:
             gatt_chrc = attr->user_data;
             bt_uuid_to_str(gatt_chrc->uuid, str, sizeof(str));
             BT_WARN("Characteristic %s found: attr->handle %x  chrcval->handle %x \r\n", str, attr->handle, gatt_chrc->value_handle);
             //print_chrc_props(gatt_chrc->properties);
             break;
-
         case BT_GATT_DISCOVER_INCLUDE:
             gatt_include = attr->user_data;
             bt_uuid_to_str(gatt_include->uuid, str, sizeof(str));
             BT_WARN("Include %s found: attr handle %x, start %x, end %x\r\n", str, attr->handle,
                     gatt_include->start_handle, gatt_include->end_handle);
             break;
-
         default:
             bt_uuid_to_str(attr->uuid, str, sizeof(str));
 
@@ -202,7 +195,6 @@ static void oad_discovery(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
 
     get_uint8_from_string(&argv[1], &disc_type);
     BT_WARN("disc_type = [%d]\r\n", disc_type);
-
     if (disc_type == 0) {
         discover_params.type = BT_GATT_DISCOVER_PRIMARY;
     } else if (disc_type == 1) {
@@ -217,10 +209,8 @@ static void oad_discovery(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
         BT_WARN("Invalid discovery type\r\n");
         return;
     }
-
     //discover_params.type = BT_GATT_DISCOVER_DESCRIPTOR;
     err = bt_gatt_discover(default_conn, &discover_params);
-
     if (err) {
         BT_WARN("Discover failed (err %d)\r\n", err);
     } else {
@@ -241,7 +231,6 @@ static u8_t oad_client_recv_data(struct bt_conn *conn,
         params->value_handle = 0U;
         return BT_GATT_ITER_STOP;
     }
-
     BT_WARN("oad_client_recv_data:%s\r\n", bt_hex(pdata, length));
     oad_client_notify_handler(data, length);
 
@@ -251,7 +240,6 @@ static u8_t oad_client_recv_data(struct bt_conn *conn,
 static void oad_subscribe(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
     int err;
-
     if (!default_conn) {
         BT_WARN("Not connected\r\n");
         return;
@@ -264,7 +252,6 @@ static void oad_subscribe(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
     subscribe_params.notify = oad_client_recv_data;
 
     err = bt_gatt_subscribe(default_conn, &subscribe_params);
-
     if (err) {
         BT_WARN("Subscribe failed (err %d)\r\n", err);
     } else {
@@ -286,7 +273,6 @@ void oad_client_notify_handler(void *buf, u16_t len)
     }
 
     cmd_id = pdata[0];
-
     switch (cmd_id) {
         case OAD_CMD_IMAG_IDENTITY:
             if (len == sizeof(struct oad_image_identity_t) + 1) {
@@ -297,7 +283,6 @@ void oad_client_notify_handler(void *buf, u16_t len)
             } else {
                 BT_WARN("Length (%d) sizeof (%d) errors\r\n", len, sizeof(struct oad_image_identity_t));
             }
-
             break;
 
         case OAD_CMD_IMAG_BLOCK_REQ:
@@ -309,7 +294,6 @@ void oad_client_notify_handler(void *buf, u16_t len)
             } else {
                 BT_WARN("Length (%d) sizeof (%d) errors\r\n", len, sizeof(struct oad_block_req_t));
             }
-
             break;
 
         case OAD_CMD_IMAG_UPGRD_END:
@@ -320,7 +304,6 @@ void oad_client_notify_handler(void *buf, u16_t len)
             } else {
                 BT_WARN("Length (%d) sizeof (%d) errors\r\n", len, sizeof(struct oad_upgrd_end_t));
             }
-
             break;
 
         default:
@@ -332,9 +315,8 @@ void oad_send_image_identity_to_servicer(struct bt_conn *conn, u8_t *data, u16_t
 {
     u16_t handle = in_handle;
 
-    if (!conn) {
+    if (!conn)
         return;
-    }
 
     data[0] = OAD_CMD_IMAG_IDENTITY;
     bt_gatt_write_without_response(conn, handle, data, len, false);
@@ -345,15 +327,13 @@ void oad_send_block_resp_to_servicer(struct bt_conn *conn, u8_t *data, u8_t len)
     u16_t handle = in_handle;
     u8_t slen = 0;
 
-    if (!conn) {
+    if (!conn)
         return;
-    }
 
     data[0] = OAD_CMD_IMAG_BLOCK_RESP;
-
-    if (len <= bt_gatt_get_mtu(conn)) {
+    if (len <= bt_gatt_get_mtu(conn))
         slen = len;
-    } else {
+    else {
         slen = bt_gatt_get_mtu(conn);
     }
 

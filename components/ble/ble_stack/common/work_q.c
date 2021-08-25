@@ -72,7 +72,6 @@ static void work_timeout(void *timer)
 {
     /* Parameter timer type is */
     struct k_delayed_work *w = (struct k_delayed_work *)k_timer_get_id(timer);
-
     if (w->work_q == NULL) {
         return;
     }
@@ -183,19 +182,16 @@ s32_t k_delayed_work_remaining_get(struct k_delayed_work *work)
 
     timer = &work->timer;
     remain = timer->timeout - (k_now_ms() - timer->start_ms);
-
     if (remain < 0) {
         remain = 0;
     }
-
     return remain;
 }
 
 void k_delayed_work_del_timer(struct k_delayed_work *work)
 {
-    if (NULL == work || NULL == work->timer.timer.hdl) {
+    if (NULL == work || NULL == work->timer.timer.hdl)
         return;
-    }
 
     k_timer_delete(&work->timer);
     work->timer.timer.hdl = NULL;
@@ -233,7 +229,6 @@ static void work_q_main(void *work_q_ptr, void *p2, void *p3)
         k_work_handler_t handler;
 
         work = k_queue_get(&work_q->queue, K_FOREVER);
-
         if (!work) {
             continue;
         }
@@ -247,8 +242,8 @@ static void work_q_main(void *work_q_ptr, void *p2, void *p3)
         }
 
         /* Make sure we don't hog up the CPU if the FIFO never (or
-         * very rarely) gets empty.
-         */
+		 * very rarely) gets empty.
+		 */
         k_yield();
     }
 }
@@ -297,7 +292,6 @@ int k_delayed_work_submit_to_queue(struct k_work_q *work_q,
     /* Cancel if work has been submitted */
     if (work->work_q == work_q) {
         err = k_delayed_work_cancel(work);
-
         if (err < 0) {
             goto done;
         }

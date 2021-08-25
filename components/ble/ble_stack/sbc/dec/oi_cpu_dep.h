@@ -50,19 +50,19 @@ extern "C" {
  *  @{
  */
 
-#define OI_CPU_X86        1 /**< x86 processor family */
-#define OI_CPU_ARM        2 /**< ARM processor family.
+#define OI_CPU_X86        1  /**< x86 processor family */
+#define OI_CPU_ARM        2  /**< ARM processor family.
                                   @deprecated Use #OI_CPU_ARM7_LEND or
                                   #OI_CPU_ARM7_BEND. */
-#define OI_CPU_ARC        3 /**< ARC processor family.
+#define OI_CPU_ARC        3  /**< ARC processor family.
                                   @deprecated Use #OI_CPU_ARC_LEND or
                                   #OI_CPU_ARC_BEND. */
-#define OI_CPU_SH3        4 /**< Hitachi SH-3 processor family */
-#define OI_CPU_H8         5 /**< Hitachi H8 processor family */
-#define OI_CPU_MIPS       6 /**< MIPS processor family */
-#define OI_CPU_SPARC      7 /**< SPARC processor family */
-#define OI_CPU_M68000     8 /**< Motorola M68000 processor family */
-#define OI_CPU_PPC        9 /**< PowerPC (PPC) processor family */
+#define OI_CPU_SH3        4  /**< Hitachi SH-3 processor family */
+#define OI_CPU_H8         5  /**< Hitachi H8 processor family */
+#define OI_CPU_MIPS       6  /**< MIPS processor family */
+#define OI_CPU_SPARC      7  /**< SPARC processor family */
+#define OI_CPU_M68000     8  /**< Motorola M68000 processor family */
+#define OI_CPU_PPC        9  /**< PowerPC (PPC) processor family */
 #define OI_CPU_SH4_7750   10 /**< Hitachi SH7750 series in SH-4 processor family */
 #define OI_CPU_SH2        11 /**< Hitachi SH-2 processor family */
 #define OI_CPU_ARM7_LEND  12 /**< ARM7, little-endian */

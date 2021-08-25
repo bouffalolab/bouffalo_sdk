@@ -268,9 +268,8 @@ static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
 
 #define UTIL_EAT(...)
 #define UTIL_EXPAND(...) __VA_ARGS__
-#define UTIL_WHEN(c) \
-    UTIL_IF(c)       \
-    (UTIL_EXPAND, UTIL_EAT)
+#define UTIL_WHEN(c)     UTIL_IF(c) \
+(UTIL_EXPAND, UTIL_EAT)
 
 #define UTIL_REPEAT(count, macro, ...)           \
     UTIL_WHEN(count)                             \

@@ -59,7 +59,6 @@ int tc_ctr_mode(uint8_t *out, unsigned int outlen, const uint8_t *in,
     /* select the last 4 bytes of the nonce to be incremented */
     block_num = (nonce[12] << 24) | (nonce[13] << 16) |
                 (nonce[14] << 8) | (nonce[15]);
-
     for (i = 0; i < inlen; ++i) {
         if ((i % (TC_AES_BLOCK_SIZE)) == 0) {
             /* encrypt data using the current nonce */
@@ -73,7 +72,6 @@ int tc_ctr_mode(uint8_t *out, unsigned int outlen, const uint8_t *in,
                 return TC_CRYPTO_FAIL;
             }
         }
-
         /* update the output */
         *out++ = buffer[i % (TC_AES_BLOCK_SIZE)] ^ *in++;
     }

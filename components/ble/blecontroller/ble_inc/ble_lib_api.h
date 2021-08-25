@@ -11,10 +11,15 @@ void ble_controller_reset(void);
 #endif
 char *ble_controller_get_lib_ver(void);
 
+// if 0, success.
+// if -1, fail,
+int8_t ble_controller_set_scan_filter_table_size(uint8_t size);
+
 // return sleep duration, in unit of 1/32768s
 // if 0, means not allow sleep
 // if -1, means allow sleep, but there is no end of sleep interrupt (ble core deep sleep is not enabled)
 int32_t ble_controller_sleep(void);
+void ble_controller_sleep_restore(void);
 bool ble_controller_sleep_is_ongoing(void);
 
 void ble_controller_set_tx_pwr(int ble_tx_power);

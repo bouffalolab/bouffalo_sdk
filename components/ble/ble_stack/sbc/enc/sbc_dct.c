@@ -158,20 +158,16 @@ void SBC_FastIDCT8(SINT32 *pInVect, SINT32 *pOutVect)
 #else
     UINT8 Index, k;
     SINT32 temp;
-
     /*Calculate 4 subband samples by matrixing*/
     for (Index = 0; Index < 8; Index++) {
         temp = 0;
-
         for (k = 0; k < 16; k++) {
             /*temp += (SINT32)(((SINT64)M[(Index*strEncParams->numOfSubBands*2)+k] * Y[k]) >> 16 );*/
             temp += (gas16AnalDCTcoeff8[(Index * 8 * 2) + k] * (pInVect[k] >> 16));
             temp += ((gas16AnalDCTcoeff8[(Index * 8 * 2) + k] * (pInVect[k] & 0xFFFF)) >> 16);
         }
-
         pOutVect[Index] = temp;
     }
-
 #endif
     /*    BT_WARN("pOutVect: 0x%x;0x%x;0x%x;0x%x;0x%x;0x%x;0x%x;0x%x\n",\
             pOutVect[0],pOutVect[1],pOutVect[2],pOutVect[3],pOutVect[4],pOutVect[5],pOutVect[6],pOutVect[7]);*/
@@ -229,20 +225,16 @@ void SBC_FastIDCT4(SINT32 *pInVect, SINT32 *pOutVect)
 #else
     UINT8 Index, k;
     SINT32 temp;
-
     /*Calculate 4 subband samples by matrixing*/
     for (Index = 0; Index < 4; Index++) {
         temp = 0;
-
         for (k = 0; k < 8; k++) {
             /*temp += (SINT32)(((SINT64)M[(Index*strEncParams->numOfSubBands*2)+k] * Y[k]) >> 16 ); */
             temp += (gas16AnalDCTcoeff4[(Index * 4 * 2) + k] * (pInVect[k] >> 16));
             temp += ((gas16AnalDCTcoeff4[(Index * 4 * 2) + k] * (pInVect[k] & 0xFFFF)) >> 16);
         }
-
         pOutVect[Index] = temp;
     }
-
 #endif
 }
 

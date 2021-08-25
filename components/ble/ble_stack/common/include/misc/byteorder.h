@@ -112,8 +112,8 @@
 #define sys_be64_to_cpu(val) __bswap_64(val)
 #define sys_cpu_to_be64(val) __bswap_64(val)
 /********************************************************************************
-    ** Macros to get and put bytes to a stream (Little Endian format).
-    */
+** Macros to get and put bytes to a stream (Little Endian format).
+*/
 #define UINT32_TO_STREAM(p, u32)      \
     {                                 \
         *(p)++ = (u8_t)(u32);         \
@@ -151,8 +151,8 @@
 #define sys_be64_to_cpu(val) (val)
 #define sys_cpu_to_be64(val) (val)
 /********************************************************************************
-    ** Macros to get and put bytes to a stream (Big Endian format)
-    */
+** Macros to get and put bytes to a stream (Big Endian format)
+*/
 #define UINT32_TO_STREAM(p, u32)      \
     {                                 \
         *(p)++ = (u8_t)((u32) >> 24); \

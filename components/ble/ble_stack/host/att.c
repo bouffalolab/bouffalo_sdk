@@ -140,19 +140,16 @@ static int att_send(struct bt_conn *conn, struct net_buf *buf,
     BT_DBG("code 0x%02x", hdr->code);
 
 #if defined(CONFIG_BT_SMP) && defined(CONFIG_BT_SIGNING)
-
     if (hdr->code == BT_ATT_OP_SIGNED_WRITE_CMD) {
         int err;
 
         err = bt_smp_sign(conn, buf);
-
         if (err) {
             BT_ERR("Error signing data");
             net_buf_unref(buf);
             return err;
         }
     }
-
 #endif
     return bt_l2cap_send_cb(conn, BT_L2CAP_CID_ATT, buf,
                             cb ? cb : att_cb(buf),
@@ -227,14 +224,11 @@ static bt_conn_tx_cb_t att_cb(struct net_buf *buf)
     switch (att_op_get_type(buf->data[0])) {
         case ATT_RESPONSE:
             return att_rsp_sent;
-
         case ATT_CONFIRMATION:
             return att_cfm_sent;
-
         case ATT_REQUEST:
         case ATT_INDICATION:
             return att_req_sent;
-
         default:
             return att_pdu_sent;
     }
@@ -252,7 +246,6 @@ static void send_err_rsp(struct bt_conn *conn, u8_t req, u16_t handle,
     }
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_ERROR_RSP, sizeof(*rsp));
-
     if (!buf) {
         return;
     }
@@ -285,7 +278,6 @@ static u8_t att_mtu_req(struct bt_att *att, struct net_buf *buf)
     }
 
     pdu = bt_att_create_pdu(conn, BT_ATT_OP_MTU_RSP, sizeof(*rsp));
-
     if (!pdu) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -300,21 +292,18 @@ static u8_t att_mtu_req(struct bt_att *att, struct net_buf *buf)
     (void)bt_l2cap_send_cb(conn, BT_L2CAP_CID_ATT, pdu, att_rsp_sent, NULL);
 
     /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part F] page 484:
-     *
-     * A device's Exchange MTU Request shall contain the same MTU as the
-     * device's Exchange MTU Response (i.e. the MTU shall be symmetric).
-     */
+	 *
+	 * A device's Exchange MTU Request shall contain the same MTU as the
+	 * device's Exchange MTU Response (i.e. the MTU shall be symmetric).
+	 */
     att->chan.rx.mtu = MIN(mtu_client, mtu_server);
     att->chan.tx.mtu = att->chan.rx.mtu;
 
     BT_DBG("Negotiated MTU %u", att->chan.rx.mtu);
 
 #if defined(BFLB_BLE_MTU_CHANGE_CB)
-
-    if (att->chan.chan.ops->mtu_changed) {
+    if (att->chan.chan.ops->mtu_changed)
         att->chan.chan.ops->mtu_changed(&(att->chan.chan), att->chan.rx.mtu);
-    }
-
 #endif
 
     return 0;
@@ -349,7 +338,6 @@ static int att_send_req(struct bt_att *att, struct bt_att_req *req)
     /* Keep a reference for resending in case of an error */
     err = bt_l2cap_send_cb(att->chan.chan.conn, BT_L2CAP_CID_ATT,
                            net_buf_ref(req->buf), att_cb(req->buf), NULL);
-
     if (err) {
         net_buf_unref(req->buf);
         req->buf = NULL;
@@ -367,7 +355,6 @@ static void att_process(struct bt_att *att)
 
     /* Pull next request from the list */
     node = sys_slist_get(&att->reqs);
-
     if (!node) {
         return;
     }
@@ -445,10 +432,10 @@ static u8_t att_mtu_rsp(struct bt_att *att, struct net_buf *buf)
     att->chan.rx.mtu = MIN(mtu, BT_ATT_MTU);
 
     /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part F] page 484:
-     *
-     * A device's Exchange MTU Request shall contain the same MTU as the
-     * device's Exchange MTU Response (i.e. the MTU shall be symmetric).
-     */
+	 *
+	 * A device's Exchange MTU Request shall contain the same MTU as the
+	 * device's Exchange MTU Response (i.e. the MTU shall be symmetric).
+	 */
     att->chan.tx.mtu = att->chan.rx.mtu;
 
     BT_DBG("Negotiated MTU %u", att->chan.rx.mtu);
@@ -464,7 +451,6 @@ static bool range_is_valid(u16_t start, u16_t end, u16_t *err)
         if (err) {
             *err = 0U;
         }
-
         return false;
     }
 
@@ -473,7 +459,6 @@ static bool range_is_valid(u16_t start, u16_t end, u16_t *err)
         if (err) {
             *err = start;
         }
-
         return false;
     }
 
@@ -522,7 +507,6 @@ static u8_t find_info_cb(const struct bt_gatt_attr *attr, void *user_data)
             }
 
             break;
-
         case BT_ATT_INFO_128:
             if (attr->uuid->type != BT_UUID_TYPE_128) {
                 return BT_GATT_ITER_STOP;
@@ -552,7 +536,6 @@ static u8_t att_find_info_rsp(struct bt_att *att, u16_t start_handle,
     (void)memset(&data, 0, sizeof(data));
 
     data.buf = bt_att_create_pdu(conn, BT_ATT_OP_FIND_INFO_RSP, 0);
-
     if (!data.buf) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -625,7 +608,6 @@ static u8_t find_type_cb(const struct bt_gatt_attr *attr, void *user_data)
             attr->handle > sys_le16_to_cpu(data->group->end_handle)) {
             data->group->end_handle = sys_cpu_to_le16(attr->handle);
         }
-
         return BT_GATT_ITER_CONTINUE;
     }
 
@@ -638,12 +620,11 @@ static u8_t find_type_cb(const struct bt_gatt_attr *attr, void *user_data)
 
     /* Read attribute value and store in the buffer */
     read = attr->read(conn, attr, uuid, sizeof(uuid), 0);
-
     if (read < 0) {
         /*
-         * Since we don't know if it is the service with requested UUID,
-         * we cannot respond with an error to this request.
-         */
+		 * Since we don't know if it is the service with requested UUID,
+		 * we cannot respond with an error to this request.
+		 */
         goto skip;
     }
 
@@ -657,12 +638,10 @@ static u8_t find_type_cb(const struct bt_gatt_attr *attr, void *user_data)
             BT_WARN("Unable to create UUID: size %u", data->value_len);
             goto skip;
         }
-
         if (!bt_uuid_create(&ref_uuid.uuid, uuid, read)) {
             BT_WARN("Unable to create UUID: size %d", read);
             goto skip;
         }
-
         if (bt_uuid_cmp(&recvd_uuid.uuid, &ref_uuid.uuid)) {
             goto skip;
         }
@@ -696,7 +675,6 @@ static u8_t att_find_type_rsp(struct bt_att *att, u16_t start_handle,
     (void)memset(&data, 0, sizeof(data));
 
     data.buf = bt_att_create_pdu(conn, BT_ATT_OP_FIND_TYPE_RSP, 0);
-
     if (!data.buf) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -719,21 +697,18 @@ static u8_t att_find_type_rsp(struct bt_att *att, u16_t start_handle,
                      data.err);
 
 #if defined(CONFIG_BT_STACK_PTS)
-
         /*PTS sends a request to the iut discover all primary services it contains */
         if (event_flag == att_find_by_type_value_ind) {
             BT_PTS("rsp err : [%d] start_handle = [0x%04x]\r\n", data.err, start_handle);
         }
-
 #endif
         return 0;
     }
 
 #if defined(CONFIG_BT_STACK_PTS)
-
-    /*when PTS sends a request to the iut discover all primary services it contains, set event flag
-     * to @att_find_by_type_value_ind make it easy for the user to check whether the messages is correct in the console.
-     */
+    /*when PTS sends a request to the iut discover all primary services it contains, set event flag 
+	 * to @att_find_by_type_value_ind make it easy for the user to check whether the messages is correct in the console.
+	 */
     if (event_flag == att_find_by_type_value_ind) {
         u8_t i = 0;
         u8_t *req_val = (u8_t *)data.value;
@@ -742,17 +717,14 @@ static u8_t att_find_type_rsp(struct bt_att *att, u16_t start_handle,
         (void)memcpy(src, req_val, data.value_len);
 
         BT_PTS("uuid = [");
-
         for (i = 0; i < value_len; i++) {
             BT_PTS("%02x", src[value_len - 1 - i]);
         }
-
         BT_PTS("]\r\n");
 
         BT_PTS("start_handle = [0x%04x] end_handle = [0x%04x]\r\n", data.buf->data[1] | data.buf->data[2] << 8,
                data.buf->data[3] | data.buf->data[4] << 8);
     }
-
 #endif
 
     (void)bt_l2cap_send_cb(conn, BT_L2CAP_CID_ATT, data.buf, att_rsp_sent,
@@ -785,10 +757,10 @@ static u8_t att_find_type_req(struct bt_att *att, struct net_buf *buf)
     }
 
     /* The Attribute Protocol Find By Type Value Request shall be used with
-     * the Attribute Type parameter set to the UUID for "Primary Service"
-     * and the Attribute Value set to the 16-bit Bluetooth UUID or 128-bit
-     * UUID for the specific primary service.
-     */
+	 * the Attribute Type parameter set to the UUID for "Primary Service"
+	 * and the Attribute Value set to the 16-bit Bluetooth UUID or 128-bit
+	 * UUID for the specific primary service.
+	 */
     if (bt_uuid_cmp(BT_UUID_DECLARE_16(type), BT_UUID_GATT_PRIMARY)) {
         send_err_rsp(conn, BT_ATT_OP_FIND_TYPE_REQ, start_handle,
                      BT_ATT_ERR_ATTRIBUTE_NOT_FOUND);
@@ -834,29 +806,27 @@ static u8_t read_type_cb(const struct bt_gatt_attr *attr, void *user_data)
     BT_DBG("handle 0x%04x", attr->handle);
 
     /*
-     * If an attribute in the set of requested attributes would cause an
-     * Error Response then this attribute cannot be included in a
-     * Read By Type Response and the attributes before this attribute
-     * shall be returned
-     *
-     * If the first attribute in the set of requested attributes would
-     * cause an Error Response then no other attributes in the requested
-     * attributes can be considered.
-     */
+	 * If an attribute in the set of requested attributes would cause an
+	 * Error Response then this attribute cannot be included in a
+	 * Read By Type Response and the attributes before this attribute
+	 * shall be returned
+	 *
+	 * If the first attribute in the set of requested attributes would
+	 * cause an Error Response then no other attributes in the requested
+	 * attributes can be considered.
+	 */
     data->err = bt_gatt_check_perm(conn, attr, BT_GATT_PERM_READ_MASK);
-
     if (data->err) {
         if (data->rsp->len) {
             data->err = 0x00;
         }
-
         return BT_GATT_ITER_STOP;
     }
 
     /*
-     * If any attribute is founded in handle range it means that error
-     * should be changed from pre-set: attr not found error to no error.
-     */
+	 * If any attribute is founded in handle range it means that error
+	 * should be changed from pre-set: attr not found error to no error.
+	 */
     data->err = 0x00;
 
     /* Fast forward to next item position */
@@ -866,7 +836,6 @@ static u8_t read_type_cb(const struct bt_gatt_attr *attr, void *user_data)
     /* Read attribute value and store in the buffer */
     read = attr->read(conn, attr, data->buf->data + data->buf->len,
                       att->chan.tx.mtu - data->buf->len, 0);
-
     if (read < 0) {
         data->err = err_to_att(read);
         return BT_GATT_ITER_STOP;
@@ -899,7 +868,6 @@ static u8_t att_read_type_rsp(struct bt_att *att, struct bt_uuid *uuid,
 
     data.buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_TYPE_RSP,
                                  sizeof(*data.rsp));
-
     if (!data.buf) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -923,11 +891,8 @@ static u8_t att_read_type_rsp(struct bt_att *att, struct bt_uuid *uuid,
     }
 
 #if defined(CONFIG_BT_STACK_PTS)
-
-    if (event_flag == att_read_by_type_ind) {
+    if (event_flag == att_read_by_type_ind)
         BT_PTS("handle : [0x%04x]\r\n", data.rsp->data->handle);
-    }
-
 #endif
 
     (void)bt_l2cap_send_cb(conn, BT_L2CAP_CID_ATT, data.buf, att_rsp_sent,
@@ -957,7 +922,6 @@ static u8_t att_read_type_req(struct bt_att *att, struct net_buf *buf)
 
     start_handle = sys_le16_to_cpu(req->start_handle);
     end_handle = sys_le16_to_cpu(req->end_handle);
-
     if (!bt_uuid_create(&u.uuid, req->uuid, uuid_len)) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -994,14 +958,13 @@ static u8_t read_cb(const struct bt_gatt_attr *attr, void *user_data)
     data->rsp = net_buf_add(data->buf, sizeof(*data->rsp));
 
     /*
-     * If any attribute is founded in handle range it means that error
-     * should be changed from pre-set: invalid handle error to no error.
-     */
+	 * If any attribute is founded in handle range it means that error
+	 * should be changed from pre-set: invalid handle error to no error.
+	 */
     data->err = 0x00;
 
     /* Check attribute permissions */
     data->err = bt_gatt_check_perm(conn, attr, BT_GATT_PERM_READ_MASK);
-
     if (data->err) {
         return BT_GATT_ITER_STOP;
     }
@@ -1009,7 +972,6 @@ static u8_t read_cb(const struct bt_gatt_attr *attr, void *user_data)
     /* Read attribute value and store in the buffer */
     read = attr->read(conn, attr, data->buf->data + data->buf->len,
                       att->chan.tx.mtu - data->buf->len, data->offset);
-
     if (read < 0) {
         data->err = err_to_att(read);
         return BT_GATT_ITER_STOP;
@@ -1037,7 +999,6 @@ static u8_t att_read_rsp(struct bt_att *att, u8_t op, u8_t rsp, u16_t handle,
     (void)memset(&data, 0, sizeof(data));
 
     data.buf = bt_att_create_pdu(conn, rsp, 0);
-
     if (!data.buf) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -1105,7 +1066,6 @@ static u8_t att_read_mult_req(struct bt_att *att, struct net_buf *buf)
     (void)memset(&data, 0, sizeof(data));
 
     data.buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_MULT_RSP, 0);
-
     if (!data.buf) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -1118,12 +1078,12 @@ static u8_t att_read_mult_req(struct bt_att *att, struct net_buf *buf)
         BT_DBG("handle 0x%04x ", handle);
 
         /* An Error Response shall be sent by the server in response to
-         * the Read Multiple Request [....] if a read operation is not
-         * permitted on any of the Characteristic Values.
-         *
-         * If handle is not valid then return invalid handle error.
-         * If handle is found error will be cleared by read_cb.
-         */
+		 * the Read Multiple Request [....] if a read operation is not
+		 * permitted on any of the Characteristic Values.
+		 *
+		 * If handle is not valid then return invalid handle error.
+		 * If handle is found error will be cleared by read_cb.
+		 */
         data.err = BT_ATT_ERR_INVALID_HANDLE;
 
         bt_gatt_foreach_attr(handle, handle, read_cb, &data);
@@ -1167,7 +1127,6 @@ static u8_t read_group_cb(const struct bt_gatt_attr *attr, void *user_data)
             attr->handle > sys_le16_to_cpu(data->group->end_handle)) {
             data->group->end_handle = sys_cpu_to_le16(attr->handle);
         }
-
         return BT_GATT_ITER_CONTINUE;
     }
 
@@ -1195,7 +1154,6 @@ static u8_t read_group_cb(const struct bt_gatt_attr *attr, void *user_data)
     /* Read attribute value and store in the buffer */
     read = attr->read(conn, attr, data->buf->data + data->buf->len,
                       att->chan.tx.mtu - data->buf->len, 0);
-
     if (read < 0) {
         /* TODO: Handle read errors */
         return BT_GATT_ITER_STOP;
@@ -1226,7 +1184,6 @@ static u8_t att_read_group_rsp(struct bt_att *att, struct bt_uuid *uuid,
 
     data.buf = bt_att_create_pdu(conn, BT_ATT_OP_READ_GROUP_RSP,
                                  sizeof(*data.rsp));
-
     if (!data.buf) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -1289,12 +1246,12 @@ static u8_t att_read_group_req(struct bt_att *att, struct net_buf *buf)
     }
 
     /* Core v4.2, Vol 3, sec 2.5.3 Attribute Grouping:
-     * Not all of the grouping attributes can be used in the ATT
-     * Read By Group Type Request. The "Primary Service" and "Secondary
-     * Service" grouping types may be used in the Read By Group Type
-     * Request. The "Characteristic" grouping type shall not be used in
-     * the ATT Read By Group Type Request.
-     */
+	 * Not all of the grouping attributes can be used in the ATT
+	 * Read By Group Type Request. The "Primary Service" and "Secondary
+	 * Service" grouping types may be used in the Read By Group Type
+	 * Request. The "Characteristic" grouping type shall not be used in
+	 * the ATT Read By Group Type Request.
+	 */
     if (bt_uuid_cmp(&u.uuid, BT_UUID_GATT_PRIMARY) &&
         bt_uuid_cmp(&u.uuid, BT_UUID_GATT_SECONDARY)) {
         send_err_rsp(conn, BT_ATT_OP_READ_GROUP_REQ, start_handle,
@@ -1326,7 +1283,6 @@ static u8_t write_cb(const struct bt_gatt_attr *attr, void *user_data)
     /* Check attribute permissions */
     data->err = bt_gatt_check_perm(data->conn, attr,
                                    BT_GATT_PERM_WRITE_MASK);
-
     if (data->err) {
         return BT_GATT_ITER_STOP;
     }
@@ -1339,7 +1295,6 @@ static u8_t write_cb(const struct bt_gatt_attr *attr, void *user_data)
     /* Write attribute value */
     write = attr->write(data->conn, attr, data->value, data->len,
                         data->offset, flags);
-
     if (write < 0 || write != data->len) {
         data->err = err_to_att(write);
         return BT_GATT_ITER_STOP;
@@ -1369,7 +1324,6 @@ static u8_t att_write_rsp(struct bt_conn *conn, u8_t req, u8_t rsp,
     /* Only allocate buf if required to respond */
     if (rsp) {
         data.buf = bt_att_create_pdu(conn, rsp, 0);
-
         if (!data.buf) {
             return BT_ATT_ERR_UNLIKELY;
         }
@@ -1391,7 +1345,6 @@ static u8_t att_write_rsp(struct bt_conn *conn, u8_t req, u8_t rsp,
             /* Respond here since handle is set */
             send_err_rsp(conn, req, handle, data.err);
         }
-
         return req == BT_ATT_OP_EXEC_WRITE_REQ ? data.err : 0;
     }
 
@@ -1437,7 +1390,6 @@ static u8_t prep_write_cb(const struct bt_gatt_attr *attr, void *user_data)
     /* Check attribute permissions */
     data->err = bt_gatt_check_perm(data->conn, attr,
                                    BT_GATT_PERM_WRITE_MASK);
-
     if (data->err) {
         return BT_GATT_ITER_STOP;
     }
@@ -1450,7 +1402,6 @@ static u8_t prep_write_cb(const struct bt_gatt_attr *attr, void *user_data)
     /* Write attribute value to check if device is authorized */
     write = attr->write(data->conn, attr, data->value, data->len,
                         data->offset, BT_GATT_WRITE_FLAG_PREPARE);
-
     if (write != 0) {
         data->err = err_to_att(write);
         return BT_GATT_ITER_STOP;
@@ -1459,7 +1410,6 @@ static u8_t prep_write_cb(const struct bt_gatt_attr *attr, void *user_data)
 append:
     /* Copy data into the outstanding queue */
     data->buf = net_buf_alloc(&prep_pool, K_NO_WAIT);
-
     if (!data->buf) {
         data->err = BT_ATT_ERR_PREPARE_QUEUE_FULL;
         return BT_GATT_ITER_STOP;
@@ -1515,7 +1465,6 @@ static u8_t att_prep_write_rsp(struct bt_att *att, u16_t handle, u16_t offset,
 
     /* Generate response */
     data.buf = bt_att_create_pdu(conn, BT_ATT_OP_PREPARE_WRITE_RSP, 0);
-
     if (!data.buf) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -1570,7 +1519,6 @@ static u8_t att_exec_write_rsp(struct bt_att *att, u8_t flags)
             err = att_write_rsp(conn, BT_ATT_OP_EXEC_WRITE_REQ, 0,
                                 data->handle, data->offset,
                                 buf->data, buf->len);
-
             if (err) {
                 /* Respond here since handle is set */
                 send_err_rsp(conn, BT_ATT_OP_EXEC_WRITE_REQ,
@@ -1587,7 +1535,6 @@ static u8_t att_exec_write_rsp(struct bt_att *att, u8_t flags)
 
     /* Generate response */
     buf = bt_att_create_pdu(conn, BT_ATT_OP_EXEC_WRITE_RSP, 0);
-
     if (!buf) {
         return BT_ATT_ERR_UNLIKELY;
     }
@@ -1642,7 +1589,6 @@ static u8_t att_signed_write_cmd(struct bt_att *att, struct net_buf *buf)
     /* Verifying data requires full buffer including attribute header */
     net_buf_push(buf, sizeof(struct bt_att_hdr));
     err = bt_smp_sign_verify(conn, buf);
-
     if (err) {
         BT_ERR("Error verifying data");
         /* No response for this command */
@@ -1665,58 +1611,53 @@ static int att_change_security(struct bt_conn *conn, u8_t err)
 
     switch (err) {
         case BT_ATT_ERR_INSUFFICIENT_ENCRYPTION:
-            if (conn->sec_level >= BT_SECURITY_L2) {
+            if (conn->sec_level >= BT_SECURITY_L2)
                 return -EALREADY;
-            }
-
             sec = BT_SECURITY_L2;
             break;
-
         case BT_ATT_ERR_AUTHENTICATION:
             if (conn->sec_level < BT_SECURITY_L2) {
                 /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part C]
-                 * page 375:
-                 *
-                 * If an LTK is not available, the service request
-                 * shall be rejected with the error code 'Insufficient
-                 * Authentication'.
-                 * Note: When the link is not encrypted, the error code
-                 * "Insufficient Authentication" does not indicate that
-                 * MITM protection is required.
-                 */
+			 * page 375:
+			 *
+			 * If an LTK is not available, the service request
+			 * shall be rejected with the error code 'Insufficient
+			 * Authentication'.
+			 * Note: When the link is not encrypted, the error code
+			 * "Insufficient Authentication" does not indicate that
+			 * MITM protection is required.
+			 */
                 sec = BT_SECURITY_L2;
             } else if (conn->sec_level < BT_SECURITY_L3) {
                 /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part C]
-                 * page 375:
-                 *
-                 * If an authenticated pairing is required but only an
-                 * unauthenticated pairing has occurred and the link is
-                 * currently encrypted, the service request shall be
-                 * rejected with the error code 'Insufficient
-                 * Authentication'.
-                 * Note: When unauthenticated pairing has occurred and
-                 * the link is currently encrypted, the error code
-                 * 'Insufficient Authentication' indicates that MITM
-                 * protection is required.
-                 */
+			 * page 375:
+			 *
+			 * If an authenticated pairing is required but only an
+			 * unauthenticated pairing has occurred and the link is
+			 * currently encrypted, the service request shall be
+			 * rejected with the error code 'Insufficient
+			 * Authentication'.
+			 * Note: When unauthenticated pairing has occurred and
+			 * the link is currently encrypted, the error code
+			 * 'Insufficient Authentication' indicates that MITM
+			 * protection is required.
+			 */
                 sec = BT_SECURITY_L3;
             } else if (conn->sec_level < BT_SECURITY_L4) {
                 /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part C]
-                 * page 375:
-                 *
-                 * If LE Secure Connections authenticated pairing is
-                 * required but LE legacy pairing has occurred and the
-                 * link is currently encrypted, the service request
-                 * shall be rejected with the error code ''Insufficient
-                 * Authentication'.
-                 */
+			 * page 375:
+			 *
+			 * If LE Secure Connections authenticated pairing is
+			 * required but LE legacy pairing has occurred and the
+			 * link is currently encrypted, the service request
+			 * shall be rejected with the error code ''Insufficient
+			 * Authentication'.
+			 */
                 sec = BT_SECURITY_L4;
             } else {
                 return -EALREADY;
             }
-
             break;
-
         default:
             return -EINVAL;
     }
@@ -1748,7 +1689,6 @@ static u8_t att_error_rsp(struct bt_att *att, struct net_buf *buf)
 
     err = rsp->error;
 #if defined(CONFIG_BT_SMP)
-
     if (att->req->retrying) {
         goto done;
     }
@@ -1759,7 +1699,6 @@ static u8_t att_error_rsp(struct bt_att *att, struct net_buf *buf)
         /* Wait security_changed: TODO: Handle fail case */
         return 0;
     }
-
 #endif /* CONFIG_BT_SMP */
 
 done:
@@ -1863,7 +1802,6 @@ static u8_t att_indicate(struct bt_att *att, struct net_buf *buf)
     bt_gatt_notification(conn, handle, buf->data, buf->len);
 
     buf = bt_att_create_pdu(conn, BT_ATT_OP_CONFIRM, 0);
-
     if (!buf) {
         return 0;
     }
@@ -2025,14 +1963,11 @@ static att_type_t att_op_get_type(u8_t op)
         case BT_ATT_OP_PREPARE_WRITE_REQ:
         case BT_ATT_OP_EXEC_WRITE_REQ:
             return ATT_REQUEST;
-
         case BT_ATT_OP_CONFIRM:
             return ATT_CONFIRMATION;
-
         case BT_ATT_OP_WRITE_CMD:
         case BT_ATT_OP_SIGNED_WRITE_CMD:
             return ATT_COMMAND;
-
         case BT_ATT_OP_ERROR_RSP:
         case BT_ATT_OP_MTU_RSP:
         case BT_ATT_OP_FIND_INFO_RSP:
@@ -2046,10 +1981,8 @@ static att_type_t att_op_get_type(u8_t op)
         case BT_ATT_OP_PREPARE_WRITE_RSP:
         case BT_ATT_OP_EXEC_WRITE_RSP:
             return ATT_RESPONSE;
-
         case BT_ATT_OP_NOTIFY:
             return ATT_NOTIFICATION;
-
         case BT_ATT_OP_INDICATE:
             return ATT_INDICATION;
     }
@@ -2086,12 +2019,10 @@ static int bt_att_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
 
     if (!handler) {
         BT_WARN("Unhandled ATT code 0x%02x", hdr->code);
-
         if (att_op_get_type(hdr->code) != ATT_COMMAND) {
             send_err_rsp(chan->conn, hdr->code, 0,
                          BT_ATT_ERR_NOT_SUPPORTED);
         }
-
         return 0;
     }
 
@@ -2134,14 +2065,12 @@ static struct bt_att *att_chan_get(struct bt_conn *conn)
     }
 
     chan = bt_l2cap_le_lookup_rx_cid(conn, BT_L2CAP_CID_ATT);
-
     if (!chan) {
         BT_ERR("Unable to find ATT channel");
         return NULL;
     }
 
     att = ATT_CHAN(chan);
-
     if (atomic_test_bit(att->flags, ATT_DISCONNECTED)) {
         BT_WARN("ATT context flagged as disconnected");
         return NULL;
@@ -2157,7 +2086,6 @@ struct net_buf *bt_att_create_pdu(struct bt_conn *conn, u8_t op, size_t len)
     struct bt_att *att;
 
     att = att_chan_get(conn);
-
     if (!att) {
         return NULL;
     }
@@ -2174,7 +2102,6 @@ struct net_buf *bt_att_create_pdu(struct bt_conn *conn, u8_t op, size_t len)
             /* Use a timeout only when responding/confirming */
             buf = bt_l2cap_create_pdu_timeout(NULL, 0, ATT_TIMEOUT);
             break;
-
         default:
             buf = bt_l2cap_create_pdu(NULL, 0);
     }
@@ -2197,12 +2124,10 @@ static void att_reset(struct bt_att *att)
     struct net_buf *buf;
 
 #if CONFIG_BT_ATT_PREPARE_COUNT > 0
-
     /* Discard queued buffers */
     while ((buf = k_fifo_get(&att->prep_queue, K_NO_WAIT))) {
         net_buf_unref(buf);
     }
-
 #endif /* CONFIG_BT_ATT_PREPARE_COUNT > 0 */
 
     while ((buf = k_fifo_get(&att->tx_queue, K_NO_WAIT))) {
@@ -2245,13 +2170,13 @@ static void att_timeout(struct k_work *work)
     BT_ERR("ATT Timeout");
 
     /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part F] page 480:
-     *
-     * A transaction not completed within 30 seconds shall time out. Such a
-     * transaction shall be considered to have failed and the local higher
-     * layers shall be informed of this failure. No more attribute protocol
-     * requests, commands, indications or notifications shall be sent to the
-     * target device on this ATT Bearer.
-     */
+	 *
+	 * A transaction not completed within 30 seconds shall time out. Such a
+	 * transaction shall be considered to have failed and the local higher
+	 * layers shall be informed of this failure. No more attribute protocol
+	 * requests, commands, indications or notifications shall be sent to the
+	 * target device on this ATT Bearer.
+	 */
     att_reset(att);
 
     /* Consider the channel disconnected */
@@ -2290,20 +2215,23 @@ static void bt_att_disconnected(struct bt_l2cap_chan *chan)
     bt_gatt_disconnected(ch->chan.conn);
 
 #ifdef BFLB_BLE_PATCH_FREE_ALLOCATED_BUFFER_IN_OS
-
-    if (att->timeout_work.timer.timer.hdl) {
+    if (att->timeout_work.timer.timer.hdl)
         k_delayed_work_del_timer(&att->timeout_work);
-    }
 
     if (att->tx_queue._queue.hdl) {
         k_queue_free(&att->tx_queue._queue);
         att->tx_queue._queue.hdl = NULL;
     }
 
-    if (att->tx_sem.sem.hdl) {
-        k_sem_delete(&att->tx_sem);
+#if CONFIG_BT_ATT_PREPARE_COUNT > 0
+    if (att->prep_queue._queue.hdl) {
+        k_queue_free(&att->prep_queue._queue);
+        att->prep_queue._queue.hdl = NULL;
     }
+#endif
 
+    if (att->tx_sem.sem.hdl)
+        k_sem_delete(&att->tx_sem);
 #endif
 }
 
@@ -2319,9 +2247,9 @@ static void bt_att_encrypt_change(struct bt_l2cap_chan *chan,
            conn, conn->handle, conn->sec_level, hci_status);
 
     /*
-     * If status (HCI status of security procedure) is non-zero, notify
-     * outstanding request about security failure.
-     */
+	 * If status (HCI status of security procedure) is non-zero, notify
+	 * outstanding request about security failure.
+	 */
     if (hci_status) {
         att_handle_rsp(att, NULL, 0, BT_ATT_ERR_AUTHENTICATION);
         return;
@@ -2338,7 +2266,6 @@ static void bt_att_encrypt_change(struct bt_l2cap_chan *chan,
     }
 
     k_sem_take(&att->tx_sem, K_FOREVER);
-
     if (!att_is_connected(att)) {
         BT_WARN("Disconnected");
         k_sem_give(&att->tx_sem);
@@ -2415,7 +2342,6 @@ void bt_att_init(void)
 
 #if CONFIG_BT_ATT_PREPARE_COUNT > 0
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
-    k_lifo_init(&prep_pool.free, CONFIG_BT_ATT_PREPARE_COUNT);
     net_buf_init(&prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU, NULL);
 #endif
 #endif
@@ -2428,7 +2354,6 @@ u16_t bt_att_get_mtu(struct bt_conn *conn)
     struct bt_att *att;
 
     att = att_chan_get(conn);
-
     if (!att) {
         return 0;
     }
@@ -2447,7 +2372,6 @@ int bt_att_send(struct bt_conn *conn, struct net_buf *buf, bt_conn_tx_cb_t cb,
     __ASSERT_NO_MSG(buf);
 
     att = att_chan_get(conn);
-
     if (!att) {
         net_buf_unref(buf);
         return -ENOTCONN;
@@ -2463,12 +2387,10 @@ int bt_att_send(struct bt_conn *conn, struct net_buf *buf, bt_conn_tx_cb_t cb,
     }
 
     err = att_send(conn, buf, cb, user_data);
-
     if (err) {
         if (!cb) {
             k_sem_give(&att->tx_sem);
         }
-
         return err;
     }
 
@@ -2485,7 +2407,6 @@ int bt_att_req_send(struct bt_conn *conn, struct bt_att_req *req)
     __ASSERT_NO_MSG(req);
 
     att = att_chan_get(conn);
-
     if (!att) {
         net_buf_unref(req->buf);
         req->buf = NULL;
@@ -2513,7 +2434,6 @@ void bt_att_req_cancel(struct bt_conn *conn, struct bt_att_req *req)
     }
 
     att = att_chan_get(conn);
-
     if (!att) {
         return;
     }

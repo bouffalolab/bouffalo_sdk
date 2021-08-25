@@ -63,7 +63,6 @@ struct bt_keys *bt_keys_get_addr(u8_t id, const bt_addr_le_t *addr)
     }
 
 #if IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
-
     if (first_free_slot == ARRAY_SIZE(key_pool)) {
         struct bt_keys *oldest = &key_pool[0];
 
@@ -76,14 +75,12 @@ struct bt_keys *bt_keys_get_addr(u8_t id, const bt_addr_le_t *addr)
         }
 
         bt_unpair(oldest->id, &oldest->addr);
-
         if (!bt_addr_le_cmp(&oldest->addr, BT_ADDR_LE_ANY)) {
             first_free_slot = oldest - &key_pool[0];
         }
     }
 
 #endif /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
-
     if (first_free_slot < ARRAY_SIZE(key_pool)) {
         keys = &key_pool[first_free_slot];
         keys->id = id;
@@ -153,13 +150,11 @@ struct bt_keys *bt_keys_get_type(int type, u8_t id, const bt_addr_le_t *addr)
     BT_DBG("type %d %s", type, bt_addr_le_str(addr));
 
     keys = bt_keys_find(type, id, addr);
-
     if (keys) {
         return keys;
     }
 
     keys = bt_keys_get_addr(id, addr);
-
     if (!keys) {
         return NULL;
     }
@@ -240,7 +235,6 @@ bt_addr_le_t *bt_get_keys_address(u8_t id)
     bt_addr_le_t addr;
 
     memset(&addr, 0, sizeof(bt_addr_le_t));
-
     if (id < ARRAY_SIZE(key_pool)) {
         if (bt_addr_le_cmp(&key_pool[id].addr, &addr)) {
             return &key_pool[id].addr;
@@ -259,7 +253,6 @@ void bt_keys_add_type(struct bt_keys *keys, int type)
 void bt_keys_clear(struct bt_keys *keys)
 {
 #if defined(BFLB_BLE)
-
     if (keys->keys & BT_KEYS_IRK) {
         bt_id_del(keys);
     }
@@ -332,7 +325,6 @@ int bt_keys_store(struct bt_keys *keys)
 
     str = settings_str_from_bytes(keys->storage_start, BT_KEYS_STORAGE_LEN,
                                   val, sizeof(val));
-
     if (!str) {
         BT_ERR("Unable to encode bt_keys as value");
         return -EINVAL;
@@ -350,7 +342,6 @@ int bt_keys_store(struct bt_keys *keys)
     }
 
     err = settings_save_one(key, keys->storage_start, BT_KEYS_STORAGE_LEN);
-
     if (err) {
         BT_ERR("Failed to save keys (err %d)", err);
         return err;
@@ -381,7 +372,6 @@ static int keys_set(const char *name, size_t len_rd, settings_read_cb read_cb,
     }
 
     len = read_cb(cb_arg, val, sizeof(val));
-
     if (len < 0) {
         BT_ERR("Failed to read value (err %zu)", len);
         return -EINVAL;
@@ -391,7 +381,6 @@ static int keys_set(const char *name, size_t len_rd, settings_read_cb read_cb,
            (len) ? bt_hex(val, sizeof(val)) : "(null)");
 
     err = bt_settings_decode_key(name, &addr);
-
     if (err) {
         BT_ERR("Unable to decode address %s", name);
         return -EINVAL;
@@ -407,7 +396,6 @@ static int keys_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 
     if (!len) {
         keys = bt_keys_find(BT_KEYS_ALL, id, &addr);
-
         if (keys) {
             (void)memset(keys, 0, sizeof(*keys));
             BT_DBG("Cleared keys for %s", bt_addr_le_str(&addr));
@@ -420,17 +408,15 @@ static int keys_set(const char *name, size_t len_rd, settings_read_cb read_cb,
     }
 
     keys = bt_keys_get_addr(id, &addr);
-
     if (!keys) {
         BT_ERR("Failed to allocate keys for %s", bt_addr_le_str(&addr));
         return -ENOMEM;
     }
-
     if (len != BT_KEYS_STORAGE_LEN) {
         do {
             /* Load shorter structure for compatibility with old
-             * records format with no counter.
-             */
+			 * records format with no counter.
+			 */
             if (IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST) &&
                 len == BT_KEYS_STORAGE_LEN_COMPAT) {
                 BT_WARN("Keys for %s have no aging counter",
@@ -451,11 +437,9 @@ static int keys_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 
     BT_DBG("Successfully restored keys for %s", bt_addr_le_str(&addr));
 #if IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
-
     if (aging_counter_val < keys->aging_counter) {
         aging_counter_val = keys->aging_counter;
     }
-
 #endif /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
     return 0;
 }
@@ -475,16 +459,16 @@ static int keys_commit(void)
     BT_DBG("");
 
     /* We do this in commit() rather than add() since add() may get
-     * called multiple times for the same address, especially if
-     * the keys were already removed.
-     */
+	 * called multiple times for the same address, especially if
+	 * the keys were already removed.
+	 */
     bt_keys_foreach(BT_KEYS_IRK, id_add, NULL);
 
     return 0;
 }
 
 //SETTINGS_STATIC_HANDLER_DEFINE(bt_keys, "bt/keys", NULL, keys_set, keys_commit,
-//                 NULL);
+//			       NULL);
 
 #if defined(BFLB_BLE)
 int bt_keys_load(void)

@@ -52,11 +52,9 @@ OI_STATUS OI_CODEC_SBC_DecoderConfigureRaw(OI_CODEC_SBC_DECODER_CONTEXT *context
 
     if (enhanced) {
 #ifdef SBC_ENHANCED
-
         if (subbands != SBC_SUBBANDS_8) {
             return OI_STATUS_INVALID_PARAMETERS;
         }
-
 #else
         return OI_STATUS_INVALID_PARAMETERS;
 #endif
@@ -127,7 +125,6 @@ OI_STATUS OI_CODEC_SBC_DecoderLimit(OI_CODEC_SBC_DECODER_CONTEXT *context,
     } else {
         context->enhancedEnabled = FALSE;
     }
-
     context->restrictSubbands = subbands;
     context->limitFrameFormat = TRUE;
     return OI_OK;

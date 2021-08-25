@@ -10,15 +10,13 @@ enum {
     BT_HCI_EVT
 };
 
-typedef struct
-{
+typedef struct {
     uint16_t opcode;
     uint8_t *params;
     uint8_t param_len;
 } bl_hci_cmd_struct;
 
-typedef struct
-{
+typedef struct {
     /// connection handle
     uint16_t conhdl;
     /// broadcast and packet boundary flag
@@ -28,21 +26,17 @@ typedef struct
     uint8_t *buffer;
 } bl_hci_acl_data_tx;
 
-typedef struct
-{
+typedef struct {
     union {
         bl_hci_cmd_struct hci_cmd;
         bl_hci_acl_data_tx acl_data;
     } p;
 } hci_pkt_struct;
 
-#if defined(OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER)
-typedef void (*bt_hci_recv_cb)(uint8_t pkt_type, uint16_t src_id, uint8_t *param, uint8_t param_len, void *rx_buf);
-uint8_t bt_onchiphci_hanlde_rx_acl(void *param, uint8_t *host_buf_data);
-#else
 typedef void (*bt_hci_recv_cb)(uint8_t pkt_type, uint16_t src_id, uint8_t *param, uint8_t param_len);
-#endif
+
 uint8_t bt_onchiphci_interface_init(bt_hci_recv_cb cb);
-int bt_onchiphci_send(uint8_t pkt_type, uint16_t dest_id, hci_pkt_struct *pkt);
+int8_t bt_onchiphci_send(uint8_t pkt_type, uint16_t dest_id, hci_pkt_struct *pkt);
+uint8_t bt_onchiphci_hanlde_rx_acl(void *param, uint8_t *host_buf_data);
 
 #endif

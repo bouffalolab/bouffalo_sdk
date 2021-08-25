@@ -110,33 +110,27 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"ble_set_device_name", "\r\nble_set_device_name:\r\n\[Lenth of name]\r\n\[name]\r\n", blecli_set_device_name},
 #if defined(CONFIG_BLE_TP_SERVER)
 
-    {
-        "ble_tp_start", "\r\nble_tp_start:\r\n\
-    [TP test,1:enable, 0:disable]\r\n", blecli_tp_start
-    },
+    {"ble_tp_start", "\r\nble_tp_start:\r\n\
+    [TP test,1:enable, 0:disable]\r\n", blecli_tp_start},
 #endif
 
 #if defined(CONFIG_BT_OBSERVER)
-    {
-        "ble_start_scan", "\r\nble_start_scan:\r\n\
+    {"ble_start_scan", "\r\nble_start_scan:\r\n\
     [Scan type, 0:passive scan, 1:active scan]\r\n\
     [Duplicate filtering, 0:Disable duplicate filtering, 1:Enable duplicate filtering]\r\n\
     [Scan interval, 0x0004-4000,e.g.0080]\r\n\
-    [Scan window, 0x0004-4000,e.g.0050]\r\n", blecli_start_scan
-    },
+    [Scan window, 0x0004-4000,e.g.0050]\r\n", blecli_start_scan},
 
     {"ble_stop_scan", "\r\nble_stop_scan:[Stop scan]\r\nParameter[Null]\r\n", blecli_stop_scan},
 #endif
 
 #if defined(CONFIG_BT_PERIPHERAL)
-    {
-        "ble_start_adv", "\r\nble_start_adv:\r\n\
+    {"ble_start_adv", "\r\nble_start_adv:\r\n\
     [Adv type,0:adv_ind,1:adv_scan_ind,2:adv_nonconn_ind]\r\n\
     [Mode, 0:discov, 1:non-discov]\r\n\
     [Adv Interval Min,0x0020-4000,e.g.0030]\r\n\
-    [Adv Interval Max,0x0020-4000,e.g.0060]\r\n", blecli_start_advertise
-    },
-
+    [Adv Interval Max,0x0020-4000,e.g.0060]\r\n", blecli_start_advertise},
+     
     {"ble_stop_adv", "\r\nble_stop_adv:[Stop advertising]\r\nParameter[Null]\r\n", blecli_stop_advertise},
 
     {"ble_read_local_address", "\r\nble_read_local_address:[Read local address]\r\n", blecli_read_local_address},
@@ -144,45 +138,33 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
 
 #if defined(CONFIG_BT_CONN)
 #if defined(CONFIG_BT_CENTRAL)
-    {
-        "ble_connect", "\r\nble_connect:[Connect remote device]\r\n\
+    {"ble_connect", "\r\nble_connect:[Connect remote device]\r\n\
      [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
-     [Address value, e.g.112233AABBCC]\r\n", blecli_connect
-    },
+     [Address value, e.g.112233AABBCC]\r\n", blecli_connect},
 #endif //CONFIG_BT_CENTRAL
-
-    {
-        "ble_disconnect", "\r\nble_disconnect:[Disconnect remote device]\r\n\
+    
+    {"ble_disconnect", "\r\nble_disconnect:[Disconnect remote device]\r\n\
     [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
-    [Address value,e.g.112233AABBCC]\r\n", blecli_disconnect
-    },
-
-    {
-        "ble_select_conn", "\r\nble_select_conn:[Select a specific connection]\r\n\
+    [Address value,e.g.112233AABBCC]\r\n", blecli_disconnect},
+	
+    {"ble_select_conn", "\r\nble_select_conn:[Select a specific connection]\r\n\
     [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
-    [Address value, e.g.112233AABBCC]\r\n", blecli_select_conn
-    },
-
-    {
-        "ble_unpair", "\r\nble_unpair:[Unpair connection]\r\n\
+    [Address value, e.g.112233AABBCC]\r\n", blecli_select_conn},
+     
+    {"ble_unpair", "\r\nble_unpair:[Unpair connection]\r\n\
     [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
-    [Address value, all 0: unpair all connection, otherwise:unpair specific connection]\r\n", blecli_unpair
-    },
+    [Address value, all 0: unpair all connection, otherwise:unpair specific connection]\r\n", blecli_unpair},
 
-    {
-        "ble_conn_update", "\r\nble_conn_update:\r\n\
+    {"ble_conn_update", "\r\nble_conn_update:\r\n\
     [Conn Interval Min,0x0006-0C80,e.g.0030]\r\n\
     [Conn Interval Max,0x0006-0C80,e.g.0030]\r\n\
     [Conn Latency,0x0000-01f3,e.g.0004]\r\n\
-    [Supervision Timeout,0x000A-0C80,e.g.0010]\r\n", blecli_conn_update
-    },
+    [Supervision Timeout,0x000A-0C80,e.g.0010]\r\n", blecli_conn_update},
 #endif //CONFIG_BT_CONN
 
 #if defined(CONFIG_BT_SMP)
-    {
-        "ble_security", "\r\nble_security:[Start security]\r\n\
-    [Security level, Default value 4, 2:BT_SECURITY_MEDIUM, 3:BT_SECURITY_HIGH, 4:BT_SECURITY_FIPS]\r\n", blecli_security
-    },
+    {"ble_security", "\r\nble_security:[Start security]\r\n\
+    [Security level, Default value 4, 2:BT_SECURITY_MEDIUM, 3:BT_SECURITY_HIGH, 4:BT_SECURITY_FIPS]\r\n", blecli_security},
 
     {"ble_auth", "\r\nble_auth:[Register auth callback]\r\n", blecli_auth},
 
@@ -199,63 +181,49 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
 #if defined(CONFIG_BT_GATT_CLIENT)
     {"ble_exchange_mtu", "\r\nble_exchange_mtu:[Exchange mtu]\r\n Parameter[Null]\r\n", blecli_exchange_mtu},
 
-    {
-        "ble_discover", "\r\nble_discover:[Gatt discovery]\r\n\
+    {"ble_discover", "\r\nble_discover:[Gatt discovery]\r\n\
     [Discovery type, 0:Primary, 1:Secondary, 2:Include, 3:Characteristic, 4:Descriptor]\r\n\
     [Uuid value, 2 Octets, e.g.1800]\r\n\
     [Start handle, 2 Octets, e.g.0001]\r\n\
-    [End handle, 2 Octets, e.g.ffff]\r\n", blecli_discover
-    },
+    [End handle, 2 Octets, e.g.ffff]\r\n", blecli_discover},
 
-    {
-        "ble_read", "\r\nble_read:[Gatt Read]\r\n\
+    {"ble_read", "\r\nble_read:[Gatt Read]\r\n\
     [Attribute handle, 2 Octets]\r\n\
-    [Value offset, 2 Octets]\r\n", blecli_read
-    },
+    [Value offset, 2 Octets]\r\n", blecli_read},
 
-    {
-        "ble_write", "\r\nble_write:[Gatt write]\r\n\
+    {"ble_write", "\r\nble_write:[Gatt write]\r\n\
     [Attribute handle, 2 Octets]\r\n\
     [Value offset, 2 Octets]\r\n\
     [Value length, 2 Octets]\r\n\
-    [Value data]\r\n", blecli_write
-    },
+    [Value data]\r\n", blecli_write},
 
-    {
-        "ble_write_without_rsp", "\r\nble_write_without_rsp:[Gatt write without response]\r\n\
+    {"ble_write_without_rsp", "\r\nble_write_without_rsp:[Gatt write without response]\r\n\
     [Sign, 0: No need signed, 1:Signed write cmd if no smp]\r\n\
     [Attribute handle, 2 Octets]\r\n\
     [Value length, 2 Octets]\r\n\
-    [Value data]\r\n", blecli_write_without_rsp
-    },
+    [Value data]\r\n", blecli_write_without_rsp},
 
-    {
-        "ble_subscribe", "\r\nble_subscribe:[Gatt subscribe]\r\n\
+    {"ble_subscribe", "\r\nble_subscribe:[Gatt subscribe]\r\n\
     [CCC handle, 2 Octets]\r\n\
     [Value handle, 2 Octets]\r\n\
-    [Value, 1:notify, 2:indicate]\r\n", blecli_subscribe
-    },
+    [Value, 1:notify, 2:indicate]\r\n", blecli_subscribe},
 
     {"ble_unsubscribe", "\r\nble_unsubscribe:[Gatt unsubscribe]\r\n Parameter[Null]\r\n", blecli_unsubscribe},
 #endif /*CONFIG_BT_GATT_CLIENT*/
 
-    {
-        "ble_set_data_len",
-        "\r\nble_set_data_len:[LE Set Data Length]\r\n\
+    {"ble_set_data_len",
+    "\r\nble_set_data_len:[LE Set Data Length]\r\n\
     [tx octets, 2 octets]\r\n\
     [tx time, 2 octets]\r\n",
-        blecli_set_data_len
-    },
+    blecli_set_data_len},
 
     {"ble_conn_info", "\r\nble_conn_info:[LE get all connection devices info]\r\n", blecli_get_all_conn_info},
 
 #if defined(CONFIG_SET_TX_PWR)
-    {
-        "ble_set_tx_pwr",
-        "\r\nble_set_tx_pwr:[Set tx power mode]\r\n\
+    {"ble_set_tx_pwr",
+    "\r\nble_set_tx_pwr:[Set tx power mode]\r\n\
     [mode, 1 octet, value:5,6,7]\r\n",
-        blecli_set_tx_pwr
-    },
+    blecli_set_tx_pwr},
 #endif
 
 #else
@@ -336,11 +304,9 @@ static void connected(struct bt_conn *conn, u8_t err)
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
 #if defined(CONFIG_BLE_MULTI_ADV)
-
     if (ble_adv_id && !bt_le_multi_adv_stop(ble_adv_id)) {
         ble_adv_id = 0;
     }
-
 #endif /* CONFIG_BLE_MULTI_ADV */
 
     if (err) {
@@ -355,7 +321,6 @@ static void connected(struct bt_conn *conn, u8_t err)
     }
 
 #if defined(CONFIG_BLE_RECONNECT_TEST)
-
     if (conn->role == BT_CONN_ROLE_MASTER) {
         if (bt_conn_disconnect(conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN)) {
             vOutputString("Disconnection fail. \r\n");
@@ -363,7 +328,6 @@ static void connected(struct bt_conn *conn, u8_t err)
             vOutputString("Disconnect success. \r\n");
         }
     }
-
 #endif
 }
 
@@ -375,7 +339,6 @@ static void disconnected(struct bt_conn *conn, u8_t reason)
     vOutputString("Disconnected: %s (reason %u) \r\n", addr, reason);
 
 #if defined(CONFIG_BLE_RECONNECT_TEST)
-
     if (conn->role == BT_CONN_ROLE_SLAVE) {
         if (set_adv_enable(true)) {
             vOutputString("Restart adv fail. \r\n");
@@ -383,7 +346,6 @@ static void disconnected(struct bt_conn *conn, u8_t reason)
             vOutputString("Restart adv success. \r\n");
         }
     }
-
 #endif
 
     if (default_conn == conn) {
@@ -451,7 +413,6 @@ static void blecli_set_2M_phy(char *pcWriteBuffer, int xWriteBufferLen, int argc
         vOutputString("Not connected \r\n");
         return;
     }
-
     if (!hci_le_set_phy(default_conn)) {
         vOutputString("Set ble 2M Phy successfully \r\n");
     } else {
@@ -468,7 +429,6 @@ static void blecli_set_default_phy(char *pcWriteBuffer, int xWriteBufferLen, int
         vOutputString("Not connected \r\n");
         return;
     }
-
     get_uint8_from_string(&argv[1], &phy);
 
     if (phy == 0) {
@@ -494,9 +454,8 @@ static void blecli_get_device_name(char *pcWriteBuffer, int xWriteBufferLen, int
 
     if (device_name) {
         vOutputString("device_name: %s\r\n", device_name);
-    } else {
+    } else
         vOutputString("Failed to read device name\r\n");
-    }
 }
 
 static void blecli_set_device_name(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
@@ -505,12 +464,10 @@ static void blecli_set_device_name(char *pcWriteBuffer, int xWriteBufferLen, int
 
     if (strlen(argv[1]) > 0 && strlen(argv[1]) <= CONFIG_BT_DEVICE_NAME_MAX) {
         err = bt_set_name((char *)argv[1]);
-
         if (err) {
             vOutputString("Failed to set device name\r\n");
-        } else {
+        } else
             vOutputString("Set the device name successfully\r\n");
-        }
     } else {
         vOutputString("Invaild lenth(%d)\r\n", strlen(argv[1]));
     }
@@ -521,7 +478,6 @@ static void blecli_tp_start(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
     extern u8_t tp_start;
 
     get_uint8_from_string(&argv[1], &tp_start);
-
     if (tp_start == 1) {
         vOutputString("Ble Throughput enable\r\n");
     } else if (tp_start == 0) {
@@ -545,7 +501,6 @@ static bool data_cb(struct bt_data *data, void *user_data)
             len = (data->data_len > NAME_LEN - 1) ? (NAME_LEN - 1) : (data->data_len);
             memcpy(name, data->data, len);
             return false;
-
         default:
             return true;
     }
@@ -598,7 +553,6 @@ static void blecli_stop_scan(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     int err;
 
     err = bt_le_scan_stop();
-
     if (err) {
         vOutputString("Stopping scanning failed (err %d)\r\n", err);
     } else {
@@ -620,7 +574,6 @@ static void blecli_scan_filter_size(char *pcWriteBuffer, int xWriteBufferLen, in
     get_uint8_from_string(&argv[1], &size);
 
     err = ble_controller_set_scan_filter_table_size(size);
-
     if (err) {
         vOutputString("Set failed (err %d)\r\n", err);
     } else {
@@ -685,7 +638,6 @@ static void blecli_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, int
     /*Get adv type, 0:adv_ind,  1:adv_scan_ind, 2:adv_nonconn_ind 3: adv_direct_ind*/
     get_uint8_from_string(&argv[1], &adv_type);
     vOutputString("adv_type 0x%x\r\n", adv_type);
-
     if (adv_type == 0) {
         param.options = (BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_ONE_TIME);
     } else if (adv_type == 1) {
@@ -700,7 +652,6 @@ static void blecli_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, int
     /*Get mode, 0:General discoverable,  1:non discoverable, 2:limit discoverable*/
     get_uint8_from_string(&argv[2], &mode);
     vOutputString("mode 0x%x\r\n", mode);
-
     if (mode == 0 || mode == 1 || mode == 2) {
         if (mode == 0) {
             struct bt_data gen_disc_data = (struct bt_data)BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL));
@@ -737,21 +688,17 @@ static void blecli_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, int
 
     if (adv_type == 1 || adv_type == 0) {
 #if defined(CONFIG_BLE_MULTI_ADV)
-
         if (ble_adv_id == 0) {
             err = bt_le_multi_adv_start(&param, ad, ad_len, &ad_discov[0], 1, &ble_adv_id);
         }
-
 #else
         err = bt_le_adv_start(&param, ad, ad_len, &ad_discov[0], 1);
 #endif /*CONFIG_BLE_MULTI_ADV*/
     } else {
 #if defined(CONFIG_BLE_MULTI_ADV)
-
         if (ble_adv_id == 0) {
             err = bt_le_multi_adv_start(&param, ad, ad_len, NULL, 0, &ble_adv_id);
         }
-
 #else
         err = bt_le_adv_start(&param, ad, ad_len, NULL, 0);
 #endif
@@ -768,15 +715,12 @@ static void blecli_stop_advertise(char *pcWriteBuffer, int xWriteBufferLen, int 
 {
 #if defined(CONFIG_BLE_MULTI_ADV)
     bool err = -1;
-
     if (ble_adv_id && !bt_le_multi_adv_stop(ble_adv_id)) {
         ble_adv_id = 0;
         err = 0;
     }
-
     if (err) {
 #else
-
     if (bt_le_adv_stop()) {
 #endif
         vOutputString("Failed to stop advertising\r\n");
@@ -808,7 +752,6 @@ static void blecli_start_multi_advertise(char *pcWriteBuffer, int xWriteBufferLe
     ad_len_1 = ARRAY_SIZE(ad_discov);
 
     err_1 = bt_le_multi_adv_start(&param_1, ad_1, ad_len_1, NULL, 0, &instant_id_1);
-
     if (err_1) {
         vOutputString("Failed to start multi adv_1 (err_1%d)\r\n", err_1);
     } else {
@@ -829,7 +772,6 @@ static void blecli_start_multi_advertise(char *pcWriteBuffer, int xWriteBufferLe
     ad_len_2 = ARRAY_SIZE(ad_discov);
 
     err_2 = bt_le_multi_adv_start(&param_2, ad_2, ad_len_2, NULL, 0, &instant_id_2);
-
     if (err_2) {
         vOutputString("Failed to start multi adv_2 (err_2: %d)\r\n", err_2);
     } else {
@@ -884,7 +826,6 @@ static void blecli_connect(char *pcWriteBuffer, int xWriteBufferLen, int argc, c
     addr.type = type;
 
     get_bytearray_from_string(&argv[2], addr_val, 6);
-
     for (i = 0; i < 6; i++) {
         vOutputString("addr[%d]:[0x%x]\r\n", i, addr_val[i]);
     }
@@ -913,7 +854,6 @@ static void blecli_disconnect(char *pcWriteBuffer, int xWriteBufferLen, int argc
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-
     get_uint8_from_string(&argv[1], (u8_t *)&type);
     get_bytearray_from_string(&argv[2], addr_val, 6);
     reverse_bytearray(addr_val, addr.a.val, 6);
@@ -1007,7 +947,6 @@ static void blecli_conn_update(char *pcWriteBuffer, int xWriteBufferLen, int arg
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-
     get_uint16_from_string(&argv[1], &param.interval_min);
     get_uint16_from_string(&argv[2], &param.interval_max);
     get_uint16_from_string(&argv[3], &param.latency);
@@ -1033,9 +972,8 @@ static void blecli_security(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
         return;
     }
 
-    if (argc == 2) {
+    if (argc == 2)
         get_uint8_from_string(&argv[1], &sec_level);
-    }
 
     err = bt_conn_set_security(default_conn, sec_level);
 
@@ -1184,7 +1122,6 @@ static void blecli_auth_passkey(char *pcWriteBuffer, int xWriteBufferLen, int ar
     }
 
     passkey = atoi(argv[1]);
-
     if (passkey > PASSKEY_MAX) {
         vOutputString("Passkey should be between 0-999999\r\n");
         return;
@@ -1216,7 +1153,6 @@ static void blecli_exchange_mtu(char *pcWriteBuffer, int xWriteBufferLen, int ar
     exchange_params.func = exchange_func;
 
     err = bt_gatt_exchange_mtu(default_conn, &exchange_params);
-
     if (err) {
         vOutputString("Exchange failed (err %d)\r\n", err);
     } else {
@@ -1284,21 +1220,18 @@ u8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *attr, struct
             bt_uuid_to_str(gatt_service->uuid, str, sizeof(str));
             vOutputString("Service %s found: start handle %x, end_handle %x\r\n", str, attr->handle, gatt_service->end_handle);
             break;
-
         case BT_GATT_DISCOVER_CHARACTERISTIC:
             gatt_chrc = attr->user_data;
             bt_uuid_to_str(gatt_chrc->uuid, str, sizeof(str));
             vOutputString("Characteristic %s found: attr->handle %x  chrc->handle %x \r\n", str, attr->handle, gatt_chrc->value_handle);
             print_chrc_props(gatt_chrc->properties);
             break;
-
         case BT_GATT_DISCOVER_INCLUDE:
             gatt_include = attr->user_data;
             bt_uuid_to_str(gatt_include->uuid, str, sizeof(str));
             vOutputString("Include %s found: handle %x, start %x, end %x\r\n", str, attr->handle,
                           gatt_include->start_handle, gatt_include->end_handle);
             break;
-
         default:
             bt_uuid_to_str(attr->uuid, str, sizeof(str));
             vOutputString("Descriptor %s found: handle %x\r\n", str, attr->handle);
@@ -1328,7 +1261,6 @@ static void blecli_discover(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
     discover_params.end_handle = 0xffff;
 
     get_uint8_from_string(&argv[1], &disc_type);
-
     if (disc_type == 0) {
         discover_params.type = BT_GATT_DISCOVER_PRIMARY;
     } else if (disc_type == 1) {
@@ -1343,20 +1275,17 @@ static void blecli_discover(char *pcWriteBuffer, int xWriteBufferLen, int argc, 
         vOutputString("Invalid discovery type\r\n");
         return;
     }
-
     get_uint16_from_string(&argv[2], &uuid.val);
 
-    if (uuid.val) {
+    if (uuid.val)
         discover_params.uuid = &uuid.uuid;
-    } else {
+    else
         discover_params.uuid = NULL;
-    }
 
     get_uint16_from_string(&argv[3], &discover_params.start_handle);
     get_uint16_from_string(&argv[4], &discover_params.end_handle);
 
     err = bt_gatt_discover(default_conn, &discover_params);
-
     if (err) {
         vOutputString("Discover failed (err %d)\r\n", err);
     } else {
@@ -1379,7 +1308,6 @@ static u8_t read_func(struct bt_conn *conn, u8_t err, struct bt_gatt_read_params
     if (length > 0 && length <= sizeof(str)) {
         memcpy(str, buf, length);
         vOutputString("device name : %s \r\n", str);
-
         for (i = 0; i < length; i++) {
             vOutputString("buf=[0x%x]\r\n", buf[i]);
         }
@@ -1414,7 +1342,6 @@ static void blecli_read(char *pcWriteBuffer, int xWriteBufferLen, int argc, char
     read_params.handle_count = 1;
 
     err = bt_gatt_read(default_conn, &read_params);
-
     if (err) {
         vOutputString("Read failed (err %d)\r\n", err);
     } else {
@@ -1458,16 +1385,13 @@ static void blecli_write(char *pcWriteBuffer, int xWriteBufferLen, int argc, cha
     get_uint16_from_string(&argv[3], &write_params.length);
     data_len = write_params.length;
     gatt_write_buf = k_malloc(data_len);
-
     if (!gatt_write_buf) {
         vOutputString("Failed to alloc buffer for the data\r\n");
         return;
     }
-
     get_bytearray_from_string(&argv[4], gatt_write_buf, data_len);
 
-    write_params.data = k_malloc(data_len);
-    ;
+    write_params.data = gatt_write_buf;
     write_params.length = data_len;
     write_params.func = write_func;
 
@@ -1504,12 +1428,10 @@ static void blecli_write_without_rsp(char *pcWriteBuffer, int xWriteBufferLen, i
     get_uint16_from_string(&argv[2], &handle);
     get_uint16_from_string(&argv[3], &len);
     gatt_write_buf = k_malloc(len);
-
     if (!gatt_write_buf) {
         vOutputString("Failed to alloc buffer for the data\r\n");
         return;
     }
-
     get_bytearray_from_string(&argv[4], gatt_write_buf, len);
 
     err = bt_gatt_write_without_response(default_conn, handle, gatt_write_buf, len, sign);
@@ -1537,19 +1459,15 @@ static u8_t notify_func(struct bt_conn *conn,
     }
 
 #if defined(CONFIG_BLE_TP_TEST)
-
     if (!time) {
         time = k_now_ms();
     }
-
     len += length;
-
     if (k_now_ms() - time >= 1000) {
         vOutputString("data_len=[%d]\r\n", len);
         time = k_now_ms();
         len = 0;
     }
-
 #endif
 
     //vOutputString("Notification: data length %u\r\n", length);
@@ -1574,7 +1492,6 @@ static void blecli_subscribe(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     subscribe_params.notify = notify_func;
 
     int err = bt_gatt_subscribe(default_conn, &subscribe_params);
-
     if (err) {
         vOutputString("Subscribe failed (err %d)\r\n", err);
     } else {
@@ -1595,7 +1512,6 @@ static void blecli_unsubscribe(char *pcWriteBuffer, int xWriteBufferLen, int arg
     }
 
     int err = bt_gatt_unsubscribe(default_conn, &subscribe_params);
-
     if (err) {
         vOutputString("Unsubscribe failed (err %d)\r\n", err);
     } else {
@@ -1624,7 +1540,6 @@ static void blecli_set_data_len(char *pcWriteBuffer, int xWriteBufferLen, int ar
     get_uint16_from_string(&argv[2], &tx_time);
 
     err = bt_le_set_data_len(default_conn, tx_octets, tx_time);
-
     if (err) {
         vOutputString("ble_set_data_len, LE Set Data Length (err %d)\r\n", err);
     } else {
@@ -1646,7 +1561,6 @@ static void blecli_get_all_conn_info(char *pcWriteBuffer, int xWriteBufferLen, i
     }
 
     vOutputString("ble connected devices count: %d\r\n", link_num);
-
     for (int i = 0; i < link_num; i++) {
         bt_addr_le_to_str(info[i].le.remote, le_addr, sizeof(le_addr));
         vOutputString("[%d]: address %s\r\n", i, le_addr);
@@ -1666,19 +1580,15 @@ static void blecli_set_tx_pwr(char *pcWriteBuffer, int xWriteBufferLen, int argc
 
     get_uint8_from_string(&argv[1], &power);
 #if defined(BL602)
-
     if (power > 21) {
         vOutputString("ble_set_tx_pwr, invalid value, value shall be in [%d - %d]\r\n", 0, 21);
         return;
     }
-
 #elif defined(BL702)
-
     if (power > 14) {
         vOutputString("ble_set_tx_pwr, invalid value, value shall be in [%d - %d]\r\n", 0, 14);
         return;
     }
-
 #endif
     err = bt_set_tx_pwr((int8_t)power);
 
@@ -1696,7 +1606,6 @@ static void blecli_disable(char *pcWriteBuffer, int xWriteBufferLen, int argc, c
     int err;
 
     err = bt_disable();
-
     if (err) {
         vOutputString("Fail to disable bt, there is existed scan/adv/conn event \r\n");
     } else {
@@ -1721,7 +1630,6 @@ static void blecli_hog_srv_notify(char *pcWriteBuffer, int xWriteBufferLen, int 
     get_uint8_from_string(&argv[2], &press);
 
     err = hog_notify(default_conn, hid_usage, press);
-
     if (err) {
         vOutputString("Failed to send notification\r\n");
     } else {

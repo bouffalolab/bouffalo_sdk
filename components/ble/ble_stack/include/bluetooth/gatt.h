@@ -39,36 +39,36 @@ enum {
     BT_GATT_PERM_WRITE = BIT(1),
 
     /** Attribute read permission with encryption.
-     *
-     *  If set, requires encryption for read access.
-     */
+	 *
+	 *  If set, requires encryption for read access.
+	 */
     BT_GATT_PERM_READ_ENCRYPT = BIT(2),
 
     /** Attribute write permission with encryption.
-     *
-     *  If set, requires encryption for write access.
-     */
+	 *
+	 *  If set, requires encryption for write access.
+	 */
     BT_GATT_PERM_WRITE_ENCRYPT = BIT(3),
 
     /** Attribute read permission with authentication.
-     *
-     *  If set, requires encryption using authenticated link-key for read
-     *  access.
-     */
+	 *
+	 *  If set, requires encryption using authenticated link-key for read
+	 *  access.
+	 */
     BT_GATT_PERM_READ_AUTHEN = BIT(4),
 
     /** Attribute write permission with authentication.
-     *
-     *  If set, requires encryption using authenticated link-key for write
-     *  access.
-     */
+	 *
+	 *  If set, requires encryption using authenticated link-key for write
+	 *  access.
+	 */
     BT_GATT_PERM_WRITE_AUTHEN = BIT(5),
 
     /** Attribute prepare write permission.
-     *
-     *  If set, allows prepare writes with use of BT_GATT_WRITE_FLAG_PREPARE
-     *  passed to write callback.
-     */
+	 *
+	 *  If set, allows prepare writes with use of BT_GATT_WRITE_FLAG_PREPARE
+	 *  passed to write callback.
+	 */
     BT_GATT_PERM_PREPARE_WRITE = BIT(6),
 };
 
@@ -85,17 +85,17 @@ enum {
 /* GATT attribute write flags */
 enum {
     /** Attribute prepare write flag
-     *
-     * If set, write callback should only check if the device is
-     * authorized but no data shall be written.
-     */
+	 *
+	 * If set, write callback should only check if the device is
+	 * authorized but no data shall be written.
+	 */
     BT_GATT_WRITE_FLAG_PREPARE = BIT(0),
 
     /** Attribute write command flag
-     *
-     * If set, indicates that write operation is a command (Write without
-     * response) which doesn't generate any response.
-     */
+	 *
+	 * If set, indicates that write operation is a command (Write without
+	 * response) which doesn't generate any response.
+	 */
     BT_GATT_WRITE_FLAG_CMD = BIT(1),
 };
 
@@ -105,39 +105,39 @@ struct bt_gatt_attr {
     const struct bt_uuid *uuid;
 
     /** Attribute read callback
-     *
-     *  The callback can also be used locally to read the contents of the
-     *  attribute in which case no connection will be set.
-     *
-     *  @param conn   The connection that is requesting to read
-     *  @param attr   The attribute that's being read
-     *  @param buf    Buffer to place the read result in
-     *  @param len    Length of data to read
-     *  @param offset Offset to start reading from
-     *
-     *  @return Number fo bytes read, or in case of an error
-     *          BT_GATT_ERR() with a specific ATT error code.
-     */
+	 *
+	 *  The callback can also be used locally to read the contents of the
+	 *  attribute in which case no connection will be set.
+	 *
+	 *  @param conn   The connection that is requesting to read
+	 *  @param attr   The attribute that's being read
+	 *  @param buf    Buffer to place the read result in
+	 *  @param len    Length of data to read
+	 *  @param offset Offset to start reading from
+	 *
+	 *  @return Number fo bytes read, or in case of an error
+	 *          BT_GATT_ERR() with a specific ATT error code.
+	 */
     ssize_t (*read)(struct bt_conn *conn,
                     const struct bt_gatt_attr *attr,
                     void *buf, u16_t len,
                     u16_t offset);
 
     /** Attribute write callback
-     *
-     *  The callback can also be used locally to read the contents of the
-     *  attribute in which case no connection will be set.
-     *
-     *  @param conn   The connection that is requesting to write
-     *  @param attr   The attribute that's being written
-     *  @param buf    Buffer with the data to write
-     *  @param len    Number of bytes in the buffer
-     *  @param offset Offset to start writing from
-     *  @param flags  Flags (BT_GATT_WRITE_*)
-     *
-     *  @return Number of bytes written, or in case of an error
-     *          BT_GATT_ERR() with a specific ATT error code.
-     */
+	 *
+	 *  The callback can also be used locally to read the contents of the
+	 *  attribute in which case no connection will be set.
+	 *
+	 *  @param conn   The connection that is requesting to write
+	 *  @param attr   The attribute that's being written
+	 *  @param buf    Buffer with the data to write
+	 *  @param len    Number of bytes in the buffer
+	 *  @param offset Offset to start writing from
+	 *  @param flags  Flags (BT_GATT_WRITE_*)
+	 *
+	 *  @return Number of bytes written, or in case of an error
+	 *          BT_GATT_ERR() with a specific ATT error code.
+	 */
     ssize_t (*write)(struct bt_conn *conn,
                      const struct bt_gatt_attr *attr,
                      const void *buf, u16_t len,
@@ -286,8 +286,8 @@ struct bt_gatt_cpf {
     /** Format of the value of the characteristic */
     u8_t format;
     /** Exponent field to determine how the value of this characteristic is
-     * further formatted
-     */
+	 * further formatted
+	 */
     s8_t exponent;
     /** Unit of the characteristic */
     u16_t unit;
@@ -1025,27 +1025,27 @@ enum {
     /** Discover Included Services. */
     BT_GATT_DISCOVER_INCLUDE,
     /** Discover Characteristic Values.
-     *
-     *  Discover Characteristic Value and its properties.
-     */
+	 *
+	 *  Discover Characteristic Value and its properties.
+	 */
     BT_GATT_DISCOVER_CHARACTERISTIC,
     /** Discover Descriptors.
-     *
-     *  Discover Attributes which are not services or characteristics.
-     *
-     *  Note: The use of this type of discover is not recommended for
-     *  discovering in ranges across multiple services/characteristics
-     *  as it may incur in extra round trips.
-     */
+	 *
+	 *  Discover Attributes which are not services or characteristics.
+	 *
+	 *  Note: The use of this type of discover is not recommended for
+	 *  discovering in ranges across multiple services/characteristics
+	 *  as it may incur in extra round trips.
+	 */
     BT_GATT_DISCOVER_DESCRIPTOR,
     /** Discover Attributes.
-     *
-     *  Discover Attributes of any type.
-     *
-     *  Note: The use of this type of discover is not recommended for
-     *  discovering in ranges across multiple services/characteristics as
-     *  it may incur in more round trips.
-     */
+	 *
+	 *  Discover Attributes of any type.
+	 *
+	 *  Note: The use of this type of discover is not recommended for
+	 *  discovering in ranges across multiple services/characteristics as
+	 *  it may incur in more round trips.
+	 */
     BT_GATT_DISCOVER_ATTRIBUTE,
 };
 
@@ -1057,8 +1057,7 @@ struct bt_gatt_discover_params {
     /** Discover attribute callback */
     bt_gatt_discover_func_t func;
     union {
-        struct
-        {
+        struct {
             /** Include service attribute declaration handle */
             u16_t attr_handle;
             /** Included service start handle */
@@ -1137,14 +1136,12 @@ struct bt_gatt_read_params {
     bt_gatt_read_func_t func;
     size_t handle_count;
     union {
-        struct
-        {
+        struct {
             u16_t handle;
             u16_t offset;
         } single;
         u16_t *handles;
-        struct
-        {
+        struct {
             u16_t start_handle;
             u16_t end_handle;
             struct bt_uuid *uuid;
@@ -1289,21 +1286,21 @@ typedef u8_t (*bt_gatt_notify_func_t)(struct bt_conn *conn,
 /* Subscription flags */
 enum {
     /** Persistence flag
-     *
-     * If set, indicates that the subscription is not saved
-     * on the GATT server side. Therefore, upon disconnection,
-     * the subscription will be automatically removed
-     * from the client's subscriptions list and
-     * when the client reconnects, it will have to
-     * issue a new subscription.
-     */
+	 *
+	 * If set, indicates that the subscription is not saved
+	 * on the GATT server side. Therefore, upon disconnection,
+	 * the subscription will be automatically removed
+	 * from the client's subscriptions list and
+	 * when the client reconnects, it will have to
+	 * issue a new subscription.
+	 */
     BT_GATT_SUBSCRIBE_FLAG_VOLATILE,
 
     /** Write pending flag
-     *
-     * If set, indicates write operation is pending waiting remote end to
-     * respond.
-     */
+	 *
+	 * If set, indicates write operation is pending waiting remote end to
+	 * respond.
+	 */
     BT_GATT_SUBSCRIBE_FLAG_WRITE_PENDING,
 
     BT_GATT_SUBSCRIBE_NUM_FLAGS

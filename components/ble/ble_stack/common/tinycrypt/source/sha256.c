@@ -44,11 +44,11 @@ int tc_sha256_init(TCSha256State_t s)
     }
 
     /*
-     * Setting the initial state values.
-     * These values correspond to the first 32 bits of the fractional parts
-     * of the square roots of the first 8 primes: 2, 3, 5, 7, 11, 13, 17
-     * and 19.
-     */
+	 * Setting the initial state values.
+	 * These values correspond to the first 32 bits of the fractional parts
+	 * of the square roots of the first 8 primes: 2, 3, 5, 7, 11, 13, 17
+	 * and 19.
+	 */
     _set((uint8_t *)s, 0x00, sizeof(*s));
     s->iv[0] = 0x6a09e667;
     s->iv[1] = 0xbb67ae85;
@@ -74,7 +74,6 @@ int tc_sha256_update(TCSha256State_t s, const uint8_t *data, size_t datalen)
 
     while (datalen-- > 0) {
         s->leftover[s->leftover_offset++] = *(data++);
-
         if (s->leftover_offset >= TC_SHA256_BLOCK_SIZE) {
             compress(s->iv, s->leftover);
             s->leftover_offset = 0;
@@ -98,7 +97,6 @@ int tc_sha256_final(uint8_t *digest, TCSha256State_t s)
     s->bits_hashed += (s->leftover_offset << 3);
 
     s->leftover[s->leftover_offset++] = 0x80; /* always room for one byte */
-
     if (s->leftover_offset > (sizeof(s->leftover) - 8)) {
         /* there is not room for all the padding in this block */
         _set(s->leftover + s->leftover_offset, 0x00,

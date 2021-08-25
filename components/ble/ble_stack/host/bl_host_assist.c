@@ -93,22 +93,18 @@ static int blhast_common_reset(void)
     if (!(bt_dev.drv->quirks & BT_QUIRK_NO_RESET)) {
         /* Send HCI_RESET */
         err = bt_hci_cmd_send_sync(BT_HCI_OP_RESET, NULL, &rsp);
-
         if (err) {
             return err;
         }
-
         bt_hci_reset_complete(rsp);
         net_buf_unref(rsp);
     }
 
 #if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
     err = bt_set_flow_control();
-
     if (err) {
         return err;
     }
-
 #endif /* CONFIG_BT_HCI_ACL_FLOW_CONTROL */
 
     return 0;
@@ -128,7 +124,6 @@ static int blhast_ble_reset(void)
     if (BT_FEAT_BREDR(bt_dev.features)) {
         buf = bt_hci_cmd_create(BT_HCI_OP_LE_WRITE_LE_HOST_SUPP,
                                 sizeof(*cp_le));
-
         if (!buf) {
             return -ENOBUFS;
         }
@@ -140,7 +135,6 @@ static int blhast_ble_reset(void)
         cp_le->simul = 0x00;
         err = bt_hci_cmd_send_sync(BT_HCI_OP_LE_WRITE_LE_HOST_SUPP, buf,
                                    NULL);
-
         if (err) {
             return err;
         }
@@ -155,7 +149,6 @@ static int blhast_ble_reset(void)
 
         err = bt_hci_cmd_send_sync(BT_HCI_OP_LE_READ_MAX_DATA_LEN, NULL,
                                    &rsp);
-
         if (err) {
             return err;
         }
@@ -167,7 +160,6 @@ static int blhast_ble_reset(void)
 
         buf = bt_hci_cmd_create(BT_HCI_OP_LE_WRITE_DEFAULT_DATA_LEN,
                                 sizeof(*cp));
-
         if (!buf) {
             return -ENOBUFS;
         }
@@ -178,7 +170,6 @@ static int blhast_ble_reset(void)
 
         err = bt_hci_cmd_send_sync(BT_HCI_OP_LE_WRITE_DEFAULT_DATA_LEN,
                                    buf, NULL);
-
         if (err) {
             return err;
         }
@@ -198,7 +189,6 @@ static int blhast_br_reset(void)
 
     /* Set SSP mode */
     buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_SSP_MODE, sizeof(*ssp_cp));
-
     if (!buf) {
         return -ENOBUFS;
     }
@@ -206,14 +196,12 @@ static int blhast_br_reset(void)
     ssp_cp = net_buf_add(buf, sizeof(*ssp_cp));
     ssp_cp->mode = 0x01;
     err = bt_hci_cmd_send_sync(BT_HCI_OP_WRITE_SSP_MODE, buf, NULL);
-
     if (err) {
         return err;
     }
 
     /* Enable Inquiry results with RSSI or extended Inquiry */
     buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_INQUIRY_MODE, sizeof(*inq_cp));
-
     if (!buf) {
         return -ENOBUFS;
     }
@@ -221,14 +209,12 @@ static int blhast_br_reset(void)
     inq_cp = net_buf_add(buf, sizeof(*inq_cp));
     inq_cp->mode = 0x02;
     err = bt_hci_cmd_send_sync(BT_HCI_OP_WRITE_INQUIRY_MODE, buf, NULL);
-
     if (err) {
         return err;
     }
 
     /* Set local name */
     buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_LOCAL_NAME, sizeof(*name_cp));
-
     if (!buf) {
         return -ENOBUFS;
     }
@@ -238,14 +224,12 @@ static int blhast_br_reset(void)
             sizeof(name_cp->local_name));
 
     err = bt_hci_cmd_send_sync(BT_HCI_OP_WRITE_LOCAL_NAME, buf, NULL);
-
     if (err) {
         return err;
     }
 
     /* Set page timeout*/
     buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_PAGE_TIMEOUT, sizeof(u16_t));
-
     if (!buf) {
         return -ENOBUFS;
     }
@@ -253,7 +237,6 @@ static int blhast_br_reset(void)
     net_buf_add_le16(buf, CONFIG_BT_PAGE_TIMEOUT);
 
     err = bt_hci_cmd_send_sync(BT_HCI_OP_WRITE_PAGE_TIMEOUT, buf, NULL);
-
     if (err) {
         return err;
     }
@@ -264,7 +247,6 @@ static int blhast_br_reset(void)
 
         buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_SC_HOST_SUPP,
                                 sizeof(*sc_cp));
-
         if (!buf) {
             return -ENOBUFS;
         }
@@ -274,7 +256,6 @@ static int blhast_br_reset(void)
 
         err = bt_hci_cmd_send_sync(BT_HCI_OP_WRITE_SC_HOST_SUPP, buf,
                                    NULL);
-
         if (err) {
             return err;
         }
@@ -297,25 +278,20 @@ static int blhast_host_hci_reset(void)
     }
 
     err = blhast_ble_reset();
-
     if (err) {
         return err;
     }
 
 #if defined(CONFIG_BT_BREDR)
-
     if (BT_FEAT_BREDR(bt_dev.features)) {
         err = blhast_br_reset();
-
         if (err) {
             return err;
         }
     }
-
 #endif
 
     err = bt_set_event_mask();
-
     if (err) {
         return err;
     }
@@ -342,24 +318,20 @@ static void blhast_host_state_restore(void)
     atomic_set_bit(bt_dev.flags, BT_DEV_ASSIST_RUN);
 
 #if defined(CONFIG_BT_OBSERVER)
-
     if (atomic_test_bit(bt_dev.flags, BT_DEV_EXPLICIT_SCAN)) {
         BT_WARN("Restore BLE scan\r\n");
         atomic_clear_bit(bt_dev.flags, BT_DEV_EXPLICIT_SCAN);
         atomic_clear_bit(bt_dev.flags, BT_DEV_SCANNING);
         bt_le_scan_start((const struct bt_le_scan_param *)&blhast_le_scan_param, blhast_le_scan_cb);
     }
-
 #endif
 
     if (atomic_test_and_clear_bit(bt_dev.flags, BT_DEV_ADVERTISING)) {
         BT_WARN("Restore BLE advertising\r\n");
-
         if (blhast_le_ad.ad_len > 0) {
             ad = k_malloc(sizeof(struct bt_data) * blhast_le_ad.ad_len);
             blhast_ble_construct_ad(&blhast_le_ad, ad);
         }
-
         if (blhast_le_sd.ad_len > 0) {
             sd = k_malloc(sizeof(struct bt_data) * blhast_le_sd.ad_len);
             blhast_ble_construct_ad(&blhast_le_sd, sd);
@@ -368,13 +340,10 @@ static void blhast_host_state_restore(void)
         bt_le_adv_start((const struct bt_le_adv_param *)&blhast_le_adv_param, ad,
                         blhast_le_ad.ad_len, sd, blhast_le_sd.ad_len);
 
-        if (ad) {
+        if (ad)
             k_free(ad);
-        }
-
-        if (sd) {
+        if (sd)
             k_free(sd);
-        }
     }
 
     atomic_clear_bit(bt_dev.flags, BT_DEV_ASSIST_RUN);

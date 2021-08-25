@@ -43,17 +43,16 @@ static int ah(const u8_t irk[16], const u8_t r[3], u8_t out[3])
     (void)memset(res + 3, 0, 13);
 
     err = bt_encrypt_le(irk, res, res);
-
     if (err) {
         return err;
     }
 
     /* The output of the random address function ah is:
-     *      ah(h, r) = e(k, r') mod 2^24
-     * The output of the security function e is then truncated to 24 bits
-     * by taking the least significant 24 bits of the output of e as the
-     * result of ah.
-     */
+	 *      ah(h, r) = e(k, r') mod 2^24
+	 * The output of the security function e is then truncated to 24 bits
+	 * by taking the least significant 24 bits of the output of e as the
+	 * result of ah.
+	 */
     memcpy(out, res, 3);
 
     return 0;
@@ -69,7 +68,6 @@ bool bt_rpa_irk_matches(const u8_t irk[16], const bt_addr_t *addr)
     BT_DBG("IRK %s bdaddr %s", bt_hex(irk, 16), bt_addr_str(addr));
 
     err = ah(irk, addr->val + 3, hash);
-
     if (err) {
         return false;
     }
@@ -84,7 +82,6 @@ int bt_rpa_create(const u8_t irk[16], bt_addr_t *rpa)
     int err;
 
     err = bt_rand(rpa->val + 3, 3);
-
     if (err) {
         return err;
     }
@@ -92,7 +89,6 @@ int bt_rpa_create(const u8_t irk[16], bt_addr_t *rpa)
     BT_ADDR_SET_RPA(rpa);
 
     err = ah(irk, rpa->val + 3, rpa->val);
-
     if (err) {
         return err;
     }

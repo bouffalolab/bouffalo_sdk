@@ -53,7 +53,7 @@ Declarations of codec functions, data types, and macros.
 #define SBC_MAX_CHANNELS        2
 #define SBC_MAX_BANDS           8
 #define SBC_MAX_BLOCKS          16
-#define SBC_MIN_BITPOOL         2 /**< Minimum size of the bit allocation pool used to encode the stream */
+#define SBC_MIN_BITPOOL         2   /**< Minimum size of the bit allocation pool used to encode the stream */
 #define SBC_MAX_BITPOOL         250 /**< Maximum size of the bit allocation pool used to encode the stream */
 #define SBC_MAX_ONE_CHANNEL_BPS 320000
 #define SBC_MAX_TWO_CHANNEL_BPS 512000
@@ -125,8 +125,7 @@ Declarations of codec functions, data types, and macros.
 typedef OI_INT16 SBC_BUFFER_T;
 
 /** Used internally. */
-typedef struct
-{
+typedef struct {
     OI_UINT16 frequency; /**< The sampling frequency. Input parameter. */
     OI_UINT8 freqIndex;
 
@@ -152,8 +151,7 @@ typedef struct
 } OI_CODEC_SBC_FRAME_INFO;
 
 /** Used internally. */
-typedef struct
-{
+typedef struct {
     const OI_CHAR *codecInfo;
     OI_CODEC_SBC_FRAME_INFO frameInfo;
     OI_INT8 scale_factor[SBC_MAX_CHANNELS * SBC_MAX_BANDS];
@@ -192,8 +190,7 @@ typedef struct
      sizeof(OI_UINT32))
 
 /** Opaque parameter to decoding functions; maintains decoder context. */
-typedef struct
-{
+typedef struct {
     OI_CODEC_SBC_COMMON_CONTEXT common;
     OI_UINT8 limitFrameFormat; /* Boolean, set by OI_CODEC_SBC_DecoderLimit() */
     OI_UINT8 restrictSubbands;
@@ -202,13 +199,11 @@ typedef struct
     OI_UINT8 sbc_mode; /* OI_SBC_MODE_STD or OI_SBC_MODE_MSBC */
 } OI_CODEC_SBC_DECODER_CONTEXT;
 
-typedef struct
-{
+typedef struct {
     OI_UINT32 data[CODEC_DATA_WORDS(1, SBC_CODEC_FAST_FILTER_BUFFERS)];
 } OI_CODEC_SBC_CODEC_DATA_MONO;
 
-typedef struct
-{
+typedef struct {
     OI_UINT32 data[CODEC_DATA_WORDS(2, SBC_CODEC_FAST_FILTER_BUFFERS)];
 } OI_CODEC_SBC_CODEC_DATA_STEREO;
 

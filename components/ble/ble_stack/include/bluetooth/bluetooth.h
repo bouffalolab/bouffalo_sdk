@@ -251,50 +251,50 @@ enum {
     BT_LE_ADV_OPT_NONE = 0,
 
     /** Advertise as connectable. Type of advertising is determined by
-     * providing SCAN_RSP data and/or enabling local privacy support.
-     */
+	 * providing SCAN_RSP data and/or enabling local privacy support.
+	 */
     BT_LE_ADV_OPT_CONNECTABLE = BIT(0),
 
     /** Don't try to resume connectable advertising after a connection.
-     *  This option is only meaningful when used together with
-     *  BT_LE_ADV_OPT_CONNECTABLE. If set the advertising will be stopped
-     *  when bt_le_adv_stop() is called or when an incoming (slave)
-     *  connection happens. If this option is not set the stack will
-     *  take care of keeping advertising enabled even as connections
-     *  occur.
-     */
+	 *  This option is only meaningful when used together with
+	 *  BT_LE_ADV_OPT_CONNECTABLE. If set the advertising will be stopped
+	 *  when bt_le_adv_stop() is called or when an incoming (slave)
+	 *  connection happens. If this option is not set the stack will
+	 *  take care of keeping advertising enabled even as connections
+	 *  occur.
+	 */
     /* if defined CONFIG_BLE_MULTI_ADV , Only support adv one time.*/
     BT_LE_ADV_OPT_ONE_TIME = BIT(1),
 
     /** Advertise using the identity address as the own address.
-     *  @warning This will compromise the privacy of the device, so care
-     *           must be taken when using this option.
-     */
+	 *  @warning This will compromise the privacy of the device, so care
+	 *           must be taken when using this option.
+	 */
     BT_LE_ADV_OPT_USE_IDENTITY = BIT(2),
 
     /** Advertise using GAP device name */
     BT_LE_ADV_OPT_USE_NAME = BIT(3),
 
     /** Use low duty directed advertising mode, otherwise high duty mode
-     *  will be used. This option is only effective when used with
-     *  bt_conn_create_slave_le().
-     */
+	 *  will be used. This option is only effective when used with
+	 *  bt_conn_create_slave_le().
+	 */
     BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY = BIT(4),
 
     /** Enable use of Resolvable Private Address (RPA) as the target address
-     *  in directed advertisements when CONFIG_BT_PRIVACY is not enabled.
-     *  This is required if the remote device is privacy-enabled and
-     *  supports address resolution of the target address in directed
-     *  advertisement.
-     *  It is the responsibility of the application to check that the remote
-     *  device supports address resolution of directed advertisements by
-     *  reading its Central Address Resolution characteristic.
-     */
+	 *  in directed advertisements when CONFIG_BT_PRIVACY is not enabled.
+	 *  This is required if the remote device is privacy-enabled and
+	 *  supports address resolution of the target address in directed
+	 *  advertisement.
+	 *  It is the responsibility of the application to check that the remote
+	 *  device supports address resolution of directed advertisements by
+	 *  reading its Central Address Resolution characteristic.
+	 */
     BT_LE_ADV_OPT_DIR_ADDR_RPA = BIT(5),
 
     /** Use whitelist to filter devices that can request scan response
-     *  data.
-     */
+	 *  data.
+	 */
     BT_LE_ADV_OPT_FILTER_SCAN_REQ = BIT(6),
 
     /** Use whitelist to filter devices that can connect. */
@@ -371,10 +371,10 @@ struct bt_le_adv_param {
  *
  *  @return Zero on success or (negative) error code otherwise.
  *  @return -ECONNREFUSED When connectable advertising is requested and there
- *            is already maximum number of connections established.
- *            This error code is only guaranteed when using Zephyr
- *            controller, for other controllers code returned in
- *            this case may be -EIO.
+ *			  is already maximum number of connections established.
+ *			  This error code is only guaranteed when using Zephyr
+ *			  controller, for other controllers code returned in
+ *			  this case may be -EIO.
  */
 int bt_le_adv_start(const struct bt_le_adv_param *param,
                     const struct bt_data *ad, size_t ad_len,
@@ -588,8 +588,8 @@ struct bt_le_oob_sc_data {
 /** General OOB data. */
 struct bt_le_oob {
     /** LE address. If local privacy is enabled this is Resolvable Private
-     *  Address.
-     */
+	 *  Address.
+	 */
     bt_addr_le_t addr;
 
     /** OOB data that are relevant for LESC pairing. */
@@ -649,8 +649,8 @@ typedef void bt_br_discovery_cb_t(struct bt_br_discovery_result *results,
 /** BR/EDR discovery parameters */
 struct bt_br_discovery_param {
     /** Maximum length of the discovery in units of 1.28 seconds.
-     *  Valid range is 0x01 - 0x30.
-     */
+	 *  Valid range is 0x01 - 0x30.
+	 */
     u8_t length;
 
     /** True if limited discovery procedure is to be used. */
@@ -760,19 +760,15 @@ static inline int bt_addr_le_to_str(const bt_addr_le_t *addr, char *str,
         case BT_ADDR_LE_PUBLIC:
             strcpy(type, "public");
             break;
-
         case BT_ADDR_LE_RANDOM:
             strcpy(type, "random");
             break;
-
         case BT_ADDR_LE_PUBLIC_ID:
             strcpy(type, "public-id");
             break;
-
         case BT_ADDR_LE_RANDOM_ID:
             strcpy(type, "random-id");
             break;
-
         default:
             snprintk(type, sizeof(type), "0x%02x", addr->type);
             break;

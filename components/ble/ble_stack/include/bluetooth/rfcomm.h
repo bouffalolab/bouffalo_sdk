@@ -38,29 +38,29 @@ struct bt_rfcomm_dlc;
 /** @brief RFCOMM DLC operations structure. */
 struct bt_rfcomm_dlc_ops {
     /** DLC connected callback
-     *
-     *  If this callback is provided it will be called whenever the
-     *  connection completes.
-     *
-     *  @param dlc The dlc that has been connected
-     */
+	 *
+	 *  If this callback is provided it will be called whenever the
+	 *  connection completes.
+	 *
+	 *  @param dlc The dlc that has been connected
+	 */
     void (*connected)(struct bt_rfcomm_dlc *dlc);
 
     /** DLC disconnected callback
-     *
-     *  If this callback is provided it will be called whenever the
-     *  dlc is disconnected, including when a connection gets
-     *  rejected or cancelled (both incoming and outgoing)
-     *
-     *  @param dlc The dlc that has been Disconnected
-     */
+	 *
+	 *  If this callback is provided it will be called whenever the
+	 *  dlc is disconnected, including when a connection gets
+	 *  rejected or cancelled (both incoming and outgoing)
+	 *
+	 *  @param dlc The dlc that has been Disconnected
+	 */
     void (*disconnected)(struct bt_rfcomm_dlc *dlc);
 
     /** DLC recv callback
-     *
-     *  @param dlc The dlc receiving data.
-     *  @param buf Buffer containing incoming data.
-     */
+	 *
+	 *  @param dlc The dlc receiving data.
+	 *  @param buf Buffer containing incoming data.
+	 */
     void (*recv)(struct bt_rfcomm_dlc *dlc, struct net_buf *buf);
 };
 
@@ -104,15 +104,15 @@ struct bt_rfcomm_server {
     uint8_t channel;
 
     /** Server accept callback
-     *
-     *  This callback is called whenever a new incoming connection requires
-     *  authorization.
-     *
-     *  @param conn The connection that is requesting authorization
-     *  @param dlc Pointer to received the allocated dlc
-     *
-     *  @return 0 in case of success or negative value in case of error.
-     */
+	 *
+	 *  This callback is called whenever a new incoming connection requires
+	 *  authorization.
+	 *
+	 *  @param conn The connection that is requesting authorization
+	 *  @param dlc Pointer to received the allocated dlc
+	 *
+	 *  @return 0 in case of success or negative value in case of error.
+	 */
     int (*accept)(struct bt_conn *conn, struct bt_rfcomm_dlc **dlc);
 
     struct bt_rfcomm_server *_next;

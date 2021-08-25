@@ -61,7 +61,6 @@ int tc_cbc_mode_encrypt(uint8_t *out, unsigned int outlen, const uint8_t *in,
 
     for (n = m = 0; n < inlen; ++n) {
         buffer[m++] ^= *in++;
-
         if (m == TC_AES_BLOCK_SIZE) {
             (void)tc_aes_encrypt(buffer, buffer, sched);
             (void)_copy(out, TC_AES_BLOCK_SIZE,
@@ -95,19 +94,17 @@ int tc_cbc_mode_decrypt(uint8_t *out, unsigned int outlen, const uint8_t *in,
     }
 
     /*
-     * Note that in == iv + ciphertext, i.e. the iv and the ciphertext are
-     * contiguous. This allows for a very efficient decryption algorithm
-     * that would not otherwise be possible.
-     */
+	 * Note that in == iv + ciphertext, i.e. the iv and the ciphertext are
+	 * contiguous. This allows for a very efficient decryption algorithm
+	 * that would not otherwise be possible.
+	 */
     p = iv;
-
     for (n = m = 0; n < outlen; ++n) {
         if ((n % TC_AES_BLOCK_SIZE) == 0) {
             (void)tc_aes_decrypt(buffer, in, sched);
             in += TC_AES_BLOCK_SIZE;
             m = 0;
         }
-
         *out++ = buffer[m++] ^ *p++;
     }
 

@@ -99,7 +99,7 @@ static inline void bt_buf_set_type(struct net_buf *buf, enum bt_buf_type type)
     *(u8_t *)net_buf_user_data(buf) = type;
 }
 
-#if defined(OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER)
+#if defined(BFLB_BLE)
 static inline void bt_buf_set_rx_adv(struct net_buf *buf, bool is_adv)
 {
     u8_t *usr_data = (u8_t *)net_buf_user_data(buf);
@@ -124,11 +124,11 @@ static inline u8_t bt_buf_check_rx_adv(struct net_buf *buf)
 static inline enum bt_buf_type bt_buf_get_type(struct net_buf *buf)
 {
     /* De-referencing the pointer from net_buf_user_data(buf) as a
-     * pointer to an enum causes issues on qemu_x86 because the true
-     * size is 8-bit, but the enum is 32-bit on qemu_x86. So we put in
-     * a temporary cast to 8-bit to ensure only 8 bits are read from
-     * the pointer.
-     */
+	 * pointer to an enum causes issues on qemu_x86 because the true
+	 * size is 8-bit, but the enum is 32-bit on qemu_x86. So we put in
+	 * a temporary cast to 8-bit to ensure only 8 bits are read from
+	 * the pointer.
+	 */
     return (enum bt_buf_type)(*(u8_t *)net_buf_user_data(buf));
 }
 

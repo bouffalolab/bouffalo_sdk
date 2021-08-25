@@ -151,8 +151,8 @@ struct bt_conn_le_info {
     /** Source (Local) Identity Address */
     const bt_addr_le_t *src;
     /** Destination (Remote) Identity Address or remote Resolvable Private
-     *  Address (RPA) before identity has been resolved.
-     */
+	 *  Address (RPA) before identity has been resolved.
+	 */
     const bt_addr_le_t *dst;
     /** Local device address used during connection setup. */
     const bt_addr_le_t *local;
@@ -331,8 +331,8 @@ typedef enum __packed {
     BT_SECURITY_FIPS __deprecated = BT_SECURITY_L4,
 
     /** Bit to force new pairing procedure, bit-wise OR with requested
-     *  security level.
-     */
+	 *  security level.
+	 */
     BT_SECURITY_FORCE_PAIR = BIT(7),
 } bt_security_t;
 
@@ -425,95 +425,95 @@ enum bt_security_err {
  */
 struct bt_conn_cb {
     /** @brief A new connection has been established.
-     *
-     *  This callback notifies the application of a new connection.
-     *  In case the err parameter is non-zero it means that the
-     *  connection establishment failed.
-     *
-     *  @param conn New connection object.
-     *  @param err HCI error. Zero for success, non-zero otherwise.
-     *
-     *  @p err can mean either of the following:
-     *  - @ref BT_HCI_ERR_UNKNOWN_CONN_ID Creating the connection started by
-     *    @ref bt_conn_create_le was canceled either by the user through
-     *    @ref bt_conn_disconnect or by the timeout in the host through
-     *    :option:`CONFIG_BT_CREATE_CONN_TIMEOUT`.
-     *  - @p BT_HCI_ERR_ADV_TIMEOUT Directed advertiser started by @ref
-     *    bt_conn_create_slave_le with high duty cycle timed out after 1.28
-     *    seconds.
-     */
+	 *
+	 *  This callback notifies the application of a new connection.
+	 *  In case the err parameter is non-zero it means that the
+	 *  connection establishment failed.
+	 *
+	 *  @param conn New connection object.
+	 *  @param err HCI error. Zero for success, non-zero otherwise.
+	 *
+	 *  @p err can mean either of the following:
+	 *  - @ref BT_HCI_ERR_UNKNOWN_CONN_ID Creating the connection started by
+	 *    @ref bt_conn_create_le was canceled either by the user through
+	 *    @ref bt_conn_disconnect or by the timeout in the host through
+	 *    :option:`CONFIG_BT_CREATE_CONN_TIMEOUT`.
+	 *  - @p BT_HCI_ERR_ADV_TIMEOUT Directed advertiser started by @ref
+	 *    bt_conn_create_slave_le with high duty cycle timed out after 1.28
+	 *    seconds.
+	 */
     void (*connected)(struct bt_conn *conn, u8_t err);
 
     /** @brief A connection has been disconnected.
-     *
-     *  This callback notifies the application that a connection
-     *  has been disconnected.
-     *
-     *  @param conn Connection object.
-     *  @param reason HCI reason for the disconnection.
-     */
+	 *
+	 *  This callback notifies the application that a connection
+	 *  has been disconnected.
+	 *
+	 *  @param conn Connection object.
+	 *  @param reason HCI reason for the disconnection.
+	 */
     void (*disconnected)(struct bt_conn *conn, u8_t reason);
 
     /** @brief LE connection parameter update request.
-     *
-     *  This callback notifies the application that a remote device
-     *  is requesting to update the connection parameters. The
-     *  application accepts the parameters by returning true, or
-     *  rejects them by returning false. Before accepting, the
-     *  application may also adjust the parameters to better suit
-     *  its needs.
-     *
-     *  It is recommended for an application to have just one of these
-     *  callbacks for simplicity. However, if an application registers
-     *  multiple it needs to manage the potentially different
-     *  requirements for each callback. Each callback gets the
-     *  parameters as returned by previous callbacks, i.e. they are not
-     *  necessarily the same ones as the remote originally sent.
-     *
-     *  @param conn Connection object.
-     *  @param param Proposed connection parameters.
-     *
-     *  @return true to accept the parameters, or false to reject them.
-     */
+	 *
+	 *  This callback notifies the application that a remote device
+	 *  is requesting to update the connection parameters. The
+	 *  application accepts the parameters by returning true, or
+	 *  rejects them by returning false. Before accepting, the
+	 *  application may also adjust the parameters to better suit
+	 *  its needs.
+	 *
+	 *  It is recommended for an application to have just one of these
+	 *  callbacks for simplicity. However, if an application registers
+	 *  multiple it needs to manage the potentially different
+	 *  requirements for each callback. Each callback gets the
+	 *  parameters as returned by previous callbacks, i.e. they are not
+	 *  necessarily the same ones as the remote originally sent.
+	 *
+	 *  @param conn Connection object.
+	 *  @param param Proposed connection parameters.
+	 *
+	 *  @return true to accept the parameters, or false to reject them.
+	 */
     bool (*le_param_req)(struct bt_conn *conn,
                          struct bt_le_conn_param *param);
 
     /** @brief The parameters for an LE connection have been updated.
-     *
-     *  This callback notifies the application that the connection
-     *  parameters for an LE connection have been updated.
-     *
-     *  @param conn Connection object.
-     *  @param interval Connection interval.
-     *  @param latency Connection latency.
-     *  @param timeout Connection supervision timeout.
-     */
+	 *
+	 *  This callback notifies the application that the connection
+	 *  parameters for an LE connection have been updated.
+	 *
+	 *  @param conn Connection object.
+	 *  @param interval Connection interval.
+	 *  @param latency Connection latency.
+	 *  @param timeout Connection supervision timeout.
+	 */
     void (*le_param_updated)(struct bt_conn *conn, u16_t interval,
                              u16_t latency, u16_t timeout);
 #if defined(CONFIG_BT_SMP)
     /** @brief Remote Identity Address has been resolved.
-     *
-     *  This callback notifies the application that a remote
-     *  Identity Address has been resolved
-     *
-     *  @param conn Connection object.
-     *  @param rpa Resolvable Private Address.
-     *  @param identity Identity Address.
-     */
+	 *
+	 *  This callback notifies the application that a remote
+	 *  Identity Address has been resolved
+	 *
+	 *  @param conn Connection object.
+	 *  @param rpa Resolvable Private Address.
+	 *  @param identity Identity Address.
+	 */
     void (*identity_resolved)(struct bt_conn *conn,
                               const bt_addr_le_t *rpa,
                               const bt_addr_le_t *identity);
 #endif /* CONFIG_BT_SMP */
 #if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
     /** @brief The security level of a connection has changed.
-     *
-     *  This callback notifies the application that the security level
-     *  of a connection has changed.
-     *
-     *  @param conn Connection object.
-     *  @param level New security level of the connection.
-     *  @param err Security error. Zero for success, non-zero otherwise.
-     */
+	 *
+	 *  This callback notifies the application that the security level
+	 *  of a connection has changed.
+	 *
+	 *  @param conn Connection object.
+	 *  @param level New security level of the connection.
+	 *  @param err Security error. Zero for success, non-zero otherwise.
+	 */
     void (*security_changed)(struct bt_conn *conn, bt_security_t level,
                              enum bt_security_err err);
 #endif /* defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR) */
@@ -644,8 +644,7 @@ struct bt_conn_oob_info {
 
     union {
         /** LESC OOB pairing parameters */
-        struct
-        {
+        struct {
             /** OOB data configuration */
             enum {
                 /** Local OOB data requested */
@@ -667,157 +666,157 @@ struct bt_conn_oob_info {
 /** Authenticated pairing callback structure */
 struct bt_conn_auth_cb {
     /** @brief Display a passkey to the user.
-     *
-     *  When called the application is expected to display the given
-     *  passkey to the user, with the expectation that the passkey will
-     *  then be entered on the peer device. The passkey will be in the
-     *  range of 0 - 999999, and is expected to be padded with zeroes so
-     *  that six digits are always shown. E.g. the value 37 should be
-     *  shown as 000037.
-     *
-     *  This callback may be set to NULL, which means that the local
-     *  device lacks the ability do display a passkey. If set
-     *  to non-NULL the cancel callback must also be provided, since
-     *  this is the only way the application can find out that it should
-     *  stop displaying the passkey.
-     *
-     *  @param conn Connection where pairing is currently active.
-     *  @param passkey Passkey to show to the user.
-     */
+	 *
+	 *  When called the application is expected to display the given
+	 *  passkey to the user, with the expectation that the passkey will
+	 *  then be entered on the peer device. The passkey will be in the
+	 *  range of 0 - 999999, and is expected to be padded with zeroes so
+	 *  that six digits are always shown. E.g. the value 37 should be
+	 *  shown as 000037.
+	 *
+	 *  This callback may be set to NULL, which means that the local
+	 *  device lacks the ability do display a passkey. If set
+	 *  to non-NULL the cancel callback must also be provided, since
+	 *  this is the only way the application can find out that it should
+	 *  stop displaying the passkey.
+	 *
+	 *  @param conn Connection where pairing is currently active.
+	 *  @param passkey Passkey to show to the user.
+	 */
     void (*passkey_display)(struct bt_conn *conn, unsigned int passkey);
 
     /** @brief Request the user to enter a passkey.
-     *
-     *  When called the user is expected to enter a passkey. The passkey
-     *  must be in the range of 0 - 999999, and should be expected to
-     *  be zero-padded, as that's how the peer device will typically be
-     *  showing it (e.g. 37 would be shown as 000037).
-     *
-     *  Once the user has entered the passkey its value should be given
-     *  to the stack using the bt_conn_auth_passkey_entry() API.
-     *
-     *  This callback may be set to NULL, which means that the local
-     *  device lacks the ability to enter a passkey. If set to non-NULL
-     *  the cancel callback must also be provided, since this is the
-     *  only way the application can find out that it should stop
-     *  requesting the user to enter a passkey.
-     *
-     *  @param conn Connection where pairing is currently active.
-     */
+	 *
+	 *  When called the user is expected to enter a passkey. The passkey
+	 *  must be in the range of 0 - 999999, and should be expected to
+	 *  be zero-padded, as that's how the peer device will typically be
+	 *  showing it (e.g. 37 would be shown as 000037).
+	 *
+	 *  Once the user has entered the passkey its value should be given
+	 *  to the stack using the bt_conn_auth_passkey_entry() API.
+	 *
+	 *  This callback may be set to NULL, which means that the local
+	 *  device lacks the ability to enter a passkey. If set to non-NULL
+	 *  the cancel callback must also be provided, since this is the
+	 *  only way the application can find out that it should stop
+	 *  requesting the user to enter a passkey.
+	 *
+	 *  @param conn Connection where pairing is currently active.
+	 */
     void (*passkey_entry)(struct bt_conn *conn);
 
     /** @brief Request the user to confirm a passkey.
-     *
-     *  When called the user is expected to confirm that the given
-     *  passkey is also shown on the peer device.. The passkey will
-     *  be in the range of 0 - 999999, and should be zero-padded to
-     *  always be six digits (e.g. 37 would be shown as 000037).
-     *
-     *  Once the user has confirmed the passkey to match, the
-     *  bt_conn_auth_passkey_confirm() API should be called. If the
-     *  user concluded that the passkey doesn't match the
-     *  bt_conn_auth_cancel() API should be called.
-     *
-     *  This callback may be set to NULL, which means that the local
-     *  device lacks the ability to confirm a passkey. If set to non-NULL
-     *  the cancel callback must also be provided, since this is the
-     *  only way the application can find out that it should stop
-     *  requesting the user to confirm a passkey.
-     *
-     *  @param conn Connection where pairing is currently active.
-     *  @param passkey Passkey to be confirmed.
-     */
+	 *
+	 *  When called the user is expected to confirm that the given
+	 *  passkey is also shown on the peer device.. The passkey will
+	 *  be in the range of 0 - 999999, and should be zero-padded to
+	 *  always be six digits (e.g. 37 would be shown as 000037).
+	 *
+	 *  Once the user has confirmed the passkey to match, the
+	 *  bt_conn_auth_passkey_confirm() API should be called. If the
+	 *  user concluded that the passkey doesn't match the
+	 *  bt_conn_auth_cancel() API should be called.
+	 *
+	 *  This callback may be set to NULL, which means that the local
+	 *  device lacks the ability to confirm a passkey. If set to non-NULL
+	 *  the cancel callback must also be provided, since this is the
+	 *  only way the application can find out that it should stop
+	 *  requesting the user to confirm a passkey.
+	 *
+	 *  @param conn Connection where pairing is currently active.
+	 *  @param passkey Passkey to be confirmed.
+	 */
     void (*passkey_confirm)(struct bt_conn *conn, unsigned int passkey);
 
     /** @brief Request the user to provide OOB data.
-     *
-     *  When called the user is expected to provide OOB data. The required
-     *  data are indicated by the information structure.
-     *
-     *  For LESC OOB pairing method, the user should provide local OOB data,
-     *  remote OOB data or both depending on their availability. Their value
-     *  should be given to the stack using the bt_le_oob_set_sc_data() API.
-     *
-     *  This callback must be set to non-NULL in order to support OOB
-     *  pairing.
-     *
-     *  @param conn Connection where pairing is currently active.
-     *  @param info OOB pairing information.
-     */
+	 *
+	 *  When called the user is expected to provide OOB data. The required
+	 *  data are indicated by the information structure.
+	 *
+	 *  For LESC OOB pairing method, the user should provide local OOB data,
+	 *  remote OOB data or both depending on their availability. Their value
+	 *  should be given to the stack using the bt_le_oob_set_sc_data() API.
+	 *
+	 *  This callback must be set to non-NULL in order to support OOB
+	 *  pairing.
+	 *
+	 *  @param conn Connection where pairing is currently active.
+	 *  @param info OOB pairing information.
+	 */
     void (*oob_data_request)(struct bt_conn *conn,
                              struct bt_conn_oob_info *info);
 
     /** @brief Cancel the ongoing user request.
-     *
-     *  This callback will be called to notify the application that it
-     *  should cancel any previous user request (passkey display, entry
-     *  or confirmation).
-     *
-     *  This may be set to NULL, but must always be provided whenever the
-     *  passkey_display, passkey_entry passkey_confirm or pairing_confirm
-     *  callback has been provided.
-     *
-     *  @param conn Connection where pairing is currently active.
-     */
+	 *
+	 *  This callback will be called to notify the application that it
+	 *  should cancel any previous user request (passkey display, entry
+	 *  or confirmation).
+	 *
+	 *  This may be set to NULL, but must always be provided whenever the
+	 *  passkey_display, passkey_entry passkey_confirm or pairing_confirm
+	 *  callback has been provided.
+	 *
+	 *  @param conn Connection where pairing is currently active.
+	 */
     void (*cancel)(struct bt_conn *conn);
 
     /** @brief Request confirmation for an incoming pairing.
-     *
-     *  This callback will be called to confirm an incoming pairing
-     *  request where none of the other user callbacks is applicable.
-     *
-     *  If the user decides to accept the pairing the
-     *  bt_conn_auth_pairing_confirm() API should be called. If the
-     *  user decides to reject the pairing the bt_conn_auth_cancel() API
-     *  should be called.
-     *
-     *  This callback may be set to NULL, which means that the local
-     *  device lacks the ability to confirm a pairing request. If set
-     *  to non-NULL the cancel callback must also be provided, since
-     *  this is the only way the application can find out that it should
-     *  stop requesting the user to confirm a pairing request.
-     *
-     *  @param conn Connection where pairing is currently active.
-     */
+	 *
+	 *  This callback will be called to confirm an incoming pairing
+	 *  request where none of the other user callbacks is applicable.
+	 *
+	 *  If the user decides to accept the pairing the
+	 *  bt_conn_auth_pairing_confirm() API should be called. If the
+	 *  user decides to reject the pairing the bt_conn_auth_cancel() API
+	 *  should be called.
+	 *
+	 *  This callback may be set to NULL, which means that the local
+	 *  device lacks the ability to confirm a pairing request. If set
+	 *  to non-NULL the cancel callback must also be provided, since
+	 *  this is the only way the application can find out that it should
+	 *  stop requesting the user to confirm a pairing request.
+	 *
+	 *  @param conn Connection where pairing is currently active.
+	 */
     void (*pairing_confirm)(struct bt_conn *conn);
 
 #if defined(CONFIG_BT_BREDR)
     /** @brief Request the user to enter a passkey.
-     *
-     *  This callback will be called for a BR/EDR (Bluetooth Classic)
-     *  connection where pairing is being performed. Once called the
-     *  user is expected to enter a PIN code with a length between
-     *  1 and 16 digits. If the @a highsec parameter is set to true
-     *  the PIN code must be 16 digits long.
-     *
-     *  Once entered, the PIN code should be given to the stack using
-     *  the bt_conn_auth_pincode_entry() API.
-     *
-     *  This callback may be set to NULL, however in that case pairing
-     *  over BR/EDR will not be possible. If provided, the cancel
-     *  callback must be provided as well.
-     *
-     *  @param conn Connection where pairing is currently active.
-     *  @param highsec true if 16 digit PIN is required.
-     */
+	 *
+	 *  This callback will be called for a BR/EDR (Bluetooth Classic)
+	 *  connection where pairing is being performed. Once called the
+	 *  user is expected to enter a PIN code with a length between
+	 *  1 and 16 digits. If the @a highsec parameter is set to true
+	 *  the PIN code must be 16 digits long.
+	 *
+	 *  Once entered, the PIN code should be given to the stack using
+	 *  the bt_conn_auth_pincode_entry() API.
+	 *
+	 *  This callback may be set to NULL, however in that case pairing
+	 *  over BR/EDR will not be possible. If provided, the cancel
+	 *  callback must be provided as well.
+	 *
+	 *  @param conn Connection where pairing is currently active.
+	 *  @param highsec true if 16 digit PIN is required.
+	 */
     void (*pincode_entry)(struct bt_conn *conn, bool highsec);
 #endif
 
     /** @brief notify that pairing process was complete.
-     *
-     * This callback notifies the application that the pairing process
-     * has been completed.
-     *
-     * @param conn Connection object.
-     * @param bonded pairing is bonded or not.
-     */
+	 *
+	 * This callback notifies the application that the pairing process
+	 * has been completed.
+	 *
+	 * @param conn Connection object.
+	 * @param bonded pairing is bonded or not.
+	 */
     void (*pairing_complete)(struct bt_conn *conn, bool bonded);
 
     /** @brief notify that pairing process has failed.
-     *
-     * @param conn Connection object.
-     * @param reason Pairing failed reason
-     */
+	 *
+	 * @param conn Connection object.
+	 * @param reason Pairing failed reason
+	 */
     void (*pairing_failed)(struct bt_conn *conn,
                            enum bt_security_err reason);
 };

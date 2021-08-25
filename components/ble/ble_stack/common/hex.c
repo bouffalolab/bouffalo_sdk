@@ -47,7 +47,6 @@ size_t bin2hex(const u8_t *buf, size_t buflen, char *hex, size_t hexlen)
         if (hex2char(buf[i] >> 4, &hex[2 * i]) < 0) {
             return 0;
         }
-
         if (hex2char(buf[i] & 0xf, &hex[2 * i + 1]) < 0) {
             return 0;
         }
@@ -70,7 +69,6 @@ size_t hex2bin(const char *hex, size_t hexlen, u8_t *buf, size_t buflen)
         if (char2hex(hex[0], &dec) < 0) {
             return 0;
         }
-
         buf[0] = dec;
         hex++;
         buf++;
@@ -81,13 +79,11 @@ size_t hex2bin(const char *hex, size_t hexlen, u8_t *buf, size_t buflen)
         if (char2hex(hex[2 * i], &dec) < 0) {
             return 0;
         }
-
         buf[i] = dec << 4;
 
         if (char2hex(hex[2 * i + 1], &dec) < 0) {
             return 0;
         }
-
         buf[i] += dec;
     }
 

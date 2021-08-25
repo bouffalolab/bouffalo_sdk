@@ -77,10 +77,10 @@ enum {
 /** @brief ISO Channel QoS structure. */
 struct bt_iso_chan_qos {
     /** @brief Channel direction
-     *
-     *  Possible values: BT_ISO_CHAN_QOS_IN, BT_ISO_CHAN_QOS_OUT or
-     *  BT_ISO_CHAN_QOS_INOUT.
-     */
+	 *
+	 *  Possible values: BT_ISO_CHAN_QOS_IN, BT_ISO_CHAN_QOS_OUT or
+	 *  BT_ISO_CHAN_QOS_INOUT.
+	 */
     uint8_t dir;
     /** Channel interval */
     uint32_t interval;
@@ -121,40 +121,40 @@ struct bt_iso_chan_path {
 /** @brief ISO Channel operations structure. */
 struct bt_iso_chan_ops {
     /** @brief Channel connected callback
-     *
-     *  If this callback is provided it will be called whenever the
-     *  connection completes.
-     *
-     *  @param chan The channel that has been connected
-     */
+	 *
+	 *  If this callback is provided it will be called whenever the
+	 *  connection completes.
+	 *
+	 *  @param chan The channel that has been connected
+	 */
     void (*connected)(struct bt_iso_chan *chan);
 
     /** @brief Channel disconnected callback
-     *
-     *  If this callback is provided it will be called whenever the
-     *  channel is disconnected, including when a connection gets
-     *  rejected.
-     *
-     *  @param chan The channel that has been Disconnected
-     */
+	 *
+	 *  If this callback is provided it will be called whenever the
+	 *  channel is disconnected, including when a connection gets
+	 *  rejected.
+	 *
+	 *  @param chan The channel that has been Disconnected
+	 */
     void (*disconnected)(struct bt_iso_chan *chan);
 
     /** @brief Channel alloc_buf callback
-     *
-     *  If this callback is provided the channel will use it to allocate
-     *  buffers to store incoming data.
-     *
-     *  @param chan The channel requesting a buffer.
-     *
-     *  @return Allocated buffer.
-     */
+	 *
+	 *  If this callback is provided the channel will use it to allocate
+	 *  buffers to store incoming data.
+	 *
+	 *  @param chan The channel requesting a buffer.
+	 *
+	 *  @return Allocated buffer.
+	 */
     struct net_buf *(*alloc_buf)(struct bt_iso_chan *chan);
 
     /** @brief Channel recv callback
-     *
-     *  @param chan The channel receiving data.
-     *  @param buf Buffer containing incoming data.
-     */
+	 *
+	 *  @param chan The channel receiving data.
+	 *  @param buf Buffer containing incoming data.
+	 */
     void (*recv)(struct bt_iso_chan *chan, struct net_buf *buf);
 };
 
@@ -164,15 +164,15 @@ struct bt_iso_server {
     bt_security_t sec_level;
 
     /** @brief Server accept callback
-     *
-     *  This callback is called whenever a new incoming connection requires
-     *  authorization.
-     *
-     *  @param conn The connection that is requesting authorization
-     *  @param chan Pointer to receive the allocated channel
-     *
-     *  @return 0 in case of success or negative value in case of error.
-     */
+	 *
+	 *  This callback is called whenever a new incoming connection requires
+	 *  authorization.
+	 *
+	 *  @param conn The connection that is requesting authorization
+	 *  @param chan Pointer to receive the allocated channel
+	 *
+	 *  @return 0 in case of success or negative value in case of error.
+	 */
     int (*accept)(struct bt_conn *conn, struct bt_iso_chan **chan);
 };
 

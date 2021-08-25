@@ -28,12 +28,10 @@ unsigned int find_msb_set(uint32_t data)
     if (!data) {
         return 0;
     }
-
     while ((data & mask) == 0) {
         count += 1u;
         mask = mask >> 1u;
     }
-
     return (32 - count);
 }
 
@@ -45,12 +43,10 @@ unsigned int find_lsb_set(uint32_t data)
     if (!data) {
         return 0;
     }
-
     while ((data & mask) == 0) {
         count += 1u;
         mask = mask << 1u;
     }
-
     return (1 + count);
 }
 
@@ -92,7 +88,6 @@ size_t bin2hex(const uint8_t *buf, size_t buflen, char *hex, size_t hexlen)
         if (hex2char(buf[i] >> 4, &hex[2 * i]) < 0) {
             return 0;
         }
-
         if (hex2char(buf[i] & 0xf, &hex[2 * i + 1]) < 0) {
             return 0;
         }
@@ -115,7 +110,6 @@ size_t hex2bin(const char *hex, size_t hexlen, uint8_t *buf, size_t buflen)
         if (char2hex(hex[0], &dec) < 0) {
             return 0;
         }
-
         buf[0] = dec;
         hex++;
         buf++;
@@ -126,13 +120,11 @@ size_t hex2bin(const char *hex, size_t hexlen, uint8_t *buf, size_t buflen)
         if (char2hex(hex[2 * i], &dec) < 0) {
             return 0;
         }
-
         buf[i] = dec << 4;
 
         if (char2hex(hex[2 * i + 1], &dec) < 0) {
             return 0;
         }
-
         buf[i] += dec;
     }
 

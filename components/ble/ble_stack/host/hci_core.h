@@ -89,8 +89,8 @@ struct bt_dev_le {
     /* Size of the the controller resolving list */
     u8_t rl_size;
     /* Number of entries in the resolving list. rl_entries > rl_size
-     * means that host-side resolving is used.
-     */
+	 * means that host-side resolving is used.
+	 */
     u8_t rl_entries;
 #endif /* CONFIG_BT_SMP */
 

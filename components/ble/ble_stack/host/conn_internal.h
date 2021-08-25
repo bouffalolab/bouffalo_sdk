@@ -133,8 +133,8 @@ struct bt_conn {
     /* Sent but not acknowledged TX packets with a callback */
     sys_slist_t tx_pending;
     /* Sent but not acknowledged TX packets without a callback before
-     * the next packet (if any) in tx_pending.
-     */
+	 * the next packet (if any) in tx_pending.
+	 */
     u32_t pending_no_cb;
 
     /* Completed TX for which we need to call the callback */
@@ -331,11 +331,11 @@ void bt_conn_process_tx(struct bt_conn *conn);
 
 #if defined(BFLB_BLE)
 /** @brief Get connection handle for a connection.
-    *
-    * @param conn Connection object.
-    * @param conn_handle Place to store the Connection handle.
-    *
-    * @return 0 on success or negative error value on failure.
-    */
+ *
+ * @param conn Connection object.
+ * @param conn_handle Place to store the Connection handle.
+ *
+ * @return 0 on success or negative error value on failure.
+ */
 int bt_hci_get_conn_handle(const struct bt_conn *conn, u16_t *conn_handle);
 #endif

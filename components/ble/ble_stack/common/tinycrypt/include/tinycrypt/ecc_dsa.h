@@ -118,7 +118,7 @@ int uECC_sign_with_k(const uint8_t *private_key, const uint8_t *message_hash,
 /**
  * @brief Verify an ECDSA signature.
  * @return returns TC_SUCCESS (1) if the signature is valid
- *     returns TC_FAIL (0) if the signature is invalid.
+ * 	   returns TC_FAIL (0) if the signature is invalid.
  *
  * @param p_public_key IN -- The signer's public key.
  * @param p_message_hash IN -- The hash of the signed data.

@@ -60,17 +60,17 @@ extern "C" {
  * @name  Maximum and minimum values for basic types
  * @{
  */
-#define OI_INT8_MIN   ((OI_INT8)0x80) /**< decimal value: -128 */
-#define OI_INT8_MAX   ((OI_INT8)0x7F) /**< decimal value: 127 */
-#define OI_INT16_MIN  ((OI_INT16)0x8000) /**< decimal value: -32768 */
-#define OI_INT16_MAX  ((OI_INT16)0x7FFF) /**< decimal value: 32767 */
-#define OI_INT32_MIN  ((OI_INT32)0x80000000) /**< decimal value: -2,147,483,648 */
-#define OI_INT32_MAX  ((OI_INT32)0x7FFFFFFF) /**< decimal value: 2,147,483,647 */
-#define OI_UINT8_MIN  ((OI_UINT8)0) /**< decimal value: 0 */
-#define OI_UINT8_MAX  ((OI_UINT8)0xFF) /**< decimal value: 255 */
-#define OI_UINT16_MIN ((OI_UINT16)0) /**< decimal value: 0 */
-#define OI_UINT16_MAX ((OI_UINT16)0xFFFF) /**< decimal value: 65535 */
-#define OI_UINT32_MIN ((OI_UINT32)0) /**< decimal value: 0 */
+#define OI_INT8_MIN   ((OI_INT8)0x80)         /**< decimal value: -128 */
+#define OI_INT8_MAX   ((OI_INT8)0x7F)         /**< decimal value: 127 */
+#define OI_INT16_MIN  ((OI_INT16)0x8000)      /**< decimal value: -32768 */
+#define OI_INT16_MAX  ((OI_INT16)0x7FFF)      /**< decimal value: 32767 */
+#define OI_INT32_MIN  ((OI_INT32)0x80000000)  /**< decimal value: -2,147,483,648 */
+#define OI_INT32_MAX  ((OI_INT32)0x7FFFFFFF)  /**< decimal value: 2,147,483,647 */
+#define OI_UINT8_MIN  ((OI_UINT8)0)           /**< decimal value: 0 */
+#define OI_UINT8_MAX  ((OI_UINT8)0xFF)        /**< decimal value: 255 */
+#define OI_UINT16_MIN ((OI_UINT16)0)          /**< decimal value: 0 */
+#define OI_UINT16_MAX ((OI_UINT16)0xFFFF)     /**< decimal value: 65535 */
+#define OI_UINT32_MIN ((OI_UINT32)0)          /**< decimal value: 0 */
 #define OI_UINT32_MAX ((OI_UINT32)0xFFFFFFFF) /**< decimal value: 4,294,967,295 */
 
 /**
@@ -83,8 +83,7 @@ extern "C" {
  */
 
 /** unsigned 64-bit integer as a structure of two unsigned 32-bit integers */
-typedef struct
-{
+typedef struct {
     OI_UINT32 I1; /**< most significant 32 bits */
     OI_UINT32 I2; /**< least significant 32 bits */
 } OI_UINT64;
@@ -99,8 +98,7 @@ typedef struct
     }
 
 /** signed 64-bit integer as a structure of one unsigned 32-bit integer and one signed 32-bit integer */
-typedef struct
-{
+typedef struct {
     OI_INT32 I1;  /**< most significant 32 bits  as a signed integer */
     OI_UINT32 I2; /**< least significant 32 bits as an unsigned integer */
 } OI_INT64;
@@ -115,8 +113,7 @@ typedef struct
     }
 
 /** unsigned 128-bit integer as a structure of four unsigned 32-bit integers */
-typedef struct
-{
+typedef struct {
     OI_UINT32 I1; /**< most significant 32 bits */
     OI_UINT32 I2; /**< second-most significant 32 bits */
     OI_UINT32 I3; /**< third-most significant 32 bits */
@@ -133,8 +130,7 @@ typedef struct
     }
 
 /** signed 128-bit integer as a structure of three unsigned 32-bit integers and one signed 32-bit integer */
-typedef struct
-{
+typedef struct {
     OI_INT32 I1;  /**< most significant 32 bits as a signed integer */
     OI_UINT32 I2; /**< second-most significant 32 bits as an unsigned integer */
     OI_UINT32 I3; /**< third-most significant 32 bits as an unsigned integer */

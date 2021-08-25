@@ -14,7 +14,6 @@ u8_t u8_to_dec(char *buf, u8_t buflen, u8_t value)
 
     while (buflen > 0 && divisor > 0) {
         digit = value / divisor;
-
         if (digit != 0 || divisor == 1 || num_digits != 0) {
             *buf = (char)digit + '0';
             buf++;

@@ -124,23 +124,24 @@ struct bt_l2cap_chan *bt_l2cap_br_lookup_tx_cid(struct bt_conn *conn,
     return NULL;
 }
 
-static struct bt_l2cap_br_chan *l2cap_br_chan_alloc_cid(struct bt_conn *conn, struct bt_l2cap_chan *chan)
+static struct bt_l2cap_br_chan *
+l2cap_br_chan_alloc_cid(struct bt_conn *conn, struct bt_l2cap_chan *chan)
 {
     struct bt_l2cap_br_chan *ch = BR_CHAN(chan);
     uint16_t cid;
 
     /*
-     * No action needed if there's already a CID allocated, e.g. in
-     * the case of a fixed channel.
-     */
+	 * No action needed if there's already a CID allocated, e.g. in
+	 * the case of a fixed channel.
+	 */
     if (ch->rx.cid > 0) {
         return ch;
     }
 
     /*
-     * L2CAP_BR_CID_DYN_END is 0xffff so we don't check against it since
-     * cid is uint16_t, just check against uint16_t overflow
-     */
+	 * L2CAP_BR_CID_DYN_END is 0xffff so we don't check against it since
+	 * cid is uint16_t, just check against uint16_t overflow
+	 */
     for (cid = L2CAP_BR_CID_DYN_START; cid; cid++) {
         if (!bt_l2cap_br_lookup_rx_cid(conn, cid)) {
             ch->rx.cid = cid;
@@ -187,12 +188,10 @@ static void l2cap_br_rtx_timeout(struct k_work *work)
         case BT_L2CAP_CONFIG:
             bt_l2cap_br_chan_disconnect(&chan->chan);
             break;
-
         case BT_L2CAP_DISCONNECT:
         case BT_L2CAP_CONNECT:
             l2cap_br_chan_cleanup(&chan->chan);
             break;
-
         default:
             break;
     }
@@ -219,7 +218,6 @@ static uint8_t l2cap_br_get_ident(void)
     static uint8_t ident;
 
     ident++;
-
     /* handle integer overflow (0 is not valid) */
     if (!ident) {
         ident++;
@@ -232,14 +230,14 @@ static void l2cap_br_chan_send_req(struct bt_l2cap_br_chan *chan,
                                    struct net_buf *buf, s32_t timeout)
 {
     /* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part A] page 126:
-     *
-     * The value of this timer is implementation-dependent but the minimum
-     * initial value is 1 second and the maximum initial value is 60
-     * seconds. One RTX timer shall exist for each outstanding signaling
-     * request, including each Echo Request. The timer disappears on the
-     * final expiration, when the response is received, or the physical
-     * link is lost.
-     */
+	 *
+	 * The value of this timer is implementation-dependent but the minimum
+	 * initial value is 1 second and the maximum initial value is 60
+	 * seconds. One RTX timer shall exist for each outstanding signaling
+	 * request, including each Echo Request. The timer disappears on the
+	 * final expiration, when the response is received, or the physical
+	 * link is lost.
+	 */
     k_delayed_work_submit(&chan->chan.rtx_work, timeout);
 
     bt_l2cap_send(chan->chan.conn, BT_L2CAP_CID_BR_SIG, buf);
@@ -261,7 +259,6 @@ static void l2cap_br_get_info(struct bt_l2cap_br *l2cap, uint16_t info_type)
         case BT_L2CAP_INFO_FEAT_MASK:
         case BT_L2CAP_INFO_FIXED_CHAN:
             break;
-
         default:
             BT_WARN("Unsupported info type %u", info_type);
             return;
@@ -302,7 +299,6 @@ static void connect_optional_fixed_channels(struct bt_l2cap_br *l2cap)
 
         chan = bt_l2cap_br_lookup_rx_cid(l2cap->chan.chan.conn,
                                          BT_L2CAP_CID_BR_SMP);
-
         if (chan) {
             connect_fixed_channel(BR_CHAN(chan));
         }
@@ -323,9 +319,9 @@ static int l2cap_br_info_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
     if (atomic_test_and_clear_bit(l2cap->chan.flags,
                                   L2CAP_FLAG_SIG_INFO_PENDING)) {
         /*
-         * Release RTX timer since got the response & there's pending
-         * command request.
-         */
+		 * Release RTX timer since got the response & there's pending
+		 * command request.
+		 */
         k_delayed_work_cancel(&l2cap->chan.chan.rtx_work);
     }
 
@@ -343,7 +339,6 @@ static int l2cap_br_info_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
 
     rsp = net_buf_pull_mem(buf, sizeof(*rsp));
     result = sys_le16_to_cpu(rsp->result);
-
     if (result != BT_L2CAP_INFO_SUCCESS) {
         BT_WARN("Result unsuccessful");
         err = -EINVAL;
@@ -363,7 +358,6 @@ static int l2cap_br_info_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
 
             l2cap_br_get_info(l2cap, BT_L2CAP_INFO_FIXED_CHAN);
             return 0;
-
         case BT_L2CAP_INFO_FIXED_CHAN:
             l2cap->info_fixed_chan = net_buf_pull_u8(buf);
             BT_DBG("remote fixed channel mask 0x%02x",
@@ -372,13 +366,11 @@ static int l2cap_br_info_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
             connect_optional_fixed_channels(l2cap);
 
             break;
-
         default:
             BT_WARN("type 0x%04x unsupported", type);
             err = -EINVAL;
             break;
     }
-
 done:
     atomic_set_bit(l2cap->chan.flags, L2CAP_FLAG_SIG_INFO_DONE);
     l2cap->info_ident = 0U;
@@ -431,7 +423,6 @@ static int l2cap_br_info_req(struct bt_l2cap_br *l2cap, uint8_t ident,
             net_buf_add_le32(rsp_buf, L2CAP_FEAT_FIXED_CHAN_MASK);
             hdr_info->len = sys_cpu_to_le16(sizeof(*rsp) + sizeof(uint32_t));
             break;
-
         case BT_L2CAP_INFO_FIXED_CHAN:
             rsp->type = sys_cpu_to_le16(BT_L2CAP_INFO_FIXED_CHAN);
             rsp->result = sys_cpu_to_le16(BT_L2CAP_INFO_SUCCESS);
@@ -441,7 +432,6 @@ static int l2cap_br_info_req(struct bt_l2cap_br *l2cap, uint8_t ident,
 
             hdr_info->len = sys_cpu_to_le16(sizeof(*rsp) + 8);
             break;
-
         default:
             rsp->type = req->type;
             rsp->result = sys_cpu_to_le16(BT_L2CAP_INFO_NOTSUPP);
@@ -480,9 +470,9 @@ void bt_l2cap_br_connected(struct bt_conn *conn)
         }
 
         /*
-         * other fixed channels will be connected after Information
-         * Response is received
-         */
+		 * other fixed channels will be connected after Information
+		 * Response is received
+		 */
         if (fchan->cid == BT_L2CAP_CID_BR_SIG) {
             struct bt_l2cap_br *sig_ch;
 
@@ -530,12 +520,11 @@ static void l2cap_br_conf(struct bt_l2cap_chan *chan)
     (void)memset(conf, 0, sizeof(*conf));
 
     conf->dcid = sys_cpu_to_le16(BR_CHAN(chan)->tx.cid);
-
     /*
-     * Add MTU option if app set non default BR/EDR L2CAP MTU,
-     * otherwise sent empty configuration data meaning default MTU
-     * to be used.
-     */
+	 * Add MTU option if app set non default BR/EDR L2CAP MTU,
+	 * otherwise sent empty configuration data meaning default MTU
+	 * to be used.
+	 */
     if (BR_CHAN(chan)->rx.mtu != L2CAP_BR_DEFAULT_MTU) {
         l2cap_br_conf_add_mtu(buf, BR_CHAN(chan)->rx.mtu);
     }
@@ -543,10 +532,10 @@ static void l2cap_br_conf(struct bt_l2cap_chan *chan)
     hdr->len = sys_cpu_to_le16(buf->len - sizeof(*hdr));
 
     /*
-     * TODO:
-     * might be needed to start tracking number of configuration iterations
-     * on both directions
-     */
+	 * TODO:
+	 * might be needed to start tracking number of configuration iterations
+	 * on both directions
+	 */
     l2cap_br_chan_send_req(BR_CHAN(chan), buf, L2CAP_BR_CFG_TIMEOUT);
 }
 
@@ -568,7 +557,8 @@ enum l2cap_br_conn_security_result {
  * - bt_conn_set_security API returns < 0.
  */
 
-static enum l2cap_br_conn_security_result l2cap_br_conn_security(struct bt_l2cap_chan *chan, const uint16_t psm)
+static enum l2cap_br_conn_security_result
+l2cap_br_conn_security(struct bt_l2cap_chan *chan, const uint16_t psm)
 {
     int check;
 
@@ -578,9 +568,9 @@ static enum l2cap_br_conn_security_result l2cap_br_conn_security(struct bt_l2cap
     }
 
     /*
-     * No link key needed for legacy devices (pre 2.1) and when low security
-     * level is required.
-     */
+	 * No link key needed for legacy devices (pre 2.1) and when low security
+	 * level is required.
+	 */
     if (chan->required_sec_level == BT_SECURITY_L1 &&
         !BT_FEAT_HOST_SSP(chan->conn->br.features)) {
         return L2CAP_CONN_SECURITY_PASSED;
@@ -591,49 +581,46 @@ static enum l2cap_br_conn_security_result l2cap_br_conn_security(struct bt_l2cap
         case BT_SECURITY_L3:
         case BT_SECURITY_L2:
             break;
-
         default:
-
             /*
-             * For non SDP PSM connections GAP's Security Mode 4 requires at
-             * least unauthenticated link key and enabled encryption if
-             * remote supports SSP before any L2CAP CoC traffic. So preset
-             * local to MEDIUM security to trigger it if needed.
-             */
+		 * For non SDP PSM connections GAP's Security Mode 4 requires at
+		 * least unauthenticated link key and enabled encryption if
+		 * remote supports SSP before any L2CAP CoC traffic. So preset
+		 * local to MEDIUM security to trigger it if needed.
+		 */
             if (BT_FEAT_HOST_SSP(chan->conn->br.features)) {
                 chan->required_sec_level = BT_SECURITY_L2;
             }
-
             break;
     }
 
     check = bt_conn_set_security(chan->conn, chan->required_sec_level);
 
     /*
-     * Check case when on existing connection security level already covers
-     * channel (service) security requirements against link security and
-     * bt_conn_set_security API returns 0 what implies also there was no
-     * need to trigger authentication.
-     */
+	 * Check case when on existing connection security level already covers
+	 * channel (service) security requirements against link security and
+	 * bt_conn_set_security API returns 0 what implies also there was no
+	 * need to trigger authentication.
+	 */
     if (check == 0 &&
         chan->conn->sec_level >= chan->required_sec_level) {
         return L2CAP_CONN_SECURITY_PASSED;
     }
 
     /*
-     * If 'check' still holds 0, it means local host just sent HCI
-     * authentication command to start procedure to increase link security
-     * since service/profile requires that.
-     */
+	 * If 'check' still holds 0, it means local host just sent HCI
+	 * authentication command to start procedure to increase link security
+	 * since service/profile requires that.
+	 */
     if (check == 0) {
         return L2CAP_CONN_SECURITY_PENDING;
     };
 
     /*
-     * For any other values in 'check' it means there was internal
-     * validation condition forbidding to start authentication at this
-     * moment.
-     */
+	 * For any other values in 'check' it means there was internal
+	 * validation condition forbidding to start authentication at this
+	 * moment.
+	 */
     return L2CAP_CONN_SECURITY_REJECT;
 }
 
@@ -700,16 +687,15 @@ static void l2cap_br_conn_req(struct bt_l2cap_br *l2cap, uint8_t ident,
 
     /* Check if there is a server registered */
     server = l2cap_br_server_lookup_psm(psm);
-
     if (!server) {
         result = BT_L2CAP_BR_ERR_PSM_NOT_SUPP;
         goto no_chan;
     }
 
     /*
-     * Report security violation for non SDP channel without encryption when
-     * remote supports SSP.
-     */
+	 * Report security violation for non SDP channel without encryption when
+	 * remote supports SSP.
+	 */
     if (server->sec_level != BT_SECURITY_L0 &&
         BT_FEAT_HOST_SSP(conn->br.features) && !conn->encrypt) {
         result = BT_L2CAP_BR_ERR_SEC_BLOCK;
@@ -722,22 +708,21 @@ static void l2cap_br_conn_req(struct bt_l2cap_br *l2cap, uint8_t ident,
     }
 
     chan = bt_l2cap_br_lookup_tx_cid(conn, scid);
-
     if (chan) {
         /*
-         * we have a chan here but this is due to SCID being already in
-         * use so it is not channel we are suppose to pass to
-         * l2cap_br_conn_req_reply as wrong DCID would be used
-         */
+		 * we have a chan here but this is due to SCID being already in
+		 * use so it is not channel we are suppose to pass to
+		 * l2cap_br_conn_req_reply as wrong DCID would be used
+		 */
         result = BT_L2CAP_BR_ERR_SCID_IN_USE;
         goto no_chan;
     }
 
     /*
-     * Request server to accept the new connection and allocate the
-     * channel. If no free channels available for PSM server reply with
-     * proper result and quit since chan pointer is uninitialized then.
-     */
+	 * Request server to accept the new connection and allocate the
+	 * channel. If no free channels available for PSM server reply with
+	 * proper result and quit since chan pointer is uninitialized then.
+	 */
     if (server->accept(conn, &chan) < 0) {
         result = BT_L2CAP_BR_ERR_NO_RESOURCES;
         goto no_chan;
@@ -760,17 +745,14 @@ static void l2cap_br_conn_req(struct bt_l2cap_br *l2cap, uint8_t ident,
             result = BT_L2CAP_BR_PENDING;
             /* TODO: auth timeout */
             break;
-
         case L2CAP_CONN_SECURITY_PASSED:
             result = BT_L2CAP_BR_SUCCESS;
             break;
-
         case L2CAP_CONN_SECURITY_REJECT:
         default:
             result = BT_L2CAP_BR_ERR_SEC_BLOCK;
             break;
     }
-
     /* Reply on connection request as acceptor */
     l2cap_br_conn_req_reply(chan, result);
 
@@ -813,7 +795,6 @@ static void l2cap_br_conf_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
            result, opt_len);
 
     chan = bt_l2cap_br_lookup_rx_cid(conn, scid);
-
     if (!chan) {
         BT_ERR("channel mismatch!");
         return;
@@ -823,9 +804,9 @@ static void l2cap_br_conf_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
     k_delayed_work_cancel(&chan->rtx_work);
 
     /*
-     * TODO: handle other results than success and parse response data if
-     * available
-     */
+	 * TODO: handle other results than success and parse response data if
+	 * available
+	 */
     switch (result) {
         case BT_L2CAP_CONF_SUCCESS:
             atomic_set_bit(BR_CHAN(chan)->flags, L2CAP_FLAG_CONN_LCONF_DONE);
@@ -838,14 +819,11 @@ static void l2cap_br_conf_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
                        BR_CHAN(chan)->tx.cid, BR_CHAN(chan)->tx.mtu);
 
                 bt_l2cap_chan_set_state(chan, BT_L2CAP_CONNECTED);
-
                 if (chan->ops && chan->ops->connected) {
                     chan->ops->connected(chan);
                 }
             }
-
             break;
-
         default:
             /* currently disconnect channel on non success result */
             bt_l2cap_chan_disconnect(chan);
@@ -902,10 +880,10 @@ static void l2cap_br_send_reject(struct bt_conn *conn, uint8_t ident,
     rej->reason = sys_cpu_to_le16(reason);
 
     /*
-     * optional data if available must be already in little-endian format
-     * made by caller.and be compliant with Core 4.2 [Vol 3, Part A, 4.1,
-     * table 4.4]
-     */
+	 * optional data if available must be already in little-endian format
+	 * made by caller.and be compliant with Core 4.2 [Vol 3, Part A, 4.1,
+	 * table 4.4]
+	 */
     if (data) {
         net_buf_add_mem(buf, data, data_len);
     }
@@ -927,7 +905,6 @@ static uint16_t l2cap_br_conf_opt_mtu(struct bt_l2cap_chan *chan,
 
     /* pulling MTU value moves buf data to next option item */
     mtu = net_buf_pull_le16(buf);
-
     if (mtu < L2CAP_BR_MIN_MTU) {
         result = BT_L2CAP_CONF_UNACCEPT;
         BR_CHAN(chan)->tx.mtu = L2CAP_BR_MIN_MTU;
@@ -965,7 +942,6 @@ static void l2cap_br_conf_req(struct bt_l2cap_br *l2cap, uint8_t ident,
     BT_DBG("dcid 0x%04x flags 0x%02x len %u", dcid, flags, opt_len);
 
     chan = bt_l2cap_br_lookup_rx_cid(conn, dcid);
-
     if (!chan) {
         BT_ERR("rx channel mismatch!");
         struct bt_l2cap_cmd_reject_cid_data data = {
@@ -1001,13 +977,12 @@ static void l2cap_br_conf_req(struct bt_l2cap_br *l2cap, uint8_t ident,
                 /* getting MTU modifies buf internals */
                 result = l2cap_br_conf_opt_mtu(chan, buf, opt->len);
                 /*
-                 * MTU is done. For now bailout the loop but later on
-                 * there can be a need to continue checking next options
-                 * that are after MTU value and then goto is not proper
-                 * way out here.
-                 */
+			 * MTU is done. For now bailout the loop but later on
+			 * there can be a need to continue checking next options
+			 * that are after MTU value and then goto is not proper
+			 * way out here.
+			 */
                 goto send_rsp;
-
             default:
                 if (!hint) {
                     BT_DBG("option %u not handled", opt->type);
@@ -1033,10 +1008,10 @@ send_rsp:
     rsp->scid = sys_cpu_to_le16(BR_CHAN(chan)->tx.cid);
 
     /*
-     * TODO: If options other than MTU bacame meaningful then processing
-     * the options chain need to be modified and taken into account when
-     * sending back to peer.
-     */
+	 * TODO: If options other than MTU bacame meaningful then processing
+	 * the options chain need to be modified and taken into account when
+	 * sending back to peer.
+	 */
     if (result == BT_L2CAP_CONF_UNACCEPT) {
         l2cap_br_conf_add_mtu(buf, BR_CHAN(chan)->tx.mtu);
     }
@@ -1058,7 +1033,6 @@ send_rsp:
                BR_CHAN(chan)->tx.cid, BR_CHAN(chan)->tx.mtu);
 
         bt_l2cap_chan_set_state(chan, BT_L2CAP_CONNECTED);
-
         if (chan->ops && chan->ops->connected) {
             chan->ops->connected(chan);
         }
@@ -1110,7 +1084,6 @@ static void l2cap_br_disconn_req(struct bt_l2cap_br *l2cap, uint8_t ident,
     BT_DBG("scid 0x%04x dcid 0x%04x", dcid, scid);
 
     chan = l2cap_br_remove_tx_cid(conn, scid);
-
     if (!chan) {
         struct bt_l2cap_cmd_reject_cid_data data;
 
@@ -1210,7 +1183,6 @@ static void l2cap_br_disconn_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
     BT_DBG("dcid 0x%04x scid 0x%04x", dcid, scid);
 
     chan = l2cap_br_remove_tx_cid(conn, dcid);
-
     if (!chan) {
         BT_WARN("No dcid 0x%04x channel found", dcid);
         return;
@@ -1250,11 +1222,9 @@ int bt_l2cap_br_chan_connect(struct bt_conn *conn, struct bt_l2cap_chan *chan,
         case BT_L2CAP_CONNECTED:
             /* Already connected */
             return -EISCONN;
-
         case BT_L2CAP_DISCONNECTED:
             /* Can connect */
             break;
-
         case BT_L2CAP_CONFIG:
         case BT_L2CAP_DISCONNECT:
         default:
@@ -1273,14 +1243,12 @@ int bt_l2cap_br_chan_connect(struct bt_conn *conn, struct bt_l2cap_chan *chan,
     switch (l2cap_br_conn_security(chan, psm)) {
         case L2CAP_CONN_SECURITY_PENDING:
             /*
-             * Authentication was triggered, wait with sending request on
-             * connection security changed callback context.
-             */
+		 * Authentication was triggered, wait with sending request on
+		 * connection security changed callback context.
+		 */
             return 0;
-
         case L2CAP_CONN_SECURITY_PASSED:
             break;
-
         case L2CAP_CONN_SECURITY_REJECT:
         default:
             l2cap_br_chan_cleanup(chan);
@@ -1325,7 +1293,6 @@ static void l2cap_br_conn_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
            result, status);
 
     chan = bt_l2cap_br_lookup_rx_cid(conn, scid);
-
     if (!chan) {
         BT_ERR("No scid 0x%04x channel found", scid);
         return;
@@ -1348,11 +1315,9 @@ static void l2cap_br_conn_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
             bt_l2cap_chan_set_state(chan, BT_L2CAP_CONFIG);
             atomic_clear_bit(BR_CHAN(chan)->flags, L2CAP_FLAG_CONN_PENDING);
             break;
-
         case BT_L2CAP_BR_PENDING:
             k_delayed_work_submit(&chan->rtx_work, L2CAP_BR_CONN_TIMEOUT);
             break;
-
         default:
             l2cap_br_chan_cleanup(chan);
             break;
@@ -1403,35 +1368,27 @@ static int l2cap_br_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
         case BT_L2CAP_INFO_RSP:
             l2cap_br_info_rsp(l2cap, hdr->ident, buf);
             break;
-
         case BT_L2CAP_INFO_REQ:
             l2cap_br_info_req(l2cap, hdr->ident, buf);
             break;
-
         case BT_L2CAP_DISCONN_REQ:
             l2cap_br_disconn_req(l2cap, hdr->ident, buf);
             break;
-
         case BT_L2CAP_CONN_REQ:
             l2cap_br_conn_req(l2cap, hdr->ident, buf);
             break;
-
         case BT_L2CAP_CONF_RSP:
             l2cap_br_conf_rsp(l2cap, hdr->ident, len, buf);
             break;
-
         case BT_L2CAP_CONF_REQ:
             l2cap_br_conf_req(l2cap, hdr->ident, len, buf);
             break;
-
         case BT_L2CAP_DISCONN_RSP:
             l2cap_br_disconn_rsp(l2cap, hdr->ident, buf);
             break;
-
         case BT_L2CAP_CONN_RSP:
             l2cap_br_conn_rsp(l2cap, hdr->ident, buf);
             break;
-
         default:
             BT_WARN("Unknown/Unsupported L2CAP PDU code 0x%02x", hdr->code);
             l2cap_br_send_reject(chan->conn, hdr->ident,
@@ -1457,9 +1414,9 @@ static void l2cap_br_conn_pend(struct bt_l2cap_chan *chan, uint8_t status)
 
     if (status) {
         /*
-         * Security procedure status is non-zero so respond with
-         * security violation only as channel acceptor.
-         */
+		 * Security procedure status is non-zero so respond with
+		 * security violation only as channel acceptor.
+		 */
         l2cap_br_conn_req_reply(chan, BT_L2CAP_BR_ERR_SEC_BLOCK);
 
         /* Release channel allocated to outgoing connection request */
@@ -1476,15 +1433,15 @@ static void l2cap_br_conn_pend(struct bt_l2cap_chan *chan, uint8_t status)
     }
 
     /*
-     * For incoming connection state send confirming outstanding
-     * response and initiate configuration request.
-     */
+	 * For incoming connection state send confirming outstanding
+	 * response and initiate configuration request.
+	 */
     if (l2cap_br_conn_req_reply(chan, BT_L2CAP_BR_SUCCESS) == 0) {
         bt_l2cap_chan_set_state(chan, BT_L2CAP_CONFIG);
         /*
-         * Initialize config request since remote needs to know
-         * local MTU segmentation.
-         */
+		 * Initialize config request since remote needs to know
+		 * local MTU segmentation.
+		 */
         l2cap_br_conf(chan);
     } else if (atomic_test_and_clear_bit(BR_CHAN(chan)->flags,
                                          L2CAP_FLAG_CONN_PENDING)) {
@@ -1543,7 +1500,6 @@ void bt_l2cap_br_recv(struct bt_conn *conn, struct net_buf *buf)
     cid = sys_le16_to_cpu(hdr->cid);
 
     chan = bt_l2cap_br_lookup_rx_cid(conn, cid);
-
     if (!chan) {
         BT_WARN("Ignoring data for unknown CID 0x%04x", cid);
         net_buf_unref(buf);
@@ -1551,9 +1507,9 @@ void bt_l2cap_br_recv(struct bt_conn *conn, struct net_buf *buf)
     }
 
     /*
-     * if data was received for fixed channel before Information
-     * Response we connect channel here.
-     */
+	 * if data was received for fixed channel before Information
+	 * Response we connect channel here.
+	 */
     check_fixed_channel(chan);
 
     chan->ops->recv(chan, buf);
@@ -1594,7 +1550,6 @@ BT_L2CAP_BR_CHANNEL_DEFINE(br_fixed_chan, BT_L2CAP_CID_BR_SIG, l2cap_br_accept);
 void bt_l2cap_br_init(void)
 {
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
-    k_lifo_init(&br_sig_pool.free, CONFIG_BT_MAX_CONN);
     net_buf_init(&br_sig_pool, CONFIG_BT_MAX_CONN, BT_L2CAP_BUF_SIZE(L2CAP_BR_MIN_MTU), NULL);
 #endif
     sys_slist_init(&br_servers);

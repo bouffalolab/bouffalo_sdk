@@ -67,8 +67,7 @@
 extern "C" {
 #endif
 
-typedef struct
-{
+typedef struct {
     /* updated each time another BLOCKLEN_BYTES bytes are produced */
     uint8_t V[TC_AES_BLOCK_SIZE];
 

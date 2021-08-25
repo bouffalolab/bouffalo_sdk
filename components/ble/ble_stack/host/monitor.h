@@ -78,16 +78,12 @@ static inline u8_t bt_monitor_opcode(struct net_buf *buf)
     switch (bt_buf_get_type(buf)) {
         case BT_BUF_CMD:
             return BT_MONITOR_COMMAND_PKT;
-
         case BT_BUF_EVT:
             return BT_MONITOR_EVENT_PKT;
-
         case BT_BUF_ACL_OUT:
             return BT_MONITOR_ACL_TX_PKT;
-
         case BT_BUF_ACL_IN:
             return BT_MONITOR_ACL_RX_PKT;
-
         default:
             return BT_MONITOR_NOP;
     }

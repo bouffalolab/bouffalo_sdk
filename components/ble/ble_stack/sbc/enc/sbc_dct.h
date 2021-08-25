@@ -29,7 +29,7 @@
 #define SBC_MULT_32_16_SIMPLIFIED(s16In2, s32In1, s32OutLow)                                    \
     {                                                                                           \
         __asm {                                                                               \
-            MUL s32OutLow,(SINT32)s16In2, (s32In1>>15) \
+    MUL s32OutLow,(SINT32)s16In2, (s32In1>>15) \
         }                                                                                       \
     }
 #else

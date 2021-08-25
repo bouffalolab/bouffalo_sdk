@@ -54,43 +54,35 @@ struct bt_keys_link_key *bt_keys_get_link_key(const bt_addr_t *addr)
     struct bt_keys_link_key *key;
 
     key = bt_keys_find_link_key(addr);
-
     if (key) {
         return key;
     }
 
     key = bt_keys_find_link_key(BT_ADDR_ANY);
 #if 0 //IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST) //MBHJ
+	if (!key) {
+		int i;
 
-    if(!key)
-    {
-        int i;
+		key = &key_pool[0];
+		for (i = 1; i < ARRAY_SIZE(key_pool); i++) {
+			struct bt_keys_link_key *current = &key_pool[i];
 
-        key = &key_pool[0];
+			if (current->aging_counter < key->aging_counter) {
+				key = current;
+			}
+		}
 
-        for(i = 1; i < ARRAY_SIZE(key_pool); i++)
-        {
-            struct bt_keys_link_key *current = &key_pool[i];
-
-            if(current->aging_counter < key->aging_counter)
-            {
-                key = current;
-            }
-        }
-
-        if(key)
-        {
-            bt_keys_link_key_clear(key);
-        }
-    }
-
+		if (key) {
+			bt_keys_link_key_clear(key);
+		}
+	}
 #endif
 
     if (key) {
         bt_addr_copy(&key->addr, addr);
 #if 0 //IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST) //MBHJ
-        key->aging_counter = ++aging_counter_val;
-        last_keys_updated = key;
+		key->aging_counter = ++aging_counter_val;
+		last_keys_updated = key;
 #endif
         BT_DBG("created %p for %s", key, bt_addr_str(addr));
         return key;
@@ -128,12 +120,10 @@ void bt_keys_link_key_clear_addr(const bt_addr_t *addr)
             key = &key_pool[i];
             bt_keys_link_key_clear(key);
         }
-
         return;
     }
 
     key = bt_keys_find_link_key(addr);
-
     if (key) {
         bt_keys_link_key_clear(key);
     }
@@ -142,27 +132,22 @@ void bt_keys_link_key_clear_addr(const bt_addr_t *addr)
 void bt_keys_link_key_store(struct bt_keys_link_key *link_key)
 {
 #if 0 //MBHJ
+	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+		int err;
+		char key[BT_SETTINGS_KEY_MAX];
+		bt_addr_le_t le_addr;
 
-    if(IS_ENABLED(CONFIG_BT_SETTINGS))
-    {
-        int err;
-        char key[BT_SETTINGS_KEY_MAX];
-        bt_addr_le_t le_addr;
+		le_addr.type = BT_ADDR_LE_PUBLIC;
+		bt_addr_copy(&le_addr.a, &link_key->addr);
+		bt_settings_encode_key(key, sizeof(key), "link_key",
+				       &le_addr, NULL);
 
-        le_addr.type = BT_ADDR_LE_PUBLIC;
-        bt_addr_copy(&le_addr.a, &link_key->addr);
-        bt_settings_encode_key(key, sizeof(key), "link_key",
-                               &le_addr, NULL);
-
-        err = settings_save_one(key, link_key->storage_start,
-                                BT_KEYS_LINK_KEY_STORAGE_LEN);
-
-        if(err)
-        {
-            BT_ERR("Failed to svae link key (err %d)", err);
-        }
-    }
-
+		err = settings_save_one(key, link_key->storage_start,
+					BT_KEYS_LINK_KEY_STORAGE_LEN);
+		if (err) {
+			BT_ERR("Failed to svae link key (err %d)", err);
+		}
+	}
 #endif
 }
 
@@ -183,7 +168,6 @@ static int link_key_set(const char *name, size_t len_rd,
     }
 
     len = read_cb(cb_arg, val, sizeof(val));
-
     if (len < 0) {
         BT_ERR("Failed to read value (err %zu)", len);
         return -EINVAL;
@@ -193,14 +177,12 @@ static int link_key_set(const char *name, size_t len_rd,
            len ? bt_hex(val, sizeof(val)) : "(null)");
 
     err = bt_settings_decode_key(name, &le_addr);
-
     if (err) {
         BT_ERR("Unable to decode address %s", name);
         return -EINVAL;
     }
 
     link_key = bt_keys_get_link_key(&le_addr.a);
-
     if (len != BT_KEYS_LINK_KEY_STORAGE_LEN) {
         if (link_key) {
             bt_keys_link_key_clear(link_key);
@@ -217,11 +199,9 @@ static int link_key_set(const char *name, size_t len_rd,
     BT_DBG("Successfully restored link key for %s",
            bt_addr_le_str(&le_addr));
 #if IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
-
     if (aging_counter_val < link_key->aging_counter) {
         aging_counter_val = link_key->aging_counter;
     }
-
 #endif /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
 
     return 0;

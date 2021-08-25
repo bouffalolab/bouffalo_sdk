@@ -11,7 +11,7 @@
  * All rights reserved.  The Berkeley software License Agreement
  * specifies the terms and conditions for redistribution.
  *
- *  @(#)errno.h 7.1 (Berkeley) 6/4/86
+ *	@(#)errno.h	7.1 (Berkeley) 6/4/86
  */
 
 #ifndef __INCerrnoh
@@ -28,15 +28,15 @@ extern int *__errno(void);
  * POSIX Error codes
  */
 
-#define EPERM        1 /* Not owner */
-#define ENOENT       2 /* No such file or directory */
-#define ESRCH        3 /* No such context */
-#define EINTR        4 /* Interrupted system call */
-#define EIO          5 /* I/O error */
-#define ENXIO        6 /* No such device or address */
-#define E2BIG        7 /* Arg list too long */
-#define ENOEXEC      8 /* Exec format error */
-#define EBADF        9 /* Bad file number */
+#define EPERM        1  /* Not owner */
+#define ENOENT       2  /* No such file or directory */
+#define ESRCH        3  /* No such context */
+#define EINTR        4  /* Interrupted system call */
+#define EIO          5  /* I/O error */
+#define ENXIO        6  /* No such device or address */
+#define E2BIG        7  /* Arg list too long */
+#define ENOEXEC      8  /* Exec format error */
+#define EBADF        9  /* Bad file number */
 #define ECHILD       10 /* No children */
 #define EAGAIN       11 /* No more contexts */
 #define ENOMEM       12 /* Not enough core */
@@ -104,8 +104,8 @@ extern int *__errno(void);
 #define EHOSTDOWN    67 /* Host is down */
 
 /* non-blocking and interrupt i/o */
-#define EINPROGRESS 68 /* Operation now in progress */
-#define EALREADY    69 /* Operation already in progress */
+#define EINPROGRESS 68     /* Operation now in progress */
+#define EALREADY    69     /* Operation already in progress */
 #define EWOULDBLOCK EAGAIN /* Operation would block */
 
 #define ENOSYS 71 /* Function not implemented */

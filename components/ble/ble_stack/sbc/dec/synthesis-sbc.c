@@ -279,11 +279,9 @@ PRIVATE void OI_SBC_SynthFrame_80(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_INT1
     for (blk = blkstart; blk < blkstop; blk++) {
         if (offset == 0) {
             COPY_BACKWARD_32BIT_ALIGNED_72_HALFWORDS(context->common.filterBuffer[0] + context->common.filterBufferLen - 72, context->common.filterBuffer[0]);
-
             if (nrof_channels == 2) {
                 COPY_BACKWARD_32BIT_ALIGNED_72_HALFWORDS(context->common.filterBuffer[1] + context->common.filterBufferLen - 72, context->common.filterBuffer[1]);
             }
-
             offset = context->common.filterBufferLen - 80;
         } else {
             offset -= 1 * 8;
@@ -294,10 +292,8 @@ PRIVATE void OI_SBC_SynthFrame_80(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_INT1
             SYNTH80(pcm + ch, context->common.filterBuffer[ch] + offset, pcmStrideShift);
             s += 8;
         }
-
         pcm += (8 << pcmStrideShift);
     }
-
     context->common.filterBufferOffset = offset;
 }
 
@@ -314,16 +310,13 @@ PRIVATE void OI_SBC_SynthFrame_4SB(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_INT
     for (blk = blkstart; blk < blkstop; blk++) {
         if (offset == 0) {
             COPY_BACKWARD_32BIT_ALIGNED_72_HALFWORDS(context->common.filterBuffer[0] + context->common.filterBufferLen - 72, context->common.filterBuffer[0]);
-
             if (nrof_channels == 2) {
                 COPY_BACKWARD_32BIT_ALIGNED_72_HALFWORDS(context->common.filterBuffer[1] + context->common.filterBufferLen - 72, context->common.filterBuffer[1]);
             }
-
             offset = context->common.filterBufferLen - 80;
         } else {
             offset -= 8;
         }
-
         for (ch = 0; ch < nrof_channels; ch++) {
             cosineModulateSynth4(context->common.filterBuffer[ch] + offset, s);
             SynthWindow40_int32_int32_symmetry_with_sum(pcm + ch,
@@ -331,10 +324,8 @@ PRIVATE void OI_SBC_SynthFrame_4SB(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_INT
                                                         pcmStrideShift);
             s += 4;
         }
-
         pcm += (4 << pcmStrideShift);
     }
-
     context->common.filterBufferOffset = offset;
 }
 
@@ -353,25 +344,20 @@ PRIVATE void OI_SBC_SynthFrame_Enhanced(OI_CODEC_SBC_DECODER_CONTEXT *context, O
     for (blk = blkstart; blk < blkstop; blk++) {
         if (offset == 0) {
             COPY_BACKWARD_32BIT_ALIGNED_104_HALFWORDS(context->common.filterBuffer[0] + context->common.filterBufferLen - 104, context->common.filterBuffer[0]);
-
             if (nrof_channels == 2) {
                 COPY_BACKWARD_32BIT_ALIGNED_104_HALFWORDS(context->common.filterBuffer[1] + context->common.filterBufferLen - 104, context->common.filterBuffer[1]);
             }
-
             offset = context->common.filterBufferLen - 112;
         } else {
             offset -= 8;
         }
-
         for (ch = 0; ch < nrof_channels; ++ch) {
             DCT2_8(context->common.filterBuffer[ch] + offset, s);
             SYNTH112(pcm + ch, context->common.filterBuffer[ch] + offset, pcmStrideShift);
             s += 8;
         }
-
         pcm += (8 << pcmStrideShift);
     }
-
     context->common.filterBufferOffset = offset;
 }
 
@@ -401,7 +387,6 @@ PRIVATE void OI_SBC_SynthFrame(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_INT16 *
     OI_UINT nrof_channels = context->common.frameInfo.nrof_channels;
 
     OI_ASSERT(nrof_subbands == 4 || nrof_subbands == 8);
-
     if (nrof_subbands == 4) {
         SynthFrame4SB[nrof_channels](context, pcm, start_block, nrof_blocks);
 #ifdef SBC_ENHANCED

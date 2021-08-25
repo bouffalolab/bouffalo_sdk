@@ -31,13 +31,13 @@
 #define Mult32(s32In1, s32In2, s32OutLow)                                                            \
     {                                                                                                \
         __asm {                                                                                    \
-            MUL s32OutLow,s32In1,s32In2; \
+        MUL s32OutLow,s32In1,s32In2; \
         }                                                                                            \
     }
 #define Mult64(s32In1, s32In2, s32OutLow, s32OutHi)                                                 \
     {                                                                                               \
         __asm {                                                                                   \
-            SMULL s32OutLow,s32OutHi,s32In1,s32In2 \
+        SMULL s32OutLow,s32OutHi,s32In1,s32In2 \
         }                                                                                           \
     }
 #else
@@ -83,7 +83,6 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
 #endif
 
     pu8PacketPtr = pstrEncParams->pu8NextPacket; /*Initialize the ptr*/
-
     if (pstrEncParams->sbc_mode != SBC_MODE_MSBC) {
         *pu8PacketPtr++ = (UINT8)SBC_SYNC_WORD_STD; /*Sync word*/
         *pu8PacketPtr++ = (UINT8)(pstrEncParams->FrameHeader);
@@ -95,14 +94,12 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
         *pu8PacketPtr++ = 0;
         *pu8PacketPtr = 0;
     }
-
     pu8PacketPtr += 2; /*skip for CRC*/
 
     /*here it indicate if it is byte boundary or nibble boundary*/
     s32PresentBit = 8;
     Temp = 0;
 #if (SBC_JOINT_STE_INCLUDED == TRUE)
-
     if (pstrEncParams->s16ChannelMode == SBC_JOINT_STEREO) {
         /* pack join stero parameters */
         for (s32Sb = 0; s32Sb < s32NumOfSubBands; s32Sb++) {
@@ -118,13 +115,11 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
             Temp = 0;
         }
     }
-
 #endif
 
     /* Pack Scale factor */
     ps16GenPtr = pstrEncParams->as16ScaleFactor;
     s32Sb = s32NumOfChannels * s32NumOfSubBands;
-
     /*Temp=*pu8PacketPtr;*/
     for (s32Ch = s32Sb; s32Ch > 0; s32Ch--) {
         Temp <<= 4;
@@ -143,14 +138,11 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
     ps32SbPtr = pstrEncParams->s32SbBuffer;
     /*Temp=*pu8PacketPtr;*/
     s32NumOfBlocks = pstrEncParams->s16NumOfBlocks;
-
     for (s32Blk = s32NumOfBlocks - 1; s32Blk >= 0; s32Blk--) {
         ps16GenPtr = pstrEncParams->as16Bits;
         ps16ScfPtr = pstrEncParams->as16ScaleFactor;
-
         for (s32Ch = s32Sb - 1; s32Ch >= 0; s32Ch--) {
             s32LoopCount = *ps16GenPtr++;
-
             if (s32LoopCount != 0) {
 #if (SBC_IS_64_MULT_IN_QUANTIZER == TRUE)
                 /* finding level from reconstruction part of decoder */
@@ -206,7 +198,6 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
                         Temp = 0;
                         s32PresentBit = 8;
                     }
-
                     Temp <<= s32LoopCount;
 
                     /* remove the unwanted msbs */
@@ -218,7 +209,6 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
                     s32PresentBit -= s32LoopCount;
                 }
             }
-
             ps16ScfPtr++;
             ps32SbPtr++;
         }
@@ -238,7 +228,6 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
     so that many more bytes are included in CRC calculation.
     */
     Temp = *pu8PacketPtr;
-
     for (s32Ch = 1; s32Ch < (s32LoopCount + 4); s32Ch++) {
         /* skip sync word and CRC bytes */
         if (s32Ch != 3) {
@@ -249,7 +238,6 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
                 u8CRC &= 0xFF;
             }
         }
-
         Temp = *(++pu8PacketPtr);
     }
 

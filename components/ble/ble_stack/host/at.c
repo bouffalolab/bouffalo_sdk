@@ -31,7 +31,6 @@ int at_check_byte(struct net_buf *buf, char check_byte)
     if (*str != check_byte) {
         return -EINVAL;
     }
-
     net_buf_pull(buf, 1);
 
     return 0;
@@ -111,7 +110,6 @@ static int get_cmd_value(struct at_client *at, struct net_buf *buf,
             break;
         }
     }
-
     net_buf_pull(buf, cmd_len);
 
     if (pos == at->buf_max_len) {
@@ -142,7 +140,6 @@ static int get_response_string(struct at_client *at, struct net_buf *buf,
             break;
         }
     }
-
     net_buf_pull(buf, cmd_len);
 
     if (pos == at->buf_max_len) {
@@ -163,11 +160,9 @@ static int at_state_start(struct at_client *at, struct net_buf *buf)
     int err;
 
     err = at_check_byte(buf, '\r');
-
     if (err < 0) {
         return err;
     }
-
     at->state = AT_STATE_START_CR;
 
     return 0;
@@ -178,11 +173,9 @@ static int at_state_start_cr(struct at_client *at, struct net_buf *buf)
     int err;
 
     err = at_check_byte(buf, '\n');
-
     if (err < 0) {
         return err;
     }
-
     at->state = AT_STATE_START_LF;
 
     return 0;
@@ -191,7 +184,6 @@ static int at_state_start_cr(struct at_client *at, struct net_buf *buf)
 static int at_state_start_lf(struct at_client *at, struct net_buf *buf)
 {
     reset_buffer(at);
-
     if (at_check_byte(buf, '+') == 0) {
         at->state = AT_STATE_GET_CMD_STRING;
         return 0;
@@ -229,7 +221,6 @@ static int at_state_process_cmd(struct at_client *at, struct net_buf *buf)
         at->resp = NULL;
         return 0;
     }
-
     at->state = AT_STATE_UNSOLICITED_CMD;
     return 0;
 }
@@ -261,8 +252,8 @@ static int at_state_process_result(struct at_client *at, struct net_buf *buf)
     if (at_parse_result(at->buf, buf, &result) == 0) {
         if (at->finish) {
             /* cme_err is 0 - Is invalid until result is
-             * AT_RESULT_CME_ERROR
-             */
+			 * AT_RESULT_CME_ERROR
+			 */
             cme_err = 0;
             at->finish(at, result, cme_err);
         }
@@ -330,9 +321,7 @@ int at_parse_input(struct at_client *at, struct net_buf *buf)
         if (at->state < AT_STATE_START || at->state >= AT_STATE_END) {
             return -EINVAL;
         }
-
         ret = parser_cb[at->state](at, buf);
-
         if (ret < 0) {
             /* Reset the state in case of error */
             at->cmd_state = AT_CMD_START;
@@ -352,14 +341,13 @@ static int at_cmd_start(struct at_client *at, struct net_buf *buf,
         if (type == AT_CMD_TYPE_NORMAL) {
             at->state = AT_STATE_UNSOLICITED_CMD;
         }
-
         return -ENODATA;
     }
 
     if (type == AT_CMD_TYPE_OTHER) {
         /* Skip for Other type such as ..RING.. which does not have
-         * values to get processed.
-         */
+		 * values to get processed.
+		 */
         at->cmd_state = AT_CMD_PROCESS_VALUE;
     } else {
         at->cmd_state = AT_CMD_GET_VALUE;
@@ -396,7 +384,6 @@ static int at_cmd_state_end_lf(struct at_client *at, struct net_buf *buf,
     int err;
 
     err = at_check_byte(buf, '\n');
-
     if (err < 0) {
         return err;
     }
@@ -425,13 +412,10 @@ int at_parse_cmd_input(struct at_client *at, struct net_buf *buf,
             at->cmd_state >= AT_CMD_STATE_END) {
             return -EINVAL;
         }
-
         ret = cmd_parser_cb[at->cmd_state](at, buf, prefix, func, type);
-
         if (ret < 0) {
             return ret;
         }
-
         /* Check for main state, the end of cmd parsing and return. */
         if (at->state == AT_STATE_START) {
             return 0;
@@ -454,7 +438,6 @@ int at_open_list(struct at_client *at)
     if (at->buf[at->pos] != '(') {
         return -ENODATA;
     }
-
     at->pos++;
 
     return 0;
@@ -467,7 +450,6 @@ int at_close_list(struct at_client *at)
     if (at->buf[at->pos] != ')') {
         return -ENODATA;
     }
-
     at->pos++;
 
     next_list(at);
@@ -484,14 +466,12 @@ int at_list_get_string(struct at_client *at, char *name, uint8_t len)
     if (at->buf[at->pos] != '"') {
         return -ENODATA;
     }
-
     at->pos++;
 
     while (at->buf[at->pos] != '\0' && at->buf[at->pos] != '"') {
         if (i == len) {
             return -ENODATA;
         }
-
         name[i++] = at->buf[at->pos++];
     }
 
@@ -504,7 +484,6 @@ int at_list_get_string(struct at_client *at, char *name, uint8_t len)
     if (at->buf[at->pos] != '"') {
         return -ENODATA;
     }
-
     at->pos++;
 
     skip_space(at);
@@ -519,7 +498,6 @@ int at_list_get_range(struct at_client *at, uint32_t *min, uint32_t *max)
     int ret;
 
     ret = at_get_number(at, &low);
-
     if (ret < 0) {
         return ret;
     }
@@ -532,10 +510,8 @@ int at_list_get_range(struct at_client *at, uint32_t *min, uint32_t *max)
     if (!isdigit((unsigned char)at->buf[at->pos])) {
         return -ENODATA;
     }
-
 out:
     ret = at_get_number(at, &high);
-
     if (ret < 0) {
         return ret;
     }

@@ -51,17 +51,14 @@ PRIVATE OI_STATUS OI_CODEC_SBC_Alloc(OI_CODEC_SBC_COMMON_CONTEXT *common,
     /* Compute sizes needed for the memory regions, and bail if we don't have
      * enough memory for them. */
     subdataSize = maxChannels * sizeof(common->subdata[0]) * SBC_MAX_BANDS * SBC_MAX_BLOCKS;
-
     if (subdataSize > codecDataBytes) {
         return OI_STATUS_OUT_OF_MEMORY;
     }
 
     filterBufferCount = (codecDataBytes - subdataSize) / (sizeof(common->filterBuffer[0][0]) * SBC_MAX_BANDS * maxChannels);
-
     if (filterBufferCount < SBC_CODEC_MIN_FILTER_BUFFERS) {
         return OI_STATUS_OUT_OF_MEMORY;
     }
-
     common->filterBufferLen = filterBufferCount * SBC_MAX_BANDS;
 
     /* Allocate memory for the subband data */

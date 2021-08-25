@@ -113,13 +113,11 @@ static void prio_recv_thread(void *p1, void *p2, void *p3)
         BT_DBG("sem taken");
 
 #if defined(CONFIG_INIT_STACKS)
-
         if (k_uptime_get_32() - prio_ts > K_SECONDS(5)) {
             STACK_ANALYZE("prio recv thread stack",
                           prio_recv_thread_stack);
             prio_ts = k_uptime_get_32();
         }
-
 #endif
     }
 }
@@ -139,21 +137,17 @@ static inline struct net_buf *encode_node(struct radio_pdu_node_rx *node_rx,
             } else {
                 buf = bt_buf_get_rx(BT_BUF_EVT, K_FOREVER);
             }
-
             if (buf) {
                 hci_evt_encode(node_rx, buf);
             }
-
             break;
 #if defined(CONFIG_BT_CONN)
-
         case HCI_CLASS_ACL_DATA:
             /* generate ACL data */
             buf = bt_buf_get_rx(BT_BUF_ACL_IN, K_FOREVER);
             hci_acl_encode(node_rx, buf);
             break;
 #endif
-
         default:
             LL_ASSERT(0);
             break;
@@ -172,7 +166,6 @@ static inline struct net_buf *process_node(struct radio_pdu_node_rx *node_rx)
     struct net_buf *buf = NULL;
 
 #if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
-
     if (hbuf_count != -1) {
         bool pend = !sys_slist_is_empty(&hbuf_pend);
 
@@ -181,12 +174,10 @@ static inline struct net_buf *process_node(struct radio_pdu_node_rx *node_rx)
             case HCI_CLASS_EVT_DISCARDABLE:
             case HCI_CLASS_EVT_REQUIRED:
                 break;
-
             case HCI_CLASS_EVT_CONNECTION:
                 /* for conn-related events, only pend is relevant */
                 hbuf_count = 1;
-
-            /* fallthrough */
+                /* fallthrough */
             case HCI_CLASS_ACL_DATA:
                 if (pend || !hbuf_count) {
                     sys_slist_append(&hbuf_pend,
@@ -194,15 +185,12 @@ static inline struct net_buf *process_node(struct radio_pdu_node_rx *node_rx)
                     BT_DBG("FC: Queuing item: %d", class);
                     return NULL;
                 }
-
                 break;
-
             default:
                 LL_ASSERT(0);
                 break;
         }
     }
-
 #endif
 
     /* process regular node from radio */
@@ -223,7 +211,6 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
     int reset;
 
     reset = atomic_test_and_clear_bit(&hci_state_mask, HCI_STATE_BIT_RESET);
-
     if (reset) {
         /* flush queue, no need to free, the LL has already done it */
         sys_slist_init(&hbuf_pend);
@@ -239,7 +226,6 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
 
     /* host acked ACL packets, try to dequeue from hbuf */
     node = sys_slist_peek_head(&hbuf_pend);
-
     if (!node) {
         return NULL;
     }
@@ -247,7 +233,6 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
     /* Return early if this iteration already has a node to process */
     node_rx = NODE_RX(node);
     class = hci_get_class(node_rx);
-
     if (n) {
         if (class == HCI_CLASS_EVT_CONNECTION ||
             (class == HCI_CLASS_ACL_DATA && hbuf_count)) {
@@ -255,7 +240,6 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
             BT_DBG("FC: signalling");
             k_poll_signal_raise(&hbuf_signal, 0x0);
         }
-
         return NULL;
     }
 
@@ -264,7 +248,6 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
             BT_DBG("FC: dequeueing event");
             (void)sys_slist_get(&hbuf_pend);
             break;
-
         case HCI_CLASS_ACL_DATA:
             if (hbuf_count) {
                 BT_DBG("FC: dequeueing ACL data");
@@ -273,9 +256,7 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
                 /* no buffers, HCI will signal */
                 node = NULL;
             }
-
             break;
-
         case HCI_CLASS_EVT_DISCARDABLE:
         case HCI_CLASS_EVT_REQUIRED:
         default:
@@ -289,7 +270,6 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
         hbuf_count = hbuf_total - (hci_hbuf_sent - hci_hbuf_acked);
         /* next node */
         node = sys_slist_peek_head(&hbuf_pend);
-
         if (node) {
             node_rx = NODE_RX(node);
             class = hci_get_class(node_rx);
@@ -297,8 +277,8 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
             if (class == HCI_CLASS_EVT_CONNECTION ||
                 (class == HCI_CLASS_ACL_DATA && hbuf_count)) {
                 /* more to process, schedule an
-                 * iteration
-                 */
+				 * iteration
+				 */
                 BT_DBG("FC: signalling");
                 k_poll_signal_raise(&hbuf_signal, 0x0);
             }
@@ -316,7 +296,6 @@ void co_rx_thread()
 {
     struct net_buf *buf = NULL;
     buf = net_buf_get(&recv_fifo, K_NO_WAIT);
-
     if (buf) {
         BT_DBG("Calling bt_recv(%p)", buf);
         bt_recv(buf);
@@ -327,7 +306,6 @@ void co_tx_rx_thread(void *p1)
 {
     UNUSED(p1);
     BT_DBG("using %s\n", __func__);
-
     while (1) {
         if (k_sem_count_get(&g_poll_sem) > 0) {
             co_tx_thread();
@@ -363,12 +341,10 @@ static void recv_thread(void *p1)
 #if defined(BFLB_BLE)
         struct net_buf *buf = NULL;
         buf = net_buf_get(&recv_fifo, K_FOREVER);
-
         if (buf) {
             BT_DBG("Calling bt_recv(%p)", buf);
             bt_recv(buf);
         }
-
 #else
         struct radio_pdu_node_rx *node_rx = NULL;
         struct net_buf *buf = NULL;
@@ -379,7 +355,6 @@ static void recv_thread(void *p1)
 
         err = k_poll(events, 2, K_FOREVER);
         LL_ASSERT(err == 0);
-
         if (events[0].state == K_POLL_STATE_SIGNALED) {
             events[0].signal->signaled = 0;
         } else if (events[1].state ==
@@ -412,17 +387,14 @@ static void recv_thread(void *p1)
                 net_buf_unref(buf);
             }
         }
-
 #endif
         k_yield();
 
 #if defined(CONFIG_INIT_STACKS)
-
         if (k_uptime_get_32() - rx_ts > K_SECONDS(5)) {
             STACK_ANALYZE("recv thread stack", recv_thread_stack);
             rx_ts = k_uptime_get_32();
         }
-
 #endif
     }
 }
@@ -435,7 +407,6 @@ static int cmd_handle(struct net_buf *buf)
     struct net_buf *evt;
 
     evt = hci_cmd_handle(buf);
-
     if (evt) {
         BT_DBG("Replying with event of %u bytes", evt->len);
         bt_recv_prio(evt);
@@ -449,7 +420,6 @@ static int acl_handle(struct net_buf *buf)
     int err;
 
     err = hci_acl_handle(buf, &evt);
-
     if (evt) {
         BT_DBG("Replying with event of %u bytes", evt->len);
         bt_recv_prio(evt);
@@ -480,20 +450,16 @@ static int hci_driver_send(struct net_buf *buf)
     return err;
 #else
     type = bt_buf_get_type(buf);
-
     switch (type) {
 #if defined(CONFIG_BT_CONN)
-
         case BT_BUF_ACL_OUT:
             err = acl_handle(buf);
             break;
 #endif /* CONFIG_BT_CONN */
-
         case BT_BUF_CMD:
             err = cmd_handle(buf);
 
             break;
-
         default:
             BT_ERR("Unknown HCI type %u", type);
             return -EINVAL;
@@ -523,7 +489,6 @@ static int hci_driver_open(void)
         BT_ERR("LL initialization failed: %u", err);
         return err;
     }
-
 #endif
 
 #if !defined(BFLB_BLE)

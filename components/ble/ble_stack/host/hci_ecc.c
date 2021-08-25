@@ -69,8 +69,7 @@ static ATOMIC_DEFINE(flags, NUM_FLAGS);
 
 static K_SEM_DEFINE(cmd_sem, 0, 1);
 
-static struct
-{
+static struct {
     u8_t private_key[32];
 
     union {
@@ -105,12 +104,10 @@ static void send_cmd_status(u16_t opcode, u8_t status)
 static u8_t generate_keys(void)
 {
 #if !defined(CONFIG_BT_USE_DEBUG_KEYS)
-
     do {
         int rc;
 
         rc = uECC_make_key(ecc.pk, ecc.private_key, &curve_secp256r1);
-
         if (rc == TC_CRYPTO_FAIL) {
             BT_ERR("Failed to create ECC public/private pair");
             return BT_HCI_ERR_UNSPECIFIED;
@@ -118,7 +115,6 @@ static u8_t generate_keys(void)
 
         /* make sure generated key isn't debug key */
     } while (memcmp(ecc.private_key, debug_private_key, 32) == 0);
-
 #else
     sys_memcpy_swap(&ecc.pk, debug_public_key, 32);
     sys_memcpy_swap(&ecc.pk[32], &debug_public_key[32], 32);
@@ -155,8 +151,8 @@ static void emulate_le_p256_public_key_cmd(void)
         (void)memset(evt->key, 0, sizeof(evt->key));
     } else {
         /* Convert X and Y coordinates from big-endian (provided
-         * by crypto API) to little endian HCI.
-         */
+		 * by crypto API) to little endian HCI.
+		 */
         sys_memcpy_swap(evt->key, ecc.pk, 32);
         sys_memcpy_swap(&evt->key[32], &ecc.pk[32], 32);
     }
@@ -175,7 +171,6 @@ static void emulate_le_generate_dhkey(void)
     int ret;
 
     ret = uECC_valid_public_key(ecc.pk, &curve_secp256r1);
-
     if (ret < 0) {
         BT_ERR("public key is not valid (ret %d)", ret);
         ret = TC_CRYPTO_FAIL;
@@ -201,8 +196,8 @@ static void emulate_le_generate_dhkey(void)
     } else {
         evt->status = 0U;
         /* Convert from big-endian (provided by crypto API) to
-         * little-endian HCI.
-         */
+		 * little-endian HCI.
+		 */
         sys_memcpy_swap(evt->dhkey, ecc.dhkey, sizeof(ecc.dhkey));
     }
 
@@ -227,7 +222,6 @@ static void ecc_thread(void *p1, void *p2, void *p3)
         } else {
             __ASSERT(0, "Unhandled ECC command");
         }
-
 #if !defined(BFLB_BLE)
         STACK_ANALYZE("ecc stack", ecc_thread_stack);
 #endif
@@ -241,9 +235,9 @@ static void clear_ecc_events(struct net_buf *buf)
     cmd = (void *)(buf->data + sizeof(struct bt_hci_cmd_hdr));
 
     /*
-     * don't enable controller ECC events as those will be generated from
-     * emulation code
-     */
+	 * don't enable controller ECC events as those will be generated from
+	 * emulation code
+	 */
     cmd->events[0] &= ~0x80; /* LE Read Local P-256 PKey Compl */
     cmd->events[1] &= ~0x01; /* LE Generate DHKey Compl Event */
 }
@@ -270,8 +264,8 @@ static void le_gen_dhkey(struct net_buf *buf)
 
     cmd = (void *)buf->data;
     /* Convert X and Y coordinates from little-endian HCI to
-     * big-endian (expected by the crypto API).
-     */
+	 * big-endian (expected by the crypto API).
+	 */
     sys_memcpy_swap(ecc.pk, cmd->key, 32);
     sys_memcpy_swap(&ecc.pk[32], &cmd->key[32], 32);
     k_sem_give(&cmd_sem);
@@ -310,16 +304,13 @@ int bt_hci_ecc_send(struct net_buf *buf)
                 net_buf_pull(buf, sizeof(*chdr));
                 le_p256_pub_key(buf);
                 return 0;
-
             case BT_HCI_OP_LE_GENERATE_DHKEY:
                 net_buf_pull(buf, sizeof(*chdr));
                 le_gen_dhkey(buf);
                 return 0;
-
             case BT_HCI_OP_LE_SET_EVENT_MASK:
                 clear_ecc_events(buf);
                 break;
-
             default:
                 break;
         }

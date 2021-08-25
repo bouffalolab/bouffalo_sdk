@@ -50,28 +50,21 @@ static inline int is_condition_met(struct k_poll_event *event, u32_t *state)
                 *state = K_POLL_STATE_SEM_AVAILABLE;
                 return 1;
             }
-
             break;
-
         case K_POLL_TYPE_DATA_AVAILABLE:
             if (!k_queue_is_empty(event->queue)) {
                 *state = K_POLL_STATE_FIFO_DATA_AVAILABLE;
                 return 1;
             }
-
             break;
-
         case K_POLL_TYPE_SIGNAL:
             if (event->signal->signaled) {
                 *state = K_POLL_STATE_SIGNALED;
                 return 1;
             }
-
             break;
-
         case K_POLL_TYPE_IGNORE:
             return 0;
-
         default:
             __ASSERT(0, "invalid event type (0x%x)\n", event->type);
             break;
@@ -95,21 +88,17 @@ static inline int register_event(struct k_poll_event *event,
             __ASSERT(event->sem, "invalid semaphore\n");
             add_event(&event->sem->poll_events, event, poller);
             break;
-
         case K_POLL_TYPE_DATA_AVAILABLE:
             __ASSERT(event->queue, "invalid queue\n");
             add_event(&event->queue->poll_events, event, poller);
             break;
-
         case K_POLL_TYPE_SIGNAL:
             __ASSERT(event->signal, "invalid poll signal\n");
             add_event(&event->signal->poll_events, event, poller);
             break;
-
         case K_POLL_TYPE_IGNORE:
             /* nothing to do */
             break;
-
         default:
             __ASSERT(0, "invalid event type\n");
             break;
@@ -130,21 +119,17 @@ static inline void clear_event_registration(struct k_poll_event *event)
             __ASSERT(event->sem, "invalid semaphore\n");
             sys_dlist_remove(&event->_node);
             break;
-
         case K_POLL_TYPE_DATA_AVAILABLE:
             __ASSERT(event->queue, "invalid queue\n");
             sys_dlist_remove(&event->_node);
             break;
-
         case K_POLL_TYPE_SIGNAL:
             __ASSERT(event->signal, "invalid poll signal\n");
             sys_dlist_remove(&event->_node);
             break;
-
         case K_POLL_TYPE_IGNORE:
             /* nothing to do */
             break;
-
         default:
             __ASSERT(0, "invalid event type\n");
             break;
@@ -179,23 +164,19 @@ static bool polling_events(struct k_poll_event *events, int num_events,
     for (int ii = 0; ii < num_events; ii++) {
         u32_t state;
         key = irq_lock();
-
         if (is_condition_met(&events[ii], &state)) {
             set_event_ready(&events[ii], state);
             polling = false;
         } else if (timeout != K_NO_WAIT && polling) {
             rc = register_event(&events[ii], NULL);
-
             if (rc == 0) {
                 ++(*last_registered);
             } else {
                 __ASSERT(0, "unexpected return code\n");
             }
         }
-
         irq_unlock(key);
     }
-
     return polling;
 }
 
@@ -245,7 +226,6 @@ int k_poll_signal_raise(struct k_poll_signal *signal, int result)
     signal->signaled = 1;
 
     poll_event = (struct k_poll_event *)sys_dlist_get(&signal->poll_events);
-
     if (!poll_event) {
         irq_unlock(key);
         return 0;

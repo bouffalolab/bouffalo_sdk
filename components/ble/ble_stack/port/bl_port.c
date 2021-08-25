@@ -32,19 +32,15 @@ int bl_rand()
     int counter = 0;
     int32_t ret = 0;
     Sec_Eng_Trng_Enable();
-
     do {
         ret = Sec_Eng_Trng_Get_Random((uint8_t *)&val, 4);
-
         if (ret < -1) {
             return -1;
         }
-
         if ((counter++) > TRNG_LOOP_COUNTER) {
             break;
         }
     } while (0 == val);
-
     val >>= 1; //leave signe bit alone
     return val;
 }
@@ -80,7 +76,6 @@ void k_queue_insert_from_isr(struct k_queue *queue, void *prev, void *data)
     BaseType_t xHigherPriorityTaskWoken;
 
     xQueueSendFromISR(queue->hdl, &data, &xHigherPriorityTaskWoken);
-
     if (xHigherPriorityTaskWoken == pdTRUE) {
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
@@ -132,7 +127,6 @@ void *k_queue_get(struct k_queue *queue, s32_t timeout)
     }
 
     ret = xQueueReceive(queue->hdl, &msg, t == BL_WAIT_FOREVER ? portMAX_DELAY : ms2tick(t));
-
     if (ret == pdPASS) {
         return msg;
     } else {
@@ -168,7 +162,6 @@ int k_sem_take(struct k_sem *sem, uint32_t timeout)
     unsigned int t = timeout;
 
     (void)ret;
-
     if (timeout == K_FOREVER) {
         t = BL_WAIT_FOREVER;
     } else if (timeout == K_NO_WAIT) {

@@ -39,7 +39,6 @@ static int prng_reseed(struct tc_hmac_prng_struct *h)
         struct net_buf *rsp;
 
         ret = bt_hci_cmd_send_sync(BT_HCI_OP_LE_RAND, NULL, &rsp);
-
         if (ret) {
             return ret;
         }
@@ -54,7 +53,6 @@ static int prng_reseed(struct tc_hmac_prng_struct *h)
 
     ret = tc_hmac_prng_reseed(h, seed, sizeof(seed), (u8_t *)&extra,
                               sizeof(extra));
-
     if (ret == TC_CRYPTO_FAIL) {
         BT_ERR("Failed to re-seed PRNG");
         return -EIO;
@@ -75,7 +73,6 @@ int prng_init(void)
     }
 
     ret = bt_hci_cmd_send_sync(BT_HCI_OP_LE_RAND, NULL, &rsp);
-
     if (ret) {
         return ret;
     }
@@ -103,10 +100,8 @@ int bt_rand(void *buf, size_t len)
 #else
     int ret;
     ret = tc_hmac_prng_generate(buf, len, &prng);
-
     if (ret == TC_HMAC_PRNG_RESEED_REQ) {
         ret = prng_reseed(&prng);
-
         if (ret) {
             return ret;
         }

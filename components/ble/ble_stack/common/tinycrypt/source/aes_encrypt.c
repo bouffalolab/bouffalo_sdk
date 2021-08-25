@@ -89,11 +89,9 @@ int tc_aes128_set_encrypt_key(TCAesKeySched_t s, const uint8_t *k)
 
     for (; i < (Nb * (Nr + 1)); ++i) {
         t = s->words[i - 1];
-
         if ((i % Nk) == 0) {
             t = subword(rotword(t)) ^ rconst[i / Nk];
         }
-
         s->words[i] = s->words[i - Nk] ^ t;
     }
 

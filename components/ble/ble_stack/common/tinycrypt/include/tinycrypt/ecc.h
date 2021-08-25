@@ -513,11 +513,11 @@ int uECC_valid_point(const uECC_word_t *point, uECC_Curve curve);
 int uECC_valid_public_key(const uint8_t *public_key, uECC_Curve curve);
 
 /*
- * @brief Converts an integer in uECC native format to big-endian bytes.
- * @param bytes OUT -- bytes representation
- * @param num_bytes IN -- number of bytes
- * @param native IN -- uECC native representation
- */
+  * @brief Converts an integer in uECC native format to big-endian bytes.
+  * @param bytes OUT -- bytes representation
+  * @param num_bytes IN -- number of bytes
+  * @param native IN -- uECC native representation
+  */
 void uECC_vli_nativeToBytes(uint8_t *bytes, int num_bytes,
                             const unsigned int *native);
 

@@ -60,11 +60,9 @@ INLINE OI_STATUS internal_DecoderReset(OI_CODEC_SBC_DECODER_CONTEXT *context,
     context->enhancedEnabled = enhanced ? TRUE : FALSE;
 #else
     context->enhancedEnabled = FALSE;
-
     if (enhanced) {
         return OI_STATUS_INVALID_PARAMETERS;
     }
-
 #endif
 
     if (msbc_enable) {
@@ -131,7 +129,6 @@ INLINE void OI_SBC_ReadHeader(OI_CODEC_SBC_COMMON_CONTEXT *common, const OI_BYTE
      * already been populated
      */
     d1 = data[1];
-
     if (d1 != frame->cachedInfo) {
         frame->freqIndex = (d1 & (BIT7 | BIT6)) >> 6;
         frame->frequency = freq_values[frame->freqIndex];
@@ -149,7 +146,6 @@ INLINE void OI_SBC_ReadHeader(OI_CODEC_SBC_COMMON_CONTEXT *common, const OI_BYTE
 
         frame->cachedInfo = d1;
     }
-
     /*
      * For decode, the bit allocator needs to know the bitpool value
      */
@@ -177,14 +173,11 @@ PRIVATE void OI_SBC_ReadScalefactors(OI_CODEC_SBC_COMMON_CONTEXT *common,
         } else {
             common->frameInfo.join = 0;
         }
-
         i /= 2;
-
         do {
             *scale_factor++ = HIGH(f = *b++);
             *scale_factor++ = LOW(f);
         } while (--i);
-
         /*
          * In this case we know that the scale factors end on a byte boundary so all we need to do
          * is initialize the bitstream.
@@ -194,12 +187,10 @@ PRIVATE void OI_SBC_ReadScalefactors(OI_CODEC_SBC_COMMON_CONTEXT *common,
         OI_ASSERT(common->frameInfo.nrof_subbands == 4 && common->frameInfo.mode == SBC_JOINT_STEREO);
         common->frameInfo.join = HIGH(f = *b++);
         i = (i - 1) / 2;
-
         do {
             *scale_factor++ = LOW(f);
             *scale_factor++ = HIGH(f = *b++);
         } while (--i);
-
         *scale_factor++ = LOW(f);
         /*
          * In 4-subband joint stereo mode, the joint stereo information ends on a half-byte
@@ -222,15 +213,12 @@ PRIVATE void OI_SBC_ReadSamples(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_BITSTR
     OI_UINT bitPtr = global_bs->bitPtr;
 
     const OI_UINT iter_count = common->frameInfo.nrof_channels * common->frameInfo.nrof_subbands / 4;
-
     do {
         OI_UINT i;
-
         for (i = 0; i < iter_count; ++i) {
             OI_UINT32 sf_by4 = ((OI_UINT32 *)common->scale_factor)[i];
             OI_UINT32 bits_by4 = common->bits.uint32[i];
             OI_UINT n;
-
             for (n = 0; n < 4; ++n) {
                 OI_INT32 dequant;
                 OI_UINT bits;
@@ -247,7 +235,6 @@ PRIVATE void OI_SBC_ReadSamples(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_BITSTR
                     sf = (sf_by4 >> 24) & 0xFF;
                     sf_by4 <<= 8;
                 }
-
                 if (bits) {
                     OI_UINT32 raw;
                     OI_BITSTREAM_READUINT(raw, bits, ptr, value, bitPtr);
@@ -255,7 +242,6 @@ PRIVATE void OI_SBC_ReadSamples(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_BITSTR
                 } else {
                     dequant = 0;
                 }
-
                 *s++ = dequant;
             }
         }

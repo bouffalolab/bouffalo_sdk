@@ -118,10 +118,9 @@ static void pts_ble_prepare_write(char *pcWriteBuffer, int xWriteBufferLen, int 
 const struct cli_command PtsCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     /*1.The cmd string to type, 2.Cmd description, 3.The function to run, 4.Number of parameters*/
 
-    {
-        "pts_ble_address_register", "\r\npts_ble_address_register:\r\n\[Address type, 0:non-rpa, 1:rpa, 2:public adderss]\r\n\
+    { "pts_ble_address_register", "\r\npts_ble_address_register:\r\n\[Address type, 0:non-rpa, 1:rpa, 2:public adderss]\r\n\
     [Pts_address, e.g.peer_addr]\r\n",
-        pts_ble_address_register },
+      pts_ble_address_register },
     { "pts_ble_set_flag", "\r\npts_ble_set_flag:[Set flag for different applications]\r\n\[Flag, e.g.0,1]\r\n", pts_ble_set_flag },
     { "pts_ble_set_smp_flag", "\r\npts_ble_set_smp_flag:[Set flag for SM test]\r\n\[Flag, e.g.0,1]\r\n", pts_ble_set_smp_flag },
     { "pts_ble_clear_smp_flag", "\r\npts_ble_clear_smp_flag:[Clear smp test flag]\r\n\[Flag, e.g.0,1]\r\n", pts_ble_clear_smp_flag },
@@ -315,9 +314,8 @@ static ssize_t pts_write_short_value(struct bt_conn *conn, const struct bt_gatt_
     u16_t tlen = len;
     u8_t *data = (u8_t *)buf;
 
-    for (i = 0; i < tlen; i++) {
+    for (i = 0; i < tlen; i++)
         vOutputString("data[%d]->[0x%x]\r\n", i, data[i]);
-    }
 
     /*The rest of space is enough.*/
     if (TEST_SVAL_MAX >= tlen) {
@@ -327,9 +325,8 @@ static ssize_t pts_write_short_value(struct bt_conn *conn, const struct bt_gatt_
     }
 
     /*If prepare write, it will return 0 */
-    if (flags == BT_GATT_WRITE_FLAG_PREPARE) {
+    if (flags == BT_GATT_WRITE_FLAG_PREPARE)
         tlen = 0;
-    }
 
     return tlen;
 }
@@ -390,9 +387,8 @@ static ssize_t pts_write_long_value(
     }
 
     /*If prepare write, it will return 0 */
-    if (flags == BT_GATT_WRITE_FLAG_PREPARE) {
+    if (flags == BT_GATT_WRITE_FLAG_PREPARE)
         tlen = 0;
-    }
 
     return tlen;
 }
@@ -506,9 +502,9 @@ static struct bt_gatt_attr pts_attr[] = {
 #if defined(PTS_GAP_SLAVER_CONFIG_WRITE_CHARC)
 
     /* Case : GATT/SR/GAR/BV-03-C
-     * Verify that a Generic Attribute Profile server can support writing a Characteristic
-     * Value selected by handle
-     */
+	 * Verify that a Generic Attribute Profile server can support writing a Characteristic
+	 * Value selected by handle
+	 */
     BT_GATT_CHARACTERISTIC(
         BT_UUID_PTS_CHAR_WRITE_VALUE,
         BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE,
@@ -518,9 +514,9 @@ static struct bt_gatt_attr pts_attr[] = {
         NULL),
 
     /* Case : GATT/SR/GAR/BV-01-C
-     * Verify that a Generic Attribute Profile server can support a write to a
-     * characteristic without response
-     */
+	 * Verify that a Generic Attribute Profile server can support a write to a 
+	 * characteristic without response
+	 */
     BT_GATT_CHARACTERISTIC(
         BT_UUID_PTS_CHAR_WRITE_NORSP,
         BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE_WITHOUT_RESP,
@@ -529,11 +525,11 @@ static struct bt_gatt_attr pts_attr[] = {
         pts_write_short_value,
         NULL),
 
-    /* Case : GATT/SR/GAR/BI-03-C, GATT/SR/GAR/BI-12-C
-     * Verify that a Generic Attribute Profile server can detect and reject a
-     * Write Characteristic Value Request to a non-writeable Characteristic Value
-     * and issue a Write Not Permitted Response.
-     */
+    /* Case : GATT/SR/GAR/BI-03-C, GATT/SR/GAR/BI-12-C 
+	 * Verify that a Generic Attribute Profile server can detect and reject a 
+	 * Write Characteristic Value Request to a non-writeable Characteristic Value 
+	 * and issue a Write Not Permitted Response.
+	 */
     BT_GATT_CHARACTERISTIC(
         BT_UUID_PTS_CHAR_WRITE_AUTHEN,
         BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE,
@@ -580,8 +576,8 @@ static struct bt_gatt_attr pts_attr[] = {
 #if defined(PTS_GAP_SLAVER_CONFIG_READ_CHARC)
 
     /* Case : GATT/SR/GAR/BI-04-C
-     * Using authenticated link-key for read access. handle is 15
-     */
+	 * Using authenticated link-key for read access. handle is 15
+	 */
     BT_GATT_CHARACTERISTIC(
         BT_UUID_PTS_CHAR_READ_AUTHEN,
         BT_GATT_CHRC_READ,
@@ -591,10 +587,10 @@ static struct bt_gatt_attr pts_attr[] = {
         NULL),
 
     /* Case : GATT/SR/GAR/BI-06-C
-     * Verify that a Generic Attribute Profile server can detect and reject a Read
-     * Characteristic by UUID Request to a non-readable Characteristic Value and issue
-     * a Read Not Permitted Response
-     */
+	 * Verify that a Generic Attribute Profile server can detect and reject a Read 
+	 * Characteristic by UUID Request to a non-readable Characteristic Value and issue 
+	 * a Read Not Permitted Response
+	 */
     BT_GATT_CHARACTERISTIC(
         BT_UUID_PTS_CHAR_READ_NOPERM,
         BT_GATT_CHRC_READ,
@@ -604,9 +600,9 @@ static struct bt_gatt_attr pts_attr[] = {
         NULL),
 
     /* Case : GATT/SR/GAR/BV-04-C;GATT/SR/GAR/BI-13-C
-     * Verify that a Generic Attribute Profile server can support reading a
-     * long Characteristic Value selected by handle.
-     */
+	 * Verify that a Generic Attribute Profile server can support reading a 
+	 * long Characteristic Value selected by handle.
+	 */
     BT_GATT_CHARACTERISTIC(
         BT_UUID_PTS_CHAR_READ_LONGVAL,
         BT_GATT_CHRC_READ,
@@ -616,9 +612,9 @@ static struct bt_gatt_attr pts_attr[] = {
         NULL),
 
     /* Case : GATT/SR/GAR/BV-06-C;GATT/SR/GAR/BV-07-C;GATT/SR/GAR/BV-08-C
-     * Verify that a Generic Attribute Profile server can support reading a Long
-     * Characteristic Descriptor selected by handle.
-     */
+	 * Verify that a Generic Attribute Profile server can support reading a Long 
+	 * Characteristic Descriptor selected by handle.
+	 */
     BT_GATT_DESCRIPTOR(
         BT_UUID_PTS_CHAR_READ_LVAL_REF,
         BT_GATT_PERM_READ,
@@ -627,10 +623,10 @@ static struct bt_gatt_attr pts_attr[] = {
         report),
 
     /* Case : GATT/SR/GAR/BI-12-C
-     * Verify that a Generic Attribute Profile server can detect and reject a Read Long
-     * Characteristic Value Request to a non-readable Characteristic Value and issue a
-     * Read Not Permitted Response.
-     */
+	 * Verify that a Generic Attribute Profile server can detect and reject a Read Long 
+	 * Characteristic Value Request to a non-readable Characteristic Value and issue a 
+	 * Read Not Permitted Response.
+	 */
     BT_GATT_CHARACTERISTIC(
         BT_UUID_PTS_CHAR_READ_L_NOPERM,
         BT_GATT_CHRC_READ,
@@ -714,7 +710,6 @@ static void pts_ble_notify(char *pcWriteBuffer, int xWriteBufferLen, int argc, c
     vOutputString("len = [0x%x]\r\n", params.len);
 
     err = bt_gatt_notify_cb(default_conn, &params);
-
     if (err) {
         vOutputString("Failed to notifition [%d]\r\n", err);
     }
@@ -762,7 +757,6 @@ static void pts_ble_indicate(char *pcWriteBuffer, int xWriteBufferLen, int argc,
     vOutputString("len = [0x%x] handle(0x%x)\r\n", params.len, params.attr->handle);
 
     err = bt_gatt_indicate(default_conn, &params);
-
     if (err) {
         vOutputString("Failed to indicate [%d]\r\n", err);
     }
@@ -782,7 +776,6 @@ static bool data_cb(struct bt_data *data, void *user_data)
             len = (data->data_len > NAME_LEN - 1) ? (NAME_LEN - 1) : (data->data_len);
             memcpy(name, data->data, len);
             return false;
-
         default:
             return true;
     }
@@ -826,9 +819,8 @@ static void pts_device_found(const bt_addr_le_t *addr, s8_t rssi, u8_t evtype,
     if (!memcmp(&pts_addr, addr, sizeof(bt_addr_le_t)) ||
         !memcmp(name, pts_cmplt_name, sizeof(*pts_cmplt_name)) ||
         !memcmp(name, pts_short_name, sizeof(*pts_short_name))) {
-        if (memcmp(&pts_addr, addr, sizeof(bt_addr_le_t))) {
+        if (memcmp(&pts_addr, addr, sizeof(bt_addr_le_t)))
             memcpy(&pts_addr, addr, sizeof(pts_addr));
-        }
 
         vOutputString("[DEVICE]: %s, AD evt type %u, RSSI %i %s \r\n", le_addr, evtype, rssi, name);
 
@@ -836,15 +828,13 @@ static void pts_device_found(const bt_addr_le_t *addr, s8_t rssi, u8_t evtype,
 
         if (*ad_flag & 0x01) {
             vOutputString("Advertising data : 'Limited Discovered Mode' flag is set one\r\n");
-        } else {
+        } else
             vOutputString("Advertising data : 'Limited Discovered Mode' flag is not set\r\n");
-        }
 
         if (*ad_flag & 0x02) {
             vOutputString("Advertising data : 'General Discovered Mode' flag is set one\r\n");
-        } else {
+        } else
             vOutputString("Advertising data : 'General Discovered Mode' flag is not set\r\n");
-        }
     }
 }
 
@@ -890,7 +880,6 @@ static void pts_ble_sc_indicate(char *pcWriteBuffer, int xWriteBufferLen, int ar
     memset(&params, 0, sizeof(params));
     params.func = NULL;
     err = service_change_test(&params, default_conn);
-
     if (err) {
         vOutputString("Failed to sc indicate\r\n");
         return;
@@ -916,7 +905,6 @@ static void pts_ble_start_scan_rpa(char *pcWriteBuffer, int xWriteBufferLen, int
     get_uint8_from_string(&argv[5], (uint8_t *)&is_rpa);
 
     err = bt_le_pts_scan_start(&scan_param, pts_device_found, is_rpa);
-
     if (err) {
         vOutputString("Failed to start scan (err %d) \r\n", err);
     } else {
@@ -947,12 +935,10 @@ static void pts_ble_add_dev_to_resolve_list(char *pcWriteBuffer, int xWriteBuffe
     get_uint8_from_string(&argv[1], &type);
     get_bytearray_from_string(&argv[2], val /*(uint8_t *)addr.a.val*/, 6);
     reverse_bytearray(val, addr.a.val, 6);
-
-    if (type == 0) {
+    if (type == 0)
         addr.type = BT_ADDR_LE_PUBLIC;
-    } else if (type == 1) {
+    else if (type == 1)
         addr.type = BT_ADDR_LE_RANDOM;
-    }
 
     memcpy(&key.addr, &addr, sizeof(bt_addr_le_t));
     memcpy(key.irk.val, peer_irk, 16);
@@ -966,7 +952,6 @@ static void pts_ble_register_pts_svc(char *pcWriteBuffer, int xWriteBufferLen, i
     int err;
 
     err = bt_gatt_service_register(&pts_svc);
-
     if (err) {
         vOutputString("Failed to register PTS service\r\n");
     } else {
@@ -982,17 +967,17 @@ static int set_attr_enc_key_size(const struct bt_gatt_attr *attr,
 
     /* Fail if requested attribute is a service */
     /*if (!bt_uuid_cmp(attr->uuid, BT_UUID_GATT_PRIMARY) ||
-        !bt_uuid_cmp(attr->uuid, BT_UUID_GATT_SECONDARY) ||
-        !bt_uuid_cmp(attr->uuid, BT_UUID_GATT_INCLUDE)) {
-        return -1;
-    }*/
+	    !bt_uuid_cmp(attr->uuid, BT_UUID_GATT_SECONDARY) ||
+	    !bt_uuid_cmp(attr->uuid, BT_UUID_GATT_INCLUDE)) {
+		return -1;
+	}*/
 
     /* Fail if permissions are not set */
     /*if (!(attr->perm & ((BT_GATT_PERM_READ_ENCRYPT | BT_GATT_PERM_READ_AUTHEN) |
-                         (BT_GATT_PERM_WRITE_ENCRYPT | BT_GATT_PERM_WRITE_AUTHEN)))) {
-
-        return -1;
-    }*/
+						 (BT_GATT_PERM_WRITE_ENCRYPT | BT_GATT_PERM_WRITE_AUTHEN)))) {
+		
+		return -1;
+	}*/
 
     vOutputString("perm:0x%x\r\n", attr->perm);
     vOutputString("handle:0x%04x\r\n", attr->handle);
@@ -1011,11 +996,10 @@ static void pts_set_enc_key_size(char *pcWriteBuffer, int xWriteBufferLen, int a
     get_uint8_from_string(&argv[1], &key_size);
     get_uint8_from_string(&argv[2], &index);
 
-    if (key_size < 0x07 || key_size > 0x0f) {
+    if (key_size < 0x07 || key_size > 0x0f)
         vOutputString("Invalid key size(%d)\r\n", key_size);
-    } else {
+    else {
         err = set_attr_enc_key_size(&pts_attr[index], key_size);
-
         if (err) {
             vOutputString("Failed to set attr enc key size(%d)\r\n", err);
         }
@@ -1041,7 +1025,6 @@ static void pts_ble_wl_connect(char *pcWriteBuffer, int xWriteBufferLen, int arg
 
     if (enable == 0x01) {
         err = bt_conn_create_auto_le(&param);
-
         if (err) {
             vOutputString("Auto connect failed (err = [%d])\r\n", err);
             return;
@@ -1050,7 +1033,6 @@ static void pts_ble_wl_connect(char *pcWriteBuffer, int xWriteBufferLen, int arg
         }
     } else if (enable == 0x02) {
         err = bt_conn_create_auto_stop();
-
         if (err) {
             vOutputString("Auto connection stop (err = [%d])\r\n", err);
             return;
@@ -1070,7 +1052,6 @@ static void pts_ble_bt_le_whitelist_add(char *pcWriteBuffer, int xWriteBufferLen
     }
 
     err = bt_le_whitelist_clear();
-
     if (err) {
         vOutputString("Clear white list device failed (err = [%d])\r\n", err);
     }
@@ -1081,7 +1062,6 @@ static void pts_ble_bt_le_whitelist_add(char *pcWriteBuffer, int xWriteBufferLen
     reverse_bytearray(val, waddr.a.val, 6);
 
     err = bt_le_whitelist_add(&waddr);
-
     if (err) {
         vOutputString("Failed to add device to whitelist (err = [%d])\r\n", err);
     }
@@ -1103,7 +1083,6 @@ static void pts_ble_start_scan_timeout(char *pcWriteBuffer, int xWriteBufferLen,
     get_uint16_from_string(&argv[6], (uint16_t *)&time);
 
     err = bt_le_pts_scan_start(&scan_param, pts_device_found, addre_type);
-
     if (err) {
         vOutputString("Failed to start scan (err %d) \r\n", err);
     } else {
@@ -1126,9 +1105,8 @@ static void pts_ble_address_register(char *pcWriteBuffer, int xWriteBufferLen, i
 
     if (type == 0) {
         addr.type = BT_ADDR_LE_PUBLIC;
-    } else if (type == 1) {
+    } else if (type == 1)
         addr.type = BT_ADDR_LE_RANDOM;
-    }
 
     memcpy(&pts_addr, &addr, sizeof(bt_addr_le_t));
 
@@ -1174,13 +1152,12 @@ static void pts_ble_bondable(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 
     get_uint8_from_string(&argv[1], &bondable);
 
-    if (bondable == 0x01) {
+    if (bondable == 0x01)
         bt_set_bondable(true);
-    } else if (bondable == 0x00) {
+    else if (bondable == 0x00)
         bt_set_bondable(false);
-    } else {
+    else
         vOutputString("Bondable status is unknow \r\n");
-    }
 }
 #endif //#if defined(CONFIG_BT_OBSERVER)
 
@@ -1205,7 +1182,6 @@ static void pts_ble_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, in
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-
     switch (event_flag) {
         case ad_type_service_uuid:
             pts_ad.type = BT_DATA_UUID128_ALL;
@@ -1298,15 +1274,13 @@ static void pts_ble_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, in
             ad = ad_discov;
             ad_len = ARRAY_SIZE(ad_discov);
         }
-
         if (is_ad == 1) {
             ad = &pts_ad;
             ad_len = 1;
         } /*else{
-
-            ad = ad_discov;
-            ad_len = ARRAY_SIZE(ad_discov);
-        }*/
+	        ad = ad_discov;
+	        ad_len = ARRAY_SIZE(ad_discov);
+		}*/
 
     } else {
         vOutputString("Arg2 is invalid\r\n");
@@ -1317,15 +1291,14 @@ static void pts_ble_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, in
     //get_bytearray_from_string(&argv[3], (u8_t *)&param.addr_type, 1);
     get_uint8_from_string(&argv[3], (u8_t *)&adder_type);
 
-    if (adder_type == 0) {
+    if (adder_type == 0)
         param.addr_type = BT_ADDR_TYPE_NON_RPA;
-    } else if (adder_type == 1) {
+    else if (adder_type == 1)
         param.addr_type = BT_ADDR_TYPE_RPA;
-    } else if (adder_type == 2) {
+    else if (adder_type == 2)
         param.addr_type = BT_ADDR_LE_PUBLIC;
-    } else {
+    else
         vOutputString("Invaild address type\r\n");
-    }
 
     if (argc == 6) {
         get_uint16_from_string(&argv[4], &param.interval_min);
@@ -1343,7 +1316,6 @@ static void pts_ble_start_advertise(char *pcWriteBuffer, int xWriteBufferLen, in
         pts.type = BT_ADDR_LE_PUBLIC;
         memcpy(pts.a.val, pts_address, 6);
         conn = bt_conn_create_slave_le(&pts, &param);
-
         if (!conn) {
             err = 1;
         } else {
@@ -1391,7 +1363,6 @@ static void pts_ble_connect_le(char *pcWriteBuffer, int xWriteBufferLen, int arg
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-
     if (event_flag == own_addr_type_random) {
         param.own_address_type = BT_ADDR_LE_RANDOM_ID;
     }
@@ -1399,17 +1370,16 @@ static void pts_ble_connect_le(char *pcWriteBuffer, int xWriteBufferLen, int arg
     get_uint8_from_string(&argv[1], (u8_t *)&type);
 
     /*Get addr type,0:ADDR_RAND, 1:ADDR_RPA_OR_PUBLIC,2:ADDR_PUBLIC, 3:ADDR_RPA_OR_RAND*/
-    if (type == 0) {
+    if (type == 0)
         addr.type = 1; /*ADDR_RAND*/
-    } else if (type == 1) {
+    else if (type == 1)
         addr.type = 2; /*ADDR_RPA_OR_PUBLIC*/
-    } else if (type == 2) {
+    else if (type == 2)
         addr.type = 0; /*ADDR_PUBLIC*/
-    } else if (type == 3) {
+    else if (type == 3)
         addr.type = 3; /*ADDR_RPA_OR_RAND*/
-    } else {
+    else
         vOutputString("adderss type is unknow [0x%x]\r\n", type);
-    }
 
     get_bytearray_from_string(&argv[2], addr_val, 6);
 
@@ -1417,17 +1387,16 @@ static void pts_ble_connect_le(char *pcWriteBuffer, int xWriteBufferLen, int arg
 
     get_uint8_from_string(&argv[3], (u8_t *)&type);
 
-    if (type == 0) {
+    if (type == 0)
         param.own_address_type = 1; /*ADDR_RAND*/
-    } else if (type == 1) {
+    else if (type == 1)
         param.own_address_type = 2; /*ADDR_RPA_OR_PUBLIC*/
-    } else if (type == 2) {
+    else if (type == 2)
         param.own_address_type = 0; /*ADDR_PUBLIC*/
-    } else if (type == 3) {
+    else if (type == 3)
         param.own_address_type = 3; /*ADDR_RPA_OR_RAND*/
-    } else {
+    else
         vOutputString("adderss type is unknow [0x%x]\r\n", type);
-    }
 
     conn = bt_conn_create_le(&addr, /*BT_LE_CONN_PARAM_DEFAULT*/ &param);
 
@@ -1451,23 +1420,21 @@ static void pts_ble_disconnect(char *pcWriteBuffer, int xWriteBufferLen, int arg
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-
     get_uint8_from_string(&argv[1], (u8_t *)&type);
     get_bytearray_from_string(&argv[2], addr_val, 6);
     reverse_bytearray(addr_val, addr.a.val, 6);
 
     /*Get addr type,0:ADDR_RAND, 1:ADDR_RPA_OR_PUBLIC,2:ADDR_PUBLIC, 3:ADDR_RPA_OR_RAND*/
-    if (type == 0) {
+    if (type == 0)
         addr.type = 1; /*ADDR_RAND*/
-    } else if (type == 1) {
+    else if (type == 1)
         addr.type = 2; /*ADDR_RPA_OR_PUBLIC*/
-    } else if (type == 2) {
+    else if (type == 2)
         addr.type = 0; /*ADDR_PUBLIC*/
-    } else if (type == 3) {
+    else if (type == 3)
         addr.type = 3; /*ADDR_RPA_OR_RAND*/
-    } else {
+    else
         vOutputString("adderss type is unknow\r\n");
-    }
 
     conn = bt_conn_lookup_addr_le(selected_id, &addr);
 
@@ -1481,7 +1448,6 @@ static void pts_ble_disconnect(char *pcWriteBuffer, int xWriteBufferLen, int arg
     } else {
         vOutputString("Disconnect successfully\r\n");
     }
-
     bt_conn_unref(conn);
 }
 
@@ -1494,23 +1460,20 @@ static void pts_ble_conn_update(char *pcWriteBuffer, int xWriteBufferLen, int ar
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-
     if (default_conn == NULL) {
         vOutputString("Connection is NULL\r\n");
         return;
     }
-
     memset(&param, 0, sizeof(struct bt_le_conn_param));
     get_uint16_from_string(&argv[1], &param.interval_min);
     get_uint16_from_string(&argv[2], &param.interval_max);
     get_uint16_from_string(&argv[3], &param.latency);
     get_uint16_from_string(&argv[4], &param.timeout);
 
-    if (event_flag == dir_connect_req) {
+    if (event_flag == dir_connect_req)
         err = bt_conn_le_param_update(default_conn, &param);
-    } else {
+    else
         err = pts_bt_conn_le_param_update(default_conn, &param);
-    }
 
     if (err) {
         vOutputString("conn update failed (err %d)\r\n", err);
@@ -1527,13 +1490,12 @@ static void pts_ble_set_mitm(char *pcWriteBuffer, int xWriteBufferLen, int argc,
 
     get_uint8_from_string(&argv[1], &enable);
 
-    if (enable == 0x01) {
+    if (enable == 0x01)
         bt_set_mitm(true);
-    } else if (enable == 0x00) {
+    else if (enable == 0x00)
         bt_set_mitm(false);
-    } else {
+    else
         vOutputString("Inviad parameter\r\n");
-    }
 }
 
 #endif //#if defined(CONFIG_BT_SMP)
@@ -1562,7 +1524,6 @@ static void pts_ble_discover_uuid_128(char *pcWriteBuffer, int xWriteBufferLen, 
     discover_params.end_handle = 0xffff;
 
     get_uint8_from_string(&argv[1], &disc_type);
-
     if (disc_type == 0) {
         discover_params.type = BT_GATT_DISCOVER_PRIMARY;
     } else if (disc_type == 1) {
@@ -1577,7 +1538,6 @@ static void pts_ble_discover_uuid_128(char *pcWriteBuffer, int xWriteBufferLen, 
         vOutputString("Invalid discovery type\r\n");
         return;
     }
-
     get_bytearray_from_string(&argv[2], val, 16);
 
     reverse_bytearray(val, uuid_128.val, 16);
@@ -1585,17 +1545,15 @@ static void pts_ble_discover_uuid_128(char *pcWriteBuffer, int xWriteBufferLen, 
     /*Set array value to 0 */
     (void)memset(val, 0x0, 16);
 
-    if (!memcmp(uuid_128.val, val, 16)) {
+    if (!memcmp(uuid_128.val, val, 16))
         discover_params.uuid = NULL;
-    } else {
+    else
         discover_params.uuid = &uuid_128.uuid;
-    }
 
     get_uint16_from_string(&argv[3], &discover_params.start_handle);
     get_uint16_from_string(&argv[4], &discover_params.end_handle);
 
     err = bt_gatt_discover(default_conn, &discover_params);
-
     if (err) {
         vOutputString("Discover failed (err %d)\r\n", err);
     } else {
@@ -1619,10 +1577,8 @@ static u8_t read_func(struct bt_conn *conn, u8_t err, struct bt_gatt_read_params
         vOutputString("device name : %s \r\n", str);
 
         u8_t i = 0;
-
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < length; i++)
             vOutputString("data[%d] = [0x%x]\r\n", i, buf[i]);
-        }
     }
 
     if (!data) {
@@ -1662,17 +1618,15 @@ static void pts_ble_read_uuid_128(char *pcWriteBuffer, int xWriteBufferLen, int 
 
     (void)memset(val, 0, 16);
 
-    if (!memcmp(uuid.val, val, 16)) {
+    if (!memcmp(uuid.val, val, 16))
         read_params.by_uuid.uuid = NULL;
-    } else {
+    else
         read_params.by_uuid.uuid = &uuid.uuid;
-    }
 
     get_uint16_from_string(&argv[2], &read_params.by_uuid.start_handle);
     get_uint16_from_string(&argv[3], &read_params.by_uuid.end_handle);
 
     err = bt_gatt_read(default_conn, &read_params);
-
     if (err) {
         vOutputString("Read failed (err %d)\r\n", err);
     } else {
@@ -1701,16 +1655,13 @@ static void pts_ble_read_uuid(char *pcWriteBuffer, int xWriteBufferLen, int argc
     read_params.by_uuid.end_handle = 0xffff;
 
     get_uint16_from_string(&argv[1], &uuid.val);
-
-    if (uuid.val) {
+    if (uuid.val)
         read_params.by_uuid.uuid = &uuid.uuid;
-    }
 
     get_uint16_from_string(&argv[2], &read_params.by_uuid.start_handle);
     get_uint16_from_string(&argv[3], &read_params.by_uuid.end_handle);
 
     err = bt_gatt_read(default_conn, &read_params);
-
     if (err) {
         vOutputString("Read failed (err %d)\r\n", err);
     } else {
@@ -1744,7 +1695,6 @@ static void pts_ble_mread(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
     vOutputString("i = [%d]\r\n", i);
 
     err = bt_gatt_read(default_conn, &read_params);
-
     if (err) {
         vOutputString("Read failed (err %d)\r\n", err);
     } else {

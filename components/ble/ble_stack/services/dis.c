@@ -183,10 +183,8 @@ static int dis_set(const char *name, size_t len_rd,
     const char *next;
 
     nlen = settings_name_next(name, &next);
-
     if (!strncmp(name, "manuf", nlen)) {
         len = read_cb(store, &dis_manuf, sizeof(dis_manuf) - 1);
-
         if (len < 0) {
             BT_ERR("Failed to read manufacturer from storage"
                    " (err %d)",
@@ -196,13 +194,10 @@ static int dis_set(const char *name, size_t len_rd,
 
             BT_DBG("Manufacturer set to %s", dis_manuf);
         }
-
         return 0;
     }
-
     if (!strncmp(name, "model", nlen)) {
         len = read_cb(store, &dis_model, sizeof(dis_model) - 1);
-
         if (len < 0) {
             BT_ERR("Failed to read model from storage"
                    " (err %d)",
@@ -212,16 +207,12 @@ static int dis_set(const char *name, size_t len_rd,
 
             BT_DBG("Model set to %s", dis_model);
         }
-
         return 0;
     }
-
 #if defined(CONFIG_BT_GATT_DIS_SERIAL_NUMBER)
-
     if (!strncmp(name, "serial", nlen)) {
         len = read_cb(store, &dis_serial_number,
                       sizeof(dis_serial_number) - 1);
-
         if (len < 0) {
             BT_ERR("Failed to read serial number from storage"
                    " (err %d)",
@@ -231,16 +222,12 @@ static int dis_set(const char *name, size_t len_rd,
 
             BT_DBG("Serial number set to %s", dis_serial_number);
         }
-
         return 0;
     }
-
 #endif
 #if defined(CONFIG_BT_GATT_DIS_FW_REV)
-
     if (!strncmp(name, "fw", nlen)) {
         len = read_cb(store, &dis_fw_rev, sizeof(dis_fw_rev) - 1);
-
         if (len < 0) {
             BT_ERR("Failed to read firmware revision from storage"
                    " (err %d)",
@@ -250,16 +237,12 @@ static int dis_set(const char *name, size_t len_rd,
 
             BT_DBG("Firmware revision set to %s", dis_fw_rev);
         }
-
         return 0;
     }
-
 #endif
 #if defined(CONFIG_BT_GATT_DIS_HW_REV)
-
     if (!strncmp(name, "hw", nlen)) {
         len = read_cb(store, &dis_hw_rev, sizeof(dis_hw_rev) - 1);
-
         if (len < 0) {
             BT_ERR("Failed to read hardware revision from storage"
                    " (err %d)",
@@ -269,16 +252,12 @@ static int dis_set(const char *name, size_t len_rd,
 
             BT_DBG("Hardware revision set to %s", dis_hw_rev);
         }
-
         return 0;
     }
-
 #endif
 #if defined(CONFIG_BT_GATT_DIS_SW_REV)
-
     if (!strncmp(name, "sw", nlen)) {
         len = read_cb(store, &dis_sw_rev, sizeof(dis_sw_rev) - 1);
-
         if (len < 0) {
             BT_ERR("Failed to read software revision from storage"
                    " (err %d)",
@@ -288,10 +267,8 @@ static int dis_set(const char *name, size_t len_rd,
 
             BT_DBG("Software revision set to %s", dis_sw_rev);
         }
-
         return 0;
     }
-
 #endif
     return 0;
 }

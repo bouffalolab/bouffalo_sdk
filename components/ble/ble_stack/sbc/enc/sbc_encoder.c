@@ -61,7 +61,6 @@ void SBC_Encoder(SBC_ENC_PARAMS *pstrEncParams)
 #else
     pstrEncParams->ps16NextPcmBuffer = pstrEncParams->as16PcmBuffer;
 #endif
-
     do {
         /* SBC ananlysis filter*/
         if (s32NumOfSubBands == 4) {
@@ -79,12 +78,10 @@ void SBC_Encoder(SBC_ENC_PARAMS *pstrEncParams)
         for (s32Sb = 0; s32Sb < s32Ch; s32Sb++) {
             SbBuffer = pstrEncParams->s32SbBuffer + s32Sb;
             s32MaxValue = 0;
-
             for (s32Blk = s32NumOfBlocks; s32Blk > 0; s32Blk--) {
                 if (s32MaxValue < abs32(*SbBuffer)) {
                     s32MaxValue = abs32(*SbBuffer);
                 }
-
                 SbBuffer += s32Ch;
             }
 
@@ -95,21 +92,17 @@ void SBC_Encoder(SBC_ENC_PARAMS *pstrEncParams)
                     break;
                 }
             }
-
             *ps16ScfL++ = (SINT16)u32Count;
 
             if (u32Count > maxBit) {
                 maxBit = u32Count;
             }
         }
-
         /* In case of JS processing,check whether to use JS */
 #if (SBC_JOINT_STE_INCLUDED == TRUE)
-
         if (pstrEncParams->s16ChannelMode == SBC_JOINT_STEREO) {
             /* Calculate sum and differance  scale factors for making JS decision   */
             ps16ScfL = pstrEncParams->as16ScaleFactor;
-
             /* calculate the scale factor of Joint stereo max sum and diff */
             for (s32Sb = 0; s32Sb < s32NumOfSubBands - 1; s32Sb++) {
                 SbBuffer = pstrEncParams->s32SbBuffer + s32Sb;
@@ -117,44 +110,33 @@ void SBC_Encoder(SBC_ENC_PARAMS *pstrEncParams)
                 s32MaxValue = 0;
                 pSum = s32LRSum;
                 pDiff = s32LRDiff;
-
                 for (s32Blk = 0; s32Blk < s32NumOfBlocks; s32Blk++) {
                     *pSum = (*SbBuffer + *(SbBuffer + s32NumOfSubBands)) >> 1;
-
                     if (abs32(*pSum) > s32MaxValue) {
                         s32MaxValue = abs32(*pSum);
                     }
-
                     pSum++;
                     *pDiff = (*SbBuffer - *(SbBuffer + s32NumOfSubBands)) >> 1;
-
                     if (abs32(*pDiff) > s32MaxValue2) {
                         s32MaxValue2 = abs32(*pDiff);
                     }
-
                     pDiff++;
                     SbBuffer += s32Ch;
                 }
-
                 u32Count = (s32MaxValue > 0x800000) ? 9 : 0;
-
                 for (; u32Count < 15; u32Count++) {
                     if (s32MaxValue <= (SINT32)(0x8000 << u32Count)) {
                         break;
                     }
                 }
-
                 u32CountSum = u32Count;
                 u32Count = (s32MaxValue2 > 0x800000) ? 9 : 0;
-
                 for (; u32Count < 15; u32Count++) {
                     if (s32MaxValue2 <= (SINT32)(0x8000 << u32Count)) {
                         break;
                     }
                 }
-
                 u32CountDiff = u32Count;
-
                 if ((*ps16ScfL + *(ps16ScfL + s32NumOfSubBands)) > (SINT16)(u32CountSum + u32CountDiff)) {
                     if (u32CountSum > maxBit) {
                         maxBit = u32CountSum;
@@ -184,13 +166,10 @@ void SBC_Encoder(SBC_ENC_PARAMS *pstrEncParams)
                 } else {
                     pstrEncParams->as16Join[s32Sb] = 0;
                 }
-
                 ps16ScfL++;
             }
-
             pstrEncParams->as16Join[s32Sb] = 0;
         }
-
 #endif
 
         pstrEncParams->s16MaxBitNeed = (SINT16)maxBit;
@@ -279,7 +258,6 @@ void SBC_Encoder_Init(SBC_ENC_PARAMS *pstrEncParams)
         if (pstrEncParams->s16BitPool < 0) {
             pstrEncParams->s16BitPool = 0;
         }
-
         /* sampling freq */
         HeaderParams = ((pstrEncParams->s16SamplingFreq & 3) << 6);
 

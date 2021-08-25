@@ -1,6 +1,8 @@
 #include "byteorder.h"
 #include "oad_service.h"
 #include "oad.h"
+#include "log.h"
+#include "hci_core.h"
 
 oad_upper_recv_cb upper_recv_cb;
 oad_disc_cb disc_cb;
@@ -13,10 +15,43 @@ static struct bt_conn_cb ble_oad_conn_callbacks = {
     .connected = ble_oad_connected,
     .disconnected = ble_oad_disconnected,
 };
+
+static void ble_oad_tx_mtu_size(struct bt_conn *conn, u8_t err,
+                                struct bt_gatt_exchange_params *params)
+{
+    if (!err) {
+        BT_WARN("ble oad echange mtu size success, mtu size: %d\n", bt_gatt_get_mtu(ble_oad_conn));
+    } else {
+        BT_WARN("ble oad echange mtu size failure, err: %d\n", err);
+    }
+}
+
 static void ble_oad_connected(struct bt_conn *conn, u8_t err)
 {
+    int ret = -1;
+    int tx_octets = 0x00fb;
+    int tx_time = 0x0848;
+
     if (!ble_oad_conn) {
         ble_oad_conn = conn;
+    }
+
+    //set data length after connected.
+    ret = bt_le_set_data_len(ble_oad_conn, tx_octets, tx_time);
+    if (!ret) {
+        BT_WARN("ble oad set data length success.\n");
+    } else {
+        BT_WARN("ble oad set data length failure, err: %d\n", ret);
+    }
+
+    //exchange mtu size after connected.
+    struct bt_gatt_exchange_params *exchg_mtu = k_malloc(sizeof(struct bt_gatt_exchange_params));
+    exchg_mtu->func = ble_oad_tx_mtu_size;
+    ret = bt_gatt_exchange_mtu(ble_oad_conn, exchg_mtu);
+    if (!ret) {
+        BT_WARN("ble oad exchange mtu size pending.\n");
+    } else {
+        BT_WARN("ble oad exchange mtu size failure, err: %d\n", ret);
     }
 }
 

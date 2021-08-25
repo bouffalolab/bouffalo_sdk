@@ -192,7 +192,6 @@ INLINE OI_INT32 OI_SBC_Dequant_Unscaled(OI_UINT32 raw, OI_UINT scale_factor, OI_
     if (bits <= 1) {
         return 0;
     }
-
     if (bits == 16) {
         result = (raw << 16) + raw - 0x7fff7fff;
         return SCALE(result, 24 - scale_factor);

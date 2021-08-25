@@ -450,7 +450,6 @@ static inline void sys_dlist_insert_at(sys_dlist_t *list, sys_dnode_t *node,
         while (pos && !cond(pos, data)) {
             pos = sys_dlist_peek_next(list, pos);
         }
-
         sys_dlist_insert_before(list, pos, node);
     }
 }

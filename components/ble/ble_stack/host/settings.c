@@ -55,12 +55,11 @@ void bt_settings_encode_key(char *path, size_t path_size, const char *subsys,
     /* Skip if path_size is less than 3; strlen("bt/") */
     if (len < path_size) {
         /* Key format:
-         *  "bt/<subsys>/<addr><type>/<key>", "/<key>" is optional
-         */
+		 *  "bt/<subsys>/<addr><type>/<key>", "/<key>" is optional
+		 */
         strcpy(path, "bt/");
         strncpy(&path[len], subsys, path_size - len);
         len = strlen(path);
-
         if (len < path_size) {
             path[len] = '/';
             len++;
@@ -73,8 +72,8 @@ void bt_settings_encode_key(char *path, size_t path_size, const char *subsys,
 
         if (len < path_size) {
             /* Type can be either BT_ADDR_LE_PUBLIC or
-             * BT_ADDR_LE_RANDOM (value 0 or 1)
-             */
+			 * BT_ADDR_LE_RANDOM (value 0 or 1)
+			 */
             path[len] = '0' + addr->type;
             len++;
         }
@@ -143,7 +142,6 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
         }
 
         len = read_cb(cb_arg, &bt_dev.id_addr, sizeof(bt_dev.id_addr));
-
         if (len < sizeof(bt_dev.id_addr[0])) {
             if (len < 0) {
                 BT_ERR("Failed to read ID address from storage"
@@ -154,7 +152,6 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
                 BT_HEXDUMP_DBG(&bt_dev.id_addr, len,
                                "data read");
             }
-
             (void)memset(bt_dev.id_addr, 0,
                          sizeof(bt_dev.id_addr));
             bt_dev.id_count = 0U;
@@ -162,7 +159,6 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
             int i;
 
             bt_dev.id_count = len / sizeof(bt_dev.id_addr[0]);
-
             for (i = 0; i < bt_dev.id_count; i++) {
                 BT_DBG("ID[%d] %s", i,
                        bt_addr_le_str(&bt_dev.id_addr[i]));
@@ -173,10 +169,8 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
     }
 
 #if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
-
     if (!strncmp(name, "name", len)) {
         len = read_cb(cb_arg, &bt_dev.name, sizeof(bt_dev.name) - 1);
-
         if (len < 0) {
             BT_ERR("Failed to read device name from storage"
                    " (err %zu)",
@@ -186,17 +180,13 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
 
             BT_DBG("Name set to %s", log_strdup(bt_dev.name));
         }
-
         return 0;
     }
-
 #endif
 
 #if defined(CONFIG_BT_PRIVACY)
-
     if (!strncmp(name, "irk", len)) {
         len = read_cb(cb_arg, bt_dev.irk, sizeof(bt_dev.irk));
-
         if (len < sizeof(bt_dev.irk[0])) {
             if (len < 0) {
                 BT_ERR("Failed to read IRK from storage"
@@ -210,7 +200,6 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
             int i, count;
 
             count = len / sizeof(bt_dev.irk[0]);
-
             for (i = 0; i < count; i++) {
                 BT_DBG("IRK[%d] %s", i,
                        bt_hex(bt_dev.irk[i], 16));
@@ -219,7 +208,6 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
 
         return 0;
     }
-
 #endif /* CONFIG_BT_PRIVACY */
 
     return -ENOENT;
@@ -233,18 +221,15 @@ static void save_id(struct k_work *work)
     BT_INFO("Saving ID");
     err = settings_save_one("bt/id", &bt_dev.id_addr,
                             ID_DATA_LEN(bt_dev.id_addr));
-
     if (err) {
         BT_ERR("Failed to save ID (err %d)", err);
     }
 
 #if defined(CONFIG_BT_PRIVACY)
     err = settings_save_one("bt/irk", bt_dev.irk, ID_DATA_LEN(bt_dev.irk));
-
     if (err) {
         BT_ERR("Failed to save IRK (err %d)", err);
     }
-
 #endif
 }
 
@@ -259,10 +244,8 @@ int bt_check_if_ef_ready()
 
     if (!ef_ready_flag) {
         err = easyflash_init();
-
-        if (!err) {
+        if (!err)
             ef_ready_flag = true;
-        }
     }
 
     return err;
@@ -275,10 +258,8 @@ int bt_settings_set_bin(const char *key, const uint8_t *value, size_t length)
     int err;
 
     err = bt_check_if_ef_ready();
-
-    if (err) {
+    if (err)
         return err;
-    }
 
     str_value = pvPortMalloc(length * 2 + 1);
 
@@ -288,7 +269,6 @@ int bt_settings_set_bin(const char *key, const uint8_t *value, size_t length)
         str_value[(i * 2) + 0] = lookup[(value[i] >> 4) & 0x0F];
         str_value[(i * 2) + 1] = lookup[value[i] & 0x0F];
     }
-
     str_value[length * 2] = '\0';
 
     err = ef_set_env(key, (const char *)str_value);
@@ -306,13 +286,10 @@ int bt_settings_get_bin(const char *key, u8_t *value, size_t exp_len, size_t *re
     int err;
 
     err = bt_check_if_ef_ready();
-
-    if (err) {
+    if (err)
         return err;
-    }
 
     str_value = ef_get_env(key);
-
     if (str_value == NULL) {
         return -1;
     }
@@ -323,9 +300,8 @@ int bt_settings_get_bin(const char *key, u8_t *value, size_t exp_len, size_t *re
         return -1;
     }
 
-    if (real_len) {
+    if (real_len)
         *real_len = str_value_len / 2;
-    }
 
     for (size_t i = 0; i < str_value_len / 2; i++) {
         strncpy(rand, str_value + 2 * i, 2);
@@ -352,11 +328,8 @@ void bt_settings_save_id(void)
 {
 #if defined(BFLB_BLE)
 #if defined(CONFIG_BT_SETTINGS)
-
-    if (bt_check_if_ef_ready()) {
+    if (bt_check_if_ef_ready())
         return;
-    }
-
     bt_settings_set_bin(NV_LOCAL_ID_ADDR, (const u8_t *)&bt_dev.id_addr[0], sizeof(bt_addr_le_t) * CONFIG_BT_ID_MAX);
 #if defined(CONFIG_BT_PRIVACY)
     bt_settings_set_bin(NV_LOCAL_IRK, (const u8_t *)&bt_dev.irk[0], 16 * CONFIG_BT_ID_MAX);
@@ -371,29 +344,24 @@ void bt_settings_save_id(void)
 #if defined(CONFIG_BT_SETTINGS)
 void bt_settings_save_name(void)
 {
-    if (bt_check_if_ef_ready()) {
+    if (bt_check_if_ef_ready())
         return;
-    }
 
     ef_set_env(NV_LOCAL_NAME, bt_dev.name);
 }
 
 void bt_local_info_load(void)
 {
-    if (bt_check_if_ef_ready()) {
+    if (bt_check_if_ef_ready())
         return;
-    }
-
 #if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
     char *dev_name;
     uint8_t len;
     dev_name = ef_get_env(NV_LOCAL_NAME);
-
     if (dev_name != NULL) {
         len = ((strlen(dev_name) + 1) < CONFIG_BT_DEVICE_NAME_MAX) ? (strlen(dev_name) + 1) : CONFIG_BT_DEVICE_NAME_MAX;
         memcpy(bt_dev.name, dev_name, len);
     }
-
 #endif
     bt_settings_get_bin(NV_LOCAL_ID_ADDR, (u8_t *)&bt_dev.id_addr[0], sizeof(bt_addr_le_t) * CONFIG_BT_ID_MAX, NULL);
 #if defined(CONFIG_BT_PRIVACY)
@@ -409,18 +377,14 @@ static int commit(void)
     BT_DBG("");
 
 #if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
-
     if (bt_dev.name[0] == '\0') {
         bt_set_name(CONFIG_BT_DEVICE_NAME);
     }
-
 #endif
-
     if (!bt_dev.id_count) {
         int err;
 
         err = bt_setup_id_addr();
-
         if (err) {
             BT_ERR("Unable to setup an identity address");
             return err;
@@ -428,7 +392,7 @@ static int commit(void)
     }
 
     /* Make sure that the identities created by bt_id_create after
-     * bt_enable is saved to persistent storage. */
+	 * bt_enable is saved to persistent storage. */
     if (!atomic_test_bit(bt_dev.flags, BT_DEV_PRESET_ID)) {
         bt_settings_save_id();
     }
@@ -454,7 +418,6 @@ int bt_settings_init(void)
     BT_DBG("");
 
     err = settings_subsys_init();
-
     if (err) {
         BT_ERR("settings_subsys_init failed (err %d)", err);
         return err;

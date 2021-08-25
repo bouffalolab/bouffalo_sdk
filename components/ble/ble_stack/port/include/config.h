@@ -175,17 +175,17 @@
 #endif
 #endif
 /**
-    * CONFIG_BLUETOOTH_L2CAP_TX_BUF_COUNT: number of buffer for outgoing L2CAP packages
-    * range 2 to 255
-    */
+* CONFIG_BLUETOOTH_L2CAP_TX_BUF_COUNT: number of buffer for outgoing L2CAP packages
+* range 2 to 255
+*/
 #ifndef CONFIG_BT_L2CAP_TX_BUF_COUNT
 #define CONFIG_BT_L2CAP_TX_BUF_COUNT CFG_BLE_TX_BUFF_DATA
 #endif
 
 /**
-    * CONFIG_BT_L2CAP_TX_MTU: Max L2CAP MTU for L2CAP tx buffer
-    * range 65 to 2000 if SMP enabled,otherwise range 23 to 2000
-    */
+* CONFIG_BT_L2CAP_TX_MTU: Max L2CAP MTU for L2CAP tx buffer
+* range 65 to 2000 if SMP enabled,otherwise range 23 to 2000
+*/
 #ifndef CONFIG_BT_L2CAP_TX_MTU
 #ifdef CONFIG_BT_SMP
 #define CONFIG_BT_L2CAP_TX_MTU 247 //96 //65
@@ -195,9 +195,9 @@
 #endif
 
 /**
-    * CONFIG_BT_L2CAP_TX_USER_DATA_SIZE: the max length for L2CAP tx buffer user data size
-    * range 4 to 65535
-    */
+* CONFIG_BT_L2CAP_TX_USER_DATA_SIZE: the max length for L2CAP tx buffer user data size
+* range 4 to 65535
+*/
 #ifndef CONFIG_BT_L2CAP_TX_USER_DATA_SIZE
 #define CONFIG_BT_L2CAP_TX_USER_DATA_SIZE 4
 #endif
@@ -206,53 +206,53 @@
 #define CONFIG_BT_ATT_PREPARE_COUNT 64
 #else
 /**
-        * CONFIG_BT_ATT_PREPARE_COUNT: Number of buffers available for ATT prepare write, setting
-        * this to 0 disables GATT long/reliable writes.
-        * range 0 to 64
-        */
+* CONFIG_BT_ATT_PREPARE_COUNT: Number of buffers available for ATT prepare write, setting
+* this to 0 disables GATT long/reliable writes.
+* range 0 to 64
+*/
 #ifndef CONFIG_BT_ATT_PREPARE_COUNT
 #define CONFIG_BT_ATT_PREPARE_COUNT 0
 #endif
 #endif
 
 /**
-    *  CONFIG_BLUETOOTH_SMP:Eable the Security Manager Protocol
-    *  (SMP), making it possible to pair devices over LE
-    */
+*  CONFIG_BLUETOOTH_SMP:Eable the Security Manager Protocol
+*  (SMP), making it possible to pair devices over LE
+*/
 #ifdef CONFIG_BT_SMP
 #undef CONFIG_BT_SMP
 #define CONFIG_BT_SMP 1
 
 /**
-        *  CONFIG_BT_SIGNING:enables data signing which is used for transferring
-        *  authenticated data in an unencrypted connection
-        */
+*  CONFIG_BT_SIGNING:enables data signing which is used for transferring
+*  authenticated data in an unencrypted connection
+*/
 #ifdef CONFIG_BT_SIGNING
 #undef CONFIG_BT_SIGNING
 #define CONFIG_BT_SIGNING 1
 #endif
 
 /**
-        *  CONFIG_BT_SMP_SC_ONLY:enables support for Secure Connection Only Mode. In this
-        *  mode device shall only use Security Mode 1 Level 4 with exception
-        *  for services that only require Security Mode 1 Level 1 (no security).
-        *  Security Mode 1 Level 4 stands for authenticated LE Secure Connections
-        *  pairing with encryption. Enabling this option disables legacy pairing
-        */
+*  CONFIG_BT_SMP_SC_ONLY:enables support for Secure Connection Only Mode. In this
+*  mode device shall only use Security Mode 1 Level 4 with exception
+*  for services that only require Security Mode 1 Level 1 (no security).
+*  Security Mode 1 Level 4 stands for authenticated LE Secure Connections
+*  pairing with encryption. Enabling this option disables legacy pairing
+*/
 #ifdef CONFIG_BT_SMP_SC_ONLY
 #undef CONFIG_BT_SMP_SC_ONLY
 #define CONFIG_BT_SMP_SC_ONLY 1
 #endif
 
 /**
-        *  CONFIG_BT_USE_DEBUG_KEYS:This option places Security Manager in
-        *  a Debug Mode. In this mode predefined
-        *  Diffie-Hellman private/public key pair is used as described
-        *  in Core Specification Vol. 3, Part H, 2.3.5.6.1. This option should
-        *  only be enabled for debugging and should never be used in production.
-        *  If this option is enabled anyone is able to decipher encrypted air
-        *  traffic.
-        */
+*  CONFIG_BT_USE_DEBUG_KEYS:This option places Security Manager in
+*  a Debug Mode. In this mode predefined
+*  Diffie-Hellman private/public key pair is used as described
+*  in Core Specification Vol. 3, Part H, 2.3.5.6.1. This option should
+*  only be enabled for debugging and should never be used in production.
+*  If this option is enabled anyone is able to decipher encrypted air
+*  traffic.
+*/
 #ifdef CONFIG_BT_USE_DEBUG_KEYS
 #ifndef CONFIG_BT_TINYCRYPT_ECC
 #error "CONFIG_BT_USE_DEBUG_KEYS depends on CONFIG_BT_TINYCRYPT_ECC"
@@ -262,9 +262,9 @@
 #endif
 
 /**
-        *  CONFIG_BT_L2CAP_DYNAMIC_CHANNEL:enables support for LE Connection
-        *  oriented Channels,allowing the creation of dynamic L2CAP Channels
-        */
+*  CONFIG_BT_L2CAP_DYNAMIC_CHANNEL:enables support for LE Connection
+*  oriented Channels,allowing the creation of dynamic L2CAP Channels
+*/
 #ifdef CONFIG_BT_L2CAP_DYNAMIC_CHANNEL
 #undef CONFIG_BT_L2CAP_DYNAMIC_CHANNEL
 #define CONFIG_BT_L2CAP_DYNAMIC_CHANNEL 1
@@ -273,9 +273,9 @@
 #endif
 
 /**
-    *   CONFIG_BT_PRIVACY:Enable local Privacy Feature support. This makes it possible
-    *   to use Resolvable Private Addresses (RPAs).
-    */
+*   CONFIG_BT_PRIVACY:Enable local Privacy Feature support. This makes it possible
+*   to use Resolvable Private Addresses (RPAs).
+*/
 #ifdef CONFIG_BT_PRIVACY
 #ifndef CONFIG_BT_SMP
 #error "CONFIG_BT_PRIVACY depends on CONFIG_BT_SMP"
@@ -284,34 +284,34 @@
 #define CONFIG_BT_PRIVACY 1
 
 /**
-        * CONFIG_BT_RPA_TIMEOUT:Resolvable Private Address timeout
-        * range 1 to 65535,seconds
-        */
+* CONFIG_BT_RPA_TIMEOUT:Resolvable Private Address timeout
+* range 1 to 65535,seconds
+*/
 #ifndef CONFIG_BT_RPA_TIMEOUT
 #define CONFIG_BT_RPA_TIMEOUT 900
 #endif
 #endif
 
 /**
-    *  CONFIG_BT_GATT_DYNAMIC_DB:enables GATT services to be added dynamically to database
-    */
+*  CONFIG_BT_GATT_DYNAMIC_DB:enables GATT services to be added dynamically to database
+*/
 #ifdef CONFIG_BT_GATT_DYNAMIC_DB
 #undef CONFIG_BT_GATT_DYNAMIC_DB
 #define CONFIG_BT_GATT_DYNAMIC_DB 1
 #endif
 
 /**
-    *  CONFIG_BT_GATT_CLIENT:GATT client role support
-    */
+*  CONFIG_BT_GATT_CLIENT:GATT client role support
+*/
 #ifdef CONFIG_BT_GATT_CLIENT
 #undef CONFIG_BT_GATT_CLIENT
 #define CONFIG_BT_GATT_CLIENT 1
 #endif
 
 /**
-    *  CONFIG_BT_MAX_PAIRED:Maximum number of paired devices
-    *  range 1 to 128
-    */
+*  CONFIG_BT_MAX_PAIRED:Maximum number of paired devices
+*  range 1 to 128
+*/
 #ifndef CONFIG_BT_MAX_PAIRED
 #define CONFIG_BT_MAX_PAIRED CONFIG_BT_MAX_CONN
 #endif
@@ -487,16 +487,16 @@
 
 #ifndef CONFIG_BT_ATT_TX_MAX
 /*
-    *  Take throuthput test into consideration, set att tx max the same with lowstack tx buffer count.
-    *  att semaphore determine the max numble packets can send to lowsatck at once.
-    */
+*  Take throuthput test into consideration, set att tx max the same with lowstack tx buffer count.
+*  att semaphore determine the max numble packets can send to lowsatck at once.
+*/
 #define CONFIG_BT_ATT_TX_MAX 10
 #endif
 
 #ifndef CONFIG_BT_CONN_TX_MAX
 /*
-    *  Take throuthput test into consideration, set upperstack conn tx max the same with lowstack tx buffer count.
-    */
+*  Take throuthput test into consideration, set upperstack conn tx max the same with lowstack tx buffer count.
+*/
 #define CONFIG_BT_CONN_TX_MAX 10
 #endif
 
@@ -571,8 +571,8 @@
 #define CONFIG_BT_GATT_SERVICE_CHANGED      1
 #define CONFIG_BT_GATT_CACHING              1
 #define CONFIG_BT_SCAN_WITH_IDENTITY        1
-#define CONFIG_BT_ADV_WITH_PUBLIC_ADDR      1
-#define CONFIG_BT_ATT_PREPARE_COUNT         64
+//#define CONFIG_BT_ADV_WITH_PUBLIC_ADDR 1
+#define CONFIG_BT_ATT_PREPARE_COUNT 64
 #endif
 #endif //BFLB_BLE
 
@@ -592,7 +592,7 @@ happens, which cause memory leak issue.*/
 #define BFLB_BLE_PATCH_SET_SCRANGE_CHAGD_ONLY_IN_CONNECTED_STATE
 #ifdef CONFIG_BT_SETTINGS
 /*Semaphore is used during flash operation. Make sure that freertos has already run up when it
-    intends to write information to flash.*/
+  intends to write information to flash.*/
 #define BFLB_BLE_PATCH_SETTINGS_LOAD
 #endif
 #define BFLB_BLE_SMP_LOCAL_AUTH
@@ -602,10 +602,13 @@ happens, which cause memory leak issue.*/
 #endif
 
 #define BFLB_RELEASE_CMD_SEM_IF_CONN_DISC
-/*Fix the issue when local auth_req is 0(no boinding),
+/*Fix the issue when local auth_req is 0(no boinding), 
 BT_SMP_DIST_ENC_KEY bit is not cleared while remote ENC_KEY is received.*/
 #define BFLB_BLE_PATCH_CLEAR_REMOTE_KEY_BIT
 
+#if defined(CONFIG_BT_CENTRAL) || defined(CONFIG_BT_OBSERVER)
+#define BFLB_BLE_NOTIFY_ADV_DISCARDED
+#endif
 #if defined(__cplusplus)
 }
 #endif
