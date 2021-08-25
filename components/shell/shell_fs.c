@@ -3,15 +3,6 @@
 #include "ff.h"
 #include "fatfs_posix_api.h"
 
-/*
-static void *(*shell_malloc)(size_t size) = mmheap_alloc;
-static void (*shell_free)(void *ptr) = mmheap_free;
-*/
-
-#ifndef MIN
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
 const char *fatfs_table[] = {
     "FR_OK：成功",                                           /* (0) Succeeded */
     "FR_DISK_ERR：底层硬件错误",                             /* (1) A hard error occurred in the low level disk I/O layer */

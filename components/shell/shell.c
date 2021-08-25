@@ -21,7 +21,7 @@
  *
  */
 #include "shell.h"
-
+#include <ctype.h>
 #if defined(SHELL_USING_FS)
 #include "ff.h"
 #endif
@@ -33,10 +33,11 @@ struct shell_sysvar *_sysvar_table_end = NULL;
 
 struct shell _shell;
 static struct shell *shell;
+static char *shell_prompt_custom = NULL;
 
 int shell_help(int argc, char **argv)
 {
-    SHELL_PRINTF("shell commands list:\r\n");
+    SHELL_DGB("shell commands list:\r\n");
     {
         struct shell_syscall *index;
 
@@ -46,25 +47,89 @@ int shell_help(int argc, char **argv)
             }
 
 #if defined(SHELL_USING_DESCRIPTION)
-            SHELL_PRINTF("%-16s - %s\r\n", &index->name[6], index->desc);
+            SHELL_DGB("%-16s - %s\r\n", &index->name[6], index->desc);
 #else
-            SHELL_PRINTF("%s\r\n", &index->name[6]);
+            SHELL_DGB("%s\r\n", &index->name[6]);
 #endif
         }
     }
-    SHELL_PRINTF("\r\n");
+    SHELL_DGB("\r\n");
 
     return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(shell_help, help, shell help.);
 
+static int shell_mm_monitor(int argc, char **argv)
+{
+    uint64_t tmp;
+    uint32_t addr, value;
+    int access_type = 'w';
+
+    /* check args */
+    if (argc < 2) {
+        SHELL_DGB("write memory sample:0x42000000 w 0xabcd\r\n");
+        SHELL_DGB("read memory sample:0x42000000 w\r\n");
+        return 0;
+    }
+
+    /* get address */
+    tmp = strtoll(argv[1], NULL, 16);
+    addr = (uint32_t)tmp;
+
+    /* get access_type */
+    if (argc >= 3) {
+        access_type = tolower(argv[2][0]);
+    }
+
+    if (argc >= 4) {
+        /* write value */
+        tmp = strtoll(argv[3], NULL, 16);
+        value = (uint32_t)tmp;
+
+        switch (access_type) {
+            case 'b':
+                *(volatile uint8_t *)addr = (uint8_t)value;
+                break;
+            case 'h':
+                *(volatile uint16_t *)addr = (uint16_t)value;
+                break;
+            case 'w':
+                *(volatile uint32_t *)addr = (uint32_t)value;
+                break;
+            default:
+                *(volatile int32_t *)addr = (uint32_t)value;
+                break;
+        }
+    } else {
+        /* read value */
+        switch (access_type) {
+            case 'b':
+                SHELL_DGB("0x%02x\r\n", *(volatile uint8_t *)addr);
+                break;
+            case 'h':
+                SHELL_DGB("0x%04x\r\n", *(volatile uint16_t *)addr);
+                break;
+            case 'w':
+                SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)addr);
+                break;
+            default:
+                SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)addr);
+                break;
+        }
+    }
+    return 0;
+}
+SHELL_CMD_EXPORT_ALIAS(shell_mm_monitor, mm_monitor, memory monitor.);
+
 static char *shell_get_prompt(void)
 {
     static char shell_prompt[SHELL_CONSOLEBUF_SIZE + 1] = { 0 };
 
-    strcpy(shell_prompt, "\r\n");
-    strcat(shell_prompt, SHELL_NAME);
-
+    if (shell_prompt_custom) {
+        strcpy(shell_prompt, shell_prompt_custom);
+    } else {
+        strcpy(shell_prompt, SHELL_DEFAULT_NAME);
+    }
 #if defined(SHELL_USING_FS)
     /* get current working directory */
     f_getcwd(&shell_prompt[strlen(shell_prompt)],
@@ -91,7 +156,8 @@ static int str_common(const char *str1, const char *str2)
 static void shell_handle_history(struct shell *shell)
 {
     SHELL_PRINTF("\033[2K\r");
-    SHELL_PRINTF("%s%s", shell_get_prompt(), shell->line);
+    SHELL_PROMPT("%s", shell_get_prompt());
+    SHELL_PRINTF("%s", shell->line);
 }
 
 static void shell_push_history(struct shell *shell)
@@ -309,7 +375,7 @@ static void shell_auto_complete(char *prefix)
                     min_length = length;
                 }
 
-                SHELL_PRINTF("%s\r\n", cmd_name);
+                SHELL_CMD("%s\r\n", cmd_name);
             }
         }
     }
@@ -319,7 +385,8 @@ static void shell_auto_complete(char *prefix)
         strncpy(prefix, name_ptr, min_length);
     }
 
-    SHELL_PRINTF("%s%s", shell_get_prompt(), prefix);
+    SHELL_PROMPT("%s", shell_get_prompt());
+    SHELL_PRINTF("%s", prefix);
     return;
 }
 
@@ -343,13 +410,13 @@ static int shell_split(char *cmd, uint32_t length, char *argv[SHELL_ARG_NUM])
         }
 
         if (argc >= SHELL_ARG_NUM) {
-            SHELL_PRINTF("Too many args ! We only Use:\n");
+            SHELL_E("Too many args ! We only Use:\r\n");
 
             for (i = 0; i < argc; i++) {
-                SHELL_PRINTF("%s ", argv[i]);
+                SHELL_E("%s ", argv[i]);
             }
 
-            SHELL_PRINTF("\r\n");
+            SHELL_E("\r\n");
             break;
         }
 
@@ -557,7 +624,7 @@ int shell_exec(char *cmd, uint32_t length)
 
         *tcmd = '\0';
     }
-    SHELL_PRINTF("%s: command not found.\r\n", cmd);
+    SHELL_E("%s: command not found.\r\n", cmd);
     return -1;
 }
 
@@ -697,7 +764,7 @@ void shell_handler(uint8_t data)
         SHELL_PRINTF("\r\n");
         shell_exec(shell->line, shell->line_position);
 
-        SHELL_PRINTF(shell_get_prompt());
+        SHELL_PROMPT(shell_get_prompt());
         memset(shell->line, 0, sizeof(shell->line));
         shell->line_curpos = shell->line_position = 0;
         return;
@@ -751,6 +818,33 @@ static void shell_var_init(const void *begin, const void *end)
     _sysvar_table_end = (struct shell_sysvar *)end;
 }
 
+int shell_set_prompt(const char *prompt)
+{
+    if (shell_prompt_custom) {
+        SHELL_FREE(shell_prompt_custom);
+        shell_prompt_custom = NULL;
+    }
+
+    /* strdup */
+    if (prompt) {
+        shell_prompt_custom = (char *)SHELL_MALLOC(strlen(prompt) + 1);
+        if (shell_prompt_custom) {
+            strcpy(shell_prompt_custom, prompt);
+        }
+    }
+
+    return 0;
+}
+
+int shell_set_print(void (*shell_printf)(char *fmt, ...))
+{
+    if (shell_printf) {
+        shell->shell_printf = shell_printf;
+        return 0;
+    } else
+        return -1;
+}
+
 /*
  * @ingroup shell
  *
@@ -778,4 +872,6 @@ void shell_init(void)
     shell_var_init(&__vsymtab_start, &__vsymtab_end);
 #endif
     shell = &_shell;
+    shell_set_prompt(SHELL_DEFAULT_NAME);
+    shell_set_print(bflb_platform_printf);
 }
