@@ -8,6 +8,7 @@ build/*
 **/Lst
 **/Obj
 
+examples/*.txt
 examples/**/*.mk
 examples/**/*.cdkws
 examples/**/*.bin
@@ -16,9 +17,17 @@ examples/**/*.bat
 examples/**/cdk/*.txt
 
 tools/bflb_flash_tool/chips/bl702/eflash_loader/eflash_loader_cfg.ini
+tools/bflb_flash_tool/chips/bl702/efuse_bootheader/flash_para.bin
 tools/bflb_flash_tool/chips/bl702/img_create_mcu/bootinfo.bin
+tools/bflb_flash_tool/chips/bl702/img_create_mcu/bootheader.bin
+tools/bflb_flash_tool/chips/bl702/img_create_mcu/bootheader_cfg.ini
+tools/bflb_flash_tool/chips/bl702/img_create_mcu/efusedata.bin
+tools/bflb_flash_tool/chips/bl702/img_create_mcu/efusedata_mask.bin
+tools/bflb_flash_tool/chips/bl702/img_create_mcu/img_create_cfg.ini
 tools/bflb_flash_tool/chips/bl702/img_create_mcu/img.bin
 tools/bflb_flash_tool/chips/bl702/img_create_mcu/whole_img.bin
 tools/bflb_flash_tool/chips/bl702/img_create_mcu/whole_img.pack
 tools/bflb_flash_tool/img/project.bin
 tools/bflb_flash_tool/log/*
+
+submodule_commit_info.*
