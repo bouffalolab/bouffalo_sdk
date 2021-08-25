@@ -128,6 +128,11 @@ uint8_t bflb_platform_print_get(void)
 
 void bflb_platform_deinit(void)
 {
+    struct device *uart = device_find("debug_log");
+
+    if (uart) {
+        device_close(uart);
+    }
 }
 
 void bflb_platform_dump(uint8_t *data, uint32_t len)

@@ -142,7 +142,7 @@ void ES8388_Codec_Mode(ES8388_Cfg_Type *cfg)
     ES8388_Write_Reg(0x00, 0x36); //ADC clock is same as DAC . DACMCLK is the chip master clock source
 
     if (cfg->role == ES8388_MASTER) {
-        ES8388_Write_Reg(0x08, 0x80);
+        ES8388_Write_Reg(0x08, 0x8D);
     } else {
         ES8388_Write_Reg(0x08, 0x00);
     }
@@ -187,8 +187,8 @@ void ES8388_Codec_Mode(ES8388_Cfg_Type *cfg)
      * default divider is 256 , see datasheet reigster 13
      */
     if (cfg->role == ES8388_MASTER) {
-        ES8388_Write_Reg(0x0d, 0x02); //ADCLRCK = MCLK/256
-        ES8388_Write_Reg(0x18, 0x02); //DACLRCK = MCLK/256
+        ES8388_Write_Reg(0x0d, 0x06); //ADCLRCK = MCLK/256
+        ES8388_Write_Reg(0x18, 0x06); //DACLRCK = MCLK/256
     }
 
     /*set ADC/DAC default volume as 0 db */
@@ -443,7 +443,7 @@ BL_Err_Type ES8388_Reg_Dump(void)
             bflb_platform_printf("iic read err\r\n");
         }
 
-        bflb_platform_printf("Reg[%02x]=%02x \n", i, tmp);
+        bflb_platform_printf("Reg[%02d]=0x%02x \n", i, tmp);
     }
 
     return SUCCESS;

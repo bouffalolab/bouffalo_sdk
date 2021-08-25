@@ -47,16 +47,16 @@ void uart_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t s
         if (size && size < Ring_Buffer_Get_Empty_Length(&uart1_rx_rb)) {
             Ring_Buffer_Write(&uart1_rx_rb, (uint8_t *)args, size);
         } else {
-            MSG("RF\r\n");
+            MSG("RF OV\r\n");
         }
     } else if (state == UART_EVENT_RTO) {
         if (size && size < Ring_Buffer_Get_Empty_Length(&uart1_rx_rb)) {
             Ring_Buffer_Write(&uart1_rx_rb, (uint8_t *)args, size);
         } else {
-            MSG("RTO\r\n");
+            MSG("RTO OV\r\n");
         }
     } else if (state == UART_RX_FER_IT) {
-        MSG("ov\r\n");
+        MSG("RX ERR\r\n");
     }
 }
 void uart1_init(void)
@@ -65,10 +65,9 @@ void uart1_init(void)
     uart1 = device_find("uart1");
 
     if (uart1) {
-        device_open(uart1, DEVICE_OFLAG_DMA_TX | DEVICE_OFLAG_INT_RX); //uart0 tx dma mode
-        device_control(uart1, DEVICE_CTRL_SUSPEND, NULL);
-        device_set_callback(uart1, uart_irq_callback);
-        device_control(uart1, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT | UART_RTO_IT));
+        // device_open(uart1, DEVICE_OFLAG_DMA_TX | DEVICE_OFLAG_INT_RX);
+        // device_set_callback(uart1, uart_irq_callback);
+        // device_control(uart1, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT | UART_RTO_IT));
     }
 
     dma_register(DMA0_CH2_INDEX, "ch2");
@@ -76,31 +75,21 @@ void uart1_init(void)
 
     if (dma_ch2) {
         device_open(dma_ch2, 0);
-        //device_set_callback(dma_ch2, NULL);
-        //device_control(dma_ch2, DEVICE_CTRL_SET_INT, NULL);
     }
-
-    //device_control(uart1, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch2);
 }
 
 void uart1_config(uint32_t baudrate, uart_databits_t databits, uart_parity_t parity, uart_stopbits_t stopbits)
 {
-    uart_param_cfg_t cfg;
-    cfg.baudrate = baudrate;
-    cfg.stopbits = stopbits;
-    cfg.parity = parity;
-
-    if (databits == 5) {
-        cfg.databits = UART_DATA_LEN_5;
-    } else if (databits == 6) {
-        cfg.databits = UART_DATA_LEN_6;
-    } else if (databits == 7) {
-        cfg.databits = UART_DATA_LEN_7;
-    } else if (databits == 8) {
-        cfg.databits = UART_DATA_LEN_8;
-    }
-
-    device_control(uart1, DEVICE_CTRL_CONFIG, &cfg);
+    device_close(uart1);
+    UART_DEV(uart1)->baudrate = baudrate;
+    UART_DEV(uart1)->stopbits = stopbits;
+    UART_DEV(uart1)->parity = parity;
+    UART_DEV(uart1)->databits = (databits - 5);
+    device_open(uart1, DEVICE_OFLAG_DMA_TX | DEVICE_OFLAG_INT_RX);
+    device_set_callback(uart1, uart_irq_callback);
+    device_control(uart1, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT | UART_RTO_IT));
+    Ring_Buffer_Reset(&usb_rx_rb);
+    Ring_Buffer_Reset(&uart1_rx_rb);
 }
 
 static uint8_t uart1_dtr;

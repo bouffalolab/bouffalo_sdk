@@ -105,6 +105,7 @@ void bflb_platform_delay_ms(uint32_t ms);
 void bflb_platform_delay_us(uint32_t us);
 
 void bflb_print_device_list(void);
+int bflb_get_board_config(uint8_t func, uint8_t *pinlist);
 
 #ifdef __cplusplus
 }

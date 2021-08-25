@@ -24,7 +24,7 @@
 #ifndef __SPI_SD_H__
 #define __SPI_SD_H__
 
-#define SPI_PIN_CS GPIO_PIN_16
+#define SPI_PIN_CS GPIO_PIN_10
 
 //SD传输数据结束后是否释放总线宏定义
 #define NO_RELEASE 0
