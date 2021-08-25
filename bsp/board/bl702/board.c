@@ -169,14 +169,6 @@ static void board_pin_mux_init(void)
     gpio_cfg.drive = 0;
     gpio_cfg.smtCtrl = 1;
 
-    /*disable wakeup irq and aon ie*/
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MASK, 0x1f);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_REG_AON_PAD_IE_SMT, 0);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_REG_EN_HW_PU_PD);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MODE, HBN_GPIO_INT_TRIGGER_ASYNC_FALLING_EDGE);
-    BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
-
     for (int i = 0; i < sizeof(af_pin_table) / sizeof(af_pin_table[0]); i++) {
         gpio_cfg.gpioMode = GPIO_MODE_AF;
         gpio_cfg.pullType = GPIO_PULL_UP;
@@ -187,39 +179,18 @@ static void board_pin_mux_init(void)
         if (af_pin_table[i].func == GPIO_FUN_UNUSED) {
             continue;
         } else if (af_pin_table[i].func == GPIO_FUN_WAKEUP) {
-            /*if gpio wakeup func*/
-            if (af_pin_table[i].pin == GPIO_PIN_9) {
-                HBN_Clear_IRQ(HBN_INT_GPIO9);
-
-                /*enable gpio9 wakeup and irq unmask*/
+            /*if hbn or pds gpio wakeup func*/
+            if (af_pin_table[i].pin < GPIO_PIN_8) {
+                /*enable pds gpio wakeup and irq unmask*/
+                tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_INT);
+                tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_GPIO_INT_SELECT, af_pin_table[i].pin);
+                tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_GPIO_INT_MASK);
+                BL_WR_REG(PDS_BASE, PDS_GPIO_INT, tmpVal);
+            } else if ((af_pin_table[i].pin > GPIO_PIN_8) && (af_pin_table[i].pin < GPIO_PIN_13)) {
+                /*enable hbn gpio wakeup and irq unmask*/
                 tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
-
-                tmpVal &= ~(1 << 3); //gpio9 unmask
-                tmpVal |= (1 << 8);  //gpio9 ie smt
-                BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
-            } else if (af_pin_table[i].pin == GPIO_PIN_10) {
-                HBN_Clear_IRQ(HBN_INT_GPIO10);
-
-                /*enable gpio10 wakeup and irq unmask*/
-                tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
-                tmpVal &= ~(1 << 4); //gpio10 unmask
-                tmpVal |= (1 << 9);  //gpio10 ie smt
-                BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
-            } else if (af_pin_table[i].pin == GPIO_PIN_11) {
-                HBN_Clear_IRQ(HBN_INT_GPIO11);
-
-                /*enable gpio11 wakeup and irq unmask*/
-                tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
-                tmpVal &= ~(1 << 5); //gpio11 unmask
-                tmpVal |= (1 << 10); //gpio11 ie smt
-                BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
-            } else if (af_pin_table[i].pin == GPIO_PIN_12) {
-                HBN_Clear_IRQ(HBN_INT_GPIO12);
-
-                /*enable gpio12 wakeup and irq unmask*/
-                tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
-                tmpVal &= ~(1 << 6); //gpio12 unmask
-                tmpVal |= (1 << 11); //gpio12 ie smt
+                tmpVal &= ~(1 << (af_pin_table[i].pin - 6)); //gpio unmask
+                tmpVal |= (1 << (af_pin_table[i].pin - 1));  //gpio ie smt
                 BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
             }
             continue;
@@ -327,6 +298,8 @@ void bl_show_info(void)
 
 void board_init(void)
 {
+    HBN_Set_Ldo11_All_Vout(HBN_LDO_LEVEL_1P10V);
+
     board_clock_init();
     board_pin_mux_init();
 }
