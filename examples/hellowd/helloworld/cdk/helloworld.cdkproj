@@ -74,6 +74,10 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
       <FileOption/>
     </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_flash.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="std">
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_acomp.c">
@@ -145,7 +149,7 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_qdec.c">
       <FileOption/>
     </File>
-    <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c" ExcludeProjConfig="BuildSet;CK_Link_Debug;OpenOCD_Debug">
+    <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c">
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romdriver.c">

@@ -77,6 +77,12 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_sec_ecdsa.c">
       <FileOption/>
     </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_flash.c">
+      <FileOption/>
+    </File>
   </VirtualDirectory>
   <VirtualDirectory Name="std">
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_acomp.c">
@@ -148,7 +154,7 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_qdec.c">
       <FileOption/>
     </File>
-    <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c" ExcludeProjConfig="BuildSet;CK_Link_Debug;OpenOCD_Debug">
+    <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c">
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romdriver.c">
@@ -407,7 +413,7 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;bl706_avb</Define>
+        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;BFLB_USE_ROM_DRIVER;bl706_iot</Define>
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -598,7 +604,7 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;bl706_avb</Define>
+        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;BFLB_USE_ROM_DRIVER;bl706_iot</Define>
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
