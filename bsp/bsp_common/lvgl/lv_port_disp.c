@@ -11,10 +11,9 @@
  *********************/
 #include "lvgl.h"
 #include "lv_port_disp.h"
-#include "bsp_il9341.h"
-
 #include "hal_spi.h"
 #include "hal_dma.h"
+#include "../mcu_lcd/mcu_lcd.h"
 
 /*********************
  *      DEFINES
@@ -27,7 +26,6 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-void LCD_Init(void);
 
 static void disp_init(void);
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
@@ -48,7 +46,7 @@ static void gpu_fill(lv_disp_drv_t *disp_drv, lv_color_t *dest_buf, lv_coord_t d
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
-static lv_disp_drv_t Disp_Drv; /*Descriptor of a display driver*/
+lv_disp_drv_t disp_drv; /*Descriptor of a display driver*/
 static lv_disp_drv_t *p_disp_drv_cb;
 
 void lv_port_disp_init(void)
@@ -89,9 +87,9 @@ void lv_port_disp_init(void)
 
     // /* Example for 2) */
     static lv_disp_buf_t draw_buf_dsc_2;
-    static lv_color_t draw_buf_2_1[LV_HOR_RES_MAX * 20];                                /*A buffer for 10 rows*/
-    static lv_color_t draw_buf_2_2[LV_HOR_RES_MAX * 20];                                /*An other buffer for 10 rows*/
-    lv_disp_buf_init(&draw_buf_dsc_2, draw_buf_2_1, draw_buf_2_2, LV_HOR_RES_MAX * 20); /*Initialize the display buffer*/
+    static lv_color_t draw_buf_2_1[LCD_W * 20];                                /*A buffer for 10 rows*/
+    static lv_color_t draw_buf_2_2[LCD_W * 20];                                /*An other buffer for 10 rows*/
+    lv_disp_buf_init(&draw_buf_dsc_2, draw_buf_2_1, draw_buf_2_2, LCD_W * 20); /*Initialize the display buffer*/
 
     // /* Example for 3) *
     // static lv_disp_buf_t draw_buf_dsc_3;
@@ -103,23 +101,23 @@ void lv_port_disp_init(void)
      * Register the display in LVGL
      *----------------------------------*/
 
-    lv_disp_drv_init(&Disp_Drv); /*Basic initialization*/
+    lv_disp_drv_init(&disp_drv); /*Basic initialization*/
 
     /*Set up the functions to access to your display*/
 
     /*Set the resolution of the display*/
-    Disp_Drv.hor_res = 240;
-    Disp_Drv.ver_res = 320;
+    disp_drv.hor_res = LCD_W;
+    disp_drv.ver_res = LCD_H;
     /* hardware rotation */
-    Disp_Drv.sw_rotate = 0;
+    disp_drv.sw_rotate = 0;
     /*  rotation */
-    Disp_Drv.rotated = LV_DISP_ROT_NONE;
+    disp_drv.rotated = LV_DISP_ROT_NONE;
 
     /*Used to copy the buffer's content to the display*/
-    Disp_Drv.flush_cb = disp_flush;
+    disp_drv.flush_cb = disp_flush;
 
     /*Set a display buffer*/
-    Disp_Drv.buffer = &draw_buf_dsc_2;
+    disp_drv.buffer = &draw_buf_dsc_2;
 
 #if LV_USE_GPU
     /*Optionally add functions to access the GPU. (Only in buffered mode, LV_VDB_SIZE != 0)*/
@@ -132,32 +130,29 @@ void lv_port_disp_init(void)
 #endif
 
     /*Finally register the driver*/
-    lv_disp_drv_register(&Disp_Drv);
+    lv_disp_drv_register(&disp_drv);
 }
 
 /**********************
  *   STATIC FUNCTIONS
  **********************/
-struct device *lcd_spi;
-struct device *lcd_dma_tx;
-struct device *lcd_dma_rx;
 
 void flush_callback(struct device *dev, void *args, uint32_t size, uint32_t event)
 {
-    device_control(lcd_spi, DEVICE_CTRL_TX_DMA_SUSPEND, NULL);
+    while (lcd_draw_is_busy())
+        ;
+
     lv_disp_flush_ready(p_disp_drv_cb);
-    CS1_HIGH;
 }
 
 /* Initialize your display and the required peripherals. */
 void disp_init(void)
 {
     /*You code here*/
-    LCD_Init();
-    lcd_spi = device_find("spi0");
-    lcd_dma_tx = device_find("dma0_ch3");
-    lcd_dma_rx = device_find("dma0_ch4");
-    device_set_callback(lcd_dma_tx, flush_callback);
+    lcd_init();
+    lcd_auto_swap_set(0);
+    device_set_callback(SPI_DEV(lcd_dev_ifs)->tx_dma, flush_callback);
+    device_control(SPI_DEV(lcd_dev_ifs)->tx_dma, DEVICE_CTRL_SET_INT, NULL);
 }
 
 /* Flush the content of the internal buffer the specific area on the display
@@ -167,28 +162,18 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
 {
     /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
     static uint8_t rotated_dir = 0;
-    uint32_t length = (area->y2 - area->y1 + 1) * (area->x2 - area->x1 + 1);
 
     if (rotated_dir != disp_drv->rotated) {
         rotated_dir = disp_drv->rotated;
-        LCD_Set_Dir(rotated_dir);
+        lcd_set_dir(rotated_dir, 0);
     }
 
-    LCD_Set_Addr(area->x1, area->y1, area->x2, area->y2);
-
-    device_control(lcd_spi, DEVICE_CTRL_TX_DMA_RESUME, NULL);
-    device_control(lcd_dma_tx, DEVICE_CTRL_SET_INT, NULL);
-    CS1_LOW;
-    DC_HIGH;
-    dma_reload(lcd_dma_tx, (uint32_t)color_p, (uint32_t)DMA_ADDR_SPI_TDR, length * 2);
-    dma_channel_start(lcd_dma_tx);
-
+    lcd_draw_picture_nonblocking(area->x1, area->y1, area->x2, area->y2, (lcd_color_t *)color_p);
     p_disp_drv_cb = disp_drv;
-    return;
 
     /* IMPORTANT!!!
      * Inform the graphics library that you are ready with the flushing*/
-    //lv_disp_flush_ready(disp_drv);
+    // lv_disp_flush_ready(disp_drv);
 }
 
 /*OPTIONAL: GPU INTERFACE*/

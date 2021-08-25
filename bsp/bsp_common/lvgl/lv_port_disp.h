@@ -29,11 +29,13 @@ extern "C" {
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
+extern lv_disp_drv_t disp_drv;
+
+void lv_port_disp_init(void);
 
 /**********************
  *      MACROS
  **********************/
-void lv_port_disp_init(void);
 
 #ifdef __cplusplus
 } /* extern "C" */

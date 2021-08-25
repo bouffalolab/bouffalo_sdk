@@ -11,6 +11,8 @@
  *********************/
 #include "lv_port_indev.h"
 #include "bflb_platform.h"
+#include "hal_gpio.h"
+#include "hal_dma.h"
 
 /*********************
  *      DEFINES
@@ -94,6 +96,10 @@ void lv_port_indev_init(void)
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = touchpad_read;
     indev_touchpad = lv_indev_drv_register(&indev_drv);
+
+    lv_obj_t *touchpad_cursor = lv_img_create(lv_disp_get_scr_act(NULL), NULL);
+    lv_img_set_src(touchpad_cursor, LV_SYMBOL_USB);
+    lv_indev_set_cursor(indev_touchpad, touchpad_cursor);
 
     /*------------------
      * Mouse
@@ -184,7 +190,13 @@ void lv_port_indev_init(void)
 static void touchpad_init(void)
 {
     /*Your code comes here*/
-    xpt2046_init();
+    if (device_find("lcd_dev_ifs") == NULL) {
+        xpt2046_init();
+    } else {
+        gpio_set_mode(TOUCH_PIN_CS, GPIO_OUTPUT_MODE);
+        gpio_write(TOUCH_PIN_CS, 1);
+        touch_spi = device_find("lcd_dev_ifs");
+    }
 }
 
 /* Will be called by the library to read the touchpad */
@@ -230,9 +242,11 @@ static lv_coord_t touchpad_get_xy(lv_coord_t *x, lv_coord_t *y)
     while (p_disp_drv_cb->driver.buffer->flushing)
         ;
 
-    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void *)3600000);
+    uint32_t spi_clock = SPI_DEV(touch_spi)->clk;
+
+    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void *)360000);
     res = touch_read(x, y);
-    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void *)36000000);
+    device_control(touch_spi, DEVICE_CTRL_SPI_CONFIG_CLOCK, (void *)spi_clock);
     return res;
 }
 

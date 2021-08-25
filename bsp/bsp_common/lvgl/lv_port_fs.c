@@ -255,7 +255,7 @@ static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t b
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
     /* Add your code here*/
-    res = f_read((file_t *)file_p, buf, btr, br);
+    res = f_read((file_t *)file_p, buf, btr, (UINT *)br);
     res = res_fatfs_to_lv(res);
 
     return res;
@@ -275,7 +275,7 @@ static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf, uin
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
 
     /* Add your code here*/
-    res = f_write((file_t *)file_p, buf, btw, bw);
+    res = f_write((file_t *)file_p, buf, btw, (UINT *)bw);
     res = res_fatfs_to_lv(res);
 
     return res;
