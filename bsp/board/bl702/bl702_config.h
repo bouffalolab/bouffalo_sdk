@@ -40,6 +40,10 @@
 #include "bl702_boot2/peripheral_config.h"
 #include "bl702_boot2/clock_config.h"
 #include "bl702_boot2/pinmux_config.h"
+#elif defined(bl702_iot)
+#include "bl702_iot/peripheral_config.h"
+#include "bl702_iot/clock_config.h"
+#include "bl702_iot/pinmux_config.h"
 #else
 #include "bl702_custom/peripheral_config.h"
 #include "bl702_custom/clock_config.h"

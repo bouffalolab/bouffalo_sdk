@@ -31,16 +31,20 @@
 #define BSP_USING_SPI0
 #define BSP_USING_I2C0
 #define BSP_USING_I2S0
-#define BSP_USING_USB
+#define BSP_USING_PWM_CH0
+#define BSP_USING_PWM_CH1
 #define BSP_USING_PWM_CH2
+#define BSP_USING_PWM_CH3
+#define BSP_USING_PWM_CH4
 #define BSP_USING_TIMER0
 #define BSP_USING_TIMER1
-#define BSP_USING_CAM
+#define BSP_USING_WDT
 #define BSP_USING_KEYSCAN
 #define BSP_USING_QDEC0
 #define BSP_USING_QDEC1
 #define BSP_USING_QDEC2
-#define BSP_USING_WDT
+#define BSP_USING_USB
+#define BSP_USING_CAM
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */
@@ -172,6 +176,20 @@
 #define PWM_CH3_CONFIG                   \
     {                                    \
         .ch = 3,                         \
+        .polarity_invert_mode = DISABLE, \
+        .period = 0,                     \
+        .threshold_low = 0,              \
+        .threshold_high = 0,             \
+        .it_pulse_count = 0,             \
+    }
+#endif
+#endif
+
+#if defined(BSP_USING_PWM_CH4)
+#ifndef PWM_CH4_CONFIG
+#define PWM_CH4_CONFIG                   \
+    {                                    \
+        .ch = 4,                         \
         .polarity_invert_mode = DISABLE, \
         .period = 0,                     \
         .threshold_low = 0,              \
@@ -314,7 +332,7 @@
 #define DMA0_CH7_CONFIG                        \
     {                                          \
         .id = 0,                               \
-        .ch = 0,                               \
+        .ch = 7,                               \
         .direction = DMA_MEMORY_TO_MEMORY,     \
         .transfer_mode = DMA_LLI_ONCE_MODE,    \
         .src_req = DMA_REQUEST_NONE,           \
