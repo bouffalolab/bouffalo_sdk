@@ -65,6 +65,7 @@ struct CSW {
 /*Length of template descriptor: 23 bytes*/
 #define MSC_DESCRIPTOR_LEN (9 + 7 + 7)
 // clang-format off
+#ifndef SUPPORT_USB_HS
 #define MSC_DESCRIPTOR_INIT(bFirstInterface, out_ep, in_ep,str_idx) \
     /* Interface */                                                  \
     0x09,                          /* bLength */                 \
@@ -88,9 +89,9 @@ struct CSW {
     0x02,                          /* bmAttributes */            \
     0x40, 0x00,                    /* wMaxPacketSize */          \
     0x01                           /* bInterval */
-
-#define MSC_HS_DESCRIPTOR_INIT(bFirstInterface, out_ep, in_ep,str_idx) \
-    /* Interface */                                                  \
+#else
+#define MSC_DESCRIPTOR_INIT(bFirstInterface, out_ep, in_ep,str_idx) \
+    /* Interface */                                                 \
     0x09,                          /* bLength */                 \
     USB_DESCRIPTOR_TYPE_INTERFACE, /* bDescriptorType */         \
     bFirstInterface,               /* bInterfaceNumber */        \
@@ -112,6 +113,7 @@ struct CSW {
     0x02,                          /* bmAttributes */            \
     0x02, 0x00,                    /* wMaxPacketSize */          \
     0x01                           /* bInterval */
+#endif
 // clang-format on
 
 void usbd_msc_class_init(uint8_t out_ep, uint8_t in_ep);

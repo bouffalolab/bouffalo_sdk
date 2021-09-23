@@ -12,6 +12,13 @@
 extern "C" {
 #endif
 
+/* HID Protocol Codes */
+#define HID_PROTOCOL_NONE     0x00
+#define HID_PROTOCOL_BOOT     0x00
+#define HID_PROTOCOL_KEYBOARD 0x01
+#define HID_PROTOCOL_REPORT   0x01
+#define HID_PROTOCOL_MOUSE    0x02
+
 /* HID Class Descriptor Types */
 #define HID_DESCRIPTOR_TYPE_HID          0x21
 #define HID_DESCRIPTOR_TYPE_HID_REPORT   0x22
@@ -24,6 +31,11 @@ extern "C" {
 #define HID_REQUEST_SET_REPORT   0x09
 #define HID_REQUEST_SET_IDLE     0x0A
 #define HID_REQUEST_SET_PROTOCOL 0x0B
+
+/* HID Report Types */
+#define HID_REPORT_INPUT   0x01
+#define HID_REPORT_OUTPUT  0x02
+#define HID_REPORT_FEATURE 0x03
 
 /* HID Report Definitions */
 struct usb_hid_class_subdescriptor {
@@ -121,10 +133,6 @@ struct usb_hid_descriptor {
 /* Collection types */
 #define COLLECTION_PHYSICAL    0x00
 #define COLLECTION_APPLICATION 0x01
-
-/* Protocols */
-#define HID_PROTOCOL_BOOT   0x00
-#define HID_PROTOCOL_REPORT 0x01
 
 /* Example HID report descriptors */
 /**

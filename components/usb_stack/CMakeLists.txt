@@ -29,9 +29,7 @@ list(APPEND ADD_SRCS  ${sources})
 #######################################################
 
 ############ Add static libs ##########################
-# if(CONFIG_COMPONENT1_INCLUDE_STATIC_LIB)
-#     list(APPEND ADD_STATIC_LIB "libxxx.a")
-# endif()
+#list(APPEND ADD_STATIC_LIB "libxxx.a")
 #######################################################
 
 ############ Add dynamic libs #########################
@@ -41,12 +39,14 @@ list(APPEND ADD_SRCS  ${sources})
 
 ############ Add global compile option ################
 #add components denpend on this component
-# list(APPEND ADD_DEFINITIONS -Dxxx)
+if(CONFIG_USB_HS)
+list(APPEND ADD_DEFINITIONS -DCONFIG_USB_HS)
+endif()
 #######################################################
 
 ############ Add private compile option ################
 #add compile option for this component that won't affect other modules
-# list(APPEND ADD_DEFINITIONS_PRIVATE -Dxxx)
+# list(APPEND ADD_PRIVATE_DEFINITIONS -Dxxx)
 #######################################################
 
 generate_library()

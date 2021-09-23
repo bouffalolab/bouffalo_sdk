@@ -296,6 +296,7 @@ struct cdc_ecm_descriptor {
 /*Length of template descriptor: 66 bytes*/
 #define CDC_ACM_DESCRIPTOR_LEN (8 + 9 + 5 + 5 + 4 + 5 + 7 + 9 + 7 + 7)
 // clang-format off
+#ifndef CONFIG_USB_HS
 #define CDC_ACM_DESCRIPTOR_INIT(bFirstInterface, int_ep, out_ep, in_ep, str_idx)                   \
     /* Interface Associate */                                                                      \
     0x08,                                                  /* bLength */                       \
@@ -360,9 +361,9 @@ struct cdc_ecm_descriptor {
     0x02,                                                  /* bmAttributes */                  \
     0x40, 0x00,                                            /* wMaxPacketSize */                \
     0x01                                                   /* bInterval */
-
-#define CDC_ACM_HS_DESCRIPTOR_INIT(bFirstInterface, int_ep, out_ep, in_ep, str_idx)                   \
-    /* Interface Associate */                                                                      \
+#else
+#define CDC_ACM_DESCRIPTOR_INIT(bFirstInterface, int_ep, out_ep, in_ep, str_idx)               \
+    /* Interface Associate */                                                                  \
     0x08,                                                  /* bLength */                       \
     USB_DESCRIPTOR_TYPE_INTERFACE_ASSOCIATION,             /* bDescriptorType */               \
     bFirstInterface,                                       /* bFirstInterface */               \
@@ -425,6 +426,7 @@ struct cdc_ecm_descriptor {
     0x02,                                                  /* bmAttributes */                  \
     0x02, 0x00,                                            /* wMaxPacketSize */                \
     0x01                                                   /* bInterval */
+#endif
 // clang-format on
 
 void usbd_cdc_add_acm_interface(usbd_class_t *class, usbd_interface_t *intf);
