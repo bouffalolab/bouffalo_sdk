@@ -97,9 +97,9 @@ void lv_port_indev_init(void)
     indev_drv.read_cb = touchpad_read;
     indev_touchpad = lv_indev_drv_register(&indev_drv);
 
-    lv_obj_t *touchpad_cursor = lv_img_create(lv_disp_get_scr_act(NULL), NULL);
-    lv_img_set_src(touchpad_cursor, LV_SYMBOL_USB);
-    lv_indev_set_cursor(indev_touchpad, touchpad_cursor);
+    // lv_obj_t *touchpad_cursor = lv_img_create(lv_disp_get_scr_act(NULL), NULL);
+    // lv_img_set_src(touchpad_cursor, LV_SYMBOL_USB);
+    // lv_indev_set_cursor(indev_touchpad, touchpad_cursor);
 
     /*------------------
      * Mouse

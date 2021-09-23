@@ -22,6 +22,14 @@ extern "C" {
  *      DEFINES
  *********************/
 
+#ifndef LV_USING_FATFS
+  #define LV_USING_FATFS 0
+#endif
+
+#ifndef LV_USING_ROMFS
+  #define LV_USING_ROMFS 0
+#endif
+
 /**********************
  *      TYPEDEFS
  **********************/

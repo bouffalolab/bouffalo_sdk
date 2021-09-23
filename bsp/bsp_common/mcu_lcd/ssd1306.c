@@ -163,7 +163,7 @@ void ssd1306_refresh_gram(void)
 
     for (i = 0; i < 8; i++) {
         ssd1306_write_byte(0xB0 + i, SSD1306_CMD);
-        ssd1306_write_byte(0x02, SSD1306_CMD);
+        ssd1306_write_byte(0x00, SSD1306_CMD);
         ssd1306_write_byte(0x10, SSD1306_CMD);
         for (j = 0; j < 128; j++) {
             ssd1306_write_byte(OLED_GRAM[j][i], SSD1306_DAT);

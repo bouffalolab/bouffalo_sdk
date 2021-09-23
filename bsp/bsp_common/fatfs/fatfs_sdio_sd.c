@@ -33,26 +33,11 @@
 #include "ff.h"     /* Obtains integer types */
 #include "diskio.h" /* Declarations of disk functions */
 #include "bsp_sdio_sdcard.h"
-#include "bflb_platform.h"
 
 static sd_card_t gSDCardInfo;
-
-int RAM_disk_status()
-{
-    return 0;
-}
+extern const char *FR_Table[];
 
 int MMC_disk_status()
-{
-    return 0;
-}
-
-int USB_disk_status()
-{
-    return 0;
-}
-
-int RAM_disk_initialize()
 {
     return 0;
 }
@@ -73,16 +58,6 @@ int MMC_disk_initialize()
     return 0;
 }
 
-int USB_disk_initialize()
-{
-    return 0;
-}
-
-int RAM_disk_read(BYTE *buff, LBA_t sector, UINT count)
-{
-    return 0;
-}
-
 int MMC_disk_read(BYTE *buff, LBA_t sector, UINT count)
 {
     if (SD_OK == SDH_ReadMultiBlocks(buff, sector, gSDCardInfo.blockSize, count)) {
@@ -92,16 +67,6 @@ int MMC_disk_read(BYTE *buff, LBA_t sector, UINT count)
     }
 }
 
-int USB_disk_read(BYTE *buff, LBA_t sector, UINT count)
-{
-    return 0;
-}
-
-int RAM_disk_write(const BYTE *buff, LBA_t sector, UINT count)
-{
-    return 0;
-}
-
 int MMC_disk_write(const BYTE *buff, LBA_t sector, UINT count)
 {
     if (SD_OK == SDH_WriteMultiBlocks((uint8_t *)buff, sector, gSDCardInfo.blockSize, count)) {
@@ -109,16 +74,6 @@ int MMC_disk_write(const BYTE *buff, LBA_t sector, UINT count)
     } else {
         return -1;
     }
-}
-
-int USB_disk_write(const BYTE *buff, LBA_t sector, UINT count)
-{
-    return 0;
-}
-
-int RAM_disk_ioctl(BYTE cmd, void *buff)
-{
-    return 0;
 }
 
 int MMC_disk_ioctl(BYTE cmd, void *buff)
@@ -148,11 +103,6 @@ int MMC_disk_ioctl(BYTE cmd, void *buff)
     return 0;
 }
 
-int USB_disk_ioctl(BYTE cmd, void *buff)
-{
-    return 0;
-}
-
 DWORD get_fattime(void)
 {
     return ((DWORD)(2015 - 1980) << 25) /* Year 2015 */
@@ -169,10 +119,12 @@ DSTATUS Translate_Result_Code(int result)
     return result;
 }
 
-FATFS_DiskioDriverTypeDef pNewDiskioDriver;
-
 void fatfs_sdio_driver_register(void)
 {
+    FATFS_DiskioDriverTypeDef pNewDiskioDriver;
+
+    memset(&pNewDiskioDriver, 0, sizeof(FATFS_DiskioDriverTypeDef));
+
     pNewDiskioDriver.MMC_disk_status = MMC_disk_status;
     pNewDiskioDriver.MMC_disk_initialize = MMC_disk_initialize;
     pNewDiskioDriver.MMC_disk_write = MMC_disk_write;

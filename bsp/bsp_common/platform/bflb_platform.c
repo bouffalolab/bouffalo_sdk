@@ -20,10 +20,10 @@
  * under the License.
  *
  */
-
 #include "hal_uart.h"
 #include "hal_mtimer.h"
 #include "drv_mmheap.h"
+#include "hal_common.h"
 #include "ring_buffer.h"
 
 extern uint32_t __HeapBase;
@@ -31,16 +31,18 @@ extern uint32_t __HeapLimit;
 
 static uint8_t uart_dbg_disable = 0;
 
+struct heap_info mmheap_root;
+
+static struct heap_region system_mmheap[] = {
+    { NULL, 0 },
+    { NULL, 0 }, /* Terminates the array. */
+};
+
 __WEAK__ void board_init(void)
 {
 }
 __WEAK__ void bl_show_info(void)
 {
-}
-
-__WEAK__ int bflb_get_board_config(uint8_t func, uint8_t *pinlist)
-{
-    return 0;
 }
 
 __WEAK__ enum uart_index_type board_get_debug_uart_index(void)
@@ -50,15 +52,11 @@ __WEAK__ enum uart_index_type board_get_debug_uart_index(void)
 
 void bflb_platform_init(uint32_t baudrate)
 {
-    __disable_irq();
+    static uint8_t initialized = 0;
+
+    cpu_global_irq_disable();
 
     board_init();
-
-    uint8_t ret = 0;
-
-    if (mmheap_init_with_pool(&__HeapBase, (size_t)&__HeapLimit - (size_t)&__HeapBase)) {
-        ret = 1;
-    }
 
     if (!uart_dbg_disable) {
         uart_register(board_get_debug_uart_index(), "debug_log");
@@ -73,16 +71,23 @@ void bflb_platform_init(uint32_t baudrate)
         bl_show_info();
     }
 
-    if (!ret)
-        MSG("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1000);
-    else
-        MSG("dynamic memory init error\r\n");
+    if (!initialized) {
+        system_mmheap[0].addr = (uint8_t *)&__HeapBase;
+        system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
 
-    __enable_irq();
+        if (system_mmheap[0].mem_size > 0) {
+            mmheap_init(&mmheap_root, system_mmheap);
+        }
+
+        MSG("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
+        initialized = 1;
+    }
+
+    cpu_global_irq_enable();
 }
 
 #if ((defined BOOTROM) || (defined BFLB_EFLASH_LOADER))
-static uint8_t eflash_loader_logbuf[2048] __attribute__((section(".system_ram_noinit")));
+static uint8_t eflash_loader_logbuf[1024] __attribute__((section(".system_ram_noinit")));
 static uint32_t log_len = 0;
 uint32_t bflb_platform_get_log(uint8_t *data, uint32_t maxlen)
 {
@@ -97,7 +102,7 @@ uint32_t bflb_platform_get_log(uint8_t *data, uint32_t maxlen)
 
 void bflb_platform_printf(char *fmt, ...)
 {
-    struct device *uart = device_find("debug_log");
+    struct device *uart;
     char print_buf[128];
     va_list ap;
 
@@ -112,6 +117,7 @@ void bflb_platform_printf(char *fmt, ...)
             log_len += len;
         }
 #endif
+        uart = device_find("debug_log");
         device_write(uart, 0, (uint8_t *)print_buf, strlen(print_buf));
     }
 }
@@ -128,10 +134,12 @@ uint8_t bflb_platform_print_get(void)
 
 void bflb_platform_deinit(void)
 {
-    struct device *uart = device_find("debug_log");
-
-    if (uart) {
-        device_close(uart);
+    if (!uart_dbg_disable){
+        struct device *uart = device_find("debug_log");
+        if (uart) {
+            device_close(uart);
+            device_unregister("debug_log");
+        }
     }
 }
 
@@ -150,6 +158,11 @@ void bflb_platform_dump(uint8_t *data, uint32_t len)
 
         bflb_platform_printf("\r\n");
     }
+}
+
+void bflb_platform_reg_dump(uint32_t addr)
+{
+    bflb_platform_printf("%08x[31:0]=%08x\r\n", addr, *(volatile uint32_t *)(addr));
 }
 
 void bflb_platform_init_time()

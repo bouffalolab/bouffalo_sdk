@@ -150,6 +150,7 @@ void disp_init(void)
 {
     /*You code here*/
     lcd_init();
+    lcd_clear(0x0000);
     lcd_auto_swap_set(0);
     device_set_callback(SPI_DEV(lcd_dev_ifs)->tx_dma, flush_callback);
     device_control(SPI_DEV(lcd_dev_ifs)->tx_dma, DEVICE_CTRL_SET_INT, NULL);

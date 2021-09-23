@@ -4,6 +4,8 @@
 #include "drv_mmheap.h"
 #include "drv_device.h"
 
+extern struct heap_info mmheap_root;
+
 #ifdef CONF_VFS_ENABLE
 #include <vfs.h>
 #endif
@@ -214,7 +216,7 @@ void *_malloc_r(struct _reent *ptr, size_t size)
 {
     void *result;
 
-    result = (void *)mmheap_alloc(size);
+    result = (void *)mmheap_alloc(&mmheap_root, size);
     if (result == NULL) {
         ptr->_errno = -ENOMEM;
     }
@@ -226,7 +228,7 @@ void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
 {
     void *result;
 
-    result = (void *)mmheap_realloc(old, newlen);
+    result = (void *)mmheap_realloc(&mmheap_root, old, newlen);
     if (result == NULL) {
         ptr->_errno = -ENOMEM;
     }
@@ -236,19 +238,13 @@ void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
 
 void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
 {
-    void *result;
-
-    result = (void *)mmheap_calloc(size, len);
-    if (result == NULL) {
-        ptr->_errno = -ENOMEM;
-    }
-
-    return result;
+    /* return "not supported" */
+    return 0;
 }
 
 void _free_r(struct _reent *ptr, void *addr)
 {
-    mmheap_free(addr);
+    mmheap_free(&mmheap_root, addr);
 }
 
 void *_sbrk_r(struct _reent *ptr, ptrdiff_t incr)

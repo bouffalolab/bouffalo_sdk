@@ -127,11 +127,11 @@ void rts_pin_set(uint8_t status)
 }
 void ringbuffer_lock()
 {
-    __disable_irq();
+    cpu_global_irq_disable();
 }
 void ringbuffer_unlock()
 {
-    __enable_irq();
+    cpu_global_irq_enable();
 }
 
 void uart_ringbuffer_init(void)

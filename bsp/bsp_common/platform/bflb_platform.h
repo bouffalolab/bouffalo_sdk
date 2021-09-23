@@ -90,6 +90,7 @@ void bflb_platform_printf(char *fmt, ...);
 void bflb_platform_print_set(uint8_t disable);
 uint8_t bflb_platform_print_get(void);
 void bflb_platform_dump(uint8_t *data, uint32_t len);
+void bflb_platform_reg_dump(uint32_t addr);
 uint32_t bflb_platform_get_log(uint8_t *data, uint32_t maxlen);
 void bflb_platform_deinit(void);
 
@@ -105,8 +106,6 @@ void bflb_platform_delay_ms(uint32_t ms);
 void bflb_platform_delay_us(uint32_t us);
 
 void bflb_print_device_list(void);
-int bflb_get_board_config(uint8_t func, uint8_t *pinlist);
-
 #ifdef __cplusplus
 }
 #endif
