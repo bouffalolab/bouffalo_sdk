@@ -36,7 +36,7 @@ extern "C" {
 #endif
 
 #include "ff.h"
-#include "drv_mmheap.h"
+#include "stdio.h"
 
 typedef int ff_dev_t; //32为int数据，高12位主设备号，低20位次设备号
 

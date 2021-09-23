@@ -40,22 +40,38 @@ FATFS_DiskioDriverTypeDef pDiskioDriver = {
 /*-----------------------------------------------------------------------*/
 void disk_driver_callback_init(FATFS_DiskioDriverTypeDef *pNewDriver)
 {
-    pDiskioDriver.RAM_disk_status = pNewDriver->RAM_disk_status;
-    pDiskioDriver.MMC_disk_status = pNewDriver->MMC_disk_status;
-    pDiskioDriver.USB_disk_status = pNewDriver->USB_disk_status;
-    pDiskioDriver.RAM_disk_initialize = pNewDriver->RAM_disk_initialize;
-    pDiskioDriver.MMC_disk_initialize = pNewDriver->MMC_disk_initialize;
-    pDiskioDriver.USB_disk_initialize = pNewDriver->USB_disk_initialize;
-    pDiskioDriver.RAM_disk_read = pNewDriver->RAM_disk_read;
-    pDiskioDriver.MMC_disk_read = pNewDriver->MMC_disk_read;
-    pDiskioDriver.USB_disk_read = pNewDriver->USB_disk_read;
-    pDiskioDriver.RAM_disk_write = pNewDriver->RAM_disk_write;
-    pDiskioDriver.MMC_disk_write = pNewDriver->MMC_disk_write;
-    pDiskioDriver.USB_disk_write = pNewDriver->USB_disk_write;
-    pDiskioDriver.RAM_disk_ioctl = pNewDriver->RAM_disk_ioctl;
-    pDiskioDriver.MMC_disk_ioctl = pNewDriver->MMC_disk_ioctl;
-    pDiskioDriver.USB_disk_ioctl = pNewDriver->USB_disk_ioctl;
-    pDiskioDriver.Translate_Result_Code = pNewDriver->Translate_Result_Code;
+    if (pNewDriver->RAM_disk_status)
+        pDiskioDriver.RAM_disk_status = pNewDriver->RAM_disk_status;
+    if (pNewDriver->MMC_disk_status)
+        pDiskioDriver.MMC_disk_status = pNewDriver->MMC_disk_status;
+    if (pNewDriver->USB_disk_status)
+        pDiskioDriver.USB_disk_status = pNewDriver->USB_disk_status;
+    if (pNewDriver->RAM_disk_initialize)
+        pDiskioDriver.RAM_disk_initialize = pNewDriver->RAM_disk_initialize;
+    if (pNewDriver->MMC_disk_initialize)
+        pDiskioDriver.MMC_disk_initialize = pNewDriver->MMC_disk_initialize;
+    if (pNewDriver->USB_disk_initialize)
+        pDiskioDriver.USB_disk_initialize = pNewDriver->USB_disk_initialize;
+    if (pNewDriver->RAM_disk_read)
+        pDiskioDriver.RAM_disk_read = pNewDriver->RAM_disk_read;
+    if (pNewDriver->MMC_disk_read)
+        pDiskioDriver.MMC_disk_read = pNewDriver->MMC_disk_read;
+    if (pNewDriver->USB_disk_read)
+        pDiskioDriver.USB_disk_read = pNewDriver->USB_disk_read;
+    if (pNewDriver->RAM_disk_write)
+        pDiskioDriver.RAM_disk_write = pNewDriver->RAM_disk_write;
+    if (pNewDriver->MMC_disk_write)
+        pDiskioDriver.MMC_disk_write = pNewDriver->MMC_disk_write;
+    if (pNewDriver->USB_disk_write)
+        pDiskioDriver.USB_disk_write = pNewDriver->USB_disk_write;
+    if (pNewDriver->RAM_disk_ioctl)
+        pDiskioDriver.RAM_disk_ioctl = pNewDriver->RAM_disk_ioctl;
+    if (pNewDriver->MMC_disk_ioctl)
+        pDiskioDriver.MMC_disk_ioctl = pNewDriver->MMC_disk_ioctl;
+    if (pNewDriver->USB_disk_ioctl)
+        pDiskioDriver.USB_disk_ioctl = pNewDriver->USB_disk_ioctl;
+    if (pNewDriver->Translate_Result_Code)
+        pDiskioDriver.Translate_Result_Code = pNewDriver->Translate_Result_Code;
 }
 
 /*-----------------------------------------------------------------------*/

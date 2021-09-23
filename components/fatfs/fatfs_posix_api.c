@@ -30,10 +30,11 @@
 #include "fatfs_posix_api.h"
 #include "ff.h"
 #include "stdlib.h"
+#include "string.h"
 
 /*Memory request interface*/
-static void *(*vfs_malloc)(size_t size) = mmheap_alloc; //默认的内存申请接口
-static void (*vfs_free)(void *ptr) = mmheap_free;       //默认的内存释放接口
+static void *(*vfs_malloc)(size_t size) = malloc; //默认的内存申请接口
+static void (*vfs_free)(void *ptr) = free;        //默认的内存释放接口
 
 /**
  * @brief fs init
