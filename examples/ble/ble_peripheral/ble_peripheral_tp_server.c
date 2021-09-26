@@ -27,7 +27,9 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err);
 static void ble_tp_disconnected(struct bt_conn *conn, u8_t reason);
 
 static struct bt_conn *ble_tp_conn;
+#if !defined(CONFIG_BT_OAD_SERVER)
 static struct bt_gatt_exchange_params exchg_mtu;
+#endif
 static TaskHandle_t ble_tp_task_h;
 
 static struct k_sem notify_poll_sem;
@@ -41,6 +43,7 @@ static struct bt_conn_cb ble_tp_conn_callbacks = {
     .disconnected = ble_tp_disconnected,
 };
 
+#if !defined(CONFIG_BT_OAD_SERVER)
 /*************************************************************************
 NAME
     ble_tp_tx_mtu_size
@@ -55,16 +58,18 @@ static void ble_tp_tx_mtu_size(struct bt_conn *conn, u8_t err,
         BT_WARN("ble tp echange mtu size failure, err: %d", err);
     }
 }
-
+#endif
 /*************************************************************************
 NAME
     ble_tp_connected
 */
 static void ble_tp_connected(struct bt_conn *conn, u8_t err)
 {
+    #if !defined(CONFIG_BT_OAD_SERVER)
     int tx_octets = 0x00fb;
     int tx_time = 0x0848;
     int ret = -1;
+    #endif
 
     if (err) {
         return;
@@ -73,6 +78,7 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
     BT_WARN("Tp connected");
     ble_tp_conn = conn;
 
+    #if !defined(CONFIG_BT_OAD_SERVER)
     //set data length after connected.
     ret = bt_le_set_data_len(ble_tp_conn, tx_octets, tx_time);
 
@@ -91,6 +97,7 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
     } else {
         BT_WARN("ble tp exchange mtu size failure, err: %d", ret);
     }
+    #endif
 }
 
 /*************************************************************************

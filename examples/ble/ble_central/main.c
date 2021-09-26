@@ -31,6 +31,7 @@
 #include "log.h"
 #include "ble_lib_api.h"
 #include "hci_driver.h"
+#include "bl702_sec_eng.h"
 
 #define NAME_LEN 30
 
@@ -265,9 +266,18 @@ int main(void)
 {
     static StackType_t ble_init_stack[1024];
     static StaticTask_t ble_init_task_h;
+    uint32_t tmpVal = 0;
 
     bflb_platform_init(0);
     HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
+
+    //Set capcode
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON, 33);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_OUT_AON, 33);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+
+    Sec_Eng_Trng_Enable();
 
     vPortDefineHeapRegions(xHeapRegions);
 

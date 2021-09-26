@@ -29,6 +29,12 @@
 #include "ble_peripheral_tp_server.h"
 #include "ble_lib_api.h"
 #include "hci_driver.h"
+#include "bl702_sec_eng.h"
+
+#if defined(CONFIG_BT_OAD_SERVER)
+#include "oad_main.h"
+#include "oad_service.h"
+#endif
 
 extern uint8_t _heap_start;
 extern uint8_t _heap_size; // @suppress("Type cannot be resolved")
@@ -127,16 +133,32 @@ int ble_start_adv(void)
     };
 
     char *adv_name = "BL_TEST_01"; // This name must be the same as adv_name in ble_central
-    struct bt_data adv_data[] = {
+    struct bt_data adv_data[2] = {
+        BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL)),
         BT_DATA(BT_DATA_NAME_COMPLETE, adv_name, strlen(adv_name)),
     };
 
-    return bt_le_adv_start(&adv_param, adv_data, ARRAY_SIZE(adv_data), NULL, 0);
+    return bt_le_adv_start(&adv_param, adv_data, ARRAY_SIZE(adv_data), &adv_data[1], 1);
 }
+
+#if defined(CONFIG_BT_OAD_SERVER)
+bool app_check_oad(u32_t cur_file_ver, u32_t new_file_ver)
+{
+    //App layer decides whether to do oad according to file version
+    /*if(new_file_ver > cur_file_ver)
+        return true;
+    else
+        return false;*/
+    return true;
+}
+#endif
 
 void bt_enable_cb(int err)
 {
     ble_tp_init();
+#if defined(CONFIG_BT_OAD_SERVER)
+    oad_service_enable(app_check_oad);
+#endif
     ble_start_adv();
 }
 
@@ -169,9 +191,18 @@ int main(void)
 {
     static StackType_t ble_init_stack[1024];
     static StaticTask_t ble_init_task_h;
+    uint32_t tmpVal = 0;
 
     bflb_platform_init(0);
     HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
+
+    //Set capcode
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON, 33);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_OUT_AON, 33);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+
+    Sec_Eng_Trng_Enable();
 
     vPortDefineHeapRegions(xHeapRegions);
 
