@@ -161,7 +161,6 @@
 			</target>
 			<target name="bl_clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make</buildCommand>
-				<buildArguments/>
 				<buildTarget>clean</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -169,7 +168,7 @@
 			</target>
 			<target name="download" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make</buildCommand>
-				<buildArguments>INTERFACE=uart</buildArguments>
+				<buildArguments>INTERFACE=uart COMx=com49</buildArguments>
 				<buildTarget>download</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
