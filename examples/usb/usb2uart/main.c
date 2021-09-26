@@ -111,6 +111,7 @@ uint8_t cdc_descriptor[] = {
     'i', 0x00,                  /* wcChar20 */
     'a', 0x00,                  /* wcChar21 */
     'l', 0x00,                  /* wcChar22 */
+#ifdef CONFIG_USB_HS
     ///////////////////////////////////////
     /// device qualifier descriptor
     ///////////////////////////////////////
@@ -124,11 +125,11 @@ uint8_t cdc_descriptor[] = {
     0x40,
     0x01,
     0x00,
-
+#endif
     0x00
 };
 struct device *usb_fs;
-usbd_class_t cdc_class;
+
 uint8_t filter_buf[sizeof(USB_CDC_RESET_FILTER_PATTERN) + 1 + 1] = { 0 };
 
 static void hexarr2string(uint8_t *hexarray, int length, uint8_t *string)

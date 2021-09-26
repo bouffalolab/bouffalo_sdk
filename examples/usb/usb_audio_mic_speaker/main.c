@@ -381,6 +381,7 @@ USB_DESC_SECTION const uint8_t audio_descriptor[] = {
     '0', 0x00,                  /* wcChar7 */
     '0', 0x00,                  /* wcChar8 */
     '0', 0x00,                  /* wcChar9 */
+#ifdef CONFIG_USB_HS
     ///////////////////////////////////////
     /// device qualifier descriptor
     ///////////////////////////////////////
@@ -394,7 +395,7 @@ USB_DESC_SECTION const uint8_t audio_descriptor[] = {
     0x40,
     0x01,
     0x00,
-
+#endif
     0x00
 };
 
@@ -416,6 +417,8 @@ static uint8_t record_data_buff[2][BUFF_SIZE + 128] __attribute__((section(".sys
 
 volatile static uint8_t play_buff_using_num = 0, play_updata_flag = 0;
 static uint8_t play_data_buff[2][BUFF_SIZE + 128] __attribute__((section(".system_ram"), aligned(4)));
+
+static uint8_t vol_change_flag = 0;
 
 static ES8388_Cfg_Type ES8388Cfg = {
     .work_mode = ES8388_CODEC_MDOE,          /*!< ES8388 work mode */
@@ -462,9 +465,9 @@ void usbd_audio_set_interface_callback(uint8_t value)
 {
     if (value) {
         play_status = 1;
-        MSG("OPEN\r\n");
         device_control(usb_fs, DEVICE_CTRL_USB_DC_SET_ACK, (void *)0x81);
         device_control(usb_fs, DEVICE_CTRL_USB_DC_SET_ACK, (void *)0x2);
+        MSG("OPEN\r\n");
     } else {
         play_status = 0;
         usb_data_offset = 0;
@@ -477,22 +480,13 @@ static usbd_endpoint_t audio_out_ep = {
     .ep_addr = AUDIO_OUT_EP
 };
 
-// static usbd_endpoint_t audio_in_ep = {
-//     .ep_cb = NULL,
-//     .ep_addr = AUDIO_IN_EP
-// };
 void usbd_audio_set_volume(uint8_t vol)
 {
-    ES8388_Set_Voice_Volume(vol);
+    vol_change_flag = vol;
 }
+
 extern struct device *usb_dc_init(void);
 struct device *dma_ch4_usb_tx;
-
-uint32_t audio_pos = 0;
-uint32_t musci_size = 0;
-uint32_t frame_count = 0;
-uint32_t frame_cnt = 0;
-uint32_t last_frame_size = 0;
 
 static void dma_ch2_i2s_tx_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
@@ -561,8 +555,8 @@ void audio_init()
         device_control(i2s, DEVICE_CTRL_ATTACH_TX_DMA, (void *)dma_ch2_i2s_tx);
 
         /* Set the interrupt function, for double buffering*/
-        device_set_callback(dma_ch2_i2s_tx, dma_ch2_i2s_tx_irq_callback);
-        device_control(dma_ch2_i2s_tx, DEVICE_CTRL_SET_INT, NULL);
+        device_set_callback(I2S_DEV(i2s)->tx_dma, dma_ch2_i2s_tx_irq_callback);
+        device_control(I2S_DEV(i2s)->tx_dma, DEVICE_CTRL_SET_INT, NULL);
     }
 
     dma_register(DMA0_CH3_INDEX, "dma_ch3_i2s_rx");
@@ -582,8 +576,8 @@ void audio_init()
         device_control(i2s, DEVICE_CTRL_ATTACH_RX_DMA, (void *)dma_ch3_i2s_rx);
 
         /* Set the interrupt function, for double buffering*/
-        device_set_callback(dma_ch3_i2s_rx, dma_ch3_i2s_rx_irq_callback);
-        device_control(dma_ch3_i2s_rx, DEVICE_CTRL_SET_INT, NULL);
+        device_set_callback(I2S_DEV(i2s)->rx_dma, dma_ch3_i2s_rx_irq_callback);
+        device_control(I2S_DEV(i2s)->rx_dma, DEVICE_CTRL_SET_INT, NULL);
     }
 }
 
@@ -644,6 +638,11 @@ int main(void)
             device_write(i2s, 0, play_data_buff[play_buff_using_num], BUFF_SIZE);
             play_updata_flag = 0;
             usb_data_offset = 0;
+        }
+
+        if (vol_change_flag) {
+            ES8388_Set_Voice_Volume(vol_change_flag);
+            vol_change_flag = 0;
         }
 
         __asm volatile("nop");

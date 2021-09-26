@@ -319,6 +319,7 @@ USB_DESC_SECTION const uint8_t video_descriptor[] = {
     '0', 0x00,                  /* wcChar7 */
     '0', 0x00,                  /* wcChar8 */
     '0', 0x00,                  /* wcChar9 */
+#ifdef CONFIG_USB_HS
     ///////////////////////////////////////
     /// device qualifier descriptor
     ///////////////////////////////////////
@@ -332,7 +333,7 @@ USB_DESC_SECTION const uint8_t video_descriptor[] = {
     0x40,
     0x01,
     0x00,
-
+#endif
     0x00
 };
 
@@ -340,8 +341,8 @@ static struct device *usb_fs;
 static struct device *dma_ch2;
 
 // static uint8_t header[2] = {0x02,0x00};
-uint8_t packet_buffer1[VIDEO_PACKET_SIZE] __attribute__((section(".tcm_code"))) = { 0x02, 0x00 };
-uint8_t packet_buffer2[VIDEO_PACKET_SIZE] __attribute__((section(".tcm_code"))) = { 0x02, 0x00 };
+ATTR_DTCM_SECTION uint8_t packet_buffer1[VIDEO_PACKET_SIZE] = { 0x02, 0x00 };
+ATTR_DTCM_SECTION uint8_t packet_buffer2[VIDEO_PACKET_SIZE] = { 0x02, 0x00 };
 static uint32_t picture_pos = 0;
 static uint32_t packets_cnt = 0;
 static uint32_t packets_in_frame;

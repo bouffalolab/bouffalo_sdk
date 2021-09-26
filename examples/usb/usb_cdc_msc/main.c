@@ -109,6 +109,7 @@ USB_DESC_SECTION const uint8_t cdc_msc_descriptor[] = {
     '3', 0x00,                  /* wcChar7 */
     '4', 0x00,                  /* wcChar8 */
     '5', 0x00,                  /* wcChar9 */
+#ifdef CONFIG_USB_HS
     ///////////////////////////////////////
     /// device qualifier descriptor
     ///////////////////////////////////////
@@ -122,7 +123,7 @@ USB_DESC_SECTION const uint8_t cdc_msc_descriptor[] = {
     0x40,
     0x01,
     0x00,
-
+#endif
     0x00
 };
 
