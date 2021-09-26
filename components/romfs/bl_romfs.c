@@ -24,10 +24,6 @@
 #include "drv_mmheap.h"
 #include "bl_romfs.h"
 
-#define ROMFH_HRD    0
-#define ROMFH_DIR    1
-#define ROMFH_REG    2
-#define ROMFH_UNKNOW 3.
 
 static uint32_t romfs_endaddr(void);
 static int dirent_type(void *addr);
@@ -339,6 +335,15 @@ int romfs_close(romfs_file_t *fp)
     return -1;
 }
 
+int romfs_size(romfs_file_t *fp)
+{
+    if(fp == NULL){
+        return -1;
+    }
+
+    return dirent_size(fp->f_arg);
+}
+
 size_t romfs_read(romfs_file_t *fp, char *buf, size_t length)
 {
     char *payload_buf;
@@ -466,9 +471,8 @@ int romfs_stat(const char *path, romfs_stat_t *st)
     return 0;
 }
 
-romfs_dir_t *romfs_opendir(const char *path)
+int romfs_opendir(romfs_dir_t *dp,const char *path)
 {
-    romfs_dir_t *dp = NULL;
     char *start_addr;
     char *end_addr;
     int res;
@@ -478,14 +482,14 @@ romfs_dir_t *romfs_opendir(const char *path)
     /* sure romfs_root is valid */
     if (romfs_root == NULL) {
         ROMFS_ERROR("ERROR: romfs_root is null.\r\n");
-        return NULL;
+        return -1;
     }
 
-    dp = (romfs_dir_t *)mmheap_alloc(sizeof(romfs_dir_t) + ROMFS_MAX_NAME_LEN + 1);
+    // dp = (romfs_dir_t *)malloc(sizeof(romfs_dir_t) + ROMFS_MAX_NAME_LEN + 1);
     if (NULL == dp) {
-        return NULL;
+        return -2;
     }
-    memset(dp, 0, sizeof(romfs_dir_t) + ROMFS_MAX_NAME_LEN + 1);
+    memset(dp, 0, sizeof(romfs_dir_t));
 
     res = dirent_file((char *)path, (void **)&start_addr, (void **)&end_addr);
     ROMFS_DEBUG("romfs: open dir path = %s, start = %p, end = %p\r\n", path, start_addr, end_addr);
@@ -495,19 +499,18 @@ romfs_dir_t *romfs_opendir(const char *path)
             dp->dir_start_addr = (char *)(romfs_root + ALIGNUP16(strlen(romfs_root + 16) + 1) + 16 + 64);
         } else {
             if (0 == dirent_childaddr(start_addr)) {
-                return NULL;
+                return -3;
             } else {
                 dp->dir_start_addr = (char *)(romfs_root + dirent_childaddr(start_addr));
             }
         }
         dp->dir_end_addr = end_addr;
         dp->dir_cur_addr = NULL;
-        return dp;
+        return 0;
     }
 
     /* open err */
-    mmheap_free(dp);
-    return NULL;
+    return -4;
 }
 
 romfs_dirent_t *romfs_readdir(romfs_dir_t *dir)
@@ -569,6 +572,12 @@ romfs_dirent_t *romfs_readdir(romfs_dir_t *dir)
         }
     }
 
+    if(ROMFH_DIR == dirent_type(dir->dir_cur_addr)){
+        dir->cur_dirent.d_type = ROMFH_DIR;
+    }else if(ROMFH_REG == dirent_type(dir->dir_cur_addr)){
+        dir->cur_dirent.d_type = ROMFH_REG;
+    }
+
     return &(dir->cur_dirent);
 }
 
@@ -578,7 +587,6 @@ int romfs_closedir(romfs_dir_t *dir)
         return -1;
     }
 
-    mmheap_free(dir);
     return 0;
 }
 

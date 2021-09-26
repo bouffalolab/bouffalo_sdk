@@ -45,6 +45,11 @@
 #define ROMFS_MOUNTPOINT   "/romfs" /* must '/' */
 #define ROMFS_MAX_NAME_LEN (64)
 
+#define ROMFH_HRD    0
+#define ROMFH_DIR    1
+#define ROMFH_REG    2
+#define ROMFH_UNKNOW 3
+
 #define ROMFS_S_IFDIR 0x0040000
 #define ROMFS_S_IFREG 0x0100000
 
@@ -80,7 +85,7 @@ typedef struct {
 typedef struct {
     int d_ino;      /* file number */
     uint8_t d_type; /* type of file */
-    char d_name[];  /* file name */
+    char d_name[ROMFS_MAX_NAME_LEN + 1];  /* file name */
 } romfs_dirent_t;
 
 /* opendir 得到的目录结构体 */
@@ -94,10 +99,11 @@ typedef struct {
 int romfs_mount(void);
 int romfs_open(romfs_file_t *fp, const char *path, int flags);
 int romfs_close(romfs_file_t *fp);
+int romfs_size(romfs_file_t *fp);
 size_t romfs_read(romfs_file_t *fp, char *buf, size_t length);
 size_t romfs_lseek(romfs_file_t *fp, int off, romfs_whence_t whence);
 int romfs_stat(const char *path, romfs_stat_t *st);
-romfs_dir_t *romfs_opendir(const char *path);
+int romfs_opendir(romfs_dir_t *dp,const char *path);
 romfs_dirent_t *romfs_readdir(romfs_dir_t *dir);
 int romfs_closedir(romfs_dir_t *dir);
 

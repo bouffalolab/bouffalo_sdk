@@ -1,6 +1,7 @@
 ################# Add global include #################
 list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}"
+${CMAKE_SOURCE_DIR}/bsp/bsp_common/mcu_lcd/
 )
 #######################################################
 

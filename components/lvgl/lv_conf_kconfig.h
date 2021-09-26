@@ -14,15 +14,6 @@ extern "C" {
 #include LV_CONF_KCONFIG_EXTERNAL_INCLUDE
 #else
 
-#if defined ESP_PLATFORM
-#include "sdkconfig.h"
-#include "esp_attr.h"
-#endif
-
-#ifdef __NuttX__
-#include <nuttx/config.h>
-#endif
-
 #endif /*LV_CONF_KCONFIG_EXTERNAL_INCLUDE*/
 
 /*******************
