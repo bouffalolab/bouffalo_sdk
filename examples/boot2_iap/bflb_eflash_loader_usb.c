@@ -35,7 +35,7 @@
   */
 #include "blsp_port.h"
 #include "hal_boot2.h"
-#if BLSP_BOOT2_SUPPORT_USB_IAP   
+#if BLSP_BOOT2_SUPPORT_USB_IAP
 #include "bflb_eflash_loader.h"
 #include "hal_usb.h"
 #include "usbd_core.h"
@@ -129,24 +129,22 @@ USB_DESC_SECTION const uint8_t cdc_descriptor[] = {
     0x00
 };
 
-
-
 void usb_send(uint8_t *buf, uint32_t len)
 {
-//    while (len >= 64) {
-//        usbd_ep_write(0x82, buf, 64, NULL);
-//        buf += 64;
-//        len -= 64;
-//    }
+    //    while (len >= 64) {
+    //        usbd_ep_write(0x82, buf, 64, NULL);
+    //        buf += 64;
+    //        len -= 64;
+    //    }
     usbd_ep_write(0x82, buf, len, NULL);
-    if(len == 64){
+    if (len == 64) {
         usbd_ep_write(0x82, NULL, 0, NULL);
     }
-//    if (len > 0) {
-//        usbd_ep_write(0x82, buf, len, NULL);
-//    } else {
-//        usbd_ep_write(0x82, NULL, 0, NULL);
-//    }
+    //    if (len > 0) {
+    //        usbd_ep_write(0x82, buf, len, NULL);
+    //    } else {
+    //        usbd_ep_write(0x82, NULL, 0, NULL);
+    //    }
 }
 
 void usbd_cdc_acm_bulk_out(uint8_t ep)
@@ -154,7 +152,6 @@ void usbd_cdc_acm_bulk_out(uint8_t ep)
     uint32_t actual_read_length = 0;
     uint8_t out_buffer[64];
     uint8_t *buf = g_eflash_loader_readbuf[g_rx_buf_index];
-    
 
     if (usbd_ep_read(ep, out_buffer, 64, &actual_read_length) < 0) {
         USBD_LOG_DBG("Read DATA Packet failed\r\n");
@@ -162,19 +159,17 @@ void usbd_cdc_acm_bulk_out(uint8_t ep)
         return;
     }
 
-//    bflb_dump_data(out_buffer,actual_read_length);
-//    usb_send(out_buffer,actual_read_length);
+    //    bflb_dump_data(out_buffer,actual_read_length);
+    //    usb_send(out_buffer,actual_read_length);
 
-    if(g_rx_buf_len + actual_read_length < BFLB_EFLASH_LOADER_READBUF_SIZE){
+    if (g_rx_buf_len + actual_read_length < BFLB_EFLASH_LOADER_READBUF_SIZE) {
         arch_memcpy(buf + g_rx_buf_len, out_buffer, actual_read_length);
-        g_rx_buf_len += actual_read_length;        
-    }else{
+        g_rx_buf_len += actual_read_length;
+    } else {
         g_rx_buf_len = 0;
     }
     //MSG("%d\r\n",g_rx_buf_len);
     usbd_ep_read(ep, NULL, 0, NULL);
-
-    
 }
 
 usbd_class_t cdc_class;
@@ -193,19 +188,18 @@ usbd_endpoint_t cdc_in_ep = {
 
 extern struct device *usb_dc_init(void);
 
-
 void bflb_eflash_loader_usb_if_init(void)
 {
     struct device *usb_fs;
 
     hal_boot2_debug_usb_port_init();
-    
+
     simple_malloc_init(g_malloc_buf, sizeof(g_malloc_buf));
     g_eflash_loader_readbuf[0] = vmalloc(BFLB_EFLASH_LOADER_READBUF_SIZE);
     g_eflash_loader_readbuf[1] = vmalloc(BFLB_EFLASH_LOADER_READBUF_SIZE);
     arch_memset(g_eflash_loader_readbuf[0], 0, BFLB_EFLASH_LOADER_READBUF_SIZE);
     arch_memset(g_eflash_loader_readbuf[1], 0, BFLB_EFLASH_LOADER_READBUF_SIZE);
-    
+
     usbd_desc_register(cdc_descriptor);
 
     usbd_cdc_add_acm_interface(&cdc_class, &cdc_cmd_intf);
@@ -221,13 +215,11 @@ void bflb_eflash_loader_usb_if_init(void)
 
     while (!usb_device_is_configured()) {
     }
-
 }
-
 
 int32_t bflb_eflash_loader_usb_send(uint32_t *data, uint32_t len)
 {
-    usb_send((uint8_t *)data,len);
+    usb_send((uint8_t *)data, len);
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
 
@@ -239,8 +231,6 @@ int32_t bflb_eflash_loader_usb_wait_tx_idle(uint32_t timeout)
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
 
-
-
 int32_t bflb_eflash_loader_usb_init()
 {
     bflb_eflash_loader_usb_deinit();
@@ -251,11 +241,11 @@ int32_t bflb_eflash_loader_usb_init()
 
 int32_t bflb_eflash_loader_check_handshake_buf(uint8_t *buf, uint32_t len)
 {
-    if(len == 0)
+    if (len == 0)
         return -1;
-    
-    for(int i = 0; i < len; i++){
-        if(buf[i] != BFLB_EFLASH_LOADER_HAND_SHAKE_BYTE)
+
+    for (int i = 0; i < len; i++) {
+        if (buf[i] != BFLB_EFLASH_LOADER_HAND_SHAKE_BYTE)
             return -1;
     }
     return 0;
@@ -287,8 +277,6 @@ int32_t bflb_eflash_loader_usb_handshake_poll(uint32_t timeout)
         }
     } while ((timeout == 0) ? 1 : (bflb_platform_get_time_ms() - time_now < timeout * 1000));
 
-    
-
     if (handshake_count >= BFLB_EFLASH_LAODER_HAND_SHAKE_SUSS_COUNT) {
         MSG("iap handshake %d 0x55 rcv\r\n", handshake_count);
 
@@ -299,26 +287,24 @@ int32_t bflb_eflash_loader_usb_handshake_poll(uint32_t timeout)
 
     /*receive shake hanad signal*/
     usb_send((uint8_t *)"OK", 2);
-    //ARCH_Delay_MS(400);
+    //arch_delay_ms(400);
     bflb_platform_delay_ms(400);
     /*init rx info */
     g_rx_buf_index = 0;
     g_rx_buf_len = 0;
 
     time_now = bflb_platform_get_time_ms();
-    do{
-        if(g_rx_buf_len > 0){
-            if(0 == bflb_eflash_loader_check_handshake_buf(buf, g_rx_buf_len)){
+    do {
+        if (g_rx_buf_len > 0) {
+            if (0 == bflb_eflash_loader_check_handshake_buf(buf, g_rx_buf_len)) {
                 g_rx_buf_len = 0;
                 time_now = bflb_platform_get_time_ms();
-            }else{
+            } else {
                 break;
             }
         }
-    }while(bflb_platform_get_time_ms() - time_now < 50);
+    } while (bflb_platform_get_time_ms() - time_now < 50);
 
-    
-    
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
 
@@ -334,8 +320,6 @@ int32_t bflb_eflash_loader_usb_change_rate(uint32_t oldval, uint32_t newval)
 
 int32_t bflb_eflash_loader_usb_deinit()
 {
-   return BFLB_EFLASH_LOADER_SUCCESS;
+    return BFLB_EFLASH_LOADER_SUCCESS;
 }
 #endif
-
-

@@ -42,7 +42,6 @@
 #include "drv_device.h"
 #include "hal_boot2.h"
 
-
 static uint32_t g_detected_baudrate;
 
 static void bflb_eflash_loader_usart_if_deinit();
@@ -52,13 +51,12 @@ enum uart_index_type board_get_debug_uart_index(void)
 {
     return 1;
 }
-void bflb_dump_data(uint8_t * buf, uint32_t size)
+void bflb_dump_data(uint8_t *buf, uint32_t size)
 {
-    for(int i = 0; i <size; i++)
-    {
-        if(i % 16 == 0)
+    for (int i = 0; i < size; i++) {
+        if (i % 16 == 0)
             MSG("\r\n");
-        MSG("%02x ",buf[i]);
+        MSG("%02x ", buf[i]);
     }
     MSG("\r\n");
 }
@@ -84,17 +82,17 @@ static void bflb_eflash_loader_usart_if_init(uint32_t bdrate)
     download_uart = device_find("debug_log");
 
     if (download_uart) {
-        UART_DEV(download_uart)->fifo_threshold = 16; 
+        UART_DEV(download_uart)->fifo_threshold = 16;
         device_open(download_uart, DEVICE_OFLAG_STREAM_TX);
     }
-#endif    
+#endif
 
-#if (BLSP_BOOT2_MODE == BOOT2_MODE_DEEP_DEBUG)    
+#if (BLSP_BOOT2_MODE == BOOT2_MODE_DEEP_DEBUG)
     uart_register(0, "iap_download");
     download_uart = device_find("iap_download");
 
     if (download_uart) {
-        UART_DEV(download_uart)->fifo_threshold = 16; 
+        UART_DEV(download_uart)->fifo_threshold = 16;
         device_open(download_uart, DEVICE_OFLAG_STREAM_TX);
     }
 
@@ -104,12 +102,11 @@ static void bflb_eflash_loader_usart_if_init(uint32_t bdrate)
     if (uart) {
         device_open(uart, DEVICE_OFLAG_STREAM_TX);
     }
-#endif    
-
+#endif
 }
 
 void bflb_eflash_loader_usart_if_enable_int(void)
-{  
+{
     if (download_uart) {
         device_close(download_uart);
         device_open(download_uart, DEVICE_OFLAG_STREAM_TX | DEVICE_OFLAG_INT_RX);
@@ -120,10 +117,9 @@ void bflb_eflash_loader_usart_if_enable_int(void)
 
 void bflb_eflash_loader_usart_if_send(uint8_t *data, uint32_t len)
 {
-    if(download_uart){
+    if (download_uart) {
         device_write(download_uart, 0, data, len);
     }
-    
 }
 
 int32_t bflb_eflash_loader_usart_if_wait_tx_idle(uint32_t timeout)
@@ -230,7 +226,7 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
 
     /*receive shake hanad signal*/
     bflb_eflash_loader_usart_if_send((uint8_t *)"OK", 2);
-    //ARCH_Delay_MS(400);
+    //arch_delay_ms(400);
     bflb_platform_delay_ms(400);
     /* consume the remaining bytes when shake hand(0x55) if needed */
     rcv_buf_len = device_read(download_uart, 0, buf, UART_FIFO_LEN); //UART_ReceiveData(g_uart_if_id,buf,128);
@@ -238,7 +234,7 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
     /*init rx info */
     g_rx_buf_index = 0;
     g_rx_buf_len = 0;
-    
+
 #if (BLSP_BOOT2_MODE == BOOT2_MODE_DEBUG)
     bflb_platform_print_set(1);
     device_unregister("debug_log");
@@ -246,7 +242,7 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
     download_uart = device_find("iap_download");
 
     if (download_uart) {
-        UART_DEV(download_uart)->fifo_threshold = 16; 
+        UART_DEV(download_uart)->fifo_threshold = 16;
         device_open(download_uart, DEVICE_OFLAG_STREAM_TX);
     }
 #endif
@@ -256,7 +252,7 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
     g_eflash_loader_readbuf[1] = vmalloc(BFLB_EFLASH_LOADER_READBUF_SIZE);
     arch_memset(g_eflash_loader_readbuf[0], 0, BFLB_EFLASH_LOADER_READBUF_SIZE);
     arch_memset(g_eflash_loader_readbuf[1], 0, BFLB_EFLASH_LOADER_READBUF_SIZE);
-    
+
     bflb_eflash_loader_usart_if_enable_int();
     return 0;
 }
@@ -306,6 +302,3 @@ int32_t bflb_eflash_loader_uart_deinit()
 
     return BFLB_EFLASH_LOADER_SUCCESS;
 }
-
-
-

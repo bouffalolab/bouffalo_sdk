@@ -21,7 +21,7 @@ endif()
 SET(LINKER_SCRIPT ${BOOT2_LINKER_SCRIPT})  
 
 
-set(mains blsp_boot2_iap.c)
+set(mains main.c)
 generate_bin()
 
 

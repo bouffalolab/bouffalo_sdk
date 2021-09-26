@@ -45,6 +45,7 @@
 #include "hal_flash.h"
 #include "hal_boot2.h"
 #include "bflb_eflash_loader.h"
+#include "hal_clock.h"
 
 uint8_t g_malloc_buf[BFLB_BOOT2_XZ_MALLOC_BUF_SIZE] __attribute__((section(".noinit_data")));
 
@@ -86,6 +87,12 @@ void blsp_dump_data(void *datain, int len)
 *******************************************************************************/
 int32_t blsp_mediaboot_pre_jump(void)
 {
+    /* reinit mtimer clock */
+    system_mtimer_clock_reinit();
+
+    /* deinit uart */
+    hal_boot2_debug_uart_gpio_deinit();
+
     /* Sec eng deinit*/
     hal_boot2_reset_sec_eng();
 
@@ -108,7 +115,6 @@ int32_t blsp_mediaboot_pre_jump(void)
 *******************************************************************************/
 void blsp_boot2_exit(void)
 {
-
     hal_boot2_sboot_finish();
 
     /* Release other CPUs*/
@@ -119,7 +125,7 @@ void blsp_boot2_exit(void)
     /* Stay here */
     while (1) {
         /* Use soft delay only */
-        ARCH_Delay_MS(100);
+        arch_delay_ms(100);
     }
 }
 
@@ -153,30 +159,30 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
         return;
     }
     /* Set decryption before read MSP and PC*/
-    if(0!=g_efuse_cfg.encrypted[0]){
-        blsp_boot2_set_encrypt(0,&g_boot_img_cfg[0]);
-        blsp_boot2_set_encrypt(1,&g_boot_img_cfg[1]);
+    if (0 != g_efuse_cfg.encrypted[0]) {
+        blsp_boot2_set_encrypt(0, &g_boot_img_cfg[0]);
+        blsp_boot2_set_encrypt(1, &g_boot_img_cfg[1]);
         /* Get msp and pc value */
-        for(i=0;i<g_cpu_count;i++){
-            if(g_boot_img_cfg[i].img_valid){
+        for (i = 0; i < g_cpu_count; i++) {
+            if (g_boot_img_cfg[i].img_valid) {
                 //if(bootImgCfg[i].entryPoint==0){
-#ifdef     ARCH_ARM
-                    blsp_mediaboot_read(g_boot_img_cfg[i].img_start.flash_offset,
-                                            (uint8_t *)&g_boot_img_cfg[i].msp_val,4);
-                    blsp_mediaboot_read(bootImgCfg[i].imgStart.flashOffset+4,
-                                            (uint8_t *)&g_boot_img_cfg[i].entry_point,4);
+#ifdef ARCH_ARM
+                blsp_mediaboot_read(g_boot_img_cfg[i].img_start.flash_offset,
+                                    (uint8_t *)&g_boot_img_cfg[i].msp_val, 4);
+                blsp_mediaboot_read(bootImgCfg[i].imgStart.flashOffset + 4,
+                                    (uint8_t *)&g_boot_img_cfg[i].entry_point, 4);
 #endif
                 //}
             }
         }
-        if(blsp_boot2_get_feature_flag()==BLSP_BOOT2_CP_FLAG){
+        if (blsp_boot2_get_feature_flag() == BLSP_BOOT2_CP_FLAG) {
             /*co-processor*/
-            g_boot_img_cfg[1].img_start.flash_offset=g_boot_img_cfg[0].img_start.flash_offset;
-            g_boot_img_cfg[1].msp_val=g_boot_img_cfg[0].msp_val;
-            g_boot_img_cfg[1].entry_point=g_boot_img_cfg[0].entry_point;
-            g_boot_img_cfg[1].cache_enable=g_boot_img_cfg[0].cache_enable;
-            g_boot_img_cfg[1].img_valid=1;
-            g_boot_img_cfg[1].cache_way_disable=0xf;
+            g_boot_img_cfg[1].img_start.flash_offset = g_boot_img_cfg[0].img_start.flash_offset;
+            g_boot_img_cfg[1].msp_val = g_boot_img_cfg[0].msp_val;
+            g_boot_img_cfg[1].entry_point = g_boot_img_cfg[0].entry_point;
+            g_boot_img_cfg[1].cache_enable = g_boot_img_cfg[0].cache_enable;
+            g_boot_img_cfg[1].img_valid = 1;
+            g_boot_img_cfg[1].cache_way_disable = 0xf;
         }
     }
 
@@ -206,9 +212,6 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
     /* If cann't jump stay here */
     while (1) {
         /*use soft delay only */
-        ARCH_Delay_MS(100);
+        arch_delay_ms(100);
     }
 }
-
-
-
