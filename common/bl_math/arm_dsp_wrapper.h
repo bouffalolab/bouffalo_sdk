@@ -24,7 +24,7 @@
 #ifndef __MY_MATH_F_H__
 #define __MY_MATH_F_H__
 
-#include "bflb_platform.h"
+#include "misc.h"
 #include "math.h"
 
 typedef float float32_t;

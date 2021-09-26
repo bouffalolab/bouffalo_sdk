@@ -33,8 +33,7 @@
  * @return Destination pointer
  *
  *******************************************************************************/
-__WEAK__
-void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
+__WEAK__ void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
 {
     const uint8_t *p = src;
     uint8_t *q = dst;
@@ -56,8 +55,7 @@ void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
  * @return Destination pointer
  *
  *******************************************************************************/
-__WEAK__
-uint32_t *ATTR_TCM_SECTION arch_memcpy4(uint32_t *dst, const uint32_t *src, uint32_t n)
+__WEAK__ uint32_t *ATTR_TCM_SECTION arch_memcpy4(uint32_t *dst, const uint32_t *src, uint32_t n)
 {
     const uint32_t *p = src;
     uint32_t *q = dst;
@@ -79,8 +77,7 @@ uint32_t *ATTR_TCM_SECTION arch_memcpy4(uint32_t *dst, const uint32_t *src, uint
  * @return Destination pointer
  *
  *******************************************************************************/
-__WEAK__
-void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n)
+__WEAK__ void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n)
 {
     uint32_t left, done, i = 0;
     uint8_t *dst = (uint8_t *)pdst;
@@ -112,8 +109,7 @@ void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n
  * @return Destination pointer
  *
  *******************************************************************************/
-__WEAK__
-void *ATTR_TCM_SECTION arch_memset(void *s, uint8_t c, uint32_t n)
+__WEAK__ void *ATTR_TCM_SECTION arch_memset(void *s, uint8_t c, uint32_t n)
 {
     uint8_t *p = (uint8_t *)s;
 
@@ -134,8 +130,7 @@ void *ATTR_TCM_SECTION arch_memset(void *s, uint8_t c, uint32_t n)
  * @return Destination pointer
  *
  *******************************************************************************/
-__WEAK__
-uint32_t *ATTR_TCM_SECTION arch_memset4(uint32_t *dst, const uint32_t val, uint32_t n)
+__WEAK__ uint32_t *ATTR_TCM_SECTION arch_memset4(uint32_t *dst, const uint32_t val, uint32_t n)
 {
     uint32_t *q = dst;
 
@@ -156,8 +151,7 @@ uint32_t *ATTR_TCM_SECTION arch_memset4(uint32_t *dst, const uint32_t val, uint3
  * @return compare result
  *
  *******************************************************************************/
-__WEAK__
-int ATTR_TCM_SECTION arch_memcmp(const void *s1, const void *s2, uint32_t n)
+__WEAK__ int ATTR_TCM_SECTION arch_memcmp(const void *s1, const void *s2, uint32_t n)
 {
     const unsigned char *c1 = s1, *c2 = s2;
     int d = 0;

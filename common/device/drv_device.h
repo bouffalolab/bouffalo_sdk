@@ -24,7 +24,7 @@
 #define __DRV_DEVICE_H__
 
 #include "drv_list.h"
-#include "bflb_platform.h"
+#include "stdio.h"
 
 #define DEVICE_NAME_MAX 20 /* max device name*/
 
@@ -63,7 +63,7 @@
 #define DEVICE_EINVAL   22 /* Invalid argument */
 #define DEVICE_ENOSPACE 23 /* No more Device for Allocate */
 
-#define __ASSERT_PRINT(fmt, ...) bflb_platform_printf(fmt, ##__VA_ARGS__)
+#define __ASSERT_PRINT(fmt, ...) printf(fmt, ##__VA_ARGS__)
 
 #define __ASSERT_LOC(test)                          \
     __ASSERT_PRINT("ASSERTION FAIL [%s] @ %s:%d\n", \

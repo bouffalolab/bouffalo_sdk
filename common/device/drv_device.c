@@ -20,7 +20,6 @@
  *
  */
 #include "drv_device.h"
-#include "string.h"
 
 #define dev_open    (dev->open)
 #define dev_close   (dev->close)
