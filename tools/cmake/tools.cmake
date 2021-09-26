@@ -43,14 +43,7 @@ function(generate_library)
 
     # Add requirements
     if(ADD_REQUIREMENTS)
-        foreach(lib ${ADD_REQUIREMENTS})
-            if(TARGET ${lib})
-            add_dependencies(${library_name} ${lib})
-            target_link_libraries(${library_name} ${lib})
-            else()
-            message(FATAL_ERROR "${lib} is not a target")
-            endif()
-        endforeach()
+        target_link_libraries(${library_name} ${ADD_REQUIREMENTS})
     endif()
 
     # Add static lib
@@ -82,9 +75,9 @@ endfunction()
 
 function(generate_bin)
 
-    get_filename_component(current_relative_dir_name ${CMAKE_CURRENT_LIST_DIR} NAME)
-    string(REGEX REPLACE "(.*)/${current_relative_dir_name}$" "\\1" above_absolute_dir ${CMAKE_CURRENT_LIST_DIR})
-    get_filename_component(above_relative_dir_name ${above_absolute_dir} NAME)
+    get_filename_component(current_dir_name ${CMAKE_CURRENT_LIST_DIR} NAME)
+    string(REGEX REPLACE "(.*)/${current_dir_name}$" "\\1" above_absolute_dir ${CMAKE_CURRENT_LIST_DIR})
+    get_filename_component(above_dir_name ${above_absolute_dir} NAME)
 
     execute_process(
     COMMAND git submodule status
@@ -137,21 +130,23 @@ function(generate_bin)
         set(OUTPUT_DIR ${OUTPUT})
         set(target_name firmware)
     else()
-        if(${APP_DIR} MATCHES "../") #if demo is not in sdk path
-            string(REPLACE "../" "" dir ${APP_DIR})
-            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${dir}/${current_relative_dir_name})
-        elseif(${APP_DIR} MATCHES "./")#if demo is in sdk peer path
-            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${current_relative_dir_name})
+        string(REPLACE "." ":" dot2colon ${APP_DIR})
+        if(${dot2colon} MATCHES "::/") #if demo is not in sdk path
+            string(REPLACE "../" "" relative_dir ${APP_DIR})
+            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${relative_dir}/${current_dir_name})
+        elseif(${dot2colon} MATCHES ":")#if demo is in sdk peer path
+            set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${current_dir_name})
         else()  #if demo is in sdk path not in peer path
-            if(${APP_DIR} MATCHES ${above_relative_dir_name}) #if demo has one-Layer Catalog
-                set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${current_relative_dir_name})
+            if(${APP_DIR} MATCHES ${above_dir_name}) #if demo has one-Layer Catalog
+                set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${current_dir_name})
             else() #if demo has Two-Layer Catalog
-                set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${above_relative_dir_name}/${current_relative_dir_name})
+                set(OUTPUT_DIR ${CMAKE_SOURCE_DIR}/out/${APP_DIR}/${above_dir_name}/${current_dir_name})
             endif()
+
         endif()
 
         file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/submodule_commit_info.txt ${GIT_SUBMODULE_INFO})
-        set(target_name ${current_relative_dir_name})
+        set(target_name ${current_dir_name})
     endif()
 
 	file(MAKE_DIRECTORY ${OUTPUT_DIR})
@@ -240,7 +235,7 @@ if(DEFINED APP)
         get_filename_component(app_absolute_dir ${cmakelists_file} DIRECTORY)
         get_filename_component(app_absolute_dir_name ${app_absolute_dir} NAME)
         message(STATUS "[run app:${app_absolute_dir_name}], path:${app_absolute_dir}")
-        add_subdirectory(${app_absolute_dir} ${CMAKE_SOURCE_DIR}/build/samples/${app_absolute_dir_name})
+        add_subdirectory(${app_absolute_dir} ${PROJECT_BINARY_DIR}/samples/${app_absolute_dir_name})
         endforeach()
     else()
     message(FATAL_ERROR "can not find ${APP} in the first or second directory under the path:${component_path}")
@@ -252,8 +247,8 @@ endif()
 
 endfunction()
 
-function(check_add_library target_name directory)
+function(check_add_library target_name directory) # if library do not be built, add its subdirectory and build it
     if(NOT TARGET ${target_name})
-    add_subdirectory(${directory} ${CMAKE_SOURCE_DIR}/build/libraries/${target_name})
+    add_subdirectory(${directory} ${PROJECT_BINARY_DIR}/libraries/${target_name})
     endif()
 endfunction()

@@ -9,7 +9,7 @@ list(APPEND GLOBAL_LD_FLAGS -Wall -Wchar-subscripts -std=c99)
 list(APPEND GLOBAL_LD_FLAGS --specs=nano.specs)
 
 
-if("${SUPPORT_FLOAT}" STREQUAL "y")
+if(CONFIG_PRINT_FLOAT_ENABLE)
 list(APPEND GLOBAL_LD_FLAGS -u _printf_float)
 endif()
 
