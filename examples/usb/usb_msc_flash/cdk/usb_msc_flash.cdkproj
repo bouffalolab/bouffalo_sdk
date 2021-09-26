@@ -249,6 +249,12 @@ Board: bl70x_iot
       <File Name="../../../../bsp/bsp_common/usb/usb_dc.c">
         <FileOption/>
       </File>
+      <File Name="../../../../bsp/bsp_common/fatfs/fatfs_usb.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../bsp/bsp_common/fatfs/fatfs_errorcode.c"/>
+        <FileOption/>
+      </File>
     </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="common">

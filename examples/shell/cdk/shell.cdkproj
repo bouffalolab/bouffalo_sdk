@@ -5,12 +5,12 @@ Chip: bl70x
 Board: bl70x_iot
   </Description>
   <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="app">
+  <VirtualDirectory Name="app" ExcludeProjConfig="">
     <File Name="../main.c">
       <FileOption/>
     </File>
   </VirtualDirectory>
-  <VirtualDirectory Name="chip">
+  <VirtualDirectory Name="chip" ExcludeProjConfig="">
     <VirtualDirectory Name="riscv">
       <File Name="../../../drivers/bl702_driver/startup/interrupt.c">
         <FileOption/>
@@ -28,52 +28,7 @@ Board: bl70x_iot
       </File>
     </VirtualDirectory>
   </VirtualDirectory>
-  <VirtualDirectory Name="hal">
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dma.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_gpio.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2c.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2s.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mtimer.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pwm.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_spi.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_timer.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_uart.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_usb.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_flash.c"/>
-  </VirtualDirectory>
-  <VirtualDirectory Name="std">
+  <VirtualDirectory Name="std" ExcludeProjConfig="">
     <File Name="../../../drivers/bl702_driver/std_drv/src/bl702_acomp.c">
       <FileOption/>
     </File>
@@ -146,9 +101,6 @@ Board: bl70x_iot
     <File Name="../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c">
       <FileOption/>
     </File>
-    <File Name="../../../drivers/bl702_driver/std_drv/src/bl702_romdriver.c">
-      <FileOption/>
-    </File>
     <File Name="../../../drivers/bl702_driver/std_drv/src/bl702_sec_dbg.c">
       <FileOption/>
     </File>
@@ -189,7 +141,7 @@ Board: bl70x_iot
       <FileOption/>
     </File>
   </VirtualDirectory>
-  <VirtualDirectory Name="bsp">
+  <VirtualDirectory Name="bsp" ExcludeProjConfig="">
     <VirtualDirectory Name="board">
       <File Name="../../../bsp/board/bl702/board.c">
         <FileOption/>
@@ -204,7 +156,7 @@ Board: bl70x_iot
       </File>
     </VirtualDirectory>
   </VirtualDirectory>
-  <VirtualDirectory Name="common">
+  <VirtualDirectory Name="common" ExcludeProjConfig="">
     <File Name="../../../common/device/drv_device.c">
       <FileOption/>
     </File>
@@ -221,7 +173,7 @@ Board: bl70x_iot
       <FileOption/>
     </File>
   </VirtualDirectory>
-  <VirtualDirectory Name="script">
+  <VirtualDirectory Name="script" ExcludeProjConfig="">
     <File Name="../../../tools/openocd/openocd_bl702_evb.cfg">
       <FileOption/>
     </File>
@@ -232,7 +184,7 @@ Board: bl70x_iot
   <MonitorProgress>
     <DebugLaunch>76</DebugLaunch>
   </MonitorProgress>
-  <VirtualDirectory Name="components">
+  <VirtualDirectory Name="components" ExcludeProjConfig="">
     <VirtualDirectory Name="fatfs">
       <File Name="../../../components/fatfs/diskio.c">
         <FileOption/>
@@ -426,12 +378,13 @@ Board: bl70x_iot
         <AllWarn>yes</AllWarn>
         <WarnErr>no</WarnErr>
         <OneElfS>yes</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
         <Define/>
         <Undefine/>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl706_iot;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl706_iot;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
         <OtherFlags/>
         <DebugLevel>gdwarf2</DebugLevel>
       </Asm>
@@ -456,6 +409,7 @@ Board: bl70x_iot
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal>23000000</SoftResetVal>
         <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
         <ConfigICE>
@@ -492,6 +446,7 @@ Board: bl70x_iot
           <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
           <OpenOCDTclPort>6666</OpenOCDTclPort>
           <OpenOCDConfigOptions>-f ../../../tools/openocd/if_rv_dbg_plus.cfg -f ../../../tools/openocd/tgt_702.cfg</OpenOCDConfigOptions>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
         </ConfigOpenOCD>
       </Debug>
       <Flash>
@@ -617,6 +572,7 @@ Board: bl70x_iot
         <AllWarn>yes</AllWarn>
         <WarnErr>no</WarnErr>
         <OneElfS>yes</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
@@ -647,6 +603,7 @@ Board: bl70x_iot
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal>21000000</SoftResetVal>
         <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
         <ConfigICE>
@@ -683,6 +640,7 @@ Board: bl70x_iot
           <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
           <OpenOCDTclPort>6666</OpenOCDTclPort>
           <OpenOCDConfigOptions>-f ../../../tools/openocd/if_rv_dbg_plus.cfg -f ../../../tools/openocd/tgt_702.cfg</OpenOCDConfigOptions>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
         </ConfigOpenOCD>
       </Debug>
       <Flash>
@@ -700,4 +658,91 @@ Board: bl70x_iot
       </Flash>
     </BuildConfig>
   </BuildConfigs>
+  <VirtualDirectory Name="hal">
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_acomp.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_boot2.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_common.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dma.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_emac.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_flash.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_gpio.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2c.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2s.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_keyscan.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mtimer.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pwm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_qdec.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_rtc.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_aes.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_dsa.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_ecdsa.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_hash.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_spi.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_timer.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_uart.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_usb.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_wdt.c"/>
+  </VirtualDirectory>
 </Project>

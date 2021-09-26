@@ -32,13 +32,34 @@ Board: bl70x_iot
     </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="hal">
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_acomp.c">
+      <FileOption/>
+    </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_boot2.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_common.c">
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_dma.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_emac.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_flash.c">
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_gpio.c">
@@ -50,10 +71,37 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_i2s.c">
       <FileOption/>
     </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_keyscan.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
+      <FileOption/>
+    </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_mtimer.c">
       <FileOption/>
     </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
+      <FileOption/>
+    </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_pwm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_qdec.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_rtc.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_sec_aes.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_sec_dsa.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_sec_ecdsa.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_sec_hash.c">
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_spi.c">
@@ -68,19 +116,9 @@ Board: bl70x_iot
     <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_usb.c">
       <FileOption/>
     </File>
-    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
+    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_wdt.c">
       <FileOption/>
     </File>
-    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../../drivers/bl702_driver/hal_drv/src/hal_flash.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="std">
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_acomp.c">
@@ -153,9 +191,6 @@ Board: bl70x_iot
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_romdriver.c">
       <FileOption/>
     </File>
     <File Name="../../../../drivers/bl702_driver/std_drv/src/bl702_sec_dbg.c">
@@ -423,6 +458,20 @@ Board: bl70x_iot
         </VirtualDirectory>
       </VirtualDirectory>
     </VirtualDirectory>
+    <VirtualDirectory Name="mbedtls">
+      <File Name="../../../../components/mbedtls/bflb_port/src/bflb_aes.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../components/mbedtls/bflb_port/src/bflb_ccm.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../components/mbedtls/library/platform_util.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../components/mbedtls/library/sha256.c">
+        <FileOption/>
+      </File>
+    </VirtualDirectory>
   </VirtualDirectory>
   <Dependencies Name="BuildSet"/>
   <Dependencies Name="CK_Link_Debug"/>
@@ -548,11 +597,11 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;CFG_FREERTOS;BL702;CFG_BLE_ENABLE;BFLB_BLE;CFG_BLE;CFG_SLEEP;OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER;BL_MCU_SDK;CFG_CON=2;CFG_BLE_TX_BUFF_DATA=2;CONFIG_BT_ALLROLES;CONFIG_BT_CENTRAL;CONFIG_BT_OBSERVER;CONFIG_BT_PERIPHERAL;CONFIG_BT_BROADCASTER;CONFIG_BT_L2CAP_DYNAMIC_CHANNEL;CONFIG_BT_GATT_CLIENT;CONFIG_BT_CONN;CONFIG_BT_GATT_DIS_PNP;CONFIG_BT_GATT_DIS_SERIAL_NUMBER;CONFIG_BT_GATT_DIS_FW_REV;CONFIG_BT_GATT_DIS_HW_REV;CONFIG_BT_GATT_DIS_SW_REV;CONFIG_BT_ECC;CONFIG_BT_GATT_DYNAMIC_DB;CONFIG_BT_GATT_SERVICE_CHANGED;CONFIG_BT_KEYS_OVERWRITE_OLDEST;CONFIG_BT_KEYS_SAVE_AGING_COUNTER_ON_PAIRING;CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS;CONFIG_BT_BONDABLE;CONFIG_BT_HCI_VS_EVT_USER;CONFIG_BT_ASSERT;CONFIG_BT_SMP;CONFIG_BT_SIGNING;CONFIG_BT_SETTINGS_CCC_LAZY_LOADING;CONFIG_BT_SETTINGS_USE_PRINTK;CFG_BLE_STACK_DBG_PRINT;bl706_iot</Define>
+        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;CFG_FREERTOS;BL702;CFG_BLE_ENABLE;BFLB_BLE;CFG_BLE;CFG_SLEEP;OPTIMIZE_DATA_EVT_FLOW_FROM_CONTROLLER;BL_MCU_SDK;CFG_CON=2;CFG_BLE_TX_BUFF_DATA=2;CONFIG_BT_ALLROLES;CONFIG_BT_CENTRAL;CONFIG_BT_OBSERVER;CONFIG_BT_PERIPHERAL;CONFIG_BT_BROADCASTER;CONFIG_BT_L2CAP_DYNAMIC_CHANNEL;CONFIG_BT_GATT_CLIENT;CONFIG_BT_CONN;CONFIG_BT_GATT_DIS_PNP;CONFIG_BT_GATT_DIS_SERIAL_NUMBER;CONFIG_BT_GATT_DIS_FW_REV;CONFIG_BT_GATT_DIS_HW_REV;CONFIG_BT_GATT_DIS_SW_REV;CONFIG_BT_ECC;CONFIG_BT_GATT_DYNAMIC_DB;CONFIG_BT_GATT_SERVICE_CHANGED;CONFIG_BT_KEYS_OVERWRITE_OLDEST;CONFIG_BT_KEYS_SAVE_AGING_COUNTER_ON_PAIRING;CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS;CONFIG_BT_BONDABLE;CONFIG_BT_HCI_VS_EVT_USER;CONFIG_BT_ASSERT;CONFIG_BT_SMP;CONFIG_BT_SIGNING;CONFIG_BT_SETTINGS_CCC_LAZY_LOADING;CONFIG_BT_SETTINGS_USE_PRINTK;CFG_BLE_STACK_DBG_PRINT;bl706_iot;MBEDTLS_CONFIG_FILE=\"mbedtls_bflb_config.h\"</Define>
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/include;$(ProjectPath)../../../../components/freertos/portable/gcc/risc-v/bl702;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/ble/ble_stack/bl_hci_wrapper;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/libc/inc;$(ProjectPath)../../../../common/libc/inc/arm_gcc;$(ProjectPath)../../../../common/libc/inc/bits;$(ProjectPath)../../../../common/libc/inc/sys;$(ProjectPath)../../../../common/libc/src;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/include;$(ProjectPath)../../../../components/freertos/portable/gcc/risc-v/bl702;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/ble/ble_stack/bl_hci_wrapper;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../../components/mbedtls/library;$(ProjectPath)../../../../components/mbedtls/include/psa;$(ProjectPath)../../../../components/mbedtls/include;$(ProjectPath)../../../../components/mbedtls/bflb_port/inc;</IncludePath>
         <OtherFlags>-fshort-enums -fno-common -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -Wignored-qualifiers -Wunused -Wundef -msmall-data-limit=4 -std=c99</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -563,12 +612,13 @@ Board: bl70x_iot
         <AllWarn>yes</AllWarn>
         <WarnErr>no</WarnErr>
         <OneElfS>yes</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
         <Define>portasmHANDLE_INTERRUPT=FreeRTOS_Interrupt_Handler;</Define>
         <Undefine/>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/include;$(ProjectPath)../../../../components/freertos/portable/gcc/risc-v/bl702;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/ble/ble_stack/bl_hci_wrapper;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/libc/inc;$(ProjectPath)../../../../common/libc/inc/arm_gcc;$(ProjectPath)../../../../common/libc/inc/bits;$(ProjectPath)../../../../common/libc/inc/sys;$(ProjectPath)../../../../common/libc/src;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/include;$(ProjectPath)../../../../components/freertos/portable/gcc/risc-v/bl702;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/ble/ble_stack/bl_hci_wrapper;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
         <OtherFlags/>
         <DebugLevel>gdwarf2</DebugLevel>
       </Asm>
@@ -593,6 +643,7 @@ Board: bl70x_iot
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal>23000000</SoftResetVal>
         <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
         <ConfigICE>
@@ -629,6 +680,7 @@ Board: bl70x_iot
           <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
           <OpenOCDTclPort>6666</OpenOCDTclPort>
           <OpenOCDConfigOptions>-f ../../../../tools/openocd/if_rv_dbg_plus.cfg -f ../../../../tools/openocd/tgt_702.cfg</OpenOCDConfigOptions>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
         </ConfigOpenOCD>
       </Debug>
       <Flash>
@@ -743,7 +795,7 @@ Board: bl70x_iot
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/include;$(ProjectPath)../../../../components/freertos/portable/gcc/risc-v/bl702;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/ble/ble_stack/bl_hci_wrapper;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/libc/inc;$(ProjectPath)../../../../common/libc/inc/arm_gcc;$(ProjectPath)../../../../common/libc/inc/bits;$(ProjectPath)../../../../common/libc/inc/sys;$(ProjectPath)../../../../common/libc/src;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/include;$(ProjectPath)../../../../components/freertos/portable/gcc/risc-v/bl702;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/ble/ble_stack/bl_hci_wrapper;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
         <OtherFlags>-fshort-enums -fno-common -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -Wignored-qualifiers -Wunused -Wundef -msmall-data-limit=4 -std=c99</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -754,12 +806,13 @@ Board: bl70x_iot
         <AllWarn>yes</AllWarn>
         <WarnErr>no</WarnErr>
         <OneElfS>yes</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
         <Define>portasmHANDLE_INTERRUPT=FreeRTOS_Interrupt_Handler;</Define>
         <Undefine/>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/include;$(ProjectPath)../../../../components/freertos/portable/gcc/risc-v/bl702;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/ble/ble_stack/bl_hci_wrapper;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/libc/inc;$(ProjectPath)../../../../common/libc/inc/arm_gcc;$(ProjectPath)../../../../common/libc/inc/bits;$(ProjectPath)../../../../common/libc/inc/sys;$(ProjectPath)../../../../common/libc/src;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/include;$(ProjectPath)../../../../components/freertos/portable/gcc/risc-v/bl702;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/ble/ble_stack/bl_hci_wrapper;$(ProjectPath)../../../../components/ble/ble_stack/cli_cmds;$(ProjectPath)../../../../components/ble/ble_stack/common;$(ProjectPath)../../../../components/ble/ble_stack/common/include;$(ProjectPath)../../../../components/ble/ble_stack/common/include/misc;$(ProjectPath)../../../../components/ble/ble_stack/common/include/toolchain;$(ProjectPath)../../../../components/ble/ble_stack/common/include/zephyr;$(ProjectPath)../../../../components/ble/ble_stack/common/tinycrypt/include/tinycrypt;$(ProjectPath)../../../../components/ble/ble_stack/port/include;$(ProjectPath)../../../../components/ble/ble_stack/hci_onchip;$(ProjectPath)../../../../components/ble/ble_stack/host;$(ProjectPath)../../../../components/ble/ble_stack/include/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/include/drivers/bluetooth;$(ProjectPath)../../../../components/ble/ble_stack/services;$(ProjectPath)../../../../components/ble/blecontroller/ble_inc;$(ProjectPath)../../../../components/ble/ble_stack/services/oad;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc</IncludePath>
         <OtherFlags/>
         <DebugLevel>gdwarf2</DebugLevel>
       </Asm>
@@ -784,6 +837,7 @@ Board: bl70x_iot
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal>23000000</SoftResetVal>
         <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
         <ConfigICE>
@@ -820,6 +874,7 @@ Board: bl70x_iot
           <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
           <OpenOCDTclPort>6666</OpenOCDTclPort>
           <OpenOCDConfigOptions>-f ../../../../tools/openocd/if_rv_dbg_plus.cfg -f ../../../../tools/openocd/tgt_702.cfg</OpenOCDConfigOptions>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
         </ConfigOpenOCD>
       </Debug>
       <Flash>

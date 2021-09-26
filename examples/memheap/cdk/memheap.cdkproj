@@ -28,51 +28,6 @@ Board: bl70x_iot
       </File>
     </VirtualDirectory>
   </VirtualDirectory>
-  <VirtualDirectory Name="hal">
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dma.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_gpio.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2c.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2s.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mtimer.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pwm.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_spi.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_timer.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_uart.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_usb.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_flash.c"/>
-  </VirtualDirectory>
   <VirtualDirectory Name="std">
     <File Name="../../../drivers/bl702_driver/std_drv/src/bl702_acomp.c">
       <FileOption/>
@@ -144,9 +99,6 @@ Board: bl70x_iot
       <FileOption/>
     </File>
     <File Name="../../../drivers/bl702_driver/std_drv/src/bl702_romapi.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/std_drv/src/bl702_romdriver.c">
       <FileOption/>
     </File>
     <File Name="../../../drivers/bl702_driver/std_drv/src/bl702_sec_dbg.c">
@@ -700,4 +652,91 @@ Board: bl70x_iot
       </Flash>
     </BuildConfig>
   </BuildConfigs>
+  <VirtualDirectory Name="hal">
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_acomp.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_boot2.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_common.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dma.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_emac.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_flash.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_gpio.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2c.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2s.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_keyscan.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mtimer.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pwm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_qdec.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_rtc.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_aes.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_dsa.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_ecdsa.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_hash.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_spi.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_timer.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_uart.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_usb.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_wdt.c"/>
+  </VirtualDirectory>
 </Project>
