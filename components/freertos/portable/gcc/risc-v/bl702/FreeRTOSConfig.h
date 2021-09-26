@@ -44,11 +44,11 @@
 #define configCLINT_BASE_ADDRESS                CLINT_CTRL_ADDR
 #define configUSE_PREEMPTION                    1
 #define configUSE_IDLE_HOOK                     0
-#define configUSE_TICK_HOOK                     1
+#define configUSE_TICK_HOOK                     0
 #define configCPU_CLOCK_HZ                      (1000000UL)
 #define configTICK_RATE_HZ                      ((TickType_t)1000)
 #define configMAX_PRIORITIES                    (7)
-#define configMINIMAL_STACK_SIZE                ((unsigned short)160) /* Only needs to be this high as some demo tasks also use this constant.  In production only the idle task would use this. */
+#define configMINIMAL_STACK_SIZE                ((unsigned short)512) /* Only needs to be this high as some demo tasks also use this constant.  In production only the idle task would use this. */
 #define configTOTAL_HEAP_SIZE                   ((size_t)48 * 1024)
 #define configMAX_TASK_NAME_LEN                 (16)
 #define configUSE_TRACE_FACILITY                1
@@ -64,6 +64,7 @@
 #define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_STATS_FORMATTING_FUNCTIONS    2
+#define configUSE_TICKLESS_IDLE                 0
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES           0
@@ -102,4 +103,10 @@ void vAssertCalled(void);
     if ((x) == 0)       \
     vAssertCalled()
 
+#if (configUSE_TICKLESS_IDLE != 0)
+void vApplicationSleep(uint32_t xExpectedIdleTime);
+#define portSUPPRESS_TICKS_AND_SLEEP(xExpectedIdleTime) vApplicationSleep(xExpectedIdleTime)
+#endif
+
+#define portUSING_MPU_WRAPPERS 0
 #endif /* FREERTOS_CONFIG_H */
