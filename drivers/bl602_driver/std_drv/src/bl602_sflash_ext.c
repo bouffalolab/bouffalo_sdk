@@ -543,6 +543,64 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Read_Security_Register(SFlash_Sec_Reg_Cfg *p
     return SUCCESS;
 }
 
+/****************************************************************************//**
+ * @brief  Clear flash status register
+ *
+ * @param  pFlashCfg: Flash configuration pointer
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION SFlash_Clear_Status_Register(SPI_Flash_Cfg_Type *pFlashCfg)
+{
+    uint32_t ret = 0;
+    uint32_t qeValue = 0;
+    uint32_t regValue = 0;
+    uint32_t readValue = 0;
+    uint8_t readRegValue0 = 0;
+    uint8_t readRegValue1 = 0;
+
+    if((pFlashCfg->ioMode&0xf)==SF_CTRL_QO_MODE || (pFlashCfg->ioMode&0xf)==SF_CTRL_QIO_MODE){
+        qeValue = 1;
+    }
+
+    SFlash_Read_Reg(pFlashCfg, 0, (uint8_t *)&readRegValue0, 1);
+    SFlash_Read_Reg(pFlashCfg, 1, (uint8_t *)&readRegValue1, 1);
+    readValue = (readRegValue0|(readRegValue1<<8));
+    if ((readValue & (~((1<<(pFlashCfg->qeIndex*8+pFlashCfg->qeBit)) |
+                        (1<<(pFlashCfg->busyIndex*8+pFlashCfg->busyBit)) |
+                        (1<<(pFlashCfg->wrEnableIndex*8+pFlashCfg->wrEnableBit))))) == 0){
+        return SUCCESS;
+    }
+
+    ret = SFlash_Write_Enable(pFlashCfg);
+    if (SUCCESS != ret) {
+        return ERROR;
+    }
+    if (pFlashCfg->qeWriteRegLen == 2) {
+        regValue = (qeValue<<(pFlashCfg->qeIndex*8+pFlashCfg->qeBit));
+        SFlash_Write_Reg(pFlashCfg, 0, (uint8_t *)&regValue, 2);
+    } else {
+        if (pFlashCfg->qeIndex == 0) {
+            regValue = (qeValue<<pFlashCfg->qeBit);
+        } else {
+            regValue = 0;
+        }
+        SFlash_Write_Reg(pFlashCfg, 0, (uint8_t *)&regValue, 1);
+        ret = SFlash_Write_Enable(pFlashCfg);
+        if (SUCCESS != ret) {
+            return ERROR;
+        }
+        if (pFlashCfg->qeIndex == 1) {
+            regValue = (qeValue<<pFlashCfg->qeBit);
+        } else {
+            regValue = 0;
+        }
+        SFlash_Write_Reg(pFlashCfg, 1, (uint8_t *)&regValue, 1);
+    }
+    return SUCCESS;
+}
+
 /*@} end of group SFLASH_EXT_Public_Functions */
 
 /*@} end of group SFLASH_EXT */

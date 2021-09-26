@@ -1007,24 +1007,6 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, 
 }
 
 __ALWAYS_INLINE
-int ATTR_TCM_SECTION XIP_SFlash_Read_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *dst, int len)
-{
-    return RomDriver_XIP_SFlash_Read_With_Lock(pFlashCfg, addr, dst, len);
-}
-
-__ALWAYS_INLINE
-int ATTR_TCM_SECTION XIP_SFlash_Write_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *src, int len)
-{
-    return RomDriver_XIP_SFlash_Write_With_Lock(pFlashCfg, addr, src, len);
-}
-
-__ALWAYS_INLINE
-int ATTR_TCM_SECTION XIP_SFlash_Erase_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, int len)
-{
-    return RomDriver_XIP_SFlash_Erase_With_Lock(pFlashCfg, addr, len);
-}
-
-__ALWAYS_INLINE
 void ATTR_TCM_SECTION XIP_SFlash_Opt_Enter(uint8_t *aesEnable)
 {
     return RomDriver_XIP_SFlash_Opt_Enter(aesEnable);

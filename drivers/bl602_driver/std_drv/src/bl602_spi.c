@@ -268,20 +268,24 @@ BL_Err_Type SPI_SetClock(SPI_ID_Type spiNo, uint32_t clk)
     uint32_t tmpVal;
     uint32_t SPIx = spiAddr[spiNo];
 
-    if (clk < 4882) {
-        clk = 4882;
-    }
-
-    if (clk > 40000000) {
-        clk = 40000000;
-    }
-
-    if (clk > 156250) {
+    if(clk > 40000000) {
+        glb_div = 1;
+        spi_div = 1;
+    } else if(clk > 156250) {
         glb_div = 1;
         spi_div = 40000000 / clk;
+    } else if(clk > 78125) {
+        glb_div = 2;
+        spi_div = 20000000 / clk;
+    } else if(clk > 39062) {
+        glb_div = 4;
+        spi_div = 10000000 / clk;
+    } else if(clk > 4882) {
+        glb_div = 32;
+        spi_div = 1250000 / clk;
     } else {
+        glb_div = 32;
         spi_div = 256;
-        glb_div = clk >> 8;
     }
 
     /* Configure length of data phase1/0 and start/stop condition */

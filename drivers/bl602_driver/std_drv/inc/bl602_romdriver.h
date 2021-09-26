@@ -774,15 +774,6 @@ typedef enum {
 #define RomDriver_XIP_SFlash_Read_Via_Cache_Need_Lock \
     ((BL_Err_Type(*)(uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Read_Via_Cache_Need_Lock])
 
-#define RomDriver_XIP_SFlash_Read_With_Lock \
-    ((int (*)(SPI_Flash_Cfg_Type * pFlashCfg, uint32_t addr, uint8_t * dst, int len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Read_With_Lock])
-
-#define RomDriver_XIP_SFlash_Write_With_Lock \
-    ((int (*)(SPI_Flash_Cfg_Type * pFlashCfg, uint32_t addr, uint8_t * src, int len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Write_With_Lock])
-
-#define RomDriver_XIP_SFlash_Erase_With_Lock \
-    ((int (*)(SPI_Flash_Cfg_Type * pFlashCfg, uint32_t addr, int len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Erase_With_Lock])
-
 #define RomDriver_XIP_SFlash_Opt_Enter \
     ((void (*)(uint8_t * aesEnable)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Opt_Enter])
 

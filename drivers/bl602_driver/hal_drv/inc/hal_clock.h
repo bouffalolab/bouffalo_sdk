@@ -23,8 +23,7 @@
 #ifndef __HAL_CLOCK__H__
 #define __HAL_CLOCK__H__
 
-#include "drv_device.h"
-#include "bl602_config.h"
+#include "hal_common.h"
 
 /*XTAL_TYPE*/
 #define XTAL_NONE           0
@@ -70,6 +69,7 @@ enum peripheral_clock_type {
 
 void system_clock_init(void);
 void system_mtimer_clock_init(void);
+void system_mtimer_clock_reinit(void);
 void peripheral_clock_init(void);
 uint32_t system_clock_get(enum system_clock_type type);
 uint32_t peripheral_clock_get(enum peripheral_clock_type type);

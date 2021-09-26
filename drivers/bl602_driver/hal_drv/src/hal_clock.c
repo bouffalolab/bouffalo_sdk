@@ -32,6 +32,12 @@ void system_mtimer_clock_init(void)
     GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, mtimer_get_clk_src_div());
 }
 
+void system_mtimer_clock_reinit(void)
+{
+    /* reinit clock to 10M */
+    GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 7);
+}
+
 void peripheral_clock_init(void)
 {
 #if defined(BSP_USING_UART0) || defined(BSP_USING_UART1)

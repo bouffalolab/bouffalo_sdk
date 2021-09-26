@@ -11,21 +11,21 @@
 /* configure the CPU type */
 OUTPUT_ARCH( "riscv" )
 /* link with the standard c library */
-/*INPUT(-lc)*/
+INPUT(-lc)
 /* link with the standard GCC library */
-/*INPUT(-lgcc)*/
+INPUT(-lgcc)
 /* configure the entry point */
 ENTRY(_enter)
 
-StackSize = 0x0400; /*  1KB */
-HeapSize  = 0x1000; /*  4KB */
-
+StackSize = 0x1000; /*  4KB */
+HeapSize  = 0x0;    /*  0KB */
+PROVIDE(__boot2_pass_param_addr = 0x42049C00);/* 0x42030000+103*1024 */
 MEMORY
 {
-    xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
-    itcm_memory (rx)  : ORIGIN = 0x22010000, LENGTH = 16K
-    dtcm_memory (rx)  : ORIGIN = 0x42014000, LENGTH = 48K
-    ram_memory  (!rx) : ORIGIN = 0x42020000, LENGTH = 176K
+	xip_memory (rx) : 		ORIGIN = 0x23000000, LENGTH = 48K
+    itcm_memory (rx) : 		ORIGIN = 0x2201c000, LENGTH = 16K
+    dtcm_memory (rx)  : 	ORIGIN = 0x42020000, LENGTH = 4K
+    ram_memory (!rx) :   	ORIGIN = 0x42021000, LENGTH = 156K
 }
 
 SECTIONS
@@ -40,41 +40,15 @@ SECTIONS
         KEEP (*(.text.metal.init.enter))
         KEEP (*(SORT_NONE(.init)))
 
-        /* section information for shell */
-        . = ALIGN(4);
-        __fsymtab_start = .;
-        KEEP(*(FSymTab))
-        __fsymtab_end = .;
+        *(EXCLUDE_FILE ( *bl602_uart*.o* *hal_uart*.o* ) .text*)
 
-        . = ALIGN(4);
-        __vsymtab_start = .;
-        KEEP(*(VSymTab))
-        __vsymtab_end = .;
-
-        *(.text)
-        *(.text.*)
-
-        /*put .rodata**/
-        *(EXCLUDE_FILE( *bl602_glb*.o* \
-                        *bl602_pds*.o* \
-                        *bl602_common*.o* \
-                        *bl602_sf_cfg*.o* \
-                        *bl602_sf_cfg_ext*.o* \
-                        *bl602_sf_ctrl*.o* \
-                        *bl602_sflash*.o* \
-                        *bl602_sflash_ext*.o* \
-                        *bl602_xip_sflash*.o* \
-                        *bl602_xip_sflash_ext*.o* \
-                        *bl602_ef_ctrl*.o*) .rodata*)
         *(.rodata)
         *(.rodata.*)
-
         *(.srodata)
         *(.srodata.*)
 
         . = ALIGN(4);
         __text_code_end__ = .;
-
     } > xip_memory
 
     . = ALIGN(4);
@@ -84,26 +58,21 @@ SECTIONS
     {
         . = ALIGN(4);
         __tcm_code_start__ = .;
-
         *(.tcm_code.*)
         *(.tcm_const.*)
         *(.sclock_rlt_code.*)
         *(.sclock_rlt_const.*)
-
-        *bl602_glb*.o*(.rodata*)
-        *bl602_pds*.o*(.rodata*)
-        *bl602_common*.o*(.rodata*)
-        *bl602_sf_cfg*.o*(.rodata*)
-        *bl602_sf_cfg_ext*.o*(.rodata*)
-        *bl602_sf_ctrl*.o*(.rodata*)
-        *bl602_sflash*.o*(.rodata*)
-        *bl602_sflash_ext*.o*(.rodata*)
-        *bl602_xip_sflash*.o*(.rodata*)
-        *bl602_xip_sflash_ext*.o*(.rodata*)
-        *bl602_ef_ctrl*.o*(.rodata*)
-
+        *bl602_romapi*.o*(.text)
+        *bl602_romapi*.o*(.text.*)
+        *bl602_romapi*.o*(.rodata)
+        *bl602_romapi*.o*(.rodata.*)
+        *bl602_romapi*.o*(.srodata)
+        *bl602_romapi*.o*(.srodata.*)
+        *bl602_uart*.o* (.text*)
+        *hal_uart*.o* (.text*)
         . = ALIGN(4);
         __tcm_code_end__ = .;
+
     } > itcm_memory
 
     __dtcm_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
@@ -113,14 +82,14 @@ SECTIONS
         . = ALIGN(4);
         __tcm_data_start__ = .;
 
-        *(.tcm_data)
+        *(.tcm_data.*)
+        /* *finger_print.o(.data*) */
 
         . = ALIGN(4);
         __tcm_data_end__ = .;
     } > dtcm_memory
 
-
-    /* .heap_dummy section doesn't contains any symbols. It is only
+	/* .heap_dummy section doesn't contains any symbols. It is only
      * used for linker to calculate size of heap sections, and assign
      * values to heap symbols later */
     .heap_dummy (NOLOAD):
@@ -130,11 +99,11 @@ SECTIONS
         . = ALIGN(0x4);
     } > dtcm_memory
 
-    _HeapBase = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory) - StackSize - HeapSize;
-    _HeapSize = HeapSize;
-
+    __HeapBase = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory) - StackSize - HeapSize;
+    __HeapSize = HeapSize;
+    __HeapLimit = __HeapBase + __HeapSize;
     /* Check if data + heap + stack exceeds RAM limit */
-    ASSERT(_HeapBase >= __tcm_data_end__, "region RAM overflowed with stack")
+    ASSERT(__HeapBase >= __tcm_data_end__, "region RAM overflowed with stack")
 
     /*************************************************************************/
     /* .stack_dummy section doesn't contains any symbols. It is only
@@ -150,7 +119,6 @@ SECTIONS
     /* Set stack top to end of RAM, and stack limit move down by
      * size of stack_dummy section */
     __StackTop = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory);
-    PROVIDE( __freertos_irq_stack_top = __StackTop);
     __StackLimit = __StackTop - SIZEOF(.stack_dummy);
 
     /* Check if data + heap + stack exceeds RAM limit */
@@ -215,19 +183,6 @@ SECTIONS
         __noinit_data_end__ = .;
     } > ram_memory
 
-    .heap (NOLOAD):
-    {
-        . = ALIGN(4);
-        __HeapBase = .;
-
-        /*__end__ = .;*/
-        /*end = __end__;*/
-        KEEP(*(.heap*))
-
-        . = ALIGN(4);
-        __HeapLimit = .;
-    } > ram_memory
-    __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
 
 }
 

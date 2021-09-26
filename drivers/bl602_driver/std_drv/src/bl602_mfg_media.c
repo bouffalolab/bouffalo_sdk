@@ -17,9 +17,9 @@ int8_t mfg_media_init_with_lock(SPI_Flash_Cfg_Type *flashCfg)
 {
     int8_t ret;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     ret = mfg_media_init_need_lock(flashCfg);
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -46,9 +46,9 @@ int8_t mfg_media_write_xtal_capcode_pre_with_lock(uint8_t capcode, uint8_t progr
 {
     int8_t ret;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     ret = mfg_media_write_xtal_capcode_pre_need_lock(capcode, program);
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -64,9 +64,9 @@ void mfg_media_write_xtal_capcode_need_lock(void)
 
 void mfg_media_write_xtal_capcode_with_lock(void)
 {
-    __disable_irq();
+    cpu_global_irq_disable();
     mfg_media_write_xtal_capcode_need_lock();
-    __enable_irq();
+    cpu_global_irq_enable();
 }
 
 int8_t mfg_media_read_xtal_capcode_need_lock(uint8_t *capcode, uint8_t reload)
@@ -82,9 +82,9 @@ int8_t mfg_media_read_xtal_capcode_with_lock(uint8_t *capcode, uint8_t reload)
 {
     int8_t ret;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     ret = mfg_media_read_xtal_capcode_need_lock(capcode, reload);
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -111,9 +111,9 @@ int8_t mfg_media_write_poweroffset_pre_with_lock(int8_t pwrOffset[14], uint8_t p
 {
     int ret;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     ret = mfg_media_write_poweroffset_pre_need_lock(pwrOffset, program);
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -129,9 +129,9 @@ void mfg_media_write_poweroffset_need_lock(void)
 
 void mfg_media_write_poweroffset_with_lock(void)
 {
-    __disable_irq();
+    cpu_global_irq_disable();
     mfg_media_write_poweroffset_need_lock();
-    __enable_irq();
+    cpu_global_irq_enable();
 }
 
 int8_t mfg_media_read_poweroffset_need_lock(int8_t pwrOffset[14], uint8_t reload)
@@ -147,9 +147,9 @@ int8_t mfg_media_read_poweroffset_with_lock(int8_t pwrOffset[14], uint8_t reload
 {
     int ret;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     ret = mfg_media_read_poweroffset_need_lock(pwrOffset, reload);
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -176,9 +176,9 @@ int8_t mfg_media_write_macaddr_pre_with_lock(uint8_t mac[6], uint8_t program)
 {
     int ret;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     ret = mfg_media_write_macaddr_pre_need_lock(mac, program);
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -194,9 +194,9 @@ void mfg_media_write_macaddr_need_lock(void)
 
 void mfg_media_write_macaddr_with_lock(void)
 {
-    __disable_irq();
+    cpu_global_irq_disable();
     mfg_media_write_macaddr_need_lock();
-    __enable_irq();
+    cpu_global_irq_enable();
 }
 
 int8_t mfg_media_read_macaddr_need_lock(uint8_t mac[6], uint8_t reload)
@@ -212,9 +212,9 @@ int8_t mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload)
 {
     int ret;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     ret = mfg_media_read_macaddr_need_lock(mac, reload);
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return ret;
 }

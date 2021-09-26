@@ -34,7 +34,7 @@ static SPI_Flash_Cfg_Type g_flash_cfg;
  *
  * @return BL_Err_Type
  */
-BL_Err_Type flash_get_cfg(uint8_t **cfg_addr,uint32_t *len)
+BL_Err_Type flash_get_cfg(uint8_t **cfg_addr, uint32_t *len)
 {
     *cfg_addr = (uint8_t *)&g_flash_cfg;
     *len = sizeof(SPI_Flash_Cfg_Type);
@@ -67,7 +67,7 @@ BL_Err_Type ATTR_TCM_SECTION flash_set_l1c_wrap(SPI_Flash_Cfg_Type *p_flash_cfg)
         L1C_Set_Wrap(DISABLE);
     } else {
         L1C_Set_Wrap(ENABLE);
-        if((p_flash_cfg->ioMode&0x0f)==SF_CTRL_QO_MODE || (p_flash_cfg->ioMode&0x0f)==SF_CTRL_QIO_MODE) {
+        if ((p_flash_cfg->ioMode & 0x0f) == SF_CTRL_QO_MODE || (p_flash_cfg->ioMode & 0x0f) == SF_CTRL_QIO_MODE) {
             SFlash_SetBurstWrap(p_flash_cfg);
         }
     }
@@ -87,7 +87,7 @@ static BL_Err_Type ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flas
     uint32_t jid = 0;
     uint32_t offset = 0;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     XIP_SFlash_Opt_Enter(&isAesEnable);
     XIP_SFlash_State_Save(p_flash_cfg, &offset);
     SFlash_GetJedecId(p_flash_cfg, (uint8_t *)&jid);
@@ -95,7 +95,7 @@ static BL_Err_Type ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flas
     jid &= 0xFFFFFF;
     ret = SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(jid, p_flash_cfg);
     if (ret == SUCCESS) {
-        p_flash_cfg->mid = (jid&0xff);
+        p_flash_cfg->mid = (jid & 0xff);
     }
 
     /* Set flash controler from p_flash_cfg */
@@ -103,7 +103,7 @@ static BL_Err_Type ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flas
     flash_set_l1c_wrap(p_flash_cfg);
     XIP_SFlash_State_Restore_Ext(p_flash_cfg, offset);
     XIP_SFlash_Opt_Exit(isAesEnable);
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -120,11 +120,11 @@ BL_Err_Type ATTR_TCM_SECTION flash_init(void)
     uint8_t clkInvert = 1;
     uint32_t jedec_id = 0;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     SFlash_Cache_Flush();
     SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(0, &g_flash_cfg);
     SFlash_Cache_Flush();
-    __enable_irq();
+    cpu_global_irq_enable();
     if (g_flash_cfg.mid != 0xff) {
         return SUCCESS;
     }
@@ -155,11 +155,11 @@ BL_Err_Type ATTR_TCM_SECTION flash_read_jedec_id(uint8_t *data)
     uint8_t isAesEnable = 0;
     uint32_t jid = 0;
 
-    __disable_irq();
+    cpu_global_irq_disable();
     XIP_SFlash_Opt_Enter(&isAesEnable);
     XIP_SFlash_GetJedecId_Need_Lock_Ext(&g_flash_cfg /*, g_flash_cfg.ioMode & 0x0f*/, (uint8_t *)&jid);
     XIP_SFlash_Opt_Exit(isAesEnable);
-    __enable_irq();
+    cpu_global_irq_enable();
     jid &= 0xFFFFFF;
     arch_memcpy(data, (void *)&jid, 4);
 
@@ -176,11 +176,11 @@ BL_Err_Type ATTR_TCM_SECTION flash_read_jedec_id(uint8_t *data)
  */
 BL_Err_Type ATTR_TCM_SECTION flash_read_via_xip(uint32_t addr, uint8_t *data, uint32_t len)
 {
-    __disable_irq();
+    cpu_global_irq_disable();
     SFlash_Cache_Flush();
     XIP_SFlash_Read_Via_Cache_Need_Lock(addr, data, len);
     SFlash_Cache_Flush();
-    __enable_irq();
+    cpu_global_irq_enable();
 
     return SUCCESS;
 }
@@ -198,9 +198,11 @@ BL_Err_Type ATTR_TCM_SECTION flash_read(uint32_t addr, uint8_t *data, uint32_t l
     BL_Err_Type ret = ERROR;
     uint8_t isAesEnable = 0;
 
+    cpu_global_irq_disable();
     XIP_SFlash_Opt_Enter(&isAesEnable);
-    ret = XIP_SFlash_Read_With_Lock_Ext(&g_flash_cfg, addr, data, len);
+    ret = XIP_SFlash_Read_Need_Lock_Ext(&g_flash_cfg, addr, data, len);
     XIP_SFlash_Opt_Exit(isAesEnable);
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -218,9 +220,11 @@ BL_Err_Type ATTR_TCM_SECTION flash_write(uint32_t addr, uint8_t *data, uint32_t 
     BL_Err_Type ret = ERROR;
     uint8_t isAesEnable = 0;
 
+    cpu_global_irq_disable();
     XIP_SFlash_Opt_Enter(&isAesEnable);
-    ret = XIP_SFlash_Write_With_Lock_Ext(&g_flash_cfg, addr, data, len);
+    ret = XIP_SFlash_Write_Need_Lock_Ext(&g_flash_cfg, addr, data, len);
     XIP_SFlash_Opt_Exit(isAesEnable);
+    cpu_global_irq_enable();
 
     return ret;
 }
@@ -237,9 +241,31 @@ BL_Err_Type ATTR_TCM_SECTION flash_erase(uint32_t startaddr, uint32_t len)
     BL_Err_Type ret = ERROR;
     uint8_t isAesEnable = 0;
 
+    cpu_global_irq_disable();
     XIP_SFlash_Opt_Enter(&isAesEnable);
-    ret = XIP_SFlash_Erase_With_Lock_Ext(&g_flash_cfg, startaddr, len);
+    ret = XIP_SFlash_Erase_Need_Lock_Ext(&g_flash_cfg, startaddr, startaddr + len - 1);
     XIP_SFlash_Opt_Exit(isAesEnable);
+    cpu_global_irq_enable();
+
+    return ret;
+}
+
+/**
+ * @brief flash clear status register
+ *
+ * @param None
+ * @return BL_Err_Type
+ */
+BL_Err_Type ATTR_TCM_SECTION flash_clear_status_register(void)
+{
+    BL_Err_Type ret = ERROR;
+    uint8_t isAesEnable = 0;
+
+    cpu_global_irq_disable();
+    XIP_SFlash_Opt_Enter(&isAesEnable);
+    ret = XIP_SFlash_Clear_Status_Register_Need_Lock(&g_flash_cfg);
+    XIP_SFlash_Opt_Exit(isAesEnable);
+    cpu_global_irq_enable();
 
     return ret;
 }

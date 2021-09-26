@@ -259,9 +259,8 @@ typedef enum {
 /* RISCV CPU include files */
 #ifdef ARCH_RISCV
 #ifdef __GNUC__
-#include "cmsis_compatible_gcc.h"
-#include "clic.h"
-#include "riscv_encoding.h"
+#include "../risc-v/Core/Include/clic.h"
+#include "../risc-v/Core/Include/riscv_encoding.h"
 #endif
 #endif
 

@@ -1,11 +1,30 @@
-#include <stdint.h>
+/**
+ * @file interrupt.c
+ * @brief
+ *
+ * Copyright (c) 2021 Bouffalolab team
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ *
+ */
+#include "bl602.h"
+#include "bflb_platform.h"
 
-#include "../risc-v/Core/Include/clic.h"
-#include "../risc-v/Core/Include/cmsis_compatible_gcc.h"
+pFunc __Interrupt_Handlers[IRQn_LAST] = { 0 };
 
-typedef void (*pFunc)(void);
-extern void Trap_Handler(void);
-extern void Interrupt_Handler(void);
 void Interrupt_Handler_Stub(void);
 
 void clic_msip_handler_Wrapper(void) __attribute__((weak, alias("Interrupt_Handler_Stub")));
@@ -68,7 +87,7 @@ const pFunc __Vectors[] __attribute__((section(".init"), aligned(64))) = {
     clic_mtimer_handler_Wrapper,        /*         */
     (pFunc)0x00000004,                  /*         */
     (pFunc)0x00001007,                  /*         */
-    (pFunc)0x00010102,                  /*         *///disable log as default
+    (pFunc)0x00010102, /*         */    //disable log as default
     clic_mext_handler_Wrapper,          /*         */
     clic_csoft_handler_Wrapper,         /*         */
     (pFunc)2000000,                     /*         */
@@ -140,6 +159,115 @@ const pFunc __Vectors[] __attribute__((section(".init"), aligned(64))) = {
     WIFI_IPC_PUBLIC_IRQHandler_Wrapper, /* 16 + 63 */
 };
 
+void Trap_Handler(void)
+{
+    unsigned long cause;
+    unsigned long epc;
+    unsigned long tval;
+
+    MSG("Trap_Handler\r\n");
+
+    cause = read_csr(mcause);
+    MSG("mcause=%08x\r\n", (uint32_t)cause);
+    epc = read_csr(mepc);
+    MSG("mepc:%08x\r\n", (uint32_t)epc);
+    tval = read_csr(mtval);
+    MSG("mtval:%08x\r\n", (uint32_t)tval);
+
+    cause = (cause & 0x3ff);
+
+    switch (cause) {
+        case 1:
+            MSG("Instruction access fault\r\n");
+            break;
+
+        case 2:
+            MSG("Illegal instruction\r\n");
+            break;
+
+        case 3:
+            MSG("Breakpoint\r\n");
+            break;
+
+        case 4:
+            MSG("Load address misaligned\r\n");
+            break;
+
+        case 5:
+            MSG("Load access fault\r\n");
+            break;
+
+        case 6:
+            MSG("Store/AMO address misaligned\r\n");
+            break;
+
+        case 7:
+            MSG("Store/AMO access fault\r\n");
+            break;
+
+        case 8:
+            MSG("Environment call from U-mode\r\n");
+            epc += 4;
+            write_csr(mepc, epc);
+            break;
+
+        case 9:
+            MSG("Environment call from M-mode\r\n");
+            epc += 4;
+            write_csr(mepc, epc);
+            break;
+
+        default:
+            MSG("Cause num=%d\r\n", (uint32_t)cause);
+            epc += 4;
+            write_csr(mepc, epc);
+            break;
+    }
+
+    while (1)
+        ;
+}
+
+void Interrupt_Handler(void)
+{
+    pFunc interruptFun;
+    uint32_t num = 0;
+    volatile uint32_t ulMEPC = 0UL, ulMCAUSE = 0UL;
+
+    /* Store a few register values that might be useful when determining why this
+	function was called. */
+    __asm volatile("csrr %0, mepc"
+                   : "=r"(ulMEPC));
+    __asm volatile("csrr %0, mcause"
+                   : "=r"(ulMCAUSE));
+
+    if ((ulMCAUSE & 0x80000000) == 0) {
+        /*Exception*/
+        MSG("Exception should not be here\r\n");
+    } else {
+        num = ulMCAUSE & 0x3FF;
+
+        if (num < IRQn_LAST) {
+            interruptFun = __Interrupt_Handlers[num];
+
+            if (NULL != interruptFun) {
+                interruptFun();
+            } else {
+                MSG("Interrupt num:%d IRQHandler not installed\r\n", (unsigned int)num);
+
+                if (num >= IRQ_NUM_BASE) {
+                    MSG("Peripheral Interrupt num:%d \r\n", (unsigned int)num - IRQ_NUM_BASE);
+                }
+
+                while (1)
+                    ;
+            }
+        } else {
+            MSG("Unexpected interrupt num:%d\r\n", (unsigned int)num);
+        }
+    }
+}
+
 void __IRQ_ALIGN64 Trap_Handler_Stub(void)
 {
     Trap_Handler();
@@ -148,6 +276,33 @@ void __IRQ_ALIGN64 Trap_Handler_Stub(void)
 void __IRQ Interrupt_Handler_Stub(void)
 {
     Interrupt_Handler();
+}
+
+void handle_trap(void)
+{
+#define MCAUSE_INT_MASK  0x80000000 // [31]=1 interrupt, else exception
+#define MCAUSE_CODE_MASK 0x7FFFFFFF // low bits show code
+
+    unsigned long mcause_value = read_csr(mcause);
+    if (mcause_value & MCAUSE_INT_MASK) {
+        // Branch to interrupt handler here
+        Interrupt_Handler();
+    } else {
+        // Branch to exception handle
+        Trap_Handler();
+    }
+}
+
+void FreeRTOS_Interrupt_Handler(void)
+{
+    Interrupt_Handler();
+}
+
+void Interrupt_Handler_Register(IRQn_Type irq, pFunc interruptFun)
+{
+    if (irq < IRQn_LAST) {
+        __Interrupt_Handlers[irq] = interruptFun;
+    }
 }
 
 void clic_enable_interrupt(uint32_t source)

@@ -4,7 +4,6 @@ list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}/std_drv/inc"
 "${CMAKE_CURRENT_SOURCE_DIR}/hal_drv/inc"
 "${CMAKE_CURRENT_SOURCE_DIR}/startup"
-"${CMAKE_CURRENT_SOURCE_DIR}/risc-v/Core/Include"
 "${CMAKE_CURRENT_SOURCE_DIR}/regs"
 )
 #######################################################

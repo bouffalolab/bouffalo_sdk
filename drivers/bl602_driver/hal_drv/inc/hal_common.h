@@ -1,8 +1,8 @@
 /**
- * @file hal_flash.h
+ * @file hal_common.h
  * @brief
  *
- * Copyright 2019-2030 Bouffalolab team
+ * Copyright (c) 2021 Bouffalolab team
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -20,21 +20,17 @@
  * under the License.
  *
  */
-#ifndef __HAL_FLASH__H__
-#define __HAL_FLASH__H__
+#ifndef __HAL_COMMON__H__
+#define __HAL_COMMON__H__
 
-#include "hal_common.h"
+#include "drv_device.h"
+#include "bl602_common.h"
+#include "bl602_config.h"
 
-#define BL_FLASH_XIP_BASE BL602_FLASH_XIP_BASE
-#define FLASH_NOT_DETECT  0x10
-
-BL_Err_Type flash_init(void);
-BL_Err_Type flash_read_jedec_id(uint8_t *data);
-BL_Err_Type flash_read_via_xip(uint32_t addr, uint8_t *data, uint32_t len);
-BL_Err_Type flash_read(uint32_t addr, uint8_t *data, uint32_t len);
-BL_Err_Type flash_write(uint32_t addr, uint8_t *data, uint32_t len);
-BL_Err_Type flash_erase(uint32_t startaddr, uint32_t len);
-BL_Err_Type flash_set_cache(uint8_t cont_read, uint8_t cache_enable, uint8_t cache_way_disable, uint32_t flash_offset);
-BL_Err_Type flash_get_cfg(uint8_t **cfg_addr, uint32_t *len);
+void cpu_global_irq_enable(void);
+void cpu_global_irq_disable(void);
+void hal_system_reset(void);
+void hal_cpu_reset(void);
+void hal_get_chip_id(uint8_t chip_id[8]);
 
 #endif

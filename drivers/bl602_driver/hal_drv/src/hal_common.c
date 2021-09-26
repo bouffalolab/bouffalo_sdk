@@ -1,8 +1,8 @@
 /**
- * @file hal_flash.h
+ * @file hal_common.c
  * @brief
  *
- * Copyright 2019-2030 Bouffalolab team
+ * Copyright (c) 2021 Bouffalolab team
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -20,21 +20,40 @@
  * under the License.
  *
  */
-#ifndef __HAL_FLASH__H__
-#define __HAL_FLASH__H__
 
 #include "hal_common.h"
+#include "bl602_ef_ctrl.h"
+#include "bl602_romdriver.h"
 
-#define BL_FLASH_XIP_BASE BL602_FLASH_XIP_BASE
-#define FLASH_NOT_DETECT  0x10
+volatile uint32_t nesting = 0;
 
-BL_Err_Type flash_init(void);
-BL_Err_Type flash_read_jedec_id(uint8_t *data);
-BL_Err_Type flash_read_via_xip(uint32_t addr, uint8_t *data, uint32_t len);
-BL_Err_Type flash_read(uint32_t addr, uint8_t *data, uint32_t len);
-BL_Err_Type flash_write(uint32_t addr, uint8_t *data, uint32_t len);
-BL_Err_Type flash_erase(uint32_t startaddr, uint32_t len);
-BL_Err_Type flash_set_cache(uint8_t cont_read, uint8_t cache_enable, uint8_t cache_way_disable, uint32_t flash_offset);
-BL_Err_Type flash_get_cfg(uint8_t **cfg_addr, uint32_t *len);
+void ATTR_TCM_SECTION cpu_global_irq_enable(void)
+{
+    nesting--;
+    if (nesting == 0) {
+        __enable_irq();
+    }
+}
 
-#endif
+void ATTR_TCM_SECTION cpu_global_irq_disable(void)
+{
+    __disable_irq();
+    nesting++;
+}
+
+void hal_system_reset(void)
+{
+    RomDriver_GLB_SW_System_Reset();
+}
+
+void hal_cpu_reset(void)
+{
+    RomDriver_GLB_SW_CPU_Reset();
+}
+
+void hal_get_chip_id(uint8_t chip_id[8])
+{
+    chip_id[6] = 0;
+    chip_id[7] = 0;
+    EF_Ctrl_Read_MAC_Address(chip_id);
+}

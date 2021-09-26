@@ -90,6 +90,7 @@ BL_Err_Type SFlash_Erase_Security_Register(SPI_Flash_Cfg_Type *pFlashCfg, SFlash
 BL_Err_Type SFlash_Program_Security_Register(SPI_Flash_Cfg_Type *pFlashCfg,
                                              SFlash_Sec_Reg_Cfg *pSecRegCfg);
 BL_Err_Type SFlash_Read_Security_Register(SFlash_Sec_Reg_Cfg *pSecRegCfg);
+BL_Err_Type SFlash_Clear_Status_Register(SPI_Flash_Cfg_Type *pFlashCfg);
 
 /*@} end of group SFLAH_EXT_Public_Functions */
 

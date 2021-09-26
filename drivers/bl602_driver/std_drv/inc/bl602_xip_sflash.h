@@ -78,9 +78,6 @@ BL_Err_Type XIP_SFlash_GetJedecId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8
 BL_Err_Type XIP_SFlash_GetDeviceId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data);
 BL_Err_Type XIP_SFlash_GetUniqueId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data, uint8_t idLen);
 BL_Err_Type XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, uint8_t *data, uint32_t len);
-int XIP_SFlash_Read_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *dst, int len);
-int XIP_SFlash_Write_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *src, int len);
-int XIP_SFlash_Erase_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, int len);
 void XIP_SFlash_Opt_Enter(uint8_t *aesEnable);
 void XIP_SFlash_Opt_Exit(uint8_t aesEnable);
 

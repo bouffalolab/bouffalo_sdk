@@ -23,8 +23,7 @@
 #ifndef __HAL_DMA__H__
 #define __HAL_DMA__H__
 
-#include "drv_device.h"
-#include "bl602_config.h"
+#include "hal_common.h"
 
 #define DMA_CHANNEL_GET_STATUS 0x10
 #define DMA_CHANNEL_START      0x11

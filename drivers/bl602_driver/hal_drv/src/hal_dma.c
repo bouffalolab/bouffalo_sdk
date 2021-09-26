@@ -21,7 +21,6 @@
  *
  */
 #include "hal_dma.h"
-#include "drv_mmheap.h"
 #include "bl602_dma.h"
 
 dma_control_data_t dma_ctrl_cfg;
