@@ -145,14 +145,14 @@ endif()
 
 add_library(blecontroller STATIC IMPORTED)
 set_target_properties(blecontroller PROPERTIES
-IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/components/ble/blecontroller/lib/libblecontroller.a"
+IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/components/ble/blecontroller/lib/libblecontroller${LIBBLECONTROLLER_SUFFIX}.a"
 INTERFACE_LINK_LIBRARIES  ${CHIP}_driver)
 
 # aux_source_directory(src ADD_SRCS)
 #######################################################
 
 ########### Add required/dependent components #########
-list(APPEND ADD_REQUIREMENTS freertos blecontroller)
+list(APPEND ADD_REQUIREMENTS freertos blecontroller mbedtls)
 #######################################################
 
 ############ Add static libs ##########################

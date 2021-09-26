@@ -23,6 +23,7 @@ enum {
     OAD_REQ_MORE_DATA,
     OAD_MALORMED_CMD,
     OAD_UPGRD_CMPLT,
+    OAD_CHECK_HASH256_FAIL,
 };
 
 enum {
@@ -59,6 +60,8 @@ struct oad_env_tag {
     struct k_delayed_work upgrd_work;
     u32_t new_img_addr;
     u32_t w_img_end_addr;
+
+    u32_t hosal_offset;
 };
 
 struct oad_image_identity_t {

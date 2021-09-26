@@ -13,16 +13,19 @@
 #include "hal_boot2.h"
 #include "bl_flash.h"
 #include "bl_sys.h"
+#include "hosal_ota.h"
+#include "bl702_common.h"
+#include "hal_sys.h"
 #else
 #include "partition.h"
 #include "hal_flash.h"
 #include "errno.h"
 #include "bl702_glb.h"
+#include "mbedtls/sha256.h"
 #endif
 #include "log.h"
 #include "bl702.h"
 #include "softcrc.h"
-
 #if defined(CONFIG_BL_MCU_SDK)
 #define BL_SDK_VER           "1.00"
 #define BOOT2_PARTITION_ADDR (0x4202DC00)
@@ -31,7 +34,6 @@
 #define OTA_WRITE_FLASH_SIZE (256 * 16)
 #define WBUF_SIZE(CON)       (OTA_WRITE_FLASH_SIZE + bt_gatt_get_mtu(CON))
 #define UPGRD_TIMEOUT        K_SECONDS(2)
-uint32_t calc_crc32_val = 0;
 
 static app_check_oad_cb app_check_cb = NULL;
 struct oad_env_tag oad_env;
@@ -47,6 +49,7 @@ static struct wflash_data_t wData;
 static int hal_boot2_partition_addr_inactive(const char *name, uint32_t *addr, uint32_t *size);
 static int hal_boot2_get_active_entries_byname(u8_t *name, pt_table_entry_config *ptEntry_hal);
 static int hal_boot2_update_ptable(pt_table_entry_config *ptEntry_hal);
+static int fw_check_hash256(void);
 #endif
 static bool check_data_valid(struct oad_file_info *file_info)
 {
@@ -116,23 +119,22 @@ static void oad_notify_block_req(struct bt_conn *conn)
     bt_oad_notify(conn, buf->data, buf->len);
 }
 
-static uint32_t oad_bswap32(uint32_t val32)
-{
-    return (val32 << 24) | ((val32 << 8) & 0xFF0000) | ((val32 >> 8) & 0xFF00) | ((val32 >> 24) & 0xFF);
-}
-
 static void oad_notify_upgrd_end(struct bt_conn *conn, u8_t status)
 {
     struct net_buf_simple *buf = NET_BUF_SIMPLE(sizeof(struct oad_upgrd_end_t) + OAD_OPCODE_SIZE);
     struct oad_upgrd_end_t *upgrd_end;
-    uint32_t recv_crc_bigend = 0;
+
     if (status == OAD_SUCC) {
-        recv_crc_bigend = oad_bswap32(oad_env.upgrd_crc32);
-        if (calc_crc32_val == recv_crc_bigend) {
-            BT_WARN("Submit upgrade work\r\n");
+        BT_WARN("Submit upgrade work\r\n");
+#if !defined(CONFIG_BL_MCU_SDK)
+        if (!hosal_ota_finish(1, 0))
+#else
+        if (!fw_check_hash256())
+#endif
             k_delayed_work_submit(&oad_env.upgrd_work, UPGRD_TIMEOUT);
-        } else {
-            BT_WARN("crc check failed, received crc=0x%x, calculted crc=0x%x, recv_crc_bigend=0x%x\r\n", oad_env.upgrd_crc32, calc_crc32_val, recv_crc_bigend);
+        else {
+            BT_WARN("Hash256 check failed");
+            status = OAD_CHECK_HASH256_FAIL;
         }
     }
 
@@ -165,43 +167,27 @@ static void oad_notity_image_identity(struct bt_conn *conn)
     bt_oad_notify(conn, buf->data, buf->len);
 }
 
-void oad_upgrade(struct k_work *work)
+void ota_finish(struct k_work *work)
 {
-    int ret = 0;
-#if !defined(CONFIG_BL_MCU_SDK)
-    HALPartition_Entry_Config ptEntry;
-#else
-    pt_table_entry_config ptEntry;
-#endif
-
     BT_WARN("oad_upgrade\r\n");
     oad_env.file_info.file_ver = oad_env.upgrd_file_ver;
-#if defined(CONFIG_BT_SETTINGS)
 
+#if defined(CONFIG_BT_SETTINGS)
     struct oad_ef_info ef_info;
     memset(&ef_info, 0, sizeof(struct oad_ef_info));
     bt_settings_set_bin(NV_IMG_info, (uint8_t *)&ef_info, sizeof(struct oad_ef_info));
-
 #endif
 
-    ret = hal_boot2_get_active_entries_byname((uint8_t *)"FW", &ptEntry);
-    if (ret) {
-        BT_WARN("Failed to get active entries by name\r\n");
-        return;
-    }
-
-    ptEntry.len = oad_env.upgrd_file_size;
-    hal_boot2_update_ptable(&ptEntry);
-
-#if !defined(CONFIG_BL_MCU_SDK)
-    bl_sys_reset_system();
-#else
+#if defined(CONFIG_BL_MCU_SDK)
     GLB_SW_System_Reset();
+#else
+    hal_reboot();
 #endif
 }
 
-static u8_t oad_write_flash(u8_t *data, u16_t len)
+static u8_t oad_write_flash(uint32_t filesize, uint32_t offset, u8_t *data, u16_t len)
 {
+#if defined(CONFIG_BL_MCU_SDK)
     uint32_t size = 0;
     uint32_t wflash_address = 0;
 
@@ -213,12 +199,8 @@ static u8_t oad_write_flash(u8_t *data, u16_t len)
 
         BT_WARN("Upgrade file size is %d\r\n", oad_env.upgrd_file_size);
         if (oad_env.upgrd_file_size <= size) {
-#if !defined(CONFIG_BL_MCU_SDK)
-            bl_flash_erase(oad_env.new_img_addr, oad_env.upgrd_file_size);
-#else
             BT_WARN("flash erase\r\n");
             flash_erase(oad_env.new_img_addr, oad_env.upgrd_file_size);
-#endif
         } else {
             return -1;
         }
@@ -235,15 +217,12 @@ static u8_t oad_write_flash(u8_t *data, u16_t len)
     }
 
     BT_WARN("Start address : 0x%x\r\n", wflash_address);
-#if !defined(CONFIG_BL_MCU_SDK)
-    bl_flash_write(wflash_address, data, len);
-#else
     flash_write(wflash_address, data, len);
-#endif
     oad_env.w_img_end_addr = wflash_address + len;
     BT_WARN("End address : 0x%x\r\n", wflash_address + len);
-
-    calc_crc32_val = BFLB_Soft_CRC32_Ex(calc_crc32_val, data, len);
+#else
+    hosal_ota_update(filesize, offset, data, len);
+#endif
 
     return 0;
 }
@@ -252,10 +231,8 @@ static u8_t oad_image_data_handler(struct bt_conn *conn, const u8_t *data, u16_t
 {
     u16_t left_size = 0;
     u16_t oDataLen = 0;
-
-#if defined(CONFIG_BT_SETTINGS)
     static u32_t write_count = 0;
-#endif
+
     if (!wData.wdata_buf) {
         wData.wdata_buf = (u8_t *)k_malloc(WBUF_SIZE(conn));
         if (!wData.wdata_buf) {
@@ -278,7 +255,7 @@ static u8_t oad_image_data_handler(struct bt_conn *conn, const u8_t *data, u16_t
             memcpy((wData.wdata_buf + wData.index), data, left_size);
             wData.index += left_size;
             if (wData.index == OTA_WRITE_FLASH_SIZE) {
-                if (oad_write_flash(wData.wdata_buf, OTA_WRITE_FLASH_SIZE)) {
+                if (oad_write_flash(oad_env.upgrd_file_size, oad_env.hosal_offset, wData.wdata_buf, OTA_WRITE_FLASH_SIZE)) {
                     BT_ERR("Failed to write flash\r\n");
                     return OAD_ABORT;
                 }
@@ -286,8 +263,10 @@ static u8_t oad_image_data_handler(struct bt_conn *conn, const u8_t *data, u16_t
                 BT_ERR("Unexpect result\r\n");
                 return OAD_ABORT;
             }
-#if defined(CONFIG_BT_SETTINGS)
+
             write_count += 1;
+            oad_env.hosal_offset = write_count * OTA_WRITE_FLASH_SIZE;
+#if defined(CONFIG_BT_SETTINGS)
             struct oad_ef_info ef_info;
             memcpy(&ef_info.file_info, &oad_env.file_info, sizeof(struct oad_file_info));
             ef_info.file_offset = write_count * OTA_WRITE_FLASH_SIZE;
@@ -308,8 +287,9 @@ static u8_t oad_image_data_handler(struct bt_conn *conn, const u8_t *data, u16_t
     if (oad_env.upgrd_offset > oad_env.upgrd_file_size) {
         return OAD_INVALID_IMAG;
     } else if (oad_env.upgrd_offset == oad_env.upgrd_file_size) {
-        if (wData.index)
-            oad_write_flash(wData.wdata_buf, wData.index);
+        if (wData.index) {
+            oad_write_flash(oad_env.upgrd_file_size, oad_env.hosal_offset, wData.wdata_buf, wData.index);
+        }
 
         if (wData.wdata_buf) {
             k_free(wData.wdata_buf);
@@ -421,6 +401,9 @@ static void oad_image_identity_handler(struct bt_conn *conn, const u8_t *data, u
         oad_env.upgrd_file_size = identity->file_size;
         oad_env.upgrd_crc32 = identity->crc32;
         BT_WARN("Send the image block request\r\n");
+#if !defined(CONFIG_BL_MCU_SDK)
+        hosal_ota_start(oad_env.upgrd_file_size);
+#endif
         oad_notify_block_req(conn);
     } else {
         oad_notity_image_identity(conn);
@@ -461,6 +444,74 @@ static struct {
 
 pt_table_id_type active_id = PT_TABLE_ID_INVALID;
 pt_table_stuff_config pt_table_stuff[2];
+
+static int fw_check_hash256(void)
+{
+    uint32_t bin_size;
+    uint32_t hash_addr;
+    pt_table_entry_config ptEntry;
+
+    if (oad_env.upgrd_file_size <= 32) {
+        return -1;
+    }
+    if (oad_env.w_img_end_addr <= 32) {
+        return -1;
+    }
+
+    bin_size = oad_env.upgrd_file_size - 32;
+    hash_addr = oad_env.w_img_end_addr - 32;
+
+    if (hal_boot2_get_active_entries_byname((uint8_t *)"FW", &ptEntry)) {
+        BT_WARN("Failed to get active entries by name\r\n");
+        return -1;
+    }
+
+#define CHECK_IMG_BUF_SIZE 512
+    uint8_t sha_check[32] = { 0 };
+    uint8_t dst_sha[32] = { 0 };
+    uint32_t read_size;
+    mbedtls_sha256_context sha256_ctx;
+    int i, offset = 0;
+    uint8_t r_buf[CHECK_IMG_BUF_SIZE];
+
+    BT_WARN("[OTA]prepare OTA partition info\r\n");
+    mbedtls_sha256_init(&sha256_ctx);
+    mbedtls_sha256_starts_ret(&sha256_ctx, 0);
+
+    memset(sha_check, 0, 32);
+    memset(dst_sha, 0, 32);
+    offset = 0;
+    while (offset < bin_size) {
+        (bin_size - offset >= CHECK_IMG_BUF_SIZE) ? (read_size = CHECK_IMG_BUF_SIZE) : (read_size = bin_size - offset);
+        if (flash_read(oad_env.new_img_addr + offset, r_buf, read_size)) {
+            BT_WARN("flash read failed \r\n");
+            return -1;
+        }
+        mbedtls_sha256_update_ret(&sha256_ctx, (const uint8_t *)r_buf, read_size);
+        offset += read_size;
+    }
+
+    mbedtls_sha256_finish_ret(&sha256_ctx, sha_check);
+
+    flash_read(hash_addr, dst_sha, 32);
+    for (i = 0; i < 32; i++) {
+        BT_WARN("%02X", dst_sha[i]);
+    }
+    puts("\r\nHeader SET SHA256 Checksum:");
+    for (i = 0; i < 32; i++) {
+        BT_WARN("%02X", sha_check[i]);
+    }
+
+    if (memcmp(sha_check, (const void *)dst_sha, 32) != 0) {
+        BT_WARN("sha256 check error\r\n");
+        return -1;
+    }
+    ptEntry.len = bin_size;
+    BT_WARN("[OTA] Update PARTITION, partition len is %lu\r\n", ptEntry.len);
+    hal_boot2_update_ptable(&ptEntry);
+
+    return 0;
+}
 
 static int oad_hal_boot2_partition_addr(const char *name, uint32_t *addr0, uint32_t *addr1, uint32_t *size0, uint32_t *size1, int *active)
 {
@@ -570,5 +621,5 @@ void oad_service_enable(app_check_oad_cb cb)
     active_id = pt_table_get_active_partition_need_lock(pt_table_stuff);
     oad_get_boot2_partition_table();
 #endif
-    k_delayed_work_init(&oad_env.upgrd_work, oad_upgrade);
+    k_delayed_work_init(&oad_env.upgrd_work, ota_finish);
 }

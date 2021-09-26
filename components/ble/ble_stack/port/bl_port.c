@@ -15,6 +15,7 @@
 #include <task.h>
 #include <semphr.h>
 #include <timers.h>
+#include <stdlib.h>
 
 #if defined(BL_MCU_SDK)
 #define TRNG_LOOP_COUNTER (17)
@@ -25,13 +26,22 @@ int bl_rand();
 extern int bl_rand();
 #endif
 
+int ble_rand()
+{
+#if defined(CONFIG_HW_SEC_ENG_DISABLE)
+    extern long random(void);
+    return random();
+#else
+    return bl_rand();
+#endif
+}
+
 #if defined(BL_MCU_SDK)
 int bl_rand()
 {
     unsigned int val;
     int counter = 0;
     int32_t ret = 0;
-    Sec_Eng_Trng_Enable();
     do {
         ret = Sec_Eng_Trng_Get_Random((uint8_t *)&val, 4);
         if (ret < -1) {
@@ -359,7 +369,7 @@ void k_get_random_byte_array(uint8_t *buf, size_t len)
 {
     // bl_rand() return a word, but *buf may not be word-aligned
     for (int i = 0; i < len; i++) {
-        *(buf + i) = (uint8_t)(bl_rand() & 0xFF);
+        *(buf + i) = (uint8_t)(ble_rand() & 0xFF);
     }
 }
 

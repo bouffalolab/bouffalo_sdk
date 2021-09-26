@@ -3,6 +3,7 @@
 #include "oad.h"
 #include "log.h"
 #include "hci_core.h"
+#include "conn_internal.h"
 
 oad_upper_recv_cb upper_recv_cb;
 oad_disc_cb disc_cb;
@@ -28,6 +29,10 @@ static void ble_oad_tx_mtu_size(struct bt_conn *conn, u8_t err,
 
 static void ble_oad_connected(struct bt_conn *conn, u8_t err)
 {
+    if (err || conn->type != BT_CONN_TYPE_LE) {
+        return;
+    }
+
     int ret = -1;
     int tx_octets = 0x00fb;
     int tx_time = 0x0848;
@@ -57,6 +62,10 @@ static void ble_oad_connected(struct bt_conn *conn, u8_t err)
 
 static void ble_oad_disconnected(struct bt_conn *conn, u8_t reason)
 {
+    if (conn->type != BT_CONN_TYPE_LE) {
+        return;
+    }
+
     if (conn == ble_oad_conn) {
         (disc_cb)(conn, reason);
     }
