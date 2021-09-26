@@ -244,7 +244,7 @@ int main(void)
                 MSG("%s", str);
 
                 while (lcd_draw_is_busy()) {
-                    BL_DRV_DUMMY;
+                    __ASM volatile("nop");
                 }
                 lcd_draw_str_ascii16(5, 180, 0xFFFF, 0x0010, str, 0xff);
 

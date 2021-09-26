@@ -25,11 +25,27 @@
 #include "hal_uart.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"
+#include "bl702_glb.h"
+#include "bl702_spi.h"
 #include "fhm_onechannel_16k_20.h"
 
-#define SPI0_CS           GPIO_PIN_10
-#define ES8374_SLAVE_ADDR 0x10
+/***************************************************************
+					MARCO Definition
+****************************************************************/
+#define AUTIO_ES8388      0
+#define AUTIO_WM8978      1
+#define AUTIO_MODULE_TYPE AUTIO_ES8388
 
+#if (AUTIO_MODULE_TYPE == AUTIO_ES8388)
+#include "bsp_es8388.h"
+#elif (AUTIO_MODULE_TYPE == AUTIO_WM8978)
+#include "wm8978.h"
+#else
+#endif
+
+/***************************************************************
+					Struct Declaration
+****************************************************************/
 typedef struct audio_dev {
     uint8_t *buff1;
     uint8_t *buff2;
@@ -48,21 +64,26 @@ typedef struct audio_dev {
     struct device *device;
 } audio_dev_t;
 
-int record_callback(audio_dev_t *audio_dev);
-
-audio_dev_t Audio_Dev = { 0 };
-
+#if (AUTIO_MODULE_TYPE == AUTIO_ES8388)
+static ES8388_Cfg_Type ES8388Cfg = {
+    .work_mode = ES8388_CODEC_MDOE,          /*!< ES8388 work mode */
+    .role = ES8388_MASTER,                   /*!< ES8388 role */
+    .mic_input_mode = ES8388_DIFF_ENDED_MIC, /*!< ES8388 mic input mode */
+    .mic_pga = ES8388_MIC_PGA_9DB,           /*!< ES8388 mic PGA */
+    .i2s_frame = ES8388_LEFT_JUSTIFY_FRAME,  //ES8388_LEFT_JUSTIFY_FRAME,  /*!< ES8388 I2S frame */
+    .data_width = ES8388_DATA_LEN_16,        //ES8388_DATA_LEN_16,        /*!< ES8388 I2S dataWitdh */
+};
+#endif
+/***************************************************************
+					Variable Definition
+****************************************************************/
+audio_dev_t audio_dev0 = { 0 };
 struct device *spi0;
-struct device *i2c0;
-struct device *dma_ch2; //spi tx
+struct device *dma_ch2;
 
-uint8_t test_buff[4 * 1024];
-
-void dma_ch2_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
-{
-    record_callback(&Audio_Dev);
-}
-
+/***************************************************************
+					Function Definition
+****************************************************************/
 uint8_t spi_init(void)
 {
     spi_register(SPI0_INDEX, "spi0");
@@ -71,12 +92,13 @@ uint8_t spi_init(void)
 
     if (spi0) {
         ((spi_device_t *)spi0)->mode = SPI_SLVAE_MODE;
-        ((spi_device_t *)spi0)->direction = SPI_MSB_BYTE0_DIRECTION_FIRST;
+        ((spi_device_t *)spi0)->direction = SPI_MSB_BYTE3_DIRECTION_FIRST;
         ((spi_device_t *)spi0)->clk_polaraity = SPI_POLARITY_HIGH;
         ((spi_device_t *)spi0)->datasize = SPI_DATASIZE_16BIT;
         ((spi_device_t *)spi0)->clk_phase = SPI_PHASE_1EDGE;
-        ((spi_device_t *)spi0)->fifo_threshold = 2;
+        ((spi_device_t *)spi0)->fifo_threshold = 3;
 
+        //dma send spi
         device_open(spi0, DEVICE_OFLAG_DMA_TX);
     }
 
@@ -84,13 +106,15 @@ uint8_t spi_init(void)
 
     if (dma_ch2) {
         ((dma_device_t *)dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;
-        ((dma_device_t *)dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
+        ((dma_device_t *)dma_ch2)->transfer_mode = DMA_LLI_CYCLE_MODE;
         ((dma_device_t *)dma_ch2)->src_req = DMA_REQUEST_NONE;
         ((dma_device_t *)dma_ch2)->dst_req = DMA_REQUEST_SPI0_TX;
         ((dma_device_t *)dma_ch2)->src_width = DMA_TRANSFER_WIDTH_16BIT;
         ((dma_device_t *)dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
+        ((dma_device_t *)dma_ch2)->src_burst_size = 0;
+        ((dma_device_t *)dma_ch2)->dst_burst_size = 0;
         device_open(dma_ch2, 0);
-        device_set_callback(dma_ch2, dma_ch2_irq_callback);
+        device_set_callback(dma_ch2, NULL);
         device_control(dma_ch2, DEVICE_CTRL_SET_INT, NULL);
         device_control(spi0, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch2);
     }
@@ -98,180 +122,88 @@ uint8_t spi_init(void)
     return SUCCESS;
 }
 
-void i2c_init(void)
+ATTR_TCM_SECTION int main(void)
 {
-    i2c_register(I2C0_INDEX, "i2c");
-    i2c0 = device_find("i2c");
+    uint8_t flag = 0;
+    GLB_GPIO_Cfg_Type gpio_cfg;
 
-    if (i2c0) {
-        ((i2c_device_t *)i2c0)->id = 0;
-        ((i2c_device_t *)i2c0)->mode = I2C_HW_MODE;
-        ((i2c_device_t *)i2c0)->phase = 15;
-        device_open(i2c0, 0);
-    }
-}
+    audio_dev0.buff1 = (void *)fhm_onechannel_16k_20;
+    audio_dev0.buff_size_max = sizeof(fhm_onechannel_16k_20);
+    audio_dev0.buff1_data_size = sizeof(fhm_onechannel_16k_20);
+    audio_dev0.audio_state = 1;
 
-int es8374_write_reg(uint8_t addr, uint8_t data)
-{
-    i2c_msg_t msg1;
-    msg1.slaveaddr = ES8374_SLAVE_ADDR,
-    msg1.len = 1,
-    msg1.buf = &data;
-    msg1.flags = SUB_ADDR_1BYTE | I2C_WR;
-    msg1.subaddr = addr;
-    bflb_platform_delay_ms(10);
-    return i2c_transfer(i2c0, &msg1, 1);
-}
-
-BL_Err_Type es8388_read_reg(uint8_t addr, uint8_t *rdata)
-{
-    i2c_msg_t msg1;
-    msg1.len = 1,
-    msg1.buf = rdata;
-    msg1.subaddr = addr;
-    msg1.slaveaddr = ES8374_SLAVE_ADDR,
-    msg1.flags = SUB_ADDR_1BYTE | I2C_RD;
-    return i2c_transfer(i2c0, &msg1, 1);
-}
-
-uint8_t es8374_config_master(void)
-{
-    es8374_write_reg(0x00, 0x3F);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x00, 0x03);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x01, 0x7F);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x05, 0x11);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x6F, 0xA0);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x72, 0x41);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x09, 0x01);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0C, 0x08);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0D, 0x13);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0E, 0xE0);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0A, 0x3A);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0B, 0x08);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x09, 0x41);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x24, 0x08);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x36, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x12, 0x30);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x13, 0x20);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x21, 0x50);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x22, 0x55);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x21, 0x24);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x00, 0x80);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x14, 0x8A);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x15, 0x40);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1A, 0xA0);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1B, 0x19);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1C, 0x90);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1D, 0x2B);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1F, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1E, 0xA0);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x28, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x25, 0x1F);
-    bflb_platform_delay_ms(10); //增益
-    es8374_write_reg(0x38, 0x00);
-    bflb_platform_delay_ms(10); //DAC音量
-    es8374_write_reg(0x37, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x6D, 0x60);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x03, 0x20);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x06, 0x03);
-    bflb_platform_delay_ms(10); // 0x0600 ---8K sample.   0x0300 -16K
-    es8374_write_reg(0x07, 0x00);
-    bflb_platform_delay_ms(10); //
-    es8374_write_reg(0x0F, 0x95);
-    bflb_platform_delay_ms(10); //0x9D 8K    0x95 16K
-    es8374_write_reg(0x10, 0x0D);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x11, 0x0D);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x02, 0x08);
-    bflb_platform_delay_ms(10);
-    return 0;
-}
-
-uint8_t es8374_config_dump(void)
-{
-    uint8_t i = 0;
-    uint8_t val = 0;
-
-    for (i = 0; i < 0X6D; i++) {
-        es8388_read_reg(i, &val);
-        MSG("0x%x = 0x%x\r\n", i, val);
-    }
-
-    return 0;
-}
-
-int record_init(audio_dev_t *audio_dev)
-{
-    audio_dev->buff1 = (void *)fhm_onechannel_16k_20;
-    audio_dev->buff_size_max = sizeof(fhm_onechannel_16k_20);
-    audio_dev->buff1_data_size = sizeof(fhm_onechannel_16k_20);
-    audio_dev->audio_state = 1;
-
-    i2c_init();
-    es8374_config_master();
-    //es8374_config_dump();
-    //memset(test_buff,0x55,sizeof(test_buff));
-
-    spi_init();
-    MSG("play start\r\n");
-    device_write(spi0, 0, audio_dev->buff1, audio_dev->buff1_data_size);
-    audio_dev->buff_using = 1;
-
-    return 0;
-}
-
-int record_callback(audio_dev_t *audio_dev)
-{
-    MSG("play end\r\n");
-    MSG("play start\r\n");
-    device_write(spi0, 0, audio_dev->buff1, audio_dev->buff1_data_size);
-    return 0;
-}
-
-int main(void)
-{
     bflb_platform_init(0);
 
-    MSG("spi_i2s_record case \r\n");
+    MSG("spi i2s mono play start...\r\n");
+    flag = spi_init();
+    if (flag) {
+        MSG("[E]spi init fail!\r\n");
+    } else {
+    }
 
-    record_init(&Audio_Dev);
+    /* Disable spi dev */
+    device_control(spi0, DEVICE_CTRL_SUSPEND, NULL);
 
-    BL_CASE_SUCCESS;
+    /* Spi CS pin config input mode*/
+    gpio_cfg.gpioMode = GPIO_MODE_AF;
+    gpio_cfg.pullType = GPIO_PULL_UP;
+    gpio_cfg.gpioPin = GPIO_PIN_10;
+    gpio_cfg.gpioFun = GPIO_FUN_UNUSED;
+    GLB_GPIO_Init(&gpio_cfg);
+    gpio_set_mode(GPIO_PIN_10, GPIO_INPUT_PP_MODE);
+
+    /*GPIO6 output clk for I2S MCLK*/
+    GLB_Set_Chip_Out_0_CLK_Sel(GLB_CHIP_CLK_OUT_I2S_REF_CLK);
+    GLB_Set_I2S_CLK(ENABLE, GLB_I2S_OUT_REF_CLK_NONE);
+
+#if (AUTIO_MODULE_TYPE == AUTIO_WM8978)
+
+    /*init wm8978*/
+    if (0 != WM8978_Init()) {
+        MSG("[E]WM8978 Init fail\r\n");
+    }
+
+    if (false == wm8978_master_cfg()) {
+        MSG("[E]wm8978 master cfg fail! \r\n");
+    }
+
+    WM8978_PlayMode();
+#elif (AUTIO_MODULE_TYPE == AUTIO_ES8388)
+    /* init ES8388 Codec */
+    ES8388_Init(&ES8388Cfg);
+    //ES8388_Reg_Dump();
+    flag = ES8388_Set_Voice_Volume(30);
+    if (flag) {
+        MSG("[E]ES8388 set volume fail!\r\n");
+    } else {
+    }
+    MSG("ES8388 config ok!\r\n");
+#else
+    MSG("[E]Please Check AUTIO_MODULE_TYPE!\r\n");
+#endif
+
+    /* Config DMA Tx Buff */
+    device_write(spi0, 0, audio_dev0.buff1, audio_dev0.buff1_data_size);
+
+    gpio_cfg.gpioMode = GPIO_MODE_AF;
+    gpio_cfg.pullType = GPIO_PULL_UP;
+    gpio_cfg.gpioPin = GPIO_PIN_10;
+    gpio_cfg.gpioFun = GPIO_FUN_SPI;
+
+    /* Wait SPI CS Rise edge */
+    while (gpio_read(GPIO_PIN_10))
+        ;
+
+    while (!gpio_read(GPIO_PIN_10))
+        ;
+
+    /* Config GPIO10 as SPI CS*/
+    GLB_GPIO_Init(&gpio_cfg);
+
+    /* Enable spi dev */
+    device_control(spi0, DEVICE_CTRL_RESUME, NULL);
+
     while (1) {
-        bflb_platform_delay_ms(100);
+        bflb_platform_delay_ms(10);
     }
 }

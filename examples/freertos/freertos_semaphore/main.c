@@ -23,8 +23,9 @@
 #include "hal_uart.h"
 #include <FreeRTOS.h>
 #include "semphr.h"
+#include "bflb_platform.h"
 
-static uint8_t freertos_heap[4096];
+static uint8_t freertos_heap[configTOTAL_HEAP_SIZE];
 
 static HeapRegion_t xHeapRegions[] = {
     { (uint8_t *)freertos_heap, 0 },
@@ -119,7 +120,7 @@ static void consumer_task(void *pvParameters)
     MSG("Consumer task enter \r\n");
     vTaskDelay(1000);
     MSG("Consumer task start \r\n");
-    MSG("begin to loop %s\n", __FILE__);
+    MSG("begin to loop %s\r\n", __FILE__);
 
     while (1) {
         if (xSemaphoreTake(sem_full, portMAX_DELAY) == pdTRUE) {
@@ -164,8 +165,10 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    xHeapRegions[0].xSizeInBytes = 4096;
+    xHeapRegions[0].xSizeInBytes = configTOTAL_HEAP_SIZE;
     vPortDefineHeapRegions(xHeapRegions);
+
+    configASSERT((configMAX_PRIORITIES > 4));
 
     /* Create semaphore */
     vSemaphoreCreateBinary(sem_empty);
@@ -178,9 +181,9 @@ int main(void)
     }
 
     MSG("[OS] Starting consumer task...\r\n");
-    xTaskCreateStatic(consumer_task, (char *)"consumer_task", sizeof(consumer_stack) / 4, NULL, 16, consumer_stack, &consumer_handle);
+    xTaskCreateStatic(consumer_task, (char *)"consumer_task", sizeof(consumer_stack) / 4, NULL, configMAX_PRIORITIES - 2, consumer_stack, &consumer_handle);
     MSG("[OS] Starting producer task...\r\n");
-    xTaskCreateStatic(producer_task, (char *)"producer_task", sizeof(producer_stack) / 4, NULL, 15, producer_stack, &producer_handle);
+    xTaskCreateStatic(producer_task, (char *)"producer_task", sizeof(producer_stack) / 4, NULL, configMAX_PRIORITIES - 3, producer_stack, &producer_handle);
 
     vTaskStartScheduler();
 

@@ -90,14 +90,14 @@ int main(void)
         MSG("fatfs open ERROR\r\n");
     }
 
-    Audio_Dev.audio_control(&Audio_Dev, AUDIO_CMD_START, NULL);
+    Audio_Dev.audio_control(&Audio_Dev, AUDIO_CMD_PLAY_START, NULL);
 
     /* start/stop test */
     /*
     bflb_platform_delay_ms(10000);
-    Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_STOP,NULL);
+    Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_PLAY_STOP,NULL);
     bflb_platform_delay_ms(5000);
-    Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_START,NULL);
+    Audio_Dev.audio_control(&Audio_Dev,AUDIO_CMD_PLAY_START,NULL);
     bflb_platform_delay_ms(5000);
     */
 

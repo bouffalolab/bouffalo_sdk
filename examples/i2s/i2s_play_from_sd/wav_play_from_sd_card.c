@@ -184,23 +184,23 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR *path)
 
     if ((audio_dev->device) && dma_ch2) {
         /* I2S Config */
-        ((i2s_device_t *)(audio_dev->device))->interface_mode = I2S_MODE_LEFT;
-        ((i2s_device_t *)(audio_dev->device))->sampl_freq_hz = audio_dev->wav_information->chunk_format.sample_rate;
-        ((i2s_device_t *)(audio_dev->device))->channel_num = audio_dev->wav_information->chunk_format.num_of_channels;
+        I2S_DEV(audio_dev->device)->interface_mode = I2S_MODE_LEFT;
+        I2S_DEV(audio_dev->device)->sampl_freq_hz = audio_dev->wav_information->chunk_format.sample_rate;
+        I2S_DEV(audio_dev->device)->channel_num = audio_dev->wav_information->chunk_format.num_of_channels;
         uint8_t pcm_w = audio_dev->wav_information->chunk_format.bits_per_sample / 8;
 
         if (pcm_w <= 2) {
-            ((i2s_device_t *)(audio_dev->device))->frame_size = I2S_FRAME_LEN_16;
+            I2S_DEV(audio_dev->device)->frame_size = I2S_FRAME_LEN_16;
         } else {
-            ((i2s_device_t *)(audio_dev->device))->frame_size = I2S_FRAME_LEN_32;
+            I2S_DEV(audio_dev->device)->frame_size = I2S_FRAME_LEN_32;
         }
 
-        ((i2s_device_t *)(audio_dev->device))->data_size = ((i2s_device_t *)(audio_dev->device))->frame_size;
-        ((i2s_device_t *)(audio_dev->device))->fifo_threshold = 8;
+        I2S_DEV(audio_dev->device)->data_size = I2S_DEV(audio_dev->device)->frame_size;
+        I2S_DEV(audio_dev->device)->fifo_threshold = 3;
         res = device_open((audio_dev->device), DEVICE_OFLAG_DMA_TX);
 
         /* ES8388 Config */
-        switch (((i2s_device_t *)(audio_dev->device))->data_size) {
+        switch (I2S_DEV(audio_dev->device)->data_size) {
             case I2S_FRAME_LEN_16:
                 ES8388Cfg.data_width = ES8388_DATA_LEN_16;
                 break;
@@ -221,30 +221,32 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR *path)
         ES8388_Init(&ES8388Cfg);
         ES8388_Set_Voice_Volume(20);
 
-        MSG("sampl_freq_hz : %d\r\n", ((i2s_device_t *)(audio_dev->device))->sampl_freq_hz);
-        MSG("channel_num   : %d\r\n", ((i2s_device_t *)(audio_dev->device))->channel_num);
-        MSG("data_size     : %d\r\n", ((i2s_device_t *)(audio_dev->device))->data_size);
+        MSG("sampl_freq_hz : %d\r\n", I2S_DEV(audio_dev->device)->sampl_freq_hz);
+        MSG("channel_num   : %d\r\n", I2S_DEV(audio_dev->device)->channel_num);
+        MSG("data_size     : %d\r\n", I2S_DEV(audio_dev->device)->data_size);
 
         /* DMA Config */
-        ((dma_device_t *)dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;
-        ((dma_device_t *)dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
-        ((dma_device_t *)dma_ch2)->src_req = (uint32_t)NULL;
-        ((dma_device_t *)dma_ch2)->dst_req = DMA_REQUEST_I2S_TX;
+        DMA_DEV(dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;
+        DMA_DEV(dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch2)->src_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_I2S_TX;
+        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_4BYTE;
 
-        switch (((i2s_device_t *)(audio_dev->device))->data_size * ((i2s_device_t *)(audio_dev->device))->channel_num) {
+        switch (I2S_DEV(audio_dev->device)->data_size * I2S_DEV(audio_dev->device)->channel_num) {
             case I2S_DATA_LEN_8:
-                ((dma_device_t *)dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
-                ((dma_device_t *)dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
+                DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+                DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
                 break;
 
             case I2S_DATA_LEN_16:
-                ((dma_device_t *)dma_ch2)->src_width = DMA_TRANSFER_WIDTH_16BIT;
-                ((dma_device_t *)dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
+                DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_16BIT;
+                DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
                 break;
 
             default:
-                ((dma_device_t *)dma_ch2)->src_width = DMA_TRANSFER_WIDTH_32BIT;
-                ((dma_device_t *)dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
+                DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_32BIT;
+                DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
                 break;
         }
 
@@ -281,7 +283,7 @@ static int sd_wav_play_control(struct audio_dev *audio_dev, AUDIO_CMD_t cmd, voi
     int res = -1;
 
     switch (cmd) {
-        case AUDIO_CMD_START:
+        case AUDIO_CMD_PLAY_START:
             if (audio_dev->audio_state) {
                 res = device_write(audio_dev->device, 0, audio_dev->buff[!audio_dev->buff_using], audio_dev->buff_data_size[!audio_dev->buff_using]);
                 audio_dev->audio_state = 2;
@@ -290,7 +292,7 @@ static int sd_wav_play_control(struct audio_dev *audio_dev, AUDIO_CMD_t cmd, voi
 
             break;
 
-        case AUDIO_CMD_STOP:
+        case AUDIO_CMD_PLAY_STOP:
             if (audio_dev->audio_state) {
                 audio_dev->audio_state = 1;
                 res = 0;

@@ -39,13 +39,13 @@ int main(void)
     struct device *pwm = device_find("pwm");
 
     if (pwm) {
-        PWM_DEV(pwm)->period = 32; //frequence = 32M/1/32 = 1Mhz
-        PWM_DEV(pwm)->threshold_low = 16;
-        PWM_DEV(pwm)->threshold_high = 32;
-        PWM_DEV(pwm)->it_pulse_count = 16;
+        PWM_DEV(pwm)->period = 10; //frequence = 32k/32/10 = 100hz
+        PWM_DEV(pwm)->threshold_low = 5;
+        PWM_DEV(pwm)->threshold_high = 10;
+        PWM_DEV(pwm)->it_pulse_count = 200; //after 2s go isr 2s = 1/100hz*200
         device_open(pwm, DEVICE_OFLAG_INT_TX);
         device_set_callback(pwm, pwm_irq_callback);
-        //pwm_it_pulse_count_update(pwm, 16);
+        //pwm_it_pulse_count_update(pwm, 200);
         pwm_channel_start(pwm);
     }
 

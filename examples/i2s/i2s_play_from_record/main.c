@@ -73,7 +73,7 @@ int main(void)
         I2S_DEV(i2s)->channel_num = I2S_FS_CHANNELS_NUM_2;
         I2S_DEV(i2s)->frame_size = I2S_FRAME_LEN_16;
         I2S_DEV(i2s)->data_size = I2S_DATA_LEN_16;
-        I2S_DEV(i2s)->fifo_threshold = 8;
+        I2S_DEV(i2s)->fifo_threshold = 3;
         device_open(i2s, DEVICE_OFLAG_DMA_TX | DEVICE_OFLAG_DMA_RX);
     }
 
@@ -87,14 +87,16 @@ int main(void)
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_32BIT;
         DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
+        DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_4BYTE;
         device_open(dma_ch3, 0);
 
         /* connect i2s device and dma device */
         device_control(i2s, DEVICE_CTRL_ATTACH_RX_DMA, (void *)dma_ch3);
 
         /* Set the interrupt function, for double buffering*/
-        device_set_callback(dma_ch3, dma_ch3_irq_callback);
-        device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
+        device_set_callback(I2S_DEV(i2s)->rx_dma, dma_ch3_irq_callback);
+        device_control(I2S_DEV(i2s)->rx_dma, DEVICE_CTRL_SET_INT, NULL);
     }
 
     dma_register(DMA0_CH2_INDEX, "dma_ch2_i2s_tx");
@@ -106,14 +108,16 @@ int main(void)
         DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_I2S_TX;
         DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_32BIT;
         DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
+        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_4BYTE;
         device_open(dma_ch2, 0);
 
         /* connect i2s device and dma device */
         device_control(i2s, DEVICE_CTRL_ATTACH_TX_DMA, (void *)dma_ch2);
 
         /* Set the interrupt function, for double buffering*/
-        device_set_callback(dma_ch2, NULL);
-        device_control(dma_ch2, DEVICE_CTRL_SET_INT, NULL);
+        device_set_callback(I2S_DEV(i2s)->tx_dma, NULL);
+        device_control(I2S_DEV(i2s)->tx_dma, DEVICE_CTRL_SET_INT, NULL);
     }
 
     uart = device_find("debug_log");

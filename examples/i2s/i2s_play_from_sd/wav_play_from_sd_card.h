@@ -82,8 +82,8 @@ typedef struct
 } wav_information_t;
 
 typedef enum {
-    AUDIO_CMD_START,
-    AUDIO_CMD_STOP,
+    AUDIO_CMD_PLAY_START,
+    AUDIO_CMD_PLAY_STOP,
     AUDIO_CMD_VOLUME,
 } AUDIO_CMD_t;
 

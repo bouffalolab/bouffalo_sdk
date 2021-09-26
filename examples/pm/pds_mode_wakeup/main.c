@@ -66,10 +66,17 @@ int pds3_enter(int argc, char *argv[])
 }
 int pds31_enter(int argc, char *argv[])
 {
+    int second = 0;
+
+    if (argc == 2) {
+        second = atoi(argv[1]);
+    } else {
+        second = 0;
+    }
     MSG("gpio wake up case,enter pds31 mode\r\n");
     bflb_platform_delay_ms(50);
 
-    pm_pds_mode_enter(PM_PDS_LEVEL_31, 0); /*hbn、pds gpio can wakeup*/
+    pm_pds_mode_enter(PM_PDS_LEVEL_31, second); /*hbn、pds gpio can wakeup*/
 
     return 0;
 }

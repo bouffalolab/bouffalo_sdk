@@ -62,7 +62,7 @@ int main(void)
 
     /* init ES8388 Codec */
     ES8388_Init(&ES8388Cfg);
-    ES8388_Set_Voice_Volume(60);
+    ES8388_Set_Voice_Volume(20);
 
     MSG("Play Music Form flash\r\n");
 
@@ -73,10 +73,10 @@ int main(void)
         I2S_DEV(i2s)->iis_mode = I2S_MODE_MASTER;
         I2S_DEV(i2s)->interface_mode = I2S_MODE_LEFT;
         I2S_DEV(i2s)->sampl_freq_hz = 16 * 1000;
-        I2S_DEV(i2s)->channel_num = I2S_FS_CHANNELS_NUM_2;
+        I2S_DEV(i2s)->channel_num = I2S_FS_CHANNELS_NUM_MONO;
         I2S_DEV(i2s)->frame_size = I2S_FRAME_LEN_16;
         I2S_DEV(i2s)->data_size = I2S_DATA_LEN_16;
-        I2S_DEV(i2s)->fifo_threshold = 8;
+        I2S_DEV(i2s)->fifo_threshold = 3;
         device_open(i2s, DEVICE_OFLAG_DMA_TX | DEVICE_OFLAG_DMA_RX);
     }
 
@@ -90,6 +90,8 @@ int main(void)
         DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_I2S_TX;
         DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_16BIT;
         DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
+        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_4BYTE;
         device_open(dma_ch2, 0);
 
         /* connect i2s device and dma device */

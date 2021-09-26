@@ -26,7 +26,8 @@
 int main(void)
 {
     i2c_msg_t msg[2];
-    uint8_t buf[8] = { 0 };
+    uint8_t buf1[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    uint8_t buf2[8] = { 0 };
 
     bflb_platform_init(0);
 
@@ -38,23 +39,37 @@ int main(void)
         device_open(i2c0, 0);
     }
 
-    msg[0].buf = buf;
-    msg[0].flags = SUB_ADDR_1BYTE | I2C_WR;
+    msg[0].buf = buf1;
+    msg[0].flags = SUB_ADDR_2BYTE | I2C_WR;
     msg[0].len = 8;
     msg[0].slaveaddr = 0x50;
     msg[0].subaddr = 0x00;
 
-    msg[1].buf = buf;
-    msg[1].flags = SUB_ADDR_1BYTE | I2C_RD;
+    msg[1].buf = buf2;
+    msg[1].flags = SUB_ADDR_2BYTE | I2C_RD;
     msg[1].len = 8;
     msg[1].slaveaddr = 0x50;
     msg[1].subaddr = 0x00;
 
-    if (i2c_transfer(i2c0, &msg[0], 2) == 0) {
-        MSG("\r\n read:%0x\r\n", msg[1].buf[0] << 8 | msg[1].buf[1]);
-        BL_CASE_SUCCESS;
-    } else
+    if (i2c_transfer(i2c0, &msg[0], 1) == 1) {
         BL_CASE_FAIL;
+        while (1) {
+        }
+    }
+    bflb_platform_delay_ms(10);
+    if (i2c_transfer(i2c0, &msg[1], 1) == 1) {
+        BL_CASE_FAIL;
+        while (1) {
+        }
+    }
+    for (uint8_t i = 0; i < 8; i++) {
+        if (buf1[i] != buf2[i]) {
+            BL_CASE_FAIL;
+            while (1) {
+            }
+        }
+    }
+    BL_CASE_SUCCESS;
     while (1) {
         bflb_platform_delay_ms(100);
     }

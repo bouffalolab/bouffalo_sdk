@@ -20,23 +20,24 @@
  * under the License.
  *
  */
+
+#include "bl702_glb.h"
+#include "bl702_spi.h"
 #include "hal_spi.h"
 #include "hal_i2c.h"
 #include "hal_uart.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"
+#include "bsp_es8388.h"
 
-#define SPI0_CS           GPIO_PIN_10
-#define ES8374_SLAVE_ADDR 0x10
+#define SPI0_CS GPIO_PIN_10
 
 //播放控制块
 typedef struct audio_dev {
-    uint8_t *buff1;
-    uint8_t *buff2;
-    uint32_t buff1_data_size; //buff1内数据长度
-    uint32_t buff2_data_size; //buff1内数据长度
-    uint32_t buff_size_max;   //buff的大小
-    uint8_t buff_using;       //正在使用的buff
+    uint8_t *buff[2];
+    uint32_t buff_data_size[2]; //buff内数据长度
+    uint32_t buff_size_max;     //buff的大小
+    uint8_t buff_using;         //正在使用的buff
 
     uint8_t audio_state; //状态
     uint8_t audio_type;  //类型
@@ -55,50 +56,30 @@ int record_callback(audio_dev_t *audio_dev);
 audio_dev_t Audio_Dev = { 0 };
 
 struct device *spi0;
-struct device *i2c0;
-struct device *uart0;
-struct device *dma_ch2; //uart tx
-struct device *dma_ch3; //spi rx
+struct device *dma_ch2; /* spi tx */
+struct device *dma_ch3; /* spi rx */
+static ES8388_Cfg_Type ES8388Cfg = {
+    .work_mode = ES8388_CODEC_MDOE,          /*!< ES8388 work mode */
+    .role = ES8388_MASTER,                   /*!< ES8388 role */
+    .mic_input_mode = ES8388_DIFF_ENDED_MIC, /*!< ES8388 mic input mode */
+    .mic_pga = ES8388_MIC_PGA_3DB,           /*!< ES8388 mic PGA */
+    .i2s_frame = ES8388_LEFT_JUSTIFY_FRAME,  /*!< ES8388 I2S frame */
+    .data_width = ES8388_DATA_LEN_16,        /*!< ES8388 I2S dataWitdh */
+};
 
-uint8_t buff1[2 * 1024] __attribute__((section(".system_ram"), aligned(4)));
-uint8_t buff2[2 * 1024] __attribute__((section(".system_ram"), aligned(4)));
+uint8_t buff[2][2 * 1024] __attribute__((section(".system_ram"), aligned(4)));
 
 int record_callback(audio_dev_t *audio_dev);
 
-void dma_ch3_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
+void dma_ch2_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
     Audio_Dev.audio_callback(&Audio_Dev);
-}
-
-void uart0_rx_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
-{
-    if (state == UART_EVENT_RX_FIFO) {
-        if (memcmp((uint8_t *)args, "start record\r\n", 14) == 0) {
-            //MSG("start recording...\r\n");
-            Audio_Dev.audio_state = 1;
-        } else if (memcmp((uint8_t *)args, "stop  record\r\n", 14) == 0) {
-            //MSG("stop recording...\r\n");
-            Audio_Dev.audio_state = 0;
-        } else {
-            //MSG("error code...\r\n");
-        }
-    } else if (state == UART_EVENT_RTO) {
-        if (memcmp((uint8_t *)args, "start record\r\n", 14) == 0) {
-            //MSG("start recording...\r\n");
-            Audio_Dev.audio_state = 1;
-        } else if (memcmp((uint8_t *)args, "stop  record\r\n", 14) == 0) {
-            //MSG("stop recording...\r\n");
-            Audio_Dev.audio_state = 0;
-        } else {
-            //MSG("error code...\r\n");
-        }
-    }
 }
 
 uint8_t spi_init(void)
 {
     spi_register(SPI0_INDEX, "spi0");
-    dma_register(DMA0_CH3_INDEX, "ch3");
+
     spi0 = device_find("spi0");
 
     if (spi0) {
@@ -110,11 +91,27 @@ uint8_t spi_init(void)
         ((spi_device_t *)spi0)->clk_phase = SPI_PHASE_1EDGE;
         ((spi_device_t *)spi0)->fifo_threshold = 2;
 
-        device_open(spi0, DEVICE_OFLAG_DMA_RX);
+        device_open(spi0, DEVICE_OFLAG_DMA_RX | DEVICE_OFLAG_DMA_TX);
     }
 
-    dma_ch3 = device_find("ch3");
+    dma_register(DMA0_CH2_INDEX, "ch2");
+    dma_ch2 = device_find("ch2");
 
+    if (dma_ch2) {
+        ((dma_device_t *)dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;
+        ((dma_device_t *)dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
+        ((dma_device_t *)dma_ch2)->src_req = DMA_REQUEST_NONE;
+        ((dma_device_t *)dma_ch2)->dst_req = DMA_REQUEST_SPI0_TX;
+        ((dma_device_t *)dma_ch2)->src_width = DMA_TRANSFER_WIDTH_16BIT;
+        ((dma_device_t *)dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
+        device_open(dma_ch2, 0);
+        device_set_callback(dma_ch2, dma_ch2_irq_callback);
+        device_control(dma_ch2, DEVICE_CTRL_SET_INT, NULL);
+        device_control(spi0, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch2);
+    }
+
+    dma_register(DMA0_CH3_INDEX, "ch3");
+    dma_ch3 = device_find("ch3");
     if (dma_ch3) {
         ((dma_device_t *)dma_ch3)->direction = DMA_PERIPH_TO_MEMORY;
         ((dma_device_t *)dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
@@ -123,7 +120,7 @@ uint8_t spi_init(void)
         ((dma_device_t *)dma_ch3)->src_width = DMA_TRANSFER_WIDTH_16BIT;
         ((dma_device_t *)dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
         device_open(dma_ch3, 0);
-        device_set_callback(dma_ch3, dma_ch3_irq_callback);
+        device_set_callback(dma_ch3, NULL);
         device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
         device_control(spi0, DEVICE_CTRL_ATTACH_RX_DMA, dma_ch3);
     }
@@ -131,221 +128,93 @@ uint8_t spi_init(void)
     return SUCCESS;
 }
 
-void uart_init(void)
-{
-    dma_register(DMA0_CH2_INDEX, "ch2");
-    uart0 = device_find("debug_log");
-
-    if (uart0) {
-        device_close(uart0);
-    } else {
-        uart_register(UART0_INDEX, "debug_log");
-    }
-
-    uart0 = device_find("debug_log");
-
-    if (uart0) {
-        ((uart_device_t *)uart0)->baudrate = 2000000;
-        ((uart_device_t *)uart0)->fifo_threshold = 64;
-        device_open(uart0, DEVICE_OFLAG_DMA_TX | DEVICE_OFLAG_INT_RX);
-        device_set_callback(uart0, uart0_rx_irq_callback);
-        device_control(uart0, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT | UART_RTO_IT));
-    }
-
-    dma_ch2 = device_find("ch2");
-
-    if (dma_ch2) {
-        ((dma_device_t *)dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;
-        ((dma_device_t *)dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
-        ((dma_device_t *)dma_ch2)->src_req = DMA_REQUEST_NONE;
-        ((dma_device_t *)dma_ch2)->dst_req = DMA_REQUEST_UART0_TX;
-        ((dma_device_t *)dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
-        ((dma_device_t *)dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
-        device_open(dma_ch2, 0);
-        device_set_callback(dma_ch2, NULL);
-        device_control(dma_ch2, DEVICE_CTRL_CLR_INT, NULL);
-
-        device_control(uart0, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch2);
-    }
-}
-
-void i2c_init(void)
-{
-    i2c_register(I2C0_INDEX, "i2c");
-    i2c0 = device_find("i2c");
-
-    if (i2c0) {
-        ((i2c_device_t *)i2c0)->id = 0;
-        ((i2c_device_t *)i2c0)->mode = I2C_HW_MODE;
-        ((i2c_device_t *)i2c0)->phase = 15;
-        device_open(i2c0, 0);
-    }
-}
-
-int es8374_write_reg(uint8_t addr, uint8_t data)
-{
-    i2c_msg_t msg1;
-    msg1.slaveaddr = ES8374_SLAVE_ADDR,
-    msg1.len = 1,
-    msg1.buf = &data;
-    msg1.flags = SUB_ADDR_1BYTE | I2C_WR;
-    msg1.subaddr = addr;
-    bflb_platform_delay_ms(10);
-    return i2c_transfer(i2c0, &msg1, 1);
-}
-
-BL_Err_Type es8388_read_reg(uint8_t addr, uint8_t *rdata)
-{
-    i2c_msg_t msg1;
-    msg1.len = 1,
-    msg1.buf = rdata;
-    msg1.subaddr = addr;
-    msg1.slaveaddr = ES8374_SLAVE_ADDR,
-    msg1.flags = SUB_ADDR_1BYTE | I2C_RD;
-    return i2c_transfer(i2c0, &msg1, 1);
-}
-
-uint8_t es8374_config_master(void)
-{
-    es8374_write_reg(0x00, 0x3F);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x00, 0x03);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x01, 0x7F);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x05, 0x11);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x6F, 0xA0);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x72, 0x41);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x09, 0x01);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0C, 0x08);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0D, 0x13);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0E, 0xE0);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0A, 0x3A);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x0B, 0x08);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x09, 0x41);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x24, 0x08);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x36, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x12, 0x30);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x13, 0x20);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x21, 0x50);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x22, 0x55);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x21, 0x24);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x00, 0x80);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x14, 0x8A);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x15, 0x40);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1A, 0xA0);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1B, 0x19);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1C, 0x90);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1D, 0x2B);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1F, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x1E, 0xA0);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x28, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x25, 0x1F);
-    bflb_platform_delay_ms(10); //增益
-    es8374_write_reg(0x38, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x37, 0x00);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x6D, 0x60);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x03, 0x20);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x06, 0x03);
-    bflb_platform_delay_ms(10); // 0x0600 ---8K sample.   0x100  48k
-    es8374_write_reg(0x07, 0x00);
-    bflb_platform_delay_ms(10); //
-    es8374_write_reg(0x0F, 0x95);
-    bflb_platform_delay_ms(10); //0x9D 8K    0x95 16K
-    es8374_write_reg(0x10, 0x0D);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x11, 0x0D);
-    bflb_platform_delay_ms(10);
-    es8374_write_reg(0x02, 0x08);
-    bflb_platform_delay_ms(10);
-    return 0;
-}
-
-uint8_t es8374_config_dump(void)
-{
-    uint8_t i = 0;
-    uint8_t val = 0;
-
-    for (i = 0; i < 0X6D; i++) {
-        es8388_read_reg(i, &val);
-        MSG("0x%x = 0x%x\r\n", i, val);
-    }
-
-    return 0;
-}
-
 int record_init(audio_dev_t *audio_dev)
 {
-    audio_dev->buff1 = buff1;
-    audio_dev->buff2 = buff2;
-    audio_dev->buff_size_max = sizeof(buff1);
+    GLB_GPIO_Cfg_Type gpio_cfg = {
+        .drive = 0,
+        .smtCtrl = 1,
+        .gpioMode = GPIO_MODE_AF,
+        .pullType = GPIO_PULL_UP,
+        .gpioPin = SPI0_CS,
+        .gpioFun = GPIO_FUN_UNUSED,
+    };
+
+    /* audio结构体填充*/
+    Audio_Dev.audio_callback = record_callback;
+    audio_dev->buff[0] = buff[0];
+    audio_dev->buff[1] = buff[1];
+    audio_dev->buff_size_max = sizeof(buff) / 2;
+
+    memset(audio_dev->buff[0], 0xF0, sizeof(buff) / 2);
+    memset(audio_dev->buff[1], 0xF0, sizeof(buff) / 2);
+
     audio_dev->audio_state = 0;
-    audio_dev->audio_init = record_init;
-    audio_dev->audio_callback = record_callback;
+    audio_dev->buff_using = 0;
 
-    i2c_init();
-    uart_init();
-    es8374_config_master();
-    //es8374_config_dump();
-
+    /* 初始化SPI和DMA */
     spi_init();
 
-    device_read(spi0, 0, audio_dev->buff1, audio_dev->buff_size_max);
-    audio_dev->buff_using = 1;
+    // /* 取消DMA方式发送 */
+    // device_control(spi0, DEVICE_CTRL_TX_DMA_SUSPEND, NULL);
+    // /* 向FIFO里填几个数据，以下两种方式都行，第一种会因为发送超时结束，第二种直接填FIFO。不这样后面就会出错，原因不明 */
+    // //spi_transmit(spi0, test_buf, 4, 1);
+
+    // for (uint8_t i = 0; i < 4; i++) {
+    //     BL_WR_REG(SPI_BASE, SPI_FIFO_WDATA, 0xFF00);
+    // }
+    // /* 恢复DMA方式发送 */
+    // device_control(spi0, DEVICE_CTRL_TX_DMA_RESUME, NULL);
+
+    /* output MCLK */
+    GLB_Set_Chip_Out_0_CLK_Sel(GLB_CHIP_CLK_OUT_I2S_REF_CLK);
+    GLB_Set_I2S_CLK(ENABLE, GLB_I2S_OUT_REF_CLK_NONE);
+
+    /* init ES8388 Codec */
+    ES8388_Init(&ES8388Cfg);
+    ES8388_Set_Voice_Volume(10);
+
+    // /* FS复用成普通GPIO的 输入模式 */
+    // gpio_cfg.gpioFun = GPIO_FUN_UNUSED;
+    // GLB_GPIO_Init(&gpio_cfg);
+    // gpio_set_mode(SPI0_CS, GPIO_INPUT_PP_MODE);
+
+    // // /* 先关SPI*/
+    // device_control(spi0, DEVICE_CTRL_SUSPEND, NULL);
+    /* 让SPI-DMA数据发送准备就绪 */
+    device_write(spi0, 0, audio_dev->buff[1], audio_dev->buff_size_max);
+
+    // /* 等待FS(CS)低电平 */
+    // while (gpio_read(SPI0_CS)) {
+    // };
+    // /* 等待FS(CS)上升沿 */
+    // while (!gpio_read(SPI0_CS)) {
+    // };
+
+    // /* 重新复用位SPI-CS功能 */
+    // gpio_cfg.gpioFun = GPIO_FUN_SPI;
+    // GLB_GPIO_Init(&gpio_cfg);
+
+    // /* 确认同步后再启动SPI */
+    // MSG(" SPI");
+    // device_control(spi0, DEVICE_CTRL_RESUME, NULL);
+    // MSG(" OK\r\n");
 
     return 0;
 }
 
 int record_callback(audio_dev_t *audio_dev)
 {
-    if (audio_dev->buff_using == 1) {
-        device_read(spi0, 0, audio_dev->buff2, audio_dev->buff_size_max);
+    MSG("init %d\r\n", audio_dev->buff_using);
 
-        if (audio_dev->audio_state) {
-            device_write(uart0, 0, audio_dev->buff1, audio_dev->buff_size_max);
-        }
+    device_write(spi0, 0, audio_dev->buff[audio_dev->buff_using], audio_dev->buff_size_max);
 
-        audio_dev->buff_using = 2;
-    } else if (audio_dev->buff_using == 2) {
-        device_read(spi0, 0, audio_dev->buff1, audio_dev->buff_size_max);
+    audio_dev->buff_using = !audio_dev->buff_using;
 
-        if (audio_dev->audio_state) {
-            device_write(uart0, 0, audio_dev->buff2, audio_dev->buff_size_max);
-        }
+    device_read(spi0, 0, audio_dev->buff[audio_dev->buff_using], audio_dev->buff_size_max);
 
-        audio_dev->buff_using = 1;
-    }
+    for (uint8_t i = 0; i < 20; i++)
+        MSG("%x ", audio_dev->buff[audio_dev->buff_using][i + 100]);
+    MSG("\r\n");
 
     return 0;
 }

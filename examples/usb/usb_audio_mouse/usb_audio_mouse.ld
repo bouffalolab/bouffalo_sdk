@@ -60,14 +60,18 @@ SECTIONS
         *(.text.*)
 
         /*put .rodata**/
-        *(EXCLUDE_FILE( *bl702_glb.o \
-                        *bl702_pds.o \
-                        *bl702_common.o \
-                        *bl702_sf_cfg.o \
-                        *bl702_sf_ctrl.o \
-                        *bl702_sflash.o \
-                        *bl702_xip_sflash.o \
-                        *bl702_ef_ctrl.o) .rodata*)
+        *(EXCLUDE_FILE( *bl702_glb*.o* \
+                        *bl702_pds*.o* \
+                        *bl702_common*.o* \
+                        *bl702_sf_cfg*.o* \
+                        *bl702_sf_cfg_ext*.o* \
+                        *bl702_sf_ctrl*.o* \
+                        *bl702_sflash*.o* \
+                        *bl702_sflash_ext*.o* \
+                        *bl702_xip_sflash*.o* \
+                        *bl702_xip_sflash_ext*.o* \
+                        *bl702_ef_ctrl*.o*) .rodata*)
+
         *(.rodata)
         *(.rodata.*)
 
@@ -86,19 +90,22 @@ SECTIONS
         . = ALIGN(4);
         __tcm_code_start__ = .;
 
-        *(.tcm_code)
-        *(.tcm_const)
-        *(.sclock_rlt_code)
-        *(.sclock_rlt_const)
+        *(.tcm_code.*)
+        *(.tcm_const.*)
+        *(.sclock_rlt_code.*)
+        *(.sclock_rlt_const.*)
 
-        *bl702_glb.o*(.rodata*)
-        *bl702_pds.o*(.rodata*)
-        *bl702_common.o*(.rodata*)
-        *bl702_sf_cfg.o*(.rodata*)
-        *bl702_sf_ctrl.o*(.rodata*)
-        *bl702_sflash.o*(.rodata*)
-        *bl702_xip_sflash.o*(.rodata*)
-        *bl702_ef_ctrl.o*(.rodata*)
+        *bl702_glb*.o*(.rodata*)
+        *bl702_pds*.o*(.rodata*)
+        *bl702_common*.o*(.rodata*)
+        *bl702_sf_cfg*.o*(.rodata*)
+        *bl702_sf_cfg_ext*.o*(.rodata*)
+        *bl702_sf_ctrl*.o*(.rodata*)
+        *bl702_sflash*.o*(.rodata*)
+        *bl702_sflash_ext*.o*(.rodata*)
+        *bl702_xip_sflash*.o*(.rodata*)
+        *bl702_xip_sflash_ext*.o*(.rodata*)
+        *bl702_ef_ctrl*.o*(.rodata*)
 
         . = ALIGN(4);
         __tcm_code_end__ = .;

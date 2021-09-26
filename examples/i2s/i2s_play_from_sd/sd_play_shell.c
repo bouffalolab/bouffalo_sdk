@@ -108,7 +108,7 @@ int cmd_play(size_t argc, char **argv)
 
     if (flag & 0x01) /* -s */
     {
-        if (Audio_Dev.audio_control(&Audio_Dev, AUDIO_CMD_START, NULL) != 0) {
+        if (Audio_Dev.audio_control(&Audio_Dev, AUDIO_CMD_PLAY_START, NULL) != 0) {
             MSG("play start error\r\n");
         } else {
             MSG("play start \r\n");
@@ -117,7 +117,7 @@ int cmd_play(size_t argc, char **argv)
 
     if (flag & 0x02) /* -p */
     {
-        if (Audio_Dev.audio_control(&Audio_Dev, AUDIO_CMD_STOP, NULL) != 0) {
+        if (Audio_Dev.audio_control(&Audio_Dev, AUDIO_CMD_PLAY_STOP, NULL) != 0) {
             MSG("play stop error\r\n");
         } else {
             MSG("play stop \r\n");

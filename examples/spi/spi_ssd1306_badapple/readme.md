@@ -1,5 +1,5 @@
 ```bash
 
-$ make APP=spi_ssd1306_badapple BOARD=bl706_avb
+$ make APP=spi_oled_badapple BOARD=bl706_avb
 
 ```

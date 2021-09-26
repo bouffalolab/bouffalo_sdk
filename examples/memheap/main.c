@@ -21,20 +21,19 @@
  *
  */
 #include "hal_uart.h"
-#include "drv_mmheap.h"
 
 int memheap_test(void)
 {
     char *ptr = NULL; /* 内存块的指针 */
 
     for (int i = 1;; i++) {
-        ptr = mmheap_alloc(i * 128);
+        ptr = malloc(i * 128);
 
         if (ptr != NULL) {
             memcpy(ptr, "hello123456789123456789123456789", 33);
             MSG("ptr :%s\n", ptr);
             MSG("get memory :%d byte\n", i * 128);
-            mmheap_free(ptr);
+            free(ptr);
             MSG("free memory :%d byte\n", i * 128);
             ptr = NULL;
             bflb_platform_delay_ms(100);
