@@ -42,10 +42,9 @@ int main(void)
     adc_channel_cfg.neg_channel = negChList;
     adc_channel_cfg.num = 1;
 
-    MSG("adc one-shot differential test case \r\n");
-    adc_register(ADC0_INDEX, "adc_one_diff");
+    adc_register(ADC0_INDEX, "adc");
 
-    adc_test = device_find("adc_one_diff");
+    adc_test = device_find("adc");
 
     if (adc_test) {
         ADC_DEV(adc_test)->differential_mode = ENABLE;
@@ -65,7 +64,7 @@ int main(void)
     adc_channel_start(adc_test);
 
     while (1) {
-        device_read(adc_test, 0, (void *)&result_val, sizeof(result_val) / sizeof(adc_channel_val_t));
+        device_read(adc_test, 0, (void *)&result_val, 1); /*max size is 32*/
 
         if (result_val.volt <= 0) {
             result_val.volt = -result_val.volt;

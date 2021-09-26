@@ -40,12 +40,13 @@ int main(void)
     adc_channel_cfg.neg_channel = negChList;
     adc_channel_cfg.num = 1;
 
-    adc_register(ADC0_INDEX, "adc_vbat_test");
+    adc_register(ADC0_INDEX, "adc");
 
-    vbat_test = device_find("adc_vbat_test");
+    vbat_test = device_find("adc");
 
     if (vbat_test) {
         MSG("adc vbat test device find success\r\n");
+        ADC_DEV(vbat_test)->continuous_conv_mode = DISABLE;
         device_open(vbat_test, DEVICE_OFLAG_STREAM_RX);
         device_control(vbat_test, DEVICE_CTRL_ADC_VBAT_ON, NULL);
         device_control(vbat_test, DEVICE_CTRL_ADC_CHANNEL_CONFIG, &adc_channel_cfg);
@@ -57,7 +58,7 @@ int main(void)
 
         for (uint8_t i = 0; i < 10; i++) {
             adc_channel_start(vbat_test);
-            device_read(vbat_test, 0, &result, 1);
+            device_read(vbat_test, 0, &result, 1); /*max size is 32*/
             MSG("vBat = %d mV\n", (uint32_t)(result.volt * 2000));
 
             bflb_platform_delay_ms(500);

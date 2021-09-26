@@ -198,7 +198,7 @@ int main(void)
     adc_channel_start(adc_key);
 
     while (1) {
-        device_read(adc_key, 0, (void *)&result_val, 1);
+        device_read(adc_key, 0, (void *)&result_val, 1); /*max size is 32*/
         keyValue = get_adc_key_value(result_val.volt * 1000);
 
         if (keyValue != KEY_NO_VALUE) {

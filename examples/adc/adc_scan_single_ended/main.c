@@ -28,7 +28,7 @@
 adc_channel_t posChList[] = { ADC_CHANNEL3, ADC_CHANNEL4 };
 adc_channel_t negChList[] = { ADC_CHANNEL_GND, ADC_CHANNEL_GND };
 
-adc_channel_val_t result_val;
+adc_channel_val_t result_val[32];
 
 struct device *adc_test;
 
@@ -42,10 +42,9 @@ int main(void)
     adc_channel_cfg.neg_channel = negChList;
     adc_channel_cfg.num = 2;
 
-    MSG("adc one-shot single ended test case \r\n");
-    adc_register(ADC0_INDEX, "adc_one_single");
+    adc_register(ADC0_INDEX, "adc");
 
-    adc_test = device_find("adc_one_single");
+    adc_test = device_find("adc");
 
     if (adc_test) {
         ADC_DEV(adc_test)->continuous_conv_mode = ENABLE;
@@ -59,14 +58,13 @@ int main(void)
         MSG("adc device find success\r\n");
     }
 
-    for (uint32_t i = 0; i < ADC_SCAN_NUM; i++) {
-        adc_channel_start(adc_test);
-        device_read(adc_test, 0, (void *)&result_val, sizeof(result_val) / sizeof(adc_channel_val_t));
-        MSG("PosId = %d NegId = %d V= %d mV \r\n", result_val.posChan, result_val.negChan, (uint32_t)(result_val.volt * 1000));
-    }
-
+    adc_channel_start(adc_test);
     BL_CASE_SUCCESS;
     while (1) {
-        bflb_platform_delay_ms(100);
+        device_read(adc_test, 0, result_val, 32); /*max size is 32*/
+        for (uint32_t i = 0; i < 32; i++) {
+            MSG("PosId = %d NegId = %d V= %d mV \r\n", result_val[i].posChan, result_val[i].negChan, (uint32_t)(result_val[i].volt * 1000));
+        }
+        bflb_platform_delay_ms(500);
     }
 }

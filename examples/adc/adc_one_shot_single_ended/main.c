@@ -42,10 +42,9 @@ int main(void)
     adc_channel_cfg.neg_channel = negChList;
     adc_channel_cfg.num = 1;
 
-    MSG("adc one-shot single ended test case \r\n");
-    adc_register(ADC0_INDEX, "adc_one_single");
+    adc_register(ADC0_INDEX, "adc");
 
-    adc_test = device_find("adc_one_single");
+    adc_test = device_find("adc");
 
     if (adc_test) {
         device_open(adc_test, DEVICE_OFLAG_STREAM_RX);
@@ -60,7 +59,7 @@ int main(void)
 
     for (uint32_t i = 0; i < ADC_SCAN_NUM; i++) {
         adc_channel_start(adc_test);
-        device_read(adc_test, 0, (void *)&result_val, sizeof(result_val) / sizeof(adc_channel_val_t));
+        device_read(adc_test, 0, (void *)&result_val, 1); /*max size is 32*/
         MSG("PosId = %d NegId = %d V= %d mV \r\n", result_val.posChan, result_val.negChan, (uint32_t)(result_val.volt * 1000));
         bflb_platform_delay_ms(500);
     }
