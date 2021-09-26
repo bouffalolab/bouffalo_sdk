@@ -38,15 +38,15 @@ static SEC_ENG_AES_Key_Type sec_aes_get_key_type(sec_aes_handle_t *handle)
     SEC_ENG_AES_Key_Type type = 0;
 
     switch (handle->key_type) {
-        case SEC_ASE_KEY_128:
+        case SEC_AES_KEY_128:
             type = SEC_ENG_AES_KEY_128BITS;
             break;
 
-        case SEC_ASE_KEY_256:
+        case SEC_AES_KEY_256:
             type = SEC_ENG_AES_KEY_256BITS;
             break;
 
-        case SEC_ASE_KEY_192:
+        case SEC_AES_KEY_192:
             type = SEC_ENG_AES_KEY_192BITS;
             break;
 
@@ -62,19 +62,19 @@ int sec_aes_setkey(sec_aes_handle_t *handle, const uint8_t *key, uint8_t key_len
     SEC_ENG_AES_Key_Type type = sec_aes_get_key_type(handle);
 
     switch (handle->aes_type) {
-        case SEC_ASE_CBC:
+        case SEC_AES_CBC:
             Sec_Eng_AES_Enable_BE(SEC_ENG_AES_ID0);
             Sec_Eng_AES_Init(&aesCtx, SEC_ENG_AES_ID0, SEC_ENG_AES_CBC, type,
                              SEC_AES_DIR_ENCRYPT == dir ? SEC_ENG_AES_ENCRYPTION : SEC_ENG_AES_DECRYPTION);
             break;
 
-        case SEC_ASE_CTR:
+        case SEC_AES_CTR:
             Sec_Eng_AES_Enable_BE(SEC_ENG_AES_ID0);
             Sec_Eng_AES_Init(&aesCtx, SEC_ENG_AES_ID0, SEC_ENG_AES_CTR, type,
                              SEC_AES_DIR_ENCRYPT == dir ? SEC_ENG_AES_ENCRYPTION : SEC_ENG_AES_DECRYPTION);
             break;
 
-        case SEC_ASE_ECB:
+        case SEC_AES_ECB:
             break;
 
         default:

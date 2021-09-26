@@ -23,8 +23,11 @@
 #ifndef __HAL_ADC__H__
 #define __HAL_ADC__H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 
 #define DEVICE_CTRL_ADC_CHANNEL_START  0x10
 #define DEVICE_CTRL_ADC_CHANNEL_STOP   0x11
@@ -39,24 +42,6 @@ enum adc_index_type {
     ADC0_INDEX,
 #endif
     ADC_MAX_INDEX
-};
-
-enum adc_event_type {
-    ADC_EVEN_INT_POS_SATURATION,
-    ADC_EVEN_INT_NEG_SATURATION,
-    ADC_EVENT_UNDERRUN,
-    ADC_EVENT_OVERRUN,
-    ADC_EVENT_REVERSED,
-    ADC_EVENT_FIFO_READY,
-    ADC_EVEN_MAX,
-};
-
-enum adc_it_type {
-    ADC_EVENT_FIFO_READY_IT = 1 << 0,
-    ADC_EVENT_OVERRUN_IT = 1 << 1,
-    ADC_EVENT_UNDERRUN_IT = 1 << 2,
-    ADC_EVEN_INT_POS_SATURATION_IT = 1 << 3,
-    ADC_EVEN_INT_NEG_SATURATION_IT = 1 << 4,
 };
 
 #define adc_channel_start(dev)        device_control(dev, DEVICE_CTRL_ADC_CHANNEL_START, NULL)
@@ -140,6 +125,15 @@ typedef enum {
     ADC_GAIN_32,   /*!< PGA gain 32 */
 } adc_pga_gain_t;
 
+enum adc_event_type {
+    ADC_EVENT_FIFO,
+    UART_EVENT_UNKNOWN
+};
+
+enum adc_it_type {
+    ADC_FIFO_IT = 1 << 0,
+};
+
 typedef struct
 {
     uint8_t *pos_channel;
@@ -172,4 +166,7 @@ int adc_register(enum adc_index_type index, const char *name);
 int adc_trim_tsen(uint16_t *tsen_offset);
 float adc_get_tsen(uint16_t tsen_offset);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

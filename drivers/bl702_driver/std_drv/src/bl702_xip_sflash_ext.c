@@ -61,8 +61,6 @@
  *  @{
  */
 
-static SPI_Flash_Cfg_Type flashCfg;
-
 /*@} end of group XIP_SFLASH_EXT_Private_Variables */
 
 /** @defgroup  XIP_SFLASH_EXT_Global_Variables
@@ -81,95 +79,30 @@ static SPI_Flash_Cfg_Type flashCfg;
  *  @{
  */
 
-/****************************************************************************/ /**
- * @brief  Read data from flash with lock
+/****************************************************************************//**
+ * @brief  Clear flash status register need lock
  *
- * @param  pFlashCfg:Flash config pointer
+ * @param  pFlashCfg: Flash config pointer
  *
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Init(SPI_Flash_Cfg_Type *pFlashCfg)
+BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg)
 {
-    uint32_t ret;
+    BL_Err_Type stat;
+    uint32_t offset;
+    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
 
-    if (pFlashCfg == NULL) {
-        /* Get flash config identify */
-        XIP_SFlash_Opt_Enter();
-        ret = SF_Cfg_Flash_Identify_Ext(1, 1, 0, 0, &flashCfg);
-        XIP_SFlash_Opt_Exit();
-
-        if ((ret & BFLB_FLASH_ID_VALID_FLAG) == 0) {
-            return ERROR;
-        }
+    stat=XIP_SFlash_State_Save(pFlashCfg, &offset);
+    if (stat != SUCCESS) {
+        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
     } else {
-        memcpy(&flashCfg, pFlashCfg, sizeof(flashCfg));
+        stat=SFlash_Clear_Status_Register(pFlashCfg);
+        XIP_SFlash_State_Restore(pFlashCfg, ioMode, offset);
     }
 
-    return SUCCESS;
-}
-
-/****************************************************************************/ /**
- * @brief  Read data from flash with lock
- *
- * @param  addr: flash read start address
- * @param  dst: data pointer to store data read from flash
- * @param  len: data length to read
- *
- * @return 0
- *
-*******************************************************************************/
-__WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Read(uint32_t addr, uint8_t *dst, int len)
-{
-    __disable_irq();
-    XIP_SFlash_Opt_Enter();
-    XIP_SFlash_Read_Need_Lock(&flashCfg, flashCfg.ioMode & 0x0f, addr, dst, len);
-    XIP_SFlash_Opt_Exit();
-    __enable_irq();
-    return 0;
-}
-
-/****************************************************************************/ /**
- * @brief  Program flash one region with lock
- *
- * @param  addr: Start address to be programed
- * @param  src: Data pointer to be programed
- * @param  len: Data length to be programed
- *
- * @return 0
- *
-*******************************************************************************/
-__WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Write(uint32_t addr, uint8_t *src, int len)
-{
-    __disable_irq();
-    XIP_SFlash_Opt_Enter();
-    XIP_SFlash_Write_Need_Lock(&flashCfg, flashCfg.ioMode & 0x0f, addr, src, len);
-    XIP_SFlash_Opt_Exit();
-    __enable_irq();
-    return 0;
-}
-
-/****************************************************************************/ /**
- * @brief  Erase flash one region with lock
- *
- * @param  addr: Start address to be erased
- * @param  len: Data length to be erased
- *
- * @return 0
- *
-*******************************************************************************/
-__WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Erase(uint32_t addr, int len)
-{
-    __disable_irq();
-    XIP_SFlash_Opt_Enter();
-    XIP_SFlash_Erase_Need_Lock(&flashCfg, flashCfg.ioMode & 0x0f, addr, addr + len - 1);
-    XIP_SFlash_Opt_Exit();
-    __enable_irq();
-    return 0;
+    return stat;
 }
 
 /*@} end of group XIP_SFLASH_EXT_Public_Functions */

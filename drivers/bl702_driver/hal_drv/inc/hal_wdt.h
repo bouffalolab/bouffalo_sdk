@@ -22,9 +22,10 @@
  */
 #ifndef __HAL_WDT__H__
 #define __HAL_WDT__H__
-
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+#include "hal_common.h"
 
 #define DEVICE_CTRL_GET_WDT_COUNTER (0x10)
 #define DEVICE_CTRL_RST_WDT_COUNTER (0x11)
@@ -53,5 +54,7 @@ typedef struct wdt_device {
 
 int wdt_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size);
 int wdt_register(enum wdt_index_type index, const char *name);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

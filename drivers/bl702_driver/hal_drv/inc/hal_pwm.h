@@ -22,9 +22,10 @@
  */
 #ifndef __HAL_PWM__H__
 #define __HAL_PWM__H__
-
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+#include "hal_common.h"
 
 #define DEVICE_CTRL_PWM_FREQUENCE_CONFIG      0x10
 #define DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG      0x11
@@ -79,5 +80,7 @@ typedef struct pwm_device {
 #define PWM_DEV(dev) ((pwm_device_t *)dev)
 
 int pwm_register(enum pwm_index_type index, const char *name);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

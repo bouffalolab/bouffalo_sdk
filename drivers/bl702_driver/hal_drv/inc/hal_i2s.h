@@ -23,11 +23,14 @@
 #ifndef __HAL_I2S__H__
 #define __HAL_I2S__H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#define I2S_GET_TX_FIFO_CMD 0x10
-#define I2S_GET_RX_FIFO_CMD 0x11
+#include "hal_common.h"
+
+#define DEVICE_CTRL_I2S_GET_TX_FIFO 0x10
+#define DEVICE_CTRL_I2S_GET_RX_FIFO 0x11
 
 enum i2s_index_type {
 #ifdef BSP_USING_I2S0
@@ -110,5 +113,9 @@ typedef struct i2s_device {
 #define I2S_DEV(dev) ((i2s_device_t *)dev)
 
 int i2s_register(enum i2s_index_type index, const char *name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

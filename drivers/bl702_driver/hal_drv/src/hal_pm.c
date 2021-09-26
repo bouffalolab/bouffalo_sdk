@@ -26,14 +26,14 @@
 #include "hal_clock.h"
 #include "hal_rtc.h"
 #include "hal_flash.h"
+#include "hal_common.h"
 
-#define PM_PDS_FLASH_POWER_OFF             1
-#define PM_PDS_EXTERNAL_XTAL_32M_POWER_OFF 1
-#define PM_PDS_DLL_POWER_OFF               1
-#define PM_PDS_PLL_POWER_OFF               1
-#define PM_PDS_RF_POWER_OFF                1
-#define PM_PDS_LDO_LEVEL_DEFAULT           HBN_LDO_LEVEL_1P10V
-#define PM_HBN_LDO_LEVEL_DEFAULT           HBN_LDO_LEVEL_0P90V
+#define PM_PDS_FLASH_POWER_OFF   1
+#define PM_PDS_DLL_POWER_OFF     1
+#define PM_PDS_PLL_POWER_OFF     1
+#define PM_PDS_RF_POWER_OFF      1
+#define PM_PDS_LDO_LEVEL_DEFAULT HBN_LDO_LEVEL_1P10V
+#define PM_HBN_LDO_LEVEL_DEFAULT HBN_LDO_LEVEL_0P90V
 
 void HBN_OUT0_IRQ(void);
 void HBN_OUT1_IRQ(void);
@@ -869,19 +869,14 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint8
     uint32_t flash_cfg_len;
 
     /* To make it simple and safe*/
-    __disable_irq();
+    cpu_global_irq_disable();
 
     flash_get_cfg((uint8_t **)&flash_cfg, &flash_cfg_len);
     HBN_Set_Ldo11_All_Vout(PM_PDS_LDO_LEVEL_DEFAULT);
 
     PDS_WAKEUP_IRQHandler_Install();
-    HBN_Clear_IRQ(HBN_INT_GPIO9);
-    HBN_Clear_IRQ(HBN_INT_GPIO10);
-    HBN_Clear_IRQ(HBN_INT_GPIO11);
-    HBN_Clear_IRQ(HBN_INT_GPIO12);
-    HBN_Clear_IRQ(HBN_INT_GPIO13);
-    HBN_Clear_IRQ(HBN_INT_ACOMP0);
-    HBN_Clear_IRQ(HBN_INT_ACOMP1);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0xffffffff);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0);
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
     tmpVal &= ~(1 << 8); //unmask pds wakeup
@@ -945,17 +940,14 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint8
     pPdsCfg->pdsCtl.puFlash = 1;
 #endif
 
-#if PM_PDS_EXTERNAL_XTAL_32M_POWER_OFF
-    HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_RC32M);
-    AON_Power_Off_XTAL();
+#if PM_PDS_PLL_POWER_OFF
+    PDS_Power_Off_PLL();
 #endif
 #if PM_PDS_DLL_POWER_OFF
-    GLB_Power_Off_DLL();
-#endif
-#if PM_PDS_PLL_POWER_OFF
     GLB_Set_System_CLK(GLB_DLL_XTAL_NONE, GLB_SYS_CLK_RC32M);
+    AON_Power_Off_XTAL();
+    GLB_Power_Off_DLL();
     PDS_Update_Flash_Ctrl_Setting(0);
-    PDS_Power_Off_PLL();
 #endif
 
     /* pds0-pds7 : ldo11rt_iload_sel=3 */
@@ -968,7 +960,6 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint8
         /* pdsLevel error */
     }
 
-    pPdsCfg->pdsCtl.gpioIePuPd = 0;
     pPdsCfg->pdsCtl.pdsLdoVol = PM_PDS_LDO_LEVEL_DEFAULT;
     pPdsCfg->pdsCtl.pdsLdoVselEn = 1;
 
@@ -995,7 +986,7 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint8
     SFlash_Restore_From_Powerdown(flash_cfg, 0);
 #endif
 
-    __enable_irq();
+    cpu_global_irq_enable();
 }
 /**
  * @brief
@@ -1014,7 +1005,7 @@ ATTR_TCM_SECTION void pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level, uint8
     uint32_t tmpVal;
 
     /* To make it simple and safe*/
-    __disable_irq();
+    cpu_global_irq_disable();
 
     CPU_Interrupt_Pending_Clear(HBN_OUT0_IRQn);
     CPU_Interrupt_Pending_Clear(HBN_OUT1_IRQn);
@@ -1041,6 +1032,8 @@ ATTR_TCM_SECTION void pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level, uint8
     GLB_Set_System_CLK(GLB_DLL_XTAL_NONE, GLB_SYS_CLK_RC32M);
     /* power off xtal */
     AON_Power_Off_XTAL();
+    GLB_Power_Off_DLL();
+    PDS_Power_Off_PLL();
 
     /* HBN mode LDO level */
     tmpVal = BL_RD_REG(HBN_BASE, HBN_CTL);
@@ -1173,4 +1166,36 @@ void HBN_OUT1_IRQ(void)
 
 __WEAK void pm_irq_callback(enum pm_event_type event)
 {
+}
+/**
+ * @brief hal_pds_enter_with_time_compensation
+ *
+ * @param pdsLevel pds level support 0~3,31
+ * @param pdsSleepCycles if user set sleep time, pdsSleepCycles cannot be less than 32768, pdsSleepCycles is a multiple of 32768 preferably.
+ * @return uint32_t actual sleep time(ms)
+ *
+ * @note If necessary，please application layer call vTaskStepTick，
+ */
+uint32_t hal_pds_enter_with_time_compensation(uint32_t pdsLevel, uint32_t pdsSleepCycles)
+{
+    uint32_t rtcLowBeforeSleep = 0, rtcHighBeforeSleep = 0;
+    uint32_t rtcLowAfterSleep = 0, rtcHighAfterSleep = 0;
+    uint32_t actualSleepDuration_32768cycles = 0;
+    uint32_t actualSleepDuration_ms = 0;
+
+    HBN_Get_RTC_Timer_Val(&rtcLowBeforeSleep, &rtcHighBeforeSleep);
+
+    pm_pds_mode_enter(pdsLevel, pdsSleepCycles / 32768);
+
+    HBN_Get_RTC_Timer_Val(&rtcLowAfterSleep, &rtcHighAfterSleep);
+
+    CHECK_PARAM((rtcHighAfterSleep - rtcHighBeforeSleep) <= 1); // make sure sleep less than 1 hour (2^32 us > 1 hour)
+
+    actualSleepDuration_32768cycles = (rtcLowAfterSleep - rtcLowBeforeSleep);
+
+    actualSleepDuration_ms = (actualSleepDuration_32768cycles >> 5) - (actualSleepDuration_32768cycles >> 11) - (actualSleepDuration_32768cycles >> 12);
+
+    // vTaskStepTick(actualSleepDuration_ms);
+
+    return actualSleepDuration_ms;
 }

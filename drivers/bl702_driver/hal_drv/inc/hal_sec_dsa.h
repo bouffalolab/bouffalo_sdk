@@ -22,9 +22,11 @@
  */
 #ifndef __HAL_SEC_DSA__H__
 #define __HAL_SEC_DSA__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#include "hal_common.h"
 
 typedef struct sec_dsa_crt_cfg_tag {
     uint32_t *dP;
@@ -54,5 +56,7 @@ int sec_dsa_mexp_mont(uint32_t size, uint32_t *a, uint32_t *b, uint32_t *c, uint
 int sec_dsa_decrypt_crt(uint32_t size, uint32_t *c, sec_dsa_crt_cfg_t *crtCfg, uint32_t *d, uint32_t *r);
 int sec_dsa_sign(sec_dsa_handle_t *handle, const uint32_t *hash, uint32_t hashLenInWord, uint32_t *s);
 int sec_dsa_verify(sec_dsa_handle_t *handle, const uint32_t *hash, uint32_t hashLenInWord, const uint32_t *s);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

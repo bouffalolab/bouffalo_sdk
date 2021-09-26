@@ -23,8 +23,11 @@
 #ifndef __HAL_I2C__H__
 #define __HAL_I2C__H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 
 enum i2c_index_type {
 #ifdef BSP_USING_I2C0
@@ -64,4 +67,7 @@ typedef struct i2c_device {
 int i2c_register(enum i2c_index_type index, const char *name);
 int i2c_transfer(struct device *dev, i2c_msg_t msgs[], uint32_t num);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -36,7 +36,11 @@
 #ifndef __HAL_BOOT2_H__
 #define __HAL_BOOT2_H__
 
-#include "drv_device.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 #include "bl702_sflash.h"
 #include "bl702_glb.h"
 
@@ -48,13 +52,11 @@
 #define BL_SFLASH_CLK         GLB_SFLASH_CLK_72M
 #define HAL_PLL_CFG_MAGICCODE "PCFG"
 
-#define BL_FLASH_XIP_BASE                       BL702_FLASH_XIP_BASE
-#define HAL_BOOT2_SUPPORT_DECOMPRESS            0 /* 1 support decompress, 0 not support */
-#define HAL_BOOT2_SUPPORT_USB_IAP               1 /* 1 support decompress, 0 not support */
-#define HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM     0 /* 1 support decompress, 0 not support */
-#define HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH   1 /* 1 support decompress, 0 not support */
-
-
+#define BL_FLASH_XIP_BASE                     BL702_FLASH_XIP_BASE
+#define HAL_BOOT2_SUPPORT_DECOMPRESS          0 /* 1 support decompress, 0 not support */
+#define HAL_BOOT2_SUPPORT_USB_IAP             1 /* 1 support decompress, 0 not support */
+#define HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM   0 /* 1 support decompress, 0 not support */
+#define HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH 1 /* 1 support decompress, 0 not support */
 
 typedef struct
 {
@@ -107,5 +109,11 @@ void hal_boot2_uart_gpio_init(void);
 void hal_boot2_debug_uart_gpio_init(void);
 #if HAL_BOOT2_SUPPORT_USB_IAP
 void hal_boot2_debug_usb_port_init(void);
+#endif
+
+void hal_boot2_debug_uart_gpio_deinit(void);
+
+#ifdef __cplusplus
+}
 #endif
 #endif

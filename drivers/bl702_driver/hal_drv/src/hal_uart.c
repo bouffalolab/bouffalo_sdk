@@ -250,6 +250,10 @@ int uart_control(struct device *dev, int cmd, void *args)
             return UART_GetTxFifoCount(uart_device->id);
         case DEVICE_CTRL_UART_GET_RX_FIFO /* constant-expression */:
             return UART_GetRxFifoCount(uart_device->id);
+        case DEVICE_CTRL_UART_CLEAR_TX_FIFO /* constant-expression */:
+            return UART_TxFifoClear(uart_device->id);
+        case DEVICE_CTRL_UART_CLEAR_RX_FIFO /* constant-expression */:
+            return UART_RxFifoClear(uart_device->id);
         default:
             break;
     }
@@ -402,17 +406,17 @@ void uart_isr(uart_device_t *handle)
     /* Rx parity check error interrupt */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_PCE_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_PCE_MASK)) {
         BL_WR_REG(UARTx, UART_INT_CLEAR, 0x20);
-        handle->parent.callback(&handle->parent, NULL, 0, UART_PCE_IT);
+        handle->parent.callback(&handle->parent, NULL, 0, UART_EVENT_PCE);
     }
 
     /* Tx fifo overflow/underflow error interrupt */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FER_MASK)) {
-        handle->parent.callback(&handle->parent, NULL, 0, UART_TX_FER_IT);
+        handle->parent.callback(&handle->parent, NULL, 0, UART_EVENT_TX_FER);
     }
 
     /* Rx fifo overflow/underflow error interrupt */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FER_MASK)) {
-        handle->parent.callback(&handle->parent, NULL, 0, UART_RX_FER_IT);
+        handle->parent.callback(&handle->parent, NULL, 0, UART_EVENT_RX_FER);
     }
 }
 

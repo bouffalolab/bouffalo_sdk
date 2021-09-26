@@ -285,19 +285,11 @@ int i2s_control(struct device *dev, int cmd, void *args)
             i2s_device->rx_dma = (struct device *)args;
             break;
 
-        case DEVICE_CTRL_GET_CONFIG:
-            switch ((uint32_t)args) {
-                case I2S_GET_TX_FIFO_CMD:
-                    return I2S_GetTxFIFO_AvlCnt();
+        case DEVICE_CTRL_I2S_GET_TX_FIFO:
+            return I2S_GetTxFIFO_AvlCnt();
 
-                case I2S_GET_RX_FIFO_CMD:
-                    return I2S_GetRxFIFO_AvlCnt();
-
-                default:
-                    break;
-            }
-
-            break;
+        case DEVICE_CTRL_I2S_GET_RX_FIFO:
+            return I2S_GetRxFIFO_AvlCnt();
 
         default:
             return ERROR;

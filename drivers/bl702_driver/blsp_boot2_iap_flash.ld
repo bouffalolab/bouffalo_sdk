@@ -40,21 +40,15 @@ SECTIONS
 
         KEEP (*(.text.metal.init.enter))
         KEEP (*(SORT_NONE(.init)))
-        /* section information for finsh shell */
-        . = ALIGN(4);
-        _shell_command_start = .;
-        KEEP(*(shellCommand))
-        _shell_command_end = .;
 
-
-
-        *(EXCLUDE_FILE ( *bl702_uart.c.obj* *hal_uart.c.obj* ) .text*)
         /* section information for usb desc */
         . = ALIGN(4);
         _usb_desc_start = .;
         KEEP(*(usb_desc))
         . = ALIGN(4);
         _usb_desc_end = .;
+
+        *(EXCLUDE_FILE ( *bl702_uart*.o* *hal_uart*.o* ) .text*)
 
         *(.rodata)
         *(.rodata.*)
@@ -72,18 +66,18 @@ SECTIONS
     {
         . = ALIGN(4);
         __tcm_code_start__ = .;
-        *(.tcm_code)
-        *(.tcm_const)
-        *(.sclock_rlt_code)
-        *(.sclock_rlt_const)
-        *bl602_romapi.o(.text)
-        *bl602_romapi.o(.text.*)
-        *bl602_romapi.o(.rodata)
-        *bl602_romapi.o(.rodata.*)
-        *bl602_romapi.o(.srodata)
-        *bl602_romapi.o(.srodata.*)
-        *bl702_uart.c.obj* (.text*)
-        *hal_uart.c.obj* (.text*)
+        *(.tcm_code.*)
+        *(.tcm_const.*)
+        *(.sclock_rlt_code.*)
+        *(.sclock_rlt_const.*)
+        *bl702_romapi*.o*(.text)
+        *bl702_romapi*.o*(.text.*)
+        *bl702_romapi*.o*(.rodata)
+        *bl702_romapi*.o*(.rodata.*)
+        *bl702_romapi*.o*(.srodata)
+        *bl702_romapi*.o*(.srodata.*)
+        *bl702_uart*.o* (.text*)
+        *hal_uart*.o* (.text*)
         . = ALIGN(4);
         __tcm_code_end__ = .;
 

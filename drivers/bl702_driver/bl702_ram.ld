@@ -48,10 +48,10 @@ SECTIONS
         *(.srodata)
         *(.srodata.*)
 
-        *(.tcm_code)
-        *(.tcm_const)
-        *(.sclock_rlt_code)
-        *(.sclock_rlt_const)
+        *(.tcm_code.*)
+        *(.tcm_const.*)
+        *(.sclock_rlt_code.*)
+        *(.sclock_rlt_const.*)
 
         . = ALIGN(4);
         __text_code_end__ = .;

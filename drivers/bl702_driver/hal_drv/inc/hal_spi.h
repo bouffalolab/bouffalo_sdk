@@ -22,9 +22,11 @@
  */
 #ifndef __HAL_SPI__H__
 #define __HAL_SPI__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#include "hal_common.h"
 
 #define DEVICE_CTRL_SPI_CONFIG_CLOCK 0x10
 
@@ -101,5 +103,7 @@ int spi_register(enum spi_index_type index, const char *name);
 int spi_transmit(struct device *dev, void *buffer, uint32_t size, uint8_t type);
 int spi_receive(struct device *dev, void *buffer, uint32_t size, uint8_t type);
 int spi_transmit_receive(struct device *dev, const void *send_buf, void *recv_buf, uint32_t length, uint8_t type);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

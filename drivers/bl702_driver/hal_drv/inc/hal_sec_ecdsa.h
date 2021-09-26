@@ -22,9 +22,11 @@
  */
 #ifndef __HAL_SEC_ECDSA__H__
 #define __HAL_SEC_ECDSA__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#include "hal_common.h"
 
 typedef enum {
     ECP_SECP256R1 = 0,
@@ -58,5 +60,7 @@ int sec_ecc_get_random_value(uint32_t *randomData, uint32_t *maxRef, uint32_t si
 int sec_eng_trng_enable(void);
 void sec_eng_trng_disable(void);
 int sec_eng_trng_read(uint8_t data[32]);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

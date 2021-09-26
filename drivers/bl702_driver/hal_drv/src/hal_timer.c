@@ -54,9 +54,12 @@ int timer_open(struct device *dev, uint16_t oflag)
     timer_device_t *timer_device = (timer_device_t *)dev;
 
     uint32_t tmpval;
-    uint64_t compare_count1;
-    uint64_t compare_count2;
-    uint64_t compare_count3;
+    uint32_t compare_count1 = 0;
+    uint32_t compare_count2 = 0;
+    uint32_t compare_count3 = 0;
+    uint32_t reload_val = 0;
+    uint32_t clkval = 0;
+    uint32_t unit = 0;
 
     /* Disable all interrupt */
     TIMER_IntMask(timer_device->id, TIMER_INT_ALL, MASK);
@@ -75,65 +78,45 @@ int timer_open(struct device *dev, uint16_t oflag)
 
     if (timer_device->cnt_mode == TIMER_CNT_PRELOAD) {
         BL_WR_WORD(TIMER_BASE + TIMER_TPLVR2_OFFSET + 4 * timer_device->id, timer_device->reload);
-
-        if (timer_device->id == TIMER_CH0) {
-            compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
-            compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
-            compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000)) + timer_device->reload;
-        } else {
-            compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000)) + timer_device->reload;
-            compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000)) + timer_device->reload;
-            compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000)) + timer_device->reload;
-        }
-
-        /* Configure match compare values */
-        if (compare_count1 > 1) {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1 - 2);
-        } else {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1);
-        }
-
-        if (compare_count2 > 1) {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, compare_count2 - 2);
-        } else {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, timer_device->timeout2);
-        }
-
-        if (compare_count3 > 1) {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, compare_count3 - 2);
-        } else {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, timer_device->timeout3);
-        }
-    } else {
-        if (timer_device->id == TIMER_CH0) {
-            compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000));
-            compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000));
-            compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000));
-
-        } else {
-            compare_count1 = timer_device->timeout1 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000));
-            compare_count2 = timer_device->timeout2 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000));
-            compare_count3 = timer_device->timeout3 * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000));
-        }
-        /* Configure match compare values */
-        if (compare_count1 > 1) {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1 - 2);
-        } else {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1);
-        }
-
-        if (compare_count2 > 1) {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, compare_count2 - 2);
-        } else {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, compare_count2);
-        }
-
-        if (compare_count3 > 1) {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, compare_count3 - 2);
-        } else {
-            TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, compare_count3);
-        }
+        reload_val = timer_device->reload;
     }
+
+    if (timer_device->id == TIMER_CH0) {
+        clkval = peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0);
+    } else {
+        clkval = peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1);
+    }
+
+    if (clkval % 1000000 == 0) {
+        unit = 1000000; //1us
+    } else if (clkval % 100000 == 0) {
+        unit = 100000; //10us
+    } else if (clkval % 10000 == 0) {
+        unit = 10000; //100us
+    } else if (clkval % 1000 == 0) {
+        unit = 1000; //1ms
+    } else if (clkval % 100 == 0) {
+        unit = 100; //10ms
+    } else if (clkval % 10 == 0) {
+        unit = 10; //100ms
+    } else if (clkval % 1 == 0) {
+        unit = 1; //s
+    } else {
+    }
+
+    compare_count1 = timer_device->timeout1 / (1000000 / unit) * (clkval / unit) + reload_val;
+    compare_count2 = timer_device->timeout2 / (1000000 / unit) * (clkval / unit) + reload_val;
+    compare_count3 = timer_device->timeout3 / (1000000 / unit) * (clkval / unit) + reload_val;
+
+    /* Configure match compare values */
+    if ((compare_count1 < 1) || (compare_count2 < 1) || (compare_count3 < 1)) {
+        return -1;
+    }
+
+    TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_0, compare_count1 - 2);
+    TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_1, compare_count2 - 2);
+    TIMER_SetCompValue(timer_device->id, TIMER_COMP_ID_2, compare_count3 - 2);
+
     /* Clear interrupt status*/
     TIMER_ClearIntStatus(timer_device->id, TIMER_COMP_ID_0);
     TIMER_ClearIntStatus(timer_device->id, TIMER_COMP_ID_1);
@@ -265,7 +248,10 @@ int timer_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t s
 {
     timer_device_t *timer_device = (timer_device_t *)dev;
     timer_timeout_cfg_t *timeout_cfg = (timer_timeout_cfg_t *)buffer;
-    uint64_t compare_count;
+    uint32_t compare_count = 0;
+    uint32_t reload_val = 0;
+    uint32_t clkval = 0;
+    uint32_t unit = 0;
 
     if (size % sizeof(timer_timeout_cfg_t)) {
         return -1;
@@ -273,11 +259,38 @@ int timer_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t s
     /* Disable timer before config */
     TIMER_Disable(timer_device->id);
 
+    if (timer_device->cnt_mode == TIMER_CNT_PRELOAD) {
+        reload_val = timer_device->reload;
+    }
+
+    if (timer_device->id == TIMER_CH0) {
+        clkval = peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0);
+    } else {
+        clkval = peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1);
+    }
+
+    if (clkval % 1000000 == 0) {
+        unit = 1000000; //1us
+    } else if (clkval % 100000 == 0) {
+        unit = 100000; //10us
+    } else if (clkval % 10000 == 0) {
+        unit = 10000; //100us
+    } else if (clkval % 1000 == 0) {
+        unit = 1000; //1ms
+    } else if (clkval % 100 == 0) {
+        unit = 100; //10ms
+    } else if (clkval % 10 == 0) {
+        unit = 10; //100ms
+    } else if (clkval % 1 == 0) {
+        unit = 1; //s
+    } else {
+    }
+
     for (uint32_t i = 0; i < size / sizeof(timer_timeout_cfg_t); i++) {
-        if (timer_device->id == TIMER_CH0) {
-            compare_count = timeout_cfg->timeout_val * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / (1000 * 1000));
-        } else {
-            compare_count = timeout_cfg->timeout_val * (peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / (1000 * 1000));
+        compare_count = timeout_cfg->timeout_val / (1000000 / unit) * (clkval / unit) + reload_val;
+
+        if (compare_count < 1) {
+            return -1;
         }
         TIMER_SetCompValue(timer_device->id, timeout_cfg->timeout_id, compare_count - 2);
     }

@@ -425,6 +425,46 @@ BL_Err_Type EMAC_Disable_TX(void)
 }
 
 /****************************************************************************/ /**
+ * @brief  EMAC_Enable_RX
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type EMAC_Enable_RX(void)
+{
+    uint32_t tmpval;
+
+    /* Enable EMAC TX*/
+    tmpval = BL_RD_REG(EMAC_BASE, EMAC_MODE);
+    tmpval = BL_SET_REG_BIT(tmpval, EMAC_RXEN);
+    BL_WR_REG(EMAC_BASE, EMAC_MODE, tmpval);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  EMAC_Disable_RX
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type EMAC_Disable_RX(void)
+{
+    uint32_t tmpval;
+
+    /* Disable EMAC RX*/
+    tmpval = BL_RD_REG(EMAC_BASE, EMAC_MODE);
+    tmpval = BL_CLR_REG_BIT(tmpval, EMAC_RXEN);
+    BL_WR_REG(EMAC_BASE, EMAC_MODE, tmpval);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  Disable EMAC module
  *
  * @param  None

@@ -23,8 +23,11 @@
 #ifndef __HAL_DAC__H__
 #define __HAL_DAC__H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 
 enum dac_index_type {
 #ifdef BSP_USING_DAC0
@@ -64,5 +67,7 @@ typedef struct dac_device {
 #define DAC_DEV(dev) ((adc_device_t *)dev)
 
 int dac_register(enum dac_index_type index, const char *name);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

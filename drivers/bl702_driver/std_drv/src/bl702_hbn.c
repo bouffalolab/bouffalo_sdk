@@ -111,7 +111,6 @@ void ATTR_TCM_SECTION HBN_Mode_Enter(HBN_APP_CFG_Type *cfg)
 {
     uint32_t valLow = 0, valHigh = 0;
     uint64_t val;
-    uint32_t tmpVal = 0, tmpVal2 = 0;
 
     /* work clock select */
     if (cfg->useXtal32k) {
@@ -146,16 +145,6 @@ void ATTR_TCM_SECTION HBN_Mode_Enter(HBN_APP_CFG_Type *cfg)
     } else {
         HBN_Aon_Pad_IeSmt_Cfg(0);
     }
-
-    /* always disable and mask aon_pad_GPIO9, mask/unmask and ie_enable/ie_disable */
-    tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
-    tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MASK);
-    tmpVal2 |= (1 << 0);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_PIN_WAKEUP_MASK, tmpVal2);
-    tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_REG_AON_PAD_IE_SMT);
-    tmpVal2 &= ~(1 << 0);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_REG_AON_PAD_IE_SMT, tmpVal2);
-    BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
 
     /* HBN RTC config and enable */
     if (cfg->sleepTime != 0) {

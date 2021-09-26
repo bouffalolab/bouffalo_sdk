@@ -22,10 +22,12 @@
  */
 #ifndef __HAL_USB__H__
 #define __HAL_USB__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
+#include "hal_common.h"
 #include "ring_buffer.h"
-#include "bl702_config.h"
 
 #define DEVICE_CTRL_USB_DC_SET_ACK            0X10
 #define DEVICE_CTRL_USB_DC_ENUM_ON            0X11
@@ -215,5 +217,7 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
 int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t data_len, uint32_t *read_bytes);
 int usb_dc_receive_to_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8_t ep);
 int usb_dc_send_from_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8_t ep);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -567,14 +567,76 @@ int usb_dc_ep_close(const uint8_t ep)
  */
 int usb_dc_ep_set_stall(const uint8_t ep)
 {
+    uint32_t tmpVal = 0;
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
 
     if (USB_EP_DIR_IS_OUT(ep)) {
-        USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_STALL);
         usb_fs_device.out_ep[ep_idx].is_stalled = 1U;
     } else {
-        USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_STALL);
         usb_fs_device.in_ep[ep_idx].is_stalled = 1U;
+    }
+
+    switch (ep_idx) {
+        case 0:
+            tmpVal = BL_RD_REG(USB_BASE, USB_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_USB_EP0_SW_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_USB_EP0_SW_NACK_OUT);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_USB_EP0_SW_NACK_IN);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_USB_EP0_SW_STALL);
+            BL_WR_REG(USB_BASE, USB_CONFIG, tmpVal);
+            break;
+        case 1:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP1_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP1_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP1_NACK);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP1_STALL);
+            BL_WR_REG(USB_BASE, USB_EP1_CONFIG, tmpVal);
+            break;
+        case 2:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP2_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP2_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP2_NACK);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP2_STALL);
+            BL_WR_REG(USB_BASE, USB_EP2_CONFIG, tmpVal);
+            break;
+        case 3:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP3_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP3_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP3_NACK);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP3_STALL);
+            BL_WR_REG(USB_BASE, USB_EP3_CONFIG, tmpVal);
+            break;
+        case 4:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP4_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP4_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP4_NACK);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP4_STALL);
+            BL_WR_REG(USB_BASE, USB_EP4_CONFIG, tmpVal);
+            break;
+        case 5:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP5_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP5_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP5_NACK);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP5_STALL);
+            BL_WR_REG(USB_BASE, USB_EP5_CONFIG, tmpVal);
+            break;
+        case 6:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP6_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP6_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP6_NACK);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP6_STALL);
+            BL_WR_REG(USB_BASE, USB_EP6_CONFIG, tmpVal);
+            break;
+        case 7:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP7_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP7_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP7_NACK);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP7_STALL);
+            BL_WR_REG(USB_BASE, USB_EP7_CONFIG, tmpVal);
+            break;
+
+        default:
+            break;
     }
     return 0;
 }
@@ -952,7 +1014,7 @@ void usb_dc_isr(usb_dc_device_t *device)
         }
     }
 
-    /* reset */
+    /* sof */
     if (USB_Get_IntStatus(USB_INT_SOF)) {
         USB_DC_LOG("sof\r\n");
         device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_SOF);

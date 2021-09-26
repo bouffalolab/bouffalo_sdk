@@ -23,9 +23,10 @@
 
 #ifndef __HAL_QDEC__H__
 #define __HAL_QDEC__H__
-
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+#include "hal_common.h"
 
 #define DEVICE_CTRL_GET_SAMPLE_VAL (0x10)
 #define DEVICE_CTRL_GET_SAMPLE_DIR (0x11)
@@ -72,5 +73,7 @@ typedef struct qdec_device {
 #define QDEC_DEV(dev) ((qdec_device_t *)dev)
 
 int qdec_register(enum qdec_index_type index, const char *name);
-
+#ifdef __cplusplus
+}
+#endif
 #endif // __HAL_QDEC_H__

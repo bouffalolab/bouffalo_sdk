@@ -72,6 +72,7 @@ BL_Err_Type SFlash_Read_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t readR
                                      uint8_t regLen);
 BL_Err_Type SFlash_Write_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t writeRegCmd, uint8_t *regValue,
                                       uint8_t regLen);
+BL_Err_Type SFlash_Clear_Status_Register(SPI_Flash_Cfg_Type *pFlashCfg);
 
 /*@} end of group SFLAH_EXT_Public_Functions */
 

@@ -1,8 +1,11 @@
 #ifndef __HAL_ACOMP_H__
 #define __HAL_ACOMP_H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 
 enum acomp_channel_type {
     ACOMP_CHANNEL_ADC_CHANNEL0, /*!< Analog compare channel,ADC input channel 0 */
@@ -43,6 +46,11 @@ typedef struct acomp_device {
     enum acomp_hysteresis_vol_type neg_hysteresis_vol;
 } acomp_device_t;
 
+
 void acomp_init(acomp_device_t *device);
 int acomp_get_result(acomp_device_t *device);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

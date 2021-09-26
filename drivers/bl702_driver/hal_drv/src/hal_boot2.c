@@ -18,8 +18,6 @@ uint32_t hal_boot2_custom(void)
     return 0;
 }
 
-
-
 /**
  * @brief get efuse Boot2 config
  *
@@ -53,8 +51,11 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *g_efuse_cfg)
 
     /* restore bclk fclk div and root clock sel */
     GLB_Set_System_CLK_Div(hdiv, bdiv);
-    BL_WR_REG(HBN_BASE, HBN_GLB,rootClk);
-    __NOP();__NOP();__NOP();__NOP();
+    BL_WR_REG(HBN_BASE, HBN_GLB, rootClk);
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
 }
 /**
  * @brief reset sec eng clock
@@ -75,7 +76,6 @@ void hal_boot2_sw_system_reset(void)
 {
     GLB_SW_System_Reset();
 }
-
 
 /**
  * @brief
@@ -133,9 +133,9 @@ void hal_boot2_clr_user_fw(void)
 /**
  * @brief hal_boot2_sboot_finish
  *
- * @return 
+ * @return
  */
-void ATTR_TCM_SECTION hal_boot2_sboot_finish(void) 
+void ATTR_TCM_SECTION hal_boot2_sboot_finish(void)
 {
     uint32_t tmp_val;
 
@@ -149,49 +149,57 @@ void ATTR_TCM_SECTION hal_boot2_sboot_finish(void)
 /**
  * @brief hal_boot2_pll_init
  *
- * @return 
+ * @return
  */
 void hal_boot2_uart_gpio_init(void)
 {
-    GLB_GPIO_Type gpios[]={GPIO_PIN_14,GPIO_PIN_15};
+    GLB_GPIO_Type gpios[] = { GPIO_PIN_14, GPIO_PIN_15 };
 
-    GLB_GPIO_Func_Init(GPIO_FUN_UART,gpios,2);
+    GLB_GPIO_Func_Init(GPIO_FUN_UART, gpios, 2);
 
-    GLB_UART_Fun_Sel((GPIO_PIN_14 % 8), GLB_UART_SIG_FUN_UART0_TXD);//  GPIO_FUN_UART1_TX
+    GLB_UART_Fun_Sel((GPIO_PIN_14 % 8), GLB_UART_SIG_FUN_UART0_TXD); //  GPIO_FUN_UART1_TX
     GLB_UART_Fun_Sel((GPIO_PIN_15 % 8), GLB_UART_SIG_FUN_UART0_RXD);
 }
 
 /**
  * @brief hal_boot2_pll_init
  *
- * @return 
+ * @return
  */
 void hal_boot2_debug_uart_gpio_init(void)
 {
-    GLB_GPIO_Type gpios[]={GPIO_PIN_17};
+    GLB_GPIO_Type gpios[] = { GPIO_PIN_17 };
 
-    GLB_GPIO_Func_Init(GPIO_FUN_UART,gpios,1);
-   
+    GLB_GPIO_Func_Init(GPIO_FUN_UART, gpios, 1);
+
     GLB_UART_Fun_Sel((GPIO_PIN_17 % 8), GLB_UART_SIG_FUN_UART1_TXD);
 }
-
 
 /**
  * @brief hal_boot2_debug_usb_port_init
  *
- * @return 
+ * @return
  */
 #if HAL_BOOT2_SUPPORT_USB_IAP
 void hal_boot2_debug_usb_port_init(void)
 {
-
-
     /* must do this , or usb can not be recognized */
-    __disable_irq();
-    __enable_irq();
+    cpu_global_irq_disable();
+    cpu_global_irq_enable();
 
-    GLB_GPIO_Type gpios[]={GPIO_PIN_7,GPIO_PIN_8};
-    GLB_GPIO_Func_Init(GPIO_FUN_ANALOG,gpios,2);
+    GLB_GPIO_Type gpios[] = { GPIO_PIN_7, GPIO_PIN_8 };
+    GLB_GPIO_Func_Init(GPIO_FUN_ANALOG, gpios, 2);
 }
 #endif
 
+/**
+ * @brief hal_boot2_debug_uart_gpio_deinit
+ *
+ * @return
+ */
+void hal_boot2_debug_uart_gpio_deinit(void)
+{
+    GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_UART0);
+    GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_UART1);
+    GLB_UART_Sig_Swap_Set(UART_SIG_SWAP_NONE);
+}

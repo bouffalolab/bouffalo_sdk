@@ -85,10 +85,6 @@ BL_Err_Type XIP_SFlash_GetDeviceId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, SF_C
 BL_Err_Type XIP_SFlash_GetUniqueId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, SF_Ctrl_IO_Type ioMode,
                                              uint8_t *data, uint8_t idLen);
 BL_Err_Type XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, uint8_t *data, uint32_t len);
-int XIP_SFlash_Read_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t *dst, int len);
-int XIP_SFlash_Write_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t *src,
-                               int len);
-int XIP_SFlash_Erase_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, SF_Ctrl_IO_Type ioMode, uint32_t addr, int len);
 
 /*@} end of group XIP_SFLASH_Public_Functions */
 

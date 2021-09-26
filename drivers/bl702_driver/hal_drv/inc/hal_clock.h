@@ -23,8 +23,11 @@
 #ifndef __HAL_CLOCK__H__
 #define __HAL_CLOCK__H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 
 /*XTAL_TYPE*/
 #define XTAL_NONE         0
@@ -48,13 +51,14 @@
 #define ROOT_CLOCK_SOURCE_32K_CLK 5
 #define ROOT_CLOCK_SOURCE_FCLK    6
 #define ROOT_CLOCK_SOURCE_BCLK    7
+#define ROOT_CLOCK_SOURCE_1K_CLK  8
 
 /*BSP_AUDIO_PLL_CLOCK_SOURCE*/
-#define ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ 8
-#define ROOT_CLOCK_SOURCE_AUPLL_11289600_HZ 9
-#define ROOT_CLOCK_SOURCE_AUPLL_5644800_HZ  10
-#define ROOT_CLOCK_SOURCE_AUPLL_24576000_HZ 11
-#define ROOT_CLOCK_SOURCE_AUPLL_24000000_HZ 12
+#define ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ 9
+#define ROOT_CLOCK_SOURCE_AUPLL_11289600_HZ 10
+#define ROOT_CLOCK_SOURCE_AUPLL_5644800_HZ  11
+#define ROOT_CLOCK_SOURCE_AUPLL_24576000_HZ 12
+#define ROOT_CLOCK_SOURCE_AUPLL_24000000_HZ 13
 
 enum system_clock_type {
     SYSTEM_CLOCK_ROOT_CLOCK = 0, /* clock source before fclk_div*/
@@ -79,7 +83,11 @@ enum peripheral_clock_type {
 
 void system_clock_init(void);
 void system_mtimer_clock_init(void);
+void system_mtimer_clock_reinit(void);
 void peripheral_clock_init(void);
 uint32_t system_clock_get(enum system_clock_type type);
 uint32_t peripheral_clock_get(enum peripheral_clock_type type);
+#ifdef __cplusplus
+}
+#endif
 #endif

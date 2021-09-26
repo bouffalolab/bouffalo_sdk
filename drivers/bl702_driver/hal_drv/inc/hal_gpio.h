@@ -23,7 +23,11 @@
 #ifndef __HAL_GPIO__H__
 #define __HAL_GPIO__H__
 
-#include "drv_device.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 
 enum gpio_pin_type {
     GPIO_PIN_0 = 0,
@@ -83,4 +87,8 @@ void gpio_toggle(uint32_t pin);
 int gpio_read(uint32_t pin);
 void gpio_attach_irq(uint32_t pin, void (*cbfun)(uint32_t pin));
 void gpio_irq_enable(uint32_t pin, uint8_t enabled);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

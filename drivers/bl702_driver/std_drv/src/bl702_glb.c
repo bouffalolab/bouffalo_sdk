@@ -150,8 +150,6 @@ GLB_ROOT_CLK_Type ATTR_CLOCK_SECTION GLB_Get_Root_CLK_Sel(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-#ifndef BFLB_USE_ROM_DRIVER
-__WEAK
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_System_CLK_Div(uint8_t hclkDiv, uint8_t bclkDiv)
 {
     /***********************************************************************************/
@@ -179,7 +177,6 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_System_CLK_Div(uint8_t hclkDiv, uint8_t b
 
     return SUCCESS;
 }
-#endif
 
 /****************************************************************************/ /**
  * @brief  Get Bus clock divider
@@ -3085,7 +3082,6 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
     uint32_t pos;
     uint32_t tmpOut;
     uint32_t tmpVal;
-    uint32_t aonPadIeSmt;
 
     /* drive strength(drive) = 0  <=>  8.0mA  @ 3.3V */
     /* drive strength(drive) = 1  <=>  9.6mA  @ 3.3V */
@@ -3188,7 +3184,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
     /* always on pads IE control (in HBN) */
     if (gpioPin >= 9 && gpioPin <= 13) {
         tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
-        aonPadIeSmt = BL_GET_REG_BITS_VAL(tmpVal, HBN_REG_AON_PAD_IE_SMT);
+        uint32_t aonPadIeSmt = BL_GET_REG_BITS_VAL(tmpVal, HBN_REG_AON_PAD_IE_SMT);
 
         if (cfg->gpioMode != GPIO_MODE_ANALOG) {
             /* not analog mode */
@@ -3460,7 +3456,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Pad_HZ(void)
     uint32_t tmpVal;
     uint32_t offset;
 
-    for(offset=23; offset<=28; offset++){
+    for (offset = 23; offset <= 28; offset++) {
         tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
         /* pu=0, pd=0, ie=0 */
         if (offset % 2 == 0) {
@@ -3484,9 +3480,9 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Pad_HZ(void)
         }
     }
 
-    tmpVal = BL_RD_WORD(GLB_BASE+GLB_GPIO_OUTPUT_EN_OFFSET);
+    tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET);
     tmpVal &= 0xE07FFFFF;
-    BL_WR_WORD(GLB_BASE+GLB_GPIO_OUTPUT_EN_OFFSET, tmpVal);
+    BL_WR_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET, tmpVal);
 
     return SUCCESS;
 }
@@ -3496,7 +3492,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Set_Psram_Pad_HZ(void)
     uint32_t tmpVal;
     uint32_t offset;
 
-    for(offset=32; offset<=37; offset++){
+    for (offset = 32; offset <= 37; offset++) {
         tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
         /* pu=0, pd=0, ie=0 */
         if (offset % 2 == 0) {
@@ -3507,22 +3503,22 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Set_Psram_Pad_HZ(void)
         BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4, tmpVal);
 
         if ((BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (offset - 32))) > 0) {
-            tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset-9) / 2 * 4);
+            tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset - 9) / 2 * 4);
             /* func_sel=swgpio */
-            if ((offset-9) % 2 == 0) {
+            if ((offset - 9) % 2 == 0) {
                 tmpVal = (tmpVal & 0xffff00ff);
                 tmpVal |= 0x0B00;
             } else {
                 tmpVal = (tmpVal & 0x00ffffff);
                 tmpVal |= (0x0B00 << 16);
             }
-            BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset-9) / 2 * 4, tmpVal);
+            BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset - 9) / 2 * 4, tmpVal);
         }
     }
 
-    tmpVal = BL_RD_WORD(GLB_BASE+GLB_GPIO_OUTPUT_EN_OFFSET+4);
+    tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET + 4);
     tmpVal &= 0xFFFFFFC0;
-    BL_WR_WORD(GLB_BASE+GLB_GPIO_OUTPUT_EN_OFFSET+4, tmpVal);
+    BL_WR_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET + 4, tmpVal);
 
     return SUCCESS;
 }

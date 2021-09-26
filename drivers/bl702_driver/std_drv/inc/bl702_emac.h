@@ -118,7 +118,6 @@ typedef struct
     uint8_t macAddr[6];             /*!< MAC Address */
 } EMAC_CFG_Type;
 
-
 /**
  *  @brief EMAC TX DMA description type definition
  */
@@ -206,6 +205,8 @@ typedef struct
 #define BD_TX_RTRY_LEN (4)
 #define BD_TX_UR_POS   (8) /*!< Underrun */
 #define BD_TX_UR_LEN   (1)
+#define BD_TX_EOF_POS  (10) /*!< EOF */
+#define BD_TX_EOF_LEN  (1)
 #define BD_TX_CRC_POS  (11) /*!< CRC Enable */
 #define BD_TX_CRC_LEN  (1)
 #define BD_TX_PAD_POS  (12) /*!< PAD enable */
@@ -250,13 +251,16 @@ typedef struct
 #define EMAC_BD_FIELD_UMSK(field) (~(((1U << BD_##field##_LEN) - 1) << BD_##field##_POS))
 /* DMA Descriptor offset */
 #define EMAC_DMA_DESC_OFFSET 0x400
+
 /* ETH packet size */
+// ETH     | Header | Extra | VLAN tag | Payload   | CRC |
+// Size    | 14     | 2     | 4        | 46 ~ 1500 | 4   |
 #define ETH_MAX_PACKET_SIZE          ((uint32_t)1524U) /*!< ETH_HEADER + ETH_EXTRA + ETH_VLAN_TAG + ETH_MAX_ETH_PAYLOAD + ETH_CRC */
-#define ETH_HEADER_SZIE              ((uint32_t)14U)   /*!< 6 byte Dest addr, 6 byte Src addr, 2 byte length/type */
-#define ETH_CRC_SIZE                 ((uint32_t)4U)    /*!< Ethernet CRC */
-#define ETH_EXTRA_SIZE               ((uint32_t)2U)    /*!< Extra bytes in some cases */
-#define ETH_VLAN_TAG_SIZE            ((uint32_t)4U)    /*!< optional 802.1q VLAN Tag */
-#define ETH_MIN_ETH_PAYLOAD_SIZE     ((uint32_t)46U)   /*!< Minimum Ethernet payload size */
+#define ETH_HEADER_SZIE              ((uint32_t)14U) /*!< 6 byte Dest addr, 6 byte Src addr, 2 byte length/type */
+#define ETH_CRC_SIZE                 ((uint32_t)4U) /*!< Ethernet CRC */
+#define ETH_EXTRA_SIZE               ((uint32_t)2U) /*!< Extra bytes in some cases */
+#define ETH_VLAN_TAG_SIZE            ((uint32_t)4U) /*!< optional 802.1q VLAN Tag */
+#define ETH_MIN_ETH_PAYLOAD_SIZE     ((uint32_t)46U) /*!< Minimum Ethernet payload size */
 #define ETH_MAX_ETH_PAYLOAD_SIZE     ((uint32_t)1500U) /*!< Maximum Ethernet payload size */
 #define ETH_JUMBO_FRAME_PAYLOAD_SIZE ((uint32_t)9000U) /*!< Jumbo frame payload size */
 
@@ -287,6 +291,8 @@ BL_Err_Type EMAC_Phy_Write(uint16_t phyReg, uint16_t regValue);
 
 BL_Err_Type EMAC_Enable_TX(void);
 BL_Err_Type EMAC_Disable_TX(void);
+BL_Err_Type EMAC_Enable_RX(void);
+BL_Err_Type EMAC_Disable_RX(void);
 
 void EMAC_Phy_SetAddress(uint16_t phyAddress);
 void EMAC_Phy_Set_Full_Duplex(uint8_t fullDuplex);

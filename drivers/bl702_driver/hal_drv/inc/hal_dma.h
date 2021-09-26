@@ -23,8 +23,11 @@
 #ifndef __HAL_DMA__H__
 #define __HAL_DMA__H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 
 #define DMA_CHANNEL_GET_STATUS 0x10
 #define DMA_CHANNEL_START      0x11
@@ -195,5 +198,7 @@ typedef struct dma_device {
 int dma_register(enum dma_index_type index, const char *name);
 int dma_allocate_register(const char *name);
 int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_t transfer_size);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

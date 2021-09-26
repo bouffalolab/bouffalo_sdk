@@ -22,20 +22,22 @@
  */
 #ifndef __HAL_SEC_AES__H__
 #define __HAL_SEC_AES__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#include "hal_common.h"
 
 typedef enum {
-    SEC_ASE_CBC,
-    SEC_ASE_CTR,
-    SEC_ASE_ECB
+    SEC_AES_CBC,
+    SEC_AES_CTR,
+    SEC_AES_ECB
 } sec_aes_type;
 
 typedef enum {
-    SEC_ASE_KEY_128,
-    SEC_ASE_KEY_256,
-    SEC_ASE_KEY_192
+    SEC_AES_KEY_128,
+    SEC_AES_KEY_256,
+    SEC_AES_KEY_192
 } sec_aes_key_type;
 
 typedef struct sec_aes_handle_t {
@@ -53,5 +55,7 @@ int sec_aes_setkey(sec_aes_handle_t *handle, const uint8_t *key, uint8_t key_len
 int sec_aes_encrypt(sec_aes_handle_t *handle, const uint8_t *in, uint32_t len, size_t offset, uint8_t *out);
 int sec_aes_decrypt(sec_aes_handle_t *handle, const uint8_t *in, uint32_t len, size_t offset, uint8_t *out);
 int sec_aes_deinit(sec_aes_handle_t *handle);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

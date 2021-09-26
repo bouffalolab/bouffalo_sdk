@@ -22,14 +22,18 @@
  */
 #ifndef __HAL_UART__H__
 #define __HAL_UART__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#include "hal_common.h"
 
 #define UART_FIFO_LEN 128
 
 #define DEVICE_CTRL_UART_GET_TX_FIFO 0x10
 #define DEVICE_CTRL_UART_GET_RX_FIFO 0x11
+#define DEVICE_CTRL_UART_CLEAR_TX_FIFO 0x12
+#define DEVICE_CTRL_UART_CLEAR_RX_FIFO 0x13
 
 enum uart_index_type {
 #ifdef BSP_USING_UART0
@@ -82,6 +86,9 @@ enum uart_event_type {
     UART_EVENT_RX_END,
     UART_EVENT_RX_FIFO,
     UART_EVENT_RTO,
+    UART_EVENT_PCE,
+    UART_EVENT_TX_FER,
+    UART_EVENT_RX_FER,
     UART_EVENT_UNKNOWN
 };
 
@@ -120,5 +127,7 @@ typedef struct uart_device {
 #define UART_DEV(dev) ((uart_device_t *)dev)
 
 int uart_register(enum uart_index_type index, const char *name);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -23,8 +23,10 @@
 #ifndef __HAL_TIMER__H__
 #define __HAL_TIMER__H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+#include "hal_common.h"
 
 enum timer_index_type {
 #ifdef BSP_USING_TIMER0
@@ -86,5 +88,7 @@ typedef struct timer_device {
 #define TIMER_DEV(dev) ((timer_device_t *)dev)
 
 int timer_register(enum timer_index_type index, const char *name);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

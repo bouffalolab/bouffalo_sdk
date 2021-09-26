@@ -4,7 +4,7 @@ list(APPEND ADD_INCLUDE
 "${CMAKE_CURRENT_SOURCE_DIR}/std_drv/inc"
 "${CMAKE_CURRENT_SOURCE_DIR}/regs"
 "${CMAKE_CURRENT_SOURCE_DIR}/startup"
-"${CMAKE_CURRENT_SOURCE_DIR}/risc-v/Core/Include"
+"${CMAKE_CURRENT_SOURCE_DIR}"
 )
 #######################################################
 
@@ -26,6 +26,8 @@ file(GLOB_RECURSE sources
 list(APPEND ADD_SRCS  ${sources})
 # aux_source_directory(src ADD_SRCS)
 list(REMOVE_ITEM ADD_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/std_drv/src/bl702_snflash.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/std_drv/src/bl702_romdriver.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/std_drv/src/bl702_clock.c"
 )
 #######################################################
 

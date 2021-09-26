@@ -24,9 +24,12 @@
 #ifndef __HAL_EMAC_H__
 #define __HAL_EMAC_H__
 
-#include "drv_device.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 #include "bl702_emac.h"
-#include "bl702_config.h"
 
 typedef struct emac_device {
     struct device parent;
@@ -53,13 +56,24 @@ typedef struct
     uint32_t phy_id;      /*!< PHY OUI */
 } emac_phy_cfg_t;
 
+#define FULL_PACKET   (uint32_t)(-1)
+#define NOFULL_PACKET (uint32_t)(0)
+
+#ifndef ETH_TX_BUFFER_SIZE
+#define ETH_TX_BUFFER_SIZE (ETH_MAX_PACKET_SIZE)
+#endif
+
+#ifndef ETH_RX_BUFFER_SIZE
+#define ETH_RX_BUFFER_SIZE (ETH_MAX_PACKET_SIZE)
+#endif
+
 #define EMAC_TX_COMMON_FLAGS (EMAC_BD_FIELD_MSK(TX_RD) |  \
                               EMAC_BD_FIELD_MSK(TX_IRQ) | \
                               EMAC_BD_FIELD_MSK(TX_PAD) | \
                               EMAC_BD_FIELD_MSK(TX_CRC))
 
 #define EMAC_RX_COMMON_FLAGS    (ETH_MAX_PACKET_SIZE << 16) | \
-    EMAC_BD_FIELD_MSK(RX_IRQ) )
+                                EMAC_BD_FIELD_MSK(RX_IRQ) )
 
 typedef enum _BD_TYPE_ {
     EMAC_BD_TYPE_INVLAID,
@@ -84,5 +98,11 @@ int emac_phy_reg_read(uint16_t phyReg, uint16_t *regValue);
 int emac_phy_reg_write(uint16_t phyReg, uint16_t regValue);
 int emac_stop(void);
 int emac_start(void);
-
+int emac_start_tx(void);
+int emac_stop_tx(void);
+int emac_start_rx(void);
+int emac_stop_rx(void);
+#ifdef __cplusplus
+}
+#endif
 #endif

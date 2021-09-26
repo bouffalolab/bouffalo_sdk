@@ -23,8 +23,11 @@
 #ifndef __HAL_PM__H__
 #define __HAL_PM__H__
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 
 enum pm_pds_sleep_level {
     PM_PDS_LEVEL_0,
@@ -61,5 +64,9 @@ void pm_hbn_enter_again(bool reset);
 void pm_hbn_out0_irq_register(void);
 void pm_hbn_out1_irq_register(void);
 void pm_irq_callback(enum pm_event_type event);
+uint32_t hal_pds_enter_with_time_compensation(uint32_t pdsLevel, uint32_t pdsSleepCycles);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -107,14 +107,14 @@ __ALWAYS_INLINE ATTR_CLOCK_SECTION
 {
     return RomDriver_GLB_Get_Root_CLK_Sel();
 }
-
+#if 0
 __ALWAYS_INLINE ATTR_CLOCK_SECTION
     BL_Err_Type
     GLB_Set_System_CLK_Div(uint8_t hclkDiv, uint8_t bclkDiv)
 {
     return RomDriver_GLB_Set_System_CLK_Div(hclkDiv, bclkDiv);
 }
-
+#endif
 __ALWAYS_INLINE ATTR_CLOCK_SECTION
     uint8_t
     GLB_Get_BCLK_Div(void)

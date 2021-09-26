@@ -94,6 +94,19 @@ static int emac_bd_rx_enqueue(uint32_t index)
  */
 static void emac_bd_rx_on_err(uint32_t index)
 {
+    /* to do index - 1 */
+    // uint32_t tmp_bd = 0;
+    // tmp_bd = BL_RD_REG(EMAC_BASE, EMAC_TX_BD_NUM);
+    // if (index == tmp_bd) {
+    //     index += (tmp_bd - 1);
+    // } else {
+    //     index -= 1;
+    // }
+    // MSG("i:%x,csl%x\r\n", 5, thiz->bd[5].C_S_L);
+    // MSG("i:%x,csl%x\r\n", 6, thiz->bd[6].C_S_L);
+    // MSG("i:%x,csl%x\r\n", 7, thiz->bd[7].C_S_L);
+    // MSG("i:%x,csl%x\r\n", 8, thiz->bd[8].C_S_L);
+    // MSG("i:%x,csl%x\r\n", 9, thiz->bd[9].C_S_L);
     /* handle error */
     if (thiz->bd[index].C_S_L & EMAC_BD_FIELD_MSK(RX_OR)) {
         MSG("EMAC RX OR Error at %s:%d\r\n", __func__, __LINE__);
@@ -295,21 +308,21 @@ static void emac_rx_busy_callback(void)
 int emac_init(emac_device_t *emac_cfg)
 {
     EMAC_CFG_Type emacCfg = {
-        .recvSmallFrame = ENABLE,     /*!< Receive small frmae or not */
-        .recvHugeFrame = DISABLE,     /*!< Receive huge frmae(>64K bytes) or not */
-        .padEnable = ENABLE,          /*!< Enable padding for frame which is less than MINFL or not */
-        .crcEnable = ENABLE,          /*!< Enable hardware CRC or not */
-        .noPreamble = DISABLE,        /*!< Enable preamble or not */
-        .recvBroadCast = ENABLE,      /*!< Receive broadcast frame or not */
-        .interFrameGapCheck = ENABLE, /*!< Check inter frame gap or not */
-        .miiNoPreamble = ENABLE,      /*!< Enable MII interface preamble or not */
-        .miiClkDiv = 49,              /*!< MII interface clock divider from bus clock */
-        .maxTxRetry = 16,             /*!< Maximum tx retry count */
-        .interFrameGapValue = 24,     /*!< Inter frame gap vaule in clock cycles(default 24)*/
-        .minFrameLen = 64,            /*!< Minimum frame length */
-        .maxFrameLen = 1500,          /*!< Maximum frame length */
-        .collisionValid = 16,         /*!< Collision valid value */
-        .macAddr[0] = 0x18,           /*!< MAC Address */
+        .recvSmallFrame = ENABLE,           /*!< Receive small frmae or not */
+        .recvHugeFrame = DISABLE,           /*!< Receive huge frmae(>64K bytes) or not */
+        .padEnable = ENABLE,                /*!< Enable padding for frame which is less than MINFL or not */
+        .crcEnable = ENABLE,                /*!< Enable hardware CRC or not */
+        .noPreamble = DISABLE,              /*!< Enable preamble or not */
+        .recvBroadCast = ENABLE,            /*!< Receive broadcast frame or not */
+        .interFrameGapCheck = ENABLE,       /*!< Check inter frame gap or not */
+        .miiNoPreamble = ENABLE,            /*!< Enable MII interface preamble or not */
+        .miiClkDiv = 49,                    /*!< MII interface clock divider from bus clock */
+        .maxTxRetry = 16,                   /*!< Maximum tx retry count */
+        .interFrameGapValue = 24,           /*!< Inter frame gap vaule in clock cycles(default 24)*/
+        .minFrameLen = 64,                  /*!< Minimum frame length */
+        .maxFrameLen = ETH_MAX_PACKET_SIZE, /*!< Maximum frame length */
+        .collisionValid = 16,               /*!< Collision valid value */
+        .macAddr[0] = 0x18,                 /*!< MAC Address */
         .macAddr[1] = 0xB0,
         .macAddr[2] = 0x09,
         .macAddr[3] = 0x00,
@@ -389,17 +402,23 @@ int emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in)
 
     DMADesc = &thiz->bd[thiz->txIndexCPU];
 
-    if ((uint32_t)(-1) == flags) {
+    if (FULL_PACKET == flags) {
+        // MSG("full packet,len:%d\r\n", len);
+        flags = (EMAC_TX_COMMON_FLAGS | EMAC_BD_FIELD_MSK(TX_EOF));
+    } else if (NOFULL_PACKET == flags) {
+        // MSG("nofull packet\r\n");
         flags = EMAC_TX_COMMON_FLAGS;
     }
 
     if (DMADesc->C_S_L & EMAC_BD_FIELD_MSK(TX_RD)) {
         /* no free BD, lost sync with DMA TX? */
         err = NORESC;
-        //MSG_ERR(TAG"%s:%d\n", __func__, __LINE__);
+        // MSG_ERR(TAG"%s:%d\n", __func__, __LINE__);
     } else {
-        //DMADesc->TXBuffer = (uint32_t)data_in;
-        ARCH_MemCpy_Fast((void *)DMADesc->Buffer, data_in, len);
+        DMADesc->Buffer = (uint32_t)data_in;
+        // MSG("tx q flags:%d,len:%d,data:0x%x\r\n", flags, len, data_in);
+
+        // ARCH_MemCpy_Fast((void *)DMADesc->Buffer, data_in, len);
 
         DMADesc->C_S_L = flags | (len << BD_TX_LEN_POS);
 
@@ -514,13 +533,33 @@ int emac_phy_reg_write(uint16_t phyReg, uint16_t regValue)
     return 0;
 }
 
-int emac_stop()
+int emac_stop(void)
 {
-    return 0;
+    return EMAC_Disable();
 }
 
-int emac_start()
+int emac_start(void)
 {
     EMAC_Enable();
     return 0;
+}
+
+int emac_start_tx(void)
+{
+    return EMAC_Enable_TX();
+}
+
+int emac_stop_tx(void)
+{
+    return EMAC_Disable_TX();
+}
+
+int emac_start_rx(void)
+{
+    return EMAC_Enable_RX();
+}
+
+int emac_stop_rx(void)
+{
+    return EMAC_Disable_RX();
 }

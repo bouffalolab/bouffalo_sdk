@@ -22,9 +22,11 @@
  */
 #ifndef __HAL_MJPEG__H__
 #define __HAL_MJPEG__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#include "hal_common.h"
 
 #define MJPEG_PACKET_ADD_NONE       0
 #define MJPEG_PACKET_ADD_DEFAULT    1 << 0
@@ -66,4 +68,7 @@ void mjpeg_stop(void);
 uint8_t mjpeg_get_one_frame(uint8_t **pic, uint32_t *len, uint8_t *q);
 void mjpeg_drop_one_frame(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

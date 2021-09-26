@@ -450,6 +450,7 @@ typedef struct
 #define HBN_STATUS_ENTER_FLAG  0x4e424845
 #define HBN_STATUS_WAKEUP_FLAG 0x4e424857
 #define HBN_WAKEUP_GPIO_NONE   0x00
+#define HBN_WAKEUP_GPIO_9      0x01
 #define HBN_WAKEUP_GPIO_10     0x02
 #define HBN_WAKEUP_GPIO_11     0x04
 #define HBN_WAKEUP_GPIO_12     0x08

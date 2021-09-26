@@ -172,7 +172,7 @@ void gpio_toggle(uint32_t pin)
  */
 int gpio_read(uint32_t pin)
 {
-    return (BL_RD_REG(GLB_BASE, GLB_GPIO_INPUT) & (1 << pin));
+    return ((BL_RD_REG(GLB_BASE, GLB_GPIO_INPUT) & (1 << pin)) ? 1 : 0);
 }
 /**
  * @brief

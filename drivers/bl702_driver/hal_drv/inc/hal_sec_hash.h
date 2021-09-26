@@ -22,9 +22,11 @@
  */
 #ifndef __HAL_SEC_HASH__H__
 #define __HAL_SEC_HASH__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#include "hal_common.h"
 
 enum sec_hash_index_type {
     SEC_HASH0_INDEX,
@@ -49,5 +51,7 @@ typedef struct sec_hash_device {
 
 int sec_hash_register(enum sec_hash_index_type index, const char *name);
 int sec_hash_sha256_register(enum sec_hash_index_type index, const char *name);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

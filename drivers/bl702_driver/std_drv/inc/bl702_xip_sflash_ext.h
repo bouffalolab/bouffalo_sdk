@@ -39,6 +39,8 @@
 #include "bl702_common.h"
 #include "bl702_sflash.h"
 #include "bl702_xip_sflash.h"
+#include "bl702_sflash.h"
+#include "bl702_sflash_ext.h"
 #include "bl702_sf_cfg.h"
 #include "bl702_sf_cfg_ext.h"
 
@@ -72,10 +74,7 @@
  *  @{
  */
 
-BL_Err_Type XIP_SFlash_Init(SPI_Flash_Cfg_Type *pFlashCfg);
-int XIP_SFlash_Read(uint32_t addr, uint8_t *dst, int len);
-int XIP_SFlash_Write(uint32_t addr, uint8_t *src, int len);
-int XIP_SFlash_Erase(uint32_t addr, int len);
+BL_Err_Type XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg);
 
 /*@} end of group XIP_SFLASH_EXT_Public_Functions */
 

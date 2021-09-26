@@ -61,16 +61,17 @@ SECTIONS
         *(.text.*)
 
         /*put .rodata**/
-        *(EXCLUDE_FILE( *bl702_glb.o \
-                        *bl702_pds.o \
-                        *bl702_common.o \
-                        *bl702_sf_cfg.o \
-                        *bl702_sf_ctrl.o \
-                        *bl702_sflash.o \
-                        *bl702_xip_sflash.o \
-                        *bl702_ef_ctrl.o) .rodata*)
-        *(.rodata)
-        *(.rodata.*)
+        *(EXCLUDE_FILE( *bl702_glb*.o* \
+                        *bl702_pds*.o* \
+                        *bl702_common*.o* \
+                        *bl702_sf_cfg*.o* \
+                        *bl702_sf_cfg_ext*.o* \
+                        *bl702_sf_ctrl*.o* \
+                        *bl702_sflash*.o* \
+                        *bl702_sflash_ext*.o* \
+                        *bl702_xip_sflash*.o* \
+                        *bl702_xip_sflash_ext*.o* \
+                        *bl702_ef_ctrl*.o*) .rodata*)
 
         *(.srodata)
         *(.srodata.*)
@@ -87,19 +88,22 @@ SECTIONS
         . = ALIGN(4);
         __tcm_code_start__ = .;
 
-        *(.tcm_code)
-        *(.tcm_const)
-        *(.sclock_rlt_code)
-        *(.sclock_rlt_const)
+        *(.tcm_code.*)
+        *(.tcm_const.*)
+        *(.sclock_rlt_code.*)
+        *(.sclock_rlt_const.*)
 
-        *bl702_glb.o*(.rodata*)
-        *bl702_pds.o*(.rodata*)
-        *bl702_common.o*(.rodata*)
-        *bl702_sf_cfg.o*(.rodata*)
-        *bl702_sf_ctrl.o*(.rodata*)
-        *bl702_sflash.o*(.rodata*)
-        *bl702_xip_sflash.o*(.rodata*)
-        *bl702_ef_ctrl.o*(.rodata*)
+        *bl702_glb*.o*(.rodata*)
+        *bl702_pds*.o*(.rodata*)
+        *bl702_common*.o*(.rodata*)
+        *bl702_sf_cfg*.o*(.rodata*)
+        *bl702_sf_cfg_ext*.o*(.rodata*)
+        *bl702_sf_ctrl*.o*(.rodata*)
+        *bl702_sflash*.o*(.rodata*)
+        *bl702_sflash_ext*.o*(.rodata*)
+        *bl702_xip_sflash*.o*(.rodata*)
+        *bl702_xip_sflash_ext*.o*(.rodata*)
+        *bl702_ef_ctrl*.o*(.rodata*)
 
         . = ALIGN(4);
         __tcm_code_end__ = .;
@@ -111,9 +115,8 @@ SECTIONS
     {
         . = ALIGN(4);
         __hbn_ram_start__ = .;
-        *(EXCLUDE_FILE(*bl702_hbn_wakeup.o).rodata*)
-        *bl702_hbn_wakeup.o*(.rodata*)
-        *(.hbn_ram_code)
+        *bl702_hbn_wakeup*.o*(.rodata*)
+        *(.hbn_ram_code*)
         *(.hbn_ram_data)
         . = ALIGN(4);
         __hbn_ram_end__ = .;

@@ -24,9 +24,12 @@
 #ifndef __HAL_CAM_H__
 #define __HAL_CAM_H__
 
-#include "drv_device.h"
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+#include "hal_common.h"
 #include "bl702_cam.h"
-#include "bl702_config.h"
 
 #define DEVICE_OFLAG_INT  0x01
 #define DEVICE_OFLAG_POLL 0x02
@@ -90,4 +93,7 @@ void cam_vsync_crop(uint16_t start, uint16_t end);
 void cam_hw_mode_wrap(uint8_t enbale);
 void CAM_Int_Callback_set(CAM_INT_Type intType, intCallback_Type *cbFun);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

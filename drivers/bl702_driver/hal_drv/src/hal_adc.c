@@ -107,11 +107,15 @@ int adc_open(struct device *dev, uint16_t oflag)
     adc_cfg.offsetCalibVal = ADC_OFFSER_CALIB_VAL;
 
     adc_fifo_cfg.dmaEn = DISABLE;
+    adc_fifo_cfg.fifoThreshold = adc_device->fifo_threshold;
 
     if (oflag & DEVICE_OFLAG_STREAM_TX) {
     }
 
     if ((oflag & DEVICE_OFLAG_INT_TX) || (oflag & DEVICE_OFLAG_INT_RX)) {
+#ifdef BSP_USING_ADC0
+        Interrupt_Handler_Register(GPADC_DMA_IRQn, ADC_IRQ);
+#endif
     }
 
     if (oflag & DEVICE_OFLAG_DMA_TX) {
@@ -121,11 +125,7 @@ int adc_open(struct device *dev, uint16_t oflag)
         adc_fifo_cfg.dmaEn = ENABLE;
     }
 
-    adc_fifo_cfg.fifoThreshold = adc_device->fifo_threshold;
-
-#ifdef BSP_USING_ADC0
-    Interrupt_Handler_Register(GPADC_DMA_IRQn, ADC_IRQ);
-#endif
+    ADC_IntMask(ADC_INT_ALL, MASK);
 
     ADC_Disable();
     ADC_Enable();
@@ -135,10 +135,6 @@ int adc_open(struct device *dev, uint16_t oflag)
     ADC_Init(&adc_cfg);
 
     ADC_FIFO_Cfg(&adc_fifo_cfg);
-    
-    ADC_IntMask(ADC_INT_ALL, MASK);
-
-    CPU_Interrupt_Enable(GPADC_DMA_IRQn);
 
     return 0;
 }
@@ -167,48 +163,17 @@ int adc_control(struct device *dev, int cmd, void *args)
     adc_device_t *adc_device = (adc_device_t *)dev;
     adc_channel_cfg_t *adc_channel_cfg = (adc_channel_cfg_t *)args;
     uint8_t rlt = 0;
-    uint32_t mask = 0;
 
     switch (cmd) {
         case DEVICE_CTRL_SET_INT /* constant-expression */:
-            mask = (uint32_t)args;
-            
-            if (mask & ADC_EVENT_FIFO_READY_IT) {
-                ADC_IntMask(ADC_EVENT_FIFO_READY, UNMASK);
-            }
-            if (mask & ADC_EVENT_OVERRUN_IT) {
-                ADC_IntMask(ADC_EVENT_OVERRUN, UNMASK);
-            }
-            if (mask & ADC_EVENT_UNDERRUN_IT) {
-                ADC_IntMask(ADC_EVENT_UNDERRUN, UNMASK);
-            }
-            if (mask & ADC_EVEN_INT_POS_SATURATION_IT) {
-                ADC_IntMask(ADC_EVEN_INT_POS_SATURATION, UNMASK);
-            }
-            if (mask & ADC_EVEN_INT_NEG_SATURATION_IT) {
-                ADC_IntMask(ADC_EVEN_INT_NEG_SATURATION, UNMASK);
-            }
-            
+            ADC_IntMask(ADC_INT_FIFO_READY, UNMASK);
+            CPU_Interrupt_Enable(GPADC_DMA_IRQn);
+
             break;
 
         case DEVICE_CTRL_CLR_INT /* constant-expression */:
-            mask = (uint32_t)args;
-
-            if (mask & ADC_EVENT_FIFO_READY_IT) {
-                ADC_IntMask(ADC_EVENT_FIFO_READY, MASK);
-            }
-            if (mask & ADC_EVENT_OVERRUN_IT) {
-                ADC_IntMask(ADC_EVENT_OVERRUN, MASK);
-            }
-            if (mask & ADC_EVENT_UNDERRUN_IT) {
-                ADC_IntMask(ADC_EVENT_UNDERRUN, MASK);
-            }
-            if (mask & ADC_EVEN_INT_POS_SATURATION_IT) {
-                ADC_IntMask(ADC_EVEN_INT_POS_SATURATION, MASK);
-            }
-            if (mask & ADC_EVEN_INT_NEG_SATURATION_IT) {
-                ADC_IntMask(ADC_EVEN_INT_NEG_SATURATION, MASK);
-            }
+            ADC_IntMask(ADC_INT_FIFO_READY, MASK);
+            CPU_Interrupt_Disable(GPADC_DMA_IRQn);
 
             break;
 
@@ -236,18 +201,33 @@ int adc_control(struct device *dev, int cmd, void *args)
             ADC_Start();
             break;
 
-        case DEVICE_CTRL_ADC_CHANNEL_STOP /* constant-expression */:
-            /* code */
-            ADC_Stop();
-            break;
+        case DEVICE_CTRL_ADC_CHANNEL_STOP /* constant-expression */: {
+            uint32_t tmpVal;
 
-        case DEVICE_CTRL_ADC_VBAT_ON:
-            ADC_Vbat_Enable();
+            /* disable convert start */
+            tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, AON_GPADC_CONV_START);
+            BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, tmpVal);
             break;
+        }
 
-        case DEVICE_CTRL_ADC_VBAT_OFF:
-            ADC_Vbat_Disable();
+        case DEVICE_CTRL_ADC_VBAT_ON: {
+            uint32_t tmpVal;
+
+            tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CONFIG2);
+            tmpVal = BL_SET_REG_BIT(tmpVal, AON_GPADC_VBAT_EN);
+            BL_WR_REG(AON_BASE, AON_GPADC_REG_CONFIG2, tmpVal);
             break;
+        }
+
+        case DEVICE_CTRL_ADC_VBAT_OFF: {
+            uint32_t tmpVal;
+
+            tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CONFIG2);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, AON_GPADC_VBAT_EN);
+            BL_WR_REG(AON_BASE, AON_GPADC_REG_CONFIG2, tmpVal);
+            break;
+        }
 
         case DEVICE_CTRL_ADC_TSEN_ON:
             ADC_Tsen_Init(ADC_TSEN_MOD_INTERNAL_DIODE);
@@ -279,18 +259,20 @@ int adc_control(struct device *dev, int cmd, void *args)
  */
 int adc_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
-    if (dev->oflag & DEVICE_OFLAG_STREAM_RX || dev->oflag & DEVICE_OFLAG_INT_RX) {
-        while (ADC_Get_FIFO_Count() == 0)
-            ;
+    uint32_t adc_fifo_val[32];
 
-        do {
-            uint32_t regVal = ADC_Read_FIFO();
+    if (dev->oflag & DEVICE_OFLAG_STREAM_RX) {
+        if (size > 32)
+            return -1;
+        while (ADC_Get_FIFO_Count() < size) {
+        }
 
-            if (regVal) {
-                ADC_Result_Type *result = (ADC_Result_Type *)buffer;
-                ADC_Parse_Result(&regVal, size, result);
-            }
-        } while (ADC_Get_FIFO_Count() != 0);
+        for (uint32_t i = 0; i < size; i++) {
+            adc_fifo_val[i] = ADC_Read_FIFO();
+        }
+        adc_channel_val_t *adc_parse_val = (adc_channel_val_t *)buffer;
+        ADC_Parse_Result(adc_fifo_val, size, (ADC_Result_Type *)adc_parse_val);
+        return size;
     }
 
     return 0;
@@ -348,27 +330,34 @@ void adc_isr(adc_device_t *handle)
         return;
 
     if (ADC_GetIntStatus(ADC_INT_POS_SATURATION) == SET && ADC_IntGetMask(ADC_INT_POS_SATURATION) == UNMASK) {
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVEN_INT_POS_SATURATION);
+        //handle->parent.callback(&handle->parent, NULL, 0, ADC_EVEN_INT_POS_SATURATION);
         ADC_IntClr(ADC_INT_POS_SATURATION);
     }
 
     if (ADC_GetIntStatus(ADC_INT_NEG_SATURATION) == SET && ADC_IntGetMask(ADC_INT_NEG_SATURATION) == UNMASK) {
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVEN_INT_NEG_SATURATION);
+        //handle->parent.callback(&handle->parent, NULL, 0, ADC_EVEN_INT_NEG_SATURATION);
         ADC_IntClr(ADC_INT_NEG_SATURATION);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_UNDERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_UNDERRUN) == UNMASK) {
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_UNDERRUN);
+        //handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_UNDERRUN);
         ADC_IntClr(ADC_INT_FIFO_UNDERRUN);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_OVERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_OVERRUN) == UNMASK) {
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_OVERRUN);
+        //handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_OVERRUN);
         ADC_IntClr(ADC_INT_FIFO_OVERRUN);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_READY) == SET && ADC_IntGetMask(ADC_INT_FIFO_READY) == UNMASK) {
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_FIFO_READY);
+        uint32_t adc_count = ADC_Get_FIFO_Count();
+        uint32_t adc_fifo_val[32];
+        adc_channel_val_t adc_parse_val[32];
+        for (uint32_t i = 0; i < adc_count; i++) {
+            adc_fifo_val[i] = ADC_Read_FIFO();
+        }
+        ADC_Parse_Result(adc_fifo_val, adc_count, (ADC_Result_Type *)adc_parse_val);
+        handle->parent.callback(&handle->parent, (void *)adc_parse_val, adc_count, ADC_EVENT_FIFO);
         ADC_IntClr(ADC_INT_FIFO_READY);
     }
 }

@@ -22,9 +22,11 @@
  */
 #ifndef __HAL_KEYSCAN__H__
 #define __HAL_KEYSCAN__H__
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-#include "drv_device.h"
-#include "bl702_config.h"
+#include "hal_common.h"
 
 #define DEVICE_CTRL_KEYSCAN_GET_KEYCODE 0x10
 
@@ -86,4 +88,7 @@ typedef struct keyscan_device {
 
 int keyscan_register(enum keyscan_index_type index, const char *name);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

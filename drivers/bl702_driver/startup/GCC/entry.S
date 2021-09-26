@@ -1,6 +1,6 @@
 /* Copyright 2018 SiFive, Inc */
 /* SPDX-License-Identifier: Apache-2.0 */
-#include "riscv_encoding.h"
+#include "../risc-v/Core/Include/riscv_encoding.h"
 
 /* This code executes before _start, which is contained inside the C library.
  * In embedded systems we want to ensure that _enter, which contains the first

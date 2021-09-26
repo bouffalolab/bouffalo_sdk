@@ -25,7 +25,6 @@
 #include "bl702_gpio.h"
 #include "bl702_dac.h"
 #include "bl702_dma.h"
-#include "bl702_config.h"
 #include "bl702_glb.h"
 #include "dac_config.h"
 
