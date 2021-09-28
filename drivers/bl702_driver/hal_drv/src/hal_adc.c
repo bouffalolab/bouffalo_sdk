@@ -165,17 +165,31 @@ int adc_control(struct device *dev, int cmd, void *args)
     uint8_t rlt = 0;
 
     switch (cmd) {
-        case DEVICE_CTRL_SET_INT /* constant-expression */:
-            ADC_IntMask(ADC_INT_FIFO_READY, UNMASK);
+        case DEVICE_CTRL_SET_INT /* constant-expression */: {
+            uint32_t offset = __builtin_ctz((uint32_t)args);
+            while ((2 <= offset) && (offset < 6)) {
+                if ((uint32_t)args & (1 << offset)) {
+                    ADC_IntMask(offset, UNMASK);
+                }
+                offset++;
+            }
             CPU_Interrupt_Enable(GPADC_DMA_IRQn);
 
             break;
+        }
 
-        case DEVICE_CTRL_CLR_INT /* constant-expression */:
-            ADC_IntMask(ADC_INT_FIFO_READY, MASK);
+        case DEVICE_CTRL_CLR_INT /* constant-expression */: {
+            uint32_t offset = __builtin_ctz((uint32_t)args);
+            while ((2 <= offset) && (offset < 6)) {
+                if ((uint32_t)args & (1 << offset)) {
+                    ADC_IntMask(offset, UNMASK);
+                }
+                offset++;
+            }
             CPU_Interrupt_Disable(GPADC_DMA_IRQn);
 
             break;
+        }
 
         case DEVICE_CTRL_GET_INT /* constant-expression */:
             /* code */
@@ -340,12 +354,12 @@ void adc_isr(adc_device_t *handle)
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_UNDERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_UNDERRUN) == UNMASK) {
-        //handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_UNDERRUN);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_UNDERRUN);
         ADC_IntClr(ADC_INT_FIFO_UNDERRUN);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_OVERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_OVERRUN) == UNMASK) {
-        //handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_OVERRUN);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_OVERRUN);
         ADC_IntClr(ADC_INT_FIFO_OVERRUN);
     }
 

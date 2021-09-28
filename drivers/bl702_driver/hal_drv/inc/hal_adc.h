@@ -24,7 +24,7 @@
 #define __HAL_ADC__H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #include "hal_common.h"
@@ -126,12 +126,16 @@ typedef enum {
 } adc_pga_gain_t;
 
 enum adc_event_type {
+    ADC_EVENT_UNDERRUN,
+    ADC_EVENT_OVERRUN,
     ADC_EVENT_FIFO,
-    UART_EVENT_UNKNOWN
+    ADC_EVENT_UNKNOWN
 };
 
 enum adc_it_type {
-    ADC_FIFO_IT = 1 << 0,
+    ADC_UNDERRUN_IT = 1 << 2,
+    ADC_OVERRUN_IT = 1 << 3,
+    ADC_FIFO_IT = 1 << 5,
 };
 
 typedef struct
