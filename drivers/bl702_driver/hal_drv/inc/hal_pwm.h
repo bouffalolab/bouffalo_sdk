@@ -52,9 +52,9 @@ enum pwm_index_type {
 
 #define pwm_channel_start(dev)                 device_control(dev, DEVICE_CTRL_RESUME, NULL)
 #define pwm_channel_stop(dev)                  device_control(dev, DEVICE_CTRL_SUSPEND, NULL)
-#define pwm_channel_freq_update(dev, count)    device_control(dev, DEIVCE_CTRL_PWM_FREQUENCE_CONFIG, (void *)count)
-#define pwm_channel_dutycycle_update(dev, cfg) device_control(dev, DEIVCE_CTRL_PWM_DUTYCYCLE_CONFIG, cfg)
-#define pwm_it_pulse_count_update(dev, count)  device_control(dev, DEIVCE_CTRL_PWM_IT_PULSE_COUNT_CONFIG, (void *)count)
+#define pwm_channel_freq_update(dev, count)    device_control(dev, DEVICE_CTRL_PWM_FREQUENCE_CONFIG, (void *)count)
+#define pwm_channel_dutycycle_update(dev, cfg) device_control(dev, DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG, cfg)
+#define pwm_it_pulse_count_update(dev, count)  device_control(dev, DEVICE_CTRL_PWM_IT_PULSE_COUNT_CONFIG, (void *)count)
 
 enum pwm_event_type {
     PWM_EVENT_COMPLETE,

@@ -101,26 +101,26 @@ int main(void)
     motor_ch3 = device_find("motor_ch3");
 
     if (motor_ch0) {
-        PWM_DEV(motor_ch0)->period = 8; //frequence = 32K/32/8 = 125hz
+        PWM_DEV(motor_ch0)->period = 8; //frequence = 32K/(31+1)/8 = 125hz
         PWM_DEV(motor_ch0)->threshold_low = 2;
         PWM_DEV(motor_ch0)->threshold_high = 7;
         PWM_DEV(motor_ch0)->polarity_invert_mode = ENABLE;
         device_open(motor_ch0, DEVICE_OFLAG_STREAM_TX);
     }
     if (motor_ch1) {
-        PWM_DEV(motor_ch1)->period = 8; //frequence = 32K/32/8 = 125hz
+        PWM_DEV(motor_ch1)->period = 8; //frequence = 32K/(31+1)/8 = 125hz
         PWM_DEV(motor_ch1)->threshold_low = 1;
         PWM_DEV(motor_ch1)->threshold_high = 4;
         device_open(motor_ch1, DEVICE_OFLAG_STREAM_TX);
     }
     if (motor_ch2) {
-        PWM_DEV(motor_ch2)->period = 8; //frequence = 32K/32/8 = 125hz
+        PWM_DEV(motor_ch2)->period = 8; //frequence = 32K/(31+1)/8 = 125hz
         PWM_DEV(motor_ch2)->threshold_low = 3;
         PWM_DEV(motor_ch2)->threshold_high = 6;
         device_open(motor_ch2, DEVICE_OFLAG_STREAM_TX);
     }
     if (motor_ch3) {
-        PWM_DEV(motor_ch3)->period = 8; //frequence = 32K/32/8 = 125hz
+        PWM_DEV(motor_ch3)->period = 8; //frequence = 32K/(31+1)/8 = 125hz
         PWM_DEV(motor_ch3)->threshold_low = 5;
         PWM_DEV(motor_ch3)->threshold_high = 8;
         device_open(motor_ch3, DEVICE_OFLAG_STREAM_TX);

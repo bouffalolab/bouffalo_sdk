@@ -45,7 +45,7 @@ int main(void)
     struct device *led_breath = device_find("led_breath");
 
     if (led_breath) {
-        PWM_DEV(led_breath)->period = 10; //frequence = 32K/32/10 = 100HZ
+        PWM_DEV(led_breath)->period = 10; //frequence = 32K/(31+1)/10 = 100HZ
         PWM_DEV(led_breath)->threshold_low = 5;
         PWM_DEV(led_breath)->threshold_high = 10;
         device_open(led_breath, DEVICE_OFLAG_STREAM_TX);

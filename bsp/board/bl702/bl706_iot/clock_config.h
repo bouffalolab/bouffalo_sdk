@@ -57,7 +57,7 @@
 #endif
 #if defined(BSP_USING_PWM_CH0) || defined(BSP_USING_PWM_CH1) || defined(BSP_USING_PWM_CH2) || defined(BSP_USING_PWM_CH3) || defined(BSP_USING_PWM_CH4) || defined(BSP_USING_PWM_CH5)
 #define BSP_PWM_CLOCK_SOURCE ROOT_CLOCK_SOURCE_32K_CLK
-#define BSP_PWM_CLOCK_DIV    32
+#define BSP_PWM_CLOCK_DIV    31
 #endif
 #if defined(BSP_USING_IR)
 #define BSP_IR_CLOCK_SOURCE ROOT_CLOCK_SOURCE_XCLK

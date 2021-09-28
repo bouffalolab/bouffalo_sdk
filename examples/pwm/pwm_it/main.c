@@ -39,7 +39,7 @@ int main(void)
     struct device *pwm = device_find("pwm");
 
     if (pwm) {
-        PWM_DEV(pwm)->period = 10; //frequence = 32k/32/10 = 100hz
+        PWM_DEV(pwm)->period = 10; //frequence = 32k/(31+1)/10 = 100hz
         PWM_DEV(pwm)->threshold_low = 5;
         PWM_DEV(pwm)->threshold_high = 10;
         PWM_DEV(pwm)->it_pulse_count = 200; //after 2s go isr 2s = 1/100hz*200

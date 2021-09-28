@@ -43,7 +43,7 @@ int main(void)
     struct device *dc_motor_ch1 = device_find("dc_motor_ch1");
 
     if (dc_motor_ch0) {
-        PWM_DEV(dc_motor_ch0)->period = 32; //frequence = 32K/1/32 = 1Khz
+        PWM_DEV(dc_motor_ch0)->period = 32; //frequence = 32K/(0+1)/32 = 1Khz
         PWM_DEV(dc_motor_ch0)->threshold_low = 16;
         PWM_DEV(dc_motor_ch0)->threshold_high = 32;
         device_open(dc_motor_ch0, DEVICE_OFLAG_STREAM_TX);
