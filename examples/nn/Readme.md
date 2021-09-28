@@ -29,8 +29,8 @@ curve for micro-controller developers, and reducing the time to market for new d
 | Directory                  | Content                                                   |
 |:-------------------------- |:--------------------------------------------------------- |
 | components/nmsis/core      | NMSIS-Core related files                                  |
-| components/NMSIS/DSP       | NMSIS-DSP related files                                   |
-| components/NMSIS/NN        | NMSIS-NN related files                                    |
+| components/nmsis/DSP       | NMSIS-DSP related files                                   |
+| components/nmsis/NN        | NMSIS-NN related files                                    |
 | examples/dsp               | dsp examples                                              |
 | examples/nn                | nn examples                                               |
 | examples/mfcc              | mfcc compile examples                                     |
@@ -46,6 +46,6 @@ User can replace APP=xxx to change build target.
 
 ## License
 
-This NMSIS is modified based on open-source project CMSIS to match Boufflao Lab requirements.
+This NMSIS is modified based on open-source project [Nuclei NMSIS](https://github.com/Nuclei-Software/NMSIS) to match Boufflao Lab requirements.
 This project transplant NMSIS into bl_mcu_sdk structure for Bouffalo Lab Device Adapting.
 NMSIS is licensed under Apache-2.0.
