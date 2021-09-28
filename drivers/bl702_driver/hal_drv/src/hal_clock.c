@@ -28,7 +28,7 @@
 
 static uint32_t mtimer_get_clk_src_div(void)
 {
-    return ((SystemCoreClockGet() / (GLB_Get_BCLK_Div() + 1)) / 1000 / 1000 - 1);
+    return (system_clock_get(SYSTEM_CLOCK_BCLK) / 1000 / 1000 - 1);
 }
 
 static void peripheral_clock_gate_all()
@@ -87,17 +87,6 @@ void system_clock_init(void)
     } else {
         HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
     }
-}
-
-void system_mtimer_clock_init(void)
-{
-    GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, mtimer_get_clk_src_div());
-}
-
-void system_mtimer_clock_reinit(void)
-{
-    /* reinit clock to 10M */
-    GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 7);
 }
 
 void peripheral_clock_init(void)
@@ -288,7 +277,7 @@ void peripheral_clock_init(void)
 #endif
 #endif
 
-#if defined(BSP_USING_PWM_CH0) || defined(BSP_USING_PWM_CH1) || defined(BSP_USING_PWM_CH2) || defined(BSP_USING_PWM_CH3) || defined(BSP_USING_PWM_CH4)
+#if defined(BSP_USING_PWM_CH0) || defined(BSP_USING_PWM_CH1) || defined(BSP_USING_PWM_CH2) || defined(BSP_USING_PWM_CH3) || defined(BSP_USING_PWM_CH4) || defined(BSP_USING_PWM_CH5)
     tmpVal |= (1 << BL_AHB_SLAVE1_PWM);
     BL_WR_REG(GLB_BASE, GLB_CGEN_CFG1, tmpVal);
 
@@ -313,7 +302,7 @@ void peripheral_clock_init(void)
         tmp_pwm = BL_SET_REG_BITS_VAL(tmp_pwm, PWM_REG_CLK_SEL, PWM_CLK_32K);
         BL_WR_REG(PWMx, PWM_CONFIG, tmp_pwm);
         /* Config pwm division */
-        BL_WR_REG(PWMx, PWM_CLKDIV, BSP_PWM_CLOCK_DIV);
+        BL_WR_REG(PWMx, PWM_CLKDIV, BSP_PWM_CLOCK_DIV + 1);
     }
 #elif BSP_PWM_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_BCLK
 
@@ -333,7 +322,7 @@ void peripheral_clock_init(void)
         tmp_pwm = BL_SET_REG_BITS_VAL(tmp_pwm, PWM_REG_CLK_SEL, PWM_CLK_BCLK);
         BL_WR_REG(PWMx, PWM_CONFIG, tmp_pwm);
         /* Config pwm division */
-        BL_WR_REG(PWMx, PWM_CLKDIV, BSP_PWM_CLOCK_DIV);
+        BL_WR_REG(PWMx, PWM_CLKDIV, BSP_PWM_CLOCK_DIV + 1);
     }
 #elif BSP_PWM_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
 
@@ -353,7 +342,7 @@ void peripheral_clock_init(void)
         tmp_pwm = BL_SET_REG_BITS_VAL(tmp_pwm, PWM_REG_CLK_SEL, PWM_CLK_XCLK);
         BL_WR_REG(PWMx, PWM_CONFIG, tmp_pwm);
         /* Config pwm division */
-        BL_WR_REG(PWMx, PWM_CLKDIV, BSP_PWM_CLOCK_DIV);
+        BL_WR_REG(PWMx, PWM_CLKDIV, BSP_PWM_CLOCK_DIV + 1);
     }
 #else
 #error "please select correct pwm clock source"
@@ -384,9 +373,9 @@ void peripheral_clock_init(void)
 #if defined(BSP_USING_DAC0)
     //tmpVal |= (1 << BL_AHB_SLAVE1_GPIP);
 #if BSP_DAC_CLOCK_SOURCE >= ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ
-    GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_AUDIO_PLL, BSP_DAC_CLOCK_DIV);
+    GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_AUDIO_PLL, BSP_DAC_CLOCK_DIV + 1);
 #elif BSP_DAC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
-    GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_XCLK, BSP_DAC_CLOCK_DIV);
+    GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_XCLK, BSP_DAC_CLOCK_DIV + 1);
 #else
 #error "please select correct dac clock source"
 #endif
@@ -433,6 +422,7 @@ void peripheral_clock_init(void)
 #endif
     BL_WR_REG(GLB_BASE, GLB_CGEN_CFG1, tmpVal);
 }
+
 uint32_t system_clock_get(enum system_clock_type type)
 {
     switch (type) {
@@ -484,6 +474,7 @@ uint32_t system_clock_get(enum system_clock_type type)
 
     return 0;
 }
+
 uint32_t peripheral_clock_get(enum peripheral_clock_type type)
 {
     uint32_t tmpVal;
@@ -492,39 +483,28 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
     switch (type) {
 #if defined(BSP_USING_UART0) || defined(BSP_USING_UART1)
         case PERIPHERAL_CLOCK_UART:
-#if BSP_UART_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_PLL_96M
-            tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG2);
-            div = BL_GET_REG_BITS_VAL(tmpVal, GLB_UART_CLK_DIV);
-            return 96000000 / (div + 1);
-#elif BSP_UART_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_FCLK
-            tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG2);
-            div = BL_GET_REG_BITS_VAL(tmpVal, GLB_UART_CLK_DIV);
-            return system_clock_get(SYSTEM_CLOCK_FCLK) / (div + 1);
-#else
-            break;
-#endif
+            tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+            tmpVal = BL_GET_REG_BITS_VAL(tmpVal, HBN_UART_CLK_SEL);
 
+            div = BL_RD_REG(GLB_BASE, GLB_CLK_CFG2);
+            div = BL_GET_REG_BITS_VAL(div, GLB_UART_CLK_DIV);
+            if (tmpVal == HBN_UART_CLK_FCLK) {
+                return system_clock_get(SYSTEM_CLOCK_FCLK) / (div + 1);
+            } else if (tmpVal == HBN_UART_CLK_96M) {
+                return 96000000 / (div + 1);
+            }
 #endif
 #if defined(BSP_USING_SPI0)
         case PERIPHERAL_CLOCK_SPI:
-#if BSP_SPI_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_BCLK
             tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG3);
             div = BL_GET_REG_BITS_VAL(tmpVal, GLB_SPI_CLK_DIV);
             return system_clock_get(SYSTEM_CLOCK_BCLK) / (div + 1);
-#else
-            break;
-#endif
 #endif
 #if defined(BSP_USING_I2C0)
         case PERIPHERAL_CLOCK_I2C:
-#if BSP_I2C_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_BCLK
             tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG3);
             div = BL_GET_REG_BITS_VAL(tmpVal, GLB_I2C_CLK_DIV);
             return system_clock_get(SYSTEM_CLOCK_BCLK) / (div + 1);
-
-#else
-            break;
-#endif
 #endif
 #if defined(BSP_USING_I2S0)
         case PERIPHERAL_CLOCK_I2S:
@@ -532,104 +512,101 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
 #endif
 #if defined(BSP_USING_ADC0)
         case PERIPHERAL_CLOCK_ADC:
-#if BSP_ADC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
             tmpVal = BL_RD_REG(GLB_BASE, GLB_GPADC_32M_SRC_CTRL);
             div = BL_GET_REG_BITS_VAL(tmpVal, GLB_GPADC_32M_CLK_DIV);
-            return system_clock_get(SYSTEM_CLOCK_XCLK) / div;
-#elif BSP_ADC_CLOCK_SOURCE >= ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ
-            tmpVal = BL_RD_REG(GLB_BASE, GLB_GPADC_32M_SRC_CTRL);
-            div = BL_GET_REG_BITS_VAL(tmpVal, GLB_GPADC_32M_CLK_DIV);
-            return system_clock_get(SYSTEM_CLOCK_AUPLL) / div;
-#else
-            break;
-#endif
+            tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_GPADC_32M_CLK_SEL);
+            if (tmpVal == GLB_ADC_CLK_AUDIO_PLL) {
+                return system_clock_get(SYSTEM_CLOCK_AUPLL) / (div + 1);
+            } else if (tmpVal == GLB_ADC_CLK_XCLK) {
+                return system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1);
+            }
 #endif
 #if defined(BSP_USING_DAC0)
         case PERIPHERAL_CLOCK_DAC:
-#if BSP_DAC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
             tmpVal = BL_RD_REG(GLB_BASE, GLB_DIG32K_WAKEUP_CTRL);
             div = BL_GET_REG_BITS_VAL(tmpVal, GLB_DIG_512K_DIV);
-            return system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1);
-#elif BSP_DAC_CLOCK_SOURCE >= ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ
-            tmpVal = BL_RD_REG(GLB_BASE, GLB_DIG32K_WAKEUP_CTRL);
-            div = BL_GET_REG_BITS_VAL(tmpVal, GLB_DIG_512K_DIV);
-            return system_clock_get(SYSTEM_CLOCK_AUPLL) / div;
-#else
-            break;
-#endif
+            tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_DIG_CLK_SRC_SEL);
+            if (tmpVal == GLB_DAC_CLK_AUDIO_PLL) {
+                return system_clock_get(SYSTEM_CLOCK_AUPLL) / div;
+            } else if (tmpVal == GLB_DAC_CLK_XCLK) {
+                return system_clock_get(SYSTEM_CLOCK_XCLK) / div;
+            }
 #endif
 #if defined(BSP_USING_TIMER0)
         case PERIPHERAL_CLOCK_TIMER0:
-#if BSP_TIMER0_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_FCLK
-            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
-            div = BL_GET_REG_BITS_VAL(tmpVal, TIMER_TCDR2);
-            return system_clock_get(SYSTEM_CLOCK_FCLK) / (div + 1);
-#elif BSP_TIMER0_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
-            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
-            div = BL_GET_REG_BITS_VAL(tmpVal, TIMER_TCDR2);
-            return system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1);
-#elif BSP_TIMER0_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_32K_CLK
-            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
-            div = BL_GET_REG_BITS_VAL(tmpVal, TIMER_TCDR2);
-            return system_clock_get(SYSTEM_CLOCK_32K_CLK) / (div + 1);
-#elif BSP_TIMER0_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_1K_CLK
-            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
-            div = BL_GET_REG_BITS_VAL(tmpVal, TIMER_TCDR2);
-            return 1000 / (div + 1);
-#else
-            break;
-#endif
+            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCCR);
+            tmpVal = BL_GET_REG_BITS_VAL(tmpVal, TIMER_CS_1);
+
+            div = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
+            div = BL_GET_REG_BITS_VAL(div, TIMER_TCDR2);
+            if (tmpVal == TIMER_CLKSRC_FCLK) {
+                return system_clock_get(SYSTEM_CLOCK_FCLK) / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_32K) {
+                return system_clock_get(SYSTEM_CLOCK_32K_CLK) / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_1K) {
+                return 1000 / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_XTAL) {
+                return system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1);
+            }
 #endif
 #if defined(BSP_USING_TIMER1)
         case PERIPHERAL_CLOCK_TIMER1:
-#if BSP_TIMER1_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_FCLK
-            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
-            div = BL_GET_REG_BITS_VAL(tmpVal, TIMER_TCDR3);
-            return system_clock_get(SYSTEM_CLOCK_FCLK) / (div + 1);
-#elif BSP_TIMER1_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
-            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
-            div = BL_GET_REG_BITS_VAL(tmpVal, TIMER_TCDR3);
-            return system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1);
-#elif BSP_TIMER1_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_32K_CLK
-            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
-            div = BL_GET_REG_BITS_VAL(tmpVal, TIMER_TCDR3);
-            return system_clock_get(SYSTEM_CLOCK_32K_CLK) / (div + 1);
-#elif BSP_TIMER1_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_1K_CLK
-            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
-            div = BL_GET_REG_BITS_VAL(tmpVal, TIMER_TCDR3);
-            return 1000 / (div + 1);
-#else
-            break;
+            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCCR);
+            tmpVal = BL_GET_REG_BITS_VAL(tmpVal, TIMER_CS_2);
+
+            div = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
+            div = BL_GET_REG_BITS_VAL(div, TIMER_TCDR3);
+            if (tmpVal == TIMER_CLKSRC_FCLK) {
+                return system_clock_get(SYSTEM_CLOCK_FCLK) / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_32K) {
+                return system_clock_get(SYSTEM_CLOCK_32K_CLK) / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_1K) {
+                return 1000 / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_XTAL) {
+                return system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1);
+            }
 #endif
+#if defined(BSP_USING_WDT)
+        case PERIPHERAL_CLOCK_WDT:
+            tmpVal = BL_RD_REG(TIMER_BASE, TIMER_TCCR);
+            tmpVal = BL_GET_REG_BITS_VAL(tmpVal, TIMER_CS_WDT);
+
+            div = BL_RD_REG(TIMER_BASE, TIMER_TCDR);
+            div = BL_GET_REG_BITS_VAL(div, TIMER_WCDR);
+            if (tmpVal == TIMER_CLKSRC_FCLK) {
+                return system_clock_get(SYSTEM_CLOCK_FCLK) / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_32K) {
+                return system_clock_get(SYSTEM_CLOCK_32K_CLK) / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_1K) {
+                return 1000 / (div + 1);
+            } else if (tmpVal == TIMER_CLKSRC_XTAL) {
+                return system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1);
+            }
 #endif
 #if defined(BSP_USING_PWM_CH0) || defined(BSP_USING_PWM_CH1) || defined(BSP_USING_PWM_CH2) || defined(BSP_USING_PWM_CH3) || defined(BSP_USING_PWM_CH4)
         case PERIPHERAL_CLOCK_PWM:
-#if BSP_PWM_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_32K_CLK
+            tmpVal = BL_RD_REG(PWM_BASE + PWM_CHANNEL_OFFSET, PWM_CONFIG);
+            tmpVal = BL_GET_REG_BITS_VAL(tmpVal, PWM_REG_CLK_SEL);
             div = BL_RD_REG(PWM_BASE + PWM_CHANNEL_OFFSET, PWM_CLKDIV);
-            return system_clock_get(SYSTEM_CLOCK_32K_CLK) / div;
-#elif BSP_PWM_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_BCLK
-            div = BL_RD_REG(PWM_BASE + PWM_CHANNEL_OFFSET, PWM_CLKDIV);
-            return system_clock_get(SYSTEM_CLOCK_BCLK) / div;
-#elif BSP_PWM_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
-            div = BL_RD_REG(PWM_BASE + PWM_CHANNEL_OFFSET, PWM_CLKDIV);
-            return system_clock_get(SYSTEM_CLOCK_XCLK) / div;
-#else
-            break;
-#endif
+            if (tmpVal == PWM_CLK_XCLK) {
+                return system_clock_get(SYSTEM_CLOCK_XCLK) / div;
+            } else if (tmpVal == PWM_CLK_BCLK) {
+                return system_clock_get(SYSTEM_CLOCK_BCLK) / div;
+            } else if (tmpVal == PWM_CLK_32K) {
+                return system_clock_get(SYSTEM_CLOCK_32K_CLK) / div;
+            }
 #endif
 #if defined(BSP_USING_CAM)
         case PERIPHERAL_CLOCK_CAM:
-#if BSP_CAM_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_PLL_96M
             tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG1);
+            tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_CAM_REF_CLK_SRC_SEL);
             div = BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_CAM_REF_CLK_DIV);
-            return (96000000 / (div + 1));
-#elif BSP_CAM_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
-            tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG1);
-            div = BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_CAM_REF_CLK_DIV);
-            return (system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1));
-#else
-            break;
-#endif
+
+            if (tmpVal == GLB_CAM_CLK_XCLK) {
+                return system_clock_get(SYSTEM_CLOCK_XCLK) / (div + 1);
+            } else if (tmpVal == GLB_CAM_CLK_DLL96M) {
+                return 96000000 / (div + 1);
+            }
 #endif
         default:
 
@@ -639,4 +616,15 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
     (void)(tmpVal);
     (void)(div);
     return 0;
+}
+
+void system_mtimer_clock_init(void)
+{
+    GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, mtimer_get_clk_src_div());
+}
+
+void system_mtimer_clock_reinit(void)
+{
+    /* reinit clock to 10M */
+    GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 7);
 }

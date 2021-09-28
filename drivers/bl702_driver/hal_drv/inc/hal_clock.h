@@ -79,14 +79,15 @@ enum peripheral_clock_type {
     PERIPHERAL_CLOCK_CAM,
     PERIPHERAL_CLOCK_TIMER0,
     PERIPHERAL_CLOCK_TIMER1,
+    PERIPHERAL_CLOCK_WDT,
 };
 
 void system_clock_init(void);
-void system_mtimer_clock_init(void);
-void system_mtimer_clock_reinit(void);
 void peripheral_clock_init(void);
 uint32_t system_clock_get(enum system_clock_type type);
 uint32_t peripheral_clock_get(enum peripheral_clock_type type);
+void system_mtimer_clock_init(void);
+void system_mtimer_clock_reinit(void);
 #ifdef __cplusplus
 }
 #endif
