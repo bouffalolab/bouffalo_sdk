@@ -23,7 +23,7 @@
 #include "hal_adc.h"
 #include "hal_gpio.h"
 
-adc_channel_t posChList[] = { ADC_CHANNEL3 };
+adc_channel_t posChList[] = { ADC_CHANNEL4 };
 adc_channel_t negChList[] = { ADC_CHANNEL_GND };
 
 void adc_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
