@@ -270,54 +270,62 @@ int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_
 
     DMA_Channel_Disable(dma_device->ch);
 
-    if (dma_device->direction == DMA_MEMORY_TO_MEMORY) {
-        dma_ctrl_cfg.bits.SI = 1;
-        dma_ctrl_cfg.bits.DI = 1;
-    } else if (dma_device->direction == DMA_MEMORY_TO_PERIPH) {
-        dma_ctrl_cfg.bits.SI = 1;
-        dma_ctrl_cfg.bits.DI = 0;
-    } else if (dma_device->direction == DMA_PERIPH_TO_MEMORY) {
-        dma_ctrl_cfg.bits.SI = 0;
-        dma_ctrl_cfg.bits.DI = 1;
-    } else if (dma_device->direction == DMA_PERIPH_TO_PERIPH) {
-        dma_ctrl_cfg.bits.SI = 0;
-        dma_ctrl_cfg.bits.DI = 0;
+    if (transfer_size == 0) {
+        return 0;
     }
 
-    if (dma_device->direction == DMA_MEMORY_TO_MEMORY) {
-        switch (dma_device->src_width) {
-            case DMA_TRANSFER_WIDTH_8BIT:
-                dma_device->src_burst_size = DMA_BURST_16BYTE;
-            case DMA_TRANSFER_WIDTH_16BIT:
-                dma_device->src_burst_size = DMA_BURST_8BYTE;
-            case DMA_TRANSFER_WIDTH_32BIT:
-                dma_device->src_burst_size = DMA_BURST_4BYTE;
-        }
-    } else {
-        dma_ctrl_cfg.bits.SBSize = dma_device->src_burst_size;
-        dma_ctrl_cfg.bits.DBSize = dma_device->dst_burst_size;
+    switch (dma_device->direction) {
+        case DMA_MEMORY_TO_MEMORY:
+            dma_ctrl_cfg.bits.SI = 1;
+            dma_ctrl_cfg.bits.DI = 1;
+            break;
+        case DMA_MEMORY_TO_PERIPH:
+            dma_ctrl_cfg.bits.SI = 1;
+            dma_ctrl_cfg.bits.DI = 0;
+            break;
+        case DMA_PERIPH_TO_MEMORY:
+            dma_ctrl_cfg.bits.SI = 0;
+            dma_ctrl_cfg.bits.DI = 1;
+            break;
+        case DMA_PERIPH_TO_PERIPH:
+            dma_ctrl_cfg.bits.SI = 0;
+            dma_ctrl_cfg.bits.DI = 0;
+            break;
+
+        default:
+            return -3;
+            break;
     }
 
+    dma_ctrl_cfg.bits.SBSize = dma_device->src_burst_size;
+    dma_ctrl_cfg.bits.DBSize = dma_device->dst_burst_size;
     dma_ctrl_cfg.bits.SWidth = dma_device->src_width;
     dma_ctrl_cfg.bits.DWidth = dma_device->dst_width;
 
-    if (dma_device->src_width == DMA_TRANSFER_WIDTH_8BIT) {
-        actual_transfer_offset = 4095;
-        actual_transfer_len = transfer_size;
-    } else if (dma_device->src_width == DMA_TRANSFER_WIDTH_16BIT) {
-        if (transfer_size % 2) {
-            return -1;
-        }
+    switch (dma_device->src_width) {
+        case DMA_TRANSFER_WIDTH_8BIT:
+            actual_transfer_offset = 4095;
+            actual_transfer_len = transfer_size;
+            break;
+        case DMA_TRANSFER_WIDTH_16BIT:
+            if (transfer_size % 2) {
+                return -1;
+            }
+            actual_transfer_offset = 4095 << 1;
+            actual_transfer_len = transfer_size >> 1;
+            break;
+        case DMA_TRANSFER_WIDTH_32BIT:
+            if (transfer_size % 4) {
+                return -1;
+            }
 
-        actual_transfer_offset = (4095 * 2);
-        actual_transfer_len = transfer_size / 2;
-    } else if (dma_device->src_width == DMA_TRANSFER_WIDTH_32BIT) {
-        if (transfer_size % 4) {
-            return -1;
-        }
+            actual_transfer_offset = 4095 << 2;
+            actual_transfer_len = transfer_size >> 2;
+            break;
 
-        actual_transfer_offset = (4095 * 4);
-        actual_transfer_len = transfer_size / 4;
+        default:
+            return -3;
+            break;
     }
 
     malloc_count = actual_transfer_len / 4095;
@@ -335,79 +343,39 @@ int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_
     }
 
     if (dma_device->lli_cfg) {
-        /*transfer_size will be 4095 or 4095*2 or 4095*4 in different transfer width*/
-        if ((!remain_len) && (malloc_count == 1)) {
-            dma_device->lli_cfg[0].src_addr = src_addr;
-            dma_device->lli_cfg[0].dst_addr = dst_addr;
-            dma_device->lli_cfg[0].nextlli = 0;
-            dma_ctrl_cfg.bits.TransferSize = remain_len;
-            dma_ctrl_cfg.bits.I = 1;
-            memcpy(&dma_device->lli_cfg[0].cfg, &dma_ctrl_cfg, sizeof(dma_control_data_t));
-        }
-        /*transfer_size will be 4095*n or 4095*2*n or 4095*4*n,(n>1) in different transfer width*/
-        else if ((!remain_len) && (malloc_count > 1)) {
-            for (uint32_t i = 0; i < malloc_count; i++) {
-                dma_device->lli_cfg[i].src_addr = src_addr;
-                dma_device->lli_cfg[i].dst_addr = dst_addr;
-                dma_device->lli_cfg[i].nextlli = 0;
+        /*transfer_size will be integer multiple of 4095*n or 4095*2*n or 4095*4*n,(n>0) */
+        for (uint32_t i = 0; i < malloc_count; i++) {
+            dma_device->lli_cfg[i].src_addr = src_addr;
+            dma_device->lli_cfg[i].dst_addr = dst_addr;
+            dma_device->lli_cfg[i].nextlli = 0;
 
-                dma_ctrl_cfg.bits.TransferSize = 4095;
-                dma_ctrl_cfg.bits.I = 0;
+            dma_ctrl_cfg.bits.TransferSize = 4095;
+            dma_ctrl_cfg.bits.I = 0;
 
-                if (dma_ctrl_cfg.bits.SI) {
-                    src_addr += actual_transfer_offset;
-                }
-
-                if (dma_ctrl_cfg.bits.DI) {
-                    dst_addr += actual_transfer_offset;
-                }
-
-                if (i == malloc_count - 1) {
-                    dma_ctrl_cfg.bits.I = 1;
-
-                    if (dma_device->transfer_mode == DMA_LLI_CYCLE_MODE) {
-                        dma_device->lli_cfg[i].nextlli = (uint32_t)&dma_device->lli_cfg[0];
-                    }
-                }
-
-                if (i) {
-                    dma_device->lli_cfg[i - 1].nextlli = (uint32_t)&dma_device->lli_cfg[i];
-                }
-
-                memcpy(&dma_device->lli_cfg[i].cfg, &dma_ctrl_cfg, sizeof(dma_control_data_t));
+            if (dma_ctrl_cfg.bits.SI) {
+                src_addr += actual_transfer_offset;
             }
-        } else {
-            for (uint32_t i = 0; i < malloc_count; i++) {
-                dma_device->lli_cfg[i].src_addr = src_addr;
-                dma_device->lli_cfg[i].dst_addr = dst_addr;
-                dma_device->lli_cfg[i].nextlli = 0;
 
-                dma_ctrl_cfg.bits.TransferSize = 4095;
-                dma_ctrl_cfg.bits.I = 0;
+            if (dma_ctrl_cfg.bits.DI) {
+                dst_addr += actual_transfer_offset;
+            }
 
-                if (dma_ctrl_cfg.bits.SI) {
-                    src_addr += actual_transfer_offset;
-                }
-
-                if (dma_ctrl_cfg.bits.DI) {
-                    dst_addr += actual_transfer_offset;
-                }
-
-                if (i == malloc_count - 1) {
+            if (i == malloc_count - 1) {
+                if (remain_len) {
                     dma_ctrl_cfg.bits.TransferSize = remain_len;
-                    dma_ctrl_cfg.bits.I = 1;
-
-                    if (dma_device->transfer_mode == DMA_LLI_CYCLE_MODE) {
-                        dma_device->lli_cfg[i].nextlli = (uint32_t)&dma_device->lli_cfg[0];
-                    }
                 }
+                dma_ctrl_cfg.bits.I = 1;
 
-                if (i) {
-                    dma_device->lli_cfg[i - 1].nextlli = (uint32_t)&dma_device->lli_cfg[i];
+                if (dma_device->transfer_mode == DMA_LLI_CYCLE_MODE) {
+                    dma_device->lli_cfg[i].nextlli = (uint32_t)&dma_device->lli_cfg[0];
                 }
-
-                memcpy(&dma_device->lli_cfg[i].cfg, &dma_ctrl_cfg, sizeof(dma_control_data_t));
             }
+
+            if (i) {
+                dma_device->lli_cfg[i - 1].nextlli = (uint32_t)&dma_device->lli_cfg[i];
+            }
+
+            memcpy(&dma_device->lli_cfg[i].cfg, &dma_ctrl_cfg, sizeof(dma_control_data_t));
         }
 
         DMA_LLI_Update(dma_device->ch, (uint32_t)dma_device->lli_cfg);
