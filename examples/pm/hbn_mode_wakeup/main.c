@@ -123,7 +123,7 @@ int hbn_run_in_wakeup_addr(int argc, char *argv[])
     /*cpu will wakeup when you set gpio9-gpio12 with GPIO_FUN_WAKEUP
     * rtc can not wakeup level2
     **/
-    pm_hbn_set_wakeup_callback(led_blink); /*cpu will run in wakeup callback not reset when it awakes*/
+    pm_set_wakeup_callback(led_blink); /*cpu will run in wakeup callback not reset when it awakes*/
     pm_hbn_mode_enter(PM_HBN_LEVEL_0, 0);
 
     return 0;

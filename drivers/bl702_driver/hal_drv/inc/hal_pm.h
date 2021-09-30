@@ -24,7 +24,7 @@
 #define __HAL_PM__H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #include "hal_common.h"
@@ -38,7 +38,7 @@ enum pm_pds_sleep_level {
     PM_PDS_LEVEL_5, /*do not recommend to use*/
     PM_PDS_LEVEL_6, /*do not recommend to use*/
     PM_PDS_LEVEL_7, /*do not recommend to use*/
-    PM_PDS_LEVEL_31,
+    PM_PDS_LEVEL_31 = 31,
 };
 
 enum pm_hbn_sleep_level {
@@ -57,14 +57,13 @@ enum pm_event_type {
     PM_HBN_ACOMP1_WAKEUP_EVENT,
 };
 
-void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint8_t sleep_time);
+void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint32_t sleep_time);
 void pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level, uint8_t sleep_time);
-void pm_hbn_set_wakeup_callback(void (*wakeup_callback)(void));
+void pm_set_wakeup_callback(void (*wakeup_callback)(void));
 void pm_hbn_enter_again(bool reset);
 void pm_hbn_out0_irq_register(void);
 void pm_hbn_out1_irq_register(void);
 void pm_irq_callback(enum pm_event_type event);
-uint32_t hal_pds_enter_with_time_compensation(uint32_t pdsLevel, uint32_t pdsSleepCycles);
 
 #ifdef __cplusplus
 }
