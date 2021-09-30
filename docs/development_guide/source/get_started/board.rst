@@ -10,7 +10,7 @@ Board 配置系统使用指南
 - **pinmux_config.h** 引脚功能配置头文件
 - **bl_config_wizard** 图形化界面配置上述三类文件
 
-用户只需要修改三个配置文件，系统会自动初始化，从而无需在用户程序中，调用一系列的复杂冗长的初始化函数。 Boufflao Lab 为方便用户快速简便的生成项目对应的配置文件，提供了 ``bl_config_wizard`` 配置软件，目前已支持引脚配置功能，但时钟配置和外设配置功能正处于开发阶段。
+用户只需要修改三个配置文件，系统会自动初始化，从而无需在用户程序中，调用一系列的复杂冗长的初始化函数。 Boufflao Lab 为方便用户快速简便的生成项目对应的配置文件，提供了 ``bl_config_wizard`` 配置软件，目前已支持引脚配置和时钟配置功能，但外设配置功能正处于开发阶段。
 
 `bl_config_wizard`_ 支持 PC 端在线配置，目前不支持移动终端在线配置。
 
@@ -63,11 +63,130 @@ Board 系统主要针对不同的板子来使用，不同的板子创建不同�
 
 .. warning:: 在 mcu sdk 中，所有 demo 共享这个文件，因此有些 demo 是不能使用的，需要频繁修改该文件的引脚功能配置。如果用户已经定好了引脚的分配，则不用频繁修改。
 
-Board 配置工具 **bl_config_wizard** 的使用
-------------------------------------------------------
+clock_config.h 的生成与修改
+----------------------------------
 
-生成一个新的 **pinmux_config.h** 文件
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+基于 bl_config_wizard 工具生成 clock_config.h 文件
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. 选择 **XCLK** 和 **PLL** 的时钟源； **XCLK** 和 **PLL** 时钟源始终保持一致，可以选择 ``内部 32M RC 震荡电路`` 产生的时钟，也可以选择 ``外部 32M 晶振`` 产生的时钟。
+
+.. figure:: img/xclk_mux.png
+    :alt:
+
+    xclk 时钟源选择
+
+2. 选择 **MCU** 的时钟源，并配置 **MCU** 和 **BCLK** 的分频系数； **MCU** 可以选择 **XCLK** 时钟或者 PLL 输出的某一路时钟作为时钟源， **PLL** 输出的时钟频率分别是 ``57.6MHz`` 、 ``144MHz`` 和 ``96MHz``。
+
+.. figure:: img/mcu_mux.png
+    :alt:
+
+    MCU 时钟源选择
+
+.. hint:: **MCU** 时钟又称为 **FCLK** 。
+.. hint:: 修改 ``DIV`` 时，如果时钟值未刷新，请敲回车。
+
+3. 选择 **PMU** 的时钟源。
+
+.. figure:: img/f32k_mux.png
+    :alt:
+
+    PMU 时钟源选择
+
+.. hint:: **PMU** 时钟又称 **F32K_CLK**
+
+4. 选择 **UART** 的时钟源，并配置其分频系数； **UART** 可以选择 **FCLK** 或者 **PLL_96M** 作为时钟源。
+
+.. figure:: img/uart_mux.png
+    :alt:
+
+    UART 时钟源选择与分频
+
+5. 配置 **I2C** 和 **SPI** 时钟的分频系数； **I2C** 、 **SPI** 有唯一的时钟源 **BCLK** ， **BCLK** 是 **MCU** 时钟经过 **BCLK_DIV** 分频后的时钟。
+
+.. figure:: img/i2c_spi_mux.png
+    :alt:
+
+    I2C 和 SPI 时钟分频
+
+6. 选择 **PWM** 的时钟源，并配置其分频系数； **PWM** 可以选择 **XTAL_32K** 、 **BCLK** 或者 **F32K_CLK** 时钟作为时钟源。
+
+.. figure:: img/pwm_mux.png
+    :alt:
+
+    PWM 时钟源选择
+
+7. 配置 **IR** 时钟的分频系数； **IR** 使用 **XCLK** 时钟作为时钟源，拥有独立的分频器。
+
+.. figure:: img/ir_mux.png
+    :alt:
+
+    IR 时钟分频器
+
+8. 选择 **I2S** 的时钟源； **I2S** 的时钟来自于 **AUPLL** 输出的时钟，AUPLL 可以选择输出 ``12.288MHz`` 、 ``11.2896MHz`` 、 ``5.6448MHz`` 、 ``24.576MMHz`` 和 ``24MMHz``。
+
+.. figure:: img/i2s_mux.png
+    :alt:
+
+    I2S 时钟源选择
+
+9. 选择 **ADC** 的时钟源，并配置其分频系数； **ADC** 可以选择 **AUPLL** 或者 **XCLK** 作为时钟源。
+
+.. figure:: img/adc_mux.png
+    :alt:
+
+    ADC 时钟源选择与分频
+
+.. warning:: ``ADC 时钟`` 不能大于 **2MHz**
+
+10. 选择 **DAC** 的时钟源，并配置其分频系数； **DAC** 可以选择 **AUPLL** 或者 **XCLK** 作为时钟源。
+
+.. figure:: img/dac_mux.png
+    :alt:
+
+    DAC 时钟源选择与分频
+
+.. warning:: ``DAC 时钟`` 不能大于 **512KHz**
+
+11. 选择 **QDEC** 和 **KYS** 的时钟源，并配置其分频系数； **QDEC** 和 **KYS** 共享一个时钟源，可以选择 **XCLK**  或者 **F32K_CLK**。
+
+.. figure:: img/qdec_kys_mux.png
+    :alt:
+
+    QDEC 和 KYS 时钟源选择
+
+.. hint:: 建议 **QDEC** 和 **KYS** 使用 **1MHz** 。
+
+12. 选择 **CAM** 的时钟源，并配置其分频系数； **CAM** 可以选择 **PLL_96M** 或者 **F32K_CLK** 作为时钟源。
+
+.. figure:: img/cam_mux.png
+    :alt:
+
+    CAM 时钟源选择
+
+13. 选择 **Timer0** 、 **Timer1** 的时钟源，并配置其分频系数。
+
+.. figure:: img/timer_mux.png
+    :alt:
+
+    Timer 时钟源选择
+
+14. 选择 **WDT** 的时钟源，并配置其分频系数。
+
+.. figure:: img/wdt_mux.png
+    :alt:
+
+    WDT 时钟源选择
+
+15. 导出配置文件。
+
+.. hint:: ``重置`` 按键用于恢复默认时钟配置。
+
+pinmux_config.h 的生成与修改
+----------------------------------
+
+基于 bl_config_wizard 工具生成 pinmux_config.h 文件
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1.  在窗口栏选择 ``引脚&外设配置``；
 #.  选择 MCU 型号，目前支持 ``BL706引脚配置``、 ``BL704引脚配置`` 、 ``BL702引脚配置`` ；
@@ -86,8 +205,8 @@ Board 配置工具 **bl_config_wizard** 的使用
 
     导出配置文件图
 
-修改原有的 **pinmux_config.h** 文件
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+基于 bl_config_wizard 工具修改 pinmux_config.h 文件
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 往往在使用中，我们不是生成一个新的 **pinmux_config.h** 文件，而是在原有的 **pinmux_config.h** 文件基础上做修改，``bl_config_wizard`` 支持这样的需求。
 

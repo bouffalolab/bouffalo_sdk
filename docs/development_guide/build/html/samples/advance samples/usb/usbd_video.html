@@ -39,7 +39,7 @@
     
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
-    <link rel="next" title="3.5. AUDIO - 麦克风" href="usbd_audio.html" />
+    <link rel="next" title="3.5. AUDIO - 声卡" href="usbd_audio.html" />
     <link rel="prev" title="3.3. HID - 键盘&amp;鼠标" href="usbd_hid.html" /> 
 </head>
 
@@ -142,6 +142,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. LowPower 低功耗评估</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../emac/index.html">7. EMAC 以太网应用</a></li>
 </ul>
 
             
@@ -249,6 +250,10 @@
     <span class="n">CAM</span>        <span class="o">&lt;--&gt;</span>     <span class="n">GPIO30</span>
     <span class="n">CAM</span>        <span class="o">&lt;--&gt;</span>     <span class="n">GPIO31</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">注解</p>
+<p>注意 706 AVB FUN1 的跳冒不要接，默认连接到摄像头引脚，如果接了则连接到了 i2s codec</p>
 </div>
 </div>
 <div class="section" id="id3">
@@ -422,7 +427,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="usbd_audio.html" class="btn btn-neutral float-right" title="3.5. AUDIO - 麦克风" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="usbd_audio.html" class="btn btn-neutral float-right" title="3.5. AUDIO - 声卡" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="usbd_hid.html" class="btn btn-neutral float-left" title="3.3. HID - 键盘&amp;鼠标" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 

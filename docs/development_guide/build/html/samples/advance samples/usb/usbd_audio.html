@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3.5. AUDIO - 麦克风 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>3.5. AUDIO - 声卡 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -129,12 +129,20 @@
 <li class="toctree-l2"><a class="reference internal" href="usbd_msc.html">3.2. MSC - U 盘</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usbd_hid.html">3.3. HID - 键盘&amp;鼠标</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usbd_video.html">3.4. VIDEO - 摄像头</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">3.5. AUDIO - 麦克风</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.5. AUDIO - 麦克风</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">3.5.1. 准备工具</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">3.5.2. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">3.5.3. 软件实现</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">3.5.4. 编译和烧录</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">3.5.5. 实验现象</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. LowPower 低功耗评估</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../emac/index.html">7. EMAC 以太网应用</a></li>
 </ul>
 
             
@@ -185,7 +193,7 @@
         
           <li><a href="index.html"><span class="section-number">3. </span>USB Device 应用</a> &raquo;</li>
         
-      <li><span class="section-number">3.5. </span>AUDIO - 麦克风</li>
+      <li><span class="section-number">3.5. </span>AUDIO - 声卡</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -205,7 +213,372 @@
            <div itemprop="articleBody">
             
   <div class="section" id="audio">
-<h1><span class="section-number">3.5. </span>AUDIO - 麦克风<a class="headerlink" href="#audio" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">3.5. </span>AUDIO - 声卡<a class="headerlink" href="#audio" title="永久链接至标题">¶</a></h1>
+<p>本 demo 将演示 USB Device AUDIO 类实现的一个声卡设备。</p>
+<p>通过 usb 外设将其枚举为 AUDIO 类录音播音复合设备，从而可以播放与录制声音,支持双通道录音与播音, 无需专用软件即可播放与录制，如微信电话、播放音乐等。</p>
+<p>在 USB 官方手册中，我们可以找到 USB 设备枚举符与端口描述符的定义, 根据定义配置正确的枚举符。</p>
+<p>采集声音与播放声音需要用到音频子板模块，这里使用的是 ESP8388 模块</p>
+<div class="section" id="id1">
+<h2><span class="section-number">3.5.1. </span>准备工具<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<p>BL706 AVB + ES8388音频模块 + windows 录音(任意用到音频的软件，如微信电话)</p>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">3.5.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>本 demo 基于 BL706_AVB 开发板，连接方式如下</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>GPIO function</p></th>
+<th class="head"><p>GPIO pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CLK_OUT(MCLK)</p></td>
+<td><p>GPIO6</p></td>
+</tr>
+<tr class="row-odd"><td><p>I2S_BCLK</p></td>
+<td><p>GPIO4</p></td>
+</tr>
+<tr class="row-even"><td><p>I2S_FS</p></td>
+<td><p>GPIO29</p></td>
+</tr>
+<tr class="row-odd"><td><p>I2S_DO</p></td>
+<td><p>GPIO30</p></td>
+</tr>
+<tr class="row-even"><td><p>I2S_DI</p></td>
+<td><p>GPIO3</p></td>
+</tr>
+<tr class="row-odd"><td><p>I2C_SCL</p></td>
+<td><p>GPIO16</p></td>
+</tr>
+<tr class="row-even"><td><p>I2C_SDA</p></td>
+<td><p>GPIO11</p></td>
+</tr>
+<tr class="row-odd"><td><p>USB_DP</p></td>
+<td><p>GPIO7</p></td>
+</tr>
+<tr class="row-even"><td><p>USB_DM</p></td>
+<td><p>GPIO8</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">3.5.3. </span>软件实现<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>USB 相关枚举符在 <code class="docutils literal notranslate"><span class="pre">example/usb/usb_audio_mic_speaker/main.c</span></code> 中定义</p></li>
+<li><p>音频 I2S 配置与使用也在 <code class="docutils literal notranslate"><span class="pre">example/usb/usb_audio_mic_speaker/main.c</span></code> 中实现</p></li>
+<li><p>USB 协议栈 在 <code class="docutils literal notranslate"><span class="pre">component/usb_stack/</span></code> 中实现, 其中 <code class="docutils literal notranslate"><span class="pre">component/usb_stack/class/audio/</span></code> 中有对于 AUDIO 特定类设备的回调函数。</p></li>
+<li><p>E38388 子板的相关驱动在 bsp/bsp_common/es8388/中。</p></li>
+<li><p>使用到的外设时钟源见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/clock_config.h</span></code>，如有改动，请自行修改:</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_AUDIO_PLL_CLOCK_SOURCE ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ</span>
+
+<span class="cp">#define BSP_I2S_CLOCK_SOURCE ROOT_CLOCK_SOURCE_XCLK</span>
+<span class="cp">#define BSP_I2S_CLOCK_DIV    0</span>
+
+<span class="cp">#define BSP_I2C_CLOCK_SOURCE ROOT_CLOCK_SOURCE_BCLK</span>
+<span class="cp">#define BSP_I2C_CLOCK_DIV    9</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>使用到的 GPIO 配置见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/pinmux_config.h</span></code>,如有改动，请自行修改:</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define CONFIG_GPIO6_FUNC GPIO_FUN_CLK_OUT</span>
+<span class="cp">#define CONFIG_GPIO3_FUNC GPIO_FUN_I2S</span>
+<span class="cp">#define CONFIG_GPIO4_FUNC GPIO_FUN_I2S</span>
+<span class="cp">#define CONFIG_GPIO29_FUNC GPIO_FUN_I2S</span>
+<span class="cp">#define CONFIG_GPIO30_FUNC GPIO_FUN_I2S</span>
+<span class="cp">#define CONFIG_GPIO11_FUNC GPIO_FUN_I2C</span>
+<span class="cp">#define CONFIG_GPIO16_FUNC GPIO_FUN_I2C</span>
+<span class="cp">#define CONFIG_GPIO7_FUNC  GPIO_FUN_USB</span>
+<span class="cp">#define CONFIG_GPIO8_FUNC  GPIO_FUN_USB</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>使能外设宏定义，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/peripheral_config.h</span></code> ,外设配置可以保持默认，在程序中已经重新配置:</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_I2C0</span>
+<span class="cp">#define BSP_USING_I2S0</span>
+<span class="cp">#define BSP_USING_USB</span>
+<span class="cp">#define BSP_USING_DMA0_CH2</span>
+<span class="cp">#define BSP_USING_DMA0_CH3</span>
+<span class="cp">#define BSP_USING_DMA0_CH4</span>
+</pre></div>
+</td></tr></table></div>
+<p>在 <code class="docutils literal notranslate"><span class="pre">example/usb/usb_audio_mic_speaker/main.c</span></code> 中, 前部分都是 USB 相关宏定义与 USB 枚举符定义, 包括设备枚举符与端口枚举符，
+这些枚举符都根据 usb 官方文档而定义, 包含了usb硬件信息、设备类型、audio 参数、端口信息等关键信息,让主机得以正确识别与使用设备，例如：</p>
+<p>例1：官方文档规定的设备描述符：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/usb_audio_1.png" />
+</div>
+<p>程序中定义的设备描述符：</p>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="o">*</span> <span class="o">------------------</span> <span class="n">AudioControl</span> <span class="n">Interface</span> <span class="o">------------------</span> <span class="o">*/</span>
+<span class="cm">/* USB Microphone Standard AC Interface Descriptor */</span>
+<span class="mh">0x09</span><span class="p">,</span>                          <span class="cm">/* bLength */</span>
+<span class="n">USB_DESCRIPTOR_TYPE_INTERFACE</span><span class="p">,</span> <span class="cm">/* bDescriptorType */</span>
+<span class="mh">0x00</span><span class="p">,</span>                          <span class="cm">/* bInterfaceNumber */</span>
+<span class="mh">0x00</span><span class="p">,</span>                          <span class="cm">/* bAlternateSetting */</span>
+<span class="mh">0x00</span><span class="p">,</span>                          <span class="cm">/* bNumEndpoints */</span>
+<span class="n">USB_DEVICE_CLASS_AUDIO</span><span class="p">,</span>        <span class="cm">/* bInterfaceClass */</span>
+<span class="n">AUDIO_SUBCLASS_AUDIOCONTROL</span><span class="p">,</span>   <span class="cm">/* bInterfaceSubClass */</span>
+<span class="n">AUDIO_PROTOCOL_UNDEFINED</span><span class="p">,</span>      <span class="cm">/* bInterfaceProtocol */</span>
+<span class="mh">0x00</span><span class="p">,</span>                          <span class="cm">/* iInterface */</span>
+<span class="cm">/* 09 byte*/</span>
+</pre></div>
+</td></tr></table></div>
+<p>例2：官方文档规定的麦克风端口描述符：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/usb_audio_2.png" />
+</div>
+<p>程序中定义的端口描述符, 其中一个描述符是控制端口, 一个是数据端口, 由其他描述符所定义的：</p>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cm">/* --------------- AudioStreaming Interface --------------- */</span>
+<span class="cm">/* USB Microphone Standard AS Interface Descriptor - Audio Streaming Zero Bandwith */</span>
+<span class="cm">/* Interface 1, Alternate Setting 0                                             */</span>
+<span class="mh">0x09</span><span class="p">,</span>                          <span class="cm">/* bLength */</span>
+<span class="n">USB_DESCRIPTOR_TYPE_INTERFACE</span><span class="p">,</span> <span class="cm">/* bDescriptorType */</span>
+<span class="mh">0x01</span><span class="p">,</span>                          <span class="cm">/* bInterfaceNumber */</span>
+<span class="mh">0x00</span><span class="p">,</span>                          <span class="cm">/* bAlternateSetting */</span>
+<span class="mh">0x00</span><span class="p">,</span>                          <span class="cm">/* bNumEndpoints */</span>
+<span class="n">USB_DEVICE_CLASS_AUDIO</span><span class="p">,</span>        <span class="cm">/* bInterfaceClass */</span>
+<span class="n">AUDIO_SUBCLASS_AUDIOSTREAMING</span><span class="p">,</span> <span class="cm">/* bInterfaceSubClass */</span>
+<span class="n">AUDIO_PROTOCOL_UNDEFINED</span><span class="p">,</span>      <span class="cm">/* bInterfaceProtocol */</span>
+<span class="mh">0x00</span><span class="p">,</span>                          <span class="cm">/* iInterface */</span>
+<span class="cm">/* 09 byte*/</span>
+
+<span class="cm">/* USB Microphone Standard AS Interface Descriptor - Audio Streaming Operational */</span>
+<span class="cm">/* Interface 1, Alternate Setting 1                                           */</span>
+<span class="mh">0x09</span><span class="p">,</span>                          <span class="cm">/* bLength */</span>
+<span class="n">USB_DESCRIPTOR_TYPE_INTERFACE</span><span class="p">,</span> <span class="cm">/* bDescriptorType */</span>
+<span class="mh">0x01</span><span class="p">,</span>                          <span class="cm">/* bInterfaceNumber */</span>
+<span class="mh">0x01</span><span class="p">,</span>                          <span class="cm">/* bAlternateSetting */</span>
+<span class="mh">0x01</span><span class="p">,</span>                          <span class="cm">/* bNumEndpoints */</span>
+<span class="n">USB_DEVICE_CLASS_AUDIO</span><span class="p">,</span>        <span class="cm">/* bInterfaceClass */</span>
+<span class="n">AUDIO_SUBCLASS_AUDIOSTREAMING</span><span class="p">,</span> <span class="cm">/* bInterfaceSubClass */</span>
+<span class="n">AUDIO_PROTOCOL_UNDEFINED</span><span class="p">,</span>      <span class="cm">/* bInterfaceProtocol */</span>
+<span class="mh">0x00</span><span class="p">,</span>                          <span class="cm">/* iInterface */</span>
+<span class="cm">/* 09 byte*/</span>
+</pre></div>
+</td></tr></table></div>
+<p>还有其他多个端口枚举符, 其作用可以查阅 usb 官方文档, 其中有详细介绍含义。
+USB 的协议流程控制程序在 <code class="docutils literal notranslate"><span class="pre">component/usb_stack</span></code> 中, 这是一个由博流开发的极为轻量级的 usb 协议栈。
+协议栈使用描述符完成枚举过程, 向主机表达了设备类型与传输端口, 并根据 usb 协议规则控制后续的数据交互流程。
+USB 协议栈可以参考 API 手册下的 USB Stack 章节的说明。</p>
+<p>在 <code class="docutils literal notranslate"><span class="pre">example/usb/usb_audio_mic_speaker/main.c</span></code> 中 <code class="docutils literal notranslate"><span class="pre">audio_init()</span></code> 函数,完成了对音频部分的初始化,
+包括 ES8388 音频模块的初始化(I2C配置接口), I2S 接口的配置，使用了 DMA 来提高效率降低 cpu 负载。
+具体作用请查看 <code class="docutils literal notranslate"><span class="pre">基础外设例程</span></code> 下的 <code class="docutils literal notranslate"><span class="pre">I2S</span></code> 示例，这里不再详细描述。</p>
+<p>在 <code class="docutils literal notranslate"><span class="pre">main()</span></code> 函数中，首先是调用了音频初始化函数，然后配置注册了 USB 相关端口，由于使用了 USB 同步传输,
+还使用了一路 DMA 来发送数据, 进一步提升效率:</p>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">bflb_platform_init</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="n">audio_init</span><span class="p">();</span>
+
+<span class="n">usbd_desc_register</span><span class="p">(</span><span class="n">audio_descriptor</span><span class="p">);</span>
+<span class="n">usbd_audio_add_interface</span><span class="p">(</span><span class="o">&amp;</span><span class="n">audio_class</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">audio_control_intf</span><span class="p">);</span>
+<span class="n">usbd_audio_add_interface</span><span class="p">(</span><span class="o">&amp;</span><span class="n">audio_class</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">audio_stream_intf</span><span class="p">);</span>
+<span class="n">usbd_audio_add_interface</span><span class="p">(</span><span class="o">&amp;</span><span class="n">audio_class</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">audio_stream_intf2</span><span class="p">);</span>
+<span class="n">usbd_interface_add_endpoint</span><span class="p">(</span><span class="o">&amp;</span><span class="n">audio_stream_intf</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">audio_out_ep</span><span class="p">);</span>
+
+<span class="n">usb_fs</span> <span class="o">=</span> <span class="n">usb_dc_init</span><span class="p">();</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">usb_fs</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">usb_fs</span><span class="p">,</span> <span class="n">DEVICE_CTRL_SET_INT</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)(</span><span class="n">USB_EP2_DATA_OUT_IT</span><span class="p">));</span>
+<span class="p">}</span>
+<span class="n">dma_register</span><span class="p">(</span><span class="n">DMA0_CH4_INDEX</span><span class="p">,</span> <span class="s">&quot;dma_ch4_usb_tx&quot;</span><span class="p">);</span>
+<span class="n">dma_ch4_usb_tx</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;dma_ch4_usb_tx&quot;</span><span class="p">);</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">direction</span> <span class="o">=</span> <span class="n">DMA_MEMORY_TO_PERIPH</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">transfer_mode</span> <span class="o">=</span> <span class="n">DMA_LLI_ONCE_MODE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_req</span> <span class="o">=</span> <span class="n">DMA_REQUEST_NONE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_req</span> <span class="o">=</span> <span class="n">DMA_REQUEST_USB_EP1</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_8BIT</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_8BIT</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_burst_size</span> <span class="o">=</span> <span class="n">DMA_BURST_16BYTE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_burst_size</span> <span class="o">=</span> <span class="n">DMA_BURST_1BYTE</span><span class="p">;</span>
+
+    <span class="n">device_open</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="c1">// device_set_callback(dma_ch4_usb_tx, dma2_irq_callback);</span>
+    <span class="c1">// device_control(dma_ch4_usb_tx, DEVICE_CTRL_SET_INT, NULL);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">usb_fs</span><span class="p">,</span> <span class="n">DEVICE_CTRL_ATTACH_TX_DMA</span><span class="p">,</span> <span class="n">dma_ch4_usb_tx</span><span class="p">);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">usb_fs</span><span class="p">,</span> <span class="n">DEVICE_CTRL_USB_DC_SET_TX_DMA</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">AUDIO_IN_EP</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>之后启动 I2S 录音, 并根据 USB 状态来判断是否需要上传录制的音频数据; 同时判断是否有下传的需要播放的数据,如果有就使用 I2S 播放：</p>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cm">/* i2s record start */</span>
+<span class="n">device_read</span><span class="p">(</span><span class="n">i2s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">record_data_buff</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">BUFF_SIZE</span><span class="p">);</span>
+
+<span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/* Waiting for record data update */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">record_updata_flag</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">device_control</span><span class="p">(</span><span class="n">dma_ch4_usb_tx</span><span class="p">,</span> <span class="n">DMA_CHANNEL_GET_STATUS</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">))</span> <span class="p">{</span>
+            <span class="n">device_write</span><span class="p">(</span><span class="n">usb_fs</span><span class="p">,</span> <span class="n">AUDIO_IN_EP</span><span class="p">,</span> <span class="n">record_data_buff</span><span class="p">[</span><span class="o">!</span><span class="n">record_buff_using_num</span><span class="p">],</span> <span class="n">BUFF_SIZE</span><span class="p">);</span>
+            <span class="n">record_updata_flag</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">record_buff_using_num</span> <span class="o">=</span> <span class="o">!</span><span class="n">record_buff_using_num</span><span class="p">;</span>
+            <span class="n">device_read</span><span class="p">(</span><span class="n">i2s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">record_data_buff</span><span class="p">[</span><span class="n">record_buff_using_num</span><span class="p">],</span> <span class="n">BUFF_SIZE</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">play_updata_flag</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">device_control</span><span class="p">(</span><span class="n">dma_ch2_i2s_tx</span><span class="p">,</span> <span class="n">DMA_CHANNEL_STOP</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+        <span class="n">play_buff_using_num</span> <span class="o">=</span> <span class="o">!</span><span class="n">play_buff_using_num</span><span class="p">;</span>
+        <span class="n">device_write</span><span class="p">(</span><span class="n">i2s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">play_data_buff</span><span class="p">[</span><span class="n">play_buff_using_num</span><span class="p">],</span> <span class="n">BUFF_SIZE</span><span class="p">);</span>
+        <span class="n">play_updata_flag</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">usb_data_offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="id4">
+<h2><span class="section-number">3.5.4. </span>编译和烧录<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p><strong>CDK 编译</strong></p>
+<p>打开项目中提供的工程文件：usb_video.cdkproj</p>
+<p>参照 <a class="reference internal" href="../../../get_started/Windows_quick_start_cdk.html#windows-cdk-quick-start"><span class="std std-ref">Windows 下使用 CDK (类 MDK Keil)开发指南</span></a> 的步骤编译下载即可</p>
+</li>
+<li><p><strong>命令行编译</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_avb <span class="nv">APP</span><span class="o">=</span>usb_audio_mic_speaker
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>烧录</strong></p>
+<p>详见 <a class="reference internal" href="../../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube 烧录工具指南</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h2><span class="section-number">3.5.5. </span>实验现象<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>如图, 将 ES8388 子板插入 BL706_AVB 板上, 并烧录程序后, 用 USB 线连接电脑:</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/usb_audio_3.png" />
+</div>
+<p>打开电脑声音设置窗口, 在输入与输入的设备中找到并选择 Bouffalo AUDIO DEMO 设备, 如下图：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/usb_audio_4.png" />
+</div>
+<p>发出声音, 如敲击麦克风，可看见麦克风进度条跳动, 拖动输出的主音量，音量进度条也有跳动，
+并且喇叭会发出提示音。如果找到设备但无法输入输出音频, 请检查 board 引脚与外设配置,和硬件连接。</p>
+<p>打开任意音频软件, 如音乐播放器, 即可使用设备播放音乐。</p>
+</div>
 </div>
 
 

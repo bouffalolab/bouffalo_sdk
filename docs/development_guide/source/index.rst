@@ -67,4 +67,5 @@ BL MCU SDK 将为您提供博流 BL70X 系列 MCU 开发的全方位支持。
    samples/advance samples/lowpower_demo
    samples/advance samples/boot2_iap_info
    samples/advance samples/ble_scan_demo
+   samples/advance samples/emac/index
 

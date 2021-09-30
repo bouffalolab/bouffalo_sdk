@@ -22,12 +22,29 @@ Linux OR WSL 环境开发指南
    :emphasize-lines: 4-6
 
    $ cd ~
-   $ wget -c https://dev.bouffalolab.com/media/upload/download/riscv64-elf-x86_64-20210120.tar.gz
-   $ mkdir -p riscv64-elf-20210120
-   $ tar -zxvf riscv64-elf-x86_64-20210120.tar.gz -C riscv64-elf-20210120
-   $ sudo cp -rf ~/riscv64-elf-20210120  /usr/bin
-   $ echo "export PATH=\"$PATH:/usr/bin/riscv64-elf-20210120/bin\""  >> ~/.bashrc
+   $ wget -c https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux/repository/archive/V10.2
+   $ unzip -x V10.2
+   $ mv toolchain_gcc_sifive_linux-V10.2/ riscv64-unknown-elf-v10.2
+   $ sudo cp -rf ~/riscv64-unknown-elf-v10.2  /usr/bin
+   $ echo "export PATH=\"$PATH:/usr/bin/riscv64-unknown-elf-v10.2/bin\""  >> ~/.bashrc
    $ source ~/.bashrc
+
+运行下面的命令，查看工具链是否安装成功，如果出现如下所示的信息则表示工具链安装成功
+
+.. code-block:: bash
+   :linenos:
+   :emphasize-lines: 1
+
+   $ riscv64-unknown-elf-gcc -v
+   Using built-in specs.
+   COLLECT_GCC=riscv64-unknown-elf-gcc
+   COLLECT_LTO_WRAPPER=/usr/bin/riscv64-unknown-elf-v10.2/bin/../libexec/gcc/riscv64-unknown-elf/10.2.0/lto-wrapper
+   Target: riscv64-unknown-elf
+   Configured with: /scratch/jenkins/workspace/tpp-freedom-tools/tpp03--build-binary-packages--parameterized/obj/x86_64-linux-ubuntu14/build/riscv64-unknown-elf-gcc/riscv-gcc/configure --target=riscv64-unknown-elf --host=x86_64-linux-gnu --prefix=/scratch/jenkins/workspace/tpp-freedom-tools/tpp03--build-binary-packages--parameterized/obj/x86_64-linux-ubuntu14/install/riscv64-unknown-elf-gcc-10.2.0-2020.12.8-x86_64-linux-ubuntu14 --with-pkgversion='SiFive GCC-Metal 10.2.0-2020.12.8' --with-bugurl=https://github.com/sifive/freedom-tools/issues --disable-shared --disable-threads --enable-languages=c,c++ --enable-tls --with-newlib --with-sysroot=/scratch/jenkins/workspace/tpp-freedom-tools/tpp03--build-binary-packages--parameterized/obj/x86_64-linux-ubuntu14/install/riscv64-unknown-elf-gcc-10.2.0-2020.12.8-x86_64-linux-ubuntu14/riscv64-unknown-elf --with-native-system-header-dir=/include --disable-libmudflap --disable-libssp --disable-libquadmath --disable-libgomp --disable-nls --disable-tm-clone-registry --src=../riscv-gcc --with-system-zlib --enable-checking=yes --enable-multilib --with-abi=lp64d --with-arch=rv64imafdc CFLAGS=-O2 CXXFLAGS=-O2 'CFLAGS_FOR_TARGET=-Os -mcmodel=medany' 'CXXFLAGS_FOR_TARGET=-Os -mcmodel=medany'
+   Thread model: single
+   Supported LTO compression algorithms: zlib
+   gcc version 10.2.0 (SiFive GCC-Metal 10.2.0-2020.12.8)
+
 
 配置 cmake & make 工具
 ----------------------------

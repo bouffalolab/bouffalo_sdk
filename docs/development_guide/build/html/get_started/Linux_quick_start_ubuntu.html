@@ -148,6 +148,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../samples/advance%20samples/emac/index.html">7. EMAC 以太网应用</a></li>
 </ul>
 
             
@@ -238,12 +239,32 @@
 <span class="normal">5</span>
 <span class="normal">6</span>
 <span class="normal">7</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> ~
-$ wget -c https://dev.bouffalolab.com/media/upload/download/riscv64-elf-x86_64-20210120.tar.gz
-$ mkdir -p riscv64-elf-20210120
-<span class="hll">$ tar -zxvf riscv64-elf-x86_64-20210120.tar.gz -C riscv64-elf-20210120
-</span><span class="hll">$ sudo cp -rf ~/riscv64-elf-20210120  /usr/bin
-</span><span class="hll">$ <span class="nb">echo</span> <span class="s2">&quot;export PATH=\&quot;</span><span class="nv">$PATH</span><span class="s2">:/usr/bin/riscv64-elf-20210120/bin\&quot;&quot;</span>  &gt;&gt; ~/.bashrc
+$ wget -c https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux/repository/archive/V10.2
+$ unzip -x V10.2
+<span class="hll">$ mv toolchain_gcc_sifive_linux-V10.2/ riscv64-unknown-elf-v10.2
+</span><span class="hll">$ sudo cp -rf ~/riscv64-unknown-elf-v10.2  /usr/bin
+</span><span class="hll">$ <span class="nb">echo</span> <span class="s2">&quot;export PATH=\&quot;</span><span class="nv">$PATH</span><span class="s2">:/usr/bin/riscv64-unknown-elf-v10.2/bin\&quot;&quot;</span>  &gt;&gt; ~/.bashrc
 </span>$ <span class="nb">source</span> ~/.bashrc
+</pre></div>
+</td></tr></table></div>
+<p>运行下面的命令，查看工具链是否安装成功，如果出现如下所示的信息则表示工具链安装成功</p>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="hll">$ riscv64-unknown-elf-gcc -v
+</span>Using built-in specs.
+<span class="nv">COLLECT_GCC</span><span class="o">=</span>riscv64-unknown-elf-gcc
+<span class="nv">COLLECT_LTO_WRAPPER</span><span class="o">=</span>/usr/bin/riscv64-unknown-elf-v10.2/bin/../libexec/gcc/riscv64-unknown-elf/10.2.0/lto-wrapper
+Target: riscv64-unknown-elf
+Configured with: /scratch/jenkins/workspace/tpp-freedom-tools/tpp03--build-binary-packages--parameterized/obj/x86_64-linux-ubuntu14/build/riscv64-unknown-elf-gcc/riscv-gcc/configure --target<span class="o">=</span>riscv64-unknown-elf --host<span class="o">=</span>x86_64-linux-gnu --prefix<span class="o">=</span>/scratch/jenkins/workspace/tpp-freedom-tools/tpp03--build-binary-packages--parameterized/obj/x86_64-linux-ubuntu14/install/riscv64-unknown-elf-gcc-10.2.0-2020.12.8-x86_64-linux-ubuntu14 --with-pkgversion<span class="o">=</span><span class="s1">&#39;SiFive GCC-Metal 10.2.0-2020.12.8&#39;</span> --with-bugurl<span class="o">=</span>https://github.com/sifive/freedom-tools/issues --disable-shared --disable-threads --enable-languages<span class="o">=</span>c,c++ --enable-tls --with-newlib --with-sysroot<span class="o">=</span>/scratch/jenkins/workspace/tpp-freedom-tools/tpp03--build-binary-packages--parameterized/obj/x86_64-linux-ubuntu14/install/riscv64-unknown-elf-gcc-10.2.0-2020.12.8-x86_64-linux-ubuntu14/riscv64-unknown-elf --with-native-system-header-dir<span class="o">=</span>/include --disable-libmudflap --disable-libssp --disable-libquadmath --disable-libgomp --disable-nls --disable-tm-clone-registry --src<span class="o">=</span>../riscv-gcc --with-system-zlib --enable-checking<span class="o">=</span>yes --enable-multilib --with-abi<span class="o">=</span>lp64d --with-arch<span class="o">=</span>rv64imafdc <span class="nv">CFLAGS</span><span class="o">=</span>-O2 <span class="nv">CXXFLAGS</span><span class="o">=</span>-O2 <span class="s1">&#39;CFLAGS_FOR_TARGET=-Os -mcmodel=medany&#39;</span> <span class="s1">&#39;CXXFLAGS_FOR_TARGET=-Os -mcmodel=medany&#39;</span>
+Thread model: single
+Supported LTO compression algorithms: zlib
+gcc version <span class="m">10</span>.2.0 <span class="o">(</span>SiFive GCC-Metal <span class="m">10</span>.2.0-2020.12.8<span class="o">)</span>
 </pre></div>
 </td></tr></table></div>
 </div>

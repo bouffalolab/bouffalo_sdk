@@ -1,0 +1,518 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>7.5. lwip iperf 网络性能测试 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="prev" title="7.4. http server – 网页服务器" href="eth_http_server.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> BL_MCU_SDK 开发指南
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">快速开发指南</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/index.html">3. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/board.html">7. Board 配置系统使用指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 手册</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/bluetooth/api_ble.html">5. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../shell_demo.html">1. Shell 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">7. EMAC 以太网应用</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="eth_basic.html">7.1. ARP - 发送 ARP 裸包</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_udp_echo.html">7.2. UDP - LwIP UDP echo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_tcp_echo.html">7.3. TCP - LwIP TCP echo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_http_server.html">7.4. HTTP - LwIP HTTP server</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.5. IPERF - LwIP iperf</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">7.5.1. 硬件准备</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">7.5.2. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#emac-lwip">7.5.3. EMAC 和 LwIP 协议栈的配置</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#iperf">7.5.4. iPerf 测试本地端口设置</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">7.5.5. 编译和下载</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">7.5.6. 实验现象</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#udp">7.5.7. UDP 性能测试</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">7.5.8. IPerf 测试结果</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BL_MCU_SDK 开发指南</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">7. </span>EMAC 以太网应用</a> &raquo;</li>
+        
+      <li><span class="section-number">7.5. </span>lwip iperf 网络性能测试</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../_sources/samples/advance samples/emac/eth_lwip_iperf.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="lwip-iperf">
+<h1><span class="section-number">7.5. </span>lwip iperf 网络性能测试<a class="headerlink" href="#lwip-iperf" title="永久链接至标题">¶</a></h1>
+<p>iPerf 是一个跨平台的网络性能测试工具，iPerf 可以测试 TCP 和 UDP 网络带宽性能和质量，但是 iPerf 是一个命令行形式的，对于使用者来说还不够直观，
+这里我们使用 iPerf 的一个图形化版本测试程序 —— JPerf，JPerf 简化了复杂的测试命令，并且测试结果可以图形化的实时显示出来。</p>
+<p>JPerf 软件直接从互联网上搜索一个下载即可，本文主要介绍如何在 BL706 上实现一个 iPerf 测试线程，BL706 作为服务端，实时监听客户端（PC Jperf 上位机）的连接和发送的数据。</p>
+<p>这里主要测试 BL706 TCP 的最大接收速度，其他测试同理。</p>
+<div class="section" id="id1">
+<h2><span class="section-number">7.5.1. </span>硬件准备<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>一块 BL706 ETH 开发板</p></li>
+<li><p>一块 PHY 8720 模块</p></li>
+<li><p>一个串口线</p></li>
+<li><p>一根标准 5/6 类网线</p></li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">7.5.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>本 demo 基于 BL706 ETH 开发板，将对应的功能引脚连接到 PHY8720 模块上，连接方式如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
+<span class="o">----------------------------------</span>
+    <span class="n">RMII_CLK</span>      <span class="o">&lt;--&gt;</span>    <span class="n">GPIO0</span>
+    <span class="n">RMII_TXD0</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO1</span>
+    <span class="n">RMII_TXD1</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO2</span>
+    <span class="n">RMII_RXD0</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO7</span>
+    <span class="n">RMII_RXD1</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO8</span>
+    <span class="n">RMII_MDC</span>      <span class="o">&lt;--&gt;</span>    <span class="n">GPIO18</span>
+    <span class="n">RMII_MDIO</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO19</span>
+    <span class="n">RMII_RXERR</span>    <span class="o">&lt;--&gt;</span>    <span class="n">GPIO20</span>
+    <span class="n">RMII_TX_EN</span>    <span class="o">&lt;--&gt;</span>    <span class="n">GPIO21</span>
+    <span class="n">RMII_RX_DV</span>    <span class="o">&lt;--&gt;</span>    <span class="n">GPIO22</span>
+</pre></div>
+</div>
+<p>接下来需要将 PHY8720 模块的 RJ-45 接口通过标准 5/6 类网线连接到与测试 PC 在同一局域网中的路由器或者交换机上。</p>
+</div>
+<div class="section" id="emac-lwip">
+<h2><span class="section-number">7.5.3. </span>EMAC 和 LwIP 协议栈的配置<a class="headerlink" href="#emac-lwip" title="永久链接至标题">¶</a></h2>
+<p>LwIP 协议栈的相关配置文件在 <code class="docutils literal notranslate"><span class="pre">components/lwip/lwipopts.h</span></code> 中，详细配置请阅读代码源文件</p>
+<p>要测试 TCP 性能，那么必须要在改文件中使能 <code class="docutils literal notranslate"><span class="pre">LWIP_TCP</span></code> 宏定义，否则将会使用 LwIP 默认的配置，同时为了获得更好的 TCP 测试性能，还需要加大 <code class="docutils literal notranslate"><span class="pre">TCP_SND_BUF</span></code>、<code class="docutils literal notranslate"><span class="pre">TCP_WND</span></code> 以及 EMAC RX buf 深度等参数。
+本 demo 测试时修改参数如下：</p>
+<div class="highlight-c notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define MEMP_NUM_TCP_PCB_LISTEN 8</span>
+<span class="cp">#define TCP_SND_BUF (8 * TCP_MSS)</span>
+<span class="cp">#define TCP_WND (8 * TCP_MSS)</span>
+<span class="cp">#define LWIP_TCP 1</span>
+<span class="cp">#define TCP_TTL  255</span>
+
+<span class="c1">// emac tx 和 rx buf 的大小</span>
+<span class="cp">#define ETH_RXBUFNB 10</span>
+<span class="cp">#define ETH_TXBUFNB 2</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="iperf">
+<h2><span class="section-number">7.5.4. </span>iPerf 测试本地端口设置<a class="headerlink" href="#iperf" title="永久链接至标题">¶</a></h2>
+<p>在 <code class="docutils literal notranslate"><span class="pre">examples\emac\lwip_iperf\iperf_server.h</span></code> 文件中，通过修改宏定义即可修改测试端口号</p>
+<p>注：由于当前测试例程 local ip 地址采用静态 IP 配置进行的测试，如需修改可在 main.c 中进行相应的修改，也可直接使能 LWIP 的 DHCP 功能自动获取 IP 配置。</p>
+<div class="highlight-c notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define IPERF_SERVER_PORT (3365)</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">7.5.5. </span>编译和下载<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p><strong>命令行编译</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> bl_mcu_sdk
+$ make <span class="nv">APP</span><span class="o">=</span>lwip_iperf
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>烧录</strong></p>
+<p>详见 <a class="reference internal" href="../../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube 烧录工具指南</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2><span class="section-number">7.5.6. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>编译完成后，烧写到芯片正确运行后，可以通过配置的测试端口访问芯片。
+打开 JPerf 软件开始进行 TCP 性能测试，具体配置如下图，设置好后点击 <code class="docutils literal notranslate"><span class="pre">Run</span> <span class="pre">IPerf</span></code> 即可。</p>
+<p>串口 log 信息：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_iperf_2.png" />
+</div>
+<p>JPerf 窗口状态：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_iperf_1.png" />
+</div>
+<p>以太网状态:</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_iperf_3.png" />
+</div>
+</div>
+<div class="section" id="udp">
+<h2><span class="section-number">7.5.7. </span>UDP 性能测试<a class="headerlink" href="#udp" title="永久链接至标题">¶</a></h2>
+<p>UDP 性能测试，需要使用 <code class="docutils literal notranslate"><span class="pre">bl_mcu_sdk/examples/emac/lwip_udp</span></code> 的例程，使用例程的默认代码即可测试 UDP 收发全双工的性能，编译测试请参考 <a class="reference internal" href="eth_udp_echo.html#eth-udp-echo"><span class="std std-ref">UDP echo</span></a> 部分教程；</p>
+<p>将代码正确编译下载到芯片后，即可通过 JPerf 软件测试 UDP 性能，具体测试配置及性能如下图，设置好后点击 <code class="docutils literal notranslate"><span class="pre">Run</span> <span class="pre">IPerf</span></code> 即可。</p>
+<p>串口 log 信息：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_udp_3.png" />
+</div>
+<p>JPerf 窗口状态：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_iperf_4.png" />
+</div>
+<p>以太网状态：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_iperf_5.png" />
+</div>
+<p>Wireshark 抓包数据：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_iperf_6.png" />
+</div>
+</div>
+<div class="section" id="id5">
+<h2><span class="section-number">7.5.8. </span>IPerf 测试结果<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>下表是在实验环境下测试的 BL706 运行 FreeRTOS + Lwip 网络协议栈的以太网性能</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>协议类型</p></th>
+<th class="head"><p>API 接口</p></th>
+<th class="head"><p>TX(发送速度)</p></th>
+<th class="head"><p>RX(接收速度)</p></th>
+<th class="head"><p>TX num</p></th>
+<th class="head"><p>RX num</p></th>
+<th class="head"><p>备注</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ARP send</p></td>
+<td><p>emac tx API</p></td>
+<td><p>69 Mbps</p></td>
+<td><p>——</p></td>
+<td><p>5</p></td>
+<td><p>5</p></td>
+<td><p>NO lwip,NO OS</p></td>
+</tr>
+<tr class="row-odd"><td><p>UDP send</p></td>
+<td><p>lwip raw API</p></td>
+<td><p>50 Mbps</p></td>
+<td><p>——</p></td>
+<td><p>3</p></td>
+<td><p>3</p></td>
+<td><p>lwip,FreeRTOS,TX only</p></td>
+</tr>
+<tr class="row-even"><td><p>UDP Full-duplex</p></td>
+<td><p>lwip raw API</p></td>
+<td><p>34 Mbps</p></td>
+<td><p>40 Mbps</p></td>
+<td><p>3</p></td>
+<td><p>3</p></td>
+<td><p>lwip,FreeRTOS,Full-duplex</p></td>
+</tr>
+<tr class="row-odd"><td><p>UDP send</p></td>
+<td><p>lwip netconn API</p></td>
+<td><p>48 Mpbs</p></td>
+<td><p>——</p></td>
+<td><p>3</p></td>
+<td><p>3</p></td>
+<td><p>lwip,FreeRTOS,TX only</p></td>
+</tr>
+<tr class="row-even"><td><p>UDP Full-duplex</p></td>
+<td><p>lwip netconn API</p></td>
+<td><p>23 Mpbs</p></td>
+<td><p>28 Mpbs</p></td>
+<td><p>5</p></td>
+<td><p>5</p></td>
+<td><p>lwip,FreeRTOS,Full-duplex</p></td>
+</tr>
+<tr class="row-odd"><td><p>UDP send</p></td>
+<td><p>lwip socket API</p></td>
+<td><p>47 Mpbs</p></td>
+<td><p>——</p></td>
+<td><p>3</p></td>
+<td><p>3</p></td>
+<td><p>lwip,FreeRTOS,TX only</p></td>
+</tr>
+<tr class="row-even"><td><p>UDP Full-duplex</p></td>
+<td><p>lwip socket API</p></td>
+<td><p>14.5 Mpbs</p></td>
+<td><p>25 Mbps</p></td>
+<td><p>5</p></td>
+<td><p>5</p></td>
+<td><p>lwip,FreeRTOS,Full-duplex</p></td>
+</tr>
+<tr class="row-odd"><td><p>TCP send</p></td>
+<td><p>lwip raw API</p></td>
+<td><p>24 Mbps</p></td>
+<td><p>——</p></td>
+<td><p>5</p></td>
+<td><p>5</p></td>
+<td><p>lwip,FreeRTOS,TX only,modify TCP_WND、TCP_SEND_BUF eg.</p></td>
+</tr>
+<tr class="row-even"><td><p>TCP recv</p></td>
+<td><p>lwip raw API</p></td>
+<td><p>——</p></td>
+<td><p>38 Mbps</p></td>
+<td><p>2</p></td>
+<td><p>10</p></td>
+<td><p>lwip,FreeRTOS,RX only,modify TCP_WND、TCP_SEND_BUF eg.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TCP send</p></td>
+<td><p>lwip netconn API</p></td>
+<td><p>22 Mpbs</p></td>
+<td><p>——</p></td>
+<td><p>5</p></td>
+<td><p>5</p></td>
+<td><p>lwip,FreeRTOS,TX only,modify TCP_WND、TCP_SEND_BUF eg.</p></td>
+</tr>
+<tr class="row-even"><td><p>TCP recv</p></td>
+<td><p>lwip netconn API</p></td>
+<td><p>——</p></td>
+<td><p>32 Mbps</p></td>
+<td><p>2</p></td>
+<td><p>10</p></td>
+<td><p>lwip,FreeRTOS,RX only,modify TCP_WND、TCP_SEND_BUF eg.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TCP send</p></td>
+<td><p>lwip socket API</p></td>
+<td><p>20 Mbps</p></td>
+<td><p>——</p></td>
+<td><p>5</p></td>
+<td><p>5</p></td>
+<td><p>lwip,FreeRTOS,TX only,modify TCP_WND、TCP_SEND_BUF eg.</p></td>
+</tr>
+<tr class="row-even"><td><p>TCP recv</p></td>
+<td><p>lwip socket API</p></td>
+<td><p>——</p></td>
+<td><p>15 Mbps</p></td>
+<td><p>2</p></td>
+<td><p>10</p></td>
+<td><p>lwip,FreeRTOS,RX only,modify TCP_WND、TCP_SEND_BUF eg.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="eth_http_server.html" class="btn btn-neutral float-left" title="7.4. http server – 网页服务器" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; 版权所有 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

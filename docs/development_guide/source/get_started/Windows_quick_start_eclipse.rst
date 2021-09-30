@@ -18,7 +18,7 @@ Windows 下使用 Eclipse 开发指南
 下载 Eclipse 安装包
 -----------------------------
 
--  从 Bouffalo Lab 开发者社区下载带有 RISC-V 工具链的 `Eclipse https://dev.bouffalolab.com/download <https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip>`_ 安装包。
+-  从 Bouffalo Lab 开发者社区下载带有 RISC-V 工具链的 `Eclipse https://dev.bouffalolab.com/download <https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win_v1.2.0.zip>`_ 安装包。
 
 下载 bl_mcu_sdk
 -----------------------------
