@@ -75,12 +75,12 @@ void system_clock_init(void)
 #ifdef BSP_AUDIO_PLL_CLOCK_SOURCE
     PDS_Set_Audio_PLL_Freq(BSP_AUDIO_PLL_CLOCK_SOURCE - ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ);
 #endif
-#if 1
+#if XTAL_32K_TYPE == INTERNAL_RC_32K
     HBN_32K_Sel(HBN_32K_RC);
     HBN_Power_Off_Xtal_32K();
 #else
-    HBN_32K_Sel(HBN_32K_XTAL);
     HBN_Power_On_Xtal_32K();
+    HBN_32K_Sel(HBN_32K_XTAL);
 #endif
     if ((XTAL_TYPE == INTERNAL_RC_32M) || (XTAL_TYPE == XTAL_NONE)) {
         HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_RC32M);
