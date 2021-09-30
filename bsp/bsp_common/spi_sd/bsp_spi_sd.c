@@ -24,7 +24,6 @@
 #include "hal_spi.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"
-#include "bl702_spi.h"
 #include "bsp_spi_sd.h"
 
 static struct device *spi0;
@@ -61,13 +60,14 @@ uint8_t SD_SPI_Init(void)
     }
 
     if (dma_ch3) {
-        ((dma_device_t *)dma_ch3)->direction = DMA_MEMORY_TO_PERIPH;
-        ((dma_device_t *)dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
-        ((dma_device_t *)dma_ch3)->src_req = DMA_REQUEST_NONE;
-        ((dma_device_t *)dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
-        ((dma_device_t *)dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
-        ((dma_device_t *)dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->direction = DMA_MEMORY_TO_PERIPH;
+        DMA_DEV(dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch3)->src_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
+        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch3, 0);
+        device_control(dma_ch3, DEVICE_CTRL_CLR_INT, NULL);
     }
 
     dma_ch4 = device_find("dma0_ch4");
@@ -80,13 +80,14 @@ uint8_t SD_SPI_Init(void)
     }
 
     if (dma_ch4) {
-        ((dma_device_t *)dma_ch4)->direction = DMA_PERIPH_TO_MEMORY;
-        ((dma_device_t *)dma_ch4)->transfer_mode = DMA_LLI_ONCE_MODE;
-        ((dma_device_t *)dma_ch4)->src_req = DMA_REQUEST_SPI0_RX;
-        ((dma_device_t *)dma_ch4)->dst_req = DMA_REQUEST_NONE;
-        ((dma_device_t *)dma_ch4)->src_width = DMA_TRANSFER_WIDTH_8BIT;
-        ((dma_device_t *)dma_ch4)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch4)->direction = DMA_PERIPH_TO_MEMORY;
+        DMA_DEV(dma_ch4)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch4)->src_req = DMA_REQUEST_SPI0_RX;
+        DMA_DEV(dma_ch4)->dst_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch4)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch4)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch4, 0);
+        device_control(dma_ch4, DEVICE_CTRL_CLR_INT, NULL);
     }
 
     return SUCCESS;
@@ -102,13 +103,11 @@ BL_Err_Type SPI_ReadWriteByte(uint8_t *txBuff, uint8_t *rxBuff, uint32_t length)
     } else {
         device_control(spi0, DEVICE_CTRL_TX_DMA_RESUME, NULL);
         device_control(spi0, DEVICE_CTRL_RX_DMA_RESUME, NULL);
-        device_control(dma_ch3, DEVICE_CTRL_CLR_INT, NULL);
-        device_control(dma_ch4, DEVICE_CTRL_CLR_INT, NULL);
 
-        dma_reload(dma_ch3, (uint32_t)txBuff, (uint32_t)DMA_ADDR_SPI_TDR, length);
         dma_reload(dma_ch4, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)rxBuff, length);
-        dma_channel_start(dma_ch3);
+        dma_reload(dma_ch3, (uint32_t)txBuff, (uint32_t)DMA_ADDR_SPI_TDR, length);
         dma_channel_start(dma_ch4);
+        dma_channel_start(dma_ch3);
 
         while (device_control(dma_ch3, DMA_CHANNEL_GET_STATUS, NULL) || device_control(dma_ch4, DMA_CHANNEL_GET_STATUS, NULL))
             ;
@@ -382,111 +381,6 @@ uint8_t SD_SendBlock(uint8_t *buf, uint8_t cmd)
     return 0;
 }
 
-/****************************************************************************/ /**
- * @brief  SD_GetCID
- *
- *
-*******************************************************************************/
-// static uint8_t SD_GetCID(uint8_t *cid_data)
-// {
-//     uint8_t rx, i;
-//     rx = SD_SendCommand(CMD10, 0, 0xFF);
-//     if (rx)
-//     {
-//         MSG("get CID err:%d\r\n", rx);
-//         return rx;
-//     }
-//     SD_ReceiveData(cid_data, 16, RELEASE);
-//     MSG("sd cid:");
-//     for (i = 0; i < 16; i++)
-//         MSG("%02X ", cid_data[i]);
-//     MSG("end\r\n");
-
-//     return SUCCESS;
-// }
-
-// /****************************************************************************
-//  * @brief  SD_GetCSD
-//  *
-//  *
-// *******************************************************************************/
-// static uint8_t SD_GetCSD(uint8_t *sid_data)
-// {
-//     uint8_t rx, i;
-//     rx = SD_SendCommand(CMD9, 0, 0xFF);
-//     if (rx)
-//     {
-//         MSG("get CSD err: CMD9 %d\r\n", rx);
-//         return rx;
-//     }
-//     SD_ReceiveData(sid_data, 16, RELEASE);
-
-//     MSG("sd sid:");
-//     for (i = 0; i < 16; i++)
-//         MSG("%02X ", sid_data[i]);
-//     MSG("end\r\n");
-
-//     return SUCCESS;
-// }
-
-// /****************************************************************************/ /**
-//  * @brief  SD_GetCapacity
-//  *
-//  *
-// *******************************************************************************/
-// uint64_t SD_GetCapacity()
-// {
-//     uint8_t csd[16] = {0};
-//     uint8_t r1;
-//     uint16_t i;
-//     uint64_t Capacity, temp;
-
-//     if (SD_GetCSD(csd) != 0)
-//         return ERROR;
-//     /* SDHC */
-//     if ((csd[0] & 0xC0) == 0x40)
-//     {
-//         Capacity = (uint64_t)csd[9];
-//         Capacity += ((uint64_t)csd[8]) << 8;
-//         Capacity += ((uint64_t)csd[7] & 0x3F) << 16;
-//         Capacity = (Capacity + 1) << 9; /* sector */
-//                                         //Capacity*=512; /* KByte */
-//         MSG("SDHC capacity:%lld MByte\r\n", Capacity / 1024);
-//     }
-//     else
-//     {
-//         i = csd[6] & 0x03;
-//         i <<= 8;
-//         i += csd[7];
-//         i <<= 2;
-//         i += ((csd[8] & 0xc0) >> 6);
-//         /*C_SIZE_MULT */
-//         r1 = csd[9] & 0x03;
-//         r1 <<= 1;
-//         r1 += ((csd[10] & 0x80) >> 7);
-//         r1 += 2;
-//         temp = 1;
-//         while (r1)
-//         {
-//             temp *= 2;
-//             r1--;
-//         }
-//         Capacity = ((uint64_t)(i + 1)) * ((uint64_t)temp);
-//         /* READ_BL_LEN */
-//         i = csd[5] & 0x0f;
-//         /* BLOCK_LEN */
-//         temp = 1;
-//         while (i)
-//         {
-//             temp *= 2;
-//             i--;
-//         }
-//         /* The final result */
-//         Capacity *= (uint64_t)temp; //字节为单位
-//         MSG("SD capacity:%u MByte\r\n", Capacity / 1024 / 1024);
-//     }
-//     return (uint32_t)Capacity;
-// }
 
 /****************************************************************************/ /**
  * @brief  SD_Get_CardInfo
