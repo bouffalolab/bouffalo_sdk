@@ -39,6 +39,10 @@
 #define BIT(n) (1UL << (n))
 #endif
 
+#ifndef CHECK_PARAM
+#define CHECK_PARAM(expr) ((void)0)
+#endif
+
 /**
  * @brief Error type definition
  */
