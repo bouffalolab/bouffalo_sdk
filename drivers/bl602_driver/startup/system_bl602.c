@@ -1,6 +1,7 @@
 #include "bl602.h"
 #include "bl602_glb.h"
 #include "bl602_hbn.h"
+#include "risc-v/Core/Include/clic.h"
 
 /*----------------------------------------------------------------------------
   Define clocks

@@ -23,6 +23,7 @@
 #include "bl702.h"
 #include "bl702_glb.h"
 #include "bl702_hbn.h"
+#include "risc-v/Core/Include/clic.h"
 
 #ifdef BFLB_EFLASH_LOADER
 #include "bl702_usb.h"

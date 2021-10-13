@@ -247,25 +247,5 @@ typedef enum {
   */
 #include <stdint.h>
 #include <system_bl602.h>
-/* ARM CPU include files */
-#ifdef ARCH_ARM
-#ifdef CPU_AP_CM4
-#include "core_cm4.h" /* Cortex-M4 processor and core peripherals */
-#endif
-#ifdef CPU_NP_CM0
-#include "core_cm0.h" /* Cortex-M0 processor and core peripherals */
-#endif
-#endif
-/* RISCV CPU include files */
-#ifdef ARCH_RISCV
-#ifdef __GNUC__
-#include "../risc-v/Core/Include/clic.h"
-#include "../risc-v/Core/Include/riscv_encoding.h"
-#endif
-#endif
-
-/**
-  * @}
-  */
 
 #endif
