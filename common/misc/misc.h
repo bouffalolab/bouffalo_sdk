@@ -123,12 +123,6 @@ typedef void (*pFunc)(void);
 #define ARCH_MemCpy4     arch_memcpy4
 #define ARCH_MemCpy_Fast arch_memcpy_fast
 #define ARCH_MemSet4     arch_memset4
-/**
- * @brief Null Type definition
- */
-#ifndef NULL
-#define NULL 0
-#endif
 
 void *arch_memcpy(void *dst, const void *src, uint32_t n);
 void *arch_memset(void *s, uint8_t c, uint32_t n);
