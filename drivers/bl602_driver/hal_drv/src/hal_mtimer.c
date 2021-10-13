@@ -22,6 +22,7 @@
  */
 #include "hal_mtimer.h"
 #include "bl602_glb.h"
+#include "risc-v/Core/Include/clic.h"
 
 static void (*systick_callback)(void);
 static uint64_t next_compare_tick = 0;
