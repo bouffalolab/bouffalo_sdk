@@ -40,6 +40,7 @@
     }
 
 /* Std driver attribute macro*/
+ #ifndef BFLB_USE_CUSTOM_LD_SECTIONS
 //#define ATTR_UNI_SYMBOL
 #define ATTR_STRINGIFY(x)          #x
 #define ATTR_TOSTRING(x)           ATTR_STRINGIFY(x)
@@ -56,5 +57,7 @@
 #define ATTR_EALIGN(x)             __attribute__((aligned(x)))
 #define ATTR_FALLTHROUGH()         __attribute__((fallthrough))
 #define ATTR_USED                  __attribute__((__used__))
-
+#else
+#include "bl_ld_sections.h"
+#endif /* BFLB_USE_CUSTOM_LD_SECTIONS */
 #endif
