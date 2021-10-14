@@ -85,9 +85,7 @@ BL706 AVB + GC0308摄像头模块 + windows 相机
     #define CONFIG_GPIO30_FUNC GPIO_FUN_CAM
     #define CONFIG_GPIO31_FUNC GPIO_FUN_CAM
 
-- 使用到的 GPIO 配置见 ``bsp/board/bl706_avb/pinmux_config.h``,默认提供了该 demo 的引脚配置
-
-.. note::  ``bsp/board/bl706_avb/pinmux_config.h`` 当前给所有的示例 demo 使用，所以，需要先选定 ``PINMUX_SELECT`` 为 ``PINMUX_UVC``，开启 UVC demo
+- 使用到的 GPIO 配置见 ``bsp/board/bl706_avb/pinmux_config.h``
 
 .. code-block:: C
     :linenos:

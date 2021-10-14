@@ -119,13 +119,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../basic%20samples/i2s/index.html">8. I2S 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../basic%20samples/adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usb/index.html">3. USB Device 应用</a></li>
-<li class="toctree-l1"><a class="reference internal" href="lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">6. BLE 客户端和服务端互连</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id1">6.1. 准备工具</a></li>
@@ -405,12 +406,12 @@
 </ul>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
- $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>ble_peripheral <span class="nv">SUPPORT_FREERTOS</span><span class="o">=</span>y <span class="nv">SUPPORT_FLOAT</span><span class="o">=</span>y <span class="nv">SUPPORT_BLE</span><span class="o">=</span>y
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>ble_peripheral <span class="nv">SUPPORT_FLOAT</span><span class="o">=</span>y
 </pre></div>
 </td></tr></table></div>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
- $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>ble_central <span class="nv">SUPPORT_FREERTOS</span><span class="o">=</span>y <span class="nv">SUPPORT_FLOAT</span><span class="o">=</span>y <span class="nv">SUPPORT_BLE</span><span class="o">=</span>y
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>ble_central <span class="nv">SUPPORT_FLOAT</span><span class="o">=</span>y
 </pre></div>
 </td></tr></table></div>
 <ul>

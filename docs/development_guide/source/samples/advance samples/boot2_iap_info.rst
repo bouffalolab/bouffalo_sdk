@@ -12,13 +12,13 @@ Bouffalo Lab 为 IAP 功能应用提供了相应的 boot2_iap.bin 文件，并�
 用户可以配合 Dev Cube 图形界面烧写软件，将已有的 boot2_iap.bin 文件烧录进目标板，烧录
 一次之后，就可以通过 IAP 功能，在线更新用户代码。
 
-bl_mcu_sdk 开源了 boot2_iap 的软件源码，用户可以到 examples/boot2_iap 查阅代码，并完成编译烧写。编译烧写过程可以参考《快速开发指南》介绍。
+bl_mcu_sdk 开源了 boot2_iap 的软件源码，用户可以到 ``examples/boot2_iap`` 查阅代码，并完成编译烧写。编译烧写过程可以参考《快速开发指南》介绍。
 
 准备工具
 -----------------------
 
 - 最新版本的 Dev Cube
-- Bl706 开发板
+- BL706 开发板
 - TTL-USB 电平转换芯片
 
 

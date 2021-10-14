@@ -119,14 +119,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/i2s/index.html">8. I2S 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">3. USB Device 应用</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="usbd_cdc.html">3.1. CDC - 虚拟串口</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usbd_msc.html">3.2. MSC - U 盘</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usbd_msc.html">3.2. MSC - U 盘升级</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usbd_hid.html">3.3. HID - 键盘&amp;鼠标</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">3.4. VIDEO - 摄像头</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id1">3.4.1. 准备工具</a></li>
@@ -139,7 +140,7 @@
 <li class="toctree-l2"><a class="reference internal" href="usbd_audio.html">3.5. AUDIO - 麦克风</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../emac/index.html">7. EMAC 以太网应用</a></li>
@@ -309,12 +310,8 @@
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p>使用到的 GPIO 配置见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/pinmux_config.h</span></code>,默认提供了该 demo 的引脚配置</p></li>
+<li><p>使用到的 GPIO 配置见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/pinmux_config.h</span></code></p></li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">注解</p>
-<p><code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/pinmux_config.h</span></code> 当前给所有的示例 demo 使用，所以，需要先选定 <code class="docutils literal notranslate"><span class="pre">PINMUX_SELECT</span></code> 为 <code class="docutils literal notranslate"><span class="pre">PINMUX_UVC</span></code>，开启 UVC demo</p>
-</div>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>

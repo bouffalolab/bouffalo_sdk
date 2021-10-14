@@ -121,14 +121,22 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#usb-device-cdc">4.3.2. USB Device CDC 类接口</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#usbd-cdc-add-acm-interface">4.3.2.1. <strong>usbd_cdc_add_acm_interface</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-cdc-acm-set-line-coding">4.3.2.2. <strong>usbd_cdc_acm_set_line_coding</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-cdc-acm-set-dtr">4.3.2.3. <strong>usbd_cdc_acm_set_dtr</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-cdc-acm-set-rts">4.3.2.4. <strong>usbd_cdc_acm_set_rts</strong></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#usb-device-msc">4.3.3. USB Device MSC 类接口</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#usbd-msc-class-init">4.3.3.1. <strong>usbd_msc_class_init</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-msc-get-cap">4.3.3.2. <strong>usbd_msc_get_cap</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-msc-sector-read">4.3.3.3. <strong>usbd_msc_sector_read</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-msc-sector-write">4.3.3.4. <strong>usbd_msc_sector_write</strong></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#usb-device-hid">4.3.4. USB Device HID 类接口</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#usbd-hid-add-interface">4.3.4.1. <strong>usbd_hid_add_interface</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-hid-report-descriptor-register">4.3.4.2. <strong>usbd_hid_report_descriptor_register</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usbd-hid-set-request-callback">4.3.4.3. <strong>usbd_hid_set_request_callback</strong></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#usb-device-audio">4.3.5. USB Device AUDIO 类接口</a><ul>
@@ -157,13 +165,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2s/index.html">8. I2S 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/usb/index.html">3. USB Device 应用</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/emac/index.html">7. EMAC 以太网应用</a></li>
@@ -412,6 +421,39 @@
 <li><p><strong>intf</strong>  接口句柄</p></li>
 </ul>
 </div>
+<div class="section" id="usbd-cdc-acm-set-line-coding">
+<h4><span class="section-number">4.3.2.2. </span><strong>usbd_cdc_acm_set_line_coding</strong><a class="headerlink" href="#usbd-cdc-acm-set-line-coding" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_cdc_acm_set_line_coding</span></code> 用来对串口进行配置。该接口由用户实现，默认为空。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_cdc_acm_set_line_coding</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">baudrate</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">databits</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">parity</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">stopbits</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>baudrate</strong> 波特率</p></li>
+<li><p><strong>databits</strong>  数据位</p></li>
+<li><p><strong>parity</strong>  校验位</p></li>
+<li><p><strong>stopbits</strong>  停止位</p></li>
+</ul>
+</div>
+<div class="section" id="usbd-cdc-acm-set-dtr">
+<h4><span class="section-number">4.3.2.3. </span><strong>usbd_cdc_acm_set_dtr</strong><a class="headerlink" href="#usbd-cdc-acm-set-dtr" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_cdc_acm_set_line_coding</span></code> 用来控制串口 DTR。该接口由用户实现，默认为空。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_cdc_acm_set_dtr</span><span class="p">(</span><span class="kt">bool</span> <span class="n">dtr</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>dtr</strong> dtr 为1表示拉低电平，为0表示拉高电平</p></li>
+</ul>
+</div>
+<div class="section" id="usbd-cdc-acm-set-rts">
+<h4><span class="section-number">4.3.2.4. </span><strong>usbd_cdc_acm_set_rts</strong><a class="headerlink" href="#usbd-cdc-acm-set-rts" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_cdc_acm_set_line_coding</span></code>  用来控制串口 RTS。该接口由用户实现，默认为空。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_cdc_acm_set_rts</span><span class="p">(</span><span class="kt">bool</span> <span class="n">rts</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>rts</strong> rts 为1表示拉低电平，为0表示拉高电平</p></li>
+</ul>
+</div>
 </div>
 <div class="section" id="usb-device-msc">
 <h3><span class="section-number">4.3.3. </span>USB Device MSC 类接口<a class="headerlink" href="#usb-device-msc" title="永久链接至标题">¶</a></h3>
@@ -424,6 +466,42 @@
 <ul class="simple">
 <li><p><strong>out_ep</strong>     输出端点的地址</p></li>
 <li><p><strong>in_ep</strong>      输入端点的地址</p></li>
+</ul>
+</div>
+<div class="section" id="usbd-msc-get-cap">
+<h4><span class="section-number">4.3.3.2. </span><strong>usbd_msc_get_cap</strong><a class="headerlink" href="#usbd-msc-get-cap" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_msc_get_cap</span></code> 用来获取存储器的信息。该接口由用户实现，默认为空。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_msc_get_cap</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">lun</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="o">*</span><span class="n">block_num</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="o">*</span><span class="n">block_size</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>lun</strong> 存储逻辑单元，暂时无用</p></li>
+<li><p><strong>block_num</strong>  存储扇区个数的指针</p></li>
+<li><p><strong>block_size</strong>  存储扇区大小的指针</p></li>
+</ul>
+</div>
+<div class="section" id="usbd-msc-sector-read">
+<h4><span class="section-number">4.3.3.3. </span><strong>usbd_msc_sector_read</strong><a class="headerlink" href="#usbd-msc-sector-read" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_msc_sector_read</span></code> 用来对存储器某个扇区开始进行数据读取。该接口由用户实现，默认为空。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">usbd_msc_sector_read</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">sector</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">length</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>sector</strong> 扇区偏移</p></li>
+<li><p><strong>buffer</strong> 存储读取的数据的指针</p></li>
+<li><p><strong>length</strong> 读取长度</p></li>
+</ul>
+</div>
+<div class="section" id="usbd-msc-sector-write">
+<h4><span class="section-number">4.3.3.4. </span><strong>usbd_msc_sector_write</strong><a class="headerlink" href="#usbd-msc-sector-write" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_msc_sector_write</span></code>  用来对存储器某个扇区开始写入数据。该接口由用户实现，默认为空。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">usbd_msc_sector_write</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">sector</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">length</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>sector</strong> 扇区偏移</p></li>
+<li><p><strong>buffer</strong> 写入数据指针</p></li>
+<li><p><strong>length</strong> 写入长度</p></li>
 </ul>
 </div>
 </div>
@@ -440,6 +518,40 @@
 <ul class="simple">
 <li><p><strong>class</strong> 类的句柄</p></li>
 <li><p><strong>intf</strong>  接口句柄</p></li>
+</ul>
+</div>
+<div class="section" id="usbd-hid-report-descriptor-register">
+<h4><span class="section-number">4.3.4.2. </span><strong>usbd_hid_report_descriptor_register</strong><a class="headerlink" href="#usbd-hid-report-descriptor-register" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_hid_report_descriptor_register</span></code>  用来对存储器某个扇区开始写入数据。该接口由用户实现，默认为空。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_hid_report_descriptor_register</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">intf_num</span><span class="p">,</span> <span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">desc</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">desc_len</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>intf_num</strong> 当前 hid 报告描述符所在接口偏移</p></li>
+<li><p><strong>desc</strong> 报告描述符</p></li>
+<li><p><strong>desc_len</strong> 报告描述符长度</p></li>
+</ul>
+</div>
+<div class="section" id="usbd-hid-set-request-callback">
+<h4><span class="section-number">4.3.4.3. </span><strong>usbd_hid_set_request_callback</strong><a class="headerlink" href="#usbd-hid-set-request-callback" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">usbd_hid_set_request_callback</span></code>  用来对存储器某个扇区开始写入数据。该接口由用户实现，默认为空。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">usbd_hid_set_request_callback</span><span class="p">(</span> <span class="kt">uint8_t</span> <span class="n">intf_num</span><span class="p">,</span>
+                                    <span class="kt">uint8_t</span> <span class="p">(</span><span class="o">*</span><span class="n">get_report_callback</span><span class="p">)(</span><span class="kt">uint8_t</span> <span class="n">report_id</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">report_type</span><span class="p">),</span>
+                                    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">set_report_callback</span><span class="p">)(</span><span class="kt">uint8_t</span> <span class="n">report_id</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">report_type</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">report</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">report_len</span><span class="p">),</span>
+                                    <span class="kt">uint8_t</span> <span class="p">(</span><span class="o">*</span><span class="n">get_idle_callback</span><span class="p">)(</span><span class="kt">uint8_t</span> <span class="n">report_id</span><span class="p">),</span>
+                                    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">set_idle_callback</span><span class="p">)(</span><span class="kt">uint8_t</span> <span class="n">report_id</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">duration</span><span class="p">),</span>
+                                    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">set_protocol_callback</span><span class="p">)(</span><span class="kt">uint8_t</span> <span class="n">protocol</span><span class="p">),</span>
+                                    <span class="kt">uint8_t</span> <span class="p">(</span><span class="o">*</span><span class="n">get_protocol_callback</span><span class="p">)(</span><span class="kt">void</span><span class="p">));</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>intf_num</strong> 当前 hid 报告描述符所在接口偏移</p></li>
+<li><p><strong>get_report_callback</strong> get report命令处理回调函数</p></li>
+<li><p><strong>set_report_callback</strong> set report命令处理回调函数</p></li>
+<li><p><strong>get_idle_callback</strong> get idle命令处理回调函数</p></li>
+<li><p><strong>set_idle_callback</strong> set idle命令处理回调函数</p></li>
+<li><p><strong>set_protocol_callback</strong> set protocol命令处理回调函数</p></li>
+<li><p><strong>get_protocol_callback</strong> get protocol命令处理回调函数</p></li>
 </ul>
 </div>
 </div>

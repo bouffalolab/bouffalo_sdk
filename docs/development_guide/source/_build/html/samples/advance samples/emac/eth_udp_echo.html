@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>7.2. UDP echo &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="7.3. TCP echo" href="eth_tcp_echo.html" />
+    <link rel="prev" title="7.1. emac basic – 发送 ARP 数据包" href="eth_basic.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> BL_MCU_SDK 开发指南
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">快速开发指南</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/index.html">3. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../get_started/board.html">7. Board 配置系统使用指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 手册</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference/bluetooth/api_ble.html">5. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../shell_demo.html">1. Shell 命令行调试</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">7. EMAC 以太网应用</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="eth_basic.html">7.1. ARP - 发送 ARP 裸包</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.2. UDP - LwIP UDP echo</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">7.2.1. 硬件准备</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">7.2.2. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lwip">7.2.3. LwIP 协议栈的配置</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#udp-ip">7.2.4. UDP 测试目标 IP 及端口设置</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">7.2.5. 编译和下载</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">7.2.6. 实验现象</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="eth_tcp_echo.html">7.3. TCP - LwIP TCP echo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_http_server.html">7.4. HTTP - LwIP HTTP server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_lwip_iperf.html">7.5. IPERF - LwIP iperf</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">BL_MCU_SDK 开发指南</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html"><span class="section-number">7. </span>EMAC 以太网应用</a> &raquo;</li>
+        
+      <li><span class="section-number">7.2. </span>UDP echo</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../../_sources/samples/advance samples/emac/eth_udp_echo.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="udp-echo">
+<span id="eth-udp-echo"></span><h1><span class="section-number">7.2. </span>UDP echo<a class="headerlink" href="#udp-echo" title="永久链接至标题">¶</a></h1>
+<p>本 demo 基于 BL706 ETH 开发板，并基于 LwIP 轻量级网络协议栈，实现了一个 UDP 协议通信的例程。</p>
+<p>以太网 PHY 芯片这里使用的是 PHY8720</p>
+<div class="section" id="id1">
+<h2><span class="section-number">7.2.1. </span>硬件准备<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>一块 BL706 ETH 开发板</p></li>
+<li><p>一块 PHY 8720 模块</p></li>
+<li><p>一个串口线</p></li>
+<li><p>一根标准 5/6 类网线</p></li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">7.2.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>本 demo 基于 BL706 ETH 开发板，将对应的功能引脚连接到 PHY8720 模块上，连接方式如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
+<span class="o">----------------------------------</span>
+    <span class="n">RMII_CLK</span>      <span class="o">&lt;--&gt;</span>    <span class="n">GPIO0</span>
+    <span class="n">RMII_TXD0</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO1</span>
+    <span class="n">RMII_TXD1</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO2</span>
+    <span class="n">RMII_RXD0</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO7</span>
+    <span class="n">RMII_RXD1</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO8</span>
+    <span class="n">RMII_MDC</span>      <span class="o">&lt;--&gt;</span>    <span class="n">GPIO18</span>
+    <span class="n">RMII_MDIO</span>     <span class="o">&lt;--&gt;</span>    <span class="n">GPIO19</span>
+    <span class="n">RMII_RXERR</span>    <span class="o">&lt;--&gt;</span>    <span class="n">GPIO20</span>
+    <span class="n">RMII_TX_EN</span>    <span class="o">&lt;--&gt;</span>    <span class="n">GPIO21</span>
+    <span class="n">RMII_RX_DV</span>    <span class="o">&lt;--&gt;</span>    <span class="n">GPIO22</span>
+</pre></div>
+</div>
+<p>接下来需要将 PHY8720 模块的 RJ-45 接口通过标准 5/6 类网线连接到与测试 PC 在同一局域网中的路由器或者交换机上。</p>
+</div>
+<div class="section" id="lwip">
+<h2><span class="section-number">7.2.3. </span>LwIP 协议栈的配置<a class="headerlink" href="#lwip" title="永久链接至标题">¶</a></h2>
+<p>LwIP 协议栈的相关配置文件在 <code class="docutils literal notranslate"><span class="pre">components/lwip/lwipopts.h</span></code> 中，详细配置请阅读代码源文件</p>
+<p>如果要使用 UDP 相关功能，需要在文件中使能 LWIP_UDP 宏定义，否则将会使用 LwIP 默认的配置</p>
+<div class="highlight-c notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cm">/* ---------- UDP options ---------- */</span>
+<span class="cp">#define LWIP_UDP 1</span>
+<span class="cp">#define UDP_TTL  255</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="udp-ip">
+<h2><span class="section-number">7.2.4. </span>UDP 测试目标 IP 及端口设置<a class="headerlink" href="#udp-ip" title="永久链接至标题">¶</a></h2>
+<p>在 <code class="docutils literal notranslate"><span class="pre">examples\emac\lwip_udp\udp_echo.h</span></code> 文件中，通过修改宏定义即可修改不同测试主机 IP 及端口信息</p>
+<p>注：由于当前测试例程 local ip 地址采用静态 IP 配置进行的测试，如需修改可在 main.c 中进行相应的修改，也可直接使能 LWIP 的 DHCP 功能自动获取 IP 配置。</p>
+<div class="highlight-c notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define UDP_DST_IP0 (192)</span>
+<span class="cp">#define UDP_DST_IP1 (168)</span>
+<span class="cp">#define UDP_DST_IP2 (1)</span>
+<span class="cp">#define UDP_DST_IP3 (3)</span>
+
+<span class="cp">#define UDP_TEST_PORT (3365)</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">7.2.5. </span>编译和下载<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p><strong>命令行编译</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> bl_mcu_sdk
+$ make <span class="nv">APP</span><span class="o">=</span>lwip_udp
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>烧录</strong></p>
+<p>详见 <a class="reference internal" href="../../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube 烧录工具指南</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2><span class="section-number">7.2.6. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>编译完成后，烧写到芯片正确运行后，可以通过配置的测试端口访问芯片。</p>
+<p>串口 log 信息：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_udp_3.png" />
+</div>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_udp_2.png" />
+</div>
+<p>使用 Wireshark 抓包看到的数据包：</p>
+<div class="figure align-default">
+<img alt="" src="../../../_images/emac_udp_1.png" />
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="eth_tcp_echo.html" class="btn btn-neutral float-right" title="7.3. TCP echo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="eth_basic.html" class="btn btn-neutral float-left" title="7.1. emac basic – 发送 ARP 数据包" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; 版权所有 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

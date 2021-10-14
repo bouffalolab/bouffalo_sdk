@@ -190,6 +190,44 @@ USB Device CDC 类接口
 - **class** 类的句柄
 - **intf**  接口句柄
 
+**usbd_cdc_acm_set_line_coding**
+""""""""""""""""""""""""""""""""""""
+
+``usbd_cdc_acm_set_line_coding`` 用来对串口进行配置。该接口由用户实现，默认为空。
+
+.. code-block:: C
+
+    void usbd_cdc_acm_set_line_coding(uint32_t baudrate, uint8_t databits, uint8_t parity, uint8_t stopbits);
+
+- **baudrate** 波特率
+- **databits**  数据位
+- **parity**  校验位
+- **stopbits**  停止位
+
+
+**usbd_cdc_acm_set_dtr**
+""""""""""""""""""""""""""""""""""""
+
+``usbd_cdc_acm_set_line_coding`` 用来控制串口 DTR。该接口由用户实现，默认为空。
+
+.. code-block:: C
+
+    void usbd_cdc_acm_set_dtr(bool dtr);
+
+- **dtr** dtr 为1表示拉低电平，为0表示拉高电平
+
+
+**usbd_cdc_acm_set_rts**
+""""""""""""""""""""""""""""""""""""
+
+``usbd_cdc_acm_set_line_coding``  用来控制串口 RTS。该接口由用户实现，默认为空。
+
+.. code-block:: C
+
+    void usbd_cdc_acm_set_rts(bool rts);
+
+- **rts** rts 为1表示拉低电平，为0表示拉高电平
+
 USB Device MSC 类接口
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -203,6 +241,46 @@ USB Device MSC 类接口
 
 - **out_ep**     输出端点的地址
 - **in_ep**      输入端点的地址
+
+**usbd_msc_get_cap**
+""""""""""""""""""""""""""""""""""""
+
+``usbd_msc_get_cap`` 用来获取存储器的信息。该接口由用户实现，默认为空。
+
+.. code-block:: C
+
+    void usbd_msc_get_cap(uint8_t lun, uint32_t *block_num, uint16_t *block_size);
+
+- **lun** 存储逻辑单元，暂时无用
+- **block_num**  存储扇区个数的指针
+- **block_size**  存储扇区大小的指针
+
+**usbd_msc_sector_read**
+""""""""""""""""""""""""""""""""""""
+
+``usbd_msc_sector_read`` 用来对存储器某个扇区开始进行数据读取。该接口由用户实现，默认为空。
+
+.. code-block:: C
+
+    int usbd_msc_sector_read(uint32_t sector, uint8_t *buffer, uint32_t length);
+
+- **sector** 扇区偏移
+- **buffer** 存储读取的数据的指针
+- **length** 读取长度
+
+
+**usbd_msc_sector_write**
+""""""""""""""""""""""""""""""""""""
+
+``usbd_msc_sector_write``  用来对存储器某个扇区开始写入数据。该接口由用户实现，默认为空。
+
+.. code-block:: C
+
+    int usbd_msc_sector_write(uint32_t sector, uint8_t *buffer, uint32_t length);
+
+- **sector** 扇区偏移
+- **buffer** 写入数据指针
+- **length** 写入长度
 
 
 USB Device HID 类接口
@@ -220,6 +298,42 @@ USB Device HID 类接口
 
 - **class** 类的句柄
 - **intf**  接口句柄
+
+**usbd_hid_report_descriptor_register**
+""""""""""""""""""""""""""""""""""""""""""""
+
+``usbd_hid_report_descriptor_register``  用来对存储器某个扇区开始写入数据。该接口由用户实现，默认为空。
+
+.. code-block:: C
+
+    void usbd_hid_report_descriptor_register(uint8_t intf_num, const uint8_t *desc, uint32_t desc_len);
+
+- **intf_num** 当前 hid 报告描述符所在接口偏移
+- **desc** 报告描述符
+- **desc_len** 报告描述符长度
+
+**usbd_hid_set_request_callback**
+""""""""""""""""""""""""""""""""""""
+
+``usbd_hid_set_request_callback``  用来对存储器某个扇区开始写入数据。该接口由用户实现，默认为空。
+
+.. code-block:: C
+
+    void usbd_hid_set_request_callback( uint8_t intf_num,
+                                        uint8_t (*get_report_callback)(uint8_t report_id, uint8_t report_type),
+                                        void (*set_report_callback)(uint8_t report_id, uint8_t report_type, uint8_t *report, uint8_t report_len),
+                                        uint8_t (*get_idle_callback)(uint8_t report_id),
+                                        void (*set_idle_callback)(uint8_t report_id, uint8_t duration),
+                                        void (*set_protocol_callback)(uint8_t protocol),
+                                        uint8_t (*get_protocol_callback)(void));
+
+- **intf_num** 当前 hid 报告描述符所在接口偏移
+- **get_report_callback** get report命令处理回调函数
+- **set_report_callback** set report命令处理回调函数
+- **get_idle_callback** get idle命令处理回调函数
+- **set_idle_callback** set idle命令处理回调函数
+- **set_protocol_callback** set protocol命令处理回调函数
+- **get_protocol_callback** get protocol命令处理回调函数
 
 
 USB Device AUDIO 类接口

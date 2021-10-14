@@ -18,3 +18,5 @@ Peripheral
     TIMER 设备 <api_timer>
     QDEC 设备 <api_qdec>
     USB 设备 <api_usb>
+    XIP FLASH 设备 <api_flash>
+    PM 设备 <api_pm>

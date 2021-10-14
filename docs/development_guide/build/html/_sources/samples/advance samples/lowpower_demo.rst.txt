@@ -1,95 +1,258 @@
-LowPower 低功耗评估
+Power Management
 =========================
 
-简介
-------------------------
+本 demo 主要演示 bl 系列 mcu 低功耗性能。具体低功耗介绍请参考 `BL702/704/706 参考手册 <https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_706_RM_zh_CN_1.1.pdf>`_。
 
-博流系列芯片拥有丰富的低功耗特性，以适配不同的低功耗应用场合。为了方便用户快速的评测使用 bl 系列 MCU 低功耗性能 bl_mcu_sdk 提供了一套抽象的低功耗接口，将低功耗等级分为四个等级，分别为
+低功耗模式：
 
-1. Running : Running 为 CPU 正常运行时的功耗，由客户应用代码执行的功能决定功耗。
+- Running : Running 为 CPU 正常运行时的功耗，由客户应用代码执行的功能决定功耗。
 
-2. WFI ：WFI 模式，CPU 的 clock 处于被 Gating 状态，CPU 停止运行，当用户退出WFI模式的时候程序将会继续运行。
+- WFI 模式：CPU 的 clock 处于被 Gating 状态，CPU 停止运行，当用户退出WFI模式的时候程序将会继续运行。
 
-3. PDS : PDS 模式，关闭了芯片上大多数电源域，同时关闭了 CPU，和 CPU 处于同一个电源域的 ITCM，DTCM 等 RAM 不可使用，只有 64K 的 OCTAM 可以保存数据，可以通过内部 RTC 进行唤醒，或者使用 GPIO 引脚(在 GPIO 电源域没有关闭的情况下)唤醒。
+- PDS 模式: 根据不同的模式关闭不同的电源域，当关闭了 CPU 电源域时，ITCM，DTCM RAM 不可使用，只有 64K 的 OCRAM 可以使用。
 
-4. HBN : HBN 模式，关闭了芯片上绝大多数电源域，关闭了 CPU 以及 64K OCRAM，只有位于 AON 域的 4K RAM 可以保存数据，可以通过内部 RTC 进行唤醒，或者使用特定的唤醒引脚(位于 AON 域的引脚)唤醒。
-
-
-bl_mcu_sdk 提供了一个简单的低功耗参考示例(bl_mcu_sdk examples/power/lowpower_test/)，旨在帮助用户快速评估低功耗功能，如果需要进一步适配自身的低功耗场景，采取不同的低功耗策略，请查阅相关 datasheet 或者寻找 Boufflao Lab 的技术支持。
-在该示例中，外设及 CPU 的时钟选择均是晶振 32M。基于该示例的功耗测量结果如下表所示:
-
-    +------------+------------+------------+---------------------+---------------------------+
-    |模式        |参考电流    |对应基础模式|唤醒源               |备注                       |
-    +============+============+============+=====================+===========================+
-    |Running     |5.68 mA     |Run         |                     |所有外设时钟都打开         |
-    +------------+------------+------------+---------------------+---------------------------+
-    |WFI         |3.14 mA     |WFI         |任意中断             |除串口外，其它外设时钟关闭 |
-    +------------+------------+------------+---------------------+---------------------------+
-    |PDS         |10 uA       |PDS 31      |内部RTC/引脚中断     |64K OCRAM保存数据          |
-    +------------+------------+------------+---------------------+---------------------------+
-    |HBN         |1 uA        |HBN 1       |内部RTC/引脚中断     |4K AON RAM保存数据         |
-    +------------+------------+------------+---------------------+---------------------------+
+- HBN 模式: 根据不同的模式关闭不同的电源域，ITCM，DTCM OCRAM RAM 无法使用，在 hbn0 下位于 AON 域的 4K RAM 可以使用，其他 hbn 模式下 4K RAM 也不可使用。
 
 
-上表中的参考电流是通过示例固件测试得出的。符合 bl70x 系列 MCU 的 spec 的描述，run wfi pds hbn 四种等级的定义简化了原先的 hbn level 以及 pds level 的设定。
+演示内容：
 
-见 bl702_bl704_bl706_DS_EN_Combo_1.9.pdf page 28
+- pds3 使用 gpio10 外部中断下降沿唤醒
+- pds31 使用 pds 唤醒脚 (gpio6) 唤醒
+- pds31 使用 pds timer 唤醒
+- hbn0 使用 acomp  (gpio11) 唤醒
+- hbn1 使用 rtc 唤醒
+- hbn2 使用 hbn 唤醒脚 (gpio12) 唤醒
 
-.. figure:: img/powerTable.png
+.. note:: 高级别的唤醒源可以唤醒低级别的功耗模式，比如 hbn 唤醒脚可以唤醒所有的低功耗模式。
 
 
-**低功耗示例测试方法**
-------------------------
+准备工具
+-----------------------
 
-**编译低功耗示例代码**
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-在工程目录下键入 ``make APP=lowpower_test  SUPPORT_SHELL=y BOARD=bl706_lp`` 完成低功耗示例 bl706 的编译。或者直接使用 CDK 工程，完成编译下载
-您可以参考本文档《快速开发指南》来获取更多编译烧写的信息。
-
-当编译并烧写成功后，连接串口到电脑端，并复位芯片，Xshell 会出现如下图所示的页面。
-
-.. figure:: img/xShell_lowpower.png
-
-.. note::当前 demo 仅仅只是测试三种低功耗模式的使用，如果需要测试达到手册中描述的，需要很多步骤，具体步骤请与我们联系。
-
-**准备低功耗测试所需的硬件环境**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
--  可以串联电流表到电源端的电路板
--  电流表
--  一台 PC 主机（运行 Windows 或者 Linux 系统）
--  TTL 转 USB
-
-如下图所示，将电流表串联进入 bl706 模组的供电线路，通过 PC 端的串口调试助手软件，下发不同的低功耗指令，使得 bl706 进入对应的低功耗模式
-观察电流表示值，完成评估。
+- pc控制端使用串口终端软件：xshell 或者 mobaxterm
+- 可以串联电流表到电源端的电路板
+- 电流表
+- TTL 转 USB
+- 滑动变阻器
 
 .. figure:: img/lowpower_arch.png
 
-**使用 Xshell 开始评估低功耗性能**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-用户可以通过在 Xshell 输入下述指令，进入对应的低功耗模式。
 
-``run``
+硬件连接
+-----------------------------
 
-- 复位芯片之后，默认进入 run 模式，没有进入任何低功耗模式，芯片实际在运行 while(1); 语句。
+本 demo 基于 BL706_LP 开发板，连接方式如下
 
-``wfi``
+::
+
+       GPIO function         GPIO pin
+    ----------------------------------
+        PDS_WAKEUP    <-->     GPIO6
+        EXTI          <-->     GPIO10
+        ADC           <-->     GPIO11
+        HBN_WAKEUP    <-->     GPIO12
+        UART0_TX      <-->     GPIO14
+        UART0_RX      <-->     GPIO15
+
+软件实现
+-------------------------
+
+软件基于 shell 进行调试，如何注册 shell 命令这里不再说明。
+
+PDS 模式
+^^^^^^^^^^^^^^^^
+
+-  软件代码见 ``examples/pm/pds_mode_wakeup``
+
+.. code-block:: C
+    :linenos:
+
+    #define CONFIG_GPIO6_FUNC GPIO_FUN_WAKEUP
+
+- pds 唤醒脚配置，pds3 和 pds31 使用，见 ``bsp/board/bl706_lp/pinmux_config.h``
+
+.. code-block:: C
+    :linenos:
+
+    #define CONFIG_GPIO10_FUNC GPIO_FUN_GPIO_EXTI_FALLING_EDGE
+
+- 外部中断引脚配置，pds3 使用，见 ``bsp/board/bl706_lp/pinmux_config.h``
+
+.. code-block:: C
+    :linenos:
+
+    #define CONFIG_GPIO12_FUNC GPIO_FUN_WAKEUP
+
+- hbn 唤醒脚配置，pds3 和 pds31 使用，见 ``bsp/board/bl706_lp/pinmux_config.h``
 
 
-- 进入 wfi 模式，后面不加任何参数，进入之后，CPU 处于 clock gating 状态，降低功耗
-- 进入 wfi 模式后，任何中断会唤醒，例如 uart 中断。在 Xshell 中敲击回车会触发 BL706 UART RX 中断，因此可以通过此方法唤醒 wfi 低功耗模式。
+.. code-block:: C
+    :linenos:
 
-``pds sleeptime``
+    gpio_attach_irq(GPIO_PIN_10, gpio_int_callback);
+    gpio_irq_enable(GPIO_PIN_10, ENABLE); //only used for level3
+
+- 注册 gpio10 外部中断回调函数并使能
+
+.. code-block:: C
+    :linenos:
+
+    int pds3_enter(int argc, char *argv[])
+    {
+        MSG("gpio wake up case,enter pds3 mode\r\n");
+        bflb_platform_delay_ms(50);
+
+        pm_pds_mode_enter(PM_PDS_LEVEL_3, 0); /*hbn、pds、exti gpio can wakeup*/
+        BL_CASE_SUCCESS;                      /*level 3 can run here*/
+        return 0;
+    }
+    int pds31_enter(int argc, char *argv[])
+    {
+        int second = 0;
+
+        if (argc == 2) {
+            second = atoi(argv[1]);
+        } else {
+            second = 0;
+        }
+        MSG("gpio wake up case,enter pds31 mode\r\n");
+        bflb_platform_delay_ms(50);
+
+        pm_pds_mode_enter(PM_PDS_LEVEL_31, second); /*hbn、pds gpio can wakeup*/
+
+        return 0;
+    }
+    SHELL_CMD_EXPORT(pds3_enter, pds3 gpio wakeup test)
+    SHELL_CMD_EXPORT(pds31_enter, pds31 gpio wakeup test)
+
+- 注册进入 pds3 和 pds31 的命令
+
+HBN 模式
+^^^^^^^^^^^^^^^^
+
+-  软件代码见 ``examples/pm/hbn_mode_wakeup``
+
+.. code-block:: C
+    :linenos:
+
+    #define CONFIG_GPIO11_FUNC GPIO_FUN_ADC
+
+- adc 引脚配置，hbn0 下 acomp 使用，见 ``bsp/board/bl706_lp/pinmux_config.h``
+
+.. code-block:: C
+    :linenos:
+
+    #define CONFIG_GPIO12_FUNC GPIO_FUN_WAKEUP
+
+- hbn 唤醒脚配置，hbn0、hbn1、hbn2 使用，见 ``bsp/board/bl706_lp/pinmux_config.h``
+
+.. code-block:: C
+    :linenos:
+
+    int hbn0_enter(int argc, char *argv[])
+    {
+        acomp_device_t acomp_device;
+        acomp_device.id = 0;
+        acomp_device.pos_ch = ACOMP_CHANNEL_ADC_CHANNEL3; /*from gpio11 adc func*/
+        acomp_device.neg_ch = ACOMP_CHANNEL_0P375VBAT;
+        acomp_device.pos_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
+        acomp_device.neg_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
+        acomp_init(&acomp_device);
+        bflb_platform_delay_ms(50); /*delay for acomp*/
+
+        for (uint32_t i = 0; i < 30; i++) {
+            MSG("status:%d\r\n", acomp_get_result(&acomp_device));
+            bflb_platform_delay_ms(100);
+        }
+
+        MSG("acomp wake up case,enter hbn0 mode\r\n");
+        bflb_platform_delay_ms(50);
+
+        /** cpu will wakeup when acomp status change
+        * please note that if you set gpio9-gpio12 with GPIO_FUN_WAKEUP,it will also wakeup this level
+        * rtc can wakeup this level when sleep time do not equal 0
+        **/
+        pm_hbn_mode_enter(PM_HBN_LEVEL_0, 0);
+
+        return 0;
+    }
+
+    int hbn1_enter(int argc, char *argv[])
+    {
+        int second = 0;
+
+        if (argc == 2) {
+            second = atoi(argv[1]);
+        } else {
+            second = 1;
+        }
+
+        MSG("rtc wake up case,enter hbn1 mode\r\n");
+        bflb_platform_delay_ms(50);
+        /** cpu will wakeup when rtc sleep time timeout
+        * please note that if you set gpio9-gpio12 with GPIO_FUN_WAKEUP,it will also wakeup this level
+        **/
+        pm_hbn_mode_enter(PM_HBN_LEVEL_1, second);
+
+        return 0;
+    }
+
+    int hbn2_enter(int argc, char *argv[])
+    {
+        MSG("gpio wake up case,enter hbn2 mode\r\n");
+        bflb_platform_delay_ms(50);
+
+        /*cpu will wakeup when you set gpio9-gpio12 with GPIO_FUN_WAKEUP
+        * rtc can not wakeup level2
+        **/
+        pm_hbn_mode_enter(PM_HBN_LEVEL_2, 0);
+
+        return 0;
+    }
+
+- 注册进入 hbn0、hbn1、hbn2 的命令
 
 
-- pds 可以选择带一个 sleeptime 的参数，决定其内部 RTC 唤醒时间。如果指令不带此参数，那么默认不使用 RTC 内部唤醒，目前的固件仅支持上电复位唤醒。
-- 如果指令包含 sleeptime 参数，pds 将会在``sleeptime * clock_period`` 的时刻被唤醒，表现为复位芯片，重新打印起始报文。
-- 进入低功耗模式后，RTC 的时钟是 32K，因此 sleeptime 为 32768 时，表现为睡眠 1S 后唤醒。
+编译和烧录
+-----------------------------
 
-``hbn sleeptime``
+-  **CDK 编译**
+
+    暂无，用户可以自己添加
+
+-  **命令行编译**
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd <sdk_path>/bl_mcu_sdk
+    $ make BOARD=bl706_lp APP=pds_mode_wakeup
+    $ make BOARD=bl706_lp APP=hbn_mode_wakeup
+
+-  **烧录**
+
+   详见 :ref:`bl_dev_cube`
 
 
-- hbn 可以选择带一个 sleeptime 的参数，决定其内部 RTC 唤醒时间。如果指令不带此参数，那么默认不使用 RTC 内部唤醒，目前的固件仅支持上电复位唤醒。
-- 如果指令包含 sleeptime 参数，hbn 将会在``sleeptime * clock_period`` 的时刻被唤醒，表现为复位芯片，重新打印起始报文。
-- 进入低功耗模式后，RTC 的时钟是 32K，因此 sleeptime 为 32768 时，表现为睡眠 1S 后唤醒。
+实验现象
+-----------------------------
+
+- 首先唤醒脚唤醒方式默认均为下降沿唤醒，所以需要将 GPIO6、GPIO10、GPIO12 引脚外接电阻到 3.3V。
+- acomp 变化电压阈值在 1.2375V，所以需要使用滑动电阻器，调整到 1.2375V（0.375VBAT）后再使用。
+- 打开终端，并按下 TAB 键可以列出命令。
+- 输入需要执行命令回车即可运行。
+
+**PDS 模式**
+
+.. figure:: img/lowpower_pds.gif
+   :alt:
+
+
+**HBN 模式**
+
+.. figure:: img/lowpower_hbn.gif
+   :alt:
+
+详细测试结果见 `BL702/704/706 数据手册 page 28 <https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_BL706_DS_zh_CN_Combo_1.9.pdf>`_。
+
+.. figure:: img/powerTable.png

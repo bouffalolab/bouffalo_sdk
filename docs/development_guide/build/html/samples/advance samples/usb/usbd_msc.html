@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3.2. MSC - U 盘 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>3.2. MSC - U 盘升级 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -119,20 +119,28 @@
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/i2s/index.html">8. I2S 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">3. USB Device 应用</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="usbd_cdc.html">3.1. CDC - 虚拟串口</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">3.2. MSC - U 盘</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.2. MSC - U 盘升级</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">3.2.1. 准备工具</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">3.2.2. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">3.2.3. 软件实现</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">3.2.4. 编译和烧录</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">3.2.5. 实验现象</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="usbd_hid.html">3.3. HID - 键盘&amp;鼠标</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usbd_video.html">3.4. VIDEO - 摄像头</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usbd_audio.html">3.5. AUDIO - 麦克风</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../emac/index.html">7. EMAC 以太网应用</a></li>
@@ -186,7 +194,7 @@
         
           <li><a href="index.html"><span class="section-number">3. </span>USB Device 应用</a> &raquo;</li>
         
-      <li><span class="section-number">3.2. </span>MSC - U 盘</li>
+      <li><span class="section-number">3.2. </span>MSC - U 盘升级</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -206,7 +214,186 @@
            <div itemprop="articleBody">
             
   <div class="section" id="msc-u">
-<h1><span class="section-number">3.2. </span>MSC - U 盘<a class="headerlink" href="#msc-u" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">3.2. </span>MSC - U 盘升级<a class="headerlink" href="#msc-u" title="永久链接至标题">¶</a></h1>
+<p>本 demo 主要演示使用 usb 将 xip flash 模拟成 u 盘设备，将其作为一个 BootLoader 使用，用来升级固件。</p>
+<p>USB大容量存储设备类（The USB mass storage device class）是一种计算机和移动设备之间的传输协议，它允许一个通用串行总线（USB）设备来访问主机的计算设备，使两者之间进行文件传输。</p>
+<p>MSC 协议介绍参考 <a class="reference external" href="https://www.usb.org/documents">USB 官方文档</a>。</p>
+<p>bootloader 我们将其编译后烧录在 flash 0x2000 开始的物理地址，工具默认也是这个地址。</p>
+<div class="figure align-default">
+<img alt="../../../_images/usb_msc.png" src="../../../_images/usb_msc.png" />
+</div>
+<p>我们使用 flash 物理地址 0x0000c000 (48K) 开始的地方，用来模拟 u 盘，u 盘大小为 256K（64 个扇区，每个扇区 4KB ），根据文件系统格式，可以知道，数据的地址在 u 盘的第 10 个扇区（0x16000），也即 APP 的入口地址。BootLoader 与 APP 分区表如下：</p>
+<div class="figure align-default">
+<img alt="../../../_images/usb_msc2.png" src="../../../_images/usb_msc2.png" />
+</div>
+<div class="section" id="id1">
+<h2><span class="section-number">3.2.1. </span>准备工具<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>一根 usb 数据线</p></li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">3.2.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>内部 flash 不需要额外电路</p></li>
+<li><p>外部 flash 需要连接 flash 控制器接口</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
+<span class="o">----------------------------------</span>
+  <span class="n">USB_DP</span>         <span class="o">&lt;--&gt;</span>     <span class="n">GPIO7</span>
+  <span class="n">USB_DM</span>         <span class="o">&lt;--&gt;</span>     <span class="n">GPIO8</span>
+  <span class="n">UART0_TX</span>       <span class="o">&lt;--&gt;</span>     <span class="n">GPIO14</span>
+  <span class="n">BOOTLOADER_PIN</span> <span class="o">&lt;--&gt;</span>     <span class="n">GPIO15</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">3.2.3. </span>软件实现<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/usb/usb_msc_flash_boot</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BLOCK_SIZE  4096</span>
+<span class="cp">#define BLOCK_COUNT 64</span>
+<span class="cp">#define FLASH_ADDR  0x0000c000 </span><span class="cm">/*addr start from 48k */</span><span class="cp"></span>
+<span class="kt">void</span> <span class="nf">usbd_msc_get_cap</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">lun</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="o">*</span><span class="n">block_num</span><span class="p">,</span> <span class="kt">uint16_t</span> <span class="o">*</span><span class="n">block_size</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="o">*</span><span class="n">block_num</span> <span class="o">=</span> <span class="n">BLOCK_COUNT</span><span class="p">;</span>
+    <span class="o">*</span><span class="n">block_size</span> <span class="o">=</span> <span class="n">BLOCK_SIZE</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="nf">usbd_msc_sector_read</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">sector</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">length</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">flash_read</span><span class="p">(</span><span class="n">FLASH_ADDR</span> <span class="o">+</span> <span class="n">sector</span> <span class="o">*</span> <span class="n">BLOCK_SIZE</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">length</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">usbd_msc_sector_write</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">sector</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">length</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">flash_erase</span><span class="p">(</span><span class="n">FLASH_ADDR</span> <span class="o">+</span> <span class="n">sector</span> <span class="o">*</span> <span class="n">BLOCK_SIZE</span><span class="p">,</span> <span class="n">BLOCK_SIZE</span><span class="p">);</span>
+    <span class="n">flash_write</span><span class="p">(</span><span class="n">FLASH_ADDR</span> <span class="o">+</span> <span class="n">sector</span> <span class="o">*</span> <span class="n">BLOCK_SIZE</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">length</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>实现 usb msc 需要的底层接口，u 盘大小 256K，flash 物理地址从 0x0000c000 开始。</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">gpio_set_mode</span><span class="p">(</span><span class="n">GPIO_PIN_15</span><span class="p">,</span> <span class="n">GPIO_INPUT_PD_MODE</span><span class="p">);</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">gpio_read</span><span class="p">(</span><span class="n">GPIO_PIN_15</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;*************Welcome to usb msc boot,update your app bin*************</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+    <span class="n">usbd_desc_register</span><span class="p">(</span><span class="n">msc_ram_descriptor</span><span class="p">);</span>
+    <span class="n">usbd_msc_class_init</span><span class="p">(</span><span class="n">MSC_OUT_EP</span><span class="p">,</span> <span class="n">MSC_IN_EP</span><span class="p">);</span>
+
+    <span class="n">usb_fs</span> <span class="o">=</span> <span class="n">usb_dc_init</span><span class="p">();</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">usb_fs</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">device_control</span><span class="p">(</span><span class="n">usb_fs</span><span class="p">,</span> <span class="n">DEVICE_CTRL_SET_INT</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)(</span><span class="n">USB_EP4_DATA_OUT_IT</span> <span class="o">|</span> <span class="n">USB_EP5_DATA_IN_IT</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">usb_device_is_configured</span><span class="p">())</span> <span class="p">{</span>
+    <span class="p">}</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">bin_header</span><span class="p">;</span>
+    <span class="n">flash_read</span><span class="p">(</span><span class="n">FLASH_ADDR</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">BLOCK_SIZE</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bin_header</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">bin_header</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">bin_header</span> <span class="o">==</span> <span class="mh">0xff</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;*************Illegal bin!! Please update your bin*************</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;*************Let&#39;s go to application*************</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">bflb_platform_delay_ms</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+    <span class="n">bflb_platform_deinit</span><span class="p">();</span>
+    <span class="n">hal_jump2app</span><span class="p">(</span><span class="n">FLASH_ADDR</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">BLOCK_SIZE</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>配置 GPIO15 作为输入模式，默认拉低，拉高进入 u 盘升级。</p></li>
+<li><p>如果 GPIO15 为高，则进入 u 盘 升级程序。</p></li>
+<li><p>如果 GPIO15 为低，则表示不需要升级直接进入 app，此时需要修改内存映射地址，将逻辑地址映射的物理地址（flash offset ）从 0x2000 改成实际 app 存储在 flash 的地址为：FLASH_ADDR + 10 * BLOCK_SIZE。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hal_jump2app</span></code> 中对物理地址进行了判断，bootloader 程序预留 48K，物理地址小于 4M。</p></li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2><span class="section-number">3.2.4. </span>编译和烧录<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p><strong>CDK 编译</strong></p>
+<blockquote>
+<div><p>暂无，用户可以自己添加</p>
+</div></blockquote>
+</li>
+<li><p><strong>命令行编译</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>usb_msc_flash_boot
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>烧录</strong></p>
+<p>详见 <a class="reference internal" href="../../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube 烧录工具指南</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h2><span class="section-number">3.2.5. </span>实验现象<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>将 GPIO15 拉高，然后使用 USB 数据线插到电脑上，识别出一个 U 盘。</p></li>
+<li><p>将编译的 APP bin 文件拖入 U 盘。</p></li>
+<li><p>拔下 USB ，拉低 GPIO15，供电以后进入 APP 。</p></li>
+</ul>
+<div class="figure align-default">
+<img alt="../../../_images/usb_msc3.gif" src="../../../_images/usb_msc3.gif" />
+</div>
+</div>
 </div>
 
 

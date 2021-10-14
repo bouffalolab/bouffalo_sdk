@@ -147,13 +147,13 @@ BLE server 软件实现
    :linenos:
 
     $ cd <sdk_path>/bl_mcu_sdk
-    $ make BOARD=bl706_iot APP=ble_peripheral SUPPORT_FREERTOS=y SUPPORT_FLOAT=y SUPPORT_BLE=y
+    $ make BOARD=bl706_iot APP=ble_peripheral SUPPORT_FLOAT=y
 
 .. code-block:: bash
    :linenos:
 
     $ cd <sdk_path>/bl_mcu_sdk
-    $ make BOARD=bl706_iot APP=ble_central SUPPORT_FREERTOS=y SUPPORT_FLOAT=y SUPPORT_BLE=y
+    $ make BOARD=bl706_iot APP=ble_central SUPPORT_FLOAT=y
 
 
 -  **烧录**

@@ -190,7 +190,7 @@ SHELL 命令注册
    :linenos:
 
     $ cd <sdk_path>/bl_mcu_sdk
-    $ make BOARD=bl706_iot APP=shell SUPPORT_SHELL=y
+    $ make BOARD=bl706_iot APP=shell
 
 -  **烧录**
 

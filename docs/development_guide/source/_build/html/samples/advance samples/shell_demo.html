@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>1. Shell 命令行调试 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/translations.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="2. Fatfs 文件系统读写(SD 卡)" href="fatfs_demo.html" />
+    <link rel="prev" title="11.1. XIP FLASH - 数据读写" href="../basic%20samples/flash/flash_demo.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> BL_MCU_SDK 开发指南
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">快速开发指南</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/get_started.html">1. 开发前的准备</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/connecting_hardware.html">2. 硬件连接指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/index.html">3. 开发环境搭建指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cmake_quick_start.html">4. 基于 cmake 框架新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/cdk_new_project_quick_start.html">5. 基于 CDK 新建工程指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/bl_dev_cube.html">6. BLDevCube 烧录工具指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../get_started/board.html">7. Board 配置系统使用指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 手册</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/api_overview.html">1. API 概述</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/peripheral/index.html">2. Peripheral</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/shell/api_shell.html">3. Shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/usb%20stack/api_usb_stack.html">4. USB Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference/bluetooth/api_ble.html">5. BLE</a></li>
+</ul>
+<p class="caption"><span class="caption-text">基础外设例程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/gpio/index.html">1. GPIO 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/uart/index.html">2. UART 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/pwm/index.html">3. PWM 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/mtimer/index.html">4. MTIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/dma/index.html">5. DMA 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/spi/index.html">6. SPI 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/i2c/index.html">7. I2C 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/i2s/index.html">8. I2S 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/adc/index.html">9. ADC 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic%20samples/flash/index.html">11. XIP FLASH 示例</a></li>
+</ul>
+<p class="caption"><span class="caption-text">进阶例程</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Shell 命令行调试</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">1.1. 准备工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">1.2. 硬件连接</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">1.3. 软件实现</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">1.3.1. shell 移植到串口</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">1.3.2. SHELL 命令注册</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">1.4. 编译和烧录</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">1.5. 实验现象</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fatfs_demo.html">2. Fatfs 文件系统读写(SD 卡)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usb/index.html">3. USB Device 应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="boot2_iap_info.html">5. BOOT2 IAP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
+<li class="toctree-l1"><a class="reference internal" href="emac/index.html">7. EMAC 以太网应用</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">BL_MCU_SDK 开发指南</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><span class="section-number">1. </span>Shell 命令行调试</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/samples/advance samples/shell_demo.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="shell">
+<h1><span class="section-number">1. </span>Shell 命令行调试<a class="headerlink" href="#shell" title="永久链接至标题">¶</a></h1>
+<p>本 demo 将演示如何使用 shell 通过串口进行命令行调试。</p>
+<div class="section" id="id1">
+<h2><span class="section-number">1.1. </span>准备工具<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><p>pc控制端使用串口终端软件：xshell 或者 mobaxterm</p></li>
+<li><p>连接介质：usb转串口 or 网络 or usb</p></li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2><span class="section-number">1.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>本 demo 基于 BL706_IOT 开发板，连接方式如下</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
+<span class="o">----------------------------------</span>
+    <span class="n">UART0_TX</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO14</span>
+    <span class="n">UART0_RX</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO15</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2><span class="section-number">1.3. </span>软件实现<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id4">
+<h3><span class="section-number">1.3.1. </span>shell 移植到串口<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/shell</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_UART_CLOCK_SOURCE  ROOT_CLOCK_SOURCE_PLL_96M</span>
+<span class="cp">#define BSP_UART_CLOCK_DIV  0</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">UART</span></code> 设备时钟源，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/clock_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define CONFIG_GPIO14_FUNC GPIO_FUN_UART0_TX</span>
+<span class="cp">#define CONFIG_GPIO15_FUNC GPIO_FUN_UART0_RX</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>配置 <code class="docutils literal notranslate"><span class="pre">UART</span></code> 设备复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_UART0</span>
+
+<span class="cp">#if defined(BSP_USING_UART0)</span>
+<span class="cp">#ifndef UART0_CONFIG</span>
+<span class="cp">#define UART0_CONFIG \</span>
+<span class="cp">{   \</span>
+<span class="cp">.id = 0, \</span>
+<span class="cp">.baudrate = 2000000,\</span>
+<span class="cp">.databits = UART_DATA_LEN_8, \</span>
+<span class="cp">.stopbits = UART_STOP_ONE, \</span>
+<span class="cp">.parity = UART_PAR_NONE, \</span>
+<span class="cp">.fifo_threshold = 1, \</span>
+<span class="cp">}</span>
+<span class="cp">#endif</span>
+<span class="cp">#endif</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>使能 <code class="docutils literal notranslate"><span class="pre">BSP_USING_UART0</span></code> 并配置 <code class="docutils literal notranslate"><span class="pre">UART</span></code> 设备配置，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/peripheral_config.h</span></code></p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">bflb_platform_init</span><span class="p">();</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>在 <code class="docutils literal notranslate"><span class="pre">bflb_platform_init</span></code> 函数中，我们已经注册并且打开了一个调试用的串口设备，给用户实现一个 <code class="docutils literal notranslate"><span class="pre">MSG</span></code> 的基本功能用作打印输出报文。具体实现如下</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>    <span class="n">uart_register</span><span class="p">(</span><span class="n">board_get_debug_uart_index</span><span class="p">(),</span> <span class="s">&quot;debug_log&quot;</span><span class="p">);</span>
+    <span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">uart</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;debug_log&quot;</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">uart</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">device_open</span><span class="p">(</span><span class="n">uart</span><span class="p">,</span> <span class="n">DEVICE_OFLAG_STREAM_TX</span> <span class="o">|</span> <span class="n">DEVICE_OFLAG_INT_RX</span><span class="p">);</span>
+        <span class="n">device_set_callback</span><span class="p">(</span><span class="n">uart</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+        <span class="n">device_control</span><span class="p">(</span><span class="n">uart</span><span class="p">,</span> <span class="n">DEVICE_CTRL_CLR_INT</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)(</span><span class="n">UART_RX_FIFO_IT</span><span class="p">));</span>
+    <span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>首先调用 <code class="docutils literal notranslate"><span class="pre">uart_register</span></code> 函数注册  <code class="docutils literal notranslate"><span class="pre">UART</span></code> 设备,当前注册 <code class="docutils literal notranslate"><span class="pre">UART0</span></code></p></li>
+<li><p>然后通过 <code class="docutils literal notranslate"><span class="pre">find</span></code> 函数找到设备对应的句柄，保存于 <code class="docutils literal notranslate"><span class="pre">uart</span></code> 句柄中</p></li>
+<li><p>最后使用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 以轮询发送和中断接收来打开 <code class="docutils literal notranslate"><span class="pre">uart</span></code> 设备，默认关闭中断并且不注册接收中断回调函数</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">uart</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;debug_log&quot;</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">uart</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">device_set_callback</span><span class="p">(</span><span class="n">uart</span><span class="p">,</span> <span class="n">shell_irq_callback</span><span class="p">);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">uart</span><span class="p">,</span> <span class="n">DEVICE_CTRL_SET_INT</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)(</span><span class="n">UART_RX_FIFO_IT</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>通过 <code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 函数，为 <code class="docutils literal notranslate"><span class="pre">UART0</span></code> 注册接收中断服务函数。通过 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> 函数打开 <code class="docutils literal notranslate"><span class="pre">UART_RX_FIFO_IT</span></code> 中断</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">shell_irq_callback</span><span class="p">(</span><span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dev</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">state</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">data</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">UART_EVENT_RX_FIFO</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="o">*</span><span class="p">)</span><span class="n">args</span><span class="p">;</span>
+        <span class="n">shell_handler</span><span class="p">(</span><span class="n">data</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>中断回调函数中，判断 <code class="docutils literal notranslate"><span class="pre">state</span></code> 是否是 <code class="docutils literal notranslate"><span class="pre">UART_EVENT_RX_FIFO</span></code>,是的话就将接收的字节传入 <code class="docutils literal notranslate"><span class="pre">shell_handler</span></code> 函数。</p></li>
+</ul>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">shell_init</span><span class="p">();</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p>调用 <code class="docutils literal notranslate"><span class="pre">shell_init</span></code> 初始化 shell 组件。</p></li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h3><span class="section-number">1.3.2. </span>SHELL 命令注册<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
+<p>以下两种注册方式任选</p>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">hellowd</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;hello World</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">echo</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;%dparameter(s)</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argc</span><span class="p">);</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">uint8_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argc</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">SHELL_CMD_EXPORT</span><span class="p">(</span><span class="n">hellowd</span><span class="p">,</span> <span class="n">hellowd</span> <span class="n">test</span><span class="p">)</span>
+<span class="n">SHELL_CMD_EXPORT</span><span class="p">(</span><span class="n">echo</span><span class="p">,</span> <span class="n">echo</span> <span class="n">test</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">hellowd</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;hello World</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">cmd_echo</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;%dparameter(s)</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argc</span><span class="p">);</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">uint8_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">argc</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">MSG</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\r\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">SHELL_CMD_EXPORT_ALIAS</span><span class="p">(</span><span class="n">hellowd</span><span class="p">,</span> <span class="n">hellwd</span><span class="p">,</span><span class="n">hellowd</span> <span class="n">test</span><span class="p">)</span>
+<span class="n">SHELL_CMD_EXPORT_ALIAS</span><span class="p">(</span><span class="n">cmd_echo</span><span class="p">,</span> <span class="n">echo</span><span class="p">,</span><span class="n">echo</span> <span class="n">test</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h2><span class="section-number">1.4. </span>编译和烧录<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p><strong>CDK 编译</strong></p>
+<p>打开项目中提供的工程文件：shell.cdkproj</p>
+<p>参照 <a class="reference internal" href="../../get_started/Windows_quick_start_cdk.html#windows-cdk-quick-start"><span class="std std-ref">Windows 下使用 CDK (类 MDK Keil)开发指南</span></a> 的步骤编译下载即可</p>
+</li>
+<li><p><strong>命令行编译</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>shell
+</pre></div>
+</td></tr></table></div>
+<ul>
+<li><p><strong>烧录</strong></p>
+<p>详见 <a class="reference internal" href="../../get_started/bl_dev_cube.html#bl-dev-cube"><span class="std std-ref">BLDevCube 烧录工具指南</span></a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h2><span class="section-number">1.5. </span>实验现象<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h2>
+<div class="figure align-default">
+<img alt="" src="../../_images/shell_demo.gif" />
+</div>
+<p>shell test</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="fatfs_demo.html" class="btn btn-neutral float-right" title="2. Fatfs 文件系统读写(SD 卡)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../basic%20samples/flash/flash_demo.html" class="btn btn-neutral float-left" title="11.1. XIP FLASH - 数据读写" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; 版权所有 2021, BouffaloLab Co., Ltd.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
