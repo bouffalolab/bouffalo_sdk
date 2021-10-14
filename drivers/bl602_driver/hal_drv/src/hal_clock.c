@@ -3,7 +3,7 @@
 
 static uint32_t mtimer_get_clk_src_div(void)
 {
-    return ((SystemCoreClockGet() / (GLB_Get_BCLK_Div() + 1)) / 1000 / 1000 - 1);
+    return (system_clock_get(SYSTEM_CLOCK_BCLK) / 1000 / 1000 - 1);
 }
 
 void system_clock_init(void)
@@ -91,13 +91,30 @@ uint32_t system_clock_get(enum system_clock_type type)
 {
     switch (type) {
         case SYSTEM_CLOCK_ROOT_CLOCK:
-            return SystemCoreClockGet() * (GLB_Get_HCLK_Div() + 1);
-
+            if (GLB_Get_Root_CLK_Sel() == 0) {
+                return 32 * 1000 * 1000;
+            } else if (GLB_Get_Root_CLK_Sel() == 1)
+                return 32 * 1000 * 1000;
+            else {
+                uint32_t tmpVal = BL_RD_REG(GLB_BASE, GLB_CLK_CFG0);
+                tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_PLL_SEL);
+                if (tmpVal == 0) {
+                    return 48 * 1000 * 1000;
+                } else if (tmpVal == 1) {
+                    return 120 * 1000 * 1000;
+                } else if (tmpVal == 2) {
+                    return 160 * 1000 * 1000;
+                } else if (tmpVal == 3) {
+                    return 192 * 1000 * 1000;
+                } else {
+                    return 0;
+                }
+            }
         case SYSTEM_CLOCK_FCLK:
-            return SystemCoreClockGet();
+            return system_clock_get(SYSTEM_CLOCK_ROOT_CLOCK) / (GLB_Get_HCLK_Div() + 1);
 
         case SYSTEM_CLOCK_BCLK:
-            return (SystemCoreClockGet() / ((GLB_Get_HCLK_Div() + 1) * (GLB_Get_BCLK_Div() + 1)));
+            return system_clock_get(SYSTEM_CLOCK_ROOT_CLOCK) / (GLB_Get_HCLK_Div() + 1) / (GLB_Get_BCLK_Div() + 1);
 
         case SYSTEM_CLOCK_XCLK:
             switch (XTAL_TYPE) {
