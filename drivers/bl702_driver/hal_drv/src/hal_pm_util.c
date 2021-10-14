@@ -35,6 +35,8 @@ extern uint32_t psramIoCfg;
 /* Flash offset value, will get from sf_ctrl register */
 extern uint32_t flash_offset;
 
+extern void pm_pds31_fast_mode_enter(enum pm_pds_sleep_level pds_level, uint32_t sleep_time);
+
 extern SPI_Flash_Cfg_Type *flash_cfg;
 
 void ATTR_PDS_RAM_SECTION pm_pds_fastboot_entry(void);
@@ -58,12 +60,11 @@ uint32_t hal_pds_enter_with_time_compensation(uint32_t pdsLevel, uint32_t pdsSle
     uint32_t actualSleepDuration_32768cycles = 0;
     uint32_t actualSleepDuration_ms = 0;
 
-    if (pdsLevel >= 4 && HBN_Get_Status_Flag() != HBN_STATUS_ENTER_FLAG) {
-        pm_set_wakeup_callback(pm_pds_fastboot_entry);
-    }
+    pm_set_wakeup_callback(pm_pds_fastboot_entry);
+
     HBN_Get_RTC_Timer_Val(&rtcLowBeforeSleep, &rtcHighBeforeSleep);
 
-    pm_pds_mode_enter(pdsLevel, pdsSleepCycles);
+    pm_pds31_fast_mode_enter(pdsLevel, pdsSleepCycles);
 
     HBN_Get_RTC_Timer_Val(&rtcLowAfterSleep, &rtcHighAfterSleep);
 

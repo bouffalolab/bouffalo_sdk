@@ -38,7 +38,6 @@ uint32_t flash_offset = 0;
 
 SPI_Flash_Cfg_Type *flash_cfg;
 
-#define PM_PDS_GPIO_IE_PUPD      0
 #define PM_PDS_FLASH_POWER_OFF   1
 #define PM_PDS_DLL_POWER_OFF     1
 #define PM_PDS_PLL_POWER_OFF     1
@@ -857,15 +856,11 @@ static ATTR_TCM_SECTION void PDS_Update_Flash_Ctrl_Setting(uint8_t fastClock)
     SF_Ctrl_Set_Clock_Delay(fastClock);
 }
 
-ATTR_TCM_SECTION void pm_pds_enter_done(bool store_flag)
+ATTR_TCM_SECTION void pm_pds_enter_done(void)
 {
-    if (store_flag) {
-        __asm__ __volatile__(
-            "la     a2,     __ld_pds_bak_addr\n\t"
-            "sw     ra,     0(a2)\n\t");
-    }
-
-    BL702_Delay_MS(1);
+    __asm__ __volatile__(
+        "la     a2,     __ld_pds_bak_addr\n\t"
+        "sw     ra,     0(a2)\n\t");
 
     __WFI(); /* if(.wfiMask==0){CPU won't power down until PDS module had seen __wfi} */
 }
@@ -887,26 +882,9 @@ ATTR_TCM_SECTION void pm_pds_enter_done(bool store_flag)
  */
 ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint32_t sleep_time)
 {
-    bool store_flag = 0;
     PDS_DEFAULT_LV_CFG_Type *pPdsCfg = NULL;
     uint32_t tmpVal;
     uint32_t flash_cfg_len;
-
-    if (HBN_STATUS_ENTER_FLAG == BL_RD_REG(HBN_BASE, HBN_RSV0)) {
-        store_flag = 1;
-
-        // Get cache way disable setting
-        cacheWayDisable = (*(volatile uint32_t *)(L1C_BASE + 0x00) >> 8) & 0x0F;
-
-        // Get psram io configuration
-        psramIoCfg = *(volatile uint32_t *)(GLB_BASE + 0x88);
-
-        // Get flash offset
-        flash_offset = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_ID0_OFFSET);
-
-    } else {
-        store_flag = 0;
-    }
 
     /* To make it simple and safe*/
     cpu_global_irq_disable();
@@ -1003,9 +981,9 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint3
     pPdsCfg->pdsCtl.pdsLdoVol = PM_PDS_LDO_LEVEL_DEFAULT;
     pPdsCfg->pdsCtl.pdsLdoVselEn = 1;
 
-#if PM_PDS_GPIO_IE_PUPD == 0
-    pPdsCfg->pdsCtl.gpioIePuPd = 0;
-#endif
+    if (BL_GET_REG_BITS_VAL(BL_RD_REG(PDS_BASE, PDS_GPIO_INT), PDS_GPIO_INT_MASK)) {
+        pPdsCfg->pdsCtl.gpioIePuPd = 0;
+    }
 
 #if PM_PDS_RF_POWER_OFF == 0
     pPdsCfg->pdsCtl.pdsCtlRfSel = 0;
@@ -1014,41 +992,8 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint3
     AON_Set_LDO11_SOC_Sstart_Delay(0x2);
 
     PDS_Default_Level_Config(pPdsCfg, sleep_time);
-    if (store_flag) {
-        __asm__ __volatile__(
-            "csrr   a0,     mtvec\n\t"
-            "csrr   a1,     mstatus\n\t"
-            "la     a2,     __ld_pds_bak_addr\n\t"
-            "sw     sp,     1*4(a2)\n\t"
-            "sw     tp,     2*4(a2)\n\t"
-            "sw     t0,     3*4(a2)\n\t"
-            "sw     t1,     4*4(a2)\n\t"
-            "sw     t2,     5*4(a2)\n\t"
-            "sw     fp,     6*4(a2)\n\t"
-            "sw     s1,     7*4(a2)\n\t"
-            "sw     a0,     8*4(a2)\n\t"
-            "sw     a1,     9*4(a2)\n\t"
-            "sw     a3,     10*4(a2)\n\t"
-            "sw     a4,     11*4(a2)\n\t"
-            "sw     a5,     12*4(a2)\n\t"
-            "sw     a6,     13*4(a2)\n\t"
-            "sw     a7,     14*4(a2)\n\t"
-            "sw     s2,     15*4(a2)\n\t"
-            "sw     s3,     16*4(a2)\n\t"
-            "sw     s4,     17*4(a2)\n\t"
-            "sw     s5,     18*4(a2)\n\t"
-            "sw     s6,     19*4(a2)\n\t"
-            "sw     s7,     20*4(a2)\n\t"
-            "sw     s8,     21*4(a2)\n\t"
-            "sw     s9,     22*4(a2)\n\t"
-            "sw     s10,    23*4(a2)\n\t"
-            "sw     s11,    24*4(a2)\n\t"
-            "sw     t3,     25*4(a2)\n\t"
-            "sw     t4,     26*4(a2)\n\t"
-            "sw     t5,     27*4(a2)\n\t"
-            "sw     t6,     28*4(a2)\n\t");
-    }
-    pm_pds_enter_done(store_flag);
+
+    __WFI(); /* if(.wfiMask==0){CPU won't power down until PDS module had seen __wfi} */
 
 #if PM_PDS_PLL_POWER_OFF
     GLB_Set_System_CLK(XTAL_TYPE, BSP_ROOT_CLOCK_SOURCE);
@@ -1056,26 +1001,149 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint3
 #endif
 
 #if PM_PDS_FLASH_POWER_OFF
-    if (pds_level < PM_PDS_LEVEL_4) {
-        HBN_Set_Pad_23_28_Pullnone();
-        /* Init flash gpio */
-        SF_Cfg_Init_Flash_Gpio(0, 1);
+    HBN_Set_Pad_23_28_Pullnone();
+    /* Init flash gpio */
+    SF_Cfg_Init_Flash_Gpio(0, 1);
 
-        SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
-        SFlash_Restore_From_Powerdown(flash_cfg, 0);
+    SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
+    SFlash_Restore_From_Powerdown(flash_cfg, 0);
+#endif
+
+    cpu_global_irq_enable();
+}
+
+ATTR_TCM_SECTION void pm_pds31_fast_mode_enter(enum pm_pds_sleep_level pds_level, uint32_t sleep_time)
+{
+    PDS_DEFAULT_LV_CFG_Type *pPdsCfg = &pdsCfgLevel31;
+    uint32_t tmpVal;
+    uint32_t flash_cfg_len;
+
+    // Get cache way disable setting
+    cacheWayDisable = (*(volatile uint32_t *)(L1C_BASE + 0x00) >> 8) & 0x0F;
+
+    // Get psram io configuration
+    psramIoCfg = *(volatile uint32_t *)(GLB_BASE + 0x88);
+
+    // Get flash offset
+    flash_offset = BL_RD_REG(SF_CTRL_BASE, SF_CTRL_SF_ID0_OFFSET);
+
+    /* To make it simple and safe*/
+    cpu_global_irq_disable();
+
+    flash_get_cfg((uint8_t **)&flash_cfg, &flash_cfg_len);
+    HBN_Set_Ldo11_All_Vout(PM_PDS_LDO_LEVEL_DEFAULT);
+
+    PDS_WAKEUP_IRQHandler_Install();
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0xffffffff);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0);
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
+    tmpVal &= ~(1 << 8); //unmask pds wakeup
+
+    if (!BL_GET_REG_BITS_VAL(BL_RD_REG(PDS_BASE, PDS_GPIO_INT), PDS_GPIO_INT_MASK))
+        tmpVal |= (1 << 19); //enable gpio wakeup for pds
+    if (BL_GET_REG_BITS_VAL(BL_RD_REG(HBN_BASE, HBN_IRQ_MODE), HBN_REG_AON_PAD_IE_SMT))
+        tmpVal |= (1 << 17); //enable hbn out0 wakeup for pds
+
+    if (sleep_time)
+        tmpVal |= (1 << 16); //unmask pds sleep time wakeup
+    BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
+
+    PDS_IntClear();
+
+    /* enable PDS interrupt to wakeup CPU (PDS1:CPU not powerdown, CPU __WFI) */
+    CPU_Interrupt_Enable(PDS_WAKEUP_IRQn);
+
+#if PM_PDS_FLASH_POWER_OFF
+    HBN_Power_Down_Flash(flash_cfg);
+    /* turn_off_ext_flash_pin, GPIO23 - GPIO28 */
+    for (uint32_t pin = 23; pin <= 28; pin++) {
+        GLB_GPIO_Set_HZ(pin);
     }
+    /* SF io select from efuse value */
+    uint32_t flash_select = BL_RD_WORD(0x40007074);
+    if (((flash_select >> 26) & 7) == 0) {
+        HBN_Set_Pad_23_28_Pullup();
+    }
+    pPdsCfg->pdsCtl.puFlash = 1;
+#endif
+
+#if PM_PDS_PLL_POWER_OFF
+    PDS_Power_Off_PLL();
+#endif
+#if PM_PDS_DLL_POWER_OFF
+    GLB_Set_System_CLK(GLB_DLL_XTAL_NONE, GLB_SYS_CLK_RC32M);
+    AON_Power_Off_XTAL();
+    GLB_Power_Off_DLL();
+    PDS_Update_Flash_Ctrl_Setting(0);
+#endif
+
+    /* pds31     : ldo11rt_iload_sel=1 */
+    HBN_Set_Ldo11rt_Drive_Strength(HBN_LDO11RT_DRIVE_STRENGTH_10_100UA);
+
+    pPdsCfg->pdsCtl.pdsLdoVol = PM_PDS_LDO_LEVEL_DEFAULT;
+    pPdsCfg->pdsCtl.pdsLdoVselEn = 1;
+
+    if (BL_GET_REG_BITS_VAL(BL_RD_REG(PDS_BASE, PDS_GPIO_INT), PDS_GPIO_INT_MASK)) {
+        pPdsCfg->pdsCtl.gpioIePuPd = 0;
+    }
+
+#if PM_PDS_RF_POWER_OFF == 0
+    pPdsCfg->pdsCtl.pdsCtlRfSel = 0;
+#endif
+    /* config  ldo11soc_sstart_delay_aon =2 , cr_pds_pd_ldo11=0 to speedup ldo11soc_rdy_aon */
+    AON_Set_LDO11_SOC_Sstart_Delay(0x2);
+
+    PDS_Default_Level_Config(pPdsCfg, sleep_time);
+
+    __asm__ __volatile__(
+        "csrr   a0,     mtvec\n\t"
+        "csrr   a1,     mstatus\n\t"
+        "la     a2,     __ld_pds_bak_addr\n\t"
+        "sw     sp,     1*4(a2)\n\t"
+        "sw     tp,     2*4(a2)\n\t"
+        "sw     t0,     3*4(a2)\n\t"
+        "sw     t1,     4*4(a2)\n\t"
+        "sw     t2,     5*4(a2)\n\t"
+        "sw     fp,     6*4(a2)\n\t"
+        "sw     s1,     7*4(a2)\n\t"
+        "sw     a0,     8*4(a2)\n\t"
+        "sw     a1,     9*4(a2)\n\t"
+        "sw     a3,     10*4(a2)\n\t"
+        "sw     a4,     11*4(a2)\n\t"
+        "sw     a5,     12*4(a2)\n\t"
+        "sw     a6,     13*4(a2)\n\t"
+        "sw     a7,     14*4(a2)\n\t"
+        "sw     s2,     15*4(a2)\n\t"
+        "sw     s3,     16*4(a2)\n\t"
+        "sw     s4,     17*4(a2)\n\t"
+        "sw     s5,     18*4(a2)\n\t"
+        "sw     s6,     19*4(a2)\n\t"
+        "sw     s7,     20*4(a2)\n\t"
+        "sw     s8,     21*4(a2)\n\t"
+        "sw     s9,     22*4(a2)\n\t"
+        "sw     s10,    23*4(a2)\n\t"
+        "sw     s11,    24*4(a2)\n\t"
+        "sw     t3,     25*4(a2)\n\t"
+        "sw     t4,     26*4(a2)\n\t"
+        "sw     t5,     27*4(a2)\n\t"
+        "sw     t6,     28*4(a2)\n\t");
+
+    pm_pds_enter_done();
+
+#if PM_PDS_PLL_POWER_OFF
+    GLB_Set_System_CLK(XTAL_TYPE, BSP_ROOT_CLOCK_SOURCE);
+    PDS_Update_Flash_Ctrl_Setting(1);
 #endif
 
     cpu_global_irq_enable();
 
-    if (store_flag) {
-        // Get cache way disable setting
-        *(volatile uint32_t *)(L1C_BASE + 0x00) &= ~(0x0F < 8);
-        *(volatile uint32_t *)(L1C_BASE + 0x00) |= cacheWayDisable;
+    // Get cache way disable setting
+    *(volatile uint32_t *)(L1C_BASE + 0x00) &= ~(0x0F < 8);
+    *(volatile uint32_t *)(L1C_BASE + 0x00) |= cacheWayDisable;
 
-        // Get psram io configuration
-        *(volatile uint32_t *)(GLB_BASE + 0x88) = psramIoCfg;
-    }
+    // Get psram io configuration
+    *(volatile uint32_t *)(GLB_BASE + 0x88) = psramIoCfg;
 }
 /**
  * @brief
