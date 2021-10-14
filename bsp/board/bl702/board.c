@@ -199,6 +199,17 @@ static void board_pin_mux_init(void)
                 hbn_gpio_mask &= ~(1 << (af_pin_table[i].pin - 9));
             }
             continue;
+        } else if ((af_pin_table[i].func == GPIO_FUN_USB) || (af_pin_table[i].func == GPIO_FUN_DAC) || (af_pin_table[i].func == GPIO_FUN_ADC)) {
+            /*if analog func , for usb、adc、dac*/
+            gpio_cfg.gpioFun = GPIO_FUN_ANALOG;
+            gpio_cfg.gpioMode = GPIO_MODE_ANALOG;
+            gpio_cfg.pullType = GPIO_PULL_NONE;
+        } else if ((af_pin_table[i].func & 0xF0) == 0xF0) {
+            /*if uart func*/
+            gpio_cfg.gpioFun = GPIO_FUN_UART;
+            uint8_t sig = af_pin_table[i].func & 0x07;
+            /*link to one uart sig*/
+            GLB_UART_Fun_Sel((gpio_cfg.gpioPin % 8), sig);
         } else if (af_pin_table[i].func == GPIO_FUN_PWM) {
             /*if pwm func*/
             gpio_cfg.pullType = GPIO_PULL_DOWN;
@@ -212,17 +223,6 @@ static void board_pin_mux_init(void)
             gpio_cfg.pullType = GPIO_PULL_NONE;
             gpio_cfg.gpioMode = GPIO_MODE_OUTPUT;
             gpio_cfg.gpioFun = GPIO_FUN_QDEC;
-        } else if ((af_pin_table[i].func == GPIO_FUN_USB) || (af_pin_table[i].func == GPIO_FUN_DAC) || (af_pin_table[i].func == GPIO_FUN_ADC)) {
-            /*if analog func , for usb、adc、dac*/
-            gpio_cfg.gpioFun = GPIO_FUN_ANALOG;
-            gpio_cfg.gpioMode = GPIO_MODE_ANALOG;
-            gpio_cfg.pullType = GPIO_PULL_NONE;
-        } else if ((af_pin_table[i].func & 0x70) == 0x70) {
-            /*if uart func*/
-            gpio_cfg.gpioFun = GPIO_FUN_UART;
-            uint8_t sig = af_pin_table[i].func & 0x07;
-            /*link to one uart sig*/
-            GLB_UART_Fun_Sel((gpio_cfg.gpioPin % 8), sig);
         } else if (af_pin_table[i].func == GPIO_FUN_CLK_OUT) {
             if (af_pin_table[i].pin % 2) {
                 /*odd gpio output clock*/
@@ -302,12 +302,20 @@ void bl_show_info(void)
 
 #if 0
     MSG("root clock:%dM\r\n", system_clock_get(SYSTEM_CLOCK_ROOT_CLOCK) / 1000000); /*root clock before f_div*/
+
     MSG("fclk clock:%dM\r\n", system_clock_get(SYSTEM_CLOCK_FCLK) / 1000000);       /*after f_div,this is system core clock*/
     MSG("bclk clock:%dM\r\n", system_clock_get(SYSTEM_CLOCK_BCLK) / 1000000);
 
     MSG("uart clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_UART) / 1000000);
     MSG("spi clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_SPI) / 1000000);
     MSG("i2c clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_I2C) / 1000000);
+    MSG("adc clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_ADC) / 1000000);
+    MSG("dac clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_DAC) / 1000000);
+    MSG("i2s clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_I2S) / 1000000);
+    MSG("pwm clock:%dhz\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_PWM));
+    MSG("cam clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_CAM) / 1000000);
+    MSG("timer0 clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_TIMER0) / 1000000);
+    MSG("timer1 clock:%dM\r\n", peripheral_clock_get(PERIPHERAL_CLOCK_TIMER1) / 1000000);
 #endif
 }
 
