@@ -325,17 +325,26 @@ int usb_control(struct device *dev, int cmd, void *args)
             while (offset < 24) {
                 if ((uint32_t)args & (1 << offset)) {
                     USB_IntEn(offset, ENABLE);
-                    USB_IntMask(offset, UNMASK); //11
-                    //USB_DC_LOG("offset:%d\r\n",offset);
+                    USB_IntMask(offset, UNMASK);
                 }
 
                 offset++;
             }
             break;
         }
-        case DEVICE_CTRL_CLR_INT /* constant-expression */:
-            break;
+        case DEVICE_CTRL_CLR_INT /* constant-expression */: {
+            uint32_t offset = __builtin_ctz((uint32_t)args);
 
+            while (offset < 24) {
+                if ((uint32_t)args & (1 << offset)) {
+                    USB_IntEn(offset, DISABLE);
+                    USB_IntMask(offset, MASK);
+                }
+
+                offset++;
+            }
+            break;
+        }
         case DEVICE_CTRL_USB_DC_SET_ACK /* constant-expression */:
             USB_Set_EPx_Status(USB_EP_GET_IDX(((uint32_t)args) & 0x7f), USB_EP_STATUS_ACK);
             return 0;
@@ -587,50 +596,36 @@ int usb_dc_ep_set_stall(const uint8_t ep)
             break;
         case 1:
             tmpVal = BL_RD_REG(USB_BASE, USB_EP1_CONFIG);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP1_RDY);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP1_NACK);
             tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP1_STALL);
             BL_WR_REG(USB_BASE, USB_EP1_CONFIG, tmpVal);
             break;
         case 2:
             tmpVal = BL_RD_REG(USB_BASE, USB_EP2_CONFIG);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP2_RDY);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP2_NACK);
             tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP2_STALL);
             BL_WR_REG(USB_BASE, USB_EP2_CONFIG, tmpVal);
             break;
         case 3:
             tmpVal = BL_RD_REG(USB_BASE, USB_EP3_CONFIG);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP3_RDY);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP3_NACK);
             tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP3_STALL);
             BL_WR_REG(USB_BASE, USB_EP3_CONFIG, tmpVal);
             break;
         case 4:
             tmpVal = BL_RD_REG(USB_BASE, USB_EP4_CONFIG);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP4_RDY);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP4_NACK);
             tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP4_STALL);
             BL_WR_REG(USB_BASE, USB_EP4_CONFIG, tmpVal);
             break;
         case 5:
             tmpVal = BL_RD_REG(USB_BASE, USB_EP5_CONFIG);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP5_RDY);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP5_NACK);
             tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP5_STALL);
             BL_WR_REG(USB_BASE, USB_EP5_CONFIG, tmpVal);
             break;
         case 6:
             tmpVal = BL_RD_REG(USB_BASE, USB_EP6_CONFIG);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP6_RDY);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP6_NACK);
             tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP6_STALL);
             BL_WR_REG(USB_BASE, USB_EP6_CONFIG, tmpVal);
             break;
         case 7:
             tmpVal = BL_RD_REG(USB_BASE, USB_EP7_CONFIG);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP7_RDY);
-            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP7_NACK);
             tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP7_STALL);
             BL_WR_REG(USB_BASE, USB_EP7_CONFIG, tmpVal);
             break;
@@ -651,13 +646,67 @@ int usb_dc_ep_set_stall(const uint8_t ep)
 int usb_dc_ep_clear_stall(const uint8_t ep)
 {
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
-
+    uint32_t tmpVal = 0;
     if (USB_EP_DIR_IS_OUT(ep)) {
-        USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_NSTALL);
         usb_fs_device.out_ep[ep_idx].is_stalled = 0;
     } else {
-        USB_Set_EPx_Status(ep_idx, USB_EP_STATUS_NSTALL);
         usb_fs_device.in_ep[ep_idx].is_stalled = 0;
+    }
+    switch (ep_idx) {
+        case 0:
+            break;
+        case 1:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP1_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP1_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP1_NACK);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, USB_CR_EP1_STALL);
+            BL_WR_REG(USB_BASE, USB_EP1_CONFIG, tmpVal);
+            break;
+        case 2:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP2_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP2_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP2_NACK);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, USB_CR_EP2_STALL);
+            BL_WR_REG(USB_BASE, USB_EP2_CONFIG, tmpVal);
+            break;
+        case 3:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP3_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP3_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP3_NACK);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, USB_CR_EP3_STALL);
+            BL_WR_REG(USB_BASE, USB_EP3_CONFIG, tmpVal);
+            break;
+        case 4:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP4_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP4_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP4_NACK);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, USB_CR_EP4_STALL);
+            BL_WR_REG(USB_BASE, USB_EP4_CONFIG, tmpVal);
+            break;
+        case 5:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP5_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP5_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP5_NACK);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, USB_CR_EP5_STALL);
+            BL_WR_REG(USB_BASE, USB_EP5_CONFIG, tmpVal);
+            break;
+        case 6:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP6_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP6_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP6_NACK);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, USB_CR_EP6_STALL);
+            BL_WR_REG(USB_BASE, USB_EP6_CONFIG, tmpVal);
+            break;
+        case 7:
+            tmpVal = BL_RD_REG(USB_BASE, USB_EP7_CONFIG);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP7_RDY);
+            tmpVal = BL_SET_REG_BIT(tmpVal, USB_CR_EP7_NACK);
+            tmpVal = BL_CLR_REG_BIT(tmpVal, USB_CR_EP7_STALL);
+            BL_WR_REG(USB_BASE, USB_EP7_CONFIG, tmpVal);
+            break;
+
+        default:
+            break;
     }
     return 0;
 }
@@ -683,11 +732,11 @@ int usb_dc_ep_is_stalled(struct device *dev, const uint8_t ep, uint8_t *stalled)
     *stalled = 0U;
 
     if (USB_EP_DIR_IS_OUT(ep)) {
-        if (USB_Get_EPx_Status(ep_idx) & USB_EP_STATUS_STALL && usb_fs_device.out_ep[ep_idx].is_stalled) {
+        if ((USB_Get_EPx_Status(ep_idx) & USB_EP_STATUS_STALL) && usb_fs_device.out_ep[ep_idx].is_stalled) {
             *stalled = 1U;
         }
     } else {
-        if (USB_Get_EPx_Status(ep_idx) & USB_EP_STATUS_STALL && usb_fs_device.in_ep[ep_idx].is_stalled) {
+        if ((USB_Get_EPx_Status(ep_idx) & USB_EP_STATUS_STALL) && usb_fs_device.in_ep[ep_idx].is_stalled) {
             *stalled = 1U;
         }
     }
@@ -731,8 +780,14 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
     if (!usb_ep_is_enabled(ep)) {
         return -USB_DC_EP_EN_ERR;
     }
+
+    if (!data && data_len) {
+        USB_DC_LOG_ERR("data is null\r\n");
+        return -USB_DC_ADDR_ERR;
+    }
+
     /* Check if ep free */
-    while (!USB_Is_EPx_RDY_Free(ep_idx)) {
+    while (!USB_Is_EPx_RDY_Free(ep_idx) && (usb_fs_device.in_ep[ep_idx].ep_cfg.ep_type != USBD_EP_TYPE_ISOC)) {
         timeout--;
 
         if (!timeout) {
@@ -744,13 +799,8 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
     if (!data_len) {
         /* Zero length packet */
         /* Clear NAK and enable ep */
-        USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
+        USB_Set_EPx_Rdy(USB_EP_GET_IDX(ep));
         return USB_DC_OK;
-    }
-
-    if (!data && data_len) {
-        USB_DC_LOG_ERR("data is null\r\n");
-        return -USB_DC_ADDR_ERR;
     }
 
     if (data_len > usb_fs_device.in_ep[ep_idx].ep_cfg.ep_mps) {
@@ -788,8 +838,7 @@ int usb_dc_ep_write(struct device *dev, const uint8_t ep, const uint8_t *data, u
 
     memcopy_to_fifo((void *)ep_tx_fifo_addr, (uint8_t *)data, data_len);
     /* Clear NAK and enable ep */
-    USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
-
+    USB_Set_EPx_Rdy(USB_EP_GET_IDX(ep));
     USB_DC_LOG_DBG("EP%d write %u bytes\r\n", ep_idx, data_len);
 
     if (ret_bytes) {
@@ -836,6 +885,12 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
         USB_DC_LOG_ERR("Not enabled endpoint\r\n");
         return -USB_DC_EP_EN_ERR;
     }
+
+    if (!data && data_len) {
+        USB_DC_LOG_ERR("data is null\r\n");
+        return -USB_DC_ADDR_ERR;
+    }
+
     /* Check if ep free */
     while (!USB_Is_EPx_RDY_Free(ep_idx) && (usb_fs_device.out_ep[ep_idx].ep_cfg.ep_type != USBD_EP_TYPE_ISOC)) {
         timeout--;
@@ -849,13 +904,8 @@ int usb_dc_ep_read(struct device *dev, const uint8_t ep, uint8_t *data, uint32_t
     /* Allow to read 0 bytes */
     if (!data_len) {
         /* Clear NAK and enable ep */
-        USB_Set_EPx_Status(USB_EP_GET_IDX(ep), USB_EP_STATUS_ACK);
+        USB_Set_EPx_Rdy(USB_EP_GET_IDX(ep));
         return USB_DC_OK;
-    }
-
-    if (!data && data_len) {
-        USB_DC_LOG_ERR("data is null\r\n");
-        return -USB_DC_ADDR_ERR;
     }
 
     read_count = USB_Get_EPx_RX_FIFO_CNT(ep_idx);
@@ -1004,7 +1054,7 @@ void usb_dc_isr(usb_dc_device_t *device)
     for (USB_INT_Type epint = USB_INT_EP1_CMD; epint <= USB_INT_EP7_CMD; epint += 2) {
         if (USB_Get_IntStatus(epint)) {
             epnum = (epint - USB_INT_EP0_OUT_CMD) >> 1;
-            if (!USB_Is_EPx_RDY_Free(epnum)) {
+            if (!USB_Is_EPx_RDY_Free(epnum) && (device->in_ep[epnum].ep_cfg.ep_type != USBD_EP_TYPE_ISOC)) {
                 USB_DC_LOG_DBG("ep%d in busy\r\n", epnum);
                 return;
             }
