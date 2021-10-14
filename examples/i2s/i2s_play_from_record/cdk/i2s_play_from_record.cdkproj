@@ -234,6 +234,9 @@ Board: bl70x_iot
     <File Name="../../../../bsp/bsp_common/platform/bflb_platform.c">
       <FileOption/>
     </File>
+    <File Name="../../../../bsp/bsp_common/platform/syscalls.c">
+      <FileOption/>
+    </File>
     <File Name="../../../../bsp/bsp_common/es8388/bsp_es8388.c">
       <FileOption/>
     </File>
@@ -488,7 +491,6 @@ Board: bl70x_iot
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal>23000000</SoftResetVal>
         <ResetAfterLoad>no</ResetAfterLoad>
-        <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
         <ConfigICE>
@@ -603,7 +605,7 @@ Board: bl70x_iot
           </RAM5>
         </RAMBank>
         <CPU>rv32imafc</CPU>
-        <UseMiniLib>no</UseMiniLib>
+        <UseMiniLib>yes</UseMiniLib>
         <Endian>little</Endian>
         <UseHardFloat>no</UseHardFloat>
         <UseEnhancedLRW>no</UseEnhancedLRW>
@@ -639,7 +641,7 @@ Board: bl70x_iot
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/Source/include;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl602_driver/regs;$(ProjectPath)../../../../drivers/bl602_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../../components/fatfs;$(ProjectPath)../../../../components/freertos/Source/include;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../components/usb_stack/class/audio;$(ProjectPath)../../../../components/usb_stack/class/cdc;$(ProjectPath)../../../../components/usb_stack/class/hid;$(ProjectPath)../../../../components/usb_stack/class/msc;$(ProjectPath)../../../../components/usb_stack/class/video;$(ProjectPath)../../../../components/usb_stack/class/webusb;$(ProjectPath)../../../../components/usb_stack/class/winusb;$(ProjectPath)../../../../components/usb_stack/common;$(ProjectPath)../../../../components/usb_stack/core;$(ProjectPath)../../../../bsp/board/bl702;$(ProjectPath)../../../../bsp/bsp_common/platform;$(ProjectPath)../../../../bsp/bsp_common/es8388;$(ProjectPath)../../../../bsp/bsp_common/spi_sd;$(ProjectPath)../../../../common/device;$(ProjectPath)../../../../common/list;$(ProjectPath)../../../../common/memheap;$(ProjectPath)../../../../common/misc;$(ProjectPath)../../../../common/ring_buffer;$(ProjectPath)../../../../common/soft_crc;$(ProjectPath)../../../../components/shell;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl702_driver/regs;$(ProjectPath)../../../../drivers/bl702_driver/startup;$(ProjectPath)../../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../../drivers/bl602_driver/regs;$(ProjectPath)../../../../drivers/bl602_driver/std_drv/inc</IncludePath>
         <OtherFlags>-fshort-enums -fno-common -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -fno-jump-tables -Wignored-qualifiers -Wswitch-default -Wunused -Wundef -msmall-data-limit=4</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -680,7 +682,6 @@ Board: bl70x_iot
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal>23000000</SoftResetVal>
         <ResetAfterLoad>no</ResetAfterLoad>
-        <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
         <ConfigICE>

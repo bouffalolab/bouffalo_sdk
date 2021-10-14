@@ -40,7 +40,7 @@
 #define USB_CONFIG_SIZE (9 + CDC_ACM_DESCRIPTOR_LEN + 8 + MSC_DESCRIPTOR_LEN)
 
 USB_DESC_SECTION const uint8_t cdc_msc_descriptor[] = {
-    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0x02, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
+    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
     USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, 0x03, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
     CDC_ACM_DESCRIPTOR_INIT(0x00, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, 0x02),
     ///////////////////////////////////////
@@ -55,7 +55,7 @@ USB_DESC_SECTION const uint8_t cdc_msc_descriptor[] = {
     0x50,                                      /* bFunctionProtocol */
     0x00,                                      /* iFunction */
 
-    MSC_DESCRIPTOR_INIT(0x02, MSC_OUT_EP, MSC_IN_EP, 0x02),
+    MSC_DESCRIPTOR_INIT(0x02, MSC_OUT_EP, MSC_IN_EP, 0x00),
     ///////////////////////////////////////
     /// string0 descriptor
     ///////////////////////////////////////

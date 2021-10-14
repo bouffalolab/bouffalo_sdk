@@ -241,6 +241,9 @@ Board: bl70x_iot
       <File Name="../../../../bsp/bsp_common/platform/bflb_platform.c">
         <FileOption/>
       </File>
+      <File Name="../../../../bsp/bsp_common/platform/syscalls.c">
+        <FileOption/>
+      </File>
       <File Name="../../../../bsp/bsp_common/image_sensor/bsp_image_sensor.c">
         <FileOption/>
       </File>

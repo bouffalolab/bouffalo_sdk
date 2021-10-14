@@ -477,7 +477,7 @@ Board: bl70x_iot
       <Linker>
         <Garbage>yes</Garbage>
         <Garbage2>yes</Garbage2>
-        <LDFile>$(ProjectPath)/../usb_cdc_msc.ld</LDFile>
+        <LDFile>$(ProjectPath)../../../../drivers/bl702_driver/bl702_flash.ld</LDFile>
         <LibName>c</LibName>
         <LibPath/>
         <OtherFlags>--specs=nano.specs</OtherFlags>

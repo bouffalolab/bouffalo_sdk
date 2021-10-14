@@ -252,7 +252,7 @@ Board: bl70x_iot
       <File Name="../../../../bsp/bsp_common/fatfs/fatfs_usb.c">
         <FileOption/>
       </File>
-      <File Name="../../../../bsp/bsp_common/fatfs/fatfs_errorcode.c"/>
+      <File Name="../../../../bsp/bsp_common/fatfs/fatfs_errorcode.c">
         <FileOption/>
       </File>
     </VirtualDirectory>
@@ -332,32 +332,6 @@ Board: bl70x_iot
     </VirtualDirectory>
   </VirtualDirectory>
   <Dependencies Name="BuildSet"/>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs>
-      <Tab disFormat="Hex">glb</Tab>
-      <Tab disFormat="Hex">uart</Tab>
-    </peripheralTabs>
-    <WatchDisplayFormat>1</WatchDisplayFormat>
-    <LocalDisplayFormat>1</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs>
-      <Tab disFormat="Hex">glb</Tab>
-      <Tab disFormat="Hex">uart</Tab>
-    </peripheralTabs>
-    <WatchDisplayFormat>1</WatchDisplayFormat>
-    <LocalDisplayFormat>1</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
   <Dependencies Name="CK_Link_Debug"/>
   <Dependencies Name="OpenOCD_Debug"/>
   <BuildConfigs>
@@ -744,4 +718,30 @@ Board: bl70x_iot
       </Flash>
     </BuildConfig>
   </BuildConfigs>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs>
+      <Tab disFormat="Hex">glb</Tab>
+      <Tab disFormat="Hex">uart</Tab>
+    </peripheralTabs>
+    <WatchDisplayFormat>1</WatchDisplayFormat>
+    <LocalDisplayFormat>1</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs>
+      <Tab disFormat="Hex">glb</Tab>
+      <Tab disFormat="Hex">uart</Tab>
+    </peripheralTabs>
+    <WatchDisplayFormat>1</WatchDisplayFormat>
+    <LocalDisplayFormat>1</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
 </Project>

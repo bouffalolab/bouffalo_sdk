@@ -243,6 +243,9 @@ Board: bl70x_iot
       <File Name="../../../../bsp/bsp_common/il9341/bsp_il9341.c">
         <FileOption/>
       </File>
+      <File Name="../../../../bsp/bsp_common/platform/syscalls.c">
+        <FileOption/>
+      </File>
     </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="common">
