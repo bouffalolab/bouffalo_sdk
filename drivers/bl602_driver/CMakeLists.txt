@@ -49,8 +49,11 @@ list(APPEND ADD_REQUIREMENTS common)
 
 ############ Add global compile option ################
 #add components denpend on this component
-if("${SUPPORT_ROMAPI}" STREQUAL "y")
+if(CONFIG_ROMAPI)
 list(APPEND ADD_DEFINITIONS -DBFLB_USE_ROM_DRIVER)
+endif()
+if(CONFIG_HALAPI)
+list(APPEND ADD_DEFINITIONS -DBFLB_USE_HAL_DRIVER)
 endif()
 list(APPEND ADD_DEFINITIONS -DARCH_RISCV)
 #######################################################
