@@ -3,6 +3,26 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.4.1
+----------------------------
+
+新增功能说明：
+    1. 新增 aes、ble pds31、freertos tickless、audio cube demo
+    2. 新增 usb 同步传输中断方式
+    3. 新增 lwip 组件以及对应 emac demo
+    4. 新增 pds31 快速唤醒功能
+    5. 文档更新，包含：flash、usb、fatfs、pm、emac、ble
+
+修复问题说明：
+    1. pwm demo 文档中分频值修正
+    2. 修正 mtimer 获取 div 函数
+    3. 修正 dma 链表配置，当传输长度为 4095 时会配置错误，优化 if 判断
+    4. switch 禁用跳表选项 ，C flag 中添加 -fno-jump-tables
+    5. 部分 cdk 工程增加 syscall.c，对系统函数重定向，否则会进 M mode 异常
+    6. 修正 gpio func macro value，该值对配置 gpio 为 uart 时会有问题，出现覆盖问题
+    7. 补全 calloc 函数，浮点打印会使用
+    8. 从驱动库文件移除 bflb_platform.h 文件，减少只使用 std drv 时的依赖项
+
 bl mcu sdk Release V1.4.0
 ----------------------------
 
