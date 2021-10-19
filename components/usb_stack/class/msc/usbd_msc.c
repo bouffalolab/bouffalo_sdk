@@ -97,6 +97,10 @@ static void usbd_msc_reset(void)
  */
 static int msc_storage_class_request_handler(struct usb_setup_packet *pSetup, uint8_t **data, uint32_t *len)
 {
+    USBD_LOG_DBG("MSC Class request: "
+                 "bRequest 0x%02x\r\n",
+                 setup->bRequest);
+
     switch (pSetup->bRequest) {
         case MSC_REQUEST_RESET:
             USBD_LOG_DBG("MSC_REQUEST_RESET");
@@ -167,7 +171,7 @@ static bool usbd_msc_send_to_host(uint8_t *buffer, uint16_t size)
         size = usbd_msc_cfg.cbw.DataLength;
         usbd_msc_cfg.stage = MSC_BS_DATA_IN_LAST;
     } else {
-        usbd_msc_cfg.stage = MSC_BS_DATA_IN_LAST_STALL;
+        //usbd_msc_cfg.stage = MSC_BS_DATA_IN_LAST_STALL;
     }
 
     if (usbd_ep_write(mass_ep_data[MSD_IN_EP_IDX].ep_addr, buffer, size, NULL)) {
