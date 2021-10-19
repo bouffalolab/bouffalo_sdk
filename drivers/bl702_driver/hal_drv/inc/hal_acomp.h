@@ -6,6 +6,7 @@ extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
 
 enum acomp_channel_type {
     ACOMP_CHANNEL_ADC_CHANNEL0, /*!< Analog compare channel,ADC input channel 0 */

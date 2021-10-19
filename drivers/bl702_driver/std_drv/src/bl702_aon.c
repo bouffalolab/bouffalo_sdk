@@ -104,8 +104,7 @@
  *
 *******************************************************************************/
 #ifndef BFLB_USE_ROM_DRIVER
-__WEAK
-BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_MBG(void)
+__WEAK BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_MBG(void)
 {
     uint32_t tmpVal = 0;
 
@@ -129,8 +128,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_MBG(void)
  *
 *******************************************************************************/
 #ifndef BFLB_USE_ROM_DRIVER
-__WEAK
-BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_MBG(void)
+__WEAK BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_MBG(void)
 {
     uint32_t tmpVal = 0;
 
@@ -152,8 +150,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_MBG(void)
  *
 *******************************************************************************/
 #ifndef BFLB_USE_ROM_DRIVER
-__WEAK
-BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
+__WEAK BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
 {
     uint32_t tmpVal = 0;
     uint32_t timeOut = 0;
@@ -188,8 +185,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
  *
 *******************************************************************************/
 #ifndef BFLB_USE_ROM_DRIVER
-__WEAK
-BL_Err_Type ATTR_CLOCK_SECTION AON_Set_Xtal_CapCode(uint8_t capIn, uint8_t capOut)
+__WEAK BL_Err_Type ATTR_CLOCK_SECTION AON_Set_Xtal_CapCode(uint8_t capIn, uint8_t capOut)
 {
     uint32_t tmpVal = 0;
 
@@ -222,6 +218,29 @@ uint8_t ATTR_CLOCK_SECTION AON_Get_Xtal_CapCode(void)
 }
 
 /****************************************************************************/ /**
+ * @brief  Set XTAL cap code
+ *
+ * @param  extra: cap cpde extra aon
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION AON_Set_Xtal_CapCode_Extra(uint8_t extra)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    if (extra) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, AON_XTAL_CAPCODE_EXTRA_AON);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, AON_XTAL_CAPCODE_EXTRA_AON);
+    }
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  Power off XTAL
  *
  * @param  None
@@ -230,8 +249,7 @@ uint8_t ATTR_CLOCK_SECTION AON_Get_Xtal_CapCode(void)
  *
 *******************************************************************************/
 #ifndef BFLB_USE_ROM_DRIVER
-__WEAK
-BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_XTAL(void)
+__WEAK BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_XTAL(void)
 {
     uint32_t tmpVal = 0;
 
@@ -507,6 +525,52 @@ BL_Err_Type ATTR_TCM_SECTION AON_Set_LDO11_SOC_Sstart_Delay(uint8_t delay)
     tmpVal = BL_RD_REG(AON_BASE, AON_LDO11SOC_AND_DCTEST);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_LDO11SOC_SSTART_DELAY_AON, delay);
     BL_WR_REG(AON_BASE, AON_LDO11SOC_AND_DCTEST, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ *
+*******************************************************************************/
+BL_Err_Type AON_Set_DCDC18_Top_0(uint8_t voutSel, uint8_t vpfm)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_DCDC18_TOP_0);
+    //dcdc18_vout_sel_aon, 1.425V*1.05=1.5V
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_DCDC18_VOUT_SEL_AON, voutSel);
+    //dcdc18_vpfm_aon
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_DCDC18_VPFM_AON, vpfm);
+    BL_WR_REG(AON_BASE, AON_DCDC18_TOP_0, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ *
+*******************************************************************************/
+BL_Err_Type AON_Set_Xtal_Cfg(uint8_t gmBoost, uint8_t ampCtrl, uint8_t fastStartup)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    //xtal_gm_boost
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_GM_BOOST_AON, gmBoost);
+    //xtal_amp_ctrl
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_AMP_CTRL_AON, ampCtrl);
+    //xtal_fast_startup
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_FAST_STARTUP_AON, fastStartup);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
 
     return SUCCESS;
 }

@@ -20,6 +20,7 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_spi.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"

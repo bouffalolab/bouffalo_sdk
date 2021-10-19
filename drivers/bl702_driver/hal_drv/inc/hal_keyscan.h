@@ -22,11 +22,14 @@
  */
 #ifndef __HAL_KEYSCAN__H__
 #define __HAL_KEYSCAN__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define DEVICE_CTRL_KEYSCAN_GET_KEYCODE 0x10
 

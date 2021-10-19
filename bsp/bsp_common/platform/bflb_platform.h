@@ -28,8 +28,12 @@
 extern "C" {
 #endif
 
-#include "misc.h"
-//#include "mcu_sdk_version.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #define MSG(a, ...)     bflb_platform_printf(a, ##__VA_ARGS__)
 #define MSG_DBG(a, ...) bflb_platform_printf(a, ##__VA_ARGS__)
@@ -77,13 +81,6 @@ extern "C" {
 #define LOG_W(fmt, ...) dbg_log_line("W", 33, fmt, ##__VA_ARGS__)
 #define LOG_E(fmt, ...) dbg_log_line("E", 31, fmt, ##__VA_ARGS__)
 #define LOG_RAW(...)    bflb_platform_printf(__VA_ARGS__)
-
-#ifdef DEBUG
-void check_failed(uint8_t *file, uint32_t line);
-#define CHECK_PARAM(expr) ((expr) ? (void)0 : check_failed((uint8_t *)__FILE__, __LINE__))
-#else
-#define CHECK_PARAM(expr) ((void)0)
-#endif /* DEBUG */
 
 void bflb_platform_init(uint32_t baudrate);
 void bflb_platform_printf(char *fmt, ...);

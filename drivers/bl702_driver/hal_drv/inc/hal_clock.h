@@ -28,6 +28,7 @@ extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "bl702_config.h"
 
 /*XTAL_TYPE*/
 #define XTAL_NONE         0

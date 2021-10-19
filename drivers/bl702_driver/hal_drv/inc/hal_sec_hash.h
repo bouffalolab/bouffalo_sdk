@@ -22,11 +22,14 @@
  */
 #ifndef __HAL_SEC_HASH__H__
 #define __HAL_SEC_HASH__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 enum sec_hash_index_type {
     SEC_HASH0_INDEX,

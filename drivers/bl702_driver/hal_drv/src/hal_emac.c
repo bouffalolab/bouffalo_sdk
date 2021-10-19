@@ -25,6 +25,10 @@
 #include "bl702_glb.h"
 #include "hal_emac.h"
 
+#ifndef MSG
+#define MSG(a,...)
+#endif
+
 #define EMAC_USE_INSIDE_CLOCK (0)
 #define TAG                   "EMAC_BD: "
 

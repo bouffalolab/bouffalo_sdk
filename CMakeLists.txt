@@ -8,8 +8,6 @@ PROJECT(${BOARD} C CXX ASM)
 # set(CMAKE_VERBOSE_MAKEFILE ON)
 ENABLE_LANGUAGE(ASM)
 
-include_directories(${CMAKE_SOURCE_DIR}/common/misc)
-include_directories(${CMAKE_SOURCE_DIR}/drivers/${CHIP}_driver/risc-v/Core/Include)
 include_directories(${CMAKE_SOURCE_DIR}/bsp/bsp_common/platform)
 
 if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/bsp/board/${CHIP})

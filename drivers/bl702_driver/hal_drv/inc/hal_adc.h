@@ -28,6 +28,8 @@ extern "C" {
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define DEVICE_CTRL_ADC_CHANNEL_START  0x10
 #define DEVICE_CTRL_ADC_CHANNEL_STOP   0x11

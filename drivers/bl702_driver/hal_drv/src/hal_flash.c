@@ -132,11 +132,13 @@ BL_Err_Type ATTR_TCM_SECTION flash_init(void)
     g_flash_cfg.ioMode = g_flash_cfg.ioMode & 0x0f;
 
     ret = flash_config_init(&g_flash_cfg, (uint8_t *)&jedec_id);
+#if 0
     MSG("flash ID = %08x\r\n", jedec_id);
     bflb_platform_dump((uint8_t *)&g_flash_cfg, sizeof(g_flash_cfg));
     if (ret != SUCCESS) {
         MSG("flash config init fail!\r\n");
     }
+#endif
     g_flash_cfg.clkDelay = clkDelay;
     g_flash_cfg.clkInvert = clkInvert;
 

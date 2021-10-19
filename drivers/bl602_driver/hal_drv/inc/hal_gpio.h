@@ -37,6 +37,8 @@
 #define __HAL_GPIO__H__
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl602_config.h"
 
 typedef enum {
     GPIO_PIN_0 = 0,

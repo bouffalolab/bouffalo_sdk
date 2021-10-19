@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-
+#include "bflb_platform.h"
 #include "hal_usb.h"
 #include "usbd_core.h"
 #include "usbd_cdc.h"

@@ -181,7 +181,7 @@ typedef struct
  *  @{
  */
 void ES8388_Init(ES8388_Cfg_Type *cfg);
-BL_Err_Type ES8388_Reg_Dump(void);
+void ES8388_Reg_Dump(void);
 int ES8388_Set_Voice_Volume(int volume);
 
 /*@} end of group ES8388_Public_Functions */

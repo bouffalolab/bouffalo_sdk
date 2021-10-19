@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 #include "main_functions.h"
+#include "bflb_platform.h"
 #include "hal_uart.h"
 
 /// Global Destructor for C++, which we're not using.

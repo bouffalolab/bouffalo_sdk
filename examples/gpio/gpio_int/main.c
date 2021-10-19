@@ -20,6 +20,7 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_gpio.h"
 
 static void gpio_int_callback(uint32_t pin)

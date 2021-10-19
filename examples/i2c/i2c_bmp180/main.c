@@ -20,6 +20,7 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_i2c.h"
 #include "hal_uart.h"
 

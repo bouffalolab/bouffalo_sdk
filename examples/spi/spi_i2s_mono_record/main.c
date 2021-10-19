@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-
+#include "bflb_platform.h"
 #include "bl702_glb.h"
 #include "bl702_spi.h"
 #include "hal_spi.h"

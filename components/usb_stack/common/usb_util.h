@@ -5,7 +5,9 @@
 #include "string.h"
 #include "stdint.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include "usb_slist.h"
+#include "bflb_platform.h"
 
 #ifndef __packed
 #define __packed __attribute__((__packed__))

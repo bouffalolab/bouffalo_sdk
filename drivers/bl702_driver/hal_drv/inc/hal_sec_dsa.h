@@ -22,6 +22,7 @@
  */
 #ifndef __HAL_SEC_DSA__H__
 #define __HAL_SEC_DSA__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif

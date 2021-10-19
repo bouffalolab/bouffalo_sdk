@@ -20,9 +20,11 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_spi.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"
+
 #define TRANSFER_LEN 256
 static uint32_t txBuff[TRANSFER_LEN] = { 0 };
 static uint32_t rxBuff[TRANSFER_LEN] = { 0 };

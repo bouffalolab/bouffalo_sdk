@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-
+#include "bflb_platform.h"
 #include "hal_gpio.h"
 #include "uart_interface.h"
 #include "hal_usb.h"

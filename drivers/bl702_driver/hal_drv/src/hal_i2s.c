@@ -21,6 +21,7 @@
  *
  */
 #include "hal_i2s.h"
+#include "hal_clock.h"
 #include "hal_dma.h"
 #include "bl702_i2s.h"
 #include "bl702_glb.h"
@@ -38,40 +39,7 @@ int i2s_open(struct device *dev, uint16_t oflag)
     I2S_CFG_Type i2sCfg = { 0 };
     I2S_FifoCfg_Type fifoCfg = { 0 };
 
-    GLB_Set_Chip_Out_0_CLK_Sel(GLB_CHIP_CLK_OUT_I2S_REF_CLK);
-    GLB_Set_I2S_CLK(ENABLE, GLB_I2S_OUT_REF_CLK_NONE);
-
-    /*Finding the right frequency*/
-    if (12288000 % (i2s_device->sampl_freq_hz) == 0) {
-        i2sCfg.audioFreqHz = 12288000;
-        PDS_Set_Audio_PLL_Freq(AUDIO_PLL_12288000_HZ);
-    } else if (11289600 % (i2s_device->sampl_freq_hz) == 0) {
-        i2sCfg.audioFreqHz = 11289600;
-        PDS_Set_Audio_PLL_Freq(AUDIO_PLL_11289600_HZ);
-    } else if (5644800 % (i2s_device->sampl_freq_hz) == 0) {
-        i2sCfg.audioFreqHz = 5644800;
-        PDS_Set_Audio_PLL_Freq(AUDIO_PLL_5644800_HZ);
-    } else {
-        switch (I2S_ADUIO_PLL_DEFAULT) {
-            case AUDIO_PLL_12288000_HZ:
-                i2sCfg.audioFreqHz = 12288000;
-                break;
-
-            case AUDIO_PLL_11289600_HZ:
-                i2sCfg.audioFreqHz = 11289600;
-                break;
-
-            case AUDIO_PLL_5644800_HZ:
-                i2sCfg.audioFreqHz = 5644800;
-                break;
-
-            default:
-                return ERROR;
-                break;
-        }
-
-        PDS_Set_Audio_PLL_Freq(I2S_ADUIO_PLL_DEFAULT);
-    }
+    i2sCfg.audioFreqHz = system_clock_get(SYSTEM_CLOCK_AUPLL);
 
     i2sCfg.sampleFreqHz = i2s_device->sampl_freq_hz;
 
@@ -242,6 +210,8 @@ int i2s_control(struct device *dev, int cmd, void *args)
 {
     i2s_device_t *i2s_device = (i2s_device_t *)dev;
 
+    I2S_CFG_Type i2sCfg;
+
     switch (cmd) {
         case DEVICE_CTRL_SET_INT:
             for (uint16_t i = 0, j = 1; i < 8; i++, j <<= 1) {
@@ -290,6 +260,32 @@ int i2s_control(struct device *dev, int cmd, void *args)
 
         case DEVICE_CTRL_I2S_GET_RX_FIFO:
             return I2S_GetRxFIFO_AvlCnt();
+
+        case DEVICE_CTRL_I2S_SET_SAMPL_FREQ:
+            switch (i2s_device->frame_size) {
+                case I2S_FRAME_LEN_8:
+                    i2sCfg.frameSize = I2S_SIZE_FRAME_8;
+                    break;
+
+                case I2S_FRAME_LEN_16:
+                    i2sCfg.frameSize = I2S_SIZE_FRAME_16;
+                    break;
+
+                case I2S_FRAME_LEN_24:
+                    i2sCfg.frameSize = I2S_SIZE_FRAME_24;
+                    break;
+
+                case I2S_FRAME_LEN_32:
+                    i2sCfg.frameSize = I2S_SIZE_FRAME_32;
+                    break;
+                default:
+                    return ERROR;
+                    break;
+            }
+            i2sCfg.audioFreqHz = system_clock_get(SYSTEM_CLOCK_AUPLL);
+            i2sCfg.sampleFreqHz = (uint32_t)args;
+            I2S_SetBclkPeriod(&i2sCfg);
+            break;
 
         default:
             return ERROR;

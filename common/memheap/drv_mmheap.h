@@ -26,7 +26,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "bflb_platform.h"
 
 #ifndef MMHEAP_LOCK
 #define MMHEAP_LOCK()
@@ -39,12 +38,12 @@
 #ifndef MMHEAP_ASSERT
 #define MMHEAP_ASSERT(A) \
     if (!(A))            \
-    bflb_platform_printf("mmheap malloc error:drv_mmheap,%d\r\n", __LINE__)
+    printf("mmheap malloc error:drv_mmheap,%d\r\n", __LINE__)
 
 #endif
 
 #ifndef MMHEAP_MALLOC_FAIL
-#define MMHEAP_MALLOC_FAIL() bflb_platform_printf("mmheap malloc fail:drv_mmheap,%d\r\n", __LINE__)
+#define MMHEAP_MALLOC_FAIL() printf("mmheap malloc fail:drv_mmheap,%d\r\n", __LINE__)
 #endif
 
 #ifdef __cplusplus
@@ -117,6 +116,23 @@ void *mmheap_alloc(struct heap_info *pRoot, size_t want_size);
  * @return  the new pointer to the allocated memory.
  */
 void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size);
+/**
+ * @brief Cealloc memory from the heap.
+ * Change the size of the memory block pointed to by ptr to size bytes.
+ *
+ * @attention
+ * <ul>
+ * <li> if ptr is NULL, then the call is equivalent to mmheap_alloc(size), for all values of size.
+ * <li> if ptr is if size is equal to zero, and ptr is not NULL, then the call is equivalent to mmheap_free(ptr).
+ * </ul>
+ *
+ * @param[in]   pRoot    heap info.
+ * @param[in]   num     size number.
+ * @param[in]   size    new size of the memory space.
+ *
+ * @return  the new pointer to the allocated memory.
+ */
+void *mmheap_calloc(struct heap_info *pRoot, size_t num, size_t size);
 /**
  * @brief Free the memory.
  * Free the memory space pointed to by ptr, which must have been returned by a previous call to mmheap_alloc(), mmheap_aligned_alloc(), or mmheap_realloc().

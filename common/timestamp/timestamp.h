@@ -24,7 +24,8 @@
 #define _TIMESTAMP_
 
 #include "stdint.h"
-#include "stdbool.h" 
+#include "stddef.h"
+#include "stdbool.h"
 
 typedef struct _rtc_time_t
 {
@@ -36,6 +37,7 @@ typedef struct _rtc_time_t
 	uint8_t minute;
 	uint8_t second;
 }rtc_time;
+
 void unixtime2bejingtime(uint32_t unixtime,rtc_time* beijing_time);
 
 #endif

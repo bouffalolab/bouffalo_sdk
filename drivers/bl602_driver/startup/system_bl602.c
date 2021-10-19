@@ -80,16 +80,9 @@ void SystemInit(void)
 
 /*identify flash config automaticly*/
 extern BL_Err_Type flash_init(void);
-extern void bflb_platform_print_set(uint8_t disable);
 void System_Post_Init(void)
 {
     PDS_Trim_RC32M();
     HBN_Trim_RC32K();
-    bflb_platform_print_set(1);
     flash_init();
-    bflb_platform_print_set(0);
-}
-
-void System_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t SubPriority)
-{
 }

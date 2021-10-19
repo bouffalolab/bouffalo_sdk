@@ -22,6 +22,7 @@
  */
 #ifndef __HAL_SEC_ECDSA__H__
 #define __HAL_SEC_ECDSA__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif

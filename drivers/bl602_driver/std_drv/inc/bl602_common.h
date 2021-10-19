@@ -2,7 +2,7 @@
 #define __BL602_COMMON_H__
 
 #include "bl602.h"
-#include "bflb_platform.h"
+#include "misc.h"
 
 #ifndef __NOP
 #define __NOP() __ASM volatile("nop") /* This implementation generates debug information */
@@ -56,6 +56,32 @@ __ALWAYS_STATIC_INLINE void __disable_irq(void)
 {
     __ASM volatile("csrc mstatus, 8");
 }
+
+/** @defgroup  COMMON_Public_Constants
+ *  @{
+ */
+
+/** @defgroup DRIVER_INT_PERIPH
+ *  @{
+ */
+#define IS_INT_PERIPH(INT_PERIPH) ((INT_PERIPH) < IRQn_LAST)
+
+/*@} end of group DRIVER_INT_PERIPH */
+
+/** @defgroup DRIVER_INT_MASK
+ *  @{
+ */
+#define IS_BL_MASK_TYPE(type) (((type) == MASK) || ((type) == UNMASK))
+
+/*@} end of group COMMON_Public_Constants */
+
+/*@} end of group DRIVER_Public_Macro */
+#define BL602_MemCpy      arch_memcpy
+#define BL602_MemSet      arch_memset
+#define BL602_MemCmp      arch_memcmp
+#define BL602_MemCpy4     arch_memcpy4
+#define BL602_MemCpy_Fast arch_memcpy_fast
+#define BL602_MemSet4     arch_memset4
 
 #define arch_delay_us BL602_Delay_US
 #define arch_delay_ms BL602_Delay_MS

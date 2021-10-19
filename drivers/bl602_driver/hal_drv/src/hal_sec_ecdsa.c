@@ -449,7 +449,7 @@ static int sec_ecdsa_verify_point_mul(uint8_t id, const uint32_t *m)
 #endif
                 } else if (pka_p1_eq_inf == 0 && pka_p2_eq_inf == 1) {
                     //sum = X1
-                    MSG("sum = X1\r\n");
+                    //MSG("sum = X1\r\n");
                 } else if (pka_p1_eq_inf == 0 && pka_p2_eq_inf == 0) {
                     //sum = X1 + X2
                     sec_ecdsa_point_add(id);
@@ -458,7 +458,7 @@ static int sec_ecdsa_verify_point_mul(uint8_t id, const uint32_t *m)
                     sec_ecdsa_dump_temp_result();
 #endif
                 } else {
-                    MSG("Error! infinite point + infinite point\r\n");
+                    //MSG("Error! infinite point + infinite point\r\n");
                     return -1;
                 }
             }

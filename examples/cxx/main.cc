@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-
+#include "bflb_platform.h"
 #include "hal_uart.h"
 #include "hal_mtimer.h"
 #include <iostream>

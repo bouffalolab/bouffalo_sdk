@@ -44,6 +44,7 @@
 #include "blsp_media_boot.h"
 #include "softcrc.h"
 #include "bflb_eflash_loader_interface.h"
+#include "hal_uart.h"
 
 extern int main(void);
 extern struct device *dev_check_hash;
@@ -180,7 +181,7 @@ static int32_t blsp_mediaboot_parse_one_fw(boot2_image_config *boot_img_cfg, uin
 
     /* Due to OTA, the flash_offset is changed, so copy from partition info */
     boot_img_cfg->img_start.flash_offset = img_addr;
-    
+
     /* If sign enable,get pk key and signature*/
     if(boot_img_cfg->sign_type){
         /* Read public key */
@@ -229,7 +230,7 @@ static int32_t blsp_mediaboot_parse_one_fw(boot2_image_config *boot_img_cfg, uin
         if(ret!=BFLB_BOOT2_SUCCESS){
             return ret;
         }
-        
+
 #ifdef BOOT2_MC
         /* Read signature2*/
         MSG_DBG("R SIG2\r\n");
@@ -257,7 +258,7 @@ static int32_t blsp_mediaboot_parse_one_fw(boot2_image_config *boot_img_cfg, uin
         ret=blsp_mediaboot_read(addr,g_boot2_read_buf,sizeof(boot_aes_config));
         if(ret!=BFLB_BOOT2_SUCCESS){
             return ret;
-        }        
+        }
         if(blsp_boot2_dump_critical_flag()){
             blsp_dump_data(g_boot2_read_buf,sizeof(boot_aes_config));
         }

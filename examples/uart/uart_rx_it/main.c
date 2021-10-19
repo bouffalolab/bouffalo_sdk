@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-#include "hal_mtimer.h"
+#include "bflb_platform.h"
 #include "hal_uart.h"
 
 void uart_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)

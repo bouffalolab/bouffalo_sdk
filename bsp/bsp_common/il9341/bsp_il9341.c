@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-
+#include "bflb_platform.h"
 #include "bsp_il9341.h"
 #include "hal_spi.h"
 #include "hal_dma.h"
@@ -625,7 +625,7 @@ void LCD_DrawChinese(uint16_t x, uint16_t y, uint8_t *character, uint16_t bk_col
 // color为字体颜色，bk_color为背景颜色,num为最大显示数量(汉字算两个)
 void LCD_DrawFont(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uint8_t *str, uint8_t num)
 {
-    uint8_t i, j, k, l, x0 = x;
+    uint8_t i, j, k, x0 = x;
     uint8_t temp, m;
 
     for (i = 0; i < num && *str; i++, str++) {
@@ -701,7 +701,7 @@ void LCD_DrawFont(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uin
 
 void LCD_DrawFont_64x32(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uint8_t *str, uint8_t num)
 {
-    uint16_t i, j, k, l, x0 = x;
+    uint16_t i, j, k, x0 = x;
     uint8_t temp, m;
 
     for (i = 0; i < num && *str; i++, str++) {

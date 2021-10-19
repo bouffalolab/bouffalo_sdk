@@ -23,9 +23,7 @@
 #ifndef __HAL_COMMON__H__
 #define __HAL_COMMON__H__
 
-#include "drv_device.h"
 #include "bl602_common.h"
-#include "bl602_config.h"
 
 void cpu_global_irq_enable(void);
 void cpu_global_irq_disable(void);

@@ -52,7 +52,7 @@ int lcd_auto_swap_set(uint8_t flag)
  * @param color_num color num
  * @return int
  */
-int lcd_swap_color_data16(uint16_t *dst, uint16_t *src, size_t color_num)
+int lcd_swap_color_data16(uint16_t *dst, uint16_t *src, uint32_t color_num)
 {
     for (size_t i = 0; i < color_num; i++) {
         dst[i] = (src[i] << 8) | (src[i] >> 8);

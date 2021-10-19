@@ -22,10 +22,14 @@
  */
 #ifndef __HAL_WDT__H__
 #define __HAL_WDT__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
+
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define DEVICE_CTRL_GET_WDT_COUNTER (0x10)
 #define DEVICE_CTRL_RST_WDT_COUNTER (0x11)

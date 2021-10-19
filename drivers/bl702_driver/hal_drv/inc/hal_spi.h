@@ -22,11 +22,14 @@
  */
 #ifndef __HAL_SPI__H__
 #define __HAL_SPI__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define DEVICE_CTRL_SPI_CONFIG_CLOCK 0x10
 

@@ -1,7 +1,7 @@
 **board/bl706_iot/clock_config.h** 中,
 
-**BSP_QDEC_KEYSCAN_CLOCK_SOURCE** 设置成 **ROOT_CLOCK_SOURCE_XCLK**
-**BSP_QDEC_KEYSCAN_CLOCK_DIV** 设置成 **31**
+**BSP_QDEC_KEYSCAN_CLOCK_SOURCE** 设置成 **ROOT_CLOCK_SOURCE_32K_CLK**
+**BSP_QDEC_KEYSCAN_CLOCK_DIV** 设置成 **0**
 
 **board/bl706_iot/pinmux_config.h** 中, 以下宏设置成 **GPIO_FUN_KEY_SCAN_ROW**
 

@@ -24,6 +24,8 @@
 #define __HAL_SEC_HASH__H__
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl602_config.h"
 
 enum sec_hash_index_type {
     SEC_HASH0_INDEX,

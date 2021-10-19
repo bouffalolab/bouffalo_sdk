@@ -61,7 +61,7 @@ extern struct device *lcd_dev_ifs;
 extern uint8_t lcd_auto_swap_flag;
 
 int lcd_auto_swap_set(uint8_t flag);
-int lcd_swap_color_data16(uint16_t *dst, uint16_t *src, size_t num);
+int lcd_swap_color_data16(uint16_t *dst, uint16_t *src, uint32_t num);
 int lcd_init(void);
 int lcd_set_dir(uint8_t dir, uint8_t mir_flag);
 int lcd_get_dir();

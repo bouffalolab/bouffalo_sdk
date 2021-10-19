@@ -25,6 +25,7 @@
 #include "hal_clock.h"
 #include "bl602_glb.h"
 #include "bl602_config.h"
+#include "bflb_platform.h"
 
 struct pin_mux_cfg {
     uint8_t pin;

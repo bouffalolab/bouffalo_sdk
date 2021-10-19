@@ -28,9 +28,13 @@ extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define DEVICE_CTRL_I2S_GET_TX_FIFO 0x10
 #define DEVICE_CTRL_I2S_GET_RX_FIFO 0x11
+
+#define DEVICE_CTRL_I2S_SET_SAMPL_FREQ 0x12
 
 enum i2s_index_type {
 #ifdef BSP_USING_I2S0

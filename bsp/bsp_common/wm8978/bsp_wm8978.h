@@ -23,7 +23,8 @@
 
 #ifndef __WM8978_H
 #define __WM8978_H
-#include "bflb_platform.h"
+
+#include "stdint.h"
 
 #define WM8978_ADDR 0X1A
 

@@ -79,6 +79,7 @@ BL_Err_Type AON_Power_Off_MBG(void);
 BL_Err_Type AON_Power_On_XTAL(void);
 BL_Err_Type AON_Set_Xtal_CapCode(uint8_t capIn, uint8_t capOut);
 uint8_t AON_Get_Xtal_CapCode(void);
+BL_Err_Type AON_Set_Xtal_CapCode_Extra(uint8_t extra);
 BL_Err_Type AON_Power_Off_XTAL(void);
 /*----------*/
 BL_Err_Type AON_Power_On_BG(void);
@@ -97,6 +98,10 @@ BL_Err_Type AON_LowPower_Enter_PDS0(void);
 BL_Err_Type AON_LowPower_Exit_PDS0(void);
 /*----------*/
 BL_Err_Type AON_Set_LDO11_SOC_Sstart_Delay(uint8_t delay);
+/*----------*/
+BL_Err_Type AON_Set_DCDC18_Top_0(uint8_t voutSel, uint8_t vpfm);
+BL_Err_Type AON_Set_Xtal_Cfg(uint8_t gmBoost, uint8_t ampCtrl, uint8_t fastStartup);
+/*----------*/
 
 /*@} end of group AON_Public_Functions */
 

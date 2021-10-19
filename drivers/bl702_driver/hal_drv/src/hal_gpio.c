@@ -225,7 +225,7 @@ static void GPIO_IRQ(void)
             } while ((SET == GLB_Get_GPIO_IntStatus(int_cfg->pin)) && timeOut);
 
             if (!timeOut) {
-                MSG("WARNING: Clear GPIO interrupt status fail.\r\n");
+                //MSG("WARNING: Clear GPIO interrupt status fail.\r\n");
             }
 
             GLB_GPIO_IntClear(int_cfg->pin, RESET);

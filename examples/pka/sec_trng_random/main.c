@@ -20,8 +20,8 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_sec_ecdsa.h"
-#include <stdlib.h>
 
 extern void srandom(unsigned int __seed);
 extern long	random(void);

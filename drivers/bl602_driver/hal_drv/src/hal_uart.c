@@ -41,6 +41,8 @@
 #include "bl602_glb.h"
 #include "uart_config.h"
 
+#define UART_CLOCK (40000000)
+
 #ifdef BSP_USING_UART0
 void UART0_IRQ(void);
 #endif
@@ -74,17 +76,18 @@ int uart_open(struct device *dev, uint16_t oflag)
     /* disable uart before config */
     UART_Disable(uart_device->id, UART_TXRX);
 
-    uint32_t uart_clk = peripheral_clock_get(PERIPHERAL_CLOCK_UART);
+    //uint32_t uart_clk = peripheral_clock_get(PERIPHERAL_CLOCK_UART);
 
     uart_cfg.baudRate = uart_device->baudrate;
     uart_cfg.dataBits = uart_device->databits;
     uart_cfg.stopBits = uart_device->stopbits;
     uart_cfg.parity = uart_device->parity;
-    uart_cfg.uartClk = uart_clk;
+    uart_cfg.uartClk = UART_CLOCK;
     uart_cfg.ctsFlowControl = UART_CTS_FLOWCONTROL_ENABLE;
     uart_cfg.rtsSoftwareControl = UART_RTS_FLOWCONTROL_ENABLE;
     uart_cfg.byteBitInverse = UART_MSB_FIRST_ENABLE;
 
+    GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_160M, 160000000 / UART_CLOCK - 1);
     /* uart init with default configuration */
     UART_Init(uart_device->id, &uart_cfg);
 
@@ -170,8 +173,10 @@ int uart_control(struct device *dev, int cmd, void *args)
             }
 
             if (uart_device->id == UART0_ID) {
+                Interrupt_Handler_Register(UART0_IRQn, UART0_IRQ);
                 CPU_Interrupt_Enable(UART0_IRQn);
             } else if (uart_device->id == UART1_ID) {
+                Interrupt_Handler_Register(UART1_IRQn, UART1_IRQ);
                 CPU_Interrupt_Enable(UART1_IRQn);
             }
 

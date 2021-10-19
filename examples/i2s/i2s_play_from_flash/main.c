@@ -38,6 +38,7 @@
  * if you want to play different wav format source , pleases modify this case .
  *
  */
+#include "bflb_platform.h"
 #include "hal_i2s.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"

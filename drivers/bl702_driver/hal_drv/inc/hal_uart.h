@@ -22,11 +22,14 @@
  */
 #ifndef __HAL_UART__H__
 #define __HAL_UART__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define UART_FIFO_LEN 128
 

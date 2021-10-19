@@ -20,6 +20,7 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "bsp_image_sensor.h"
 #include "bl702_glb.h"
 #include "hal_gpio.h"

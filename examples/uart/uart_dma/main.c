@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-#include "drv_mmheap.h"
+#include "bflb_platform.h"
 #include "hal_uart.h"
 #include "hal_dma.h"
 

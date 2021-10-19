@@ -302,7 +302,26 @@ void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size)
     }
     return pReturn;
 }
+/**
+ * @brief
+ *
+ * @param pRoot
+ * @param num
+ * @param size
+ * @return void*
+ */
+void *mmheap_calloc(struct heap_info *pRoot, size_t num, size_t size)
+{
+    void *pReturn = NULL;
 
+    pReturn = (void *)mmheap_alloc(pRoot, size * num);
+
+    if (pReturn) {
+        memset(pReturn, 0, num * size);
+    }
+
+    return pReturn;
+}
 /**
  * @brief mmheap_free
  *

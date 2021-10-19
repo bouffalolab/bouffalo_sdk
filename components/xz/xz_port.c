@@ -1,4 +1,6 @@
 #include "bflb_platform.h"
+#include <stddef.h>
+
 static uint8_t *mallocBuf = NULL;
 static uint32_t malloced = 0;
 static uint32_t bufsize = 0;

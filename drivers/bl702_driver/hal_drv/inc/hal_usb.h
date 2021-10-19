@@ -22,12 +22,15 @@
  */
 #ifndef __HAL_USB__H__
 #define __HAL_USB__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include "hal_common.h"
 #include "ring_buffer.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define DEVICE_CTRL_USB_DC_SET_ACK            0X10
 #define DEVICE_CTRL_USB_DC_ENUM_ON            0X11
@@ -125,6 +128,16 @@ enum usb_dc_event_type {
     /** USB connection resumed by the HOST */
     USB_DC_EVENT_RESUME,
 
+    /** USB interface selected */
+    USB_DC_EVENT_SET_INTERFACE,
+    /** USB interface selected */
+    USB_DC_EVENT_SET_REMOTE_WAKEUP,
+    /** USB interface selected */
+    USB_DC_EVENT_CLEAR_REMOTE_WAKEUP,
+    /** Set Feature ENDPOINT_HALT received */
+    USB_DC_EVENT_SET_HALT,
+    /** Clear Feature ENDPOINT_HALT received */
+    USB_DC_EVENT_CLEAR_HALT,
     /** setup packet received */
     USB_DC_EVENT_SETUP_NOTIFY,
     /** ep0 in packet received */

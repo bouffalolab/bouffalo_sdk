@@ -28,6 +28,8 @@ extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 enum dac_index_type {
 #ifdef BSP_USING_DAC0

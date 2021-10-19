@@ -4,7 +4,7 @@
 #include "xz_config.h"
 #include "blsp_port.h"
 #include "hal_boot2.h"
-
+#include "bflb_platform.h"
 
 uint8_t *g_eflash_loader_readbuf[2];
 volatile uint32_t g_rx_buf_index = 0;
@@ -33,7 +33,7 @@ eflash_loader_if_cfg_t * bflb_eflash_loader_if_set(eflash_loader_if_type_t type)
             //eflash_loader_if_cfg.boot_if_changerate=bflb_eflash_loader_uart_change_rate;
 
             return &eflash_loader_if_cfg;
-#if BLSP_BOOT2_SUPPORT_USB_IAP              
+#if BLSP_BOOT2_SUPPORT_USB_IAP
         case BFLB_EFLASH_LOADER_IF_USB:
             eflash_loader_if_cfg.if_type=(uint8_t)BFLB_EFLASH_LOADER_IF_USB;
             eflash_loader_if_cfg.if_type_onfail=(uint8_t)BFLB_EFLASH_LOADER_IF_UART;
@@ -49,7 +49,7 @@ eflash_loader_if_cfg_t * bflb_eflash_loader_if_set(eflash_loader_if_type_t type)
             //eflash_loader_if_cfg.boot_if_changerate=bflb_eflash_loader_uart_change_rate;
 
             return &eflash_loader_if_cfg;
-#endif            
+#endif
         default:
             break;
 	}
@@ -102,7 +102,7 @@ int32_t bflb_eflash_loader_main()
     ret = pt_table_get_iap_para(&p_iap_param);
     if(0 != ret){
         MSG("no valid partition table\r\n");
-        return -1; 
+        return -1;
     }
 
     while (1) {

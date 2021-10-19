@@ -124,7 +124,6 @@ int wdt_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
     uint16_t wdt_timeout = (uint16_t)(uint32_t)buffer;
 
     WDT_Disable();
-    MSG("wdt timeout %d \r\n", wdt_timeout);
     WDT_SetCompValue(wdt_timeout);
     WDT_Enable();
 

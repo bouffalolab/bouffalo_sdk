@@ -32,7 +32,7 @@
  *  关于 romfs 文件系统相关，请查看 components/romfs/genromfs/readme.md 文档
  *  本例程是使用四分之一图片，通过镜像旋转到完整图片
  */
-
+#include "bflb_platform.h"
 #include "hal_spi.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"

@@ -6,7 +6,7 @@
  * Change Logs:
  * Date           Author       Notes
  */
-
+#include "bflb_platform.h"
 #include <rthw.h>
 #include "board.h"
 #include "hal_uart.h"

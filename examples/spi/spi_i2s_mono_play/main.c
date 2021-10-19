@@ -20,6 +20,7 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_spi.h"
 #include "hal_i2c.h"
 #include "hal_uart.h"
@@ -39,7 +40,7 @@
 #if (AUTIO_MODULE_TYPE == AUTIO_ES8388)
 #include "bsp_es8388.h"
 #elif (AUTIO_MODULE_TYPE == AUTIO_WM8978)
-#include "wm8978.h"
+#include "bsp_wm8978.h"
 #else
 #endif
 

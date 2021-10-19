@@ -20,7 +20,9 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_flash.h"
+
 int main(void)
 {
     uint8_t writeTestData[256];

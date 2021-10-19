@@ -23,10 +23,14 @@
 
 #ifndef __HAL_QDEC__H__
 #define __HAL_QDEC__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
+
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define DEVICE_CTRL_GET_SAMPLE_VAL (0x10)
 #define DEVICE_CTRL_GET_SAMPLE_DIR (0x11)

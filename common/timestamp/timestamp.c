@@ -22,7 +22,6 @@
  */
 
 #include "timestamp.h"
-#include "misc.h"
 
 #define FOUR_YEAR_DAY ((365 << 2) + 1) //The total number of days in a 4-year cycle
 #define TIMEZONE      (8)              //Beijing time Zone adjustment
@@ -127,7 +126,7 @@ void unixtime2bejingtime(uint32_t unixtime, rtc_time *beijing_time)
     beijing_time->day = remain_day;
 
 
-	
+
 	/*利用基姆拉尔森计算日期公式  w=(d+2*m+3*(m+1)/5+y+y/4-y/100+y/400)*/
 
 	beijing_time->week = beijing_time->day + 2*beijing_time->month + 3*(beijing_time->month+1)/5 + \

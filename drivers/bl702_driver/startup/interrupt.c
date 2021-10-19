@@ -21,7 +21,7 @@
  *
  */
 #include "bl702_common.h"
-#include "bl702.h"
+#include "bflb_platform.h"
 
 pFunc __Interrupt_Handlers[IRQn_LAST] = { 0 };
 

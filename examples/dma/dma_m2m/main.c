@@ -20,6 +20,7 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_dma.h"
 
 uint8_t dma_src_buffer[8000] __attribute__((section(".system_ram")));

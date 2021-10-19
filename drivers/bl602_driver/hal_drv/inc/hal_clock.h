@@ -24,6 +24,7 @@
 #define __HAL_CLOCK__H__
 
 #include "hal_common.h"
+#include "bl602_config.h"
 
 /*XTAL_TYPE*/
 #define XTAL_NONE           0

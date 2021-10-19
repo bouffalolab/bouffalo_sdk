@@ -25,6 +25,7 @@
 #include "drv_mmheap.h"
 #include "hal_common.h"
 #include "ring_buffer.h"
+#include "bflb_platform.h"
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;

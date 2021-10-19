@@ -22,10 +22,14 @@
  */
 #ifndef __HAL_PWM__H__
 #define __HAL_PWM__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
+
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define DEVICE_CTRL_PWM_FREQUENCE_CONFIG      0x10
 #define DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG      0x11

@@ -433,7 +433,7 @@ void ES8388_I2C_Init(void)
  * @return None
  *
 *******************************************************************************/
-BL_Err_Type ES8388_Reg_Dump(void)
+void ES8388_Reg_Dump(void)
 {
     int i;
     uint8_t tmp;
@@ -446,7 +446,6 @@ BL_Err_Type ES8388_Reg_Dump(void)
         bflb_platform_printf("Reg[%02d]=0x%02x \n", i, tmp);
     }
 
-    return SUCCESS;
 }
 
 /*@} end of group ES8388_Private_Functions */

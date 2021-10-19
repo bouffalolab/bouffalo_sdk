@@ -40,7 +40,7 @@
     }
 
 /* Std driver attribute macro*/
- #ifndef BFLB_USE_CUSTOM_LD_SECTIONS
+#ifndef BFLB_USE_CUSTOM_LD_SECTIONS
 //#define ATTR_UNI_SYMBOL
 #define ATTR_STRINGIFY(x)          #x
 #define ATTR_TOSTRING(x)           ATTR_STRINGIFY(x)

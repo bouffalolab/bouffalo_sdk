@@ -24,7 +24,7 @@
 #ifndef __PID_H__
 #define __PID_H__
 
-#include "stdio.h"
+#include "stdint.h"
 
 typedef struct pid_alg {
     float set_val;

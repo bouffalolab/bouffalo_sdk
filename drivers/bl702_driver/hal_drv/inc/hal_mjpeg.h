@@ -22,11 +22,14 @@
  */
 #ifndef __HAL_MJPEG__H__
 #define __HAL_MJPEG__H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 #define MJPEG_PACKET_ADD_NONE       0
 #define MJPEG_PACKET_ADD_DEFAULT    1 << 0

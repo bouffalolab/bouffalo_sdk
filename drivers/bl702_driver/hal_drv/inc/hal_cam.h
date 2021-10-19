@@ -29,6 +29,8 @@ extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 #include "bl702_cam.h"
 
 #define DEVICE_OFLAG_INT  0x01

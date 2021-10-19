@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-
+#include "bflb_platform.h"
 #include "hal_i2s.h"
 #include "hal_dma.h"
 

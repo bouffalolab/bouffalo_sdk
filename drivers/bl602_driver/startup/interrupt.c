@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-#include "bl602.h"
+#include "bl602_common.h"
 #include "bflb_platform.h"
 
 pFunc __Interrupt_Handlers[IRQn_LAST] = { 0 };
@@ -303,6 +303,10 @@ void Interrupt_Handler_Register(IRQn_Type irq, pFunc interruptFun)
     if (irq < IRQn_LAST) {
         __Interrupt_Handlers[irq] = interruptFun;
     }
+}
+
+void System_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t SubPriority)
+{
 }
 
 void clic_enable_interrupt(uint32_t source)

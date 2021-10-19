@@ -665,6 +665,11 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[]={
         //.name="ZD_25Q16B",
         .cfg=&flashCfg_ZD_25Q16B,
     },
+    {
+        .jedecID=0x1460CD,
+        //.name="TH_25Q80HB",
+        .cfg=&flashCfg_FM_25Q08,
+    },
 };
 
 /*@} end of group SF_CFG_EXT_Private_Variables */

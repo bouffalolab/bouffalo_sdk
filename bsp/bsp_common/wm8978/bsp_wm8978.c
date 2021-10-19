@@ -20,9 +20,9 @@
  * under the License.
  *
  */
-
-#include "wm8978.h"
+#include "bflb_platform.h"
 #include "hal_i2c.h"
+#include "bsp_wm8978.h"
 
 struct device *wm8978_i2c = NULL;
 

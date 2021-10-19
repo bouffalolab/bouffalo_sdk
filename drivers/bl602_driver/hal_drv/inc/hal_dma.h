@@ -24,6 +24,8 @@
 #define __HAL_DMA__H__
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl602_config.h"
 
 #define DMA_CHANNEL_GET_STATUS 0x10
 #define DMA_CHANNEL_START      0x11

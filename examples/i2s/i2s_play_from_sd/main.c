@@ -33,7 +33,7 @@
  *
  * This case use shell module to complete human-computer interaction.
  */
-
+#include "bflb_platform.h"
 #include "ff.h"
 #include "fatfs_posix_api.h"
 #include "wav_play_from_sd_card.h"

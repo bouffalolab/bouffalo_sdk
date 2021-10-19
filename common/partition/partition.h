@@ -36,10 +36,7 @@
 #ifndef __PARTITION_H__
 #define __PARTITION_H__
 
-#include "stdint.h"
-#include "string.h"
 #include "misc.h"
-//#include "bflb_bsp_driver_glue.h"
 
 /** @addtogroup  BFLB_Common_Driver
  *  @{

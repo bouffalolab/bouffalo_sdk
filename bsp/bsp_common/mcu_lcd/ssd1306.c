@@ -3,6 +3,7 @@
 #include "hal_spi.h"
 #include "hal_gpio.h"
 #include "font.h"
+#include "bflb_platform.h"
 
 #define SSD1306_USING_I2C 0
 #define SSD1306_USING_SPI 1

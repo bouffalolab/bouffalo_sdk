@@ -27,9 +27,7 @@
 extern "C" {
 #endif
 
-#include "drv_device.h"
 #include "bl702_common.h"
-#include "bl702_config.h"
 
 void cpu_global_irq_enable(void);
 void cpu_global_irq_disable(void);

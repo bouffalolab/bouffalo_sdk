@@ -20,8 +20,9 @@
  * under the License.
  *
  */
-
+#include "bflb_platform.h"
 #include "GSL61xx.h"
+
 uint8_t image[120 * 104];
 
 void main(void)

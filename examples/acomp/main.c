@@ -20,6 +20,7 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_pm.h"
 #include "hal_acomp.h"
 #include "hal_uart.h"

@@ -34,7 +34,7 @@
 #include "hal_emac.h"
 #include <FreeRTOS.h>
 #include "semphr.h"
-
+#include "bflb_platform.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Network interface name */

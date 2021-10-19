@@ -37,6 +37,8 @@
 #define __HAL_UART__H__
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl602_config.h"
 
 #define UART_FIFO_LEN 32
 

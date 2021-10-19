@@ -28,6 +28,8 @@ extern "C"{
 #endif
 
 #include "hal_common.h"
+#include "drv_device.h"
+#include "bl702_config.h"
 
 enum gpio_pin_type {
     GPIO_PIN_0 = 0,

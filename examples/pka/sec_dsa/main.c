@@ -20,6 +20,7 @@
  * under the License.
  *
  */
+#include "bflb_platform.h"
 #include "hal_sec_dsa.h"
 
 /** @addtogroup  BFLB_Peripheral_Case
