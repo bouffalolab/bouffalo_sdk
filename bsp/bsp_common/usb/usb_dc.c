@@ -29,43 +29,9 @@ struct device *usb;
 
 static void usb_dc_event_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
-    switch (state) {
-        case USB_DC_EVENT_ERROR:
-            usbd_event_notify_handler(USB_EVENT_ERROR, NULL);
-            break;
-
-        case USB_DC_EVENT_RESET:
-            usbd_event_notify_handler(USB_EVENT_RESET, NULL);
-            break;
-
-        case USB_DC_EVENT_SOF:
-            usbd_event_notify_handler(USB_EVENT_SOF, NULL);
-            break;
-
-        case USB_DC_EVENT_SETUP_NOTIFY:
-            usbd_event_notify_handler(USB_EVENT_SETUP_NOTIFY, NULL);
-            break;
-
-        case USB_DC_EVENT_EP0_IN_NOTIFY:
-            usbd_event_notify_handler(USB_EVENT_EP0_IN_NOTIFY, NULL);
-            break;
-
-        case USB_DC_EVENT_EP0_OUT_NOTIFY:
-            usbd_event_notify_handler(USB_EVENT_EP0_OUT_NOTIFY, NULL);
-            break;
-
-        case USB_DC_EVENT_EP_IN_NOTIFY:
-            usbd_event_notify_handler(USB_EVENT_EP_IN_NOTIFY, args);
-            break;
-
-        case USB_DC_EVENT_EP_OUT_NOTIFY:
-            usbd_event_notify_handler(USB_EVENT_EP_OUT_NOTIFY, args);
-            break;
-
-        default:
-            break;
-    }
+    usbd_event_notify_handler(state, args);
 }
+
 struct device *usb_dc_init(void)
 {
     usb_dc_register(USB_INDEX, "usb");
