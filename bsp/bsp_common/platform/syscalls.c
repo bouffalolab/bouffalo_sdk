@@ -232,14 +232,19 @@ void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
     if (result == NULL) {
         ptr->_errno = -ENOMEM;
     }
-
     return result;
 }
 
 void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
 {
-    /* return "not supported" */
-    return 0;
+    void *result;
+
+    result = (void *)mmheap_calloc(&mmheap_root, size, len);
+    if (result == NULL) {
+        ptr->_errno = -ENOMEM;
+    }
+
+    return result;
 }
 
 void _free_r(struct _reent *ptr, void *addr)
@@ -249,7 +254,11 @@ void _free_r(struct _reent *ptr, void *addr)
 
 void *_sbrk_r(struct _reent *ptr, ptrdiff_t incr)
 {
-    return 0;
+    void *ret;
+    ptr->_errno = ENOMEM;
+    ret = (void *)-1;
+
+    return ret;
 }
 
 /* for exit() and abort() */
