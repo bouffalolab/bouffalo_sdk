@@ -53,12 +53,12 @@ int sd_disk_ioctl(BYTE cmd, void *buff)
             break;
 
         case GET_SECTOR_SIZE:
-            *(DWORD *)buff = SD_CardInfo.CardBlockSize;
+            *(WORD *)buff = SD_CardInfo.CardBlockSize;
             result = RES_OK;
             break;
 
         case GET_BLOCK_SIZE:
-            *(WORD *)buff = SD_CardInfo.CardBlockSize;
+            *(DWORD *)buff = SD_CardInfo.CardBlockSize;
             result = RES_OK;
             break;
 

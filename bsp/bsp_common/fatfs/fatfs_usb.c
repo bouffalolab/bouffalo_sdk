@@ -60,12 +60,12 @@ int usb_disk_ioctl(BYTE cmd, void *buff)
             break;
 
         case GET_SECTOR_SIZE:
-            *(DWORD *)buff = FLASH_BLOCK_SIZE;
+            *(WORD *)buff = FLASH_BLOCK_SIZE;
             result = RES_OK;
             break;
 
         case GET_BLOCK_SIZE:
-            *(WORD *)buff = 1;
+            *(DWORD *)buff = 1;
             result = RES_OK;
             break;
 
