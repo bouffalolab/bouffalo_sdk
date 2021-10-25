@@ -21,6 +21,8 @@
  */
 #include "drv_device.h"
 
+#define DEVICE_CHECK_PARAM
+
 #define dev_open    (dev->open)
 #define dev_close   (dev->close)
 #define dev_read    (dev->read)
@@ -28,6 +30,18 @@
 #define dev_control (dev->control)
 
 dlist_t device_head = DLIST_OBJECT_INIT(device_head);
+
+/**
+ * This function get device list header
+ *
+ * @param None
+ *
+ * @return device header
+ */
+dlist_t *device_get_list_header(void)
+{
+    return &device_head;
+}
 
 /**
  * This function registers a device driver with specified name.
@@ -58,17 +72,7 @@ int device_register(struct device *dev, const char *name)
     dev->status = DEVICE_REGISTERED;
     return DEVICE_EOK;
 }
-/**
- * This function get device list header
- *
- * @param None
- *
- * @return device header
- */
-dlist_t *device_get_list_header(void)
-{
-    return &device_head;
-}
+
 /**
  * This function unregisters a device driver with specified name.
  *
@@ -124,6 +128,7 @@ struct device *device_find(const char *name)
  */
 int device_open(struct device *dev, uint16_t oflag)
 {
+#ifdef DEVICE_CHECK_PARAM
     int retval = DEVICE_EOK;
 
     if ((dev->status == DEVICE_REGISTERED) || (dev->status == DEVICE_CLOSED)) {
@@ -139,6 +144,9 @@ int device_open(struct device *dev, uint16_t oflag)
     }
 
     return retval;
+#else
+    return dev_open(dev, oflag);
+#endif
 }
 /**
  * This function will close a device
@@ -149,6 +157,7 @@ int device_open(struct device *dev, uint16_t oflag)
  */
 int device_close(struct device *dev)
 {
+#ifdef DEVICE_CHECK_PARAM
     int retval = DEVICE_EOK;
 
     if (dev->status == DEVICE_OPENED) {
@@ -164,6 +173,9 @@ int device_close(struct device *dev)
     }
 
     return retval;
+#else
+    return dev_close(dev);
+#endif
 }
 /**
  * This function will perform a variety of control functions on devices.
@@ -176,6 +188,7 @@ int device_close(struct device *dev)
  */
 int device_control(struct device *dev, int cmd, void *args)
 {
+#ifdef DEVICE_CHECK_PARAM
     int retval = DEVICE_EOK;
 
     if (dev->status > DEVICE_UNREGISTER) {
@@ -189,6 +202,9 @@ int device_control(struct device *dev, int cmd, void *args)
     }
 
     return retval;
+#else
+    return dev_control(dev, cmd, args);
+#endif
 }
 /**
  * This function will write some data to a device.
@@ -202,6 +218,7 @@ int device_control(struct device *dev, int cmd, void *args)
  */
 int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
+#ifdef DEVICE_CHECK_PARAM
     int retval = DEVICE_EOK;
 
     if (dev->status == DEVICE_OPENED) {
@@ -215,6 +232,9 @@ int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t 
     }
 
     return retval;
+#else
+    return dev_write(dev, pos, buffer, size);
+#endif
 }
 /**
  * This function will read some data from a device.
@@ -228,6 +248,7 @@ int device_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t 
  */
 int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
+#ifdef DEVICE_CHECK_PARAM
     int retval = DEVICE_EOK;
 
     if (dev->status == DEVICE_OPENED) {
@@ -241,6 +262,9 @@ int device_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
     }
 
     return retval;
+#else
+    return dev_read(dev, pos, buffer, size);
+#endif
 }
 /**
  * This function will read some data from a device.
