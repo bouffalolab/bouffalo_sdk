@@ -99,7 +99,7 @@ void my_memcpy(void *dst, void const *src, uint32_t size)
     }
 }
 
-void ATTR_TCM_SECTION CAM_Interrupt_Normal(void)
+void ATTR_TCM_SECTION cam_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
     if (flag_normal == 0) {
         // memcpy((void *)(uint32_t)(0x42023000 + (8640 * buff_using_num)), (void *)CAMERA_WRITE_ADDR, CAMERA_FRAME_SIZE);
@@ -162,7 +162,6 @@ void ATTR_TCM_SECTION CAM_Interrupt_Normal(void)
         return;
     }
 
-    // MSG("CAM NORMAL\r\n");
     return;
 }
 
@@ -182,17 +181,9 @@ int ATTR_TCM_SECTION main(void)
     }
     // MSG("dma open \r\n");
 
-    cam_hw_mode_wrap(DISABLE);
+    //CAM_HW_Mode_Wrap(DISABLE);
 
     cam_clk_out();
-
-    cam_hsync_crop(0, 2 * CAMERA_RESOLUTION_X);
-    cam_vsync_crop(0, CAMERA_RESOLUTION_Y);
-
-    CAM_IntMask(CAM_INT_ALL, MASK);
-    CAM_Int_Callback_set(CAM_INT_NORMAL_0, &CAM_Interrupt_Normal);
-    CAM_IntMask(CAM_INT_NORMAL_0, UNMASK);
-    CPU_Interrupt_Enable(CAM_IRQn);
 
     if (SUCCESS != image_sensor_init(DISABLE, &camera_cfg, &mjpeg_cfg)) {
         MSG("Init error!\n");
@@ -200,14 +191,24 @@ int ATTR_TCM_SECTION main(void)
         while (1) {
         }
     }
-    // MSG("cam init!\n");
-    cam_start();
+
+    cam_frame_area_t cfg;
+    cfg.x0 = 0;
+    cfg.x1 = CAMERA_RESOLUTION_X;
+    cfg.y0 = 0;
+    cfg.y1 = CAMERA_RESOLUTION_Y;
+
+    struct device *cam0 = device_find("camera0");
+    device_control(cam0, DEVICE_CTRL_CAM_FRAME_CUT, &cfg);
+    device_set_callback(cam0, cam_irq_callback);
+    device_control(cam0, DEVICE_CTRL_SET_INT, (void *)CAM_FRAME_IT);
+    device_control(cam0, DEVICE_CTRL_RESUME, NULL);
 
     while (1) {
         if (buff_using_num == 18 * 3) { // close cam when 3 pic saved,480x360 = 480x20x18
-            cam_stop();
+            device_control(cam0, DEVICE_CTRL_SUSPEND, NULL);
 
-            device_write(uart0, 0, (void *)(uint32_t *)PSRAM_START_ADDR, YUV400_FRAME_SIZE * 3); // uart log send 3 pic raw data
+            //device_write(uart0, 0, (void *)(uint32_t *)PSRAM_START_ADDR, YUV400_FRAME_SIZE * 3); // uart log send 3 pic raw data
 
             // MSG("\r\ntim1:%d, tim2:%d, tim3:%d, tim4:%d", tim1, tim2, tim3, tim4);
             return 0;

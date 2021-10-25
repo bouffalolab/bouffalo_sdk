@@ -246,17 +246,21 @@ int main(void)
 
     cam_clk_out();
 
-    cam_hsync_crop(400, (2 * CAMERA_RESOLUTION_X) + 400);
-    cam_vsync_crop(80, CAMERA_RESOLUTION_Y + 80);
-
     if (SUCCESS != image_sensor_init(DISABLE, &camera_cfg, &mjpeg_cfg)) {
         MSG("Init error!\n");
         BL_CASE_FAIL;
         while (1) {
         }
     }
+    cam_frame_area_t cfg;
+    cfg.x0 = 200;
+    cfg.x1 = CAMERA_RESOLUTION_X + 200;
+    cfg.y0 = 80;
+    cfg.y1 = CAMERA_RESOLUTION_Y + 80;
 
-    cam_start();
+    struct device *cam0 = device_find("camera0");
+    device_control(cam0, DEVICE_CTRL_CAM_FRAME_CUT, &cfg);
+    device_control(cam0, DEVICE_CTRL_RESUME, NULL);
 
     LCD_Set_Addr(0, 0, CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y);
 
@@ -268,16 +272,16 @@ int main(void)
         while (SUCCESS != cam_get_one_frame_interleave(&picture, &length)) {
         }
 
-        cam_stop();
+        device_control(cam0, DEVICE_CTRL_SUSPEND, NULL);
 #ifdef USE_YUV422
         yuv422sp_to_rgb24(picture, rgb_pic, CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y);
         rgb24_to_rgb565(rgb_pic, rgb16_pic);
         LCD_DrawPicture_cam(0, 0, CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, picture);
 #else
-        LCD_WR_SPI_DMA(picture, (CAMERA_FRAME_SIZE));
+        LCD_WR_SPI_DMA((uint16_t *)picture, (CAMERA_FRAME_SIZE));
 #endif
-        cam_drop_one_frame_interleave();
-        cam_start();
+        device_control(cam0, DEVICE_CTRL_CAM_FRAME_DROP, NULL);
+        device_control(cam0, DEVICE_CTRL_RESUME, NULL);
 
 #ifdef TEST_TIM
         timer_end = bflb_platform_get_time_ms();

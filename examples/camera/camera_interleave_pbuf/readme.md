@@ -1,4 +1,3 @@
-**board/bl706_avb/pinmux_config.h** 中 **PINMUX_SELECT** 选择 **PINMUX_CAMERA_LCD**
 **bsp_common/image_sensor/bsp_image_sensor.c** 中**IMAGE_SENSOR_USE** 选择**IMAGE_SENSOR_GC0308** (目前暂时没有 BF2013 sensor 验证)
 **bsp_common/image_sensor/bsp_image_sensor.c** 中**FORMAT_SEL** 选择 **YUYV**
 **bsp_common/image_sensor/bsp_image_sensor.c** 中**CAM_MODE** 选择 **CAM_USING_INT_MODE**模式

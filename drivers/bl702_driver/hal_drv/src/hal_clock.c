@@ -381,7 +381,7 @@ void peripheral_clock_init(void)
 #endif
 #endif
 
-#if defined(BSP_USING_CAM)
+#if defined(BSP_USING_CAM0)
     tmpVal |= (1 << BL_AHB_SLAVE1_CAM);
 #if BSP_CAM_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_PLL_96M
     GLB_Set_CAM_CLK(ENABLE, GLB_CAM_CLK_DLL96M, BSP_CAM_CLOCK_DIV);

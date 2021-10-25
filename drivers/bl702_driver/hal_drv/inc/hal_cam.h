@@ -25,54 +25,69 @@
 #define __HAL_CAM_H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #include "hal_common.h"
 #include "drv_device.h"
 #include "bl702_config.h"
-#include "bl702_cam.h"
 
-#define DEVICE_OFLAG_INT  0x01
-#define DEVICE_OFLAG_POLL 0x02
+#define DEVICE_CTRL_CAM_FRAME_CUT 0x10
+#define DEVICE_CTRL_CAM_FRAME_DROP 0x11
 
-enum camera_event_type {
-    CAM_EVENT_NORMAL_0,           /*!< Interleave mode: normal write interrupt,     planar mode:even byte normal write interrupt */
-    CAM_EVENT_NORMAL_1,           /*!< Interleave mode: no use,                     planar mode:odd byte normal write interrupt */
-    CAM_EVENT_MEMORY_OVERWRITE_0, /*!< Interleave mode: memory overwrite interrupt, planar mode:even byte memory overwrite interrupt */
-    CAM_EVENT_MEMORY_OVERWRITE_1, /*!< Interleave mode: no use,                     planar mode:odd byte memory overwrite interrupt */
-    CAM_EVENT_FRAME_OVERWRITE_0,  /*!< Interleave mode: frame overwrite interrupt,  planar mode:even byte frame overwrite interrupt */
-    CAM_EVENT_FRAME_OVERWRITE_1,  /*!< Interleave mode: no use,                     planar mode:odd byte frame overwrite interrupt */
-    CAM_EVENT_FIFO_OVERWRITE_0,   /*!< Interleave mode: fifo overwrite interrupt,   planar mode:even byte fifo overwrite interrupt */
-    CAM_EVENT_FIFO_OVERWRITE_1,   /*!< Interleave mode: no use,                     planar mode:odd byte fifo overwrite interrupt */
-    CAM_EVENT_VSYNC_CNT_ERROR,    /*!< Vsync valid line count non-match interrupt */
-    CAM_EVENT_HSYNC_CNT_ERROR,    /*!< Hsync valid pixel count non-match interrupt */
-    CAM_EVENT_ALL,                /*!< All of interrupt */
+enum cam_index_type {
+#ifdef BSP_USING_CAM0
+    CAM0_INDEX,
+#endif
+    CAM_MAX_INDEX
 };
 
-typedef enum {
-    CAM_AUTO_MODE,
-    CAM_MANUAL_MODE,
-} cam_software_mode_t;
+#define CAM_AUTO_MODE   0
+#define CAM_MANUAL_MODE 1
 
-typedef enum {
-    CAM_FRAME_PLANAR_MODE,
-    CAM_FRAME_INTERLEAVE_MODE,
-} cam_frame_mode_t;
+#define CAM_FRAME_PLANAR_MODE     0
+#define CAM_FRAME_INTERLEAVE_MODE 1
 
-typedef enum {
-    CAM_YUV_FORMAT_YUV422,
-    CAM_YUV_FORMAT_YUV420_EVEN,
-    CAM_YUV_FORMAT_YUV420_ODD,
-    CAM_YUV_FORMAT_YUV400_EVEN,
-    CAM_YUV_FORMAT_YUV400_ODD,
-} cam_yuv_format_t;
+#define CAM_HSPOLARITY_LOW  0
+#define CAM_HSPOLARITY_HIGH 1
+
+#define CAM_VSPOLARITY_LOW  0
+#define CAM_VSPOLARITY_HIGH 1
+
+#define CAM_YUV_FORMAT_YUV422      0
+#define CAM_YUV_FORMAT_YUV420_EVEN 1
+#define CAM_YUV_FORMAT_YUV420_ODD  2
+#define CAM_YUV_FORMAT_YUV400_EVEN 3
+#define CAM_YUV_FORMAT_YUV400_ODD  4
+
+enum cam_it_type {
+    CAM_FRAME_IT = 1 << 0,
+};
+
+enum cam_event_type {
+    CAM_EVENT_FRAME = 0,
+};
+
+typedef struct {
+    int16_t x0;
+    int16_t x1;
+    int16_t y0;
+    int16_t y1;
+} cam_frame_area_t;
+
+typedef struct {
+    uint32_t frame_addr;
+    uint32_t frame_count;
+} cam_frame_info_t;
 
 typedef struct cam_device {
     struct device parent;
-    cam_software_mode_t software_mode;
-    cam_frame_mode_t frame_mode;
-    cam_yuv_format_t yuv_format;
+    uint8_t id;
+    uint8_t software_mode;
+    uint8_t frame_mode;
+    uint8_t yuv_format;
+    uint8_t hsp;
+    uint8_t vsp;
     uint32_t cam_write_ram_addr;
     uint32_t cam_write_ram_size;
     uint32_t cam_frame_size;
@@ -83,19 +98,14 @@ typedef struct cam_device {
     uint32_t cam_frame_size1;
 } cam_device_t;
 
-void cam_init(cam_device_t *cam_cfg, uint16_t oflag);
-void cam_start(void);
-void cam_stop(void);
-uint8_t cam_get_one_frame_interleave(uint8_t **pic, uint32_t *len);
-uint8_t cam_get_one_frame_planar(CAM_YUV_Mode_Type yuv, uint8_t **picYY, uint32_t *lenYY, uint8_t **picUV, uint32_t *lenUV);
+#define CAM_DEV(dev) ((cam_device_t *)dev)
+
+int cam_register(enum cam_index_type index, const char *name);
 void cam_drop_one_frame_interleave(void);
-void cam_drop_one_frame_planar(void);
-void cam_hsync_crop(uint16_t start, uint16_t end);
-void cam_vsync_crop(uint16_t start, uint16_t end);
-void cam_hw_mode_wrap(uint8_t enbale);
-void CAM_Int_Callback_set(CAM_INT_Type intType, intCallback_Type *cbFun);
+uint8_t cam_get_one_frame_interleave(uint8_t **pic, uint32_t *len);
 
 #ifdef __cplusplus
 }
 #endif
+
 #endif

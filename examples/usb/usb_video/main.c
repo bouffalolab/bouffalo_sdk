@@ -353,16 +353,18 @@ uint32_t jpeg_count = 0;
 
 void usbd_video_set_interface_callback(uint8_t value)
 {
+    struct device* cam0 = device_find("camera0");
+
     if (value) {
         play_status = 1;
         MSG("OPEN\r\n");
         mjpeg_start();
-        cam_start();
+        device_control(cam0, DEVICE_CTRL_RESUME, NULL);
 
     } else {
         play_status = 0;
         MSG("CLOSE\r\n");
-        cam_stop();
+        device_control(cam0, DEVICE_CTRL_SUSPEND, NULL);
         mjpeg_stop();
     }
 }

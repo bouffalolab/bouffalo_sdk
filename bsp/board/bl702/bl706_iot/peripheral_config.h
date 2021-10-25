@@ -125,6 +125,8 @@
         .clk_phase = SPI_PHASE_1EDGE,               \
         .datasize = SPI_DATASIZE_8BIT,              \
         .fifo_threshold = 1,                        \
+        .pin_swap_enable = 1,                       \
+        .delitch_cnt = 0,                           \
     }
 #endif
 #endif

@@ -679,24 +679,37 @@ uint8_t image_sensor_init(BL_Fun_Type mjpeg_en, cam_device_t *cam_cfg, mjpeg_dev
         return 1;
     }
 
-    cam_stop();
     mjpeg_stop();
 
-    if (mjpeg_en) {
-#if (CAM_MODE == CAM_USING_INT_MODE)
-        cam_init(cam_cfg, DEVICE_OFLAG_INT);
-#elif (CAM_MODE == CAM_USING_POLL_MODE)
-        cam_init(cam_cfg, DEVICE_OFLAG_POLL);
-#endif
-        mjpeg_init(mjpeg_cfg);
-    } else {
-#if (CAM_MODE == CAM_USING_INT_MODE)
-        cam_init(cam_cfg, DEVICE_OFLAG_INT);
-#elif (CAM_MODE == CAM_USING_POLL_MODE)
-        cam_init(cam_cfg, DEVICE_OFLAG_POLL);
-#endif
+    cam_register(CAM0_INDEX, "camera0");
+    struct device *cam0 = device_find("camera0");
+
+    if(!cam0)
+    {
+        MSG("cam do not find\r\n");
+        return 1;
     }
 
+    if (mjpeg_en) {
+        mjpeg_init(mjpeg_cfg);
+    }
+
+    CAM_DEV(cam0)->hsp = CAM_HSPOLARITY_HIGH;
+    CAM_DEV(cam0)->vsp = CAM_VSPOLARITY_HIGH;
+    CAM_DEV(cam0)->software_mode = cam_cfg->software_mode;
+    CAM_DEV(cam0)->frame_mode = cam_cfg->frame_mode;
+    CAM_DEV(cam0)->yuv_format = cam_cfg->yuv_format;
+    CAM_DEV(cam0)->cam_write_ram_addr = cam_cfg->cam_write_ram_addr;
+    CAM_DEV(cam0)->cam_write_ram_size = cam_cfg->cam_write_ram_size;
+    CAM_DEV(cam0)->cam_frame_size = cam_cfg->cam_frame_size;
+    CAM_DEV(cam0)->cam_write_ram_addr1 = cam_cfg->cam_write_ram_addr1;
+    CAM_DEV(cam0)->cam_write_ram_size1 = cam_cfg->cam_write_ram_size1;
+    CAM_DEV(cam0)->cam_frame_size1 = cam_cfg->cam_frame_size1;
+#if (CAM_MODE == CAM_USING_INT_MODE)
+    device_open(cam0, DEVICE_OFLAG_INT_RX);
+#elif (CAM_MODE == CAM_USING_POLL_MODE)
+    device_open(cam0, DEVICE_OFLAG_STREAM_RX);
+#endif
     return SUCCESS;
 }
 

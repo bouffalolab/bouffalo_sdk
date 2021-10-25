@@ -44,7 +44,7 @@
 #define BSP_USING_QDEC1
 #define BSP_USING_QDEC2
 #define BSP_USING_USB
-#define BSP_USING_CAM
+#define BSP_USING_CAM0
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */
@@ -125,6 +125,8 @@
         .clk_phase = SPI_PHASE_1EDGE,               \
         .datasize = SPI_DATASIZE_8BIT,              \
         .fifo_threshold = 4,                        \
+        .pin_swap_enable = 1,                       \
+        .delitch_cnt = 0,                           \
     }
 #endif
 #endif
@@ -458,6 +460,26 @@
         .led_period = 7,                           \
         .deglitch_en = DISABLE,                    \
         .deglitch_strength = 0x0,                  \
+    }
+#endif
+#endif
+
+#if defined(BSP_USING_CAM0)
+#ifndef CAM0_CONFIG
+#define CAM0_CONFIG                              \
+    {                                            \
+        .id = 0,                                 \
+        .software_mode = CAM_AUTO_MODE,          \
+        .frame_mode = CAM_FRAME_INTERLEAVE_MODE, \
+        .yuv_format = CAM_YUV_FORMAT_YUV422,     \
+        .hsp = CAM_HSPOLARITY_LOW,               \
+        .vsp = CAM_VSPOLARITY_LOW,               \
+        .cam_write_ram_addr = 0,                 \
+        .cam_write_ram_size = 0,                 \
+        .cam_frame_size = 0,                     \
+        .cam_write_ram_addr1 = 0,                \
+        .cam_write_ram_size1 = 0,                \
+        .cam_frame_size1 = 0,                    \
     }
 #endif
 #endif

@@ -63,9 +63,6 @@ int main(void)
 
     cam_clk_out();
 
-    cam_hsync_crop(0, 2 * CAMERA_RESOLUTION_X);
-    cam_vsync_crop(0, CAMERA_RESOLUTION_Y);
-
     if (SUCCESS != image_sensor_init(DISABLE, &camera_cfg, &mjpeg_cfg)) {
         MSG("Init error!\n");
         BL_CASE_FAIL;
@@ -73,7 +70,15 @@ int main(void)
         }
     }
 
-    cam_start();
+    cam_frame_area_t cfg;
+    cfg.x0 = 0;
+    cfg.x1 = CAMERA_RESOLUTION_X;
+    cfg.y0 = 0;
+    cfg.y1 = CAMERA_RESOLUTION_Y;
+
+    struct device *cam0 = device_find("camera0");
+    device_control(cam0, DEVICE_CTRL_CAM_FRAME_CUT, &cfg);
+    device_control(cam0, DEVICE_CTRL_RESUME, NULL);
 
     for (i = 0; i < 3; i++) {
         while (SUCCESS != cam_get_one_frame_interleave(&picture, &length)) {
@@ -82,11 +87,10 @@ int main(void)
         MSG("picturestartuyvy");
         UART_SendData(0, picture, length);
         MSG("pictureend");
-
-        cam_drop_one_frame_interleave();
+        device_control(cam0, DEVICE_CTRL_CAM_FRAME_DROP, NULL);
     }
 
-    cam_stop();
+    device_control(cam0, DEVICE_CTRL_SUSPEND, NULL);
 
     BL_CASE_SUCCESS;
     while (1) {
