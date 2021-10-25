@@ -21,10 +21,9 @@
  *
  */
 #include "hal_timer.h"
-#include "timer_config.h"
+#include "hal_clock.h"
 #include "bl702_glb.h"
 #include "bl702_timer.h"
-#include "hal_clock.h"
 
 #ifdef BSP_USING_TIMER0
 void TIMER0_IRQ(void);

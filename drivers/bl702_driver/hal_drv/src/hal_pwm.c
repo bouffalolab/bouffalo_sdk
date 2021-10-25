@@ -21,12 +21,9 @@
  *
  */
 #include "hal_pwm.h"
-#include "hal_gpio.h"
 #include "hal_clock.h"
 #include "bl702_pwm.h"
-#include "bl702_gpio.h"
 #include "bl702_glb.h"
-#include "pwm_config.h"
 
 static pwm_device_t pwmx_device[PWM_MAX_INDEX] = {
 #ifdef BSP_USING_PWM_CH0
@@ -53,8 +50,11 @@ int pwm_open(struct device *dev, uint16_t oflag)
 
     uint32_t tmpVal;
     uint32_t PWMx;
-    PWM_Channel_Disable(pwm_device->ch);
+
+    CPU_Interrupt_Disable(PWM_IRQn);
     PWM_IntMask(pwm_device->ch, PWM_INT_ALL, MASK);
+
+    PWM_Channel_Disable(pwm_device->ch);
 
     uint32_t pwm_clk = peripheral_clock_get(PERIPHERAL_CLOCK_PWM);
     if (pwm_device->period > pwm_clk)
@@ -64,7 +64,7 @@ int pwm_open(struct device *dev, uint16_t oflag)
 
     tmpVal = BL_RD_REG(PWMx, PWM_CONFIG);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PWM_OUT_INV, pwm_device->polarity_invert_mode);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PWM_STOP_MODE, PWM_STOP_MODE_SEL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PWM_STOP_MODE, PWM_STOP_GRACEFUL);
     BL_WR_REG(PWMx, PWM_CONFIG, tmpVal);
 
     BL_WR_REG(PWMx, PWM_THRE1, pwm_device->threshold_low);
@@ -91,7 +91,7 @@ int pwm_close(struct device *dev)
 int pwm_control(struct device *dev, int cmd, void *args)
 {
     pwm_device_t *pwm_device = (pwm_device_t *)dev;
-    pwm_dutycycle_config_t *pwm_detycycle_config = (pwm_dutycycle_config_t *)args;
+    pwm_dutycycle_config_t *config = (pwm_dutycycle_config_t *)args;
 
     switch (cmd) {
         case DEVICE_CTRL_CONFIG /* constant-expression */:
@@ -111,8 +111,8 @@ int pwm_control(struct device *dev, int cmd, void *args)
             BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_PERIOD, (uint32_t)args);
             break;
         case DEVICE_CTRL_PWM_DUTYCYCLE_CONFIG:
-            BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_THRE1, pwm_detycycle_config->threshold_low);
-            BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_THRE2, pwm_detycycle_config->threshold_high);
+            BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_THRE1, config->threshold_low);
+            BL_WR_REG(PWM_BASE + PWM_CHANNEL_OFFSET + (pwm_device->ch) * 0x20, PWM_THRE2, config->threshold_high);
             break;
         case DEVICE_CTRL_PWM_IT_PULSE_COUNT_CONFIG: {
             /* Config interrupt pulse count */

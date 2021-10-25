@@ -24,7 +24,7 @@
 #define __HAL_SPI__H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #include "hal_common.h"
@@ -95,6 +95,8 @@ typedef struct spi_device {
     uint8_t clk_phase;
     uint8_t datasize;
     uint8_t fifo_threshold;
+    uint8_t pin_swap_enable; /*swap mosi and miso*/
+    uint8_t delitch_cnt;
     void *tx_dma;
     void *rx_dma;
 } spi_device_t;

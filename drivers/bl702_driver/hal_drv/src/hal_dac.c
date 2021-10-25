@@ -33,7 +33,13 @@ static dac_device_t dacx_device[] = {
     DAC_CONFIG,
 #endif
 };
-
+/**
+ * @brief
+ *
+ * @param dev
+ * @param oflag
+ * @return int
+ */
 int dac_open(struct device *dev, uint16_t oflag)
 {
     GLB_GPIP_DAC_ChanA_Cfg_Type chCfg = { 0 };
@@ -136,40 +142,59 @@ int dac_open(struct device *dev, uint16_t oflag)
 
     return 0;
 }
+/**
+ * @brief
+ *
+ * @param dev
+ * @return int
+ */
 int dac_close(struct device *dev)
 {
+    GLB_GPIP_DAC_ChanA_Cfg_Type chCfg = { 0 };
+    GLB_GPIP_DAC_Cfg_Type dacCfg = { 0 };
+    GLB_GPIP_DAC_Init(&dacCfg);
+    GLB_GPIP_DAC_Set_ChanA_Config(&chCfg);
+    GLB_GPIP_DAC_Set_ChanB_Config((GLB_GPIP_DAC_ChanB_Cfg_Type *)&chCfg);
     return 0;
 }
+/**
+ * @brief
+ *
+ * @param dev
+ * @param cmd
+ * @param args
+ * @return int
+ */
 int dac_control(struct device *dev, int cmd, void *args)
 {
     dac_device_t *dac_device = (dac_device_t *)dev;
 
     switch (cmd) {
-        case DEVICE_CTRL_SET_INT /* constant-expression */:
+        case DEVICE_CTRL_SET_INT:
 
             break;
 
-        case DEVICE_CTRL_CLR_INT /* constant-expression */:
+        case DEVICE_CTRL_CLR_INT:
 
             break;
 
-        case DEVICE_CTRL_GET_INT /* constant-expression */:
+        case DEVICE_CTRL_GET_INT:
             /* code */
             break;
 
-        case DEVICE_CTRL_CONFIG /* constant-expression */:
+        case DEVICE_CTRL_CONFIG:
             /* code */
             break;
 
-        case DEVICE_CTRL_RESUME /* constant-expression */:
+        case DEVICE_CTRL_RESUME:
 
             break;
 
-        case DEVICE_CTRL_SUSPEND /* constant-expression */:
+        case DEVICE_CTRL_SUSPEND:
 
             break;
 
-        case DEVICE_CTRL_ATTACH_TX_DMA /* constant-expression */:
+        case DEVICE_CTRL_ATTACH_TX_DMA:
             dac_device->tx_dma = (struct device *)args;
             break;
 
@@ -179,6 +204,15 @@ int dac_control(struct device *dev, int cmd, void *args)
 
     return 0;
 }
+/**
+ * @brief
+ *
+ * @param dev
+ * @param pos
+ * @param buffer
+ * @param size
+ * @return int
+ */
 int dac_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
     dac_channel_t channel = (dac_channel_t)pos;
@@ -215,11 +249,14 @@ int dac_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
 
     return 0;
 }
-int dac_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
-{
-    return 0;
-}
 
+/**
+ * @brief
+ *
+ * @param index
+ * @param name
+ * @return int
+ */
 int dac_register(enum dac_index_type index, const char *name)
 {
     struct device *dev;

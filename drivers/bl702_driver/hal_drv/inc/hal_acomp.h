@@ -2,11 +2,10 @@
 #define __HAL_ACOMP_H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #include "hal_common.h"
-#include "drv_device.h"
 
 enum acomp_channel_type {
     ACOMP_CHANNEL_ADC_CHANNEL0, /*!< Analog compare channel,ADC input channel 0 */
@@ -38,18 +37,24 @@ enum acomp_hysteresis_vol_type {
     ACOMP_HYSTERESIS_VOLT_70MV, /*!< Analog compare hysteresis voltage 70mv */
 };
 
+enum acomp_it_type {
+    ACOMP_POSITIVE_IT = 1 << 0,
+    ACOMP_NEGATIVE_IT = 1 << 1,
+};
+
 typedef struct acomp_device {
-    struct device parent;
-    uint8_t id;
     enum acomp_channel_type pos_ch;
     enum acomp_channel_type neg_ch;
     enum acomp_hysteresis_vol_type pos_hysteresis_vol;
     enum acomp_hysteresis_vol_type neg_hysteresis_vol;
 } acomp_device_t;
 
-
-void acomp_init(acomp_device_t *device);
-int acomp_get_result(acomp_device_t *device);
+void acomp_init(uint8_t idx,acomp_device_t *device);
+void acomp_enable(uint8_t idx);
+void acomp_disable(uint8_t idx);
+void acomp_interrupt_mask(uint8_t idx,uint32_t flag);
+void acomp_interrupt_unmask(uint8_t idx,uint32_t flag);
+int acomp_get_result(uint8_t idx);
 
 #ifdef __cplusplus
 }

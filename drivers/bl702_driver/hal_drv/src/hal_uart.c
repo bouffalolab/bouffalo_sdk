@@ -22,7 +22,6 @@
  */
 #include "hal_uart.h"
 #include "hal_dma.h"
-#include "hal_gpio.h"
 #include "hal_clock.h"
 #include "bl702_uart.h"
 #include "bl702_glb.h"

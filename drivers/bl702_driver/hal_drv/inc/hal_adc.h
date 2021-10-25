@@ -140,15 +140,13 @@ enum adc_it_type {
     ADC_FIFO_IT = 1 << 5,
 };
 
-typedef struct
-{
+typedef struct {
     uint8_t *pos_channel;
     uint8_t *neg_channel;
     uint8_t num;
 } adc_channel_cfg_t;
 
-typedef struct
-{
+typedef struct {
     int8_t posChan; /*!< Positive channel */
     int8_t negChan; /*!< Negative channel */
     uint16_t value; /*!< ADC value */

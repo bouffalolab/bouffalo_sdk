@@ -26,6 +26,8 @@
 
 void mjpeg_init(mjpeg_device_t *mjpeg_cfg)
 {
+    MJPEG_Packet_Type packetCfg = { 0 };
+
     MJPEG_CFG_Type mjpegCfg = {
         .burst = MJPEG_BURST_INCR16,
         .quality = mjpeg_cfg->quality,
@@ -48,16 +50,14 @@ void mjpeg_init(mjpeg_device_t *mjpeg_cfg)
         .horizationalDmy = DISABLE,
     };
 
-    static MJPEG_Packet_Type packetCfg = {
-        .packetEnable = DISABLE,
-        .endToTail = DISABLE,
-        .frameHead = 0,
-        .frameTail = DISABLE,
-        .packetHead = 0,
-        .packetBody = 0,
-        .packetTail = 0,
-    };
     GLB_AHB_Slave1_Clock_Gate(DISABLE, BL_AHB_SLAVE1_MJPEG);
+
+    uint32_t tmpVal;
+
+    /* Disable mjpeg module */
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_1);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_MJPEG_ENABLE);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_1, tmpVal);
 
     MJPEG_Init(&mjpegCfg);
 
@@ -89,12 +89,22 @@ void mjpeg_init(mjpeg_device_t *mjpeg_cfg)
 
 void mjpeg_start(void)
 {
-    MJPEG_Enable();
+    uint32_t tmpVal;
+
+    /* Enable mjpeg module */
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_1);
+    tmpVal = BL_SET_REG_BIT(tmpVal, MJPEG_REG_MJPEG_ENABLE);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_1, tmpVal);
 }
 
 void mjpeg_stop(void)
 {
-    MJPEG_Disable();
+    uint32_t tmpVal;
+
+    /* Disable mjpeg module */
+    tmpVal = BL_RD_REG(MJPEG_BASE, MJPEG_CONTROL_1);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, MJPEG_REG_MJPEG_ENABLE);
+    BL_WR_REG(MJPEG_BASE, MJPEG_CONTROL_1, tmpVal);
 }
 
 uint8_t mjpeg_get_one_frame(uint8_t **pic, uint32_t *len, uint8_t *q)

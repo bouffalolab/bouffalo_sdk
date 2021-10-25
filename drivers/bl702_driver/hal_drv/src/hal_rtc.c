@@ -20,8 +20,8 @@
  * under the License.
  *
  */
-#include "bl702_hbn.h"
 #include "hal_rtc.h"
+#include "bl702_hbn.h"
 
 static uint64_t current_timestamp = 0;
 /**

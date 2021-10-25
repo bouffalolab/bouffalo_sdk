@@ -21,7 +21,6 @@
  *
  */
 #include "hal_adc.h"
-#include "hal_gpio.h"
 #include "hal_clock.h"
 #include "bl702_glb.h"
 #include "bl702_dma.h"
@@ -50,18 +49,18 @@ uint8_t adc_check_channel_status(uint8_t *pos_list, uint8_t *neg_list, uint16_t 
     uint16_t i = 0;
 
     uint8_t channel_io_reference_table[] = {
-        GPIO_PIN_8,  /* CH0 IO */
-        GPIO_PIN_15, /* CH1 IO */
-        GPIO_PIN_17, /* CH2 IO */
-        GPIO_PIN_11, /* CH3 IO */
-        GPIO_PIN_12, /* CH4 IO */
-        GPIO_PIN_14, /* CH5 IO */
-        GPIO_PIN_7,  /* CH6 IO */
-        GPIO_PIN_9,  /* CH7 IO */
-        GPIO_PIN_18, /* CH8 IO */
-        GPIO_PIN_19, /* CH9 IO */
-        GPIO_PIN_20, /* CH10 IO */
-        GPIO_PIN_21, /* CH11 IO */
+        GLB_GPIO_PIN_8,  /* CH0 IO */
+        GLB_GPIO_PIN_15, /* CH1 IO */
+        GLB_GPIO_PIN_17, /* CH2 IO */
+        GLB_GPIO_PIN_11, /* CH3 IO */
+        GLB_GPIO_PIN_12, /* CH4 IO */
+        GLB_GPIO_PIN_14, /* CH5 IO */
+        GLB_GPIO_PIN_7,  /* CH6 IO */
+        GLB_GPIO_PIN_9,  /* CH7 IO */
+        GLB_GPIO_PIN_18, /* CH8 IO */
+        GLB_GPIO_PIN_19, /* CH9 IO */
+        GLB_GPIO_PIN_20, /* CH10 IO */
+        GLB_GPIO_PIN_21, /* CH11 IO */
 
     };
 
@@ -89,6 +88,9 @@ int adc_open(struct device *dev, uint16_t oflag)
     adc_device_t *adc_device = (adc_device_t *)dev;
     ADC_CFG_Type adc_cfg = { 0 };
     ADC_FIFO_Cfg_Type adc_fifo_cfg = { 0 };
+
+    CPU_Interrupt_Disable(GPADC_DMA_IRQn);
+    ADC_IntMask(ADC_INT_ALL, MASK);
 
     adc_cfg.clkDiv = adc_device->clk_div;
 
@@ -125,8 +127,6 @@ int adc_open(struct device *dev, uint16_t oflag)
         adc_fifo_cfg.dmaEn = ENABLE;
     }
 
-    ADC_IntMask(ADC_INT_ALL, MASK);
-
     ADC_Disable();
     ADC_Enable();
 
@@ -146,7 +146,26 @@ int adc_open(struct device *dev, uint16_t oflag)
  */
 int adc_close(struct device *dev)
 {
-    ADC_Disable();
+    uint32_t tmpVal;
+
+    ADC_IntMask(ADC_INT_ALL, MASK);
+
+    /* disable convert start */
+    tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_GPADC_CONV_START);
+    BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, tmpVal);
+
+    /*disable adc */
+    tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_GPADC_GLOBAL_EN);
+    BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, tmpVal);
+
+    /*disable vbat */
+    tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CONFIG2);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_GPADC_VBAT_EN);
+    BL_WR_REG(AON_BASE, AON_GPADC_REG_CONFIG2, tmpVal);
+
+    ADC_Reset();
     return 0;
 }
 
@@ -165,7 +184,7 @@ int adc_control(struct device *dev, int cmd, void *args)
     uint8_t rlt = 0;
 
     switch (cmd) {
-        case DEVICE_CTRL_SET_INT /* constant-expression */: {
+        case DEVICE_CTRL_SET_INT: {
             uint32_t offset = __builtin_ctz((uint32_t)args);
             while ((2 <= offset) && (offset < 6)) {
                 if ((uint32_t)args & (1 << offset)) {
@@ -178,7 +197,7 @@ int adc_control(struct device *dev, int cmd, void *args)
             break;
         }
 
-        case DEVICE_CTRL_CLR_INT /* constant-expression */: {
+        case DEVICE_CTRL_CLR_INT: {
             uint32_t offset = __builtin_ctz((uint32_t)args);
             while ((2 <= offset) && (offset < 6)) {
                 if ((uint32_t)args & (1 << offset)) {
@@ -191,15 +210,13 @@ int adc_control(struct device *dev, int cmd, void *args)
             break;
         }
 
-        case DEVICE_CTRL_GET_INT /* constant-expression */:
-            /* code */
+        case DEVICE_CTRL_GET_INT:
             break;
 
-        case DEVICE_CTRL_CONFIG /* constant-expression */:
-            /* code */
+        case DEVICE_CTRL_CONFIG:
             break;
 
-        case DEVICE_CTRL_ADC_CHANNEL_CONFIG /* constant-expression */:
+        case DEVICE_CTRL_ADC_CHANNEL_CONFIG:
             if (adc_channel_cfg->num == 1) {
                 ADC_Channel_Config(*adc_channel_cfg->pos_channel, *adc_channel_cfg->neg_channel, adc_device->continuous_conv_mode);
                 rlt = adc_check_channel_status(adc_channel_cfg->pos_channel, adc_channel_cfg->neg_channel, 1);
@@ -210,12 +227,23 @@ int adc_control(struct device *dev, int cmd, void *args)
 
             break;
 
-        case DEVICE_CTRL_ADC_CHANNEL_START /* constant-expression */:
-            /* code */
-            ADC_Start();
-            break;
+        case DEVICE_CTRL_ADC_CHANNEL_START: {
+            uint32_t regCmd;
 
-        case DEVICE_CTRL_ADC_CHANNEL_STOP /* constant-expression */: {
+            /* disable convert start */
+            regCmd = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
+            regCmd = BL_CLR_REG_BIT(regCmd, AON_GPADC_CONV_START);
+            BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, regCmd);
+
+            BL702_Delay_US(100);
+
+            /* enable convert start */
+            regCmd = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
+            regCmd = BL_SET_REG_BIT(regCmd, AON_GPADC_CONV_START);
+            BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, regCmd);
+        } break;
+
+        case DEVICE_CTRL_ADC_CHANNEL_STOP: {
             uint32_t tmpVal;
 
             /* disable convert start */
@@ -307,8 +335,6 @@ float adc_get_tsen(uint16_t tsen_offset)
  *
  * @param index
  * @param name
- * @param flag
- * @param adc_user_cfg
  * @return int
  */
 int adc_register(enum adc_index_type index, const char *name)

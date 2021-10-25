@@ -25,8 +25,9 @@
 #include "hal_mtimer.h"
 #include "bl702_usb.h"
 #include "bl702_glb.h"
-#include "bl702_gpio.h"
-#include "usb_config.h"
+
+#define USE_INTERNAL_TRANSCEIVER
+// #define ENABLE_LPM_INT
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -304,6 +305,7 @@ int usb_close(struct device *dev)
     usb_set_power_off();
 
     usb_xcvr_config(DISABLE);
+    GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_USB);
     return 0;
 }
 /**

@@ -196,14 +196,15 @@ int i2s_open(struct device *dev, uint16_t oflag)
         I2S_Enable(I2S_ROLE_MASTER);
     else if (i2s_device->iis_mode == I2S_MODE_SLAVE)
         I2S_Enable(I2S_ROLE_SLAVE);
-    return SUCCESS;
+    return 0;
 }
 
 int i2s_close(struct device *dev)
 {
     //i2s_device_t* uart_device = (i2s_device_t*)dev;
     I2S_Disable();
-    return SUCCESS;
+    GLB_AHB_Slave1_Reset(BL_AHB_SLAVE1_I2S);
+    return 0;
 }
 
 int i2s_control(struct device *dev, int cmd, void *args)

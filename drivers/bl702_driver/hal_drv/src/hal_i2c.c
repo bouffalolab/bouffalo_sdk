@@ -21,9 +21,7 @@
  *
  */
 #include "hal_i2c.h"
-#include "hal_gpio.h"
 #include "bl702_i2c.h"
-#include "bl702_i2c_gpio_sim.h"
 #include "bl702_glb.h"
 
 static i2c_device_t i2cx_device[I2C_MAX_INDEX] = {
