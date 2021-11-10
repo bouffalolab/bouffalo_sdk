@@ -637,7 +637,7 @@ Board: bl70x_iot
         </AfterMake>
       </User>
       <Compiler>
-        <Define>ARCH_RISCV;ARCH_RISCV;BFLB_USE_HAL_DRIVER;BFLB_USE_ROM_DRIVER;bl702_evb</Define>
+        <Define>ARCH_RISCV;ARCH_RISCV;BFLB_USE_HAL_DRIVER;BFLB_USE_ROM_DRIVER;bl706_iot</Define>
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
