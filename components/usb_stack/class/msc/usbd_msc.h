@@ -43,25 +43,6 @@ extern "C" {
 #define CSW_STATUS_CMD_FAILED  0x01
 #define CSW_STATUS_PHASE_ERROR 0x02
 
-/** MSC Bulk-Only Command Block Wrapper (CBW) */
-struct CBW {
-    uint32_t Signature;
-    uint32_t Tag;
-    uint32_t DataLength;
-    uint8_t Flags;
-    uint8_t LUN;
-    uint8_t CBLength;
-    uint8_t CB[16];
-} __packed;
-
-/** MSC Bulk-Only Command Status Wrapper (CSW) */
-struct CSW {
-    uint32_t Signature;
-    uint32_t Tag;
-    uint32_t DataResidue;
-    uint8_t Status;
-} __packed;
-
 /*Length of template descriptor: 23 bytes*/
 #define MSC_DESCRIPTOR_LEN (9 + 7 + 7)
 // clang-format off
