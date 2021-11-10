@@ -39,10 +39,6 @@
 #define BIT(n) (1UL << (n))
 #endif
 
-#ifndef CHECK_PARAM
-#define CHECK_PARAM(expr) ((void)0)
-#endif
-
 /**
  * @brief Null Type definition
  */
@@ -129,4 +125,7 @@ void *arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n);
 uint32_t *arch_memset4(uint32_t *dst, const uint32_t val, uint32_t n);
 void memcopy_to_fifo(void *fifo_addr, uint8_t *data, uint32_t length);
 void fifocopy_to_mem(void *fifo_addr, uint8_t *data, uint32_t length);
+int arch_ctzll(uint64_t *val, uint32_t *bit);
+int arch_clzll(uint64_t *val, uint32_t *bit);
+int arch_ffsll(uint64_t *val, uint32_t *bit);
 #endif

@@ -188,6 +188,46 @@ void fifocopy_to_mem(void *fifo_addr, uint8_t *data, uint32_t length)
     }
 }
 
+/****************************************************************************/ /**
+ * @brief  get u64 first number 1 from right to left
+ *
+ * @param  val: target value
+ * @param  bit: first 1 in bit
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+int arch_ffsll(uint64_t *val, uint32_t *bit)
+{
+    if (!*val) {
+        return ERROR;
+    }
+
+    *bit = __builtin_ffsll(*val) - 1;
+    *val &= ~((1ULL) << (*bit));
+    return 0;
+}
+
+int arch_ctzll(uint64_t *val, uint32_t *bit)
+{
+    if (!*val)
+        return -1;
+
+    *bit = __builtin_ctzll(*val);
+    *val &= ~((1ULL) << (*bit));
+    return 0;
+}
+
+int arch_clzll(uint64_t *val, uint32_t *bit)
+{
+    if (!*val)
+        return -1;
+
+    *bit = __builtin_clzll(*val);
+    *val &= ~((1ULL) << (*bit));
+    return 0;
+}
+
 #ifdef DEBUG
 /*******************************************************************************
 * @brief  Reports the name of the source file and the source line number
