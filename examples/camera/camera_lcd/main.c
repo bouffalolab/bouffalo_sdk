@@ -27,12 +27,13 @@
 #include "hal_spi.h"
 #include "hal_gpio.h"
 #include "hal_dma.h"
-#include "bsp_il9341.h"
+// #include "bsp_il9341.h"
+#include "mcu_lcd.h"
 
 #include "picture.c"
 
-#define CAMERA_RESOLUTION_X (240)
-#define CAMERA_RESOLUTION_Y (320)
+#define CAMERA_RESOLUTION_X (128)
+#define CAMERA_RESOLUTION_Y (128)
 
 #define YUV422_FRAME_SIZE (CAMERA_RESOLUTION_X * CAMERA_RESOLUTION_Y * 2)
 #define YUV420_FRAME_SIZE (CAMERA_RESOLUTION_X * CAMERA_RESOLUTION_Y * 2 * 3 / 4)
@@ -44,11 +45,11 @@
 #define CAMERA_WRITE_ADDR   (0x26000000)
 #define CAMERA_BUFFER_SIZE  (CAMERA_FRAME_SIZE)
 #define CAMERA_WRITE_ADDR1  (0x26000000 + CAMERA_BUFFER_SIZE)
-#define CAMERA_BUFFER_SIZE1 (0x200000)
+#define CAMERA_BUFFER_SIZE1 (CAMERA_FRAME_SIZE)
 
 #define YUV_USE (1)
 
-// #define TEST_TIM
+#define TEST_TIM
 
 /* Turn 24-bit RGB color to 16-bit */
 #define RGB(r, g, b) (((r >> 3) << 3 | (g >> 5) | (g >> 2) << 13 | (b >> 3) << 8) & 0xffff)
@@ -234,13 +235,21 @@ int main(void)
 #endif
     uint32_t length;
 #ifdef TEST_TIM
+    uint8_t str[64];
     uint32_t timer_start = 0;
     uint32_t timer_end = 0;
+    uint32_t time = 0;
 #endif
 
     bflb_platform_init(0);
-    LCD_Init();
-    LCD_Clear(0);
+    // LCD_Init();
+    // LCD_Clear(0);
+    if (lcd_init()) {
+        MSG("lcd err \r\n");
+    }
+    lcd_set_dir(0, 0);
+    lcd_clear(0xFFFF);
+    lcd_auto_swap_set(0);
 
     bsp_sf_psram_init(1);
 
@@ -253,16 +262,16 @@ int main(void)
         }
     }
     cam_frame_area_t cfg;
-    cfg.x0 = 200;
-    cfg.x1 = CAMERA_RESOLUTION_X + 200;
-    cfg.y0 = 80;
-    cfg.y1 = CAMERA_RESOLUTION_Y + 80;
+    cfg.x0 = 96;
+    cfg.x1 = CAMERA_RESOLUTION_X + 96;
+    cfg.y0 = 56;
+    cfg.y1 = CAMERA_RESOLUTION_Y + 56;
 
     struct device *cam0 = device_find("camera0");
     device_control(cam0, DEVICE_CTRL_CAM_FRAME_CUT, &cfg);
     device_control(cam0, DEVICE_CTRL_RESUME, NULL);
 
-    LCD_Set_Addr(0, 0, CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y);
+    // LCD_Set_Addr(0, 0, CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y);
 
     while (1) {
 #ifdef TEST_TIM
@@ -276,16 +285,30 @@ int main(void)
 #ifdef USE_YUV422
         yuv422sp_to_rgb24(picture, rgb_pic, CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y);
         rgb24_to_rgb565(rgb_pic, rgb16_pic);
-        LCD_DrawPicture_cam(0, 0, CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, picture);
+        // LCD_DrawPicture_cam(0, 0, CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y, picture);
 #else
-        LCD_WR_SPI_DMA((uint16_t *)picture, (CAMERA_FRAME_SIZE));
+        // LCD_WR_SPI_DMA((uint16_t *)picture, (CAMERA_FRAME_SIZE));
+        while (ili9341_draw_is_busy()) {
+        };
+#ifdef TEST_TIM
+        sprintf((char *)str, "camera lcd test: time:%ld fps:%ld", time, 1000 / time);
+        lcd_set_dir(1, 0);
+        lcd_draw_str_ascii16(0, 0, 0x00f8, 0xffff, str, sizeof(str));
+        sprintf((char *)str, "camera size:%d x %d", CAMERA_RESOLUTION_X, CAMERA_RESOLUTION_Y);
+        lcd_draw_str_ascii16(80, 196, 0x00f8, 0xffff, str, sizeof(str));
+#endif
+        lcd_set_dir(0, 0);
+        lcd_draw_picture_nonblocking(50, 96, CAMERA_RESOLUTION_X + 50 - 1, CAMERA_RESOLUTION_Y + 96 - 1, (uint16_t *)picture);
+
 #endif
         device_control(cam0, DEVICE_CTRL_CAM_FRAME_DROP, NULL);
         device_control(cam0, DEVICE_CTRL_RESUME, NULL);
 
 #ifdef TEST_TIM
         timer_end = bflb_platform_get_time_ms();
-        MSG("time:%d\r\n", (timer_end - timer_start));
+        time = timer_end - timer_start;
+        // MSG("time:%d,FPS:%d\r\n", (timer_end - timer_start), (1000 / (timer_end - timer_start)));
+
 #endif
     }
 }

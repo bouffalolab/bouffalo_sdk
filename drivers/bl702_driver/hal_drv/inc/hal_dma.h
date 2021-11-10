@@ -24,17 +24,19 @@
 #define __HAL_DMA__H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #include "hal_common.h"
 #include "drv_device.h"
 #include "bl702_config.h"
 
-#define DMA_CHANNEL_GET_STATUS 0x10
-#define DMA_CHANNEL_START      0x11
-#define DMA_CHANNEL_STOP       0x12
-#define DMA_CHANNEL_UPDATE     0x13
+#define DMA_CHANNEL_GET_STATUS    0x10
+#define DMA_CHANNEL_START         0x11
+#define DMA_CHANNEL_STOP          0x12
+#define DMA_CHANNEL_UPDATE        0x13
+#define DEVICE_CTRL_DMA_CONFIG_SI 0x14
+#define DEVICE_CTRL_DMA_CONFIG_DI 0x15
 
 enum dma_index_type {
 #ifdef BSP_USING_DMA0_CH0
@@ -69,6 +71,21 @@ enum dma_index_type {
 #define dma_channel_update(dev, list) device_control(dev, DMA_CHANNEL_UPDATE, list)
 #define dma_channel_check_busy(dev)   device_control(dev, DMA_CHANNEL_GET_STATUS, NULL)
 
+#define DMA_LLI_ONCE_MODE  0
+#define DMA_LLI_CYCLE_MODE 1
+
+#define DMA_ADDR_INCREMENT_DISABLE 0 /*!< Addr increment mode disable */
+#define DMA_ADDR_INCREMENT_ENABLE  1 /*!< Addr increment mode enable  */
+
+#define DMA_TRANSFER_WIDTH_8BIT  0
+#define DMA_TRANSFER_WIDTH_16BIT 1
+#define DMA_TRANSFER_WIDTH_32BIT 2
+
+#define DMA_BURST_1BYTE  0
+#define DMA_BURST_4BYTE  1
+#define DMA_BURST_8BYTE  2
+#define DMA_BURST_16BYTE 3
+
 #define DMA_ADDR_UART0_TDR (0x4000A000 + 0x88)
 #define DMA_ADDR_UART0_RDR (0x4000A000 + 0x8C)
 #define DMA_ADDR_UART1_TDR (0x4000A100 + 0x88)
@@ -80,25 +97,7 @@ enum dma_index_type {
 #define DMA_ADDR_I2S_TDR   (0x4000AA00 + 0x88)
 #define DMA_ADDR_I2S_RDR   (0x4000AA00 + 0x8C)
 #define DMA_ADDR_ADC0_DR   (0x40002000 + 0x04)
-#define DMA_ADDR_ADC1_DR   (0x40002000 + 0x04)
-#define DMA_ADDR_DAC_TDR   (0x40002048)
-
-/** @defgroup DMA_Peripheral_incremented_mode DMA Peripheral incremented mode
-  * @brief    DMA peripheral incremented mode
-  * @{
-  */
-#define DMA_PINC_ENABLE  1 /*!< Peripheral increment mode enable  */
-#define DMA_PINC_DISABLE 0 /*!< Peripheral increment mode disable */
-/**
-  * @}
-  */
-
-/** @defgroup DMA_Memory_incremented_mode DMA Memory incremented mode
-  * @brief    DMA memory incremented mode
-  * @{
-  */
-#define DMA_MINC_ENABLE  1 /*!< Memory increment mode enable  */
-#define DMA_MINC_DISABLE 0 /*!< Memory increment mode disable */
+#define DMA_ADDR_DAC_TDR   (0x40002000 + 0X48)
 
 #define DMA_REQUEST_NONE     0x00000000 /*!< DMA request peripheral:None */
 #define DMA_REQUEST_UART0_RX 0x00000000 /*!< DMA request peripheral:UART0 RX */
@@ -122,26 +121,14 @@ enum dma_index_type {
 #define DMA_REQUEST_USB_EP6  0x0000001E /*!< DMA request peripheral:USB EP6*/
 #define DMA_REQUEST_USB_EP7  0x0000001F /*!< DMA request peripheral:USB EP7 */
 
-#define DMA_BURST_1BYTE  0
-#define DMA_BURST_4BYTE  1
-#define DMA_BURST_8BYTE  2
-#define DMA_BURST_16BYTE 3
-
-#define DMA_TRANSFER_WIDTH_8BIT  0
-#define DMA_TRANSFER_WIDTH_16BIT 1
-#define DMA_TRANSFER_WIDTH_32BIT 2
-
-#define DMA_LLI_ONCE_MODE  0
-#define DMA_LLI_CYCLE_MODE 1
-
 /**
  *  @brief DMA transfer direction type definition
  */
 typedef enum {
-    DMA_MEMORY_TO_MEMORY = 0, /*!< DMA transfer tyep:memory to memory */
-    DMA_MEMORY_TO_PERIPH,     /*!< DMA transfer tyep:memory to peripheral */
-    DMA_PERIPH_TO_MEMORY,     /*!< DMA transfer tyep:peripheral to memory */
-    DMA_PERIPH_TO_PERIPH,     /*!< DMA transfer tyep:peripheral to peripheral */
+    DMA_MEMORY_TO_MEMORY = 0, /*!< DMA transfer type:memory to memory */
+    DMA_MEMORY_TO_PERIPH,     /*!< DMA transfer type:memory to peripheral */
+    DMA_PERIPH_TO_MEMORY,     /*!< DMA transfer type:peripheral to memory */
+    DMA_PERIPH_TO_PERIPH,     /*!< DMA transfer type:peripheral to peripheral */
 } dma_transfer_dir_type;
 
 typedef union {
@@ -173,21 +160,16 @@ typedef struct
     dma_control_data_t cfg;
 } dma_lli_ctrl_t;
 
-typedef struct
-{
-    uint8_t direction;
-    uint32_t src_req;
-    uint32_t dst_req;
-} dma_ctrl_param_t;
-
 typedef struct dma_device {
     struct device parent;
     uint8_t id;
     uint8_t ch;
-    uint8_t direction;
     uint8_t transfer_mode;
+    uint8_t direction;
     uint32_t src_req;
     uint32_t dst_req;
+    uint8_t src_addr_inc;
+    uint8_t dst_addr_inc;
     uint8_t src_burst_size;
     uint8_t dst_burst_size;
     uint8_t src_width;
@@ -200,7 +182,9 @@ typedef struct dma_device {
 int dma_register(enum dma_index_type index, const char *name);
 int dma_allocate_register(const char *name);
 int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_t transfer_size);
+
 #ifdef __cplusplus
 }
 #endif
+
 #endif

@@ -360,6 +360,10 @@ uint8_t isp_uart_init(isp_obj_t *isp_obj)
         DMA_DEV(dma_ch0)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch0)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch0)->dst_req = DMA_REQUEST_UART0_TX;
+        DMA_DEV(dma_ch0)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch0)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+        DMA_DEV(dma_ch0)->src_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch0)->dst_burst_size = DMA_BURST_1BYTE;
         DMA_DEV(dma_ch0)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch0)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch0, 0);
@@ -378,6 +382,10 @@ uint8_t isp_uart_init(isp_obj_t *isp_obj)
     //     DMA_DEV(dma_ch1)->transfer_mode = DMA_LLI_ONCE_MODE;
     //     DMA_DEV(dma_ch1)->src_req = DMA_REQUEST_UART0_RX;
     //     DMA_DEV(dma_ch1)->dst_req = DMA_REQUEST_NONE;
+    //     DMA_DEV(dma_ch1)->src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+    //     DMA_DEV(dma_ch1)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+    //     DMA_DEV(dma_ch1)->src_burst_size = DMA_BURST_1BYTE;
+    //     DMA_DEV(dma_ch1)->dst_burst_size = DMA_BURST_1BYTE;
     //     DMA_DEV(dma_ch1)->src_width = DMA_TRANSFER_WIDTH_8BIT;
     //     DMA_DEV(dma_ch1)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
     //     device_open(dma_ch1, 0);

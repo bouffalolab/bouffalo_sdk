@@ -556,7 +556,16 @@ int main(void)
     dma_ch2 = device_find("ch2");
 
     if (dma_ch2) {
+        DMA_DEV(dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;
+        DMA_DEV(dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch2)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_USB_EP1;
+        DMA_DEV(dma_ch2)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_16BYTE;
+        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch2, 0);
         // device_set_callback(dma_ch2, dma2_irq_callback);
         // device_control(dma_ch2, DEVICE_CTRL_SET_INT, NULL);

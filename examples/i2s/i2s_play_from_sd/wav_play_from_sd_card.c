@@ -230,9 +230,12 @@ static int sd_wav_play_init(audio_dev_t *audio_dev, const TCHAR *path)
         DMA_DEV(dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch2)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_I2S_TX;
+        DMA_DEV(dma_ch2)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_4BYTE;
         DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_4BYTE;
-
+        DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         switch (I2S_DEV(audio_dev->device)->data_size * I2S_DEV(audio_dev->device)->channel_num) {
             case I2S_DATA_LEN_8:
                 DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;

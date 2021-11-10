@@ -176,7 +176,7 @@ static int isp_wav_play_init(struct audio_dev *audio_dev, uint8_t mode, uint8_t 
 
     if ((audio_dev->device) && dma_ch2) {
         /* I2S Config */
-        I2S_DEV(audio_dev->device)->interface_mode = I2S_MODE_LEFT;
+        I2S_DEV(audio_dev->device)->interface_mode = I2S_MODE_STD;
         I2S_DEV(audio_dev->device)->sampl_freq_hz = audio_dev->wav_information->chunk_format.sample_rate;
         I2S_DEV(audio_dev->device)->channel_num = audio_dev->wav_information->chunk_format.num_of_channels;
         uint8_t pcm_w = audio_dev->wav_information->chunk_format.bits_per_sample / 8;
@@ -217,9 +217,12 @@ static int isp_wav_play_init(struct audio_dev *audio_dev, uint8_t mode, uint8_t 
         DMA_DEV(dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch2)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_I2S_TX;
+        DMA_DEV(dma_ch2)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_4BYTE;
         DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_4BYTE;
-
+        DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         switch (I2S_DEV(audio_dev->device)->data_size * I2S_DEV(audio_dev->device)->channel_num) {
             case 1:
                 DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
@@ -326,9 +329,12 @@ record_conf:
         DMA_DEV(dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch3)->src_req = DMA_REQUEST_I2S_RX;
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch3)->src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+        DMA_DEV(dma_ch3)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
         DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_4BYTE;
         DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_4BYTE;
-
+        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         switch (I2S_DEV(audio_dev->device)->data_size * I2S_DEV(audio_dev->device)->channel_num) {
             case 1:
                 DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;

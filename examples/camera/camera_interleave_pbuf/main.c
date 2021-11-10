@@ -181,8 +181,6 @@ int ATTR_TCM_SECTION main(void)
     }
     // MSG("dma open \r\n");
 
-    //CAM_HW_Mode_Wrap(DISABLE);
-
     cam_clk_out();
 
     if (SUCCESS != image_sensor_init(DISABLE, &camera_cfg, &mjpeg_cfg)) {
@@ -199,6 +197,7 @@ int ATTR_TCM_SECTION main(void)
     cfg.y1 = CAMERA_RESOLUTION_Y;
 
     struct device *cam0 = device_find("camera0");
+    device_control(cam0, DEVICE_CTRL_CAM_FRAME_WRAP, (void *)0);
     device_control(cam0, DEVICE_CTRL_CAM_FRAME_CUT, &cfg);
     device_set_callback(cam0, cam_irq_callback);
     device_control(cam0, DEVICE_CTRL_SET_INT, (void *)CAM_FRAME_IT);
