@@ -72,8 +72,10 @@ void system_clock_init(void)
     GLB_Set_System_CLK_Div(BSP_FCLK_DIV, BSP_BCLK_DIV);
     /* Set MTimer the same frequency as SystemCoreClock */
     GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, mtimer_get_clk_src_div());
+#ifndef FAST_WAKEUP
 #ifdef BSP_AUDIO_PLL_CLOCK_SOURCE
     PDS_Set_Audio_PLL_Freq(BSP_AUDIO_PLL_CLOCK_SOURCE - ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ);
+#endif
 #endif
 #if XTAL_32K_TYPE == INTERNAL_RC_32K
     HBN_32K_Sel(HBN_32K_RC);
@@ -82,11 +84,11 @@ void system_clock_init(void)
     HBN_Power_On_Xtal_32K();
     HBN_32K_Sel(HBN_32K_XTAL);
 #endif
-    if ((XTAL_TYPE == INTERNAL_RC_32M) || (XTAL_TYPE == XTAL_NONE)) {
-        HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_RC32M);
-    } else {
-        HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
-    }
+#if XTAL_TYPE == EXTERNAL_XTAL_32M
+    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
+#else
+    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_RC32M);
+#endif
 }
 
 void peripheral_clock_init(void)
@@ -360,7 +362,7 @@ void peripheral_clock_init(void)
 #endif
 
 #if defined(BSP_USING_ADC0)
-    //tmpVal |= (1 << BL_AHB_SLAVE1_GPIP);
+    tmpVal |= (1 << BL_AHB_SLAVE1_GPIP);
 #if BSP_ADC_CLOCK_SOURCE >= ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ
     GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_AUDIO_PLL, BSP_ADC_CLOCK_DIV);
 #elif BSP_ADC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
@@ -371,7 +373,7 @@ void peripheral_clock_init(void)
 #endif
 
 #if defined(BSP_USING_DAC0)
-    //tmpVal |= (1 << BL_AHB_SLAVE1_GPIP);
+    tmpVal |= (1 << BL_AHB_SLAVE1_GPIP);
 #if BSP_DAC_CLOCK_SOURCE >= ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ
     GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_AUDIO_PLL, BSP_DAC_CLOCK_DIV + 1);
 #elif BSP_DAC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK

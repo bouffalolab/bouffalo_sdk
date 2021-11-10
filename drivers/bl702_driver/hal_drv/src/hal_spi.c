@@ -251,6 +251,7 @@ int spi_control(struct device *dev, int cmd, void *args)
  */
 int spi_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
+    int ret = 0;
     spi_device_t *spi_device = (spi_device_t *)dev;
 
     if (dev->oflag & DEVICE_OFLAG_DMA_TX) {
@@ -280,13 +281,12 @@ int spi_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
                     break;
             }
 
-            dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_SPI_TDR, size);
+            ret = dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_SPI_TDR, size);
             dma_channel_start(dma_ch);
         }
-
-        return 0;
+        return ret;
     } else if (dev->oflag & DEVICE_OFLAG_INT_TX) {
-        return -1;
+        return -2;
     } else {
         if (spi_device->datasize == SPI_DATASIZE_8BIT) {
             return SPI_Send_8bits(spi_device->id, (uint8_t *)buffer, size, SPI_TIMEOUT_DISABLE);
@@ -310,6 +310,7 @@ int spi_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
  */
 int spi_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
+    int ret = 0;
     spi_device_t *spi_device = (spi_device_t *)dev;
 
     if (dev->oflag & DEVICE_OFLAG_DMA_RX) {
@@ -337,16 +338,13 @@ int spi_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
                     break;
                 default:
                     break;
-                    dma_reload(dma_ch, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)buffer, size);
-                    dma_channel_start(dma_ch);
             }
-            dma_reload(dma_ch, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)buffer, size);
+            ret = dma_reload(dma_ch, (uint32_t)DMA_ADDR_SPI_RDR, (uint32_t)buffer, size);
             dma_channel_start(dma_ch);
         }
-
-        return 0;
+        return ret;
     } else if (dev->oflag & DEVICE_OFLAG_INT_TX) {
-        return -1;
+        return -2;
     } else {
         if (spi_device->datasize == SPI_DATASIZE_8BIT) {
             return SPI_Recv_8bits(spi_device->id, (uint8_t *)buffer, size, SPI_TIMEOUT_DISABLE);

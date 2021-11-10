@@ -41,6 +41,11 @@ void ATTR_TCM_SECTION cpu_global_irq_disable(void)
     nesting++;
 }
 
+void hal_por_reset(void)
+{
+    RomDriver_GLB_SW_POR_Reset();
+}
+
 void hal_system_reset(void)
 {
     RomDriver_GLB_SW_System_Reset();

@@ -147,6 +147,13 @@ int cam_control(struct device *dev, int cmd, void *args)
                 BL_WR_REG(CAM_BASE, CAM_DVP_FRAME_FIFO_POP, 3);
             }
             break;
+        case DEVICE_CTRL_CAM_FRAME_WRAP: {
+            uint32_t tmpVal;
+
+            tmpVal = BL_RD_REG(CAM_BASE, CAM_DVP2AXI_CONFIGUE);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CAM_REG_HW_MODE_FWRAP, ((uint32_t)args) & 0x01);
+            BL_WR_REG(CAM_BASE, CAM_DVP2AXI_CONFIGUE, tmpVal);
+        } break;
         default:
             break;
     }

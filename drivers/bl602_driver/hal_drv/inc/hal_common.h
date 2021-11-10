@@ -27,6 +27,7 @@
 
 void cpu_global_irq_enable(void);
 void cpu_global_irq_disable(void);
+void hal_por_reset(void);
 void hal_system_reset(void);
 void hal_cpu_reset(void);
 void hal_get_chip_id(uint8_t chip_id[8]);

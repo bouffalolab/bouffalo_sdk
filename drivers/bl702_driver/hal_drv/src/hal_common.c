@@ -43,6 +43,11 @@ void ATTR_TCM_SECTION cpu_global_irq_disable(void)
     nesting++;
 }
 
+void hal_por_reset(void)
+{
+    RomDriver_GLB_SW_POR_Reset();
+}
+
 void hal_system_reset(void)
 {
     RomDriver_GLB_SW_System_Reset();
@@ -63,7 +68,7 @@ void hal_enter_usb_iap(void)
     BL_WR_WORD(HBN_BASE + HBN_RSV0_OFFSET, 0x00425355); //"\0BSU"
 
     arch_delay_ms(1000);
-    RomDriver_GLB_SW_System_Reset();
+    RomDriver_GLB_SW_POR_Reset();
 }
 
 void ATTR_TCM_SECTION hal_jump2app(uint32_t flash_offset)

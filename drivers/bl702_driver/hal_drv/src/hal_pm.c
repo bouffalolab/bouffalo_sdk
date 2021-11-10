@@ -401,6 +401,7 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel3 = {
         .MiscDigPwrOff = 1,
     }
 };
+#if 0
 static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel4 = {
     .pdsCtl = {
         .pdsStart = 1,
@@ -749,6 +750,7 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel7 = {
         .MiscDigPwrOff = 1,
     }
 };
+#endif
 static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel31 = {
     .pdsCtl = {
         .pdsStart = 1,
@@ -928,17 +930,13 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint3
             pPdsCfg = &pdsCfgLevel3;
             break;
         case PM_PDS_LEVEL_4:
-            pPdsCfg = &pdsCfgLevel4;
-            break;
+            return;
         case PM_PDS_LEVEL_5:
-            pPdsCfg = &pdsCfgLevel5;
-            break;
+            return;
         case PM_PDS_LEVEL_6:
-            pPdsCfg = &pdsCfgLevel6;
-            break;
+            return;
         case PM_PDS_LEVEL_7:
-            pPdsCfg = &pdsCfgLevel7;
-            break;
+            return;
         case PM_PDS_LEVEL_31:
             pPdsCfg = &pdsCfgLevel31;
             break;
@@ -1237,13 +1235,6 @@ ATTR_TCM_SECTION void pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level, uint8
     }
 }
 
-void pm_set_wakeup_callback(void (*wakeup_callback)(void))
-{
-    BL_WR_REG(HBN_BASE, HBN_RSV1, (uint32_t)wakeup_callback);
-    /* Set HBN flag */
-    BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
-}
-
 ATTR_HBN_RAM_SECTION void pm_hbn_enter_again(bool reset)
 {
     uint32_t tmpVal;
@@ -1258,6 +1249,60 @@ ATTR_HBN_RAM_SECTION void pm_hbn_enter_again(bool reset)
     tmpVal = BL_SET_REG_BIT(tmpVal, HBN_MODE);
     BL_WR_REG(HBN_BASE, HBN_CTL, tmpVal);
 }
+
+void pm_set_wakeup_callback(void (*wakeup_callback)(void))
+{
+    BL_WR_REG(HBN_BASE, HBN_RSV1, (uint32_t)wakeup_callback);
+    /* Set HBN flag */
+    BL_WR_REG(HBN_BASE, HBN_RSV0, HBN_STATUS_ENTER_FLAG);
+}
+
+enum pm_event_type pm_get_wakeup_event(void)
+{
+    if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_GPIO9)) {
+        return PM_HBN_GPIO9_WAKEUP_EVENT;
+    } else if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_GPIO10)) {
+        return PM_HBN_GPIO10_WAKEUP_EVENT;
+    } else if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_GPIO11)) {
+        return PM_HBN_GPIO11_WAKEUP_EVENT;
+    } else if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_GPIO12)) {
+        return PM_HBN_GPIO12_WAKEUP_EVENT;
+    } else if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_GPIO10)) {
+    } else if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_PIR)) {
+    } else if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_BOR)) {
+        return PM_HBN_BOR_WAKEUP_EVENT;
+    } else if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_ACOMP0)) {
+        return PM_HBN_ACOMP0_WAKEUP_EVENT;
+    } else if (BL_RD_REG(HBN_BASE, HBN_IRQ_STAT) & (1 << HBN_INT_ACOMP1)) {
+        return PM_HBN_ACOMP1_WAKEUP_EVENT;
+    }
+
+    return PM_HBN_WAKEUP_EVENT_NONE;
+}
+
+void pm_bor_init(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_IRQ_BOR_EN);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_MISC);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_PU_BOR);
+    BL_WR_REG(HBN_BASE, HBN_MISC, tmpVal);
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_MISC);
+    tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_BOR);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_BOR_VTH, HBN_BOR_THRES_2P4V);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_BOR_SEL, HBN_BOR_MODE_POR_INDEPENDENT);
+    BL_WR_REG(HBN_BASE, HBN_MISC, tmpVal);
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+    tmpVal = BL_SET_REG_BIT(tmpVal, HBN_IRQ_BOR_EN);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+}
+
 void pm_hbn_out0_irq_register(void)
 {
     Interrupt_Handler_Register(HBN_OUT1_IRQn, HBN_OUT0_IRQ);
@@ -1275,23 +1320,16 @@ void HBN_OUT0_IRQ(void)
     if (SET == HBN_Get_INT_State(HBN_INT_GPIO9)) {
         HBN_Clear_IRQ(HBN_INT_GPIO9);
         pm_irq_callback(PM_HBN_GPIO9_WAKEUP_EVENT);
-    }
-    if (SET == HBN_Get_INT_State(HBN_INT_GPIO10)) {
+    } else if (SET == HBN_Get_INT_State(HBN_INT_GPIO10)) {
         HBN_Clear_IRQ(HBN_INT_GPIO10);
         pm_irq_callback(PM_HBN_GPIO10_WAKEUP_EVENT);
-    }
-
-    if (SET == HBN_Get_INT_State(HBN_INT_GPIO11)) {
+    } else if (SET == HBN_Get_INT_State(HBN_INT_GPIO11)) {
         HBN_Clear_IRQ(HBN_INT_GPIO11);
         pm_irq_callback(PM_HBN_GPIO11_WAKEUP_EVENT);
-    }
-
-    if (SET == HBN_Get_INT_State(HBN_INT_GPIO12)) {
+    } else if (SET == HBN_Get_INT_State(HBN_INT_GPIO12)) {
         HBN_Clear_IRQ(HBN_INT_GPIO12);
         pm_irq_callback(PM_HBN_GPIO12_WAKEUP_EVENT);
-    }
-
-    if (SET == HBN_Get_INT_State(HBN_INT_RTC)) {
+    } else {
         HBN_Clear_IRQ(HBN_INT_RTC);
         HBN_Clear_RTC_INT();
         pm_irq_callback(PM_HBN_RTC_WAKEUP_EVENT);
@@ -1304,20 +1342,18 @@ void HBN_OUT1_IRQ(void)
     if (SET == HBN_Get_INT_State(HBN_INT_PIR)) {
         HBN_Clear_IRQ(HBN_INT_PIR);
     }
-
     /* BOR */
-    if (SET == HBN_Get_INT_State(HBN_INT_BOR)) {
+    else if (SET == HBN_Get_INT_State(HBN_INT_BOR)) {
         HBN_Clear_IRQ(HBN_INT_BOR);
+        pm_irq_callback(PM_HBN_BOR_WAKEUP_EVENT);
     }
-
     /* ACOMP0 */
-    if (SET == HBN_Get_INT_State(HBN_INT_ACOMP0)) {
+    else if (SET == HBN_Get_INT_State(HBN_INT_ACOMP0)) {
         HBN_Clear_IRQ(HBN_INT_ACOMP0);
         pm_irq_callback(PM_HBN_ACOMP0_WAKEUP_EVENT);
     }
-
     /* ACOMP1 */
-    if (SET == HBN_Get_INT_State(HBN_INT_ACOMP1)) {
+    else if (SET == HBN_Get_INT_State(HBN_INT_ACOMP1)) {
         HBN_Clear_IRQ(HBN_INT_ACOMP1);
         pm_irq_callback(PM_HBN_ACOMP1_WAKEUP_EVENT);
     }

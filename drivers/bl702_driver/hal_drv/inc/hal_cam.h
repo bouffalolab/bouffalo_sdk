@@ -32,8 +32,9 @@ extern "C" {
 #include "drv_device.h"
 #include "bl702_config.h"
 
-#define DEVICE_CTRL_CAM_FRAME_CUT 0x10
+#define DEVICE_CTRL_CAM_FRAME_CUT  0x10
 #define DEVICE_CTRL_CAM_FRAME_DROP 0x11
+#define DEVICE_CTRL_CAM_FRAME_WRAP 0x12
 
 enum cam_index_type {
 #ifdef BSP_USING_CAM0

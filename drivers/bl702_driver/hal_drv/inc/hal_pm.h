@@ -48,19 +48,23 @@ enum pm_hbn_sleep_level {
 };
 
 enum pm_event_type {
+    PM_HBN_WAKEUP_EVENT_NONE,
     PM_HBN_GPIO9_WAKEUP_EVENT,
     PM_HBN_GPIO10_WAKEUP_EVENT,
     PM_HBN_GPIO11_WAKEUP_EVENT,
     PM_HBN_GPIO12_WAKEUP_EVENT,
     PM_HBN_RTC_WAKEUP_EVENT,
+    PM_HBN_BOR_WAKEUP_EVENT,
     PM_HBN_ACOMP0_WAKEUP_EVENT,
     PM_HBN_ACOMP1_WAKEUP_EVENT,
 };
 
 void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint32_t sleep_time);
 void pm_hbn_mode_enter(enum pm_hbn_sleep_level hbn_level, uint8_t sleep_time);
-void pm_set_wakeup_callback(void (*wakeup_callback)(void));
 void pm_hbn_enter_again(bool reset);
+void pm_set_wakeup_callback(void (*wakeup_callback)(void));
+enum pm_event_type pm_get_wakeup_event(void);
+void pm_bor_init(void);
 void pm_hbn_out0_irq_register(void);
 void pm_hbn_out1_irq_register(void);
 void pm_irq_callback(enum pm_event_type event);

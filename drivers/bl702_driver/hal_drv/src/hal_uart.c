@@ -270,6 +270,7 @@ int uart_control(struct device *dev, int cmd, void *args)
  */
 int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
+    int ret = 0;
     uart_device_t *uart_device = (uart_device_t *)dev;
     if (dev->oflag & DEVICE_OFLAG_DMA_TX) {
         struct device *dma_ch = (struct device *)uart_device->tx_dma;
@@ -277,13 +278,13 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
             return -1;
 
         if (uart_device->id == 0) {
-            dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART0_TDR, size);
+            ret = dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART0_TDR, size);
             dma_channel_start(dma_ch);
         } else if (uart_device->id == 1) {
-            dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART1_TDR, size);
+            ret = dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART1_TDR, size);
             dma_channel_start(dma_ch);
         }
-        return 0;
+        return ret;
     } else if (dev->oflag & DEVICE_OFLAG_INT_TX) {
         return -2;
     } else
@@ -300,6 +301,7 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
  */
 int uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
+    int ret = -1;
     uart_device_t *uart_device = (uart_device_t *)dev;
     if (dev->oflag & DEVICE_OFLAG_DMA_RX) {
         struct device *dma_ch = (struct device *)uart_device->rx_dma;
@@ -307,13 +309,13 @@ int uart_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
             return -1;
 
         if (uart_device->id == 0) {
-            dma_reload(dma_ch, (uint32_t)DMA_ADDR_UART0_RDR, (uint32_t)buffer, size);
+            ret = dma_reload(dma_ch, (uint32_t)DMA_ADDR_UART0_RDR, (uint32_t)buffer, size);
             dma_channel_start(dma_ch);
         } else if (uart_device->id == 1) {
-            dma_reload(dma_ch, (uint32_t)DMA_ADDR_UART1_RDR, (uint32_t)buffer, size);
+            ret = dma_reload(dma_ch, (uint32_t)DMA_ADDR_UART1_RDR, (uint32_t)buffer, size);
             dma_channel_start(dma_ch);
         }
-        return 0;
+        return ret;
     } else if (dev->oflag & DEVICE_OFLAG_INT_RX) {
         return -2;
     } else {

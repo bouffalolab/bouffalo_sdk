@@ -110,14 +110,6 @@ enum uart_event_type {
     UART_EVENT_UNKNOWN
 };
 
-typedef struct
-{
-    uint8_t tx;
-    uint8_t rx;
-    uint8_t cts;
-    uint8_t rts;
-} uart_pin_t;
-
 enum uart_it_type {
     UART_TX_END_IT = 1 << 0,
     UART_RX_END_IT = 1 << 1,
@@ -146,7 +138,6 @@ typedef struct uart_device {
     uart_stopbits_t stopbits;
     uart_parity_t parity;
     uint8_t fifo_threshold;
-    uart_pin_t pin;
     void *tx_dma;
     void *rx_dma;
 } uart_device_t;

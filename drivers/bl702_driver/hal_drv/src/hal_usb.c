@@ -410,6 +410,7 @@ int usb_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
         usb_lli_list.cfg.bits.DBSize = DMA_BURST_1BYTE;
         device_control(usb_device->tx_dma, DMA_CHANNEL_UPDATE, (void *)((uint32_t)&usb_lli_list));
         dma_channel_start(usb_device->tx_dma);
+        return 0;
     } else {
     }
 
@@ -434,6 +435,7 @@ int usb_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
         usb_lli_list.cfg.bits.DBSize = DMA_BURST_16BYTE;
         device_control(usb_device->rx_dma, DMA_CHANNEL_UPDATE, (void *)((uint32_t)&usb_lli_list));
         dma_channel_start(usb_device->rx_dma);
+        return 0;
     } else {
     }
 
