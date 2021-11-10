@@ -24,7 +24,7 @@
 #define __HAL_DAC__H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #include "hal_common.h"
@@ -38,31 +38,28 @@ enum dac_index_type {
     DAC_MAX_INDEX
 };
 
-typedef struct
-{
-    uint8_t dac0;
-    uint8_t dac1;
-    uint8_t pin_num;
-} dac_pin_t;
+#define DAC_CHANNEL_0   (1 << 0)
+#define DAC_CHANNEL_1   (1 << 1)
+#define DAC_CHANNEL_ALL (DAC_CHANNEL_0 | DAC_CHANNEL_1)
 
-typedef enum {
-    DAC_CHANNEL_0,
-    DAC_CHANNEL_1,
-    DAC_CHANNEL_ALL,
-} dac_channel_t;
+/* default a_rng and b_rng is 0x03*/
+/*output Voltage = (1.8V-0.2V) * digital_val/1024 + 0.2V */
+#define DAC_VREF_INTERNAL 0 /*0.2V~1.8V*/
+/*output Voltage = (0.9vref-0.1vref) * digital_val/1024 + 0.1vref */
+#define DAC_VREF_EXTERNAL 1 /*0.1vref~0.9vref,using gpio7 for GPIO_FUN_ADC*/
 
-typedef enum {
-    DAC_CLK_500KHZ,
-    DAC_CLK_44P1KHZ,
-    DAC_CLK_16KHZ,
-    DAC_CLK_8KHZ,
-} dac_clk_t;
+enum dac_sample_frequence {
+    DAC_SAMPLE_FREQ_8KHZ,
+    DAC_SAMPLE_FREQ_16KHZ,
+    DAC_SAMPLE_FREQ_44P1KHZ,
+    DAC_SAMPLE_FREQ_500KHZ,
+};
 
 typedef struct dac_device {
     struct device parent;
-    dac_clk_t clk;
-    dac_pin_t pin;
-
+    enum dac_sample_frequence sample_freq;
+    uint8_t channels;
+    uint8_t vref;
     void *tx_dma;
 } dac_device_t;
 

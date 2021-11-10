@@ -75,9 +75,9 @@
 #endif
 #if defined(BSP_USING_DAC0)
 #define BSP_DAC_CLOCK_SOURCE ROOT_CLOCK_SOURCE_AUPLL_24000000_HZ
-#define BSP_DAC_CLOCK_DIV    1
+#define BSP_DAC_CLOCK_DIV    2
 #endif
-#if defined(BSP_USING_CAM0)
+#if defined(BSP_USING_CAM)
 #define BSP_CAM_CLOCK_SOURCE ROOT_CLOCK_SOURCE_PLL_96M
 #define BSP_CAM_CLOCK_DIV    3
 #endif

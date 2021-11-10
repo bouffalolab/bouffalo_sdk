@@ -34,7 +34,7 @@ int main(void)
     struct device *dac = device_find("dac");
 
     if (dac) {
-        ((dac_device_t *)dac)->clk = DAC_CLK_16KHZ;
+        ((dac_device_t *)dac)->sample_freq = DAC_SAMPLE_FREQ_16KHZ;
         device_open(dac, DEVICE_OFLAG_DMA_TX);
         MSG("device open success\r\n");
     }
