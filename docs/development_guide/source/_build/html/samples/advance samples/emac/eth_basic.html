@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>7.1. emac basic – 发送 ARP 数据包 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>8.1. emac basic – 发送 ARP 数据包 &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
-    <link rel="next" title="7.2. UDP echo" href="eth_udp_echo.html" />
-    <link rel="prev" title="7. EMAC 以太网应用" href="index.html" /> 
+    <link rel="next" title="8.2. UDP echo" href="eth_udp_echo.html" />
+    <link rel="prev" title="8. EMAC 以太网应用" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -119,28 +119,30 @@
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/i2s/index.html">8. I2S 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usb/index.html">3. USB Device 应用</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">7. EMAC 以太网应用</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">7.1. ARP - 发送 ARP 裸包</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">7.1.1. 硬件准备</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">7.1.2. 硬件连接</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#arp">7.1.3. 构造 ARP 数据包</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">7.1.4. 编译和下载</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">7.1.5. 实验现象</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ble_pds.html">7. BLE PDS31</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">8. EMAC 以太网应用</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">8.1. ARP - 发送 ARP 裸包</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">8.1.1. 硬件准备</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">8.1.2. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#arp">8.1.3. 构造 ARP 数据包</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">8.1.4. 编译和下载</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">8.1.5. 实验现象</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="eth_udp_echo.html">7.2. UDP - LwIP UDP echo</a></li>
-<li class="toctree-l2"><a class="reference internal" href="eth_tcp_echo.html">7.3. TCP - LwIP TCP echo</a></li>
-<li class="toctree-l2"><a class="reference internal" href="eth_http_server.html">7.4. HTTP - LwIP HTTP server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="eth_lwip_iperf.html">7.5. IPERF - LwIP iperf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_udp_echo.html">8.2. UDP - LwIP UDP echo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_tcp_echo.html">8.3. TCP - LwIP TCP echo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_http_server.html">8.4. HTTP - LwIP HTTP server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_lwip_iperf.html">8.5. IPERF - LwIP iperf</a></li>
 </ul>
 </li>
 </ul>
@@ -191,9 +193,9 @@
     
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="index.html"><span class="section-number">7. </span>EMAC 以太网应用</a> &raquo;</li>
+          <li><a href="index.html"><span class="section-number">8. </span>EMAC 以太网应用</a> &raquo;</li>
         
-      <li><span class="section-number">7.1. </span>emac basic – 发送 ARP 数据包</li>
+      <li><span class="section-number">8.1. </span>emac basic – 发送 ARP 数据包</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -213,11 +215,11 @@
            <div itemprop="articleBody">
             
   <div class="section" id="emac-basic-arp">
-<h1><span class="section-number">7.1. </span>emac basic – 发送 ARP 数据包<a class="headerlink" href="#emac-basic-arp" title="永久链接至标题">¶</a></h1>
+<h1><span class="section-number">8.1. </span>emac basic – 发送 ARP 数据包<a class="headerlink" href="#emac-basic-arp" title="永久链接至标题">¶</a></h1>
 <p>本 demo 基于 BL706 emac 实现通过以太网发送一个 ARP 裸数据包的例程，通过本例程可以确认 emac 以及 PHY 芯片的配置是否正确。</p>
 <p>以太网 PHY 芯片这里使用的是 PHY8720</p>
 <div class="section" id="id1">
-<h2><span class="section-number">7.1.1. </span>硬件准备<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.1.1. </span>硬件准备<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>一块 BL706 ETH 开发板</p></li>
 <li><p>一块 PHY 8720 模块</p></li>
@@ -226,7 +228,7 @@
 </ul>
 </div>
 <div class="section" id="id2">
-<h2><span class="section-number">7.1.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.1.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <p>本 demo 基于 BL706 ETH 开发板，将对应的功能引脚连接到 PHY8720 模块上，连接方式如下：</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
 <span class="o">----------------------------------</span>
@@ -245,7 +247,7 @@
 <p>接下来需要将 PHY8720 模块的 RJ-45 接口通过标准 5/6 类网线连接到与测试 PC 在同一局域网中的路由器或者交换机上。</p>
 </div>
 <div class="section" id="arp">
-<h2><span class="section-number">7.1.3. </span>构造 ARP 数据包<a class="headerlink" href="#arp" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.1.3. </span>构造 ARP 数据包<a class="headerlink" href="#arp" title="永久链接至标题">¶</a></h2>
 <p>通过查阅 ARP 协议可以知道 ARP 包的数据报文组织结构如下：</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span><span class="n">dst</span> <span class="n">mac</span><span class="o">|</span><span class="n">src</span> <span class="n">mac</span><span class="o">|</span><span class="n">frame</span> <span class="nb">type</span><span class="o">|</span><span class="n">Hardware</span> <span class="nb">type</span><span class="o">|</span><span class="n">Protocol</span> <span class="nb">type</span><span class="o">|</span><span class="n">Hardware</span> <span class="n">size</span><span class="o">|</span><span class="n">Protocol</span> <span class="n">size</span><span class="o">|</span><span class="n">Opcode</span><span class="o">|</span><span class="n">src</span> <span class="n">mac</span><span class="o">|</span><span class="n">src</span> <span class="n">ip</span><span class="o">|</span><span class="n">dst</span> <span class="n">mac</span><span class="o">|</span><span class="n">dst</span> <span class="n">ip</span><span class="o">|</span>
 <span class="o">|</span><span class="mi">6</span> <span class="n">Byte</span> <span class="o">|</span><span class="mi">6</span> <span class="n">Byte</span> <span class="o">|</span><span class="mi">2</span> <span class="n">Byte</span>    <span class="o">|</span>   <span class="mi">2</span> <span class="n">Byte</span>    <span class="o">|</span>   <span class="mi">2</span> <span class="n">Byte</span>    <span class="o">|</span>   <span class="mi">1</span> <span class="n">Byte</span>    <span class="o">|</span>   <span class="mi">1</span> <span class="n">Byte</span>    <span class="o">|</span><span class="mi">2</span> <span class="n">Byte</span><span class="o">|</span><span class="mi">6</span> <span class="n">Byte</span> <span class="o">|</span><span class="mi">4</span> <span class="n">Byte</span><span class="o">|</span><span class="mi">6</span> <span class="n">Byte</span> <span class="o">|</span><span class="mi">4</span> <span class="n">Byte</span><span class="o">|</span>
@@ -277,7 +279,7 @@
 </td></tr></table></div>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">7.1.4. </span>编译和下载<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.1.4. </span>编译和下载<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p><strong>命令行编译</strong></p></li>
 </ul>
@@ -293,7 +295,7 @@ $ make <span class="nv">APP</span><span class="o">=</span>emac_basic
 </ul>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">7.1.5. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.1.5. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <p>串口 log 信息：</p>
 <div class="figure align-default">
 <img alt="" src="../../../_images/emac_basic_arp_2.png" />
@@ -311,8 +313,8 @@ $ make <span class="nv">APP</span><span class="o">=</span>emac_basic
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="eth_udp_echo.html" class="btn btn-neutral float-right" title="7.2. UDP echo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="index.html" class="btn btn-neutral float-left" title="7. EMAC 以太网应用" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="eth_udp_echo.html" class="btn btn-neutral float-right" title="8.2. UDP echo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="8. EMAC 以太网应用" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

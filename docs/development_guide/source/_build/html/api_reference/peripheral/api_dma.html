@@ -139,6 +139,8 @@
 <li class="toctree-l2"><a class="reference internal" href="api_timer.html">2.11. TIMER 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_qdec.html">2.12. QDEC 设备</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api_usb.html">2.13. USB 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_flash.html">2.14. XIP FLASH 设备</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_pm.html">2.15. PM 设备</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../shell/api_shell.html">3. Shell</a></li>
@@ -157,16 +159,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/i2s/index.html">8. I2S 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/basic%20samples/flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/usb/index.html">3. USB Device 应用</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/emac/index.html">7. EMAC 以太网应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/ble_pds.html">7. BLE PDS31</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../samples/advance%20samples/emac/index.html">8. EMAC 以太网应用</a></li>
 </ul>
 
             
@@ -255,10 +259,12 @@
     <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">id</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">ch</span><span class="p">;</span>
-    <span class="kt">uint8_t</span> <span class="n">direction</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">transfer_mode</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">direction</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">src_req</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">dst_req</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">src_addr_inc</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">dst_addr_inc</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">src_burst_size</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">dst_burst_size</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">src_width</span><span class="p">;</span>
@@ -271,16 +277,23 @@
 <li><p><strong>parent</strong>        继承父类属性</p></li>
 <li><p><strong>id</strong>            DMA id号，默认0，当前只有一个DMA</p></li>
 <li><p><strong>ch</strong>            通道号</p></li>
-<li><p><strong>direction</strong>     传输方向</p></li>
 <li><p><strong>transfer_mode</strong> 传输模式</p></li>
+<li><p><strong>direction</strong>     传输方向</p></li>
 <li><p><strong>src_req</strong>       源请求</p></li>
 <li><p><strong>dst_req</strong>       目标请求</p></li>
+<li><p><strong>src_addr_inc</strong>  源地址自增</p></li>
+<li><p><strong>dst_addr_inc</strong>  目标地址自增</p></li>
 <li><p><strong>src_burst_size</strong> 源突发字节数</p></li>
 <li><p><strong>dst_burst_size</strong> 目标突发字节数</p></li>
 <li><p><strong>src_width</strong>     源传输位宽</p></li>
 <li><p><strong>dst_width</strong>     目标传输位宽</p></li>
 <li><p><strong>lli_cfg</strong>       用来存储dma通道的一些信息，用户不用管</p></li>
 </ul>
+<p><code class="docutils literal notranslate"><span class="pre">transfer_mode</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_LLI_ONCE_MODE     0</span>
+<span class="cp">#define DMA_LLI_CYCLE_MODE    1</span>
+</pre></div>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">direction</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
     <span class="n">DMA_MEMORY_TO_MEMORY</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>                        <span class="cm">/*!&lt; DMA transfer tyep:memory to memory */</span>
@@ -288,11 +301,6 @@
     <span class="n">DMA_PERIPH_TO_MEMORY</span><span class="p">,</span>                            <span class="cm">/*!&lt; DMA transfer tyep:peripheral to memory */</span>
     <span class="n">DMA_PERIPH_TO_PERIPH</span><span class="p">,</span>                            <span class="cm">/*!&lt; DMA transfer tyep:peripheral to peripheral */</span>
 <span class="p">}</span><span class="n">dma_transfer_dir_type</span><span class="p">;</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">transfer_mode</span></code> 提供以下类型</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_LLI_ONCE_MODE     0</span>
-<span class="cp">#define DMA_LLI_CYCLE_MODE    1</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">src_req</span></code> 提供以下类型</p>
@@ -343,6 +351,16 @@
 <span class="cp">#define DMA_REQUEST_USB_EP7     0x0000001F </span><span class="cm">/*!&lt; DMA request peripheral:USB EP7 */</span><span class="cp"></span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">src_addr_inc</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_ADDR_INCREMENT_DISABLE 0 </span><span class="cm">/*!&lt; Addr increment mode disable */</span><span class="cp"></span>
+<span class="cp">#define DMA_ADDR_INCREMENT_ENABLE  1 </span><span class="cm">/*!&lt; Addr increment mode enable  */</span><span class="cp"></span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dst_addr_inc</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_ADDR_INCREMENT_DISABLE 0 </span><span class="cm">/*!&lt; Addr increment mode disable */</span><span class="cp"></span>
+<span class="cp">#define DMA_ADDR_INCREMENT_ENABLE  1 </span><span class="cm">/*!&lt; Addr increment mode enable  */</span><span class="cp"></span>
+</pre></div>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">src_burst_size</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_BURST_1BYTE     0</span>
 <span class="cp">#define DMA_BURST_4BYTE     1</span>
@@ -378,14 +396,18 @@
 <span class="cp">#ifndef DMA0_CH0_CONFIG</span>
 <span class="cp">#define DMA0_CH0_CONFIG \</span>
 <span class="cp">{   \</span>
-<span class="cp"> .id = 0, \</span>
-<span class="cp"> .ch = 0,\</span>
-<span class="cp"> .direction = DMA_MEMORY_TO_MEMORY,\</span>
-<span class="cp"> .transfer_mode = DMA_LLI_ONCE_MODE, \</span>
-<span class="cp"> .src_req = DMA_REQUEST_NONE, \</span>
-<span class="cp"> .dst_req = DMA_REQUEST_NONE, \</span>
-<span class="cp"> .src_width = DMA_TRANSFER_WIDTH_32BIT , \</span>
-<span class="cp"> .dst_width = DMA_TRANSFER_WIDTH_32BIT , \</span>
+<span class="cp">    .id = 0,                                   \</span>
+<span class="cp">    .ch = 7,                                   \</span>
+<span class="cp">    .direction = DMA_MEMORY_TO_MEMORY,         \</span>
+<span class="cp">    .transfer_mode = DMA_LLI_ONCE_MODE,        \</span>
+<span class="cp">    .src_req = DMA_REQUEST_NONE,               \</span>
+<span class="cp">    .dst_req = DMA_REQUEST_NONE,               \</span>
+<span class="cp">    .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \</span>
+<span class="cp">    .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \</span>
+<span class="cp">    .src_burst_size = DMA_BURST_1BYTE,         \</span>
+<span class="cp">    .dst_burst_size = DMA_BURST_1BYTE,         \</span>
+<span class="cp">    .src_width = DMA_TRANSFER_WIDTH_8BIT,      \</span>
+<span class="cp">    .dst_width = DMA_TRANSFER_WIDTH_8BIT,      \</span>
 <span class="cp">}</span>
 <span class="cp">#endif</span>
 <span class="cp">#endif</span>

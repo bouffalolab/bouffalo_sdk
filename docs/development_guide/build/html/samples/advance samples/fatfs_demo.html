@@ -216,15 +216,32 @@
 </div>
 <div class="section" id="id2">
 <h2><span class="section-number">2.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
-<p>本 demo 基于 BL706_AVB 开发板，连接方式如下</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
-<span class="o">----------------------------------</span>
-    <span class="n">SD_CS</span>       <span class="o">&lt;--&gt;</span>     <span class="n">GPIO10</span>
-    <span class="n">SPI_SCK</span>     <span class="o">&lt;--&gt;</span>     <span class="n">GPIO19</span>
-    <span class="n">SPI_MISO</span>    <span class="o">&lt;--&gt;</span>     <span class="n">GPIO20</span>
-    <span class="n">SPI_MOSI</span>    <span class="o">&lt;--&gt;</span>     <span class="n">GPIO21</span>
-</pre></div>
-</div>
+<p>本 demo 基于 BL706_AVB 开发板，连接方式如下：</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>GPIO function</p></th>
+<th class="head"><p>GPIO pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SD_CS</p></td>
+<td><p>GPIO10</p></td>
+</tr>
+<tr class="row-odd"><td><p>SPI_SCK</p></td>
+<td><p>GPIO19</p></td>
+</tr>
+<tr class="row-even"><td><p>SPI_MISO</p></td>
+<td><p>GPIO20</p></td>
+</tr>
+<tr class="row-odd"><td><p>SPI_MOSI</p></td>
+<td><p>GPIO21</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="id3">
 <h2><span class="section-number">2.3. </span>软件实现<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
@@ -328,37 +345,53 @@
 <span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
-<span class="normal">34</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_DMA0_CH3</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_DMA0_CH3</span>
 <span class="cp">#define BSP_USING_DMA0_CH4</span>
 
 <span class="cp">#if defined(BSP_USING_DMA0_CH3)</span>
 <span class="cp">#ifndef DMA0_CH3_CONFIG</span>
-<span class="cp">#define DMA0_CH3_CONFIG                       \</span>
-<span class="cp">    {                                         \</span>
-<span class="cp">        .id = 0,                              \</span>
-<span class="cp">        .ch = 3,                              \</span>
-<span class="cp">        .direction = DMA_MEMORY_TO_PERIPH,    \</span>
-<span class="cp">        .transfer_mode = DMA_LLI_ONCE_MODE,   \</span>
-<span class="cp">        .src_req = DMA_REQUEST_NONE,          \</span>
-<span class="cp">        .dst_req = DMA_REQUEST_SPI0_TX,       \</span>
-<span class="cp">        .src_width = DMA_TRANSFER_WIDTH_8BIT, \</span>
-<span class="cp">        .dst_width = DMA_TRANSFER_WIDTH_8BIT, \</span>
+<span class="cp">#define DMA0_CH3_CONFIG                             \</span>
+<span class="cp">    {                                               \</span>
+<span class="cp">        .id = 0,                                    \</span>
+<span class="cp">        .ch = 3,                                    \</span>
+<span class="cp">        .direction = DMA_MEMORY_TO_PERIPH,          \</span>
+<span class="cp">        .transfer_mode = DMA_LLI_ONCE_MODE,         \</span>
+<span class="cp">        .src_req = DMA_REQUEST_NONE,                \</span>
+<span class="cp">        .dst_req = DMA_REQUEST_SPI0_TX,             \</span>
+<span class="cp">        .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \</span>
+<span class="cp">        .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \</span>
+<span class="cp">        .src_burst_size = DMA_BURST_1BYTE,          \</span>
+<span class="cp">        .dst_burst_size = DMA_BURST_1BYTE,          \</span>
+<span class="cp">        .src_width = DMA_TRANSFER_WIDTH_8BIT,       \</span>
+<span class="cp">        .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \</span>
 <span class="cp">    }</span>
 <span class="cp">#endif</span>
 <span class="cp">#endif</span>
 
 <span class="cp">#if defined(BSP_USING_DMA0_CH4)</span>
 <span class="cp">#ifndef DMA0_CH4_CONFIG</span>
-<span class="cp">#define DMA0_CH4_CONFIG                       \</span>
-<span class="cp">    {                                         \</span>
-<span class="cp">        .id = 0,                              \</span>
-<span class="cp">        .ch = 4,                              \</span>
-<span class="cp">        .direction = DMA_PERIPH_TO_MEMORY,    \</span>
-<span class="cp">        .transfer_mode = DMA_LLI_ONCE_MODE,   \</span>
-<span class="cp">        .src_req = DMA_REQUEST_SPI0_RX,       \</span>
-<span class="cp">        .dst_req = DMA_REQUEST_NONE,          \</span>
-<span class="cp">        .src_width = DMA_TRANSFER_WIDTH_8BIT, \</span>
-<span class="cp">        .dst_width = DMA_TRANSFER_WIDTH_8BIT, \</span>
+<span class="cp">#define DMA0_CH4_CONFIG                             \</span>
+<span class="cp">    {                                               \</span>
+<span class="cp">        .id = 0,                                    \</span>
+<span class="cp">        .ch = 4,                                    \</span>
+<span class="cp">        .direction = DMA_PERIPH_TO_MEMORY,          \</span>
+<span class="cp">        .transfer_mode = DMA_LLI_ONCE_MODE,         \</span>
+<span class="cp">        .src_req = DMA_REQUEST_SPI0_RX,             \</span>
+<span class="cp">        .dst_req = DMA_REQUEST_NONE,                \</span>
+<span class="cp">        .src_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \</span>
+<span class="cp">        .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \</span>
+<span class="cp">        .src_burst_size = DMA_BURST_1BYTE,          \</span>
+<span class="cp">        .dst_burst_size = DMA_BURST_1BYTE,          \</span>
+<span class="cp">        .src_width = DMA_TRANSFER_WIDTH_8BIT,       \</span>
+<span class="cp">        .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \</span>
 <span class="cp">    }</span>
 <span class="cp">#endif</span>
 <span class="cp">#endif</span>

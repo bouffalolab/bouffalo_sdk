@@ -19,17 +19,21 @@ DMA - RAM间数据搬运
 
     #if defined(BSP_USING_DMA0_CH0)
     #ifndef DMA0_CH0_CONFIG
-    #define DMA0_CH0_CONFIG \
-    {   \
-    .id = 0, \
-    .ch = 0,\
-    .direction = DMA_MEMORY_TO_MEMORY,\
-    .transfer_mode = DMA_LLI_ONCE_MODE, \
-    .src_req = DMA_REQUEST_NONE, \
-    .dst_req = DMA_REQUEST_NONE, \
-    .src_width = DMA_TRANSFER_WIDTH_32BIT , \
-    .dst_width = DMA_TRANSFER_WIDTH_32BIT , \
-    }
+    #define DMA0_CH0_CONFIG                            \
+        {                                              \
+            .id = 0,                                   \
+            .ch = 0,                                   \
+            .direction = DMA_MEMORY_TO_MEMORY,         \
+            .transfer_mode = DMA_LLI_ONCE_MODE,        \
+            .src_req = DMA_REQUEST_NONE,               \
+            .dst_req = DMA_REQUEST_NONE,               \
+            .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
+            .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
+            .src_burst_size = DMA_BURST_4BYTE,         \
+            .dst_burst_size = DMA_BURST_4BYTE,         \
+            .src_width = DMA_TRANSFER_WIDTH_32BIT,     \
+            .dst_width = DMA_TRANSFER_WIDTH_32BIT,     \
+        }
     #endif
     #endif
 
@@ -38,29 +42,38 @@ DMA - RAM间数据搬运
 .. code-block:: C
     :linenos:
 
-    dma_register(DMA0_CH0_INDEX, "DMA");
+    dma_register(DMA0_CH0_INDEX, "dma_ch0");
 
-    struct device *dma = device_find("DMA");
+    struct device *dma_ch0 = device_find("dma_ch0");
 
-    if (dma)
-    {
-        device_open(dma, 0);
-        device_set_callback(dma, dma_transfer_done);
-        device_control(dma, DEVICE_CTRL_SET_INT, NULL);
+    if (dma_ch0) {
+        DMA_DEV(dma_ch0)->direction = DMA_MEMORY_TO_MEMORY;
+        DMA_DEV(dma_ch0)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch0)->src_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch0)->dst_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch0)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch0)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch0)->src_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch0)->dst_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch0)->src_width = DMA_TRANSFER_WIDTH_32BIT;
+        DMA_DEV(dma_ch0)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
+        device_open(dma_ch0, 0);
+        device_set_callback(dma_ch0, dma_transfer_done);
+        device_control(dma_ch0, DEVICE_CTRL_SET_INT, NULL);
     }
 
 - 首先调用 ``dma_register`` 函数注册 ``DMA`` 设备的一个通道,当前注册 ``DMA_CH0``
-- 然后通过 ``find`` 函数找到设备对应的句柄，保存于 ``dma`` 句柄中
-- 最后使用 ``device_open`` 以默认模式来打开 ``dma`` 设备，调用 ``device_set_callback`` 注册一个dma通道0中断回调函数，调用 ``device_control`` 开启dma传输完成中断
+- 然后通过 ``find`` 函数找到设备对应的句柄，保存于 ``dma_ch0`` 句柄中
+- 最后使用 ``device_open`` 以默认模式来打开 ``dma_ch0`` 设备，调用 ``device_set_callback`` 注册一个 dma 通道0中断回调函数，调用 ``device_control`` 开启dma传输完成中断
 
 .. code-block:: C
     :linenos:
 
-    dma_reload(dma,(uint32_t)dma_src_buffer,(uint32_t)dma_dst_buffer,8000);
-    dma_channel_start(dma);
+    dma_reload(dma_ch0,(uint32_t)dma_src_buffer,(uint32_t)dma_dst_buffer,8000);
+    dma_channel_start(dma_ch0);
 
-- 调用 ``dma_reload`` 函数对dma 通道0的配置进行补充，``DMA0_CH0_CONFIG`` 中已经补充了一部分配置，这边主要补充源数据地址和目标数据地址以及传输总长度
-- 调用 ``dma_channel_start`` 开启dma传输
+- 调用 ``dma_reload`` 函数对 dma 通道0的配置进行补充，``DMA0_CH0_CONFIG`` 中已经补充了一部分配置，这边主要补充源数据地址和目标数据地址以及传输总长度
+- 调用 ``dma_channel_start`` 开启 dma 传输
 
 .. code-block:: C
     :linenos:

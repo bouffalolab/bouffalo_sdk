@@ -42,16 +42,22 @@ PWM - 驱动步进电机
 硬件连接
 -----------------------------
 
-本 demo 基于BL706_IOT开发板，连接方式如下
+本 demo 基于BL706_IOT开发板，连接方式如下：
 
-::
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
 
-       GPIO function         GPIO pin
-    ----------------------------------
-        PWM_CH0      <-->     GPIO10
-        PWM_CH1      <-->     GPIO11
-        PWM_CH2      <-->     GPIO12
-        PWM_CH3      <-->     GPIO3
+    * - GPIO function
+      - GPIO pin
+    * - PWM_CH0
+      - GPIO10
+    * - PWM_CH1
+      - GPIO11
+    * - PWM_CH2
+      - GPIO12
+    * - PWM_CH3
+      - GPIO3
 
 .. figure:: img/pwm_step_motor.png
     :alt:

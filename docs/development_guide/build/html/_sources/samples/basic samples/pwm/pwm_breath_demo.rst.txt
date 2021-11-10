@@ -6,13 +6,16 @@ PWM - 呼吸灯
 硬件连接
 -----------------------------
 
-本 demo 基于BL706_IOT开发板，连接方式如下
+本 demo 基于BL706_IOT开发板，连接方式如下：
 
-::
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
 
-       GPIO function         GPIO pin
-    ----------------------------------
-        PWM_CH2      <-->     GPIO22
+    * - GPIO function
+      - GPIO pin
+    * - PWM_CH2
+      - GPIO22
 
 .. figure:: img/blink_breath_sch.png
     :alt:

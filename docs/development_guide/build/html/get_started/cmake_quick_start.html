@@ -212,7 +212,18 @@
 <p>本文档将介绍一下如何基于本 SDK 新建一个全新的项目</p>
 <div class="section" id="examples">
 <h2><span class="section-number">4.1. </span>examples 的目录结构<a class="headerlink" href="#examples" title="永久链接至标题">¶</a></h2>
-<p>在 <code class="docutils literal notranslate"><span class="pre">bl_mcu_sdk/examples</span></code> 目录下通常存在两层子目录，第一层通常为同一类外设相关的 case 集，一般使用外设名称，第二层通常为该外设具体的某一种测试例程，该目录下通常还包含一个 <code class="docutils literal notranslate"><span class="pre">CMakeList.txt</span></code> 以及该 case 相关的源码</p>
+<p>在 <code class="docutils literal notranslate"><span class="pre">bl_mcu_sdk/examples</span></code> 目录下通常存在两层子目录，第一层通常为同一类外设相关的 case 集，一般使用外设名称，第二层通常为该外设具体的某一种测试例程，该目录下通常还包含一个 <code class="docutils literal notranslate"><span class="pre">CMakeList.txt</span></code> 以及该 case 相关的源码。</p>
+<p>可供用户使用的 cmake 变量如下：</p>
+<ul class="simple">
+<li><p>mains:main 函数入口</p></li>
+<li><p>TARGET_REQUIRED_SRCS:没有编译成 lib 的外部 c 文件</p></li>
+<li><p>TARGET_REQUIRED_PRIVATE_INCLUDE:外部 c 文件需要的头文件路径</p></li>
+<li><p>TARGET_REQUIRED_LIBS:目标需要的 lib 库名称，可以是 cmake 通过 generate_bin 生成的 target 或者外部导入的 lib 库</p></li>
+<li><p>TARGET_REQUIRED_PRIVATE_OPTIONS:私有 c flag</p></li>
+<li><p>LINKER_SCRIPT:重新定义链接脚本</p></li>
+<li><p>GLOBAL_C_FLAGS:全局 c flag</p></li>
+<li><p>GLOBAL_LD_FLAGS:全局 ld flag</p></li>
+</ul>
 </div>
 <div class="section" id="id1">
 <h2><span class="section-number">4.2. </span>添加单个源文件工程<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
@@ -346,7 +357,7 @@
 <ul class="simple">
 <li><p>编写好相应的功能代码后，在 bl_mcu_sdk 目录下进行编译即可，编译命令如下：</p></li>
 </ul>
-<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>gpio_case  <span class="nv">SUPPORT_FREERTOS</span><span class="o">=</span>y
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>gpio_case
 </pre></div>
 </td></tr></table></div>
 </div>

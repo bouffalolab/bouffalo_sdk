@@ -129,16 +129,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../i2s/index.html">8. I2S 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/usb/index.html">3. USB Device 应用</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/emac/index.html">7. EMAC 以太网应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_pds.html">7. BLE PDS31</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/emac/index.html">8. EMAC 以太网应用</a></li>
 </ul>
 
             
@@ -213,12 +215,23 @@
 <p>本 demo 基于 GPIO 外设外部中断模式编写。</p>
 <div class="section" id="id1">
 <h2><span class="section-number">1.2.1. </span>硬件连接<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
-<p>本 demo 基于BL706_IOT开发板，自行添加按键电路，连接方式如下</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
-<span class="o">----------------------------------</span>
-    <span class="n">SW1</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO11</span>
-</pre></div>
-</div>
+<p>本 demo 基于BL706_IOT开发板，自行添加按键电路，连接方式如下：</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>GPIO function</p></th>
+<th class="head"><p>GPIO pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SW1</p></td>
+<td><p>GPIO11</p></td>
+</tr>
+</tbody>
+</table>
 <div class="figure align-default">
 <img alt="" src="../../../_images/button_sch.png" />
 </div>

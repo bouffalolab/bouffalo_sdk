@@ -6,18 +6,24 @@ SPI - TFT LCD 显示
 硬件连接
 -----------------------------
 
-本 demo 基于 BL706_AVB 开发板，连接方式如下
+本 demo 基于 BL706_AVB 开发板，连接方式如下：
 
-::
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
 
-       GPIO function         GPIO pin
-    ----------------------------------
-        LCD_CS      <-->     GPIO10
-        LCD_DC      <-->     GPIO22
-        SPI_SCK     <-->     GPIO19
-        SPI_MISO    <-->     GPIO20
-        SPI_MOSI    <-->     GPIO21
-
+    * - GPIO function
+      - GPIO pin
+    * - LCD_CS
+      - GPIO10
+    * - LCD_DC
+      - GPIO22
+    * - SPI_SCK
+      - GPIO19
+    * - SPI_MISO
+      - GPIO20
+    * - SPI_MOSI
+      - GPIO21
 
 软件实现
 -----------------------------
@@ -41,7 +47,7 @@ SPI - TFT LCD 显示
 
 -  配置 ``SPI`` 设备复用引脚，见 ``bsp/board/bl706_avb/pinmux_config.h``,，如有改动，请自行修改
 
-.. note:: 为适配 bl702_avb 硬件, SPI 的 MOSI 和 MISO 默认进行了调换，如果想要恢复默认，修改 ``drivers/bl702_driver/hal_drv/default_config/spi_config.h`` 中 ``SPI_SWAP_ENABLE`` 为 0
+.. note:: 为适配 bl702_avb 硬件, SPI 的 MOSI 和 MISO 默认进行了调换，如果想要恢复默认，修改 ``bsp/board/bl706_avb/pinmux_config.h`` 中 ``pin_swap_enable`` 为 0
 
 .. code-block:: C
     :linenos:

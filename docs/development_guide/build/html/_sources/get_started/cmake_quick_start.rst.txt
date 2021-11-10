@@ -6,8 +6,18 @@
 examples 的目录结构
 ------------------------
 
-在 ``bl_mcu_sdk/examples`` 目录下通常存在两层子目录，第一层通常为同一类外设相关的 case 集，一般使用外设名称，第二层通常为该外设具体的某一种测试例程，该目录下通常还包含一个 ``CMakeList.txt`` 以及该 case 相关的源码
+在 ``bl_mcu_sdk/examples`` 目录下通常存在两层子目录，第一层通常为同一类外设相关的 case 集，一般使用外设名称，第二层通常为该外设具体的某一种测试例程，该目录下通常还包含一个 ``CMakeList.txt`` 以及该 case 相关的源码。
 
+可供用户使用的 cmake 变量如下：
+
+- mains:main 函数入口
+- TARGET_REQUIRED_SRCS:没有编译成 lib 的外部 c 文件
+- TARGET_REQUIRED_PRIVATE_INCLUDE:外部 c 文件需要的头文件路径
+- TARGET_REQUIRED_LIBS:目标需要的 lib 库名称，可以是 cmake 通过 generate_bin 生成的 target 或者外部导入的 lib 库
+- TARGET_REQUIRED_PRIVATE_OPTIONS:私有 c flag
+- LINKER_SCRIPT:重新定义链接脚本
+- GLOBAL_C_FLAGS:全局 c flag
+- GLOBAL_LD_FLAGS:全局 ld flag
 
 添加单个源文件工程
 ------------------------
@@ -131,7 +141,7 @@ examples 的目录结构
 .. code-block:: bash
    :linenos:
 
-   make BOARD=bl706_iot APP=gpio_case  SUPPORT_FREERTOS=y
+   make BOARD=bl706_iot APP=gpio_case
 
 添加新工程并设置私有编译选项（gcc option）
 -------------------------------------------

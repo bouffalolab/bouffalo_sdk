@@ -127,7 +127,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">3. USB Device 应用</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="usbd_cdc.html">3.1. CDC - 虚拟串口</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">3.2. MSC - U 盘</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">3.2. MSC - U 盘升级</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id1">3.2.1. 准备工具</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id2">3.2.2. 硬件连接</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">3.2.3. 软件实现</a></li>
@@ -143,7 +143,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../emac/index.html">7. EMAC 以太网应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ble_pds.html">7. BLE PDS31</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../emac/index.html">8. EMAC 以太网应用</a></li>
 </ul>
 
             
@@ -218,13 +219,13 @@
 <p>本 demo 主要演示使用 usb 将 xip flash 模拟成 u 盘设备，将其作为一个 BootLoader 使用，用来升级固件。</p>
 <p>USB大容量存储设备类（The USB mass storage device class）是一种计算机和移动设备之间的传输协议，它允许一个通用串行总线（USB）设备来访问主机的计算设备，使两者之间进行文件传输。</p>
 <p>MSC 协议介绍参考 <a class="reference external" href="https://www.usb.org/documents">USB 官方文档</a>。</p>
-<p>bootloader 我们将其编译后烧录在 0x2000 开始的物理地址，工具默认也是这个地址。</p>
-<div class="figure align-default">
-<img alt="../../../_images/usb_msc2.png" src="../../../_images/usb_msc2.png" />
-</div>
-<p>我们使用 flash 的 48K开始的地方，用来模拟 u 盘，u 盘大小为 256K（64 个扇区，每个扇区 4KB ），根据文件系统格式，可以知道，数据的地址在 u 盘的第 10 个扇区，也即 APP 的入口地址。BootLoader 与 APP 分区表如下：</p>
+<p>bootloader 我们将其编译后烧录在 flash 0x2000 开始的物理地址，工具默认也是这个地址。</p>
 <div class="figure align-default">
 <img alt="../../../_images/usb_msc.png" src="../../../_images/usb_msc.png" />
+</div>
+<p>我们使用 flash 物理地址 0x0000c000 (48K) 开始的地方，用来模拟 u 盘，u 盘大小为 256K（64 个扇区，每个扇区 4KB ），根据文件系统格式，可以知道，数据的地址在 u 盘的第 10 个扇区（0x16000），也即 APP 的入口地址。BootLoader 与 APP 分区表如下：</p>
+<div class="figure align-default">
+<img alt="../../../_images/usb_msc2.png" src="../../../_images/usb_msc2.png" />
 </div>
 <div class="section" id="id1">
 <h2><span class="section-number">3.2.1. </span>准备工具<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>

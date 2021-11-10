@@ -214,12 +214,23 @@
 <p>本 demo 主要介绍一个基于 ADC 的按键功能，使用 ADC 检测按键输入引脚的电压值，根据不同的分压值判断相应的按键是否按下</p>
 <div class="section" id="id1">
 <h2><span class="section-number">9.1.1. </span>硬件连接<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
-<p>本 demo 基于 BL706_AVB 开发板:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
-<span class="o">----------------------------------</span>
-    <span class="n">ADC</span> <span class="n">CH8</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO18</span>
-</pre></div>
-</div>
+<p>本 demo 基于 BL706_AVB 开发板，连接方式如下:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>GPIO function</p></th>
+<th class="head"><p>GPIO pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ADC CH8</p></td>
+<td><p>GPIO18</p></td>
+</tr>
+</tbody>
+</table>
 <p><strong>分压电路：</strong></p>
 <div class="figure align-default" id="id5">
 <img alt="" src="../../../_images/adc_key_demo.png" />

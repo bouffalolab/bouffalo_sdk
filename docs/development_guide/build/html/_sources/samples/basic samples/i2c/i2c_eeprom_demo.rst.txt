@@ -4,15 +4,18 @@ I2C - AT24CXX 读写
 硬件连接
 -----------------------------
 
-本 demo 基于 BL706_IOT 开发板，自行添加 AT24CXX 电路，连接方式如下
+本 demo 基于 BL706_IOT 开发板，自行添加 AT24CXX 电路，连接方式如下：
 
-::
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
 
-       GPIO function         GPIO pin
-    ----------------------------------
-        I2C_SCL      <-->     GPIO11
-        I2C_SDA      <-->     GPIO16
-
+    * - GPIO function
+      - GPIO pin
+    * - I2C_SCL
+      - GPIO11
+    * - I2C_SDA
+      - GPIO16
 
 软件实现
 -----------------------------

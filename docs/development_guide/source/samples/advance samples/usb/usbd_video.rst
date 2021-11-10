@@ -25,27 +25,44 @@ BL706 AVB + GC0308摄像头模块 + windows 相机
 硬件连接
 -----------------------------
 
-本 demo 基于 BL706_AVB 开发板，连接方式如下
+本 demo 基于 BL706_AVB 开发板，连接方式如下：
 
-::
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
 
-       GPIO function         GPIO pin
-    ----------------------------------
-        CAM        <-->     GPIO0
-        CAM        <-->     GPIO1
-        CAM        <-->     GPIO2
-        CAM        <-->     GPIO3
-        CAM        <-->     GPIO4
-        CAM        <-->     GPIO5
-        CAM        <-->     GPIO6
-        USB_DP     <-->     GPIO7
-        USB_DM     <-->     GPIO8
-        CLK_OUT    <-->     GPIO9
-        I2C_SCL    <-->     GPIO11
-        I2C_SDA    <-->     GPIO16
-        CAM        <-->     GPIO29
-        CAM        <-->     GPIO30
-        CAM        <-->     GPIO31
+    * - GPIO function
+      - GPIO pin
+    * - CAM
+      - GPIO0
+    * - CAM
+      - GPIO1
+    * - CAM
+      - GPIO2
+    * - CAM
+      - GPIO3
+    * - CAM
+      - GPIO4
+    * - CAM
+      - GPIO5
+    * - CAM
+      - GPIO6
+    * - USB_DP
+      - GPIO7
+    * - USB_DM
+      - GPIO8
+    * - CLK_OUT
+      - GPIO9
+    * - I2C_SCL
+      - GPIO11
+    * - I2C_SDA
+      - GPIO16
+    * - CAM
+      - GPIO29
+    * - CAM
+      - GPIO30
+    * - CAM
+      - GPIO31
 
 .. note:: 注意 706 AVB FUN1 的跳冒不要接，默认连接到摄像头引脚，如果接了则连接到了 i2s codec
 
@@ -108,16 +125,20 @@ BL706 AVB + GC0308摄像头模块 + windows 相机
 
     #if defined(BSP_USING_DMA0_CH2)
     #ifndef DMA0_CH2_CONFIG
-    #define DMA0_CH2_CONFIG                       \
-        {                                         \
-            .id = 0,                              \
-            .ch = 2,                              \
-            .direction = DMA_MEMORY_TO_PERIPH,    \
-            .transfer_mode = DMA_LLI_ONCE_MODE,   \
-            .src_req = DMA_REQUEST_NONE,          \
-            .dst_req = DMA_REQUEST_UART1_TX,      \
-            .src_width = DMA_TRANSFER_WIDTH_8BIT, \
-            .dst_width = DMA_TRANSFER_WIDTH_8BIT, \
+    #define DMA0_CH2_CONFIG                             \
+        {                                               \
+            .id = 0,                                    \
+            .ch = 2,                                    \
+            .direction = DMA_MEMORY_TO_PERIPH,          \
+            .transfer_mode = DMA_LLI_ONCE_MODE,         \
+            .src_req = DMA_REQUEST_NONE,                \
+            .dst_req = DMA_REQUEST_UART1_TX,            \
+            .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
+            .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
+            .src_burst_size = DMA_BURST_1BYTE,          \
+            .dst_burst_size = DMA_BURST_1BYTE,          \
+            .src_width = DMA_TRANSFER_WIDTH_8BIT,       \
+            .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \
         }
     #endif
     #endif
@@ -128,7 +149,16 @@ BL706 AVB + GC0308摄像头模块 + windows 相机
 .. code-block:: C
     :linenos:
 
+    DMA_DEV(dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;
+    DMA_DEV(dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
+    DMA_DEV(dma_ch2)->src_req = DMA_REQUEST_NONE;
     DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_USB_EP1;
+    DMA_DEV(dma_ch2)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+    DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+    DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_16BYTE;
+    DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_1BYTE;
+    DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+    DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
     device_open(dma_ch2, 0);
 
 .. code-block:: C

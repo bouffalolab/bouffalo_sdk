@@ -6,7 +6,7 @@ I2S - 使用DMIC配合audio cube实现在线录音
 准备工具
 -----------------------
 
-- 一块 bl702 开发板 +DMIC音频子板 + PC端 Audio_Cube 工具
+- 一块 bl702 开发板 + DMIC音频子板 + PC 端 Audio_Cube 工具
 
 
 硬件连接
@@ -32,6 +32,12 @@ I2S - 使用DMIC配合audio cube实现在线录音
       - GPIO15
     * - UART0_RX
       - GPIO14
+
+如果使用的是BL706_AVB板，请确保FUN1 FUN2两个跳帽处于短接的状态,如下图所示
+
+  .. figure:: img/tiaomao.png
+    :alt:
+
 
 本 demo 用到的内部外设资源如下：
 
@@ -59,21 +65,20 @@ I2S - 使用DMIC配合audio cube实现在线录音
 
 本文档不再详细功能实现的细节,仅概述功能过程,可以参考 I2S 与 UART 相关文档。
 
-配置 ``I2S, I2C, CLK_OUT(MCLK)`` 相关复用引脚，见 ``bsp/board/bl706_avb/pinmux_config.h`` 中的宏定义选项:
+配置 ``I2S, I2C, CLK_OUT(MCLK)`` 相关复用引脚，见 ``bsp/board/bl706_iot/pinmux_config.h`` 中的宏定义选项:
 
 .. code-block:: C
     :linenos:
 
-    #define CONFIG_GPIO6_FUNC GPIO_FUN_CLK_OUT
     #define CONFIG_GPIO3_FUNC GPIO_FUN_I2S
     #define CONFIG_GPIO4_FUNC GPIO_FUN_I2S
-    #define CONFIG_GPIO29_FUNC GPIO_FUN_I2S
-    #define CONFIG_GPIO30_FUNC GPIO_FUN_I2S
+    #define CONFIG_GPIO6_FUNC GPIO_FUN_CLK_OUT
     #define CONFIG_GPIO11_FUNC GPIO_FUN_I2C
-    #define CONFIG_GPIO16_FUNC GPIO_FUN_I2C
     #define CONFIG_GPIO14_FUNC GPIO_FUN_UART0_TX
     #define CONFIG_GPIO15_FUNC GPIO_FUN_UART0_RX
-
+    #define CONFIG_GPIO16_FUNC GPIO_FUN_I2C
+    #define CONFIG_GPIO29_FUNC GPIO_FUN_I2S
+    #define CONFIG_GPIO30_FUNC GPIO_FUN_I2S
 
 编译和烧录
 -----------------------------
@@ -90,7 +95,7 @@ I2S - 使用DMIC配合audio cube实现在线录音
    :linenos:
 
     $ cd <sdk_path>/bl_mcu_sdk
-    $ make BOARD=bl706_avb APP=audio_cube
+    $ make BOARD=bl706_iot APP=audio_cube
 
 -  **烧录**
 	详见 :ref:`bl_dev_cube`

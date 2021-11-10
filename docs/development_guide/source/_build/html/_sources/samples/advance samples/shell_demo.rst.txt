@@ -12,15 +12,18 @@ Shell 命令行调试
 硬件连接
 -----------------------------
 
-本 demo 基于 BL706_IOT 开发板，连接方式如下
+本 demo 基于 BL706_IOT 开发板，连接方式如下：
 
-::
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
 
-       GPIO function         GPIO pin
-    ----------------------------------
-        UART0_TX      <-->     GPIO14
-        UART0_RX      <-->     GPIO15
-
+    * - GPIO function
+      - GPIO pin
+    * - UART0_TX
+      - GPIO14
+    * - UART0_RX
+      - GPIO15
 
 软件实现
 -------------------------

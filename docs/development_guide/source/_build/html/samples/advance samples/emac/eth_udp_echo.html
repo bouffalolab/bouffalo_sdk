@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>7.2. UDP echo &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
+  <title>8.2. UDP echo &mdash; BL_MCU_SDK 开发指南 0.3 文档</title>
   
 
   
@@ -39,8 +39,8 @@
     
     <link rel="index" title="索引" href="../../../genindex.html" />
     <link rel="search" title="搜索" href="../../../search.html" />
-    <link rel="next" title="7.3. TCP echo" href="eth_tcp_echo.html" />
-    <link rel="prev" title="7.1. emac basic – 发送 ARP 数据包" href="eth_basic.html" /> 
+    <link rel="next" title="8.3. TCP echo" href="eth_tcp_echo.html" />
+    <link rel="prev" title="8.1. emac basic – 发送 ARP 数据包" href="eth_basic.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -119,29 +119,31 @@
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/i2s/index.html">8. I2S 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic%20samples/flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usb/index.html">3. USB Device 应用</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">7. EMAC 以太网应用</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="eth_basic.html">7.1. ARP - 发送 ARP 裸包</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">7.2. UDP - LwIP UDP echo</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">7.2.1. 硬件准备</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">7.2.2. 硬件连接</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#lwip">7.2.3. LwIP 协议栈的配置</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#udp-ip">7.2.4. UDP 测试目标 IP 及端口设置</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">7.2.5. 编译和下载</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">7.2.6. 实验现象</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ble_pds.html">7. BLE PDS31</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">8. EMAC 以太网应用</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="eth_basic.html">8.1. ARP - 发送 ARP 裸包</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">8.2. UDP - LwIP UDP echo</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">8.2.1. 硬件准备</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">8.2.2. 硬件连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lwip">8.2.3. LwIP 协议栈的配置</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#udp-ip">8.2.4. UDP 测试目标 IP 及端口设置</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">8.2.5. 编译和下载</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">8.2.6. 实验现象</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="eth_tcp_echo.html">7.3. TCP - LwIP TCP echo</a></li>
-<li class="toctree-l2"><a class="reference internal" href="eth_http_server.html">7.4. HTTP - LwIP HTTP server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="eth_lwip_iperf.html">7.5. IPERF - LwIP iperf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_tcp_echo.html">8.3. TCP - LwIP TCP echo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_http_server.html">8.4. HTTP - LwIP HTTP server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eth_lwip_iperf.html">8.5. IPERF - LwIP iperf</a></li>
 </ul>
 </li>
 </ul>
@@ -192,9 +194,9 @@
     
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="index.html"><span class="section-number">7. </span>EMAC 以太网应用</a> &raquo;</li>
+          <li><a href="index.html"><span class="section-number">8. </span>EMAC 以太网应用</a> &raquo;</li>
         
-      <li><span class="section-number">7.2. </span>UDP echo</li>
+      <li><span class="section-number">8.2. </span>UDP echo</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -214,11 +216,11 @@
            <div itemprop="articleBody">
             
   <div class="section" id="udp-echo">
-<span id="eth-udp-echo"></span><h1><span class="section-number">7.2. </span>UDP echo<a class="headerlink" href="#udp-echo" title="永久链接至标题">¶</a></h1>
+<span id="eth-udp-echo"></span><h1><span class="section-number">8.2. </span>UDP echo<a class="headerlink" href="#udp-echo" title="永久链接至标题">¶</a></h1>
 <p>本 demo 基于 BL706 ETH 开发板，并基于 LwIP 轻量级网络协议栈，实现了一个 UDP 协议通信的例程。</p>
 <p>以太网 PHY 芯片这里使用的是 PHY8720</p>
 <div class="section" id="id1">
-<h2><span class="section-number">7.2.1. </span>硬件准备<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.2.1. </span>硬件准备<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p>一块 BL706 ETH 开发板</p></li>
 <li><p>一块 PHY 8720 模块</p></li>
@@ -227,7 +229,7 @@
 </ul>
 </div>
 <div class="section" id="id2">
-<h2><span class="section-number">7.2.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.2.2. </span>硬件连接<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <p>本 demo 基于 BL706 ETH 开发板，将对应的功能引脚连接到 PHY8720 模块上，连接方式如下：</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
 <span class="o">----------------------------------</span>
@@ -246,7 +248,7 @@
 <p>接下来需要将 PHY8720 模块的 RJ-45 接口通过标准 5/6 类网线连接到与测试 PC 在同一局域网中的路由器或者交换机上。</p>
 </div>
 <div class="section" id="lwip">
-<h2><span class="section-number">7.2.3. </span>LwIP 协议栈的配置<a class="headerlink" href="#lwip" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.2.3. </span>LwIP 协议栈的配置<a class="headerlink" href="#lwip" title="永久链接至标题">¶</a></h2>
 <p>LwIP 协议栈的相关配置文件在 <code class="docutils literal notranslate"><span class="pre">components/lwip/lwipopts.h</span></code> 中，详细配置请阅读代码源文件</p>
 <p>如果要使用 UDP 相关功能，需要在文件中使能 LWIP_UDP 宏定义，否则将会使用 LwIP 默认的配置</p>
 <div class="highlight-c notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
@@ -258,7 +260,7 @@
 </td></tr></table></div>
 </div>
 <div class="section" id="udp-ip">
-<h2><span class="section-number">7.2.4. </span>UDP 测试目标 IP 及端口设置<a class="headerlink" href="#udp-ip" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.2.4. </span>UDP 测试目标 IP 及端口设置<a class="headerlink" href="#udp-ip" title="永久链接至标题">¶</a></h2>
 <p>在 <code class="docutils literal notranslate"><span class="pre">examples\emac\lwip_udp\udp_echo.h</span></code> 文件中，通过修改宏定义即可修改不同测试主机 IP 及端口信息</p>
 <p>注：由于当前测试例程 local ip 地址采用静态 IP 配置进行的测试，如需修改可在 main.c 中进行相应的修改，也可直接使能 LWIP 的 DHCP 功能自动获取 IP 配置。</p>
 <div class="highlight-c notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
@@ -276,7 +278,7 @@
 </td></tr></table></div>
 </div>
 <div class="section" id="id3">
-<h2><span class="section-number">7.2.5. </span>编译和下载<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.2.5. </span>编译和下载<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
 <ul class="simple">
 <li><p><strong>命令行编译</strong></p></li>
 </ul>
@@ -292,7 +294,7 @@ $ make <span class="nv">APP</span><span class="o">=</span>lwip_udp
 </ul>
 </div>
 <div class="section" id="id4">
-<h2><span class="section-number">7.2.6. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<h2><span class="section-number">8.2.6. </span>实验现象<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
 <p>编译完成后，烧写到芯片正确运行后，可以通过配置的测试端口访问芯片。</p>
 <p>串口 log 信息：</p>
 <div class="figure align-default">
@@ -314,8 +316,8 @@ $ make <span class="nv">APP</span><span class="o">=</span>lwip_udp
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="eth_tcp_echo.html" class="btn btn-neutral float-right" title="7.3. TCP echo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="eth_basic.html" class="btn btn-neutral float-left" title="7.1. emac basic – 发送 ARP 数据包" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="eth_tcp_echo.html" class="btn btn-neutral float-right" title="8.3. TCP echo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="eth_basic.html" class="btn btn-neutral float-left" title="8.1. emac basic – 发送 ARP 数据包" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

@@ -237,21 +237,29 @@
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_DMA0_CH0</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define BSP_USING_DMA0_CH0</span>
 
 <span class="cp">#if defined(BSP_USING_DMA0_CH0)</span>
 <span class="cp">#ifndef DMA0_CH0_CONFIG</span>
-<span class="cp">#define DMA0_CH0_CONFIG \</span>
-<span class="cp">{   \</span>
-<span class="cp">.id = 0, \</span>
-<span class="cp">.ch = 0,\</span>
-<span class="cp">.direction = DMA_MEMORY_TO_MEMORY,\</span>
-<span class="cp">.transfer_mode = DMA_LLI_ONCE_MODE, \</span>
-<span class="cp">.src_req = DMA_REQUEST_NONE, \</span>
-<span class="cp">.dst_req = DMA_REQUEST_NONE, \</span>
-<span class="cp">.src_width = DMA_TRANSFER_WIDTH_32BIT , \</span>
-<span class="cp">.dst_width = DMA_TRANSFER_WIDTH_32BIT , \</span>
-<span class="cp">}</span>
+<span class="cp">#define DMA0_CH0_CONFIG                            \</span>
+<span class="cp">    {                                              \</span>
+<span class="cp">        .id = 0,                                   \</span>
+<span class="cp">        .ch = 0,                                   \</span>
+<span class="cp">        .direction = DMA_MEMORY_TO_MEMORY,         \</span>
+<span class="cp">        .transfer_mode = DMA_LLI_ONCE_MODE,        \</span>
+<span class="cp">        .src_req = DMA_REQUEST_NONE,               \</span>
+<span class="cp">        .dst_req = DMA_REQUEST_NONE,               \</span>
+<span class="cp">        .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \</span>
+<span class="cp">        .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \</span>
+<span class="cp">        .src_burst_size = DMA_BURST_4BYTE,         \</span>
+<span class="cp">        .dst_burst_size = DMA_BURST_4BYTE,         \</span>
+<span class="cp">        .src_width = DMA_TRANSFER_WIDTH_32BIT,     \</span>
+<span class="cp">        .dst_width = DMA_TRANSFER_WIDTH_32BIT,     \</span>
+<span class="cp">    }</span>
 <span class="cp">#endif</span>
 <span class="cp">#endif</span>
 </pre></div>
@@ -268,31 +276,49 @@
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">dma_register</span><span class="p">(</span><span class="n">DMA0_CH0_INDEX</span><span class="p">,</span> <span class="s">&quot;DMA&quot;</span><span class="p">);</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">dma_register</span><span class="p">(</span><span class="n">DMA0_CH0_INDEX</span><span class="p">,</span> <span class="s">&quot;dma_ch0&quot;</span><span class="p">);</span>
 
-<span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dma</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;DMA&quot;</span><span class="p">);</span>
+<span class="k">struct</span> <span class="nc">device</span> <span class="o">*</span><span class="n">dma_ch0</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;dma_ch0&quot;</span><span class="p">);</span>
 
-<span class="k">if</span> <span class="p">(</span><span class="n">dma</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="n">device_open</span><span class="p">(</span><span class="n">dma</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="n">device_set_callback</span><span class="p">(</span><span class="n">dma</span><span class="p">,</span> <span class="n">dma_transfer_done</span><span class="p">);</span>
-    <span class="n">device_control</span><span class="p">(</span><span class="n">dma</span><span class="p">,</span> <span class="n">DEVICE_CTRL_SET_INT</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">direction</span> <span class="o">=</span> <span class="n">DMA_MEMORY_TO_MEMORY</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">transfer_mode</span> <span class="o">=</span> <span class="n">DMA_LLI_ONCE_MODE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_req</span> <span class="o">=</span> <span class="n">DMA_REQUEST_NONE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_req</span> <span class="o">=</span> <span class="n">DMA_REQUEST_NONE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_addr_inc</span> <span class="o">=</span> <span class="n">DMA_ADDR_INCREMENT_ENABLE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_addr_inc</span> <span class="o">=</span> <span class="n">DMA_ADDR_INCREMENT_ENABLE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_burst_size</span> <span class="o">=</span> <span class="n">DMA_BURST_4BYTE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_burst_size</span> <span class="o">=</span> <span class="n">DMA_BURST_4BYTE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_32BIT</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_32BIT</span><span class="p">;</span>
+    <span class="n">device_open</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">device_set_callback</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">,</span> <span class="n">dma_transfer_done</span><span class="p">);</span>
+    <span class="n">device_control</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">,</span> <span class="n">DEVICE_CTRL_SET_INT</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
 <li><p>首先调用 <code class="docutils literal notranslate"><span class="pre">dma_register</span></code> 函数注册 <code class="docutils literal notranslate"><span class="pre">DMA</span></code> 设备的一个通道,当前注册 <code class="docutils literal notranslate"><span class="pre">DMA_CH0</span></code></p></li>
-<li><p>然后通过 <code class="docutils literal notranslate"><span class="pre">find</span></code> 函数找到设备对应的句柄，保存于 <code class="docutils literal notranslate"><span class="pre">dma</span></code> 句柄中</p></li>
-<li><p>最后使用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 以默认模式来打开 <code class="docutils literal notranslate"><span class="pre">dma</span></code> 设备，调用 <code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 注册一个dma通道0中断回调函数，调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> 开启dma传输完成中断</p></li>
+<li><p>然后通过 <code class="docutils literal notranslate"><span class="pre">find</span></code> 函数找到设备对应的句柄，保存于 <code class="docutils literal notranslate"><span class="pre">dma_ch0</span></code> 句柄中</p></li>
+<li><p>最后使用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 以默认模式来打开 <code class="docutils literal notranslate"><span class="pre">dma_ch0</span></code> 设备，调用 <code class="docutils literal notranslate"><span class="pre">device_set_callback</span></code> 注册一个 dma 通道0中断回调函数，调用 <code class="docutils literal notranslate"><span class="pre">device_control</span></code> 开启dma传输完成中断</p></li>
 </ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">dma_reload</span><span class="p">(</span><span class="n">dma</span><span class="p">,(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">dma_src_buffer</span><span class="p">,(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">dma_dst_buffer</span><span class="p">,</span><span class="mi">8000</span><span class="p">);</span>
-<span class="n">dma_channel_start</span><span class="p">(</span><span class="n">dma</span><span class="p">);</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">dma_reload</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">,(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">dma_src_buffer</span><span class="p">,(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">dma_dst_buffer</span><span class="p">,</span><span class="mi">8000</span><span class="p">);</span>
+<span class="n">dma_channel_start</span><span class="p">(</span><span class="n">dma_ch0</span><span class="p">);</span>
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">
-<li><p>调用 <code class="docutils literal notranslate"><span class="pre">dma_reload</span></code> 函数对dma 通道0的配置进行补充，<code class="docutils literal notranslate"><span class="pre">DMA0_CH0_CONFIG</span></code> 中已经补充了一部分配置，这边主要补充源数据地址和目标数据地址以及传输总长度</p></li>
-<li><p>调用 <code class="docutils literal notranslate"><span class="pre">dma_channel_start</span></code> 开启dma传输</p></li>
+<li><p>调用 <code class="docutils literal notranslate"><span class="pre">dma_reload</span></code> 函数对 dma 通道0的配置进行补充，<code class="docutils literal notranslate"><span class="pre">DMA0_CH0_CONFIG</span></code> 中已经补充了一部分配置，这边主要补充源数据地址和目标数据地址以及传输总长度</p></li>
+<li><p>调用 <code class="docutils literal notranslate"><span class="pre">dma_channel_start</span></code> 开启 dma 传输</p></li>
 </ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
 <span class="normal"> 2</span>

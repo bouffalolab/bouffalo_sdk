@@ -135,16 +135,18 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../adc/index.html">9. ADC 示例</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../timer/index.html">10. TIMER 示例</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../flash/index.html">11. XIP FLASH 示例</a></li>
 </ul>
 <p class="caption"><span class="caption-text">进阶例程</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/shell_demo.html">1. Shell 命令行调试</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. Fatfs 文件系统读写</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/fatfs_demo.html">2. FatFs 文件系统读写(SD 卡)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/usb/index.html">3. USB Device 应用</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">4. LowPower 低功耗评估</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/lowpower_demo.html">4. Power Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/boot2_iap_info.html">5. BOOT2 IAP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_scan_demo.html">6. BLE 客户端和服务端互连</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/emac/index.html">7. EMAC 以太网应用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/ble_pds.html">7. BLE PDS31</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../advance%20samples/emac/index.html">8. EMAC 以太网应用</a></li>
 </ul>
 
             
@@ -257,6 +259,12 @@
 </tr>
 </tbody>
 </table>
+<p>如果使用的是BL706_AVB板，请确保FUN1 FUN2两个跳帽处于短接的状态,如下图所示</p>
+<blockquote>
+<div><div class="figure align-default">
+<img alt="" src="../../../_images/tiaomao.png" />
+</div>
+</div></blockquote>
 <ul class="simple">
 <li><p>本 demo 用到的内部外设资源如下：</p></li>
 </ul>
@@ -294,21 +302,25 @@
 <p>本文档不再详细介绍 I2C 与 DMA，主要介绍 I2S 相关配置，其他外设可以查看对应的文档。</p>
 <ul class="simple">
 <li><p>软件代码见 <code class="docutils literal notranslate"><span class="pre">examples/i2s/i2s_play_form_record</span></code></p></li>
-<li><p>配置 <code class="docutils literal notranslate"><span class="pre">I2S,</span> <span class="pre">I2C,</span> <span class="pre">CLK_OUT(MCLK)</span></code> 相关复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code> 中的宏定义选项:</p></li>
 </ul>
+<p>配置 <code class="docutils literal notranslate"><span class="pre">I2S,</span> <span class="pre">I2C,</span> <span class="pre">CLK_OUT(MCLK)</span></code> 相关复用引脚，见 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/pinmux_config.h</span></code> 中的宏定义选项:</p>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define CONFIG_GPIO6_FUNC GPIO_FUN_CLK_OUT</span>
-<span class="cp">#define CONFIG_GPIO3_FUNC GPIO_FUN_I2S</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#define CONFIG_GPIO3_FUNC GPIO_FUN_I2S</span>
 <span class="cp">#define CONFIG_GPIO4_FUNC GPIO_FUN_I2S</span>
+<span class="cp">#define CONFIG_GPIO6_FUNC GPIO_FUN_CLK_OUT</span>
+<span class="cp">#define CONFIG_GPIO11_FUNC GPIO_FUN_I2C</span>
+<span class="cp">#define CONFIG_GPIO14_FUNC GPIO_FUN_UART0_TX</span>
+<span class="cp">#define CONFIG_GPIO15_FUNC GPIO_FUN_UART0_RX</span>
+<span class="cp">#define CONFIG_GPIO16_FUNC GPIO_FUN_I2C</span>
 <span class="cp">#define CONFIG_GPIO29_FUNC GPIO_FUN_I2S</span>
 <span class="cp">#define CONFIG_GPIO30_FUNC GPIO_FUN_I2S</span>
-<span class="cp">#define CONFIG_GPIO11_FUNC GPIO_FUN_I2C</span>
-<span class="cp">#define CONFIG_GPIO16_FUNC GPIO_FUN_I2C</span>
 </pre></div>
 </td></tr></table></div>
 <ul>
@@ -382,7 +394,7 @@
 <li><p>先调用 <code class="docutils literal notranslate"><span class="pre">i2s_register</span></code> 函数注册  <code class="docutils literal notranslate"><span class="pre">I2S</span></code> 设备</p></li>
 <li><p>然后通过 <code class="docutils literal notranslate"><span class="pre">find</span></code> 函数找到设备对应的句柄，保存于 <code class="docutils literal notranslate"><span class="pre">i2s</span></code> 中</p></li>
 <li><p>最后填写配置参数后，使用 <code class="docutils literal notranslate"><span class="pre">device_open</span></code> 来打开 <code class="docutils literal notranslate"><span class="pre">I2S</span></code> 设备</p></li>
-<li><p>如果不填写配置参数，会默认使用 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_avb/peripheral_config.h</span></code> 中预设的参数</p></li>
+<li><p>如果不填写配置参数，会默认使用 <code class="docutils literal notranslate"><span class="pre">bsp/board/bl706_iot/peripheral_config.h</span></code> 中预设的参数</p></li>
 </ul>
 <div class="highlight-C notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -459,7 +471,11 @@
 <span class="normal">39</span>
 <span class="normal">40</span>
 <span class="normal">41</span>
-<span class="normal">42</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cm">/* register &amp; open dma device */</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cm">/* register &amp; open dma device */</span>
 <span class="n">dma_register</span><span class="p">(</span><span class="n">DMA0_CH3_INDEX</span><span class="p">,</span> <span class="s">&quot;dma_ch3_i2s_rx&quot;</span><span class="p">);</span>
 <span class="n">dma_ch3</span> <span class="o">=</span> <span class="n">device_find</span><span class="p">(</span><span class="s">&quot;dma_ch3_i2s_rx&quot;</span><span class="p">);</span>
 <span class="k">if</span> <span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span> <span class="p">{</span>
@@ -467,10 +483,12 @@
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">transfer_mode</span> <span class="o">=</span> <span class="n">DMA_LLI_ONCE_MODE</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_req</span> <span class="o">=</span> <span class="n">DMA_REQUEST_I2S_RX</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_req</span> <span class="o">=</span> <span class="n">DMA_REQUEST_NONE</span><span class="p">;</span>
-    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_32BIT</span><span class="p">;</span>
-    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_32BIT</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_addr_inc</span> <span class="o">=</span> <span class="n">DMA_ADDR_INCREMENT_DISABLE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_addr_inc</span> <span class="o">=</span> <span class="n">DMA_ADDR_INCREMENT_ENABLE</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_burst_size</span> <span class="o">=</span> <span class="n">DMA_BURST_4BYTE</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_burst_size</span> <span class="o">=</span> <span class="n">DMA_BURST_4BYTE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_32BIT</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_32BIT</span><span class="p">;</span>
     <span class="n">device_open</span><span class="p">(</span><span class="n">dma_ch3</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 
     <span class="cm">/* connect i2s device and dma device */</span>
@@ -488,6 +506,8 @@
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">transfer_mode</span> <span class="o">=</span> <span class="n">DMA_LLI_ONCE_MODE</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_req</span> <span class="o">=</span> <span class="n">DMA_REQUEST_NONE</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_req</span> <span class="o">=</span> <span class="n">DMA_REQUEST_I2S_TX</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_addr_inc</span> <span class="o">=</span> <span class="n">DMA_ADDR_INCREMENT_ENABLE</span><span class="p">;</span>
+    <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_addr_inc</span> <span class="o">=</span> <span class="n">DMA_ADDR_INCREMENT_DISABLE</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_32BIT</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dst_width</span> <span class="o">=</span> <span class="n">DMA_TRANSFER_WIDTH_32BIT</span><span class="p">;</span>
     <span class="n">DMA_DEV</span><span class="p">(</span><span class="n">dma_ch2</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">src_burst_size</span> <span class="o">=</span> <span class="n">DMA_BURST_4BYTE</span><span class="p">;</span>
@@ -552,7 +572,7 @@
 </ul>
 <div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> &lt;sdk_path&gt;/bl_mcu_sdk
- $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_avb <span class="nv">APP</span><span class="o">=</span>i2s_play_form_record
+ $ make <span class="nv">BOARD</span><span class="o">=</span>bl706_iot <span class="nv">APP</span><span class="o">=</span>i2s_play_form_record
 </pre></div>
 </td></tr></table></div>
 <ul class="simple">

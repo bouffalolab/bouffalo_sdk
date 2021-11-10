@@ -30,6 +30,11 @@ I2S - 录音回环播放
     * - I2C_SDA
       - GPIO11
 
+如果使用的是BL706_AVB板，请确保FUN1 FUN2两个跳帽处于短接的状态,如下图所示
+
+  .. figure:: img/tiaomao.png
+    :alt:
+
 - 本 demo 用到的内部外设资源如下：
 
 .. list-table::
@@ -56,18 +61,20 @@ I2S - 录音回环播放
 
 -  软件代码见 ``examples/i2s/i2s_play_form_record``
 
-- 配置 ``I2S, I2C, CLK_OUT(MCLK)`` 相关复用引脚，见 ``bsp/board/bl706_iot/pinmux_config.h`` 中的宏定义选项:
+配置 ``I2S, I2C, CLK_OUT(MCLK)`` 相关复用引脚，见 ``bsp/board/bl706_iot/pinmux_config.h`` 中的宏定义选项:
 
 .. code-block:: C
     :linenos:
 
-    #define CONFIG_GPIO6_FUNC GPIO_FUN_CLK_OUT
     #define CONFIG_GPIO3_FUNC GPIO_FUN_I2S
     #define CONFIG_GPIO4_FUNC GPIO_FUN_I2S
+    #define CONFIG_GPIO6_FUNC GPIO_FUN_CLK_OUT
+    #define CONFIG_GPIO11_FUNC GPIO_FUN_I2C
+    #define CONFIG_GPIO14_FUNC GPIO_FUN_UART0_TX
+    #define CONFIG_GPIO15_FUNC GPIO_FUN_UART0_RX
+    #define CONFIG_GPIO16_FUNC GPIO_FUN_I2C
     #define CONFIG_GPIO29_FUNC GPIO_FUN_I2S
     #define CONFIG_GPIO30_FUNC GPIO_FUN_I2S
-    #define CONFIG_GPIO11_FUNC GPIO_FUN_I2C
-    #define CONFIG_GPIO16_FUNC GPIO_FUN_I2C
 
 - 配置 ES8388 的参数，初始化 ES8388 ，其中会用到 I2C 外设，具体过程可见 ``bsp/bsp_common/es8388/es8388.c``
 
@@ -115,7 +122,7 @@ I2S 的配置与使能:
 - 先调用 ``i2s_register`` 函数注册  ``I2S`` 设备
 - 然后通过 ``find`` 函数找到设备对应的句柄，保存于 ``i2s`` 中
 - 最后填写配置参数后，使用 ``device_open`` 来打开 ``I2S`` 设备
-- 如果不填写配置参数，会默认使用 ``bsp/board/bl706_avb/peripheral_config.h`` 中预设的参数
+- 如果不填写配置参数，会默认使用 ``bsp/board/bl706_iot/peripheral_config.h`` 中预设的参数
 
 .. code-block:: C
     :linenos:
@@ -151,10 +158,12 @@ DMA 的配置与使能
         DMA_DEV(dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch3)->src_req = DMA_REQUEST_I2S_RX;
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_NONE;
-        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_32BIT;
-        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
+        DMA_DEV(dma_ch3)->src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+        DMA_DEV(dma_ch3)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
         DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_4BYTE;
         DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_32BIT;
+        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
         device_open(dma_ch3, 0);
 
         /* connect i2s device and dma device */
@@ -172,6 +181,8 @@ DMA 的配置与使能
         DMA_DEV(dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch2)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_I2S_TX;
+        DMA_DEV(dma_ch2)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_32BIT;
         DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
         DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_4BYTE;
@@ -226,7 +237,7 @@ DMA 中断回调函数
    :linenos:
 
     $ cd <sdk_path>/bl_mcu_sdk
-    $ make BOARD=bl706_avb APP=i2s_play_form_record
+    $ make BOARD=bl706_iot APP=i2s_play_form_record
 
 -  **烧录**
 

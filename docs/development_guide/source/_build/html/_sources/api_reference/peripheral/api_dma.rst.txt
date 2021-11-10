@@ -21,10 +21,12 @@ DMA 设备结构体定义
         struct device parent;
         uint8_t id;
         uint8_t ch;
-        uint8_t direction;
         uint8_t transfer_mode;
+        uint8_t direction;
         uint32_t src_req;
         uint32_t dst_req;
+        uint8_t src_addr_inc;
+        uint8_t dst_addr_inc;
         uint8_t src_burst_size;
         uint8_t dst_burst_size;
         uint8_t src_width;
@@ -35,15 +37,24 @@ DMA 设备结构体定义
 - **parent**        继承父类属性
 - **id**            DMA id号，默认0，当前只有一个DMA
 - **ch**            通道号
-- **direction**     传输方向
 - **transfer_mode** 传输模式
+- **direction**     传输方向
 - **src_req**       源请求
 - **dst_req**       目标请求
+- **src_addr_inc**  源地址自增
+- **dst_addr_inc**  目标地址自增
 - **src_burst_size** 源突发字节数
 - **dst_burst_size** 目标突发字节数
 - **src_width**     源传输位宽
 - **dst_width**     目标传输位宽
 - **lli_cfg**       用来存储dma通道的一些信息，用户不用管
+
+``transfer_mode`` 提供以下类型
+
+.. code-block:: C
+
+    #define DMA_LLI_ONCE_MODE     0
+    #define DMA_LLI_CYCLE_MODE    1
 
 ``direction`` 提供以下类型
 
@@ -55,13 +66,6 @@ DMA 设备结构体定义
         DMA_PERIPH_TO_MEMORY,                            /*!< DMA transfer tyep:peripheral to memory */
         DMA_PERIPH_TO_PERIPH,                            /*!< DMA transfer tyep:peripheral to peripheral */
     }dma_transfer_dir_type;
-
-``transfer_mode`` 提供以下类型
-
-.. code-block:: C
-
-    #define DMA_LLI_ONCE_MODE     0
-    #define DMA_LLI_CYCLE_MODE    1
 
 ``src_req`` 提供以下类型
 
@@ -115,6 +119,20 @@ DMA 设备结构体定义
     #define DMA_REQUEST_USB_EP6     0x0000001E /*!< DMA request peripheral:USB EP6*/
     #define DMA_REQUEST_USB_EP7     0x0000001F /*!< DMA request peripheral:USB EP7 */
 
+``src_addr_inc`` 提供以下类型
+
+.. code-block:: C
+
+    #define DMA_ADDR_INCREMENT_DISABLE 0 /*!< Addr increment mode disable */
+    #define DMA_ADDR_INCREMENT_ENABLE  1 /*!< Addr increment mode enable  */
+
+``dst_addr_inc`` 提供以下类型
+
+.. code-block:: C
+
+    #define DMA_ADDR_INCREMENT_DISABLE 0 /*!< Addr increment mode disable */
+    #define DMA_ADDR_INCREMENT_ENABLE  1 /*!< Addr increment mode enable  */
+
 ``src_burst_size`` 提供以下类型
 
 .. code-block:: C
@@ -161,14 +179,18 @@ DMA 设备参数配置表
     #ifndef DMA0_CH0_CONFIG
     #define DMA0_CH0_CONFIG \
     {   \
-     .id = 0, \
-     .ch = 0,\
-     .direction = DMA_MEMORY_TO_MEMORY,\
-     .transfer_mode = DMA_LLI_ONCE_MODE, \
-     .src_req = DMA_REQUEST_NONE, \
-     .dst_req = DMA_REQUEST_NONE, \
-     .src_width = DMA_TRANSFER_WIDTH_32BIT , \
-     .dst_width = DMA_TRANSFER_WIDTH_32BIT , \
+        .id = 0,                                   \
+        .ch = 7,                                   \
+        .direction = DMA_MEMORY_TO_MEMORY,         \
+        .transfer_mode = DMA_LLI_ONCE_MODE,        \
+        .src_req = DMA_REQUEST_NONE,               \
+        .dst_req = DMA_REQUEST_NONE,               \
+        .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
+        .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
+        .src_burst_size = DMA_BURST_1BYTE,         \
+        .dst_burst_size = DMA_BURST_1BYTE,         \
+        .src_width = DMA_TRANSFER_WIDTH_8BIT,      \
+        .dst_width = DMA_TRANSFER_WIDTH_8BIT,      \
     }
     #endif
     #endif

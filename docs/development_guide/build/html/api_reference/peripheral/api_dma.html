@@ -259,10 +259,12 @@
     <span class="k">struct</span> <span class="nc">device</span> <span class="n">parent</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">id</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">ch</span><span class="p">;</span>
-    <span class="kt">uint8_t</span> <span class="n">direction</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">transfer_mode</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">direction</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">src_req</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">dst_req</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">src_addr_inc</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">dst_addr_inc</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">src_burst_size</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">dst_burst_size</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">src_width</span><span class="p">;</span>
@@ -275,16 +277,23 @@
 <li><p><strong>parent</strong>        继承父类属性</p></li>
 <li><p><strong>id</strong>            DMA id号，默认0，当前只有一个DMA</p></li>
 <li><p><strong>ch</strong>            通道号</p></li>
-<li><p><strong>direction</strong>     传输方向</p></li>
 <li><p><strong>transfer_mode</strong> 传输模式</p></li>
+<li><p><strong>direction</strong>     传输方向</p></li>
 <li><p><strong>src_req</strong>       源请求</p></li>
 <li><p><strong>dst_req</strong>       目标请求</p></li>
+<li><p><strong>src_addr_inc</strong>  源地址自增</p></li>
+<li><p><strong>dst_addr_inc</strong>  目标地址自增</p></li>
 <li><p><strong>src_burst_size</strong> 源突发字节数</p></li>
 <li><p><strong>dst_burst_size</strong> 目标突发字节数</p></li>
 <li><p><strong>src_width</strong>     源传输位宽</p></li>
 <li><p><strong>dst_width</strong>     目标传输位宽</p></li>
 <li><p><strong>lli_cfg</strong>       用来存储dma通道的一些信息，用户不用管</p></li>
 </ul>
+<p><code class="docutils literal notranslate"><span class="pre">transfer_mode</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_LLI_ONCE_MODE     0</span>
+<span class="cp">#define DMA_LLI_CYCLE_MODE    1</span>
+</pre></div>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">direction</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
     <span class="n">DMA_MEMORY_TO_MEMORY</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>                        <span class="cm">/*!&lt; DMA transfer tyep:memory to memory */</span>
@@ -292,11 +301,6 @@
     <span class="n">DMA_PERIPH_TO_MEMORY</span><span class="p">,</span>                            <span class="cm">/*!&lt; DMA transfer tyep:peripheral to memory */</span>
     <span class="n">DMA_PERIPH_TO_PERIPH</span><span class="p">,</span>                            <span class="cm">/*!&lt; DMA transfer tyep:peripheral to peripheral */</span>
 <span class="p">}</span><span class="n">dma_transfer_dir_type</span><span class="p">;</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">transfer_mode</span></code> 提供以下类型</p>
-<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_LLI_ONCE_MODE     0</span>
-<span class="cp">#define DMA_LLI_CYCLE_MODE    1</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">src_req</span></code> 提供以下类型</p>
@@ -347,6 +351,16 @@
 <span class="cp">#define DMA_REQUEST_USB_EP7     0x0000001F </span><span class="cm">/*!&lt; DMA request peripheral:USB EP7 */</span><span class="cp"></span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">src_addr_inc</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_ADDR_INCREMENT_DISABLE 0 </span><span class="cm">/*!&lt; Addr increment mode disable */</span><span class="cp"></span>
+<span class="cp">#define DMA_ADDR_INCREMENT_ENABLE  1 </span><span class="cm">/*!&lt; Addr increment mode enable  */</span><span class="cp"></span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dst_addr_inc</span></code> 提供以下类型</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_ADDR_INCREMENT_DISABLE 0 </span><span class="cm">/*!&lt; Addr increment mode disable */</span><span class="cp"></span>
+<span class="cp">#define DMA_ADDR_INCREMENT_ENABLE  1 </span><span class="cm">/*!&lt; Addr increment mode enable  */</span><span class="cp"></span>
+</pre></div>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">src_burst_size</span></code> 提供以下类型</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define DMA_BURST_1BYTE     0</span>
 <span class="cp">#define DMA_BURST_4BYTE     1</span>
@@ -382,14 +396,18 @@
 <span class="cp">#ifndef DMA0_CH0_CONFIG</span>
 <span class="cp">#define DMA0_CH0_CONFIG \</span>
 <span class="cp">{   \</span>
-<span class="cp"> .id = 0, \</span>
-<span class="cp"> .ch = 0,\</span>
-<span class="cp"> .direction = DMA_MEMORY_TO_MEMORY,\</span>
-<span class="cp"> .transfer_mode = DMA_LLI_ONCE_MODE, \</span>
-<span class="cp"> .src_req = DMA_REQUEST_NONE, \</span>
-<span class="cp"> .dst_req = DMA_REQUEST_NONE, \</span>
-<span class="cp"> .src_width = DMA_TRANSFER_WIDTH_32BIT , \</span>
-<span class="cp"> .dst_width = DMA_TRANSFER_WIDTH_32BIT , \</span>
+<span class="cp">    .id = 0,                                   \</span>
+<span class="cp">    .ch = 7,                                   \</span>
+<span class="cp">    .direction = DMA_MEMORY_TO_MEMORY,         \</span>
+<span class="cp">    .transfer_mode = DMA_LLI_ONCE_MODE,        \</span>
+<span class="cp">    .src_req = DMA_REQUEST_NONE,               \</span>
+<span class="cp">    .dst_req = DMA_REQUEST_NONE,               \</span>
+<span class="cp">    .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \</span>
+<span class="cp">    .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \</span>
+<span class="cp">    .src_burst_size = DMA_BURST_1BYTE,         \</span>
+<span class="cp">    .dst_burst_size = DMA_BURST_1BYTE,         \</span>
+<span class="cp">    .src_width = DMA_TRANSFER_WIDTH_8BIT,      \</span>
+<span class="cp">    .dst_width = DMA_TRANSFER_WIDTH_8BIT,      \</span>
 <span class="cp">}</span>
 <span class="cp">#endif</span>
 <span class="cp">#endif</span>

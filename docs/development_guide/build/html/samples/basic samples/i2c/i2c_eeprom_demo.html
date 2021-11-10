@@ -213,13 +213,26 @@
 <h1><span class="section-number">7.1. </span>I2C - AT24CXX 读写<a class="headerlink" href="#i2c-at24cxx" title="永久链接至标题">¶</a></h1>
 <div class="section" id="id1">
 <h2><span class="section-number">7.1.1. </span>硬件连接<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
-<p>本 demo 基于 BL706_IOT 开发板，自行添加 AT24CXX 电路，连接方式如下</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">GPIO</span> <span class="n">function</span>         <span class="n">GPIO</span> <span class="n">pin</span>
-<span class="o">----------------------------------</span>
-    <span class="n">I2C_SCL</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO11</span>
-    <span class="n">I2C_SDA</span>      <span class="o">&lt;--&gt;</span>     <span class="n">GPIO16</span>
-</pre></div>
-</div>
+<p>本 demo 基于 BL706_IOT 开发板，自行添加 AT24CXX 电路，连接方式如下：</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>GPIO function</p></th>
+<th class="head"><p>GPIO pin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>I2C_SCL</p></td>
+<td><p>GPIO11</p></td>
+</tr>
+<tr class="row-odd"><td><p>I2C_SDA</p></td>
+<td><p>GPIO16</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="id2">
 <h2><span class="section-number">7.1.2. </span>软件实现<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>

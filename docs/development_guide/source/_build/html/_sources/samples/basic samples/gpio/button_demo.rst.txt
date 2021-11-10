@@ -6,13 +6,16 @@ GPIO 中断 - 按键检测
 硬件连接
 -----------------------------
 
-本 demo 基于BL706_IOT开发板，自行添加按键电路，连接方式如下
+本 demo 基于BL706_IOT开发板，自行添加按键电路，连接方式如下：
 
-::
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
 
-       GPIO function         GPIO pin
-    ----------------------------------
-        SW1      <-->     GPIO11
+    * - GPIO function
+      - GPIO pin
+    * - SW1
+      - GPIO11
 
 .. figure:: img/button_sch.png
     :alt:

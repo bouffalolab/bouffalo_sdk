@@ -11,17 +11,22 @@ FatFs 文件系统读写(SD 卡)
 硬件连接
 -----------------------------
 
-本 demo 基于 BL706_AVB 开发板，连接方式如下
+本 demo 基于 BL706_AVB 开发板，连接方式如下：
 
-::
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
 
-       GPIO function         GPIO pin
-    ----------------------------------
-        SD_CS       <-->     GPIO10
-        SPI_SCK     <-->     GPIO19
-        SPI_MISO    <-->     GPIO20
-        SPI_MOSI    <-->     GPIO21
-
+    * - GPIO function
+      - GPIO pin
+    * - SD_CS
+      - GPIO10
+    * - SPI_SCK
+      - GPIO19
+    * - SPI_MISO
+      - GPIO20
+    * - SPI_MOSI
+      - GPIO21
 
 软件实现
 -----------------------------
@@ -80,32 +85,40 @@ FatFs 文件系统读写(SD 卡)
 
     #if defined(BSP_USING_DMA0_CH3)
     #ifndef DMA0_CH3_CONFIG
-    #define DMA0_CH3_CONFIG                       \
-        {                                         \
-            .id = 0,                              \
-            .ch = 3,                              \
-            .direction = DMA_MEMORY_TO_PERIPH,    \
-            .transfer_mode = DMA_LLI_ONCE_MODE,   \
-            .src_req = DMA_REQUEST_NONE,          \
-            .dst_req = DMA_REQUEST_SPI0_TX,       \
-            .src_width = DMA_TRANSFER_WIDTH_8BIT, \
-            .dst_width = DMA_TRANSFER_WIDTH_8BIT, \
+    #define DMA0_CH3_CONFIG                             \
+        {                                               \
+            .id = 0,                                    \
+            .ch = 3,                                    \
+            .direction = DMA_MEMORY_TO_PERIPH,          \
+            .transfer_mode = DMA_LLI_ONCE_MODE,         \
+            .src_req = DMA_REQUEST_NONE,                \
+            .dst_req = DMA_REQUEST_SPI0_TX,             \
+            .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
+            .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
+            .src_burst_size = DMA_BURST_1BYTE,          \
+            .dst_burst_size = DMA_BURST_1BYTE,          \
+            .src_width = DMA_TRANSFER_WIDTH_8BIT,       \
+            .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \
         }
     #endif
     #endif
 
     #if defined(BSP_USING_DMA0_CH4)
     #ifndef DMA0_CH4_CONFIG
-    #define DMA0_CH4_CONFIG                       \
-        {                                         \
-            .id = 0,                              \
-            .ch = 4,                              \
-            .direction = DMA_PERIPH_TO_MEMORY,    \
-            .transfer_mode = DMA_LLI_ONCE_MODE,   \
-            .src_req = DMA_REQUEST_SPI0_RX,       \
-            .dst_req = DMA_REQUEST_NONE,          \
-            .src_width = DMA_TRANSFER_WIDTH_8BIT, \
-            .dst_width = DMA_TRANSFER_WIDTH_8BIT, \
+    #define DMA0_CH4_CONFIG                             \
+        {                                               \
+            .id = 0,                                    \
+            .ch = 4,                                    \
+            .direction = DMA_PERIPH_TO_MEMORY,          \
+            .transfer_mode = DMA_LLI_ONCE_MODE,         \
+            .src_req = DMA_REQUEST_SPI0_RX,             \
+            .dst_req = DMA_REQUEST_NONE,                \
+            .src_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
+            .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
+            .src_burst_size = DMA_BURST_1BYTE,          \
+            .dst_burst_size = DMA_BURST_1BYTE,          \
+            .src_width = DMA_TRANSFER_WIDTH_8BIT,       \
+            .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \
         }
     #endif
     #endif

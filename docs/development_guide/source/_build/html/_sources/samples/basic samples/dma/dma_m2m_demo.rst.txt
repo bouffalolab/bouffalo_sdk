@@ -19,17 +19,21 @@ DMA - RAM间数据搬运
 
     #if defined(BSP_USING_DMA0_CH0)
     #ifndef DMA0_CH0_CONFIG
-    #define DMA0_CH0_CONFIG \
-    {   \
-    .id = 0, \
-    .ch = 0,\
-    .direction = DMA_MEMORY_TO_MEMORY,\
-    .transfer_mode = DMA_LLI_ONCE_MODE, \
-    .src_req = DMA_REQUEST_NONE, \
-    .dst_req = DMA_REQUEST_NONE, \
-    .src_width = DMA_TRANSFER_WIDTH_32BIT , \
-    .dst_width = DMA_TRANSFER_WIDTH_32BIT , \
-    }
+    #define DMA0_CH0_CONFIG                            \
+        {                                              \
+            .id = 0,                                   \
+            .ch = 0,                                   \
+            .direction = DMA_MEMORY_TO_MEMORY,         \
+            .transfer_mode = DMA_LLI_ONCE_MODE,        \
+            .src_req = DMA_REQUEST_NONE,               \
+            .dst_req = DMA_REQUEST_NONE,               \
+            .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
+            .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
+            .src_burst_size = DMA_BURST_1BYTE,         \
+            .dst_burst_size = DMA_BURST_1BYTE,         \
+            .src_width = DMA_TRANSFER_WIDTH_32BIT,     \
+            .dst_width = DMA_TRANSFER_WIDTH_32BIT,     \
+        }
     #endif
     #endif
 

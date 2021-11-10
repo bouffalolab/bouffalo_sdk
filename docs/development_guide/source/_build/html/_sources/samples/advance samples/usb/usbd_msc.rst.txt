@@ -7,13 +7,13 @@ USB大容量存储设备类（The USB mass storage device class）是一种计�
 
 MSC 协议介绍参考 `USB 官方文档 <https://www.usb.org/documents>`_。
 
-bootloader 我们将其编译后烧录在 0x2000 开始的物理地址，工具默认也是这个地址。
-
-.. figure:: img/usb_msc2.png
-
-我们使用 flash 的 48K开始的地方，用来模拟 u 盘，u 盘大小为 256K（64 个扇区，每个扇区 4KB ），根据文件系统格式，可以知道，数据的地址在 u 盘的第 10 个扇区，也即 APP 的入口地址。BootLoader 与 APP 分区表如下：
+bootloader 我们将其编译后烧录在 flash 0x2000 开始的物理地址，工具默认也是这个地址。
 
 .. figure:: img/usb_msc.png
+
+我们使用 flash 物理地址 0x0000c000 (48K) 开始的地方，用来模拟 u 盘，u 盘大小为 256K（64 个扇区，每个扇区 4KB ），根据文件系统格式，可以知道，数据的地址在 u 盘的第 10 个扇区（0x16000），也即 APP 的入口地址。BootLoader 与 APP 分区表如下：
+
+.. figure:: img/usb_msc2.png
 
 准备工具
 -----------------------
