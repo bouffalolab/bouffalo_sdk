@@ -8,12 +8,23 @@ extern "C" {
 #endif
 
 /**
- * @brief USB Device Controller API
- * @defgroup _usb_device_controller_api USB Device Controller API
- * @{
+ * USB endpoint direction and number.
  */
-/**< maximum packet size (MPS) for EP 0 */
-#define USB_CTRL_EP_MPS 64
+#define USB_EP_DIR_MASK 0x80U
+#define USB_EP_DIR_IN   0x80U
+#define USB_EP_DIR_OUT  0x00U
+
+/** Get endpoint index (number) from endpoint address */
+#define USB_EP_GET_IDX(ep) ((ep) & ~USB_EP_DIR_MASK)
+/** Get direction from endpoint address */
+#define USB_EP_GET_DIR(ep) ((ep)&USB_EP_DIR_MASK)
+/** Get endpoint address from endpoint index and direction */
+#define USB_EP_GET_ADDR(idx, dir) ((idx) | ((dir)&USB_EP_DIR_MASK))
+/** True if the endpoint is an IN endpoint */
+#define USB_EP_DIR_IS_IN(ep) (USB_EP_GET_DIR(ep) == USB_EP_DIR_IN)
+/** True if the endpoint is an OUT endpoint */
+#define USB_EP_DIR_IS_OUT(ep) (USB_EP_GET_DIR(ep) == USB_EP_DIR_OUT)
+
 /**
  * USB endpoint Transfer Type mask.
  */
@@ -26,6 +37,14 @@ extern "C" {
 /* Default USB control EP, always 0 and 0x80 */
 #define USB_CONTROL_OUT_EP0 0
 #define USB_CONTROL_IN_EP0  0x80
+
+/**
+ * @brief USB Device Controller API
+ * @defgroup _usb_device_controller_api USB Device Controller API
+ * @{
+ */
+/**< maximum packet size (MPS) for EP 0 */
+#define USB_CTRL_EP_MPS 64
 
 /**
  * @brief USB Endpoint Transfer Type
@@ -153,7 +172,7 @@ int usbd_ep_write(const uint8_t ep, const uint8_t *data, uint32_t data_len, uint
  * This is similar to usb_dc_ep_read, the difference being that, it doesn't
  * clear the endpoint NAKs so that the consumer is not bogged down by further
  * upcalls till he is done with the processing of the data. The caller should
- * reactivate ep by invoking usb_dc_ep_read_continue() do so.
+ * reactivate ep by setting max_data_len 0 do so.
  *
  * @param[in]  ep           Endpoint address corresponding to the one
  *                          listed in the device configuration table
