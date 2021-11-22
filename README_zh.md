@@ -14,42 +14,79 @@
 bl_mcu_sdk
 ├── bsp
 │   ├── board
-│   │   ├── bl706_avb
-│   │   ├── bl706_iot
-│   │   └── bl602_xxx
+│   │   ├── bl602
+│   │   └── bl702
 │   └── bsp_common
+├── build
 ├── common
+│   ├── bl_math
 │   ├── device
 │   ├── list
 │   ├── memheap
 │   ├── misc
 │   ├── partition
+│   ├── pid
 │   ├── ring_buffer
-│   └── soft_crc
+│   ├── soft_crc
+│   └── timestamp
 ├── components
 │   ├── ble
 │   ├── fatfs
 │   ├── freertos
+│   ├── lvgl
+│   ├── lwip
+│   ├── mbedtls
+│   ├── nmsis
+│   ├── romfs
+│   ├── rt-thread
 │   ├── shell
-│   └── usb_stack
+│   ├── tflite
+│   ├── tiny_jpeg
+│   ├── usb_stack
+│   └── xz
 ├── docs
-│   ├── bl70x_docs
+│   ├── chipSpecification
 │   ├── development_guide
+│   └── development_guide_en
 ├── drivers
 │   ├── bl602_driver
 │   └── bl702_driver
 ├── examples
+│   ├── acomp
 │   ├── adc
-│   ├── audio
+│   ├── audio_cube
+│   ├── ble
+│   ├── boot2_iap
 │   ├── camera
+│   ├── coremark
+│   ├── cxx
 │   ├── dac
 │   ├── dma
+│   ├── dsp
+│   ├── emac
+│   ├── flash
+│   ├── freertos
 │   ├── gpio
 │   ├── hellowd
 │   ├── i2c
 │   ├── i2s
+│   ├── keyscan
+│   ├── lvgl
+│   ├── mbedtls
 │   ├── memheap
+│   ├── nn
+│   ├── pka
+│   ├── pm
+│   ├── psram
+│   ├── pwm
+│   ├── qdec
+│   ├── rt-thread
+│   ├── rtc
+│   ├── shell
 │   ├── spi
+│   ├── systick
+│   ├── tensorflow
+│   ├── timer
 │   ├── uart
 │   └── usb
 ├── out
@@ -61,17 +98,17 @@ bl_mcu_sdk
 
 ```
 
-- bsp/bsp_common : 存放一些板级相关的常用外设驱动代码
-- bsp/board : 存放板级描述文件 `clock_config.h`(描述时钟配置文件) `pinmux_config.h`(描述io功能文件) `peripheral_config.h` (描述外设默认配置文件) 这几个文件共同形成 board 文件夹描述特定应用的所有硬件信息。
-- common : 存放一些常见的与硬件无关的算法函数库
-- components : 存放第三方库公共组件库
-- drivers : 存放博流智能提供的公共芯片底层驱动库
-- examples : 存放官方提供的示例代码
-- out : 中间文件，用来存放编译链接后的产生的bin文件
-- tools : 存放编译下载相关的工具包
-- docs : 存放教程文档以及其他帮助信息
+- **bsp/board** : 存放板级描述文件 `clock_config.h`(描述时钟配置文件) `pinmux_config.h`(描述io功能文件) `peripheral_config.h` (描述外设默认配置文件) 这几个文件共同形成 board 文件夹描述特定应用的所有硬件信息。
+- **bsp/bsp_common** : 存放一些板级相关的常用外设驱动代码
+- **common** : 存放一些常用的函数和宏（芯片驱动需要）
+- **components** : 存放第三方库公共组件
+- **drivers** : 存放博流智能系列芯片驱动
+- **examples** : 存放官方提供的示例代码
+- **tools** : 存放编译下载相关的工具包
+- **docs** : 存放教程文档以及其他帮助信息
+- **build**: 存放 cmake 缓存文件
+- **out** : 中间文件，用来存放编译链接后的产生的bin文件
 
-更多文件目录参考信息，请查阅 [bl mcu sdk 文档教程](http://bouffalolab.gitee.io/bl_mcu_sdk)
 ## 层次结构
 
 [![层次结构](https://z3.ax1x.com/2021/06/18/RpUVoj.png)](https://imgtu.com/i/RpUVoj)
@@ -84,10 +121,11 @@ bl_mcu_sdk
 [![BL706_IOT](https://z3.ax1x.com/2021/08/06/fnPcLT.png)](https://imgtu.com/i/fnPcLT)
 
 - BL706 AVB 开发板
-[![BL706_AVB](https://z3.ax1x.com/2021/06/18/Rpa7DO.jpg)](https://imgtu.com/i/Rpa7DO)
+[![BL706_AVB](https://z3.ax1x.com/2021/11/16/IWPuVJ.png)](https://imgtu.com/i/IWPuVJ)
 
 
-目前暂时没有提供官方的购买渠道，如果想获得上述开发板，可到任意开源社区留言申请。
+目前暂时没有提供官方的购买渠道，如果想获得上述开发板，可到[论坛申请贴](https://bbs.bouffalolab.com/d/88)申请。
+
 ## 芯片手册
 
 [芯片参考手册](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_706_RM_zh_CN_1.1.pdf)|[芯片数据手册](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_BL706_DS_zh_CN_Combo_2.0.pdf)
