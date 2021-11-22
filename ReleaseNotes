@@ -3,6 +3,19 @@ bl mcu sdk Release Notes
 此文件包含 bl mcu sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bl mcu sdk Release V1.4.2
+----------------------------
+
+新增功能说明：
+    1. 重构 dac、dma 驱动，更新 dac、dma doc
+    2. 新增 arch_ffsll、arch_ctzll、arch_clzll 等函数
+    3. 优化 usb 协议栈 log 信息，msc 新增 sense code for requestSense command
+
+修复问题说明：
+    1. 补充完整 xxx_close 函数，复位相关寄存器
+    2. 删除 drivers 下头文件部分依赖
+    3. 优化 usb 驱动中 端点0 设置 ack 的位置（放置中断中），防止重复设置。
+
 bl mcu sdk Release V1.4.1
 ----------------------------
 
