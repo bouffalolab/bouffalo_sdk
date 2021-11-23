@@ -67,37 +67,6 @@ void SystemInit(void)
     /* global IRQ disable */
     __disable_irq();
 
-    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_XTAL_CAPCODE_EXTRA_AON);
-    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
-
-    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_OUT_AON, 0);
-    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
-
-    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON, 0);
-    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
-
-    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_RDY_SEL_AON, 0);
-    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
-
-    tmpVal = BL_RD_REG(AON_BASE, AON_TSEN);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_RDY_INT_SEL_AON, 0);
-    BL_WR_REG(AON_BASE, AON_TSEN, tmpVal);
-
-    for (i = 0; i < 20000; i++) {
-        tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
-        tmpVal = BL_SET_REG_BIT(tmpVal, AON_XTAL_EXT_SEL_AON);
-        BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
-        tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
-        tmpVal = BL_CLR_REG_BIT(tmpVal, AON_XTAL_EXT_SEL_AON);
-        BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
-        if (BL_IS_REG_BIT_SET(BL_RD_REG(GLB_BASE, GLB_CLK_CFG0), GLB_CHIP_RDY))
-            break;
-    }
-
     tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
     tmpVal |= (1 << 8);      /*mask pds wakeup*/
     tmpVal |= (1 << 10);     /*mask rf done*/

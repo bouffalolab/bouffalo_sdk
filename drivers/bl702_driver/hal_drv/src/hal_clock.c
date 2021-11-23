@@ -26,6 +26,43 @@
 #include "bl702_timer.h"
 #include "hal_clock.h"
 
+#if XTAL_TYPE != EXTERNAL_XTAL_32M
+static void internal_rc32m_init(void)
+{
+    uint32_t tmpVal;
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_XTAL_CAPCODE_EXTRA_AON);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_OUT_AON, 0);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON, 0);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_RDY_SEL_AON, 0);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_TSEN);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_RDY_INT_SEL_AON, 0);
+    BL_WR_REG(AON_BASE, AON_TSEN, tmpVal);
+
+    for (uint32_t i = 0; i < 20000; i++) {
+        tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+        tmpVal = BL_SET_REG_BIT(tmpVal, AON_XTAL_EXT_SEL_AON);
+        BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+        tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+        tmpVal = BL_CLR_REG_BIT(tmpVal, AON_XTAL_EXT_SEL_AON);
+        BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+        if (BL_IS_REG_BIT_SET(BL_RD_REG(GLB_BASE, GLB_CLK_CFG0), GLB_CHIP_RDY))
+            break;
+    }
+}
+#endif
+
 static uint32_t mtimer_get_clk_src_div(void)
 {
     return (system_clock_get(SYSTEM_CLOCK_BCLK) / 1000 / 1000 - 1);
@@ -62,6 +99,10 @@ static void peripheral_clock_gate_all()
 
 void system_clock_init(void)
 {
+#if XTAL_TYPE != EXTERNAL_XTAL_32M
+    internal_rc32m_init();
+    AON_Power_Off_XTAL();
+#endif
     /*select root clock*/
     GLB_Set_System_CLK(XTAL_TYPE, BSP_ROOT_CLOCK_SOURCE);
 #if BSP_ROOT_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_PLL_57P6M
