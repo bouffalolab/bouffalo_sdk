@@ -59,67 +59,49 @@ int shell_help(int argc, char **argv)
 }
 SHELL_CMD_EXPORT_ALIAS(shell_help, help, shell help.);
 
-static int shell_mm_monitor(int argc, char **argv)
+static int shell_memtrace(int argc, char **argv)
 {
-    uint64_t tmp;
     uint32_t addr, value;
-    int access_type = 'w';
 
     /* check args */
     if (argc < 2) {
-        SHELL_DGB("write memory sample:0x42000000 w 0xabcd\r\n");
-        SHELL_DGB("read memory sample:0x42000000 w\r\n");
+        SHELL_DGB("write memory: 0x42000000 0xabcd 10\r\n");
+        SHELL_DGB("read memory: 0x42000000 10\r\n");
         return 0;
     }
 
     /* get address */
-    tmp = strtoll(argv[1], NULL, 16);
-    addr = (uint32_t)tmp;
+    addr = strtoll(argv[1], NULL, 16);
 
-    /* get access_type */
-    if (argc >= 3) {
-        access_type = tolower(argv[2][0]);
+    if (argc < 3) {
+        /* read word */
+        SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)addr);
+        return 0;
     }
 
-    if (argc >= 4) {
-        /* write value */
-        tmp = strtoll(argv[3], NULL, 16);
-        value = (uint32_t)tmp;
+    if (argc < 4) {
+        uint16_t count = atoi(argv[2]);
+        for (int i = 0; i < count; i++) {
+            /* read word */
+            SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)(addr + 4 * i));
+        }
 
-        switch (access_type) {
-            case 'b':
-                *(volatile uint8_t *)addr = (uint8_t)value;
-                break;
-            case 'h':
-                *(volatile uint16_t *)addr = (uint16_t)value;
-                break;
-            case 'w':
-                *(volatile uint32_t *)addr = (uint32_t)value;
-                break;
-            default:
-                *(volatile int32_t *)addr = (uint32_t)value;
-                break;
+        return 0;
+    }
+
+    if (argc < 5) {
+        uint16_t count = atoi(argv[3]);
+        /* write value */
+        value = strtoll(argv[2], NULL, 16);
+
+        for (int i = 0; i < count; i++) {
+            *(volatile uint32_t *)(addr + 4 * i) = (uint32_t)value;
         }
-    } else {
-        /* read value */
-        switch (access_type) {
-            case 'b':
-                SHELL_DGB("0x%02x\r\n", *(volatile uint8_t *)addr);
-                break;
-            case 'h':
-                SHELL_DGB("0x%04x\r\n", *(volatile uint16_t *)addr);
-                break;
-            case 'w':
-                SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)addr);
-                break;
-            default:
-                SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)addr);
-                break;
-        }
+        return 0;
     }
     return 0;
 }
-SHELL_CMD_EXPORT_ALIAS(shell_mm_monitor, mm_monitor, memory monitor.);
+SHELL_CMD_EXPORT_ALIAS(shell_memtrace, memtrace, memory trace.);
 
 static char *shell_get_prompt(void)
 {
