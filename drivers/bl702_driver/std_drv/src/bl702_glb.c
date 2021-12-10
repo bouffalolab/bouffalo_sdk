@@ -1894,7 +1894,7 @@ void BMX_ERR_IRQHandler(void)
     }
 
     while (1) {
-        MSG("BMX_ERR_IRQHandler\r\n");
+        //MSG("BMX_ERR_IRQHandler\r\n");
         BL702_Delay_MS(1000);
     }
 }
@@ -1938,7 +1938,7 @@ void BMX_TO_IRQHandler(void)
     }
 
     while (1) {
-        MSG("BMX_TO_IRQHandler\r\n");
+        //MSG("BMX_TO_IRQHandler\r\n");
         BL702_Delay_MS(1000);
     }
 }
@@ -3992,7 +3992,7 @@ void GPIO_INT0_IRQHandler(void)
                 timeOut--;
             } while ((SET == GLB_Get_GPIO_IntStatus(gpioPin)) && timeOut);
             if (!timeOut) {
-                MSG("WARNING: Clear GPIO interrupt status fail.\r\n");
+                //MSG("WARNING: Clear GPIO interrupt status fail.\r\n");
             }
 
             /* if timeOut==0, GPIO interrupt status not cleared */
@@ -4012,7 +4012,7 @@ void GPIO_INT0_IRQHandler(void)
                 timeOut--;
             } while ((SET == GLB_Get_GPIO_Int2Status(gpioPin)) && timeOut);
             if (!timeOut) {
-                MSG("WARNING: Clear GPIO interrupt status fail.\r\n");
+                //MSG("WARNING: Clear GPIO interrupt status fail.\r\n");
             }
 
             /* if timeOut==0, GPIO interrupt status not cleared */

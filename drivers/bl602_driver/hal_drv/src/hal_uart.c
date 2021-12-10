@@ -268,6 +268,7 @@ int uart_control(struct device *dev, int cmd, void *args)
  */
 int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t size)
 {
+    int ret = -1;
     uart_device_t *uart_device = (uart_device_t *)dev;
 
     if (dev->oflag & DEVICE_OFLAG_DMA_TX) {
@@ -278,14 +279,13 @@ int uart_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t si
         }
 
         if (uart_device->id == 0) {
-            dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART0_TDR, size);
+            ret = dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART0_TDR, size);
             dma_channel_start(dma_ch);
         } else if (uart_device->id == 1) {
-            dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART1_TDR, size);
+            ret = dma_reload(dma_ch, (uint32_t)buffer, (uint32_t)DMA_ADDR_UART1_TDR, size);
             dma_channel_start(dma_ch);
         }
-
-        return 0;
+        return ret;
     } else if (dev->oflag & DEVICE_OFLAG_INT_TX) {
         return -2;
     } else

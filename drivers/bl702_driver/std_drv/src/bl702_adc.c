@@ -1281,64 +1281,12 @@ uint32_t TSEN_Get_V_Error(void)
 *******************************************************************************/
 BL_Err_Type ATTR_CLOCK_SECTION ADC_Trim_TSEN(uint16_t *tsen_offset)
 {
-    uint8_t average_index = 0;
-    uint32_t v_error_sum = 0;
-    uint32_t tmpVal = 0;
-    float A1 = 0.0, A2 = 0.0, C = 0.0, delta = 0.0;
     Efuse_TSEN_Refcode_Corner_Type trim;
 
     EF_Ctrl_Read_TSEN_Trim(&trim);
-
     if (trim.tsenRefcodeCornerEn) {
         if (trim.tsenRefcodeCornerParity == EF_Ctrl_Get_Trim_Parity(trim.tsenRefcodeCorner, 12)) {
-            MSG("TSEN ATE Version = %d\r\n", trim.tsenRefcodeCornerVersion);
-
             *tsen_offset = trim.tsenRefcodeCorner;
-
-            if (trim.tsenRefcodeCornerVersion == 0) {
-                /* debug advise by ran
-                 * 2020.9.04
-                 */
-
-                //set 4000F90C[19](gpadc_mic2_diff) = 0
-                tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
-                tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_GPADC_MIC2_DIFF, 0);
-                BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, tmpVal);
-
-                for (average_index = 0; average_index < 50; average_index++) {
-                    v_error_sum += TSEN_Get_V_Error();
-                }
-
-                v_error_sum /= 50;
-
-                MSG("A1 = %d\r\n", v_error_sum);
-                A1 = v_error_sum;
-
-                v_error_sum = 0;
-
-                //set 4000F90C[19](gpadc_mic2_diff) = 1
-                tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
-                tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_GPADC_MIC2_DIFF, 1);
-                BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, tmpVal);
-
-                for (average_index = 0; average_index < 50; average_index++) {
-                    v_error_sum += TSEN_Get_V_Error();
-                }
-
-                v_error_sum /= 50;
-
-                MSG("A2 = %d\r\n", v_error_sum);
-                A2 = v_error_sum;
-
-                MSG("C = %d\r\n", *tsen_offset);
-                C = *tsen_offset;
-
-                delta = A2 - (7.753 / 5.62 * A1) + 2.133 / 5.62 * C + 72;
-
-                MSG("delta=A2-7.753/5.62*A1+2.133/5.62*C+72x; delta = %d\r\n", (uint16_t)delta);
-
-                *tsen_offset = delta + C;
-            }
 
             return SUCCESS;
         }

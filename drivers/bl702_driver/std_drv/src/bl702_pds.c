@@ -632,7 +632,7 @@ BL_Err_Type PDS_Set_Vddcore_GPIO_IntMask(BL_Mask_Type intMask)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-PDS_STS_Type PDS_Get_Vddcore_GPIO_IntStatus(void)
+BL_Sts_Type PDS_Get_Vddcore_GPIO_IntStatus(void)
 {
     return BL_GET_REG_BITS_VAL(BL_RD_REG(PDS_BASE, PDS_GPIO_INT), PDS_GPIO_INT_STAT) ? SET : RESET;
 }
@@ -1325,6 +1325,26 @@ void PDS_WAKEUP_IRQHandler(void)
 BL_Err_Type PDS_WAKEUP_IRQHandler_Install(void)
 {
     Interrupt_Handler_Register(PDS_WAKEUP_IRQn, PDS_WAKEUP_IRQHandler);
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief
+ *
+ * @param
+ *
+ * @return
+ *
+*******************************************************************************/
+BL_Err_Type PDS_Set_Clkpll_Top_Ctrl(uint8_t vg11Sel)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_CLKPLL_TOP_CTRL);
+    //clkpll_vg11_sel
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CLKPLL_VG11_SEL, vg11Sel);
+    BL_WR_REG(PDS_BASE, PDS_CLKPLL_TOP_CTRL, tmpVal);
+
     return SUCCESS;
 }
 

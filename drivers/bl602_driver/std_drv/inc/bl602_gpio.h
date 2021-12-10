@@ -145,7 +145,7 @@ typedef struct
 #define GPIO0_FUN_SDIO_CLK          1
 #define GPIO0_FUN_SF_D1             2
 #define GPIO0_FUN_UNUSED3           3
-#define GPIO0_FUN_SPI_MISO_SPI_MOSI 4
+#define GPIO0_FUN_SPI_MOSI_SPI_MISO 4
 #define GPIO0_FUN_UNUSED5           5
 #define GPIO0_FUN_I2C_SCL           6
 #define GPIO0_FUN_UART_SIG0         7
@@ -158,7 +158,7 @@ typedef struct
 #define GPIO1_FUN_SDIO_CMD          1
 #define GPIO1_FUN_SF_D2             2
 #define GPIO1_FUN_UNUSED3           3
-#define GPIO1_FUN_SPI_MOSI_SPI_MISO 4
+#define GPIO1_FUN_SPI_MISO_SPI_MOSI 4
 #define GPIO1_FUN_UNUSED5           5
 #define GPIO1_FUN_I2C_SDA           6
 #define GPIO1_FUN_UART_SIG1         7
@@ -197,7 +197,7 @@ typedef struct
 #define GPIO4_FUN_SDIO_DAT2         1
 #define GPIO4_FUN_UNUSED2           2
 #define GPIO4_FUN_UNUSED3           3
-#define GPIO4_FUN_SPI_MISO_SPI_MOSI 4
+#define GPIO4_FUN_SPI_MOSI_SPI_MISO 4
 #define GPIO4_FUN_UNUSED5           5
 #define GPIO4_FUN_I2C_SCL           6
 #define GPIO4_FUN_UART_SIG4         7
@@ -210,7 +210,7 @@ typedef struct
 #define GPIO5_FUN_SDIO_DAT3         1
 #define GPIO5_FUN_UNUSED2           2
 #define GPIO5_FUN_UNUSED3           3
-#define GPIO5_FUN_SPI_MOSI_SPI_MISO 4
+#define GPIO5_FUN_SPI_MISO_SPI_MOSI 4
 #define GPIO5_FUN_UNUSED5           5
 #define GPIO5_FUN_I2C_SDA           6
 #define GPIO5_FUN_UART_SIG5         7
@@ -249,7 +249,7 @@ typedef struct
 #define GPIO8_FUN_UNUSED1           1
 #define GPIO8_FUN_UNUSED2           2
 #define GPIO8_FUN_UNUSED3           3
-#define GPIO8_FUN_SPI_MISO_SPI_MOSI 4
+#define GPIO8_FUN_SPI_MOSI_SPI_MISO 4
 #define GPIO8_FUN_UNUSED5           5
 #define GPIO8_FUN_I2C_SCL           6
 #define GPIO8_FUN_UART_SIG0         7
@@ -262,7 +262,7 @@ typedef struct
 #define GPIO9_FUN_UNUSED1           1
 #define GPIO9_FUN_UNUSED2           2
 #define GPIO9_FUN_UNUSED3           3
-#define GPIO9_FUN_SPI_MOSI_SPI_MISO 4
+#define GPIO9_FUN_SPI_MISO_SPI_MOSI 4
 #define GPIO9_FUN_UNUSED5           5
 #define GPIO9_FUN_I2C_SDA           6
 #define GPIO9_FUN_UART_SIG1         7
@@ -301,7 +301,7 @@ typedef struct
 #define GPIO12_FUN_UNUSED1                 1
 #define GPIO12_FUN_UNUSED2                 2
 #define GPIO12_FUN_UNUSED3                 3
-#define GPIO12_FUN_SPI_MISO_SPI_MOSI       4
+#define GPIO12_FUN_SPI_MOSI_SPI_MISO       4
 #define GPIO12_FUN_UNUSED5                 5
 #define GPIO12_FUN_I2C_SCL                 6
 #define GPIO12_FUN_UART_SIG4               7
@@ -314,7 +314,7 @@ typedef struct
 #define GPIO13_FUN_UNUSED1           1
 #define GPIO13_FUN_UNUSED2           2
 #define GPIO13_FUN_UNUSED3           3
-#define GPIO13_FUN_SPI_MOSI_SPI_MISO 4
+#define GPIO13_FUN_SPI_MISO_SPI_MOSI 4
 #define GPIO13_FUN_UNUSED5           5
 #define GPIO13_FUN_I2C_SDA           6
 #define GPIO13_FUN_UART_SIG5         7
@@ -353,7 +353,7 @@ typedef struct
 #define GPIO16_FUN_UNUSED1           1
 #define GPIO16_FUN_UNUSED2           2
 #define GPIO16_FUN_UNUSED3           3
-#define GPIO16_FUN_SPI_MISO_SPI_MOSI 4
+#define GPIO16_FUN_SPI_MOSI_SPI_MISO 4
 #define GPIO16_FUN_UNUSED5           5
 #define GPIO16_FUN_I2C_SCL           6
 #define GPIO16_FUN_UART_SIG0         7
@@ -366,7 +366,7 @@ typedef struct
 #define GPIO17_FUN_UNUSED1           1
 #define GPIO17_FUN_SF_D3             2
 #define GPIO17_FUN_UNUSED3           3
-#define GPIO17_FUN_SPI_MOSI_SPI_MISO 4
+#define GPIO17_FUN_SPI_MISO_SPI_MOSI 4
 #define GPIO17_FUN_UNUSED5           5
 #define GPIO17_FUN_I2C_SDA           6
 #define GPIO17_FUN_UART_SIG1         7
@@ -405,7 +405,7 @@ typedef struct
 #define GPIO20_FUN_UNUSED1           1
 #define GPIO20_FUN_SF_D0             2
 #define GPIO20_FUN_UNUSED3           3
-#define GPIO20_FUN_SPI_MISO_SPI_MOSI 4
+#define GPIO20_FUN_SPI_MOSI_SPI_MISO 4
 #define GPIO20_FUN_UNUSED5           5
 #define GPIO20_FUN_I2C_SCL           6
 #define GPIO20_FUN_UART_SIG4         7
@@ -418,7 +418,7 @@ typedef struct
 #define GPIO21_FUN_UNUSED1           1
 #define GPIO21_FUN_SF_CS             2
 #define GPIO21_FUN_UNUSED3           3
-#define GPIO21_FUN_SPI_MOSI_SPI_MISO 4
+#define GPIO21_FUN_SPI_MISO_SPI_MOSI 4
 #define GPIO21_FUN_UNUSED5           5
 #define GPIO21_FUN_I2C_SDA           6
 #define GPIO21_FUN_UART_SIG5         7

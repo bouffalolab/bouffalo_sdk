@@ -762,7 +762,7 @@ BL_Sts_Type PDS_Get_Reset_Event(PDS_RST_EVENT_Type event);
 BL_Err_Type PDS_Set_Vddcore_GPIO_IntCfg(PDS_VDDCORE_GPIO_SRC_Type src,
                                         PDS_AON_GPIO_INT_Trigger_Type mode);
 BL_Err_Type PDS_Set_Vddcore_GPIO_IntMask(BL_Mask_Type intMask);
-PDS_STS_Type PDS_Get_Vddcore_GPIO_IntStatus(void);
+BL_Sts_Type PDS_Get_Vddcore_GPIO_IntStatus(void);
 BL_Err_Type PDS_Set_Vddcore_GPIO_IntClear(void);
 /*----------*/
 BL_Err_Type PDS_WAKEUP_IRQHandler_Install(void);
@@ -785,7 +785,9 @@ void PDS_Auto_Time_Config(uint32_t sleepDuration);
 void PDS_Auto_Enable(PDS_AUTO_POWER_DOWN_CFG_Type *powerCfg, PDS_AUTO_NORMAL_CFG_Type *normalCfg, BL_Fun_Type enable);
 void PDS_Manual_Force_Turn_Off(PDS_FORCE_Type domain);
 void PDS_Manual_Force_Turn_On(PDS_FORCE_Type domain);
-/*----------*/;
+/*----------*/
+BL_Err_Type PDS_Set_Clkpll_Top_Ctrl(uint8_t vg11Sel);
+/*----------*/
 
 /*@} end of group PDS_Public_Functions */
 

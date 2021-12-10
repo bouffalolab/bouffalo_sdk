@@ -291,20 +291,20 @@ BL_Err_Type EF_Ctrl_Read_MAC_Address(uint8_t mac[8]);
 BL_Err_Type EF_Ctrl_Read_MAC_Address_Raw(uint8_t mac[7]);
 void EF_Ctrl_Writelock_MAC_Address(uint8_t program);
 uint8_t EF_Ctrl_Is_MAC_Address_Slot_Empty(uint8_t slot, uint8_t reload);
-BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t program);
-BL_Err_Type EF_Ctrl_Read_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t reload);
+BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[8], uint8_t program);
+BL_Err_Type EF_Ctrl_Read_MAC_Address_Opt(uint8_t slot, uint8_t mac[8], uint8_t reload);
 BL_Err_Type EF_Ctrl_Read_Chip_ID(uint8_t id[8]);
 /*----------*/
 BL_Err_Type EF_Ctrl_Get_Chip_PIDVID(uint16_t pid[1], uint16_t vid[1]);
 BL_Err_Type EF_Ctrl_Get_Customer_PIDVID(uint16_t pid[1], uint16_t vid[1]);
 /*----------*/
 void EF_Ctrl_Read_Device_Info(Efuse_Device_Info_Type *deviceInfo);
-uint8_t EF_Ctrl_Is_CapCode_Empty(uint8_t reload);
-BL_Err_Type EF_Ctrl_Write_CapCode_Opt(uint8_t code, uint8_t program);
-BL_Err_Type EF_Ctrl_Read_CapCode_Opt(uint8_t *code, uint8_t reload);
+uint8_t EF_Ctrl_Is_CapCode_Empty(uint8_t slot, uint8_t reload);
+BL_Err_Type EF_Ctrl_Write_CapCode_Opt(uint8_t slot, uint8_t code, uint8_t program);
+BL_Err_Type EF_Ctrl_Read_CapCode_Opt(uint8_t slot, uint8_t *code, uint8_t reload);
 uint8_t EF_Ctrl_Is_PowerOffset_Slot_Empty(uint8_t slot, uint8_t reload);
-BL_Err_Type EF_Ctrl_Write_PowerOffset_Opt(uint8_t slot, int8_t pwrOffset[3], uint8_t program);
-BL_Err_Type EF_Ctrl_Read_PowerOffset_Opt(uint8_t slot, int8_t pwrOffset[3], uint8_t reload);
+BL_Err_Type EF_Ctrl_Write_PowerOffset_Opt(uint8_t slot, int8_t pwrOffset[2], uint8_t program);
+BL_Err_Type EF_Ctrl_Read_PowerOffset_Opt(uint8_t slot, int8_t pwrOffset[2], uint8_t reload);
 void EF_Ctrl_Write_AES_Key(uint8_t index, uint32_t *keyData, uint32_t len, uint8_t program);
 void EF_Ctrl_Read_AES_Key(uint8_t index, uint32_t *keyData, uint32_t len);
 void EF_Ctrl_Writelock_AES_Key(uint8_t index, uint8_t program);

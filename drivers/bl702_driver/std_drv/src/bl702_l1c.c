@@ -608,7 +608,7 @@ void L1C_BMX_ERR_IRQHandler(void)
     }
 
     while (1) {
-        MSG("L1C_BMX_ERR_IRQHandler\r\n");
+        //MSG("L1C_BMX_ERR_IRQHandler\r\n");
         BL702_Delay_MS(1000);
     }
 }
@@ -652,7 +652,7 @@ void L1C_BMX_TO_IRQHandler(void)
     }
 
     while (1) {
-        MSG("L1C_BMX_TO_IRQHandler\r\n");
+        //MSG("L1C_BMX_TO_IRQHandler\r\n");
         BL702_Delay_MS(1000);
     }
 }
