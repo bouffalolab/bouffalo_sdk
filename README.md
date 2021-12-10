@@ -134,9 +134,9 @@ For more information, please visit the BouffaloLab developer website: [https://d
 
 ## Documentation Tutorial
 
-Contains a quick start tutorial for bl mcu sdk development, api manual and a detailed introduction to the driver framework, etc.
+To get more bl mcu sdk documentation tutorial, like api manual or peripheral demo and so on, please visit:
 
-- [bl mcu sdk documentation tutorial](https://htmlpreview.github.io/?https://github.com/bouffalolab/bl_mcu_sdk/blob/master/docs/development_guide_en/build/html/index.html)
+- [bl mcu sdk documentation tutorial](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_en/index.html)
 
 ## Video Tutorial
 
@@ -146,7 +146,7 @@ Contains a quick start tutorial for bl mcu sdk development, api manual and a det
 
 ### Command Line Development
 
-For the tools needed for command line development, please refer to [linux development guide](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Linux_quick_start_ubuntu.html)
+For the tools needed for command line development, please refer to [linux development guide](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_en/get_started/Linux_quick_start_ubuntu.html)
 
 - [cmake 3.19](https://cmake.org/files/v3.19/), cmake compilation tool, it is recommended to use cmake v3.15 or above
 - [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux), risc-v linux toolchain，download command:
@@ -159,7 +159,7 @@ git clone https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux.git
 
 ### Eclipse Development
 
-For the tools needed for Eclipse development, please refer to [Eclipse Development Guide](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_eclipse.html)
+For the tools needed for Eclipse development, please refer to [Eclipse Development Guide](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_en/get_started/Windows_quick_start_eclipse.html)
 
 - [Eclipse](https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip) eclipse development free installation package under Windows
 - [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_sifive_windows), risc-v windows toolchain，download command:
@@ -174,7 +174,7 @@ git clone https://gitee.com/bouffalolab/toolchain_gcc_sifive_windows.git
 
 ### CDK Development
 
-For tools needed for CDK development, please refer to  [CDK Development Guide](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_cdk.html)
+For tools needed for CDK development, please refer to  [CDK Development Guide](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_en/get_started/Windows_quick_start_cdk.html)
 
 - [CDK](https://occ.t-head.cn/development/activities/cdk), Jianchi CDK integrated development environment of T-Head , it is recommended to use CDK v2.8.4 or above
 
@@ -185,6 +185,10 @@ Graphical programming tools provided by Bouffalolab:
 
 - [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-win32.zip)
 - [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-linux-x86.tar.gz)
+
+### Board Config Wizard
+
+We provide [BL Config Wizard](https://dev.bouffalolab.com/media/config/index.html) to generate `clock_config.h`、 `pinmux_config.h` and `peripheral_config.h` file online.
 
 ## How to make sdk as submodule
 

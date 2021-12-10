@@ -134,9 +134,9 @@ bl_mcu_sdk
 
 ## 文档教程
 
-包含 bl mcu sdk 开发的快速入门教程， api 手册以及驱动框架等详细介绍
+获取更多 bl mcu sdk 开发相关的教程，如 api 手册、外设 demo 等，请参考：
 
-- [bl mcu sdk 文档教程](http://bouffalolab.gitee.io/bl_mcu_sdk)
+- [bl mcu sdk 文档教程](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_zh/index.html)
 
 ## 视频教程
 
@@ -146,7 +146,7 @@ bl_mcu_sdk
 
 ### 命令行开发
 
-命令行开发需要的工具，具体使用方法参考 [linux 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Linux_quick_start_ubuntu.html)
+命令行开发需要的工具，具体使用方法参考 [linux 开发指南](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_zh/get_started/Linux_quick_start_ubuntu.html)
 
 - [cmake 3.19](https://cmake.org/files/v3.19/)， cmake 编译工具，建议使用 cmake v3.15 以上版本
 - [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux), risc-v linux 端工具链，下载方式：
@@ -159,7 +159,7 @@ git clone https://gitee.com/bouffalolab/toolchain_gcc_sifive_linux.git
 
 ### Eclipse开发
 
-Eclipse 开发需要的工具，具体使用方法参考 [Eclipse 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_eclipse.html)
+Eclipse 开发需要的工具，具体使用方法参考 [Eclipse 开发指南](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_zh/get_started/Windows_quick_start_eclipse.html)
 
 - [Eclipse](https://dev.bouffalolab.com/media/upload/download/BouffaloLab_eclipse_x86_64_win.zip) Windows 下 eclipse 开发免安装包
 - [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_sifive_windows), risc-v windows 端工具链，下载方式：
@@ -174,7 +174,7 @@ git clone https://gitee.com/bouffalolab/toolchain_gcc_sifive_windows.git
 
 ### CDK开发
 
-CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](http://bouffalolab.gitee.io/bl_mcu_sdk/get_started/Windows_quick_start_cdk.html)
+CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_zh/get_started/Windows_quick_start_cdk.html)
 
 - [CDK](https://occ.t-head.cn/development/activities/cdk)，平头哥剑池 CDK 集成开发环境，建议使用 CDK v2.8.4 以上版本
 
@@ -185,6 +185,10 @@ CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](http://b
 
 - [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-win32.zip)
 - [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-linux-x86.tar.gz)
+
+### Board Config Wizard
+
+我们提供了[BL Config Wizard](https://dev.bouffalolab.com/media/config/index.html)，可以在线生成  `clock_config.h`、 `pinmux_config.h` 和 `peripheral_config.h` 文件。
 
 ## 如何将 SDK 作为 submodule 使用
 
