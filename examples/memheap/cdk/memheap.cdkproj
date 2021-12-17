@@ -268,198 +268,96 @@ Board: bl70x_iot
   </DebugSessions>
   <Dependencies Name="CK_Link_Debug"/>
   <Dependencies Name="OpenOCD_Debug"/>
+  <VirtualDirectory Name="hal">
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_acomp.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_boot2.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_common.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dma.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_emac.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_flash.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_gpio.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2c.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2s.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_keyscan.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mtimer.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pwm.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_qdec.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_rtc.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_aes.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_dsa.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_ecdsa.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_hash.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_spi.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_timer.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_uart.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_usb.c">
+      <FileOption/>
+    </File>
+    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_wdt.c">
+      <FileOption/>
+    </File>
+  </VirtualDirectory>
   <BuildConfigs>
-    <BuildConfig Name="OpenOCD_Debug">
-      <Target>
-        <ROMBank Selected="1">
-          <ROM1>
-            <InUse>no</InUse>
-            <Start>0x23000000</Start>
-            <Size>0x100000</Size>
-          </ROM1>
-          <ROM2>
-            <InUse>no</InUse>
-            <Start>0x22014000</Start>
-            <Size>0x4000</Size>
-          </ROM2>
-          <ROM3>
-            <InUse>no</InUse>
-            <Start>0x42018000</Start>
-            <Size>0x8000</Size>
-          </ROM3>
-          <ROM4>
-            <InUse>no</InUse>
-            <Start/>
-            <Size/>
-          </ROM4>
-          <ROM5>
-            <InUse>no</InUse>
-            <Start/>
-            <Size/>
-          </ROM5>
-        </ROMBank>
-        <RAMBank>
-          <RAM1>
-            <InUse>yes</InUse>
-            <Start>0x42020000</Start>
-            <Size>0xc000</Size>
-            <Init>yes</Init>
-          </RAM1>
-          <RAM2>
-            <InUse>no</InUse>
-            <Start/>
-            <Size/>
-            <Init>yes</Init>
-          </RAM2>
-          <RAM3>
-            <InUse>no</InUse>
-            <Start/>
-            <Size/>
-            <Init>yes</Init>
-          </RAM3>
-          <RAM4>
-            <InUse>no</InUse>
-            <Start/>
-            <Size/>
-            <Init>yes</Init>
-          </RAM4>
-          <RAM5>
-            <InUse>no</InUse>
-            <Start/>
-            <Size/>
-            <Init>yes</Init>
-          </RAM5>
-        </RAMBank>
-        <CPU>rv32imafc</CPU>
-        <UseMiniLib>yes</UseMiniLib>
-        <Endian>little</Endian>
-        <UseHardFloat>no</UseHardFloat>
-        <UseEnhancedLRW>no</UseEnhancedLRW>
-        <UseContinueBuild>no</UseContinueBuild>
-        <UseSemiHost>no</UseSemiHost>
-      </Target>
-      <Output>
-        <OutputName>$(ProjectName)</OutputName>
-        <Type>Executable</Type>
-        <CreateHexFile>no</CreateHexFile>
-        <CreateBinFile>yes</CreateBinFile>
-        <Preprocessor>no</Preprocessor>
-        <Disassmeble>yes</Disassmeble>
-        <CallGraph>no</CallGraph>
-        <Map>yes</Map>
-      </Output>
-      <User>
-        <BeforeCompile>
-          <RunUserProg>no</RunUserProg>
-          <UserProgName/>
-        </BeforeCompile>
-        <BeforeMake>
-          <RunUserProg>no</RunUserProg>
-          <UserProgName/>
-        </BeforeMake>
-        <AfterMake>
-          <RunUserProg>no</RunUserProg>
-          <UserProgName>$(ProjectPath)../../../tools/bflb_flash_tool/bflb_mcu_tool.exe  --chipname=bl702 --interface=openocd --firmware="$(ProjectPath)/Obj/$(ProjectName).bin" </UserProgName>
-        </AfterMake>
-      </User>
-      <Compiler>
-        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;BFLB_USE_ROM_DRIVER;bl706_iot</Define>
-        <Undefine/>
-        <Optim>Optimize more (-O2)</Optim>
-        <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl702;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/libc/inc;$(ProjectPath)../../../common/libc/inc/arm_gcc;$(ProjectPath)../../../common/libc/inc/bits;$(ProjectPath)../../../common/libc/inc/sys;$(ProjectPath)../../../common/libc/src;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
-        <OtherFlags>-fshort-enums -fno-common -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -Wignored-qualifiers -Wunused -Wundef -msmall-data-limit=4 -std=c99</OtherFlags>
-        <Verbose>no</Verbose>
-        <Ansi>no</Ansi>
-        <Syntax>no</Syntax>
-        <Pedantic>no</Pedantic>
-        <PedanticErr>no</PedanticErr>
-        <InhibitWarn>no</InhibitWarn>
-        <AllWarn>yes</AllWarn>
-        <WarnErr>no</WarnErr>
-        <OneElfS>yes</OneElfS>
-        <Fstrict>no</Fstrict>
-      </Compiler>
-      <Asm>
-        <Define/>
-        <Undefine/>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl706_iot;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
-        <OtherFlags/>
-        <DebugLevel>gdwarf2</DebugLevel>
-      </Asm>
-      <Linker>
-        <Garbage>yes</Garbage>
-        <Garbage2>yes</Garbage2>
-        <LDFile>$(ProjectPath)../../../drivers/bl702_driver/bl702_flash.ld</LDFile>
-        <LibName>c</LibName>
-        <LibPath/>
-        <OtherFlags>--specs=nano.specs</OtherFlags>
-        <AutoLDFile>no</AutoLDFile>
-        <LinkType/>
-      </Linker>
-      <Debug>
-        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
-        <Connector>OpenOCD</Connector>
-        <StopAt>yes</StopAt>
-        <StopAtText>main</StopAtText>
-        <InitFile/>
-        <AfterLoadFile>$(ProjectPath)../../../tools/openocd/bl70x_gdb.init</AfterLoadFile>
-        <AutoRun>yes</AutoRun>
-        <ResetType>Hard Reset</ResetType>
-        <SoftResetVal>23000000</SoftResetVal>
-        <ResetAfterLoad>no</ResetAfterLoad>
-        <Dumpcore>no</Dumpcore>
-        <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
-        <ConfigICE>
-          <IP>localhost</IP>
-          <PORT>1025</PORT>
-          <CPUNumber>0</CPUNumber>
-          <Clock>2000</Clock>
-          <Delay>10</Delay>
-          <WaitReset>50</WaitReset>
-          <DDC>yes</DDC>
-          <TRST>no</TRST>
-          <DebugPrint>no</DebugPrint>
-          <Connect>Normal</Connect>
-          <ResetType>Hard Reset</ResetType>
-          <SoftResetVal>21000000</SoftResetVal>
-          <RTOSType>Bare Metal</RTOSType>
-          <DownloadToFlash>yes</DownloadToFlash>
-          <ResetAfterConnect>yes</ResetAfterConnect>
-          <GDBName/>
-          <GDBServerType>Local</GDBServerType>
-          <OtherFlags>-arch riscv</OtherFlags>
-        </ConfigICE>
-        <ConfigSIM>
-          <SIMTarget/>
-          <OtherFlags/>
-          <NoGraphic>yes</NoGraphic>
-          <Log>no</Log>
-          <SimTrace>no</SimTrace>
-        </ConfigSIM>
-        <ConfigOpenOCD>
-          <OpenOCDExecutablePath>openocd-hifive</OpenOCDExecutablePath>
-          <OpenOCDTelnetPortEnable>no</OpenOCDTelnetPortEnable>
-          <OpenOCDTelnetPort>4444</OpenOCDTelnetPort>
-          <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
-          <OpenOCDTclPort>6666</OpenOCDTclPort>
-          <OpenOCDConfigOptions>-f ../../../tools/openocd/if_rv_dbg_plus.cfg -f ../../../tools/openocd/tgt_702.cfg</OpenOCDConfigOptions>
-        </ConfigOpenOCD>
-      </Debug>
-      <Flash>
-        <InitFile/>
-        <Erase>Erase Sectors</Erase>
-        <Algorithms Path="">bl70x_flasher.elf</Algorithms>
-        <Program>yes</Program>
-        <Verify>yes</Verify>
-        <ResetAndRun>no</ResetAndRun>
-        <ResetType>Hard Reset</ResetType>
-        <SoftResetVal/>
-        <External>no</External>
-        <Command/>
-        <Arguments/>
-      </Flash>
-    </BuildConfig>
     <BuildConfig Name="CK_Link_Debug">
       <Target>
         <ROMBank Selected="1">
@@ -558,7 +456,7 @@ Board: bl70x_iot
         <Undefine/>
         <Optim>Optimize more (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl702;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/libc/inc;$(ProjectPath)../../../common/libc/inc/arm_gcc;$(ProjectPath)../../../common/libc/inc/bits;$(ProjectPath)../../../common/libc/inc/sys;$(ProjectPath)../../../common/libc/src;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl702;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
         <OtherFlags>-fshort-enums -fno-common -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -Wignored-qualifiers -Wunused -Wundef -msmall-data-limit=4 -std=c99</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -569,12 +467,13 @@ Board: bl70x_iot
         <AllWarn>yes</AllWarn>
         <WarnErr>no</WarnErr>
         <OneElfS>yes</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
         <Define/>
         <Undefine/>
-        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl706_iot;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl706_iot;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
         <OtherFlags/>
         <DebugLevel>gdwarf2</DebugLevel>
       </Asm>
@@ -599,6 +498,7 @@ Board: bl70x_iot
         <ResetType>Hard Reset</ResetType>
         <SoftResetVal>21000000</SoftResetVal>
         <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
         <ConfigICE>
@@ -635,6 +535,7 @@ Board: bl70x_iot
           <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
           <OpenOCDTclPort>6666</OpenOCDTclPort>
           <OpenOCDConfigOptions>-f ../../../tools/openocd/if_rv_dbg_plus.cfg -f ../../../tools/openocd/tgt_702.cfg</OpenOCDConfigOptions>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
         </ConfigOpenOCD>
       </Debug>
       <Flash>
@@ -651,92 +552,199 @@ Board: bl70x_iot
         <Arguments/>
       </Flash>
     </BuildConfig>
+    <BuildConfig Name="OpenOCD_Debug">
+      <Target>
+        <ROMBank Selected="1">
+          <ROM1>
+            <InUse>no</InUse>
+            <Start>0x23000000</Start>
+            <Size>0x100000</Size>
+          </ROM1>
+          <ROM2>
+            <InUse>no</InUse>
+            <Start>0x22014000</Start>
+            <Size>0x4000</Size>
+          </ROM2>
+          <ROM3>
+            <InUse>no</InUse>
+            <Start>0x42018000</Start>
+            <Size>0x8000</Size>
+          </ROM3>
+          <ROM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM4>
+          <ROM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM5>
+        </ROMBank>
+        <RAMBank>
+          <RAM1>
+            <InUse>yes</InUse>
+            <Start>0x42020000</Start>
+            <Size>0xc000</Size>
+            <Init>yes</Init>
+          </RAM1>
+          <RAM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM2>
+          <RAM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM3>
+          <RAM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM4>
+          <RAM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM5>
+        </RAMBank>
+        <CPU>rv32imafc</CPU>
+        <UseMiniLib>yes</UseMiniLib>
+        <Endian>little</Endian>
+        <UseHardFloat>no</UseHardFloat>
+        <UseEnhancedLRW>no</UseEnhancedLRW>
+        <UseContinueBuild>no</UseContinueBuild>
+        <UseSemiHost>no</UseSemiHost>
+      </Target>
+      <Output>
+        <OutputName>$(ProjectName)</OutputName>
+        <Type>Executable</Type>
+        <CreateHexFile>no</CreateHexFile>
+        <CreateBinFile>yes</CreateBinFile>
+        <Preprocessor>no</Preprocessor>
+        <Disassmeble>yes</Disassmeble>
+        <CallGraph>no</CallGraph>
+        <Map>yes</Map>
+      </Output>
+      <User>
+        <BeforeCompile>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+        </BeforeCompile>
+        <BeforeMake>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+        </BeforeMake>
+        <AfterMake>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName>$(ProjectPath)../../../tools/bflb_flash_tool/bflb_mcu_tool.exe  --chipname=bl702 --interface=openocd --firmware="$(ProjectPath)/Obj/$(ProjectName).bin" </UserProgName>
+        </AfterMake>
+      </User>
+      <Compiler>
+        <Define>ARCH_RISCV;BFLB_USE_HAL_DRIVER;BFLB_USE_ROM_DRIVER;bl706_iot</Define>
+        <Undefine/>
+        <Optim>Optimize more (-O2)</Optim>
+        <DebugLevel>Default (-g)</DebugLevel>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl702;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
+        <OtherFlags>-fshort-enums -fno-common -fms-extensions -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wall -Wshift-negative-value -Wchar-subscripts -Wformat -Wuninitialized -Winit-self -Wignored-qualifiers -Wunused -Wundef -msmall-data-limit=4 -std=c99</OtherFlags>
+        <Verbose>no</Verbose>
+        <Ansi>no</Ansi>
+        <Syntax>no</Syntax>
+        <Pedantic>no</Pedantic>
+        <PedanticErr>no</PedanticErr>
+        <InhibitWarn>no</InhibitWarn>
+        <AllWarn>yes</AllWarn>
+        <WarnErr>no</WarnErr>
+        <OneElfS>yes</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
+        <Fstrict>no</Fstrict>
+      </Compiler>
+      <Asm>
+        <Define/>
+        <Undefine/>
+        <IncludePath>$(ProjectPath);$(ProjectPath)../;$(ProjectPath)../../../components/fatfs;$(ProjectPath)../../../components/freertos/Source/include;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../components/usb_stack/class/audio;$(ProjectPath)../../../components/usb_stack/class/cdc;$(ProjectPath)../../../components/usb_stack/class/hid;$(ProjectPath)../../../components/usb_stack/class/msc;$(ProjectPath)../../../components/usb_stack/class/video;$(ProjectPath)../../../components/usb_stack/class/webusb;$(ProjectPath)../../../components/usb_stack/class/winusb;$(ProjectPath)../../../components/usb_stack/common;$(ProjectPath)../../../components/usb_stack/core;$(ProjectPath)../../../bsp/board/bl706_iot;$(ProjectPath)../../../bsp/bsp_common/platform;$(ProjectPath)../../../common/device;$(ProjectPath)../../../common/list;$(ProjectPath)../../../common/memheap;$(ProjectPath)../../../common/misc;$(ProjectPath)../../../common/ring_buffer;$(ProjectPath)../../../common/soft_crc;$(ProjectPath)../../../components/shell;$(ProjectPath)../../../drivers/bl702_driver;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl702_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl702_driver;$(ProjectPath)../../../drivers/bl702_driver/regs;$(ProjectPath)../../../drivers/bl702_driver/startup;$(ProjectPath)../../../drivers/bl702_driver/std_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/risc-v/Core/Include;$(ProjectPath)../../../drivers/bl602_driver/startup;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/inc;$(ProjectPath)../../../drivers/bl602_driver/hal_drv/default_config;$(ProjectPath)../../../drivers/bl602_driver/regs;$(ProjectPath)../../../drivers/bl602_driver/std_drv/inc</IncludePath>
+        <OtherFlags/>
+        <DebugLevel>gdwarf2</DebugLevel>
+      </Asm>
+      <Linker>
+        <Garbage>yes</Garbage>
+        <Garbage2>yes</Garbage2>
+        <LDFile>$(ProjectPath)../../../drivers/bl702_driver/bl702_flash.ld</LDFile>
+        <LibName>c</LibName>
+        <LibPath/>
+        <OtherFlags>--specs=nano.specs</OtherFlags>
+        <AutoLDFile>no</AutoLDFile>
+        <LinkType/>
+      </Linker>
+      <Debug>
+        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
+        <Connector>OpenOCD</Connector>
+        <StopAt>yes</StopAt>
+        <StopAtText>main</StopAtText>
+        <InitFile/>
+        <AfterLoadFile>$(ProjectPath)../../../tools/openocd/bl70x_gdb.init</AfterLoadFile>
+        <AutoRun>yes</AutoRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal>23000000</SoftResetVal>
+        <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
+        <Dumpcore>no</Dumpcore>
+        <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
+        <ConfigICE>
+          <IP>localhost</IP>
+          <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
+          <Clock>2000</Clock>
+          <Delay>10</Delay>
+          <WaitReset>50</WaitReset>
+          <DDC>yes</DDC>
+          <TRST>no</TRST>
+          <DebugPrint>no</DebugPrint>
+          <Connect>Normal</Connect>
+          <ResetType>Hard Reset</ResetType>
+          <SoftResetVal>21000000</SoftResetVal>
+          <RTOSType>Bare Metal</RTOSType>
+          <DownloadToFlash>yes</DownloadToFlash>
+          <ResetAfterConnect>yes</ResetAfterConnect>
+          <GDBName/>
+          <GDBServerType>Local</GDBServerType>
+          <OtherFlags>-arch riscv</OtherFlags>
+        </ConfigICE>
+        <ConfigSIM>
+          <SIMTarget/>
+          <OtherFlags/>
+          <NoGraphic>yes</NoGraphic>
+          <Log>no</Log>
+          <SimTrace>no</SimTrace>
+        </ConfigSIM>
+        <ConfigOpenOCD>
+          <OpenOCDExecutablePath>openocd-hifive</OpenOCDExecutablePath>
+          <OpenOCDTelnetPortEnable>no</OpenOCDTelnetPortEnable>
+          <OpenOCDTelnetPort>4444</OpenOCDTelnetPort>
+          <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
+          <OpenOCDTclPort>6666</OpenOCDTclPort>
+          <OpenOCDConfigOptions>-f ../../../tools/openocd/if_rv_dbg_plus.cfg -f ../../../tools/openocd/tgt_702.cfg</OpenOCDConfigOptions>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
+        </ConfigOpenOCD>
+      </Debug>
+      <Flash>
+        <InitFile/>
+        <Erase>Erase Sectors</Erase>
+        <Algorithms Path="">bl70x_flasher.elf</Algorithms>
+        <Program>yes</Program>
+        <Verify>yes</Verify>
+        <ResetAndRun>no</ResetAndRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal/>
+        <External>no</External>
+        <Command/>
+        <Arguments/>
+      </Flash>
+    </BuildConfig>
   </BuildConfigs>
-  <VirtualDirectory Name="hal">
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_acomp.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_adc.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_boot2.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_cam.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_clock.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_common.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dac.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_dma.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_emac.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_flash.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_gpio.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2c.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_i2s.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_keyscan.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mjpeg.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_mtimer.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pm.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_pwm.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_qdec.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_rtc.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_aes.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_dsa.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_ecdsa.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_sec_hash.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_spi.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_timer.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_uart.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_usb.c">
-      <FileOption/>
-    </File>
-    <File Name="../../../drivers/bl702_driver/hal_drv/src/hal_wdt.c"/>
-  </VirtualDirectory>
 </Project>
