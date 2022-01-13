@@ -33,11 +33,8 @@ SUPPORT_HW_SEC_ENG_DISABLE?=n
 SUPPORT_BLECONTROLLER_LIB?=
 
 #cmake definition config
-ifneq ($(CPU_ID),none)
-cmake_definition+= -DCPU_ID=$(CPU_ID)
-endif
-
 cmake_definition+= -DCHIP=$(CHIP)
+cmake_definition+= -DCPU_ID=$(CPU_ID)
 cmake_definition+= -DBOARD=$(BOARD)
 cmake_definition+= -DAPP_DIR=$(APP_DIR)
 cmake_definition+= -DAPP=$(APP)
@@ -50,8 +47,7 @@ cmake_definition+= -DCONFIG_HW_SEC_ENG_DISABLE=$(SUPPORT_HW_SEC_ENG_DISABLE)
 cmake_definition+= -DCONFIG_BLECONTROLLER_LIB=$(SUPPORT_BLECONTROLLER_LIB)
 
 build:Makefile
-	cmake -E make_directory build
-	cd build && cmake -G "Unix Makefiles" $(cmake_definition) ..
+	cmake -S . -B build -G "Unix Makefiles" $(cmake_definition) ..
 	cd build && make -j4
 
 help:
