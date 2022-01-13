@@ -87,7 +87,7 @@ static int ili9341_spi_init(void)
         SPI_DEV(spi0)->clk_polaraity = SPI_POLARITY_LOW;
         SPI_DEV(spi0)->datasize = SPI_DATASIZE_8BIT;
         SPI_DEV(spi0)->clk_phase = SPI_PHASE_1EDGE;
-        SPI_DEV(spi0)->fifo_threshold = 1;
+        SPI_DEV(spi0)->fifo_threshold = 4;
 
         device_open(spi0, DEVICE_OFLAG_STREAM_TX);
     } else {
@@ -106,10 +106,12 @@ static int ili9341_spi_init(void)
         DMA_DEV(dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch3)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
-        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
-        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch3)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_1BYTE;
         DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch3, 0);
         device_set_callback(dma_ch3, NULL);
         device_control(spi0, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch3);
@@ -193,7 +195,7 @@ static int ili9341_write_data_4byte(uint32_t data)
  */
 int ili9341_draw_is_busy(void)
 {
-    if (device_control(SPI_DEV(spi0)->tx_dma, DMA_CHANNEL_GET_STATUS, NULL)) {
+    if (dma_channel_check_busy(SPI_DEV(spi0)->tx_dma)) {
         return 1;
     } else {
         device_control(spi0, DEVICE_CTRL_TX_DMA_SUSPEND, NULL);
@@ -358,6 +360,7 @@ void ili9341_draw_area(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
  */
 void ili9341_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t *picture)
 {
+    uint8_t ret = 0;
     size_t picture_size = (x2 - x1 + 1) * (y2 - y1 + 1);
 
     /* 数据高低位切换 */
@@ -365,11 +368,18 @@ void ili9341_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2, uin
         lcd_swap_color_data16(picture, picture, picture_size);
     }
 
+    // DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_32BIT;
+    // DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_1BYTE;
+    // DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_4BYTE;
+
     ili9341_set_draw_window(x1, y1, x2, y2);
     ILI9341_DC_HIGH;
     ILI9341_CS_LOW;
     device_control(spi0, DEVICE_CTRL_TX_DMA_RESUME, NULL);
-    device_write(spi0, 0, picture, picture_size * 2);
+    ret = device_write(spi0, 0, picture, picture_size * 2);
+    if (ret != 0) {
+        MSG("device write fail!\r\n");
+    }
 }
 
 /**

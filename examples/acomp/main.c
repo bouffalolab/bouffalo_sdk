@@ -40,20 +40,23 @@ int main(void)
 
     pm_hbn_out1_irq_register();
     acomp_device_t acomp_device;
-    acomp_device.id = 1;
+
     acomp_device.pos_ch = ACOMP_CHANNEL_ADC_CHANNEL6; //GPIO7
     acomp_device.neg_ch = ACOMP_CHANNEL_0P375VBAT;
     acomp_device.pos_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
     acomp_device.neg_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
-    acomp_init(&acomp_device);
+    acomp_init(0, &acomp_device);
 
-    acomp_device.id = 0;
     acomp_device.pos_ch = ACOMP_CHANNEL_ADC_CHANNEL2; //GPIO17
     acomp_device.neg_ch = ACOMP_CHANNEL_0P375VBAT;
     acomp_device.pos_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
     acomp_device.neg_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
-    acomp_init(&acomp_device);
+    acomp_init(1, &acomp_device);
 
+    acomp_enable(0);
+    acomp_interrupt_unmask(0, ACOMP_POSITIVE_IT | ACOMP_NEGATIVE_IT);
+    acomp_enable(1);
+    acomp_interrupt_unmask(1, ACOMP_POSITIVE_IT | ACOMP_NEGATIVE_IT);
     while (1) {
         bflb_platform_delay_ms(100);
     }

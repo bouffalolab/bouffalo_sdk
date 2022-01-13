@@ -74,6 +74,16 @@ void uart1_init(void)
     dma_ch2 = device_find("ch2");
 
     if (dma_ch2) {
+        DMA_DEV(dma_ch2)->direction = DMA_MEMORY_TO_PERIPH;
+        DMA_DEV(dma_ch2)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch2)->src_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_UART1_TX;
+        DMA_DEV(dma_ch2)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch2, 0);
     }
 }
@@ -167,14 +177,14 @@ static dma_lli_ctrl_t uart_lli_list = {
 void uart_send_from_ringbuffer(void)
 {
     if (Ring_Buffer_Get_Length(&usb_rx_rb)) {
-        if (!device_control(dma_ch2, DMA_CHANNEL_GET_STATUS, NULL)) {
+        if (!dma_channel_check_busy(dma_ch2)) {
             uint32_t avalibleCnt = Ring_Buffer_Read(&usb_rx_rb, src_buffer, UART_TX_DMA_SIZE);
 
             if (avalibleCnt) {
                 dma_channel_stop(dma_ch2);
                 uart_dma_ctrl_cfg.bits.TransferSize = avalibleCnt;
                 memcpy(&uart_lli_list.cfg, &uart_dma_ctrl_cfg, sizeof(dma_control_data_t));
-                device_control(dma_ch2, DMA_CHANNEL_UPDATE, (void *)((uint32_t)&uart_lli_list));
+                dma_channel_update(dma_ch2, (void *)((uint32_t)&uart_lli_list));
                 dma_channel_start(dma_ch2);
             }
         }

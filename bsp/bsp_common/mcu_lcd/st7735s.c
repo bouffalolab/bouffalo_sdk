@@ -106,10 +106,12 @@ static int st7735s_spi_init(void)
         DMA_DEV(dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch3)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
-        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
-        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch3)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_1BYTE;
         DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
+        DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch3, 0);
         device_set_callback(dma_ch3, NULL);
         device_control(spi0, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch3);
@@ -193,7 +195,7 @@ static int st7735s_write_data_4byte(uint32_t data)
  */
 int st7735s_draw_is_busy(void)
 {
-    if (device_control(SPI_DEV(spi0)->tx_dma, DMA_CHANNEL_GET_STATUS, NULL)) {
+    if (dma_channel_check_busy(SPI_DEV(spi0)->tx_dma)) {
         return 1;
     } else {
         device_control(spi0, DEVICE_CTRL_TX_DMA_SUSPEND, NULL);

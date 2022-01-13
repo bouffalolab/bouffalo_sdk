@@ -23,6 +23,8 @@
 #ifndef __TFT_LCD_H__
 #define __TFT_LCD_H__
 
+
+
 #include "hal_gpio.h"
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
@@ -71,6 +73,10 @@
 /**
  *  @brief Tft_lcd Functions
  */
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 void LCD_WR_Cmd(uint8_t command);
 void LCD_WR_Byte(uint8_t data);
 void LCD_WR_HalfWord(uint16_t data);
@@ -91,6 +97,10 @@ void LCD_WR_SPI_DMA(uint16_t *img, uint32_t len);
 void LCD_DrawChinese(uint16_t x, uint16_t y, uint8_t *character, uint16_t bColor, uint16_t cColor);
 void LCD_DrawFont(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uint8_t *str, uint8_t num);
 void LCD_DrawFont_64x32(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_color, uint8_t *str, uint8_t num);
+
+#ifdef __cplusplus
+}
+#endif
 /*@} end of group TFT_LCD_Public_Functions */
 
 /*@} end of group TFT_LCD */
@@ -98,3 +108,4 @@ void LCD_DrawFont_64x32(uint16_t x, uint16_t y, uint16_t color, uint16_t bk_colo
 /*@} end of group BL702_Peripheral_Driver */
 
 #endif /* __TFT_LCD_H__ */
+

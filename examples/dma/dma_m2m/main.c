@@ -46,14 +46,24 @@ int main(void)
 {
     bflb_platform_init(0);
 
-    dma_register(DMA0_CH0_INDEX, "DMA");
+    dma_register(DMA0_CH0_INDEX, "dma_ch0");
 
-    struct device *dma = device_find("DMA");
+    struct device *dma_ch0 = device_find("dma_ch0");
 
-    if (dma) {
-        device_open(dma, 0);
-        device_set_callback(dma, dma_transfer_done);
-        device_control(dma, DEVICE_CTRL_SET_INT, NULL);
+    if (dma_ch0) {
+        DMA_DEV(dma_ch0)->direction = DMA_MEMORY_TO_MEMORY;
+        DMA_DEV(dma_ch0)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dma_ch0)->src_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch0)->dst_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch0)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch0)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch0)->src_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch0)->dst_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch0)->src_width = DMA_TRANSFER_WIDTH_32BIT;
+        DMA_DEV(dma_ch0)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
+        device_open(dma_ch0, 0);
+        device_set_callback(dma_ch0, dma_transfer_done);
+        device_control(dma_ch0, DEVICE_CTRL_SET_INT, NULL);
     }
 
     /* prepare test memory src as 0xff but dest as 0x0 */
@@ -61,11 +71,10 @@ int main(void)
     memset(dma_src_buffer, 0xff, 8000);
     memset(dma_dst_buffer, 0, 8000);
 
-    dma_reload(dma, (uint32_t)dma_src_buffer, (uint32_t)dma_dst_buffer, 8000);
+    dma_reload(dma_ch0, (uint32_t)dma_src_buffer, (uint32_t)dma_dst_buffer, 8000);
 
-    dma_channel_start(dma);
+    dma_channel_start(dma_ch0);
 
-    BL_CASE_SUCCESS;
     while (1) {
         bflb_platform_delay_ms(100);
     }

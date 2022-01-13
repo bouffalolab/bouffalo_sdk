@@ -47,13 +47,16 @@ int main(void)
     struct device *dac_dma = device_find("dac_dma");
 
     if (dac_dma) {
-        ((dma_device_t *)dac_dma)->direction = DMA_MEMORY_TO_PERIPH;
-        ((dma_device_t *)dac_dma)->transfer_mode = DMA_LLI_ONCE_MODE;
-        ((dma_device_t *)dac_dma)->src_req = DMA_REQUEST_NONE;
-        ((dma_device_t *)dac_dma)->dst_req = DMA_REQUEST_DAC0;
-        ((dma_device_t *)dac_dma)->src_width = DMA_TRANSFER_WIDTH_16BIT;
-        ((dma_device_t *)dac_dma)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
-
+        DMA_DEV(dac_dma)->direction = DMA_MEMORY_TO_PERIPH;
+        DMA_DEV(dac_dma)->transfer_mode = DMA_LLI_ONCE_MODE;
+        DMA_DEV(dac_dma)->src_req = DMA_REQUEST_NONE;
+        DMA_DEV(dac_dma)->dst_req = DMA_REQUEST_DAC0;
+        DMA_DEV(dac_dma)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dac_dma)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+        DMA_DEV(dac_dma)->src_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dac_dma)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dac_dma)->src_width = DMA_TRANSFER_WIDTH_16BIT;
+        DMA_DEV(dac_dma)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
         device_open(dac_dma, 0);
     }
 

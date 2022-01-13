@@ -64,6 +64,10 @@ uint8_t SD_SPI_Init(void)
         DMA_DEV(dma_ch3)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch3)->src_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
+        DMA_DEV(dma_ch3)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch3)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+        DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_1BYTE;
         DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch3, 0);
@@ -84,6 +88,10 @@ uint8_t SD_SPI_Init(void)
         DMA_DEV(dma_ch4)->transfer_mode = DMA_LLI_ONCE_MODE;
         DMA_DEV(dma_ch4)->src_req = DMA_REQUEST_SPI0_RX;
         DMA_DEV(dma_ch4)->dst_req = DMA_REQUEST_NONE;
+        DMA_DEV(dma_ch4)->src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
+        DMA_DEV(dma_ch4)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
+        DMA_DEV(dma_ch4)->src_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch4)->dst_burst_size = DMA_BURST_1BYTE;
         DMA_DEV(dma_ch4)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch4)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch4, 0);
@@ -95,7 +103,7 @@ uint8_t SD_SPI_Init(void)
 
 BL_Err_Type SPI_ReadWriteByte(uint8_t *txBuff, uint8_t *rxBuff, uint32_t length)
 {
-    while (device_control(dma_ch3, DMA_CHANNEL_GET_STATUS, NULL) || device_control(dma_ch4, DMA_CHANNEL_GET_STATUS, NULL))
+    while (dma_channel_check_busy(dma_ch3) || dma_channel_check_busy(dma_ch4))
         ;
 
     if (length < 500) {
@@ -109,7 +117,7 @@ BL_Err_Type SPI_ReadWriteByte(uint8_t *txBuff, uint8_t *rxBuff, uint32_t length)
         dma_channel_start(dma_ch4);
         dma_channel_start(dma_ch3);
 
-        while (device_control(dma_ch3, DMA_CHANNEL_GET_STATUS, NULL) || device_control(dma_ch4, DMA_CHANNEL_GET_STATUS, NULL))
+        while (dma_channel_check_busy(dma_ch3) || dma_channel_check_busy(dma_ch4))
             ;
 
         device_control(spi0, DEVICE_CTRL_TX_DMA_SUSPEND, NULL);
@@ -380,7 +388,6 @@ uint8_t SD_SendBlock(uint8_t *buf, uint8_t cmd)
 
     return 0;
 }
-
 
 /****************************************************************************/ /**
  * @brief  SD_Get_CardInfo

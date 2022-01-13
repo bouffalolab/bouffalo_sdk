@@ -21,6 +21,7 @@
  *
  */
 #include "hal_uart.h"
+#include "hal_flash.h"
 #include "hal_mtimer.h"
 #include "drv_mmheap.h"
 #include "hal_common.h"
@@ -51,11 +52,41 @@ __WEAK__ enum uart_index_type board_get_debug_uart_index(void)
     return 0;
 }
 
+void bl_show_flashinfo(void)
+{
+    SPI_Flash_Cfg_Type flashCfg;
+    uint8_t *pFlashCfg = NULL;
+    uint32_t flashCfgLen = 0;
+    uint32_t flashJedecId = 0;
+
+    flashJedecId = flash_get_jedecid();
+    flash_get_cfg(&pFlashCfg, &flashCfgLen);
+    arch_memcpy((void *)&flashCfg, pFlashCfg, flashCfgLen);
+    MSG("show flash cfg:\r\n");
+    MSG("jedec id   0x%06X\r\n", flashJedecId);
+    MSG("mid            0x%02X\r\n", flashCfg.mid);
+    MSG("iomode         0x%02X\r\n", flashCfg.ioMode);
+    MSG("clk delay      0x%02X\r\n", flashCfg.clkDelay);
+    MSG("clk invert     0x%02X\r\n", flashCfg.clkInvert);
+    MSG("read reg cmd0  0x%02X\r\n", flashCfg.readRegCmd[0]);
+    MSG("read reg cmd1  0x%02X\r\n", flashCfg.readRegCmd[1]);
+    MSG("write reg cmd0 0x%02X\r\n", flashCfg.writeRegCmd[0]);
+    MSG("write reg cmd1 0x%02X\r\n", flashCfg.writeRegCmd[1]);
+    MSG("qe write len   0x%02X\r\n", flashCfg.qeWriteRegLen);
+    MSG("cread support  0x%02X\r\n", flashCfg.cReadSupport);
+    MSG("cread code     0x%02X\r\n", flashCfg.cReadMode);
+    MSG("burst wrap cmd 0x%02X\r\n", flashCfg.burstWrapCmd);
+    MSG("-------------------\r\n");
+}
+
 void bflb_platform_init(uint32_t baudrate)
 {
     static uint8_t initialized = 0;
+    BL_Err_Type ret = ERROR;
 
     cpu_global_irq_disable();
+
+    ret = flash_init();
 
     board_init();
 
@@ -82,6 +113,10 @@ void bflb_platform_init(uint32_t baudrate)
 
         MSG("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
         initialized = 1;
+        if (ret != SUCCESS) {
+            MSG("flash init fail!!!\r\n");
+        }
+        bl_show_flashinfo();
     }
 
     cpu_global_irq_enable();
@@ -135,7 +170,7 @@ uint8_t bflb_platform_print_get(void)
 
 void bflb_platform_deinit(void)
 {
-    if (!uart_dbg_disable){
+    if (!uart_dbg_disable) {
         struct device *uart = device_find("debug_log");
         if (uart) {
             device_close(uart);

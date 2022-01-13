@@ -43,8 +43,12 @@
 #define XPT2046_Y_MAX 3700
 
 extern struct device *touch_spi;
-
+#ifdef __cplusplus
+extern "C"{
+#endif
 void xpt2046_init(void);
 uint8_t xpt2046_read(int16_t *x, int16_t *y);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -30,8 +30,10 @@ void shell_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t 
 {
     uint8_t data;
     if (state == UART_EVENT_RX_FIFO) {
-        data = *(uint8_t *)args;
-        shell_handler(data);
+        for (size_t i = 0; i < size; i++) {
+            data = *(uint8_t *)(args + i);
+            shell_handler(data);
+        }
     }
 }
 
@@ -45,6 +47,13 @@ int main(void)
         device_control(uart, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT));
     }
 
+    acomp_device_t acomp_device;
+    acomp_device.pos_ch = ACOMP_CHANNEL_ADC_CHANNEL3; /*from gpio11 adc func*/
+    acomp_device.neg_ch = ACOMP_CHANNEL_0P375VBAT;
+    acomp_device.pos_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
+    acomp_device.neg_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
+    acomp_init(0, &acomp_device);
+
     while (1) {
         bflb_platform_delay_ms(100);
     }
@@ -52,17 +61,12 @@ int main(void)
 
 int hbn0_enter(int argc, char *argv[])
 {
-    acomp_device_t acomp_device;
-    acomp_device.id = 0;
-    acomp_device.pos_ch = ACOMP_CHANNEL_ADC_CHANNEL3; /*from gpio11 adc func*/
-    acomp_device.neg_ch = ACOMP_CHANNEL_0P375VBAT;
-    acomp_device.pos_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
-    acomp_device.neg_hysteresis_vol = ACOMP_HYSTERESIS_VOLT_50MV;
-    acomp_init(&acomp_device);
+    acomp_enable(0);
+    acomp_interrupt_unmask(0,ACOMP_POSITIVE_IT|ACOMP_NEGATIVE_IT);
     bflb_platform_delay_ms(50); /*delay for acomp*/
 
     for (uint32_t i = 0; i < 30; i++) {
-        MSG("status:%d\r\n", acomp_get_result(&acomp_device));
+        MSG("status:%d\r\n", acomp_get_result(0));
         bflb_platform_delay_ms(100);
     }
 
