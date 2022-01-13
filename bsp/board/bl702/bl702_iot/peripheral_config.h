@@ -94,7 +94,7 @@
         .databits = UART_DATA_LEN_8, \
         .stopbits = UART_STOP_ONE,   \
         .parity = UART_PAR_NONE,     \
-        .fifo_threshold = 1,         \
+        .fifo_threshold = 0,         \
     }
 #endif
 #endif
@@ -108,7 +108,7 @@
         .databits = UART_DATA_LEN_8, \
         .stopbits = UART_STOP_ONE,   \
         .parity = UART_PAR_NONE,     \
-        .fifo_threshold = 64,        \
+        .fifo_threshold = 63,        \
     }
 #endif
 #endif

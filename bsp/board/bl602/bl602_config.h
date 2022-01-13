@@ -33,9 +33,7 @@
 #include "bl602_boot2/clock_config.h"
 #include "bl602_boot2/pinmux_config.h"
 #else
-#include "bl602_custom/peripheral_config.h"
-#include "bl602_custom/clock_config.h"
-#include "bl602_custom/pinmux_config.h"
+#error "do not find board,please check your board name"
 #endif
 
 #endif

@@ -29,7 +29,7 @@
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */
-
+#define BSP_USING_DAC0
 #define BSP_USING_DMA0_CH0
 #define BSP_USING_DMA0_CH1
 #define BSP_USING_DMA0_CH2
@@ -40,6 +40,18 @@
 #define BSP_USING_DMA0_CH7
 
 /* PERIPHERAL CONFIG */
+
+#if defined(BSP_USING_DAC0)
+#ifndef DAC_CONFIG
+#define DAC_CONFIG                             \
+    {                                          \
+        .channels = DAC_CHANNEL_0,             \
+        .sample_freq = DAC_SAMPLE_FREQ_500KHZ, \
+        .vref = DAC_VREF_INTERNAL,             \
+    }
+#endif
+#endif
+
 #if defined(BSP_USING_UART0)
 #ifndef UART0_CONFIG
 #define UART0_CONFIG                 \
@@ -49,7 +61,7 @@
         .databits = UART_DATA_LEN_8, \
         .stopbits = UART_STOP_ONE,   \
         .parity = UART_PAR_NONE,     \
-        .fifo_threshold = 1,         \
+        .fifo_threshold = 0,         \
     }
 #endif
 #endif
@@ -63,7 +75,7 @@
         .databits = UART_DATA_LEN_8, \
         .stopbits = UART_STOP_ONE,   \
         .parity = UART_PAR_NONE,     \
-        .fifo_threshold = 64,        \
+        .fifo_threshold = 63,        \
     }
 #endif
 #endif

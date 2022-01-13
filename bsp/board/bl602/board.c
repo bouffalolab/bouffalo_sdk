@@ -176,8 +176,11 @@ static void board_pin_mux_init(void)
         // }
         else if ((af_pin_table[i].func & 0x70) == 0x70) {
             gpio_cfg.gpioFun = GPIO_FUN_UART;
-            uint8_t sig = af_pin_table[i].func & 0x07;
-            GLB_UART_Fun_Sel((gpio_cfg.gpioPin % 8), sig);
+            uint8_t uart_func = af_pin_table[i].func & 0x07;
+            uint8_t uart_sig = gpio_cfg.gpioPin % 8;
+            /*link to one uart sig*/
+            GLB_UART_Fun_Sel((GLB_UART_SIG_Type)uart_sig, (GLB_UART_SIG_FUN_Type)uart_func);
+            GLB_UART_Fun_Sel((GLB_UART_SIG_Type)uart_func, (GLB_UART_SIG_FUN_Type)uart_sig);
         }
 
         GLB_GPIO_Init(&gpio_cfg);

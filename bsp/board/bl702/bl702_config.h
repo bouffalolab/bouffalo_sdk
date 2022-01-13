@@ -45,9 +45,7 @@
 #include "bl702_iot/clock_config.h"
 #include "bl702_iot/pinmux_config.h"
 #else
-#include "bl702_custom/peripheral_config.h"
-#include "bl702_custom/clock_config.h"
-#include "bl702_custom/pinmux_config.h"
+#error "do not find board,please check your board name"
 #endif
 
 #endif

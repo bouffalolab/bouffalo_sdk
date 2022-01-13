@@ -94,7 +94,7 @@
         .databits = UART_DATA_LEN_8, \
         .stopbits = UART_STOP_ONE,   \
         .parity = UART_PAR_NONE,     \
-        .fifo_threshold = 1,         \
+        .fifo_threshold = 0,         \
     }
 #endif
 #endif
@@ -108,7 +108,7 @@
         .databits = UART_DATA_LEN_8, \
         .stopbits = UART_STOP_ONE,   \
         .parity = UART_PAR_NONE,     \
-        .fifo_threshold = 64,        \
+        .fifo_threshold = 63,        \
     }
 #endif
 #endif
@@ -124,7 +124,7 @@
         .clk_polaraity = SPI_POLARITY_LOW,          \
         .clk_phase = SPI_PHASE_1EDGE,               \
         .datasize = SPI_DATASIZE_8BIT,              \
-        .fifo_threshold = 1,                        \
+        .fifo_threshold = 0,                        \
         .pin_swap_enable = 1,                       \
         .delitch_cnt = 0,                           \
     }
@@ -212,7 +212,7 @@
         .channel_num = I2S_FS_CHANNELS_NUM_MONO, \
         .frame_size = I2S_FRAME_LEN_16,          \
         .data_size = I2S_DATA_LEN_16,            \
-        .fifo_threshold = 8,                     \
+        .fifo_threshold = 7,                     \
     }
 #endif
 #endif
