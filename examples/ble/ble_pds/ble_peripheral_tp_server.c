@@ -22,15 +22,13 @@ NOTES
 #include "uuid.h"
 #include "ble_peripheral_tp_server.h"
 #include "log.h"
+#include "hal_clock.h"
 
-
-#define BLE_CONN_PDS     0
 extern bool pds_start;
 
 static void ble_tp_connected(struct bt_conn *conn, u8_t err);
 static void ble_tp_disconnected(struct bt_conn *conn, u8_t reason);
-static void ble_param_updated(struct bt_conn *conn, u16_t interval,u16_t latency, u16_t timeout);
-
+static void ble_param_updated(struct bt_conn *conn, u16_t interval, u16_t latency, u16_t timeout);
 
 static struct bt_conn *ble_tp_conn;
 #if !defined(CONFIG_BT_OAD_SERVER)
@@ -72,15 +70,15 @@ NAME
 */
 static void ble_tp_connected(struct bt_conn *conn, u8_t err)
 {
-    #if !defined(CONFIG_BT_OAD_SERVER)
+#if !defined(CONFIG_BT_OAD_SERVER)
     int tx_octets = 0x00fb;
     int tx_time = 0x0848;
     int ret = -1;
-    #endif
+#endif
 
-	#if (BLE_CONN_PDS)
-	struct bt_le_conn_param param;
-	#endif
+#if XTAL_32K_TYPE == EXTERNAL_XTAL_32K
+    struct bt_le_conn_param param;
+#endif
 
     if (err) {
         return;
@@ -88,24 +86,21 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
 
     BT_WARN("Tp connected");
     ble_tp_conn = conn;
-	pds_start = false;
+    pds_start = false;
 
-	#if (BLE_CONN_PDS)
-	param.interval_min = param.interval_max = 0x320;
+#if XTAL_32K_TYPE == EXTERNAL_XTAL_32K
+    param.interval_min = param.interval_max = 0x320;
     param.latency = 0;
     param.timeout = 0x05dc;
     ret = bt_conn_le_param_update(ble_tp_conn, &param);
-    if (ret) 
-    {
-	    BT_WARN("conn update failed (err %d)\r\n", ret);
-	} 
-	else 
-	{
-		BT_WARN("conn update initiated\r\n");
-	}
-	#endif
+    if (ret) {
+        BT_WARN("conn update failed (err %d)\r\n", ret);
+    } else {
+        BT_WARN("conn update initiated\r\n");
+    }
+#endif
 
-    #if !defined(CONFIG_BT_OAD_SERVER)
+#if !defined(CONFIG_BT_OAD_SERVER)
     //set data length after connected.
     ret = bt_le_set_data_len(ble_tp_conn, tx_octets, tx_time);
 
@@ -124,8 +119,7 @@ static void ble_tp_connected(struct bt_conn *conn, u8_t err)
     } else {
         BT_WARN("ble tp exchange mtu size failure, err: %d", ret);
     }
-    #endif
-    
+#endif
 }
 
 /*************************************************************************
@@ -143,6 +137,9 @@ static void ble_tp_disconnected(struct bt_conn *conn, u8_t reason)
     }
 
     ble_tp_conn = NULL;
+    extern int ble_start_adv(void);
+    ble_start_adv();
+    pds_start = true;
 }
 
 /*************************************************************************
@@ -151,21 +148,16 @@ NAME
 */
 
 static void ble_param_updated(struct bt_conn *conn, u16_t interval,
-			     u16_t latency, u16_t timeout)
+                              u16_t latency, u16_t timeout)
 {
     BT_WARN("LE conn param updated: int 0x%04x lat %d to %d \r\n", interval, latency, timeout);
-	#if (BLE_CONN_PDS)
-    if( interval > 80)
-    {
+#if XTAL_32K_TYPE == EXTERNAL_XTAL_32K
+    if (interval > 80) {
         pds_start = true;
+    } else {
+        pds_start = false;
     }
-	else
-	{
-		pds_start = false;
-		 	
-	}
-	#endif
-	
+#endif
 }
 
 /*************************************************************************
@@ -278,7 +270,6 @@ static void ble_tp_notify_ccc_changed(const struct bt_gatt_attr *attr, u16_t val
     BT_WARN("ccc:value=[%d]", value);
 
     if (value == BT_GATT_CCC_NOTIFY) {
-
         if (xTaskCreate(ble_tp_notify_task, (char *)"bletp", 512, NULL, 15, &ble_tp_task_h) == pdPASS) {
             created_tp_task = 1;
             BT_WARN("Create throughput tx task success");
