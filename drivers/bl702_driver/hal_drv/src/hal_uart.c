@@ -148,7 +148,7 @@ int uart_control(struct device *dev, int cmd, void *args)
     switch (cmd) {
         case DEVICE_CTRL_SET_INT /* constant-expression */: {
             uint32_t offset = __builtin_ctz((uint32_t)args);
-            while ((0 <= offset) && (offset < 9)) {
+            while (offset < 9) {
                 if ((uint32_t)args & (1 << offset)) {
                     UART_IntMask(uart_device->id, offset, UNMASK);
                 }
@@ -163,7 +163,7 @@ int uart_control(struct device *dev, int cmd, void *args)
         }
         case DEVICE_CTRL_CLR_INT /* constant-expression */: {
             uint32_t offset = __builtin_ctz((uint32_t)args);
-            while ((0 <= offset) && (offset < 9)) {
+            while (offset < 9) {
                 if ((uint32_t)args & (1 << offset)) {
                     UART_IntMask(uart_device->id, offset, MASK);
                 }
@@ -387,7 +387,7 @@ void uart_isr(uart_device_t *handle)
     /* Rx fifo ready interrupt,auto-cleared when data is popped */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FIFO_MASK)) {
         uint8_t buffer[UART_FIFO_MAX_LEN];
-        uint8_t len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
+        uint8_t len = UART_ReceiveData(handle->id, buffer, UART_FIFO_MAX_LEN);
         if (len) {
             handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RX_FIFO);
         }
@@ -395,13 +395,12 @@ void uart_isr(uart_device_t *handle)
 
     /* Rx time-out interrupt */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_RTO_MASK)) {
+        BL_WR_REG(UARTx, UART_INT_CLEAR, 0x10);
         uint8_t buffer[UART_FIFO_MAX_LEN];
         uint8_t len = UART_ReceiveData(handle->id, buffer, UART_FIFO_MAX_LEN);
         if (len) {
             handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RTO);
         }
-
-        BL_WR_REG(UARTx, UART_INT_CLEAR, 0x10);
     }
 
     /* Rx parity check error interrupt */

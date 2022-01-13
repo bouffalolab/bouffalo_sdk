@@ -29,7 +29,5 @@
 #define ATTR_PDS_RAM_CONST_SECTION __attribute__((section(".pds_ram_data")))
 
 uint32_t hal_pds_enter_with_time_compensation(uint32_t pdsLevel, uint32_t pdsSleepCycles);
-void pm_set_tcm_recovery_callback(void (*tcm_recovery_cb)(void));
-void pm_set_board_recovery_callback(void (*board_recovery_cb)(void));
-
+void pm_set_hardware_recovery_callback(void (*hardware_recovery_cb)(void));
 #endif

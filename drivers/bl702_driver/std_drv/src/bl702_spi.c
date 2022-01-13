@@ -275,8 +275,8 @@ BL_Err_Type SPI_FifoConfig(SPI_ID_Type spiNo, SPI_FifoCfg_Type *fifoCfg)
 
     /* Set fifo threshold value */
     tmpVal = BL_RD_REG(SPIx, SPI_FIFO_CONFIG_1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SPI_TX_FIFO_TH, fifoCfg->txFifoThreshold - 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SPI_RX_FIFO_TH, fifoCfg->rxFifoThreshold - 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SPI_TX_FIFO_TH, fifoCfg->txFifoThreshold);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, SPI_RX_FIFO_TH, fifoCfg->rxFifoThreshold);
     BL_WR_REG(SPIx, SPI_FIFO_CONFIG_1, tmpVal);
 
     /* Enable or disable dma function */

@@ -651,6 +651,11 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[]={
         .cfg=&flashCfg_XM25QH16,
     },
     {
+        .jedecID=0x1840C8,
+        //.name="GD_25Q127C_128_33",
+        .cfg=&flashCfg_XM25QH16,
+    },
+    {
         .jedecID=0x176085,
         //.name="Puya_P25Q64H_64_33",
         .cfg=&flashCfg_XM25QH16,
@@ -669,6 +674,11 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[]={
         .jedecID=0x1460CD,
         //.name="TH_25Q80HB",
         .cfg=&flashCfg_FM_25Q08,
+    },
+    {
+        .jedecID=0x1870EF,
+        //.name="W25Q128JV_128_33",
+        .cfg=&flashCfg_XM25QH16,
     },
 };
 
@@ -704,10 +714,11 @@ BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID
     uint32_t i;
     uint8_t buf[sizeof(SPI_Flash_Cfg_Type)+8];
     uint32_t crc,*pCrc;
+    char flashCfgMagic[] = "FCFG";
 
     if(flashID==0){
         XIP_SFlash_Read_Via_Cache_Need_Lock(8+BL602_FLASH_XIP_BASE,buf,sizeof(SPI_Flash_Cfg_Type)+8);
-        if(BL602_MemCmp(buf,BFLB_FLASH_CFG_MAGIC,4)==0){
+        if(BL602_MemCmp(buf,flashCfgMagic,4)==0){
             crc=BFLB_Soft_CRC32((uint8_t *)buf+4,sizeof(SPI_Flash_Cfg_Type));
             pCrc=(uint32_t *)(buf+4+sizeof(SPI_Flash_Cfg_Type));
             if(*pCrc==crc){

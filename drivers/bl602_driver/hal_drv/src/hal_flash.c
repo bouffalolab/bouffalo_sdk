@@ -27,7 +27,21 @@
 #include "bl602_sf_cfg_ext.h"
 #include "hal_flash.h"
 
+static uint32_t g_jedec_id = 0;
 static SPI_Flash_Cfg_Type g_flash_cfg;
+
+/**
+ * @brief flash_get_jedecid
+ *
+ * @return BL_Err_Type
+ */
+uint32_t flash_get_jedecid(void)
+{
+    uint32_t jid = 0;
+
+    jid = ((g_jedec_id&0xff)<<16) + (g_jedec_id&0xff00) + ((g_jedec_id&0xff0000)>>16);
+    return jid;
+}
 
 /**
  * @brief flash_get_cfg
@@ -93,6 +107,7 @@ static BL_Err_Type ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flas
     SFlash_GetJedecId(p_flash_cfg, (uint8_t *)&jid);
     arch_memcpy(jedec_id, (uint8_t *)&jid, 3);
     jid &= 0xFFFFFF;
+    g_jedec_id = jid;
     ret = SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(jid, p_flash_cfg);
     if (ret == SUCCESS) {
         p_flash_cfg->mid = (jid & 0xff);

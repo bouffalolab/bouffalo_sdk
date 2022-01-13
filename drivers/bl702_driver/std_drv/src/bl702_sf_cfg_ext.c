@@ -70,7 +70,8 @@ typedef struct
 /** @defgroup  SF_CFG_EXT_Private_Variables
  *  @{
  */
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D = {
+
+static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D={
     .resetCreadCmd = 0xff,
     .resetCreadCmdSize = 3,
     .mid = 0x51,
@@ -102,7 +103,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D = {
     .writeRegCmd[1] = 0x01,
 
     .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
+    .frQioDmyClk = 16/8,
     .cReadSupport = 0,
     .cReadMode = 0xA0,
 
@@ -110,7 +111,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D = {
     .burstWrapCmdDmyClk = 0x3,
     .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
     .burstWrapData = 0x40,
-    /*erase*/
+     /*erase*/
     .chipEraseCmd = 0xc7,
     .sectorEraseCmd = 0x20,
     .blk32EraseCmd = 0x52,
@@ -122,7 +123,7 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D = {
 
     .ioMode = 0x11,
     .clkDelay = 1,
-    .clkInvert = 0x01,
+    .clkInvert = 0x3f,
 
     .resetEnCmd = 0x66,
     .resetCmd = 0x99,
@@ -139,18 +140,18 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D = {
 
     /*read*/
     .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
+    .frDmyClk = 8/8,
     .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
+    .qpiFrDmyClk = 8/8,
     .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
+    .frDoDmyClk = 8/8,
     .fastReadDioCmd = 0xbb,
     .frDioDmyClk = 0,
     .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .frQoDmyClk = 8/8,
 
     .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
+    .qpiFrQioDmyClk = 16/8,
     .qpiPageProgramCmd = 0x02,
     .writeVregEnableCmd = 0x50,
 
@@ -158,12 +159,12 @@ static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D = {
     .enterQpi = 0x38,
     .exitQpi = 0xff,
 
-    /*AC*/
+     /*AC*/
     .timeEsector = 300,
     .timeE32k = 1200,
     .timeE64k = 1200,
     .timePagePgm = 5,
-    .timeCe = 33000,
+    .timeCe = 20*1000,
     .pdDelay = 20,
     .qeData = 0,
 };
@@ -543,6 +544,16 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[] = {
         .name = "ZB_25Q32B_16_33",
         .cfg = &flashCfg_Winb_16JV,
     },
+    {
+        .jedecID = 0x1560EB,
+        .name = "TH_25Q16HB_16_33",
+        .cfg = &flashCfg_FM_Q80,
+    },
+    {
+        .jedecID = 0x15345E,
+        .name = "ZB_25Q16A_15_33",
+        .cfg = &flashCfg_Winb_16JV,
+    },
 };
 
 /*@} end of group SF_CFG_EXT_Private_Variables */
@@ -610,11 +621,12 @@ BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID
     uint32_t i;
     uint8_t buf[sizeof(SPI_Flash_Cfg_Type) + 8];
     uint32_t crc, *pCrc;
+    char flashCfgMagic[] = "FCFG";
 
     if (flashID == 0) {
         XIP_SFlash_Read_Via_Cache_Need_Lock(8 + BL702_FLASH_XIP_BASE, buf, sizeof(SPI_Flash_Cfg_Type) + 8);
 
-        if (BL702_MemCmp(buf, BFLB_FLASH_CFG_MAGIC, 4) == 0) {
+        if (BL702_MemCmp(buf, flashCfgMagic, 4) == 0) {
             crc = BFLB_Soft_CRC32((uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
             pCrc = (uint32_t *)(buf + 4 + sizeof(SPI_Flash_Cfg_Type));
 

@@ -380,16 +380,17 @@ void adc_isr(adc_device_t *handle)
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_UNDERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_UNDERRUN) == UNMASK) {
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_UNDERRUN);
         ADC_IntClr(ADC_INT_FIFO_UNDERRUN);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_UNDERRUN);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_OVERRUN) == SET && ADC_IntGetMask(ADC_INT_FIFO_OVERRUN) == UNMASK) {
-        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_OVERRUN);
         ADC_IntClr(ADC_INT_FIFO_OVERRUN);
+        handle->parent.callback(&handle->parent, NULL, 0, ADC_EVENT_OVERRUN);
     }
 
     if (ADC_GetIntStatus(ADC_INT_FIFO_READY) == SET && ADC_IntGetMask(ADC_INT_FIFO_READY) == UNMASK) {
+        ADC_IntClr(ADC_INT_FIFO_READY);
         uint32_t adc_count = ADC_Get_FIFO_Count();
         uint32_t adc_fifo_val[32];
         adc_channel_val_t adc_parse_val[32];
@@ -398,7 +399,6 @@ void adc_isr(adc_device_t *handle)
         }
         ADC_Parse_Result(adc_fifo_val, adc_count, (ADC_Result_Type *)adc_parse_val);
         handle->parent.callback(&handle->parent, (void *)adc_parse_val, adc_count, ADC_EVENT_FIFO);
-        ADC_IntClr(ADC_INT_FIFO_READY);
     }
 }
 #ifdef BSP_USING_ADC0

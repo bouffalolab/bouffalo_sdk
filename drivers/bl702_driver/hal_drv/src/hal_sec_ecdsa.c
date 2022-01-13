@@ -20,12 +20,31 @@
 
 //#define ECDSA_DBG                                   1
 //#define ECDSA_DBG_DETAIL                            1
+
+#define secp256r1
+#define secp256k1
+#define SEC_ECC_POINT_MUL_PARAM_CFG(G) sec_ecc_point_mul_cfg( \
+    (uint32_t *)G##P,                                         \
+    (uint32_t *)G##PrimeN_P,                                  \
+    (uint32_t *)G##_1,                                        \
+    (uint32_t *)G##_BAR2,                                     \
+    (uint32_t *)G##_BAR3,                                     \
+    (uint32_t *)G##_BAR4,                                     \
+    (uint32_t *)G##_BAR8,                                     \
+    (uint32_t *)G##_1P1,                                      \
+    (uint32_t *)G##_1M1)
+
+#define SEC_ECC_BASIC_PARAM_CFG(G) sec_ecc_basic_parameter_cfg( \
+    (uint32_t *)G##N,                                           \
+    (uint32_t *)G##PrimeN_N,                                    \
+    (uint32_t *)G##InvR_N)
+
 void bflb_platform_dump(uint8_t *data, uint32_t len);
 
 #if (defined(ECDSA_DBG) || defined(ECDSA_DBG_DETAIL))
 uint32_t pka_tmp[32] = { 0 };
 #endif
-
+/********************************************** secp256r1 *******************************************/
 const uint8_t secp256r1P[32] ALIGN4 = {
     0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
@@ -107,28 +126,139 @@ const uint8_t secp256r1_Gy[32] ALIGN4 = {
     0x8b, 0x4a, 0xb8, 0xe4, 0xba, 0x19, 0xe4, 0x5c, 0xdd, 0xf2, 0x53, 0x57, 0xce, 0x95, 0x56, 0x0a
 };
 
-static int sec_ecc_basic_parameter_init(uint8_t id)
-{
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, (uint32_t *)secp256r1N, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_NPRIME_N_REG_INDEX, (uint32_t *)secp256r1PrimeN_N, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_INVR_N_REG_INDEX, (uint32_t *)secp256r1InvR_N, ECP_SECP256R1_SIZE / 4, 0);
+/********************************************** secp256k1 *******************************************/
+const uint8_t secp256k1P[32] ALIGN4 = {
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFC, 0x2F
+};
+const uint8_t secp256k1B[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07
+};
+const uint8_t secp256k1Gx[32] ALIGN4 = {
+    0x79, 0xBE, 0x66, 0x7E, 0xF9, 0xDC, 0xBB, 0xAC, 0x55, 0xA0, 0x62, 0x95, 0xCE, 0x87, 0x0B, 0x07,
+    0x02, 0x9B, 0xFC, 0xDB, 0x2D, 0xCE, 0x28, 0xD9, 0x59, 0xF2, 0x81, 0x5B, 0x16, 0xF8, 0x17, 0x98
+};
+const uint8_t secp256k1Gy[32] ALIGN4 = {
+    0x4f, 0xe3, 0x42, 0xe2, 0xfe, 0x1a, 0x7f, 0x9b, 0x8e, 0xe7, 0xeb, 0x4a, 0x7c, 0x0f, 0x9e, 0x16,
+    0x2b, 0xce, 0x33, 0x57, 0x6b, 0x31, 0x5e, 0xce, 0xcb, 0xb6, 0x40, 0x68, 0x37, 0xbf, 0x51, 0xf5
+};
+const uint8_t secp256k1N[32] ALIGN4 = {
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
+    0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B, 0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
+};
+const uint8_t secp256k1PrimeN_N[32] ALIGN4 = {
+    0xd9, 0xe8, 0x89, 0xd, 0x64, 0x94, 0xef, 0x93, 0x89, 0x7f, 0x30, 0xc1, 0x27, 0xcf, 0xab, 0x5e,
+    0x50, 0xa5, 0x1a, 0xc8, 0x34, 0xb9, 0xec, 0x24, 0x4b, 0xd, 0xff, 0x66, 0x55, 0x88, 0xb1, 0x3f
+};
+const uint8_t secp256k1InvR_N[32] ALIGN4 = {
+    0xd9, 0xe8, 0x89, 0xd, 0x64, 0x94, 0xef, 0x93, 0x89, 0x7f, 0x30, 0xc1, 0x27, 0xcf, 0xab, 0x5d,
+    0x3b, 0xbb, 0xd4, 0x56, 0x7f, 0xa5, 0xc, 0x3c, 0x80, 0xfd, 0x22, 0x93, 0x80, 0x97, 0xc0, 0x16
+};
+const uint8_t secp256k1PrimeN_P[32] ALIGN4 = {
+    0xc9, 0xbd, 0x19, 0x5, 0x15, 0x53, 0x83, 0x99, 0x9c, 0x46, 0xc2, 0xc2, 0x95, 0xf2, 0xb7, 0x61,
+    0xbc, 0xb2, 0x23, 0xfe, 0xdc, 0x24, 0xa0, 0x59, 0xd8, 0x38, 0x9, 0x1d, 0xd2, 0x25, 0x35, 0x31
+};
+const uint8_t secp256k1InvR_P[32] ALIGN4 = {
+    0xc9, 0xbd, 0x19, 0x5, 0x15, 0x53, 0x83, 0x99, 0x9c, 0x46, 0xc2, 0xc2, 0x95, 0xf2, 0xb7, 0x61,
+    0xbc, 0xb2, 0x23, 0xfe, 0xdc, 0x24, 0xa0, 0x59, 0xd8, 0x38, 0x9, 0x1d, 0x8, 0x68, 0x19, 0x2a
+};
+const uint8_t secp256k1_1[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+};
+const uint8_t secp256k1_BAR2[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x07, 0xa2
+};
+const uint8_t secp256k1_BAR3[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x0b, 0x73
+};
+const uint8_t secp256k1_BAR4[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x0f, 0x44
+};
+const uint8_t secp256k1_BAR8[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x1e, 0x88
+};
+const uint8_t secp256k1_1P1[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x03, 0xd2
+};
+const uint8_t secp256k1_1M1[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x03, 0xd0
+};
+const uint8_t secp256k1_Zerox[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+const uint8_t secp256k1_Zeroy[32] ALIGN4 = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x03, 0xd1
+};
+const uint8_t secp256k1_Gx[32] ALIGN4 = {
+    0x99, 0x81, 0xe6, 0x43, 0xe9, 0x08, 0x9f, 0x48, 0x97, 0x9f, 0x48, 0xc0, 0x33, 0xfd, 0x12, 0x9c,
+    0x23, 0x1e, 0x29, 0x53, 0x29, 0xbc, 0x66, 0xdb, 0xd7, 0x36, 0x2e, 0x5a, 0x48, 0x7e, 0x20, 0x97
+};
+const uint8_t secp256k1_Gy[32] ALIGN4 = {
+    0xcf, 0x3f, 0x85, 0x1f, 0xd4, 0xa5, 0x82, 0xd6, 0x70, 0xb6, 0xb5, 0x9a, 0xac, 0x19, 0xc1, 0x36,
+    0x8d, 0xfc, 0x5d, 0x5d, 0x1f, 0x1d, 0xc6, 0x4d, 0xb1, 0x5e, 0xa6, 0xd2, 0xd3, 0xdb, 0xab, 0xe2
+};
 
-    return 0;
+static BL_Err_Type sec_ecc_basic_parameter_cfg(uint32_t *n, uint32_t *prime_n, uint32_t *invr_n)
+{
+    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, (uint32_t *)n, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_NPRIME_N_REG_INDEX, (uint32_t *)prime_n, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_INVR_N_REG_INDEX, (uint32_t *)invr_n, ECP_SECP256R1_SIZE / 4, 0);
+    return SUCCESS;
+}
+static BL_Err_Type sec_ecc_basic_parameter_init(uint8_t id)
+{
+    if (id >= ECP_TYPE_MAX) {
+        return ERROR;
+    }
+
+    if (id == ECP_SECP256R1) {
+        SEC_ECC_BASIC_PARAM_CFG(secp256r1);
+    } else if (id == ECP_SECP256K1) {
+        SEC_ECC_BASIC_PARAM_CFG(secp256k1);
+    }
+
+    return SUCCESS;
+}
+
+static BL_Err_Type sec_ecc_point_mul_cfg(uint32_t *p, uint32_t *primeN_p, uint32_t *ori_1, uint32_t *bar2,
+                                         uint32_t *bar3, uint32_t *bar4, uint32_t *bar8, uint32_t *bar1p1, uint32_t *bar1m1)
+{
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 0, (uint32_t *)p, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 1, (uint32_t *)primeN_p, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 8, (uint32_t *)ori_1, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 9, (uint32_t *)bar2, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 10, (uint32_t *)bar3, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 11, (uint32_t *)bar4, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 12, (uint32_t *)bar8, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 19, (uint32_t *)bar1p1, ECP_SECP256R1_SIZE / 4, 0);
+    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 20, (uint32_t *)bar1m1, ECP_SECP256R1_SIZE / 4, 0);
+
+    return SUCCESS;
 }
 
 static int sec_ecc_point_mul_init(uint8_t id)
 {
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 0, (uint32_t *)secp256r1P, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 1, (uint32_t *)secp256r1PrimeN_P, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 8, (uint32_t *)secp256r1_1, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 9, (uint32_t *)secp256r1_BAR2, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 10, (uint32_t *)secp256r1_BAR3, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 11, (uint32_t *)secp256r1_BAR4, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 12, (uint32_t *)secp256r1_BAR8, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 19, (uint32_t *)secp256r1_1P1, ECP_SECP256R1_SIZE / 4, 0);
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 20, (uint32_t *)secp256r1_1M1, ECP_SECP256R1_SIZE / 4, 0);
+    if (id >= ECP_TYPE_MAX) {
+        return ERROR;
+    }
 
-    return 0;
+    if (id == ECP_SECP256R1) {
+        SEC_ECC_POINT_MUL_PARAM_CFG(secp256r1);
+    } else if (id == ECP_SECP256K1) {
+        SEC_ECC_POINT_MUL_PARAM_CFG(secp256k1);
+    }
+
+    return SUCCESS;
 }
 
 static void sec_ecdsa_point_add_inf_check(uint8_t *pka_p1_eq_inf, uint8_t *pka_p2_eq_inf)
@@ -284,23 +414,13 @@ static void sec_ecdsa_point_add(uint8_t id)
     //PKA_MSUB(1,3, 3,3, 3,3,14,3,0);
     Sec_Eng_PKA_MSUB(3, 3, 3, 3, 3, 14, 3, 0, 1);
 }
-
-static void sec_ecdsa_point_double(uint8_t id)
+/**
+ * @brief calculate secp256r1's W
+ *
+ * @note index 13:W = 3X^2-3Z^2
+ */
+static void sec_ecdsa_cal_secp256r1_w(void)
 {
-    /* index 2:BAR_Zero_x
-     * index 3:BAR_Zero_y
-     * index 4:BAR_Zero_z
-     * index 5:BAR_G_x
-     * index 6:BAR_G_y
-     * index 7:BAR_G_z
-     * index 8:1
-     * index 9:2
-     * index 10:3
-     * index 11:4
-     * index 12:8
-     * index 19:1P1
-     * index 20:1m1*/
-
     //X1^2
     //PKA_MMUL(0,3,13,3, 5,3, 5,3,0);//d_reg_type,d_reg_idx,s0_reg_type,s0_reg_idx,s1_reg_type,s1_reg_idx,s2_reg_type,s2_reg_idx
     Sec_Eng_PKA_MMUL(3, 13, 3, 5, 3, 5, 3, 0, 0);
@@ -316,6 +436,47 @@ static void sec_ecdsa_point_double(uint8_t id)
     //W = 3*(X1^2-Z1^2)
     //PKA_MMUL(0,3,13,3,10,3,13,3,0);
     Sec_Eng_PKA_MMUL(3, 13, 3, 10, 3, 13, 3, 0, 0);
+}
+
+/**
+ * @brief calculate secp256k1's W
+ *
+ * @note index 13:W = 3X^2
+ */
+static void sec_ecdsa_cal_secp256k1_w(void)
+{
+    //X1^2
+    Sec_Eng_PKA_MMUL(3, 13, 3, 5, 3, 5, 3, 0, 0);
+
+    //W = 3* (X1^2)
+    Sec_Eng_PKA_MMUL(3, 13, 3, 10, 3, 13, 3, 0, 0);
+}
+
+static BL_Err_Type sec_ecdsa_point_double(sec_ecp_type id)
+{
+    /* index 2:BAR_Zero_x
+     * index 3:BAR_Zero_y
+     * index 4:BAR_Zero_z
+     * index 5:BAR_G_x
+     * index 6:BAR_G_y
+     * index 7:BAR_G_z
+     * index 8:1
+     * index 9:2
+     * index 10:3
+     * index 11:4
+     * index 12:8
+     * index 19:1P1
+     * index 20:1m1*/
+
+    if (id >= ECP_TYPE_MAX) {
+        return ERROR;
+    }
+
+    if (id == ECP_SECP256R1) {
+        sec_ecdsa_cal_secp256r1_w();
+    } else if (id == ECP_SECP256K1) {
+        sec_ecdsa_cal_secp256k1_w();
+    }
 
     //S = Y1*Z1
     //PKA_MMUL(0,3,14,3, 6,3, 7,3,0);
@@ -388,6 +549,8 @@ static void sec_ecdsa_point_double(uint8_t id)
     //Z2 = 8*S^3
     //PKA_MMUL(1,3, 7,3,12,3, 7,3,0);
     Sec_Eng_PKA_MMUL(3, 7, 3, 12, 3, 7, 3, 0, 1);
+
+    return SUCCESS;
 }
 #ifdef ECDSA_DBG_DETAIL
 static void sec_ecdsa_dump_temp_result()
@@ -485,6 +648,10 @@ static int32_t sec_ecdh_get_scalar_point(uint8_t id, const uint32_t *pkX, const 
     uint32_t pk_z[8];
 #endif
 
+    if (id >= ECP_TYPE_MAX) {
+        return ERROR;
+    }
+
     /* Pointer check */
     if (private_key == NULL) {
         return -1;
@@ -501,24 +668,38 @@ static int32_t sec_ecdh_get_scalar_point(uint8_t id, const uint32_t *pkX, const 
 
     sec_ecc_point_mul_init(id);
 
-    //X1
-    //PKA_CTREG(3, 2,8,bar_Zero_x);
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 2, (uint32_t *)secp256r1_Zerox, ECP_SECP256R1_SIZE / 4, 0);
-    //Y1
-    //PKA_CTREG(3, 3,8,bar_Zero_y);
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 3, (uint32_t *)secp256r1_Zeroy, ECP_SECP256R1_SIZE / 4, 0);
+    if (id == ECP_SECP256R1) {
+        //X1
+        //PKA_CTREG(3, 2,8,bar_Zero_x);
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 2, (uint32_t *)secp256r1_Zerox, ECP_SECP256R1_SIZE / 4, 0);
+        //Y1
+        //PKA_CTREG(3, 3,8,bar_Zero_y);
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 3, (uint32_t *)secp256r1_Zeroy, ECP_SECP256R1_SIZE / 4, 0);
+    } else if (id == ECP_SECP256K1) {
+        //X1
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 2, (uint32_t *)secp256k1_Zerox, ECP_SECP256R1_SIZE / 4, 0);
+        //Y1
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 3, (uint32_t *)secp256k1_Zeroy, ECP_SECP256R1_SIZE / 4, 0);
+    }
     //Z1
     //PKA_CTREG(3, 4,8,bar_Zero_z);
     //PKA_MOVDAT(1,3, 4,3, 2);
     Sec_Eng_PKA_Move_Data(3, 4, 3, 2, 1);
 
     if (pkX == NULL) {
-        //X2
-        //PKA_CTREG(3, 5,8,bar_G_x);
-        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 5, (uint32_t *)secp256r1_Gx, ECP_SECP256R1_SIZE / 4, 0);
-        //Y2
-        //PKA_CTREG(3, 6,8,bar_G_y);
-        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256r1_Gy, ECP_SECP256R1_SIZE / 4, 0);
+        if (id == ECP_SECP256R1) {
+            //X2
+            //PKA_CTREG(3, 5,8,bar_G_x);
+            Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 5, (uint32_t *)secp256r1_Gx, ECP_SECP256R1_SIZE / 4, 0);
+            //Y2
+            //PKA_CTREG(3, 6,8,bar_G_y);
+            Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256r1_Gy, ECP_SECP256R1_SIZE / 4, 0);
+        } else if (id == ECP_SECP256K1) {
+            //X2
+            Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 5, (uint32_t *)secp256k1_Gx, ECP_SECP256R1_SIZE / 4, 0);
+            //Y2
+            Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256k1_Gy, ECP_SECP256R1_SIZE / 4, 0);
+        }
     } else {
         /* chaneg peer's public key to mont domain*/
         //PUB_x
@@ -582,9 +763,13 @@ static int32_t sec_ecdh_get_scalar_point(uint8_t id, const uint32_t *pkX, const 
     //get R.x
     //R.z ^ -1
     Sec_Eng_PKA_MINV(ECP_SECP256R1_REG_TYPE, 5, ECP_SECP256R1_REG_TYPE, 4, ECP_SECP256R1_REG_TYPE, 0, 1);
-    //inv_r
-    //PKA_CTREG(3, 6,8,inv_r);
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256r1InvR_P, ECP_SECP256R1_SIZE / 4, 0);
+    if (id == ECP_SECP256R1) {
+        //inv_r
+        //PKA_CTREG(3, 6,8,inv_r);
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256r1InvR_P, ECP_SECP256R1_SIZE / 4, 0);
+    } else if (id == ECP_SECP256K1) {
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256k1InvR_P, ECP_SECP256R1_SIZE / 4, 0);
+    }
     //R.z ^ -1
     Sec_Eng_PKA_CREG(ECP_SECP256R1_REG_TYPE, 2 * ECP_SECP256R1_LT_REG_INDEX - 1, ECP_SECP256R1_SIZE / 4, 1);
     Sec_Eng_PKA_CREG(ECP_SECP256R1_REG_TYPE, 2 * ECP_SECP256R1_LT_REG_INDEX, ECP_SECP256R1_SIZE / 4, 1);
@@ -606,7 +791,12 @@ static int32_t sec_ecdh_get_scalar_point(uint8_t id, const uint32_t *pkX, const 
     MSG("R.x=\r\n");
     bflb_platform_dump(pRx, ECP_SECP256R1_SIZE);
 #endif
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, (uint32_t *)secp256r1N, ECP_SECP256R1_SIZE / 4, 0);
+    if (id == ECP_SECP256R1) {
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, (uint32_t *)secp256r1N, ECP_SECP256R1_SIZE / 4, 0);
+    } else if (id == ECP_SECP256K1) {
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, (uint32_t *)secp256k1N, ECP_SECP256R1_SIZE / 4, 0);
+    }
+
     Sec_Eng_PKA_MREM(ECP_SECP256R1_REG_TYPE, 2, ECP_SECP256R1_REG_TYPE, 2,
                      ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, 1);
     Sec_Eng_PKA_Read_Data(ECP_SECP256R1_REG_TYPE, 2, (uint32_t *)pRx, ECP_SECP256R1_SIZE / 4);
@@ -614,15 +804,23 @@ static int32_t sec_ecdh_get_scalar_point(uint8_t id, const uint32_t *pkX, const 
     MSG("R.x%n=\r\n");
     bflb_platform_dump(pRx, ECP_SECP256R1_SIZE);
 #endif
+    if (id == ECP_SECP256R1) {
+        /*after %n,re write p*/
+        Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 0, (uint32_t *)secp256r1P, ECP_SECP256R1_SIZE / 4, 0);
+    } else if (id == ECP_SECP256K1) {
+        Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 0, (uint32_t *)secp256k1P, ECP_SECP256R1_SIZE / 4, 0);
+    }
 
-    /*after %n,re write p*/
-    Sec_Eng_PKA_Write_Data(SEC_ENG_PKA_REG_SIZE_32, 0, (uint32_t *)secp256r1P, ECP_SECP256R1_SIZE / 4, 0);
     //get R.y
     //R.z ^ -1
     Sec_Eng_PKA_MINV(ECP_SECP256R1_REG_TYPE, 5, ECP_SECP256R1_REG_TYPE, 4, ECP_SECP256R1_REG_TYPE, 0, 1);
     //inv_r
     //PKA_CTREG(3, 6,8,inv_r);
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256r1InvR_P, ECP_SECP256R1_SIZE / 4, 0);
+    if (id == ECP_SECP256R1) {
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256r1InvR_P, ECP_SECP256R1_SIZE / 4, 0);
+    } else if (id == ECP_SECP256K1) {
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, 6, (uint32_t *)secp256k1InvR_P, ECP_SECP256R1_SIZE / 4, 0);
+    }
     //R.z ^ -1
     Sec_Eng_PKA_CREG(ECP_SECP256R1_REG_TYPE, 2 * ECP_SECP256R1_LT_REG_INDEX - 1, ECP_SECP256R1_SIZE / 4, 1);
     Sec_Eng_PKA_CREG(ECP_SECP256R1_REG_TYPE, 2 * ECP_SECP256R1_LT_REG_INDEX, ECP_SECP256R1_SIZE / 4, 1);
@@ -643,7 +841,11 @@ static int32_t sec_ecdh_get_scalar_point(uint8_t id, const uint32_t *pkX, const 
     MSG("R.y=\r\n");
     bflb_platform_dump(pRy, ECP_SECP256R1_SIZE);
 #endif
-    Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, (uint32_t *)secp256r1N, ECP_SECP256R1_SIZE / 4, 0);
+    if (id == ECP_SECP256R1) {
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, (uint32_t *)secp256r1N, ECP_SECP256R1_SIZE / 4, 0);
+    } else if (id == ECP_SECP256K1) {
+        Sec_Eng_PKA_Write_Data(ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, (uint32_t *)secp256k1N, ECP_SECP256R1_SIZE / 4, 0);
+    }
     Sec_Eng_PKA_MREM(ECP_SECP256R1_REG_TYPE, 3, ECP_SECP256R1_REG_TYPE, 3,
                      ECP_SECP256R1_REG_TYPE, ECP_SECP256R1_N_REG_INDEX, 1);
     Sec_Eng_PKA_Read_Data(ECP_SECP256R1_REG_TYPE, 3, (uint32_t *)pRy, ECP_SECP256R1_SIZE / 4);

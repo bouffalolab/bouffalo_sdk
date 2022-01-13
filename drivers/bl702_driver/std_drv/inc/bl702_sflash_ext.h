@@ -51,11 +51,31 @@
  *  @{
  */
 
+/**
+ *  @brief Serail flash protect KH25V40 type definition
+ */
+typedef enum {
+    SFLASH_KH25V40_PROTECT_NONE,          /*!< SFlash no protect KH25V40 */
+    SFLASH_KH25V40_PROTECT_448KTO512K,    /*!< SFlash protect KH25V40 448K to 512K */
+    SFLASH_KH25V40_PROTECT_384KTO512K,    /*!< SFlash protect KH25V40 384K to 512K */
+    SFLASH_KH25V40_PROTECT_256KTO512K,    /*!< SFlash protect KH25V40 256K to 512K */
+    SFLASH_KH25V40_PROTECT_ALL,           /*!< SFlash protect KH25V40 0K to 512K */
+} SFlash_Protect_Kh25v40_Type;
+
 /*@} end of group SFLAH_EXT_Public_Types */
 
 /** @defgroup  SFLAH_EXT_Public_Constants
  *  @{
  */
+
+/** @defgroup  SFLASH_PROTECT_KH25V40_TYPE
+ *  @{
+ */
+#define IS_SFLASH_PROTECT_KH25V40_TYPE(type) (((type) == SFLASH_KH25V40_PROTECT_NONE) || \
+                                              ((type) == SFLASH_KH25V40_PROTECT_448KTO512K) ||  \
+                                              ((type) == SFLASH_KH25V40_PROTECT_384KTO512K) ||  \
+                                              ((type) == SFLASH_KH25V40_PROTECT_256KTO512K) || \
+                                              ((type) == SFLASH_KH25V40_PROTECT_ALL))
 
 /*@} end of group SFLAH_EXT_Public_Constants */
 
@@ -68,6 +88,7 @@
 /** @defgroup  SFLAH_EXT_Public_Functions
  *  @{
  */
+BL_Err_Type SFlash_KH25V40_Write_Protect(SPI_Flash_Cfg_Type *flashCfg, SFlash_Protect_Kh25v40_Type protect);
 BL_Err_Type SFlash_Read_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t readRegCmd, uint8_t *regValue,
                                      uint8_t regLen);
 BL_Err_Type SFlash_Write_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t writeRegCmd, uint8_t *regValue,

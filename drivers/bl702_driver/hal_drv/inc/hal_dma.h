@@ -31,12 +31,12 @@ extern "C" {
 #include "drv_device.h"
 #include "bl702_config.h"
 
-#define DMA_CHANNEL_GET_STATUS    0x10
-#define DMA_CHANNEL_START         0x11
-#define DMA_CHANNEL_STOP          0x12
-#define DMA_CHANNEL_UPDATE        0x13
-#define DEVICE_CTRL_DMA_CONFIG_SI 0x14
-#define DEVICE_CTRL_DMA_CONFIG_DI 0x15
+#define DEVICE_CTRL_DMA_CHANNEL_GET_STATUS 0x10
+#define DEVICE_CTRL_DMA_CHANNEL_START      0x11
+#define DEVICE_CTRL_DMA_CHANNEL_STOP       0x12
+#define DEVICE_CTRL_DMA_CHANNEL_UPDATE     0x13
+#define DEVICE_CTRL_DMA_CONFIG_SI          0x14
+#define DEVICE_CTRL_DMA_CONFIG_DI          0x15
 
 enum dma_index_type {
 #ifdef BSP_USING_DMA0_CH0
@@ -66,10 +66,10 @@ enum dma_index_type {
     DMA_MAX_INDEX
 };
 
-#define dma_channel_start(dev)        device_control(dev, DMA_CHANNEL_START, NULL)
-#define dma_channel_stop(dev)         device_control(dev, DMA_CHANNEL_STOP, NULL)
-#define dma_channel_update(dev, list) device_control(dev, DMA_CHANNEL_UPDATE, list)
-#define dma_channel_check_busy(dev)   device_control(dev, DMA_CHANNEL_GET_STATUS, NULL)
+#define dma_channel_start(dev)        device_control(dev, DEVICE_CTRL_DMA_CHANNEL_START, NULL)
+#define dma_channel_stop(dev)         device_control(dev, DEVICE_CTRL_DMA_CHANNEL_STOP, NULL)
+#define dma_channel_update(dev, list) device_control(dev, DEVICE_CTRL_DMA_CHANNEL_UPDATE, list)
+#define dma_channel_check_busy(dev)   device_control(dev, DEVICE_CTRL_DMA_CHANNEL_GET_STATUS, NULL)
 
 #define DMA_LLI_ONCE_MODE  0
 #define DMA_LLI_CYCLE_MODE 1
@@ -96,7 +96,7 @@ enum dma_index_type {
 #define DMA_ADDR_SPI_RDR   (0x4000A200 + 0x8C)
 #define DMA_ADDR_I2S_TDR   (0x4000AA00 + 0x88)
 #define DMA_ADDR_I2S_RDR   (0x4000AA00 + 0x8C)
-#define DMA_ADDR_ADC0_DR   (0x40002000 + 0x04)
+#define DMA_ADDR_ADC_RDR   (0x40002000 + 0x04)
 #define DMA_ADDR_DAC_TDR   (0x40002000 + 0X48)
 
 #define DMA_REQUEST_NONE     0x00000000 /*!< DMA request peripheral:None */

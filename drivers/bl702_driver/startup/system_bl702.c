@@ -134,11 +134,9 @@ void SystemInit(void)
     /* global IRQ enable */
     __enable_irq();
 }
-/*identify flash config automaticly*/
-extern BL_Err_Type flash_init(void);
+
 void System_Post_Init(void)
 {
     PDS_Trim_RC32M();
     HBN_Trim_RC32K();
-    flash_init();
 }

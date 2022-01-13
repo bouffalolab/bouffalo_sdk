@@ -3456,6 +3456,10 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Pad_HZ(void)
     uint32_t tmpVal;
     uint32_t offset;
 
+    if (BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) != 0x00) {
+        return ERROR;
+    }
+
     for (offset = 23; offset <= 28; offset++) {
         tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
         /* pu=0, pd=0, ie=0 */
@@ -3466,18 +3470,16 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Pad_HZ(void)
         }
         BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4, tmpVal);
 
-        if ((BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (offset - 23))) == 0) {
-            tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
-            /* func_sel=swgpio */
-            if (offset % 2 == 0) {
-                tmpVal = (tmpVal & 0xffff00ff);
-                tmpVal |= 0x0B00;
-            } else {
-                tmpVal = (tmpVal & 0x00ffffff);
-                tmpVal |= (0x0B00 << 16);
-            }
-            BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4, tmpVal);
+        tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
+        /* func_sel=swgpio */
+        if (offset % 2 == 0) {
+            tmpVal = (tmpVal & 0xffff00ff);
+            tmpVal |= 0x0B00;
+        } else {
+            tmpVal = (tmpVal & 0x00ffffff);
+            tmpVal |= (0x0B00 << 16);
         }
+        BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4, tmpVal);
     }
 
     tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET);
@@ -3492,6 +3494,10 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Set_Psram_Pad_HZ(void)
     uint32_t tmpVal;
     uint32_t offset;
 
+    if (BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) != 0x3F) {
+        return ERROR;
+    }
+
     for (offset = 32; offset <= 37; offset++) {
         tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4);
         /* pu=0, pd=0, ie=0 */
@@ -3502,23 +3508,21 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Set_Psram_Pad_HZ(void)
         }
         BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + offset / 2 * 4, tmpVal);
 
-        if ((BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO) & (1 << (offset - 32))) > 0) {
-            tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset - 9) / 2 * 4);
-            /* func_sel=swgpio */
-            if ((offset - 9) % 2 == 0) {
-                tmpVal = (tmpVal & 0xffff00ff);
-                tmpVal |= 0x0B00;
-            } else {
-                tmpVal = (tmpVal & 0x00ffffff);
-                tmpVal |= (0x0B00 << 16);
-            }
-            BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset - 9) / 2 * 4, tmpVal);
+        tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset - 9) / 2 * 4);
+        /* func_sel=swgpio */
+        if ((offset - 9) % 2 == 0) {
+            tmpVal = (tmpVal & 0xffff00ff);
+            tmpVal |= 0x0B00;
+        } else {
+            tmpVal = (tmpVal & 0x00ffffff);
+            tmpVal |= (0x0B00 << 16);
         }
+        BL_WR_WORD(GLB_BASE + GLB_GPIO_OFFSET + (offset - 9) / 2 * 4, tmpVal);
     }
 
-    tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET + 4);
-    tmpVal &= 0xFFFFFFC0;
-    BL_WR_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET + 4, tmpVal);
+    tmpVal = BL_RD_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET);
+    tmpVal &= 0xE07FFFFF;
+    BL_WR_WORD(GLB_BASE + GLB_GPIO_OUTPUT_EN_OFFSET, tmpVal);
 
     return SUCCESS;
 }

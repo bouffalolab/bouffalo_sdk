@@ -87,6 +87,41 @@
  */
 
 /****************************************************************************/ /**
+ * @brief  KH25V40 flash write protect set
+ *
+ * @param  flashCfg: Serial flash parameter configuration pointer
+ * @param  protect: protect area
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+__WEAK
+BL_Err_Type ATTR_TCM_SECTION SFlash_KH25V40_Write_Protect(SPI_Flash_Cfg_Type *flashCfg, SFlash_Protect_Kh25v40_Type protect)
+{
+    uint32_t stat = 0, ret;
+
+    SFlash_Read_Reg(flashCfg, 0, (uint8_t *)&stat, 1);
+    if (((stat >> 2) & 0xf) == protect) {
+        return SUCCESS;
+    }
+
+    stat |= ((protect << 2) & 0xff);
+
+    ret = SFlash_Write_Enable(flashCfg);
+    if (SUCCESS != ret) {
+        return ERROR;
+    }
+
+    SFlash_Write_Reg(flashCfg, 0, (uint8_t *)&stat, 1);
+    SFlash_Read_Reg(flashCfg, 0, (uint8_t *)&stat, 1);
+    if (((stat >> 2) & 0xf) == protect) {
+        return SUCCESS;
+    }
+
+    return ERROR;
+}
+
+/****************************************************************************/ /**
  * @brief  Read flash register with read command
  *
  * @param  flashCfg: Serial flash parameter configuration pointer

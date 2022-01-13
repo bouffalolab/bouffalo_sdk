@@ -27,7 +27,21 @@
 #include "bl702_sf_cfg_ext.h"
 #include "hal_flash.h"
 
+static uint32_t g_jedec_id = 0;
 static SPI_Flash_Cfg_Type g_flash_cfg;
+
+/**
+ * @brief flash_get_jedecid
+ *
+ * @return BL_Err_Type
+ */
+uint32_t flash_get_jedecid(void)
+{
+    uint32_t jid = 0;
+
+    jid = ((g_jedec_id&0xff)<<16) + (g_jedec_id&0xff00) + ((g_jedec_id&0xff0000)>>16);
+    return jid;
+}
 
 /**
  * @brief flash_get_cfg
@@ -92,6 +106,7 @@ static BL_Err_Type ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flas
     SFlash_GetJedecId(p_flash_cfg, (uint8_t *)&jid);
     arch_memcpy(jedec_id, (uint8_t *)&jid, 3);
     jid &= 0xFFFFFF;
+    g_jedec_id = jid;
     ret = SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(jid, p_flash_cfg);
     if (ret == SUCCESS) {
         p_flash_cfg->mid = (jid & 0xff);
@@ -241,6 +256,25 @@ BL_Err_Type ATTR_TCM_SECTION flash_erase(uint32_t startaddr, uint32_t len)
     cpu_global_irq_disable();
     XIP_SFlash_Opt_Enter();
     ret = XIP_SFlash_Erase_Need_Lock(&g_flash_cfg, g_flash_cfg.ioMode & 0x0f, startaddr, startaddr + len - 1);
+    XIP_SFlash_Opt_Exit();
+    cpu_global_irq_enable();
+
+    return ret;
+}
+
+/**
+ * @brief flash write protect set
+ *
+ * @param protect
+ * @return BL_Err_Type
+ */
+BL_Err_Type ATTR_TCM_SECTION flash_write_protect_set(SFlash_Protect_Kh25v40_Type protect)
+{
+    BL_Err_Type ret = ERROR;
+
+    cpu_global_irq_disable();
+    XIP_SFlash_Opt_Enter();
+    ret = XIP_SFlash_KH25V40_Write_Protect_Need_Lock(&g_flash_cfg, protect);
     XIP_SFlash_Opt_Exit();
     cpu_global_irq_enable();
 

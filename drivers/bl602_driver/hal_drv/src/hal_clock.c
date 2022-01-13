@@ -80,11 +80,7 @@ void peripheral_clock_init(void)
 #endif
 
 #if defined(BSP_USING_DAC0)
-#if BSP_ADC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_AUPLL
-    GLB_Set_DAC_CLK(ENABLE, GLB_ADC_CLK_AUDIO_PLL, BSP_DAC_CLOCK_DIV);
-#elif BSP_ADC_CLOCK_SOURCE == ROOT_CLOCK_SOURCE_XCLK
     GLB_Set_DAC_CLK(ENABLE, GLB_ADC_CLK_XCLK, BSP_DAC_CLOCK_DIV);
-#endif
 #endif
 }
 uint32_t system_clock_get(enum system_clock_type type)
@@ -176,6 +172,7 @@ uint32_t peripheral_clock_get(enum peripheral_clock_type type)
 #endif
 
         case PERIPHERAL_CLOCK_ADC:
+        case PERIPHERAL_CLOCK_DAC:
             return 32000000;
 
         default:

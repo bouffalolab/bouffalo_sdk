@@ -24,10 +24,12 @@
 #define __HAL_FLASH__H__
 
 #include "hal_common.h"
+#include "bl602_sflash.h"
 
 #define BL_FLASH_XIP_BASE BL602_FLASH_XIP_BASE
 #define FLASH_NOT_DETECT  0x10
 
+uint32_t flash_get_jedecid(void);
 BL_Err_Type flash_init(void);
 BL_Err_Type flash_read_jedec_id(uint8_t *data);
 BL_Err_Type flash_read_via_xip(uint32_t addr, uint8_t *data, uint32_t len);

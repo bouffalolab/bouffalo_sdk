@@ -80,6 +80,33 @@
  */
 
 /****************************************************************************//**
+ * @brief  XIP KH25V40 flash write protect set
+ *
+ * @param  pFlashCfg: Flash config pointer
+ * @param  protect: protect area
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+__WEAK
+BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_KH25V40_Write_Protect_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, SFlash_Protect_Kh25v40_Type protect)
+{
+    BL_Err_Type stat;
+    uint32_t offset;
+    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
+
+    stat = XIP_SFlash_State_Save(pFlashCfg, &offset);
+    if (stat != SUCCESS) {
+        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    } else {
+        stat = SFlash_KH25V40_Write_Protect(pFlashCfg, protect);
+        XIP_SFlash_State_Restore(pFlashCfg, ioMode, offset);
+    }
+
+    return stat;
+}
+
+/****************************************************************************//**
  * @brief  Clear flash status register need lock
  *
  * @param  pFlashCfg: Flash config pointer

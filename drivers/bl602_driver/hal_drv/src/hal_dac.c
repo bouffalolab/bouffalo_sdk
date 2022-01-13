@@ -23,8 +23,9 @@
 #include "hal_dac.h"
 #include "hal_dma.h"
 #include "hal_clock.h"
-#include "bl702_dac.h"
-#include "bl702_glb.h"
+#include "bl602_dac.h"
+#include "bl602_glb.h"
+#include "dac_config.h"
 
 static dac_device_t dacx_device[] = {
 #ifdef BSP_USING_DAC0
@@ -48,10 +49,10 @@ int dac_open(struct device *dev, uint16_t oflag)
 
     uint32_t dac_clk = peripheral_clock_get(PERIPHERAL_CLOCK_DAC);
 
-    if ((GLB_GPIO_Get_Fun(GLB_GPIO_PIN_11) == GPIO_FUN_ANALOG) && (dac_device->channels & DAC_CHANNEL_0)) {
+    if ((GLB_GPIO_Get_Fun(GLB_GPIO_PIN_13) == GPIO_FUN_ANALOG) && (dac_device->channels & DAC_CHANNEL_0)) {
         dac_channel_enable_check |= DAC_CHANNEL_0;
     }
-    if ((GLB_GPIO_Get_Fun(GLB_GPIO_PIN_17) == GPIO_FUN_ANALOG) && (dac_device->channels & DAC_CHANNEL_1)) {
+    if ((GLB_GPIO_Get_Fun(GLB_GPIO_PIN_14) == GPIO_FUN_ANALOG) && (dac_device->channels & DAC_CHANNEL_1)) {
         dac_channel_enable_check |= DAC_CHANNEL_1;
     }
 
@@ -94,7 +95,7 @@ int dac_open(struct device *dev, uint16_t oflag)
     tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_CTRL);
     /*dac vref select*/
     if (dac_device->vref == DAC_VREF_EXTERNAL) {
-        if (GLB_GPIO_Get_Fun(GLB_GPIO_PIN_7) != GPIO_FUN_ANALOG)
+        if (GLB_GPIO_Get_Fun(GLB_GPIO_PIN_12) != GPIO_FUN_ANALOG)
             return -1;
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDAC_REF_SEL);
     } else {
@@ -143,18 +144,18 @@ int dac_open(struct device *dev, uint16_t oflag)
     BL_WR_REG(GPIP_BASE, GPIP_GPDAC_CONFIG, tmpVal);
 
     /* GLB enable or disable channel */
-    if (dac_channel_enable_check & DAC_CHANNEL_0) {
+    if (dac_channel_enable_check) {
         /* a channel */
         tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_ACTRL);
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDAC_IOA_EN);
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDAC_A_EN);
-        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_A_RNG, 0x03);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_A_RNG, DAC_REF_RNG_DEFAULT_SELECT);
         tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_ACTRL, tmpVal);
     }
-    if (dac_channel_enable_check & DAC_CHANNEL_1) {
+    if (dac_channel_enable_check) {
         /* b channel */
         tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_BCTRL);
-        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_B_RNG, 0x03);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_B_RNG, DAC_REF_RNG_DEFAULT_SELECT);
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDAC_IOB_EN);
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDAC_B_EN);
         tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_BCTRL, tmpVal);

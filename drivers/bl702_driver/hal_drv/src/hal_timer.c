@@ -346,20 +346,21 @@ void timer_isr(timer_device_t *handle)
 
     /* Comparator 0 match interrupt */
     if (BL_IS_REG_BIT_SET(intId, TIMER_TMSR_0)) {
-        handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP0);
         BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_0));
+        handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP0);
+
     }
 
     /* Comparator 1 match interrupt */
     if (BL_IS_REG_BIT_SET(intId, TIMER_TMSR_1)) {
-        handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP1);
         BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_1));
+        handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP1);
     }
 
     /* Comparator 2 match interrupt */
     if (BL_IS_REG_BIT_SET(intId, TIMER_TMSR_2)) {
-        handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP2);
         BL_WR_WORD(tmpAddr, BL_SET_REG_BIT(tmpVal, TIMER_TCLR_2));
+        handle->parent.callback(&handle->parent, NULL, 0, TIMER_EVENT_COMP2);
     }
 }
 

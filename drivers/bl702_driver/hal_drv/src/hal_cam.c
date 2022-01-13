@@ -220,8 +220,8 @@ void cam_isr(cam_device_t *handle)
 
     tmpVal = BL_RD_REG(CAM_BASE, CAM_DVP_STATUS_AND_ERROR);
     if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_NORMAL_INT_0)) {
-        handle->parent.callback(&handle->parent, NULL, 0, CAM_EVENT_FRAME);
         CAM_IntClr(CAM_INT_NORMAL_0);
+        handle->parent.callback(&handle->parent, NULL, 0, CAM_EVENT_FRAME);
     }
     if (BL_IS_REG_BIT_SET(tmpVal, CAM_STS_NORMAL_INT_1)) {
         CAM_IntClr(CAM_INT_NORMAL_1);

@@ -74,6 +74,7 @@
  *  @{
  */
 
+BL_Err_Type XIP_SFlash_KH25V40_Write_Protect_Need_Lock(SPI_Flash_Cfg_Type *flashCfg, SFlash_Protect_Kh25v40_Type protect);
 BL_Err_Type XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg);
 
 /*@} end of group XIP_SFLASH_EXT_Public_Functions */

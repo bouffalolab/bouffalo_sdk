@@ -24,13 +24,15 @@
 #define __HAL_SEC_ECDSA__H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #include "hal_common.h"
 
 typedef enum {
     ECP_SECP256R1 = 0,
+    ECP_SECP256K1 = 1,
+    ECP_TYPE_MAX = 2,
 } sec_ecp_type;
 
 typedef struct

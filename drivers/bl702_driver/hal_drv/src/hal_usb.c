@@ -27,7 +27,9 @@
 #include "bl702_glb.h"
 
 #define USE_INTERNAL_TRANSCEIVER
-// #define ENABLE_LPM_INT
+//#define ENABLE_LPM_INT
+//#define ENABLE_SOF3MS_INT
+//#define ENABLE_ERROR_INT
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -408,7 +410,7 @@ int usb_write(struct device *dev, uint32_t pos, const void *buffer, uint32_t siz
         usb_lli_list.cfg.bits.SI = 1;
         usb_lli_list.cfg.bits.SBSize = DMA_BURST_16BYTE;
         usb_lli_list.cfg.bits.DBSize = DMA_BURST_1BYTE;
-        device_control(usb_device->tx_dma, DMA_CHANNEL_UPDATE, (void *)((uint32_t)&usb_lli_list));
+        dma_channel_update(usb_device->tx_dma, (void *)((uint32_t)&usb_lli_list));
         dma_channel_start(usb_device->tx_dma);
         return 0;
     } else {
@@ -433,7 +435,7 @@ int usb_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
         usb_lli_list.cfg.bits.SI = 0;
         usb_lli_list.cfg.bits.SBSize = DMA_BURST_1BYTE;
         usb_lli_list.cfg.bits.DBSize = DMA_BURST_16BYTE;
-        device_control(usb_device->rx_dma, DMA_CHANNEL_UPDATE, (void *)((uint32_t)&usb_lli_list));
+        dma_channel_update(usb_device->rx_dma, (void *)((uint32_t)&usb_lli_list));
         dma_channel_start(usb_device->rx_dma);
         return 0;
     } else {
@@ -508,6 +510,10 @@ int usb_dc_ep_open(struct device *dev, const struct usb_dc_ep_cfg *ep_cfg)
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
 
     USB_DC_LOG_DBG("%s ep %x, mps %d, type %d\r\n", __func__, ep, ep_cfg->ep_mps, ep_cfg->ep_type);
+
+    if (ep_idx == 0) {
+        return 0;
+    }
 
     if (USB_EP_DIR_IS_OUT(ep)) {
         epCfg.dir = EP_OUT;
@@ -1028,12 +1034,6 @@ int usb_dc_send_from_ringbuffer(struct device *dev, Ring_Buffer_Type *rb, uint8_
 }
 
 /**
-  * @brief  This function handles PCD interrupt request.
-  * @param  hpcd PCD handle
-  * @retval HAL status
-  */
-
-/**
  * @brief
  *
  * @param device
@@ -1048,11 +1048,10 @@ void usb_dc_isr(usb_dc_device_t *device)
             epnum = (epint - USB_INT_EP0_OUT_CMD) >> 1;
             if (!USB_Is_EPx_RDY_Free(epnum) && (device->out_ep[epnum].ep_cfg.ep_type != USBD_EP_TYPE_ISOC)) {
                 USB_DC_LOG_ERR("ep%d out busy\r\n", epnum);
-                return;
+                continue;
             }
-            device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_OUT(epnum)), 0, USB_DC_EVENT_EP_OUT_NOTIFY);
             USB_Clr_IntStatus(epint);
-            return;
+            device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_OUT(epnum)), 0, USB_DC_EVENT_EP_OUT_NOTIFY);
         }
     }
 
@@ -1062,101 +1061,83 @@ void usb_dc_isr(usb_dc_device_t *device)
             epnum = (epint - USB_INT_EP0_OUT_CMD) >> 1;
             if (!USB_Is_EPx_RDY_Free(epnum) && (device->in_ep[epnum].ep_cfg.ep_type != USBD_EP_TYPE_ISOC)) {
                 USB_DC_LOG_DBG("ep%d in busy\r\n", epnum);
-                return;
+                continue;
             }
-            device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_IN(epnum)), 0, USB_DC_EVENT_EP_IN_NOTIFY);
             USB_Clr_IntStatus(epint);
-            return;
+            device->parent.callback(&device->parent, (void *)((uint32_t)USB_SET_EP_IN(epnum)), 0, USB_DC_EVENT_EP_IN_NOTIFY);
         }
-    }
-
-    /* sof */
-    if (USB_Get_IntStatus(USB_INT_SOF)) {
-        USB_DC_LOG("sof\r\n");
-        device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_SOF);
-        USB_Clr_IntStatus(USB_INT_SOF);
-        return;
-    }
-
-    /* reset */
-    if (USB_Get_IntStatus(USB_INT_RESET)) {
-        USB_DC_LOG("reset\r\n");
-        device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_RESET);
-        USB_Clr_IntStatus(USB_INT_RESET);
-        return;
-    }
-
-    /* vbus toggle */
-    if (USB_Get_IntStatus(USB_INT_VBUS_TGL)) {
-        USB_DC_LOG("vbus toggle\r\n");
-        /*************************************/
-        /*************************************/
-        USB_Clr_IntStatus(USB_INT_VBUS_TGL);
-        return;
     }
 
     /* EP0 setup done */
     if (USB_Get_IntStatus(USB_INT_EP0_SETUP_DONE)) {
-        USB_DC_LOG("S\r\n");
         if (!USB_Is_EPx_RDY_Free(0)) {
             USB_DC_LOG_DBG("ep0 setup busy\r\n");
             return;
         }
+        USB_Clr_IntStatus(USB_INT_EP0_SETUP_DONE);
         device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_SETUP_NOTIFY);
         USB_Set_EPx_Rdy(EP_ID0);
-        USB_Clr_IntStatus(USB_INT_EP0_SETUP_DONE);
         return;
     }
 
     /* EP0 in done */
     if (USB_Get_IntStatus(USB_INT_EP0_IN_DONE)) {
-        USB_DC_LOG("I\r\n");
         if (!USB_Is_EPx_RDY_Free(0)) {
             USB_DC_LOG_DBG("ep0 in busy\r\n");
             return;
         }
+        USB_Clr_IntStatus(USB_INT_EP0_IN_DONE);
         device->parent.callback(&device->parent, (void *)0x80, 0, USB_DC_EVENT_EP0_IN_NOTIFY);
         USB_Set_EPx_Rdy(EP_ID0);
-        USB_Clr_IntStatus(USB_INT_EP0_IN_DONE);
         return;
     }
 
     /* EP0 out done */
     if (USB_Get_IntStatus(USB_INT_EP0_OUT_DONE)) {
-        USB_DC_LOG("O\r\n");
         if (!USB_Is_EPx_RDY_Free(0)) {
             USB_DC_LOG_DBG("ep0 out busy\r\n");
             return;
         }
+        USB_Clr_IntStatus(USB_INT_EP0_OUT_DONE);
         device->parent.callback(&device->parent, (void *)0x00, 0, USB_DC_EVENT_EP0_OUT_NOTIFY);
         USB_Set_EPx_Rdy(EP_ID0);
-        /*************************************/
-        USB_Clr_IntStatus(USB_INT_EP0_OUT_DONE);
+        return;
+    }
+
+    /* sof */
+    if (USB_Get_IntStatus(USB_INT_SOF)) {
+        USB_Clr_IntStatus(USB_INT_SOF);
+        device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_SOF);
+        return;
+    }
+
+    /* reset */
+    if (USB_Get_IntStatus(USB_INT_RESET)) {
+        USB_Clr_IntStatus(USB_INT_RESET);
+        device->parent.callback(&device->parent, NULL, 0, USB_DC_EVENT_RESET);
         return;
     }
 
     /* reset end */
     if (USB_Get_IntStatus(USB_INT_RESET_END)) {
-        USB_DC_LOG("re\r\n");
-        /*************************************/
-        USB_Set_EPx_Rdy(EP_ID0);
-        /*************************************/
         USB_Clr_IntStatus(USB_INT_RESET_END);
+        USB_Set_EPx_Rdy(EP_ID0);
         return;
     }
 
+    /* vbus toggle */
+    if (USB_Get_IntStatus(USB_INT_VBUS_TGL)) {
+        USB_Clr_IntStatus(USB_INT_VBUS_TGL);
+        return;
+    }
+#ifdef ENABLE_LPM_INT
     /* LPM wakeup */
-    /* usb wakeup interrupt, need update by reg_excel_files */
     if (USB_Get_IntStatus(USB_INT_LPM_WAKEUP)) {
-        /*************************************/
-        /*set wInterrupt_Mask global variable*/
-        /*************************************/
         USB_Clr_IntStatus(USB_INT_LPM_WAKEUP);
         return;
     }
 
     /* LPM packet */
-    /* usb suspend interrupt, need update by reg_excel_files */
     if (USB_Get_IntStatus(USB_INT_LPM_PACKET)) {
         /*************************************/
         /* Force low-power mode in the macrocell */
@@ -1167,7 +1148,8 @@ void usb_dc_isr(usb_dc_device_t *device)
         USB_Clr_IntStatus(USB_INT_LPM_PACKET);
         return;
     }
-
+#endif
+#ifdef ENABLE_SOF3MS_INT
     /* lost 3 SOF */
     if (USB_Get_IntStatus(USB_INT_LOST_SOF_3_TIMES)) {
         USB_DC_LOG_ERR("Lost 3 SOFs\r\n");
@@ -1176,7 +1158,8 @@ void usb_dc_isr(usb_dc_device_t *device)
         USB_Clr_IntStatus(USB_INT_LOST_SOF_3_TIMES);
         return;
     }
-
+#endif
+#ifdef ENABLE_ERROR_INT
     /* error */
     if (USB_Get_IntStatus(USB_INT_ERROR)) {
         USB_DC_LOG("USB bus error 0x%08x; EP2 fifo status 0x%08x\r\n", *(volatile uint32_t *)(0x4000D81C), *(volatile uint32_t *)(0x4000D920));
@@ -1186,6 +1169,7 @@ void usb_dc_isr(usb_dc_device_t *device)
         USB_Clr_IntStatus(USB_INT_ERROR);
         return;
     }
+#endif
 }
 /**
  * @brief

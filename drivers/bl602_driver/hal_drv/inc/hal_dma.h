@@ -27,12 +27,12 @@
 #include "drv_device.h"
 #include "bl602_config.h"
 
-#define DMA_CHANNEL_GET_STATUS    0x10
-#define DMA_CHANNEL_START         0x11
-#define DMA_CHANNEL_STOP          0x12
-#define DMA_CHANNEL_UPDATE        0x13
-#define DEVICE_CTRL_DMA_CONFIG_SI 0x14
-#define DEVICE_CTRL_DMA_CONFIG_DI 0x15
+#define DEVICE_CTRL_DMA_CHANNEL_GET_STATUS 0x10
+#define DEVICE_CTRL_DMA_CHANNEL_START      0x11
+#define DEVICE_CTRL_DMA_CHANNEL_STOP       0x12
+#define DEVICE_CTRL_DMA_CHANNEL_UPDATE     0x13
+#define DEVICE_CTRL_DMA_CONFIG_SI          0x14
+#define DEVICE_CTRL_DMA_CONFIG_DI          0x15
 
 enum dma_index_type {
 #ifdef BSP_USING_DMA0_CH0
@@ -62,10 +62,10 @@ enum dma_index_type {
     DMA_MAX_INDEX
 };
 
-#define dma_channel_start(dev)        device_control(dev, DMA_CHANNEL_START, NULL)
-#define dma_channel_stop(dev)         device_control(dev, DMA_CHANNEL_STOP, NULL)
-#define dma_channel_update(dev, list) device_control(dev, DMA_CHANNEL_UPDATE, list)
-#define dma_channel_check_busy(dev)   device_control(dev, DMA_CHANNEL_GET_STATUS, NULL)
+#define dma_channel_start(dev)        device_control(dev, DEVICE_CTRL_DMA_CHANNEL_START, NULL)
+#define dma_channel_stop(dev)         device_control(dev, DEVICE_CTRL_DMA_CHANNEL_STOP, NULL)
+#define dma_channel_update(dev, list) device_control(dev, DEVICE_CTRL_DMA_CHANNEL_UPDATE, list)
+#define dma_channel_check_busy(dev)   device_control(dev, DEVICE_CTRL_DMA_CHANNEL_GET_STATUS, NULL)
 
 #define DMA_LLI_ONCE_MODE  0
 #define DMA_LLI_CYCLE_MODE 1

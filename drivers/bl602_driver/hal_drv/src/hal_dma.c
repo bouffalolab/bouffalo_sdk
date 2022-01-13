@@ -141,18 +141,18 @@ int dma_control(struct device *dev, int cmd, void *args)
 
             break;
 
-        case DMA_CHANNEL_UPDATE:
+        case DEVICE_CTRL_DMA_CHANNEL_UPDATE:
             DMA_LLI_Update(dma_device->ch, (uint32_t)args);
             break;
 
-        case DMA_CHANNEL_GET_STATUS:
+        case DEVICE_CTRL_DMA_CHANNEL_GET_STATUS:
             return DMA_Channel_Is_Busy(dma_device->ch);
 
-        case DMA_CHANNEL_START:
+        case DEVICE_CTRL_DMA_CHANNEL_START:
             DMA_Channel_Enable(dma_device->ch);
             break;
 
-        case DMA_CHANNEL_STOP:
+        case DEVICE_CTRL_DMA_CHANNEL_STOP:
             DMA_Channel_Disable(dma_device->ch);
             break;
         case DEVICE_CTRL_DMA_CONFIG_SI: {

@@ -341,6 +341,58 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, 
 }
 
 /****************************************************************************/ /**
+ * @return 0
+ *
+*******************************************************************************/
+__WEAK
+int ATTR_TCM_SECTION XIP_SFlash_Read_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t addr, uint8_t *dst, int len)
+{
+    __disable_irq();
+    XIP_SFlash_Read_Need_Lock(pFlashCfg, addr, dst, len);
+    __enable_irq();
+    return 0;
+}
+
+/****************************************************************************//**
+ * @brief  Program flash one region with lock
+ *
+ * @param  pFlashCfg: Flash config pointer
+ * @param  addr: Start address to be programed
+ * @param  src: Data pointer to be programed
+ * @param  len: Data length to be programed
+ *
+ * @return 0
+ *
+*******************************************************************************/
+__WEAK
+int ATTR_TCM_SECTION XIP_SFlash_Write_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t addr, uint8_t *src, int len)
+{
+    __disable_irq();
+    XIP_SFlash_Write_Need_Lock(pFlashCfg, addr, src, len);
+    __enable_irq();
+    return 0;
+}
+
+/****************************************************************************//**
+ * @brief  Erase flash one region with lock
+ *
+ * @param  pFlashCfg: Flash config pointer
+ * @param  addr: Start address to be erased
+ * @param  len: Data length to be erased
+ *
+ * @return 0
+ *
+*******************************************************************************/
+__WEAK
+int ATTR_TCM_SECTION XIP_SFlash_Erase_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t addr, int len)
+{
+    __disable_irq();
+    XIP_SFlash_Erase_Need_Lock(pFlashCfg, addr, addr + len - 1);
+    __enable_irq();
+    return 0;
+}
+
+/****************************************************************************//**
  * @brief  XIP SFlash option save
  *
  * @param  aesEnable: AES enable status pointer

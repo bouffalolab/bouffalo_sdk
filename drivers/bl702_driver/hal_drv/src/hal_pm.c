@@ -901,13 +901,16 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint3
     tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
     tmpVal &= ~(1 << 8); //unmask pds wakeup
 
-    if (!BL_GET_REG_BITS_VAL(BL_RD_REG(PDS_BASE, PDS_GPIO_INT), PDS_GPIO_INT_MASK) || !(BL_RD_REG(GLB_BASE, GLB_GPIO_INT_MASK1) == 0xffffffff))
+    if (!BL_GET_REG_BITS_VAL(BL_RD_REG(PDS_BASE, PDS_GPIO_INT), PDS_GPIO_INT_MASK) || !(BL_RD_REG(GLB_BASE, GLB_GPIO_INT_MASK1) == 0xffffffff)) {
         tmpVal |= (1 << 19); //enable gpio wakeup for pds
-    if (BL_GET_REG_BITS_VAL(BL_RD_REG(HBN_BASE, HBN_IRQ_MODE), HBN_REG_AON_PAD_IE_SMT))
+    }
+    if (BL_GET_REG_BITS_VAL(BL_RD_REG(HBN_BASE, HBN_IRQ_MODE), HBN_REG_AON_PAD_IE_SMT)) {
         tmpVal |= (1 << 17); //enable hbn out0 wakeup for pds
+    }
 
-    if (sleep_time)
+    if (sleep_time) {
         tmpVal |= (1 << 16); //unmask pds sleep time wakeup
+    }
     BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
 
     PDS_Set_Vddcore_GPIO_IntClear();
@@ -968,7 +971,7 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint3
 
     /* pds0-pds7 : ldo11rt_iload_sel=3 */
     /* pds31     : ldo11rt_iload_sel=1 */
-    if ((pds_level >= 0) && (pds_level <= 7)) {
+    if (pds_level <= PM_PDS_LEVEL_7) {
         HBN_Set_Ldo11rt_Drive_Strength(HBN_LDO11RT_DRIVE_STRENGTH_25_250UA);
     } else if (pds_level == PM_PDS_LEVEL_31) {
         HBN_Set_Ldo11rt_Drive_Strength(HBN_LDO11RT_DRIVE_STRENGTH_10_100UA);
@@ -1038,13 +1041,16 @@ ATTR_TCM_SECTION void pm_pds31_fast_mode_enter(enum pm_pds_sleep_level pds_level
     tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
     tmpVal &= ~(1 << 8); //unmask pds wakeup
 
-    if (!BL_GET_REG_BITS_VAL(BL_RD_REG(PDS_BASE, PDS_GPIO_INT), PDS_GPIO_INT_MASK))
+    if (!BL_GET_REG_BITS_VAL(BL_RD_REG(PDS_BASE, PDS_GPIO_INT), PDS_GPIO_INT_MASK)) {
         tmpVal |= (1 << 19); //enable gpio wakeup for pds
-    if (BL_GET_REG_BITS_VAL(BL_RD_REG(HBN_BASE, HBN_IRQ_MODE), HBN_REG_AON_PAD_IE_SMT))
+    }
+    if (BL_GET_REG_BITS_VAL(BL_RD_REG(HBN_BASE, HBN_IRQ_MODE), HBN_REG_AON_PAD_IE_SMT)) {
         tmpVal |= (1 << 17); //enable hbn out0 wakeup for pds
+    }
 
-    if (sleep_time)
+    if (sleep_time) {
         tmpVal |= (1 << 16); //unmask pds sleep time wakeup
+    }
     BL_WR_REG(PDS_BASE, PDS_INT, tmpVal);
 
     PDS_IntClear();
@@ -1128,11 +1134,6 @@ ATTR_TCM_SECTION void pm_pds31_fast_mode_enter(enum pm_pds_sleep_level pds_level
         "sw     t6,     28*4(a2)\n\t");
 
     pm_pds_enter_done();
-
-#if PM_PDS_PLL_POWER_OFF
-    GLB_Set_System_CLK(XTAL_TYPE, BSP_ROOT_CLOCK_SOURCE);
-    PDS_Update_Flash_Ctrl_Setting(1);
-#endif
 
     cpu_global_irq_enable();
 

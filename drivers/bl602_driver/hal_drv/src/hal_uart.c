@@ -385,14 +385,14 @@ void uart_isr(uart_device_t *handle)
     /* Rx fifo ready interrupt,auto-cleared when data is popped */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FIFO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FIFO_MASK)) {
         uint8_t buffer[UART_FIFO_MAX_LEN];
-        len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
+        len = UART_ReceiveData(handle->id, buffer, UART_FIFO_MAX_LEN);
         handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RX_FIFO);
     }
 
     /* Rx time-out interrupt */
     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_RTO_MASK)) {
         uint8_t buffer[UART_FIFO_MAX_LEN];
-        len = UART_ReceiveData(handle->id, buffer, handle->fifo_threshold);
+        len = UART_ReceiveData(handle->id, buffer, UART_FIFO_MAX_LEN);
         handle->parent.callback(&handle->parent, &buffer[0], len, UART_EVENT_RTO);
         BL_WR_REG(UARTx, UART_INT_CLEAR, 0x10);
     }
