@@ -18,13 +18,15 @@ file(GLOB_RECURSE sources "${CMAKE_CURRENT_SOURCE_DIR}/croutine.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/list.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/queue.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/tasks.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/stream_buffer.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/timers.c"
 "${CMAKE_CURRENT_SOURCE_DIR}/portable/MemMang/heap_5.c"
 )
 list(APPEND ADD_SRCS  ${sources})
-if(CPU_ID)
+if(NOT CPU_ID STREQUAL "none")
 list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/${CPU_ID}/port.c)
 list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/${CPU_ID}/portASM.S)
+list(APPEND ADD_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/${CPU_ID})
 else()
 list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/port.c)
 list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/portASM.S)
