@@ -66,7 +66,7 @@ int device_register(struct device *dev, const char *name)
         }
     }
 
-    strncpy(dev->name, name, DEVICE_NAME_MAX);
+    strcpy(dev->name, name);
 
     dlist_insert_after(&device_head, &(dev->list));
     dev->status = DEVICE_REGISTERED;

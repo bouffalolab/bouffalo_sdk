@@ -27,7 +27,7 @@
 #define MEM_MANAGE_BITS_PER_BYTE          8
 #define MEM_MANAGE_MEM_STRUCT_SIZE        mmheap_align_up(sizeof(struct heap_node), MEM_MANAGE_ALIGNMENT_BYTE_DEFAULT)
 #define MEM_MANAGE_MINUM_MEM_SIZE         (MEM_MANAGE_MEM_STRUCT_SIZE << 1)
-#define MEM_MANAGE_ALLOCA_LABAL           ((size_t)(1 << (sizeof(size_t) * MEM_MANAGE_BITS_PER_BYTE - 1)))
+#define MEM_MANAGE_ALLOCA_LABAL           ((size_t)((size_t)1 << (sizeof(size_t) * MEM_MANAGE_BITS_PER_BYTE - 1)))
 
 static inline size_t mmheap_align_down(size_t data, size_t align_byte)
 {
