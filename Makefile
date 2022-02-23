@@ -47,11 +47,11 @@ cmake_definition+= -DCONFIG_HW_SEC_ENG_DISABLE=$(SUPPORT_HW_SEC_ENG_DISABLE)
 cmake_definition+= -DCONFIG_BLECONTROLLER_LIB=$(SUPPORT_BLECONTROLLER_LIB)
 
 build:Makefile
-	cmake -S . -B build -G "Unix Makefiles" $(cmake_definition) ..
+	cmake -S . -B build -G "Unix Makefiles" $(cmake_definition)
 	cd build && make -j4
 
 help:
-	@echo "Welcome to MCU SDK camke build system,commands are as follows:"
+	@echo "Welcome to MCU SDK cmake build system,commands are as follows:"
 	@echo ""
 	@echo "make clean - Remove all cmake caches and output files"
 	@echo "make SUPPORT_FLOAT=y - Enable float print"
