@@ -534,10 +534,12 @@ void ADC_Parse_Result(uint32_t *orgVal, uint32_t len, ADC_Result_Type *result)
             if (dataType == ADC_DATA_WIDTH_12) {
                 result[i].value = (unsigned int)(((orgVal[i] & 0xffff) >> 4) / coe);
                 result[i].volt = result[i].value / 4096.0 * ref;
-            } else if (dataType == ADC_DATA_WIDTH_14_WITH_16_AVERAGE) {
+            } else if ((dataType == ADC_DATA_WIDTH_14_WITH_16_AVERAGE) ||
+                       (dataType == ADC_DATA_WIDTH_14_WITH_64_AVERAGE)) {
                 result[i].value = (unsigned int)(((orgVal[i] & 0xffff) >> 2) / coe);
                 result[i].volt = result[i].value / 16384.0 * ref;
-            } else if (dataType == ADC_DATA_WIDTH_16_WITH_64_AVERAGE || dataType == ADC_DATA_WIDTH_16_WITH_256_AVERAGE) {
+            } else if ((dataType == ADC_DATA_WIDTH_16_WITH_128_AVERAGE) ||
+                       (dataType == ADC_DATA_WIDTH_16_WITH_256_AVERAGE)) {
                 result[i].value = (unsigned int)((orgVal[i] & 0xffff) / coe);
                 result[i].volt = result[i].value / 65536.0 * ref;
             }
@@ -557,10 +559,12 @@ void ADC_Parse_Result(uint32_t *orgVal, uint32_t len, ADC_Result_Type *result)
             if (dataType == ADC_DATA_WIDTH_12) {
                 result[i].value = (unsigned int)(((orgVal[i] & 0xffff) >> 4) / coe);
                 result[i].volt = result[i].value / 2048.0 * ref;
-            } else if (dataType == ADC_DATA_WIDTH_14_WITH_16_AVERAGE) {
+            } else if ((dataType == ADC_DATA_WIDTH_14_WITH_16_AVERAGE) ||
+                       (dataType == ADC_DATA_WIDTH_14_WITH_64_AVERAGE)) {
                 result[i].value = (unsigned int)(((orgVal[i] & 0xffff) >> 2) / coe);
                 result[i].volt = result[i].value / 8192.0 * ref;
-            } else if (dataType == ADC_DATA_WIDTH_16_WITH_64_AVERAGE || dataType == ADC_DATA_WIDTH_16_WITH_256_AVERAGE) {
+            } else if ((dataType == ADC_DATA_WIDTH_16_WITH_128_AVERAGE) ||
+                       (dataType == ADC_DATA_WIDTH_16_WITH_256_AVERAGE)) {
                 result[i].value = (unsigned int)((orgVal[i] & 0xffff) / coe);
                 result[i].volt = result[i].value / 32768.0 * ref;
             }

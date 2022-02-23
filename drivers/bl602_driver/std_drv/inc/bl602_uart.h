@@ -287,7 +287,7 @@ BL_Err_Type UART_SetTxDataLength(UART_ID_Type uartId, uint16_t length);
 BL_Err_Type UART_SetRxDataLength(UART_ID_Type uartId, uint16_t length);
 BL_Err_Type UART_SetRxTimeoutValue(UART_ID_Type uartId, uint8_t time);
 BL_Err_Type UART_SetDeglitchCount(UART_ID_Type uartId, uint8_t deglitchCnt);
-BL_Err_Type UART_SetBaudrate(UART_ID_Type uartId, UART_AutoBaudDetection_Type autoBaudDet);
+BL_Err_Type UART_ApplyAbrResult(UART_ID_Type uartId, UART_AutoBaudDetection_Type autoBaudDet);
 BL_Err_Type UART_SetRtsValue(UART_ID_Type uartId);
 BL_Err_Type UART_ClrRtsValue(UART_ID_Type uartId);
 BL_Err_Type UART_TxFreeRun(UART_ID_Type uartId, BL_Fun_Type txFreeRun);

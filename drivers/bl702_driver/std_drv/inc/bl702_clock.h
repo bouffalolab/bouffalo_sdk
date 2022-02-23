@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    bl702_glb.h
+  * @file    bl702_clock.h
   * @version V1.0
   * @date
   * @brief   This file is the standard driver header file
@@ -33,8 +33,8 @@
   *
   ******************************************************************************
   */
-#ifndef __BL702_GLB_H__
-#define __BL702_GLB_H__
+#ifndef __BL702_CLOCK_H__
+#define __BL702_CLOCK_H__
 
 #include "glb_reg.h"
 #include "bl702_hbn.h"
@@ -44,11 +44,11 @@
  *  @{
  */
 
-/** @addtogroup  GLB
+/** @addtogroup  CLOCK
  *  @{
  */
 
-/** @defgroup  GLB_Public_Types
+/** @defgroup  CLOCK_Public_Types
  *  @{
  */
 
@@ -74,9 +74,9 @@ typedef struct
     uint32_t i2sClock;                           /*!< I2S clock */
 } Clock_Cfg_Type;
 
-/*@} end of group GLB_Public_Types */
+/*@} end of group CLOCK_Public_Types */
 
-/** @defgroup  GLB_Public_Constants
+/** @defgroup  CLOCK_Public_Constants
  *  @{
  */
 
@@ -90,15 +90,15 @@ typedef struct
                                        ((type) == BL_SYSTEM_CLOCK_XTAL) || \
                                        ((type) == BL_SYSTEM_CLOCK_MAX))
 
-/*@} end of group GLB_Public_Constants */
+/*@} end of group CLOCK_Public_Constants */
 
-/** @defgroup  GLB_Public_Macros
+/** @defgroup  CLOCK_Public_Macros
  *  @{
  */
 
-/*@} end of group GLB_Public_Macros */
+/*@} end of group CLOCK_Public_Macros */
 
-/** @defgroup  GLB_Public_Functions
+/** @defgroup  CLOCK_Public_Functions
  *  @{
  */
 void Clock_System_Clock_Set(BL_System_Clock_Type type, uint32_t clock);
@@ -106,10 +106,10 @@ void Clock_Peripheral_Clock_Set(BL_AHB_Slave1_Type type, uint32_t clock);
 uint32_t Clock_System_Clock_Get(BL_System_Clock_Type type);
 uint32_t Clock_Peripheral_Clock_Get(BL_AHB_Slave1_Type type);
 
-/*@} end of group GLB_Public_Functions */
+/*@} end of group CLOCK_Public_Functions */
 
-/*@} end of group GLB */
+/*@} end of group CLOCK */
 
 /*@} end of group BL702_Peripheral_Driver */
 
-#endif /* __BL702_GLB_H__ */
+#endif /* __BL702_CLOCK_H__ */

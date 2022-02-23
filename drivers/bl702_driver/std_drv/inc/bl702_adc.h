@@ -201,7 +201,7 @@ typedef enum {
 typedef enum {
     ADC_DATA_WIDTH_12,                  /*!< ADC 12 bits */
     ADC_DATA_WIDTH_14_WITH_16_AVERAGE,  /*!< ADC 14 bits,and the value is average of 16 converts */
-    ADC_DATA_WIDTH_16_WITH_64_AVERAGE,  /*!< ADC 16 bits,and the value is average of 64 converts */
+    ADC_DATA_WIDTH_14_WITH_64_AVERAGE,  /*!< ADC 14 bits,and the value is average of 64 converts */
     ADC_DATA_WIDTH_16_WITH_128_AVERAGE, /*!< ADC 16 bits,and the value is average of 128 converts */
     ADC_DATA_WIDTH_16_WITH_256_AVERAGE, /*!< ADC 16 bits,and the value is average of 256 converts */
 } ADC_Data_Width_Type;
@@ -450,7 +450,7 @@ typedef struct
  */
 #define IS_ADC_DATA_WIDTH_TYPE(type) (((type) == ADC_DATA_WIDTH_12) ||                  \
                                       ((type) == ADC_DATA_WIDTH_14_WITH_16_AVERAGE) ||  \
-                                      ((type) == ADC_DATA_WIDTH_16_WITH_64_AVERAGE) ||  \
+                                      ((type) == ADC_DATA_WIDTH_14_WITH_64_AVERAGE) ||  \
                                       ((type) == ADC_DATA_WIDTH_16_WITH_128_AVERAGE) || \
                                       ((type) == ADC_DATA_WIDTH_16_WITH_256_AVERAGE))
 

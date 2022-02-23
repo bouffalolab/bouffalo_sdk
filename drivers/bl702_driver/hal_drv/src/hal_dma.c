@@ -280,6 +280,9 @@ int dma_allocate_register(const char *name)
  */
 int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_t transfer_size)
 {
+#if defined(BSP_USING_DMA0_CH0) || defined(BSP_USING_DMA0_CH1) || defined(BSP_USING_DMA0_CH2) || defined(BSP_USING_DMA0_CH3) || \
+    defined(BSP_USING_DMA0_CH4) || defined(BSP_USING_DMA0_CH5) || defined(BSP_USING_DMA0_CH6) || defined(BSP_USING_DMA0_CH7)
+
     uint32_t malloc_count;
     uint32_t remain_len;
     uint32_t actual_transfer_len = 0;
@@ -365,7 +368,6 @@ int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_
             }
 
             dma_device->lli_cfg[i].cfg = dma_ctrl_cfg;
-
         }
         BL_WR_REG(dma_channel_base[dma_device->id][dma_device->ch], DMA_SRCADDR, dma_device->lli_cfg[0].src_addr);
         BL_WR_REG(dma_channel_base[dma_device->id][dma_device->ch], DMA_DSTADDR, dma_device->lli_cfg[0].dst_addr);
@@ -374,7 +376,7 @@ int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_
     } else {
         return -2;
     }
-
+#endif
     return 0;
 }
 

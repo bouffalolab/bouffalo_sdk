@@ -591,7 +591,7 @@ BL_Err_Type UART_SetDeglitchCount(UART_ID_Type uartId, uint8_t deglitchCnt)
  * @return SUCCESS
  *
 *******************************************************************************/
-BL_Err_Type UART_SetBaudrate(UART_ID_Type uartId, UART_AutoBaudDetection_Type autoBaudDet)
+BL_Err_Type UART_ApplyAbrResult(UART_ID_Type uartId, UART_AutoBaudDetection_Type autoBaudDet)
 {
     uint32_t UARTx = uartAddr[uartId];
     uint16_t tmpVal;

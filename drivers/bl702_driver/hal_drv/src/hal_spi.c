@@ -234,6 +234,21 @@ int spi_control(struct device *dev, int cmd, void *args)
             break;
         }
 
+        case DEVICE_CTRL_SPI_GET_TX_FIFO :
+            return SPI_GetTxFifoCount(spi_device->id);
+
+        case DEVICE_CTRL_SPI_GET_RX_FIFO :
+            return SPI_GetRxFifoCount(spi_device->id);
+
+        case DEVICE_CTRL_SPI_CLEAR_TX_FIFO :
+            return SPI_ClrTxFifo(spi_device->id);
+
+        case DEVICE_CTRL_SPI_CLEAR_RX_FIFO :
+            return SPI_ClrRxFifo(spi_device->id);
+
+        case DEVICE_CTRL_SPI_GET_BUS_BUSY_STATUS :
+            return SPI_GetBusyStatus(spi_device->id);
+
         default:
             break;
     }

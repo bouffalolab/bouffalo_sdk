@@ -22,6 +22,7 @@
  */
 #include "hal_adc.h"
 #include "hal_clock.h"
+#include "hal_dma.h"
 #include "bl702_glb.h"
 #include "bl702_dma.h"
 #include "bl702_adc.h"
@@ -278,7 +279,9 @@ int adc_control(struct device *dev, int cmd, void *args)
         case DEVICE_CTRL_ADC_TSEN_OFF:
 
             break;
-
+        case DEVICE_CTRL_ATTACH_RX_DMA :
+            adc_device->rx_dma = (struct device *)args;
+            break;
         default:
             break;
     }
@@ -302,6 +305,8 @@ int adc_control(struct device *dev, int cmd, void *args)
 int adc_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
 {
     uint32_t adc_fifo_val[32];
+    int ret = -1;
+    adc_device_t *adc_device = (adc_device_t *)dev;
 
     if (dev->oflag & DEVICE_OFLAG_STREAM_RX) {
         if (size > 32)
@@ -315,9 +320,17 @@ int adc_read(struct device *dev, uint32_t pos, void *buffer, uint32_t size)
         adc_channel_val_t *adc_parse_val = (adc_channel_val_t *)buffer;
         ADC_Parse_Result(adc_fifo_val, size, (ADC_Result_Type *)adc_parse_val);
         return size;
-    }
+    } else if (dev->oflag & DEVICE_OFLAG_DMA_RX) {
+        struct device *dma_ch = (struct device *)adc_device->rx_dma;
+        if (!dma_ch)
+            return -1;
 
-    return 0;
+        ret = dma_reload(dma_ch, (uint32_t)DMA_ADDR_ADC_RDR, (uint32_t)buffer, size);
+        dma_channel_start(dma_ch);
+
+        return ret;
+    }
+    return ret;
 }
 
 int adc_trim_tsen(uint16_t *tsen_offset)

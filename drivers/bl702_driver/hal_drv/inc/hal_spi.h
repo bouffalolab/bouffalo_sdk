@@ -31,7 +31,16 @@ extern "C" {
 #include "drv_device.h"
 #include "bl702_config.h"
 
+#define SPI_FIFO_LEN 4
+
 #define DEVICE_CTRL_SPI_CONFIG_CLOCK 0x10
+
+#define DEVICE_CTRL_SPI_GET_TX_FIFO   0x11
+#define DEVICE_CTRL_SPI_GET_RX_FIFO   0x12
+#define DEVICE_CTRL_SPI_CLEAR_TX_FIFO 0x13
+#define DEVICE_CTRL_SPI_CLEAR_RX_FIFO 0x14
+
+#define DEVICE_CTRL_SPI_GET_BUS_BUSY_STATUS 0x15
 
 enum spi_index_type {
 #ifdef BSP_USING_SPI0
