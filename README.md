@@ -127,10 +127,7 @@ There is currently no official purchase channel. If you want to get the above de
 
 ## Chip Manual
 
-[Chip Reference Manual](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_706_RM_zh_CN_1.1.pdf) | [Chip Data Manual](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_BL706_DS_zh_CN_Combo_2.0.pdf)
-
-For more information, please visit the BouffaloLab developer website: [https://dev.bouffalolab.com/](https://dev.bouffalolab.com/)
-
+**Chip Reference Manual** and **Chip Data Manual** are listed on [document](https://dev.bouffalolab.com/document)
 
 ## Documentation Tutorial
 
@@ -183,8 +180,7 @@ For tools needed for CDK development, please refer to  [CDK Development Guide](h
 In addition to using CK-link, J-link and command line programming, it also supports graphical programming tools.
 Graphical programming tools provided by Bouffalolab:
 
-- [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-win32.zip)
-- [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-linux-x86.tar.gz)
+- [Bouffalo Lab Dev Cube](https://dev.bouffalolab.com/download)
 
 ### Board Config Wizard
 

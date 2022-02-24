@@ -128,9 +128,7 @@ bl_mcu_sdk
 
 ## 芯片手册
 
-[芯片参考手册](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_706_RM_zh_CN_1.1.pdf)|[芯片数据手册](https://dev.bouffalolab.com/media/upload/doc/BL702_BL704_BL706_DS_zh_CN_Combo_2.0.pdf)
-
-更多资料请访问 BouffaloLab 开发者网站: [https://dev.bouffalolab.com/](https://dev.bouffalolab.com/)
+芯片数据手册和参考手册见 [文档](https://dev.bouffalolab.com/document)。
 
 ## 文档教程
 
@@ -183,8 +181,7 @@ CDK 开发需要的工具，具体使用方法参考 [CDK 开发指南](https://
 除了可以使用 CK-link、J-link 以及命令行烧写以外，还支持图形化的烧写工具。
 博流提供的图形化烧写工具：
 
-- [Bouffalo Lab Dev Cube For Windows](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-win32.zip)
-- [Bouffalo Lab Dev Cube For Ubuntu](https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-1.5.3-linux-x86.tar.gz)
+- [Bouffalo Lab Dev Cube](https://dev.bouffalolab.com/download)
 
 ### Board Config Wizard
 
