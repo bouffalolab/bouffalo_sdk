@@ -545,7 +545,7 @@ int main(void)
     usbd_video_add_interface(&video_class, &video_control_intf);
     usbd_video_add_interface(&video_class, &video_stream_intf);
     usbd_interface_add_endpoint(&video_stream_intf, &video_in_ep);
-
+    usbd_video_set_probe_and_commit_controls(&probe, &commit);
     usb_fs = usb_dc_init();
 
     if (usb_fs) {
@@ -626,7 +626,7 @@ int main(void)
             }
 
             if (packets_cnt < (packets_in_frame - 1)) {
-                if (!device_control(dma_ch2, DMA_CHANNEL_GET_STATUS, NULL)) {
+                if (!dma_channel_check_busy(dma_ch2)) {
 #ifdef USING_CAMERA
 #else
 
@@ -665,7 +665,7 @@ int main(void)
                     }
                 }
             } else {
-                if (!device_control(dma_ch2, DMA_CHANNEL_GET_STATUS, NULL)) {
+                if (!dma_channel_check_busy(dma_ch2)) {
 #ifdef USING_CAMERA
 #else
 

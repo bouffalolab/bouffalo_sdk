@@ -110,7 +110,7 @@ void ATTR_TCM_SECTION cam_irq_callback(struct device *dev, void *args, uint32_t 
         }
         */
 
-        while (device_control(dma_cam, DMA_CHANNEL_GET_STATUS, NULL)) {
+        while (dma_channel_check_busy(dma_cam)) {
             __asm volatile("nop");
             __asm volatile("nop");
         }
@@ -142,7 +142,7 @@ void ATTR_TCM_SECTION cam_irq_callback(struct device *dev, void *args, uint32_t 
         }
         */
 
-        while (device_control(dma_cam, DMA_CHANNEL_GET_STATUS, NULL)) {
+        while (dma_channel_check_busy(dma_cam)) {
             __asm volatile("nop");
             __asm volatile("nop");
         }

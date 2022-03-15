@@ -763,7 +763,7 @@ int main(void)
                 MSG("frame_count:%d,last_frame_size:%d\r\n", frame_count, last_frame_size);
                 music_tx_flag = 1;
             }
-            if (!device_control(dma_ch2, DMA_CHANNEL_GET_STATUS, NULL)) {
+            if (!dma_channel_check_busy(dma_ch2)) {
                 if (frame_cnt < frame_count) {
                     device_write(usb_fs, AUDIO_IN_EP, &music[audio_pos], 4064);
                     frame_cnt++;
