@@ -38,6 +38,7 @@ extern "C" {
 #define DEVICE_CTRL_ADC_VBAT_OFF       0x14
 #define DEVICE_CTRL_ADC_TSEN_ON        0x15
 #define DEVICE_CTRL_ADC_TSEN_OFF       0x16
+#define DEVICE_CTRL_ADC_DATA_PARSE     0x17
 
 enum adc_index_type {
 #ifdef BSP_USING_ADC0
@@ -153,6 +154,13 @@ typedef struct {
     float volt;     /*!< ADC voltage result */
 } adc_channel_val_t;
 
+typedef struct
+{
+    uint32_t *input;
+    adc_channel_val_t *output;
+    uint32_t num;
+} adc_data_parse_t;
+
 typedef struct adc_device {
     struct device parent;
     adc_clk_div_t clk_div;     /* CLK is not more than 2Mhz */
@@ -162,7 +170,7 @@ typedef struct adc_device {
     adc_data_width_t data_width;
     adc_fifo_threshold_t fifo_threshold;
     adc_pga_gain_t gain;
-    void* rx_dma;
+    void *rx_dma;
 } adc_device_t;
 
 #define ADC_DEV(dev) ((adc_device_t *)dev)
