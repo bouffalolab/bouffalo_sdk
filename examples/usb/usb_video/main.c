@@ -545,7 +545,7 @@ int main(void)
     usbd_video_add_interface(&video_class, &video_control_intf);
     usbd_video_add_interface(&video_class, &video_stream_intf);
     usbd_interface_add_endpoint(&video_stream_intf, &video_in_ep);
-    usbd_video_set_probe_and_commit_controls(&probe, &commit);
+
     usb_fs = usb_dc_init();
 
     if (usb_fs) {
