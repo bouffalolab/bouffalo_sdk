@@ -1,8 +1,6 @@
-**board/bl706_avb/pinmux_config.h** 中 **PINMUX_SELECT** 选择 **PINMUX_LVGL**
-
 ```bash
 
-$ make APP=isp_audio_test BOARD=bl706_avb
+$ make APP=audio_cube BOARD=bl706_avb
 
 isp 协议 测试
 

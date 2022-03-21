@@ -1,5 +1,4 @@
 ## 修改程序
--- **board/bl706_avb/pinmux_config.h** 中 **PINMUX_SELECT** 选择 **PINMUX_LVGL**
 
 -- **board/bl706_avb/pinmux_config.h** 中 **CONFIG_GPIO10_FUNC** 、 **CONFIG_GPIO19_FUNC** 、 **CONFIG_GPIO20_FUNC** 、 **CONFIG_GPIO21_FUNC**选择 **GPIO_FUN_SPI**
 

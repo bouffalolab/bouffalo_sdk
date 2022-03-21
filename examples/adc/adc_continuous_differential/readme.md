@@ -7,7 +7,7 @@ $ make APP=adc_continuous_differential BOARD=bl706_iot
 
 # 基本配置
 
-此示例需要将对应board目录下的pinmux_config文件中的GPIO11与GPIO13配置为ADC复用功能，
+此示例需要将对应board目录下的pinmux_config文件中的GPIO11与GPIO12配置为ADC复用功能，
 并且将对应board目录下的clock_config.h文件中的ADC时钟配置为相应的时钟。
 # 基本原理
 
