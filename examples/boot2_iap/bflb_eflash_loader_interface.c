@@ -25,10 +25,12 @@ eflash_loader_if_cfg_t * bflb_eflash_loader_if_set(eflash_loader_if_type_t type)
             eflash_loader_if_cfg.maxlen=BFLB_EFLASH_LOADER_READBUF_SIZE;
             eflash_loader_if_cfg.timeout=BFLB_EFLASH_LOADER_IF_UART_RX_TIMEOUT;
             eflash_loader_if_cfg.boot_if_init=bflb_eflash_loader_uart_init;
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH||BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM
             eflash_loader_if_cfg.boot_if_handshake_poll=bflb_eflash_loader_uart_handshake_poll;
             eflash_loader_if_cfg.boot_if_recv=bflb_eflash_loader_uart_recv;
             eflash_loader_if_cfg.boot_if_send=bflb_eflash_loader_uart_send;
             eflash_loader_if_cfg.boot_if_wait_tx_idle=bflb_eflash_loader_usart_wait_tx_idle;
+#endif
             eflash_loader_if_cfg.boot_if_deinit=bflb_eflash_loader_uart_deinit;
             //eflash_loader_if_cfg.boot_if_changerate=bflb_eflash_loader_uart_change_rate;
 
@@ -87,7 +89,6 @@ int32_t bflb_eflash_loader_if_deinit()
 	return eflash_loader_if_cfg.boot_if_deinit();
 }
 
-
 int32_t bflb_eflash_loader_main()
 {
     int32_t ret;
@@ -97,7 +98,7 @@ int32_t bflb_eflash_loader_main()
     uint8_t err_cnt = 0;
     uint8_t to_cnt = 0;
 
-    MSG("bflb_eflash_loader_main\r\n");
+    MSG("eflash_loader_main\r\n");
     pt_table_dump();
     ret = pt_table_get_iap_para(&p_iap_param);
     if(0 != ret){
@@ -123,7 +124,6 @@ int32_t bflb_eflash_loader_main()
             break;
         }
 
-        MSG("Recv\r\n");
         //eflash_loader_dump_data(recv_buf,total_len);
         cmd_len = recv_buf[2] + (recv_buf[3] << 8);
         MSG("cmd_len %d\r\n", cmd_len);

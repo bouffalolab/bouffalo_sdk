@@ -47,16 +47,16 @@
 #include "hal_uart.h"
 #include "hal_flash.h"
 #include "hal_boot2.h"
-#include "hal_clock.h"
 
 uint8_t *g_boot2_read_buf;
-boot2_image_config g_boot_img_cfg[2];
+boot2_image_config g_boot_img_cfg[BLSP_BOOT2_CPU_GROUP_MAX];
 boot2_efuse_hw_config g_efuse_cfg;
 uint8_t g_ps_mode = BFLB_PSM_ACTIVE;
-uint8_t g_cpu_count;
 uint32_t g_user_hash_ignored = 0;
 uint8_t g_usb_init_flag = 0;
-
+ATTR_NOCACHE_RAM_SECTION sec_hash_handle_t hash_handle ;
+int blsp_do_ram_image_boot(pt_table_id_type active_id, pt_table_stuff_config *pt_stuff, 
+                           pt_table_entry_config *pt_entry);
 /****************************************************************************/ /**
  * @brief  Boot2 runs error call back function
  *
@@ -79,11 +79,12 @@ static void blsp_boot2_on_error(void *log)
             bflb_eflash_loader_main();
         }
 #endif
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH||BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM
         bflb_eflash_loader_if_set(BFLB_EFLASH_LOADER_IF_UART);
         if (0 == bflb_eflash_loader_if_handshake_poll(0)) {
             bflb_eflash_loader_main();
         }
-
+#endif
         MSG_ERR("%s\r\n", (char *)log);
         arch_delay_ms(500);
     }
@@ -237,17 +238,17 @@ static int blsp_boot2_deal_one_fw(pt_table_id_type active_id, pt_table_stuff_con
 #endif
         /* Check if this partition need copy */
         if (pt_entry->active_index >= 2) {
-            MSG("Find OTA image, do image copy\r\n");
+            MSG("Do image copy\r\n");
             if (BFLB_BOOT2_SUCCESS == blsp_boot2_do_fw_copy(active_id, pt_stuff, pt_entry)) {
                 pt_entry->active_index = !(pt_entry->active_index & 0x01);
                 pt_entry->age++;
                 ret = pt_table_update_entry((pt_table_id_type)(!active_id), pt_stuff, pt_entry);
 
                 if (ret != PT_ERROR_SUCCESS) {
-                    MSG_ERR("Update Partition table entry fail, After Image Copy\r\n");
+                    MSG_ERR("Update Partition table entry fail\r\n");
                     return BFLB_BOOT2_FAIL;
                 } else {
-                    MSG("OTA image copy done\r\n");
+                    MSG("Done\r\n");
                 }
 
                 return 0;
@@ -269,7 +270,7 @@ static int blsp_boot2_deal_one_fw(pt_table_id_type active_id, pt_table_stuff_con
  *
 *******************************************************************************/
 #ifdef BLSP_BOOT2_ROLLBACK
-static int32_t blsp_boot2_rollback_ptentry(pt_table_id_type active_id, pt_table_stuff_config *pt_stuff, pt_table_entry_config *pt_entry)
+int32_t blsp_boot2_rollback_ptentry(pt_table_id_type active_id, pt_table_stuff_config *pt_stuff, pt_table_entry_config *pt_entry)
 {
     int32_t ret;
 
@@ -334,26 +335,30 @@ int main(void)
     pt_table_stuff_config pt_table_stuff[2];
     pt_table_id_type active_id;
     /* Init to zero incase only one cpu boot up*/
-    pt_table_entry_config pt_entry[BFLB_BOOT2_CPU_MAX] = { 0 };
-    uint32_t boot_header_addr[BFLB_BOOT2_CPU_MAX] = { 0 };
-    uint8_t boot_need_rollback[BFLB_BOOT2_CPU_MAX] = { 0 };
+    pt_table_entry_config pt_entry[BLSP_BOOT2_CPU_GROUP_MAX] = { 0 };
+    uint32_t boot_header_addr[BLSP_BOOT2_CPU_GROUP_MAX] = { 0 };
+    uint8_t boot_need_rollback[BLSP_BOOT2_CPU_GROUP_MAX] = { 0 };
     uint8_t pt_parsed = 1;
     uint8_t user_fw_name[9] = { 0 };
     uint32_t user_fw;
 #ifdef BLSP_BOOT2_ROLLBACK
     uint8_t roll_backed = 0;
 #endif
-
     uint8_t mfg_mode_flag = 0;
     //boot_clk_config clk_cfg;
     uint8_t flash_cfg_buf[4 + sizeof(SPI_Flash_Cfg_Type) + 4] = { 0 };
     uint32_t crc;
     uint8_t *flash_cfg = NULL;
     uint32_t flash_cfg_len = 0;
+    extern void system_mtimer_clock_init(void);
+    extern void peripheral_clock_init(void);
 
     system_mtimer_clock_init();
     peripheral_clock_init();
 
+    blsp_boot2_start_timer();
+    hal_boot2_get_efuse_cfg(&g_efuse_cfg);
+    
 #if (BLSP_BOOT2_MODE == BOOT2_MODE_RELEASE)
     bflb_platform_print_set(1);
 #endif
@@ -372,19 +377,26 @@ int main(void)
 
     simple_malloc_init(g_malloc_buf, sizeof(g_malloc_buf));
     g_boot2_read_buf = vmalloc(BFLB_BOOT2_READBUF_SIZE);
-
-    hal_boot2_custom();
-    flash_init();
-
-    bflb_platform_deinit_time();
-
-    if (blsp_boot2_get_feature_flag() == BLSP_BOOT2_CP_FLAG) {
-        MSG("BLSP_Boot2_CP:%s,%s\r\n", __DATE__, __TIME__);
-    } else if (blsp_boot2_get_feature_flag() == BLSP_BOOT2_MP_FLAG) {
-        MSG("BLSP_Boot2_MC:%s,%s\r\n", __DATE__, __TIME__);
-    } else {
-        MSG("BLSP_Boot2_SP:%s,%s\r\n", __DATE__, __TIME__);
+    ret = hal_boot2_custom();
+    MSG("custom %04x\r\n",ret);
+    ret = flash_init();
+    if(ret){
+        while(1){
+            MSG_ERR("flash cfg get err\r\n");
+            arch_delay_ms(500);
+        }
     }
+    MSG("flash init ret %d\r\n",(int)ret);
+
+    MSG("BLSP Boot2 start:%s,%s\r\n", __DATE__, __TIME__);
+    MSG("Group=%d,CPU Count=%d\r\n", hal_boot2_get_grp_count(),hal_boot2_get_cpu_count());
+#if BLSP_BOOT2_CPU_MAX>1
+    if (hal_boot2_get_feature_flag() == HAL_BOOT2_CP_FLAG) {
+        MSG("Boot As Co-CPU\r\n");
+    }else{
+        MSG("Boot As Normal\r\n");
+    }
+#endif
 #ifdef BL_SDK_VER
     MSG("sdk:%s\r\n", BL_SDK_VER);
 #else
@@ -393,18 +405,8 @@ int main(void)
     MSG("BSP Common:%s\r\n", BSP_COMMON_VERSION);
 #endif
 
-    MSG("Get efuse config\r\n");
-    hal_boot2_get_efuse_cfg(&g_efuse_cfg);
-
     /* Reset Sec_Eng for using */
     hal_boot2_reset_sec_eng();
-    if (blsp_boot2_get_feature_flag() != BLSP_BOOT2_SP_FLAG) {
-        /* Get cpu count info */
-        g_cpu_count = blsp_boot2_get_cpu_count();
-    } else {
-        g_cpu_count = 1;
-    }
-
     /* Get power save mode */
     g_ps_mode = blsp_read_power_save_mode();
 
@@ -428,11 +430,21 @@ int main(void)
     }
 #endif
 
-    pt_table_dump();
+    //pt_table_dump();
+#if BLSP_BOOT2_RAM_IMG_COUNT_MAX>0
+    /* Deal with ram image: copy from flash to ram like */
+    do {
+        active_id = pt_table_get_active_partition_need_lock(pt_table_stuff);
 
+        if (PT_TABLE_ID_INVALID == active_id) {
+            blsp_boot2_on_error("No valid PT\r\n");
+        }
+        ret=blsp_do_ram_image_boot(active_id, &pt_table_stuff[active_id], &pt_entry[0]);
+    } while (ret != 0);
+#endif
+    /* Deal with flash image */
     while (1) {
         mfg_mode_flag = 0;
-
         do {
             active_id = pt_table_get_active_partition_need_lock(pt_table_stuff);
 
@@ -455,7 +467,7 @@ int main(void)
                 }
                 mfg_mode_flag = 1;
                 user_fw_name[0] = 0;
-            } else if (user_fw_name[0] == '1' && g_cpu_count > 1) {
+            } else if (user_fw_name[0] == '1' && BLSP_BOOT2_CPU_GROUP_MAX > 1) {
                 g_user_hash_ignored = 1;
                 pt_parsed = blsp_boot2_deal_one_fw(active_id, &pt_table_stuff[active_id], &pt_entry[1], &user_fw_name[1], PT_ENTRY_FW_CPU1);
                 if (pt_parsed == 0) {
@@ -466,11 +478,13 @@ int main(void)
                 mfg_mode_flag = 1;
                 user_fw_name[0] = 0;
             } else {
+                /* partition type 0 is group0*/
                 pt_parsed = blsp_boot2_deal_one_fw(active_id, &pt_table_stuff[active_id], &pt_entry[0], NULL, PT_ENTRY_FW_CPU0);
                 if (pt_parsed == 0) {
                     continue;
                 }
-                if (g_cpu_count > 1) {
+                /* partition type 1 is group1 */
+                if (BLSP_BOOT2_CPU_GROUP_MAX > 1) {
                     pt_parsed = blsp_boot2_deal_one_fw(active_id, &pt_table_stuff[active_id], &pt_entry[1], NULL, PT_ENTRY_FW_CPU1);
                     if (pt_parsed == 0) {
                         continue;
@@ -501,7 +515,7 @@ int main(void)
 
         MSG("Boot start\r\n");
 
-        for (i = 0; i < g_cpu_count; i++) {
+        for (i = 0; i < BLSP_BOOT2_CPU_GROUP_MAX; i++) {
             boot_header_addr[i] = pt_entry[i].start_address[pt_entry[i].active_index];
         }
 
@@ -527,12 +541,11 @@ int main(void)
             break;
         }
 
-        MSG("Boot return 0x%04x\r\n", ret);
-        MSG("Check Rollback\r\n");
+        MSG("Boot return 0x%04x\r\nCheck Rollback\r\n", ret);
 
-        for (i = 0; i < g_cpu_count; i++) {
+        for (i = 0; i < BLSP_BOOT2_CPU_GROUP_MAX; i++) {
             if (boot_need_rollback[i] != 0) {
-                MSG("Rollback %d\r\n", i);
+                MSG("Rollback group %d\r\n", i);
 
                 if (BFLB_BOOT2_SUCCESS == blsp_boot2_rollback_ptentry(active_id, &pt_table_stuff[active_id], &pt_entry[i])) {
                     roll_backed = 1;
@@ -565,11 +578,12 @@ int main(void)
             bflb_eflash_loader_main();
         }
 #endif
+#if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH||BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM
         bflb_eflash_loader_if_set(BFLB_EFLASH_LOADER_IF_UART);
         if (0 == bflb_eflash_loader_if_handshake_poll(0)) {
             bflb_eflash_loader_main();
         }
-
+#endif
         MSG_ERR("BLSP boot2 fail\r\n");
         arch_delay_ms(500);
     }

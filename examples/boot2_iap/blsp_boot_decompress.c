@@ -237,11 +237,6 @@ int32_t blsp_boot2_update_fw(pt_table_id_type active_id, pt_table_stuff_config *
         return BFLB_BOOT2_SUCCESS;
     }
 
-
-    MSG("Do decompress,xz start address %08x,dest address %08x\r\n",\
-        pt_entry->start_address[active_index],\
-        pt_entry->start_address[!(active_index & 0x01)]);
-    
     /* Do decompress */
     if (BFLB_BOOT2_SUCCESS == blsp_boot2_fw_decompress(pt_entry->start_address[active_index],
                                                        pt_entry->start_address[!(active_index & 0x01)],
@@ -252,7 +247,7 @@ int32_t blsp_boot2_update_fw(pt_table_id_type active_id, pt_table_stuff_config *
         ret = pt_table_update_entry((pt_table_id_type)(!active_id), pt_stuff, pt_entry);
 
         if (ret != PT_ERROR_SUCCESS) {
-            MSG_ERR("Do Decompress Update Partition table entry fail\r\n");
+            MSG_ERR("Update Partition table entry fail\r\n");
             return BFLB_BOOT2_FAIL;
         }
     } else {

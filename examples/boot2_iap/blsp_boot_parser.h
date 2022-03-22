@@ -38,7 +38,6 @@
 
 #include "stdint.h"
 
-int32_t blsp_boot_parse_bootheader(boot2_image_config *g_boot_img_cfg, uint8_t *data);
 int32_t blsp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own);
 int32_t blsp_boot_parse_signature(boot2_image_config *g_boot_img_cfg, uint8_t *data, uint8_t own);
 int32_t blsp_boot_parse_aesiv(boot2_image_config *g_boot_img_cfg, uint8_t *data);

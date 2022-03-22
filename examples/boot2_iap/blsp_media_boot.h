@@ -42,8 +42,10 @@
 #include "blsp_bootinfo.h"
 
 int32_t blsp_mediaboot_read(uint32_t addr, uint8_t *data, uint32_t len);
-int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BFLB_BOOT2_CPU_MAX], uint8_t cpu_roll_back[BFLB_BOOT2_CPU_MAX],uint8_t roll_back);
+int32_t blsp_mediaboot_main(uint32_t cpu_boot_header_addr[BLSP_BOOT2_CPU_GROUP_MAX], uint8_t cpu_roll_back[BLSP_BOOT2_CPU_GROUP_MAX],uint8_t roll_back);
 void blsp_boot2_show_timer(void);
+
+#define BLSP_BOOT2_PSRAM_BASE 0x50000000
 
 #endif /* __BLSP_MEDIA_BOOT_H__ */
 

@@ -47,10 +47,6 @@ static uint32_t g_detected_baudrate;
 static void bflb_eflash_loader_usart_if_deinit();
 struct device *download_uart = NULL;
 
-enum uart_index_type board_get_debug_uart_index(void)
-{
-    return 1;
-}
 void bflb_dump_data(uint8_t *buf, uint32_t size)
 {
     for (int i = 0; i < size; i++) {
