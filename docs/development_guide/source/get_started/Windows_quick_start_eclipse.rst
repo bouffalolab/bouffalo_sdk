@@ -8,11 +8,8 @@ Windows 下使用 Eclipse 开发指南
 -----------------------------
 
 -  Eclipse 免安装软件包
--  串口助手软件
--  一根 USB Type-A 数据线
--  一个 j-link 仿真器
--  一个 USB-TTL 串口模块
--  杜邦线若干
+-  一个 支持 risc-v 的 jtag 调试器
+-  一个 USB-TTL 串口模块（如果调试器自带，忽略）
 
 
 下载 Eclipse 安装包
@@ -123,7 +120,7 @@ Windows 下使用 Eclipse 开发指南
 烧写 Hello World
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
--  双击 ``download`` 即可烧写 helloworld 工程 ``bin`` 文件到芯片中
+-  双击 ``download`` 即可烧写 helloworld 工程 ``bin`` 文件到芯片中，默认使用串口烧录，烧录之前需要进入烧录模式，参考 :ref:`bl_dev_cube`。
 
 -  下载成功后 ``Console`` 窗口可以看到如下图所示的 log 信息
 

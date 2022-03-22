@@ -331,10 +331,10 @@ DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
 .. code-block:: C
 
-    #define DMA_CHANNEL_GET_STATUS  0x10
-    #define DMA_CHANNEL_START       0x11
-    #define DMA_CHANNEL_STOP        0x12
-    #define DMA_CHANNEL_UPDATE      0x13
+    #define DEVICE_CTRL_DMA_CHANNEL_GET_STATUS  0x10
+    #define DEVICE_CTRL_DMA_CHANNEL_START       0x11
+    #define DEVICE_CTRL_DMA_CHANNEL_STOP        0x12
+    #define DEVICE_CTRL_DMA_CHANNEL_UPDATE      0x13
 
 ``args`` 根据不同的 ``cmd`` 传入不同，具体如下：
 
@@ -351,16 +351,16 @@ DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。
     * - DEVICE_CTRL_CLR_INT
       - NULL
       - 关闭 dma 传输完成中断
-    * - DMA_CHANNEL_GET_STATUS
+    * - DEVICE_CTRL_DMA_CHANNEL_GET_STATUS
       - NULL
       - 获取 dma 通道完成状态
-    * - DMA_CHANNEL_START
+    * - DEVICE_CTRL_DMA_CHANNEL_START
       - NULL
       - 开启 dma 通道
-    * - DMA_CHANNEL_STOP
+    * - DEVICE_CTRL_DMA_CHANNEL_STOP
       - NULL
       - 关闭 dma 通道
-    * - DMA_CHANNEL_UPDATE
+    * - DEVICE_CTRL_DMA_CHANNEL_UPDATE
       - NULL
       - 更新 dma 传输配置
 
@@ -394,7 +394,7 @@ DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。
 **dma_channel_start**
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``dma_channel_start`` 用于开启 DMA 通道。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DMA_CHANNEL_START``。
+``dma_channel_start`` 用于开启 DMA 通道。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DEVICE_CTRL_DMA_CHANNEL_START``。
 
 .. code-block:: C
 
@@ -406,7 +406,7 @@ DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。
 **dma_channel_stop**
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``dma_channel_stop`` 用于关闭一个 DMA 通道。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DMA_CHANNEL_STOP``。
+``dma_channel_stop`` 用于关闭一个 DMA 通道。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DEVICE_CTRL_DMA_CHANNEL_STOP``。
 
 .. code-block:: C
 
@@ -418,7 +418,7 @@ DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。
 **dma_channel_update**
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-``dma_channel_update`` 用于更新 DMA 的一个通道配置。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DMA_CHANNEL_UPDATE``。
+``dma_channel_update`` 用于更新 DMA 的一个通道配置。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DEVICE_CTRL_DMA_CHANNEL_UPDATE``。
 
 .. code-block:: C
 
@@ -431,7 +431,7 @@ DMA 设备除了标准的控制命令，还具有自己特殊的控制命令。
 **dma_channel_check_busy**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``dma_channel_check_busy`` 用于查询当前使用的 DMA 通道是否传输完成。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DMA_CHANNEL_GET_STATUS``。
+``dma_channel_check_busy`` 用于查询当前使用的 DMA 通道是否传输完成。实际是调用 ``device_control`` ，其中 ``cmd`` 为 ``DEVICE_CTRL_DMA_CHANNEL_GET_STATUS``。
 
 .. code-block:: C
 
