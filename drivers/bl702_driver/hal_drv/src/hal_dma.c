@@ -356,7 +356,7 @@ int dma_reload(struct device *dev, uint32_t src_addr, uint32_t dst_addr, uint32_
                 if (remain_len) {
                     dma_ctrl_cfg.bits.TransferSize = remain_len;
                 }
-                dma_ctrl_cfg.bits.I = 1;
+                dma_ctrl_cfg.bits.I = 0;
 
                 if (dma_device->transfer_mode == DMA_LLI_CYCLE_MODE) {
                     dma_device->lli_cfg[i].nextlli = (uint32_t)&dma_device->lli_cfg[0];

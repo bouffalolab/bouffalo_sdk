@@ -115,7 +115,7 @@ static int ili9341_spi_init(void)
         device_open(dma_ch3, 0);
         device_set_callback(dma_ch3, NULL);
         device_control(spi0, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch3);
-        device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
+        //device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
     } else {
         return 1;
     }
