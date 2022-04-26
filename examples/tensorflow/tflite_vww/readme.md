@@ -5,7 +5,7 @@
 编译命令：
 ```bash
 
-$ make build SUPPORT_FLOAT=y BOARD=bl706_avb APP=vww_demo
+$ make APP=tflite_vww BOARD=bl706_avb SUPPORT_FLOAT=y
 
 ```
 NMSIS加速库:

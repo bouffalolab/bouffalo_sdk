@@ -20,10 +20,6 @@
  * under the License.
  *
  */
-
-#include "hal_usb.h"
-#include "usbd_core.h"
-#include "usbd_video.h"
 #include "mcu_lcd.h"
 #include "hal_dma.h"
 #include "hal_cam.h"
