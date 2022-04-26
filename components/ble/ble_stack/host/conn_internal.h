@@ -264,6 +264,8 @@ void notify_remote_info(struct bt_conn *conn);
 
 void notify_le_param_updated(struct bt_conn *conn);
 
+void notify_le_phy_updated(struct bt_conn *conn, u8_t tx_phy, u8_t rx_phy);
+
 bool le_param_req(struct bt_conn *conn, struct bt_le_conn_param *param);
 
 #if defined(CONFIG_BT_SMP)
@@ -327,7 +329,12 @@ struct k_sem *bt_conn_get_pkts(struct bt_conn *conn);
 
 /* k_poll related helpers for the TX thread */
 int bt_conn_prepare_events(struct k_poll_event events[]);
+
+#if (BFLB_BT_CO_THREAD)
+void bt_conn_process_tx(struct bt_conn *conn, struct net_buf *tx_buf);
+#else
 void bt_conn_process_tx(struct bt_conn *conn);
+#endif
 
 #if defined(BFLB_BLE)
 /** @brief Get connection handle for a connection.

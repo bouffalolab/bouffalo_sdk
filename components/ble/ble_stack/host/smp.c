@@ -258,8 +258,10 @@ struct bt_smp_br {
 static struct bt_smp_br bt_smp_br_pool[CONFIG_BT_MAX_CONN];
 #endif /* CONFIG_BT_BREDR */
 
-#if defined(CONFIG_BT_STACK_PTS)
+#if defined(CONFIG_BT_STACK_PTS) || defined(CONFIG_AUTO_PTS)
 static bool mitm = IS_ENABLED(CONFIG_BT_SMP_ENFORCE_MITM);
+#endif
+#if defined(CONFIG_BT_STACK_PTS)
 static int smp_test_flag = 0;
 #endif
 
@@ -2660,12 +2662,14 @@ void bt_set_bondable(bool enable)
     bondable = enable;
 }
 
-#if defined(CONFIG_BT_STACK_PTS)
+#if defined(CONFIG_BT_STACK_PTS) || defined(CONFIG_AUTO_PTS)
 void bt_set_mitm(bool enable)
 {
     mitm = enable;
 }
+#endif
 
+#if defined(CONFIG_BT_STACK_PTS)
 void bt_set_smpflag(smp_test_id id)
 {
     atomic_set_bit(&smp_test_flag, id);
@@ -2708,7 +2712,7 @@ static u8_t get_auth(struct bt_conn *conn, u8_t auth)
             auth &= BT_SMP_AUTH_MASK;
         }
 
-#if defined(CONFIG_BT_STACK_PTS)
+#if defined(CONFIG_BT_STACK_PTS) || defined(CONFIG_AUTO_PTS)
         if ((get_io_capa() == BT_SMP_IO_NO_INPUT_OUTPUT) ||
             (!mitm &&
              (conn->required_sec_level < BT_SECURITY_L3))) {

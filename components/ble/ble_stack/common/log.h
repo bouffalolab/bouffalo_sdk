@@ -43,11 +43,15 @@ extern "C" {
 #if defined(BFLB_BLE)
 
 #if defined(BL_MCU_SDK)
-#define BT_DBG(fmt, ...) //bflb_platform_printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
-#define BT_ERR(fmt, ...) bflb_platform_printf(fmt ", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_DBG(fmt, ...)  //bflb_platform_printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_ERR(fmt, ...)  bflb_platform_printf(fmt ", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_WARN(fmt, ...) bflb_platform_printf(fmt ", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_INFO(fmt, ...) //bflb_platform_printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
 #else
-#define BT_DBG(fmt, ...) //printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
-#define BT_ERR(fmt, ...) printf(fmt ", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_DBG(fmt, ...)  //printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_ERR(fmt, ...)  printf(fmt ", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_WARN(fmt, ...) printf(fmt ", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_INFO(fmt, ...) //printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
 #endif
 
 #if defined(CONFIG_BT_STACK_PTS) || defined(CONFIG_BT_MESH_PTS)
@@ -56,14 +60,6 @@ extern "C" {
 #else
 #define BT_PTS(fmt, ...) printf(fmt "\r\n", ##__VA_ARGS__)
 #endif
-
-#endif
-#if defined(BL_MCU_SDK)
-#define BT_WARN(fmt, ...) bflb_platform_printf(fmt ", %s\r\n", ##__VA_ARGS__, __func__)
-#define BT_INFO(fmt, ...) //bflb_platform_printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
-#else
-#define BT_WARN(fmt, ...) printf(fmt ", %s\r\n", ##__VA_ARGS__, __func__)
-#define BT_INFO(fmt, ...) //printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
 #endif
 
 #else /*BFLB_BLE*/

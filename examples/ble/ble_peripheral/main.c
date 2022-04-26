@@ -128,18 +128,18 @@ int ble_start_adv(void)
 {
     struct bt_le_adv_param adv_param = {
         //options:3, connectable undirected, adv one time
-        .options = 3,
+        .options = (BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_ONE_TIME),
         .interval_min = BT_GAP_ADV_FAST_INT_MIN_3,
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_3,
     };
 
-    char *adv_name = "BL_TEST_01"; // This name must be the same as adv_name in ble_central
-    struct bt_data adv_data[2] = {
+    //char *adv_name = "BL_TEST_01"; // This name must be the same as adv_name in ble_central
+    struct bt_data adv_data[] = {
         BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL)),
-        BT_DATA(BT_DATA_NAME_COMPLETE, adv_name, strlen(adv_name)),
+        //BT_DATA(BT_DATA_NAME_COMPLETE, adv_name, strlen(adv_name)),
     };
 
-    return bt_le_adv_start(&adv_param, adv_data, ARRAY_SIZE(adv_data), &adv_data[1], 1);
+    return bt_le_adv_start(&adv_param, adv_data, ARRAY_SIZE(adv_data), NULL, 0);
 }
 
 #if defined(CONFIG_BT_OAD_SERVER)

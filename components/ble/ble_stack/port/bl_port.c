@@ -29,7 +29,6 @@ extern int bl_rand();
 int ble_rand()
 {
 #if defined(CONFIG_HW_SEC_ENG_DISABLE)
-    extern long random(void);
     return random();
 #else
     return bl_rand();
@@ -59,7 +58,7 @@ int bl_rand()
 void k_queue_init(struct k_queue *queue, int size)
 {
     //int size = 20;
-    uint8_t blk_size = sizeof(void *) + 1;
+    uint8_t blk_size = sizeof(void *);
 
     queue->hdl = xQueueCreate(size, blk_size);
     BT_ASSERT(queue->hdl != NULL);
@@ -249,16 +248,25 @@ int k_thread_create(struct k_thread *new_thread, const char *name,
     return new_thread->task ? 0 : -1;
 }
 
-void k_thread_delete(struct k_thread *new_thread)
+void k_thread_delete(struct k_thread *thread)
 {
-    if (NULL == new_thread || 0 == new_thread->task) {
+    if (NULL == thread || 0 == thread->task) {
         BT_ERR("task is NULL\n");
         return;
     }
 
-    vTaskDelete((void *)(new_thread->task));
-    new_thread->task = 0;
+    vTaskDelete((void *)(thread->task));
+    thread->task = 0;
     return;
+}
+
+bool k_is_current_thread(struct k_thread *thread)
+{
+    eTaskState thread_state = eTaskGetState((void *)(thread->task));
+    if (thread_state == eRunning)
+        return true;
+    else
+        return false;
 }
 
 int k_yield(void)
@@ -367,7 +375,7 @@ long long k_now_ms(void)
 
 void k_get_random_byte_array(uint8_t *buf, size_t len)
 {
-    // bl_rand() return a word, but *buf may not be word-aligned
+    // ble_rand() return a word, but *buf may not be word-aligned
     for (int i = 0; i < len; i++) {
         *(buf + i) = (uint8_t)(ble_rand() & 0xFF);
     }
@@ -375,10 +383,18 @@ void k_get_random_byte_array(uint8_t *buf, size_t len)
 
 void *k_malloc(size_t size)
 {
+#if defined(CFG_USE_PSRAM)
+    return pvPortMallocPsram(size);
+#else
     return pvPortMalloc(size);
+#endif /* CFG_USE_PSRAM */
 }
 
 void k_free(void *buf)
 {
+#if defined(CFG_USE_PSRAM)
+    return vPortFreePsram(buf);
+#else
     return vPortFree(buf);
+#endif
 }

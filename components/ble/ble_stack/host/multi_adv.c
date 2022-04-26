@@ -11,6 +11,7 @@
 
 #include "multi_adv.h"
 #include "work_q.h"
+#include "log.h"
 
 static struct multi_adv_instant g_multi_adv_list[MAX_MULTI_ADV_INSTANT];
 static struct multi_adv_scheduler g_multi_adv_scheduler;
@@ -310,7 +311,7 @@ void multi_adv_schedule_timeslot(struct multi_adv_scheduler *adv_scheduler)
         }
     }
 
-    //    BT_DBG("multi_adv_schedule_timeslot, num = %d, match = %d", inst_num, match);
+    BT_DBG("multi_adv_schedule_timeslot, num = %d, match = %d", inst_num, match);
     if (match) {
         int offset_per_instant, diff;
         offset_per_instant = TIME_PRIOD_MS / match;
@@ -416,7 +417,7 @@ void multi_adv_new_schedule(void)
     }
 
     if (high_duty_instant) {
-        //BT_WARN("High Duty Cycle Instants, id = %d, interval = %d\n", adv_instant->instant_id, adv_instant->param.interval_min);
+        BT_WARN("High Duty Cycle Instants, id = %d, interval = %d\n", adv_instant->instant_id, adv_instant->param.interval_min);
         multi_adv_start_adv_instant(adv_instant);
         return;
     }
@@ -449,7 +450,7 @@ void multi_adv_new_schedule(void)
         adv_instant->instant_interval = inst_interval[i];
         adv_instant->instant_offset = inst_offset[i];
 
-        //BT_WARN("adv_instant id = %d, interval = %d, offset = %d\n", adv_instant->instant_id, adv_instant->instant_interval, adv_instant->instant_offset);
+        BT_WARN("adv_instant id = %d, interval = %d, offset = %d\n", adv_instant->instant_id, adv_instant->instant_interval, adv_instant->instant_offset);
     }
 
     multi_adv_schedule_start();
@@ -493,7 +494,7 @@ int bt_le_multi_adv_stop(int instant_id)
     if (multi_adv_find_instant_by_id(instant_id) == 0)
         return -1;
 
-    //BT_WARN("%s id[%d]\n", __func__, instant_id);
+    BT_WARN("%s id[%d]\n", __func__, instant_id);
     multi_adv_delete_instant_by_id(instant_id);
     multi_adv_new_schedule();
 

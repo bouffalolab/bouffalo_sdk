@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include "types.h"
 #include "bl_port.h"
@@ -241,6 +242,8 @@ int k_thread_create(struct k_thread *new_thread, const char *name,
                     int prio);
 
 void k_thread_delete(struct k_thread *new_thread);
+
+bool k_is_current_thread(struct k_thread *thread);
 
 /**
  * @brief Yield the current thread.
