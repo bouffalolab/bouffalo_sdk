@@ -39,11 +39,7 @@ int main(void)
         MSG("device open success\r\n");
     }
 
-    /* register & open dma device */
-    if (dma_allocate_register("dac_dma") == SUCCESS) {
-        MSG("dma allocate success\r\n");
-    }
-
+    dma_register(DMA0_CH0_INDEX, "dac_dma");
     struct device *dac_dma = device_find("dac_dma");
 
     if (dac_dma) {
@@ -53,8 +49,8 @@ int main(void)
         DMA_DEV(dac_dma)->dst_req = DMA_REQUEST_DAC0;
         DMA_DEV(dac_dma)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
         DMA_DEV(dac_dma)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
-        DMA_DEV(dac_dma)->src_burst_size = DMA_BURST_1BYTE;
-        DMA_DEV(dac_dma)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dac_dma)->src_burst_size = DMA_BURST_INCR1;
+        DMA_DEV(dac_dma)->dst_burst_size = DMA_BURST_INCR1;
         DMA_DEV(dac_dma)->src_width = DMA_TRANSFER_WIDTH_16BIT;
         DMA_DEV(dac_dma)->dst_width = DMA_TRANSFER_WIDTH_16BIT;
         device_open(dac_dma, 0);

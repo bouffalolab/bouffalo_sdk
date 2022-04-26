@@ -55,8 +55,8 @@ int main(void)
         DMA_DEV(dma_ch0)->dst_req = DMA_REQUEST_UART1_TX;
         DMA_DEV(dma_ch0)->src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch0)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
-        DMA_DEV(dma_ch0)->src_burst_size = DMA_BURST_1BYTE;
-        DMA_DEV(dma_ch0)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch0)->src_burst_size = DMA_BURST_INCR1;
+        DMA_DEV(dma_ch0)->dst_burst_size = DMA_BURST_INCR1;
         DMA_DEV(dma_ch0)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch0)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch0, 0);

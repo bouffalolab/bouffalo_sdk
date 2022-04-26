@@ -77,10 +77,10 @@ enum dma_index_type {
 #define DMA_TRANSFER_WIDTH_16BIT 1
 #define DMA_TRANSFER_WIDTH_32BIT 2
 
-#define DMA_BURST_1BYTE  0
-#define DMA_BURST_4BYTE  1
-#define DMA_BURST_8BYTE  2
-#define DMA_BURST_16BYTE 3
+#define DMA_BURST_INCR1  0
+#define DMA_BURST_INCR4  1
+#define DMA_BURST_INCR8  2
+#define DMA_BURST_INCR16 3
 
 #define DMA_ADDR_UART0_TDR (0x4000A000 + 0x88)
 #define DMA_ADDR_UART0_RDR (0x4000A000 + 0x8C)
@@ -162,7 +162,8 @@ typedef struct dma_device {
     uint8_t dst_burst_size;
     uint8_t src_width;
     uint8_t dst_width;
-    dma_lli_ctrl_t *lli_cfg;
+    uint8_t intr; /* private param */
+    dma_lli_ctrl_t *lli_cfg;/* private param*/
 } dma_device_t;
 
 #define DMA_DEV(dev) ((dma_device_t *)dev)

@@ -135,8 +135,8 @@ BL706 AVB + GC0308摄像头模块 + windows 相机
             .dst_req = DMA_REQUEST_UART1_TX,            \
             .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
             .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
-            .src_burst_size = DMA_BURST_1BYTE,          \
-            .dst_burst_size = DMA_BURST_1BYTE,          \
+            .src_burst_size = DMA_BURST_INCR1,          \
+            .dst_burst_size = DMA_BURST_INCR1,          \
             .src_width = DMA_TRANSFER_WIDTH_8BIT,       \
             .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \
         }
@@ -155,8 +155,8 @@ BL706 AVB + GC0308摄像头模块 + windows 相机
     DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_USB_EP1;
     DMA_DEV(dma_ch2)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
     DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
-    DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_16BYTE;
-    DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_1BYTE;
+    DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_INCR16;
+    DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_INCR1;
     DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
     DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
     device_open(dma_ch2, 0);

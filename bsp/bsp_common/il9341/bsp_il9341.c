@@ -117,8 +117,8 @@ void spi0_init(void)
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
         DMA_DEV(dma_ch3)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
         DMA_DEV(dma_ch3)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
-        DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_1BYTE;
-        DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_INCR1;
+        DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_INCR1;
         DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch3, 0);
@@ -142,8 +142,8 @@ void spi0_init(void)
         DMA_DEV(dma_ch4)->dst_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch4)->src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch4)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
-        DMA_DEV(dma_ch4)->src_burst_size = DMA_BURST_1BYTE;
-        DMA_DEV(dma_ch4)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch4)->src_burst_size = DMA_BURST_INCR1;
+        DMA_DEV(dma_ch4)->dst_burst_size = DMA_BURST_INCR1;
         DMA_DEV(dma_ch4)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch4)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch4, 0);

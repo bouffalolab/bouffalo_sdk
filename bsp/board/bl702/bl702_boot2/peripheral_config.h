@@ -43,7 +43,7 @@
 /* ----------------------*/
 
 /* PERIPHERAL With DMA LIST */
-
+#define BSP_USING_DMA
 #define BSP_USING_DMA0_CH0
 #define BSP_USING_DMA0_CH1
 #define BSP_USING_DMA0_CH2
@@ -208,8 +208,8 @@
         .dst_req = DMA_REQUEST_NONE,               \
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
         .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
-        .src_burst_size = DMA_BURST_4BYTE,         \
-        .dst_burst_size = DMA_BURST_4BYTE,         \
+        .src_burst_size = DMA_BURST_INCR4,         \
+        .dst_burst_size = DMA_BURST_INCR4,         \
         .src_width = DMA_TRANSFER_WIDTH_32BIT,     \
         .dst_width = DMA_TRANSFER_WIDTH_32BIT,     \
     }
@@ -228,8 +228,8 @@
         .dst_req = DMA_REQUEST_NONE,               \
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
         .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
-        .src_burst_size = DMA_BURST_4BYTE,         \
-        .dst_burst_size = DMA_BURST_4BYTE,         \
+        .src_burst_size = DMA_BURST_INCR4,         \
+        .dst_burst_size = DMA_BURST_INCR4,         \
         .src_width = DMA_TRANSFER_WIDTH_16BIT,     \
         .dst_width = DMA_TRANSFER_WIDTH_16BIT,     \
     }
@@ -248,8 +248,8 @@
         .dst_req = DMA_REQUEST_UART1_TX,            \
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
         .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
-        .src_burst_size = DMA_BURST_1BYTE,          \
-        .dst_burst_size = DMA_BURST_1BYTE,          \
+        .src_burst_size = DMA_BURST_INCR1,          \
+        .dst_burst_size = DMA_BURST_INCR1,          \
         .src_width = DMA_TRANSFER_WIDTH_8BIT,       \
         .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \
     }
@@ -268,8 +268,8 @@
         .dst_req = DMA_REQUEST_SPI0_TX,             \
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
         .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
-        .src_burst_size = DMA_BURST_1BYTE,          \
-        .dst_burst_size = DMA_BURST_1BYTE,          \
+        .src_burst_size = DMA_BURST_INCR1,          \
+        .dst_burst_size = DMA_BURST_INCR1,          \
         .src_width = DMA_TRANSFER_WIDTH_8BIT,       \
         .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \
     }
@@ -288,8 +288,8 @@
         .dst_req = DMA_REQUEST_NONE,                \
         .src_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
         .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
-        .src_burst_size = DMA_BURST_1BYTE,          \
-        .dst_burst_size = DMA_BURST_1BYTE,          \
+        .src_burst_size = DMA_BURST_INCR1,          \
+        .dst_burst_size = DMA_BURST_INCR1,          \
         .src_width = DMA_TRANSFER_WIDTH_8BIT,       \
         .dst_width = DMA_TRANSFER_WIDTH_8BIT,       \
     }
@@ -308,8 +308,8 @@
         .dst_req = DMA_REQUEST_I2S_TX,              \
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
         .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
-        .src_burst_size = DMA_BURST_1BYTE,          \
-        .dst_burst_size = DMA_BURST_1BYTE,          \
+        .src_burst_size = DMA_BURST_INCR1,          \
+        .dst_burst_size = DMA_BURST_INCR1,          \
         .src_width = DMA_TRANSFER_WIDTH_16BIT,      \
         .dst_width = DMA_TRANSFER_WIDTH_16BIT,      \
     }
@@ -328,8 +328,8 @@
         .dst_req = DMA_REQUEST_I2S_TX,              \
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,  \
         .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE, \
-        .src_burst_size = DMA_BURST_1BYTE,          \
-        .dst_burst_size = DMA_BURST_1BYTE,          \
+        .src_burst_size = DMA_BURST_INCR1,          \
+        .dst_burst_size = DMA_BURST_INCR1,          \
         .src_width = DMA_TRANSFER_WIDTH_16BIT,      \
         .dst_width = DMA_TRANSFER_WIDTH_16BIT,      \
     }
@@ -348,8 +348,8 @@
         .dst_req = DMA_REQUEST_NONE,               \
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
         .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
-        .src_burst_size = DMA_BURST_1BYTE,         \
-        .dst_burst_size = DMA_BURST_1BYTE,         \
+        .src_burst_size = DMA_BURST_INCR1,         \
+        .dst_burst_size = DMA_BURST_INCR1,         \
         .src_width = DMA_TRANSFER_WIDTH_32BIT,     \
         .dst_width = DMA_TRANSFER_WIDTH_32BIT,     \
     }

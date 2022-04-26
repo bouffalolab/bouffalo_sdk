@@ -547,8 +547,8 @@ void audio_init()
         DMA_DEV(dma_ch2_i2s_tx)->dst_req = DMA_REQUEST_I2S_TX;
         DMA_DEV(dma_ch2_i2s_tx)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
         DMA_DEV(dma_ch2_i2s_tx)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
-        DMA_DEV(dma_ch2_i2s_tx)->dst_burst_size = DMA_BURST_4BYTE;
-        DMA_DEV(dma_ch2_i2s_tx)->src_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch2_i2s_tx)->dst_burst_size = DMA_BURST_INCR4;
+        DMA_DEV(dma_ch2_i2s_tx)->src_burst_size = DMA_BURST_INCR4;
         DMA_DEV(dma_ch2_i2s_tx)->src_width = DMA_TRANSFER_WIDTH_32BIT;
         DMA_DEV(dma_ch2_i2s_tx)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
         device_open(dma_ch2_i2s_tx, 0);
@@ -570,8 +570,8 @@ void audio_init()
         DMA_DEV(dma_ch3_i2s_rx)->dst_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch3_i2s_rx)->src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch3_i2s_rx)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
-        DMA_DEV(dma_ch3_i2s_rx)->dst_burst_size = DMA_BURST_4BYTE;
-        DMA_DEV(dma_ch3_i2s_rx)->src_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch3_i2s_rx)->dst_burst_size = DMA_BURST_INCR4;
+        DMA_DEV(dma_ch3_i2s_rx)->src_burst_size = DMA_BURST_INCR4;
         DMA_DEV(dma_ch3_i2s_rx)->src_width = DMA_TRANSFER_WIDTH_32BIT;
         DMA_DEV(dma_ch3_i2s_rx)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
         device_open(dma_ch3_i2s_rx, 0);
@@ -612,8 +612,8 @@ int main(void)
         DMA_DEV(dma_ch4_usb_tx)->dst_req = DMA_REQUEST_USB_EP1;
         DMA_DEV(dma_ch4_usb_tx)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
         DMA_DEV(dma_ch4_usb_tx)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
-        DMA_DEV(dma_ch4_usb_tx)->src_burst_size = DMA_BURST_16BYTE;
-        DMA_DEV(dma_ch4_usb_tx)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch4_usb_tx)->src_burst_size = DMA_BURST_INCR16;
+        DMA_DEV(dma_ch4_usb_tx)->dst_burst_size = DMA_BURST_INCR1;
         DMA_DEV(dma_ch4_usb_tx)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch4_usb_tx)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch4_usb_tx, 0);

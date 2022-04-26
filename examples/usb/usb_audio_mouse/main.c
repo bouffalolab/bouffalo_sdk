@@ -734,8 +734,8 @@ int main(void)
         DMA_DEV(dma_ch2)->dst_req = DMA_REQUEST_USB_EP1;
         DMA_DEV(dma_ch2)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
         DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
-        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_16BYTE;
-        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_INCR16;
+        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_INCR1;
         DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch2, 0);

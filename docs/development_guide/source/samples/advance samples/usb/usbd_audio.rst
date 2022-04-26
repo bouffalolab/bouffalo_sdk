@@ -198,8 +198,8 @@ USB 协议栈可以参考 API 手册下的 USB Stack 章节的说明。
         DMA_DEV(dma_ch4_usb_tx)->dst_req = DMA_REQUEST_USB_EP1;
         DMA_DEV(dma_ch4_usb_tx)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch4_usb_tx)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
-        DMA_DEV(dma_ch4_usb_tx)->src_burst_size = DMA_BURST_16BYTE;
-        DMA_DEV(dma_ch4_usb_tx)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch4_usb_tx)->src_burst_size = DMA_BURST_INCR16;
+        DMA_DEV(dma_ch4_usb_tx)->dst_burst_size = DMA_BURST_INCR1;
 
         device_open(dma_ch4_usb_tx, 0);
         // device_set_callback(dma_ch4_usb_tx, dma2_irq_callback);
