@@ -137,19 +137,19 @@ DMA 设备结构体定义
 
 .. code-block:: C
 
-    #define DMA_BURST_1BYTE     0
-    #define DMA_BURST_4BYTE     1
-    #define DMA_BURST_8BYTE     2
-    #define DMA_BURST_16BYTE    3
+    #define DMA_BURST_INCR1     0
+    #define DMA_BURST_INCR4     1
+    #define DMA_BURST_INCR8     2
+    #define DMA_BURST_INCR16    3
 
 ``dst_burst_size`` 提供以下类型
 
 .. code-block:: C
 
-    #define DMA_BURST_1BYTE     0
-    #define DMA_BURST_4BYTE     1
-    #define DMA_BURST_8BYTE     2
-    #define DMA_BURST_16BYTE    3
+    #define DMA_BURST_INCR1     0
+    #define DMA_BURST_INCR4     1
+    #define DMA_BURST_INCR8     2
+    #define DMA_BURST_INCR16    3
 
 ``src_width`` 提供以下类型
 
@@ -187,8 +187,8 @@ DMA 设备参数配置表
         .dst_req = DMA_REQUEST_NONE,               \
         .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
         .dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE, \
-        .src_burst_size = DMA_BURST_1BYTE,         \
-        .dst_burst_size = DMA_BURST_1BYTE,         \
+        .src_burst_size = DMA_BURST_INCR1,         \
+        .dst_burst_size = DMA_BURST_INCR1,         \
         .src_width = DMA_TRANSFER_WIDTH_8BIT,      \
         .dst_width = DMA_TRANSFER_WIDTH_8BIT,      \
     }
@@ -468,7 +468,7 @@ DMA 的效率与FIFO
 
 - 在连续读写时，burst 突发模式的总线利用效率比 single 单次模式高得多，因此可以尽量提高 ``xxx_burst_size``，但注意，DMA0 的每个通道只有 16Byte 的 FIFO，因此 width 乘 burst_size 的积必须小于等于 16Byte。
 
-因此在内存到内存搬运数据时，最高效的是 ``xxx_width`` 值为 ``DMA_TRANSFER_WIDTH_32BIT``, ``xxx_burst_size`` 值为 ``DMA_BURST_4BYTE``,此时完全利用了 DMA 的FIFO，读写最快，总线占用最少，但要求数据量与地址满足对齐要求。
+因此在内存到内存搬运数据时，最高效的是 ``xxx_width`` 值为 ``DMA_TRANSFER_WIDTH_32BIT``, ``xxx_burst_size`` 值为 ``DMA_BURST_INCR4``,此时完全利用了 DMA 的FIFO，读写最快，总线占用最少，但要求数据量与地址满足对齐要求。
 
 
 外设到内存 与 内存到外设
@@ -482,7 +482,7 @@ DMA 的效率与FIFO
 
 - 内存端配置的 burst_size 和 width 与外设端的可以不相等，但 burst_size 与 width 的乘积必须相等，并且小于 16Byte。内存端配置更高的 ``xxx_width`` 可以提高传输速度，减少对总线占用，但注意对数据量(data size)与地址的对齐要求。
 
-如对于 I2S ,他的 tx 与 rx 的 FIFO 深度都为 8，I2S 最佳的 ``fifo_threshold`` 应为 4，DMA 的 ``xxx_burst_size`` 应该为 ``DMA_BURST_4BYTE``，这样能保证 I2S 的 FIFO 能留有一定余量防止出现 rx-FIFO 溢出与 tx-FIFO 欠载，又减少 DMA 了对总线的占用。
+如对于 I2S ,他的 tx 与 rx 的 FIFO 深度都为 8，I2S 最佳的 ``fifo_threshold`` 应为 4，DMA 的 ``xxx_burst_size`` 应该为 ``DMA_BURST_INCR4``，这样能保证 I2S 的 FIFO 能留有一定余量防止出现 rx-FIFO 溢出与 tx-FIFO 欠载，又减少 DMA 了对总线的占用。
 
 又如对于 SPI ，他的 tx 与 rx 的 FIFO 深度都为 4，若使用 burst_size 为 4 的方式传输，那么 SPI 的 ``fifo_threshold`` 只能是 4，没有冗余，若此时 CPU 在占用总线导致 DMA 传输不及时，可能会出现SPI传输间歇，在SPI从机模式下还可能出现发送欠载与接收溢出。
-因此对于 SPI 而言，最佳的 ``fifo_threshold`` 应为 1，DMA 的 ``xxx_burst_size`` 应为 ``DMA_BURST_1BYTE``，此时 DMA 虽然对总线的访问效率一般，但保证了 SPI 的 FIFO 有冗余，不会出现上诉问题。
+因此对于 SPI 而言，最佳的 ``fifo_threshold`` 应为 1，DMA 的 ``xxx_burst_size`` 应为 ``DMA_BURST_INCR1``，此时 DMA 虽然对总线的访问效率一般，但保证了 SPI 的 FIFO 有冗余，不会出现上诉问题。

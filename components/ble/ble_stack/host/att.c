@@ -392,7 +392,9 @@ static u8_t att_handle_rsp(struct bt_att *att, void *pdu, u16_t len, u8_t err)
     func = att->req->func;
     att->req->func = NULL;
 
-    func(att->chan.chan.conn, err, pdu, len, att->req);
+    if (func) {
+        func(att->chan.chan.conn, err, pdu, len, att->req);
+    }
 
     /* Don't destroy if callback had reused the request */
     if (!att->req->func) {
@@ -2265,7 +2267,14 @@ static void bt_att_encrypt_change(struct bt_l2cap_chan *chan,
         return;
     }
 
+#if (BFLB_BT_CO_THREAD)
+    if (k_sem_take(&att->tx_sem, K_NO_WAIT) < 0) {
+        k_fifo_put(&att->tx_queue, att->req->buf);
+        return;
+    }
+#else
     k_sem_take(&att->tx_sem, K_FOREVER);
+#endif
     if (!att_is_connected(att)) {
         BT_WARN("Disconnected");
         k_sem_give(&att->tx_sem);
@@ -2342,7 +2351,11 @@ void bt_att_init(void)
 
 #if CONFIG_BT_ATT_PREPARE_COUNT > 0
 #if defined(BFLB_DYNAMIC_ALLOC_MEM)
+#if (BFLB_STATIC_ALLOC_MEM)
+    net_buf_init(PREP, &prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU, NULL);
+#else
     net_buf_init(&prep_pool, CONFIG_BT_ATT_PREPARE_COUNT, BT_ATT_MTU, NULL);
+#endif
 #endif
 #endif
 

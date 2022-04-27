@@ -42,7 +42,7 @@
 #define RGB565     0
 #define UYVY       1
 #define YUYV       2
-#define FORMAT_SEL RGB565
+#define FORMAT_SEL UYVY
 
 #if (IMAGE_SENSOR_USE == IMAGE_SENSOR_BF2013)
 #define I2C_CAMERA_ADDR 0x6E
@@ -684,8 +684,7 @@ uint8_t image_sensor_init(BL_Fun_Type mjpeg_en, cam_device_t *cam_cfg, mjpeg_dev
     cam_register(CAM0_INDEX, "camera0");
     struct device *cam0 = device_find("camera0");
 
-    if(!cam0)
-    {
+    if (!cam0) {
         MSG("cam do not find\r\n");
         return 1;
     }

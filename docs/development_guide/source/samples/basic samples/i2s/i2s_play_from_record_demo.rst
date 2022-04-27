@@ -160,8 +160,8 @@ DMA 的配置与使能
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_NONE;
         DMA_DEV(dma_ch3)->src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch3)->dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
-        DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_4BYTE;
-        DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_INCR4;
+        DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_INCR4;
         DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_32BIT;
         DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
         device_open(dma_ch3, 0);
@@ -185,8 +185,8 @@ DMA 的配置与使能
         DMA_DEV(dma_ch2)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
         DMA_DEV(dma_ch2)->src_width = DMA_TRANSFER_WIDTH_32BIT;
         DMA_DEV(dma_ch2)->dst_width = DMA_TRANSFER_WIDTH_32BIT;
-        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_4BYTE;
-        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_4BYTE;
+        DMA_DEV(dma_ch2)->src_burst_size = DMA_BURST_INCR4;
+        DMA_DEV(dma_ch2)->dst_burst_size = DMA_BURST_INCR4;
         device_open(dma_ch2, 0);
 
         /* connect i2s device and dma device */
@@ -201,7 +201,7 @@ DMA 的配置与使能
 .. important:: 这里 DMA 的传输宽度设置为了 ``DMA_TRANSFER_WIDTH_32BIT``,但前面 I2S 的配置是16位有效数据，这是因为 I2S 在初始化时默认使用了合并 FIFO 功能，\
   即当双声道时有效数据位宽为8位或者16位时，会将双声道数据同时放入同一个 FIFO 中,合并为16位或32位，提高 FIFO 利用效率，具体原因请看 api_dma 文档最后一节
 
-.. important:: 这里 DMA 的 ``src_burst_size`` 与 ``dst_burst_size`` 都为 DMA_BURST_4BYTE，这要求 I2S 初始化时，其中的 ``fifo_threshold`` 要大于等于4，具体原因请看 api_dma 文档最后一节
+.. important:: 这里 DMA 的 ``src_burst_size`` 与 ``dst_burst_size`` 都为 DMA_BURST_INCR4，这要求 I2S 初始化时，其中的 ``fifo_threshold`` 要大于等于4，具体原因请看 api_dma 文档最后一节
 
 DMA 中断回调函数
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

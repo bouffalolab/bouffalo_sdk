@@ -72,6 +72,13 @@ struct ccc_store {
 
 #if defined(CONFIG_BT_GATT_CLIENT)
 static sys_slist_t subscriptions;
+#if defined(BFLB_BLE_NOTIFY_ALL)
+bt_notification_all_cb_t gatt_notify_all_cb;
+#endif
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+uint8_t discover_ongoing = BT_GATT_ITER_STOP;
+extern int bt_gatt_discover_continue(struct bt_conn *conn, struct bt_gatt_discover_params *params);
+#endif
 #endif /* CONFIG_BT_GATT_CLIENT */
 
 static const u16_t gap_appearance = CONFIG_BT_DEVICE_APPEARANCE;
@@ -942,11 +949,9 @@ int service_change_test(struct bt_gatt_indicate_params *params, const struct bt_
     params->data = &sc_range[0];
     params->len = sizeof(sc_range);
 
-    if (bt_gatt_indicate(con, params)) {
-        /* No connections to indicate */
-        return;
-    }
+    return bt_gatt_indicate(con, params);
 }
+
 #endif
 
 #if defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
@@ -2314,13 +2319,23 @@ bool bt_gatt_is_subscribed(struct bt_conn *conn,
 }
 
 #if defined(CONFIG_BT_GATT_CLIENT)
+#if defined(BFLB_BLE_NOTIFY_ALL)
+void bt_gatt_register_notification_callback(bt_notification_all_cb_t cb)
+{
+    gatt_notify_all_cb = cb;
+}
+#endif
 void bt_gatt_notification(struct bt_conn *conn, u16_t handle,
                           const void *data, u16_t length)
 {
     struct bt_gatt_subscribe_params *params, *tmp;
 
     BT_DBG("handle 0x%04x length %u", handle, length);
-
+#if defined(BFLB_BLE_NOTIFY_ALL)
+    if (gatt_notify_all_cb) {
+        gatt_notify_all_cb(conn, handle, data, length);
+    }
+#endif
     SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&subscriptions, params, tmp, node)
     {
         if (bt_conn_addr_le_cmp(conn, &params->_peer) ||
@@ -2473,12 +2488,19 @@ static void gatt_discover_next(struct bt_conn *conn, u16_t last_handle,
 
 discover:
     /* Discover next range */
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+    if (!bt_gatt_discover_continue(conn, params)) {
+#else
     if (!bt_gatt_discover(conn, params)) {
+#endif
         return;
     }
 
 done:
     params->func(conn, NULL, params);
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+    discover_ongoing = BT_GATT_ITER_STOP;
+#endif
 }
 
 static void gatt_find_type_rsp(struct bt_conn *conn, u8_t err,
@@ -2521,6 +2543,9 @@ static void gatt_find_type_rsp(struct bt_conn *conn, u8_t err,
         attr.user_data = &value;
 
         if (params->func(conn, &attr, params) == BT_GATT_ITER_STOP) {
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+            discover_ongoing = BT_GATT_ITER_STOP;
+#endif
             return;
         }
     }
@@ -2535,6 +2560,9 @@ static void gatt_find_type_rsp(struct bt_conn *conn, u8_t err,
     return;
 done:
     params->func(conn, NULL, params);
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+    discover_ongoing = BT_GATT_ITER_STOP;
+#endif
 }
 
 static int gatt_find_type(struct bt_conn *conn,
@@ -2846,6 +2874,9 @@ static void gatt_read_type_rsp(struct bt_conn *conn, u8_t err,
 
     if (err) {
         params->func(conn, NULL, params);
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+        discover_ongoing = BT_GATT_ITER_STOP;
+#endif
         return;
     }
 
@@ -2856,6 +2887,9 @@ static void gatt_read_type_rsp(struct bt_conn *conn, u8_t err,
     }
 
     if (!handle) {
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+        discover_ongoing = BT_GATT_ITER_STOP;
+#endif
         return;
     }
 
@@ -2982,11 +3016,17 @@ static void gatt_read_group_rsp(struct bt_conn *conn, u8_t err,
 
     if (err) {
         params->func(conn, NULL, params);
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+        discover_ongoing = BT_GATT_ITER_STOP;
+#endif
         return;
     }
 
     handle = parse_service(conn, pdu, params, length);
     if (!handle) {
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+        discover_ongoing = BT_GATT_ITER_STOP;
+#endif
         return;
     }
 
@@ -3121,6 +3161,9 @@ static void gatt_find_info_rsp(struct bt_conn *conn, u8_t err,
         attr->handle = handle;
 
         if (params->func(conn, attr, params) == BT_GATT_ITER_STOP) {
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+            discover_ongoing = BT_GATT_ITER_STOP;
+#endif
             return;
         }
     }
@@ -3131,6 +3174,9 @@ static void gatt_find_info_rsp(struct bt_conn *conn, u8_t err,
 
 done:
     params->func(conn, NULL, params);
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+    discover_ongoing = BT_GATT_ITER_STOP;
+#endif
 }
 
 static int gatt_find_info(struct bt_conn *conn,
@@ -3168,6 +3214,18 @@ int bt_gatt_discover(struct bt_conn *conn,
         return -ENOTCONN;
     }
 
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+    if (discover_ongoing != BT_GATT_ITER_STOP) {
+        return -EINPROGRESS;
+    }
+    discover_ongoing = BT_GATT_ITER_CONTINUE;
+
+    return bt_gatt_discover_continue(conn, params);
+}
+int bt_gatt_discover_continue(struct bt_conn *conn,
+                              struct bt_gatt_discover_params *params)
+{
+#endif
     switch (params->type) {
         case BT_GATT_DISCOVER_PRIMARY:
         case BT_GATT_DISCOVER_SECONDARY:
@@ -4690,3 +4748,23 @@ SETTINGS_STATIC_HANDLER_DEFINE(bt_hash, "bt/hash", NULL, db_hash_set,
                                db_hash_commit, NULL);
 #endif /*CONFIG_BT_GATT_CACHING */
 #endif /* CONFIG_BT_SETTINGS */
+
+#if defined(CONFIG_BT_GATT_DYNAMIC_DB)
+uint16_t bt_gatt_get_last_handle(void)
+{
+    struct bt_gatt_service *last;
+    u16_t handle, last_handle;
+
+    if (sys_slist_is_empty(&db)) {
+        handle = last_static_handle;
+        last_handle = handle;
+        goto last;
+    }
+
+    last = SYS_SLIST_PEEK_TAIL_CONTAINER(&db, last, node);
+    handle = last->attrs[last->attr_count - 1].handle;
+    last_handle = handle;
+last:
+    return last_handle;
+}
+#endif
