@@ -463,6 +463,11 @@ void peripheral_clock_init(void)
     tmpVal |= (1 << BL_AHB_SLAVE1_USB);
     GLB_Set_USB_CLK(1);
 #endif
+
+#if defined(BSP_USING_DMA)
+    tmpVal |= (1 << BL_AHB_SLAVE1_DMA);
+#endif
+
     BL_WR_REG(GLB_BASE, GLB_CGEN_CFG1, tmpVal);
 }
 
