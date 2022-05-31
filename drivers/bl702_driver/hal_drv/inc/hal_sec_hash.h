@@ -52,8 +52,20 @@ typedef struct sec_hash_device {
     uint8_t type;                /*!< Sha has feed data */
 } sec_hash_device_t;
 
-int sec_hash_register(enum sec_hash_index_type index, const char *name);
+typedef struct
+{
+    uint32_t shaBuf[64 / 4];     /*!< Data not processed but in this temp buffer */
+    uint32_t shaPadding[64 / 4]; /*!< Padding data */
+    uint8_t type;                /*!< Sha has feed data */
+} sec_hash_handle_t;
+
+int sec_hash_init(sec_hash_handle_t *handle, uint8_t type);
+int sec_hash_deinit(sec_hash_handle_t *handle);
+int sec_hash_update(sec_hash_handle_t *handle, const void *buffer, uint32_t size);
+int sec_hash_finish(sec_hash_handle_t *handle, void *buffer);
 int sec_hash_sha256_register(enum sec_hash_index_type index, const char *name);
+int sec_hash_sha224_register(enum sec_hash_index_type index, const char *name);
+
 #ifdef __cplusplus
 }
 #endif

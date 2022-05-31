@@ -46,6 +46,19 @@
 #include "hal_boot2.h"
 
 extern uint32_t __boot2_pass_param_addr;
+static uint32_t start_time=0;
+/****************************************************************************/ /**
+* @brief  Boot2 show timer for cal boot time
+*
+* @param  None
+*
+* @return None
+*
+*******************************************************************************/
+void blsp_boot2_start_timer(void)
+{
+    start_time=(uint32_t)bflb_platform_get_time_ms();
+}
 
 /****************************************************************************/ /**
 * @brief  Boot2 show timer for cal boot time
@@ -57,20 +70,7 @@ extern uint32_t __boot2_pass_param_addr;
 *******************************************************************************/
 void blsp_boot2_show_timer(void)
 {
-    MSG("Counter value=%d\n", (unsigned int)bflb_platform_get_time_ms());
-}
-
-/****************************************************************************/ /**
-* @brief  Boot2 get cpu count info
-*
-* @param  None
-*
-* @return None
-*
-*******************************************************************************/
-uint32_t blsp_boot2_get_cpu_count(void)
-{
-    return 1;
+    MSG("Counter value=%d\n", (unsigned int)bflb_platform_get_time_ms()-start_time);
 }
 
 /****************************************************************************/ /**
@@ -126,6 +126,40 @@ void blsp_boot2_pass_parameter(void *data, uint32_t len)
 *******************************************************************************/
 void ATTR_TCM_SECTION blsp_boot2_releae_other_cpu(void)
 {
+#if BLSP_BOOT2_RAM_IMG_COUNT_MAX>0
+    uint32_t i=0;
+    pentry_t pentry;
+#endif
+#if BLSP_BOOT2_CPU_MAX>1
+    uint32_t group,core;
+    /* deal Other CPUs' entry point and release*/
+    for(group = 0; group < BLSP_BOOT2_CPU_GROUP_MAX; group++){
+        for(core = 1; core < BLSP_BOOT2_CPU_MAX; core++){
+            if(g_boot_img_cfg[group].cpu_cfg[core].config_enable){
+                if(g_boot_img_cfg[group].cpu_cfg[core].halt_cpu == 0){
+                    hal_boot2_release_cpu(core, g_boot_img_cfg[group].cpu_cfg[core].boot_entry);
+                }
+            }
+        }
+    }
+#endif
+#if BLSP_BOOT2_RAM_IMG_COUNT_MAX>0
+    /* deal with ram image */
+    for(i=0;i<BLSP_BOOT2_RAM_IMG_COUNT_MAX;i++){
+        if(ram_img_config[i].valid && ram_img_config[i].core != 0 && 
+           ram_img_config[i].core != 0xf){
+            hal_boot2_release_cpu(ram_img_config[i].core,ram_img_config[i].boot_addr);
+        }
+    }
+    for(i=0;i<BLSP_BOOT2_RAM_IMG_COUNT_MAX;i++){
+        if(ram_img_config[i].valid&&ram_img_config[i].core==0){
+            pentry=(pentry_t)ram_img_config[i].boot_addr;
+            cpu_global_irq_disable();
+            hal_boot2_clean_cache();
+            pentry();
+        }
+    }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -142,18 +176,21 @@ int32_t ATTR_TCM_SECTION blsp_boot2_set_encrypt(uint8_t index, boot2_image_confi
     uint32_t aes_enabled = 0;
     uint32_t len = 0;
 
+    if(g_boot_img_cfg->img_valid==0){
+        return BFLB_BOOT2_SUCCESS;
+    }
     /* FIXME:,1:lock, should be 1??*/
-    if (g_boot_img_cfg->encrypt_type != 0) {
-        len = g_boot_img_cfg->img_segment_info.img_len;
+    if (g_boot_img_cfg->basic_cfg.encrypt_type != 0) {
+        len = g_boot_img_cfg->basic_cfg.img_len_cnt;
 
         if (len != 0) {
-            SF_Ctrl_AES_Set_Key_BE(index, NULL, (SF_Ctrl_AES_Key_Type)(g_boot_img_cfg->encrypt_type - 1));
-            SF_Ctrl_AES_Set_IV_BE(index, g_boot_img_cfg->aes_iv, g_boot_img_cfg->img_start.flash_offset);
+            SF_Ctrl_AES_Set_Key_BE(index, NULL, (SF_Ctrl_AES_Key_Type)(g_boot_img_cfg->basic_cfg.encrypt_type - 1));
+            SF_Ctrl_AES_Set_IV_BE(index, g_boot_img_cfg->aes_iv, g_boot_img_cfg->basic_cfg.group_image_offset);
 
             SF_Ctrl_AES_Set_Region(index, 1 /*enable this region*/, 1 /*hardware key*/,
-                                   g_boot_img_cfg->img_start.flash_offset,
-                                   g_boot_img_cfg->img_start.flash_offset + len - 1,
-                                   g_boot_img_cfg->aes_region_lock /*lock*/);
+                                   g_boot_img_cfg->basic_cfg.group_image_offset,
+                                   g_boot_img_cfg->basic_cfg.group_image_offset + len - 1,
+                                   g_boot_img_cfg->basic_cfg.aes_region_lock /*lock*/);
             aes_enabled = 1;
         }
     }
@@ -166,88 +203,6 @@ int32_t ATTR_TCM_SECTION blsp_boot2_set_encrypt(uint8_t index, boot2_image_confi
     return BFLB_BOOT2_SUCCESS;
 }
 
-typedef void (*pFunc)(void);
-extern pFunc __Vectors[];
-/****************************************************************************/ /**
- * @brief  Boot2 Get log tx GPIO
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-uint8_t ATTR_TCM_SECTION blsp_boot2_get_tx_gpio(void)
-{
-    uint8_t *p = ((uint8_t *)&__Vectors[9] + 1);
-
-    return *p;
-}
-
-/****************************************************************************/ /**
- * @brief  Boot2 Get UART Port
- *
- * @param  None
- *
- * @return 0(UART0)/1(UART1)
- *
-*******************************************************************************/
-uint8_t ATTR_TCM_SECTION blsp_boot2_get_uart_port(void)
-{
-    uint8_t *p = ((uint8_t *)&__Vectors[9] + 2);
-
-    return *p;
-}
-
-/****************************************************************************/ /**
- * @brief  Boot2 Get Feature Flag
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-uint8_t ATTR_TCM_SECTION blsp_boot2_get_feature_flag(void)
-{
-    static uint8_t boot2_flag = 0xff;
-    uint8_t *p = ((uint8_t *)&__Vectors[10] + 0);
-
-    if (boot2_flag == 0xff) {
-        boot2_flag = *p;
-    }
-
-    return boot2_flag;
-}
-
-/****************************************************************************/ /**
- * @brief  Boot2 Get log disable Flag
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-uint8_t ATTR_TCM_SECTION blsp_boot2_get_log_disable_flag(void)
-{
-    uint8_t *p = ((uint8_t *)&__Vectors[10] + 1);
-
-    return *p;
-}
-
-/****************************************************************************/ /**
- * @brief  Boot2 Get 8M Flash support Flag
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-uint8_t ATTR_TCM_SECTION blsp_boot2_8m_support_flag(void)
-{
-    uint8_t *p = ((uint8_t *)&__Vectors[10] + 2);
-
-    return *p;
-}
-
 /****************************************************************************/ /**
  * @brief  Boot2 Get dump critical data flag
  *
@@ -258,25 +213,9 @@ uint8_t ATTR_TCM_SECTION blsp_boot2_8m_support_flag(void)
 *******************************************************************************/
 uint8_t ATTR_TCM_SECTION blsp_boot2_dump_critical_flag(void)
 {
-    uint8_t *p = ((uint8_t *)&__Vectors[10] + 3);
-
-    return *p;
+    return 0;
 }
 
-/****************************************************************************/ /**
- * @brief  Boot2 Get Baudrate
- *
- * @param  None
- *
- * @return None
- *
-*******************************************************************************/
-uint32_t ATTR_TCM_SECTION blsp_boot2_get_baudrate(void)
-{
-    uint32_t *p = ((uint32_t *)&__Vectors[13]);
-
-    return *p;
-}
 
 
 

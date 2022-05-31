@@ -45,9 +45,8 @@
 #include "hal_flash.h"
 #include "hal_boot2.h"
 #include "bflb_eflash_loader.h"
-#include "hal_clock.h"
 
-uint8_t g_malloc_buf[BFLB_BOOT2_XZ_MALLOC_BUF_SIZE] __attribute__((section(".noinit_data")));
+ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t g_malloc_buf[BFLB_BOOT2_XZ_MALLOC_BUF_SIZE];
 
 int32_t blsp_boot2_set_encrypt(uint8_t index, boot2_image_config *g_boot_img_cfg);
 
@@ -87,6 +86,8 @@ void blsp_dump_data(void *datain, int len)
 *******************************************************************************/
 int32_t blsp_mediaboot_pre_jump(void)
 {
+    extern  void system_mtimer_clock_reinit(void);
+
     /* reinit mtimer clock */
     system_mtimer_clock_reinit();
 
@@ -100,6 +101,7 @@ int32_t blsp_mediaboot_pre_jump(void)
     bflb_platform_deinit();
 
     /* Jump to entry */
+    __disable_irq();
     blsp_boot2_jump_entry();
 
     return BFLB_BOOT2_SUCCESS;
@@ -118,9 +120,7 @@ void blsp_boot2_exit(void)
     hal_boot2_sboot_finish();
 
     /* Release other CPUs*/
-    if (g_cpu_count != 1 && !g_boot_img_cfg[0].halt_cpu1) {
-        blsp_boot2_releae_other_cpu();
-    }
+    blsp_boot2_releae_other_cpu();
 
     /* Stay here */
     while (1) {
@@ -140,19 +140,20 @@ void blsp_boot2_exit(void)
 void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
 {
     pentry_t pentry;
-    uint32_t i = 0;
     int32_t ret;
 
+    
+    hal_boot2_clean_cache();
     hal_boot2_sboot_finish();
 
     /*Note:enable cache with flash offset, after this, should be no flash directl read,
       If need read, should take flash offset into consideration */
     if (0 != g_efuse_cfg.encrypted[0]) {
         /*for encrypted img, use none-continuos read*/
-        ret = flash_set_cache(0, g_boot_img_cfg[0].cache_enable, g_boot_img_cfg[0].cache_way_disable, g_boot_img_cfg[0].img_start.flash_offset);
+        ret = hal_boot2_set_cache(0, &g_boot_img_cfg[0]);
     } else {
         /*for unencrypted img, use continuos read*/
-        ret = flash_set_cache(1, g_boot_img_cfg[0].cache_enable, g_boot_img_cfg[0].cache_way_disable, g_boot_img_cfg[0].img_start.flash_offset);
+        ret = hal_boot2_set_cache(1, &g_boot_img_cfg[0]);
     }
 
     if (ret != BFLB_BOOT2_SUCCESS) {
@@ -162,51 +163,30 @@ void ATTR_TCM_SECTION blsp_boot2_jump_entry(void)
     if (0 != g_efuse_cfg.encrypted[0]) {
         blsp_boot2_set_encrypt(0, &g_boot_img_cfg[0]);
         blsp_boot2_set_encrypt(1, &g_boot_img_cfg[1]);
-        /* Get msp and pc value */
-        for (i = 0; i < g_cpu_count; i++) {
-            if (g_boot_img_cfg[i].img_valid) {
-                //if(bootImgCfg[i].entryPoint==0){
-#ifdef ARCH_ARM
-                blsp_mediaboot_read(g_boot_img_cfg[i].img_start.flash_offset,
-                                    (uint8_t *)&g_boot_img_cfg[i].msp_val, 4);
-                blsp_mediaboot_read(bootImgCfg[i].imgStart.flashOffset + 4,
-                                    (uint8_t *)&g_boot_img_cfg[i].entry_point, 4);
-#endif
-                //}
-            }
-        }
-        if (blsp_boot2_get_feature_flag() == BLSP_BOOT2_CP_FLAG) {
+#if BLSP_BOOT2_CPU_MAX>1
+        if (hal_boot2_get_feature_flag() == HAL_BOOT2_CP_FLAG) {
             /*co-processor*/
-            g_boot_img_cfg[1].img_start.flash_offset = g_boot_img_cfg[0].img_start.flash_offset;
-            g_boot_img_cfg[1].msp_val = g_boot_img_cfg[0].msp_val;
-            g_boot_img_cfg[1].entry_point = g_boot_img_cfg[0].entry_point;
-            g_boot_img_cfg[1].cache_enable = g_boot_img_cfg[0].cache_enable;
-            g_boot_img_cfg[1].img_valid = 1;
-            g_boot_img_cfg[1].cache_way_disable = 0xf;
+            g_boot_img_cfg[0].cpu_cfg[1].msp_val = g_boot_img_cfg[0].cpu_cfg[0].msp_val;
+            g_boot_img_cfg[0].cpu_cfg[1].boot_entry = g_boot_img_cfg[0].cpu_cfg[0].boot_entry;
+            g_boot_img_cfg[0].cpu_cfg[1].cache_enable = g_boot_img_cfg[0].cpu_cfg[0].cache_enable;
+            g_boot_img_cfg[0].img_valid = 1;
+            g_boot_img_cfg[0].cpu_cfg[1].cache_way_dis = 0xf;
         }
+#endif
     }
+
+    blsp_boot2_releae_other_cpu();
 
     /* Deal CPU0's entry point */
-    if (g_boot_img_cfg[0].img_valid) {
-        pentry = (pentry_t)g_boot_img_cfg[0].entry_point;
-
-        if (g_boot_img_cfg[0].msp_val != 0) {
-            __set_MSP(g_boot_img_cfg[0].msp_val);
+    for(uint32_t group = 0; group < BLSP_BOOT2_CPU_GROUP_MAX; group++){
+        if(g_boot_img_cfg[group].img_valid&&g_boot_img_cfg[group].cpu_cfg[0].config_enable){
+            if(g_boot_img_cfg[group].cpu_cfg[0].halt_cpu == 0){    
+                pentry = (pentry_t)g_boot_img_cfg[group].cpu_cfg[0].boot_entry;
+                if(pentry){
+                    pentry();
+                }
+            }
         }
-
-        /* Release other CPUs unless user halt it */
-        if (g_cpu_count != 1 && !g_boot_img_cfg[0].halt_cpu1) {
-            blsp_boot2_releae_other_cpu();
-        }
-
-        if (pentry != NULL) {
-            pentry();
-        }
-    }
-
-    /* Release other CPUs unless user halt it */
-    if (g_cpu_count != 1 && !g_boot_img_cfg[0].halt_cpu1) {
-        blsp_boot2_releae_other_cpu();
     }
 
     /* If cann't jump stay here */

@@ -17,7 +17,6 @@
  * @{
  */
 
-#include <atomic.h>
 #include <../bluetooth/buf.h>
 #include <conn.h>
 #include <hci_host.h>

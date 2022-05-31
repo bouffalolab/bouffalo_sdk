@@ -51,16 +51,20 @@
 #define BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM    HAL_BOOT2_SUPPORT_EFLASH_LOADER_RAM     
 #define BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH  HAL_BOOT2_SUPPORT_EFLASH_LOADER_FLASH   
 
-#define BOOT2_MODE_RELEASE              0x01
-#define BOOT2_MODE_DEBUG                0x02
-#define BOOT2_MODE_DEEP_DEBUG           0x04
-#define BLSP_BOOT2_MODE                 BOOT2_MODE_DEBUG
+#define BOOT2_MODE_RELEASE                      0x01
+#define BOOT2_MODE_DEBUG                        0x02
+#define BOOT2_MODE_DEEP_DEBUG                   0x04
+#define BLSP_BOOT2_MODE                         BOOT2_MODE_DEBUG
+#define BLSP_BOOT2_CPU_GROUP_MAX                HAL_BOOT2_CPU_GROUP_MAX
+#define BLSP_BOOT2_CPU_MAX                      HAL_BOOT2_CPU_MAX
+#define BLSP_BOOT2_RAM_IMG_COUNT_MAX            HAL_BOOT2_RAM_IMG_COUNT_MAX
 
 
 uint32_t blsp_boot2_get_cpu_count(void);
 uint8_t blsp_read_power_save_mode(void);
 void blsp_boot2_pass_parameter(void *data, uint32_t len);
 void blsp_boot2_releae_other_cpu(void);
+void blsp_boot2_start_timer(void);
 void blsp_boot2_show_timer(void);
 void blsp_boot2_init_sec_eng_pka(void);
 

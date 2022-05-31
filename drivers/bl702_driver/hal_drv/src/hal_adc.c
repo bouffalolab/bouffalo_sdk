@@ -279,9 +279,14 @@ int adc_control(struct device *dev, int cmd, void *args)
         case DEVICE_CTRL_ADC_TSEN_OFF:
 
             break;
-        case DEVICE_CTRL_ATTACH_RX_DMA :
+        case DEVICE_CTRL_ATTACH_RX_DMA:
             adc_device->rx_dma = (struct device *)args;
             break;
+        case DEVICE_CTRL_ADC_DATA_PARSE: {
+            adc_data_parse_t *parse = (adc_data_parse_t *)args;
+            ADC_Parse_Result(parse->input, parse->num, (ADC_Result_Type *)parse->output);
+        }
+        break;
         default:
             break;
     }

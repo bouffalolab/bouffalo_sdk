@@ -30,6 +30,8 @@
 #include "a2dp_internal.h"
 #include "rfcomm_internal.h"
 #include "hfp_hf.h"
+#include "avctp.h"
+#include "avrcp.h"
 
 #define BR_CHAN(_ch)    CONTAINER_OF(_ch, struct bt_l2cap_br_chan, chan)
 #define BR_CHAN_RTX(_w) CONTAINER_OF(_w, struct bt_l2cap_br_chan, chan.rtx_work)
@@ -74,6 +76,7 @@ enum {
 };
 
 static sys_slist_t br_servers;
+static uint8_t ident;
 
 /* Pool for outgoing BR/EDR signaling packets, min MTU is 48 */
 #if !defined(BFLB_DYNAMIC_ALLOC_MEM)
@@ -215,8 +218,6 @@ static bool l2cap_br_chan_add(struct bt_conn *conn, struct bt_l2cap_chan *chan,
 
 static uint8_t l2cap_br_get_ident(void)
 {
-    static uint8_t ident;
-
     ident++;
     /* handle integer overflow (0 is not valid) */
     if (!ident) {
@@ -478,6 +479,8 @@ void bt_l2cap_br_connected(struct bt_conn *conn)
 
             connect_fixed_channel(ch);
 
+            /* reset l2cap signaling channel identifier */
+            ident = 0;
             sig_ch = CONTAINER_OF(ch, struct bt_l2cap_br, chan);
             l2cap_br_get_info(sig_ch, BT_L2CAP_INFO_FEAT_MASK);
         }
@@ -1556,19 +1559,18 @@ void bt_l2cap_br_init(void)
 
     bt_sdp_init();
 
-    if (IS_ENABLED(CONFIG_BT_RFCOMM)) {
-        bt_rfcomm_init();
-    }
-
     if (IS_ENABLED(CONFIG_BT_HFP)) {
+        bt_rfcomm_init();
         bt_hfp_hf_init();
     }
 
-    if (IS_ENABLED(CONFIG_BT_AVDTP)) {
+    if (IS_ENABLED(CONFIG_BT_A2DP)) {
         bt_avdtp_init();
+        bt_a2dp_init();
     }
 
-    if (IS_ENABLED(CONFIG_BT_A2DP)) {
-        bt_a2dp_init();
+    if (IS_ENABLED(CONFIG_BT_AVRCP)) {
+        bt_avctp_init();
+        bt_avrcp_init();
     }
 }

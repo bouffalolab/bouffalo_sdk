@@ -118,19 +118,19 @@ DMA Device Structure Definition
 
 .. code-block:: C
 
-    #define DMA_BURST_1BYTE     0
-    #define DMA_BURST_4BYTE     1
-    #define DMA_BURST_8BYTE     2
-    #define DMA_BURST_16BYTE    3
+    #define DMA_BURST_INCR1     0
+    #define DMA_BURST_INCR4     1
+    #define DMA_BURST_INCR8     2
+    #define DMA_BURST_INCR16    3
 
 ``dst_burst_size`` provides the following types
 
 .. code-block:: C
 
-    #define DMA_BURST_1BYTE     0
-    #define DMA_BURST_4BYTE     1
-    #define DMA_BURST_8BYTE     2
-    #define DMA_BURST_16BYTE    3
+    #define DMA_BURST_INCR1     0
+    #define DMA_BURST_INCR4     1
+    #define DMA_BURST_INCR8     2
+    #define DMA_BURST_INCR16    3
 
 ``src_width`` provides the following types
 

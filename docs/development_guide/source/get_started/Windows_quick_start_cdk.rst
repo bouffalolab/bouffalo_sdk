@@ -13,10 +13,8 @@ Windows 下使用 CDK (类 MDK Keil)开发指南
 -----------------------------
 
 -  剑池 CDK 软件
--  一根 USB Type-A 数据线、一根 Type-C 数据线
--  一个 CK-Link 仿真器 or 一个 Sipeed RV-Debugger Plus 调试器
--  一个 USB-TTL 串口模块
--  杜邦线若干
+-  一个 支持 risc-v 的 jtag 调试器
+-  一个 USB-TTL 串口模块（如果调试器自带，忽略）
 
 
 下载剑池 CDK 软件安装包

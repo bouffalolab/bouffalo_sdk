@@ -40,31 +40,25 @@
 #include "blsp_port.h"
 #include "hal_flash.h"
 #include "hal_boot2.h"
+#include "hal_sec_hash.h"
 
 
-#define BFLB_BOOT2_CPU0_MAGIC        "BFNP"
-#define BFLB_BOOT2_CPU1_MAGIC        "BFAP"
 #define BFLB_BOOT2_FLASH_CFG_MAGIC   "FCFG"
 #define BFLB_BOOT2_PLL_CFG_MAGICCODE "PCFG"
 #define BFLB_BOOT2_FLASH_TZC_MAGIC   "TCFG"
-#define BFLB_BOOT2_DEADBEEF_VAL      0xdeadbeef
+
 
 #define BFLB_BOOT2_READBUF_SIZE         4 * 1024
-#define BFLB_FW_IMG_OFFSET_AFTER_HEADER 4 * 1024
+#define BFLB_FW_IMG_OFFSET_AFTER_HEADER HAL_BOOT2_FW_IMG_OFFSET_AFTER_HEADER
 
 
 /* Image owner type */
 #define BFLB_BOOT2_CPU_0   0
 #define BFLB_BOOT2_CPU_1   1
-#define BFLB_BOOT2_CPU_MAX HAL_EFUSE_CPU_MAX
 
 /* Public key hash size */
-#define BFLB_BOOT2_PK_HASH_SIZE HAL_EFUSE_PK_HASH_SIZE
-#define BFLB_BOOT2_HASH_SIZE    256 / 8
-/* Public key type */
-#define BFLB_BOOT2_ECC_KEYXSIZE 256 / 8
-#define BFLB_BOOT2_ECC_KEYYSIZE 256 / 8
-#define BFLB_BOOT2_SIGN_MAXSIZE 2048 / 8
+#define BFLB_BOOT2_PK_HASH_SIZE HAL_BOOT2_PK_HASH_SIZE
+
 
 /* Power save define */
 #define BFLB_PSM_ACTIVE 0
@@ -124,56 +118,7 @@ typedef enum {
 
 } boot_error_code;
 
-typedef struct
-{
-    uint32_t magicCode; /*'BFXP'*/
-    uint32_t rivison;
-    hal_flash_config flash_cfg;
-    hal_pll_config clk_cfg;
-    __PACKED_UNION
-    {
-        __PACKED_STRUCT
-        {
-            uint32_t sign              : 2;  /* [1: 0]      for sign*/
-            uint32_t encrypt_type      : 2;  /* [3: 2]      for encrypt */
-            uint32_t key_sel           : 2;  /* [5: 4]      for key sel in boot interface*/
-            uint32_t rsvd6_7           : 2;  /* [7: 6]      for encrypt*/
-            uint32_t no_segment        : 1;  /* [8]         no segment info */
-            uint32_t cache_enable      : 1;  /* [9]         for cache */
-            uint32_t notLoadInBoot     : 1;  /* [10]        not load this img in bootrom */
-            uint32_t aes_region_lock   : 1;  /* [11]        aes region lock */
-            uint32_t cache_way_disable : 4;  /* [15: 12]    cache way disable info*/
-            uint32_t crcIgnore         : 1;  /* [16]        ignore crc */
-            uint32_t hash_ignore       : 1;  /* [17]        hash crc */
-            uint32_t halt_cpu1         : 1;  /* [18]        halt ap */
-            uint32_t rsvd19_31         : 13; /* [31:19]     rsvd */
-        }
-        bval;
-        uint32_t wval;
-    }
-    bootCfg;
 
-    __PACKED_UNION
-    {
-        uint32_t segment_cnt;
-        uint32_t img_len;
-    }
-    img_segment_info;
-
-    uint32_t bootEntry; /* entry point of the image*/
-    __PACKED_UNION
-    {
-        uint32_t ram_addr;
-        uint32_t flash_offset;
-    }
-    img_start;
-
-    uint8_t hash[BFLB_BOOT2_HASH_SIZE]; /*hash of the image*/
-
-    uint32_t rsv1;
-    uint32_t rsv2;
-    uint32_t crc32;
-} boot_header_config;
 
 typedef struct
 {
@@ -183,68 +128,19 @@ typedef struct
 
 typedef struct
 {
-    uint8_t eckye_x[BFLB_BOOT2_ECC_KEYXSIZE]; //ec key in boot header
-    uint8_t eckey_y[BFLB_BOOT2_ECC_KEYYSIZE]; //ec key in boot header
+    uint8_t eckye_x[HAL_BOOT2_ECC_KEYXSIZE]; //ec key in boot header
+    uint8_t eckey_y[HAL_BOOT2_ECC_KEYYSIZE]; //ec key in boot header
     uint32_t crc32;
 } boot_pk_config;
 
 typedef struct
 {
     uint32_t sig_len;
-    uint8_t signature[BFLB_BOOT2_SIGN_MAXSIZE];
+    uint8_t signature[HAL_BOOT2_SIGN_MAXSIZE];
     uint32_t crc32;
 } boot_sign_config;
 
-typedef struct
-{
-    uint8_t encrypt_type;
-    uint8_t sign_type;
-    uint8_t key_sel;
-    uint8_t img_valid;
 
-    uint8_t no_segment;
-    uint8_t cache_enable;
-    uint8_t cache_way_disable;
-    uint8_t hash_ignore;
-
-    uint8_t aes_region_lock;
-    uint8_t halt_cpu1;
-    uint8_t cpu_type;
-    uint8_t r[1];
-
-    __PACKED_UNION
-    {
-        uint32_t segment_cnt;
-        uint32_t img_len;
-    }
-    img_segment_info;
-
-    uint32_t msp_val;
-    uint32_t entry_point;
-    __PACKED_UNION
-    {
-        uint32_t ram_addr;
-        uint32_t flash_offset;
-    }
-    img_start;
-    uint32_t sig_len;
-    uint32_t sig_len2;
-
-    uint32_t deal_len;
-    uint32_t max_input_len;
-
-    uint8_t img_hash[BFLB_BOOT2_HASH_SIZE]; //hash of the whole (all)images
-    uint8_t aes_iv[16 + 4];                 //iv in boot header
-
-    uint8_t eckye_x[BFLB_BOOT2_ECC_KEYXSIZE];  //ec key in boot header
-    uint8_t eckey_y[BFLB_BOOT2_ECC_KEYYSIZE];  //ec key in boot header
-    uint8_t eckey_x2[BFLB_BOOT2_ECC_KEYXSIZE]; //ec key in boot header
-    uint8_t eckey_y2[BFLB_BOOT2_ECC_KEYYSIZE]; //ec key in boot header
-
-    uint8_t signature[BFLB_BOOT2_SIGN_MAXSIZE];  //signature in boot header
-    uint8_t signature2[BFLB_BOOT2_SIGN_MAXSIZE]; //signature in boot header
-
-} boot2_image_config;
 
 typedef struct
 {
@@ -253,15 +149,25 @@ typedef struct
     uint32_t default_xip_addr;
 } boot_cpu_config;
 
+/**
+ *  @brief ram image config type
+ */
+typedef struct
+{
+    uint8_t  valid;      /*!< valid or not */
+    uint8_t  core;       /*!< which core to run */
+    uint32_t boot_addr ; /*!< boot addr */
+} ram_img_config_t;
+
 typedef void (*pentry_t)(void);
 
-extern boot2_image_config g_boot_img_cfg[2];
+extern ram_img_config_t ram_img_config[BLSP_BOOT2_RAM_IMG_COUNT_MAX];
+extern boot2_image_config g_boot_img_cfg[BLSP_BOOT2_CPU_GROUP_MAX];
 extern boot2_efuse_hw_config g_efuse_cfg;
 extern uint8_t g_ps_mode;
-extern uint8_t g_cpu_count;
+//extern uint8_t g_cpu_count;
 extern uint8_t *g_boot2_read_buf;
-
-
+extern sec_hash_handle_t hash_handle;
 
 #endif /* __BLSP_BOOTINFO_H__ */
 

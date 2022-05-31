@@ -1,5 +1,5 @@
 ```bash
 
-$ make APP=flash_read_write BOARD=bl706_iot
+$ make APP=flash_rw BOARD=bl706_iot
 
 ```

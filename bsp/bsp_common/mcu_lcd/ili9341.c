@@ -108,14 +108,14 @@ static int ili9341_spi_init(void)
         DMA_DEV(dma_ch3)->dst_req = DMA_REQUEST_SPI0_TX;
         DMA_DEV(dma_ch3)->src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
         DMA_DEV(dma_ch3)->dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
-        DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_1BYTE;
-        DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_INCR1;
+        DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_INCR1;
         DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch3)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
         device_open(dma_ch3, 0);
         device_set_callback(dma_ch3, NULL);
         device_control(spi0, DEVICE_CTRL_ATTACH_TX_DMA, dma_ch3);
-        device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
+        //device_control(dma_ch3, DEVICE_CTRL_SET_INT, NULL);
     } else {
         return 1;
     }
@@ -369,8 +369,8 @@ void ili9341_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2, uin
     }
 
     // DMA_DEV(dma_ch3)->src_width = DMA_TRANSFER_WIDTH_32BIT;
-    // DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_1BYTE;
-    // DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_4BYTE;
+    // DMA_DEV(dma_ch3)->src_burst_size = DMA_BURST_INCR1;
+    // DMA_DEV(dma_ch3)->dst_burst_size = DMA_BURST_INCR4;
 
     ili9341_set_draw_window(x1, y1, x2, y2);
     ILI9341_DC_HIGH;

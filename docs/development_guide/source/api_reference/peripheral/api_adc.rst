@@ -157,13 +157,14 @@ ADC 设备除了标准的控制命令，还具有自己特殊的控制命令。
 
 .. code-block:: C
 
-    #define DEVICE_CTRL_ADC_CHANNEL_START  0x10
-    #define DEVICE_CTRL_ADC_CHANNEL_STOP   0x11
-    #define DEVICE_CTRL_ADC_CHANNEL_CONFIG 0x12
-    #define DEVICE_CTRL_ADC_VBAT_ON        0x13
-    #define DEVICE_CTRL_ADC_VBAT_OFF       0x14
-    #define DEVICE_CTRL_ADC_TSEN_ON        0x15
-    #define DEVICE_CTRL_ADC_TSEN_OFF       0x16
+    #define DEVICE_CTRL_ADC_CHANNEL_START    0x10
+    #define DEVICE_CTRL_ADC_CHANNEL_STOP     0x11
+    #define DEVICE_CTRL_ADC_CHANNEL_CONFIG   0x12
+    #define DEVICE_CTRL_ADC_VBAT_ON          0x13
+    #define DEVICE_CTRL_ADC_VBAT_OFF         0x14
+    #define DEVICE_CTRL_ADC_TSEN_ON          0x15
+    #define DEVICE_CTRL_ADC_TSEN_OFF         0x16
+    #define DEVICE_CTRL_ADC_DATA_PARSE       0x17
 
 ``args`` 根据不同的 ``cmd`` 传入不同，具体如下：
 
@@ -207,6 +208,9 @@ ADC 设备除了标准的控制命令，还具有自己特殊的控制命令。
     * - DEVICE_CTRL_ADC_TSEN_OFF
       - NULL
       - 关闭内部温度测量电路(需硬件支持)
+    * - DEVICE_CTRL_ADC_DATA_PARSE
+      - adc_data_parse_t
+      - 对原始数据进行解析，解析成电压形式
 
 **device_read**
 ^^^^^^^^^^^^^^^^

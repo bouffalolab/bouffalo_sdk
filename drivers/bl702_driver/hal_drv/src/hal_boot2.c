@@ -149,7 +149,7 @@ void ATTR_TCM_SECTION hal_boot2_sboot_finish(void)
 }
 
 /**
- * @brief hal_boot2_pll_init
+ * @brief hal_boot2_uart_gpio_init
  *
  * @return
  */
@@ -208,6 +208,32 @@ void hal_boot2_debug_uart_gpio_deinit(void)
 
 
 /****************************************************************************/ /**
+ * @brief  Check bootheader crc
+ *
+ * @param  data: bootheader data pointer
+ *
+ * @return boot_error_code type
+ *
+*******************************************************************************/
+static uint32_t hal_boot_check_bootheader(struct hal_bootheader_t *header)
+{
+    uint32_t crc_pass = 0;
+    uint32_t crc;
+
+    if (header->bootCfg.bval.crcIgnore == 1 && header->crc32 == HAL_BOOT2_DEADBEEF_VAL) {
+        //MSG("Crc ignored\r\n");
+        crc_pass = 1;
+    } else {
+        crc = BFLB_Soft_CRC32((uint8_t *)header, sizeof(struct hal_bootheader_t) - sizeof(header->crc32));
+
+        if (header->crc32 == crc) {
+            crc_pass = 1;
+        }
+    }
+    return crc_pass;
+}
+
+/****************************************************************************/ /**
  * @brief  Check if the input public key is the same as  burned in the efuse
  *
  * @param  g_boot_img_cfg: Boot image config pointer
@@ -219,135 +245,233 @@ void hal_boot2_debug_uart_gpio_deinit(void)
 int32_t hal_boot_parse_bootheader(boot2_image_config *boot_img_cfg, uint8_t *data)
 {
     struct  hal_bootheader_t *header = (struct  hal_bootheader_t *)data;
-    uint32_t crc;
     uint32_t crc_pass = 0;
     uint32_t i = 0;
     uint32_t *phash = (uint32_t *)header->hash;
-    int32_t ret;
 
-    if (header->bootCfg.bval.crcIgnore == 1 && header->crc32 == HAL_BOOT2_DEADBEEF_VAL) {
-        //MSG("Crc ignored\r\n");
-        crc_pass = 1;
-    } else {
-        crc = BFLB_Soft_CRC32((uint8_t *)header, sizeof(struct  hal_bootheader_t) - sizeof(header->crc32));
+    crc_pass=hal_boot_check_bootheader(header);
 
-        if (header->crc32 == crc) {
-            crc_pass = 1;
-        }
-    }
-
-    if (crc_pass) {
-        if (header->bootCfg.bval.notLoadInBoot) {
-            return 0x0202;
-        }
-
-        /* Get which CPU's img it is*/
-        for (i = 0; i < HAL_BOOT2_CPU_MAX; i++) {
-            if (0 == memcmp((void *)&header->magicCode, HAL_BOOT2_CPU0_MAGIC,
-                            sizeof(header->magicCode))) {
-                break;
-            } else if (0 == memcmp((void *)&header->magicCode, HAL_BOOT2_CPU1_MAGIC,
-                                   sizeof(header->magicCode))) {
-                break;
-            }
-        }
-
-        if (i == HAL_BOOT2_CPU_MAX) {
-            /* No cpu img magic match */
-            //MSG_ERR("Magic code error\r\n");
-            return 0x0203;
-        }
-
-        boot_img_cfg->cpu_type = i;
-        boot_img_cfg->entry_point = 0;
-        /* Set image valid 0 as default */
-        boot_img_cfg->img_valid = 0;
-
-        /* Deal with pll config */
-
-        /* Encrypt and sign */
-        boot_img_cfg->encrypt_type = header->bootCfg.bval.encrypt_type;
-        boot_img_cfg->sign_type = header->bootCfg.bval.sign;
-        boot_img_cfg->key_sel = header->bootCfg.bval.key_sel;
-
-        /* Xip relative */
-        boot_img_cfg->no_segment = header->bootCfg.bval.no_segment;
-        boot_img_cfg->cache_enable = header->bootCfg.bval.cache_enable;
-        boot_img_cfg->aes_region_lock = header->bootCfg.bval.aes_region_lock;
-        boot_img_cfg->halt_cpu1 = header->bootCfg.bval.halt_cpu1;
-        boot_img_cfg->cache_way_disable = header->bootCfg.bval.cache_way_disable;
-        boot_img_cfg->hash_ignore = header->bootCfg.bval.hash_ignore;
-        /* Firmware len*/
-        boot_img_cfg->img_segment_info.img_len = header->img_segment_info.img_len;
-
-        /* Boot entry and flash offset */
-        boot_img_cfg->entry_point = header->bootEntry;
-        boot_img_cfg->img_start.flash_offset = header->img_start.flash_offset;
-
-        //MSG("sign %d,encrypt:%d\r\n", boot_img_cfg->sign_type,boot_img_cfg->encrypt_type);
-
-        /* Check encrypt and sign match*/
-        if (g_efuse_cfg.encrypted[i] != 0) {
-            if (boot_img_cfg->encrypt_type == 0) {
-                //MSG_ERR("Encrypt not fit\r\n");
-                return 0x0205;
-            }
-        }
-
-        if (g_efuse_cfg.sign[i] ^ boot_img_cfg->sign_type) {
-            //MSG_ERR("sign not fit\r\n");
-            boot_img_cfg->sign_type = g_efuse_cfg.sign[i];
-            return 0x0206;
-        }
-
-        if (g_ps_mode == 1 && (!g_efuse_cfg.hbn_check_sign)) {
-            /* In HBN Mode, if user select to ignore hash and sign*/
-            boot_img_cfg->hash_ignore = 1;
-        } else if ((boot_img_cfg->hash_ignore == 1 && *phash != HAL_BOOT2_DEADBEEF_VAL) ||
-                   g_efuse_cfg.sign[i] != 0) {
-            /* If signed or user not really want to ignore, hash can't be ignored*/
-            boot_img_cfg->hash_ignore = 0;
-        }
-
-        if (g_user_hash_ignored) {
-            boot_img_cfg->hash_ignore = 1;
-        }
-
-        ARCH_MemCpy_Fast(boot_img_cfg->img_hash, header->hash, sizeof(header->hash));
-
-        if (boot_img_cfg->img_segment_info.img_len == 0) {
-            return 0x0207;
-        }
-
-        /* Start hash here*/
-        //Sec_Eng_SHA256_Init(&g_sha_ctx, SEC_ENG_SHA_ID0, SEC_ENG_SHA256, g_sha_tmp_buf, g_padding);
-        //Sec_Eng_SHA_Start(SEC_ENG_SHA_ID0);
-        device_unregister("dev_check_hash");
-        sec_hash_sha256_register(0,"dev_check_hash");
-        dev_check_hash = device_find("dev_check_hash");
-        if(dev_check_hash){
-            ret = device_open(dev_check_hash, 0);
-            if(ret){
-                //MSG_ERR("hash dev open err\r\n");
-                return 0xffff;
-            }
-        }else{
-            //MSG_ERR("hash dev find err\r\n");
-            return 0xffff;
-        }
-
-    } else {
+    if (!crc_pass) {
         //MSG_ERR("bootheader crc error\r\n");
         //blsp_dump_data((uint8_t *)&crc, 4);
         return 0x0204;
     }
 
+    if (header->bootCfg.bval.notLoadInBoot) {
+        return 0x0202;
+    }
+
+    /* Get which CPU's img it is*/
+    for (i = 0; i < HAL_BOOT2_CPU_MAX; i++) {
+        if (0 == memcmp((void *)&header->magicCode, HAL_BOOT2_CPU0_MAGIC,
+                        sizeof(header->magicCode))) {
+            break;
+        } else if (0 == memcmp((void *)&header->magicCode, HAL_BOOT2_CPU1_MAGIC,
+                               sizeof(header->magicCode))) {
+            break;
+        }
+    }
+
+    if (i == HAL_BOOT2_CPU_MAX) {
+        /* No cpu img magic match */
+        //MSG_ERR("Magic code error\r\n");
+        return 0x0203;
+    }
+
+    if(boot_img_cfg==NULL){
+        return 0;
+    }
+    
+    boot_img_cfg->pk_src=i;    
+    boot_img_cfg->img_valid=0;
+
+    /* Deal with pll config */
+
+    /* Encrypt and sign */
+    boot_img_cfg->basic_cfg.encrypt_type = header->bootCfg.bval.encrypt_type;
+    boot_img_cfg->basic_cfg.sign_type = header->bootCfg.bval.sign;
+    boot_img_cfg->basic_cfg.key_sel = header->bootCfg.bval.key_sel;
+
+    /* Xip relative */
+    boot_img_cfg->basic_cfg.no_segment = header->bootCfg.bval.no_segment;
+    boot_img_cfg->cpu_cfg[0].cache_enable = header->bootCfg.bval.cache_enable;
+    boot_img_cfg->basic_cfg.aes_region_lock = header->bootCfg.bval.aes_region_lock;
+    //boot_img_cfg->cpu_cfg[1].halt_cpu = header->bootCfg.bval.halt_cpu1;
+    boot_img_cfg->cpu_cfg[0].cache_way_dis = header->bootCfg.bval.cache_way_disable;
+    boot_img_cfg->basic_cfg.hash_ignore = header->bootCfg.bval.hash_ignore;
+    /* Firmware len*/
+    boot_img_cfg->basic_cfg.img_len_cnt= header->img_segment_info.img_len;
+
+    /* Boot entry and flash offset */
+    boot_img_cfg->cpu_cfg[0].boot_entry = header->bootEntry;
+    boot_img_cfg->basic_cfg.group_image_offset = header->img_start.flash_offset;
+
+    boot_img_cfg->cpu_cfg[0].config_enable=1;
+    boot_img_cfg->cpu_cfg[0].halt_cpu =0;
+
+    //MSG("sign %d,encrypt:%d\r\n", boot_img_cfg->sign_type,boot_img_cfg->encrypt_type);
+
+    /* Check encrypt and sign match*/
+    if (g_efuse_cfg.encrypted[i] != 0) {
+        if (boot_img_cfg->basic_cfg.encrypt_type == 0) {
+            //MSG_ERR("Encrypt not fit\r\n");
+            return 0x0205;
+        }
+    }
+
+    if (g_efuse_cfg.sign[i] !=boot_img_cfg->basic_cfg.sign_type) {
+        //MSG_ERR("sign not fit\r\n");
+        boot_img_cfg->basic_cfg.sign_type = g_efuse_cfg.sign[i];
+        return 0x0206;
+    }
+
+    if (g_ps_mode == 1 && (!g_efuse_cfg.hbn_check_sign)) {
+        /* In HBN Mode, if user select to ignore hash and sign*/
+        boot_img_cfg->basic_cfg.hash_ignore = 1;
+    } else if ((boot_img_cfg->basic_cfg.hash_ignore == 1 && *phash != HAL_BOOT2_DEADBEEF_VAL) ||
+                g_efuse_cfg.sign[i] != 0) {
+        /* If signed or user not really want to ignore, hash can't be ignored*/
+        boot_img_cfg->basic_cfg.hash_ignore = 0;
+    }
+
+    if (g_user_hash_ignored) {
+        boot_img_cfg->basic_cfg.hash_ignore = 1;
+    }
+
+    ARCH_MemCpy_Fast(boot_img_cfg->basic_cfg.hash, header->hash, sizeof(header->hash));
+
+    if (boot_img_cfg->basic_cfg.img_len_cnt == 0) {
+        return 0x0207;
+    }
+
     return 0;
 }
 
-void hal_boot2_clean_cache(void)
+void ATTR_TCM_SECTION hal_boot2_clean_cache(void)
 {
-    
+    /* no need clean again since hal_boot2_set_cache will also clean
+      unused way,and bl702 no data cache except psram */
 }
 
+
+BL_Err_Type ATTR_TCM_SECTION hal_boot2_set_cache(uint8_t cont_read, boot2_image_config *boot_img_cfg)
+{
+    return flash_set_cache(cont_read, boot_img_cfg->cpu_cfg[0].cache_enable, 
+                    boot_img_cfg->cpu_cfg[0].cache_way_dis,
+                    boot_img_cfg->basic_cfg.group_image_offset);
+}
+ 
+/****************************************************************************/ /**
+ * @brief  get the ram image name and count
+ *
+ * @param  img_name: ram image name in partition
+ * @param  ram_img_cnt: ram image count that support boot from flash
+ *
+ * @return None
+ *
+*******************************************************************************/
+void hal_boot2_get_ram_img_cnt(char* img_name[],uint32_t *ram_img_cnt )
+{
+    *ram_img_cnt=0;
+}
+
+/****************************************************************************/ /**
+ * @brief  get the ram image info
+ *
+ * @param  data: bootheader information
+ * @param  image_offset: ram image offset in flash(from of bootheader)
+ * @param  img_len: ram image length
+ * @param  hash: pointer to hash pointer
+ *
+ * @return None
+ *
+*******************************************************************************/
+void hal_boot2_get_img_info(uint8_t *data, uint32_t *image_offset, uint32_t *img_len,uint8_t **hash)
+{
+    *img_len=0;
+}
+
+/****************************************************************************/ /**
+ * @brief  release other cpu to boot up
+ *
+ * @param  core: core number
+ * @param  boot_addr: boot address
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION hal_boot2_release_cpu(uint32_t core, uint32_t boot_addr)
+{
+
+}
+
+/****************************************************************************/ /**
+ * @brief  get xip address according to flash addr
+ *
+ * @param  flash_addr: flash address
+ *
+ * @return XIP Address
+ *
+*******************************************************************************/
+uint32_t hal_boot2_get_xip_addr(uint32_t flash_addr)
+{
+    uint32_t img_offset= SF_Ctrl_Get_Flash_Image_Offset();
+    if(flash_addr>=img_offset){
+        return BL702_FLASH_XIP_BASE+(flash_addr-img_offset);
+    }else{
+        return 0;
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  get multi-group count
+ *
+ * @param  None
+ *
+ * @return 1 for multi-group 0 for not
+ *
+*******************************************************************************/
+uint32_t hal_boot2_get_grp_count(void)
+{
+    return 1;
+}
+
+/****************************************************************************/ /**
+ * @brief  get cpu count
+ *
+ * @param  None
+ *
+ * @return 1 for multi-group 0 for not
+ *
+*******************************************************************************/
+uint32_t hal_boot2_get_cpu_count(void)
+{
+    return 1;
+}
+
+/****************************************************************************/ /**
+ * @brief  get cpu count
+ *
+ * @param  None
+ *
+ * @return 1 for multi-group 0 for not
+ *
+*******************************************************************************/
+uint32_t ATTR_TCM_SECTION hal_boot2_get_feature_flag(void)
+{
+    return HAL_BOOT2_SP_FLAG;
+}
+
+/****************************************************************************/ /**
+ * @brief  get boot header offset
+ *
+ * @param  None
+ *
+ * @return bootheader offset
+ *
+*******************************************************************************/
+uint32_t hal_boot2_get_bootheader_offset(void)
+{
+    return 0x00;
+}
 

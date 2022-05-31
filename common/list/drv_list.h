@@ -157,6 +157,15 @@ static inline unsigned int dlist_len(const dlist_t *l)
     dlist_t list = { &(list), &(list) }
 
 /**
+ * @brief get the struct for this entry
+ * @param node the entry point
+ * @param type the type of structure
+ * @param member the name of list in structure
+ */
+#define dlist_entry(node, type, member) \
+    container_of(node, type, member)
+
+/**
  * dlist_first_entry - get the first element from a list
  * @ptr:    the list head to take the element from.
  * @type:   the type of the struct this is embedded in.
@@ -176,15 +185,6 @@ static inline unsigned int dlist_len(const dlist_t *l)
  */
 #define dlist_first_entry_or_null(ptr, type, member) \
     (dlist_isempty(ptr) ? NULL : dlist_first_entry(ptr, type, member))
-
-/**
- * @brief get the struct for this entry
- * @param node the entry point
- * @param type the type of structure
- * @param member the name of list in structure
- */
-#define dlist_entry(node, type, member) \
-    container_of(node, type, member)
 
 /**
  * dlist_for_each - iterate over a list

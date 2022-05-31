@@ -7,58 +7,63 @@
 博流系列芯片拥有丰富的时钟源选择，为方便用户配置，提供了时钟树配置表，不需要用户手动调用时钟设置接口，用户只需要关心最终的系统时钟和外设时钟频率即可。时钟配置表位于 ``bsp/board/xxx_board`` 目录下 ``clock_config.h`` 文件。
 
 
-时钟频率获取接口
-------------------------
+**XTAL_TYPE** 有以下选择：
 
-**system_clock_get**
-^^^^^^^^^^^^^^^^^^^^^^^^
+- EXTERNAL_XTAL_32M
+- INTERNAL_RC_32M
 
-``system_clock_get`` 用来获取系统时钟频率。
+**XTAL_32K_TYPE** 有以下选择：
 
-.. code-block:: C
+- EXTERNAL_XTAL_32K
+- INTERNAL_RC_32K
 
-    uint32_t system_clock_get(enum system_clock_type type);
+**BSP_ROOT_CLOCK_SOURCE** 有以下选择：
 
-- **type** 获取的系统时钟频率类型
+- ROOT_CLOCK_SOURCE_XCLK
+- ROOT_CLOCK_SOURCE_PLL_57P6M
+- ROOT_CLOCK_SOURCE_PLL_96M
+- ROOT_CLOCK_SOURCE_PLL_144M
 
-``type`` 提供以下几种类型
+**BSP_AUDIO_PLL_CLOCK_SOURCE** 有以下选择：
 
-.. code-block:: C
+- ROOT_CLOCK_SOURCE_AUPLL_12288000_HZ
+- ROOT_CLOCK_SOURCE_AUPLL_11289600_HZ
+- ROOT_CLOCK_SOURCE_AUPLL_5644800_HZ
+- ROOT_CLOCK_SOURCE_AUPLL_24576000_HZ
+- ROOT_CLOCK_SOURCE_AUPLL_24000000_HZ
 
-    enum system_clock_type
-    {
-        SYSTEM_CLOCK_ROOT_CLOCK = 0,
-        SYSTEM_CLOCK_FCLK,
-        SYSTEM_CLOCK_BCLK,
-        SYSTEM_CLOCK_XCLK,
-        SYSTEM_CLOCK_32K_CLK,
-        SYSTEM_CLOCK_AUPLL,
-    };
+**BSP_UART_CLOCK_SOURCE** 有以下选择：
 
+- ROOT_CLOCK_SOURCE_PLL_96M
+- ROOT_CLOCK_SOURCE_FCLK
 
-**peripheral_clock_get**
-^^^^^^^^^^^^^^^^^^^^^^^^
+**BSP_I2C_CLOCK_SOURCE** 有以下选择：
 
-``peripheral_clock_get`` 用来获取外设时钟频率。
+- ROOT_CLOCK_SOURCE_BCLK
 
-.. code-block:: C
+**BSP_SPI_CLOCK_SOURCE** 有以下选择：
 
-    uint32_t peripheral_clock_get(enum peripheral_clock_type type);
+- ROOT_CLOCK_SOURCE_BCLK
 
-- **type** 获取的外设时钟频率类型
+**BSP_USING_TIMER0** 有以下选择，TIMER1、WDT同理：
 
-``type`` 提供以下几种类型
+- ROOT_CLOCK_SOURCE_FCLK
+- ROOT_CLOCK_SOURCE_XCLK
+- ROOT_CLOCK_SOURCE_32K_CLK
+- ROOT_CLOCK_SOURCE_1K_CLK
 
-.. code-block:: C
+**BSP_USING_PWM_CHx** 有以下选择：
 
-    enum peripheral_clock_type
-    {
-        PERIPHERAL_CLOCK_UART = 0,
-        PERIPHERAL_CLOCK_SPI,
-        PERIPHERAL_CLOCK_I2C,
-        PERIPHERAL_CLOCK_ADC,
-        PERIPHERAL_CLOCK_DAC,
-        PERIPHERAL_CLOCK_I2S,
-        PERIPHERAL_CLOCK_PWM,
-        PERIPHERAL_CLOCK_CAM,
-    };
+- ROOT_CLOCK_SOURCE_32K_CLK
+- ROOT_CLOCK_SOURCE_BCLK
+- ROOT_CLOCK_SOURCE_XCLK
+
+**BSP_USING_ADC0** 有以下选择：
+
+- ROOT_CLOCK_SOURCE_XCLK
+- BSP_AUDIO_PLL_CLOCK_SOURCE
+
+**BSP_USING_DAC0** 有以下选择：
+
+- ROOT_CLOCK_SOURCE_XCLK
+- BSP_AUDIO_PLL_CLOCK_SOURCE

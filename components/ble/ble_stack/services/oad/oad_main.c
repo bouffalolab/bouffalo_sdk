@@ -179,7 +179,7 @@ void ota_finish(struct k_work *work)
 #endif
 
 #if defined(CONFIG_BL_MCU_SDK)
-    GLB_SW_System_Reset();
+    GLB_SW_POR_Reset();
 #else
     hal_reboot();
 #endif

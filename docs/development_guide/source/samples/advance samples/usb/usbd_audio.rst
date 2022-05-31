@@ -198,8 +198,8 @@ USB 协议栈可以参考 API 手册下的 USB Stack 章节的说明。
         DMA_DEV(dma_ch4_usb_tx)->dst_req = DMA_REQUEST_USB_EP1;
         DMA_DEV(dma_ch4_usb_tx)->src_width = DMA_TRANSFER_WIDTH_8BIT;
         DMA_DEV(dma_ch4_usb_tx)->dst_width = DMA_TRANSFER_WIDTH_8BIT;
-        DMA_DEV(dma_ch4_usb_tx)->src_burst_size = DMA_BURST_16BYTE;
-        DMA_DEV(dma_ch4_usb_tx)->dst_burst_size = DMA_BURST_1BYTE;
+        DMA_DEV(dma_ch4_usb_tx)->src_burst_size = DMA_BURST_INCR16;
+        DMA_DEV(dma_ch4_usb_tx)->dst_burst_size = DMA_BURST_INCR1;
 
         device_open(dma_ch4_usb_tx, 0);
         // device_set_callback(dma_ch4_usb_tx, dma2_irq_callback);
@@ -219,7 +219,7 @@ USB 协议栈可以参考 API 手册下的 USB Stack 章节的说明。
     while (1) {
         /* Waiting for record data update */
         if (record_updata_flag) {
-            if (!device_control(dma_ch4_usb_tx, DMA_CHANNEL_GET_STATUS, NULL)) {
+            if (!device_control(dma_ch4_usb_tx, DEVICE_CTRL_DMA_CHANNEL_GET_STATUS, NULL)) {
                 device_write(usb_fs, AUDIO_IN_EP, record_data_buff[!record_buff_using_num], BUFF_SIZE);
                 record_updata_flag = 0;
                 record_buff_using_num = !record_buff_using_num;
@@ -228,7 +228,7 @@ USB 协议栈可以参考 API 手册下的 USB Stack 章节的说明。
         }
 
         if (play_updata_flag) {
-            device_control(dma_ch2_i2s_tx, DMA_CHANNEL_STOP, NULL);
+            device_control(dma_ch2_i2s_tx, DEVICE_CTRL_DMA_CHANNEL_STOP, NULL);
             play_buff_using_num = !play_buff_using_num;
             device_write(i2s, 0, play_data_buff[play_buff_using_num], BUFF_SIZE);
             play_updata_flag = 0;

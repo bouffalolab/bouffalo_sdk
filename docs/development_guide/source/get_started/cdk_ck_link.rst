@@ -15,7 +15,9 @@
 
    helloworld.cdkproj
 
--  在活动工程下拉菜单可以选择 ``CK_Link_Debug`` 或者 ``OpenOCD_Debug`` 工程，本教程基于 ``CK_Link_Debug`` 工程
+-  在活动工程下拉菜单可以选择 ``CK_Link_Debug`` 或者 ``OpenOCD_Debug`` 工程，本教程基于 ``CK_Link_Debug`` 工程， ``CK_Link_Debug`` 菜单已经选择好了 cklink 调试器，如果没有 ``CK_Link_Debug`` 菜单，其他的菜单只需要在 `Debug` 栏选择 `ICE` 即可。
+
+.. figure:: img/cdk12.png
 
 -  在 CDK 工具栏中，点击编译图标即可编译工程
 
