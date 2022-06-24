@@ -167,7 +167,7 @@ static void board_pin_mux_init(void)
 {
     GLB_GPIO_Cfg_Type gpio_cfg;
     uint32_t tmpVal;
-    gpio_cfg.drive = 0;
+    gpio_cfg.drive = 2;
     gpio_cfg.smtCtrl = 1;
     uint8_t hbn_gpio_mask = 0x1f;
     uint8_t hbn_aon_ie = 0;

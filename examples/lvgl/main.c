@@ -80,6 +80,7 @@ int main(void)
 
     lv_demo_benchmark();
 
+    lv_task_handler();
     BL_CASE_SUCCESS;
 
     while (1) {

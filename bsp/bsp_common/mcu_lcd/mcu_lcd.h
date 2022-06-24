@@ -26,9 +26,10 @@
 
 #include "font.h"
 
-#define MCU_LCD_ILI9341
+// #define MCU_LCD_ILI9341
 // #define MCU_LCD_ST7735S /* 未验证 */
 // #define MCU_LCD_ST7789V
+#define MCU_LCD_ST7796
 
 extern struct device *lcd_dev_ifs;
 
@@ -52,6 +53,13 @@ typedef uint16_t lcd_color_t;
 #define LCD_W ST7789V_W
 #define LCD_H ST7789V_H
 typedef uint16_t lcd_color_t;
+
+#elif defined MCU_LCD_ST7796
+
+#include "st7796.h"
+#define LCD_W ST7796_SPI_W
+#define LCD_H ST7796_SPI_H
+typedef st7796_spi_color_t lcd_color_t;
 
 #endif
 

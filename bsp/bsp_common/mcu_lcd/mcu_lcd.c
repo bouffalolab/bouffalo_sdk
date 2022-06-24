@@ -74,6 +74,8 @@ int lcd_init(void)
     res = st7735s_init();
 #elif defined(MCU_LCD_ST7789V)
     res = st7789v_init();
+#elif defined(MCU_LCD_ST7796)
+    res = st7796_spi_init();
 #endif
     lcd_dev_ifs = device_find("lcd_dev_ifs");
     return res;
@@ -106,6 +108,9 @@ int lcd_set_dir(uint8_t dir, uint8_t mir_flag)
 #elif defined(MCU_LCD_ST7789V)
     st7789v_set_dir(dir);
     return 0;
+#elif defined(MCU_LCD_ST7796)
+    st7796_spi_set_dir(dir);
+    return 0;
 #endif
 }
 
@@ -127,6 +132,9 @@ int lcd_draw_point(uint16_t x, uint16_t y, lcd_color_t color)
     return 0;
 #elif defined(MCU_LCD_ST7789V)
     st7789v_draw_point(x, y, color);
+    return 0;
+#elif defined(MCU_LCD_ST7796)
+    st7796_spi_draw_point(x, y, color);
     return 0;
 #endif
 }
@@ -152,6 +160,9 @@ int lcd_draw_area(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, lcd_color_
 #elif defined(MCU_LCD_ST7789V)
     st7789v_draw_area(x1, y1, x2, y2, color);
     return 0;
+#elif defined(MCU_LCD_ST7796)
+    st7796_spi_draw_area(x1, y1, x2, y2, color);
+    return 0;
 #endif
 }
 
@@ -175,6 +186,9 @@ int lcd_draw_picture_blocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2
     return 0;
 #elif defined(MCU_LCD_ST7789V)
     st7789v_draw_picture_blocking(x1, y1, x2, y2, picture);
+    return 0;
+#elif defined(MCU_LCD_ST7796)
+    st7796_spi_draw_picture_blocking(x1, y1, x2, y2, picture);
     return 0;
 #endif
 }
@@ -201,6 +215,9 @@ int lcd_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t
 #elif defined(MCU_LCD_ST7789V)
     st7789v_draw_picture_nonblocking(x1, y1, x2, y2, picture);
     return 0;
+#elif defined(MCU_LCD_ST7796)
+    st7796_spi_draw_picture_nonblocking(x1, y1, x2, y2, picture);
+    return 0;
 #endif
 }
 
@@ -217,6 +234,8 @@ int lcd_draw_is_busy(void)
     return st7735s_draw_is_busy();
 #elif defined(MCU_LCD_ST7789V)
     return st7789v_draw_is_busy();
+#elif defined(MCU_LCD_ST7796)
+    return st7796_spi_draw_is_busy();
 #endif
 }
 
