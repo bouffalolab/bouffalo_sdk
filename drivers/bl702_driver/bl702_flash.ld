@@ -22,9 +22,8 @@ StackSize = 0x1000; /*  4KB */
 MEMORY
 {
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
-    itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 16K
-    dtcm_memory (rx)  : ORIGIN = 0x42018000, LENGTH = 16K
-    ram_memory  (!rx) : ORIGIN = 0x4201C000, LENGTH = 80K
+    dtcm_memory (rx)  : ORIGIN = 0x42014000, LENGTH = 8K
+    ram_memory  (!rx) : ORIGIN = 0x42016000, LENGTH = 104K
     hbn_memory  (rx)  : ORIGIN = 0x40010000, LENGTH = 0xE00     /* hbn ram 4K used 3.5K*/
 }
 
@@ -107,7 +106,7 @@ SECTIONS
 
         . = ALIGN(4);
         __tcm_code_end__ = .;
-    } > itcm_memory
+    } > dtcm_memory
 
     __hbn_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
 

@@ -18,17 +18,16 @@ OUTPUT_ARCH( "riscv" )
 ENTRY(_enter)
 
 StackSize = 0x1000; /*  4KB */
-HeapSize  = 0x1000; /*  4KB */
 __EM_SIZE = DEFINED(ble_controller_init) ? 8K : 0K;
 
 MEMORY
 {
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
-    itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 16K
-    dtcm_memory (rx)  : ORIGIN = 0x42018000, LENGTH = 32K
-    ram_memory  (!rx) : ORIGIN = 0x42020000, LENGTH = 32K
+    dtcm_memory (rx)  : ORIGIN = 0x42014000, LENGTH = 8K
+    ram_memory  (!rx) : ORIGIN = 0x42016000, LENGTH = 72K
     rsvd_memory (!rx) : ORIGIN = 0x42028000, LENGTH = 1K
     ram2_memory (!rx) : ORIGIN = 0x42028400, LENGTH = (31K - __EM_SIZE)
+    hbn_memory  (rx)  : ORIGIN = 0x40010000, LENGTH = 0xE00     /* hbn ram 4K used 3.5K*/
 }
 
 SECTIONS
@@ -76,9 +75,6 @@ SECTIONS
                         *bl702_xip_sflash_ext*.o* \
                         *bl702_ef_ctrl*.o*) .rodata*)
 
-        *(.rodata)
-        *(.rodata.*)
-
         *(.srodata)
         *(.srodata.*)
 
@@ -120,9 +116,22 @@ SECTIONS
 
         . = ALIGN(4);
         __tcm_code_end__ = .;
-    } > itcm_memory
+    } > dtcm_memory
 
-    __dtcm_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
+    __hbn_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
+
+    .hbn_ram_region : AT (__hbn_load_addr)
+    {
+        . = ALIGN(4);
+        __hbn_ram_start__ = .;
+        *bl702_hbn_wakeup*.o*(.rodata*)
+        *(.hbn_ram_code*)
+        *(.hbn_ram_data)
+        . = ALIGN(4);
+        __hbn_ram_end__ = .;
+    } > hbn_memory
+
+    __dtcm_load_addr = __hbn_load_addr + SIZEOF(.hbn_ram_region);
 
     .dtcm_region : AT (__dtcm_load_addr)
     {
@@ -135,22 +144,6 @@ SECTIONS
         . = ALIGN(4);
         __tcm_data_end__ = .;
     } > dtcm_memory
-
-    /* .heap_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of heap sections, and assign
-     * values to heap symbols later */
-    .heap_dummy (NOLOAD):
-    {
-        . = ALIGN(0x4);
-        . = . + HeapSize;
-        . = ALIGN(0x4);
-    } > dtcm_memory
-
-    _HeapBase = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory) - StackSize - HeapSize;
-    _HeapSize = HeapSize;
-
-    /* Check if data + heap + stack exceeds RAM limit */
-    ASSERT(_HeapBase >= __tcm_data_end__, "region RAM overflowed with stack")
 
     /*************************************************************************/
     /* .stack_dummy section doesn't contains any symbols. It is only
@@ -236,17 +229,18 @@ SECTIONS
         . = ALIGN(4);
         __HeapBase = .;
 
-        /*__end__ = .;*/
-        /*end = __end__;*/
         KEEP(*(.heap*))
 
         . = ALIGN(4);
         __HeapLimit = .;
     } > ram_memory
+
+    PROVIDE (__heap_min_size = 0x400);
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
+
+    ASSERT((__HeapLimit -  __HeapBase ) >= __heap_min_size, "heap size is too short.")
 
     PROVIDE( _heap_start = ORIGIN(ram2_memory) );
     PROVIDE( _heap_size = LENGTH(ram2_memory) );
-
 }
 

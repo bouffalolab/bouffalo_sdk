@@ -232,9 +232,9 @@ SECTIONS
 
     /* Check if data + heap + stack exceeds RAM limit */
     ASSERT(__StackLimit >= __noinit_data_end__, "region RAM overflowed with stack")
-	
-	
-	
+
+
+
     /*************************************************************************/
     .heap (NOLOAD):
     {
