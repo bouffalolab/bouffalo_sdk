@@ -152,6 +152,12 @@ int dac_open(struct device *dev, uint16_t oflag)
         tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_ACTRL, tmpVal);
     }
     if (dac_channel_enable_check & DAC_CHANNEL_1) {
+        /* a channel */
+        tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_ACTRL);
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDAC_IOA_EN);
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_GPDAC_A_EN);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_A_RNG, 0x03);
+        tmpVal = BL_WR_REG(GLB_BASE, GLB_GPDAC_ACTRL, tmpVal);
         /* b channel */
         tmpVal = BL_RD_REG(GLB_BASE, GLB_GPDAC_BCTRL);
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_GPDAC_B_RNG, 0x03);
