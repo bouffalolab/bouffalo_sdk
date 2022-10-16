@@ -28,34 +28,52 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 #include "PikaPlatform.h"
+#include "PikaVersion.h"
+
+/*! \NOTE: Make sure #include "plooc_class.h" is close to the class definition
+ */
+#if defined(__DATA_MEMORY_CLASS_IMPLEMENT__)
+#define __PLOOC_CLASS_IMPLEMENT__
+#endif
+#include "__pika_ooc.h"
 
 typedef struct {
     uint32_t heapUsed;
     uint32_t heapUsedMax;
+#if PIKA_ARG_CACHE_ENABLE
+    uint8_t* cache_pool[PIKA_ARG_CACHE_POOL_SIZE];
+    uint32_t cache_pool_top;
+#endif
+    uint32_t alloc_times;
+    uint32_t alloc_times_cache;
 } PikaMemInfo;
 
 typedef uint8_t* BitMap;
 
-typedef struct {
-    BitMap bitmap;
-    uint8_t* mem;
-    uint8_t aline;
-    uint32_t size;
-    uint32_t first_free_block;
-    uint32_t purl_free_block_start;
-} Pool;
+/* clang-format off */
+typedef struct Pool Pool;
+struct Pool{
+    private_member(
+        BitMap bitmap;
+        uint8_t* mem;
+        uint8_t aline;
+        uint32_t size;
+        uint32_t first_free_block;
+        uint32_t purl_free_block_start;
+        PIKA_BOOL inited;
+    )
+};
+/* clang-format on */
+
+#define aline_by(size, aline) \
+    (((size) == 0) ? 0 : (((size)-1) / (aline) + 1) * (aline))
 
 void pikaFree(void* mem, uint32_t size);
 void* pikaMalloc(uint32_t size);
-uint16_t pikaMemNow(void);
-uint16_t pikaMemMax(void);
+uint32_t pikaMemNow(void);
+uint32_t pikaMemMax(void);
 void pikaMemMaxReset(void);
-
-uint32_t aline_by(uint32_t size, uint32_t aline);
 
 BitMap bitmap_init(uint32_t size);
 void bitmap_set(BitMap bitmap, uint32_t index, uint8_t bit);
@@ -63,9 +81,10 @@ uint8_t bitmap_get(BitMap bitmap, uint32_t index);
 uint8_t bitmap_getByte(BitMap bitmap, uint32_t index);
 void bitmap_deinit(BitMap bitmap);
 
-Pool pool_init(uint32_t size, uint8_t aline);
-void* pool_malloc(Pool* pool, uint32_t size);
-void pool_free(Pool* pool, void* mem, uint32_t size);
-void pool_deinit(Pool* pool);
-void pool_printBlocks(Pool* pool, uint32_t block_min, uint32_t block_max);
+void mem_pool_deinit(void);
+void mem_pool_init(void);
+
+#define mem_align(_size) ((((_size) + 4 - 1) & ~(4 - 1)))
+
+#undef __DATA_MEMORY_CLASS_IMPLEMENT__
 #endif

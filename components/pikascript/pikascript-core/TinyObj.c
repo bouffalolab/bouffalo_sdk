@@ -27,13 +27,9 @@
 
 #include "PikaObj.h"
 
-void _UpdateHandle(PikaObj* self) {
-    // override the handle function here
-}
-
-void _beforDinit(PikaObj* self) {
-    /* override in user code */
-}
+const NativeProperty TinyObjNativeProp = {.super = NULL,
+                                          .methodGroup = NULL,
+                                          .methodGroupCount = 0};
 
 PikaObj* New_TinyObj(Args* args) {
     PikaObj* self = New_PikaObj();

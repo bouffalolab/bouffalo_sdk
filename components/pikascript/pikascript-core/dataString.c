@@ -26,22 +26,7 @@
  */
 
 #include "dataString.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-char* strAppendWithSize_unlimited(char* strOut, char* pData, int32_t Size) {
-    int32_t strOut_i = strGetSize(strOut);
-    for (int32_t i = 0; i < Size; i++) {
-        strOut[strOut_i + i] = pData[i];
-    }
-    strOut_i += Size;
-    // add \0 to the end of strOut
-    strOut[strOut_i] = 0;
-
-    return strOut;
-}
+#include "PikaPlatform.h"
 
 char* strCut(char* strOut, char* strIn, char startSign, char endSign) {
     int32_t Size = strGetSize(strIn);
@@ -80,7 +65,8 @@ char* strCut(char* strOut, char* strIn, char startSign, char endSign) {
 
 char* strDeleteChar(char* strOut, char* strIn, char ch) {
     int32_t iOut = 0;
-    for (int32_t i = 0; i < strGetSize(strIn); i++) {
+    uint32_t size = strGetSize(strIn);
+    for (uint32_t i = 0; i < size; i++) {
         if (ch == strIn[i]) {
             continue;
         }
@@ -90,10 +76,6 @@ char* strDeleteChar(char* strOut, char* strIn, char ch) {
     /* add \0 */
     strOut[iOut] = 0;
     return strOut;
-}
-
-char* strDeleteEnter(char* str) {
-    return strDeleteChar(str, str, '\n');
 }
 
 char* strAppendWithSize(char* strOut, char* pData, int32_t Size) {
@@ -109,11 +91,12 @@ char* strAppendWithSize(char* strOut, char* pData, int32_t Size) {
 }
 
 int32_t strCountSign(char* strIn, char sign) {
-    int32_t count = 0;
-    for (int32_t i = 0; i < strGetSize(strIn); i++) {
-        if (sign == strIn[i]) {
+    int count = 0;
+    while (*strIn) {
+        if (*strIn == sign) {
             count++;
         }
+        strIn++;
     }
     return count;
 }
@@ -122,32 +105,30 @@ int32_t strGetTokenNum(char* strIn, char sign) {
     return strCountSign(strIn, sign) + 1;
 }
 
-uint32_t strGetSize(char* pData) {
+size_t strGetSize(char* pData) {
+    pika_assert(pData != NULL);
     return strlen(pData);
 }
 
-char* strAppend_unlimited(char* strOut, char* pData) {
-    uint32_t Size = 0;
-    Size = strGetSize(pData);
-    return strAppendWithSize_unlimited(strOut, pData, Size);
-}
-
-char* strGetLastLine(char* strOut, char* strIn) {
+char* strPointToLastToken(char* strIn, char sign) {
+    if(!strIsContain(strIn, sign)){
+        return strIn;
+    }
     int32_t size = strGetSize(strIn);
-    char sign = '\n';
-    uint32_t beginIndex = 0;
-
-    /* skip the latest '\n' */
-    for (int32_t i = size - 2; i > -1; i--) {
+    for (int32_t i = size - 1; i > -1; i--) {
         if (strIn[i] == sign) {
-            beginIndex = i + 1;
-            break;
+            return strIn + i + 1;
         }
     }
+    return strIn;
+}
 
-    memcpy(strOut, strIn + beginIndex, size - beginIndex);
-    strOut[size - beginIndex + 1] = 0;
-    return strOut;
+char* strPopLastToken(char* strIn, char sign) {
+    char* last_token = strPointToLastToken(strIn, sign);
+    if (last_token != strIn) {
+        *(last_token - 1) = 0;
+    }
+    return last_token;
 }
 
 char* strGetLastToken(char* strOut, char* strIn, char sign) {
@@ -172,30 +153,18 @@ char* strGetLastToken(char* strOut, char* strIn, char sign) {
     return strOut;
 }
 
-char* strPopToken(char* strOut, char* strIn, char sign) {
-    int32_t getSign = 0;
-    int32_t iPoped = 0;
-    int32_t iOut = 0;
-    int32_t size = strGetSize(strIn);
-    int32_t i = 0;
-    for (i = 0; i < size; i++) {
-        if (getSign) {
-            strIn[iPoped] = strIn[i];
-            iPoped++;
-            continue;
-        }
-        if (strIn[i] != sign) {
-            strOut[iOut++] = strIn[i];
-            continue;
-        }
-        if (strIn[i] == sign) {
-            getSign = 1;
-            continue;
-        }
+char* strPopFirstToken(char** strIn, char sign) {
+    char* strIn_ = *strIn;
+    char* pos = strchr(strIn_, sign);
+    if (pos != NULL) {
+        /* found the first sign */
+        *pos = 0;
+        *strIn = pos + 1;
+        return strIn_;
     }
-    strOut[iOut] = 0;
-    strIn[iPoped] = 0;
-    return strOut;
+    /* no found */
+    *strIn = strchr(strIn_, 0);
+    return strIn_;
 }
 
 char* strGetFirstToken(char* strOut, char* strIn, char sign) {
@@ -211,31 +180,6 @@ char* strGetFirstToken(char* strOut, char* strIn, char sign) {
     return strOut;
 }
 
-int32_t strGetToken(char* string, char** argv, char sign) {
-    int32_t argc = 0;
-    int32_t i = 0;
-    // arg_i point32_t to the arg operated now
-    int32_t arg_i = 0;
-    // if not found ' ', then put chars from CMD to argv_tem
-    int32_t char_i = 0;
-    for (i = 0; (i < strGetSize(string)); i++) {
-        if (string[i] != sign) {
-            argv[arg_i][char_i] = string[i];
-            char_i++;
-        }
-        if (string[i] == sign) {
-            // write '\0' to the end of argv
-            argv[arg_i][char_i] = 0;
-            arg_i++;
-            char_i = 0;
-        }
-        // write '\0' to the end of last argv
-        argv[arg_i][char_i] = 0;
-    }
-    argc = arg_i + 1;
-    return argc;
-}
-
 char* strAppend(char* strOut, char* pData) {
     uint32_t Size = 0;
     Size = strGetSize(pData);
@@ -248,13 +192,10 @@ int32_t strIsStartWith(char* str, char* strStart) {
         return 0;
     }
     uint32_t size = strGetSize(strStart);
-    uint32_t CMDName_get = 1;
-    for (int32_t i = 0; i < size; i++) {
-        if (str[i] != strStart[i]) {
-            CMDName_get = 0;
-        }
+    if (0 == strncmp(str, strStart, size)) {
+        return 1;
     }
-    return CMDName_get;
+    return 0;
 }
 
 int32_t strEqu(char* str1, char* str2) {
@@ -268,30 +209,59 @@ char* strRemovePrefix(char* inputStr, char* prefix, char* outputStr) {
     if (!strIsStartWith(inputStr, prefix)) {
         return NULL;
     }
-
-    for (int32_t i = strGetSize(prefix); i < strGetSize(inputStr); i++) {
+    size_t len = strGetSize(inputStr);
+    for (uint32_t i = strGetSize(prefix); i < len; i++) {
         outputStr[i - strGetSize(prefix)] = inputStr[i];
     }
     return outputStr;
 }
 
-char* strClear(char* str) {
-    for (int32_t i = 0; i < sizeof(str); i++) {
-        str[i] = 0;
-    }
-    return str;
-}
-
 int32_t strIsContain(char* str, char ch) {
-    for (int32_t i = 0; i < strGetSize(str); i++) {
-        if (str[i] == ch) {
+    while(*str){
+        if (*str == ch){
             return 1;
         }
+        str++;
     }
     return 0;
 }
 
 char* strCopy(char* strBuff, char* strIn) {
-    memcpy(strBuff, strIn, strGetSize(strIn));
+    __platform_memcpy(strBuff, strIn, strGetSize(strIn) + 1);
     return strBuff;
+}
+
+int32_t strGetLineSize(char* str) {
+    int i = 0;
+    while (1) {
+        if (str[i] == '\n') {
+            return i;
+        }
+        i++;
+    }
+}
+
+char* strGetLine(char* strOut, char* strIn) {
+    int32_t lineSize = strGetLineSize(strIn);
+    __platform_memcpy(strOut, strIn, lineSize);
+    strOut[lineSize] = 0;
+    return strOut;
+}
+
+char* strGetLastLine(char* strOut, char* strIn) {
+    int32_t size = strGetSize(strIn);
+    char sign = '\n';
+    uint32_t beginIndex = 0;
+
+    /* skip the latest '\n' */
+    for (int32_t i = size - 2; i > -1; i--) {
+        if (strIn[i] == sign) {
+            beginIndex = i + 1;
+            break;
+        }
+    }
+
+    __platform_memcpy(strOut, strIn + beginIndex, size - beginIndex);
+    strOut[size - beginIndex + 1] = 0;
+    return strOut;
 }

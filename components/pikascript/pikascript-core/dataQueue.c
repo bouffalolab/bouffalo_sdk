@@ -26,20 +26,18 @@
  */
 
 #include "dataQueue.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "PikaPlatform.h"
 #include "dataArgs.h"
 
-
+void queue_init(Queue* queue) {
+    args_setInt(queue, "__t", 0);
+    args_setInt(queue, "__b", 0);
+}
 
 Queue* New_queue(void) {
     Args* args = New_args(NULL);
-    args_setInt(args, "top", 0);
-    args_setInt(args, "bottom", 0);
-    Queue* queue = args;
-    return queue;
+    queue_init(args);
+    return (Queue*)args;
 }
 
 int32_t queue_deinit(Queue* queue) {
@@ -48,85 +46,51 @@ int32_t queue_deinit(Queue* queue) {
     return 0;
 }
 
-int32_t queue_pushInt(Queue* queue, int val) {
-    Args* args = queue;
-    uint64_t top = args_getInt(args, "top");
-    char buff[11];
-    char* topStr = fast_itoa(buff, top);
-    /* add top */
-    args_setInt(args, "top", top + 1);
-    return args_setInt(args, topStr, val);
-}
-
-int64_t queue_popInt(Queue* queue) {
-    Args* args = queue;
-    uint64_t bottom = args_getInt(args, "bottom");
-    char buff[11];
-    char* bottomStr = fast_itoa(buff, bottom);
-    /* add bottom */
-    args_setInt(args, "bottom", bottom + 1);
-    int64_t res = args_getInt(args, bottomStr);
-    args_removeArg(args, args_getArg(args, bottomStr));
-    return res;
-}
-
-int32_t queue_pushFloat(Queue* queue, float val) {
-    Args* args = queue;
-    uint64_t top = args_getInt(args, "top");
-    char buff[11];
-    char* topStr = fast_itoa(buff, top);
-    /* add top */
-    args_setInt(args, "top", top + 1);
-    return args_setFloat(args, topStr, val);
-}
-
-float queue_popFloat(Queue* queue) {
-    Args* args = queue;
-    uint64_t bottom = args_getInt(args, "bottom");
-    char buff[11];
-    char* bottomStr = fast_itoa(buff, bottom);
-    /* add bottom */
-    args_setInt(args, "bottom", bottom + 1);
-    float res = args_getFloat(args, bottomStr);
-    args_removeArg(args, args_getArg(args, bottomStr));
-    return res;
-}
-
-int32_t queue_pushStr(Queue* queue, char* str) {
-    Args* args = queue;
-    uint64_t top = args_getInt(args, "top");
-    char buff[11];
-    /* add top */
-    char* topStr = fast_itoa(buff, top);
-    args_setInt(args, "top", top + 1);
-    return args_setStr(args, topStr, str);
-}
-
-char* queue_popStr(Queue* queue) {
-    Args* args = queue;
-    uint64_t bottom = args_getInt(args, "bottom");
-    char buff[11];
-    /* add bottom */
-    args_setInt(args, "bottom", bottom + 1);
-    return args_getStr(args, fast_itoa(buff, bottom));
-}
-
 int32_t queue_pushArg(Queue* queue, Arg* arg) {
     Args* args = queue;
-    uint64_t top = args_getInt(args, "top");
+    uint64_t top = args_getInt(args, "__t");
     /* add top */
-    args_setInt(args, "top", top + 1);
+    args_setInt(args, "__t", top + 1);
     char buff[11];
     arg = arg_setName(arg, fast_itoa(buff, top));
     return args_setArg(args, arg);
 }
 
-Arg* queue_popArg(Queue* queue) {
+Arg* __queue_popArg_noRmoveArg(Queue* queue) {
     Args* args = queue;
-    uint64_t bottom = args_getInt(args, "bottom");
+    uint64_t top = args_getInt(args, "__t");
+    uint64_t bottom = args_getInt(args, "__b");
+    if (top - bottom < 1) {
+        return NULL;
+    }
     /* add bottom */
-    args_setInt(args, "bottom", bottom + 1);
+    args_setInt(args, "__b", bottom + 1);
     char buff[11];
     Arg* res = args_getArg(args, fast_itoa(buff, bottom));
+    /* not deinit arg to keep str buff */
     return res;
+}
+
+int32_t queue_pushInt(Queue* queue, int val) {
+    return queue_pushArg(queue, arg_newInt(val));
+}
+
+int64_t queue_popInt(Queue* queue) {
+    return arg_getInt(__queue_popArg_noRmoveArg(queue));
+}
+
+int32_t queue_pushFloat(Queue* queue, pika_float val) {
+    return queue_pushArg(queue, arg_newFloat(val));
+}
+
+pika_float queue_popFloat(Queue* queue) {
+    return arg_getFloat(__queue_popArg_noRmoveArg(queue));
+}
+
+int32_t queue_pushStr(Queue* queue, char* str) {
+    return queue_pushArg(queue, arg_newStr(str));
+}
+
+char* queue_popStr(Queue* queue) {
+    return arg_getStr(__queue_popArg_noRmoveArg(queue));
 }

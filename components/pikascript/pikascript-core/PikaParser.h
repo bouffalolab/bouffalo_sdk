@@ -25,22 +25,101 @@
  * SOFTWARE.
  */
 
-#ifndef __PIKA__PARSER__H
-#define __PIKA__PARSER__H
+#ifndef __PIKA_PARSER__H
+#define __PIKA_PARSER__H
+#include "PikaVM.h"
 #include "dataQueueObj.h"
 #include "dataStack.h"
 
-typedef QueueObj AST;
-AST* AST_parseLine(char* line, Stack* blockStack);
-char* Parser_LineToAsm(Args* buffs, char* line, Stack* blockStack);
-int32_t AST_deinit(AST* ast);
-char* AST_toPikaAsm(AST* ast, Args* buffs);
-char* Parser_multiLineToAsm(Args* outBuffs, char* multiLine);
-char* Lexer_getTokens(Args* outBuffs, char* stmt);
-char* Lexer_printTokens(Args* outBuffs, char* tokens);
-char* strsPopTokenWithSkip_byStr(Args* buffs,
-                                 char* stmts,
-                                 char* str,
-                                 char skipStart,
-                                 char skipEnd);
+enum TokenType {
+    TOKEN_strEnd = 0,
+    TOKEN_symbol,
+    TOKEN_keyword,
+    TOKEN_operator,
+    TOKEN_devider,
+    TOKEN_literal,
+};
+
+enum StmtType {
+    STMT_reference,
+    STMT_string,
+    STMT_bytes,
+    STMT_number,
+    STMT_method,
+    STMT_chain,
+    STMT_operator,
+    STMT_import,
+    STMT_list,
+    STMT_slice,
+    STMT_dict,
+    STMT_none,
+};
+
+typedef struct Asmer Asmer;
+struct Asmer {
+    char* asm_code;
+    uint8_t block_deepth_now;
+    uint8_t is_new_line;
+    char* line_pointer;
+};
+
+typedef enum _GenRuleValType {
+    VAL_NONEVAL,
+    VAL_DYNAMIC,
+    VAL_STATIC_,
+} GenRuleValType;
+
+typedef struct GenRule {
+    char* ins;
+    GenRuleValType type;
+    char* ast;
+    char* val;
+} GenRule;
+
+typedef struct LexToken LexToken;
+struct LexToken {
+    char* token;
+    enum TokenType type;
+    char* pyload;
+};
+
+typedef struct Cursor ParsetState;
+struct Cursor {
+    char* tokens;
+    uint16_t length;
+    uint16_t iter_index;
+    int8_t branket_deepth;
+    struct LexToken token1;
+    struct LexToken token2;
+    Arg* last_token;
+    Args* iter_buffs;
+    Args* buffs_p;
+    PIKA_RES result;
+};
+
+char* Parser_fileToAsm(Args* outBuffs, char* filename);
+char* Parser_linesToAsm(Args* outBuffs, char* multiLine);
+char* Parser_linesToBytes(ByteCodeFrame* bf, char* py_lines);
+char* Parser_linesToArray(char* lines);
+
+char* instructUnit_fromAsmLine(Args* outBuffs, char* pikaAsm);
+ByteCodeFrame* byteCodeFrame_appendFromAsm(ByteCodeFrame* bf, char* pikaAsm);
+int bytecodeFrame_fromLines(ByteCodeFrame* bytecode_frame, char* python_lines);
+
+#define Cursor_forEach(cursor)  \
+    Cursor_beforeIter(&cursor); \
+    for (int __i = 0; __i < cursor.length; __i++)
+
+#define Cursor_forEachTokenExistPs(cursor, tokens) \
+    /* init parserStage */                         \
+    Cursor_init(&cursor);                          \
+    Cursor_parse(&cursor, tokens);                 \
+    Cursor_forEach(cursor)
+
+#define Cursor_forEachToken(cursor, tokens) \
+    struct Cursor cursor;                   \
+    Cursor_forEachTokenExistPs(cursor, tokens)
+
+uint16_t Tokens_getSize(char* tokens);
+
 #endif

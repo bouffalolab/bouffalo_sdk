@@ -31,7 +31,7 @@
 Args* New_strBuff(void);
 char* strsGetFirstToken(Args* buffs, char* strIn, char sign);
 char* strsGetLastToken(Args* buffs, char* arg_Path, char sign);
-char* strsPopToken(Args* buffs, char* tokens, char sign);
+char* strsPopToken(Args* buffs, char** tokens, char sign);
 char* strsCopy(Args* buffs, char* source);
 char* strsDeleteChar(Args* buff, char* strIn, char ch);
 char* strsCut(Args* buffs, char* strIn, char startSign, char endSign);
@@ -39,4 +39,9 @@ char* strsRemovePrefix(Args* buffs, char* inputStr, char* prefix);
 char* strsAppend(Args* buffs, char* strOrigin, char* strAppend);
 char* strsFormat(Args* buffs, uint16_t buffSize, const char* fmt, ...);
 char* strsGetDirectStr(Args* buffs, char* argPath);
+Arg* arg_strAppend(Arg* arg_in, char* str_to_append);
+char* strsReplace(Args* buffs, char* orig, char* rep, char* with);
+char* strsGetLine(Args* buffs, char* code);
+void strsDeinit(Args* buffs);
+char* strsCacheArg(Args* buffs_p, Arg* arg);
 #endif

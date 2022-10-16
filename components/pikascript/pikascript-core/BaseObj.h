@@ -28,17 +28,11 @@
 #ifndef _PikaObj_baseObj__H
 #define _PikaObj_baseObj__H
 #include "PikaObj.h"
+#include "PikaVM.h"
 #include "TinyObj.h"
 #include "dataMemory.h"
-#include "PikaVM.h"
+
 PikaObj* New_BaseObj(Args* args);
-int32_t obj_newObjFromClassLoader(PikaObj* self,
-                                  char* objPath,
-                                  char* classPath);
-int32_t obj_import(PikaObj* self, char* className, NewFun classPtr);
-int32_t obj_newObj(PikaObj* self,
-                   char* objName,
-                   char* className,
-                   NewFun newFunPtr);
-Arg* arg_setMetaObj(char* objName, char* className, NewFun objPtr);
+void Baseobj_print(PikaObj* self, Args* args);
+
 #endif

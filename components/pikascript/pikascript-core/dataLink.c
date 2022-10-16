@@ -30,16 +30,24 @@
 #include "dataLinkNode.h"
 #include "dataMemory.h"
 
-void link_deinit(Link* self) {
+void __link_deinit_pyload(Link* self) {
     LinkNode* nowNode = self->firstNode;
     while (NULL != nowNode) {
-        LinkNode* nodeNext = content_getNext(nowNode);
+        LinkNode* nodeNext = (LinkNode*)arg_getNext((Arg*)nowNode);
         linkNode_deinit(nowNode);
         nowNode = nodeNext;
     }
-    // DynMemPut(self->mem);
-    pikaFree(self, sizeof(Link));
     self = NULL;
+}
+
+void link_deinit(Link* self) {
+    pika_assert(self != NULL);
+    __link_deinit_pyload(self);
+    pikaFree(self, sizeof(Link));
+}
+
+void link_deinit_stack(Link* self) {
+    __link_deinit_pyload(self);
 }
 
 void link_addNode(Link* self, void* content) {
@@ -48,10 +56,12 @@ void link_addNode(Link* self, void* content) {
 
     self->firstNode = content;
     // change the first node to new node
-    content_setNext(content, secondNode);
+    arg_setNext((Arg*)content, (Arg*)secondNode);
 }
 
-void link_removeNode(Link* self, void* content) {
+static void __link_removeNode(Link* self,
+                              void* content,
+                              uint8_t is_deinit_node) {
     LinkNode* nodeToDelete = NULL;
     LinkNode* nodeNow = self->firstNode;
     LinkNode* priorNode = NULL;
@@ -66,26 +76,34 @@ void link_removeNode(Link* self, void* content) {
             goto exit;
         }
         priorNode = nodeNow;
-        nodeNow = content_getNext(nodeNow);
+        nodeNow = (LinkNode*)arg_getNext((Arg*)nodeNow);
     }
 
-    nextNode = content_getNext(nodeToDelete);
+    nextNode = (LinkNode*)arg_getNext((Arg*)nodeToDelete);
     if (nodeToDelete == self->firstNode) {
-        self->firstNode = content_getNext(nodeToDelete);
+        self->firstNode = (LinkNode*)arg_getNext((Arg*)nodeToDelete);
     }
-
     if (NULL == priorNode) {
         self->firstNode = nextNode;
         goto exit;
     }
-
-    content_setNext(priorNode, nextNode);
+    arg_setNext((Arg*)priorNode, (Arg*)nextNode);
     goto exit;
 
 // deinit the node
 exit:
-    linkNode_deinit(nodeToDelete);
+    if (is_deinit_node) {
+        linkNode_deinit(nodeToDelete);
+    }
     return;
+}
+
+void link_removeNode(Link* self, void* content) {
+    __link_removeNode(self, content, 1);
+}
+
+void link_removeNode_notDeinitNode(Link* self, void* content) {
+    __link_removeNode(self, content, 0);
 }
 
 int32_t link_getSize(Link* self) {
@@ -94,7 +112,7 @@ int32_t link_getSize(Link* self) {
     NowNode = self->firstNode;
     while (NULL != NowNode) {
         size++;
-        NowNode = content_getNext(NowNode);
+        NowNode = (LinkNode*)arg_getNext((Arg*)NowNode);
     }
     return size;
 }

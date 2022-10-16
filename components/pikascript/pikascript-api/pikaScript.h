@@ -8,6 +8,6 @@
 #include "PikaObj.h"
 #include "PikaMain.h"
 
-PikaObj * pikaScriptInit();
+PikaObj * pikaScriptInit(void);
 
 #endif
