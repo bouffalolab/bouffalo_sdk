@@ -15,41 +15,41 @@ Note2：due to the non-generic peripherals, the code style and interface name in
 
 |   CHIP        |  v1.4.5  |  latest |
 |:-------------:|:--------:|:-------:|
-|BL602/BL604    |  ✔️       |   ❌     |
-|BL702/BL704/BL706 |  ✔️    |   ✔️     |
-|BL616     |  ❌            |   ✔️     |
-|BL808     |  ❌            |   ✔️     |
+|BL602/BL604    |  √       |   ×     |
+|BL702/BL704/BL706 |  √    |   √     |
+|BL616     |  ×            |   √     |
+|BL808     |  ×            |   √     |
 
 ## LHAL Support
 
 **LHAL** is a low level hal driver for common peripherals designed by Bouffalo Lab, in order to support all the Bouffalo chips with the same api . Also it is convenient for users to use and port to other platforms.
 
-Note：**✔️** means supported ；**❌** means not supported；**❓** means supported but not tested ；**➖** means no such peripheral。
+Note：**√** means supported ；**×** means not supported；**○** means supported but not tested ；**-** means no such peripheral。
 
-|   Peripheral  |    BL602/BL604  |    BL702/BL704/BL706   |    BL616     |   BL808        |
-|:-------:|:---------------:|:--------------------:|:--------------:|:--------------:|
-|  ADC    |      ❓         |      ✔️             |         ✔️     |   ❓      |
-|  CAM    |      ➖        |      ❌             |   ❌           |   ❌     |
-|  DAC    |      ❓         |      ✔️             |   ✔️           |   ❓      |
-|  DMA    |      ❓         |      ✔️             |   ✔️           |   ✔️     |
-|  EFUSE  |      ❌        |      ❌             |   ❌           |   ❌     |
-|  EMAC   |      ➖        |      ✔️             |   ✔️           |   ✔️     |
-|  FLASH  |      ❌        |      ❌             |   ❌           |   ❌     |
-|  GPIO   |      ❓         |      ✔️             |   ✔️           |   ✔️     |
-|  I2C    |      ❓         |      ✔️             |   ✔️           |   ❓      |
-|  IR     |      ❓         |      ✔️             |   ✔️           |   ❓      |
-|  MJPEG    |      ❌      |      ❌             |   ❌           |   ❌      |
-|  PWM_v1   |      ❓       |      ✔️             |   ➖          |   ➖      |
-|  PWM_v2   |      ➖      |      ➖             |   ✔️          |   ✔️      |
-|  RTC      |      ❓       |      ✔️             |   ✔️         |   ✔️       |
-|  SEC_AES  |      ❓       |      ✔️             |   ✔️         |   ✔️       |
-|  SEC_SHA  |      ❓       |      ✔️             |   ✔️         |   ✔️       |
-|  SEC_TRNG |      ❓       |      ✔️             |   ✔️         |   ✔️       |
-|  SPI      |      ❓       |      ✔️             |   ✔️         |   ❓        |
-|  TIMER    |      ❓       |      ✔️             |   ✔️         |   ✔️       |
-|  UART     |      ❓       |      ✔️             |   ✔️         |   ✔️       |
-|  USB_v1   |      ➖      |      ✔️             |   ➖         |   ➖       |
-|  USB_v2   |      ➖      |      ➖             |   ✔️         |   ✔️       |
+|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 |    BL616    |   BL808  |
+|:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
+|  ADC         |      ○         |      √             |   √           |   ○      |
+|  CAM         |      -         |      ×             |   ×           |   ×      |
+|  DAC         |      ○         |      √             |   √           |   ○      |
+|  DMA         |      ○         |      √             |   √           |   √      |
+|  EFUSE       |      ×         |      ×             |   ×           |   ×      |
+|  EMAC        |      -         |      √             |   √           |   √      |
+|  FLASH       |      ×         |      ×             |   ×           |   ×      |
+|  GPIO        |      ○         |      √             |   √           |   √      |
+|  I2C         |      ○         |      √             |   √           |   ○      |
+|  IR          |      ○         |      √             |   √           |   ○      |
+|  MJPEG       |      ×         |      ×             |   ×           |   ×      |
+|  PWM_v1      |      ○         |      √             |   -           |   -      |
+|  PWM_v2      |      -         |      -             |   √           |   √      |
+|  RTC         |      ○         |      √             |   √           |   √      |
+|  SEC_AES     |      ○         |      √             |   √           |   √      |
+|  SEC_SHA     |      ○         |      √             |   √           |   √      |
+|  SEC_TRNG    |      ○         |      √             |   √           |   √      |
+|  SPI         |      ○         |      √             |   √           |   ○      |
+|  TIMER       |      ○         |      √             |   √           |   √      |
+|  UART        |      ○         |      √             |   √           |   √      |
+|  USB_v1      |      -         |      √             |   -           |   -      |
+|  USB_v2      |      -         |      -             |   √           |   √      |
 
 ## Code Framework
 
@@ -146,6 +146,7 @@ TODO
 
 To get more bl mcu sdk documentation tutorial, like api manual or peripheral demo and so on, please visit:
 
+- [bl mcu sdk v2.0 documentation tutorial](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/)
 - [bl mcu sdk  v1.4.5 documentation tutorial](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_en/index.html)
 
 ## Video Tutorial
