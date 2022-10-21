@@ -1,61 +1,18 @@
-################# Add global include #################
-list(APPEND ADD_INCLUDE
-"${CMAKE_CURRENT_SOURCE_DIR}"
-"${CMAKE_CURRENT_SOURCE_DIR}/include"
-"${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}"
-)
-#######################################################
+sdk_generate_library()
+sdk_library_add_sources(croutine.c)
+sdk_library_add_sources(event_groups.c)
+sdk_library_add_sources(list.c)
+sdk_library_add_sources(queue.c)
+sdk_library_add_sources(tasks.c)
+sdk_library_add_sources(timers.c)
+sdk_library_add_sources(timers.c)
+sdk_library_add_sources(freertos_port.c)
+sdk_library_add_sources(portable/MemMang/heap_5.c)
 
-################# Add private include #################
-# list(APPEND ADD_PRIVATE_INCLUDE
-# )
-#######################################################
+sdk_library_add_sources(portable/GCC/RISC-V/port.c)
+sdk_library_add_sources(portable/GCC/RISC-V/portASM.S)
+sdk_add_include_directories(portable/GCC/RISC-V)
+sdk_add_include_directories(portable/GCC/RISC-V/chip_specific_extensions/RV32I_CLINT_no_extensions)
+sdk_add_include_directories(include)
 
-############## Add current dir source files ###########
-file(GLOB_RECURSE sources "${CMAKE_CURRENT_SOURCE_DIR}/croutine.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/croutine.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/event_groups.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/list.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/queue.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/tasks.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/stream_buffer.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/timers.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/portable/MemMang/heap_5.c"
-)
-list(APPEND ADD_SRCS  ${sources})
-if(NOT CPU_ID STREQUAL "none")
-list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/${CPU_ID}/port.c)
-list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/${CPU_ID}/portASM.S)
-list(APPEND ADD_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/${CPU_ID})
-else()
-list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/port.c)
-list(APPEND ADD_SRCS  ${CMAKE_CURRENT_SOURCE_DIR}/portable/gcc/risc-v/${CHIP}/portASM.S)
-endif()
-# aux_source_directory(src ADD_SRCS)
-# list(REMOVE_ITEM ADD_SRCS "${CMAKE_CURRENT_SOURCE_DIR}")
-#######################################################
-
-########### Add required/dependent components #########
-#list(APPEND ADD_REQUIREMENTS xxx)
-#######################################################
-
-############ Add static libs ##########################
-#list(APPEND ADD_STATIC_LIB "libxxx.a")
-#######################################################
-
-############ Add dynamic libs #########################
-# list(APPEND ADD_DYNAMIC_LIB "libxxx.so"
-# )
-#######################################################
-
-############ Add global compile option ################
-#add components denpend on this component
-list(APPEND ADD_DEFINITIONS -DportasmHANDLE_INTERRUPT=FreeRTOS_Interrupt_Handler)
-#######################################################
-
-############ Add private compile option ################
-#add compile option for this component that won't affect other modules
-# list(APPEND ADD_PRIVATE_DEFINITIONS -Dxxx)
-#######################################################
-
-generate_library()
+sdk_add_compile_definitions(-DportasmHANDLE_INTERRUPT=interrupt_entry -Ddefault_interrupt_handler=freertos_risc_v_trap_handler)

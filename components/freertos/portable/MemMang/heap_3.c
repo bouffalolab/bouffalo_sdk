@@ -1,6 +1,8 @@
 /*
- * FreeRTOS Kernel V10.2.1
- * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.4.6
+ * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -19,11 +21,11 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * http://www.FreeRTOS.org
- * http://aws.amazon.com/freertos
+ * https://www.FreeRTOS.org
+ * https://github.com/FreeRTOS
  *
- * 1 tab == 4 spaces!
  */
+
 
 /*
  * Implementation of pvPortMalloc() and vPortFree() that relies on the
@@ -33,14 +35,14 @@
  * a heap memory area.
  *
  * See heap_1.c, heap_2.c and heap_4.c for alternative implementations, and the
- * memory management pages of http://www.FreeRTOS.org for more information.
+ * memory management pages of https://www.FreeRTOS.org for more information.
  */
 
 #include <stdlib.h>
 
 /* Defining MPU_WRAPPERS_INCLUDED_FROM_API_FILE prevents task.h from redefining
-all the API functions to use the MPU wrappers.  That should only be done when
-task.h is included from an application file. */
+ * all the API functions to use the MPU wrappers.  That should only be done when
+ * task.h is included from an application file. */
 #define MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #include "FreeRTOS.h"
@@ -48,44 +50,46 @@ task.h is included from an application file. */
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
-#if (configSUPPORT_DYNAMIC_ALLOCATION == 0)
-#error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
+#if ( configSUPPORT_DYNAMIC_ALLOCATION == 0 )
+    #error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
 #endif
 
 /*-----------------------------------------------------------*/
 
-void *pvPortMalloc(size_t xWantedSize)
+void * pvPortMalloc( size_t xWantedSize )
 {
-    void *pvReturn;
+    void * pvReturn;
 
     vTaskSuspendAll();
     {
-        pvReturn = malloc(xWantedSize);
-        traceMALLOC(pvReturn, xWantedSize);
+        pvReturn = malloc( xWantedSize );
+        traceMALLOC( pvReturn, xWantedSize );
     }
-    (void)xTaskResumeAll();
+    ( void ) xTaskResumeAll();
 
-#if (configUSE_MALLOC_FAILED_HOOK == 1)
-    {
-        if (pvReturn == NULL) {
-            extern void vApplicationMallocFailedHook(void);
-            vApplicationMallocFailedHook();
+    #if ( configUSE_MALLOC_FAILED_HOOK == 1 )
+        {
+            if( pvReturn == NULL )
+            {
+                extern void vApplicationMallocFailedHook( void );
+                vApplicationMallocFailedHook();
+            }
         }
-    }
-#endif
+    #endif
 
     return pvReturn;
 }
 /*-----------------------------------------------------------*/
 
-void vPortFree(void *pv)
+void vPortFree( void * pv )
 {
-    if (pv) {
+    if( pv )
+    {
         vTaskSuspendAll();
         {
-            free(pv);
-            traceFREE(pv, 0);
+            free( pv );
+            traceFREE( pv, 0 );
         }
-        (void)xTaskResumeAll();
+        ( void ) xTaskResumeAll();
     }
 }

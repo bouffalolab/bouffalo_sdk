@@ -1,6 +1,6 @@
 /**
  * @file lvgl.h
- * Include all LittleV GL related headers
+ * Include all LVGL related headers
  */
 
 #ifndef LVGL_H
@@ -13,73 +13,60 @@ extern "C" {
 /***************************
  * CURRENT VERSION OF LVGL
  ***************************/
-#define LVGL_VERSION_MAJOR 7
-#define LVGL_VERSION_MINOR 11
-#define LVGL_VERSION_PATCH 0
-#define LVGL_VERSION_INFO  "dev"
+#define LVGL_VERSION_MAJOR 8
+#define LVGL_VERSION_MINOR 3
+#define LVGL_VERSION_PATCH 1
+#define LVGL_VERSION_INFO  ""
 
 /*********************
  *      INCLUDES
  *********************/
 
-#include "lv_misc/lv_log.h"
-#include "lv_misc/lv_task.h"
-#include "lv_misc/lv_math.h"
-#include "lv_misc/lv_async.h"
+#include "misc/lv_log.h"
+#include "misc/lv_timer.h"
+#include "misc/lv_math.h"
+#include "misc/lv_mem.h"
+#include "misc/lv_async.h"
+#include "misc/lv_anim_timeline.h"
+#include "misc/lv_printf.h"
 
-#include "lv_hal/lv_hal.h"
+#include "hal/lv_hal.h"
 
-#include "lv_core/lv_obj.h"
-#include "lv_core/lv_group.h"
-#include "lv_core/lv_indev.h"
+#include "core/lv_obj.h"
+#include "core/lv_group.h"
+#include "core/lv_indev.h"
+#include "core/lv_refr.h"
+#include "core/lv_disp.h"
+#include "core/lv_theme.h"
 
-#include "lv_core/lv_refr.h"
-#include "lv_core/lv_disp.h"
+#include "font/lv_font.h"
+#include "font/lv_font_loader.h"
+#include "font/lv_font_fmt_txt.h"
 
-#include "lv_themes/lv_theme.h"
+#include "widgets/lv_arc.h"
+#include "widgets/lv_btn.h"
+#include "widgets/lv_img.h"
+#include "widgets/lv_label.h"
+#include "widgets/lv_line.h"
+#include "widgets/lv_table.h"
+#include "widgets/lv_checkbox.h"
+#include "widgets/lv_bar.h"
+#include "widgets/lv_slider.h"
+#include "widgets/lv_btnmatrix.h"
+#include "widgets/lv_dropdown.h"
+#include "widgets/lv_roller.h"
+#include "widgets/lv_textarea.h"
+#include "widgets/lv_canvas.h"
+#include "widgets/lv_switch.h"
 
-#include "lv_font/lv_font.h"
-#include "lv_font/lv_font_loader.h"
-#include "lv_font/lv_font_fmt_txt.h"
-#include "lv_misc/lv_printf.h"
-
-#include "lv_widgets/lv_btn.h"
-#include "lv_widgets/lv_imgbtn.h"
-#include "lv_widgets/lv_img.h"
-#include "lv_widgets/lv_label.h"
-#include "lv_widgets/lv_line.h"
-#include "lv_widgets/lv_page.h"
-#include "lv_widgets/lv_cont.h"
-#include "lv_widgets/lv_list.h"
-#include "lv_widgets/lv_chart.h"
-#include "lv_widgets/lv_table.h"
-#include "lv_widgets/lv_checkbox.h"
-#include "lv_widgets/lv_cpicker.h"
-#include "lv_widgets/lv_bar.h"
-#include "lv_widgets/lv_slider.h"
-#include "lv_widgets/lv_led.h"
-#include "lv_widgets/lv_btnmatrix.h"
-#include "lv_widgets/lv_keyboard.h"
-#include "lv_widgets/lv_dropdown.h"
-#include "lv_widgets/lv_roller.h"
-#include "lv_widgets/lv_textarea.h"
-#include "lv_widgets/lv_canvas.h"
-#include "lv_widgets/lv_win.h"
-#include "lv_widgets/lv_tabview.h"
-#include "lv_widgets/lv_tileview.h"
-#include "lv_widgets/lv_msgbox.h"
-#include "lv_widgets/lv_objmask.h"
-#include "lv_widgets/lv_gauge.h"
-#include "lv_widgets/lv_linemeter.h"
-#include "lv_widgets/lv_switch.h"
-#include "lv_widgets/lv_arc.h"
-#include "lv_widgets/lv_spinner.h"
-#include "lv_widgets/lv_calendar.h"
-#include "lv_widgets/lv_spinbox.h"
-
-#include "lv_draw/lv_img_cache.h"
+#include "draw/lv_draw.h"
 
 #include "lv_api_map.h"
+
+/*-----------------
+ * EXTRAS
+ *----------------*/
+#include "extra/lv_extra.h"
 
 /*********************
  *      DEFINES
@@ -117,7 +104,7 @@ extern "C" {
  *   bugfix_in_v5_3_2();
  * #endif
  *
- * */
+ */
 #define LV_VERSION_CHECK(x, y, z) (x == LVGL_VERSION_MAJOR && (y < LVGL_VERSION_MINOR || (y == LVGL_VERSION_MINOR && z <= LVGL_VERSION_PATCH)))
 
 /**
@@ -145,7 +132,7 @@ static inline const char *lv_version_info(void)
 }
 
 #ifdef __cplusplus
-}
+} /*extern "C"*/
 #endif
 
 #endif /*LVGL_H*/

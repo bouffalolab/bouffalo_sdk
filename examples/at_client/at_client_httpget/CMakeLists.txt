@@ -1,5 +1,0 @@
-set(TARGET_REQUIRED_SRCS ${CMAKE_CURRENT_LIST_DIR}/../at.c)
-set(TARGET_REQUIRED_PRIVATE_INCLUDE ${CMAKE_CURRENT_LIST_DIR}/..)
-set(mains main.c)
-generate_bin()
-

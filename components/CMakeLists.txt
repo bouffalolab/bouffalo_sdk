@@ -1,0 +1,8 @@
+sdk_add_subdirectory_ifdef(CONFIG_SHELL shell)
+sdk_add_subdirectory_ifdef(CONFIG_FREERTOS freertos)
+sdk_add_subdirectory_ifdef(CONFIG_CHERRYUSB cherryusb)
+sdk_add_subdirectory_ifdef(CONFIG_FATFS fatfs)
+sdk_add_subdirectory_ifdef(CONFIG_BFLOG bflog)
+sdk_add_subdirectory_ifdef(CONFIG_LUA lua)
+sdk_add_subdirectory_ifdef(CONFIG_LVGL lvgl)
+sdk_add_subdirectory_ifdef(CONFIG_LWIP lwip)

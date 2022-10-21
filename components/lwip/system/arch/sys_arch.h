@@ -50,13 +50,13 @@ extern "C" {
 #define SYS_MBOX_NULL (xQueueHandle)0
 #define SYS_SEM_NULL  (xSemaphoreHandle)0
 
-#define osPriorityIdle        10 //< priority: idle (lowest)
-#define osPriorityLow         11 //< priority: low
-#define osPriorityBelowNormal 12 //< priority: below normal
-#define osPriorityNormal      13 //< priority: normal (default)
-#define osPriorityAboveNormal 14 //< priority: above normal
-#define osPriorityHigh        15 //< priority: high
-#define osPriorityRealtime    16 //< priority: realtime (highest)
+#define osPriorityIdle        0 //< priority: idle (lowest)
+#define osPriorityLow         1 //< priority: low
+#define osPriorityBelowNormal 2 //< priority: below normal
+#define osPriorityNormal      3 //< priority: normal (default)
+#define osPriorityAboveNormal 4 //< priority: above normal
+#define osPriorityHigh        5 //< priority: high
+#define osPriorityRealtime    6 //< priority: realtime (highest)
 
 typedef xSemaphoreHandle sys_sem_t;
 typedef xSemaphoreHandle sys_mutex_t;

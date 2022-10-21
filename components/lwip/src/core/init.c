@@ -340,13 +340,18 @@ void lwip_init(void)
 
     /* Modules initialization */
     stats_init();
+    // printf("stats_init\r\n");
 #if !NO_SYS
     sys_init();
+    // printf("sys_init\r\n");
 #endif /* !NO_SYS */
     mem_init();
     memp_init();
+    // printf("mem_init\r\n");
     pbuf_init();
+    // printf("pbuf_init\r\n");
     netif_init();
+    // printf("netif_init\r\n");
 #if LWIP_IPV4
     ip_init();
 #if LWIP_ARP
@@ -358,9 +363,11 @@ void lwip_init(void)
 #endif /* LWIP_RAW */
 #if LWIP_UDP
     udp_init();
+    // printf("udp_init\r\n");
 #endif /* LWIP_UDP */
 #if LWIP_TCP
     tcp_init();
+    // printf("tcp_init\r\n");
 #endif /* LWIP_TCP */
 #if LWIP_IGMP
     igmp_init();
@@ -374,5 +381,6 @@ void lwip_init(void)
 
 #if LWIP_TIMERS
     sys_timeouts_init();
+    // printf("sys time_init\r\n");
 #endif /* LWIP_TIMERS */
 }

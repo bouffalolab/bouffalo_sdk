@@ -29,59 +29,57 @@
  *
  *
  */
-#include "bflb_platform.h"
-#include "hal_spi.h"
-#include "hal_gpio.h"
-#include "hal_dma.h"
+#include "board.h"
+#include "bflb_gpio.h"
+#include "bflb_l1c.h"
 
-#include "xpt2046.h"
+#include "lv_conf.h"
+#include "lvgl.h"
+
 #include "lv_port_disp.h"
 #include "lv_port_indev.h"
-#include "lvgl.h"
-#include "lv_examples.h"
+
+#include "demos/lv_demos.h"
+
+#include "lcd.h"
 
 /* lvgl log cb */
-void lv_log_print_g_cb(lv_log_level_t level, const char *path, uint32_t line, const char *name, const char *str)
+void lv_log_print_g_cb(const char *buf)
 {
-    switch (level) {
-        case LV_LOG_LEVEL_ERROR:
-            MSG("ERROR: ");
-            break;
+    printf("[LVGL] %s", buf);
+}
 
-        case LV_LOG_LEVEL_WARN:
-            MSG("WARNING: ");
-            break;
+static void gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+    gpio = bflb_device_get_by_name("gpio");
 
-        case LV_LOG_LEVEL_INFO:
-            MSG("INFO: ");
-            break;
-
-        case LV_LOG_LEVEL_TRACE:
-            MSG("TRACE: ");
-            break;
-
-        default:
-            break;
-    }
-
-    MSG("%s- ", name);
-    MSG(" %s\r\n,", str);
+    /* lcd spi clk and data pin */
+    // bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    // bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
 int main(void)
 {
-    bflb_platform_init(0);
+    board_init();
+    gpio_init();
 
+    printf("lvgl case\r\n");
+
+    /* lvgl init */
     lv_log_register_print_cb(lv_log_print_g_cb);
-
     lv_init();
     lv_port_disp_init();
-    lv_port_indev_init();
+    // lv_port_indev_init();
 
     lv_demo_benchmark();
+    // lv_demo_stress();
 
     lv_task_handler();
-    BL_CASE_SUCCESS;
+
+    printf("lvgl success\r\n");
 
     while (1) {
         lv_task_handler();

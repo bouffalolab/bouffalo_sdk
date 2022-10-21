@@ -8,6 +8,9 @@
 / Function Configurations
 /---------------------------------------------------------------------------*/
 
+#define FF_FS_CONTINUOUS 1
+/* Read and write as much data as possible at one time, regardless of the cluster size */
+
 #define FF_FS_READONLY 0
 /* This option switches read-only configuration. (0:Read/Write or 1:Read-only)
 /  Read-only configuration removes writing API functions, f_write(), f_sync(),
@@ -23,7 +26,7 @@
 /   2: f_opendir(), f_readdir() and f_closedir() are removed in addition to 1.
 /   3: f_lseek() function is removed in addition to 2. */
 
-#define FF_USE_STRFUNC 0
+#define FF_USE_STRFUNC 2
 /* This option switches string functions, f_gets(), f_putc(), f_puts() and f_printf().
 /
 /  0: Disable string functions.
@@ -86,7 +89,7 @@
 /     0 - Include all code pages above and configured by f_setcp()
 */
 
-#define FF_USE_LFN 1
+#define FF_USE_LFN 3
 #define FF_MAX_LFN 255
 /* The FF_USE_LFN switches the support for LFN (long file name).
 /
@@ -151,7 +154,7 @@
 /* Number of volumes (logical drives) to be used. (1-10) */
 
 #define FF_STR_VOLUME_ID 1
-#define FF_VOLUME_STRS   "ram", "sd", "usb", "nand", "cg", "sd2",
+#define FF_VOLUME_STRS   "ram", "sd", "flash", "usb", "cg", "sd2",
 /* FF_STR_VOLUME_ID switches support for volume ID in arbitrary strings.
 /  When FF_STR_VOLUME_ID is set to 1 or 2, arbitrary strings can be used as drive
 /  number in the path name. FF_VOLUME_STRS defines the volume ID strings for each
@@ -247,8 +250,14 @@
 
 /* #include <somertos.h>    // O/S definitions */
 #define FF_FS_REENTRANT 0
-#define FF_FS_TIMEOUT   1000
-#define FF_SYNC_t       HANDLE
+
+#if (FF_FS_REENTRANT)
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+#define FF_FS_TIMEOUT 5000
+#define FF_SYNC_t     SemaphoreHandle_t
+#endif
 /* The option FF_FS_REENTRANT switches the re-entrancy (thread safe) of the FatFs
 /  module itself. Note that regardless of this option, file access to different
 /  volume is always re-entrant and volume control functions, f_mount(), f_mkfs()

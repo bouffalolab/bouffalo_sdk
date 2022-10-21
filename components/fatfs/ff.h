@@ -164,8 +164,8 @@ typedef struct
 #if FF_FS_EXFAT
     LBA_t bitbase; /* Allocation bitmap base sector */
 #endif
-    LBA_t winsect;       /* Current sector appearing in the win[] */
-    BYTE win[FF_MAX_SS]; /* Disk access window for Directory, FAT (and file data at tiny cfg) */
+    LBA_t winsect;                                   /* Current sector appearing in the win[] */
+    BYTE win[FF_MAX_SS] __attribute__((aligned(8))); /* Disk access window for Directory, FAT (and file data at tiny cfg) */
 } FATFS;
 
 /* Object ID and allocation information (FFOBJID) */
@@ -208,7 +208,7 @@ typedef struct
     DWORD *cltbl; /* Pointer to the cluster link map table (nulled on open, set by application) */
 #endif
 #if !FF_FS_TINY
-    BYTE buf[FF_MAX_SS]; /* File private data read/write window */
+    BYTE buf[FF_MAX_SS] __attribute__((aligned(8))); /* File private data read/write window */
 #endif
 } FIL;
 
@@ -342,12 +342,12 @@ DWORD get_fattime(void);
 #endif
 
 /* LFN support functions */
-#if FF_USE_LFN >= 1 /* Code conversion (defined in unicode.c) */
+#if FF_USE_LFN >= 1                   /* Code conversion (defined in unicode.c) */
 WCHAR ff_oem2uni(WCHAR oem, WORD cp); /* OEM code to Unicode conversion */
 WCHAR ff_uni2oem(DWORD uni, WORD cp); /* Unicode to OEM code conversion */
 DWORD ff_wtoupper(DWORD uni);         /* Unicode upper-case conversion */
 #endif
-#if FF_USE_LFN == 3 /* Dynamic memory allocation */
+#if FF_USE_LFN == 3            /* Dynamic memory allocation */
 void *ff_memalloc(UINT msize); /* Allocate memory block */
 void ff_memfree(void *mblock); /* Free memory block */
 #endif

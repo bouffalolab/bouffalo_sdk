@@ -26,8 +26,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "shell_config.h"
-#include "bflb_platform.h"
 
 #ifdef SHELL_USING_COLOR
 /*

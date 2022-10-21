@@ -614,23 +614,24 @@ err_t tcpip_callbackmsg_trycallback_fromisr(struct tcpip_callback_msg *msg)
 void tcpip_init(tcpip_init_done_fn initfunc, void *arg)
 {
     lwip_init();
-
+    printf("lwip init done\r\n");
     tcpip_init_done = initfunc;
     tcpip_init_done_arg = arg;
 
     if (sys_mbox_new(&tcpip_mbox, TCPIP_MBOX_SIZE) != ERR_OK) {
         LWIP_ASSERT("failed to create tcpip_thread mbox", 0);
     }
-
+    printf("sys_mbox_new done!\r\n");
 #if LWIP_TCPIP_CORE_LOCKING
 
     if (sys_mutex_new(&lock_tcpip_core) != ERR_OK) {
         LWIP_ASSERT("failed to create lock_tcpip_core", 0);
     }
-
+    printf("sys_mutex_new done!\r\n");
 #endif /* LWIP_TCPIP_CORE_LOCKING */
 
     sys_thread_new(TCPIP_THREAD_NAME, tcpip_thread, NULL, TCPIP_THREAD_STACKSIZE, TCPIP_THREAD_PRIO);
+    printf("tcpip thread init done!\r\n");
 }
 
 /**

@@ -30,26 +30,31 @@ typedef struct
     /* get status */
     int (*RAM_disk_status)(void);
     int (*MMC_disk_status)(void);
+    int (*FLASH_disk_status)(void);
     int (*USB_disk_status)(void);
 
     /* init */
     int (*RAM_disk_initialize)(void);
     int (*MMC_disk_initialize)(void);
+    int (*FLASH_disk_initialize)(void);
     int (*USB_disk_initialize)(void);
 
     /* read */
     int (*RAM_disk_read)(BYTE *buff, LBA_t sector, UINT count);
     int (*MMC_disk_read)(BYTE *buff, LBA_t sector, UINT count);
+    int (*FLASH_disk_read)(BYTE *buff, LBA_t sector, UINT count);
     int (*USB_disk_read)(BYTE *buff, LBA_t sector, UINT count);
 
     /* write */
     int (*RAM_disk_write)(const BYTE *buff, LBA_t sector, UINT count);
     int (*MMC_disk_write)(const BYTE *buff, LBA_t sector, UINT count);
+    int (*FLASH_disk_write)(const BYTE *buff, LBA_t sector, UINT count);
     int (*USB_disk_write)(const BYTE *buff, LBA_t sector, UINT count);
 
     /* ioctl */
     int (*RAM_disk_ioctl)(BYTE cmd, void *buff);
     int (*MMC_disk_ioctl)(BYTE cmd, void *buff);
+    int (*FLASH_disk_ioctl)(BYTE cmd, void *buff);
     int (*USB_disk_ioctl)(BYTE cmd, void *buff);
 
     /* translate reslut code */

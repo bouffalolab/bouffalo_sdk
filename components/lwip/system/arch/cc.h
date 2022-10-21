@@ -35,7 +35,7 @@
 #include "cpu.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "bflb_platform.h"
+// #include "bflb_platform.h"
 
 typedef int sys_prot_t;
 
@@ -82,7 +82,7 @@ typedef int sys_prot_t;
 
 #define LWIP_PLATFORM_ASSERT(x)                              \
     do {                                                     \
-        bflb_platform_printf("Assertion \"%s\" failed at line %d in %s\n", \
+        printf("Assertion \"%s\" failed at line %d in %s\n", \
                x, __LINE__, __FILE__);                       \
     } while (0)
 

@@ -62,6 +62,7 @@ SHELL_CMD_EXPORT_ALIAS(shell_help, help, shell help.);
 static int shell_memtrace(int argc, char **argv)
 {
     uint32_t addr, value;
+    int i, j;
 
     /* check args */
     if (argc < 2) {
@@ -75,15 +76,24 @@ static int shell_memtrace(int argc, char **argv)
 
     if (argc < 3) {
         /* read word */
-        SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)addr);
+        SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)(uintptr_t)addr);
         return 0;
     }
 
     if (argc < 4) {
         uint16_t count = atoi(argv[2]);
-        for (int i = 0; i < count; i++) {
-            /* read word */
-            SHELL_DGB("0x%08x\r\n", *(volatile uint32_t *)(addr + 4 * i));
+        for (i = 0; i < count;) {
+            SHELL_DGB("0x%08x ", (addr + sizeof(uintptr_t) * i));
+            for (j = 0; j < 4; j++) {
+                if (i < count) {
+                    /* read word */
+                    SHELL_DGB("0x%08x ", *(volatile uint32_t *)(uintptr_t)(addr + sizeof(uintptr_t) * i));
+                } else {
+                    break;
+                }
+                i++;
+            }
+            SHELL_DGB("\r\n");
         }
 
         return 0;
@@ -94,8 +104,8 @@ static int shell_memtrace(int argc, char **argv)
         /* write value */
         value = strtoll(argv[2], NULL, 16);
 
-        for (int i = 0; i < count; i++) {
-            *(volatile uint32_t *)(addr + 4 * i) = (uint32_t)value;
+        for (i = 0; i < count; i++) {
+            *(volatile uint32_t *)(uintptr_t)(addr + sizeof(uintptr_t) * i) = (uint32_t)value;
         }
         return 0;
     }
@@ -855,5 +865,6 @@ void shell_init(void)
 #endif
     shell = &_shell;
     shell_set_prompt(SHELL_DEFAULT_NAME);
-    shell_set_print(bflb_platform_printf);
+    shell_set_print((void (*)(char *fmt, ...))printf);
+    SHELL_PRINTF(shell_get_prompt());
 }

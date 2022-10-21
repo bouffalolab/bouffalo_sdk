@@ -1,0 +1,31 @@
+# The command to remove a file.
+
+ifeq ($(OS),Windows_NT)
+CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
+else
+CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+endif
+
+RM = $(CMAKE) -E remove_directory
+
+#cmake definition config
+cmake_definition+= -DCROSS_COMPILE=${CROSS_COMPILE}
+cmake_definition+= -DCHIP=$(CHIP)
+cmake_definition+= -DCPU_ID=$(CPU_ID)
+cmake_definition+= -DBOARD=$(BOARD)
+cmake_definition+= -DCONFIG_DEBUG=y
+cmake_definition+= -DCONFIG_ROMAPI=y
+cmake_definition+= -DCONFIG_USB_HS=$(CONFIG_USB_HS)
+
+build:Makefile
+	$(CMAKE) -S . -B build -G "Unix Makefiles" $(cmake_definition)
+	cd build && make -j4
+
+clean:
+	$(RM) build
+
+menuconfig:
+	python ../../tools/kconfig/menuconfig.py
+
+.PHONY:build clean menuconfig
+

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Bouffalolab team
+ * Copyright (c) 2022 Bouffalolab team
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
  *
@@ -48,7 +48,7 @@
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-#define MEM_SIZE (12 * 1024)
+#define MEM_SIZE (15 * 1024)
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
@@ -223,6 +223,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define LWIP_DEBUG       LWIP_DBG_OFF
 #define ETHARP_DEBUG     LWIP_DBG_OFF
 #define ICMP_DEBUG       LWIP_DBG_OFF
+#define TCPIP_DEBUG      LWIP_DBG_OFF
 #define TCP_DEBUG        LWIP_DBG_OFF
 #define TCP_OUTPUT_DEBUG LWIP_DBG_OFF
 #define UDP_DEBUG        LWIP_DBG_OFF
@@ -230,6 +231,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define API_LIB_DEBUG    LWIP_DBG_OFF
 #define HTTPD_DEBUG      LWIP_DBG_OFF
 #define PBUF_DEBUG       LWIP_DBG_OFF
+#define IP_DEBUG         LWIP_DBG_OFF
 
 /*
    ---------------------------------

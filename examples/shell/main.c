@@ -1,71 +1,35 @@
-/**
- * @file main.c
- * @brief
- *
- * Copyright (c) 2021 Bouffalolab team
- *
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.  The
- * ASF licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations
- * under the License.
- *
- */
-#include "bflb_platform.h"
-#include "hal_uart.h"
+#include "bflb_mtimer.h"
+#include "bflb_uart.h"
 #include "shell.h"
 
-void shell_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
+extern void board_init(void);
+
+static struct bflb_device_s *uart0;
+
+void uart_isr(int irq, void *arg)
 {
-    uint8_t data;
-    if (state == UART_EVENT_RX_FIFO) {
-        for (size_t i = 0; i < size; i++) {
-            data = *(uint8_t *)(args + i);
-            shell_handler(data);
+    uint32_t intstatus = bflb_uart_get_intstatus(uart0);
+    if (intstatus & UART_URX_FIFO_INT) {
+        while (bflb_uart_rxavailable(uart0)) {
+            shell_handler(bflb_uart_getchar(uart0));
         }
+    }
+    if (intstatus & UART_URX_RTO_INT) {
+        while (bflb_uart_rxavailable(uart0)) {
+            shell_handler(bflb_uart_getchar(uart0));
+        }
+        bflb_uart_int_clear(uart0, UART_CR_URX_RTO_CLR);
     }
 }
 
 int main(void)
 {
-    bflb_platform_init(0);
+    board_init();
+    uart0 = bflb_device_get_by_name("uart0");
+    bflb_uart_rxint_mask(uart0, false);
+    bflb_irq_attach(uart0->irq_num, uart_isr, uart0);
+    bflb_irq_enable(uart0->irq_num);
     shell_init();
-    struct device *uart = device_find("debug_log");
-    if (uart) {
-        device_set_callback(uart, shell_irq_callback);
-        device_control(uart, DEVICE_CTRL_SET_INT, (void *)(UART_RX_FIFO_IT));
-    }
-
-    BL_CASE_SUCCESS;
     while (1) {
-        bflb_platform_delay_ms(100);
     }
 }
-
-void hellowd()
-{
-    MSG("hello World\r\n");
-}
-
-int echo(int argc, char *argv[])
-{
-    MSG("%dparameter(s)\r\n", argc);
-
-    for (uint8_t i = 1; i < argc; i++) {
-        MSG("%s\r\n", argv[i]);
-    }
-
-    return 0;
-}
-
-SHELL_CMD_EXPORT(hellowd, hellowd test)
-SHELL_CMD_EXPORT(echo, echo test)
