@@ -36,8 +36,11 @@ SECTIONS
         . = ALIGN(4);
         __text_code_start__ = .;
 
-        KEEP (*(.text.metal.init.enter))
         KEEP (*(SORT_NONE(.init)))
+
+        *(.text)
+        *(.text.*)
+
         /* section information for shell */
         . = ALIGN(4);
         __fsymtab_start = .;
@@ -55,9 +58,6 @@ SECTIONS
         KEEP(*(usb_desc))
         . = ALIGN(4);
         _usb_desc_end = .;
-
-        *(.text)
-        *(.text.*)
 
         /*put .rodata**/
         *(EXCLUDE_FILE( *bl702_glb*.o* \

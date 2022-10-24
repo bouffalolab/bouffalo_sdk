@@ -63,13 +63,14 @@ static void peripheral_clock_init(void)
     PERIPHERAL_CLOCK_IR_ENABLE();
     PERIPHERAL_CLOCK_I2S_ENABLE();
 
-    GLB_Set_ADC_CLK(1, GLB_ADC_CLK_XCLK, 4);
+    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 4);
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
     GLB_Set_SPI_CLK(ENABLE, GLB_SPI_CLK_MCU_MUXPLL_160M, 0);
+    GLB_Set_I2C_CLK(ENABLE, GLB_I2C_CLK_XCLK, 0);
     GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, 19);
-    GLB_Set_ADC_CLK(1, GLB_ADC_CLK_XCLK, 0);
+    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 0);
     GLB_Set_DIG_CLK_Sel(GLB_DIG_CLK_XCLK);
-    GLB_Set_DIG_512K_CLK(1, ENABLE, 0x4E);
+    GLB_Set_DIG_512K_CLK(ENABLE, ENABLE, 0x4E);
     GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
 
 #ifdef CONFIG_BSP_SDH_SDCARD
@@ -233,7 +234,9 @@ void board_i2c0_gpio_init(void)
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
+    /* I2C0_SDA */
     bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* I2C0_SCL */
     bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 

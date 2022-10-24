@@ -6,7 +6,6 @@
 #include "mmheap.h"
 #include "board.h"
 #include "bl702_glb.h"
-#include "bl702_pds.h"
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
@@ -41,14 +40,14 @@ static void peripheral_clock_init(void)
     PERIPHERAL_CLOCK_I2S_ENABLE();
     PERIPHERAL_CLOCK_USB_ENABLE();
 
-    GLB_Set_UART_CLK(1, HBN_UART_CLK_96M, 0);
-    GLB_Set_SPI_CLK(1, 0);
-    GLB_Set_I2C_CLK(1, 0);
+    GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_96M, 0);
+    GLB_Set_SPI_CLK(ENABLE, 0);
+    GLB_Set_I2C_CLK(ENABLE, 0);
 
-    GLB_Set_ADC_CLK(1, GLB_ADC_CLK_XCLK, 0);
-    GLB_Set_DAC_CLK(1, GLB_DAC_CLK_XCLK, 0x3E);
+    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 0);
+    GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_XCLK, 0x3E);
 
-    GLB_Set_USB_CLK(1);
+    GLB_Set_USB_CLK(ENABLE);
 }
 
 void bl_show_log(void)
@@ -124,7 +123,9 @@ void board_i2c0_gpio_init()
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
+    /* I2C0_SDA */
     bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* I2C0_SCL */
     bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
