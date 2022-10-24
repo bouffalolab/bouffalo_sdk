@@ -71,7 +71,17 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
     /* Write back */
     putreg32(tx_cfg, reg_base + UART_UTX_CONFIG_OFFSET);
     putreg32(rx_cfg, reg_base + UART_URX_CONFIG_OFFSET);
-
+#if defined(BL602)
+    if (config->flow_ctrl & UART_FLOWCTRL_RTS) {
+        regval = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+        regval |= UART_CR_URX_RTS_SW_MODE;
+        putreg32(regval, reg_base + UART_URX_CONFIG_OFFSET);
+    } else {
+        regval = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+        regval &= ~UART_CR_URX_RTS_SW_MODE;
+        putreg32(regval, reg_base + UART_URX_CONFIG_OFFSET);
+    }
+#else
     if (config->flow_ctrl & UART_FLOWCTRL_RTS) {
         regval = getreg32(reg_base + UART_SW_MODE_OFFSET);
         regval |= UART_CR_URX_RTS_SW_MODE;
@@ -81,7 +91,7 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
         regval &= ~UART_CR_URX_RTS_SW_MODE;
         putreg32(regval, reg_base + UART_SW_MODE_OFFSET);
     }
-
+#endif
     regval = getreg32(reg_base + UART_DATA_CONFIG_OFFSET);
     regval &= ~UART_CR_UART_BIT_INV;
     putreg32(regval, reg_base + UART_DATA_CONFIG_OFFSET);
@@ -257,12 +267,16 @@ void bflb_uart_errint_mask(struct bflb_device_s *dev, bool mask)
         int_mask |= UART_CR_URX_PCE_MASK;
         int_mask |= UART_CR_UTX_FER_MASK;
         int_mask |= UART_CR_URX_FER_MASK;
+#if !defined(BL602)
         int_mask |= UART_CR_URX_LSE_MASK;
+#endif
     } else {
         int_mask &= ~UART_CR_URX_PCE_MASK;
         int_mask &= ~UART_CR_UTX_FER_MASK;
         int_mask &= ~UART_CR_URX_FER_MASK;
+#if !defined(BL602)
         int_mask &= ~UART_CR_URX_LSE_MASK;
+#endif
     }
     putreg32(int_mask, reg_base + UART_INT_MASK_OFFSET);
 }
@@ -373,6 +387,8 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 
         case UART_CMD_SET_RTS_VALUE:
+#if defined(BL602)
+#else
             /* Set rx rts output software control value */
             tmp = getreg32(reg_base + UART_SW_MODE_OFFSET);
             tmp &= ~UART_CR_URX_RTS_SW_VAL;
@@ -380,6 +396,7 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
                 tmp |= UART_CR_URX_RTS_SW_VAL;
             }
             putreg32(tmp, reg_base + UART_SW_MODE_OFFSET);
+#endif
             break;
 
         case UART_CMD_GET_TX_FIFO_CNT:
@@ -421,7 +438,7 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
                 *((uint32_t *)arg + 1) = (tmp & UART_STS_URX_ABR_PRD_0X55_MASK) >> UART_STS_URX_ABR_PRD_0X55_SHIFT;
             }
             break;
-
+#if !defined(BL602)
         case UART_CMD_SET_BREAK_VALUE:
             /* Set lin mode break value */
             tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
@@ -453,7 +470,7 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 
             putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
             break;
-
+#endif
         case UART_CMD_SET_TX_RX_EN:
             /* Set tx and rx enable */
             tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);

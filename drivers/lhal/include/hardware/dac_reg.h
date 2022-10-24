@@ -129,7 +129,7 @@
 #define GLB_GPDAC_B_OUTMUX_MASK  (0x7 << GLB_GPDAC_B_OUTMUX_SHIFT)
 
 /* 0x314 : gpdac_data */
-#if defined(BL702) || defined(BL606P) || defined(BL808)
+#if defined(BL702) || defined(BL602) || defined(BL606P) || defined(BL808)
 #define GLB_GPDAC_B_DATA_SHIFT (0U)
 #define GLB_GPDAC_B_DATA_MASK  (0x3ff << GLB_GPDAC_B_DATA_SHIFT)
 #define GLB_GPDAC_A_DATA_SHIFT (16U)

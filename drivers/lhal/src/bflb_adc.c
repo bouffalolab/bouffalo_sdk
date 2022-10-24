@@ -1,7 +1,7 @@
 #include "bflb_adc.h"
 #include "hardware/adc_reg.h"
 
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define ADC_GPIP_BASE ((uint32_t)0x40002000)
 #elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define ADC_GPIP_BASE ((uint32_t)0x20002000)
@@ -439,6 +439,7 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                 }
                 result[i].value = conv_result;
                 result[i].millivolt = (int32_t)result[i].value / 65536.0 * ref;
+            } else {
             }
         }
     } else {
@@ -475,6 +476,7 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                 }
                 result[i].value = conv_result;
                 result[i].millivolt = (float)result[i].value / 32768 * ref;
+            } else {
             }
 
             if (neg) {

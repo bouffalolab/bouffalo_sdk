@@ -1,6 +1,8 @@
 #ifndef _RV_PMP_H_
 #define _RV_PMP_H_
 
+#include "stdint.h"
+
 #define RV_PMP_ENTRY (8)
 
 #define ENTRY_FLAG_PERM_R     (1 << 0)

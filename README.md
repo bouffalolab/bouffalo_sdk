@@ -15,7 +15,7 @@ Note2：due to the non-generic peripherals, the code style and interface name in
 
 |   CHIP        |  v1.4.5  |  latest |
 |:-------------:|:--------:|:-------:|
-|BL602/BL604    |  √       |   ×     |
+|BL602/BL604    |  √       |   √     |
 |BL702/BL704/BL706 |  √    |   √     |
 |BL616     |  ×            |   √     |
 |BL808     |  ×            |   √     |
@@ -47,7 +47,7 @@ Note：**√** means supported ；**×** means not supported；**○** means sup
 |  SEC_TRNG    |      ○         |      √             |   √           |   √      |
 |  SPI         |      ○         |      √             |   √           |   ○      |
 |  TIMER       |      ○         |      √             |   √           |   √      |
-|  UART        |      ○         |      √             |   √           |   √      |
+|  UART        |      √         |      √             |   √           |   √      |
 |  USB_v1      |      -         |      √             |   -           |   -      |
 |  USB_v2      |      -         |      -             |   √           |   √      |
 

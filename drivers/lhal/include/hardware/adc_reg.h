@@ -127,7 +127,7 @@
 #if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define AON_GPADC_SEN_SEL_MASK (0x7 << AON_GPADC_SEN_SEL_SHIFT)
 #define AON_GPADC_SEN_TEST_EN  (1 << 31U)
-#elif defined(BL702)
+#elif defined(BL702) || defined(BL602)
 #define AON_GPADC_SEN_SEL_MASK (0x3 << AON_GPADC_SEN_SEL_SHIFT)
 #define AON_GPADC_SEN_TEST_EN  (1 << 30U)
 #endif

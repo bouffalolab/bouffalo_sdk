@@ -1,7 +1,7 @@
 #include "bflb_dac.h"
 #include "hardware/dac_reg.h"
 
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define DAC_GPIP_BASE ((uint32_t)0x40002000)
 #elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define DAC_GPIP_BASE ((uint32_t)0x20002000)

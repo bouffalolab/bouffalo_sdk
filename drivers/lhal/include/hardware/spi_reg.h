@@ -136,25 +136,25 @@
 
 /* 0x84 : spi_fifo_config_1 */
 #define SPI_TX_FIFO_CNT_SHIFT (0U)
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define SPI_TX_FIFO_CNT_MASK (0x7 << SPI_TX_FIFO_CNT_SHIFT)
 #elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define SPI_TX_FIFO_CNT_MASK (0x3f << SPI_TX_FIFO_CNT_SHIFT)
 #endif
 #define SPI_RX_FIFO_CNT_SHIFT (8U)
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define SPI_RX_FIFO_CNT_MASK (0x7 << SPI_RX_FIFO_CNT_SHIFT)
 #elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define SPI_RX_FIFO_CNT_MASK (0x3f << SPI_RX_FIFO_CNT_SHIFT)
 #endif
 #define SPI_TX_FIFO_TH_SHIFT (16U)
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define SPI_TX_FIFO_TH_MASK (0x3 << SPI_TX_FIFO_TH_SHIFT)
 #elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define SPI_TX_FIFO_TH_MASK (0x1f << SPI_TX_FIFO_TH_SHIFT)
 #endif
 #define SPI_RX_FIFO_TH_SHIFT (24U)
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define SPI_RX_FIFO_TH_MASK (0x3 << SPI_RX_FIFO_TH_SHIFT)
 #elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define SPI_RX_FIFO_TH_MASK (0x1f << SPI_RX_FIFO_TH_SHIFT)

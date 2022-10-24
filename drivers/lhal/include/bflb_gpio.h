@@ -69,7 +69,13 @@
 /* cfgset list */
 #define GPIO_FUNC_SHIFT (0) /* Bits 0-4: GPIO function */
 #define GPIO_FUNC_MASK  (0x1f << GPIO_FUNC_SHIFT)
-#if defined(BL702)
+#if defined(BL602)
+#define GPIO_FUNC_SDIO (1 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_SPI0 (4 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_I2C0 (6 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PWM0 (8 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_JTAG (14 << GPIO_FUNC_SHIFT)
+#elif defined(BL702)
 #define GPIO_FUNC_I2S  (3 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI0 (4 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_I2C0 (6 << GPIO_FUNC_SHIFT)
@@ -89,6 +95,7 @@
 #define GPIO_FUNC_SDU  (12 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_PWM0 (16 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG (26 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_CLKOUT (31 << GPIO_FUNC_SHIFT)
 #elif defined(BL606P) || defined(BL808)
 #define GPIO_FUNC_SDH     (0 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SPI0    (1 << GPIO_FUNC_SHIFT)

@@ -10,7 +10,7 @@
 #define BFLB_SYSTEM_32K_CLK    4
 #define BFLB_SYSTEM_1K_CLK     5
 
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define BFLB_GLB_CGEN1_BASE (0x40000000 + 0x24)
 #elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define BFLB_GLB_CGEN1_BASE (0x20000000 + 0x584)

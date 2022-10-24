@@ -8,7 +8,7 @@ struct bflb_dma_irq_callback {
     void *arg;
 };
 
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 const uint32_t dma_base[] = { 0x4000C000 };
 struct bflb_dma_irq_callback dma_callback[1][8];
 #elif defined(BL616)
