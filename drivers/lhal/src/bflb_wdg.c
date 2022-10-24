@@ -15,7 +15,11 @@ void bflb_wdg_init(struct bflb_device_s *dev, const struct bflb_wdg_config_s *co
 
     regval = getreg32(reg_base + TIMER_WMER_OFFSET);
     regval &= ~TIMER_WE;
-    regval &= ~TIMER_WRIE;
+    if (config->mode == WDG_MODE_INTERRUPT) {
+        regval &= ~TIMER_WRIE;
+    } else {
+        regval |= TIMER_WRIE;
+    }
     putreg32(regval, reg_base + TIMER_WMER_OFFSET);
 
     /* Configure clock source */
@@ -72,7 +76,6 @@ void bflb_wdg_stop(struct bflb_device_s *dev)
 
     regval = getreg32(reg_base + TIMER_WMER_OFFSET);
     regval &= ~TIMER_WE;
-    regval &= ~TIMER_WRIE;
     putreg32(regval, reg_base + TIMER_WMER_OFFSET);
 }
 

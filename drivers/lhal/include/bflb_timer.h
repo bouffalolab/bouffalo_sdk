@@ -19,6 +19,7 @@
 #define TIMER_COMP_ID_0 0
 #define TIMER_COMP_ID_1 1
 #define TIMER_COMP_ID_2 2
+#define TIMER_COMP_NONE 3
 /**
   * @}
   */

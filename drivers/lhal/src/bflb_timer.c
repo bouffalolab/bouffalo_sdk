@@ -9,6 +9,11 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
 
     reg_base = dev->reg_base;
 
+    /* Disable timer */
+    regval = getreg32(reg_base + TIMER_TCER_OFFSET);
+    regval &= ~(1 << (dev->idx + 1));
+    putreg32(regval, reg_base + TIMER_TCER_OFFSET);
+
     /* Configure clock source */
     if (config->clock_source == BFLB_SYSTEM_CPU_CLK) {
         clk_source = 0;
@@ -16,7 +21,7 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
         clk_source = 3;
     } else if (config->clock_source == BFLB_SYSTEM_32K_CLK) {
         clk_source = 1;
-    } else if (config->clock_source == BFLB_SYSTEM_1K_CLK){
+    } else if (config->clock_source == BFLB_SYSTEM_1K_CLK) {
         clk_source = 2;
     }
 
@@ -48,7 +53,9 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
     /* Configure preload trigger source */
     regval = getreg32(reg_base + TIMER_TPLCR0_OFFSET + 4 * dev->idx);
     regval &= ~TIMER_TPLCR0_MASK;
-    regval |= ((config->trigger_comp_id + 1) << TIMER_TPLCR0_SHIFT);
+    if (config->trigger_comp_id != TIMER_COMP_NONE) {
+        regval |= ((config->trigger_comp_id + 1) << TIMER_TPLCR0_SHIFT);
+    }
     putreg32(regval, reg_base + TIMER_TPLCR0_OFFSET + 4 * dev->idx);
 
     if (config->counter_mode == TIMER_COUNTER_MODE_PROLOAD) {
@@ -164,9 +171,9 @@ bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no)
 
     if (regval & (1 << cmp_no)) {
         return true;
+    } else {
+        return false;
     }
-
-    return false;
 }
 
 void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no)
