@@ -22,8 +22,9 @@ StackSize = 0x1000; /*  4KB */
 MEMORY
 {
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
-    dtcm_memory (rx)  : ORIGIN = 0x42014000, LENGTH = 8K
-    ram_memory  (!rx) : ORIGIN = 0x42016000, LENGTH = 104K
+    itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 8K
+    dtcm_memory (rx)  : ORIGIN = 0x42016000, LENGTH = 4K
+    ram_memory  (!rx) : ORIGIN = 0x42017000, LENGTH = 100K
     hbn_memory  (rx)  : ORIGIN = 0x40010000, LENGTH = 0xE00     /* hbn ram 4K used 3.5K*/
 }
 
@@ -51,13 +52,6 @@ SECTIONS
         __vsymtab_start = .;
         KEEP(*(VSymTab))
         __vsymtab_end = .;
-
-        /* section information for usb desc */
-        . = ALIGN(4);
-        _usb_desc_start = .;
-        KEEP(*(usb_desc))
-        . = ALIGN(4);
-        _usb_desc_end = .;
 
         /*put .rodata**/
         *(EXCLUDE_FILE( *bl702_glb*.o* \
@@ -106,7 +100,7 @@ SECTIONS
 
         . = ALIGN(4);
         __tcm_code_end__ = .;
-    } > dtcm_memory
+    } > itcm_memory
 
     __hbn_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
 
