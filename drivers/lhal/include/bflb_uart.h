@@ -87,6 +87,9 @@
 #define UART_INTSTS_RX_ADS (1 << 10)
 #define UART_INTSTS_RX_AD5 (1 << 11)
 #endif
+/**
+  * @}
+  */
 
 /** @defgroup UART_INTCLR uart interrupt clear definition
   * @{
@@ -103,7 +106,6 @@
 #define UART_INTCLR_RX_ADS (1 << 10)
 #define UART_INTCLR_RX_AD5 (1 << 11)
 #endif
-
 /**
   * @}
   */
@@ -111,27 +113,26 @@
 /** @defgroup UART_CMD uart feature control cmd definition
   * @{
   */
-#define UART_CMD_SET_BAUD_RATE    (0x01)
-#define UART_CMD_SET_DATA_BITS    (0x02)
-#define UART_CMD_SET_STOP_BITS    (0x03)
-#define UART_CMD_SET_PARITY_BITS  (0x04)
-#define UART_CMD_CLR_TX_FIFO      (0x05)
-#define UART_CMD_CLR_RX_FIFO      (0x06)
-#define UART_CMD_SET_RTO_VALUE    (0x07)
-#define UART_CMD_SET_RTS_VALUE    (0x08)
-#define UART_CMD_GET_TX_FIFO_CNT  (0x09)
-#define UART_CMD_GET_RX_FIFO_CNT  (0x0a)
-#define UART_CMD_SET_AUTO_BAUD    (0x0b)
-#define UART_CMD_GET_AUTO_BAUD    (0x0c)
-#define UART_CMD_SET_BREAK_VALUE  (0x0d)
-#define UART_CMD_SET_TX_LIN_VALUE (0x0e)
-#define UART_CMD_SET_RX_LIN_VALUE (0x0f)
-#define UART_CMD_SET_TX_RX_EN     (0x10)
-#if !defined(BL602) && !defined(BL702)
-#define UART_CMD_SET_TX_RS485_EN  (0x11)
-#define UART_CMD_SET_TX_RS485_POL (0x12)
-#endif
-#define UART_CMD_SET_ABR_PW_VALUE (0x13)
+#define UART_CMD_SET_BAUD_RATE           (0x01)
+#define UART_CMD_SET_DATA_BITS           (0x02)
+#define UART_CMD_SET_STOP_BITS           (0x03)
+#define UART_CMD_SET_PARITY_BITS         (0x04)
+#define UART_CMD_CLR_TX_FIFO             (0x05)
+#define UART_CMD_CLR_RX_FIFO             (0x06)
+#define UART_CMD_SET_RTO_VALUE           (0x07)
+#define UART_CMD_SET_RTS_VALUE           (0x08)
+#define UART_CMD_GET_TX_FIFO_CNT         (0x09)
+#define UART_CMD_GET_RX_FIFO_CNT         (0x0a)
+#define UART_CMD_SET_AUTO_BAUD           (0x0b)
+#define UART_CMD_GET_AUTO_BAUD           (0x0c)
+#define UART_CMD_SET_BREAK_VALUE         (0x0d)
+#define UART_CMD_SET_TX_LIN_VALUE        (0x0e)
+#define UART_CMD_SET_RX_LIN_VALUE        (0x0f)
+#define UART_CMD_SET_TX_RX_EN            (0x10)
+#define UART_CMD_SET_TX_RS485_EN         (0x11)
+#define UART_CMD_SET_TX_RS485_POLARITY   (0x12)
+#define UART_CMD_SET_ABR_ALLOWABLE_ERROR (0x13)
+#define UART_CMD_SET_SW_RTS_CONTROL      (0x14)
 /**
   * @}
   */
@@ -170,10 +171,14 @@ extern "C" {
 
 void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *config);
 void bflb_uart_deinit(struct bflb_device_s *dev);
+void bflb_uart_enable(struct bflb_device_s *dev);
+void bflb_uart_disable(struct bflb_device_s *dev);
 void bflb_uart_link_txdma(struct bflb_device_s *dev, bool enable);
 void bflb_uart_link_rxdma(struct bflb_device_s *dev, bool enable);
 void bflb_uart_putchar(struct bflb_device_s *dev, int ch);
 int bflb_uart_getchar(struct bflb_device_s *dev);
+void bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
 bool bflb_uart_txready(struct bflb_device_s *dev);
 bool bflb_uart_txempty(struct bflb_device_s *dev);
 bool bflb_uart_rxavailable(struct bflb_device_s *dev);
@@ -183,7 +188,7 @@ void bflb_uart_errint_mask(struct bflb_device_s *dev, bool mask);
 uint32_t bflb_uart_get_intstatus(struct bflb_device_s *dev);
 void bflb_uart_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
-void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }

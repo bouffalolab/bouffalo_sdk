@@ -1,4 +1,5 @@
 #include "bflb_common.h"
+#include "bflb_core.h"
 
 void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
 {

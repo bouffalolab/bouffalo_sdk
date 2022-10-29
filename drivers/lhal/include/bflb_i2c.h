@@ -36,15 +36,50 @@
 
 #define I2C_M_READ    0x0001 /* Read data, from slave to master */
 #define I2C_M_TEN     0x0002 /* Ten bit address */
+#define I2C_M_DMA     0x0004 /* Enable dma mode */
 #define I2C_M_NOSTOP  0x0040 /* Message should not end with a STOP */
 #define I2C_M_NOSTART 0x0080 /* Message should not begin with a START */
 
-/* I2c bus speed */
+/* I2C bus speed */
 
 #define I2C_SPEED_STANDARD  100000  /* Standard speed (100Khz) */
 #define I2C_SPEED_FAST      400000  /* Fast speed     (400Khz) */
 #define I2C_SPEED_FAST_PLUS 1000000 /* Fast+ speed    (  1Mhz) */
 #define I2C_SPEED_HIGH      3400000 /* High speed     (3.4Mhz) */
+
+/** @defgroup I2C_INTSTS i2c interrupt status definition
+  * @{
+  */
+#define I2C_INTSTS_END     (1 << 0) /* Transfer end interrupt */
+#define I2C_INTSTS_TX_FIFO (1 << 1) /* TX FIFO ready interrupt */
+#define I2C_INTSTS_RX_FIFO (1 << 2) /* RX FIFO ready interrupt */
+#define I2C_INTSTS_NACK    (1 << 3) /* NACK interrupt */
+#define I2C_INTSTS_ARB     (1 << 4) /* Arbitration lost interrupt */
+#define I2C_INTSTS_FER     (1 << 5) /* TX/RX FIFO error interrupt */
+/**
+ * @}
+ */
+
+/** @defgroup I2C_INTCLR i2c interrupt clear definition
+  * @{
+  */
+#define I2C_INTCLR_END     (1 << 0) /* Transfer end interrupt */
+#define I2C_INTCLR_TX_FIFO (1 << 1) /* TX FIFO ready interrupt */
+#define I2C_INTCLR_RX_FIFO (1 << 2) /* RX FIFO ready interrupt */
+#define I2C_INTCLR_NACK    (1 << 3) /* NACK interrupt */
+#define I2C_INTCLR_ARB     (1 << 4) /* Arbitration lost interrupt */
+#define I2C_INTCLR_FER     (1 << 5) /* TX/RX FIFO error interrupt */
+/**
+ * @}
+ */
+
+/* I2C interrupt type */
+#define I2C_INT_END     (1 << 0) /* Transfer end interrupt */
+#define I2C_INT_TX_FIFO (1 << 1) /* TX FIFO ready interrupt */
+#define I2C_INT_RX_FIFO (1 << 2) /* RX FIFO ready interrupt */
+#define I2C_INT_NACK    (1 << 3) /* NACK interrupt */
+#define I2C_INT_ARB     (1 << 4) /* Arbitration lost interrupt */
+#define I2C_INT_FER     (1 << 5) /* TX/RX FIFO error interrupt */
 
 /**
  * @brief I2C message structure
@@ -70,8 +105,11 @@ void bflb_i2c_deinit(struct bflb_device_s *dev);
 void bflb_i2c_link_txdma(struct bflb_device_s *dev, bool enable);
 void bflb_i2c_link_rxdma(struct bflb_device_s *dev, bool enable);
 int bflb_i2c_transfer(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, int count);
+void bflb_i2c_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask);
+void bflb_i2c_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
+uint32_t bflb_i2c_get_intstatus(struct bflb_device_s *dev);
 
-void bflb_i2c_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+int bflb_i2c_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }

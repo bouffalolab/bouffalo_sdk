@@ -158,6 +158,7 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
 void bflb_adc_tsen_init(struct bflb_device_s *dev, uint8_t tsen_mod);
 float bflb_adc_tsen_get_temp(struct bflb_device_s *dev, uint32_t tsen_offset);
 void bflb_adc_vbat_enable(struct bflb_device_s *dev);
+void bflb_adc_vbat_disable(struct bflb_device_s *dev);
 
 #ifdef __cplusplus
 }

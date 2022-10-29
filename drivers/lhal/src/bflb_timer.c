@@ -5,7 +5,6 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
 {
     uint32_t regval;
     uint32_t reg_base;
-    uint8_t clk_source = 3;
 
     reg_base = dev->reg_base;
 
@@ -14,24 +13,19 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
     regval &= ~(1 << (dev->idx + 1));
     putreg32(regval, reg_base + TIMER_TCER_OFFSET);
 
-    /* Configure clock source */
-    if (config->clock_source == BFLB_SYSTEM_CPU_CLK) {
-        clk_source = 0;
-    } else if (config->clock_source == BFLB_SYSTEM_XCLK) {
-        clk_source = 3;
-    } else if (config->clock_source == BFLB_SYSTEM_32K_CLK) {
-        clk_source = 1;
-    } else if (config->clock_source == BFLB_SYSTEM_1K_CLK) {
-        clk_source = 2;
-    }
+    /* Timer interrupr clear */
+    bflb_timer_compint_clear(dev, TIMER_COMP_ID_0);
+    bflb_timer_compint_clear(dev, TIMER_COMP_ID_1);
+    bflb_timer_compint_clear(dev, TIMER_COMP_ID_2);
 
+    /* Configure clock source */
     regval = getreg32(reg_base + TIMER_TCCR_OFFSET);
     if (dev->idx == 0) {
         regval &= ~TIMER_CS_0_MASK;
-        regval |= (clk_source << TIMER_CS_0_SHIFT);
+        regval |= (config->clock_source << TIMER_CS_0_SHIFT);
     } else {
         regval &= ~TIMER_CS_1_MASK;
-        regval |= (clk_source << TIMER_CS_1_SHIFT);
+        regval |= (config->clock_source << TIMER_CS_1_SHIFT);
     }
     putreg32(regval, reg_base + TIMER_TCCR_OFFSET);
 
@@ -76,14 +70,26 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
         bflb_timer_set_compvalue(dev, TIMER_COMP_ID_0, config->comp0_val - 2);
         bflb_timer_set_compvalue(dev, TIMER_COMP_ID_1, config->comp1_val - 2);
         bflb_timer_set_compvalue(dev, TIMER_COMP_ID_2, 0xffffffff);
-    } else {
+    } else if (config->trigger_comp_id < TIMER_COMP_NONE) {
         bflb_timer_compint_mask(dev, TIMER_COMP_ID_0, false);
         bflb_timer_compint_mask(dev, TIMER_COMP_ID_1, false);
         bflb_timer_compint_mask(dev, TIMER_COMP_ID_2, false);
         bflb_timer_set_compvalue(dev, TIMER_COMP_ID_0, config->comp0_val - 2);
         bflb_timer_set_compvalue(dev, TIMER_COMP_ID_1, config->comp1_val - 2);
         bflb_timer_set_compvalue(dev, TIMER_COMP_ID_2, config->comp2_val - 2);
+    } else {
+        bflb_timer_compint_mask(dev, TIMER_COMP_ID_0, true);
+        bflb_timer_compint_mask(dev, TIMER_COMP_ID_1, true);
+        bflb_timer_compint_mask(dev, TIMER_COMP_ID_2, true);
+        bflb_timer_set_compvalue(dev, TIMER_COMP_ID_0, 0xffffffff);
+        bflb_timer_set_compvalue(dev, TIMER_COMP_ID_1, 0xffffffff);
+        bflb_timer_set_compvalue(dev, TIMER_COMP_ID_2, 0xffffffff);
     }
+}
+
+void bflb_timer_deinit(struct bflb_device_s *dev)
+{
+
 }
 
 void bflb_timer_start(struct bflb_device_s *dev)
@@ -186,3 +192,21 @@ void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no)
     regval |= (1 << cmp_no);
     putreg32(regval, reg_base + TIMER_TICR0_OFFSET + 4 * dev->idx);
 }
+
+#if !defined(BL702) || !defined(BL602)
+void bflb_timer_capture_init(struct bflb_device_s *dev, const struct bflb_timer_capture_config_s *config)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+    regval = getreg32(reg_base + TIMER_GPIO_OFFSET);
+    /* polarity: 1->neg, 0->pos */
+    if (config->polarity == TIMER_CAPTURE_POLARITY_FALLING) {
+        regval |= (1 << (5 + dev->idx));
+    } else {
+        regval &= ~(1 << (5 + dev->idx));
+    }
+    putreg32(regval, reg_base + TIMER_GPIO_OFFSET);
+}
+#endif

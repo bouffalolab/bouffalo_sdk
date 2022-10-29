@@ -3,11 +3,13 @@
 
 #include "bflb_core.h"
 
-#define SHA_MODE_SHA1   0
-#define SHA_MODE_SHA224 1
-#define SHA_MODE_SHA256 2
-#define SHA_MODE_SHA384 3
-#define SHA_MODE_SHA512 4
+#define SHA_MODE_SHA256     0
+#define SHA_MODE_SHA224     1
+#define SHA_MODE_SHA1       2
+#define SHA_MODE_SHA512     4
+#define SHA_MODE_SHA384     5
+#define SHA_MODE_SHA512T224 6
+#define SHA_MODE_SHA512T256 7
 
 struct bflb_sha1_ctx_s {
     uint32_t total[2];                                    /*!< Number of bytes processed */
@@ -30,6 +32,22 @@ struct bflb_sha512_ctx_s {
     uint8_t sha_feed;                                      /*!< Sha has feed data */
 };
 
+struct bflb_sha_link_s {
+    uint32_t                 : 2;  /*!< [1:0]Reserved */
+    uint32_t sha_mode        : 3;  /*!< [4:2]Sha-256/sha-224/sha-1/sha-1/sha-512/sha-384/sha-512T224/sha-512T256 */
+    uint32_t                 : 1;  /*!< [5]Reserved */
+    uint32_t sha_newhash_dis : 1;  /*!< [6]New hash or accumulate last hash */
+    uint32_t                 : 2;  /*!< [8:7]Reserved */
+    uint32_t sha_intclr      : 1;  /*!< [9]Clear interrupt */
+    uint32_t sha_intset      : 1;  /*!< [10]Set interrupt */
+    uint32_t                 : 1;  /*!< [11]Reserved */
+    uint32_t sha_mode_ext    : 2;  /*!< [13:12]Extention,0:sha 1:md5 2:crc16 3:crc32 */
+    uint32_t                 : 2;  /*!< [15:14]Reserved */
+    uint32_t sha_msglen      : 16; /*!< [31:16]Number of 512-bit block */
+    uint32_t sha_srcaddr;          /*!< Message source address */
+    uint32_t result[16];           /*!< Result of SHA */
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,6 +62,42 @@ int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx,
 void bflb_sha1_finish(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, uint8_t *output);
 void bflb_sha256_finish(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx, uint8_t *output);
 void bflb_sha512_finish(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx, uint8_t *output);
+
+void bflb_sha_link_init(struct bflb_device_s *dev);
+void bflb_sha_link_deinit(struct bflb_device_s *dev);
+void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx);
+void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx);
+void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx);
+int bflb_sha1_link_update(struct bflb_device_s *dev,
+                          struct bflb_sha1_ctx_s *ctx,
+                          uint32_t link_addr,
+                          const uint8_t *input,
+                          uint32_t len);
+int bflb_sha256_link_update(struct bflb_device_s *dev,
+                            struct bflb_sha256_ctx_s *ctx,
+                            uint32_t link_addr,
+                            const uint8_t *input,
+                            uint32_t len);
+int bflb_sha512_link_update(struct bflb_device_s *dev,
+                            struct bflb_sha512_ctx_s *ctx,
+                            uint32_t link_addr,
+                            const uint8_t *input,
+                            uint32_t len);
+void bflb_sha1_link_finish(struct bflb_device_s *dev,
+                           struct bflb_sha1_ctx_s *ctx,
+                           uint32_t link_addr,
+                           uint8_t *output);
+void bflb_sha256_link_finish(struct bflb_device_s *dev,
+                             struct bflb_sha256_ctx_s *ctx,
+                             uint32_t link_addr,
+                             uint8_t *output);
+void bflb_sha512_link_finish(struct bflb_device_s *dev,
+                             struct bflb_sha512_ctx_s *ctx,
+                             uint32_t link_addr,
+                             uint8_t *output);
+
+void bflb_group0_request_sha_access(struct bflb_device_s *dev);
+void bflb_group0_release_sha_access(struct bflb_device_s *dev);
 
 #ifdef __cplusplus
 }

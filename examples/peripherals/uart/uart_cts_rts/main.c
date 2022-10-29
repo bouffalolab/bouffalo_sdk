@@ -37,7 +37,7 @@ int main(void)
     cfg.data_bits = UART_DATA_BITS_8;
     cfg.stop_bits = UART_STOP_BITS_1;
     cfg.parity = UART_PARITY_NONE;
-    cfg.flow_ctrl = UART_FLOWCTRL_RTS;
+    cfg.flow_ctrl = 0;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
     bflb_uart_init(uart1, &cfg);
@@ -46,8 +46,9 @@ int main(void)
     bflb_irq_attach(uart1->irq_num, uart_isr, uart1);
     bflb_irq_enable(uart1->irq_num);
 
+    bflb_uart_feature_control(uart1, UART_CMD_SET_SW_RTS_CONTROL, true);
+    bflb_uart_feature_control(uart1, UART_CMD_SET_RTS_VALUE, 0);
     while (1) {
-        printf("helloworld\r\n");
         bflb_mtimer_delay_ms(2000);
     }
 }

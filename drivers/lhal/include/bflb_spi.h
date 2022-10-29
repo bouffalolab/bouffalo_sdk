@@ -70,7 +70,7 @@
   * @}
   */
 
-/** @defgroup SPI_CMD uart feature control cmd definition
+/** @defgroup SPI_CMD spi feature control cmd definition
   * @{
   */
 #define SPI_CMD_SET_DATA_WIDTH  (0x01)
@@ -78,7 +78,6 @@
 #define SPI_CMD_CLEAR_TX_FIFO   (0x03)
 #define SPI_CMD_CLEAR_RX_FIFO   (0x04)
 #define SPI_CMD_SET_CS_INTERVAL (0x05)
-
 /**
   * @}
   */
@@ -116,7 +115,7 @@ void bflb_spi_link_txdma(struct bflb_device_s *dev, bool enable);
 void bflb_spi_link_rxdma(struct bflb_device_s *dev, bool enable);
 uint32_t bflb_spi_poll_send(struct bflb_device_s *dev, uint32_t data);
 int bflb_spi_poll_exchange(struct bflb_device_s *dev, const void *txbuffer, void *rxbuffer, size_t nbytes);
-int bflb_spi_isbusy(struct bflb_device_s *dev);
+bool bflb_spi_isbusy(struct bflb_device_s *dev);
 void bflb_spi_txint_mask(struct bflb_device_s *dev, bool mask);
 void bflb_spi_rxint_mask(struct bflb_device_s *dev, bool mask);
 void bflb_spi_errint_mask(struct bflb_device_s *dev, bool mask);

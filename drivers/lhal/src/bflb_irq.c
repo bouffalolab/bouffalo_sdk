@@ -46,7 +46,7 @@ void bflb_irq_restore(uint32_t flags)
 int bflb_irq_attach(int irq, irq_callback isr, void *arg)
 {
     if (irq > CONFIG_IRQ_NUM) {
-        return -1;
+        return -EINVAL;
     }
     g_irqvector[irq].handler = isr;
     g_irqvector[irq].arg = arg;
@@ -56,7 +56,7 @@ int bflb_irq_attach(int irq, irq_callback isr, void *arg)
 int bflb_irq_detach(int irq)
 {
     if (irq > CONFIG_IRQ_NUM) {
-        return -1;
+        return -EINVAL;
     }
     return 0;
 }

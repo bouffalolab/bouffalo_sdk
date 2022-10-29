@@ -34,12 +34,9 @@
   ******************************************************************************
   */
 #include "bflb_core.h"
-#include "bflb_common.h"
 #include "bflb_emac.h"
 #include "bflb_clock.h"
-#include "bflb_mtimer.h"
 #include "bflb_l1c.h"
-
 #include "hardware/emac_reg.h"
 
 /* private definition */
@@ -634,6 +631,7 @@ int bflb_emac_phy_reg_write(struct bflb_device_s *dev, uint16_t phy_reg, uint16_
  */
 int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+    int ret = 0;
     uint32_t reg_val;
     uint32_t reg_base;
 
@@ -748,10 +746,10 @@ int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 
         default:
-            return -1;
+            ret = -EPERM;
             break;
     }
-    return 0;
+    return ret;
 }
 
 /**

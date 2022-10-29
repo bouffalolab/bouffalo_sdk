@@ -1,9 +1,10 @@
 #include "bflb_core.h"
-#include "bflb_mtimer.h"
 #include "bflb_irq.h"
 #include "usbd_core.h"
 #include "usbh_core.h"
 #include "hardware/usb_v2_reg.h"
+
+// #define CONFIG_USB_PINGPONG_ENABLE
 
 #define BLFB_USB_BASE ((uint32_t)0x20072000)
 #define BFLB_PDS_BASE ((uint32_t)0x2000e000)
@@ -673,6 +674,22 @@ int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
 #else
         if (ep_cfg->ep_mps > 512) {
             bflb_usb_set_ep_fifomap(1, USB_FIFO_F0);
+
+            bflb_usb_set_fifo_epmap(USB_FIFO_F0, 1, USB_FIFO_DIR_BID);
+            bflb_usb_set_fifo_epmap(USB_FIFO_F1, 1, USB_FIFO_DIR_BID);
+            bflb_usb_set_fifo_epmap(USB_FIFO_F2, 1, USB_FIFO_DIR_BID);
+            bflb_usb_set_fifo_epmap(USB_FIFO_F3, 1, USB_FIFO_DIR_BID);
+
+            if (ep_idx == 1) {
+                bflb_usb_fifo_config(USB_FIFO_F0, ep_cfg->ep_type, 1024, 2, true);
+                bflb_usb_fifo_config(USB_FIFO_F1, ep_cfg->ep_type, 1024, 2, false);
+                bflb_usb_fifo_config(USB_FIFO_F2, ep_cfg->ep_type, 1024, 2, false);
+                bflb_usb_fifo_config(USB_FIFO_F3, ep_cfg->ep_type, 1024, 2, false);
+            } else {
+                return -1;
+            }
+        } else {
+            bflb_usb_set_ep_fifomap(1, USB_FIFO_F0);
             bflb_usb_set_ep_fifomap(2, USB_FIFO_F2);
 
             bflb_usb_set_fifo_epmap(USB_FIFO_F0, 1, USB_FIFO_DIR_BID);
@@ -686,22 +703,6 @@ int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
             } else if (ep_idx == 2) {
                 bflb_usb_fifo_config(USB_FIFO_F2, ep_cfg->ep_type, 512, 2, true);
                 bflb_usb_fifo_config(USB_FIFO_F3, ep_cfg->ep_type, 512, 2, false);
-            } else {
-                return -1;
-            }
-        } else {
-            bflb_usb_set_ep_fifomap(1, USB_FIFO_F0);
-
-            bflb_usb_set_fifo_epmap(USB_FIFO_F0, 1, USB_FIFO_DIR_BID);
-            bflb_usb_set_fifo_epmap(USB_FIFO_F1, 1, USB_FIFO_DIR_BID);
-            bflb_usb_set_fifo_epmap(USB_FIFO_F2, 1, USB_FIFO_DIR_BID);
-            bflb_usb_set_fifo_epmap(USB_FIFO_F3, 1, USB_FIFO_DIR_BID);
-
-            if (ep_idx == 1) {
-                bflb_usb_fifo_config(USB_FIFO_F0, ep_cfg->ep_type, 1024, 2, true);
-                bflb_usb_fifo_config(USB_FIFO_F1, ep_cfg->ep_type, 1024, 2, false);
-                bflb_usb_fifo_config(USB_FIFO_F2, ep_cfg->ep_type, 1024, 2, false);
-                bflb_usb_fifo_config(USB_FIFO_F3, ep_cfg->ep_type, 1024, 2, false);
             } else {
                 return -1;
             }

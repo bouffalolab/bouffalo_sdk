@@ -4,6 +4,13 @@
 #include "bflb_core.h"
 #include "bflb_clock.h"
 
+#define WDG_CLKSRC_BCLK 0
+#define WDG_CLKSRC_32K  1
+#define WDG_CLKSRC_1K   2
+#define WDG_CLKSRC_XTAL 3
+#define WDG_CLKSRC_GPIO 4
+#define WDG_CLKSRC_NO   5
+
 /** @defgroup WDG_MODE Watch-dog reset/interrupt mode definition
   * @{
   */

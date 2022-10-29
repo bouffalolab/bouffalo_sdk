@@ -261,13 +261,14 @@ void bflb_i2c_init(struct bflb_device_s *dev, uint32_t frequency)
 
     bflb_i2c_disable(dev);
 
-    regval = (I2C_CR_I2C_END_EN |
-              I2C_CR_I2C_END_MASK |
-              I2C_CR_I2C_TXF_MASK |
-              I2C_CR_I2C_RXF_MASK |
-              I2C_CR_I2C_NAK_MASK |
-              I2C_CR_I2C_ARB_MASK |
-              I2C_CR_I2C_FER_MASK);
+    regval = getreg32(reg_base + I2C_INT_STS_OFFSET);
+
+    regval |= (I2C_CR_I2C_END_MASK |
+               I2C_CR_I2C_TXF_MASK |
+               I2C_CR_I2C_RXF_MASK |
+               I2C_CR_I2C_NAK_MASK |
+               I2C_CR_I2C_ARB_MASK |
+               I2C_CR_I2C_FER_MASK);
 
     putreg32(regval, reg_base + I2C_INT_STS_OFFSET);
 
@@ -283,12 +284,14 @@ void bflb_i2c_deinit(struct bflb_device_s *dev)
 
     bflb_i2c_disable(dev);
 
-    regval = (I2C_CR_I2C_END_MASK |
-              I2C_CR_I2C_TXF_MASK |
-              I2C_CR_I2C_RXF_MASK |
-              I2C_CR_I2C_NAK_MASK |
-              I2C_CR_I2C_ARB_MASK |
-              I2C_CR_I2C_FER_MASK);
+    regval = getreg32(reg_base + I2C_INT_STS_OFFSET);
+
+    regval |= (I2C_CR_I2C_END_MASK |
+               I2C_CR_I2C_TXF_MASK |
+               I2C_CR_I2C_RXF_MASK |
+               I2C_CR_I2C_NAK_MASK |
+               I2C_CR_I2C_ARB_MASK |
+               I2C_CR_I2C_FER_MASK);
 
     putreg32(regval, reg_base + I2C_INT_STS_OFFSET);
 }
@@ -352,17 +355,69 @@ int bflb_i2c_transfer(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, in
         }
 
         if (msgs[i].length > 256) {
-            return -1;
+            return -EINVAL;
         }
         bflb_i2c_set_datalen(dev, msgs[i].length);
         if (msgs[i].flags & I2C_M_READ) {
             bflb_i2c_set_dir(dev, 1);
-            bflb_i2c_read_bytes(dev, msgs[i].buffer, msgs[i].length);
+            if ((msgs[i].flags & I2C_M_DMA) == 0) {
+                bflb_i2c_read_bytes(dev, msgs[i].buffer, msgs[i].length);
+            } else {
+                bflb_i2c_enable(dev);
+            }
         } else {
             bflb_i2c_set_dir(dev, 0);
-            bflb_i2c_write_bytes(dev, msgs[i].buffer, msgs[i].length);
+            if ((msgs[i].flags & I2C_M_DMA) == 0) {
+                bflb_i2c_write_bytes(dev, msgs[i].buffer, msgs[i].length);
+            } else {
+                bflb_i2c_enable(dev);
+            }
         }
     }
 
     return 0;
+}
+
+void bflb_i2c_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = dev->reg_base;
+    regval = getreg32(reg_base + I2C_INT_STS_OFFSET);
+    regval &= ~((int_type & 0xff) << 8);
+    if (mask) {
+        regval |= (int_type & 0xff) << 8;
+    }
+    putreg32(regval, reg_base + I2C_INT_STS_OFFSET);
+}
+
+void bflb_i2c_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = dev->reg_base;
+    regval = getreg32(reg_base + I2C_INT_STS_OFFSET);
+    regval |= (int_clear & 0xff) << 16;
+    putreg32(regval, reg_base + I2C_INT_STS_OFFSET);
+}
+
+uint32_t bflb_i2c_get_intstatus(struct bflb_device_s *dev)
+{
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+    return(getreg32(reg_base + I2C_INT_STS_OFFSET) & 0xff);
+}
+
+int bflb_i2c_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
+{
+    int ret = 0;
+    switch (cmd) {
+        default:
+        ret = -EPERM;
+            break;
+    }
+    return ret;
 }

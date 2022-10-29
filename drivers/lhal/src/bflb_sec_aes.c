@@ -2,10 +2,11 @@
 #include "hardware/sec_eng_reg.h"
 
 #define CONFIG_BFLB_AES_USE_BE
-#define CONFIG_BFLB_AES_HW_KEY_SEL 1
 
 #define BFLB_PUT_LE32(p) ((p[3] << 24) | (p[2] << 16) | (p[1] << 8) | (p[0]))
 #define BFLB_PUT_BE32(p) ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | (p[3]))
+
+volatile uint8_t hw_key_sel = 1;
 
 void bflb_aes_init(struct bflb_device_s *dev)
 {
@@ -35,6 +36,11 @@ void bflb_aes_deinit(struct bflb_device_s *dev)
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval &= ~SEC_ENG_SE_AES_0_EN;
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+}
+
+void bflb_aes_set_hwkey(uint8_t keysel)
+{
+    hw_key_sel = keysel;
 }
 
 void bflb_aes_set_mode(struct bflb_device_s *dev, uint8_t mode)
@@ -89,12 +95,12 @@ void bflb_aes_setkey(struct bflb_device_s *dev, const uint8_t *key, uint16_t key
     if (key == NULL) {
         regval = getreg32(reg_base + SEC_ENG_SE_AES_0_KEY_SEL_OFFSET);
         regval &= ~SEC_ENG_SE_AES_0_KEY_SEL_MASK;
-        regval |= (CONFIG_BFLB_AES_HW_KEY_SEL << SEC_ENG_SE_AES_0_KEY_SEL_SHIFT);
+        regval |= (hw_key_sel << SEC_ENG_SE_AES_0_KEY_SEL_SHIFT);
         putreg32(regval, reg_base + SEC_ENG_SE_AES_0_KEY_SEL_OFFSET);
 
         regval = getreg32(reg_base + SEC_ENG_SE_AES_1_KEY_SEL_OFFSET);
         regval &= ~SEC_ENG_SE_AES_1_KEY_SEL_MASK;
-        regval |= (CONFIG_BFLB_AES_HW_KEY_SEL << SEC_ENG_SE_AES_1_KEY_SEL_SHIFT);
+        regval |= (hw_key_sel << SEC_ENG_SE_AES_1_KEY_SEL_SHIFT);
         putreg32(regval, reg_base + SEC_ENG_SE_AES_1_KEY_SEL_OFFSET);
     } else {
         putreg32(BFLB_PUT_LE32(temp_key), reg_base + SEC_ENG_SE_AES_0_KEY_0_OFFSET);
@@ -137,15 +143,11 @@ int bflb_aes_encrypt(struct bflb_device_s *dev,
 
     reg_base = dev->reg_base;
 
-    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
-
-    if (regval & SEC_ENG_SE_AES_0_BUSY) {
-        return -1;
-    }
     if (len % 16) {
-        return -2;
+        return -EINVAL;
     }
 
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval &= ~SEC_ENG_SE_AES_0_TRIG_1T;
     regval &= ~SEC_ENG_SE_AES_0_IV_SEL; /* Clear aes iv sel to select new iv */
     regval &= ~SEC_ENG_SE_AES_0_DEC_EN; /* Set AES encryption */
@@ -202,16 +204,11 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
 
     reg_base = dev->reg_base;
 
-    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
-
-    if (regval & SEC_ENG_SE_AES_0_BUSY) {
-        return -1;
-    }
-
     if (len % 16) {
-        return -2;
+        return -EINVAL;
     }
 
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval &= ~SEC_ENG_SE_AES_0_TRIG_1T;
     regval &= ~SEC_ENG_SE_AES_0_IV_SEL; /* Clear aes iv sel to select new iv */
     regval |= SEC_ENG_SE_AES_0_DEC_EN;  /* Set AES decryption */
@@ -253,4 +250,116 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
     while (getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET) & SEC_ENG_SE_AES_0_BUSY) {
     }
     return 0;
+}
+
+void bflb_aes_link_init(struct bflb_device_s *dev)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+#ifdef CONFIG_BFLB_AES_USE_BE
+    putreg32(0x1f, reg_base + SEC_ENG_SE_AES_0_ENDIAN_OFFSET);
+#else
+    putreg32(0x10, reg_base + SEC_ENG_SE_AES_0_ENDIAN_OFFSET);
+#endif
+
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+    regval |= SEC_ENG_SE_AES_0_LINK_MODE;
+    regval |= SEC_ENG_SE_AES_0_EN;
+    putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+}
+
+void bflb_aes_link_deinit(struct bflb_device_s *dev)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+    regval &= ~SEC_ENG_SE_AES_0_LINK_MODE;
+    regval &= ~SEC_ENG_SE_AES_0_EN;
+    putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+}
+
+int bflb_aes_link_update(struct bflb_device_s *dev,
+                         uint32_t link_addr,
+                         const uint8_t *input,
+                         uint8_t *output,
+                         uint32_t len)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    if ((len % 16) || ((link_addr & 0x03))) {
+        return -EINVAL;
+    }
+
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+    regval &= ~SEC_ENG_SE_AES_0_TRIG_1T;
+    putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+
+    /* Set link address */
+    putreg32(link_addr, reg_base + SEC_ENG_SE_AES_0_LINK_OFFSET);
+
+    /* Change source buffer address and destination buffer address */
+    *(uint32_t *)(uintptr_t)(link_addr + 4) = (uint32_t)(uintptr_t)input;
+    *(uint32_t *)(uintptr_t)(link_addr + 8) = (uint32_t)(uintptr_t)output;
+
+    /* Set data length */
+    *((uint16_t *)(uintptr_t)link_addr + 1) = len / 16;
+
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+    regval |= SEC_ENG_SE_AES_0_TRIG_1T;
+    putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+
+    __asm volatile("nop");
+    __asm volatile("nop");
+
+    while (getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET) & SEC_ENG_SE_AES_0_BUSY) {
+    }
+
+    return 0;
+}
+
+void bflb_group0_request_aes_access(struct bflb_device_s *dev)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + SEC_ENG_SE_CTRL_PROT_RD_OFFSET);
+    if (((regval >> 2) & 0x03) == 0x03) {
+        putreg32(0x02, reg_base + SEC_ENG_SE_AES_0_CTRL_PROT_OFFSET);
+
+        regval = getreg32(reg_base + SEC_ENG_SE_CTRL_PROT_RD_OFFSET);
+        if (((regval >> 2) & 0x03) == 0x01) {
+        }
+    }
+}
+
+void bflb_group0_release_aes_access(struct bflb_device_s *dev)
+{
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    putreg32(0x06, reg_base + SEC_ENG_SE_AES_0_CTRL_PROT_OFFSET);
+}
+
+void bflb_aes_set_hwkey_source(struct bflb_device_s *dev, uint8_t source)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_SBOOT_OFFSET);
+    regval |= (source << 0);
+    putreg32(0x02, reg_base + SEC_ENG_SE_AES_0_SBOOT_OFFSET);
 }

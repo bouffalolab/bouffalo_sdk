@@ -8,7 +8,7 @@ struct bflb_dma_irq_callback {
     void *arg;
 };
 
-#if defined(BL702) || defined(BL602)
+#if defined(BL702) || defined(BL602) || defined(BL702L)
 const uint32_t dma_base[] = { 0x4000C000 };
 struct bflb_dma_irq_callback dma_callback[1][8];
 #elif defined(BL616)
@@ -246,7 +246,7 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev, struct bflb_dma_chann
         lli_count_used_offset += current_lli_count;
 
         if (lli_count_used_offset > max_lli_count) {
-            return -2;
+            return -ENOMEM;
         }
     }
 
@@ -365,8 +365,9 @@ void bflb_dma_channel_tcint_clear(struct bflb_device_s *dev)
     putreg32(1 << dev->sub_idx, dma_base[dev->idx] + DMA_INTTCCLEAR_OFFSET);
 }
 
-void bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
+int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+    int ret = 0;
     uint32_t regval;
     uint32_t channel_base;
 
@@ -394,6 +395,8 @@ void bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 
         default:
+            ret = -EPERM;
             break;
     }
+    return ret;
 }

@@ -1495,7 +1495,7 @@
 #define GLB_GPIO_TX_DATA_TO_FIFO_SHIFT                          (0U)
 #define GLB_GPIO_TX_DATA_TO_FIFO_MASK                           (0xffff<<GLB_GPIO_TX_DATA_TO_FIFO_SHIFT)
 
-#elif defined(BL702) || defined(BL602)
+#elif defined(BL702) || defined(BL602) || defined(BL702L)
 
 #define GLB_GPIO_CFGCTL0_OFFSET                                 (0x100)/* GPIO_CFGCTL0 */
 #define GLB_GPIO_CFGCTL1_OFFSET                                 (0x104)/* GPIO_CFGCTL1 */

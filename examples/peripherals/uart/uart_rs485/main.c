@@ -47,7 +47,7 @@ int main(void)
     bflb_uart_init(uart1, &cfg);
 
     bflb_uart_feature_control(uart1, UART_CMD_SET_TX_RS485_EN, 1);
-    bflb_uart_feature_control(uart1, UART_CMD_SET_TX_RS485_POL, 1);
+    bflb_uart_feature_control(uart1, UART_CMD_SET_TX_RS485_POLARITY, 1);
 
     for (uint8_t i = 0; i < 128; i++) {
         bflb_uart_putchar(uart1, uart_txbuf[i]);
@@ -58,7 +58,6 @@ int main(void)
     bflb_irq_enable(uart1->irq_num);
 
     while (1) {
-        printf("helloworld\r\n");
         bflb_mtimer_delay_ms(2000);
     }
 }

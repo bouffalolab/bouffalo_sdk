@@ -62,7 +62,6 @@ int main(void)
     bflb_irq_enable(uart1->irq_num);
 
     while (1) {
-        printf("helloworld\r\n");
         bflb_mtimer_delay_ms(2000);
     }
 }

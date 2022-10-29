@@ -5,7 +5,7 @@
 
 #if (__riscv_xlen == 32)
 
-#define RV_HPM_SET_CPUNTER(name, val)                      \
+#define RV_HPM_SET_COUNTER(name, val)                      \
     do {                                                   \
         uint32_t value = (uint32_t)val;                    \
         __asm volatile("csrw " #name ", %0"                \
@@ -46,7 +46,7 @@
 
 #else
 
-#define RV_HPM_SET_CPUNTER(name, val)       \
+#define RV_HPM_SET_COUNTER(name, val)       \
     do {                                    \
         uint64_t value = val;               \
         __asm volatile("csrw " #name ", %0" \
@@ -114,8 +114,8 @@ inline __attribute__((always_inline)) void RV_HPM_L1_ICache_Miss_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter3, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter4, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter3, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter4, 0);
 }
 
 /* M-mode: L1 ICache Miss rate measure end              */
@@ -142,8 +142,8 @@ inline __attribute__((always_inline)) void RV_HPM_L1_BrPredict_Miss_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter8, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter9, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter8, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter9, 0);
 #endif
 #ifdef CPU_D0
     __asm volatile("csrw mhpmevent9, 6"
@@ -154,8 +154,8 @@ inline __attribute__((always_inline)) void RV_HPM_L1_BrPredict_Miss_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter9, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter10, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter9, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter10, 0);
 #endif
 }
 
@@ -187,8 +187,8 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_RdMiss_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter14, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter15, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter14, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter15, 0);
 #endif
 #ifdef CPU_D0
     __asm volatile("csrw mhpmevent5, 12"
@@ -199,8 +199,8 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_RdMiss_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter5, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter6, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter5, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter6, 0);
 #endif
 }
 
@@ -232,8 +232,8 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_WrMiss_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter16, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter17, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter16, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter17, 0);
 #endif
 #ifdef CPU_D0
     __asm volatile("csrw mhpmevent7, 14"
@@ -244,8 +244,8 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_WrMiss_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter7, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter8, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter7, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter8, 0);
 #endif
 }
 
@@ -280,9 +280,9 @@ inline __attribute__((always_inline)) void RV_HPM_TLB_Miss_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter5, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter6, 0);
-    RV_HPM_SET_CPUNTER(mhpmcounter7, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter5, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter6, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter7, 0);
 }
 
 /* M-mode: TLB miss count measure end      */
@@ -307,7 +307,7 @@ inline __attribute__((always_inline)) void RV_HPM_Store_Insn_Init_M(void)
                    :
                    :
                    : "memory");
-    RV_HPM_SET_CPUNTER(mhpmcounter13, 0);
+    RV_HPM_SET_COUNTER(mhpmcounter13, 0);
 }
 
 /* M-mode: Store Instruction counter measure end      */
@@ -323,7 +323,7 @@ inline __attribute__((always_inline)) void RV_HPM_Store_Insn_Stop_M(uint64_t *sc
 /* M-Mode: Set cycle counter */
 inline __attribute__((always_inline)) void RV_HPM_Cycle_Init_M(void)
 {
-    RV_HPM_SET_CPUNTER(mcycle, 0);
+    RV_HPM_SET_COUNTER(mcycle, 0);
 }
 
 /* M-Mode: Get cycle counter */
@@ -338,7 +338,7 @@ inline __attribute__((always_inline)) void RV_HPM_Cycle_Get_M(uint64_t *cycle)
 /* M-Mode: Set minstret counter */
 inline __attribute__((always_inline)) void RV_HPM_Instret_Init_M(void)
 {
-    RV_HPM_SET_CPUNTER(minstret, 0);
+    RV_HPM_SET_COUNTER(minstret, 0);
 }
 
 /* M-Mode: Get minstret counter */

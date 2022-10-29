@@ -130,7 +130,6 @@ int main(void)
         printf("receive data:%02x\r\n", receive_buffer[i]);
     }
     while (1) {
-        printf("helloworld\r\n");
         bflb_mtimer_delay_ms(2000);
     }
 }

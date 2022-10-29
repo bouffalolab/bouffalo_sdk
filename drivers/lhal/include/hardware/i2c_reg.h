@@ -64,7 +64,7 @@
 #define I2C_CR_I2C_SUB_ADDR_EN       (1 << 4U)
 #define I2C_CR_I2C_SUB_ADDR_BC_SHIFT (5U)
 #define I2C_CR_I2C_SUB_ADDR_BC_MASK  (0x3 << I2C_CR_I2C_SUB_ADDR_BC_SHIFT)
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628) || defined(BL702L)
 #define I2C_CR_I2C_10B_ADDR_EN    (1 << 7U)
 #define I2C_CR_I2C_SLV_ADDR_SHIFT (8U)
 #define I2C_CR_I2C_SLV_ADDR_MASK  (0x3ff << I2C_CR_I2C_SLV_ADDR_SHIFT)

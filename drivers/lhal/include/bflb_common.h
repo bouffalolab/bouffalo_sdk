@@ -1,7 +1,7 @@
 #ifndef _BFLB_COMMON_H
 #define _BFLB_COMMON_H
 
-#include "bflb_core.h"
+#include "stdint.h"
 
 #ifdef __cplusplus
 extern "C" {

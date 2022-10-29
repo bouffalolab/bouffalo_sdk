@@ -156,6 +156,8 @@ int main(void)
 
     sha = bflb_device_get_by_name("sha");
 
+    bflb_group0_request_sha_access(sha);
+
     bflb_sha_init(sha, SHA_MODE_SHA1);
 
     for (uint8_t i = 0; i < 3; i++) {
@@ -247,6 +249,7 @@ int main(void)
         bflb_data_compare(sha512_test_sum[i + 3], sha_output_buf, 20);
     }
     printf("sha512 success\r\n");
+    bflb_group0_release_sha_access(sha);
     while (1) {
         bflb_mtimer_delay_ms(2000);
     }

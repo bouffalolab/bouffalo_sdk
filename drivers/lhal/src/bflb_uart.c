@@ -72,25 +72,14 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
     putreg32(tx_cfg, reg_base + UART_UTX_CONFIG_OFFSET);
     putreg32(rx_cfg, reg_base + UART_URX_CONFIG_OFFSET);
 #if defined(BL602)
-    if (config->flow_ctrl & UART_FLOWCTRL_RTS) {
-        regval = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
-        regval |= UART_CR_URX_RTS_SW_MODE;
-        putreg32(regval, reg_base + UART_URX_CONFIG_OFFSET);
-    } else {
-        regval = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
-        regval &= ~UART_CR_URX_RTS_SW_MODE;
-        putreg32(regval, reg_base + UART_URX_CONFIG_OFFSET);
-    }
+    regval = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+    regval &= ~UART_CR_URX_RTS_SW_MODE;
+    putreg32(regval, reg_base + UART_URX_CONFIG_OFFSET);
+
 #else
-    if (config->flow_ctrl & UART_FLOWCTRL_RTS) {
-        regval = getreg32(reg_base + UART_SW_MODE_OFFSET);
-        regval |= UART_CR_URX_RTS_SW_MODE;
-        putreg32(regval, reg_base + UART_SW_MODE_OFFSET);
-    } else {
-        regval = getreg32(reg_base + UART_SW_MODE_OFFSET);
-        regval &= ~UART_CR_URX_RTS_SW_MODE;
-        putreg32(regval, reg_base + UART_SW_MODE_OFFSET);
-    }
+    regval = getreg32(reg_base + UART_SW_MODE_OFFSET);
+    regval &= ~UART_CR_URX_RTS_SW_MODE;
+    putreg32(regval, reg_base + UART_SW_MODE_OFFSET);
 #endif
     regval = getreg32(reg_base + UART_DATA_CONFIG_OFFSET);
     regval &= ~UART_CR_UART_BIT_INV;
@@ -113,7 +102,11 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
     regval = getreg32(reg_base + UART_FIFO_CONFIG_0_OFFSET);
     regval |= UART_TX_FIFO_CLR;
     regval |= UART_RX_FIFO_CLR;
+    regval &= ~UART_DMA_TX_EN;
+    regval &= ~UART_DMA_RX_EN;
     putreg32(regval, reg_base + UART_FIFO_CONFIG_0_OFFSET);
+
+    putreg32(0xFFFFFFFF, reg_base + UART_INT_MASK_OFFSET);
 
     /* Enable UART tx rx unit */
     tx_cfg = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
@@ -125,6 +118,36 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
 }
 
 void bflb_uart_deinit(struct bflb_device_s *dev)
+{
+    uint32_t reg_base;
+    uint32_t tx_cfg;
+    uint32_t rx_cfg;
+
+    reg_base = dev->reg_base;
+    tx_cfg = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
+    rx_cfg = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+    tx_cfg &= ~UART_CR_UTX_EN;
+    rx_cfg &= ~UART_CR_URX_EN;
+    putreg32(tx_cfg, reg_base + UART_UTX_CONFIG_OFFSET);
+    putreg32(rx_cfg, reg_base + UART_URX_CONFIG_OFFSET);
+}
+
+void bflb_uart_enable(struct bflb_device_s *dev)
+{
+    uint32_t reg_base;
+    uint32_t tx_cfg;
+    uint32_t rx_cfg;
+
+    reg_base = dev->reg_base;
+    tx_cfg = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
+    rx_cfg = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+    tx_cfg |= UART_CR_UTX_EN;
+    rx_cfg |= UART_CR_URX_EN;
+    putreg32(tx_cfg, reg_base + UART_UTX_CONFIG_OFFSET);
+    putreg32(rx_cfg, reg_base + UART_URX_CONFIG_OFFSET);
+}
+
+void bflb_uart_disable(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t tx_cfg;
@@ -190,6 +213,28 @@ int bflb_uart_getchar(struct bflb_device_s *dev)
     }
 
     return ch;
+}
+
+void bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
+{
+    for (uint32_t i = 0; i < len; i++) {
+        bflb_uart_putchar(dev, data[i]);
+    }
+}
+
+int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
+{
+    int ch = -1;
+    uint32_t count = 0;
+
+    while (count < len) {
+        if ((ch = bflb_uart_getchar(dev)) < 0) {
+            break;
+        }
+        data[count] = ch;
+        count++;
+    }
+    return count;
 }
 
 bool bflb_uart_txready(struct bflb_device_s *dev)
@@ -301,8 +346,9 @@ void bflb_uart_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
     putreg32(int_clear, reg_base + UART_INT_CLEAR_OFFSET);
 }
 
-void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
+int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+    int ret = 0;
     uint32_t reg_base;
     uint32_t tmp;
     uint32_t tx_tmp;
@@ -401,13 +447,11 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 
         case UART_CMD_GET_TX_FIFO_CNT:
             /* Get tx fifo count */
-            *(uint32_t *)arg = getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET) & UART_TX_FIFO_CNT_MASK;
-            break;
+            return (getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET) & UART_TX_FIFO_CNT_MASK) >> UART_TX_FIFO_CNT_SHIFT;
 
         case UART_CMD_GET_RX_FIFO_CNT:
             /* Get rx fifo count */
-            *(uint32_t *)arg = (getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET) & UART_RX_FIFO_CNT_MASK) >> UART_RX_FIFO_CNT_SHIFT;
-            break;
+            return (getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET) & UART_RX_FIFO_CNT_MASK) >> UART_RX_FIFO_CNT_SHIFT;
 
         case UART_CMD_SET_AUTO_BAUD:
             /* Set auto baudrate detection  */
@@ -432,12 +476,11 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
         case UART_CMD_GET_AUTO_BAUD:
             /* Get auto baudrate detection count value */
             tmp = getreg32(reg_base + UART_STS_URX_ABR_PRD_OFFSET);
-            if (*(uint32_t *)arg == UART_AUTO_BAUD_START) {
-                *((uint32_t *)arg + 1) = tmp & UART_STS_URX_ABR_PRD_START_MASK;
+            if (arg == UART_AUTO_BAUD_START) {
+                return (tmp & UART_STS_URX_ABR_PRD_START_MASK);
             } else {
-                *((uint32_t *)arg + 1) = (tmp & UART_STS_URX_ABR_PRD_0X55_MASK) >> UART_STS_URX_ABR_PRD_0X55_SHIFT;
+                return ((tmp & UART_STS_URX_ABR_PRD_0X55_MASK) >> UART_STS_URX_ABR_PRD_0X55_SHIFT);
             }
-            break;
 #if !defined(BL602)
         case UART_CMD_SET_BREAK_VALUE:
             /* Set lin mode break value */
@@ -498,7 +541,7 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(tx_tmp, reg_base + UART_UTX_RS485_CFG_OFFSET);
             break;
 
-        case UART_CMD_SET_TX_RS485_POL:
+        case UART_CMD_SET_TX_RS485_POLARITY:
             /* Set tx rs485 de pin polarity */
             tx_tmp = getreg32(reg_base + UART_UTX_RS485_CFG_OFFSET);
             tx_tmp &= ~UART_CR_UTX_RS485_POL;
@@ -510,7 +553,7 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(tx_tmp, reg_base + UART_UTX_RS485_CFG_OFFSET);
             break;
 
-        case UART_CMD_SET_ABR_PW_VALUE:
+        case UART_CMD_SET_ABR_ALLOWABLE_ERROR:
             /* Set auto baudrate detection mode pulse-width tolerance value for codeword 0x55 */
             rx_tmp = getreg32(reg_base + UART_URX_ABR_PW_TOL_OFFSET);
             rx_tmp &= ~UART_CR_URX_ABR_PW_TOL_MASK;
@@ -519,7 +562,33 @@ void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(rx_tmp, reg_base + UART_URX_ABR_PW_TOL_OFFSET);
             break;
 #endif
+        case UART_CMD_SET_SW_RTS_CONTROL:
+#if defined(BL602)
+            if (arg) {
+                rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+                rx_tmp |= UART_CR_URX_RTS_SW_MODE;
+                putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
+            } else {
+                rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+                rx_tmp &= ~UART_CR_URX_RTS_SW_MODE;
+                putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
+            }
+#else
+            if (arg) {
+                rx_tmp = getreg32(reg_base + UART_SW_MODE_OFFSET);
+                rx_tmp |= UART_CR_URX_RTS_SW_MODE;
+                putreg32(rx_tmp, reg_base + UART_SW_MODE_OFFSET);
+
+            } else {
+                rx_tmp = getreg32(reg_base + UART_SW_MODE_OFFSET);
+                rx_tmp &= ~UART_CR_URX_RTS_SW_MODE;
+                putreg32(rx_tmp, reg_base + UART_SW_MODE_OFFSET);
+            }
+#endif
+            break;
         default:
+            ret = -EPERM;
             break;
     }
+    return ret;
 }

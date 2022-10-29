@@ -174,7 +174,7 @@ void bflb_pwm_v2_int_enable(struct bflb_device_s *dev, uint32_t int_en, bool ena
 uint32_t bflb_pwm_v2_get_intstatus(struct bflb_device_s *dev);
 void bflb_pwm_v2_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
-void bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }

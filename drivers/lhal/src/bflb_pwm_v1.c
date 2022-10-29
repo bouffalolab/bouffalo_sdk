@@ -25,6 +25,7 @@ void bflb_pwm_v1_channel_init(struct bflb_device_s *dev, uint8_t ch, const struc
         regval |= (1 << PWM_REG_CLK_SEL_SHIFT);
     } else if (config->clk_source == BFLB_SYSTEM_32K_CLK) {
         regval |= (2 << PWM_REG_CLK_SEL_SHIFT);
+    } else {
     }
     putreg32(regval, reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
 
@@ -189,8 +190,9 @@ void bflb_pwm_v1_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
     putreg32(regval, dev->reg_base + PWM_INT_CONFIG_OFFSET);
 }
 
-void bflb_pwm_v1_feature_control(struct bflb_device_s *dev, uint8_t ch, int cmd, size_t arg)
+int bflb_pwm_v1_feature_control(struct bflb_device_s *dev, uint8_t ch, int cmd, size_t arg)
 {
+    int ret = 0;
     uint32_t reg_base;
     uint32_t regval;
 
@@ -244,6 +246,8 @@ void bflb_pwm_v1_feature_control(struct bflb_device_s *dev, uint8_t ch, int cmd,
             break;
 
         default:
+            ret = -EPERM;
             break;
     }
+    return ret;
 }

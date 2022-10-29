@@ -12,8 +12,11 @@
 #include <compiler/compiler_gcc.h>
 #include <compiler/compiler_ld.h>
 #include "bflb_list.h"
+#include "bflb_mtimer.h"
+#include "bflb_common.h"
 
-#if !defined(BL602) && !defined(BL702) && !defined(BL616) && !defined(BL606P) && !defined(BL808) && !defined(BL628)
+#if !defined(BL602) && !defined(BL702) && !defined(BL702L) && \
+    !defined(BL616) && !defined(BL606P) && !defined(BL808) && !defined(BL628)
 #error please define a supported chip
 #endif
 
@@ -56,6 +59,8 @@ void assert_func(uint8_t *file, uint32_t line, uint8_t *function, uint8_t *strin
 #define BFLB_DEVICE_TYPE_SHA      29
 #define BFLB_DEVICE_TYPE_MD5      30
 #define BFLB_DEVICE_TYPE_TRNG     31
+#define BFLB_DEVICE_TYPE_PKA      32
+#define BFLB_DEVICE_TYPE_CKS      33
 
 struct bflb_device_s {
     const char *name;

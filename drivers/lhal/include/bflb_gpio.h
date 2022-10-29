@@ -83,18 +83,24 @@
 #define GPIO_FUNC_CAM  (9 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG (14 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_EMAC (19 << GPIO_FUNC_SHIFT)
+#elif defined(BL702L)
+#define GPIO_FUNC_SPI0    (4 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_I2C0    (6 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PWM0    (8 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_KEYSCAN (13 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_JTAG    (14 << GPIO_FUNC_SHIFT)
 #elif defined(BL616)
-#define GPIO_FUNC_SDH  (0 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_SPI0 (1 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_I2S  (3 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_PDM  (4 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_I2C0 (5 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_I2C1 (6 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_EMAC (8 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_CAM  (9 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_SDU  (12 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_PWM0 (16 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_JTAG (26 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_SDH    (0 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_SPI0   (1 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_I2S    (3 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PDM    (4 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_I2C0   (5 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_I2C1   (6 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_EMAC   (8 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_CAM    (9 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_SDU    (12 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PWM0   (16 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_JTAG   (26 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_CLKOUT (31 << GPIO_FUNC_SHIFT)
 #elif defined(BL606P) || defined(BL808)
 #define GPIO_FUNC_SDH     (0 << GPIO_FUNC_SHIFT)
@@ -118,19 +124,20 @@
 #define GPIO_FUNC_JTAG_M0 (26 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG_D0 (27 << GPIO_FUNC_SHIFT)
 #elif defined(BL628)
-#define GPIO_FUNC_SDH   (0 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_SPI0  (1 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_I2S   (3 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_PDM   (4 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_I2C0  (5 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_I2C1  (6 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_UART  (7 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_EMAC  (8 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_CAM   (9 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_SDU   (12 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_PWM0  (16 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_DBI_B (22 << GPIO_FUNC_SHIFT)
-#define GPIO_FUNC_DBI_C (23 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_SDH    (0 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_SPI0   (1 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_I2S    (3 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PDM    (4 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_I2C0   (5 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_I2C1   (6 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_UART   (7 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_EMAC   (8 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_CAM    (9 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_SDU    (12 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PWM0   (16 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_DBI_B  (22 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_DBI_C  (23 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_CLKOUT (31 << GPIO_FUNC_SHIFT)
 #endif
 
 #define GPIO_MODE_SHIFT (5) /* Bits 5-6: Port Mode */
@@ -190,6 +197,14 @@
 #define GPIO_UART_FUNC_UART2_RX  11
 #endif
 
+/** @defgroup GPIO_CMD gpio feature control cmd definition
+  * @{
+  */
+#define GPIO_CMD_GET_GPIO_FUN (0x01)
+/**
+  * @}
+  */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -206,7 +221,7 @@ void bflb_gpio_int_clear(struct bflb_device_s *dev, uint8_t pin);
 
 void bflb_gpio_uart_init(struct bflb_device_s *dev, uint8_t pin, uint8_t uart_func);
 
-void bflb_gpio_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+int bflb_gpio_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }

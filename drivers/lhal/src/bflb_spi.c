@@ -472,7 +472,7 @@ void bflb_spi_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
 }
 
-int bflb_spi_isbusy(struct bflb_device_s *dev)
+bool bflb_spi_isbusy(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t regval;
@@ -483,21 +483,21 @@ int bflb_spi_isbusy(struct bflb_device_s *dev)
     regval = getreg32(reg_base + SPI_FIFO_CONFIG_1_OFFSET);
 #if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT)
     if ((regval & SPI_TX_FIFO_CNT_MASK) >> SPI_TX_FIFO_CNT_SHIFT < SPI_FIFO_BYTE_NUM_MAX) {
-        return 1;
+        return true;
     }
 #else
     if ((regval & SPI_TX_FIFO_CNT_MASK) >> SPI_TX_FIFO_CNT_SHIFT < SPI_FIFO_WORD_NUM_MAX) {
-        return 1;
+        return true;
     }
 #endif
 
     /* check busy bit */
     regval = getreg32(reg_base + SPI_BUS_BUSY_OFFSET);
     if (regval) {
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
@@ -556,7 +556,7 @@ int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 
         default:
-            ret = -1;
+            ret = -EPERM;
             break;
     }
 

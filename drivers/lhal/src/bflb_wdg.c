@@ -6,7 +6,6 @@ void bflb_wdg_init(struct bflb_device_s *dev, const struct bflb_wdg_config_s *co
 {
     uint32_t regval;
     uint32_t reg_base;
-    uint8_t clk_source;
 
     reg_base = dev->reg_base;
 
@@ -23,19 +22,9 @@ void bflb_wdg_init(struct bflb_device_s *dev, const struct bflb_wdg_config_s *co
     putreg32(regval, reg_base + TIMER_WMER_OFFSET);
 
     /* Configure clock source */
-    if (config->clock_source == BFLB_SYSTEM_CPU_CLK) {
-        clk_source = 0;
-    } else if (config->clock_source == BFLB_SYSTEM_XCLK) {
-        clk_source = 3;
-    } else if (config->clock_source == BFLB_SYSTEM_32K_CLK) {
-        clk_source = 1;
-    } else {
-        clk_source = 2;
-    }
-
     regval = getreg32(reg_base + TIMER_TCCR_OFFSET);
     regval &= ~TIMER_CS_WDT_MASK;
-    regval |= (clk_source << TIMER_CS_WDT_SHIFT);
+    regval |= (config->clock_source << TIMER_CS_WDT_SHIFT);
     putreg32(regval, reg_base + TIMER_TCCR_OFFSET);
 
     /* Configure clock div */

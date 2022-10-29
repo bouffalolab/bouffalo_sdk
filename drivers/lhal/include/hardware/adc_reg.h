@@ -72,7 +72,7 @@
 #define GPIP_GPADC_RDY           (1 << 4U)
 #define GPIP_GPADC_FIFO_OVERRUN  (1 << 5U)
 #define GPIP_GPADC_FIFO_UNDERRUN (1 << 6U)
-#if defined(BL702)
+#if defined(BL702) || defined(BL702L)
 #define GPIP_GPADC_FIFO_RDY (1 << 7U)
 #endif
 #define GPIP_GPADC_RDY_CLR            (1 << 8U)
@@ -81,7 +81,7 @@
 #define GPIP_GPADC_RDY_MASK           (1 << 12U)
 #define GPIP_GPADC_FIFO_OVERRUN_MASK  (1 << 13U)
 #define GPIP_GPADC_FIFO_UNDERRUN_MASK (1 << 14U)
-#if defined(BL702)
+#if defined(BL702) || defined(BL702L)
 #define GPIP_GPADC_FIFO_RDY_MASK (1 << 15U)
 #endif
 #define GPIP_GPADC_FIFO_DATA_COUNT_SHIFT (16U)
@@ -127,7 +127,7 @@
 #if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define AON_GPADC_SEN_SEL_MASK (0x7 << AON_GPADC_SEN_SEL_SHIFT)
 #define AON_GPADC_SEN_TEST_EN  (1 << 31U)
-#elif defined(BL702) || defined(BL602)
+#elif defined(BL702) || defined(BL602) || defined(BL702L)
 #define AON_GPADC_SEN_SEL_MASK (0x3 << AON_GPADC_SEN_SEL_SHIFT)
 #define AON_GPADC_SEN_TEST_EN  (1 << 30U)
 #endif

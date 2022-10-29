@@ -1,4 +1,6 @@
 #include "bflb_mtimer.h"
+#include "bflb_core.h"
+#include "bflb_irq.h"
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #include <risc-v/e24/clic.h>
 #else
@@ -34,6 +36,11 @@ void bflb_mtimer_config(uint64_t ticks, void (*interruptfun)(void))
     bflb_irq_enable(7);
 }
 
+__WEAK uint32_t bflb_mtimer_get_freq(void)
+{
+    return 1 * 1000 * 1000;
+}
+
 uint64_t bflb_mtimer_get_time_us()
 {
     volatile uint64_t tmp_low, tmp_high, tmp_low1, tmp_high1;
@@ -51,8 +58,11 @@ uint64_t bflb_mtimer_get_time_us()
         tmp_high1 = (uint64_t)csi_coret_get_valueh();
 #endif
     } while (tmp_low > tmp_low1 || tmp_high != tmp_high1);
-
-    return (uint64_t)((tmp_high1 << 32) + tmp_low1);
+#ifdef CONFIG_MTIMER_CUSTOM_FREQUENCE
+    return ((uint64_t)(((tmp_high1 << 32) + tmp_low1)) * ((uint64_t)(1 * 1000 * 1000)) / bflb_mtimer_get_freq());
+#else
+    return (uint64_t)(((tmp_high1 << 32) + tmp_low1));
+#endif
 }
 
 uint64_t bflb_mtimer_get_time_ms()

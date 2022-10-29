@@ -11,7 +11,7 @@ int main(void)
     printf("Watchdog interrupt test\r\n");
 
     struct bflb_wdg_config_s wdg_cfg;
-    wdg_cfg.clock_source = BFLB_SYSTEM_32K_CLK;
+    wdg_cfg.clock_source = WDG_CLKSRC_32K;
     wdg_cfg.clock_div = 0;
     wdg_cfg.comp_val = 64000;
     wdg_cfg.mode = WDG_MODE_RESET;

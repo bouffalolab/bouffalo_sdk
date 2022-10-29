@@ -1,7 +1,7 @@
 #include "bflb_adc.h"
 #include "hardware/adc_reg.h"
 
-#if defined(BL702) || defined(BL602)
+#if defined(BL702) || defined(BL602) || defined(BL702L)
 #define ADC_GPIP_BASE ((uint32_t)0x40002000)
 #elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define ADC_GPIP_BASE ((uint32_t)0x20002000)
@@ -103,7 +103,7 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval |= (GPIP_GPADC_FIFO_UNDERRUN_MASK | GPIP_GPADC_FIFO_OVERRUN_MASK | GPIP_GPADC_RDY_MASK |
                GPIP_GPADC_FIFO_UNDERRUN_CLR | GPIP_GPADC_FIFO_OVERRUN_CLR | GPIP_GPADC_RDY_CLR);
 
-#if defined(BL702)
+#if defined(BL702) || defined(BL702L)
     regval |= (GPIP_GPADC_FIFO_RDY_MASK | GPIP_GPADC_FIFO_RDY);
 #endif
     regval |= GPIP_GPADC_FIFO_CLR;
@@ -172,7 +172,7 @@ int bflb_adc_channel_config(struct bflb_device_s *dev, struct bflb_adc_channel_s
 
     if (!(getreg32(reg_base + AON_GPADC_REG_CONFIG1_OFFSET) & AON_GPADC_SCAN_EN)) {
         if (channels > 1) {
-            return -1;
+            return -EINVAL;
         }
 
         regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
@@ -586,5 +586,17 @@ void bflb_adc_vbat_enable(struct bflb_device_s *dev)
 
     regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
     regval |= AON_GPADC_VBAT_EN;
+    putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+}
+
+void bflb_adc_vbat_disable(struct bflb_device_s *dev)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+    regval &= ~AON_GPADC_VBAT_EN;
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 }

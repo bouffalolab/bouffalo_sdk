@@ -490,6 +490,8 @@ int main(void)
 
     aes = bflb_device_get_by_name("aes");
 
+    bflb_group0_request_aes_access(aes);
+
     bflb_aes_init(aes);
 
     bflb_aes_set_mode(aes, AES_MODE_ECB);
@@ -589,6 +591,7 @@ int main(void)
     printf("aes xts 256 success\r\n");
 
     printf("aes success\r\n");
+    bflb_group0_release_aes_access(aes);
     while (1) {
         bflb_mtimer_delay_ms(2000);
     }

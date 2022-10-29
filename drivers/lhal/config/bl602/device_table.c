@@ -155,6 +155,13 @@ struct bflb_device_s bl602_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_TRNG,
       .user_data = NULL },
+    { .name = "pka",
+      .reg_base = SEC_ENG_BASE,
+      .irq_num = 0xff,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_PKA,
+      .user_data = NULL },
 };
 
 struct bflb_device_s *bflb_device_get_by_name(const char *name)

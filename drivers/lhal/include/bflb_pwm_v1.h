@@ -90,7 +90,7 @@ void bflb_pwm_v1_int_enable(struct bflb_device_s *dev, uint8_t ch, bool enable);
 uint32_t bflb_pwm_v1_get_intstatus(struct bflb_device_s *dev);
 void bflb_pwm_v1_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
-void bflb_pwm_v1_feature_control(struct bflb_device_s *dev, uint8_t ch, int cmd, size_t arg);
+int bflb_pwm_v1_feature_control(struct bflb_device_s *dev, uint8_t ch, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }
