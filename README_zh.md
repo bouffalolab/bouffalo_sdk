@@ -30,6 +30,7 @@
 |:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
 |  ADC         |      ○         |      √             |   √           |   ○      |
 |  CAM         |      -         |      ×             |   ×           |   ×      |
+|  CKS         |      ○         |      √             |   √           |   ○      |
 |  DAC         |      ○         |      √             |   √           |   ○      |
 |  DMA         |      ○         |      √             |   √           |   √      |
 |  EFUSE       |      ×         |      ×             |   ×           |   ×      |
@@ -45,11 +46,13 @@
 |  SEC_AES     |      ○         |      √             |   √           |   √      |
 |  SEC_SHA     |      ○         |      √             |   √           |   √      |
 |  SEC_TRNG    |      ○         |      √             |   √           |   √      |
+|  SEC_PKA     |      ○         |      √             |   √           |   √      |
 |  SPI         |      ○         |      √             |   √           |   ○      |
 |  TIMER       |      ○         |      √             |   √           |   √      |
 |  UART        |      √         |      √             |   √           |   √      |
 |  USB_v1      |      -         |      √             |   -           |   -      |
 |  USB_v2      |      -         |      -             |   √           |   √      |
+|  WDG         |      ○         |      ○             |   √           |   ○      |
 
 # 代码框架
 
@@ -161,7 +164,7 @@ TODO
 
 ```
 /*
- * Copyright (c) 2021 Bouffalolab team
+ * Copyright (c) 2022 Bouffalolab team
  *
  * SPDX-License-Identifier: Apache-2.0
  */

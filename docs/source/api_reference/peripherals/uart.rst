@@ -382,16 +382,22 @@ bflb_uart_get_intstatus
 .. code-block:: c
    :linenos:
 
-    UART_UTX_FIFO_INT
-    UART_URX_FIFO_INT
-    UART_URX_RTO_INT
-    UART_URX_PCE_INT
-    UART_UTX_FER_INT
-    UART_URX_FER_INT
-    UART_URX_LSE_INT
-    UART_URX_BCR_INT
-    UART_URX_ADS_INT
-    UART_URX_AD5_INT
+   #define UART_INTSTS_TX_END  (1 << 0)
+   #define UART_INTSTS_RX_END  (1 << 1)
+   #define UART_INTSTS_TX_FIFO (1 << 2)
+   #define UART_INTSTS_RX_FIFO (1 << 3)
+   #define UART_INTSTS_RTO     (1 << 4)
+   #define UART_INTSTS_PCE     (1 << 5)
+   #define UART_INTSTS_TX_FER  (1 << 6)
+   #define UART_INTSTS_RX_FER  (1 << 7)
+   #if !defined(BL602)
+   #define UART_INTSTS_RX_LSE (1 << 8)
+   #endif
+   #if !defined(BL602) && !defined(BL702)
+   #define UART_INTSTS_RX_BCR (1 << 9)
+   #define UART_INTSTS_RX_ADS (1 << 10)
+   #define UART_INTSTS_RX_AD5 (1 << 11)
+   #endif
 
 bflb_uart_int_clear
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -419,12 +425,18 @@ bflb_uart_int_clear
 .. code-block:: c
    :linenos:
 
-    UART_CR_URX_RTO_CLR
-    UART_CR_URX_PCE_CLR
-    UART_CR_URX_LSE_CLR
-    UART_CR_URX_BCR_CLR
-    UART_CR_URX_ADS_CLR
-    UART_CR_URX_AD5_CLR
+   #define UART_INTCLR_TX_END (1 << 0)
+   #define UART_INTCLR_RX_END (1 << 1)
+   #define UART_INTCLR_RTO    (1 << 4)
+   #define UART_INTCLR_PCE    (1 << 5)
+   #if !defined(BL602)
+   #define UART_INTCLR_RX_LSE (1 << 8)
+   #endif
+   #if !defined(BL602) && !defined(BL702)
+   #define UART_INTCLR_RX_BCR (1 << 9)
+   #define UART_INTCLR_RX_ADS (1 << 10)
+   #define UART_INTCLR_RX_AD5 (1 << 11)
+   #endif
 
 bflb_uart_feature_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -434,7 +446,7 @@ bflb_uart_feature_control
 .. code-block:: c
    :linenos:
 
-    void bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+    int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 .. list-table::
     :widths: 10 10
@@ -448,30 +460,31 @@ bflb_uart_feature_control
       - 控制字
     * - arg
       - 控制参数
+    * - return
+      - 负值表示不支持此命令
 
 `cmd` 可以填入以下参数:
 
 .. code-block:: c
    :linenos:
 
-   #define UART_CMD_SET_BAUD_RATE    (0x01)
-   #define UART_CMD_SET_DATA_BITS    (0x02)
-   #define UART_CMD_SET_STOP_BITS    (0x03)
-   #define UART_CMD_SET_PARITY_BITS  (0x04)
-   #define UART_CMD_CLR_TX_FIFO      (0x05)
-   #define UART_CMD_CLR_RX_FIFO      (0x06)
-   #define UART_CMD_SET_RTO_VALUE    (0x07)
-   #define UART_CMD_SET_RTS_VALUE    (0x08)
-   #define UART_CMD_GET_TX_FIFO_CNT  (0x09)
-   #define UART_CMD_GET_RX_FIFO_CNT  (0x0a)
-   #define UART_CMD_SET_AUTO_BAUD    (0x0b)
-   #define UART_CMD_GET_AUTO_BAUD    (0x0c)
-   #define UART_CMD_SET_BREAK_VALUE  (0x0d)
-   #define UART_CMD_SET_TX_LIN_VALUE (0x0e)
-   #define UART_CMD_SET_RX_LIN_VALUE (0x0f)
-   #define UART_CMD_SET_TX_RX_EN     (0x10)
-   #if !defined(BL602) && !defined(BL702)
-   #define UART_CMD_SET_TX_RS485_EN  (0x11)
-   #define UART_CMD_SET_TX_RS485_POL (0x12)
-   #endif
-   #define UART_CMD_SET_ABR_PW_VALUE (0x13)
+   #define UART_CMD_SET_BAUD_RATE           (0x01)
+   #define UART_CMD_SET_DATA_BITS           (0x02)
+   #define UART_CMD_SET_STOP_BITS           (0x03)
+   #define UART_CMD_SET_PARITY_BITS         (0x04)
+   #define UART_CMD_CLR_TX_FIFO             (0x05)
+   #define UART_CMD_CLR_RX_FIFO             (0x06)
+   #define UART_CMD_SET_RTO_VALUE           (0x07)
+   #define UART_CMD_SET_RTS_VALUE           (0x08)
+   #define UART_CMD_GET_TX_FIFO_CNT         (0x09)
+   #define UART_CMD_GET_RX_FIFO_CNT         (0x0a)
+   #define UART_CMD_SET_AUTO_BAUD           (0x0b)
+   #define UART_CMD_GET_AUTO_BAUD           (0x0c)
+   #define UART_CMD_SET_BREAK_VALUE         (0x0d)
+   #define UART_CMD_SET_TX_LIN_VALUE        (0x0e)
+   #define UART_CMD_SET_RX_LIN_VALUE        (0x0f)
+   #define UART_CMD_SET_TX_RX_EN            (0x10)
+   #define UART_CMD_SET_TX_RS485_EN         (0x11)
+   #define UART_CMD_SET_TX_RS485_POLARITY   (0x12)
+   #define UART_CMD_SET_ABR_ALLOWABLE_ERROR (0x13)
+   #define UART_CMD_SET_SW_RTS_CONTROL      (0x14)

@@ -375,7 +375,7 @@ bflb_spi_feature_control
 .. code-block:: c
    :linenos:
 
-    void bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+    int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 .. list-table::
     :widths: 10 10
@@ -389,6 +389,8 @@ bflb_spi_feature_control
       - 控制字
     * - arg
       - 控制参数
+    * - return
+      - 负值表示不支持此命令
 
 `cmd` 可以填入以下参数:
 

@@ -44,10 +44,11 @@ i2c 传输时需要填充的消息。
 .. code-block:: c
    :linenos:
 
-    #define I2C_M_READ    0x0001
-    #define I2C_M_TEN     0x0002
-    #define I2C_M_NOSTOP  0x0040
-    #define I2C_M_NOSTART 0x0080
+   #define I2C_M_READ    0x0001
+   #define I2C_M_TEN     0x0002
+   #define I2C_M_DMA     0x0004
+   #define I2C_M_NOSTOP  0x0040
+   #define I2C_M_NOSTART 0x0080
 
 .. note:: I2C_M_NOSTOP 表示 i2c 设备需要操作寄存器地址
 

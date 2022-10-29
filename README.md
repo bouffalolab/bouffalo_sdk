@@ -30,6 +30,7 @@ Note：**√** means supported ；**×** means not supported；**○** means sup
 |:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
 |  ADC         |      ○         |      √             |   √           |   ○      |
 |  CAM         |      -         |      ×             |   ×           |   ×      |
+|  CKS         |      ○         |      √             |   √           |   ○      |
 |  DAC         |      ○         |      √             |   √           |   ○      |
 |  DMA         |      ○         |      √             |   √           |   √      |
 |  EFUSE       |      ×         |      ×             |   ×           |   ×      |
@@ -45,11 +46,13 @@ Note：**√** means supported ；**×** means not supported；**○** means sup
 |  SEC_AES     |      ○         |      √             |   √           |   √      |
 |  SEC_SHA     |      ○         |      √             |   √           |   √      |
 |  SEC_TRNG    |      ○         |      √             |   √           |   √      |
+|  SEC_PKA     |      ○         |      √             |   √           |   √      |
 |  SPI         |      ○         |      √             |   √           |   ○      |
 |  TIMER       |      ○         |      √             |   √           |   √      |
 |  UART        |      √         |      √             |   √           |   √      |
 |  USB_v1      |      -         |      √             |   -           |   -      |
 |  USB_v2      |      -         |      -             |   √           |   √      |
+|  WDG         |      ○         |      ○             |   √           |   ○      |
 
 ## Code Framework
 
@@ -170,7 +173,7 @@ Bouffalolab Developer Forum: [https://bbs.bouffalolab.com/](https://bbs.bouffalo
 
 ```
 /*
- * Copyright (c) 2021 Bouffalolab team
+ * Copyright (c) 2022 Bouffalolab team
  *
  * SPDX-License-Identifier: Apache-2.0
  */

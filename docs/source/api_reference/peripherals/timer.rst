@@ -4,6 +4,21 @@ TIMER
 Macros
 ------------
 
+timer clock source
+^^^^^^^^^^^^^^^^^^^^^^
+
+定时器输入时钟源可以选择以下类型，注意： `TIMER_CLKSRC_GPIO` BL602/BL702 系列没有此功能
+
+.. code-block:: c
+   :linenos:
+
+   #define TIMER_CLKSRC_BCLK 0
+   #define TIMER_CLKSRC_32K  1
+   #define TIMER_CLKSRC_1K   2
+   #define TIMER_CLKSRC_XTAL 3
+   #define TIMER_CLKSRC_GPIO 4
+   #define TIMER_CLKSRC_NO   5
+
 timer counter mode
 ^^^^^^^^^^^^^^^^^^^^^^
 

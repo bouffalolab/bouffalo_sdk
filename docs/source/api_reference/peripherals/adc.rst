@@ -120,10 +120,10 @@ adc 标准转换结果
    :linenos:
 
     struct bflb_adc_result_s {
-        int8_t pos_chan;
-        int8_t neg_chan;
-        uint16_t value;
-        int32_t millivolt;
+      int8_t pos_chan;
+      int8_t neg_chan;
+      int32_t value;
+      int32_t millivolt;
     };
 
 .. list-table::
