@@ -81,8 +81,8 @@ if (CONFIG_BFLB_BLOCK_POOL_MULTITHREAD)
 endif()
 
 # bflb block pool
-sdk_library_add_sources(bflb_block_pool/bflb_block_pool.c)
-sdk_add_include_directories(bflb_block_pool)
+# sdk_library_add_sources(bflb_block_pool/bflb_block_pool.c)
+# sdk_add_include_directories(bflb_block_pool)
 
 # soft crc
 sdk_library_add_sources(soft_crc/soft_crc.c)
