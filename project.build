@@ -8,6 +8,9 @@ endif
 
 RM = $(CMAKE) -E remove_directory
 
+CPU_ID ?=
+CONFIG_USB_HS ?=y
+
 #cmake definition config
 cmake_definition+= -DCROSS_COMPILE=${CROSS_COMPILE}
 cmake_definition+= -DCHIP=$(CHIP)
@@ -16,6 +19,7 @@ cmake_definition+= -DBOARD=$(BOARD)
 cmake_definition+= -DCONFIG_DEBUG=y
 cmake_definition+= -DCONFIG_ROMAPI=y
 cmake_definition+= -DCONFIG_USB_HS=$(CONFIG_USB_HS)
+cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
 build:Makefile
 	$(CMAKE) -S . -B build -G "Unix Makefiles" $(cmake_definition)
