@@ -226,6 +226,15 @@ static void tcp_server_socket_thread(void *arg)
     int sock, newconn, size;
     struct sockaddr_in address, remotehost;
 
+    tmpnetif = netif_find("bl");
+
+#if LWIP_DHCP
+    while (tmpnetif->state != 3) {
+        printf("wait DHCP get ip...\r\n");
+        vTaskDelay(1000);
+    }
+#endif
+
     printf("TCP Server create socket\r\n");
 
     /* create a TCP socket */
@@ -246,7 +255,6 @@ static void tcp_server_socket_thread(void *arg)
     /* listen for incoming connections (TCP listen backlog = 5) */
     listen(sock, 5);
 
-    tmpnetif = netif_find("bl");
     sprintf((char *)iptxt, "%s", ip4addr_ntoa(&tmpnetif->ip_addr));
     printf("Create server success, server ip & listen port:%s:%d\r\n", iptxt, TCP_SERVER_TEST_PORT);
 

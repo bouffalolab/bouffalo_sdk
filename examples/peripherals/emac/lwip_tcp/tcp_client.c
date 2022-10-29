@@ -165,7 +165,7 @@ static void tcp_client_socket_test(void)
                 printf("write falied!\r\n");
                 break;
             }
-            arch_delay_us(100);
+            bflb_mtimer_delay_us(100);
             total_cnt += sizeof(send_buf);
         }
         printf("Total send data=0x%08lx%08lx\r\n",
