@@ -54,13 +54,13 @@
 #endif
 
 // Support for the decimal notation floating point conversion specifiers (%f, %F)
-#ifndef PRINTF_SUPPORT_DECIMAL_SPECIFIERS
-#define PRINTF_SUPPORT_DECIMAL_SPECIFIERS 0
+#ifndef CONFIG_LIBC_FLOAT
+#define CONFIG_LIBC_FLOAT 0
 #endif
 
 // Support for the exponential notatin floating point conversion specifiers (%e, %g, %E, %G)
-#ifndef PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS
-#define PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS 0
+#ifndef CONFIG_LIBC_FLOAT_EX
+#define CONFIG_LIBC_FLOAT_EX 0
 #endif
 
 // Default precision for the floating point conversion specifiers (the C standard sets this at 6)
@@ -78,11 +78,11 @@
 
 // Support for the long long integral types (with the ll, z and t length modifiers for specifiers
 // %d,%i,%o,%x,%X,%u, and with the %p specifier). Note: 'L' (long double) is not supported.
-#ifndef PRINTF_SUPPORT_LONG_LONG
-#define PRINTF_SUPPORT_LONG_LONG 1
+#ifndef CONFIG_LIBC_LONG_LONG
+#define CONFIG_LIBC_LONG_LONG 1
 #endif
 
-#if PRINTF_SUPPORT_LONG_LONG
+#if CONFIG_LIBC_LONG_LONG
 typedef unsigned long long printf_unsigned_value_t;
 typedef long long          printf_signed_value_t;
 #else
@@ -123,7 +123,7 @@ typedef long          printf_signed_value_t;
 
 typedef uint8_t numeric_base_t;
 
-#if (PRINTF_SUPPORT_DECIMAL_SPECIFIERS || PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS)
+#if (CONFIG_LIBC_FLOAT || CONFIG_LIBC_FLOAT_EX)
 #include <float.h>
 #if FLT_RADIX != 2
 #error "Non-binary-radix floating-point types are unsupported."
@@ -179,7 +179,7 @@ static inline int get_exp2(double_with_bit_access x)
 }
 #define PRINTF_ABS(_x) ( (_x) > 0 ? (_x) : -(_x) )
 
-#endif // (PRINTF_SUPPORT_DECIMAL_SPECIFIERS || PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS)
+#endif // (CONFIG_LIBC_FLOAT || CONFIG_LIBC_FLOAT_EX)
 
 // Note in particular the behavior here on LONG_MIN or LLONG_MIN; it is valid
 // and well-defined, but if you're not careful you can easily trigger undefined
@@ -371,7 +371,7 @@ static size_t print_integer(out_fct_type out, char* buffer, size_t idx, size_t m
   return print_integer_finalization(out, buffer, idx, maxlen, buf, len, negative, base, precision, width, flags);
 }
 
-#if (PRINTF_SUPPORT_DECIMAL_SPECIFIERS || PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS)
+#if (CONFIG_LIBC_FLOAT || CONFIG_LIBC_FLOAT_EX)
 
 struct double_components {
   int_fast64_t integral;
@@ -468,7 +468,7 @@ struct scaling_factor update_normalization(struct scaling_factor sf, double extr
   return result;
 }
 
-#if PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS
+#if CONFIG_LIBC_FLOAT_EX
 static struct double_components get_normalized_components(bool negative, unsigned int precision, double non_normalized, struct scaling_factor normalization)
 {
   struct double_components components;
@@ -600,7 +600,7 @@ static size_t print_decimal_number(out_fct_type out, char* buffer, size_t idx, s
   return print_broken_up_decimal(value_, out, buffer, idx, maxlen, precision, width, flags, buf, len);
 }
 
-#if PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS
+#if CONFIG_LIBC_FLOAT_EX
 // internal ftoa variant for exponential floating-point type, contributed by Martijn Jasperse <m.jasperse@gmail.com>
 static size_t print_exponential_number(out_fct_type out, char* buffer, size_t idx, size_t maxlen, double number, unsigned int precision, unsigned int width, unsigned int flags, char* buf, size_t len)
 {
@@ -726,7 +726,7 @@ static size_t print_exponential_number(out_fct_type out, char* buffer, size_t id
   }
   return idx;
 }
-#endif  // PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS
+#endif  // CONFIG_LIBC_FLOAT_EX
 
 
 static size_t print_floating_point(out_fct_type out, char* buffer, size_t idx, size_t maxlen, double value, unsigned int precision, unsigned int width, unsigned int flags, bool prefer_exponential)
@@ -746,7 +746,7 @@ static size_t print_floating_point(out_fct_type out, char* buffer, size_t idx, s
     // The required behavior of standard printf is to print _every_ integral-part digit -- which could mean
     // printing hundreds of characters, overflowing any fixed internal buffer and necessitating a more complicated
     // implementation.
-#if PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS
+#if CONFIG_LIBC_FLOAT_EX
     return print_exponential_number(out, buffer, idx, maxlen, value, precision, width, flags, buf, len);
 #else
     return 0U;
@@ -765,14 +765,14 @@ static size_t print_floating_point(out_fct_type out, char* buffer, size_t idx, s
   }
 
   return
-#if PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS
+#if CONFIG_LIBC_FLOAT_EX
     prefer_exponential ?
       print_exponential_number(out, buffer, idx, maxlen, value, precision, width, flags, buf, len) :
 #endif
       print_decimal_number(out, buffer, idx, maxlen, value, precision, width, flags, buf, len);
 }
 
-#endif  // (PRINTF_SUPPORT_DECIMAL_SPECIFIERS || PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS)
+#endif  // (CONFIG_LIBC_FLOAT || CONFIG_LIBC_FLOAT_EX)
 
 // internal vsnprintf
 static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, const char* format, va_list va)
@@ -921,7 +921,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         if ((*format == 'i') || (*format == 'd')) {
           // signed
           if (flags & FLAGS_LONG_LONG) {
-#if PRINTF_SUPPORT_LONG_LONG
+#if CONFIG_LIBC_LONG_LONG
             const long long value = va_arg(va, long long);
             idx = print_integer(out, buffer, idx, maxlen, ABS_FOR_PRINTING(value), value < 0, base, precision, width, flags);
 #endif
@@ -938,7 +938,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         else {
           // unsigned
           if (flags & FLAGS_LONG_LONG) {
-#if PRINTF_SUPPORT_LONG_LONG
+#if CONFIG_LIBC_LONG_LONG
             idx = print_integer(out, buffer, idx, maxlen, (printf_unsigned_value_t) va_arg(va, unsigned long long), false, base, precision, width, flags);
 #endif
           }
@@ -953,7 +953,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         format++;
         break;
       }
-#if PRINTF_SUPPORT_DECIMAL_SPECIFIERS
+#if CONFIG_LIBC_FLOAT
       case 'f' :
       case 'F' :
         if (*format == 'F') flags |= FLAGS_UPPERCASE;
@@ -961,7 +961,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         format++;
         break;
 #endif
-#if PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS
+#if CONFIG_LIBC_FLOAT_EX
       case 'e':
       case 'E':
       case 'g':
@@ -971,7 +971,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         idx = print_floating_point(out, buffer, idx, maxlen, va_arg(va, double), precision, width, flags, PRINTF_PREFER_EXPONENTIAL);
         format++;
         break;
-#endif  // PRINTF_SUPPORT_EXPONENTIAL_SPECIFIERS
+#endif  // CONFIG_LIBC_FLOAT_EX
       case 'c' : {
         unsigned int l = 1U;
         // pre padding

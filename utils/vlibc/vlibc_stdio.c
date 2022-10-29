@@ -22,7 +22,7 @@
 
 #define vlibc_file(_stream) ((vlibc_file_t *)(_stream))
 
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
 int FRESULT_to_errno[20] = {
     0,
     EIO,
@@ -47,7 +47,7 @@ int FRESULT_to_errno[20] = {
 };
 #endif
 
-#ifdef VLIBC_DEBUG
+#ifdef CONFIG_VLIBC_DEBUG
 #define CHECK_FILE(_stream, __ret)       \
     do {                                 \
         if ((void *)(_stream) == NULL) { \
@@ -84,7 +84,7 @@ void vlibc_clearerr(VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         f_error(stream->file) = 0;
 #endif
     }
@@ -109,7 +109,7 @@ int vlibc_feof(VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         return f_eof(stream->file);
 #else
         errno = EIO;
@@ -139,7 +139,7 @@ int vlibc_ferror(VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
 
         fresult = f_error(stream->file);
@@ -162,25 +162,25 @@ static int __get_mode_vlibc_fopen(const char *mode, unsigned char *iomode, unsig
     /*!< get file and io open mode */
     switch (*mode) {
         case 'r':
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
             *openmode = FA_READ;
 #endif
             *iomode = _VLIBC_IO_READ;
             break;
         case 'w':
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
             *openmode = FA_CREATE_ALWAYS | FA_WRITE;
 #endif
             *iomode = _VLIBC_IO_WRITE;
             break;
         case 'a':
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
             *openmode = FA_OPEN_APPEND | FA_WRITE;
 #endif
             *iomode = _VLIBC_IO_WRITE;
             break;
         case 'x':
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
             *openmode = FA_CREATE_NEW | FA_WRITE;
 #endif
             *iomode = _VLIBC_IO_WRITE;
@@ -195,7 +195,7 @@ static int __get_mode_vlibc_fopen(const char *mode, unsigned char *iomode, unsig
             case '\0':
                 break;
             case '+':
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
                 *openmode |= (FA_WRITE | FA_READ);
 #endif
                 *iomode |= (_VLIBC_IO_WRITE | _VLIBC_IO_READ);
@@ -393,7 +393,7 @@ static VLIBC_FILE *__io_vlibc_open(VLIBC_FILE *fnew, const char *name, unsigned 
     return fnew;
 }
 
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
 static VLIBC_FILE *__file_vlibc_open(VLIBC_FILE *fnew, const char *name, unsigned char openmode)
 {
     int fresult;
@@ -471,7 +471,7 @@ static int __io_vlibc_close(VLIBC_FILE *stream)
     return 0;
 }
 
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
 static int __file_vlibc_close(VLIBC_FILE *stream)
 {
     int fresult;
@@ -573,7 +573,7 @@ VLIBC_FILE *vlibc_freopen(const char *filename, const char *mode, VLIBC_FILE *st
             }
             else IF_FILE(stream)
             {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
                 if (__file_vlibc_close(stream)) {
                     return NULL;
                 }
@@ -610,7 +610,7 @@ VLIBC_FILE *vlibc_freopen(const char *filename, const char *mode, VLIBC_FILE *st
             }
             else IF_FILE(stream)
             {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
                 if (__file_vlibc_close(stream)) {
                     return NULL;
                 }
@@ -719,7 +719,7 @@ size_t vlibc_fread(void *ptr, size_t size, size_t nmemb, VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         size_t bytes;
         fresult = f_read(stream->file, ptr, size * nmemb, &bytes);
@@ -849,7 +849,7 @@ size_t vlibc_fwrite(const void *ptr, size_t size, size_t nmemb, VLIBC_FILE *stre
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         size_t bytes;
         fresult = f_write(stream->file, ptr, size * nmemb, &bytes);
@@ -910,7 +910,7 @@ int vlibc_fflush(VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         fresult = f_sync(stream->file);
         if (fresult != FR_OK) {
@@ -952,7 +952,7 @@ int vlibc_fseek(VLIBC_FILE *stream, long offset, int whence)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         long long temp;
 
@@ -1031,7 +1031,7 @@ long vlibc_ftell(VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         return (long)f_tell(stream->file);
 #else
         errno = EIO;
@@ -1054,7 +1054,7 @@ int vlibc_remove(const char *filename)
 {
     CHECK_FILE(filename, EOF);
 
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     int fresult;
     FILINFO finfo;
 
@@ -1091,7 +1091,7 @@ int vlibc_rename(const char *old_filename, const char *new_filename)
 {
     CHECK_FILE(old_filename, EOF);
     CHECK_FILE(new_filename, EOF);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     int fresult;
 
     fresult = f_rename(old_filename, new_filename);
@@ -1125,7 +1125,7 @@ void vlibc_rewind(VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         fresult = f_lseek(stream->file, 0);
         if (fresult != FR_OK) {
@@ -1176,7 +1176,7 @@ void vlibc_setbuf(VLIBC_FILE *stream, char *buffer)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         return;
 #else
         errno = EIO;
@@ -1224,7 +1224,7 @@ int vlibc_setvbuf(VLIBC_FILE *stream, char *buffer, int mode, size_t size)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         return EOF;
 #else
         errno = EIO;
@@ -1240,7 +1240,7 @@ int vlibc_setvbuf(VLIBC_FILE *stream, char *buffer, int mode, size_t size)
 
 VLIBC_FILE *vlibc_tmpfile(void)
 {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return NULL;
 #else
     return NULL;
@@ -1249,7 +1249,7 @@ VLIBC_FILE *vlibc_tmpfile(void)
 
 char *vlibc_tmpnam(char *str)
 {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return NULL;
 #else
     return NULL;
@@ -1260,7 +1260,7 @@ int vlibc_fscanf(VLIBC_FILE *stream, const char *format, ...)
 {
     CHECK_FILE(stream, EOF);
     CHECK_FILE(format, EOF);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return EOF;
 #else
     return EOF;
@@ -1270,7 +1270,7 @@ int vlibc_fscanf(VLIBC_FILE *stream, const char *format, ...)
 int vlibc_scanf(const char *format, ...)
 {
     CHECK_FILE(format, EOF);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return EOF;
 #else
     return EOF;
@@ -1281,7 +1281,7 @@ int vlibc_sscanf(const char *str, const char *format, ...)
 {
     CHECK_FILE(str, EOF);
     CHECK_FILE(format, EOF);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return EOF;
 #else
     return EOF;
@@ -1292,7 +1292,7 @@ int vlibc_vfscanf(VLIBC_FILE *stream, const char *format, va_list arg)
 {
     CHECK_FILE(stream, EOF);
     CHECK_FILE(format, EOF);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return EOF;
 #else
     return EOF;
@@ -1302,7 +1302,7 @@ int vlibc_vfscanf(VLIBC_FILE *stream, const char *format, va_list arg)
 int vlibc_vscanf(const char *format, va_list arg)
 {
     CHECK_FILE(format, EOF);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return EOF;
 #else
     return EOF;
@@ -1313,7 +1313,7 @@ int vlibc_vsscanf(const char *str, const char *format, va_list arg)
 {
     CHECK_FILE(str, EOF);
     CHECK_FILE(format, EOF);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return EOF;
 #else
     return EOF;
@@ -1329,7 +1329,7 @@ int vlibc_fgetc(VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         int ch;
         size_t bytes;
@@ -1361,7 +1361,7 @@ char *vlibc_fgets(char *str, int size, VLIBC_FILE *stream)
 {
     CHECK_FILE(str, NULL);
     CHECK_FILE(stream, NULL);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return NULL;
 #else
     return NULL;
@@ -1378,7 +1378,7 @@ int vlibc_fputc(int chr, VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         size_t bytes;
         fresult = f_write(stream->file, &chr, 1, &bytes);
@@ -1419,7 +1419,7 @@ int vlibc_getc(VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         int ch;
         size_t bytes;
@@ -1449,7 +1449,7 @@ int vlibc_getc(VLIBC_FILE *stream)
 
 int vlibc_getchar(void)
 {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return EOF;
 #else
     return EOF;
@@ -1459,7 +1459,7 @@ int vlibc_getchar(void)
 char *vlibc_gets(char *str)
 {
     CHECK_FILE(str, NULL);
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
     return NULL;
 #else
     return NULL;
@@ -1482,7 +1482,7 @@ int vlibc_putc(int chr, VLIBC_FILE *stream)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         size_t bytes;
         fresult = f_write(stream->file, &chr, 1, &bytes);
@@ -1523,7 +1523,7 @@ int vlibc_putchar(int chr)
     }
     else IF_FILE(vlibc_stdout)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         int fresult;
         size_t bytes;
         fresult = f_write(vlibc_stdout->file, &chr, 1, &bytes);

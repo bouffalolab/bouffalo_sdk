@@ -64,12 +64,12 @@ void bflog_restart(void)
     void *direct0 = (void *)&bflog_direct_filetime;
     void *direct1 = (void *)&bflog_direct_filesize;
 
-    bflog_direct_create(direct0, BFLOG_DIRECT_TYPE_FILE_TIME, BFLOG_DIRECT_COLOR_DISABLE);
-    bflog_direct_init_file_time(direct0, "sd:/log/common", 60, 42, NULL, NULL);
+    bflog_direct_create(direct0, BFLOG_DIRECT_TYPE_FILE_TIME, BFLOG_DIRECT_COLOR_DISABLE, NULL, NULL);
+    bflog_direct_init_file_time_s(direct0, "sd:/log/common", 60, 42);
 
-    bflog_direct_create(direct1, BFLOG_DIRECT_TYPE_FILE_SIZE, BFLOG_DIRECT_COLOR_DISABLE);
-    bflog_direct_init_file_size(direct1, "sd:/log/error", 128 * 1024, 16, NULL, NULL);
-    bflog_direct_control(direct1, BFLOG_DIRECT_CMD_LEVEL, BFLOG_LEVEL_WARN);
+    bflog_direct_create(direct1, BFLOG_DIRECT_TYPE_FILE_SIZE, BFLOG_DIRECT_COLOR_DISABLE, NULL, NULL);
+    bflog_direct_init_file_size_s(direct1, "sd:/log/error", 128 * 1024, 16);
+    bflog_direct_control_s(direct1, BFLOG_DIRECT_CMD_LEVEL, BFLOG_LEVEL_WARN);
 
     /*!< suspend record */
     bflog_suspend_s(record);

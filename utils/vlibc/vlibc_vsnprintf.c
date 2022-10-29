@@ -54,7 +54,7 @@
 #define _VLIBC_TYPEIS_IO   ((int)(0x01))
 #define _VLIBC_TYPEIS_FILE ((int)(0x02))
 
-#ifdef VLIBC_DEBUG
+#ifdef CONFIG_VLIBC_DEBUG
 #define CHECK_FILE(_stream, __ret)       \
     do {                                 \
         if ((void *)(_stream) == NULL) { \
@@ -76,7 +76,7 @@
 #define IF_FILE(_stream) \
     if (((vlibc_file(_stream)->magic) & _VLIBC_MAGIC_MASK) == _VLIBC_FILE_MAGIC_CODE)
 
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
 extern int FRESULT_to_errno[20];
 #endif
 
@@ -98,18 +98,18 @@ extern int FRESULT_to_errno[20];
 #endif
 
 // Support for the decimal notation floating point conversion specifiers (%f, %F)
-#ifndef VLIBC_FLOAT
-#define VLIBC_FLOAT 0
+#ifndef CONFIG_VLIBC_FLOAT
+#define CONFIG_VLIBC_FLOAT 0
 #endif
 
 // Support for the exponential notation floating point conversion specifiers (%e, %g, %E, %G)
-#ifndef VLIBC_FLOAT_EX
-#define VLIBC_FLOAT_EX 0
+#ifndef CONFIG_VLIBC_FLOAT_EX
+#define CONFIG_VLIBC_FLOAT_EX 0
 #endif
 
 // Support for the length write-back specifier (%n)
-#ifndef VLIBC_WRITEBACK
-#define VLIBC_WRITEBACK 0
+#ifndef CONFIG_VLIBC_WRITEBACK
+#define CONFIG_VLIBC_WRITEBACK 0
 #endif
 
 // Default precision for the floating point conversion specifiers (the C standard sets this at 6)
@@ -127,8 +127,8 @@ extern int FRESULT_to_errno[20];
 
 // Support for the long long integral types (with the ll, z and t length modifiers for specifiers
 // %d,%i,%o,%x,%X,%u, and with the %p specifier). Note: 'L' (long double) is not supported.
-#ifndef VLIBC_LONG_LONG
-#define VLIBC_LONG_LONG 0
+#ifndef CONFIG_VLIBC_LONG_LONG
+#define CONFIG_VLIBC_LONG_LONG 0
 #endif
 
 // The number of terms in a Taylor series expansion of log_10(x) to
@@ -181,7 +181,7 @@ typedef unsigned int printf_flags_t;
 
 typedef uint8_t numeric_base_t;
 
-#if VLIBC_LONG_LONG
+#if CONFIG_VLIBC_LONG_LONG
 typedef unsigned long long printf_unsigned_value_t;
 typedef long long printf_signed_value_t;
 #else
@@ -194,7 +194,7 @@ typedef long printf_signed_value_t;
 // since INT_MAX is the maximum return value, which excludes the
 // trailing '\0'.
 
-#if (VLIBC_FLOAT || VLIBC_FLOAT_EX)
+#if (CONFIG_VLIBC_FLOAT || CONFIG_VLIBC_FLOAT_EX)
 #include <float.h>
 #if FLT_RADIX != 2
 #error "Non-binary-radix floating-point types are unsupported."
@@ -256,7 +256,7 @@ static inline int get_exp2(double_with_bit_access x)
 }
 #define PRINTF_ABS(_x) ((_x) > 0 ? (_x) : -(_x))
 
-#endif // (VLIBC_FLOAT || VLIBC_FLOAT_EX)
+#endif // (CONFIG_VLIBC_FLOAT || CONFIG_VLIBC_FLOAT_EX)
 
 // Note in particular the behavior here on LONG_MIN or LLONG_MIN; it is valid
 // and well-defined, but if you're not careful you can easily trigger undefined
@@ -300,7 +300,7 @@ static inline void putc_via_file(output_gadget_t *output, char c)
     if (write_pos >= VLIBC_FBUFSIZ) {
         output->max = 0;
         write_pos = 0;
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         FRESULT fresult;
         size_t bytes;
         fresult = f_write(output->stream->file, output->buffer, VLIBC_FBUFSIZ, &bytes);
@@ -527,7 +527,7 @@ static void print_integer(output_gadget_t *output, void (*putc_function)(output_
     print_integer_finalization(output, putc_function, buf, len, negative, base, precision, width, flags);
 }
 
-#if (VLIBC_FLOAT || VLIBC_FLOAT_EX)
+#if (CONFIG_VLIBC_FLOAT || CONFIG_VLIBC_FLOAT_EX)
 
 // Stores a fixed-precision representation of a double relative
 // to a fixed precision (which cannot be determined by examining this structure)
@@ -585,7 +585,7 @@ static struct double_components get_components(double number, size_t precision)
     return number_;
 }
 
-#if VLIBC_FLOAT_EX
+#if CONFIG_VLIBC_FLOAT_EX
 struct scaling_factor {
     double raw_factor;
     bool multiply; // if true, need to multiply by raw_factor; otherwise need to divide by it
@@ -662,7 +662,7 @@ static struct double_components get_normalized_components(bool negative, size_t 
     }
     return components;
 }
-#endif // VLIBC_FLOAT_EX
+#endif // CONFIG_VLIBC_FLOAT_EX
 
 static void print_broken_up_decimal(
     struct double_components number_, output_gadget_t *output, void (*putc_function)(output_gadget_t *, char), size_t precision,
@@ -749,7 +749,7 @@ static void print_decimal_number(output_gadget_t *output, void (*putc_function)(
     print_broken_up_decimal(value_, output, putc_function, precision, width, flags, buf, len);
 }
 
-#if VLIBC_FLOAT_EX
+#if CONFIG_VLIBC_FLOAT_EX
 
 // A floor function - but one which only works for numbers whose
 // floor value is representable by an int.
@@ -925,7 +925,7 @@ static void print_exponential_number(output_gadget_t *output, void (*putc_functi
         }
     }
 }
-#endif // VLIBC_FLOAT_EX
+#endif // CONFIG_VLIBC_FLOAT_EX
 
 static void print_floating_point(output_gadget_t *output, void (*putc_function)(output_gadget_t *, char), double value, size_t precision, size_t width, printf_flags_t flags, bool prefer_exponential)
 {
@@ -951,7 +951,7 @@ static void print_floating_point(output_gadget_t *output, void (*putc_function)(
         // The required behavior of standard printf is to print _every_ integral-part digit -- which could mean
         // printing hundreds of characters, overflowing any fixed internal buffer and necessitating a more complicated
         // implementation.
-#if VLIBC_FLOAT_EX
+#if CONFIG_VLIBC_FLOAT_EX
         print_exponential_number(output, putc_function, value, precision, width, flags, buf, len);
 #endif
         return;
@@ -968,7 +968,7 @@ static void print_floating_point(output_gadget_t *output, void (*putc_function)(
         precision--;
     }
 
-#if VLIBC_FLOAT_EX
+#if CONFIG_VLIBC_FLOAT_EX
     if (prefer_exponential)
         print_exponential_number(output, putc_function, value, precision, width, flags, buf, len);
     else
@@ -976,7 +976,7 @@ static void print_floating_point(output_gadget_t *output, void (*putc_function)(
         print_decimal_number(output, putc_function, value, precision, width, flags, buf, len);
 }
 
-#endif // (VLIBC_FLOAT || VLIBC_FLOAT_EX)
+#endif // (CONFIG_VLIBC_FLOAT || CONFIG_VLIBC_FLOAT_EX)
 
 // Advances the format pointer past the flags, and returns the parsed flags
 // due to the characters passed
@@ -1133,7 +1133,7 @@ static int _vsnprintf(output_gadget_t *output, void (*putc_function)(output_gadg
                     // A signed specifier: d, i or possibly I + bit size if enabled
 
                     if (flags & FLAGS_LONG_LONG) {
-#if VLIBC_LONG_LONG
+#if CONFIG_VLIBC_LONG_LONG
                         const long long value = va_arg(args, long long);
                         print_integer(output, putc_function, ABS_FOR_PRINTING(value), value < 0, base, precision, width, flags);
 #endif
@@ -1157,7 +1157,7 @@ static int _vsnprintf(output_gadget_t *output, void (*putc_function)(output_gadg
                     flags &= ~(FLAGS_PLUS | FLAGS_SPACE);
 
                     if (flags & FLAGS_LONG_LONG) {
-#if VLIBC_LONG_LONG
+#if CONFIG_VLIBC_LONG_LONG
                         print_integer(output, putc_function, (printf_unsigned_value_t)va_arg(args, unsigned long long), false, base, precision, width, flags);
 #endif
                     } else if (flags & FLAGS_LONG) {
@@ -1173,7 +1173,7 @@ static int _vsnprintf(output_gadget_t *output, void (*putc_function)(output_gadg
                 break;
             }
 
-#if VLIBC_FLOAT
+#if CONFIG_VLIBC_FLOAT
             case 'f':
             case 'F':
                 if (*format == 'F')
@@ -1183,7 +1183,7 @@ static int _vsnprintf(output_gadget_t *output, void (*putc_function)(output_gadg
                 break;
 #endif
 
-#if VLIBC_FLOAT_EX
+#if CONFIG_VLIBC_FLOAT_EX
             case 'e':
             case 'E':
             case 'g':
@@ -1267,7 +1267,7 @@ static int _vsnprintf(output_gadget_t *output, void (*putc_function)(output_gadg
                 // Many people prefer to disable support for %n, as it lets the caller
                 // engineer a write to an arbitrary location, of a value the caller
                 // effectively controls - which could be a security concern in some cases.
-#if VLIBC_WRITEBACK
+#if CONFIG_VLIBC_WRITEBACK
             case 'n': {
                 if (flags & FLAGS_CHAR)
                     *(va_arg(args, char *)) = (char)output->pos;
@@ -1275,16 +1275,16 @@ static int _vsnprintf(output_gadget_t *output, void (*putc_function)(output_gadg
                     *(va_arg(args, short *)) = (short)output->pos;
                 else if (flags & FLAGS_LONG)
                     *(va_arg(args, long *)) = (long)output->pos;
-#if VLIBC_LONG_LONG
+#if CONFIG_VLIBC_LONG_LONG
                 else if (flags & FLAGS_LONG_LONG)
                     *(va_arg(args, long long *)) = (long long int)output->pos;
-#endif // VLIBC_LONG_LONG
+#endif // CONFIG_VLIBC_LONG_LONG
                 else
                     *(va_arg(args, int *)) = (int)output->pos;
                 format++;
                 break;
             }
-#endif // VLIBC_WRITEBACK
+#endif // CONFIG_VLIBC_WRITEBACK
 
             default:
                 putc_function(output, *format);
@@ -1353,7 +1353,7 @@ int vlibc_vfprintf(VLIBC_FILE *stream, const char *format, va_list arg)
     }
     else IF_FILE(stream)
     {
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         char buffer[VLIBC_FBUFSIZ];
         int ret;
         FRESULT fresult;

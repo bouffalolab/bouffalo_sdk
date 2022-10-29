@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
 #include "ff.h"
 #endif
 
@@ -32,7 +32,7 @@ typedef struct {
 
     union {
         struct __vlibc_io *io;
-#ifdef VLIBC_PORT_FATFS
+#ifdef CONFIG_VLIBC_FATFS
         FIL *file;
 #else
         int *file;
