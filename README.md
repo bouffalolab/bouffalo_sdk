@@ -139,6 +139,10 @@ make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 
 TODO
 
+## Debug
+
+Only supports debug with CKLink currently. See [bl mcu sdk debug chapter](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
+
 # Resources
 
 ## Chip Manual

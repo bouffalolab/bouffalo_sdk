@@ -5,6 +5,39 @@
 
 本节主要介绍如何使用调试器进行代码的调试。
 
+芯片默认 JTAG PIN 列表
+-------------------------------------------
+
+.. list-table::
+    :widths: 10 10 10 10 10
+    :header-rows: 1
+
+    * - CHIP/Pin
+      - BL602/BL604
+      - BL702/BL704/BL706
+      - BL616/BL618
+      - BL808
+    * - TMS
+      - GPIO12
+      - GPIO0
+      - GPIO0
+      - GPIO6
+    * - TCK
+      - GPIO14
+      - GPIO2
+      - GPIO1
+      - GPIO12
+    * - TDO
+      - GPIO11
+      - GPIO9
+      - GPIO2
+      - GPIO7
+    * - TDI
+      - GPIO17
+      - GPIO1
+      - GPIO3
+      - GPIO13
+
 使用 CKLink + Eclipse 调试代码
 -------------------------------------------
 

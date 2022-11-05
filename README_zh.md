@@ -139,6 +139,10 @@ make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 
 TODO
 
+## 调试
+
+当前仅支持使用 CKLink 调试。详细参考 [bl mcu sdk 调试章节](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
+
 # 芯片手册
 
 芯片数据手册和参考手册见 [文档](https://dev.bouffalolab.com/document)。

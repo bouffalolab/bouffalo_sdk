@@ -31,3 +31,12 @@ CKLink driver version must be higher than 5.16.0. Download link is here.
 ## Debug with Eclipse
 
 See [BL_MCU_SDK DOC](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)
+
+## Default JTAG Pin
+
+|   CHIP/Pin    |  BL602/BL604  |  BL702/BL704/BL706 | BL616/BL618 |   BL808  |
+|:-------------:|:-------------:|:------------------:|:-----------:|:--------:|
+|TMS            |     GPIO12    |      GPIO0         |    GPIO0    |   GPIO6  |
+|TCK            |     GPIO14    |      GPIO2         |    GPIO1    |   GPIO12 |
+|TDO            |     GPIO11    |      GPIO9         |    GPIO2    |   GPIO7  |
+|TDI            |     GPIO17    |      GPIO1         |    GPIO3    |   GPIO13 |
