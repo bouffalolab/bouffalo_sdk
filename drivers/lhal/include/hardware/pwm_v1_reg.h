@@ -41,8 +41,11 @@
 ****************************************************************************/
 
 /* Register offsets *********************************************************/
-
-#define PWM_INT_CONFIG_OFFSET (0x0)  /* pwm_int_config */
+#if defined(BL702L)
+#define PWM_INT_CONFIG_OFFSET (-0x20) /* pwm_int_config */
+#else
+#define PWM_INT_CONFIG_OFFSET (0x0) /* pwm_int_config */
+#endif
 #define PWM0_CLKDIV_OFFSET    (0x20) /* pwm0_clkdiv */
 #define PWM0_THRE1_OFFSET     (0x24) /* pwm0_thre1 */
 #define PWM0_THRE2_OFFSET     (0x28) /* pwm0_thre2 */

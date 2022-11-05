@@ -465,8 +465,8 @@ const uint8_t aes_xts_256bit_ct[3][64] = {
 
 const uint8_t aes_xts_256bit_len[3] = { 64, 64, 64 };
 
-ATTR_NOCACHE_RAM_SECTION uint8_t aes_enc_buf[512];
-ATTR_NOCACHE_RAM_SECTION uint8_t aes_dec_buf[512];
+ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t aes_enc_buf[512];
+ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t aes_dec_buf[512];
 
 static uint32_t bflb_data_compare(const uint8_t *expected, uint8_t *input, uint32_t len)
 {

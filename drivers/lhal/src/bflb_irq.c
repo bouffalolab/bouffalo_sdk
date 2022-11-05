@@ -1,4 +1,5 @@
 #include "bflb_irq.h"
+#include "bflb_core.h"
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #include <risc-v/e24/clic.h>
 #else

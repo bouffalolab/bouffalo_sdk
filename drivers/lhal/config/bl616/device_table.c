@@ -177,6 +177,20 @@ struct bflb_device_s bl616_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_TIMER,
       .user_data = NULL },
+    { .name = "cks",
+      .reg_base = CKS_BASE,
+      .irq_num = 0,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CKS,
+      .user_data = NULL },
+    { .name = "mjpeg",
+      .reg_base = MJPEG_BASE,
+      .irq_num = BL616_IRQ_MJPEG,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_MJPEG,
+      .user_data = NULL },
 };
 
 struct bflb_device_s *bflb_device_get_by_name(const char *name)

@@ -172,7 +172,7 @@ int bflb_sha256_update(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx,
     return bflb_sha1_update(dev, (struct bflb_sha1_ctx_s *)ctx, input, len);
 }
 
-int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx, const uint8_t *input, uint32_t len)
+int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx, const uint8_t *input, uint64_t len)
 {
     uint32_t regval;
     uint32_t reg_base;
@@ -267,6 +267,7 @@ void bflb_sha1_finish(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, ui
     uint8_t msgLen[8];
     uint32_t regval;
     uint32_t reg_base;
+    uint8_t mode;
     uint8_t *p = (uint8_t *)output;
 
     reg_base = dev->reg_base;
@@ -310,6 +311,29 @@ void bflb_sha1_finish(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, ui
     *p++ = ((regval >> 8) & 0xff);
     *p++ = ((regval >> 16) & 0xff);
     *p++ = ((regval >> 24) & 0xff);
+
+    mode = (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_MODE_MASK) >> SEC_ENG_SE_SHA_0_MODE_SHIFT;
+
+    if ((mode == SHA_MODE_SHA224) || (mode == SHA_MODE_SHA256)) {
+        regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_HASH_L_5_OFFSET);
+        *p++ = (regval & 0xff);
+        *p++ = ((regval >> 8) & 0xff);
+        *p++ = ((regval >> 16) & 0xff);
+        *p++ = ((regval >> 24) & 0xff);
+        regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_HASH_L_6_OFFSET);
+        *p++ = (regval & 0xff);
+        *p++ = ((regval >> 8) & 0xff);
+        *p++ = ((regval >> 16) & 0xff);
+        *p++ = ((regval >> 24) & 0xff);
+
+        if (mode == SHA_MODE_SHA256) {
+            regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_HASH_L_7_OFFSET);
+            *p++ = (regval & 0xff);
+            *p++ = ((regval >> 8) & 0xff);
+            *p++ = ((regval >> 16) & 0xff);
+            *p++ = ((regval >> 24) & 0xff);
+        }
+    }
 
     /* Disable SHA engine*/
     regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
@@ -474,26 +498,27 @@ void bflb_sha_link_deinit(struct bflb_device_s *dev)
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
 }
 
-void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx)
+void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_link_ctx_s *ctx, struct bflb_sha_link_s *link)
 {
-    memset(ctx, 0, sizeof(struct bflb_sha1_ctx_s));
+    memset(ctx, 0, sizeof(struct bflb_sha1_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
+    ctx->link_addr = (uint32_t)(uintptr_t)link;
 }
 
-void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx)
+void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_ctx_s *ctx, struct bflb_sha_link_s *link)
 {
-    return bflb_sha1_link_start(dev, (struct bflb_sha1_ctx_s *)ctx);
+    return bflb_sha1_link_start(dev, (struct bflb_sha1_link_ctx_s *)ctx, link);
 }
 
-void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx)
+void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_link_ctx_s *ctx, struct bflb_sha_link_s *link)
 {
-    memset(ctx, 0, sizeof(struct bflb_sha512_ctx_s));
+    memset(ctx, 0, sizeof(struct bflb_sha512_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
+    ctx->link_addr = (uint32_t)(uintptr_t)link;
 }
 
 int bflb_sha1_link_update(struct bflb_device_s *dev,
-                          struct bflb_sha1_ctx_s *ctx,
-                          uint32_t link_addr,
+                          struct bflb_sha1_link_ctx_s *ctx,
                           const uint8_t *input,
                           uint32_t len)
 {
@@ -509,7 +534,7 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
     reg_base = dev->reg_base;
 
     /* Set link address */
-    putreg32(link_addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
+    putreg32(ctx->link_addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
 
     left = ctx->total[0] & 0x3F;
     fill = 64 - left;
@@ -524,17 +549,17 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
     if (left && len >= fill) {
         arch_memcpy_fast((void *)((uint8_t *)ctx->sha_buf + left), input, fill);
         /* Set data source address */
-        *(uint32_t *)(uintptr_t)(link_addr + 4) = (uint32_t)(uintptr_t)ctx->sha_buf;
+        *(uint32_t *)(uintptr_t)(ctx->link_addr + 4) = (uint32_t)(uintptr_t)ctx->sha_buf;
 
         /* Set data length */
-        *((uint16_t *)(uintptr_t)link_addr + 1) = 1;
+        *((uint16_t *)(uintptr_t)ctx->link_addr + 1) = 1;
 
         regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
         regval |= SEC_ENG_SE_SHA_0_TRIG_1T;
         putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
 
         /* Choose accumulating last hash in the next time */
-        *((uint32_t *)(uintptr_t)link_addr) |= 0x40;
+        *((uint32_t *)(uintptr_t)ctx->link_addr) |= 0x40;
         input += fill;
         len -= fill;
         left = 0;
@@ -548,8 +573,8 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
         }
 
         /* Fill data */
-        *(uint32_t *)(uintptr_t)(link_addr + 4) = (uint32_t)(uintptr_t)input;
-        *((uint16_t *)(uintptr_t)link_addr + 1) = fill;
+        *(uint32_t *)(uintptr_t)(ctx->link_addr + 4) = (uint32_t)(uintptr_t)input;
+        *((uint16_t *)(uintptr_t)ctx->link_addr + 1) = fill;
 
         regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
         regval |= SEC_ENG_SE_SHA_0_TRIG_1T;
@@ -557,7 +582,7 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
 
         input += (fill * 64);
         /* Choose accumulating last hash in the next time */
-        *((uint32_t *)(uintptr_t)link_addr) |= 0x40;
+        *((uint32_t *)(uintptr_t)ctx->link_addr) |= 0x40;
     }
 
     if (len > 0) {
@@ -574,19 +599,17 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
 }
 
 int bflb_sha256_link_update(struct bflb_device_s *dev,
-                            struct bflb_sha256_ctx_s *ctx,
-                            uint32_t link_addr,
+                            struct bflb_sha256_link_ctx_s *ctx,
                             const uint8_t *input,
                             uint32_t len)
 {
-    return bflb_sha1_link_update(dev, (struct bflb_sha1_ctx_s *)ctx, link_addr, input, len);
+    return bflb_sha1_link_update(dev, (struct bflb_sha1_link_ctx_s *)ctx, input, len);
 }
 
 int bflb_sha512_link_update(struct bflb_device_s *dev,
-                            struct bflb_sha512_ctx_s *ctx,
-                            uint32_t link_addr,
+                            struct bflb_sha512_link_ctx_s *ctx,
                             const uint8_t *input,
-                            uint32_t len)
+                            uint64_t len)
 {
     uint32_t regval;
     uint32_t reg_base;
@@ -600,7 +623,7 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
     reg_base = dev->reg_base;
 
     /* Set link address */
-    putreg32(link_addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
+    putreg32(ctx->link_addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
 
     left = ctx->total[0] & 0x7F;
     fill = 128 - left;
@@ -614,17 +637,17 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
     if (left && len >= fill) {
         arch_memcpy_fast((void *)((uint8_t *)ctx->sha_buf + left), input, fill);
         /* Set data source address */
-        *(uint32_t *)(uintptr_t)(link_addr + 4) = (uint32_t)(uintptr_t)ctx->sha_buf;
+        *(uint32_t *)(uintptr_t)(ctx->link_addr + 4) = (uint32_t)(uintptr_t)ctx->sha_buf;
 
         /* Set data length */
-        *((uint16_t *)(uintptr_t)link_addr + 1) = 1;
+        *((uint16_t *)(uintptr_t)ctx->link_addr + 1) = 1;
 
         regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
         regval |= SEC_ENG_SE_SHA_0_TRIG_1T;
         putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
 
         /* Choose accumulating last hash in the next time */
-        *((uint32_t *)(uintptr_t)link_addr) |= 0x40;
+        *((uint32_t *)(uintptr_t)ctx->link_addr) |= 0x40;
         input += fill;
         len -= fill;
         left = 0;
@@ -638,8 +661,8 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
         }
 
         /* Fill data */
-        *(uint32_t *)(uintptr_t)(link_addr + 4) = (uint32_t)(uintptr_t)input;
-        *((uint16_t *)(uintptr_t)link_addr + 1) = fill;
+        *(uint32_t *)(uintptr_t)(ctx->link_addr + 4) = (uint32_t)(uintptr_t)input;
+        *((uint16_t *)(uintptr_t)ctx->link_addr + 1) = fill;
 
         regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
         regval |= SEC_ENG_SE_SHA_0_TRIG_1T;
@@ -647,7 +670,7 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
 
         input += (fill * 128);
         /* Choose accumulating last hash in the next time */
-        *((uint32_t *)(uintptr_t)link_addr) |= 0x40;
+        *((uint32_t *)(uintptr_t)ctx->link_addr) |= 0x40;
     }
 
     if (len > 0) {
@@ -664,8 +687,7 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
 }
 
 void bflb_sha1_link_finish(struct bflb_device_s *dev,
-                           struct bflb_sha1_ctx_s *ctx,
-                           uint32_t link_addr,
+                           struct bflb_sha1_link_ctx_s *ctx,
                            uint8_t *output)
 {
     uint32_t last, padn;
@@ -673,12 +695,12 @@ void bflb_sha1_link_finish(struct bflb_device_s *dev,
     uint8_t msgLen[8];
 
     uint32_t reg_base;
-    uint32_t sha_mode = (*(uint32_t *)(uintptr_t)link_addr) >> 2 & 0x7;
+    uint32_t sha_mode = (*(uint32_t *)(uintptr_t)ctx->link_addr) >> 2 & 0x7;
 
     reg_base = dev->reg_base;
 
     /* Set link address */
-    putreg32(link_addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
+    putreg32(ctx->link_addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
 
     high = (ctx->total[0] >> 29) | (ctx->total[1] << 3);
     low = (ctx->total[0] << 3);
@@ -689,25 +711,25 @@ void bflb_sha1_link_finish(struct bflb_device_s *dev,
     last = ctx->total[0] & 0x3F;
     padn = (last < 56) ? (56 - last) : (120 - last);
 
-    bflb_sha1_link_update(dev, ctx, link_addr, (uint8_t *)ctx->sha_padding, padn);
-    bflb_sha1_link_update(dev, ctx, link_addr, msgLen, 8);
+    bflb_sha1_link_update(dev, ctx, (uint8_t *)ctx->sha_padding, padn);
+    bflb_sha1_link_update(dev, ctx, msgLen, 8);
 
     /* Get result according to SHA mode,result is placed in (link address + offset:8) */
     switch (sha_mode) {
         case 0:
-            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(link_addr + 8), 32);
+            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(ctx->link_addr + 8), 32);
             break;
 
         case 1:
-            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(link_addr + 8), 28);
+            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(ctx->link_addr + 8), 28);
             break;
 
         case 2:
-            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(link_addr + 8), 20);
+            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(ctx->link_addr + 8), 20);
             break;
 
         case 3:
-            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(link_addr + 8), 20);
+            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(ctx->link_addr + 8), 20);
             break;
 
         default:
@@ -715,62 +737,60 @@ void bflb_sha1_link_finish(struct bflb_device_s *dev,
     }
 
     /* Choose new hash in the next time */
-    *((uint32_t *)(uintptr_t)link_addr) &= ~0x40;
+    *((uint32_t *)(uintptr_t)ctx->link_addr) &= ~0x40;
 }
 
 void bflb_sha256_link_finish(struct bflb_device_s *dev,
-                             struct bflb_sha256_ctx_s *ctx,
-                             uint32_t link_addr,
+                             struct bflb_sha256_link_ctx_s *ctx,
                              uint8_t *output)
 {
-    return bflb_sha1_link_finish(dev, (struct bflb_sha1_ctx_s *)ctx, link_addr, output);
+    return bflb_sha1_link_finish(dev, (struct bflb_sha1_link_ctx_s *)ctx, output);
 }
 
 void bflb_sha512_link_finish(struct bflb_device_s *dev,
-                             struct bflb_sha512_ctx_s *ctx,
-                             uint32_t link_addr,
+                             struct bflb_sha512_link_ctx_s *ctx,
                              uint8_t *output)
 {
-    uint32_t last, padn;
-    uint32_t high, low;
+    uint64_t last, padn;
+    uint64_t high, low;
     uint8_t msgLen[16];
 
     uint32_t reg_base;
-    uint32_t sha_mode = (*(uint32_t *)(uintptr_t)link_addr) >> 2 & 0x7;
+    uint32_t sha_mode = (*(uint32_t *)(uintptr_t)ctx->link_addr) >> 2 & 0x7;
 
     reg_base = dev->reg_base;
 
     /* Set link address */
-    putreg32(link_addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
+    putreg32(ctx->link_addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
 
     high = (ctx->total[0] >> 61) | (ctx->total[1] << 3);
     low = (ctx->total[0] << 3);
 
-    PUT_UINT32_BE(high, msgLen, 0);
-    PUT_UINT32_BE(low, msgLen, 8);
+    PUT_UINT64_BE(high, msgLen, 0);
+    PUT_UINT64_BE(low, msgLen, 8);
 
     last = ctx->total[0] & 0x7F;
     padn = (last < 112) ? (112 - last) : (240 - last);
 
-    bflb_sha512_link_update(dev, ctx, link_addr, (uint8_t *)ctx->sha_padding, padn);
-    bflb_sha512_link_update(dev, ctx, link_addr, msgLen, 16);
+    bflb_sha512_link_update(dev, ctx, (uint8_t *)ctx->sha_padding, padn);
+    bflb_sha512_link_update(dev, ctx, msgLen, 16);
 
     /* Get result according to SHA mode,result is placed in (link address + offset:8) */
     switch (sha_mode) {
         case 4:
-            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(link_addr + 8), 64);
+            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(ctx->link_addr + 8), 64);
             break;
 
         case 5:
-            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(link_addr + 8), 48);
+            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(ctx->link_addr + 8), 48);
             break;
 
         case 6:
-            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(link_addr + 8), 28);
+            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(ctx->link_addr + 8), 28);
             break;
 
         case 7:
-            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(link_addr + 8), 32);
+            arch_memcpy_fast(output, (uint8_t *)(uintptr_t)(ctx->link_addr + 8), 32);
             break;
 
         default:
@@ -778,7 +798,7 @@ void bflb_sha512_link_finish(struct bflb_device_s *dev,
     }
 
     /* Choose new hash in the next time */
-    *((uint32_t *)(uintptr_t)link_addr) &= ~0x40;
+    *((uint32_t *)(uintptr_t)ctx->link_addr) &= ~0x40;
 }
 
 void bflb_group0_request_sha_access(struct bflb_device_s *dev)

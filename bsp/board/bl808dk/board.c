@@ -1,5 +1,4 @@
 #include "bflb_uart.h"
-#include "bflb_irq.h"
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
@@ -73,6 +72,7 @@ static void peripheral_clock_init(void)
     GLB_Set_DIG_512K_CLK(ENABLE, ENABLE, 0x4E);
     GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
 
+    GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_MCU_MUXPLL_160M);
 #ifdef CONFIG_BSP_SDH_SDCARD
     PERIPHERAL_CLOCK_SDH_ENABLE();
     uint32_t tmp_val;

@@ -1,4 +1,5 @@
 #include "bflb_timer.h"
+#include "bflb_gpio.h"
 #include "hardware/timer_reg.h"
 
 void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s *config)
@@ -89,7 +90,6 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
 
 void bflb_timer_deinit(struct bflb_device_s *dev)
 {
-
 }
 
 void bflb_timer_start(struct bflb_device_s *dev)
@@ -192,21 +192,3 @@ void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no)
     regval |= (1 << cmp_no);
     putreg32(regval, reg_base + TIMER_TICR0_OFFSET + 4 * dev->idx);
 }
-
-#if !defined(BL702) || !defined(BL602)
-void bflb_timer_capture_init(struct bflb_device_s *dev, const struct bflb_timer_capture_config_s *config)
-{
-    uint32_t regval;
-    uint32_t reg_base;
-
-    reg_base = dev->reg_base;
-    regval = getreg32(reg_base + TIMER_GPIO_OFFSET);
-    /* polarity: 1->neg, 0->pos */
-    if (config->polarity == TIMER_CAPTURE_POLARITY_FALLING) {
-        regval |= (1 << (5 + dev->idx));
-    } else {
-        regval &= ~(1 << (5 + dev->idx));
-    }
-    putreg32(regval, reg_base + TIMER_GPIO_OFFSET);
-}
-#endif

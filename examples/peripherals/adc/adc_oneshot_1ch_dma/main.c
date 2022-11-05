@@ -12,7 +12,7 @@ static uint8_t dma_tc_flag0 = 0;
 
 #define ADC_CONVERT_COUNT 16
 
-ATTR_NOCACHE_RAM_SECTION uint32_t raw_data[ADC_CONVERT_COUNT];
+ATTR_NOCACHE_NOINIT_RAM_SECTION uint32_t raw_data[ADC_CONVERT_COUNT];
 
 void dma0_ch0_isr(void *arg)
 {

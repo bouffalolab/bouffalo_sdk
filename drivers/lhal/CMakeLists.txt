@@ -22,6 +22,7 @@ sdk_library_add_sources(src/bflb_sec_trng.c)
 sdk_library_add_sources(src/bflb_timer.c)
 sdk_library_add_sources(src/bflb_wdg.c)
 sdk_library_add_sources(src/bflb_cks.c)
+sdk_library_add_sources(src/bflb_mjpeg.c)
 # sdk_library_add_sources(src/bflb_clock.c)
 
 if(("${CHIP}" STREQUAL "bl702") OR ("${CHIP}" STREQUAL "bl602"))

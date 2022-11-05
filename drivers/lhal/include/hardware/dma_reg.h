@@ -137,17 +137,34 @@
 #define DMA_TRANSFERSIZE_SHIFT (0U)
 #define DMA_TRANSFERSIZE_MASK  (0xfff << DMA_TRANSFERSIZE_SHIFT)
 #define DMA_SBSIZE_SHIFT       (12U)
+#if defined(BL602)
+#define DMA_SBSIZE_MASK        (0x7 << DMA_SBSIZE_SHIFT)
+#else
 #define DMA_SBSIZE_MASK        (0x3 << DMA_SBSIZE_SHIFT)
 #define DMA_DST_MIN_MODE       (1 << 14U)
+#endif
 #define DMA_DBSIZE_SHIFT       (15U)
+#if defined(BL602)
+#define DMA_DBSIZE_MASK        (0x7 << DMA_DBSIZE_SHIFT)
+#else
 #define DMA_DBSIZE_MASK        (0x3 << DMA_DBSIZE_SHIFT)
 #define DMA_DST_ADD_MODE       (1 << 17U)
+#endif
 #define DMA_SWIDTH_SHIFT       (18U)
+#if defined(BL602)
+#define DMA_SWIDTH_MASK        (0x7 << DMA_SWIDTH_SHIFT)
+#else
 #define DMA_SWIDTH_MASK        (0x3 << DMA_SWIDTH_SHIFT)
+#endif
 #define DMA_DWIDTH_SHIFT       (21U)
+#if defined(BL602)
+#define DMA_DWIDTH_MASK        (0x7 << DMA_DWIDTH_SHIFT)
+#define DMA_SLARGERD           (1 << 24U)
+#else
 #define DMA_DWIDTH_MASK        (0x3 << DMA_DWIDTH_SHIFT)
 #define DMA_FIX_CNT_SHIFT      (23U)
 #define DMA_FIX_CNT_MASK       (0x7 << DMA_FIX_CNT_SHIFT)
+#endif
 #define DMA_SI                 (1 << 26U)
 #define DMA_DI                 (1 << 27U)
 #define DMA_PROT_SHIFT         (28U)

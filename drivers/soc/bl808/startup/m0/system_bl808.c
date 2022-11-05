@@ -79,6 +79,7 @@ void SystemInit(void)
 
     /* Every interrupt should be clear by software*/
     for (i = 0; i < IRQn_LAST; i++) {
+        CLIC->CLICINT[i].IE = 0;
         CLIC->CLICINT[i].IP = 0;
         CLIC->CLICINT[i].ATTR = 1; /* use vector interrupt */
     }

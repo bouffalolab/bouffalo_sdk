@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-#include "bflb_irq.h"
+#include "bflb_core.h"
 #include <csi_core.h>
 #include "irq_ctx.h"
 

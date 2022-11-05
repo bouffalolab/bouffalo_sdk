@@ -19,7 +19,7 @@ static const uint8_t test_frame[42] = {
     0xc0, 0xa8, 0x7b, 0xb2                                      // dst ip 192.168.123.178
 };
 #define TEST_PATTERN_LEN (ETH_MAX_PACKET_SIZE - 32)
-ATTR_NOCACHE_RAM_SECTION static uint8_t test_pattern[TEST_PATTERN_LEN] = { 0 };
+ATTR_NOCACHE_NOINIT_RAM_SECTION static uint8_t test_pattern[TEST_PATTERN_LEN] = { 0 };
 
 static volatile uint32_t tx_pkg_cnt = 0;
 static volatile uint32_t tx_err_cnt = 0;

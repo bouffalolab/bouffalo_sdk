@@ -151,13 +151,12 @@ SECTIONS
     /*************************************************************************/
     __nocache_ram_load_addr = __dtcm_load_addr + SIZEOF(.dtcm_region);
 
-    .nocache_ram_region (NOLOAD) : AT (__nocache_ram_load_addr)
+    .nocache_ram_region  : AT (__nocache_ram_load_addr)
     {
         . = ALIGN(4);
         __nocache_ram_data_start__ = .;
 
         *(.nocache_ram)
-        *(.noncacheable)
 
         . = ALIGN(4);
         __nocache_ram_data_end__ = .;
@@ -235,12 +234,13 @@ SECTIONS
     .nocache_noinit_ram_region (NOLOAD) :
     {
         . = ALIGN(4);
-        __nocache_ram_data_start__ = .;
+        __nocache_noinit_ram_data_start__ = .;
 
         *(.nocache_noinit_ram)
+        *(.noncacheable)
 
         . = ALIGN(4);
-        __nocache_ram_data_end__ = .;
+        __nocache_noinit_ram_data_end__ = .;
     } > nocache_ram_memory
 
     .heap (NOLOAD):

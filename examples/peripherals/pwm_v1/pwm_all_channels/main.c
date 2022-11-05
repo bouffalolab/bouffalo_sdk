@@ -9,12 +9,12 @@ int main(void)
     board_init();
     board_pwm_gpio_init();
 
-    pwm = bflb_device_get_by_name("pwm");
+    pwm = bflb_device_get_by_name("pwm0");
 
-    /* period = .PBCLK / .clk_div / .period = 80MHz / 80 / 1000 = 1KHz */
+    /* period = .XCLK / .clk_div / .period = 32MHz / 32 / 1000 = 1KHz */
     struct bflb_pwm_v1_channel_config_s cfg = {
-        .clk_source = BFLB_SYSTEM_PBCLK,
-        .clk_div = 80,
+        .clk_source = BFLB_SYSTEM_XCLK,
+        .clk_div = 32,
         .period = 1000,
     };
 

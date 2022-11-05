@@ -9,9 +9,12 @@
 #define AES_MODE_XTS 3
 
 #define AES_LINK_KEY_128BITS        0
-#define AES_LINK_KEY_192BITS        1
-#define AES_LINK_KEY_256BITS        2
+#define AES_LINK_KEY_192BITS        2
+#define AES_LINK_KEY_256BITS        1
 #define AES_LINK_KEY_DOUBLE_128BITS 3
+
+#define AES_LINK_XTS_MODE1 0
+#define AES_LINK_XTS_MODE2 1
 
 struct bflb_aes_link_s {
     uint32_t                : 3;  /*!< [2:0]Reserved */

@@ -8,10 +8,10 @@ struct bflb_device_s *uart1;
 struct bflb_device_s *dma0_ch0;
 struct bflb_device_s *dma0_ch1;
 
-static ATTR_NOCACHE_RAM_SECTION uint8_t src_buffer[4100];
-static ATTR_NOCACHE_RAM_SECTION uint8_t src2_buffer[4100];
-static ATTR_NOCACHE_RAM_SECTION uint8_t src3_buffer[4100];
-static ATTR_NOCACHE_RAM_SECTION uint8_t receive_buffer[50] = { 0 };
+static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src_buffer[4100];
+static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src2_buffer[4100];
+static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src3_buffer[4100];
+static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t receive_buffer[50] = { 0 };
 
 static volatile uint8_t dma_tc_flag0 = 0;
 static volatile uint8_t dma_tc_flag1 = 0;

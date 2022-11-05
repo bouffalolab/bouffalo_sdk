@@ -9,6 +9,7 @@ extern uint32_t __itcm_load_addr;
 extern uint32_t __dtcm_load_addr;
 extern uint32_t __system_ram_load_addr;
 extern uint32_t __ram_load_addr;
+extern uint32_t __nocache_ram_load_addr;
 
 extern uint32_t __text_code_start__;
 extern uint32_t __text_code_end__;
@@ -24,6 +25,8 @@ extern uint32_t __bss_start__;
 extern uint32_t __bss_end__;
 extern uint32_t __noinit_data_start__;
 extern uint32_t __noinit_data_end__;
+extern uint32_t __nocache_ram_data_start__;
+extern uint32_t __nocache_ram_data_end__;
 
 extern uint32_t __StackTop;
 extern uint32_t __StackLimit;
@@ -69,6 +72,14 @@ void start_load(void)
     pDest = &__ram_data_start__;
 
     for (; pDest < &__ram_data_end__;) {
+        *pDest++ = *pSrc++;
+    }
+
+    /* BF Add no cache ram data copy */
+    pSrc = &__nocache_ram_load_addr;
+    pDest = &__nocache_ram_data_start__;
+
+    for (; pDest < &__nocache_ram_data_end__;) {
         *pDest++ = *pSrc++;
     }
 

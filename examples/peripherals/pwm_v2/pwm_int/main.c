@@ -71,7 +71,7 @@ void pwm_isr(int irq, void *arg)
 int main(void)
 {
     board_init();
-    // board_pwm0_gpio_init();
+    board_pwm0_gpio_init();
 
     pwm0 = bflb_device_get_by_name("pwm0");
 

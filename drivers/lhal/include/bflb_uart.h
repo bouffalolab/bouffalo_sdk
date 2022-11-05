@@ -133,12 +133,23 @@
 #define UART_CMD_SET_TX_RS485_POLARITY   (0x12)
 #define UART_CMD_SET_ABR_ALLOWABLE_ERROR (0x13)
 #define UART_CMD_SET_SW_RTS_CONTROL      (0x14)
+#define UART_CMD_IR_CONFIG               (0x15)
 /**
   * @}
   */
 
 #define UART_AUTO_BAUD_START 0
 #define UART_AUTO_BAUD_0X55  1
+
+struct bflb_uart_ir_config_s {
+    bool tx_en;
+    bool rx_en;
+    bool tx_inverse;
+    bool rx_inverse;
+    uint16_t tx_pluse_start;
+    uint16_t tx_pluse_stop;
+    uint16_t rx_pluse_start;
+};
 
 /**
  * @brief UART configuration structure

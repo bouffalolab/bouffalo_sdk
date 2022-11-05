@@ -1,7 +1,7 @@
 #ifndef _BFLB_IRQ_H
 #define _BFLB_IRQ_H
 
-#include "bflb_core.h"
+#include "stdint.h"
 
 typedef void (*irq_callback)(int irq, void *arg);
 

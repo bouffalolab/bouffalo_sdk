@@ -429,7 +429,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 
         case UART_CMD_SET_RTO_VALUE:
             /* Set rx time-out value */
-            putreg32(arg, reg_base + UART_CR_URX_RTO_VALUE_SHIFT);
+            putreg32(arg, reg_base + UART_URX_RTO_TIMER_OFFSET);
             break;
 
         case UART_CMD_SET_RTS_VALUE:
@@ -586,6 +586,40 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
 #endif
             break;
+#if !defined(BL702L)
+        case UART_CMD_IR_CONFIG: {
+            struct bflb_uart_ir_config_s *ir_config = (struct bflb_uart_ir_config_s *)arg;
+            tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
+            if (ir_config->tx_en) {
+                tx_tmp |= UART_CR_UTX_IR_EN;
+            } else {
+                tx_tmp &= ~UART_CR_UTX_IR_EN;
+            }
+            if (ir_config->tx_inverse) {
+                tx_tmp |= UART_CR_UTX_IR_INV;
+            } else {
+                tx_tmp &= ~UART_CR_UTX_IR_INV;
+            }
+            putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
+
+            rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+            if (ir_config->rx_en) {
+                rx_tmp |= UART_CR_URX_IR_EN;
+            } else {
+                rx_tmp &= ~UART_CR_URX_IR_EN;
+            }
+            if (ir_config->rx_inverse) {
+                rx_tmp |= UART_CR_URX_IR_INV;
+            } else {
+                rx_tmp &= ~UART_CR_URX_IR_INV;
+            }
+            putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
+            /* Configure tx ir pulse start and stop position */
+            putreg32((ir_config->tx_pluse_stop << 16) | ir_config->tx_pluse_start, reg_base + UART_UTX_IR_POSITION_OFFSET);
+            /* Configure rx ir pulse start position */
+            putreg32(ir_config->rx_pluse_start, reg_base + UART_URX_IR_POSITION_OFFSET);
+        } break;
+#endif
         default:
             ret = -EPERM;
             break;

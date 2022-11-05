@@ -84,7 +84,7 @@ const uint8_t aes_xts_256bit_ct[64] = {
     0x66, 0xb2, 0x7f, 0x06, 0x46, 0xbb, 0xb2, 0x46, 0x00, 0xf8, 0x6b, 0x0c, 0xc0, 0x5f, 0xb5, 0x20
 };
 
-static struct bflb_aes_link_s aes_ecb_link = {
+ATTR_NOCACHE_RAM_SECTION struct bflb_aes_link_s aes_ecb_link = {
     .aes_key = AES_LINK_KEY_128BITS, /* 128-bit key mode select */
     .aes_dec_en = 0,                 /* Encode */
     .aes_newkey_dis = 0,             /* Use new key */
@@ -111,7 +111,7 @@ static struct bflb_aes_link_s aes_ecb_link = {
     .aes_key7 = 0                    /* Big endian aes key(aes-256 key LSB) */
 };
 
-static struct bflb_aes_link_s aes_cbc_link = {
+ATTR_NOCACHE_RAM_SECTION struct bflb_aes_link_s aes_cbc_link = {
     .aes_key = AES_LINK_KEY_128BITS, /* 128-bit key mode select */
     .aes_dec_en = 0,                 /* Encode */
     .aes_newkey_dis = 0,             /* Use new key */
@@ -138,7 +138,7 @@ static struct bflb_aes_link_s aes_cbc_link = {
     .aes_key7 = 0                    /* Big endian aes key(aes-256 key LSB) */
 };
 
-static struct bflb_aes_link_s aes_cbc_link2 = {
+ATTR_NOCACHE_RAM_SECTION struct bflb_aes_link_s aes_cbc_link2 = {
     .aes_key = AES_LINK_KEY_128BITS, /* 128-bit key mode select */
     .aes_dec_en = 0,                 /* Encode */
     .aes_newkey_dis = 0,             /* Use new key */
@@ -165,7 +165,7 @@ static struct bflb_aes_link_s aes_cbc_link2 = {
     .aes_key7 = 0                    /* Big endian aes key(aes-256 key LSB) */
 };
 
-static struct bflb_aes_link_s aes_ctr_link = {
+ATTR_NOCACHE_RAM_SECTION struct bflb_aes_link_s aes_ctr_link = {
     .aes_key = AES_LINK_KEY_128BITS, /* 128-bit key mode select */
     .aes_dec_en = 0,                 /* Encode */
     .aes_newkey_dis = 0,             /* Use new key */
@@ -192,7 +192,7 @@ static struct bflb_aes_link_s aes_ctr_link = {
     .aes_key7 = 0                    /* Big endian aes key(aes-256 key LSB) */
 };
 
-static struct bflb_aes_xts_link_s aes_xts_link1 = {
+ATTR_NOCACHE_RAM_SECTION struct bflb_aes_xts_link_s aes_xts_link1 = {
     .aes_key = AES_LINK_KEY_128BITS, /* 128-bit key mode select */
     .aes_dec_en = 0,                 /* Encode */
     .aes_newkey_dis = 0,             /* Use new key */
@@ -201,7 +201,7 @@ static struct bflb_aes_xts_link_s aes_xts_link1 = {
     .aes_intset = 0,                 /* Not set interrupt */
     .aes_mode = AES_MODE_XTS,        /* ECB mode select */
     .aes_newiv_dis = 0,              /* Use new iv */
-    .aes_xts = 0,                    /* XTS mode select */
+    .aes_xts = AES_LINK_XTS_MODE1,   /* XTS mode select */
     .aes_msglen = 1,                 /* Number of 128-bit block */
     .aes_srcaddr = 0,                /* Message source address */
     .aes_dstaddr = 0,                /* Message destination address */
@@ -228,7 +228,7 @@ static struct bflb_aes_xts_link_s aes_xts_link1 = {
     .aes_key27 = 0x00000000          /* Big endian aes key2(aes-256 key LSB) */
 };
 
-static struct bflb_aes_xts_link_s aes_xts_link2 = {
+ATTR_NOCACHE_RAM_SECTION struct bflb_aes_xts_link_s aes_xts_link2 = {
     .aes_key = AES_LINK_KEY_192BITS, /* 128-bit key mode select */
     .aes_dec_en = 0,                 /* Encode */
     .aes_newkey_dis = 0,             /* Use new key */
@@ -237,7 +237,7 @@ static struct bflb_aes_xts_link_s aes_xts_link2 = {
     .aes_intset = 0,                 /* Not set interrupt */
     .aes_mode = AES_MODE_XTS,        /* ECB mode select */
     .aes_newiv_dis = 0,              /* Use new iv */
-    .aes_xts = 0,                    /* XTS mode select */
+    .aes_xts = AES_LINK_XTS_MODE1,   /* XTS mode select */
     .aes_msglen = 1,                 /* Number of 128-bit block */
     .aes_srcaddr = 0,                /* Message source address */
     .aes_dstaddr = 0,                /* Message destination address */
@@ -264,7 +264,7 @@ static struct bflb_aes_xts_link_s aes_xts_link2 = {
     .aes_key27 = 0x00000000          /* Big endian aes key2(aes-256 key LSB) */
 };
 
-static struct bflb_aes_xts_link_s aes_xts_link3 = {
+ATTR_NOCACHE_RAM_SECTION struct bflb_aes_xts_link_s aes_xts_link3 = {
     .aes_key = AES_LINK_KEY_256BITS, /* 128-bit key mode select */
     .aes_dec_en = 0,                 /* Encode */
     .aes_newkey_dis = 0,             /* Use new key */
@@ -273,7 +273,7 @@ static struct bflb_aes_xts_link_s aes_xts_link3 = {
     .aes_intset = 0,                 /* Not set interrupt */
     .aes_mode = AES_MODE_XTS,        /* ECB mode select */
     .aes_newiv_dis = 0,              /* Use new iv */
-    .aes_xts = 0,                    /* XTS mode select */
+    .aes_xts = AES_LINK_XTS_MODE1,   /* XTS mode select */
     .aes_msglen = 1,                 /* Number of 128-bit block */
     .aes_srcaddr = 0,                /* Message source address */
     .aes_dstaddr = 0,                /* Message destination address */
@@ -314,8 +314,8 @@ static uint32_t bflb_data_compare(const uint8_t *expected, uint8_t *input, uint3
     return 0;
 }
 
-ATTR_NOCACHE_RAM_SECTION uint8_t aes_enc_buf[512];
-ATTR_NOCACHE_RAM_SECTION uint8_t aes_dec_buf[512];
+ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t aes_enc_buf[512];
+ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t aes_dec_buf[512];
 
 int main(void)
 {
@@ -349,12 +349,12 @@ int main(void)
     bflb_data_compare(aes_xts_128bit_ct, aes_enc_buf, 16);
     printf("aes link xts 128 success\r\n");
 
-    bflb_aes_link_update(aes, (uint32_t)&aes_xts_link2, aes_xts_192bit_pt, aes_enc_buf, 16);
-    bflb_data_compare(aes_xts_192bit_ct, aes_enc_buf, 16);
+    bflb_aes_link_update(aes, (uint32_t)&aes_xts_link2, aes_xts_192bit_pt, aes_enc_buf, 32);
+    bflb_data_compare(aes_xts_192bit_ct, aes_enc_buf, 32);
     printf("aes link xts 192 success\r\n");
 
-    bflb_aes_link_update(aes, (uint32_t)&aes_xts_link3, aes_xts_256bit_pt, aes_enc_buf, 16);
-    bflb_data_compare(aes_xts_256bit_ct, aes_enc_buf, 16);
+    bflb_aes_link_update(aes, (uint32_t)&aes_xts_link3, aes_xts_256bit_pt, aes_enc_buf, 32);
+    bflb_data_compare(aes_xts_256bit_ct, aes_enc_buf, 32);
     printf("aes link xts 256 success\r\n");
 
     printf("aes link success\r\n");

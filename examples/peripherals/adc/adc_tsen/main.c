@@ -24,7 +24,7 @@ int main(void)
 
     struct bflb_adc_channel_s chan;
 
-    chan.pos_chan = ADC_CHAN_TSEN_P;
+    chan.pos_chan = ADC_CHANNEL_TSEN_P;
     chan.neg_chan = ADC_CHANNEL_GND;
 
     bflb_adc_init(adc, &cfg);

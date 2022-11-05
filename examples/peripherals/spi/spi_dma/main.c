@@ -11,8 +11,8 @@ struct bflb_device_s *spi0;
 struct bflb_device_s *dma0_ch0;
 struct bflb_device_s *dma0_ch1;
 
-static ATTR_NOCACHE_RAM_SECTION uint32_t tx_buffer[256];
-static ATTR_NOCACHE_RAM_SECTION uint32_t rx_buffer[256];
+static ATTR_NOCACHE_NOINIT_RAM_SECTION uint32_t tx_buffer[256];
+static ATTR_NOCACHE_NOINIT_RAM_SECTION uint32_t rx_buffer[256];
 
 static volatile uint8_t dma_tc_flag0 = 0;
 static volatile uint8_t dma_tc_flag1 = 0;

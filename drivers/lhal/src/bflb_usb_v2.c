@@ -1,5 +1,4 @@
 #include "bflb_core.h"
-#include "bflb_irq.h"
 #include "usbd_core.h"
 #include "usbh_core.h"
 #include "hardware/usb_v2_reg.h"

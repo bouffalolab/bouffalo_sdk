@@ -1,6 +1,5 @@
 #include "bflb_dma.h"
 #include "bflb_l1c.h"
-#include "bflb_irq.h"
 #include "hardware/dma_reg.h"
 
 struct bflb_dma_irq_callback {
@@ -73,9 +72,9 @@ void bflb_dma_channel_init(struct bflb_device_s *dev, const struct bflb_dma_chan
 
     channel_base = dev->reg_base;
 
-    /* dma global disable */
+    /* dma global enable */
     regval = getreg32(dma_base[dev->idx] + DMA_TOP_CONFIG_OFFSET);
-    regval &= ~DMA_E;
+    regval |= DMA_E;
     putreg32(regval, dma_base[dev->idx] + DMA_TOP_CONFIG_OFFSET);
 
     /* dma channel disable */
@@ -83,7 +82,12 @@ void bflb_dma_channel_init(struct bflb_device_s *dev, const struct bflb_dma_chan
     regval &= ~DMA_E;
     putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
 
+#if defined(BL602)
     regval = 0;
+#else
+    regval = getreg32(channel_base + DMA_CxCONTROL_OFFSET);
+    regval &= DMA_DST_ADD_MODE | DMA_DST_MIN_MODE | DMA_FIX_CNT_MASK;
+#endif
 
     if (config->src_addr_inc) {
         regval |= DMA_SI;
@@ -108,10 +112,18 @@ void bflb_dma_channel_init(struct bflb_device_s *dev, const struct bflb_dma_chan
     regval |= (config->direction << DMA_FLOWCNTRL_SHIFT);
     putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
 
-    /* dma global enable */
-    regval = getreg32(dma_base[dev->idx] + DMA_TOP_CONFIG_OFFSET);
-    regval |= DMA_E;
-    putreg32(regval, dma_base[dev->idx] + DMA_TOP_CONFIG_OFFSET);
+    /* disable dma error and tc interrupt */
+    regval = getreg32(channel_base + DMA_CxCONFIG_OFFSET);
+    regval |= (DMA_ITC | DMA_IE);
+    putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
+
+    regval = getreg32(channel_base + DMA_CxCONTROL_OFFSET);
+    regval &= ~DMA_I;
+    putreg32(regval, channel_base + DMA_CxCONTROL_OFFSET);
+
+    /* clear irq status */
+    putreg32(1 << dev->sub_idx, dma_base[dev->idx] + DMA_INTTCCLEAR_OFFSET);
+    putreg32(1 << dev->sub_idx, dma_base[dev->idx] + DMA_INTERRCLR_OFFSET);
 
 #if (defined(BL606P) || defined(BL808)) && (defined(CPU_M0) || defined(CPU_LP))
     bflb_irq_attach(31, dma0_isr, NULL);
@@ -393,6 +405,30 @@ int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
             putreg32(regval, channel_base + DMA_CxCONTROL_OFFSET);
             break;
+
+#if !defined(BL602)
+        case DMA_CMD_SET_ADD_MODE:
+            regval = getreg32(channel_base + DMA_CxCONTROL_OFFSET);
+            if (arg) {
+                regval |= DMA_DST_ADD_MODE;
+            } else {
+                regval &= ~DMA_DST_ADD_MODE;
+            }
+            putreg32(regval, channel_base + DMA_CxCONTROL_OFFSET);
+            break;
+
+        case DMA_CMD_SET_REDUCE_MODE:
+            regval = getreg32(channel_base + DMA_CxCONTROL_OFFSET);
+            if (arg) {
+                regval |= DMA_DST_MIN_MODE;
+                regval &= ~DMA_FIX_CNT_MASK;
+                regval |= (arg & 0x7) << DMA_FIX_CNT_SHIFT;
+            } else {
+                regval &= ~DMA_DST_MIN_MODE;
+            }
+            putreg32(regval, channel_base + DMA_CxCONTROL_OFFSET);
+            break;
+#endif
 
         default:
             ret = -EPERM;

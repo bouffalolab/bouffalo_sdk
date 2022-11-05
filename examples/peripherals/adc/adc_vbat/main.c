@@ -21,7 +21,7 @@ int main(void)
 
     struct bflb_adc_channel_s chan;
 
-    chan.pos_chan = ADC_CHAN_VABT_HALF;
+    chan.pos_chan = ADC_CHANNEL_VABT_HALF;
     chan.neg_chan = ADC_CHANNEL_GND;
 
     bflb_adc_init(adc, &cfg);

@@ -1,5 +1,4 @@
 #include "bflb_uart.h"
-#include "bflb_irq.h"
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
 #include "bflb_rtc.h"

@@ -126,13 +126,13 @@ static const unsigned char sha512_test_sum[6][64] = {
       0x4E, 0xAD, 0xB2, 0x17, 0xAD, 0x8C, 0xC0, 0x9B }
 };
 
-ATTR_NOCACHE_RAM_SECTION __attribute__((aligned(32))) uint8_t sha_input_buf[1000]; /* input addr must be align 32 */
+ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(32))) uint8_t sha_input_buf[1000]; /* input addr must be align 32 */
 
 uint8_t sha_output_buf[128];
 
-ATTR_NOCACHE_RAM_SECTION struct bflb_sha1_ctx_s ctx_sha1;
-ATTR_NOCACHE_RAM_SECTION struct bflb_sha256_ctx_s ctx_sha256;
-ATTR_NOCACHE_RAM_SECTION struct bflb_sha512_ctx_s ctx_sha512;
+ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha1_ctx_s ctx_sha1;
+ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_ctx_s ctx_sha256;
+ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha512_ctx_s ctx_sha512;
 
 static uint32_t bflb_data_compare(const uint8_t *expected, uint8_t *input, uint32_t len)
 {
@@ -192,7 +192,7 @@ int main(void)
         }
 
         bflb_sha256_finish(sha, &ctx_sha256, sha_output_buf);
-        bflb_data_compare(sha256_test_sum[i], sha_output_buf, 20);
+        bflb_data_compare(sha256_test_sum[i], sha_output_buf, 28);
     }
     printf("sha224 success\r\n");
 
@@ -210,7 +210,7 @@ int main(void)
         }
 
         bflb_sha256_finish(sha, &ctx_sha256, sha_output_buf);
-        bflb_data_compare(sha256_test_sum[i + 3], sha_output_buf, 20);
+        bflb_data_compare(sha256_test_sum[i + 3], sha_output_buf, 32);
     }
     printf("sha256 success\r\n");
 
@@ -228,7 +228,7 @@ int main(void)
         }
 
         bflb_sha512_finish(sha, &ctx_sha512, sha_output_buf);
-        bflb_data_compare(sha512_test_sum[i], sha_output_buf, 20);
+        bflb_data_compare(sha512_test_sum[i], sha_output_buf, 48);
     }
     printf("sha384 success\r\n");
 
@@ -246,7 +246,7 @@ int main(void)
         }
 
         bflb_sha512_finish(sha, &ctx_sha512, sha_output_buf);
-        bflb_data_compare(sha512_test_sum[i + 3], sha_output_buf, 20);
+        bflb_data_compare(sha512_test_sum[i + 3], sha_output_buf, 64);
     }
     printf("sha512 success\r\n");
     bflb_group0_release_sha_access(sha);

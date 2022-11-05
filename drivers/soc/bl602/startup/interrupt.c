@@ -20,7 +20,7 @@
  * under the License.
  *
  */
-#include "bflb_irq.h"
+#include "bflb_core.h"
 
 typedef void (*pFunc)(void);
 
