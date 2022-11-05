@@ -55,7 +55,7 @@
 
 // Support for the decimal notation floating point conversion specifiers (%f, %F)
 #ifndef CONFIG_LIBC_FLOAT
-#define CONFIG_LIBC_FLOAT 0
+#define CONFIG_LIBC_FLOAT 1
 #endif
 
 // Support for the exponential notatin floating point conversion specifiers (%e, %g, %E, %G)
@@ -73,7 +73,7 @@
 // possibly hundreds of characters, potentially overflowing your buffers. In this implementation,
 // all values beyond this threshold are switched to exponential notation.
 #ifndef PRINTF_MAX_INTEGRAL_DIGITS_FOR_DECIMAL
-#define PRINTF_MAX_INTEGRAL_DIGITS_FOR_DECIMAL 0
+#define PRINTF_MAX_INTEGRAL_DIGITS_FOR_DECIMAL 9
 #endif
 
 // Support for the long long integral types (with the ll, z and t length modifiers for specifiers
@@ -81,6 +81,19 @@
 #ifndef CONFIG_LIBC_LONG_LONG
 #define CONFIG_LIBC_LONG_LONG 1
 #endif
+
+#ifndef PRINTF_SUPPORT_LENGTH_FILED
+#define PRINTF_SUPPORT_LENGTH_FILED 1
+#endif
+
+#ifndef PRINTF_SUPPORT_CHAR
+#define PRINTF_SUPPORT_CHAR 1
+#endif
+
+#ifndef PRINTF_SUPPORT_ADDR
+#define PRINTF_SUPPORT_ADDR 1
+#endif
+
 
 #if CONFIG_LIBC_LONG_LONG
 typedef unsigned long long printf_unsigned_value_t;
@@ -843,7 +856,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         format++;
       }
     }
-
+#if PRINTF_SUPPORT_LENGTH_FILED
     // evaluate length field
     switch (*format) {
       case 'l' :
@@ -877,7 +890,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
       default:
         break;
     }
-
+#endif
     // evaluate specifier
     switch (*format) {
       case 'd' :
@@ -972,6 +985,8 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         format++;
         break;
 #endif  // CONFIG_LIBC_FLOAT_EX
+
+#if PRINTF_SUPPORT_CHAR
       case 'c' : {
         unsigned int l = 1U;
         // pre padding
@@ -991,7 +1006,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         format++;
         break;
       }
-
+#endif
       case 's' : {
         const char* p = va_arg(va, char*);
         if (p == NULL) {
@@ -1022,7 +1037,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         format++;
         break;
       }
-
+#if PRINTF_SUPPORT_ADDR
       case 'p' : {
         width = sizeof(void*) * 2U + 2; // 2 hex chars per byte + the "0x" prefix
         flags |= FLAGS_ZEROPAD | FLAGS_POINTER;
@@ -1033,7 +1048,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
         format++;
         break;
       }
-
+#endif
       case '%' :
         out('%', buffer, idx++, maxlen);
         format++;
