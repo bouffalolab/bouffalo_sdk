@@ -191,6 +191,7 @@ struct bflb_device_s bl808_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_CKS,
       .user_data = NULL },
+#if defined(CPU_D0)
     { .name = "mjpeg",
       .reg_base = MJPEG_BASE,
       .irq_num = BL808_IRQ_MJPEG,
@@ -198,6 +199,7 @@ struct bflb_device_s bl808_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_MJPEG,
       .user_data = NULL },
+#endif
 };
 
 struct bflb_device_s *bflb_device_get_by_name(const char *name)
