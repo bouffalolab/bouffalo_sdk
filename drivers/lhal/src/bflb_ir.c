@@ -4,6 +4,7 @@
 
 #define DIVIDE_ROUND(a, b) ((2 * a + b) / (2 * b))
 
+#if !defined(BL616)
 void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s *config)
 {
     uint32_t reg_base;
@@ -80,6 +81,16 @@ void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s
     if (tx_config->tx_mode != IR_TX_CUSTOMIZE) {
         tx_config->modu_width_1 = ((ir_clock / 11310 + 5) / 10 - 1) & 0xff;
         tx_config->modu_width_0 = ((ir_clock / 5655 + 5) / 10 - 1) & 0xff;
+    } else {
+        if (tx_config->output_modulation != 0 && tx_config->freerun_enable != 0) {
+            tx_config->continue_enable = 0;
+            if (tx_config->tail_pulse_width_1 < 5) {
+                tx_config->tail_pulse_width_1 = 5;
+            }
+            if (tx_config->tail_pulse_width_0 < 5) {
+                tx_config->tail_pulse_width_0 = 5;
+            }
+        }
     }
     
     reg_base = dev->reg_base;
@@ -172,10 +183,16 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
         }
     }
     
-    while((bflb_ir_txint_status(dev) & IR_TX_INT_END) == 0){
-        /* Waiting for sending */
+    if ((getreg32(reg_base + IRTX_CONFIG_OFFSET) & IR_CR_IRTX_FRM_EN) == 0) {
+        while((bflb_ir_txint_status(dev) & IR_TX_INT_END) == 0){
+            /* Waiting for sending */
+        }
+    } else {
+        while(bflb_ir_txfifo_cnt(dev) < 4){
+            /* Waiting for sending */
+        }
     }
-    
+
     regval &= ~IR_CR_IRTX_EN;
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
     
@@ -334,7 +351,9 @@ void bflb_ir_txfifo_clear(struct bflb_device_s *dev)
     regval |= IR_TX_FIFO_CLR;
     putreg32(regval, reg_base + IR_FIFO_CONFIG_0_OFFSET);
 }
+#endif
 
+#if !defined(BL702L)
 void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s *config)
 {
     uint32_t reg_base;
@@ -513,3 +532,4 @@ void bflb_ir_rxfifo_clear(struct bflb_device_s *dev)
     regval |= IR_RX_FIFO_CLR;
     putreg32(regval, reg_base + IR_FIFO_CONFIG_0_OFFSET);
 }
+#endif

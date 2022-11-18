@@ -445,7 +445,7 @@ uint8_t EF_Ctrl_Is_All_Bits_Zero(uint32_t val, uint8_t start, uint8_t len);
 uint8_t EF_Ctrl_Read_FlashDlyCoe(void);
 
 uint32_t EF_Ctrl_Get_Common_Trim_List(Efuse_Common_Trim_Cfg **trim_list);
-void EF_Ctrl_Read_Common_Trim(char *name, Efuse_Common_Trim_Type *trim);
+void EF_Ctrl_Read_Common_Trim(char *name, Efuse_Common_Trim_Type *trim, uint8_t reload);
 void EF_Ctrl_Write_Common_Trim(char *name, uint32_t value, uint8_t program);
 
 /*@} end of group EF_CTRL_Public_Functions */

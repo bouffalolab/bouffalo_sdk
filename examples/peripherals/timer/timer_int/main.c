@@ -10,18 +10,18 @@ void timer0_isr(int irq, void *arg)
 {
     bool status = bflb_timer_get_compint_status(timer0, TIMER_COMP_ID_0);
     if (status) {
-        printf("timer0 comp0 trigger\r\n");
         bflb_timer_compint_clear(timer0, TIMER_COMP_ID_0);
+        printf("timer0 comp0 trigger\r\n");
     }
     status = bflb_timer_get_compint_status(timer0, TIMER_COMP_ID_1);
     if (status) {
-        printf("timer0 comp1 trigger\r\n");
         bflb_timer_compint_clear(timer0, TIMER_COMP_ID_1);
+        printf("timer0 comp1 trigger\r\n");
     }
     status = bflb_timer_get_compint_status(timer0, TIMER_COMP_ID_2);
     if (status) {
-        printf("timer0 comp2 trigger\r\n");
         bflb_timer_compint_clear(timer0, TIMER_COMP_ID_2);
+        printf("timer0 comp2 trigger\r\n");
     }
 }
 
@@ -29,18 +29,18 @@ void timer1_isr(int irq, void *arg)
 {
     bool status = bflb_timer_get_compint_status(timer1, TIMER_COMP_ID_0);
     if (status) {
-        printf("timer1 comp0 trigger\r\n");
         bflb_timer_compint_clear(timer1, TIMER_COMP_ID_0);
+        printf("timer1 comp0 trigger\r\n");
     }
     status = bflb_timer_get_compint_status(timer1, TIMER_COMP_ID_1);
     if (status) {
-        printf("timer1 comp1 trigger\r\n");
         bflb_timer_compint_clear(timer1, TIMER_COMP_ID_1);
+        printf("timer1 comp1 trigger\r\n");
     }
     status = bflb_timer_get_compint_status(timer1, TIMER_COMP_ID_2);
     if (status) {
-        printf("timer1 comp2 trigger\r\n");
         bflb_timer_compint_clear(timer1, TIMER_COMP_ID_2);
+        printf("timer1 comp2 trigger\r\n");
     }
 }
 
@@ -77,8 +77,8 @@ int main(void)
     bflb_timer_init(timer0, &cfg0);
     bflb_timer_init(timer1, &cfg1);
 
-    bflb_irq_attach(timer0->irq_num, timer0_isr, timer0);
-    bflb_irq_attach(timer1->irq_num, timer1_isr, timer1);
+    bflb_irq_attach(timer0->irq_num, timer0_isr, NULL);
+    bflb_irq_attach(timer1->irq_num, timer1_isr, NULL);
     bflb_irq_enable(timer0->irq_num);
     bflb_irq_enable(timer1->irq_num);
 

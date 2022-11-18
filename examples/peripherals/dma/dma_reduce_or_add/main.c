@@ -124,6 +124,8 @@ int main(void)
     config.dst_width = DMA_DATA_WIDTH_32BIT;
     bflb_dma_channel_init(dma0_ch0, &config);
 
+    bflb_dma_channel_tcint_mask(dma0_ch0, false);
+
     transfers[0].nbytes = DMA_TRANSFER_LENGTH + 1;
     bflb_dma_channel_lli_reload(dma0_ch0, lli, 20, transfers, 1);
 

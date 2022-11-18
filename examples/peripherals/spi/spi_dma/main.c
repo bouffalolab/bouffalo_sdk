@@ -47,10 +47,11 @@ int main(void)
     struct bflb_dma_channel_lli_transfer_s rx_transfers[1];
 
     struct bflb_spi_config_s spi_cfg = {
-        .freq = 20 * 1000 * 1000,
 #if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+        .freq = 1 * 1000 * 1000,
         .role = SPI_ROLE_MASTER,
 #else
+        .freq = 32 * 1000 * 1000,
         .role = SPI_ROLE_SLAVE,
 #endif
         .mode = SPI_MODE3,

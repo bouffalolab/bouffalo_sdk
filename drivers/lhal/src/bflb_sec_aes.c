@@ -138,6 +138,7 @@ int bflb_aes_encrypt(struct bflb_device_s *dev,
 {
     uint32_t regval;
     uint32_t reg_base;
+    uint64_t start_time;
     uint8_t mode;
     uint8_t *temp_iv = (uint8_t *)iv;
 
@@ -186,7 +187,11 @@ int bflb_aes_encrypt(struct bflb_device_s *dev,
     regval |= SEC_ENG_SE_AES_0_TRIG_1T;
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET) & SEC_ENG_SE_AES_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
     return 0;
 }
@@ -199,6 +204,7 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
 {
     uint32_t regval;
     uint32_t reg_base;
+    uint64_t start_time;
     uint8_t mode;
     uint8_t *temp_iv = (uint8_t *)iv;
 
@@ -247,7 +253,11 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
     regval |= SEC_ENG_SE_AES_0_TRIG_1T;
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET) & SEC_ENG_SE_AES_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
     return 0;
 }
@@ -292,6 +302,7 @@ int bflb_aes_link_update(struct bflb_device_s *dev,
 {
     uint32_t regval;
     uint32_t reg_base;
+    uint64_t start_time;
 
     reg_base = dev->reg_base;
 
@@ -320,7 +331,11 @@ int bflb_aes_link_update(struct bflb_device_s *dev,
     __asm volatile("nop");
     __asm volatile("nop");
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET) & SEC_ENG_SE_AES_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
 
     return 0;

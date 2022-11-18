@@ -4,7 +4,7 @@
 #include "bflb_l1c.h"
 #include "board.h"
 
-struct bflb_device_s *uart1;
+struct bflb_device_s *uartx;
 struct bflb_device_s *dma0_ch0;
 struct bflb_device_s *dma0_ch1;
 
@@ -45,10 +45,10 @@ void sram_init()
 int main(void)
 {
     board_init();
-    board_uart1_gpio_init();
+    board_uartx_gpio_init();
     sram_init();
 
-    uart1 = bflb_device_get_by_name("uart1");
+    uartx = bflb_device_get_by_name(DEFAULT_TEST_UART);
 
     struct bflb_uart_config_s cfg;
 
@@ -59,9 +59,9 @@ int main(void)
     cfg.flow_ctrl = 0;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 0;
-    bflb_uart_init(uart1, &cfg);
-    bflb_uart_link_txdma(uart1, true);
-    bflb_uart_link_rxdma(uart1, true);
+    bflb_uart_init(uartx, &cfg);
+    bflb_uart_link_txdma(uartx, true);
+    bflb_uart_link_rxdma(uartx, true);
 
     dma0_ch0 = bflb_device_get_by_name("dma0_ch0");
     dma0_ch1 = bflb_device_get_by_name("dma0_ch1");
@@ -70,7 +70,7 @@ int main(void)
 
     config.direction = DMA_MEMORY_TO_PERIPH;
     config.src_req = DMA_REQUEST_NONE;
-    config.dst_req = DMA_REQUEST_UART1_TX;
+    config.dst_req = DEFAULT_TEST_UART_DMA_TX_REQUEST;
     config.src_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
     config.dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
     config.src_burst_count = DMA_BURST_INCR1;
@@ -82,7 +82,7 @@ int main(void)
     struct bflb_dma_channel_config_s rxconfig;
 
     rxconfig.direction = DMA_PERIPH_TO_MEMORY;
-    rxconfig.src_req = DMA_REQUEST_UART1_RX;
+    rxconfig.src_req = DEFAULT_TEST_UART_DMA_RX_REQUEST;
     rxconfig.dst_req = DMA_REQUEST_NONE;
     rxconfig.src_addr_inc = DMA_ADDR_INCREMENT_DISABLE;
     rxconfig.dst_addr_inc = DMA_ADDR_INCREMENT_ENABLE;
@@ -99,20 +99,20 @@ int main(void)
     struct bflb_dma_channel_lli_transfer_s tx_transfers[3];
 
     tx_transfers[0].src_addr = (uint32_t)src_buffer;
-    tx_transfers[0].dst_addr = (uint32_t)DMA_ADDR_UART1_TDR;
+    tx_transfers[0].dst_addr = (uint32_t)DEFAULT_TEST_UART_DMA_TDR;
     tx_transfers[0].nbytes = 4100;
 
     tx_transfers[1].src_addr = (uint32_t)src2_buffer;
-    tx_transfers[1].dst_addr = (uint32_t)DMA_ADDR_UART1_TDR;
+    tx_transfers[1].dst_addr = (uint32_t)DEFAULT_TEST_UART_DMA_TDR;
     tx_transfers[1].nbytes = 4100;
 
     tx_transfers[2].src_addr = (uint32_t)src3_buffer;
-    tx_transfers[2].dst_addr = (uint32_t)DMA_ADDR_UART1_TDR;
+    tx_transfers[2].dst_addr = (uint32_t)DEFAULT_TEST_UART_DMA_TDR;
     tx_transfers[2].nbytes = 4100;
 
     struct bflb_dma_channel_lli_pool_s rx_llipool[20];
     struct bflb_dma_channel_lli_transfer_s rx_transfers[1];
-    rx_transfers[0].src_addr = (uint32_t)DMA_ADDR_UART1_RDR;
+    rx_transfers[0].src_addr = (uint32_t)DEFAULT_TEST_UART_DMA_RDR;
     rx_transfers[0].dst_addr = (uint32_t)receive_buffer;
     rx_transfers[0].nbytes = 50;
 

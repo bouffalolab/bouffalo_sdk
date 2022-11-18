@@ -13,6 +13,7 @@ int bflb_trng_read(struct bflb_device_s *dev, uint8_t data[32])
 {
     uint32_t regval;
     uint32_t reg_base;
+    uint64_t start_time;
     uint8_t *p = (uint8_t *)data;
 
     reg_base = dev->reg_base;
@@ -32,7 +33,11 @@ int bflb_trng_read(struct bflb_device_s *dev, uint8_t data[32])
     __ASM volatile("nop");
     __ASM volatile("nop");
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_TRNG_0_CTRL_0_OFFSET) & SEC_ENG_SE_TRNG_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
 
     regval = getreg32(reg_base + SEC_ENG_SE_TRNG_0_CTRL_0_OFFSET);
@@ -49,7 +54,11 @@ int bflb_trng_read(struct bflb_device_s *dev, uint8_t data[32])
     __ASM volatile("nop");
     __ASM volatile("nop");
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_TRNG_0_CTRL_0_OFFSET) & SEC_ENG_SE_TRNG_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
 
     /* copy trng value */

@@ -23,10 +23,10 @@ HeapMinSize  = 0x1000; /*  4KB */
 MEMORY
 {
     xip_memory  (rx)  : ORIGIN = 0xA0000000, LENGTH = 4M
-    itcm_memory (rx)  : ORIGIN = 0x62FC0000, LENGTH = 16K
-    dtcm_memory (rx)  : ORIGIN = 0x62FC4000, LENGTH = 4K
-    nocache_ram_memory (!rx) : ORIGIN = 0x22FC5000, LENGTH = 44K+64K
-    ram_memory  (!rx) : ORIGIN = 0x62FE0000 , LENGTH = 320K+160K-16K-4K-44K-64K
+    itcm_memory (rx)  : ORIGIN = 0x62FC0000, LENGTH = 20K
+    dtcm_memory (rx)  : ORIGIN = 0x62FC5000, LENGTH = 4K
+    nocache_ram_memory (!rx) : ORIGIN = 0x22FC6000, LENGTH = 44K+60K
+    ram_memory  (!rx) : ORIGIN = 0x62FE0000 , LENGTH = 320K+160K-20K-4K-44K-60K
 }
 
 SECTIONS

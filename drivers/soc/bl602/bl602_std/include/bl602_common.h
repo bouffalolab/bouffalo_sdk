@@ -205,6 +205,11 @@ __ALWAYS_STATIC_INLINE void __disable_irq(void)
 #define arch_delay_us BL602_Delay_US
 #define arch_delay_ms BL602_Delay_MS
 
+#define BFLB_Soft_CRC32  bflb_soft_crc32
+#define CPU_Interrupt_Enable(irq)
+#define CPU_Interrupt_Disable(irq)
+#define Interrupt_Handler_Register(irq, callback)
+
 void BL602_Delay_US(uint32_t cnt);
 void BL602_Delay_MS(uint32_t cnt);
 #endif

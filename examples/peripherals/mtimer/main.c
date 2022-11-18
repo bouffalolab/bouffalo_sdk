@@ -1,4 +1,5 @@
 #include "bflb_mtimer.h"
+#include "board.h"
 
 void systick_isr()
 {
@@ -6,8 +7,6 @@ void systick_isr()
     tick++;
     printf("tick:%d\r\n", tick);
 }
-
-extern void board_init(void);
 
 int main(void)
 {

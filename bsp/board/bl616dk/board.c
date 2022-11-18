@@ -2,11 +2,13 @@
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
+#include "bflb_flash.h"
 #include "mmheap.h"
 #include "board.h"
 #include "bl616_tzc_sec.h"
 #include "bl616_psram.h"
 #include "bl616_glb.h"
+#include "bl616_sflash.h"
 
 #define WB_4MB_PSRAM (1)
 
@@ -26,7 +28,7 @@ static struct heap_region system_mmheap[] = {
 
 static struct bflb_device_s *uart0;
 
-#if (defined(CONFIG_LUA) || defined(CONFIG_BFLOG))
+#if (defined(CONFIG_LUA) || defined(CONFIG_BFLOG) || defined(CONFIG_FATFS))
 static struct bflb_device_s *rtc;
 #endif
 
@@ -56,10 +58,11 @@ static void peripheral_clock_init(void)
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
     GLB_Set_SPI_CLK(ENABLE, GLB_SPI_CLK_MCU_MUXPLL_160M, 0);
     GLB_Set_I2C_CLK(ENABLE, GLB_I2C_CLK_XCLK, 0);
-    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 0);
+    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
     GLB_Set_DIG_CLK_Sel(GLB_DIG_CLK_XCLK);
     GLB_Set_DIG_512K_CLK(ENABLE, ENABLE, 0x4E);
     GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
+    GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, 19);
 
     GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_MCU_MUXPLL_160M);
 #ifdef CONFIG_BSP_SDH_SDCARD
@@ -70,21 +73,16 @@ static void peripheral_clock_init(void)
 #endif
 
     GLB_Set_USB_CLK_From_WIFIPLL(1);
+    GLB_Swap_MCU_SPI_0_MOSI_With_MISO(0);
 }
 
 static void bflb_init_psram_gpio(void)
 {
-    GLB_GPIO_Cfg_Type cfg;
+    struct bflb_device_s *gpio;
 
-    cfg.pullType = GPIO_PULL_NONE;
-    cfg.drive = 0;
-    cfg.smtCtrl = 1;
-
+    gpio = bflb_device_get_by_name("gpio");
     for (uint8_t i = 0; i < 12; i++) {
-        cfg.gpioPin = 41 + i;
-        cfg.gpioMode = GPIO_MODE_INPUT;
-
-        GLB_GPIO_Init(&cfg);
+        bflb_gpio_init(gpio, (41 + i), GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_0);
     }
 }
 
@@ -146,6 +144,33 @@ void bl_show_log(void)
     printf("Copyright (c) 2022 Bouffalolab team\r\n");
 }
 
+void bl_show_flashinfo(void)
+{
+    SPI_Flash_Cfg_Type flashCfg;
+    uint8_t *pFlashCfg = NULL;
+    uint32_t flashCfgLen = 0;
+    uint32_t flashJedecId = 0;
+
+    flashJedecId = bflb_flash_get_jedec_id();
+    bflb_flash_get_cfg(&pFlashCfg, &flashCfgLen);
+    arch_memcpy((void *)&flashCfg, pFlashCfg, flashCfgLen);
+    printf("=========== flash cfg ==============\r\n");
+    printf("jedec id   0x%06X\r\n", flashJedecId);
+    printf("mid            0x%02X\r\n", flashCfg.mid);
+    printf("iomode         0x%02X\r\n", flashCfg.ioMode);
+    printf("clk delay      0x%02X\r\n", flashCfg.clkDelay);
+    printf("clk invert     0x%02X\r\n", flashCfg.clkInvert);
+    printf("read reg cmd0  0x%02X\r\n", flashCfg.readRegCmd[0]);
+    printf("read reg cmd1  0x%02X\r\n", flashCfg.readRegCmd[1]);
+    printf("write reg cmd0 0x%02X\r\n", flashCfg.writeRegCmd[0]);
+    printf("write reg cmd1 0x%02X\r\n", flashCfg.writeRegCmd[1]);
+    printf("qe write len   0x%02X\r\n", flashCfg.qeWriteRegLen);
+    printf("cread support  0x%02X\r\n", flashCfg.cReadSupport);
+    printf("cread code     0x%02X\r\n", flashCfg.cReadMode);
+    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burstWrapCmd);
+    printf("=====================================\r\n");
+}
+
 extern void bflb_uart_set_console(struct bflb_device_s *dev);
 
 static void console_init()
@@ -173,9 +198,17 @@ static void console_init()
 
 void board_init(void)
 {
-    bflb_irq_initialize();
+    uintptr_t flag;
+
+    flag = bflb_irq_save();
+
+    bflb_flash_init();
+
     system_clock_init();
     peripheral_clock_init();
+    bflb_irq_initialize();
+
+    bflb_irq_restore(flag);
 
     system_mmheap[0].addr = (uint8_t *)&__HeapBase;
     system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
@@ -187,23 +220,24 @@ void board_init(void)
     console_init();
 
     bl_show_log();
+    bl_show_flashinfo();
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
 
     printf("sig1:%08lx\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
     printf("sig2:%08lx\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
 
-#if (defined(CONFIG_LUA) || defined(CONFIG_BFLOG))
+#if (defined(CONFIG_LUA) || defined(CONFIG_BFLOG) || defined(CONFIG_FATFS))
     rtc = bflb_device_get_by_name("rtc");
-    bflb_rtc_set_time(rtc, BFLB_RTC_SEC2TIME(0));
 #endif
+
 #ifdef CONFIG_PSRAM
     board_psram_x8_init();
     Tzc_Sec_PSRAMB_Access_Release();
 #endif
 }
 
-void board_uart1_gpio_init()
+void board_uartx_gpio_init()
 {
     struct bflb_device_s *gpio;
 
@@ -231,13 +265,17 @@ void board_spi0_gpio_init()
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* spi cs */
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* spi clk */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* spi miso */
     bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* spi mosi */
     bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
-void board_pwm0_gpio_init()
+void board_pwm_gpio_init()
 {
     struct bflb_device_s *gpio;
 
@@ -314,6 +352,15 @@ void board_sdh_gpio_init()
     bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_SDH | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
+void board_ir_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_0);
+    GLB_IR_RX_GPIO_Sel(GLB_GPIO_PIN_10);
+}
+
 #ifdef CONFIG_BFLOG
 __attribute__((weak)) uint64_t bflog_clock(void)
 {
@@ -322,7 +369,7 @@ __attribute__((weak)) uint64_t bflog_clock(void)
 
 __attribute__((weak)) uint32_t bflog_time(void)
 {
-    return BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc));
+    return BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc)) + 1640995200;
 }
 
 __attribute__((weak)) char *bflog_thread(void)
@@ -332,18 +379,35 @@ __attribute__((weak)) char *bflog_thread(void)
 #endif
 
 #ifdef CONFIG_LUA
-clock_t luaport_clock(void)
+__attribute__((weak)) clock_t luaport_clock(void)
 {
     return (clock_t)CPU_Get_MTimer_Counter();
 }
 
-time_t luaport_time(time_t *seconds)
+__attribute__((weak)) time_t luaport_time(time_t *seconds)
 {
-    time_t t = (time_t)BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc));
+    time_t t = (time_t)BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc)) + 1640995200;
     if (seconds != NULL) {
         *seconds = t;
     }
 
     return t;
+}
+#endif
+
+#ifdef CONFIG_FATFS
+#include "bflb_timestamp.h"
+__attribute__((weak)) uint32_t get_fattime(void)
+{
+    bflb_timestamp_t tm;
+
+    bflb_timestamp_utc2time(BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc)) + 1640995200, &tm);
+
+    return ((uint32_t)(tm.year - 1980) << 25) /* Year 2015 */
+           | ((uint32_t)tm.mon << 21)         /* Month 1 */
+           | ((uint32_t)tm.mday << 16)        /* Mday 1 */
+           | ((uint32_t)tm.hour << 11)        /* Hour 0 */
+           | ((uint32_t)tm.min << 5)          /* Min 0 */
+           | ((uint32_t)tm.sec >> 1);         /* Sec 0 */
 }
 #endif

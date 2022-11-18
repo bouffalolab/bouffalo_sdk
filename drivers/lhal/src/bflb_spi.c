@@ -215,7 +215,6 @@ ATTR_TCM_SECTION uint32_t bflb_spi_poll_send(struct bflb_device_s *dev, uint32_t
         regval = getreg32(reg_base + SPI_FIFO_CONFIG_1_OFFSET);
         fifo_cnt = (regval & SPI_RX_FIFO_CNT_MASK) >> SPI_RX_FIFO_CNT_SHIFT;
     } while (fifo_cnt < frame_size);
-
 #else
 
     /* Wait for rx data */
@@ -223,7 +222,6 @@ ATTR_TCM_SECTION uint32_t bflb_spi_poll_send(struct bflb_device_s *dev, uint32_t
         regval = getreg32(reg_base + SPI_FIFO_CONFIG_1_OFFSET);
         fifo_cnt = (regval & SPI_RX_FIFO_CNT_MASK) >> SPI_RX_FIFO_CNT_SHIFT;
     } while (fifo_cnt == 0);
-
 #endif
 
     regval = getreg32(reg_base + SPI_FIFO_RDATA_OFFSET);
@@ -338,7 +336,6 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
             fifo_cnt = fifo_cnt > nbytes ? nbytes : fifo_cnt;
             nbytes -= fifo_cnt;
         } else {
-            continue;
         }
 
         /* read and write data */
@@ -431,6 +428,20 @@ void bflb_spi_rxint_mask(struct bflb_device_s *dev, bool mask)
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
 }
 
+void bflb_spi_tcint_mask(struct bflb_device_s *dev, bool mask)
+{
+    uint32_t regval;
+    uint32_t reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + SPI_INT_STS_OFFSET);
+    if (mask) {
+        regval |= SPI_CR_SPI_END_MASK;
+    } else {
+        regval &= ~SPI_CR_SPI_END_MASK;
+    }
+    putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
+}
+
 void bflb_spi_errint_mask(struct bflb_device_s *dev, bool mask)
 {
     uint32_t regval;
@@ -456,8 +467,8 @@ uint32_t bflb_spi_get_intstatus(struct bflb_device_s *dev)
     uint32_t int_mask;
 
     reg_base = dev->reg_base;
-    int_status = getreg32(reg_base + SPI_INT_STS_OFFSET) & 0xff;
-    int_mask = getreg32(reg_base + SPI_INT_STS_OFFSET) >> 8 & 0xff;
+    int_status = getreg32(reg_base + SPI_INT_STS_OFFSET) & 0x1f;
+    int_mask = getreg32(reg_base + SPI_INT_STS_OFFSET) >> 8 & 0x1f;
     return (int_status & ~int_mask);
 }
 
@@ -468,7 +479,7 @@ void bflb_spi_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
 
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + SPI_INT_STS_OFFSET);
-    regval |= int_clear << 16;
+    regval |= int_clear;
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
 }
 

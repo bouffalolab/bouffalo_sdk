@@ -1,5 +1,4 @@
 #include "bl616_common.h"
-#include <string.h>
 #include "bl616_glb.h"
 #include "bl616_clock.h"
 
@@ -62,7 +61,6 @@
  * @return none
  *
  *******************************************************************************/
-#ifndef BFLB_USE_ROM_DRIVER
 #ifdef ARCH_RISCV
 __WEAK
 void ATTR_TCM_SECTION ASM_Delay_Us(uint32_t core, uint32_t cnt, uint32_t loopT)
@@ -116,7 +114,6 @@ void ATTR_TCM_SECTION ASM_Delay_Us(uint32_t core, uint32_t cnt, uint32_t loopT)
     );
 }
 #endif
-#endif
 
 /****************************************************************************/ /**
  * @brief      delay us
@@ -126,14 +123,12 @@ void ATTR_TCM_SECTION ASM_Delay_Us(uint32_t core, uint32_t cnt, uint32_t loopT)
  * @return none
  *
  *******************************************************************************/
-#ifndef BFLB_USE_ROM_DRIVER
 __WEAK
 void ATTR_TCM_SECTION arch_delay_us(uint32_t cnt)
 {
     uint32_t coreFreq;
     uint32_t loopTick = 3;
-
-#if __riscv_xtheade == 1
+#if defined(__riscv_xthead) || defined(__riscv_xtheadc)
 #if ((__ICACHE_PRESENT == 1U) && (__DCACHE_PRESENT == 1U))
     uint32_t iCacheEn;
     uint32_t dCacheEn;
@@ -174,7 +169,6 @@ void ATTR_TCM_SECTION arch_delay_us(uint32_t cnt)
 
     ASM_Delay_Us(coreFreq, cnt, loopTick);
 }
-#endif
 
 /****************************************************************************/ /**
  * @brief      delay ms
@@ -184,7 +178,6 @@ void ATTR_TCM_SECTION arch_delay_us(uint32_t cnt)
  * @return none
  *
  *******************************************************************************/
-#ifndef BFLB_USE_ROM_DRIVER
 __WEAK
 void ATTR_TCM_SECTION arch_delay_ms(uint32_t cnt)
 {
@@ -205,7 +198,6 @@ void ATTR_TCM_SECTION arch_delay_ms(uint32_t cnt)
         arch_delay_us(count * 1000);
     }
 }
-#endif
 
 #ifdef DEBUG
 /*******************************************************************************

@@ -39,7 +39,7 @@
 #include "glb_reg.h"
 #include "pds_reg.h"
 #include "bl602_gpio.h"
-// #include "bl602_l1c.h"
+#include "bl602_l1c.h"
 #include "bl602_hbn.h"
 #include "bl602_sf_ctrl.h"
 #include "bl602_sf_cfg.h"

@@ -99,64 +99,6 @@ static intCallback_Type *l1cBmxToIntCbfArra[L1C_BMX_TO_INT_ALL] = { NULL };
 __WEAK
 BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Enable_Set(uint8_t wayDisable)
 {
-    L1C_Cache_Flush(wayDisable);
-
-    return SUCCESS;
-}
-#endif
-
-/****************************************************************************/ /**
- * @brief  L1C cache write set
- *
- * @param  wtEn: L1C write through enable
- * @param  wbEn: L1C write back enable
- * @param  waEn: L1C write allocate enable
- *
- * @return None
- *
-*******************************************************************************/
-#ifndef BFLB_USE_ROM_DRIVER
-__WEAK
-void ATTR_TCM_SECTION L1C_Cache_Write_Set(BL_Fun_Type wtEn, BL_Fun_Type wbEn, BL_Fun_Type waEn)
-{
-    uint32_t tmpVal;
-
-    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
-
-    if (wtEn) {
-        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WT_EN);
-    } else {
-        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WT_EN);
-    }
-
-    if (wbEn) {
-        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WB_EN);
-    } else {
-        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WB_EN);
-    }
-
-    if (waEn) {
-        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WA_EN);
-    } else {
-        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WA_EN);
-    }
-
-    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
-}
-#endif
-
-/****************************************************************************/ /**
- * @brief  Flush cache
- *
- * @param  wayDisable: cache way disable config
- *
- * @return SUCCESS or ERROR
- *
-*******************************************************************************/
-#ifndef BFLB_USE_ROM_DRIVER
-__WEAK
-BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush(uint8_t wayDisable)
-{
     uint32_t tmpVal;
     uint32_t cnt = 0;
     uint8_t finWayDisable = 0;
@@ -249,6 +191,46 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush(uint8_t wayDisable)
 #endif
 
 /****************************************************************************/ /**
+ * @brief  L1C cache write set
+ *
+ * @param  wtEn: L1C write through enable
+ * @param  wbEn: L1C write back enable
+ * @param  waEn: L1C write allocate enable
+ *
+ * @return None
+ *
+*******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
+__WEAK
+void ATTR_TCM_SECTION L1C_Cache_Write_Set(BL_Fun_Type wtEn, BL_Fun_Type wbEn, BL_Fun_Type waEn)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
+
+    if (wtEn) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WT_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WT_EN);
+    }
+
+    if (wbEn) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WB_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WB_EN);
+    }
+
+    if (waEn) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, L1C_WA_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, L1C_WA_EN);
+    }
+
+    BL_WR_REG(L1C_BASE, L1C_CONFIG, tmpVal);
+}
+#endif
+
+/****************************************************************************/ /**
  * @brief  Flush cache external api
  *
  * @param  None
@@ -256,13 +238,13 @@ BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush(uint8_t wayDisable)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush_Ext(void)
+BL_Err_Type ATTR_TCM_SECTION L1C_Cache_Flush(void)
 {
     uint32_t tmpVal;
 
     /* Disable early respone */
     tmpVal = BL_RD_REG(L1C_BASE, L1C_CONFIG);
-    L1C_Cache_Flush((tmpVal >> L1C_WAY_DIS_POS) & 0xf);
+    L1C_Cache_Enable_Set((tmpVal >> L1C_WAY_DIS_POS) & 0xf);
     __NOP();
     __NOP();
     __NOP();

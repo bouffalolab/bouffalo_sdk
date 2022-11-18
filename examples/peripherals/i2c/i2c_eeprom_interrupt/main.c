@@ -43,7 +43,7 @@ int main(void)
 
     /* Set i2c interrupt */
     bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
-    bflb_irq_attach(i2c0->irq_num, i2c_isr, i2c0);
+    bflb_irq_attach(i2c0->irq_num, i2c_isr, NULL);
     bflb_irq_enable(i2c0->irq_num);
 
     struct bflb_i2c_msg_s msgs[2];

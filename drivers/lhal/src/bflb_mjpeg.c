@@ -166,8 +166,6 @@ void bflb_mjpeg_init(struct bflb_device_s *dev, const struct bflb_mjpeg_config_s
 
     if (min_framesize > config->output_bufsize) {
         printf("mjpeg output size is too small\r\n");
-        while (1) {
-        }
     }
 
     putreg32(config->output_bufaddr, reg_base + MJPEG_JPEG_FRAME_ADDR_OFFSET);

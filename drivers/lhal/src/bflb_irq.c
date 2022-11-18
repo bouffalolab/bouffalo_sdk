@@ -10,6 +10,7 @@ extern struct bflb_irq_info_s g_irqvector[];
 
 void irq_unexpected_isr(int irq, void *arg)
 {
+    printf("irq :%d unregistered\r\n", irq);
 }
 
 void bflb_irq_initialize(void)
@@ -23,9 +24,9 @@ void bflb_irq_initialize(void)
     }
 }
 
-uint32_t bflb_irq_save(void)
+ATTR_TCM_SECTION uintptr_t bflb_irq_save(void)
 {
-    uint32_t oldstat;
+    uintptr_t oldstat;
 
     /* Read mstatus & clear machine interrupt enable (MIE) in mstatus */
 
@@ -35,7 +36,7 @@ uint32_t bflb_irq_save(void)
     return oldstat;
 }
 
-void bflb_irq_restore(uint32_t flags)
+ATTR_TCM_SECTION void bflb_irq_restore(uintptr_t flags)
 {
     /* Write flags to mstatus */
 
@@ -59,6 +60,8 @@ int bflb_irq_detach(int irq)
     if (irq > CONFIG_IRQ_NUM) {
         return -EINVAL;
     }
+    g_irqvector[irq].handler = irq_unexpected_isr;
+    g_irqvector[irq].arg = NULL;
     return 0;
 }
 
@@ -67,6 +70,11 @@ void bflb_irq_enable(int irq)
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     putreg8(1, CLIC_HART0_BASE + CLIC_INTIE_OFFSET + irq);
 #else
+#if (defined(BL808) || defined(BL606P)) && defined(CPU_D0)
+    if (csi_vic_get_prio(irq) == 0) {
+        csi_vic_set_prio(irq, 1);
+    }
+#endif
     csi_vic_enable_irq(irq);
 #endif
 }
@@ -98,12 +106,25 @@ void bflb_irq_clear_pending(int irq)
 #endif
 }
 
+void bflb_irq_set_nlbits(uint8_t nlbits)
+{
+#if defined(BL702) || defined(BL602) || defined(BL702L)
+    uint8_t clicCfg = getreg8(CLIC_HART0_BASE + CLIC_CFG_OFFSET);
+    putreg8((clicCfg & 0xe1) | ((nlbits & 0xf) << 1), CLIC_HART0_BASE + CLIC_CFG_OFFSET);
+#else
+#if !defined(CPU_D0)
+    CLIC->CLICCFG = ((nlbits & 0xf) << 1) | 1;
+#endif
+#endif
+}
+
 void bflb_irq_set_priority(int irq, uint8_t preemptprio, uint8_t subprio)
 {
-#if defined(BL702) || defined(BL602)
-#elif defined(BL702L)
+#if defined(BL702) || defined(BL602) || defined(BL702L)
+    uint8_t nlbits = getreg8(CLIC_HART0_BASE + CLIC_CFG_OFFSET) >> 1 & 0xf;
+    uint8_t clicIntCfg = getreg8(CLIC_HART0_BASE + CLIC_INTCFG_OFFSET + irq);
+    putreg8((clicIntCfg & 0xf) | (preemptprio << (8 - nlbits)) | ((subprio & (0xf >> nlbits)) << 4), CLIC_HART0_BASE + CLIC_INTCFG_OFFSET + irq);
 #else
     csi_vic_set_prio(irq, preemptprio);
 #endif
 }
-

@@ -52,6 +52,9 @@ int bflb_spi_poll_test(uint32_t data_width)
     /* send data */
     for (uint16_t i = 0; i < BUFF_LEN / 4; i++) {
         p_rx[i] = bflb_spi_poll_send(spi0, p_tx[i]);
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+        bflb_mtimer_delay_us(10); /* delay for slave device prepare ok */
+#endif
     }
 
     /* check data */
@@ -129,10 +132,11 @@ int main(void)
     board_spi0_gpio_init();
 
     struct bflb_spi_config_s spi_cfg = {
-        .freq = 20 * 1000 * 1000,
 #if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+        .freq = 1 * 1000 * 1000,
         .role = SPI_ROLE_MASTER,
 #else
+        .freq = 32 * 1000 * 1000,
         .role = SPI_ROLE_SLAVE,
 #endif
         .mode = SPI_MODE3,
@@ -154,21 +158,27 @@ int main(void)
     } else {
         printf("poll send 8-bit test success!\r\n");
     }
-
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
     printf("\r\n************** spi poll send 16-bit test **************\r\n");
     if (bflb_spi_poll_test(SPI_DATA_WIDTH_16BIT) < 0) {
         printf("poll send 16-bit test error!!!\r\n");
     } else {
         printf("poll send 16-bit test success!\r\n");
     }
-
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
     printf("\r\n************** spi poll send 24-bit test **************\r\n");
     if (bflb_spi_poll_test(SPI_DATA_WIDTH_24BIT) < 0) {
         printf("poll send 24-bit test error!!!\r\n");
     } else {
         printf("poll send 24-bit test success!\r\n");
     }
-
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
     printf("\r\n************** spi poll send 32-bit test **************\r\n");
     if (bflb_spi_poll_test(SPI_DATA_WIDTH_32BIT) < 0) {
         printf("poll send 32-bit test error!!!\r\n");
@@ -176,7 +186,9 @@ int main(void)
         printf("poll send 32-bit test success!\r\n");
     }
 
-    bflb_mtimer_delay_ms(10);
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
 
     printf("\r\n************** spi poll exchange 8-bit test **************\r\n");
 
@@ -185,21 +197,27 @@ int main(void)
     } else {
         printf("poll exchange 8-bit test success!\r\n");
     }
-
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
     printf("\r\n************** spi poll exchange 16-bit test **************\r\n");
     if (bflb_spi_poll_exchange_test(SPI_DATA_WIDTH_16BIT) < 0) {
         printf("poll exchange 16-bit test error!!!\r\n");
     } else {
         printf("poll exchange 16-bit test success!\r\n");
     }
-
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
     printf("\r\n************** spi poll exchange 24-bit test **************\r\n");
     if (bflb_spi_poll_exchange_test(SPI_DATA_WIDTH_24BIT) < 0) {
         printf("poll exchange 24-bit test error!!!\r\n");
     } else {
         printf("poll exchange 24-bit test success!\r\n");
     }
-
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
     printf("\r\n************** spi poll exchange 32-bit test **************\r\n");
     if (bflb_spi_poll_exchange_test(SPI_DATA_WIDTH_32BIT) < 0) {
         printf("poll exchange 32-bit test error!!!\r\n");
@@ -207,16 +225,22 @@ int main(void)
         printf("poll exchange 32-bit test success!\r\n");
     }
 
-    bflb_mtimer_delay_ms(10);
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
 
     printf("\r\n************** spi poll exchange only send 32-bit test **************\r\n");
     bflb_spi_poll_exchange(spi0, tx_buff, NULL, BUFF_LEN);
     printf("poll exchange 32-bit only send test end!\r\n");
-
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
     printf("\r\n************** spi poll exchange only receive 32-bit test **************\r\n");
     bflb_spi_poll_exchange(spi0, NULL, rx_buff, BUFF_LEN);
     printf("poll exchange 32-bit only receive test end!\r\n");
-
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+    bflb_mtimer_delay_ms(1000); /* delay for slave device prepare ok */
+#endif
     printf("\r\n************** spi poll exchange spare time clock 32-bit test **************\r\n");
     bflb_spi_poll_exchange(spi0, NULL, NULL, BUFF_LEN);
     printf("poll exchange 32-bit spare time clock test end!\r\n");

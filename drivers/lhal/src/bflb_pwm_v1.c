@@ -5,15 +5,21 @@ void bflb_pwm_v1_channel_init(struct bflb_device_s *dev, uint8_t ch, const struc
 {
     uint32_t reg_base;
     uint32_t regval;
+    uint64_t start_time;
 
     reg_base = dev->reg_base;
     /* stop pwm */
     regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
     regval |= PWM_STOP_EN;
     putreg32(regval, reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
+
+    start_time = bflb_mtimer_get_time_ms();
     do {
         regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
         regval &= PWM_STS_TOP;
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return;
+        }
     } while (regval == 0);
 
     /* config clock source and dividor */
@@ -41,37 +47,25 @@ void bflb_pwm_v1_channel_init(struct bflb_device_s *dev, uint8_t ch, const struc
     putreg32(regval, reg_base + PWM0_PERIOD_OFFSET + ch * 0x20);
 }
 
-void bflb_pwm_v1_channel_set_threshold(struct bflb_device_s *dev, uint8_t ch, uint16_t low_threhold, uint16_t high_threhold)
+void bflb_pwm_v1_channel_deinit(struct bflb_device_s *dev, uint8_t ch)
 {
     uint32_t reg_base;
     uint32_t regval;
-
-    reg_base = dev->reg_base;
-
-    regval = getreg32(reg_base + PWM0_THRE1_OFFSET + ch * 0x20);
-    regval &= ~PWM_THRE1_MASK;
-    regval |= low_threhold;
-    putreg32(regval, reg_base + PWM0_THRE1_OFFSET + ch * 0x20);
-
-    regval = getreg32(reg_base + PWM0_THRE2_OFFSET + ch * 0x20);
-    regval &= ~PWM_THRE2_MASK;
-    regval |= high_threhold;
-    putreg32(regval, reg_base + PWM0_THRE2_OFFSET + ch * 0x20);
-}
-
-void bflb_pwm_v1_deinit(struct bflb_device_s *dev, uint8_t ch)
-{
-    uint32_t reg_base;
-    uint32_t regval;
+    uint64_t start_time;
 
     reg_base = dev->reg_base;
     /* stop pwmx */
     regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
     regval |= PWM_STOP_EN;
     putreg32(regval, reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
+
+    start_time = bflb_mtimer_get_time_ms();
     do {
         regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
         regval &= PWM_STS_TOP;
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return;
+        }
     } while (regval == 0);
 
     /* restore pwmx_clkdiv register with default value */
@@ -97,6 +91,50 @@ void bflb_pwm_v1_deinit(struct bflb_device_s *dev, uint8_t ch)
     putreg32(0xFFFFFFFF, reg_base + PWM_INT_CONFIG_OFFSET);
 }
 
+void bflb_pwm_v1_start(struct bflb_device_s *dev, uint8_t ch)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+    uint32_t start_time;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
+    regval &= ~PWM_STOP_EN;
+    putreg32(regval, reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
+
+    start_time = bflb_mtimer_get_time_ms();
+    do {
+        regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
+        regval &= PWM_STS_TOP;
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return;
+        }
+    } while (regval != 0);
+}
+
+void bflb_pwm_v1_stop(struct bflb_device_s *dev, uint8_t ch)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+    uint32_t start_time;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
+    regval |= PWM_STOP_EN;
+    putreg32(regval, reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
+
+    start_time = bflb_mtimer_get_time_ms();
+    do {
+        regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
+        regval &= PWM_STS_TOP;
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return;
+        }
+    } while (regval == 0);
+}
+
 void bflb_pwm_v1_set_period(struct bflb_device_s *dev, uint8_t ch, uint16_t period)
 {
     uint32_t reg_base;
@@ -110,36 +148,22 @@ void bflb_pwm_v1_set_period(struct bflb_device_s *dev, uint8_t ch, uint16_t peri
     putreg32(regval, reg_base + PWM0_PERIOD_OFFSET + ch * 0x20);
 }
 
-void bflb_pwm_v1_start(struct bflb_device_s *dev, uint8_t ch)
+void bflb_pwm_v1_channel_set_threshold(struct bflb_device_s *dev, uint8_t ch, uint16_t low_threhold, uint16_t high_threhold)
 {
     uint32_t reg_base;
     uint32_t regval;
 
     reg_base = dev->reg_base;
 
-    regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
-    regval &= ~PWM_STOP_EN;
-    putreg32(regval, reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
-    do {
-        regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
-        regval &= PWM_STS_TOP;
-    } while (regval != 0);
-}
+    regval = getreg32(reg_base + PWM0_THRE1_OFFSET + ch * 0x20);
+    regval &= ~PWM_THRE1_MASK;
+    regval |= low_threhold;
+    putreg32(regval, reg_base + PWM0_THRE1_OFFSET + ch * 0x20);
 
-void bflb_pwm_v1_stop(struct bflb_device_s *dev, uint8_t ch)
-{
-    uint32_t reg_base;
-    uint32_t regval;
-
-    reg_base = dev->reg_base;
-
-    regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
-    regval |= PWM_STOP_EN;
-    putreg32(regval, reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
-    do {
-        regval = getreg32(reg_base + PWM0_CONFIG_OFFSET + ch * 0x20);
-        regval &= PWM_STS_TOP;
-    } while (regval == 0);
+    regval = getreg32(reg_base + PWM0_THRE2_OFFSET + ch * 0x20);
+    regval &= ~PWM_THRE2_MASK;
+    regval |= high_threhold;
+    putreg32(regval, reg_base + PWM0_THRE2_OFFSET + ch * 0x20);
 }
 
 void bflb_pwm_v1_int_enable(struct bflb_device_s *dev, uint8_t ch, bool enable)

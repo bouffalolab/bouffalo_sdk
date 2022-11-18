@@ -36,8 +36,8 @@
 
 #include "bl702_glb.h"
 #include "bl702_sf_cfg.h"
-#include "softcrc.h"
 #include "bl702_xip_sflash.h"
+#include "soft_crc.h"
 
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{

@@ -35,8 +35,8 @@
   */
 
 #include "bl616_sf_cfg.h"
-#include "softcrc.h"
 #include "bl616_xip_sflash.h"
+#include "soft_crc.h"
 
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{

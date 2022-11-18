@@ -2,9 +2,11 @@
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
+#include "bflb_flash.h"
 #include "mmheap.h"
 #include "board.h"
 #include "bl702_glb.h"
+#include "bl702_sflash.h"
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
@@ -43,7 +45,7 @@ static void peripheral_clock_init(void)
     GLB_Set_SPI_CLK(ENABLE, 0);
     GLB_Set_I2C_CLK(ENABLE, 0);
 
-    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 0);
+    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
     GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_XCLK, 0x3E);
 
     GLB_Set_USB_CLK(ENABLE);
@@ -61,6 +63,33 @@ void bl_show_log(void)
     printf("\r\n");
     printf("Build:%s,%s\r\n", __TIME__, __DATE__);
     printf("Copyright (c) 2022 Bouffalolab team\r\n");
+}
+
+void bl_show_flashinfo(void)
+{
+    SPI_Flash_Cfg_Type flashCfg;
+    uint8_t *pFlashCfg = NULL;
+    uint32_t flashCfgLen = 0;
+    uint32_t flashJedecId = 0;
+
+    flashJedecId = bflb_flash_get_jedec_id();
+    bflb_flash_get_cfg(&pFlashCfg, &flashCfgLen);
+    arch_memcpy((void *)&flashCfg, pFlashCfg, flashCfgLen);
+    printf("=========== flash cfg ==============\r\n");
+    printf("jedec id   0x%06X\r\n", flashJedecId);
+    printf("mid            0x%02X\r\n", flashCfg.mid);
+    printf("iomode         0x%02X\r\n", flashCfg.ioMode);
+    printf("clk delay      0x%02X\r\n", flashCfg.clkDelay);
+    printf("clk invert     0x%02X\r\n", flashCfg.clkInvert);
+    printf("read reg cmd0  0x%02X\r\n", flashCfg.readRegCmd[0]);
+    printf("read reg cmd1  0x%02X\r\n", flashCfg.readRegCmd[1]);
+    printf("write reg cmd0 0x%02X\r\n", flashCfg.writeRegCmd[0]);
+    printf("write reg cmd1 0x%02X\r\n", flashCfg.writeRegCmd[1]);
+    printf("qe write len   0x%02X\r\n", flashCfg.qeWriteRegLen);
+    printf("cread support  0x%02X\r\n", flashCfg.cReadSupport);
+    printf("cread code     0x%02X\r\n", flashCfg.cReadMode);
+    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burstWrapCmd);
+    printf("=====================================\r\n");
 }
 
 extern void bflb_uart_set_console(struct bflb_device_s *dev);
@@ -90,9 +119,17 @@ static void console_init()
 
 void board_init(void)
 {
-    bflb_irq_initialize();
+    uintptr_t flag;
+
+    flag = bflb_irq_save();
+
+    bflb_flash_init();
+
     system_clock_init();
     peripheral_clock_init();
+    bflb_irq_initialize();
+
+    bflb_irq_restore(flag);
 
     system_mmheap[0].addr = (uint8_t *)&__HeapBase;
     system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
@@ -105,10 +142,12 @@ void board_init(void)
 
     bl_show_log();
 
+    bl_show_flashinfo();
+
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
 }
 
-void board_uart1_gpio_init()
+void board_uartx_gpio_init()
 {
     struct bflb_device_s *gpio;
 
@@ -133,8 +172,11 @@ void board_spi0_gpio_init()
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
+    /* spi clk */
     bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* spi miso */
     bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* spi mosi */
     bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_SPI0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 

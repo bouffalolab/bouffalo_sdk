@@ -7,8 +7,8 @@ static volatile uint8_t wdg_int_arrived = 0;
 
 void wdg_isr(int irq, void *arg)
 {
-    wdg_int_arrived = 1;
     bflb_wdg_compint_clear(wdg);
+    wdg_int_arrived = 1;
 }
 
 int main(void)

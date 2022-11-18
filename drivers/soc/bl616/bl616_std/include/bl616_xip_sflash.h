@@ -88,6 +88,9 @@ BL_Err_Type XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, uint8_t *data, ui
 void XIP_SFlash_Opt_Enter(uint8_t *aesEnable);
 void XIP_SFlash_Opt_Exit(uint8_t aesEnable);
 
+BL_Err_Type XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg,
+                                                       uint8_t group, SF_Ctrl_Bank_Select bank);
+
 /*@} end of group XIP_SFLASH_Public_Functions */
 
 /*@} end of group XIP_SFLASH */

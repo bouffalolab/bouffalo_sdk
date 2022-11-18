@@ -38,11 +38,21 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     } else if (mode == GPIO_OUTPUT) {
         regval |= (1 << (pin & 0x1f));
         function = 11;
+#if defined(BL702L)
+        if (function == 22) {
+            regval &= ~(1 << (pin & 0x1f));
+        }
+#endif
     } else if (mode == GPIO_ANALOG) {
         regval &= ~(1 << (pin & 0x1f));
         function = 10;
     } else if (mode == GPIO_ALTERNATE) {
         cfg |= (1 << (is_odd * 16 + 0));
+#if defined(BL702L)
+        if (function == 22) {
+            cfg &= ~(1 << (is_odd * 16 + 0));
+        }
+#endif
         regval &= ~(1 << (pin & 0x1f));
     } else {
     }
@@ -63,7 +73,9 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     cfg |= (function << (is_odd * 16 + 8));
 #if defined(BL702L)
     /* configure output mode:set and clr mode */
-    cfg |= (1 << (is_odd * 16 + 15));
+    if ((function != 22) || (function != 21)) {
+        cfg |= (1 << (is_odd * 16 + 15));
+    }
 #endif
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
     cfg_address = reg_base + GLB_GPIO_CFG0_OFFSET + (pin << 2);
@@ -109,8 +121,10 @@ void bflb_gpio_deinit(struct bflb_device_s *dev, uint8_t pin)
 
 void bflb_gpio_set(struct bflb_device_s *dev, uint8_t pin)
 {
-#if defined(BL702) || defined(BL602) || defined(BL702L)
+#if defined(BL702) || defined(BL602)
     putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFGCTL32_OFFSET);
+#elif defined(BL702L)
+    putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFGCTL35_OFFSET);
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
     putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFG138_OFFSET + ((pin >> 5) << 2));
 #endif
@@ -118,8 +132,10 @@ void bflb_gpio_set(struct bflb_device_s *dev, uint8_t pin)
 
 void bflb_gpio_reset(struct bflb_device_s *dev, uint8_t pin)
 {
-#if defined(BL702) || defined(BL602) || defined(BL702L)
+#if defined(BL702) || defined(BL602)
     putreg32(0 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFGCTL32_OFFSET);
+#elif defined(BL702L)
+    putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFGCTL36_OFFSET);
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
     putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFG140_OFFSET + ((pin >> 5) << 2));
 #endif
@@ -147,11 +163,16 @@ void bflb_gpio_int_init(struct bflb_device_s *dev, uint8_t pin, uint8_t trig_mod
     bflb_gpio_int_mask(dev, pin, true);
     bflb_gpio_int_clear(dev, pin);
 
-#if defined(BL702) || defined(BL602) || defined(BL702L)
+#if defined(BL702) || defined(BL602) 
     cfg_address = reg_base + GLB_GPIO_INT_MODE_SET1_OFFSET + ((pin / 10) << 2);
     regval = getreg32(cfg_address);
     regval &= ~(0x07 << ((pin % 10) * 3));
     regval |= (trig_mode << ((pin % 10) * 3));
+#elif defined(BL702L)
+    cfg_address = reg_base + GLB_GPIO_INT_MODE_SET1_OFFSET + ((pin / 8) << 2);
+    regval = getreg32(cfg_address);
+    regval &= ~(0x0f << ((pin % 8) * 4));
+    regval |= (trig_mode << ((pin % 8) * 4));
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
     cfg_address = reg_base + GLB_GPIO_CFG0_OFFSET + (pin << 2);
     regval = getreg32(cfg_address);

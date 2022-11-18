@@ -39,6 +39,7 @@
 #include "bl702_sf_cfg_ext.h"
 #include "bl702_xip_sflash.h"
 #include "bl702_romdriver.h"
+#include "soft_crc.h"
 
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{

@@ -44,7 +44,7 @@ struct bflb_device_s bl616_device_table[] = {
       .idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_SPI,
       .user_data = NULL },
-    { .name = "pwm0",
+    { .name = "pwm_v2_0",
       .reg_base = PWM_BASE,
       .irq_num = BL616_IRQ_PWM,
       .idx = 0,
@@ -190,6 +190,13 @@ struct bflb_device_s bl616_device_table[] = {
       .idx = 0,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_MJPEG,
+      .user_data = NULL },
+    { .name = "irrx",
+      .reg_base = IR_BASE,
+      .irq_num = BL616_IRQ_IRRX,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_IR,
       .user_data = NULL },
 };
 

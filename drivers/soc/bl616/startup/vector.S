@@ -101,6 +101,7 @@ default_interrupt_handler:
      * ~mem addr low:
      */
     /* WARNING: global IRQ enabled by ipush */
+    csrs    mstatus, 8
 
     /* keep stack 16bytes aligned */
     addi    sp, sp, -88

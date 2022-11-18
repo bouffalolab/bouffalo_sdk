@@ -9,7 +9,7 @@ int main(void)
     board_init();
     board_pwm_gpio_init();
 
-    pwm = bflb_device_get_by_name("pwm0");
+    pwm = bflb_device_get_by_name("pwm_v1");
 
     /* period = .XCLK / .clk_div / .period = 32MHz / 32 / 1000 = 1KHz */
     struct bflb_pwm_v1_channel_config_s cfg = {

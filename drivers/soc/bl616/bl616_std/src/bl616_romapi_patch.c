@@ -36,7 +36,7 @@
 
 #include "bl616_romapi_patch.h"
 #include "bl616_romdriver_e907.h"
-// #include "softcrc.h"
+#include "soft_crc.h"
 
 /* WiFi PLL Config*/
 const GLB_WA_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifiPllBasicCfg_32M_38P4M_40M = {
@@ -199,7 +199,7 @@ const GLB_SLAVE_GRP_0_TBL_Type ATTR_CLOCK_CONST_SECTION glb_slave_grp_0_table[GL
     { GLB_IR_CFG0_OFFSET, GLB_IR_CLK_EN_POS, 0, GLB_IR_CLK_DIV_POS, GLB_IR_CLK_EN_LEN, 0, GLB_IR_CLK_DIV_LEN },
     { GLB_I2C_CFG0_OFFSET, GLB_I2C_CLK_EN_POS, GLB_I2C_CLK_SEL_POS, GLB_I2C_CLK_DIV_POS, GLB_I2C_CLK_EN_LEN, GLB_I2C_CLK_SEL_LEN, GLB_I2C_CLK_DIV_LEN },
     { GLB_SPI_CFG0_OFFSET, GLB_SPI_CLK_EN_POS, GLB_SPI_CLK_SEL_POS, GLB_SPI_CLK_DIV_POS, GLB_SPI_CLK_EN_LEN, GLB_SPI_CLK_SEL_LEN, GLB_SPI_CLK_DIV_LEN },
-    { 0, 0, 0, 0, 0, 0, 0 },
+    { GLB_PEC_CFG0_OFFSET, GLB_PEC_CLK_EN_POS, GLB_PEC_CLK_SEL_POS, GLB_PEC_CLK_DIV_POS, GLB_PEC_CLK_EN_LEN, GLB_PEC_CLK_SEL_LEN, GLB_PEC_CLK_DIV_LEN },
     { GLB_DBI_CFG0_OFFSET, GLB_DBI_CLK_EN_POS, GLB_DBI_CLK_SEL_POS, GLB_DBI_CLK_DIV_POS, GLB_DBI_CLK_EN_LEN, GLB_DBI_CLK_SEL_LEN, GLB_DBI_CLK_DIV_LEN },
     { GLB_AUDIO_CFG0_OFFSET, GLB_REG_AUDIO_AUTO_DIV_EN_POS, 0, 0, GLB_REG_AUDIO_AUTO_DIV_EN_LEN, 0, 0 },
     { GLB_AUDIO_CFG0_OFFSET, GLB_REG_AUDIO_ADC_CLK_EN_POS, 0, GLB_REG_AUDIO_ADC_CLK_DIV_POS, GLB_REG_AUDIO_ADC_CLK_EN_LEN, 0, GLB_REG_AUDIO_ADC_CLK_DIV_LEN },
@@ -208,11 +208,6 @@ const GLB_SLAVE_GRP_0_TBL_Type ATTR_CLOCK_CONST_SECTION glb_slave_grp_0_table[GL
     { GLB_SDH_CFG0_OFFSET, GLB_REG_SDH_CLK_EN_POS, GLB_REG_SDH_CLK_SEL_POS, GLB_REG_SDH_CLK_DIV_POS, GLB_REG_SDH_CLK_EN_LEN, GLB_REG_SDH_CLK_SEL_LEN, GLB_REG_SDH_CLK_DIV_LEN },
     { GLB_PSRAM_CFG0_OFFSET, GLB_REG_PSRAMB_CLK_EN_POS, GLB_REG_PSRAMB_CLK_SEL_POS, GLB_REG_PSRAMB_CLK_DIV_POS, GLB_REG_PSRAMB_CLK_EN_LEN, GLB_REG_PSRAMB_CLK_SEL_LEN, GLB_REG_PSRAMB_CLK_DIV_LEN },
 };
-
-// static const uint32_t uartAddr[UART_ID_MAX] = { UART0_BASE, UART1_BASE };
-// static intCallback_Type *uartIntCbfArra[UART_ID_MAX][UART_INT_ALL] = {
-//     { NULL }
-// };
 
 typedef struct
 {
@@ -907,186 +902,6 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[] = {
     },
 };
 
-//UART
-// static void UART_IntHandler(UART_ID_Type uartId)
-// {
-//     uint32_t tmpVal = 0;
-//     uint32_t maskVal = 0;
-//     uint32_t UARTx = uartAddr[uartId];
-
-//     tmpVal = BL_RD_REG(UARTx, UART_INT_STS);
-//     maskVal = BL_RD_REG(UARTx, UART_INT_MASK);
-
-//     /* Length of uart tx data transfer arrived interrupt */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_END_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_END_MASK)) {
-//         BL_WR_REG(UARTx, UART_INT_CLEAR, 1 << UART_CR_UTX_END_CLR_POS);
-
-//         if (uartIntCbfArra[uartId][UART_INT_TX_END] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_TX_END]();
-//         }
-//     }
-
-//     /* Length of uart rx data transfer arrived interrupt */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_END_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_END_MASK)) {
-//         BL_WR_REG(UARTx, UART_INT_CLEAR, 1 << UART_CR_URX_END_CLR_POS);
-
-//         if (uartIntCbfArra[uartId][UART_INT_RX_END] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_RX_END]();
-//         }
-//     }
-
-//     /* Tx fifo ready interrupt,auto-cleared when data is pushed */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FRDY_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FRDY_MASK)) {
-//         if (uartIntCbfArra[uartId][UART_INT_TX_FIFO_REQ] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_TX_FIFO_REQ]();
-//         }
-//     }
-
-//     /* Rx fifo ready interrupt,auto-cleared when data is popped */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FRDY_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FRDY_MASK)) {
-//         if (uartIntCbfArra[uartId][UART_INT_RX_FIFO_REQ] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_RX_FIFO_REQ]();
-//         }
-//     }
-
-//     /* Rx time-out interrupt */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_RTO_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_RTO_MASK)) {
-//         BL_WR_REG(UARTx, UART_INT_CLEAR, 1 << UART_CR_URX_RTO_CLR_POS);
-
-//         if (uartIntCbfArra[uartId][UART_INT_RTO] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_RTO]();
-//         }
-//     }
-
-//     /* Rx parity check error interrupt */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_PCE_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_PCE_MASK)) {
-//         BL_WR_REG(UARTx, UART_INT_CLEAR, 1 << UART_CR_URX_PCE_CLR_POS);
-
-//         if (uartIntCbfArra[uartId][UART_INT_PCE] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_PCE]();
-//         }
-//     }
-
-//     /* Tx fifo overflow/underflow error interrupt */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_UTX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_UTX_FER_MASK)) {
-//         if (uartIntCbfArra[uartId][UART_INT_TX_FER] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_TX_FER]();
-//         }
-//     }
-
-//     /* Rx fifo overflow/underflow error interrupt */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_FER_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_FER_MASK)) {
-//         if (uartIntCbfArra[uartId][UART_INT_RX_FER] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_RX_FER]();
-//         }
-//     }
-
-//     /* Rx lin mode sync field error interrupt */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_LSE_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_LSE_MASK)) {
-//         BL_WR_REG(UARTx, UART_INT_CLEAR, 1 << UART_CR_URX_LSE_CLR_POS);
-
-//         if (uartIntCbfArra[uartId][UART_INT_LSE] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_LSE]();
-//         }
-//     }
-
-//     /* Rx byte count reached interrupt */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_BCR_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_BCR_MASK)) {
-//         BL_WR_REG(UARTx, UART_INT_CLEAR, 1 << UART_CR_URX_BCR_CLR_POS);
-
-//         if (uartIntCbfArra[uartId][UART_INT_BCR] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_BCR]();
-//         }
-//     }
-
-//     /* Rx auto baud rate detection finish interrupt using start bit */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_ADS_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_ADS_MASK)) {
-//         BL_WR_REG(UARTx, UART_INT_CLEAR, 1 << UART_CR_URX_ADS_CLR_POS);
-
-//         if (uartIntCbfArra[uartId][UART_INT_STARTBIT] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_STARTBIT]();
-//         }
-//     }
-
-//     /* Rx auto baud rate detection finish interrupt using codeword 0x55 */
-//     if (BL_IS_REG_BIT_SET(tmpVal, UART_URX_AD5_INT) && !BL_IS_REG_BIT_SET(maskVal, UART_CR_URX_AD5_MASK)) {
-//         BL_WR_REG(UARTx, UART_INT_CLEAR, 1 << UART_CR_URX_AD5_CLR_POS);
-
-//         if (uartIntCbfArra[uartId][UART_INT_0X55] != NULL) {
-//             uartIntCbfArra[uartId][UART_INT_0X55]();
-//         }
-//     }
-// }
-
-// #if (defined BOOTROM) || (!defined BFLB_USE_HAL_DRIVER)
-// void UART1_IRQHandler(void)
-// {
-//     UART_IntHandler(UART1_ID);
-// }
-// #endif
-
-// /****************************************************************************/ /**
-//  * @brief  Install uart interrupt callback function
-//  *
-//  * @param  uartId: UART ID type
-//  * @param  intType: UART interrupt type
-//  * @param  cbFun: Pointer to interrupt callback function. The type should be void (*fn)(void)
-//  *
-//  * @return SUCCESS
-//  *
-// *******************************************************************************/
-// BL_Err_Type UART_Int_Callback_Install(UART_ID_Type uartId, UART_INT_Type intType, intCallback_Type *cbFun)
-// {
-//     /* Check the parameters */
-//     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
-//     CHECK_PARAM(IS_UART_INT_TYPE(intType));
-
-//     uartIntCbfArra[uartId][intType] = cbFun;
-
-//     return SUCCESS;
-// }
-
-// /****************************************************************************/ /**
-//  * @brief  UART set baud rate function
-//  *
-//  * @param  uartId: UART ID type
-//  * @param  baudRate: baudRate need to set
-//  *
-//  * @return SUCCESS or ERROR
-//  *
-// *******************************************************************************/
-// BL_Err_Type UART_SetBaudRate(UART_ID_Type uartId, uint32_t baudRate)
-// {
-//     uint32_t uartClk = 0;
-//     uint32_t fraction = 0;
-//     uint32_t baudRateDivisor = 0;
-//     uint32_t UARTx = uartAddr[uartId];
-
-//     /* Check the parameters */
-//     CHECK_PARAM(IS_UART_ID_TYPE(uartId));
-
-//     /* Get uart clk */
-//     if (uartId == UART0_ID || uartId == UART1_ID) {
-//         uartClk = Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_UART0);
-//     } else {
-//         return ERROR;
-//     }
-
-//     /* Cal the baud rate divisor */
-//     fraction = uartClk * 10 / baudRate % 10;
-//     baudRateDivisor = uartClk / baudRate;
-
-//     if (fraction >= 5) {
-//         ++baudRateDivisor;
-//     }
-
-//     /* Set the baud rate register value */
-//     BL_WR_REG(UARTx, UART_BIT_PRD, ((baudRateDivisor - 1) << 0x10) | ((baudRateDivisor - 1) & 0xFFFF));
-
-//     return SUCCESS;
-// }
-
-
 //CLOCK
 //EFUSE
 //PDS
@@ -1197,6 +1012,64 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Erase(SPI_Flash_Cfg_Type *flashCfg, uint32_t
     return SUCCESS;
 }
 
+/****************************************************************************//**
+ * @brief  Clear flash status register
+ *
+ * @param  flashCfg: Flash configuration pointer
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION SFlash_Clear_Status_Register(SPI_Flash_Cfg_Type *flashCfg)
+{
+    uint32_t ret = 0;
+    uint32_t qeValue = 0;
+    uint32_t regValue = 0;
+    uint32_t readValue = 0;
+    uint8_t readRegValue0 = 0;
+    uint8_t readRegValue1 = 0;
+
+    if((flashCfg->ioMode&0xf)==SF_CTRL_QO_MODE || (flashCfg->ioMode&0xf)==SF_CTRL_QIO_MODE){
+        qeValue = 1;
+    }
+
+    SFlash_Read_Reg(flashCfg, 0, (uint8_t *)&readRegValue0, 1);
+    SFlash_Read_Reg(flashCfg, 1, (uint8_t *)&readRegValue1, 1);
+    readValue = (readRegValue0|(readRegValue1<<8));
+    if ((readValue & (~((1<<(flashCfg->qeIndex*8+flashCfg->qeBit)) |
+                        (1<<(flashCfg->busyIndex*8+flashCfg->busyBit)) |
+                        (1<<(flashCfg->wrEnableIndex*8+flashCfg->wrEnableBit))))) == 0){
+        return SUCCESS;
+    }
+
+    ret = SFlash_Write_Enable(flashCfg);
+    if (SUCCESS != ret) {
+        return ERROR;
+    }
+    if (flashCfg->qeWriteRegLen == 2) {
+        regValue = (qeValue<<(flashCfg->qeIndex*8+flashCfg->qeBit));
+        SFlash_Write_Reg(flashCfg, 0, (uint8_t *)&regValue, 2);
+    } else {
+        if (flashCfg->qeIndex == 0) {
+            regValue = (qeValue<<flashCfg->qeBit);
+        } else {
+            regValue = 0;
+        }
+        SFlash_Write_Reg(flashCfg, 0, (uint8_t *)&regValue, 1);
+        ret = SFlash_Write_Enable(flashCfg);
+        if (SUCCESS != ret) {
+            return ERROR;
+        }
+        if (flashCfg->qeIndex == 1) {
+            regValue = (qeValue<<flashCfg->qeBit);
+        } else {
+            regValue = 0;
+        }
+        SFlash_Write_Reg(flashCfg, 1, (uint8_t *)&regValue, 1);
+    }
+    return SUCCESS;
+}
+
 /****************************************************************************/ /**
  * @brief  Get flash config according to flash ID patch
  *
@@ -1206,43 +1079,43 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Erase(SPI_Flash_Cfg_Type *flashCfg, uint32_t
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-// BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID, SPI_Flash_Cfg_Type *pFlashCfg)
-// {
-//     uint32_t i;
-//     uint8_t buf[sizeof(SPI_Flash_Cfg_Type) + 8];
-//     uint32_t crc, *pCrc;
-//     uint32_t xipOffset;
-//     char flashCfgMagic[] = "FCFG";
+BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID, SPI_Flash_Cfg_Type *pFlashCfg)
+{
+    uint32_t i;
+    uint8_t buf[sizeof(SPI_Flash_Cfg_Type) + 8];
+    uint32_t crc, *pCrc;
+    uint32_t xipOffset;
+    char flashCfgMagic[] = "FCFG";
 
-//     if (flashID == 0) {
-//         xipOffset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
-//         SF_Ctrl_Set_Flash_Image_Offset(0, 0, SF_CTRL_FLASH_BANK0);
-//         XIP_SFlash_Read_Via_Cache_Need_Lock(8 + BL616_FLASH_XIP_BASE, buf, sizeof(SPI_Flash_Cfg_Type) + 8);
-//         SF_Ctrl_Set_Flash_Image_Offset(xipOffset, 0, SF_CTRL_FLASH_BANK0);
+    if (flashID == 0) {
+        xipOffset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
+        SF_Ctrl_Set_Flash_Image_Offset(0, 0, SF_CTRL_FLASH_BANK0);
+        XIP_SFlash_Read_Via_Cache_Need_Lock(8 + BL616_FLASH_XIP_BASE, buf, sizeof(SPI_Flash_Cfg_Type) + 8);
+        SF_Ctrl_Set_Flash_Image_Offset(xipOffset, 0, SF_CTRL_FLASH_BANK0);
 
-//         if (ARCH_MemCmp(buf, flashCfgMagic, 4) == 0) {
-//             crc = BFLB_Soft_CRC32((uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
-//             pCrc = (uint32_t *)(buf + 4 + sizeof(SPI_Flash_Cfg_Type));
+        if (ARCH_MemCmp(buf, flashCfgMagic, 4) == 0) {
+            crc = BFLB_Soft_CRC32((uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
+            pCrc = (uint32_t *)(buf + 4 + sizeof(SPI_Flash_Cfg_Type));
 
-//             if (*pCrc == crc) {
-//                 ARCH_MemCpy_Fast(pFlashCfg, (uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
-//                 return SUCCESS;
-//             }
-//         }
-//     } else {
-//         if (RomDriver_SF_Cfg_Get_Flash_Cfg_Need_Lock(flashID, pFlashCfg) == SUCCESS) {
-//             return SUCCESS;
-//         }
-//         for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
-//             if (flashInfos[i].jedecID == flashID) {
-//                 ARCH_MemCpy_Fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
-//                 return SUCCESS;
-//             }
-//         }
-//     }
+            if (*pCrc == crc) {
+                ARCH_MemCpy_Fast(pFlashCfg, (uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
+                return SUCCESS;
+            }
+        }
+    } else {
+        if (RomDriver_SF_Cfg_Get_Flash_Cfg_Need_Lock(flashID, pFlashCfg) == SUCCESS) {
+            return SUCCESS;
+        }
+        for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
+            if (flashInfos[i].jedecID == flashID) {
+                ARCH_MemCpy_Fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
+                return SUCCESS;
+            }
+        }
+    }
 
-//     return ERROR;
-// }
+    return ERROR;
+}
 
 /****************************************************************************/ /**
  * @brief  Identify one flash patch
@@ -1565,6 +1438,35 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_GetUniqueId_Need_Lock(SPI_Flash_Cfg_Type
     XIP_SFlash_Opt_Exit(aesEnable);
 
     return SUCCESS;
+}
+
+/****************************************************************************//**
+ * @brief  Clear flash status register need lock
+ *
+ * @param  pFlashCfg: Flash config pointer
+ * @param  group: CPU group id 0 or 1
+ * @param  bank: Flash bank select
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+__WEAK
+BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg,
+                                                                        uint8_t group, SF_Ctrl_Bank_Select bank)
+{
+    BL_Err_Type stat;
+    uint32_t offset;
+    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
+
+    stat=XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
+    if (stat != SUCCESS) {
+        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+    } else {
+        stat=SFlash_Clear_Status_Register(pFlashCfg);
+        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+    }
+
+    return stat;
 }
 
 /****************************************************************************/ /**
@@ -2179,6 +2081,47 @@ BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, GLB_SPI_CLK_Type clkSel, uint8_t div
         tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_SPI_CLK_EN);
     }
     BL_WR_REG(GLB_BASE, GLB_SPI_CFG0, tmpVal);
+#endif
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  set PEC clock
+ *
+ * @param  enable: Enable or disable PEC clock
+ * @param  clkSel: clock selection
+ * @param  div: divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type GLB_Set_PEC_CLK(uint8_t enable, GLB_PEC_CLK_Type clkSel, uint8_t div)
+{
+#ifndef BOOTROM
+    uint32_t tmpVal = 0;
+
+    CHECK_PARAM(IS_GLB_PEC_CLK_TYPE(clkSel));
+    CHECK_PARAM((div <= 0x1F));
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_PEC_CFG0);
+    tmpVal >>= 1;
+    tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_PEC_CLK_EN);
+    BL_WR_REG(GLB_BASE, GLB_PEC_CFG0, tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_PEC_CFG0);
+    tmpVal >>= 1;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_PEC_CLK_DIV, div);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_PEC_CLK_SEL, clkSel);
+    BL_WR_REG(GLB_BASE, GLB_PEC_CFG0, tmpVal);
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_PEC_CFG0);
+    tmpVal >>= 1;
+    if (enable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_PEC_CLK_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_PEC_CLK_EN);
+    }
+    BL_WR_REG(GLB_BASE, GLB_PEC_CFG0, tmpVal);
 #endif
     return SUCCESS;
 }
@@ -3008,3 +2951,245 @@ BL_Err_Type HBN_Set_BOD_Cfg(HBN_BOD_CFG_Type *cfg)
     return SUCCESS;
 }
 
+#define GLB_CLK_SET_DUMMY_WAIT \
+    {                          \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+        __NOP();               \
+    }
+const uint32_t ATTR_CLOCK_CONST_SECTION usbPllSdmin_12M = 0x28000;
+const uint32_t ATTR_CLOCK_CONST_SECTION sscDivSdmin_24M = 0x28000;
+
+void glb_40M_delay_us(uint32_t us)
+{
+    for (uint32_t i = 0; i < us; i++) {
+        GLB_CLK_SET_DUMMY_WAIT;
+        GLB_CLK_SET_DUMMY_WAIT;
+        GLB_CLK_SET_DUMMY_WAIT;
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  power on wifipll quickly
+ *
+ * @param  xtalType: XTAL frequency type
+ * @param  pllType: only power on xtal
+ *******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Fast_Power_On_WIFIPLL(const GLB_WA_PLL_Cfg_Type *const cfg, uint8_t waitStable)
+{
+    uint32_t REG_PLL_BASE_ADDRESS = 0;
+    uint32_t tmpVal = 0;
+
+    REG_PLL_BASE_ADDRESS = GLB_BASE + GLB_WIFI_PLL_CFG0_OFFSET;
+
+    /* Step1:config parameter */
+    /* cfg1:Set wifipll_refclk_sel and wifipll_refdiv_ratio */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_REFDIV_RATIO, cfg->basicCfg->clkpllRefdivRatio);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 1, tmpVal);
+
+    /* cfg2:Set wifipll_int_frac_sw,wifipll_icp_1u,wifipll_icp_5u */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 2);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_INT_FRAC_SW, cfg->basicCfg->clkpllIntFracSw);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_ICP_1U, cfg->basicCfg->clkpllIcp1u);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_ICP_5U, cfg->basicCfg->clkpllIcp5u);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 2, tmpVal);
+
+    /* cfg3:Set wifipll_rz,wifipll_cz,wifipll_c3,wifipll_r4_short,wifipll_r4_en */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 3);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_RZ, cfg->basicCfg->clkpllRz);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_CZ, cfg->basicCfg->clkpllCz);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_C3, cfg->basicCfg->clkpllC3);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_R4_SHORT, cfg->basicCfg->clkpllR4Short);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_C4_EN, cfg->basicCfg->clkpllC4En);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 3, tmpVal);
+
+    /* cfg4:Set wifipll_sel_sample_clk */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 4);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_SEL_SAMPLE_CLK, cfg->basicCfg->clkpllSelSampleClk);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 4, tmpVal);
+
+    /* cfg5:Set wifipll_vco_speed */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 5);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_VCO_SPEED, cfg->basicCfg->clkpllVcoSpeed);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 5, tmpVal);
+
+    /* cfg6:Set wifipll_sdm_bypass,wifipll_sdmin */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 6);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_SDM_CTRL_HW, cfg->basicCfg->clkpllSdmCtrlHw);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_SDM_BYPASS, cfg->basicCfg->clkpllSdmBypass);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_SDMIN, cfg->clkpllSdmin);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 6, tmpVal);
+
+    /* cfg10:always set usbpll_sdmin */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 10);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_USBPLL_SDMIN, usbPllSdmin_12M);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 10, tmpVal);
+
+    /* cfg12:always set sscdiv_sdmin */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 12);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_SSCDIV_SDMIN, sscDivSdmin_24M);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 12, tmpVal);
+
+    /* Step2:config pu */
+    /* cfg0 : pu_wifipll_sfreg=1 */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_PU_WIFIPLL_SFREG, 1);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 0, tmpVal);
+
+    /* delay > 2us */
+    glb_40M_delay_us(3);
+
+    /* cfg0 : pu_wifipll=1 */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_PU_WIFIPLL, 1);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 0, tmpVal);
+
+    /* delay > 2us */
+    glb_40M_delay_us(3);
+
+    /* toggle sdm_reset (pulse 0 > 1us) */
+    /* cfg0 : wifipll_sdm_reset */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_SDM_RSTB, 1);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 0, tmpVal);
+    glb_40M_delay_us(2);
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_SDM_RSTB, 0);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 0, tmpVal);
+    glb_40M_delay_us(2);
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_SDM_RSTB, 1);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 0, tmpVal);
+
+    /* Step3:reset pll */
+    /* cfg0 : toggle wifipll_reset_fbdv, pulse 0 > 1us */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_FBDV_RSTB, 1);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 0, tmpVal);
+    glb_40M_delay_us(2);
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_FBDV_RSTB, 0);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 0, tmpVal);
+    glb_40M_delay_us(2);
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WIFIPLL_FBDV_RSTB, 1);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 0, tmpVal);
+
+    /* Step4:enable output clock */
+    /* cfg8 : wifipll clock enable */
+    tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 8);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV3);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV4);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV5);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV6);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV8);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV10);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV12);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV20);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV30);
+    BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 8, tmpVal);
+
+    if (waitStable) {
+        /* Wait 1.5*30us    */
+        glb_40M_delay_us(45);
+    }
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  power on xtal and wifipll quickly
+ *
+ * @param  xtalType: XTAL frequency type
+ * @param  pllType: only power on xtal
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Fast_Power_On_XTAL_40M_And_WIFIPLL(void)
+{
+    uint32_t tmpVal;
+    volatile GLB_PLL_REF_CLK_Type refClk;
+
+    refClk = GLB_PLL_REFCLK_XTAL;
+
+    /* power on xtal first */
+    AON_Power_On_XTAL();
+
+    HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_RC32M);
+    HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
+
+    HBN_Set_Xtal_Type(GLB_XTAL_40M);
+
+    /* power on wifipll */
+    GLB_Power_Off_WIFIPLL();
+    GLB_WIFIPLL_Ref_Clk_Sel(refClk);
+    GLB_Fast_Power_On_WIFIPLL(&wifiPllCfg_960M[GLB_XTAL_40M], 0);
+
+    glb_40M_delay_us(30);
+
+    /* if power on xtal, always set xclk from xtal */
+    HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
+
+    /* enable all PLL clock output */
+    /* GLB reg_pll_en = 1, cannot be zero */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG0);
+    tmpVal = BL_SET_REG_BIT(tmpVal, GLB_REG_PLL_EN);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG0, tmpVal);
+
+    GLB_CLK_SET_DUMMY_WAIT;
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Program data to efuse
+ *
+ * @param  offset: offset of efuse address to program
+ * @param  pword: data pointer to buffer which is aligned to word
+ * @param  count: count of data in words to program
+ *
+ * @return None
+ *
+*******************************************************************************/
+void EF_Ctrl_Program_Direct(uint32_t offset, uint32_t *pword, uint32_t count)
+{
+    uint32_t *pEfuseStart0 = (uint32_t *)(EF_DATA_BASE + offset);
+
+    /* Switch to AHB clock */
+    EF_Ctrl_Sw_AHB_Clk_0();
+
+    /* Add delay for CLK to be stable */
+    arch_delay_us(4);
+
+    if (pword != NULL) {
+        ARCH_MemCpy4(pEfuseStart0, pword, count);
+    }
+
+    EF_Ctrl_Program_Efuse_0();
+}
+
+/****************************************************************************/ /**
+ * @brief  Read data from efuse
+ *
+ * @param  offset: offset of efuse address to read
+ * @param  pword: data pointer to buffer which is aligned to word
+ * @param  count: count of data in words to read
+ *
+ * @return None
+ *
+*******************************************************************************/
+void EF_Ctrl_Read_Direct(uint32_t offset, uint32_t *pword, uint32_t count)
+{
+    uint32_t *pEfuseStart0 = (uint32_t *)(EF_DATA_BASE + offset);
+
+    EF_Ctrl_Load_Efuse_R0();
+
+    ARCH_MemCpy4(pword, pEfuseStart0, count);
+}

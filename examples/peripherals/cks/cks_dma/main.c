@@ -2,10 +2,9 @@
 #include "bflb_cks.h"
 #include "bflb_dma.h"
 #include "bflb_mtimer.h"
-#include "bl628_memorymap.h"
 #include "bflb_core.h"
 
-#define DATA_LEN 1024
+#define DATA_LEN 512
 
 static volatile uint8_t dma_tc_flag0 = 0;
 struct bflb_device_s *cks;
@@ -23,7 +22,7 @@ uint16_t sw_chksum(uint8_t *data, uint32_t len) {
   uint32_t size = len;
 
   if (len % 2 == 1) {
-    size=len-1;
+    size = len - 1;
     sum += data[size];
   }
 
@@ -48,7 +47,7 @@ uint16_t get_cks_with_dma(uint8_t* data,uint32_t length)
     struct bflb_dma_channel_lli_transfer_s transfers[1];
 
     transfers[0].src_addr = (uint32_t)data;
-    transfers[0].dst_addr = (uint32_t)(CKS_BASE+0x4);
+    transfers[0].dst_addr = (uint32_t)(cks->reg_base + 0x4);
     transfers[0].nbytes = length;
 
     bflb_dma_channel_lli_reload(dma0_ch0, lli, 20, transfers, 1);
@@ -70,10 +69,10 @@ static void test_case1(void){
     uint32_t time = 0, i;
     struct bflb_dma_channel_config_s config;
     
-    static uint32_t data_src1[DATA_LEN/4];
+    uint32_t data_src1[DATA_LEN/4];
     
     for(i = 0;i < DATA_LEN; i++){
-        ((uint8_t *)data_src1)[i] = i&0xff;
+        ((uint8_t *)data_src1)[i] = i & 0xff;
     }
     
     time = (unsigned int)bflb_mtimer_get_time_us();

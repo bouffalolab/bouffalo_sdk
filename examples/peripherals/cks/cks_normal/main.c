@@ -22,7 +22,7 @@ static void test_case1(struct bflb_device_s *dev) {
     cks = bflb_cks_compute(dev, (uint8_t *)data_src1, sizeof(data_src1));
     
     if (cks != (data_src1_cks[0] << 8 | data_src1_cks[1])) {
-        printf("Error! CKS result with LE is %04x, should be %02x%02x\r\n", cks, data_src1_cks[1], data_src1_cks[0]);
+        printf("Error! CKS result with LE is %04x, should be %02x%02x\r\n", cks, data_src1_cks[0], data_src1_cks[1]);
     } else {
         printf("Pass\r\n");
     }
@@ -59,7 +59,11 @@ static void test_case2(struct bflb_device_s *dev) {
         checksum = (checksum >> 16) + (checksum & 0xFFFF);
     }
     
-    printf("CKS LE result is %04x, %04x\r\n", cks, (uint16_t)~checksum);
+    if (cks != (uint16_t)(~checksum << 8 | (~checksum >> 8 & 0xff))) {
+        printf("Error! CKS result with LE is %04x, should be %04x\r\n", cks, (uint16_t)(~checksum << 8 | (~checksum >> 8 & 0xff)));
+    } else {
+        printf("Pass\r\n");
+    }
     
     bflb_cks_reset(dev);
     bflb_cks_set_endian(dev, CKS_BIG_ENDIAN);
@@ -75,11 +79,10 @@ static void test_case2(struct bflb_device_s *dev) {
         checksum = (checksum >> 16) + (checksum & 0xFFFF);
     }
     
-    printf("CKS BE result is %04x, %04x\r\n", cks, (uint16_t)~checksum);
-    if (cks == ((uint16_t)~checksum)) {
-        printf("====== Success %04X Checksum=====\r\n", cks);
+    if (cks != (uint16_t)~checksum) {
+        printf("Error! CKS result with BE is %04x, should be %04x\r\n", cks, (uint16_t)~checksum);
     } else {
-        printf("====== Failed %04X Checksum======\r\n", cks);
+        printf("Pass\r\n");
     }
 }
 
@@ -104,7 +107,11 @@ static void test_case3(struct bflb_device_s *dev) {
         checksum = (checksum >> 16) + (checksum & 0xFFFF);
     }
     
-    printf("CKS LE result is %04x, %04x\r\n", cks, (uint16_t)~checksum);
+    if (cks != (uint16_t)(~checksum << 8 | (~checksum >> 8 & 0xff))) {
+        printf("Error! CKS result with LE is %04x, should be %04x\r\n", cks, (uint16_t)(~checksum << 8 | (~checksum >> 8 & 0xff)));
+    } else {
+        printf("Pass\r\n");
+    }
     
     bflb_cks_reset(dev);
     bflb_cks_set_endian(dev, CKS_BIG_ENDIAN);
@@ -120,11 +127,10 @@ static void test_case3(struct bflb_device_s *dev) {
         checksum = (checksum >> 16) + (checksum & 0xFFFF);
     }
     
-    printf("CKS BE result is %04x, %04x\r\n", cks, (uint16_t)~checksum);
-    if (cks == ((uint16_t)~checksum)) {
-        printf("====== Success %04X Checksum=====\r\n", cks);
+    if (cks != (uint16_t)~checksum) {
+        printf("Error! CKS result with BE is %04x, should be %04x\r\n", cks, (uint16_t)~checksum);
     } else {
-        printf("====== Failed %04X Checksum======\r\n", cks);
+        printf("Pass\r\n");
     }
 }
 
@@ -152,7 +158,11 @@ static void test_case4(struct bflb_device_s *dev) {
     }
     cks = bflb_cks_compute(dev, &data_segment_two, 1);
     
-    printf("CKS LE result is %04x, %04x\r\n", cks, (uint16_t)~checksum);
+    if (cks != (uint16_t)(~checksum << 8 | (~checksum >> 8 & 0xff))) {
+        printf("Error! CKS result with LE is %04x, should be %04x\r\n", cks, (uint16_t)(~checksum << 8 | (~checksum >> 8 & 0xff)));
+    } else {
+        printf("Pass\r\n");
+    }
     
     bflb_cks_reset(dev);
     bflb_cks_set_endian(dev, CKS_BIG_ENDIAN);
@@ -170,11 +180,10 @@ static void test_case4(struct bflb_device_s *dev) {
     }
     cks = bflb_cks_compute(dev, &data_segment_two, 1);
     
-    printf("CKS BE result is %04x, %04x\r\n", cks, (uint16_t)~checksum);
-    if (cks == ((uint16_t)~checksum)) {
-        printf("====== Success %04X Checksum=====\r\n", cks);
+    if (cks != (uint16_t)~checksum) {
+        printf("Error! CKS result with BE is %04x, should be %04x\r\n", cks, (uint16_t)~checksum);
     } else {
-        printf("====== Failed %04X Checksum======\r\n", cks);
+        printf("Pass\r\n");
     }
 }
 
@@ -230,6 +239,8 @@ static void test_case5(struct bflb_device_s *dev) {
     
     if (sw_cks != hw_cks) {
         printf("Error!\r\n");
+    } else {
+        printf("Pass\r\n");
     }
 }
 

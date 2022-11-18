@@ -187,5 +187,17 @@ __attribute__((interrupt, aligned(64))) void default_trap_handler(void)
 
 __attribute__((interrupt)) __attribute__((weak)) void default_interrupt_handler(void)
 {
+    __asm volatile("addi sp,sp,-8");
+    __asm volatile("csrr a0,mcause");
+    __asm volatile("csrr a1,mepc");
+    __asm volatile("sw a0,4(sp)");
+    __asm volatile("sw a1,0(sp)");
+    __asm volatile("csrsi mstatus,8");
     interrupt_entry();
+    __asm volatile("csrci mstatus,8");
+    __asm volatile("lw a1,0(sp)");
+    __asm volatile("lw a0,4(sp)");
+    __asm volatile("csrw mepc,a1");
+    __asm volatile("csrw mcause,a0");
+    __asm volatile("addi sp,sp,8");
 }

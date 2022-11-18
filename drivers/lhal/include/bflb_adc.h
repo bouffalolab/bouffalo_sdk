@@ -6,15 +6,14 @@
 /** @defgroup ADC_CHANNEL adc channel definition
   * @{
   */
-#define ADC_CHANNEL_0 0
-#define ADC_CHANNEL_1 1
-#define ADC_CHANNEL_2 2
-#define ADC_CHANNEL_3 3
-#define ADC_CHANNEL_4 4
-#define ADC_CHANNEL_5 5
-#define ADC_CHANNEL_6 6
-#define ADC_CHANNEL_7 7
-#if !defined(BL702L)
+#define ADC_CHANNEL_0         0
+#define ADC_CHANNEL_1         1
+#define ADC_CHANNEL_2         2
+#define ADC_CHANNEL_3         3
+#define ADC_CHANNEL_4         4
+#define ADC_CHANNEL_5         5
+#define ADC_CHANNEL_6         6
+#define ADC_CHANNEL_7         7
 #define ADC_CHANNEL_8         8
 #define ADC_CHANNEL_9         9
 #define ADC_CHANNEL_10        10
@@ -23,16 +22,9 @@
 #define ADC_CHANNEL_DACB      13
 #define ADC_CHANNEL_TSEN_P    14
 #define ADC_CHANNEL_TSEN_N    15
+#define ADC_CHANNEL_VREF      16
 #define ADC_CHANNEL_VABT_HALF 18
 #define ADC_CHANNEL_GND       23
-#else
-#define ADC_CHANNEL_DACA 8
-#define ADC_CHANNEL_DACB 9
-#define ADC_CHANNEL_VBAT 10
-#define ADC_CHANNEL_TSEN 11
-#define ADC_CHANNEL_VREF 12
-#define ADC_CHANNEL_GND  13
-#endif
 /**
   * @}
   */
@@ -166,8 +158,9 @@ uint32_t bflb_adc_get_intstatus(struct bflb_device_s *dev);
 void bflb_adc_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
 void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct bflb_adc_result_s *result, uint16_t count);
+
 void bflb_adc_tsen_init(struct bflb_device_s *dev, uint8_t tsen_mod);
-float bflb_adc_tsen_get_temp(struct bflb_device_s *dev, uint32_t tsen_offset);
+float bflb_adc_tsen_get_temp(struct bflb_device_s *dev);
 void bflb_adc_vbat_enable(struct bflb_device_s *dev);
 void bflb_adc_vbat_disable(struct bflb_device_s *dev);
 

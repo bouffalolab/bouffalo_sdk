@@ -157,6 +157,16 @@ void check_failed(uint8_t *file, uint32_t line);
  */
 #define IS_BL_MASK_TYPE(type) (((type) == MASK) || ((type) == UNMASK))
 
+#define ARCH_MemCpy      arch_memcpy
+#define ARCH_MemSet      arch_memset
+#define ARCH_MemCmp      arch_memcmp
+#define ARCH_MemCpy4     arch_memcpy4
+#define ARCH_MemCpy_Fast arch_memcpy_fast
+#define ARCH_MemSet4     arch_memset4
+#define BFLB_Soft_CRC32  bflb_soft_crc32
+#define CPU_Interrupt_Enable(irq)
+#define CPU_Interrupt_Disable(irq)
+#define Interrupt_Handler_Register(irq, callback)
 /*@} end of group COMMON_Public_Constants */
 
 /** @defgroup DRIVER_Public_FunctionDeclaration

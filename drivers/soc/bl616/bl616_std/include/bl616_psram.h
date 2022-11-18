@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2020 Bouffalo Lab</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2022 Bouffalo Lab</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -172,11 +172,11 @@ typedef enum {
  *  @brief PSRAM Burst Length type definition
  */
 typedef enum {
-    PSRAM_WINBOND_BURST_LENGTH_128_BYTES, /*!< Burst Length 128 bytes */
-    PSRAM_WINBOND_BURST_LENGTH_64_BYTES,  /*!< Burst Length 64 bytes */
-    PSRAM_WINBOND_BURST_LENGTH_16_BYTES,  /*!< Burst Length 16 bytes */
-    PSRAM_WINBOND_BURST_LENGTH_32_BYTES,  /*!< Burst Length 32 bytes */
-    PSRAM_WINBOND_BURST_LENGTH_512_BYTES, /*!< Burst Length 512 only for HyperBus3 */
+    PSRAM_WINBOND_BURST_LENGTH_128_BYTES = 0x4, /*!< Burst Length 128 bytes */
+    PSRAM_WINBOND_BURST_LENGTH_64_BYTES,        /*!< Burst Length 64 bytes */
+    PSRAM_WINBOND_BURST_LENGTH_16_BYTES,        /*!< Burst Length 16 bytes */
+    PSRAM_WINBOND_BURST_LENGTH_32_BYTES,        /*!< Burst Length 32 bytes */
+    PSRAM_WINBOND_BURST_LENGTH_512_BYTES,       /*!< Burst Length 512 only for HyperBus3 */
 } PSRAM_Winbond_Burst_Length;
 
 /**
@@ -302,8 +302,7 @@ typedef struct
 /** @defgroup  PSRAM_ID_TYPE
  *  @{
  */
-#define IS_PSRAM_ID_TYPE(type) (((type) == PSRAM0_ID) || \
-                                ((type) == PSRAM1_ID))
+#define IS_PSRAM_ID_TYPE(type) (((type) == PSRAM0_ID))
 
 /** @defgroup  PSRAM_CTRL_IO_MODE_TYPE
  *  @{
@@ -466,12 +465,12 @@ typedef struct
  *  @{
  */
 void PSram_Ctrl_Init(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Cfg_Type *psramCtrlCfg);
-void PSram_Ctrl_Winbond_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_Reg_Type reg_addr, uint16_t *regVal);
-void PSram_Ctrl_Winbond_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_Reg_Type reg_addr,
-                                  PSRAM_Winbond_Cfg_Type *reg_cfg);
-void PSram_Ctrl_ApMem_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_Type reg_addr, uint16_t *regVal);
-void PSram_Ctrl_ApMem_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_Type reg_addr,
-                                PSRAM_APMemory_Cfg_Type *reg_cfg);
+BL_Err_Type PSram_Ctrl_Winbond_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_Reg_Type reg_addr, uint16_t *regVal);
+BL_Err_Type PSram_Ctrl_Winbond_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_Reg_Type reg_addr,
+                                         PSRAM_Winbond_Cfg_Type *reg_cfg);
+BL_Err_Type PSram_Ctrl_ApMem_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_Type reg_addr, uint16_t *regVal);
+BL_Err_Type PSram_Ctrl_ApMem_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_Type reg_addr,
+                                       PSRAM_APMemory_Cfg_Type *reg_cfg);
 void PSram_Ctrl_ApMem_Reset(PSRAM_ID_Type PSRAM_ID);
 void PSram_Ctrl_CK_Sel(PSRAM_ID_Type PSRAM_ID, PSRAM_Clock_Type clkSel);
 void PSram_Ctrl_Winbond_Reset(PSRAM_ID_Type PSRAM_ID);

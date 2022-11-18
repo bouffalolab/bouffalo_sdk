@@ -461,6 +461,35 @@ void ATTR_TCM_SECTION XIP_SFlash_Opt_Exit(uint8_t aesEnable)
     }
 }
 
+/****************************************************************************//**
+ * @brief  Clear flash status register need lock
+ *
+ * @param  pFlashCfg: Flash config pointer
+ * @param  group: CPU group id 0 or 1
+ * @param  bank: Flash bank select
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+__WEAK
+BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg,
+                                                                        uint8_t group, SF_Ctrl_Bank_Select bank)
+{
+    BL_Err_Type stat;
+    uint32_t offset;
+    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
+
+    stat=XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
+    if (stat != SUCCESS) {
+        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+    } else {
+        stat=SFlash_Clear_Status_Register(pFlashCfg);
+        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+    }
+
+    return stat;
+}
+
 /*@} end of group XIP_SFLASH_Public_Functions */
 
 /*@} end of group XIP_SFLASH */

@@ -2,14 +2,14 @@
 #include "bflb_uart.h"
 #include "board.h"
 
-struct bflb_device_s *uart1;
+struct bflb_device_s *uartx;
 
 int main(void)
 {
     board_init();
-    board_uart1_gpio_init();
+    board_uartx_gpio_init();
 
-    uart1 = bflb_device_get_by_name("uart1");
+    uartx = bflb_device_get_by_name(DEFAULT_TEST_UART);
 
     struct bflb_uart_config_s cfg;
 
@@ -20,13 +20,13 @@ int main(void)
     cfg.flow_ctrl = 0;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
-    bflb_uart_init(uart1, &cfg);
+    bflb_uart_init(uartx, &cfg);
 
     int ch;
     while (1) {
-        ch = bflb_uart_getchar(uart1);
+        ch = bflb_uart_getchar(uartx);
         if (ch != -1) {
-            bflb_uart_putchar(uart1, ch);
+            bflb_uart_putchar(uartx, ch);
         }
     }
 }

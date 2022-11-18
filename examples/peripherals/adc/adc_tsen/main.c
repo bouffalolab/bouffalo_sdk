@@ -1,4 +1,5 @@
 #include "bflb_adc.h"
+#include "bflb_efuse.h"
 #include "bflb_mtimer.h"
 #include "board.h"
 
@@ -10,12 +11,12 @@ int main(void)
     board_adc_gpio_init();
     uint16_t i = 0;
     float average_filter = 0.0;
-    uint16_t tsen_offset = 2042;
 
     adc = bflb_device_get_by_name("adc");
 
+    /* adc clock = XCLK / 2 / 32 */
     struct bflb_adc_config_s cfg;
-    cfg.clk_div = ADC_CLK_DIV_16;
+    cfg.clk_div = ADC_CLK_DIV_32;
     cfg.scan_conv_mode = false;
     cfg.continuous_conv_mode = false;
     cfg.differential_mode = false;
@@ -33,7 +34,7 @@ int main(void)
 
     while (1) {
         for (i = 0; i < 50; i++) {
-            average_filter += bflb_adc_tsen_get_temp(adc, tsen_offset);
+            average_filter += bflb_adc_tsen_get_temp(adc);
             bflb_mtimer_delay_ms(10);
         }
 

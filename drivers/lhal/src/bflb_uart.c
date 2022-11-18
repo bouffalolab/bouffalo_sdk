@@ -192,17 +192,23 @@ void bflb_uart_link_rxdma(struct bflb_device_s *dev, bool enable)
     putreg32(regval, reg_base + UART_FIFO_CONFIG_0_OFFSET);
 }
 
-void bflb_uart_putchar(struct bflb_device_s *dev, int ch)
+ATTR_TCM_SECTION int bflb_uart_putchar(struct bflb_device_s *dev, int ch)
 {
+    uint64_t start_time;
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
+    start_time = bflb_mtimer_get_time_ms();
     while ((getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET) & UART_TX_FIFO_CNT_MASK) == 0) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
     putreg8(ch, reg_base + UART_FIFO_WDATA_OFFSET);
+    return 0;
 }
 
-int bflb_uart_getchar(struct bflb_device_s *dev)
+ATTR_TCM_SECTION int bflb_uart_getchar(struct bflb_device_s *dev)
 {
     int ch = -1;
     uint32_t reg_base;
@@ -215,14 +221,19 @@ int bflb_uart_getchar(struct bflb_device_s *dev)
     return ch;
 }
 
-void bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
+ATTR_TCM_SECTION int bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
 {
+    int ret;
     for (uint32_t i = 0; i < len; i++) {
-        bflb_uart_putchar(dev, data[i]);
+        ret = bflb_uart_putchar(dev, data[i]);
+        if (ret < 0) {
+            return ret;
+        }
     }
+    return 0;
 }
 
-int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
+ATTR_TCM_SECTION int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
 {
     int ch = -1;
     uint32_t count = 0;
@@ -353,6 +364,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     uint32_t tmp;
     uint32_t tx_tmp;
     uint32_t rx_tmp;
+    uint32_t int_mask;
 
     reg_base = dev->reg_base;
 
@@ -458,14 +470,15 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
             rx_tmp = getreg32(reg_base + UART_INT_MASK_OFFSET);
             tmp &= ~UART_CR_URX_ABR_EN;
-            if (arg) {
+            if (arg == UART_AUTO_BAUD_0X55) {
+                tmp |= UART_CR_URX_ABR_EN;
+#if !defined(BL602) && !defined(BL702)
+                rx_tmp &= ~UART_CR_URX_AD5_MASK;
+#endif
+            } else {
                 tmp |= UART_CR_URX_ABR_EN;
 #if !defined(BL602) && !defined(BL702)
                 rx_tmp &= ~UART_CR_URX_ADS_MASK;
-                rx_tmp &= ~UART_CR_URX_AD5_MASK;
-            } else {
-                rx_tmp |= UART_CR_URX_ADS_MASK;
-                rx_tmp |= UART_CR_URX_AD5_MASK;
 #endif
             }
 
@@ -619,6 +632,84 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             /* Configure rx ir pulse start position */
             putreg32(ir_config->rx_pluse_start, reg_base + UART_URX_IR_POSITION_OFFSET);
         } break;
+#endif
+        case UART_CMD_SET_TX_FREERUN:
+            /* Set tx freerun */
+            tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
+
+            if (arg) {
+                tx_tmp |= UART_CR_UTX_FRM_EN;
+            } else {
+                tx_tmp &= ~UART_CR_UTX_FRM_EN;
+            }
+
+            putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
+            break;
+        case UART_CMD_SET_TX_END_INTERRUPT:
+            /* Set tx end interrupt */
+            int_mask = getreg32(reg_base + UART_INT_MASK_OFFSET);
+            if (arg) {
+                int_mask &= ~UART_CR_UTX_END_MASK;
+            } else {
+                int_mask |= UART_CR_UTX_END_MASK;
+            }
+            putreg32(int_mask, reg_base + UART_INT_MASK_OFFSET);
+            break;
+        case UART_CMD_SET_RX_END_INTERRUPT:
+            /* Set rx end interrupt */
+            int_mask = getreg32(reg_base + UART_INT_MASK_OFFSET);
+            if (arg) {
+                int_mask &= ~UART_CR_URX_END_MASK;
+            } else {
+                int_mask |= UART_CR_URX_END_MASK;
+            }
+            putreg32(int_mask, reg_base + UART_INT_MASK_OFFSET);
+            break;
+        case UART_CMD_SET_TX_TRANSFER_LEN:
+            /* Set tx transfer length */
+            tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
+
+            tx_tmp |= ((arg - 1) << UART_CR_UTX_LEN_SHIFT);
+
+            putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
+            break;
+        case UART_CMD_SET_RX_TRANSFER_LEN:
+            /* Set rx transfer length */
+            rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
+
+            rx_tmp |= ((arg - 1) << UART_CR_URX_LEN_SHIFT);
+
+            putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
+            break;
+        case UART_CMD_SET_TX_EN:
+            /* Set tx enable */
+            tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
+
+            if (arg) {
+                tx_tmp |= UART_CR_UTX_EN;
+            } else {
+                tx_tmp &= ~UART_CR_UTX_EN;
+            }
+
+            putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
+            break;
+#if !defined(BL602) && !defined(BL702)
+        case UART_CMD_SET_BCR_END_INTERRUPT:
+            /* Set bcr value */
+            int_mask = getreg32(reg_base + UART_INT_MASK_OFFSET);
+            int_mask &= ~UART_CR_URX_BCR_MASK;
+            putreg32(int_mask, reg_base + UART_INT_MASK_OFFSET);
+
+            rx_tmp = getreg32(reg_base + UART_URX_BCR_INT_CFG_OFFSET);
+            rx_tmp &= ~UART_CR_URX_BCR_VALUE_MASK;
+            rx_tmp |= (arg << UART_CR_URX_BCR_VALUE_SHIFT);
+            putreg32(rx_tmp, reg_base + UART_URX_BCR_INT_CFG_OFFSET);
+            break;
+        case UART_CMD_GET_BCR_COUNT:
+            /* Get bcr value */
+            rx_tmp = getreg32(reg_base + UART_URX_BCR_INT_CFG_OFFSET);
+            return ((rx_tmp & UART_STS_URX_BCR_COUNT_MASK) >> UART_STS_URX_BCR_COUNT_SHIFT);
+            break;
 #endif
         default:
             ret = -EPERM;

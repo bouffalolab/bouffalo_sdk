@@ -84,6 +84,7 @@ int bflb_sha1_update(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, con
     uint32_t reg_base;
     uint32_t fill;
     uint32_t left;
+    uint64_t start_time;
 
     if (len == 0) {
         return 0;
@@ -130,7 +131,11 @@ int bflb_sha1_update(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, con
     len = len % 64;
 
     if (fill > 0) {
+        start_time = bflb_mtimer_get_time_ms();
         while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
 
         /* SHA need set se_sha_sel to 1 to keep the last sha state */
@@ -155,14 +160,22 @@ int bflb_sha1_update(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, con
     }
 
     if (len > 0) {
+        start_time = bflb_mtimer_get_time_ms();
         while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
 
         /* Copy left data into temp buffer */
         arch_memcpy_fast((void *)((uint8_t *)ctx->sha_buf + left), input, len);
     }
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
     return 0;
 }
@@ -178,6 +191,7 @@ int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx,
     uint32_t reg_base;
     uint32_t fill;
     uint32_t left;
+    uint64_t start_time;
 
     if (len == 0) {
         return 0;
@@ -223,7 +237,11 @@ int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx,
     len = len % 128;
 
     if (fill > 0) {
+        start_time = bflb_mtimer_get_time_ms();
         while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
 
         /* SHA need set se_sha_sel to 1 to keep the last sha state */
@@ -248,14 +266,22 @@ int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx,
     }
 
     if (len > 0) {
+        start_time = bflb_mtimer_get_time_ms();
         while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
 
         /* Copy left data into temp buffer */
         arch_memcpy_fast((void *)((uint8_t *)ctx->sha_buf + left), input, len);
     }
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
     return 0;
 }
@@ -526,6 +552,7 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
     uint32_t reg_base;
     uint32_t fill;
     uint32_t left;
+    uint64_t start_time;
 
     if (len == 0) {
         return 0;
@@ -569,7 +596,11 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
     len = len % 64;
 
     if (fill > 0) {
+        start_time = bflb_mtimer_get_time_ms();
         while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
 
         /* Fill data */
@@ -586,14 +617,22 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
     }
 
     if (len > 0) {
+        start_time = bflb_mtimer_get_time_ms();
         while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
 
         /* Copy left data into temp buffer */
         arch_memcpy_fast((void *)((uint8_t *)ctx->sha_buf + left), input, len);
     }
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
     return 0;
 }
@@ -615,6 +654,7 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
     uint32_t reg_base;
     uint32_t fill;
     uint32_t left;
+    uint64_t start_time;
 
     if (len == 0) {
         return 0;
@@ -657,7 +697,11 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
     len = len % 128;
 
     if (fill > 0) {
+        start_time = bflb_mtimer_get_time_ms();
         while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
 
         /* Fill data */
@@ -674,14 +718,22 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
     }
 
     if (len > 0) {
+        start_time = bflb_mtimer_get_time_ms();
         while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
 
         /* Copy left data into temp buffer */
         arch_memcpy_fast((void *)((uint8_t *)ctx->sha_buf + left), input, len);
     }
 
+    start_time = bflb_mtimer_get_time_ms();
     while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
     }
     return 0;
 }

@@ -937,9 +937,8 @@ struct SDH_Handle_Cfg_Tag {
 /** @defgroup  SDH_Public_Functions
  *  @{
  */
-#if (defined BOOTROM) || (!defined BFLB_USE_HAL_DRIVER)
 void SDH_MMC1_IRQHandler(void);
-#endif
+
 void SDH_Reset(void);
 void SDH_Set_Timeout(uint8_t tmo);
 void SDH_SetSdClock(uint32_t srcClock, uint32_t busClock);

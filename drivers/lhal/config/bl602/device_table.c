@@ -162,6 +162,13 @@ struct bflb_device_s bl602_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_PKA,
       .user_data = NULL },
+    { .name = "watchdog",
+      .reg_base = TIMER_BASE,
+      .irq_num = BL602_IRQ_WDT,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_TIMER,
+      .user_data = NULL },
 };
 
 struct bflb_device_s *bflb_device_get_by_name(const char *name)

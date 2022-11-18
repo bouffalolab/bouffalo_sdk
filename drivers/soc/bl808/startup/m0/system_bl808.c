@@ -110,30 +110,10 @@ void SystemInit(void)
     GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
 }
 
-#if defined(DUAL_CORE)
-volatile uintptr_t ATTR_MP_SHARE_DATA_SECTION master_copy_done = 0;
-#endif
-
 void System_Post_Init(void)
 {
-    /* Bootrom not use dcache,so ignore this flush*/
-#ifndef BOOTROM
     csi_dcache_clean();
-#endif
 
-#if defined(DUAL_CORE)
-    __DSB();
-
-#if defined(DUAL_CORE)
-    if (GLB_CORE_ID_M0 == GLB_Get_Core_Type()) {
-#endif
-        master_copy_done = 0xE906DAD5;
-#if defined(DUAL_CORE)
-    }
-#endif
-
-    __DSB();
-#endif
     PDS_Power_On_MM_System();
     /* make D0 all ram avalable for mcu usage */
     GLB_Set_DSP_L2SRAM_Available_Size(3, 1, 1, 1);

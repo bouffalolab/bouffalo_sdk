@@ -298,7 +298,7 @@
 #define CSR_DSCRATCH        0x7B2
 
 /* In mstatus register */
-
+#define MSTATUS_SIE       (0x1 << 1)  /* Superior Interrupt Enable */
 #define MSTATUS_MIE       (0x1 << 3)  /* Machine Interrupt Enable */
 #define MSTATUS_MPIE      (0x1 << 7)  /* Machine Previous Interrupt Enable */
 #define MSTATUS_MPPM      (0x3 << 11) /* Machine Previous Privilege (m-mode) */

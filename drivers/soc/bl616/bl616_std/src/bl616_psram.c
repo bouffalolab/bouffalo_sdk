@@ -1,13 +1,13 @@
 /**
   ******************************************************************************
-  * @file    bl616p_psram_ctrl.c
+  * @file    bl616_psram_ctrl.c
   * @version V1.0
   * @date
   * @brief   This file is the standard driver c file
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2020 Bouffalo Lab</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2022 Bouffalo Lab</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
 #include "bl616_psram.h"
 #include "psram_reg.h"
 
-/** @addtogroup  BL616P_Peripheral_Driver
+/** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
 
@@ -48,7 +48,7 @@
 /** @defgroup  PSRAM_CTRL_Private_Macros
  *  @{
  */
-
+#define PSRAM_X8_CTRL_WAIT_TIMEOUT 1000
 /*@} end of group PSRAM_CTRL_Private_Macros */
 
 /** @defgroup  PSRAM_CTRL_Private_Types
@@ -141,6 +141,7 @@ static void PSram_Ctrl_Request(PSRAM_ID_Type PSRAM_ID)
 {
     uint32_t tmpVal = 0;
     uint32_t psram_base = PSRAM_CTRL_BASE + (0x1000 * PSRAM_ID);
+    uint32_t time_out = 0;
 
     //start configure request
     tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
@@ -150,6 +151,9 @@ static void PSram_Ctrl_Request(PSRAM_ID_Type PSRAM_ID)
     //Waiting for the authorization
     do {
         tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+        if (time_out++ > PSRAM_X8_CTRL_WAIT_TIMEOUT) {
+            break;
+        }
     } while (!BL_IS_REG_BIT_SET(tmpVal, PSRAM_REG_CONFIG_GNT));
 }
 
@@ -179,13 +183,14 @@ static void PSram_Ctrl_Release(PSRAM_ID_Type PSRAM_ID)
  * @param  reg_addr: PSRAM Register ID CR0 or CR1
  * @param  regVal: read Reister value
  *
- * @return None
+ * @return SUCCESS or TIMEOUT
  *
 *******************************************************************************/
-void PSram_Ctrl_Winbond_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_Reg_Type reg_addr, uint16_t *regVal)
+BL_Err_Type PSram_Ctrl_Winbond_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_Reg_Type reg_addr, uint16_t *regVal)
 {
     uint32_t tmpVal = 0;
     uint32_t psram_base = PSRAM_CTRL_BASE + (0x1000 * PSRAM_ID);
+    uint32_t time_out = 0;
 
     CHECK_PARAM(IS_PSRAM_WINBON_CFG_TYPE(reg_cfg));
     CHECK_PARAM(IS_PSRAM_CTRL_WINBOND_CFG_REG_TYPE(reg_addr));
@@ -206,6 +211,9 @@ void PSram_Ctrl_Winbond_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_
     //waiting confiure complete
     do {
         tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+        if (time_out++ > PSRAM_X8_CTRL_WAIT_TIMEOUT) {
+            return TIMEOUT;
+        }
     } while (!BL_IS_REG_BIT_SET(tmpVal, PSRAM_STS_CONFIG_R_DONE));
 
     //read reg data form sts_config_read
@@ -213,6 +221,8 @@ void PSram_Ctrl_Winbond_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_
     *regVal = (uint16_t)(tmpVal >> 16);
 
     PSram_Ctrl_Release(PSRAM_ID);
+
+    return SUCCESS;
 }
 
 /****************************************************************************/ /**
@@ -222,14 +232,15 @@ void PSram_Ctrl_Winbond_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_
  * @param  reg_addr: PSRAM Register ID CR0 or CR1
  * @param  reg_cfg: winbond configuration
  *
- * @return None
+ * @return SUCCESS or TIMEOUT
  *
 *******************************************************************************/
-void PSram_Ctrl_Winbond_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_Reg_Type reg_addr, PSRAM_Winbond_Cfg_Type *reg_cfg)
+BL_Err_Type PSram_Ctrl_Winbond_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg_Reg_Type reg_addr, PSRAM_Winbond_Cfg_Type *reg_cfg)
 {
     uint32_t tmpVal = 0;
     uint32_t psram_base = PSRAM_CTRL_BASE + (0x1000 * PSRAM_ID);
     PSRAM_Ctrl_Size_Type psramDensity;
+    uint32_t time_out = 0;
 
     CHECK_PARAM(IS_PSRAM_WINBON_CFG_TYPE(reg_cfg));
     CHECK_PARAM(IS_PSRAM_CTRL_WINBOND_CFG_REG_TYPE(reg_addr));
@@ -279,9 +290,14 @@ void PSram_Ctrl_Winbond_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg
     //waiting confiure complete
     do {
         tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+        if (time_out++ > PSRAM_X8_CTRL_WAIT_TIMEOUT) {
+            return TIMEOUT;
+        }
     } while (!BL_IS_REG_BIT_SET(tmpVal, PSRAM_STS_CONFIG_W_DONE));
 
     PSram_Ctrl_Release(PSRAM_ID);
+
+    return SUCCESS;
 }
 
 /****************************************************************************/ /**
@@ -291,13 +307,14 @@ void PSram_Ctrl_Winbond_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_Winbond_Cfg
  * @param  reg_addr: PSRAM Register ID CR0 or CR1
  * @param  regVal: read Reister value
  *
- * @return None
+ * @return SUCCESS or TIMEOUT
  *
 *******************************************************************************/
-void PSram_Ctrl_ApMem_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_Type reg_addr, uint16_t *regVal)
+BL_Err_Type PSram_Ctrl_ApMem_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_Type reg_addr, uint16_t *regVal)
 {
     uint32_t tmpVal = 0;
     uint32_t psram_base = PSRAM_CTRL_BASE + (0x1000 * PSRAM_ID);
+    uint32_t time_out = 0;
 
     CHECK_PARAM(IS_PSRAM_WINBON_CFG_TYPE(reg_cfg));
     CHECK_PARAM(IS_PSRAM_CTRL_APMEM_CFG_REG_TYPE(reg_addr));
@@ -318,6 +335,9 @@ void PSram_Ctrl_ApMem_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_
     //waiting confiure complete
     do {
         tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+        if (time_out++ > PSRAM_X8_CTRL_WAIT_TIMEOUT) {
+            return TIMEOUT;
+        }
     } while (!BL_IS_REG_BIT_SET(tmpVal, PSRAM_STS_CONFIG_R_DONE));
 
     //read reg data form sts_config_read
@@ -325,6 +345,8 @@ void PSram_Ctrl_ApMem_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_
     *regVal = (uint16_t)(tmpVal >> 16);
 
     PSram_Ctrl_Release(PSRAM_ID);
+
+    return SUCCESS;
 }
 
 /****************************************************************************/ /**
@@ -334,13 +356,14 @@ void PSram_Ctrl_ApMem_Read_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_
  * @param  reg_addr: PSRAM Register ID
  * @param  reg_cfg: winbond configuration
  *
- * @return None
+ * @return SUCCESS or TIMEOUT
  *
 *******************************************************************************/
-void PSram_Ctrl_ApMem_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_Type reg_addr, PSRAM_APMemory_Cfg_Type *reg_cfg)
+BL_Err_Type PSram_Ctrl_ApMem_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg_Type reg_addr, PSRAM_APMemory_Cfg_Type *reg_cfg)
 {
     uint32_t tmpVal = 0;
     uint32_t psram_base = PSRAM_CTRL_BASE + (0x1000 * PSRAM_ID);
+    uint32_t time_out = 0;
 
     CHECK_PARAM(IS_PSRAM_WINBON_CFG_TYPE(reg_cfg));
     CHECK_PARAM(IS_PSRAM_CTRL_APMEM_CFG_REG_TYPE(reg_addr));
@@ -378,9 +401,14 @@ void PSram_Ctrl_ApMem_Write_Reg(PSRAM_ID_Type PSRAM_ID, PSRAM_Ctrl_ApMem_Cfg_Reg
     //waiting confiure complete
     do {
         tmpVal = BL_RD_REG(psram_base, PSRAM_CONFIGURE);
+        if (time_out++ > PSRAM_X8_CTRL_WAIT_TIMEOUT) {
+            return TIMEOUT;
+        }
     } while (!BL_IS_REG_BIT_SET(tmpVal, PSRAM_STS_CONFIG_W_DONE));
 
     PSram_Ctrl_Release(PSRAM_ID);
+
+    return SUCCESS;
 }
 
 /****************************************************************************/ /**
@@ -528,4 +556,4 @@ void PSram_Ctrl_Debug_Timout(PSRAM_ID_Type PSRAM_ID, uint8_t enable, uint32_t ti
 
 /*@} end of group PSRAM_CTRL */
 
-/*@} end of group BL616P_Peripheral_Driver */
+/*@} end of group BL616_Peripheral_Driver */

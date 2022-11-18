@@ -44,7 +44,7 @@ struct bflb_device_s bl702_device_table[] = {
       .idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_SPI,
       .user_data = NULL },
-    { .name = "pwm0",
+    { .name = "pwm_v1",
       .reg_base = PWM_BASE,
       .irq_num = BL702_IRQ_PWM,
       .idx = 0,
@@ -168,6 +168,13 @@ struct bflb_device_s bl702_device_table[] = {
       .idx = 0,
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_ETH,
+      .user_data = NULL },
+    { .name = "watchdog",
+      .reg_base = TIMER_BASE,
+      .irq_num = BL702_IRQ_WDT,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_TIMER,
       .user_data = NULL },
 };
 

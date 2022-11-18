@@ -134,6 +134,14 @@
 #define UART_CMD_SET_ABR_ALLOWABLE_ERROR (0x13)
 #define UART_CMD_SET_SW_RTS_CONTROL      (0x14)
 #define UART_CMD_IR_CONFIG               (0x15)
+#define UART_CMD_SET_TX_FREERUN          (0x16)
+#define UART_CMD_SET_TX_END_INTERRUPT    (0x17)
+#define UART_CMD_SET_RX_END_INTERRUPT    (0x18)
+#define UART_CMD_SET_TX_TRANSFER_LEN     (0x19)
+#define UART_CMD_SET_RX_TRANSFER_LEN     (0x20)
+#define UART_CMD_SET_TX_EN               (0x21)
+#define UART_CMD_SET_BCR_END_INTERRUPT   (0x22)
+#define UART_CMD_GET_BCR_COUNT           (0x23)
 /**
   * @}
   */
@@ -186,9 +194,9 @@ void bflb_uart_enable(struct bflb_device_s *dev);
 void bflb_uart_disable(struct bflb_device_s *dev);
 void bflb_uart_link_txdma(struct bflb_device_s *dev, bool enable);
 void bflb_uart_link_rxdma(struct bflb_device_s *dev, bool enable);
-void bflb_uart_putchar(struct bflb_device_s *dev, int ch);
+int bflb_uart_putchar(struct bflb_device_s *dev, int ch);
 int bflb_uart_getchar(struct bflb_device_s *dev);
-void bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+int bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
 int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
 bool bflb_uart_txready(struct bflb_device_s *dev);
 bool bflb_uart_txempty(struct bflb_device_s *dev);

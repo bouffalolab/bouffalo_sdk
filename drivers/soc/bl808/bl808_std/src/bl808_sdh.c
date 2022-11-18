@@ -75,9 +75,7 @@ static SDH_Handle_Cfg_Type *sdhHandle = NULL;
 /** @defgroup  SDH_Private_Fun_Declaration
  *  @{
  */
-#if (defined BOOTROM) || (!defined BFLB_USE_HAL_DRIVER)
 static void SDH_IntHandler(IRQn_Type intPeriph, SDH_Handle_Cfg_Type *handle);
-#endif
 
 /*@} end of group SDH_Private_Fun_Declaration */
 
@@ -1227,7 +1225,6 @@ void SDH_InstallHandleCallback(SDH_Handle_Cfg_Type *handle,
  * @return None
  *
 *******************************************************************************/
-#if (defined BOOTROM) || (!defined BFLB_USE_HAL_DRIVER)
 static void SDH_IntHandler(IRQn_Type intPeriph, SDH_Handle_Cfg_Type *handle)
 {
     uint32_t intFlag, intMask;
@@ -1343,7 +1340,6 @@ static void SDH_IntHandler(IRQn_Type intPeriph, SDH_Handle_Cfg_Type *handle)
 
     SDH_ClearIntStatus(intFlag);
 }
-#endif
 
 /****************************************************************************/ /**
  * @brief  SDH interrupt handler
@@ -1353,12 +1349,10 @@ static void SDH_IntHandler(IRQn_Type intPeriph, SDH_Handle_Cfg_Type *handle)
  * @return None
  *
 *******************************************************************************/
-#if (defined BOOTROM) || (!defined BFLB_USE_HAL_DRIVER)
 void SDH_MMC1_IRQHandler(void)
 {
     SDH_IntHandler(SDH_IRQn, sdhHandle);
 }
-#endif
 
 /*@} end of group SDH_Public_Functions */
 

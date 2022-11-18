@@ -107,14 +107,14 @@ static Efuse_Common_Trim_Cfg trim_lit[] = {
         .value_len = 4,
     },
     {
-        .name = "ldo33",
+        .name = "ldo33_trim",
         .en_addr = 0x78 * 8 + 13,
         .parity_addr = 0x78 * 8 + 12,
         .value_addr = 0x78 * 8 + 8,
         .value_len = 4,
     },
     {
-        .name = "ldo11",
+        .name = "ldo11_tirm",
         .en_addr = 0x78 * 8 + 7,
         .parity_addr = 0x78 * 8 + 6,
         .value_addr = 0x78 * 8 + 2,
@@ -125,6 +125,90 @@ static Efuse_Common_Trim_Cfg trim_lit[] = {
         .en_addr = 0x78 * 8 + 1,
         .parity_addr = 0x78 * 8 + 0,
         .value_addr = 0x7C * 8 + 4,
+        .value_len = 8,
+    },
+    {
+        .name = "hp_poffset0",
+        .en_addr = 0xCC * 8 + 26,
+        .parity_addr = 0xC0 * 8 + 15,
+        .value_addr = 0xC0 * 8 + 0,
+        .value_len = 15,
+    },
+    {
+        .name = "hp_poffset1",
+        .en_addr = 0xCC * 8 + 27,
+        .parity_addr = 0xC0 * 8 + 31,
+        .value_addr = 0xC0 * 8 + 16,
+        .value_len = 15,
+    },
+    {
+        .name = "hp_poffset2",
+        .en_addr = 0xCC * 8 + 28,
+        .parity_addr = 0xC4 * 8 + 15,
+        .value_addr = 0xC4 * 8 + 0,
+        .value_len = 15,
+    },
+    {
+        .name = "lp_poffset0",
+        .en_addr = 0xCC * 8 + 29,
+        .parity_addr = 0xC4 * 8 + 31,
+        .value_addr = 0xC4 * 8 + 16,
+        .value_len = 15,
+    },
+    {
+        .name = "lp_poffset1",
+        .en_addr = 0xCC * 8 + 30,
+        .parity_addr = 0xC8 * 8 + 15,
+        .value_addr = 0xC8 * 8 + 0,
+        .value_len = 15,
+    },
+    {
+        .name = "lp_poffset2",
+        .en_addr = 0xCC * 8 + 31,
+        .parity_addr = 0xC8 * 8 + 31,
+        .value_addr = 0xC8 * 8 + 16,
+        .value_len = 15,
+    },
+    {
+        .name = "bz_poffset0",
+        .en_addr = 0xD0 * 8 + 26,
+        .parity_addr = 0xCC * 8 + 25,
+        .value_addr = 0xCC * 8 + 0,
+        .value_len = 25,
+    },
+    {
+        .name = "bz_poffset1",
+        .en_addr = 0xD0 * 8 + 27,
+        .parity_addr = 0xD0 * 8 + 25,
+        .value_addr = 0xD0 * 8 + 0,
+        .value_len = 25,
+    },
+    {
+        .name = "bz_poffset2",
+        .en_addr = 0xD0 * 8 + 28,
+        .parity_addr = 0xD4 * 8 + 25,
+        .value_addr = 0xD4 * 8 + 0,
+        .value_len = 25,
+    },
+    {
+        .name = "tmp_mp0",
+        .en_addr = 0xD8 * 8 + 9,
+        .parity_addr = 0xD8 * 8 + 8,
+        .value_addr = 0xD8 * 8 + 0,
+        .value_len = 8,
+    },
+    {
+        .name = "tmp_mp1",
+        .en_addr = 0xD8 * 8 + 19,
+        .parity_addr = 0xD8 * 8 + 18,
+        .value_addr = 0xD8 * 8 + 10,
+        .value_len = 8,
+    },
+    {
+        .name = "tmp_mp2",
+        .en_addr = 0xD8 * 8 + 29,
+        .parity_addr = 0xD8 * 8 + 28,
+        .value_addr = 0xD8 * 8 + 20,
         .value_len = 8,
     },
     {
@@ -156,21 +240,21 @@ static Efuse_Common_Trim_Cfg trim_lit[] = {
         .value_len = 10,
     },
     {
-        .name = "xtal1",
+        .name = "xtal0",
         .en_addr = 0xEC * 8 + 7,
         .parity_addr = 0xEC * 8 + 6,
         .value_addr = 0xEC * 8 + 0,
         .value_len = 6,
     },
     {
-        .name = "xtal2",
+        .name = "xtal1",
         .en_addr = 0xF0 * 8 + 31,
         .parity_addr = 0xF0 * 8 + 30,
         .value_addr = 0xF4 * 8 + 26,
         .value_len = 6,
     },
     {
-        .name = "xtal3",
+        .name = "xtal2",
         .en_addr = 0xF0 * 8 + 29,
         .parity_addr = 0xF0 * 8 + 28,
         .value_addr = 0xF4 * 8 + 20,
@@ -298,17 +382,19 @@ uint32_t EF_Ctrl_Get_Common_Trim_List(Efuse_Common_Trim_Cfg **trim_list)
  *
  * @param  name: Trim name
  * @param  trim: Trim data pointer
- *
+ * @param  reload: Reload efuse data before read
  * @return None
  *
 *******************************************************************************/
-void EF_Ctrl_Read_Common_Trim(char *name, Efuse_Common_Trim_Type *trim)
+void EF_Ctrl_Read_Common_Trim(char *name, Efuse_Common_Trim_Type *trim, uint8_t reload)
 {
     uint32_t tmpVal;
     uint32_t i = 0;
 
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R0;
+    if (reload) {
+        /* Trigger read data from efuse */
+        EF_CTRL_LOAD_BEFORE_READ_R0;
+    }
 
     trim->en = 0;
     trim->parity = 0;
@@ -362,7 +448,6 @@ void EF_Ctrl_Write_Common_Trim(char *name, uint32_t value, uint8_t program)
             tmpVal = BL_RD_WORD(EF_DATA_BASE + (trim_lit[i].en_addr / 32) * 4);
             tmpVal |= (1 << (trim_lit[i].en_addr % 32));
             BL_WR_WORD(EF_DATA_BASE + (trim_lit[i].en_addr / 32) * 4, tmpVal);
-
 
             parity = EF_Ctrl_Get_Trim_Parity(value, trim_lit[i].value_len);
             if (parity) {

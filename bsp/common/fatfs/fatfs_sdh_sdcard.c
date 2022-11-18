@@ -104,15 +104,6 @@ int MMC_disk_ioctl(BYTE cmd, void *buff)
     return 0;
 }
 
-DWORD get_fattime(void)
-{
-    return ((DWORD)(2015 - 1980) << 25) /* Year 2015 */
-           | ((DWORD)1 << 21)           /* Month 1 */
-           | ((DWORD)1 << 16)           /* Mday 1 */
-           | ((DWORD)0 << 11)           /* Hour 0 */
-           | ((DWORD)0 << 5)            /* Min 0 */
-           | ((DWORD)0 >> 1);           /* Sec 0 */
-}
 
 DSTATUS Translate_Result_Code(int result)
 {

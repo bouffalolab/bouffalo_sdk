@@ -3,6 +3,7 @@
 
 #include "bflb_core.h"
 
+#if !defined(BL616)
 /** @defgroup IR TX mode definition
   * @{
   */
@@ -34,7 +35,9 @@
 /**
   * @}
   */
+#endif
 
+#if !defined(BL702L)
 /** @defgroup IR RX mode definition
   * @{
   */
@@ -54,6 +57,7 @@
 /**
   * @}
   */
+#endif
 
 /** @defgroup IR word definition
   * @{
@@ -64,6 +68,7 @@
   * @}
   */
 
+#if !defined(BL616)
 /**
  * @brief IR TX configuration structure
  *
@@ -124,7 +129,9 @@ struct bflb_ir_tx_config_s {
     uint8_t modu_width_0;
     uint16_t pulse_width_unit;
 };
+#endif
 
+#if !defined(BL702L)
 /**
  * @brief IR RX configuration structure
  *
@@ -145,11 +152,13 @@ struct bflb_ir_rx_config_s {
     uint16_t end_threshold;
     uint16_t fifo_threshold;
 };
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#if !defined(BL616)
 void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s *config);
 void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length);
 void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length);
@@ -160,7 +169,9 @@ uint32_t bflb_ir_txint_status(struct bflb_device_s *dev);
 void bflb_ir_link_txdma(struct bflb_device_s *dev, bool enable);
 uint8_t bflb_ir_txfifo_cnt(struct bflb_device_s *dev);
 void bflb_ir_txfifo_clear(struct bflb_device_s *dev);
+#endif
 
+#if !defined(BL702L)
 void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s *config);
 uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data);
 uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t length);
@@ -170,6 +181,7 @@ void bflb_ir_rxint_clear(struct bflb_device_s *dev);
 uint32_t bflb_ir_rxint_status(struct bflb_device_s *dev);
 uint8_t bflb_ir_rxfifo_cnt(struct bflb_device_s *dev);
 void bflb_ir_rxfifo_clear(struct bflb_device_s *dev);
+#endif
 
 void bflb_ir_feature_control();
 

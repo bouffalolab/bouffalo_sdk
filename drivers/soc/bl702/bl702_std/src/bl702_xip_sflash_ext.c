@@ -34,7 +34,6 @@
   ******************************************************************************
   */
 
-#include "string.h"
 #include "bl702_xip_sflash_ext.h"
 
 /** @addtogroup  BL702_Peripheral_Driver

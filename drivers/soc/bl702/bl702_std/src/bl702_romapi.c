@@ -53,44 +53,44 @@ __ALWAYS_INLINE ATTR_TCM_SECTION void BL702_Delay_MS(uint32_t cnt)
     RomDriver_BL702_Delay_MS(cnt);
 }
 
-__ALWAYS_INLINE ATTR_TCM_SECTION void *BL702_MemCpy(void *dst, const void *src, uint32_t n)
-{
-    return RomDriver_BL702_MemCpy(dst, src, n);
-}
+// __ALWAYS_INLINE ATTR_TCM_SECTION void *BL702_MemCpy(void *dst, const void *src, uint32_t n)
+// {
+//     return RomDriver_BL702_MemCpy(dst, src, n);
+// }
 
-__ALWAYS_INLINE ATTR_TCM_SECTION
-    uint32_t *
-    BL702_MemCpy4(uint32_t *dst, const uint32_t *src, uint32_t n)
-{
-    return RomDriver_BL702_MemCpy4(dst, src, n);
-}
+// __ALWAYS_INLINE ATTR_TCM_SECTION
+//     uint32_t *
+//     BL702_MemCpy4(uint32_t *dst, const uint32_t *src, uint32_t n)
+// {
+//     return RomDriver_BL702_MemCpy4(dst, src, n);
+// }
 
 // __ALWAYS_INLINE ATTR_TCM_SECTION
 // void* BL702_MemCpy_Fast(void *pdst, const void *psrc, uint32_t n) {
 //     return RomDriver_BL702_MemCpy_Fast(pdst, psrc, n);
 // }
 
-__ALWAYS_INLINE ATTR_TCM_SECTION void *ARCH_MemCpy_Fast(void *pdst, const void *psrc, uint32_t n)
-{
-    return RomDriver_ARCH_MemCpy_Fast(pdst, psrc, n);
-}
+// __ALWAYS_INLINE ATTR_TCM_SECTION void *ARCH_MemCpy_Fast(void *pdst, const void *psrc, uint32_t n)
+// {
+//     return RomDriver_ARCH_MemCpy_Fast(pdst, psrc, n);
+// }
 
-__ALWAYS_INLINE ATTR_TCM_SECTION void *BL702_MemSet(void *s, uint8_t c, uint32_t n)
-{
-    return RomDriver_BL702_MemSet(s, c, n);
-}
+// __ALWAYS_INLINE ATTR_TCM_SECTION void *BL702_MemSet(void *s, uint8_t c, uint32_t n)
+// {
+//     return RomDriver_BL702_MemSet(s, c, n);
+// }
 
-__ALWAYS_INLINE ATTR_TCM_SECTION
-    uint32_t *
-    BL702_MemSet4(uint32_t *dst, const uint32_t val, uint32_t n)
-{
-    return RomDriver_BL702_MemSet4(dst, val, n);
-}
+// __ALWAYS_INLINE ATTR_TCM_SECTION
+//     uint32_t *
+//     BL702_MemSet4(uint32_t *dst, const uint32_t val, uint32_t n)
+// {
+//     return RomDriver_BL702_MemSet4(dst, val, n);
+// }
 
-__ALWAYS_INLINE ATTR_TCM_SECTION int BL702_MemCmp(const void *s1, const void *s2, uint32_t n)
-{
-    return RomDriver_BL702_MemCmp(s1, s2, n);
-}
+// __ALWAYS_INLINE ATTR_TCM_SECTION int BL702_MemCmp(const void *s1, const void *s2, uint32_t n)
+// {
+//     return RomDriver_BL702_MemCmp(s1, s2, n);
+// }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
     uint32_t
@@ -780,12 +780,14 @@ __ALWAYS_INLINE ATTR_TCM_SECTION void L1C_Cache_Write_Set(BL_Fun_Type wtEn, BL_F
     RomDriver_L1C_Cache_Write_Set(wtEn, wbEn, waEn);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
     BL_Err_Type
     L1C_Cache_Flush(uint8_t wayDisable)
 {
     return RomDriver_L1C_Cache_Flush(wayDisable);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION void L1C_Cache_Hit_Count_Get(uint32_t *hitCountLow, uint32_t *hitCountHigh)
 {

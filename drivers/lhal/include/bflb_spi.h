@@ -70,6 +70,29 @@
   * @}
   */
 
+/** @defgroup SPI_INTSTS spi interrupt status definition
+  * @{
+  */
+#define SPI_INTSTS_TC                (1 << 0)
+#define SPI_INTSTS_TX_FIFO           (1 << 1)
+#define SPI_INTSTS_RX_FIFO           (1 << 2)
+#define SPI_INTSTS_SLAVE_TIMEOUT     (1 << 3)
+#define SPI_INTSTS_SLAVE_TX_UNDERRUN (1 << 4)
+#define SPI_INTSTS_FIFO_ERR          (1 << 5)
+/**
+  * @}
+  */
+
+/** @defgroup SPI_INTCLR spi interrupt clear definition
+  * @{
+  */
+#define SPI_INTCLR_TC                (1 << 16)
+#define SPI_INTCLR_SLAVE_TIMEOUT     (1 << 19)
+#define SPI_INTCLR_SLAVE_TX_UNDERRUN (1 << 20)
+/**
+  * @}
+  */
+
 /** @defgroup SPI_CMD spi feature control cmd definition
   * @{
   */
@@ -118,6 +141,7 @@ int bflb_spi_poll_exchange(struct bflb_device_s *dev, const void *txbuffer, void
 bool bflb_spi_isbusy(struct bflb_device_s *dev);
 void bflb_spi_txint_mask(struct bflb_device_s *dev, bool mask);
 void bflb_spi_rxint_mask(struct bflb_device_s *dev, bool mask);
+void bflb_spi_tcint_mask(struct bflb_device_s *dev, bool mask);
 void bflb_spi_errint_mask(struct bflb_device_s *dev, bool mask);
 uint32_t bflb_spi_get_intstatus(struct bflb_device_s *dev);
 void bflb_spi_int_clear(struct bflb_device_s *dev, uint32_t int_clear);

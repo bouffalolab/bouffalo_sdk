@@ -209,6 +209,8 @@ BL_Err_Type SFlash_Read(SPI_Flash_Cfg_Type *flashCfg, SF_Ctrl_IO_Type ioMode, ui
                         uint32_t len);
 BL_Err_Type SFlash_Program(SPI_Flash_Cfg_Type *flashCfg, SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t *data, uint32_t len);
 
+BL_Err_Type SFlash_Clear_Status_Register(SPI_Flash_Cfg_Type *flashCfg);
+
 /*@} end of group SFLAH_Public_Functions */
 
 /*@} end of group SFLAH */

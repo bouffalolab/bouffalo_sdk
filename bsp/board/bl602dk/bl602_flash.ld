@@ -164,6 +164,7 @@ SECTIONS
         __system_ram_data_start__ = .;
 
         *(.system_ram)
+        *(.nocache_ram)
 
         . = ALIGN(4);
         __system_ram_data_end__ = .;

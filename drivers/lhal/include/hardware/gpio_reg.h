@@ -1522,6 +1522,7 @@
 #define GLB_GPIO_CFGCTL33_OFFSET                                (0x18C)/* GPIO_CFGCTL33 */
 #define GLB_GPIO_CFGCTL34_OFFSET                                (0x190)/* GPIO_CFGCTL34 */
 #define GLB_GPIO_CFGCTL35_OFFSET                                (0x194)/* GPIO_CFGCTL35 */
+#define GLB_GPIO_CFGCTL36_OFFSET                                (0x198)/* GPIO_CFGCTL36 */
 #define GLB_GPIO_INT_MASK1_OFFSET                               (0x1A0)/* GPIO_INT_MASK1 */
 #define GLB_GPIO_INT_STAT1_OFFSET                               (0x1A8)/* GPIO_INT_STAT1 */
 #define GLB_GPIO_INT_CLR1_OFFSET                                (0x1B0)/* GPIO_INT_CLR1 */

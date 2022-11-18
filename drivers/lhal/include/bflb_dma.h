@@ -66,6 +66,9 @@
 #if !defined(BL702L)
 #define DMA_ADDR_DAC_TDR   (0x40002000 + 0x48)
 #endif
+#if defined(BL702L)
+#define DMA_ADDR_IR_TDR    (0x4000A600 + 0x88)
+#endif
 /**
   * @}
   */
@@ -82,6 +85,9 @@
 #endif
 #define DMA_REQUEST_I2C0_RX  0x00000006
 #define DMA_REQUEST_I2C0_TX  0x00000007
+#if defined(BL702L)
+#define DMA_REQUEST_IR_TX    0x00000008
+#endif
 #define DMA_REQUEST_SPI0_RX  0x0000000A
 #define DMA_REQUEST_SPI0_TX  0x0000000B
 #if !defined(BL702L)
@@ -165,6 +171,7 @@
 #define DMA_ADDR_I2S_RDR     (0x2000AB00 + 0x8C)
 #define DMA_ADDR_ADC_RDR     (0x20002000 + 0x04)
 #define DMA_ADDR_DAC_TDR     (0x20002000 + 0x48)
+#define DMA_ADDR_IR_TDR      (0x2000A600 + 0x88)
 /**
   * @}
   */
@@ -360,7 +367,6 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev,
 
 int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
-/* Not use */
 void bflb_dma_channel_tcint_mask(struct bflb_device_s *dev, bool mask);
 bool bflb_dma_channel_get_tcint_status(struct bflb_device_s *dev);
 void bflb_dma_channel_tcint_clear(struct bflb_device_s *dev);

@@ -246,6 +246,7 @@ void EF_Ctrl_Load_Efuse_R0(void){
     return RomDriver_EF_Ctrl_Load_Efuse_R0();
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Program_Direct_R0(uint32_t index, uint32_t *data, uint32_t len){
     return RomDriver_EF_Ctrl_Program_Direct_R0(index,data,len);
@@ -255,6 +256,7 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Program_Efuse_0(void){
     return RomDriver_EF_Ctrl_Program_Efuse_0();
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Read_ADC_Gain_Trim(Efuse_ADC_Gain_Coeff_Type *trim){
@@ -293,10 +295,12 @@ void EF_Ctrl_Read_Device_Info(Efuse_Device_Info_Type *deviceInfo){
 }
 #endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Read_Direct_R0(uint32_t index, uint32_t *data, uint32_t len){
     return RomDriver_EF_Ctrl_Read_Direct_R0(index,data,len);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Read_Ldo11socVoutTrim_Trim(Efuse_Ana_Ldo11socVoutTrim_Type *trim){
@@ -671,6 +675,13 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(GLB_ETH_REF_CLK_OUT_Type clkSel){
     return RomDriver_GLB_Set_ETH_REF_O_CLK_Sel(clkSel);
 }
+
+#if 0
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_PEC_CLK(uint8_t enable, GLB_PEC_CLK_Type clkSel, uint8_t div){
+    return RomDriver_GLB_Set_PEC_CLK(enable,clkSel,div);
+}
+#endif
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -2071,187 +2082,6 @@ void SFlash_Volatile_Reg_Write_Enable(SPI_Flash_Cfg_Type *flashCfg){
     return RomDriver_SFlash_Volatile_Reg_Write_Enable(flashCfg);
 }
 
-/*
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_AutoBaudDetection(UART_ID_Type uartId, BL_Fun_Type autoBaud){
-    return RomDriver_UART_AutoBaudDetection(uartId,autoBaud);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_ClrRtsValue(UART_ID_Type uartId){
-    return RomDriver_UART_ClrRtsValue(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_ClrTxValue(UART_ID_Type uartId){
-    return RomDriver_UART_ClrTxValue(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_DeInit(UART_ID_Type uartId){
-    return RomDriver_UART_DeInit(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_Disable(UART_ID_Type uartId, UART_Direction_Type direct){
-    return RomDriver_UART_Disable(uartId,direct);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_Enable(UART_ID_Type uartId, UART_Direction_Type direct){
-    return RomDriver_UART_Enable(uartId,direct);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_FifoConfig(UART_ID_Type uartId, UART_FifoCfg_Type *fifoCfg){
-    return RomDriver_UART_FifoConfig(uartId,fifoCfg);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_GetBitWidth0X55(UART_ID_Type uartId, uint16_t *width){
-    return RomDriver_UART_GetBitWidth0X55(uartId,width);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_Init(UART_ID_Type uartId, UART_CFG_Type *uartCfg){
-    return RomDriver_UART_Init(uartId,uartCfg);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_IntClear(UART_ID_Type uartId, UART_INT_Type intType){
-    return RomDriver_UART_IntClear(uartId,intType);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_IntMask(UART_ID_Type uartId, UART_INT_Type intType, BL_Mask_Type intMask){
-    return RomDriver_UART_IntMask(uartId,intType,intMask);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_IrConfig(UART_ID_Type uartId, UART_IrCfg_Type *irCfg){
-    return RomDriver_UART_IrConfig(uartId,irCfg);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_RxFifoClear(UART_ID_Type uartId){
-    return RomDriver_UART_RxFifoClear(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SendData(UART_ID_Type uartId, uint8_t *data, uint32_t len){
-    return RomDriver_UART_SendData(uartId,data,len);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SendDataBlock(UART_ID_Type uartId, uint8_t *data, uint32_t len){
-    return RomDriver_UART_SendDataBlock(uartId,data,len);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetAllowableError0X55(UART_ID_Type uartId, uint8_t allowableError){
-    return RomDriver_UART_SetAllowableError0X55(uartId,allowableError);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_ApplyAbrResult(UART_ID_Type uartId, UART_AutoBaudDetection_Type autoBaudDet){
-    return RomDriver_UART_SetBaudrate(uartId,autoBaudDet);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetDeglitchCount(UART_ID_Type uartId, uint8_t deglitchCnt){
-    return RomDriver_UART_SetDeglitchCount(uartId,deglitchCnt);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetRS485(UART_ID_Type uartId, BL_Fun_Type enable, UART_RS485Polarity_Type polarity){
-    return RomDriver_UART_SetRS485(uartId,enable,polarity);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetRtsValue(UART_ID_Type uartId){
-    return RomDriver_UART_SetRtsValue(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetRxByteCount(UART_ID_Type uartId, uint16_t count){
-    return RomDriver_UART_SetRxByteCount(uartId,count);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetRxDataLength(UART_ID_Type uartId, uint16_t length){
-    return RomDriver_UART_SetRxDataLength(uartId,length);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetRxTimeoutValue(UART_ID_Type uartId, uint8_t time){
-    return RomDriver_UART_SetRxTimeoutValue(uartId,time);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetTxDataLength(UART_ID_Type uartId, uint16_t length){
-    return RomDriver_UART_SetTxDataLength(uartId,length);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_SetTxValue(UART_ID_Type uartId){
-    return RomDriver_UART_SetTxValue(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_TxFifoClear(UART_ID_Type uartId){
-    return RomDriver_UART_TxFifoClear(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type UART_TxFreeRun(UART_ID_Type uartId, BL_Fun_Type txFreeRun){
-    return RomDriver_UART_TxFreeRun(uartId,txFreeRun);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type UART_GetIntStatus(UART_ID_Type uartId, UART_INT_Type intType){
-    return RomDriver_UART_GetIntStatus(uartId,intType);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type UART_GetOverflowStatus(UART_ID_Type uartId, UART_Overflow_Type overflow){
-    return RomDriver_UART_GetOverflowStatus(uartId,overflow);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type UART_GetRxBusBusyStatus(UART_ID_Type uartId){
-    return RomDriver_UART_GetRxBusBusyStatus(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type UART_GetTxBusBusyStatus(UART_ID_Type uartId){
-    return RomDriver_UART_GetTxBusBusyStatus(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-uint16_t UART_GetAutoBaudCount(UART_ID_Type uartId, UART_AutoBaudDetection_Type autoBaudDet){
-    return RomDriver_UART_GetAutoBaudCount(uartId,autoBaudDet);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-uint16_t UART_GetRxByteCount(UART_ID_Type uartId){
-    return RomDriver_UART_GetRxByteCount(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-uint32_t UART_ReceiveData(UART_ID_Type uartId, uint8_t *data, uint32_t maxLen){
-    return RomDriver_UART_ReceiveData(uartId,data,maxLen);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-uint8_t UART_GetRxFifoCount(UART_ID_Type uartId){
-    return RomDriver_UART_GetRxFifoCount(uartId);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-uint8_t UART_GetTxFifoCount(UART_ID_Type uartId){
-    return RomDriver_UART_GetTxFifoCount(uartId);
-}
-*/
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type XIP_SFlash_Erase_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t startaddr, int len, uint8_t group, SF_Ctrl_Bank_Select bank){

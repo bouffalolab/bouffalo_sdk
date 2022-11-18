@@ -10,17 +10,26 @@ sdk_library_add_sources(startup/${CPU_ID}/interrupt.c)
 sdk_library_add_sources(bl808_std/src/bl808_aon.c)
 sdk_library_add_sources(bl808_std/src/bl808_clock.c)
 sdk_library_add_sources(bl808_std/src/bl808_common.c)
+sdk_library_add_sources(bl808_std/src/bl808_ef_ctrl.c)
+sdk_library_add_sources(bl808_std/src/bl808_ef_cfg.c)
 sdk_library_add_sources(bl808_std/src/bl808_glb.c)
 sdk_library_add_sources(bl808_std/src/bl808_hbn.c)
+sdk_library_add_sources(bl808_std/src/bl808_l1c.c)
 sdk_library_add_sources(bl808_std/src/bl808_pds.c)
 sdk_library_add_sources(bl808_std/src/bl808_sdh.c)
 
 sdk_library_add_sources(bl808_std/src/bl808_tzc_sec.c)
-sdk_library_add_sources(bl808_std/src/bl808_ef_ctrl.c)
-sdk_library_add_sources(bl808_std/src/bl808_ef_cfg.c)
 sdk_library_add_sources(bl808_std/src/bl808_psram_uhs.c)
 sdk_library_add_sources(bl808_std/src/bl808_uhs_phy.c)
+
+sdk_library_add_sources(bl808_std/src/bl808_sf_cfg.c)
+sdk_library_add_sources(bl808_std/src/bl808_sf_ctrl.c)
+sdk_library_add_sources(bl808_std/src/bl808_sflash.c)
+sdk_library_add_sources(bl808_std/src/bl808_xip_sflash.c)
+
 sdk_library_add_sources(port/bl808_clock.c)
+sdk_library_add_sources(port/bl808_flash.c)
+sdk_library_add_sources(port/bl808_efuse.c)
 
 sdk_add_include_directories(
 bl808_std/include
@@ -41,7 +50,7 @@ SET(MARCH "rv32emcxtheadse")
 SET(MABI "ilp32e")
 endif()
 
-sdk_add_compile_definitions(-DARCH_RISCV)
+sdk_add_compile_definitions(-DARCH_RISCV -DBFLB_USE_HAL_DRIVER)
 sdk_add_compile_options(-march=${MARCH} -mabi=${MABI} -mtune=${MCPU})
 sdk_add_link_options(-march=${MARCH} -mabi=${MABI} -mtune=${MCPU})
 

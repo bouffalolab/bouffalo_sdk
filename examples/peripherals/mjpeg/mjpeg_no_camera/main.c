@@ -13,23 +13,23 @@ volatile uint32_t pic_count = 0;
 volatile uint32_t pic_addr[MJPEG_MAX_FRAME_COUNT] = { 0 };
 volatile uint32_t pic_len[MJPEG_MAX_FRAME_COUNT] = { 0 };
 
-uint8_t *pic;
-volatile uint32_t jpeg_len;
-
 void mjpeg_isr(int irq, void *arg)
 {
+    uint8_t *pic;
+    uint32_t jpeg_len;
+
     uint32_t intstatus = bflb_mjpeg_get_intstatus(mjpeg);
     if (intstatus & MJPEG_INTSTS_ONE_FRAME) {
+        bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);
         jpeg_len = bflb_mjpeg_get_frame_info(mjpeg, &pic);
         pic_addr[pic_count] = (uint32_t)pic;
         pic_len[pic_count] = jpeg_len;
         pic_count++;
         bflb_mjpeg_pop_one_frame(mjpeg);
-        bflb_mjpeg_int_clear(mjpeg, MJPEG_INTCLR_ONE_FRAME);
     }
 }
 
-static uint16_t Q_Table_50_Y[64] = {
+static uint16_t q_table_50_y[64] = {
     16, 11, 10, 16, 24, 40, 51, 61,
     12, 12, 14, 19, 26, 58, 60, 55,
     14, 13, 16, 24, 40, 57, 69, 56,
@@ -40,7 +40,7 @@ static uint16_t Q_Table_50_Y[64] = {
     72, 92, 95, 98, 112, 100, 103, 99
 };
 
-static uint16_t Q_Table_50_UV[64] = {
+static uint16_t q_table_50_uv[64] = {
     17, 18, 24, 47, 99, 99, 99, 99,
     18, 21, 26, 66, 99, 99, 99, 99,
     24, 26, 56, 99, 99, 99, 99, 99,
@@ -51,12 +51,17 @@ static uint16_t Q_Table_50_UV[64] = {
     99, 99, 99, 99, 99, 99, 99, 99
 };
 
-uint8_t jpgHeadBuf[800] = { 0 };
-uint32_t jpgHeadLength;
+uint8_t jpg_head_buf[800] = { 0 };
+uint32_t jpg_head_len;
 
 uint8_t MJPEG_QUALITY = 50;
 
-#define BUFFER_YUV  0xA8000000
+#if defined(BL616)
+#define BSP_PSRAM_BASE 0xA8000000
+#elif defined(BL808)
+#define BSP_PSRAM_BASE 0x50000000
+#endif
+
 #define SIZE_BUFFER (4 * 1024 * 1024)
 
 void bflb_mjpeg_dump_hex(uint8_t *data, uint32_t len)
@@ -76,8 +81,8 @@ void bflb_mjpeg_dump_hex(uint8_t *data, uint32_t len)
 
 int main(void)
 {
-    uint16_t tmpTableY[64] = { 0 };
-    uint16_t tmpTableUV[64] = { 0 };
+    uint16_t tmp_table_y[64] = { 0 };
+    uint16_t tmp_table_uv[64] = { 0 };
 
     board_init();
 
@@ -90,16 +95,16 @@ int main(void)
     config.resolution_y = Y;
     config.input_bufaddr0 = (uint32_t)test_64x64;
     config.input_bufaddr1 = 0;
-    config.output_bufaddr = (uint32_t)BUFFER_YUV + MJPEG_MAX_FRAME_COUNT * X * Y * 2;
+    config.output_bufaddr = (uint32_t)BSP_PSRAM_BASE + MJPEG_MAX_FRAME_COUNT * X * Y * 2;
     config.output_bufsize = SIZE_BUFFER - MJPEG_MAX_FRAME_COUNT * X * Y * 2;
 
     bflb_mjpeg_init(mjpeg, &config);
 
-    bflb_mjpeg_calculate_quantize_table(MJPEG_QUALITY, Q_Table_50_Y, tmpTableY);
-    bflb_mjpeg_calculate_quantize_table(MJPEG_QUALITY, Q_Table_50_UV, tmpTableUV);
-    bflb_mjpeg_fill_quantize_table(mjpeg, tmpTableY, tmpTableUV);
-    jpgHeadLength = JpegHeadCreate(YUV_MODE_422, MJPEG_QUALITY, X, Y, jpgHeadBuf);
-    bflb_mjpeg_fill_jpeg_header_tail(mjpeg, jpgHeadBuf, jpgHeadLength);
+    bflb_mjpeg_calculate_quantize_table(MJPEG_QUALITY, q_table_50_y, tmp_table_y);
+    bflb_mjpeg_calculate_quantize_table(MJPEG_QUALITY, q_table_50_uv, tmp_table_uv);
+    bflb_mjpeg_fill_quantize_table(mjpeg, tmp_table_y, tmp_table_uv);
+    jpg_head_len = JpegHeadCreate(YUV_MODE_422, MJPEG_QUALITY, X, Y, jpg_head_buf);
+    bflb_mjpeg_fill_jpeg_header_tail(mjpeg, jpg_head_buf, jpg_head_len);
 
     bflb_mjpeg_tcint_mask(mjpeg, false);
     bflb_irq_attach(mjpeg->irq_num, mjpeg_isr, NULL);
@@ -108,6 +113,7 @@ int main(void)
     bflb_mjpeg_sw_run(mjpeg, MJPEG_MAX_FRAME_COUNT);
 
     while (pic_count < MJPEG_MAX_FRAME_COUNT) {
+        printf("pic count:%d\r\n",pic_count);
         bflb_mtimer_delay_ms(200);
     }
 

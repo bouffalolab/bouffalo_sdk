@@ -64,11 +64,8 @@
   * @{
   */
 #define I2C_INTCLR_END     (1 << 0) /* Transfer end interrupt */
-#define I2C_INTCLR_TX_FIFO (1 << 1) /* TX FIFO ready interrupt */
-#define I2C_INTCLR_RX_FIFO (1 << 2) /* RX FIFO ready interrupt */
 #define I2C_INTCLR_NACK    (1 << 3) /* NACK interrupt */
 #define I2C_INTCLR_ARB     (1 << 4) /* Arbitration lost interrupt */
-#define I2C_INTCLR_FER     (1 << 5) /* TX/RX FIFO error interrupt */
 /**
  * @}
  */

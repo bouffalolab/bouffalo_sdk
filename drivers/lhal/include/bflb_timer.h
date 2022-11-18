@@ -7,11 +7,15 @@
 /** @defgroup TIMER_CLK_SOURCE timer clock source definition
   * @{
   */
+#if !defined(BL702L)
 #define TIMER_CLKSRC_BCLK 0
+#endif
 #define TIMER_CLKSRC_32K  1
 #define TIMER_CLKSRC_1K   2
 #define TIMER_CLKSRC_XTAL 3
+#if !defined(BL702) && !defined(BL602)
 #define TIMER_CLKSRC_GPIO 4
+#endif
 #define TIMER_CLKSRC_NO   5
 /**
   * @}
@@ -33,15 +37,6 @@
 #define TIMER_COMP_ID_1 1
 #define TIMER_COMP_ID_2 2
 #define TIMER_COMP_NONE 3
-/**
-  * @}
-  */
-
-/** @defgroup TIMER_CAPTURE_POLARITY timer capture polarity definition
-  * @{
-  */
-#define TIMER_CAPTURE_POLARITY_RISING  0
-#define TIMER_CAPTURE_POLARITY_FALLING 1
 /**
   * @}
   */
@@ -95,8 +90,6 @@ uint32_t bflb_timer_get_countervalue(struct bflb_device_s *dev);
 void bflb_timer_compint_mask(struct bflb_device_s *dev, uint8_t cmp_no, bool mask);
 bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no);
 void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no);
-
-void bflb_timer_capture_init(struct bflb_device_s *dev, const struct bflb_timer_capture_config_s *config);
 
 #ifdef __cplusplus
 }

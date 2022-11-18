@@ -5,15 +5,21 @@ void bflb_pwm_v2_init(struct bflb_device_s *dev, const struct bflb_pwm_v2_config
 {
     uint32_t reg_base;
     uint32_t regval;
+    uint64_t start_time;
 
     reg_base = dev->reg_base;
     /* stop pwm */
     regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
     regval |= PWM_STOP_EN;
     putreg32(regval, reg_base + PWM_MC0_CONFIG0_OFFSET);
+
+    start_time = bflb_mtimer_get_time_ms();
     do {
         regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
         regval &= PWM_STS_STOP;
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return;
+        }
     } while (regval == 0);
 
     /* config clock source and dividor */
@@ -42,15 +48,21 @@ void bflb_pwm_v2_deinit(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t regval;
+    uint64_t start_time;
 
     reg_base = dev->reg_base;
     /* stop pwm */
     regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
     regval |= PWM_STOP_EN;
     putreg32(regval, reg_base + PWM_MC0_CONFIG0_OFFSET);
+
+    start_time = bflb_mtimer_get_time_ms();
     do {
         regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
         regval &= PWM_STS_STOP;
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return;
+        }
     } while (regval == 0);
 
     /* restore pwm_mc0_config0 register with default value */
@@ -99,14 +111,20 @@ void bflb_pwm_v2_start(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t regval;
+    uint64_t start_time;
 
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
     regval &= ~PWM_STOP_EN;
     putreg32(regval, reg_base + PWM_MC0_CONFIG0_OFFSET);
+
+    start_time = bflb_mtimer_get_time_ms();
     do {
         regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
         regval &= PWM_STS_STOP;
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return;
+        }
     } while (regval != 0);
 }
 
@@ -114,14 +132,20 @@ void bflb_pwm_v2_stop(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t regval;
+    uint64_t start_time;
 
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
     regval |= PWM_STOP_EN;
     putreg32(regval, reg_base + PWM_MC0_CONFIG0_OFFSET);
+
+    start_time = bflb_mtimer_get_time_ms();
     do {
         regval = getreg32(reg_base + PWM_MC0_CONFIG0_OFFSET);
         regval &= PWM_STS_STOP;
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return;
+        }
     } while (regval == 0);
 }
 
@@ -356,7 +380,7 @@ int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 
         default:
-        ret = -EPERM;
+            ret = -EPERM;
             break;
     }
     return ret;

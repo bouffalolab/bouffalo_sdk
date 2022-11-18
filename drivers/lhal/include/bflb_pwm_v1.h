@@ -80,11 +80,11 @@ extern "C" {
 #endif
 
 void bflb_pwm_v1_channel_init(struct bflb_device_s *dev, uint8_t ch, const struct bflb_pwm_v1_channel_config_s *config);
-void bflb_pwm_v1_channel_set_threshold(struct bflb_device_s *dev, uint8_t ch, uint16_t low_threhold, uint16_t high_threhold);
-void bflb_pwm_v1_deinit(struct bflb_device_s *dev, uint8_t ch);
+void bflb_pwm_v1_channel_deinit(struct bflb_device_s *dev, uint8_t ch);
 void bflb_pwm_v1_start(struct bflb_device_s *dev, uint8_t ch);
 void bflb_pwm_v1_stop(struct bflb_device_s *dev, uint8_t ch);
 void bflb_pwm_v1_set_period(struct bflb_device_s *dev, uint8_t ch, uint16_t period);
+void bflb_pwm_v1_channel_set_threshold(struct bflb_device_s *dev, uint8_t ch, uint16_t low_threhold, uint16_t high_threhold);
 
 void bflb_pwm_v1_int_enable(struct bflb_device_s *dev, uint8_t ch, bool enable);
 uint32_t bflb_pwm_v1_get_intstatus(struct bflb_device_s *dev);
