@@ -23,7 +23,7 @@ sdk_add_compile_options(
 # -Wno-error=absolute-value
 # -Wno-error=type-limits
 # -Wno-error=cpp -Wextra
-
+-Wno-format
 # -Wno-unused-parameter
 # -Wno-sign-compare
 # $<$<COMPILE_LANGUAGE:C>:-Wno-old-style-declaration>
