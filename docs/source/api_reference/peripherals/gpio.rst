@@ -126,7 +126,7 @@ Functions
 bflb_gpio_init
 ^^^^^^^^^^^^^^^^^^^^
 
-说明: 初始化 gpio。如果使用到 UART 功能，需要使用 `bflb_gpio_uart_init` 替代。
+说明: 初始化 gpio。如果配置为 UART 功能，请使用 `bflb_gpio_uart_init` 。
 
 .. code-block:: c
    :linenos:

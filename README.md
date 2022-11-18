@@ -17,7 +17,7 @@ Note2：due to the non-generic peripherals, the code style and interface name in
 |:-------------:|:--------:|:-------:|
 |BL602/BL604    |  √       |   √     |
 |BL702/BL704/BL706 |  √    |   √     |
-|BL616     |  ×            |   √     |
+|BL616/BL618     |  ×      |   √     |
 |BL808     |  ×            |   √     |
 
 ## LHAL Support
@@ -26,7 +26,7 @@ Note2：due to the non-generic peripherals, the code style and interface name in
 
 Note：**√** means supported ；**×** means not supported；**○** means supported but not tested ；**-** means no such peripheral。
 
-|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 |    BL616    |   BL808  |
+|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
 |:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
 |  ADC         |      ○         |      √             |   √           |   ○      |
 |  CAM         |      -         |      ×             |   ×           |   ×      |
@@ -35,11 +35,11 @@ Note：**√** means supported ；**×** means not supported；**○** means sup
 |  DMA         |      ○         |      √             |   √           |   √      |
 |  EFUSE       |      ×         |      ×             |   ×           |   ×      |
 |  EMAC        |      -         |      √             |   √           |   √      |
-|  FLASH       |      ×         |      ×             |   ×           |   ×      |
+|  FLASH       |      √         |      √             |   √           |   √      |
 |  GPIO        |      ○         |      √             |   √           |   √      |
 |  I2C         |      ○         |      √             |   √           |   ○      |
 |  IR          |      ○         |      √             |   √           |   ○      |
-|  MJPEG       |      ×         |      ×             |   ×           |   ×      |
+|  MJPEG       |      ×         |      ×             |   √           |   √      |
 |  PWM_v1      |      ○         |      √             |   -           |   -      |
 |  PWM_v2      |      -         |      -             |   √           |   √      |
 |  RTC         |      ○         |      √             |   √           |   √      |
@@ -47,12 +47,12 @@ Note：**√** means supported ；**×** means not supported；**○** means sup
 |  SEC_SHA     |      ○         |      √             |   √           |   √      |
 |  SEC_TRNG    |      ○         |      √             |   √           |   √      |
 |  SEC_PKA     |      ○         |      √             |   √           |   √      |
-|  SPI         |      ○         |      √             |   √           |   ○      |
+|  SPI         |      ○         |      √             |   √           |   √      |
 |  TIMER       |      ○         |      √             |   √           |   √      |
 |  UART        |      √         |      √             |   √           |   √      |
 |  USB_v1      |      -         |      √             |   -           |   -      |
 |  USB_v2      |      -         |      -             |   √           |   √      |
-|  WDG         |      ○         |      ○             |   √           |   ○      |
+|  WDG         |      ○         |      √             |   √           |   ○      |
 
 ## Code Framework
 
@@ -141,7 +141,14 @@ TODO
 
 ## Debug
 
-Only supports debug with CKLink currently. See [bl mcu sdk debug chapter](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
+Only supports debug with CKLink currently. See [bl mcu sdk debug chapter](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html).
+
+## Firmware Download
+
+We recommend you to use this **BL DevCube** and download firmware with serial.
+
+- [BL DevCube Tool](https://dev.bouffalolab.com/download)
+- [BL DevCube download guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/devcube.html)
 
 # Resources
 

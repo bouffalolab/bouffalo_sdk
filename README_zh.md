@@ -17,7 +17,7 @@
 |:-------------:|:--------:|:-------:|
 |BL602/BL604    |  √       |   √     |
 |BL702/BL704/BL706 |  √    |   √     |
-|BL616     |  ×            |   √     |
+|BL616/BL618     |  ×      |   √     |
 |BL808     |  ×            |   √     |
 
 ## LHAL 支持情况
@@ -26,7 +26,7 @@
 
 备注：**√** 表示已支持；**×** 表示未支持；**○** 表示已支持但未测试；**-** 表示没有该外设。
 
-|   外设       |    BL602/BL604 |    BL702/BL704/BL706 |    BL616    |   BL808  |
+|   外设       |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
 |:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
 |  ADC         |      ○         |      √             |   √           |   ○      |
 |  CAM         |      -         |      ×             |   ×           |   ×      |
@@ -35,11 +35,11 @@
 |  DMA         |      ○         |      √             |   √           |   √      |
 |  EFUSE       |      ×         |      ×             |   ×           |   ×      |
 |  EMAC        |      -         |      √             |   √           |   √      |
-|  FLASH       |      ×         |      ×             |   ×           |   ×      |
+|  FLASH       |      √         |      √             |   √           |   √      |
 |  GPIO        |      ○         |      √             |   √           |   √      |
 |  I2C         |      ○         |      √             |   √           |   ○      |
 |  IR          |      ○         |      √             |   √           |   ○      |
-|  MJPEG       |      ×         |      ×             |   ×           |   ×      |
+|  MJPEG       |      ×         |      ×             |   √           |   √      |
 |  PWM_v1      |      ○         |      √             |   -           |   -      |
 |  PWM_v2      |      -         |      -             |   √           |   √      |
 |  RTC         |      ○         |      √             |   √           |   √      |
@@ -47,12 +47,12 @@
 |  SEC_SHA     |      ○         |      √             |   √           |   √      |
 |  SEC_TRNG    |      ○         |      √             |   √           |   √      |
 |  SEC_PKA     |      ○         |      √             |   √           |   √      |
-|  SPI         |      ○         |      √             |   √           |   ○      |
+|  SPI         |      ○         |      √             |   √           |   √      |
 |  TIMER       |      ○         |      √             |   √           |   √      |
 |  UART        |      √         |      √             |   √           |   √      |
 |  USB_v1      |      -         |      √             |   -           |   -      |
 |  USB_v2      |      -         |      -             |   √           |   √      |
-|  WDG         |      ○         |      ○             |   √           |   ○      |
+|  WDG         |      ○         |      √             |   √           |   ○      |
 
 # 代码框架
 
@@ -142,6 +142,13 @@ TODO
 ## 调试
 
 当前仅支持使用 CKLink 调试。详细参考 [bl mcu sdk 调试章节](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
+
+## 固件烧录
+
+推荐使用 **BL DevCube** 并通过串口进行固件的烧录。
+
+- [BL DevCube Tool](https://dev.bouffalolab.com/download)
+- [BL DevCube download guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/devcube.html)
 
 # 芯片手册
 

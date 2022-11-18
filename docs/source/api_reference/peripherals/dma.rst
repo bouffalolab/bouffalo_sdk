@@ -289,7 +289,7 @@ bflb_dma_channel_irq_detach
 bflb_dma_channel_lli_reload
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-说明: 获取 dma 通道完成中断状态。
+说明: 配置 dma 通道的 lli 信息。
 
 .. code-block:: c
    :linenos:

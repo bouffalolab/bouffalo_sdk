@@ -12,7 +12,7 @@ adc channel
 adc clock div
 ^^^^^^^^^^^^^^^^^^^^
 
-对 adc 时钟再一次进行分频。
+对 adc 时钟再一次进行分频。分频后的时钟必须小于 2M。
 
 .. code-block:: c
    :linenos:
@@ -247,8 +247,6 @@ bflb_adc_start_conversion
     * - dev
       - 设备句柄
 
-.. warning:: 没有开启连续转换时，下次采集需要先关闭 adc 采集并等待 100us 以后方可调用该函数。
-
 bflb_adc_stop_conversion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -440,3 +438,45 @@ bflb_adc_parse_result
       - 输出结果
     * - count
       - 转换个数
+
+bflb_adc_tsen_init
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 初始化 adc tsen 模块。
+
+.. code-block:: c
+   :linenos:
+
+   void bflb_adc_tsen_init(struct bflb_device_s *dev, uint8_t tsen_mod);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - dev
+      - 设备句柄
+    * - tsen_mod
+      - 模式选择
+
+bflb_adc_tsen_get_temp
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 初始化 adc tsen 模块。
+
+.. code-block:: c
+   :linenos:
+
+   float bflb_adc_tsen_get_temp(struct bflb_device_s *dev);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - dev
+      - 设备句柄
+    * - return
+      - 温度
