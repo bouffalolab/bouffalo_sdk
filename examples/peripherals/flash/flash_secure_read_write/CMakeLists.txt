@@ -6,4 +6,4 @@ find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 sdk_set_main_file(main.c)
 
-project(flash_secure_read)
+project(flash_secure_read_write)
