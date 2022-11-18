@@ -7,12 +7,10 @@
 
 extern void board_init(void);
 
-#define BLK_COUNT 16
-#define BLK_SIZE  128
-
+#define BLK_SIZE        128
+#define BLK_MEMORY_SIZE 16 * (BLK_SIZE + sizeof(void *))
 static bflb_block_pool_t block_pool;
-static bflb_block_pool_node_t block_nodes[BLK_COUNT];
-static uint8_t block_pool_memory[BLK_COUNT * BLK_SIZE];
+__attribute__((aligned(8))) static uint8_t block_pool_memory[BLK_MEMORY_SIZE];
 
 static uint8_t freertos_heap[configTOTAL_HEAP_SIZE];
 
@@ -65,19 +63,19 @@ static void producer_task(void *pvParameters)
 
     void *block_ptr;
     uint32_t free;
-    uint32_t busy;
+    uint32_t total;
 
     while (1) {
         time = rand() % 64;
 
-        if (bflb_block_pool_alloc_wait(&block_pool, &block_ptr, 100)) {
+        if (bflb_block_pool_alloc(&block_pool, &block_ptr, 100)) {
             LOG_W("alloc block pool faild\r\n");
 
-            bflb_block_pool_get_info(&block_pool, &busy, &free);
-            LOG_W("free [%4ld] busy [%4ld]\r\n", free, busy);
+            bflb_block_pool_info_get(&block_pool, &total, &free);
+            LOG_W("total [%4ld] free [%4ld]\r\n", total, free);
         } else {
-            bflb_block_pool_get_info(&block_pool, &busy, &free);
-            LOG_I("free [%4ld] busy [%4ld]\r\n", free, busy);
+            bflb_block_pool_info_get(&block_pool, &total, &free);
+            LOG_I("total [%4ld] free [%4ld]\r\n", total, free);
 
             cnt++;
             sprintf((char *)block_ptr, "this is [%ld] info in block [%08lx]\r\n", cnt, (uint32_t)block_ptr);
@@ -96,59 +94,59 @@ static void producer_task(void *pvParameters)
 SemaphoreHandle_t sem;
 SemaphoreHandle_t mtx;
 
-static int block_pool_semaphore_get(uint32_t wait)
+static int block_pool_sem_get(uint32_t wait)
 {
     if (pdTRUE != xSemaphoreTake(sem, wait)) {
         return -1;
     }
     return 0;
 }
-static int block_pool_semaphore_put(void)
+static void block_pool_sem_put(void)
 {
-    if (pdTRUE != xSemaphoreGive(sem)) {
-        return -1;
-    }
-    return 0;
+    xSemaphoreGive(sem);
 }
-static int block_pool_mutex_get(uint32_t wait)
+static int block_pool_mtx_get(uint32_t wait)
 {
     if (pdTRUE != xSemaphoreTake(mtx, wait)) {
         return -1;
     }
     return 0;
 }
-static int block_pool_mutex_put(void)
+static void block_pool_mtx_put(void)
 {
-    if (pdTRUE != xSemaphoreGive(mtx)) {
-        return -1;
-    }
-    return 0;
+    xSemaphoreGive(mtx);
 }
 
 int main(void)
 {
+    uint32_t block_count;
+
     board_init();
     xHeapRegions[0].xSizeInBytes = configTOTAL_HEAP_SIZE;
     vPortDefineHeapRegions(xHeapRegions);
 
     configASSERT((configMAX_PRIORITIES > 4));
 
-    queue = xQueueCreate(BLK_COUNT, sizeof(void *));
+    _ASSERT_FUNC(0 == bflb_block_pool_create(&block_pool, BLK_SIZE, BFLB_BLOCK_POOL_ALIGN_8, block_pool_memory, BLK_MEMORY_SIZE));
+    bflb_block_pool_info_get(&block_pool, &block_count, NULL);
+
+    LOG_I("block pool total block count is %d\r\n", block_count);
+
+    queue = xQueueCreate(block_count, sizeof(void *));
     _ASSERT_PARAM(NULL != queue);
 
-    sem = xSemaphoreCreateCounting(BLK_COUNT, BLK_COUNT);
+    sem = xSemaphoreCreateCounting(block_count, block_count);
     _ASSERT_PARAM(NULL != sem);
 
     mtx = xSemaphoreCreateMutex();
     _ASSERT_PARAM(NULL != sem);
 
-    _ASSERT_FUNC(0 == bflb_block_pool_create(&block_pool, block_nodes, block_pool_memory, BLK_COUNT, BLK_SIZE));
-    _ASSERT_FUNC(0 == bflb_block_pool_register_mutex(&block_pool, block_pool_mutex_get, block_pool_mutex_put));
-    _ASSERT_FUNC(0 == bflb_block_pool_register_semaphore(&block_pool, block_pool_semaphore_get, block_pool_semaphore_put));
+    _ASSERT_FUNC(0 == bflb_block_pool_add_mtx(&block_pool, block_pool_mtx_get, block_pool_mtx_put));
+    _ASSERT_FUNC(0 == bflb_block_pool_add_sem(&block_pool, block_pool_sem_get, block_pool_sem_put));
 
-    LOG_I("[OS] Starting consumer task...\r\n");
+    LOG_I("Starting consumer task...\r\n");
     xTaskCreate(consumer_task, (char *)"consumer_task", 512, NULL, configMAX_PRIORITIES - 2, &consumer_handle);
-    LOG_I("[OS] Starting producer task...\r\n");
+    LOG_I("Starting producer task...\r\n");
     xTaskCreate(producer_task, (char *)"producer_task", 512, NULL, configMAX_PRIORITIES - 3, &producer_handle);
 
     vTaskStartScheduler();

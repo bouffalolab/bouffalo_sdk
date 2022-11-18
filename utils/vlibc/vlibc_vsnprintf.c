@@ -99,7 +99,7 @@ extern int FRESULT_to_errno[20];
 
 // Support for the decimal notation floating point conversion specifiers (%f, %F)
 #ifndef CONFIG_VLIBC_FLOAT
-#define CONFIG_VLIBC_FLOAT 0
+#define CONFIG_VLIBC_FLOAT 1
 #endif
 
 // Support for the exponential notation floating point conversion specifiers (%e, %g, %E, %G)

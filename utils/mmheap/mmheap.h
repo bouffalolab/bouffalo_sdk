@@ -27,6 +27,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef CONFIG_MMHEAP_USER
+#include "mmheap_user.h"
+#endif
+
 #ifndef MMHEAP_LOCK
 #define MMHEAP_LOCK()
 #endif

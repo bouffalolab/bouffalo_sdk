@@ -3,19 +3,19 @@
 
 struct bflb_device_s *console = NULL;
 
+#ifdef CONFIG_CUSTOM_PRINTF
 int puts(const char *s)
 {
-    int counter = 0;
-    char c;
+    int len = strlen(s);
 
-    while ('\0' != (c = *(s++))) {
-        bflb_uart_putchar(console, c);
-        counter++;
+    bflb_uart_put(console, (uint8_t *)s, len);
+    if (s[len - 1] == '\r') {
+        bflb_uart_putchar(console, '\n');
     }
-    return counter;
+    return len;
 }
 
-int bflb_printf(const char *fmt, ...)
+int printf(const char *fmt, ...)
 {
     char print_buf[128];
     uint32_t len;
@@ -27,11 +27,11 @@ int bflb_printf(const char *fmt, ...)
 
     len = (len > sizeof(print_buf)) ? sizeof(print_buf) : len;
 
-    for (size_t i = 0; i < len; i++) {
-        bflb_uart_putchar(console, print_buf[i]);
-    }
+    bflb_uart_put(console, (uint8_t *)print_buf, len);
+
     return 0;
 }
+#endif
 
 #define __is_print(ch) ((unsigned int)((ch) - ' ') < 127u - ' ')
 void bflb_dump_hex(const void *ptr, uint32_t buflen)
