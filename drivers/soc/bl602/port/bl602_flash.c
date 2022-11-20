@@ -95,7 +95,7 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     return ret;
 }
 
-uint32_t bflb_flash_get_jedecid(void)
+uint32_t bflb_flash_get_jedec_id(void)
 {
     uint32_t jid = 0;
 
