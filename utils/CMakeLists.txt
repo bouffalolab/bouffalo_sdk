@@ -53,7 +53,7 @@ if(CONFIG_VLIBC)
         sdk_add_compile_definitions(-DCONFIG_VLIBC_FATFS)
     endif()
 
-    sdk_add_compile_definitions(-Dprintf=vlibc_printf)
+    # sdk_add_compile_definitions(-Dprintf=vlibc_printf)
     sdk_library_add_sources(vlibc/printf.c)
     sdk_library_add_sources(vlibc/syscalls.c)
     sdk_library_add_sources(vlibc/vlibc_stdio.c)

@@ -1,6 +1,7 @@
 #include "bflb_mtimer.h"
 #include "bflb_timer.h"
 #include "board.h"
+
 #define TEST_TIMER_COMP_ID TIMER_COMP_ID_2
 
 struct bflb_device_s *timer0;

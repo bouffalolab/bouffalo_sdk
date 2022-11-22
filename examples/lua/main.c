@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "bflb_mtimer.h"
 #include "board.h"
 #include "vlibc_stdio.h"
