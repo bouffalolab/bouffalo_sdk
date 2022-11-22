@@ -41,6 +41,7 @@ int bflb_flash_init(void);
 uint32_t bflb_flash_get_jedec_id(void);
 void bflb_flash_get_cfg(uint8_t **cfg_addr, uint32_t *len);
 void bflb_flash_set_iomode(uint8_t iomode);
+uint32_t bflb_flash_get_image_offset(void);
 int bflb_flash_erase(uint32_t addr, uint32_t len);
 int bflb_flash_write(uint32_t addr, uint8_t *data, uint32_t len);
 int bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len);

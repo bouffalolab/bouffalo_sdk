@@ -80,7 +80,7 @@ int main(void)
     bflb_flash_aes_enable();
 
     /* read 0x00010000 flash data */
-    bflb_data_compare(aes_ctr_pt_buffer, (uint8_t *)(FLASH_XIP_BASE - 0x2000 + 0x00010000), AES_DATA_LEN);
+    bflb_data_compare(aes_ctr_pt_buffer, (uint8_t *)(FLASH_XIP_BASE - bflb_flash_get_image_offset() + 0x00010000), AES_DATA_LEN);
     printf("flash decrypt with flash aes ctr128 success\r\n");
 
     bflb_flash_read(0x00010000, aes_ctr_tmp_buffer, AES_DATA_LEN);

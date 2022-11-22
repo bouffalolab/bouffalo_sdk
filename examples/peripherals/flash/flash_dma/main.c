@@ -120,7 +120,7 @@ int main(void)
         struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */
         struct bflb_dma_channel_lli_transfer_s transfers[1];
 
-        transfers[0].src_addr = (uint32_t)(FLASH_XIP_BASE - 0x2000 + 0x00010000 + DMA_FLASH_ADDR_OFFSET);
+        transfers[0].src_addr = (uint32_t)(FLASH_XIP_BASE - bflb_flash_get_image_offset() + 0x00010000 + DMA_FLASH_ADDR_OFFSET);
         transfers[0].dst_addr = (uint32_t)dst_buffer;
         transfers[0].nbytes = DMA_BUFFER_LENGTH - DMA_FLASH_ADDR_OFFSET;
 

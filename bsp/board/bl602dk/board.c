@@ -136,6 +136,7 @@ void board_init(void)
     console_init();
 
     bl_show_log();
+    bl_show_flashinfo();
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
 }

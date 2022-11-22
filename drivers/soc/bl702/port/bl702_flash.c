@@ -126,6 +126,11 @@ void bflb_flash_get_cfg(uint8_t **cfg_addr, uint32_t *len)
     *len = sizeof(SPI_Flash_Cfg_Type);
 }
 
+ATTR_TCM_SECTION uint32_t bflb_flash_get_image_offset(void)
+{
+    return SF_Ctrl_Get_Flash_Image_Offset();
+}
+
 void bflb_flash_set_iomode(uint8_t iomode)
 {
     g_flash_cfg.ioMode &= ~0x0f;

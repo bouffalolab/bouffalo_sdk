@@ -258,6 +258,11 @@ void bflb_flash_set_iomode(uint8_t iomode)
     }
 }
 
+ATTR_TCM_SECTION uint32_t bflb_flash_get_image_offset(void)
+{
+    return SF_Ctrl_Get_Flash_Image_Offset(0, 0);
+}
+
 /**
  * @brief erase flash via sbus
  *

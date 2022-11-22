@@ -21,7 +21,7 @@ int main(void)
         bflb_flash_erase(0x00010000 + (i - 1) * 1024, i * 1024);
 
         /* read 0x00010000 flash data */
-        read_buf = (uint8_t *)(FLASH_XIP_BASE - 0x2000 + 0x00010000 + (i - 1) * 1024);
+        read_buf = (uint8_t *)(FLASH_XIP_BASE - bflb_flash_get_image_offset() + 0x00010000 + (i - 1) * 1024);
         bflb_l1c_dcache_invalidate_range(read_buf, 256);
         for (uint16_t j = 0; j < 256; j++) {
             if (read_buf[j] != 0xff) {
@@ -34,7 +34,7 @@ int main(void)
         bflb_flash_write(0x00010000 + (i - 1) * 1024, write_buf, sizeof(write_buf));
 
         /* read 0x00010000 flash data */
-        read_buf = (uint8_t *)(FLASH_XIP_BASE - 0x2000 + 0x00010000 + (i - 1) * 1024);
+        read_buf = (uint8_t *)(FLASH_XIP_BASE - bflb_flash_get_image_offset() + 0x00010000 + (i - 1) * 1024);
         bflb_l1c_dcache_invalidate_range(read_buf, 256);
         for (uint16_t j = 0; j < 256; j++) {
             if (read_buf[j] != write_buf[j]) {
