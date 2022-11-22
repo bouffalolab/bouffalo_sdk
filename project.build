@@ -1,4 +1,8 @@
-# The command to remove a file.
+
+# avoid 'Entering|Leaving directory' messages
+ifndef VERBOSE
+MAKEFLAGS += --no-print-directory
+endif
 
 ifeq ($(OS),Windows_NT)
 CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
@@ -6,18 +10,22 @@ else
 CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
 endif
 
+# The command to remove a file.
+
 RM = $(CMAKE) -E remove_directory
 
 CPU_ID ?=
 CONFIG_USB_HS ?=y
+CONFIG_ROMAPI ?=y
+CONFIG_DEBUG ?=y
 
 #cmake definition config
 cmake_definition+= -DCROSS_COMPILE=${CROSS_COMPILE}
 cmake_definition+= -DCHIP=$(CHIP)
 cmake_definition+= -DCPU_ID=$(CPU_ID)
 cmake_definition+= -DBOARD=$(BOARD)
-cmake_definition+= -DCONFIG_DEBUG=y
-cmake_definition+= -DCONFIG_ROMAPI=y
+cmake_definition+= -DCONFIG_DEBUG=$(CONFIG_DEBUG)
+cmake_definition+= -DCONFIG_ROMAPI=$(CONFIG_ROMAPI)
 cmake_definition+= -DCONFIG_USB_HS=$(CONFIG_USB_HS)
 cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
