@@ -21,7 +21,7 @@
  *
  */
 #include "bflb_mtimer.h"
-
+#include "stdbool.h"
 #include "lwip/api.h"
 #include "lwip/arch.h"
 #include "lwip/opt.h"

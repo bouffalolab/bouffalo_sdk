@@ -20,7 +20,7 @@ int main(void)
 
     for (uint8_t iomode = FLASH_IOMODE_NIO; iomode <= FLASH_IOMODE_QIO; iomode++) {
         printf("select flash iomode:%s\r\n", iomode_string[iomode]);
-        bflb_flash_set_iomode(i);
+        bflb_flash_set_iomode(iomode);
 
         start_time = bflb_mtimer_get_time_ms();
 
@@ -37,9 +37,9 @@ int main(void)
 
         printf("cost time:%lld ms\r\n", (bflb_mtimer_get_time_ms() - start_time));
 
-        for (i = 0; i < FLASH_DATA_LEN; i++) {
-            if (read_buf[i] != (i & 0xff)) {
-                printf("flash test fail at %d, expect:%d but with %d\r\n", i, (i & 0xff), read_buf[i]);
+        for (uint16_t j = 0; j < FLASH_DATA_LEN; j++) {
+            if (read_buf[j] != write_buf[j]) {
+                printf("flash test fail at %d, expect:%d but with %d\r\n", j, write_buf[j], read_buf[j]);
                 while (1) {
                 }
             }
