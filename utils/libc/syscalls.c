@@ -10,7 +10,7 @@ extern struct bflb_device_s *console;
 
 /* Reentrant versions of system calls.  */
 
-/* global errno in RT-Thread */
+/* global errno */
 static volatile int _sys_errno = 0;
 
 #ifndef _REENT_ONLY

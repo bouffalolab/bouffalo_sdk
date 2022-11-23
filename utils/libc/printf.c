@@ -3,19 +3,10 @@
 
 struct bflb_device_s *console = NULL;
 
-#ifdef CONFIG_CUSTOM_PRINTF
-int puts(const char *s)
-{
-    int len = strlen(s);
+int puts(const char *fmt) __attribute__((alias("bflb_printf")));
+int printf(const char *fmt, ...) __attribute__((alias("bflb_printf")));
 
-    bflb_uart_put(console, (uint8_t *)s, len);
-    if (s[len - 1] == '\r') {
-        bflb_uart_putchar(console, '\n');
-    }
-    return len;
-}
-
-int printf(const char *fmt, ...)
+int bflb_printf(const char *fmt, ...)
 {
     char print_buf[128];
     uint32_t len;
@@ -31,7 +22,6 @@ int printf(const char *fmt, ...)
 
     return 0;
 }
-#endif
 
 #define __is_print(ch) ((unsigned int)((ch) - ' ') < 127u - ' ')
 void bflb_dump_hex(const void *ptr, uint32_t buflen)
