@@ -105,4 +105,5 @@ endif()
 sdk_library_add_sources(bflb_timestamp/bflb_timestamp.c)
 sdk_add_include_directories(bflb_timestamp)
 
+sdk_add_compile_options(-fno-builtin-printf)
 sdk_add_link_options(-u_malloc_r -u_vsnprintf)

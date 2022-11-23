@@ -3,10 +3,7 @@
 
 struct bflb_device_s *console = NULL;
 
-int puts(const char *fmt) __attribute__((alias("bflb_printf")));
-int printf(const char *fmt, ...) __attribute__((alias("bflb_printf")));
-
-int bflb_printf(const char *fmt, ...)
+int printf(const char *fmt, ...)
 {
     char print_buf[128];
     uint32_t len;

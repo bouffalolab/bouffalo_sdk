@@ -2,28 +2,20 @@
 #include <errno.h>
 #include <unistd.h>
 #include "mmheap.h"
+#include "bflb_uart.h"
 
 extern struct heap_info mmheap_root;
 
-#ifdef CONF_VFS_ENABLE
-#include <vfs.h>
-#endif
+extern struct bflb_device_s *console;
 
 /* Reentrant versions of system calls.  */
 
-/* global errno in RT-Thread */
+/* global errno */
 static volatile int _sys_errno = 0;
 
 #ifndef _REENT_ONLY
 int *__errno()
 {
-    // #if (configUSE_POSIX_ERRNO == 1)
-    //     {
-    //         extern int FreeRTOS_errno;
-
-    //         return &FreeRTOS_errno;
-    //     }
-    // #endif
     return (int *)&_sys_errno;
 }
 #endif
@@ -84,108 +76,58 @@ int _link_r(struct _reent *ptr, const char *old, const char *new)
 
 _off_t _lseek_r(struct _reent *ptr, int fd, _off_t pos, int whence)
 {
-#ifndef CONF_VFS_ENABLE
     /* return "not supported" */
     ptr->_errno = -ENOSYS;
     return -1;
-#else
-    _off_t rc;
-
-    rc = aos_lseek(fd, pos, whence);
-    return rc;
-#endif
 }
 
 int _mkdir_r(struct _reent *ptr, const char *name, int mode)
 {
-#ifndef CONF_VFS_ENABLE
     /* return "not supported" */
     ptr->_errno = -ENOSYS;
     return -1;
-#else
-    int rc;
-
-    rc = aos_mkdir(name);
-    return rc;
-#endif
 }
 
 int _open_r(struct _reent *ptr, const char *file, int flags, int mode)
 {
-#ifndef CONF_VFS_ENABLE
     /* return "not supported" */
     ptr->_errno = -ENOSYS;
     return -1;
-#else
-    int rc;
-
-    rc = aos_open(file, flags);
-    return rc;
-#endif
 }
 
 int _close_r(struct _reent *ptr, int fd)
 {
-#ifndef CONF_VFS_ENABLE
     /* return "not supported" */
     ptr->_errno = -ENOSYS;
     return -1;
-#else
-    return aos_close(fd);
-#endif
 }
 
 _ssize_t _read_r(struct _reent *ptr, int fd, void *buf, size_t nbytes)
 {
-#ifndef CONF_VFS_ENABLE
     /* return "not supported" */
     ptr->_errno = -ENOSYS;
     return -1;
-#else
-    _ssize_t rc;
-
-    rc = aos_read(fd, buf, nbytes);
-    return rc;
-#endif
 }
 
 int _rename_r(struct _reent *ptr, const char *old, const char *new)
 {
-#ifndef CONF_VFS_ENABLE
     /* return "not supported" */
     ptr->_errno = -ENOSYS;
     return -1;
-#else
-    int rc;
-
-    rc = aos_rename(old, new);
-    return rc;
-#endif
 }
 
 int _stat_r(struct _reent *ptr, const char *file, struct stat *pstat)
 {
-#ifndef CONF_VFS_ENABLE
     /* return "not supported" */
     ptr->_errno = -ENOSYS;
     return -1;
-#else
-    int rc;
-
-    rc = aos_stat(file, pstat);
-    return rc;
-#endif
 }
 
 int _unlink_r(struct _reent *ptr, const char *file)
 {
-#ifndef CONF_VFS_ENABLE
     /* return "not supported" */
     ptr->_errno = -ENOSYS;
     return -1;
-#else
-    return aos_unlink(file);
-#endif
 }
 
 int _wait_r(struct _reent *ptr, int *status)
@@ -197,7 +139,10 @@ int _wait_r(struct _reent *ptr, int *status)
 
 _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
 {
-    return -1;
+    if ((STDOUT_FILENO == fd) || (STDERR_FILENO == fd)) {
+        bflb_uart_put(console, (uint8_t *)buf, nbytes);
+    }
+    return 0;
 }
 
 void *_malloc_r(struct _reent *ptr, size_t size)

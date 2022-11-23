@@ -1314,6 +1314,7 @@ static int _vsnprintf(output_gadget_t *output, void (*putc_function)(output_gadg
  *   @param  arg                    
  *   @return int 
  */
+// int vfprintf(FILE *__restrict, const char *__restrict, __VALIST) __attribute__((alias("vlibc_vfprintf")));
 int vlibc_vfprintf(VLIBC_FILE *stream, const char *format, va_list arg)
 {
     CHECK_FILE(stream, EOF);
@@ -1389,6 +1390,7 @@ int vlibc_vfprintf(VLIBC_FILE *stream, const char *format, va_list arg)
  *   @param  arg                    
  *   @return int 
  */
+// int vprintf(const char *, __VALIST) __attribute__((alias("vlibc_vprintf")));
 int vlibc_vprintf(const char *format, va_list arg)
 {
     return vlibc_vfprintf(vlibc_stdout, format, arg);
@@ -1402,7 +1404,7 @@ int vlibc_vprintf(const char *format, va_list arg)
  *   @param  arg                    
  *   @return int 
  */
-int vsnprintf (char *, size_t, const char *, va_list) __attribute__ ((alias ("vlibc_vsnprintf")));
+int vsnprintf(char *__restrict, size_t, const char *__restrict, __VALIST) __attribute__((alias("vlibc_vsnprintf")));
 int vlibc_vsnprintf(char *str, size_t size, const char *format, va_list arg)
 {
     CHECK_FILE(str, EOF);
@@ -1423,6 +1425,7 @@ int vlibc_vsnprintf(char *str, size_t size, const char *format, va_list arg)
  *   @param  arg                    
  *   @return int 
  */
+// int vsprintf(char *__restrict, const char *__restrict, __VALIST) __attribute__((alias("vlibc_vsprintf")));
 int vlibc_vsprintf(char *str, const char *format, va_list arg)
 {
     return vlibc_vsnprintf(str, PRINTF_MAX_POSSIBLE_BUFFER_SIZE, format, arg);
@@ -1435,6 +1438,7 @@ int vlibc_vsprintf(char *str, const char *format, va_list arg)
  *   @param  ...                    
  *   @return int 
  */
+// int fprintf(FILE *__restrict, const char *__restrict, ...) __attribute__((alias("vlibc_fprintf")));
 int vlibc_fprintf(VLIBC_FILE *stream, const char *format, ...)
 {
     va_list args;
@@ -1450,8 +1454,7 @@ int vlibc_fprintf(VLIBC_FILE *stream, const char *format, ...)
  *   @param  ...                    
  *   @return int 
  */
-// int puts(const char *__restrict fmt) __attribute__((alias("vlibc_printf")));
-// int printf(const char *__restrict fmt, ...) __attribute__((alias("vlibc_printf")));
+int printf(const char *__restrict, ...) __attribute__((alias("vlibc_printf")));
 int vlibc_printf(const char *format, ...)
 {
     va_list args;
@@ -1468,6 +1471,7 @@ int vlibc_printf(const char *format, ...)
  *   @param  ...                    
  *   @return int 
  */
+// int sprintf(char *__restrict, const char *__restrict, ...) __attribute__((alias("vlibc_sprintf")));
 int vlibc_sprintf(char *str, const char *format, ...)
 {
     va_list args;
@@ -1485,6 +1489,7 @@ int vlibc_sprintf(char *str, const char *format, ...)
  *   @param  ...                    
  *   @return int 
  */
+// int snprintf(char *__restrict, size_t, const char *__restrict, ...) __attribute__((alias("vlibc_snprintf")));
 int vlibc_snprintf(char *str, size_t size, const char *format, ...)
 {
     va_list args;
