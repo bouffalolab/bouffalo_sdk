@@ -59,6 +59,7 @@ static void peripheral_clock_init(void)
     PERIPHERAL_CLOCK_TIMER0_1_WDG_ENABLE();
     PERIPHERAL_CLOCK_IR_ENABLE();
     PERIPHERAL_CLOCK_I2S_ENABLE();
+    PERIPHERAL_CLOCK_USB_ENABLE();
 
     GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 4);
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
@@ -84,6 +85,7 @@ static void peripheral_clock_init(void)
     GLB_Set_SDH_CLK(ENABLE, GLB_SDH_CLK_WIFIPLL_96M, 0);
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_EXT_SDH);
 #endif
+    GLB_Set_USB_CLK_From_WIFIPLL(1);
 }
 #ifdef CONFIG_PSRAM
 #define WB_4MB_PSRAM   (1)
