@@ -80,6 +80,7 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
     cfg_address = reg_base + GLB_GPIO_CFG0_OFFSET + (pin << 2);
     cfg = 0;
+    cfg |= GLB_REG_GPIO_0_INT_MASK;
 
     if (mode == GPIO_INPUT) {
         cfg |= GLB_REG_GPIO_0_IE;
@@ -163,7 +164,7 @@ void bflb_gpio_int_init(struct bflb_device_s *dev, uint8_t pin, uint8_t trig_mod
     bflb_gpio_int_mask(dev, pin, true);
     bflb_gpio_int_clear(dev, pin);
 
-#if defined(BL702) || defined(BL602) 
+#if defined(BL702) || defined(BL602)
     cfg_address = reg_base + GLB_GPIO_INT_MODE_SET1_OFFSET + ((pin / 10) << 2);
     regval = getreg32(cfg_address);
     regval &= ~(0x07 << ((pin % 10) * 3));
