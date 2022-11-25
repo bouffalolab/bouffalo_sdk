@@ -46,11 +46,15 @@ sdk_add_link_options(
 -ffunction-sections
 -fdata-sections
 --specs=nano.specs
--uboard_init
 )
 
 sdk_add_link_libraries(c m)
 
-
 sdk_add_compile_options_ifdef(CONFIG_DEBUG -g3)
+
+if(NOT DEFINED CONFIG_GCC_OPTIMISE_LEVEL)
 sdk_add_compile_options(-O2)
+else()
+sdk_add_compile_options(${CONFIG_GCC_OPTIMISE_LEVEL})
+endif()
+

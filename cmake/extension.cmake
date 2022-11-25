@@ -99,6 +99,12 @@ function(sdk_add_subdirectory_ifdef feature dir)
   endif()
 endfunction()
 
+macro(sdk_ifndef define val)
+  if(NOT DEFINED ${define})
+    set(${define} ${val})
+  endif()
+endmacro()
+
 function(sdk_set_linker_script ld)
   if(IS_ABSOLUTE ${ld})
   set(path ${ld})

@@ -1,51 +1,52 @@
-build_dirs += bflog
-build_dirs += fatfs
-build_dirs += freertos
-build_dirs += helloworld
-build_dirs += lua
-build_dirs += lvgl
-build_dirs += shell
-build_dirs += peripherals/adc/adc_oneshot_1ch
-build_dirs += peripherals/adc/adc_oneshot_1ch_dma
-build_dirs += peripherals/adc/adc_oneshot_1ch_int
-build_dirs += peripherals/adc/adc_oneshot_multich
-build_dirs += peripherals/dac/dac_dma
-build_dirs += peripherals/dac/dac_polling
-build_dirs += peripherals/dma
-build_dirs += peripherals/emac/emac_basic
-build_dirs += peripherals/emac/lwip_udp
-build_dirs += peripherals/gpio/gpio_interrupt
-build_dirs += peripherals/gpio/gpio_output
-build_dirs += peripherals/i2c/i2c_eeprom
-build_dirs += peripherals/mtimer
-build_dirs += peripherals/pwm/pwm_all_channel
-build_dirs += peripherals/pwm/pwm_basic
-build_dirs += peripherals/pwm/pwm_config_channel
-build_dirs += peripherals/pwm/pwm_deadtime
-build_dirs += peripherals/pwm/pwm_int
-build_dirs += peripherals/rtc
-build_dirs += peripherals/sec_eng/sec_eng_aes_sw_key
-build_dirs += peripherals/sec_eng/sec_eng_sha
-build_dirs += peripherals/sec_eng/trng_random
-build_dirs += peripherals/spi/spi_dma
-build_dirs += peripherals/spi/spi_poll
-build_dirs += peripherals/timer
-build_dirs += peripherals/uart/uart_auto_baudrate
-build_dirs += peripherals/uart/uart_cts_rts
-build_dirs += peripherals/uart/uart_dma
-build_dirs += peripherals/uart/uart_error_interrupt
-build_dirs += peripherals/uart/uart_feature_control
-build_dirs += peripherals/uart/uart_fifo_interrupt
-build_dirs += peripherals/uart/uart_lin
-build_dirs += peripherals/uart/uart_poll
-build_dirs += peripherals/uart/uart_rs485
-build_dirs += peripherals/usbdev/usbd_cdc_acm
-build_dirs += peripherals/usbdev/usbd_static_video
-build_dirs += peripherals/usbhost
 
-all: $(build_dirs)
+makefile_files += $(shell find ./ -name 'Makefile' -not -path "*/build/*")
+makefile_dirs = $(sort $(dir $(makefile_files)))
 
-$(build_dirs):
-	make -C $@
+filter_out_dirs += ./bflog/%
+filter_out_dirs += ./bl808_dualcore/%
+filter_out_dirs += ./ble/%
+filter_out_dirs += ./lvgl/%
+filter_out_dirs += ./fatfs/%
+filter_out_dirs += ./membench/%
 
-.PHONY: $(build_dirs)
+ifeq ($(CHIP),bl602)
+filter_out_dirs += ./peripherals/emac/%
+filter_out_dirs += ./peripherals/pwm_v2/%
+filter_out_dirs += ./peripherals/iso11898/%
+filter_out_dirs += ./peripherals/usbdev/%
+
+endif
+
+ifeq ($(CHIP),bl702)
+filter_out_dirs += ./peripherals/emac/%
+filter_out_dirs += ./peripherals/pwm_v2/%
+filter_out_dirs += ./peripherals/iso11898/%
+endif
+
+ifeq ($(CHIP),bl702L)
+filter_out_dirs += ./peripherals/emac/%
+filter_out_dirs += ./peripherals/pwm_v2/%
+filter_out_dirs += ./peripherals/iso11898/%
+filter_out_dirs += ./peripherals/usbdev/%
+endif
+
+ifeq ($(CHIP),bl616)
+filter_out_dirs += ./peripherals/pwm_v1/%
+endif
+
+ifeq ($(CHIP),bl808)
+filter_out_dirs += ./peripherals/pwm_v1/%
+endif
+
+build_dirs = $(filter-out $(filter_out_dirs), $(makefile_dirs))
+
+listall:
+	@for n in $(build_dirs); do echo $$n ; done
+
+buildall:
+	@for n in $(build_dirs); do make -C $$n ; done
+
+cleanall:
+	@for n in $(build_dirs); do make -C $$n clean; done
+
+.PHONY: buildall cleanall
