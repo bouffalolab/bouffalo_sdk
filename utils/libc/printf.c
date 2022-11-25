@@ -9,6 +9,10 @@ int printf(const char *fmt, ...)
     uint32_t len;
     va_list ap;
 
+    if (console == NULL) {
+        return 0;
+    }
+
     va_start(ap, fmt);
     len = vsnprintf(print_buf, sizeof(print_buf), fmt, ap);
     va_end(ap);
