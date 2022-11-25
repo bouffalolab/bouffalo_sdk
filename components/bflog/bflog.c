@@ -81,13 +81,15 @@
  * @{
  */
 
-#ifdef BFLOG_DEBUG_ENABLE
+#ifdef CONFIG_BFLOG_DEBUG
 #define _BFLOG_CHECK(_expr, _ret) \
     if (!(_expr))                 \
     return _ret
 #else
 #define _BFLOG_CHECK(_expr, _ret) ((void)0)
 #endif
+
+#define _bflog_t(_ptr) ((bflog_t *)(_ptr))
 
 #define _msg_t(_ptr) ((struct _bflog_msg *)(_ptr))
 
@@ -170,8 +172,9 @@ static char *bflog_dummy_string = "";
 /**
  *   @brief         dummy function
  */
-static void dummy(void)
+static int dummy(void)
 {
+    return 0;
 }
 
 /** @addtogroup BFLOG_TIMESTAMP
@@ -424,7 +427,7 @@ static void queue_get(bflog_t *log, struct _bflog_msg *msg)
  *   @param  size                   pool size
  *   @return int
  */
-int bflog_create(bflog_t *log, void *pool, uint16_t size, uint8_t mode)
+int bflog_create_s(bflog_t *log, void *pool, uint16_t size, uint8_t mode)
 {
     _BFLOG_CHECK(log != NULL, -1);
     _BFLOG_CHECK(pool != NULL, -1);
@@ -472,7 +475,9 @@ int bflog_delete_s(bflog_t *log)
             return 0;
     }
 
-    log->enter_critical();
+    if (log->enter_critical()) {
+        return -1;
+    }
 
     switch (log->status) {
         case BFLOG_STATUS_READY:
@@ -521,7 +526,9 @@ int bflog_append_s(bflog_t *log, bflog_direct_t *direct)
             return -1;
     }
 
-    log->enter_critical();
+    if (log->enter_critical()) {
+        return -1;
+    }
 
     switch (log->status) {
         case BFLOG_STATUS_READY:
@@ -570,7 +577,9 @@ int bflog_remove_s(bflog_t *log, bflog_direct_t *direct)
             return -1;
     }
 
-    log->enter_critical();
+    if (log->enter_critical()) {
+        return -1;
+    }
 
     switch (log->status) {
         case BFLOG_STATUS_READY:
@@ -625,7 +634,9 @@ int bflog_suspend_s(bflog_t *log)
             return -1;
     }
 
-    log->enter_critical();
+    if (log->enter_critical()) {
+        return -1;
+    }
 
     switch (log->status) {
         case BFLOG_STATUS_SUSPEND:
@@ -665,7 +676,10 @@ int bflog_resume_s(bflog_t *log)
             return -1;
     }
 
-    log->enter_critical();
+    if (log->enter_critical()) {
+        printf("3");
+        return -1;
+    }
 
     switch (log->status) {
         case BFLOG_STATUS_RUNNING:
@@ -705,7 +719,29 @@ int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param)
             return -1;
     }
 
-    log->enter_critical();
+    switch (command) {
+        case BFLOG_CMD_ENTER_CRITICAL:
+            if ((void *)param == NULL) {
+                log->enter_critical = dummy;
+            } else {
+                log->enter_critical = (void *)param;
+            }
+            return 0;
+        case BFLOG_CMD_EXIT_CRITICAL: {
+            if ((void *)param == NULL) {
+                log->exit_critical = dummy;
+            } else {
+                log->exit_critical = (void *)param;
+            }
+        }
+            return 0;
+        default:
+            break;
+    }
+
+    if (log->enter_critical()) {
+        return -1;
+    }
 
     switch (log->status) {
         case BFLOG_STATUS_READY:
@@ -736,17 +772,12 @@ int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param)
             log->queue.rpos = 0;
             log->queue.free = log->queue.size;
             break;
-        case BFLOG_CMD_ENTER_CRITICAL:
-            log->enter_critical = (void *)param;
-            break;
-        case BFLOG_CMD_EXIT_CRITICAL: {
-            void (*exit_critical)(void) = log->exit_critical;
-            log->exit_critical = (void *)param;
-            exit_critical();
-        }
-            return 0;
         case BFLOG_CMD_FLUSH_NOTICE:
-            log->flush_notice = (void *)param;
+            if ((void *)param == NULL) {
+                log->flush_notice = dummy;
+            } else {
+                log->flush_notice = (void *)param;
+            }
             break;
         case BFLOG_CMD_MODE:
             log->mode = param & 0xff;
@@ -774,10 +805,10 @@ int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param)
  *   @param  ...                    format params
  *   @return int
  */
-void bflog_s(bflog_t *log, uint8_t level, const char *const tag, const char *const file, const char *const func, const long line, const char *format, ...)
+int bflog_s(void *log, uint8_t level, const char *const tag, const char *const file, const char *const func, const long line, const char *format, ...)
 {
-    _BFLOG_CHECK(log != NULL, );
-    _BFLOG_CHECK(format != NULL, );
+    _BFLOG_CHECK(log != NULL, -1);
+    _BFLOG_CHECK(format != NULL, -1);
 
     int ret;
     va_list args;
@@ -785,28 +816,28 @@ void bflog_s(bflog_t *log, uint8_t level, const char *const tag, const char *con
     uint16_t size = sizeof(struct _bflog_msg);
 
     /*!< working only during running and suspend */
-    switch (log->status) {
+    switch (_bflog_t(log)->status) {
         case BFLOG_STATUS_SUSPEND:
         case BFLOG_STATUS_RUNNING:
             break;
         default:
-            return;
+            return -1;
     }
 
     /*!< ignore high level */
-    if (level > log->level) {
-        return;
+    if (level > _bflog_t(log)->level) {
+        return -1;
     }
 
     /*!< record clock tick */
-    if (log->flags & BFLOG_FLAG_CLK) {
+    if (_bflog_t(log)->flags & BFLOG_FLAG_CLK) {
         _msg_t(msg)->clk = bflog_clock();
     } else {
         _msg_t(msg)->clk = 0;
     }
 
     /*!< record timestamp */
-    if (log->flags & BFLOG_FLAG_TIME) {
+    if (_bflog_t(log)->flags & BFLOG_FLAG_TIME) {
         _msg_t(msg)->time = bflog_time();
     } else {
         _msg_t(msg)->time = 0;
@@ -816,35 +847,35 @@ void bflog_s(bflog_t *log, uint8_t level, const char *const tag, const char *con
     _msg_t(msg)->level = level;
 
     /*!< record tag, only record pointer */
-    if (log->flags & BFLOG_FLAG_TAG) {
+    if (_bflog_t(log)->flags & BFLOG_FLAG_TAG) {
         _msg_t(msg)->tag = tag;
     } else {
         _msg_t(msg)->tag = bflog_dummy_string;
     }
 
     /*!< record func, only record pointer */
-    if (log->flags & BFLOG_FLAG_FUNC) {
+    if (_bflog_t(log)->flags & BFLOG_FLAG_FUNC) {
         _msg_t(msg)->func = func;
     } else {
         _msg_t(msg)->func = bflog_dummy_string;
     }
 
     /*!< record line */
-    if (log->flags & BFLOG_FLAG_LINE) {
+    if (_bflog_t(log)->flags & BFLOG_FLAG_LINE) {
         _msg_t(msg)->line = line;
     } else {
         _msg_t(msg)->line = 0;
     }
 
     /*!< record file, only record pointer */
-    if (log->flags & BFLOG_FLAG_FILE) {
+    if (_bflog_t(log)->flags & BFLOG_FLAG_FILE) {
         _msg_t(msg)->file = file;
     } else {
         _msg_t(msg)->file = bflog_dummy_string;
     }
 
     /*!< record thread, only record pointer */
-    if (log->flags & BFLOG_FLAG_THREAD) {
+    if (_bflog_t(log)->flags & BFLOG_FLAG_THREAD) {
         _msg_t(msg)->thread = bflog_thread();
     } else {
         _msg_t(msg)->thread = bflog_dummy_string;
@@ -872,28 +903,30 @@ void bflog_s(bflog_t *log, uint8_t level, const char *const tag, const char *con
         _msg_t(msg)->size = size;
     }
 
-    log->enter_critical();
+    if (_bflog_t(log)->enter_critical()) {
+        return -1;
+    }
     /*!< working only during running and suspend */
-    switch (log->status) {
+    switch (_bflog_t(log)->status) {
         case BFLOG_STATUS_SUSPEND:
         case BFLOG_STATUS_RUNNING:
             break;
         default:
-            log->exit_critical();
-            return;
+            _bflog_t(log)->exit_critical();
+            return -1;
     }
 
-    queue_put(log, (void *)(&msg));
+    queue_put(_bflog_t(log), (void *)(&msg));
 
-    if (log->mode & BFLOG_MODE_ASYNC) {
-        log->flush_notice();
-        log->exit_critical();
-        return;
+    if (_bflog_t(log)->mode & BFLOG_MODE_ASYNC) {
+        _bflog_t(log)->flush_notice();
+        _bflog_t(log)->exit_critical();
+        return 0;
     }
 
-    log->exit_critical();
+    _bflog_t(log)->exit_critical();
 
-    bflog_flush_s(log);
+    return bflog_flush_s(_bflog_t(log));
 }
 
 /**
@@ -901,9 +934,9 @@ void bflog_s(bflog_t *log, uint8_t level, const char *const tag, const char *con
  *   @param  log                    recorder
  *   @return int
  */
-void bflog_flush_s(bflog_t *log)
+int bflog_flush_s(void *log)
 {
-    _BFLOG_CHECK(log != NULL, );
+    _BFLOG_CHECK(log != NULL, -1);
 
     uint8_t msg[BFLOG_LINE_BUFFER_SIZE + sizeof(struct _bflog_msg)];
     char buf[BFLOG_LINE_BUFFER_SIZE * 2];
@@ -911,45 +944,47 @@ void bflog_flush_s(bflog_t *log)
     void *direct;
 
     /*!< working only during running */
-    switch (log->status) {
+    switch (_bflog_t(log)->status) {
         case BFLOG_STATUS_SUSPEND:
-            return;
+            return -1;
         case BFLOG_STATUS_RUNNING:
             break;
         default:
-            return;
+            return -1;
     }
 
     do {
         /*!< reset msg string */
         _msg_t(msg)->string[0] = '\0';
 
-        log->enter_critical();
+        if (_bflog_t(log)->enter_critical()) {
+            return -1;
+        }
 
         /*!< working only during running */
-        switch (log->status) {
+        switch (_bflog_t(log)->status) {
             case BFLOG_STATUS_SUSPEND:
-                log->exit_critical();
-                return;
+                _bflog_t(log)->exit_critical();
+                return -1;
             case BFLOG_STATUS_RUNNING:
                 break;
             default:
-                log->exit_critical();
-                return;
+                _bflog_t(log)->exit_critical();
+                return -1;
         }
 
         /*!< get msg(on stack) from queue(on ram) */
-        queue_get(log, (void *)(&msg));
+        queue_get(_bflog_t(log), (void *)(&msg));
 
-        log->exit_critical();
+        _bflog_t(log)->exit_critical();
 
         if (_msg_t(msg)->zero != 0) {
             if (_msg_t(msg)->zero == 0xbd) {
                 /*!< no msg */
-                return;
+                return -1;
             } else {
                 /*!< error */
-                return;
+                return -1;
             }
         }
 
@@ -959,7 +994,7 @@ void bflog_flush_s(bflog_t *log)
 
         /*!< level */
         char *level;
-        if (log->flags & BFLOG_FLAG_LEVEL) {
+        if (_bflog_t(log)->flags & BFLOG_FLAG_LEVEL) {
             level = bflog_level_strings[_msg_t(msg)->level];
         } else {
             level = bflog_dummy_string;
@@ -972,11 +1007,11 @@ void bflog_flush_s(bflog_t *log)
         bflog_unix2time(_msg_t(msg)->time, &tm);
 #endif
 
-        log->enter_critical();
+        _bflog_t(log)->enter_critical();
         /*!< foreach direct, execute layout to buf(on stack), then output buf(on stack) */
-        BFLOG_DLIST_FOREACH_NEXT(node, &(log->direct))
+        BFLOG_DLIST_FOREACH_NEXT(node, &(_bflog_t(log)->direct))
         {
-            log->exit_critical();
+            _bflog_t(log)->exit_critical();
 
             int size;
             direct = BFLOG_DLIST_ENTRY(node, bflog_direct_t, list);
@@ -1047,16 +1082,22 @@ void bflog_flush_s(bflog_t *log)
                 size = BFLOG_LINE_BUFFER_SIZE * 2;
             }
 
-            /*!< call write */
-            _direct_t(direct)->write(direct, buf, size);
+            if (_direct_t(direct)->lock()) {
+                /*!< drop log message */
+            } else {
+                /*!< call write */
+                _direct_t(direct)->write(direct, buf, size);
 
-            log->enter_critical();
+                _direct_t(direct)->unlock();
+            }
+
+            _bflog_t(log)->enter_critical();
         }
 
-        log->exit_critical();
+        _bflog_t(log)->exit_critical();
     } while (1);
 
-    return;
+    return -1;
 }
 
 /**
@@ -1073,7 +1114,7 @@ void bflog_flush_s(bflog_t *log)
  *   @param  type                   directed output type
  *   @return int
  */
-int bflog_direct_create(bflog_direct_t *direct, uint8_t type, uint8_t color)
+int bflog_direct_create(bflog_direct_t *direct, uint8_t type, uint8_t color, void(*lock), void(*unlock))
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(
@@ -1093,6 +1134,14 @@ int bflog_direct_create(bflog_direct_t *direct, uint8_t type, uint8_t color)
     direct->type = type;
     direct->color = color;
 
+    if ((lock == NULL) || (unlock == NULL)) {
+        direct->lock = dummy;
+        direct->unlock = dummy;
+    } else {
+        direct->lock = lock;
+        direct->unlock = unlock;
+    }
+
     return 0;
 }
 
@@ -1101,7 +1150,7 @@ int bflog_direct_create(bflog_direct_t *direct, uint8_t type, uint8_t color)
  *   @param  direct                 directed output
  *   @return int
  */
-int bflog_direct_delete(bflog_direct_t *direct)
+int bflog_direct_delete_s(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1112,11 +1161,30 @@ int bflog_direct_delete(bflog_direct_t *direct)
             return -1;
     }
 
+    if (direct->lock()) {
+        return -1;
+    }
+
+    switch (direct->status) {
+        case BFLOG_DIRECT_STATUS_INIT:
+            break;
+        default:
+            direct->unlock();
+            return -1;
+    }
+
     bflog_dlist_remove(&(direct->list));
 
     direct->write = NULL;
     direct->status = BFLOG_DIRECT_STATUS_ILLEGAL;
     direct->type = BFLOG_DIRECT_TYPE_ILLEGAL;
+
+    direct->lock = dummy;
+
+    int (*unlock)(void) = direct->unlock;
+    direct->unlock = dummy;
+
+    unlock();
 
     return 0;
 }
@@ -1196,7 +1264,7 @@ int bflog_direct_link(bflog_direct_t *direct, bflog_layout_t *layout)
  *   @param  param
  *   @return int
  */
-int bflog_direct_control(bflog_direct_t *direct, uint32_t command, uint32_t param)
+int bflog_direct_control_s(bflog_direct_t *direct, uint32_t command, uint32_t param)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1215,6 +1283,22 @@ int bflog_direct_control(bflog_direct_t *direct, uint32_t command, uint32_t para
 
         case BFLOG_DIRECT_CMD_COLOR:
             direct->color = param != 0;
+            break;
+
+        case BFLOG_DIRECT_CMD_LOCK:
+            if ((void *)param == NULL) {
+                direct->lock = dummy;
+            } else {
+                direct->lock = (void *)param;
+            }
+            break;
+
+        case BFLOG_DIRECT_CMD_UNLOCK:
+            if ((void *)param == NULL) {
+                direct->unlock = dummy;
+            } else {
+                direct->unlock = (void *)param;
+            }
             break;
 
         default:
@@ -1243,14 +1327,14 @@ static void bflog_driect_write_buffer(bflog_direct_t *direct, void *ptr, uint16_
     return;
 }
 
-int bflog_direct_init_buffer(bflog_direct_t *direct, void *buffer, void *size)
+int bflog_direct_init_buffer_s(bflog_direct_t *direct, void *buffer, void *size)
 {
     /*!< TODO */
     (void)bflog_driect_write_buffer;
     return 0;
 }
 
-int bflog_direct_deinit_buffer(bflog_direct_t *direct)
+int bflog_direct_deinit_buffer_s(bflog_direct_t *direct)
 {
     /*!< TODO */
     return 0;
@@ -1278,27 +1362,36 @@ static void bflog_direct_write_stream(bflog_direct_t *direct, void *ptr, uint16_
 }
 
 /**
- *   @brief         init stream type direct
+ *   @brief         init stream type direct, thread safe
  *   @param  direct                 directed output
  *   @param  stream_output          stream output function pointer
  *   @return int
  */
-int bflog_direct_init_stream(bflog_direct_t *direct, uint16_t (*stream_output)(void *, uint16_t))
+int bflog_direct_init_stream_s(bflog_direct_t *direct, uint16_t (*stream_output)(void *, uint16_t))
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(stream_output != NULL, -1);
 
+    if (direct->lock()) {
+        return -1;
+    }
+
     if (direct->type != BFLOG_DIRECT_TYPE_STREAM) {
+        direct->unlock();
         return -1;
     }
 
     if (direct->status != BFLOG_DIRECT_STATUS_INIT) {
+        direct->unlock();
         return -1;
     }
 
     _direct_stream_t(direct)->stream_output = stream_output;
+
     direct->status = BFLOG_DIRECT_STATUS_READY;
     direct->write = bflog_direct_write_stream;
+
+    direct->unlock();
 
     return 0;
 }
@@ -1308,10 +1401,29 @@ int bflog_direct_init_stream(bflog_direct_t *direct, uint16_t (*stream_output)(v
  *   @param  direct                 directed output
  *   @return int 
  */
-int bflog_direct_deinit_stream(bflog_direct_t *direct)
+int bflog_direct_deinit_stream_s(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
-    /*!< TODO */
+
+    if (direct->type != BFLOG_DIRECT_TYPE_STREAM) {
+        return -1;
+    }
+
+    if (direct->status != BFLOG_DIRECT_STATUS_READY) {
+        return -1;
+    }
+
+    if (direct->lock()) {
+        return -1;
+    }
+
+    direct->status = BFLOG_DIRECT_STATUS_INIT;
+    direct->write = NULL;
+
+    _direct_stream_t(direct)->stream_output = NULL;
+
+    direct->unlock();
+
     return 0;
 }
 
@@ -1347,32 +1459,27 @@ static void bflog_direct_write_file(bflog_direct_t *direct, void *ptr, uint16_t 
 /**
  *   @brief         
  *   @param  direct                 
- *   @param  path                   
- *   @param  lock                   
- *   @param  unlock                 
+ *   @param  path                                 
  *   @return int 
  */
-int bflog_direct_init_file(bflog_direct_t *direct, const char *path, void (*lock)(void), void (*unlock)(void))
+int bflog_direct_init_file_s(bflog_direct_t *direct, const char *path)
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(path != NULL, -1);
 
     char fullpath[256];
 
-    if ((lock == NULL) || (unlock == NULL)) {
-        lock = dummy;
-        unlock = dummy;
+    if (direct->lock()) {
+        return -1;
     }
 
-    lock();
-
     if (direct->type != BFLOG_DIRECT_TYPE_FILE) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
     if (direct->status != BFLOG_DIRECT_STATUS_INIT) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
@@ -1382,18 +1489,16 @@ int bflog_direct_init_file(bflog_direct_t *direct, const char *path, void (*lock
 
     _direct_file_t(direct)->fp = bflog_fopen(fullpath, "a+");
     if (_direct_file_t(direct)->fp == NULL) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
     _direct_file_t(direct)->path = path;
-    _direct_file_t(direct)->lock = lock;
-    _direct_file_t(direct)->unlock = unlock;
 
     direct->status = BFLOG_DIRECT_STATUS_READY;
     direct->write = bflog_direct_write_file;
 
-    unlock();
+    direct->unlock();
 
     return 0;
 }
@@ -1403,7 +1508,7 @@ int bflog_direct_init_file(bflog_direct_t *direct, const char *path, void (*lock
  *   @param  direct
  *   @return int
  */
-int bflog_direct_deinit_file(bflog_direct_t *direct)
+int bflog_direct_deinit_file_s(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1415,22 +1520,22 @@ int bflog_direct_deinit_file(bflog_direct_t *direct)
         return -1;
     }
 
-    _direct_file_t(direct)->lock();
+    if (direct->lock()) {
+        return -1;
+    }
 
     if (bflog_fclose(_direct_file_t(direct)->fp)) {
-        _direct_file_t(direct)->unlock();
+        direct->unlock();
         return -1;
     }
 
     direct->status = BFLOG_DIRECT_STATUS_INIT;
     direct->write = NULL;
+
     _direct_file_t(direct)->fp = NULL;
     _direct_file_t(direct)->path = NULL;
-    _direct_file_t(direct)->lock = NULL;
 
-    void (*unlock)(void) = _direct_file_t(direct)->unlock;
-    _direct_file_t(direct)->unlock = NULL;
-    unlock();
+    direct->unlock();
 
     return 0;
 }
@@ -1523,11 +1628,9 @@ static void bflog_direct_write_file_time(bflog_direct_t *direct, void *ptr, uint
  *   @param  path                   file path
  *   @param  interval               file rotate interval
  *   @param  keep                   max keep file count
- *   @param  lock                   lock   function
- *   @param  unlock                 unlock function
  *   @return int 
  */
-int bflog_direct_init_file_time(bflog_direct_t *direct, const char *path, uint32_t interval, uint32_t keep, void (*lock)(void), void (*unlock)(void))
+int bflog_direct_init_file_time_s(bflog_direct_t *direct, const char *path, uint32_t interval, uint32_t keep)
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(path != NULL, -1);
@@ -1540,20 +1643,17 @@ int bflog_direct_init_file_time(bflog_direct_t *direct, const char *path, uint32
 
     char fullpath[256];
 
-    if ((lock == NULL) || (unlock == NULL)) {
-        lock = dummy;
-        unlock = dummy;
+    if (direct->lock()) {
+        return -1;
     }
 
-    lock();
-
     if (direct->type != BFLOG_DIRECT_TYPE_FILE_TIME) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
     if (direct->status != BFLOG_DIRECT_STATUS_INIT) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
@@ -1563,7 +1663,7 @@ int bflog_direct_init_file_time(bflog_direct_t *direct, const char *path, uint32
 
     _direct_file_time_t(direct)->fp = bflog_fopen(fullpath, "a+");
     if (_direct_file_time_t(direct)->fp == NULL) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
@@ -1571,13 +1671,11 @@ int bflog_direct_init_file_time(bflog_direct_t *direct, const char *path, uint32
     _direct_file_time_t(direct)->keep = keep;
     _direct_file_time_t(direct)->interval = interval;
     _direct_file_time_t(direct)->path = path;
-    _direct_file_time_t(direct)->lock = lock;
-    _direct_file_time_t(direct)->unlock = unlock;
 
     direct->status = BFLOG_DIRECT_STATUS_READY;
     direct->write = bflog_direct_write_file_time;
 
-    unlock();
+    direct->unlock();
 
     return 0;
 }
@@ -1587,7 +1685,7 @@ int bflog_direct_init_file_time(bflog_direct_t *direct, const char *path, uint32
  *   @param  direct
  *   @return int
  */
-int bflog_direct_deinit_file_time(bflog_direct_t *direct)
+int bflog_direct_deinit_file_time_s(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1599,10 +1697,12 @@ int bflog_direct_deinit_file_time(bflog_direct_t *direct)
         return -1;
     }
 
-    _direct_file_time_t(direct)->lock();
+    if (direct->lock()) {
+        return -1;
+    }
 
     if (bflog_fclose(_direct_file_time_t(direct)->fp)) {
-        _direct_file_time_t(direct)->unlock();
+        direct->unlock();
         return -1;
     }
 
@@ -1610,12 +1710,9 @@ int bflog_direct_deinit_file_time(bflog_direct_t *direct)
     direct->write = NULL;
     _direct_file_time_t(direct)->fp = NULL;
     _direct_file_time_t(direct)->path = NULL;
-    _direct_file_time_t(direct)->lock = NULL;
     _direct_file_time_t(direct)->keep = 0;
 
-    void (*unlock)(void) = _direct_file_time_t(direct)->unlock;
-    _direct_file_time_t(direct)->unlock = NULL;
-    unlock();
+    direct->unlock();
 
     return 0;
 }
@@ -1663,12 +1760,10 @@ static void bflog_direct_write_file_size(bflog_direct_t *direct, void *ptr, uint
  *   @param  direct                 
  *   @param  path                   
  *   @param  size                   
- *   @param  keep                   
- *   @param  lock                   
- *   @param  unlock                 
+ *   @param  keep                                
  *   @return int 
  */
-int bflog_direct_init_file_size(bflog_direct_t *direct, const char *path, uint32_t size, uint32_t keep, void (*lock)(void), void (*unlock)(void))
+int bflog_direct_init_file_size_s(bflog_direct_t *direct, const char *path, uint32_t size, uint32_t keep)
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(path != NULL, -1);
@@ -1680,20 +1775,17 @@ int bflog_direct_init_file_size(bflog_direct_t *direct, const char *path, uint32
 
     char fullpath[256];
 
-    if ((lock == NULL) || (unlock == NULL)) {
-        lock = dummy;
-        unlock = dummy;
+    if (direct->lock()) {
+        return -1;
     }
 
-    lock();
-
     if (direct->type != BFLOG_DIRECT_TYPE_FILE_SIZE) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
     if (direct->status != BFLOG_DIRECT_STATUS_INIT) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
@@ -1703,20 +1795,18 @@ int bflog_direct_init_file_size(bflog_direct_t *direct, const char *path, uint32
 
     _direct_file_size_t(direct)->fp = bflog_fopen(fullpath, "a+");
     if (_direct_file_size_t(direct)->fp == NULL) {
-        unlock();
+        direct->unlock();
         return -1;
     }
 
     _direct_file_size_t(direct)->keep = keep;
     _direct_file_size_t(direct)->size = size;
     _direct_file_size_t(direct)->path = path;
-    _direct_file_size_t(direct)->lock = lock;
-    _direct_file_size_t(direct)->unlock = unlock;
 
     direct->status = BFLOG_DIRECT_STATUS_READY;
     direct->write = bflog_direct_write_file_size;
 
-    unlock();
+    direct->unlock();
 
     return 0;
 }
@@ -1726,7 +1816,7 @@ int bflog_direct_init_file_size(bflog_direct_t *direct, const char *path, uint32
  *   @param  direct
  *   @return int
  */
-int bflog_direct_deinit_file_size(bflog_direct_t *direct)
+int bflog_direct_deinit_file_size_s(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1738,10 +1828,12 @@ int bflog_direct_deinit_file_size(bflog_direct_t *direct)
         return -1;
     }
 
-    _direct_file_size_t(direct)->lock();
+    if (direct->lock()) {
+        return -1;
+    }
 
     if (bflog_fclose(_direct_file_size_t(direct)->fp)) {
-        _direct_file_size_t(direct)->unlock();
+        direct->unlock();
         return -1;
     }
 
@@ -1749,12 +1841,9 @@ int bflog_direct_deinit_file_size(bflog_direct_t *direct)
     direct->write = NULL;
     _direct_file_size_t(direct)->fp = NULL;
     _direct_file_size_t(direct)->path = NULL;
-    _direct_file_size_t(direct)->lock = NULL;
     _direct_file_size_t(direct)->keep = 0;
 
-    void (*unlock)(void) = _direct_file_size_t(direct)->unlock;
-    _direct_file_size_t(direct)->unlock = NULL;
-    unlock();
+    direct->unlock();
 
     return 0;
 }

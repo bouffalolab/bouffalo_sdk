@@ -5,5 +5,9 @@ sdk_add_compile_definitions(-DCONFIG_BFLOG)
 
 
 if(CONFIG_BFLOG_USER)
-sdk_add_compile_definitions(-DBFLOG_USER)
+sdk_add_compile_definitions(-DCONFIG_BFLOG_USER)
+endif()
+
+if(CONFIG_BFLOG_DEBUG)
+sdk_add_compile_definitions(-DCONFIG_BFLOG_DEBUG)
 endif()

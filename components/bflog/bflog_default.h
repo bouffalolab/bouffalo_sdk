@@ -28,7 +28,7 @@
 #include "bflog.h"
 
 /*!< param check enable */
-#define BFLOG_DEBUG_ENABLE
+#define CONFIG_BFLOG_DEBUG
 
 /*!< log enable */
 #define BFLOG_ENABLE

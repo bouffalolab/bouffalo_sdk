@@ -139,29 +139,34 @@ extern void error_handler(void);
 
 #else
 
-#define _CALL_ERROR()                    \
-    do {                                 \
-        LOG_F("Call Error Handler\r\n"); \
-        LOG_FLUSH();                     \
-        error_handler();                 \
+#define _CALL_ERROR()                       \
+    do {                                    \
+        printf("(Call Error Handler)\r\n"); \
+        LOG_F("Call Error Handler\r\n");    \
+        LOG_FLUSH();                        \
+        error_handler();                    \
     } while (0)
 
-#define _ASSERT_PARAM(x)                 \
-    if ((uint32_t)(x) == 0) {            \
-        LOG_F("Assertion Faild\r\n");    \
-        LOG_F("%s", (const char *)(#x)); \
-        LOG_FLUSH();                     \
-        error_handler();                 \
+#define _ASSERT_PARAM(x)                        \
+    if ((uint32_t)(x) == 0) {                   \
+        printf("(Assertion Faild)\r\n");        \
+        printf("(%s)\r\n", (const char *)(#x)); \
+        LOG_F("Assertion Faild\r\n");           \
+        LOG_F("%s\r\n", (const char *)(#x));    \
+        LOG_FLUSH();                            \
+        error_handler();                        \
     }
 
-#define _ASSERT_FUNC(x)                      \
-    do {                                     \
-        if ((uint32_t)(x) == 0) {            \
-            LOG_F("Assertion Faild\r\n");    \
-            LOG_F("%s", (const char *)(#x)); \
-            LOG_FLUSH();                     \
-            error_handler();                 \
-        }                                    \
+#define _ASSERT_FUNC(x)                             \
+    do {                                            \
+        if ((uint32_t)(x) == 0) {                   \
+            printf("(Assertion Faild)\r\n");        \
+            printf("(%s)\r\n", (const char *)(#x)); \
+            LOG_F("Assertion Faild\r\n");           \
+            LOG_F("%s\r\n", (const char *)(#x));    \
+            LOG_FLUSH();                            \
+            error_handler();                        \
+        }                                           \
     } while (0)
 #endif
 

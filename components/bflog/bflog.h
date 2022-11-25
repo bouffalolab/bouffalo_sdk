@@ -26,7 +26,7 @@
 
 #include <stdint.h>
 
-#ifdef BFLOG_USER
+#ifdef CONFIG_BFLOG_USER
 #include "bflog_user.h"
 #else
 #include "bflog_default.h"
@@ -272,6 +272,8 @@
  */
 #define BFLOG_DIRECT_CMD_ILLEGAL ((uint32_t)0x00)
 #define BFLOG_DIRECT_CMD_LEVEL   ((uint32_t)0x02)
+#define BFLOG_DIRECT_CMD_LOCK    ((uint32_t)0x06)
+#define BFLOG_DIRECT_CMD_UNLOCK  ((uint32_t)0x07)
 #define BFLOG_DIRECT_CMD_COLOR   ((uint32_t)0x0A)
 /**
  * @}
@@ -400,9 +402,9 @@ struct _bflog_msg {
 typedef struct
 {
     struct _bflog_list direct; /*!< dlist */
-    void (*enter_critical)(void);
-    void (*exit_critical)(void);
-    void (*flush_notice)(void);
+    int (*enter_critical)(void);
+    int (*exit_critical)(void);
+    int (*flush_notice)(void);
 
     uint8_t status;
     uint8_t flags;
@@ -465,7 +467,9 @@ typedef struct
     uint8_t status;                                                        \
     uint8_t color;                                                         \
     uint8_t level;                                                         \
-    uint8_t type
+    uint8_t type;                                                          \
+    int (*lock)(void);                                                     \
+    int (*unlock)(void)
 
 /**
  *   @brief         direct base type
@@ -497,8 +501,6 @@ typedef struct
 typedef struct
 {
     _BFLOG_STRUCT_DIRECT_EXTENDS;
-    void (*lock)(void);
-    void (*unlock)(void);
     void *fp;
     const char *path;
 } bflog_direct_file_t;
@@ -509,10 +511,8 @@ typedef struct
 typedef struct
 {
     _BFLOG_STRUCT_DIRECT_EXTENDS;
-    void (*lock)(void);   /*!< lock */
-    void (*unlock)(void); /*!< unlock */
-    void *fp;             /*!< file pointer now */
-    const char *path;     /*!< file path */
+    void *fp;         /*!< file pointer now */
+    const char *path; /*!< file path */
     uint32_t interval;
     uint32_t keep;
     uint32_t timestamp;
@@ -524,8 +524,6 @@ typedef struct
 typedef struct
 {
     _BFLOG_STRUCT_DIRECT_EXTENDS;
-    void (*lock)(void);
-    void (*unlock)(void);
     void *fp;
     const char *path;
     uint32_t size;
@@ -540,37 +538,37 @@ extern uint64_t bflog_clock(void);
 extern uint32_t bflog_time(void);
 extern char *bflog_thread(void);
 
-extern int bflog_create(bflog_t *log, void *pool, uint16_t size, uint8_t mode);
+extern int bflog_create_s(bflog_t *log, void *pool, uint16_t size, uint8_t mode);
 extern int bflog_delete_s(bflog_t *log);
 extern int bflog_append_s(bflog_t *log, bflog_direct_t *direct);
 extern int bflog_remove_s(bflog_t *log, bflog_direct_t *direct);
 extern int bflog_suspend_s(bflog_t *log);
 extern int bflog_resume_s(bflog_t *log);
 extern int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param);
-extern void bflog_s(bflog_t *log, uint8_t level, const char *const tag, const char *const file, const char *const func, const long line, const char *format, ...);
-extern void bflog_flush_s(bflog_t *log);
+extern int bflog_s(void *log, uint8_t level, const char *const tag, const char *const file, const char *const func, const long line, const char *format, ...);
+extern int bflog_flush_s(void *log);
 
-extern int bflog_direct_create(bflog_direct_t *direct, uint8_t type, uint8_t color);
-extern int bflog_direct_delete(bflog_direct_t *direct);
+extern int bflog_direct_create(bflog_direct_t *direct, uint8_t type, uint8_t color, void(*lock), void(*unlock));
+extern int bflog_direct_delete_s(bflog_direct_t *direct);
 extern int bflog_direct_suspend_s(bflog_direct_t *direct);
 extern int bflog_direct_resume_s(bflog_direct_t *direct);
 extern int bflog_direct_link(bflog_direct_t *direct, bflog_layout_t *layout);
-extern int bflog_direct_control(bflog_direct_t *direct, uint32_t command, uint32_t param);
+extern int bflog_direct_control_s(bflog_direct_t *direct, uint32_t command, uint32_t param);
 
-extern int bflog_direct_init_buffer(bflog_direct_t *direct, void *buffer, void *size);
-extern int bflog_direct_deinit_buffer(bflog_direct_t *direct);
+extern int bflog_direct_init_buffer_s(bflog_direct_t *direct, void *buffer, void *size);
+extern int bflog_direct_deinit_buffer_s(bflog_direct_t *direct);
 
-extern int bflog_direct_init_stream(bflog_direct_t *direct, uint16_t (*stream_output)(void *, uint16_t));
-extern int bflog_direct_deinit_stream(bflog_direct_t *direct);
+extern int bflog_direct_init_stream_s(bflog_direct_t *direct, uint16_t (*stream_output)(void *, uint16_t));
+extern int bflog_direct_deinit_stream_s(bflog_direct_t *direct);
 
-extern int bflog_direct_init_file(bflog_direct_t *direct, const char *path, void (*lock)(void), void (*unlock)(void));
-extern int bflog_direct_deinit_file(bflog_direct_t *direct);
+extern int bflog_direct_init_file_s(bflog_direct_t *direct, const char *path);
+extern int bflog_direct_deinit_file_s(bflog_direct_t *direct);
 
-extern int bflog_direct_init_file_size(bflog_direct_t *direct, const char *path, uint32_t size, uint32_t keep, void (*lock)(void), void (*unlock)(void));
-extern int bflog_direct_deinit_file_size(bflog_direct_t *direct);
+extern int bflog_direct_init_file_size_s(bflog_direct_t *direct, const char *path, uint32_t size, uint32_t keep);
+extern int bflog_direct_deinit_file_size_s(bflog_direct_t *direct);
 
-extern int bflog_direct_init_file_time(bflog_direct_t *direct, const char *path, uint32_t interval, uint32_t keep, void (*lock)(void), void (*unlock)(void));
-extern int bflog_direct_deinit_file_time(bflog_direct_t *direct);
+extern int bflog_direct_init_file_time_s(bflog_direct_t *direct, const char *path, uint32_t interval, uint32_t keep);
+extern int bflog_direct_deinit_file_time_s(bflog_direct_t *direct);
 
 extern int bflog_layout_create(bflog_layout_t *layout, uint8_t type);
 extern int bflog_layout_delete(bflog_layout_t *layout);
