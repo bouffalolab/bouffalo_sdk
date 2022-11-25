@@ -224,6 +224,41 @@ int ATTR_TCM_SECTION bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len)
     return stat;
 }
 
+int ATTR_TCM_SECTION bflb_flash_set_cache(uint8_t cont_read, uint8_t cache_enable, uint8_t cache_way_disable, uint32_t flash_offset)
+{
+    uint8_t isAesEnable = 0;
+    uint32_t tmp[1];
+    int stat;
+
+    SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
+
+    XIP_SFlash_Opt_Enter(&isAesEnable);
+    /* To make it simple, exit cont read anyway */
+    SFlash_Reset_Continue_Read(&g_flash_cfg);
+
+    if (g_flash_cfg.cReadSupport == 0) {
+        cont_read = 0;
+    }
+
+    if (cont_read == 1) {
+        stat = SFlash_Read(&g_flash_cfg, g_flash_cfg.ioMode & 0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
+
+        if (0 != stat) {
+            XIP_SFlash_Opt_Exit(isAesEnable);
+            return -1;
+        }
+    }
+
+    /* TODO: Set default value */
+
+    SF_Ctrl_Set_Flash_Image_Offset(flash_offset, 0, 0);
+    SFlash_IDbus_Read_Enable(&g_flash_cfg, g_flash_cfg.ioMode & 0xf, cont_read, SF_CTRL_FLASH_BANK0);
+
+    XIP_SFlash_Opt_Exit(isAesEnable);
+
+    return 0;
+}
+
 void bflb_flash_aes_init(struct bflb_flash_aes_config_s *config)
 {
     uint8_t hw_key_enable = 0;

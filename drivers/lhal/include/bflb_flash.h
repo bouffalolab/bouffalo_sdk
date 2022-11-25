@@ -45,6 +45,7 @@ uint32_t bflb_flash_get_image_offset(void);
 int bflb_flash_erase(uint32_t addr, uint32_t len);
 int bflb_flash_write(uint32_t addr, uint8_t *data, uint32_t len);
 int bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len);
+int bflb_flash_set_cache(uint8_t cont_read, uint8_t cache_enable, uint8_t cache_way_disable, uint32_t flash_offset);
 
 void bflb_flash_aes_init(struct bflb_flash_aes_config_s *config);
 void bflb_flash_aes_enable(void);

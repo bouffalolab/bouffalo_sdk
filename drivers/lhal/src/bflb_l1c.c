@@ -58,8 +58,10 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
 }
 #else
 
+#if defined(BL702) || defined(BL702L)
 extern void L1C_Cache_Enable_Set(uint8_t wayDisable);
 extern void L1C_Cache_Flush(void);
+#endif
 
 void bflb_l1c_icache_enable(void)
 {
@@ -67,7 +69,9 @@ void bflb_l1c_icache_enable(void)
 
 void bflb_l1c_icache_disable(void)
 {
+#if defined(BL702) || defined(BL702L)
     L1C_Cache_Enable_Set(0x0f);
+#endif
 }
 
 void bflb_l1c_icache_invalid_all(void)
@@ -88,12 +92,16 @@ void bflb_l1c_dcache_clean_all(void)
 
 void bflb_l1c_dcache_invalidate_all(void)
 {
+#if defined(BL702) || defined(BL702L)
     L1C_Cache_Flush();
+#endif
 }
 
 void bflb_l1c_dcache_clean_invalidate_all(void)
 {
+#if defined(BL702) || defined(BL702L)
     L1C_Cache_Flush();
+#endif
 }
 
 void bflb_l1c_dcache_clean_range(void *addr, uint32_t size)
@@ -102,7 +110,9 @@ void bflb_l1c_dcache_clean_range(void *addr, uint32_t size)
 
 ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size)
 {
+#if defined(BL702) || defined(BL702L)
     L1C_Cache_Flush();
+#endif
 }
 
 #endif

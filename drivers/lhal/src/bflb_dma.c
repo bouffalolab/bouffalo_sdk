@@ -270,7 +270,24 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev, struct bflb_dma_chann
     /* clean cache, DMA does not pass through the cache */
     bflb_l1c_dcache_clean_range((uint32_t *)(uintptr_t)lli_pool, sizeof(struct bflb_dma_channel_lli_pool_s) * lli_count_used_offset);
 #endif
-    return 0;
+    return lli_count_used_offset;
+}
+
+void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
+                                    struct bflb_dma_channel_lli_pool_s *lli_pool,
+                                    uint32_t used_lli_count)
+{
+    uint32_t channel_base;
+
+    channel_base = dev->reg_base;
+
+    lli_pool[used_lli_count - 1].nextlli = (uint32_t)(uintptr_t)&lli_pool[0];
+
+    putreg32(lli_pool[0].nextlli, channel_base + DMA_CxLLI_OFFSET);
+#if defined(BL616) || defined(BL606P) || defined(BL808)
+    /* clean cache, DMA does not pass through the cache */
+    bflb_l1c_dcache_clean_range((uint32_t *)(uintptr_t)lli_pool, sizeof(struct bflb_dma_channel_lli_pool_s) * used_lli_count);
+#endif
 }
 
 int bflb_dma_channel_start(struct bflb_device_s *dev)

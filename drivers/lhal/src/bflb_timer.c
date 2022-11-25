@@ -90,6 +90,14 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
 
 void bflb_timer_deinit(struct bflb_device_s *dev)
 {
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + TIMER_TCER_OFFSET);
+    regval &= ~(1 << (dev->idx + 1));
+    putreg32(regval, reg_base + TIMER_TCER_OFFSET);
 }
 
 void bflb_timer_start(struct bflb_device_s *dev)

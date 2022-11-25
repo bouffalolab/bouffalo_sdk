@@ -601,6 +601,22 @@ int usbd_set_address(const uint8_t addr)
     return 0;
 }
 
+uint8_t usbd_get_port_speed(const uint8_t port)
+{
+    uint8_t speed = 3;
+
+    speed = (getreg32(BLFB_USB_BASE + USB_OTG_CSR_OFFSET) & USB_SPD_TYP_HOV_POV_MASK) >> USB_SPD_TYP_HOV_POV_SHIFT;
+
+    if (speed == 0) {
+        return USB_SPEED_FULL;
+    } else if (speed == 1) {
+        return USB_SPEED_LOW;
+    } else if (speed == 2) {
+        return USB_SPEED_HIGH;
+    }
+    return USB_SPEED_HIGH;
+}
+
 int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
 {
     uint8_t ep;

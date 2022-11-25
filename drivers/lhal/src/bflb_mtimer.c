@@ -35,12 +35,12 @@ void bflb_mtimer_config(uint64_t ticks, void (*interruptfun)(void))
     bflb_irq_enable(7);
 }
 
-__WEAK uint32_t bflb_mtimer_get_freq(void)
+__WEAK uint32_t ATTR_TCM_SECTION bflb_mtimer_get_freq(void)
 {
     return 1 * 1000 * 1000;
 }
 
-uint64_t bflb_mtimer_get_time_us()
+uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_us()
 {
     volatile uint64_t tmp_low, tmp_high, tmp_low1, tmp_high1;
 
@@ -64,12 +64,12 @@ uint64_t bflb_mtimer_get_time_us()
 #endif
 }
 
-uint64_t bflb_mtimer_get_time_ms()
+uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_ms()
 {
     return bflb_mtimer_get_time_us() / 1000;
 }
 
-void bflb_mtimer_delay_us(uint32_t time)
+void ATTR_TCM_SECTION bflb_mtimer_delay_us(uint32_t time)
 {
     uint64_t start_time = bflb_mtimer_get_time_us();
 
@@ -77,7 +77,7 @@ void bflb_mtimer_delay_us(uint32_t time)
     }
 }
 
-void bflb_mtimer_delay_ms(uint32_t time)
+void ATTR_TCM_SECTION bflb_mtimer_delay_ms(uint32_t time)
 {
     uint64_t start_time = bflb_mtimer_get_time_ms();
 

@@ -54,20 +54,20 @@
 #define DMA_ADDR_UART1_TDR (0x4000A100 + 0x88)
 #define DMA_ADDR_UART1_RDR (0x4000A100 + 0x8C)
 #endif
-#define DMA_ADDR_I2C0_TDR  (0x4000A300 + 0x88)
-#define DMA_ADDR_I2C0_RDR  (0x4000A300 + 0x8C)
-#define DMA_ADDR_SPI0_TDR  (0x4000A200 + 0x88)
-#define DMA_ADDR_SPI0_RDR  (0x4000A200 + 0x8C)
+#define DMA_ADDR_I2C0_TDR (0x4000A300 + 0x88)
+#define DMA_ADDR_I2C0_RDR (0x4000A300 + 0x8C)
+#define DMA_ADDR_SPI0_TDR (0x4000A200 + 0x88)
+#define DMA_ADDR_SPI0_RDR (0x4000A200 + 0x8C)
 #if !defined(BL702L)
-#define DMA_ADDR_I2S_TDR   (0x4000AA00 + 0x88)
-#define DMA_ADDR_I2S_RDR   (0x4000AA00 + 0x8C)
+#define DMA_ADDR_I2S_TDR (0x4000AA00 + 0x88)
+#define DMA_ADDR_I2S_RDR (0x4000AA00 + 0x8C)
 #endif
-#define DMA_ADDR_ADC_RDR   (0x40002000 + 0x04)
+#define DMA_ADDR_ADC_RDR (0x40002000 + 0x04)
 #if !defined(BL702L)
-#define DMA_ADDR_DAC_TDR   (0x40002000 + 0x48)
+#define DMA_ADDR_DAC_TDR (0x40002000 + 0x48)
 #endif
 #if defined(BL702L)
-#define DMA_ADDR_IR_TDR    (0x4000A600 + 0x88)
+#define DMA_ADDR_IR_TDR (0x4000A600 + 0x88)
 #endif
 /**
   * @}
@@ -83,20 +83,20 @@
 #define DMA_REQUEST_UART1_RX 0x00000002
 #define DMA_REQUEST_UART1_TX 0x00000003
 #endif
-#define DMA_REQUEST_I2C0_RX  0x00000006
-#define DMA_REQUEST_I2C0_TX  0x00000007
+#define DMA_REQUEST_I2C0_RX 0x00000006
+#define DMA_REQUEST_I2C0_TX 0x00000007
 #if defined(BL702L)
-#define DMA_REQUEST_IR_TX    0x00000008
+#define DMA_REQUEST_IR_TX 0x00000008
 #endif
-#define DMA_REQUEST_SPI0_RX  0x0000000A
-#define DMA_REQUEST_SPI0_TX  0x0000000B
+#define DMA_REQUEST_SPI0_RX 0x0000000A
+#define DMA_REQUEST_SPI0_TX 0x0000000B
 #if !defined(BL702L)
-#define DMA_REQUEST_I2S_RX   0x00000014
-#define DMA_REQUEST_I2S_TX   0x00000015
+#define DMA_REQUEST_I2S_RX 0x00000014
+#define DMA_REQUEST_I2S_TX 0x00000015
 #endif
-#define DMA_REQUEST_ADC      0x00000016
+#define DMA_REQUEST_ADC 0x00000016
 #if !defined(BL702L)
-#define DMA_REQUEST_DAC      0x00000017
+#define DMA_REQUEST_DAC 0x00000017
 #endif
 /**
   * @}
@@ -269,8 +269,8 @@
 #define DMA_CMD_SET_SRCADDR_INCREMENT (0x01)
 #define DMA_CMD_SET_DSTADDR_INCREMENT (0x02)
 #if !defined(BL602)
-#define DMA_CMD_SET_ADD_MODE          (0x03)
-#define DMA_CMD_SET_REDUCE_MODE       (0x04)
+#define DMA_CMD_SET_ADD_MODE    (0x03)
+#define DMA_CMD_SET_REDUCE_MODE (0x04)
 #endif
 /**
   * @}
@@ -364,6 +364,9 @@ void bflb_dma_channel_irq_detach(struct bflb_device_s *dev);
 int bflb_dma_channel_lli_reload(struct bflb_device_s *dev,
                                 struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t max_lli_count,
                                 struct bflb_dma_channel_lli_transfer_s *transfer, uint32_t count);
+void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
+                                    struct bflb_dma_channel_lli_pool_s *lli_pool,
+                                    uint32_t used_lli_count);
 
 int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 

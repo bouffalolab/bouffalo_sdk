@@ -3,7 +3,7 @@
 #include "bl702_xip_sflash_ext.h"
 #include "bl702_sf_cfg.h"
 #include "bl702_sf_cfg_ext.h"
-#include "bl702_ef_ctrl.h"
+#include "bl702_ef_cfg.h"
 #include "bflb_flash.h"
 
 static uint32_t g_jedec_id = 0;
@@ -31,9 +31,10 @@ static void ATTR_TCM_SECTION flash_set_l1c_wrap(SPI_Flash_Cfg_Type *p_flash_cfg)
 static void ATTR_TCM_SECTION flash_sf2_gpio_init(void)
 {
     uint32_t tmpVal;
-    Efuse_Device_Info_Type devInfo;
+    bflb_efuse_device_info_type devInfo;
 
-    EF_Ctrl_Read_Device_Info(&devInfo);
+    bflb_ef_ctrl_get_device_info(&devInfo);
+
     /* flash_cfg != BFLB_FLASH_CFG_SF1_EXT_17_22, flash pad use SF2 */
     if (devInfo.flash_cfg != BFLB_FLASH_CFG_SF1_EXT_17_22) {
         tmpVal = BL_RD_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO);
@@ -177,6 +178,42 @@ int ATTR_TCM_SECTION bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len)
     bflb_irq_restore(flag);
 
     return ret;
+}
+
+int ATTR_TCM_SECTION bflb_flash_set_cache(uint8_t cont_read, uint8_t cache_enable, uint8_t cache_way_disable, uint32_t flash_offset)
+{
+    uint32_t tmp[1];
+    int stat;
+
+    SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
+
+    XIP_SFlash_Opt_Enter();
+    /* To make it simple, exit cont read anyway */
+    SFlash_Reset_Continue_Read(&g_flash_cfg);
+
+    if (g_flash_cfg.cReadSupport == 0) {
+        cont_read = 0;
+    }
+
+    if (cont_read == 1) {
+        stat = SFlash_Read(&g_flash_cfg, g_flash_cfg.ioMode & 0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
+
+        if (0 != stat) {
+            XIP_SFlash_Opt_Exit();
+            return -1;
+        }
+    }
+
+    /* Set default value */
+    L1C_Cache_Enable_Set(0xf);
+
+    if (cache_enable) {
+        SF_Ctrl_Set_Flash_Image_Offset(flash_offset);
+        SFlash_Cache_Read_Enable(&g_flash_cfg, g_flash_cfg.ioMode & 0xf, cont_read, cache_way_disable);
+    }
+    XIP_SFlash_Opt_Exit();
+
+    return 0;
 }
 
 void bflb_flash_aes_init(struct bflb_flash_aes_config_s *config)

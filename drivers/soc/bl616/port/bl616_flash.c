@@ -11,20 +11,12 @@ static uint32_t g_jedec_id2 = 0;
 static SPI_Flash_Cfg_Type g_flash_cfg;
 static SPI_Flash_Cfg_Type g_flash2_cfg;
 
-uint32_t flash2_get_jedecid(void)
+uint32_t bflb_flash2_get_jedec_id(void)
 {
     uint32_t jid = 0;
 
     jid = ((g_jedec_id2 & 0xff) << 16) + (g_jedec_id2 & 0xff00) + ((g_jedec_id2 & 0xff0000) >> 16);
     return jid;
-}
-
-uint32_t flash_get_size(SF_Ctrl_Bank_Select bank)
-{
-    if (bank == SF_CTRL_FLASH_BANK1) {
-        return flash2_size;
-    }
-    return flash1_size;
 }
 
 static void flash_get_clock_delay(SPI_Flash_Cfg_Type *cfg)
@@ -120,7 +112,7 @@ static int ATTR_TCM_SECTION flash2_init(void)
     int stat = -1;
     uint32_t ret = 0;
     uint32_t jid = 0;
-    Efuse_Device_Info_Type deviceInfo;
+    bflb_efuse_device_info_type deviceInfo;
     SF_Ctrl_Bank2_Cfg sfBank2Cfg = {
         .sbus2Select = ENABLE,
         .bank2RxClkInvertSrc = DISABLE,
@@ -141,7 +133,7 @@ static int ATTR_TCM_SECTION flash2_init(void)
         .cmdsWrapLen = SF_CTRL_WRAP_LEN_4096,
     };
 
-    EF_Ctrl_Read_Device_Info(&deviceInfo);
+    bflb_ef_ctrl_get_device_info(&deviceInfo);
     if (deviceInfo.memoryInfo == 0) {
         /* memoryInfo==0, external flash */
         flash1_size = 64 * 1024 * 1024;
@@ -374,6 +366,40 @@ int ATTR_TCM_SECTION bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len)
     }
 
     return stat;
+}
+
+int ATTR_TCM_SECTION bflb_flash_set_cache(uint8_t cont_read, uint8_t cache_enable, uint8_t cache_way_disable, uint32_t flash_offset)
+{
+    uint8_t isAesEnable = 0;
+    uint32_t tmp[1];
+    int stat;
+
+    SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
+
+    XIP_SFlash_Opt_Enter(&isAesEnable);
+    /* To make it simple, exit cont read anyway */
+    SFlash_Reset_Continue_Read(&g_flash_cfg);
+
+    if (g_flash_cfg.cReadSupport == 0) {
+        cont_read = 0;
+    }
+
+    if (cont_read == 1) {
+        stat = SFlash_Read(&g_flash_cfg, g_flash_cfg.ioMode & 0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
+
+        if (0 != stat) {
+            XIP_SFlash_Opt_Exit(isAesEnable);
+            return -1;
+        }
+    }
+
+    /* TODO: Set default value */
+    SF_Ctrl_Set_Flash_Image_Offset(flash_offset, 0, 0);
+    SFlash_IDbus_Read_Enable(&g_flash_cfg, g_flash_cfg.ioMode & 0xf, cont_read, 0);
+
+    XIP_SFlash_Opt_Exit(isAesEnable);
+
+    return 0;
 }
 
 void bflb_flash_aes_init(struct bflb_flash_aes_config_s *config)

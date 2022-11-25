@@ -45,6 +45,23 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval &= ~AON_GPADC_SOFT_RST;
     putreg32(regval, reg_base + AON_GPADC_REG_CMD_OFFSET);
 
+    /* disable int and clear status */
+    regval = getreg32(ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+    regval |= (GPIP_GPADC_FIFO_UNDERRUN_MASK | GPIP_GPADC_FIFO_OVERRUN_MASK | GPIP_GPADC_RDY_MASK |
+               GPIP_GPADC_FIFO_UNDERRUN_CLR | GPIP_GPADC_FIFO_OVERRUN_CLR | GPIP_GPADC_RDY_CLR);
+
+#if defined(BL702) || defined(BL702L)
+    regval |= (GPIP_GPADC_FIFO_RDY_MASK | GPIP_GPADC_FIFO_RDY);
+#endif
+    regval |= GPIP_GPADC_FIFO_CLR;
+    regval &= ~GPIP_GPADC_FIFO_THL_MASK;
+    regval &= ~GPIP_GPADC_DMA_EN;
+    putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+
+    bflb_adc_start_conversion(dev);
+    bflb_mtimer_delay_ms(1);
+    bflb_adc_stop_conversion(dev);
+
     regval = 0;
     regval |= (2 << AON_GPADC_V18_SEL_SHIFT);                     /* V18 select 1.82V */
     regval |= (1 << AON_GPADC_V11_SEL_SHIFT);                     /* V11 select 1.1V */
@@ -112,6 +129,7 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
 #endif
     regval |= GPIP_GPADC_FIFO_CLR;
     regval &= ~GPIP_GPADC_FIFO_THL_MASK;
+    regval &= ~GPIP_GPADC_DMA_EN;
     putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC_REG_ISR_OFFSET);
@@ -119,8 +137,8 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval |= AON_GPADC_POS_SATUR_MASK;
     putreg32(regval, reg_base + AON_GPADC_REG_ISR_OFFSET);
 
-    coe = bflb_efuse_get_adc_trim();              /* read from efuse */
-    tsen_offset = bflb_efuse_get_adc_tsen_trim(); /* read from efuse */
+    //coe = bflb_efuse_get_adc_trim();              /* read from efuse */
+    //tsen_offset = bflb_efuse_get_adc_tsen_trim(); /* read from efuse */
 }
 
 void bflb_adc_deinit(struct bflb_device_s *dev)
@@ -154,6 +172,7 @@ void bflb_adc_deinit(struct bflb_device_s *dev)
     putreg32(regval, reg_base + AON_GPADC_REG_CMD_OFFSET);
 
     putreg32(0, reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
+    putreg32(0, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 }
 
 void bflb_adc_link_rxdma(struct bflb_device_s *dev, bool enable)

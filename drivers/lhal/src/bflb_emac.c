@@ -187,6 +187,8 @@ int emac_bd_fragment_support(void)
     return 1;
 #elif defined(BL702)
     return 0;
+#elif defined(BL628)
+    return 1;
 #endif
 }
 /**
@@ -215,7 +217,7 @@ int bflb_emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in
         //printf(TAG"%s:%d\n", __func__, __LINE__);
     } else {
 #if defined(BL616)
-        __DSB();
+        __ASM volatile("fence");
 #endif
         // printf("tx q flags:%d,len:%d,data:0x%x\r\n", flags, len, data_in);
         if (flags & EMAC_NOCOPY_PACKET) {

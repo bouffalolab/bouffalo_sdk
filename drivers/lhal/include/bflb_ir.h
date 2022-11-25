@@ -18,9 +18,11 @@
 /** @defgroup IR TX FIFO valid width definition
   * @{
   */
+#if !defined(BL602) && !defined(BL702)
 #define IR_TX_FIFO_WIDTH_8BIT  0
 #define IR_TX_FIFO_WIDTH_16BIT 1
 #define IR_TX_FIFO_WIDTH_24BIT 2
+#endif
 #define IR_TX_FIFO_WIDTH_32BIT 3
 /**
   * @}
@@ -30,8 +32,10 @@
   * @{
   */
 #define IR_TX_INT_END  (1 << 0)
+#if !defined(BL602) && !defined(BL702)
 #define IR_TX_INT_FIFO (1 << 1)
 #define IR_TX_INT_FER  (1 << 2)
+#endif
 /**
   * @}
   */
@@ -52,21 +56,14 @@
   * @{
   */
 #define IR_RX_INT_END  (1 << 0)
+#if !defined(BL602) && !defined(BL702)
 #define IR_RX_INT_FIFO (1 << 1)
 #define IR_RX_INT_FER  (1 << 2)
+#endif
 /**
   * @}
   */
 #endif
-
-/** @defgroup IR word definition
-  * @{
-  */
-#define IR_WORD_0 0
-#define IR_WORD_1 1
-/**
-  * @}
-  */
 
 #if !defined(BL616)
 /**
@@ -166,9 +163,11 @@ void bflb_ir_tx_enable(struct bflb_device_s *dev, bool enable);
 void bflb_ir_txint_mask(struct bflb_device_s *dev, uint8_t int_type, bool mask);
 void bflb_ir_txint_clear(struct bflb_device_s *dev);
 uint32_t bflb_ir_txint_status(struct bflb_device_s *dev);
+#if !defined(BL602) && !defined(BL702)
 void bflb_ir_link_txdma(struct bflb_device_s *dev, bool enable);
 uint8_t bflb_ir_txfifo_cnt(struct bflb_device_s *dev);
 void bflb_ir_txfifo_clear(struct bflb_device_s *dev);
+#endif
 #endif
 
 #if !defined(BL702L)
