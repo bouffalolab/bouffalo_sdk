@@ -38,7 +38,6 @@
 
 #include "pds_reg.h"
 #include "glb_reg.h"
-#include "bl808_ef_ctrl.h"
 #include "bl808_clock.h"
 #include "bl808_aon.h"
 #include "bl808_hbn.h"

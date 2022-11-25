@@ -39,7 +39,6 @@
 #include "bl616_pds.h"
 #include "bl616_sflash.h"
 #include "bl616_xip_sflash.h"
-#include "bl616_ef_ctrl.h"
 #include "bl616_clock.h"
 // #include "bl616_uart.h"
 

@@ -75,8 +75,6 @@ int RV_Sv39_Create_PageMapping(Sv39_PTE_cfg_t *cfg, uintptr_t *tlb_index, volati
     volatile uint64_t *ttb1 = NULL;
     volatile uint64_t *ttb2 = NULL;
 
-    /* TODO: check parameters */
-
     if (Sv39_PTE_LOC_JTLB == cfg->where) {
         t0 = cfg->va;
         smeh = ((t0 >> 12) << SMEH_VPN_OFFSET) | cfg->size | cfg->asid;

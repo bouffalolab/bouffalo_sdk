@@ -40,7 +40,6 @@
 #include "glb_reg.h"
 #include "hbn_reg.h"
 #include "pds_reg.h"
-#include "bl702_ef_ctrl.h"
 #include "bl702_common.h"
 
 /** @addtogroup  BL702_Peripheral_Driver

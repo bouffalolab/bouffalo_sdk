@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    bl616_ef_ctrl.h
+  * @file    bl702_ef_cfg.h
   * @version V1.0
   * @date
   * @brief   This file is the standard driver header file
@@ -33,13 +33,13 @@
   *
   ******************************************************************************
   */
-#ifndef __BL616_EF_CFG_H__
-#define __BL616_EF_CFG_H__
+#ifndef __BL702_EF_CFG_H__
+#define __BL702_EF_CFG_H__
 
-#include "ef_ctrl_reg.h"
-#include "bl616_common.h"
+#include "bflb_ef_ctrl.h"
+#include "bl702_common.h"
 
-/** @addtogroup  BL616_Peripheral_Driver
+/** @addtogroup  BL702_Peripheral_Driver
  *  @{
  */
 
@@ -50,14 +50,17 @@
 /** @defgroup  EF_CTRL_Public_Types
  *  @{
  */
-
+/**
+ *  @brief Efuse analog device info type definition
+ */
 typedef struct
 {
-    uint32_t rsvd       : 22; /*!< Reserved */
-    uint32_t deviceInfo : 2;  /*!< Efuse device information */
-    uint32_t psramInfo  : 2;  /*!< Efuse psram info 0:no psram, 1:WB 4MB*/
-    uint32_t memoryInfo : 3;  /*!< Efuse memory info 0:no memory, 8:1MB flash */
-    uint32_t chipInfo   : 3;  /*!< Efuse chip revision */
+    uint32_t rsvd_21_0   : 22; /*!< Reserved */
+    uint32_t sf_swap_cfg : 2;  /*!< 0:swap none, 1:swap SF2_CS & SF2_IO2, 2:swap SF2_IO0 & SF2_IO3, 3:swap both */
+    uint32_t psram_cfg   : 2;  /*!< 0:no psram, 1:2MB psram, 2:external psram, 3:reserved */
+    uint32_t flash_cfg   : 3;  /*!< 0:external flash SF2, 1:0.5MB flash, 2:1MB flash, 3:external flash SF1 */
+    uint32_t rsvd_29     : 1;  /*!< Reserved */
+    uint32_t pkg_info    : 2;  /*!< 0:QFN32, 1:QFN40, 2:QFN48, 3:reserved */
 } bflb_efuse_device_info_type;
 
 /*@} end of group EF_CTRL_Public_Types */
@@ -77,12 +80,15 @@ typedef struct
 /** @defgroup  EF_CTRL_Public_Functions
  *  @{
  */
+void bflb_efuse_switch_cpu_clock_save(void);
+void bflb_efuse_switch_cpu_clock_restore(void);
 void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo);
+uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg **trim_list);
 
 /*@} end of group EF_CTRL_Public_Functions */
 
 /*@} end of group EF_CTRL */
 
-/*@} end of group BL616_Peripheral_Driver */
+/*@} end of group BL702_Peripheral_Driver */
 
-#endif /* __BL616_EF_CFG_H__ */
+#endif /* __BL702_EF_CFG_H__ */

@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    bl616_ef_ctrl.h
+  * @file    bl602_ef_ctrl.h
   * @version V1.0
   * @date
   * @brief   This file is the standard driver header file
@@ -33,13 +33,13 @@
   *
   ******************************************************************************
   */
-#ifndef __BL616_EF_CFG_H__
-#define __BL616_EF_CFG_H__
+#ifndef __BL602_EF_CFG_H__
+#define __BL602_EF_CFG_H__
 
 #include "ef_ctrl_reg.h"
-#include "bl616_common.h"
+#include "bl602_common.h"
 
-/** @addtogroup  BL616_Peripheral_Driver
+/** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
 
@@ -51,13 +51,18 @@
  *  @{
  */
 
-typedef struct
-{
-    uint32_t rsvd       : 22; /*!< Reserved */
-    uint32_t deviceInfo : 2;  /*!< Efuse device information */
-    uint32_t psramInfo  : 2;  /*!< Efuse psram info 0:no psram, 1:WB 4MB*/
-    uint32_t memoryInfo : 3;  /*!< Efuse memory info 0:no memory, 8:1MB flash */
-    uint32_t chipInfo   : 3;  /*!< Efuse chip revision */
+/**
+ *  @brief Efuse Ctrl key slot type definition
+ */
+typedef struct {
+    uint32_t rsvd       : 19; /*!< Reserved */
+    uint32_t chip_ver   : 3;  /*!< chip revision */
+    uint32_t customerID : 2;  /*!< Efuse customer ID information */
+    uint32_t rsvd_info  : 3;  /*!< Efuse device info extension: 1:BL602C, 2:BL602L, 3:BL602E */
+    uint32_t memoryInfo : 2;  /*!< Efuse memory info 0:no memory, 1:1MB flash, 2:2MB flash */
+    uint32_t coreInfo   : 1;  /*!< Efuse reserved */
+    uint32_t mcuInfo    : 1;  /*!< Efuse mcu info 0:wifi, 1:mcu */
+    uint32_t pinInfo    : 1;  /*!< Efuse pin info 0:QFN32, 1:QFN40 */
 } bflb_efuse_device_info_type;
 
 /*@} end of group EF_CTRL_Public_Types */
@@ -77,12 +82,16 @@ typedef struct
 /** @defgroup  EF_CTRL_Public_Functions
  *  @{
  */
+
+void bflb_efuse_switch_cpu_clock_save(void);
+void bflb_efuse_switch_cpu_clock_restore(void);
 void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo);
+uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg **trim_list);
 
 /*@} end of group EF_CTRL_Public_Functions */
 
 /*@} end of group EF_CTRL */
 
-/*@} end of group BL616_Peripheral_Driver */
+/*@} end of group BL602_Peripheral_Driver */
 
-#endif /* __BL616_EF_CFG_H__ */
+#endif /* __BL602_EF_CFG_H__ */

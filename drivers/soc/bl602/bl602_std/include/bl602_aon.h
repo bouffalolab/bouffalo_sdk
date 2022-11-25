@@ -40,7 +40,6 @@
 #include "glb_reg.h"
 #include "hbn_reg.h"
 #include "pds_reg.h"
-#include "bl602_ef_ctrl.h"
 #include "bl602_common.h"
 
 /** @addtogroup  BL602_Peripheral_Driver

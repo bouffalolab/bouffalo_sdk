@@ -28,10 +28,6 @@ void SystemInit(void)
     uint32_t *p;
     uint8_t i;
     uint32_t tmpVal = 0;
-    uint8_t flashCfg = 0;
-    uint8_t psramCfg = 0;
-    uint8_t isInternalFlash = 0;
-    uint8_t isInternalPsram = 0;
 
     /* global IRQ disable */
     __disable_irq();

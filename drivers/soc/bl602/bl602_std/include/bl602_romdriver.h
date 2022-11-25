@@ -43,6 +43,7 @@
 #include "bl602_xip_sflash.h"
 #include "bl602_sflash.h"
 #include "bl602_sf_ctrl.h"
+#include "bl602_ef_ctrl.h"
 // #include "bl602_sec_eng.h"
 // #include "softcrc.h"
 

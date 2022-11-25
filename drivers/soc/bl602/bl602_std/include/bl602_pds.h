@@ -37,7 +37,6 @@
 #define __BL602_PDS_H__
 
 #include "pds_reg.h"
-#include "bl602_ef_ctrl.h"
 #include "bl602_aon.h"
 #include "bl602_hbn.h"
 #include "bl602_sflash.h"

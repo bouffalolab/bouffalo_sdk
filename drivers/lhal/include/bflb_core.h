@@ -63,6 +63,12 @@ void assert_func(uint8_t *file, uint32_t line, uint8_t *function, uint8_t *strin
 #define BFLB_DEVICE_TYPE_PKA      32
 #define BFLB_DEVICE_TYPE_CKS      33
 #define BFLB_DEVICE_TYPE_MJPEG    34
+#define BFLB_DEVICE_TYPE_KYS      35
+#define BFLB_DEVICE_TYPE_DBI      36
+#define BFLB_DEVICE_TYPE_PEC      37
+#define BFLB_DEVICE_TYPE_WDT      38
+#define BFLB_DEVICE_TYPE_EF_CTRL  39
+#define BFLB_DEVICE_TYPE_SDIO3    40
 
 struct bflb_device_s {
     const char *name;

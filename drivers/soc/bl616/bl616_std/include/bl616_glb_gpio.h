@@ -44,7 +44,6 @@
 #include "bl616_sf_ctrl.h"
 // #include "bl616_sf_cfg.h"
 #include "bl616_aon.h"
-#include "bl616_ef_ctrl.h"
 #include "bl616_pds.h"
 #include "bl616_common.h"
 

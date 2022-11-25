@@ -44,7 +44,6 @@
 #include "bl808_sf_ctrl.h"
 #include "bl808_sf_cfg.h"
 #include "bl808_aon.h"
-#include "bl808_ef_ctrl.h"
 #include "bl808_pds.h"
 #include "bl808_common.h"
 

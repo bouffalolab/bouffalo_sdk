@@ -35,10 +35,8 @@
   */
 
 #include "string.h"
-#include "bl808_ef_ctrl.h"
+#include "bflb_ef_ctrl.h"
 #include "bl808_ef_cfg.h"
-#include "ef_data_0_reg.h"
-#include "ef_data_1_reg.h"
 
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
@@ -51,8 +49,91 @@
 /** @defgroup  SEC_EF_CTRL_Private_Macros
  *  @{
  */
-#define EF_CTRL_LOAD_BEFORE_READ_R0 EF_Ctrl_Load_Efuse_R0()
-#define EF_CTRL_LOAD_BEFORE_READ_R1 EF_Ctrl_Load_Efuse_R1()
+
+static const bflb_ef_ctrl_com_trim_cfg trim_list[] = {
+    {
+        .name = "rc32m",
+        .en_addr = 0x78 * 8 + 1,
+        .parity_addr = 0x78 * 8 + 0,
+        .value_addr = 0x7C * 8 + 4,
+        .value_len = 8,
+    },
+    {
+        .name = "rc32k",
+        .en_addr = 0xEC * 8 + 19,
+        .parity_addr = 0xEC * 8 + 18,
+        .value_addr = 0xEC * 8 + 8,
+        .value_len = 10,
+    },
+    {
+        .name = "gpadc_gain",
+        .en_addr = 0xF0 * 8 + 27,
+        .parity_addr = 0xF0 * 8 + 26,
+        .value_addr = 0xF0 * 8 + 14,
+        .value_len = 12,
+    },
+    {
+        .name = "tsen",
+        .en_addr = 0xF0 * 8 + 13,
+        .parity_addr = 0xF0 * 8 + 12,
+        .value_addr = 0xF0 * 8 + 0,
+        .value_len = 12,
+    }
+};
+
+#define EF_DATA_EF_CFG_0_OFFSET (0x0)
+/* 0x14 : ef_wifi_mac_low */
+#define EF_DATA_EF_WIFI_MAC_LOW_OFFSET (0x14)
+/* 0x18 : ef_wifi_mac_high */
+#define EF_DATA_EF_WIFI_MAC_HIGH_OFFSET (0x18)
+/* 0x1C : ef_key_slot_0_w0 */
+#define EF_DATA_EF_KEY_SLOT_0_W0_OFFSET (0x1C)
+/* 0x20 : ef_key_slot_0_w1 */
+#define EF_DATA_EF_KEY_SLOT_0_W1_OFFSET (0x20)
+/* 0x24 : ef_key_slot_0_w2 */
+#define EF_DATA_EF_KEY_SLOT_0_W2_OFFSET (0x24)
+/* 0x28 : ef_key_slot_0_w3 */
+#define EF_DATA_EF_KEY_SLOT_0_W3_OFFSET (0x28)
+/* 0x2C : ef_key_slot_1_w0 */
+#define EF_DATA_EF_KEY_SLOT_1_W0_OFFSET (0x2C)
+/* 0x30 : ef_key_slot_1_w1 */
+#define EF_DATA_EF_KEY_SLOT_1_W1_OFFSET (0x30)
+/* 0x34 : ef_key_slot_1_w2 */
+#define EF_DATA_EF_KEY_SLOT_1_W2_OFFSET (0x34)
+/* 0x38 : ef_key_slot_1_w3 */
+#define EF_DATA_EF_KEY_SLOT_1_W3_OFFSET (0x38)
+/* 0x3C : ef_key_slot_2_w0 */
+#define EF_DATA_EF_KEY_SLOT_2_W0_OFFSET (0x3C)
+/* 0x40 : ef_key_slot_2_w1 */
+#define EF_DATA_EF_KEY_SLOT_2_W1_OFFSET (0x40)
+/* 0x44 : ef_key_slot_2_w2 */
+#define EF_DATA_EF_KEY_SLOT_2_W2_OFFSET (0x44)
+/* 0x48 : ef_key_slot_2_w3 */
+#define EF_DATA_EF_KEY_SLOT_2_W3_OFFSET (0x48)
+/* 0x4C : ef_key_slot_3_w0 */
+#define EF_DATA_EF_KEY_SLOT_3_W0_OFFSET (0x4C)
+/* 0x50 : ef_key_slot_3_w1 */
+#define EF_DATA_EF_KEY_SLOT_3_W1_OFFSET (0x50)
+/* 0x54 : ef_key_slot_3_w2 */
+#define EF_DATA_EF_KEY_SLOT_3_W2_OFFSET (0x54)
+/* 0x58 : ef_key_slot_3_w3 */
+#define EF_DATA_EF_KEY_SLOT_3_W3_OFFSET (0x58)
+/* 0x5C : ef_sw_usage_0 */
+#define EF_DATA_EF_SW_USAGE_0_OFFSET (0x5C)
+/* 0x60 : ef_sw_usage_1 */
+#define EF_DATA_EF_SW_USAGE_1_OFFSET (0x60)
+/* 0x64 : ef_sw_usage_2 */
+#define EF_DATA_EF_SW_USAGE_2_OFFSET (0x64)
+/* 0x68 : ef_sw_usage_3 */
+#define EF_DATA_EF_SW_USAGE_3_OFFSET (0x68)
+/* 0x6C : ef_key_slot_11_w0 */
+#define EF_DATA_EF_KEY_SLOT_11_W0_OFFSET (0x6C)
+/* 0x70 : ef_key_slot_11_w1 */
+#define EF_DATA_EF_KEY_SLOT_11_W1_OFFSET (0x70)
+/* 0x74 : ef_key_slot_11_w2 */
+#define EF_DATA_EF_KEY_SLOT_11_W2_OFFSET (0x74)
+/* 0x78 : ef_key_slot_11_w3 */
+#define EF_DATA_EF_KEY_SLOT_11_W3_OFFSET (0x78)
 
 /*@} end of group SEC_EF_CTRL_Private_Macros */
 
@@ -85,338 +166,42 @@
  */
 
 /****************************************************************************/ /**
- * @brief  Efuse get zero bit count
+ * @brief  Efuse read device info
  *
- * @param  val: Value to count
- *
- * @return Zero bit count
- *
-*******************************************************************************/
-static uint32_t EF_Cfg_Get_Byte_Zero_Cnt(uint8_t val)
-{
-    uint32_t cnt = 0;
-    uint32_t i = 0;
-
-    for (i = 0; i < 8; i++) {
-        if ((val & (1 << i)) == 0) {
-            cnt += 1;
-        }
-    }
-
-    return cnt;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse get chip info
- *
- * @param  chipInfo: info pointer
+ * @param  deviceInfo: info pointer
  *
  * @return None
  *
 *******************************************************************************/
-void EF_Ctrl_Get_Chip_Info(Efuse_Chip_Info_Type *chipInfo)
+void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *chipInfo)
 {
-    uint32_t tmpVal;
+    uint32_t tmpval;
 
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R0;
+    //tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_HIGH);
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, &tmpval, 1, 1);
 
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_HIGH);
-    chipInfo->chipInfo = (tmpVal>>29)&0x7;
-    chipInfo->memoryInfo = (tmpVal>>27)&0x3;
-    chipInfo->psramInfo = (tmpVal>>25)&0x3;
-    chipInfo->deviceInfo = (tmpVal>>22)&0x7;
+    chipInfo->chipInfo = (tmpval >> 29) & 0x7;
+    chipInfo->memoryInfo = (tmpval >> 27) & 0x3;
+    chipInfo->psramInfo = (tmpval >> 25) & 0x3;
+    chipInfo->deviceInfo = (tmpval >> 22) & 0x7;
 
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_CFG_0);
-    chipInfo->psramInfo |= ((tmpVal>>20)&0x1) << 2;
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_CFG_0_OFFSET, &tmpval, 1, 1);
+
+    chipInfo->psramInfo |= ((tmpval >> 20) & 0x1) << 2;
 }
 
 /****************************************************************************/ /**
- * @brief  Efuse read xtal trim rc32m configuration
+ * @brief  Efuse get trim list
  *
- * @param  trim: Trim data pointer
+ * @param  trim_list: Trim list pointer
  *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_LDO15RF_Vout_Sel(Efuse_Ana_LDO15RF_Vout_Sel_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R0;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_SW_USAGE_3);
-    trim->trimLDO15RFVoutAon = (tmpVal >> 27) & 0x07;
-    trim->trimLDO15RFVoutAonParity = (tmpVal >> 30) & 0x01;
-    trim->trimLDO15RFVoutAonEn = (tmpVal >> 31) & 0x01;
-}
-
-
-/****************************************************************************/ /**
- * @brief  Efuse read rcal iptat code configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
+ * @return Trim list count
  *
 *******************************************************************************/
-void EF_Ctrl_Read_Rcal_Iptat_Code(Efuse_Ana_Rcal_Iptat_Code_Type *trim)
+uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg **ptrim_list)
 {
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R0;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_SW_USAGE_3);
-    trim->trimRcalIptatCode = (tmpVal >> 22) & 0x1f;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W2);
-    trim->trimRcalIptatCodeParity = (tmpVal >> 30) & 0x01;
-    trim->trimRcalIptatCodeEn = (tmpVal >> 31) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read rcal icx code configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_Rcal_Icx_Code(Efuse_Ana_Rcal_Icx_Code_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R0;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W2);
-    trim->trimRcalIcxCode = (tmpVal >> 22) & 0x3f;
-    trim->trimRcalIcxCodeParity = (tmpVal >> 28) & 0x01;
-    trim->trimRcalIcxCodeEn = (tmpVal >> 29) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read LDO28CIS vout trim configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_LDO28CIS_Vout_Trim(Efuse_Ana_LDO28CIS_Vout_Trim_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R0;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W3);
-    trim->trimLDO28CISVout = (tmpVal >> 8) & 0xf;
-    trim->trimLDO28CISVoutParity = (tmpVal >> 12) & 0x01;
-    trim->trimLDO28CISVoutEn = (tmpVal >> 13) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read LDO15CIS vout trim configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_LDO15CIS_Vout_Trim(Efuse_Ana_LDO15CIS_Vout_Trim_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R0;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W3);
-    trim->trimLDO15CISVout = (tmpVal >> 8) & 0xf;
-    trim->trimLDO15CISVoutParity = (tmpVal >> 12) & 0x01;
-    trim->trimLDO15CISVoutEn = (tmpVal >> 13) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read LDO12UHS vout trim configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_LDO12UHS_Vout_Trim(Efuse_Ana_LDO12UHS_Vout_Trim_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R1;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_KEY_SLOT_10_W3);
-    trim->trimLDO12UHSVout = (tmpVal >> 20) & 0xf;
-    trim->trimLDO12UHSVoutParity = (tmpVal >> 24) & 0x01;
-    trim->trimLDO12UHSVoutEn = (tmpVal >> 25) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read xtal capcode 1 inout configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_Xtal_Capcode1_Inout(Efuse_Ana_Xtal_Capcode_1_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R1;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_KEY_SLOT_10_W3);
-    trim->trimXtalCapcode1 = (tmpVal >> 0) & 0x3f;
-    trim->trimXtalCapcode1Parity = (tmpVal >> 6) & 0x01;
-    trim->trimXtalCapcode1En = (tmpVal >> 7) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read xtal capcode 2 inout configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_Xtal_Capcode2_Inout(Efuse_Ana_Xtal_Capcode_2_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R1;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_DAT_1_RSVD_1);
-    trim->trimXtalCapcode2 = (tmpVal >> 26) & 0x3f;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_DAT_1_RSVD_0);
-    trim->trimXtalCapcode2Parity = (tmpVal >> 30) & 0x01;
-    trim->trimXtalCapcode2En = (tmpVal >> 31) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read xtal capcode 3 inout configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_Xtal_Capcode3_Inout(Efuse_Ana_Xtal_Capcode_3_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R1;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_DAT_1_RSVD_1);
-    trim->trimXtalCapcode3 = (tmpVal >> 20) & 0x3f;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_DAT_1_RSVD_0);
-    trim->trimXtalCapcode3Parity = (tmpVal >> 28) & 0x01;
-    trim->trimXtalCapcode3En = (tmpVal >> 29) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read gauge vpack offset configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_Gauge_Vpack_Offset(Efuse_Ana_Gauge_Vpack_Offset_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R1;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_DAT_1_RSVD_1);
-    trim->trimGaugeVpackOffset = (tmpVal >> 2) & 0xffff;
-    trim->trimGaugeVpackOffsetParity = (tmpVal >> 18) & 0x01;
-    trim->trimGaugeVpackOffsetEn = (tmpVal >> 19) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read gauge vtemp offset configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_Gauge_Vtemp_Offset(Efuse_Ana_Gauge_Vtemp_Offset_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R1;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_DAT_1_RSVD_2);
-    trim->trimGaugeVtempOffset = (tmpVal >> 16) & 0xffff;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_DAT_1_RSVD_1);
-    trim->trimGaugeVtempOffsetParity = (tmpVal >> 0) & 0x01;
-    trim->trimGaugeVtempOffsetEn = (tmpVal >> 1) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse read psram trim configuration
- *
- * @param  trim: Trim data pointer
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Read_Psram_Trim(Efuse_Psram_Trim_Type *trim)
-{
-    uint32_t tmpVal;
-
-    /* Trigger read data from efuse */
-    EF_CTRL_LOAD_BEFORE_READ_R1;
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_KEY_SLOT_10_W2);
-    trim->psramTrim = (tmpVal >> 0) & 0x7ff;
-    trim->psramTrimParity = (tmpVal >> 11) & 0x01;
-    trim->psramTrimEn = (tmpVal >> 12) & 0x01;
-}
-
-/****************************************************************************/ /**
- * @brief  Efuse write psram trim configuration
- *
- * @param  trim: Trim data pointer
- * @param  program: program to efuse entity or not
- *
- * @return None
- *
-*******************************************************************************/
-void EF_Ctrl_Write_Psram_Trim(Efuse_Psram_Trim_Type *trim, uint8_t program)
-{
-    uint32_t tmpVal;
-
-    /* Switch to AHB clock */
-    EF_Ctrl_Sw_AHB_Clk_1();
-
-    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_1_EF_KEY_SLOT_10_W2);
-    tmpVal |= (trim->psramTrim<<0);
-    tmpVal |= (trim->psramTrimParity<<11);
-    tmpVal |= (trim->psramTrimEn<<12);
-    BL_WR_REG(EF_DATA_BASE, EF_DATA_1_EF_KEY_SLOT_10_W2, tmpVal);
-
-    if (program) {
-        EF_Ctrl_Program_Efuse_1();
-    }
+    *ptrim_list = &trim_list[0];
+    return sizeof(trim_list) / sizeof(trim_list[0]);
 }
 
 /****************************************************************************/ /**
@@ -430,44 +215,24 @@ void EF_Ctrl_Write_Psram_Trim(Efuse_Psram_Trim_Type *trim, uint8_t program)
 *******************************************************************************/
 uint8_t EF_Ctrl_Is_MAC_Address_Slot_Empty(uint8_t slot, uint8_t reload)
 {
-    uint32_t tmp1 = 0xffffffff, tmp2 = 0xffffffff;
     uint32_t part1Empty = 0, part2Empty = 0;
+#if 0
+    uint32_t tmp1 = 0xffffffff, tmp2 = 0xffffffff;
 
     if (slot == 0) {
-        /* Switch to AHB clock */
-        EF_Ctrl_Sw_AHB_Clk_0();
-
-        if (reload) {
-            EF_CTRL_LOAD_BEFORE_READ_R0;
-        }
-
-        tmp1 = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_LOW);
-        tmp2 = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_HIGH);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_WIFI_MAC_LOW_OFFSET,&tmp1,1,reload);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_WIFI_MAC_HIGH_OFFSET,&tmp2,1,reload);
     } else if (slot == 1) {
-        /* Switch to AHB clock */
-        EF_Ctrl_Sw_AHB_Clk_0();
-
-        if (reload) {
-            EF_CTRL_LOAD_BEFORE_READ_R0;
-        }
-
-        tmp1 = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_SW_USAGE_2);
-        tmp2 = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_SW_USAGE_3);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_SW_USAGE_2_OFFSET,&tmp1,1,reload);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_SW_USAGE_3_OFFSET,&tmp2,1,reload);
     } else if (slot == 2) {
-        /* Switch to AHB clock */
-        EF_Ctrl_Sw_AHB_Clk_0();
-
-        if (reload) {
-            EF_CTRL_LOAD_BEFORE_READ_R0;
-        }
-
-        tmp1 = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W1);
-        tmp2 = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W2);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_KEY_SLOT_11_W1_OFFSET,&tmp1,1,reload);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_KEY_SLOT_11_W2_OFFSET,&tmp2,1,reload);
     }
 
-    part1Empty = (EF_Ctrl_Is_All_Bits_Zero(tmp1, 0, 32));
-    part2Empty = (EF_Ctrl_Is_All_Bits_Zero(tmp2, 0, 22));
-
+    part1Empty = (bflb_ef_ctrl_is_all_bits_zero(tmp1, 0, 32));
+    part2Empty = (bflb_ef_ctrl_is_all_bits_zero(tmp2, 0, 22));
+#endif
     return (part1Empty && part2Empty);
 }
 
@@ -483,9 +248,10 @@ uint8_t EF_Ctrl_Is_MAC_Address_Slot_Empty(uint8_t slot, uint8_t reload)
 *******************************************************************************/
 BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t program)
 {
+#if 0
     uint8_t *maclow = (uint8_t *)mac;
     uint8_t *machigh = (uint8_t *)(mac + 4);
-    uint32_t tmpVal;
+    uint32_t tmpval;
     uint32_t i = 0, cnt;
 
     if (slot >= 3) {
@@ -494,45 +260,40 @@ BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t 
 
     /* Change to local order */
     for (i = 0; i < 3; i++) {
-        tmpVal = mac[i];
+        tmpval = mac[i];
         mac[i] = mac[5 - i];
-        mac[5 - i] = tmpVal;
+        mac[5 - i] = tmpval;
     }
 
-    /* Switch to AHB clock */
-    EF_Ctrl_Sw_AHB_Clk_0();
-
     /* The low 32 bits */
+    tmpval=BL_RDWD_FRM_BYTEP(maclow);
+
     if (slot == 0) {
-        BL_WR_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_LOW, BL_RDWD_FRM_BYTEP(maclow));
+        bflb_ef_ctrl_write_direct(NULL,EF_DATA_EF_WIFI_MAC_LOW_OFFSET,&tmpval,1,program);
     } else if (slot == 1) {
-        BL_WR_REG(EF_DATA_BASE, EF_DATA_0_EF_SW_USAGE_2, BL_RDWD_FRM_BYTEP(maclow));
+        bflb_ef_ctrl_write_direct(NULL,EF_DATA_EF_SW_USAGE_2_OFFSET,&tmpval,1,program);
     } else if (slot == 2) {
-        BL_WR_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W1, BL_RDWD_FRM_BYTEP(maclow));
+        bflb_ef_ctrl_write_direct(NULL,EF_DATA_EF_KEY_SLOT_11_W1_OFFSET,&tmpval,1,program);
     }
 
     /* The high 16 bits */
-    tmpVal = machigh[0] + (machigh[1] << 8);
+    tmpval = machigh[0] + (machigh[1] << 8);
     cnt = 0;
 
     for (i = 0; i < 6; i++) {
-        cnt += EF_Cfg_Get_Byte_Zero_Cnt(mac[i]);
+        cnt += bflb_ef_ctrl_get_byte_zero_cnt(mac[i]);
     }
 
-    tmpVal |= ((cnt & 0x3f) << 16);
+    tmpval |= ((cnt & 0x3f) << 16);
 
     if (slot == 0) {
-        BL_WR_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_HIGH, tmpVal);
+        bflb_ef_ctrl_write_direct(NULL,EF_DATA_EF_WIFI_MAC_HIGH_OFFSET,&tmpval,1,program);
     } else if (slot == 1) {
-        BL_WR_REG(EF_DATA_BASE, EF_DATA_0_EF_SW_USAGE_3, tmpVal);
+        bflb_ef_ctrl_write_direct(NULL,EF_DATA_EF_SW_USAGE_3_OFFSET,&tmpval,1,program);
     } else if (slot == 2) {
-        BL_WR_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W2, tmpVal);
+        bflb_ef_ctrl_write_direct(NULL,EF_DATA_EF_KEY_SLOT_11_W2_OFFSET,&tmpval,1,program);
     }
-
-    if (program) {
-        EF_Ctrl_Program_Efuse_0();
-    }
-
+#endif
     return SUCCESS;
 }
 
@@ -548,9 +309,10 @@ BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t 
 *******************************************************************************/
 BL_Err_Type EF_Ctrl_Read_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t reload)
 {
+#if 0
     uint8_t *maclow = (uint8_t *)mac;
     uint8_t *machigh = (uint8_t *)(mac + 4);
-    uint32_t tmpVal = 0;
+    uint32_t tmpval = 0;
     uint32_t i = 0;
     uint32_t cnt = 0;
 
@@ -558,49 +320,45 @@ BL_Err_Type EF_Ctrl_Read_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t r
         return ERROR;
     }
 
-    /* Trigger read data from efuse */
-    if (reload) {
-        EF_CTRL_LOAD_BEFORE_READ_R0;
+    if (slot == 0) {
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_WIFI_MAC_LOW_OFFSET,&tmpval,1,reload);
+    } else if (slot == 1) {
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_SW_USAGE_2_OFFSET,&tmpval,1,reload);
+    } else if (slot == 2) {
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_KEY_SLOT_11_W1_OFFSET,&tmpval,1,reload);
     }
+
+    BL_WRWD_TO_BYTEP(maclow, tmpval);
 
     if (slot == 0) {
-        tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_LOW);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_WIFI_MAC_HIGH_OFFSET,&tmpval,1,reload);
     } else if (slot == 1) {
-        tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_SW_USAGE_2);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_SW_USAGE_3_OFFSET,&tmpval,1,reload);
     } else if (slot == 2) {
-        tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W1);
+        bflb_ef_ctrl_read_direct(NULL,EF_DATA_EF_KEY_SLOT_11_W2_OFFSET,&tmpval,1,reload);
     }
 
-    BL_WRWD_TO_BYTEP(maclow, tmpVal);
-
-    if (slot == 0) {
-        tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_HIGH);
-    } else if (slot == 1) {
-        tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_SW_USAGE_3);
-    } else if (slot == 2) {
-        tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_KEY_SLOT_11_W2);
-    }
-
-    machigh[0] = tmpVal & 0xff;
-    machigh[1] = (tmpVal >> 8) & 0xff;
+    machigh[0] = tmpval & 0xff;
+    machigh[1] = (tmpval >> 8) & 0xff;
 
     /* Check parity */
     for (i = 0; i < 6; i++) {
-        cnt += EF_Cfg_Get_Byte_Zero_Cnt(mac[i]);
+        cnt += bflb_ef_ctrl_get_byte_zero_cnt(mac[i]);
     }
 
-    if ((cnt & 0x3f) == ((tmpVal >> 16) & 0x3f)) {
+    if ((cnt & 0x3f) == ((tmpval >> 16) & 0x3f)) {
         /* Change to network order */
         for (i = 0; i < 3; i++) {
-            tmpVal = mac[i];
+            tmpval = mac[i];
             mac[i] = mac[5 - i];
-            mac[5 - i] = tmpVal;
+            mac[5 - i] = tmpval;
         }
-
         return SUCCESS;
     } else {
         return ERROR;
     }
+#endif
+    return SUCCESS;
 }
 
 /*@} end of group SEC_EF_CTRL_Public_Functions */

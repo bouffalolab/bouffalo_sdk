@@ -38,7 +38,6 @@
 
 #include "pds_reg.h"
 #include "glb_reg.h"
-#include "bl616_ef_ctrl.h"
 #include "bl616_clock.h"
 #include "bl616_aon.h"
 #include "bl616_hbn.h"

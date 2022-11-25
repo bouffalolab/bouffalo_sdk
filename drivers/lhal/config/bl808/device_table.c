@@ -23,6 +23,13 @@ struct bflb_device_s bl808_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_DAC,
       .user_data = NULL },
+    { .name = "ef_ctrl",
+      .reg_base = EF_CTRL_BASE,
+      .irq_num = 0xff,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_EF_CTRL,
+      .user_data = NULL },
     { .name = "gpio",
       .reg_base = GLB_BASE,
 #if defined(CPU_M0)
