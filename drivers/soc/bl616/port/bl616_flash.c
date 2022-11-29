@@ -11,6 +11,8 @@ static uint32_t g_jedec_id2 = 0;
 static SPI_Flash_Cfg_Type g_flash_cfg;
 static SPI_Flash_Cfg_Type g_flash2_cfg;
 
+static bflb_efuse_device_info_type deviceInfo;
+
 uint32_t bflb_flash2_get_jedec_id(void)
 {
     uint32_t jid = 0;
@@ -112,7 +114,7 @@ static int ATTR_TCM_SECTION flash2_init(void)
     int stat = -1;
     uint32_t ret = 0;
     uint32_t jid = 0;
-    bflb_efuse_device_info_type deviceInfo;
+
     SF_Ctrl_Bank2_Cfg sfBank2Cfg = {
         .sbus2Select = ENABLE,
         .bank2RxClkInvertSrc = DISABLE,
@@ -133,7 +135,6 @@ static int ATTR_TCM_SECTION flash2_init(void)
         .cmdsWrapLen = SF_CTRL_WRAP_LEN_4096,
     };
 
-    bflb_ef_ctrl_get_device_info(&deviceInfo);
     if (deviceInfo.memoryInfo == 0) {
         /* memoryInfo==0, external flash */
         flash1_size = 64 * 1024 * 1024;
@@ -188,6 +189,8 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     int ret = -1;
     uint32_t jedec_id = 0;
     uintptr_t flag;
+
+    bflb_ef_ctrl_get_device_info(&deviceInfo);
 
     jedec_id = GLB_Get_Flash_Id_Value();
     if (jedec_id != 0) {

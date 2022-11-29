@@ -9,6 +9,8 @@
 static uint32_t g_jedec_id = 0;
 static SPI_Flash_Cfg_Type g_flash_cfg;
 
+static bflb_efuse_device_info_type devInfo;
+
 static void ATTR_TCM_SECTION flash_set_qspi_enable(SPI_Flash_Cfg_Type *p_flash_cfg)
 {
     if ((p_flash_cfg->ioMode & 0x0f) == SF_CTRL_QO_MODE || (p_flash_cfg->ioMode & 0x0f) == SF_CTRL_QIO_MODE) {
@@ -31,9 +33,6 @@ static void ATTR_TCM_SECTION flash_set_l1c_wrap(SPI_Flash_Cfg_Type *p_flash_cfg)
 static void ATTR_TCM_SECTION flash_sf2_gpio_init(void)
 {
     uint32_t tmpVal;
-    bflb_efuse_device_info_type devInfo;
-
-    bflb_ef_ctrl_get_device_info(&devInfo);
 
     /* flash_cfg != BFLB_FLASH_CFG_SF1_EXT_17_22, flash pad use SF2 */
     if (devInfo.flash_cfg != BFLB_FLASH_CFG_SF1_EXT_17_22) {
@@ -92,6 +91,8 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     uint8_t clkInvert = 1;
     uint32_t jedec_id = 0;
     uintptr_t flag;
+
+    bflb_ef_ctrl_get_device_info(&devInfo);
 
     flag = bflb_irq_save();
     L1C_Cache_Flush();
