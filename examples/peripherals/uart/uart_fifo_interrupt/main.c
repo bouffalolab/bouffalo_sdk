@@ -11,24 +11,25 @@ void uart_isr(int irq, void *arg)
     uint32_t intstatus = bflb_uart_get_intstatus(uartx);
 
     if (intstatus & UART_INTSTS_RX_FIFO) {
+        printf("rx fifo\r\n");
         while (bflb_uart_rxavailable(uartx)) {
-            printf("enter rx fifo interrupt");
             printf("0x%02x\r\n", bflb_uart_getchar(uartx));
         }
+        bflb_uart_feature_control(uartx, UART_CMD_SET_RTS_VALUE, 1);
     }
     if (intstatus & UART_INTSTS_RTO) {
-        bflb_uart_int_clear(uartx, UART_INTCLR_RTO);
+        printf("rto\r\n");
         while (bflb_uart_rxavailable(uartx)) {
-            printf("enter rto interrupt");
             printf("0x%02x\r\n", bflb_uart_getchar(uartx));
         }
+        bflb_uart_int_clear(uartx, UART_INTCLR_RTO);
     }
     if (intstatus & UART_INTSTS_TX_FIFO) {
+        printf("tx fifo\r\n");
         for (uint8_t i = 0; i < 27; i++) {
             bflb_uart_putchar(uartx, uart_txbuf[i]);
         }
         bflb_uart_txint_mask(uartx, true);
-        printf("tx interrupt end");
     }
 }
 
