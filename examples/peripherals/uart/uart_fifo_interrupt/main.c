@@ -4,7 +4,7 @@
 
 struct bflb_device_s *uartx;
 
-static uint8_t uart_txbuf[128] = {0};
+static uint8_t uart_txbuf[128] = { 0 };
 
 void uart_isr(int irq, void *arg)
 {
@@ -24,9 +24,8 @@ void uart_isr(int irq, void *arg)
         }
     }
     if (intstatus & UART_INTSTS_TX_FIFO) {
-        for (uint8_t i = 0; i < 27; i++)
-        {
-            bflb_uart_putchar(uartx,uart_txbuf[i]);
+        for (uint8_t i = 0; i < 27; i++) {
+            bflb_uart_putchar(uartx, uart_txbuf[i]);
         }
         bflb_uart_txint_mask(uartx, true);
         printf("tx interrupt end");
@@ -38,10 +37,9 @@ int main(void)
     board_init();
     board_uartx_gpio_init();
 
-    uartx = bflb_device_get_by_name("uart3");
+    uartx = bflb_device_get_by_name(DEFAULT_TEST_UART);
 
-    for(uint8_t i=0; i < 128; i++)
-    {
+    for (uint8_t i = 0; i < 128; i++) {
         uart_txbuf[i] = i;
     }
 
@@ -54,7 +52,7 @@ int main(void)
     cfg.flow_ctrl = 0;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
-    //bflb_uart_init(uartx, &cfg);
+    bflb_uart_init(uartx, &cfg);
 
     bflb_uart_txint_mask(uartx, false);
     bflb_uart_rxint_mask(uartx, false);
