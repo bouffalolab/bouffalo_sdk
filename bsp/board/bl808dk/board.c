@@ -83,7 +83,7 @@ static void peripheral_clock_init(void)
     BL_WR_REG(PDS_BASE, PDS_CTL5, tmp_val);
 
     GLB_Set_SDH_CLK(ENABLE, GLB_SDH_CLK_WIFIPLL_96M, 0);
-    GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_EXT_SDH);
+    GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_SDH);
 #endif
     GLB_Set_USB_CLK_From_WIFIPLL(1);
 }
