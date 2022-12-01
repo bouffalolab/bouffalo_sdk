@@ -11,7 +11,6 @@ CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
 endif
 
 # The command to remove a file.
-
 RM = $(CMAKE) -E remove_directory
 
 CPU_ID ?=
@@ -33,11 +32,15 @@ build:Makefile
 	$(CMAKE) -S . -B build -G "Unix Makefiles" $(cmake_definition)
 	cd build && make -j4
 
+ninja:Makefile
+	$(CMAKE) -S . -B build -G Ninja $(cmake_definition)
+	cd build && ninja
+
 clean:
 	$(RM) build
 
 menuconfig:
 	python ../../tools/kconfig/menuconfig.py
 
-.PHONY:build clean menuconfig
+.PHONY:build clean menuconfig ninja
 
