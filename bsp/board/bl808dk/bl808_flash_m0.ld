@@ -39,6 +39,7 @@ SECTIONS
         __text_code_start__ = .;
 
         KEEP (*(SORT_NONE(.init)))
+        KEEP (*(SORT_NONE(.vector)))
 
         *(.text)
         *(.text.*)

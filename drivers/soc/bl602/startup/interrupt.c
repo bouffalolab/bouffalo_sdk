@@ -29,7 +29,7 @@ struct bflb_irq_info_s g_irqvector[CONFIG_IRQ_NUM];
 extern void default_trap_handler(void);
 extern void default_interrupt_handler(void);
 
-const pFunc __Vectors[] __attribute__((section(".init"), aligned(64))) = {
+const pFunc __Vectors[] __attribute__((section(".vector"), aligned(64))) = {
     default_interrupt_handler, /*         */
     default_interrupt_handler, /*         */
     default_interrupt_handler, /*         */
