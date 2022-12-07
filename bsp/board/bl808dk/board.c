@@ -103,8 +103,8 @@ int uhs_psram_init(void)
         PSRAM_UHS_NORMAL_TEMP,
     };
 
-    Efuse_Chip_Info_Type chip_info;
-    EF_Ctrl_Get_Chip_Info(&chip_info);
+    bflb_efuse_device_info_type chip_info;
+    bflb_ef_ctrl_get_device_info(&chip_info);
     if (chip_info.psramInfo == UHS_32MB_PSRAM) {
         psramDefaultCfg.psramMemSize = PSRAM_MEM_SIZE_32MB;
     } else if (chip_info.psramInfo == UHS_64MB_PSRAM) {
@@ -112,9 +112,6 @@ int uhs_psram_init(void)
     } else {
         return -1;
     }
-
-    Efuse_Psram_Trim_Type uhs_psram_trim;
-    EF_Ctrl_Read_Psram_Trim(&uhs_psram_trim);
 
     //init uhs PLL; Must open uhs pll first, and then initialize uhs psram
     GLB_Config_UHS_PLL(GLB_XTAL_40M, uhsPllCfg_2000M);
