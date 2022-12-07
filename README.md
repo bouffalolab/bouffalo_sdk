@@ -9,9 +9,9 @@
 
 # SDK Versions & Chip Support
 
-Note1：**drivers before v1.4.5 use v1.0（hal + std）, the later version will use v2.0 (lhal + soc)**。If you want to use **v1.4.5**, please checkout your branch to [release-v1.4.5](https://github.com/bouffalolab/bl_mcu_sdk/tree/release_v1.4.5).
+Note1: **drivers before v1.4.5 use v1.0（hal + std）, the later version will use v2.0 (lhal + soc)**。If you want to use **v1.4.5**, please checkout your branch to [release-v1.4.5](https://github.com/bouffalolab/bl_mcu_sdk/tree/release_v1.4.5).
 
-Note2：due to the non-generic peripherals, the code style and interface name in **soc** are still the previous version, but will be subsequently updated to the new code style。
+Note2: due to the non-generic peripherals, the code style and interface name in **soc** are still the previous version, but will be subsequently updated to the new code style.
 
 |   CHIP        |  v1.4.5  |  latest |
 |:-------------:|:--------:|:-------:|
@@ -24,7 +24,7 @@ Note2：due to the non-generic peripherals, the code style and interface name in
 
 **LHAL** is a low level hal driver for common peripherals designed by Bouffalo Lab, in order to support all the Bouffalo chips with the same api . Also it is convenient for users to use and port to other platforms.
 
-Note：**√** means supported ；**×** means not supported；**○** means supported but not tested ；**-** means no such peripheral。
+Note：**√** means supported ; **×** means not supported; **○** means supported but not tested ; **-** means no such peripheral.
 
 |   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
 |:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
@@ -61,6 +61,7 @@ Note：**√** means supported ；**×** means not supported；**○** means sup
 bl_mcu_sdk
 ├── bsp
 │   ├── board
+│   │   └── bl602
 │   │   └── bl702
 │   │   └── bl616
 │   │   └── bl808
@@ -113,7 +114,7 @@ bl_mcu_sdk
 
 ## Command Line Development
 
-Before compiling with the command line, you need to select the corresponding toolchain according to your operating system, configure it to the system environment variables, and install the **make**, then you can do the following.
+Before compiling with the command line, you need to select the corresponding toolchain according to your operating system, configure it to the system environment variables, and install the **make** or **ninja**, then you can do the following. For the details, you can visit [bl mcu sdk Environment Setup](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/index.html).
 
 - Go to the demo directory where you want to compile and there are `main.c` and `Makefile` files in that directory
 - Just execute the following command, take **BL616** as an example
@@ -128,6 +129,15 @@ make CHIP=bl616 BOARD=bl616dk
 
 - If you use **BL808** or **BL606P**, you need to add **CPU_ID** with m0 or d0.
 
+If you want to use **ninja**, you can try:
+
+```
+cd bl_mcu_sdk
+chmod +x tools/cmake/bin/cmake
+cd examples/helloworld
+make ninja CHIP=bl616 BOARD=bl616dk
+```
+
 ```
 cd bl_mcu_sdk
 chmod +x tools/cmake/bin/cmake
@@ -141,14 +151,14 @@ TODO
 
 ## Debug
 
-Only supports debug with CKLink currently. See [bl mcu sdk debug chapter](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html).
+Only supports debug with CKLink currently. See [bl mcu sdk Debug Guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html).
 
 ## Firmware Download
 
 We recommend you to use this **BL DevCube** and download firmware with serial.
 
-- [BL DevCube Tool](https://dev.bouffalolab.com/download)
-- [BL DevCube download guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/devcube.html)
+- [Bouffalo Lab Dev Cube](https://dev.bouffalolab.com/download)
+- [Bouffalo Lab Dev Cube User Guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/devcube.html)
 
 # Resources
 
@@ -167,20 +177,13 @@ To get more bl mcu sdk documentation tutorial, like api manual or peripheral dem
 
 - [BL706 MCU Development Series Video Tutorial](https://www.bilibili.com/video/BV1xK4y1P7ur)
 
-### Flash Tool
-
-In addition to using CK-link, J-link and command line programming, it also supports graphical programming tools.
-Graphical programming tools provided by Bouffalolab:
-
-- [Bouffalo Lab Dev Cube](https://dev.bouffalolab.com/download)
-
 ## Forum
 
 Bouffalolab Developer Forum: [https://bbs.bouffalolab.com/](https://bbs.bouffalolab.com/)
 
 # License
 
-**bl mcu sdk** is completely open source and follows the Apache License 2.0 open source license agreement. It can be used in commercial products for free and does not require public private code.
+**bl mcu sdk** follows the Apache License 2.0 open source license agreement. It can be used in commercial products for free and does not require public private code.
 
 ```
 /*

@@ -1,8 +1,8 @@
-=======================
-DAC 示例
-=======================
+====
+DAC
+====
 
 .. toctree::
     :maxdepth: 1
 
-    DAC - 生成正弦波 <dac_polling>
+    DAC - poll <dac_polling>

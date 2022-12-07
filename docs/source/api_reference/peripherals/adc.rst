@@ -12,7 +12,7 @@ adc channel
 adc clock div
 ^^^^^^^^^^^^^^^^^^^^
 
-对 adc 时钟再一次进行分频。分频后的时钟必须小于 2M。
+对 adc 时钟再一次进行分频。分频后的时钟必须小于等于 500K。ADC CLK = CLK_SOURCE/CLK_DIV/adc_clk_div。
 
 .. code-block:: c
    :linenos:
@@ -480,3 +480,41 @@ bflb_adc_tsen_get_temp
       - 设备句柄
     * - return
       - 温度
+
+bflb_adc_vbat_enable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 开启 vbat 。
+
+.. code-block:: c
+   :linenos:
+
+   void bflb_adc_vbat_enable(struct bflb_device_s *dev);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - dev
+      - 设备句柄
+
+bflb_adc_vbat_disable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 关闭 vbat。
+
+.. code-block:: c
+   :linenos:
+
+   void bflb_adc_vbat_disable(struct bflb_device_s *dev);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - dev
+      - 设备句柄

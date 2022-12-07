@@ -8,5 +8,5 @@ Peripherals
     :maxdepth: 1
 
     ADC <adc/index>
-    UART <uart/index>
     DAC <dac/index>
+    UART <uart/index>

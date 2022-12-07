@@ -10,3 +10,4 @@ BL MCU SDK 提供了以下几种开发环境，包含安装、编译、烧录和
     Windows_CDK <windows_cdk>
     Windows_CMD <windows_cmd>
     Linux or WSL <linux_wsl>
+    Eclipse <eclipse>

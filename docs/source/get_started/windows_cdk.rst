@@ -1,2 +1,2 @@
-Windows CDK
-==============
+Build and Debug with CDK
+============================

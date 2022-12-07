@@ -1,9 +1,17 @@
 L1C
 =============
 
-.. note:: BL602、BL702 无 L1C 函数操作。
-
 Macros
+------------
+
+无
+
+Structs
+------------
+
+无
+
+Functions
 ------------
 
 bflb_l1c_icache_enable
@@ -108,13 +116,3 @@ bflb_l1c_dcache_clean_invalidate_range
       - 首地址（必须 32 字节对齐）
     * - len
       - 长度
-
-Structs
-------------
-
-无
-
-Functions
-------------
-
-无

@@ -228,7 +228,7 @@ bflb_uart_getchar
     * - dev
       - 设备句柄
     * - return
-      - 返回 -1 表示没有数据，返回其他表示接收字符
+      - 返回 -1 表示没有数据，返回其他表示接收的字符
 
 bflb_uart_txready
 ^^^^^^^^^^^^^^^^^^^^
@@ -488,3 +488,12 @@ bflb_uart_feature_control
    #define UART_CMD_SET_TX_RS485_POLARITY   (0x12)
    #define UART_CMD_SET_ABR_ALLOWABLE_ERROR (0x13)
    #define UART_CMD_SET_SW_RTS_CONTROL      (0x14)
+   #define UART_CMD_IR_CONFIG               (0x15)
+   #define UART_CMD_SET_TX_FREERUN          (0x16)
+   #define UART_CMD_SET_TX_END_INTERRUPT    (0x17)
+   #define UART_CMD_SET_RX_END_INTERRUPT    (0x18)
+   #define UART_CMD_SET_TX_TRANSFER_LEN     (0x19)
+   #define UART_CMD_SET_RX_TRANSFER_LEN     (0x20)
+   #define UART_CMD_SET_TX_EN               (0x21)
+   #define UART_CMD_SET_BCR_END_INTERRUPT   (0x22)
+   #define UART_CMD_GET_BCR_COUNT           (0x23)

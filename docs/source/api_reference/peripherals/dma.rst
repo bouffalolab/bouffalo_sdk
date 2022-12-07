@@ -25,8 +25,8 @@ dma 地址自增使能。
 .. code-block:: c
    :linenos:
 
-    #define DMA_ADDR_INCREMENT_DISABLE 0 /*!< Addr increment mode disable */
-    #define DMA_ADDR_INCREMENT_ENABLE  1 /*!< Addr increment mode enable  */
+    #define DMA_ADDR_INCREMENT_DISABLE 0
+    #define DMA_ADDR_INCREMENT_ENABLE  1
 
 dma data width
 ^^^^^^^^^^^^^^^^^^^^^
@@ -53,7 +53,7 @@ dma 突发传输个数，最多 16 字节突发。
     #define DMA_BURST_INCR8  2
     #define DMA_BURST_INCR16 3
 
-.. warning:: 位宽 * 突发个数 需要小于等于 16
+.. warning:: 位宽 * 突发个数 需要小于等于 16 字节
 
 dma addr
 ^^^^^^^^^^^^^^^^^^^^^
@@ -315,7 +315,31 @@ bflb_dma_channel_lli_reload
     * - count
       - 传输次数
     * - return
-      - 小于0 表示参数错误或者内存池过小
+      - 返回使用的 lli count个数，小于0表示错误
+
+bflb_dma_channel_lli_link_head
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 将 lli 最后一个链表与头部连接，表示开启循环模式。
+
+.. code-block:: c
+   :linenos:
+
+   void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
+   struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t used_lli_count);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - dev
+      - 设备句柄
+    * - lli_pool
+      - lli 内存池
+    * - used_lli_count
+      - 已经使用的 lli 个数
 
 bflb_dma_feature_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -347,3 +371,5 @@ bflb_dma_feature_control
 
     #define DMA_CMD_SET_SRCADDR_INCREMENT (0x01)
     #define DMA_CMD_SET_DSTADDR_INCREMENT (0x02)
+    #define DMA_CMD_SET_ADD_MODE          (0x03)
+    #define DMA_CMD_SET_REDUCE_MODE       (0x04)

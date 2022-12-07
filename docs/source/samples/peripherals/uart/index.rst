@@ -1,8 +1,9 @@
-=======================
-UART 轮询收发数据
-=======================
+======
+UART
+======
 
 .. toctree::
     :maxdepth: 1
 
     UART - poll <uart_poll>
+    UART - dma <uart_dma>

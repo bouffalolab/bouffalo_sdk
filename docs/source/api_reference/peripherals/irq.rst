@@ -32,7 +32,7 @@ bflb_irq_save
 .. code-block:: c
    :linenos:
 
-    uint32_t bflb_irq_save(void);
+   uintptr_t bflb_irq_save(void);
 
 .. list-table::
     :widths: 10 10
@@ -51,7 +51,7 @@ bflb_irq_restore
 .. code-block:: c
    :linenos:
 
-    void bflb_irq_restore(uint32_t flags);
+   void bflb_irq_restore(uintptr_t flags);
 
 .. list-table::
     :widths: 10 10
@@ -100,29 +100,6 @@ bflb_irq_detach
     * - flags
       - 关闭之前的状态
 
-bflb_irq_set_priority
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-说明: 设置中断优先级。
-
-.. code-block:: c
-   :linenos:
-
-    void bflb_irq_set_priority(int irq, uint8_t preemptprio, uint8_t subprio);
-
-.. list-table::
-    :widths: 10 10
-    :header-rows: 1
-
-    * - parameter
-      - description
-    * - irq
-      - 中断号
-    * - preemptprio
-      - 抢占优先级
-    * - subprio
-      - 子优先级
-
 bflb_irq_enable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -160,3 +137,83 @@ bflb_irq_disable
       - description
     * - irq
       - 中断号
+
+bflb_irq_set_pending
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 设置中断 pending 位。
+
+.. code-block:: c
+   :linenos:
+
+    void bflb_irq_set_pending(int irq);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - irq
+      - 中断号
+
+bflb_irq_clear_pending
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 清除中断 pending 位。
+
+.. code-block:: c
+   :linenos:
+
+    void bflb_irq_clear_pending(int irq);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - irq
+      - 中断号
+
+bflb_irq_set_nlbits
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 设置中断分组。
+
+.. code-block:: c
+   :linenos:
+
+    void bflb_irq_set_nlbits(uint8_t nlbits);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - irq
+      - 中断号
+
+bflb_irq_set_priority
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+说明: 设置中断优先级。
+
+.. code-block:: c
+   :linenos:
+
+    void bflb_irq_set_priority(int irq, uint8_t preemptprio, uint8_t subprio);
+
+.. list-table::
+    :widths: 10 10
+    :header-rows: 1
+
+    * - parameter
+      - description
+    * - irq
+      - 中断号
+    * - preemptprio
+      - 抢占优先级
+    * - subprio
+      - 子优先级

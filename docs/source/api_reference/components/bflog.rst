@@ -3,6 +3,7 @@ BFLOG
 
 简介
 ------------
+
 - BFLOG 是一个移植简单，功能多样的多线程日志记录库
 - 具有同步异步两种工作模式，异步模式如果缓冲区溢出会将最早的一条记录完整删除
 - 总体三部分、记录器、定向输出、格式化器
@@ -20,7 +21,8 @@ BFLOG
     log 样式
 
 配置BFLOG相关功能
-------------
+-------------------
+
 如果需要配置BFLOG的相关功能需要在对应的工程目录下 `proj.conf` 文件中添加对应的代码，举例如下：
 
 .. note:: BFLOG 默认依赖 VLIBC 需要先启用 VLIBC。
@@ -62,7 +64,7 @@ BFLOG
     set(CONFIG_BSP_SDH_SDCARD 1)
 
     # 使能 Fatfs 的 SD 卡接口
-    set(CONFIG_BSP_FATFS_SDH_SDCARD 1)
+    set(CONFIG_FATFS_SDH_SDCARD 1)
 
 此外在 `proj.conf` 配置中添加以下配置可以使用用户的 **bflog_user.h** 配置文件，配置文件模板为 **bflog_default.h**
 

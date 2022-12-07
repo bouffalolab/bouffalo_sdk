@@ -3,6 +3,7 @@ VLIBC
 
 简介
 ------------
+
 - VLIBC 是适用于MCU使用的C标准库 STDIO的重新实现，与标准的STDIO库具有相同的API以及相同的使用方法。
 - VLIBC 支持文件操作，诸如fopen、fwrite、fprintf等API，与Fatfs文件系统对接，为其他依赖标准C库文件操作的组件提供支持。
 - VLIBC 同时支持对外设进行操作，例如将UART当做文件进行处理，使用fprintf进行输出。
@@ -11,7 +12,8 @@ VLIBC
 .. note:: VLIBC 中浮点打印只能最大支持到11位小数精度
 
 配置VLIBC相关功能
-------------
+--------------------
+
 如果需要配置VLIBC的相关功能需要在对应的工程目录下 `proj.conf` 文件中添加对应的代码，举例如下：
 
 .. code-block:: cmake
@@ -21,9 +23,9 @@ VLIBC
     set(CONFIG_VSNPRINTF_FLOAT 1)
 
 格式化控制字符
-------------
+-----------------
 
-.. list-table:: 
+.. list-table::
     :header-rows: 1
 
     * - proj.conf 配置项
@@ -41,7 +43,7 @@ VLIBC
     * - CONFIG_VSNPRINTF_WRITEBACK
       - 使能格式化字符 (%n) 字符统计支持
 
-.. list-table:: 
+.. list-table::
     :header-rows: 1
 
     * - 格式化控制字符 (specifier)
@@ -75,7 +77,7 @@ VLIBC
     * - %n
       - ✔️
 
-.. list-table:: 
+.. list-table::
     :header-rows: 1
 
     * - 格式化控制变量长度字符 (length)
@@ -95,7 +97,7 @@ VLIBC
     * - z
       - ✔️
 
-.. list-table:: 
+.. list-table::
     :header-rows: 1
 
     * - 格式化控制标志字符 (flags)
@@ -112,7 +114,8 @@ VLIBC
       - ✔️
 
 格式化输出格式
-------------
+--------------------
+
 .. code-block:: c
     :linenos:
 
@@ -125,7 +128,7 @@ VLIBC
     printf("% 8x\r\n", var)
 
 IO 接口移植
-------------
+---------------
 
 .. code-block:: c
     :linenos:
@@ -187,5 +190,6 @@ IO 接口移植
 
 API参考
 ------------
+
 - API 基本与标准C库一致
 - 等待完善

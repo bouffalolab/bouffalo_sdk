@@ -1,32 +1,23 @@
-Linux or WSL
+.. _linux_cmd:
+
+Build with Linux or WSL
 ================================
 
 本节主要介绍如何在 Linux 或者 WSL 下使用 **命令行** 进行开发。Windows 下如何安装 WSL 请自行百度。
 
-安装
+环境搭建
 -----------------
 
-安装前需要下载好 git 工具。
+- 首先打开 linux 终端，并安装依赖工具
 
 .. code-block:: bash
    :linenos:
    :emphasize-lines: 1
 
    $ cd ~
-   $ sudo apt install git
+   $ sudo apt install git make ninja-build -y
 
-安装 make
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: bash
-   :linenos:
-   :emphasize-lines: 1
-
-   $ cd ~
-   $ sudo apt install make
-
-安装 RISC-V 工具链
-^^^^^^^^^^^^^^^^^^^^^^^^
+- 其次使用 git 下载 RISC-V 工具链
 
 .. code-block:: bash
    :linenos:
@@ -38,10 +29,7 @@ Linux or WSL
    $ echo "export PATH=\"$PATH:/usr/bin/toolchain_gcc_t-head_linux/bin\""  >> ~/.bashrc
    $ source ~/.bashrc
 
-安装检查
--------------
-
-完成上述两步以后，需要检查是否真的安装成功。打开 linux 终端。输入下列命令：
+- 完成上述步骤以后，需要检查是否真的安装成功，输入下列命令：
 
 .. code-block:: bash
    :linenos:
@@ -59,7 +47,6 @@ Linux or WSL
     License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
     This is free software: you are free to change and redistribute it.
     There is NO WARRANTY, to the extent permitted by law.
-
 
 .. code-block:: bash
    :linenos:
@@ -81,7 +68,7 @@ Linux or WSL
     gcc version 10.2.0 (Xuantie-900 elf newlib gcc Toolchain V2.2.5 B-20220323)
 
 
-在 linux 中，有严格的权限限制，通常一个用户对应一个权限，所以如果提示下面信息，表示需要设置 cmake 权限。
+- 在 linux 中，有严格的权限限制，通常一个用户对应一个权限，所以如果提示下面信息，表示需要设置 cmake 权限。
 
 .. figure:: img/cmake_error.png
    :align: center
@@ -91,17 +78,28 @@ Linux or WSL
 .. code-block:: bash
    :linenos:
 
+   $ cd bl_mcu_sdk
    $ sudo chmod +x tools/cmake/bin/cmake
 
 编译
 -------------
 
-进入 **examples** ,选择你想要编译的 case，且该 case 下必须有 **main.c** 文件。生成的 bin 文件会输出到 `build/build_out` 目录下。
+打开 linux 终端，进入 **examples** ，选择你想要编译的 case，且该 case 下必须有 **Makefile** 文件。使用下面命令编译，生成的 bin 文件会输出到 `build/build_out` 目录下。
+
+- 使用 make 编译
 
 .. code-block:: bash
    :linenos:
 
-    $ cd .\examples\helloworld\
+    $ cd examples/helloworld
     $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+
+- 使用 ninja 编译
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd examples/helloworld
+    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 .. note :: 如果使用 BL808 或者 BL606P，需要在上面基础上添加 CPU_ID=id ,id 可以为 m0 或者 d0

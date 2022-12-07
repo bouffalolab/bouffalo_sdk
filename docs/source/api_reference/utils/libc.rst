@@ -3,12 +3,14 @@ LIBC
 
 简介
 ------------
+
 - LIBC 中实现了一个vsnprintf，用以避开使用完整的c库，减少代码体积。
 
 .. note:: LIBC 中浮点打印只能最大支持到7位小数精度
 
 配置LIBC相关功能
-------------
+-------------------
+
 如果需要配置LIBC的相关功能需要在对应的工程目录下 `proj.conf` 文件中添加对应的代码，举例如下：
 
 .. code-block:: cmake
@@ -18,9 +20,9 @@ LIBC
     set(CONFIG_VSNPRINTF_FLOAT 1)
 
 格式化控制字符
-------------
+----------------
 
-.. list-table:: 
+.. list-table::
     :header-rows: 1
 
     * - proj.conf 配置项
@@ -34,7 +36,7 @@ LIBC
     * - CONFIG_VSNPRINTF_LONG_LONG
       - 使能格式化输出 (%lld,%lli,%llo,%llx,%llX,%llu) 长整型格式化支持
 
-.. list-table:: 
+.. list-table::
     :header-rows: 1
 
     * - 格式化控制字符 (specifier)
@@ -68,7 +70,7 @@ LIBC
     * - %n
       - ❌
 
-.. list-table:: 
+.. list-table::
     :header-rows: 1
 
     * - 格式化控制变量长度字符 (length)
@@ -88,7 +90,7 @@ LIBC
     * - z
       - ✔️
 
-.. list-table:: 
+.. list-table::
     :header-rows: 1
 
     * - 格式化控制标志字符 (flags)
@@ -105,7 +107,7 @@ LIBC
       - ✔️
 
 格式化输出格式
-------------
+----------------
 .. code-block:: c
     :linenos:
 

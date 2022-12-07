@@ -7,7 +7,7 @@ Macros
 timer clock source
 ^^^^^^^^^^^^^^^^^^^^^^
 
-定时器输入时钟源可以选择以下类型，注意： `TIMER_CLKSRC_GPIO` BL602/BL702 系列没有此功能
+定时器输入时钟源可以选择以下类型，注意： `TIMER_CLKSRC_GPIO` BL602/BL702 系列没有此功能。
 
 .. code-block:: c
    :linenos:
@@ -22,7 +22,7 @@ timer clock source
 timer counter mode
 ^^^^^^^^^^^^^^^^^^^^^^
 
-定时器计数模式分为两种: freerun(向上计数模式)、preload(重装载模式)
+定时器计数模式分为两种: freerun(向上计数模式)、preload(重装载模式)。
 
 .. code-block:: c
    :linenos:
@@ -33,7 +33,7 @@ timer counter mode
 timer compare id
 ^^^^^^^^^^^^^^^^^^^^^^
 
-定时器一共三个 compare id,用于设置不同的定时时间，当三个定时器使用
+定时器一共三个 compare id, 用于设置不同的定时时间，可以当三个定时器使用。
 
 .. code-block:: c
    :linenos:

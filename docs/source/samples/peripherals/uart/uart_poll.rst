@@ -1,12 +1,15 @@
-UART - 轮询收发数据
+UART - poll
 ====================
 
-本 demo 主要介绍 UART1 外设的轮询发送和轮询接收，实现自发自收功能。
+本 demo 主要演示 UART 轮询模式收发功能。
 
 硬件连接
 -----------------------------
 
-将 UART1 TX 和 RX 引脚分别与 USB2TTL 模块 RX 和 TX 相连。本 demo 中不同芯片 UART1 引脚对应的 GPIO 口如下表所示：
+- 芯片 UART TX 引脚连接 USB2TTL 模块 RX
+- 芯片 UART RX 引脚连接 USB2TTL 模块 TX
+
+本 demo 使用到的 gpio 如下表：
 
 .. table:: GPIO 口
     :widths: 30, 30, 40
@@ -28,26 +31,26 @@ UART - 轮询收发数据
 软件实现
 -----------------------------
 
-具体软件代码见 ``examples/peripherals/uart/uart_poll``
+具体软件代码见 **examples/peripherals/uart/uart_poll**
 
 .. code-block:: C
     :linenos:
 
     board_init();
 
-- ``board_init`` 中会开启 uart1 外设，并且初始化 uart1 的时钟
+- ``board_init`` 中会开启 UART IP 时钟，并选择 UART 时钟源和分频。
 
 .. code-block:: C
     :linenos:
 
-    board_uart1_gpio_init();
+    board_uartx_gpio_init();
 
--  配置相关引脚为 ``UART1 TX`` 、 ``UART1 RX`` 功能
+-  配置相关引脚为 ``UARTx TX`` 、 ``UARTx RX`` 功能，默认 demo 使用 UART1 外设。
 
 .. code-block:: C
     :linenos:
 
-    uart1 = bflb_device_get_by_name("uart1");
+    uartx = bflb_device_get_by_name(DEFAULT_TEST_UART);
 
     struct bflb_uart_config_s cfg;
 
@@ -58,40 +61,34 @@ UART - 轮询收发数据
     cfg.flow_ctrl = 0;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
-    bflb_uart_init(uart1, &cfg);
+    bflb_uart_init(uartx, &cfg);
 
-- 获取 `uart1` 句柄，并初始化 UART1
+- 获取 `DEFAULT_TEST_UART` 句柄，并初始化 UART
 
 .. code-block:: C
     :linenos:
 
     int ch;
     while (1) {
-        ch = bflb_uart_getchar(uart1);
+        ch = bflb_uart_getchar(uartx);
         if (ch != -1) {
-            bflb_uart_putchar(uart1, ch);
+            bflb_uart_putchar(uartx, ch);
         }
     }
 
-- 调用 ``bflb_uart_getchar(uart1)`` ，从 UART1 RX FIFO 中读取 USB2TTL 模块发送给 UART1 的数据，保存在 ch 中，如果没有数据则返回 -1
-- 调用 ``bflb_uart_putchar(uart1, ch)`` 将数据 ch 写入 UART1 TX FIFO 中，并发送给 USB2TTL 模块
+- 调用 ``bflb_uart_getchar`` 从 uart rx fifo 中读取数据，如果返回 -1，表示没有数据
+- 调用 ``bflb_uart_putchar`` 将数据 `ch` 填充到 uart tx fifo 中
 
 编译和烧录
 -----------------------------
 
 -  **命令行编译**
 
-.. code-block:: bash
-   :linenos:
-
-    $ cd <sdk_path>/examples/peripherals/uart/uart_poll
-    $ make CHIP=blxxx BOARD=blxxx_dk
-
-.. note:: blxxx为所使用的芯片型号，以bl616为例，编译命令为：make CHIP=bl616 BOARD=bl616_dk
+参考 :ref:`linux_cmd` 或者 :ref:`windows_cmd`
 
 -  **烧录**
 
-   详见 :ref:`bl_dev_cube`
+参考 :ref:`bl_dev_cube`
 
 实验现象
 -----------------------------

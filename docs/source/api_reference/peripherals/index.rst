@@ -71,7 +71,7 @@ API 支持情况
     * - peripheral
       - BL602/BL604
       - BL702/BL704/BL706
-      - BL616
+      - BL616/BL618
       - BL808
     * - ADC
       - ❓
@@ -83,6 +83,11 @@ API 支持情况
       - ❌
       - ❌
       - ❌
+    * - CKS
+      - ❓
+      - ✔️
+      - ✔️
+      - ❓
     * - DAC
       - ❓
       - ✔️
@@ -94,20 +99,20 @@ API 支持情况
       - ✔️
       - ✔️
     * - EFUSE
-      - ❌
-      - ❌
-      - ❌
-      - ❌
+      - ❓
+      - ✔️
+      - ✔️
+      - ✔️
     * - EMAC
       - ➖
       - ✔️
       - ✔️
       - ✔️
     * - FLASH
-      - ❌
-      - ❌
-      - ❌
-      - ❌
+      - ✔️
+      - ✔️
+      - ✔️
+      - ✔️
     * - GPIO
       - ❓
       - ✔️
@@ -125,8 +130,8 @@ API 支持情况
       - ✔️
     * - MJPEG
       - ❌
-      - ❌
-      - ❌
+      - ✔️
+      - ✔️
       - ❌
     * - PWM_v1
       - ❓
@@ -158,6 +163,11 @@ API 支持情况
       - ✔️
       - ✔️
       - ✔️
+    * - SEC_PKA
+      - ❓
+      - ✔️
+      - ✔️
+      - ✔️
     * - SPI
       - ❓
       - ✔️
@@ -183,6 +193,11 @@ API 支持情况
       - ➖
       - ✔️
       - ✔️
+    * - WDG
+      - ❓
+      - ✔️
+      - ✔️
+      - ✔️
 
 API 列表
 ---------------
@@ -191,9 +206,11 @@ API 列表
     :maxdepth: 1
 
     ADC <adc>
+    CKS <cks>
     CLOCK <clock>
     DAC <dac>
     DMA <dma>
+    FLASH <flash>
     GPIO <gpio>
     I2C <i2c>
     IRQ <irq>
@@ -204,6 +221,7 @@ API 列表
     RTC <rtc>
     SEC_AES <sec_aes>
     SEC_SHA <sec_sha>
+    SEC_PKA <sec_pka>
     SPI <spi>
     TIMER <timer>
     UART <uart>

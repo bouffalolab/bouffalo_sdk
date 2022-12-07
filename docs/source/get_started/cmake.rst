@@ -37,13 +37,16 @@ CMake 框架的使用
       - 添加静态库（满足 if 条件）
     * - sdk_add_subdirectory_ifdef
       - 编译子目录下的 cmakelist（满足 if 条件）
+    * - sdk_add_static_library
+      - 添加外部静态库
     * - sdk_set_linker_script
       - 设置链接脚本
     * - sdk_set_main_file
       - 设置 main 函数所在文件
     * - project
       - 工程编译
-
+    * - target_source(app PRIVATE xxx)
+      - 添加源文件到 app 库中，当用户需要自己添加一些源文件又不想创建 cmakelist 单独编译成库，可以使用该项
 
 新建工程
 ----------------

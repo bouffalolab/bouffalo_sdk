@@ -1,12 +1,12 @@
-DAC - 正弦波
+DAC - poll
 ====================
 
-本 demo 主要介绍基于 DAC 生成正弦波。
+本 demo 主要介绍基于 DAC 轮询模式生成正弦波。
 
 硬件连接
 -----------------------------
 
-不同芯片 DAC Channel A 对应的 GPIO 口如下表所示：
+本 demo 使用到的 gpio 如下表：
 
 .. table:: GPIO 口
     :widths: 30, 30, 40
@@ -24,14 +24,14 @@ DAC - 正弦波
 软件实现
 -----------------------------
 
-更详细的代码请参考 ``examples/peripherals/dac/dac_polling``
+更详细的代码请参考 **examples/peripherals/dac/dac_polling**
 
 .. code-block:: C
     :linenos:
 
     board_init();
 
-- ``board_init`` 中会开启 dac 外设
+- ``board_init`` 中会开启 DAC IP 时钟，并选择 DAC 时钟源和分频。
 
 .. code-block:: C
     :linenos:
@@ -47,7 +47,7 @@ DAC - 正弦波
 
     bflb_dac_init(dac, DAC_SAMPLING_FREQ_32K);
 
-- 获取 `dac` 句柄，并初始化 dac，时钟配置为 32K
+- 获取 `dac` 句柄，并初始化 dac 频率为 32K
 
 .. code-block:: C
     :linenos:
@@ -71,17 +71,11 @@ DAC - 正弦波
 
 -  **命令行编译**
 
-.. code-block:: bash
-   :linenos:
-
-    $ cd <sdk_path>/examples/peripherals/dac/dac_polling
-    $ make CHIP=blxxx BOARD=blxxx_dk
-
-.. note:: blxxx为所使用的芯片型号，以bl616为例，编译命令为：make CHIP=bl616 BOARD=bl616_dk
+参考 :ref:`linux_cmd` 或者 :ref:`windows_cmd`
 
 -  **烧录**
 
-   详见 :ref:`bl_dev_cube`
+参考 :ref:`bl_dev_cube`
 
 实验现象
 -----------------------------

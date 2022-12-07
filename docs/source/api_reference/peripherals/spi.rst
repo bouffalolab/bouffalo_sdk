@@ -309,7 +309,7 @@ bflb_spi_errint_mask
 bflb_spi_get_intstatus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-说明:  获取 uart 中断标志。
+说明:  获取 spi 中断标志。
 
 .. code-block:: c
    :linenos:
@@ -332,16 +332,17 @@ bflb_spi_get_intstatus
 .. code-block:: c
    :linenos:
 
-    SPI_TXF_INT
-    SPI_RXF_INT
-    SPI_STO_INT
-    SPI_TXU_INT
-    SPI_FER_INT
+   #define SPI_INTSTS_TC                (1 << 0)
+   #define SPI_INTSTS_TX_FIFO           (1 << 1)
+   #define SPI_INTSTS_RX_FIFO           (1 << 2)
+   #define SPI_INTSTS_SLAVE_TIMEOUT     (1 << 3)
+   #define SPI_INTSTS_SLAVE_TX_UNDERRUN (1 << 4)
+   #define SPI_INTSTS_FIFO_ERR          (1 << 5)
 
 bflb_spi_int_clear
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-说明:  清除 uart 中断标志。
+说明:  清除 spi 中断标志。
 
 .. code-block:: c
    :linenos:
@@ -364,8 +365,9 @@ bflb_spi_int_clear
 .. code-block:: c
    :linenos:
 
-    SPI_CR_SPI_STO_CLR
-    SPI_CR_SPI_TXU_CLR
+   #define SPI_INTCLR_TC                (1 << 16)
+   #define SPI_INTCLR_SLAVE_TIMEOUT     (1 << 19)
+   #define SPI_INTCLR_SLAVE_TX_UNDERRUN (1 << 20)
 
 bflb_spi_feature_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -33,7 +33,7 @@
 |  CKS         |      ○         |      √             |   √           |   ○      |
 |  DAC         |      ○         |      √             |   √           |   ○      |
 |  DMA         |      ○         |      √             |   √           |   √      |
-|  EFUSE       |      ×         |      ×             |   ×           |   ×      |
+|  EFUSE       |      ×         |      √             |   √           |   √      |
 |  EMAC        |      -         |      √             |   √           |   √      |
 |  FLASH       |      √         |      √             |   √           |   √      |
 |  GPIO        |      ○         |      √             |   √           |   √      |
@@ -61,6 +61,7 @@
 bl_mcu_sdk
 ├── bsp
 │   ├── board
+│   │   └── bl602
 │   │   └── bl702
 │   │   └── bl616
 │   │   └── bl808
@@ -113,7 +114,7 @@ bl_mcu_sdk
 
 ## 命令行编译
 
-在进行命令行编译之前，需要根据你的操作系统，选择对应的工具链，并配置到系统环境变量，并安装了 **make** 工具，然后才能进行下面操作。
+在进行命令行编译之前，需要根据你的操作系统，选择对应的工具链，并配置到系统环境变量，并安装了 **make** 或者 **ninja** 工具，然后才能进行下面操作。更详细的搭建过程，参考 [bl mcu sdk 环境搭建](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/index.html).
 
 - 进入要编译的 demo 目录，且该目录下有 `main.c` 和 `Makefile` 文件
 - 执行下面命令即可,以 **BL616** 为例
@@ -135,20 +136,29 @@ cd examples/helloworld
 make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
+如果你想使用 **ninja** 编译，你可以尝试：
+
+```
+cd bl_mcu_sdk
+chmod +x tools/cmake/bin/cmake
+cd examples/helloworld
+make ninja CHIP=bl808 BOARD=bl808dk CPU_ID=m0
+```
+
 ## CDK 编译
 
 TODO
 
 ## 调试
 
-当前仅支持使用 CKLink 调试。详细参考 [bl mcu sdk 调试章节](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
+当前仅支持使用 CKLink 调试。详细参考 [bl mcu sdk 调试指南](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
 
 ## 固件烧录
 
 推荐使用 **BL DevCube** 并通过串口进行固件的烧录。
 
-- [BL DevCube Tool](https://dev.bouffalolab.com/download)
-- [BL DevCube download guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/devcube.html)
+- [Bouffalo Lab Dev Cube](https://dev.bouffalolab.com/download)
+- [Bouffalo Lab Dev Cube User Guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/devcube.html)
 
 # 芯片手册
 
@@ -171,7 +181,7 @@ TODO
 
 # 许可协议
 
-**bl mcu sdk** 完全开源，遵循 Apache License 2.0 开源许可协议，可以免费在商业产品中使用，并且不需要公开私有代码。
+**bl mcu sdk** 遵循 Apache License 2.0 开源许可协议，可以免费在商业产品中使用，并且不需要公开私有代码。
 
 ```
 /*

@@ -1,44 +1,29 @@
-Windows CMD
-==============
+.. _windows_cmd:
+
+Build with Windows CMD
+============================
 
 本节主要介绍如何在 Windows 下使用 **命令行** 进行开发。
 
-安装
+环境搭建
 -----------------
 
-安装前需要下载好 git 工具。这里自行百度。
-
-安装 make
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-在 `bl_mcu_sdk/tools/make` 目录下已经准备好了 windows 版本的 make 工具，将 make 工具的绝对路径配置到系统环境变量即可。如图所示：
-
-.. figure:: img/windows_path.png
-   :align: center
-
-.. figure:: img/windows_path2.png
-      :align: center
-
-安装 RISC-V 工具链
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-克隆 windows 端工具链到你的目录。
+- 首先需要安装 git 工具，这里自行百度。
+- 使用 git 下载 RISC-V 工具链, 这里比如安装到 D 盘
 
 .. code-block:: bash
    :linenos:
    :emphasize-lines: 1
 
+   $ cd d
    $ git clone git@gitee.com:bouffalolab/toolchain_gcc_t-head_windows.git
 
-设置工具链的路径到环境变量中, 如图所示：
+- 将 make、ninja、下载的 risc-v 工具链路径配置到系统环境变量中, 其中 make 和 ninja 工具位于 `bl_mcu_sdk/tools` 目录下。
 
-.. figure:: img/windows_path3.png
-      :align: center
+.. figure:: img/windows_path.png
+   :alt:
 
-安装检查
--------------
-
-完成上述两步以后，需要检查是否真的安装成功。打开 powershell 或者 cmd。输入下列命令：
+- 完成上述步骤以后，需要检查是否真的安装成功。打开 powershell 或者 cmd，输入下列命令：
 
 .. code-block:: bash
    :linenos:
@@ -79,12 +64,22 @@ Windows CMD
 编译
 -------------
 
-进入 **examples** ,选择你想要编译的 case，且该 case 下必须有 **main.c** 文件。生成的 bin 文件会输出到 `build/build_out` 目录下。
+打开 powershell 或者 cmd，进入 **examples** ，选择你想要编译的 case，且该 case 下必须有 **Makefile** 文件。使用下面命令编译，生成的 bin 文件会输出到 `build/build_out` 目录下。
+
+- 使用 make 编译
 
 .. code-block:: bash
    :linenos:
 
     $ cd .\examples\helloworld\
     $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+
+- 使用 ninja 编译
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd .\examples\helloworld\
+    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 .. note :: 如果使用 BL808 或者 BL606P，需要在上面基础上添加 CPU_ID=id ,id 可以为 m0 或者 d0

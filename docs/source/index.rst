@@ -30,3 +30,19 @@ BL MCU SDK 使用指南
    :caption: 基础例程
 
    samples/peripherals/index
+   samples/components/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 进阶例程
+
+   advance_samples/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 应用笔记
+
+   notes/note_uart
+   notes/note_dma
+   notes/note_cache
+   notes/note_808dualcore

@@ -1,13 +1,15 @@
 PWM_v1
 =============
 
+.. note:: PWM V1 版本每个 PWM 的所有通道频率可以单独设置。
+
 Macros
 ------------
 
 pwm channel
 ^^^^^^^^^^^^^^
 
-PWM V1 版本共 5个 pwm 通道。
+PWM V1 版本共 5 个 pwm 通道。（BL702L 只有通道 0）。
 
 Structs
 ------------
