@@ -1,8 +1,7 @@
 #include "bflb_mtimer.h"
 #include "bflb_uart.h"
 #include "shell.h"
-
-extern void board_init(void);
+#include "board.h"
 
 static struct bflb_device_s *uart0;
 
@@ -24,6 +23,7 @@ void uart_isr(int irq, void *arg)
 
 int main(void)
 {
+    int ch;
     board_init();
     uart0 = bflb_device_get_by_name("uart0");
     bflb_uart_rxint_mask(uart0, false);
@@ -31,5 +31,9 @@ int main(void)
     bflb_irq_enable(uart0->irq_num);
     shell_init();
     while (1) {
+        if((ch = bflb_uart_getchar(uart0)) != -1)
+        {
+            shell_handler(ch);
+        }
     }
 }

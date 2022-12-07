@@ -28,4 +28,12 @@
 //#define SHELL_USING_FS
 //#define SHELL_USING_COLOR
 
+#ifndef SHELL_THREAD_STACK_SIZE
+#define SHELL_THREAD_STACK_SIZE 1024
+#endif
+
+#ifndef SHELL_THREAD_PRIO
+#define SHELL_THREAD_PRIO 5
+#endif
+
 #endif
