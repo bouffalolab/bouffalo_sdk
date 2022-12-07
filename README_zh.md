@@ -142,7 +142,7 @@ make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 cd bl_mcu_sdk
 chmod +x tools/cmake/bin/cmake
 cd examples/helloworld
-make ninja CHIP=bl808 BOARD=bl808dk CPU_ID=m0
+make ninja CHIP=bl616 BOARD=bl616dk
 ```
 
 ## CDK 编译
