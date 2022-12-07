@@ -6,16 +6,17 @@
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.doReset" value="false"/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageFileName" value=""/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageOffset" value=""/>
-    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.initCommands" value="set mem inaccessible-by-default off&#13;&#10;set architecture riscv:rv32&#13;&#10;set remotetimeout 250&#13;&#10;&#13;&#10;mon reset&#13;&#10;&#13;&#10;set $pc=0x21000000&#13;&#10;set $mie=0&#13;&#10;set $mstatus=0x1880&#13;&#10;&#13;&#10;mem 0x22010000 0x22014000 rw&#13;&#10;mem 0x42010000 0x42014000 rw&#13;&#10;mem 0x22014000 0x22020000 rw&#13;&#10;mem 0x42014000 0x42020000 rw&#13;&#10;mem 0x22020000  0x22030000 rw&#13;&#10;mem 0x42020000  0x42030000 rw&#13;&#10;&#13;&#10;#flash&#13;&#10;mem 0x23000000 0x23400000 ro"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.initCommands" value="set mem inaccessible-by-default off&#13;&#10;set architecture riscv:rv32&#13;&#10;set remotetimeout 250&#13;&#10;&#13;&#10;mon reset&#13;&#10;&#13;&#10;set $pc=0x23000000&#13;&#10;set $mie=0&#13;&#10;set $mstatus=0x1880&#13;&#10;&#13;&#10;mem 0x22010000 0x22014000 rw&#13;&#10;mem 0x42010000 0x42014000 rw&#13;&#10;mem 0x22014000 0x22020000 rw&#13;&#10;mem 0x42014000 0x42020000 rw&#13;&#10;mem 0x22020000  0x22030000 rw&#13;&#10;mem 0x42020000  0x42030000 rw&#13;&#10;&#13;&#10;#flash&#13;&#10;mem 0x23000000 0x23400000 ro"/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.jtagDeviceId" value="org.eclipse.cdt.debug.gdbjtag.core.jtagdevice.genericDevice"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.loadImage" value="false"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.loadSymbols" value="true"/>
-    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.pcRegister" value="210000000"/>
-    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.runCommands" value="set mem inaccessible-by-default off&#13;&#10;set architecture riscv:rv32&#13;&#10;set remotetimeout 250&#13;&#10;&#13;&#10;mon reset&#13;&#10;&#13;&#10;set $pc=0x21000000&#13;&#10;set $mie=0&#13;&#10;set $mstatus=0x1880&#13;&#10;&#13;&#10;mem 0x22008000 0x22014000 rw&#13;&#10;mem 0x42008000 0x42014000 rw&#13;&#10;mem 0x22014000 0x22020000 rw&#13;&#10;mem 0x42014000 0x42020000 rw&#13;&#10;mem 0x22020000 0x22030000 rw&#13;&#10;mem 0x42020000 0x42030000 rw&#13;&#10;mem 0x22030000 0x2204C000 rw&#13;&#10;mem 0x42030000 0x4204C000 rw&#13;&#10;mem 0x23000000 0x23400000 ro"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.pcRegister" value="230000000"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.protocol" value="remote"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.runCommands" value="set mem inaccessible-by-default off&#13;&#10;set architecture riscv:rv32&#13;&#10;set remotetimeout 250&#13;&#10;&#13;&#10;mon reset&#13;&#10;&#13;&#10;set $pc=0x23000000&#13;&#10;set $mie=0&#13;&#10;set $mstatus=0x1880&#13;&#10;&#13;&#10;mem 0x22008000 0x22014000 rw&#13;&#10;mem 0x42008000 0x42014000 rw&#13;&#10;mem 0x22014000 0x22020000 rw&#13;&#10;mem 0x42014000 0x42020000 rw&#13;&#10;mem 0x22020000 0x22030000 rw&#13;&#10;mem 0x42020000 0x42030000 rw&#13;&#10;mem 0x22030000 0x2204C000 rw&#13;&#10;mem 0x42030000 0x4204C000 rw&#13;&#10;mem 0x23000000 0x23400000 ro"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setPcRegister" value="true"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setResume" value="true"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setStopAt" value="true"/>
-    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.stopAt" value="main"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.stopAt" value="__start"/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsFileName" value=""/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsOffset" value=""/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useFileForImage" value="false"/>
@@ -23,7 +24,7 @@
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useProjBinaryForImage" value="true"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useProjBinaryForSymbols" value="true"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useRemoteTarget" value="true"/>
-    <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="${eclipse_home}\riscv64-unknown-elf-gcc-mingw32\bin\riscv64-unknown-elf-gdb.exe"/>
+    <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="riscv64-unknown-elf-gdb.exe"/>
     <booleanAttribute key="org.eclipse.cdt.dsf.gdb.REMOTE_TIMEOUT_ENABLED" value="false"/>
     <stringAttribute key="org.eclipse.cdt.dsf.gdb.REMOTE_TIMEOUT_VALUE" value=""/>
     <booleanAttribute key="org.eclipse.cdt.dsf.gdb.UPDATE_THREADLIST_ON_SUSPEND" value="false"/>
@@ -34,6 +35,7 @@
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="bl_mcu_sdk"/>
     <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+    <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
         <listEntry value="/bl_mcu_sdk"/>
     </listAttribute>
