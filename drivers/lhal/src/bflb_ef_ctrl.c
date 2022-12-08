@@ -74,7 +74,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r0(struct bflb_device_s
     putreg32(reg_val, dev->reg_base + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
     /* Add delay for CLK to be stable */
-    bflb_mtimer_delay_us(4);
+    arch_delay_us(4);
 }
 
 /****************************************************************************/ /**
@@ -121,7 +121,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r1(struct bflb_device_s
     putreg32(reg_val, dev->reg_base + EF_CTRL_EF_IF_CTRL_1_OFFSET);
 
     /* Add delay for CLK to be stable */
-    bflb_mtimer_delay_us(4);
+    arch_delay_us(4);
 }
 #endif
 
@@ -168,7 +168,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r0(struct bflb_device_s 
     putreg32(reg_val, dev->reg_base + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
     /* Add delay for POR to be stable */
-    bflb_mtimer_delay_us(4);
+    arch_delay_us(4);
 
     /* Trigger */
     reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
@@ -237,7 +237,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s 
     putreg32(reg_val, dev->reg_base + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
     /* Add delay for POR to be stable */
-    bflb_mtimer_delay_us(4);
+    arch_delay_us(4);
 
     reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_1_MANUAL_EN_POS) |
@@ -349,7 +349,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *de
 
     putreg32(reg_val, dev->reg_base + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
-    bflb_mtimer_delay_us(10);
+    arch_delay_us(10);
 
     /* Wait for efuse control idle */
     do {
@@ -424,7 +424,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *de
 
     putreg32(reg_val, dev->reg_base + EF_CTRL_EF_IF_CTRL_1_OFFSET);
 
-    bflb_mtimer_delay_us(10);
+    arch_delay_us(10);
 
     /* Wait for efuse control idle */
     do {
@@ -569,7 +569,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
 
         if (program) {
             bflb_ef_ctrl_program_efuse_r0(dev);
-            bflb_mtimer_delay_us(100);
+            arch_delay_us(100);
         }
     }
 #ifdef EF_CTRL_EFUSE_R1_SIZE
@@ -578,13 +578,13 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
         bflb_ef_ctrl_switch_ahb_clk_r1(dev);
 
         /* Add delay for CLK to be stable */
-        bflb_mtimer_delay_us(4);
+        arch_delay_us(4);
 
         arch_memcpy4(pefuse_start, pword, region1_count);
 
         if (program) {
             bflb_ef_ctrl_program_efuse_r1(dev);
-            bflb_mtimer_delay_us(100);
+            arch_delay_us(100);
         }
     }
 #endif

@@ -14,6 +14,9 @@ uint32_t *arch_memcpy4(uint32_t *dst, const uint32_t *src, uint32_t n);
 void *arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n);
 uint32_t *arch_memset4(uint32_t *dst, const uint32_t val, uint32_t n);
 
+void arch_delay_us(uint32_t cnt);
+void arch_delay_ms(uint32_t cnt);
+
 #ifdef __cplusplus
 }
 #endif
