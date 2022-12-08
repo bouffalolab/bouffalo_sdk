@@ -41,8 +41,8 @@ void System_Post_Init(void)
 
     /* fix amr setting */
     uintptr_t tmpVal = 0;
-    Efuse_Chip_Info_Type chip_info;
-    EF_Ctrl_Get_Chip_Info(&chip_info);
+    bflb_efuse_device_info_type chip_info;
+    bflb_ef_ctrl_get_device_info(&chip_info);
     /* if not B0 enable AMR */
     if (chip_info.chipInfo != BL808_B0) {
         tmpVal = __get_MHINT();
