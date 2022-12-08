@@ -202,10 +202,10 @@ __ALWAYS_STATIC_INLINE void __disable_irq(void)
 #define BL602_MemCpy_Fast arch_memcpy_fast
 #define BL602_MemSet4     arch_memset4
 
-#define arch_delay_us BL602_Delay_US
-#define arch_delay_ms BL602_Delay_MS
+#define BL602_Delay_US arch_delay_us
+#define BL602_Delay_MS arch_delay_ms
 
-#define BFLB_Soft_CRC32  bflb_soft_crc32
+#define BFLB_Soft_CRC32 bflb_soft_crc32
 #define CPU_Interrupt_Enable(irq)
 #define CPU_Interrupt_Disable(irq)
 #define Interrupt_Handler_Register(irq, callback)
