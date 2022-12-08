@@ -1,5 +1,5 @@
 /**
- * @file mmheap.c
+ * @file bflb_mmheap.c
  * @brief
  *
  * Copyright (c) 2021 Bouffalolab team
@@ -21,7 +21,7 @@
  *
  */
 
-#include "mmheap.h"
+#include "bflb_mmheap.h"
 
 #define MEM_MANAGE_ALIGNMENT_BYTE_DEFAULT 8
 #define MEM_MANAGE_BITS_PER_BYTE          8
@@ -117,14 +117,14 @@ void mmheap_get_state(struct heap_info *pRoot, struct heap_state *pState)
     MMHEAP_UNLOCK();
 }
 /**
- * @brief mmheap_align_alloc
+ * @brief bflb_mmheap_align_alloc
  *
  * @param pRoot
  * @param align_size
  * @param want_size
  * @return void*
  */
-void *mmheap_align_alloc(struct heap_info *pRoot, size_t align_size, size_t want_size)
+void *bflb_mmheap_align_alloc(struct heap_info *pRoot, size_t align_size, size_t want_size)
 {
     void *pReturn = NULL;
     struct heap_node *pPriv_Node, *pNow_Node;
@@ -208,25 +208,25 @@ void *mmheap_align_alloc(struct heap_info *pRoot, size_t align_size, size_t want
     return pReturn;
 }
 /**
- * @brief mmheap_alloc
+ * @brief bflb_mmheap_alloc
  *
  * @param pRoot
  * @param want_size
  * @return void*
  */
-void *mmheap_alloc(struct heap_info *pRoot, size_t want_size)
+void *bflb_mmheap_alloc(struct heap_info *pRoot, size_t want_size)
 {
-    return mmheap_align_alloc(pRoot, MEM_MANAGE_ALIGNMENT_BYTE_DEFAULT, want_size);
+    return bflb_mmheap_align_alloc(pRoot, MEM_MANAGE_ALIGNMENT_BYTE_DEFAULT, want_size);
 }
 /**
- * @brief mmheap_realloc
+ * @brief bflb_mmheap_realloc
  *
  * @param pRoot
  * @param src_addr
  * @param want_size
  * @return void*
  */
-void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size)
+void *bflb_mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size)
 {
     void *pReturn = NULL;
     struct heap_node *pNext_Node, *pPriv_Node;
@@ -234,10 +234,10 @@ void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size)
     MMHEAP_ASSERT(pRoot->pStart != NULL);
     MMHEAP_ASSERT(pRoot->pEnd != NULL);
     if (src_addr == NULL) {
-        return mmheap_align_alloc(pRoot, MEM_MANAGE_ALIGNMENT_BYTE_DEFAULT, want_size);
+        return bflb_mmheap_align_alloc(pRoot, MEM_MANAGE_ALIGNMENT_BYTE_DEFAULT, want_size);
     }
     if (want_size == 0) {
-        mmheap_free(pRoot, src_addr);
+        bflb_mmheap_free(pRoot, src_addr);
         return NULL;
     }
 
@@ -288,7 +288,7 @@ void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size)
         MMHEAP_UNLOCK();
     } else {
         MMHEAP_UNLOCK();
-        pReturn = mmheap_align_alloc(pRoot, MEM_MANAGE_ALIGNMENT_BYTE_DEFAULT, want_size);
+        pReturn = bflb_mmheap_align_alloc(pRoot, MEM_MANAGE_ALIGNMENT_BYTE_DEFAULT, want_size);
         if (pReturn == NULL) {
             pSrc_Node->mem_size |= MEM_MANAGE_ALLOCA_LABAL;
             MMHEAP_MALLOC_FAIL();
@@ -298,7 +298,7 @@ void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size)
         memcpy(pReturn, src_addr, pSrc_Node->mem_size);
         pSrc_Node->mem_size |= MEM_MANAGE_ALLOCA_LABAL;
         MMHEAP_UNLOCK();
-        mmheap_free(pRoot, src_addr);
+        bflb_mmheap_free(pRoot, src_addr);
     }
     return pReturn;
 }
@@ -310,11 +310,11 @@ void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size)
  * @param size
  * @return void*
  */
-void *mmheap_calloc(struct heap_info *pRoot, size_t num, size_t size)
+void *bflb_mmheap_calloc(struct heap_info *pRoot, size_t num, size_t size)
 {
     void *pReturn = NULL;
 
-    pReturn = (void *)mmheap_alloc(pRoot, size * num);
+    pReturn = (void *)bflb_mmheap_alloc(pRoot, size * num);
 
     if (pReturn) {
         memset(pReturn, 0, num * size);
@@ -323,12 +323,12 @@ void *mmheap_calloc(struct heap_info *pRoot, size_t num, size_t size)
     return pReturn;
 }
 /**
- * @brief mmheap_free
+ * @brief bflb_mmheap_free
  *
  * @param pRoot
  * @param addr
  */
-void mmheap_free(struct heap_info *pRoot, void *addr)
+void bflb_mmheap_free(struct heap_info *pRoot, void *addr)
 {
     struct heap_node *pFree_Node;
     MMHEAP_ASSERT(pRoot->pStart != NULL);
@@ -356,12 +356,12 @@ void mmheap_free(struct heap_info *pRoot, void *addr)
     MMHEAP_UNLOCK();
 }
 /**
- * @brief mmheap_init
+ * @brief bflb_mmheap_init
  *
  * @param pRoot
  * @param pRegion
  */
-void mmheap_init(struct heap_info *pRoot, const struct heap_region *pRegion)
+void bflb_mmheap_init(struct heap_info *pRoot, const struct heap_region *pRegion)
 {
     struct heap_node *align_addr;
     size_t align_size;

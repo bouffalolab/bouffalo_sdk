@@ -1,5 +1,5 @@
 /**
- * @file mmheap.h
+ * @file bflb_mmheap.h
  * @brief
  *
  * Copyright (c) 2021 Bouffalolab team
@@ -20,8 +20,8 @@
  * under the License.
  *
  */
-#ifndef __DRV_MMHEAP_H
-#define __DRV_MMHEAP_H
+#ifndef __BFLB_MMHEAP_H
+#define __BFLB_MMHEAP_H
 
 #include <stdint.h>
 #include <stdio.h>
@@ -77,7 +77,7 @@ struct heap_state {
     size_t min_node_size;
 };
 
-void mmheap_init(struct heap_info *pRoot, const struct heap_region *pRigon);
+void bflb_mmheap_init(struct heap_info *pRoot, const struct heap_region *pRigon);
 /**
  * @brief Alloc start address aligned memory from the heap.
  * Alloc aligned address and specified size memory from the heap.
@@ -90,7 +90,7 @@ void mmheap_init(struct heap_info *pRoot, const struct heap_region *pRigon);
  *
  * @return  the pointer to the allocated memory.
  */
-void *mmheap_align_alloc(struct heap_info *pRoot, size_t align_size, size_t want_size);
+void *bflb_mmheap_align_alloc(struct heap_info *pRoot, size_t align_size, size_t want_size);
 /**
  * @brief Alloc memory.
  * Allocate size bytes and returns a pointer to the allocated memory.
@@ -102,7 +102,7 @@ void *mmheap_align_alloc(struct heap_info *pRoot, size_t align_size, size_t want
  *
  * @return  the pointer to the allocated memory.
  */
-void *mmheap_alloc(struct heap_info *pRoot, size_t want_size);
+void *bflb_mmheap_alloc(struct heap_info *pRoot, size_t want_size);
 /**
  * @brief Realloc memory from the heap.
  * Change the size of the memory block pointed to by ptr to size bytes.
@@ -119,7 +119,7 @@ void *mmheap_alloc(struct heap_info *pRoot, size_t want_size);
  *
  * @return  the new pointer to the allocated memory.
  */
-void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size);
+void *bflb_mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size);
 /**
  * @brief Cealloc memory from the heap.
  * Change the size of the memory block pointed to by ptr to size bytes.
@@ -136,7 +136,7 @@ void *mmheap_realloc(struct heap_info *pRoot, void *src_addr, size_t want_size);
  *
  * @return  the new pointer to the allocated memory.
  */
-void *mmheap_calloc(struct heap_info *pRoot, size_t num, size_t size);
+void *bflb_mmheap_calloc(struct heap_info *pRoot, size_t num, size_t size);
 /**
  * @brief Free the memory.
  * Free the memory space pointed to by ptr, which must have been returned by a previous call to mmheap_alloc(), mmheap_aligned_alloc(), or mmheap_realloc().
@@ -148,14 +148,14 @@ void *mmheap_calloc(struct heap_info *pRoot, size_t num, size_t size);
  *
  * @return  None.
  */
-void mmheap_free(struct heap_info *pRoot, void *addr);
+void bflb_mmheap_free(struct heap_info *pRoot, void *addr);
 /**
  * @brief get mmheap state
  *
  * @param pRoot heap info.
  * @param pState heap state
  */
-void mmheap_get_state(struct heap_info *pRoot, struct heap_state *pState);
+void bflb_mmheap_get_state(struct heap_info *pRoot, struct heap_state *pState);
 #ifdef __cplusplus
 }
 #endif

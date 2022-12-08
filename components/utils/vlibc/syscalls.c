@@ -1,10 +1,14 @@
 #include <reent.h>
 #include <errno.h>
 #include <unistd.h>
-#include "mmheap.h"
 #include "bflb_uart.h"
+#ifdef CONFIG_TLSF
+#include "bflb_tlsf.h"
+#else
+#include "bflb_mmheap.h"
 
 extern struct heap_info mmheap_root;
+#endif
 
 extern struct bflb_device_s *console;
 
@@ -151,11 +155,15 @@ void *_malloc_r(struct _reent *ptr, size_t size)
 #ifdef CONFIG_MEM_USE_FREERTOS
     result = pvPortMalloc(size);
 #else
-    result = (void *)mmheap_alloc(&mmheap_root, size);
+#ifdef CONFIG_TLSF
+    result = (void *)bflb_malloc(size);
+#else
+    result = (void *)bflb_mmheap_alloc(&mmheap_root, size);
+#endif
+#endif
     if (result == NULL) {
         ptr->_errno = -ENOMEM;
     }
-#endif
     return result;
 }
 
@@ -164,7 +172,11 @@ void *_realloc_r(struct _reent *ptr, void *old, size_t newlen)
     void *result;
 #ifdef CONFIG_MEM_USE_FREERTOS
 #else
-    result = (void *)mmheap_realloc(&mmheap_root, old, newlen);
+#ifdef CONFIG_TLSF
+    result = (void *)bflb_realloc(old, newlen);
+#else
+    result = (void *)bflb_mmheap_realloc(&mmheap_root, old, newlen);
+#endif
 #endif
     if (result == NULL) {
         ptr->_errno = -ENOMEM;
@@ -177,15 +189,19 @@ void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
     void *result;
 #ifdef CONFIG_MEM_USE_FREERTOS
     result = pvPortMalloc(size * len);
-    if (result) {
-        memset(result, 0, size * len);
-    }
 #else
-    result = (void *)mmheap_calloc(&mmheap_root, size, len);
+#ifdef CONFIG_TLSF
+    result = (void *)bflb_calloc(size, len);
+#else
+    result = (void *)bflb_mmheap_calloc(&mmheap_root, size, len);
+#endif
+#endif
     if (result == NULL) {
         ptr->_errno = -ENOMEM;
     }
-#endif
+    if (result) {
+        memset(result, 0, size * len);
+    }
     return result;
 }
 
@@ -194,7 +210,11 @@ void *_memalign_r(struct _reent *ptr, size_t align, size_t size)
     void *result;
 #ifdef CONFIG_MEM_USE_FREERTOS
 #else
-    result = (void *)mmheap_align_alloc(&mmheap_root, align, size);
+#ifdef CONFIG_TLSF
+    result = (void *)bflb_malloc_align(align, size);
+#else
+    result = (void *)bflb_mmheap_align_alloc(&mmheap_root, align, size);
+#endif
 #endif
     if (result == NULL) {
         ptr->_errno = -ENOMEM;
@@ -208,7 +228,11 @@ void _free_r(struct _reent *ptr, void *addr)
 #ifdef CONFIG_MEM_USE_FREERTOS
     vPortFree(addr);
 #else
-    mmheap_free(&mmheap_root, addr);
+#ifdef CONFIG_TLSF
+    bflb_free(addr);
+#else
+    bflb_mmheap_free(&mmheap_root, addr);
+#endif
 #endif
 }
 

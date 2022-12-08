@@ -42,7 +42,7 @@ endif()
 
 # libc or vlibc select
 if(CONFIG_VLIBC)
-
+    sdk_add_compile_definitions(-DCONFIG_VLIBC)
     # vlibc debug enable
     if (CONFIG_VLIBC_DEBUG)
         sdk_add_compile_definitions(-DCONFIG_VLIBC_DEBUG)
@@ -70,7 +70,7 @@ else()
 endif()
 
 # memheap
-sdk_library_add_sources(mmheap/mmheap.c)
+sdk_library_add_sources(mmheap/bflb_mmheap.c)
 sdk_add_include_directories(mmheap)
 
 # memheap lock user config
