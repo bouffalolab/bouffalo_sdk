@@ -105,7 +105,7 @@ void ili9341_spi_dma_flush_callback(void *arg)
     }
 
     while (ili9341_spi_draw_is_busy()) {
-        __NOP();
+        __ASM volatile("nop");
     };
 
     if (ili9341_spi_async_callback != NULL) {
@@ -253,7 +253,7 @@ int ili9341_spi_draw_is_busy(void)
     } else {
         /* Wait for the SPI bus to be idle */
         while (bflb_spi_isbusy(ili9341_spi)) {
-            __NOP();
+            __ASM volatile("nop");
         };
         /* Switch the SPI to non-DMA mode */
         bflb_spi_link_txdma(ili9341_spi, false);
@@ -475,7 +475,7 @@ void ili9341_spi_draw_area(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, i
 
     /* Wait to finish, and cs high */
     while (ili9341_spi_draw_is_busy()) {
-        __NOP();
+        __ASM volatile("nop");
     };
 
     /* enable src_addr_inc */
@@ -537,7 +537,7 @@ void ili9341_spi_draw_picture_blocking(uint16_t x1, uint16_t y1, uint16_t x2, ui
 
     ili9341_spi_draw_picture_nonblocking(x1, y1, x2, y2, picture);
     while (ili9341_spi_draw_is_busy()) {
-        __NOP();
+        __ASM volatile("nop");
     };
 }
 
