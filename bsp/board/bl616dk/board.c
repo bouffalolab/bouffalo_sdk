@@ -3,7 +3,11 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
-#include "mmheap.h"
+#ifdef CONFIG_TLSF
+#include "bflb_tlsf.h"
+#else
+#include "bflb_mmheap.h"
+#endif
 #include "board.h"
 #include "bl616_tzc_sec.h"
 #include "bl616_psram.h"
@@ -19,12 +23,14 @@
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
 
+#ifndef CONFIG_TLSF
 struct heap_info mmheap_root;
 
 static struct heap_region system_mmheap[] = {
     { NULL, 0 },
     { NULL, 0 }, /* Terminates the array. */
 };
+#endif
 
 static struct bflb_device_s *uart0;
 
@@ -54,6 +60,7 @@ static void peripheral_clock_init(void)
     PERIPHERAL_CLOCK_IR_ENABLE();
     PERIPHERAL_CLOCK_I2S_ENABLE();
     PERIPHERAL_CLOCK_USB_ENABLE();
+    PERIPHERAL_CLOCK_CAN_ENABLE();
 
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
     GLB_Set_SPI_CLK(ENABLE, GLB_SPI_CLK_MCU_MUXPLL_160M, 0);
@@ -63,13 +70,12 @@ static void peripheral_clock_init(void)
     GLB_Set_DIG_512K_CLK(ENABLE, ENABLE, 0x4E);
     GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
     GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, 19);
+    GLB_Set_CAM_CLK(ENABLE, GLB_CAM_CLK_WIFIPLL_96M, 3);
 
     GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_MCU_MUXPLL_160M);
 #ifdef CONFIG_BSP_SDH_SDCARD
     PERIPHERAL_CLOCK_SDH_ENABLE();
-    GLB_Set_SDH_CLK(ENABLE, GLB_SDH_CLK_WIFIPLL_96M, 0);
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_EXT_SDH);
-    SDH_ClockSet(400000, 96000000, 48000000);
 #endif
 
     GLB_Set_USB_CLK_From_WIFIPLL(1);
@@ -210,22 +216,26 @@ void board_init(void)
 
     bflb_irq_restore(flag);
 
+#ifdef CONFIG_TLSF
+    bflb_mmheap_init((void *)&__HeapBase, ((size_t)&__HeapLimit - (size_t)&__HeapBase));
+#else
     system_mmheap[0].addr = (uint8_t *)&__HeapBase;
     system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
 
     if (system_mmheap[0].mem_size > 0) {
-        mmheap_init(&mmheap_root, system_mmheap);
+        bflb_mmheap_init(&mmheap_root, system_mmheap);
     }
-
+#endif
     console_init();
 
     bl_show_log();
     bl_show_flashinfo();
 
-    printf("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
+    printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
-    printf("sig1:%08lx\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
-    printf("sig2:%08lx\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
+    printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
+    printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
+    printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
 
 #if (defined(CONFIG_LUA) || defined(CONFIG_BFLOG) || defined(CONFIG_FATFS))
     rtc = bflb_device_get_by_name("rtc");
@@ -361,15 +371,90 @@ void board_ir_gpio_init(void)
     GLB_IR_RX_GPIO_Sel(GLB_GPIO_PIN_10);
 }
 
+void board_dvp1_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* I2C GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    /* Power down GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_reset(gpio, GPIO_PIN_2);
+
+    /* Reset GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_set(gpio, GPIO_PIN_3);
+
+    /* MCLK GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    /* DVP1 GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_24, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_25, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_26, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_31, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_32, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_33, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_34, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+void board_dvp2_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* I2C GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    /* Power down GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_reset(gpio, GPIO_PIN_29);
+
+    /* Reset GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_set(gpio, GPIO_PIN_30);
+
+    /* MCLK GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    /* DVP2 GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_15, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+void board_iso11898_gpio_init()
+{
+    // struct bflb_device_s *gpio;
+
+    // gpio = bflb_device_get_by_name("gpio");
+}
+
 #ifdef CONFIG_BFLOG
 __attribute__((weak)) uint64_t bflog_clock(void)
 {
-    return CPU_Get_MTimer_Counter();
+    return bflb_mtimer_get_time_us();
 }
 
 __attribute__((weak)) uint32_t bflog_time(void)
 {
-    return BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc)) + 1640995200;
+    return BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc));
 }
 
 __attribute__((weak)) char *bflog_thread(void)
@@ -381,12 +466,12 @@ __attribute__((weak)) char *bflog_thread(void)
 #ifdef CONFIG_LUA
 __attribute__((weak)) clock_t luaport_clock(void)
 {
-    return (clock_t)CPU_Get_MTimer_Counter();
+    return (clock_t)bflb_mtimer_get_time_us();
 }
 
 __attribute__((weak)) time_t luaport_time(time_t *seconds)
 {
-    time_t t = (time_t)BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc)) + 1640995200;
+    time_t t = (time_t)BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc));
     if (seconds != NULL) {
         *seconds = t;
     }
@@ -401,7 +486,7 @@ __attribute__((weak)) uint32_t get_fattime(void)
 {
     bflb_timestamp_t tm;
 
-    bflb_timestamp_utc2time(BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc)) + 1640995200, &tm);
+    bflb_timestamp_utc2time(BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc)), &tm);
 
     return ((uint32_t)(tm.year - 1980) << 25) /* Year 2015 */
            | ((uint32_t)tm.mon << 21)         /* Month 1 */

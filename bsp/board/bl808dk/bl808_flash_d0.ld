@@ -26,7 +26,7 @@ MEMORY
     itcm_memory (rx)  : ORIGIN = 0x3eff0000, LENGTH = 28K
     dtcm_memory (rx)  : ORIGIN = 0x3eff7000, LENGTH = 4K
     nocache_ram_memory (!rx) : ORIGIN = 0x3eff8000, LENGTH = 0K
-    ram_memory  (!rx) : ORIGIN = 0x3eff8000, LENGTH = 64K
+    ram_memory  (!rx) : ORIGIN = 0x3eff8000, LENGTH = 32K + 32K
     xram_memory (!rx) : ORIGIN = 0x40004000, LENGTH = 16K
 }
 

@@ -10,6 +10,7 @@ void board_adc_gpio_init();
 void board_dac_gpio_init();
 void board_emac_gpio_init();
 void board_pwm_gpio_init();
+void board_ir_gpio_init();
 
 #define DEFAULT_TEST_UART "uart1"
 #define DEFAULT_TEST_UART_DMA_TX_REQUEST DMA_REQUEST_UART1_TX

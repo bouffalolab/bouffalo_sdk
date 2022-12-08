@@ -3,7 +3,11 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
-#include "mmheap.h"
+#ifdef CONFIG_TLSF
+#include "bflb_tlsf.h"
+#else
+#include "bflb_mmheap.h"
+#endif
 #include "board.h"
 #include "bl702_glb.h"
 #include "bl702_sflash.h"
@@ -11,14 +15,20 @@
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
 
+#ifndef CONFIG_TLSF
 struct heap_info mmheap_root;
-
-static struct bflb_device_s *uart0;
 
 static struct heap_region system_mmheap[] = {
     { NULL, 0 },
     { NULL, 0 }, /* Terminates the array. */
 };
+#endif
+
+static struct bflb_device_s *uart0;
+
+#if defined(CONFIG_BFLOG)
+static struct bflb_device_s *rtc;
+#endif
 
 static void system_clock_init(void)
 {
@@ -44,6 +54,7 @@ static void peripheral_clock_init(void)
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_96M, 0);
     GLB_Set_SPI_CLK(ENABLE, 0);
     GLB_Set_I2C_CLK(ENABLE, 0);
+    GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, 15);
 
     GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
     GLB_Set_DAC_CLK(ENABLE, GLB_DAC_CLK_XCLK, 0x3E);
@@ -131,20 +142,28 @@ void board_init(void)
 
     bflb_irq_restore(flag);
 
+#ifdef CONFIG_TLSF
+    bflb_mmheap_init((void *)&__HeapBase, ((size_t)&__HeapLimit - (size_t)&__HeapBase));
+#else
     system_mmheap[0].addr = (uint8_t *)&__HeapBase;
     system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
 
     if (system_mmheap[0].mem_size > 0) {
-        mmheap_init(&mmheap_root, system_mmheap);
+        bflb_mmheap_init(&mmheap_root, system_mmheap);
     }
+#endif
 
     console_init();
 
     bl_show_log();
-
     bl_show_flashinfo();
 
-    printf("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
+    printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+
+    printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
+#if defined(CONFIG_BFLOG)
+    rtc = bflb_device_get_by_name("rtc");
+#endif
 }
 
 void board_uartx_gpio_init()
@@ -192,6 +211,21 @@ void board_pwm_gpio_init()
     bflb_gpio_init(gpio, GPIO_PIN_4, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
+void board_ir_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    /* IR TX support GPIO 22 or GPIO 23 */
+    bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    GLB_IR_LED_Driver_Output_Disable(GLB_GPIO_PIN_23);
+    GLB_IR_LED_Driver_Output_Enable(GLB_GPIO_PIN_22);
+
+    /* IR RX support GPIO 17 ~ GPIO 31 */
+    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_0);
+    GLB_IR_RX_GPIO_Sel(GLB_GPIO_PIN_18);
+}
+
 void board_adc_gpio_init()
 {
     struct bflb_device_s *gpio;
@@ -233,3 +267,38 @@ void board_emac_gpio_init()
     PDS_Enable_PLL_Clk(PDS_PLL_CLK_48M);
     PDS_Set_Audio_PLL_Freq(AUDIO_PLL_50000000_HZ);
 }
+
+void board_keyscan_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_FUN_KEY_SCAN_COL | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_OUTPUT | GPIO_SMT_EN | GPIO_DRV_1);
+
+    bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUN_KEY_SCAN_ROW | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1);
+
+    GLB_Set_QDEC_CLK(GLB_QDEC_CLK_F32K, 0);
+}
+
+#ifdef CONFIG_BFLOG
+__attribute__((weak)) uint64_t bflog_clock(void)
+{
+    return bflb_mtimer_get_time_us();
+}
+
+__attribute__((weak)) uint32_t bflog_time(void)
+{
+    return BFLB_RTC_TIME2SEC(bflb_rtc_get_time(rtc));
+}
+
+__attribute__((weak)) char *bflog_thread(void)
+{
+    return "";
+}
+#endif
