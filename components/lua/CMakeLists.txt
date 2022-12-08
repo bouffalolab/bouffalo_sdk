@@ -32,6 +32,7 @@ sdk_library_add_sources(core/src/lundump.c)
 sdk_library_add_sources(core/src/lutf8lib.c)
 sdk_library_add_sources(core/src/lvm.c)
 sdk_library_add_sources(core/src/lzio.c)
+sdk_library_add_sources(start/lua_start.c)
 sdk_add_include_directories(core/inc)
 sdk_add_compile_definitions(-DCONFIG_LUA)
 

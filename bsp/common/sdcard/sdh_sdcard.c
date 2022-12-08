@@ -21,6 +21,8 @@
  *
  */
 
+#if defined(BL616) || defined(BL808) || defined(BL628) || defined(BL606P)
+
 #include "sdh_sdcard.h"
 #include "bflb_mtimer.h"
 #include "bflb_l1c.h"
@@ -30,9 +32,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-static uint32_t sdhClockInit = 400000ul;
-static uint32_t sdhClockSrc = 96000000ul;
-static uint32_t sdhClockTransfer = 48000000ul;
+static uint32_t sdhClockInit = 100ul;
+static uint32_t sdhClockSrc = 100ul;
+static uint32_t sdhClockTransfer = 100ul;
 
 static sd_card_t *pSDCardInfo = NULL;
 static SDH_Cfg_Type SDH_Cfg_Type_Instance;
@@ -316,6 +318,8 @@ static status_t SDH_SendCardCommand(SDH_CMD_Cfg_Type *cmd)
 
 static void SDH_HostInit(void)
 {
+    GLB_Set_SDH_CLK(ENABLE, GLB_SDH_CLK_WIFIPLL_96M, 7);
+
     /* initialise SDH controller*/
     SDH_Cfg_Type_Instance.vlot18Enable = DISABLE;
     SDH_Cfg_Type_Instance.highSpeed = ENABLE;
@@ -816,6 +820,8 @@ static status_t SD_SetDataBusWidth(sd_card_t *card, SDH_Data_Bus_Width_Type widt
         goto out;
     }
 
+    GLB_Set_SDH_CLK(ENABLE, GLB_SDH_CLK_WIFIPLL_96M, 1);
+
     /* reinitialise SDH controller*/
     SDH_Cfg_Type_Instance.vlot18Enable = DISABLE;
     SDH_Cfg_Type_Instance.highSpeed = ENABLE;
@@ -1170,14 +1176,14 @@ static status_t SDH_SDCardInit(uint32_t bus_wide, sd_card_t *card)
   * @brief  Initializes SD Card clock.
   * @retval SD status
   */
-status_t SDH_ClockSet(uint32_t clockInit, uint32_t clockSrc, uint32_t clockTransfer)
-{
-    sdhClockInit = clockInit;
-    sdhClockSrc = clockSrc;
-    sdhClockTransfer = clockTransfer;
+// status_t SDH_ClockSet(uint32_t clockInit, uint32_t clockSrc, uint32_t clockTransfer)
+// {
+//     sdhClockInit = clockInit;
+//     sdhClockSrc = clockSrc;
+//     sdhClockTransfer = clockTransfer;
 
-    return Status_Success;
-}
+//     return Status_Success;
+// }
 
 /**
   * @brief  Initializes the SD card device.
@@ -1622,3 +1628,5 @@ status_t SDH_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t B
 out:
     return (errorstatus);
 }
+
+#endif

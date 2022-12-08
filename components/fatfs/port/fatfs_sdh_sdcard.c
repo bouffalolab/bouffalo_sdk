@@ -30,6 +30,8 @@
 /* storage control modules to the FatFs module with a defined API.       */
 /*-----------------------------------------------------------------------*/
 
+#if defined(BL616) || defined(BL808) || defined(BL628) || defined(BL606P)
+
 #include "ff.h"     /* Obtains integer types */
 #include "diskio.h" /* Declarations of disk functions */
 #include "sdh_sdcard.h"
@@ -104,7 +106,6 @@ int MMC_disk_ioctl(BYTE cmd, void *buff)
     return 0;
 }
 
-
 DSTATUS Translate_Result_Code(int result)
 {
     // MSG("%s\r\n",FR_Table[result]);
@@ -135,3 +136,5 @@ void fatfs_sdh_driver_register(void)
     bflb_irq_attach(33, sdh_isr, NULL);
     bflb_irq_enable(33);
 }
+
+#endif

@@ -21,8 +21,8 @@
  *
  */
 
-#ifndef __SDIO_SDCARD_H
-#define __SDIO_SDCARD_H
+#ifndef _SDH_SDCARD_H
+#define _SDH_SDCARD_H
 
 #include <stdint.h>
 
@@ -38,7 +38,17 @@
 #include "bl616_common.h"
 #include "bl616_glb.h"
 #include "bl616_sdh.h"
+#elif defined(BL628)
+#include "bl628_common.h"
+#include "bl628_glb.h"
+#include "bl628_smih.h"
+#else
+#define _SDH_SDCARD_CHECK
 #endif
+
+#ifndef _SDH_SDCARD_CHECK
+#define _SDH_SDCARD_CHECK
+
 /*! @brief Reverse byte sequence in uint32_t */
 #define SWAP_WORD_BYTE_SEQUENCE(x) (__REV(x))
 
@@ -512,4 +522,6 @@ status_t SDH_Init(uint32_t bus_wide, sd_card_t *pOutCardInfo);
 status_t SD_Erase(uint32_t startaddr, uint32_t endaddr);
 status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize, uint32_t NumberOfBlocks);
 status_t SDH_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSize, uint32_t NumberOfBlocks);
-#endif /* __SDCARD_H */
+
+#endif
+#endif
