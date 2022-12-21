@@ -3,6 +3,14 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup I2C
+  * @{
+  */
+
 /* Bit definitions for the flags field in struct bflb_i2c_msg_s
  *
  * START/STOP Rules:
@@ -40,13 +48,6 @@
 #define I2C_M_NOSTOP  0x0040 /* Message should not end with a STOP */
 #define I2C_M_NOSTART 0x0080 /* Message should not begin with a START */
 
-/* I2C bus speed */
-
-#define I2C_SPEED_STANDARD  100000  /* Standard speed (100Khz) */
-#define I2C_SPEED_FAST      400000  /* Fast speed     (400Khz) */
-#define I2C_SPEED_FAST_PLUS 1000000 /* Fast+ speed    (  1Mhz) */
-#define I2C_SPEED_HIGH      3400000 /* High speed     (3.4Mhz) */
-
 /** @defgroup I2C_INTSTS i2c interrupt status definition
   * @{
   */
@@ -63,20 +64,25 @@
 /** @defgroup I2C_INTCLR i2c interrupt clear definition
   * @{
   */
-#define I2C_INTCLR_END     (1 << 0) /* Transfer end interrupt */
-#define I2C_INTCLR_NACK    (1 << 3) /* NACK interrupt */
-#define I2C_INTCLR_ARB     (1 << 4) /* Arbitration lost interrupt */
+#define I2C_INTCLR_END  (1 << 0) /* Transfer end interrupt */
+#define I2C_INTCLR_NACK (1 << 3) /* NACK interrupt */
+#define I2C_INTCLR_ARB  (1 << 4) /* Arbitration lost interrupt */
 /**
  * @}
  */
 
-/* I2C interrupt type */
-#define I2C_INT_END     (1 << 0) /* Transfer end interrupt */
-#define I2C_INT_TX_FIFO (1 << 1) /* TX FIFO ready interrupt */
-#define I2C_INT_RX_FIFO (1 << 2) /* RX FIFO ready interrupt */
-#define I2C_INT_NACK    (1 << 3) /* NACK interrupt */
-#define I2C_INT_ARB     (1 << 4) /* Arbitration lost interrupt */
-#define I2C_INT_FER     (1 << 5) /* TX/RX FIFO error interrupt */
+/** @defgroup I2C_INTEN i2c interrupt enable definition
+  * @{
+  */
+#define I2C_INTEN_END     (1 << 0) /* Transfer end interrupt */
+#define I2C_INTEN_TX_FIFO (1 << 1) /* TX FIFO ready interrupt */
+#define I2C_INTEN_RX_FIFO (1 << 2) /* RX FIFO ready interrupt */
+#define I2C_INTEN_NACK    (1 << 3) /* NACK interrupt */
+#define I2C_INTEN_ARB     (1 << 4) /* Arbitration lost interrupt */
+#define I2C_INTEN_FER     (1 << 5) /* TX/RX FIFO error interrupt */
+/**
+ * @}
+ */
 
 /**
  * @brief I2C message structure
@@ -97,19 +103,92 @@ struct bflb_i2c_msg_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize i2c.
+ *
+ * @param [in] dev device handle
+ * @param [in] frequency i2c frequency, range from 305Hz to 400KHz
+ */
 void bflb_i2c_init(struct bflb_device_s *dev, uint32_t frequency);
+
+/**
+ * @brief Deinitialize i2c.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_i2c_deinit(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable i2c tx dma.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, otherwise disable.
+ */
 void bflb_i2c_link_txdma(struct bflb_device_s *dev, bool enable);
+
+/**
+ * @brief Enable i2c rx dma.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, otherwise disable.
+ */
 void bflb_i2c_link_rxdma(struct bflb_device_s *dev, bool enable);
+
+/**
+ * @brief Start transferring i2c message.
+ *
+ * @param [in] dev device handle
+ * @param [in] msgs pointer to i2c message
+ * @param [in] count message count
+ * @return A negated errno value on failure.
+ */
 int bflb_i2c_transfer(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, int count);
+
+/**
+ * @brief Enable or disable i2c interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] int_type interrupt type ,use @ref I2C_INTEN
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_i2c_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask);
+
+/**
+ * @brief Clear i2c interrupt status.
+ *
+ * @param [in] dev device handle
+ * @param [in] int_clear clear value, use @ref I2C_INTCLR
+ */
 void bflb_i2c_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
+
+/**
+ * @brief Get i2c interrupt status.
+ *
+ * @param [in] dev device handle
+ * @return interrupt status value, use @ref I2C_INTSTS
+ */
 uint32_t bflb_i2c_get_intstatus(struct bflb_device_s *dev);
 
+/**
+ * @brief Control i2c feature.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmd feature command
+ * @param [in] arg user data
+ * @return A negated errno value on failure.
+ */
 int bflb_i2c_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

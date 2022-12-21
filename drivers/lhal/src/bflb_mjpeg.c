@@ -189,6 +189,44 @@ void bflb_mjpeg_init(struct bflb_device_s *dev, const struct bflb_mjpeg_config_s
 
     /* Clear interrupt */
     putreg32(0x3F00, reg_base + MJPEG_FRAME_FIFO_POP_OFFSET);
+
+    static uint16_t q_table_50_y[64] = {
+        16, 11, 10, 16, 24, 40, 51, 61,
+        12, 12, 14, 19, 26, 58, 60, 55,
+        14, 13, 16, 24, 40, 57, 69, 56,
+        14, 17, 22, 29, 51, 87, 80, 62,
+        18, 22, 37, 56, 68, 109, 103, 77,
+        24, 35, 55, 64, 81, 104, 113, 92,
+        49, 64, 78, 87, 103, 121, 120, 101,
+        72, 92, 95, 98, 112, 100, 103, 99
+    };
+
+    static uint16_t q_table_50_uv[64] = {
+        17, 18, 24, 47, 99, 99, 99, 99,
+        18, 21, 26, 66, 99, 99, 99, 99,
+        24, 26, 56, 99, 99, 99, 99, 99,
+        47, 66, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99
+    };
+
+    uint16_t tmp_table_y[64] = { 0 };
+    uint16_t tmp_table_uv[64] = { 0 };
+
+    if (config->input_yy_table) {
+        bflb_mjpeg_calculate_quantize_table(config->quality, config->input_yy_table, tmp_table_y);
+    } else {
+        bflb_mjpeg_calculate_quantize_table(config->quality, q_table_50_y, tmp_table_y);
+    }
+    if (config->input_uv_table) {
+        bflb_mjpeg_calculate_quantize_table(config->quality, config->input_uv_table, tmp_table_uv);
+    } else {
+        bflb_mjpeg_calculate_quantize_table(config->quality, q_table_50_uv, tmp_table_uv);
+    }
+
+    bflb_mjpeg_fill_quantize_table(dev, tmp_table_y, tmp_table_uv);
 }
 
 void bflb_mjpeg_start(struct bflb_device_s *dev)

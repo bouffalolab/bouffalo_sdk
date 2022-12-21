@@ -1,4 +1,5 @@
 #include "bflb_pwm_v1.h"
+#include "bflb_clock.h"
 #include "hardware/pwm_v1_reg.h"
 
 void bflb_pwm_v1_channel_init(struct bflb_device_s *dev, uint8_t ch, const struct bflb_pwm_v1_channel_config_s *config)

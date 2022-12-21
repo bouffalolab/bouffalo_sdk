@@ -2,7 +2,14 @@
 #define _BFLB_TIMER_H
 
 #include "bflb_core.h"
-#include "bflb_clock.h"
+
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup TIMER
+  * @{
+  */
 
 /** @defgroup TIMER_CLK_SOURCE timer clock source definition
   * @{
@@ -37,6 +44,15 @@
 #define TIMER_COMP_ID_1 1
 #define TIMER_COMP_ID_2 2
 #define TIMER_COMP_NONE 3
+/**
+  * @}
+  */
+
+/** @defgroup TIMER_CAPTURE_POLARITY timer capture polarity definition
+  * @{
+  */
+#define TIMER_CAPTURE_POLARITY_POSITIVE 0
+#define TIMER_CAPTURE_POLARITY_NEGATIVE 1
 /**
   * @}
   */
@@ -79,19 +95,105 @@ struct bflb_timer_capture_config_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize timer.
+ *
+ * @param [in] dev device handle
+ * @param [in] config pointer to save timer config
+ */
 void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s *config);
+
+/**
+ * @brief Deinitialize timer.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_timer_deinit(struct bflb_device_s *dev);
+
+/**
+ * @brief Start timer.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_timer_start(struct bflb_device_s *dev);
+
+/**
+ * @brief Stop timer.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_timer_stop(struct bflb_device_s *dev);
+
+/**
+ * @brief Set timer preload value.
+ *
+ * @param [in] dev device handle
+ * @param [in] val preload value
+ */
 void bflb_timer_set_preloadvalue(struct bflb_device_s *dev, uint32_t val);
+
+/**
+ * @brief Set compare value of corresponding compare id.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmp_no compare id, use @ref TIMER_COMP_ID
+ * @param [in] val compare value
+ */
 void bflb_timer_set_compvalue(struct bflb_device_s *dev, uint8_t cmp_no, uint32_t val);
+
+/**
+ * @brief Get compare value of corresponding compare id.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmp_no compare id, use @ref TIMER_COMP_ID
+ * @return uint32_t
+ */
 uint32_t bflb_timer_get_compvalue(struct bflb_device_s *dev, uint8_t cmp_no);
+
+/**
+ * @brief Get timer counter value.
+ *
+ * @param [in] dev device handle
+ * @return counter value
+ */
 uint32_t bflb_timer_get_countervalue(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable or disable timer interrupt of corresponding compare id.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmp_no compare id, use @ref TIMER_COMP_ID
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_timer_compint_mask(struct bflb_device_s *dev, uint8_t cmp_no, bool mask);
+
+/**
+ * @brief Get timer interrupt status of corresponding compare id.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmp_no compare id, use @ref TIMER_COMP_ID
+ * @return true mean yes, otherwise no.
+ */
 bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no);
+
+/**
+ * @brief Clear timer interrupt status of corresponding compare id.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmp_no compare id, use @ref TIMER_COMP_ID
+ */
 void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
 #endif

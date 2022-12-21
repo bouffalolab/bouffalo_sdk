@@ -137,8 +137,8 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval |= AON_GPADC_POS_SATUR_MASK;
     putreg32(regval, reg_base + AON_GPADC_REG_ISR_OFFSET);
 
-    //coe = bflb_efuse_get_adc_trim();              /* read from efuse */
-    //tsen_offset = bflb_efuse_get_adc_tsen_trim(); /* read from efuse */
+    coe = bflb_efuse_get_adc_trim();              /* read from efuse */
+    tsen_offset = bflb_efuse_get_adc_tsen_trim(); /* read from efuse */
 }
 
 void bflb_adc_deinit(struct bflb_device_s *dev)

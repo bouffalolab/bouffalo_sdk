@@ -1,13 +1,21 @@
 #include "bflb_rtc.h"
 #include "hardware/rtc_reg.h"
 
+#if defined(BL602) || defined(BL702) || defined(BL702L)
+#define BFLB_RTC_BASE 0x4000F000
+#elif defined(BL808) || defined(BL606P) || defined(BL616)
+#define BFLB_RTC_BASE 0x2000F000
+#elif defined(BL628)
+#define BFLB_RTC_BASE 0x2008F000
+#endif
+
 void bflb_rtc_set_time(struct bflb_device_s *dev, uint64_t time)
 {
     uint32_t reg_base;
     uint32_t regval;
     uint32_t comp_l, comp_h;
 
-    reg_base = dev->reg_base;
+    reg_base = BFLB_RTC_BASE;
 
     /* Clear & Disable RTC counter */
     regval = getreg32(reg_base + HBN_CTL_OFFSET);
@@ -51,7 +59,7 @@ uint64_t bflb_rtc_get_time(struct bflb_device_s *dev)
     uint64_t time_l;
     uint64_t time_h;
 
-    reg_base = dev->reg_base;
+    reg_base = BFLB_RTC_BASE;
 
     /* Tigger RTC val read */
     regval = getreg32(reg_base + HBN_RTC_TIME_H_OFFSET);

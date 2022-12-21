@@ -2,7 +2,14 @@
 #define _BFLB_PWM_V2_H
 
 #include "bflb_core.h"
-#include "bflb_clock.h"
+
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup PWM_V1
+  * @{
+  */
 
 /** @defgroup PWM_CHANNEL pwm channel definition
   * @{
@@ -65,7 +72,7 @@
 /**
  * @brief PWM configuration structure
  *
- * @param clk_source PWM clock source, use BFLB_SYSTEM_* definition
+ * @param clk_source PWM clock source, use @ref BFLB_SYSTEM_CLOCK
  * @param clk_div    PWM clock dividor, should be in 1~65535
  * @param period     PWM period count, should be in 2~65535
  */
@@ -79,21 +86,104 @@ struct bflb_pwm_v1_channel_config_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize pwm channel.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ * @param [in] config pointer to save pwm channel config
+ */
 void bflb_pwm_v1_channel_init(struct bflb_device_s *dev, uint8_t ch, const struct bflb_pwm_v1_channel_config_s *config);
+
+/**
+ * @brief Deinitialize pwm channel.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ */
 void bflb_pwm_v1_channel_deinit(struct bflb_device_s *dev, uint8_t ch);
+
+/**
+ * @brief Start pwm channel output.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ */
 void bflb_pwm_v1_start(struct bflb_device_s *dev, uint8_t ch);
+
+/**
+ * @brief Stop pwm channel output.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ */
 void bflb_pwm_v1_stop(struct bflb_device_s *dev, uint8_t ch);
+
+/**
+ * @brief Set pwm channel period to change pwm frequence. Frequcence(hz) = pwm source clock /div/period.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ * @param [in] period pwm period
+ */
 void bflb_pwm_v1_set_period(struct bflb_device_s *dev, uint8_t ch, uint16_t period);
+
+/**
+ * @brief Set pwm dutycycle. Dutycycle(%) = (high_threhold - low_threhold)/period * 100%.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ * @param [in] low_threhold pwm low threhold
+ * @param [in] high_threhold pwm high threhold
+ */
 void bflb_pwm_v1_channel_set_threshold(struct bflb_device_s *dev, uint8_t ch, uint16_t low_threhold, uint16_t high_threhold);
 
+/**
+ * @brief Enable pwm interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ * @param [in] enable true means enable, otherwise disable.
+ */
 void bflb_pwm_v1_int_enable(struct bflb_device_s *dev, uint8_t ch, bool enable);
+
+/**
+ * @brief Get pwm interrupt status.
+ *
+ * @param [in] dev device handle
+ * @return interrupt status, use @ref PWM_INTSTS
+ */
 uint32_t bflb_pwm_v1_get_intstatus(struct bflb_device_s *dev);
+
+/**
+ * @brief Clear pwm interrupt status.
+ *
+ * @param [in] dev device handle
+ * @param [in] int_clear clear value, use @ref PWM_INTCLR
+ */
 void bflb_pwm_v1_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
+/**
+ * @brief
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ * @param [in] cmd feature command, use @ref PWM_CMD
+ * @param [in] arg user data
+ * @return A negated errno value on failure.
+ */
 int bflb_pwm_v1_feature_control(struct bflb_device_s *dev, uint8_t ch, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

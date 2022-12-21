@@ -3,6 +3,14 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup SPI
+  * @{
+  */
+
 #if defined(BL602) || defined(BL702)
 #define SPI_FIFO_WORD_NUM_MAX           4
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 0
@@ -101,6 +109,7 @@
 #define SPI_CMD_CLEAR_TX_FIFO   (0x03)
 #define SPI_CMD_CLEAR_RX_FIFO   (0x04)
 #define SPI_CMD_SET_CS_INTERVAL (0x05)
+#define SPI_CMD_RX_IGNORE       (0x06)
 /**
   * @}
   */
@@ -132,24 +141,133 @@ struct bflb_spi_config_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize spi.
+ *
+ * @param [in] dev device handle
+ * @param [in] config pointer to save spi config
+ */
 void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *config);
+
+/**
+ * @brief Deinitialize spi.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_spi_deinit(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable spi tx dma.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, otherwise disable.
+ */
 void bflb_spi_link_txdma(struct bflb_device_s *dev, bool enable);
+
+/**
+ * @brief Enable spi rx dma.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, otherwise disable.
+ */
 void bflb_spi_link_rxdma(struct bflb_device_s *dev, bool enable);
+
+/**
+ * @brief Send and receive one data on spi.
+ *
+ * @param [in] dev device handle
+ * @param [in] data data to send
+ * @return receive data
+ */
 uint32_t bflb_spi_poll_send(struct bflb_device_s *dev, uint32_t data);
+
+/**
+ * @brief Send and receive a block of data on spi.
+ *
+ * @param [in] dev device handle
+ * @param [in] txbuffer pointer to send buffer
+ * @param [in] rxbuffer pointer to receive buffer
+ * @param [in] nbytes bytes to send
+ * @return A negated errno value on failure.
+ */
 int bflb_spi_poll_exchange(struct bflb_device_s *dev, const void *txbuffer, void *rxbuffer, size_t nbytes);
+
+/**
+ * @brief Check if spi is busy.
+ *
+ * @param [in] dev device handle
+ * @return true means busy, otherwise not.
+ */
 bool bflb_spi_isbusy(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable or disable spi rx fifo threhold interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_spi_txint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Enable or disable spi rx fifo threhold interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_spi_rxint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Enable or disable spi transfer done interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_spi_tcint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Enable or disable spi error interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_spi_errint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Get spi interrupt status.
+ *
+ * @param [in] dev device handle
+ * @return interrupt status, use @ref SPI_INTSTS
+ */
 uint32_t bflb_spi_get_intstatus(struct bflb_device_s *dev);
+
+/**
+ * @brief Clear spi interrupt status.
+ *
+ * @param [in] dev device handle
+ * @param [in] int_clear clear value, use @ref SPI_INTCLR
+ */
 void bflb_spi_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
+/**
+ * @brief Control spi feature.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmd feature command, use @ref SPI_CMD
+ * @param [in] arg user data
+ * @return A negated errno value on failure.
+ */
 int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

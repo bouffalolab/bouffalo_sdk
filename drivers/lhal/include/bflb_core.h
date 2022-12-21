@@ -16,6 +16,14 @@
 #include "bflb_irq.h"
 #include "bflb_common.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup CORE
+  * @{
+  */
+
 #if !defined(BL602) && !defined(BL702) && !defined(BL702L) && \
     !defined(BL616) && !defined(BL606P) && !defined(BL808) && !defined(BL628)
 #error please define a supported chip
@@ -26,6 +34,16 @@
 void assert_func(uint8_t *file, uint32_t line, uint8_t *function, uint8_t *string);
 #else
 #define ASSERT_PARAM(expr) ((void)0U)
+#endif
+
+#if defined(BL702)
+#define BFLB_PSRAM_BASE 0x26000000
+#elif defined(BL616)
+#define BFLB_PSRAM_BASE 0xA8000000
+#elif defined(BL808)
+#define BFLB_PSRAM_BASE 0x50000000
+#elif defined(BL606P)
+#define BFLB_PSRAM_BASE 0x54000000
 #endif
 
 #define BFLB_DEVICE_TYPE_ADC      0
@@ -65,8 +83,11 @@ void assert_func(uint8_t *file, uint32_t line, uint8_t *function, uint8_t *strin
 #define BFLB_DEVICE_TYPE_MJPEG    34
 #define BFLB_DEVICE_TYPE_KYS      35
 #define BFLB_DEVICE_TYPE_DBI      36
+#define BFLB_DEVICE_TYPE_PEC      37
 #define BFLB_DEVICE_TYPE_WDT      38
 #define BFLB_DEVICE_TYPE_EF_CTRL  39
+#define BFLB_DEVICE_TYPE_SDIO3    40
+#define BFLB_DEVICE_TYPE_SDIO2    41
 
 struct bflb_device_s {
     const char *name;
@@ -82,12 +103,41 @@ struct bflb_device_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Get device handle by name.
+ *
+ * @param [in] name device name
+ * @return device handle
+ */
 struct bflb_device_s *bflb_device_get_by_name(const char *name);
+
+/**
+ * @brief Get device handle by type and index.
+ *
+ * @param [in] type device type
+ * @param [in] idx device index
+ * @return device handle
+ */
 struct bflb_device_s *bflb_device_get_by_id(uint8_t type, uint8_t idx);
+
+/**
+ * @brief Set user data into device handle.
+ *
+ * @param [in] device device handle
+ * @param [in] user_data pointer to user data
+ */
 void bflb_device_set_userdata(struct bflb_device_s *device, void *user_data);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

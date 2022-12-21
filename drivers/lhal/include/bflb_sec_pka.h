@@ -3,6 +3,14 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup SEC_PKA
+  * @{
+  */
+
 #define SEC_ENG_PKA_REG_SIZE_8   1
 #define SEC_ENG_PKA_REG_SIZE_16  2
 #define SEC_ENG_PKA_REG_SIZE_32  3
@@ -265,5 +273,13 @@ void bflb_pka_mont2gf(struct bflb_device_s *dev,
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

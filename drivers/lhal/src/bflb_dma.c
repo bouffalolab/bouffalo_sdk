@@ -290,7 +290,7 @@ void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
 #endif
 }
 
-int bflb_dma_channel_start(struct bflb_device_s *dev)
+void bflb_dma_channel_start(struct bflb_device_s *dev)
 {
     uint32_t regval;
     uint32_t channel_base;
@@ -301,11 +301,9 @@ int bflb_dma_channel_start(struct bflb_device_s *dev)
     regval = getreg32(channel_base + DMA_CxCONFIG_OFFSET);
     regval |= DMA_E;
     putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
-
-    return 0;
 }
 
-int bflb_dma_channel_stop(struct bflb_device_s *dev)
+void bflb_dma_channel_stop(struct bflb_device_s *dev)
 {
     uint32_t regval;
     uint32_t channel_base;
@@ -316,8 +314,6 @@ int bflb_dma_channel_stop(struct bflb_device_s *dev)
     regval = getreg32(channel_base + DMA_CxCONFIG_OFFSET);
     regval &= ~DMA_E;
     putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
-
-    return 0;
 }
 
 bool bflb_dma_channel_isbusy(struct bflb_device_s *dev)

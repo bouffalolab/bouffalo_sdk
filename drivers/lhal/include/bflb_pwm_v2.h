@@ -2,7 +2,14 @@
 #define _BFLB_PWM_V2_H
 
 #include "bflb_core.h"
-#include "bflb_clock.h"
+
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup PWM_V2
+  * @{
+  */
 
 /** @defgroup PWM_CHANNEL pwm channel definition
   * @{
@@ -16,7 +23,7 @@
   * @}
   */
 
-/** @defgroup PWM_POLARITY definition
+/** @defgroup PWM_POLARITY pwm polarity definition
   * @{
   */
 #define PWM_POLARITY_ACTIVE_LOW  0
@@ -25,7 +32,7 @@
   * @}
   */
 
-/** @defgroup PWM_STATE definition
+/** @defgroup PWM_STATE pwm state definition
   * @{
   */
 #define PWM_STATE_INACTIVE 0
@@ -34,7 +41,7 @@
   * @}
   */
 
-/** @defgroup PWM_TRIG_SDC_SRC definition
+/** @defgroup PWM_TRIG_SDC_SRC pwm trigger adc source definition
   * @{
   */
 #define PWM_TRIG_ADC_SRC_CH0_L  0
@@ -142,7 +149,7 @@ struct bflb_pwm_v2_channel_config_s {
 /**
  * @brief PWM configuration structure
  *
- * @param clk_source PWM clock source, use BFLB_SYSTEM_* definition
+ * @param clk_source PWM clock source, use @ref BFLB_SYSTEM_CLOCK
  * @param clk_div    PWM clock dividor, should be in 1~65535
  * @param period     PWM period count, should be in 2~65535
  */
@@ -156,28 +163,147 @@ struct bflb_pwm_v2_config_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize pwm.
+ *
+ * @param [in] dev device handle
+ * @param [in] config pointer to save pwm config
+ */
 void bflb_pwm_v2_init(struct bflb_device_s *dev, const struct bflb_pwm_v2_config_s *config);
+
+/**
+ * @brief Deinitialize pwm.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_pwm_v2_deinit(struct bflb_device_s *dev);
+
+/**
+ * @brief Start pwm output.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_pwm_v2_start(struct bflb_device_s *dev);
+
+/**
+ * @brief Stop pwm output.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_pwm_v2_stop(struct bflb_device_s *dev);
+
+/**
+ * @brief Set pwm period to change pwm frequence. Frequcence(hz) = pwm source clock /div/period.
+ *
+ * @param [in] dev device handle
+ * @param [in] period pwm period
+ */
 void bflb_pwm_v2_set_period(struct bflb_device_s *dev, uint16_t period);
+
+/**
+ * @brief Get pwm frequcency.
+ *
+ * @param [in] dev device handle
+ * @return frequcency
+ */
 float bflb_pwm_v2_get_frequency(struct bflb_device_s *dev);
 
+/**
+ * @brief Config pwm channel.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ * @param [in] config pointer to save pwm channel config
+ */
 void bflb_pwm_v2_channel_init(struct bflb_device_s *dev, uint8_t ch, struct bflb_pwm_v2_channel_config_s *config);
+
+/**
+ * @brief Set pwm dutycycle. Dutycycle(%) = (high_threhold - low_threhold)/period * 100%.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ * @param [in] low_threhold pwm low threhold
+ * @param [in] high_threhold pwm high threhold
+ */
 void bflb_pwm_v2_channel_set_threshold(struct bflb_device_s *dev, uint8_t ch, uint16_t low_threhold, uint16_t high_threhold);
+
+/**
+ * @brief Start pwm positive output.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ */
 void bflb_pwm_v2_channel_positive_start(struct bflb_device_s *dev, uint8_t ch);
+
+/**
+ * @brief Start pwm negative output.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ */
 void bflb_pwm_v2_channel_negative_start(struct bflb_device_s *dev, uint8_t ch);
+
+/**
+ * @brief Stop pwm positive output.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ */
 void bflb_pwm_v2_channel_positive_stop(struct bflb_device_s *dev, uint8_t ch);
+
+/**
+ * @brief Stop pwm negative output.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch channel number
+ */
 void bflb_pwm_v2_channel_negative_stop(struct bflb_device_s *dev, uint8_t ch);
 
+/**
+ * @brief Enable pwm interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] int_en interrupt type
+ * @param [in] enable true means enable, otherwise disable
+ */
 void bflb_pwm_v2_int_enable(struct bflb_device_s *dev, uint32_t int_en, bool enable);
+
+/**
+ * @brief Get pwm interrupt status.
+ *
+ * @param [in] dev device handle
+ * @return interrupt status, use @ref PWM_INTSTS
+ */
 uint32_t bflb_pwm_v2_get_intstatus(struct bflb_device_s *dev);
+
+/**
+ * @brief Clear pwm interrupt status.
+ *
+ * @param [in] dev device handle
+ * @param [in] int_clear clear value, use @ref PWM_INTCLR
+ */
 void bflb_pwm_v2_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
+/**
+ * @brief Control pwm feature.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmd feature command, use @ref PWM_CMD
+ * @param [in] arg user data
+ * @return A negated errno value on failure.
+ */
 int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

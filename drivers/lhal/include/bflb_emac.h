@@ -1,43 +1,15 @@
-/**
-  ******************************************************************************
-  * @file    bflb_emac.h
-  * @version V1.0
-  * @date    2022-09-27
-  * @brief   This file is the low hardware abstraction layer file
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT(c) 2022 Bouffalo Lab</center></h2>
-  *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of Bouffalo Lab nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
-  *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  ******************************************************************************
-  */
-
 #ifndef _BFLB_EMAC_H
 #define _BFLB_EMAC_H
 
 #include "bflb_core.h"
+
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup EMAC
+  * @{
+  */
 
 #define EMAC_DO_FLUSH_DATA (1)
 
@@ -63,8 +35,11 @@
 #define EMAC_CMD_SET_MAX_FRAME    (0x0D)
 #define EMAC_CMD_SET_MAXRET       (0x0E)
 #define EMAC_CMD_SET_COLLVALID    (0x0F)
+/**
+  * @}
+  */
 
-/** @defgroup PHY state definition
+/** @defgroup PHY_STATE phy state definition
   * @{
   */
 #define PHY_STATE_DOWN    (0) /* PHY is not usable */
@@ -74,6 +49,9 @@
 #define PHY_STATE_NOLINK  (4) /* no cable connected */
 #define PHY_STATE_STOPPED (5) /* PHY has been stopped */
 #define PHY_STATE_TESTING (6) /* in test mode */
+/**
+  * @}
+  */
 
 /* EMAC PACKET */
 #define EMAC_NORMAL_PACKET   (uint32_t)(0)
@@ -156,7 +134,7 @@ struct bflb_emac_config_s {
  * @param phy_address      EMAC phy address
  * @param phy_id           EMAC phy read phy id
  */
-struct emac_phy_cfg_s {
+struct bflb_emac_phy_cfg_s {
     uint8_t auto_negotiation;
     uint8_t full_duplex;
     uint8_t phy_state;
@@ -166,68 +144,200 @@ struct emac_phy_cfg_s {
     uint32_t phy_id;
 };
 
-/**
- *  @brief Note: Always write DWORD1 (buffer addr) first then DWORD0 for racing concern.
- */
-struct emac_bd_desc_s {
-    uint32_t C_S_L;  /*!< Buffer Descriptors(BD) control,status,length */
-    uint32_t Buffer; /*!< BD buffer address */
-};
-
-/**
- * @brief emac handle type definition
- * @param bd             Tx descriptor header pointer
- * @param tx_index_emac  TX index: EMAC
- * @param tx_index_cpu   TX index: CPU/SW
- * @param tx_buff_limit  TX index max
- * @param rsv0           rsv0
- * @param rx_index_emac  RX index: EMAC
- * @param rx_index_cpu   RX index: CPU/SW
- * @param rx_buff_limit  RX index max
- * @param rsv1           rsv1
- *
- */
-struct emac_handle_s {
-    struct emac_bd_desc_s *bd;
-    uint8_t tx_index_emac;
-    uint8_t tx_index_cpu;
-    uint8_t tx_buff_limit;
-    uint8_t rsv0;
-    uint8_t rx_index_emac;
-    uint8_t rx_index_cpu;
-    uint8_t rx_buff_limit;
-    uint8_t rsv1;
-};
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] config
+ */
 void bflb_emac_init(struct bflb_device_s *dev, const struct bflb_emac_config_s *config);
-void bflb_emac_bd_init(struct bflb_device_s *dev, uint8_t *eth_tx_buff, uint8_t tx_buf_count, uint8_t *eth_rx_buff, uint8_t rx_buf_count);
-int emac_bd_fragment_support(void);
-int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
-void bflb_emac_int_enable(struct bflb_device_s *dev, uint32_t flag, bool enable);
-void bflb_emac_int_clear(struct bflb_device_s *dev, uint32_t flag);
-uint32_t bflb_emac_get_int_status(struct bflb_device_s *dev);
-uint32_t bflb_emac_bd_get_cur_active(struct bflb_device_s *dev, uint8_t bdt);
-void bflb_emac_bd_rx_enqueue(uint32_t index);
-void bflb_emac_bd_rx_on_err(uint32_t index);
-void bflb_emac_bd_tx_dequeue(uint32_t index);
-void bflb_emac_bd_tx_on_err(uint32_t index);
-int bflb_emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in);
-int bflb_emac_bd_rx_dequeue(uint32_t flags, uint32_t *len, uint8_t *data_out);
-int bflb_emac_phy_reg_read(struct bflb_device_s *dev, uint16_t phy_reg, uint16_t *phy_reg_val);
-int bflb_emac_phy_reg_write(struct bflb_device_s *dev, uint16_t phy_reg, uint16_t phy_reg_val);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ */
 void bflb_emac_stop(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ */
 void bflb_emac_start(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ */
 void bflb_emac_start_tx(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ */
 void bflb_emac_stop_tx(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ */
 void bflb_emac_start_rx(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ */
 void bflb_emac_stop_rx(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] eth_tx_buff
+ * @param [in] tx_buf_count
+ * @param [in] eth_rx_buff
+ * @param [in] rx_buf_count
+ */
+void bflb_emac_bd_init(struct bflb_device_s *dev, uint8_t *eth_tx_buff, uint8_t tx_buf_count, uint8_t *eth_rx_buff, uint8_t rx_buf_count);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] bdt
+ * @return uint32_t
+ */
+uint32_t bflb_emac_bd_get_cur_active(struct bflb_device_s *dev, uint8_t bdt);
+
+/**
+ * @brief
+ *
+ * @param [in] index
+ */
+void bflb_emac_bd_rx_enqueue(uint32_t index);
+
+/**
+ * @brief
+ *
+ * @param [in] index
+ */
+void bflb_emac_bd_rx_on_err(uint32_t index);
+
+/**
+ * @brief
+ *
+ * @param [in] index
+ */
+void bflb_emac_bd_tx_dequeue(uint32_t index);
+
+/**
+ * @brief
+ *
+ * @param [in] index
+ */
+void bflb_emac_bd_tx_on_err(uint32_t index);
+
+/**
+ * @brief
+ *
+ * @param [in] flags
+ * @param [in] len
+ * @param [in] data_in
+ * @return int
+ */
+int bflb_emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in);
+
+/**
+ * @brief
+ *
+ * @param [in] flags
+ * @param [in] len
+ * @param [in] data_out
+ * @return int
+ */
+int bflb_emac_bd_rx_dequeue(uint32_t flags, uint32_t *len, uint8_t *data_out);
+
+/**
+ * @brief
+ *
+ * @return int
+ */
+int emac_bd_fragment_support(void);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] flag
+ * @param [in] enable
+ */
+void bflb_emac_int_enable(struct bflb_device_s *dev, uint32_t flag, bool enable);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] flag
+ */
+void bflb_emac_int_clear(struct bflb_device_s *dev, uint32_t flag);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @return uint32_t
+ */
+uint32_t bflb_emac_get_int_status(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] cmd
+ * @param [in] arg
+ * @return int
+ */
+int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] phy_reg
+ * @param [in] phy_reg_val
+ * @return int
+ */
+int bflb_emac_phy_reg_read(struct bflb_device_s *dev, uint16_t phy_reg, uint16_t *phy_reg_val);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] phy_reg
+ * @param [in] phy_reg_val
+ * @return int
+ */
+int bflb_emac_phy_reg_write(struct bflb_device_s *dev, uint16_t phy_reg, uint16_t phy_reg_val);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _BFLB_EMAC_H */
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+#endif

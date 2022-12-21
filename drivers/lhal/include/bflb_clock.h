@@ -3,11 +3,25 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup CLOCK
+  * @{
+  */
+
+/** @defgroup BFLB_SYSTEM_CLOCK system clock definition
+  * @{
+  */
 #define BFLB_SYSTEM_ROOT_CLOCK 0
 #define BFLB_SYSTEM_CPU_CLK    1
 #define BFLB_SYSTEM_PBCLK      2
 #define BFLB_SYSTEM_XCLK       3
 #define BFLB_SYSTEM_32K_CLK    4
+/**
+  * @}
+  */
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define BFLB_GLB_CGEN1_BASE (0x40000000 + 0x24)
@@ -176,11 +190,33 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Get system clock frequence
+ *
+ * @param [in] type system clock type
+ * @return frequence
+ */
 uint32_t bflb_clk_get_system_clock(uint8_t type);
+
+/**
+ * @brief Get peripheral clock frequence
+ *
+ * @param [in] type peripheral type
+ * @param [in] idx peripheral index
+ * @return frequence
+ */
 uint32_t bflb_clk_get_peripheral_clock(uint8_t type, uint8_t idx);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

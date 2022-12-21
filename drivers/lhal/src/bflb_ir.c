@@ -11,19 +11,19 @@ void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s
     uint32_t regval;
     uint32_t ir_clock;
     struct bflb_ir_tx_config_s *tx_config = (struct bflb_ir_tx_config_s *)config;
-    
+
 #if defined(BL602) || defined(BL702)
     *(uint32_t *)0x40000224 |= 1 << 31;
 #else
     *(uint32_t *)0x20000144 |= 1 << 31;
 #endif
-    
+
     if (bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0)) {
         ir_clock = bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0);
     } else {
         ir_clock = 2000000;
     }
-    
+
     if (tx_config->tx_mode == IR_TX_NEC) {
         tx_config->data_bits = 32;
         tx_config->tail_inverse = 0;
@@ -81,7 +81,7 @@ void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s
         tx_config->fifo_width = IR_TX_FIFO_WIDTH_32BIT;
         tx_config->fifo_threshold = 0;
     }
-    
+
     if (tx_config->tx_mode != IR_TX_CUSTOMIZE) {
         tx_config->modu_width_1 = ((ir_clock / 11310 + 5) / 10 - 1) & 0xff;
         tx_config->modu_width_0 = ((ir_clock / 5655 + 5) / 10 - 1) & 0xff;
@@ -96,18 +96,18 @@ void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s
             }
         }
     }
-    
+
     reg_base = dev->reg_base;
     regval = (tx_config->pulse_width_unit & 0xfff) | tx_config->modu_width_1 << 16 | tx_config->modu_width_0 << 24;
     putreg32(regval, reg_base + IRTX_PULSE_WIDTH_OFFSET);
-    
+
 #if !defined(BL602) && !defined(BL702)
     regval = getreg32(reg_base + IR_FIFO_CONFIG_1_OFFSET);
     regval &= ~IR_TX_FIFO_TH_MASK;
     regval |= tx_config->fifo_threshold << IR_TX_FIFO_TH_SHIFT;
     putreg32(regval, reg_base + IR_FIFO_CONFIG_1_OFFSET);
 #endif
-    
+
     regval = getreg32(reg_base + IRTX_CONFIG_OFFSET);
 #if defined(BL602) || defined(BL702)
     regval &= ~(IR_CR_IRTX_SWM_EN | IR_CR_IRTX_MOD_EN | IR_CR_IRTX_OUT_INV);
@@ -166,7 +166,7 @@ void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s
     }
 #endif
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
-    
+
 #if defined(BL602) || defined(BL702)
     regval = (tx_config->tail_pulse_width_1 & 0xf) << 28 | \
              (tx_config->tail_pulse_width_0 & 0xf) << 24 | \
@@ -181,7 +181,7 @@ void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s
     regval = tx_config->logic0_pulse_width_0 | tx_config->logic0_pulse_width_1 << 8 | \
              tx_config->logic1_pulse_width_0 << 16 | tx_config->logic1_pulse_width_1 << 24;
     putreg32(regval, reg_base + IRTX_PW_0_OFFSET);
-    
+
     regval = tx_config->head_pulse_width_0 | tx_config->head_pulse_width_1 << 8 | \
              tx_config->tail_pulse_width_0 << 16 | tx_config->tail_pulse_width_1 << 24;
     putreg32(regval, reg_base + IRTX_PW_1_OFFSET);
@@ -195,9 +195,9 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
 #if !defined(BL602) && !defined(BL702)
     uint32_t i = 0;
 #endif
-    
+
     bflb_ir_txint_clear(dev);
-    
+
     reg_base = dev->reg_base;
 #if defined(BL602) || defined(BL702)
     putreg32(data[0], reg_base + IRTX_DATA_WORD0_OFFSET);
@@ -205,40 +205,40 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
         putreg32(data[1], reg_base + IRTX_DATA_WORD1_OFFSET);
     }
 #endif
-    
+
     regval = getreg32(reg_base + IRTX_CONFIG_OFFSET);
     regval |= IR_CR_IRTX_EN;
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
-    
+
 #if !defined(BL602) && !defined(BL702)
     if ((regval & IR_CR_IRTX_FRM_EN) == 0) {
         length = length < 4 ? length : 4;
     }
     while(i < length){
-        if (bflb_ir_txfifo_cnt(dev) > 0) {
+        if (bflb_ir_get_txfifo_cnt(dev) > 0) {
             putreg32(data[i], reg_base + IR_FIFO_WDATA_OFFSET);
             i++;
         }
     }
-    
+
     if ((getreg32(reg_base + IRTX_CONFIG_OFFSET) & IR_CR_IRTX_FRM_EN) == 0) {
-        while((bflb_ir_txint_status(dev) & IR_TX_INT_END) == 0){
+        while((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0){
             /* Waiting for sending */
         }
     } else {
-        while(bflb_ir_txfifo_cnt(dev) < 4){
+        while(bflb_ir_get_txfifo_cnt(dev) < 4){
             /* Waiting for sending */
         }
     }
 #else
-    while((bflb_ir_txint_status(dev) & IR_TX_INT_END) == 0){
+    while((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0){
         /* Waiting for sending */
     }
 #endif
 
     regval &= ~IR_CR_IRTX_EN;
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
-    
+
     bflb_ir_txint_clear(dev);
 }
 
@@ -254,20 +254,20 @@ void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
 #endif
     uint32_t pwval = 0;
     uint32_t i, j;
-    
+
     if (length > 128) {
         length = 128;
     }
-    
+
     bflb_ir_txint_clear(dev);
-    
+
     /* Search for min value */
     for (i = 1; i < length; i++) {
         if (min_data > data[i] && data[i] != 0) {
             min_data = data[i];
         }
     }
-    
+
     /* Set min value as pulse width unit */
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRTX_PULSE_WIDTH_OFFSET);
@@ -326,19 +326,19 @@ void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
         }
 
         /* Write to tx fifo */
-        while(bflb_ir_txfifo_cnt(dev) == 0){}
+        while(bflb_ir_get_txfifo_cnt(dev) == 0){}
         putreg32(pwval, reg_base + IR_FIFO_WDATA_OFFSET);
     }
 #endif
-    
-    while((bflb_ir_txint_status(dev) & IR_TX_INT_END) == 0){
+
+    while((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0){
         /* Waiting for sending */
     }
-    
+
     regval = getreg32(reg_base + IRTX_CONFIG_OFFSET);
     regval &= ~IR_CR_IRTX_EN;
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
-    
+
     bflb_ir_txint_clear(dev);
 }
 
@@ -346,7 +346,7 @@ void bflb_ir_tx_enable(struct bflb_device_s *dev, bool enable)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRTX_CONFIG_OFFSET);
     if (enable) {
@@ -361,7 +361,7 @@ void bflb_ir_txint_mask(struct bflb_device_s *dev, uint8_t int_type, bool mask)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRTX_INT_STS_OFFSET);
     if (mask) {
@@ -376,17 +376,17 @@ void bflb_ir_txint_clear(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRTX_INT_STS_OFFSET);
     regval |= IR_CR_IRTX_END_CLR;
     putreg32(regval, reg_base + IRTX_INT_STS_OFFSET);
 }
 
-uint32_t bflb_ir_txint_status(struct bflb_device_s *dev)
+uint32_t bflb_ir_get_txint_status(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
-    
+
     reg_base = dev->reg_base;
     return (getreg32(reg_base + IRTX_INT_STS_OFFSET) & 0x7);
 }
@@ -396,7 +396,7 @@ void bflb_ir_link_txdma(struct bflb_device_s *dev, bool enable)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IR_FIFO_CONFIG_0_OFFSET);
     if (enable) {
@@ -407,10 +407,10 @@ void bflb_ir_link_txdma(struct bflb_device_s *dev, bool enable)
     putreg32(regval, reg_base + IR_FIFO_CONFIG_0_OFFSET);
 }
 
-uint8_t bflb_ir_txfifo_cnt(struct bflb_device_s *dev)
+uint8_t bflb_ir_get_txfifo_cnt(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
-    
+
     reg_base = dev->reg_base;
     return ((getreg32(reg_base + IR_FIFO_CONFIG_1_OFFSET) & IR_TX_FIFO_CNT_MASK) >> IR_TX_FIFO_CNT_SHIFT);
 }
@@ -419,7 +419,7 @@ void bflb_ir_txfifo_clear(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IR_FIFO_CONFIG_0_OFFSET);
     regval |= IR_TX_FIFO_CLR;
@@ -435,13 +435,13 @@ void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s
     uint32_t regval;
     uint32_t ir_clock;
     uint16_t data_threshold, end_threshold;
-    
+
     if (bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0)) {
         ir_clock = bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0);
     } else {
         ir_clock = 2000000;
     }
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRRX_CONFIG_OFFSET);
     regval &= ~IR_CR_IRRX_MODE_MASK;
@@ -459,7 +459,7 @@ void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s
         regval |= config->deglitch_cnt << IR_CR_IRRX_DEG_CNT_SHIFT;
     }
     putreg32(regval, reg_base + IRRX_CONFIG_OFFSET);
-    
+
     if (config->rx_mode == IR_RX_NEC) {
         data_threshold = (ir_clock / 588 - 1) & 0xffff;
         end_threshold = (ir_clock / 222 - 1) & 0xffff;
@@ -473,7 +473,7 @@ void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s
     regval = getreg32(reg_base + IRRX_PW_CONFIG_OFFSET);
     regval = end_threshold << IR_CR_IRRX_END_TH_SHIFT | data_threshold;
     putreg32(regval, reg_base + IRRX_PW_CONFIG_OFFSET);
-    
+
 #if !defined(BL602) && !defined(BL702)
     regval = getreg32(reg_base + IR_FIFO_CONFIG_1_OFFSET);
     regval &= ~IR_RX_FIFO_TH_MASK;
@@ -486,30 +486,30 @@ uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     bflb_ir_rxint_clear(dev);
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRRX_CONFIG_OFFSET);
     regval |= IR_CR_IRRX_EN;
     putreg32(regval, reg_base + IRRX_CONFIG_OFFSET);
-    
-    while((bflb_ir_rxint_status(dev) & IR_RX_INT_END) == 0){
+
+    while((bflb_ir_get_rxint_status(dev) & IR_RX_INTSTS_END) == 0){
         /* Waiting for receiving */
     }
-    
+
     regval &= ~IR_CR_IRRX_EN;
     putreg32(regval, reg_base + IRRX_CONFIG_OFFSET);
-    
+
     bflb_ir_rxint_clear(dev);
-    
+
     regval = getreg32(reg_base + IRRX_DATA_COUNT_OFFSET) & IR_STS_IRRX_DATA_CNT_MASK;
     if (regval <= 32) {
         *data = getreg32(reg_base + IRRX_DATA_WORD0_OFFSET);
     } else {
         *data = getreg32(reg_base + IRRX_DATA_WORD0_OFFSET) | (uint64_t)getreg32(reg_base + IRRX_DATA_WORD1_OFFSET) << 32;
     }
-    
+
     return regval;
 }
 
@@ -518,16 +518,16 @@ uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t l
     uint32_t reg_base;
     uint32_t regval;
     uint32_t i = 0;
-    
+
     bflb_ir_rxint_clear(dev);
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRRX_CONFIG_OFFSET);
     regval |= IR_CR_IRRX_EN;
     putreg32(regval, reg_base + IRRX_CONFIG_OFFSET);
-    
-    while((bflb_ir_rxint_status(dev) & IR_RX_INT_END) == 0){
-        if (bflb_ir_rxfifo_cnt(dev) != 0 && i < length) {
+
+    while((bflb_ir_get_rxint_status(dev) & IR_RX_INTSTS_END) == 0){
+        if (bflb_ir_get_rxfifo_cnt(dev) != 0 && i < length) {
 #if defined(BL602) || defined(BL702)
             data[i] = getreg32(reg_base + IRRX_SWM_FIFO_RDATA_OFFSET);
 #else
@@ -536,13 +536,13 @@ uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t l
             i++;
         }
     }
-    
+
     regval = getreg32(reg_base + IRRX_CONFIG_OFFSET);
     regval &= ~IR_CR_IRRX_EN;
     putreg32(regval, reg_base + IRRX_CONFIG_OFFSET);
-    
+
     bflb_ir_rxint_clear(dev);
-    
+
     return(getreg32(reg_base + IRRX_DATA_COUNT_OFFSET) & IR_STS_IRRX_DATA_CNT_MASK);
 }
 
@@ -550,7 +550,7 @@ void bflb_ir_rx_enable(struct bflb_device_s *dev, bool enable)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRRX_CONFIG_OFFSET);
     if (enable) {
@@ -565,7 +565,7 @@ void bflb_ir_rxint_mask(struct bflb_device_s *dev, uint8_t int_type, bool mask)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRRX_INT_STS_OFFSET);
     if (mask) {
@@ -580,25 +580,25 @@ void bflb_ir_rxint_clear(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
     regval = getreg32(reg_base + IRRX_INT_STS_OFFSET);
     regval |= IR_CR_IRRX_END_CLR;
     putreg32(regval, reg_base + IRRX_INT_STS_OFFSET);
 }
 
-uint32_t bflb_ir_rxint_status(struct bflb_device_s *dev)
+uint32_t bflb_ir_get_rxint_status(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
-    
+
     reg_base = dev->reg_base;
     return (getreg32(reg_base + IRRX_INT_STS_OFFSET) & 0x7);
 }
 
-uint8_t bflb_ir_rxfifo_cnt(struct bflb_device_s *dev)
+uint8_t bflb_ir_get_rxfifo_cnt(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
-    
+
     reg_base = dev->reg_base;
 #if defined(BL602) || defined(BL702)
     return ((getreg32(reg_base + IRRX_SWM_FIFO_CONFIG_0_OFFSET) & IR_RX_FIFO_CNT_MASK) >> IR_RX_FIFO_CNT_SHIFT);
@@ -611,7 +611,7 @@ void bflb_ir_rxfifo_clear(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
     uint32_t regval;
-    
+
     reg_base = dev->reg_base;
 #if defined(BL602) || defined(BL702)
     regval = getreg32(reg_base + IRRX_SWM_FIFO_CONFIG_0_OFFSET);
@@ -624,3 +624,14 @@ void bflb_ir_rxfifo_clear(struct bflb_device_s *dev)
 #endif
 }
 #endif
+
+int bflb_ir_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
+{
+    int ret = 0;
+    switch (cmd) {
+        default:
+            ret = -EPERM;
+            break;
+    }
+    return ret;
+}

@@ -190,6 +190,13 @@ struct bflb_device_s bl602_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_IR,
       .user_data = NULL },
+    { .name = "sdio2",
+      .reg_base = SDU_BASE,
+      .irq_num = BL602_IRQ_SDIO,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_SDIO2,
+      .user_data = NULL },
 };
 
 struct bflb_device_s *bflb_device_get_by_name(const char *name)

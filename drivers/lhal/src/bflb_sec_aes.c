@@ -150,7 +150,11 @@ int bflb_aes_encrypt(struct bflb_device_s *dev,
 
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval &= ~SEC_ENG_SE_AES_0_TRIG_1T;
-    regval &= ~SEC_ENG_SE_AES_0_IV_SEL; /* Clear aes iv sel to select new iv */
+    if (temp_iv) {
+        regval &= ~SEC_ENG_SE_AES_0_IV_SEL; /* Clear aes iv sel to select new iv */
+    } else {
+        regval |= SEC_ENG_SE_AES_0_IV_SEL; /* Clear aes iv sel to select last iv */
+    }
     regval &= ~SEC_ENG_SE_AES_0_DEC_EN; /* Set AES encryption */
     regval &= ~SEC_ENG_SE_AES_0_MSG_LEN_MASK;
     regval |= SEC_ENG_SE_AES_0_INT_CLR_1T;
@@ -159,24 +163,26 @@ int bflb_aes_encrypt(struct bflb_device_s *dev,
 
     mode = (regval & SEC_ENG_SE_AES_0_BLOCK_MODE_MASK) >> SEC_ENG_SE_AES_0_BLOCK_MODE_SHIFT;
 
-    if (mode == AES_MODE_XTS) {
-        putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_3_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_2_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_1_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_0_OFFSET);
-        temp_iv += 4;
-    } else {
-        putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_0_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_1_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_2_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_3_OFFSET);
-        temp_iv += 4;
+    if (temp_iv) {
+        if (mode == AES_MODE_XTS) {
+            putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_3_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_2_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_1_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_0_OFFSET);
+            temp_iv += 4;
+        } else {
+            putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_0_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_1_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_2_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_3_OFFSET);
+            temp_iv += 4;
+        }
     }
 
     /* Set input and output address */
@@ -216,8 +222,12 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
 
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval &= ~SEC_ENG_SE_AES_0_TRIG_1T;
-    regval &= ~SEC_ENG_SE_AES_0_IV_SEL; /* Clear aes iv sel to select new iv */
-    regval |= SEC_ENG_SE_AES_0_DEC_EN;  /* Set AES decryption */
+    if (temp_iv) {
+        regval &= ~SEC_ENG_SE_AES_0_IV_SEL; /* Clear aes iv sel to select new iv */
+    } else {
+        regval |= SEC_ENG_SE_AES_0_IV_SEL; /* Clear aes iv sel to select last iv */
+    }
+    regval |= SEC_ENG_SE_AES_0_DEC_EN; /* Set AES decryption */
     regval |= SEC_ENG_SE_AES_0_INT_CLR_1T;
     regval &= ~SEC_ENG_SE_AES_0_MSG_LEN_MASK;
     regval |= ((len / 16) << SEC_ENG_SE_AES_0_MSG_LEN_SHIFT);
@@ -225,24 +235,26 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
 
     mode = (regval & SEC_ENG_SE_AES_0_BLOCK_MODE_MASK) >> SEC_ENG_SE_AES_0_BLOCK_MODE_SHIFT;
 
-    if (mode == AES_MODE_XTS) {
-        putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_3_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_2_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_1_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_0_OFFSET);
-        temp_iv += 4;
-    } else {
-        putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_0_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_1_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_2_OFFSET);
-        temp_iv += 4;
-        putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_3_OFFSET);
-        temp_iv += 4;
+    if (temp_iv) {
+        if (mode == AES_MODE_XTS) {
+            putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_3_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_2_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_1_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_BE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_0_OFFSET);
+            temp_iv += 4;
+        } else {
+            putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_0_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_1_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_2_OFFSET);
+            temp_iv += 4;
+            putreg32(BFLB_PUT_LE32(temp_iv), reg_base + SEC_ENG_SE_AES_0_IV_3_OFFSET);
+            temp_iv += 4;
+        }
     }
 
     /* Set input and output address */

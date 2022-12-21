@@ -2,7 +2,14 @@
 #define _BFLB_WDG_H
 
 #include "bflb_core.h"
-#include "bflb_clock.h"
+
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup WDG
+  * @{
+  */
 
 #if !defined(BL702L)
 #define WDG_CLKSRC_BCLK 0
@@ -43,15 +50,60 @@ struct bflb_wdg_config_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize watchdog.
+ *
+ * @param [in] dev device handle
+ * @param [in] config pointer to save watchdog config
+ */
 void bflb_wdg_init(struct bflb_device_s *dev, const struct bflb_wdg_config_s *config);
+
+/**
+ * @brief Start watchdog.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_wdg_start(struct bflb_device_s *dev);
+
+/**
+ * @brief Stop watchdog.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_wdg_stop(struct bflb_device_s *dev);
+
+/**
+ * @brief Get watchdog counter value.
+ *
+ * @param [in] dev device handle
+ * @return counter value
+ */
 uint16_t bflb_wdg_get_countervalue(struct bflb_device_s *dev);
+
+/**
+ * @brief Reset watchdog counter value.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_wdg_reset_countervalue(struct bflb_device_s *dev);
+
+/**
+ * @brief Clear watchdog compare interrupt status.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_wdg_compint_clear(struct bflb_device_s *dev);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

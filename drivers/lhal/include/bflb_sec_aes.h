@@ -3,15 +3,35 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup SEC_AES
+  * @{
+  */
+
+/** @defgroup AES_MODE aes mode definition
+  * @{
+  */
 #define AES_MODE_ECB 0
 #define AES_MODE_CTR 1
 #define AES_MODE_CBC 2
 #define AES_MODE_XTS 3
+/**
+  * @}
+  */
 
+/** @defgroup AES_LINK_KEYBITS aes link mode keybits definition
+  * @{
+  */
 #define AES_LINK_KEY_128BITS        0
 #define AES_LINK_KEY_192BITS        2
 #define AES_LINK_KEY_256BITS        1
 #define AES_LINK_KEY_DOUBLE_128BITS 3
+/**
+  * @}
+  */
 
 #define AES_LINK_XTS_MODE1 0
 #define AES_LINK_XTS_MODE2 1
@@ -90,36 +110,138 @@ struct bflb_aes_xts_link_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Enable aes.
+ *
+ * @param [in] dev
+ */
 void bflb_aes_init(struct bflb_device_s *dev);
+
+/**
+ * @brief Disable aes.
+ *
+ * @param [in] dev
+ */
 void bflb_aes_deinit(struct bflb_device_s *dev);
+
+/**
+ * @brief Set aes hardware key.
+ *
+ * @param [in] keysel hardware key mode in efuse table
+ */
 void bflb_aes_set_hwkey(uint8_t keysel);
+
+/**
+ * @brief Set aes hardware key source.
+ *
+ * @param [in] dev device handle
+ * @param [in] source hardware key source
+ */
+void bflb_aes_set_hwkey_source(struct bflb_device_s *dev, uint8_t source);
+
+/**
+ * @brief Set aes mode.
+ *
+ * @param [in] dev device handle
+ * @param [in] mode aes mode, use @ref AES_MODE
+ */
 void bflb_aes_set_mode(struct bflb_device_s *dev, uint8_t mode);
+
+/**
+ * @brief Set aes key.
+ *
+ * @param [in] dev device handle
+ * @param [in] key pointer to aes key, if NULL, means use hardware key
+ * @param [in] keybits aes keybits, can be 128/192/256
+ */
 void bflb_aes_setkey(struct bflb_device_s *dev, const uint8_t *key, uint16_t keybits);
+
+/**
+ * @brief Perform aes encrypt.
+ *
+ * @param [in] dev device handle
+ * @param [in] input pointer to plaintext
+ * @param [in] iv input iv, if NULL, means use last iv.
+ * @param [in] output pointer to ciphertext
+ * @param [in] len encrypt length, muse be multiple of 16
+ * @return A negated errno value on failure.
+ */
 int bflb_aes_encrypt(struct bflb_device_s *dev,
                      const uint8_t *input,
                      const uint8_t *iv,
                      uint8_t *output,
                      uint32_t len);
+
+/**
+ * @brief Perform aes decrypt.
+ *
+ * @param [in] dev device handle
+ * @param [in] input pointer to ciphertext
+ * @param [in] iv input iv, if NULL, means use last iv.
+ * @param [in] output pointer to plaintext
+ * @param [in] len decrypt length, muse be multiple of 16
+ * @return A negated errno value on failure.
+ */
 int bflb_aes_decrypt(struct bflb_device_s *dev,
                      const uint8_t *input,
                      const uint8_t *iv,
                      uint8_t *output,
                      uint32_t len);
 
+/**
+ * @brief Enable aes link mode.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_aes_link_init(struct bflb_device_s *dev);
+
+/**
+ * @brief Disable aes link mode.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_aes_link_deinit(struct bflb_device_s *dev);
+
+/**
+ * @brief Perform encrypt or decrypt with link mode.
+ *
+ * @param [in] dev device handle
+ * @param [in] link_addr link struct pointer address, must be located in 0x2xxxxxxx
+ * @param [in] input pointer to plaintext or ciphertext
+ * @param [in] output pointer to plaintext or ciphertext
+ * @param [in] len update length, muse be multiple of 16
+ * @return A negated errno value on failure.
+ */
 int bflb_aes_link_update(struct bflb_device_s *dev,
                          uint32_t link_addr,
                          const uint8_t *input,
                          uint8_t *output,
                          uint32_t len);
 
+/**
+ * @brief Enable aes in group0.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_group0_request_aes_access(struct bflb_device_s *dev);
+
+/**
+ * @brief Disable aes in group0.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_group0_release_aes_access(struct bflb_device_s *dev);
-void bflb_aes_set_hwkey_source(struct bflb_device_s *dev, uint8_t source);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

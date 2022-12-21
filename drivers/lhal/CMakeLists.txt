@@ -8,42 +8,71 @@ sdk_library_add_sources(src/bflb_common.c)
 endif()
 endif()
 
-sdk_library_add_sources(src/bflb_adc.c)
-if((NOT ("${CHIP}" STREQUAL "bl702l")))
-sdk_library_add_sources(src/bflb_dac.c)
-endif()
-sdk_library_add_sources(src/bflb_dma.c)
-if((NOT ("${CHIP}" STREQUAL "bl602")) AND (NOT ("${CHIP}" STREQUAL "bl702l")))
-sdk_library_add_sources(src/bflb_emac.c)
-endif()
-sdk_library_add_sources(src/bflb_gpio.c)
-sdk_library_add_sources(src/bflb_i2c.c)
-if((NOT ("${CHIP}" STREQUAL "bl628")))
-sdk_library_add_sources(src/bflb_ir.c)
-endif()
-sdk_library_add_sources(src/bflb_uart.c)
-sdk_library_add_sources(src/bflb_spi.c)
-sdk_library_add_sources(src/bflb_rtc.c)
-sdk_library_add_sources(src/bflb_sec_aes.c)
-sdk_library_add_sources(src/bflb_sec_sha.c)
-sdk_library_add_sources(src/bflb_sec_trng.c)
-# sdk_library_add_sources(src/bflb_sec_irq.c)
-sdk_library_add_sources(src/bflb_timer.c)
-sdk_library_add_sources(src/bflb_wdg.c)
-sdk_library_add_sources(src/bflb_cks.c)
-sdk_library_add_sources(src/bflb_mjpeg.c)
-if("${CHIP}" STREQUAL "bl628")
-sdk_library_add_sources(src/bflb_clock.c)
-endif()
-sdk_library_add_sources(src/bflb_ef_ctrl.c)
+sdk_library_add_sources(
+src/bflb_adc.c
+src/bflb_cks.c
+src/bflb_ef_ctrl.c
+src/bflb_gpio.c
+src/bflb_i2c.c
+src/bflb_dma.c
+src/bflb_rtc.c
+src/bflb_sec_aes.c
+src/bflb_sec_sha.c
+src/bflb_sec_trng.c
+src/bflb_spi.c
+src/bflb_timer.c
+src/bflb_uart.c
+src/bflb_wdg.c
+)
 
-if(("${CHIP}" STREQUAL "bl702") OR ("${CHIP}" STREQUAL "bl602"))
-sdk_library_add_sources(src/bflb_pwm_v1.c)
+if("${CHIP}" STREQUAL "bl602")
+sdk_library_add_sources(
+src/bflb_dac.c
+src/bflb_ir.c
+src/bflb_pwm_v1.c
+)
+elseif("${CHIP}" STREQUAL "bl702")
+sdk_library_add_sources(
+src/bflb_dac.c
+src/bflb_emac.c
+src/bflb_ir.c
+src/bflb_pwm_v1.c
+src/bflb_cam.c
+)
 elseif("${CHIP}" STREQUAL "bl702l")
-sdk_library_add_sources(src/bflb_pwm_v1.c)
-sdk_library_add_sources(src/bflb_pwm_v2.c)
-else()
-sdk_library_add_sources(src/bflb_pwm_v2.c)
+sdk_library_add_sources(
+src/bflb_kys.c
+src/bflb_pwm_v1.c
+src/bflb_pwm_v2.c
+)
+elseif("${CHIP}" STREQUAL "bl616")
+sdk_library_add_sources(
+src/bflb_dac.c
+src/bflb_emac.c
+src/bflb_ir.c
+src/bflb_mjpeg.c
+src/bflb_pwm_v2.c
+src/bflb_cam.c
+src/bflb_iso11898.c
+)
+elseif("${CHIP}" STREQUAL "bl628")
+sdk_library_add_sources(
+src/bflb_dac.c
+src/bflb_emac.c
+src/bflb_clock.c
+src/bflb_pwm_v2.c
+src/bflb_iso11898.c
+)
+elseif("${CHIP}" STREQUAL "bl808")
+sdk_library_add_sources(
+src/bflb_dac.c
+src/bflb_emac.c
+src/bflb_ir.c
+src/bflb_mjpeg.c
+src/bflb_pwm_v2.c
+src/bflb_cam.c
+src/bflb_iso11898.c
+)
 endif()
 
 if(CONFIG_CHERRYUSB)
@@ -51,6 +80,7 @@ if("${CHIP}" STREQUAL "bl702")
 sdk_library_add_sources(src/bflb_usb_v1.c)
 elseif(("${CHIP}" STREQUAL "bl602") OR ("${CHIP}" STREQUAL "bl702l"))
 # no usb
+elseif(("${CHIP}" STREQUAL "bl628"))
 else()
 sdk_library_add_sources(src/bflb_usb_v2.c)
 endif()

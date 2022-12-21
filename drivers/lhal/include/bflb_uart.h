@@ -3,6 +3,14 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup UART
+  * @{
+  */
+
 /** @defgroup UART_DIRECTION uart direction enable definition
   * @{
   */
@@ -188,29 +196,173 @@ struct bflb_uart_config_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize uart.
+ *
+ * @param [in] dev device handle
+ * @param [in] config pointer to save uart config
+ */
 void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *config);
+
+/**
+ * @brief Deinitialize uart.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_uart_deinit(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable uart.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_uart_enable(struct bflb_device_s *dev);
+
+/**
+ * @brief Disable uart.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_uart_disable(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable uart tx dma.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, otherwise disable.
+ */
 void bflb_uart_link_txdma(struct bflb_device_s *dev, bool enable);
+
+/**
+ * @brief Enable uart rx dma.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, otherwise disable.
+ */
 void bflb_uart_link_rxdma(struct bflb_device_s *dev, bool enable);
+
+/**
+ * @brief Put one char on uart.
+ *
+ * @param [in] dev device handle
+ * @param [in] ch char
+ * @return A negated errno value on failure.
+ */
 int bflb_uart_putchar(struct bflb_device_s *dev, int ch);
+
+/**
+ * @brief Get char from uart.
+ *
+ * @param [in] dev device handle
+ * @return A negated errno value on failure, otherwise received char.
+ */
 int bflb_uart_getchar(struct bflb_device_s *dev);
+
+/**
+ * @brief Put a block of data on uart.This is a poll api.
+ *
+ * @param [in] dev device handle
+ * @param [in] data pointer to save send data
+ * @param [in] len length to send
+ * @return A negated errno value on failure.
+ */
 int bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+
+/**
+ * @brief Get a block of data from uart. This is a asynchronous api.
+ *
+ * @param [in] dev device handle
+ * @param [in] data pointer to save received data
+ * @param [in] len max length wants to receive
+ * @return actual received length
+ */
 int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+
+/**
+ * @brief Check if there is free space in tx fifo.
+ *
+ * @param [in] dev device handle
+ * @return Return true if the tranmsit hardware is ready to send another byte
+ */
 bool bflb_uart_txready(struct bflb_device_s *dev);
+
+/**
+ * @brief Check if there is no data in tx fifo.
+ *
+ * @param [in] dev device handle
+ * @return Return true if all characters have been sent
+ */
 bool bflb_uart_txempty(struct bflb_device_s *dev);
+
+/**
+ * @brief Check if there is data in rx fifo.
+ *
+ * @param [in] dev device handle
+ * @return true means yes.Otherwise there is no data in rx fifo
+ */
 bool bflb_uart_rxavailable(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable or disable uart tx fifo threhold interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_uart_txint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Enable or disable uart rx fifo threhold interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_uart_rxint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Enable or disable uart error interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_uart_errint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Get uart interrupt status.
+ *
+ * @param [in] dev device handle
+ * @return interrupt status, use @ref UART_INTSTS
+ */
 uint32_t bflb_uart_get_intstatus(struct bflb_device_s *dev);
+
+/**
+ * @brief Clear uart interrupt status.
+ *
+ * @param [in] dev device handle
+ * @param [in] int_clear clear value, use @ref UART_INTCLR
+ */
 void bflb_uart_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
+
+/**
+ * @brief Control uart feature.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmd feature command, use @ref UART_CMD
+ * @param [in] arg user data
+ * @return A negated errno value on failure.
+ */
 int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

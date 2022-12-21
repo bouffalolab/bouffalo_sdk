@@ -1,5 +1,5 @@
-#ifndef __BL616_MEMORYMAP_H
-#define __BL616_MEMORYMAP_H
+#ifndef __BL808_MEMORYMAP_H
+#define __BL808_MEMORYMAP_H
 
 /****************************************************************************
  * Included Files
@@ -118,9 +118,9 @@
 #define TIMER1_BASE      ((uint32_t)0x30009000)
 #define PSRAM_UHS_BASE   ((uint32_t)0x3000f000)
 
-/* ISP_SUBSYS */
-#define ISP_MISC_BASE        ((uint32_t)0x30010000)
-#define ISP_BASE             ((uint32_t)0x30011000)
+/* MM_SUBSYS */
+#define CAM_FRONT_BASE       ((uint32_t)0x30010000)
+#define MM_SUBSYS_BASE       ((uint32_t)0x30011000)
 #define DVP0_BASE            ((uint32_t)0x30012000)
 #define DVP1_BASE            ((uint32_t)0x30012100)
 #define DVP2_BASE            ((uint32_t)0x30012200)

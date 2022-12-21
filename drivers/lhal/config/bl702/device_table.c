@@ -204,6 +204,13 @@ struct bflb_device_s bl702_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_KYS,
       .user_data = NULL },
+    { .name = "cam0",
+      .reg_base = CAM_BASE,
+      .irq_num = BL702_IRQ_CAM,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
 };
 
 struct bflb_device_s *bflb_device_get_by_name(const char *name)

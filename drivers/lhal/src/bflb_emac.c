@@ -33,7 +33,6 @@
   *
   ******************************************************************************
   */
-#include "bflb_core.h"
 #include "bflb_emac.h"
 #include "bflb_clock.h"
 #include "bflb_l1c.h"
@@ -44,8 +43,41 @@
 #define EMAC_TX_COMMON_FLAGS (EMAC_BD_TX_RD_MASK | EMAC_BD_TX_IRQ_MASK | EMAC_BD_TX_PAD_MASK | EMAC_BD_TX_CRC_MASK | EMAC_BD_TX_EOF_MASK)
 #define EMAC_RX_COMMON_FLAGS ((ETH_MAX_PACKET_SIZE << 16) | EMAC_BD_RX_IRQ_MASK)
 
-static struct emac_handle_s ethHandle;
-static struct emac_handle_s *thiz = NULL;
+/**
+ *  @brief Note: Always write DWORD1 (buffer addr) first then DWORD0 for racing concern.
+ */
+struct bflb_emac_bd_desc_s {
+    uint32_t C_S_L;  /*!< Buffer Descriptors(BD) control,status,length */
+    uint32_t Buffer; /*!< BD buffer address */
+};
+
+/**
+ * @brief emac handle type definition
+ * @param bd             Tx descriptor header pointer
+ * @param tx_index_emac  TX index: EMAC
+ * @param tx_index_cpu   TX index: CPU/SW
+ * @param tx_buff_limit  TX index max
+ * @param rsv0           rsv0
+ * @param rx_index_emac  RX index: EMAC
+ * @param rx_index_cpu   RX index: CPU/SW
+ * @param rx_buff_limit  RX index max
+ * @param rsv1           rsv1
+ *
+ */
+struct bflb_emac_handle_s {
+    struct bflb_emac_bd_desc_s *bd;
+    uint8_t tx_index_emac;
+    uint8_t tx_index_cpu;
+    uint8_t tx_buff_limit;
+    uint8_t rsv0;
+    uint8_t rx_index_emac;
+    uint8_t rx_index_cpu;
+    uint8_t rx_buff_limit;
+    uint8_t rsv1;
+};
+
+static struct bflb_emac_handle_s eth_handle;
+static struct bflb_emac_handle_s *thiz = NULL;
 
 /**
  *
@@ -132,7 +164,7 @@ void bflb_emac_bd_rx_on_err(uint32_t index)
  */
 void bflb_emac_bd_tx_dequeue(uint32_t index)
 {
-    struct emac_bd_desc_s *DMADesc;
+    struct bflb_emac_bd_desc_s *DMADesc;
 
     thiz->tx_index_emac = index;
     DMADesc = &thiz->bd[thiz->tx_index_emac];
@@ -202,7 +234,7 @@ int emac_bd_fragment_support(void)
 int bflb_emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in)
 {
     uint32_t err = 0;
-    struct emac_bd_desc_s *DMADesc;
+    struct bflb_emac_bd_desc_s *DMADesc;
     uint32_t tx_flags = EMAC_TX_COMMON_FLAGS;
     DMADesc = &thiz->bd[thiz->tx_index_cpu];
 
@@ -257,7 +289,7 @@ int bflb_emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in
 int bflb_emac_bd_rx_dequeue(uint32_t flags, uint32_t *len, uint8_t *data_out)
 {
     uint32_t err = 0;
-    struct emac_bd_desc_s *DMADesc;
+    struct bflb_emac_bd_desc_s *DMADesc;
 
     DMADesc = &thiz->bd[thiz->rx_index_cpu];
 
@@ -488,12 +520,12 @@ uint32_t bflb_emac_get_int_status(struct bflb_device_s *dev)
  * @param rx_buff_cnt
  *
  */
-static void emac_dma_desc_list_init(uint32_t reg_base, struct emac_handle_s *handle, uint8_t *tx_buff, uint32_t tx_buff_cnt, uint8_t *rx_buff, uint32_t rx_buff_cnt)
+static void emac_dma_desc_list_init(uint32_t reg_base, struct bflb_emac_handle_s *handle, uint8_t *tx_buff, uint32_t tx_buff_cnt, uint8_t *rx_buff, uint32_t rx_buff_cnt)
 {
     uint32_t i = 0;
 
     /* Set the Ethernet handler env */
-    handle->bd = (struct emac_bd_desc_s *)(uintptr_t)(reg_base + EMAC_DMA_DESC_OFFSET);
+    handle->bd = (struct bflb_emac_bd_desc_s *)(uintptr_t)(reg_base + EMAC_DMA_DESC_OFFSET);
     handle->tx_index_emac = 0;
     handle->tx_index_cpu = 0;
     handle->tx_buff_limit = tx_buff_cnt - 1;
@@ -536,7 +568,7 @@ static void emac_dma_desc_list_init(uint32_t reg_base, struct emac_handle_s *han
  */
 void bflb_emac_bd_init(struct bflb_device_s *dev, uint8_t *eth_tx_buff, uint8_t tx_buf_count, uint8_t *eth_rx_buff, uint8_t rx_buf_count)
 {
-    thiz = &ethHandle;
+    thiz = &eth_handle;
     uint32_t reg_base;
     reg_base = dev->reg_base;
     /* init the BDs in emac with buffer address */

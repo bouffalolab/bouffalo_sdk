@@ -566,6 +566,18 @@ int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
             break;
 
+        case SPI_CMD_RX_IGNORE:
+            /* set rx ignore, start: arg[20:16], stop: arg[4:0] */
+            regval = getreg32(reg_base + SPI_CONFIG_OFFSET);
+            if (arg) {
+                regval |= SPI_CR_SPI_RXD_IGNR_EN;
+                putreg32(arg, reg_base + SPI_RXD_IGNR_OFFSET);
+            } else {
+                regval &= ~SPI_CR_SPI_RXD_IGNR_EN;
+            }
+            putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
+            break;
+
         default:
             ret = -EPERM;
             break;

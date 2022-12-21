@@ -324,6 +324,105 @@ struct bflb_device_s bl808_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_TIMER,
       .user_data = NULL },
+    { .name = "cam0",
+      .reg_base = DVP0_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_DVP2BUS_INT0,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
+    { .name = "cam1",
+      .reg_base = DVP1_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_DVP2BUS_INT1,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 1,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
+    { .name = "cam2",
+      .reg_base = DVP2_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_DVP2BUS_INT2,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 2,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
+    { .name = "cam3",
+      .reg_base = DVP3_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_DVP2BUS_INT3,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 3,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
+    { .name = "cam4",
+      .reg_base = DVP4_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_DVP2BUS_INT4,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 4,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
+    { .name = "cam5",
+      .reg_base = DVP5_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_DVP2BUS_INT5,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 5,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
+    { .name = "cam6",
+      .reg_base = DVP6_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_DVP2BUS_INT6,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 6,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
+    { .name = "cam7",
+      .reg_base = DVP7_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_DVP2BUS_INT7,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 7,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CAMERA,
+      .user_data = NULL },
+    { .name = "csi",
+      .reg_base = CSI_BASE,
+#if defined(CPU_D0)
+      .irq_num = BL808_IRQ_MIPI_CSI,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_CSI,
+      .user_data = NULL },
 };
 
 struct bflb_device_s *bflb_device_get_by_name(const char *name)

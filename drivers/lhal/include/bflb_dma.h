@@ -3,6 +3,14 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup DMA
+  * @{
+  */
+
 /** @defgroup DMA_DIRECTION dma transfer direction definition
   * @{
   */
@@ -106,18 +114,20 @@
 /** @defgroup DMA_PERIPHERAL_REGBASE dma peripheral data register address definition
   * @{
   */
-#define DMA_ADDR_UART0_TDR   (0x2000A000 + 0x88)
-#define DMA_ADDR_UART0_RDR   (0x2000A000 + 0x8C)
-#define DMA_ADDR_UART1_TDR   (0x2000A100 + 0x88)
-#define DMA_ADDR_UART1_RDR   (0x2000A100 + 0x8C)
-#define DMA_ADDR_I2C0_TDR    (0x2000A300 + 0x88)
-#define DMA_ADDR_I2C0_RDR    (0x2000A300 + 0x8C)
-#define DMA_ADDR_SPI0_TDR    (0x2000A200 + 0x88)
-#define DMA_ADDR_SPI0_RDR    (0x2000A200 + 0x8C)
-#define DMA_ADDR_I2S_TDR     (0x2000AB00 + 0x88)
-#define DMA_ADDR_I2S_RDR     (0x2000AB00 + 0x8C)
-#define DMA_ADDR_ADC_RDR     (0x20002000 + 0x04)
-#define DMA_ADDR_DAC_TDR     (0x20002000 + 0x48)
+#define DMA_ADDR_UART0_TDR      (0x2000A000 + 0x88)
+#define DMA_ADDR_UART0_RDR      (0x2000A000 + 0x8C)
+#define DMA_ADDR_UART1_TDR      (0x2000A100 + 0x88)
+#define DMA_ADDR_UART1_RDR      (0x2000A100 + 0x8C)
+#define DMA_ADDR_I2C0_TDR       (0x2000A300 + 0x88)
+#define DMA_ADDR_I2C0_RDR       (0x2000A300 + 0x8C)
+#define DMA_ADDR_SPI0_TDR       (0x2000A200 + 0x88)
+#define DMA_ADDR_SPI0_RDR       (0x2000A200 + 0x8C)
+#define DMA_ADDR_I2S_TDR        (0x2000AB00 + 0x88)
+#define DMA_ADDR_I2S_RDR        (0x2000AB00 + 0x8C)
+#define DMA_ADDR_ADC_RDR        (0x20002000 + 0x04)
+#define DMA_ADDR_DAC_TDR        (0x20002000 + 0x48)
+#define DMA_ADDR_AUDAC_TDR      (0x20055000 + 0x94)
+#define DMA_ADDR_AUADC_RDR      (0x2000A000 + 0xC88)
 /**
   * @}
   */
@@ -125,20 +135,29 @@
 /** @defgroup DMA_PERIPHERAL_REQUEST dma peripheral request definition
   * @{
   */
-#define DMA_REQUEST_NONE     0x00000000
-#define DMA_REQUEST_UART0_RX 0x00000000
-#define DMA_REQUEST_UART0_TX 0x00000001
-#define DMA_REQUEST_UART1_RX 0x00000002
-#define DMA_REQUEST_UART1_TX 0x00000003
-#define DMA_REQUEST_I2C0_RX  0x00000006
-#define DMA_REQUEST_I2C0_TX  0x00000007
-#define DMA_REQUEST_SPI0_RX  0x0000000A
-#define DMA_REQUEST_SPI0_TX  0x0000000B
-#define DMA_REQUEST_AUDIO_TX 0x0000000D
-#define DMA_REQUEST_I2S_RX   0x00000010
-#define DMA_REQUEST_I2S_TX   0x00000011
-#define DMA_REQUEST_ADC      0x00000016
-#define DMA_REQUEST_DAC      0x00000017
+#define DMA_REQUEST_NONE        0x00000000
+#define DMA_REQUEST_UART0_RX    0x00000000
+#define DMA_REQUEST_UART0_TX    0x00000001
+#define DMA_REQUEST_UART1_RX    0x00000002
+#define DMA_REQUEST_UART1_TX    0x00000003
+#define DMA_REQUEST_I2C0_RX     0x00000006
+#define DMA_REQUEST_I2C0_TX     0x00000007
+#define DMA_REQUEST_SPI0_RX     0x0000000A
+#define DMA_REQUEST_SPI0_TX     0x0000000B
+#define DMA_REQUEST_AUDIO_TX    0x0000000D
+#define DMA_REQUEST_I2S_RX      0x00000010
+#define DMA_REQUEST_I2S_TX      0x00000011
+#define DMA_REQUEST_ADC         0x00000016
+#define DMA_REQUEST_DAC         0x00000017
+#define DMA_REQUEST_PEC0_SM0_RX 0x00000018
+#define DMA_REQUEST_PEC0_SM1_RX 0x00000019
+#define DMA_REQUEST_PEC0_SM2_RX 0x0000001A
+#define DMA_REQUEST_PEC0_SM3_RX 0x0000001B
+#define DMA_REQUEST_PEC0_SM0_TX 0x0000001C
+#define DMA_REQUEST_PEC0_SM1_TX 0x0000001D
+#define DMA_REQUEST_PEC0_SM2_TX 0x0000001E
+#define DMA_REQUEST_PEC0_SM3_TX 0x0000001F
+
 /**
   * @}
   */
@@ -268,10 +287,8 @@
   */
 #define DMA_CMD_SET_SRCADDR_INCREMENT (0x01)
 #define DMA_CMD_SET_DSTADDR_INCREMENT (0x02)
-#if !defined(BL602)
-#define DMA_CMD_SET_ADD_MODE    (0x03)
-#define DMA_CMD_SET_REDUCE_MODE (0x04)
-#endif
+#define DMA_CMD_SET_ADD_MODE          (0x03)
+#define DMA_CMD_SET_REDUCE_MODE       (0x04)
 /**
   * @}
   */
@@ -354,28 +371,127 @@ struct bflb_dma_channel_config_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize dma channel.
+ *
+ * @param [in] dev device handle
+ * @param [in] config pointer to save dma channel configuration
+ */
 void bflb_dma_channel_init(struct bflb_device_s *dev, const struct bflb_dma_channel_config_s *config);
+
+/**
+ * @brief Deinitialize dma channel.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_dma_channel_deinit(struct bflb_device_s *dev);
-int bflb_dma_channel_start(struct bflb_device_s *dev);
-int bflb_dma_channel_stop(struct bflb_device_s *dev);
+
+/**
+ * @brief Start dma channel transfer.
+ *
+ * @param [in] dev device handle
+ */
+void bflb_dma_channel_start(struct bflb_device_s *dev);
+
+/**
+ * @brief Stop dma channel transfer.
+ *
+ * @param [in] dev device handle
+ */
+void bflb_dma_channel_stop(struct bflb_device_s *dev);
+
+/**
+ * @brief Check if dma channel is in busy.
+ *
+ * @param [in] dev device handle
+ * @return true means dma channel does not transfer completely, otherwise transfers completely.
+ */
 bool bflb_dma_channel_isbusy(struct bflb_device_s *dev);
+
+/**
+ * @brief Register dma channel transmission completion interrupt callback.
+ *
+ * @param [in] dev device handle
+ * @param [in] callback interrupt callback
+ * @param [in] arg user data
+ */
 void bflb_dma_channel_irq_attach(struct bflb_device_s *dev, void (*callback)(void *arg), void *arg);
+
+/**
+ * @brief Unregister dma channel transmission completion interrupt callback.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_dma_channel_irq_detach(struct bflb_device_s *dev);
+
+/**
+ * @brief Config dma channel lli.
+ *
+ * @param [in] dev device handle
+ * @param [in] lli_pool pointer to lli pool
+ * @param [in] max_lli_count lli pool size
+ * @param [in] transfer pointer to transfer structure
+ * @param [in] count transfer count.
+ * @return A negated errno value on failure, otherwise means number of used lli.
+ */
 int bflb_dma_channel_lli_reload(struct bflb_device_s *dev,
                                 struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t max_lli_count,
                                 struct bflb_dma_channel_lli_transfer_s *transfer, uint32_t count);
+
+/**
+ * @brief Enable lli continueous mode.
+ *
+ * @param [in] dev device handle
+ * @param [in] lli_pool pointer to lli pool
+ * @param [in] used_lli_count number of used lli.
+ */
 void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
                                     struct bflb_dma_channel_lli_pool_s *lli_pool,
                                     uint32_t used_lli_count);
 
+/**
+ * @brief Control dma feature.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmd feature command. use @ref DMA_CMD
+ * @param [in] arg user data
+ * @return A negated errno value on failure.
+ */
 int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
+/**
+ * @brief Enable or disable dma channel transmission completion interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_dma_channel_tcint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Check if dma channel transfers completely.
+ *
+ * @param [in] dev device handle
+ * @return true means yes, false means no.
+ */
 bool bflb_dma_channel_get_tcint_status(struct bflb_device_s *dev);
+
+/**
+ * @brief Clear dma channel transmission completion interrupt status.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_dma_channel_tcint_clear(struct bflb_device_s *dev);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

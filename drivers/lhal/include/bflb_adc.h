@@ -3,6 +3,14 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup ADC
+  * @{
+  */
+
 /** @defgroup ADC_CHANNEL adc channel definition
   * @{
   */
@@ -53,7 +61,7 @@
   * @}
   */
 
-/** @defgroup ADC_VREF adc reference select
+/** @defgroup ADC_VREF adc reference select definition
   * @{
   */
 #define ADC_VREF_3P2V 0
@@ -144,28 +152,152 @@ struct bflb_adc_result_s {
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize adc.
+ *
+ * @param [in] dev device handle
+ * @param [in] config pointer to save adc configuration
+ */
 void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config);
+
+/**
+ * @brief Deinitialize adc.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_adc_deinit(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable adc rx dma.
+ *
+ * @param [in] dev device handle
+ * @param [in] enable true means enable, otherwise disable.
+ */
 void bflb_adc_link_rxdma(struct bflb_device_s *dev, bool enable);
+
+/**
+ * @brief Config adc channels to sample.
+ *
+ * @param [in] dev device handle
+ * @param [in] chan pointer to the channel configurations.
+ * @param [in] channels pair number of channels
+ * @return Zero on success; a negated errno value on failure
+ */
 int bflb_adc_channel_config(struct bflb_device_s *dev, struct bflb_adc_channel_s *chan, uint8_t channels);
+
+/**
+ * @brief Start adc conversion
+ *
+ * @param [in] dev device handle
+ */
 void bflb_adc_start_conversion(struct bflb_device_s *dev);
+
+/**
+ * @brief Stop adc conversion
+ *
+ * @param [in] dev device handle
+ */
 void bflb_adc_stop_conversion(struct bflb_device_s *dev);
+
+/**
+ * @brief Get adc number of completed conversions
+ *
+ * @param [in] dev device handle
+ * @return number of completed conversions
+ */
 uint8_t bflb_adc_get_count(struct bflb_device_s *dev);
+
+/**
+ * @brief Read adc conversion value
+ *
+ * @param [in] dev device handle
+ * @return conversion value
+ */
 uint32_t bflb_adc_read_raw(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable or disable adc conversion completion interrupt.
+ * Triggerring when a channel conversion is completed.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_adc_rxint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Enable or disable adc error interrupt.
+ *
+ * @param [in] dev device handle
+ * @param [in] mask true means disable, false means enable
+ */
 void bflb_adc_errint_mask(struct bflb_device_s *dev, bool mask);
+
+/**
+ * @brief Get adc interrupt instatus.
+ *
+ * @param [in] dev device handle
+ * @return interrupt instatus value, use @ref ADC_INTSTS
+ */
 uint32_t bflb_adc_get_intstatus(struct bflb_device_s *dev);
+
+/**
+ * @brief Clear adc interrupt instatus.
+ *
+ * @param [in] dev device handle
+ * @param [in] int_clear interrupt clear value, use @ref ADC_INTCLR
+ */
 void bflb_adc_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
+/**
+ * @brief Parse adc conversion value into millivolt and actual numerical value.
+ *
+ * @param [in] dev device handle
+ * @param [in] buffer pointer to adc original value from bflb_adc_read_raw api
+ * @param [out] result pointer to save parse result
+ * @param [in] count count to parse
+ */
 void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct bflb_adc_result_s *result, uint16_t count);
 
+/**
+ * @brief Initialize adc temperature sensor
+ *
+ * @param [in] dev device handle
+ * @param [in] tsen_mod temperature sensor mode, use @ref ADC_TSEN_MOD
+ */
 void bflb_adc_tsen_init(struct bflb_device_s *dev, uint8_t tsen_mod);
+
+/**
+ * @brief Get adc temperature
+ *
+ * @param [in] dev device handle
+ * @return temperature
+ */
 float bflb_adc_tsen_get_temp(struct bflb_device_s *dev);
+
+/**
+ * @brief Enable adc vbat power.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_adc_vbat_enable(struct bflb_device_s *dev);
+
+/**
+ * @brief Disable adc vbat power.
+ *
+ * @param [in] dev device handle
+ */
 void bflb_adc_vbat_disable(struct bflb_device_s *dev);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

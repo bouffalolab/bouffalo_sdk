@@ -7,7 +7,7 @@
 #define DAC_GPIP_BASE ((uint32_t)0x20002000)
 #endif
 
-void bflb_dac_init(struct bflb_device_s *dev, uint8_t frequence)
+void bflb_dac_init(struct bflb_device_s *dev, uint8_t clk_div)
 {
     uint32_t regval;
     uint32_t reg_base;
@@ -46,7 +46,7 @@ void bflb_dac_init(struct bflb_device_s *dev, uint8_t frequence)
 #ifdef GPIP_GPDAC_EN2
     regval |= GPIP_GPDAC_EN2;
 #endif
-    regval |= (frequence << GPIP_GPDAC_MODE_SHIFT);
+    regval |= (clk_div << GPIP_GPDAC_MODE_SHIFT);
     putreg32(regval, DAC_GPIP_BASE + GPIP_GPDAC_CONFIG_OFFSET);
 
     regval = getreg32(DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
