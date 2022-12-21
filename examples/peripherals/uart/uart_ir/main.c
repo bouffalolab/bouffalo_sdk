@@ -12,7 +12,7 @@ int main(void)
     board_init();
     board_uartx_gpio_init();
 
-    uartx = bflb_device_get_by_name("uartx");
+    uartx = bflb_device_get_by_name(DEFAULT_TEST_UART);
 
     for (uint8_t i = 0; i < 128; i++) {
         uart_txbuf[i] = i;

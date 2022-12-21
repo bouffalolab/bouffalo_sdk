@@ -13,7 +13,7 @@ int main(void)
 {
     board_init();
 
-    printf("IR NEC case:\n\r");
+    printf("IR NEC case:\r\n");
 
     board_ir_gpio_init();
 
@@ -58,16 +58,16 @@ int main(void)
 #ifdef IR_TX_NEC
     /* Check data received */
     if (rx_data != tx_buffer[0]) {
-        printf("Data error! receive bit: %d, value: 0x%016llx\n\r", rx_len, rx_data);
+        printf("Data error! receive bit: %d, value: 0x%016lx\r\n", rx_len, rx_data);
     } else {
-        printf("Success\n\r");
+        printf("Received correctly. receive bit: %d, value: 0x%016lx\r\n", rx_len, rx_data);
     }
 #else
-    printf("Receive bit: %d, value: 0x%016llx\n\r", rx_len, rx_data);
+    printf("Receive bit: %d, value: 0x%016lx\r\n", rx_len, rx_data);
 #endif
 #endif
 
-    printf("end\n\r");
+    printf("end\r\n");
 
     while (1) {
     }

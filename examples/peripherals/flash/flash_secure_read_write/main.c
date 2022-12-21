@@ -31,6 +31,11 @@ static void bflb_data_compare(const uint8_t *expected, uint8_t *input, uint32_t 
     }
 }
 
+/**
+ *  This demo tests two decryption ways.
+ *  One is decrypted by aes module, another is decrypted by flash aes module.
+ */
+
 int main(void)
 {
     board_init();
@@ -84,15 +89,10 @@ int main(void)
     printf("flash decrypt with flash aes ctr128 success\r\n");
 
     bflb_flash_read(0x00010000, aes_ctr_tmp_buffer, AES_DATA_LEN);
-    bflb_aes_decrypt(aes, &aes_ctr_tmp_buffer[0], aes_ctr_128bit_iv, &aes_ctr_tmp_buffer2[0], 1024);
-    aes_ctr_128bit_iv[15] = 0x40; /* update counter */
-    bflb_aes_decrypt(aes, &aes_ctr_tmp_buffer[1024], aes_ctr_128bit_iv, &aes_ctr_tmp_buffer2[1024], 1024);
-    aes_ctr_128bit_iv[15] = 0x80; /* update counter */
-    bflb_aes_decrypt(aes, &aes_ctr_tmp_buffer[1024 * 2], aes_ctr_128bit_iv, &aes_ctr_tmp_buffer2[1024 * 2], 1024);
-    aes_ctr_128bit_iv[15] = 0xc0; /* update counter */
-    bflb_aes_decrypt(aes, &aes_ctr_tmp_buffer[1024 * 3], aes_ctr_128bit_iv, &aes_ctr_tmp_buffer2[1024 * 3], 1024);
-    aes_ctr_128bit_iv[15] = 0x00; /* update counter */
-    aes_ctr_128bit_iv[14] = 0x01;
+    bflb_aes_decrypt(aes, &aes_ctr_tmp_buffer[0], aes_ctr_128bit_iv, &aes_ctr_tmp_buffer2[0], 1024);  /* set new iv */
+    bflb_aes_decrypt(aes, &aes_ctr_tmp_buffer[1024], NULL, &aes_ctr_tmp_buffer2[1024], 1024);         /* use last iv */
+    bflb_aes_decrypt(aes, &aes_ctr_tmp_buffer[1024 * 2], NULL, &aes_ctr_tmp_buffer2[1024 * 2], 1024); /* use last iv */
+    bflb_aes_decrypt(aes, &aes_ctr_tmp_buffer[1024 * 3], NULL, &aes_ctr_tmp_buffer2[1024 * 3], 1024); /* use last iv */
     bflb_data_compare(aes_ctr_pt_buffer, aes_ctr_tmp_buffer2, AES_DATA_LEN);
     printf("flash decrypt with sec eng aes ctr128 success\r\n");
 

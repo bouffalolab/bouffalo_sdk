@@ -1,8 +1,7 @@
 #include "bflb_gpio.h"
+#include "board.h"
 
 struct bflb_device_s *gpio;
-
-extern void board_init(void);
 
 int main(void)
 {

@@ -29,28 +29,6 @@ void mjpeg_isr(int irq, void *arg)
     }
 }
 
-static uint16_t q_table_50_y[64] = {
-    16, 11, 10, 16, 24, 40, 51, 61,
-    12, 12, 14, 19, 26, 58, 60, 55,
-    14, 13, 16, 24, 40, 57, 69, 56,
-    14, 17, 22, 29, 51, 87, 80, 62,
-    18, 22, 37, 56, 68, 109, 103, 77,
-    24, 35, 55, 64, 81, 104, 113, 92,
-    49, 64, 78, 87, 103, 121, 120, 101,
-    72, 92, 95, 98, 112, 100, 103, 99
-};
-
-static uint16_t q_table_50_uv[64] = {
-    17, 18, 24, 47, 99, 99, 99, 99,
-    18, 21, 26, 66, 99, 99, 99, 99,
-    24, 26, 56, 99, 99, 99, 99, 99,
-    47, 66, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99
-};
-
 uint8_t jpg_head_buf[800] = { 0 };
 uint32_t jpg_head_len;
 
@@ -81,9 +59,6 @@ void bflb_mjpeg_dump_hex(uint8_t *data, uint32_t len)
 
 int main(void)
 {
-    uint16_t tmp_table_y[64] = { 0 };
-    uint16_t tmp_table_uv[64] = { 0 };
-
     board_init();
 
     mjpeg = bflb_device_get_by_name("mjpeg");
@@ -91,18 +66,18 @@ int main(void)
     struct bflb_mjpeg_config_s config;
 
     config.format = MJPEG_FORMAT_YUV422_YUYV;
+    config.quality = MJPEG_QUALITY;
     config.resolution_x = X;
     config.resolution_y = Y;
     config.input_bufaddr0 = (uint32_t)test_64x64;
     config.input_bufaddr1 = 0;
     config.output_bufaddr = (uint32_t)BSP_PSRAM_BASE + MJPEG_MAX_FRAME_COUNT * X * Y * 2;
     config.output_bufsize = SIZE_BUFFER - MJPEG_MAX_FRAME_COUNT * X * Y * 2;
+    config.input_yy_table = NULL; /* use default table */
+    config.input_uv_table = NULL; /* use default table */
 
     bflb_mjpeg_init(mjpeg, &config);
 
-    bflb_mjpeg_calculate_quantize_table(MJPEG_QUALITY, q_table_50_y, tmp_table_y);
-    bflb_mjpeg_calculate_quantize_table(MJPEG_QUALITY, q_table_50_uv, tmp_table_uv);
-    bflb_mjpeg_fill_quantize_table(mjpeg, tmp_table_y, tmp_table_uv);
     jpg_head_len = JpegHeadCreate(YUV_MODE_422, MJPEG_QUALITY, X, Y, jpg_head_buf);
     bflb_mjpeg_fill_jpeg_header_tail(mjpeg, jpg_head_buf, jpg_head_len);
 
@@ -113,7 +88,7 @@ int main(void)
     bflb_mjpeg_sw_run(mjpeg, MJPEG_MAX_FRAME_COUNT);
 
     while (pic_count < MJPEG_MAX_FRAME_COUNT) {
-        printf("pic count:%d\r\n",pic_count);
+        printf("pic count:%d\r\n", pic_count);
         bflb_mtimer_delay_ms(200);
     }
 

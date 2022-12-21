@@ -7,6 +7,8 @@
 #define EEPROM_SELECT_PAGE1    (1 << 5)
 
 static struct bflb_device_s *i2c0;
+static volatile uint32_t txFifoFlag = 0;
+static volatile uint32_t rxFifoFlag = 0;
 
 void i2c_isr(int irq, void *arg)
 {
@@ -17,6 +19,14 @@ void i2c_isr(int irq, void *arg)
     if (status & I2C_INTSTS_END) {
         bflb_i2c_int_mask(i2c0, I2C_INT_END, true);
         printf("Transfer end interrupt\r\n");
+    }
+    if (status & I2C_INTSTS_TX_FIFO) {
+        bflb_i2c_int_mask(i2c0, I2C_INT_TX_FIFO, true);
+        txFifoFlag = 1;
+    }
+    if (status & I2C_INTSTS_RX_FIFO) {
+        bflb_i2c_int_mask(i2c0, I2C_INT_RX_FIFO, true);
+        rxFifoFlag = 1;
     }
     if (status & I2C_INTSTS_NACK) {
         bflb_i2c_int_mask(i2c0, I2C_INT_NACK, true);
@@ -42,7 +52,7 @@ int main(void)
     bflb_i2c_init(i2c0, 400000);
 
     /* Set i2c interrupt */
-    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
+    bflb_i2c_int_mask(i2c0, I2C_INTEN_END | I2C_INTEN_TX_FIFO | I2C_INTEN_RX_FIFO | I2C_INTEN_NACK | I2C_INTEN_ARB | I2C_INTEN_FER, false);
     bflb_irq_attach(i2c0->irq_num, i2c_isr, NULL);
     bflb_irq_enable(i2c0->irq_num);
 
@@ -72,11 +82,19 @@ int main(void)
     msgs[1].length = EEPROM_TRANSFER_LENGTH;
 
     bflb_i2c_transfer(i2c0, msgs, 2);
+    if (txFifoFlag) {
+        printf("TX FIFO Ready interrupt generated\r\n");
+        txFifoFlag = 0;
+    }
+    if (rxFifoFlag) {
+        printf("RX FIFO Ready interrupt generated\r\n");
+        rxFifoFlag = 0;
+    }
     printf("write over\r\n\r\n");
     bflb_mtimer_delay_ms(100);
 
     /* Unmask interrupt */
-    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
+    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_TX_FIFO | I2C_INT_RX_FIFO | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
 
     /* Write page 1 */
     subaddr[1] = EEPROM_SELECT_PAGE1;
@@ -87,11 +105,19 @@ int main(void)
     msgs[1].length = EEPROM_TRANSFER_LENGTH;
 
     bflb_i2c_transfer(i2c0, msgs, 2);
+    if (txFifoFlag) {
+        printf("TX FIFO Ready interrupt generated\r\n");
+        txFifoFlag = 0;
+    }
+    if (rxFifoFlag) {
+        printf("RX FIFO Ready interrupt generated\r\n");
+        rxFifoFlag = 0;
+    }
     printf("write over\r\n\r\n");
     bflb_mtimer_delay_ms(100);
 
     /* Unmask interrupt */
-    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
+    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_TX_FIFO | I2C_INT_RX_FIFO | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
 
     /* Read page 0 */
     subaddr[1] = EEPROM_SELECT_PAGE0;
@@ -101,11 +127,19 @@ int main(void)
     msgs[1].buffer = read_data;
     msgs[1].length = EEPROM_TRANSFER_LENGTH;
     bflb_i2c_transfer(i2c0, msgs, 2);
+    if (txFifoFlag) {
+        printf("TX FIFO Ready interrupt generated\r\n");
+        txFifoFlag = 0;
+    }
+    if (rxFifoFlag) {
+        printf("RX FIFO Ready interrupt generated\r\n");
+        rxFifoFlag = 0;
+    }
     printf("read over\r\n\r\n");
     bflb_mtimer_delay_ms(100);
 
     /* Unmask interrupt */
-    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
+    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_TX_FIFO | I2C_INT_RX_FIFO | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
 
     /* Read page 1 */
     subaddr[1] = EEPROM_SELECT_PAGE1;
@@ -115,6 +149,14 @@ int main(void)
     msgs[1].buffer = read_data + EEPROM_TRANSFER_LENGTH;
     msgs[1].length = EEPROM_TRANSFER_LENGTH;
     bflb_i2c_transfer(i2c0, msgs, 2);
+    if (txFifoFlag) {
+        printf("TX FIFO Ready interrupt generated\r\n");
+        txFifoFlag = 0;
+    }
+    if (rxFifoFlag) {
+        printf("RX FIFO Ready interrupt generated\r\n");
+        rxFifoFlag = 0;
+    }
     printf("read over\r\n\r\n");
     bflb_mtimer_delay_ms(100);
 

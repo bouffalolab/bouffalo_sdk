@@ -66,7 +66,7 @@ int main(void)
 
     board_init();
 
-    printf("IR TX DMA case:\n\r");
+    printf("IR TX DMA case:\r\n");
 
     board_ir_gpio_init();
 
@@ -96,7 +96,7 @@ int main(void)
     }
     printf("Check wave\r\n");
 
-    printf("end\n\r");
+    printf("end\r\n");
 
     while (1) {
     }

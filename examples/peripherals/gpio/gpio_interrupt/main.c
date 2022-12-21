@@ -1,9 +1,8 @@
 #include "bflb_gpio.h"
 #include "bflb_mtimer.h"
+#include "board.h"
 
 struct bflb_device_s *gpio;
-
-extern void board_init(void);
 
 void gpio_isr(int irq, void *arg)
 {
@@ -22,7 +21,7 @@ int main(void)
     gpio = bflb_device_get_by_name("gpio");
     printf("gpio interrupt\r\n");
 
-    bflb_gpio_int_init(gpio, GPIO_PIN_0, GPIO_INT_TRIG_MODE_SYNC_FALLING_EDGE);
+    bflb_gpio_int_init(gpio, GPIO_PIN_0, GPIO_INT_TRIG_MODE_SYNC_LOW_LEVEL);
     bflb_gpio_int_mask(gpio, GPIO_PIN_0, false);
 
     bflb_irq_attach(gpio->irq_num, gpio_isr, gpio);

@@ -37,6 +37,7 @@
 
 #include "http_server.h"
 
+
 const HtmlServerRouter_TypeDef httpRouter[] = {
     { "/", "/index.html" },
     { "/favicon.ico", "/asset/favicon.ico" },

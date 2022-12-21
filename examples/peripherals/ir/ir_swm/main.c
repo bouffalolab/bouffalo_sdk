@@ -15,7 +15,7 @@ int main(void)
 
     board_init();
 
-    printf("IR SWM case:\n\r");
+    printf("IR SWM case:\r\n");
 
     board_ir_gpio_init();
 
@@ -71,7 +71,7 @@ int main(void)
     printf("\r\n");
 #endif
 
-    printf("\n\rend\n\r");
+    printf("end\r\n");
 
     while (1) {
     }

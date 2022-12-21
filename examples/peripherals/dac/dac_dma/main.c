@@ -70,7 +70,8 @@ int main(void)
 
     bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);
 
-    bflb_dac_init(dac, DAC_SAMPLING_FREQ_512K);
+    /* 512K / 1 = 512K */
+    bflb_dac_init(dac, DAC_CLK_DIV_1);
     bflb_dac_channel_enable(dac, DAC_CHANNEL_A);
     bflb_dac_channel_enable(dac, DAC_CHANNEL_B);
     bflb_dac_link_txdma(dac, true);

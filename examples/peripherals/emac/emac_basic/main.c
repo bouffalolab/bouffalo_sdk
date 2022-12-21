@@ -105,7 +105,7 @@ int main(void)
         .mac_addr[5] = 0x56,
     };
 
-    struct emac_phy_cfg_s phy_cfg = {
+    struct bflb_emac_phy_cfg_s phy_cfg = {
         .auto_negotiation = 1, /*!< Speed and mode auto negotiation */
         .full_duplex = 0,      /*!< Duplex mode */
         .speed = 0,            /*!< Speed mode */
@@ -129,7 +129,7 @@ int main(void)
     bflb_emac_int_clear(emac0, EMAC_INT_EN_ALL);
     bflb_emac_int_enable(emac0, EMAC_INT_EN_ALL, 1);
 
-    printf("EMAC ARB Packet test!\r\n");
+    printf("EMAC ARP Packet test!\r\n");
 
     /* phy module init */
     ethernet_phy_init(emac0, &phy_cfg);

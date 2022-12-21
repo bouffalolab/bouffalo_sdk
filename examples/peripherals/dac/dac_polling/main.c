@@ -43,7 +43,8 @@ int main(void)
 
     dac = bflb_device_get_by_name("dac");
 
-    bflb_dac_init(dac, DAC_SAMPLING_FREQ_32K);
+    /* 512K / 16 = 32K */
+    bflb_dac_init(dac, DAC_CLK_DIV_16);
     bflb_dac_channel_enable(dac, DAC_CHANNEL_A);
     bflb_dac_channel_enable(dac, DAC_CHANNEL_B);
 
