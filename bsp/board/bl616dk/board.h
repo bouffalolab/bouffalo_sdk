@@ -12,8 +12,7 @@ void board_dac_gpio_init();
 void board_emac_gpio_init();
 void board_sdh_gpio_init();
 void board_ir_gpio_init();
-void board_dvp1_gpio_init();
-void board_dvp2_gpio_init();
+void board_dvp_gpio_init();
 void board_iso11898_gpio_init();
 
 #define DEFAULT_TEST_UART "uart1"

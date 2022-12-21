@@ -95,6 +95,12 @@ static void peripheral_clock_init(void)
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_SDH);
 #endif
     GLB_Set_USB_CLK_From_WIFIPLL(1);
+    
+#ifdef CONFIG_BSP_CSI
+    GLB_CSI_Config_MIPIPLL(2, 0x21000);
+    GLB_CSI_Power_Up_MIPIPLL();
+    GLB_Set_DSP_CLK(ENABLE, GLB_DSP_CLK_MUXPLL_160M, 1);
+#endif
 }
 
 #ifdef CONFIG_PSRAM
@@ -451,7 +457,7 @@ void board_sdh_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_5, GPIO_FUNC_SDH | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
-void board_dvp1_gpio_init(void)
+void board_dvp_gpio_init(void)
 {
     struct bflb_device_s *gpio;
 
@@ -471,7 +477,7 @@ void board_dvp1_gpio_init(void)
     /* MCLK GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_33, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 
-    /* DVP1 GPIO */
+    /* DVP GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, GPIO_PIN_17, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, GPIO_PIN_24, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
@@ -485,7 +491,31 @@ void board_dvp1_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_32, GPIO_FUNC_CAM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
-void board_iso11898_gpio_init()
+void board_csi_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+
+    /* I2C GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    /* Power down GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_set(gpio, GPIO_PIN_22);
+
+    /* Reset GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_21, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_set(gpio, GPIO_PIN_21);
+
+    /* MCLK GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    GLB_Set_Ldo15cis_Vout(GLB_LDO15CIS_LEVEL_1P20V);
+}
+
+void board_iso11898_gpio_init(void)
 {
     // struct bflb_device_s *gpio;
 

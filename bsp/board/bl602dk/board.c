@@ -162,11 +162,11 @@ void board_init(void)
 
 void board_uartx_gpio_init()
 {
-    // struct bflb_device_s *gpio;
+    struct bflb_device_s *gpio;
 
-    // gpio = bflb_device_get_by_name("gpio");
-    // bflb_gpio_uart_init(gpio, GPIO_PIN_18, GPIO_UART_FUNC_UART1_TX);
-    // bflb_gpio_uart_init(gpio, GPIO_PIN_19, GPIO_UART_FUNC_UART1_RX);
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_uart_init(gpio, GPIO_PIN_1, GPIO_UART_FUNC_UART1_TX);
+    bflb_gpio_uart_init(gpio, GPIO_PIN_12, GPIO_UART_FUNC_UART1_RX);
 }
 
 void board_i2c0_gpio_init()
