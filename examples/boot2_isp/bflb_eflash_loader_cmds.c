@@ -43,11 +43,11 @@
 #include "bflb_sec_sha.h"
 #include "blsp_media_boot.h"
 #include "blsp_common.h"
+#include "bflb_flash.h"
 
 #define BFLB_EFLASH_LOADER_CHECK_LEN 2048
 #define BFLB_EFLASH_MAX_SIZE         2 * 1024 * 1024
 
-extern struct device *download_uart;
 
 #if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM
 static struct image_cfg_t image_cfg;
@@ -331,7 +331,7 @@ static int32_t bflb_bootrom_cmd_load_segdata(uint16_t cmd, uint8_t *data, uint16
     }
 
     /*no encryption,copy directlly */
-    ARCH_MemCpy_Fast((void *)segment_hdr.destaddr, data, len);
+    arch_memcpy_fast((void *)segment_hdr.destaddr, data, len);
     //LOG_F("segment_hdr.destaddr 0x%08x, len %d,data %02x %02x %02x %02x \r\n", segment_hdr.destaddr, len, data[0], data[1], data[2], data[3]);
     img_ctrl.segdata_recv_len += len;
     segment_hdr.destaddr += len;
@@ -479,7 +479,7 @@ static int32_t bflb_eflash_loader_cmd_read_jedec_id(uint16_t cmd, uint8_t *data,
     /*ack read jedec ID */
     tmp_buf[2] = 4;
     tmp_buf[3] = 0;
-    flash_read_jedec_id((uint8_t *)&ackdata[1]);
+    ackdata[0] = bflb_flash_get_jedec_id();
     ackdata[1] &= 0x00ffffff;
     ackdata[1] |= 0x80000000;
     bflb_eflash_loader_if_write((uint32_t *)ackdata, 4 + 4);
@@ -499,7 +499,7 @@ static int32_t bflb_eflash_loader_cmd_reset(uint16_t cmd, uint8_t *data, uint16_
     hal_boot2_set_psmode_status(0x594c440B);
 
     /* FPGA POR RST NOT work,so add system reset */
-    bflb_platform_delay_us(10);
+    arch_delay_us(10);
     hal_boot2_sw_system_reset();
 
     return ret;
@@ -523,7 +523,7 @@ static int32_t bflb_eflash_loader_cmd_erase_flash(uint16_t cmd, uint8_t *data, u
 
         //LOG_F("from%08xto%08x\n", startaddr, endaddr);
 
-        if (SUCCESS != flash_erase(startaddr, endaddr - startaddr + 1)) {
+        if (SUCCESS != bflb_flash_erase(startaddr, endaddr - startaddr + 1)) {
             //LOG_F("fail\n");
             ret = BFLB_EFLASH_LOADER_FLASH_ERASE_ERROR;
         }
@@ -547,7 +547,7 @@ static int32_t ATTR_TCM_SECTION bflb_eflash_loader_cmd_write_flash(uint16_t cmd,
         write_len = len - 4;
         //LOG_F("to%08x,%d\n", startaddr, write_len);
         if (startaddr < 0xffffffff) {
-            if (SUCCESS != flash_write(startaddr, data + 4, write_len)) {
+            if (SUCCESS != bflb_flash_write(startaddr, data + 4, write_len)) {
                 /*error , response again with error */
                 //LOG_F("fail\r\n");
                 ret = BFLB_EFLASH_LOADER_FLASH_WRITE_ERROR;
@@ -584,7 +584,7 @@ static int32_t bflb_eflash_loader_cmd_read_flash(uint16_t cmd, uint8_t *data, ui
         ackdata[1] = 'K';
         ackdata[2] = read_len & 0xff;
         ackdata[3] = (read_len >> 8) & 0xff;
-        flash_read(startaddr, &ackdata[4], read_len);
+        bflb_flash_read(startaddr, &ackdata[4], read_len);
 
         bflb_eflash_loader_cmd_response((uint32_t *)ackdata, read_len + 4);
     }

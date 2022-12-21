@@ -40,7 +40,6 @@
 #include "blsp_media_boot.h"
 #include "blsp_boot_decompress.h"
 #include "blsp_common.h"
-#include "blsp_version.h"
 #include "partition.h"
 #include "softcrc.h"
 #include "bflb_flash.h"
@@ -82,7 +81,6 @@ static int blsp_cal_ram_img_hash(uint32_t src, uint32_t total_len, uint8_t *hash
         cur_len += read_len;
     }
     bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)cal_hash);
-    //sec_hash_deinit(&hash_handle);   //ToDo
     if (memcmp(hash, cal_hash, 32) != 0) {
         LOG_E("Cal hash error\r\n");
         return -1;

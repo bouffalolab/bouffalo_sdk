@@ -121,7 +121,7 @@ static int32_t blsp_mediaboot_read_signaure(uint32_t addr, uint32_t *len)
         return ret;
     }
 
-    ARCH_MemCpy_Fast(g_boot2_read_buf, &sig_len, sizeof(sig_len));
+    arch_memcpy_fast(g_boot2_read_buf, &sig_len, sizeof(sig_len));
     addr += (sig_len + 4);
     *len = sig_len;
 

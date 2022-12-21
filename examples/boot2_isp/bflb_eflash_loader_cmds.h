@@ -38,7 +38,7 @@
 
 #include "stdint.h"
 #include "bflb_core.h"
-#include "bl616_sflash.h"
+#include "bflb_port_boot2.h"
 
 #define BFLB_EFLASH_LOADER_CMD_GET_BOOTINFO    0x0010
 #define BFLB_EFLASH_LOADER_CMD_LOAD_BOOTHEADER 0x0011

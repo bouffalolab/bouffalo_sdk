@@ -86,7 +86,6 @@ int32_t blsp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *data, 
         /* Check public key with data info in OTP*/
         bflb_sha256_update(sha, &ctx_sha256, data, HAL_BOOT2_ECC_KEYXSIZE + HAL_BOOT2_ECC_KEYYSIZE);
         bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)pk_hash);
-        //bflb_sha_deinit(&hash_handle);//ToDo
 
         bflb_sha_init(sha, SHA_MODE_SHA256);
         bflb_sha256_start(sha, &ctx_sha256);
@@ -100,8 +99,8 @@ int32_t blsp_boot_parse_pkey(boot2_image_config *g_boot_img_cfg, uint8_t *data, 
         }
 
         if (own == 1) {
-            ARCH_MemCpy_Fast(g_boot_img_cfg->eckye_x, cfg->eckye_x, sizeof(cfg->eckye_x));
-            ARCH_MemCpy_Fast(g_boot_img_cfg->eckey_y, cfg->eckey_y, sizeof(cfg->eckey_y));
+            arch_memcpy_fast(g_boot_img_cfg->eckye_x, cfg->eckye_x, sizeof(cfg->eckye_x));
+            arch_memcpy_fast(g_boot_img_cfg->eckey_y, cfg->eckey_y, sizeof(cfg->eckey_y));
         }
     } else {
         LOG_E("PK crc error\r\n");
@@ -135,10 +134,10 @@ int32_t blsp_boot_parse_signature(boot2_image_config *g_boot_img_cfg, uint8_t *d
 
     if (memcmp(&crc, &cfg->signature[cfg->sig_len], 4) == 0) {
         if (own == 1) {
-            ARCH_MemCpy_Fast(g_boot_img_cfg->signature, cfg->signature, cfg->sig_len);
+            arch_memcpy_fast(g_boot_img_cfg->signature, cfg->signature, cfg->sig_len);
             //g_boot_img_cfg->sig_len = cfg->sig_len;
         } else {
-            ARCH_MemCpy_Fast(g_boot_img_cfg->signature2, cfg->signature, cfg->sig_len);
+            arch_memcpy_fast(g_boot_img_cfg->signature2, cfg->signature, cfg->sig_len);
             //g_boot_img_cfg->sig_len2 = cfg->sig_len;
         }
     } else {
@@ -236,7 +235,6 @@ int32_t blsp_boot_parser_check_hash(boot2_image_config *g_boot_img_cfg)
     if (!g_boot_img_cfg->basic_cfg.hash_ignore) {
         //Sec_Eng_SHA256_Finish(&g_sha_ctx, SEC_ENG_SHA_ID0, (uint8_t *)img_hash_cal);
         bflb_sha256_finish(sha, &ctx_sha256, (uint8_t *)img_hash_cal);
-        //sec_hash_deinit(&hash_handle);//ToDo
 
         if (memcmp(img_hash_cal, g_boot_img_cfg->basic_cfg.hash, 32) != 0) {
             LOG_E("Hash error\r\n");

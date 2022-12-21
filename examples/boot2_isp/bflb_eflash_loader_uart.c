@@ -38,6 +38,7 @@
 #include "blsp_common.h"
 #include "partition.h"
 #include "bflb_uart.h"
+#include "bflb_port_boot2.h"
 
 static uint32_t g_detected_baudrate;
 struct bflb_device_s *uartx;
@@ -74,6 +75,7 @@ static void bflb_eflash_loader_usart_if_init(uint32_t bdrate)
 
 void bflb_eflash_loader_usart_if_enable_int(void)
 {
+    bflb_uart_rxint_mask(uartx,false);
 }
 
 void bflb_eflash_loader_usart_if_send(uint8_t *data, uint32_t len)
@@ -116,7 +118,6 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
     uint32_t handshake_count = 0;
     uint32_t rcv_buf_len = 0;
     //rcv_buf_len = UART_ReceiveData(g_uart_if_id,buf,128);
-    //struct device *download_uart = device_find("download_uart");
     uartx = bflb_device_get_by_name("uart0");
     rcv_buf_len = bflb_uart_get(uartx, buf, UART_FIFO_LEN);
 
@@ -139,7 +140,7 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
         return -1;
     }
 
-#if 1 //defined(CHIP_BL606P) || defined(CHIP_BL808) || defined(CHIP_BL616) || defined(CHIP_WB03)
+#if defined(CHIP_BL606P) || defined(CHIP_BL808) || defined(CHIP_BL616) || defined(CHIP_WB03)
     /*receive shake hanad signal*/
     bflb_eflash_loader_usart_if_send((uint8_t *)"Boot2 ISP Ready", strlen("Boot2 ISP Ready"));
     bflb_mtimer_delay_ms(2);
@@ -159,30 +160,19 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
     /* consume the remaining bytes when shake hand(0x55) if needed */
     nowtime = bflb_mtimer_get_time_ms();
     do {
-        rcv_buf_len = device_read(download_uart, 0, buf, UART_FIFO_LEN);
+        
+        rcv_buf_len = bflb_uart_get(uartx,buf,UART_FIFO_LEN);
         if (rcv_buf_len > 0) {
-            nowtime = bflb_platform_get_time_ms();
+            nowtime = bflb_mtimer_get_time_ms();
         }
 
-    } while (bflb_platform_get_time_ms() - nowtime < BFLB_EFLASH_LAODER_COMSUME_55_TIMEOUT);
+    } while (bflb_mtimer_get_time_ms() - nowtime < BFLB_EFLASH_LAODER_COMSUME_55_TIMEOUT);
     bflb_eflash_loader_usart_if_send((uint8_t *)"Boot2 ISP Ready", strlen("Boot2 ISP Ready"));
 
     /*init rx info */
     g_rx_buf_index = 0;
     g_rx_buf_len = 0;
 
-#if (BLSP_BOOT2_MODE == BOOT2_MODE_DEBUG)
-    arch_delay_ms(2);
-    bflb_platform_print_set(1);
-    device_unregister("debug_log");
-    uart_register(0, "iap_download");
-    download_uart = device_find("iap_download");
-
-    if (download_uart) {
-        UART_DEV(download_uart)->fifo_threshold = 16;
-        device_open(download_uart, DEVICE_OFLAG_STREAM_TX);
-    }
-#endif
 
     simple_malloc_init(g_malloc_buf, sizeof(g_malloc_buf));
     g_eflash_loader_readbuf[0] = vmalloc(BFLB_EFLASH_LOADER_READBUF_SIZE);
