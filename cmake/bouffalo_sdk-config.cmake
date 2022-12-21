@@ -11,7 +11,7 @@ set(EXECUTABLE_OUTPUT_PATH ${build_dir})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 add_library(sdk_intf_lib INTERFACE)
-add_library(app STATIC ${BL_SDK_BASE}/bsp/board/${BOARD}/board.c)
+add_library(app STATIC)
 target_link_libraries(app sdk_intf_lib)
 
 include(${BL_SDK_BASE}/cmake/toolchain.cmake)
