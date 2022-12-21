@@ -2,8 +2,7 @@
 #include <FreeRTOS.h>
 #include "semphr.h"
 #include "log.h"
-
-extern void board_init(void);
+#include "board.h"
 
 static uint8_t freertos_heap[configTOTAL_HEAP_SIZE];
 

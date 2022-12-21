@@ -53,7 +53,9 @@
     #include "portmacro.h"
 #endif
 
-#if portBYTE_ALIGNMENT == 32
+#if portBYTE_ALIGNMENT == 128
+    #define portBYTE_ALIGNMENT_MASK    ( 0x007f )
+#elif portBYTE_ALIGNMENT == 32
     #define portBYTE_ALIGNMENT_MASK    ( 0x001f )
 #elif portBYTE_ALIGNMENT == 16
     #define portBYTE_ALIGNMENT_MASK    ( 0x000f )

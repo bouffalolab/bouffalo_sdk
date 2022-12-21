@@ -94,12 +94,21 @@ definitions. */
 	#define portasmHAS_SIFIVE_CLINT 0
 #endif
 
+#ifndef portasmHAS_F_EXTENSION
+	#define portasmHAS_F_EXTENSION 0
+#endif
+
 /* Only the standard core registers are stored by default.  Any additional
 registers must be saved by the portasmSAVE_ADDITIONAL_REGISTERS and
 portasmRESTORE_ADDITIONAL_REGISTERS macros - which can be defined in a chip
 specific version of freertos_risc_v_chip_specific_extensions.h.  See the notes
 at the top of this file. */
 #define portCONTEXT_SIZE ( 30 * portWORD_SIZE )
+
+
+#define portFLOAT_CONTEXT_SIZE ( 34 * portWORD_SIZE )
+
+
 
 .global xPortStartFirstTask
 .global freertos_risc_v_trap_handler
@@ -154,6 +163,50 @@ freertos_risc_v_trap_handler:
 
 	csrr t0, mstatus					/* Required for MPIE bit. */
 	store_x t0, 29 * portWORD_SIZE( sp )
+
+#if( portasmHAS_F_EXTENSION != 0 )
+	addi    sp,   sp, -portFLOAT_CONTEXT_SIZE
+    csrr    t1,   mstatus
+    sw      t1,   34 * portWORD_SIZE( sp )
+    srli    t2,   t1, 13
+    andi    t2,   t2, 0x3
+    li      t0,   0x3
+    bne     t2,   t0,  f_reg_skip_save
+
+	fsw     f0,   1  * portWORD_SIZE( sp )
+	fsw     f1,   2  * portWORD_SIZE( sp )
+	fsw     f2,   3  * portWORD_SIZE( sp )
+	fsw     f3,   4  * portWORD_SIZE( sp )
+	fsw     f4,   5  * portWORD_SIZE( sp )
+	fsw     f5,   6  * portWORD_SIZE( sp )
+	fsw     f6,   7  * portWORD_SIZE( sp )
+	fsw     f7,   8  * portWORD_SIZE( sp )
+	fsw     f8,   9  * portWORD_SIZE( sp )
+	fsw     f9,   10 * portWORD_SIZE( sp )
+	fsw     f10,  11 * portWORD_SIZE( sp )
+	fsw     f11,  12 * portWORD_SIZE( sp )
+	fsw     f12,  13 * portWORD_SIZE( sp )
+	fsw     f13,  14 * portWORD_SIZE( sp )
+	fsw     f14,  15 * portWORD_SIZE( sp )
+	fsw     f15,  16 * portWORD_SIZE( sp )
+	fsw     f16,  17 * portWORD_SIZE( sp )
+	fsw     f17,  18 * portWORD_SIZE( sp )
+	fsw     f18,  19 * portWORD_SIZE( sp )
+	fsw     f19,  20 * portWORD_SIZE( sp )
+	fsw     f20,  21 * portWORD_SIZE( sp )
+	fsw     f21,  22 * portWORD_SIZE( sp )
+	fsw     f22,  23 * portWORD_SIZE( sp )
+	fsw     f23,  24 * portWORD_SIZE( sp )
+	fsw     f24,  25 * portWORD_SIZE( sp )
+	fsw     f25,  26 * portWORD_SIZE( sp )
+	fsw     f26,  27 * portWORD_SIZE( sp )
+	fsw     f27,  28 * portWORD_SIZE( sp )
+	fsw     f28,  29 * portWORD_SIZE( sp )
+	fsw     f29,  30 * portWORD_SIZE( sp )
+	fsw     f30,  31 * portWORD_SIZE( sp )
+	fsw     f31,  32 * portWORD_SIZE( sp )
+f_reg_skip_save:
+#endif
 
 	portasmSAVE_ADDITIONAL_REGISTERS	/* Defined in freertos_risc_v_chip_specific_extensions.h to save any registers unique to the RISC-V implementation. */
 
@@ -250,8 +303,8 @@ is_exception:
 	csrr t0, mcause						/* For viewing in the debugger only. */
 	csrr t1, mepc						/* For viewing in the debugger only */
 	csrr t2, mstatus
-	jal exception_entry				    /* No other exceptions handled yet. */
-	j is_exception				        /* No other exceptions handled yet. */
+	j exception_entry				    /* No other exceptions handled yet. */
+	# j is_exception				        /* No other exceptions handled yet. */
 
 as_yet_unhandled:
 	csrr t0, mcause						/* For viewing in the debugger only. */
@@ -271,6 +324,48 @@ processed_source:
 	csrw mepc, t0
 
 	portasmRESTORE_ADDITIONAL_REGISTERS	/* Defined in freertos_risc_v_chip_specific_extensions.h to restore any registers unique to the RISC-V implementation. */
+
+#if( portasmHAS_F_EXTENSION != 0 )
+    lw      t1,   34 * portWORD_SIZE( sp )
+    srli    t2,   t1, 13
+    andi    t2,   t2, 0x3
+    li      t0,   0x3
+    bne     t2,   t0, f_reg_skip_restore1
+	flw     f0,   1  * portWORD_SIZE( sp )
+	flw     f1,   2  * portWORD_SIZE( sp )
+	flw     f2,   3  * portWORD_SIZE( sp )
+	flw     f3,   4  * portWORD_SIZE( sp )
+	flw     f4,   5  * portWORD_SIZE( sp )
+	flw     f5,   6  * portWORD_SIZE( sp )
+	flw     f6,   7  * portWORD_SIZE( sp )
+	flw     f7,   8  * portWORD_SIZE( sp )
+	flw     f8,   9  * portWORD_SIZE( sp )
+	flw     f9,   10 * portWORD_SIZE( sp )
+	flw     f10,  11 * portWORD_SIZE( sp )
+	flw     f11,  12 * portWORD_SIZE( sp )
+	flw     f12,  13 * portWORD_SIZE( sp )
+	flw     f13,  14 * portWORD_SIZE( sp )
+	flw     f14,  15 * portWORD_SIZE( sp )
+	flw     f15,  16 * portWORD_SIZE( sp )
+	flw     f16,  17 * portWORD_SIZE( sp )
+	flw     f17,  18 * portWORD_SIZE( sp )
+	flw     f18,  19 * portWORD_SIZE( sp )
+	flw     f19,  20 * portWORD_SIZE( sp )
+	flw     f20,  21 * portWORD_SIZE( sp )
+	flw     f21,  22 * portWORD_SIZE( sp )
+	flw     f22,  23 * portWORD_SIZE( sp )
+	flw     f23,  24 * portWORD_SIZE( sp )
+	flw     f24,  25 * portWORD_SIZE( sp )
+	flw     f25,  26 * portWORD_SIZE( sp )
+	flw     f26,  27 * portWORD_SIZE( sp )
+	flw     f27,  28 * portWORD_SIZE( sp )
+	flw     f28,  29 * portWORD_SIZE( sp )
+	flw     f29,  30 * portWORD_SIZE( sp )
+	flw     f30,  31 * portWORD_SIZE( sp )
+	flw     f31,  32 * portWORD_SIZE( sp )
+f_reg_skip_restore1:
+    addi    sp,   sp, portFLOAT_CONTEXT_SIZE
+#endif
 
 	/* Load mstatus with the interrupt enable bits used by the task. */
 	load_x  t0, 29 * portWORD_SIZE( sp )
@@ -329,6 +424,48 @@ xPortStartFirstTask:
 	load_x  x1, 0( sp ) /* Note for starting the scheduler the exception return address is used as the function return address. */
 
 	portasmRESTORE_ADDITIONAL_REGISTERS	/* Defined in freertos_risc_v_chip_specific_extensions.h to restore any registers unique to the RISC-V implementation. */
+
+#if( portasmHAS_F_EXTENSION != 0 )
+    lw      t1,   34 * portWORD_SIZE( sp )
+    srli    t2,   t1, 13
+    andi    t2,   t2, 0x3
+    li      t0,   0x3
+    bne     t2,   t0, f_reg_skip_restore2
+	flw     f0,   1  * portWORD_SIZE( sp )
+	flw     f1,   2  * portWORD_SIZE( sp )
+	flw     f2,   3  * portWORD_SIZE( sp )
+	flw     f3,   4  * portWORD_SIZE( sp )
+	flw     f4,   5  * portWORD_SIZE( sp )
+	flw     f5,   6  * portWORD_SIZE( sp )
+	flw     f6,   7  * portWORD_SIZE( sp )
+	flw     f7,   8  * portWORD_SIZE( sp )
+	flw     f8,   9  * portWORD_SIZE( sp )
+	flw     f9,   10 * portWORD_SIZE( sp )
+	flw     f10,  11 * portWORD_SIZE( sp )
+	flw     f11,  12 * portWORD_SIZE( sp )
+	flw     f12,  13 * portWORD_SIZE( sp )
+	flw     f13,  14 * portWORD_SIZE( sp )
+	flw     f14,  15 * portWORD_SIZE( sp )
+	flw     f15,  16 * portWORD_SIZE( sp )
+	flw     f16,  17 * portWORD_SIZE( sp )
+	flw     f17,  18 * portWORD_SIZE( sp )
+	flw     f18,  19 * portWORD_SIZE( sp )
+	flw     f19,  20 * portWORD_SIZE( sp )
+	flw     f20,  21 * portWORD_SIZE( sp )
+	flw     f21,  22 * portWORD_SIZE( sp )
+	flw     f22,  23 * portWORD_SIZE( sp )
+	flw     f23,  24 * portWORD_SIZE( sp )
+	flw     f24,  25 * portWORD_SIZE( sp )
+	flw     f25,  26 * portWORD_SIZE( sp )
+	flw     f26,  27 * portWORD_SIZE( sp )
+	flw     f27,  28 * portWORD_SIZE( sp )
+	flw     f28,  29 * portWORD_SIZE( sp )
+	flw     f29,  30 * portWORD_SIZE( sp )
+	flw     f30,  31 * portWORD_SIZE( sp )
+	flw     f31,  32 * portWORD_SIZE( sp )
+f_reg_skip_restore2:
+    addi    sp,   sp,  portFLOAT_CONTEXT_SIZE
+#endif
 
 	load_x  x6, 3 * portWORD_SIZE( sp )		/* t1 */
 	load_x  x7, 4 * portWORD_SIZE( sp )		/* t2 */
@@ -445,7 +582,12 @@ pxPortInitialiseStack:
 	store_x a2, 0(a0)					/* Task parameters (pvParameters parameter) goes into register X10/a0 on the stack. */
 	addi a0, a0, -(6 * portWORD_SIZE)	/* Space for registers x5-x9. */
 	store_x x0, 0(a0)					/* Return address onto the stack, could be portTASK_RETURN_ADDRESS */
+#if( portasmHAS_F_EXTENSION != 0 )
+	addi t0, x0, 34						/* Space for float register */
+	addi t0, t0, portasmADDITIONAL_CONTEXT_SIZE /* The number of chip specific additional registers. */
+#else
 	addi t0, x0, portasmADDITIONAL_CONTEXT_SIZE /* The number of chip specific additional registers. */
+#endif
 chip_specific_stack_frame:				/* First add any chip specific registers to the stack frame being created. */
 	beq t0, x0, 1f						/* No more chip specific registers to save. */
 	addi a0, a0, -portWORD_SIZE			/* Make space for chip specific register. */
