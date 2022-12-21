@@ -7,31 +7,32 @@ sdk_library_add_sources(startup/${CPU_ID}/start_load.c)
 sdk_library_add_sources(startup/${CPU_ID}/system_bl808.c)
 sdk_library_add_sources(startup/${CPU_ID}/interrupt.c)
 
-sdk_library_add_sources(bl808_std/src/bl808_aon.c)
-sdk_library_add_sources(bl808_std/src/bl808_clock.c)
-sdk_library_add_sources(bl808_std/src/bl808_common.c)
-sdk_library_add_sources(bl808_std/src/bl808_ef_cfg.c)
-sdk_library_add_sources(bl808_std/src/bl808_glb.c)
-sdk_library_add_sources(bl808_std/src/bl808_hbn.c)
-sdk_library_add_sources(bl808_std/src/bl808_l1c.c)
-sdk_library_add_sources(bl808_std/src/bl808_pds.c)
-sdk_library_add_sources(bl808_std/src/bl808_sdh.c)
+sdk_library_add_sources(src/bl808_aon.c)
+sdk_library_add_sources(src/bl808_clock.c)
+sdk_library_add_sources(src/bl808_common.c)
+sdk_library_add_sources(src/bl808_ef_cfg.c)
+sdk_library_add_sources(src/bl808_glb.c)
+sdk_library_add_sources(src/bl808_glb_gpio.c)
+sdk_library_add_sources(src/bl808_hbn.c)
+sdk_library_add_sources(src/bl808_l1c.c)
+sdk_library_add_sources(src/bl808_pds.c)
+sdk_library_add_sources(src/bl808_sdh.c)
 
-sdk_library_add_sources(bl808_std/src/bl808_tzc_sec.c)
-sdk_library_add_sources(bl808_std/src/bl808_psram_uhs.c)
-sdk_library_add_sources(bl808_std/src/bl808_uhs_phy.c)
+sdk_library_add_sources(src/bl808_tzc_sec.c)
+sdk_library_add_sources(src/bl808_psram_uhs.c)
+sdk_library_add_sources(src/bl808_uhs_phy.c)
 
-sdk_library_add_sources(bl808_std/src/bl808_sf_cfg.c)
-sdk_library_add_sources(bl808_std/src/bl808_sf_ctrl.c)
-sdk_library_add_sources(bl808_std/src/bl808_sflash.c)
-sdk_library_add_sources(bl808_std/src/bl808_xip_sflash.c)
+sdk_library_add_sources(src/bl808_sf_cfg.c)
+sdk_library_add_sources(src/bl808_sf_ctrl.c)
+sdk_library_add_sources(src/bl808_sflash.c)
+sdk_library_add_sources(src/bl808_xip_sflash.c)
 
 sdk_library_add_sources(port/bl808_clock.c)
 sdk_library_add_sources(port/bl808_flash.c)
 
 sdk_add_include_directories(
-bl808_std/include
-bl808_std/include/hardware
+include
+include/hardware
 )
 
 if("${CPU_ID}" STREQUAL "m0")
