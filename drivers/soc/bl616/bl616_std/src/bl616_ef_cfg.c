@@ -33,35 +33,12 @@
   *
   ******************************************************************************
   */
-
-#include "string.h"
-#include "bflb_ef_ctrl.h"
 #include "bl616_ef_cfg.h"
+#include "hardware/ef_data_reg.h"
 
-/** @addtogroup  BL616_Peripheral_Driver
- *  @{
- */
+extern int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload);
 
-/** @addtogroup  SEC_EF_CTRL
- *  @{
- */
-
-/** @defgroup  SEC_EF_CTRL_Private_Macros
- *  @{
- */
-
-/*@} end of group SEC_EF_CTRL_Private_Macros */
-
-/** @defgroup  SEC_EF_CTRL_Private_Types
- *  @{
- */
-
-/*@} end of group SEC_EF_CTRL_Private_Types */
-
-/** @defgroup  SEC_EF_CTRL_Private_Variables
- *  @{
- */
-static const bflb_ef_ctrl_com_trim_cfg trim_list[] = {
+static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {
         .name = "ldo15",
         .en_addr = 0x68 * 8 + 31,
@@ -302,77 +279,19 @@ static const bflb_ef_ctrl_com_trim_cfg trim_list[] = {
     }
 };
 
-#define EF_CTRL_DEVICE_INFO_OFFSET 0x18
-/* 0x14 : ef_wifi_mac_low */
-#define EF_DATA_EF_WIFI_MAC_LOW_OFFSET (0x14)
-/* 0x18 : ef_wifi_mac_high */
-#define EF_DATA_EF_WIFI_MAC_HIGH_OFFSET (0x18)
-/* 0x1C : ef_key_slot_0_w0 */
-#define EF_DATA_EF_KEY_SLOT_0_W0_OFFSET (0x1C)
-/* 0x20 : ef_key_slot_0_w1 */
-#define EF_DATA_EF_KEY_SLOT_0_W1_OFFSET (0x20)
-/* 0x24 : ef_key_slot_0_w2 */
-#define EF_DATA_EF_KEY_SLOT_0_W2_OFFSET (0x24)
-/* 0x28 : ef_key_slot_0_w3 */
-#define EF_DATA_EF_KEY_SLOT_0_W3_OFFSET (0x28)
-/* 0x2C : ef_key_slot_1_w0 */
-#define EF_DATA_EF_KEY_SLOT_1_W0_OFFSET (0x2C)
-/* 0x30 : ef_key_slot_1_w1 */
-#define EF_DATA_EF_KEY_SLOT_1_W1_OFFSET (0x30)
-/* 0x34 : ef_key_slot_1_w2 */
-#define EF_DATA_EF_KEY_SLOT_1_W2_OFFSET (0x34)
-/* 0x38 : ef_key_slot_1_w3 */
-#define EF_DATA_EF_KEY_SLOT_1_W3_OFFSET (0x38)
-/* 0x3C : ef_key_slot_2_w0 */
-#define EF_DATA_EF_KEY_SLOT_2_W0_OFFSET (0x3C)
-/* 0x40 : ef_key_slot_2_w1 */
-#define EF_DATA_EF_KEY_SLOT_2_W1_OFFSET (0x40)
-/* 0x44 : ef_key_slot_2_w2 */
-#define EF_DATA_EF_KEY_SLOT_2_W2_OFFSET (0x44)
-/* 0x48 : ef_key_slot_2_w3 */
-#define EF_DATA_EF_KEY_SLOT_2_W3_OFFSET (0x48)
-/* 0x4C : ef_key_slot_3_w0 */
-#define EF_DATA_EF_KEY_SLOT_3_W0_OFFSET (0x4C)
-/* 0x50 : ef_key_slot_3_w1 */
-#define EF_DATA_EF_KEY_SLOT_3_W1_OFFSET (0x50)
-/* 0x54 : ef_key_slot_3_w2 */
-#define EF_DATA_EF_KEY_SLOT_3_W2_OFFSET (0x54)
-/* 0x58 : ef_key_slot_3_w3 */
-#define EF_DATA_EF_KEY_SLOT_3_W3_OFFSET (0x58)
-/* 0x5C : ef_sw_usage_0 */
-#define EF_DATA_EF_SW_USAGE_0_OFFSET (0x5C)
-/* 0x60 : ef_sw_usage_1 */
-#define EF_DATA_EF_SW_USAGE_1_OFFSET (0x60)
-/* 0x64 : ef_sw_usage_2 */
-#define EF_DATA_EF_SW_USAGE_2_OFFSET (0x64)
-/* 0x68 : ef_sw_usage_3 */
-#define EF_DATA_EF_SW_USAGE_3_OFFSET (0x68)
-/* 0x6C : ef_key_slot_11_w0 */
-#define EF_DATA_EF_KEY_SLOT_11_W0_OFFSET (0x6C)
-/* 0x70 : ef_key_slot_11_w1 */
-#define EF_DATA_EF_KEY_SLOT_11_W1_OFFSET (0x70)
-/* 0x74 : ef_key_slot_11_w2 */
-#define EF_DATA_EF_KEY_SLOT_11_W2_OFFSET (0x74)
-/* 0x78 : ef_key_slot_11_w3 */
-#define EF_DATA_EF_KEY_SLOT_11_W3_OFFSET (0x78)
-
-/*@} end of group SEC_EF_CTRL_Private_Variables */
-
-/** @defgroup  SEC_EF_CTRL_Global_Variables
- *  @{
- */
-
-/*@} end of group SEC_EF_CTRL_Global_Variables */
-
-/** @defgroup  SEC_EF_CTRL_Private_Fun_Declaration
- *  @{
- */
-
-/*@} end of group SEC_EF_CTRL_Private_Fun_Declaration */
-
-/** @defgroup  SEC_EF_CTRL_Private_Functions
- *  @{
- */
+/****************************************************************************/ /**
+ * @brief  Efuse get trim list
+ *
+ * @param  trim_list: Trim list pointer
+ *
+ * @return Trim list count
+ *
+*******************************************************************************/
+uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **ptrim_list)
+{
+    *ptrim_list = &trim_list[0];
+    return sizeof(trim_list) / sizeof(trim_list[0]);
+}
 
 /****************************************************************************/ /**
  * @brief  Efuse read device info
@@ -386,21 +305,14 @@ void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo)
 {
     uint32_t *p = (uint32_t *)deviceInfo;
 
-    bflb_ef_ctrl_read_direct(NULL, EF_CTRL_DEVICE_INFO_OFFSET, p, 1, 1);
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, p, 1, 1);
 }
 
-/****************************************************************************/ /**
- * @brief  Efuse get trim list
- *
- * @param  trim_list: Trim list pointer
- *
- * @return Trim list count
- *
-*******************************************************************************/
-uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg **ptrim_list)
+void bflb_efuse_get_chipid(uint8_t chipid[8])
 {
-    *ptrim_list = &trim_list[0];
-    return sizeof(trim_list) / sizeof(trim_list[0]);
+    bflb_efuse_read_mac_address_opt(0, chipid, 1);
+    chipid[6] = 0;
+    chipid[7] = 0;
 }
 
 /****************************************************************************/ /**
@@ -412,7 +324,7 @@ uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg **ptr
  * @return 0 for all slots full,1 for others
  *
 *******************************************************************************/
-uint8_t EF_Ctrl_Is_MAC_Address_Slot_Empty(uint8_t slot, uint8_t reload)
+uint8_t bflb_efuse_is_mac_address_slot_empty(uint8_t slot, uint8_t reload)
 {
     uint32_t tmp1 = 0xffffffff, tmp2 = 0xffffffff;
     uint32_t part1Empty = 0, part2Empty = 0;
@@ -441,10 +353,10 @@ uint8_t EF_Ctrl_Is_MAC_Address_Slot_Empty(uint8_t slot, uint8_t reload)
  * @param  mac[6]: MAC address buffer
  * @param  program: Whether program
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
-BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t program)
+int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t program)
 {
     uint8_t *maclow = (uint8_t *)mac;
     uint8_t *machigh = (uint8_t *)(mac + 4);
@@ -452,7 +364,7 @@ BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t 
     uint32_t i = 0, cnt;
 
     if (slot >= 3) {
-        return ERROR;
+        return -1;
     }
 
     /* Change to local order */
@@ -491,7 +403,7 @@ BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t 
         bflb_ef_ctrl_write_direct(NULL, EF_DATA_EF_KEY_SLOT_11_W2_OFFSET, &tmpval, 1, program);
     }
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************/ /**
@@ -501,10 +413,10 @@ BL_Err_Type EF_Ctrl_Write_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t 
  * @param  mac[6]: MAC address buffer
  * @param  reload: Whether reload
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
-BL_Err_Type EF_Ctrl_Read_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t reload)
+int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload)
 {
     uint8_t *maclow = (uint8_t *)mac;
     uint8_t *machigh = (uint8_t *)(mac + 4);
@@ -513,7 +425,7 @@ BL_Err_Type EF_Ctrl_Read_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t r
     uint32_t cnt = 0;
 
     if (slot >= 3) {
-        return ERROR;
+        return -1;
     }
 
     if (slot == 0) {
@@ -549,14 +461,124 @@ BL_Err_Type EF_Ctrl_Read_MAC_Address_Opt(uint8_t slot, uint8_t mac[6], uint8_t r
             mac[i] = mac[5 - i];
             mac[5 - i] = tmpval;
         }
-        return SUCCESS;
+        return 0;
     } else {
-        return ERROR;
+        return -1;
     }
 }
 
-/*@} end of group SEC_EF_CTRL_Public_Functions */
+float bflb_efuse_get_adc_trim(void)
+{
+    bflb_ef_ctrl_com_trim_t trim;
+    uint32_t tmp;
 
-/*@} end of group SEC_EF_CTRL */
+    float coe = 1.0;
 
-/*@} end of group BL616_Peripheral_Driver */
+    bflb_ef_ctrl_read_common_trim(NULL, "gpadc_gain", &trim, 1);
+
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            tmp = trim.value;
+
+            if (tmp & 0x800) {
+                tmp = ~tmp;
+                tmp += 1;
+                tmp = tmp & 0xfff;
+                coe = (1.0 + ((float)tmp / 2048.0));
+            } else {
+                coe = (1.0 - ((float)tmp / 2048.0));
+            }
+        }
+    }
+
+    return coe;
+}
+
+uint32_t bflb_efuse_get_adc_tsen_trim(void)
+{
+    bflb_ef_ctrl_com_trim_t trim;
+
+    bflb_ef_ctrl_read_common_trim(NULL, "tsen", &trim, 1);
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            return trim.value;
+        }
+    }
+
+    return 2042;
+}
+
+void bflb_efuse_read_secure_boot(uint8_t *sign, uint8_t *aes)
+{
+    uint32_t tmpval = 0;
+
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_CFG_0_OFFSET, &tmpval, 1, 1);
+    *sign = ((tmpval & EF_DATA_EF_SBOOT_SIGN_MODE_MSK) >> EF_DATA_EF_SBOOT_SIGN_MODE_POS) & 0x01;
+    *aes = ((tmpval & EF_DATA_EF_SF_AES_MODE_MSK) >> EF_DATA_EF_SF_AES_MODE_POS);
+}
+
+void bflb_efuse_write_aes_key(uint8_t index, uint8_t *data, uint32_t len)
+{
+    if ((index <= 3) || (index == 11)) {
+        index = ((index == 11) ? 5 : index);
+        /* Every key is 4 words len*/
+        bflb_ef_ctrl_write_direct(NULL, 0x1C + index * 4, (uint32_t *)data, len, 1);
+    } else if ((index < 11) && (index > 3)) {
+        index = index - 4;
+        /* Every key is 4 words len*/
+        bflb_ef_ctrl_write_direct(NULL, 0x80 + index * 4, (uint32_t *)data, len, 1);
+    }
+}
+
+void bflb_efuse_read_aes_key(uint8_t index, uint8_t *data, uint32_t len)
+{
+    if ((index <= 3) || (index == 11)) {
+        index = ((index == 11) ? 5 : index);
+        /* Every key is 4 words len*/
+        bflb_ef_ctrl_read_direct(NULL, 0x1C + index * 4, (uint32_t *)data, len, 1);
+    } else if ((index < 11) && (index > 3)) {
+        index = index - 4;
+        /* Every key is 4 words len*/
+        bflb_ef_ctrl_read_direct(NULL, 0x80 + index * 4, (uint32_t *)data, len, 1);
+    }
+}
+
+void bflb_efuse_lock_aes_key_write(uint8_t index)
+{
+    uint32_t lock = 0;
+
+    if ((index <= 3) || (index == 11)) {
+        index = ((index == 11) ? 8 : index);
+        lock |= (1 << (index + 17));
+        bflb_ef_ctrl_write_direct(NULL, 0x7c, &lock, 1, 1);
+    } else if ((index < 11) && (index > 3)) {
+        index = index - 4;
+        lock |= (1 << (index + 15));
+        bflb_ef_ctrl_write_direct(NULL, 0xfc, &lock, 1, 1);
+    }
+}
+
+void bflb_efuse_lock_aes_key_read(uint8_t index)
+{
+    uint32_t lock = 0;
+
+    if ((index <= 3) || (index == 11)) {
+        index = ((index == 11) ? 4 : index);
+        lock |= (1 << (index + 27));
+        bflb_ef_ctrl_write_direct(NULL, 0x7c, (uint32_t *)lock, 1, 1);
+    } else if ((index < 11) && (index > 3)) {
+        index = index - 4;
+        lock |= (1 << (index + 25));
+        bflb_ef_ctrl_write_direct(NULL, 0xfc, (uint32_t *)lock, 1, 1);
+    }
+}
+
+void bflb_efuse_write_sw_usage(uint32_t index, uint32_t usage, uint8_t program)
+{
+    bflb_ef_ctrl_write_direct(NULL, EF_DATA_EF_SW_USAGE_0_OFFSET + index * 4, &usage, 1, program);
+}
+
+void bflb_efuse_read_sw_usage(uint32_t index, uint32_t *usage)
+{
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_SW_USAGE_0_OFFSET + index * 4, (uint32_t *)usage, 1, 1);
+}

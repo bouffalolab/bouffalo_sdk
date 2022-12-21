@@ -272,7 +272,7 @@ void Tzc_Sec_Set_CPU_Group(uint8_t cpu, uint8_t group)
 void Tzc_Sec_ROM_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
 {
     uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr+length+1023)&~0x3FF;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
     /* check the parameter */
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
@@ -310,7 +310,7 @@ void Tzc_Sec_ROM_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length,
 void Tzc_Sec_ROM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
 {
     uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr+length+1023)&~0x3FF;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
     /* check the parameter */
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
@@ -348,7 +348,7 @@ void Tzc_Sec_ROM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t
 void Tzc_Sec_OCRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
 {
     uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr+length+1023)&~0x3FF;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
     /* check the parameter */
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
@@ -418,7 +418,7 @@ void Tzc_Sec_OCRAM_Access_Set_Regionx(uint8_t group)
 void Tzc_Sec_WRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
 {
     uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr+length+1023)&~0x3FF;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
     /* check the parameter */
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
@@ -475,6 +475,32 @@ void Tzc_Sec_WRAM_Access_Set_Regionx(uint8_t group)
 }
 
 /****************************************************************************/ /**
+ * @brief  TrustZone Security set HBNRAM region access configuration
+ *
+ * @param  startAddr: HBNRAM region start address
+ * @param  length: HBNRAM region end length
+ *
+ * @return None
+ *
+*******************************************************************************/
+void Tzc_Sec_HBNRAM_Access_Set(uint32_t startAddr, uint32_t length)
+{
+    uint32_t tmpVal = 0;
+    uint32_t alignEnd = (startAddr + length + 3) & ~0x3;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_TZC_HBNRAM_R0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_TZC_HBNRAM_R0_START, ((startAddr >> 2) & 0xffff));
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_TZC_HBNRAM_R0_END, (((alignEnd >> 2) & 0xffff) - 1));
+    BL_WR_REG(AON_BASE, AON_TZC_HBNRAM_R0, tmpVal);
+
+    /* set enable and lock */
+    tmpVal = BL_RD_REG(AON_BASE, AON_TZC_HBNRAM_CTRL);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_TZC_HBNRAM_R0_EN, 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_TZC_HBNRAM_R0_LOCK, 1);
+    BL_WR_REG(AON_BASE, AON_TZC_HBNRAM_CTRL, tmpVal);
+}
+
+/****************************************************************************/ /**
  * @brief  TrustZone Security set Flash region access configuration
  *
  * @param  region: Flash region index 0-2
@@ -489,7 +515,7 @@ void Tzc_Sec_Flash_Access_Set(uint8_t region, uint32_t startAddr, uint32_t lengt
 {
     uint32_t tmpVal = 0;
     uint32_t tmpVal2 = 0;
-    uint32_t alignEnd = (startAddr+length+1023)&~0x3FF;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
     /* check the parameter */
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
@@ -568,7 +594,7 @@ void Tzc_Sec_Flash_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32
 {
     uint32_t tmpVal = 0;
     uint32_t tmpVal2 = 0;
-    uint32_t alignEnd = (startAddr+length+1023)&~0x3FF;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
     /* check the parameter */
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
@@ -614,7 +640,7 @@ void Tzc_Sec_Flash_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32
 void Tzc_Sec_PSRAMB_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
 {
     uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr+length+1023)&~0x3FF;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
     /* check the parameter */
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
@@ -666,7 +692,7 @@ void Tzc_Sec_PSRAMB_Access_Release(void)
 void Tzc_Sec_PSRAMB_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
 {
     uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr+length+1023)&~0x3FF;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
     /* check the parameter */
     CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));

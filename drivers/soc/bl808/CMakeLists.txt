@@ -28,7 +28,6 @@ sdk_library_add_sources(bl808_std/src/bl808_xip_sflash.c)
 
 sdk_library_add_sources(port/bl808_clock.c)
 sdk_library_add_sources(port/bl808_flash.c)
-sdk_library_add_sources(port/bl808_efuse.c)
 
 sdk_add_include_directories(
 bl808_std/include

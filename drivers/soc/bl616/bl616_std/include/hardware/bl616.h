@@ -227,7 +227,7 @@ typedef enum {
 #define AON_BASE         ((uint32_t)0x2000f000)
 #define MM_MISC_BASE     ((uint32_t)0x20050000)
 #define PSRAM_CTRL_BASE  ((uint32_t)0x20052000)
-#define AUPWM_BASE       ((uint32_t)0x20055000)
+#define AUDAC_BASE       ((uint32_t)0x20055000)
 #define EFUSE_BASE       ((uint32_t)0x20056000)
 #define EF_DATA_BASE     ((uint32_t)0x20056000)
 #define EF_CTRL_BASE     ((uint32_t)0x20056000)

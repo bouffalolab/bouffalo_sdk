@@ -306,6 +306,14 @@ typedef enum {
     GLB_PERI_DMA_GAUGE    = 20, /*!< gauge    */
     GLB_PERI_DMA_GPADC    = 22, /*!< gpadc    */
     GLB_PERI_DMA_GPDAC_TX = 23, /*!< gpdac_tx */
+    GLB_PERI_DMA_PEC_RX0  = 24, /*!< pec_rx0  */
+    GLB_PERI_DMA_PEC_RX1  = 25, /*!< pec_rx1  */
+    GLB_PERI_DMA_PEC_RX2  = 26, /*!< pec_rx2  */
+    GLB_PERI_DMA_PEC_RX3  = 27, /*!< pec_rx3  */
+    GLB_PERI_DMA_PEC_TX0  = 28, /*!< pec_tx0  */
+    GLB_PERI_DMA_PEC_TX1  = 29, /*!< pec_tx1  */
+    GLB_PERI_DMA_PEC_TX2  = 30, /*!< pec_tx2  */
+    GLB_PERI_DMA_PEC_TX3  = 31, /*!< pec_tx3  */
 } GLB_PERI_DMA_Type;
 
 /**
@@ -1115,7 +1123,15 @@ typedef union {
                                     ((type) == GLB_PERI_DMA_PADC) ||      \
                                     ((type) == GLB_PERI_DMA_GAUGE) ||     \
                                     ((type) == GLB_PERI_DMA_GPADC) ||     \
-                                    ((type) == GLB_PERI_DMA_GPDAC_TX))
+                                    ((type) == GLB_PERI_DMA_GPDAC_TX) ||  \
+                                    ((type) == GLB_PERI_DMA_PEC_RX0) ||   \
+                                    ((type) == GLB_PERI_DMA_PEC_RX1) ||   \
+                                    ((type) == GLB_PERI_DMA_PEC_RX2) ||   \
+                                    ((type) == GLB_PERI_DMA_PEC_RX3) ||   \
+                                    ((type) == GLB_PERI_DMA_PEC_TX0) ||   \
+                                    ((type) == GLB_PERI_DMA_PEC_TX1) ||   \
+                                    ((type) == GLB_PERI_DMA_PEC_TX2) ||   \
+                                    ((type) == GLB_PERI_DMA_PEC_TX3))
 
 /** @defgroup  GLB_PERI_DMA_CN_SEL_TYPE
  *  @{

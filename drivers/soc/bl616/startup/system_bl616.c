@@ -105,6 +105,7 @@ void System_Post_Init(void)
     /* Bootrom not use dcache,so ignore this flush*/
 #ifndef BOOTROM
     csi_dcache_clean();
+    csi_icache_invalid();
 #endif
 
     /* global IRQ enable */

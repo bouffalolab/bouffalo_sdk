@@ -29,7 +29,6 @@ sdk_library_add_sources(bl702_std/src/bl702_xip_sflash_ext.c)
 
 sdk_library_add_sources(port/bl702_clock.c)
 sdk_library_add_sources(port/bl702_flash.c)
-sdk_library_add_sources(port/bl702_efuse.c)
 
 sdk_add_include_directories(
 bl702_std/include

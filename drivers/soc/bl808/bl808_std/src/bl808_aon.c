@@ -338,7 +338,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Trim_USB20_RCAL(void)
     Efuse_Ana_USB20RCAL_Trim_Type trim;
     uint32_t tmpVal = 0;
 
-    EF_Ctrl_Read_USB20RCAL_Trim(&trim);
+    //EF_Ctrl_Read_USB20RCAL_Trim(&trim); //FixZc
     if (trim.trimUsb20rcalAonEn) {
         if (trim.trimUsb20rcalAonParity == EF_Ctrl_Get_Trim_Parity(trim.trimUsb20rcalAon, 6)) {
             tmpVal = BL_RD_REG(AON_BASE, AON_PSW_IRRCV);

@@ -33,7 +33,6 @@ sdk_library_add_sources(bl616_std/src/bl616_psram.c)
 
 sdk_library_add_sources(port/bl616_clock.c)
 sdk_library_add_sources(port/bl616_flash.c)
-sdk_library_add_sources(port/bl616_efuse.c)
 
 sdk_add_include_directories(
 bl616_std/include

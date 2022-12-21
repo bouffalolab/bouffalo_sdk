@@ -29,7 +29,6 @@ sdk_library_add_sources(bl602_std/src/bl602_xip_sflash_ext.c)
 
 sdk_library_add_sources(port/bl602_clock.c)
 sdk_library_add_sources(port/bl602_flash.c)
-sdk_library_add_sources(port/bl602_efuse.c)
 
 sdk_add_include_directories(
 bl602_std/include

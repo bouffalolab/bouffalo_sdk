@@ -2045,7 +2045,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Read(SPI_Flash_Cfg_Type *flashCfg,
             }
         }
 
-        ARCH_MemCpy_Fast(data, flashCtrlBuf, curLen);
+        arch_memcpy_fast(data, flashCtrlBuf, curLen);
 
         addr += curLen;
         i += curLen;
@@ -2122,7 +2122,7 @@ BL_Err_Type ATTR_TCM_SECTION SFlash_Program(SPI_Flash_Cfg_Type *flashCfg,
         }
 
         /* Prepare command */
-        ARCH_MemCpy_Fast(flashCtrlBuf, data, curLen);
+        arch_memcpy_fast(flashCtrlBuf, data, curLen);
 
         if (is32BitsAddr > 0) {
             flashCmd.cmdBuf[0] = (cmd << 24) | (addr >> 8);

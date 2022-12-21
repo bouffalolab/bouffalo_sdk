@@ -232,6 +232,7 @@ void Tzc_Sec_Flash_Access_Set_Regionx(uint8_t group);
 void Tzc_Sec_PSRAMB_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_PSRAMB_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_PSRAMB_Access_Release(void);
+void Tzc_Sec_HBNRAM_Access_Set(uint32_t startAddr, uint32_t length);
 void Tzc_Sec_Set_Se_Ctrl_Mode(TZC_SEC_SE_Ctrl_Mode mode);
 void Tzc_Sec_Set_Sf_Ctrl_Mode(TZC_SEC_SF_Ctrl_Mode mode);
 void Tzc_Sec_Set_Se_Group(TZC_SEC_SE_Ctrl_Type slaveType, uint8_t group);

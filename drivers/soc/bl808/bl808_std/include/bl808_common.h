@@ -161,7 +161,7 @@ void check_failed(uint8_t *file, uint32_t line);
 #define ARCH_MemSet      arch_memset
 #define ARCH_MemCmp      arch_memcmp
 #define ARCH_MemCpy4     arch_memcpy4
-#define ARCH_MemCpy_Fast arch_memcpy_fast
+#define arch_memcpy_fast arch_memcpy_fast
 #define ARCH_MemSet4     arch_memset4
 #define BFLB_Soft_CRC32  bflb_soft_crc32
 #define CPU_Interrupt_Enable(irq)
@@ -180,7 +180,7 @@ void arch_delay_ms(uint32_t cnt);
 
 void *ARCH_MemCpy(void *dst, const void *src, uint32_t n);
 uint32_t *ARCH_MemCpy4(uint32_t *dst, const uint32_t *src, uint32_t n);
-void *ARCH_MemCpy_Fast(void *pdst, const void *psrc, uint32_t n);
+void *arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n);
 void *ARCH_MemSet(void *s, uint8_t c, uint32_t n);
 uint32_t *ARCH_MemSet4(uint32_t *dst, const uint32_t val, uint32_t n);
 int ARCH_MemCmp(const void *s1, const void *s2, uint32_t n);

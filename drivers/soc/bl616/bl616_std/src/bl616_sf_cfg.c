@@ -2650,14 +2650,14 @@ BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock(uint32_t flashID, SP
             pCrc = (uint32_t *)(buf + 4 + sizeof(SPI_Flash_Cfg_Type));
 
             if (*pCrc == crc) {
-                ARCH_MemCpy_Fast(pFlashCfg, (uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
+                arch_memcpy_fast(pFlashCfg, (uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
                 return SUCCESS;
             }
         }
     } else {
         for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
             if (flashInfos[i].jedecID == flashID) {
-                ARCH_MemCpy_Fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
+                arch_memcpy_fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
                 return SUCCESS;
             }
         }
@@ -2784,7 +2784,7 @@ uint32_t ATTR_TCM_SECTION SF_Cfg_Flash_Identify(uint8_t callFromFlash, uint8_t f
     autoScan = ((flashPinCfg >> 7) & 1);
     flashPin = (flashPinCfg & 0x7F);
 
-    ARCH_MemCpy_Fast(pFlashCfg, &flashCfg_Winb_16JV, sizeof(SPI_Flash_Cfg_Type));
+    arch_memcpy_fast(pFlashCfg, &flashCfg_Winb_16JV, sizeof(SPI_Flash_Cfg_Type));
 
     if (callFromFlash == 1) {
         stat = XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
@@ -2850,7 +2850,7 @@ uint32_t ATTR_TCM_SECTION SF_Cfg_Flash_Identify(uint8_t callFromFlash, uint8_t f
 
     for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
         if (flashInfos[i].jedecID == jdecId) {
-            ARCH_MemCpy_Fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
+            arch_memcpy_fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
             break;
         }
     }

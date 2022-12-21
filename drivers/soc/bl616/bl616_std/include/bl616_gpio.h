@@ -82,10 +82,10 @@ typedef enum {
 #define GPIO_PULL_UP               ((uint32_t)0x00000000U) /*!< GPIO pull up                          */
 #define GPIO_PULL_DOWN             ((uint32_t)0x00000001U) /*!< GPIO pull down                        */
 #define GPIO_PULL_NONE             ((uint32_t)0x00000002U) /*!< GPIO no pull up or down               */
-#define GPIO_OUTPUT_VALUE_MODE     ((uint8_t)0x00U) /*!< GPIO Output by reg_gpio_x_o Value                             */
-#define GPIO_SET_CLR_MODE          ((uint8_t)0x01U) /*!< GPIO Output set by reg_gpio_x_set and clear by reg_gpio_x_clr */
-#define GPIO_DMA_OUTPUT_VALUE_MODE ((uint8_t)0x02U) /*!< GPIO Output value by gpio_dma_o                               */
-#define GPIO_DMA_SET_CLR_MODE      ((uint8_t)0x03U) /*!< GPIO Outout value by gpio_dma_set/gpio_dma_clr                */
+#define GPIO_OUTPUT_VALUE_MODE     ((uint8_t)0x00U)        /*!< GPIO Output by reg_gpio_x_o Value                             */
+#define GPIO_SET_CLR_MODE          ((uint8_t)0x01U)        /*!< GPIO Output set by reg_gpio_x_set and clear by reg_gpio_x_clr */
+#define GPIO_DMA_OUTPUT_VALUE_MODE ((uint8_t)0x02U)        /*!< GPIO Output value by gpio_dma_o                               */
+#define GPIO_DMA_SET_CLR_MODE      ((uint8_t)0x03U)        /*!< GPIO Outout value by gpio_dma_set/gpio_dma_clr                */
 
 typedef enum {
     GPIO_FUN_SDH = 0,
@@ -110,7 +110,7 @@ typedef enum {
     GPIO_FUN_DBI_B = 22,
     GPIO_FUN_DBI_C = 23,
     GPIO_FUN_DISP_QSPI = 24,
-    GPIO_FUN_AUPWM = 25,
+    GPIO_FUN_AUDAC_PWM = 25,
     GPIO_FUN_JTAG = 26,
     GPIO_FUN_CLOCK_OUT = 31,
 

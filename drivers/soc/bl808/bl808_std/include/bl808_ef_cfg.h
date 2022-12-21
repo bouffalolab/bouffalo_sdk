@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    bl808_ef_ctrl.h
+  * @file    bl808_ef_cfg.h
   * @version V1.0
   * @date
   * @brief   This file is the standard driver header file
@@ -36,7 +36,7 @@
 #ifndef __BL808_EF_CFG_H__
 #define __BL808_EF_CFG_H__
 
-#include "ef_ctrl_reg.h"
+#include "bflb_ef_ctrl.h"
 #include "bl808_common.h"
 
 /** @addtogroup  BL808_Peripheral_Driver
@@ -58,7 +58,7 @@ typedef struct
 {
     uint8_t chipInfo;   /*!< Efuse chip revision */
     uint8_t memoryInfo; /*!< Efuse memory info 0:no memory, 8:1MB flash */
-    uint8_t psramInfo;  /*!< Efuse psram info 0:no psram, 1:WB 4MB, 2:UHS 32MB, 3:UHS 64MB, 4:WB 32MB */
+    uint8_t psramInfo;  /*!< Efuse psram info 0:no psram, 1:WB 4MB, 2:UHS 32MB, 3:UHS 64MB, 4:WB 32MB, 5:WB 16MB */
     uint8_t deviceInfo; /*!< Efuse device information */
 } bflb_efuse_device_info_type;
 

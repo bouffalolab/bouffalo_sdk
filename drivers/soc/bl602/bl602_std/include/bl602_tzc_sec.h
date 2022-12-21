@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    bl616_ef_cfg.h
+  * @file    bl602_tzc_sec.h
   * @version V1.0
   * @date
   * @brief   This file is the standard driver header file
@@ -33,56 +33,52 @@
   *
   ******************************************************************************
   */
-#ifndef __BL616_EF_CFG_H__
-#define __BL616_EF_CFG_H__
+#ifndef __BL602_TZC_SEC_H__
+#define __BL602_TZC_SEC_H__
 
-#include "bflb_ef_ctrl.h"
-#include "bl616_common.h"
+#include "tzc_sec_reg.h"
+#include "bl602_common.h"
 
-/** @addtogroup  BL616_Peripheral_Driver
+/** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
 
-/** @addtogroup  EF_CTRL
+/** @addtogroup  TZC_SEC
  *  @{
  */
 
-/** @defgroup  EF_CTRL_Public_Types
+/** @defgroup  TZC_SEC_Public_Types
  *  @{
  */
 
-typedef struct
-{
-    uint32_t rsvd       : 22; /*!< Reserved */
-    uint32_t deviceInfo : 2;  /*!< Efuse device information */
-    uint32_t psramInfo  : 2;  /*!< Efuse psram info 0:no psram, 1:WB 4MB*/
-    uint32_t memoryInfo : 3;  /*!< Efuse memory info 0:no memory, 1:2MB flash, 2:4MB flash, 3:6MB flash, 4:8MB flash */
-    uint32_t chipInfo   : 3;  /*!< Efuse chip revision */
-} bflb_efuse_device_info_type;
+/*@} end of group TZC_SEC_Public_Types */
 
-/*@} end of group EF_CTRL_Public_Types */
-
-/** @defgroup  EF_CTRL_Public_Constants
+/** @defgroup  TZC_SEC_Public_Constants
  *  @{
  */
 
-/*@} end of group EF_CTRL_Public_Constants */
+/*@} end of group TZC_SEC_Public_Constants */
 
-/** @defgroup  EF_CTRL_Public_Macros
+/** @defgroup  TZC_SEC_Public_Macros
  *  @{
  */
 
-/*@} end of group EF_CTRL_Public_Macros */
+/*@} end of group TZC_SEC_Public_Macros */
 
-/** @defgroup  EF_CTRL_Public_Functions
+/** @defgroup  TZC_SEC_Public_Functions
  *  @{
  */
-void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo);
 
-/*@} end of group EF_CTRL_Public_Functions */
+void TZC_Sboot_Set(uint8_t Val);
+void TZC_Set_Rom0_R0_Protect(uint32_t start, uint32_t length);
+void TZC_Set_Rom0_R1_Protect(uint32_t start, uint32_t length);
+void TZC_Set_Rom1_R0_Protect(uint32_t start, uint32_t length);
+void TZC_Set_Rom1_R1_Protect(uint32_t start, uint32_t length);
 
-/*@} end of group EF_CTRL */
+/*@} end of group TZC_SEC_Public_Functions */
 
-/*@} end of group BL616_Peripheral_Driver */
+/*@} end of group TZC_SEC */
 
-#endif /* __BL616_EF_CFG_H__ */
+/*@} end of group BL602_Peripheral_Driver */
+
+#endif /* __BL602_TZC_SEC_H__ */

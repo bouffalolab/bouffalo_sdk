@@ -113,6 +113,7 @@ void SystemInit(void)
 void System_Post_Init(void)
 {
     csi_dcache_clean();
+    csi_icache_invalid();
 
     PDS_Power_On_MM_System();
     /* make D0 all ram avalable for mcu usage */

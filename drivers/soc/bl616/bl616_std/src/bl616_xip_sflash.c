@@ -420,7 +420,7 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, 
     offset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
     SF_Ctrl_Set_Flash_Image_Offset(0, 0, SF_CTRL_FLASH_BANK0);
     /* Flash read */
-    ARCH_MemCpy_Fast(data, (void *)(uintptr_t)(addr - SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0)), len);
+    arch_memcpy_fast(data, (void *)(uintptr_t)(addr - SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0)), len);
     SF_Ctrl_Set_Flash_Image_Offset(offset, 0, SF_CTRL_FLASH_BANK0);
 
     return SUCCESS;

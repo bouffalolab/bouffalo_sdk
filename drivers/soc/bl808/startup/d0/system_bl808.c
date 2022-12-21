@@ -38,6 +38,7 @@ void SystemInit(void)
 void System_Post_Init(void)
 {
     csi_dcache_clean();
+    csi_icache_invalid();
 
     /* fix amr setting */
     uintptr_t tmpVal = 0;

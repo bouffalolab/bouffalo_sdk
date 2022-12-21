@@ -1098,7 +1098,7 @@ BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID
             pCrc = (uint32_t *)(buf + 4 + sizeof(SPI_Flash_Cfg_Type));
 
             if (*pCrc == crc) {
-                ARCH_MemCpy_Fast(pFlashCfg, (uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
+                arch_memcpy_fast(pFlashCfg, (uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
                 return SUCCESS;
             }
         }
@@ -1108,7 +1108,7 @@ BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID
         }
         for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
             if (flashInfos[i].jedecID == flashID) {
-                ARCH_MemCpy_Fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
+                arch_memcpy_fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
                 return SUCCESS;
             }
         }
@@ -1148,7 +1148,7 @@ uint32_t ATTR_TCM_SECTION SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash, uint8
     jdecId = (ret & 0xffffff);
     for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
         if (flashInfos[i].jedecID == jdecId) {
-            ARCH_MemCpy_Fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
+            arch_memcpy_fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
             break;
         }
     }
@@ -1179,7 +1179,7 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, 
     offset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
     SF_Ctrl_Set_Flash_Image_Offset(0, 0, SF_CTRL_FLASH_BANK0);
     /* Flash read */
-    ARCH_MemCpy_Fast(data, (void *)(uintptr_t)(addr - SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0)), len);
+    arch_memcpy_fast(data, (void *)(uintptr_t)(addr - SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0)), len);
     SF_Ctrl_Set_Flash_Image_Offset(offset, 0, SF_CTRL_FLASH_BANK0);
 
     return SUCCESS;
