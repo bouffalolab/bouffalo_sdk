@@ -199,7 +199,6 @@ uint32_t ATTR_TCM_SECTION BFLB_Soft_CRC32_Ex(uint32_t initial, void *dataIn, uin
 }
 
 #ifndef BFLB_USE_ROM_DRIVER
-__WEAK__
 uint32_t ATTR_TCM_SECTION BFLB_Soft_CRC32(void *dataIn, uint32_t len)
 {
     return BFLB_Soft_CRC32_Ex(0, dataIn, len);

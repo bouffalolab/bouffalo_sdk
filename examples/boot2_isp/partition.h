@@ -37,7 +37,7 @@
 #define __PARTITION_H__
 
 #include "blsp_port.h"
-#include "bl616_common.h"
+#include "bflb_port_boot2.h"
 
 /** @addtogroup  BFLB_Common_Driver
  *  @{

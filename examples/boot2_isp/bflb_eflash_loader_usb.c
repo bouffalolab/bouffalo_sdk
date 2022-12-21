@@ -248,7 +248,7 @@ int32_t bflb_eflash_loader_usb_handshake_poll(uint32_t timeout)
     uint32_t handshake_count = 0;
     uint8_t *buf = g_eflash_loader_readbuf[g_rx_buf_index];
 
-    time_now = bflb_platform_get_time_ms();
+    time_now = bflb_mtimer_get_time_ms();
 
     LOG_D("usb iap handshake poll\r\n");
     do {
@@ -266,7 +266,7 @@ int32_t bflb_eflash_loader_usb_handshake_poll(uint32_t timeout)
                 break;
             }
         }
-    } while ((timeout == 0) ? 1 : (bflb_platform_get_time_ms() - time_now < timeout * 1000));
+    } while ((timeout == 0) ? 1 : (bflb_mtimer_get_time_ms() - time_now < timeout * 1000));
 
     if (handshake_count >= BFLB_EFLASH_LAODER_HAND_SHAKE_SUSS_COUNT) {
         LOG_D("iap handshake %d 0x55 rcv\r\n", handshake_count);
@@ -284,17 +284,17 @@ int32_t bflb_eflash_loader_usb_handshake_poll(uint32_t timeout)
     g_rx_buf_index = 0;
     g_rx_buf_len = 0;
 
-    time_now = bflb_platform_get_time_ms();
+    time_now = bflb_mtimer_get_time_ms();
     do {
         if (g_rx_buf_len > 0) {
             if (0 == bflb_eflash_loader_check_handshake_buf(buf, g_rx_buf_len)) {
                 g_rx_buf_len = 0;
-                time_now = bflb_platform_get_time_ms();
+                time_now = bflb_mtimer_get_time_ms();
             } else {
                 break;
             }
         }
-    } while (bflb_platform_get_time_ms() - time_now < 50);
+    } while (bflb_mtimer_get_time_ms() - time_now < 50);
 
     return BFLB_EFLASH_LOADER_SUCCESS;
 }

@@ -41,7 +41,6 @@
 #include "blsp_bootinfo.h"
 #include "blsp_common.h"
 #include "blsp_media_boot.h"
-#include "tzc_sec_reg.h"
 
 extern uint32_t __boot2_pass_param_addr;
 static uint32_t start_time = 0;
@@ -99,6 +98,21 @@ uint8_t blsp_read_power_save_mode(void)
 *******************************************************************************/
 void blsp_boot2_pass_parameter(void *data, uint32_t len)
 {
+    static uint8_t *p_parameter = NULL;
+    
+    if (len == 0) {
+        //GLB_Set_EM_Sel(0); //system init has done
+        //p_parameter = (uint8_t *)(0x42020000 + 60 * 1024);
+        //p_parameter = (uint8_t *)(0x42030000+103*1024);
+        p_parameter = (uint8_t *)&__boot2_pass_param_addr;
+        return;
+    }
+
+    if(p_parameter!=NULL){
+        LOG_F("pass param addr %08x,len %d\r\n", p_parameter,len);
+        arch_memcpy_fast(p_parameter, data, len);
+        p_parameter += len;
+    }
 }
 
 /****************************************************************************/ /**

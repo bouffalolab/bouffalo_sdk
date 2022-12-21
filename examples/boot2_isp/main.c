@@ -40,7 +40,6 @@
 #include "blsp_media_boot.h"
 #include "blsp_boot_decompress.h"
 #include "blsp_common.h"
-#include "blsp_version.h"
 #include "partition.h"
 #include "softcrc.h"
 #include "bflb_flash.h"
@@ -400,7 +399,7 @@ int main(void)
     LOG_F("BLSP Boot2 start:%s,%s\r\n", __DATE__, __TIME__);
     LOG_F("Group=%d,CPU Count=%d\r\n", BLSP_BOOT2_CPU_GROUP_MAX, BLSP_BOOT2_CPU_MAX);
 
-    LOG_F("ver:%s\r\n", BL_SDK_VER);
+    LOG_F("ver:%s\r\n", BFLB_BOOT2_VER);
 
     /* Reset Sec_Eng */
     hal_boot2_reset_sec_eng();

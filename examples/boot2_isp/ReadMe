@@ -1,0 +1,11 @@
+compile cmd:
+
+make CHIP=bl602 BOARD=bl602dk 
+
+make CHIP=bl702 BOARD=bl702dk 
+
+make CHIP=bl808 CPU_ID=m0 BOARD=bl808dk 
+
+make CHIP=bl606p CPU_ID=m0 BOARD=bl606pdk 
+
+make CHIP=bl616 CPU_ID=m0 BOARD=bl616dk 

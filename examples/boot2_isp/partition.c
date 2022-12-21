@@ -210,7 +210,7 @@ pt_table_error_type pt_table_get_active_entries_by_id(pt_table_stuff_config *pt_
 
     for (i = 0; i < pt_stuff->pt_table.entryCnt; i++) {
         if (pt_stuff->pt_entries[i].type == type) {
-            ARCH_MemCpy_Fast(pt_entry, &pt_stuff->pt_entries[i], sizeof(pt_table_entry_config));
+            arch_memcpy_fast(pt_entry, &pt_stuff->pt_entries[i], sizeof(pt_table_entry_config));
             return PT_ERROR_SUCCESS;
         }
     }
@@ -242,7 +242,7 @@ pt_table_error_type pt_table_get_active_entries_by_name(pt_table_stuff_config *p
     for (i = 0; i < pt_stuff->pt_table.entryCnt; i++) {
         if (strlen((char *)pt_stuff->pt_entries[i].name) == len &&
             memcmp((char *)pt_stuff->pt_entries[i].name, (char *)name, len) == 0) {
-            ARCH_MemCpy_Fast(pt_entry, &pt_stuff->pt_entries[i], sizeof(pt_table_entry_config));
+            arch_memcpy_fast(pt_entry, &pt_stuff->pt_entries[i], sizeof(pt_table_entry_config));
             return PT_ERROR_SUCCESS;
         }
     }
@@ -291,7 +291,7 @@ pt_table_error_type pt_table_update_entry(pt_table_id_type target_table_id,
 
     for (i = 0; i < pt_table->entryCnt; i++) {
         if (pt_entries[i].type == pt_entry->type) {
-            ARCH_MemCpy_Fast(&pt_entries[i], pt_entry, sizeof(pt_table_entry_config));
+            arch_memcpy_fast(&pt_entries[i], pt_entry, sizeof(pt_table_entry_config));
             break;
         }
     }
@@ -299,7 +299,7 @@ pt_table_error_type pt_table_update_entry(pt_table_id_type target_table_id,
     if (i == pt_table->entryCnt) {
         /* Not found this entry ,add new one */
         if (pt_table->entryCnt < PT_ENTRY_MAX) {
-            ARCH_MemCpy_Fast(&pt_entries[pt_table->entryCnt], pt_entry, sizeof(pt_table_entry_config));
+            arch_memcpy_fast(&pt_entries[pt_table->entryCnt], pt_entry, sizeof(pt_table_entry_config));
             pt_table->entryCnt++;
         } else {
             return PT_ERROR_ENTRY_UPDATE_FAIL;
@@ -491,7 +491,7 @@ pt_table_error_type pt_table_set_iap_para(pt_table_iap_param_type *para)
         gp_pt_table_flash_read(BFLB_PT_TABLE1_ADDRESS, (uint8_t *)&pt_stuff, sizeof(pt_table_stuff_config));
     }
 
-    ARCH_MemCpy_Fast((void *)&pt_stuff_write, (void *)&pt_stuff, sizeof(pt_table_stuff_config));
+    arch_memcpy_fast((void *)&pt_stuff_write, (void *)&pt_stuff, sizeof(pt_table_stuff_config));
     pt_stuff_write.pt_table.age += 1;
     pt_stuff_write.pt_entries[0].active_index = !(pt_stuff_write.pt_entries[0].active_index & 0x01);
     pt_stuff_write.pt_table.crc32 = BFLB_Soft_CRC32((uint8_t *)&pt_stuff_write, sizeof(pt_table_config) - 4);
