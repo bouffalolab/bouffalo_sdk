@@ -83,7 +83,7 @@
 #define PHY_ISFR                                ((uint16_t)0x1DU)   /*!< PHY Interrupt Source Flag register Offset       */
 #define PHY_ISFR_INT4                           ((uint16_t)0x0010U) /*!< PHY Link down inturrupt                         */
 
-int phy_8720_init(struct bflb_device_s *emac, struct emac_phy_cfg_s *cfg);
+int phy_8720_init(struct bflb_device_s *emac, struct bflb_emac_phy_cfg_s *cfg);
 emac_phy_status_t phy_8720_status_get(void);
 
 #endif /* __PHY_8720_H__ */

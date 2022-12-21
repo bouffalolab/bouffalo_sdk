@@ -49,10 +49,11 @@
     LCD_SPI_ILI9481
     LCD_SPI_ILI9341
     LCD_SPI_ST7796
+    LCD_SPI_ST7789V
 */
 
 /* Select screen Type */
-#define LCD_SPI_ST7796
+#define LCD_SPI_ST7789V
 
 #define LCD_INTERFACE_SPI       1
 #define LCD_INTERFACE_DBI       2
@@ -141,6 +142,15 @@
 #define LCD_H                        ST7796_SPI_H
 #define LCD_COLOR_DEPTH              ST7796_SPI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) st7796_spi_##_func(__VA_ARGS__)
+
+#elif defined LCD_SPI_ST7789V
+
+#include "spi/st7789v_spi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_SPI
+#define LCD_W                        ST7789V_SPI_W
+#define LCD_H                        ST7789V_SPI_H
+#define LCD_COLOR_DEPTH              ST7789V_SPI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) st7789v_spi_##_func(__VA_ARGS__)
 
 #elif
 #error "Please select a screen type"

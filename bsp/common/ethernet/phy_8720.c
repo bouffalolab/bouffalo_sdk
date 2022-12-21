@@ -4,7 +4,7 @@
 #define CHECK_PARAM(expr) ((void)0)
 
 struct bflb_device_s *emac_dev = NULL;
-static struct emac_phy_cfg_s *phy_8720_cfg = NULL;
+static struct bflb_emac_phy_cfg_s *phy_8720_cfg = NULL;
 
 /**
  * @brief phy 8720 reset
@@ -63,7 +63,7 @@ int phy_8720_reset(void)
  * @return int
  *
  */
-int phy_8720_auto_negotiate(struct emac_phy_cfg_s *cfg)
+int phy_8720_auto_negotiate(struct bflb_emac_phy_cfg_s *cfg)
 {
     uint16_t regval = 0;
     uint16_t phyid1 = 0, phyid2 = 0;
@@ -187,7 +187,7 @@ int phy_8720_auto_negotiate(struct emac_phy_cfg_s *cfg)
  * @return int
  *
  */
-int phy_8720_link_up(struct emac_phy_cfg_s *cfg)
+int phy_8720_link_up(struct bflb_emac_phy_cfg_s *cfg)
 {
     uint16_t phy_bsr = 0;
     uint16_t phy_sr = 0;
@@ -247,7 +247,7 @@ int phy_8720_link_up(struct emac_phy_cfg_s *cfg)
  * @return int
  *
  */
-int phy_8720_poll_cable_status(struct emac_phy_cfg_s *cfg)
+int phy_8720_poll_cable_status(struct bflb_emac_phy_cfg_s *cfg)
 {
     uint16_t phy_regval = 0;
 
@@ -268,7 +268,7 @@ int phy_8720_poll_cable_status(struct emac_phy_cfg_s *cfg)
  * @return int
  *
  */
-int phy_8720_init(struct bflb_device_s *emac, struct emac_phy_cfg_s *cfg)
+int phy_8720_init(struct bflb_device_s *emac, struct bflb_emac_phy_cfg_s *cfg)
 {
     uint16_t phyReg;
 

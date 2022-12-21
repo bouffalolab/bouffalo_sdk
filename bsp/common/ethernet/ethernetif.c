@@ -50,16 +50,15 @@
 // #define BL702_EMAC  0
 // #define EMAC_OUTPUT BL702_EMAC
 
-#if LWIP_DHCP
 #define MAX_DHCP_TRIES 4
 uint32_t DHCPfineTimer = 0;
 uint8_t DHCP_state = DHCP_OFF;
-#else
+
 /*Static IP ADDRESS: IP_ADDR0.IP_ADDR1.IP_ADDR2.IP_ADDR3 */
-#define IP_ADDR0      (uint8_t)192
-#define IP_ADDR1      (uint8_t)168
-#define IP_ADDR2      (uint8_t)123
-#define IP_ADDR3      (uint8_t)100
+#define IP_ADDR0 (uint8_t)192
+#define IP_ADDR1 (uint8_t)168
+#define IP_ADDR2 (uint8_t)123
+#define IP_ADDR3 (uint8_t)100
 
 /*NETMASK*/
 #define NETMASK_ADDR0 (uint8_t)255
@@ -68,15 +67,14 @@ uint8_t DHCP_state = DHCP_OFF;
 #define NETMASK_ADDR3 (uint8_t)0
 
 /*Gateway Address*/
-#define GW_ADDR0      (uint8_t)192
-#define GW_ADDR1      (uint8_t)168
-#define GW_ADDR2      (uint8_t)123
-#define GW_ADDR3      (uint8_t)1
-#endif
+#define GW_ADDR0 (uint8_t)192
+#define GW_ADDR1 (uint8_t)168
+#define GW_ADDR2 (uint8_t)123
+#define GW_ADDR3 (uint8_t)1
 
 /* Private function prototypes -----------------------------------------------*/
 struct bflb_device_s *emac0;
-struct emac_phy_cfg_s phy_cfg = {
+struct bflb_emac_phy_cfg_s phy_cfg = {
     .auto_negotiation = 1, /*!< Speed and mode auto negotiation */
     .full_duplex = 0,      /*!< Duplex mode */
     .speed = 0,            /*!< Speed mode */
@@ -110,7 +108,7 @@ LWIP_MEMPOOL_DECLARE(RX_POOL, 10, sizeof(struct pbuf_custom), "Zero-copy RX PBUF
   *        for this ethernetif
   */
 extern void emac_init_txrx_buffer(struct bflb_device_s *emac);
-// extern int ethernet_phy_init(struct bflb_device_s *emac, struct emac_phy_cfg_s *emac_phy_cfg);
+// extern int ethernet_phy_init(struct bflb_device_s *emac, struct bflb_emac_phy_cfg_s *emac_phy_cfg);
 void emac_rx_done_callback_app(void);
 void dhcp_thread(void const *argument);
 
@@ -283,7 +281,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
                 // copy data to tx buf
                 printf("tx buf is too larger!\r\n");
                 flags = EMAC_FRAGMENT_PACKET;
-                // ARCH_MemCpy_Fast(&emac_send_buf[framelength + bufferoffset], q->payload + payloadoffset, (ETH_TX_BUFFER_SIZE - bufferoffset));
+                // arch_memcpy_fast(&emac_send_buf[framelength + bufferoffset], q->payload + payloadoffset, (ETH_TX_BUFFER_SIZE - bufferoffset));
             }
             // arch_memcpy_fast(&emac_send_buf[framelength], q->payload, byteslefttocopy);
             memcpy(&emac_send_buf[framelength], q->payload, byteslefttocopy);
@@ -565,17 +563,17 @@ void dhcp_thread(void const *argument)
                 ip_addr_set_zero_ip4(&netif->netmask);
                 ip_addr_set_zero_ip4(&netif->gw);
                 DHCP_state = DHCP_WAIT_ADDRESS;
-                printf("  State: Looking for DHCP server ...\n");
+                printf("  State: Looking for DHCP server ...\r\n");
                 dhcp_start(netif);
             } break;
             case DHCP_WAIT_ADDRESS: {
                 if (dhcp_supplied_address(netif)) {
                     DHCP_state = DHCP_ADDRESS_ASSIGNED;
                     sprintf((char *)iptxt, "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
-                    printf("IP address assigned by a DHCP server: %s\n", iptxt);
+                    printf("IP address assigned by a DHCP server: %s\r\n", iptxt);
                 } else {
                     dhcp = (struct dhcp *)netif_get_client_data(netif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP);
-
+                    // printf("else\r\n");
                     /* DHCP timeout */
                     if (dhcp->tries > MAX_DHCP_TRIES) {
                         DHCP_state = DHCP_TIMEOUT;
@@ -583,17 +581,21 @@ void dhcp_thread(void const *argument)
                         /* Static address used */
                         ethernet_set_static_ip(netif);
                         sprintf((char *)iptxt, "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
-                        printf("DHCP Timeout !! \n");
-                        printf("Static IP address: %s\n", iptxt);
+                        printf("DHCP Timeout !! \r\n");
+                        printf("Static IP address: %s\r\n", iptxt);
                     }
                 }
             } break;
+            case DHCP_ADDRESS_ASSIGNED: {
+                netif->state = DHCP_ADDRESS_ASSIGNED;
+            } break;
             case DHCP_LINK_DOWN: {
                 DHCP_state = DHCP_OFF;
-                printf("The network cable is not connected \n");
+                printf("The network cable is not connected \r\n");
             } break;
-            default:
-                break;
+            default: {
+                printf("dhcp:%d\r\n", DHCP_state);
+            } break;
         }
         vTaskDelay(100);
     }

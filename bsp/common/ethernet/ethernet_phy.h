@@ -50,6 +50,6 @@ typedef enum emac_phy_status {
 #endif
 
 emac_phy_status_t ethernet_phy_status_get(void);
-int ethernet_phy_init(struct bflb_device_s *emac, struct emac_phy_cfg_s *emac_phy_cfg);
+int ethernet_phy_init(struct bflb_device_s *emac, struct bflb_emac_phy_cfg_s *emac_phy_cfg);
 
 #endif

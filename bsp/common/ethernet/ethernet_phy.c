@@ -30,7 +30,7 @@
  * @return int
  *
  */
-int ethernet_phy_init(struct bflb_device_s *emac, struct emac_phy_cfg_s *emac_phy_cfg)
+int ethernet_phy_init(struct bflb_device_s *emac, struct bflb_emac_phy_cfg_s *emac_phy_cfg)
 {
     return _PHY_FUNC_DEFINE(init, emac, emac_phy_cfg);
 }
