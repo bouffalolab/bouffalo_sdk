@@ -7,8 +7,11 @@ sdk_library_add_sources(tasks.c)
 sdk_library_add_sources(timers.c)
 sdk_library_add_sources(timers.c)
 sdk_library_add_sources(freertos_port.c)
+if(CONFIG_TLSF)
+sdk_library_add_sources(portable/MemMang/heap_3.c)
+else()
 sdk_library_add_sources(portable/MemMang/heap_5.c)
-
+endif()
 sdk_add_include_directories(include)
 
 if(("${CHIP}" STREQUAL "bl808") AND ("${CPU_ID}" STREQUAL "d0"))
