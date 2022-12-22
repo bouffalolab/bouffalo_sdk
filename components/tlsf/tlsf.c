@@ -7,6 +7,8 @@
 
 #include "tlsf.h"
 
+#pragma GCC diagnostic ignored "-Wunused-value"
+
 #if defined(__cplusplus)
     #define tlsf_decl inline
 #else
@@ -1066,7 +1068,7 @@ void tlsf_remove_pool(tlsf_t tlsf, pool_t pool)
 ** TLSF main interface.
 */
 
-#if _DEBUG
+#ifdef _DEBUG
 int test_ffs_fls()
 {
     /* Verify ffs/fls work properly. */
@@ -1096,7 +1098,7 @@ int test_ffs_fls()
 
 tlsf_t tlsf_create(void *mem)
 {
-#if _DEBUG
+#ifdef _DEBUG
     if (test_ffs_fls())
     {
         return 0;
