@@ -267,8 +267,13 @@ void board_init(void)
 
     bl_show_log();
     bl_show_flashinfo();
-
+#ifdef CONFIG_TLSF
+    bflb_tlsf_size_container_t *tlsf_size = bflb_tlsf_stats();
+    printf("TLSF Dynamic Memory Init Success: Heap Size = %d Kbyte, Used Size = %d Kbyte, Free Size = %d Kbyte\r\n",
+           tlsf_size->free + tlsf_size->used / 1024, tlsf_size->used / 1024, tlsf_size->free / 1024);
+#else
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
+#endif
 
     printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
     printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));

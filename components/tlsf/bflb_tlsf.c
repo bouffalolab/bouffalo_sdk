@@ -57,3 +57,21 @@ void *bflb_malloc_align(size_t align, size_t size)
 
     return ptr;
 }
+
+void tlsf_size_walker(void* ptr, size_t size, int used, void* user)
+{
+    if (used) {
+        ((bflb_tlsf_size_container_t *)user)->used += (unsigned int)size;
+    }
+    else {
+        ((bflb_tlsf_size_container_t *)user)->free += (unsigned int)size;
+    }
+}
+
+bflb_tlsf_size_container_t *bflb_tlsf_stats() {
+    static bflb_tlsf_size_container_t sizes;
+    sizes.free = 0;
+    sizes.used = 0;
+    tlsf_walk_pool(tlsf_get_pool(tlsf_ptr), tlsf_size_walker, &sizes);
+    return &sizes;
+}
