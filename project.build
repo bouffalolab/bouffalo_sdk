@@ -17,16 +17,18 @@ CPU_ID ?=
 CONFIG_USB_HS ?=y
 CONFIG_ROMAPI ?=y
 CONFIG_DEBUG ?=y
+BOARD_DIR ?=
 
 #cmake definition config
 cmake_definition+= -DCROSS_COMPILE=${CROSS_COMPILE}
 cmake_definition+= -DCHIP=$(CHIP)
 cmake_definition+= -DCPU_ID=$(CPU_ID)
 cmake_definition+= -DBOARD=$(BOARD)
+cmake_definition+= -DBOARD_DIR=$(BOARD_DIR)
 cmake_definition+= -DCONFIG_DEBUG=$(CONFIG_DEBUG)
 cmake_definition+= -DCONFIG_ROMAPI=$(CONFIG_ROMAPI)
 cmake_definition+= -DCONFIG_USB_HS=$(CONFIG_USB_HS)
-cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF
 
 build:Makefile
 	$(CMAKE) -S . -B build -G "Unix Makefiles" $(cmake_definition)
