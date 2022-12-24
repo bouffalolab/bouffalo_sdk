@@ -31,7 +31,6 @@ sdk_library_add_sources(src/bl616_sdh.c)
 sdk_library_add_sources(src/bl616_tzc_sec.c)
 sdk_library_add_sources(src/bl616_psram.c)
 sdk_library_add_sources(src/bl616_audac.c)
-sdk_library_add_sources(src/bl616_pec.c)
 
 if(CONFIG_RF)
 sdk_library_add_sources(src/bl616_mfg_efuse.c)
