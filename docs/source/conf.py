@@ -2,7 +2,7 @@
 
 # -- Project information
 
-project = 'BL_MCU_SDK'
+project = 'BouffaloSDK'
 copyright = '2022, Bouffalolab Team'
 author = 'Bouffalolab Team'
 

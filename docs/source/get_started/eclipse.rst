@@ -13,7 +13,7 @@ Build and Debug with Eclipse
 .. figure:: img/eclipse1.png
     :alt:
 
-- 其余需要的环境参考 :ref:`windows_cmd`
+- 其余步骤参考 :ref:`windows_cmd`
 
 - 解压 Eclipse 并双击打开 `Eclipse.exe`
 

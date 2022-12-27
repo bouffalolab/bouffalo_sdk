@@ -3,9 +3,11 @@
 Bouffalo Lab DevCube 的使用
 =============================
 
-本文档将简要介绍一下如何使用 Bouffalo Lab DevCube 集成开发工具烧写代码.
+.. caution:: BouffaloSDK 不再使用此工具，使用 SDK 自带的命令行烧录工具
 
-Bouffalo Lab Dev Cube 工具可以从博流智能开发者社区下载适合您操作系统的版本，下载地址：`https://dev.bouffalolab.com/download <https://dev.bouffalolab.com/download>`_ 。没有注册开发者账号的用户，可以点击开发者入口，使用 ``guest`` 用户进入。
+本文档将简要介绍一下如何使用 Bouffalo Lab DevCube 集成开发工具烧写代码。
+
+Bouffalo Lab Dev Cube 工具可以从博流智能开发者社区下载适合您操作系统的版本，下载地址： `https://dev.bouffalolab.com/download <https://dev.bouffalolab.com/download>`_ 。没有注册开发者账号的用户，可以点击开发者入口，使用 ``guest`` 用户进入。
 
 下载完成后，解压后即可使用。
 

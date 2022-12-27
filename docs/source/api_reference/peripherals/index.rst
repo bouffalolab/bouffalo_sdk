@@ -5,7 +5,7 @@ Peripherals
 简介
 ---------
 
-BL MCU SDK 中外设驱动分为两类： **LHAL** 和 **SOC** ，前者对通用外设进行了统一的封装，不同芯片使用同一套接口，方便用户使用和移植到其他平台。后者则是每个芯片独有且特殊的部分，比如 GLB、HBN、PDS、AON 等等。
+BouffaloSDK 中外设驱动分为两类： **LHAL** 和 **SOC** ，前者对通用外设进行了统一的封装，不同芯片使用同一套接口，方便用户使用和移植到其他平台。后者则是每个芯片独有且特殊的部分，比如 GLB、HBN、PDS、AON 等等。
 
 下面主要列出 **LHAL** 相关 API 的使用。
 
@@ -22,7 +22,6 @@ BL MCU SDK 中外设驱动分为两类： **LHAL** 和 **SOC** ，前者对通�
         uint8_t sub_idx;
         uint8_t dev_type;
         void *user_data;
-        bflb_dlist_t list;
     };
 
 .. list-table::
@@ -201,6 +200,13 @@ API 支持情况
 
 API 列表
 ---------------
+
+除了使用网页版查看 API 以外， 还提供了 **LHAL Doxygen** 版本，离线生成文档。 Doxyfile 文件在 ``drivers/lhal`` 目录下。
+
+使用 Doxywizard 导入并运行即可。
+
+.. figure:: doxygen.png
+   :alt:
 
 .. toctree::
     :maxdepth: 1

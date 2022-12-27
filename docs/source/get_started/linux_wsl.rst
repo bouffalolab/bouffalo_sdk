@@ -68,7 +68,7 @@ Build with Linux or WSL
     gcc version 10.2.0 (Xuantie-900 elf newlib gcc Toolchain V2.2.5 B-20220323)
 
 
-- 在 linux 中，有严格的权限限制，通常一个用户对应一个权限，所以如果提示下面信息，表示需要设置 cmake 权限。
+- 在 linux 中，有严格的权限限制，通常一个用户对应一个权限，所以如果提示下面信息，表示需要设置权限。因此，我们将使用到的工具都设置好权限即可
 
 .. figure:: img/cmake_error.png
    :align: center
@@ -78,8 +78,10 @@ Build with Linux or WSL
 .. code-block:: bash
    :linenos:
 
-   $ cd bl_mcu_sdk
-   $ sudo chmod +x tools/cmake/bin/cmake
+   $ cd bouffalo_sdk
+   $ chmod 777 +x tools/cmake/bin/cmake
+   $ chmod 777 +x tools/bflb_tools/bflb_fw_post_proc/bflb_fw_post_proc
+   $ chmod 777 +x tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand
 
 编译
 -------------
@@ -92,7 +94,7 @@ Build with Linux or WSL
    :linenos:
 
     $ cd examples/helloworld
-    $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+    $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl602、bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 - 使用 ninja 编译
 
@@ -100,6 +102,14 @@ Build with Linux or WSL
    :linenos:
 
     $ cd examples/helloworld
-    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl602、bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 .. note :: 如果使用 BL808 或者 BL606P，需要在上面基础上添加 CPU_ID=id ,id 可以为 m0 或者 d0
+
+- 烧录
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd examples/helloworld
+    $ make flash CHIP=chip_name COMX=port_name ## port_name 为串口号名称，比如 linux 中/dev/ttyACMx，wsl 中对应使用 /dev/ttySx
