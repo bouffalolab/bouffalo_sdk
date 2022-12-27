@@ -18,7 +18,8 @@ Build with Windows CMD
    $ cd d
    $ git clone git@gitee.com:bouffalolab/toolchain_gcc_t-head_windows.git
 
-- 将 make、ninja、下载的 risc-v 工具链路径配置到系统环境变量中, 其中 make 和 ninja 工具位于 `bl_mcu_sdk/tools` 目录下。
+- 将 make、ninja、下载的 risc-v 工具链路径配置到系统环境变量中, 其中 make 和 ninja 工具位于 `bouffalo_sdk/tools` 目录下。
+- windows 11 配置完以后需要重启电脑才生效。
 
 .. figure:: img/windows_path.png
    :alt:
@@ -72,7 +73,7 @@ Build with Windows CMD
    :linenos:
 
     $ cd .\examples\helloworld\
-    $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+    $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl602、bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 - 使用 ninja 编译
 
@@ -80,6 +81,14 @@ Build with Windows CMD
    :linenos:
 
     $ cd .\examples\helloworld\
-    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl602、bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 .. note :: 如果使用 BL808 或者 BL606P，需要在上面基础上添加 CPU_ID=id ,id 可以为 m0 或者 d0
+
+- 烧录
+
+.. code-block:: bash
+   :linenos:
+
+    $ cd examples/helloworld
+    $ make flash CHIP=chip_name COMX=port_name ## port_name 为串口号名称，比如 COM5

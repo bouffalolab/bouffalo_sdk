@@ -4,18 +4,18 @@ DAC
 Macros
 ------------
 
-dac sampling frequence
+dac clock div
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-dac 采样频率可以选择 32K、16K、8K，512K 只有 dma 模式下才可以使用。
+dac 分频，只有 DMA 模式下可以使用 1 分频。
 
 .. code-block:: c
    :linenos:
 
-    #define DAC_SAMPLING_FREQ_32K  0
-    #define DAC_SAMPLING_FREQ_16K  1
-    #define DAC_SAMPLING_FREQ_8K   3
-    #define DAC_SAMPLING_FREQ_512K 4
+   #define DAC_CLK_DIV_16 0
+   #define DAC_CLK_DIV_32 1
+   #define DAC_CLK_DIV_64 3
+   #define DAC_CLK_DIV_1  4
 
 dac channel
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -44,7 +44,7 @@ bflb_dac_init
 .. code-block:: c
    :linenos:
 
-    void bflb_dac_init(struct bflb_device_s *dev, uint8_t frequence);
+    void bflb_dac_init(struct bflb_device_s *dev, uint8_t clk_div);
 
 .. list-table::
     :widths: 10 10
@@ -54,8 +54,8 @@ bflb_dac_init
       - description
     * - dev
       - 设备句柄
-    * - frequence
-      - 采样率
+    * - clk_div
+      - 分频值
 
 bflb_dac_deinit
 ^^^^^^^^^^^^^^^^^^^^
