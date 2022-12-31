@@ -33,13 +33,13 @@
 |  CKS         |      ○         |      √             |   √           |   ○      |
 |  DAC         |      ○         |      √             |   √           |   ○      |
 |  DMA         |      ○         |      √             |   √           |   √      |
-|  EFUSE       |      ×         |      √             |   √           |   √      |
+|  EFUSE       |      √         |      √             |   √           |   √      |
 |  EMAC        |      -         |      √             |   √           |   √      |
 |  FLASH       |      √         |      √             |   √           |   √      |
 |  GPIO        |      ○         |      √             |   √           |   √      |
 |  I2C         |      ○         |      √             |   √           |   √      |
 |  IR          |      ○         |      √             |   √           |   ○      |
-|  MJPEG       |      ×         |      ×             |   √           |   √      |
+|  MJPEG       |      ×         |      √             |   √           |   √      |
 |  PWM_v1      |      ○         |      √             |   -           |   -      |
 |  PWM_v2      |      -         |      -             |   √           |   √      |
 |  RTC         |      ○         |      √             |   √           |   √      |
@@ -118,11 +118,8 @@ bl_mcu_sdk
 
 - 进入要编译的 demo 目录，且该目录下有 `main.c` 和 `Makefile` 文件
 - 执行下面命令即可,以 **BL616** 为例
-- Linux 下第一次使用需要使用 `chmod` 配置 cmake 权限
 
 ```
-cd bl_mcu_sdk
-chmod +x tools/cmake/bin/cmake
 cd examples/helloworld
 make CHIP=bl616 BOARD=bl616dk
 ```
@@ -130,8 +127,6 @@ make CHIP=bl616 BOARD=bl616dk
 - 如果使用 **BL808** 或者 **BL606P** ,需要添加 **CPU_ID**
 
 ```
-cd bl_mcu_sdk
-chmod +x tools/cmake/bin/cmake
 cd examples/helloworld
 make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
@@ -139,8 +134,6 @@ make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 如果你想使用 **ninja** 编译，你可以尝试：
 
 ```
-cd bl_mcu_sdk
-chmod +x tools/cmake/bin/cmake
 cd examples/helloworld
 make ninja CHIP=bl616 BOARD=bl616dk
 ```
@@ -162,7 +155,7 @@ TODO
 
 # 芯片手册
 
-芯片数据手册和参考手册见 [文档](https://dev.bouffalolab.com/document)。
+芯片数据手册和参考手册见 [文档](https://github.com/bouffalolab/bl_docs)。
 
 # 文档教程
 

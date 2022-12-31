@@ -33,13 +33,13 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 |  CKS         |      ○         |      √             |   √           |   ○      |
 |  DAC         |      ○         |      √             |   √           |   ○      |
 |  DMA         |      ○         |      √             |   √           |   √      |
-|  EFUSE       |      ×         |      √             |   √           |   √      |
+|  EFUSE       |      √         |      √             |   √           |   √      |
 |  EMAC        |      -         |      √             |   √           |   √      |
 |  FLASH       |      √         |      √             |   √           |   √      |
 |  GPIO        |      ○         |      √             |   √           |   √      |
 |  I2C         |      ○         |      √             |   √           |   √      |
 |  IR          |      ○         |      √             |   √           |   ○      |
-|  MJPEG       |      ×         |      ×             |   √           |   √      |
+|  MJPEG       |      ×         |      √             |   √           |   √      |
 |  PWM_v1      |      ○         |      √             |   -           |   -      |
 |  PWM_v2      |      -         |      -             |   √           |   √      |
 |  RTC         |      ○         |      √             |   √           |   √      |
@@ -118,11 +118,8 @@ Before compiling with the command line, you need to select the corresponding too
 
 - Go to the demo directory where you want to compile and there are `main.c` and `Makefile` files in that directory
 - Just execute the following command, take **BL616** as an example
-- The first time you use it on Linux, you need to use `chmod` to configure the cmake permissions
 
 ```
-cd bl_mcu_sdk
-chmod +x tools/cmake/bin/cmake
 cd examples/helloworld
 make CHIP=bl616 BOARD=bl616dk
 ```
@@ -132,8 +129,6 @@ make CHIP=bl616 BOARD=bl616dk
 If you want to use **ninja**, you can try:
 
 ```
-cd bl_mcu_sdk
-chmod +x tools/cmake/bin/cmake
 cd examples/helloworld
 make ninja CHIP=bl616 BOARD=bl616dk
 ```
@@ -157,7 +152,7 @@ We recommend you to use this **BL DevCube** and download firmware with serial.
 
 ## Chip Manual
 
-**Chip Reference Manual** and **Chip Data Manual** are listed on [document](https://dev.bouffalolab.com/document)
+**Chip Reference Manual** and **Chip Data Manual** are listed on [document](https://github.com/bouffalolab/bl_docs)
 
 ## Documentation Tutorial
 
