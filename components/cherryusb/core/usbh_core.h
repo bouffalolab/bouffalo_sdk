@@ -39,6 +39,9 @@ extern "C" {
 #define CLASS_INFO_DEFINE __attribute__((section("usbh_class_info"))) __USED __ALIGNED(1)
 #elif defined(__GNUC__)
 #define CLASS_INFO_DEFINE __attribute__((section(".usbh_class_info"))) __USED __ALIGNED(1)
+#elif defined(__ICCARM__) || defined(__ICCRX__)
+#pragma section="usbh_class_info"
+#define CLASS_INFO_DEFINE __attribute__((section("usbh_class_info"))) __USED __ALIGNED(1)
 #endif
 
 static inline void usbh_control_urb_fill(struct usbh_urb *urb,
@@ -160,7 +163,6 @@ struct usbh_hub {
     struct usb_hub_descriptor hub_desc;
     struct usbh_hubport child[CONFIG_USBHOST_MAX_EHPORTS];
     struct usbh_hubport *parent;
-    usb_slist_t hub_event_list;
 };
 
 int usbh_hport_activate_epx(usbh_pipe_t *pipe, struct usbh_hubport *hport, struct usb_endpoint_descriptor *ep_desc);
@@ -181,8 +183,6 @@ int usbh_initialize(void);
 struct usbh_hubport *usbh_find_hubport(uint8_t dev_addr);
 void *usbh_find_class_instance(const char *devname);
 
-void usbh_device_mount_done_callback(struct usbh_hubport *hport);
-void usbh_device_unmount_done_callback(struct usbh_hubport *hport);
 
 int lsusb(int argc, char **argv);
 #ifdef __cplusplus

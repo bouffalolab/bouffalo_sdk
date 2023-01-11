@@ -195,23 +195,40 @@ int hid_test(void)
     return ret;
 }
 
-void usbh_device_mount_done_callback(struct usbh_hubport *hport)
-{
-}
-
-void usbh_device_unmount_done_callback(struct usbh_hubport *hport)
-{
-}
-
 static void usbh_class_test_thread(void *argument)
 {
     while (1) {
-        printf("helloworld\r\n");
+        //printf("helloworld\r\n");
         usb_osal_msleep(1000);
         cdc_acm_test();
         msc_test();
         hid_test();
+        //video_test();
     }
+}
+
+void usbh_cdc_acm_run(struct usbh_cdc_acm *cdc_acm_class)
+{
+}
+
+void usbh_cdc_acm_stop(struct usbh_cdc_acm *cdc_acm_class)
+{
+}
+
+void usbh_hid_run(struct usbh_hid *hid_class)
+{
+}
+
+void usbh_hid_stop(struct usbh_hid *hid_class)
+{
+}
+
+void usbh_msc_run(struct usbh_msc *msc_class)
+{
+}
+
+void usbh_msc_stop(struct usbh_msc *msc_class)
+{
 }
 
 void usbh_class_test(void)
