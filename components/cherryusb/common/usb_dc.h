@@ -21,6 +21,7 @@ struct usbd_endpoint_cfg {
     uint8_t ep_addr; /* Endpoint addr with direction */
     uint8_t ep_type; /* Endpoint type */
     uint16_t ep_mps; /* Endpoint max packet size */
+    uint8_t ep_mult; /* Endpoint additional transcations in micro frame */
 };
 
 /**
@@ -43,6 +44,15 @@ int usb_dc_deinit(void);
  * @return On success will return 0, and others indicate fail.
  */
 int usbd_set_address(const uint8_t addr);
+
+/**
+ * @brief Get USB device speed
+ *
+ * @param[in] port port index
+ *
+ * @return port speed, USB_SPEED_LOW or USB_SPEED_FULL or USB_SPEED_HIGH
+ */
+uint8_t usbd_get_port_speed(const uint8_t port);
 
 /**
  * @brief configure and enable endpoint.

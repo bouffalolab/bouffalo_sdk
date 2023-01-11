@@ -742,7 +742,10 @@ void usbd_video_probe_and_commit_controls_init(uint32_t dwFrameInterval, uint32_
     usbd_video_cfg.commit.bMaxVersion = 0;
 }
 
-struct usbd_interface *usbd_video_init_intf(struct usbd_interface *intf, uint32_t dwFrameInterval, uint32_t dwMaxVideoFrameSize, uint32_t dwMaxPayloadTransferSize)
+struct usbd_interface *usbd_video_init_intf(struct usbd_interface *intf,
+                                            uint32_t dwFrameInterval,
+                                            uint32_t dwMaxVideoFrameSize,
+                                            uint32_t dwMaxPayloadTransferSize)
 {
     intf->class_interface_handler = video_class_interface_request_handler;
     intf->class_endpoint_handler = NULL;

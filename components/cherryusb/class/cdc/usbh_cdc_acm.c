@@ -146,6 +146,7 @@ static int usbh_cdc_acm_connect(struct usbh_hubport *hport, uint8_t intf)
 
     USB_LOG_INFO("Register CDC ACM Class:%s\r\n", hport->config.intf[intf].devname);
 
+    usbh_cdc_acm_run(cdc_acm_class);
     return ret;
 }
 
@@ -166,6 +167,7 @@ static int usbh_cdc_acm_disconnect(struct usbh_hubport *hport, uint8_t intf)
             usbh_pipe_free(cdc_acm_class->bulkout);
         }
 
+        usbh_cdc_acm_stop(cdc_acm_class);
         memset(cdc_acm_class, 0, sizeof(struct usbh_cdc_acm));
         usb_free(cdc_acm_class);
 
@@ -176,10 +178,36 @@ static int usbh_cdc_acm_disconnect(struct usbh_hubport *hport, uint8_t intf)
     return ret;
 }
 
+static int usbh_cdc_data_connect(struct usbh_hubport *hport, uint8_t intf)
+{
+    return 0;
+}
+
+static int usbh_cdc_data_disconnect(struct usbh_hubport *hport, uint8_t intf)
+{
+    return 0;
+}
+
+__WEAK void usbh_cdc_acm_run(struct usbh_cdc_acm *cdc_acm_class)
+{
+
+}
+
+__WEAK void usbh_cdc_acm_stop(struct usbh_cdc_acm *cdc_acm_class)
+{
+
+}
+
 const struct usbh_class_driver cdc_acm_class_driver = {
     .driver_name = "cdc_acm",
     .connect = usbh_cdc_acm_connect,
     .disconnect = usbh_cdc_acm_disconnect
+};
+
+const struct usbh_class_driver cdc_data_class_driver = {
+    .driver_name = "cdc_data",
+    .connect = usbh_cdc_data_connect,
+    .disconnect = usbh_cdc_data_disconnect
 };
 
 CLASS_INFO_DEFINE const struct usbh_class_info cdc_acm_class_info = {
@@ -190,4 +218,14 @@ CLASS_INFO_DEFINE const struct usbh_class_info cdc_acm_class_info = {
     .vid = 0x00,
     .pid = 0x00,
     .class_driver = &cdc_acm_class_driver
+};
+
+CLASS_INFO_DEFINE const struct usbh_class_info cdc_data_class_info = {
+    .match_flags = USB_CLASS_MATCH_INTF_CLASS,
+    .class = USB_DEVICE_CLASS_CDC_DATA,
+    .subclass = 0x00,
+    .protocol = 0x00,
+    .vid = 0x00,
+    .pid = 0x00,
+    .class_driver = &cdc_data_class_driver
 };
