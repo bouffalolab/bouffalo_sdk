@@ -1,3 +1,2 @@
 pikascript-core==latest
 PikaStdLib==latest
-pika_libc==v1.0.1

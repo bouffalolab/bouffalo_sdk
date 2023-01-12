@@ -18,7 +18,6 @@ PikaObj *pikaScriptInit(void){
     __platform_printf("======[pikascript packages installed]======\r\n");
     pks_printVersion();
     __platform_printf("PikaStdLib==latest\r\n");
-    __platform_printf("pika_libc==v1.0.1\r\n");
     __platform_printf("===========================================\r\n");
     PikaObj* pikaMain = newRootObj("pikaMain", New_PikaMain);
     __pikaMain = pikaMain;
