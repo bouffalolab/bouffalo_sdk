@@ -53,6 +53,8 @@
 #include "PikaStdTask_Task.h"
 #include "PikaStdLib_SysObj.h"
 #include "PikaStdData_List.h"
+#include "pika_libc.h"
+#include "TinyObj.h"
 
 #ifndef PIKA_MODULE_PIKADEBUG_DISABLE
 void PikaDebug_DebugerMethod(PikaObj *self, Args *args){
@@ -1883,6 +1885,19 @@ PikaObj *New_PikaStdTask_Task(Args *args){
 
 Arg *PikaStdTask_Task(PikaObj *self){
     return obj_newObjInPackage(New_PikaStdTask_Task);
+}
+#endif
+
+#ifndef PIKA_MODULE_PIKA_LIBC_DISABLE
+class_def(pika_libc){
+    __BEFORE_MOETHOD_DEF
+};
+class_inhert(pika_libc, TinyObj);
+
+PikaObj *New_pika_libc(Args *args){
+    PikaObj *self = New_TinyObj(args);
+    obj_setClass(self, pika_libc);
+    return self;
 }
 #endif
 

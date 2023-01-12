@@ -348,6 +348,10 @@
         #define PIKA_FREERTOS_ENABLE 0
     #endif
 
+    #ifndef PIKA_LWIP_ENABLE
+        #define PIKA_LWIP_ENABLE 0
+    #endif
+
     /* configuration validation */
 
 #endif

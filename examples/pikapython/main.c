@@ -1,10 +1,9 @@
 #include <stdlib.h>
 #include "bflb_uart.h"
 #include "board.h"
-#include "ff.h"
 #include "log.h"
 #include "pikaScript.h"
-#include "vlibc_stdio.h"
+#include <stdio.h>
 
 struct bflb_device_s* uartx = NULL;
 
@@ -27,6 +26,7 @@ int main(void) {
 
     uartx = bflb_device_get_by_name("uart0");
     bflb_uart_feature_control(uartx, UART_CMD_SET_BAUD_RATE, 115200);
+    printf("%lld\r\n", (int64_t)123);
 
     PikaObj* root = pikaScriptInit();
     pikaScriptShell(root);
