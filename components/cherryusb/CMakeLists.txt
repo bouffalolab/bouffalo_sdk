@@ -1,4 +1,4 @@
-﻿sdk_generate_library()
+sdk_generate_library()
 sdk_add_include_directories(common)
 sdk_add_include_directories(osal)
 sdk_add_include_directories(core)
