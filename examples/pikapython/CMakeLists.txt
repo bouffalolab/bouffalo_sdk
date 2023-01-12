@@ -14,4 +14,7 @@ sdk_add_include_directories(pikapython/pikascript-api)
 
 sdk_set_main_file(main.c)
 
+set(APP_LDFLAGS_HEAD "-Wl,--whole-archive")
+set(APP_LDFLAGS_TAIL "-Wl,--no-whole-archive")
+
 project(pikapython)

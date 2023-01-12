@@ -163,8 +163,20 @@ macro(project name)
     set_target_properties(${proj_name}.elf PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT_PROPERTY})
   endif()
 
+  if(DEFINED APP_LDFLAGS_HEAD)
+    message(STATUS "Using APP_LDFLAGS_HEAD: ${APP_LDFLAGS_HEAD}")
+  else()
+    set(APP_LDFLAGS_HEAD "")
+  endif()
+
+  if(DEFINED APP_LDFLAGS_TAIL)
+    message(STATUS "Using APP_LDFLAGS_TAIL: ${APP_LDFLAGS_TAIL}")
+  else()
+    set(APP_LDFLAGS_TAIL "")
+  endif()
+  
   get_property(SDK_LIBS_PROPERTY GLOBAL PROPERTY SDK_LIBS)
-  target_link_libraries(${proj_name}.elf -Wl,--start-group ${SDK_LIBS_PROPERTY} app -Wl,--end-group)
+  target_link_libraries(${proj_name}.elf -Wl,--start-group ${SDK_LIBS_PROPERTY} ${APP_LDFLAGS_HEAD} app ${APP_LDFLAGS_TAIL} -Wl,--end-group)
 
   if(OUTPUT_DIR)
   add_custom_command(TARGET ${proj_name}.elf POST_BUILD
