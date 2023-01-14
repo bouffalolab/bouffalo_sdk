@@ -12,6 +12,8 @@ sdk_add_include_directories(.)
 sdk_add_include_directories(pikapython/pikascript-core)
 sdk_add_include_directories(pikapython/pikascript-api)
 
+sdk_add_compile_definitions(PIKA_CONFIG_ENABLE=1 LWIP_DNS=1)
+
 sdk_set_main_file(main.c)
 
 set(APP_LDFLAGS_HEAD "-Wl,--whole-archive")

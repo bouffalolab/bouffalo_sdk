@@ -1,0 +1,2 @@
+#define PIKA_LWIP_ENABLE 1
+#define PIKA_FREERTOS_ENABLE 1

@@ -19,6 +19,7 @@
 #include "PikaMain.h"
 #include "PikaStdLib_SysObj.h"
 #include "PikaStdLib.h"
+#include "_socket.h"
 #include "PikaStdData.h"
 #include "TinyObj.h"
 #include "PikaStdData_ByteArray.h"
@@ -54,6 +55,10 @@
 #include "PikaStdTask_Task.h"
 #include "PikaStdLib_SysObj.h"
 #include "PikaStdData_List.h"
+#include "_socket.h"
+#include "TinyObj.h"
+#include "_socket_socket.h"
+#include "TinyObj.h"
 
 #ifndef PIKA_MODULE_PIKADEBUG_DISABLE
 void PikaDebug_DebugerMethod(PikaObj *self, Args *args){
@@ -122,6 +127,7 @@ class_inhert(PikaMain, PikaStdLib_SysObj);
 PikaObj *New_PikaMain(Args *args){
     PikaObj *self = New_PikaStdLib_SysObj(args);
     obj_newObj(self, "PikaStdLib", "PikaStdLib", New_PikaStdLib);
+    obj_newObj(self, "_socket", "_socket", New__socket);
     obj_setClass(self, PikaMain);
     return self;
 }
@@ -1885,6 +1891,136 @@ PikaObj *New_PikaStdTask_Task(Args *args){
 
 Arg *PikaStdTask_Task(PikaObj *self){
     return obj_newObjInPackage(New_PikaStdTask_Task);
+}
+#endif
+
+#ifndef PIKA_MODULE__SOCKET_DISABLE
+void _socket__gethostnameMethod(PikaObj *self, Args *args){
+    char* res = _socket__gethostname(self);
+    method_returnStr(args, res);
+}
+method_typedef(
+    _socket__gethostname,
+    "_gethostname", ""
+);
+
+void _socket_socketMethod(PikaObj *self, Args *args){
+    Arg* res = _socket_socket(self);
+    method_returnArg(args, res);
+}
+method_typedef(
+    _socket_socket,
+    "socket", ""
+);
+
+class_def(_socket){
+    __BEFORE_MOETHOD_DEF
+    constructor_def(_socket_socket, 472974126),
+    method_def(_socket__gethostname, 2076113347),
+};
+class_inhert(_socket, TinyObj);
+
+PikaObj *New__socket(Args *args){
+    PikaObj *self = New_TinyObj(args);
+    obj_setClass(self, _socket);
+    return self;
+}
+#endif
+
+#ifndef PIKA_MODULE__SOCKET_DISABLE
+void _socket_socket__acceptMethod(PikaObj *self, Args *args){
+    _socket_socket__accept(self);
+}
+method_typedef(
+    _socket_socket__accept,
+    "_accept", ""
+);
+
+void _socket_socket__bindMethod(PikaObj *self, Args *args){
+    char* host = args_getStr(args, "host");
+    int port = args_getInt(args, "port");
+    _socket_socket__bind(self, host, port);
+}
+method_typedef(
+    _socket_socket__bind,
+    "_bind", "host,port"
+);
+
+void _socket_socket__closeMethod(PikaObj *self, Args *args){
+    _socket_socket__close(self);
+}
+method_typedef(
+    _socket_socket__close,
+    "_close", ""
+);
+
+void _socket_socket__connectMethod(PikaObj *self, Args *args){
+    char* host = args_getStr(args, "host");
+    int port = args_getInt(args, "port");
+    _socket_socket__connect(self, host, port);
+}
+method_typedef(
+    _socket_socket__connect,
+    "_connect", "host,port"
+);
+
+void _socket_socket__initMethod(PikaObj *self, Args *args){
+    _socket_socket__init(self);
+}
+method_typedef(
+    _socket_socket__init,
+    "_init", ""
+);
+
+void _socket_socket__listenMethod(PikaObj *self, Args *args){
+    int num = args_getInt(args, "num");
+    _socket_socket__listen(self, num);
+}
+method_typedef(
+    _socket_socket__listen,
+    "_listen", "num"
+);
+
+void _socket_socket__recvMethod(PikaObj *self, Args *args){
+    int num = args_getInt(args, "num");
+    Arg* res = _socket_socket__recv(self, num);
+    method_returnArg(args, res);
+}
+method_typedef(
+    _socket_socket__recv,
+    "_recv", "num"
+);
+
+void _socket_socket__sendMethod(PikaObj *self, Args *args){
+    Arg* data = args_getArg(args, "data");
+    _socket_socket__send(self, data);
+}
+method_typedef(
+    _socket_socket__send,
+    "_send", "data"
+);
+
+class_def(_socket_socket){
+    __BEFORE_MOETHOD_DEF
+    method_def(_socket_socket__bind, 250454625),
+    method_def(_socket_socket__init, 250711480),
+    method_def(_socket_socket__recv, 251024916),
+    method_def(_socket_socket__send, 251061198),
+    method_def(_socket_socket__listen, 406217811),
+    method_def(_socket_socket__close, 1823847098),
+    method_def(_socket_socket__connect, 2010642926),
+    method_def(_socket_socket__accept, 2115505652),
+};
+class_inhert(_socket_socket, TinyObj);
+
+PikaObj *New__socket_socket(Args *args){
+    PikaObj *self = New_TinyObj(args);
+    obj_setClass(self, _socket_socket);
+    return self;
+}
+
+Arg *_socket_socket(PikaObj *self){
+    return obj_newObjInPackage(New__socket_socket);
 }
 #endif
 
