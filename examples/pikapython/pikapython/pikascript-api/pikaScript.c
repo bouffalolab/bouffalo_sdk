@@ -17,7 +17,6 @@ volatile PikaObj *__pikaMain;
 PikaObj *pikaScriptInit(void){
     __platform_printf("======[pikascript packages installed]======\r\n");
     pks_printVersion();
-    __platform_printf("mqtt==latest\r\n");
     __platform_printf("===========================================\r\n");
     PikaObj* pikaMain = newRootObj("pikaMain", New_PikaMain);
     __pikaMain = pikaMain;
@@ -28,6 +27,7 @@ PikaObj *pikaScriptInit(void){
             "import PikaStdLib\n"
             "import socket\n"
             "import random\n"
+            "import mqtt\n"
             "print('hello PikaPython!')\n"
             "\n");
 #else 
