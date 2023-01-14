@@ -19,6 +19,7 @@
 #include "PikaMain.h"
 #include "PikaStdLib_SysObj.h"
 #include "PikaStdLib.h"
+#include "_mqtt.h"
 #include "_socket.h"
 #include "random.h"
 #include "PikaStdData.h"
@@ -56,6 +57,10 @@
 #include "PikaStdTask_Task.h"
 #include "PikaStdLib_SysObj.h"
 #include "PikaStdData_List.h"
+#include "_mqtt.h"
+#include "TinyObj.h"
+#include "_mqtt__MQTT.h"
+#include "TinyObj.h"
 #include "_socket.h"
 #include "TinyObj.h"
 #include "_socket_socket.h"
@@ -130,6 +135,7 @@ class_inhert(PikaMain, PikaStdLib_SysObj);
 PikaObj *New_PikaMain(Args *args){
     PikaObj *self = New_PikaStdLib_SysObj(args);
     obj_newObj(self, "PikaStdLib", "PikaStdLib", New_PikaStdLib);
+    obj_newObj(self, "_mqtt", "_mqtt", New__mqtt);
     obj_newObj(self, "_socket", "_socket", New__socket);
     obj_newObj(self, "random", "random", New_random);
     obj_setClass(self, PikaMain);
@@ -1895,6 +1901,273 @@ PikaObj *New_PikaStdTask_Task(Args *args){
 
 Arg *PikaStdTask_Task(PikaObj *self){
     return obj_newObjInPackage(New_PikaStdTask_Task);
+}
+#endif
+
+#ifndef PIKA_MODULE__MQTT_DISABLE
+void _mqtt__MQTTMethod(PikaObj *self, Args *args){
+    Arg* res = _mqtt__MQTT(self);
+    method_returnArg(args, res);
+}
+method_typedef(
+    _mqtt__MQTT,
+    "_MQTT", ""
+);
+
+void _mqtt___del__Method(PikaObj *self, Args *args){
+    _mqtt___del__(self);
+}
+method_typedef(
+    _mqtt___del__,
+    "__del__", ""
+);
+
+class_def(_mqtt){
+    __BEFORE_MOETHOD_DEF
+    constructor_def(_mqtt__MQTT, 249672938),
+    method_def(_mqtt___del__, 2038499702),
+};
+class_inhert(_mqtt, TinyObj);
+
+PikaObj *New__mqtt(Args *args){
+    PikaObj *self = New_TinyObj(args);
+    obj_setClass(self, _mqtt);
+    return self;
+}
+#endif
+
+#ifndef PIKA_MODULE__MQTT_DISABLE
+void _mqtt__MQTT___del__Method(PikaObj *self, Args *args){
+    _mqtt__MQTT___del__(self);
+}
+method_typedef(
+    _mqtt__MQTT___del__,
+    "__del__", ""
+);
+
+void _mqtt__MQTT___init__Method(PikaObj *self, Args *args){
+    char* ip = args_getStr(args, "ip");
+    int port = args_getInt(args, "port");
+    char* clinetID = args_getStr(args, "clinetID");
+    char* username = args_getStr(args, "username");
+    char* password = args_getStr(args, "password");
+    char* version = args_getStr(args, "version");
+    char* ca = args_getStr(args, "ca");
+    int keepalive = args_getInt(args, "keepalive");
+    _mqtt__MQTT___init__(self, ip, port, clinetID, username, password, version, ca, keepalive);
+}
+method_typedef(
+    _mqtt__MQTT___init__,
+    "__init__", "ip,port,clinetID,username,password,version,ca,keepalive"
+);
+
+void _mqtt__MQTT__fakeMsgMethod(PikaObj *self, Args *args){
+    char* topic = args_getStr(args, "topic");
+    int qos = args_getInt(args, "qos");
+    char* msg = args_getStr(args, "msg");
+    _mqtt__MQTT__fakeMsg(self, topic, qos, msg);
+}
+method_typedef(
+    _mqtt__MQTT__fakeMsg,
+    "_fakeMsg", "topic,qos,msg"
+);
+
+void _mqtt__MQTT_connectMethod(PikaObj *self, Args *args){
+    int res = _mqtt__MQTT_connect(self);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_connect,
+    "connect", ""
+);
+
+void _mqtt__MQTT_disconnectMethod(PikaObj *self, Args *args){
+    int res = _mqtt__MQTT_disconnect(self);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_disconnect,
+    "disconnect", ""
+);
+
+void _mqtt__MQTT_listSubscribeTopicMethod(PikaObj *self, Args *args){
+    PikaObj* res = _mqtt__MQTT_listSubscribeTopic(self);
+    method_returnObj(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_listSubscribeTopic,
+    "listSubscribeTopic", ""
+);
+
+void _mqtt__MQTT_publishMethod(PikaObj *self, Args *args){
+    char* topic = args_getStr(args, "topic");
+    char* payload = args_getStr(args, "payload");
+    int qos = args_getInt(args, "qos");
+    int res = _mqtt__MQTT_publish(self, topic, payload, qos);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_publish,
+    "publish", "topic,payload,qos"
+);
+
+void _mqtt__MQTT_setCaMethod(PikaObj *self, Args *args){
+    char* ca = args_getStr(args, "ca");
+    int res = _mqtt__MQTT_setCa(self, ca);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setCa,
+    "setCa", "ca"
+);
+
+void _mqtt__MQTT_setClientIDMethod(PikaObj *self, Args *args){
+    char* id = args_getStr(args, "id");
+    int res = _mqtt__MQTT_setClientID(self, id);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setClientID,
+    "setClientID", "id"
+);
+
+void _mqtt__MQTT_setDisconnectHandlerMethod(PikaObj *self, Args *args){
+    Arg* cb = args_getArg(args, "cb");
+    int res = _mqtt__MQTT_setDisconnectHandler(self, cb);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setDisconnectHandler,
+    "setDisconnectHandler", "cb"
+);
+
+void _mqtt__MQTT_setHostMethod(PikaObj *self, Args *args){
+    char* host_url = args_getStr(args, "host_url");
+    int res = _mqtt__MQTT_setHost(self, host_url);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setHost,
+    "setHost", "host_url"
+);
+
+void _mqtt__MQTT_setKeepAliveMethod(PikaObj *self, Args *args){
+    int time = args_getInt(args, "time");
+    int res = _mqtt__MQTT_setKeepAlive(self, time);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setKeepAlive,
+    "setKeepAlive", "time"
+);
+
+void _mqtt__MQTT_setPasswordMethod(PikaObj *self, Args *args){
+    char* passwd = args_getStr(args, "passwd");
+    int res = _mqtt__MQTT_setPassword(self, passwd);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setPassword,
+    "setPassword", "passwd"
+);
+
+void _mqtt__MQTT_setPortMethod(PikaObj *self, Args *args){
+    int port = args_getInt(args, "port");
+    int res = _mqtt__MQTT_setPort(self, port);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setPort,
+    "setPort", "port"
+);
+
+void _mqtt__MQTT_setUsernameMethod(PikaObj *self, Args *args){
+    char* name = args_getStr(args, "name");
+    int res = _mqtt__MQTT_setUsername(self, name);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setUsername,
+    "setUsername", "name"
+);
+
+void _mqtt__MQTT_setVersionMethod(PikaObj *self, Args *args){
+    char* version = args_getStr(args, "version");
+    int res = _mqtt__MQTT_setVersion(self, version);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setVersion,
+    "setVersion", "version"
+);
+
+void _mqtt__MQTT_setWillMethod(PikaObj *self, Args *args){
+    char* topic = args_getStr(args, "topic");
+    char* payload = args_getStr(args, "payload");
+    int qos = args_getInt(args, "qos");
+    int retain = args_getInt(args, "retain");
+    int res = _mqtt__MQTT_setWill(self, topic, payload, qos, retain);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_setWill,
+    "setWill", "topic,payload,qos,retain"
+);
+
+void _mqtt__MQTT_subscribeMethod(PikaObj *self, Args *args){
+    char* topic = args_getStr(args, "topic");
+    Arg* cb = args_getArg(args, "cb");
+    int qos = args_getInt(args, "qos");
+    int res = _mqtt__MQTT_subscribe(self, topic, cb, qos);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_subscribe,
+    "subscribe", "topic,cb,qos"
+);
+
+void _mqtt__MQTT_unsubscribeMethod(PikaObj *self, Args *args){
+    char* topic = args_getStr(args, "topic");
+    int res = _mqtt__MQTT_unsubscribe(self, topic);
+    method_returnInt(args, res);
+}
+method_typedef(
+    _mqtt__MQTT_unsubscribe,
+    "unsubscribe", "topic"
+);
+
+class_def(_mqtt__MQTT){
+    __BEFORE_MOETHOD_DEF
+    method_def(_mqtt__MQTT_disconnect, 35797775),
+    method_def(_mqtt__MQTT_setKeepAlive, 127013703),
+    method_def(_mqtt__MQTT_setHost, 203320527),
+    method_def(_mqtt__MQTT_setPort, 203607990),
+    method_def(_mqtt__MQTT_setWill, 203852809),
+    method_def(_mqtt__MQTT_setCa, 274291413),
+    method_def(_mqtt__MQTT_setUsername, 784896433),
+    method_def(_mqtt__MQTT___init__, 904762485),
+    method_def(_mqtt__MQTT__fakeMsg, 1038277218),
+    method_def(_mqtt__MQTT_setPassword, 1218879652),
+    method_def(_mqtt__MQTT_publish, 1229990812),
+    method_def(_mqtt__MQTT_subscribe, 1264968679),
+    method_def(_mqtt__MQTT_setDisconnectHandler, 1301513113),
+    method_def(_mqtt__MQTT_connect, 1400262095),
+    method_def(_mqtt__MQTT_setVersion, 1498633015),
+    method_def(_mqtt__MQTT_listSubscribeTopic, 1706966338),
+    method_def(_mqtt__MQTT_unsubscribe, 1956402186),
+    method_def(_mqtt__MQTT___del__, 2038499702),
+    method_def(_mqtt__MQTT_setClientID, 2142871709),
+};
+class_inhert(_mqtt__MQTT, TinyObj);
+
+PikaObj *New__mqtt__MQTT(Args *args){
+    PikaObj *self = New_TinyObj(args);
+    obj_setClass(self, _mqtt__MQTT);
+    return self;
+}
+
+Arg *_mqtt__MQTT(PikaObj *self){
+    return obj_newObjInPackage(New__mqtt__MQTT);
 }
 #endif
 

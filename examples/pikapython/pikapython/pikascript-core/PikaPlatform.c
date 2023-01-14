@@ -391,7 +391,7 @@ PIKA_WEAK void pika_platform_thread_destroy(pika_platform_thread_t* thread) {
 #elif PIKA_FREERTOS_ENABLE
     if (NULL != thread)
         vTaskDelete(thread->thread);
-    pika_platform_memory_free(thread);
+    pika_platform_free(thread);
 #else
     WEAK_FUNCTION_NEED_OVERRIDE_ERROR();
 #endif
