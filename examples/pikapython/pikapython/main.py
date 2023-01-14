@@ -3,4 +3,14 @@ import socket
 import random
 import mqtt
 import requests
+import PikaStdData
+import configparser
+import pika_cjson
+import PikaMath
+import unittest
+import re
+import binascii
+import modbus
+import time
+import pika_lvgl
 print('hello PikaPython!')

@@ -1,1 +1,10 @@
-requests==latest
+configparser==v0.2.1
+pika_cjson==v1.2.1
+PikaMath==v0.2.0
+unittest==latest
+re==v0.1.1
+binascii==v0.0.1
+modbus==v0.0.1
+pika_fatfs==v0.1.0
+time==v0.1.0
+pika_lvgl==v0.4.1

@@ -17,7 +17,16 @@ volatile PikaObj *__pikaMain;
 PikaObj *pikaScriptInit(void){
     __platform_printf("======[pikascript packages installed]======\r\n");
     pks_printVersion();
-    __platform_printf("requests==latest\r\n");
+    __platform_printf("PikaMath==v0.2.0\r\n");
+    __platform_printf("binascii==v0.0.1\r\n");
+    __platform_printf("configparser==v0.2.1\r\n");
+    __platform_printf("modbus==v0.0.1\r\n");
+    __platform_printf("pika_cjson==v1.2.1\r\n");
+    __platform_printf("pika_fatfs==v0.1.0\r\n");
+    __platform_printf("pika_lvgl==v0.4.1\r\n");
+    __platform_printf("re==v0.1.1\r\n");
+    __platform_printf("time==v0.1.0\r\n");
+    __platform_printf("unittest==latest\r\n");
     __platform_printf("===========================================\r\n");
     PikaObj* pikaMain = newRootObj("pikaMain", New_PikaMain);
     __pikaMain = pikaMain;
@@ -30,6 +39,16 @@ PikaObj *pikaScriptInit(void){
             "import random\n"
             "import mqtt\n"
             "import requests\n"
+            "import PikaStdData\n"
+            "import configparser\n"
+            "import pika_cjson\n"
+            "import PikaMath\n"
+            "import unittest\n"
+            "import re\n"
+            "import binascii\n"
+            "import modbus\n"
+            "import time\n"
+            "import pika_lvgl\n"
             "print('hello PikaPython!')\n"
             "\n");
 #else 

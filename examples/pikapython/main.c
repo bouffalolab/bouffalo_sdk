@@ -30,17 +30,25 @@ int pika_platform_putchar(char ch) {
     return 0;
 }
 
+static void consumer_task(void* pvParameters) {
+    uartx = bflb_device_get_by_name("uart0");
+    bflb_uart_feature_control(uartx, UART_CMD_SET_BAUD_RATE, 115200);
+    PikaObj* root = pikaScriptInit();
+    pikaScriptShell(root);
+    while (1) {
+    }
+}
+
 int main(void) {
     board_init();
     xHeapRegions[0].xSizeInBytes = configTOTAL_HEAP_SIZE;
     vPortDefineHeapRegions(xHeapRegions);
-
     printf("Heap size: %d", configTOTAL_HEAP_SIZE);
-    // lwip_init();
 
-    uartx = bflb_device_get_by_name("uart0");
-    bflb_uart_feature_control(uartx, UART_CMD_SET_BAUD_RATE, 115200);
+    xTaskCreate(consumer_task, (char*)"consumer_task", 512, NULL,
+                configMAX_PRIORITIES - 2, NULL);
+    vTaskStartScheduler();
 
-    PikaObj* root = pikaScriptInit();
-    pikaScriptShell(root);
+    while (1) {
+    }
 }
