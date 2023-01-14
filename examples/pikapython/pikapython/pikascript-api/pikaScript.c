@@ -25,6 +25,7 @@ PikaObj *pikaScriptInit(void){
     obj_linkLibrary(pikaMain, pikaModules_py_a);
 #if PIKA_INIT_STRING_ENABLE
     obj_run(pikaMain,
+            "import PikaStdLib\n"
             "print('hello PikaPython!')\n"
             "\n");
 #else 
