@@ -4,6 +4,7 @@
 #include "log.h"
 #include "pikaScript.h"
 #include <stdio.h>
+#include "lwip/init.h"
 
 struct bflb_device_s* uartx = NULL;
 
@@ -23,6 +24,7 @@ int pika_platform_putchar(char ch) {
 
 int main(void) {
     board_init();
+    // lwip_init();
 
     uartx = bflb_device_get_by_name("uart0");
     bflb_uart_feature_control(uartx, UART_CMD_SET_BAUD_RATE, 115200);

@@ -20,6 +20,7 @@
 #include "PikaStdLib_SysObj.h"
 #include "PikaStdLib.h"
 #include "_socket.h"
+#include "random.h"
 #include "PikaStdData.h"
 #include "TinyObj.h"
 #include "PikaStdData_ByteArray.h"
@@ -58,6 +59,8 @@
 #include "_socket.h"
 #include "TinyObj.h"
 #include "_socket_socket.h"
+#include "TinyObj.h"
+#include "random.h"
 #include "TinyObj.h"
 
 #ifndef PIKA_MODULE_PIKADEBUG_DISABLE
@@ -128,6 +131,7 @@ PikaObj *New_PikaMain(Args *args){
     PikaObj *self = New_PikaStdLib_SysObj(args);
     obj_newObj(self, "PikaStdLib", "PikaStdLib", New_PikaStdLib);
     obj_newObj(self, "_socket", "_socket", New__socket);
+    obj_newObj(self, "random", "random", New_random);
     obj_setClass(self, PikaMain);
     return self;
 }
@@ -2021,6 +2025,86 @@ PikaObj *New__socket_socket(Args *args){
 
 Arg *_socket_socket(PikaObj *self){
     return obj_newObjInPackage(New__socket_socket);
+}
+#endif
+
+#ifndef PIKA_MODULE_RANDOM_DISABLE
+void random___init__Method(PikaObj *self, Args *args){
+    random___init__(self);
+}
+method_typedef(
+    random___init__,
+    "__init__", ""
+);
+
+void random_randintMethod(PikaObj *self, Args *args){
+    int a = args_getInt(args, "a");
+    int b = args_getInt(args, "b");
+    int res = random_randint(self, a, b);
+    method_returnInt(args, res);
+}
+method_typedef(
+    random_randint,
+    "randint", "a,b"
+);
+
+void random_randomMethod(PikaObj *self, Args *args){
+    pika_float res = random_random(self);
+    method_returnFloat(args, res);
+}
+method_typedef(
+    random_random,
+    "random", ""
+);
+
+void random_randrangeMethod(PikaObj *self, Args *args){
+    int start = args_getInt(args, "start");
+    int stop = args_getInt(args, "stop");
+    int step = args_getInt(args, "step");
+    int res = random_randrange(self, start, stop, step);
+    method_returnInt(args, res);
+}
+method_typedef(
+    random_randrange,
+    "randrange", "start,stop,step"
+);
+
+void random_seedMethod(PikaObj *self, Args *args){
+    int a = args_getInt(args, "a");
+    PikaObj* res = random_seed(self, a);
+    method_returnObj(args, res);
+}
+method_typedef(
+    random_seed,
+    "seed", "a"
+);
+
+void random_uniformMethod(PikaObj *self, Args *args){
+    pika_float a = args_getFloat(args, "a");
+    pika_float b = args_getFloat(args, "b");
+    pika_float res = random_uniform(self, a, b);
+    method_returnFloat(args, res);
+}
+method_typedef(
+    random_uniform,
+    "uniform", "a,b"
+);
+
+class_def(random){
+    __BEFORE_MOETHOD_DEF
+    method_def(random_random, 417623846),
+    method_def(random_randint, 896678645),
+    method_def(random___init__, 904762485),
+    method_def(random_uniform, 979024293),
+    method_def(random_randrange, 1535671287),
+    method_def(random_seed, 2090719782),
+};
+class_inhert(random, TinyObj);
+
+PikaObj *New_random(Args *args){
+    PikaObj *self = New_TinyObj(args);
+    obj_setClass(self, random);
+    return self;
 }
 #endif
 

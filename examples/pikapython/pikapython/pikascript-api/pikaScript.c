@@ -17,8 +17,7 @@ volatile PikaObj *__pikaMain;
 PikaObj *pikaScriptInit(void){
     __platform_printf("======[pikascript packages installed]======\r\n");
     pks_printVersion();
-    __platform_printf("PikaStdLib==latest\r\n");
-    __platform_printf("socket==latest\r\n");
+    __platform_printf("random==latest\r\n");
     __platform_printf("===========================================\r\n");
     PikaObj* pikaMain = newRootObj("pikaMain", New_PikaMain);
     __pikaMain = pikaMain;
@@ -27,6 +26,8 @@ PikaObj *pikaScriptInit(void){
 #if PIKA_INIT_STRING_ENABLE
     obj_run(pikaMain,
             "import PikaStdLib\n"
+            "import socket\n"
+            "import random\n"
             "print('hello PikaPython!')\n"
             "\n");
 #else 
