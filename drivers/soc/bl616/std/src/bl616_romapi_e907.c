@@ -1448,8 +1448,8 @@ void HBN_Mode_Enter(HBN_APP_CFG_Type *cfg){
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void HBN_Power_Down_Flash(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_HBN_Power_Down_Flash(flashCfg);
+void HBN_Power_Down_Flash(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_HBN_Power_Down_Flash(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1567,12 +1567,12 @@ BL_Err_Type PDS_RAM_Config(PDS_CTRL_RAM1_Type *ram1Cfg, PDS_CTRL_RAM2_Type *ram2
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type PDS_Set_Flash_Pad_Pull_None(SF_Ctrl_Pin_Select pinCfg){
+BL_Err_Type PDS_Set_Flash_Pad_Pull_None(uint8_t pinCfg){
     return RomDriver_PDS_Set_Flash_Pad_Pull_None(pinCfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(SF_Ctrl_Pin_Select pinCfg){
+BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg){
     return RomDriver_PDS_Set_Flash_Pad_Pull_None_Fast(pinCfg);
 }
 
@@ -1647,510 +1647,510 @@ BL_Sts_Type PDS_Get_IntStatus(PDS_INT_Type intType){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SF_Cfg_Deinit_Ext_Flash_Gpio(uint8_t extFlashPin){
-    return RomDriver_SF_Cfg_Deinit_Ext_Flash_Gpio(extFlashPin);
+int bflb_sf_cfg_deinit_ext_flash_gpio(uint8_t ext_flash_pin){
+    return RomDriver_SF_Cfg_Deinit_Ext_Flash_Gpio(ext_flash_pin);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SF_Cfg_Flash_Init(SF_Ctrl_Pin_Select sel, const SF_Ctrl_Cfg_Type *pSfCtrlCfg, const SF_Ctrl_Bank2_Cfg *pBank2Cfg){
-    return RomDriver_SF_Cfg_Flash_Init(sel,pSfCtrlCfg,pBank2Cfg);
+int bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg, const struct sf_ctrl_bank2_cfg *p_bank2_cfg){
+    return RomDriver_SF_Cfg_Flash_Init(sel,p_sf_ctrl_cfg,p_bank2_cfg);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SF_Cfg_Get_Flash_Cfg_Need_Lock(uint32_t flashID, SPI_Flash_Cfg_Type *pFlashCfg){
-    return RomDriver_SF_Cfg_Get_Flash_Cfg_Need_Lock(flashID,pFlashCfg);
+int bflb_sf_cfg_get_flash_cfg_need_lock(uint32_t flash_id, spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SF_Cfg_Get_Flash_Cfg_Need_Lock(flash_id,flash_cfg);
 }
 #endif
 
 __ALWAYS_INLINE
-BL_Err_Type SF_Cfg_Init_Ext_Flash_Gpio(uint8_t extFlashPin){
-    return RomDriver_SF_Cfg_Init_Ext_Flash_Gpio(extFlashPin);
+int bflb_sf_cfg_init_ext_flash_gpio(uint8_t ext_flash_pin){
+    return RomDriver_SF_Cfg_Init_Ext_Flash_Gpio(ext_flash_pin);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SF_Cfg_Init_Flash2_Gpio(uint8_t swap){
+int bflb_sf_cfg_init_flash2_gpio(uint8_t swap){
     return RomDriver_SF_Cfg_Init_Flash2_Gpio(swap);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SF_Cfg_Init_Flash_Gpio(SF_Ctrl_Pin_Select flashPinCfg, uint8_t restoreDefault){
-    return RomDriver_SF_Cfg_Init_Flash_Gpio(flashPinCfg,restoreDefault);
+int bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t restore_default){
+    return RomDriver_SF_Cfg_Init_Flash_Gpio(flash_pin_cfg,restore_default);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SF_Cfg_Sbus2_Flash_Init(SF_Ctrl_Pin_Select sel, const SF_Ctrl_Bank2_Cfg *pBank2Cfg){
-    return RomDriver_SF_Cfg_Sbus2_Flash_Init(sel,pBank2Cfg);
+int bflb_sf_cfg_sbus2_flash_init(uint8_t sel, const struct sf_ctrl_bank2_cfg *p_bank2_cfg){
+    return RomDriver_SF_Cfg_Sbus2_Flash_Init(sel,p_bank2_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-uint32_t SF_Cfg_Flash_Identify(uint8_t callFromFlash, uint8_t flashPinCfg, uint8_t restoreDefault, SPI_Flash_Cfg_Type *pFlashCfg, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_SF_Cfg_Flash_Identify(callFromFlash,flashPinCfg,restoreDefault,pFlashCfg,group,bank);
+uint32_t bflb_sf_cfg_flash_identify(uint8_t call_from_flash, uint8_t flash_pin_cfg, uint8_t restore_default, spi_flash_cfg_type *flash_cfg, uint8_t group, uint8_t bank){
+    return RomDriver_SF_Cfg_Flash_Identify(call_from_flash,flash_pin_cfg,restore_default,flash_cfg,group,bank);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type SF_Ctrl_GetBusyState(void){
+uint8_t bflb_sf_ctrl_get_busy_state(void){
     return RomDriver_SF_Ctrl_GetBusyState();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type SF_Ctrl_Is_AES_Enable(void){
+uint8_t bflb_sf_ctrl_is_aes_enable(void){
     return RomDriver_SF_Ctrl_Is_AES_Enable();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type SF_Ctrl_Is_Sbus2_Enable(void){
+uint8_t bflb_sf_ctrl_is_sbus2_enable(void){
     return RomDriver_SF_Ctrl_Is_Sbus2_Enable();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-uint32_t SF_Ctrl_Get_Flash_Image_Offset(uint8_t group, SF_Ctrl_Bank_Select bank){
+uint32_t bflb_sf_ctrl_get_flash_image_offset(uint8_t group, uint8_t bank){
     return RomDriver_SF_Ctrl_Get_Flash_Image_Offset(group,bank);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-uint8_t SF_Ctrl_Get_Clock_Delay(void){
+uint8_t bflb_sf_ctrl_get_clock_delay(void){
     return RomDriver_SF_Ctrl_Get_Clock_Delay();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-uint8_t SF_Ctrl_Get_Wrap_Queue_Value(void){
+uint8_t bflb_sf_ctrl_get_wrap_queue_value(void){
     return RomDriver_SF_Ctrl_Get_Wrap_Queue_Value();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_32bits_Addr_En(BL_Fun_Type en32BitsAddr){
-    return RomDriver_SF_Ctrl_32bits_Addr_En(en32BitsAddr);
+void bflb_sf_ctrl_32bits_addr_en(BL_Fun_Type en_32bits_addr){
+    return RomDriver_SF_Ctrl_32bits_Addr_En(en_32bits_addr);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Disable(void){
+void bflb_sf_ctrl_aes_disable(void){
     return RomDriver_SF_Ctrl_AES_Disable();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Enable(void){
+void bflb_sf_ctrl_aes_enable(void){
     return RomDriver_SF_Ctrl_AES_Enable();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Enable_BE(void){
+void bflb_sf_ctrl_aes_enable_be(void){
     return RomDriver_SF_Ctrl_AES_Enable_BE();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Enable_LE(void){
+void bflb_sf_ctrl_aes_enable_le(void){
     return RomDriver_SF_Ctrl_AES_Enable_LE();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Set_IV(uint8_t region, uint8_t *iv, uint32_t addrOffset){
-    return RomDriver_SF_Ctrl_AES_Set_IV(region,iv,addrOffset);
+void bflb_sf_ctrl_aes_set_iv(uint8_t region, uint8_t *iv, uint32_t addr_offset){
+    return RomDriver_SF_Ctrl_AES_Set_IV(region,iv,addr_offset);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Set_IV_BE(uint8_t region, uint8_t *iv, uint32_t addrOffset){
-    return RomDriver_SF_Ctrl_AES_Set_IV_BE(region,iv,addrOffset);
+void bflb_sf_ctrl_aes_set_iv_be(uint8_t region, uint8_t *iv, uint32_t addr_offset){
+    return RomDriver_SF_Ctrl_AES_Set_IV_BE(region,iv,addr_offset);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Set_Key(uint8_t region, uint8_t *key, SF_Ctrl_AES_Key_Type keyType){
-    return RomDriver_SF_Ctrl_AES_Set_Key(region,key,keyType);
+void bflb_sf_ctrl_aes_set_key(uint8_t region, uint8_t *key, uint8_t key_type){
+    return RomDriver_SF_Ctrl_AES_Set_Key(region,key,key_type);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Set_Key_BE(uint8_t region, uint8_t *key, SF_Ctrl_AES_Key_Type keyType){
-    return RomDriver_SF_Ctrl_AES_Set_Key_BE(region,key,keyType);
+void bflb_sf_ctrl_aes_set_key_be(uint8_t region, uint8_t *key, uint8_t key_type){
+    return RomDriver_SF_Ctrl_AES_Set_Key_BE(region,key,key_type);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Set_Mode(SF_Ctrl_AES_Mode_Type mode){
+void bflb_sf_ctrl_aes_set_mode(uint8_t mode){
     return RomDriver_SF_Ctrl_AES_Set_Mode(mode);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_Set_Region(uint8_t region, uint8_t enable, uint8_t hwKey, uint32_t startAddr, uint32_t endAddr, uint8_t locked){
-    return RomDriver_SF_Ctrl_AES_Set_Region(region,enable,hwKey,startAddr,endAddr,locked);
+void bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable, uint8_t hwKey, uint32_t start_addr, uint32_t end_addr, uint8_t locked){
+    return RomDriver_SF_Ctrl_AES_Set_Region(region,enable,hwKey,start_addr,end_addr,locked);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_XTS_Set_IV(uint8_t region, uint8_t *iv, uint32_t addrOffset){
-    return RomDriver_SF_Ctrl_AES_XTS_Set_IV(region,iv,addrOffset);
+void bflb_sf_ctrl_aes_xts_set_iv(uint8_t region, uint8_t *iv, uint32_t addr_offset){
+    return RomDriver_SF_Ctrl_AES_XTS_Set_IV(region,iv,addr_offset);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_XTS_Set_IV_BE(uint8_t region, uint8_t *iv, uint32_t addrOffset){
-    return RomDriver_SF_Ctrl_AES_XTS_Set_IV_BE(region,iv,addrOffset);
+void bflb_sf_ctrl_aes_xts_set_iv_be(uint8_t region, uint8_t *iv, uint32_t addr_offset){
+    return RomDriver_SF_Ctrl_AES_XTS_Set_IV_BE(region,iv,addr_offset);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_XTS_Set_Key(uint8_t region, uint8_t *key, SF_Ctrl_AES_Key_Type keyType){
-    return RomDriver_SF_Ctrl_AES_XTS_Set_Key(region,key,keyType);
+void bflb_sf_ctrl_aes_xts_set_key(uint8_t region, uint8_t *key, uint8_t key_type){
+    return RomDriver_SF_Ctrl_AES_XTS_Set_Key(region,key,key_type);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_AES_XTS_Set_Key_BE(uint8_t region, uint8_t *key, SF_Ctrl_AES_Key_Type keyType){
-    return RomDriver_SF_Ctrl_AES_XTS_Set_Key_BE(region,key,keyType);
+void bflb_sf_ctrl_aes_xts_set_key_be(uint8_t region, uint8_t *key, uint8_t key_type){
+    return RomDriver_SF_Ctrl_AES_XTS_Set_Key_BE(region,key,key_type);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Bank2_Enable(const SF_Ctrl_Bank2_Cfg *bank2Cfg){
-    return RomDriver_SF_Ctrl_Bank2_Enable(bank2Cfg);
+void bflb_sf_ctrl_bank2_enable(const struct sf_ctrl_bank2_cfg *bank2_cfg){
+    return RomDriver_SF_Ctrl_Bank2_Enable(bank2_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Cmds_Set(SF_Ctrl_Cmds_Cfg *cmdsCfg, SF_Ctrl_Bank_Select bank){
-    return RomDriver_SF_Ctrl_Cmds_Set(cmdsCfg,bank);
+void bflb_sf_ctrl_cmds_set(struct sf_ctrl_cmds_cfg *cmds_cfg, uint8_t bank){
+    return RomDriver_SF_Ctrl_Cmds_Set(cmds_cfg,bank);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Disable(void){
+void bflb_sf_ctrl_disable(void){
     return RomDriver_SF_Ctrl_Disable();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Disable_Wrap_Access(uint8_t disable){
+void bflb_sf_ctrl_disable_wrap_access(uint8_t disable){
     return RomDriver_SF_Ctrl_Disable_Wrap_Access(disable);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Enable(const SF_Ctrl_Cfg_Type *cfg){
+void bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg){
     return RomDriver_SF_Ctrl_Enable(cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Flash2_Read_Icache_Set(SF_Ctrl_Cmd_Cfg_Type *cfg, uint8_t cmdValid){
-    return RomDriver_SF_Ctrl_Flash2_Read_Icache_Set(cfg,cmdValid);
+void bflb_sf_ctrl_xip2_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_valid){
+    return RomDriver_SF_Ctrl_Flash2_Read_Icache_Set(cfg,cmd_valid);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Flash_Read_Icache_Set(SF_Ctrl_Cmd_Cfg_Type *cfg, uint8_t cmdValid){
-    return RomDriver_SF_Ctrl_Flash_Read_Icache_Set(cfg,cmdValid);
+void bflb_sf_ctrl_xip_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_valid){
+    return RomDriver_SF_Ctrl_Flash_Read_Icache_Set(cfg,cmd_valid);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Lock_Flash_Image_Offset(uint8_t lock){
+void bflb_sf_ctrl_lock_flash_image_offset(uint8_t lock){
     return RomDriver_SF_Ctrl_Lock_Flash_Image_Offset(lock);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Remap_Set(SF_Ctrl_Remap_Type remap, uint8_t lock){
+void bflb_sf_ctrl_remap_set(uint8_t remap, uint8_t lock){
     return RomDriver_SF_Ctrl_Remap_Set(remap,lock);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Sbus2_Hold_Sram(void){
+void bflb_sf_ctrl_sbus2_hold_sram(void){
     return RomDriver_SF_Ctrl_Sbus2_Hold_Sram();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Sbus2_Release_Sram(void){
+void bflb_sf_ctrl_sbus2_release_sram(void){
     return RomDriver_SF_Ctrl_Sbus2_Release_Sram();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Sbus2_Replace(SF_Ctrl_Pad_Type pad){
+void bflb_sf_ctrl_sbus2_replace(uint8_t pad){
     return RomDriver_SF_Ctrl_Sbus2_Replace(pad);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Sbus2_Revoke_replace(void){
+void bflb_sf_ctrl_sbus2_revoke_replace(void){
     return RomDriver_SF_Ctrl_Sbus2_Revoke_replace();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Sbus2_Set_Delay(uint8_t clkDelay, uint8_t rxClkInvert){
-    return RomDriver_SF_Ctrl_Sbus2_Set_Delay(clkDelay,rxClkInvert);
+void bflb_sf_ctrl_sbus2_set_delay(uint8_t clk_delay, uint8_t rx_clk_invert){
+    return RomDriver_SF_Ctrl_Sbus2_Set_Delay(clk_delay,rx_clk_invert);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Sbus_Select_Bank(SF_Ctrl_Bank_Select bank){
+void bflb_sf_ctrl_sbus_select_bank(uint8_t bank){
     return RomDriver_SF_Ctrl_Sbus_Select_Bank(bank);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Select_Pad(SF_Ctrl_Pin_Select sel){
+void bflb_sf_ctrl_select_pad(uint8_t sel){
     return RomDriver_SF_Ctrl_Select_Pad(sel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_SendCmd(SF_Ctrl_Cmd_Cfg_Type *cfg){
+void bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg){
     return RomDriver_SF_Ctrl_SendCmd(cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Set_Clock_Delay(uint8_t delay){
+void bflb_sf_ctrl_set_clock_delay(uint8_t delay){
     return RomDriver_SF_Ctrl_Set_Clock_Delay(delay);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Set_Flash_Image_Offset(uint32_t addrOffset, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_SF_Ctrl_Set_Flash_Image_Offset(addrOffset,group,bank);
+void bflb_sf_ctrl_set_flash_image_offset(uint32_t addr_offset, uint8_t group, uint8_t bank){
+    return RomDriver_SF_Ctrl_Set_Flash_Image_Offset(addr_offset,group,bank);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Set_IO_Delay(SF_Ctrl_Pad_Type pad, uint8_t doDelay, uint8_t diDelay, uint8_t oeDelay){
-    return RomDriver_SF_Ctrl_Set_IO_Delay(pad,doDelay,diDelay,oeDelay);
+void bflb_sf_ctrl_set_io_delay(uint8_t pad, uint8_t do_delay, uint8_t di_delay, uint8_t oe_delay){
+    return RomDriver_SF_Ctrl_Set_IO_Delay(pad,do_delay,di_delay,oe_delay);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SF_Ctrl_Set_Owner(SF_Ctrl_Owner_Type owner){
+void bflb_sf_ctrl_set_owner(uint8_t owner){
     return RomDriver_SF_Ctrl_Set_Owner(owner);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Blk32_Erase(SPI_Flash_Cfg_Type *flashCfg, uint32_t blkNum){
-    return RomDriver_SFlash_Blk32_Erase(flashCfg,blkNum);
+int bflb_sflash_blk32_erase(spi_flash_cfg_type *flash_cfg, uint32_t blk_num){
+    return RomDriver_SFlash_Blk32_Erase(flash_cfg,blk_num);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Blk64_Erase(SPI_Flash_Cfg_Type *flashCfg, uint32_t blkNum){
-    return RomDriver_SFlash_Blk64_Erase(flashCfg,blkNum);
+int bflb_sflash_blk64_erase(spi_flash_cfg_type *flash_cfg, uint32_t blk_num){
+    return RomDriver_SFlash_Blk64_Erase(flash_cfg,blk_num);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Chip_Erase(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Chip_Erase(flashCfg);
+int bflb_sflash_chip_erase(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Chip_Erase(flash_cfg);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Erase(SPI_Flash_Cfg_Type *flashCfg, uint32_t startaddr, uint32_t endaddr){
-    return RomDriver_SFlash_Erase(flashCfg,startaddr,endaddr);
+int bflb_sflash_erase(spi_flash_cfg_type *flash_cfg, uint32_t start_addr, uint32_t end_addr){
+    return RomDriver_SFlash_Erase(flash_cfg,start_addr,end_addr);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Erase_Security_Register(SPI_Flash_Cfg_Type *pFlashCfg, SFlash_Sec_Reg_Cfg *pSecRegCfg){
-    return RomDriver_SFlash_Erase_Security_Register(pFlashCfg,pSecRegCfg);
+int bflb_sflash_erase_security_register(spi_flash_cfg_type *flash_cfg, struct sflash_sec_reg_cfg *p_sec_reg_cfg){
+    return RomDriver_SFlash_Erase_Security_Register(flash_cfg,p_sec_reg_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_IDbus_Read_Enable(SPI_Flash_Cfg_Type *flashCfg, SF_Ctrl_IO_Type ioMode, uint8_t contRead, SF_Ctrl_Bank_Select bank){
-    return RomDriver_SFlash_IDbus_Read_Enable(flashCfg,ioMode,contRead,bank);
+int bflb_sflash_idbus_read_enable(spi_flash_cfg_type *flash_cfg, uint8_t io_mode, uint8_t cont_read, uint8_t bank){
+    return RomDriver_SFlash_IDbus_Read_Enable(flash_cfg,io_mode,cont_read,bank);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Program(SPI_Flash_Cfg_Type *flashCfg, SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t *data, uint32_t len){
-    return RomDriver_SFlash_Program(flashCfg,ioMode,addr,data,len);
+int bflb_sflash_program(spi_flash_cfg_type *flash_cfg, uint8_t io_mode, uint32_t addr, uint8_t *data, uint32_t len){
+    return RomDriver_SFlash_Program(flash_cfg,io_mode,addr,data,len);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Program_Security_Register(SPI_Flash_Cfg_Type *pFlashCfg, SFlash_Sec_Reg_Cfg *pSecRegCfg){
-    return RomDriver_SFlash_Program_Security_Register(pFlashCfg,pSecRegCfg);
+int bflb_sflash_program_security_register(spi_flash_cfg_type *flash_cfg, struct sflash_sec_reg_cfg *p_sec_reg_cfg){
+    return RomDriver_SFlash_Program_Security_Register(flash_cfg,p_sec_reg_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Qspi_Disable(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Qspi_Disable(flashCfg);
+int bflb_sflash_qspi_disable(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Qspi_Disable(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Qspi_Enable(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Qspi_Enable(flashCfg);
+int bflb_sflash_qspi_enable(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Qspi_Enable(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_RCV_Enable(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t rCmd, uint8_t wCmd, uint8_t bitPos){
-    return RomDriver_SFlash_RCV_Enable(pFlashCfg,rCmd,wCmd,bitPos);
+int bflb_sflash_rcv_enable(spi_flash_cfg_type *flash_cfg, uint8_t r_cmd, uint8_t w_cmd, uint8_t bit_pos){
+    return RomDriver_SFlash_RCV_Enable(flash_cfg,r_cmd,w_cmd,bit_pos);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Read(SPI_Flash_Cfg_Type *flashCfg, SF_Ctrl_IO_Type ioMode, uint8_t contRead, uint32_t addr, uint8_t *data, uint32_t len){
-    return RomDriver_SFlash_Read(flashCfg,ioMode,contRead,addr,data,len);
+int bflb_sflash_read(spi_flash_cfg_type *flash_cfg, uint8_t io_mode, uint8_t cont_read, uint32_t addr, uint8_t *data, uint32_t len){
+    return RomDriver_SFlash_Read(flash_cfg,io_mode,cont_read,addr,data,len);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Read_Reg(SPI_Flash_Cfg_Type *flashCfg, uint8_t regIndex, uint8_t *regValue, uint8_t regLen){
-    return RomDriver_SFlash_Read_Reg(flashCfg,regIndex,regValue,regLen);
+int bflb_sflash_read_reg(spi_flash_cfg_type *flash_cfg, uint8_t reg_index, uint8_t *reg_value, uint8_t reg_len){
+    return RomDriver_SFlash_Read_Reg(flash_cfg,reg_index,reg_value,reg_len);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Read_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t readRegCmd, uint8_t *regValue, uint8_t regLen){
-    return RomDriver_SFlash_Read_Reg_With_Cmd(flashCfg,readRegCmd,regValue,regLen);
+int bflb_sflash_read_reg_with_cmd(spi_flash_cfg_type *flash_cfg, uint8_t read_reg_cmd, uint8_t *reg_value, uint8_t reg_len){
+    return RomDriver_SFlash_Read_Reg_With_Cmd(flash_cfg,read_reg_cmd,reg_value,reg_len);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Read_Security_Register(SFlash_Sec_Reg_Cfg *pSecRegCfg){
-    return RomDriver_SFlash_Read_Security_Register(pSecRegCfg);
+int bflb_sflash_read_security_register(struct sflash_sec_reg_cfg *p_sec_reg_cfg){
+    return RomDriver_SFlash_Read_Security_Register(p_sec_reg_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Restore_From_Powerdown(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t flashContRead, SF_Ctrl_Bank_Select bank){
-    return RomDriver_SFlash_Restore_From_Powerdown(pFlashCfg,flashContRead,bank);
+int bflb_sflash_restore_from_powerdown(spi_flash_cfg_type *flash_cfg, uint8_t flash_cont_read, uint8_t bank){
+    return RomDriver_SFlash_Restore_From_Powerdown(flash_cfg,flash_cont_read,bank);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Sector_Erase(SPI_Flash_Cfg_Type *flashCfg, uint32_t secNum){
-    return RomDriver_SFlash_Sector_Erase(flashCfg,secNum);
+int bflb_sflash_sector_erase(spi_flash_cfg_type *flash_cfg, uint32_t sec_num){
+    return RomDriver_SFlash_Sector_Erase(flash_cfg,sec_num);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Set32BitsAddrMode(SPI_Flash_Cfg_Type *flashCfg, BL_Fun_Type en32BitsAddr){
-    return RomDriver_SFlash_Set32BitsAddrMode(flashCfg,en32BitsAddr);
+int bflb_sflash_set_32bits_addr_mode(spi_flash_cfg_type *flash_cfg, BL_Fun_Type en_32bits_addr){
+    return RomDriver_SFlash_Set32BitsAddrMode(flash_cfg,en_32bits_addr);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_SetSPIMode(SF_Ctrl_Mode_Type mode){
+int bflb_sflash_set_spi_mode(uint8_t mode){
     return RomDriver_SFlash_SetSPIMode(mode);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Set_IDbus_Cfg(SPI_Flash_Cfg_Type *flashCfg, SF_Ctrl_IO_Type ioMode, uint8_t contRead, uint32_t addr, uint32_t len, SF_Ctrl_Bank_Select bank){
-    return RomDriver_SFlash_Set_IDbus_Cfg(flashCfg,ioMode,contRead,addr,len,bank);
+int bflb_sflash_set_xip_cfg(spi_flash_cfg_type *flash_cfg, uint8_t io_mode, uint8_t cont_read, uint32_t addr, uint32_t len, uint8_t bank){
+    return RomDriver_SFlash_Set_IDbus_Cfg(flash_cfg,io_mode,cont_read,addr,len,bank);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Software_Reset(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Software_Reset(flashCfg);
+int bflb_sflash_software_reset(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Software_Reset(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Write_Enable(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Write_Enable(flashCfg);
+int bflb_sflash_write_enable(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Write_Enable(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Write_Reg(SPI_Flash_Cfg_Type *flashCfg, uint8_t regIndex, uint8_t *regValue, uint8_t regLen){
-    return RomDriver_SFlash_Write_Reg(flashCfg,regIndex,regValue,regLen);
+int bflb_sflash_write_reg(spi_flash_cfg_type *flash_cfg, uint8_t reg_index, uint8_t *reg_value, uint8_t reg_len){
+    return RomDriver_SFlash_Write_Reg(flash_cfg,reg_index,reg_value,reg_len);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type SFlash_Write_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t writeRegCmd, uint8_t *regValue, uint8_t regLen){
-    return RomDriver_SFlash_Write_Reg_With_Cmd(flashCfg,writeRegCmd,regValue,regLen);
+int bflb_sflash_write_reg_with_cmd(spi_flash_cfg_type *flash_cfg, uint8_t write_reg_cmd, uint8_t *reg_value, uint8_t reg_len){
+    return RomDriver_SFlash_Write_Reg_With_Cmd(flash_cfg,write_reg_cmd,reg_value,reg_len);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type SFlash_Busy(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Busy(flashCfg);
+int bflb_sflash_busy(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Busy(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_DisableBurstWrap(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_DisableBurstWrap(flashCfg);
+void bflb_sflash_disable_burst_wrap(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_DisableBurstWrap(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_GetDeviceId(uint8_t *data, BL_Fun_Type is32BitsAddr){
-    return RomDriver_SFlash_GetDeviceId(data,is32BitsAddr);
+void bflb_sflash_get_deviceid(uint8_t *data, uint8_t is_32bits_addr){
+    return RomDriver_SFlash_GetDeviceId(data,is_32bits_addr);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_GetJedecId(SPI_Flash_Cfg_Type *flashCfg, uint8_t *data){
-    return RomDriver_SFlash_GetJedecId(flashCfg,data);
+void bflb_sflash_get_jedecid(spi_flash_cfg_type *flash_cfg, uint8_t *data){
+    return RomDriver_SFlash_GetJedecId(flash_cfg,data);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_GetUniqueId(uint8_t *data, uint8_t idLen){
-    return RomDriver_SFlash_GetUniqueId(data,idLen);
+void bflb_sflash_get_uniqueid(uint8_t *data, uint8_t id_len){
+    return RomDriver_SFlash_GetUniqueId(data,id_len);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_IDbus_Read_Disable(void){
+void bflb_sflash_idbus_read_disable(void){
     return RomDriver_SFlash_IDbus_Read_Disable();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_Init(const SF_Ctrl_Cfg_Type *pSfCtrlCfg, const SF_Ctrl_Bank2_Cfg *pBank2Cfg){
-    return RomDriver_SFlash_Init(pSfCtrlCfg,pBank2Cfg);
+void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg, const struct sf_ctrl_bank2_cfg *p_bank2_cfg){
+    return RomDriver_SFlash_Init(p_sf_ctrl_cfg,p_bank2_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_Powerdown(void){
+void bflb_sflash_powerdown(void){
     return RomDriver_SFlash_Powerdown();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_Release_Powerdown(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Release_Powerdown(flashCfg);
+void bflb_sflash_release_powerdown(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Release_Powerdown(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_Reset_Continue_Read(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Reset_Continue_Read(flashCfg);
+void bflb_sflash_reset_continue_read(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Reset_Continue_Read(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_SetBurstWrap(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_SetBurstWrap(flashCfg);
+void bflb_sflash_set_burst_wrap(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_SetBurstWrap(flash_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void SFlash_Volatile_Reg_Write_Enable(SPI_Flash_Cfg_Type *flashCfg){
-    return RomDriver_SFlash_Volatile_Reg_Write_Enable(flashCfg);
+void bflb_sflash_volatile_reg_write_enable(spi_flash_cfg_type *flash_cfg){
+    return RomDriver_SFlash_Volatile_Reg_Write_Enable(flash_cfg);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_Erase_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t startaddr, int len, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_XIP_SFlash_Erase_Need_Lock(pFlashCfg,startaddr,len,group,bank);
+int bflb_xip_sflash_erase_need_lock(spi_flash_cfg_type *flash_cfg, uint32_t start_addr, int len, uint8_t group, uint8_t bank){
+    return RomDriver_XIP_SFlash_Erase_Need_Lock(flash_cfg,start_addr,len,group,bank);
 }
 #endif
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_GetDeviceId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, BL_Fun_Type is32BitsAddr, uint8_t *data, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_XIP_SFlash_GetDeviceId_Need_Lock(pFlashCfg,is32BitsAddr,data,group,bank);
+int bflb_xip_sflash_getdeviceid_need_lock(spi_flash_cfg_type *flash_cfg, BL_Fun_Type is_32bits_addr, uint8_t *data, uint8_t group, uint8_t bank){
+    return RomDriver_XIP_SFlash_GetDeviceId_Need_Lock(flash_cfg,is_32bits_addr,data,group,bank);
 }
 #endif
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_GetJedecId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_XIP_SFlash_GetJedecId_Need_Lock(pFlashCfg,data,group,bank);
+int bflb_xip_sflash_getjedecid_need_lock(spi_flash_cfg_type *flash_cfg, uint8_t *data, uint8_t group, uint8_t bank){
+    return RomDriver_XIP_SFlash_GetJedecId_Need_Lock(flash_cfg,data,group,bank);
 }
 #endif
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_GetUniqueId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data, uint8_t idLen, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_XIP_SFlash_GetUniqueId_Need_Lock(pFlashCfg,data,idLen,group,bank);
+int bflb_xip_sflash_getuniqueid_need_lock(spi_flash_cfg_type *flash_cfg, uint8_t *data, uint8_t id_len, uint8_t group, uint8_t bank){
+    return RomDriver_XIP_SFlash_GetUniqueId_Need_Lock(flash_cfg,data,id_len,group,bank);
 }
 #endif
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_Read_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *data, uint32_t len, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_XIP_SFlash_Read_Need_Lock(pFlashCfg,addr,data,len,group,bank);
+int bflb_xip_sflash_read_need_lock(spi_flash_cfg_type *flash_cfg, uint32_t addr, uint8_t *data, uint32_t len, uint8_t group, uint8_t bank){
+    return RomDriver_XIP_SFlash_Read_Need_Lock(flash_cfg,addr,data,len,group,bank);
 }
 #endif
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, uint8_t *data, uint32_t len){
+int bflb_xip_sflash_read_via_cache_need_lock(uint32_t addr, uint8_t *data, uint32_t len){
     return RomDriver_XIP_SFlash_Read_Via_Cache_Need_Lock(addr,data,len);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_State_Restore(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t offset, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_XIP_SFlash_State_Restore(pFlashCfg,offset,group,bank);
+int bflb_xip_sflash_state_restore(spi_flash_cfg_type *flash_cfg, uint32_t offset, uint8_t group, uint8_t bank){
+    return RomDriver_XIP_SFlash_State_Restore(flash_cfg,offset,group,bank);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_State_Save(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t *offset, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_XIP_SFlash_State_Save(pFlashCfg,offset,group,bank);
+int bflb_xip_sflash_state_save(spi_flash_cfg_type *flash_cfg, uint32_t *offset, uint8_t group, uint8_t bank){
+    return RomDriver_XIP_SFlash_State_Save(flash_cfg,offset,group,bank);
 }
 #endif
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type XIP_SFlash_Write_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *data, uint32_t len, uint8_t group, SF_Ctrl_Bank_Select bank){
-    return RomDriver_XIP_SFlash_Write_Need_Lock(pFlashCfg,addr,data,len,group,bank);
+int bflb_xip_sflash_write_need_lock(spi_flash_cfg_type *flash_cfg, uint32_t addr, uint8_t *data, uint32_t len, uint8_t group, uint8_t bank){
+    return RomDriver_XIP_SFlash_Write_Need_Lock(flash_cfg,addr,data,len,group,bank);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void XIP_SFlash_Opt_Enter(uint8_t *aesEnable){
-    return RomDriver_XIP_SFlash_Opt_Enter(aesEnable);
+void bflb_xip_sflash_opt_enter(uint8_t *aes_enable){
+    return RomDriver_XIP_SFlash_Opt_Enter(aes_enable);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void XIP_SFlash_Opt_Exit(uint8_t aesEnable){
-    return RomDriver_XIP_SFlash_Opt_Exit(aesEnable);
+void bflb_xip_sflash_opt_exit(uint8_t aes_enable){
+    return RomDriver_XIP_SFlash_Opt_Exit(aes_enable);
 }
 
 #if 0

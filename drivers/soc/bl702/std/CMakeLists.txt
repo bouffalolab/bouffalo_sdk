@@ -19,18 +19,11 @@ sdk_library_add_sources(src/bl702_hbn.c)
 sdk_library_add_sources(src/bl702_l1c.c)
 sdk_library_add_sources(src/bl702_pds.c)
 
-sdk_library_add_sources(src/bl702_sf_cfg.c)
-sdk_library_add_sources(src/bl702_sf_cfg_ext.c)
-sdk_library_add_sources(src/bl702_sf_ctrl.c)
-sdk_library_add_sources(src/bl702_sflash.c)
 sdk_library_add_sources(src/bl702_sflash_ext.c)
-sdk_library_add_sources(src/bl702_xip_sflash.c)
 sdk_library_add_sources(src/bl702_xip_sflash_ext.c)
-
-sdk_library_add_sources(src/bl702_psram.c)
+sdk_library_add_sources(src/bl702_sf_cfg_ext.c)
 
 sdk_library_add_sources(port/bl702_clock.c)
-sdk_library_add_sources(port/bl702_flash.c)
 
 sdk_add_include_directories(
 include

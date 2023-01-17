@@ -6,8 +6,12 @@ endif
 
 ifeq ($(OS),Windows_NT)
 CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
+BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
+cmake_generator = "MinGW Makefiles"
 else
 CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand
+cmake_generator = "Unix Makefiles"
 endif
 
 # The command to remove a file.
@@ -17,6 +21,9 @@ CPU_ID ?=
 CONFIG_USB_HS ?=y
 CONFIG_ROMAPI ?=y
 CONFIG_DEBUG ?=y
+CONFIG_TLSF ?=y
+COMX ?=COM5
+BAUDRATE ?=2000000
 BOARD_DIR ?=
 
 #cmake definition config
@@ -28,11 +35,13 @@ cmake_definition+= -DBOARD_DIR=$(BOARD_DIR)
 cmake_definition+= -DCONFIG_DEBUG=$(CONFIG_DEBUG)
 cmake_definition+= -DCONFIG_ROMAPI=$(CONFIG_ROMAPI)
 cmake_definition+= -DCONFIG_USB_HS=$(CONFIG_USB_HS)
+cmake_definition+= -DCONFIG_COMX=$(COMX)
 cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF
+cmake_definition+= -DCONFIG_TLSF=$(CONFIG_TLSF)
 
 build:Makefile
-	$(CMAKE) -S . -B build -G "Unix Makefiles" $(cmake_definition)
-	cd build && make -j4
+	$(CMAKE) -S . -B build -G $(cmake_generator) $(cmake_definition)
+	cd build && make -j8
 
 ninja:Makefile
 	$(CMAKE) -S . -B build -G Ninja $(cmake_definition)
@@ -42,7 +51,18 @@ clean:
 	$(RM) build
 
 menuconfig:
-	python ../../tools/kconfig/menuconfig.py
+	python $(BL_SDK_BASE)/tools/kconfig/menuconfig.py
+
+flash:
+	@echo "Support in next version, please use devcube now"
+
+efuse:
+	$(BL_FLASH_PROGRAM) \
+	--interface=uart \
+	--baudrate=$(BAUDRATE) \
+	--port=$(COMX) \
+	--chipname=$(CHIP) \
+	--efuse=build/build_out/efusedata.bin
 
 .PHONY:build clean menuconfig ninja
 

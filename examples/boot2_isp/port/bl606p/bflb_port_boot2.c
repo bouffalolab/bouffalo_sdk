@@ -5,7 +5,6 @@
 #include "bl606p_hbn.h"
 #include "bl606p_glb.h"
 #include "bl606p_pds.h"
-#include "bl606p_xip_sflash.h"
 #include "bl606p_tzc_sec.h"
 #include "bflb_gpio.h"
 #include "softcrc.h"
@@ -195,7 +194,7 @@ static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num)
 
     LOG_F("r ef:0x%08lx\r\n", g_efuse_cfg.psram_dqs_cfg);
     before_ef = g_efuse_cfg.psram_dqs_cfg;
-    if ((g_efuse_cfg.psram_dqs_cfg & (0x1000)) && (g_efuse_cfg.psram_dqs_cfg != 0xffff)) {
+    if (g_efuse_cfg.psram_dqs_cfg != 0xffff) {
         left_flag = ((g_efuse_cfg.psram_dqs_cfg & (0xf0)) >> 0x4);
         right_flag = (g_efuse_cfg.psram_dqs_cfg & (0xf));
         c_val = ((left_flag + right_flag) >> 0x1);
@@ -225,11 +224,7 @@ static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num)
         c_val = ((left_flag + right_flag) >> 1);
 
         g_efuse_cfg.psram_dqs_cfg = (((left_flag << 0x4) | (right_flag)) & (0xff));
-        if (bflb_ef_ctrl_get_trim_parity(g_efuse_cfg.psram_dqs_cfg, 11)) {
-            g_efuse_cfg.psram_dqs_cfg = ((0x1800) | (g_efuse_cfg.psram_dqs_cfg));
-        } else {
-            g_efuse_cfg.psram_dqs_cfg = ((0x1000) | (g_efuse_cfg.psram_dqs_cfg));
-        }
+        
         LOG_F("c ef:0x%08lx\r\n", g_efuse_cfg.psram_dqs_cfg);
         *psram_dqs_win_num = right_flag - left_flag;
         if (((*psram_dqs_win_num) <= 4) || ((*psram_dqs_win_num) > 0xf)) {
@@ -364,11 +359,11 @@ uint32_t hal_boot2_custom(void *custom_param)
         ret = hal_boot2_x8_psram_calibration(&psram_dqs_win_num);
         if (ret == ERROR) {
             while (1) {
-                printf("psram:%d\r\n", (int)psram_dqs_win_num);
+                LOG_F("psram:%d\r\n", (int)psram_dqs_win_num);
                 arch_delay_ms(500);
             }
         }
-        printf("psram:%d \r\n", (int)psram_dqs_win_num);
+        LOG_F("psram:%d \r\n", (int)psram_dqs_win_num);
 
         /* Flush i-cache in case branch prediction logic is wrong when
        psram is not inited by hal_boot2_custom but cpu has already prefetch psram */
@@ -449,7 +444,7 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
     }
 
     /* get device info */
-    //EF_Ctrl_Get_Chip_Info((Efuse_Chip_Info_Type *)&efuse_cfg->dev_info);
+    bflb_ef_ctrl_get_device_info((bflb_efuse_device_info_type *)&efuse_cfg->dev_info);
 
     /* get chip id */
     bflb_efuse_get_chipid(efuse_cfg->chip_id);
@@ -858,7 +853,7 @@ void ATTR_TCM_SECTION hal_boot2_release_cpu(uint32_t core, uint32_t boot_addr)
 *******************************************************************************/
 uint32_t hal_boot2_get_xip_addr(uint32_t flash_addr)
 {
-    uint32_t img_offset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
+    uint32_t img_offset = bflb_sf_ctrl_get_flash_image_offset(0, SF_CTRL_FLASH_BANK0);
     if (flash_addr >= img_offset) {
         return BL606P_FLASH_XIP_BASE + (flash_addr - img_offset);
     } else {

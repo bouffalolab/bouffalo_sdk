@@ -34,8 +34,8 @@
   ******************************************************************************
   */
 
+#include "bflb_sf_ctrl.h"
 #include "bl702_sflash_ext.h"
-#include "bl702_sf_ctrl.h"
 #include "l1c_reg.h"
 
 /** @addtogroup  BL702_Peripheral_Driver
@@ -89,182 +89,182 @@
 /****************************************************************************/ /**
  * @brief  KH25V40 flash write protect set
  *
- * @param  flashCfg: Serial flash parameter configuration pointer
+ * @param  flash_cfg: Serial flash parameter configuration pointer
  * @param  protect: protect area
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION SFlash_KH25V40_Write_Protect(SPI_Flash_Cfg_Type *flashCfg, SFlash_Protect_Kh25v40_Type protect)
+int ATTR_TCM_SECTION bflb_sflash_kh25v40_write_protect(spi_flash_cfg_type *flash_cfg, uint8_t protect)
 {
     uint32_t stat = 0, ret;
 
-    SFlash_Read_Reg(flashCfg, 0, (uint8_t *)&stat, 1);
+    bflb_sflash_read_reg(flash_cfg, 0, (uint8_t *)&stat, 1);
     if (((stat >> 2) & 0xf) == protect) {
-        return SUCCESS;
+        return 0;
     }
 
     stat |= ((protect << 2) & 0xff);
 
-    ret = SFlash_Write_Enable(flashCfg);
-    if (SUCCESS != ret) {
-        return ERROR;
+    ret = bflb_sflash_write_enable(flash_cfg);
+    if (0 != ret) {
+        return -1;
     }
 
-    SFlash_Write_Reg(flashCfg, 0, (uint8_t *)&stat, 1);
-    SFlash_Read_Reg(flashCfg, 0, (uint8_t *)&stat, 1);
+    bflb_sflash_write_reg(flash_cfg, 0, (uint8_t *)&stat, 1);
+    bflb_sflash_read_reg(flash_cfg, 0, (uint8_t *)&stat, 1);
     if (((stat >> 2) & 0xf) == protect) {
-        return SUCCESS;
+        return 0;
     }
 
-    return ERROR;
+    return -1;
 }
 
 /****************************************************************************/ /**
  * @brief  Read flash register with read command
  *
- * @param  flashCfg: Serial flash parameter configuration pointer
- * @param  readRegCmd: read command
- * @param  regValue: register value pointer to store data
- * @param  regLen: register value length
+ * @param  flash_cfg: Serial flash parameter configuration pointer
+ * @param  read_reg_cmd: read command
+ * @param  reg_value: register value pointer to store data
+ * @param  reg_len: register value length
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION SFlash_Read_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t readRegCmd, uint8_t *regValue, uint8_t regLen)
+int ATTR_TCM_SECTION bflb_sflash_read_reg_with_cmd(spi_flash_cfg_type *flash_cfg, uint8_t read_reg_cmd, uint8_t *reg_value, uint8_t reg_len)
 {
-    uint8_t *const flashCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
-    SF_Ctrl_Cmd_Cfg_Type flashCmd;
+    uint8_t *const flash_ctrl_buf = (uint8_t *)SF_CTRL_BUF_BASE;
+    struct sf_ctrl_cmd_cfg_type flash_cmd;
     uint32_t cnt = 0;
 
-    if (((uint32_t)&flashCmd) % 4 == 0) {
-        BL702_MemSet4((uint32_t *)&flashCmd, 0, sizeof(flashCmd) / 4);
+    if (((uint32_t)&flash_cmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&flash_cmd, 0, sizeof(flash_cmd) / 4);
     } else {
-        BL702_MemSet(&flashCmd, 0, sizeof(flashCmd));
+        BL702_MemSet(&flash_cmd, 0, sizeof(flash_cmd));
     }
 
-    flashCmd.cmdBuf[0] = readRegCmd << 24;
-    flashCmd.rwFlag = SF_CTRL_READ;
-    flashCmd.nbData = regLen;
+    flash_cmd.cmd_buf[0] = read_reg_cmd << 24;
+    flash_cmd.rw_flag = SF_CTRL_READ;
+    flash_cmd.nb_data = reg_len;
 
-    SF_Ctrl_SendCmd(&flashCmd);
+    bflb_sf_ctrl_sendcmd(&flash_cmd);
 
-    while (SET == SF_Ctrl_GetBusyState()) {
+    while (SET == bflb_sf_ctrl_get_busy_state()) {
         BL702_Delay_US(1);
         cnt++;
 
         if (cnt > 1000) {
-            return ERROR;
+            return -1;
         }
     }
 
-    BL702_MemCpy(regValue, flashCtrlBuf, regLen);
-    return SUCCESS;
+    BL702_MemCpy(reg_value, flash_ctrl_buf, reg_len);
+    return 0;
 }
 
 /****************************************************************************/ /**
  * @brief  Write flash register with write command
  *
- * @param  flashCfg: Serial flash parameter configuration pointer
- * @param  writeRegCmd: write command
- * @param  regValue: register value pointer storing data
- * @param  regLen: register value length
+ * @param  flash_cfg: Serial flash parameter configuration pointer
+ * @param  read_reg_cmd: write command
+ * @param  reg_value: register value pointer storing data
+ * @param  reg_len: register value length
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION SFlash_Write_Reg_With_Cmd(SPI_Flash_Cfg_Type *flashCfg, uint8_t writeRegCmd, uint8_t *regValue, uint8_t regLen)
+int ATTR_TCM_SECTION bflb_sflash_write_reg_with_cmd(spi_flash_cfg_type *flash_cfg, uint8_t read_reg_cmd, uint8_t *reg_value, uint8_t reg_len)
 {
-    uint8_t *const flashCtrlBuf = (uint8_t *)SF_CTRL_BUF_BASE;
+    uint8_t *const flash_ctrl_buf = (uint8_t *)SF_CTRL_BUF_BASE;
     uint32_t cnt = 0;
-    SF_Ctrl_Cmd_Cfg_Type flashCmd;
+    struct sf_ctrl_cmd_cfg_type flash_cmd;
 
-    if (((uint32_t)&flashCmd) % 4 == 0) {
-        BL702_MemSet4((uint32_t *)&flashCmd, 0, sizeof(flashCmd) / 4);
+    if (((uint32_t)&flash_cmd) % 4 == 0) {
+        BL702_MemSet4((uint32_t *)&flash_cmd, 0, sizeof(flash_cmd) / 4);
     } else {
-        BL702_MemSet(&flashCmd, 0, sizeof(flashCmd));
+        BL702_MemSet(&flash_cmd, 0, sizeof(flash_cmd));
     }
 
-    BL702_MemCpy(flashCtrlBuf, regValue, regLen);
+    BL702_MemCpy(flash_ctrl_buf, reg_value, reg_len);
 
-    flashCmd.cmdBuf[0] = writeRegCmd << 24;
-    flashCmd.rwFlag = SF_CTRL_WRITE;
-    flashCmd.nbData = regLen;
+    flash_cmd.cmd_buf[0] = read_reg_cmd << 24;
+    flash_cmd.rw_flag = SF_CTRL_WRITE;
+    flash_cmd.nb_data = reg_len;
 
-    SF_Ctrl_SendCmd(&flashCmd);
+    bflb_sf_ctrl_sendcmd(&flash_cmd);
 
     /* take 40ms for tw(write status register) as default */
-    while (SET == SFlash_Busy(flashCfg)) {
+    while (SET == bflb_sflash_busy(flash_cfg)) {
         BL702_Delay_US(100);
         cnt++;
 
         if (cnt > 400) {
-            return ERROR;
+            return -1;
         }
     }
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************//**
  * @brief  Clear flash status register
  *
- * @param  pFlashCfg: Flash configuration pointer
+ * @param  p_flash_cfg: Flash configuration pointer
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION SFlash_Clear_Status_Register(SPI_Flash_Cfg_Type *pFlashCfg)
+int ATTR_TCM_SECTION bflb_sflash_clear_status_register(spi_flash_cfg_type *p_flash_cfg)
 {
     uint32_t ret = 0;
-    uint32_t qeValue = 0;
-    uint32_t regValue = 0;
-    uint32_t readValue = 0;
-    uint8_t readRegValue0 = 0;
-    uint8_t readRegValue1 = 0;
+    uint32_t qe_value = 0;
+    uint32_t reg_value = 0;
+    uint32_t read_value = 0;
+    uint8_t readreg_value0 = 0;
+    uint8_t readreg_value1 = 0;
 
-    if((pFlashCfg->ioMode&0xf)==SF_CTRL_QO_MODE || (pFlashCfg->ioMode&0xf)==SF_CTRL_QIO_MODE){
-        qeValue = 1;
+    if((p_flash_cfg->io_mode&0xf)==SF_CTRL_QO_MODE || (p_flash_cfg->io_mode&0xf)==SF_CTRL_QIO_MODE){
+        qe_value = 1;
     }
 
-    SFlash_Read_Reg(pFlashCfg, 0, (uint8_t *)&readRegValue0, 1);
-    SFlash_Read_Reg(pFlashCfg, 1, (uint8_t *)&readRegValue1, 1);
-    readValue = (readRegValue0|(readRegValue1<<8));
-    if ((readValue & (~((1<<(pFlashCfg->qeIndex*8+pFlashCfg->qeBit)) |
-                        (1<<(pFlashCfg->busyIndex*8+pFlashCfg->busyBit)) |
-                        (1<<(pFlashCfg->wrEnableIndex*8+pFlashCfg->wrEnableBit))))) == 0){
-        return SUCCESS;
+    bflb_sflash_read_reg(p_flash_cfg, 0, (uint8_t *)&readreg_value0, 1);
+    bflb_sflash_read_reg(p_flash_cfg, 1, (uint8_t *)&readreg_value1, 1);
+    read_value = (readreg_value0|(readreg_value1<<8));
+    if ((read_value & (~((1<<(p_flash_cfg->qe_index*8+p_flash_cfg->qe_bit)) |
+                        (1<<(p_flash_cfg->busy_index*8+p_flash_cfg->busy_bit)) |
+                        (1<<(p_flash_cfg->wr_enable_index*8+p_flash_cfg->wr_enable_bit))))) == 0){
+        return 0;
     }
 
-    ret = SFlash_Write_Enable(pFlashCfg);
-    if (SUCCESS != ret) {
-        return ERROR;
+    ret = bflb_sflash_write_enable(p_flash_cfg);
+    if (0 != ret) {
+        return -1;
     }
-    if (pFlashCfg->qeWriteRegLen == 2) {
-        regValue = (qeValue<<(pFlashCfg->qeIndex*8+pFlashCfg->qeBit));
-        SFlash_Write_Reg(pFlashCfg, 0, (uint8_t *)&regValue, 2);
+    if (p_flash_cfg->qe_write_reg_len == 2) {
+        reg_value = (qe_value<<(p_flash_cfg->qe_index*8+p_flash_cfg->qe_bit));
+        bflb_sflash_write_reg(p_flash_cfg, 0, (uint8_t *)&reg_value, 2);
     } else {
-        if (pFlashCfg->qeIndex == 0) {
-            regValue = (qeValue<<pFlashCfg->qeBit);
+        if (p_flash_cfg->qe_index == 0) {
+            reg_value = (qe_value<<p_flash_cfg->qe_bit);
         } else {
-            regValue = 0;
+            reg_value = 0;
         }
-        SFlash_Write_Reg(pFlashCfg, 0, (uint8_t *)&regValue, 1);
-        ret = SFlash_Write_Enable(pFlashCfg);
-        if (SUCCESS != ret) {
-            return ERROR;
+        bflb_sflash_write_reg(p_flash_cfg, 0, (uint8_t *)&reg_value, 1);
+        ret = bflb_sflash_write_enable(p_flash_cfg);
+        if (0 != ret) {
+            return -1;
         }
-        if (pFlashCfg->qeIndex == 1) {
-            regValue = (qeValue<<pFlashCfg->qeBit);
+        if (p_flash_cfg->qe_index == 1) {
+            reg_value = (qe_value<<p_flash_cfg->qe_bit);
         } else {
-            regValue = 0;
+            reg_value = 0;
         }
-        SFlash_Write_Reg(pFlashCfg, 1, (uint8_t *)&regValue, 1);
+        bflb_sflash_write_reg(p_flash_cfg, 1, (uint8_t *)&reg_value, 1);
     }
-    return SUCCESS;
+    return 0;
 }
 
 /*@} end of group SFLASH_EXT_Public_Functions */

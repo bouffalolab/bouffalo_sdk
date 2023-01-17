@@ -41,11 +41,11 @@
 #include "bl602_gpio.h"
 #include "bl602_l1c.h"
 #include "bl602_hbn.h"
-#include "bl602_sf_ctrl.h"
-#include "bl602_sf_cfg.h"
 #include "bl602_aon.h"
 #include "bl602_pds.h"
 #include "bl602_common.h"
+#include "bflb_sf_ctrl.h"
+#include "bflb_sf_cfg.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{

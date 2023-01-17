@@ -35,9 +35,9 @@
   */
 
 #include "bl702_glb.h"
-#include "bl702_sf_cfg.h"
+#include "bflb_sf_cfg.h"
 #include "bl702_sf_cfg_ext.h"
-#include "bl702_xip_sflash.h"
+#include "bflb_xip_sflash.h"
 #include "bl702_romdriver.h"
 #include "soft_crc.h"
 
@@ -61,10 +61,10 @@
  */
 typedef struct
 {
-    uint32_t jedecID;
+    uint32_t jedec_id;
     char *name;
-    const SPI_Flash_Cfg_Type *cfg;
-} Flash_Info_t;
+    const spi_flash_cfg_type *cfg;
+} flash_info_t;
 
 /*@} end of group SF_CFG_EXT_Private_Types */
 
@@ -72,488 +72,488 @@ typedef struct
  *  @{
  */
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Gd_Md_40D={
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flashcfg_gd_md_40d = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0x51,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x02,
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x02,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x01,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x01,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16/8,
-    .cReadSupport = 0,
-    .cReadMode = 0xA0,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 0,
+    .c_read_mode = 0xA0,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
-     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
+    /*erase*/
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = 0x11,
-    .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .io_mode = 0x11,
+    .clk_delay = 1,
+    .clk_invert = 0x3f,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .qpiJedecIdCmd = 0x9f,
-    .qpiJedecIdCmdDmyClk = 0x00,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .qpi_jedec_id_cmd = 0x9f,
+    .qpi_jedec_id_cmd_dmy_clk = 0x00,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8/8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8/8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8/8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8/8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16/8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
-     /*AC*/
-    .timeEsector = 300,
-    .timeE32k = 1200,
-    .timeE64k = 1200,
-    .timePagePgm = 5,
-    .timeCe = 20*1000,
-    .pdDelay = 20,
-    .qeData = 0,
+    /*AC*/
+    .time_e_sector = 300,
+    .time_e_32k = 1200,
+    .time_e_64k = 1200,
+    .time_page_pgm = 5,
+    .time_ce = 20 * 1000,
+    .pd_delay = 20,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_MX_KH25 = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flashcfg_mx_kh25 = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xc2,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x01,
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x02,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x00,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x00,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x00,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x00,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 0,
-    .cReadMode = 0x20,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 0,
+    .c_read_mode = 0x20,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = 0x11,
-    .clkDelay = 1,
-    .clkInvert = 0x01,
+    .io_mode = 0x11,
+    .clk_delay = 1,
+    .clk_invert = 0x01,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .qpiJedecIdCmd = 0x9f,
-    .qpiJedecIdCmdDmyClk = 0x00,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .qpi_jedec_id_cmd = 0x9f,
+    .qpi_jedec_id_cmd_dmy_clk = 0x00,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 300,
-    .timeE32k = 1200,
-    .timeE64k = 1200,
-    .timePagePgm = 5,
-    .timeCe = 33000,
-    .pdDelay = 20,
-    .qeData = 0,
+    .time_e_sector = 300,
+    .time_e_32k = 1200,
+    .time_e_64k = 1200,
+    .time_page_pgm = 5,
+    .time_ce = 33000,
+    .pd_delay = 20,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_FM_Q80 = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flashcfg_fm_q80 = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xc8,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x02,
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x02,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x01,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x01,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 1,
-    .cReadMode = 0xA0,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0xA0,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = SF_CTRL_QIO_MODE,
-    .clkDelay = 1,
-    .clkInvert = 0x01,
+    .io_mode = SF_CTRL_QIO_MODE,
+    .clk_delay = 1,
+    .clk_invert = 0x01,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .qpiJedecIdCmd = 0x9f,
-    .qpiJedecIdCmdDmyClk = 0x00,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .qpi_jedec_id_cmd = 0x9f,
+    .qpi_jedec_id_cmd_dmy_clk = 0x00,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 300,
-    .timeE32k = 1200,
-    .timeE64k = 1200,
-    .timePagePgm = 5,
-    .timeCe = 33000,
-    .pdDelay = 20,
-    .qeData = 0,
+    .time_e_sector = 300,
+    .time_e_32k = 1200,
+    .time_e_64k = 1200,
+    .time_page_pgm = 5,
+    .time_ce = 33000,
+    .pd_delay = 20,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Winb_16JV = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flashcfg_winb_16jv = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xef,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x01,
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x01,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x31,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x31,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 1,
-    .cReadMode = 0x20,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0x20,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = SF_CTRL_QIO_MODE,
-    .clkDelay = 1,
-    .clkInvert = 0x01,
+    .io_mode = SF_CTRL_QIO_MODE,
+    .clk_delay = 1,
+    .clk_invert = 0x01,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .qpiJedecIdCmd = 0x9f,
-    .qpiJedecIdCmdDmyClk = 0x00,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .qpi_jedec_id_cmd = 0x9f,
+    .qpi_jedec_id_cmd_dmy_clk = 0x00,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 400,
-    .timeE32k = 1600,
-    .timeE64k = 2000,
-    .timePagePgm = 5,
-    .timeCe = 33000,
-    .pdDelay = 3,
-    .qeData = 0,
+    .time_e_sector = 300,
+    .time_e_32k = 1600,
+    .time_e_64k = 1200,
+    .time_page_pgm = 5,
+    .time_ce = 33 * 1000,
+    .pd_delay = 20,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[] = {
+static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
     {
-        .jedecID = 0x134051,
+        .jedec_id = 0x134051,
         .name = "GD_MD04D_04_33",
-        .cfg = &flashCfg_Gd_Md_40D,
+        .cfg = &flashcfg_gd_md_40d,
     },
     {
-        .jedecID = 0x1320c2,
+        .jedec_id = 0x1320c2,
         .name = "MX_KH40_04_33",
-        .cfg = &flashCfg_MX_KH25,
+        .cfg = &flashcfg_mx_kh25,
     },
     {
-        .jedecID = 0x1420c2,
+        .jedec_id = 0x1420c2,
         .name = "MX_KH80_08_33",
-        .cfg = &flashCfg_MX_KH25,
+        .cfg = &flashcfg_mx_kh25,
     },
     {
-        .jedecID = 0x1520c2,
+        .jedec_id = 0x1520c2,
         .name = "MX_KH16_16_33",
-        .cfg = &flashCfg_MX_KH25,
+        .cfg = &flashcfg_mx_kh25,
     },
     {
-        .jedecID = 0x1440A1,
+        .jedec_id = 0x1440A1,
         .name = "FM_25Q80_80_33",
-        .cfg = &flashCfg_FM_Q80,
+        .cfg = &flashcfg_fm_q80,
     },
     {
-        .jedecID = 0x1570EF,
+        .jedec_id = 0x1570EF,
         .name = "Winb_16JV_16_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x1870EF,
+        .jedec_id = 0x1870EF,
         .name = "Winb_128JV_128_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x15605E,
+        .jedec_id = 0x15605E,
         .name = "ZB_VQ16_16_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x144020,
+        .jedec_id = 0x144020,
         .name = "XM_25QH80_80_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x154020,
+        .jedec_id = 0x154020,
         .name = "XM_25QH16_16_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x164020,
+        .jedec_id = 0x164020,
         .name = "XM_25QH32_32_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x174020,
+        .jedec_id = 0x174020,
         .name = "XM_25QH64_64_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x13325E,
+        .jedec_id = 0x13325E,
         .name = "ZB_D40B_80_33",
-        .cfg = &flashCfg_MX_KH25,
+        .cfg = &flashcfg_mx_kh25,
     },
     {
-        .jedecID = 0x14325E,
+        .jedec_id = 0x14325E,
         .name = "ZB_D80B_80_33",
-        .cfg = &flashCfg_MX_KH25,
+        .cfg = &flashcfg_mx_kh25,
     },
     {
-        .jedecID = 0x15405E,
+        .jedec_id = 0x15405E,
         .name = "ZB_25Q16B_15_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x16405E,
+        .jedec_id = 0x16405E,
         .name = "ZB_25Q32B_16_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
     {
-        .jedecID = 0x1560EB,
+        .jedec_id = 0x1560EB,
         .name = "TH_25Q16HB_16_33",
-        .cfg = &flashCfg_FM_Q80,
+        .cfg = &flashcfg_fm_q80,
     },
     {
-        .jedecID = 0x15345E,
+        .jedec_id = 0x15345E,
         .name = "ZB_25Q16A_15_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flashcfg_winb_16jv,
     },
 };
 
@@ -583,7 +583,7 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[] = {
  * @return None
  *
 *******************************************************************************/
-void ATTR_TCM_SECTION SF_Cfg_Init_Internal_Flash_Gpio(void)
+void ATTR_TCM_SECTION bflb_sf_cfg_Init_Internal_Flash_Gpio(void)
 {
     GLB_GPIO_Cfg_Type gpioCfg = {
         .gpioPin = GLB_GPIO_PIN_0,
@@ -611,42 +611,45 @@ void ATTR_TCM_SECTION SF_Cfg_Init_Internal_Flash_Gpio(void)
 /****************************************************************************/ /**
  * @brief  Get flash config according to flash ID
  *
- * @param  flashID: Flash ID
- * @param  pFlashCfg: Flash config pointer
+ * @param  flash_id: Flash ID
+ * @param  p_flash_cfg: Flash config pointer
+ * @param  group: CPU group id 0 or 1
+ * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID, SPI_Flash_Cfg_Type *pFlashCfg)
+int ATTR_TCM_SECTION bflb_sf_cfg_get_flash_cfg_need_lock_ext(uint32_t flash_id, spi_flash_cfg_type *p_flash_cfg,
+                                                             uint8_t group, uint8_t bank)
 {
     uint32_t i;
-    uint8_t buf[sizeof(SPI_Flash_Cfg_Type) + 8];
+    uint8_t buf[sizeof(spi_flash_cfg_type) + 8];
     uint32_t crc, *pCrc;
-    char flashCfgMagic[] = "FCFG";
+    char flash_cfg_magic[] = "FCFG";
 
-    if (flashID == 0) {
-        XIP_SFlash_Read_Via_Cache_Need_Lock(8 + BL702_FLASH_XIP_BASE, buf, sizeof(SPI_Flash_Cfg_Type) + 8);
+    if (flash_id == 0) {
+        bflb_xip_sflash_read_via_cache_need_lock(8 + BL702_FLASH_XIP_BASE, buf, sizeof(spi_flash_cfg_type) + 8, group, bank);
 
-        if (BL702_MemCmp(buf, flashCfgMagic, 4) == 0) {
-            crc = BFLB_Soft_CRC32((uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
-            pCrc = (uint32_t *)(buf + 4 + sizeof(SPI_Flash_Cfg_Type));
+        if (BL702_MemCmp(buf, flash_cfg_magic, 4) == 0) {
+            crc = BFLB_Soft_CRC32((uint8_t *)buf + 4, sizeof(spi_flash_cfg_type));
+            pCrc = (uint32_t *)(buf + 4 + sizeof(spi_flash_cfg_type));
 
             if (*pCrc == crc) {
-                BL702_MemCpy_Fast(pFlashCfg, (uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
+                BL702_MemCpy_Fast(p_flash_cfg, (uint8_t *)buf + 4, sizeof(spi_flash_cfg_type));
                 return SUCCESS;
             }
         }
     } else {
-        if (SF_Cfg_Get_Flash_Cfg_Need_Lock(flashID, pFlashCfg) == SUCCESS) {
+        if (bflb_sf_cfg_get_flash_cfg_need_lock(flash_id, p_flash_cfg, group, bank) == SUCCESS) {
             /* 0x134051 flash cfg is wrong in rom, find again */
-            if ((flashID&0xFFFFFF) != 0x134051) {
+            if ((flash_id&0xFFFFFF) != 0x134051) {
                 return SUCCESS;
             }
         }
 
-        for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
-            if (flashInfos[i].jedecID == flashID) {
-                BL702_MemCpy_Fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
+        for (i = 0; i < sizeof(flash_infos) / sizeof(flash_infos[0]); i++) {
+            if (flash_infos[i].jedec_id == flash_id) {
+                BL702_MemCpy_Fast(p_flash_cfg, flash_infos[i].cfg, sizeof(spi_flash_cfg_type));
                 return SUCCESS;
             }
         }
@@ -658,23 +661,25 @@ BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID
 /****************************************************************************/ /**
  * @brief  Identify one flash
  *
- * @param  callFromFlash: code run at flash or ram
- * @param  autoScan: Auto scan all GPIO pin
- * @param  flashPinCfg: Specify flash GPIO config, not auto scan
- * @param  restoreDefault: Wether restore default flash GPIO config
- * @param  pFlashCfg: Flash config pointer
+ * @param  call_from_flash: code run at flash or ram
+ * @param  auto_scan: Auto scan all GPIO pin
+ * @param  flash_pin_cfg: Specify flash GPIO config, not auto scan
+ * @param  restore_default: Wether restore default flash GPIO config
+ * @param  p_flash_cfg: Flash config pointer
+ * @param  group: CPU group id 0 or 1
+ * @param  bank: Flash bank select
  *
  * @return Flash ID
  *
 *******************************************************************************/
-uint32_t ATTR_TCM_SECTION SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash,
-                                                    uint32_t autoScan, uint32_t flashPinCfg, uint8_t restoreDefault, SPI_Flash_Cfg_Type *pFlashCfg)
+uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify_ext(uint8_t call_from_flash, uint8_t flash_pin_cfg,
+                  uint8_t restore_default, spi_flash_cfg_type *p_flash_cfg, uint8_t group, uint8_t bank)
 {
-    uint32_t jdecId = 0;
+    uint32_t jedec_id = 0;
     uint32_t i = 0;
     uint32_t ret = 0;
 
-    ret = SF_Cfg_Flash_Identify(callFromFlash, autoScan, flashPinCfg, restoreDefault, pFlashCfg);
+    ret = bflb_sf_cfg_flash_identify(call_from_flash, flash_pin_cfg, restore_default, p_flash_cfg, group, bank);
 
     if ((ret & BFLB_FLASH_ID_VALID_FLAG) != 0) {
         /* 0x134051 flash cfg is wrong in rom, find again */
@@ -683,19 +688,19 @@ uint32_t ATTR_TCM_SECTION SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash,
         }
     }
 
-    jdecId = (ret & 0xffffff);
+    jedec_id = (ret & 0xffffff);
 
-    for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
-        if (flashInfos[i].jedecID == jdecId) {
-            BL702_MemCpy_Fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
+    for (i = 0; i < sizeof(flash_infos) / sizeof(flash_infos[0]); i++) {
+        if (flash_infos[i].jedec_id == jedec_id) {
+            BL702_MemCpy_Fast(p_flash_cfg, flash_infos[i].cfg, sizeof(spi_flash_cfg_type));
             break;
         }
     }
 
-    if (i == sizeof(flashInfos) / sizeof(flashInfos[0])) {
-        return jdecId;
+    if (i == sizeof(flash_infos) / sizeof(flash_infos[0])) {
+        return jedec_id;
     } else {
-        return (jdecId | BFLB_FLASH_ID_VALID_FLAG);
+        return (jedec_id | BFLB_FLASH_ID_VALID_FLAG);
     }
 }
 

@@ -200,3 +200,93 @@ void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no)
     regval |= (1 << cmp_no);
     putreg32(regval, reg_base + TIMER_TICR0_OFFSET + 4 * dev->idx);
 }
+
+#if !defined(BL702) && !defined(BL602)
+void bflb_timer_capture_init(struct bflb_device_s *dev, const struct bflb_timer_capture_config_s *config)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+#if defined(BL702L)
+    regval = getreg32(0x20000000 + 0xc);
+    regval &= ~(0x3 << 14);
+    switch (config->pin & 0x03) {
+        case 0:
+            regval &= ~(1 << 10);
+            regval |= (0 << 14);
+            break;
+        case 1:
+            regval &= ~(1 << 11);
+            regval |= (1 << 14);
+            break;
+        case 2:
+            regval &= ~(1 << 12);
+            regval |= (2 << 14);
+            break;
+        case 3:
+            regval &= ~(1 << 13);
+            regval |= (3 << 14);
+            break;
+
+        default:
+            break;
+    }
+    putreg32(regval, 0x20000000 + 0xc);
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, config->pin, (0 << GPIO_FUNC_SHIFT) | GPIO_ALTERNATE | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_1);
+#else
+    regval = getreg32(0x20000000 + 0x258);
+    regval &= ~(3 << 12);
+    switch (config->pin & 0x03) {
+        case 0:
+            regval &= ~(1 << 8);
+            regval |= (0 << 12);
+            break;
+        case 1:
+            regval &= ~(1 << 9);
+            regval |= (1 << 12);
+            break;
+        case 2:
+            regval &= ~(1 << 10);
+            regval |= (2 << 12);
+            break;
+        case 3:
+            regval &= ~(1 << 11);
+            regval |= (3 << 12);
+            break;
+
+        default:
+            break;
+    }
+    putreg32(regval, 0x20000000 + 0x258);
+    struct bflb_device_s *gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, config->pin, (31 << GPIO_FUNC_SHIFT) | GPIO_ALTERNATE | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_1);
+#endif
+
+    regval = getreg32(reg_base + TIMER_GPIO_OFFSET);
+    /* polarity: 1->neg, 0->pos */
+    if (config->polarity == TIMER_CAPTURE_POLARITY_NEGATIVE) {
+        regval |= (1 << (5 + dev->idx));
+    } else {
+        regval &= ~(1 << (5 + dev->idx));
+    }
+    regval |= TIMER0_GPIO_EN;
+    putreg32(regval, reg_base + TIMER_GPIO_OFFSET);
+}
+
+uint32_t bflb_timer_capture_get_pulsewidth(struct bflb_device_s *dev)
+{
+    uint32_t reg_base;
+    uint32_t lat1 = 0;
+    uint32_t lat2 = 0;
+    reg_base = dev->reg_base;
+
+    do {
+        lat1 = getreg32(reg_base + TIMER_GPIO_LAT1_OFFSET);
+        lat2 = getreg32(reg_base + TIMER_GPIO_LAT2_OFFSET);
+    } while (!(getreg32(reg_base + TIMER_GPIO_OFFSET) & TIMER_GPIO_LAT_OK) || (lat1 >= lat2));
+
+    return (lat2 - lat1);
+}
+#endif

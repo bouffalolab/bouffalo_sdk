@@ -49,7 +49,7 @@
 #define configMTIMECMP_BASE_ADDRESS (0xE0000000UL + 0x4000UL)
 #endif
 
-// #define configSUPPORT_STATIC_ALLOCATION         1
+#define configSUPPORT_STATIC_ALLOCATION         1
 #define configUSE_PREEMPTION                    1
 #define configUSE_IDLE_HOOK                     0
 #define configUSE_TICK_HOOK                     0

@@ -184,10 +184,10 @@ int32_t ATTR_TCM_SECTION blsp_boot2_set_encrypt(uint8_t index, boot2_image_confi
         len = g_boot_img_cfg->basic_cfg.img_len_cnt;
 
         if (len != 0) {
-            SF_Ctrl_AES_Set_Key_BE(index, NULL, (SF_Ctrl_AES_Key_Type)(g_boot_img_cfg->basic_cfg.encrypt_type - 1));
-            SF_Ctrl_AES_Set_IV_BE(index, g_boot_img_cfg->aes_iv, g_boot_img_cfg->basic_cfg.group_image_offset);
+            bflb_sf_ctrl_aes_set_key_be(index, NULL, (g_boot_img_cfg->basic_cfg.encrypt_type - 1));
+            bflb_sf_ctrl_aes_set_iv_be(index, g_boot_img_cfg->aes_iv, g_boot_img_cfg->basic_cfg.group_image_offset);
 
-            SF_Ctrl_AES_Set_Region(index, 1 /*enable this region*/, 1 /*hardware key*/,
+            bflb_sf_ctrl_aes_set_region(index, 1 /*enable this region*/, 1 /*hardware key*/,
                                    g_boot_img_cfg->basic_cfg.group_image_offset,
                                    g_boot_img_cfg->basic_cfg.group_image_offset + len - 1,
                                    g_boot_img_cfg->basic_cfg.aes_region_lock /*lock*/);
@@ -196,8 +196,8 @@ int32_t ATTR_TCM_SECTION blsp_boot2_set_encrypt(uint8_t index, boot2_image_confi
     }
 
     if (aes_enabled) {
-        SF_Ctrl_AES_Enable_BE();
-        SF_Ctrl_AES_Enable();
+        bflb_sf_ctrl_aes_enable_be();
+        bflb_sf_ctrl_aes_enable();
     }
 
     return BFLB_BOOT2_SUCCESS;

@@ -119,6 +119,7 @@
 #define GPIO_FUNC_PWM0      (16 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_AUDAC_PWM (25 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG      (26 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PEC       (27 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_CLKOUT    (31 << GPIO_FUNC_SHIFT)
 #elif defined(BL606P) || defined(BL808)
 #define GPIO_FUNC_SDH     (0 << GPIO_FUNC_SHIFT)
@@ -156,6 +157,7 @@
 #define GPIO_FUNC_PWM0   (16 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_DBI_B  (22 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_DBI_C  (23 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_PEC    (27 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_CLKOUT (31 << GPIO_FUNC_SHIFT)
 #endif
 
@@ -281,6 +283,38 @@ void bflb_gpio_reset(struct bflb_device_s *dev, uint8_t pin);
  * @return true means high level, otherwise low level
  */
 bool bflb_gpio_read(struct bflb_device_s *dev, uint8_t pin);
+
+/**
+ * @brief Write gpio pin 0~31.
+ *
+ * @param [in] dev device handle
+ * @param [in] val gpio pin 0~31 value
+ */
+void bflb_gpio_pin0_31_write(struct bflb_device_s *dev, uint32_t val);
+
+/**
+ * @brief Write gpio pin 32~63.
+ *
+ * @param [in] dev device handle
+ * @param [in] val gpio pin 32~63 value
+ */
+void bflb_gpio_pin32_63_write(struct bflb_device_s *dev, uint32_t val);
+
+/**
+ * @brief Read level from gpio pin 0~31.
+ *
+ * @param [in] dev device handle
+ * @return level of gpio pin 0~31
+ */
+uint32_t bflb_gpio_pin0_31_read(struct bflb_device_s *dev);
+
+/**
+ * @brief Read level from gpio pin 32~63.
+ *
+ * @param [in] dev device handle
+ * @return level of gpio pin32~63
+ */
+uint32_t bflb_gpio_pin32_63_read(struct bflb_device_s *dev);
 
 /**
  * @brief Config gpio pin interrupt.

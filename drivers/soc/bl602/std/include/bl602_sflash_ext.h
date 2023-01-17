@@ -36,7 +36,7 @@
 #ifndef __BL602_SFLAH_EXT_H__
 #define __BL602_SFLAH_EXT_H__
 
-#include "bl602_sflash.h"
+#include "bflb_sflash.h"
 #include "bl602_common.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
@@ -50,22 +50,6 @@
 /** @defgroup  SFLAH_EXT_Public_Types
  *  @{
  */
-
-/**
- *  @brief Serial flash security register configuration
- */
-typedef struct
-{
-    uint8_t eraseCmd;       /*!< Erase security register command */
-    uint8_t programCmd;     /*!< Program security register command */
-    uint8_t readCmd;        /*!< Read security register command */
-    uint8_t enterSecOptCmd; /*!< Enter security register option mode command */
-    uint8_t exitSecOptCmd;  /*!< Exit security register option mode command */
-    uint8_t blockNum;       /*!< Security register block number */
-    uint8_t *data;          /*!< Data pointer to be program/read */
-    uint32_t addr;          /*!< Start address to be program/read */
-    uint32_t len;           /*!< Data length to be program/read */
-} SFlash_Sec_Reg_Cfg;
 
 /*@} end of group SFLAH_EXT_Public_Types */
 
@@ -84,13 +68,15 @@ typedef struct
 /** @defgroup  SFLAH_EXT_Public_Functions
  *  @{
  */
-BL_Err_Type SFlash_Restore_From_Powerdown(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t flashContRead);
-BL_Err_Type SFlash_RCV_Enable(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t rCmd, uint8_t wCmd, uint8_t bitPos);
-BL_Err_Type SFlash_Erase_Security_Register(SPI_Flash_Cfg_Type *pFlashCfg, SFlash_Sec_Reg_Cfg *pSecRegCfg);
-BL_Err_Type SFlash_Program_Security_Register(SPI_Flash_Cfg_Type *pFlashCfg,
-                                             SFlash_Sec_Reg_Cfg *pSecRegCfg);
-BL_Err_Type SFlash_Read_Security_Register(SFlash_Sec_Reg_Cfg *pSecRegCfg);
-BL_Err_Type SFlash_Clear_Status_Register(SPI_Flash_Cfg_Type *pFlashCfg);
+int bflb_sflash_restore_from_powerdown(spi_flash_cfg_type *p_flash_cfg, uint8_t flash_cont_read, uint8_t bank);
+int bflb_sflash_rcv_enable(spi_flash_cfg_type *p_flash_cfg, uint8_t r_cmd, uint8_t w_cmd, uint8_t bit_pos);
+int bflb_sflash_erase_security_register(spi_flash_cfg_type *p_flash_cfg, struct sflash_sec_reg_cfg *p_sec_reg_cfg);
+int bflb_sflash_program_security_register(spi_flash_cfg_type *p_flash_cfg,
+                                          struct sflash_sec_reg_cfg *p_sec_reg_cfg);
+int bflb_sflash_read_security_register(struct sflash_sec_reg_cfg *p_sec_reg_cfg);
+int bflb_sflash_clear_status_register(spi_flash_cfg_type *p_flash_cfg);
+int bflb_sflash_cache_enable_set(uint8_t way_disable);
+int bflb_sflash_cache_flush(void);
 
 /*@} end of group SFLAH_EXT_Public_Functions */
 

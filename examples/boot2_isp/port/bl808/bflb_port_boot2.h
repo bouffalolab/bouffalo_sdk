@@ -36,7 +36,6 @@
 #ifndef __BFLB_PORT_BOOT2_H__
 #define __BFLB_PORT_BOOT2_H__
 
-#include "bl808_sflash.h"
 #include "bl808_glb.h"
 
 #define HAL_PLL_CFG_MAGICCODE "PCFG"
@@ -68,6 +67,12 @@
 
 #define HAL_BOOT2_PSRAM_INFO_MASK (0xff0000)
 #define HAL_BOOT2_PSRAM_INFO_POS  (16)
+
+#define WB_4MB_PSRAM   (1)
+#define UHS_32MB_PSRAM (2)
+#define UHS_64MB_PSRAM (3)
+#define WB_32MB_PSRAM  (4)
+#define NONE_UHS_PSRAM (-1)
 
 typedef enum {
     HAL_REBOOT_AS_BOOTPIN,     /*!< reboot as bootpin level */
@@ -160,7 +165,7 @@ typedef struct
 
 struct __attribute__((packed, aligned(4))) hal_flash_config {
     uint32_t magicCode; /*'FCFG'*/
-    SPI_Flash_Cfg_Type cfg;
+    spi_flash_cfg_type cfg;
     uint32_t crc32;
 };
 

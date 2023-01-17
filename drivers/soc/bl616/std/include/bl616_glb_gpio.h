@@ -41,11 +41,10 @@
 #include "pds_reg.h"
 #include "bl616_gpio.h"
 #include "bl616_hbn.h"
-#include "bl616_sf_ctrl.h"
-// #include "bl616_sf_cfg.h"
 #include "bl616_aon.h"
 #include "bl616_pds.h"
 #include "bl616_common.h"
+#include "bflb_sf_ctrl.h"
 
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{

@@ -48,6 +48,8 @@
 #define BFLB_EFLASH_LOADER_CHECK_LEN 2048
 #define BFLB_EFLASH_MAX_SIZE         2 * 1024 * 1024
 
+// 4bytes、32bit数据大小端转化
+#define L2B32(Little) (((Little & 0xff) << 24) | (((Little) & 0xff00) << 8) | (((Little) & 0xff0000) >> 8) | ((Little >> 24) & 0xff))
 
 #if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM
 static struct image_cfg_t image_cfg;
@@ -479,9 +481,12 @@ static int32_t bflb_eflash_loader_cmd_read_jedec_id(uint16_t cmd, uint8_t *data,
     /*ack read jedec ID */
     tmp_buf[2] = 4;
     tmp_buf[3] = 0;
-    ackdata[0] = bflb_flash_get_jedec_id();
+    ackdata[1] = bflb_flash_get_jedec_id();
     ackdata[1] &= 0x00ffffff;
     ackdata[1] |= 0x80000000;
+    ackdata[1] = (ackdata[1]) << 8;
+    ackdata[1] |= 0x80;
+    ackdata[1] = L2B32(ackdata[1]);
     bflb_eflash_loader_if_write((uint32_t *)ackdata, 4 + 4);
     return BFLB_EFLASH_LOADER_SUCCESS;
 }

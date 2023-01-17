@@ -19,10 +19,6 @@ sdk_library_add_sources(src/bl616_glb.c)
 sdk_library_add_sources(src/bl616_hbn.c)
 sdk_library_add_sources(src/bl616_l1c.c)
 sdk_library_add_sources(src/bl616_pds.c)
-sdk_library_add_sources(src/bl616_sf_cfg.c)
-sdk_library_add_sources(src/bl616_sf_ctrl.c)
-sdk_library_add_sources(src/bl616_sflash.c)
-sdk_library_add_sources(src/bl616_xip_sflash.c)
 endif()
 
 sdk_library_add_sources(src/bl616_common.c)
@@ -31,6 +27,7 @@ sdk_library_add_sources(src/bl616_sdh.c)
 sdk_library_add_sources(src/bl616_tzc_sec.c)
 sdk_library_add_sources(src/bl616_psram.c)
 sdk_library_add_sources(src/bl616_audac.c)
+sdk_library_add_sources(src/bl616_auadc.c)
 
 if(CONFIG_RF)
 sdk_library_add_sources(src/bl616_mfg_efuse.c)
@@ -39,7 +36,6 @@ sdk_library_add_sources(src/bl616_mfg_media.c)
 endif()
 
 sdk_library_add_sources(port/bl616_clock.c)
-sdk_library_add_sources(port/bl616_flash.c)
 
 sdk_add_include_directories(
 include

@@ -22,6 +22,7 @@ HeapSize  = 0x1000; /*  4KB */
 
 MEMORY
 {
+    fw_header_memory  (rx)  : ORIGIN = 0x23000000 - 0x1000, LENGTH = 4K
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
     itcm_memory (rx)  : ORIGIN = 0x22010000, LENGTH = 16K
     dtcm_memory (rx)  : ORIGIN = 0x42014000, LENGTH = 48K
@@ -31,6 +32,11 @@ MEMORY
 SECTIONS
 {
     PROVIDE(__metal_chicken_bit = 0);
+
+    .fw_header :
+    {
+        KEEP(*(.fw_header))
+    } > fw_header_memory
 
     .text :
     {
@@ -189,6 +195,10 @@ SECTIONS
         *(.sdata2.*)
 
         . = ALIGN(4);
+        __bflog_tags_start__ = .;
+        *(.bflog_tags_array)
+        . = ALIGN(4);
+        __bflog_tags_end__ = .;
         __ram_data_end__ = .;
     } > ram_memory
 

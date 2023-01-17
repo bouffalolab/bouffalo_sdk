@@ -3,27 +3,16 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
-#ifdef CONFIG_TLSF
-#include "bflb_tlsf.h"
-#else
-#include "bflb_mmheap.h"
-#endif
-#include "board.h"
+#include "bflb_spi_psram.h"
 #include "bl702_glb.h"
-#include "bl702_sflash.h"
-#include "bl702_psram.h"
+#include "board.h"
+
+#include "mem.h"
+
+extern void log_start(void);
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
-
-#ifndef CONFIG_TLSF
-struct heap_info mmheap_root;
-
-static struct heap_region system_mmheap[] = {
-    { NULL, 0 },
-    { NULL, 0 }, /* Terminates the array. */
-};
-#endif
 
 static struct bflb_device_s *uart0;
 
@@ -51,7 +40,7 @@ static void peripheral_clock_init(void)
     PERIPHERAL_CLOCK_IR_ENABLE();
     PERIPHERAL_CLOCK_I2S_ENABLE();
     PERIPHERAL_CLOCK_USB_ENABLE();
-    GLB_AHB_Slave1_Clock_Gate(DISABLE,BL_AHB_SLAVE1_CAM);
+    GLB_AHB_Slave1_Clock_Gate(DISABLE, BL_AHB_SLAVE1_CAM);
 
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_96M, 0);
     GLB_Set_SPI_CLK(ENABLE, 0);
@@ -66,45 +55,46 @@ static void peripheral_clock_init(void)
 
 /* bsp sf psram private variables */
 
-SPI_Psram_Cfg_Type apMemory1604 = {
-    .readIdCmd = 0x9F,
-    .readIdDmyClk = 0,
-    .burstToggleCmd = 0xC0,
-    .resetEnableCmd = 0x66,
-    .resetCmd = 0x99,
-    .enterQuadModeCmd = 0x35,
-    .exitQuadModeCmd = 0xF5,
-    .readRegCmd = 0xB5,
-    .readRegDmyClk = 1,
-    .writeRegCmd = 0xB1,
-    .readCmd = 0x03,
-    .readDmyClk = 0,
-    .fReadCmd = 0x0B,
-    .fReadDmyClk = 1,
-    .fReadQuadCmd = 0xEB,
-    .fReadQuadDmyClk = 3,
-    .writeCmd = 0x02,
-    .quadWriteCmd = 0x38,
-    .pageSize = 512,
-    .ctrlMode = PSRAM_SPI_CTRL_MODE,
-    .driveStrength = PSRAM_DRIVE_STRENGTH_50_OHMS,
-    .burstLength = PSRAM_BURST_LENGTH_512_BYTES,
+struct spi_psram_cfg_type ap_memory1604 = {
+    .read_id_cmd = 0x9F,
+    .read_id_dmy_clk = 0,
+    .burst_toggle_cmd = 0xC0,
+    .reset_enable_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .enter_quad_mode_cmd = 0x35,
+    .exit_quad_mode_cmd = 0xF5,
+    .read_reg_cmd = 0xB5,
+    .read_reg_dmy_clk = 1,
+    .write_reg_cmd = 0xB1,
+    .read_cmd = 0x03,
+    .read_dmy_clk = 0,
+    .f_read_cmd = 0x0B,
+    .f_read_dmy_clk = 1,
+    .f_read_quad_cmd = 0xEB,
+    .f_read_quad_dmy_clk = 3,
+    .write_cmd = 0x02,
+    .quad_write_cmd = 0x38,
+    .page_size = 512,
+    .ctrl_mode = PSRAM_SPI_CTRL_MODE,
+    .drive_strength = PSRAM_DRIVE_STRENGTH_50_OHMS,
+    .burst_length = PSRAM_BURST_LENGTH_512_BYTES,
 };
 
-SF_Ctrl_Cmds_Cfg cmdsCfg = {
-    .cmdsEn = ENABLE,
-    .burstToggleEn = ENABLE,
-    .wrapModeEn = DISABLE,
-    .wrapLen = SF_CTRL_WRAP_LEN_512,
+struct sf_ctrl_cmds_cfg cmds_cfg = {
+    .cmds_core_en = 1,
+    .cmds_en = 1,
+    .burst_toggle_en = 1,
+    .cmds_wrap_mode = 0,
+    .cmds_wrap_len = SF_CTRL_WRAP_LEN_512,
 };
-SF_Ctrl_Psram_Cfg sfCtrlPsramCfg = {
+struct sf_ctrl_psram_cfg psram_cfg = {
     .owner = SF_CTRL_OWNER_SAHB,
-    .padSel = SF_CTRL_PAD_SEL_DUAL_CS_SF2,
-    .bankSel = SF_CTRL_SEL_PSRAM,
-    .psramRxClkInvertSrc = ENABLE,
-    .psramRxClkInvertSel = DISABLE,
-    .psramDelaySrc = ENABLE,
-    .psramClkDelay = 1,
+    .pad_sel = SF_CTRL_SEL_DUAL_CS_SF2,
+    .bank_sel = SF_CTRL_SEL_PSRAM,
+    .psram_rx_clk_invert_src = 1,
+    .psram_rx_clk_invert_sel = 0,
+    .psram_delay_src = 1,
+    .psram_clk_delay = 1,
 };
 
 #define BFLB_EXTFLASH_CS_GPIO    GLB_GPIO_PIN_25
@@ -156,12 +146,12 @@ void ATTR_TCM_SECTION board_psram_init(void)
 {
     psram_gpio_init();
 
-    Psram_Init(&apMemory1604, &cmdsCfg, &sfCtrlPsramCfg);
+    bflb_psram_init(&ap_memory1604, &cmds_cfg, &psram_cfg);
 
-    Psram_SoftwareReset(&apMemory1604, apMemory1604.ctrlMode);
+    bflb_psram_softwarereset(&ap_memory1604, ap_memory1604.ctrl_mode);
 
-    Psram_ReadId(&apMemory1604, psramId);
-    Psram_Cache_Write_Set(&apMemory1604, SF_CTRL_QIO_MODE, ENABLE, DISABLE, DISABLE);
+    bflb_psram_readid(&ap_memory1604, psramId);
+    bflb_psram_cache_write_set(&ap_memory1604, SF_CTRL_QIO_MODE, ENABLE, DISABLE, DISABLE);
     L1C_Cache_Enable_Set(L1C_WAY_DISABLE_NONE);
 }
 
@@ -181,7 +171,7 @@ void bl_show_log(void)
 
 void bl_show_flashinfo(void)
 {
-    SPI_Flash_Cfg_Type flashCfg;
+    spi_flash_cfg_type flashCfg;
     uint8_t *pFlashCfg = NULL;
     uint32_t flashCfgLen = 0;
     uint32_t flashJedecId = 0;
@@ -192,17 +182,17 @@ void bl_show_flashinfo(void)
     printf("=========== flash cfg ==============\r\n");
     printf("jedec id   0x%06X\r\n", flashJedecId);
     printf("mid            0x%02X\r\n", flashCfg.mid);
-    printf("iomode         0x%02X\r\n", flashCfg.ioMode);
-    printf("clk delay      0x%02X\r\n", flashCfg.clkDelay);
-    printf("clk invert     0x%02X\r\n", flashCfg.clkInvert);
-    printf("read reg cmd0  0x%02X\r\n", flashCfg.readRegCmd[0]);
-    printf("read reg cmd1  0x%02X\r\n", flashCfg.readRegCmd[1]);
-    printf("write reg cmd0 0x%02X\r\n", flashCfg.writeRegCmd[0]);
-    printf("write reg cmd1 0x%02X\r\n", flashCfg.writeRegCmd[1]);
-    printf("qe write len   0x%02X\r\n", flashCfg.qeWriteRegLen);
-    printf("cread support  0x%02X\r\n", flashCfg.cReadSupport);
-    printf("cread code     0x%02X\r\n", flashCfg.cReadMode);
-    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burstWrapCmd);
+    printf("iomode         0x%02X\r\n", flashCfg.io_mode);
+    printf("clk delay      0x%02X\r\n", flashCfg.clk_delay);
+    printf("clk invert     0x%02X\r\n", flashCfg.clk_invert);
+    printf("read reg cmd0  0x%02X\r\n", flashCfg.read_reg_cmd[0]);
+    printf("read reg cmd1  0x%02X\r\n", flashCfg.read_reg_cmd[1]);
+    printf("write reg cmd0 0x%02X\r\n", flashCfg.write_reg_cmd[0]);
+    printf("write reg cmd1 0x%02X\r\n", flashCfg.write_reg_cmd[1]);
+    printf("qe write len   0x%02X\r\n", flashCfg.qe_write_reg_len);
+    printf("cread support  0x%02X\r\n", flashCfg.c_read_support);
+    printf("cread code     0x%02X\r\n", flashCfg.c_read_mode);
+    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burst_wrap_cmd);
     printf("=====================================\r\n");
 }
 
@@ -233,43 +223,41 @@ static void console_init()
 
 void board_init(void)
 {
+    int ret = -1;
     uintptr_t flag;
 
     flag = bflb_irq_save();
 
-    bflb_flash_init();
+    ret = bflb_flash_init();
 
     system_clock_init();
     peripheral_clock_init();
     bflb_irq_initialize();
 
-    bflb_irq_restore(flag);
-
-#ifdef CONFIG_TLSF
-    bflb_mmheap_init((void *)&__HeapBase, ((size_t)&__HeapLimit - (size_t)&__HeapBase));
-#else
-    system_mmheap[0].addr = (uint8_t *)&__HeapBase;
-    system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-
-    if (system_mmheap[0].mem_size > 0) {
-        bflb_mmheap_init(&mmheap_root, system_mmheap);
-    }
-#endif
-
     console_init();
 
+    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    kmem_init((void *)&__HeapBase, heap_len);
+
     bl_show_log();
+    if (ret != 0) {
+        printf("flash init fail!!!\r\n");
+    }
     bl_show_flashinfo();
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
     printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
+
+    log_start();
 #if defined(CONFIG_BFLOG)
     rtc = bflb_device_get_by_name("rtc");
 #endif
 #ifdef CONFIG_PSRAM
     board_psram_init();
 #endif
+
+    bflb_irq_restore(flag);
 }
 
 void board_uartx_gpio_init()

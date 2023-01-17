@@ -153,7 +153,7 @@ void exception_entry(uintptr_t *regs)
 
     printf("%s\r\n", mcause_str[cause & 0xf]);
 // clang-format off
-#ifndef CONFIG_ERR_NOT_DUMP_ALL_REGS
+#ifdef CONFIG_TRAP_DUMP_ALL_REGS
     printf("ra = 0x%08x  ", regs[REG_RA]); printf("sp = 0x%08x  ", regs[REG_SP]); printf("gp = 0x%08x  ", regs[REG_GP]);
     printf("tp = 0x%08x  ", regs[REG_TP]); printf("\n\r");
 

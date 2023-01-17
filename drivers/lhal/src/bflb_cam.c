@@ -369,22 +369,10 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
         putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_DVP2BUS_SRC_SEL_2_OFFSET);
     }
 #endif
-}
-
-void bflb_cam_start(struct bflb_device_s *dev)
-{
-    uint32_t reg_base;
-    uint32_t regval;
-
-    reg_base = dev->reg_base;
-    regval = getreg32(reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
-    regval |= CAM_REG_DVP_ENABLE;
-    putreg32(regval, reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
 
 #if !defined(BL702)
 #if defined(BL808)
-    regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_PIX_DATA_CTRL_OFFSET);
-    if (regval & CAM_FRONT_REG_ISP_DTSRC_SRC) {
+    if (config->input_source == 0) {
         regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
         regval |= CAM_FRONT_RG_DVPAS_ENABLE;
         putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
@@ -397,6 +385,17 @@ void bflb_cam_start(struct bflb_device_s *dev)
 #endif
 }
 
+void bflb_cam_start(struct bflb_device_s *dev)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = dev->reg_base;
+    regval = getreg32(reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
+    regval |= CAM_REG_DVP_ENABLE;
+    putreg32(regval, reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
+}
+
 void bflb_cam_stop(struct bflb_device_s *dev)
 {
     uint32_t reg_base;
@@ -406,12 +405,6 @@ void bflb_cam_stop(struct bflb_device_s *dev)
     regval = getreg32(reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
     regval &= ~CAM_REG_DVP_ENABLE;
     putreg32(regval, reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
-
-#if !defined(BL702)
-    regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
-    regval &= ~CAM_FRONT_RG_DVPAS_ENABLE;
-    putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
-#endif
 }
 
 void bflb_cam_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask)

@@ -193,120 +193,120 @@ extern "C" {
 #endif
 
 /**
- * @brief
+ * @brief Initialize cam.
  *
- * @param [in] dev
- * @param [in] config
+ * @param [in] dev device handle
+ * @param [in] config pointer to cam configure structure
  */
 void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *config);
 
 /**
- * @brief
+ * @brief Enable cam.
  *
- * @param [in] dev
+ * @param [in] dev device handle
  */
 void bflb_cam_start(struct bflb_device_s *dev);
 
 /**
- * @brief
+ * @brief Disable cam.
  *
- * @param [in] dev
+ * @param [in] dev device handle
  */
 void bflb_cam_stop(struct bflb_device_s *dev);
 
 /**
- * @brief
+ * @brief Mask or unmask cam interrupt.
  *
- * @param [in] dev
- * @param [in] int_type
- * @param [in] mask
+ * @param [in] dev device handle
+ * @param [in] int_type cam interrupt mask type, use @ref CAM_INTMASK
+ * @param [in] mask mask or unmask
  */
 void bflb_cam_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask);
 
 /**
- * @brief
+ * @brief Clear cam interrupt.
  *
- * @param [in] dev
- * @param [in] int_type
+ * @param [in] dev device handle
+ * @param [in] int_type int_type cam interrupt clear type, use @ref CAM_INTCLR
  */
 void bflb_cam_int_clear(struct bflb_device_s *dev, uint32_t int_type);
 
 /**
- * @brief
+ * @brief Crop vsync.
  *
- * @param [in] dev
- * @param [in] start_line
- * @param [in] end_line
+ * @param [in] dev device handle
+ * @param [in] start_line start line of window
+ * @param [in] end_line end line of window, not include
  */
 void bflb_cam_crop_vsync(struct bflb_device_s *dev, uint16_t start_line, uint16_t end_line);
 
 /**
- * @brief
+ * @brief Crop hsync.
  *
- * @param [in] dev
- * @param [in] start_pixel
- * @param [in] end_pixel
+ * @param [in] dev device handle
+ * @param [in] start_pixel start pixel of each line
+ * @param [in] end_pixel end pixel of each line, not include
  */
 void bflb_cam_crop_hsync(struct bflb_device_s *dev, uint16_t start_pixel, uint16_t end_pixel);
 
 /**
- * @brief
+ * @brief Pop one frame.
  *
- * @param [in] dev
+ * @param [in] dev device handle
  */
 void bflb_cam_pop_one_frame(struct bflb_device_s *dev);
 
 #if !defined(BL702)
 /**
- * @brief
+ * @brief Swap input order of y and uv.
  *
- * @param [in] dev
- * @param [in] enable
+ * @param [in] dev device handle
+ * @param [in] enable enable or disable
  */
 void bflb_cam_swap_input_yu_order(struct bflb_device_s *dev, bool enable);
 
 /**
- * @brief
+ * @brief Set frame filter, if frame_count = 3, frame_valid = 101b, second frame will be dropped every 3 frames.
  *
- * @param [in] dev
- * @param [in] frame_count
- * @param [in] frame_valid
+ * @param [in] dev device handle
+ * @param [in] frame_count frame filter period
+ * @param [in] frame_valid frame valid
  */
 void bflb_cam_filter_frame_period(struct bflb_device_s *dev, uint8_t frame_count, uint32_t frame_valid);
 #endif
 
 /**
- * @brief
+ * @brief Get frame count.
  *
- * @param [in] dev
- * @return uint8_t
+ * @param [in] dev device handle
+ * @return Frame count
  */
 uint8_t bflb_cam_get_frame_count(struct bflb_device_s *dev);
 
 /**
- * @brief
+ * @brief Get frame information.
  *
- * @param [in] dev
- * @param [in] pic
- * @return uint32_t
+ * @param [in] dev device handle
+ * @param [out] pic pointer to frame start address
+ * @return Size of frame
  */
 uint32_t bflb_cam_get_frame_info(struct bflb_device_s *dev, uint8_t **pic);
 
 /**
- * @brief
+ * @brief Get interrupt status.
  *
- * @param [in] dev
- * @return uint32_t
+ * @param [in] dev device handle
+ * @return Interrupt status
  */
 uint32_t bflb_cam_get_intstatus(struct bflb_device_s *dev);
 
 /**
- * @brief
+ * @brief Control cam feature.
  *
- * @param [in] dev
- * @param [in] cmd
- * @param [in] arg
- * @return int
+ * @param [in] dev device handle
+ * @param [in] cmd feature command
+ * @param [in] arg user data
+ * @return A negated errno value on failure
  */
 int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 

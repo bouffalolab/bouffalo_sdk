@@ -81,8 +81,6 @@ static BL_Err_Type GLB_Get_And_Clr_First_Set_From_U64(uint64_t *val, uint32_t *b
  *  @{
  */
 
-
-
 /* WiFi PLL Config*/
 const GLB_WAC_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifiPllBasicCfg_32M_38P4M_40M = {
     .clkpllRefdivRatio = 2,  /*!< pll_refdiv_ratio */
@@ -305,42 +303,42 @@ const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION mipiPllCfg_1500M[GLB_XTAL_MAX
 
 /* uhs PLL 2100 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2100BasicCfg_24M = {
-    .clkpllRefdivRatio = 1,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2100/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 1,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2100 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2100BasicCfg_32M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2100/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2100 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2100BasicCfg_38P4M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2100/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2100 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2100BasicCfg_40M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2100/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2100 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2100BasicCfg_26M = {
-    .clkpllRefdivRatio = 1,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2100/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 1,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2100 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_2100M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                      /*!< XTAL is None */
+    { NULL, 0x0 },                          /*!< XTAL is None */
     { &uhsPll2100BasicCfg_24M, 0x2BC00 },   /*!< XTAL is 24M */
     { &uhsPll2100BasicCfg_32M, 0x41A00 },   /*!< XTAL is 32M */
     { &uhsPll2100BasicCfg_38P4M, 0x36B00 }, /*!< XTAL is 38.4M */
@@ -351,39 +349,39 @@ const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_2100M[GLB_XTAL_MAX]
 
 /* uhs PLL 1400 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1400MCfg_24M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 4,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 4,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1400MCfg_32M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 4,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 4,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1400MCfg_38P4M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 4,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 4,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1400MCfg_40M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 4,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 4,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1400MCfg_26M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 4,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 4,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_1400M[GLB_XTAL_MAX] = {
     { NULL, 0x0 },                      /*!< XTAL is None */
@@ -397,39 +395,39 @@ const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_1400M[GLB_XTAL_MAX]
 
 /* uhs PLL 1500 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1500MCfg_24M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1500/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1500 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1500MCfg_32M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1500/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1500 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1500MCfg_38P4M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1500/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1500 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1500MCfg_40M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1500/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1500 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1500MCfg_26M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1500/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1500 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_1500M[GLB_XTAL_MAX] = {
     { NULL, 0x0 },                      /*!< XTAL is None */
@@ -443,42 +441,42 @@ const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_1500M[GLB_XTAL_MAX]
 
 /* uhs PLL 1600 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1600BasicCfg_24M = {
-    .clkpllRefdivRatio = 1,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1600/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 1,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1600 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1600BasicCfg_32M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1600/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1600 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1600BasicCfg_38P4M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1600/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1600 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1600BasicCfg_40M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1600/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1600 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1600BasicCfg_26M = {
-    .clkpllRefdivRatio = 1,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 5,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1600/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 1,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 5,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1600 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_1600M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                      /*!< XTAL is None */
+    { NULL, 0x0 },                          /*!< XTAL is None */
     { &uhsPll1600BasicCfg_24M, 0x21555 },   /*!< XTAL is 24M */
     { &uhsPll1600BasicCfg_32M, 0x32000 },   /*!< XTAL is 32M */
     { &uhsPll1600BasicCfg_38P4M, 0x29AAA }, /*!< XTAL is 38.4M */
@@ -489,180 +487,180 @@ const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_1600M[GLB_XTAL_MAX]
 
 /* uhs PLL 400 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll400BasicCfg_24M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll400BasicCfg_32M = {
-    .clkpllRefdivRatio = 4,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 4,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll400BasicCfg_38P4M = {
-    .clkpllRefdivRatio = 4,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 4,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll400BasicCfg_40M = {
-    .clkpllRefdivRatio = 4,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 4,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll400BasicCfg_26M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 400/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 400 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_400M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                      /*!< XTAL is None */
-    { &uhsPll400BasicCfg_24M, 0x19000 },    /*!< XTAL is 24M */
-    { &uhsPll400BasicCfg_32M, 0x19000 },    /*!< XTAL is 32M */
-    { &uhsPll400BasicCfg_38P4M, 0x14D55 },  /*!< XTAL is 38.4M */
-    { &uhsPll400BasicCfg_40M, 0x14000 },    /*!< XTAL is 40M */
-    { &uhsPll400BasicCfg_26M, 0x1713B },    /*!< XTAL is 26M */
-    { &uhsPll400BasicCfg_32M, 0x19000 },    /*!< XTAL is RC32M */
+    { NULL, 0x0 },                         /*!< XTAL is None */
+    { &uhsPll400BasicCfg_24M, 0x19000 },   /*!< XTAL is 24M */
+    { &uhsPll400BasicCfg_32M, 0x19000 },   /*!< XTAL is 32M */
+    { &uhsPll400BasicCfg_38P4M, 0x14D55 }, /*!< XTAL is 38.4M */
+    { &uhsPll400BasicCfg_40M, 0x14000 },   /*!< XTAL is 40M */
+    { &uhsPll400BasicCfg_26M, 0x1713B },   /*!< XTAL is 26M */
+    { &uhsPll400BasicCfg_32M, 0x19000 },   /*!< XTAL is RC32M */
 };
 
 /* uhs PLL 667 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll667BasicCfg_24M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 667/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 667 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll667BasicCfg_32M = {
-    .clkpllRefdivRatio = 4,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 667/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 4,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 667 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll667BasicCfg_38P4M = {
-    .clkpllRefdivRatio = 4,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 667/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 4,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 667 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll667BasicCfg_40M = {
-    .clkpllRefdivRatio = 4,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 667/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 4,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 667 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll667BasicCfg_26M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 1,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 667/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 1,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 667 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_667M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                      /*!< XTAL is None */
-    { &uhsPll667BasicCfg_24M, 0x29B00 },    /*!< XTAL is 24M */
-    { &uhsPll667BasicCfg_32M, 0x29B00 },    /*!< XTAL is 32M */
-    { &uhsPll667BasicCfg_38P4M, 0x22BD5 },  /*!< XTAL is 38.4M */
-    { &uhsPll667BasicCfg_40M, 0x21599 },    /*!< XTAL is 40M */
-    { &uhsPll667BasicCfg_26M, 0x267B1 },    /*!< XTAL is 26M */
-    { &uhsPll667BasicCfg_32M, 0x29B00 },    /*!< XTAL is RC32M */
+    { NULL, 0x0 },                         /*!< XTAL is None */
+    { &uhsPll667BasicCfg_24M, 0x29B00 },   /*!< XTAL is 24M */
+    { &uhsPll667BasicCfg_32M, 0x29B00 },   /*!< XTAL is 32M */
+    { &uhsPll667BasicCfg_38P4M, 0x22BD5 }, /*!< XTAL is 38.4M */
+    { &uhsPll667BasicCfg_40M, 0x21599 },   /*!< XTAL is 40M */
+    { &uhsPll667BasicCfg_26M, 0x267B1 },   /*!< XTAL is 26M */
+    { &uhsPll667BasicCfg_32M, 0x29B00 },   /*!< XTAL is RC32M */
 };
 
 /* uhs PLL 800 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll800BasicCfg_24M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 2,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 800/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 2,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 800 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll800BasicCfg_32M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 2,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 800/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 2,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 800 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll800BasicCfg_38P4M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 2,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 800/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 2,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 800 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll800BasicCfg_40M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 2,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 800/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 2,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 800 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll800BasicCfg_26M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 2,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 800/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,         /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,        /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 2,            /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,           /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 800 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_800M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                      /*!< XTAL is None */
-    { &uhsPll800BasicCfg_24M, 0x21555 },    /*!< XTAL is 24M */
-    { &uhsPll800BasicCfg_32M, 0x25800 },    /*!< XTAL is 32M */
-    { &uhsPll800BasicCfg_38P4M, 0x1F400 },  /*!< XTAL is 38.4M */
-    { &uhsPll800BasicCfg_40M, 0x1E000 },    /*!< XTAL is 40M */
-    { &uhsPll800BasicCfg_26M, 0x1EC4E },    /*!< XTAL is 26M */
-    { &uhsPll800BasicCfg_32M, 0x25800 },    /*!< XTAL is RC32M */
+    { NULL, 0x0 },                         /*!< XTAL is None */
+    { &uhsPll800BasicCfg_24M, 0x21555 },   /*!< XTAL is 24M */
+    { &uhsPll800BasicCfg_32M, 0x25800 },   /*!< XTAL is 32M */
+    { &uhsPll800BasicCfg_38P4M, 0x1F400 }, /*!< XTAL is 38.4M */
+    { &uhsPll800BasicCfg_40M, 0x1E000 },   /*!< XTAL is 40M */
+    { &uhsPll800BasicCfg_26M, 0x1EC4E },   /*!< XTAL is 26M */
+    { &uhsPll800BasicCfg_32M, 0x25800 },   /*!< XTAL is RC32M */
 };
 
 /* uhs PLL 1066 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1066BasicCfg_24M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 3,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1066/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 3,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1066 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1066BasicCfg_32M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 3,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1066/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 3,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1066 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1066BasicCfg_38P4M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 3,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1066/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 3,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1066 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1066BasicCfg_40M = {
-    .clkpllRefdivRatio = 3,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 3,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1066/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 3,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 3,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1066 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll1066BasicCfg_26M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 3,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 1066/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 3,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 1066 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_1066M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                      /*!< XTAL is None */
+    { NULL, 0x0 },                          /*!< XTAL is None */
     { &uhsPll1066BasicCfg_24M, 0x2C6AA },   /*!< XTAL is 24M */
     { &uhsPll1066BasicCfg_32M, 0x31F80 },   /*!< XTAL is 32M */
     { &uhsPll1066BasicCfg_38P4M, 0x29A40 }, /*!< XTAL is 38.4M */
@@ -673,42 +671,42 @@ const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_1066M[GLB_XTAL_MAX]
 
 /* uhs PLL 2000 Config*/
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2000BasicCfg_24M = {
-    .clkpllRefdivRatio = 1,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2000/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 1,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2000 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2000BasicCfg_32M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2000/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2000 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2000BasicCfg_38P4M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2000/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2000 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2000BasicCfg_40M = {
-    .clkpllRefdivRatio = 2,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 2,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2000/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 2,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 2,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2000 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION uhsPll2000BasicCfg_26M = {
-    .clkpllRefdivRatio = 1,     /*!< pll_refdiv_ratio */
-    .clkpllSelSampleClk = 1,    /*!< pll_sel_sample_clk */
-    .clkpllVcoSpeed = 7,        /*!< pll_vco_speed */
-    .clkpllEvenDivEn = 1,       /*!< pll_even_div_en */
-    .clkpllEvenDivRatio = 2000/50, /*!< pll_even_div_ratio */
+    .clkpllRefdivRatio = 1,          /*!< pll_refdiv_ratio */
+    .clkpllSelSampleClk = 1,         /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 7,             /*!< pll_vco_speed */
+    .clkpllEvenDivEn = 1,            /*!< pll_even_div_en */
+    .clkpllEvenDivRatio = 2000 / 50, /*!< pll_even_div_ratio */
 };
 const GLB_MU_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION uhsPllCfg_2000M[GLB_XTAL_MAX] = {
-    { NULL, 0x0 },                      /*!< XTAL is None */
+    { NULL, 0x0 },                          /*!< XTAL is None */
     { &uhsPll2000BasicCfg_24M, 0x29AAA },   /*!< XTAL is 24M */
     { &uhsPll2000BasicCfg_32M, 0x3E800 },   /*!< XTAL is 32M */
     { &uhsPll2000BasicCfg_38P4M, 0x34155 }, /*!< XTAL is 38.4M */
@@ -1264,7 +1262,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_WAC_PLL(GLB_WAC_PLL_Type pllType, co
     /* aupll : cfg1, aupll_postdiv = 0x12 or 0x14 */
     if (GLB_WAC_PLL_AUPLL == pllType) {
         tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 1);
-        if ((cfg->clkpllSdmin==0x12D0E)||(cfg->clkpllSdmin==0x1C395)||(cfg->clkpllSdmin==0x17851)||(cfg->clkpllSdmin==0x16944)||(cfg->clkpllSdmin==0x115E5)) {
+        if ((cfg->clkpllSdmin == 0x12D0E) || (cfg->clkpllSdmin == 0x1C395) || (cfg->clkpllSdmin == 0x17851) || (cfg->clkpllSdmin == 0x16944) || (cfg->clkpllSdmin == 0x115E5)) {
             /* 451.548 */
             tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_AUPLL_POSTDIV, 0x14);
         } else {
@@ -1577,9 +1575,9 @@ BL_Err_Type GLB_Set_Display_CLK(uint8_t enable, GLB_DISP_CLK_Type srcClk, uint8_
     }
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_MIPI_PLL_CFG1);
-    if(enable){
+    if (enable) {
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_MIPIPLL_EVEN_DIV_EN);
-    }else{
+    } else {
         tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_MIPIPLL_EVEN_DIV_EN);
     }
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_MIPIPLL_EVEN_DIV_RATIO, evenNum);
@@ -1622,23 +1620,23 @@ BL_Err_Type GLB_Set_EMAC_CLK(uint8_t enable)
 *******************************************************************************/
 BL_Err_Type GLB_Output_EMAC_CLK(uint8_t gpio)
 {
-    uint32_t regAddr=GLB_BASE+GLB_GPIO_CFG0_OFFSET+(gpio<<2);
-    uint32_t regVal=0x00040F03;
+    uint32_t regAddr = GLB_BASE + GLB_GPIO_CFG0_OFFSET + (gpio << 2);
+    uint32_t regVal = 0x00040F03;
 
-    if( ( gpio != GLB_GPIO_PIN_6 ) && \
-        ( gpio != GLB_GPIO_PIN_14 ) && \
-        ( gpio != GLB_GPIO_PIN_12 ) && \
-        ( gpio != GLB_GPIO_PIN_30 ) ){
+    if ((gpio != GLB_GPIO_PIN_6) &&
+        (gpio != GLB_GPIO_PIN_14) &&
+        (gpio != GLB_GPIO_PIN_12) &&
+        (gpio != GLB_GPIO_PIN_30)) {
         return ERROR;
     }
     /* set gpio in debug function */
-    BL_WR_WORD(regAddr,regVal);
+    BL_WR_WORD(regAddr, regVal);
 
     /* select signal */
-    BL_WR_WORD(0x200002E0+((gpio-6)/8)*4,0x80000010);
+    BL_WR_WORD(0x200002E0 + ((gpio - 6) / 8) * 4, 0x80000010);
 
     /* output */
-    BL_WR_WORD(0x200002F0,0x01);
+    BL_WR_WORD(0x200002F0, 0x01);
 
     return SUCCESS;
 }
@@ -5149,9 +5147,9 @@ BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(GLB_XTAL_Type *calcXtalType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Flash_Id_Value(uint32_t idValue)
+BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Id_Value(uint32_t idValue)
 {
-    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, (idValue|BFLB_FLASH_ID_VALID_FLAG));
+    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, (idValue | BFLB_FLASH_ID_VALID_FLAG));
 
     return SUCCESS;
 }
@@ -5164,13 +5162,13 @@ BL_Err_Type GLB_Set_Flash_Id_Value(uint32_t idValue)
  * @return flash id
  *
 *******************************************************************************/
-uint32_t GLB_Get_Flash_Id_Value(void)
+uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
 {
     uint32_t tmpVal = 0;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_HW_RSV1);
-    if ((tmpVal&BFLB_FLASH_ID_VALID_FLAG) != 0) {
-        return (tmpVal&BFLB_FLASH_ID_VALID_MASK);
+    if ((tmpVal & BFLB_FLASH_ID_VALID_FLAG) != 0) {
+        return (tmpVal & BFLB_FLASH_ID_VALID_MASK);
     }
 
     return 0x00000000;
@@ -5869,7 +5867,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_DSP_Image_Sensor_Reset(GLB_DSP_IMAGE_SENSOR_Typ
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const GLB_WAC_PLL_Cfg_Type * pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const GLB_WAC_PLL_Cfg_Type *pllCfgList)
 {
     GLB_PLL_REF_CLK_Type refClk;
 
@@ -5895,7 +5893,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL(GLB_XTAL_Type xtalType, const GLB_WAC_PLL_Cfg_Type * pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL(GLB_XTAL_Type xtalType, const GLB_WAC_PLL_Cfg_Type *pllCfgList)
 {
     GLB_PLL_REF_CLK_Type refClk;
 
@@ -5921,7 +5919,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL(GLB_XTAL_Type xtalType, cons
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPU_PLL(GLB_XTAL_Type xtalType, const GLB_WAC_PLL_Cfg_Type * pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPU_PLL(GLB_XTAL_Type xtalType, const GLB_WAC_PLL_Cfg_Type *pllCfgList)
 {
     GLB_PLL_REF_CLK_Type refClk;
 
@@ -5947,7 +5945,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPU_PLL(GLB_XTAL_Type xtalType, const 
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_MIPI_PLL(GLB_XTAL_Type xtalType, const GLB_MU_PLL_Cfg_Type * pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_MIPI_PLL(GLB_XTAL_Type xtalType, const GLB_MU_PLL_Cfg_Type *pllCfgList)
 {
     GLB_PLL_REF_CLK_Type refClk;
 
@@ -5997,7 +5995,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_MIPI_PLL_Div(uint8_t divEn, uint8_t di
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_UHS_PLL(GLB_XTAL_Type xtalType, const GLB_MU_PLL_Cfg_Type * pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_UHS_PLL(GLB_XTAL_Type xtalType, const GLB_MU_PLL_Cfg_Type *pllCfgList)
 {
     GLB_PLL_REF_CLK_Type refClk;
 

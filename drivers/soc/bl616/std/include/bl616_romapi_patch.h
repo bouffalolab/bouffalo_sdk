@@ -36,9 +36,9 @@
 #ifndef __BL616_ROMAPI_PATCH_H__
 #define __BL616_ROMAPI_PATCH_H__
 
+#include "bflb_sflash.h"
+#include "bflb_xip_sflash.h"
 #include "bl616_pds.h"
-#include "bl616_sflash.h"
-#include "bl616_xip_sflash.h"
 #include "bl616_clock.h"
 // #include "bl616_uart.h"
 

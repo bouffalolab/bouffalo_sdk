@@ -40,7 +40,6 @@
 extern "C" {
 #endif
 
-#include "bl702_sflash.h"
 #include "bl702_glb.h"
 
 #define BL_TCM_BASE           BL702_TCM_BASE
@@ -105,7 +104,7 @@ typedef struct
 
 struct __attribute__((packed, aligned(4))) hal_flash_config {
     uint32_t magicCode; /*'FCFG'*/
-    SPI_Flash_Cfg_Type cfg;
+    spi_flash_cfg_type cfg;
     uint32_t crc32;
 };
 

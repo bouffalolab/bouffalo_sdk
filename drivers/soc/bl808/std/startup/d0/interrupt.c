@@ -45,7 +45,7 @@ const char *mcause_str[] = {
     if ((cause & 0xf))
         printf("%s\r\n\r\n", mcause_str[cause & 0xf]);
 
-#ifndef CONFIG_ERR_NOT_DUMP_ALL_REGS
+#ifdef CONFIG_TRAP_DUMP_ALL_REGS
     printf("ra = 0x%16llx  ", regs[REG_RA]); printf("sp = 0x%16llx  ", regs[REG_SP]); printf("gp = 0x%16llx  ", regs[REG_GP]);
     printf("tp = 0x%16llx  ", regs[REG_TP]); printf("\n\r");
 

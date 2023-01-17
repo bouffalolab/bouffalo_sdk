@@ -83,6 +83,10 @@ void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size);
  */
 void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_t size);
 
+void bflb_l1c_hit_count_get(uint32_t *hit_count_low, uint32_t *hit_count_high);
+uint32_t bflb_l1c_miss_count_get(void);
+void bflb_l1c_cache_write_set(uint8_t wt_en, uint8_t wb_en, uint8_t wa_en);
+
 /**
   * @}
   */

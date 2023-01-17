@@ -2,10 +2,16 @@
 #include "bflb_dma.h"
 #include "board.h"
 
+
+#define FLASH_RW_START_ADDR   0x10000
+#define DMA_FLASH_ADDR_OFFSET 28  /* 0 or 28 for unaligned case */
 #define DMA_BUFFER_LENGTH     260
-#define DMA_FLASH_ADDR_OFFSET 0  /* 0 or 28 */
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t dst_buffer[DMA_BUFFER_LENGTH];
+static uint8_t write_buf[DMA_BUFFER_LENGTH];
+static uint8_t dma_tc_flag0 = 0;
+struct bflb_device_s *dma0_ch0;
+static uint64_t start_time;
 
 static uint8_t src_burst[] = {
     DMA_BURST_INCR1,
@@ -67,12 +73,6 @@ static uint8_t dst_width[] = {
     DMA_DATA_WIDTH_32BIT,
 };
 
-static uint8_t dma_tc_flag0 = 0;
-
-struct bflb_device_s *dma0_ch0;
-
-volatile uint64_t start_time;
-
 void dma0_ch0_isr(void *arg)
 {
     printf("cost time:%d us\r\n", (uint32_t)(bflb_mtimer_get_time_us() - start_time));
@@ -83,18 +83,15 @@ void dma0_ch0_isr(void *arg)
 int main(void)
 {
     board_init();
-
-    uint8_t write_buf[DMA_BUFFER_LENGTH];
-
     for (uint16_t i = 0; i < DMA_BUFFER_LENGTH; i++) {
         write_buf[i] = (i & 0xff) + i / 256;
     }
 
-    /* erase 0x00010000 4k flash */
-    bflb_flash_erase(0x00010000, 4096);
+    /* erase flash */
+    bflb_flash_erase(FLASH_RW_START_ADDR, 4096);
 
-    /* write 0x00010000 flash data */
-    bflb_flash_write(0x00010000, write_buf, sizeof(write_buf)); /* FLASH_XIP_BASE - 0x2000 + 0x00010000 */
+    /* write flash data */
+    bflb_flash_write(FLASH_RW_START_ADDR, write_buf, sizeof(write_buf)); /* FLASH_XIP_BASE - 0x2000 + 0x00010000 */
 
     dma0_ch0 = bflb_device_get_by_name("dma0_ch0");
 
@@ -120,7 +117,7 @@ int main(void)
         struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */
         struct bflb_dma_channel_lli_transfer_s transfers[1];
 
-        transfers[0].src_addr = (uint32_t)(FLASH_XIP_BASE - bflb_flash_get_image_offset() + 0x00010000 + DMA_FLASH_ADDR_OFFSET);
+        transfers[0].src_addr = (uint32_t)(FLASH_XIP_BASE - bflb_flash_get_image_offset() + FLASH_RW_START_ADDR + DMA_FLASH_ADDR_OFFSET);
         transfers[0].dst_addr = (uint32_t)dst_buffer;
         transfers[0].nbytes = DMA_BUFFER_LENGTH - DMA_FLASH_ADDR_OFFSET;
 
@@ -141,7 +138,7 @@ int main(void)
         }
     }
 
-    printf("flash test success\r\n");
+    printf("flash dam case success\r\n");
     while (1) {
     }
 }

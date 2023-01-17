@@ -36,7 +36,6 @@
 #ifndef __BFLB_PORT_BOOT2_H__
 #define __BFLB_PORT_BOOT2_H__
 
-#include "bl606p_sflash.h"
 #include "bl606p_glb.h"
 #include "bl606p_pm.h"
 
@@ -167,13 +166,13 @@ typedef struct
 
 struct __attribute__((packed, aligned(4))) hal_flash_config {
     uint32_t magicCode; /*'FCFG'*/
-    SPI_Flash_Cfg_Type cfg;
+    spi_flash_cfg_type cfg;
     uint32_t crc32;
 };
 
 struct hal_psram_config {
     uint32_t magicCode; /*'FCFG'*/
-    SPI_Flash_Cfg_Type cfg;
+    spi_flash_cfg_type cfg;
     uint32_t crc32;
 };
 

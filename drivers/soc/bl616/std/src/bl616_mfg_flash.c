@@ -3,19 +3,19 @@
 
 //static rf_para_flash_t rf_para;
 //static uint32_t rf_para_addr = 0;
-//static SPI_Flash_Cfg_Type *pFlashCfg;
+//static spi_flash_cfg_type *pFlashCfg;
 
 //#define RF_PARA_MAGIC_FLAG      0x41504652
 #define RF_PARA_MAGIC_FLAG 0x41
 #define RF_PARA_VALID_FLAG 0x5A
 #define RF_PARA_PART_NAME  "rf_para"
 
-static BL_Err_Type PtTable_Flash_Read(uint32_t addr, uint8_t *data, uint32_t len)
+static int PtTable_Flash_Read(uint32_t addr, uint8_t *data, uint32_t len)
 {
-    return SUCCESS;
+    return 0;
 }
 
-int mfg_flash_init(SPI_Flash_Cfg_Type *flashCfg)
+int mfg_flash_init(spi_flash_cfg_type *flashCfg)
 {
     PtTable_Flash_Read(0, NULL, 0);
     return -1;

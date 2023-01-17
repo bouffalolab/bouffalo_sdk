@@ -39,6 +39,7 @@ int main(void)
 
     memcpy(&cam_config, sensor_config, IMAGE_SENSOR_INFO_COPY_SIZE);
     cam_config.with_mjpeg = false;
+    cam_config.input_source = CAM_INPUT_SOURCE_DVP;
     cam_config.output_format = CAM_OUTPUT_FORMAT_AUTO;
     cam_config.output_bufaddr = BFLB_PSRAM_BASE;
     cam_config.output_bufsize = CROP_WQVGA_X * CROP_WQVGA_Y * 8;

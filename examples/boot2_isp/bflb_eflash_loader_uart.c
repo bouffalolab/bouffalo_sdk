@@ -39,6 +39,7 @@
 #include "partition.h"
 #include "bflb_uart.h"
 #include "bflb_port_boot2.h"
+#include "bflb_uart.h"
 
 static uint32_t g_detected_baudrate;
 struct bflb_device_s *uartx;
@@ -53,8 +54,37 @@ void bflb_dump_data(uint8_t *buf, uint32_t size)
     }
     LOG_F("\r\n");
 }
+
+static uint32_t uart_read_all_data(uint8_t *buf,uint32_t maxlen)
+{
+    return bflb_uart_get(uartx, buf, maxlen);
+}
+
 void ATTR_TCM_SECTION uart0_irq_callback(struct device *dev, void *args, uint32_t size, uint32_t state)
 {
+}
+
+void ATTR_TCM_SECTION uart_isr(int irq, void *arg)
+{
+    uint32_t intstatus = bflb_uart_get_intstatus(uartx);
+
+    if (intstatus & UART_INTSTS_RX_FIFO) {
+
+        uint8_t *buf=(uint8_t *)g_eflash_loader_readbuf[g_rx_buf_index];
+
+        g_rx_buf_len+=uart_read_all_data(buf+g_rx_buf_len,
+                                    BFLB_EFLASH_LOADER_READBUF_SIZE-g_rx_buf_len);
+        bflb_uart_int_clear(uartx, UART_INTSTS_RX_FIFO);
+                                    
+    }
+    if (intstatus & UART_INTSTS_RTO) {
+        uint8_t *buf=(uint8_t *)g_eflash_loader_readbuf[g_rx_buf_index];
+
+        g_rx_buf_len+=uart_read_all_data(buf+g_rx_buf_len,
+                                    BFLB_EFLASH_LOADER_READBUF_SIZE-g_rx_buf_len);
+        bflb_uart_int_clear(uartx, UART_INTCLR_RTO);
+    }
+    
 }
 
 static void bflb_eflash_loader_usart_if_init(uint32_t bdrate)
@@ -68,8 +98,8 @@ static void bflb_eflash_loader_usart_if_init(uint32_t bdrate)
     cfg.stop_bits = UART_STOP_BITS_1;
     cfg.parity = UART_PARITY_NONE;
     cfg.flow_ctrl = 0;
-    cfg.tx_fifo_threshold = 7;
-    cfg.rx_fifo_threshold = 7;
+    cfg.tx_fifo_threshold = 16;
+    cfg.rx_fifo_threshold = 16;
     bflb_uart_init(uartx, &cfg);
 }
 
@@ -80,7 +110,7 @@ void bflb_eflash_loader_usart_if_enable_int(void)
 
 void bflb_eflash_loader_usart_if_send(uint8_t *data, uint32_t len)
 {
-    uartx = bflb_device_get_by_name("uart0");
+    //uartx = bflb_device_get_by_name("uart0");
     bflb_uart_put(uartx, data, len);
 }
 
@@ -94,6 +124,35 @@ int32_t bflb_eflash_loader_usart_if_wait_tx_idle(uint32_t timeout)
 
 static uint32_t *bflb_eflash_loader_usart_if_receive(uint32_t *recv_len, uint16_t maxlen, uint16_t timeout)
 {
+    uint8_t *buf = (uint8_t *)g_eflash_loader_readbuf[g_rx_buf_index];
+    uint16_t datalen = 0;
+    uint64_t time_now;
+
+    time_now = bflb_mtimer_get_time_ms();
+
+    do {
+        if (g_rx_buf_len >= 4) {
+            /* receive cmd id and data len*/
+            datalen = buf[2] + (buf[3] << 8);
+
+            if (g_rx_buf_len == datalen + 4) {
+                /*receive all the payload,return */
+                /* move on to next buffer */
+                g_rx_buf_index = (g_rx_buf_index + 1) % 2;
+                g_rx_buf_len = 0;
+
+                if (datalen <= BFLB_EFLASH_LOADER_CMD_DATA_MAX_LEN) {
+                    *recv_len = datalen + 4;
+                    return (uint32_t *)buf;
+                } else {
+                    *recv_len = 0;
+                    return NULL;
+                }
+            }
+        }
+    } while (bflb_mtimer_get_time_ms() - time_now < timeout);
+
+    *recv_len = 0;
     return NULL;
 }
 
@@ -118,7 +177,7 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
     uint32_t handshake_count = 0;
     uint32_t rcv_buf_len = 0;
     //rcv_buf_len = UART_ReceiveData(g_uart_if_id,buf,128);
-    uartx = bflb_device_get_by_name("uart0");
+    //uartx = bflb_device_get_by_name("uart0");
     rcv_buf_len = bflb_uart_get(uartx, buf, UART_FIFO_LEN);
 
     //while(1)
@@ -167,7 +226,7 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
         }
 
     } while (bflb_mtimer_get_time_ms() - nowtime < BFLB_EFLASH_LAODER_COMSUME_55_TIMEOUT);
-    bflb_eflash_loader_usart_if_send((uint8_t *)"Boot2 ISP Ready", strlen("Boot2 ISP Ready"));
+    
 
     /*init rx info */
     g_rx_buf_index = 0;
@@ -180,7 +239,10 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
     arch_memset(g_eflash_loader_readbuf[0], 0, BFLB_EFLASH_LOADER_READBUF_SIZE);
     arch_memset(g_eflash_loader_readbuf[1], 0, BFLB_EFLASH_LOADER_READBUF_SIZE);
 
+    bflb_irq_attach(uartx->irq_num, uart_isr, NULL);
     bflb_eflash_loader_usart_if_enable_int();
+    bflb_irq_enable(uartx->irq_num);
+    bflb_eflash_loader_usart_if_send((uint8_t *)"Boot2 ISP Ready", strlen("Boot2 ISP Ready"));
 
 #endif
 

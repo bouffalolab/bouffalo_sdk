@@ -1950,7 +1950,6 @@ BL_Err_Type GLB_Set_Chip_Clock_Out0_Sel(GLB_CHIP_CLK_OUT_0_Type clkOutType)
     BL_WR_REG(GLB_BASE, GLB_DIG_CLK_CFG2, tmpVal);
 
     return SUCCESS;
-
 }
 
 /****************************************************************************/ /**
@@ -3381,9 +3380,9 @@ BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(GLB_XTAL_Type *calcXtalType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Flash_Id_Value(uint32_t idValue)
+BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Id_Value(uint32_t idValue)
 {
-    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, (idValue|BFLB_FLASH_ID_VALID_FLAG));
+    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, (idValue | BFLB_FLASH_ID_VALID_FLAG));
 
     return SUCCESS;
 }
@@ -3396,13 +3395,13 @@ BL_Err_Type GLB_Set_Flash_Id_Value(uint32_t idValue)
  * @return flash id
  *
 *******************************************************************************/
-uint32_t GLB_Get_Flash_Id_Value(void)
+uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
 {
     uint32_t tmpVal = 0;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_HW_RSV1);
-    if ((tmpVal&BFLB_FLASH_ID_VALID_FLAG) != 0) {
-        return (tmpVal&BFLB_FLASH_ID_VALID_MASK);
+    if ((tmpVal & BFLB_FLASH_ID_VALID_FLAG) != 0) {
+        return (tmpVal & BFLB_FLASH_ID_VALID_MASK);
     }
 
     return 0x00000000;
@@ -3704,20 +3703,20 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_Slave_Grp_0_CLK(GLB_SLAVE_GRP_0_Type slav
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const GLB_WA_PLL_Cfg_Type * pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList)
 {
     GLB_PLL_REF_CLK_Type refClk;
-    
+
     if (xtalType == GLB_XTAL_RC32M) {
         refClk = GLB_PLL_REFCLK_RC32M;
     } else {
         refClk = GLB_PLL_REFCLK_XTAL;
     }
-    
+
     GLB_Power_Off_WIFIPLL();
     GLB_WIFIPLL_Ref_Clk_Sel(refClk);
     GLB_Power_On_WIFIPLL(&(pllCfgList[xtalType]), 1);
-    
+
     return SUCCESS;
 }
 
@@ -3730,20 +3729,20 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL(GLB_XTAL_Type xtalType, const GLB_WA_PLL_Cfg_Type * pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL(GLB_XTAL_Type xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList)
 {
     GLB_PLL_REF_CLK_Type refClk;
-    
+
     if (xtalType == GLB_XTAL_RC32M) {
         refClk = GLB_PLL_REFCLK_RC32M;
     } else {
         refClk = GLB_PLL_REFCLK_XTAL;
     }
-    
+
     GLB_Power_Off_AUPLL();
     GLB_AUPLL_Ref_Clk_Sel(refClk);
     GLB_Power_On_AUPLL(&(pllCfgList[xtalType]), 1);
-    
+
     return SUCCESS;
 }
 
@@ -3758,12 +3757,12 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL(GLB_XTAL_Type xtalType, cons
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_384M(void)
 {
     /* GLB_XTAL_Type */
-    uint8_t xtalType=GLB_XTAL_NONE;
+    uint8_t xtalType = GLB_XTAL_NONE;
 
     /* we take 384M for CPU use,so set LDO to 1.2V*/
     HBN_Set_Ldo11_All_Vout(HBN_LDO_LEVEL_1P20V);
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType,audioPllCfg_384M);
+    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType, audioPllCfg_384M);
 }
 
 /****************************************************************************/ /**
@@ -3777,10 +3776,10 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_384M(void)
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_400M(void)
 {
     /* GLB_XTAL_Type */
-    uint8_t xtalType=GLB_XTAL_NONE;
+    uint8_t xtalType = GLB_XTAL_NONE;
 
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType,audioPllCfg_400M);
+    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType, audioPllCfg_400M);
 }
 
 /****************************************************************************/ /**
@@ -3794,10 +3793,10 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_400M(void)
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_451P58M(void)
 {
     /* GLB_XTAL_Type */
-    uint8_t xtalType=GLB_XTAL_NONE;
+    uint8_t xtalType = GLB_XTAL_NONE;
 
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType,audioPllCfg_451P58M);
+    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType, audioPllCfg_451P58M);
 }
 
 /****************************************************************************/ /**
@@ -3811,10 +3810,10 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_451P58M(void)
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_491P52M(void)
 {
     /* GLB_XTAL_Type */
-    uint8_t xtalType=GLB_XTAL_NONE;
+    uint8_t xtalType = GLB_XTAL_NONE;
 
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType,audioPllCfg_491P52M);
+    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType, audioPllCfg_491P52M);
 }
 
 /*@} end of group GLB_Public_Functions */

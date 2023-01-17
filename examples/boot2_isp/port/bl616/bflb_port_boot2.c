@@ -38,11 +38,11 @@
 #include "bl616_ef_ctrl.h"
 #include "bl616_hbn.h"
 #include "bl616_glb.h"
-#include "bl616_xip_sflash.h"
 #include "bl616_tzc_sec.h"
 #include "softcrc.h"
 #include "bl616_psram.h"
 #include "bflb_flash.h"
+#include "log.h"
 
 /****************************************************************************/ /**
  * @brief  init boot2 system clock
@@ -228,8 +228,7 @@ static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num)
     printf("r ef:0x%08lx\r\n", g_efuse_cfg.psram_dqs_cfg);
 #endif
     before_ef = g_efuse_cfg.psram_dqs_cfg;
-    if ((g_efuse_cfg.psram_dqs_cfg & (0x1000)) &&
-        (((g_efuse_cfg.psram_dqs_cfg & 0x800) >> 11) == EF_Ctrl_Get_Trim_Parity(g_efuse_cfg.psram_dqs_cfg, 11))) {
+    if (g_efuse_cfg.psram_dqs_cfg != 0xffff) {
         left_flag = ((g_efuse_cfg.psram_dqs_cfg & (0xf0)) >> 0x4);
         right_flag = (g_efuse_cfg.psram_dqs_cfg & (0xf));
         c_val = ((left_flag + right_flag) >> 0x1);
@@ -263,11 +262,7 @@ static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num)
         // printf("window: 0x%02x ~ 0x%02x; c_val: 0x%02x; dqs:0x%04x; code num:%d\r\n", left_flag, right_flag, c_val, dqs_val[c_val], (right_flag - left_flag));
 
         g_efuse_cfg.psram_dqs_cfg = (((left_flag << 0x4) | (right_flag)) & (0xff));
-        if (EF_Ctrl_Get_Trim_Parity(g_efuse_cfg.psram_dqs_cfg, 11)) {
-            g_efuse_cfg.psram_dqs_cfg = ((0x1800) | (g_efuse_cfg.psram_dqs_cfg));
-        } else {
-            g_efuse_cfg.psram_dqs_cfg = ((0x1000) | (g_efuse_cfg.psram_dqs_cfg));
-        }
+        
 #ifdef CONFIG_DEBUG
         printf("c ef:0x%08lx\r\n", g_efuse_cfg.psram_dqs_cfg);
         /* printf("window: 0x%02x ~ 0x%02x; c_val: 0x%02x; dqs:0x%08x; code num:%d\r\n", left_flag, right_flag, c_val, dqs_val[c_val], (right_flag - left_flag)); */
@@ -282,7 +277,7 @@ static uint16_t hal_boot2_x8_psram_calibration(int32_t *psram_dqs_win_num)
         }
         /* to do write efuse psram dqs delay */
         if (!(before_ef & 0x1fff)) {
-            // EF_Ctrl_Write_Psram_Trim((Efuse_Psram_Trim_Type *)&g_efuse_cfg.psram_dqs_cfg, ENABLE);
+            bflb_ef_ctrl_write_common_trim(NULL,"psram",g_efuse_cfg.psram_dqs_cfg,1);
         }
     }
     return psram_id;
@@ -314,11 +309,11 @@ uint32_t hal_boot2_custom(void *custom_param)
         __ISB();
         if (ret == ERROR) {
             while (1) {
-                printf("psram error:%d\r\n", (int)psram_dqs_win_num);
+                LOG_F("psram error:%d\r\n", (int)psram_dqs_win_num);
                 arch_delay_ms(500);
             }
         }
-        printf("psram suss:%d \r\n", (int)psram_dqs_win_num);
+        LOG_F("psram suss:%d \r\n", (int)psram_dqs_win_num);
     }
 
     return ret;
@@ -790,7 +785,7 @@ void ATTR_TCM_SECTION hal_boot2_release_cpu(uint32_t core, uint32_t boot_addr)
 *******************************************************************************/
 uint32_t hal_boot2_get_xip_addr(uint32_t flash_addr)
 {
-    uint32_t img_offset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
+    uint32_t img_offset = bflb_sf_ctrl_get_flash_image_offset(0, SF_CTRL_FLASH_BANK0);
     if (flash_addr >= img_offset) {
         return BL616_FLASH_XIP_BASE + (flash_addr - img_offset);
     } else {

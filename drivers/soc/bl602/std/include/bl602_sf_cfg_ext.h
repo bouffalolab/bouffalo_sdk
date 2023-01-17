@@ -37,8 +37,8 @@
 #define __BL602_SF_CFG_EXT_H__
 
 #include "string.h"
-#include "bl602_sflash.h"
-#include "bl602_sf_ctrl.h"
+#include "bflb_sflash.h"
+#include "bflb_sf_ctrl.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
@@ -69,9 +69,10 @@
 /** @defgroup  SF_CFG_EXT_Public_Functions
  *  @{
  */
-BL_Err_Type SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID, SPI_Flash_Cfg_Type *pFlashCfg);
-uint32_t SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash, uint32_t autoScan, uint32_t flashPinCfg,
-                                   uint8_t restoreDefault, SPI_Flash_Cfg_Type *pFlashCfg);
+int bflb_sf_cfg_get_flash_cfg_need_lock_ext(uint32_t flash_id, spi_flash_cfg_type *p_flash_cfg,
+                                            uint8_t group, uint8_t bank);
+uint32_t bflb_sf_cfg_flash_identify_ext(uint8_t call_from_flash, uint8_t flash_pin_cfg, uint8_t restore_default,
+                                        spi_flash_cfg_type *p_flash_cfg, uint8_t group, uint8_t bank);
 
 /*@} end of group SF_CFG_EXT_Public_Functions */
 

@@ -1,5 +1,7 @@
 #include "bflb_mtimer.h"
 #include "board.h"
+
+#define DBG_TAG "MAIN"
 #include "log.h"
 
 int main(void)

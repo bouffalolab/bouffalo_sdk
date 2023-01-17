@@ -41,9 +41,9 @@
 #include "bl808_clock.h"
 #include "bl808_aon.h"
 #include "bl808_hbn.h"
-#include "bl808_sflash.h"
-#include "bl808_sf_ctrl.h"
 #include "bl808_common.h"
+#include "bflb_sflash.h"
+#include "bflb_sf_ctrl.h"
 
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
@@ -372,7 +372,7 @@ typedef struct
     uint8_t xtalType;                                 /*!< XTal type, used when user choose turn off PLL, PDS will turn on when exit PDS mode */
     uint8_t flashContRead;                            /*!< Whether enable flash continue read */
     uint32_t sleepTime;                               /*!< PDS sleep time */
-    SPI_Flash_Cfg_Type *flashCfg;                     /*!< Flash config pointer, used when power down flash */
+    spi_flash_cfg_type *flashCfg;                     /*!< Flash config pointer, used when power down flash */
     PDS_LDO_LEVEL_Type ldoLevel;                      /*!< LDO level */
     void (*preCbFun)(void);                           /*!< Pre callback function */
     void (*postCbFun)(void);                          /*!< Post callback function */
@@ -473,8 +473,8 @@ BL_Err_Type PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask_Type intMask);
 BL_Err_Type PDS_Set_GPIO_Pad_IntMode(PDS_GPIO_INT_SET_Type set, PDS_GPIO_INT_TRIG_Type trig);
 BL_Err_Type PDS_Set_GPIO_Pad_IntClr(PDS_GPIO_INT_SET_Type set);
 BL_Sts_Type PDS_Get_GPIO_Pad_IntStatus(GLB_GPIO_Type pad);
-BL_Err_Type PDS_Set_Flash_Pad_Pull_None(SF_Ctrl_Pin_Select pinCfg);
-BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(SF_Ctrl_Pin_Select pinCfg);
+BL_Err_Type PDS_Set_Flash_Pad_Pull_None(uint8_t pinCfg);
+BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg);
 BL_Err_Type PDS_Set_MCU0_Clock_Enable(void);
 BL_Err_Type PDS_Set_MCU0_Clock_Disable(void);
 BL_Err_Type PDS_Set_MCU0_Reset_Address(uint32_t addr);

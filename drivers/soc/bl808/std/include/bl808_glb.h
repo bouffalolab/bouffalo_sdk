@@ -42,11 +42,11 @@
 #include "pds_reg.h"
 #include "bl808_gpio.h"
 #include "bl808_hbn.h"
-#include "bl808_sf_ctrl.h"
-#include "bl808_sf_cfg.h"
 #include "bl808_aon.h"
 #include "bl808_pds.h"
 #include "bl808_common.h"
+#include "bflb_sf_ctrl.h"
+#include "bflb_sf_cfg.h"
 
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{

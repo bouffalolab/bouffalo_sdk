@@ -3,8 +3,6 @@
 #include "bl602_glb.h"
 #include "bl602_ef_ctrl.h"
 #include "bl602_hbn.h"
-#include "bl602_xip_sflash.h"
-#include "bl602_sf_cfg.h"
 #include "bl602_sf_cfg_ext.h"
 #include "bl602_glb.h"
 #include "bl602_xip_sflash_ext.h"
@@ -502,7 +500,7 @@ void ATTR_TCM_SECTION hal_boot2_release_cpu(uint32_t core, uint32_t boot_addr)
 *******************************************************************************/
 uint32_t hal_boot2_get_xip_addr(uint32_t flash_addr)
 {
-    uint32_t img_offset = SF_Ctrl_Get_Flash_Image_Offset();
+    uint32_t img_offset = bflb_sf_ctrl_get_flash_image_offset(0,0);
     if (flash_addr >= img_offset) {
         return BL602_FLASH_XIP_BASE + (flash_addr - img_offset);
     } else {

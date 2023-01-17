@@ -62,7 +62,7 @@
 #define BL616_IRQ_TIMER1                            (BL616_IRQ_NUM_BASE + 37)
 #define BL616_IRQ_WDG                               (BL616_IRQ_NUM_BASE + 38)
 #define BL616_IRQ_I2C1                              (BL616_IRQ_NUM_BASE + 39)
-#define BL616_IRQ_I2CS                              (BL616_IRQ_NUM_BASE + 40)
+#define BL616_IRQ_I2S                               (BL616_IRQ_NUM_BASE + 40)
 #define BL616_IRQ_ANA_OCP_OUT_TO_CPU_0              (BL616_IRQ_NUM_BASE + 41)
 #define BL616_IRQ_ANA_OCP_OUT_TO_CPU_1              (BL616_IRQ_NUM_BASE + 42)
 #define BL616_IRQ_XTAL_RDY_SCAN                     (BL616_IRQ_NUM_BASE + 43)

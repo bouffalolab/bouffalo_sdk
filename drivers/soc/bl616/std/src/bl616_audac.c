@@ -244,13 +244,13 @@ int bflb_audac_get_intstatus(struct bflb_device_s *dev)
 
     /* fifo int */
     regval = getreg32(reg_base + AUDAC_FIFO_STATUS_OFFSET);
-    if (regval | AUDAC_TXO_INT) {
+    if (regval & AUDAC_TXO_INT) {
         int_sts |= AUDAC_INTSTS_FIFO_OVER;
     }
-    if (regval | AUDAC_TXU_INT) {
+    if (regval & AUDAC_TXU_INT) {
         int_sts |= AUDAC_INTSTS_FIFO_UNDER;
     }
-    if (regval | AUDAC_TXA_INT) {
+    if (regval & AUDAC_TXA_INT) {
         int_sts |= AUDAC_INTSTS_FIFO_AVAILABLE;
     }
 
