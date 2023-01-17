@@ -25,6 +25,9 @@
 #define _BFLOG_H
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 #ifdef CONFIG_BFLOG_USER
 #include "bflog_user.h"
@@ -35,20 +38,20 @@
 /** @addtogroup BFLOG_CSI Control Sequence Introducer
  * @{
  */
-#define BFLOG_CSI_START "\033["
-#define BFLOG_CSI_CUU   "A"
-#define BFLOG_CSI_CUD   "B"
-#define BFLOG_CSI_CUF   "C"
-#define BFLOG_CSI_CUB   "D"
-#define BFLOG_CSI_CNL   "E"
-#define BFLOG_CSI_CPL   "F"
-#define BFLOG_CSI_CHA   "G"
-#define BFLOG_CSI_CUP   "H"
-#define BFLOG_CSI_ED    "J"
-#define BFLOG_CSI_EL    "K"
-#define BFLOG_CSI_SU    "S"
-#define BFLOG_CSI_SD    "T"
-#define BFLOG_CSI_SGR   "m"
+#define BFLOG_CSI_START      "\033["
+#define BFLOG_CSI_CUU        "A"
+#define BFLOG_CSI_CUD        "B"
+#define BFLOG_CSI_CUF        "C"
+#define BFLOG_CSI_CUB        "D"
+#define BFLOG_CSI_CNL        "E"
+#define BFLOG_CSI_CPL        "F"
+#define BFLOG_CSI_CHA        "G"
+#define BFLOG_CSI_CUP        "H"
+#define BFLOG_CSI_ED         "J"
+#define BFLOG_CSI_EL         "K"
+#define BFLOG_CSI_SU         "S"
+#define BFLOG_CSI_SD         "T"
+#define BFLOG_CSI_SGR        "m"
 /**
  * @}
  */
@@ -90,9 +93,9 @@
 /** @addtogroup BFLOG_COLOR
  * @{
  */
-#define BFLOG_COLOR_START BFLOG_CSI_START
-#define BFLOG_COLOR_END   BFLOG_CSI_SGR
-#define BFLOG_CLOLR_SEP   ";"
+#define BFLOG_COLOR_START    BFLOG_CSI_START
+#define BFLOG_COLOR_END      BFLOG_CSI_SGR
+#define BFLOG_CLOLR_SEP      ";"
 #define BFLOG_COLOR_DEFAULT
 #define BFLOG_COLOR_RESET BFLOG_SGR_RESET BFLOG_CLOLR_SEP
 #define BFLOG_COLOR_FG_NONE
@@ -133,7 +136,7 @@
 #endif
 
 #ifndef BFLOG_COLOR_INFO
-#define BFLOG_COLOR_INFO BFLOG_COLOR_FG_GREEN BFLOG_COLOR_BG_NONE BFLOG_SGR_NORMAL
+#define BFLOG_COLOR_INFO BFLOG_COLOR_FG_NONE BFLOG_COLOR_BG_NONE BFLOG_SGR_RESET
 #endif
 
 #ifndef BFLOG_COLOR_DEBUG
@@ -180,12 +183,14 @@
 /** @addtogroup BFLOG_LEVEL
  * @{
  */
-#define BFLOG_LEVEL_FATAL 0 /*!< level fatal, create a panic */
-#define BFLOG_LEVEL_ERROR 1 /*!< level error                 */
-#define BFLOG_LEVEL_WARN  2 /*!< level warning               */
-#define BFLOG_LEVEL_INFO  3 /*!< level information           */
-#define BFLOG_LEVEL_DEBUG 4 /*!< level debug                 */
-#define BFLOG_LEVEL_TRACE 5 /*!< level trace information     */
+#define BFLOG_LEVEL_FATAL           0x00 /*!< level fatal, create a panic */
+#define BFLOG_LEVEL_ERROR           0x01 /*!< level error                 */
+#define BFLOG_LEVEL_WARN            0x02 /*!< level warning               */
+#define BFLOG_LEVEL_INFO            0x03 /*!< level information           */
+#define BFLOG_LEVEL_DEBUG           0x04 /*!< level debug                 */
+#define BFLOG_LEVEL_TRACE           0x05 /*!< level trace information     */
+#define BFLOG_LEVEL_MASK            0x7F /*!< level mask */
+#define BFLOG_LEVEL_RAW             0x80 /*!< level raw bit */
 /**
  * @}
  */
@@ -193,14 +198,14 @@
 /** @addtogroup BFLOG_FLAG
  * @{
  */
-#define BFLOG_FLAG_LEVEL  ((uint8_t)0x01) /*!< supported print level     */
-#define BFLOG_FLAG_TAG    ((uint8_t)0x02) /*!< supported record tag      */
-#define BFLOG_FLAG_FUNC   ((uint8_t)0x04) /*!< supported record function */
-#define BFLOG_FLAG_LINE   ((uint8_t)0x08) /*!< supported record line     */
-#define BFLOG_FLAG_FILE   ((uint8_t)0x10) /*!< supported record file     */
-#define BFLOG_FLAG_CLK    ((uint8_t)0x20) /*!< supported record clock    */
-#define BFLOG_FLAG_TIME   ((uint8_t)0x40) /*!< supported record time     */
-#define BFLOG_FLAG_THREAD ((uint8_t)0x80) /*!< supported record thread   */
+#define BFLOG_FLAG_LEVEL            ((uint8_t)0x01) /*!< supported print level     */
+#define BFLOG_FLAG_TAG              ((uint8_t)0x02) /*!< supported record tag      */
+#define BFLOG_FLAG_FUNC             ((uint8_t)0x04) /*!< supported record function */
+#define BFLOG_FLAG_LINE             ((uint8_t)0x08) /*!< supported record line     */
+#define BFLOG_FLAG_FILE             ((uint8_t)0x10) /*!< supported record file     */
+#define BFLOG_FLAG_CLK              ((uint8_t)0x20) /*!< supported record clock    */
+#define BFLOG_FLAG_TIME             ((uint8_t)0x40) /*!< supported record time     */
+#define BFLOG_FLAG_THREAD           ((uint8_t)0x80) /*!< supported record thread   */
 /**
  * @}
  */
@@ -212,10 +217,10 @@
 /** @addtogroup BFLOG_STATUS
  * @{
  */
-#define BFLOG_STATUS_ILLEGAL ((uint8_t)0)
-#define BFLOG_STATUS_READY   ((uint8_t)1)
-#define BFLOG_STATUS_RUNNING ((uint8_t)2)
-#define BFLOG_STATUS_SUSPEND ((uint8_t)3)
+#define BFLOG_STATUS_ILLEGAL        ((uint8_t)0)
+#define BFLOG_STATUS_READY          ((uint8_t)1)
+#define BFLOG_STATUS_RUNNING        ((uint8_t)2)
+#define BFLOG_STATUS_SUSPEND        ((uint8_t)3)
 /**
  * @}
  */
@@ -223,8 +228,8 @@
 /** @addtogroup BFLOG_MODE
  * @{
  */
-#define BFLOG_MODE_SYNC  ((uint8_t)0x00)
-#define BFLOG_MODE_ASYNC ((uint8_t)0x01)
+#define BFLOG_MODE_SYNC             ((uint8_t)0x00)
+#define BFLOG_MODE_ASYNC            ((uint8_t)0x01)
 /**
  * @}
  */
@@ -232,16 +237,16 @@
 /** @addtogroup BFLOG_COMMAND
  * @{
  */
-#define BFLOG_CMD_ILLEGAL        ((uint32_t)0x00)
-#define BFLOG_CMD_FLAG           ((uint32_t)0x01)
-#define BFLOG_CMD_LEVEL          ((uint32_t)0x02)
-#define BFLOG_CMD_QUEUE_POOL     ((uint32_t)0x03)
-#define BFLOG_CMD_QUEUE_SIZE     ((uint32_t)0x04)
-#define BFLOG_CMD_QUEUE_RST      ((uint32_t)0x05)
-#define BFLOG_CMD_ENTER_CRITICAL ((uint32_t)0x06)
-#define BFLOG_CMD_EXIT_CRITICAL  ((uint32_t)0x07)
-#define BFLOG_CMD_FLUSH_NOTICE   ((uint32_t)0x08)
-#define BFLOG_CMD_MODE           ((uint32_t)0x09)
+#define BFLOG_CMD_ILLEGAL           ((uint32_t)0x00)
+#define BFLOG_CMD_FLAG              ((uint32_t)0x01)
+#define BFLOG_CMD_LEVEL             ((uint32_t)0x02)
+#define BFLOG_CMD_QUEUE_POOL        ((uint32_t)0x03)
+#define BFLOG_CMD_QUEUE_SIZE        ((uint32_t)0x04)
+#define BFLOG_CMD_QUEUE_RST         ((uint32_t)0x05)
+#define BFLOG_CMD_ENTER_CRITICAL    ((uint32_t)0x06)
+#define BFLOG_CMD_EXIT_CRITICAL     ((uint32_t)0x07)
+#define BFLOG_CMD_FLUSH_NOTICE      ((uint32_t)0x08)
+#define BFLOG_CMD_MODE              ((uint32_t)0x09)
 /**
  * @}
  */
@@ -270,11 +275,11 @@
 /** @addtogroup BFLOG_DIRECT_COMMAND
  * @{
  */
-#define BFLOG_DIRECT_CMD_ILLEGAL ((uint32_t)0x00)
-#define BFLOG_DIRECT_CMD_LEVEL   ((uint32_t)0x02)
-#define BFLOG_DIRECT_CMD_LOCK    ((uint32_t)0x06)
-#define BFLOG_DIRECT_CMD_UNLOCK  ((uint32_t)0x07)
-#define BFLOG_DIRECT_CMD_COLOR   ((uint32_t)0x0A)
+#define BFLOG_DIRECT_CMD_ILLEGAL    ((uint32_t)0x00)
+#define BFLOG_DIRECT_CMD_LEVEL      ((uint32_t)0x02)
+#define BFLOG_DIRECT_CMD_LOCK       ((uint32_t)0x06)
+#define BFLOG_DIRECT_CMD_UNLOCK     ((uint32_t)0x07)
+#define BFLOG_DIRECT_CMD_COLOR      ((uint32_t)0x0A)
 /**
  * @}
  */
@@ -295,8 +300,8 @@
 /** @addtogroup BFLOG_DIRECT_COLOR
  * @{
  */
-#define BFLOG_DIRECT_COLOR_DISABLE ((uint8_t)0)
-#define BFLOG_DIRECT_COLOR_ENABLE  ((uint8_t)1)
+#define BFLOG_DIRECT_COLOR_DISABLE  ((uint8_t)0)
+#define BFLOG_DIRECT_COLOR_ENABLE   ((uint8_t)1)
 /**
  * @}
  */
@@ -322,9 +327,9 @@
 /** @addtogroup BFLOG_LAYOUT_TYPE
  * @{
  */
-#define BFLOG_LAYOUT_TYPE_SIMPLE ((uint8_t)0)
-#define BFLOG_LAYOUT_TYPE_FORMAT ((uint8_t)1)
-#define BFLOG_LAYOUT_TYPE_YAML   ((uint8_t)2)
+#define BFLOG_LAYOUT_TYPE_SIMPLE    ((uint8_t)0)
+#define BFLOG_LAYOUT_TYPE_FORMAT    ((uint8_t)1)
+#define BFLOG_LAYOUT_TYPE_YAML      ((uint8_t)2)
 /**
  * @}
  */
@@ -365,6 +370,15 @@ struct _bflog_list {
 };
 
 /**
+ *   @brief         tag
+ */
+struct _bflog_tag {
+    char *tag;
+    /*!< max 32 filter */
+    uint32_t en;
+};
+
+/**
  *   @brief         message
  */
 struct _bflog_msg {
@@ -391,7 +405,7 @@ struct _bflog_msg {
     uint32_t line;      /*!< msg line */
     const char *func;   /*!< msg function, must be static string, only record pointer */
     const char *file;   /*!< msg file,     must be static string, only record pointer */
-    const char *tag;    /*!< msg tag,      must be static string, only record pointer */
+    void *tag;          /*!< msg tag */
     const char *thread; /*!< msg thread,   must be static string, only record pointer */
     char string[0];     /*!< msg string */
 };
@@ -410,6 +424,8 @@ typedef struct
     uint8_t flags;
     uint8_t level;
     uint8_t mode;
+
+    uint32_t filter;
 
     struct
     {
@@ -449,7 +465,7 @@ typedef struct
 typedef struct
 {
     _BFLOG_STRUCT_LAYOUT_EXTENDS
-    int (*snprintf)(void *ptr, uint16_t size, char *color, char *level, bflog_tm_t *tm, struct _bflog_msg *msg);
+    int (*snprintf)(void *ptr, uint16_t size, char *color, char *level, char *tag, bflog_tm_t *tm, struct _bflog_msg *msg);
 } bflog_layout_format_t;
 
 /**
@@ -468,6 +484,7 @@ typedef struct
     uint8_t color;                                                         \
     uint8_t level;                                                         \
     uint8_t type;                                                          \
+    uint32_t filter;                                                       \
     int (*lock)(void);                                                     \
     int (*unlock)(void)
 
@@ -538,47 +555,49 @@ extern uint64_t bflog_clock(void);
 extern uint32_t bflog_time(void);
 extern char *bflog_thread(void);
 
-extern int bflog_create_s(bflog_t *log, void *pool, uint16_t size, uint8_t mode);
-extern int bflog_delete_s(bflog_t *log);
-extern int bflog_append_s(bflog_t *log, bflog_direct_t *direct);
-extern int bflog_remove_s(bflog_t *log, bflog_direct_t *direct);
-extern int bflog_suspend_s(bflog_t *log);
-extern int bflog_resume_s(bflog_t *log);
-extern int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param);
-extern int bflog_s(void *log, uint8_t level, const char *const tag, const char *const file, const char *const func, const long line, const char *format, ...);
-extern int bflog_flush_s(void *log);
+extern int bflog_global_filter(void *tag_string, uint8_t enable);
+
+extern int bflog_create(bflog_t *log, void *pool, uint16_t size, uint8_t mode);
+extern int bflog_delete(bflog_t *log);
+extern int bflog_append(bflog_t *log, bflog_direct_t *direct);
+extern int bflog_remove(bflog_t *log, bflog_direct_t *direct);
+extern int bflog_suspend(bflog_t *log);
+extern int bflog_resume(bflog_t *log);
+extern int bflog_control(bflog_t *log, uint32_t command, uint32_t param);
+extern int bflog_filter(bflog_t *log, void *tag_string, uint8_t enable);
+extern int bflog(void *log, uint8_t level, void *tag, const char *const file, const char *const func, const long line, const char *format, ...);
+extern int bflog_flush(void *log);
 
 extern int bflog_direct_create(bflog_direct_t *direct, uint8_t type, uint8_t color, void(*lock), void(*unlock));
-extern int bflog_direct_delete_s(bflog_direct_t *direct);
-extern int bflog_direct_suspend_s(bflog_direct_t *direct);
-extern int bflog_direct_resume_s(bflog_direct_t *direct);
+extern int bflog_direct_delete(bflog_direct_t *direct);
+extern int bflog_direct_suspend(bflog_direct_t *direct);
+extern int bflog_direct_resume(bflog_direct_t *direct);
 extern int bflog_direct_link(bflog_direct_t *direct, bflog_layout_t *layout);
-extern int bflog_direct_control_s(bflog_direct_t *direct, uint32_t command, uint32_t param);
+extern int bflog_direct_control(bflog_direct_t *direct, uint32_t command, uint32_t param);
+extern int bflog_direct_filter(bflog_direct_t *direct, void *tag_string, uint8_t enable);
 
-extern int bflog_direct_init_buffer_s(bflog_direct_t *direct, void *buffer, void *size);
-extern int bflog_direct_deinit_buffer_s(bflog_direct_t *direct);
+extern int bflog_direct_init_buffer(bflog_direct_t *direct, void *buffer, void *size);
+extern int bflog_direct_deinit_buffer(bflog_direct_t *direct);
 
-extern int bflog_direct_init_stream_s(bflog_direct_t *direct, uint16_t (*stream_output)(void *, uint16_t));
-extern int bflog_direct_deinit_stream_s(bflog_direct_t *direct);
+extern int bflog_direct_init_stream(bflog_direct_t *direct, uint16_t (*stream_output)(void *, uint16_t));
+extern int bflog_direct_deinit_stream(bflog_direct_t *direct);
 
-extern int bflog_direct_init_file_s(bflog_direct_t *direct, const char *path);
-extern int bflog_direct_deinit_file_s(bflog_direct_t *direct);
+extern int bflog_direct_init_file(bflog_direct_t *direct, const char *path);
+extern int bflog_direct_deinit_file(bflog_direct_t *direct);
 
-extern int bflog_direct_init_file_size_s(bflog_direct_t *direct, const char *path, uint32_t size, uint32_t keep);
-extern int bflog_direct_deinit_file_size_s(bflog_direct_t *direct);
+extern int bflog_direct_init_file_size(bflog_direct_t *direct, const char *path, uint32_t size, uint32_t keep);
+extern int bflog_direct_deinit_file_size(bflog_direct_t *direct);
 
-extern int bflog_direct_init_file_time_s(bflog_direct_t *direct, const char *path, uint32_t interval, uint32_t keep);
-extern int bflog_direct_deinit_file_time_s(bflog_direct_t *direct);
+extern int bflog_direct_init_file_time(bflog_direct_t *direct, const char *path, uint32_t interval, uint32_t keep);
+extern int bflog_direct_deinit_file_time(bflog_direct_t *direct);
 
 extern int bflog_layout_create(bflog_layout_t *layout, uint8_t type);
 extern int bflog_layout_delete(bflog_layout_t *layout);
-extern int bflog_layout_format(bflog_layout_t *layout, int (*u_snprintf)(void *ptr, uint16_t size, char *color, char *level, bflog_tm_t *tm, struct _bflog_msg *msg));
+extern int bflog_layout_format(bflog_layout_t *layout, int (*u_snprintf)(void *ptr, uint16_t size, char *color, char *level, char *tag, bflog_tm_t *tm, struct _bflog_msg *msg));
 
 #ifdef BFLOG_TIMESTAMP_ENABLE
 extern void bflog_unix2time(uint32_t timestamp, bflog_tm_t *time);
 #endif
-
-#ifdef BFLOG_ENABLE
 
 #ifndef BFLOG_LEVEL_ENABLE
 #define BFLOG_LEVEL_ENABLE BFLOG_LEVEL_INFO
@@ -608,50 +627,92 @@ extern void bflog_unix2time(uint32_t timestamp, bflog_tm_t *time);
 #define __BFLOG_LINE__ __LINE__
 #endif
 
+#define __BFLOG_WRAP(x) #x
+
+/*!< define a tag */
+#define BFLOG_DEFINE_TAG(name, _string, enable)                                                                        \
+    __attribute__((unused)) struct _bflog_tag __bflog_tag_##name##__ __attribute__((section(".bflog_tags_array"))) = { \
+        .tag = _string,                                                                                                \
+        .en = enable ? 0xffffffff : 0x00000000                                                                         \
+    }
+
+/*!< extern a tag */
+#define BFLOG_EXTERN_TAG(name) extern struct _bflog_tag __bflog_tag_##name##__ __attribute__((section(".bflog_tags_array")))
+
+/*!< get tag name */
+#define BFLOG_GET_TAG(name)    &__bflog_tag_##name##__
+
+/*!< set tag */
+#define BFLOG_TAG              NULL
+
+#ifdef BFLOG_ENABLE
+
+#define BFLOG_X(_log, _level, _tag, ...) bflog((void *)(_log), (_level), (_tag), __BFLOG_FILENAME__, __BFLOG_FUNCTION__, __BFLOG_LINE__, ##__VA_ARGS__)
+
 #if (BFLOG_LEVEL_ENABLE >= BFLOG_LEVEL_FATAL)
-#define BFLOG_F(_log, _tag, ...) bflog_s((void *)(_log), BFLOG_LEVEL_FATAL, (_tag), __BFLOG_FILENAME__, __BFLOG_FUNCTION__, __BFLOG_LINE__, __VA_ARGS__)
+#define BFLOG_F(_log, ...)  BFLOG_X(_log, BFLOG_LEVEL_FATAL, (BFLOG_TAG), ##__VA_ARGS__)
+#define BFLOG_RF(_log, ...) BFLOG_X(_log, BFLOG_LEVEL_RAW | BFLOG_LEVEL_FATAL, (BFLOG_TAG), ##__VA_ARGS__)
 #else
-#define BFLOG_F(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
+#define BFLOG_F(_log, ...)  ((void)(_log))
+#define BFLOG_RF(_log, ...) ((void)(_log))
 #endif
 
 #if (BFLOG_LEVEL_ENABLE >= BFLOG_LEVEL_ERROR)
-#define BFLOG_E(_log, _tag, ...) bflog_s((void *)(_log), BFLOG_LEVEL_ERROR, (_tag), __BFLOG_FILENAME__, __BFLOG_FUNCTION__, __BFLOG_LINE__, __VA_ARGS__)
+#define BFLOG_E(_log, ...)  BFLOG_X(_log, BFLOG_LEVEL_ERROR, (BFLOG_TAG), ##__VA_ARGS__)
+#define BFLOG_RE(_log, ...) BFLOG_X(_log, BFLOG_LEVEL_RAW | BFLOG_LEVEL_ERROR, (BFLOG_TAG), ##__VA_ARGS__)
 #else
-#define BFLOG_E(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
+#define BFLOG_E(_log, ...)  ((void)(_log))
+#define BFLOG_RE(_log, ...) ((void)(_log))
 #endif
 
 #if (BFLOG_LEVEL_ENABLE >= BFLOG_LEVEL_WARN)
-#define BFLOG_W(_log, _tag, ...) bflog_s((void *)(_log), BFLOG_LEVEL_WARN, (_tag), __BFLOG_FILENAME__, __BFLOG_FUNCTION__, __BFLOG_LINE__, __VA_ARGS__)
+#define BFLOG_W(_log, ...)  BFLOG_X(_log, BFLOG_LEVEL_WARN, (BFLOG_TAG), ##__VA_ARGS__)
+#define BFLOG_RW(_log, ...) BFLOG_X(_log, BFLOG_LEVEL_RAW | BFLOG_LEVEL_WARN, (BFLOG_TAG), ##__VA_ARGS__)
 #else
-#define BFLOG_W(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
+#define BFLOG_W(_log, ...)  ((void)(_log))
+#define BFLOG_RW(_log, ...) ((void)(_log))
 #endif
 
 #if (BFLOG_LEVEL_ENABLE >= BFLOG_LEVEL_INFO)
-#define BFLOG_I(_log, _tag, ...) bflog_s((void *)(_log), BFLOG_LEVEL_INFO, (_tag), __BFLOG_FILENAME__, __BFLOG_FUNCTION__, __BFLOG_LINE__, __VA_ARGS__)
+#define BFLOG_I(_log, ...)  BFLOG_X(_log, BFLOG_LEVEL_INFO, (BFLOG_TAG), ##__VA_ARGS__)
+#define BFLOG_RI(_log, ...) BFLOG_X(_log, BFLOG_LEVEL_RAW | BFLOG_LEVEL_INFO, (BFLOG_TAG), ##__VA_ARGS__)
 #else
-#define BFLOG_I(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
+#define BFLOG_I(_log, ...)  ((void)(_log))
+#define BFLOG_RI(_log, ...) ((void)(_log))
 #endif
 
 #if (BFLOG_LEVEL_ENABLE >= BFLOG_LEVEL_DEBUG)
-#define BFLOG_D(_log, _tag, ...) bflog_s((void *)(_log), BFLOG_LEVEL_DEBUG, (_tag), __BFLOG_FILENAME__, __BFLOG_FUNCTION__, __BFLOG_LINE__, __VA_ARGS__)
+#define BFLOG_D(_log, ...)  BFLOG_X(_log, BFLOG_LEVEL_DEBUG, (BFLOG_TAG), ##__VA_ARGS__)
+#define BFLOG_RD(_log, ...) BFLOG_X(_log, BFLOG_LEVEL_RAW | BFLOG_LEVEL_DEBUG, (BFLOG_TAG), ##__VA_ARGS__)
 #else
-#define BFLOG_D(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
+#define BFLOG_D(_log, ...)  ((void)(_log))
+#define BFLOG_RD(_log, ...) ((void)(_log))
 #endif
 
 #if (BFLOG_LEVEL_ENABLE >= BFLOG_LEVEL_TRACE)
-#define BFLOG_T(_log, _tag, ...) bflog_s((void *)(_log), BFLOG_LEVEL_TRACE, (_tag), __BFLOG_FILENAME__, __BFLOG_FUNCTION__, __BFLOG_LINE__, __VA_ARGS__)
+#define BFLOG_T(_log, ...)  BFLOG_X(_log, BFLOG_LEVEL_TRACE, (BFLOG_TAG), ##__VA_ARGS__)
+#define BFLOG_RT(_log, ...) BFLOG_X(_log, BFLOG_LEVEL_RAW | BFLOG_LEVEL_TRACE, (BFLOG_TAG), ##__VA_ARGS__)
 #else
-#define BFLOG_T(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
+#define BFLOG_T(_log, ...)  ((void)(_log))
+#define BFLOG_RT(_log, ...) ((void)(_log))
 #endif
 
 #else
 
-#define BFLOG_F(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
-#define BFLOG_E(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
-#define BFLOG_W(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
-#define BFLOG_I(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
-#define BFLOG_D(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
-#define BFLOG_T(_log, _tag, ...) (void)(_log), (void)(_tag), (void)(__VA_ARGS__)
+#define BFLOG_X(_log, _level, _tag, ...) (void)(_log), (void)(_level), (void)(_tag),
+
+#define BFLOG_F(_log, ...)               ((void)(_log))
+#define BFLOG_RF(_log, ...)              ((void)(_log))
+#define BFLOG_E(_log, ...)               ((void)(_log))
+#define BFLOG_RE(_log, ...)              ((void)(_log))
+#define BFLOG_W(_log, ...)               ((void)(_log))
+#define BFLOG_RW(_log, ...)              ((void)(_log))
+#define BFLOG_I(_log, ...)               ((void)(_log))
+#define BFLOG_RI(_log, ...)              ((void)(_log))
+#define BFLOG_D(_log, ...)               ((void)(_log))
+#define BFLOG_RD(_log, ...)              ((void)(_log))
+#define BFLOG_T(_log, ...)               ((void)(_log))
+#define BFLOG_RT(_log, ...)              ((void)(_log))
 
 #endif
 

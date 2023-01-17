@@ -23,59 +23,10 @@ endif()
 sdk_library_add_sources(log/log.c)
 sdk_add_include_directories(log)
 
-# vsnprintf config
-if(CONFIG_VSNPRINTF_FLOAT)
-    sdk_add_compile_definitions(-DCONFIG_VLIBC_FLOAT=${CONFIG_VSNPRINTF_FLOAT})
-    sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT=${CONFIG_VSNPRINTF_FLOAT})
-endif()
-if(CONFIG_VSNPRINTF_FLOAT_EX)
-    sdk_add_compile_definitions(-DCONFIG_VLIBC_FLOAT_EX=${CONFIG_VSNPRINTF_FLOAT_EX})
-    sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT_EX=${CONFIG_VSNPRINTF_FLOAT_EX})
-endif()
-if(CONFIG_VSNPRINTF_LONG_LONG)
-    sdk_add_compile_definitions(-DCONFIG_VLIBC_LONG_LONG=${CONFIG_VSNPRINTF_LONG_LONG})
-    sdk_add_compile_definitions(-DCONFIG_LIBC_LONG_LONG=${CONFIG_VSNPRINTF_LONG_LONG})
-endif()
-if(CONFIG_VSNPRINTF_WRITEBACK)
-    sdk_add_compile_definitions(-DCONFIG_VLIBC_WRITEBACK=${CONFIG_VSNPRINTF_WRITEBACK})
-endif()
-
-# libc or vlibc select
-if(CONFIG_VLIBC)
-    sdk_add_compile_definitions(-DCONFIG_VLIBC)
-    # vlibc debug enable
-    if (CONFIG_VLIBC_DEBUG)
-        sdk_add_compile_definitions(-DCONFIG_VLIBC_DEBUG)
+if(CONFIG_BFLOG)
+    if(CONFIG_FREERTOS)
+        sdk_library_add_sources(log/log_freertos.c)
     endif()
-
-    # vlibc fatfs port enable
-    if(CONFIG_VLIBC_FATFS)
-        sdk_add_compile_definitions(-DCONFIG_VLIBC_FATFS)
-    endif()
-
-    sdk_library_add_sources(vlibc/printf.c)
-    sdk_library_add_sources(vlibc/syscalls.c)
-    sdk_library_add_sources(vlibc/vlibc_stdio.c)
-    sdk_library_add_sources(vlibc/vlibc_vsnprintf.c)
-    sdk_add_include_directories(vlibc)
-else()
-    if(CONFIG_VSNPRINTF_NANO)
-    sdk_library_add_sources(libc/vsnprintf_nano.c)
-    else()
-    sdk_library_add_sources(libc/vsnprintf.c)
-    endif()
-
-    sdk_library_add_sources(libc/syscalls.c)
-    sdk_library_add_sources(libc/printf.c)
-endif()
-
-# memheap
-sdk_library_add_sources(mmheap/bflb_mmheap.c)
-sdk_add_include_directories(mmheap)
-
-# memheap lock user config
-if (CONFIG_MMHEAP_USER)
-    sdk_add_compile_definitions(-DCONFIG_MMHEAP_USER)
 endif()
 
 # ring_buffer
@@ -110,5 +61,6 @@ endif()
 sdk_library_add_sources(bflb_timestamp/bflb_timestamp.c)
 sdk_add_include_directories(bflb_timestamp)
 
-sdk_add_compile_options(-fno-builtin-printf)
-sdk_add_link_options(-u_malloc_r)
+# getopt
+sdk_library_add_sources(getopt/utils_getopt.c)
+sdk_add_include_directories(getopt)
