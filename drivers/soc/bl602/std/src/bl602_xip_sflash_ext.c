@@ -35,9 +35,9 @@
   */
 
 #include "string.h"
-#include "bl602_sf_cfg.h"
+#include "bflb_sf_cfg.h"
 #include "bl602_sf_cfg_ext.h"
-#include "bl602_xip_sflash.h"
+#include "bflb_xip_sflash.h"
 #include "bl602_xip_sflash_ext.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
@@ -64,8 +64,8 @@
  *  @{
  */
 
-static SPI_Flash_Cfg_Type flashCfg;
-static uint8_t aesEnable;
+static spi_flash_cfg_type flash_cfg;
+static uint8_t aes_enable;
 
 /*@} end of group XIP_SFLASH_EXT_Private_Variables */
 
@@ -94,66 +94,68 @@ static uint8_t aesEnable;
 /****************************************************************************//**
  * @brief  Save flash controller state
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  offset: CPU XIP flash offset pointer
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_State_Save_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t *offset)
+int ATTR_TCM_SECTION bflb_xip_sflash_state_save_ext(spi_flash_cfg_type *p_flash_cfg,uint32_t *offset,
+                                                                         uint8_t group, uint8_t bank)
 {
     /* XIP_SFlash_Delay */
     volatile uint32_t i=32*2;
     while(i--);
     
-    SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
+    bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
     /* Exit form continous read for accepting command */
-    SFlash_Reset_Continue_Read(pFlashCfg);
+    bflb_sflash_reset_continue_read(p_flash_cfg);
     /* Send software reset command(80bv has no this command)to deburst wrap for ISSI like */
-    SFlash_Software_Reset(pFlashCfg);
+    bflb_sflash_software_reset(p_flash_cfg);
     /* For disable command that is setting register instaed of send command, we need write enable */
-    SFlash_DisableBurstWrap(pFlashCfg);
-    if ((pFlashCfg->ioMode & 0x0f) == SF_CTRL_QO_MODE || (pFlashCfg->ioMode & 0x0f) == SF_CTRL_QIO_MODE) {
+    bflb_sflash_disable_burst_wrap(p_flash_cfg);
+    if ((p_flash_cfg->io_mode & 0x0f) == SF_CTRL_QO_MODE || (p_flash_cfg->io_mode & 0x0f) == SF_CTRL_QIO_MODE) {
         /* Enable QE again in case reset command make it reset */
-        SFlash_Qspi_Enable(pFlashCfg);
+        bflb_sflash_qspi_enable(p_flash_cfg);
     }
     /* Deburst again to make sure */
-    SFlash_DisableBurstWrap(pFlashCfg);
+    bflb_sflash_disable_burst_wrap(p_flash_cfg);
 
     /* Clear offset setting*/
-    *offset=SF_Ctrl_Get_Flash_Image_Offset();
-    SF_Ctrl_Set_Flash_Image_Offset(0);
+    *offset=bflb_sf_ctrl_get_flash_image_offset(group, bank);
+    bflb_sf_ctrl_set_flash_image_offset(0, group, bank);
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************//**
  * @brief  Restore flash controller state
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  offset: CPU XIP flash offset
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_State_Restore_Ext(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t offset)
+int ATTR_TCM_SECTION bflb_xip_sflash_state_restore_ext(spi_flash_cfg_type *p_flash_cfg, uint32_t offset,
+                                                                            uint8_t group, uint8_t bank)
 {
     uint32_t tmp[1];
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    SF_Ctrl_Set_Flash_Image_Offset(offset);
+    bflb_sf_ctrl_set_flash_image_offset(offset, group, bank);
 
-    if (((pFlashCfg->ioMode >> 4) & 0x01) == 0) {
-        if ((pFlashCfg->ioMode & 0x0f) == SF_CTRL_QO_MODE || (pFlashCfg->ioMode & 0x0f) == SF_CTRL_QIO_MODE) {
-            SFlash_SetBurstWrap(pFlashCfg);
+    if (((p_flash_cfg->io_mode >> 4) & 0x01) == 0) {
+        if ((p_flash_cfg->io_mode & 0x0f) == SF_CTRL_QO_MODE || (p_flash_cfg->io_mode & 0x0f) == SF_CTRL_QIO_MODE) {
+            bflb_sflash_set_burst_wrap(p_flash_cfg);
         }
     }
-    SFlash_Read(pFlashCfg, ioMode, 1, 0x0, (uint8_t *)tmp, sizeof(tmp));
-    SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    bflb_sflash_read(p_flash_cfg, io_mode, 1, 0x0, (uint8_t *)tmp, sizeof(tmp));
+    bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
 
-    return SUCCESS;
+    return 0;
 }
 
 /*@} end of group XIP_SFLASH_EXT_Public_Functions */
@@ -165,29 +167,30 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_State_Restore_Ext(SPI_Flash_Cfg_Type *pF
 /****************************************************************************/ /**
  * @brief  Erase flash one region
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  startaddr: start address to erase
  * @param  endaddr: end address(include this address) to erase
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Erase_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t startaddr, uint32_t endaddr)
+int ATTR_TCM_SECTION bflb_xip_sflash_erase_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint32_t startaddr,
+                                                               uint32_t endaddr, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode&0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat=XIP_SFlash_State_Save(pFlashCfg,&offset);
-    if(stat!=SUCCESS){
-        SFlash_Set_IDbus_Cfg(pFlashCfg,ioMode,1,0,32);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat=bflb_xip_sflash_state_save(p_flash_cfg,&offset,group,bank);
+    if(stat!=0){
+        bflb_sflash_set_xip_cfg(p_flash_cfg,io_mode,1,0,32,bank);
     }else{
-        stat=SFlash_Erase(pFlashCfg,startaddr,endaddr);
-        XIP_SFlash_State_Restore_Ext(pFlashCfg,offset);
+        stat=bflb_sflash_erase(p_flash_cfg,startaddr,endaddr);
+        bflb_xip_sflash_state_restore_ext(p_flash_cfg,offset,group,bank);
     }
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
 }
@@ -195,30 +198,31 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Erase_Need_Lock_Ext(SPI_Flash_Cfg_Type *
 /****************************************************************************/ /**
  * @brief  Program flash one region
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  addr: start address to be programed
  * @param  data: data pointer to be programed
  * @param  len: data length to be programed
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Write_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *data, uint32_t len)
+int ATTR_TCM_SECTION bflb_xip_sflash_write_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint32_t addr,
+                                               uint8_t *data, uint32_t len, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode&0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat=XIP_SFlash_State_Save(pFlashCfg,&offset);
-    if(stat!=SUCCESS){
-        SFlash_Set_IDbus_Cfg(pFlashCfg,ioMode,1,0,32);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat=bflb_xip_sflash_state_save(p_flash_cfg,&offset,group,bank);
+    if(stat!=0){
+        bflb_sflash_set_xip_cfg(p_flash_cfg,io_mode,1,0,32,bank);
     }else{
-        stat= SFlash_Program(pFlashCfg,ioMode,addr,data,len);
-        XIP_SFlash_State_Restore_Ext(pFlashCfg,offset);
+        stat= bflb_sflash_program(p_flash_cfg,io_mode,addr,data,len);
+        bflb_xip_sflash_state_restore_ext(p_flash_cfg,offset,group,bank);
     }
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
 }
@@ -226,30 +230,31 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Write_Need_Lock_Ext(SPI_Flash_Cfg_Type *
 /****************************************************************************/ /**
  * @brief  Read data from flash
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  addr: flash read start address
  * @param  data: data pointer to store data read from flash
  * @param  len: data length to read
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *data, uint32_t len)
+int ATTR_TCM_SECTION bflb_xip_sflash_read_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint32_t addr,
+                                              uint8_t *data, uint32_t len, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode&0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat=XIP_SFlash_State_Save(pFlashCfg,&offset);
-    if(stat!=SUCCESS){
-        SFlash_Set_IDbus_Cfg(pFlashCfg,ioMode,1,0,32);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat=bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
+    if(stat!=0){
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     }else{
-        stat=SFlash_Read(pFlashCfg,ioMode,0,addr, data,len);
-        XIP_SFlash_State_Restore_Ext(pFlashCfg,offset);
+        stat=bflb_sflash_read(p_flash_cfg, io_mode,0, addr, data, len);
+        bflb_xip_sflash_state_restore_ext(p_flash_cfg, offset, group, bank);
     }
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
 }
@@ -257,24 +262,25 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Need_Lock_Ext(SPI_Flash_Cfg_Type *p
 /****************************************************************************//**
  * @brief  Clear flash status register need lock
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg)
+int ATTR_TCM_SECTION bflb_xip_sflash_clear_status_register_need_lock(spi_flash_cfg_type *p_flash_cfg,
+                                                                         uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode&0xf;
 
-    stat=XIP_SFlash_State_Save(pFlashCfg, &offset);
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    stat=bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        stat=SFlash_Clear_Status_Register(pFlashCfg);
-        XIP_SFlash_State_Restore_Ext(pFlashCfg, offset);
+        stat=bflb_sflash_clear_status_register(p_flash_cfg);
+        bflb_xip_sflash_state_restore_ext(p_flash_cfg, offset,  group, bank);
     }
 
     return stat;
@@ -283,109 +289,113 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flas
 /****************************************************************************//**
  * @brief  Get Flash Jedec ID
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  data: data pointer to store Jedec ID Read from flash
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_GetJedecId_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data)
+int ATTR_TCM_SECTION bflb_xip_sflash_getjedecid_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
+                                                                                 uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset);
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        SFlash_GetJedecId(pFlashCfg, data);
-        XIP_SFlash_State_Restore_Ext(pFlashCfg, offset);
+        bflb_sflash_get_jedecid(p_flash_cfg, data);
+        bflb_xip_sflash_state_restore_ext(p_flash_cfg, offset, group, bank);
     }
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************/ /**
  * @brief  Get Flash Device ID
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  data: data pointer to store Device ID Read from flash
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_GetDeviceId_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data)
+int ATTR_TCM_SECTION bflb_xip_sflash_get_deviceid_need_lock_ext(spi_flash_cfg_type *p_flash_cfg,
+                             uint8_t is_32bits_addr, uint8_t *data, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset);
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        SFlash_GetDeviceId(data);
-        XIP_SFlash_State_Restore_Ext(pFlashCfg, offset);
+        bflb_sflash_get_deviceid(data, is_32bits_addr);
+        bflb_xip_sflash_state_restore_ext(p_flash_cfg, offset, group, bank);
     }
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************/ /**
  * @brief  Get Flash Unique ID
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  data: data pointer to store Device ID Read from flash
- * @param  idLen: Unique id len
+ * @param  id_len: Unique id len
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_GetUniqueId_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data, uint8_t idLen)
+int ATTR_TCM_SECTION bflb_xip_sflash_get_uniqueid_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
+                                                                uint8_t id_len, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset);
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        SFlash_GetUniqueId(data, idLen);
-        XIP_SFlash_State_Restore_Ext(pFlashCfg, offset);
+        bflb_sflash_get_uniqueid(data, id_len);
+        bflb_xip_sflash_state_restore_ext(p_flash_cfg, offset, group, bank);
     }
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************/ /**
  * @brief  Sflash enable RCV mode to recovery for erase while power drop need lock
  *
- * @param  pFlashCfg: Flash config pointer
- * @param  rCmd: Read RCV register cmd
- * @param  wCmd: Write RCV register cmd
- * @param  bitPos: RCV register bit pos
+ * @param  p_flash_cfg: Flash config pointer
+ * @param  r_cmd: Read RCV register cmd
+ * @param  w_cmd: Write RCV register cmd
+ * @param  bit_pos: RCV register bit pos
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_RCV_Enable_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t rCmd, uint8_t wCmd, uint8_t bitPos)
+int ATTR_TCM_SECTION bflb_xip_sflash_rcv_enable_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t r_cmd, uint8_t w_cmd,
+                                                          uint8_t bit_pos, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset);
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32 , bank);
     } else {
-        stat = SFlash_RCV_Enable(pFlashCfg, rCmd, wCmd, bitPos);
-        XIP_SFlash_State_Restore_Ext(pFlashCfg, offset);
+        stat = bflb_sflash_rcv_enable(p_flash_cfg, r_cmd, w_cmd, bit_pos);
+        bflb_xip_sflash_state_restore_ext(p_flash_cfg, offset, group, bank);
     }
 
     return stat;
@@ -394,7 +404,7 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_RCV_Enable_Need_Lock(SPI_Flash_Cfg_Type 
 /****************************************************************************//**
  * @brief  Read data from flash with lock
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  addr: flash read start address
  * @param  dst: data pointer to store data read from flash
  * @param  len: data length to read
@@ -403,10 +413,10 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_RCV_Enable_Need_Lock(SPI_Flash_Cfg_Type 
  *
 *******************************************************************************/
 __WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Read_With_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t addr, uint8_t *dst, int len)
+int ATTR_TCM_SECTION bflb_xip_sflash_read_with_lock_ext(spi_flash_cfg_type *p_flash_cfg,uint32_t addr, uint8_t *dst, int len)
 {
     __disable_irq();
-    XIP_SFlash_Read_Need_Lock_Ext(pFlashCfg, addr, dst, len);
+    bflb_xip_sflash_read_need_lock_ext(p_flash_cfg, addr, dst, len, 0, 0);
     __enable_irq();
     return 0;
 }
@@ -414,7 +424,7 @@ int ATTR_TCM_SECTION XIP_SFlash_Read_With_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg
 /****************************************************************************//**
  * @brief  Program flash one region with lock
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  addr: Start address to be programed
  * @param  src: Data pointer to be programed
  * @param  len: Data length to be programed
@@ -423,10 +433,10 @@ int ATTR_TCM_SECTION XIP_SFlash_Read_With_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg
  *
 *******************************************************************************/
 __WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Write_With_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t addr, uint8_t *src, int len)
+int ATTR_TCM_SECTION bflb_ip_sflash_write_with_lock_ext(spi_flash_cfg_type *p_flash_cfg,uint32_t addr, uint8_t *src, int len)
 {
     __disable_irq();
-    XIP_SFlash_Write_Need_Lock_Ext(pFlashCfg, addr, src, len);
+    bflb_xip_sflash_write_need_lock_ext(p_flash_cfg, addr, src, len, 0, 0);
     __enable_irq();
     return 0;
 }
@@ -434,7 +444,7 @@ int ATTR_TCM_SECTION XIP_SFlash_Write_With_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCf
 /****************************************************************************//**
  * @brief  Erase flash one region with lock
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  addr: Start address to be erased
  * @param  len: Data length to be erased
  *
@@ -442,10 +452,10 @@ int ATTR_TCM_SECTION XIP_SFlash_Write_With_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCf
  *
 *******************************************************************************/
 __WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Erase_With_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t addr, int len)
+int ATTR_TCM_SECTION bflb_xip_sflash_erase_with_lock_ext(spi_flash_cfg_type *p_flash_cfg,uint32_t addr, int len)
 {
     __disable_irq();
-    XIP_SFlash_Erase_Need_Lock_Ext(pFlashCfg, addr, addr + len - 1);
+    bflb_xip_sflash_erase_need_lock_ext(p_flash_cfg, addr, addr + len - 1, 0, 0);
     __enable_irq();
     return 0;
 }
@@ -453,16 +463,16 @@ int ATTR_TCM_SECTION XIP_SFlash_Erase_With_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCf
 /****************************************************************************//**
  * @brief  Clear flash status register with lock
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  *
  * @return 0
  *
 *******************************************************************************/
 __WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg)
+int ATTR_TCM_SECTION bflb_xip_sflash_clear_status_register_with_lock(spi_flash_cfg_type *p_flash_cfg)
 {
     __disable_irq();
-    XIP_SFlash_Clear_Status_Register_Need_Lock(pFlashCfg);
+    bflb_xip_sflash_clear_status_register_need_lock(p_flash_cfg, 0, 0);
     __enable_irq();
     return 0;
 }
@@ -470,19 +480,19 @@ int ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_With_Lock(SPI_Flash_Cfg_Ty
 /****************************************************************************//**
  * @brief  Sflash enable RCV mode to recovery for erase while power drop with lock
  *
- * @param  pFlashCfg: Flash config pointer
- * @param  rCmd: Read RCV register cmd
- * @param  wCmd: Write RCV register cmd
- * @param  bitPos: RCV register bit pos
+ * @param  p_flash_cfg: Flash config pointer
+ * @param  r_cmd: Read RCV register cmd
+ * @param  w_cmd: Write RCV register cmd
+ * @param  bit_pos: RCV register bit pos
  *
  * @return 0
  *
 *******************************************************************************/
 __WEAK
-int ATTR_TCM_SECTION XIP_SFlash_RCV_Enable_With_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t rCmd, uint8_t wCmd, uint8_t bitPos)
+int ATTR_TCM_SECTION bflb_xip_sflash_rcv_enable_with_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t r_cmd, uint8_t w_cmd, uint8_t bit_pos)
 {
     __disable_irq();
-    XIP_SFlash_RCV_Enable_Need_Lock(pFlashCfg, rCmd, wCmd, bitPos);
+    bflb_xip_sflash_rcv_enable_need_lock(p_flash_cfg, r_cmd, w_cmd, bit_pos, 0, 0);
     __enable_irq();
     return 0;
 }
@@ -490,29 +500,29 @@ int ATTR_TCM_SECTION XIP_SFlash_RCV_Enable_With_Lock(SPI_Flash_Cfg_Type *pFlashC
 /****************************************************************************//**
  * @brief  Read data from flash with lock
  *
- * @param  pFlashCfg:Flash config pointer
+ * @param  p_flash_cfg:Flash config pointer
  *
- * @return SUCCESS or ERROR
+ * @return 0 or -1
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Init(SPI_Flash_Cfg_Type *pFlashCfg)
+int ATTR_TCM_SECTION bflb_xip_sflash_init(spi_flash_cfg_type *p_flash_cfg)
 {
     uint32_t ret;
 
-    if(pFlashCfg==NULL){
+    if(p_flash_cfg==NULL){
         /* Get flash config identify */
-        XIP_SFlash_Opt_Enter(&aesEnable);
-        ret=SF_Cfg_Flash_Identify_Ext(1,1,0,0,&flashCfg);
-        XIP_SFlash_Opt_Exit(aesEnable);
+        bflb_xip_sflash_opt_enter(&aes_enable);
+        ret=bflb_sf_cfg_flash_identify_ext(1, 0x80, 0, &flash_cfg, 0, 0);
+        bflb_xip_sflash_opt_exit(aes_enable);
         if((ret&BFLB_FLASH_ID_VALID_FLAG)==0){
-            return ERROR;
+            return -1;
         }
     }else{
-        memcpy(&flashCfg,pFlashCfg,sizeof(flashCfg));
+        memcpy(&flash_cfg,p_flash_cfg,sizeof(flash_cfg));
     }
     
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************//**
@@ -526,12 +536,12 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Init(SPI_Flash_Cfg_Type *pFlashCfg)
  *
 *******************************************************************************/
 __WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Read(uint32_t addr, uint8_t *dst, int len)
+int ATTR_TCM_SECTION bflb_xip_sflash_read(uint32_t addr, uint8_t *dst, int len)
 {
     __disable_irq();
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    XIP_SFlash_Read_Need_Lock_Ext(&flashCfg, addr, dst, len);
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    bflb_xip_sflash_read_need_lock_ext(&flash_cfg, addr, dst, len, 0, 0);
+    bflb_xip_sflash_opt_exit(aes_enable);
     __enable_irq();
     return 0;
 }
@@ -547,12 +557,12 @@ int ATTR_TCM_SECTION XIP_SFlash_Read(uint32_t addr, uint8_t *dst, int len)
  *
 *******************************************************************************/
 __WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Write(uint32_t addr, uint8_t *src, int len)
+int ATTR_TCM_SECTION bflb_xip_sflash_write(uint32_t addr, uint8_t *src, int len)
 {
     __disable_irq();
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    XIP_SFlash_Write_Need_Lock_Ext(&flashCfg, addr, src, len);
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    bflb_xip_sflash_write_need_lock_ext(&flash_cfg, addr, src, len, 0, 0);
+    bflb_xip_sflash_opt_exit(aes_enable);
     __enable_irq();
     return 0;
 }
@@ -567,12 +577,12 @@ int ATTR_TCM_SECTION XIP_SFlash_Write(uint32_t addr, uint8_t *src, int len)
  *
 *******************************************************************************/
 __WEAK
-int ATTR_TCM_SECTION XIP_SFlash_Erase(uint32_t addr, int len)
+int ATTR_TCM_SECTION bflb_xip_sflash_erase(uint32_t addr, int len)
 {
     __disable_irq();
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    XIP_SFlash_Erase_Need_Lock_Ext(&flashCfg, addr, addr + len - 1);
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    bflb_xip_sflash_erase_need_lock_ext(&flash_cfg, addr, addr + len - 1, 0, 0);
+    bflb_xip_sflash_opt_exit(aes_enable);
     __enable_irq();
     return 0;
 }

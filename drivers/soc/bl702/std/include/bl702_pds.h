@@ -40,8 +40,8 @@
 #include "bl702_ef_ctrl.h"
 #include "bl702_aon.h"
 #include "bl702_hbn.h"
-#include "bl702_sflash.h"
 #include "bl702_common.h"
+#include "bflb_sflash.h"
 
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
@@ -435,7 +435,7 @@ typedef struct
     uint8_t xtalType;                                 /*!< XTal type, used when user choose turn off PLL, PDS will turn on when exit PDS mode */
     uint8_t flashContRead;                            /*!< Whether enable flash continue read */
     uint32_t sleepTime;                               /*!< PDS sleep time */
-    SPI_Flash_Cfg_Type *flashCfg;                     /*!< Flash config pointer, used when power down flash */
+    spi_flash_cfg_type *flashCfg;                     /*!< Flash config pointer, used when power down flash */
     HBN_LDO_LEVEL_Type ldoLevel;                      /*!< LDO level */
     void (*preCbFun)(void);                           /*!< Pre callback function */
     void (*postCbFun)(void);                          /*!< Post callback function */

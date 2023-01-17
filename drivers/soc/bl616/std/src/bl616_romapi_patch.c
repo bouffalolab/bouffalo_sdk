@@ -211,694 +211,699 @@ const GLB_SLAVE_GRP_0_TBL_Type ATTR_CLOCK_CONST_SECTION glb_slave_grp_0_table[GL
 
 typedef struct
 {
-    uint32_t jedecID;
+    uint32_t jedec_id;
     char *name;
-    const SPI_Flash_Cfg_Type *cfg;
+    const spi_flash_cfg_type *cfg;
 } Flash_Info_t;
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_GD_LQ64E = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_GD_LQ64E = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xc8,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x02,
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x02,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x01,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x01,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 1,
-    .cReadMode = 0xa0,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0xa0,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = SF_CTRL_QIO_MODE,
-    .clkDelay = 1,
-    .clkInvert = 0x3d,
+    .io_mode = SF_CTRL_QIO_MODE,
+    .clk_delay = 1,
+    .clk_invert = 0x3d,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .enter32BitsAddrCmd = 0xb7,
-    .exit32BitsAddrCmd = 0xe9,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .enter_32bits_addr_cmd = 0xb7,
+    .exit_32bits_addr_cmd = 0xe9,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 500,
-    .timeE32k = 2000,
-    .timeE64k = 2000,
-    .timePagePgm = 5,
-    .timeCe = 33 * 1000,
-    .pdDelay = 3,
-    .qeData = 0,
+    .time_e_sector = 500,
+    .time_e_32k = 2000,
+    .time_e_64k = 2000,
+    .time_page_pgm = 5,
+    .time_ce = 33 * 1000,
+    .pd_delay = 3,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_GD_Q64E = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_GD_Q64E = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xc8,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x01,
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x01,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x31,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x31,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 1,
-    .cReadMode = 0x20,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0x20,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = SF_CTRL_QIO_MODE,
-    .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .io_mode = SF_CTRL_QIO_MODE,
+    .clk_delay = 1,
+    .clk_invert = 0x3f,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .enter32BitsAddrCmd = 0xb7,
-    .exit32BitsAddrCmd = 0xe9,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .enter_32bits_addr_cmd = 0xb7,
+    .exit_32bits_addr_cmd = 0xe9,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 300,
-    .timeE32k = 1200,
-    .timeE64k = 1200,
-    .timePagePgm = 5,
-    .timeCe = 33 * 1000,
-    .pdDelay = 20,
-    .qeData = 0,
+    .time_e_sector = 300,
+    .time_e_32k = 1200,
+    .time_e_64k = 1200,
+    .time_page_pgm = 5,
+    .time_ce = 33 * 1000,
+    .pd_delay = 20,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Winb_16JV = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_16JV = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xef,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x02, /*Q08BV,Q16DV: 0x02.Q32FW,Q32FV: 0x01 */
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x02, /*Q08BV,Q16DV: 0x02.Q32FW,Q32FV: 0x01 */
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x01,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x01,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 1,
-    .cReadMode = 0xa0,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0xa0,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = SF_CTRL_QIO_MODE,
-    .clkDelay = 1,
-    .clkInvert = 0x3d,
+    .io_mode = SF_CTRL_QIO_MODE,
+    .clk_delay = 1,
+    .clk_invert = 0x3d,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .enter32BitsAddrCmd = 0xb7,
-    .exit32BitsAddrCmd = 0xe9,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .enter_32bits_addr_cmd = 0xb7,
+    .exit_32bits_addr_cmd = 0xe9,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 300,
-    .timeE32k = 1200,
-    .timeE64k = 1200,
-    .timePagePgm = 5,
-    .timeCe = 33 * 1000,
-    .pdDelay = 3,
-    .qeData = 0,
+    .time_e_sector = 300,
+    .time_e_32k = 1200,
+    .time_e_64k = 1200,
+    .time_page_pgm = 5,
+    .time_ce = 33 * 1000,
+    .pd_delay = 3,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Winb_64JV = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_64JV = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xef,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x01,
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x01,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x31,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x31,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 0,
-    .cReadMode = 0xFF,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 0,
+    .c_read_mode = 0xFF,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = SF_CTRL_QIO_MODE,
-    .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .io_mode = SF_CTRL_QIO_MODE,
+    .clk_delay = 1,
+    .clk_invert = 0x3f,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .enter32BitsAddrCmd = 0xb7,
-    .exit32BitsAddrCmd = 0xe9,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .enter_32bits_addr_cmd = 0xb7,
+    .exit_32bits_addr_cmd = 0xe9,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 400,
-    .timeE32k = 1600,
-    .timeE64k = 2000,
-    .timePagePgm = 5,
-    .timeCe = 33 * 1000,
-    .pdDelay = 3,
-    .qeData = 0,
+    .time_e_sector = 400,
+    .time_e_32k = 1600,
+    .time_e_64k = 2000,
+    .time_page_pgm = 5,
+    .time_ce = 33 * 1000,
+    .pd_delay = 3,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Winb_256FV = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_256FV = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xef,
 
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x01,
-    .qeReadRegLen = 0x1,
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x01,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x31,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x31,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 1,
-    .cReadMode = 0xa0,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0xa0,
 
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
 
-    .ioMode = 0x24,
-    .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .io_mode = 0x24,
+    .clk_delay = 1,
+    .clk_invert = 0x3f,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .enter32BitsAddrCmd = 0xb7,
-    .exit32BitsAddrCmd = 0xe9,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .enter_32bits_addr_cmd = 0xb7,
+    .exit_32bits_addr_cmd = 0xe9,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 400,
-    .timeE32k = 1600,
-    .timeE64k = 2000,
-    .timePagePgm = 5,
-    .timeCe = 33 * 1000,
-    .pdDelay = 3,
-    .qeData = 0,
+    .time_e_sector = 400,
+    .time_e_32k = 1600,
+    .time_e_64k = 2000,
+    .time_page_pgm = 5,
+    .time_ce = 33 * 1000,
+    .pd_delay = 3,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION SPI_Flash_Cfg_Type flashCfg_Mxic_25U256 = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Mxic_25U256 = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
     .mid = 0xc2,
 
-    .deBurstWrapCmd = 0xC0,
-    .deBurstWrapCmdDmyClk = 0x00,
-    .deBurstWrapDataMode = SF_CTRL_DATA_1_LINE,
-    .deBurstWrapData = 0x10,
+    .de_burst_wrap_cmd = 0xC0,
+    .de_burst_wrap_cmd_dmy_clk = 0x00,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_1_LINE,
+    .de_burst_wrap_data = 0x10,
 
     /*reg*/
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
 
-    .qeIndex = 0,
-    .qeBit = 0x06,
-    .qeWriteRegLen = 0x02,
-    .qeReadRegLen = 0x1,
+    .qe_index = 0,
+    .qe_bit = 0x06,
+    .qe_write_reg_len = 0x02,
+    .qe_read_reg_len = 0x1,
 
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
 
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x15,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x01,
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x15,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x01,
 
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 1,
-    .cReadMode = 0xA5,
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0xA5,
 
-    .burstWrapCmd = 0xC0,
-    .burstWrapCmdDmyClk = 0x00,
-    .burstWrapDataMode = SF_CTRL_DATA_1_LINE,
-    .burstWrapData = 0x02,
+    .burst_wrap_cmd = 0xC0,
+    .burst_wrap_cmd_dmy_clk = 0x00,
+    .burst_wrap_data_mode = SF_CTRL_DATA_1_LINE,
+    .burst_wrap_data = 0x02,
     /*erase*/
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
     /*write*/
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x38,
-    .qppAddrMode = SF_CTRL_ADDR_4_LINES,
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x38,
+    .qpp_addr_mode = SF_CTRL_ADDR_4_LINES,
 
-    .ioMode = (SF_CTRL_QIO_MODE | 0x20),
-    .clkDelay = 1,
-    .clkInvert = 0x3f,
+    .io_mode = (SF_CTRL_QIO_MODE | 0x20),
+    .clk_delay = 1,
+    .clk_invert = 0x3f,
 
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
 
     /*id*/
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .enter32BitsAddrCmd = 0xb7,
-    .exit32BitsAddrCmd = 0xe9,
-    .sectorSize = 4,
-    .pageSize = 256,
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .enter_32bits_addr_cmd = 0xb7,
+    .exit_32bits_addr_cmd = 0xe9,
+    .sector_size = 4,
+    .page_size = 256,
 
     /*read*/
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
 
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
 
     /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
 
     /*AC*/
-    .timeEsector = 400,
-    .timeE32k = 1000,
-    .timeE64k = 2000,
-    .timePagePgm = 5,
-    .timeCe = 33 * 1000,
-    .pdDelay = 20,
-    .qeData = 0,
+    .time_e_sector = 400,
+    .time_e_32k = 1000,
+    .time_e_64k = 2000,
+    .time_page_pgm = 5,
+    .time_ce = 33 * 1000,
+    .pd_delay = 20,
+    .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[] = {
+static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
     {
-        .jedecID = 0x1740ef,
+        .jedec_id = 0x1740ef,
         //.name="WB_64JV_64_33",
-        .cfg = &flashCfg_Winb_64JV,
+        .cfg = &flash_cfg_Winb_64JV,
     },
     {
-        .jedecID = 0x1940ef,
+        .jedec_id = 0x1940ef,
         //.name="WB_256FV_256_33",
-        .cfg = &flashCfg_Winb_256FV,
+        .cfg = &flash_cfg_Winb_256FV,
     },
     {
-        .jedecID = 0x1760ef,
+        .jedec_id = 0x1760ef,
         //.name="WB_64JW_64_18",
-        .cfg = &flashCfg_Winb_64JV,
+        .cfg = &flash_cfg_Winb_64JV,
     },
     {
-        .jedecID = 0x1570ef,
+        .jedec_id = 0x1570ef,
         //.name="WB_16JV_16_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flash_cfg_Winb_16JV,
     },
     {
-        .jedecID = 0x1740c8,
+        .jedec_id = 0x1740c8,
         //.name="GD_64E_64_33",
-        .cfg = &flashCfg_GD_Q64E,
+        .cfg = &flash_cfg_GD_Q64E,
     },
     {
-        .jedecID = 0x1760c8,
+        .jedec_id = 0x1760c8,
         //.name="GD_LQ64E_64_18",
-        .cfg = &flashCfg_GD_LQ64E,
+        .cfg = &flash_cfg_GD_LQ64E,
     },
     {
-        .jedecID = 0x1860c8,
+        .jedec_id = 0x1860c8,
         //.name="GD_LQ128E_128_18",
-        .cfg = &flashCfg_GD_LQ64E,
+        .cfg = &flash_cfg_GD_LQ64E,
     },
     {
-        .jedecID = 0x15345e,
+        .jedec_id = 0x15345e,
         //.name="ZB_WQ16A_16_33",
-        .cfg = &flashCfg_GD_Q64E,
+        .cfg = &flash_cfg_GD_Q64E,
     },
     {
-        .jedecID = 0x15405e,
+        .jedec_id = 0x15405e,
         //.name="ZB_16B_16_33",
-        .cfg = &flashCfg_GD_Q64E,
+        .cfg = &flash_cfg_GD_Q64E,
     },
     {
-        .jedecID = 0x16405e,
+        .jedec_id = 0x16405e,
         //.name="ZB_32B_32_33",
-        .cfg = &flashCfg_GD_Q64E,
+        .cfg = &flash_cfg_GD_Q64E,
     },
     {
-        .jedecID = 0x17405e,
+        .jedec_id = 0x17405e,
         //.name="ZB_VQ64_64_33",
-        .cfg = &flashCfg_GD_Q64E,
+        .cfg = &flash_cfg_GD_Q64E,
     },
     {
-        .jedecID = 0x15605e,
+        .jedec_id = 0x18405e,
+        //.name="ZB_VQ128_64_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x15605e,
         //.name="ZB_VQ16_16_33",
-        .cfg = &flashCfg_GD_Q64E,
+        .cfg = &flash_cfg_GD_Q64E,
     },
     {
-        .jedecID = 0x3925c2,
+        .jedec_id = 0x3925c2,
         //.name="MX_U25643G_256_18",
-        .cfg = &flashCfg_Mxic_25U256,
+        .cfg = &flash_cfg_Mxic_25U256,
     },
     {
-        .jedecID = 0x144020,
+        .jedec_id = 0x144020,
         //.name="XM_QH80_08_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flash_cfg_Winb_16JV,
     },
     {
-        .jedecID = 0x154020,
+        .jedec_id = 0x154020,
         //.name="XM_QH16_16_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flash_cfg_Winb_16JV,
     },
     {
-        .jedecID = 0x164020,
+        .jedec_id = 0x164020,
         //.name="XM_QH32_32_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flash_cfg_Winb_16JV,
     },
     {
-        .jedecID = 0x174020,
+        .jedec_id = 0x174020,
         //.name="XM_QH64_64_33",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flash_cfg_Winb_16JV,
     },
     {
-        .jedecID = 0x174220,
+        .jedec_id = 0x174220,
         //.name="XM_QW64_64_1833",
-        .cfg = &flashCfg_Winb_16JV,
+        .cfg = &flash_cfg_Winb_16JV,
     },
     {
-        .jedecID = 0x17400b,
+        .jedec_id = 0x17400b,
         //.name="XT_F64B_64_33",
-        .cfg = &flashCfg_GD_LQ64E,
+        .cfg = &flash_cfg_GD_LQ64E,
     },
 };
 
@@ -910,252 +915,255 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flashInfos[] = {
 /****************************************************************************/ /**
  * @brief  Erase flash one 32K block
  *
- * @param  flashCfg: Serial flash parameter configuration pointer
- * @param  blkNum: flash 32K block number
+ * @param  flash_cfg: Serial flash parameter configuration pointer
+ * @param  blk_num: flash 32K block number
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION SFlash_Blk32_Erase(SPI_Flash_Cfg_Type *flashCfg, uint32_t blkNum)
+int ATTR_TCM_SECTION bflb_sflash_blk32_erase(spi_flash_cfg_type *flash_cfg, uint32_t blk_num)
 {
     uint32_t cnt = 0;
-    uint8_t is32BitsAddr = 0;
-    SF_Ctrl_Cmd_Cfg_Type flashCmd;
-    BL_Err_Type stat = SFlash_Write_Enable(flashCfg);
+    uint8_t is_32bits_addr = 0;
+    struct sf_ctrl_cmd_cfg_type flash_cmd;
+    int stat = bflb_sflash_write_enable(flash_cfg);
 
-    if (stat != SUCCESS) {
+    if (stat != 0) {
         return stat;
     }
 
-    if (((uintptr_t)&flashCmd) % 4 == 0) {
-        ARCH_MemSet4((uint32_t *)&flashCmd, 0, sizeof(flashCmd) / 4);
+    if (((uintptr_t)&flash_cmd) % 4 == 0) {
+        ARCH_MemSet4((uint32_t *)&flash_cmd, 0, sizeof(flash_cmd) / 4);
     } else {
-        ARCH_MemSet(&flashCmd, 0, sizeof(flashCmd));
+        ARCH_MemSet(&flash_cmd, 0, sizeof(flash_cmd));
     }
 
-    is32BitsAddr = (flashCfg->ioMode & 0x20);
-    /* rwFlag don't care */
-    flashCmd.rwFlag = SF_CTRL_READ;
-    flashCmd.addrSize = 3;
+    is_32bits_addr = (flash_cfg->io_mode & 0x20);
+    /* rw_flag don't care */
+    flash_cmd.rw_flag = SF_CTRL_READ;
+    flash_cmd.addr_size = 3;
 
-    if (is32BitsAddr > 0) {
-        flashCmd.addrSize++;
-        flashCmd.cmdBuf[0] = (flashCfg->blk32EraseCmd << 24) | ((BFLB_SPIFLASH_BLK32K_SIZE * blkNum) >> 8);
-        flashCmd.cmdBuf[1] = ((BFLB_SPIFLASH_BLK32K_SIZE * blkNum) << 24);
+    if (is_32bits_addr > 0) {
+        flash_cmd.addr_size++;
+        flash_cmd.cmd_buf[0] = (flash_cfg->blk32_erase_cmd << 24) | ((BFLB_SPIFLASH_BLK32K_SIZE * blk_num) >> 8);
+        flash_cmd.cmd_buf[1] = ((BFLB_SPIFLASH_BLK32K_SIZE * blk_num) << 24);
     } else {
-        flashCmd.cmdBuf[0] = (flashCfg->blk32EraseCmd << 24) | (BFLB_SPIFLASH_BLK32K_SIZE * blkNum);
+        flash_cmd.cmd_buf[0] = (flash_cfg->blk32_erase_cmd << 24) | (BFLB_SPIFLASH_BLK32K_SIZE * blk_num);
     }
 
-    SF_Ctrl_SendCmd(&flashCmd);
+    bflb_sf_ctrl_sendcmd(&flash_cmd);
 
-    while (SET == SFlash_Busy(flashCfg)) {
+    while (SET == bflb_sflash_busy(flash_cfg)) {
         arch_delay_us(500);
         cnt++;
 
-        if (cnt > flashCfg->timeE32k * 3) {
-            return ERROR;
+        if (cnt > flash_cfg->time_e_32k * 3) {
+            return -1;
         }
     }
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************/ /**
  * @brief  Erase flash one region
  *
- * @param  flashCfg: Serial flash parameter configuration pointer
- * @param  startaddr: start address to erase
- * @param  endaddr: end address(include this address) to erase
+ * @param  flash_cfg: Serial flash parameter configuration pointer
+ * @param  start_addr: start address to erase
+ * @param  end_addr: end address(include this address) to erase
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION SFlash_Erase(SPI_Flash_Cfg_Type *flashCfg, uint32_t startaddr, uint32_t endaddr)
+int ATTR_TCM_SECTION bflb_sflash_erase(spi_flash_cfg_type *flash_cfg, uint32_t start_addr, uint32_t end_addr)
 {
     uint32_t len = 0;
-    uint32_t eraseLen = 0;
-    BL_Err_Type ret = SUCCESS;
+    uint32_t erase_len = 0;
+    int ret = 0;
 
-    if (startaddr > endaddr) {
-        return ERROR;
+    if (start_addr > end_addr) {
+        return -1;
     }
 
-    while (startaddr <= endaddr) {
-        len = endaddr - startaddr + 1;
+    while (start_addr <= end_addr) {
+        len = end_addr - start_addr + 1;
 
-        if (flashCfg->blk64EraseCmd != BFLB_SPIFLASH_CMD_INVALID &&
-            (startaddr & (BFLB_SPIFLASH_BLK64K_SIZE - 1)) == 0 &&
-            len > (BFLB_SPIFLASH_BLK64K_SIZE - flashCfg->sectorSize * 1024)) {
+        if (flash_cfg->blk64_erase_cmd != BFLB_SPIFLASH_CMD_INVALID &&
+            (start_addr & (BFLB_SPIFLASH_BLK64K_SIZE - 1)) == 0 &&
+            len > (BFLB_SPIFLASH_BLK64K_SIZE - flash_cfg->sector_size * 1024)) {
             /* 64K margin address,and length > 64K-sector size, erase one first */
-            ret = SFlash_Blk64_Erase(flashCfg, startaddr / BFLB_SPIFLASH_BLK64K_SIZE);
-            eraseLen = BFLB_SPIFLASH_BLK64K_SIZE;
-        } else if (flashCfg->blk32EraseCmd != BFLB_SPIFLASH_CMD_INVALID &&
-                   (startaddr & (BFLB_SPIFLASH_BLK32K_SIZE - 1)) == 0 &&
-                   len > (BFLB_SPIFLASH_BLK32K_SIZE - flashCfg->sectorSize * 1024)) {
+            ret = bflb_sflash_blk64_erase(flash_cfg, start_addr / BFLB_SPIFLASH_BLK64K_SIZE);
+            erase_len = BFLB_SPIFLASH_BLK64K_SIZE;
+        } else if (flash_cfg->blk32_erase_cmd != BFLB_SPIFLASH_CMD_INVALID &&
+                   (start_addr & (BFLB_SPIFLASH_BLK32K_SIZE - 1)) == 0 &&
+                   len > (BFLB_SPIFLASH_BLK32K_SIZE - flash_cfg->sector_size * 1024)) {
             /* 32K margin address,and length > 32K-sector size, erase one first */
-            ret = SFlash_Blk32_Erase(flashCfg, startaddr / BFLB_SPIFLASH_BLK32K_SIZE);
-            eraseLen = BFLB_SPIFLASH_BLK32K_SIZE;
+            ret = bflb_sflash_blk32_erase(flash_cfg, start_addr / BFLB_SPIFLASH_BLK32K_SIZE);
+            erase_len = BFLB_SPIFLASH_BLK32K_SIZE;
         } else {
             /* Sector erase */
-            startaddr = ((startaddr) & (~(flashCfg->sectorSize * 1024 - 1)));
-            ret = SFlash_Sector_Erase(flashCfg, startaddr / flashCfg->sectorSize / 1024);
-            eraseLen = flashCfg->sectorSize * 1024;
+            start_addr = ((start_addr) & (~(flash_cfg->sector_size * 1024 - 1)));
+            ret = bflb_sflash_sector_erase(flash_cfg, start_addr / flash_cfg->sector_size / 1024);
+            erase_len = flash_cfg->sector_size * 1024;
         }
 
-        startaddr += eraseLen;
+        start_addr += erase_len;
 
-        if (ret != SUCCESS) {
-            return ERROR;
+        if (ret != 0) {
+            return -1;
         }
     }
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************//**
  * @brief  Clear flash status register
  *
- * @param  flashCfg: Flash configuration pointer
+ * @param  flash_cfg: Flash configuration pointer
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION SFlash_Clear_Status_Register(SPI_Flash_Cfg_Type *flashCfg)
+int ATTR_TCM_SECTION bflb_SFlash_Clear_Status_Register(spi_flash_cfg_type *flash_cfg)
 {
     uint32_t ret = 0;
-    uint32_t qeValue = 0;
-    uint32_t regValue = 0;
-    uint32_t readValue = 0;
-    uint8_t readRegValue0 = 0;
-    uint8_t readRegValue1 = 0;
+    uint32_t qe_value = 0;
+    uint32_t reg_value = 0;
+    uint32_t read_value = 0;
+    uint8_t read_reg_value0 = 0;
+    uint8_t read_reg_value1 = 0;
 
-    if((flashCfg->ioMode&0xf)==SF_CTRL_QO_MODE || (flashCfg->ioMode&0xf)==SF_CTRL_QIO_MODE){
-        qeValue = 1;
+    if((flash_cfg->io_mode&0xf)==SF_CTRL_QO_MODE || (flash_cfg->io_mode&0xf)==SF_CTRL_QIO_MODE){
+        qe_value = 1;
     }
 
-    SFlash_Read_Reg(flashCfg, 0, (uint8_t *)&readRegValue0, 1);
-    SFlash_Read_Reg(flashCfg, 1, (uint8_t *)&readRegValue1, 1);
-    readValue = (readRegValue0|(readRegValue1<<8));
-    if ((readValue & (~((1<<(flashCfg->qeIndex*8+flashCfg->qeBit)) |
-                        (1<<(flashCfg->busyIndex*8+flashCfg->busyBit)) |
-                        (1<<(flashCfg->wrEnableIndex*8+flashCfg->wrEnableBit))))) == 0){
-        return SUCCESS;
+    bflb_sflash_read_reg(flash_cfg, 0, (uint8_t *)&read_reg_value0, 1);
+    bflb_sflash_read_reg(flash_cfg, 1, (uint8_t *)&read_reg_value1, 1);
+    read_value = (read_reg_value0|(read_reg_value1<<8));
+    if ((read_value & (~((1<<(flash_cfg->qe_index*8+flash_cfg->qe_bit)) |
+                        (1<<(flash_cfg->busy_index*8+flash_cfg->busy_bit)) |
+                        (1<<(flash_cfg->wr_enable_index*8+flash_cfg->wr_enable_bit))))) == 0){
+        return 0;
     }
 
-    ret = SFlash_Write_Enable(flashCfg);
-    if (SUCCESS != ret) {
-        return ERROR;
+    ret = bflb_sflash_write_enable(flash_cfg);
+    if (0 != ret) {
+        return -1;
     }
-    if (flashCfg->qeWriteRegLen == 2) {
-        regValue = (qeValue<<(flashCfg->qeIndex*8+flashCfg->qeBit));
-        SFlash_Write_Reg(flashCfg, 0, (uint8_t *)&regValue, 2);
+    if (flash_cfg->qe_write_reg_len == 2) {
+        reg_value = (qe_value<<(flash_cfg->qe_index*8+flash_cfg->qe_bit));
+        bflb_sflash_write_reg(flash_cfg, 0, (uint8_t *)&reg_value, 2);
     } else {
-        if (flashCfg->qeIndex == 0) {
-            regValue = (qeValue<<flashCfg->qeBit);
+        if (flash_cfg->qe_index == 0) {
+            reg_value = (qe_value<<flash_cfg->qe_bit);
         } else {
-            regValue = 0;
+            reg_value = 0;
         }
-        SFlash_Write_Reg(flashCfg, 0, (uint8_t *)&regValue, 1);
-        ret = SFlash_Write_Enable(flashCfg);
+        bflb_sflash_write_reg(flash_cfg, 0, (uint8_t *)&reg_value, 1);
+        ret = bflb_sflash_write_enable(flash_cfg);
         if (SUCCESS != ret) {
-            return ERROR;
+            return -1;
         }
-        if (flashCfg->qeIndex == 1) {
-            regValue = (qeValue<<flashCfg->qeBit);
+        if (flash_cfg->qe_index == 1) {
+            reg_value = (qe_value<<flash_cfg->qe_bit);
         } else {
-            regValue = 0;
+            reg_value = 0;
         }
-        SFlash_Write_Reg(flashCfg, 1, (uint8_t *)&regValue, 1);
+        bflb_sflash_write_reg(flash_cfg, 1, (uint8_t *)&reg_value, 1);
     }
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************/ /**
  * @brief  Get flash config according to flash ID patch
  *
- * @param  flashID: Flash ID
- * @param  pFlashCfg: Flash config pointer
+ * @param  flash_id: Flash ID
+ * @param  p_flash_cfg: Flash config pointer
+ * @param  group: CPU group id 0 or 1
+ * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(uint32_t flashID, SPI_Flash_Cfg_Type *pFlashCfg)
+int ATTR_TCM_SECTION bflb_sf_cfg_get_flash_cfg_need_lock_ext(uint32_t flash_id, spi_flash_cfg_type *p_flash_cfg,
+                                                             uint8_t group, uint8_t bank)
 {
     uint32_t i;
-    uint8_t buf[sizeof(SPI_Flash_Cfg_Type) + 8];
-    uint32_t crc, *pCrc;
-    uint32_t xipOffset;
-    char flashCfgMagic[] = "FCFG";
+    uint8_t buf[sizeof(spi_flash_cfg_type) + 8];
+    uint32_t crc, *p_crc;
+    uint32_t xip_offset;
+    char flash_cfg_magic[] = "FCFG";
 
-    if (flashID == 0) {
-        xipOffset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
-        SF_Ctrl_Set_Flash_Image_Offset(0, 0, SF_CTRL_FLASH_BANK0);
-        XIP_SFlash_Read_Via_Cache_Need_Lock(8 + BL616_FLASH_XIP_BASE, buf, sizeof(SPI_Flash_Cfg_Type) + 8);
-        SF_Ctrl_Set_Flash_Image_Offset(xipOffset, 0, SF_CTRL_FLASH_BANK0);
+    if (flash_id == 0) {
+        xip_offset = bflb_sf_ctrl_get_flash_image_offset(group, bank);
+        bflb_sf_ctrl_set_flash_image_offset(0, group, bank);
+        bflb_xip_sflash_read_via_cache_need_lock(8 + BL616_FLASH_XIP_BASE, buf, sizeof(spi_flash_cfg_type) + 8, group, bank);
+        bflb_sf_ctrl_set_flash_image_offset(xip_offset, group, bank);
 
-        if (ARCH_MemCmp(buf, flashCfgMagic, 4) == 0) {
-            crc = BFLB_Soft_CRC32((uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
-            pCrc = (uint32_t *)(buf + 4 + sizeof(SPI_Flash_Cfg_Type));
+        if (ARCH_MemCmp(buf, flash_cfg_magic, 4) == 0) {
+            crc = BFLB_Soft_CRC32((uint8_t *)buf + 4, sizeof(spi_flash_cfg_type));
+            p_crc = (uint32_t *)(buf + 4 + sizeof(spi_flash_cfg_type));
 
-            if (*pCrc == crc) {
-                arch_memcpy_fast(pFlashCfg, (uint8_t *)buf + 4, sizeof(SPI_Flash_Cfg_Type));
-                return SUCCESS;
+            if (*p_crc == crc) {
+                arch_memcpy_fast(p_flash_cfg, (uint8_t *)buf + 4, sizeof(spi_flash_cfg_type));
+                return 0;
             }
         }
     } else {
-        if (RomDriver_SF_Cfg_Get_Flash_Cfg_Need_Lock(flashID, pFlashCfg) == SUCCESS) {
-            return SUCCESS;
+        if (RomDriver_SF_Cfg_Get_Flash_Cfg_Need_Lock(flash_id, p_flash_cfg) == 0) {
+            return 0;
         }
-        for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
-            if (flashInfos[i].jedecID == flashID) {
-                arch_memcpy_fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
-                return SUCCESS;
+        for (i = 0; i < sizeof(flash_infos) / sizeof(flash_infos[0]); i++) {
+            if (flash_infos[i].jedec_id == flash_id) {
+                arch_memcpy_fast(p_flash_cfg, flash_infos[i].cfg, sizeof(spi_flash_cfg_type));
+                return 0;
             }
         }
     }
 
-    return ERROR;
+    return -1;
 }
 
 /****************************************************************************/ /**
  * @brief  Identify one flash patch
  *
- * @param  callFromFlash: code run at flash or ram
- * @param  flashPinCfg: Bit 7: autoscan, Bit6-0: flash GPIO config
- * @param  restoreDefault: Wether restore default flash GPIO config
- * @param  pFlashCfg: Flash config pointer
+ * @param  call_from_flash: code run at flash or ram
+ * @param  flash_pin_cfg: Bit 7: autoscan, Bit6-0: flash GPIO config
+ * @param  restore_default: Wether restore default flash GPIO config
+ * @param  p_flash_cfg: Flash config pointer
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
  * @return Flash ID
  *
 *******************************************************************************/
-uint32_t ATTR_TCM_SECTION SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash, uint8_t flashPinCfg,
-                                                    uint8_t restoreDefault, SPI_Flash_Cfg_Type *pFlashCfg, uint8_t group, SF_Ctrl_Bank_Select bank)
+uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify_ext(uint8_t call_from_flash, uint8_t flash_pin_cfg,
+                  uint8_t restore_default, spi_flash_cfg_type *p_flash_cfg, uint8_t group, uint8_t bank)
 {
-    uint32_t jdecId = 0;
+    uint32_t jedec_id = 0;
     uint32_t i = 0;
     uint32_t ret = 0;
 
-    ret = SF_Cfg_Flash_Identify(callFromFlash, flashPinCfg, restoreDefault, pFlashCfg, group, bank);
-    if (callFromFlash) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, pFlashCfg->ioMode & 0xf, 1, 0, 32, bank);
+    ret = bflb_sf_cfg_flash_identify(call_from_flash, flash_pin_cfg, restore_default, p_flash_cfg, group, bank);
+    if (call_from_flash) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, p_flash_cfg->io_mode & 0xf, 1, 0, 32, bank);
     }
     if ((ret & BFLB_FLASH_ID_VALID_FLAG) != 0) {
         return ret;
     }
 
-    jdecId = (ret & 0xffffff);
-    for (i = 0; i < sizeof(flashInfos) / sizeof(flashInfos[0]); i++) {
-        if (flashInfos[i].jedecID == jdecId) {
-            arch_memcpy_fast(pFlashCfg, flashInfos[i].cfg, sizeof(SPI_Flash_Cfg_Type));
+    jedec_id = (ret & 0xffffff);
+    for (i = 0; i < sizeof(flash_infos) / sizeof(flash_infos[0]); i++) {
+        if (flash_infos[i].jedec_id == jedec_id) {
+            arch_memcpy_fast(p_flash_cfg, flash_infos[i].cfg, sizeof(spi_flash_cfg_type));
             break;
         }
     }
-    if (i == sizeof(flashInfos) / sizeof(flashInfos[0])) {
-        return jdecId;
+    if (i == sizeof(flash_infos) / sizeof(flash_infos[0])) {
+        return jedec_id;
     } else {
-        return (jdecId | BFLB_FLASH_ID_VALID_FLAG);
+        return (jedec_id | BFLB_FLASH_ID_VALID_FLAG);
     }
 }
 
@@ -1165,39 +1173,42 @@ uint32_t ATTR_TCM_SECTION SF_Cfg_Flash_Identify_Ext(uint8_t callFromFlash, uint8
  * @param  addr: flash read start address
  * @param  data: data pointer to store data read from flash
  * @param  len: data length to read
+ * @param  group: CPU group id 0 or 1
+ * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Via_Cache_Need_Lock(uint32_t addr, uint8_t *data, uint32_t len)
+int ATTR_TCM_SECTION bflb_xip_sflash_read_via_cache_need_lock(uint32_t addr, uint8_t *data, uint32_t len,
+                                                              uint8_t group, uint8_t bank)
 {
     uint32_t offset;
 
     addr = addr & (BL616_FLASH_XIP_END - BL616_FLASH_XIP_BASE - 1);
     addr |= BL616_FLASH_XIP_BASE;
 
-    offset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
-    SF_Ctrl_Set_Flash_Image_Offset(0, 0, SF_CTRL_FLASH_BANK0);
+    offset = bflb_sf_ctrl_get_flash_image_offset(group, bank);
+    bflb_sf_ctrl_set_flash_image_offset(0, group, bank);
     /* Flash read */
-    arch_memcpy_fast(data, (void *)(uintptr_t)(addr - SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0)), len);
-    SF_Ctrl_Set_Flash_Image_Offset(offset, 0, SF_CTRL_FLASH_BANK0);
+    arch_memcpy_fast(data, (void *)(uintptr_t)(addr - bflb_sf_ctrl_get_flash_image_offset(group, bank)), len);
+    bflb_sf_ctrl_set_flash_image_offset(offset, group, bank);
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************/ /**
  * @brief  Save flash controller state
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  offset: CPU XIP flash offset pointer
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_State_Save(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t *offset,
-                                                   uint8_t group, SF_Ctrl_Bank_Select bank)
+int ATTR_TCM_SECTION bflb_xip_sflash_state_save(spi_flash_cfg_type *p_flash_cfg, uint32_t *offset,
+                                                uint8_t group, uint8_t bank)
 {
     /* XIP_SFlash_Delay */
     volatile uint32_t i = 32 * 2;
@@ -1206,60 +1217,60 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_State_Save(SPI_Flash_Cfg_Type *pFlashCfg
         ;
 
     if (bank == SF_CTRL_FLASH_BANK1) {
-        SF_Ctrl_Sbus2_Replace(SF_CTRL_PAD2);
+        bflb_sf_ctrl_sbus2_replace(SF_CTRL_PAD2);
     }
-    SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
+    bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
     /* Exit form continous read for accepting command */
-    SFlash_Reset_Continue_Read(pFlashCfg);
+    bflb_sflash_reset_continue_read(p_flash_cfg);
     /* For disable command that is setting register instaed of send command, we need write enable */
-    SFlash_DisableBurstWrap(pFlashCfg);
+    bflb_sflash_disable_burst_wrap(p_flash_cfg);
     /* Enable 32Bits addr mode again in case reset command make it reset */
-    SFlash_Set32BitsAddrMode(pFlashCfg, ENABLE);
-    if ((pFlashCfg->ioMode & 0x0f) == SF_CTRL_QO_MODE || (pFlashCfg->ioMode & 0x0f) == SF_CTRL_QIO_MODE) {
+    bflb_sflash_set_32bits_addr_mode(p_flash_cfg, 1);
+    if ((p_flash_cfg->io_mode & 0x0f) == SF_CTRL_QO_MODE || (p_flash_cfg->io_mode & 0x0f) == SF_CTRL_QIO_MODE) {
         /* Enable QE again in case reset command make it reset */
-        SFlash_Qspi_Enable(pFlashCfg);
+        bflb_sflash_qspi_enable(p_flash_cfg);
     }
     /* Deburst again to make sure */
-    SFlash_DisableBurstWrap(pFlashCfg);
+    bflb_sflash_disable_burst_wrap(p_flash_cfg);
 
     /* Clear offset setting*/
-    *offset = SF_Ctrl_Get_Flash_Image_Offset(group, bank);
-    SF_Ctrl_Set_Flash_Image_Offset(0, group, bank);
+    *offset = bflb_sf_ctrl_get_flash_image_offset(group, bank);
+    bflb_sf_ctrl_set_flash_image_offset(0, group, bank);
 
-    return SUCCESS;
+    return 0;
 }
 
 /****************************************************************************/ /**
  * @brief  Erase flash one region
  *
- * @param  pFlashCfg: Flash config pointer
- * @param  startaddr: start address to erase
+ * @param  p_flash_cfg: Flash config pointer
+ * @param  start_addr: start address to erase
  * @param  len: data length to erase
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Erase_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t startaddr, int len,
-                                                        uint8_t group, SF_Ctrl_Bank_Select bank)
+int ATTR_TCM_SECTION bflb_xip_sflash_erase_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t start_addr,
+                                                     int len, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat;
     uint32_t offset;
-    uint8_t aesEnable = 0;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t aes_enable = 0;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
 
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        stat = SFlash_Erase(pFlashCfg, startaddr, startaddr + len - 1);
-        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+        stat = bflb_sflash_erase(p_flash_cfg, start_addr, start_addr + len - 1);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, group, bank);
     }
 
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
 }
@@ -1267,35 +1278,35 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Erase_Need_Lock(SPI_Flash_Cfg_Type *pFla
 /****************************************************************************/ /**
  * @brief  Program flash one region
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  addr: start address to be programed
  * @param  data: data pointer to be programed
  * @param  len: data length to be programed
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Write_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *data, uint32_t len,
-                                                        uint8_t group, SF_Ctrl_Bank_Select bank)
+int ATTR_TCM_SECTION bflb_xip_sflash_write_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t addr, uint8_t *data,
+                                                     uint32_t len, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat;
     uint32_t offset;
-    uint8_t aesEnable = 0;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t aes_enable = 0;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
 
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        stat = SFlash_Program(pFlashCfg, ioMode, addr, data, len);
-        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+        stat = bflb_sflash_program(p_flash_cfg, io_mode, addr, data, len);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, group, bank);
     }
 
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
 }
@@ -1303,35 +1314,35 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Write_Need_Lock(SPI_Flash_Cfg_Type *pFla
 /****************************************************************************/ /**
  * @brief  Read data from flash
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  addr: flash read start address
  * @param  data: data pointer to store data read from flash
  * @param  len: data length to read
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint32_t addr, uint8_t *data, uint32_t len,
-                                                       uint8_t group, SF_Ctrl_Bank_Select bank)
+int ATTR_TCM_SECTION bflb_xip_sflash_read_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t addr, uint8_t *data,
+                                                    uint32_t len, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat;
     uint32_t offset;
-    uint8_t aesEnable = 0;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t aes_enable = 0;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
 
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        stat = SFlash_Read(pFlashCfg, ioMode, 0, addr, data, len);
-        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+        stat = bflb_sflash_read(p_flash_cfg, io_mode, 0, addr, data, len);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, group, bank);
     }
 
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
 }
@@ -1339,131 +1350,131 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Read_Need_Lock(SPI_Flash_Cfg_Type *pFlas
 /****************************************************************************/ /**
  * @brief  Get Flash Jedec ID
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  data: data pointer to store Jedec ID Read from flash
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_GetJedecId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data,
-                                                             uint8_t group, SF_Ctrl_Bank_Select bank)
+int ATTR_TCM_SECTION bflb_xip_sflash_getjedecid_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
+                                                          uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat;
     uint32_t offset;
-    uint8_t aesEnable = 0;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t aes_enable = 0;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
 
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        SFlash_GetJedecId(pFlashCfg, data);
-        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+        bflb_sflash_get_jedecid(p_flash_cfg, data);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, group, bank);
     }
 
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
-    return SUCCESS;
+    return stat;
 }
 
 /****************************************************************************/ /**
  * @brief  Get Flash Device ID
  *
- * @param  pFlashCfg: Flash config pointer
- * @param  is32BitsAddr: Is flash addr mode in 32-bits
+ * @param  p_flash_cfg: Flash config pointer
+ * @param  is_32bits_addr: Is flash addr mode in 32-bits
  * @param  data: data pointer to store Device ID Read from flash
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_GetDeviceId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, BL_Fun_Type is32BitsAddr, uint8_t *data,
-                                                              uint8_t group, SF_Ctrl_Bank_Select bank)
+int ATTR_TCM_SECTION bflb_xip_sflash_getdeviceid_need_lock(spi_flash_cfg_type *p_flash_cfg, BL_Fun_Type is_32bits_addr,
+                                                           uint8_t *data, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat;
     uint32_t offset;
-    uint8_t aesEnable = 0;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t aes_enable = 0;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
 
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        SFlash_GetDeviceId(data, is32BitsAddr);
-        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+        bflb_sflash_get_deviceid(data, is_32bits_addr);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, group, bank);
     }
 
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
-    return SUCCESS;
+    return stat;
 }
 
 /****************************************************************************/ /**
  * @brief  Get Flash Unique ID
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  data: data pointer to store Device ID Read from flash
  * @param  idLen: Unique id len
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_GetUniqueId_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t *data, uint8_t idLen,
-                                                              uint8_t group, SF_Ctrl_Bank_Select bank)
+int ATTR_TCM_SECTION bflb_xip_sflash_getuniqueid_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
+                                                           uint8_t idLen, uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat;
     uint32_t offset;
-    uint8_t aesEnable = 0;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode & 0xf;
+    uint8_t aes_enable = 0;
+    uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
-    XIP_SFlash_Opt_Enter(&aesEnable);
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
+    bflb_xip_sflash_opt_enter(&aes_enable);
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
 
     if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        SFlash_GetUniqueId(data, idLen);
-        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+        bflb_sflash_get_uniqueid(data, idLen);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, group, bank);
     }
 
-    XIP_SFlash_Opt_Exit(aesEnable);
+    bflb_xip_sflash_opt_exit(aes_enable);
 
-    return SUCCESS;
+    return stat;
 }
 
 /****************************************************************************//**
  * @brief  Clear flash status register need lock
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  * @param  group: CPU group id 0 or 1
  * @param  bank: Flash bank select
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg,
-                                                                        uint8_t group, SF_Ctrl_Bank_Select bank)
+int ATTR_TCM_SECTION bflb_XIP_SFlash_Clear_Status_Register_Need_Lock(spi_flash_cfg_type *p_flash_cfg,
+                                                                     uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
+    uint8_t io_mode = p_flash_cfg->io_mode&0xf;
 
-    stat=XIP_SFlash_State_Save(pFlashCfg, &offset, group, bank);
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32, bank);
+    stat=bflb_xip_sflash_state_save(p_flash_cfg, &offset, group, bank);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, io_mode, 1, 0, 32, bank);
     } else {
-        stat=SFlash_Clear_Status_Register(pFlashCfg);
-        XIP_SFlash_State_Restore(pFlashCfg, offset, group, bank);
+        stat=bflb_sflash_clear_status_register(p_flash_cfg);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, group, bank);
     }
 
     return stat;
@@ -1683,7 +1694,7 @@ BL_Err_Type GLB_Set_Chip_Clock_Out3_Sel(GLB_CHIP_CLK_OUT_3_Type clkOutType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Flash_Id_Value(uint32_t idValue)
+BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Id_Value(uint32_t idValue)
 {
     BL_WR_REG(GLB_BASE, GLB_HW_RSV1, (idValue | BFLB_FLASH_ID_VALID_FLAG));
 
@@ -1698,7 +1709,7 @@ BL_Err_Type GLB_Set_Flash_Id_Value(uint32_t idValue)
  * @return flash id
  *
 *******************************************************************************/
-uint32_t GLB_Get_Flash_Id_Value(void)
+uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
 {
     uint32_t tmpVal = 0;
 

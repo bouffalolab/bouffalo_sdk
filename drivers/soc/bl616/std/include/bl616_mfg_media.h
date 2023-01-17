@@ -5,8 +5,8 @@
 #include "bl616_mfg_efuse.h"
 #include "bl616_mfg_flash.h"
 
-int mfg_media_init_need_lock(SPI_Flash_Cfg_Type *flashCfg);
-int mfg_media_init_with_lock(SPI_Flash_Cfg_Type *flashCfg);
+int mfg_media_init_need_lock(spi_flash_cfg_type *flashCfg);
+int mfg_media_init_with_lock(spi_flash_cfg_type *flashCfg);
 uint8_t mfg_media_is_xtal_capcode_slot_empty(uint8_t reload);
 int mfg_media_write_xtal_capcode_pre_need_lock(uint8_t capcode, uint8_t program);
 int mfg_media_write_xtal_capcode_pre_with_lock(uint8_t capcode, uint8_t program);

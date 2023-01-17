@@ -44,14 +44,6 @@
 /* global network interface struct define */
 struct netif gnetif;
 
-/* free rtos heap define */
-static uint8_t freertos_heap[configTOTAL_HEAP_SIZE];
-static HeapRegion_t xHeapRegions[] = {
-    { (uint8_t *)freertos_heap, 0 },
-    { NULL, 0 }, /* Terminates the array. */
-    { NULL, 0 }  /* Terminates the array. */
-};
-
 static StackType_t start_task_stack[512];
 static StaticTask_t start_task_handle;
 
@@ -132,9 +124,6 @@ int main(void)
     board_emac_gpio_init();
 
     printf("EMAC lwip http test case !\r\n");
-    /* freertos heap define */
-    xHeapRegions[0].xSizeInBytes = configTOTAL_HEAP_SIZE;
-    vPortDefineHeapRegions(xHeapRegions);
 
     // ethernet_lwip_init();
     vSemaphoreCreateBinary(console_lock);

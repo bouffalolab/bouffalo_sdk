@@ -36,7 +36,6 @@
 #ifndef __BFLB_PORT_BOOT2_H__
 #define __BFLB_PORT_BOOT2_H__
 
-#include "bl602_sflash.h"
 #include "bl602_glb.h"
 
 #define BL_TCM_BASE           BL602_TCM_BASE
@@ -101,7 +100,7 @@ typedef struct
 
 struct __attribute__((packed, aligned(4))) hal_flash_config {
     uint32_t magicCode; /*'FCFG'*/
-    SPI_Flash_Cfg_Type cfg;
+    spi_flash_cfg_type cfg;
     uint32_t crc32;
 };
 

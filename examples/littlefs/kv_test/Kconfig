@@ -1,0 +1,41 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_KV_TEST
+	tristate "\"kv test!\" example"
+	default n
+	---help---
+		Enable the \"kv test!\" example
+
+if EXAMPLES_KV_TEST
+
+config EXAMPLES_KV_TEST_PROGNAME
+	string "Program name"
+	default "kv_test"
+	---help---
+		This is the name of the program that will be used when the NSH ELF
+		program is installed.
+
+config EXAMPLES_KV_TEST_PRIORITY
+	int "kv_test task priority"
+	default 100
+
+config EXAMPLES_KV_TEST_STACKSIZE
+	int "kv_test stack size"
+	default 4096
+
+config KV_TEST_TEST_CASE_NUM
+	int "kv_test case num"
+	default 1
+
+config KV_TEST_FILE_OPER_SUM
+	int "kv_test file RW sum"
+	default 20000
+
+config KV_TEST_FILE_OPER_PERIOD
+	int "kv_test file RW period(ms)"
+	default 1000
+
+endif

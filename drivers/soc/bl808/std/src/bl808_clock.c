@@ -275,7 +275,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_AUPLL_Output(CLOCK_AUPLL_Type clock
     }
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Get_Audio_PLL_Output()
+static inline uint32_t ATTR_CLOCK_SECTION Clock_Get_Audio_PLL_Output()
 {
     uint32_t tmpVal = 0;
 
@@ -420,22 +420,22 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_UHS_PLL_Output()
     }
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_Get_WIFI_PLL_Output(uint32_t pllOut)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_Get_WIFI_PLL_Output(uint32_t pllOut)
 {
     return Clock_Get_WIFI_PLL_Output(pllOut);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_EMI_Get_WIFI_PLL_Output(uint32_t pllOut)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_EMI_Get_WIFI_PLL_Output(uint32_t pllOut)
 {
     return Clock_Get_WIFI_PLL_Output(pllOut);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_EMI_Get_CPU_PLL_Output(uint32_t pllOut)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_EMI_Get_CPU_PLL_Output(uint32_t pllOut)
 {
     return Clock_Get_CPU_PLL_Output(pllOut);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Xtal_Output(void)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_Xtal_Output(void)
 {
     uint8_t xtalType = 0;
 
@@ -463,7 +463,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Xtal_Output(void)
     }
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_XClk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_XClk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* rc32m */
@@ -476,7 +476,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_XClk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_F32k_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_F32k_Mux_Output(uint8_t sel)
 {
     uint32_t tmpVal;
     uint32_t div = 0;
@@ -495,7 +495,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_F32k_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_F32k_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_F32k_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -504,7 +504,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_F32k_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, HBN_F32K_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_320M_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_320M_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm wifi pll 320m */
@@ -517,7 +517,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_320M_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_320M_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_320M_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -526,7 +526,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_320M_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_MM_MUXPLL_320M_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_240M_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_240M_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm wifi pll 240m */
@@ -539,7 +539,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_240M_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_240M_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_240M_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -548,7 +548,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_240M_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_MM_MUXPLL_240M_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_160M_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_160M_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm wifi pll 160m */
@@ -561,7 +561,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_160M_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_160M_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_160M_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -570,7 +570,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_DSP_Get_Muxpll_160M_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_MM_MUXPLL_160M_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_160M_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_160M_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* wifi pll 160m */
@@ -589,7 +589,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_160M_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_Muxpll_160M_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_Muxpll_160M_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -598,7 +598,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_Muxpll_160M_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_TOP_MUXPLL_160M_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_80M_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_80M_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* wifi pll 80m */
@@ -617,7 +617,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_80M_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_Muxpll_80M_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_Muxpll_80M_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -626,7 +626,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_Muxpll_80M_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_TOP_MUXPLL_80M_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_MCU_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_MCU_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* cpu pll 400m */
@@ -645,7 +645,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_MCU_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_XClk_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_XClk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -655,7 +655,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_XClk_Sel_Val(void)
     return (tmpVal & 0x1);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_Root_Clk_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_Root_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -665,7 +665,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_Root_Clk_Sel_Val(void)
     return ((tmpVal >> 1) & 0x1);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_MCU_Root_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_MCU_Root_Clk_Mux_Output(uint8_t sel)
 {
     uint32_t tmpVal;
 
@@ -682,7 +682,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_MCU_Root_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_HClk_Div_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_HClk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -691,7 +691,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_MCU_HClk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_HCLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_Peri_BClk_Div_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_Peri_BClk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -700,7 +700,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_Peri_BClk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_BCLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_LP_Clk_Div_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_LP_Clk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -709,7 +709,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_LP_Clk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, PDS_REG_PICO_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_XClk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_XClk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* rc32m */
@@ -722,7 +722,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_XClk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_XClk_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_XClk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -731,7 +731,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_XClk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_XCLK_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_Root_Clk_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_Root_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -740,7 +740,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_Root_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_CPU_ROOT_CLK_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm mux 240m */
@@ -756,7 +756,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_Root_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_Root_Clk_Mux_Output(uint8_t sel)
 {
     uint32_t tmpVal;
 
@@ -773,7 +773,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_Root_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_HClk_Div_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_HClk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -782,7 +782,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_HClk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_CPU_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_BClk_Div_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_BClk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -791,7 +791,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_BClk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_BCLK2X_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_MM_Bclk_Sel_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_MM_Bclk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -800,7 +800,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_MM_Bclk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_BCLK1X_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_MM_BClk_Div_Val(void)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_MM_BClk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -809,7 +809,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_MM_BClk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_BCLK1X_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_MM_BCLK_Mux_Output(uint8_t sel)
+static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_MM_BCLK_Mux_Output(uint8_t sel)
 {
     if (sel == 0 || sel == 1) {
         /* mm xclk */
@@ -906,7 +906,7 @@ uint32_t ATTR_CLOCK_SECTION Clock_System_Clock_Get(BL_System_Clock_Type type)
     }
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_EMI_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_EMI_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mcu pbclk */
@@ -928,7 +928,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_EMI_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_EMI_Clk_Div_Val(void)
+static inline uint8_t Clock_Get_EMI_Clk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -937,7 +937,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_EMI_Clk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_EMI_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_EMI_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_EMI_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -946,7 +946,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_EMI_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_EMI_CLK_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Get_EMI_Clk(void)
+static inline uint32_t Clock_Get_EMI_Clk(void)
 {
     uint32_t div = 0;
 
@@ -955,7 +955,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_EMI_Clk(void)
     return Clock_EMI_Clk_Mux_Output(Clock_Get_EMI_Clk_Sel_Val()) / (div + 1);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_PARAMB_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_PARAMB_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* emi cpu pll 400m */
@@ -971,7 +971,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_PARAMB_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_PSRAMB_Clk_Div_Val(void)
+static inline uint8_t Clock_Get_PSRAMB_Clk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -980,7 +980,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_PSRAMB_Clk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_PSRAMB_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_PSRAMB_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_PSRAMB_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -989,7 +989,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_PSRAMB_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_PSRAMB_CLK_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Get_PSRAMB_Clk(void)
+static inline uint32_t Clock_Get_PSRAMB_Clk(void)
 {
     uint32_t div = 0;
 
@@ -998,7 +998,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_PSRAMB_Clk(void)
     return Clock_PARAMB_Clk_Mux_Output(Clock_Get_PSRAMB_Clk_Sel_Val()) / (div + 1);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm mux 160m */
@@ -1018,7 +1018,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_Clk_Div_Val(void)
+static inline uint8_t Clock_Get_Clk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1027,7 +1027,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_Clk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1036,7 +1036,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_CLK_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Get_Clk(void)
+static inline uint32_t Clock_Get_Clk(void)
 {
     uint32_t div = 0;
 
@@ -1045,7 +1045,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_Clk(void)
     return Clock_Clk_Mux_Output(Clock_Get_Clk_Sel_Val()) / (div + 1);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_H264_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_H264_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm mux 160m */
@@ -1061,7 +1061,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_H264_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_H264_Clk_Div_Val(void)
+static inline uint8_t Clock_Get_H264_Clk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1070,7 +1070,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_H264_Clk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_H264_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_H264_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_H264_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1079,7 +1079,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_H264_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_H264_CLK_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Get_H264_Clk(void)
+static inline uint32_t Clock_Get_H264_Clk(void)
 {
     uint32_t div = 0;
 
@@ -1088,7 +1088,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_H264_Clk(void)
     return Clock_H264_Clk_Mux_Output(Clock_Get_H264_Clk_Sel_Val()) / (div + 1);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_BLAI_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_BLAI_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm mux 160m */
@@ -1104,7 +1104,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_BLAI_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_BLAI_Clk_Div_Val(void)
+static inline uint8_t Clock_Get_BLAI_Clk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1113,7 +1113,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_BLAI_Clk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_CNN_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_BLAI_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_BLAI_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1122,7 +1122,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_BLAI_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_CNN_CLK_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Get_BLAI_Clk(void)
+static inline uint32_t Clock_Get_BLAI_Clk(void)
 {
     uint32_t div = 0;
 
@@ -1131,7 +1131,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_BLAI_Clk(void)
     return Clock_BLAI_Clk_Mux_Output(Clock_Get_BLAI_Clk_Sel_Val()) / (div + 1);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_MIPI_Div_Val(void)
+static inline uint8_t Clock_Get_MIPI_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1140,12 +1140,12 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_MIPI_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_MIPIPLL_EVEN_DIV_RATIO);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_MIPI_Clk_Mux_Output(void)
+static inline uint32_t Clock_MIPI_Clk_Mux_Output(void)
 {
     return Clock_Get_MIPI_PLL_Output();
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Display_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_Display_Clk_Mux_Output(uint8_t sel)
 {
     uint32_t div = 0;
 
@@ -1161,7 +1161,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Display_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_Display_Clk_Div_Val(void)
+static inline uint8_t Clock_Get_Display_Clk_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1170,7 +1170,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_Display_Clk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_DP_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_Display_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_Display_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1179,7 +1179,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_Display_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_DP_CLK_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_Get_Display_Clk(void)
+static inline uint32_t Clock_Get_Display_Clk(void)
 {
     uint32_t div = 0;
 
@@ -1188,7 +1188,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_Display_Clk(void)
     return Clock_Display_Clk_Mux_Output(Clock_Get_Display_Clk_Sel_Val()) / (div + 1);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_UART_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_UART_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mcu pbclk */
@@ -1202,7 +1202,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_UART_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_UART_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_UART_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1211,7 +1211,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_UART_Clk_Sel_Val(void)
     return ((BL_GET_REG_BITS_VAL(tmpVal, GLB_HBN_UART_CLK_SEL2) << 1) | BL_GET_REG_BITS_VAL(tmpVal, GLB_HBN_UART_CLK_SEL));
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_UART_Div_Val(void)
+static inline uint8_t Clock_Get_UART_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1220,7 +1220,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_UART_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_UART_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_UART_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_DSP_UART_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm pbclk */
@@ -1236,7 +1236,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_UART_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_UART_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_DSP_UART_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1245,7 +1245,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_UART_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_UART_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_UART0_Div_Val(void)
+static inline uint8_t Clock_Get_DSP_UART0_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1254,7 +1254,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_UART0_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_UART0_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_UART1_Div_Val(void)
+static inline uint8_t Clock_Get_DSP_UART1_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1263,7 +1263,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_UART1_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_UART1_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_PKA_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_PKA_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mcu pbclk */
@@ -1276,7 +1276,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_PKA_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_PKA_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_PKA_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1285,13 +1285,13 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_PKA_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_PKA_CLK_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_IR_Clk_Mux_Output(void)
+static inline uint32_t Clock_IR_Clk_Mux_Output(void)
 {
     /* xclk */
     return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MCU_XCLK);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_IR_Div_Val(void)
+static inline uint8_t Clock_Get_IR_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1300,7 +1300,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_IR_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_IR_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Clk_Sel2_Val(void)
+static inline uint8_t Clock_Get_SF_Clk_Sel2_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1309,7 +1309,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Clk_Sel2_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SF_CLK_SEL2);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_SF_SEL2_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_SF_SEL2_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* wifi pll 120m */
@@ -1326,7 +1326,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_SF_SEL2_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_SF_SEL_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_SF_SEL_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* sf sel2 */
@@ -1343,7 +1343,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_SF_SEL_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_SF_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1352,7 +1352,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SF_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Div_Val(void)
+static inline uint8_t Clock_Get_SF_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1361,7 +1361,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SF_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_SPI_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_SPI_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mux 160Mkz */
@@ -1372,7 +1372,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_SPI_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_SPI_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_SPI_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1381,7 +1381,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_SPI_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SPI_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_SPI_Div_Val(void)
+static inline uint8_t Clock_Get_SPI_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1390,7 +1390,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_SPI_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SPI_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_SPI_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_DSP_SPI_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm mux 160m */
@@ -1403,7 +1403,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_SPI_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_SPI_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_DSP_SPI_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1412,7 +1412,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_SPI_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_SPI_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_SPI_Div_Val(void)
+static inline uint8_t Clock_Get_DSP_SPI_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1421,7 +1421,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_SPI_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_SPI_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_I2C_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_I2C_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mcu pbclk */
@@ -1434,7 +1434,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_I2C_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_I2C_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_I2C_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1443,7 +1443,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_I2C_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_I2C_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_I2C_Div_Val(void)
+static inline uint8_t Clock_Get_I2C_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1452,7 +1452,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_I2C_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_I2C_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DSP_I2C_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_DSP_I2C_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* mm pbclk */
@@ -1463,7 +1463,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_DSP_I2C_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_I2C_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_DSP_I2C_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1472,7 +1472,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_I2C_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_I2C_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_I2C0_Div_Val(void)
+static inline uint8_t Clock_Get_DSP_I2C0_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1481,7 +1481,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_I2C0_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_I2C0_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_I2C1_Div_Val(void)
+static inline uint8_t Clock_Get_DSP_I2C1_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1490,7 +1490,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DSP_I2C1_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MM_GLB_REG_I2C1_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_GPADC_Clk_Output(uint8_t sel)
+static inline uint32_t Clock_GPADC_Clk_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* audio pll clk */
@@ -1501,7 +1501,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_GPADC_Clk_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPADC_32M_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_GPADC_32M_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1510,7 +1510,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPADC_32M_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_GPADC_32M_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPADC_Div_Val(void)
+static inline uint8_t Clock_Get_GPADC_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1519,7 +1519,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPADC_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_GPADC_32M_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_GPADC_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_GPADC_Clk_Mux_Output(uint8_t sel)
 {
     uint32_t div = 0;
 
@@ -1532,13 +1532,13 @@ static uint32_t ATTR_CLOCK_SECTION Clock_GPADC_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_PDM_Clk_Mux_Output(void)
+static inline uint32_t Clock_PDM_Clk_Mux_Output(void)
 {
     /* audio pll clk */
     return Clock_Get_Audio_PLL_Output();
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_PDM_Div_Val(void)
+static inline uint8_t Clock_Get_PDM_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1547,13 +1547,13 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_PDM_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_AUDIO_PDM_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_I2S_Clk_Mux_Output(void)
+static inline uint32_t Clock_I2S_Clk_Mux_Output(void)
 {
     /* audio pll clk */
     return Clock_Get_Audio_PLL_Output();
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_I2S_Div_Val(void)
+static inline uint8_t Clock_Get_I2S_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1562,13 +1562,13 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_I2S_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_I2S_REF_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_ADC_Clk_Mux_Output(void)
+static inline uint32_t Clock_ADC_Clk_Mux_Output(void)
 {
     /* audio pll clk */
     return Clock_Get_Audio_PLL_Output();
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_ADC_Div_Val(void)
+static inline uint8_t Clock_Get_ADC_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1577,7 +1577,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_ADC_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_AUDIO_ADC_CLK_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPADC_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_GPADC_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1586,7 +1586,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPADC_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, HBN_GPADC_CS);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_GPDAC_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_GPDAC_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* wifi pll 32m */
@@ -1600,7 +1600,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_GPDAC_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPDAC_Div_Val(void)
+static inline uint8_t Clock_Get_GPDAC_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1609,7 +1609,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPDAC_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_DIG_512K_DIV);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPDAC_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_GPDAC_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1618,13 +1618,13 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_GPDAC_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_DIG_CLK_SRC_SEL);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_DAC_Clk_Mux_Output(void)
+static inline uint32_t Clock_DAC_Clk_Mux_Output(void)
 {
     /* audio pll clk */
     return Clock_Get_Audio_PLL_Output();
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_DAC_Div_Val(void)
+static inline uint8_t Clock_Get_DAC_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1633,7 +1633,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_DAC_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_AUDIO_DAC_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_SDH_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_SDH_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* wifi pll 96m */
@@ -1644,7 +1644,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_SDH_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_SDH_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_SDH_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1653,7 +1653,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_SDH_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_SDH_CLK_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_SDH_Div_Val(void)
+static inline uint8_t Clock_Get_SDH_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1662,7 +1662,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_SDH_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_SDH_CLK_DIV);
 }
 
-static uint32_t ATTR_CLOCK_SECTION Clock_CAM_Clk_Mux_Output(uint8_t sel)
+static inline uint32_t Clock_CAM_Clk_Mux_Output(uint8_t sel)
 {
     if (sel == 0) {
         /* xclk */
@@ -1678,7 +1678,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_CAM_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_CAM_Clk_Sel_Val(void)
+static inline uint8_t Clock_Get_CAM_Clk_Sel_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1687,7 +1687,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_CAM_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_CAM_REF_CLK_SRC_SEL);
 }
 
-static uint8_t ATTR_CLOCK_SECTION Clock_Get_CAM_Div_Val(void)
+static inline uint8_t Clock_Get_CAM_Div_Val(void)
 {
     uint32_t tmpVal;
 
@@ -1703,7 +1703,7 @@ static uint8_t ATTR_CLOCK_SECTION Clock_Get_CAM_Div_Val(void)
  * @return Audio ADC clock value
  *
 *******************************************************************************/
-static uint32_t ATTR_CLOCK_SECTION Clock_Audio_ADC_Clock_Get(void)
+static inline uint32_t Clock_Audio_ADC_Clock_Get(void)
 {
     uint32_t clock = 0;
     uint32_t div = 0;
@@ -1721,7 +1721,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Audio_ADC_Clock_Get(void)
  * @return Audio DAC clock value
  *
 *******************************************************************************/
-static uint32_t ATTR_CLOCK_SECTION Clock_Audio_DAC_Clock_Get(void)
+static inline uint32_t Clock_Audio_DAC_Clock_Get(void)
 {
     uint32_t clock = 0;
     uint32_t div = 0;
@@ -1741,7 +1741,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Audio_DAC_Clock_Get(void)
  * @return Peripheral1 clock value
  *
 *******************************************************************************/
-uint32_t ATTR_CLOCK_SECTION Clock_Peripheral_Clock_Get(BL_Peripheral_Type type)
+uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type)
 {
     uint32_t clock = 0;
     uint32_t div = 0;

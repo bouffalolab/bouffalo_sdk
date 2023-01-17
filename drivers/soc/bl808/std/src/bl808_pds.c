@@ -335,7 +335,7 @@ BL_Sts_Type ATTR_TCM_SECTION PDS_Get_GPIO_Pad_IntStatus(GLB_GPIO_Type pad)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None(SF_Ctrl_Pin_Select pinCfg)
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None(uint8_t pinCfg)
 {
     switch (pinCfg) {
         case SF_IO_EXT_SF2:
@@ -360,7 +360,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None(SF_Ctrl_Pin_Select pinC
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None_Fast(SF_Ctrl_Pin_Select pinCfg)
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg)
 {
     uint32_t tmpVal;
 

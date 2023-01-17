@@ -48,15 +48,7 @@
 #define AUADC_PDM_ADC_1_OFFSET             (0xC0C) /* pdm_adc_1 */
 #define AUADC_PDM_DAC_0_OFFSET             (0xC10) /* pdm_dac_0 */
 #define AUADC_PDM_PDM_0_OFFSET             (0xC1C) /* pdm_pdm_0 */
-#define AUADC_PDM_RSVD0_OFFSET             (0xC20) /* pdm_rsvd0 */
-#define AUADC_PDM_DBG_0_OFFSET             (0xC24) /* pdm_dbg_0 */
-#define AUADC_PDM_DBG_1_OFFSET             (0xC28) /* pdm_dbg_1 */
-#define AUADC_PDM_DBG_2_OFFSET             (0xC2C) /* pdm_dbg_2 */
-#define AUADC_PDM_DBG_3_OFFSET             (0xC30) /* pdm_dbg_3 */
-#define AUADC_PDM_DBG_4_OFFSET             (0xC34) /* pdm_dbg_4 */
 #define AUADC_PDM_ADC_S0_OFFSET            (0xC38) /* pdm_adc_s0 */
-#define AUADC_PDM_ADC_S1_OFFSET            (0xC3C) /* pdm_adc_s1 */
-#define AUADC_PDM_ADC_S2_OFFSET            (0xC40) /* pdm_adc_s2 */
 #define AUADC_AUDADC_ANA_CFG1_OFFSET       (0xC60) /* audadc_ana_cfg1 */
 #define AUADC_AUDADC_ANA_CFG2_OFFSET       (0xC64) /* audadc_ana_cfg2 */
 #define AUADC_AUDADC_CMD_OFFSET            (0xC68) /* audadc_cmd */
@@ -101,34 +93,9 @@
 #define AUADC_ADC_0_PDM_SEL_SHIFT (3U)
 #define AUADC_ADC_0_PDM_SEL_MASK  (0x7 << AUADC_ADC_0_PDM_SEL_SHIFT)
 
-/* 0xC20 : pdm_rsvd0 */
-
-/* 0xC24 : pdm_dbg_0 */
-#define AUADC_ADC_TEST_CLKIN_EN       (1 << 21U)
-#define AUADC_ADC_TEST_DIN_EN         (1 << 23U)
-#define AUADC_AUD_TEST_READ_SEL_SHIFT (24U)
-#define AUADC_AUD_TEST_READ_SEL_MASK  (0x3f << AUADC_AUD_TEST_READ_SEL_SHIFT)
-
-/* 0xC28 : pdm_dbg_1 */
-#define AUADC_AUD_TEST_READ_SHIFT (0U)
-#define AUADC_AUD_TEST_READ_MASK  (0xffffffff << AUADC_AUD_TEST_READ_SHIFT)
-
-/* 0xC2C : pdm_dbg_2 */
-#define AUADC_ADC_FIR_4S_VAL_SHIFT (0U)
-#define AUADC_ADC_FIR_4S_VAL_MASK  (0xfffff << AUADC_ADC_FIR_4S_VAL_SHIFT)
-#define AUADC_ADC_0_FIR_4S_EN      (1 << 20U)
-
-/* 0xC30 : pdm_dbg_3 */
-
-/* 0xC34 : pdm_dbg_4 */
-
 /* 0xC38 : pdm_adc_s0 */
 #define AUADC_ADC_S0_VOLUME_SHIFT (0U)
 #define AUADC_ADC_S0_VOLUME_MASK  (0x1ff << AUADC_ADC_S0_VOLUME_SHIFT)
-
-/* 0xC3C : pdm_adc_s1 */
-
-/* 0xC40 : pdm_adc_s2 */
 
 /* 0xC60 : audadc_ana_cfg1 */
 #define AUADC_AUDADC_PGA_CHOP_CKSEL      (1 << 0U)

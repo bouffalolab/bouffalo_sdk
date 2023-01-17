@@ -194,7 +194,178 @@ int hid_test(void)
     ret = usbh_submit_urb(&hid_intin_urb);
     return ret;
 }
+#if 0
+#define TEST_MJPEG        1
+#define USE_VIDEO_IRQ     1
 
+#define VIDEO_ISO_PACKETS 8
+
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t video_buffer[VIDEO_ISO_PACKETS * 3072];  /* just for reference , use ram larger than 4M */
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t video_buffer2[VIDEO_ISO_PACKETS * 3072]; /* just for reference , use ram larger than 4M */
+
+struct usbh_videostreaming g_uvcsteam;
+volatile uint32_t number = 0;
+
+//uint8_t data_buffer[200*1024];
+void usbh_videostreaming_output(uint8_t *input, uint32_t input_len)
+{
+    //memcpy(&data_buffer[g_uvcsteam.bufoffset], input, input_len);
+}
+
+void usbh_video_one_frame_callback(struct usbh_videostreaming *stream)
+{
+    number++;
+    //printf("l:%d\r\n", stream->bufoffset);
+}
+
+struct usbh_urb *video_urb;
+struct usbh_urb *video_urb2;
+
+volatile bool video_urb_select = 0;
+volatile bool usb_transfer_abort = false;
+
+void usbh_iso_complete_callback(void *arg, int nbytes)
+{
+    if (nbytes == 0) {
+        video_urb2->start_frame = video_urb->start_frame;
+        usbh_submit_urb(video_urb2);
+#if TEST_MJPEG
+        usbh_videostreaming_parse_mjpeg(video_urb, &g_uvcsteam);
+#else
+        usbh_videostreaming_parse_yuyv2(video_urb, &g_uvcsteam);
+#endif
+    } else {
+        printf("break1\r\n");
+        usb_transfer_abort = true;
+    }
+}
+
+void usbh_iso_complete_callback2(void *arg, int nbytes)
+{
+    if (nbytes == 0) {
+        video_urb->start_frame = video_urb2->start_frame;
+        usbh_submit_urb(video_urb);
+#if TEST_MJPEG
+        usbh_videostreaming_parse_mjpeg(video_urb2, &g_uvcsteam);
+#else
+        usbh_videostreaming_parse_yuyv2(video_urb2, &g_uvcsteam);
+#endif
+    } else {
+        printf("break2\r\n");
+        usb_transfer_abort = true;
+    }
+}
+
+int video_test(void)
+{
+    int ret;
+    struct usbh_video *video_class = (struct usbh_video *)usbh_find_class_instance("/dev/video0");
+    if (video_class == NULL) {
+        USB_LOG_RAW("do not find /dev/video0\r\n");
+        return -1;
+    }
+
+    uint8_t hz = 0x01;
+    usbh_video_set_cur(video_class, video_class->ctrl_intf, 0x02, VIDEO_VC_PROCESSING_UNIT_DESCRIPTOR_SUBTYPE, &hz, 1);
+#if TEST_MJPEG
+    ret = usbh_video_open(video_class, USBH_VIDEO_FORMAT_MJPEG, 1280, 720, 7);
+#else
+    ret = usbh_video_open(video_class, USBH_VIDEO_FORMAT_UNCOMPRESSED, 640, 480, 7);
+#endif
+    if (ret < 0) {
+        USB_LOG_RAW("no such setting, ret:%d\r\n", ret);
+        return -1;
+    }
+
+    usb_osal_msleep(100);
+
+    video_urb = usb_malloc(sizeof(struct usbh_urb) + sizeof(struct usbh_iso_frame_packet) * VIDEO_ISO_PACKETS);
+    if (video_urb == NULL) {
+        USB_LOG_ERR("No memory to alloc urb\r\n");
+        while (1) {
+        }
+    }
+
+    uint8_t *tmp_buf = video_buffer;
+    memset(video_urb, 0, sizeof(struct usbh_urb) + sizeof(struct usbh_iso_frame_packet) * VIDEO_ISO_PACKETS);
+    video_urb->pipe = video_class->isoin;
+    video_urb->num_of_iso_packets = VIDEO_ISO_PACKETS;
+    video_urb->timeout = 0xffffffff;
+#if USE_VIDEO_IRQ
+    video_urb->complete = usbh_iso_complete_callback;
+    video_urb->timeout = 0;
+#endif
+    video_urb->start_frame = (usbh_get_frame_number() + 2) & 0x3ff;
+    for (uint32_t i = 0; i < VIDEO_ISO_PACKETS; i++) {
+        video_urb->iso_packet[i].transfer_buffer = tmp_buf;
+        video_urb->iso_packet[i].transfer_buffer_length = video_class->isoin_mps;
+        tmp_buf += video_class->isoin_mps; /* enable this when use ram larger than 4M */
+    }
+
+    video_urb2 = usb_malloc(sizeof(struct usbh_urb) + sizeof(struct usbh_iso_frame_packet) * VIDEO_ISO_PACKETS);
+    if (video_urb2 == NULL) {
+        USB_LOG_ERR("No memory to alloc urb\r\n");
+        while (1) {
+        }
+    }
+
+    tmp_buf = video_buffer2;
+    memset(video_urb2, 0, sizeof(struct usbh_urb) + sizeof(struct usbh_iso_frame_packet) * VIDEO_ISO_PACKETS);
+    video_urb2->pipe = video_class->isoin;
+    video_urb2->num_of_iso_packets = VIDEO_ISO_PACKETS;
+    video_urb2->timeout = 0xffffffff;
+#if USE_VIDEO_IRQ
+    video_urb2->complete = usbh_iso_complete_callback2;
+    video_urb2->timeout = 0;
+#endif
+    video_urb2->start_frame = video_urb->start_frame;
+    for (uint32_t i = 0; i < VIDEO_ISO_PACKETS; i++) {
+        video_urb2->iso_packet[i].transfer_buffer = tmp_buf;
+        video_urb2->iso_packet[i].transfer_buffer_length = video_class->isoin_mps;
+        tmp_buf += video_class->isoin_mps; /* enable this when use ram larger than 4M */
+    }
+
+    g_uvcsteam.bufoffset = 0;
+    g_uvcsteam.video_one_frame_callback = usbh_video_one_frame_callback;
+#if USE_VIDEO_IRQ
+    ret = usbh_submit_urb(video_urb);
+#endif
+    static uint32_t start_time = 0;
+    start_time = bflb_mtimer_get_time_ms();
+    while (1) {
+#if USE_VIDEO_IRQ == 0
+        ret = usbh_submit_urb(video_urb);
+        if (ret < 0) {
+            break;
+        }
+        video_urb2->start_frame = video_urb->start_frame;
+        ret = usbh_submit_urb(video_urb2);
+#if TEST_MJPEG
+        usbh_videostreaming_parse_mjpeg(video_urb, &g_uvcsteam);
+#else
+        usbh_videostreaming_parse_yuyv2(video_urb, &g_uvcsteam);
+#endif
+        if (ret < 0) {
+            break;
+        }
+#if TEST_MJPEG
+        usbh_videostreaming_parse_mjpeg(video_urb2, &g_uvcsteam);
+#else
+        usbh_videostreaming_parse_yuyv2(video_urb2, &g_uvcsteam);
+#endif
+        video_urb->start_frame = video_urb2->start_frame;
+#else
+        printf("fps:%d\r\n",(number * 1000 / ((uint32_t)bflb_mtimer_get_time_ms() - start_time)));
+        usb_osal_msleep(1000);
+#endif
+    }
+    printf("transfer failed\r\n");
+    video_class->is_opened = false;
+    usb_free(video_urb);
+    usb_free(video_urb2);
+    return ret;
+}
+#endif
 static void usbh_class_test_thread(void *argument)
 {
     while (1) {
@@ -203,7 +374,7 @@ static void usbh_class_test_thread(void *argument)
         cdc_acm_test();
         msc_test();
         hid_test();
-        //video_test();
+        // video_test();
     }
 }
 

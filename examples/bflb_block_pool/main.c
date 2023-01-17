@@ -1,24 +1,21 @@
+#define DBG_TAG "MAIN"
+
+#include <stdlib.h>
 #include "bflb_mtimer.h"
 #include <FreeRTOS.h>
 #include "semphr.h"
+#include "board.h"
 #include "log.h"
 #include "bflb_block_pool.h"
-#include "stdlib.h"
 
-extern void board_init(void);
+BFLOG_DEFINE_TAG(MAIN, DBG_TAG, true);
+#undef BFLOG_TAG
+#define BFLOG_TAG BFLOG_GET_TAG(MAIN)
 
 #define BLK_SIZE        128
 #define BLK_MEMORY_SIZE 16 * (BLK_SIZE + sizeof(void *))
 static bflb_block_pool_t block_pool;
 __attribute__((aligned(8))) static uint8_t block_pool_memory[BLK_MEMORY_SIZE];
-
-static uint8_t freertos_heap[configTOTAL_HEAP_SIZE];
-
-static HeapRegion_t xHeapRegions[] = {
-    { (uint8_t *)freertos_heap, 0 },
-    { NULL, 0 }, /* Terminates the array. */
-    { NULL, 0 }  /* Terminates the array. */
-};
 
 static TaskHandle_t consumer_handle;
 static TaskHandle_t producer_handle;
@@ -122,8 +119,6 @@ int main(void)
     uint32_t block_count;
 
     board_init();
-    xHeapRegions[0].xSizeInBytes = configTOTAL_HEAP_SIZE;
-    vPortDefineHeapRegions(xHeapRegions);
 
     configASSERT((configMAX_PRIORITIES > 4));
 
@@ -148,6 +143,10 @@ int main(void)
     xTaskCreate(consumer_task, (char *)"consumer_task", 512, NULL, configMAX_PRIORITIES - 2, &consumer_handle);
     LOG_I("Starting producer task...\r\n");
     xTaskCreate(producer_task, (char *)"producer_task", 512, NULL, configMAX_PRIORITIES - 3, &producer_handle);
+
+#ifdef CONFIG_BFLOG
+    log_restart();
+#endif
 
     vTaskStartScheduler();
 

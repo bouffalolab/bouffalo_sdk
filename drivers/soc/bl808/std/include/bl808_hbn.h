@@ -39,8 +39,8 @@
 #include "hbn_reg.h"
 #include "bl808_aon.h"
 #include "bl808_l1c.h"
-#include "bl808_sflash.h"
 #include "bl808_common.h"
+#include "bflb_sflash.h"
 
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
@@ -323,7 +323,7 @@ typedef struct
     uint32_t sleepTime;                     /*!< HBN sleep time */
     uint8_t gpioWakeupSrc;                  /*!< GPIO Wakeup source */
     HBN_GPIO_INT_Trigger_Type gpioTrigType; /*!< GPIO Triger type */
-    SPI_Flash_Cfg_Type *flashCfg;           /*!< Flash config pointer, used when power down flash */
+    spi_flash_cfg_type *flashCfg;           /*!< Flash config pointer, used when power down flash */
     HBN_LEVEL_Type hbnLevel;                /*!< HBN level */
     HBN_LDO_LEVEL_Type ldoLevel;            /*!< LDO level */
     uint8_t dcdcPuSeq;                      /*!< power on dcdc sequence */
@@ -571,7 +571,7 @@ void HBN_OUT1_IRQHandler(void);
 #endif
 /*----------*/
 void HBN_Mode_Enter(HBN_APP_CFG_Type *cfg);
-void HBN_Power_Down_Flash(SPI_Flash_Cfg_Type *flashCfg);
+void HBN_Power_Down_Flash(spi_flash_cfg_type *flashCfg);
 void HBN_Enable(uint32_t aGPIOIeCfg, HBN_LDO_LEVEL_Type ldoLevel, HBN_LEVEL_Type hbnLevel, uint8_t dcdcPuSeq);
 BL_Err_Type HBN_Reset(void);
 /*----------*/

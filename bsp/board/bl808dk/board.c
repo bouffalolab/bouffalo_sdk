@@ -3,34 +3,23 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
-#ifdef CONFIG_TLSF
-#include "bflb_tlsf.h"
-#else
-#include "bflb_mmheap.h"
-#endif
 #include "bl808_glb.h"
-#include "bl808_sflash.h"
 #include "bl808_psram_uhs.h"
 #include "bl808_tzc_sec.h"
 #include "bl808_ef_cfg.h"
 #include "bl808_uhs_phy.h"
 #include "board.h"
 
+#include "mem.h"
+
 #ifdef CONFIG_BSP_SDH_SDCARD
 #include "sdh_sdcard.h"
 #endif
 
+extern void log_start(void);
+
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
-
-#ifndef CONFIG_TLSF
-struct heap_info mmheap_root;
-
-static struct heap_region system_mmheap[] = {
-    { NULL, 0 },
-    { NULL, 0 }, /* Terminates the array. */
-};
-#endif
 
 static struct bflb_device_s *uart0;
 
@@ -94,13 +83,12 @@ static void peripheral_clock_init(void)
     BL_WR_REG(PDS_BASE, PDS_CTL5, tmp_val);
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_SDH);
 #endif
-    GLB_Set_USB_CLK_From_WIFIPLL(1);
-    
 #ifdef CONFIG_BSP_CSI
     GLB_CSI_Config_MIPIPLL(2, 0x21000);
     GLB_CSI_Power_Up_MIPIPLL();
     GLB_Set_DSP_CLK(ENABLE, GLB_DSP_CLK_MUXPLL_160M, 1);
 #endif
+    GLB_Set_USB_CLK_From_WIFIPLL(1);
 }
 
 #ifdef CONFIG_PSRAM
@@ -175,7 +163,7 @@ void bl_show_log(void)
 
 void bl_show_flashinfo(void)
 {
-    SPI_Flash_Cfg_Type flashCfg;
+    spi_flash_cfg_type flashCfg;
     uint8_t *pFlashCfg = NULL;
     uint32_t flashCfgLen = 0;
     uint32_t flashJedecId = 0;
@@ -186,17 +174,17 @@ void bl_show_flashinfo(void)
     printf("=========== flash cfg ==============\r\n");
     printf("jedec id   0x%06X\r\n", flashJedecId);
     printf("mid            0x%02X\r\n", flashCfg.mid);
-    printf("iomode         0x%02X\r\n", flashCfg.ioMode);
-    printf("clk delay      0x%02X\r\n", flashCfg.clkDelay);
-    printf("clk invert     0x%02X\r\n", flashCfg.clkInvert);
-    printf("read reg cmd0  0x%02X\r\n", flashCfg.readRegCmd[0]);
-    printf("read reg cmd1  0x%02X\r\n", flashCfg.readRegCmd[1]);
-    printf("write reg cmd0 0x%02X\r\n", flashCfg.writeRegCmd[0]);
-    printf("write reg cmd1 0x%02X\r\n", flashCfg.writeRegCmd[1]);
-    printf("qe write len   0x%02X\r\n", flashCfg.qeWriteRegLen);
-    printf("cread support  0x%02X\r\n", flashCfg.cReadSupport);
-    printf("cread code     0x%02X\r\n", flashCfg.cReadMode);
-    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burstWrapCmd);
+    printf("iomode         0x%02X\r\n", flashCfg.io_mode);
+    printf("clk delay      0x%02X\r\n", flashCfg.clk_delay);
+    printf("clk invert     0x%02X\r\n", flashCfg.clk_invert);
+    printf("read reg cmd0  0x%02X\r\n", flashCfg.read_reg_cmd[0]);
+    printf("read reg cmd1  0x%02X\r\n", flashCfg.read_reg_cmd[1]);
+    printf("write reg cmd0 0x%02X\r\n", flashCfg.write_reg_cmd[0]);
+    printf("write reg cmd1 0x%02X\r\n", flashCfg.write_reg_cmd[1]);
+    printf("qe write len   0x%02X\r\n", flashCfg.qe_write_reg_len);
+    printf("cread support  0x%02X\r\n", flashCfg.c_read_support);
+    printf("cread code     0x%02X\r\n", flashCfg.c_read_mode);
+    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burst_wrap_cmd);
     printf("=====================================\r\n");
 }
 
@@ -211,8 +199,9 @@ static void console_init()
     bflb_gpio_uart_init(gpio, GPIO_PIN_14, GPIO_UART_FUNC_UART0_TX);
     bflb_gpio_uart_init(gpio, GPIO_PIN_15, GPIO_UART_FUNC_UART0_RX);
 #elif defined(CPU_D0)
-    bflb_gpio_init(gpio, GPIO_PIN_8, 21 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    //bflb_gpio_init(gpio, GPIO_PIN_9, 21 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    /* sipeed m1s dock */
+    bflb_gpio_init(gpio, GPIO_PIN_16, 21 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_17, 21 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 #endif
     struct bflb_uart_config_s cfg;
     cfg.baudrate = 2000000;
@@ -234,49 +223,36 @@ static void console_init()
 #if defined(CPU_M0)
 void board_init(void)
 {
+    int ret = -1;
     uintptr_t flag;
 
     flag = bflb_irq_save();
 
-    bflb_flash_init();
+    ret = bflb_flash_init();
 
     GLB_Halt_CPU(GLB_CORE_ID_D0);
-    GLB_Halt_CPU(GLB_CORE_ID_LP);
 
     system_clock_init();
     peripheral_clock_init();
     bflb_irq_initialize();
 
-    GLB_Release_CPU(GLB_CORE_ID_D0);
-    GLB_Release_CPU(GLB_CORE_ID_LP);
-
-    bflb_irq_restore(flag);
-
-#ifdef CONFIG_TLSF
-    bflb_mmheap_init((void *)&__HeapBase, ((size_t)&__HeapLimit - (size_t)&__HeapBase));
-#else
-    system_mmheap[0].addr = (uint8_t *)&__HeapBase;
-    system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-
-    if (system_mmheap[0].mem_size > 0) {
-        bflb_mmheap_init(&mmheap_root, system_mmheap);
-    }
-#endif
-
     console_init();
 
+    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    kmem_init((void *)&__HeapBase, heap_len);
+
     bl_show_log();
+    if (ret != 0) {
+        printf("flash init fail!!!\r\n");
+    }
     bl_show_flashinfo();
-#ifdef CONFIG_TLSF
-    bflb_tlsf_size_container_t *tlsf_size = bflb_tlsf_stats();
-    printf("TLSF Dynamic Memory Init Success: Heap Size = %d Kbyte, Used Size = %d Kbyte, Free Size = %d Kbyte\r\n",
-           tlsf_size->free + tlsf_size->used / 1024, tlsf_size->used / 1024, tlsf_size->free / 1024);
-#else
-    printf("dynamic memory init success,heap size = %d Kbyte \r\n", system_mmheap[0].mem_size / 1024);
-#endif
+
+    printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
     printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
     printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
+
+    log_start();
 
 #if (defined(CONFIG_LUA) || defined(CONFIG_BFLOG) || defined(CONFIG_FATFS))
     rtc = bflb_device_get_by_name("rtc");
@@ -288,6 +264,18 @@ void board_init(void)
         }
     }
 #endif
+    /* set CPU D0 boot XIP address and flash address */
+    // Tzc_Sec_Set_CPU_Group(GLB_CORE_ID_D0, 1);
+    // /* D0 boot from 0x58000000 */
+    // GLB_Set_CPU_Reset_Address(GLB_CORE_ID_D0, 0x58000000);
+    // /* D0 image offset on flash is 0x100000+0x1000(header) */
+    // bflb_sf_ctrl_set_flash_image_offset(0x101000, 1, SF_CTRL_FLASH_BANK0);
+
+    bflb_irq_restore(flag);
+
+    /* we do not check header at 0x10000, just boot */
+    GLB_Release_CPU(GLB_CORE_ID_D0);
+
     /* release d0 and then do can run */
     BL_WR_WORD(IPC_SYNC_ADDR1, IPC_SYNC_FLAG);
     BL_WR_WORD(IPC_SYNC_ADDR2, IPC_SYNC_FLAG);
@@ -300,16 +288,8 @@ void board_init(void)
 
     bflb_irq_initialize();
 
-#ifdef CONFIG_TLSF
-    bflb_mmheap_init((void *)&__HeapBase, ((size_t)&__HeapLimit - (size_t)&__HeapBase));
-#else
-    system_mmheap[0].addr = (uint8_t *)&__HeapBase;
-    system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-
-    if (system_mmheap[0].mem_size > 0) {
-        bflb_mmheap_init(&mmheap_root, system_mmheap);
-    }
-#endif
+    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    kmem_init((void *)&__HeapBase, heap_len);
 
     console_init();
 
@@ -320,6 +300,8 @@ void board_init(void)
     printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
     printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
     printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
+
+    log_start();
 }
 #endif
 
@@ -502,25 +484,43 @@ void board_csi_gpio_init(void)
 
     gpio = bflb_device_get_by_name("gpio");
 
+    GLB_Set_Ldo15cis_Vout(GLB_LDO15CIS_LEVEL_1P20V);
+#if 1 /* sipeed m1s dock */
     /* I2C GPIO */
-    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-
-    /* Power down GPIO */
-    bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_set(gpio, GPIO_PIN_22);
-
-    /* Reset GPIO */
-    bflb_gpio_init(gpio, GPIO_PIN_21, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_set(gpio, GPIO_PIN_21);
+    bflb_gpio_init(gpio, GPIO_PIN_6, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_7, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 
     /* MCLK GPIO */
-    bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_33, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 
-    GLB_Set_Ldo15cis_Vout(GLB_LDO15CIS_LEVEL_1P20V);
+    /* Power down GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_40, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_reset(gpio, GPIO_PIN_40);
+
+    /* Reset GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_41, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_mtimer_delay_us(20);
+    bflb_gpio_set(gpio, GPIO_PIN_41);
+#else
+    /* I2C GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_21, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    /* MCLK GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_18, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+
+    /* Power down GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_6, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_reset(gpio, GPIO_PIN_6);
+
+    /* Reset GPIO */
+    bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_mtimer_delay_us(20);
+    bflb_gpio_set(gpio, GPIO_PIN_23);
+#endif
 }
 
-void board_iso11898_gpio_init(void)
+void board_iso11898_gpio_init()
 {
     // struct bflb_device_s *gpio;
 

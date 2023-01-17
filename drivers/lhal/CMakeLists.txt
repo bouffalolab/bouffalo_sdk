@@ -23,6 +23,11 @@ src/bflb_spi.c
 src/bflb_timer.c
 src/bflb_uart.c
 src/bflb_wdg.c
+src/bflb_flash.c
+src/flash/bflb_sf_cfg.c
+src/flash/bflb_xip_sflash.c
+src/flash/bflb_sflash.c
+src/flash/bflb_sf_ctrl.c
 )
 
 if("${CHIP}" STREQUAL "bl602")
@@ -38,12 +43,13 @@ src/bflb_emac.c
 src/bflb_ir.c
 src/bflb_pwm_v1.c
 src/bflb_cam.c
+src/bflb_spi_psram.c
 )
 elseif("${CHIP}" STREQUAL "bl702l")
 sdk_library_add_sources(
-src/bflb_kys.c
 src/bflb_pwm_v1.c
 src/bflb_pwm_v2.c
+src/bflb_spi_psram.c
 )
 elseif("${CHIP}" STREQUAL "bl616")
 sdk_library_add_sources(
@@ -54,6 +60,7 @@ src/bflb_mjpeg.c
 src/bflb_pwm_v2.c
 src/bflb_cam.c
 src/bflb_iso11898.c
+src/bflb_i2s.c
 )
 elseif("${CHIP}" STREQUAL "bl628")
 sdk_library_add_sources(
@@ -72,6 +79,8 @@ src/bflb_mjpeg.c
 src/bflb_pwm_v2.c
 src/bflb_cam.c
 src/bflb_iso11898.c
+src/bflb_csi.c
+src/bflb_i2s.c
 )
 endif()
 
@@ -96,6 +105,7 @@ sdk_add_include_directories(include/arch)
 sdk_add_include_directories(include/arch/risc-v/t-head)
 sdk_add_include_directories(include/arch/risc-v/t-head/Core/Include)
 sdk_add_include_directories(config/${CHIP})
+sdk_add_include_directories(src/flash)
 
 if((NOT ("${CHIP}" STREQUAL "bl702")) AND (NOT ("${CHIP}" STREQUAL "bl602")) AND (NOT ("${CHIP}" STREQUAL "bl702l")))
 sdk_library_add_sources(include/arch/risc-v/t-head/rv_hart.c)
@@ -113,4 +123,7 @@ sdk_add_compile_definitions(-DCPU_${CPU_ID_NAME})
 endif()
 
 sdk_add_static_library(src/pka/libpka.a)
-#add_subdirectory(src/pka)
+# add_subdirectory(src/pka)
+if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl628"))
+# keep
+endif()

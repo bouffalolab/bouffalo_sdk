@@ -112,7 +112,7 @@ void bflb_dma_channel_init(struct bflb_device_s *dev, const struct bflb_dma_chan
     regval |= (config->direction << DMA_FLOWCNTRL_SHIFT);
     putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
 
-    /* disable dma error and tc interrupt */
+    /* enable dma error and tc interrupt */
     regval = getreg32(channel_base + DMA_CxCONFIG_OFFSET);
     regval |= (DMA_ITC | DMA_IE);
     putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);

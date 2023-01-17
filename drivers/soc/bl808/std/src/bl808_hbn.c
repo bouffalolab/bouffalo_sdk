@@ -36,7 +36,7 @@
 
 #include "bl808_hbn.h"
 #include "bl808_glb.h"
-#include "bl808_xip_sflash.h"
+#include "bflb_xip_sflash.h"
 
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
@@ -157,24 +157,24 @@ void ATTR_TCM_SECTION HBN_Mode_Enter(HBN_APP_CFG_Type *cfg)
  * @return None
  *
 *******************************************************************************/
-void ATTR_TCM_SECTION HBN_Power_Down_Flash(SPI_Flash_Cfg_Type *flashCfg)
+void ATTR_TCM_SECTION HBN_Power_Down_Flash(spi_flash_cfg_type *flashCfg)
 {
-    SPI_Flash_Cfg_Type bhFlashCfg;
+    spi_flash_cfg_type bhFlashCfg;
 
     if (flashCfg == NULL) {
-        L1C_DCache_Invalid_By_Addr(BL808_FLASH_XIP_BASE + 8 + 4, sizeof(SPI_Flash_Cfg_Type));
-        XIP_SFlash_Read_Via_Cache_Need_Lock(BL808_FLASH_XIP_BASE + 8 + 4, (uint8_t *)(&bhFlashCfg),
-                                            sizeof(SPI_Flash_Cfg_Type), 0, 0);
-        L1C_DCache_Invalid_By_Addr(BL808_FLASH_XIP_BASE + 8 + 4, sizeof(SPI_Flash_Cfg_Type));
+        L1C_DCache_Invalid_By_Addr(BL808_FLASH_XIP_BASE + 8 + 4, sizeof(spi_flash_cfg_type));
+        bflb_xip_sflash_read_via_cache_need_lock(BL808_FLASH_XIP_BASE + 8 + 4, (uint8_t *)(&bhFlashCfg),
+                                            sizeof(spi_flash_cfg_type), 0, 0);
+        L1C_DCache_Invalid_By_Addr(BL808_FLASH_XIP_BASE + 8 + 4, sizeof(spi_flash_cfg_type));
 
-        SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
-        SFlash_Reset_Continue_Read(&bhFlashCfg);
+        bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
+        bflb_sflash_reset_continue_read(&bhFlashCfg);
     } else {
-        SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
-        SFlash_Reset_Continue_Read(flashCfg);
+        bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
+        bflb_sflash_reset_continue_read(flashCfg);
     }
 
-    SFlash_Powerdown();
+    bflb_sflash_powerdown();
 }
 
 /****************************************************************************/ /**

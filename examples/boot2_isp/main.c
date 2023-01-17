@@ -362,7 +362,7 @@ int main(void)
 #endif
     uint8_t mfg_mode_flag = 0;
     //boot_clk_config clk_cfg;
-    uint8_t flash_cfg_buf[4 + sizeof(SPI_Flash_Cfg_Type) + 4] = { 0 };
+    uint8_t flash_cfg_buf[4 + sizeof(spi_flash_cfg_type) + 4] = { 0 };
     uint32_t crc;
     uint8_t *flash_cfg = NULL;
     uint32_t flash_cfg_len = 0;

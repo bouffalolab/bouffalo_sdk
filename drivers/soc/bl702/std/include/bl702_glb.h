@@ -41,12 +41,12 @@
 #include "bl702_gpio.h"
 #include "bl702_l1c.h"
 #include "bl702_hbn.h"
-#include "bl702_sf_ctrl.h"
-#include "bl702_sf_cfg.h"
 #include "bl702_aon.h"
 #include "bl702_ef_ctrl.h"
 #include "bl702_pds.h"
 #include "bl702_common.h"
+#include "bflb_sf_ctrl.h"
+#include "bflb_sf_cfg.h"
 
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{

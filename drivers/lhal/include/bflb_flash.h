@@ -2,6 +2,7 @@
 #define _BFLB_FLASH_H
 
 #include "bflb_core.h"
+#include "bflb_sflash.h"
 
 /** @addtogroup LHAL
   * @{

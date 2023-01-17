@@ -20,16 +20,11 @@ sdk_library_add_sources(src/bl602_l1c.c)
 sdk_library_add_sources(src/bl602_pds.c)
 sdk_library_add_sources(src/bl602_tzc_sec.c)
 
-sdk_library_add_sources(src/bl602_sf_cfg.c)
-sdk_library_add_sources(src/bl602_sf_cfg_ext.c)
-sdk_library_add_sources(src/bl602_sf_ctrl.c)
-sdk_library_add_sources(src/bl602_sflash.c)
 sdk_library_add_sources(src/bl602_sflash_ext.c)
-sdk_library_add_sources(src/bl602_xip_sflash.c)
 sdk_library_add_sources(src/bl602_xip_sflash_ext.c)
+sdk_library_add_sources(src/bl602_sf_cfg_ext.c)
 
 sdk_library_add_sources(port/bl602_clock.c)
-sdk_library_add_sources(port/bl602_flash.c)
 
 sdk_add_include_directories(
 include

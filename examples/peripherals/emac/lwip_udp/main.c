@@ -42,14 +42,6 @@
 /* global network interface struct define */
 struct netif gnetif;
 
-/* free rtos heap define */
-static uint8_t freertos_heap[configTOTAL_HEAP_SIZE];
-static HeapRegion_t xHeapRegions[] = {
-    { (uint8_t *)freertos_heap, 0 },
-    { NULL, 0 }, /* Terminates the array. */
-    { NULL, 0 }  /* Terminates the array. */
-};
-
 /* For emac tx and rx buffer,we put here to make controlling it's size easy */
 #define ETH_RXBUFNB 5
 #define ETH_TXBUFNB 5
@@ -117,9 +109,6 @@ int main(void)
     board_emac_gpio_init();
 
     printf("EMAC lwip test case !\r\n");
-    /* freertos heap define */
-    xHeapRegions[0].xSizeInBytes = configTOTAL_HEAP_SIZE;
-    vPortDefineHeapRegions(xHeapRegions);
 
     ethernet_lwip_init();
     // bflb_emac_stop_tx();

@@ -115,4 +115,74 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size
 #endif
 }
 
+#if defined(BL702) || defined(BL702L)
+/****************************************************************************/ /**
+ * @brief  L1C cache write set
+ *
+ * @param  wt_en: L1C write through enable
+ * @param  wb_en: L1C write back enable
+ * @param  wa_en: L1C write allocate enable
+ *
+ * @return None
+ *
+*******************************************************************************/
+__WEAK
+void ATTR_TCM_SECTION bflb_l1c_cache_write_set(uint8_t wt_en, uint8_t wb_en, uint8_t wa_en)
+{
+    uint32_t regval = 0;
+
+    regval = getreg32(0x40009000 + 0x0);
+
+    if (wt_en) {
+        regval |= (1<<4);
+    } else {
+        regval &= ~(1<<4);
+    }
+
+    if (wb_en) {
+        regval |= (1<<5);
+    } else {
+        regval &= ~(1<<5);
+    }
+
+    if (wa_en) {
+        regval |= (1<<6);
+    } else {
+        regval &= ~(1<<6);
+    }
+
+    putreg32(regval, 0x40009000+0x0);
+}
+#endif
+
+/****************************************************************************/ /**
+ * @brief  Get hit count
+ *
+ * @param  hit_count_low: hit count low 32 bits pointer
+ * @param  hit_count_high: hit count high 32 bits pointer
+ *
+ * @return None
+ *
+*******************************************************************************/
+__WEAK
+void ATTR_TCM_SECTION bflb_l1c_hit_count_get(uint32_t *hit_count_low, uint32_t *hit_count_high)
+{
+    *hit_count_low = getreg32(0x40009000 + 0x4);
+    *hit_count_high = getreg32(0x40009000 + 0x8);
+}
+
+/****************************************************************************/ /**
+ * @brief  Get miss count
+ *
+ * @param  None
+ *
+ * @return Miss count
+ *
+*******************************************************************************/
+__WEAK
+uint32_t ATTR_TCM_SECTION bflb_l1c_miss_count_get(void)
+{
+    return getreg32(0x40009000 + 0xC);
+}
+
 #endif

@@ -79,27 +79,87 @@
  */
 
 /****************************************************************************//**
- * @brief  XIP KH25V40 flash write protect set
+ * @brief  XIP SFlash option save
  *
- * @param  pFlashCfg: Flash config pointer
- * @param  protect: protect area
+ * @param  aes_enable: AES enable status pointer
  *
- * @return SUCCESS or ERROR
+ * @return None
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION bflb_xip_sflash_opt_enter(uint8_t *aes_enable)
+{
+    *aes_enable = bflb_sf_ctrl_is_aes_enable();
+
+    if (*aes_enable) {
+        bflb_sf_ctrl_aes_disable();
+    }
+}
+
+/****************************************************************************//**
+ * @brief  XIP SFlash option restore
+ *
+ * @param  aes_enable: AES enable status
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION bflb_xip_sflash_opt_exit(uint8_t aes_enable)
+{
+    if (aes_enable) {
+        bflb_sf_ctrl_aes_enable();
+    }
+}
+
+/****************************************************************************//**
+ * @brief  Read data from flash via XIP
+ *
+ * @param  addr: flash read start address
+ * @param  data: data pointer to store data read from flash
+ * @param  len: data length to read
+ * @param  group: CPU group id 0 or 1
+ * @param  bank: Flash bank select
+ *
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
 __WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_KH25V40_Write_Protect_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, SFlash_Protect_Kh25v40_Type protect)
+int ATTR_TCM_SECTION bflb_xip_sflash_read_via_cache_need_lock(uint32_t addr,uint8_t *data, uint32_t len,
+                                                              uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
 
-    stat = XIP_SFlash_State_Save(pFlashCfg, &offset);
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    if(addr>=BL702_FLASH_XIP_BASE && addr<BL702_FLASH_XIP_END){
+        offset=bflb_sf_ctrl_get_flash_image_offset(group, bank);
+        bflb_sf_ctrl_set_flash_image_offset(0, group, bank);
+        /* Flash read */
+        BL702_MemCpy_Fast(data,(void *)(addr-bflb_sf_ctrl_get_flash_image_offset(group, bank)),len);
+        bflb_sf_ctrl_set_flash_image_offset(offset, group, bank);
+    }
+
+    return 0;
+}
+
+
+/****************************************************************************//**
+ * @brief  XIP KH25V40 flash write protect set
+ *
+ * @param  p_flash_cfg: Flash config pointer
+ * @param  protect: protect area
+ *
+ * @return BFLB_RET:0 means success and other value means error
+ *
+*******************************************************************************/
+int ATTR_TCM_SECTION bflb_xip_sflash_kh25v40_write_protect_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t protect)
+{
+    int stat = -1;
+    uint32_t offset;
+
+    stat = bflb_xip_sflash_state_save(p_flash_cfg, &offset, 0, 0);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, 1, 0, 32, 0, 0);
     } else {
-        stat = SFlash_KH25V40_Write_Protect(pFlashCfg, protect);
-        XIP_SFlash_State_Restore(pFlashCfg, ioMode, offset);
+        stat = bflb_sflash_kh25v40_write_protect(p_flash_cfg, protect);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, 0, 0);
     }
 
     return stat;
@@ -108,24 +168,23 @@ BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_KH25V40_Write_Protect_Need_Lock(SPI_Flas
 /****************************************************************************//**
  * @brief  Clear flash status register need lock
  *
- * @param  pFlashCfg: Flash config pointer
+ * @param  p_flash_cfg: Flash config pointer
  *
- * @return SUCCESS or ERROR
+ * @return BFLB_RET:0 means success and other value means error
  *
 *******************************************************************************/
-__WEAK
-BL_Err_Type ATTR_TCM_SECTION XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg)
+int ATTR_TCM_SECTION bflb_xip_sflash_clear_status_register_need_lock(spi_flash_cfg_type *p_flash_cfg,
+                                                                     uint8_t group, uint8_t bank)
 {
-    BL_Err_Type stat;
+    int stat = -1;
     uint32_t offset;
-    SF_Ctrl_IO_Type ioMode = (SF_Ctrl_IO_Type)pFlashCfg->ioMode&0xf;
 
-    stat=XIP_SFlash_State_Save(pFlashCfg, &offset);
-    if (stat != SUCCESS) {
-        SFlash_Set_IDbus_Cfg(pFlashCfg, ioMode, 1, 0, 32);
+    stat=bflb_xip_sflash_state_save(p_flash_cfg, &offset, 0, 0);
+    if (stat != 0) {
+        bflb_sflash_set_xip_cfg(p_flash_cfg, 1, 0, 32, 0, 0);
     } else {
-        stat=SFlash_Clear_Status_Register(pFlashCfg);
-        XIP_SFlash_State_Restore(pFlashCfg, ioMode, offset);
+        stat=bflb_sflash_clear_status_register(p_flash_cfg);
+        bflb_xip_sflash_state_restore(p_flash_cfg, offset, 0, 0);
     }
 
     return stat;

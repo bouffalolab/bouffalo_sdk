@@ -184,6 +184,11 @@ bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no);
  */
 void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no);
 
+#if !defined(BL702) || !defined(BL602)
+void bflb_timer_capture_init(struct bflb_device_s *dev, const struct bflb_timer_capture_config_s *config);
+uint32_t bflb_timer_capture_get_pulsewidth(struct bflb_device_s *dev);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

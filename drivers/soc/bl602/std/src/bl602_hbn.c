@@ -36,7 +36,7 @@
 
 #include "bl602_hbn.h"
 #include "bl602_glb.h"
-#include "bl602_xip_sflash.h"
+#include "bflb_xip_sflash.h"
 // #include "risc-v/Core/Include/clic.h"
 
 /** @addtogroup  BL602_Peripheral_Driver

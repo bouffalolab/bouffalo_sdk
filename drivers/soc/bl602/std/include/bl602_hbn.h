@@ -38,7 +38,7 @@
 
 #include "hbn_reg.h"
 #include "bl602_aon.h"
-#include "bl602_sflash.h"
+#include "bflb_sflash.h"
 #include "bl602_common.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
@@ -243,7 +243,7 @@ typedef struct
     uint32_t sleepTime;                     /*!< HBN sleep time */
     uint8_t gpioWakeupSrc;                  /*!< GPIO Wakeup source */
     HBN_GPIO_INT_Trigger_Type gpioTrigType; /*!< GPIO Triger type */
-    SPI_Flash_Cfg_Type *flashCfg;           /*!< Flash config pointer, used when power down flash */
+    spi_flash_cfg_type *flashCfg;           /*!< Flash config pointer, used when power down flash */
     HBN_LEVEL_Type hbnLevel;                /*!< HBN level */
     HBN_LDO_LEVEL_Type ldoLevel;            /*!< LDO level */
 } HBN_APP_CFG_Type;
@@ -411,7 +411,7 @@ void HBN_OUT1_IRQHandler(void);
 #endif
 /*----------*/
 void HBN_Mode_Enter_Ext(HBN_APP_CFG_Type *cfg);
-void HBN_Power_Down_Flash(SPI_Flash_Cfg_Type *flashCfg);
+void HBN_Power_Down_Flash(spi_flash_cfg_type *flashCfg);
 void HBN_Enable_Ext(uint8_t aGPIOIeCfg, HBN_LDO_LEVEL_Type ldoLevel, HBN_LEVEL_Type hbnLevel);
 BL_Err_Type HBN_Reset(void);
 BL_Err_Type HBN_App_Reset(uint8_t npXtalType, uint8_t bclkDiv, uint8_t apXtalType, uint8_t fclkDiv);

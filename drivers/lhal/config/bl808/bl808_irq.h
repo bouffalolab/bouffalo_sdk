@@ -9,7 +9,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define BL808_IRQ_NUM_BASE 16
+#define BL808_IRQ_NUM_BASE       16
 
 #define BL808_IRQ_SSOFT          1
 #define BL808_IRQ_MSOFT          3

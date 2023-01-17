@@ -3,6 +3,7 @@ BL_SDK_BASE ?= $(SDK_DEMO_PATH)/../..
 
 export BL_SDK_BASE
 
+CPU_ID ?= m0
 CHIP ?= bl616
 BOARD ?= bl616dk
 CROSS_COMPILE ?= riscv64-unknown-elf-

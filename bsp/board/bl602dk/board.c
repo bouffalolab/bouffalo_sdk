@@ -3,26 +3,15 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
-#ifdef CONFIG_TLSF
-#include "bflb_tlsf.h"
-#else
-#include "bflb_mmheap.h"
-#endif
 #include "board.h"
 #include "bl602_glb.h"
-#include "bl602_sflash.h"
+
+#include "mem.h"
+
+extern void log_start(void);
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
-
-#ifndef CONFIG_TLSF
-struct heap_info mmheap_root;
-
-static struct heap_region system_mmheap[] = {
-    { NULL, 0 },
-    { NULL, 0 }, /* Terminates the array. */
-};
-#endif
 
 static struct bflb_device_s *uart0;
 
@@ -72,7 +61,7 @@ void bl_show_log(void)
 
 void bl_show_flashinfo(void)
 {
-    SPI_Flash_Cfg_Type flashCfg;
+    spi_flash_cfg_type flashCfg;
     uint8_t *pFlashCfg = NULL;
     uint32_t flashCfgLen = 0;
     uint32_t flashJedecId = 0;
@@ -83,17 +72,17 @@ void bl_show_flashinfo(void)
     printf("=========== flash cfg ==============\r\n");
     printf("jedec id   0x%06X\r\n", flashJedecId);
     printf("mid            0x%02X\r\n", flashCfg.mid);
-    printf("iomode         0x%02X\r\n", flashCfg.ioMode);
-    printf("clk delay      0x%02X\r\n", flashCfg.clkDelay);
-    printf("clk invert     0x%02X\r\n", flashCfg.clkInvert);
-    printf("read reg cmd0  0x%02X\r\n", flashCfg.readRegCmd[0]);
-    printf("read reg cmd1  0x%02X\r\n", flashCfg.readRegCmd[1]);
-    printf("write reg cmd0 0x%02X\r\n", flashCfg.writeRegCmd[0]);
-    printf("write reg cmd1 0x%02X\r\n", flashCfg.writeRegCmd[1]);
-    printf("qe write len   0x%02X\r\n", flashCfg.qeWriteRegLen);
-    printf("cread support  0x%02X\r\n", flashCfg.cReadSupport);
-    printf("cread code     0x%02X\r\n", flashCfg.cReadMode);
-    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burstWrapCmd);
+    printf("iomode         0x%02X\r\n", flashCfg.io_mode);
+    printf("clk delay      0x%02X\r\n", flashCfg.clk_delay);
+    printf("clk invert     0x%02X\r\n", flashCfg.clk_invert);
+    printf("read reg cmd0  0x%02X\r\n", flashCfg.read_reg_cmd[0]);
+    printf("read reg cmd1  0x%02X\r\n", flashCfg.read_reg_cmd[1]);
+    printf("write reg cmd0 0x%02X\r\n", flashCfg.write_reg_cmd[0]);
+    printf("write reg cmd1 0x%02X\r\n", flashCfg.write_reg_cmd[1]);
+    printf("qe write len   0x%02X\r\n", flashCfg.qe_write_reg_len);
+    printf("cread support  0x%02X\r\n", flashCfg.c_read_support);
+    printf("cread code     0x%02X\r\n", flashCfg.c_read_mode);
+    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burst_wrap_cmd);
     printf("=====================================\r\n");
 }
 
@@ -124,40 +113,38 @@ static void console_init()
 
 void board_init(void)
 {
+    int ret = -1;
     uintptr_t flag;
 
     flag = bflb_irq_save();
 
-    bflb_flash_init();
+    ret = bflb_flash_init();
 
     system_clock_init();
     peripheral_clock_init();
     bflb_irq_initialize();
 
-    bflb_irq_restore(flag);
-
-#ifdef CONFIG_TLSF
-    bflb_mmheap_init((void *)&__HeapBase, ((size_t)&__HeapLimit - (size_t)&__HeapBase));
-#else
-    system_mmheap[0].addr = (uint8_t *)&__HeapBase;
-    system_mmheap[0].mem_size = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-
-    if (system_mmheap[0].mem_size > 0) {
-        bflb_mmheap_init(&mmheap_root, system_mmheap);
-    }
-#endif
-
     console_init();
 
+    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    kmem_init((void *)&__HeapBase, heap_len);
+
     bl_show_log();
+    if (ret != 0) {
+        printf("flash init fail!!!\r\n");
+    }
     bl_show_flashinfo();
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
     printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
+
+    log_start();
 #if defined(CONFIG_BFLOG)
     rtc = bflb_device_get_by_name("rtc");
 #endif
+
+    bflb_irq_restore(flag);
 }
 
 void board_uartx_gpio_init()

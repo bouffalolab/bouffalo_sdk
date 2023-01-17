@@ -4,12 +4,12 @@
 #include "bl808_ef_cfg.h"
 #include "bl808_hbn.h"
 #include "bl808_glb.h"
-#include "bl808_xip_sflash.h"
 #include "bl808_tzc_sec.h"
 #include "bflb_gpio.h"
 #include "softcrc.h"
 #include "bl808_psram_uhs.h"
 #include "bflb_efuse.h"
+#include "bl808_uhs_phy.h"
 
 /****************************************************************************/ /**
  * @brief  init clock
@@ -38,17 +38,55 @@ void hal_boot2_init_clock(void)
 *******************************************************************************/
 uint32_t hal_boot2_custom(void *custom_param)
 {
+    extern uhs_phy_cal_res_struct* uhs_phy_cal_res;
+    PSRAM_UHS_Cfg_Type psramDefaultCfg = {
+            2000,
+            PSRAM_MEM_SIZE_32MB,
+            PSRAM_PAGE_SIZE_2KB,
+            PSRAM_UHS_NORMAL_TEMP,
+    };
+    bflb_efuse_device_info_type chip_info;
+    
     //EF_Ctrl_Trim_DCDC_And_LDO();
     AON_Trim_USB20_RCAL();
     //GLB_Readjust_LDO18IO_Vout();
     if (((g_efuse_cfg.dev_info & HAL_BOOT2_PSRAM_INFO_MASK) >> HAL_BOOT2_PSRAM_INFO_POS) != 0) {
-        GLB_Config_UHS_PLL(GLB_XTAL_40M, uhsPllCfg_2000M);
-        Psram_UHS_x16_Init(2000);
-        Tzc_Sec_PSRAMA_Access_Release();
+       
+        bflb_ef_ctrl_get_device_info(&chip_info);
+        if (chip_info.psramInfo == UHS_32MB_PSRAM) {
+            psramDefaultCfg.psramMemSize = PSRAM_MEM_SIZE_32MB;
+        } else if (chip_info.psramInfo == UHS_64MB_PSRAM) {
+            psramDefaultCfg.psramMemSize = PSRAM_MEM_SIZE_64MB;
+        } else {
+            return 2;
+        }
 
-        /* Flush i-cache in case branch prediction logic is wrong when
-       psram is not inited by hal_boot2_custom but cpu has already prefetch psram */
-        __ISB();
+        //init uhs PLL; Must open uhs pll first, and then initialize uhs psram
+        GLB_Config_UHS_PLL(GLB_XTAL_40M, uhsPllCfg_2000M);
+        //init uhs psram ;
+        // Psram_UHS_x16_Init(Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PSRAMA) / 1000000);
+        Psram_UHS_x16_Init_Override(&psramDefaultCfg);
+        Tzc_Sec_PSRAMA_Access_Release();
+#if 0 
+        // example: 2000Mbps typical cal values
+        uhs_phy_cal_res->rl = 39;
+        uhs_phy_cal_res->rdqs = 3;
+        uhs_phy_cal_res->rdq = 0;
+        uhs_phy_cal_res->wl = 13;
+        uhs_phy_cal_res->wdqs = 4;
+        uhs_phy_cal_res->wdq = 5;
+        uhs_phy_cal_res->ck = 9;
+        /* TODO: use uhs psram trim update */
+        set_uhs_latency_r(uhs_phy_cal_res->rl);
+        cfg_dqs_rx(uhs_phy_cal_res->rdqs);
+        cfg_dq_rx(uhs_phy_cal_res->rdq);
+        set_uhs_latency_w(uhs_phy_cal_res->wl);
+        cfg_dq_drv(uhs_phy_cal_res->wdq);
+        cfg_ck_cen_drv(uhs_phy_cal_res->wdq + 4, uhs_phy_cal_res->wdq + 1);
+        cfg_dqs_drv(uhs_phy_cal_res->wdqs);
+        // set_odt_en();
+        mr_read_back();
+#endif
     }
     return 0;
 }
@@ -99,9 +137,8 @@ void hal_boot2_get_efuse_cfg(boot2_efuse_hw_config *efuse_cfg)
     efuse_cfg->keep_dbg_port_closed = (uint8_t)(sw_cfg0.keep_dbg_port_closed);
     efuse_cfg->boot_pin_cfg = (uint8_t)(sw_cfg0.boot_pin_cfg);
 
-    /* get device info */ //FixZc
-    //EF_Ctrl_Get_Chip_Info((Efuse_Chip_Info_Type *)&efuse_cfg->dev_info);
-
+    /* get device info */ 
+    bflb_ef_ctrl_get_device_info((bflb_efuse_device_info_type *)&efuse_cfg->dev_info);
     /* get chip id */
     //EF_Ctrl_Read_Chip_ID(efuse_cfg->chip_id);
     bflb_efuse_get_chipid(efuse_cfg->chip_id);
@@ -542,7 +579,7 @@ void ATTR_TCM_SECTION hal_boot2_release_cpu(uint32_t core, uint32_t boot_addr)
 *******************************************************************************/
 uint32_t hal_boot2_get_xip_addr(uint32_t flash_addr)
 {
-    uint32_t img_offset = SF_Ctrl_Get_Flash_Image_Offset(0, SF_CTRL_FLASH_BANK0);
+    uint32_t img_offset = bflb_sf_ctrl_get_flash_image_offset(0, SF_CTRL_FLASH_BANK0);
     if (flash_addr >= img_offset) {
         return BL808_FLASH_XIP_BASE + (flash_addr - img_offset);
     } else {

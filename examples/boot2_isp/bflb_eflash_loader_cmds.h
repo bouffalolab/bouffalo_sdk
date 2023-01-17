@@ -120,7 +120,7 @@ struct eflash_loader_cmd_cfg_t {
 __PACKED_STRUCT boot_flash_cfg_t
 {
     uint32_t magiccode; /*'FCFG'*/
-    SPI_Flash_Cfg_Type cfg;
+    spi_flash_cfg_type cfg;
     uint32_t crc32;
 };
 

@@ -40,11 +40,11 @@
 #include "bl602_aon.h"
 #include "bl602_glb.h"
 #include "bl602_hbn.h"
-#include "bl602_xip_sflash.h"
-#include "bl602_sflash.h"
-#include "bl602_sf_ctrl.h"
 #include "bl602_ef_ctrl.h"
 // #include "bl602_sec_eng.h"
+#include "bflb_xip_sflash.h"
+#include "bflb_sflash.h"
+#include "bflb_sf_ctrl.h"
 // #include "softcrc.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
@@ -446,7 +446,7 @@ typedef enum {
     ((void (*)(HBN_APP_CFG_Type * cfg)) ROM_APITABLE[ROM_API_INDEX_HBN_Mode_Enter])
 
 #define RomDriver_HBN_Power_Down_Flash \
-    ((void (*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_HBN_Power_Down_Flash])
+    ((void (*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_HBN_Power_Down_Flash])
 
 #define RomDriver_HBN_Enable \
     ((void (*)(uint8_t aGPIOIeCfg, HBN_LDO_LEVEL_Type ldoLevel, HBN_LEVEL_Type hbnLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Enable])
@@ -554,52 +554,52 @@ typedef enum {
     ((void (*)(void))ROM_APITABLE[ROM_API_INDEX_SEC_Eng_Turn_Off_Sec_Ring])
 
 #define RomDriver_SFlash_Init \
-    ((void (*)(const SF_Ctrl_Cfg_Type *pSfCtrlCfg))ROM_APITABLE[ROM_API_INDEX_SFlash_Init])
+    ((void (*)(const struct sf_ctrl_cfg_type *pSfCtrlCfg))ROM_APITABLE[ROM_API_INDEX_SFlash_Init])
 
 #define RomDriver_SFlash_SetSPIMode \
-    ((BL_Err_Type(*)(SF_Ctrl_Mode_Type mode))ROM_APITABLE[ROM_API_INDEX_SFlash_SetSPIMode])
+    ((int(*)(uint8_t mode))ROM_APITABLE[ROM_API_INDEX_SFlash_SetSPIMode])
 
 #define RomDriver_SFlash_Read_Reg \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, uint8_t regIndex, uint8_t * regValue, uint8_t regLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_Read_Reg])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t regIndex, uint8_t * regValue, uint8_t regLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_Read_Reg])
 
 #define RomDriver_SFlash_Write_Reg \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, uint8_t regIndex, uint8_t * regValue, uint8_t regLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_Write_Reg])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t regIndex, uint8_t * regValue, uint8_t regLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_Write_Reg])
 
 #define RomDriver_SFlash_Busy \
-    ((BL_Sts_Type(*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Busy])
+    ((int(*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Busy])
 
 #define RomDriver_SFlash_Write_Enable \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Write_Enable])
+    ((int(*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Write_Enable])
 
 #define RomDriver_SFlash_Qspi_Enable \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Qspi_Enable])
+    ((int(*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Qspi_Enable])
 
 #define RomDriver_SFlash_Volatile_Reg_Write_Enable \
-    ((void (*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Volatile_Reg_Write_Enable])
+    ((void (*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Volatile_Reg_Write_Enable])
 
 #define RomDriver_SFlash_Chip_Erase \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Chip_Erase])
+    ((int(*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Chip_Erase])
 
 #define RomDriver_SFlash_Sector_Erase \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, uint32_t secNum)) ROM_APITABLE[ROM_API_INDEX_SFlash_Sector_Erase])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint32_t secNum)) ROM_APITABLE[ROM_API_INDEX_SFlash_Sector_Erase])
 
 #define RomDriver_SFlash_Blk32_Erase \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, uint32_t blkNum)) ROM_APITABLE[ROM_API_INDEX_SFlash_Blk32_Erase])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint32_t blkNum)) ROM_APITABLE[ROM_API_INDEX_SFlash_Blk32_Erase])
 
 #define RomDriver_SFlash_Blk64_Erase \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, uint32_t blkNum)) ROM_APITABLE[ROM_API_INDEX_SFlash_Blk64_Erase])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint32_t blkNum)) ROM_APITABLE[ROM_API_INDEX_SFlash_Blk64_Erase])
 
 #define RomDriver_SFlash_Erase \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, uint32_t startaddr, uint32_t endaddr)) ROM_APITABLE[ROM_API_INDEX_SFlash_Erase])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint32_t startaddr, uint32_t endaddr)) ROM_APITABLE[ROM_API_INDEX_SFlash_Erase])
 
 #define RomDriver_SFlash_Program \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, SF_Ctrl_IO_Type ioMode, uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_SFlash_Program])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t ioMode, uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_SFlash_Program])
 
 #define RomDriver_SFlash_GetUniqueId \
     ((void (*)(uint8_t * data, uint8_t idLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_GetUniqueId])
 
 #define RomDriver_SFlash_GetJedecId \
-    ((void (*)(SPI_Flash_Cfg_Type * flashCfg, uint8_t * data)) ROM_APITABLE[ROM_API_INDEX_SFlash_GetJedecId])
+    ((void (*)(spi_flash_cfg_type * flashCfg, uint8_t * data)) ROM_APITABLE[ROM_API_INDEX_SFlash_GetJedecId])
 
 #define RomDriver_SFlash_GetDeviceId \
     ((void (*)(uint8_t * data)) ROM_APITABLE[ROM_API_INDEX_SFlash_GetDeviceId])
@@ -608,34 +608,34 @@ typedef enum {
     ((void (*)(void))ROM_APITABLE[ROM_API_INDEX_SFlash_Powerdown])
 
 #define RomDriver_SFlash_Releae_Powerdown \
-    ((void (*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Releae_Powerdown])
+    ((void (*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Releae_Powerdown])
 
 #define RomDriver_SFlash_SetBurstWrap \
-    ((void (*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_SetBurstWrap])
+    ((void (*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_SetBurstWrap])
 
 #define RomDriver_SFlash_DisableBurstWrap \
-    ((void (*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_DisableBurstWrap])
+    ((void (*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_DisableBurstWrap])
 
 #define RomDriver_SFlash_Software_Reset \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Software_Reset])
+    ((int(*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Software_Reset])
 
 #define RomDriver_SFlash_Reset_Continue_Read \
-    ((void (*)(SPI_Flash_Cfg_Type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Reset_Continue_Read])
+    ((void (*)(spi_flash_cfg_type * flashCfg)) ROM_APITABLE[ROM_API_INDEX_SFlash_Reset_Continue_Read])
 
 #define RomDriver_SFlash_Set_IDbus_Cfg \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, SF_Ctrl_IO_Type ioMode, uint8_t contRead, uint32_t addr, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_SFlash_Set_IDbus_Cfg])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t ioMode, uint8_t contRead, uint32_t addr, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_SFlash_Set_IDbus_Cfg])
 
 #define RomDriver_SFlash_IDbus_Read_Enable \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, SF_Ctrl_IO_Type ioMode, uint8_t contRead)) ROM_APITABLE[ROM_API_INDEX_SFlash_IDbus_Read_Enable])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t ioMode, uint8_t contRead)) ROM_APITABLE[ROM_API_INDEX_SFlash_IDbus_Read_Enable])
 
 #define RomDriver_SFlash_Cache_Enable_Set \
-    ((BL_Err_Type(*)(uint8_t wayDisable))ROM_APITABLE[ROM_API_INDEX_SFlash_Cache_Enable_Set])
+    ((int(*)(uint8_t wayDisable))ROM_APITABLE[ROM_API_INDEX_SFlash_Cache_Enable_Set])
 
 #define RomDriver_SFlash_Cache_Flush \
-    ((BL_Err_Type(*)(void))ROM_APITABLE[ROM_API_INDEX_SFlash_Cache_Flush])
+    ((int(*)(void))ROM_APITABLE[ROM_API_INDEX_SFlash_Cache_Flush])
 
 #define RomDriver_SFlash_Cache_Read_Enable \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, SF_Ctrl_IO_Type ioMode, uint8_t contRead, uint8_t wayDisable)) ROM_APITABLE[ROM_API_INDEX_SFlash_Cache_Read_Enable])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t ioMode, uint8_t contRead, uint8_t wayDisable)) ROM_APITABLE[ROM_API_INDEX_SFlash_Cache_Read_Enable])
 
 #define RomDriver_SFlash_Cache_Hit_Count_Get \
     ((void (*)(uint32_t * hitCountLow, uint32_t * hitCountHigh)) ROM_APITABLE[ROM_API_INDEX_SFlash_Cache_Hit_Count_Get])
@@ -647,46 +647,46 @@ typedef enum {
     ((void (*)(void))ROM_APITABLE[ROM_API_INDEX_SFlash_Cache_Read_Disable])
 
 #define RomDriver_SFlash_Read \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, SF_Ctrl_IO_Type ioMode, uint8_t contRead, uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_SFlash_Read])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t ioMode, uint8_t contRead, uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_SFlash_Read])
 
 #define RomDriver_SFlash_Read_Reg_With_Cmd \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, uint8_t readRegCmd, uint8_t * regValue, uint8_t regLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_Read_Reg_With_Cmd])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t readRegCmd, uint8_t * regValue, uint8_t regLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_Read_Reg_With_Cmd])
 
 #define RomDriver_SFlash_Write_Reg_With_Cmd \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * flashCfg, uint8_t writeRegCmd, uint8_t * regValue, uint8_t regLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_Write_Reg_With_Cmd])
+    ((int(*)(spi_flash_cfg_type * flashCfg, uint8_t writeRegCmd, uint8_t * regValue, uint8_t regLen)) ROM_APITABLE[ROM_API_INDEX_SFlash_Write_Reg_With_Cmd])
 
 #define RomDriver_SFlash_Restore_From_Powerdown \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint8_t flashContRead)) ROM_APITABLE[ROM_API_INDEX_SFlash_Restore_From_Powerdown])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint8_t flashContRead)) ROM_APITABLE[ROM_API_INDEX_SFlash_Restore_From_Powerdown])
 
 #define RomDriver_SF_Cfg_Init_Ext_Flash_Gpio \
-    ((void (*)(uint8_t extFlashPin))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Init_Ext_Flash_Gpio])
+    ((int (*)(uint8_t extFlashPin))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Init_Ext_Flash_Gpio])
 
 #define RomDriver_SF_Cfg_Init_Internal_Flash_Gpio \
     ((void (*)(void))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Init_Internal_Flash_Gpio])
 
 #define RomDriver_SF_Cfg_Deinit_Ext_Flash_Gpio \
-    ((void (*)(uint8_t extFlashPin))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Deinit_Ext_Flash_Gpio])
+    ((int (*)(uint8_t extFlashPin))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Deinit_Ext_Flash_Gpio])
 
 #define RomDriver_SF_Cfg_Restore_GPIO17_Fun \
     ((void (*)(uint8_t fun))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Restore_GPIO17_Fun])
 
 #define RomDriver_SF_Cfg_Get_Flash_Cfg_Need_Lock \
-    ((BL_Err_Type(*)(uint32_t flashID, SPI_Flash_Cfg_Type * pFlashCfg)) ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Get_Flash_Cfg_Need_Lock])
+    ((int(*)(uint32_t flashID, spi_flash_cfg_type * pFlashCfg)) ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Get_Flash_Cfg_Need_Lock])
 
 #define RomDriver_SF_Cfg_Init_Flash_Gpio \
-    ((void (*)(uint8_t flashPinCfg, uint8_t restoreDefault))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Init_Flash_Gpio])
+    ((int (*)(uint8_t flashPinCfg, uint8_t restoreDefault))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Init_Flash_Gpio])
 
 #define RomDriver_SF_Cfg_Flash_Identify \
-    ((uint32_t(*)(uint8_t callFromFlash, uint32_t autoScan, uint32_t flashPinCfg, uint8_t restoreDefault, SPI_Flash_Cfg_Type * pFlashCfg)) ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Flash_Identify])
+    ((uint32_t(*)(uint8_t callFromFlash, uint32_t autoScan, uint32_t flashPinCfg, uint8_t restoreDefault, spi_flash_cfg_type * pFlashCfg)) ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Flash_Identify])
 
 #define RomDriver_SF_Ctrl_Enable \
-    ((void (*)(const SF_Ctrl_Cfg_Type *cfg))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Enable])
+    ((void (*)(const struct sf_ctrl_cfg_type *cfg))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Enable])
 
 #define RomDriver_SF_Ctrl_Select_Pad \
-    ((void (*)(SF_Ctrl_Pad_Sel sel))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Select_Pad])
+    ((void (*)(uint8_t sel))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Select_Pad])
 
 #define RomDriver_SF_Ctrl_Set_Owner \
-    ((void (*)(SF_Ctrl_Owner_Type owner))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Set_Owner])
+    ((void (*)(uint8_t owner))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Set_Owner])
 
 #define RomDriver_SF_Ctrl_Disable \
     ((void (*)(void))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Disable])
@@ -701,10 +701,10 @@ typedef enum {
     ((void (*)(uint8_t region, uint8_t enable, uint8_t hwKey, uint32_t startAddr, uint32_t endAddr, uint8_t locked))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_AES_Set_Region])
 
 #define RomDriver_SF_Ctrl_AES_Set_Key \
-    ((void (*)(uint8_t region, uint8_t * key, SF_Ctrl_AES_Key_Type keyType)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_AES_Set_Key])
+    ((void (*)(uint8_t region, uint8_t * key, uint8_t keyType)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_AES_Set_Key])
 
 #define RomDriver_SF_Ctrl_AES_Set_Key_BE \
-    ((void (*)(uint8_t region, uint8_t * key, SF_Ctrl_AES_Key_Type keyType)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_AES_Set_Key_BE])
+    ((void (*)(uint8_t region, uint8_t * key, uint8_t keyType)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_AES_Set_Key_BE])
 
 #define RomDriver_SF_Ctrl_AES_Set_IV \
     ((void (*)(uint8_t region, uint8_t * iv, uint32_t addrOffset)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_AES_Set_IV])
@@ -725,19 +725,19 @@ typedef enum {
     ((uint32_t(*)(void))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Get_Flash_Image_Offset])
 
 #define RomDriver_SF_Ctrl_Select_Clock \
-    ((void (*)(SF_Ctrl_Sahb_Type sahbType))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Select_Clock])
+    ((void (*)(uint8_t sahbType))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Select_Clock])
 
 #define RomDriver_SF_Ctrl_SendCmd \
-    ((void (*)(SF_Ctrl_Cmd_Cfg_Type * cfg)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_SendCmd])
+    ((void (*)(struct sf_ctrl_cmd_cfg_type * cfg)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_SendCmd])
 
 #define RomDriver_SF_Ctrl_Icache_Set \
-    ((void (*)(SF_Ctrl_Cmd_Cfg_Type * cfg, uint8_t cmdValid)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Icache_Set])
+    ((void (*)(struct sf_ctrl_cmd_cfg_type * cfg, uint8_t cmdValid)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Icache_Set])
 
 #define RomDriver_SF_Ctrl_Icache2_Set \
-    ((void (*)(SF_Ctrl_Cmd_Cfg_Type * cfg, uint8_t cmdValid)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Icache2_Set])
+    ((void (*)(struct sf_ctrl_cmd_cfg_type * cfg, uint8_t cmdValid)) ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Icache2_Set])
 
 #define RomDriver_SF_Ctrl_GetBusyState \
-    ((BL_Sts_Type(*)(void))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_GetBusyState])
+    ((int(*)(void))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_GetBusyState])
 
 #define RomDriver_SF_Ctrl_Is_AES_Enable \
     ((uint8_t(*)(void))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Is_AES_Enable])
@@ -749,31 +749,31 @@ typedef enum {
     ((void (*)(uint8_t delay))ROM_APITABLE[ROM_API_INDEX_SF_Ctrl_Set_Clock_Delay])
 
 #define RomDriver_XIP_SFlash_State_Save \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint32_t * offset)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_State_Save])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint32_t * offset)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_State_Save])
 
 #define RomDriver_XIP_SFlash_State_Restore \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint32_t offset)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_State_Restore])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint32_t offset)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_State_Restore])
 
 #define RomDriver_XIP_SFlash_Erase_Need_Lock \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint32_t startaddr, uint32_t endaddr)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Erase_Need_Lock])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint32_t startaddr, uint32_t endaddr)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Erase_Need_Lock])
 
 #define RomDriver_XIP_SFlash_Write_Need_Lock \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Write_Need_Lock])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Write_Need_Lock])
 
 #define RomDriver_XIP_SFlash_Read_Need_Lock \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Read_Need_Lock])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Read_Need_Lock])
 
 #define RomDriver_XIP_SFlash_GetJedecId_Need_Lock \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint8_t * data)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_GetJedecId_Need_Lock])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint8_t * data)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_GetJedecId_Need_Lock])
 
 #define RomDriver_XIP_SFlash_GetDeviceId_Need_Lock \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint8_t * data)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_GetDeviceId_Need_Lock])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint8_t * data)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_GetDeviceId_Need_Lock])
 
 #define RomDriver_XIP_SFlash_GetUniqueId_Need_Lock \
-    ((BL_Err_Type(*)(SPI_Flash_Cfg_Type * pFlashCfg, uint8_t * data, uint8_t idLen)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_GetUniqueId_Need_Lock])
+    ((int(*)(spi_flash_cfg_type * pFlashCfg, uint8_t * data, uint8_t idLen)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_GetUniqueId_Need_Lock])
 
 #define RomDriver_XIP_SFlash_Read_Via_Cache_Need_Lock \
-    ((BL_Err_Type(*)(uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Read_Via_Cache_Need_Lock])
+    ((int(*)(uint32_t addr, uint8_t * data, uint32_t len)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Read_Via_Cache_Need_Lock])
 
 #define RomDriver_XIP_SFlash_Opt_Enter \
     ((void (*)(uint8_t * aesEnable)) ROM_APITABLE[ROM_API_INDEX_XIP_SFlash_Opt_Enter])

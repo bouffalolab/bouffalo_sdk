@@ -37,11 +37,10 @@
 #define __BL702_XIP_SFLASH_EXT_H__
 
 #include "bl702_common.h"
-#include "bl702_sflash.h"
-#include "bl702_xip_sflash.h"
-#include "bl702_sflash.h"
+#include "bflb_xip_sflash.h"
+#include "bflb_sflash.h"
 #include "bl702_sflash_ext.h"
-#include "bl702_sf_cfg.h"
+#include "bflb_sf_cfg.h"
 #include "bl702_sf_cfg_ext.h"
 
 /** @addtogroup  BL702_Peripheral_Driver
@@ -74,8 +73,11 @@
  *  @{
  */
 
-BL_Err_Type XIP_SFlash_KH25V40_Write_Protect_Need_Lock(SPI_Flash_Cfg_Type *flashCfg, SFlash_Protect_Kh25v40_Type protect);
-BL_Err_Type XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg);
+void bflb_xip_sflash_opt_enter(uint8_t *aes_enable);
+void bflb_xip_sflash_opt_exit(uint8_t aes_enable);
+int bflb_xip_sflash_read_via_cache_need_lock(uint32_t addr,uint8_t *data, uint32_t len, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_kh25v40_write_protect_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t protect);
+int bflb_xip_sflash_clear_status_register_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t group, uint8_t bank);
 
 /*@} end of group XIP_SFLASH_EXT_Public_Functions */
 

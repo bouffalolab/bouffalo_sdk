@@ -23,11 +23,11 @@ sdk_add_compile_definitions(
 )
 
 sdk_add_compile_options(
-    # -O3
+    -O3
     -falign-functions=2
-    # -fno-code-hoisting
-    # -finline-limit=500
-    # -funroll-all-loops
+    -fno-code-hoisting
+    -finline-limit=500
+    -funroll-all-loops
 )
 
 project(coremark)

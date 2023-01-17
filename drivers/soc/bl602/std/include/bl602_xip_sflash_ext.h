@@ -37,9 +37,9 @@
 #define __BL602_XIP_SFLASH_EXT_H__
 
 #include "bl602_common.h"
-#include "bl602_sflash.h"
 #include "bl602_sflash_ext.h"
-#include "bl602_xip_sflash.h"
+#include "bflb_sflash.h"
+#include "bflb_xip_sflash.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
@@ -70,21 +70,23 @@
 /** @defgroup  XIP_SFLASH_EXT_Public_Functions
  *  @{
  */
-BL_Err_Type XIP_SFlash_State_Restore_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t offset);
-BL_Err_Type XIP_SFlash_Erase_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t startaddr,
-                                           uint32_t endaddr);
-BL_Err_Type XIP_SFlash_Write_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t addr,uint8_t *data,
-                                           uint32_t len);
-BL_Err_Type XIP_SFlash_Read_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint32_t addr,uint8_t *data,
-                                          uint32_t len);
-BL_Err_Type XIP_SFlash_Clear_Status_Register_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg);
-BL_Err_Type XIP_SFlash_GetJedecId_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint8_t *data);
-BL_Err_Type XIP_SFlash_GetDeviceId_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint8_t *data);
-BL_Err_Type XIP_SFlash_GetUniqueId_Need_Lock_Ext(SPI_Flash_Cfg_Type *pFlashCfg,uint8_t *data,
-                                                 uint8_t idLen);
-BL_Err_Type XIP_SFlash_RCV_Enable_Need_Lock(SPI_Flash_Cfg_Type *pFlashCfg, uint8_t rCmd, uint8_t wCmd,
-                                            uint8_t bitPos);
-BL_Err_Type XIP_SFlash_Init(SPI_Flash_Cfg_Type *pFlashCfg);
+int bflb_xip_sflash_state_restore_ext(spi_flash_cfg_type *p_flash_cfg, uint32_t offset, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_erase_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint32_t startaddr,
+                                        uint32_t endaddr, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_write_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint32_t addr, uint8_t *data,
+                                        uint32_t len, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_read_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint32_t addr, uint8_t *data,
+                                        uint32_t len, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_clear_status_register_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_get_jedecid_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
+                                              uint8_t group, uint8_t bank);
+int bflb_xip_sflash_get_deviceid_need_lock_ext(spi_flash_cfg_type *p_flash_cfg, uint8_t is_32bits_addr,
+                                               uint8_t *data, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_get_uniqueid_need_lock_ext(spi_flash_cfg_type *p_flash_cfg,uint8_t *data,
+                                               uint8_t idLen, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_rcv_enable_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t rCmd, uint8_t wCmd,
+                                         uint8_t bitPos, uint8_t group, uint8_t bank);
+int bflb_xip_sflash_init(spi_flash_cfg_type *p_flash_cfg);
 
 /*@} end of group XIP_SFLASH_EXT_Public_Functions */
 

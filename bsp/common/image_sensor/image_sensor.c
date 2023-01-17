@@ -25,16 +25,18 @@
 #include "gc0308.h"
 #include "gc0328.h"
 #include "gc2053.h"
+#include "ov2685.h"
 #include "bflb_i2c.h"
 
 static struct image_sensor_config_s *sensor_list[] = {
-    NULL, &bf2013_config, &gc0308_config, &gc0328_config, &gc2053_config
+    NULL, &bf2013_config, &gc0308_config, &gc0328_config, &gc2053_config, &ov2685_config
 };
 
 void image_sensor_read(struct bflb_device_s *i2c, uint32_t sensor_index, struct image_sensor_command_s *read_list, uint32_t list_len)
 {
     uint32_t i;
     struct bflb_i2c_msg_s msgs[2];
+    uint8_t buffer[2];
     
     msgs[0].addr = sensor_list[sensor_index]->slave_addr;
     msgs[0].flags = I2C_M_NOSTOP;
@@ -47,7 +49,14 @@ void image_sensor_read(struct bflb_device_s *i2c, uint32_t sensor_index, struct 
     msgs[1].length = 1;
     
     for(i=0;i<list_len;i++){
-        msgs[0].buffer = (uint8_t *)&read_list[i].address;
+        if (sensor_list[sensor_index]->reg_size == 1) {
+            buffer[0] = read_list[i].address & 0xff;
+        } else {
+            buffer[0] = read_list[i].address >> 8;
+            buffer[1] = read_list[i].address & 0xff;
+        }
+        
+        msgs[0].buffer = buffer;
         msgs[1].buffer = &read_list[i].paramete;
         bflb_i2c_transfer(i2c, msgs, 2);
     }
@@ -57,6 +66,7 @@ void image_sensor_write(struct bflb_device_s *i2c, uint32_t sensor_index, struct
 {
     uint32_t i;
     struct bflb_i2c_msg_s msgs[2];
+    uint8_t buffer[2];
     
     msgs[0].addr = sensor_list[sensor_index]->slave_addr;
     msgs[0].flags = I2C_M_NOSTOP;
@@ -69,7 +79,14 @@ void image_sensor_write(struct bflb_device_s *i2c, uint32_t sensor_index, struct
     msgs[1].length = 1;
     
     for(i=0;i<list_len;i++){
-        msgs[0].buffer = (uint8_t *)&read_list[i].address;
+        if (sensor_list[sensor_index]->reg_size == 1) {
+            buffer[0] = read_list[i].address & 0xff;
+        } else {
+            buffer[0] = read_list[i].address >> 8;
+            buffer[1] = read_list[i].address & 0xff;
+        }
+        
+        msgs[0].buffer = buffer;
         msgs[1].buffer = &read_list[i].paramete;
         bflb_i2c_transfer(i2c, msgs, 2);
     }

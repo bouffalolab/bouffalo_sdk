@@ -24,10 +24,8 @@
  *
  * 1 tab == 4 spaces!
  */
-
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
-
 /*-----------------------------------------------------------
  * Application specific definitions.
  *
@@ -39,8 +37,6 @@
  *
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
-#include "stdio.h"
-
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define configMTIME_BASE_ADDRESS    (0x02000000UL + 0xBFF8UL)
 #define configMTIMECMP_BASE_ADDRESS (0x02000000UL + 0x4000UL)
@@ -53,8 +49,7 @@
 #define configMTIMECMP_BASE_ADDRESS ((0xE0000000UL) + 0x4000UL)
 #endif
 #endif
-
-// #define configSUPPORT_STATIC_ALLOCATION         1
+#define configSUPPORT_STATIC_ALLOCATION         1
 #define configUSE_PREEMPTION                    1
 #define configUSE_IDLE_HOOK                     0
 #define configUSE_TICK_HOOK                     0
@@ -73,27 +68,26 @@
 #define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configUSE_MALLOC_FAILED_HOOK            1
-#define configUSE_APPLICATION_TASK_TAG          0
+#define configUSE_APPLICATION_TASK_TAG          1
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configGENERATE_RUN_TIME_STATS           0
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_TICKLESS_IDLE                 0
+#define configUSE_POSIX_ERRNO                   1
 
 /* Co-routine definitions. */
-#define configUSE_CO_ROUTINES           0
-#define configMAX_CO_ROUTINE_PRIORITIES (2)
+#define configUSE_CO_ROUTINES                   0
+#define configMAX_CO_ROUTINE_PRIORITIES         (2)
 
 /* Software timer definitions. */
-#define configUSE_TIMERS             1
-#define configTIMER_TASK_PRIORITY    (configMAX_PRIORITIES - 1)
-#define configTIMER_QUEUE_LENGTH     4
-#define configTIMER_TASK_STACK_DEPTH (configMINIMAL_STACK_SIZE)
-
+#define configUSE_TIMERS                        1
+#define configTIMER_TASK_PRIORITY               (configMAX_PRIORITIES - 1)
+#define configTIMER_QUEUE_LENGTH                4
+#define configTIMER_TASK_STACK_DEPTH            (configMINIMAL_STACK_SIZE)
 /* Task priorities.  Allow these to be overridden. */
 #ifndef uartPRIMARY_PRIORITY
 #define uartPRIMARY_PRIORITY (configMAX_PRIORITIES - 3)
 #endif
-
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet         1
@@ -108,11 +102,13 @@ to exclude the API function. */
 #define INCLUDE_xTaskAbortDelay          1
 #define INCLUDE_xTaskGetHandle           1
 #define INCLUDE_xSemaphoreGetMutexHolder 1
-
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
 void vApplicationMallocFailedHook(void);
 void vAssertCalled(void);
+
+#include <stdio.h>
+
 #define configASSERT(x)                        \
     if ((x) == 0) {                            \
         printf("file [%s]\r\n", __FILE__);     \
@@ -121,12 +117,9 @@ void vAssertCalled(void);
         printf("%s\r\n", (const char *)(#x));  \
         vAssertCalled();                       \
     }
-
 #if (configUSE_TICKLESS_IDLE != 0)
 void vApplicationSleep(uint32_t xExpectedIdleTime);
 #define portSUPPRESS_TICKS_AND_SLEEP(xExpectedIdleTime) vApplicationSleep(xExpectedIdleTime)
 #endif
-
 // #define portUSING_MPU_WRAPPERS
-
 #endif /* FREERTOS_CONFIG_H */

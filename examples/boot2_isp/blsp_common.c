@@ -43,6 +43,7 @@
 #include "blsp_media_boot.h"
 #include "bflb_flash.h"
 #include "bflb_eflash_loader.h"
+#include "bflb_uart.h"
 
 ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t g_malloc_buf[BFLB_BOOT2_XZ_MALLOC_BUF_SIZE];
 
@@ -88,7 +89,7 @@ int32_t blsp_mediaboot_pre_jump(void)
 
     /* reinit mtimer clock */
     //system_mtimer_clock_reinit();
-
+    bflb_uart_deinit(uartx);
     /* deinit uart */
     hal_boot2_debug_uart_gpio_deinit();
 
