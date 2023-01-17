@@ -4,103 +4,7 @@
 #include "bflb_flash.h"
 
 static uint32_t g_jedec_id = 0;
-static SPI_Flash_Cfg_Type g_flash_cfg = {
-    .resetCreadCmd = 0xff,
-    .resetCreadCmdSize = 3,
-    .mid = 0xc8,
-
-    .deBurstWrapCmd = 0x77,
-    .deBurstWrapCmdDmyClk = 0x3,
-    .deBurstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .deBurstWrapData = 0xF0,
-
-    /* reg */
-    .writeEnableCmd = 0x06,
-    .wrEnableIndex = 0x00,
-    .wrEnableBit = 0x01,
-    .wrEnableReadRegLen = 0x01,
-
-    .qeIndex = 1,
-    .qeBit = 0x01,
-    .qeWriteRegLen = 0x02,
-    .qeReadRegLen = 0x1,
-
-    .busyIndex = 0,
-    .busyBit = 0x00,
-    .busyReadRegLen = 0x1,
-    .releasePowerDown = 0xab,
-
-    .readRegCmd[0] = 0x05,
-    .readRegCmd[1] = 0x35,
-    .writeRegCmd[0] = 0x01,
-    .writeRegCmd[1] = 0x01,
-
-    .fastReadQioCmd = 0xeb,
-    .frQioDmyClk = 16 / 8,
-    .cReadSupport = 0,
-    .cReadMode = 0xa0,
-
-    .burstWrapCmd = 0x77,
-    .burstWrapCmdDmyClk = 0x3,
-    .burstWrapDataMode = SF_CTRL_DATA_4_LINES,
-    .burstWrapData = 0x40,
-    /* erase */
-    .chipEraseCmd = 0xc7,
-    .sectorEraseCmd = 0x20,
-    .blk32EraseCmd = 0x52,
-    .blk64EraseCmd = 0xd8,
-    /* write */
-    .pageProgramCmd = 0x02,
-    .qpageProgramCmd = 0x32,
-    .qppAddrMode = SF_CTRL_ADDR_1_LINE,
-
-    .ioMode = 0x10,
-    .clkDelay = 0,
-    .clkInvert = 0x03,
-
-    .resetEnCmd = 0x66,
-    .resetCmd = 0x99,
-    .cRExit = 0xff,
-    .wrEnableWriteRegLen = 0x00,
-
-    /* id */
-    .jedecIdCmd = 0x9f,
-    .jedecIdCmdDmyClk = 0,
-    .enter32BitsAddrCmd = 0xb7,
-    .exit32BitsAddrCmd = 0xe9,
-    .sectorSize = 4,
-    .pageSize = 256,
-
-    /* read */
-    .fastReadCmd = 0x0b,
-    .frDmyClk = 8 / 8,
-    .qpiFastReadCmd = 0x0b,
-    .qpiFrDmyClk = 8 / 8,
-    .fastReadDoCmd = 0x3b,
-    .frDoDmyClk = 8 / 8,
-    .fastReadDioCmd = 0xbb,
-    .frDioDmyClk = 0,
-    .fastReadQoCmd = 0x6b,
-    .frQoDmyClk = 8 / 8,
-
-    .qpiFastReadQioCmd = 0xeb,
-    .qpiFrQioDmyClk = 16 / 8,
-    .qpiPageProgramCmd = 0x02,
-    .writeVregEnableCmd = 0x50,
-
-    /* qpi mode */
-    .enterQpi = 0x38,
-    .exitQpi = 0xff,
-
-    /* AC */
-    .timeEsector = 500,
-    .timeE32k = 2000,
-    .timeE64k = 2000,
-    .timePagePgm = 5,
-    .timeCe = 33 * 1000,
-    .pdDelay = 20,
-    .qeData = 0,
-};
+static SPI_Flash_Cfg_Type g_flash_cfg;
 
 /**
  * @brief flash_get_clock_delay
@@ -132,30 +36,6 @@ static int flash_get_clock_delay(SPI_Flash_Cfg_Type *cfg)
     /* bit5-7 for oe delay */
     cfg->clkInvert |= ((BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_IO_0_OE_DLY_SEL) & 7) << 5);
 
-    return 0;
-}
-
-/**
- * @brief flash_set_cmds
- *
- * @return int
- */
-static int ATTR_TCM_SECTION flash_set_cmds(SPI_Flash_Cfg_Type *p_flash_cfg)
-{
-    SF_Ctrl_Cmds_Cfg cmds_cfg = {
-        .ackLatency = 1,
-        .cmdsCoreEn = 1,
-        .cmdsEn = 1,
-        .cmdsWrapMode = 1,
-        .cmdsWrapLen = 9,
-    };
-
-    if ((p_flash_cfg->ioMode & 0x0f) == SF_CTRL_QO_MODE || (p_flash_cfg->ioMode & 0x0f) == SF_CTRL_QIO_MODE) {
-        cmds_cfg.cmdsWrapMode = 2;
-        cmds_cfg.cmdsWrapLen = 2;
-    }
-    SF_Ctrl_Cmds_Set(&cmds_cfg, 0);
-    
     return 0;
 }
 
@@ -218,7 +98,6 @@ static int ATTR_TCM_SECTION flash_config_init(SPI_Flash_Cfg_Type *p_flash_cfg, u
     }
 
     /* Set flash controler from p_flash_cfg */
-    flash_set_cmds(p_flash_cfg);
     flash_set_qspi_enable(p_flash_cfg);
     flash_set_l1c_wrap(p_flash_cfg);
     XIP_SFlash_State_Restore(p_flash_cfg, offset, 0, 0);
@@ -237,6 +116,7 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
 {
     int ret = -1;
     uint32_t jedec_id = 0;
+    uintptr_t flag;
 
     jedec_id = GLB_Get_Flash_Id_Value();
     if (jedec_id != 0) {
@@ -248,6 +128,15 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
         }
     }
 
+    flag = bflb_irq_save();
+    L1C_ICache_Invalid_All();
+    SF_Cfg_Get_Flash_Cfg_Need_Lock_Ext(0, &g_flash_cfg, 0, 0);
+    L1C_ICache_Invalid_All();
+    bflb_irq_restore(flag);
+    if (g_flash_cfg.mid != 0xff) {
+        flash_get_clock_delay(&g_flash_cfg);
+        return 0;
+    }
 
     ret = flash_config_init(&g_flash_cfg, (uint8_t *)&jedec_id);
 
