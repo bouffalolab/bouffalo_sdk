@@ -1,0 +1,2 @@
+sdk_add_subdirectory_ifdef(CONFIG_TINYMAIX TinyMaix)
+sdk_add_subdirectory_ifdef(CONFIG_TENSORFLOWLITE TensorFlowLite)

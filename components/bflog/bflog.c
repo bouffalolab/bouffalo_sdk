@@ -33,44 +33,48 @@
  * @{
  */
 
-#ifndef bflog_fopen
-#define bflog_fopen fopen
+#ifndef bflogc_fopen
+#define bflogc_fopen fopen
 #endif
 
-#ifndef bflog_fclose
-#define bflog_fclose fclose
+#ifndef bflogc_fclose
+#define bflogc_fclose fclose
 #endif
 
-#ifndef bflog_fwrite
-#define bflog_fwrite fwrite
+#ifndef bflogc_fwrite
+#define bflogc_fwrite fwrite
 #endif
 
-#ifndef bflog_ftell
-#define bflog_ftell ftell
+#ifndef bflogc_ftell
+#define bflogc_ftell ftell
 #endif
 
-#ifndef bflog_fflush
-#define bflog_fflush fflush
+#ifndef bflogc_fflush
+#define bflogc_fflush fflush
 #endif
 
-#ifndef bflog_memcpy
-#define bflog_memcpy memcpy
+#ifndef bflogc_memcpy
+#define bflogc_memcpy memcpy
 #endif
 
-#ifndef bflog_snprintf
-#define bflog_snprintf snprintf
+#ifndef bflogc_snprintf
+#define bflogc_snprintf snprintf
 #endif
 
-#ifndef bflog_vsnprintf
-#define bflog_vsnprintf vsnprintf
+#ifndef bflogc_vsnprintf
+#define bflogc_vsnprintf vsnprintf
 #endif
 
-#ifndef bflog_remove
-#define bflog_remove remove
+#ifndef bflogc_remove
+#define bflogc_remove remove
 #endif
 
-#ifndef bflog_rename
-#define bflog_rename rename
+#ifndef bflogc_rename
+#define bflogc_rename rename
+#endif
+
+#ifndef bflogc_strcmp
+#define bflogc_strcmp strcmp
 #endif
 
 /**
@@ -89,9 +93,10 @@
 #define _BFLOG_CHECK(_expr, _ret) ((void)0)
 #endif
 
-#define _bflog_t(_ptr) ((bflog_t *)(_ptr))
+#define _bflog_t(_ptr)            ((bflog_t *)(_ptr))
 
-#define _msg_t(_ptr) ((struct _bflog_msg *)(_ptr))
+#define _msg_t(_ptr)              ((struct _bflog_msg *)(_ptr))
+#define _tag_t(_ptr)              ((struct _bflog_tag *)(_ptr))
 
 #define _direct_t(_ptr)           ((bflog_direct_t *)(_ptr))
 #define _direct_buffer_t(_ptr)    ((bflog_direct_buffer_t *)(_ptr))
@@ -100,9 +105,9 @@
 #define _direct_file_time_t(_ptr) ((bflog_direct_file_time_t *)(_ptr))
 #define _direct_file_size_t(_ptr) ((bflog_direct_file_size_t *)(_ptr))
 
-#define _layout_simple_t(_ptr) ((bflog_layout_simple_t *)(_ptr))
-#define _layout_format_t(_ptr) ((bflog_layout_format_t *)(_ptr))
-#define _layout_yaml_t(_ptr)   ((bflog_layout_yaml_t *)(_ptr))
+#define _layout_simple_t(_ptr)    ((bflog_layout_simple_t *)(_ptr))
+#define _layout_format_t(_ptr)    ((bflog_layout_format_t *)(_ptr))
+#define _layout_yaml_t(_ptr)      ((bflog_layout_yaml_t *)(_ptr))
 
 /*!< default log record flag */
 #ifndef BFLOG_FLAG_DEFAULT
@@ -167,7 +172,12 @@ static char *bflog_level_strings[6] = {
     BFLOG_LEVEL_TRACE_STRING
 };
 
+static uint32_t global_filter = 0xffffffff;
+
 static char *bflog_dummy_string = "";
+
+extern struct _bflog_tag __bflog_tags_start__;
+extern struct _bflog_tag __bflog_tags_end__;
 
 /**
  *   @brief         dummy function
@@ -359,14 +369,14 @@ static void queue_put(bflog_t *log, struct _bflog_msg *msg)
     /*!< ring loop */
     if (msg->size >= remain) {
         /*!< store to ring tail */
-        bflog_memcpy(pool + log->queue.wpos, msg, remain);
+        bflogc_memcpy(pool + log->queue.wpos, msg, remain);
 
         log->queue.wpos = msg->size - remain;
 
         /*!< store to ring head */
-        bflog_memcpy(pool, (char *)msg + remain, log->queue.wpos);
+        bflogc_memcpy(pool, (char *)msg + remain, log->queue.wpos);
     } else {
-        bflog_memcpy(pool + log->queue.wpos, msg, msg->size);
+        bflogc_memcpy(pool + log->queue.wpos, msg, msg->size);
 
         log->queue.wpos += msg->size;
     }
@@ -396,14 +406,14 @@ static void queue_get(bflog_t *log, struct _bflog_msg *msg)
     /*!< ring loop */
     if (size >= remain) {
         /*!< load from ring tail */
-        bflog_memcpy(msg, pool + log->queue.rpos, remain);
+        bflogc_memcpy(msg, pool + log->queue.rpos, remain);
 
         log->queue.rpos = size - remain;
 
         /*!< load from ring head */
-        bflog_memcpy((char *)msg + remain, pool, log->queue.rpos);
+        bflogc_memcpy((char *)msg + remain, pool, log->queue.rpos);
     } else {
-        bflog_memcpy(msg, pool + log->queue.rpos, size);
+        bflogc_memcpy(msg, pool + log->queue.rpos, size);
         log->queue.rpos += size;
     }
 
@@ -416,9 +426,111 @@ static void queue_get(bflog_t *log, struct _bflog_msg *msg)
  * @}
  */
 
+/** @addtogroup BFLOG_FILTER
+ * @{
+ */
+
+/**
+ *   @brief         find the last bit set
+ *   @param  word                   word
+ *   @return int                    bit index
+ */
+static int bflog_fls(uint32_t word)
+{
+    int bit = 32;
+
+    if (!word) {
+        bit -= 1;
+    }
+    if (!(word & 0xffff0000)) {
+        word <<= 16;
+        bit -= 16;
+    }
+    if (!(word & 0xff000000)) {
+        word <<= 8;
+        bit -= 8;
+    }
+    if (!(word & 0xf0000000)) {
+        word <<= 4;
+        bit -= 4;
+    }
+    if (!(word & 0xc0000000)) {
+        word <<= 2;
+        bit -= 2;
+    }
+    if (!(word & 0x80000000)) {
+        word <<= 1;
+        bit -= 1;
+    }
+
+    return bit;
+}
+
+/**
+ *   @brief         alloc a filter
+ *   @return uint32_t  (0 on faild) filter bit
+ */
+static uint32_t bflog_filter_alloc(void)
+{
+    uint8_t shift = bflog_fls(global_filter) - 1;
+
+    if (shift >= 0) {
+        global_filter = global_filter & ~(0x1 << shift);
+        return 0x1 << shift;
+    } else {
+        return 0;
+    }
+}
+
+/**
+ *   @brief         free a filter
+ *   @param  filter                 filter bit
+ */
+static void bflog_filter_free(uint32_t filter)
+{
+    global_filter = global_filter | filter;
+}
+
+/**
+ *   @brief         config filter
+ *   @param  filter                 filter bit
+ *   @param  tag_string             tag string pointer
+ *   @return int
+ */
+static int bflog_filter_set(uint32_t filter, void *tag_string, uint8_t enable)
+{
+    struct _bflog_tag *ps = &__bflog_tags_start__;
+    struct _bflog_tag *pe = &__bflog_tags_end__;
+
+    while (ps < pe) {
+        if ((tag_string == ps->tag) || (0 == bflogc_strcmp(tag_string, ps->tag))) {
+            if (enable) {
+                ps->en |= filter;
+            } else {
+                ps->en &= ~filter;
+            }
+            return 0;
+        }
+        ps += 1;
+    }
+
+    return -1;
+}
+
+/**
+ * @}
+ */
+
 /** @addtogroup BFLOG_BASE_API
  * @{
  */
+
+int bflog_global_filter(void *tag_string, uint8_t enable)
+{
+    _BFLOG_CHECK(tag_string != NULL, -1);
+
+    return bflog_filter_set(0xffffffff, tag_string, enable);
+}
 
 /**
  *   @brief         create recorder, thread unsafe
@@ -427,7 +539,7 @@ static void queue_get(bflog_t *log, struct _bflog_msg *msg)
  *   @param  size                   pool size
  *   @return int
  */
-int bflog_create_s(bflog_t *log, void *pool, uint16_t size, uint8_t mode)
+int bflog_create(bflog_t *log, void *pool, uint16_t size, uint8_t mode)
 {
     _BFLOG_CHECK(log != NULL, -1);
     _BFLOG_CHECK(pool != NULL, -1);
@@ -450,6 +562,13 @@ int bflog_create_s(bflog_t *log, void *pool, uint16_t size, uint8_t mode)
     log->exit_critical = dummy;
     log->flush_notice = dummy;
 
+    uint32_t filter = bflog_filter_alloc();
+    if (filter > 0) {
+        log->filter = filter;
+    } else {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -458,7 +577,7 @@ int bflog_create_s(bflog_t *log, void *pool, uint16_t size, uint8_t mode)
  *   @param  log                    recorder
  *   @return int
  */
-int bflog_delete_s(bflog_t *log)
+int bflog_delete(bflog_t *log)
 {
     _BFLOG_CHECK(log, -1);
 
@@ -502,6 +621,8 @@ int bflog_delete_s(bflog_t *log)
 
     log->status = BFLOG_STATUS_ILLEGAL;
 
+    bflog_filter_free(log->filter);
+
     log->exit_critical();
 
     return 0;
@@ -513,7 +634,7 @@ int bflog_delete_s(bflog_t *log)
  *   @param  direct                 directed output
  *   @return int
  */
-int bflog_append_s(bflog_t *log, bflog_direct_t *direct)
+int bflog_append(bflog_t *log, bflog_direct_t *direct)
 {
     _BFLOG_CHECK(log != NULL, -1);
     _BFLOG_CHECK(direct != NULL, -1);
@@ -562,7 +683,7 @@ int bflog_append_s(bflog_t *log, bflog_direct_t *direct)
  *   @param  direct                 directed output
  *   @return int
  */
-int bflog_remove_s(bflog_t *log, bflog_direct_t *direct)
+int bflog_remove(bflog_t *log, bflog_direct_t *direct)
 {
     _BFLOG_CHECK(log != NULL, -1);
     _BFLOG_CHECK(direct != NULL, -1);
@@ -620,7 +741,7 @@ int bflog_remove_s(bflog_t *log, bflog_direct_t *direct)
  *   @param  log                    recorder
  *   @return int
  */
-int bflog_suspend_s(bflog_t *log)
+int bflog_suspend(bflog_t *log)
 {
     _BFLOG_CHECK(log != NULL, -1);
 
@@ -662,7 +783,7 @@ int bflog_suspend_s(bflog_t *log)
  *   @param  log                   recorder
  *   @return int
  */
-int bflog_resume_s(bflog_t *log)
+int bflog_resume(bflog_t *log)
 {
     _BFLOG_CHECK(log != NULL, -1);
 
@@ -677,7 +798,6 @@ int bflog_resume_s(bflog_t *log)
     }
 
     if (log->enter_critical()) {
-        printf("3");
         return -1;
     }
 
@@ -707,13 +827,18 @@ int bflog_resume_s(bflog_t *log)
  *   @param  param                  config param
  *   @return int
  */
-int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param)
+int bflog_control(bflog_t *log, uint32_t command, uint32_t param)
 {
     _BFLOG_CHECK(log != NULL, -1);
 
     switch (log->status) {
         case BFLOG_STATUS_READY:
         case BFLOG_STATUS_SUSPEND:
+            break;
+        case BFLOG_STATUS_RUNNING:
+            if (command != BFLOG_CMD_LEVEL) {
+                return -1;
+            }
             break;
         default:
             return -1;
@@ -747,6 +872,11 @@ int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param)
         case BFLOG_STATUS_READY:
         case BFLOG_STATUS_SUSPEND:
             break;
+        case BFLOG_STATUS_RUNNING:
+            if (command != BFLOG_CMD_LEVEL) {
+                return -1;
+            }
+            break;
         default:
             log->exit_critical();
             return -1;
@@ -759,7 +889,7 @@ int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param)
             log->flags = param & 0xff;
             break;
         case BFLOG_CMD_LEVEL:
-            log->level = param & 0xff;
+            log->level = param & BFLOG_LEVEL_MASK;
             break;
         case BFLOG_CMD_QUEUE_POOL:
             log->queue.pool = (void *)param;
@@ -793,11 +923,47 @@ int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param)
 }
 
 /**
+ *   @brief         config recorder filter, thread safe
+ *   @param  log                    recorder
+ *   @param  tag_string             tag string
+ *   @param  enable                 tag enable
+ *   @return int
+ */
+int bflog_filter(bflog_t *log, void *tag_string, uint8_t enable)
+{
+    _BFLOG_CHECK(log != NULL, -1);
+    _BFLOG_CHECK(tag_string != NULL, -1);
+
+    int ret;
+
+    switch (log->status) {
+        case BFLOG_STATUS_READY:
+        case BFLOG_STATUS_RUNNING:
+        case BFLOG_STATUS_SUSPEND:
+            break;
+        default:
+            return -1;
+    }
+
+    if (log->enter_critical()) {
+        return -1;
+    }
+
+    ret = bflog_filter_set(log->filter, tag_string, enable);
+
+    if (log->exit_critical()) {
+        return -1;
+    }
+
+    return ret;
+}
+
+/**
  *   @brief         record log msg, thread safe
  *                  tag, file, func only recorded pointer
  *   @param  log                    recorder
  *   @param  level                  level threshold
- *   @param  tag                    const tag string
+ *   @param  tag                    tag
  *   @param  file                   const file name
  *   @param  func                   const func name
  *   @param  line                   file line
@@ -805,7 +971,7 @@ int bflog_control_s(bflog_t *log, uint32_t command, uint32_t param)
  *   @param  ...                    format params
  *   @return int
  */
-int bflog_s(void *log, uint8_t level, const char *const tag, const char *const file, const char *const func, const long line, const char *format, ...)
+int bflog(void *log, uint8_t level, void *tag, const char *const file, const char *const func, const long line, const char *format, ...)
 {
     _BFLOG_CHECK(log != NULL, -1);
     _BFLOG_CHECK(format != NULL, -1);
@@ -817,16 +983,25 @@ int bflog_s(void *log, uint8_t level, const char *const tag, const char *const f
 
     /*!< working only during running and suspend */
     switch (_bflog_t(log)->status) {
-        case BFLOG_STATUS_SUSPEND:
         case BFLOG_STATUS_RUNNING:
             break;
         default:
             return -1;
     }
 
-    /*!< ignore high level */
-    if (level > _bflog_t(log)->level) {
-        return -1;
+    /*!< level filter */
+    if ((level & BFLOG_LEVEL_MASK) > _bflog_t(log)->level) {
+        return 0;
+    }
+
+    /*!< if advanced tag, use tag filter */
+    if (((uintptr_t)(&__bflog_tags_start__) <= (uintptr_t)(tag)) &&
+        ((uintptr_t)(tag) < (uintptr_t)(&__bflog_tags_end__))) {
+        /*!< tag filter */
+        if ((tag != NULL) &&
+            ((_tag_t(tag)->en & _bflog_t(log)->filter) != _bflog_t(log)->filter)) {
+            return 0;
+        }
     }
 
     /*!< record clock tick */
@@ -850,7 +1025,7 @@ int bflog_s(void *log, uint8_t level, const char *const tag, const char *const f
     if (_bflog_t(log)->flags & BFLOG_FLAG_TAG) {
         _msg_t(msg)->tag = tag;
     } else {
-        _msg_t(msg)->tag = bflog_dummy_string;
+        _msg_t(msg)->tag = NULL;
     }
 
     /*!< record func, only record pointer */
@@ -886,7 +1061,7 @@ int bflog_s(void *log, uint8_t level, const char *const tag, const char *const f
 
     /*!< print string to msg->string */
     va_start(args, format);
-    ret = bflog_vsnprintf(_msg_t(msg)->string, BFLOG_LINE_BUFFER_SIZE, format, args);
+    ret = bflogc_vsnprintf(_msg_t(msg)->string, BFLOG_LINE_BUFFER_SIZE, format, args);
     va_end(args);
 
     /*!< check true size */
@@ -908,7 +1083,6 @@ int bflog_s(void *log, uint8_t level, const char *const tag, const char *const f
     }
     /*!< working only during running and suspend */
     switch (_bflog_t(log)->status) {
-        case BFLOG_STATUS_SUSPEND:
         case BFLOG_STATUS_RUNNING:
             break;
         default:
@@ -926,7 +1100,7 @@ int bflog_s(void *log, uint8_t level, const char *const tag, const char *const f
 
     _bflog_t(log)->exit_critical();
 
-    return bflog_flush_s(_bflog_t(log));
+    return bflog_flush(_bflog_t(log));
 }
 
 /**
@@ -934,7 +1108,7 @@ int bflog_s(void *log, uint8_t level, const char *const tag, const char *const f
  *   @param  log                    recorder
  *   @return int
  */
-int bflog_flush_s(void *log)
+int bflog_flush(void *log)
 {
     _BFLOG_CHECK(log != NULL, -1);
 
@@ -942,6 +1116,7 @@ int bflog_flush_s(void *log)
     char buf[BFLOG_LINE_BUFFER_SIZE * 2];
     struct _bflog_list *node;
     void *direct;
+    uint32_t filter = _bflog_t(log)->filter;
 
     /*!< working only during running */
     switch (_bflog_t(log)->status) {
@@ -981,7 +1156,7 @@ int bflog_flush_s(void *log)
         if (_msg_t(msg)->zero != 0) {
             if (_msg_t(msg)->zero == 0xbd) {
                 /*!< no msg */
-                return -1;
+                return 0;
             } else {
                 /*!< error */
                 return -1;
@@ -990,12 +1165,12 @@ int bflog_flush_s(void *log)
 
         /*!< color */
         char *color;
-        color = bflog_color_strings[_msg_t(msg)->level];
+        color = bflog_color_strings[_msg_t(msg)->level & BFLOG_LEVEL_MASK];
 
         /*!< level */
         char *level;
         if (_bflog_t(log)->flags & BFLOG_FLAG_LEVEL) {
-            level = bflog_level_strings[_msg_t(msg)->level];
+            level = bflog_level_strings[_msg_t(msg)->level & BFLOG_LEVEL_MASK];
         } else {
             level = bflog_dummy_string;
         }
@@ -1006,6 +1181,15 @@ int bflog_flush_s(void *log)
 
         bflog_unix2time(_msg_t(msg)->time, &tm);
 #endif
+
+        /*!< check if advanced tag */
+        uint8_t advanced_tag;
+        if (((uintptr_t)(&__bflog_tags_start__) <= (uintptr_t)(_msg_t(msg)->tag)) &&
+            ((uintptr_t)(_msg_t(msg)->tag) < (uintptr_t)(&__bflog_tags_end__))) {
+            advanced_tag = 1;
+        } else {
+            advanced_tag = 0;
+        }
 
         _bflog_t(log)->enter_critical();
         /*!< foreach direct, execute layout to buf(on stack), then output buf(on stack) */
@@ -1022,8 +1206,32 @@ int bflog_flush_s(void *log)
             }
 
             /*!< level filter */
-            if (_msg_t(msg)->level > _direct_t(direct)->level) {
+            if ((_msg_t(msg)->level & BFLOG_LEVEL_MASK) > _direct_t(direct)->level) {
                 continue;
+            }
+
+            if (advanced_tag) {
+                /*!< tag filter */
+                if ((_msg_t(msg)->tag != NULL) &&
+                    ((_tag_t(_msg_t(msg)->tag)->en & filter) != filter)) {
+                    continue;
+                }
+            }
+
+            char *tag;
+            if ((_msg_t(msg)->tag == NULL)) {
+                tag = bflog_dummy_string;
+            } else {
+                tag = advanced_tag ? _tag_t(_msg_t(msg)->tag)->tag : _msg_t(msg)->tag;
+            }
+
+            /*!< raw output */
+            if (_msg_t(msg)->level & BFLOG_LEVEL_RAW) {
+                size = bflogc_snprintf(
+                    buf,
+                    BFLOG_LINE_BUFFER_SIZE * 2,
+                    "%s", _msg_t(msg)->string);
+                goto output;
             }
 
             /*!< nolayout */
@@ -1036,16 +1244,47 @@ int bflog_flush_s(void *log)
                 case BFLOG_LAYOUT_TYPE_FORMAT:
                     if (_direct_t(direct)->color) {
 #ifdef BFLOG_TIMESTAMP_ENABLE
-                        size = _layout_format_t(_direct_t(direct)->layout)->snprintf(buf, BFLOG_LINE_BUFFER_SIZE * 2, color, level, &tm, _msg_t(msg));
+                        size = _layout_format_t(_direct_t(direct)->layout)
+                                   ->snprintf(
+                                       buf,
+                                       BFLOG_LINE_BUFFER_SIZE * 2,
+                                       color,
+                                       level,
+                                       tag,
+                                       &tm,
+                                       _msg_t(msg));
 #else
-                        size = _layout_format_t(_direct_t(direct)->layout)->snprintf(buf, BFLOG_LINE_BUFFER_SIZE * 2, color, level, NULL, _msg_t(msg));
+                        size = _layout_format_t(_direct_t(direct)->layout)
+                                   ->snprintf(
+                                       buf,
+                                       BFLOG_LINE_BUFFER_SIZE * 2,
+                                       color,
+                                       level,
+                                       tag,
+                                       NULL,
+                                       _msg_t(msg));
 #endif
-
                     } else {
 #ifdef BFLOG_TIMESTAMP_ENABLE
-                        size = _layout_format_t(_direct_t(direct)->layout)->snprintf(buf, BFLOG_LINE_BUFFER_SIZE * 2, bflog_dummy_string, level, &tm, _msg_t(msg));
+                        size = _layout_format_t(_direct_t(direct)->layout)
+                                   ->snprintf(
+                                       buf,
+                                       BFLOG_LINE_BUFFER_SIZE * 2,
+                                       bflog_dummy_string,
+                                       level,
+                                       tag,
+                                       &tm,
+                                       _msg_t(msg));
 #else
-                        size = _layout_format_t(_direct_t(direct)->layout)->snprintf(buf, BFLOG_LINE_BUFFER_SIZE * 2, bflog_dummy_string, level, NULL, _msg_t(msg));
+                        size = _layout_format_t(_direct_t(direct)->layout)
+                                   ->snprintf(
+                                       buf,
+                                       BFLOG_LINE_BUFFER_SIZE * 2,
+                                       bflog_dummy_string,
+                                       level,
+                                       tag,
+                                       NULL,
+                                       _msg_t(msg));
 #endif
                     }
                     goto output;
@@ -1062,17 +1301,49 @@ int bflog_flush_s(void *log)
             if (_direct_t(direct)->color) {
                 /*!< default and simple color format */
 #ifdef BFLOG_TIMESTAMP_ENABLE
-                size = bflog_snprintf(buf, BFLOG_LINE_BUFFER_SIZE * 2, BFLOG_SIMPLE_LAYOUT_STRING(color, level, &tm, _msg_t(msg)));
+                size = bflogc_snprintf(
+                    buf,
+                    BFLOG_LINE_BUFFER_SIZE * 2,
+                    BFLOG_SIMPLE_LAYOUT_STRING(
+                        color,
+                        level,
+                        tag,
+                        &tm,
+                        _msg_t(msg)));
 #else
-                size = bflog_snprintf(buf, BFLOG_LINE_BUFFER_SIZE * 2, BFLOG_SIMPLE_LAYOUT_STRING(color, level, NULL, _msg_t(msg)));
+                size = bflogc_snprintf(
+                    buf,
+                    BFLOG_LINE_BUFFER_SIZE * 2,
+                    BFLOG_SIMPLE_LAYOUT_STRING(
+                        color,
+                        level,
+                        tag,
+                        NULL,
+                        _msg_t(msg)));
 #endif
 
             } else {
                 /*!< default and simple no color format */
 #ifdef BFLOG_TIMESTAMP_ENABLE
-                size = bflog_snprintf(buf, BFLOG_LINE_BUFFER_SIZE * 2, BFLOG_SIMPLE_LAYOUT_STRING(bflog_dummy_string, level, &tm, _msg_t(msg)));
+                size = bflogc_snprintf(
+                    buf,
+                    BFLOG_LINE_BUFFER_SIZE * 2,
+                    BFLOG_SIMPLE_LAYOUT_STRING(
+                        bflog_dummy_string,
+                        level,
+                        tag,
+                        &tm,
+                        _msg_t(msg)));
 #else
-                size = bflog_snprintf(buf, BFLOG_LINE_BUFFER_SIZE * 2, BFLOG_SIMPLE_LAYOUT_STRING(bflog_dummy_string, level, NULL, _msg_t(msg)));
+                size = bflogc_snprintf(
+                    buf,
+                    BFLOG_LINE_BUFFER_SIZE * 2,
+                    BFLOG_SIMPLE_LAYOUT_STRING(
+                        bflog_dummy_string,
+                        level,
+                        tag,
+                        NULL,
+                        _msg_t(msg)));
 #endif
             }
 
@@ -1150,7 +1421,7 @@ int bflog_direct_create(bflog_direct_t *direct, uint8_t type, uint8_t color, voi
  *   @param  direct                 directed output
  *   @return int
  */
-int bflog_direct_delete_s(bflog_direct_t *direct)
+int bflog_direct_delete(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1184,6 +1455,8 @@ int bflog_direct_delete_s(bflog_direct_t *direct)
     int (*unlock)(void) = direct->unlock;
     direct->unlock = dummy;
 
+    bflog_filter_free(direct->filter);
+
     unlock();
 
     return 0;
@@ -1194,7 +1467,7 @@ int bflog_direct_delete_s(bflog_direct_t *direct)
  *   @param  direct                 directed output
  *   @return int
  */
-int bflog_direct_suspend_s(bflog_direct_t *direct)
+int bflog_direct_suspend(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1216,7 +1489,7 @@ int bflog_direct_suspend_s(bflog_direct_t *direct)
  *   @param  direct                 directed output
  *   @return int
  */
-int bflog_direct_resume_s(bflog_direct_t *direct)
+int bflog_direct_resume(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1244,7 +1517,8 @@ int bflog_direct_link(bflog_direct_t *direct, bflog_layout_t *layout)
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(layout != NULL, -1);
 
-    if (direct->status != BFLOG_DIRECT_STATUS_READY) {
+    if ((direct->status != BFLOG_DIRECT_STATUS_READY) &&
+        (direct->status != BFLOG_DIRECT_STATUS_SUSPEND)) {
         return -1;
     }
 
@@ -1264,7 +1538,7 @@ int bflog_direct_link(bflog_direct_t *direct, bflog_layout_t *layout)
  *   @param  param
  *   @return int
  */
-int bflog_direct_control_s(bflog_direct_t *direct, uint32_t command, uint32_t param)
+int bflog_direct_control(bflog_direct_t *direct, uint32_t command, uint32_t param)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1272,13 +1546,18 @@ int bflog_direct_control_s(bflog_direct_t *direct, uint32_t command, uint32_t pa
         case BFLOG_STATUS_READY:
         case BFLOG_STATUS_SUSPEND:
             break;
+        case BFLOG_STATUS_RUNNING:
+            if (command != BFLOG_DIRECT_CMD_LEVEL) {
+                return -1;
+            }
+            break;
         default:
             return -1;
     }
 
     switch (command) {
         case BFLOG_DIRECT_CMD_LEVEL:
-            direct->level = param & 0xff;
+            direct->level = param & BFLOG_LEVEL_MASK;
             break;
 
         case BFLOG_DIRECT_CMD_COLOR:
@@ -1306,6 +1585,34 @@ int bflog_direct_control_s(bflog_direct_t *direct, uint32_t command, uint32_t pa
     }
 
     return 0;
+}
+
+/**
+ *   @brief         config direct filter, thread safe
+ *   @param  direct                 direct
+ *   @param  tag_string             tag string
+ *   @param  enable                 tag enable
+ *   @return int
+ */
+int bflog_direct_filter(bflog_direct_t *direct, void *tag_string, uint8_t enable)
+{
+    _BFLOG_CHECK(direct != NULL, -1);
+    _BFLOG_CHECK(tag_string != NULL, -1);
+
+    int ret;
+
+    switch (direct->status) {
+        case BFLOG_STATUS_READY:
+        case BFLOG_STATUS_RUNNING:
+        case BFLOG_STATUS_SUSPEND:
+            break;
+        default:
+            return -1;
+    }
+
+    ret = bflog_filter_set(direct->filter, tag_string, enable);
+
+    return ret;
 }
 
 /**
@@ -1367,7 +1674,7 @@ static void bflog_direct_write_stream(bflog_direct_t *direct, void *ptr, uint16_
  *   @param  stream_output          stream output function pointer
  *   @return int
  */
-int bflog_direct_init_stream_s(bflog_direct_t *direct, uint16_t (*stream_output)(void *, uint16_t))
+int bflog_direct_init_stream(bflog_direct_t *direct, uint16_t (*stream_output)(void *, uint16_t))
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(stream_output != NULL, -1);
@@ -1401,7 +1708,7 @@ int bflog_direct_init_stream_s(bflog_direct_t *direct, uint16_t (*stream_output)
  *   @param  direct                 directed output
  *   @return int 
  */
-int bflog_direct_deinit_stream_s(bflog_direct_t *direct)
+int bflog_direct_deinit_stream(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1452,8 +1759,8 @@ static void bflog_direct_write_file(bflog_direct_t *direct, void *ptr, uint16_t 
         return;
     }
 
-    bflog_fwrite(ptr, 1, size, _direct_file_t(direct)->fp);
-    bflog_fflush(_direct_file_t(direct)->fp);
+    bflogc_fwrite(ptr, 1, size, _direct_file_t(direct)->fp);
+    bflogc_fflush(_direct_file_t(direct)->fp);
 }
 
 /**
@@ -1462,7 +1769,7 @@ static void bflog_direct_write_file(bflog_direct_t *direct, void *ptr, uint16_t 
  *   @param  path                                 
  *   @return int 
  */
-int bflog_direct_init_file_s(bflog_direct_t *direct, const char *path)
+int bflog_direct_init_file(bflog_direct_t *direct, const char *path)
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(path != NULL, -1);
@@ -1484,10 +1791,10 @@ int bflog_direct_init_file_s(bflog_direct_t *direct, const char *path)
     }
 
     size_t pathsize = strlen(path);
-    bflog_memcpy(fullpath, path, pathsize);
-    bflog_snprintf(fullpath + pathsize, 16, ".log");
+    bflogc_memcpy(fullpath, path, pathsize);
+    bflogc_snprintf(fullpath + pathsize, 16, ".log");
 
-    _direct_file_t(direct)->fp = bflog_fopen(fullpath, "a+");
+    _direct_file_t(direct)->fp = bflogc_fopen(fullpath, "a+");
     if (_direct_file_t(direct)->fp == NULL) {
         direct->unlock();
         return -1;
@@ -1508,7 +1815,7 @@ int bflog_direct_init_file_s(bflog_direct_t *direct, const char *path)
  *   @param  direct
  *   @return int
  */
-int bflog_direct_deinit_file_s(bflog_direct_t *direct)
+int bflog_direct_deinit_file(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1524,7 +1831,7 @@ int bflog_direct_deinit_file_s(bflog_direct_t *direct)
         return -1;
     }
 
-    if (bflog_fclose(_direct_file_t(direct)->fp)) {
+    if (bflogc_fclose(_direct_file_t(direct)->fp)) {
         direct->unlock();
         return -1;
     }
@@ -1563,31 +1870,31 @@ static void file_rotate(bflog_direct_file_size_t *direct)
     void *fp;
 
     size_t pathsize = strlen(direct->path);
-    bflog_memcpy(oldpath, direct->path, pathsize);
-    bflog_memcpy(newpath, direct->path, pathsize);
+    bflogc_memcpy(oldpath, direct->path, pathsize);
+    bflogc_memcpy(newpath, direct->path, pathsize);
 
     if (direct->fp) {
-        bflog_fclose(direct->fp);
+        bflogc_fclose(direct->fp);
     }
 
     for (int i = direct->keep - 1; i >= 0; i--) {
-        bflog_snprintf(oldpath + pathsize, 16, i ? "_%d.log" : ".log", i - 1);
-        bflog_snprintf(newpath + pathsize, 16, "_%d.log", i);
+        bflogc_snprintf(oldpath + pathsize, 16, i ? "_%d.log" : ".log", i - 1);
+        bflogc_snprintf(newpath + pathsize, 16, "_%d.log", i);
 
-        fp = bflog_fopen(newpath, "r");
+        fp = bflogc_fopen(newpath, "r");
         if (fp != NULL) {
-            bflog_fclose(fp);
-            bflog_remove(newpath);
+            bflogc_fclose(fp);
+            bflogc_remove(newpath);
         }
 
-        fp = bflog_fopen(oldpath, "r");
+        fp = bflogc_fopen(oldpath, "r");
         if (fp != NULL) {
-            bflog_fclose(fp);
-            bflog_rename(oldpath, newpath);
+            bflogc_fclose(fp);
+            bflogc_rename(oldpath, newpath);
         }
     }
 
-    direct->fp = bflog_fopen(oldpath, "a+");
+    direct->fp = bflogc_fopen(oldpath, "a+");
 }
 
 #endif
@@ -1618,8 +1925,8 @@ static void bflog_direct_write_file_time(bflog_direct_t *direct, void *ptr, uint
         _direct_file_time_t(direct)->timestamp = timestamp;
     }
 
-    bflog_fwrite(ptr, 1, size, _direct_file_size_t(direct)->fp);
-    bflog_fflush(_direct_file_size_t(direct)->fp);
+    bflogc_fwrite(ptr, 1, size, _direct_file_size_t(direct)->fp);
+    bflogc_fflush(_direct_file_size_t(direct)->fp);
 }
 
 /**
@@ -1630,7 +1937,7 @@ static void bflog_direct_write_file_time(bflog_direct_t *direct, void *ptr, uint
  *   @param  keep                   max keep file count
  *   @return int 
  */
-int bflog_direct_init_file_time_s(bflog_direct_t *direct, const char *path, uint32_t interval, uint32_t keep)
+int bflog_direct_init_file_time(bflog_direct_t *direct, const char *path, uint32_t interval, uint32_t keep)
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(path != NULL, -1);
@@ -1658,10 +1965,10 @@ int bflog_direct_init_file_time_s(bflog_direct_t *direct, const char *path, uint
     }
 
     size_t pathsize = strlen(path);
-    bflog_memcpy(fullpath, path, pathsize);
-    bflog_snprintf(fullpath + pathsize, 16, ".log");
+    bflogc_memcpy(fullpath, path, pathsize);
+    bflogc_snprintf(fullpath + pathsize, 16, ".log");
 
-    _direct_file_time_t(direct)->fp = bflog_fopen(fullpath, "a+");
+    _direct_file_time_t(direct)->fp = bflogc_fopen(fullpath, "a+");
     if (_direct_file_time_t(direct)->fp == NULL) {
         direct->unlock();
         return -1;
@@ -1685,7 +1992,7 @@ int bflog_direct_init_file_time_s(bflog_direct_t *direct, const char *path, uint
  *   @param  direct
  *   @return int
  */
-int bflog_direct_deinit_file_time_s(bflog_direct_t *direct)
+int bflog_direct_deinit_file_time(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1701,7 +2008,7 @@ int bflog_direct_deinit_file_time_s(bflog_direct_t *direct)
         return -1;
     }
 
-    if (bflog_fclose(_direct_file_time_t(direct)->fp)) {
+    if (bflogc_fclose(_direct_file_time_t(direct)->fp)) {
         direct->unlock();
         return -1;
     }
@@ -1745,14 +2052,14 @@ static void bflog_direct_write_file_size(bflog_direct_t *direct, void *ptr, uint
     }
 
     /*!< fseek(_direct_file_size_t(direct)->fp, 0L, SEEK_END); */
-    size_t fsize = bflog_ftell(_direct_file_size_t(direct)->fp);
+    size_t fsize = bflogc_ftell(_direct_file_size_t(direct)->fp);
 
     if (fsize > _direct_file_size_t(direct)->size) {
         file_rotate((void *)direct);
     }
 
-    bflog_fwrite(ptr, 1, size, _direct_file_size_t(direct)->fp);
-    bflog_fflush(_direct_file_size_t(direct)->fp);
+    bflogc_fwrite(ptr, 1, size, _direct_file_size_t(direct)->fp);
+    bflogc_fflush(_direct_file_size_t(direct)->fp);
 }
 
 /**
@@ -1763,7 +2070,7 @@ static void bflog_direct_write_file_size(bflog_direct_t *direct, void *ptr, uint
  *   @param  keep                                
  *   @return int 
  */
-int bflog_direct_init_file_size_s(bflog_direct_t *direct, const char *path, uint32_t size, uint32_t keep)
+int bflog_direct_init_file_size(bflog_direct_t *direct, const char *path, uint32_t size, uint32_t keep)
 {
     _BFLOG_CHECK(direct != NULL, -1);
     _BFLOG_CHECK(path != NULL, -1);
@@ -1790,10 +2097,10 @@ int bflog_direct_init_file_size_s(bflog_direct_t *direct, const char *path, uint
     }
 
     size_t pathsize = strlen(path);
-    bflog_memcpy(fullpath, path, pathsize);
-    bflog_snprintf(fullpath + pathsize, 16, ".log");
+    bflogc_memcpy(fullpath, path, pathsize);
+    bflogc_snprintf(fullpath + pathsize, 16, ".log");
 
-    _direct_file_size_t(direct)->fp = bflog_fopen(fullpath, "a+");
+    _direct_file_size_t(direct)->fp = bflogc_fopen(fullpath, "a+");
     if (_direct_file_size_t(direct)->fp == NULL) {
         direct->unlock();
         return -1;
@@ -1816,7 +2123,7 @@ int bflog_direct_init_file_size_s(bflog_direct_t *direct, const char *path, uint
  *   @param  direct
  *   @return int
  */
-int bflog_direct_deinit_file_size_s(bflog_direct_t *direct)
+int bflog_direct_deinit_file_size(bflog_direct_t *direct)
 {
     _BFLOG_CHECK(direct != NULL, -1);
 
@@ -1832,7 +2139,7 @@ int bflog_direct_deinit_file_size_s(bflog_direct_t *direct)
         return -1;
     }
 
-    if (bflog_fclose(_direct_file_size_t(direct)->fp)) {
+    if (bflogc_fclose(_direct_file_size_t(direct)->fp)) {
         direct->unlock();
         return -1;
     }
@@ -1915,7 +2222,7 @@ int bflog_layout_delete(bflog_layout_t *layout)
  *   @param  snprintf               format
  *   @return int
  */
-int bflog_layout_format(bflog_layout_t *layout, int (*u_snprintf)(void *ptr, uint16_t size, char *color, char *level, bflog_tm_t *tm, struct _bflog_msg *msg))
+int bflog_layout_format(bflog_layout_t *layout, int (*u_snprintf)(void *ptr, uint16_t size, char *color, char *level, char *tag, bflog_tm_t *tm, struct _bflog_msg *msg))
 {
     _BFLOG_CHECK(layout != NULL, -1);
     _BFLOG_CHECK(u_snprintf != NULL, -1);

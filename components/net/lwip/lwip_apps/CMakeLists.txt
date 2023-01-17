@@ -1,0 +1,3 @@
+sdk_add_subdirectory_ifdef(CONFIG_DHCPD dhcpd)
+sdk_add_subdirectory_ifdef(CONFIG_PING ping)
+

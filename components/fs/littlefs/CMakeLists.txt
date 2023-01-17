@@ -1,0 +1,17 @@
+sdk_generate_library()
+sdk_library_add_sources(littlefs/lfs_util.c)
+sdk_library_add_sources(littlefs/lfs.c)
+sdk_add_include_directories(littlefs)
+
+# sdk_library_add_sources(littlefs/bd/lfs_filebd.c.c)
+# sdk_library_add_sources(littlefs/bd/lfs_rambd.c.c)
+# sdk_library_add_sources(littlefs/bd/lfs_testbd.c.c)
+# sdk_add_include_directories(littlefs/bd)
+sdk_library_add_sources(port/lfs_xip_flash.c)
+sdk_add_include_directories(port)
+
+sdk_add_compile_definitions(-DCONFIG_LITTLEFS)
+
+if(CONFIG_LITTLEFS_FLASH_ADDRESS)
+    sdk_add_compile_definitions(-DCONFIG_LITTLEFS_FLASH_ADDRESS=${CONFIG_LITTLEFS_FLASH_ADDRESS})
+endif()

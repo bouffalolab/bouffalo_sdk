@@ -1,0 +1,2 @@
+sdk_add_subdirectory_ifdef(CONFIG_BLUETOOTH bluetooth)
+sdk_add_subdirectory_ifdef(CONFIG_WIFI6 wifi6)

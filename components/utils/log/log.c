@@ -1,3 +1,5 @@
+#include "bflb_uart.h"
+
 #ifdef CONFIG_BFLOG
 #include "bflog.h"
 
@@ -6,34 +8,42 @@
 #endif
 
 bflog_t __bflog_recorder;
+void *__bflog_recorder_pointer = &__bflog_recorder;
 static uint8_t bflog_pool[CONFIG_BFLOG_POOL_SIZE];
 bflog_direct_stream_t bflog_direct_stream;
 
-extern uint16_t __console_output(void *ptr, uint16_t size);
+extern struct bflb_device_s *console;
+static uint16_t console_output(void *ptr, uint16_t size)
+{
+    for (size_t i = 0; i < size; i++) {
+        bflb_uart_putchar(console, ((char *)ptr)[i]);
+    }
+    return size;
+}
 
 #endif
 
-void log_init(void)
+void log_start(void)
 {
 #ifdef CONFIG_BFLOG
     void *record = (void *)&__bflog_recorder;
     void *direct = (void *)&bflog_direct_stream;
 
     /*!< create recorder */
-    bflog_create_s(record, bflog_pool, CONFIG_BFLOG_POOL_SIZE, BFLOG_MODE_SYNC);
+    bflog_create(record, bflog_pool, CONFIG_BFLOG_POOL_SIZE, BFLOG_MODE_SYNC);
 
     /*!< create stream direct */
     bflog_direct_create(direct, BFLOG_DIRECT_TYPE_STREAM, BFLOG_DIRECT_COLOR_ENABLE, NULL, NULL);
-    bflog_direct_init_stream_s((void *)direct, __console_output);
+    bflog_direct_init_stream((void *)direct, console_output);
 
     /*!< connect direct and recorder */
-    bflog_append_s(record, direct);
+    bflog_append(record, direct);
 
     /*!< resume direct */
-    bflog_direct_resume_s(direct);
+    bflog_direct_resume(direct);
 
     /*!< resume record */
-    bflog_resume_s(record);
+    bflog_resume(record);
 #endif
 }
 

@@ -1,0 +1,1 @@
+sdk_add_subdirectory_ifdef(CONFIG_XZ xz)

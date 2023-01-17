@@ -92,19 +92,19 @@
     (bflog_dlist_is_empty(_pnode) ? NULL : BFLOG_DLIST_ENTRY_FIRST(_pnode, _type, _member))
 
 /*!< 正向遍历链表 */
-#define BFLOG_DLIST_FOREACH(_pos, _head) for ((_pos) = (_head)->next; (_pos) != (_head); (_pos) = (_pos)->next)
+#define BFLOG_DLIST_FOREACH(_pos, _head)            for ((_pos) = (_head)->next; (_pos) != (_head); (_pos) = (_pos)->next)
 
 /*!< 正向遍历链表 */
-#define BFLOG_DLIST_FOREACH_NEXT BFLOG_DLIST_FOREACH
+#define BFLOG_DLIST_FOREACH_NEXT                    BFLOG_DLIST_FOREACH
 
 /*!< 逆向遍历链表 */
-#define BFLOG_DLIST_FOREACH_PREV(_pos, _head) for ((_pos) = (_head)->prev; (_pos) != (_head); (_pos) = (_pos)->prev)
+#define BFLOG_DLIST_FOREACH_PREV(_pos, _head)       for ((_pos) = (_head)->prev; (_pos) != (_head); (_pos) = (_pos)->prev)
 
 /*!< 安全正向遍历链表 */
-#define BFLOG_DLIST_FOREACH_S(_pos, _n, _head) for ((_pos) = (_head)->next, (_n) = (_pos)->next; (_pos) != (_head); (_pos) = (_n), (_n) = (_pos)->next)
+#define BFLOG_DLIST_FOREACH_S(_pos, _n, _head)      for ((_pos) = (_head)->next, (_n) = (_pos)->next; (_pos) != (_head); (_pos) = (_n), (_n) = (_pos)->next)
 
 /*!< 安全正向遍历链表 */
-#define BFLOG_DLIST_FOREACH_NEXT_S BFLOG_DLIST_FOREACH_S
+#define BFLOG_DLIST_FOREACH_NEXT_S                  BFLOG_DLIST_FOREACH_S
 
 /*!< 安全逆向遍历链表 */
 #define BFLOG_DLIST_FOREACH_PREV_S(_pos, _n, _head) for ((_pos) = (_head)->prev, (_n) = (_pos)->prev; (_pos) != (_head); (_pos) = (_n), (_n) = (_pos)->prev)
