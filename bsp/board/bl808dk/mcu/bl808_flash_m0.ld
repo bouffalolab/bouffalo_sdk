@@ -215,6 +215,10 @@ SECTIONS
         *(.sdata2.*)
 
         . = ALIGN(4);
+        __bflog_tags_start__ = .;
+        *(.bflog_tags_array)
+        . = ALIGN(4);
+        __bflog_tags_end__ = .;
         __ram_data_end__ = .;
     } > ram_memory
 
@@ -272,43 +276,6 @@ SECTIONS
 
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
     ASSERT(__HeapLimit - __HeapBase >= HeapMinSize, "heap region overflow")
-
-    .psmram_data (NOLOAD):
-    {
-        . = ALIGN(4);
-        __psram_data_start__ = .;
-
-        /*__end__ = .;*/
-        /*end = __end__;*/
-        KEEP(*(.psram_data*))
-
-        . = ALIGN(4);
-        __psram_data_end__ = .;
-    } > ram_code
-
-    .wifibss (NOLOAD) :
-    {
-      PROVIDE( __wifi_bss_start = ADDR(.wifibss) );
-      PROVIDE( __wifi_bss_end = ADDR(.wifibss) + SIZEOF(.wifibss) );
-      _sshram = . ;
-      *(SHAREDRAMIPC)
-      *(SHAREDRAM)
-      _eshram = . ;
-      *ipc_shared.o(COMMON)
-      *sdu_shared.o(COMMON)
-      *hal_desc.o(COMMON)
-      *txl_buffer_shared.o(COMMON)
-      *txl_frame_shared.o(COMMON)
-      *scan_shared.o(COMMON)
-      *scanu_shared.o(COMMON)
-      *mfp_bip.o(COMMON)
-      *me_mic.o(COMMON)
-      *(.wifi_ram*)
-      . = ALIGN(16);
-    } > ram_wifi
-
-    PROVIDE( _heap_wifi_start = . );
-    PROVIDE( _heap_wifi_size = ORIGIN(ram_wifi) + LENGTH(ram_wifi) - _heap_wifi_start );
 
 }
 
