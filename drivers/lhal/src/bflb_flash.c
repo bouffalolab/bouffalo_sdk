@@ -467,7 +467,7 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     L1C_Cache_Flush();
 #endif
     bflb_irq_restore(flag);
-    if (g_flash_cfg.mid != 0xff) {
+    if (g_flash_cfg.mid != 0xff && g_flash_cfg.mid != 0x00) {
         return 0;
     }
     clk_delay = g_flash_cfg.clk_delay;
