@@ -228,9 +228,9 @@ void board_init(void)
 
     flag = bflb_irq_save();
 
-    ret = bflb_flash_init();
-
     GLB_Halt_CPU(GLB_CORE_ID_D0);
+
+    ret = bflb_flash_init();
 
     system_clock_init();
     peripheral_clock_init();
@@ -273,7 +273,7 @@ void board_init(void)
 
     bflb_irq_restore(flag);
 
-    /* we do not check header at 0x10000, just boot */
+    /* we do not check header at 0x100000, just boot */
     GLB_Release_CPU(GLB_CORE_ID_D0);
 
     /* release d0 and then do can run */
