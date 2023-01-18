@@ -1,14 +1,9 @@
-#define DBG_TAG "MAIN"
-
-#include "bflb_mtimer.h"
 #include <FreeRTOS.h>
 #include "semphr.h"
-#include "log.h"
 #include "board.h"
 
-BFLOG_DEFINE_TAG(MAIN, DBG_TAG, true);
-#undef BFLOG_TAG
-#define BFLOG_TAG BFLOG_GET_TAG(MAIN)
+#define DBG_TAG "MAIN"
+#include "log.h"
 
 static TaskHandle_t consumer_handle;
 static TaskHandle_t producer_handle;
@@ -83,10 +78,6 @@ int main(void)
     xTaskCreate(consumer_task, (char *)"consumer_task", 512, NULL, configMAX_PRIORITIES - 2, &consumer_handle);
     LOG_I("[OS] Starting producer task...\r\n");
     xTaskCreate(producer_task, (char *)"producer_task", 512, NULL, configMAX_PRIORITIES - 3, &producer_handle);
-
-#ifdef CONFIG_BFLOG
-    log_restart();
-#endif
 
     vTaskStartScheduler();
 

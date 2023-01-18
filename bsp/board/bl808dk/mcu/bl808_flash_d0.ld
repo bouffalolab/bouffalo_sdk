@@ -200,6 +200,10 @@ SECTIONS
         *(.sdata2.*)
 
         . = ALIGN(4);
+        __bflog_tags_start__ = .;
+        *(.bflog_tags_array)
+        . = ALIGN(4);
+        __bflog_tags_end__ = .;
         __ram_data_end__ = .;
     } > ram_memory
 
