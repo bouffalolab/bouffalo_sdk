@@ -530,6 +530,8 @@ int usb_dc_init(void)
     /* enable rst/tx0/rx0 irq in source group2 */
     regval = 0xffffffff;
     regval &= ~USB_MUSBRST_INT;
+    regval &= ~USB_MSUSP_INT;
+    regval &= ~USB_MRESM_INT;
     regval &= ~USB_MTX0BYTE_INT;
     regval &= ~USB_MRX0BYTE_INT;
     putreg32(regval, BLFB_USB_BASE + USB_DEV_MISG2_OFFSET);
@@ -888,6 +890,14 @@ void USBD_IRQHandler(int irq, void *arg)
         if (dev_intstatus & USB_INT_G2) {
             subgroup_intstatus = bflb_usb_get_source_group_intstatus(2);
 
+            if (subgroup_intstatus & USB_SUSP_INT) {
+                bflb_usb_source_group_int_clear(2, USB_SUSP_INT);
+                usbd_event_suspend_handler();
+            }
+            if (subgroup_intstatus & USB_RESM_INT) {
+                bflb_usb_source_group_int_clear(2, USB_RESM_INT);
+                usbd_event_resume_handler();
+            }
             if (subgroup_intstatus & USB_TX0BYTE_INT) {
                 for (uint8_t i = 1; i < 5; i++) {
                     if (bflb_usb_get_tx_zlp_intstatus() & (1 << (i - 1))) {
