@@ -10,7 +10,7 @@ This is the instructions for the cklink firmware used with BL702 or BL616.
 
 ![RV-Debugger-Plus](rv-debugger.png)
 
-## Flash download
+## Flash download (via BLDevCube)
 
 - Open BL Devcube
 - Select IOT UI and select single download
@@ -19,6 +19,12 @@ This is the instructions for the cklink firmware used with BL702 or BL616.
 - Download
 
 ![Flash download](flash_download.png)
+
+## Flash download (via blisp)
+
+- Download latest blisp [here](https://github.com/pine64/blisp/releases/latest).
+- Press and hold the boot pin then plug the usb in the computer to go to the boot mode.
+- Execute `blisp iot -c bl70x --reset -s bl702_cklink_whole_img_v2.2.bin -l 0x0`
 
 ## CKLink driver
 
