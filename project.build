@@ -47,10 +47,10 @@ ninja:Makefile
 	$(CMAKE) -S . -B build -G Ninja $(cmake_definition)
 	cd build && ninja && ninja combine
 
-clean:
+clean::
 	$(RM) build
 
-menuconfig:
+menuconfig::
 	python $(BL_SDK_BASE)/tools/kconfig/menuconfig.py
 
 flash:
