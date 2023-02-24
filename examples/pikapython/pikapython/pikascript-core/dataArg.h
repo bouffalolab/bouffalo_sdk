@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of the PikaScript project.
  * http://github.com/pikastech/pikascript
  *
@@ -36,6 +36,7 @@ typedef enum {
     ARG_TYPE_UNDEF = 0,
     ARG_TYPE_NONE,
     ARG_TYPE_INT,
+    ARG_TYPE_BOOL,
     ARG_TYPE_FLOAT,
     ARG_TYPE_STRING,
     ARG_TYPE_BYTES,
@@ -100,10 +101,12 @@ static inline void arg_setType(Arg* self, ArgType type) {
 }
 
 static inline Hash arg_getNameHash(Arg* self) {
+    pika_assert(self != 0);
     return self->name_hash;
 }
 
 static inline ArgType arg_getType(Arg* self) {
+    pika_assert(self != 0);
     return (ArgType)self->type;
 }
 
@@ -111,6 +114,7 @@ uint32_t arg_getContentSize(Arg* self);
 Hash hash_time33(char* str);
 
 Arg* arg_setInt(Arg* self, char* name, int64_t val);
+Arg* arg_setBool(Arg* self, char* name, PIKA_BOOL val);
 Arg* arg_setFloat(Arg* self, char* name, pika_float val);
 Arg* arg_setPtr(Arg* self, char* name, ArgType type, void* pointer);
 Arg* arg_setStr(Arg* self, char* name, char* string);
@@ -118,19 +122,23 @@ Arg* arg_setNull(Arg* self);
 Arg* arg_setBytes(Arg* self, char* name, uint8_t* src, size_t size);
 
 static inline Arg* arg_newInt(int64_t val) {
-    return arg_setInt(NULL, "", (val));
+    return arg_setInt(NULL, (char*)"", (val));
+}
+
+static inline Arg* arg_newBool(PIKA_BOOL val) {
+    return arg_setBool(NULL, (char*)"", (val));
 }
 
 static inline Arg* arg_newFloat(pika_float val) {
-    return arg_setFloat(NULL, "", (val));
+    return arg_setFloat(NULL, (char*)"", (val));
 }
 
 static inline Arg* arg_newPtr(ArgType type, void* pointer) {
-    return arg_setPtr(NULL, "", (type), (pointer));
+    return arg_setPtr(NULL, (char*)"", (type), (pointer));
 }
 
 static inline Arg* arg_newStr(char* string) {
-    return arg_setStr(NULL, "", (string));
+    return arg_setStr(NULL, (char*)"", (string));
 }
 
 static inline Arg* arg_newNull() {
@@ -138,10 +146,11 @@ static inline Arg* arg_newNull() {
 }
 
 static inline Arg* arg_newBytes(uint8_t* src, size_t size) {
-    return arg_setBytes(NULL, "", (src), (size));
+    return arg_setBytes(NULL, (char*)"", (src), (size));
 }
 
 int64_t arg_getInt(Arg* self);
+PIKA_BOOL arg_getBool(Arg* self);
 pika_float arg_getFloat(Arg* self);
 void* arg_getPtr(Arg* self);
 char* arg_getStr(Arg* self);
@@ -165,8 +174,8 @@ Arg* arg_setHeapStruct(Arg* self,
                        void* struct_deinit_fun);
 void* arg_getHeapStruct(Arg* self);
 void arg_deinitHeap(Arg* self);
-void arg_printBytes(Arg* self, char* end);
-void arg_singlePrint(Arg* self, PIKA_BOOL in_REPL, char* end);
+Arg* arg_toStrArg(Arg* arg);
+void arg_print(Arg* self, PIKA_BOOL in_REPL, char* end);
 Arg* arg_loadFile(Arg* self, char* filename);
 
 #define ARG_FLAG_SERIALIZED 0x01

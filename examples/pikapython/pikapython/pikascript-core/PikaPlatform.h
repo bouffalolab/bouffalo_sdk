@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of the PikaScript project.
  * http://github.com/pikastech/pikascript
  *
@@ -44,7 +44,7 @@
 #if PIKA_ASSERT_ENABLE
     #define pika_assert(expr) \
     if(!(expr)) { \
-        pika_platform_printf("Assertion \"%s\" failed, in function: %s(). \r\n  (at %s:%d)\n", #expr, __FUNCTION__, __FILE__, __LINE__); \
+        pika_platform_printf((char*)"Assertion \"%s\" failed, in function: %s(). \r\n  (at %s:%d)\n", #expr, __FUNCTION__, __FILE__, __LINE__); \
         abort(); \
     }
 #else
@@ -101,15 +101,19 @@ typedef enum {
     PIKA_RES_ERR_ASSERT = -16,
     PIKA_RES_ERR_SIGNAL_EVENT_FULL = -17,
     PIKA_RES_ERR_SIGNAL_EVENT_EMPTY = -18,
+    PIKA_RES_ERR_INDEX = -19,
 } PIKA_RES;
 
 /* clang-format off */
 
 /* pikascript bool type */
-typedef enum {
-    PIKA_TRUE   = 1,
-    PIKA_FALSE  = 0,
-} PIKA_BOOL;
+#define PIKA_BOOL int64_t
+#define PIKA_TRUE 1
+#define PIKA_FALSE 0
+#define _PIKA_BOOL_ERR -1
+
+#define _PIKA_INT_ERR (-999999999)
+#define _PIKA_FLOAT_ERR (-999999999.0)
 
 /* clang-format on */
 
@@ -175,11 +179,9 @@ void pika_platform_error_handle(void);
 /* panic */
 void pika_platform_panic_handle(void);
 
-void pika_platform_thread_delay(void);
-int64_t pika_platform_getTick(void);
+int64_t pika_platform_get_tick(void);
 
 void pika_platform_sleep_ms(uint32_t ms);
-void pika_platform_sleep_s(uint32_t s);
 
 void pika_hook_instruct(void);
 PIKA_BOOL pika_hook_arg_cache_filter(void* self);
@@ -206,8 +208,8 @@ typedef struct pika_platform_thread {
     pthread_cond_t cond;
 } pika_platform_thread_t;
 #elif PIKA_FREERTOS_ENABLE
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "FreeRTOS.h"
+#include "task.h"
 typedef struct pika_platform_thread {
     TaskHandle_t thread;
 } pika_platform_thread_t;
@@ -223,25 +225,34 @@ pika_platform_thread_t* pika_platform_thread_init(const char* name,
                                                   unsigned int stack_size,
                                                   unsigned int priority,
                                                   unsigned int tick);
+uint64_t pika_platform_thread_self(void);
+void pika_platform_thread_delay(void);
 void pika_platform_thread_startup(pika_platform_thread_t* thread);
 void pika_platform_thread_stop(pika_platform_thread_t* thread);
 void pika_platform_thread_start(pika_platform_thread_t* thread);
 void pika_platform_thread_destroy(pika_platform_thread_t* thread);
+void pika_platform_thread_exit(pika_platform_thread_t* thread);
 
 #ifdef __linux
 #include <pthread.h>
 typedef struct pika_platform_thread_mutex {
     pthread_mutex_t mutex;
+    volatile int is_init;
+    volatile int is_first_lock;
 } pika_platform_thread_mutex_t;
 #elif PIKA_FREERTOS_ENABLE
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 typedef struct pika_platform_thread_mutex {
     SemaphoreHandle_t mutex;
+    volatile int is_init;
+    volatile int is_first_lock;
 } pika_platform_thread_mutex_t;
 #else
 typedef struct pika_platform_thread_mutex {
     void* platform_data;
+    volatile int is_init;
+    volatile int is_first_lock;
 } pika_platform_thread_mutex_t;
 #endif
 
@@ -257,8 +268,8 @@ typedef struct pika_platform_timer {
     struct timeval time;
 } pika_platform_timer_t;
 #elif PIKA_FREERTOS_ENABLE
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "FreeRTOS.h"
+#include "task.h"
 typedef struct pika_platform_timer {
     uint32_t time;
 } pika_platform_timer_t;
@@ -268,13 +279,14 @@ typedef struct pika_platform_timer {
 } pika_platform_timer_t;
 #endif
 
-void pika_platform_timer_init(pika_platform_timer_t* timer);
-void pika_platform_timer_cutdown(pika_platform_timer_t* timer,
-                                 unsigned int timeout);
-char pika_platform_timer_is_expired(pika_platform_timer_t* timer);
-int pika_platform_timer_remain(pika_platform_timer_t* timer);
-unsigned long pika_platform_timer_now(void);
-void pika_platform_timer_usleep(unsigned long usec);
+void pika_platform_thread_timer_init(pika_platform_timer_t* timer);
+void pika_platform_thread_timer_cutdown(pika_platform_timer_t* timer,
+                                        unsigned int timeout);
+char pika_platform_thread_timer_is_expired(pika_platform_timer_t* timer);
+int pika_platform_thread_timer_remain(pika_platform_timer_t* timer);
+unsigned long pika_platform_thread_timer_now(void);
+void pika_platform_thread_timer_usleep(unsigned long usec);
+void pika_platform_reboot(void);
 
 #define WEAK_FUNCTION_NEED_OVERRIDE_ERROR(_)                               \
     pika_platform_printf("Error: weak function `%s()` need override.\r\n", \

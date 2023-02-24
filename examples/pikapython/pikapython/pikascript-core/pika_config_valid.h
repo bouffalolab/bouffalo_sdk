@@ -65,9 +65,12 @@
             #define PIKA_SYNTAX_LEVEL PIKA_SYNTAX_LEVEL_MINIMAL
         #endif
 
-
         #ifndef PIKA_STRING_UTF8_ENABLE
             #define PIKA_STRING_UTF8_ENABLE 0
+        #endif
+
+        #ifndef PIKA_SHELL_FILTER_ENABLE
+            #define PIKA_SHELL_FILTER_ENABLE 0
         #endif
 
     #endif
@@ -328,8 +331,32 @@
         #define PIKA_SHELL_SAVE_FILE_ENABLE 0
     #endif
 
-    #ifndef PIKA_SHELL_SAVE_FILE_NAME
-        #define PIKA_SHELL_SAVE_FILE_NAME "pika_shell_save.py"
+    #ifndef PIKA_SHELL_SAVE_FILE_PATH
+        #define PIKA_SHELL_SAVE_FILE_PATH "app.py"
+    #endif
+
+    #ifndef PIKA_SHELL_SAVE_BYTECODE_ENABLE
+        #define PIKA_SHELL_SAVE_BYTECODE_ENABLE 0
+    #endif
+
+    #ifndef PIKA_SHELL_SAVE_BYTECODE_PATH
+        #define PIKA_SHELL_SAVE_BYTECODE_PATH "app.py.o"
+    #endif
+
+    #ifndef PIKA_SHELL_SAVE_APP_ENABLE
+        #define PIKA_SHELL_SAVE_APP_ENABLE 0
+    #endif
+
+    #ifndef PIKA_SHELL_SAVE_APP_PATH
+        #define PIKA_SHELL_SAVE_APP_PATH "app.pika"
+    #endif
+
+    #ifndef PIKA_SHELL_FILTER_ENABLE
+        #define PIKA_SHELL_FILTER_ENABLE 1
+    #endif
+
+    #ifndef PIKA_SHELL_FILTER_FIFO_SIZE
+        #define PIKA_SHELL_FILTER_FIFO_SIZE    32
     #endif
 
     #ifndef PIKA_EVENT_LIST_SIZE
@@ -350,6 +377,30 @@
 
     #ifndef PIKA_LWIP_ENABLE
         #define PIKA_LWIP_ENABLE 0
+    #endif
+
+    #ifndef PIKA_SHELL_NO_NEWLINE
+        #define PIKA_SHELL_NO_NEWLINE 0
+    #endif
+
+    #ifndef PIKA_SETJMP_ENABLE
+        #define PIKA_SETJMP_ENABLE 0
+    #endif
+
+    #ifndef PIKA_JMP_BUF_LIST_SIZE
+        #define PIKA_JMP_BUF_LIST_SIZE 16
+    #endif
+
+    #ifndef PIKA_THREAD_STACK_SIZE
+        #define PIKA_THREAD_STACK_SIZE 2048
+    #endif
+
+    #ifndef PIKA_THREAD_PRIO
+        #define PIKA_THREAD_PRIO 5
+    #endif
+
+    #ifndef PIKA_THREAD_TICK
+        #define PIKA_THREAD_TICK 50
     #endif
 
     /* configuration validation */
