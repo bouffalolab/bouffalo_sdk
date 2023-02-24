@@ -202,6 +202,9 @@ static void console_init()
     /* sipeed m1s dock */
     bflb_gpio_init(gpio, GPIO_PIN_16, 21 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, GPIO_PIN_17, 21 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+#elif defined(CPU_LP)
+    bflb_gpio_uart_init(gpio, GPIO_PIN_16, GPIO_UART_FUNC_UART1_TX);
+    bflb_gpio_uart_init(gpio, GPIO_PIN_17, GPIO_UART_FUNC_UART1_RX);
 #endif
     struct bflb_uart_config_s cfg;
     cfg.baudrate = 2000000;
@@ -215,6 +218,8 @@ static void console_init()
     uart0 = bflb_device_get_by_name("uart0");
 #elif defined(CPU_D0)
     uart0 = bflb_device_get_by_name("uart3");
+#elif defined(CPU_LP)
+    uart0 = bflb_device_get_by_name("uart1");
 #endif
     bflb_uart_init(uart0, &cfg);
     bflb_uart_set_console(uart0);
@@ -229,6 +234,7 @@ void board_init(void)
     flag = bflb_irq_save();
 
     GLB_Halt_CPU(GLB_CORE_ID_D0);
+    GLB_Halt_CPU(GLB_CORE_ID_LP);
 
     ret = bflb_flash_init();
 
@@ -265,16 +271,16 @@ void board_init(void)
     }
 #endif
     /* set CPU D0 boot XIP address and flash address */
-    // Tzc_Sec_Set_CPU_Group(GLB_CORE_ID_D0, 1);
-    // /* D0 boot from 0x58000000 */
-    // GLB_Set_CPU_Reset_Address(GLB_CORE_ID_D0, 0x58000000);
-    // /* D0 image offset on flash is 0x100000+0x1000(header) */
-    // bflb_sf_ctrl_set_flash_image_offset(0x101000, 1, SF_CTRL_FLASH_BANK0);
+    Tzc_Sec_Set_CPU_Group(GLB_CORE_ID_D0, 1);
+    /* D0 boot from 0x58000000 */
+    GLB_Set_CPU_Reset_Address(GLB_CORE_ID_D0, 0x58000000);
+    /* D0 image offset on flash is CONFIG_D0_FLASH_ADDR+0x1000(header) */
+    bflb_sf_ctrl_set_flash_image_offset(CONFIG_D0_FLASH_ADDR + 0x1000, 1, SF_CTRL_FLASH_BANK0);
 
     bflb_irq_restore(flag);
 
-    /* we do not check header at 0x100000, just boot */
     GLB_Release_CPU(GLB_CORE_ID_D0);
+    GLB_Release_CPU(GLB_CORE_ID_LP);
 
     /* release d0 and then do can run */
     BL_WR_WORD(IPC_SYNC_ADDR1, IPC_SYNC_FLAG);
@@ -296,6 +302,25 @@ void board_init(void)
     bl_show_log();
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+
+    printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
+    printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
+    printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
+
+    log_start();
+}
+#elif defined(CPU_LP)
+void board_init(void)
+{
+    CPU_Set_MTimer_CLK(ENABLE, CPU_Get_MTimer_Source_Clock() / 1000 / 1000 - 1);
+
+    bflb_irq_initialize();
+
+    console_init();
+
+    bl_show_log();
+
+    printf("lp does not use memheap due to little ram \r\n");
 
     printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
     printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));

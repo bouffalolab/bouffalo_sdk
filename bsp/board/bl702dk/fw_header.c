@@ -113,7 +113,11 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
 
     .img_segment_info.img_len = 0x00010000, /* image length or segment count */
     .rsvd0 = 0x00000000,
+#ifdef BFLB_BOOT2
+    .img_start.flashoffset = 0x00002000, /* flash controller offset */
+#else    
     .img_start.flashoffset = 0x00001000, /* flash controller offset */
+#endif    
     .hash = { 0xdeadbeef },              /* hash of the image */
 
     .boot2_pt_table_0 = 0x1000, /* address of partition table 0 */

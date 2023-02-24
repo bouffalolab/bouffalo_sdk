@@ -199,12 +199,15 @@ struct __attribute__((packed, aligned(4))) bootheader_t {
     uint32_t flash_cfg_table_addr; /* address of flashcfg table list */ /* 4 */
     uint32_t flash_cfg_table_len; /* flashcfg table list len */         /* 4 */
 
-    uint32_t rsvd0[6]; /* rsvd */
-    uint32_t rsvd1[6]; /* rsvd */
+    uint32_t rsvd0[8]; /* rsvd */
+    uint32_t rsvd1[8]; /* rsvd */
 
-    uint32_t rsvd3[5]; /* 4 */
+    uint32_t rsvd3[5]; /* 20 */
 
     uint32_t crc32; /* 4 */
 };
+
+#define BFLB_FW_LENGTH_OFFSET 140
+#define BFLB_FW_HASH_OFFSET   144
 
 #endif
