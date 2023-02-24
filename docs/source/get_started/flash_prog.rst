@@ -20,13 +20,13 @@ Flash prog cfg.ini 的使用
     # 0: not use isp mode, #1: isp mode
     boot2_isp_mode = 0
 
-    [firmware]
+    [FW]
     filedir = ./build/build_out/xxx*_$(CHIPNAME).bin
     address = 0x0000
 
 
 - **cfg** 表示烧录时的一些配置，正常不需要改动
-- **firmware** 要烧录的应用固件，必须使用 **firmware** 名称。
+- **FW** 要烧录的应用固件，必须使用 **FW** 名称。
 
     - **filedir** 表示应用固件所在相对路径，正常来说是编译完后放在 `build/build_out` 目录。 ``_$(CHIPNAME).bin`` 是必须要的后缀，用于区分不同芯片。 ``xxx`` 表示应用固件名称，与 `CMakeLists.txt` 中 `project(xxx)` 中名称一致。 ``*`` 表示正则匹配，可用可不用。
     - **address** 必须使用 0 地址
@@ -46,7 +46,7 @@ Flash prog cfg.ini 的使用
     # 0: not use isp mode, #1: isp mode
     boot2_isp_mode = 0
 
-    [firmware]
+    [FW]
     filedir = ./build/build_out/xxx*_$(CHIPNAME).bin
     address = 0x10000
 
@@ -63,7 +63,7 @@ Flash prog cfg.ini 的使用
     address = 0x210000
 
 - **cfg** 表示烧录时的一些配置，正常不需要改动
-- **firmware** 要烧录的应用固件，必须使用 **firmware** 名称。
+- **FW** 要烧录的应用固件，必须使用 **FW** 名称。
 
     - **filedir** 表示应用固件所在相对路径，正常来说是编译完后放在 `build/build_out` 目录。 ``_$(CHIPNAME).bin`` 是必须要的后缀，用于区分不同芯片。 ``xxx`` 表示应用固件名称，与 `CMakeLists.txt` 中 `project(xxx)` 中名称一致。
     - **address** 由 `partition_xxx.toml` 指定

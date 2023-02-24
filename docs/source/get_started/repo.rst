@@ -25,13 +25,7 @@ Repo 是谷歌用 Python 脚本写的调用 git 的一个脚本，可以实现�
 下载代码
 ----------
 
-- 获取 SDK (只包含 BL616/BL618 版本)
-
-.. code-block:: bash
-   :linenos:
-
-    repo init -u https://gerrit.bouffalolab.com/bouffalo/manifest/bouffalo_sdk -b master -m bl616-public.xml
-
+请与公司联系，申请账号。
 
 同步代码
 ----------
