@@ -58,14 +58,16 @@ static void peripheral_clock_init(void)
     PERIPHERAL_CLOCK_I2S_ENABLE();
     PERIPHERAL_CLOCK_USB_ENABLE();
     PERIPHERAL_CLOCK_CAN_ENABLE();
+    PERIPHERAL_CLOCK_AUDIO_ENABLE();
 
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
     GLB_Set_SPI_CLK(ENABLE, GLB_SPI_CLK_MCU_MUXPLL_160M, 0);
+    GLB_Set_DBI_CLK(ENABLE, GLB_SPI_CLK_MCU_MUXPLL_160M, 0);
     GLB_Set_I2C_CLK(ENABLE, GLB_I2C_CLK_XCLK, 0);
     GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
     GLB_Set_DIG_CLK_Sel(GLB_DIG_CLK_XCLK);
     GLB_Set_DIG_512K_CLK(ENABLE, ENABLE, 0x4E);
-    GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
+    GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_SINGLE_END);
     GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, 19);
     GLB_Set_CAM_CLK(ENABLE, GLB_CAM_CLK_WIFIPLL_96M, 3);
 
@@ -263,7 +265,7 @@ void board_i2c0_gpio_init()
     /* I2C0_SDA */
     bflb_gpio_init(gpio, GPIO_PIN_11, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     /* I2C0_SCL */
-    bflb_gpio_init(gpio, GPIO_PIN_16, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
 void board_spi0_gpio_init()
@@ -303,6 +305,20 @@ void board_adc_gpio_init()
     gpio = bflb_device_get_by_name("gpio");
     /* ADC_CH0 */
     bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC_CH1 */
+    bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC_CH2 */
+    bflb_gpio_init(gpio, GPIO_PIN_2, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC_CH3 */
+    bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC_CH4 */
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC_CH5 */
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC_CH6 */
+    bflb_gpio_init(gpio, GPIO_PIN_12, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
+    /* ADC_CH7 */
+    bflb_gpio_init(gpio, GPIO_PIN_10, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC_CH8 */
     bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC_CH9 */

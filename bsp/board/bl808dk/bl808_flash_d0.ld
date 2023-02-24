@@ -162,28 +162,7 @@ SECTIONS
         __nocache_ram_data_end__ = .;
     } > nocache_ram_memory
 
-    __system_ram_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
-
-    .system_ram_data_region : AT (__system_ram_load_addr)
-    {
-        . = ALIGN(4);
-        __system_ram_data_start__ = .;
-
-        *(.system_ram)
-
-        . = ALIGN(4);
-        __system_ram_data_end__ = .;
-    } > ram_memory
-
-    .system_ram_noinit_data_region (NOLOAD) :
-    {
-        . = ALIGN(4);
-        *(.system_ram_noinit)
-
-        . = ALIGN(4);
-    } > ram_memory
-
-    __ram_load_addr = __system_ram_load_addr + SIZEOF(.system_ram_data_region);
+    __ram_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
 
     /* Data section */
     RAM_DATA : AT (__ram_load_addr)

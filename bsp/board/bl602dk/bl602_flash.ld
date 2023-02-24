@@ -163,21 +163,7 @@ SECTIONS
     ASSERT(__StackLimit >= __tcm_data_end__, "region RAM overflowed with stack")
     /*************************************************************************/
 
-    __system_ram_load_addr = __dtcm_load_addr + SIZEOF(.dtcm_region);
-
-    .system_ram_data_region : AT (__system_ram_load_addr)
-    {
-        . = ALIGN(4);
-        __system_ram_data_start__ = .;
-
-        *(.system_ram)
-        *(.nocache_ram)
-
-        . = ALIGN(4);
-        __system_ram_data_end__ = .;
-    } > ram_memory
-
-    __ram_load_addr = __system_ram_load_addr + SIZEOF(.system_ram_data_region);
+    __ram_load_addr = __dtcm_load_addr + SIZEOF(.dtcm_region);
 
     /* Data section */
     RAM_DATA : AT (__ram_load_addr)
@@ -193,6 +179,8 @@ SECTIONS
         *(.sdata.*)
         *(.sdata2)
         *(.sdata2.*)
+
+        *(.nocache_ram)
 
         . = ALIGN(4);
         __bflog_tags_start__ = .;
@@ -221,6 +209,7 @@ SECTIONS
         __noinit_data_start__ = .;
 
         *(.noinit_data*)
+        *(.nocache_noinit_ram)
 
         . = ALIGN(4);
         __noinit_data_end__ = .;

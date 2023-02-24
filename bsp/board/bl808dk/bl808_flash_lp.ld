@@ -22,21 +22,21 @@ HeapMinSize  = 0x1000; /*  4KB */
 
 MEMORY
 {
-    fw_header_memory  (rx)  : ORIGIN = 0x58000000 - 0x1000, LENGTH = 4K
-    xip_memory  (rx)  : ORIGIN = 0x58000000, LENGTH = 32M
-    itcm_memory (rx)  : ORIGIN = 0x62020000, LENGTH = 20K
-    dtcm_memory (rx)  : ORIGIN = 0x62025000, LENGTH = 4K
-    nocache_ram_memory (!rx) : ORIGIN = 0x22026000, LENGTH = 40K
-    ram_memory  (!rx) : ORIGIN = 0x62030000, LENGTH = 160K + 64K - 20K - 4K - 40K
+    fw_header_memory0  (rx)  : ORIGIN = 0x58020000 - 0x1000, LENGTH = 4K
+    xip_memory  (rx)  : ORIGIN = 0x58020000, LENGTH = 1M
+    itcm_memory (rx)  : ORIGIN = 0x2202C000, LENGTH = 16K
+    dtcm_memory (rx)  : ORIGIN = 0x22030000, LENGTH = 16K
+    nocache_ram_memory (!rx) : ORIGIN = 0x22030000, LENGTH = 0K
+    ram_memory  (!rx) : ORIGIN = 0x22034000, LENGTH = 16K
     xram_memory  (!rx) : ORIGIN = 0x40000000, LENGTH = 16K
 }
 
 SECTIONS
 {
-    .fw_header :
+    .fw_header0 :
     {
-        KEEP(*(.fw_header))
-    } > fw_header_memory
+        KEEP(*(.fw_header0))
+    } > fw_header_memory0
 
     .text :
     {
@@ -154,7 +154,9 @@ SECTIONS
 
     /* Check if data + heap + stack exceeds RAM limit */
     ASSERT(__StackLimit >= __tcm_data_end__, "region RAM overflowed with stack")
+
     /*************************************************************************/
+
     __nocache_ram_load_addr = __dtcm_load_addr + SIZEOF(.dtcm_region);
 
     .nocache_ram_region  : AT (__nocache_ram_load_addr)
@@ -168,28 +170,7 @@ SECTIONS
         __nocache_ram_data_end__ = .;
     } > nocache_ram_memory
 
-    __system_ram_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
-
-    .system_ram_data_region : AT (__system_ram_load_addr)
-    {
-        . = ALIGN(4);
-        __system_ram_data_start__ = .;
-
-        *(.system_ram)
-
-        . = ALIGN(4);
-        __system_ram_data_end__ = .;
-    } > ram_memory
-
-    .system_ram_noinit_data_region (NOLOAD) :
-    {
-        . = ALIGN(4);
-        *(.system_ram_noinit)
-
-        . = ALIGN(4);
-    } > ram_memory
-
-    __ram_load_addr = __system_ram_load_addr + SIZEOF(.system_ram_data_region);
+    __ram_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
 
     /* Data section */
     RAM_DATA : AT (__ram_load_addr)

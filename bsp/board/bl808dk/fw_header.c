@@ -145,7 +145,11 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .basic_cfg.dcache_invalid = 0x1, /* [30] dcache invalid */
     .basic_cfg.rsvd_3 = 0x0,         /* [31] rsvd_3 */
 
+#ifdef BFLB_BOOT2
+    .basic_cfg.group_image_offset = 0x00002000, /* flash controller offset */
+#else
     .basic_cfg.group_image_offset = 0x00001000, /* flash controller offset */
+#endif
     .basic_cfg.aes_region_len = 0x00000000,     /* aes region length */
 
     .basic_cfg.img_len_cnt = 0x00010000, /* image length or segment count */
@@ -169,13 +173,13 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .cpu_cfg[0].msp_val = 0x00000000, /* msp value */
 
     /* cpu cfg */
-    .cpu_cfg[1].config_enable = 0x01, /* coinfig this cpu */
-    .cpu_cfg[1].halt_cpu = 0x0,       /* halt this cpu */
-    .cpu_cfg[1].cache_enable = 0x0,   /* cache setting :only for BL Cache */
-    .cpu_cfg[1].cache_wa = 0x0,       /* cache setting :only for BL Cache*/
-    .cpu_cfg[1].cache_wb = 0x0,       /* cache setting :only for BL Cache*/
-    .cpu_cfg[1].cache_wt = 0x0,       /* cache setting :only for BL Cache*/
-    .cpu_cfg[1].cache_way_dis = 0x0,  /* cache setting :only for BL Cache*/
+    .cpu_cfg[1].config_enable = 0x0, /* coinfig this cpu */
+    .cpu_cfg[1].halt_cpu = 0x0,      /* halt this cpu */
+    .cpu_cfg[1].cache_enable = 0x0,  /* cache setting :only for BL Cache */
+    .cpu_cfg[1].cache_wa = 0x0,      /* cache setting :only for BL Cache*/
+    .cpu_cfg[1].cache_wb = 0x0,      /* cache setting :only for BL Cache*/
+    .cpu_cfg[1].cache_wt = 0x0,      /* cache setting :only for BL Cache*/
+    .cpu_cfg[1].cache_way_dis = 0x0, /* cache setting :only for BL Cache*/
     .cpu_cfg[1].rsvd = 0x0,
 
     .cpu_cfg[1].cache_range_h = 0x00000000,
@@ -194,6 +198,11 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .flash_cfg_table_addr = 0x00000000,
     /* flashcfg table list len */ /* 4 */
     .flash_cfg_table_len = 0x00000000,
+
+    .rsvd1[0] = 0x20000320,
+    .rsvd1[1] = 0x00000000,
+    .rsvd1[2] = 0x2000F038,
+    .rsvd1[3] = 0x18000000,
 
     .crc32 = 0xdeadbeef /* 4 */
 };
