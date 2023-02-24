@@ -10,7 +10,7 @@
 
 ![SDK Architecture](BouffaloSDK.png)
 
-# Code Directoryies
+# Code Directories
 
 | Name | Description |
 |:---:|:------:|
