@@ -1,7 +1,7 @@
-ADC - poll
+ADC - poll_diff_mode
 ====================
 
-本 demo 主要演示 adc poll 单端模式下读取电压值。默认扫描通道 0 ~ 通道10。 **需要注意，有些芯片不一定支持全部通道**。
+本 demo 主要演示 adc poll 差分模式下读取通道 2 和 通道 3 的电压值。
 
 硬件连接
 -----------------------------
@@ -11,7 +11,7 @@ ADC - poll
 软件实现
 -----------------------------
 
-更详细的代码请参考 **examples/peripherals/adc/adc_poll**
+更详细的代码请参考 **examples/peripherals/adc/adc_poll_diff_mode**
 
 .. code-block:: C
     :linenos:
@@ -37,7 +37,7 @@ ADC - poll
     cfg.clk_div = ADC_CLK_DIV_32;
     cfg.scan_conv_mode = true;
     cfg.continuous_conv_mode = false;
-    cfg.differential_mode = false;
+    cfg.differential_mode = true;
     cfg.resolution = ADC_RESOLUTION_16B;
     cfg.vref = ADC_VREF_3P2V;
 
@@ -50,7 +50,7 @@ ADC - poll
 
     bflb_adc_channel_config(adc, chan, TEST_ADC_CHANNELS);
 
-- 配置 adc 通道信息，使用的对数根据 `TEST_ADC_CHANNELS` 可配，默认开启通道 0 ~ 10，根据 ``board_adc_gpio_init`` 需要选择性关闭其他通道。
+- 配置通道 2 和 通道 3 信息。
 
 .. code-block:: C
     :linenos:
@@ -67,7 +67,7 @@ ADC - poll
             uint32_t raw_data = bflb_adc_read_raw(adc);
             printf("raw data:%08x\r\n", raw_data);
             bflb_adc_parse_result(adc, &raw_data, &result, 1);
-            printf("pos chan %d,%d mv \r\n", result.pos_chan, result.millivolt);
+            printf("pos chan %d,neg chan %d,%d mv \r\n", result.pos_chan, result.neg_chan, result.millivolt);
         }
 
         bflb_adc_stop_conversion(adc);
@@ -87,4 +87,4 @@ ADC - poll
 
 实验现象
 -----------------------------
-打印 raw data，通道号以及通道对应的电压值。
+打印 raw data，正极和负极通道号以及对应的电压差值。

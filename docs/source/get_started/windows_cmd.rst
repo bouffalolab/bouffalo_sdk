@@ -73,7 +73,7 @@ Build with Windows CMD
    :linenos:
 
     $ cd .\examples\helloworld\
-    $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl602、bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+    $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 - 使用 ninja 编译
 
@@ -81,14 +81,22 @@ Build with Windows CMD
    :linenos:
 
     $ cd .\examples\helloworld\
-    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl602、bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 .. note :: 如果使用 BL808 或者 BL606P，需要在上面基础上添加 CPU_ID=id ,id 可以为 m0 或者 d0
 
-- 烧录
+烧录
+-------------
 
 .. code-block:: bash
    :linenos:
 
     $ cd examples/helloworld
     $ make flash CHIP=chip_name COMX=port_name ## port_name 为串口号名称，比如 COM5
+
+.. note :: 如果使用 BL808 或者 BL606P，需要在上面基础上添加 CPU_ID=id ,id 可以为 m0 或者 d0
+
+调试
+-------------
+
+推荐使用 eclipse + cklink 调试，参考 :ref:`eclipse_gcc`，也可以使用命令行调试，这里不做介绍
