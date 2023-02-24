@@ -295,17 +295,17 @@ static const char *l_str2dloc(const char *s, lua_Number *result, int mode)
 static const char *l_str2d(const char *s, lua_Number *result)
 {
     const char *endptr;
-    const char *pmode = strpbrk(s, ".xXnN"); /* look for special chars */
+    const char *pmode = luaport_strpbrk(s, ".xXnN"); /* look for special chars */
     int mode = pmode ? ltolower(cast_uchar(*pmode)) : 0;
     if (mode == 'n') /* reject 'inf' and 'nan' */
         return NULL;
     endptr = l_str2dloc(s, result, mode); /* try to convert */
     if (endptr == NULL) {                 /* failed? may be a different locale */
         char buff[L_MAXLENNUM + 1];
-        const char *pdot = strchr(s, '.');
-        if (pdot == NULL || strlen(s) > L_MAXLENNUM)
+        const char *pdot = luaport_strchr(s, '.');
+        if (pdot == NULL || luaport_strlen(s) > L_MAXLENNUM)
             return NULL;                          /* string too long or no dot; fail */
-        strcpy(buff, s);                          /* copy string to buffer */
+        luaport_strcpy(buff, s);                  /* copy string to buffer */
         buff[pdot - s] = lua_getlocaledecpoint(); /* correct decimal point */
         endptr = l_str2dloc(buff, result, mode);  /* try again */
         if (endptr != NULL)
@@ -404,7 +404,7 @@ static int tostringbuff(TValue *obj, char *buff)
         len = lua_integer2str(buff, MAXNUMBER2STR, ivalue(obj));
     else {
         len = lua_number2str(buff, MAXNUMBER2STR, fltvalue(obj));
-        if (buff[strspn(buff, "-0123456789")] == '\0') { /* looks like an int? */
+        if (buff[luaport_strspn(buff, "-0123456789")] == '\0') { /* looks like an int? */
             buff[len++] = lua_getlocaledecpoint();
             buff[len++] = '0'; /* adds '.0' to result */
         }
@@ -513,14 +513,14 @@ const char *luaO_pushvfstring(lua_State *L, const char *fmt, va_list argp)
     const char *e; /* points to next '%' */
     buff.pushed = buff.blen = 0;
     buff.L = L;
-    while ((e = strchr(fmt, '%')) != NULL) {
+    while ((e = luaport_strchr(fmt, '%')) != NULL) {
         addstr2buff(&buff, fmt, e - fmt); /* add 'fmt' up to '%' */
         switch (*(e + 1)) {               /* conversion specifier */
             case 's': {                   /* zero-terminated string */
                 const char *s = va_arg(argp, char *);
                 if (s == NULL)
                     s = "(null)";
-                addstr2buff(&buff, s, strlen(s));
+                addstr2buff(&buff, s, luaport_strlen(s));
                 break;
             }
             case 'c': { /* an 'int' as a character */
@@ -571,8 +571,8 @@ const char *luaO_pushvfstring(lua_State *L, const char *fmt, va_list argp)
         }
         fmt = e + 2; /* skip '%' and the specifier */
     }
-    addstr2buff(&buff, fmt, strlen(fmt)); /* rest of 'fmt' */
-    clearbuff(&buff);                     /* empty buffer into the stack */
+    addstr2buff(&buff, fmt, luaport_strlen(fmt)); /* rest of 'fmt' */
+    clearbuff(&buff);                             /* empty buffer into the stack */
     lua_assert(buff.pushed == 1);
     return svalue(s2v(L->top - 1));
 }
@@ -589,9 +589,9 @@ const char *luaO_pushfstring(lua_State *L, const char *fmt, ...)
 
 /* }================================================================== */
 
-#define RETS "..."
-#define PRE  "[string \""
-#define POS  "\"]"
+#define RETS            "..."
+#define PRE             "[string \""
+#define POS             "\"]"
 
 #define addstr(a, b, l) (luaport_memcpy(a, b, (l) * sizeof(char)), a += (l))
 
@@ -613,12 +613,12 @@ void luaO_chunkid(char *out, const char *source, size_t srclen)
             bufflen -= LL(RETS);
             luaport_memcpy(out, source + 1 + srclen - bufflen, bufflen * sizeof(char));
         }
-    } else {                                   /* string; format as [string "source"] */
-        const char *nl = strchr(source, '\n'); /* find first new line (if any) */
-        addstr(out, PRE, LL(PRE));             /* add prefix */
-        bufflen -= LL(PRE RETS POS) + 1;       /* save space for prefix+suffix+'\0' */
-        if (srclen < bufflen && nl == NULL) {  /* small one-line source? */
-            addstr(out, source, srclen);       /* keep it */
+    } else {                                           /* string; format as [string "source"] */
+        const char *nl = luaport_strchr(source, '\n'); /* find first new line (if any) */
+        addstr(out, PRE, LL(PRE));                     /* add prefix */
+        bufflen -= LL(PRE RETS POS) + 1;               /* save space for prefix+suffix+'\0' */
+        if (srclen < bufflen && nl == NULL) {          /* small one-line source? */
+            addstr(out, source, srclen);               /* keep it */
         } else {
             if (nl != NULL)
                 srclen = nl - source; /* stop at first newline */

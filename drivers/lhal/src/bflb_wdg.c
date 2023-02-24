@@ -77,6 +77,17 @@ uint16_t bflb_wdg_get_countervalue(struct bflb_device_s *dev)
     return getreg16(reg_base + TIMER_WVR_OFFSET);
 }
 
+void bflb_wdg_set_countervalue(struct bflb_device_s *dev, uint16_t value)
+{
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    putreg16(0xBABA, reg_base + TIMER_WFAR_OFFSET);
+    putreg16(0xEB10, reg_base + TIMER_WSAR_OFFSET);
+    putreg16(value, reg_base + TIMER_WMR_OFFSET);
+}
+
 void bflb_wdg_reset_countervalue(struct bflb_device_s *dev)
 {
     uint32_t regval;

@@ -98,13 +98,13 @@
 #define getCcalls(L) ((L)->nCcalls & 0xffff)
 
 /* Increment the number of non-yieldable calls */
-#define incnny(L) ((L)->nCcalls += 0x10000)
+#define incnny(L)    ((L)->nCcalls += 0x10000)
 
 /* Decrement the number of non-yieldable calls */
-#define decnny(L) ((L)->nCcalls -= 0x10000)
+#define decnny(L)    ((L)->nCcalls -= 0x10000)
 
 /* Non-yieldable call increment */
-#define nyci (0x10000 | 1)
+#define nyci         (0x10000 | 1)
 
 struct lua_longjmp; /* defined in ldo.c */
 
@@ -113,8 +113,9 @@ struct lua_longjmp; /* defined in ldo.c */
 ** is thread safe
 */
 #if !defined(l_signalT)
-#include <signal.h>
-#define l_signalT sig_atomic_t
+// #include <signal.h>
+// #define l_signalT sig_atomic_t
+#define l_signalT int
 #endif
 
 /*
@@ -124,15 +125,15 @@ struct lua_longjmp; /* defined in ldo.c */
 ** there will be a stack check soon after the push. Function frames
 ** never use this extra space, so it does not need to be kept clean.
 */
-#define EXTRA_STACK 5
+#define EXTRA_STACK      5
 
 #define BASIC_STACK_SIZE (2 * LUA_MINSTACK)
 
-#define stacksize(th) cast_int((th)->stack_last - (th)->stack)
+#define stacksize(th)    cast_int((th)->stack_last - (th)->stack)
 
 /* kinds of Garbage Collection */
-#define KGC_INC 0 /* incremental gc */
-#define KGC_GEN 1 /* generational gc */
+#define KGC_INC          0 /* incremental gc */
+#define KGC_GEN          1 /* generational gc */
 
 typedef struct stringtable {
     TString **hash;
@@ -198,7 +199,7 @@ typedef struct CallInfo {
 #define CIST_TRAN      (1 << 8) /* 'ci' has transfer information */
 #define CIST_CLSRET    (1 << 9) /* function is closing tbc variables */
 /* Bits 10-12 are used for CIST_RECST (see below) */
-#define CIST_RECST 10
+#define CIST_RECST     10
 #if defined(LUA_COMPAT_LT_LE)
 #define CIST_LEQ (1 << 13) /* using __lt for __le */
 #endif
@@ -215,7 +216,7 @@ typedef struct CallInfo {
               ((ci)->callstatus = ((ci)->callstatus & ~(7 << CIST_RECST)) | ((st) << CIST_RECST)))
 
 /* active function is a Lua function */
-#define isLua(ci) (!((ci)->callstatus & CIST_C))
+#define isLua(ci)     (!((ci)->callstatus & CIST_C))
 
 /* call is running Lua code (not a hook) */
 #define isLuacode(ci) (!((ci)->callstatus & (CIST_C | CIST_HOOKED)))
@@ -306,7 +307,7 @@ struct lua_State {
     volatile l_signalT hookmask;
 };
 
-#define G(L) (L->l_G)
+#define G(L)             (L->l_G)
 
 /*
 ** 'g->nilvalue' being a nil value flags that the state was completely
@@ -349,16 +350,16 @@ union GCUnion {
 #define gco2ccl(o) check_exp((o)->tt == LUA_VCCL, &((cast_u(o))->cl.c))
 #define gco2cl(o) \
     check_exp(novariant((o)->tt) == LUA_TFUNCTION, &((cast_u(o))->cl))
-#define gco2t(o)   check_exp((o)->tt == LUA_VTABLE, &((cast_u(o))->h))
-#define gco2p(o)   check_exp((o)->tt == LUA_VPROTO, &((cast_u(o))->p))
-#define gco2th(o)  check_exp((o)->tt == LUA_VTHREAD, &((cast_u(o))->th))
-#define gco2upv(o) check_exp((o)->tt == LUA_VUPVAL, &((cast_u(o))->upv))
+#define gco2t(o)         check_exp((o)->tt == LUA_VTABLE, &((cast_u(o))->h))
+#define gco2p(o)         check_exp((o)->tt == LUA_VPROTO, &((cast_u(o))->p))
+#define gco2th(o)        check_exp((o)->tt == LUA_VTHREAD, &((cast_u(o))->th))
+#define gco2upv(o)       check_exp((o)->tt == LUA_VUPVAL, &((cast_u(o))->upv))
 
 /*
 ** macro to convert a Lua object into a GCObject
 ** (The access to 'tt' tries to ensure that 'v' is actually a Lua object.)
 */
-#define obj2gco(v) check_exp((v)->tt >= LUA_TSTRING, &(cast_u(v)->gc))
+#define obj2gco(v)       check_exp((v)->tt >= LUA_TSTRING, &(cast_u(v)->gc))
 
 /* actual number of total bytes allocated */
 #define gettotalbytes(g) cast(lu_mem, (g)->totalbytes + (g)->GCdebt)

@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-/* Alloc video interface driver */
+/* Init video interface driver */
 struct usbd_interface *usbd_video_init_intf(struct usbd_interface *intf,
                                             uint32_t dwFrameInterval,
                                             uint32_t dwMaxVideoFrameSize,

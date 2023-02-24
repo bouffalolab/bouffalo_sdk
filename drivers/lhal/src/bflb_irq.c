@@ -8,7 +8,7 @@
 
 extern struct bflb_irq_info_s g_irqvector[];
 
-void irq_unexpected_isr(int irq, void *arg)
+static void irq_unexpected_isr(int irq, void *arg)
 {
     printf("irq :%d unregistered\r\n", irq);
 }

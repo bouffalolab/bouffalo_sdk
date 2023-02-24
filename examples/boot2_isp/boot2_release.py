@@ -10,11 +10,16 @@ git_cmd=r'git describe --tags '#--dirty
 tag_standard="boot2_v1.0.0"
 
 release_list = [
-[r'make clean;make CHIP=bl602            BOARD=bl602dk ',"bl602","release"],
-[r'make clean;make CHIP=bl702            BOARD=bl702dk ',"bl702","release"],    
-[r'make clean;make CHIP=bl808  CPU_ID=m0 BOARD=bl808dk ',"bl808","release"],
-[r'make clean;make CHIP=bl606p CPU_ID=m0 BOARD=bl606pdk ',"bl606p","release"],
-[r'make clean;make CHIP=bl616  CPU_ID=m0 BOARD=bl616dk ',"bl616","release"],
+[r'make clean;make CHIP=bl602            BOARD=bl602dk CONFIG_DEBUG=n',"bl602","release"],
+[r'make clean;make CHIP=bl602            BOARD=bl602dk CONFIG_DEBUG=y',"bl602","debug"],
+[r'make clean;make CHIP=bl702            BOARD=bl702dk CONFIG_DEBUG=n',"bl702","release"],    
+[r'make clean;make CHIP=bl702            BOARD=bl702dk CONFIG_DEBUG=y',"bl702","debug"],  
+[r'make clean;make CHIP=bl808  CPU_ID=m0 BOARD=bl808dk CONFIG_DEBUG=n',"bl808","release"],
+[r'make clean;make CHIP=bl808  CPU_ID=m0 BOARD=bl808dk CONFIG_DEBUG=y',"bl808","debug"],
+[r'make clean;make CHIP=bl606p CPU_ID=m0 BOARD=bl606pdk CONFIG_DEBUG=n',"bl606p","release"],
+[r'make clean;make CHIP=bl606p CPU_ID=m0 BOARD=bl606pdk CONFIG_DEBUG=y',"bl606p","debug"],
+[r'make clean;make CHIP=bl616  CPU_ID=m0 BOARD=bl616dk CONFIG_DEBUG=n',"bl616","release"],
+[r'make clean;make CHIP=bl616  CPU_ID=m0 BOARD=bl616dk CONFIG_DEBUG=y',"bl616","debug"],
 ]
 
 
@@ -54,10 +59,11 @@ def boot2_release(cmd, ver):
         for file in files:
             if file.endswith(".bin"):
                 if cmd[1] in file:
-                    binfile = os.path.join(root, file)
-                    print(binfile)
-                    print('boot2_isp_' + cmd[1] + '_v' + ver + "/" + 'boot2_isp_' + cmd[2] + ".bin")
-                    shutil.copy(binfile, 'boot2_isp_' + cmd[1] + '_v' + ver + "/" + 'boot2_isp' + ".bin")     
+                    if "boot2_isp" in file:
+                        binfile = os.path.join(root, file)
+                        print(binfile)
+                        print('boot2_isp_' + cmd[1] + '_v' + ver + "/" + 'boot2_isp_' + cmd[2] + ".bin")
+                        shutil.copy(binfile, 'boot2_isp_' + cmd[1] + '_v' + ver + "/" + 'boot2_isp' + '_' + cmd[2] + ".bin")     
     
 
 

@@ -27,6 +27,7 @@ int usbh_hid_get_idle(struct usbh_hid *hid_class, uint8_t *buffer);
 
 void usbh_hid_run(struct usbh_hid *hid_class);
 void usbh_hid_stop(struct usbh_hid *hid_class);
+
 #ifdef __cplusplus
 }
 #endif

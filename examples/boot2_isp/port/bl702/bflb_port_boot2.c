@@ -4,7 +4,7 @@
 #include "bl702_hbn.h"
 #include "bl702_glb.h"
 #include "bflb_gpio.h"
-#include "softcrc.h"
+
 #include "bl702_clock.h"
 #include "bflb_efuse.h"
 

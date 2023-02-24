@@ -6,7 +6,7 @@
 #include "bl808_glb.h"
 #include "bl808_tzc_sec.h"
 #include "bflb_gpio.h"
-#include "softcrc.h"
+
 #include "bl808_psram_uhs.h"
 #include "bflb_efuse.h"
 #include "bl808_uhs_phy.h"
@@ -67,7 +67,7 @@ uint32_t hal_boot2_custom(void *custom_param)
         // Psram_UHS_x16_Init(Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PSRAMA) / 1000000);
         Psram_UHS_x16_Init_Override(&psramDefaultCfg);
         Tzc_Sec_PSRAMA_Access_Release();
-#if 0 
+#if 1 
         // example: 2000Mbps typical cal values
         uhs_phy_cal_res->rl = 39;
         uhs_phy_cal_res->rdqs = 3;
@@ -495,12 +495,12 @@ BL_Err_Type ATTR_TCM_SECTION hal_boot2_set_cache(uint8_t cont_read, boot2_image_
 *******************************************************************************/
 void hal_boot2_get_ram_img_cnt(char *img_name[], uint32_t *ram_img_cnt)
 {
-    *ram_img_cnt = 5;
-    img_name[0] = "Imgload";
-    img_name[1] = "SBI";
-    img_name[2] = "Kernel";
-    img_name[3] = "Rootfs";
-    img_name[4] = "DTB";
+    *ram_img_cnt = 0;
+    //img_name[0] = "Imgload";
+    //img_name[1] = "SBI";
+    //img_name[2] = "Kernel";
+    //img_name[3] = "Rootfs";
+    //img_name[4] = "DTB";
 }
 
 /****************************************************************************/ /**

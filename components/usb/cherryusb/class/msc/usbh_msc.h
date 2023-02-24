@@ -27,6 +27,7 @@ int usbh_msc_scsi_read10(struct usbh_msc *msc_class, uint32_t start_sector, cons
 
 void usbh_msc_run(struct usbh_msc *msc_class);
 void usbh_msc_stop(struct usbh_msc *msc_class);
+
 #ifdef __cplusplus
 extern "C" {
 #endif

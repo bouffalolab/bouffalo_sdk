@@ -51,7 +51,7 @@
 */
 
 /* number of bits in the mantissa of a float */
-#define NBM (l_floatatt(MANT_DIG))
+#define NBM        (l_floatatt(MANT_DIG))
 
 /*
 ** Check whether some integers may not fit in a float, testing whether
@@ -63,7 +63,7 @@
 #if ((((LUA_MAXINTEGER >> (NBM / 4)) >> (NBM / 4)) >> (NBM / 4)) >> (NBM - (3 * (NBM / 4)))) > 0
 
 /* limit for integers that fit in a float */
-#define MAXINTFITSF ((lua_Unsigned)1 << NBM)
+#define MAXINTFITSF   ((lua_Unsigned)1 << NBM)
 
 /* check whether 'i' is in the interval [-MAXINTFITSF, MAXINTFITSF] */
 #define l_intfitsf(i) ((MAXINTFITSF + l_castS2U(i)) <= (2 * MAXINTFITSF))
@@ -367,11 +367,11 @@ static int l_strcmp(const TString *ls, const TString *rs)
     const char *r = getstr(rs);
     size_t lr = tsslen(rs);
     for (;;) { /* for each segment */
-        int temp = strcoll(l, r);
+        int temp = luaport_strcoll(l, r);
         if (temp != 0)                      /* not equal? */
             return temp;                    /* done */
         else {                              /* strings are equal up to a '\0' */
-            size_t len = strlen(l);         /* index of first '\0' in both strings */
+            size_t len = luaport_strlen(l); /* index of first '\0' in both strings */
             if (len == lr)                  /* 'rs' is finished? */
                 return (len == ll) ? 0 : 1; /* check 'ls' */
             else if (len == ll)             /* 'ls' is finished? */
@@ -762,7 +762,7 @@ lua_Number luaV_modf(lua_State *L, lua_Number m, lua_Number n)
 }
 
 /* number of bits in an integer */
-#define NBITS cast_int(sizeof(lua_Integer) * CHAR_BIT)
+#define NBITS             cast_int(sizeof(lua_Integer) * CHAR_BIT)
 
 /*
 ** Shift left operation. (Shift right just negates 'y'.)
@@ -898,10 +898,10 @@ void luaV_finishOp(lua_State *L)
 #define l_bor(a, b)     intop(|, a, b)
 #define l_bxor(a, b)    intop(^, a, b)
 
-#define l_lti(a, b) (a < b)
-#define l_lei(a, b) (a <= b)
-#define l_gti(a, b) (a > b)
-#define l_gei(a, b) (a >= b)
+#define l_lti(a, b)     (a < b)
+#define l_lei(a, b)     (a <= b)
+#define l_gti(a, b)     (a > b)
+#define l_gei(a, b)     (a >= b)
 
 /*
 ** Arithmetic operations with immediate operands. 'iop' is the integer
@@ -1076,14 +1076,14 @@ void luaV_finishOp(lua_State *L)
 ** some macros for common tasks in 'luaV_execute'
 */
 
-#define RA(i)  (base + GETARG_A(i))
-#define RB(i)  (base + GETARG_B(i))
-#define vRB(i) s2v(RB(i))
-#define KB(i)  (k + GETARG_B(i))
-#define RC(i)  (base + GETARG_C(i))
-#define vRC(i) s2v(RC(i))
-#define KC(i)  (k + GETARG_C(i))
-#define RKC(i) ((TESTARG_k(i)) ? k + GETARG_C(i) : s2v(base + GETARG_C(i)))
+#define RA(i)          (base + GETARG_A(i))
+#define RB(i)          (base + GETARG_B(i))
+#define vRB(i)         s2v(RB(i))
+#define KB(i)          (k + GETARG_B(i))
+#define RC(i)          (base + GETARG_C(i))
+#define vRC(i)         s2v(RC(i))
+#define KC(i)          (k + GETARG_C(i))
+#define RKC(i)         ((TESTARG_k(i)) ? k + GETARG_C(i) : s2v(base + GETARG_C(i)))
 
 #define updatetrap(ci) (trap = ci->u.l.trap)
 
@@ -1128,7 +1128,7 @@ void luaV_finishOp(lua_State *L)
 /*
 ** Correct global 'pc'.
 */
-#define savepc(L) (ci->u.l.savedpc = pc)
+#define savepc(L)        (ci->u.l.savedpc = pc)
 
 /*
 ** Whenever code can raise errors, the global 'pc' and the global
@@ -1140,10 +1140,10 @@ void luaV_finishOp(lua_State *L)
 ** Protect code that, in general, can raise errors, reallocate the
 ** stack, and change the hooks.
 */
-#define Protect(exp) (savestate(L, ci), (exp), updatetrap(ci))
+#define Protect(exp)     (savestate(L, ci), (exp), updatetrap(ci))
 
 /* special version that does not change the top */
-#define ProtectNT(exp) (savepc(L), (exp), updatetrap(ci))
+#define ProtectNT(exp)   (savepc(L), (exp), updatetrap(ci))
 
 /*
 ** Protect code that can only raise errors. (That is, it cannot change
@@ -1207,7 +1207,7 @@ returning: /* trap already set */
         vmfetch();
 #if 0
       /* low-level line tracing for debugging Lua */
-      printf("line: %d\n", luaG_getfuncline(cl->p, pcRel(pc, cl->p)));
+      luaport_printf("line: %d\n", luaG_getfuncline(cl->p, pcRel(pc, cl->p)));
 #endif
         lua_assert(base == ci->func + 1);
         lua_assert(base <= L->top && L->top < L->stack_last);

@@ -548,14 +548,6 @@ struct usb_bos_header_descriptor {
     uint8_t bNumDeviceCaps;
 } __PACKED;
 
-/* BOS Capability extension Descriptor*/
-struct usb_bos_capability_extension_descriptor {
-    uint8_t bLength;
-    uint8_t bDescriptorType;
-    uint8_t bDevCapabilityType;
-    uint32_t bmAttributes;
-} __PACKED;
-
 /* BOS Capability platform Descriptor */
 struct usb_bos_capability_platform_descriptor {
     uint8_t bLength;
@@ -563,18 +555,6 @@ struct usb_bos_capability_platform_descriptor {
     uint8_t bDevCapabilityType;
     uint8_t bReserved;
     uint8_t PlatformCapabilityUUID[16];
-} __PACKED;
-
-/* BOS Capability superspeed Descriptor */
-struct usb_bos_capability_superspeed_descriptor {
-    uint8_t bLength;
-    uint8_t bDescriptorType;
-    uint8_t bDevCapabilityType;
-    uint8_t bmAttributes;
-    uint16_t wSpeedsSupported;
-    uint8_t bFunctionalitySupport;
-    uint8_t bU1DevExitLat;
-    uint16_t wU2DevExitLat;
 } __PACKED;
 
 /* BOS Capability MS OS Descriptors version 2 */
@@ -590,6 +570,14 @@ struct usb_bos_capability_webusb_descriptor {
     uint16_t bcdVersion;
     uint8_t bVendorCode;
     uint8_t iLandingPage;
+} __PACKED;
+
+/* BOS Capability extension Descriptor*/
+struct usb_bos_capability_extension_descriptor {
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bDevCapabilityType;
+    uint32_t bmAttributes;
 } __PACKED;
 
 /* Microsoft OS 2.0 Platform Capability Descriptor
@@ -617,6 +605,12 @@ struct usb_webusb_url_descriptor {
     uint8_t bDescriptorType;
     uint8_t bScheme;
     char URL[];
+} __PACKED;
+
+struct usb_webusb_url_ex_descriptor {
+    uint8_t vendor_code;
+    uint8_t *string;
+    uint32_t string_len;
 } __PACKED;
 
 struct usb_bos_descriptor {

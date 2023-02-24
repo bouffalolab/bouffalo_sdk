@@ -165,7 +165,7 @@ static int db_getinfo(lua_State *L)
     if (!lua_getinfo(L1, options, &ar))
         return luaL_argerror(L, arg + 2, "invalid option");
     lua_newtable(L); /* table to collect results */
-    if (strchr(options, 'S')) {
+    if (luaport_strchr(options, 'S')) {
         lua_pushlstring(L, ar.source, ar.srclen);
         lua_setfield(L, -2, "source");
         settabss(L, "short_src", ar.short_src);
@@ -173,26 +173,26 @@ static int db_getinfo(lua_State *L)
         settabsi(L, "lastlinedefined", ar.lastlinedefined);
         settabss(L, "what", ar.what);
     }
-    if (strchr(options, 'l'))
+    if (luaport_strchr(options, 'l'))
         settabsi(L, "currentline", ar.currentline);
-    if (strchr(options, 'u')) {
+    if (luaport_strchr(options, 'u')) {
         settabsi(L, "nups", ar.nups);
         settabsi(L, "nparams", ar.nparams);
         settabsb(L, "isvararg", ar.isvararg);
     }
-    if (strchr(options, 'n')) {
+    if (luaport_strchr(options, 'n')) {
         settabss(L, "name", ar.name);
         settabss(L, "namewhat", ar.namewhat);
     }
-    if (strchr(options, 'r')) {
+    if (luaport_strchr(options, 'r')) {
         settabsi(L, "ftransfer", ar.ftransfer);
         settabsi(L, "ntransfer", ar.ntransfer);
     }
-    if (strchr(options, 't'))
+    if (luaport_strchr(options, 't'))
         settabsb(L, "istailcall", ar.istailcall);
-    if (strchr(options, 'L'))
+    if (luaport_strchr(options, 'L'))
         treatstackoption(L, L1, "activelines");
-    if (strchr(options, 'f'))
+    if (luaport_strchr(options, 'f'))
         treatstackoption(L, L1, "func");
     return 1; /* return table */
 }
@@ -338,11 +338,11 @@ static void hookf(lua_State *L, lua_Debug *ar)
 static int makemask(const char *smask, int count)
 {
     int mask = 0;
-    if (strchr(smask, 'c'))
+    if (luaport_strchr(smask, 'c'))
         mask |= LUA_MASKCALL;
-    if (strchr(smask, 'r'))
+    if (luaport_strchr(smask, 'r'))
         mask |= LUA_MASKRET;
-    if (strchr(smask, 'l'))
+    if (luaport_strchr(smask, 'l'))
         mask |= LUA_MASKLINE;
     if (count > 0)
         mask |= LUA_MASKCOUNT;
@@ -429,9 +429,9 @@ static int db_debug(lua_State *L)
         char buffer[250];
         lua_writestringerror("%s", "lua_debug> ");
         if (luaport_fgets(buffer, sizeof(buffer), luaport_stdin) == NULL ||
-            strcmp(buffer, "cont\n") == 0)
+            luaport_strcmp(buffer, "cont\n") == 0)
             return 0;
-        if (luaL_loadbuffer(L, buffer, strlen(buffer), "=(debug command)") ||
+        if (luaL_loadbuffer(L, buffer, luaport_strlen(buffer), "=(debug command)") ||
             lua_pcall(L, 0, 0, 0))
             lua_writestringerror("%s\n", luaL_tolstring(L, -1, NULL));
         lua_settop(L, 0); /* remove eventual returns */

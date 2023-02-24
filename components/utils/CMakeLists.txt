@@ -47,10 +47,6 @@ endif()
 sdk_library_add_sources(bflb_block_pool/bflb_block_pool.c)
 sdk_add_include_directories(bflb_block_pool)
 
-# soft crc
-sdk_library_add_sources(soft_crc/soft_crc.c)
-sdk_add_include_directories(soft_crc)
-
 if(DEFINED CONFIG_TIMEZONE)
     sdk_add_compile_definitions(-DBFLB_TIMESTAMP_TIMEZONE=${CONFIG_TIMEZONE})
 else()

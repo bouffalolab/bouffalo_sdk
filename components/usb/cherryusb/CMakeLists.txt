@@ -49,7 +49,15 @@ sdk_library_add_sources(class/msc/usbh_msc.c)
 sdk_library_add_sources(class/hid/usbh_hid.c)
 sdk_library_add_sources(class/hub/usbh_hub.c)
 sdk_library_add_sources(class/video/usbh_video.c)
+sdk_library_add_sources(class/audio/usbh_audio.c)
 
-sdk_add_link_libraries(-ucdc_acm_class_driver -uhid_class_driver -umsc_class_driver -uvideo_class_ctrl_intf_driver)
+sdk_add_link_libraries(
+-ucdc_acm_class_driver 
+-uhid_class_driver 
+-umsc_class_driver 
+-uvideo_ctrl_class_driver 
+-uaudio_ctrl_class_driver)
 
+# sdk_add_static_library(port/ehci/libehci_iso.a)
+# add_subdirectory(port/ehci)
 endif()

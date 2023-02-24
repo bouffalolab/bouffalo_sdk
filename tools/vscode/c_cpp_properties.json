@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "@proj_name@",
+            "includePath": [@C_CPP_PROPERTIES_INCLUDE_IN@
+            ],
+            "defines": [@C_CPP_PROPERTIES_DEFINES_IN@
+                "__attribute__(x)="
+            ],
+            "compilerPath": "@CMAKE_C_COMPILER@",
+            "cStandard": "gnu99",
+            "cppStandard": "gnu++11",
+            "intelliSenseMode": "gcc-arm"
+        }
+    ],
+    "version": 4
+}

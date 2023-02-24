@@ -721,7 +721,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_common_trim(struct bflb_device_s *dev, c
     trim_list_len = bflb_ef_ctrl_get_common_trim_list(&trim_list);
 
     for (i = 0; i < trim_list_len; i++) {
-        if (memcmp(name, trim_list[i].name, strlen(name)) == 0) {
+        if (arch_memcmp(name, trim_list[i].name, strlen(name)) == 0) {
             /* switch clock */
             if (trim_list[i].en_addr <= EF_CTRL_EFUSE_R0_SIZE) {
                 /* Switch to AHB clock */

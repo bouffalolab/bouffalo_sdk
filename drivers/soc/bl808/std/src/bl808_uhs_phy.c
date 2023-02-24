@@ -762,6 +762,7 @@ uint8_t uhs_err_handler(uint8_t err)
 {
     err_flag = 1;
     uhs_phy_cal_res->err_type = err;
+#ifndef BFLB_BOOT2
     switch (err) {
         case UHS_REGR_GNT_ERR:
             uhs_phy_printfe("UHS_REGR_GNT_ERR\r\n");
@@ -830,6 +831,9 @@ uint8_t uhs_err_handler(uint8_t err)
     }
     uhs_phy_printfe("ERR_AT %ldMbps\r\n",cfg_glb->pck_freq);
     uhs_phy_reg_dump();
+#else
+    uhs_phy_printfe("uhs_err_handler:%d\r\n",err);
+#endif
     #if CAL_MODE == 0 || CAL_MODE == 1
     while(1){
         uhs_phy_printfe("%d",err);

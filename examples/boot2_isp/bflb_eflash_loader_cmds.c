@@ -37,7 +37,7 @@
 #include "stdio.h"
 #include "stdint.h"
 #include "string.h"
-#include "softcrc.h"
+
 #include "partition.h"
 #include "bflb_flash.h"
 #include "bflb_sec_sha.h"
@@ -85,7 +85,7 @@ static int32_t bflb_eflash_loader_cmd_read_mac_addr(uint16_t cmd, uint8_t *data,
 #endif
 
 #if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH || BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM
-static const struct eflash_loader_cmd_cfg_t eflash_loader_cmds[] = {
+static ATTR_TCM_CONST_SECTION const struct eflash_loader_cmd_cfg_t eflash_loader_cmds[] = {
 #if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM
     /*for bl602*/
     { BFLB_EFLASH_LOADER_CMD_GET_BOOTINFO, EFLASH_LOADER_CMD_ENABLE, bflb_bootrom_cmd_get_bootinfo },
@@ -510,7 +510,7 @@ static int32_t bflb_eflash_loader_cmd_reset(uint16_t cmd, uint8_t *data, uint16_
     return ret;
 }
 
-static int32_t bflb_eflash_loader_cmd_erase_flash(uint16_t cmd, uint8_t *data, uint16_t len)
+ static int32_t ATTR_TCM_SECTION bflb_eflash_loader_cmd_erase_flash(uint16_t cmd, uint8_t *data, uint16_t len)
 {
     int32_t ret = BFLB_EFLASH_LOADER_SUCCESS;
     uint32_t startaddr, endaddr;
@@ -523,8 +523,8 @@ static int32_t bflb_eflash_loader_cmd_erase_flash(uint16_t cmd, uint8_t *data, u
         /*clean write error, since write usually behand erase*/
         g_eflash_loader_error = BFLB_EFLASH_LOADER_SUCCESS;
 
-        memcpy(&startaddr, data, 4);
-        memcpy(&endaddr, data + 4, 4);
+        arch_memcpy(&startaddr, data, 4);
+        arch_memcpy(&endaddr, data + 4, 4);
 
         //LOG_F("from%08xto%08x\n", startaddr, endaddr);
 
@@ -548,7 +548,7 @@ static int32_t ATTR_TCM_SECTION bflb_eflash_loader_cmd_write_flash(uint16_t cmd,
     if (len <= 4) {
         ret = BFLB_EFLASH_LOADER_FLASH_WRITE_PARA_ERROR;
     } else {
-        memcpy(&startaddr, data, 4);
+        arch_memcpy(&startaddr, data, 4);
         write_len = len - 4;
         //LOG_F("to%08x,%d\n", startaddr, write_len);
         if (startaddr < 0xffffffff) {
@@ -717,7 +717,7 @@ static int32_t bflb_eflash_loader_cmd_clock_set(uint16_t cmd, uint8_t *data, uin
 
 #endif
 
-int32_t bflb_eflash_loader_cmd_process(uint8_t cmdid, uint8_t *data, uint16_t len)
+int32_t ATTR_TCM_SECTION bflb_eflash_loader_cmd_process(uint8_t cmdid, uint8_t *data, uint16_t len)
 {
     int32_t ret = BFLB_EFLASH_LOADER_SUCCESS;
 #if BLSP_BOOT2_SUPPORT_EFLASH_LOADER_FLASH || BLSP_BOOT2_SUPPORT_EFLASH_LOADER_RAM

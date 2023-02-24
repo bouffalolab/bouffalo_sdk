@@ -14,10 +14,10 @@
 /** @defgroup DMA_DIRECTION dma transfer direction definition
   * @{
   */
-#define DMA_MEMORY_TO_MEMORY 0
-#define DMA_MEMORY_TO_PERIPH 1
-#define DMA_PERIPH_TO_MEMORY 2
-#define DMA_PERIPH_TO_PERIPH 3
+#define DMA_MEMORY_TO_MEMORY       0
+#define DMA_MEMORY_TO_PERIPH       1
+#define DMA_PERIPH_TO_MEMORY       2
+#define DMA_PERIPH_TO_PERIPH       3
 /**
   * @}
   */
@@ -34,9 +34,9 @@
 /** @defgroup DMA_DATA_WIDTH dma data width definition
   * @{
   */
-#define DMA_DATA_WIDTH_8BIT  0
-#define DMA_DATA_WIDTH_16BIT 1
-#define DMA_DATA_WIDTH_32BIT 2
+#define DMA_DATA_WIDTH_8BIT        0
+#define DMA_DATA_WIDTH_16BIT       1
+#define DMA_DATA_WIDTH_32BIT       2
 /**
   * @}
   */
@@ -44,10 +44,10 @@
 /** @defgroup DMA_BURST_COUNT dma burst increment count definition
   * @{
   */
-#define DMA_BURST_INCR1  0
-#define DMA_BURST_INCR4  1
-#define DMA_BURST_INCR8  2
-#define DMA_BURST_INCR16 3
+#define DMA_BURST_INCR1            0
+#define DMA_BURST_INCR4            1
+#define DMA_BURST_INCR8            2
+#define DMA_BURST_INCR16           3
 /**
   * @}
   */
@@ -75,7 +75,8 @@
 #define DMA_ADDR_DAC_TDR (0x40002000 + 0x48)
 #endif
 #if defined(BL702L)
-#define DMA_ADDR_IR_TDR (0x4000A600 + 0x88)
+#define DMA_ADDR_IR_TDR    (0x4000A600 + 0x88)
+#define DMA_ADDR_AUADC_RDR (0x4000AD00 + 0x88)
 #endif
 /**
   * @}
@@ -98,6 +99,9 @@
 #endif
 #define DMA_REQUEST_SPI0_RX 0x0000000A
 #define DMA_REQUEST_SPI0_TX 0x0000000B
+#if defined(BL702L)
+#define DMA_REQUEST_AUADC_RX 0x0000000D
+#endif
 #if !defined(BL702L)
 #define DMA_REQUEST_I2S_RX 0x00000014
 #define DMA_REQUEST_I2S_TX 0x00000015
@@ -126,6 +130,7 @@
 #define DMA_ADDR_I2S_RDR        (0x2000AB00 + 0x8C)
 #define DMA_ADDR_ADC_RDR        (0x20002000 + 0x04)
 #define DMA_ADDR_DAC_TDR        (0x20002000 + 0x48)
+#define DMA_ADDR_DBI_TDR        (0x2000A800 + 0x88)
 #define DMA_ADDR_AUDAC_TDR      (0x20055000 + 0x94)
 #define DMA_ADDR_AUADC_RDR      (0x2000A000 + 0xC88)
 /**
@@ -144,6 +149,7 @@
 #define DMA_REQUEST_I2C0_TX     0x00000007
 #define DMA_REQUEST_SPI0_RX     0x0000000A
 #define DMA_REQUEST_SPI0_TX     0x0000000B
+#define DMA_REQUEST_DBI_TX      0x00000014
 #define DMA_REQUEST_AUADC_RX    0x00000015
 #define DMA_REQUEST_AUDAC_TX    0x0000000D
 #define DMA_REQUEST_I2S_RX      0x00000010
@@ -290,6 +296,8 @@
 #define DMA_CMD_SET_DSTADDR_INCREMENT (0x02)
 #define DMA_CMD_SET_ADD_MODE          (0x03)
 #define DMA_CMD_SET_REDUCE_MODE       (0x04)
+#define DMA_CMD_SET_LLI_CONFIG        (0x05)
+#define DMA_CMD_GET_LLI_CONTROL       (0x06)
 /**
   * @}
   */

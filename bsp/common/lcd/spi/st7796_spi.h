@@ -24,21 +24,11 @@
 #ifndef _ST7796_SPI_H_
 #define _ST7796_SPI_H_
 
-#include "bflb_core.h"
+#include "../lcd_conf.h"
 
-#define ST7796_SPI_CS_PIN GPIO_PIN_16
-#define ST7796_SPI_DC_PIN GPIO_PIN_18
+#if defined LCD_SPI_ST7796
 
-#define ST7796_SPI_CS_HIGH bflb_gpio_set(st7796_gpio, ST7796_SPI_CS_PIN)
-#define ST7796_SPI_CS_LOW  bflb_gpio_reset(st7796_gpio, ST7796_SPI_CS_PIN)
-#define ST7796_SPI_DC_HIGH bflb_gpio_set(st7796_gpio, ST7796_SPI_DC_PIN)
-#define ST7796_SPI_DC_LOW  bflb_gpio_reset(st7796_gpio, ST7796_SPI_DC_PIN)
-
-#define ST7796_SPI_W 320 /* ST7796 LCD width */
-#define ST7796_SPI_H 480 /* ST7796 LCD height */
-
-#define ST7796_SPI_OFFSET_X 0
-#define ST7796_SPI_OFFSET_Y 0
+/* Do not modify the following */
 
 #define ST7796_SPI_COLOR_DEPTH 16
 
@@ -51,13 +41,15 @@ typedef struct {
 typedef uint16_t st7796_spi_color_t;
 
 int st7796_spi_init();
+void st7796_spi_async_callback_enable(bool enable);
 void st7796_spi_async_callback_register(void (*callback)(void));
 int st7796_spi_set_dir(uint8_t dir, uint8_t mir_flag);
-void st7796_spi_set_draw_window(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2);
+void st7796_spi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 void st7796_spi_draw_point(uint16_t x, uint16_t y, st7796_spi_color_t color);
 void st7796_spi_draw_area(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7796_spi_color_t color);
 void st7796_spi_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7796_spi_color_t *picture);
 void st7796_spi_draw_picture_blocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7796_spi_color_t *picture);
 int st7796_spi_draw_is_busy(void);
 
+#endif
 #endif

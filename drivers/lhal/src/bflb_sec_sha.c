@@ -48,7 +48,7 @@ void bflb_sha1_start(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx)
 
     reg_base = dev->reg_base;
 
-    memset(ctx, 0, sizeof(struct bflb_sha1_ctx_s));
+    arch_memset(ctx, 0, sizeof(struct bflb_sha1_ctx_s));
     ctx->sha_padding[0] = 0x80;
 
     regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
@@ -69,7 +69,7 @@ void bflb_sha512_start(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx)
 
     reg_base = dev->reg_base;
 
-    memset(ctx, 0, sizeof(struct bflb_sha512_ctx_s));
+    arch_memset(ctx, 0, sizeof(struct bflb_sha512_ctx_s));
     ctx->sha_padding[0] = 0x80;
 
     regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
@@ -526,7 +526,7 @@ void bflb_sha_link_deinit(struct bflb_device_s *dev)
 
 void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_link_ctx_s *ctx, struct bflb_sha_link_s *link)
 {
-    memset(ctx, 0, sizeof(struct bflb_sha1_link_ctx_s));
+    arch_memset(ctx, 0, sizeof(struct bflb_sha1_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
     ctx->link_addr = (uint32_t)(uintptr_t)link;
 }
@@ -538,7 +538,7 @@ void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_c
 
 void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_link_ctx_s *ctx, struct bflb_sha_link_s *link)
 {
-    memset(ctx, 0, sizeof(struct bflb_sha512_link_ctx_s));
+    arch_memset(ctx, 0, sizeof(struct bflb_sha512_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
     ctx->link_addr = (uint32_t)(uintptr_t)link;
 }

@@ -9,7 +9,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define BL616_IRQ_NUM_BASE 16
+#define BL616_IRQ_NUM_BASE       16
 
 #define BL616_IRQ_SSOFT          1
 #define BL616_IRQ_MSOFT          3
@@ -26,7 +26,7 @@
 #define BL616_IRQ_BMX_MCU_TO                        (BL616_IRQ_NUM_BASE + 1)
 #define BL616_IRQ_DBI                               (BL616_IRQ_NUM_BASE + 2)
 #define BL616_IRQ_SDU_SOFT_RST                      (BL616_IRQ_NUM_BASE + 3)
-#define BL616_IRQ_AUADC                             (BL616_IRQ_NUM_BASE + 4)
+#define BL616_IRQ_AUDAC                             (BL616_IRQ_NUM_BASE + 4)
 #define BL616_IRQ_RF_TOP_INT0                       (BL616_IRQ_NUM_BASE + 5)
 #define BL616_IRQ_RF_TOP_INT1                       (BL616_IRQ_NUM_BASE + 6)
 #define BL616_IRQ_SDIO                              (BL616_IRQ_NUM_BASE + 7)
@@ -44,7 +44,7 @@
 #define BL616_IRQ_WIFI_TBTT_WAKEUP                  (BL616_IRQ_NUM_BASE + 19)
 #define BL616_IRQ_IRRX                              (BL616_IRQ_NUM_BASE + 20)
 #define BL616_IRQ_USB                               (BL616_IRQ_NUM_BASE + 21)
-#define BL616_IRQ_AUDAC                             (BL616_IRQ_NUM_BASE + 22)
+#define BL616_IRQ_AUADC                             (BL616_IRQ_NUM_BASE + 22)
 #define BL616_IRQ_MJPEG                             (BL616_IRQ_NUM_BASE + 23)
 #define BL616_IRQ_EMAC                              (BL616_IRQ_NUM_BASE + 24)
 #define BL616_IRQ_GPADC_DMA                         (BL616_IRQ_NUM_BASE + 25)

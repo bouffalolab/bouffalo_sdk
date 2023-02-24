@@ -132,6 +132,7 @@ void exception_entry(uintptr_t *regs)
 
     cause = (cause & 0x3ff);
 
+#ifndef CONFIG_TRAP_DUMP_DISABLE
     const char *mcause_str[] = {
         "Instruction address misaligned",
         "Instruction access fault",
@@ -152,29 +153,7 @@ void exception_entry(uintptr_t *regs)
     };
 
     printf("%s\r\n", mcause_str[cause & 0xf]);
-// clang-format off
-#ifdef CONFIG_TRAP_DUMP_ALL_REGS
-    printf("ra = 0x%08x  ", regs[REG_RA]); printf("sp = 0x%08x  ", regs[REG_SP]); printf("gp = 0x%08x  ", regs[REG_GP]);
-    printf("tp = 0x%08x  ", regs[REG_TP]); printf("\n\r");
-
-    printf("t0 = 0x%08x  ", regs[REG_T0]); printf("t1 = 0x%08x  ", regs[REG_T1]); printf("t2 = 0x%08x  ", regs[REG_T2]);
-    printf("t3 = 0x%08x  ", regs[REG_T3]); printf("\n\r");
-    printf("t4 = 0x%08x  ", regs[REG_T4]); printf("t5 = 0x%08x  ", regs[REG_T5]); printf("t6 = 0x%08x  ", regs[REG_T6]);
-    printf("\n\r");
-
-    printf("a0 = 0x%08x  ", regs[REG_A0]); printf("a1 = 0x%08x  ", regs[REG_A1]); printf("a2 = 0x%08x  ", regs[REG_A2]);
-    printf("a3 = 0x%08x  ", regs[REG_A3]); printf("\n\r");
-    printf("a4 = 0x%08x  ", regs[REG_A4]); printf("a5 = 0x%08x  ", regs[REG_A5]); printf("a6 = 0x%08x  ", regs[REG_A6]);
-    printf("a7 = 0x%08x  ", regs[REG_A7]); printf("\n\r");
-
-    printf("s0 = 0x%08x  ", regs[REG_S0]); printf("s1 = 0x%08x  ", regs[REG_S1]); printf("s2 = 0x%08x  ", regs[REG_S2]);
-    printf("s3 = 0x%08x  ", regs[REG_S3]); printf("\n\r");
-    printf("s4 = 0x%08x  ", regs[REG_S4]); printf("s5 = 0x%08x  ", regs[REG_S5]); printf("s6 = 0x%08x  ", regs[REG_S6]);
-    printf("s7 = 0x%08x  ", regs[REG_S7]); printf("\n\r");
-    printf("s8 = 0x%08x  ", regs[REG_S8]); printf("s9 = 0x%08x  ", regs[REG_S9]); printf("s10 = 0x%08x ", regs[REG_S10]);
-    printf("s11 = 0x%08x  ", regs[REG_S11]); printf("\n\r");
 #endif
-    // clang-format on
     if ((cause == 8) || (cause == 11)) {
         epc += 4;
         WRITE_CSR(CSR_MEPC, epc);

@@ -150,13 +150,13 @@
 #else
 #define BFLOG_SIMPLE_LAYOUT_STRING(_color, _level, _tag, _tm, _msg) \
     "%s"                                                            \
-    "[%c][%10lu]"                                                   \
-    "[%s:%s:%d]"                                                    \
-    "<%s> %s",                                                      \
+    "[%c:%10lu]"                                                    \
+    "[%s:%d]"                                                       \
+    "%10s> %s",                                                     \
         (_color),                                                   \
         (_level[0]),                                                \
         ((_msg)->clkl),                                             \
-        ((_msg)->file), ((_msg)->func), ((_msg)->line),             \
+        ((_msg)->file), ((_msg)->line),                             \
         (_tag),                                                     \
         ((_msg)->string)
 #endif

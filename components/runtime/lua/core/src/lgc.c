@@ -30,12 +30,12 @@
 ** (Large enough to dissipate fixed overheads but small enough
 ** to allow small steps for the collector.)
 */
-#define GCSWEEPMAX 100
+#define GCSWEEPMAX     100
 
 /*
 ** Maximum number of finalizers to call in each single step.
 */
-#define GCFINMAX 10
+#define GCFINMAX       10
 
 /*
 ** Cost of calling one finalizer.
@@ -46,19 +46,19 @@
 ** The equivalent, in bytes, of one unit of "work" (visiting a slot,
 ** sweeping an object, etc.)
 */
-#define WORK2MEM sizeof(TValue)
+#define WORK2MEM       sizeof(TValue)
 
 /*
 ** macro to adjust 'pause': 'pause' is actually used like
 ** 'pause / PAUSEADJ' (value chosen by tests)
 */
-#define PAUSEADJ 100
+#define PAUSEADJ       100
 
 /* mask with all color bits */
-#define maskcolors (bitmask(BLACKBIT) | WHITEBITS)
+#define maskcolors     (bitmask(BLACKBIT) | WHITEBITS)
 
 /* mask with all GC bits */
-#define maskgcbits (maskcolors | AGEBITS)
+#define maskgcbits     (maskcolors | AGEBITS)
 
 /* macro to erase all color bits then set only the current white bit */
 #define makewhite(g, x) \
@@ -78,7 +78,7 @@
 /*
 ** Protected access to objects in values
 */
-#define gcvalueN(o) (iscollectable(o) ? gcvalue(o) : NULL)
+#define gcvalueN(o)   (iscollectable(o) ? gcvalue(o) : NULL)
 
 #define markvalue(g, o)                      \
     {                                        \
@@ -547,8 +547,8 @@ static lu_mem traversetable(global_State *g, Table *h)
     const TValue *mode = gfasttm(g, h->metatable, TM_MODE);
     markobjectN(g, h->metatable);
     if (mode && ttisstring(mode) && /* is there a weak mode? */
-        (cast_void(weakkey = strchr(svalue(mode), 'k')),
-         cast_void(weakvalue = strchr(svalue(mode), 'v')),
+        (cast_void(weakkey = luaport_strchr(svalue(mode), 'k')),
+         cast_void(weakvalue = luaport_strchr(svalue(mode), 'v')),
          (weakkey || weakvalue))) { /* is really weak? */
         if (!weakkey)               /* strong keys? */
             traverseweakvalue(g, h);

@@ -41,7 +41,7 @@
 #include "blsp_common.h"
 #include "blsp_boot_parser.h"
 #include "blsp_media_boot.h"
-#include "softcrc.h"
+
 #include "bflb_eflash_loader_interface.h"
 
 extern int main(void);

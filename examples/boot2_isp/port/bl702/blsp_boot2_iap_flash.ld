@@ -23,6 +23,7 @@ PROVIDE(__boot2_pass_param_addr = 0x4202DC00);
 
 MEMORY
 {
+    fw_header_memory  (rx)  : ORIGIN = 0x23000000 - 0x2000, LENGTH = 8K
     xip_memory (rx) : 	ORIGIN = 0x23000000, LENGTH = 64K
    	itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 16K
     dtcm_memory (rx)  : ORIGIN = 0x42018000, LENGTH = 4K
@@ -32,6 +33,11 @@ MEMORY
 SECTIONS
 {
     PROVIDE(__metal_chicken_bit = 0);
+
+    .fw_header :
+    {
+        KEEP(*(.fw_header))
+    } > fw_header_memory
 
     .text :
     {

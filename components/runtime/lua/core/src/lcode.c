@@ -30,7 +30,7 @@
 #include "lvm.h"
 
 /* Maximum number of registers in a Lua function (must fit in 8 bits) */
-#define MAXREGS 255
+#define MAXREGS     255
 
 #define hasjumps(e) ((e)->t != (e)->f)
 

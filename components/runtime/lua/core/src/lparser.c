@@ -29,13 +29,13 @@
 
 /* maximum number of local variables per function (must be smaller
    than 250, due to the bytecode format) */
-#define MAXVARS 200
+#define MAXVARS       200
 
 #define hasmultret(k) ((k) == VCALL || (k) == VVARARG)
 
 /* because all strings are unified by the scanner, the parser
    can use pointer equality for string equality */
-#define eqstr(a, b) ((a) == (b))
+#define eqstr(a, b)   ((a) == (b))
 
 /*
 ** nodes for block list (list of active blocks)
@@ -1679,9 +1679,8 @@ static void test_then_block(LexState *ls, int *escapelist)
         luaX_next(ls);              /* skip 'break' */
         enterblock(fs, &bl, 0);     /* must enter block before 'goto' */
         newgotoentry(ls, luaS_newliteral(ls->L, "break"), line, v.t);
-        while (testnext(ls, ';')) {
-        }                          /* skip semicolons */
-        if (block_follow(ls, 0)) { /* jump is the entire block? */
+        while (testnext(ls, ';')) {} /* skip semicolons */
+        if (block_follow(ls, 0)) {   /* jump is the entire block? */
             leaveblock(fs);
             return; /* and that is it */
         } else      /* must skip over 'then' part if condition is false */
@@ -1731,9 +1730,9 @@ static int getlocalattribute(LexState *ls)
     if (testnext(ls, '<')) {
         const char *attr = getstr(str_checkname(ls));
         checknext(ls, '>');
-        if (strcmp(attr, "const") == 0)
+        if (luaport_strcmp(attr, "const") == 0)
             return RDKCONST; /* read-only variable */
-        else if (strcmp(attr, "close") == 0)
+        else if (luaport_strcmp(attr, "close") == 0)
             return RDKTOCLOSE; /* to-be-closed variable */
         else
             luaK_semerror(ls,

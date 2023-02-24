@@ -1,5 +1,6 @@
 #include "bflb_mtimer.h"
 #include "bflb_pwm_v2.h"
+#include "bflb_clock.h"
 #include "board.h"
 
 #define REPT_CNT 3

@@ -4,6 +4,62 @@
 #include "ring_buffer.h"
 #include "bflb_uart.h"
 
+static int shell_exec_argc;
+static char *shell_exec_argv[SHELL_ARG_NUM];
+static char shell_exec_line[SHELL_CMD_SIZE];
+static ptrdiff_t shell_exec_line_diff;
+TaskHandle_t shell_exec_handle;
+static ATTR_NOCACHE_RAM_SECTION volatile bool shell_exec_end = true;
+
+static void shell_exec_task(void *pvParameters)
+{
+    shell_exec_end = false;
+    __ASM volatile("fence");
+    ((cmd_function_t)(pvParameters))(shell_exec_argc, shell_exec_argv);
+    shell_exec_end = true;
+    __ASM volatile("fence");
+    vTaskDelete(shell_exec_handle);
+    shell_exec_handle = NULL;
+}
+
+void shell_dup_line(char *cmd, uint32_t length)
+{
+    memcpy(shell_exec_line, cmd, length);
+    shell_exec_line_diff = shell_exec_line - cmd;
+}
+
+void shell_abort_exec(int sig)
+{
+    (void)sig;
+    if (shell_exec_end == false) {
+        shell_exec_end = true;
+        __ASM volatile("fence");
+        vTaskDelete(shell_exec_handle);
+        shell_exec_handle = NULL;
+    }
+}
+
+int shell_start_exec(cmd_function_t func, int argc, char *argv[])
+{
+    BaseType_t xReturned;
+    shell_abort_exec(SHELL_SIGINT);
+    shell_exec_argc = argc;
+
+    for (uint8_t i = 0; i < argc; i++) {
+        shell_exec_argv[i] = argv[i] + shell_exec_line_diff;
+    }
+
+    __ASM volatile("fence");
+    xReturned = xTaskCreate(shell_exec_task, (char *)"shell_exec_task", SHELL_EXEC_THREAD_STACK_SIZE, func, SHELL_EXEC_THREAD_PRIO, &shell_exec_handle);
+
+    if (xReturned == pdPASS) {
+        return 0;
+    } else {
+        shell_exec_end = true;
+        return -1;
+    }
+}
+
 static TaskHandle_t shell_handle;
 SemaphoreHandle_t sem_shell = NULL;
 

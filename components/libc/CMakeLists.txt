@@ -1,5 +1,9 @@
 sdk_generate_library()
 
+add_subdirectory(newlib)
+
+# use newlib stdlib or nuttx stdlib
+if(NOT CONFIG_NEWLIB_STANDARD)
 sdk_library_add_sources(
 nuttx/libc/stdlib/lib_abs.c
 nuttx/libc/stdlib/lib_atof.c
@@ -19,7 +23,10 @@ nuttx/libc/stdlib/lib_strtod.c
 # nuttx/libc/stdlib/lib_strtoll.c
 # nuttx/libc/stdlib/lib_strtoull.c
 )
+endif()
 
+# use newlib string or nuttx string
+if(NOT CONFIG_NEWLIB_STANDARD)
 sdk_library_add_sources(
 nuttx/libc/string/lib_ffs.c
 nuttx/libc/string/lib_ffsl.c
@@ -54,72 +61,51 @@ nuttx/libc/string/lib_strtokr.c
 # nuttx/libc/string/lib_isbasedigit.c
 # nuttx/libc/string/lib_skipspace.c
 )
+endif()
 
+# is boot2
+if(NOT CONFIG_BOOT2)
+# use newlib memcpy or nuttx memcpy
+if(NOT CONFIG_NEWLIB_STANDARD)
 sdk_library_add_sources(
 nuttx/libc/string/lib_vikmemcpy.c
 )
+endif()
+else()
+sdk_library_add_sources(
+nuttx/libc/string/lib_memcpy.c
+)
+endif()
 
 sdk_add_include_directories(.)
 
-# libc or vlibc select
-if(CONFIG_VLIBC)
-    # vsnprintf config
-    if(CONFIG_VSNPRINTF_FLOAT)
-        sdk_add_compile_definitions(-DCONFIG_VLIBC_FLOAT=${CONFIG_VSNPRINTF_FLOAT})
-    endif()
-
-    if(CONFIG_VSNPRINTF_FLOAT_EX)
-        sdk_add_compile_definitions(-DCONFIG_VLIBC_FLOAT_EX=${CONFIG_VSNPRINTF_FLOAT_EX})
-    endif()
-
-    if(CONFIG_VSNPRINTF_LONG_LONG)
-        sdk_add_compile_definitions(-DCONFIG_VLIBC_LONG_LONG=${CONFIG_VSNPRINTF_LONG_LONG})
-    endif()
-
-    if(CONFIG_VSNPRINTF_WRITEBACK)
-        sdk_add_compile_definitions(-DCONFIG_VLIBC_WRITEBACK=${CONFIG_VSNPRINTF_WRITEBACK})
-    endif()
-
-    sdk_add_compile_definitions(-DCONFIG_VLIBC)
-
-    # vlibc debug enable
-    if(CONFIG_VLIBC_DEBUG)
-        sdk_add_compile_definitions(-DCONFIG_VLIBC_DEBUG)
-    endif()
-
-    # vlibc fatfs port enable
-    if(CONFIG_VLIBC_FATFS)
-        sdk_add_compile_definitions(-DCONFIG_VLIBC_FATFS)
-    endif()
-
-    sdk_library_add_sources(vlibc/printf.c)
-    sdk_library_add_sources(vlibc/vlibc_stdio.c)
-    sdk_library_add_sources(vlibc/vlibc_vsnprintf.c)
-    sdk_add_include_directories(vlibc)
+if(NOT CONFIG_NEWLIB_STANDARD)
+if(CONFIG_VSNPRINTF_NANO)
+sdk_library_add_sources(vsnprintf_nano.c)
 else()
-    # vsnprintf config
-    if(CONFIG_VSNPRINTF_FLOAT)
-        sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT=${CONFIG_VSNPRINTF_FLOAT})
-    endif()
-
-    if(CONFIG_VSNPRINTF_FLOAT_EX)
-        sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT_EX=${CONFIG_VSNPRINTF_FLOAT_EX})
-    endif()
-
-    if(CONFIG_VSNPRINTF_LONG_LONG)
-        sdk_add_compile_definitions(-DCONFIG_LIBC_LONG_LONG=${CONFIG_VSNPRINTF_LONG_LONG})
-    endif()
-
-    if(CONFIG_VSNPRINTF_NANO)
-        sdk_library_add_sources(vsnprintf_nano.c)
-    else()
-        sdk_library_add_sources(vsnprintf.c)
-    endif()
-
-    sdk_library_add_sources(printf.c)
+sdk_library_add_sources(vsnprintf.c)
+endif()
 endif()
 
+if(NOT CONFIG_NEWLIB)
 sdk_library_add_sources(snprintf.c)
+sdk_library_add_sources(sprintf.c)
+sdk_library_add_sources(vsprintf.c)
+sdk_library_add_sources(printf.c)
+endif()
+
+# vsnprintf %f %F
+if(CONFIG_VSNPRINTF_FLOAT)
+    sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT=${CONFIG_VSNPRINTF_FLOAT})
+endif()
+# vsnprintf %g %G %e %E
+if(CONFIG_VSNPRINTF_FLOAT_EX)
+    sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT_EX=${CONFIG_VSNPRINTF_FLOAT_EX})
+endif()
+# vsnprintf %lld %lli %llu %llx %llX %llo
+if(CONFIG_VSNPRINTF_LONG_LONG)
+    sdk_add_compile_definitions(-DCONFIG_LIBC_LONG_LONG=${CONFIG_VSNPRINTF_LONG_LONG})
+endif()
 
 # use custom apis first, if not exist, then use builtin apis
 sdk_add_compile_options(-fno-builtin)

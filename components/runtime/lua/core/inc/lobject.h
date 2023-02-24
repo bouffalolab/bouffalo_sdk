@@ -15,14 +15,14 @@
 /*
 ** Extra types for collectable non-values
 */
-#define LUA_TUPVAL   LUA_NUMTYPES       /* upvalues */
-#define LUA_TPROTO   (LUA_NUMTYPES + 1) /* function prototypes */
-#define LUA_TDEADKEY (LUA_NUMTYPES + 2) /* removed keys in tables */
+#define LUA_TUPVAL        LUA_NUMTYPES       /* upvalues */
+#define LUA_TPROTO        (LUA_NUMTYPES + 1) /* function prototypes */
+#define LUA_TDEADKEY      (LUA_NUMTYPES + 2) /* removed keys in tables */
 
 /*
 ** number of all possible types (including LUA_TNONE but excluding DEADKEY)
 */
-#define LUA_TOTALTYPES (LUA_TPROTO + 2)
+#define LUA_TOTALTYPES    (LUA_TPROTO + 2)
 
 /*
 ** tags for Tagged Values have the following use of bits:
@@ -58,21 +58,21 @@ typedef struct TValue {
     TValuefields;
 } TValue;
 
-#define val_(o)   ((o)->value_)
-#define valraw(o) (val_(o))
+#define val_(o)         ((o)->value_)
+#define valraw(o)       (val_(o))
 
 /* raw type tag of a TValue */
-#define rawtt(o) ((o)->tt_)
+#define rawtt(o)        ((o)->tt_)
 
 /* tag with no variants (bits 0-3) */
-#define novariant(t) ((t)&0x0F)
+#define novariant(t)    ((t)&0x0F)
 
 /* type tag of a TValue (bits 0-3 for tags + variant bits 4-5) */
-#define withvariant(t) ((t)&0x3F)
-#define ttypetag(o)    withvariant(rawtt(o))
+#define withvariant(t)  ((t)&0x3F)
+#define ttypetag(o)     withvariant(rawtt(o))
 
 /* type of a TValue */
-#define ttype(o) (novariant(rawtt(o)))
+#define ttype(o)        (novariant(rawtt(o)))
 
 /* Macros to test type */
 #define checktag(o, t)  (rawtt(o) == (t))
@@ -81,7 +81,7 @@ typedef struct TValue {
 /* Macros for internal tests */
 
 /* collectable object has the same tag as the original value */
-#define righttt(obj) (ttypetag(obj) == gcvalue(obj)->tt)
+#define righttt(obj)    (ttypetag(obj) == gcvalue(obj)->tt)
 
 /*
 ** Any value being manipulated by the program either is non
@@ -117,13 +117,13 @@ typedef struct TValue {
 /* from stack to stack */
 #define setobjs2s(L, o1, o2) setobj(L, s2v(o1), s2v(o2))
 /* to stack (not from same stack) */
-#define setobj2s(L, o1, o2) setobj(L, s2v(o1), o2)
+#define setobj2s(L, o1, o2)  setobj(L, s2v(o1), o2)
 /* from table to same table */
-#define setobjt2t setobj
+#define setobjt2t            setobj
 /* to new object */
-#define setobj2n setobj
+#define setobj2n             setobj
 /* to table */
-#define setobj2t setobj
+#define setobj2t             setobj
 
 /*
 ** Entries in a Lua stack. Field 'tbclist' forms a list of all
@@ -145,7 +145,7 @@ typedef union StackValue {
 typedef StackValue *StkId;
 
 /* convert a 'StackValue' to a 'TValue' */
-#define s2v(o) (&(o)->val)
+#define s2v(o)            (&(o)->val)
 
 /*
 ** {==================================================================
@@ -154,23 +154,23 @@ typedef StackValue *StkId;
 */
 
 /* Standard nil */
-#define LUA_VNIL makevariant(LUA_TNIL, 0)
+#define LUA_VNIL          makevariant(LUA_TNIL, 0)
 
 /* Empty slot (which might be different from a slot containing nil) */
-#define LUA_VEMPTY makevariant(LUA_TNIL, 1)
+#define LUA_VEMPTY        makevariant(LUA_TNIL, 1)
 
 /* Value returned for a key not found in a table (absent key) */
-#define LUA_VABSTKEY makevariant(LUA_TNIL, 2)
+#define LUA_VABSTKEY      makevariant(LUA_TNIL, 2)
 
 /* macro to test for (any kind of) nil */
-#define ttisnil(v) checktype((v), LUA_TNIL)
+#define ttisnil(v)        checktype((v), LUA_TNIL)
 
 /* macro to test for a standard nil */
-#define ttisstrictnil(o) checktag((o), LUA_VNIL)
+#define ttisstrictnil(o)  checktag((o), LUA_VNIL)
 
-#define setnilvalue(obj) settt_(obj, LUA_VNIL)
+#define setnilvalue(obj)  settt_(obj, LUA_VNIL)
 
-#define isabstkey(v) checktag((v), LUA_VABSTKEY)
+#define isabstkey(v)      checktag((v), LUA_VABSTKEY)
 
 /*
 ** macro to detect non-standard nils (used only in assertions)
@@ -182,13 +182,13 @@ typedef StackValue *StkId;
 ** (In any definition, values associated with absent keys must also
 ** be accepted as empty.)
 */
-#define isempty(v) ttisnil(v)
+#define isempty(v)        ttisnil(v)
 
 /* macro defining a value corresponding to an absent key */
-#define ABSTKEYCONSTANT { NULL }, LUA_VABSTKEY
+#define ABSTKEYCONSTANT   { NULL }, LUA_VABSTKEY
 
 /* mark an entry as empty */
-#define setempty(v) settt_(v, LUA_VEMPTY)
+#define setempty(v)       settt_(v, LUA_VEMPTY)
 
 /* }================================================================== */
 
@@ -198,17 +198,17 @@ typedef StackValue *StkId;
 ** ===================================================================
 */
 
-#define LUA_VFALSE makevariant(LUA_TBOOLEAN, 0)
-#define LUA_VTRUE  makevariant(LUA_TBOOLEAN, 1)
+#define LUA_VFALSE        makevariant(LUA_TBOOLEAN, 0)
+#define LUA_VTRUE         makevariant(LUA_TBOOLEAN, 1)
 
-#define ttisboolean(o) checktype((o), LUA_TBOOLEAN)
-#define ttisfalse(o)   checktag((o), LUA_VFALSE)
-#define ttistrue(o)    checktag((o), LUA_VTRUE)
+#define ttisboolean(o)    checktype((o), LUA_TBOOLEAN)
+#define ttisfalse(o)      checktag((o), LUA_VFALSE)
+#define ttistrue(o)       checktag((o), LUA_VTRUE)
 
-#define l_isfalse(o) (ttisfalse(o) || ttisnil(o))
+#define l_isfalse(o)      (ttisfalse(o) || ttisnil(o))
 
-#define setbfvalue(obj) settt_(obj, LUA_VFALSE)
-#define setbtvalue(obj) settt_(obj, LUA_VTRUE)
+#define setbfvalue(obj)   settt_(obj, LUA_VFALSE)
+#define setbtvalue(obj)   settt_(obj, LUA_VTRUE)
 
 /* }================================================================== */
 
@@ -218,11 +218,11 @@ typedef StackValue *StkId;
 ** ===================================================================
 */
 
-#define LUA_VTHREAD makevariant(LUA_TTHREAD, 0)
+#define LUA_VTHREAD       makevariant(LUA_TTHREAD, 0)
 
-#define ttisthread(o) checktag((o), ctb(LUA_VTHREAD))
+#define ttisthread(o)     checktag((o), ctb(LUA_VTHREAD))
 
-#define thvalue(o) check_exp(ttisthread(o), gco2th(val_(o).gc))
+#define thvalue(o)        check_exp(ttisthread(o), gco2th(val_(o).gc))
 
 #define setthvalue(L, obj, x)         \
     {                                 \
@@ -260,14 +260,14 @@ typedef struct GCObject {
 /* Bit mark for collectable types */
 #define BIT_ISCOLLECTABLE (1 << 6)
 
-#define iscollectable(o) (rawtt(o) & BIT_ISCOLLECTABLE)
+#define iscollectable(o)  (rawtt(o) & BIT_ISCOLLECTABLE)
 
 /* mark a tag as collectable */
-#define ctb(t) ((t) | BIT_ISCOLLECTABLE)
+#define ctb(t)            ((t) | BIT_ISCOLLECTABLE)
 
-#define gcvalue(o) check_exp(iscollectable(o), val_(o).gc)
+#define gcvalue(o)        check_exp(iscollectable(o), val_(o).gc)
 
-#define gcvalueraw(v) ((v).gc)
+#define gcvalueraw(v)     ((v).gc)
 
 #define setgcovalue(L, obj, x)    \
     {                             \
@@ -286,17 +286,17 @@ typedef struct GCObject {
 */
 
 /* Variant tags for numbers */
-#define LUA_VNUMINT makevariant(LUA_TNUMBER, 0) /* integer numbers */
-#define LUA_VNUMFLT makevariant(LUA_TNUMBER, 1) /* float numbers */
+#define LUA_VNUMINT    makevariant(LUA_TNUMBER, 0) /* integer numbers */
+#define LUA_VNUMFLT    makevariant(LUA_TNUMBER, 1) /* float numbers */
 
 #define ttisnumber(o)  checktype((o), LUA_TNUMBER)
 #define ttisfloat(o)   checktag((o), LUA_VNUMFLT)
 #define ttisinteger(o) checktag((o), LUA_VNUMINT)
 
-#define nvalue(o) check_exp(ttisnumber(o), \
+#define nvalue(o)      check_exp(ttisnumber(o), \
                             (ttisinteger(o) ? cast_num(ivalue(o)) : fltvalue(o)))
-#define fltvalue(o) check_exp(ttisfloat(o), val_(o).n)
-#define ivalue(o)   check_exp(ttisinteger(o), val_(o).i)
+#define fltvalue(o)    check_exp(ttisfloat(o), val_(o).n)
+#define ivalue(o)      check_exp(ttisinteger(o), val_(o).i)
 
 #define fltvalueraw(v) ((v).n)
 #define ivalueraw(v)   ((v).i)
@@ -338,16 +338,16 @@ typedef struct GCObject {
 */
 
 /* Variant tags for strings */
-#define LUA_VSHRSTR makevariant(LUA_TSTRING, 0) /* short strings */
-#define LUA_VLNGSTR makevariant(LUA_TSTRING, 1) /* long strings */
+#define LUA_VSHRSTR      makevariant(LUA_TSTRING, 0) /* short strings */
+#define LUA_VLNGSTR      makevariant(LUA_TSTRING, 1) /* long strings */
 
 #define ttisstring(o)    checktype((o), LUA_TSTRING)
 #define ttisshrstring(o) checktag((o), ctb(LUA_VSHRSTR))
 #define ttislngstring(o) checktag((o), ctb(LUA_VLNGSTR))
 
-#define tsvalueraw(v) (gco2ts((v).gc))
+#define tsvalueraw(v)    (gco2ts((v).gc))
 
-#define tsvalue(o) check_exp(ttisstring(o), gco2ts(val_(o).gc))
+#define tsvalue(o)       check_exp(ttisstring(o), gco2ts(val_(o).gc))
 
 #define setsvalue(L, obj, x)       \
     {                              \
@@ -362,7 +362,7 @@ typedef struct GCObject {
 #define setsvalue2s(L, o, s) setsvalue(L, s2v(o), s)
 
 /* set a string to a new object */
-#define setsvalue2n setsvalue
+#define setsvalue2n          setsvalue
 
 /*
 ** Header for a string value.
@@ -382,16 +382,16 @@ typedef struct TString {
 /*
 ** Get the actual string (array of bytes) from a 'TString'.
 */
-#define getstr(ts) ((ts)->contents)
+#define getstr(ts)           ((ts)->contents)
 
 /* get the actual string (array of bytes) from a Lua value */
-#define svalue(o) getstr(tsvalue(o))
+#define svalue(o)            getstr(tsvalue(o))
 
 /* get string length from 'TString *s' */
-#define tsslen(s) ((s)->tt == LUA_VSHRSTR ? (s)->shrlen : (s)->u.lnglen)
+#define tsslen(s)            ((s)->tt == LUA_VSHRSTR ? (s)->shrlen : (s)->u.lnglen)
 
 /* get string length from 'TValue *o' */
-#define vslen(o) tsslen(tsvalue(o))
+#define vslen(o)             tsslen(tsvalue(o))
 
 /* }================================================================== */
 
@@ -405,17 +405,17 @@ typedef struct TString {
 ** Light userdata should be a variant of userdata, but for compatibility
 ** reasons they are also different types.
 */
-#define LUA_VLIGHTUSERDATA makevariant(LUA_TLIGHTUSERDATA, 0)
+#define LUA_VLIGHTUSERDATA   makevariant(LUA_TLIGHTUSERDATA, 0)
 
-#define LUA_VUSERDATA makevariant(LUA_TUSERDATA, 0)
+#define LUA_VUSERDATA        makevariant(LUA_TUSERDATA, 0)
 
 #define ttislightuserdata(o) checktag((o), LUA_VLIGHTUSERDATA)
 #define ttisfulluserdata(o)  checktag((o), ctb(LUA_VUSERDATA))
 
-#define pvalue(o) check_exp(ttislightuserdata(o), val_(o).p)
-#define uvalue(o) check_exp(ttisfulluserdata(o), gco2u(val_(o).gc))
+#define pvalue(o)            check_exp(ttislightuserdata(o), val_(o).p)
+#define uvalue(o)            check_exp(ttisfulluserdata(o), gco2u(val_(o).gc))
 
-#define pvalueraw(v) ((v).p)
+#define pvalueraw(v)         ((v).p)
 
 #define setpvalue(obj, x)               \
     {                                   \
@@ -473,10 +473,10 @@ typedef struct Udata0 {
 
 /* compute the offset of the memory area of a userdata */
 #define udatamemoffset(nuv) \
-    ((nuv) == 0 ? offsetof(Udata0, bindata) : offsetof(Udata, uv) + (sizeof(UValue) * (nuv)))
+    ((nuv) == 0 ? luaport_offsetof(Udata0, bindata) : luaport_offsetof(Udata, uv) + (sizeof(UValue) * (nuv)))
 
 /* get the address of the memory block inside 'Udata' */
-#define getudatamem(u) (cast_charp(u) + udatamemoffset((u)->nuvalue))
+#define getudatamem(u)     (cast_charp(u) + udatamemoffset((u)->nuvalue))
 
 /* compute the size of a userdata */
 #define sizeudata(nuv, nb) (udatamemoffset(nuv) + (nb))
@@ -489,7 +489,7 @@ typedef struct Udata0 {
 ** ===================================================================
 */
 
-#define LUA_VPROTO makevariant(LUA_TPROTO, 0)
+#define LUA_VPROTO         makevariant(LUA_TPROTO, 0)
 
 /*
 ** Description of an upvalue for function prototypes
@@ -562,12 +562,12 @@ typedef struct Proto {
 ** ===================================================================
 */
 
-#define LUA_VUPVAL makevariant(LUA_TUPVAL, 0)
+#define LUA_VUPVAL      makevariant(LUA_TUPVAL, 0)
 
 /* Variant tags for functions */
-#define LUA_VLCL makevariant(LUA_TFUNCTION, 0) /* Lua closure */
-#define LUA_VLCF makevariant(LUA_TFUNCTION, 1) /* light C function */
-#define LUA_VCCL makevariant(LUA_TFUNCTION, 2) /* C closure */
+#define LUA_VLCL        makevariant(LUA_TFUNCTION, 0) /* Lua closure */
+#define LUA_VLCF        makevariant(LUA_TFUNCTION, 1) /* light C function */
+#define LUA_VCCL        makevariant(LUA_TFUNCTION, 2) /* C closure */
 
 #define ttisfunction(o) checktype(o, LUA_TFUNCTION)
 #define ttisLclosure(o) checktag((o), ctb(LUA_VLCL))
@@ -575,14 +575,14 @@ typedef struct Proto {
 #define ttisCclosure(o) checktag((o), ctb(LUA_VCCL))
 #define ttisclosure(o)  (ttisLclosure(o) || ttisCclosure(o))
 
-#define isLfunction(o) ttisLclosure(o)
+#define isLfunction(o)  ttisLclosure(o)
 
-#define clvalue(o)  check_exp(ttisclosure(o), gco2cl(val_(o).gc))
-#define clLvalue(o) check_exp(ttisLclosure(o), gco2lcl(val_(o).gc))
-#define fvalue(o)   check_exp(ttislcf(o), val_(o).f)
-#define clCvalue(o) check_exp(ttisCclosure(o), gco2ccl(val_(o).gc))
+#define clvalue(o)      check_exp(ttisclosure(o), gco2cl(val_(o).gc))
+#define clLvalue(o)     check_exp(ttisLclosure(o), gco2lcl(val_(o).gc))
+#define fvalue(o)       check_exp(ttislcf(o), val_(o).f)
+#define clCvalue(o)     check_exp(ttisCclosure(o), gco2ccl(val_(o).gc))
 
-#define fvalueraw(v) ((v).f)
+#define fvalueraw(v)    ((v).f)
 
 #define setclLvalue(L, obj, x)     \
     {                              \
@@ -649,7 +649,7 @@ typedef union Closure {
     LClosure l;
 } Closure;
 
-#define getproto(o) (clLvalue(o)->p)
+#define getproto(o)  (clLvalue(o)->p)
 
 /* }================================================================== */
 
@@ -659,11 +659,11 @@ typedef union Closure {
 ** ===================================================================
 */
 
-#define LUA_VTABLE makevariant(LUA_TTABLE, 0)
+#define LUA_VTABLE   makevariant(LUA_TTABLE, 0)
 
 #define ttistable(o) checktag((o), ctb(LUA_VTABLE))
 
-#define hvalue(o) check_exp(ttistable(o), gco2t(val_(o).gc))
+#define hvalue(o)    check_exp(ttistable(o), gco2t(val_(o).gc))
 
 #define sethvalue(L, obj, x)         \
     {                                \
@@ -740,21 +740,21 @@ typedef struct Table {
 /*
 ** Macros to manipulate keys inserted in nodes
 */
-#define keytt(node)  ((node)->u.key_tt)
-#define keyval(node) ((node)->u.key_val)
+#define keytt(node)         ((node)->u.key_tt)
+#define keyval(node)        ((node)->u.key_val)
 
-#define keyisnil(node)     (keytt(node) == LUA_TNIL)
-#define keyisinteger(node) (keytt(node) == LUA_VNUMINT)
-#define keyival(node)      (keyval(node).i)
-#define keyisshrstr(node)  (keytt(node) == ctb(LUA_VSHRSTR))
-#define keystrval(node)    (gco2ts(keyval(node).gc))
+#define keyisnil(node)      (keytt(node) == LUA_TNIL)
+#define keyisinteger(node)  (keytt(node) == LUA_VNUMINT)
+#define keyival(node)       (keyval(node).i)
+#define keyisshrstr(node)   (keytt(node) == ctb(LUA_VSHRSTR))
+#define keystrval(node)     (gco2ts(keyval(node).gc))
 
-#define setnilkey(node) (keytt(node) = LUA_TNIL)
+#define setnilkey(node)     (keytt(node) = LUA_TNIL)
 
 #define keyiscollectable(n) (keytt(n) & BIT_ISCOLLECTABLE)
 
-#define gckey(n)  (keyval(n).gc)
-#define gckeyN(n) (keyiscollectable(n) ? gckey(n) : NULL)
+#define gckey(n)            (keyval(n).gc)
+#define gckeyN(n)           (keyiscollectable(n) ? gckey(n) : NULL)
 
 /*
 ** Dead keys in tables have the tag DEADKEY but keep their original
@@ -762,8 +762,8 @@ typedef struct Table {
 ** be found when searched in a special way. ('next' needs that to find
 ** keys removed from a table during a traversal.)
 */
-#define setdeadkey(node) (keytt(node) = LUA_TDEADKEY)
-#define keyisdead(node)  (keytt(node) == LUA_TDEADKEY)
+#define setdeadkey(node)    (keytt(node) = LUA_TDEADKEY)
+#define keyisdead(node)     (keytt(node) == LUA_TDEADKEY)
 
 /* }================================================================== */
 
@@ -777,7 +777,7 @@ typedef struct Table {
 #define sizenode(t) (twoto((t)->lsizenode))
 
 /* size of buffer for 'luaO_utf8esc' function */
-#define UTF8BUFFSZ 8
+#define UTF8BUFFSZ  8
 
 LUAI_FUNC int luaO_utf8esc(char *buff, unsigned long x);
 LUAI_FUNC int luaO_ceillog2(unsigned int x);
