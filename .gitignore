@@ -10,4 +10,5 @@
 *.doc
 *.pptx
 *.svd
+*.pack
 **/_build
