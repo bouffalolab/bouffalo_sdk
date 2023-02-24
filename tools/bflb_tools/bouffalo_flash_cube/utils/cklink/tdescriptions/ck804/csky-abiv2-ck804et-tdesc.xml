@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<target>
+  <architecture>csky</architecture>
+  <feature name="org.gnu.csky.abiv2.gpr">
+    <reg name="r0"  bitsize="32" regnum="0"  group="gpr"/>
+    <reg name="r1"  bitsize="32" regnum="1"  group="gpr"/>
+    <reg name="r2"  bitsize="32" regnum="2"  group="gpr"/>
+    <reg name="r3"  bitsize="32" regnum="3"  group="gpr"/>
+    <reg name="r4"  bitsize="32" regnum="4"  group="gpr"/>
+    <reg name="r5"  bitsize="32" regnum="5"  group="gpr"/>
+    <reg name="r6"  bitsize="32" regnum="6"  group="gpr"/>
+    <reg name="r7"  bitsize="32" regnum="7"  group="gpr"/>
+    <reg name="r8"  bitsize="32" regnum="8"  group="gpr"/>
+    <reg name="r9"  bitsize="32" regnum="9"  group="gpr"/>
+    <reg name="r10" bitsize="32" regnum="10" group="gpr"/>
+    <reg name="r11" bitsize="32" regnum="11" group="gpr"/>
+    <reg name="r12" bitsize="32" regnum="12" group="gpr"/>
+    <reg name="r13" bitsize="32" regnum="13" group="gpr"/>
+    <reg name="r14" bitsize="32" regnum="14" group="gpr"/>
+    <reg name="r15" bitsize="32" regnum="15" group="gpr"/>
+    <reg name="r16" bitsize="32" regnum="16" group="gpr"/>
+    <reg name="r17" bitsize="32" regnum="17" group="gpr"/>
+    <reg name="r18" bitsize="32" regnum="18" group="gpr"/>
+    <reg name="r19" bitsize="32" regnum="19" group="gpr"/>
+    <reg name="r20" bitsize="32" regnum="20" group="gpr"/>
+    <reg name="r21" bitsize="32" regnum="21" group="gpr"/>
+    <reg name="r22" bitsize="32" regnum="22" group="gpr"/>
+    <reg name="r23" bitsize="32" regnum="23" group="gpr"/>
+    <reg name="r24" bitsize="32" regnum="24" group="gpr"/>
+    <reg name="r25" bitsize="32" regnum="25" group="gpr"/>
+    <reg name="r26" bitsize="32" regnum="26" group="gpr"/>
+    <reg name="r27" bitsize="32" regnum="27" group="gpr"/>
+    <reg name="r28" bitsize="32" regnum="28" group="gpr"/>
+    <reg name="r29" bitsize="32" regnum="29" group="gpr"/>
+    <reg name="r30" bitsize="32" regnum="30" group="gpr"/>
+    <reg name="r31" bitsize="32" regnum="31" group="gpr"/>
+    <reg name="hi"  bitsize="32" regnum="36"/>
+    <reg name="lo"  bitsize="32" regnum="37"/>
+    <reg name="pc"  bitsize="32" regnum="72"/>
+  </feature>
+  <feature name="org.gnu.csky.abiv2.cr">
+    <flags id="ckcpu_psr" size="4">
+      <field name="C[0]"        start="0"  end="0"  type="int8"/>
+      <field name="AF[1]"       start="1"  end="1"  type="int8"/>
+      <field name="IE[6]"       start="6"  end="6"  type="int8"/>
+      <field name="IC[7]"       start="7"  end="7"  type="int8"/>
+      <field name="EE[8]"       start="8"  end="8"  type="int8"/>
+      <field name="MM[9]"       start="9"  end="9"  type="int8"/>
+      <field name="TM[15:14]"   start="14" end="15" type="int8"/>
+      <field name="VEC[23:16]"  start="16" end="23" type="int8"/>
+      <field name="SV[25]"      start="25" end="25" type="int8"/>
+      <field name="SD[26]"      start="26" end="26" type="int8"/>
+      <field name="SC[27]"      start="27" end="27" type="int8"/>
+      <field name="HS[28]"      start="28" end="28" type="int8"/>
+      <field name="SP[29]"      start="29" end="29" type="int8"/>
+      <field name="T[30]"       start="30" end="30" type="int8"/>
+      <field name="S[31]"       start="31" end="31" type="int8"/>
+	</flags>
+    <reg name="psr"  bitsize="32" regnum="89"  group="cr" type="ckcpu_psr"/>
+    <reg name="vbr"  bitsize="32" regnum="90"  group="cr"/>
+    <reg name="epsr" bitsize="32" regnum="91"  group="cr"/>
+    <reg name="epc"  bitsize="32" regnum="93"  group="cr"/>
+    <reg name="cpuid"  bitsize="32" regnum="102" group="cr"/>
+    <reg name="ccr"  bitsize="32" regnum="107" group="cr"/>
+    <reg name="capr"  bitsize="32" regnum="108" group="cr"/>
+    <reg name="pacr"  bitsize="32" regnum="109" group="cr"/>
+    <reg name="prsr"  bitsize="32" regnum="110" group="cr"/>
+    <reg name="chr"  bitsize="32" regnum="120" group="cr"/>
+    <reg name="int_sp"  bitsize="32" regnum="204"/>
+  </feature>
+  <feature name="org.gnu.csky.abiv2.tee">
+	<reg name="nt_usp"  bitsize="32" regnum="127" group="ree"/>
+	<reg name="ebr"  bitsize="32" regnum="190" group="cr"/>
+	<reg name="dcr"  bitsize="32" regnum="229" group="cr"/>
+	<reg name="t_usp"  bitsize="32" regnum="228" group="tee"/>
+	<reg name="t_pcr"  bitsize="32" regnum="230" group="tee"/>
+  </feature>
+  <feature name="org.gnu.csky.pseudo">
+	<reg name="t_psr"  bitsize="32" regs="89"  group="tee" type="int32" env="tee"/>
+    <reg name="t_vbr"  bitsize="32" regs="90"  group="tee" type="int32" env="tee"/>
+    <reg name="t_epsr" bitsize="32" regs="91"  group="tee" type="int32" env="tee"/>
+    <reg name="t_epc"  bitsize="32" regs="93"  group="tee" type="int32" env="tee"/>
+	<reg name="t_ebr"  bitsize="32" regs="190" group="tee" type="int32" env="tee"/>
+	<reg name="nt_psr"  bitsize="32" regs="89"  group="ree" type="int32" env="ree"/>
+    <reg name="nt_vbr"  bitsize="32" regs="90"  group="ree" type="int32" env="ree"/>
+    <reg name="nt_epsr" bitsize="32" regs="91"  group="ree" type="int32" env="ree"/>
+    <reg name="nt_epc"  bitsize="32" regs="93"  group="ree" type="int32" env="ree"/>
+	<reg name="nt_ebr"  bitsize="32" regs="190" group="ree" type="int32" env="ree"/>
+  </feature>
+</target>
