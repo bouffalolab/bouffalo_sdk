@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of the PikaScript project.
  * http://github.com/pikastech/pikascript
  *
@@ -28,6 +28,12 @@
 #include "PikaPlatform.h"
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(_WIN32) && !defined(CROSS_BUILD)
+#include <Windows.h>
+#endif
+
+void pikaFree(void* mem, uint32_t size);
+void* pikaMalloc(uint32_t size);
 
 PIKA_WEAK void pika_platform_disable_irq_handle(void) {
     /* disable irq to support thread */
@@ -74,8 +80,29 @@ PIKA_WEAK uint8_t pika_is_locked_pikaMemory(void) {
     return 0;
 }
 
-PIKA_WEAK int64_t pika_platform_getTick(void) {
+#if PIKA_FREERTOS_ENABLE
+static uint32_t platform_uptime_ms(void) {
+#if (configTICK_RATE_HZ == 1000)
+    return (uint32_t)xTaskGetTickCount();
+#else
+    TickType_t tick = 0u;
+
+    tick = xTaskGetTickCount() * 1000;
+    return (uint32_t)((tick + configTICK_RATE_HZ - 1) / configTICK_RATE_HZ);
+#endif
+}
+#endif
+
+PIKA_WEAK int64_t pika_platform_get_tick(void) {
+#if PIKA_FREERTOS_ENABLE
+    return platform_uptime_ms();
+#elif defined(__linux)
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
+#else
     return -1;
+#endif
 }
 
 PIKA_WEAK int pika_platform_vsprintf(char* buff, char* fmt, va_list args) {
@@ -215,6 +242,7 @@ PIKA_WEAK size_t pika_platform_fwrite(const void* ptr,
                                       size_t size,
                                       size_t n,
                                       FILE* stream) {
+    pika_assert(NULL != stream);
 #if defined(__linux) || defined(_WIN32)
     return fwrite(ptr, size, n, stream);
 #else
@@ -270,21 +298,26 @@ PIKA_WEAK PIKA_BOOL pika_hook_arg_cache_filter(void* self) {
 }
 
 PIKA_WEAK void pika_platform_thread_delay(void) {
+#if defined(__linux) || defined(_WIN32)
     return;
+#elif PIKA_FREERTOS_ENABLE
+    vTaskDelay(1);
+#else
+    return;
+#endif
 }
 
 PIKA_WEAK void pika_platform_sleep_ms(uint32_t ms) {
+#if defined(__linux)
+    usleep(ms * 1000);
+#elif defined(_WIN32) && !defined(CROSS_BUILD)
+    Sleep(ms);
+#else
     pika_platform_printf(
         "Error: pika_platform_sleep_ms need implementation!\r\n");
     while (1) {
     }
-}
-
-PIKA_WEAK void pika_platform_sleep_s(uint32_t s) {
-    pika_platform_printf(
-        "Error: pika_platform_sleep_s need implementation!\r\n");
-    while (1) {
-    }
+#endif
 }
 
 /* Thread Support */
@@ -301,11 +334,11 @@ PIKA_WEAK pika_platform_thread_t* pika_platform_thread_init(
     void* (*thread_entry)(void*);
 
     thread_entry = (void* (*)(void*))entry;
-    thread = pika_platform_malloc(sizeof(pika_platform_thread_t));
+    thread = pikaMalloc(sizeof(pika_platform_thread_t));
 
     res = pthread_create(&thread->thread, NULL, thread_entry, param);
     if (res != 0) {
-        pika_platform_free(thread);
+        pikaFree(thread, sizeof(pika_platform_thread_t));
     }
 
     thread->mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
@@ -316,14 +349,14 @@ PIKA_WEAK pika_platform_thread_t* pika_platform_thread_init(
     BaseType_t err;
     pika_platform_thread_t* thread;
 
-    thread = pika_platform_malloc(sizeof(pika_platform_thread_t));
+    thread = pikaMalloc(sizeof(pika_platform_thread_t));
 
     (void)tick;
 
     err = xTaskCreate(entry, name, stack_size, param, priority, thread->thread);
 
     if (pdPASS != err) {
-        pika_platform_free(thread);
+        pikaFree(thread, sizeof(pika_platform_thread_t));
         return NULL;
     }
 
@@ -331,6 +364,17 @@ PIKA_WEAK pika_platform_thread_t* pika_platform_thread_init(
 #else
     WEAK_FUNCTION_NEED_OVERRIDE_ERROR();
     return NULL;
+#endif
+}
+
+uint64_t pika_platform_thread_self(void) {
+#ifdef __linux
+    return (uint64_t)pthread_self();
+#elif PIKA_FREERTOS_ENABLE
+    return (uint64_t)xTaskGetCurrentTaskHandle();
+#else
+    WEAK_FUNCTION_NEED_OVERRIDE_ERROR();
+    return 0;
 #endif
 }
 
@@ -366,13 +410,28 @@ PIKA_WEAK void pika_platform_thread_destroy(pika_platform_thread_t* thread) {
 #ifdef __linux
     if (NULL != thread) {
         pthread_detach(thread->thread);
-        pika_platform_free(thread);
+        pikaFree(thread, sizeof(pika_platform_thread_t));
         thread = NULL;
+        return;
     }
 #elif PIKA_FREERTOS_ENABLE
-    if (NULL != thread)
+    if (NULL != thread) {
         vTaskDelete(thread->thread);
-    pika_platform_memory_free(thread);
+        pikaFree(thread, sizeof(pika_platform_thread_t));
+        return;
+    }
+#else
+    WEAK_FUNCTION_NEED_OVERRIDE_ERROR();
+#endif
+}
+
+PIKA_WEAK void pika_platform_thread_exit(pika_platform_thread_t* thread) {
+#ifdef __linux
+    return pika_platform_thread_destroy(thread);
+#elif PIKA_FREERTOS_ENABLE
+    vTaskDelete(NULL);  // test on esp32c3
+    // vTaskDelete(thread->thread);
+    return;
 #else
     WEAK_FUNCTION_NEED_OVERRIDE_ERROR();
 #endif
@@ -438,20 +497,7 @@ PIKA_WEAK int pika_platform_thread_mutex_destroy(
 #endif
 }
 
-#if PIKA_FREERTOS_ENABLE
-static uint32_t platform_uptime_ms(void) {
-#if (configTICK_RATE_HZ == 1000)
-    return (uint32_t)xTaskGetTickCount();
-#else
-    TickType_t tick = 0u;
-
-    tick = xTaskGetTickCount() * 1000;
-    return (uint32_t)((tick + configTICK_RATE_HZ - 1) / configTICK_RATE_HZ);
-#endif
-}
-#endif
-
-PIKA_WEAK void pika_platform_timer_init(pika_platform_timer_t* timer) {
+PIKA_WEAK void pika_platform_thread_timer_init(pika_platform_timer_t* timer) {
 #ifdef __linux
     timer->time = (struct timeval){0, 0};
 #elif PIKA_FREERTOS_ENABLE
@@ -461,8 +507,8 @@ PIKA_WEAK void pika_platform_timer_init(pika_platform_timer_t* timer) {
 #endif
 }
 
-PIKA_WEAK void pika_platform_timer_cutdown(pika_platform_timer_t* timer,
-                                           unsigned int timeout) {
+PIKA_WEAK void pika_platform_thread_timer_cutdown(pika_platform_timer_t* timer,
+                                                  unsigned int timeout) {
 #ifdef __linux
     struct timeval now;
     gettimeofday(&now, NULL);
@@ -476,7 +522,8 @@ PIKA_WEAK void pika_platform_timer_cutdown(pika_platform_timer_t* timer,
 #endif
 }
 
-PIKA_WEAK char pika_platform_timer_is_expired(pika_platform_timer_t* timer) {
+PIKA_WEAK char pika_platform_thread_timer_is_expired(
+    pika_platform_timer_t* timer) {
 #ifdef __linux
     struct timeval now, res;
     gettimeofday(&now, NULL);
@@ -490,7 +537,7 @@ PIKA_WEAK char pika_platform_timer_is_expired(pika_platform_timer_t* timer) {
 #endif
 }
 
-PIKA_WEAK int pika_platform_timer_remain(pika_platform_timer_t* timer) {
+PIKA_WEAK int pika_platform_thread_timer_remain(pika_platform_timer_t* timer) {
 #ifdef __linux
     struct timeval now, res;
     gettimeofday(&now, NULL);
@@ -509,7 +556,7 @@ PIKA_WEAK int pika_platform_timer_remain(pika_platform_timer_t* timer) {
 #endif
 }
 
-PIKA_WEAK unsigned long pika_platform_timer_now(void) {
+PIKA_WEAK unsigned long pika_platform_thread_timer_now(void) {
 #ifdef __linux
     return (unsigned long)time(NULL);
 #elif PIKA_FREERTOS_ENABLE
@@ -520,7 +567,7 @@ PIKA_WEAK unsigned long pika_platform_timer_now(void) {
 #endif
 }
 
-PIKA_WEAK void pika_platform_timer_usleep(unsigned long usec) {
+PIKA_WEAK void pika_platform_thread_timer_usleep(unsigned long usec) {
 #ifdef __linux
     usleep(usec);
 #elif PIKA_FREERTOS_ENABLE
@@ -535,4 +582,8 @@ PIKA_WEAK void pika_platform_timer_usleep(unsigned long usec) {
 #else
     WEAK_FUNCTION_NEED_OVERRIDE_ERROR();
 #endif
+}
+
+PIKA_WEAK void pika_platform_reboot(void) {
+    WEAK_FUNCTION_NEED_OVERRIDE_ERROR();
 }

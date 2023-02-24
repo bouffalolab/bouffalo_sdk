@@ -5,6 +5,7 @@
  * MIT License
  *
  * Copyright (c) 2021 lyon 李昂 liang6516@outlook.com
+ * Copyright (c) 2023 Gorgon Meducer embedded_zhuroan@hotmail.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +33,7 @@
 #include "dataLink.h"
 #include "dataMemory.h"
 #include "dataStrs.h"
+#include "dataQueue.h"
 
 typedef struct InstructUnit InstructUnit;
 struct InstructUnit {
@@ -135,6 +137,7 @@ typedef struct MethodProp {
     char* name;
     ByteCodeFrame* bytecode_frame;
     PikaObj* def_context;
+    PikaObj* host_obj;
     char* declareation;
 } MethodProp;
 
@@ -151,6 +154,7 @@ typedef PikaObj PikaMaker;
 
 /* operation */
 int32_t obj_deinit(PikaObj* self);
+int obj_GC(PikaObj* self);
 int32_t obj_init(PikaObj* self, Args* args);
 int32_t obj_update(PikaObj* self);
 int32_t obj_enable(PikaObj* self);
@@ -171,6 +175,7 @@ void* obj_getPtr(PikaObj* self, char* argPath);
 pika_float obj_getFloat(PikaObj* self, char* argPath);
 char* obj_getStr(PikaObj* self, char* argPath);
 int64_t obj_getInt(PikaObj* self, char* argPath);
+PIKA_BOOL obj_getBool(PikaObj* self, char* argPath);
 Arg* obj_getArg(PikaObj* self, char* argPath);
 uint8_t* obj_getBytes(PikaObj* self, char* argPath);
 size_t obj_getBytesSize(PikaObj* self, char* argPath);
@@ -245,6 +250,7 @@ uint8_t obj_getAnyArg(PikaObj* self,
 
 void method_returnStr(Args* args, char* val);
 void method_returnInt(Args* args, int64_t val);
+void method_returnBool(Args* args, PIKA_BOOL val);
 void method_returnFloat(Args* args, pika_float val);
 void method_returnPtr(Args* args, void* val);
 void method_returnObj(Args* args, void* val);
@@ -255,6 +261,8 @@ void method_returnArg(Args* args, Arg* arg);
 char* methodArg_getDec(Arg* method_arg);
 char* methodArg_getTypeList(Arg* method_arg, char* buffs, size_t size);
 char* methodArg_getName(Arg* method_arg, char* buffs, size_t size);
+int methodArg_setHostObj(Arg* method_arg, PikaObj* host_obj);
+PikaObj* methodArg_getHostObj(Arg* method_arg);
 ByteCodeFrame* methodArg_getBytecodeFrame(Arg* method_arg);
 Method methodArg_getPtr(Arg* method_arg);
 
@@ -273,7 +281,40 @@ typedef struct ShellConfig ShellConfig;
 typedef enum shellCTRL (*sh_handler)(PikaObj*, char*, ShellConfig*);
 typedef char (*sh_getchar)(void);
 
+
+#if PIKA_SHELL_FILTER_ENABLE
+typedef struct FilterFIFO {
+    ByteQueue queue;
+    uint8_t ignore_mask;
+    uint8_t buffer[PIKA_SHELL_FILTER_FIFO_SIZE];
+} FilterFIFO;
+
+typedef struct FilterItem FilterItem;
+
+typedef PIKA_BOOL FilterMessageHandler(  FilterItem *msg, 
+                                    PikaObj* self, 
+                                    ShellConfig* shell);
+
+struct FilterItem {
+    FilterMessageHandler   *handler;
+    const uint8_t          *message;
+    uint16_t                size;
+    uint8_t                 is_visible          : 1;
+    uint8_t                 is_case_insensitive : 1;
+    uint8_t                                     : 6;
+    uint8_t                 ignore_mask;
+    uintptr_t               target;
+};
+
+#endif
+
 struct ShellConfig {
+#if PIKA_SHELL_FILTER_ENABLE
+    FilterFIFO filter_fifo;
+    FilterItem *messages;
+    uint16_t message_count;
+    uint16_t                : 16;   /* padding to suppress warning*/
+#endif
     char* prefix;
     sh_handler handler;
     void* context;
@@ -306,11 +347,11 @@ Arg* arg_setRef(Arg* self, char* name, PikaObj* obj);
 Arg* arg_setObj(Arg* self, char* name, PikaObj* obj);
 
 static inline Arg* arg_newObj(PikaObj* obj) {
-    return arg_setObj(NULL, "", (obj));
+    return arg_setObj(NULL, (char*)"", (obj));
 }
 
 static inline Arg* arg_newRef(PikaObj* obj) {
-    return arg_setRef(NULL, "", (obj));
+    return arg_setRef(NULL, (char*)"", (obj));
 }
 
 PikaObj* obj_importModuleWithByteCodeFrame(PikaObj* self,
@@ -389,14 +430,14 @@ static inline uint8_t obj_refcntNow(PikaObj* self) {
 #define obj_setStruct(PikaObj_p_self, char_p_name, struct_) \
     args_setStruct(((PikaObj_p_self)->list), char_p_name, struct_)
 
-#define ABSTRACT_METHOD_NEED_OVERRIDE_ERROR(_)                            \
-    obj_setErrorCode(self, 1);                                            \
+#define ABSTRACT_METHOD_NEED_OVERRIDE_ERROR(_)                               \
+    obj_setErrorCode(self, 1);                                               \
     pika_platform_printf("Error: abstract method `%s()` need override.\r\n", \
-                      __FUNCTION__)
+                         __FUNCTION__)
 
 char* obj_cacheStr(PikaObj* self, char* str);
 PikaObj* _arg_to_obj(Arg* self, PIKA_BOOL* pIsTemp);
-char* __printBytes(PikaObj* self, Arg* arg);
+Arg* arg_toStrArg(Arg* arg);
 
 #define PIKASCRIPT_VERSION_TO_NUM(majer, minor, micro) \
     majer * 100 * 100 + minor * 100 + micro
@@ -516,5 +557,16 @@ Arg* pks_eventListener_sendSignalAwaitResult(PikaEventListener* self,
                                              int eventSignal);
 
 void obj_printModules(PikaObj* self);
+#if PIKA_DEBUG_ENABLE
+#define pika_debug(fmt, ...) \
+    pika_platform_printf("PikaDBG: " fmt "\r\n", ##__VA_ARGS__)
+#else
+#define pika_debug(...) \
+    do {                \
+    } while (0)
+#endif
+
+int pika_GIL_EXIT(void);
+int pika_GIL_ENTER(void);
 
 #endif

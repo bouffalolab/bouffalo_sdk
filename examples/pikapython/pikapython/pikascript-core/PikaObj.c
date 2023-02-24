@@ -5,6 +5,7 @@
  * MIT License
  *
  * Copyright (c) 2021 lyon 李昂 liang6516@outlook.com
+ * Copyright (c) 2023 Gorgon Meducer embedded_zhuroan@hotmail.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +33,7 @@
 #include "PikaPlatform.h"
 #include "dataArgs.h"
 #include "dataMemory.h"
+#include "dataQueue.h"
 #include "dataString.h"
 #include "dataStrs.h"
 
@@ -110,6 +112,15 @@ static int32_t obj_deinit_no_del(PikaObj* self) {
     /* free the pointer */
     pikaFree(self, sizeof(PikaObj));
     self = NULL;
+    return 0;
+}
+
+int obj_GC(PikaObj* self) {
+    obj_refcntDec(self);
+    int ref_cnt = obj_refcntNow(self);
+    if (ref_cnt <= 0) {
+        obj_deinit(self);
+    }
     return 0;
 }
 
@@ -219,10 +230,20 @@ PIKA_RES obj_setBytes(PikaObj* self, char* argPath, uint8_t* src, size_t size) {
 int64_t obj_getInt(PikaObj* self, char* argPath) {
     PikaObj* obj = obj_getHostObj(self, argPath);
     if (NULL == obj) {
-        return -999999999;
+        return _PIKA_INT_ERR;
     }
     char* argName = strPointToLastToken(argPath, '.');
     int64_t res = args_getInt(obj->list, argName);
+    return res;
+}
+
+PIKA_BOOL obj_getBool(PikaObj* self, char* argPath) {
+    PikaObj* obj = obj_getHostObj(self, argPath);
+    if (NULL == obj) {
+        return PIKA_FALSE;
+    }
+    char* argName = strPointToLastToken(argPath, '.');
+    PIKA_BOOL res = args_getBool(obj->list, argName);
     return res;
 }
 
@@ -675,9 +696,9 @@ Method methodArg_getPtr(Arg* method_arg) {
 }
 
 char* methodArg_getTypeList(Arg* method_arg, char* buffs, size_t size) {
-    MethodProp* method_store = (MethodProp*)arg_getContent(method_arg);
-    if (NULL != method_store->type_list) {
-        return strcpy(buffs, method_store->type_list);
+    MethodProp* prop = (MethodProp*)arg_getContent(method_arg);
+    if (NULL != prop->type_list) {
+        return strcpy(buffs, prop->type_list);
     }
     char* method_dec = methodArg_getDec(method_arg);
     pika_assert(strGetSize(method_dec) <= size);
@@ -690,6 +711,21 @@ char* methodArg_getTypeList(Arg* method_arg, char* buffs, size_t size) {
     char* res = strCut(buffs, method_dec, '(', ')');
     pika_assert(NULL != res);
     return res;
+}
+
+PikaObj* methodArg_getHostObj(Arg* method_arg) {
+    MethodProp* prop = (MethodProp*)arg_getContent(method_arg);
+    return prop->host_obj;
+}
+
+int methodArg_setHostObj(Arg* method_arg, PikaObj* host_obj) {
+    MethodProp* prop = (MethodProp*)arg_getContent(method_arg);
+    if (prop->host_obj == NULL) {
+        prop->host_obj = host_obj;
+        // obj_refcntInc(host_obj);
+        return 0;
+    }
+    return 0;
 }
 
 char* methodArg_getName(Arg* method_arg, char* buffs, size_t size) {
@@ -764,6 +800,7 @@ static void obj_saveMethodInfo(PikaObj* self, MethodInfo* method_info) {
         .bytecode_frame = method_info->bytecode_frame,
         .def_context = method_info->def_context,
         .declareation = method_info->dec,  // const
+        .host_obj = NULL,
     };
     char* name = method_info->name;
     if (NULL == method_info->name) {
@@ -951,9 +988,174 @@ static void _putc_cmd(char KEY_POS, int pos) {
     }
 }
 
-enum shellCTRL _do_obj_runChar(PikaObj* self,
-                               char inputChar,
-                               ShellConfig* shell) {
+#if PIKA_SHELL_FILTER_ENABLE
+typedef enum {
+    __FILTER_NO_RESULT,
+    __FILTER_FAIL_DROP_ONE,
+    __FILTER_SUCCESS_GET_ALL_PEEKED,
+    __FILTER_SUCCESS_DROP_ALL_PEEKED
+} FilterReturn;
+
+PIKA_BOOL _filter_msg_hi_pika_handler(FilterItem* msg,
+                                      PikaObj* self,
+                                      ShellConfig* shell) {
+    pika_platform_printf("Yes, I am here\r\n");
+    return PIKA_TRUE;
+}
+
+PIKA_BOOL _filter_msg_bye_pika_handler(FilterItem* msg,
+                                       PikaObj* self,
+                                       ShellConfig* shell) {
+    pika_platform_printf("OK, see you\r\n");
+    return PIKA_TRUE;
+}
+
+#define __MSG_DECLARE
+#include "__default_filter_msg_table.h"
+
+static const FilterItem g_default_filter_messages[] = {
+#define __MSG_TABLE
+#include "__default_filter_msg_table.h"
+};
+
+static FilterReturn _do_message_filter(PikaObj* self,
+                                       ShellConfig* shell,
+                                       FilterItem* msg,
+                                       uint_fast16_t count) {
+    pika_assert(NULL != msg);
+    pika_assert(count > 0);
+    ByteQueue* queue = &shell->filter_fifo.queue;
+    FilterReturn result = __FILTER_FAIL_DROP_ONE;
+
+    do {
+        do {
+            if (msg->ignore_mask & shell->filter_fifo.ignore_mask) {
+                /* this message should be ignored */
+                break;
+            }
+
+            if (NULL == msg->message) {
+                break;
+            }
+
+            uint_fast16_t message_size = msg->size;
+            if (!message_size) {
+                break;
+            }
+
+            byteQueue_resetPeek(queue);
+
+            /* do message comparison */
+            uint8_t* src = (uint8_t*)msg->message;
+
+            if (msg->is_case_insensitive) {
+                do {
+                    uint8_t byte;
+                    if (!byteQueue_peekOne(queue, &byte)) {
+                        result = __FILTER_NO_RESULT;
+                        break;
+                    }
+                    char letter = *src++;
+
+                    if (letter >= 'A' && letter <= 'Z') {
+                        letter += 'a' - 'A';
+                    }
+
+                    if (byte >= 'A' && byte <= 'Z') {
+                        byte += 'a' - 'A';
+                    }
+
+                    if (letter != byte) {
+                        break;
+                    }
+                } while (--message_size);
+            } else {
+                do {
+                    uint8_t byte;
+                    if (!byteQueue_peekOne(queue, &byte)) {
+                        result = __FILTER_NO_RESULT;
+                        break;
+                    }
+                    if (*src++ != byte) {
+                        break;
+                    }
+                } while (--message_size);
+            }
+
+            if (0 == message_size) {
+                /* message match */
+                if (NULL != msg->handler) {
+                    if (!msg->handler(msg, self, shell)) {
+                        break;
+                    }
+                }
+                /* message is handled */
+                if (msg->is_visible) {
+                    return __FILTER_SUCCESS_GET_ALL_PEEKED;
+                }
+                return __FILTER_SUCCESS_DROP_ALL_PEEKED;
+            }
+        } while (0);
+
+        msg++;
+    } while (--count);
+
+    return result;
+}
+
+#ifndef dimof
+#define dimof(__array) (sizeof(__array) / sizeof(__array[0]))
+#endif
+
+int16_t _do_stream_filter(PikaObj* self, ShellConfig* shell) {
+    ByteQueue* queue = &shell->filter_fifo.queue;
+
+    FilterReturn result =
+        _do_message_filter(self, shell, (FilterItem*)g_default_filter_messages,
+                           dimof(g_default_filter_messages));
+    int16_t drop_count = 0;
+
+    switch (result) {
+        case __FILTER_NO_RESULT:
+            break;
+        case __FILTER_FAIL_DROP_ONE:
+            drop_count = 1;
+            break;
+        case __FILTER_SUCCESS_DROP_ALL_PEEKED:
+            byteQueue_dropAllPeeked(queue);
+            return 0;
+        case __FILTER_SUCCESS_GET_ALL_PEEKED:
+            drop_count = byteQueue_getPeekedNumber(queue);
+            return drop_count;
+    }
+
+    /* user registered message filter */
+    if (NULL != shell->messages && shell->message_count) {
+        result = _do_message_filter(self, shell, shell->messages,
+                                    shell->message_count);
+        switch (result) {
+            case __FILTER_NO_RESULT:
+                break;
+            case __FILTER_FAIL_DROP_ONE:
+                drop_count = 1;
+                break;
+            case __FILTER_SUCCESS_DROP_ALL_PEEKED:
+                byteQueue_dropAllPeeked(&shell->filter_fifo.queue);
+                return 0;
+            case __FILTER_SUCCESS_GET_ALL_PEEKED:
+                drop_count =
+                    byteQueue_getPeekedNumber(&shell->filter_fifo.queue);
+                return drop_count;
+        }
+    }
+
+    return drop_count;
+}
+#endif
+
+enum shellCTRL _inner_do_obj_runChar(PikaObj* self,
+                                     char inputChar,
+                                     ShellConfig* shell) {
     char* input_line = NULL;
     enum shellCTRL ctrl = SHELL_CTRL_CONTINUE;
 #if !(defined(__linux) || defined(_WIN32))
@@ -1055,7 +1257,7 @@ enum shellCTRL _do_obj_runChar(PikaObj* self,
         goto exit;
     }
     if ((inputChar == '\r') || (inputChar == '\n')) {
-#if !(defined(__linux) || defined(_WIN32))
+#if !(defined(__linux) || defined(_WIN32) || PIKA_SHELL_NO_NEWLINE)
         pika_platform_printf("\r\n");
 #endif
         /* still in block */
@@ -1108,6 +1310,48 @@ exit:
     return ctrl;
 }
 
+PIKA_WEAK
+enum shellCTRL _do_obj_runChar(PikaObj* self,
+                               char inputChar,
+                               ShellConfig* shell) {
+#if PIKA_SHELL_FILTER_ENABLE
+    ByteQueue* queue = &(shell->filter_fifo.queue);
+
+    /* validation */
+    if (NULL == queue->buffer) {
+        /* need initialize first */
+        byteQueue_init(queue, &shell->filter_fifo.buffer,
+                       sizeof(shell->filter_fifo.buffer), PIKA_FALSE);
+    }
+
+    PIKA_BOOL result = byteQueue_writeOne(queue, inputChar);
+    pika_assert(result != PIKA_FALSE);
+
+    int16_t byte_count;
+    do {
+        if (0 == byteQueue_peekAvailableCount(queue)) {
+            break;
+        }
+        byte_count = _do_stream_filter(self, shell);
+        int16_t n = byte_count;
+
+        while (n--) {
+            PIKA_BOOL result = byteQueue_readOne(queue, (uint8_t*)&inputChar);
+            pika_assert(result != PIKA_FALSE);
+
+            if (SHELL_CTRL_EXIT ==
+                _inner_do_obj_runChar(self, inputChar, shell)) {
+                return SHELL_CTRL_EXIT;
+            }
+        }
+    } while (byte_count);
+
+    return SHELL_CTRL_CONTINUE;
+#else
+    return _inner_do_obj_runChar(self, inputChar, shell);
+#endif
+}
+
 enum shellCTRL obj_runChar(PikaObj* self, char inputChar) {
     ShellConfig* shell = args_getStruct(self->list, "@shcfg");
     if (NULL == shell) {
@@ -1122,6 +1366,22 @@ enum shellCTRL obj_runChar(PikaObj* self, char inputChar) {
         _obj_runChar_beforeRun(self, shell);
     }
     return _do_obj_runChar(self, inputChar, shell);
+}
+
+static void _save_file(char* file_name, uint8_t* buff, size_t size) {
+    pika_platform_printf("[   Info] Saving file to '%s'...\r\n", file_name);
+    FILE* fp = pika_platform_fopen(file_name, "wb+");
+    if (NULL == fp) {
+        pika_platform_printf("[  Error] Open file '%s' error!\r\n", file_name);
+        pika_platform_fclose(fp);
+    } else {
+        pika_platform_fwrite(buff, 1, size, fp);
+        pika_platform_printf("[   Info] Writing %d bytes to '%s'...\r\n",
+                             (int)(size), file_name);
+        pika_platform_fclose(fp);
+        pika_platform_printf("[    OK ] Writing to '%s' succeed!\r\n",
+                             file_name);
+    }
 }
 
 void _do_pikaScriptShell(PikaObj* self, ShellConfig* cfg) {
@@ -1186,23 +1446,7 @@ void _do_pikaScriptShell(PikaObj* self, ShellConfig* cfg) {
                 (int)PIKA_READ_FILE_BUFF_SIZE,
                 ((float)len / (float)PIKA_READ_FILE_BUFF_SIZE));
 #if PIKA_SHELL_SAVE_FILE_ENABLE
-            char* file_name = PIKA_SHELL_SAVE_FILE_NAME;
-            pika_platform_printf("[   Info] Saving file to '%s'...\r\n",
-                                 file_name);
-            FILE* fp = pika_platform_fopen(file_name, "w+");
-            if (NULL == fp) {
-                pika_platform_printf("[  Error] Open file '%s' error!\r\n",
-                                     file_name);
-                pika_platform_fclose(fp);
-            } else {
-                pika_platform_fwrite(buff, 1, len, fp);
-                pika_platform_printf(
-                    "[   Info] Writing %d bytes to '%s'...\r\n", (int)(len),
-                    file_name);
-                pika_platform_fclose(fp);
-                pika_platform_printf("[    OK ] Writing to '%s' succeed!\r\n",
-                                     file_name);
-            }
+            _save_file(PIKA_SHELL_SAVE_FILE_PATH, (uint8_t*)buff, len);
 #endif
             pika_platform_printf("=============== [ Run] ===============\r\n");
             obj_run(self, (char*)buff);
@@ -1219,26 +1463,45 @@ void _do_pikaScriptShell(PikaObj* self, ShellConfig* cfg) {
 
         /* run xx.py.o */
         if (inputChar[0] == 'p' && inputChar[1] == 0x0f) {
+            uint8_t magic_code[4] = {0x0f, 'p', 0x00, 0x00};
             for (int i = 0; i < 2; i++) {
                 /* eat 'yo' */
-                cfg->fn_getchar();
+                magic_code[2 + i] = cfg->fn_getchar();
             }
             uint32_t size = 0;
             for (int i = 0; i < 4; i++) {
                 uint8_t* size_byte = (uint8_t*)&size;
                 size_byte[i] = cfg->fn_getchar();
             }
+            size += sizeof(uint32_t) * 2;
             uint8_t* buff = pikaMalloc(size);
-            for (uint32_t i = 0; i < size; i++) {
+            /* save magic code and size */
+            memcpy(buff, magic_code, sizeof(magic_code));
+            memcpy(buff + sizeof(magic_code), &size, sizeof(size));
+
+            for (uint32_t i = sizeof(uint32_t) * 2; i < size; i++) {
                 buff[i] = cfg->fn_getchar();
             }
+
             pika_platform_printf(
-                "\r\n=============== [Code] ===============\r\n");
-            pika_platform_printf("[   Info] Bytecode size: %d\r\n", size);
-            pika_platform_printf("=============== [ RUN] ===============\r\n");
-            pikaVM_runByteCodeInconstant(self, buff);
-            pikaFree(buff, size);
-            return;
+                "\r\n=============== [File] ===============\r\n");
+            pika_platform_printf("[   Info] Recived size: %d\r\n", size);
+            if (magic_code[3] == 'o') {
+#if PIKA_SHELL_SAVE_BYTECODE_ENABLE
+                _save_file(PIKA_SHELL_SAVE_BYTECODE_PATH, (uint8_t*)buff, size);
+#endif
+                pika_platform_printf(
+                    "=============== [ RUN] ===============\r\n");
+                pikaVM_runByteCodeInconstant(self, buff);
+                pikaFree(buff, size);
+                return;
+            }
+            if (magic_code[3] == 'a') {
+                _save_file(PIKA_SHELL_SAVE_APP_PATH, (uint8_t*)buff, size);
+                pika_platform_printf(
+                    "=============== [REBOOT] ===============\r\n");
+                pika_platform_reboot();
+            }
         }
 #endif
         if (SHELL_CTRL_EXIT == _do_obj_runChar(self, inputChar[0], cfg)) {
@@ -1335,6 +1598,13 @@ void method_returnStr(Args* args, char* val) {
 
 void method_returnInt(Args* args, int64_t val) {
     args_pushArg_name(args, "@rt", arg_newInt(val));
+}
+
+void method_returnBool(Args* args, PIKA_BOOL val) {
+    if (val == _PIKA_BOOL_ERR) {
+        return;
+    }
+    args_pushArg_name(args, "@rt", arg_newBool(val));
 }
 
 void method_returnFloat(Args* args, pika_float val) {
