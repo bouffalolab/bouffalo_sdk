@@ -332,7 +332,7 @@ static Rand64 nextrand(Rand64 *state)
 #define shift64_FIG (64 - FIGS)
 
 /* to scale to [0, 1), multiply by scaleFIG = 2^(-FIGS) */
-#define scaleFIG (l_mathop(0.5) / ((Rand64)1 << (FIGS - 1)))
+#define scaleFIG    (l_mathop(0.5) / ((Rand64)1 << (FIGS - 1)))
 
 static lua_Number I2d(Rand64 x)
 {
@@ -343,7 +343,7 @@ static lua_Number I2d(Rand64 x)
 #define I2UInt(x) ((lua_Unsigned)trim64(x))
 
 /* convert a 'lua_Unsigned' to a 'Rand64' */
-#define Int2I(x) ((Rand64)(x))
+#define Int2I(x)  ((Rand64)(x))
 
 #else /* no 'Rand64'   }{ */
 

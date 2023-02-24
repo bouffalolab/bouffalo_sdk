@@ -39,7 +39,7 @@
 #include "bl616_hbn.h"
 #include "bl616_glb.h"
 #include "bl616_tzc_sec.h"
-#include "softcrc.h"
+
 #include "bl616_psram.h"
 #include "bflb_flash.h"
 #include "log.h"

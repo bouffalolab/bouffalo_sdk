@@ -35,7 +35,7 @@
   */
 #include "bflb_core.h"
 #include "partition.h"
-#include "softcrc.h"
+
 
 /** @addtogroup  BFLB_Common_Driver
  *  @{
@@ -111,7 +111,6 @@ static uint8_t pt_table_valid(pt_table_stuff_config *pt_stuff)
             return 0;
         }
 
-        /* ToDo it is a trap here, when entryCnt > 8, crc32 will overflow, comment by zhangcheng */
         p_crc32 = (uint32_t *)((uintptr_t)pt_entries + entriesLen);
 
         if (*p_crc32 != BFLB_Soft_CRC32((uint8_t *)pt_entries, entriesLen)) {

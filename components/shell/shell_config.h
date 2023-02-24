@@ -36,4 +36,12 @@
 #define SHELL_THREAD_PRIO 5
 #endif
 
+#ifndef SHELL_EXEC_THREAD_STACK_SIZE
+#define SHELL_EXEC_THREAD_STACK_SIZE 1024
+#endif
+
+#ifndef SHELL_EXEC_THREAD_PRIO
+#define SHELL_EXEC_THREAD_PRIO 4
+#endif
+
 #endif

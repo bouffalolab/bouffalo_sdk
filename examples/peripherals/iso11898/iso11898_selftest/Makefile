@@ -3,8 +3,8 @@ BL_SDK_BASE ?= $(SDK_DEMO_PATH)/../../../..
 
 export BL_SDK_BASE
 
-CHIP ?= bl628
-BOARD ?= bl628dk
+CHIP ?= bl616
+BOARD ?= bl616dk
 CROSS_COMPILE ?= riscv64-unknown-elf-
 
 # add custom cmake definition

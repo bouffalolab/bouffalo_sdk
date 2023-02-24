@@ -1,9 +1,8 @@
 #include "bflb_mtimer.h"
 #include "bflb_dma.h"
+#include "board.h"
 
 #define DMA_BUFFER_LENGTH 4100
-
-extern void board_init(void);
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src1_buffer[DMA_BUFFER_LENGTH];
 static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src2_buffer[DMA_BUFFER_LENGTH];

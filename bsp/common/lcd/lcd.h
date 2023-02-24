@@ -26,41 +26,14 @@
 
 #include "font.h"
 #include "bflb_core.h"
+#include "lcd_conf.h"
 
-/* List of supported LCD */
-
-/* mipi dbi interface
-    LCD_DBI_ILI9488
-    LCD_DISP_QSPI_GC9C01
-*/
-
-/* mipi dpi (RGB) interface
-    LCD_DPI_ILI9488
-    LCD_DPI_ST7701S
-    LCD_DPI_STANDARD
-*/
-
-/* mipi dsi vidio interface
-    LCD_DSI_VIDIO_ILI9881C
-*/
-
-/* spi interface
-    LCD_SPI_ILI9488
-    LCD_SPI_ILI9481
-    LCD_SPI_ILI9341
-    LCD_SPI_ST7796
-    LCD_SPI_ST7789V
-*/
-
-/* Select screen Type */
-#define LCD_SPI_ST7789V
+/* Do not modify the following */
 
 #define LCD_INTERFACE_SPI       1
 #define LCD_INTERFACE_DBI       2
 #define LCD_INTERFACE_DPI       3
 #define LCD_INTERFACE_DSI_VIDIO 4
-
-/*  */
 
 #if defined LCD_DBI_ILI9488
 
@@ -70,6 +43,15 @@
 #define LCD_H                        ILI9488_DBI_H
 #define LCD_COLOR_DEPTH              ILI9488_DBI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) ili9488_dbi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DBI_ILI9341
+
+#include "mipi_dbi/ili9341_dbi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DBI
+#define LCD_W                        ILI9341_DBI_W
+#define LCD_H                        ILI9341_DBI_H
+#define LCD_COLOR_DEPTH              ILI9341_DBI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) ili9341_dbi_##_func(__VA_ARGS__)
 
 #elif defined LCD_DISP_QSPI_GC9C01
 
@@ -88,6 +70,15 @@
 #define LCD_H                        ILI9488_DPI_H
 #define LCD_COLOR_DEPTH              ILI9488_DPI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) ili9488_dpi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DPI_GC9503V
+
+#include "mipi_dpi/gc9503v_dpi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DPI
+#define LCD_W                        GC9503V_DPI_W
+#define LCD_H                        GC9503V_DPI_H
+#define LCD_COLOR_DEPTH              GC9503V_DPI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) gc9503v_dpi_##_func(__VA_ARGS__)
 
 #elif defined LCD_DPI_ST7701S
 

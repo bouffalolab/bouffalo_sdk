@@ -9,8 +9,8 @@ struct bflb_iso11898_config_s cfg = {
     .mode = ISO11898_MODE_NORMAL,     /*!< specifies the CAN operating mode. @ref ISO11898_MODE_XXX */
     .sample = ISO11898_SAMPLE_TRIPLE, /*!< specifies the number of sample times. @ref ISO11898_SAMPLE_XXX */
     .sjw = ISO11898_SJW_2TQ,          /*!< specifies the maximum number of time quanta the ISO11898 hardware is allowed to lengthen or shorten a bit to perform resynchronization. @ref ISO11898_SJW_XXX */
-    .bs1 = ISO11898_BS1_9TQ,          /*!< specifies the number of time quanta in Bit Segment 1. @ref ISO11898_BS1_XXX */
-    .bs2 = ISO11898_BS2_6TQ,          /*!< specifies the number of time quanta in Bit Segment 2. @ref ISO11898_BS2_XXX */
+    .bs1 = ISO11898_BS1_12TQ,          /*!< specifies the number of time quanta in Bit Segment 1. @ref ISO11898_BS1_XXX */
+    .bs2 = ISO11898_BS2_7TQ,          /*!< specifies the number of time quanta in Bit Segment 2. @ref ISO11898_BS2_XXX */
 };
 
 struct bflb_iso11898_filter_s filter = {

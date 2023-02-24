@@ -34,6 +34,7 @@ int usbh_cdc_acm_set_line_state(struct usbh_cdc_acm *cdc_acm_class, bool dtr, bo
 
 void usbh_cdc_acm_run(struct usbh_cdc_acm *cdc_acm_class);
 void usbh_cdc_acm_stop(struct usbh_cdc_acm *cdc_acm_class);
+
 #ifdef __cplusplus
 }
 #endif

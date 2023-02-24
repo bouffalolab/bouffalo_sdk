@@ -36,7 +36,6 @@
 
 #include "bl616_romapi_patch.h"
 #include "bl616_romdriver_e907.h"
-#include "soft_crc.h"
 
 /* WiFi PLL Config*/
 const GLB_WA_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifiPllBasicCfg_32M_38P4M_40M = {
@@ -859,11 +858,6 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
         .jedec_id = 0x17405e,
         //.name="ZB_VQ64_64_33",
         .cfg = &flash_cfg_GD_Q64E,
-    },
-    {
-        .jedec_id = 0x18405e,
-        //.name="ZB_VQ128_64_33",
-        .cfg = &flash_cfg_GD_LQ64E,
     },
     {
         .jedec_id = 0x15605e,

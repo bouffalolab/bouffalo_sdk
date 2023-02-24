@@ -38,7 +38,7 @@
 #include "blsp_bootinfo.h"
 #include "blsp_common.h"
 #include "blsp_media_boot.h"
-#include "softcrc.h"
+
 #include "partition.h"
 #include "bflb_flash.h"
 

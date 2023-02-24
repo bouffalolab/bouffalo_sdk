@@ -42,7 +42,7 @@ typedef struct LG {
     global_State g;
 } LG;
 
-#define fromstate(L) (cast(LX *, cast(lu_byte *, (L)) - offsetof(LX, l)))
+#define fromstate(L) (cast(LX *, cast(lu_byte *, (L)) - luaport_offsetof(LX, l)))
 
 /*
 ** A macro to create a "random" seed when a state is created;
@@ -57,11 +57,11 @@ typedef struct LG {
 ** Rely on Address Space Layout Randomization (if present) and
 ** current time.
 */
-#define addbuff(b, p, e)              \
-    {                                 \
-        size_t t = cast_sizet(e);     \
+#define addbuff(b, p, e)                      \
+    {                                         \
+        size_t t = cast_sizet(e);             \
         luaport_memcpy(b + p, &t, sizeof(t)); \
-        p += sizeof(t);               \
+        p += sizeof(t);                       \
     }
 
 static unsigned int luai_makeseed(lua_State *L)
@@ -305,7 +305,7 @@ LUA_API lua_State *lua_newthread(lua_State *L)
     resethookcount(L1);
     /* initialize L1 extra space */
     luaport_memcpy(lua_getextraspace(L1), lua_getextraspace(g->mainthread),
-           LUA_EXTRASPACE);
+                   LUA_EXTRASPACE);
     luai_userstatethread(L, L1);
     stack_init(L1, L); /* init stack */
     lua_unlock(L);

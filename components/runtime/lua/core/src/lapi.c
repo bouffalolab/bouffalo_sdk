@@ -41,10 +41,10 @@ const char lua_ident[] =
 #define isvalid(L, o) (!ttisnil(o) || o != &G(L)->nilvalue)
 
 /* test for pseudo index */
-#define ispseudo(i) ((i) <= LUA_REGISTRYINDEX)
+#define ispseudo(i)   ((i) <= LUA_REGISTRYINDEX)
 
 /* test for upvalue */
-#define isupvalue(i) ((i) < LUA_REGISTRYINDEX)
+#define isupvalue(i)  ((i) < LUA_REGISTRYINDEX)
 
 /*
 ** Convert an acceptable index to a pointer to its respective value.

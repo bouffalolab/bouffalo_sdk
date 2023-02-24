@@ -99,7 +99,7 @@ int32_t bflb_eflash_loader_if_handshake_poll(uint32_t timeout)
     return eflash_loader_if_cfg.boot_if_handshake_poll(timeout);
 }
 
-uint32_t *bflb_eflash_loader_if_read(uint32_t *read_len)
+ATTR_TCM_SECTION uint32_t *bflb_eflash_loader_if_read(uint32_t *read_len)
 {
     return eflash_loader_if_cfg.boot_if_recv(read_len, eflash_loader_if_cfg.maxlen, eflash_loader_if_cfg.timeout);
 }
@@ -119,7 +119,7 @@ int32_t bflb_eflash_loader_if_deinit()
     return eflash_loader_if_cfg.boot_if_deinit();
 }
 
-int32_t bflb_eflash_loader_main()
+int32_t ATTR_TCM_SECTION bflb_eflash_loader_main()
 {
 #if defined(CHIP_BL602) || defined(CHIP_BL702)
     int32_t ret;
@@ -129,7 +129,7 @@ int32_t bflb_eflash_loader_main()
     uint8_t err_cnt = 0;
     uint8_t to_cnt = 0;
 
-    LOG_F("bflb_eflash_loader_main\r\n");
+    //LOG_F("bflb_eflash_loader_main\r\n");
     //pt_table_dump();
     //ret = pt_table_get_iap_para(&p_iap_param);
     //if(0 != ret){
@@ -151,14 +151,14 @@ int32_t bflb_eflash_loader_main()
         } while (to_cnt < 2 && total_len <= 0);
 
         if (to_cnt >= 2 || total_len <= 0) {
-            LOG_F("rcv err break\r\n");
+            //LOG_F("rcv err break\r\n");
             break;
         }
 
-        LOG_F("Recv\r\n");
+        //LOG_F("Recv\r\n");
         //eflash_loader_dump_data(recv_buf,total_len);
         cmd_len = recv_buf[2] + (recv_buf[3] << 8);
-        LOG_F("cmd_len %d\r\n", cmd_len);
+        //LOG_F("cmd_len %d\r\n", cmd_len);
 
         /* Check checksum*/
         if (recv_buf[1] != 0) {
@@ -170,7 +170,7 @@ int32_t bflb_eflash_loader_main()
 
             if ((tmp & 0xff) != recv_buf[1]) {
                 /* FL+Error code(2bytes) */
-                LOG_F("Checksum error %02x\r\n", tmp & 0xff);
+                //LOG_F("Checksum error %02x\r\n", tmp & 0xff);
                 g_eflash_loader_cmd_ack_buf[0] = BFLB_EFLASH_LOADER_CMD_NACK | ((BFLB_EFLASH_LOADER_CMD_CRC_ERROR << 16) & 0xffff0000);
                 bflb_eflash_loader_if_write(g_eflash_loader_cmd_ack_buf, 4);
                 continue;
@@ -182,7 +182,7 @@ int32_t bflb_eflash_loader_main()
         ret = bflb_eflash_loader_cmd_process(recv_buf[0], recv_buf + 4, cmd_len);
 
         if (ret != BFLB_EFLASH_LOADER_SUCCESS) {
-            LOG_F(" CMD Pro Ret %d\r\n", ret);
+            //LOG_F(" CMD Pro Ret %d\r\n", ret);
 
             err_cnt++;
 

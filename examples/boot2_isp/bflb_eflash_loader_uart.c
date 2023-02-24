@@ -108,7 +108,7 @@ void bflb_eflash_loader_usart_if_enable_int(void)
     bflb_uart_rxint_mask(uartx,false);
 }
 
-void bflb_eflash_loader_usart_if_send(uint8_t *data, uint32_t len)
+ATTR_TCM_SECTION void bflb_eflash_loader_usart_if_send(uint8_t *data, uint32_t len)
 {
     //uartx = bflb_device_get_by_name("uart0");
     bflb_uart_put(uartx, data, len);
@@ -122,7 +122,7 @@ int32_t bflb_eflash_loader_usart_if_wait_tx_idle(uint32_t timeout)
     return 0;
 }
 
-static uint32_t *bflb_eflash_loader_usart_if_receive(uint32_t *recv_len, uint16_t maxlen, uint16_t timeout)
+ATTR_TCM_SECTION static uint32_t *bflb_eflash_loader_usart_if_receive(uint32_t *recv_len, uint16_t maxlen, uint16_t timeout)
 {
     uint8_t *buf = (uint8_t *)g_eflash_loader_readbuf[g_rx_buf_index];
     uint16_t datalen = 0;
@@ -243,18 +243,19 @@ int32_t bflb_eflash_loader_uart_handshake_poll(uint32_t timeout)
     bflb_eflash_loader_usart_if_enable_int();
     bflb_irq_enable(uartx->irq_num);
     bflb_eflash_loader_usart_if_send((uint8_t *)"Boot2 ISP Ready", strlen("Boot2 ISP Ready"));
+    bflb_uart_set_console(NULL);
 
 #endif
 
     return 0;
 }
 
-uint32_t *bflb_eflash_loader_uart_recv(uint32_t *recv_len, uint32_t maxlen, uint32_t timeout)
+uint32_t ATTR_TCM_SECTION *bflb_eflash_loader_uart_recv(uint32_t *recv_len, uint32_t maxlen, uint32_t timeout)
 {
     return bflb_eflash_loader_usart_if_receive(recv_len, maxlen, timeout);
 }
 
-int32_t bflb_eflash_loader_uart_send(uint32_t *data, uint32_t len)
+ATTR_TCM_SECTION int32_t bflb_eflash_loader_uart_send(uint32_t *data, uint32_t len)
 {
     bflb_eflash_loader_usart_if_send((uint8_t *)data, len);
 

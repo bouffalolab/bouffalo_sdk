@@ -59,7 +59,7 @@ static const char *b_str2int(const char *s, int base, lua_Integer *pn)
 {
     lua_Unsigned n = 0;
     int neg = 0;
-    s += strspn(s, SPACECHARS); /* skip initial spaces */
+    s += luaport_strspn(s, SPACECHARS); /* skip initial spaces */
     if (*s == '-') {
         s++;
         neg = 1;
@@ -75,7 +75,7 @@ static const char *b_str2int(const char *s, int base, lua_Integer *pn)
         n = n * base + digit;
         s++;
     } while (isalnum((unsigned char)*s));
-    s += strspn(s, SPACECHARS); /* skip trailing spaces */
+    s += luaport_strspn(s, SPACECHARS); /* skip trailing spaces */
     *pn = (lua_Integer)((neg) ? (0u - n) : n);
     return s;
 }

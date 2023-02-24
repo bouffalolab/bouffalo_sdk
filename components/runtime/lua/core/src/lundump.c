@@ -267,9 +267,9 @@ static void loadFunction(LoadState *S, Proto *f, TString *psource)
 static void checkliteral(LoadState *S, const char *s, const char *msg)
 {
     char buff[sizeof(LUA_SIGNATURE) + sizeof(LUAC_DATA)]; /* larger than both */
-    size_t len = strlen(s);
+    size_t len = luaport_strlen(s);
     loadVector(S, buff, len);
-    if (memcmp(s, buff, len) != 0)
+    if (luaport_memcmp(s, buff, len) != 0)
         error(S, msg);
 }
 

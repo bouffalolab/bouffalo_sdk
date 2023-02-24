@@ -19,10 +19,10 @@
 typedef struct luaL_Buffer luaL_Buffer;
 
 /* extra error code for 'luaL_loadfilex' */
-#define LUA_ERRFILE (LUA_ERRERR + 1)
+#define LUA_ERRFILE       (LUA_ERRERR + 1)
 
 /* key, in the registry, for table of loaded modules */
-#define LUA_LOADED_TABLE "_LOADED"
+#define LUA_LOADED_TABLE  "_LOADED"
 
 /* key, in the registry, for table of preloaded loaders */
 #define LUA_PRELOAD_TABLE "_PRELOAD"
@@ -128,7 +128,7 @@ LUALIB_API void(luaL_requiref)(lua_State *L, const char *modname,
 #define luaL_checkstring(L, n)  (luaL_checklstring(L, (n), NULL))
 #define luaL_optstring(L, n, d) (luaL_optlstring(L, (n), (d), NULL))
 
-#define luaL_typename(L, i) lua_typename(L, lua_type(L, (i)))
+#define luaL_typename(L, i)     lua_typename(L, lua_type(L, (i)))
 
 #define luaL_dofile(L, fn) \
     (luaL_loadfile(L, fn) || lua_pcall(L, 0, LUA_MULTRET, 0))
@@ -136,9 +136,9 @@ LUALIB_API void(luaL_requiref)(lua_State *L, const char *modname,
 #define luaL_dostring(L, s) \
     (luaL_loadstring(L, s) || lua_pcall(L, 0, LUA_MULTRET, 0))
 
-#define luaL_getmetatable(L, n) (lua_getfield(L, LUA_REGISTRYINDEX, (n)))
+#define luaL_getmetatable(L, n)      (lua_getfield(L, LUA_REGISTRYINDEX, (n)))
 
-#define luaL_opt(L, f, n, d) (lua_isnoneornil(L, (n)) ? (d) : f(L, (n)))
+#define luaL_opt(L, f, n, d)         (lua_isnoneornil(L, (n)) ? (d) : f(L, (n)))
 
 #define luaL_loadbuffer(L, s, sz, n) luaL_loadbufferx(L, s, sz, n, NULL)
 
@@ -159,7 +159,7 @@ LUALIB_API void(luaL_requiref)(lua_State *L, const char *modname,
 
 #if defined LUAI_ASSERT
 #include <assert.h>
-#define lua_assert(c) assert(c)
+#define lua_assert(c) luaport_assert(c)
 #else
 #define lua_assert(c) ((void)0)
 #endif
@@ -219,10 +219,10 @@ LUALIB_API char *(luaL_buffinitsize)(lua_State *L, luaL_Buffer *B, size_t sz);
 ** after that initial structure).
 */
 
-#define LUA_FILEHANDLE LUAPORT_FILEHANDLE
+#define LUA_FILEHANDLE     "FILE*"
 
 typedef struct luaL_Stream {
-    LUAPORT_FILE *f;      /* stream (NULL for incompletely created streams) */
+    FILE *f;              /* stream (NULL for incompletely created streams) */
     lua_CFunction closef; /* to close stream (NULL for closed streams) */
 } luaL_Stream;
 
@@ -236,7 +236,7 @@ typedef struct luaL_Stream {
 
 /* print a string */
 #if !defined(lua_writestring)
-#define lua_writestring(s, l) luaport_fwirte((s), sizeof(char), (l), luaport_stdout)
+#define lua_writestring(s, l) luaport_fwrite((s), sizeof(char), (l), luaport_stdout)
 #endif
 
 /* print a newline and flush the output */
@@ -263,8 +263,8 @@ typedef struct luaL_Stream {
 #define luaL_optunsigned(L, a, d) \
     ((lua_Unsigned)luaL_optinteger(L, a, (lua_Integer)(d)))
 
-#define luaL_checkint(L, n)  ((int)luaL_checkinteger(L, (n)))
-#define luaL_optint(L, n, d) ((int)luaL_optinteger(L, (n), (d)))
+#define luaL_checkint(L, n)   ((int)luaL_checkinteger(L, (n)))
+#define luaL_optint(L, n, d)  ((int)luaL_optinteger(L, (n), (d)))
 
 #define luaL_checklong(L, n)  ((long)luaL_checkinteger(L, (n)))
 #define luaL_optlong(L, n, d) ((long)luaL_optinteger(L, (n), (d)))

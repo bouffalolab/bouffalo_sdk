@@ -26,7 +26,7 @@
 #include "ltable.h"
 #include "lzio.h"
 
-#define next(ls) (ls->current = zgetc(ls->z))
+#define next(ls)          (ls->current = zgetc(ls->z))
 
 #define currIsNewline(ls) (ls->current == '\n' || ls->current == '\r')
 

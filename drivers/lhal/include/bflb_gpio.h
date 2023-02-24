@@ -31,52 +31,52 @@
 /** @defgroup GPIO_PIN gpio pin definition
   * @{
   */
-#define GPIO_PIN_0  0
-#define GPIO_PIN_1  1
-#define GPIO_PIN_2  2
-#define GPIO_PIN_3  3
-#define GPIO_PIN_4  4
-#define GPIO_PIN_5  5
-#define GPIO_PIN_6  6
-#define GPIO_PIN_7  7
-#define GPIO_PIN_8  8
-#define GPIO_PIN_9  9
-#define GPIO_PIN_10 10
-#define GPIO_PIN_11 11
-#define GPIO_PIN_12 12
-#define GPIO_PIN_13 13
-#define GPIO_PIN_14 14
-#define GPIO_PIN_15 15
-#define GPIO_PIN_16 16
-#define GPIO_PIN_17 17
-#define GPIO_PIN_18 18
-#define GPIO_PIN_19 19
-#define GPIO_PIN_20 20
-#define GPIO_PIN_21 21
-#define GPIO_PIN_22 22
-#define GPIO_PIN_23 23
-#define GPIO_PIN_24 24
-#define GPIO_PIN_25 25
-#define GPIO_PIN_26 26
-#define GPIO_PIN_27 27
-#define GPIO_PIN_28 28
-#define GPIO_PIN_29 29
-#define GPIO_PIN_30 30
-#define GPIO_PIN_31 31
-#define GPIO_PIN_32 32
-#define GPIO_PIN_33 33
-#define GPIO_PIN_34 34
-#define GPIO_PIN_35 35
-#define GPIO_PIN_36 36
-#define GPIO_PIN_37 37
-#define GPIO_PIN_38 38
-#define GPIO_PIN_39 39
-#define GPIO_PIN_40 40
-#define GPIO_PIN_41 41
-#define GPIO_PIN_42 42
-#define GPIO_PIN_43 43
-#define GPIO_PIN_44 44
-#define GPIO_PIN_45 45
+#define GPIO_PIN_0      0
+#define GPIO_PIN_1      1
+#define GPIO_PIN_2      2
+#define GPIO_PIN_3      3
+#define GPIO_PIN_4      4
+#define GPIO_PIN_5      5
+#define GPIO_PIN_6      6
+#define GPIO_PIN_7      7
+#define GPIO_PIN_8      8
+#define GPIO_PIN_9      9
+#define GPIO_PIN_10     10
+#define GPIO_PIN_11     11
+#define GPIO_PIN_12     12
+#define GPIO_PIN_13     13
+#define GPIO_PIN_14     14
+#define GPIO_PIN_15     15
+#define GPIO_PIN_16     16
+#define GPIO_PIN_17     17
+#define GPIO_PIN_18     18
+#define GPIO_PIN_19     19
+#define GPIO_PIN_20     20
+#define GPIO_PIN_21     21
+#define GPIO_PIN_22     22
+#define GPIO_PIN_23     23
+#define GPIO_PIN_24     24
+#define GPIO_PIN_25     25
+#define GPIO_PIN_26     26
+#define GPIO_PIN_27     27
+#define GPIO_PIN_28     28
+#define GPIO_PIN_29     29
+#define GPIO_PIN_30     30
+#define GPIO_PIN_31     31
+#define GPIO_PIN_32     32
+#define GPIO_PIN_33     33
+#define GPIO_PIN_34     34
+#define GPIO_PIN_35     35
+#define GPIO_PIN_36     36
+#define GPIO_PIN_37     37
+#define GPIO_PIN_38     38
+#define GPIO_PIN_39     39
+#define GPIO_PIN_40     40
+#define GPIO_PIN_41     41
+#define GPIO_PIN_42     42
+#define GPIO_PIN_43     43
+#define GPIO_PIN_44     44
+#define GPIO_PIN_45     45
 /**
   * @}
   */
@@ -117,6 +117,9 @@
 #define GPIO_FUNC_CAM       (9 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_SDU       (12 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_PWM0      (16 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_DBI_B     (22 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_DBI_C     (23 << GPIO_FUNC_SHIFT)
+#define GPIO_FUNC_DBI_QSPI  (24 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_AUDAC_PWM (25 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_JTAG      (26 << GPIO_FUNC_SHIFT)
 #define GPIO_FUNC_PEC       (27 << GPIO_FUNC_SHIFT)
@@ -161,30 +164,30 @@
 #define GPIO_FUNC_CLKOUT (31 << GPIO_FUNC_SHIFT)
 #endif
 
-#define GPIO_MODE_SHIFT (5) /* Bits 5-6: Port Mode */
-#define GPIO_MODE_MASK  (3 << GPIO_MODE_SHIFT)
-#define GPIO_INPUT      (0 << GPIO_MODE_SHIFT) /* Input Enable */
-#define GPIO_OUTPUT     (1 << GPIO_MODE_SHIFT) /* Output Enable */
-#define GPIO_ANALOG     (2 << GPIO_MODE_SHIFT) /* Analog Enable */
-#define GPIO_ALTERNATE  (3 << GPIO_MODE_SHIFT) /* Alternate Enable */
+#define GPIO_MODE_SHIFT                      (5) /* Bits 5-6: Port Mode */
+#define GPIO_MODE_MASK                       (3 << GPIO_MODE_SHIFT)
+#define GPIO_INPUT                           (0 << GPIO_MODE_SHIFT) /* Input Enable */
+#define GPIO_OUTPUT                          (1 << GPIO_MODE_SHIFT) /* Output Enable */
+#define GPIO_ANALOG                          (2 << GPIO_MODE_SHIFT) /* Analog Enable */
+#define GPIO_ALTERNATE                       (3 << GPIO_MODE_SHIFT) /* Alternate Enable */
 
-#define GPIO_PUPD_SHIFT (7) /* Bits 7-8: Pull-up/down */
-#define GPIO_PUPD_MASK  (3 << GPIO_PUPD_SHIFT)
-#define GPIO_FLOAT      (0 << GPIO_PUPD_SHIFT) /* No pull-up, pull-down */
-#define GPIO_PULLUP     (1 << GPIO_PUPD_SHIFT) /* Pull-up */
-#define GPIO_PULLDOWN   (2 << GPIO_PUPD_SHIFT) /* Pull-down */
+#define GPIO_PUPD_SHIFT                      (7) /* Bits 7-8: Pull-up/down */
+#define GPIO_PUPD_MASK                       (3 << GPIO_PUPD_SHIFT)
+#define GPIO_FLOAT                           (0 << GPIO_PUPD_SHIFT) /* No pull-up, pull-down */
+#define GPIO_PULLUP                          (1 << GPIO_PUPD_SHIFT) /* Pull-up */
+#define GPIO_PULLDOWN                        (2 << GPIO_PUPD_SHIFT) /* Pull-down */
 
-#define GPIO_SMT_SHIFT (9) /* Bits 9: SMT Enable */
-#define GPIO_SMT_MASK  (1 << GPIO_SMT_SHIFT)
-#define GPIO_SMT_DIS   (0 << GPIO_SMT_SHIFT)
-#define GPIO_SMT_EN    (1 << GPIO_SMT_SHIFT)
+#define GPIO_SMT_SHIFT                       (9) /* Bits 9: SMT Enable */
+#define GPIO_SMT_MASK                        (1 << GPIO_SMT_SHIFT)
+#define GPIO_SMT_DIS                         (0 << GPIO_SMT_SHIFT)
+#define GPIO_SMT_EN                          (1 << GPIO_SMT_SHIFT)
 
-#define GPIO_DRV_SHIFT (10) /* Bits 10-11: Drive */
-#define GPIO_DRV_MASK  (3 << GPIO_DRV_SHIFT)
-#define GPIO_DRV_0     (0 << GPIO_DRV_SHIFT)
-#define GPIO_DRV_1     (1 << GPIO_DRV_SHIFT)
-#define GPIO_DRV_2     (2 << GPIO_DRV_SHIFT)
-#define GPIO_DRV_3     (3 << GPIO_DRV_SHIFT)
+#define GPIO_DRV_SHIFT                       (10) /* Bits 10-11: Drive */
+#define GPIO_DRV_MASK                        (3 << GPIO_DRV_SHIFT)
+#define GPIO_DRV_0                           (0 << GPIO_DRV_SHIFT)
+#define GPIO_DRV_1                           (1 << GPIO_DRV_SHIFT)
+#define GPIO_DRV_2                           (2 << GPIO_DRV_SHIFT)
+#define GPIO_DRV_3                           (3 << GPIO_DRV_SHIFT)
 
 /** @defgroup GPIO_INT_TRIG_MODE gpio interrupt trigger mode definition
   * @{
@@ -225,6 +228,17 @@
 #define GPIO_UART_FUNC_UART2_CTS 9
 #define GPIO_UART_FUNC_UART2_TX  10
 #define GPIO_UART_FUNC_UART2_RX  11
+#endif
+/**
+  * @}
+  */
+
+/** @defgroup GPIO_ISO11898_FUNC gpio iso11898 function definition
+  * @{
+  */
+#if defined(BL808) || defined(BL606P)|| defined(BL616)|| defined(BL628)
+#define GPIO_ISO11898_FUNC_TX 10
+#define GPIO_ISO11898_FUNC_RX 11
 #endif
 /**
   * @}
@@ -361,6 +375,15 @@ void bflb_gpio_int_clear(struct bflb_device_s *dev, uint8_t pin);
 void bflb_gpio_uart_init(struct bflb_device_s *dev, uint8_t pin, uint8_t uart_func);
 
 /**
+ * @brief Config gpio pin with iso11898 function.
+ *
+ * @param [in] dev device handle
+ * @param [in] pin gpio pin, use @ref GPIO_PIN
+ * @param [in] iso11898_func iso11898 function, use @ref GPIO_ISO11898_FUNC
+ */
+void bflb_gpio_iso11898_init(struct bflb_device_s *dev, uint8_t pin, uint8_t iso11898_func);
+
+/**
  * @brief Control gpio feature.
  *
  * @param [in] dev device handle
@@ -368,6 +391,7 @@ void bflb_gpio_uart_init(struct bflb_device_s *dev, uint8_t pin, uint8_t uart_fu
  * @param [in] arg user data
  * @return A negated errno value on failure.
  */
+
 int bflb_gpio_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus

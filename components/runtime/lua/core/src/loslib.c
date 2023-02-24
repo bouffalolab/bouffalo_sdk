@@ -90,8 +90,8 @@
 #else /* }{ */
 
 /* ISO C definitions */
-#define l_gmtime(t, r)    ((void)(r)->tm_sec, gmtime(t))
-#define l_localtime(t, r) ((void)(r)->tm_sec, localtime(t))
+#define l_gmtime(t, r)    ((void)(r)->tm_sec, luaport_gmtime(t))
+#define l_localtime(t, r) ((void)(r)->tm_sec, luaport_localtime(t))
 
 #endif /* } */
 
@@ -118,21 +118,21 @@
 #define LUA_TMPNAMTEMPLATE "/tmp/lua_XXXXXX"
 #endif
 
-#define lua_tmpnam(b, e)               \
-    {                                  \
-        strcpy(b, LUA_TMPNAMTEMPLATE); \
-        e = mkstemp(b);                \
-        if (e != -1)                   \
-            close(e);                  \
-        e = (e == -1);                 \
+#define lua_tmpnam(b, e)                       \
+    {                                          \
+        luaport_strcpy(b, LUA_TMPNAMTEMPLATE); \
+        e = mkstemp(b);                        \
+        if (e != -1)                           \
+            close(e);                          \
+        e = (e == -1);                         \
     }
 
 #else /* }{ */
 
 /* ISO C definitions */
 #define LUA_TMPNAMBUFSIZE L_tmpnam
-#define lua_tmpnam(b, e)         \
-    {                            \
+#define lua_tmpnam(b, e)                 \
+    {                                    \
         e = (luaport_tmpnam(b) == NULL); \
     }
 
@@ -145,7 +145,7 @@ static int os_execute(lua_State *L)
 {
     const char *cmd = luaL_optstring(L, 1, NULL);
     int stat;
-    errno = 0;
+    luaport_errno = 0;
     stat = luaport_system(cmd);
     if (cmd != NULL)
         return luaL_execresult(L, stat);
@@ -277,9 +277,9 @@ static const char *checkoption(lua_State *L, const char *conv,
     const char *option = LUA_STRFTIMEOPTIONS;
     int oplen = 1; /* length of options being checked */
     for (; *option != '\0' && oplen <= convlen; option += oplen) {
-        if (*option == '|')                          /* next block? */
-            oplen++;                                 /* will check options with next length (+1) */
-        else if (memcmp(conv, option, oplen) == 0) { /* match? */
+        if (*option == '|')                                  /* next block? */
+            oplen++;                                         /* will check options with next length (+1) */
+        else if (luaport_memcmp(conv, option, oplen) == 0) { /* match? */
             luaport_memcpy(buff, conv, oplen);               /* copy valid option to buffer */
             buff[oplen] = '\0';
             return conv + oplen; /* return next item */
@@ -290,11 +290,11 @@ static const char *checkoption(lua_State *L, const char *conv,
     return conv; /* to avoid warnings */
 }
 
-static time_t l_checktime(lua_State *L, int arg)
+static luaport_time_t l_checktime(lua_State *L, int arg)
 {
     l_timet t = l_gettime(L, arg);
-    luaL_argcheck(L, (time_t)t == t, arg, "time out-of-bounds");
-    return (time_t)t;
+    luaL_argcheck(L, (luaport_time_t)t == t, arg, "time out-of-bounds");
+    return (luaport_time_t)t;
 }
 
 /* maximum size for an individual 'strftime' item */
@@ -304,7 +304,7 @@ static int os_date(lua_State *L)
 {
     size_t slen;
     const char *s = luaL_optlstring(L, 1, "%c", &slen);
-    time_t t = luaL_opt(L, l_checktime, 2, luaport_time(NULL));
+    luaport_time_t t = luaL_opt(L, l_checktime, 2, luaport_time(NULL));
     const char *se = s + slen; /* 's' end */
     struct tm tmr, *stm;
     if (*s == '!') { /* UTC? */
@@ -315,7 +315,7 @@ static int os_date(lua_State *L)
     if (stm == NULL) /* invalid date? */
         return luaL_error(L,
                           "date result cannot be represented in this installation");
-    if (strcmp(s, "*t") == 0) {
+    if (luaport_strcmp(s, "*t") == 0) {
         lua_createtable(L, 0, 9); /* 9 = number of fields */
         setallfields(L, stm);
     } else {
@@ -331,7 +331,7 @@ static int os_date(lua_State *L)
                 char *buff = luaL_prepbuffsize(&b, SIZETIMEFMT);
                 s++;                                   /* skip '%' */
                 s = checkoption(L, s, se - s, cc + 1); /* copy specifier to 'cc' */
-                reslen = strftime(buff, SIZETIMEFMT, cc, stm);
+                reslen = luaport_strftime(buff, SIZETIMEFMT, cc, stm);
                 luaL_addsize(&b, reslen);
             }
         }
@@ -342,9 +342,9 @@ static int os_date(lua_State *L)
 
 static int os_time(lua_State *L)
 {
-    time_t t;
-    if (lua_isnoneornil(L, 1)) /* called without args? */
-        t = luaport_time(NULL);        /* get current time */
+    luaport_time_t t;
+    if (lua_isnoneornil(L, 1))  /* called without args? */
+        t = luaport_time(NULL); /* get current time */
     else {
         struct tm ts;
         luaL_checktype(L, 1, LUA_TTABLE);
@@ -356,21 +356,22 @@ static int os_time(lua_State *L)
         ts.tm_min = getfield(L, "min", 0, 0);
         ts.tm_sec = getfield(L, "sec", 0, 0);
         ts.tm_isdst = getboolfield(L, "isdst");
-        t = mktime(&ts);
+        t = luaport_mktime(&ts);
         setallfields(L, &ts); /* update fields with normalized values */
     }
-    if (t != (time_t)(l_timet)t || t == (time_t)(-1))
-        return luaL_error(L,
-                          "time result cannot be represented in this installation");
+
+    // if (t != (luaport_time_t)(l_timet)t || t == (luaport_time_t)(-1))
+    //   return luaL_error(L,
+    //                 "time result cannot be represented in this installation");
     l_pushtime(L, t);
     return 1;
 }
 
 static int os_difftime(lua_State *L)
 {
-    time_t t1 = l_checktime(L, 1);
-    time_t t2 = l_checktime(L, 2);
-    lua_pushnumber(L, (lua_Number)difftime(t1, t2));
+    luaport_time_t t1 = l_checktime(L, 1);
+    luaport_time_t t2 = l_checktime(L, 2);
+    lua_pushnumber(L, (lua_Number)luaport_difftime(t1, t2));
     return 1;
 }
 
@@ -384,7 +385,7 @@ static int os_setlocale(lua_State *L)
                                             "numeric", "time", NULL };
     const char *l = luaL_optstring(L, 1, NULL);
     int op = luaL_checkoption(L, 2, "all", catnames);
-    lua_pushstring(L, setlocale(cat[op], l));
+    lua_pushstring(L, luaport_setlocale(cat[op], l));
     return 1;
 }
 

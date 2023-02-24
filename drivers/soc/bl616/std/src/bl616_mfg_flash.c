@@ -1,5 +1,4 @@
 #include "bl616_mfg_flash.h"
-#include "soft_crc.h"
 
 //static rf_para_flash_t rf_para;
 //static uint32_t rf_para_addr = 0;

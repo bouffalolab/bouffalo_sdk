@@ -11,78 +11,16 @@
 #include "diskio.h" /* Declarations of disk functions */
 #include "stddef.h"
 
-/* Definitions of physical drive number for each drive */
-#define DEV_RAM   0 /* Example: Map Ramdisk to physical drive 0 */
-#define DEV_MMC   1 /* Example: Map MMC/SD card to physical drive 1 */
-#define DEV_FLASH 2 /* Example: Map USB MSD to physical drive 2 */
-#define DEV_USB   3 /* Example: Map USB MSD to physical drive 2 */
-
-FATFS_DiskioDriverTypeDef pDiskioDriver = {
-    .RAM_disk_status = NULL,
-    .MMC_disk_status = NULL,
-    .USB_disk_status = NULL,
-    .RAM_disk_initialize = NULL,
-    .MMC_disk_initialize = NULL,
-    .USB_disk_initialize = NULL,
-    .RAM_disk_read = NULL,
-    .MMC_disk_read = NULL,
-    .USB_disk_read = NULL,
-    .RAM_disk_write = NULL,
-    .MMC_disk_write = NULL,
-    .USB_disk_write = NULL,
-    .RAM_disk_ioctl = NULL,
-    .MMC_disk_ioctl = NULL,
-    .USB_disk_ioctl = NULL,
-    .Translate_Result_Code = NULL,
-};
+FATFS_DiskioDriverTypeDef pDiskioDriver[DEV_NUM_MAX] = { NULL };
 
 /*-----------------------------------------------------------------------*/
 /* init driver callback                                                  */
 /*-----------------------------------------------------------------------*/
-void disk_driver_callback_init(FATFS_DiskioDriverTypeDef *pNewDriver)
+void disk_driver_callback_init(uint8_t pdrv, FATFS_DiskioDriverTypeDef *pNewDriver)
 {
-    if (pNewDriver->RAM_disk_status)
-        pDiskioDriver.RAM_disk_status = pNewDriver->RAM_disk_status;
-    if (pNewDriver->MMC_disk_status)
-        pDiskioDriver.MMC_disk_status = pNewDriver->MMC_disk_status;
-    if (pNewDriver->FLASH_disk_status)
-        pDiskioDriver.FLASH_disk_status = pNewDriver->FLASH_disk_status;
-    if (pNewDriver->USB_disk_status)
-        pDiskioDriver.USB_disk_status = pNewDriver->USB_disk_status;
-    if (pNewDriver->RAM_disk_initialize)
-        pDiskioDriver.RAM_disk_initialize = pNewDriver->RAM_disk_initialize;
-    if (pNewDriver->MMC_disk_initialize)
-        pDiskioDriver.MMC_disk_initialize = pNewDriver->MMC_disk_initialize;
-    if (pNewDriver->FLASH_disk_initialize)
-        pDiskioDriver.FLASH_disk_initialize = pNewDriver->FLASH_disk_initialize;
-    if (pNewDriver->USB_disk_initialize)
-        pDiskioDriver.USB_disk_initialize = pNewDriver->USB_disk_initialize;
-    if (pNewDriver->RAM_disk_read)
-        pDiskioDriver.RAM_disk_read = pNewDriver->RAM_disk_read;
-    if (pNewDriver->MMC_disk_read)
-        pDiskioDriver.MMC_disk_read = pNewDriver->MMC_disk_read;
-    if (pNewDriver->FLASH_disk_read)
-        pDiskioDriver.FLASH_disk_read = pNewDriver->FLASH_disk_read;
-    if (pNewDriver->USB_disk_read)
-        pDiskioDriver.USB_disk_read = pNewDriver->USB_disk_read;
-    if (pNewDriver->RAM_disk_write)
-        pDiskioDriver.RAM_disk_write = pNewDriver->RAM_disk_write;
-    if (pNewDriver->MMC_disk_write)
-        pDiskioDriver.MMC_disk_write = pNewDriver->MMC_disk_write;
-    if (pNewDriver->FLASH_disk_write)
-        pDiskioDriver.FLASH_disk_write = pNewDriver->FLASH_disk_write;
-    if (pNewDriver->USB_disk_write)
-        pDiskioDriver.USB_disk_write = pNewDriver->USB_disk_write;
-    if (pNewDriver->RAM_disk_ioctl)
-        pDiskioDriver.RAM_disk_ioctl = pNewDriver->RAM_disk_ioctl;
-    if (pNewDriver->MMC_disk_ioctl)
-        pDiskioDriver.MMC_disk_ioctl = pNewDriver->MMC_disk_ioctl;
-    if (pNewDriver->FLASH_disk_ioctl)
-        pDiskioDriver.FLASH_disk_ioctl = pNewDriver->FLASH_disk_ioctl;
-    if (pNewDriver->USB_disk_ioctl)
-        pDiskioDriver.USB_disk_ioctl = pNewDriver->USB_disk_ioctl;
-    if (pNewDriver->Translate_Result_Code)
-        pDiskioDriver.Translate_Result_Code = pNewDriver->Translate_Result_Code;
+    if (pdrv < DEV_NUM_MAX) {
+        pDiskioDriver[pdrv] = *pNewDriver;
+    }
 }
 
 /*-----------------------------------------------------------------------*/
@@ -96,41 +34,19 @@ DSTATUS disk_status(
     DSTATUS stat = STA_NOINIT;
     int result = 0;
 
-    switch (pdrv) {
-        case DEV_RAM:
-            if (pDiskioDriver.RAM_disk_status) {
-                result = pDiskioDriver.RAM_disk_status();
-            }
+    if (pdrv > DEV_NUM_MAX) {
+        return STA_NOINIT;
+    }
 
-            break;
-
-        case DEV_MMC:
-            if (pDiskioDriver.MMC_disk_status) {
-                result = pDiskioDriver.MMC_disk_status();
-            }
-
-            break;
-
-        case DEV_FLASH:
-            if (pDiskioDriver.FLASH_disk_status) {
-                result = pDiskioDriver.FLASH_disk_status();
-            }
-
-            break;
-        case DEV_USB:
-            if (pDiskioDriver.USB_disk_status) {
-                result = pDiskioDriver.USB_disk_status();
-            }
-
-            break;
-
-        default:
-            return STA_NOINIT;
+    if (pDiskioDriver[pdrv].disk_status) {
+        result = pDiskioDriver[pdrv].disk_status();
     }
 
     /* translate the reslut code here */
-    if (pDiskioDriver.Translate_Result_Code) {
-        stat = pDiskioDriver.Translate_Result_Code(result);
+    if (pDiskioDriver[pdrv].error_code_parsing) {
+        stat = pDiskioDriver[pdrv].error_code_parsing(result);
+    } else {
+        stat = result;
     }
 
     return stat;
@@ -147,41 +63,19 @@ DSTATUS disk_initialize(
     DSTATUS stat = STA_NOINIT;
     int result = 0;
 
-    switch (pdrv) {
-        case DEV_RAM:
-            if (pDiskioDriver.RAM_disk_initialize) {
-                result = pDiskioDriver.RAM_disk_initialize();
-            }
+    if (pdrv > DEV_NUM_MAX) {
+        return STA_NOINIT;
+    }
 
-            break;
-
-        case DEV_MMC:
-            if (pDiskioDriver.MMC_disk_initialize) {
-                result = pDiskioDriver.MMC_disk_initialize();
-            }
-
-            break;
-
-        case DEV_FLASH:
-            if (pDiskioDriver.FLASH_disk_initialize) {
-                result = pDiskioDriver.FLASH_disk_initialize();
-            }
-            break;
-
-        case DEV_USB:
-            if (pDiskioDriver.USB_disk_initialize) {
-                result = pDiskioDriver.USB_disk_initialize();
-            }
-
-            break;
-
-        default:
-            return STA_NOINIT;
+    if (pDiskioDriver[pdrv].disk_initialize) {
+        result = pDiskioDriver[pdrv].disk_initialize();
     }
 
     /* translate the reslut code here */
-    if (pDiskioDriver.Translate_Result_Code) {
-        stat = pDiskioDriver.Translate_Result_Code(result);
+    if (pDiskioDriver[pdrv].error_code_parsing) {
+        stat = pDiskioDriver[pdrv].error_code_parsing(result);
+    } else {
+        stat = result;
     }
 
     return stat;
@@ -201,41 +95,19 @@ DRESULT disk_read(
     DSTATUS stat = STA_NOINIT;
     int result = 0;
 
-    switch (pdrv) {
-        case DEV_RAM:
-            if (pDiskioDriver.RAM_disk_read) {
-                result = pDiskioDriver.RAM_disk_read(buff, sector, count);
-            }
+    if (pdrv > DEV_NUM_MAX) {
+        return STA_NOINIT;
+    }
 
-            break;
-
-        case DEV_MMC:
-            if (pDiskioDriver.MMC_disk_read) {
-                result = pDiskioDriver.MMC_disk_read(buff, sector, count);
-            }
-
-            break;
-
-        case DEV_FLASH:
-            if (pDiskioDriver.FLASH_disk_read) {
-                result = pDiskioDriver.FLASH_disk_read(buff, sector, count);
-            }
-            break;
-
-        case DEV_USB:
-            if (pDiskioDriver.USB_disk_read) {
-                result = pDiskioDriver.USB_disk_read(buff, sector, count);
-            }
-
-            break;
-
-        default:
-            return RES_PARERR;
+    if (pDiskioDriver[pdrv].disk_read) {
+        result = pDiskioDriver[pdrv].disk_read(buff, sector, count);
     }
 
     /* translate the reslut code here */
-    if (pDiskioDriver.Translate_Result_Code) {
-        stat = pDiskioDriver.Translate_Result_Code(result);
+    if (pDiskioDriver[pdrv].error_code_parsing) {
+        stat = pDiskioDriver[pdrv].error_code_parsing(result);
+    } else {
+        stat = result;
     }
 
     return stat;
@@ -257,41 +129,19 @@ DRESULT disk_write(
     DSTATUS stat = STA_NOINIT;
     int result = 0;
 
-    switch (pdrv) {
-        case DEV_RAM:
-            if (pDiskioDriver.RAM_disk_write) {
-                result = pDiskioDriver.RAM_disk_write(buff, sector, count);
-            }
+    if (pdrv > DEV_NUM_MAX) {
+        return STA_NOINIT;
+    }
 
-            break;
-
-        case DEV_MMC:
-            if (pDiskioDriver.MMC_disk_write) {
-                result = pDiskioDriver.MMC_disk_write(buff, sector, count);
-            }
-
-            break;
-
-        case DEV_FLASH:
-            if (pDiskioDriver.FLASH_disk_write) {
-                result = pDiskioDriver.FLASH_disk_write(buff, sector, count);
-            }
-            break;
-
-        case DEV_USB:
-            if (pDiskioDriver.USB_disk_write) {
-                result = pDiskioDriver.USB_disk_write(buff, sector, count);
-            }
-
-            break;
-
-        default:
-            return RES_PARERR;
+    if (pDiskioDriver[pdrv].disk_write) {
+        result = pDiskioDriver[pdrv].disk_write(buff, sector, count);
     }
 
     /* translate the reslut code here */
-    if (pDiskioDriver.Translate_Result_Code) {
-        stat = pDiskioDriver.Translate_Result_Code(result);
+    if (pDiskioDriver[pdrv].error_code_parsing) {
+        stat = pDiskioDriver[pdrv].error_code_parsing(result);
+    } else {
+        stat = result;
     }
 
     return stat;
@@ -312,41 +162,19 @@ DRESULT disk_ioctl(
     DSTATUS stat = STA_NOINIT;
     int result = 0;
 
-    switch (pdrv) {
-        case DEV_RAM:
-            if (pDiskioDriver.RAM_disk_ioctl) {
-                result = pDiskioDriver.RAM_disk_ioctl(cmd, buff);
-            }
+    if (pdrv > DEV_NUM_MAX) {
+        return STA_NOINIT;
+    }
 
-            break;
-
-        case DEV_MMC:
-            if (pDiskioDriver.MMC_disk_ioctl) {
-                result = pDiskioDriver.MMC_disk_ioctl(cmd, buff);
-            }
-
-            break;
-
-        case DEV_FLASH:
-            if (pDiskioDriver.FLASH_disk_ioctl) {
-                result = pDiskioDriver.FLASH_disk_ioctl(cmd, buff);
-            }
-            break;
-
-        case DEV_USB:
-            if (pDiskioDriver.USB_disk_ioctl) {
-                result = pDiskioDriver.USB_disk_ioctl(cmd, buff);
-            }
-
-            break;
-
-        default:
-            return RES_PARERR;
+    if (pDiskioDriver[pdrv].disk_ioctl) {
+        result = pDiskioDriver[pdrv].disk_ioctl(cmd, buff);
     }
 
     /* translate the reslut code here */
-    if (pDiskioDriver.Translate_Result_Code) {
-        stat = pDiskioDriver.Translate_Result_Code(result);
+    if (pDiskioDriver[pdrv].error_code_parsing) {
+        stat = pDiskioDriver[pdrv].error_code_parsing(result);
+    } else {
+        stat = result;
     }
 
     return stat;

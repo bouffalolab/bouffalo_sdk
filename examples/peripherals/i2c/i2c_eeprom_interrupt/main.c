@@ -17,27 +17,27 @@ void i2c_isr(int irq, void *arg)
     status = bflb_i2c_get_intstatus(i2c0);
 
     if (status & I2C_INTSTS_END) {
-        bflb_i2c_int_mask(i2c0, I2C_INT_END, true);
+        bflb_i2c_int_mask(i2c0, I2C_INTEN_END, true);
         printf("Transfer end interrupt\r\n");
     }
     if (status & I2C_INTSTS_TX_FIFO) {
-        bflb_i2c_int_mask(i2c0, I2C_INT_TX_FIFO, true);
+        bflb_i2c_int_mask(i2c0, I2C_INTEN_TX_FIFO, true);
         txFifoFlag = 1;
     }
     if (status & I2C_INTSTS_RX_FIFO) {
-        bflb_i2c_int_mask(i2c0, I2C_INT_RX_FIFO, true);
+        bflb_i2c_int_mask(i2c0, I2C_INTEN_RX_FIFO, true);
         rxFifoFlag = 1;
     }
     if (status & I2C_INTSTS_NACK) {
-        bflb_i2c_int_mask(i2c0, I2C_INT_NACK, true);
+        bflb_i2c_int_mask(i2c0, I2C_INTEN_NACK, true);
         printf("Error! NACK interrupt\r\n");
     }
     if (status & I2C_INTSTS_ARB) {
-        bflb_i2c_int_mask(i2c0, I2C_INT_ARB, true);
+        bflb_i2c_int_mask(i2c0, I2C_INTEN_ARB, true);
         printf("Error! Arbitration lost interrupt\r\n");
     }
     if (status & I2C_INTSTS_FER) {
-        bflb_i2c_int_mask(i2c0, I2C_INT_FER, true);
+        bflb_i2c_int_mask(i2c0, I2C_INTEN_FER, true);
         printf("Error! TX/RX FIFO error interrupt\r\n");
     }
 }
@@ -94,7 +94,7 @@ int main(void)
     bflb_mtimer_delay_ms(100);
 
     /* Unmask interrupt */
-    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_TX_FIFO | I2C_INT_RX_FIFO | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
+    bflb_i2c_int_mask(i2c0, I2C_INTEN_END | I2C_INTEN_TX_FIFO | I2C_INTEN_RX_FIFO | I2C_INTEN_NACK | I2C_INTEN_ARB | I2C_INTEN_FER, false);
 
     /* Write page 1 */
     subaddr[1] = EEPROM_SELECT_PAGE1;
@@ -117,7 +117,7 @@ int main(void)
     bflb_mtimer_delay_ms(100);
 
     /* Unmask interrupt */
-    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_TX_FIFO | I2C_INT_RX_FIFO | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
+    bflb_i2c_int_mask(i2c0, I2C_INTEN_END | I2C_INTEN_TX_FIFO | I2C_INTEN_RX_FIFO | I2C_INTEN_NACK | I2C_INTEN_ARB | I2C_INTEN_FER, false);
 
     /* Read page 0 */
     subaddr[1] = EEPROM_SELECT_PAGE0;
@@ -139,7 +139,7 @@ int main(void)
     bflb_mtimer_delay_ms(100);
 
     /* Unmask interrupt */
-    bflb_i2c_int_mask(i2c0, I2C_INT_END | I2C_INT_TX_FIFO | I2C_INT_RX_FIFO | I2C_INT_NACK | I2C_INT_ARB | I2C_INT_FER, false);
+    bflb_i2c_int_mask(i2c0, I2C_INTEN_END | I2C_INTEN_TX_FIFO | I2C_INTEN_RX_FIFO | I2C_INTEN_NACK | I2C_INTEN_ARB | I2C_INTEN_FER, false);
 
     /* Read page 1 */
     subaddr[1] = EEPROM_SELECT_PAGE1;

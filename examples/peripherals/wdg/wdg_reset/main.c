@@ -12,8 +12,8 @@ int main(void)
 
     struct bflb_wdg_config_s wdg_cfg;
     wdg_cfg.clock_source = WDG_CLKSRC_32K;
-    wdg_cfg.clock_div = 0;
-    wdg_cfg.comp_val = 64000;
+    wdg_cfg.clock_div = 31;
+    wdg_cfg.comp_val = 2000;
     wdg_cfg.mode = WDG_MODE_RESET;
 
     wdg = bflb_device_get_by_name("watchdog");
@@ -32,7 +32,17 @@ int main(void)
         printf("Delay 1s, wdg interrupt not arrive, pass\r\n");
     }
 
-    printf("Next delay 2s, wdg will reset it.");
+    bflb_wdg_set_countervalue(wdg, 4000);
+    bflb_mtimer_delay_ms(2000);
+
+    if (wdg_int_arrived) {
+        printf("Error! Delay 2s, wdg not reset.\r\n");
+        bflb_wdg_stop(wdg);
+    } else {
+        printf("Delay 2s, set 4s, wdg interrupt not arrive, pass\r\n");
+    }
+
+    printf("Next delay 4s, wdg will reset it.");
     /* delay 2s will trigger wdg interrupt */
     bflb_mtimer_delay_ms(2000);
     bflb_wdg_reset_countervalue(wdg);

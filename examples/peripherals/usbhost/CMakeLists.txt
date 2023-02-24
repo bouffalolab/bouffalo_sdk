@@ -5,6 +5,7 @@ include(proj.conf)
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 sdk_add_include_directories(.)
+# add_subdirectory(vtb)
 
 target_sources(app PRIVATE usb_host.c)
 sdk_set_main_file(main.c)

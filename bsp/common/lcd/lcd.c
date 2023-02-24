@@ -25,6 +25,11 @@
 #include "font.h"
 #include "bflb_core.h"
 
+#if defined(LCD_RESET_EN)
+#include "bflb_gpio.h"
+#include "bflb_mtimer.h"
+#endif
+
 uint8_t lcd_dir = 0;
 uint16_t lcd_max_x = LCD_W - 1, lcd_max_y = LCD_H - 1;
 
@@ -40,9 +45,41 @@ int lcd_init(void)
 {
     int res;
 
+#if defined(LCD_RESET_EN)
+    struct bflb_device_s *gpio;
+
+    /* gpio init */
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, LCD_RESET_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+
+    /* lcd reset */
+#if LCD_RESET_ACTIVE_LEVEL
+    bflb_gpio_set(gpio, LCD_RESET_PIN);
+#else
+    bflb_gpio_reset(gpio, LCD_RESET_PIN);
+#endif
+
+    bflb_mtimer_delay_ms(LCD_RESET_HOLD_MS);
+
+    /* lcd recovery */
+#if LCD_RESET_ACTIVE_LEVEL
+    bflb_gpio_reset(gpio, LCD_RESET_PIN);
+#else
+    bflb_gpio_set(gpio, LCD_RESET_PIN);
+#endif
+
+    bflb_mtimer_delay_ms(LCD_RESET_DELAY);
+#endif
+
     res = _LCD_FUNC_DEFINE(init);
 
     return res;
+}
+
+static int lcd_async_callback_enable(bool enable)
+{
+    _LCD_FUNC_DEFINE(async_callback_enable, enable);
+    return 0;
 }
 
 int lcd_async_callback_register(void (*callback)(void))
@@ -281,13 +318,15 @@ int lcd_draw_str_ascii16(uint16_t x, uint16_t y, lcd_color_t color, lcd_color_t 
     uint8_t ch, temp;
     uint16_t x0 = x;
 
+    lcd_async_callback_enable(false);
+
     for (uint16_t i = 0; i < num && str[i]; i++) {
         if (str[i] < 128) {
-            // if (x > LCD_W - 8) {
-            //     x = x0;
-            //     y += 16;
-            // }
-            if (x > LCD_W - 8 || y > LCD_H - 16)
+            if (x > lcd_max_x - 8) {
+                x = x0;
+                y += 16;
+            }
+            if (x > lcd_max_x - 8 || y > lcd_max_y - 16)
                 break;
 
             ch = str[i];
@@ -326,6 +365,8 @@ int lcd_draw_str_ascii16(uint16_t x, uint16_t y, lcd_color_t color, lcd_color_t 
     }
     while (lcd_draw_is_busy()) {
     };
+
+    lcd_async_callback_enable(true);
     return 0;
 }
 #endif

@@ -74,10 +74,10 @@
 #else /* }{ */
 
 /* ISO C handling with long jumps */
-#define LUAI_THROW(L, c) longjmp((c)->b, 1)
-#define LUAI_TRY(L, c, a)      \
-    if (setjmp((c)->b) == 0) { \
-        a                      \
+#define LUAI_THROW(L, c) luaport_longjmp((c)->b, 1)
+#define LUAI_TRY(L, c, a)              \
+    if (luaport_setjmp((c)->b) == 0) { \
+        a                              \
     }
 #define luai_jmpbuf jmp_buf
 
@@ -942,7 +942,7 @@ struct SParser { /* data to 'f_parser' */
 
 static void checkmode(lua_State *L, const char *mode, const char *x)
 {
-    if (mode && strchr(mode, x[0]) == NULL) {
+    if (mode && luaport_strchr(mode, x[0]) == NULL) {
         luaO_pushfstring(L,
                          "attempt to load a %s chunk (mode is '%s')", x, mode);
         luaD_throw(L, LUA_ERRSYNTAX);

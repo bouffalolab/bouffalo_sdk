@@ -33,30 +33,30 @@ typedef unsigned char lu_byte;
 typedef signed char ls_byte;
 
 /* maximum value for size_t */
-#define MAX_SIZET ((size_t)(~(size_t)0))
+#define MAX_SIZET     ((size_t)(~(size_t)0))
 
 /* maximum size visible for Lua (must be representable in a lua_Integer) */
-#define MAX_SIZE (sizeof(size_t) < sizeof(lua_Integer) ? MAX_SIZET : (size_t)(LUA_MAXINTEGER))
+#define MAX_SIZE      (sizeof(size_t) < sizeof(lua_Integer) ? MAX_SIZET : (size_t)(LUA_MAXINTEGER))
 
-#define MAX_LUMEM ((lu_mem)(~(lu_mem)0))
+#define MAX_LUMEM     ((lu_mem)(~(lu_mem)0))
 
-#define MAX_LMEM ((l_mem)(MAX_LUMEM >> 1))
+#define MAX_LMEM      ((l_mem)(MAX_LUMEM >> 1))
 
-#define MAX_INT INT_MAX /* maximum value of an int */
+#define MAX_INT       INT_MAX /* maximum value of an int */
 
 /*
 ** floor of the log2 of the maximum signed value for integral type 't'.
 ** (That is, maximum 'n' such that '2^n' fits in the given signed type.)
 */
-#define log2maxs(t) (sizeof(t) * 8 - 2)
+#define log2maxs(t)   (sizeof(t) * 8 - 2)
 
 /*
 ** test whether an unsigned value is a power of 2 (or zero)
 */
-#define ispow2(x) (((x) & ((x)-1)) == 0)
+#define ispow2(x)     (((x) & ((x)-1)) == 0)
 
 /* number of chars of a literal string without the ending \0 */
-#define LL(x) (sizeof(x) / sizeof(char) - 1)
+#define LL(x)         (sizeof(x) / sizeof(char) - 1)
 
 /*
 ** conversion of pointer to unsigned integer:
@@ -75,11 +75,11 @@ typedef LUAI_UACINT l_uacInt;
 #if defined LUAI_ASSERT
 #undef NDEBUG
 #include <assert.h>
-#define lua_assert(c) assert(c)
+#define lua_assert(c) luaport_assert(c)
 #endif
 
 #if defined(lua_assert)
-#define check_exp(c, e) (lua_assert(c), (e))
+#define check_exp(c, e)   (lua_assert(c), (e))
 /* to avoid problems with conditions too long */
 #define lua_longassert(c) ((c) ? (void)0 : lua_assert(0))
 #else
@@ -103,7 +103,7 @@ typedef LUAI_UACINT l_uacInt;
 #endif
 
 /* type casts (a macro highlights casts in the code) */
-#define cast(t, exp) ((t)(exp))
+#define cast(t, exp)  ((t)(exp))
 
 #define cast_void(i)  cast(void, (i))
 #define cast_voidp(i) cast(void *, (i))

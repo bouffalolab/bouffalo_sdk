@@ -45,7 +45,7 @@
 #endif
 
 /* prefix for open functions in C libraries */
-#define LUA_POF "luaopen_"
+#define LUA_POF   "luaopen_"
 
 /* separator for open functions in C libraries */
 #define LUA_OFSEP "_"
@@ -56,7 +56,7 @@
 */
 static const char *const CLIBS = "_CLIBS";
 
-#define LIB_FAIL "open"
+#define LIB_FAIL      "open"
 
 #define setprogdir(L) ((void)0)
 
@@ -164,7 +164,7 @@ static void setprogdir(lua_State *L)
     char *lb;
     DWORD nsize = sizeof(buff) / sizeof(char);
     DWORD n = GetModuleFileNameA(NULL, buff, nsize); /* get exec. name */
-    if (n == 0 || n == nsize || (lb = strrchr(buff, '\\')) == NULL)
+    if (n == 0 || n == nsize || (lb = luaport_strrchr(buff, '\\')) == NULL)
         luaL_error(L, "unable to get ModuleFileName");
     else {
         *lb = '\0'; /* cut name on the last '\\' to get the path */
@@ -218,7 +218,7 @@ static lua_CFunction lsys_sym(lua_State *L, void *lib, const char *sym)
 #undef LIB_FAIL
 #define LIB_FAIL "absent"
 
-#define DLMSG "dynamic libraries not enabled; check your Lua installation"
+#define DLMSG    "dynamic libraries not enabled; check your Lua installation"
 
 static void lsys_unloadlib(void *lib)
 {
@@ -284,14 +284,14 @@ static void setpath(lua_State *L, const char *fieldname,
     const char *dftmark;
     const char *nver = lua_pushfstring(L, "%s%s", envname, LUA_VERSUFFIX);
     const char *path = luaport_getenv(nver); /* try versioned name */
-    if (path == NULL)                /* no versioned environment variable? */
+    if (path == NULL)                        /* no versioned environment variable? */
         path = luaport_getenv(envname);      /* try unversioned name */
-    if (path == NULL || noenv(L))    /* no environment variable? */
-        lua_pushstring(L, dft);      /* use default */
-    else if ((dftmark = strstr(path, LUA_PATH_SEP LUA_PATH_SEP)) == NULL)
+    if (path == NULL || noenv(L))            /* no environment variable? */
+        lua_pushstring(L, dft);              /* use default */
+    else if ((dftmark = luaport_strstr(path, LUA_PATH_SEP LUA_PATH_SEP)) == NULL)
         lua_pushstring(L, path); /* nothing to change */
     else {                       /* path contains a ";;": insert default path in its place */
-        size_t len = strlen(path);
+        size_t len = luaport_strlen(path);
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         if (path < dftmark) {                          /* is there a prefix before ';;'? */
@@ -413,7 +413,7 @@ static int ll_loadlib(lua_State *L)
 
 static int readable(const char *filename)
 {
-    LUAPORT_FILE *f = luaport_fopen(filename, "r"); /* try to open file */
+    FILE *f = luaport_fopen(filename, "r"); /* try to open file */
     if (f == NULL)
         return 0; /* open failed */
     luaport_fclose(f);
@@ -435,11 +435,11 @@ static const char *getnextfilename(char **path, char *end)
         *name = *LUA_PATH_SEP; /* restore separator */
         name++;                /* skip it */
     }
-    sep = strchr(name, *LUA_PATH_SEP); /* find next separator */
-    if (sep == NULL)                   /* separator not found? */
-        sep = end;                     /* name goes until the end */
-    *sep = '\0';                       /* finish file name */
-    *path = sep;                       /* will start next search from here */
+    sep = luaport_strchr(name, *LUA_PATH_SEP); /* find next separator */
+    if (sep == NULL)                           /* separator not found? */
+        sep = end;                             /* name goes until the end */
+    *sep = '\0';                               /* finish file name */
+    *path = sep;                               /* will start next search from here */
     return name;
 }
 
@@ -469,7 +469,7 @@ static const char *searchpath(lua_State *L, const char *name,
     char *endpathname; /* its end */
     const char *filename;
     /* separator is non-empty and appears in 'name'? */
-    if (*sep != '\0' && strchr(name, *sep) != NULL)
+    if (*sep != '\0' && luaport_strchr(name, *sep) != NULL)
         name = luaL_gsub(L, name, sep, dirsep); /* replace it by 'dirsep' */
     luaL_buffinit(L, &buff);
     /* add path to the buffer, replacing marks ('?') with the file name */
@@ -546,7 +546,7 @@ static int loadfunc(lua_State *L, const char *filename, const char *modname)
     const char *openfunc;
     const char *mark;
     modname = luaL_gsub(L, modname, ".", LUA_OFSEP);
-    mark = strchr(modname, *LUA_IGMARK);
+    mark = luaport_strchr(modname, *LUA_IGMARK);
     if (mark) {
         int stat;
         openfunc = lua_pushlstring(L, modname, mark - modname);
@@ -573,7 +573,7 @@ static int searcher_Croot(lua_State *L)
 {
     const char *filename;
     const char *name = luaL_checkstring(L, 1);
-    const char *p = strchr(name, '.');
+    const char *p = luaport_strchr(name, '.');
     int stat;
     if (p == NULL)
         return 0; /* is root */

@@ -24,24 +24,11 @@
 #ifndef _ILI9488_SPI_H_
 #define _ILI9488_SPI_H_
 
-#include "bflb_core.h"
+#include "../lcd_conf.h"
 
-#define ILI9488_SPI_CS_PIN GPIO_PIN_16
-#define ILI9488_SPI_DC_PIN GPIO_PIN_18
+#if defined LCD_SPI_ILI9488
 
-#define ILI9488_SPI_CS_HIGH bflb_gpio_set(ili9488_gpio, ILI9488_SPI_CS_PIN)
-#define ILI9488_SPI_CS_LOW  bflb_gpio_reset(ili9488_gpio, ILI9488_SPI_CS_PIN)
-#define ILI9488_SPI_DC_HIGH bflb_gpio_set(ili9488_gpio, ILI9488_SPI_DC_PIN)
-#define ILI9488_SPI_DC_LOW  bflb_gpio_reset(ili9488_gpio, ILI9488_SPI_DC_PIN)
-
-/* ILI9488 LCD width */
-#define ILI9488_SPI_W 320
-/* ILI9488 LCD height */
-#define ILI9488_SPI_H 480
-
-/* The offset of the area can be displayed */
-#define ILI9488_SPI_OFFSET_X 0
-#define ILI9488_SPI_OFFSET_Y 0
+/* Do not modify the following */
 
 #define ILI9488_SPI_COLOR_DEPTH 16
 
@@ -54,6 +41,7 @@ typedef struct {
 typedef uint16_t ili9488_spi_color_t;
 
 int ili9488_spi_init();
+void ili9488_spi_async_callback_enable(bool enable);
 void ili9488_spi_async_callback_register(void (*callback)(void));
 int ili9488_spi_set_dir(uint8_t dir, uint8_t mir_flag);
 void ili9488_spi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
@@ -63,4 +51,5 @@ void ili9488_spi_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2,
 void ili9488_spi_draw_picture_blocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, ili9488_spi_color_t *picture);
 int ili9488_spi_draw_is_busy(void);
 
+#endif
 #endif

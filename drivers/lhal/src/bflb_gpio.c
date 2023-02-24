@@ -16,6 +16,15 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     mode = (cfgset & GPIO_MODE_MASK);
     drive = (cfgset & GPIO_DRV_MASK) >> GPIO_DRV_SHIFT;
 
+#if defined(BL616)
+    /* disable muxed to be xtal32k */
+    if (pin == GPIO_PIN_16) {
+        *(volatile uint32_t *)(0x2000f000 + 0x38) &= ~(1 << 20);
+    } else if (pin == GPIO_PIN_17) {
+        *(volatile uint32_t *)(0x2000f000 + 0x38) &= ~(1 << 21);
+    }
+#endif
+
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     uint32_t regval;
     uint8_t is_odd = 0;
@@ -159,6 +168,7 @@ void bflb_gpio_pin0_31_write(struct bflb_device_s *dev, uint32_t val)
     putreg32(val, dev->reg_base + GLB_GPIO_CFG136_OFFSET);
 #endif
 }
+
 void bflb_gpio_pin32_63_write(struct bflb_device_s *dev, uint32_t val)
 {
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -167,6 +177,7 @@ void bflb_gpio_pin32_63_write(struct bflb_device_s *dev, uint32_t val)
     putreg32(val, dev->reg_base + GLB_GPIO_CFG137_OFFSET);
 #endif
 }
+
 uint32_t bflb_gpio_pin0_31_read(struct bflb_device_s *dev)
 {
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -175,6 +186,7 @@ uint32_t bflb_gpio_pin0_31_read(struct bflb_device_s *dev)
     return (getreg32(dev->reg_base + GLB_GPIO_CFG128_OFFSET));
 #endif
 }
+
 uint32_t bflb_gpio_pin32_63_read(struct bflb_device_s *dev)
 {
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -183,6 +195,7 @@ uint32_t bflb_gpio_pin32_63_read(struct bflb_device_s *dev)
     return (getreg32(dev->reg_base + GLB_GPIO_CFG129_OFFSET));
 #endif
 }
+
 void bflb_gpio_int_init(struct bflb_device_s *dev, uint8_t pin, uint8_t trig_mode)
 {
     uint32_t reg_base;
@@ -391,6 +404,80 @@ void bflb_gpio_uart_init(struct bflb_device_s *dev, uint8_t pin, uint8_t uart_fu
 #endif
     bflb_gpio_init(dev, pin, (7 << GPIO_FUNC_SHIFT) | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
+
+#if defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
+void bflb_gpio_iso11898_init(struct bflb_device_s *dev, uint8_t pin, uint8_t iso11898_func)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+    uint8_t sig;
+    uint8_t sig_pos;
+
+    reg_base = dev->reg_base;
+
+#define GLB_ISO11898_CFG1_OFFSET (0x154)
+#define GLB_ISO11898_CFG2_OFFSET (0x158)
+    uint32_t regval2;
+    sig = pin % 12;
+
+    if (sig < 8) {
+        sig_pos = sig << 2;
+
+        regval = getreg32(reg_base + GLB_ISO11898_CFG1_OFFSET);
+        regval &= (~(0x0f << sig_pos));
+        regval |= (iso11898_func << sig_pos);
+
+        for (uint8_t i = 0; i < 8; i++) {
+            /* reset other sigs which are the same with iso11898_func */
+            sig_pos = i << 2;
+            if (((regval & (0x0f << sig_pos)) == (iso11898_func << sig_pos)) && (i != sig) && (iso11898_func != 0x0f)) {
+                regval &= (~(0x0f << sig_pos));
+                regval |= (0x0f << sig_pos);
+            }
+        }
+        regval2 = getreg32(reg_base + GLB_ISO11898_CFG2_OFFSET);
+
+        for (uint8_t i = 8; i < 12; i++) {
+            /* reset other sigs which are the same with iso11898_func */
+            sig_pos = (i - 8) << 2;
+            if (((regval2 & (0x0f << sig_pos)) == (iso11898_func << sig_pos)) && (i != sig) && (iso11898_func != 0x0f)) {
+                regval2 &= (~(0x0f << sig_pos));
+                regval2 |= (0x0f << sig_pos);
+            }
+        }
+        putreg32(regval, reg_base + GLB_ISO11898_CFG1_OFFSET);
+        putreg32(regval2, reg_base + GLB_ISO11898_CFG2_OFFSET);
+    } else {
+        sig_pos = (sig - 8) << 2;
+
+        regval = getreg32(reg_base + GLB_ISO11898_CFG2_OFFSET);
+        regval &= (~(0x0f << sig_pos));
+        regval |= (iso11898_func << sig_pos);
+
+        for (uint8_t i = 8; i < 12; i++) {
+            /* reset other sigs which are the same with iso11898_func */
+            sig_pos = (i - 8) << 2;
+            if (((regval & (0x0f << sig_pos)) == (iso11898_func << sig_pos)) && (i != sig) && (iso11898_func != 0x0f)) {
+                regval &= (~(0x0f << sig_pos));
+                regval |= (0x0f << sig_pos);
+            }
+        }
+        regval2 = getreg32(reg_base + GLB_ISO11898_CFG1_OFFSET);
+
+        for (uint8_t i = 0; i < 8; i++) {
+            /* reset other sigs which are the same with iso11898_func */
+            sig_pos = i << 2;
+            if (((regval2 & (0x0f << sig_pos)) == (iso11898_func << sig_pos)) && (i != sig) && (iso11898_func != 0x0f)) {
+                regval2 &= (~(0x0f << sig_pos));
+                regval2 |= (0x0f << sig_pos);
+            }
+        }
+        putreg32(regval, reg_base + GLB_ISO11898_CFG2_OFFSET);
+        putreg32(regval2, reg_base + GLB_ISO11898_CFG1_OFFSET);
+    }
+    bflb_gpio_init(dev, pin, (7 << GPIO_FUNC_SHIFT) | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+}
+#endif
 
 int bflb_gpio_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {

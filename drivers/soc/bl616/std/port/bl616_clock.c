@@ -18,6 +18,8 @@ uint32_t bflb_clk_get_peripheral_clock(uint8_t type, uint8_t idx)
         return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_I2S);
     } else if (type == BFLB_DEVICE_TYPE_SDH) {
         return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_SDH);
+    } else if (type == BFLB_DEVICE_TYPE_DBI) {
+        return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_DBI);
     }
     return 0;
 }

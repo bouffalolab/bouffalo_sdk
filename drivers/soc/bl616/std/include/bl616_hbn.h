@@ -486,6 +486,8 @@ typedef struct
 #define HBN_RTC_COMP_BIT13_39      0x04
 #define HBN_STATUS_ENTER_FLAG      0x4e424845
 #define HBN_STATUS_WAKEUP_FLAG     0x4e424857
+#define APP_JUMP_ENTER_FLAG        0x50504145
+#define APP_JUMP_DONE_FLAG         0x50504157
 #define HBN_RELEASE_CORE_FLAG      (0x4)
 #define HBN_LDO18IO_POWER_DLY_FLAG (0x52)
 #define HBN_XTAL_FLAG_VALUE        (0x8)
@@ -641,6 +643,7 @@ BL_Err_Type HBN_Clear_RTC_Counter(void);
 BL_Err_Type HBN_Enable_RTC_Counter(void);
 BL_Err_Type HBN_Set_RTC_Timer(HBN_RTC_INT_Delay_Type delay, uint32_t compValLow, uint32_t compValHigh, uint8_t compMode);
 BL_Err_Type HBN_Get_RTC_Timer_Val(uint32_t *valLow, uint32_t *valHigh);
+BL_Err_Type HBN_Recal_RC32K(int32_t expected_counter, int32_t actual_counter);
 BL_Err_Type HBN_Clear_RTC_IRQ(void);
 /*----------*/
 BL_Err_Type HBN_GPIO_INT_Enable(HBN_GPIO_INT_Trigger_Type gpioIntTrigType);

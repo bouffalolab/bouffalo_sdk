@@ -21,7 +21,7 @@
 
 #define MAXUNICODE 0x10FFFFu
 
-#define MAXUTF 0x7FFFFFFFu
+#define MAXUTF     0x7FFFFFFFu
 
 /*
 ** Integer type for decoded UTF-8 values; MAXUTF needs 31 bits.

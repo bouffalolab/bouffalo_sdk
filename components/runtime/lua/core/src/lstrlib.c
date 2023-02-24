@@ -34,7 +34,7 @@
 #endif
 
 /* macro to 'unsign' a character */
-#define uchar(c) ((unsigned char)(c))
+#define uchar(c)  ((unsigned char)(c))
 
 /*
 ** Some sizes are better limited to fit in 'int', but must also fit in
@@ -591,7 +591,7 @@ static const char *match_capture(MatchState *ms, const char *s, int l)
     l = check_capture(ms, l);
     len = ms->capture[l].len;
     if ((size_t)(ms->src_end - s) >= len &&
-        memcmp(ms->capture[l].init, s, len) == 0)
+        luaport_memcmp(ms->capture[l].init, s, len) == 0)
         return s + len;
     else
         return NULL;
@@ -725,9 +725,9 @@ static const char *lmemfind(const char *s1, size_t l1,
         const char *init; /* to search for a '*s2' inside 's1' */
         l2--;             /* 1st char will be checked by 'memchr' */
         l1 = l1 - l2;     /* 's2' cannot be found after that */
-        while (l1 > 0 && (init = (const char *)memchr(s1, *s2, l1)) != NULL) {
+        while (l1 > 0 && (init = (const char *)luaport_memchr(s1, *s2, l1)) != NULL) {
             init++; /* 1st char is already checked */
-            if (memcmp(init, s2 + 1, l2) == 0)
+            if (luaport_memcmp(init, s2 + 1, l2) == 0)
                 return init - 1;
             else { /* correct 'l1' and 's1' to try again */
                 l1 -= init - s1;
@@ -792,9 +792,9 @@ static int nospecials(const char *p, size_t l)
 {
     size_t upto = 0;
     do {
-        if (strpbrk(p + upto, SPECIALS))
-            return 0;                 /* pattern has a special character */
-        upto += strlen(p + upto) + 1; /* may have more after \0 */
+        if (luaport_strpbrk(p + upto, SPECIALS))
+            return 0;                         /* pattern has a special character */
+        upto += luaport_strlen(p + upto) + 1; /* may have more after \0 */
     } while (upto <= l);
     return 1; /* no special chars found */
 }
@@ -920,7 +920,7 @@ static void add_s(MatchState *ms, luaL_Buffer *b, const char *s,
     lua_State *L = ms->L;
     const char *news = lua_tolstring(L, 3, &l);
     const char *p;
-    while ((p = (char *)memchr(news, L_ESC, l)) != NULL) {
+    while ((p = (char *)luaport_memchr(news, L_ESC, l)) != NULL) {
         luaL_addlstring(b, news, p - news);
         p++;             /* skip ESC */
         if (*p == L_ESC) /* '%%' */
@@ -1049,7 +1049,7 @@ static int str_gsub(lua_State *L)
 ** to nibble boundaries by making what is left after that first digit a
 ** multiple of 4.
 */
-#define L_NBFD ((l_floatatt(MANT_DIG) - 1) % 4 + 1)
+#define L_NBFD     ((l_floatatt(MANT_DIG) - 1) % 4 + 1)
 
 /*
 ** Add integer part of 'x' to buffer and return new 'x'
@@ -1125,7 +1125,7 @@ static int lua_number2strx(lua_State *L, char *buff, int sz,
 ** worst case are floats: they may need 99 significant digits, plus
 ** '0x', '-', '.', 'e+XXXX', and '\0'. Adding some extra, 120.
 */
-#define MAX_ITEM 120
+#define MAX_ITEM  120
 
 /* valid flags in a format specification */
 #if !defined(L_FMTFLAGSF)
@@ -1195,9 +1195,9 @@ static int quotefloat(lua_State *L, char *buff, lua_Number n)
         int nb = lua_number2strx(L, buff, MAX_ITEM,
                                  "%" LUA_NUMBER_FRMLEN "a", n);
         /* ensures that 'buff' string uses a dot as the radix character */
-        if (memchr(buff, '.', nb) == NULL) {      /* no dot? */
-            char point = lua_getlocaledecpoint(); /* try locale point */
-            char *ppoint = (char *)memchr(buff, point, nb);
+        if (luaport_memchr(buff, '.', nb) == NULL) { /* no dot? */
+            char point = lua_getlocaledecpoint();    /* try locale point */
+            char *ppoint = (char *)luaport_memchr(buff, point, nb);
             if (ppoint)
                 *ppoint = '.'; /* change it to a dot */
         }
@@ -1219,11 +1219,9 @@ static void addliteral(lua_State *L, luaL_Buffer *b, int arg)
         case LUA_TNUMBER: {
             char *buff = luaL_prepbuffsize(b, MAX_ITEM);
             int nb;
-            if (!lua_isinteger(L, arg)) { /* float? */
-                luaL_error(L, "specifier '%%q' not supported yet in this dft_platform build");
-                return;
+            if (!lua_isinteger(L, arg)) /* float? */
                 nb = quotefloat(L, buff, lua_tonumber(L, arg));
-            } else { /* integers */
+            else { /* integers */
                 lua_Integer n = lua_tointeger(L, arg);
                 const char *format = (n == LUA_MININTEGER) /* corner case? */
                                          ?
@@ -1266,10 +1264,10 @@ static const char *get2digits(const char *s)
 static void checkformat(lua_State *L, const char *form, const char *flags,
                         int precision)
 {
-    const char *spec = form + 1; /* skip '%' */
-    spec += strspn(spec, flags); /* skip flags */
-    if (*spec != '0') {          /* a width cannot start with '0' */
-        spec = get2digits(spec); /* skip width */
+    const char *spec = form + 1;         /* skip '%' */
+    spec += luaport_strspn(spec, flags); /* skip flags */
+    if (*spec != '0') {                  /* a width cannot start with '0' */
+        spec = get2digits(spec);         /* skip width */
         if (*spec == '.' && precision) {
             spec++;
             spec = get2digits(spec); /* skip precision */
@@ -1287,7 +1285,7 @@ static const char *getformat(lua_State *L, const char *strfrmt,
                              char *form)
 {
     /* spans flags, width, and precision ('0' is included as a flag) */
-    size_t len = strspn(strfrmt, L_FMTFLAGSF "123456789.");
+    size_t len = luaport_strspn(strfrmt, L_FMTFLAGSF "123456789.");
     len++; /* adds following character (should be the specifier) */
     /* still needs space for '%', '\0', plus a length modifier */
     if (len >= MAX_FORMAT - 10)
@@ -1303,10 +1301,10 @@ static const char *getformat(lua_State *L, const char *strfrmt,
 */
 static void addlenmod(char *form, const char *lenmod)
 {
-    size_t l = strlen(form);
-    size_t lm = strlen(lenmod);
+    size_t l = luaport_strlen(form);
+    size_t lm = luaport_strlen(lenmod);
     char spec = form[l - 1];
-    strcpy(form + l - 1, lenmod);
+    luaport_strcpy(form + l - 1, lenmod);
     form[l + lm - 1] = spec;
     form[l + lm] = '\0';
 }
@@ -1360,7 +1358,6 @@ static int str_format(lua_State *L)
                 }
                 case 'a':
                 case 'A':
-                    return luaL_error(L, "specifier '%%a' or '%%A' not supported yet in this dft_platform build");
                     checkformat(L, form, L_FMTFLAGSF, 1);
                     addlenmod(form, LUA_NUMBER_FRMLEN);
                     nb = lua_number2strx(L, buff, maxitem, form,
@@ -1383,9 +1380,9 @@ static int str_format(lua_State *L)
                 case 'p': {
                     const void *p = lua_topointer(L, arg);
                     checkformat(L, form, L_FMTFLAGSC, 0);
-                    if (p == NULL) {                  /* avoid calling 'printf' with argument NULL */
-                        p = "(null)";                 /* result */
-                        form[strlen(form) - 1] = 's'; /* format it as a string */
+                    if (p == NULL) {                          /* avoid calling 'printf' with argument NULL */
+                        p = "(null)";                         /* result */
+                        form[luaport_strlen(form) - 1] = 's'; /* format it as a string */
                     }
                     nb = l_sprintf(buff, maxitem, form, p);
                     break;
@@ -1402,9 +1399,9 @@ static int str_format(lua_State *L)
                     if (form[2] == '\0')   /* no modifiers? */
                         luaL_addvalue(&b); /* keep entire string */
                     else {
-                        luaL_argcheck(L, l == strlen(s), arg, "string contains zeros");
+                        luaL_argcheck(L, l == luaport_strlen(s), arg, "string contains zeros");
                         checkformat(L, form, L_FMTFLAGSC, 1);
-                        if (strchr(form, '.') == NULL && l >= 100) {
+                        if (luaport_strchr(form, '.') == NULL && l >= 100) {
                             /* no precision and string is too long to be formatted */
                             luaL_addvalue(&b); /* keep entire string */
                         } else {               /* format the string into 'buff' */
@@ -1443,13 +1440,13 @@ static int str_format(lua_State *L)
 #define MAXINTSIZE 16
 
 /* number of bits in a character */
-#define NB CHAR_BIT
+#define NB         CHAR_BIT
 
 /* mask for one character (NB 1's) */
-#define MC ((1 << NB) - 1)
+#define MC         ((1 << NB) - 1)
 
 /* size of a lua_Integer */
-#define SZINT ((int)sizeof(lua_Integer))
+#define SZINT      ((int)sizeof(lua_Integer))
 
 /* dummy union to get native endianness */
 static const union {
@@ -1612,7 +1609,7 @@ static KOption getoption(Header *h, const char **fmt, int *size)
             h->islittle = nativeendian.little;
             break;
         case '!': {
-            const int maxalign = offsetof(struct cD, u);
+            const int maxalign = luaport_offsetof(struct cD, u);
             h->maxalign = getnumlimit(h, fmt, maxalign);
             break;
         }
@@ -1773,7 +1770,7 @@ static int str_pack(lua_State *L)
             case Kzstr: { /* zero-terminated string */
                 size_t len;
                 const char *s = luaL_checklstring(L, arg, &len);
-                luaL_argcheck(L, strlen(s) == len, arg, "string contains zeros");
+                luaL_argcheck(L, luaport_strlen(s) == len, arg, "string contains zeros");
                 luaL_addlstring(&b, s, len);
                 luaL_addchar(&b, '\0'); /* add zero at the end */
                 totalsize += len + 1;
@@ -1901,7 +1898,7 @@ static int str_unpack(lua_State *L)
                 break;
             }
             case Kzstr: {
-                size_t len = strlen(data + pos);
+                size_t len = luaport_strlen(data + pos);
                 luaL_argcheck(L, pos + len < ld, 2,
                               "unfinished string for format 'z'");
                 lua_pushlstring(L, data + pos, len);

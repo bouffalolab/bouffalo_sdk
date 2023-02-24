@@ -1,4 +1,8 @@
 sdk_generate_library()
+
+sdk_add_include_directories(core/inc)
+sdk_add_include_directories(port/inc)
+
 sdk_library_add_sources(core/src/lapi.c)
 sdk_library_add_sources(core/src/lauxlib.c)
 sdk_library_add_sources(core/src/lbaselib.c)
@@ -27,14 +31,12 @@ sdk_library_add_sources(core/src/lstrlib.c)
 sdk_library_add_sources(core/src/ltable.c)
 sdk_library_add_sources(core/src/ltablib.c)
 sdk_library_add_sources(core/src/ltm.c)
-sdk_library_add_sources(core/src/luaport.c)
 sdk_library_add_sources(core/src/lundump.c)
 sdk_library_add_sources(core/src/lutf8lib.c)
 sdk_library_add_sources(core/src/lvm.c)
 sdk_library_add_sources(core/src/lzio.c)
-sdk_library_add_sources(start/lua_start.c)
-sdk_add_include_directories(core/inc)
-sdk_add_compile_definitions(-DCONFIG_LUA)
+
+sdk_library_add_sources(start/lua.c)
 
 if(CONFIG_LUA_LHAL)
 sdk_library_add_sources(lhal/llib_init.c)
@@ -44,3 +46,5 @@ sdk_library_add_sources(lhal/llib_gpio.c)
 sdk_add_include_directories(lhal)
 sdk_add_compile_definitions(-DCONFIG_LUA_LHAL)
 endif()
+
+sdk_add_compile_definitions(-DCONFIG_LUA)

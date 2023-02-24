@@ -4,8 +4,8 @@ sdk_add_compile_definitions(-DCONFIG_LWIP)
 
 sdk_library_add_sources(src/apps/lwiperf/lwiperf.c)
 sdk_library_add_sources(src/apps/http/fs.c)
-sdk_library_add_sources(src/apps/http/fsdata_custom.c)
-sdk_library_add_sources(src/apps/http/fsdata.c)
+# sdk_library_add_sources(src/apps/http/fsdata_custom.c)
+# sdk_library_add_sources(src/apps/http/fsdata.c)
 # sdk_library_add_sources(src/apps/http/httpd.c)
 
 sdk_library_add_sources(src/api/api_lib.c)

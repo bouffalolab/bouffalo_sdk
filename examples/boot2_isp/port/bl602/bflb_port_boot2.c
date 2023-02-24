@@ -7,7 +7,7 @@
 #include "bl602_glb.h"
 #include "bl602_xip_sflash_ext.h"
 #include "bl602_clock.h"
-#include "softcrc.h"
+
 #include "bflb_gpio.h"
 #include "bflb_common.h"
 #include "bflb_efuse.h"

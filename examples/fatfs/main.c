@@ -1,7 +1,9 @@
 #include "bflb_mtimer.h"
 #include "board.h"
-#include "vlibc_stdio.h"
+#include "fatfs_diskio_register.h"
 #include "ff.h"
+
+#define DBG_TAG "MAIN"
 #include "log.h"
 
 FATFS fs;
@@ -21,25 +23,25 @@ void filesystem_init(void)
 
     board_sdh_gpio_init();
 
-    extern void fatfs_sdh_driver_register(void);
     fatfs_sdh_driver_register();
 
-    ret = f_mount(&fs, "sd:/", 1);
+    ret = f_mount(&fs, "/sd", 1);
+    // ret = FR_NO_FILESYSTEM;
 
     if (ret == FR_NO_FILESYSTEM) {
         LOG_W("No filesystem yet, try to be formatted...\r\n");
 
-        ret = f_mkfs("sd:/", &fs_para, workbuf, sizeof(workbuf));
+        ret = f_mkfs("/sd", &fs_para, workbuf, sizeof(workbuf));
 
         if (ret != FR_OK) {
-            LOG_F("fail to make filesystem\r\n");
+            LOG_F("fail to make filesystem %d\r\n", ret);
             _CALL_ERROR();
         }
 
         if (ret == FR_OK) {
             LOG_I("done with formatting.\r\n");
             LOG_I("first start to unmount.\r\n");
-            ret = f_mount(NULL, "sd:/", 1);
+            ret = f_mount(NULL, "/sd", 1);
             LOG_I("then start to remount.\r\n");
         }
     } else if (ret != FR_OK) {
@@ -98,7 +100,7 @@ void fatfs_write_read_test()
 
     /* write test */
     LOG_I("\r\n******************** be about to write test... **********************\r\n");
-    ret = f_open(&fnew, "sd:test_file.txt", FA_CREATE_ALWAYS | FA_WRITE);
+    ret = f_open(&fnew, "/sd/test_file.txt", FA_CREATE_ALWAYS | FA_WRITE);
     if (ret == FR_OK) {
         time_node = (uint32_t)bflb_mtimer_get_time_ms();
         /*write into file*/
@@ -124,13 +126,13 @@ void fatfs_write_read_test()
             return;
         }
     } else {
-        LOG_F("Fail to open or create files.\r\n");
+        LOG_F("Fail to open or create files: %d.\r\n", ret);
         return;
     }
 
     /* read test */
     LOG_I("\r\n******************** be about to read test... **********************\r\n");
-    ret = f_open(&fnew, "sd:test_file.txt", FA_OPEN_EXISTING | FA_READ);
+    ret = f_open(&fnew, "/sd/test_file.txt", FA_OPEN_EXISTING | FA_READ);
     if (ret == FR_OK) {
         time_node = (uint32_t)bflb_mtimer_get_time_ms();
 
@@ -162,7 +164,7 @@ void fatfs_write_read_test()
     /* check data */
 #if SDU_DATA_CHECK
     LOG_I("\r\n******************** be about to check test... **********************\r\n");
-    ret = f_open(&fnew, "sd:test_file.txt", FA_OPEN_EXISTING | FA_READ);
+    ret = f_open(&fnew, "/sd/test_file.txt", FA_OPEN_EXISTING | FA_READ);
     if (ret == FR_OK) {
         ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
         for (i = 0; i < 1024; i++) {
@@ -210,23 +212,10 @@ int main(void)
 
     fatfs_write_read_test();
 
-#ifdef CONFIG_VLIBC
-    LOG_I("\r\n******************** be about to vlibc test... **********************\r\n");
-    vlibc_file_t *fp = vlibc_fopen("sd:/test.txt", "w");
-
-    if (fp == NULL) {
-        LOG_F("open file error\r\n");
-    } else {
-        LOG_I("open file success\r\n");
-        for (uint8_t i = 0; i < 10; i++) {
-            vlibc_fprintf(fp, "hello world\r\n");
-        }
-
-        vlibc_fclose(fp);
-
-        LOG_I("close file success\r\n");
-    }
-
+#if defined(CONFIG_NEWLIB) && CONFIG_NEWLIB && defined(CONFIG_NEWLIB_FATFS) && CONFIG_NEWLIB_FATFS
+    FILE *fp;
+    fp = fopen("/sd/hellotest.txt","w+");
+    fclose(fp);
 #endif
 
     while (1) {
