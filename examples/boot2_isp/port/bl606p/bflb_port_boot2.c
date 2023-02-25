@@ -7,7 +7,7 @@
 #include "bl606p_pds.h"
 #include "bl606p_tzc_sec.h"
 #include "bflb_gpio.h"
-#include "softcrc.h"
+
 #include "bl606p_psram.h"
 #include "bflb_efuse.h"
 #include "ef_data_0_reg.h"

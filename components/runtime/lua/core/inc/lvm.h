@@ -58,7 +58,7 @@ typedef enum {
 #define tointegerns(o, i) \
     (l_likely(ttisinteger(o)) ? (*(i) = ivalue(o), 1) : luaV_tointegerns(o, i, LUA_FLOORN2I))
 
-#define intop(op, v1, v2) l_castU2S(l_castS2U(v1) op l_castS2U(v2))
+#define intop(op, v1, v2)        l_castU2S(l_castS2U(v1) op l_castS2U(v2))
 
 #define luaV_rawequalobj(t1, t2) luaV_equalobj(NULL, t1, t2)
 

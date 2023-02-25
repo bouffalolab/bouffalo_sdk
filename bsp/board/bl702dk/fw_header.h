@@ -164,4 +164,7 @@ struct __attribute__((packed, aligned(4))) bootheader_t {
     uint32_t crc32;
 };
 
+#define BFLB_FW_LENGTH_OFFSET 120
+#define BFLB_FW_HASH_OFFSET   132
+
 #endif

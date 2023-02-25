@@ -393,11 +393,11 @@ LUA_API int lua_getinfo(lua_State *L, const char *what, lua_Debug *ar)
     }
     cl = ttisclosure(func) ? clvalue(func) : NULL;
     status = auxgetinfo(L, what, ar, cl, ci);
-    if (strchr(what, 'f')) {
+    if (luaport_strchr(what, 'f')) {
         setobj2s(L, L->top, func);
         api_incr_top(L);
     }
-    if (strchr(what, 'L'))
+    if (luaport_strchr(what, 'L'))
         collectvalidlines(L, cl);
     lua_unlock(L);
     return status;
@@ -512,7 +512,7 @@ static const char *gxf(const Proto *p, int pc, Instruction i, int isup)
         name = upvalname(p, t);
     else
         getobjname(p, pc, t, &name);
-    return (name && strcmp(name, LUA_ENV) == 0) ? "global" : "field";
+    return (name && luaport_strcmp(name, LUA_ENV) == 0) ? "global" : "field";
 }
 
 static const char *getobjname(const Proto *p, int lastpc, int reg,
@@ -804,7 +804,7 @@ l_noret luaG_ordererror(lua_State *L, const TValue *p1, const TValue *p2)
 {
     const char *t1 = luaT_objtypename(L, p1);
     const char *t2 = luaT_objtypename(L, p2);
-    if (strcmp(t1, t2) == 0)
+    if (luaport_strcmp(t1, t2) == 0)
         luaG_runerror(L, "attempt to compare two %s values", t1);
     else
         luaG_runerror(L, "attempt to compare %s with %s", t1, t2);

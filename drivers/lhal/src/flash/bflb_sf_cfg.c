@@ -37,7 +37,6 @@
 #include "bflb_sf_ctrl.h"
 #include "bflb_sf_cfg.h"
 #include "bflb_xip_sflash.h"
-#include "soft_crc.h"
 
 /** @addtogroup  BL628_Peripheral_Driver
  *  @{
@@ -2960,7 +2959,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_get_flash_cfg_need_lock(uint32_t flash_id, spi_
     return -1;
 }
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL702L)
 /****************************************************************************/ /**
  * @brief  Get flash config according to flash ID patch
  *

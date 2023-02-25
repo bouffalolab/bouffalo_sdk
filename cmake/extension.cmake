@@ -2,7 +2,7 @@ macro(sdk_generate_library)
   if(${ARGC})
     set(library_name ${ARGV0})
   else()
-  get_filename_component(library_name ${CMAKE_CURRENT_LIST_DIR} NAME)
+    get_filename_component(library_name ${CMAKE_CURRENT_LIST_DIR} NAME)
   endif()
 
   message(STATUS "[register library : ${library_name}], path:${CMAKE_CURRENT_LIST_DIR}")
@@ -16,21 +16,22 @@ endmacro()
 function(sdk_library_add_sources)
   foreach(arg ${ARGV})
     if(IS_DIRECTORY ${arg})
-    message(FATAL_ERROR "sdk_library_add_sources() was called on a directory")
+      message(FATAL_ERROR "sdk_library_add_sources() was called on a directory")
     endif()
 
     if(IS_ABSOLUTE ${arg})
-    set(path ${arg})
+      set(path ${arg})
     else()
-    set(path ${CMAKE_CURRENT_SOURCE_DIR}/${arg})
+      set(path ${CMAKE_CURRENT_SOURCE_DIR}/${arg})
     endif()
+
     target_sources(${CURRENT_STATIC_LIBRARY} PRIVATE ${path})
   endforeach()
 endfunction()
 
 function(sdk_library_add_sources_ifdef feature)
   if(${${feature}})
-  sdk_library_add_sources(${ARGN})
+    sdk_library_add_sources(${ARGN})
   endif()
 endfunction()
 
@@ -41,6 +42,7 @@ function(sdk_add_include_directories)
     else()
       set(path ${CMAKE_CURRENT_SOURCE_DIR}/${arg})
     endif()
+
     target_include_directories(sdk_intf_lib INTERFACE ${path})
   endforeach()
 endfunction()
@@ -52,19 +54,38 @@ function(sdk_add_private_include_directories)
     else()
       set(path ${CMAKE_CURRENT_SOURCE_DIR}/${arg})
     endif()
+
     target_include_directories(${CURRENT_STATIC_LIBRARY} PRIVATE ${path})
+  endforeach()
+endfunction()
+
+function(sdk_add_system_include_directories)
+  foreach(arg ${ARGV})
+    if(IS_ABSOLUTE ${arg})
+      set(path ${arg})
+    else()
+      set(path ${CMAKE_CURRENT_SOURCE_DIR}/${arg})
+    endif()
+
+    target_include_directories(sdk_intf_lib SYSTEM INTERFACE ${path})
   endforeach()
 endfunction()
 
 function(sdk_add_include_directories_ifdef feature)
   if(${${feature}})
-  sdk_add_include_directories(${ARGN})
+    sdk_add_include_directories(${ARGN})
   endif()
 endfunction()
 
 function(sdk_add_private_include_directories_ifdef feature)
   if(${${feature}})
-  sdk_add_private_include_directories(${ARGN})
+    sdk_add_private_include_directories(${ARGN})
+  endif()
+endfunction()
+
+function(sdk_add_system_include_directories_ifdef feature)
+  if(${${feature}})
+    sdk_add_system_include_directories(${ARGN})
   endif()
 endfunction()
 
@@ -78,7 +99,7 @@ endfunction()
 
 function(sdk_add_compile_definitions_ifdef feature)
   if(${${feature}})
-  sdk_add_compile_definitions(${ARGN})
+    sdk_add_compile_definitions(${ARGN})
   endif()
 endfunction()
 
@@ -98,13 +119,13 @@ endfunction()
 
 function(sdk_add_compile_options_ifdef feature)
   if(${${feature}})
-  sdk_add_compile_options(${ARGN})
+    sdk_add_compile_options(${ARGN})
   endif()
 endfunction()
 
 function(sdk_add_private_compile_options_ifdef feature)
   if(${${feature}})
-  sdk_add_private_compile_options(${ARGN})
+    sdk_add_private_compile_options(${ARGN})
   endif()
 endfunction()
 
@@ -118,7 +139,7 @@ endfunction()
 
 function(sdk_add_link_options_ifdef feature)
   if(${${feature}})
-  sdk_add_link_options(${ARGN})
+    sdk_add_link_options(${ARGN})
   endif()
 endfunction()
 
@@ -134,7 +155,7 @@ endfunction()
 
 function(sdk_add_link_libraries_ifdef feature)
   if(${${feature}})
-  sdk_add_link_libraries(${ARGN})
+    sdk_add_link_libraries(${ARGN})
   endif()
 endfunction()
 
@@ -146,18 +167,19 @@ endfunction()
 
 function(sdk_add_static_library)
   foreach(arg ${ARGV})
-  if(IS_DIRECTORY ${arg})
-  message(FATAL_ERROR "sdk_add_static_library() was called on a directory")
-  endif()
+    if(IS_DIRECTORY ${arg})
+      message(FATAL_ERROR "sdk_add_static_library() was called on a directory")
+    endif()
 
-  if(IS_ABSOLUTE ${arg})
-  set(path ${arg})
-  else()
-  set(path ${CMAKE_CURRENT_SOURCE_DIR}/${arg})
-  endif()
-  get_filename_component(library_name ${path} NAME_WE)
-  message(STATUS "[register extern library : ${library_name}], path:${CMAKE_CURRENT_LIST_DIR}")
-  set_property(GLOBAL APPEND PROPERTY SDK_LIBS ${path})
+    if(IS_ABSOLUTE ${arg})
+      set(path ${arg})
+    else()
+      set(path ${CMAKE_CURRENT_SOURCE_DIR}/${arg})
+    endif()
+
+    get_filename_component(library_name ${path} NAME_WE)
+    message(STATUS "[register extern library : ${library_name}], path:${CMAKE_CURRENT_LIST_DIR}")
+    set_property(GLOBAL APPEND PROPERTY SDK_LIBS ${path})
   endforeach()
 endfunction()
 
@@ -175,10 +197,11 @@ endmacro()
 
 function(sdk_set_linker_script ld)
   if(IS_ABSOLUTE ${ld})
-  set(path ${ld})
+    set(path ${ld})
   else()
-  set(path ${CMAKE_CURRENT_SOURCE_DIR}/${ld})
+    set(path ${CMAKE_CURRENT_SOURCE_DIR}/${ld})
   endif()
+
   set_property(GLOBAL PROPERTY LINKER_SCRIPT ${path})
 endfunction()
 
@@ -191,20 +214,20 @@ macro(sdk_set_vscode_dir dir)
 endmacro()
 
 macro(sdk_set_main_file)
-    if(IS_ABSOLUTE ${ARGV0})
+  if(IS_ABSOLUTE ${ARGV0})
     set(path ${ARGV0})
-    else()
+  else()
     set(path ${CMAKE_CURRENT_SOURCE_DIR}/${ARGV0})
-    endif()
+  endif()
+
   set(CURRENT_MAIN_FILE ${path})
 endmacro()
 
 macro(project name)
-
   if(CPU_ID)
-  set(proj_name ${name}_${CHIP}_${CPU_ID})
+    set(proj_name ${name}_${CHIP}_${CPU_ID})
   else()
-  set(proj_name ${name}_${CHIP})
+    set(proj_name ${name}_${CHIP})
   endif()
 
   _project(${proj_name} ASM C CXX)
@@ -217,38 +240,41 @@ macro(project name)
   add_executable(${proj_name}.elf ${CURRENT_MAIN_FILE})
   target_link_libraries(${proj_name}.elf sdk_intf_lib)
   get_property(LINKER_SCRIPT_PROPERTY GLOBAL PROPERTY LINKER_SCRIPT)
+
   if(EXISTS ${LINKER_SCRIPT_PROPERTY})
     set_target_properties(${proj_name}.elf PROPERTIES LINK_FLAGS "-T${LINKER_SCRIPT_PROPERTY} -Wl,-Map=${MAP_FILE}")
     set_target_properties(${proj_name}.elf PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT_PROPERTY})
   endif()
 
   get_property(SDK_LIBS_PROPERTY GLOBAL PROPERTY SDK_LIBS)
-  target_link_libraries(${proj_name}.elf -Wl,--start-group ${SDK_LIBS_PROPERTY} app -Wl,--end-group)
+  target_link_libraries(${proj_name}.elf -Wl,--whole-archive ${SDK_LIBS_PROPERTY} app -Wl,--no-whole-archive)
 
   if(OUTPUT_DIR)
-  add_custom_command(TARGET ${proj_name}.elf POST_BUILD
-  COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${proj_name}.elf> ${BIN_FILE}
-  COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
-  # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${proj_name}.elf> ${HEX_FILE}
-  # COMMAND ${SIZE} $<TARGET_FILE:${proj_name}.elf>
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${proj_name}.elf> ${OUTPUT_DIR}/${name}/${proj_name}.elf
-  COMMAND ${CMAKE_COMMAND} -E copy ${ASM_FILE} ${OUTPUT_DIR}/${name}/${proj_name}.asm
-  COMMAND ${CMAKE_COMMAND} -E copy ${MAP_FILE} ${OUTPUT_DIR}/${name}/${proj_name}.map
-  COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} ${OUTPUT_DIR}/${name}/${proj_name}.bin
-  COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} ${OUTPUT_DIR}/project.bin
-  COMMENT "Generate ${BIN_FILE}\r\n"
-  )
+    add_custom_command(TARGET ${proj_name}.elf POST_BUILD
+      COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${proj_name}.elf> ${BIN_FILE}
+      COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
+
+      # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${proj_name}.elf> ${HEX_FILE}
+      # COMMAND ${SIZE} $<TARGET_FILE:${proj_name}.elf>
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${proj_name}.elf> ${OUTPUT_DIR}/${name}/${proj_name}.elf
+      COMMAND ${CMAKE_COMMAND} -E copy ${ASM_FILE} ${OUTPUT_DIR}/${name}/${proj_name}.asm
+      COMMAND ${CMAKE_COMMAND} -E copy ${MAP_FILE} ${OUTPUT_DIR}/${name}/${proj_name}.map
+      COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} ${OUTPUT_DIR}/${name}/${proj_name}.bin
+      COMMAND ${CMAKE_COMMAND} -E copy ${BIN_FILE} ${OUTPUT_DIR}/project.bin
+      COMMENT "Generate ${BIN_FILE}\r\n"
+    )
 
   else()
-  add_custom_command(TARGET ${proj_name}.elf POST_BUILD
-  COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${proj_name}.elf> ${BIN_FILE}
-  COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
-  # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${proj_name}.elf> ${HEX_FILE}
-  # COMMAND ${SIZE} $<TARGET_FILE:${proj_name}.elf>
-  COMMENT "Generate ${BIN_FILE}\r\n"
-  )
+    add_custom_command(TARGET ${proj_name}.elf POST_BUILD
+      COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${proj_name}.elf> ${BIN_FILE}
+      COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
+
+      # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${proj_name}.elf> ${HEX_FILE}
+      # COMMAND ${SIZE} $<TARGET_FILE:${proj_name}.elf>
+      COMMENT "Generate ${BIN_FILE}\r\n"
+    )
   endif()
 
-  # include(${BL_SDK_BASE}/cmake/bflb_flash.cmake)
-  # include(${BL_SDK_BASE}/cmake/gen_c_cpp_properties_json.cmake)
+  include(${BL_SDK_BASE}/cmake/bflb_flash.cmake)
+  include(${BL_SDK_BASE}/cmake/gen_c_cpp_properties_json.cmake)
 endmacro()

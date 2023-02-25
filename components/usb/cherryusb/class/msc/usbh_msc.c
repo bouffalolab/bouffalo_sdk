@@ -40,7 +40,7 @@ static void usbh_msc_devno_free(struct usbh_msc *msc_class)
 
 static int usbh_msc_get_maxlun(struct usbh_msc *msc_class, uint8_t *buffer)
 {
-    struct usb_setup_packet *setup = &msc_class->hport->setup;
+    struct usb_setup_packet *setup = msc_class->hport->setup;
 
     setup->bmRequestType = USB_REQUEST_DIR_IN | USB_REQUEST_CLASS | USB_REQUEST_RECIPIENT_INTERFACE;
     setup->bRequest = MSC_REQUEST_GET_MAX_LUN;
@@ -348,11 +348,13 @@ static int usbh_msc_connect(struct usbh_hubport *hport, uint8_t intf)
         USB_LOG_ERR("Fail to scsi_testunitready\r\n");
         return ret;
     }
+
     ret = usbh_msc_scsi_inquiry(msc_class);
     if (ret < 0) {
         USB_LOG_ERR("Fail to scsi_inquiry\r\n");
         return ret;
     }
+
     ret = usbh_msc_scsi_readcapacity10(msc_class);
     if (ret < 0) {
         USB_LOG_ERR("Fail to scsi_readcapacity10\r\n");

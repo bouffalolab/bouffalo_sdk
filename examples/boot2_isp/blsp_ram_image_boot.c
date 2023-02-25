@@ -41,7 +41,7 @@
 #include "blsp_boot_decompress.h"
 #include "blsp_common.h"
 #include "partition.h"
-#include "softcrc.h"
+
 #include "bflb_flash.h"
 #include "bflb_sec_sha.h"
 

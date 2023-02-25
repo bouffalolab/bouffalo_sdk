@@ -1558,6 +1558,51 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Get_RTC_Timer_Val(uint32_t *valLow, uint32_t *v
 }
 
 /****************************************************************************/ /**
+ * @brief  HBN Re-Cal RC32K
+ *
+ * @param  expected_counter: Expected rtc counter
+ * @param  actual_counter: Actual rtc counter
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_Recal_RC32K(int32_t expected_counter, int32_t actual_counter)
+{
+    int32_t tmpVal = 0;
+    int32_t current = 0;
+    int32_t delta = 0;
+
+    delta = actual_counter - expected_counter;
+
+    /* normalize to 1s count */
+    delta = (delta * 32768) / expected_counter;
+
+    if ((delta < 32) && (delta > -32)) {
+        return -1;
+    }
+    if (delta < -320) {
+        delta = -320;
+    } else if (delta > 320) {
+        delta = 320;
+    }
+
+    if (delta >= 64 || delta <= -64) {
+        delta = delta / 64;
+    } else {
+        delta = delta / 32;
+    }
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_CTRL0);
+    current = BL_GET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT);
+    current += delta;
+    current &= ((1U << HBN_RC32K_CODE_FR_EXT_LEN) - 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT, current);
+    BL_WR_REG(HBN_BASE, HBN_RC32K_CTRL0, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  HBN clear RTC timer interrupt,this function must be called to clear delayed rtc IRQ
  *
  * @param  None

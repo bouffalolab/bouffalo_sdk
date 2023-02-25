@@ -286,7 +286,7 @@ void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
     putreg32(lli_pool[0].nextlli, channel_base + DMA_CxLLI_OFFSET);
 #if defined(BL616) || defined(BL606P) || defined(BL808)
     /* clean cache, DMA does not pass through the cache */
-    bflb_l1c_dcache_clean_range((uint32_t *)(uintptr_t)lli_pool, sizeof(struct bflb_dma_channel_lli_pool_s) * used_lli_count);
+    bflb_l1c_dcache_clean_range((uint32_t *)lli_pool, sizeof(struct bflb_dma_channel_lli_pool_s) * used_lli_count);
 #endif
 }
 
@@ -442,7 +442,11 @@ int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, channel_base + DMA_CxCONTROL_OFFSET);
             break;
 #endif
-
+        case DMA_CMD_SET_LLI_CONFIG:
+            arch_memcpy4((uint32_t *)(channel_base + DMA_CxSRCADDR_OFFSET), (uint32_t *)arg, 4);
+            break;
+        case DMA_CMD_GET_LLI_CONTROL:
+            return getreg32(channel_base + DMA_CxCONTROL_OFFSET);
         default:
             ret = -EPERM;
             break;

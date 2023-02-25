@@ -1,26 +1,30 @@
 [![License](https://img.shields.io/badge/License-Apache--2.0-brightgreen)](LICENSE)
-[![Release](https://img.shields.io/github/v/tag/bouffalolab/bl_mcu_sdk?color=s&label=release)]()
 
 [English Version](README.md)
 
 # 简介
 
-**bl mcu sdk** 是 Bouffalo Lab 提供的 MCU 软件开发包，支持博流智能所有系列芯片。
+**BouffaloSDK** 是 Bouffalo Lab 提供的软件开发包，支持博流智能所有系列芯片。
 
-# SDK 版本与芯片支持情况
+# SDK 架构
 
-注意1：**v1.4.5 版本之前的驱动库使用 1.0 版本（hal + std），之后的版本都将使用 2.0 版本 (lhal + soc)**。如果使用 **v1.4.5** ，请切换分支到 [release-v1.4.5](https://github.com/bouffalolab/bl_mcu_sdk/tree/release_v1.4.5)。
+![SDK Architecture](BouffaloSDK.png)
 
-注意2：**soc** 由于是非通用的外设，代码风格和接口名还是延续之前版本，但是后续会更新到新的代码风格。
+# 代码目录
 
-|   芯片        |  v1.4.5  |  latest |
-|:-------------:|:--------:|:-------:|
-|BL602/BL604    |  √       |   √     |
-|BL702/BL704/BL706 |  √    |   √     |
-|BL616/BL618     |  ×      |   √     |
-|BL808     |  ×            |   √     |
+| 名称 | 描述|
+|:---:|:------:|
+| bsp/board |  包含时钟、引脚、内存管理和 console 的板级初始化 |
+| bsp/common | 板级相关的常用外设驱动|
+| components| 组件|
+|docs | 快速上手、 api、demo 文档|
+|drivers/lhal| 博流智能系列芯片通用外设驱动，支持所有系列芯片|
+|drivers/soc| 博流智能系列芯片非通用外设驱动|
+|drivers/rfparam| 射频参数配置|
+|examples| 官方示例代码|
+|tools| 工具 |
 
-## LHAL 支持情况
+# LHAL 支持
 
 **LHAL** 是博流为统一通用外设接口而设计的驱动库，代码精炼并且支持博流所有系列芯片，方便用户使用和移植到其他平台。
 
@@ -29,17 +33,18 @@
 |   外设       |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
 |:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
 |  ADC         |      ○         |      √             |   √           |   ○      |
-|  CAM         |      -         |      √             |   √           |   √      |
+|  CAM         |      -         |      ×             |   ×           |   ×      |
 |  CKS         |      ○         |      √             |   √           |   ○      |
 |  DAC         |      ○         |      √             |   √           |   ○      |
 |  DMA         |      ○         |      √             |   √           |   √      |
-|  EFUSE       |      √         |      √             |   √           |   √      |
+|  EFUSE       |      ×         |      √             |   √           |   √      |
 |  EMAC        |      -         |      √             |   √           |   √      |
 |  FLASH       |      √         |      √             |   √           |   √      |
 |  GPIO        |      ○         |      √             |   √           |   √      |
-|  I2C         |      ○         |      √             |   √           |   √      |
+|  I2C         |      ○         |      √             |   √           |   ○      |
+|  I2S         |      ○         |      ○             |   √           |   ○      |
 |  IR          |      ○         |      √             |   √           |   ○      |
-|  MJPEG       |      ×         |      √             |   √           |   √      |
+|  MJPEG       |      ×         |      ×             |   √           |   √      |
 |  PWM_v1      |      ○         |      √             |   -           |   -      |
 |  PWM_v2      |      -         |      -             |   √           |   √      |
 |  RTC         |      ○         |      √             |   √           |   √      |
@@ -54,56 +59,6 @@
 |  USB_v2      |      -         |      -             |   √           |   √      |
 |  WDG         |      ○         |      √             |   √           |   ○      |
 
-# 代码框架
-
-```
-
-bl_mcu_sdk
-├── bsp
-│   ├── board
-│   │   └── bl602
-│   │   └── bl702
-│   │   └── bl616
-│   │   └── bl808
-│   └── common
-├── components
-│   ├── bflog
-│   ├── cherryusb
-│   ├── fatfs
-│   ├── freertos
-│   ├── lua
-│   ├── lvgl
-│   ├── lwip
-│   └── shell
-├── docs
-├── drivers
-│   ├── lhal
-│   └── soc
-├── examples
-│   ├── bflog
-│   ├── fatfs
-│   ├── freertos
-│   ├── helloworld
-│   ├── lua
-│   ├── lvgl
-│   ├── peripherals
-│   └── shell
-└── tools
-    └── cmake
-    └── kconfig
-    └── make
-
-```
-
-- **bsp/board** : 包含时钟、引脚、内存管理和 console 的板级初始化
-- **bsp/common** : 存放一些板级相关的常用外设驱动代码
-- **components** : 存放第三方库公共组件
-- **docs** : 存放教程文档以及其他帮助信息
-- **drivers/lhal** : 存放博流智能系列芯片通用外设驱动，支持所有系列芯片
-- **drivers/soc** : 存放博流智能系列芯片非通用外设驱动，各个芯片独有的部分
-- **examples** : 存放官方提供的示例代码
-- **tools** : 存放编译下载相关的工具包
-
 # 环境搭建
 
 ## 工具链
@@ -114,7 +69,7 @@ bl_mcu_sdk
 
 ## 命令行编译
 
-在进行命令行编译之前，需要根据你的操作系统，选择对应的工具链，并配置到系统环境变量，并安装了 **make** 或者 **ninja** 工具，然后才能进行下面操作。更详细的搭建过程，参考 [bl mcu sdk 环境搭建](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/index.html).
+在进行命令行编译之前，需要根据你的操作系统，选择对应的工具链，并配置到系统环境变量，并安装了 **make** 或者 **ninja** 工具，然后才能进行下面操作。更详细的搭建过程，参考 [BouffaloSDK 环境搭建](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/index.html).
 
 - 进入要编译的 demo 目录，且该目录下有 `main.c` 和 `Makefile` 文件
 - 执行下面命令即可,以 **BL616** 为例
@@ -135,7 +90,7 @@ make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 
 ```
 cd examples/helloworld
-make ninja CHIP=bl616 BOARD=bl616dk
+make ninja CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 ## CDK 编译
@@ -144,43 +99,52 @@ TODO
 
 ## 调试
 
-当前仅支持使用 CKLink 调试。详细参考 [bl mcu sdk 调试指南](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
+当前仅支持使用 CKLink 调试。详细参考 [BouffaloSDK 调试指南](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
 
 ## 固件烧录
 
-推荐使用 **BL DevCube** 并通过串口进行固件的烧录。
+需要注意，如果使用的是 linux，linux 由于权限问题会拒绝访问串口设备，所以，为了方便后续使用，将你自己的用户名添加到 `dialout` 中。然后重启 linux 生效。或者在命令的前面加上 `sudo`。
 
-- [Bouffalo Lab Dev Cube](https://dev.bouffalolab.com/download)
-- [Bouffalo Lab Dev Cube User Guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/devcube.html)
+```
+sudo usermod -aG dialout xxx # xxx 是你自己的用户名
+```
+
+```
+cd examples/helloworld
+make flash CHIP=chip_name COMX=xxx # chip_name should be bl602/bl702/bl616/bl808/bl606p, COMX in Windows, /dev/ttyxxx in Linux
+```
+
+- 如果使用 **BL808** 或者 **BL606P** ,需要添加 **CPU_ID**
+
+```
+cd examples/helloworld
+make flash CHIP=chip_name CPU_ID=m0 COMX=xxx # chip_name should be bl602/bl702/bl616/bl808/bl606p, COMX in Windows, /dev/ttyxxx in Linux
+```
+
+如果使用串口烧录而非 USB 烧录，不同的 USB2TTL 芯片支持的最高波特率不一样,烧录的时候需要注意。
+
+| 芯片 | 波特率|
+|:---:|:------:|
+| ch340 |  <= 500K |
+| cp2102 |  <= 2M |
+| ft232 |  <= 2M |
+| bl702 |  <= 8M |
+| bl616 |  <= 10M |
 
 # 芯片手册
 
-芯片数据手册和参考手册见 [文档](https://github.com/bouffalolab/bl_docs)。
+芯片数据手册和参考手册见 [文档](https://dev.bouffalolab.com/document)。
 
 # 文档教程
 
-获取更多 bl mcu sdk 开发相关的教程，如环境搭建、 api 手册、外设 demo 等，请参考：
+获取更多 BouffaloSDK 开发相关的教程，如环境搭建、 api 手册、外设 demo 等，请参考：
 
-- [bl mcu sdk v2.0 文档教程](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/)
-- [bl mcu sdk v1.4.5 文档教程](https://dev.bouffalolab.com/media/doc/sdk/bl_mcu_sdk_zh/index.html)
+- [BouffaloSDK 文档教程](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/)
 
 # 视频教程
 
-- [BL706 MCU 开发系列视频教程](https://www.bilibili.com/video/BV1xK4y1P7ur)
+TODO
 
 # 论坛
 
 博流开发者交流论坛: [https://bbs.bouffalolab.com/](https://bbs.bouffalolab.com/)
-
-# 许可协议
-
-**bl mcu sdk** 遵循 Apache License 2.0 开源许可协议，可以免费在商业产品中使用，并且不需要公开私有代码。
-
-```
-/*
- * Copyright (c) 2022 Bouffalolab team
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
-```

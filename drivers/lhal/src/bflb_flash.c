@@ -9,6 +9,9 @@
 #elif defined(BL808)
 #include "bl808_memorymap.h"
 #include "bl808_glb.h"
+#elif defined(BL702L)
+#include "bl702l_glb.h"
+#include "bl702l_ef_ctrl.h"
 #elif defined(BL602)
 #include "bl602_glb.h"
 #include "bl602_sflash_ext.h"
@@ -244,7 +247,7 @@ uint32_t bflb_flash2_get_jedec_id(void)
 }
 #endif
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL702L)
 static int flash_get_clock_delay(spi_flash_cfg_type *cfg)
 {
     uint32_t reg_base = 0;
@@ -274,23 +277,6 @@ static int flash_get_clock_delay(spi_flash_cfg_type *cfg)
     cfg->clk_invert |= (((regval & SF_CTRL_SF_IO_0_OE_DLY_SEL_MASK) >> SF_CTRL_SF_IO_0_OE_DLY_SEL_SHIFT) << 5);
 
     return 0;
-}
-
-static void ATTR_TCM_SECTION flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
-{
-    struct sf_ctrl_cmds_cfg cmds_cfg;
-
-    cmds_cfg.ack_latency = 1;
-    cmds_cfg.cmds_core_en = 1;
-    cmds_cfg.cmds_en = 1;
-    cmds_cfg.cmds_wrap_mode = 1;
-    cmds_cfg.cmds_wrap_len = 9;
-
-    if ((p_flash_cfg->io_mode & 0x1f) == SF_CTRL_QIO_MODE) {
-        cmds_cfg.cmds_wrap_mode = 2;
-        cmds_cfg.cmds_wrap_len = 2;
-    }
-    bflb_sf_ctrl_cmds_set(&cmds_cfg, 0);
 }
 #endif
 
@@ -342,7 +328,7 @@ static int ATTR_TCM_SECTION flash_config_init(spi_flash_cfg_type *p_flash_cfg, u
 
     /* Set flash controler from p_flash_cfg */
 #if defined(BL616) || defined(BL606P) || defined(BL808)
-    flash_set_cmds(p_flash_cfg);
+    bflb_flash_set_cmds(p_flash_cfg);
 #endif
     flash_set_qspi_enable(p_flash_cfg);
     flash_set_l1c_wrap(p_flash_cfg);
@@ -508,6 +494,25 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     return ret;
 }
 
+#if defined(BL616) || defined(BL606P) || defined(BL808)
+void ATTR_TCM_SECTION bflb_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
+{
+    struct sf_ctrl_cmds_cfg cmds_cfg;
+
+    cmds_cfg.ack_latency = 1;
+    cmds_cfg.cmds_core_en = 1;
+    cmds_cfg.cmds_en = 1;
+    cmds_cfg.cmds_wrap_mode = 1;
+    cmds_cfg.cmds_wrap_len = 9;
+
+    if ((p_flash_cfg->io_mode & 0x1f) == SF_CTRL_QIO_MODE) {
+        cmds_cfg.cmds_wrap_mode = 2;
+        cmds_cfg.cmds_wrap_len = 2;
+    }
+    bflb_sf_ctrl_cmds_set(&cmds_cfg, 0);
+}
+#endif
+
 uint32_t bflb_flash_get_jedec_id(void)
 {
     uint32_t jid = 0;
@@ -541,7 +546,7 @@ void ATTR_TCM_SECTION bflb_flash_set_iomode(uint8_t iomode)
     }
 
 #if defined(BL616) || defined(BL606P) || defined(BL808)
-    flash_set_cmds(&g_flash_cfg);
+    bflb_flash_set_cmds(&g_flash_cfg);
 #endif
     flash_set_qspi_enable(&g_flash_cfg);
     flash_set_l1c_wrap(&g_flash_cfg);
@@ -601,6 +606,11 @@ int ATTR_TCM_SECTION bflb_flash_erase(uint32_t startaddr, uint32_t len)
     flag = bflb_irq_save();
 #if defined(BL602)
     stat = bflb_xip_sflash_erase_need_lock_ext(&g_flash_cfg, startaddr, startaddr+len-1, 0, 0);
+#elif defined(BL702)
+    uint8_t aes_enabled = 0;
+    bflb_xip_sflash_opt_enter(&aes_enabled);
+    stat = bflb_xip_sflash_erase_need_lock(&g_flash_cfg, startaddr, len, 0, 0);
+    bflb_xip_sflash_opt_exit(aes_enabled);
 #else
     stat = bflb_xip_sflash_erase_need_lock(&g_flash_cfg, startaddr, len, 0, 0);
 #endif
@@ -653,6 +663,11 @@ int ATTR_TCM_SECTION bflb_flash_write(uint32_t addr, uint8_t *data, uint32_t len
     flag = bflb_irq_save();
 #if defined(BL602)
     stat = bflb_xip_sflash_write_need_lock_ext(&g_flash_cfg, addr, data, len, 0, 0);
+#elif defined(BL702)
+    uint8_t aes_enabled = 0;
+    bflb_xip_sflash_opt_enter(&aes_enabled);
+    stat = bflb_xip_sflash_write_need_lock(&g_flash_cfg, addr, data, len, 0, 0);
+    bflb_xip_sflash_opt_exit(aes_enabled);
 #else
     stat = bflb_xip_sflash_write_need_lock(&g_flash_cfg, addr, data, len, 0, 0);
 #endif
@@ -705,6 +720,11 @@ int ATTR_TCM_SECTION bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len)
     flag = bflb_irq_save();
 #if defined(BL602)
     stat = bflb_xip_sflash_read_need_lock_ext(&g_flash_cfg, addr, data, len, 0, 0);
+#elif defined(BL702)
+    uint8_t aes_enabled = 0;
+    bflb_xip_sflash_opt_enter(&aes_enabled);
+    stat = bflb_xip_sflash_read_need_lock(&g_flash_cfg, addr, data, len, 0, 0);
+    bflb_xip_sflash_opt_exit(aes_enabled);
 #else
     stat = bflb_xip_sflash_read_need_lock(&g_flash_cfg, addr, data, len, 0, 0);
 #endif

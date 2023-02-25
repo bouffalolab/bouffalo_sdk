@@ -1,10 +1,9 @@
 #include "bflb_mtimer.h"
 #include "bflb_dma.h"
+#include "board.h"
 
 #define DMA_BUFFER_MAX_LENGTH 128
 #define DMA_TRANSFER_LENGTH   64
-
-extern void board_init(void);
 
 static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src_buffer[DMA_BUFFER_MAX_LENGTH];
 

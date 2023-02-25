@@ -39,7 +39,7 @@
     } while (0)
 
 #define SHELL_PRINTF(fmt, ...) shell_print(0, fmt, ##__VA_ARGS__)
-#define SHELL_PROMPT(fmt, ...) shell_print(34, fmt, ##__VA_ARGS__)
+#define SHELL_PROMPT(fmt, ...) shell_print(36, fmt, ##__VA_ARGS__)
 #define SHELL_DGB(fmt, ...)    shell_print(32, fmt, ##__VA_ARGS__)
 #define SHELL_CMD(fmt, ...)    shell_print(33, fmt, ##__VA_ARGS__)
 #define SHELL_E(fmt, ...)      shell_print(31, fmt, ##__VA_ARGS__)
@@ -52,9 +52,14 @@
 #define SHELL_E(fmt, ...)      shell->shell_printf(fmt, ##__VA_ARGS__)
 #endif
 
-#define SHELL_MALLOC malloc
-#define SHELL_FREE   free
+#define SHELL_MALLOC  malloc
+#define SHELL_FREE    free
 
+#define SHELL_SIGINT  1
+#define SHELL_SIG_DFL ((shell_sig_func_ptr)0) /* Default action */
+#define SHELL_SIG_IGN ((shell_sig_func_ptr)1) /* Ignore action */
+
+typedef void (*shell_sig_func_ptr)(int);
 typedef int (*syscall_func)(void);
 typedef int (*cmd_function_t)(int argc, char **argv);
 
@@ -157,4 +162,5 @@ void shell_handler(uint8_t data);
 int shell_set_prompt(const char *prompt);
 int shell_set_print(void (*shell_printf)(char *fmt, ...));
 void shell_init(void);
+shell_sig_func_ptr shell_signal(int sig, shell_sig_func_ptr func);
 #endif

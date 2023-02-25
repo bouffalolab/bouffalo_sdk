@@ -1028,7 +1028,7 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 /******************************************************************************/
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void bflb_psram_Init(struct spi_psram_cfg_type *psram_cfg, struct sf_ctrl_cmds_cfg *cmds_cfg, struct sf_ctrl_psram_cfg *psram_cfg)
+void bflb_psram_init(struct spi_psram_cfg_type *psram_cfg, struct sf_ctrl_cmds_cfg *cmds_cfg, struct sf_ctrl_psram_cfg *psram_cfg)
 {
     RomDriver_Psram_Init(psram_cfg, cmds_cfg, psram_cfg);
 }

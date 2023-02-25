@@ -18,7 +18,7 @@
 #define SPI_FIFO_BYTE_NUM_MAX           32
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 1
 #elif defined(BL616) || defined(BL628)
-#define SPI_FIFO_BYTE_NUM_MAX           16
+#define SPI_FIFO_BYTE_NUM_MAX           32
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 1
 #elif defined(BL702L)
 #define SPI_FIFO_BYTE_NUM_MAX           16
@@ -30,8 +30,8 @@
 /** @defgroup SPI_ROLE spi role definition
   * @{
   */
-#define SPI_ROLE_MASTER 0
-#define SPI_ROLE_SLAVE  1
+#define SPI_ROLE_MASTER      0
+#define SPI_ROLE_SLAVE       1
 /**
   * @}
   */
@@ -39,10 +39,10 @@
 /** @defgroup SPI_MODE spi mode definition
   * @{
   */
-#define SPI_MODE0 0 /* CPOL=0 CHPHA=0 */
-#define SPI_MODE1 1 /* CPOL=0 CHPHA=1 */
-#define SPI_MODE2 2 /* CPOL=1 CHPHA=0 */
-#define SPI_MODE3 3 /* CPOL=1 CHPHA=1 */
+#define SPI_MODE0            0 /* CPOL=0 CHPHA=0 */
+#define SPI_MODE1            1 /* CPOL=0 CHPHA=1 */
+#define SPI_MODE2            2 /* CPOL=1 CHPHA=0 */
+#define SPI_MODE3            3 /* CPOL=1 CHPHA=1 */
 /**
   * @}
   */
@@ -61,8 +61,8 @@
 /** @defgroup SPI_BIT_ORDER spi bit order definition
   * @{
   */
-#define SPI_BIT_LSB 1
-#define SPI_BIT_MSB 0
+#define SPI_BIT_LSB          1
+#define SPI_BIT_MSB          0
 /**
   * @}
   */
@@ -70,7 +70,7 @@
 /** @defgroup SPI_BYTE_ORDER spi byte order definition
   * @{
   */
-#define SPI_BYTE_LSB 0
+#define SPI_BYTE_LSB         0
 #if !defined(BL602) && !defined(BL702)
 #define SPI_BYTE_MSB 1
 #endif
@@ -104,12 +104,12 @@
 /** @defgroup SPI_CMD spi feature control cmd definition
   * @{
   */
-#define SPI_CMD_SET_DATA_WIDTH  (0x01)
-#define SPI_CMD_GET_DATA_WIDTH  (0x02)
-#define SPI_CMD_CLEAR_TX_FIFO   (0x03)
-#define SPI_CMD_CLEAR_RX_FIFO   (0x04)
-#define SPI_CMD_SET_CS_INTERVAL (0x05)
-#define SPI_CMD_RX_IGNORE       (0x06)
+#define SPI_CMD_SET_DATA_WIDTH       (0x01)
+#define SPI_CMD_GET_DATA_WIDTH       (0x02)
+#define SPI_CMD_CLEAR_TX_FIFO        (0x03)
+#define SPI_CMD_CLEAR_RX_FIFO        (0x04)
+#define SPI_CMD_SET_CS_INTERVAL      (0x05)
+#define SPI_CMD_RX_IGNORE            (0x06)
 /**
   * @}
   */

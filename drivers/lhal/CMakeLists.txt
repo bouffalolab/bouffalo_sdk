@@ -35,6 +35,7 @@ sdk_library_add_sources(
 src/bflb_dac.c
 src/bflb_ir.c
 src/bflb_pwm_v1.c
+src/bflb_sdio2.c
 )
 elseif("${CHIP}" STREQUAL "bl702")
 sdk_library_add_sources(
@@ -47,6 +48,7 @@ src/bflb_spi_psram.c
 )
 elseif("${CHIP}" STREQUAL "bl702l")
 sdk_library_add_sources(
+src/bflb_kys.c
 src/bflb_pwm_v1.c
 src/bflb_pwm_v2.c
 src/bflb_spi_psram.c
@@ -60,7 +62,11 @@ src/bflb_mjpeg.c
 src/bflb_pwm_v2.c
 src/bflb_cam.c
 src/bflb_iso11898.c
+src/bflb_sdio2.c
 src/bflb_i2s.c
+src/bflb_dbi.c
+src/bflb_audac.c
+src/bflb_auadc.c
 )
 elseif("${CHIP}" STREQUAL "bl628")
 sdk_library_add_sources(
@@ -125,5 +131,6 @@ endif()
 sdk_add_static_library(src/pka/libpka.a)
 # add_subdirectory(src/pka)
 if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl628"))
-# keep
+# sdk_add_static_library(src/pec/libpec.a)
+#add_subdirectory(src/pec)
 endif()

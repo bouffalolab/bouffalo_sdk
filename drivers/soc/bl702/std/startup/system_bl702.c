@@ -21,6 +21,8 @@
  *
  */
 #include "bl702_glb.h"
+#include "bl702_hbn.h"
+#include "bl702_aon.h"
 #include <arch/risc-v/e24/clic.h>
 
 void SystemInit(void)
@@ -94,6 +96,11 @@ void SystemInit(void)
     /* init bor for all platform */
     // HBN_BOR_CFG_Type borCfg = { 0 /* pu_bor */, 0 /* irq_bor_en */, 1 /* bor_vth */, 0 /* bor_sel */ };
     // HBN_Set_BOR_Cfg(&borCfg);
+    /* dcdc 1.8v -> 1.5v */
+    tmpVal = BL_RD_REG(AON_BASE, AON_DCDC18_TOP_0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_DCDC18_VOUT_SEL_AON, 0xC);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_DCDC18_VPFM_AON, 0x3);
+    BL_WR_REG(AON_BASE, AON_DCDC18_TOP_0, tmpVal);
 }
 
 void System_Post_Init(void)

@@ -104,6 +104,27 @@ void bflb_mjpeg_stop(struct bflb_device_s *dev);
 void bflb_mjpeg_sw_run(struct bflb_device_s *dev, uint8_t frame_count);
 
 /**
+ * @brief Start mjpeg kick mode compression without camera.
+ *
+ * @param [in] dev device handle
+ * @param [in] kick_count kick block horizontal count to compress
+ */
+void bflb_mjpeg_kick_run(struct bflb_device_s *dev, uint16_t kick_count);
+
+/**
+ * @brief Stop mjpeg kick mode compression without camera.
+ *
+ * @param [in] dev device handle
+ */
+void bflb_mjpeg_kick_stop(struct bflb_device_s *dev);
+
+/**
+ * @brief kick one times compression without camera.
+ *
+ * @param [in] dev device handle
+ */
+void bflb_mjpeg_kick(struct bflb_device_s *dev);
+/**
  * @brief Enable or disable mjpeg one frame compression completion interrupt.
  *
  * @param [in] dev device handle

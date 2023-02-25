@@ -37,7 +37,7 @@
 #include "blsp_common.h"
 #include "blsp_bootinfo.h"
 #include "blsp_boot_parser.h"
-#include "softcrc.h"
+
 #include "blsp_port.h"
 #include "bflb_sec_sha.h"
 #include "bflb_sec_ecdsa.h"

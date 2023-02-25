@@ -3,7 +3,7 @@
 Build with Linux or WSL
 ================================
 
-本节主要介绍如何在 Linux 或者 WSL 下使用 **命令行** 进行开发。Windows 下如何安装 WSL 请自行百度。
+本节主要介绍如何在 Linux 或者 WSL 下使用 **命令行** 进行开发。Windows 下如何安装 WSL 以及 WSL1/WSL2 下如何使用串口请自行百度。
 
 环境搭建
 -----------------
@@ -67,22 +67,6 @@ Build with Linux or WSL
     Supported LTO compression algorithms: zlib
     gcc version 10.2.0 (Xuantie-900 elf newlib gcc Toolchain V2.2.5 B-20220323)
 
-
-- 在 linux 中，有严格的权限限制，通常一个用户对应一个权限，所以如果提示下面信息，表示需要设置权限。因此，我们将使用到的工具都设置好权限即可
-
-.. figure:: img/cmake_error.png
-   :align: center
-
-进入 sdk 根目录，输入:
-
-.. code-block:: bash
-   :linenos:
-
-   $ cd bouffalo_sdk
-   $ chmod 777 +x tools/cmake/bin/cmake
-   $ chmod 777 +x tools/bflb_tools/bflb_fw_post_proc/bflb_fw_post_proc
-   $ chmod 777 +x tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand
-
 编译
 -------------
 
@@ -94,7 +78,7 @@ Build with Linux or WSL
    :linenos:
 
     $ cd examples/helloworld
-    $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl602、bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+    $ make CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 - 使用 ninja 编译
 
@@ -102,14 +86,22 @@ Build with Linux or WSL
    :linenos:
 
     $ cd examples/helloworld
-    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl602、bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
+    $ make ninja CHIP=chip_name BOARD=board_name ## chip_name 为芯片型号，可以填写 bl702、bl616、bl808、bl606p, board_name 为开发板名称，详见 bsp/board 目录
 
 .. note :: 如果使用 BL808 或者 BL606P，需要在上面基础上添加 CPU_ID=id ,id 可以为 m0 或者 d0
 
-- 烧录
+烧录
+-------------
 
 .. code-block:: bash
    :linenos:
 
     $ cd examples/helloworld
-    $ make flash CHIP=chip_name COMX=port_name ## port_name 为串口号名称，比如 linux 中/dev/ttyACMx，wsl 中对应使用 /dev/ttySx
+    $ make flash CHIP=chip_name COMX=port_name ## port_name 为串口号名称，比如 linux 中/dev/ttyACMx
+
+.. note :: 如果使用 BL808 或者 BL606P，需要在上面基础上添加 CPU_ID=id ,id 可以为 m0 或者 d0
+
+调试
+-------------
+
+推荐使用 eclipse + cklink 调试，参考 :ref:`eclipse_gcc`，也可以使用命令行调试，这里不做介绍

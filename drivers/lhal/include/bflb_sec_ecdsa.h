@@ -16,6 +16,7 @@
 
 struct bflb_ecdsa_s {
     uint8_t ecpId;
+    uint8_t pad[3];
     uint32_t *privateKey;
     uint32_t *publicKeyx;
     uint32_t *publicKeyy;

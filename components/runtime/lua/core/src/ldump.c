@@ -31,7 +31,7 @@ typedef struct {
 */
 #define dumpVector(D, v, n) dumpBlock(D, v, (n) * sizeof((v)[0]))
 
-#define dumpLiteral(D, s) dumpBlock(D, s, sizeof(s) - sizeof(char))
+#define dumpLiteral(D, s)   dumpBlock(D, s, sizeof(s) - sizeof(char))
 
 static void dumpBlock(DumpState *D, const void *b, size_t size)
 {

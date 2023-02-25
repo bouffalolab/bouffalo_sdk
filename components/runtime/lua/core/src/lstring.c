@@ -32,9 +32,9 @@ int luaS_eqlngstr(TString *a, TString *b)
 {
     size_t len = a->u.lnglen;
     lua_assert(a->tt == LUA_VLNGSTR && b->tt == LUA_VLNGSTR);
-    return (a == b) ||                                 /* same instance or... */
-           ((len == b->u.lnglen) &&                    /* equal length and ... */
-            (memcmp(getstr(a), getstr(b), len) == 0)); /* equal contents */
+    return (a == b) ||                                         /* same instance or... */
+           ((len == b->u.lnglen) &&                            /* equal length and ... */
+            (luaport_memcmp(getstr(a), getstr(b), len) == 0)); /* equal contents */
 }
 
 unsigned int luaS_hash(const char *str, size_t l, unsigned int seed)
@@ -189,7 +189,7 @@ static TString *internshrstr(lua_State *L, const char *str, size_t l)
     TString **list = &tb->hash[lmod(h, tb->size)];
     lua_assert(str != NULL); /* otherwise 'memcmp'/'memcpy' are undefined */
     for (ts = *list; ts != NULL; ts = ts->u.hnext) {
-        if (l == ts->shrlen && (memcmp(str, getstr(ts), l * sizeof(char)) == 0)) {
+        if (l == ts->shrlen && (luaport_memcmp(str, getstr(ts), l * sizeof(char)) == 0)) {
             /* found! */
             if (isdead(g, ts))   /* dead (but not collected yet)? */
                 changewhite(ts); /* resurrect it */
@@ -239,14 +239,14 @@ TString *luaS_new(lua_State *L, const char *str)
     int j;
     TString **p = G(L)->strcache[i];
     for (j = 0; j < STRCACHE_M; j++) {
-        if (strcmp(str, getstr(p[j])) == 0) /* hit? */
-            return p[j];                    /* that is it */
+        if (luaport_strcmp(str, getstr(p[j])) == 0) /* hit? */
+            return p[j];                            /* that is it */
     }
     /* normal route */
     for (j = STRCACHE_M - 1; j > 0; j--)
         p[j] = p[j - 1]; /* move out last element */
     /* new element is first in the list */
-    p[0] = luaS_newlstr(L, str, strlen(str));
+    p[0] = luaS_newlstr(L, str, luaport_strlen(str));
     return p[0];
 }
 

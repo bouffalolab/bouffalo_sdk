@@ -21,15 +21,6 @@
  *
  */
 
-/*-----------------------------------------------------------------------*/
-/* Low level disk I/O module skeleton for FatFs     (C)ChaN, 2019        */
-/*-----------------------------------------------------------------------*/
-/* If a working storage control module is available, it should be        */
-/* attached to the FatFs via a glue function rather than modifying it.   */
-/* This is an example of glue functions to attach various exsisting      */
-/* storage control modules to the FatFs module with a defined API.       */
-/*-----------------------------------------------------------------------*/
-
 #if defined(BL616) || defined(BL808) || defined(BL628) || defined(BL606P)
 
 #include "ff.h"     /* Obtains integer types */
@@ -38,7 +29,6 @@
 #include "bflb_irq.h"
 
 static sd_card_t gSDCardInfo;
-extern const char *FR_Table[];
 
 int MMC_disk_status()
 {
@@ -108,33 +98,38 @@ int MMC_disk_ioctl(BYTE cmd, void *buff)
 
 DSTATUS Translate_Result_Code(int result)
 {
-    // MSG("%s\r\n",FR_Table[result]);
     return result;
-}
-
-extern void SDH_MMC1_IRQHandler(void);
-
-static void sdh_isr(int irq, void *arg)
-{
-    SDH_MMC1_IRQHandler();
 }
 
 void fatfs_sdh_driver_register(void)
 {
-    FATFS_DiskioDriverTypeDef pNewDiskioDriver;
+    FATFS_DiskioDriverTypeDef SDH_DiskioDriver = { NULL };
 
-    memset(&pNewDiskioDriver, 0, sizeof(FATFS_DiskioDriverTypeDef));
+    SDH_DiskioDriver.disk_status = MMC_disk_status;
+    SDH_DiskioDriver.disk_initialize = MMC_disk_initialize;
+    SDH_DiskioDriver.disk_write = MMC_disk_write;
+    SDH_DiskioDriver.disk_read = MMC_disk_read;
+    SDH_DiskioDriver.disk_ioctl = MMC_disk_ioctl;
+    SDH_DiskioDriver.error_code_parsing = Translate_Result_Code;
 
-    pNewDiskioDriver.MMC_disk_status = MMC_disk_status;
-    pNewDiskioDriver.MMC_disk_initialize = MMC_disk_initialize;
-    pNewDiskioDriver.MMC_disk_write = MMC_disk_write;
-    pNewDiskioDriver.MMC_disk_read = MMC_disk_read;
-    pNewDiskioDriver.MMC_disk_ioctl = MMC_disk_ioctl;
-    pNewDiskioDriver.Translate_Result_Code = Translate_Result_Code;
-    disk_driver_callback_init(&pNewDiskioDriver);
+    disk_driver_callback_init(DEV_SD, &SDH_DiskioDriver);
+}
 
-    bflb_irq_attach(33, sdh_isr, NULL);
-    bflb_irq_enable(33);
+uint32_t get_fattime(void)
+{
+    uint16_t year = 2022;
+    uint8_t mon = 1;
+    uint8_t mday = 1;
+    uint8_t hour = 0;
+    uint8_t min = 0;
+    uint8_t sec = 0;
+
+    return ((uint32_t)(year - 1980) << 25 |
+            (uint32_t)mon << 21 |
+            (uint32_t)mday << 16 |
+            (uint32_t)hour << 11 |
+            (uint32_t)min << 5 |
+            (uint32_t)(sec / 2) << 0);
 }
 
 #endif

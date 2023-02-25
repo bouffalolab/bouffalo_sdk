@@ -32,6 +32,11 @@ struct shell _shell;
 static struct shell *shell;
 static char *shell_prompt_custom = NULL;
 
+extern void shell_abort_exec(int sig);
+extern int shell_start_exec(cmd_function_t func, int argc, char *argv[]);
+extern void shell_dup_line(char *cmd, uint32_t length);
+static volatile shell_sig_func_ptr shell_sig_func;
+
 int shell_help(int argc, char **argv)
 {
     SHELL_DGB("shell commands list:\r\n");
@@ -514,7 +519,10 @@ static int shell_exec_cmd(char *cmd, uint32_t length, int *retp)
     }
 
     /* exec this command */
-    *retp = cmd_func(argc, argv);
+    shell_signal(SHELL_SIGINT, SHELL_SIG_DFL);
+    shell_dup_line(cmd, length);
+    *retp = shell_start_exec(cmd_func, argc, argv);
+    // *retp = cmd_func(argc, argv);
     return 0;
 }
 
@@ -626,6 +634,19 @@ void shell_handler(uint8_t data)
    * right key:0x1b 0x5b 0x43
    * left key: 0x1b 0x5b 0x44
    */
+
+    if (data == 0x03) {
+        /*!< ctrl + c */
+        if (shell_sig_func) {
+            shell_sig_func(SHELL_SIGINT);
+
+            if (shell_sig_func == shell_abort_exec) {
+                SHELL_PRINTF("^C");
+                data = '\r';
+            }
+        }
+    }
+
     if (data == 0x1b) {
         shell->stat = WAIT_SPEC_KEY;
         return;
@@ -864,4 +885,36 @@ void shell_init(void)
     shell_set_prompt(SHELL_DEFAULT_NAME);
     shell_set_print((void (*)(char *fmt, ...))printf);
     SHELL_PRINTF(shell_get_prompt());
+}
+
+shell_sig_func_ptr shell_signal(int sig, shell_sig_func_ptr func)
+{
+    shell_sig_func_ptr shell_sig_func_prev = shell_sig_func;
+
+    if (sig == SHELL_SIGINT) {
+        if (func == SHELL_SIG_DFL) {
+            shell_sig_func = shell_abort_exec;
+        } else if (func == SHELL_SIG_IGN) {
+            shell_sig_func = NULL;
+        } else {
+            shell_sig_func = func;
+        }
+        return shell_sig_func_prev;
+    }
+
+    return NULL;
+}
+
+__attribute__((weak)) void shell_abort_exec(int sig)
+{
+    (void)sig;
+}
+__attribute__((weak)) int shell_start_exec(cmd_function_t func, int argc, char *argv[])
+{
+    return func(argc, argv);
+}
+__attribute__((weak)) void shell_dup_line(char *cmd, uint32_t length)
+{
+    (void)cmd;
+    (void)length;
 }

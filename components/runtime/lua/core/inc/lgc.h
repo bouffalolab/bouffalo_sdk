@@ -66,21 +66,21 @@
 ** used for object "age" in generational mode. Last bit is used
 ** by tests.
 */
-#define WHITE0BIT    3 /* object is white (type 0) */
-#define WHITE1BIT    4 /* object is white (type 1) */
-#define BLACKBIT     5 /* object is black */
-#define FINALIZEDBIT 6 /* object has been marked for finalization */
+#define WHITE0BIT        3 /* object is white (type 0) */
+#define WHITE1BIT        4 /* object is white (type 1) */
+#define BLACKBIT         5 /* object is black */
+#define FINALIZEDBIT     6 /* object has been marked for finalization */
 
-#define TESTBIT 7
+#define TESTBIT          7
 
-#define WHITEBITS bit2mask(WHITE0BIT, WHITE1BIT)
+#define WHITEBITS        bit2mask(WHITE0BIT, WHITE1BIT)
 
-#define iswhite(x) testbits((x)->marked, WHITEBITS)
-#define isblack(x) testbit((x)->marked, BLACKBIT)
-#define isgray(x)  /* neither white nor black */ \
+#define iswhite(x)       testbits((x)->marked, WHITEBITS)
+#define isblack(x)       testbit((x)->marked, BLACKBIT)
+#define isgray(x)        /* neither white nor black */ \
     (!testbits((x)->marked, WHITEBITS | bitmask(BLACKBIT)))
 
-#define tofinalize(x) testbit((x)->marked, FINALIZEDBIT)
+#define tofinalize(x)  testbit((x)->marked, FINALIZEDBIT)
 
 #define otherwhite(g)  ((g)->currentwhite ^ WHITEBITS)
 #define isdeadm(ow, m) ((m) & (ow))
@@ -93,41 +93,41 @@
 #define luaC_white(g) cast_byte((g)->currentwhite &WHITEBITS)
 
 /* object age in generational mode */
-#define G_NEW      0 /* created in current cycle */
-#define G_SURVIVAL 1 /* created in previous cycle */
-#define G_OLD0     2 /* marked old by frw. barrier in this cycle */
-#define G_OLD1     3 /* first full cycle as old */
-#define G_OLD      4 /* really old object (not to be visited) */
-#define G_TOUCHED1 5 /* old object touched this cycle */
-#define G_TOUCHED2 6 /* old object touched in previous cycle */
+#define G_NEW         0 /* created in current cycle */
+#define G_SURVIVAL    1 /* created in previous cycle */
+#define G_OLD0        2 /* marked old by frw. barrier in this cycle */
+#define G_OLD1        3 /* first full cycle as old */
+#define G_OLD         4 /* really old object (not to be visited) */
+#define G_TOUCHED1    5 /* old object touched this cycle */
+#define G_TOUCHED2    6 /* old object touched in previous cycle */
 
-#define AGEBITS 7 /* all age bits (111) */
+#define AGEBITS       7 /* all age bits (111) */
 
-#define getage(o)    ((o)->marked & AGEBITS)
-#define setage(o, a) ((o)->marked = cast_byte(((o)->marked & (~AGEBITS)) | a))
-#define isold(o)     (getage(o) > G_SURVIVAL)
+#define getage(o)     ((o)->marked & AGEBITS)
+#define setage(o, a)  ((o)->marked = cast_byte(((o)->marked & (~AGEBITS)) | a))
+#define isold(o)      (getage(o) > G_SURVIVAL)
 
 #define changeage(o, f, t) \
     check_exp(getage(o) == (f), (o)->marked ^= ((f) ^ (t)))
 
 /* Default Values for GC parameters */
-#define LUAI_GENMAJORMUL 100
-#define LUAI_GENMINORMUL 20
+#define LUAI_GENMAJORMUL  100
+#define LUAI_GENMINORMUL  20
 
 /* wait memory to double before starting new cycle */
-#define LUAI_GCPAUSE 200
+#define LUAI_GCPAUSE      200
 
 /*
 ** some gc parameters are stored divided by 4 to allow a maximum value
 ** up to 1023 in a 'lu_byte'.
 */
-#define getgcparam(p)    ((p)*4)
-#define setgcparam(p, v) ((p) = (v) / 4)
+#define getgcparam(p)     ((p)*4)
+#define setgcparam(p, v)  ((p) = (v) / 4)
 
-#define LUAI_GCMUL 100
+#define LUAI_GCMUL        100
 
 /* how much to allocate before next GC step (log2) */
-#define LUAI_GCSTEPSIZE 13 /* 8 KB */
+#define LUAI_GCSTEPSIZE   13 /* 8 KB */
 
 /*
 ** Check whether the declared GC mode is generational. While in
@@ -139,10 +139,10 @@
 /*
 ** Control when GC is running:
 */
-#define GCSTPUSR     1 /* bit true when GC stopped by user */
-#define GCSTPGC      2 /* bit true when GC stopped by itself */
-#define GCSTPCLS     4 /* bit true when closing Lua state */
-#define gcrunning(g) ((g)->gcstp == 0)
+#define GCSTPUSR          1 /* bit true when GC stopped by user */
+#define GCSTPGC           2 /* bit true when GC stopped by itself */
+#define GCSTPCLS          4 /* bit true when closing Lua state */
+#define gcrunning(g)      ((g)->gcstp == 0)
 
 /*
 ** Does one step of collection when debt becomes positive. 'pre'/'pos'
@@ -161,7 +161,7 @@
     }
 
 /* more often than not, 'pre'/'pos' are empty */
-#define luaC_checkGC(L) luaC_condGC(L, (void)0, (void)0)
+#define luaC_checkGC(L)       luaC_condGC(L, (void)0, (void)0)
 
 #define luaC_barrier(L, p, v) (                               \
     (iscollectable(v) && isblack(p) && iswhite(gcvalue(v))) ? \

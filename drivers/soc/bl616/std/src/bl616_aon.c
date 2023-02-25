@@ -35,7 +35,8 @@
   */
 
 #include "bl616_aon.h"
-
+#include "bl616_ef_cfg.h"
+#include "bl616_ef_ctrl.h"
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -103,6 +104,7 @@
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_MBG(void)
 {
     uint32_t tmpVal = 0;
@@ -116,6 +118,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_MBG(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Power off Main band gap
@@ -125,6 +128,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_MBG(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_MBG(void)
 {
     uint32_t tmpVal = 0;
@@ -136,6 +140,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_MBG(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Power on XTAL
@@ -145,6 +150,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_MBG(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
 {
     uint32_t tmpVal = 0;
@@ -168,6 +174,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Set XTAL cap code
@@ -178,6 +185,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_On_XTAL(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_CLOCK_SECTION AON_Set_Xtal_CapCode(uint8_t capIn, uint8_t capOut)
 {
     uint32_t tmpVal = 0;
@@ -191,6 +199,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Set_Xtal_CapCode(uint8_t capIn, uint8_t capOu
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Get XTAL cap code
@@ -200,6 +209,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Set_Xtal_CapCode(uint8_t capIn, uint8_t capOu
  * @return Cap code
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 uint8_t ATTR_CLOCK_SECTION AON_Get_Xtal_CapCode(void)
 {
     uint32_t tmpVal = 0;
@@ -208,6 +218,7 @@ uint8_t ATTR_CLOCK_SECTION AON_Get_Xtal_CapCode(void)
 
     return BL_GET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON);
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Power off XTAL
@@ -217,6 +228,7 @@ uint8_t ATTR_CLOCK_SECTION AON_Get_Xtal_CapCode(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_XTAL(void)
 {
     uint32_t tmpVal = 0;
@@ -228,6 +240,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_XTAL(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Power on bandgap system
@@ -237,6 +250,7 @@ BL_Err_Type ATTR_CLOCK_SECTION AON_Power_Off_XTAL(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Power_On_BG(void)
 {
     uint32_t tmpVal = 0;
@@ -250,6 +264,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_On_BG(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Power off bandgap system
@@ -259,6 +274,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_On_BG(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_BG(void)
 {
     uint32_t tmpVal = 0;
@@ -272,6 +288,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_BG(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Power on LDO15_RF
@@ -281,6 +298,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_BG(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Power_On_LDO15_RF(void)
 {
     uint32_t tmpVal = 0;
@@ -294,6 +312,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_On_LDO15_RF(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Power off LDO15_RF
@@ -303,6 +322,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_On_LDO15_RF(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_LDO15_RF(void)
 {
     uint32_t tmpVal = 0;
@@ -314,6 +334,78 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_LDO15_RF(void)
 
     return SUCCESS;
 }
+#endif
+
+/****************************************************************************/ /**
+ * @brief  LDO15_RF Output Float
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_Float_LDO15_RF(void)
+{
+    uint32_t tmpVal=0;
+
+    /* ldo15rf pulldown select by aon */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_SEL_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    /* ldo15rf float output */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief   LDO15_RF Pulldown Output to Groud
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_Pulldown_LDO15_RF(void)
+{
+    uint32_t tmpVal=0;
+
+    /* ldo15rf pulldown select by aon */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_SEL_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    /* ldo15rf pulldown output to ground */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  LDO15_RF Output Pulldown Controlled by PD Signal
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_LDO15_RF_Ctrl_by_Pd(void)
+{
+    uint32_t tmpVal=0;
+
+    /* output ldo15rf pulldown select by pd signal */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_SEL_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    return SUCCESS;
+}
+
 
 /****************************************************************************/ /**
  * @brief  power on source follow regular
@@ -323,6 +415,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_LDO15_RF(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Power_On_SFReg(void)
 {
     uint32_t tmpVal = 0;
@@ -336,6 +429,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_On_SFReg(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  power off source follow regular
@@ -345,6 +439,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_On_SFReg(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_SFReg(void)
 {
     uint32_t tmpVal = 0;
@@ -356,6 +451,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_SFReg(void)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  power on mic bias
@@ -482,6 +578,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_LowPower_Exit_PDS0(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcDis(void)
 {
     Efuse_Ana_DcdcDis_Type trim;
@@ -499,6 +596,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcDis(void)
 
     return ERROR;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  trim DCDC vout sel
@@ -508,6 +606,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcDis(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcVoutSel(void)
 {
     Efuse_Ana_DcdcVoutSel_Type trim;
@@ -525,6 +624,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcVoutSel(void)
 
     return ERROR;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  trim DCDC vout trim
@@ -534,6 +634,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcVoutSel(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcVoutTrim(void)
 {
     Efuse_Ana_DcdcVoutTrim_Type trim;
@@ -551,6 +652,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcVoutTrim(void)
 
     return ERROR;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  trim LDO11SOC vout
@@ -560,6 +662,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_DcdcVoutTrim(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Trim_Ldo11socVoutTrim(void)
 {
     Efuse_Ana_Ldo11socVoutTrim_Type trim;
@@ -577,6 +680,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_Ldo11socVoutTrim(void)
 
     return ERROR;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  trim USB20 rcal code
@@ -586,6 +690,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_Ldo11socVoutTrim(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_TCM_SECTION AON_Trim_Usb20RcalCode(void)
 {
     Efuse_Ana_Usb20RcalCode_Type trim;
@@ -603,6 +708,7 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_Usb20RcalCode(void)
 
     return ERROR;
 }
+#endif
 
 /*@} end of group AON_Public_Functions */
 

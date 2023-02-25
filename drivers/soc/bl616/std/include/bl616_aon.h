@@ -86,6 +86,8 @@ BL_Err_Type AON_Power_Off_BG(void);
 /*----------*/
 BL_Err_Type AON_Power_On_LDO15_RF(void);
 BL_Err_Type AON_Power_Off_LDO15_RF(void);
+BL_Err_Type AON_Output_Float_LDO15_RF(void);
+BL_Err_Type AON_Output_Pulldown_LDO15_RF(void);
 /*----------*/
 BL_Err_Type AON_Power_On_SFReg(void);
 BL_Err_Type AON_Power_Off_SFReg(void);

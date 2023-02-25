@@ -232,6 +232,11 @@ void SDH_CMDTransferFinished_CallBack(SDH_Handle_Cfg_Type *handle, SDH_Stat_Type
     }
 }
 
+extern void SDH_MMC1_IRQHandler(void);
+static void sdh_isr(int irq, void *arg)
+{
+    SDH_MMC1_IRQHandler();
+}
 /****************************************************************************/ /**
  * @brief  SDH INT init
  *
@@ -242,6 +247,9 @@ void SDH_CMDTransferFinished_CallBack(SDH_Handle_Cfg_Type *handle, SDH_Stat_Type
 *******************************************************************************/
 static void SDH_INT_Init(void)
 {
+    bflb_irq_attach(33, sdh_isr, NULL);
+    bflb_irq_enable(33);
+
     SDH_EnableIntStatus(SDH_INT_ALL);
     SDH_DisableIntSource(SDH_INT_ALL);
     SDH_Trans_Callback_Cfg_TypeInstance.SDH_CallBack_TransferFinished = SDH_DataTransferFinished_CallBack;

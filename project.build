@@ -41,11 +41,11 @@ cmake_definition+= -DCONFIG_TLSF=$(CONFIG_TLSF)
 
 build:Makefile
 	$(CMAKE) -S . -B build -G $(cmake_generator) $(cmake_definition)
-	cd build && make -j8
+	cd build && make -j8 && make combine
 
 ninja:Makefile
 	$(CMAKE) -S . -B build -G Ninja $(cmake_definition)
-	cd build && ninja
+	cd build && ninja && ninja combine
 
 clean::
 	$(RM) build
@@ -54,7 +54,13 @@ menuconfig::
 	python $(BL_SDK_BASE)/tools/kconfig/menuconfig.py
 
 flash:
-	@echo "Support in next version, please use devcube now"
+	$(BL_FLASH_PROGRAM) \
+	--interface=uart \
+	--baudrate=$(BAUDRATE) \
+	--port=$(COMX) \
+	--chipname=$(CHIP) \
+	--cpu_id=$(CPU_ID) \
+	--config=flash_prog_cfg.ini
 
 efuse:
 	$(BL_FLASH_PROGRAM) \

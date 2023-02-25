@@ -130,7 +130,11 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .basic_cfg.dcache_invalid = 0x1, /* [30] dcache invalid */
     .basic_cfg.rsvd_3 = 0x0,         /* [31] rsvd_3 */
 
+#ifdef BFLB_BOOT2
+    .basic_cfg.group_image_offset = 0x00002000, /* flash controller offset */
+#else
     .basic_cfg.group_image_offset = 0x00001000, /* flash controller offset */
+#endif
     .basic_cfg.aes_region_len = 0x00000000,     /* aes region length */
 
     .basic_cfg.img_len_cnt = 0x00010000, /* image length or segment count */

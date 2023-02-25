@@ -23,6 +23,7 @@ HeapMinSize  = 0x1000; /*  4KB */
 PROVIDE(__boot2_pass_param_addr = 0x62057C00);/* 0x42030000+159*1024 */
 MEMORY
 {
+    fw_header_memory  (rx)  : ORIGIN = 0x58000000 - 0x2000, LENGTH = 8K
     xip_memory  (rx)  : ORIGIN = 0x58000000, LENGTH = 48K
     itcm_memory (rx)  : ORIGIN = 0x62020000, LENGTH = 48K
     dtcm_memory (rx)  : ORIGIN = 0x6202C000, LENGTH = 4K
@@ -32,6 +33,11 @@ MEMORY
 
 SECTIONS
 {
+
+    .fw_header :
+    {
+        KEEP(*(.fw_header))
+    } > fw_header_memory
 
     .text :
     {

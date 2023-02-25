@@ -25,6 +25,12 @@ static uint16_t console_output(void *ptr, uint16_t size)
 
 void log_start(void)
 {
+#if defined(CONFIG_NEWLIB) && CONFIG_NEWLIB
+    setvbuf(stdin, NULL, _IONBF, 0);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+#endif
+
 #ifdef CONFIG_BFLOG
     void *record = (void *)&__bflog_recorder;
     void *direct = (void *)&bflog_direct_stream;

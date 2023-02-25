@@ -132,6 +132,13 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval &= ~GPIP_GPADC_DMA_EN;
     putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
 
+    regval = getreg32(ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+    regval &= ~(GPIP_GPADC_FIFO_UNDERRUN_CLR |
+                GPIP_GPADC_FIFO_OVERRUN_CLR |
+                GPIP_GPADC_RDY_CLR |
+                GPIP_GPADC_FIFO_CLR);
+    putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+
     regval = getreg32(reg_base + AON_GPADC_REG_ISR_OFFSET);
     regval |= AON_GPADC_NEG_SATUR_MASK;
     regval |= AON_GPADC_POS_SATUR_MASK;

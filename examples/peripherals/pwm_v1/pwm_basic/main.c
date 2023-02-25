@@ -1,5 +1,6 @@
 #include "bflb_mtimer.h"
 #include "bflb_pwm_v1.h"
+#include "bflb_clock.h"
 #include "board.h"
 
 struct bflb_device_s *pwm;

@@ -25,46 +25,31 @@ typedef enum {
 } DRESULT;
 
 /******************user code****************************/
+
+/* Definitions of physical drive number for each drive
+   It must be in the same order as FF_VOLUME_STRS in ffconf.h */
+#define DEV_RAM     0 /* Example: Map Ramdisk to physical drive 0 */
+#define DEV_FLASH   1 /* Example: Map Flash to physical drive 1 */
+#define DEV_SD      2 /* Example: Map MMC/SD card to physical drive 2 */
+#define DEV_SD2     3
+#define DEV_USB     4
+#define DEV_NUM_MAX 5
+
 typedef struct
 {
-    /* get status */
-    int (*RAM_disk_status)(void);
-    int (*MMC_disk_status)(void);
-    int (*FLASH_disk_status)(void);
-    int (*USB_disk_status)(void);
-
-    /* init */
-    int (*RAM_disk_initialize)(void);
-    int (*MMC_disk_initialize)(void);
-    int (*FLASH_disk_initialize)(void);
-    int (*USB_disk_initialize)(void);
-
-    /* read */
-    int (*RAM_disk_read)(BYTE *buff, LBA_t sector, UINT count);
-    int (*MMC_disk_read)(BYTE *buff, LBA_t sector, UINT count);
-    int (*FLASH_disk_read)(BYTE *buff, LBA_t sector, UINT count);
-    int (*USB_disk_read)(BYTE *buff, LBA_t sector, UINT count);
-
-    /* write */
-    int (*RAM_disk_write)(const BYTE *buff, LBA_t sector, UINT count);
-    int (*MMC_disk_write)(const BYTE *buff, LBA_t sector, UINT count);
-    int (*FLASH_disk_write)(const BYTE *buff, LBA_t sector, UINT count);
-    int (*USB_disk_write)(const BYTE *buff, LBA_t sector, UINT count);
-
-    /* ioctl */
-    int (*RAM_disk_ioctl)(BYTE cmd, void *buff);
-    int (*MMC_disk_ioctl)(BYTE cmd, void *buff);
-    int (*FLASH_disk_ioctl)(BYTE cmd, void *buff);
-    int (*USB_disk_ioctl)(BYTE cmd, void *buff);
-
-    /* translate reslut code */
-    DSTATUS(*Translate_Result_Code)
+    int (*disk_status)(void);
+    int (*disk_initialize)(void);
+    int (*disk_read)(BYTE *buff, LBA_t sector, UINT count);
+    int (*disk_write)(const BYTE *buff, LBA_t sector, UINT count);
+    int (*disk_ioctl)(BYTE cmd, void *buff);
+    DSTATUS(*error_code_parsing)
     (int result);
+
 } FATFS_DiskioDriverTypeDef;
 
-extern FATFS_DiskioDriverTypeDef pDiskioDriver;
+extern FATFS_DiskioDriverTypeDef pDiskioDriver[];
 
-void disk_driver_callback_init(FATFS_DiskioDriverTypeDef *pNewDriver);
+void disk_driver_callback_init(uint8_t pdrv, FATFS_DiskioDriverTypeDef *pNewDriver);
 /******************user code****************************/
 
 /*---------------------------------------*/

@@ -274,6 +274,8 @@ pmp_status_type_e rvpmp_fill_entry(const pmp_config_entry_t *entry, uintptr_t i,
     am = entry->entry_flag & ENTRY_FLAG_ADDR_MASK;
 
     switch (am) {
+        case ENTRY_FLAG_ADDR_OFF:
+            break;
         case ENTRY_FLAG_ADDR_TOR:
             pa >>= 2;
             break;

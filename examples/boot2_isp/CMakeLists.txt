@@ -15,7 +15,6 @@ target_sources(app PRIVATE
 				blsp_port.c 
 				blsp_ram_image_boot.c 
 				partition.c
-				softcrc.c
 				${CMAKE_SOURCE_DIR}/port/${CHIP}/bflb_port_boot2.c
 				)
 				
@@ -37,6 +36,8 @@ if("${CONFIG_DEBUG}" STREQUAL "y")
 sdk_add_compile_definitions(-DCONFIG_DEBUG)
 endif()
 sdk_add_compile_definitions(-DBFLB_BOOT2_VER="${CONFIG_BOOT2_VER}")
+sdk_add_compile_definitions(-DBFLB_BOOT2)
+sdk_add_compile_definitions(-DCONFIG_TRAP_DUMP_DISABLE)
 message(${CONFIG_BOOT2_VER})
 
 if((${CHIP} STREQUAL "bl602")) 
@@ -49,10 +50,12 @@ endif()
 
 if((${CHIP} STREQUAL "bl808")) 
     sdk_add_compile_definitions(-DCHIP_BL808)
+	sdk_add_compile_definitions(-DCONFIG_SUPPORT_UART_CLOCK_GET_ONLY)	
 endif()
 
 if((${CHIP} STREQUAL "bl606p")) 
     sdk_add_compile_definitions(-DCHIP_BL606P)
+	sdk_add_compile_definitions(-DCONFIG_SUPPORT_UART_CLOCK_GET_ONLY)
 endif()
 
 if((${CHIP} STREQUAL "bl616")) 

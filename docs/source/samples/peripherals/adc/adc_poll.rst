@@ -18,7 +18,7 @@ ADC - poll
 
     board_init();
 
-- ``board_init`` 中会开启 ADC IP 时钟，并选择 ADC 时钟源和分频。
+- ``board_init`` 中会开启 ADC IP 时钟，并选择 ADC 时钟源和分频(ADC 时钟必须小于等于 500K)。
 
 .. code-block:: C
     :linenos:
@@ -83,13 +83,8 @@ ADC - poll
 编译和烧录
 -----------------------------
 
--  **命令行编译**
-
 参考 :ref:`linux_cmd` 或者 :ref:`windows_cmd`
-
--  **烧录**
-
-参考 :ref:`bl_dev_cube`
 
 实验现象
 -----------------------------
+打印 raw data，通道号以及通道对应的电压值。

@@ -25,38 +25,35 @@
 
 #if defined(LCD_SPI_ST7796)
 
-#include "bflb_mtimer.h"
-#include "bflb_spi.h"
-#include "bflb_dma.h"
-#include "bflb_gpio.h"
-#include "bflb_l1c.h"
-#include "st7796_spi.h"
+#if (LCD_SPI_INTERFACE_TYPE == 1)
+#include "bl_spi_hard_4.h"
 
-#if (defined(BL808) || defined(BL606P)) && defined(CPU_D0)
-#define ST7796_SPI_ID       1
-#define ST7796_SPI_NAME     "spi1"
-#define ST7796_SPI_DMA_NAME "dma2_ch0"
-#else
-#define ST7796_SPI_ID       0
-#define ST7796_SPI_NAME     "spi0"
-#define ST7796_SPI_DMA_NAME "dma0_ch3"
+#define lcd_spi_init                          lcd_spi_hard_4_init
+#define lcd_spi_isbusy                        lcd_spi_hard_4_is_busy
+
+#define lcd_spi_transmit_cmd_para             lcd_spi_hard_4_transmit_cmd_para
+#define lcd_spi_transmit_cmd_pixel_sync       lcd_spi_hard_4_transmit_cmd_pixel_sync
+#define lcd_spi_transmit_cmd_pixel_fill_sync  lcd_spi_hard_4_transmit_cmd_pixel_fill_sync
+
+#define lcd_spi_sync_callback_enable          lcd_spi_hard_4_async_callback_enable
+#define lcd_spi_async_callback_register       lcd_spi_hard_4_async_callback_register
+#define lcd_spi_transmit_cmd_pixel_async      lcd_spi_hard_4_transmit_cmd_pixel_async
+#define lcd_spi_transmit_cmd_pixel_fill_async lcd_spi_hard_4_transmit_cmd_pixel_fill_async
+
+static lcd_spi_hard_4_init_t spi_para = {
+    .clock_freq = 40 * 1000 * 1000,
+#if (ST7796_SPI_PIXEL_FORMAT == 1)
+    .pixel_format = LCD_SPI_LCD_PIXEL_FORMAT_RGB565,
+#elif (ST7796_SPI_PIXEL_FORMAT == 2)
+    .pixel_format = LCD_SPI_LCD_PIXEL_FORMAT_NRGB8888,
 #endif
+};
 
-#define ST7796_DMA_LLI_NUM (ST7796_SPI_W * ST7796_SPI_H / 4064 + 1)
+#else
 
-/* asynchronous flush interrupt callback */
-typedef void (*st7796_spi_callback)(void);
-static volatile st7796_spi_callback st7796_spi_async_callback = NULL;
-static volatile bool st7796_spi_sync_flush_flag = 0;
+#error "Configuration error"
 
-static struct bflb_device_s *st7796_gpio;
-static struct bflb_device_s *st7796_spi;
-static struct bflb_device_s *st7796_dma_spi_tx;
-
-/* The memory space of DMA */
-static struct bflb_dma_channel_lli_pool_s dam_tx_llipool[ST7796_DMA_LLI_NUM];
-static struct bflb_dma_channel_lli_transfer_s dma_tx_transfers[1];
-
+#endif
 const st7796_spi_init_cmd_t st7796_spi_init_cmds[] = {
     { 0x01, NULL, 0 },
     { 0xFF, NULL, 10 },
@@ -72,8 +69,8 @@ const st7796_spi_init_cmd_t st7796_spi_init_cmds[] = {
     { 0xE6, "\x0F\xF2\x3F\x4F\x4F\x28\x0E\x00", 8 },
     { 0xC5, "\x2A", 1 },
 
-/* Display Inversion */
-#if 0
+/* Color reversal */
+#if ST7796_SPI_COLOR_REVERSAL
     { 0xB4, "\x01", 1 },
     { 0x21, NULL, 0 },
 #endif
@@ -89,23 +86,13 @@ const st7796_spi_init_cmd_t st7796_spi_init_cmds[] = {
 };
 
 /**
- * @brief st7796_spi_dma_flush_callback
+ * @brief st7796_spi_async_callback_enable
  *
  * @return
  */
-void st7796_spi_dma_flush_callback(void *args)
+void st7796_spi_async_callback_enable(bool enable)
 {
-    if (st7796_spi_sync_flush_flag == true) {
-        st7796_spi_sync_flush_flag = false;
-        return;
-    }
-
-    while (lcd_draw_is_busy()) {
-    };
-
-    if (st7796_spi_async_callback != NULL) {
-        st7796_spi_async_callback();
-    }
+    lcd_spi_sync_callback_enable(enable);
 }
 
 /**
@@ -115,123 +102,7 @@ void st7796_spi_dma_flush_callback(void *args)
  */
 void st7796_spi_async_callback_register(void (*callback)(void))
 {
-    st7796_spi_async_callback = callback;
-}
-
-/**
- * @brief st7796_spi_init
- *
- * @return int  0:succes  1:error
- */
-static int st7796_spi_peripheral_init(void)
-{
-    /* spi */
-    struct bflb_spi_config_s spi_cfg = {
-        .freq = 40 * 1000 * 1000,
-        .role = SPI_ROLE_MASTER,
-        .mode = SPI_MODE3,
-        .data_width = SPI_DATA_WIDTH_8BIT,
-        .bit_order = SPI_BIT_MSB,
-        .byte_order = SPI_BYTE_LSB,
-        .tx_fifo_threshold = 0,
-        .rx_fifo_threshold = 0,
-    };
-
-    /* dma */
-    struct bflb_dma_channel_config_s dma_spi_tx_cfg = {
-        .direction = DMA_MEMORY_TO_PERIPH,
-        .src_req = DMA_REQUEST_NONE,
-        .dst_req = DMA_REQUEST_SPI0_TX,
-        .src_addr_inc = DMA_ADDR_INCREMENT_ENABLE,
-        .dst_addr_inc = DMA_ADDR_INCREMENT_DISABLE,
-        .src_burst_count = DMA_BURST_INCR1,
-        .dst_burst_count = DMA_BURST_INCR1,
-        .src_width = DMA_DATA_WIDTH_16BIT,
-        .dst_width = DMA_DATA_WIDTH_16BIT,
-    };
-
-    /* CS and DC pin init */
-    st7796_gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_init(st7796_gpio, ST7796_SPI_CS_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_init(st7796_gpio, ST7796_SPI_DC_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    ST7796_SPI_CS_HIGH;
-    ST7796_SPI_DC_HIGH;
-
-#if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT) && (SPI_FIFO_BYTE_NUM_MAX > (2 * 4))
-    /* SPI support burst*4 */
-    spi_cfg.tx_fifo_threshold = 2 * 4 - 1;
-    spi_cfg.rx_fifo_threshold = 2 * 4 - 1;
-#elif (!SPI_FIFO_WIDTH_VARIABLE_SUPPORT) && (SPI_FIFO_WORD_NUM_MAX > 4)
-    /* SPI support burst*4 */
-    spi_cfg.tx_fifo_threshold = 4 - 1;
-    spi_cfg.rx_fifo_threshold = 4 - 1;
-#endif
-
-#if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT)
-    spi_cfg.byte_order = SPI_BYTE_MSB;
-#endif
-
-    /* spi init */
-    st7796_spi = bflb_device_get_by_name(ST7796_SPI_NAME);
-    bflb_spi_init(st7796_spi, &spi_cfg);
-
-    /* spi enabled continuous mode */
-    bflb_spi_feature_control(st7796_spi, SPI_CMD_SET_CS_INTERVAL, true);
-
-#if (ST7796_SPI_ID == 0)
-    dma_spi_tx_cfg.dst_req = DMA_REQUEST_SPI0_TX;
-#elif (ST7796_SPI_ID == 1)
-    dma_spi_tx_cfg.dst_req = DMA_REQUEST_SPI1_TX;
-#endif
-
-#if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT) && (SPI_FIFO_BYTE_NUM_MAX > (2 * 4))
-    /* DMA support burst*4 */
-    dma_spi_tx_cfg.src_burst_count = DMA_BURST_INCR4;
-    dma_spi_tx_cfg.dst_burst_count = DMA_BURST_INCR4;
-#elif (!SPI_FIFO_WIDTH_VARIABLE_SUPPORT) && (SPI_FIFO_WORD_NUM_MAX > 4)
-    /* DMA support burst*4 */
-    dma_spi_tx_cfg.src_burst_count = DMA_BURST_INCR4;
-    dma_spi_tx_cfg.dst_burst_count = DMA_BURST_INCR4;
-#endif
-
-    /* dma init */
-    st7796_dma_spi_tx = bflb_device_get_by_name(ST7796_SPI_DMA_NAME);
-    bflb_dma_channel_init(st7796_dma_spi_tx, &dma_spi_tx_cfg);
-
-    /* dma int cfg */
-    bflb_dma_channel_irq_attach(st7796_dma_spi_tx, st7796_spi_dma_flush_callback, NULL);
-
-    return 0;
-}
-
-/**
- * @brief st7796_spi_write_cmd
- *
- * @param cmd
- * @return int 0:succes  1:error
- */
-static int st7796_spi_write_cmd(uint8_t cmd)
-{
-    ST7796_SPI_DC_LOW;
-    ST7796_SPI_CS_LOW;
-    bflb_spi_poll_send(st7796_spi, cmd);
-    ST7796_SPI_CS_HIGH;
-    ST7796_SPI_DC_HIGH;
-    return 0;
-}
-
-/**
- * @brief st7796_spi_write_data_byte
- *
- * @param data
- * @return int 0:succes  1:error
- */
-static int st7796_spi_write_data_byte(uint8_t data)
-{
-    ST7796_SPI_CS_LOW;
-    bflb_spi_poll_send(st7796_spi, data);
-    ST7796_SPI_CS_HIGH;
-    return 0;
+    lcd_spi_async_callback_register(callback);
 }
 
 /**
@@ -243,23 +114,7 @@ static int st7796_spi_write_data_byte(uint8_t data)
  */
 int st7796_spi_draw_is_busy(void)
 {
-    if (bflb_dma_channel_isbusy(st7796_dma_spi_tx)) {
-        return 1;
-    } else {
-        /* Wait for the SPI bus to be idle */
-        while (bflb_spi_isbusy(st7796_spi)) {
-            __ASM volatile("nop");
-        };
-        /* Switch the SPI to non-DMA mode */
-        bflb_spi_link_txdma(st7796_spi, false);
-        /* clear rx fifo */
-        bflb_spi_feature_control(st7796_spi, SPI_CMD_CLEAR_RX_FIFO, 0);
-        /*  */
-        ST7796_SPI_CS_HIGH;
-        /* 8-bit data */
-        bflb_spi_feature_control(st7796_spi, SPI_CMD_SET_DATA_WIDTH, SPI_DATA_WIDTH_8BIT);
-        return 0;
-    }
+    return lcd_spi_isbusy();
 }
 
 /**
@@ -269,47 +124,18 @@ int st7796_spi_draw_is_busy(void)
  */
 int st7796_spi_init()
 {
-    int res = st7796_spi_peripheral_init();
-    if (res < 0) {
-        return res;
-    }
+    lcd_spi_init(&spi_para);
 
-    for (uint16_t i = 0; i < (sizeof(st7796_spi_init_cmds) / sizeof(st7796_spi_init_cmd_t)); i++) {
-        if (st7796_spi_init_cmds[i].cmd == 0xFF && st7796_spi_init_cmds[i].data == NULL) {
+    for (uint16_t i = 0; i < (sizeof(st7796_spi_init_cmds) / sizeof(st7796_spi_init_cmds[0])); i++) {
+        if (st7796_spi_init_cmds[i].cmd == 0xFF && st7796_spi_init_cmds[i].data == NULL && st7796_spi_init_cmds[i].databytes) {
             bflb_mtimer_delay_ms(st7796_spi_init_cmds[i].databytes);
         } else {
-            /* send register address */
-            st7796_spi_write_cmd(st7796_spi_init_cmds[i].cmd);
-
-            /* send register data */
-            for (uint8_t j = 0; j < (st7796_spi_init_cmds[i].databytes); j++) {
-                st7796_spi_write_data_byte(st7796_spi_init_cmds[i].data[j]);
-            }
+            lcd_spi_transmit_cmd_para(st7796_spi_init_cmds[i].cmd, (void *)(st7796_spi_init_cmds[i].data), st7796_spi_init_cmds[i].databytes);
         }
     }
-    st7796_spi_set_draw_window(0, 0, ST7796_SPI_H, ST7796_SPI_W);
-    return res;
-}
 
-#if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT == 0)
-
-/**
- * @brief lcd_swap_color_data16
- *
- * @param dst destination
- * @param src source
- * @param color_num color num
- * @return int
- */
-static int lcd_swap_color_data16(uint16_t *dst, uint16_t *src, uint32_t color_num)
-{
-    for (size_t i = 0; i < color_num; i++) {
-        dst[i] = (src[i] << 8) | (src[i] >> 8);
-    }
     return 0;
 }
-
-#endif
 
 /**
  * @brief
@@ -320,6 +146,7 @@ static int lcd_swap_color_data16(uint16_t *dst, uint16_t *src, uint32_t color_nu
 int st7796_spi_set_dir(uint8_t dir, uint8_t mir_flag)
 {
     uint8_t param;
+
     switch (dir) {
         case 0:
             if (!mir_flag)
@@ -350,8 +177,9 @@ int st7796_spi_set_dir(uint8_t dir, uint8_t mir_flag)
             return -1;
             break;
     }
-    st7796_spi_write_cmd(0x36);
-    st7796_spi_write_data_byte(param);
+
+    lcd_spi_transmit_cmd_para(0x36, (void *)&param, 1);
+
     return dir;
 }
 
@@ -363,7 +191,7 @@ int st7796_spi_set_dir(uint8_t dir, uint8_t mir_flag)
  * @param x2
  * @param y2
  */
-void st7796_spi_set_draw_window(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2)
+void st7796_spi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
 #if ST7796_SPI_OFFSET_X
     x1 += ST7796_SPI_OFFSET_X;
@@ -374,19 +202,21 @@ void st7796_spi_set_draw_window(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t 
     y2 += ST7796_SPI_OFFSET_Y;
 #endif
 
-    st7796_spi_write_cmd(0x2a);
-    st7796_spi_write_data_byte(x1 >> 8);
-    st7796_spi_write_data_byte(x1);
-    st7796_spi_write_data_byte(x2 >> 8);
-    st7796_spi_write_data_byte(x2);
+    int8_t param[4];
 
-    st7796_spi_write_cmd(0x2b);
-    st7796_spi_write_data_byte(y1 >> 8);
-    st7796_spi_write_data_byte(y1);
-    st7796_spi_write_data_byte(y2 >> 8);
-    st7796_spi_write_data_byte(y2);
+    param[0] = (x1 >> 8) & 0xFF;
+    param[1] = x1 & 0xFF;
+    param[2] = (x2 >> 8) & 0xFF;
+    param[3] = x2 & 0xFF;
 
-    st7796_spi_write_cmd(0x2c);
+    lcd_spi_transmit_cmd_para(0x2A, (void *)param, 4);
+
+    param[0] = (y1 >> 8) & 0xFF;
+    param[1] = y1 & 0xFF;
+    param[2] = (y2 >> 8) & 0xFF;
+    param[3] = y2 & 0xFF;
+
+    lcd_spi_transmit_cmd_para(0x2B, (void *)param, 4);
 }
 
 /**
@@ -398,16 +228,10 @@ void st7796_spi_set_draw_window(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t 
  */
 void st7796_spi_draw_point(uint16_t x, uint16_t y, st7796_spi_color_t color)
 {
-#if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT == 0)
-    color = ((color >> 8) & 0xFF) | color << 8;
-#endif
-
+    /* set window */
     st7796_spi_set_draw_window(x, y, x, y);
-    ST7796_SPI_DC_HIGH;
-    ST7796_SPI_CS_LOW;
-    bflb_spi_poll_send(st7796_spi, color & 0x00ff);
-    bflb_spi_poll_send(st7796_spi, (color >> 8) & 0x00ff);
-    ST7796_SPI_CS_HIGH;
+
+    lcd_spi_transmit_cmd_pixel_sync(0x2C, (void *)&color, 1);
 }
 
 /**
@@ -421,57 +245,12 @@ void st7796_spi_draw_point(uint16_t x, uint16_t y, st7796_spi_color_t color)
  */
 void st7796_spi_draw_area(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7796_spi_color_t color)
 {
-    uint32_t pixelDataSize, PixelCount = (x2 - x1 + 1) * (y2 - y1 + 1);
-    uint32_t __attribute__((aligned(64))) color_src;
-
-#if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT)
-    color_src = color;
-#else
-    color_src = ((color >> 8) & 0xFF) | color << 8;
-#endif
-
-    /* clean cache */
-    bflb_l1c_dcache_clean_range((void *)&color_src, sizeof(color_src));
+    uint32_t pixel_cnt = (x2 - x1 + 1) * (y2 - y1 + 1);
 
     /* set window */
     st7796_spi_set_draw_window(x1, y1, x2, y2);
 
-    /* get pixel Data Size */
-    pixelDataSize = PixelCount * 2;
-
-    /* spi 16-bit mode */
-    bflb_spi_feature_control(st7796_spi, SPI_CMD_SET_DATA_WIDTH, SPI_DATA_WIDTH_16BIT);
-
-    /* enable spi dma mode */
-    bflb_spi_link_txdma(st7796_spi, true);
-
-    ST7796_SPI_CS_LOW;
-
-    /* sync mode flag, temporary shutdown interrupt */
-    st7796_spi_sync_flush_flag = true;
-
-    /* disable dma src_addr_inc */
-    bflb_dma_feature_control(st7796_dma_spi_tx, DMA_CMD_SET_SRCADDR_INCREMENT, false);
-
-    /* cfg and start dma */
-    dma_tx_transfers[0].src_addr = (uint32_t)(uintptr_t)&color_src;
-#if (defined(BL808) || defined(BL606P)) && defined(CPU_D0)
-    dma_tx_transfers[0].dst_addr = (uint32_t)DMA_ADDR_SPI1_TDR;
-#else
-    dma_tx_transfers[0].dst_addr = (uint32_t)DMA_ADDR_SPI0_TDR;
-#endif
-    dma_tx_transfers[0].nbytes = pixelDataSize;
-
-    bflb_dma_channel_lli_reload(st7796_dma_spi_tx, dam_tx_llipool, ST7796_DMA_LLI_NUM, dma_tx_transfers, 1);
-    bflb_dma_channel_start(st7796_dma_spi_tx);
-
-    /* Wait to finish, and cs high */
-    while (st7796_spi_draw_is_busy()) {
-        __ASM volatile("nop");
-    };
-
-    /* enable src_addr_inc */
-    bflb_dma_feature_control(st7796_dma_spi_tx, DMA_CMD_SET_SRCADDR_INCREMENT, true);
+    lcd_spi_transmit_cmd_pixel_fill_sync(0x2C, (uint32_t)color, pixel_cnt);
 }
 
 /**
@@ -486,31 +265,12 @@ void st7796_spi_draw_area(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st
  */
 void st7796_spi_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7796_spi_color_t *picture)
 {
-    size_t picture_size = (x2 - x1 + 1) * (y2 - y1 + 1);
+    size_t pixel_cnt = (x2 - x1 + 1) * (y2 - y1 + 1);
 
+    /* set window */
     st7796_spi_set_draw_window(x1, y1, x2, y2);
 
-#if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT == 0)
-    lcd_swap_color_data16(picture, picture, picture_size);
-#endif
-
-    /* clean dcache */
-    bflb_l1c_dcache_clean_range((void *)(picture), (picture_size * 2));
-
-    /* spi 16-bit data mode */
-    bflb_spi_feature_control(st7796_spi, SPI_CMD_SET_DATA_WIDTH, SPI_DATA_WIDTH_16BIT);
-
-    /* spi dma mode enable */
-    bflb_spi_link_txdma(st7796_spi, true);
-
-    ST7796_SPI_CS_LOW;
-
-    /* dma cfg and start */
-    dma_tx_transfers[0].src_addr = (uint32_t)(uintptr_t)picture;
-    dma_tx_transfers[0].dst_addr = (uint32_t)DMA_ADDR_SPI0_TDR;
-    dma_tx_transfers[0].nbytes = picture_size * 2;
-    bflb_dma_channel_lli_reload(st7796_dma_spi_tx, dam_tx_llipool, sizeof(dam_tx_llipool) / sizeof(dam_tx_llipool[0]), dma_tx_transfers, 1);
-    bflb_dma_channel_start(st7796_dma_spi_tx);
+    lcd_spi_transmit_cmd_pixel_async(0x2C, (void *)picture, pixel_cnt);
 }
 
 /**
@@ -524,13 +284,12 @@ void st7796_spi_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2, 
  */
 void st7796_spi_draw_picture_blocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7796_spi_color_t *picture)
 {
-    /* sync mode, temporary shutdown interrupt */
-    st7796_spi_sync_flush_flag = true;
+    size_t pixel_cnt = (x2 - x1 + 1) * (y2 - y1 + 1);
 
-    st7796_spi_draw_picture_nonblocking(x1, y1, x2, y2, picture);
-    while (st7796_spi_draw_is_busy()) {
-        __ASM volatile("nop");
-    };
+    /* set window */
+    st7796_spi_set_draw_window(x1, y1, x2, y2);
+
+    lcd_spi_transmit_cmd_pixel_sync(0x2C, (void *)picture, pixel_cnt);
 }
 
 #endif

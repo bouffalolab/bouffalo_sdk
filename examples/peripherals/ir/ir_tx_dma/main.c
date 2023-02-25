@@ -18,6 +18,7 @@ void dma0_ch0_isr(void *arg)
 /* main */
 int main(void)
 {
+#ifdef IR_TX_NEC
     uint32_t i;
     struct bflb_dma_channel_lli_pool_s tx_llipool[1];
     struct bflb_dma_channel_lli_transfer_s tx_transfers[1];
@@ -97,7 +98,7 @@ int main(void)
     printf("Check wave\r\n");
 
     printf("end\r\n");
-
+#endif
     while (1) {
     }
 }

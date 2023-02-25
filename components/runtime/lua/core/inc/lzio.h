@@ -25,9 +25,9 @@ typedef struct Mbuffer {
 
 #define luaZ_initbuffer(L, buff) ((buff)->buffer = NULL, (buff)->buffsize = 0)
 
-#define luaZ_buffer(buff)     ((buff)->buffer)
-#define luaZ_sizebuffer(buff) ((buff)->buffsize)
-#define luaZ_bufflen(buff)    ((buff)->n)
+#define luaZ_buffer(buff)        ((buff)->buffer)
+#define luaZ_sizebuffer(buff)    ((buff)->buffsize)
+#define luaZ_bufflen(buff)       ((buff)->n)
 
 #define luaZ_buffremove(buff, i) ((buff)->n -= (i))
 #define luaZ_resetbuffer(buff)   ((buff)->n = 0)

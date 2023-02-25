@@ -24,21 +24,11 @@
 #ifndef _ST7789V_SPI_H_
 #define _ST7789V_SPI_H_
 
-#include "bflb_core.h"
+#include "../lcd_conf.h"
 
-#define ST7789V_SPI_CS_PIN GPIO_PIN_12
-#define ST7789V_SPI_DC_PIN GPIO_PIN_13
+#if defined LCD_SPI_ST7789V
 
-#define ST7789V_SPI_CS_HIGH bflb_gpio_set(st7789v_gpio, ST7789V_SPI_CS_PIN)
-#define ST7789V_SPI_CS_LOW  bflb_gpio_reset(st7789v_gpio, ST7789V_SPI_CS_PIN)
-#define ST7789V_SPI_DC_HIGH bflb_gpio_set(st7789v_gpio, ST7789V_SPI_DC_PIN)
-#define ST7789V_SPI_DC_LOW  bflb_gpio_reset(st7789v_gpio, ST7789V_SPI_DC_PIN)
-
-#define ST7789V_SPI_W 240 /* ST7789V LCD width */
-#define ST7789V_SPI_H 280 /* ST7789V LCD height */
-
-#define ST7789V_SPI_OFFSET_X 0
-#define ST7789V_SPI_OFFSET_Y 20
+/* Do not modify the following */
 
 #define ST7789V_SPI_COLOR_DEPTH 16
 
@@ -51,13 +41,15 @@ typedef struct {
 typedef uint16_t st7789v_spi_color_t;
 
 int st7789v_spi_init();
+void st7789v_spi_async_callback_enable(bool enable);
 void st7789v_spi_async_callback_register(void (*callback)(void));
 int st7789v_spi_set_dir(uint8_t dir, uint8_t mir_flag);
-void st7789v_spi_set_draw_window(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2);
+void st7789v_spi_set_draw_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 void st7789v_spi_draw_point(uint16_t x, uint16_t y, st7789v_spi_color_t color);
 void st7789v_spi_draw_area(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7789v_spi_color_t color);
 void st7789v_spi_draw_picture_nonblocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7789v_spi_color_t *picture);
 void st7789v_spi_draw_picture_blocking(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, st7789v_spi_color_t *picture);
 int st7789v_spi_draw_is_busy(void);
 
+#endif
 #endif

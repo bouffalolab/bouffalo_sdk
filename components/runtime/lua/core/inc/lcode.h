@@ -52,7 +52,7 @@ typedef enum BinOpr {
 } BinOpr;
 
 /* true if operation is foldable (that is, it is arithmetic or bitwise) */
-#define foldbinop(op) ((op) <= OPR_SHR)
+#define foldbinop(op)                ((op) <= OPR_SHR)
 
 #define luaK_codeABC(fs, o, a, b, c) luaK_codeABCk(fs, o, a, b, c, 0)
 
@@ -63,11 +63,11 @@ typedef enum UnOpr { OPR_MINUS,
                      OPR_NOUNOPR } UnOpr;
 
 /* get (pointer to) instruction of given 'expdesc' */
-#define getinstruction(fs, e) ((fs)->f->code[(e)->u.info])
+#define getinstruction(fs, e)  ((fs)->f->code[(e)->u.info])
 
 #define luaK_setmultret(fs, e) luaK_setreturns(fs, e, LUA_MULTRET)
 
-#define luaK_jumpto(fs, t) luaK_patchlist(fs, luaK_jump(fs), t)
+#define luaK_jumpto(fs, t)     luaK_patchlist(fs, luaK_jump(fs), t)
 
 LUAI_FUNC int luaK_code(FuncState *fs, Instruction i);
 LUAI_FUNC int luaK_codeABx(FuncState *fs, OpCode o, int A, unsigned int Bx);

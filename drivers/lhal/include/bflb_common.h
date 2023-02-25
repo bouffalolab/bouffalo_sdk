@@ -81,6 +81,24 @@ void arch_delay_us(uint32_t cnt);
  */
 void arch_delay_ms(uint32_t cnt);
 
+/**
+ * @brief
+ * 
+ * @param [in] in
+ * @param [in] len
+ * @return [in] uint16_t
+ */
+uint16_t bflb_soft_crc16(void *in, uint32_t len);
+
+/**
+ * @brief
+ *
+ * @param [in] in
+ * @param [in] len
+ * @return [in] uint32_t
+ */
+uint32_t bflb_soft_crc32(void *in, uint32_t len);
+
 #ifdef __cplusplus
 }
 #endif

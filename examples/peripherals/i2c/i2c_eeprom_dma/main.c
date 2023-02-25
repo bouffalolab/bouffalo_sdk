@@ -87,7 +87,7 @@ int main(void)
 
     while (dma_tc_flag0 == 0) {
     }
-    while ((bflb_i2c_get_intstatus(i2c0) & I2C_INT_END) == 0) {
+    while ((bflb_i2c_get_intstatus(i2c0) & I2C_INTSTS_END) == 0) {
     }
     bflb_i2c_deinit(i2c0);
 
@@ -130,7 +130,7 @@ int main(void)
 
     while (dma_tc_flag1 == 0) {
     }
-    while ((bflb_i2c_get_intstatus(i2c0) & I2C_INT_END) == 0) {
+    while ((bflb_i2c_get_intstatus(i2c0) & I2C_INTSTS_END) == 0) {
     }
     bflb_i2c_deinit(i2c0);
 

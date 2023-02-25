@@ -81,6 +81,14 @@ void bflb_wdg_stop(struct bflb_device_s *dev);
 uint16_t bflb_wdg_get_countervalue(struct bflb_device_s *dev);
 
 /**
+ * @brief Set watchdog counter value.
+ *
+ * @param [in] dev device handle
+ * @param [in] counter value
+ */
+void bflb_wdg_set_countervalue(struct bflb_device_s *dev, uint16_t value);
+
+/**
  * @brief Reset watchdog counter value.
  *
  * @param [in] dev device handle

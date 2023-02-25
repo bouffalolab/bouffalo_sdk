@@ -280,6 +280,73 @@ void bflb_mjpeg_sw_run(struct bflb_device_s *dev, uint8_t frame_count)
     putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
 }
 
+void bflb_mjpeg_kick_run(struct bflb_device_s *dev, uint16_t kick_count)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval |= MJPEG_REG_SW_KICK_MODE;
+    regval &= ~MJPEG_REG_SW_FRAME_MASK;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval |= MJPEG_REG_MJPEG_SW_MODE;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval &= ~MJPEG_REG_MJPEG_SW_MODE;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+
+    regval = getreg32(reg_base + MJPEG_YUV_MEM_SW_OFFSET);
+    regval &= ~MJPEG_REG_SW_KICK_HBLK_MASK;
+    regval |= (kick_count << MJPEG_REG_SW_KICK_HBLK_SHIFT);
+    putreg32(regval, reg_base + MJPEG_YUV_MEM_SW_OFFSET);
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval |= MJPEG_REG_MJPEG_SW_RUN;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval &= ~MJPEG_REG_MJPEG_SW_RUN;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+}
+
+void bflb_mjpeg_kick_stop(struct bflb_device_s *dev)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval &= ~MJPEG_REG_SW_KICK_MODE;
+    regval &= ~MJPEG_REG_SW_FRAME_MASK;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval |= MJPEG_REG_MJPEG_SW_MODE;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval &= ~MJPEG_REG_MJPEG_SW_MODE;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+}
+
+void bflb_mjpeg_kick(struct bflb_device_s *dev)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
+    regval |= MJPEG_REG_SW_KICK;
+    putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+}
+
 void bflb_mjpeg_tcint_mask(struct bflb_device_s *dev, bool mask)
 {
     uint32_t regval;
