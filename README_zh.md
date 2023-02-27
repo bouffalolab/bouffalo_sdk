@@ -133,7 +133,7 @@ make flash CHIP=chip_name CPU_ID=m0 COMX=xxx # chip_name should be bl602/bl702/b
 
 # 芯片手册
 
-芯片数据手册和参考手册见 [文档](https://dev.bouffalolab.com/document)。
+芯片数据手册和参考手册见 [文档](https://github.com/bouffalolab/bl_docs)。
 
 # 文档教程
 

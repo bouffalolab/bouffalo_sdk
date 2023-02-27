@@ -135,7 +135,7 @@ If flash using serial port rather than USB, different USB2TTL chips support diff
 
 ## Chip Manual
 
-**Chip Reference Manual** and **Chip Data Manual** are listed on [document](https://dev.bouffalolab.com/document)
+**Chip Reference Manual** and **Chip Data Manual** are listed on [document](https://github.com/bouffalolab/bl_docs)
 
 ## Documentation Tutorial
 
