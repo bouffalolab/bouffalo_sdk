@@ -10,7 +10,8 @@ foreach(item ${C_CPP_PROPERTIES_INCLUDE})
 endforeach()
 
 foreach(item ${C_CPP_PROPERTIES_DEFINES})
-    string(APPEND C_CPP_PROPERTIES_DEFINES_IN "\n                \"${item}\",")
+    string(REGEX REPLACE "([^\"])([\"])" "\\1\\\\\"" nitem ${item})
+    string(APPEND C_CPP_PROPERTIES_DEFINES_IN "\n                \"${nitem}\",")
 endforeach()
 
 get_filename_component(SYS_INCLUDE_PATH ${CMAKE_C_COMPILER} DIRECTORY)

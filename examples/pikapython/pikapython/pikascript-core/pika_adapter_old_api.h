@@ -39,7 +39,8 @@
 #define __platform_error_handle pika_platform_error_handle
 #define __platform_panic_handle pika_platform_panic_handle
 #define __platform_thread_delay pika_platform_thread_delay
-#define __platform_getTick pika_platform_getTick
+#define __platform_getTick pika_platform_get_tick
+#define pika_platform_getTick pika_platform_get_tick
 #define __platform_sleep_ms pika_platform_sleep_ms
 #define __platform_sleep_s pika_platform_sleep_s
 
@@ -71,6 +72,13 @@
 #define pks_eventLisener_sendSignal pks_eventListener_sendSignal
 #define pks_eventLisener_deinit pks_eventListener_deinit
 #define pks_eventLicener_removeEvent pks_eventListener_removeEvent
+
+#define pika_platform_timer_init pika_platform_thread_timer_init
+#define pika_platform_timer_cutdown pika_platform_thread_timer_cutdown
+#define pika_platform_timer_is_expired pika_platform_thread_timer_is_expired
+#define pika_platform_timer_remain pika_platform_thread_timer_remain
+#define pika_platform_timer_now pika_platform_thread_timer_now
+#define pika_platform_timer_usleep pika_platform_thread_timer_usleep
 
 #endif
 

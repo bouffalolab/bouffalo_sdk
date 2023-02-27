@@ -8,7 +8,7 @@
 struct bflb_device_s bl808_device_table[] = {
     { .name = "adc",
       .reg_base = AON_BASE,
-#if defined(CPU_M0) || defined(CPU_LP) || defined(CPU_LP)
+#if defined(CPU_M0) || defined(CPU_LP)
       .irq_num = BL808_IRQ_GPADC_DMA,
 #else
       .irq_num = 0xff,
