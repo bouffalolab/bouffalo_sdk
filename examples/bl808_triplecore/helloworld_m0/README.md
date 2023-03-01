@@ -1,18 +1,18 @@
-# bl808_dualcore
+# bl808_triplecore
 
 
 ## Support CHIP
 
 |      CHIP        | Remark |
 |:----------------:|:------:|
-|BL808             |  Only for D0 CPU      |
+|BL808             |  Only for M0 CPU      |
 
 ## Compile
 
 - BL808
 
 ```
-make CHIP=bl808 BOARD=bl808dk CPU_ID=d0
+make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 ## Flash

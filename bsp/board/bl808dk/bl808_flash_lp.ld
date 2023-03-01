@@ -33,9 +33,9 @@ MEMORY
 
 SECTIONS
 {
-    .fw_header0 :
+    .fw_header :
     {
-        KEEP(*(.fw_header0))
+        KEEP(*(.fw_header))
     } > fw_header_memory0
 
     .text :
