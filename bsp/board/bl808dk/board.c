@@ -203,8 +203,9 @@ static void console_init()
     bflb_gpio_init(gpio, GPIO_PIN_16, 21 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, GPIO_PIN_17, 21 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 #elif defined(CPU_LP)
-    bflb_gpio_uart_init(gpio, GPIO_PIN_16, GPIO_UART_FUNC_UART1_TX);
-    bflb_gpio_uart_init(gpio, GPIO_PIN_17, GPIO_UART_FUNC_UART1_RX);
+    /* map GPIO_PIN_18 and GPIO_PIN_19 as UART for LP core */
+    bflb_gpio_uart_init(gpio, GPIO_PIN_18, GPIO_UART_FUNC_UART1_TX);
+    bflb_gpio_uart_init(gpio, GPIO_PIN_19, GPIO_UART_FUNC_UART1_RX);
 #endif
     struct bflb_uart_config_s cfg;
     cfg.baudrate = 2000000;
@@ -276,6 +277,12 @@ void board_init(void)
     GLB_Set_CPU_Reset_Address(GLB_CORE_ID_D0, 0x58000000);
     /* D0 image offset on flash is CONFIG_D0_FLASH_ADDR+0x1000(header) */
     bflb_sf_ctrl_set_flash_image_offset(CONFIG_D0_FLASH_ADDR + 0x1000, 1, SF_CTRL_FLASH_BANK0);
+
+    Tzc_Sec_Set_CPU_Group(GLB_CORE_ID_LP, 2);
+    /* LP boot from 0x58020000 */
+    GLB_Set_CPU_Reset_Address(GLB_CORE_ID_LP, 0x58020000);
+    /* LP image offset on flash is CONFIG_LP_FLASH_ADDR+0x1000(header) */
+    bflb_sf_ctrl_set_flash_image_offset(CONFIG_LP_FLASH_ADDR + 0x1000, 2, SF_CTRL_FLASH_BANK1);
 
     bflb_irq_restore(flag);
 

@@ -128,7 +128,7 @@ string(TOUPPER ${CPU_ID} CPU_ID_NAME)
 sdk_add_compile_definitions(-DCPU_${CPU_ID_NAME})
 endif()
 
-if(NOT ("${CPU_ID}" STREQUAL "d0"))
+if((NOT ("${CPU_ID}" STREQUAL "d0")) AND (NOT ("${CPU_ID}" STREQUAL "lp")))
 sdk_add_static_library(src/pka/libpka.a)
 endif()
 # add_subdirectory(src/pka)
