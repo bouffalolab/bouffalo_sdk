@@ -1,3 +1,4 @@
+add_subdirectory(ai)
 sdk_add_subdirectory_ifdef(CONFIG_BFLOG bflog)
 add_subdirectory(crypto)
 add_subdirectory(fs)
