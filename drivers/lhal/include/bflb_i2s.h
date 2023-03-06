@@ -75,6 +75,9 @@
 #define I2S_CMD_CHANNEL_LR_EXCHG (0x06)
 #define I2S_CMD_MUTE             (0x07)
 #define I2S_CMD_BIT_REVERSE      (0x08)
+/**
+  * @}
+  */
 
 /** @defgroup I2S_CMD_DATA_ENABLE_TYPE i2s data enable type
   * @{
