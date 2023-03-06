@@ -6,8 +6,10 @@
 
 static struct bflb_device_s *mjpeg;
 
-#define X 64
-#define Y 64
+#define X       64
+#define Y       64
+
+#define ROW_NUM (Y * MJPEG_MAX_FRAME_COUNT)
 
 volatile uint32_t pic_count = 0;
 volatile uint32_t pic_addr[MJPEG_MAX_FRAME_COUNT] = { 0 };
@@ -33,12 +35,6 @@ uint8_t jpg_head_buf[800] = { 0 };
 uint32_t jpg_head_len;
 
 uint8_t MJPEG_QUALITY = 50;
-
-#if defined(BL616)
-#define BSP_PSRAM_BASE 0xA8000000
-#elif defined(BL808)
-#define BSP_PSRAM_BASE 0x50000000
-#endif
 
 #define SIZE_BUFFER (4 * 1024 * 1024)
 
@@ -67,12 +63,13 @@ int main(void)
 
     config.format = MJPEG_FORMAT_YUV422_YUYV;
     config.quality = MJPEG_QUALITY;
+    config.rows = ROW_NUM;
     config.resolution_x = X;
     config.resolution_y = Y;
     config.input_bufaddr0 = (uint32_t)test_64x64;
     config.input_bufaddr1 = 0;
-    config.output_bufaddr = (uint32_t)BSP_PSRAM_BASE + MJPEG_MAX_FRAME_COUNT * X * Y * 2;
-    config.output_bufsize = SIZE_BUFFER - MJPEG_MAX_FRAME_COUNT * X * Y * 2;
+    config.output_bufaddr = (uint32_t)BFLB_PSRAM_BASE + X * 2 * ROW_NUM;
+    config.output_bufsize = SIZE_BUFFER - X * 2 * ROW_NUM;
     config.input_yy_table = NULL; /* use default table */
     config.input_uv_table = NULL; /* use default table */
 
