@@ -9,9 +9,15 @@ CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
 BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
 cmake_generator = "MinGW Makefiles"
 else
-CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
-BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand
-cmake_generator = "Unix Makefiles"
+	ifeq ($(shell uname),Darwin)
+	CMAKE = cmake # use user cmake
+	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-macos
+	cmake_generator = "Unix Makefiles"
+	else
+	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
+	cmake_generator = "Unix Makefiles"
+	endif
 endif
 
 # The command to remove a file.

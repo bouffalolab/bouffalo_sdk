@@ -83,7 +83,7 @@
   <feature name="org.gnu.gdb.riscv.csr">
     <!-- Regnum for CSR is (csr_regno + 65), used by remote protocol -->
     <!-- M-mode Information -->
-    <reg name="mvendorid" bitsize="64" regnum="0xf52" type="int"/>
+    <reg name="mvendorid" bitsize="32" regnum="0xf52" type="int"/>
 	<reg name="marchid"   bitsize="64" regnum="0xf53" type="int"/>
 	<reg name="mimpid"    bitsize="64" regnum="0xf54" type="int"/>
 	<reg name="mhartid"   bitsize="64" regnum="0xf55" type="int"/>
@@ -94,8 +94,8 @@
 	<reg name="mideleg"       bitsize="64" regnum="0x344" type="int"/>
 	<reg name="mie"           bitsize="64" regnum="0x345" type="int"/>
 	<reg name="mtvec"         bitsize="64" regnum="0x346" type="int"/>
-	<reg name="mcounteren"    bitsize="64" regnum="0x347" type="int"/>
-	<reg name="mcountinhibit" bitsize="64" regnum="0x361" type="int"/>
+	<reg name="mcounteren"    bitsize="32" regnum="0x347" type="int"/>
+	<reg name="mcountinhibit" bitsize="32" regnum="0x361" type="int"/>
 	<!-- M-mode Exception Handling -->
 	<reg name="mscratch"  bitsize="64" regnum="0x381" type="int"/>
 	<reg name="mepc"      bitsize="64" regnum="0x382" type="int"/>
@@ -104,7 +104,7 @@
 	<reg name="mip"       bitsize="64" regnum="0x385" type="int"/>
     <!-- M-mode Memory Protect -->
 	<reg name="pmpcfg0"   bitsize="64" regnum="0x3e1" type="int"/>
-	<reg name="pmpcfg1"   bitsize="64" regnum="0x3e2" type="int"/>
+	<reg name="pmpcfg2"   bitsize="64" regnum="0x3e3" type="int"/>
 	<reg name="pmpaddr0"  bitsize="64" regnum="0x3f1" type="int"/>
 	<reg name="pmpaddr1"  bitsize="64" regnum="0x3f2" type="int"/>
 	<reg name="pmpaddr2"  bitsize="64" regnum="0x3f3" type="int"/>
@@ -214,7 +214,7 @@
 	<reg name="sstatus"    bitsize="64" regnum="0x141" type="int"/>
 	<reg name="sie"        bitsize="64" regnum="0x145" type="int"/>
 	<reg name="stvec"      bitsize="64" regnum="0x146" type="int"/>
-	<reg name="scounteren" bitsize="64" regnum="0x147" type="int"/>
+	<reg name="scounteren" bitsize="32" regnum="0x147" type="int"/>
 	<!-- S-mode Exception Handling -->
 	<reg name="sscratch" bitsize="64" regnum="0x181" type="int"/>
 	<reg name="sepc"     bitsize="64" regnum="0x182" type="int"/>
@@ -313,7 +313,7 @@
 	<reg name="vsstatus"  bitsize="64" regnum="0x241" type="int"/>
 	<reg name="vlenb"  bitsize="64" regnum="0xc63" type="int"/>
 	<!-- For Debug -->
-	<reg name="dcsr" bitsize="64" regnum="0x7f1" type="int"/>
+	<reg name="dcsr" bitsize="32" regnum="0x7f1" type="int"/>
 	<reg name="dpc"  bitsize="64" regnum="0x7f2" type="int"/>
   </feature>
   <feature name="org.gnu.gdb.riscv.vpu">
