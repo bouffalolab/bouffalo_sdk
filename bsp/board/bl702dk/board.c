@@ -236,14 +236,18 @@ void board_init(void)
 
     console_init();
 
-    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
-
     bl_show_log();
     if (ret != 0) {
         printf("flash init fail!!!\r\n");
     }
     bl_show_flashinfo();
+
+#ifdef CONFIG_PSRAM
+    board_psram_init();
+#endif
+
+    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    kmem_init((void *)&__HeapBase, heap_len);
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
@@ -252,9 +256,6 @@ void board_init(void)
     log_start();
 #if defined(CONFIG_BFLOG)
     rtc = bflb_device_get_by_name("rtc");
-#endif
-#ifdef CONFIG_PSRAM
-    board_psram_init();
 #endif
 
     bflb_irq_restore(flag);

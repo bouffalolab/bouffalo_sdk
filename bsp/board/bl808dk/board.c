@@ -245,14 +245,20 @@ void board_init(void)
 
     console_init();
 
-    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
-
     bl_show_log();
     if (ret != 0) {
         printf("flash init fail!!!\r\n");
     }
     bl_show_flashinfo();
+
+#ifdef CONFIG_PSRAM
+    if (uhs_psram_init() < 0) {
+        while (1) {
+        }
+    }
+#endif
+    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    kmem_init((void *)&__HeapBase, heap_len);
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
@@ -265,12 +271,6 @@ void board_init(void)
     rtc = bflb_device_get_by_name("rtc");
 #endif
 
-#ifdef CONFIG_PSRAM
-    if (uhs_psram_init() < 0) {
-        while (1) {
-        }
-    }
-#endif
     /* set CPU D0 boot XIP address and flash address */
     Tzc_Sec_Set_CPU_Group(GLB_CORE_ID_D0, 1);
     /* D0 boot from 0x58000000 */
@@ -554,9 +554,11 @@ void board_csi_gpio_init(void)
 
 void board_iso11898_gpio_init()
 {
-    // struct bflb_device_s *gpio;
+    struct bflb_device_s *gpio;
 
-    // gpio = bflb_device_get_by_name("gpio");
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_iso11898_init(gpio, GPIO_PIN_14, GPIO_ISO11898_FUNC_TX);
+    bflb_gpio_iso11898_init(gpio, GPIO_PIN_15, GPIO_ISO11898_FUNC_RX);
 }
 
 #ifdef CONFIG_BFLOG

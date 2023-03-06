@@ -19,6 +19,7 @@ ENTRY(__start)
 
 StackSize    = 0x1000; /*  4KB */
 HeapMinSize  = 0x1000; /*  4KB */
+psram_min_size = 0x1000;
 
 __EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
 __RFTLV_SIZE_OFFSET = 1K;
@@ -279,6 +280,18 @@ SECTIONS
         __psram_data_end__ = .;
     } > ram_code
 
+    .psram_heap (NOLOAD):
+    {
+        . = ALIGN(4);
+        __psram_heap_base = .;
+        KEEP(*(.psram_heap*))
+        . = ALIGN(4);
+        __psram_heap_end = .;
+    } > ram_code
+
+    __psram_limit = ORIGIN(ram_code) + LENGTH(ram_code);
+    ASSERT(__psram_limit - __psram_heap_base >= psram_min_size, "psram heap region overflow")
+ 
     .wifibss (NOLOAD) :
     {
       PROVIDE( __wifi_bss_start = ADDR(.wifibss) );
