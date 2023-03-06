@@ -770,9 +770,9 @@ int bflb_dbi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             /* dbi output pixel format, arg use @ref DBI_PIXEL_OUTPUT_FORMAT */
             regval = getreg32(reg_base + DBI_PIX_CNT_OFFSET);
             if (arg == DBI_PIXEL_OUTPUT_FORMAT_RGB_565) {
-                regval |= DBI_CR_DBI_PIX_FORMAT;
-            } else if (arg == DBI_PIXEL_OUTPUT_FORMAT_RGB_888) {
                 regval &= ~DBI_CR_DBI_PIX_FORMAT;
+            } else if (arg == DBI_PIXEL_OUTPUT_FORMAT_RGB_888) {
+                regval |= DBI_CR_DBI_PIX_FORMAT;
             }
             putreg32(regval, reg_base + DBI_PIX_CNT_OFFSET);
             break;

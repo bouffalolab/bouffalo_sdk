@@ -412,74 +412,7 @@ void bflb_gpio_uart_init(struct bflb_device_s *dev, uint8_t pin, uint8_t uart_fu
 #if defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
 void bflb_gpio_iso11898_init(struct bflb_device_s *dev, uint8_t pin, uint8_t iso11898_func)
 {
-    uint32_t reg_base;
-    uint32_t regval;
-    uint8_t sig;
-    uint8_t sig_pos;
-
-    reg_base = dev->reg_base;
-
-#define GLB_ISO11898_CFG1_OFFSET (0x154)
-#define GLB_ISO11898_CFG2_OFFSET (0x158)
-    uint32_t regval2;
-    sig = pin % 12;
-
-    if (sig < 8) {
-        sig_pos = sig << 2;
-
-        regval = getreg32(reg_base + GLB_ISO11898_CFG1_OFFSET);
-        regval &= (~(0x0f << sig_pos));
-        regval |= (iso11898_func << sig_pos);
-
-        for (uint8_t i = 0; i < 8; i++) {
-            /* reset other sigs which are the same with iso11898_func */
-            sig_pos = i << 2;
-            if (((regval & (0x0f << sig_pos)) == (iso11898_func << sig_pos)) && (i != sig) && (iso11898_func != 0x0f)) {
-                regval &= (~(0x0f << sig_pos));
-                regval |= (0x0f << sig_pos);
-            }
-        }
-        regval2 = getreg32(reg_base + GLB_ISO11898_CFG2_OFFSET);
-
-        for (uint8_t i = 8; i < 12; i++) {
-            /* reset other sigs which are the same with iso11898_func */
-            sig_pos = (i - 8) << 2;
-            if (((regval2 & (0x0f << sig_pos)) == (iso11898_func << sig_pos)) && (i != sig) && (iso11898_func != 0x0f)) {
-                regval2 &= (~(0x0f << sig_pos));
-                regval2 |= (0x0f << sig_pos);
-            }
-        }
-        putreg32(regval, reg_base + GLB_ISO11898_CFG1_OFFSET);
-        putreg32(regval2, reg_base + GLB_ISO11898_CFG2_OFFSET);
-    } else {
-        sig_pos = (sig - 8) << 2;
-
-        regval = getreg32(reg_base + GLB_ISO11898_CFG2_OFFSET);
-        regval &= (~(0x0f << sig_pos));
-        regval |= (iso11898_func << sig_pos);
-
-        for (uint8_t i = 8; i < 12; i++) {
-            /* reset other sigs which are the same with iso11898_func */
-            sig_pos = (i - 8) << 2;
-            if (((regval & (0x0f << sig_pos)) == (iso11898_func << sig_pos)) && (i != sig) && (iso11898_func != 0x0f)) {
-                regval &= (~(0x0f << sig_pos));
-                regval |= (0x0f << sig_pos);
-            }
-        }
-        regval2 = getreg32(reg_base + GLB_ISO11898_CFG1_OFFSET);
-
-        for (uint8_t i = 0; i < 8; i++) {
-            /* reset other sigs which are the same with iso11898_func */
-            sig_pos = i << 2;
-            if (((regval2 & (0x0f << sig_pos)) == (iso11898_func << sig_pos)) && (i != sig) && (iso11898_func != 0x0f)) {
-                regval2 &= (~(0x0f << sig_pos));
-                regval2 |= (0x0f << sig_pos);
-            }
-        }
-        putreg32(regval, reg_base + GLB_ISO11898_CFG2_OFFSET);
-        putreg32(regval2, reg_base + GLB_ISO11898_CFG1_OFFSET);
-    }
-    bflb_gpio_init(dev, pin, (7 << GPIO_FUNC_SHIFT) | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_uart_init(dev, pin, iso11898_func);
 }
 #endif
 
