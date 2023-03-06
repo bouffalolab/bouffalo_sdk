@@ -133,4 +133,14 @@
     <reg name="cp1cr19" bitsize="32" regnum="208" group="bank1"/>
     <reg name="cp1cr20" bitsize="32" regnum="209" group="bank1"/>
   </feature>
+  <feature name="org.gnu.csky.abiv2.bank14">
+    <!--BANK14, CR0- CR6, PTIM Registers -->
+    <reg name="ptim_ctlr"  bitsize="32" regnum="628" group="bank14"/>
+    <reg name="ptim_tsr"  bitsize="32" regnum="629" group="bank14"/>
+    <reg name="ptim_ccvr_hi"  bitsize="32" regnum="630" group="bank14"/>
+    <reg name="ptim_ccvr_lo"  bitsize="32" regnum="631" group="bank14"/>
+    <reg name="ptim_cmvr_hi"  bitsize="32" regnum="632" group="bank14"/>
+    <reg name="ptim_cmvr_lo"  bitsize="32" regnum="633" group="bank14"/>
+	  <reg name="ptim_lvr"  bitsize="32" regnum="634" group="bank14"/>
+  </feature>
 </target>

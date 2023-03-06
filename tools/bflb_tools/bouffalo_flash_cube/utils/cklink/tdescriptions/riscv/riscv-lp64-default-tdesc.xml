@@ -40,7 +40,7 @@
   <feature name="org.gnu.gdb.riscv.csr">
     <!-- Regnum for CSR is (csr_regno + 65), used by remote protocol -->
     <!-- M-mode Information -->
-    <reg name="mvendorid" bitsize="64" regnum="0xf52" type="int"/>
+    <reg name="mvendorid" bitsize="32" regnum="0xf52" type="int"/>
 	<reg name="marchid"   bitsize="64" regnum="0xf53" type="int"/>
 	<reg name="mimpid"    bitsize="64" regnum="0xf54" type="int"/>
 	<reg name="mhartid"   bitsize="64" regnum="0xf55" type="int"/>
@@ -51,8 +51,8 @@
 	<reg name="mideleg"       bitsize="64" regnum="0x344" type="int"/>
 	<reg name="mie"           bitsize="64" regnum="0x345" type="int"/>
 	<reg name="mtvec"         bitsize="64" regnum="0x346" type="int"/>
-	<reg name="mcounteren"    bitsize="64" regnum="0x347" type="int"/>
-	<reg name="mcountinhibit" bitsize="64" regnum="0x361" type="int"/>
+	<reg name="mcounteren"    bitsize="32" regnum="0x347" type="int"/>
+	<reg name="mcountinhibit" bitsize="32" regnum="0x361" type="int"/>
 	<!-- M-mode Exception Handling -->
 	<reg name="mscratch"  bitsize="64" regnum="0x381" type="int"/>
 	<reg name="mepc"      bitsize="64" regnum="0x382" type="int"/>
@@ -76,7 +76,7 @@
 	<reg name="mceicr2"       bitsize="64" regnum="0x818"  type="int"/>
 	
 	<!-- For Debug -->
-	<reg name="dcsr" bitsize="64" regnum="0x7f1" type="int"/>
+	<reg name="dcsr" bitsize="32" regnum="0x7f1" type="int"/>
 	<reg name="dpc"  bitsize="64" regnum="0x7f2" type="int"/>
   </feature>
   <feature name="org.gnu.gdb.riscv.virtual">
