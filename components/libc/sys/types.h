@@ -219,7 +219,9 @@ typedef	__suseconds_t	suseconds_t;
 typedef	__int64_t	sbintime_t;
 
 #include <sys/features.h>
-// #include <sys/_pthreadtypes.h>
+#ifndef CONFIG_POSIX
+#include <sys/_pthreadtypes.h>
+#endif
 #include <machine/types.h>
 
 #endif  /* !__need_inttypes */
