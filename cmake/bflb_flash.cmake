@@ -1,9 +1,8 @@
+
 if(MINGW OR CYGWIN OR WIN32)
 set(TOOL_SUFFIX ".exe")
-elseif(UNIX)
-set(TOOL_SUFFIX "-ubuntu")
-elseif(APPLE)
-set(TOOL_SUFFIX "-macos")
+elseif(UNIX OR APPLE)
+set(TOOL_SUFFIX "")
 endif()
 
 set(BL_FW_POST_PROC ${BL_SDK_BASE}/tools/bflb_tools/bflb_fw_post_proc/bflb_fw_post_proc${TOOL_SUFFIX})
