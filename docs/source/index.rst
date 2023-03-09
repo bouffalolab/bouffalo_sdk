@@ -24,15 +24,12 @@ BouffaloSDK 使用指南
    :caption: API 手册
 
    api_reference/peripherals/index
-   api_reference/components/index
-   api_reference/utils/index
 
 .. toctree::
    :maxdepth: 1
    :caption: 基础例程
 
    samples/peripherals/index
-   samples/components/index
 
 .. toctree::
    :maxdepth: 1
@@ -47,4 +44,5 @@ BouffaloSDK 使用指南
    notes/note_uart
    notes/note_dma
    notes/note_cache
-   notes/note_808dualcore
+   notes/note_808triplecore
+   notes/note_flash_tool
