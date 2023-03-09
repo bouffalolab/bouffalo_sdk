@@ -3,7 +3,7 @@
 Bouffalo Lab DevCube 的使用
 =============================
 
-.. caution:: BouffaloSDK 不再使用此工具，使用 SDK 自带的命令行烧录工具
+.. caution:: BouffaloSDK 不再使用此工具，请使用 SDK 自带的命令行烧录工具
 
 本文档将简要介绍一下如何使用 Bouffalo Lab DevCube 集成开发工具烧写代码。
 
