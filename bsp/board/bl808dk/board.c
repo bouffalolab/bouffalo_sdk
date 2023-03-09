@@ -245,12 +245,6 @@ void board_init(void)
 
     console_init();
 
-    bl_show_log();
-    if (ret != 0) {
-        printf("flash init fail!!!\r\n");
-    }
-    bl_show_flashinfo();
-
 #ifdef CONFIG_PSRAM
     if (uhs_psram_init() < 0) {
         while (1) {
@@ -259,6 +253,12 @@ void board_init(void)
 #endif
     size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     kmem_init((void *)&__HeapBase, heap_len);
+
+    bl_show_log();
+    if (ret != 0) {
+        printf("flash init fail!!!\r\n");
+    }
+    bl_show_flashinfo();
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
