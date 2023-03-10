@@ -24,6 +24,6 @@ void board_iso11898_gpio_init(void);
 #define DEFAULT_TEST_UART_DMA_RDR        DMA_ADDR_UART1_RDR
 
 #define CONFIG_D0_FLASH_ADDR             0x100000
-#define CONFIG_LP_FLASH_ADDR             0x200000
+#define CONFIG_LP_FLASH_ADDR             0x20000
 
 #endif
