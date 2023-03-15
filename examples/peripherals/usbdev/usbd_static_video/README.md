@@ -5,17 +5,10 @@
 
 |      CHIP        | Remark |
 |:----------------:|:------:|
-|BL702/BL704/BL706 |        |
 |BL616/BL618       |        |
 |BL808             |   D0 has no irq     |
 
 ## Compile
-
-- BL702/BL704/BL706
-
-```
-make CHIP=bl702 BOARD=bl702dk
-```
 
 - BL616/BL618
 
