@@ -14,7 +14,9 @@
 
 #define EXTHUB_FIRST_INDEX     2
 
+#if CONFIG_USBHOST_MAX_EXTHUBS > 0
 static uint32_t g_devinuse = 0;
+#endif
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_hub_buf[32];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_hub_intbuf[CONFIG_USBHOST_MAX_EXTHUBS + 1][1];
@@ -65,6 +67,7 @@ static void usbh_hub_register(struct usbh_hub *hub)
     usb_slist_add_tail(&hub_class_head, &hub->list);
 }
 
+#if CONFIG_USBHOST_MAX_EXTHUBS > 0
 static void usbh_hub_unregister(struct usbh_hub *hub)
 {
     usb_slist_remove(&hub_class_head, &hub->list);
@@ -111,6 +114,7 @@ static int _usbh_hub_get_status(struct usbh_hub *hub, uint8_t *buffer)
     memcpy(buffer, g_hub_buf, 2);
     return ret;
 }
+#endif
 
 static int _usbh_hub_get_portstatus(struct usbh_hub *hub, uint8_t port, struct hub_port_status *port_status)
 {
@@ -163,6 +167,7 @@ static int _usbh_hub_clear_feature(struct usbh_hub *hub, uint8_t port, uint8_t f
     return usbh_control_transfer(hub->parent->ep0, setup, NULL);
 }
 
+#if CONFIG_USBHOST_MAX_EXTHUBS > 0
 static int parse_hub_descriptor(struct usb_hub_descriptor *desc, uint16_t length)
 {
     if (desc->bLength != USB_SIZEOF_HUB_DESC) {
@@ -184,6 +189,7 @@ static int parse_hub_descriptor(struct usb_hub_descriptor *desc, uint16_t length
     }
     return 0;
 }
+#endif
 
 static int usbh_hub_get_portstatus(struct usbh_hub *hub, uint8_t port, struct hub_port_status *port_status)
 {
