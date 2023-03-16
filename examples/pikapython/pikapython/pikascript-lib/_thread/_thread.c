@@ -1,5 +1,6 @@
 #include "_thread.h"
 #include "PikaVM.h"
+#include "TinyObj.h"
 
 typedef struct pika_thread_info {
     Arg* function;
@@ -9,12 +10,20 @@ typedef struct pika_thread_info {
 
 static void _thread_func(void* arg) {
     pika_debug("waiting for first lock");
-    while (!_VM_is_first_lock()) {
+    while (1) {
+        if (_VM_is_first_lock()) {
+            break;
+        }
+        //! This May break the thread
+        // if (_VMEvent_getVMCnt() <= 0) {
+        //     break;
+        // }
+        pika_debug("VM num %d", _VMEvent_getVMCnt());
         pika_platform_thread_delay();
     }
     pika_debug("thread start");
     pika_GIL_ENTER();
-    PikaObj* ctx = New_PikaObj();
+    PikaObj* ctx = New_TinyObj(NULL);
     pika_thread_info* info = (pika_thread_info*)arg;
     obj_setArg(ctx, "args", info->args);
     obj_setArg(ctx, "thread", info->function);

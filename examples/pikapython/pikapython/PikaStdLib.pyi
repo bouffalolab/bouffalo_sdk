@@ -130,6 +130,14 @@ class SysObj:
     @PIKA_C_MACRO_IF("!PIKA_NANO_ENABLE")
     def reboot(): ...
 
+    @staticmethod
+    @PIKA_C_MACRO_IF("!PIKA_NANO_ENABLE")
+    def clear(): ...
+
+    @staticmethod
+    @PIKA_C_MACRO_IF("PIKA_GC_MARK_SWEEP_ENABLE")
+    def gcdump(): ...
+
 
 @PIKA_C_MACRO_IF("0")
 class RangeObj:

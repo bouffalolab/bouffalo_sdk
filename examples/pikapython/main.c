@@ -1,15 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "./pikapython/pikascript-lib/PikaStdDevice/pika_hal.h"
-#include "FreeRTOS.h"
 #include "bflb_flash.h"
 #include "bflb_gpio.h"
 #include "bflb_uart.h"
 #include "board.h"
 #include "log.h"
+#include "usbd_cdc_user.h"
 // #include "lwip/init.h"
 #include "pikaScript.h"
+#if PIKA_FREERTOS_ENABLE
+#include "FreeRTOS.h"
 #include "task.h"
+#endif
 
 #if defined(BL616)
 #include "bl616_glb.h"
@@ -20,6 +23,11 @@
 #elif defined(BL808)
 #include "bl808_glb.h"
 #endif
+
+#define REPL_UART0 0
+#define REPL_USB 1
+
+#define REPL_PORT REPL_USB
 
 struct bflb_device_s* uartx = NULL;
 // static uint8_t freertos_heap[configTOTAL_HEAP_SIZE];
@@ -51,6 +59,8 @@ static int _pika_app_check(void) {
 
 uint8_t _pika_app_buf[_PIKA_APP_FLASH_SIZE] = {0};
 static void consumer_task(void* pvParameters) {
+    cdc_acm_init();
+    vTaskDelay(1000);
     PikaObj* root = newRootObj("root", New_PikaMain);
     if (_pika_app_check()) {
         printf("Load app.pika from flash\r\n");
@@ -96,16 +106,22 @@ static void _erise_app_task(void* pvParameters) {
 
 int main(void) {
     board_init();
+    #if REPL_PORT == REPL_UART0
     uartx = bflb_device_get_by_name("uart0");
     bflb_uart_feature_control(uartx, UART_CMD_SET_BAUD_RATE, 115200);
+    #endif
     // xHeapRegions[0].xSizeInBytes = configTOTAL_HEAP_SIZE;
     // vPortDefineHeapRegions(xHeapRegions);
     // printf("Heap size: %d\r\n", configTOTAL_HEAP_SIZE);
 
+#if PIKA_FREERTOS_ENABLE
     xTaskCreate(_erise_app_task, (char*)"erise_app_task", 8192, NULL,
                 configMAX_PRIORITIES - 1, NULL);
-    xTaskCreate(consumer_task, (char*)"consumer_task", 8192, NULL, 3, NULL);
+    xTaskCreate(consumer_task, (char*)"consumer_task", 8 * 1024, NULL, 3, NULL);
     vTaskStartScheduler();
+#else
+    consumer_task(NULL);
+#endif
 
     while (1) {
     }
@@ -114,17 +130,25 @@ int main(void) {
 /* Platform Porting */
 
 char pika_platform_getchar(void) {
+    #if REPL_PORT == REPL_UART0
     while (1) {
         int c = bflb_uart_getchar(uartx);
         if (c != -1) {
             return c;
         }
     }
+    #elif REPL_PORT == REPL_USB
+    return usb_cdc_user_getchar();
+    #endif
 }
 
 int pika_platform_putchar(char ch) {
+    #if REPL_PORT == REPL_UART0
     bflb_uart_putchar(uartx, ch);
     return 0;
+    #elif REPL_PORT == REPL_USB
+    return usb_cdc_user_putchar(ch);
+    #endif
 }
 
 void pika_platform_reboot(void) {
@@ -132,11 +156,19 @@ void pika_platform_reboot(void) {
 }
 
 void* pika_platform_malloc(size_t size) {
+#if PIKA_FREERTOS_ENABLE
     return pvPortMalloc(size);
+#else
+    return malloc(size);
+#endif
 }
 
 void pika_platform_free(void* ptr) {
+#if PIKA_FREERTOS_ENABLE
     return vPortFree(ptr);
+#else
+    free(ptr);
+#endif
 }
 
 /* fopen */

@@ -1,11 +1,12 @@
 #include "PikaStdData_String.h"
 #include "PikaStdData_List.h"
 #include "PikaStdData_String_Util.h"
-#include "dataStrs.h"
+#include "PikaStdLib_SysObj.h"
 #include "PikaVM.h"
+#include "dataStrs.h"
 
 char* _strlwr(char* str);
-static int string_len(char* str);
+int strGetSizeUtf8(char* str);
 
 Arg* PikaStdData_String___iter__(PikaObj* self) {
     obj_setInt(self, "__iter_i", 0);
@@ -69,7 +70,7 @@ Arg* PikaStdData_String___next__(PikaObj* self) {
 static int _str_get(char* str, int key_i, char* char_buff) {
     uint16_t len = strGetSize(str);
     if (key_i < 0) {
-        key_i = string_len(str) + key_i;
+        key_i = strGetSizeUtf8(str) + key_i;
     }
 #if PIKA_STRING_UTF8_ENABLE
     return _utf8_get(str, len, key_i, char_buff);
@@ -84,16 +85,6 @@ static int _str_get(char* str, int key_i, char* char_buff) {
 
 char* string_slice(Args* outBuffs, char* str, int start, int end) {
     char* res = args_getBuff(outBuffs, strGetSize(str));
-    if (start < 0) {
-        start += string_len(str);
-    }
-    /* magic code, to the end */
-    if (end == VM_PC_EXIT) {
-        end = string_len(str);
-    }
-    if (end < 0) {
-        end += string_len(str);
-    }
     for (int i = start; i < end; i++) {
         char char_buff[5] = {0};
         int r = _str_get(str, i, char_buff);
@@ -276,7 +267,7 @@ PikaObj* PikaStdData_String_split(PikaObj* self, char* s) {
     return list;
 }
 
-static int string_len(char* str) {
+int strGetSizeUtf8(char* str) {
 #if PIKA_STRING_UTF8_ENABLE
     int n = _utf8_strlen(str, -1);
     return n;
@@ -287,7 +278,7 @@ static int string_len(char* str) {
 
 int PikaStdData_String___len__(PikaObj* self) {
     char* str = obj_getStr(self, "str");
-    int n = string_len(str);
+    int n = strGetSizeUtf8(str);
     if (n < 0) {
         obj_setErrorCode(self, __LINE__);
         __platform_printf("Error. Internal error(%d)\r\n", __LINE__);
@@ -822,4 +813,48 @@ char* _strlwr(char* str) {
 char* PikaStdData_String_format(PikaObj* self, PikaTuple* vars) {
     /* 'test{}'.format(123) */
     return NULL;
+}
+
+char* PikaStdData_String_join(PikaObj* self, Arg* val) {
+    PikaObj* context = newNormalObj(New_PikaStdLib_SysObj);
+    obj_setArg(context, "@val", val);
+    obj_setStr(context, "@str", obj_getStr(self, "str"));
+    /* clang-format off */
+    PIKA_PYTHON(
+    @res_join = ""
+    @num = len(@val)
+    for i in range(@num):
+        @res_join += @val[i]
+        if i != @num - 1:
+            @res_join += @str
+
+    )
+    /* clang-format on */
+    const uint8_t bytes[] = {
+        0x84, 0x00, 0x00, 0x00, /* instruct array size */
+        0x00, 0x83, 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x10, 0x81, 0x0b, 0x00,
+        0x00, 0x02, 0x10, 0x00, 0x00, 0x04, 0x14, 0x00, 0x20, 0x81, 0x14, 0x00,
+        0x10, 0x02, 0x19, 0x00, 0x00, 0x02, 0x1f, 0x00, 0x00, 0x04, 0x24, 0x00,
+        0x00, 0x82, 0x28, 0x00, 0x00, 0x04, 0x35, 0x00, 0x00, 0x0d, 0x35, 0x00,
+        0x00, 0x07, 0x37, 0x00, 0x11, 0x81, 0x01, 0x00, 0x31, 0x01, 0x0b, 0x00,
+        0x31, 0x01, 0x35, 0x00, 0x21, 0x1d, 0x00, 0x00, 0x11, 0x02, 0x00, 0x00,
+        0x01, 0x08, 0x39, 0x00, 0x01, 0x04, 0x01, 0x00, 0x11, 0x81, 0x35, 0x00,
+        0x21, 0x01, 0x14, 0x00, 0x21, 0x05, 0x3b, 0x00, 0x11, 0x08, 0x3d, 0x00,
+        0x01, 0x08, 0x3f, 0x00, 0x01, 0x07, 0x3b, 0x00, 0x12, 0x81, 0x01, 0x00,
+        0x22, 0x01, 0x42, 0x00, 0x12, 0x02, 0x00, 0x00, 0x02, 0x08, 0x39, 0x00,
+        0x02, 0x04, 0x01, 0x00, 0x00, 0x86, 0x47, 0x00, 0x00, 0x8c, 0x24, 0x00,
+        /* instruct array */
+        0x4a, 0x00, 0x00, 0x00, /* const pool size */
+        0x00, 0x40, 0x72, 0x65, 0x73, 0x5f, 0x6a, 0x6f, 0x69, 0x6e, 0x00, 0x40,
+        0x76, 0x61, 0x6c, 0x00, 0x6c, 0x65, 0x6e, 0x00, 0x40, 0x6e, 0x75, 0x6d,
+        0x00, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x00, 0x69, 0x74, 0x65, 0x72, 0x00,
+        0x24, 0x6c, 0x30, 0x00, 0x24, 0x6c, 0x30, 0x2e, 0x5f, 0x5f, 0x6e, 0x65,
+        0x78, 0x74, 0x5f, 0x5f, 0x00, 0x69, 0x00, 0x32, 0x00, 0x2b, 0x00, 0x31,
+        0x00, 0x2d, 0x00, 0x21, 0x3d, 0x00, 0x40, 0x73, 0x74, 0x72, 0x00, 0x2d,
+        0x31, 0x00, /* const pool */
+    };
+    pikaVM_runByteCode(context, (uint8_t*)bytes);
+    char* sRes = obj_cacheStr(self, obj_getStr(context, "@res_join"));
+    obj_deinit(context);
+    return sRes;
 }
