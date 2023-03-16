@@ -1,6 +1,6 @@
 /*
- * This file is part of the PikaScript project.
- * http://github.com/pikastech/pikascript
+ * This file is part of the PikaPython project.
+ * http://github.com/pikastech/pikapython
  *
  * MIT License
  *
@@ -121,6 +121,7 @@ size_t strGetSize(char* pData) {
     pika_assert(pData != NULL);
     return strlen(pData);
 }
+
 
 char* strPointToLastToken(char* strIn, char sign) {
     if (!strIsContain(strIn, sign)) {

@@ -1,6 +1,6 @@
 /*
- * This file is part of the PikaScript project.
- * http://github.com/pikastech/pikascript
+ * This file is part of the PikaPython project.
+ * http://github.com/pikastech/pikapython
  *
  * MIT License
  *
@@ -39,16 +39,16 @@ static PIKA_BOOL _arg_cache_push(Arg* self, uint32_t size) {
     if (PIKA_FALSE == pika_hook_arg_cache_filter(self)) {
         return PIKA_FALSE;
     }
-    extern PikaMemInfo pikaMemInfo;
+    extern PikaMemInfo g_PikaMemInfo;
     if (self->heap_size < PIKA_ARG_CACHE_SIZE ||
         self->heap_size > 2 * PIKA_ARG_CACHE_SIZE) {
         return PIKA_FALSE;
     }
-    if (PIKA_ARG_CACHE_POOL_SIZE <= pikaMemInfo.cache_pool_top) {
+    if (PIKA_ARG_CACHE_POOL_SIZE <= g_PikaMemInfo.cache_pool_top) {
         return PIKA_FALSE;
     }
-    pikaMemInfo.cache_pool[pikaMemInfo.cache_pool_top++] = (uint8_t*)self;
-    pikaMemInfo.heapUsed -= mem_align(sizeof(Arg) + size);
+    g_PikaMemInfo.cache_pool[g_PikaMemInfo.cache_pool_top++] = (uint8_t*)self;
+    g_PikaMemInfo.heapUsed -= mem_align(sizeof(Arg) + size);
     return PIKA_TRUE;
 #endif
 }
@@ -58,16 +58,16 @@ static Arg* _arg_cache_pop(uint32_t size) {
     return NULL;
 #else
     uint32_t req_heap_size = mem_align(sizeof(Arg) + size);
-    extern PikaMemInfo pikaMemInfo;
+    extern PikaMemInfo g_PikaMemInfo;
     if (req_heap_size > PIKA_ARG_CACHE_SIZE) {
         return NULL;
     }
-    if (!(pikaMemInfo.cache_pool_top > 0)) {
+    if (!(g_PikaMemInfo.cache_pool_top > 0)) {
         return NULL;
     }
-    --pikaMemInfo.cache_pool_top;
-    Arg* self = (Arg*)pikaMemInfo.cache_pool[pikaMemInfo.cache_pool_top];
-    pikaMemInfo.heapUsed += mem_align(sizeof(Arg) + size);
+    --g_PikaMemInfo.cache_pool_top;
+    Arg* self = (Arg*)g_PikaMemInfo.cache_pool[g_PikaMemInfo.cache_pool_top];
+    g_PikaMemInfo.heapUsed += mem_align(sizeof(Arg) + size);
     return self;
 #endif
 }
@@ -118,15 +118,15 @@ static Arg* _arg_set_hash(Arg* self,
         // if (heap_size < PIKA_ARG_CACHE_SIZE) {
         //     heap_size = PIKA_ARG_CACHE_SIZE;
         // }
-        extern PikaMemInfo pikaMemInfo;
-        pikaMemInfo.alloc_times++;
-        pikaMemInfo.alloc_times_cache++;
+        extern PikaMemInfo g_PikaMemInfo;
+        g_PikaMemInfo.alloc_times++;
+        g_PikaMemInfo.alloc_times_cache++;
 #endif
         if (NULL == self) {
             self = (Arg*)pikaMalloc(heap_size);
 #if PIKA_ARG_CACHE_ENABLE
-            extern PikaMemInfo pikaMemInfo;
-            pikaMemInfo.alloc_times_cache--;
+            extern PikaMemInfo g_PikaMemInfo;
+            g_PikaMemInfo.alloc_times_cache--;
             self->heap_size = mem_align(heap_size);
 #endif
         }
@@ -318,7 +318,16 @@ Arg* arg_toStrArg(Arg* arg) {
                 strEqu(method_store->name, "tuple")) {
                 pika_platform_snprintf(buff, PIKA_SPRINTF_BUFF_SIZE,
                                        "<class '%s'>", method_store->name);
+                return arg_newStr(buff);
             }
+            pika_platform_snprintf(buff, PIKA_SPRINTF_BUFF_SIZE,
+                                   "<built-in function %s>",
+                                   method_store->name);
+            return arg_newStr(buff);
+        }
+        if (argType_isConstructor(type)) {
+            pika_platform_snprintf(buff, PIKA_SPRINTF_BUFF_SIZE,
+                                   "<class 'object'>");
             return arg_newStr(buff);
         }
         pika_platform_snprintf(buff, PIKA_SPRINTF_BUFF_SIZE,
@@ -333,7 +342,7 @@ Arg* arg_toStrArg(Arg* arg) {
     }
     if (type == ARG_TYPE_OBJECT_META) {
         pika_platform_snprintf(buff, PIKA_SPRINTF_BUFF_SIZE,
-                               "<mate object at %p>", arg_getPtr(arg));
+                               "<meta object at %p>", arg_getPtr(arg));
         return arg_newStr(buff);
     }
     return NULL;
@@ -471,16 +480,37 @@ Arg* New_arg(void* voidPointer) {
     return NULL;
 }
 
-static void _arg_refcnt_fix(Arg* self) {
+void arg_refcntInc(Arg* self) {
     ArgType arg_type = arg_getType(self);
-    if (ARG_TYPE_OBJECT == arg_type) {
-        obj_refcntInc((PikaObj*)arg_getPtr(self));
+    if (ARG_TYPE_OBJECT != arg_type) {
+        return;
     }
-    // if (ARG_TYPE_METHOD_OBJECT == arg_type) {
-    //     if (NULL != methodArg_getHostObj(self)) {
-    //         obj_refcntInc((PikaObj*)arg_getPtr(self));
-    //     }
-    // }
+    if (arg_getIsWeakRef(self)) {
+        return;
+    }
+    obj_refcntInc((PikaObj*)arg_getPtr(self));
+}
+
+void arg_refcntDec(Arg* self) {
+    ArgType arg_type = arg_getType(self);
+    if (ARG_TYPE_OBJECT != arg_type) {
+        return;
+    }
+    if (arg_getIsWeakRef(self)) {
+        return;
+    }
+    obj_refcntDec((PikaObj*)arg_getPtr(self));
+}
+
+Arg* arg_copy_content(Arg* arg_dict, Arg* arg_src) {
+    arg_dict = arg_setContent(arg_dict, arg_getContent(arg_src),
+                              arg_getContentSize(arg_src));
+    arg_dict = arg_setNameHash(arg_dict, arg_getNameHash(arg_src));
+    pika_assert(NULL != arg_dict);
+    arg_setType(arg_dict, arg_getType(arg_src));
+    arg_setIsKeyword(arg_dict, arg_getIsKeyword(arg_src));
+    arg_setIsWeakRef(arg_dict, arg_getIsWeakRef(arg_src));
+    return arg_dict;
 }
 
 Arg* arg_copy(Arg* arg_src) {
@@ -488,14 +518,9 @@ Arg* arg_copy(Arg* arg_src) {
         return NULL;
     }
     pika_assert(arg_src->flag < ARG_FLAG_MAX);
-    _arg_refcnt_fix(arg_src);
+    arg_refcntInc(arg_src);
     Arg* arg_dict = New_arg(NULL);
-    arg_dict = arg_setContent(arg_dict, arg_getContent(arg_src),
-                              arg_getContentSize(arg_src));
-    arg_dict = arg_setNameHash(arg_dict, arg_getNameHash(arg_src));
-    pika_assert(NULL != arg_dict);
-    arg_setType(arg_dict, arg_getType(arg_src));
-    arg_setIsKeyword(arg_dict, arg_getIsKeyword(arg_src));
+    arg_dict = arg_copy_content(arg_dict, arg_src);
     return arg_dict;
 }
 
@@ -510,14 +535,9 @@ Arg* arg_copy_noalloc(Arg* arg_src, Arg* arg_dict) {
     if (arg_getSize(arg_src) > arg_getSize(arg_dict)) {
         return arg_copy(arg_src);
     }
-    _arg_refcnt_fix(arg_src);
+    arg_refcntInc(arg_src);
     arg_setSerialized(arg_dict, PIKA_FALSE);
-    arg_dict = arg_setContent(arg_dict, arg_getContent(arg_src),
-                              arg_getContentSize(arg_src));
-    arg_dict = arg_setNameHash(arg_dict, arg_getNameHash(arg_src));
-    pika_assert(NULL != arg_dict);
-    arg_setType(arg_dict, arg_getType(arg_src));
-    arg_setIsKeyword(arg_dict, arg_getIsKeyword(arg_src));
+    arg_dict = arg_copy_content(arg_dict, arg_src);
     return arg_dict;
 }
 
@@ -530,9 +550,9 @@ Arg* arg_append(Arg* self, void* new_content, size_t new_size) {
     if (self->heap_size > mem_align(sizeof(Arg) + old_size + new_size)) {
         new_arg = self;
         new_arg->size = old_size + new_size;
-        extern PikaMemInfo pikaMemInfo;
-        pikaMemInfo.heapUsed += mem_align(sizeof(Arg) + old_size + new_size) -
-                                mem_align(sizeof(Arg) + old_size);
+        extern PikaMemInfo g_PikaMemInfo;
+        g_PikaMemInfo.heapUsed += mem_align(sizeof(Arg) + old_size + new_size) -
+                                  mem_align(sizeof(Arg) + old_size);
     }
 #endif
     if (NULL == new_arg) {
