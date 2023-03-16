@@ -1,6 +1,6 @@
 /*
- * This file is part of the PikaScript project.
- * http://github.com/pikastech/pikascript
+ * This file is part of the PikaPython project.
+ * http://github.com/pikastech/pikapython
  *
  * MIT License
  *
@@ -370,7 +370,8 @@ uint8_t Parser_checkIsDirect(char* str) {
     Args buffs = {0};
     uint8_t res = 0;
     pika_assert(NULL != str);
-    if (Cursor_isContain(str, TOKEN_operator, "=")) {
+    char* left = Cursor_splitCollect(&buffs, str, "=", 1);
+    if (!strEqu(left, str)) {
         res = 1;
         goto exit;
     }
@@ -768,9 +769,9 @@ char* Token_getPyload(char* token) {
     return (char*)((uintptr_t)token + 1);
 }
 
-uint8_t TokenStream_isContain(char* tokenStream,
-                              enum TokenType token_type,
-                              char* pyload) {
+uint8_t TokenStream_count(char* tokenStream,
+                          enum TokenType token_type,
+                          char* pyload) {
     Args buffs = {0};
     char* tokenStream_buff = strsCopy(&buffs, tokenStream);
     uint8_t res = 0;
@@ -779,14 +780,21 @@ uint8_t TokenStream_isContain(char* tokenStream,
         char* token = TokenStream_pop(&buffs, &tokenStream_buff);
         if (token_type == Token_getType(token)) {
             if (strEqu(Token_getPyload(token), pyload)) {
-                res = 1;
-                goto exit;
+                res++;
             }
         }
     }
-exit:
     strsDeinit(&buffs);
     return res;
+}
+
+uint8_t TokenStream_isContain(char* tokenStream,
+                              enum TokenType token_type,
+                              char* pyload) {
+    if (TokenStream_count(tokenStream, token_type, pyload) > 0) {
+        return 1;
+    }
+    return 0;
 }
 
 static char* _solveEqualLevelOperator(Args* buffs,
@@ -963,19 +971,23 @@ void _Cursor_beforeIter(struct Cursor* cs) {
     cs->last_token = arg_newStr(TokenStream_pop(cs->buffs_p, &cs->tokenStream));
 }
 
-PIKA_BOOL Cursor_isContain(char* stmt, TokenType type, char* pyload) {
+uint8_t Cursor_count(char* stmt, TokenType type, char* pyload) {
     /* fast return */
     if (!strstr(stmt, pyload)) {
         return PIKA_FALSE;
     }
     Args buffs = {0};
-    PIKA_BOOL res = PIKA_FALSE;
     char* tokenStream = Lexer_getTokenStream(&buffs, stmt);
-    if (TokenStream_isContain(tokenStream, type, pyload)) {
-        res = PIKA_TRUE;
-    }
+    uint8_t res = TokenStream_count(tokenStream, type, pyload);
     strsDeinit(&buffs);
     return res;
+}
+
+PIKA_BOOL Cursor_isContain(char* stmt, TokenType type, char* pyload) {
+    if (Cursor_count(stmt, type, pyload) > 0) {
+        return PIKA_TRUE;
+    }
+    return PIKA_FALSE;
 }
 
 char* Cursor_popToken(Args* buffs, char** pStmt, char* devide) {
@@ -1565,11 +1577,11 @@ char* Suger_not_in(Args* out_buffs, char* line) {
     PIKA_BOOL got_not_in = PIKA_FALSE;
     PIKA_BOOL skip = PIKA_FALSE;
     Args buffs = {0};
-    if (!Cursor_isContain(line, TOKEN_operator, " not ")) {
+    if (1 != Cursor_count(line, TOKEN_operator, " not ")) {
         ret = line;
         goto __exit;
     }
-    if (!Cursor_isContain(line, TOKEN_operator, " in ")) {
+    if (1 != Cursor_count(line, TOKEN_operator, " in ")) {
         ret = line;
         goto __exit;
     }
@@ -1651,14 +1663,18 @@ AST* AST_parseStmt(AST* ast, char* stmt) {
         isLeftExist = Suger_selfOperator(&buffs, stmt, &right, &left);
     }
 
+    /* remove hint */
+    if (isLeftExist) {
+        left = Cursor_splitCollect(&buffs, left, ":", 0);
+    }
+
     /* solve the [] stmt */
     right = Suger_leftSlice(&buffs, right, &left);
     right = Suger_format(&buffs, right);
 
     /* set left */
     if (isLeftExist) {
-        char* left_without_hint = Cursor_splitCollect(&buffs, left, ":", 0);
-        AST_setNodeAttr(ast, (char*)"left", left_without_hint);
+        AST_setNodeAttr(ast, (char*)"left", left);
     }
     /* match statment type */
     enum StmtType stmtType = Lexer_matchStmtType(right);
@@ -1800,7 +1816,7 @@ static int32_t Parser_getPyLineBlockDeepth(char* line) {
     return -1;
 }
 
-char* Parser_removeAnnotation(char* line) {
+char* Parser_removeComment(char* line) {
     uint8_t is_annotation_exit = 0;
     uint8_t is_in_single_quotes = 0;
     uint8_t is_in_pika_float_quotes_deepth = 0;
@@ -1851,13 +1867,13 @@ char* _defGetDefault(Args* outBuffs, char** psDeclearOut) {
     char* sArgList = strsCut(&buffs, sDeclear, '(', ')');
     char* sDefaultOut = NULL;
     pika_assert(NULL != sArgList);
-    int argNum = strCountSign(sArgList, ',') + 1;
+    int argNum = Cursor_count(sArgList, TOKEN_devider, ",") + 1;
     for (int i = 0; i < argNum; i++) {
-        char* sItem = strsPopToken(&buffs, &sArgList, ',');
+        char* sItem = Cursor_popToken(&buffs, &sArgList, ",");
         char* sDefaultVal = NULL;
         char* sDefaultKey = NULL;
         int is_default = 0;
-        if (strIsContain(sItem, '=')) {
+        if (Cursor_isContain(sItem, TOKEN_operator, "=")) {
             /* has default value */
             sDefaultVal = Cursor_splitCollect(&buffs, sItem, "=", 1);
             sDefaultKey = Cursor_splitCollect(&buffs, sItem, "=", 0);
@@ -1911,12 +1927,12 @@ const char control_keywords[][9] = {"break", "continue"};
 const char normal_keywords[][7] = {"while", "if", "elif"};
 
 AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
-                                                  Stack* block_stack,
+                                                  Stack* tBlockStack,
                                                   int block_deepth) {
     Stack s;
     stack_init(&s);
-    if (block_stack == NULL) {
-        block_stack = &s;
+    if (tBlockStack == NULL) {
+        tBlockStack = &s;
     }
     /* line is not exist */
     if (line == NULL) {
@@ -1943,7 +1959,7 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
     obj_setInt(ast, "blockDeepth", block_deepth_now);
 
     /* check if exit block */
-    block_deepth_last = stack_getTop(block_stack) + block_deepth;
+    block_deepth_last = stack_getTop(tBlockStack) + block_deepth;
     /* exit each block */
     for (int i = 0; i < block_deepth_last - block_deepth_now; i++) {
         QueueObj* exit_block_queue = obj_getObj(ast, "exitBlock");
@@ -1954,7 +1970,7 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
             queueObj_init(exit_block_queue);
         }
         char buff[10] = {0};
-        char* block_type = stack_popStr(block_stack, buff);
+        char* block_type = stack_popStr(tBlockStack, buff);
         /* push exit block type to exit_block queue */
         queueObj_pushStr(exit_block_queue, block_type);
     }
@@ -1970,7 +1986,7 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
             (line_start[keyword_len] == ' ')) {
             stmt = strsCut(&buffs, line_start, ' ', ':');
             AST_setNodeBlock(ast, keyword);
-            stack_pushStr(block_stack, keyword);
+            stack_pushStr(tBlockStack, keyword);
             goto block_matched;
         }
     }
@@ -2003,14 +2019,14 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
         char* arg_in = strsPopToken(list_buffs, &line_buff, ' ');
         AST_setNodeAttr(ast, "arg_in", arg_in);
         strsPopToken(list_buffs, &line_buff, ' ');
-        char* list_in = strsPopToken(list_buffs, &line_buff, ':');
+        char* list_in = Cursor_splitCollect(list_buffs, line_buff, ":", 0);
         list_in = strsAppend(list_buffs, "iter(", list_in);
         list_in = strsAppend(list_buffs, list_in, ")");
         list_in = strsCopy(&buffs, list_in);
         args_deinit(list_buffs);
         AST_setNodeBlock(ast, "for");
         AST_setNodeAttr(ast, "list_in", list_in);
-        stack_pushStr(block_stack, "for");
+        stack_pushStr(tBlockStack, "for");
         stmt = list_in;
         goto block_matched;
     }
@@ -2020,7 +2036,7 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
         if ((line_start[4] == ' ') || (line_start[4] == ':')) {
             stmt = "";
             AST_setNodeBlock(ast, "else");
-            stack_pushStr(block_stack, "else");
+            stack_pushStr(tBlockStack, "else");
         }
         goto block_matched;
     }
@@ -2031,7 +2047,7 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
         if ((line_start[3] == ' ') || (line_start[3] == ':')) {
             stmt = "";
             AST_setNodeBlock(ast, "try");
-            stack_pushStr(block_stack, "try");
+            stack_pushStr(tBlockStack, "try");
         }
         goto block_matched;
     }
@@ -2041,7 +2057,7 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
         if ((line_start[6] == ' ') || (line_start[6] == ':')) {
             stmt = "";
             AST_setNodeBlock(ast, "except");
-            stack_pushStr(block_stack, "except");
+            stack_pushStr(tBlockStack, "except");
         }
         goto block_matched;
     }
@@ -2116,25 +2132,25 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
     }
     if (strIsStartWith(line_start, (char*)"def ")) {
         stmt = "";
-        char* declare = strsCut(&buffs, line_start, ' ', ':');
-        if (NULL == declare) {
+        char* sDeclare = strsCut(&buffs, line_start, ' ', ':');
+        if (NULL == sDeclare) {
             obj_deinit(ast);
             ast = NULL;
             goto exit;
         }
-        declare = Cursor_getCleanStmt(&buffs, declare);
-        if (!strIsContain(declare, '(') || !strIsContain(declare, ')')) {
+        sDeclare = Cursor_getCleanStmt(&buffs, sDeclare);
+        if (!strIsContain(sDeclare, '(') || !strIsContain(sDeclare, ')')) {
             obj_deinit(ast);
             ast = NULL;
             goto exit;
         }
-        char* defaultStmt = _defGetDefault(&buffs, &declare);
+        char* sDefaultStmt = _defGetDefault(&buffs, &sDeclare);
         AST_setNodeBlock(ast, "def");
-        AST_setNodeAttr(ast, "declare", declare);
-        if (defaultStmt[0] != '\0') {
-            AST_setNodeAttr(ast, "default", defaultStmt);
+        AST_setNodeAttr(ast, "declare", sDeclare);
+        if (sDefaultStmt[0] != '\0') {
+            AST_setNodeAttr(ast, "default", sDefaultStmt);
         }
-        stack_pushStr(block_stack, "def");
+        stack_pushStr(tBlockStack, "def");
         goto block_matched;
     }
     if (strIsStartWith(line_start, (char*)"class ")) {
@@ -2148,7 +2164,7 @@ AST* AST_parseLine_withBlockStack_withBlockDeepth(char* line,
         declare = Cursor_getCleanStmt(&buffs, declare);
         AST_setNodeBlock(ast, "class");
         AST_setNodeAttr(ast, "declare", declare);
-        stack_pushStr(block_stack, "class");
+        stack_pushStr(tBlockStack, "class");
         goto block_matched;
     }
 
@@ -2407,7 +2423,7 @@ static char* Suger_import(Args* outbuffs, char* line) {
 }
 
 static char* Parser_linePreProcess(Args* outbuffs, char* line) {
-    line = Parser_removeAnnotation(line);
+    line = Parser_removeComment(line);
     Arg* line_buff = NULL;
     int line_num = 0;
     /* check syntex error */
@@ -2485,168 +2501,180 @@ static int Parser_isVoidLine(char* line) {
     return 1;
 }
 
-static uint8_t Parser_checkIsMultiComment(char* line) {
-    for (uint32_t i = 0; i < strGetSize(line); i++) {
+static uint8_t Parser_checkIsMultiComment(char* line, uint8_t* pbIsOneLine) {
+    uint8_t bIsMultiComment = 0;
+    uint32_t i = 0;
+    uint32_t uLineSize = strGetSize(line);
+    while (i + 2 < uLineSize) {
         /* not match ' or " */
         if ((line[i] != '\'') && (line[i] != '"')) {
+            i++;
             continue;
         }
         /* not match ''' or """ */
         if (!((line[i + 1] == line[i]) && (line[i + 2] == line[i]))) {
+            i++;
             continue;
         }
-        /* check char befor the ''' or """ */
-        if (!((0 == i) || (line[i - 1] == ' '))) {
-            continue;
+        if (bIsMultiComment) {
+            *pbIsOneLine = 1;
         }
-        /* check char after the ''' or """ */
-        if (!((line[i + 3] == ' ') || (line[i + 3] == 0))) {
-            continue;
-        }
-        /* mached */
-        return 1;
+        bIsMultiComment = 1;
+        i += 3;
     }
-    /* not mached */
-    return 0;
+    return bIsMultiComment;
 }
 
 static char* _Parser_linesToBytesOrAsm(Args* outBuffs,
                                        ByteCodeFrame* bytecode_frame,
-                                       char* py_lines) {
-    Stack block_stack;
-    stack_init(&block_stack);
-    Arg* asm_buff = arg_newStr("");
-    uint32_t lines_offset = 0;
-    uint16_t lines_num = strCountSign(py_lines, '\n') + 1;
-    uint16_t lines_index = 0;
-    uint8_t is_in_multi_comment = 0;
-    Arg* line_connection_arg = arg_newStr("");
-    uint8_t is_line_connection = 0;
-    char* out_ASM = NULL;
-    char* single_ASM = NULL;
-    uint32_t line_size = 0;
+                                       char* sPyLines) {
+    Stack tBlockStack;
+    stack_init(&tBlockStack);
+    Arg* aAsm = arg_newStr("");
+    uint32_t uLinesOffset = 0;
+    uint16_t uLinesNum = strCountSign(sPyLines, '\n') + 1;
+    uint16_t uLinesIndex = 0;
+    uint8_t bIsInMultiComment = 0;
+    uint8_t bIsOneLineMultiComment = 0;
+    Arg* aLineConnection = arg_newStr("");
+    uint8_t bIsLineConnection = 0;
+    char* sOutASM = NULL;
+    char* sSingleASM = NULL;
+    uint32_t uLineSize = 0;
     /* parse each line */
     while (1) {
-        lines_index++;
+        uLinesIndex++;
         Args buffs = {0};
-        char* line_origin = NULL;
-        char* line = NULL;
+        char* sLineOrigin = NULL;
+        char* sLine = NULL;
 
         /* add void line to the end */
-        if (lines_index >= lines_num + 1) {
-            line = "";
+        if (uLinesIndex >= uLinesNum + 1) {
+            sLine = "";
             goto parse_line;
         }
 
         /* get single line by pop multiline */
-        line_origin = strsGetFirstToken(&buffs, py_lines + lines_offset, '\n');
+        sLineOrigin = strsGetFirstToken(&buffs, sPyLines + uLinesOffset, '\n');
 
-        line = strsCopy(&buffs, line_origin);
+        sLine = strsCopy(&buffs, sLineOrigin);
+
         /* line connection */
-        if (is_line_connection) {
-            is_line_connection = 0;
-            line_connection_arg = arg_strAppend(line_connection_arg, line);
-            line = strsCopy(&buffs, arg_getStr(line_connection_arg));
+        if (bIsLineConnection) {
+            bIsLineConnection = 0;
+            aLineConnection = arg_strAppend(aLineConnection, sLine);
+            sLine = strsCopy(&buffs, arg_getStr(aLineConnection));
             /* reflash the line_connection_arg */
-            arg_deinit(line_connection_arg);
-            line_connection_arg = arg_newStr("");
+            arg_deinit(aLineConnection);
+            aLineConnection = arg_newStr("");
         }
 
         /* check connection */
-        if ('\\' == line[strGetSize(line) - 1]) {
+        if ('\\' == sLine[strGetSize(sLine) - 1]) {
             /* remove the '\\' */
-            line[strGetSize(line) - 1] = '\0';
-            is_line_connection = 1;
-            line_connection_arg = arg_strAppend(line_connection_arg, line);
+            sLine[strGetSize(sLine) - 1] = '\0';
+            bIsLineConnection = 1;
+            aLineConnection = arg_strAppend(aLineConnection, sLine);
             goto next_line;
         }
-        Cursor_forEach(c, line) {
+
+        /* filter for not end \n */
+        if (Parser_isVoidLine(sLine)) {
+            goto next_line;
+        }
+
+        /* filter for multiline comment ''' or """ */
+        if (Parser_checkIsMultiComment(sLine, &bIsOneLineMultiComment)) {
+            bIsInMultiComment = ~bIsInMultiComment;
+            /* skip one line multiline comment */
+            if (bIsOneLineMultiComment) {
+                bIsInMultiComment = 0;
+                bIsOneLineMultiComment = 0;
+            }
+            goto next_line;
+        }
+
+        /* skip multiline comment */
+        if (bIsInMultiComment) {
+            goto next_line;
+        }
+
+        /* support Tab */
+        sLine = strsReplace(&buffs, sLine, "\t", "    ");
+        /* remove \r */
+        sLine = strsReplace(&buffs, sLine, "\r", "");
+
+        /* check auto connection */
+        Cursor_forEach(c, sLine) {
             Cursor_iterStart(&c);
             Cursor_iterEnd(&c);
         }
         Cursor_deinit(&c);
         /* auto connection */
-        if (lines_index < lines_num) {
+        if (uLinesIndex < uLinesNum) {
             if (c.branket_deepth > 0) {
-                line_connection_arg = arg_strAppend(line_connection_arg, line);
-                is_line_connection = 1;
+                aLineConnection = arg_strAppend(aLineConnection, sLine);
+                bIsLineConnection = 1;
                 goto next_line;
             }
         }
 
         /* branket match failed */
         if (c.branket_deepth != 0) {
-            single_ASM = NULL;
+            sSingleASM = NULL;
             goto parse_after;
-        }
-
-        /* support Tab */
-        line = strsReplace(&buffs, line, "\t", "    ");
-        /* remove \r */
-        line = strsReplace(&buffs, line, "\r", "");
-
-        /* filter for not end \n */
-        if (Parser_isVoidLine(line)) {
-            goto next_line;
-        }
-
-        /* filter for multiline comment ''' or """ */
-        if (Parser_checkIsMultiComment(line)) {
-            is_in_multi_comment = ~is_in_multi_comment;
-            goto next_line;
-        }
-
-        /* skipe multiline comment */
-        if (is_in_multi_comment) {
-            goto next_line;
         }
 
     parse_line:
         /* parse single Line to Asm */
-        single_ASM = Parser_LineToAsm(&buffs, line, &block_stack);
+        sSingleASM = Parser_LineToAsm(&buffs, sLine, &tBlockStack);
     parse_after:
-        if (NULL == single_ASM) {
-            out_ASM = NULL;
+        if (NULL == sSingleASM) {
+            sOutASM = NULL;
+            pika_platform_printf(
+                "----------[%d]----------\r\n%s\r\n-------------------------"
+                "\r\n",
+                uLinesIndex, sLine);
             strsDeinit(&buffs);
             goto exit;
         }
 
         if (NULL == bytecode_frame) {
             /* store ASM */
-            asm_buff = arg_strAppend(asm_buff, single_ASM);
+            aAsm = arg_strAppend(aAsm, sSingleASM);
         } else if (NULL == outBuffs) {
             /* store ByteCode */
-            byteCodeFrame_appendFromAsm(bytecode_frame, single_ASM);
+            byteCodeFrame_appendFromAsm(bytecode_frame, sSingleASM);
         }
 
     next_line:
-        if (lines_index < lines_num) {
-            line_size = strGetSize(line_origin);
-            lines_offset = lines_offset + line_size + 1;
+        if (uLinesIndex < uLinesNum) {
+            uLineSize = strGetSize(sLineOrigin);
+            uLinesOffset = uLinesOffset + uLineSize + 1;
         }
         strsDeinit(&buffs);
 
         /* exit when finished */
-        if (lines_index >= lines_num + 1) {
+        if (uLinesIndex >= uLinesNum + 1) {
             break;
         }
     }
     if (NULL != outBuffs) {
         /* load stored ASM */
-        out_ASM = strsCopy(outBuffs, arg_getStr(asm_buff));
+        sOutASM = strsCopy(outBuffs, arg_getStr(aAsm));
     } else {
-        out_ASM = (char*)1;
+        sOutASM = (char*)1;
     }
     goto exit;
 exit:
-    if (NULL != asm_buff) {
-        arg_deinit(asm_buff);
+    if (NULL != aAsm) {
+        arg_deinit(aAsm);
     }
-    if (NULL != line_connection_arg) {
-        arg_deinit(line_connection_arg);
+    if (NULL != aLineConnection) {
+        arg_deinit(aLineConnection);
     }
-    stack_deinit(&block_stack);
-    return out_ASM;
+    stack_deinit(&tBlockStack);
+    return sOutASM;
 };
 
 PIKA_RES Parser_linesToBytes(ByteCodeFrame* bf, char* py_lines) {
@@ -2683,8 +2711,12 @@ char* Parser_fileToAsm(Args* outBuffs, char* filename) {
     /* add '\n' at the end */
     lines = strsAppend(&buffs, lines, "\n\n");
     char* res = Parser_linesToAsm(&buffs, lines);
-    arg_deinit(file_arg);
+    if (NULL == res) {
+        goto __exit;
+    }
     res = strsCopy(outBuffs, res);
+__exit:
+    arg_deinit(file_arg);
     strsDeinit(&buffs);
     return res;
 }
@@ -2779,7 +2811,7 @@ char* GenRule_toAsm(GenRule rule,
     return pikaAsm;
 }
 
-char* AST_genAsm(AST* ast, Args* outBuffs) {
+char* AST_genAsm(AST* oAST, Args* outBuffs) {
     const GenRule rules_topAst[] = {
         {.ins = "CTN", .type = VAL_NONEVAL, .ast = "continue"},
         {.ins = "BRK", .type = VAL_NONEVAL, .ast = "break"},
@@ -2799,14 +2831,14 @@ char* AST_genAsm(AST* ast, Args* outBuffs) {
     };
 
     Args buffs = {0};
-    char* pikaAsm = strsCopy(&buffs, "");
+    char* sPikaAsm = strsCopy(&buffs, "");
     QueueObj* exitBlock;
     uint8_t is_block_matched;
-    if (NULL == ast) {
-        pikaAsm = NULL;
+    if (NULL == oAST) {
+        sPikaAsm = NULL;
         goto exit;
     }
-    exitBlock = obj_getObj(ast, "exitBlock");
+    exitBlock = obj_getObj(oAST, "exitBlock");
     /* exiting from block */
     if (exitBlock != NULL) {
         while (1) {
@@ -2818,81 +2850,82 @@ char* AST_genAsm(AST* ast, Args* outBuffs) {
             }
             /* goto the while start when exit while block */
             if (strEqu(block_type, "while")) {
-                pikaAsm =
-                    ASM_addBlockDeepth(ast, outBuffs, pikaAsm, block_type_num);
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 JMP -1\n");
+                sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm,
+                                              block_type_num);
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"0 JMP -1\n");
             }
 #if PIKA_SYNTAX_EXCEPTION_ENABLE
             /* goto the while start when exit while block */
             if (strEqu(block_type, "try")) {
-                pikaAsm =
-                    ASM_addBlockDeepth(ast, outBuffs, pikaAsm, block_type_num);
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 NTR \n");
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 GER \n");
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 JEZ 2\n");
+                sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm,
+                                              block_type_num);
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"0 NTR \n");
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"0 GER \n");
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"0 JEZ 2\n");
             }
 #endif
             /* goto the while start when exit while block */
             if (strEqu(block_type, "for")) {
-                pikaAsm =
-                    ASM_addBlockDeepth(ast, outBuffs, pikaAsm, block_type_num);
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 JMP -1\n");
+                sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm,
+                                              block_type_num);
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"0 JMP -1\n");
                 /* garbage collect for the list */
-                pikaAsm =
-                    ASM_addBlockDeepth(ast, outBuffs, pikaAsm, block_type_num);
+                sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm,
+                                              block_type_num);
                 char _l_x[] = "$lx";
                 char block_deepth_char =
-                    AST_getBlockDeepthNow(ast) + block_type_num + '0';
+                    AST_getBlockDeepthNow(oAST) + block_type_num + '0';
                 _l_x[sizeof(_l_x) - 2] = block_deepth_char;
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 DEL ");
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)_l_x);
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"\n");
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"0 DEL ");
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)_l_x);
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"\n");
             }
             /* return when exit method */
             if (strEqu(block_type, "def")) {
-                pikaAsm = ASM_addBlockDeepth(ast, outBuffs, pikaAsm,
-                                             block_type_num + 1);
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 RET \n");
+                sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm,
+                                              block_type_num + 1);
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"0 RET \n");
             }
             /* return when exit class */
             if (strEqu(block_type, "class")) {
-                pikaAsm = ASM_addBlockDeepth(ast, outBuffs, pikaAsm,
-                                             block_type_num + 1);
-                pikaAsm =
-                    strsAppend(outBuffs, pikaAsm, (char*)"0 RAS $origin\n");
-                pikaAsm = ASM_addBlockDeepth(ast, outBuffs, pikaAsm, 1);
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 NEW self\n");
-                pikaAsm = strsAppend(outBuffs, pikaAsm, (char*)"0 RET \n");
+                sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm,
+                                              block_type_num + 1);
+                sPikaAsm =
+                    strsAppend(outBuffs, sPikaAsm, (char*)"0 RAS $origin\n");
+                sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm, 1);
+                sPikaAsm =
+                    strsAppend(outBuffs, sPikaAsm, (char*)"0 NEW self\n");
+                sPikaAsm = strsAppend(outBuffs, sPikaAsm, (char*)"0 RET \n");
             }
         }
     }
     /* add block deepth */
     /* example: B0 */
-    pikaAsm = ASM_addBlockDeepth(ast, outBuffs, pikaAsm, 0);
+    sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm, 0);
 
     /* "deepth" is invoke deepth, not the blockDeepth */
-    obj_setInt(ast, "deepth", 0);
+    obj_setInt(oAST, "deepth", 0);
 
     /* match block */
     is_block_matched = 0;
-    if (strEqu(AST_getThisBlock(ast), "for")) {
+    if (strEqu(AST_getThisBlock(oAST), "for")) {
         /* for "for" iter */
-        char* arg_in = obj_getStr(ast, "arg_in");
+        char* arg_in = obj_getStr(oAST, "arg_in");
 #if !PIKA_NANO_ENABLE
         char* arg_in_kv = NULL;
 #endif
         Arg* newAsm_arg = arg_newStr("");
         char _l_x[] = "$lx";
         char block_deepth_char = '0';
-        block_deepth_char += AST_getBlockDeepthNow(ast);
+        block_deepth_char += AST_getBlockDeepthNow(oAST);
         _l_x[sizeof(_l_x) - 2] = block_deepth_char;
         /* init iter */
         /*     get the iter(_l<x>) */
-        pikaAsm = AST_genAsm_sub(ast, ast, &buffs, pikaAsm);
+        sPikaAsm = AST_genAsm_sub(oAST, oAST, &buffs, sPikaAsm);
         newAsm_arg = arg_strAppend(newAsm_arg, "0 OUT ");
         newAsm_arg = arg_strAppend(newAsm_arg, _l_x);
         newAsm_arg = arg_strAppend(newAsm_arg, "\n");
-        pikaAsm = strsAppend(&buffs, pikaAsm, arg_getStr(newAsm_arg));
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, arg_getStr(newAsm_arg));
         arg_deinit(newAsm_arg);
         newAsm_arg = arg_newStr("");
         /* get next */
@@ -2912,7 +2945,7 @@ char* AST_genAsm(AST* ast, Args* outBuffs) {
         }
 #endif
 
-        pikaAsm = ASM_addBlockDeepth(ast, outBuffs, pikaAsm, 0);
+        sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm, 0);
         newAsm_arg = arg_strAppend(newAsm_arg, "0 RUN ");
         newAsm_arg = arg_strAppend(newAsm_arg, _l_x);
         newAsm_arg = arg_strAppend(newAsm_arg,
@@ -2924,7 +2957,7 @@ char* AST_genAsm(AST* ast, Args* outBuffs) {
                                    "0 EST ");
         newAsm_arg = arg_strAppend(newAsm_arg, arg_in);
         newAsm_arg = arg_strAppend(newAsm_arg, "\n0 JEZ 2\n");
-        pikaAsm = strsAppend(&buffs, pikaAsm, arg_getStr(newAsm_arg));
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, arg_getStr(newAsm_arg));
         arg_deinit(newAsm_arg);
 
 #if !PIKA_NANO_ENABLE
@@ -2939,55 +2972,56 @@ char* AST_genAsm(AST* ast, Args* outBuffs) {
                                         "%s = $tmp[%d]\n", item, out_num);
 
                 AST* ast_this = AST_parseLine_withBlockDeepth(
-                    stmt, AST_getBlockDeepthNow(ast) + 1);
-                pikaAsm =
-                    strsAppend(&buffs, pikaAsm, AST_genAsm(ast_this, &buffs));
+                    stmt, AST_getBlockDeepthNow(oAST) + 1);
+                sPikaAsm =
+                    strsAppend(&buffs, sPikaAsm, AST_genAsm(ast_this, &buffs));
                 AST_deinit(ast_this);
                 out_num++;
             }
-            pikaAsm = ASM_addBlockDeepth(ast, outBuffs, pikaAsm, 1);
-            pikaAsm = strsAppend(&buffs, pikaAsm, "0 DEL $tmp\n");
+            sPikaAsm = ASM_addBlockDeepth(oAST, outBuffs, sPikaAsm, 1);
+            sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 DEL $tmp\n");
         }
 #endif
 
         is_block_matched = 1;
         goto exit;
     }
-    if (strEqu(AST_getThisBlock(ast), "elif")) {
+    if (strEqu(AST_getThisBlock(oAST), "elif")) {
         /* skip if __else is 0 */
-        pikaAsm = strsAppend(&buffs, pikaAsm, "0 NEL 1\n");
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 NEL 1\n");
         /* parse stmt ast */
-        pikaAsm = AST_genAsm_sub(ast, ast, &buffs, pikaAsm);
+        sPikaAsm = AST_genAsm_sub(oAST, oAST, &buffs, sPikaAsm);
         /* skip if stmt is 0 */
-        pikaAsm = strsAppend(&buffs, pikaAsm, "0 JEZ 1\n");
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 JEZ 1\n");
         is_block_matched = 1;
         goto exit;
     }
-    if (strEqu(AST_getThisBlock(ast), "def")) {
+    if (strEqu(AST_getThisBlock(oAST), "def")) {
 #if !PIKA_NANO_ENABLE
-        char* defaultStmts = AST_getNodeAttr(ast, "default");
+        char* sDefaultStmts = AST_getNodeAttr(oAST, "default");
 #endif
-        pikaAsm = strsAppend(&buffs, pikaAsm, "0 DEF ");
-        pikaAsm = strsAppend(&buffs, pikaAsm, AST_getNodeAttr(ast, "declare"));
-        pikaAsm = strsAppend(&buffs, pikaAsm,
-                             "\n"
-                             "0 JMP 1\n");
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 DEF ");
+        sPikaAsm =
+            strsAppend(&buffs, sPikaAsm, AST_getNodeAttr(oAST, "declare"));
+        sPikaAsm = strsAppend(&buffs, sPikaAsm,
+                              "\n"
+                              "0 JMP 1\n");
 
 #if !PIKA_NANO_ENABLE
-        if (NULL != defaultStmts) {
-            int stmt_num = strGetTokenNum(defaultStmts, ',');
-            for (int i = 0; i < stmt_num; i++) {
-                char* stmt = strsPopToken(&buffs, &defaultStmts, ',');
-                char* arg_name = strsGetFirstToken(&buffs, stmt, '=');
-                pikaAsm = ASM_addBlockDeepth(ast, &buffs, pikaAsm, 1);
-                pikaAsm = strsAppend(&buffs, pikaAsm, "0 EST ");
-                pikaAsm = strsAppend(&buffs, pikaAsm, arg_name);
-                pikaAsm = strsAppend(&buffs, pikaAsm, "\n");
-                pikaAsm = strsAppend(&buffs, pikaAsm, "0 JNZ 2\n");
+        if (NULL != sDefaultStmts) {
+            int iStmtNum = strGetTokenNum(sDefaultStmts, ',');
+            for (int i = 0; i < iStmtNum; i++) {
+                char* sStmt = Cursor_popToken(&buffs, &sDefaultStmts, ",");
+                char* sArgName = strsGetFirstToken(&buffs, sStmt, '=');
+                sPikaAsm = ASM_addBlockDeepth(oAST, &buffs, sPikaAsm, 1);
+                sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 EST ");
+                sPikaAsm = strsAppend(&buffs, sPikaAsm, sArgName);
+                sPikaAsm = strsAppend(&buffs, sPikaAsm, "\n");
+                sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 JNZ 2\n");
                 AST* ast_this = AST_parseLine_withBlockDeepth(
-                    stmt, AST_getBlockDeepthNow(ast) + 1);
-                pikaAsm =
-                    strsAppend(&buffs, pikaAsm, AST_genAsm(ast_this, &buffs));
+                    sStmt, AST_getBlockDeepthNow(oAST) + 1);
+                sPikaAsm =
+                    strsAppend(&buffs, sPikaAsm, AST_genAsm(ast_this, &buffs));
                 AST_deinit(ast_this);
             }
         }
@@ -2997,8 +3031,8 @@ char* AST_genAsm(AST* ast, Args* outBuffs) {
         goto exit;
     }
 
-    if (strEqu(AST_getThisBlock(ast), "class")) {
-        char* declare = obj_getStr(ast, "declare");
+    if (strEqu(AST_getThisBlock(oAST), "class")) {
+        char* declare = obj_getStr(oAST, "declare");
         char* thisClass = NULL;
         char* superClass = NULL;
         if (strIsContain(declare, '(')) {
@@ -3016,29 +3050,29 @@ char* AST_genAsm(AST* ast, Args* outBuffs) {
             /* default superClass */
             superClass = "TinyObj";
         }
-        pikaAsm = strsAppend(&buffs, pikaAsm, "0 CLS ");
-        pikaAsm = strsAppend(&buffs, pikaAsm,
-                             strsAppend(&buffs, thisClass,
-                                        "()\n"
-                                        "0 JMP 1\n"));
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 CLS ");
+        sPikaAsm = strsAppend(&buffs, sPikaAsm,
+                              strsAppend(&buffs, thisClass,
+                                         "()\n"
+                                         "0 JMP 1\n"));
         char block_deepth_str[] = "B0\n";
         /* goto deeper block */
-        block_deepth_str[1] += AST_getBlockDeepthNow(ast) + 1;
-        pikaAsm = strsAppend(&buffs, pikaAsm, block_deepth_str);
-        pikaAsm = strsAppend(&buffs, pikaAsm, "0 RUN ");
-        pikaAsm = strsAppend(&buffs, pikaAsm, superClass);
-        pikaAsm = strsAppend(&buffs, pikaAsm, "\n");
-        pikaAsm = strsAppend(&buffs, pikaAsm, "0 OUT self\n");
-        pikaAsm = strsAppend(&buffs, pikaAsm, block_deepth_str);
-        pikaAsm = strsAppend(&buffs, pikaAsm, "0 RAS self\n");
+        block_deepth_str[1] += AST_getBlockDeepthNow(oAST) + 1;
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, block_deepth_str);
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 RUN ");
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, superClass);
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, "\n");
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 OUT self\n");
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, block_deepth_str);
+        sPikaAsm = strsAppend(&buffs, sPikaAsm, "0 RAS self\n");
         is_block_matched = 1;
         goto exit;
     }
 
     for (size_t i = 0; i < sizeof(rules_block) / sizeof(GenRule); i++) {
         GenRule rule = rules_block[i];
-        if (strEqu(AST_getThisBlock(ast), rule.ast)) {
-            pikaAsm = GenRule_toAsm(rule, &buffs, ast, pikaAsm, 0);
+        if (strEqu(AST_getThisBlock(oAST), rule.ast)) {
+            sPikaAsm = GenRule_toAsm(rule, &buffs, oAST, sPikaAsm, 0);
             is_block_matched = 1;
             goto exit;
         }
@@ -3048,26 +3082,26 @@ char* AST_genAsm(AST* ast, Args* outBuffs) {
     for (size_t i = 0; i < sizeof(rules_topAst) / sizeof(rules_topAst[0]);
          i++) {
         GenRule item = rules_topAst[i];
-        if (obj_isArgExist(ast, item.ast)) {
-            pikaAsm = GenRule_toAsm(item, &buffs, ast, pikaAsm, 0);
+        if (obj_isArgExist(oAST, item.ast)) {
+            sPikaAsm = GenRule_toAsm(item, &buffs, oAST, sPikaAsm, 0);
             is_block_matched = 1;
             goto exit;
         }
     }
 exit:
-    if (NULL == pikaAsm) {
+    if (NULL == sPikaAsm) {
         strsDeinit(&buffs);
         return NULL;
     }
     if (!is_block_matched) {
         /* parse stmt ast */
-        pikaAsm = AST_genAsm_sub(ast, ast, &buffs, pikaAsm);
+        sPikaAsm = AST_genAsm_sub(oAST, oAST, &buffs, sPikaAsm);
     }
 
     /* output pikaAsm */
-    pikaAsm = strsCopy(outBuffs, pikaAsm);
+    sPikaAsm = strsCopy(outBuffs, sPikaAsm);
     strsDeinit(&buffs);
-    return pikaAsm;
+    return sPikaAsm;
 }
 
 int32_t AST_deinit(AST* ast) {
