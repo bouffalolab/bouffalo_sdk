@@ -52,6 +52,7 @@ int pika_hal_platform_ADC_open(pika_dev* dev, char* name) {
         dev->platform_data = platform_adc;
         platform_adc->channel.pos_chan = ch;
         platform_adc->channel.neg_chan = ADC_CHANNEL_GND;
+        platform_adc->device = bflb_device_get_by_name("adc");
         return 0;
     }
     return -1;
