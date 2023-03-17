@@ -57,19 +57,51 @@ static int _pika_app_check(void) {
     return 0;
 }
 
+#define ERAISE_BATCH_SIZE (_PIKA_APP_FLASH_SIZE / 1)
+
+static int _do_eraise_app(void){
+    for (uint32_t i = 0; i < (_PIKA_APP_FLASH_SIZE / ERAISE_BATCH_SIZE); i++) {
+        int ret = 0;
+        ret = bflb_flash_erase(
+            _PIKA_APP_FLASH_ADDR + i * ERAISE_BATCH_SIZE,
+            ERAISE_BATCH_SIZE);
+        if (ret != 0) {
+            pika_platform_printf("Erase app.pika failed\r\n");
+            return -1;
+        }
+    }
+    return 0;
+}
+
+static void _eraise_app(void){
+    pika_platform_printf("Erasing app.pika...\r\n");
+    pika_platform_printf("Please release the button\r\n");
+    _do_eraise_app();
+    pika_platform_printf("Erase app.pika done\r\n");
+    pika_platform_reboot();
+}
+
 uint8_t _pika_app_buf[_PIKA_APP_FLASH_SIZE] = {0};
 static void consumer_task(void* pvParameters) {
     cdc_acm_init();
     vTaskDelay(1000);
+    struct bflb_device_s* gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, GPIO_PIN_33,
+                   GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
+    vTaskDelay(100);
+    if (bflb_gpio_read(gpio, GPIO_PIN_33) == 0){
+        _eraise_app();
+    }
+
     PikaObj* root = newRootObj("root", New_PikaMain);
     if (_pika_app_check()) {
-        printf("Load app.pika from flash\r\n");
+        pika_platform_printf("Load app.pika from flash\r\n");
         FILE* f = pika_platform_fopen("app.pika", "rb");
         pika_platform_fread(_pika_app_buf, 1, _PIKA_APP_FLASH_SIZE, f);
         obj_linkLibrary(root, (uint8_t*)_pika_app_buf);
         obj_runModule(root, "main");
     } else {
-        printf("Load app.pika from flash failed\r\n");
+        pika_platform_printf("Load app.pika from flash failed\r\n");
         extern unsigned char pikaModules_py_a[];
         obj_linkLibrary(root, pikaModules_py_a);
         obj_runModule(root, "main");
@@ -79,7 +111,7 @@ static void consumer_task(void* pvParameters) {
     }
 }
 
-static void _erise_app_task(void* pvParameters) {
+static void _erase_app_task(void* pvParameters) {
     struct bflb_device_s* gpio = bflb_device_get_by_name("gpio");
     bflb_gpio_init(gpio, GPIO_PIN_2,
                    GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_0);
@@ -88,19 +120,19 @@ static void _erise_app_task(void* pvParameters) {
         if (bflb_gpio_read(gpio, GPIO_PIN_2) == 1) {
             time++;
             if (time > 100) {
-                printf("Erasing app.pika...\r\n");
-                printf("Please release the button\r\n");
-                for (uint32_t i = 1; i < (_PIKA_APP_FLASH_SIZE / 1024); i++) {
-                    bflb_flash_erase(_PIKA_APP_FLASH_ADDR + (i - 1) * 1024,
-                                     i * 1024);
-                }
-                printf("Erase app.pika done\r\n");
-                pika_platform_reboot();
+                _eraise_app();
             }
         } else {
             time = 0;
         }
         vTaskDelay(10);
+    }
+}
+
+static void usb_cdc_fflush_task(void* pvParameters) {
+    while (1) {
+        vTaskDelay(30);
+        usb_cdc_fflush();
     }
 }
 
@@ -115,9 +147,11 @@ int main(void) {
     // printf("Heap size: %d\r\n", configTOTAL_HEAP_SIZE);
 
 #if PIKA_FREERTOS_ENABLE
-    xTaskCreate(_erise_app_task, (char*)"erise_app_task", 8192, NULL,
+    xTaskCreate(_erase_app_task, (char*)"erase_app_task", 8192, NULL,
                 configMAX_PRIORITIES - 1, NULL);
     xTaskCreate(consumer_task, (char*)"consumer_task", 8 * 1024, NULL, 3, NULL);
+    xTaskCreate(usb_cdc_fflush_task, (char*)"usb_cdc_fflush_task", 1024, NULL,
+                1, NULL);
     vTaskStartScheduler();
 #else
     consumer_task(NULL);
@@ -179,9 +213,7 @@ FILE* pika_platform_fopen(const char* filename, const char* modes) {
         if (strchr(modes, 'w') == NULL) {
             return fp;
         }
-        for (uint32_t i = 1; i < (_PIKA_APP_FLASH_SIZE / 1024); i++) {
-            bflb_flash_erase(_PIKA_APP_FLASH_ADDR + (i - 1) * 1024, i * 1024);
-        }
+        _do_eraise_app();
         return fp;
     }
     return NULL;

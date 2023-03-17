@@ -1,11 +1,7 @@
 #include "../pikascript-lib/PikaStdDevice/pika_hal.h"
 #include "bflb_gpio.h"
+#include "pika_hal_BLMCU_common.h"
 
-typedef struct platform_gpio_t {
-    struct bflb_device_s* device;
-    uint8_t pin;
-    uint32_t config;
-} platform_gpio_t;
 
 int pika_hal_platform_GPIO_open(pika_dev* dev, char* name) {
     dev->platform_data = pikaMalloc(sizeof(platform_gpio_t));

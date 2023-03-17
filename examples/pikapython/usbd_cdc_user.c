@@ -1,5 +1,8 @@
 #include "usbd_core.h"
 #include "usbd_cdc.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include <stdio.h>
 
 /*!< endpoint address */
 #define CDC_IN_EP  0x81
@@ -10,6 +13,8 @@
 #define USBD_PID           0xFFFF
 #define USBD_MAX_POWER     100
 #define USBD_LANGID_STRING 1033
+
+#define USB_CDC_BUFFER_SIZE (1024 * 8)
 
 /*!< config descriptor size */
 #define USB_CONFIG_SIZE (9 + CDC_ACM_DESCRIPTOR_LEN)
@@ -93,11 +98,21 @@ static const uint8_t cdc_descriptor[] = {
     0x00
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[2048];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[USB_CDC_BUFFER_SIZE];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[USB_CDC_BUFFER_SIZE];
+
+struct circular_queue {
+    uint8_t buffer[USB_CDC_BUFFER_SIZE];
+    uint32_t head;
+    uint32_t tail;
+};
+
+struct circular_queue read_queue = {0};
+struct circular_queue write_queue = {0};
 
 volatile bool ep_tx_busy_flag = false;
 volatile bool ep_rx_ready_flag = false;
+volatile bool ep_rx_busy_flag = false;
 
 #ifdef CONFIG_USB_HS
 #define CDC_MAX_MPS 512
@@ -107,16 +122,27 @@ volatile bool ep_rx_ready_flag = false;
 
 void usbd_configure_done_callback(void)
 {
+    // printf("usbd configure done callback\r\n");
     /* setup first out ep read transfer */
-    usbd_ep_start_read(CDC_OUT_EP, read_buffer, 2048);
+    usbd_ep_start_read(CDC_OUT_EP, read_buffer, USB_CDC_BUFFER_SIZE);
 }
 
-void usbd_cdc_acm_bulk_out(uint8_t ep, uint32_t nbytes)
+void usbd_cdc_acm_bulk_rx(uint8_t ep, uint32_t nbytes)
 {
-    ep_rx_ready_flag = true;
+    /* append to read_queue */
+    ep_rx_busy_flag = true;
+    // printf("actual out len:%d\r\n", nbytes);
+
+    for (int i = 0; i < nbytes; i++) {
+        read_queue.buffer[read_queue.tail] = read_buffer[i];
+        read_queue.tail = (read_queue.tail + 1) % USB_CDC_BUFFER_SIZE;
+    }
+
+    ep_rx_busy_flag = false;
+    usbd_ep_start_read(CDC_OUT_EP, read_buffer, USB_CDC_BUFFER_SIZE);
 }
 
-void usbd_cdc_acm_bulk_in(uint8_t ep, uint32_t nbytes)
+void usbd_cdc_acm_bulk_tx(uint8_t ep, uint32_t nbytes)
 {
     // USB_LOG_RAW("actual in len:%d\r\n", nbytes);
 
@@ -125,18 +151,19 @@ void usbd_cdc_acm_bulk_in(uint8_t ep, uint32_t nbytes)
         usbd_ep_start_write(CDC_IN_EP, NULL, 0);
     } else {
         ep_tx_busy_flag = false;
+        // usb_cdc_fflush();
     }
 }
 
 /*!< endpoint call back */
 struct usbd_endpoint cdc_out_ep = {
     .ep_addr = CDC_OUT_EP,
-    .ep_cb = usbd_cdc_acm_bulk_out
+    .ep_cb = usbd_cdc_acm_bulk_rx
 };
 
 struct usbd_endpoint cdc_in_ep = {
     .ep_addr = CDC_IN_EP,
-    .ep_cb = usbd_cdc_acm_bulk_in
+    .ep_cb = usbd_cdc_acm_bulk_tx
 };
 
 struct usbd_interface intf0;
@@ -188,25 +215,72 @@ int usbd_ep_read_sync(uint8_t ep, void *buf, uint32_t nbytes)
     return 0;
 }
 
+int usb_cdc_fflush(void){
+    if (ep_tx_busy_flag) {
+        return 0;
+    }
+    /* fflush for write_queue */
+    if (write_queue.head == write_queue.tail) {
+        return 0;
+    }
+    int len = write_queue.tail - write_queue.head;
+    if (len < 0) {
+        len += USB_CDC_BUFFER_SIZE;
+    }
+    if (len > USB_CDC_BUFFER_SIZE) {
+        len -= USB_CDC_BUFFER_SIZE;
+    }
+    for (int i = 0; i < len; i++) {
+        write_buffer[i] = write_queue.buffer[write_queue.head];
+        write_queue.head = (write_queue.head + 1) % USB_CDC_BUFFER_SIZE;
+    }
+    // printf("usb_cdc_fflush:%d\r\n", len);
+    ep_tx_busy_flag = true;
+    usbd_ep_start_write(CDC_IN_EP, write_buffer, len); 
+}
+
 int usb_cdc_user_putchar(char ch)
 {
     // printf("usb_cdc_user_putchar:%c\r\n", ch);
-    write_buffer[0] = ch;
-    usbd_ep_write_sync(CDC_IN_EP, write_buffer, 1);
+    /* append to write_queue */
+    write_queue.buffer[write_queue.tail] = ch;
+    write_queue.tail = (write_queue.tail + 1) % USB_CDC_BUFFER_SIZE;
+    if (ch == '\n'){
+        usb_cdc_fflush();
+    }
     return 0;
 }
 
 char usb_cdc_user_getchar(void)
 {
-    usbd_ep_read_sync(CDC_OUT_EP, &read_buffer, 1);
+    // usbd_ep_read_sync(CDC_OUT_EP, &read_buffer, 1);
     // printf("usb_cdc_user_getchar:%c\r\n", read_buffer[0]);
-    return read_buffer[0];
+    char res = 0;
+
+    /* read from read_buffer_user */
+    while(1){
+        if (ep_rx_busy_flag){
+            printf("got ep_rx_busy_flag\r\n");
+            continue;
+        }
+        /* read from read_queue */
+        if (read_queue.head != read_queue.tail) {
+            res = read_queue.buffer[read_queue.head];
+            read_queue.head = (read_queue.head + 1) % USB_CDC_BUFFER_SIZE;
+            // printf("got res:%c\r\n", res);
+            // printf("read_queue.head:%d\r\n", read_queue.head);
+            // printf("read_queue.tail:%d\r\n", read_queue.tail);
+            break;
+        }
+        vTaskDelay(10);
+    }
+    return res;
 }
 
 void cdc_acm_data_send_with_dtr_test(void)
 {
     // if (dtr_enable) {
-        usbd_ep_read_sync(CDC_OUT_EP, read_buffer, 2048);
+        usbd_ep_read_sync(CDC_OUT_EP, read_buffer, USB_CDC_BUFFER_SIZE);
         usbd_ep_write_sync(CDC_IN_EP, read_buffer, strlen(read_buffer));
     // }
 }

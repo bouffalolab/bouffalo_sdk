@@ -1,1 +1,2 @@
-**/pikascript-api
+**/*.a
+**/*.o

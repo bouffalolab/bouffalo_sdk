@@ -47,8 +47,8 @@ int pika_hal_platform_DAC_ioctl_config(pika_dev* dev,
                                        pika_hal_DAC_config* cfg) {
     platform_dac_t* platform_dac = (platform_dac_t*)dev->platform_data;
     platform_dac->clk_div = DAC_CLK_DIV_16;
-    cfg->max = 3300000;
-    cfg->vref = (pika_float)3.3;
+    cfg->max = 4096;
+    cfg->vref = (pika_float)1.73;
     return 0;
 }
 
@@ -69,6 +69,7 @@ int pika_hal_platform_DAC_read(pika_dev* dev, void* buf, size_t count) {
 int pika_hal_platform_DAC_write(pika_dev* dev, void* buf, size_t count) {
     platform_dac_t* platform_dac = (platform_dac_t*)dev->platform_data;
     uint32_t value = *(uint32_t*)buf;
+    pika_debug("DAC write: %d", value);
     bflb_dac_set_value(platform_dac->device, platform_dac->channel, value);
     return 0;
 }
