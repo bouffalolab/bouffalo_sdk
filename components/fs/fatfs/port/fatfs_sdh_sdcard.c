@@ -115,21 +115,4 @@ void fatfs_sdh_driver_register(void)
     disk_driver_callback_init(DEV_SD, &SDH_DiskioDriver);
 }
 
-uint32_t get_fattime(void)
-{
-    uint16_t year = 2022;
-    uint8_t mon = 1;
-    uint8_t mday = 1;
-    uint8_t hour = 0;
-    uint8_t min = 0;
-    uint8_t sec = 0;
-
-    return ((uint32_t)(year - 1980) << 25 |
-            (uint32_t)mon << 21 |
-            (uint32_t)mday << 16 |
-            (uint32_t)hour << 11 |
-            (uint32_t)min << 5 |
-            (uint32_t)(sec / 2) << 0);
-}
-
 #endif

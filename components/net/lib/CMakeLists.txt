@@ -1,0 +1,4 @@
+sdk_add_subdirectory_ifdef(CONFIG_CJSON cjson)
+sdk_add_subdirectory_ifdef(CONFIG_HTTP http)
+sdk_add_subdirectory_ifdef(CONFIG_MQTT mqtt)
+sdk_add_subdirectory_ifdef(CONFIG_SNTP sntp)

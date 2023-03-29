@@ -39,9 +39,9 @@ static void gt911_i2c_gpio_init(void)
     gt911_i2c_gpio = bflb_device_get_by_name("gpio");
 
     /* I2C0_SCL */
-    bflb_gpio_init(gt911_i2c_gpio, GPIO_PIN_6, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gt911_i2c_gpio, TOUCH_I2C_SCL_PIN /* GPIO_PIN_6 */, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     /* I2C0_SDA */
-    bflb_gpio_init(gt911_i2c_gpio, GPIO_PIN_9, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gt911_i2c_gpio, TOUCH_I2C_SDA_PIN /* GPIO_PIN_9 */, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
 }
 
 static int gt911_i2c_peripheral_init(void)

@@ -14,8 +14,8 @@ else()
     sdk_add_compile_definitions(-DCONFIG_LOG_LEVEL=3)
 endif()
 
-if(CONFIG_BFLOG_POOL_SIZE)
-    sdk_add_compile_definitions(-DCONFIG_BFLOG_POOL_SIZE=${CONFIG_BFLOG_POOL_SIZE})
+if(CONFIG_LOG_POOL_SIZE)
+    sdk_add_compile_definitions(-DCONFIG_LOG_POOL_SIZE=${CONFIG_LOG_POOL_SIZE})
 endif()
 
 
@@ -24,8 +24,14 @@ sdk_library_add_sources(log/log.c)
 sdk_add_include_directories(log)
 
 if(CONFIG_BFLOG)
+    sdk_add_compile_definitions(-DCONFIG_BFLOG)
+    sdk_library_add_sources(log/bflog/bflog.c)
+    sdk_add_include_directories(log/bflog)
     if(CONFIG_FREERTOS)
         sdk_library_add_sources(log/log_freertos.c)
+    endif()
+    if(CONFIG_BFLOG_DEBUG)
+    sdk_add_private_compile_definitions(-DCONFIG_BFLOG_DEBUG)
     endif()
 endif()
 
@@ -60,3 +66,15 @@ sdk_add_include_directories(bflb_timestamp)
 # getopt
 sdk_library_add_sources(getopt/utils_getopt.c)
 sdk_add_include_directories(getopt)
+
+# partition
+if(CONFIG_PARTITION)
+sdk_library_add_sources(partition/partition.c)
+sdk_add_include_directories(partition)
+endif()
+
+# blmtd
+if(CONFIG_BFLB_MTD)
+sdk_library_add_sources(bflb_mtd/bflb_mtd.c bflb_mtd/bflb_boot2.c)
+sdk_add_include_directories(bflb_mtd/include)
+endif()

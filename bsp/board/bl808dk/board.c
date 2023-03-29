@@ -550,15 +550,6 @@ void board_csi_gpio_init(void)
 #endif
 }
 
-void board_iso11898_gpio_init()
-{
-    struct bflb_device_s *gpio;
-
-    gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_iso11898_init(gpio, GPIO_PIN_14, GPIO_ISO11898_FUNC_TX);
-    bflb_gpio_iso11898_init(gpio, GPIO_PIN_15, GPIO_ISO11898_FUNC_RX);
-}
-
 #ifdef CONFIG_BFLOG
 __attribute__((weak)) uint64_t bflog_clock(void)
 {

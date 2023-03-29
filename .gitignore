@@ -1,4 +1,18 @@
 .vscode
+.repo
+.cache
+.clangd
+cscope*
+compile_commands.*
+components
+drivers
+bsp
+examples/solutions
+examples/wifi
+examples/btble
+examples/zigbee
+tools/bflb_tools
+chiptest
 **/__pycache__
 **/build
 *.pyc
@@ -10,5 +24,7 @@
 *.doc
 *.pptx
 *.svd
-*.pack
 **/_build
+tools/reg_parser/Peripherals/*_reg.h
+tools/reg_parser/InitVals/*_register.c
+**/img_create_iot

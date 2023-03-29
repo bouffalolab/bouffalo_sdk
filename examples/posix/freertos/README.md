@@ -1,5 +1,6 @@
-# shell_no_os
+# posix_freertos
 
+Only supports sem/mqueue/pthread/timer api
 
 ## Support CHIP
 

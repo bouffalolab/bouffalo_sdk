@@ -9,7 +9,7 @@
 #define EMAC_TEST_TX_INTERVAL_US (3000)
 
 static const uint8_t test_frame[42] = {
-    /* ARP reply to 192.168.123.221(e4:54:e8:ca:31:16): 192.168.1.220 is at 18:b9:05:12:34:56 */
+    /* ARP reply to 192.168.123.178(e4:54:e8:ca:31:16): 192.168.123.100 is at 18:b9:05:12:34:56 */
     0xb0, 0x7b, 0x25, 0x00, 0x89, 0x53,                         // dst mac b0:7b:25:00:89:53
     0x18, 0xB9, 0x05, 0x12, 0x34, 0x56,                         // src mac
     0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x02, // arp reply
@@ -77,8 +77,8 @@ void emac_isr(int irq, void *arg)
 
     if (int_sts_val & EMAC_INT_STS_RX_ERROR) {
         bflb_emac_int_clear(emac0, EMAC_INT_STS_RX_ERROR);
-        index = bflb_emac_bd_get_cur_active(emac0, EMAC_BD_TYPE_TX);
-        bflb_emac_bd_tx_on_err(index);
+        index = bflb_emac_bd_get_cur_active(emac0, EMAC_BD_TYPE_RX);
+        bflb_emac_bd_rx_on_err(index);
 
         printf("EMAC rx error!!!\r\n");
         rx_err_cnt++;
@@ -109,8 +109,15 @@ int main(void)
         .auto_negotiation = 1, /*!< Speed and mode auto negotiation */
         .full_duplex = 0,      /*!< Duplex mode */
         .speed = 0,            /*!< Speed mode */
-        .phy_address = 1,      /*!< PHY address */
-        .phy_id = 0x7c0f0,     /*!< PHY OUI, masked */
+#ifdef PHY_8720
+        .phy_address = 1,  /*!< PHY address */
+        .phy_id = 0x7c0f0, /*!< PHY OUI, masked */
+#else
+#ifdef PHY_8201F
+        .phy_address = 0, /*!< PHY address */
+        .phy_id = 0x120,  /*!< PHY OUI, masked */
+#endif
+#endif
         .phy_state = PHY_STATE_DOWN,
     };
 

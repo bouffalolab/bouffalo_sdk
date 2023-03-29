@@ -3,13 +3,13 @@
 #ifdef CONFIG_BFLOG
 #include "bflog.h"
 
-#ifndef CONFIG_BFLOG_POOL_SIZE
-#define CONFIG_BFLOG_POOL_SIZE 1024
+#ifndef CONFIG_LOG_POOL_SIZE
+#define CONFIG_LOG_POOL_SIZE 1024
 #endif
 
 bflog_t __bflog_recorder;
 void *__bflog_recorder_pointer = &__bflog_recorder;
-static uint8_t bflog_pool[CONFIG_BFLOG_POOL_SIZE];
+static uint8_t bflog_pool[CONFIG_LOG_POOL_SIZE];
 bflog_direct_stream_t bflog_direct_stream;
 
 extern struct bflb_device_s *console;
@@ -36,7 +36,7 @@ void log_start(void)
     void *direct = (void *)&bflog_direct_stream;
 
     /*!< create recorder */
-    bflog_create(record, bflog_pool, CONFIG_BFLOG_POOL_SIZE, BFLOG_MODE_SYNC);
+    bflog_create(record, bflog_pool, CONFIG_LOG_POOL_SIZE, BFLOG_MODE_SYNC);
 
     /*!< create stream direct */
     bflog_direct_create(direct, BFLOG_DIRECT_TYPE_STREAM, BFLOG_DIRECT_COLOR_ENABLE, NULL, NULL);

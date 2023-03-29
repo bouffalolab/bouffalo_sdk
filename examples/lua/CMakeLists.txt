@@ -5,6 +5,8 @@ include(proj.conf)
 find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 
 
+add_subdirectory(lua)
+
 target_sources(app PRIVATE
 
 )

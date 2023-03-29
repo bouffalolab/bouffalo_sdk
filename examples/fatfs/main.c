@@ -214,7 +214,8 @@ int main(void)
 
 #if defined(CONFIG_NEWLIB) && CONFIG_NEWLIB && defined(CONFIG_NEWLIB_FATFS) && CONFIG_NEWLIB_FATFS
     FILE *fp;
-    fp = fopen("/sd/hellotest.txt","w+");
+    fp = fopen("/sd/hellotest.txt", "w+");
+    fprintf(fp, "hello world\r\n");
     fclose(fp);
 #endif
 

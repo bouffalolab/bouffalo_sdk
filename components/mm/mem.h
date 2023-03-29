@@ -28,26 +28,32 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <bflb_irq.h>
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define MEM_ASSERT(x)                           \
-    {                                           \
-        if (!(x)) {                               \
+#define MEM_ASSERT(x)                              \
+    {                                              \
+        if (!(x)) {                                \
             printf("[MEM] !!! assert " #x "\r\n"); \
-            while (1)                           \
-                ;                               \
-        }                                       \
+            bflb_irq_save();                       \
+            while (1)                              \
+                ;                                  \
+        }                                          \
     }
 
-#define MEM_LOG(fmt, ...)     //printf("[MEM] "fmt, __VA_ARGS__)
+#define MEM_LOG(fmt, ...)  //printf("[MEM] "fmt, __VA_ARGS__)
 
-#define MEM_IS_VALID(heap)    ((heap) != NULL && (heap)->mem_impl != NULL)
+#define MEM_IS_VALID(heap) ((heap) != NULL && (heap)->mem_impl != NULL)
 
-
-#define KMEM_HEAP &g_memheap
+#define KMEM_HEAP          &g_memheap
+#if defined(CONFIG_PSRAM) && defined(BL616) // only for bl618
+#define PMEM_HEAP &g_pmemheap
+#else
+#define PMEM_HEAP &g_memheap
+#endif
 
 /****************************************************************************
  * Public Types
@@ -58,8 +64,7 @@ struct mem_heap_s {
     struct mem_heap_impl_s *mem_impl;
 };
 
-struct meminfo
-{
+struct meminfo {
     int total_size;    /* This is the total size of memory allocated
                         * for use by malloc in bytes. */
     int free_node;     /* This is the number of free (not in use) chunks */
@@ -78,12 +83,10 @@ struct meminfo
 #undef EXTERN
 #if defined(__cplusplus)
 #define EXTERN extern "C"
-extern "C"
-{
+extern "C" {
 #else
 #define EXTERN extern
 #endif
-
 
 EXTERN struct mem_heap_s g_memheap;
 
@@ -92,8 +95,10 @@ EXTERN struct mem_heap_s g_memheap;
  ****************************************************************************/
 
 void kmem_init(void *heapstart, size_t heapsize);
+void *kmalloc(size_t size);
+void kfree(void *addr);
 
-void umem_init(struct mem_heap_s *heap, void *heapstart, size_t heapsize);
+void pmem_init(void *heapstart, size_t heapsize);
 
 /* private api for mm*/
 
@@ -117,4 +122,3 @@ void bflb_mem_usage(struct mem_heap_s *heap, struct meminfo *info);
 #endif
 
 #endif /* __BFLB_MM_MEM_H */
-

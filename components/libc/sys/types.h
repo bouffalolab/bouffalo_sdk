@@ -15,7 +15,8 @@
    doesn't have a stat, and the necv70 doesn't matter.) -- eichin
  */
 
-// #ifndef _SYS_TYPES_H
+#ifndef _SYS_TYPES_H
+
 #include <_ansi.h>
 #include <sys/cdefs.h>
 #include <machine/_types.h>
@@ -228,4 +229,4 @@ typedef	__int64_t	sbintime_t;
 
 #undef __need_inttypes
 
-// #endif	/* _SYS_TYPES_H */
+#endif	/* _SYS_TYPES_H */

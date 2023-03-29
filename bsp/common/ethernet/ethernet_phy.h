@@ -29,6 +29,7 @@
 /**
     ETH PHY chips
     PHY_8720
+    PHY_8201F
 */
 
 #define PHY_8720
@@ -47,6 +48,11 @@ typedef enum emac_phy_status {
 #if defined PHY_8720
 #include "phy_8720.h"
 #define _PHY_FUNC_DEFINE(_func, ...) phy_8720_##_func(__VA_ARGS__)
+#endif
+
+#if defined PHY_8201F
+#include "phy_8201f.h"
+#define _PHY_FUNC_DEFINE(_func, ...) phy_8201f_##_func(__VA_ARGS__)
 #endif
 
 emac_phy_status_t ethernet_phy_status_get(void);

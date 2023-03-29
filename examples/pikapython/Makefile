@@ -5,7 +5,7 @@ export BL_SDK_BASE
 
 CHIP ?= bl616
 BOARD ?= bl616dk
-CPU_ID ?=m0
+CPU_ID ?=
 CROSS_COMPILE ?= riscv64-unknown-elf-
 
 # add custom cmake definition

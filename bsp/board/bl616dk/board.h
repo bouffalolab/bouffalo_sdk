@@ -14,7 +14,9 @@ void board_sdh_gpio_init();
 void board_ir_gpio_init();
 void board_dvp_gpio_init();
 void board_i2s_gpio_init();
-void board_iso11898_gpio_init();
+void board_acomp_init();
+
+#define DEFAULT_ACOMP_VREF_1V65 33
 
 #define DEFAULT_TEST_UART "uart1"
 #define DEFAULT_TEST_UART_DMA_TX_REQUEST DMA_REQUEST_UART1_TX

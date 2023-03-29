@@ -4,7 +4,7 @@
 
 # 简介
 
-**BouffaloSDK** 是 Bouffalo Lab 提供的软件开发包，支持博流智能所有系列芯片。
+**BouffaloSDK** 是 Bouffalo Lab 提供的 IOT 和 MCU 软件开发包，支持博流智能所有系列芯片，也是 **bl_mcu_sdk** 和 **bl_iot_sdk** 的结合体。
 
 # SDK 架构
 
@@ -33,8 +33,9 @@
 |   外设       |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
 |:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
 |  ADC         |      ○         |      √             |   √           |   ○      |
-|  CAM         |      -         |      ×             |   ×           |   ×      |
+|  CAM         |      -         |      √             |   √           |   √      |
 |  CKS         |      ○         |      √             |   √           |   ○      |
+|  CSI         |      -         |      -             |   -           |   √      |
 |  DAC         |      ○         |      √             |   √           |   ○      |
 |  DMA         |      ○         |      √             |   √           |   √      |
 |  EFUSE       |      ×         |      √             |   √           |   √      |
@@ -58,6 +59,18 @@
 |  USB_v1      |      -         |      √             |   -           |   -      |
 |  USB_v2      |      -         |      -             |   √           |   √      |
 |  WDG         |      ○         |      √             |   √           |   ○      |
+
+# Wireless 支持
+
+|   外设       |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
+|:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
+|  WIFI4       |      ×         |      -             |   -           |   ×      |
+|  WIFI6       |      -         |      -             |   √           |   -      |
+|  BT          |      -         |      -             |   ×           |   ×      |
+|  BLE         |      ×         |      ×             |   √           |   ×      |
+|  ZIGBEE      |      -         |      ×             |   ×           |   ×      |
+
+备注：**√** 表示已支持；**×** 表示未支持；**○** 表示已支持但未测试；**-** 表示没有该外设。
 
 # 环境搭建
 
@@ -87,6 +100,11 @@ make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 如果你想使用 **ninja** 编译，你可以尝试：
+
+```
+cd examples/helloworld
+make ninja CHIP=bl616 BOARD=bl616dk
+```
 
 ```
 cd examples/helloworld
@@ -131,20 +149,34 @@ make flash CHIP=chip_name CPU_ID=m0 COMX=xxx # chip_name should be bl602/bl702/b
 | bl702 |  <= 8M |
 | bl616 |  <= 10M |
 
-# 芯片手册
+### Flash_prog_cfg.ini 使用文档
+
+参考 [flash_prog_cfg.ini doc](tools/bflb_tools/bouffalo_flash_cube/docs/FlashCube_User_Guide.pdf)
+
+# 资源
+
+## 芯片手册
 
 芯片数据手册和参考手册见 [文档](https://github.com/bouffalolab/bl_docs)。
 
-# 文档教程
+## 文档教程
 
 获取更多 BouffaloSDK 开发相关的教程，如环境搭建、 api 手册、外设 demo 等，请参考：
 
 - [BouffaloSDK 文档教程](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/)
 
-# 视频教程
+## 视频教程
+
+## LCD 支持列表
+
+[LCD Support List](bsp/common/lcd/README.md)
+
+## Cam Sensor 支持列表
+
+[Cam Sensor Support List](bsp/common/image_sensor/README.md)
 
 TODO
 
-# 论坛
+## 论坛
 
 博流开发者交流论坛: [https://bbs.bouffalolab.com/](https://bbs.bouffalolab.com/)

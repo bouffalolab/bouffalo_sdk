@@ -274,6 +274,7 @@ SECTIONS
         /*__end__ = .;*/
         /*end = __end__;*/
         KEEP(*(.psram_data*))
+        KEEP(*(.psram_noinit*))
         KEEP(*(.img_buf*))
 
         . = ALIGN(4);
@@ -315,6 +316,7 @@ SECTIONS
 
     PROVIDE( _heap_wifi_start = . );
     PROVIDE( _heap_wifi_size = ORIGIN(ram_wifi) + LENGTH(ram_wifi) - _heap_wifi_start );
+    PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
 
 }
 

@@ -639,12 +639,10 @@ void shell_handler(uint8_t data)
         /*!< ctrl + c */
         if (shell_sig_func) {
             shell_sig_func(SHELL_SIGINT);
-
-            if (shell_sig_func == shell_abort_exec) {
-                SHELL_PRINTF("^C");
-                data = '\r';
-            }
-        }
+            shell_sig_func = NULL;
+        } 
+        SHELL_PRINTF("^C");
+        data = '\r';
     }
 
     if (data == 0x1b) {
@@ -716,7 +714,7 @@ void shell_handler(uint8_t data)
     }
 
     /* received null or error */
-    if (data == '\0' || data == 0xFF) {
+    if ((data == '\0') || (data == 0xFF)) {
         return;
     }
     /* handle tab key */
@@ -779,7 +777,11 @@ void shell_handler(uint8_t data)
         shell->line_curpos = shell->line_position = 0;
         return;
     }
-
+    /* return not display character */
+    if((data < 0x20) || (data >= 0x80))
+    {
+        return;
+    }
     /* it's a large line, discard it */
     if (shell->line_position >= SHELL_CMD_SIZE) {
         shell->line_position = 0;

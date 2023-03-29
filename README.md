@@ -4,7 +4,7 @@
 
 # Introduction
 
-**BouffaloSDK** is an MCU software development kit provided by the Bouffalo Lab Team, supports all the series of Bouffalo chips.
+**BouffaloSDK** is the IOT and MCU software development kit provided by the Bouffalo Lab Team, supports all the series of Bouffalo chips. Also it is the combination of **bl_mcu_sdk** and **bl_iot_sdk** 。
 
 # SDK Architecture
 
@@ -33,8 +33,9 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 |   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
 |:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
 |  ADC         |      ○         |      √             |   √           |   ○      |
-|  CAM         |      -         |      ×             |   ×           |   ×      |
+|  CAM         |      -         |      √             |   √           |   √      |
 |  CKS         |      ○         |      √             |   √           |   ○      |
+|  CSI         |      -         |      -             |   -           |   √      |
 |  DAC         |      ○         |      √             |   √           |   ○      |
 |  DMA         |      ○         |      √             |   √           |   √      |
 |  EFUSE       |      ×         |      ×             |   ×           |   ×      |
@@ -58,6 +59,18 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 |  USB_v1      |      -         |      √             |   -           |   -      |
 |  USB_v2      |      -         |      -             |   √           |   √      |
 |  WDG         |      ○         |      √             |   √           |   ○      |
+
+# Wireless Support
+
+|   Peripheral |    BL602/BL604 |    BL702/BL704/BL706 | BL616/BL618 |   BL808  |
+|:------------:|:--------------:|:--------------------:|:-----------:|:--------:|
+|  WIFI4       |      ×         |      -             |   -           |   ×      |
+|  WIFI6       |      -         |      -             |   √           |   -      |
+|  BT          |      -         |      -             |   ×           |   ×      |
+|  BLE         |      ×         |      ×             |   √           |   ×      |
+|  ZIGBEE      |      -         |      ×             |   ×           |   ×      |
+
+Note：**√** means supported ; **×** means not supported; **○** means supported but not tested ; **-** means no such peripheral.
 
 # Environment Setup
 
@@ -90,7 +103,7 @@ make ninja CHIP=bl616 BOARD=bl616dk
 
 ```
 cd examples/helloworld
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
+make ninja CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 ## CDK Development
@@ -131,6 +144,10 @@ If flash using serial port rather than USB, different USB2TTL chips support diff
 | bl702 |  <= 8M |
 | bl616 |  <= 10M |
 
+### Flash_prog_cfg.ini User Guide
+
+See [flash_prog_cfg.ini doc](tools/bflb_tools/bouffalo_flash_cube/docs/FlashCube_User_Guide.pdf)
+
 # Resources
 
 ## Chip Manual
@@ -146,6 +163,14 @@ To get more BouffaloSDK documentation tutorial, like api manual or peripheral de
 ## Video Tutorial
 
 TODO
+
+## LCD Support List
+
+[LCD Support List](bsp/common/lcd/README.md)
+
+## Cam Sensor Support List
+
+[Cam Sensor Support List](bsp/common/image_sensor/README.md)
 
 ## Forum
 

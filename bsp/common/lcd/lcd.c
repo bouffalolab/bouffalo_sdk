@@ -45,7 +45,7 @@ int lcd_init(void)
 {
     int res;
 
-#if defined(LCD_RESET_EN)
+#if (defined(LCD_RESET_EN) && LCD_RESET_EN)
     struct bflb_device_s *gpio;
 
     /* gpio init */
@@ -312,7 +312,7 @@ int lcd_draw_circle(uint16_t x, uint16_t y, uint16_t r, lcd_color_t color)
  */
 int lcd_draw_str_ascii16(uint16_t x, uint16_t y, lcd_color_t color, lcd_color_t bk_color, uint8_t *str, uint8_t num)
 {
-    lcd_color_t draw_buff[2][16 * 8];
+    static lcd_color_t draw_buff[2][16 * 8];
     uint16_t buff_color_num;
     uint8_t buff_using_num = 0;
     uint8_t ch, temp;

@@ -13,7 +13,3 @@ if(CONFIG_FATFS_SDH_SDCARD)
 sdk_add_compile_definitions(-DCONFIG_FATFS_SDH_SDCARD)
 sdk_library_add_sources(port/fatfs_sdh_sdcard.c)
 endif()
-
-if(CONFIG_FATFS_FFCONF_USER)
-sdk_add_compile_definitions(-DCONFIG_FATFS_FFCONF_USER)
-endif()

@@ -42,23 +42,23 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Network interface name */
-#define IFNAME0 'b'
-#define IFNAME1 'l'
+#define IFNAME0                  'b'
+#define IFNAME1                  'l'
 
 #define ETH_DMA_TRANSMIT_TIMEOUT (20U)
 
 // #define BL702_EMAC  0
 // #define EMAC_OUTPUT BL702_EMAC
 
-#define MAX_DHCP_TRIES 4
+#define MAX_DHCP_TRIES           4
 uint32_t DHCPfineTimer = 0;
 uint8_t DHCP_state = DHCP_OFF;
 
 /*Static IP ADDRESS: IP_ADDR0.IP_ADDR1.IP_ADDR2.IP_ADDR3 */
-#define IP_ADDR0 (uint8_t)192
-#define IP_ADDR1 (uint8_t)168
-#define IP_ADDR2 (uint8_t)123
-#define IP_ADDR3 (uint8_t)100
+#define IP_ADDR0      (uint8_t)192
+#define IP_ADDR1      (uint8_t)168
+#define IP_ADDR2      (uint8_t)123
+#define IP_ADDR3      (uint8_t)100
 
 /*NETMASK*/
 #define NETMASK_ADDR0 (uint8_t)255
@@ -67,10 +67,10 @@ uint8_t DHCP_state = DHCP_OFF;
 #define NETMASK_ADDR3 (uint8_t)0
 
 /*Gateway Address*/
-#define GW_ADDR0 (uint8_t)192
-#define GW_ADDR1 (uint8_t)168
-#define GW_ADDR2 (uint8_t)123
-#define GW_ADDR3 (uint8_t)1
+#define GW_ADDR0      (uint8_t)192
+#define GW_ADDR1      (uint8_t)168
+#define GW_ADDR2      (uint8_t)123
+#define GW_ADDR3      (uint8_t)1
 
 /* Private function prototypes -----------------------------------------------*/
 struct bflb_device_s *emac0;
@@ -78,8 +78,15 @@ struct bflb_emac_phy_cfg_s phy_cfg = {
     .auto_negotiation = 1, /*!< Speed and mode auto negotiation */
     .full_duplex = 0,      /*!< Duplex mode */
     .speed = 0,            /*!< Speed mode */
-    .phy_address = 1,      /*!< PHY address */
-    .phy_id = 0x7c0f0,     /*!< PHY OUI, masked */
+#ifdef PHY_8720
+    .phy_address = 1,  /*!< PHY address */
+    .phy_id = 0x7c0f0, /*!< PHY OUI, masked */
+#else
+#ifdef PHY_8201F
+    .phy_address = 0, /*!< PHY address */
+    .phy_id = 0x120,  /*!< PHY OUI, masked */
+#endif
+#endif
     .phy_state = PHY_STATE_DOWN,
 };
 
@@ -145,7 +152,7 @@ void emac_isr(int irq, void *arg)
     if (int_sts_val & EMAC_INT_STS_RX_ERROR) {
         bflb_emac_int_clear(emac0, EMAC_INT_STS_RX_ERROR);
         index = bflb_emac_bd_get_cur_active(emac0, EMAC_BD_TYPE_RX);
-        bflb_emac_bd_tx_on_err(index);
+        bflb_emac_bd_rx_on_err(index);
 
         printf("EMAC rx error!!!\r\n");
     }

@@ -10,3 +10,7 @@ if (CONFIG_TLSF)
 else()
     add_subdirectory(mmheap)
 endif()
+
+if(CONFIG_FREERTOS)
+sdk_add_compile_definitions(-DconfigSTACK_ALLOCATION_FROM_SEPARATE_HEAP=1)
+endif()

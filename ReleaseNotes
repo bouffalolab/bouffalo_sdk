@@ -1,7 +1,12 @@
-bl mcu sdk Release Notes
+bouffalo_sdk Release Notes
 ----------------------------
-此文件包含 bl mcu sdk 软件开发包的发行说明。
+此文件包含 bouffalo_sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
+
+bouffalo_sdk Release V2.0
+----------------------------
+
+bl mcu sdk 从此版本开始正式变更为 bouffalo_sdk
 
 bl mcu sdk Release V1.4.4
 ----------------------------

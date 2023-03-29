@@ -68,35 +68,36 @@ bflog_exit_critical(void)
 }
 
 /* BFLOG Stream Mutex  ------------------------------------------------------------------*/
-// SemaphoreHandle_t sem_server_uart0;
+SemaphoreHandle_t sem_uart0;
 
-// static int
-// bflog_direct_stream_lock(void)
-// {
-//     if (pdTRUE == xSemaphoreTake(sem_server_uart0, (TickType_t)200)) {
-//         return 0;
-//     } else {
-//         return -1;
-//     }
-// }
+static int
+bflog_direct_stream_lock(void)
+{
+    if (pdTRUE == xSemaphoreTake(sem_uart0, (TickType_t)200)) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
 
-// static int
-// bflog_direct_stream_unlock(void)
-// {
-//     xSemaphoreGive(sem_server_uart0);
-//     return 0;
-// }
+static int
+bflog_direct_stream_unlock(void)
+{
+    xSemaphoreGive(sem_uart0);
+    return 0;
+}
 
 /* APP init ------------------------------------------------------------------*/
+extern bflog_direct_stream_t bflog_direct_stream;
 
 void log_restart(void)
 {
-    LOG_I("log start init\r\n");
+    LOG_I("log restart\r\n");
 
     LOG_FLUSH();
 
-    // sem_server_uart0 = xSemaphoreCreateMutex();
-    // _ASSERT_PARAM(NULL != sem_server_uart0);
+    sem_uart0 = xSemaphoreCreateMutex();
+    _ASSERT_PARAM(NULL != sem_uart0);
 
     /*!< create event flag */
     event_group_server_log_flush_notice = xEventGroupCreate();
@@ -114,10 +115,10 @@ void log_restart(void)
     _ASSERT_FUNC(0 == bflog_control(&__bflog_recorder, BFLOG_CMD_MODE, BFLOG_MODE_ASYNC));
 
     /*!< recofig uart0 direct stream, set lock unlock function */
-    // _ASSERT_FUNC(0 == bflog_direct_suspend((void *)&example_uart_stream));
-    // _ASSERT_FUNC(0 == bflog_direct_control((void *)&example_uart_stream, BFLOG_DIRECT_CMD_LOCK, (uint32_t)bflog_direct_stream_lock));
-    // _ASSERT_FUNC(0 == bflog_direct_control((void *)&example_uart_stream, BFLOG_DIRECT_CMD_UNLOCK, (uint32_t)bflog_direct_stream_unlock));
-    // _ASSERT_FUNC(0 == bflog_direct_resume((void *)&example_uart_stream));
+    _ASSERT_FUNC(0 == bflog_direct_suspend((void *)&bflog_direct_stream));
+    _ASSERT_FUNC(0 == bflog_direct_control((void *)&bflog_direct_stream, BFLOG_DIRECT_CMD_LOCK, (uint32_t)bflog_direct_stream_lock));
+    _ASSERT_FUNC(0 == bflog_direct_control((void *)&bflog_direct_stream, BFLOG_DIRECT_CMD_UNLOCK, (uint32_t)bflog_direct_stream_unlock));
+    _ASSERT_FUNC(0 == bflog_direct_resume((void *)&bflog_direct_stream));
 
 #ifdef LOG_ENABLE_FILESYSTEM
     /*!< create and config file time direct, keep common log info */
@@ -125,7 +126,7 @@ void log_restart(void)
     _ASSERT_FUNC(0 == bflog_direct_create((void *)&bflog_direct_filetime, BFLOG_DIRECT_TYPE_FILE_TIME, BFLOG_DIRECT_COLOR_DISABLE, NULL, NULL));
     /*!< 6 * 60 * 60 second create a file */
     /*!< keep max 120 files */
-    _ASSERT_FUNC(0 == bflog_direct_init_file_time((void *)&bflog_direct_filetime, "sd:/log/common", 6 * 60 * 60, 120));
+    _ASSERT_FUNC(0 == bflog_direct_init_file_time((void *)&bflog_direct_filetime, "/sd/log/common", 6 * 60 * 60, 120));
     _ASSERT_FUNC(0 == bflog_append(&__bflog_recorder, (void *)&bflog_direct_filetime));
     _ASSERT_FUNC(0 == bflog_direct_resume((void *)&bflog_direct_filetime));
 
@@ -134,7 +135,7 @@ void log_restart(void)
     _ASSERT_FUNC(0 == bflog_direct_create((void *)&bflog_direct_filesize, BFLOG_DIRECT_TYPE_FILE_SIZE, BFLOG_DIRECT_COLOR_DISABLE, NULL, NULL));
     /*!< 128 * 1024 bytes create a file */
     /*!< keep max 16 files */
-    _ASSERT_FUNC(0 == bflog_direct_init_file_size((void *)&bflog_direct_filesize, "sd:/log/error", 128 * 1024, 16));
+    _ASSERT_FUNC(0 == bflog_direct_init_file_size((void *)&bflog_direct_filesize, "/sd/log/error", 128 * 1024, 16));
     _ASSERT_FUNC(0 == bflog_direct_control((void *)&bflog_direct_filesize, BFLOG_DIRECT_CMD_LEVEL, BFLOG_LEVEL_WARN));
     _ASSERT_FUNC(0 == bflog_append(&__bflog_recorder, (void *)&bflog_direct_filesize));
     _ASSERT_FUNC(0 == bflog_direct_resume((void *)&bflog_direct_filesize));
@@ -151,10 +152,10 @@ void log_restart(void)
     _ASSERT_FUNC(pdPASS == xTaskCreate(
                                /*!< task function */ task_function_log,
                                /*!< task name     */ "LOG",
-                               /*!< stack size    */ 2048,
+                               /*!< stack size    */ 4096,
                                /*!< task param    */ NULL,
-                               /*!< task priority */ 3,
+                               /*!< task priority */ 8,
                                /*!< task handle   */ &task_log));
 
-    LOG_I("log init success\r\n");
+    LOG_I("log restart success\r\n");
 }

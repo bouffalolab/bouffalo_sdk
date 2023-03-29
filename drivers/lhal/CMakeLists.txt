@@ -10,6 +10,7 @@ endif()
 
 sdk_library_add_sources(
 src/bflb_adc.c
+src/bflb_acomp.c
 src/bflb_cks.c
 src/bflb_ef_ctrl.c
 src/bflb_gpio.c
@@ -61,12 +62,12 @@ src/bflb_ir.c
 src/bflb_mjpeg.c
 src/bflb_pwm_v2.c
 src/bflb_cam.c
-src/bflb_iso11898.c
 src/bflb_sdio2.c
 src/bflb_i2s.c
 src/bflb_dbi.c
 src/bflb_audac.c
 src/bflb_auadc.c
+src/bflb_platform_dma.c
 )
 elseif("${CHIP}" STREQUAL "bl628")
 sdk_library_add_sources(
@@ -74,7 +75,6 @@ src/bflb_dac.c
 src/bflb_emac.c
 src/bflb_clock.c
 src/bflb_pwm_v2.c
-src/bflb_iso11898.c
 )
 elseif("${CHIP}" STREQUAL "bl808")
 sdk_library_add_sources(
@@ -84,7 +84,6 @@ src/bflb_ir.c
 src/bflb_mjpeg.c
 src/bflb_pwm_v2.c
 src/bflb_cam.c
-src/bflb_iso11898.c
 src/bflb_csi.c
 src/bflb_i2s.c
 )
@@ -130,9 +129,6 @@ endif()
 
 if((NOT ("${CPU_ID}" STREQUAL "d0")) AND (NOT ("${CPU_ID}" STREQUAL "lp")))
 sdk_add_static_library(src/pka/libpka.a)
-endif()
+else()
 # add_subdirectory(src/pka)
-if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl628"))
-# sdk_add_static_library(src/pec/libpec.a)
-#add_subdirectory(src/pec)
 endif()

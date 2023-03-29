@@ -9,6 +9,8 @@ sdk_add_include_directories(class/audio)
 sdk_add_include_directories(class/video)
 sdk_add_include_directories(class/hub)
 
+sdk_add_compile_definitions(-DCONFIG_CHERRYUSB)
+
 if(CONFIG_CHERRYUSB_DEVICE)
 sdk_library_add_sources(core/usbd_core.c)
 
@@ -58,6 +60,4 @@ sdk_add_link_libraries(
 -uvideo_ctrl_class_driver 
 -uaudio_ctrl_class_driver)
 
-# sdk_add_static_library(port/ehci/libehci_iso.a)
-# add_subdirectory(port/ehci)
 endif()

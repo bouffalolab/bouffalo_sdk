@@ -35,13 +35,13 @@
 
 #ifdef CONFIG_FREERTOS
 
-#define _IRQ_CONTEXT()          xPortIsInsideInterrupt()
-#define _SCHED_LOCK()           (taskSCHEDULER_RUNNING != xTaskGetSchedulerState())
-#define _ENTER_CRITICAL()       portENTER_CRITICAL()
-#define _EXIT_CRITICAL()        portEXIT_CRITICAL()
-#define _SEM_INIT(s, p, c)      xSemaphoreCreateRecursiveMutexStatic(s)
-#define _SEM_WAIT(s)            xSemaphoreTakeRecursive((SemaphoreHandle_t)s, portMAX_DELAY)
-#define _SEM_POST(s)            xSemaphoreGiveRecursive((SemaphoreHandle_t)s)
+#define _IRQ_CONTEXT()     xPortIsInsideInterrupt()
+#define _SCHED_LOCK()      (taskSCHEDULER_RUNNING != xTaskGetSchedulerState())
+#define _ENTER_CRITICAL()  portENTER_CRITICAL()
+#define _EXIT_CRITICAL()   portEXIT_CRITICAL()
+#define _SEM_INIT(s, p, c) xSemaphoreCreateRecursiveMutexStatic(s)
+#define _SEM_WAIT(s)       xSemaphoreTakeRecursive((SemaphoreHandle_t)s, portMAX_DELAY)
+#define _SEM_POST(s)       xSemaphoreGiveRecursive((SemaphoreHandle_t)s)
 
 #else
 
@@ -57,14 +57,14 @@ static volatile uintptr_t s_irq_entry;
         s_irq_entry += 1;             \
     }
 
-#define _EXIT_CRITICAL()                       \
-    {                                          \
-        if (s_irq_entry > 0) {                 \
-            s_irq_entry -= 1;                  \
-            if (s_irq_entry == 0) {            \
+#define _EXIT_CRITICAL()                      \
+    {                                         \
+        if (s_irq_entry > 0) {                \
+            s_irq_entry -= 1;                 \
+            if (s_irq_entry == 0) {           \
                 bflb_irq_restore(s_irq_flag); \
-            }                                  \
-        }                                      \
+            }                                 \
+        }                                     \
     }
 
 #endif
@@ -85,9 +85,7 @@ typedef TaskHandle_t task_t;
 
 #endif /* CONFIG_FREERTOS */
 
-
-struct mem_delaynode_s
-{
+struct mem_delaynode_s {
     struct mem_delaynode_s *flink;
 };
 
@@ -323,7 +321,10 @@ void *bflb_malloc(struct mem_heap_s *heap, size_t nbytes)
     /* Allocate from the tlsf pool */
 
     bflb_mem_sem_take(impl);
-    ret = tlsf_malloc(heap->mem_impl->mem_tlsf, nbytes);
+    
+    ret = tlsf_memalign(heap->mem_impl->mem_tlsf, 32, nbytes);
+    MEM_ASSERT(ret != NULL);
+
     bflb_mem_sem_give(impl);
 
     return ret;
@@ -345,7 +346,6 @@ void bflb_free(struct mem_heap_s *heap, void *ptr)
     impl = heap->mem_impl;
 
     if (_IRQ_CONTEXT()) {
-
         /* We are in ISR, add to mm_delaylist */
 
         bflb_mem_add_delaylist(heap, ptr);
@@ -380,8 +380,9 @@ void *bflb_realloc(struct mem_heap_s *heap, void *ptr, size_t nbytes)
     /* Allocate from the tlsf pool */
 
     bflb_mem_sem_take(impl);
-  
+
     ret = tlsf_realloc(heap->mem_impl->mem_tlsf, ptr, nbytes);
+    MEM_ASSERT(ret != NULL);
 
     bflb_mem_sem_give(impl);
 
@@ -436,6 +437,7 @@ void *bflb_malloc_align(struct mem_heap_s *heap, size_t align, size_t size)
     bflb_mem_sem_take(impl);
 
     ret = tlsf_memalign(heap->mem_impl->mem_tlsf, align, size);
+    MEM_ASSERT(ret != NULL);
 
     bflb_mem_sem_give(impl);
 

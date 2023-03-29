@@ -87,7 +87,6 @@ bflb_clk_get_peripheral_clock
    #define BFLB_DEVICE_TYPE_IR       10
    #define BFLB_DEVICE_TYPE_TIMER    11
    #define BFLB_DEVICE_TYPE_PWM      12
-   #define BFLB_DEVICE_TYPE_ISO11898 13
    #define BFLB_DEVICE_TYPE_CAMERA   14
    #define BFLB_DEVICE_TYPE_FLASH    15
    #define BFLB_DEVICE_TYPE_QSPI     16

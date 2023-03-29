@@ -24,7 +24,7 @@ static void shell_exec_task(void *pvParameters)
 
 void shell_dup_line(char *cmd, uint32_t length)
 {
-    memcpy(shell_exec_line, cmd, length);
+    memcpy(shell_exec_line, cmd, length + 1);
     shell_exec_line_diff = shell_exec_line - cmd;
 }
 

@@ -387,9 +387,7 @@ static int usbh_video_ctrl_connect(struct usbh_hubport *hport, uint8_t intf)
     usbh_video_list_info(video_class);
 
     snprintf(hport->config.intf[intf].devname, CONFIG_USBHOST_DEV_NAMELEN, DEV_FORMAT, video_class->minor);
-#ifdef CONFIG_USBHOST_UVC_YUV2RGB
-    inityuyv2rgb_table();
-#endif
+
     USB_LOG_INFO("Register Video Class:%s\r\n", hport->config.intf[intf].devname);
 
     usbh_video_run(video_class);

@@ -12,5 +12,4 @@ Peripherals
     GPIO <gpio/index>
     I2C <i2c/index>
     IR <ir/index>
-    ISO11898 <iso11898/index>
     UART <uart/index>

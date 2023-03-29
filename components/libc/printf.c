@@ -9,7 +9,7 @@ int puts(const char* c)
         return 0;
     }
     
-    bflb_uart_put(console, (uint8_t *)c, 1);
+    bflb_uart_put(console, (uint8_t *)c, strlen(c));
     
     return 0;
 }
@@ -27,7 +27,7 @@ int putstring(const char* c)
 
 int printf(const char *fmt, ...)
 {
-    char print_buf[1024];
+    char print_buf[512];
     uint32_t len;
     va_list ap;
 

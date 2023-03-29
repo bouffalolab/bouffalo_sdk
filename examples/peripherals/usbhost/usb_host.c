@@ -26,9 +26,8 @@ void usbh_cdc_acm_callback(void *arg, int nbytes)
         for (size_t i = 0; i < nbytes; i++) {
             USB_LOG_RAW("0x%02x ", cdc_buffer[i]);
         }
+        USB_LOG_RAW("nbytes:%d\r\n", nbytes);
     }
-
-    USB_LOG_RAW("nbytes:%d\r\n", nbytes);
 }
 
 static void usbh_cdc_acm_thread(void *argument)
@@ -102,10 +101,9 @@ void usbh_hid_callback(void *arg, int nbytes)
         for (size_t i = 0; i < nbytes; i++) {
             USB_LOG_RAW("0x%02x ", hid_buffer[i]);
         }
+        USB_LOG_RAW("nbytes:%d\r\n", nbytes);
+        usbh_submit_urb(&hid_intin_urb);
     }
-
-    USB_LOG_RAW("nbytes:%d\r\n", nbytes);
-    usbh_submit_urb(&hid_intin_urb);
 }
 
 static void usbh_hid_thread(void *argument)
@@ -308,11 +306,11 @@ void usbh_class_test(void)
     usb_osal_thread_create("usbh_msc", 2048, CONFIG_USBHOST_PSC_PRIO + 1, usbh_msc_thread, NULL);
 #endif
 #if TEST_USBH_AUDIO
-    extern void vtb_audio_test();
-    vtb_audio_test();
+    extern void usbh_audio_test();
+    usbh_audio_test();
 #endif
 #if TEST_USBH_VIDEO
-    extern void vtb_video_test();
-    vtb_video_test();
+    extern void usbh_video_test();
+    usbh_video_test();
 #endif
 }

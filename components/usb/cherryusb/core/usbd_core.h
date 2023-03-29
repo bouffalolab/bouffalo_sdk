@@ -73,7 +73,7 @@ struct usb_descriptor {
     struct usb_msosv2_descriptor *msosv2_descriptor;
     struct usb_bos_descriptor *bos_descriptor;
 };
-#if defined(CHERRYUSB_VERSION) && (CHERRYUSB_VERSION > 0x000700)
+#ifdef CONFIG_USBDEV_ADVANCE_DESC
 void usbd_desc_register(struct usb_descriptor *desc);
 #else
 void usbd_desc_register(const uint8_t *desc);
@@ -89,6 +89,8 @@ bool usb_device_is_configured(void);
 void usbd_configure_done_callback(void);
 int usbd_initialize(void);
 int usbd_deinitialize(void);
+
+void usbd_event_handler(uint8_t event);
 
 #ifdef __cplusplus
 }

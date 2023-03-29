@@ -15,8 +15,8 @@ Build with Windows CMD
    :linenos:
    :emphasize-lines: 1
 
-   $ cd d
-   $ git clone git@gitee.com:bouffalolab/toolchain_gcc_t-head_windows.git
+   $ cd D:/
+   $ git clone https://gitee.com/bouffalolab/toolchain_gcc_t-head_windows.git
 
 - 将 make、ninja、下载的 risc-v 工具链路径配置到系统环境变量中, 其中 make 和 ninja 工具位于 `bouffalo_sdk/tools` 目录下。
 - windows 11 配置完以后需要重启电脑才生效。

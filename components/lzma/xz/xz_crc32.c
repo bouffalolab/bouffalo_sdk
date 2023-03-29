@@ -25,12 +25,12 @@
 #define STATIC_RW_DATA static
 #endif
 
-//STATIC_RW_DATA uint32_t xz_crc32_table[256];
-extern const uint32_t crc32Tab[256];
+STATIC_RW_DATA uint32_t xz_crc32_table[256];
+//extern const uint32_t crc32Tab[256];
 
 XZ_EXTERN void xz_crc32_init(void)
 {
-#if 0
+#if 1
     const uint32_t poly = 0xEDB88320;
 
     uint32_t i;
@@ -58,7 +58,7 @@ XZ_EXTERN uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
     crc = ~crc;
 
     while (size != 0) {
-        crc = crc32Tab[*buf++ ^ (crc & 0xFF)] ^ (crc >> 8);
+        crc = xz_crc32_table[*buf++ ^ (crc & 0xFF)] ^ (crc >> 8);
         --size;
     }
 

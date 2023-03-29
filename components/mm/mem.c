@@ -32,6 +32,7 @@
  ****************************************************************************/
 
 struct mem_heap_s g_memheap;
+struct mem_heap_s g_pmemheap;
 
 /****************************************************************************
  * Private Function Prototypes
@@ -59,7 +60,50 @@ void kmem_init(void *heapstart, size_t heapsize)
 }
 
 /****************************************************************************
- * Name: usr_mem_init
+ * Name: malloc
+ *
+ * Description:
+ *   Allocate memory from the user heap.
+ *
+ * Input Parameters:
+ *   size - Size (in bytes) of the memory region to be allocated.
+ *
+ * Returned Value:
+ *   The address of the allocated memory (NULL on failure to allocate)
+ *
+ ****************************************************************************/
+
+void *kmalloc(size_t size)
+{
+    return bflb_malloc(KMEM_HEAP, size);
+}
+
+void *pvPortMallocStack(size_t xSize)
+{
+    return kmalloc(xSize);
+}
+
+/****************************************************************************
+ * Name: free
+ *
+ * Description:
+ *   Returns a chunk of user memory to the list of free nodes,  merging with
+ *   adjacent free chunks if possible.
+ *
+ ****************************************************************************/
+
+void kfree(void *addr)
+{
+    bflb_free(KMEM_HEAP, addr);
+}
+
+void vPortFreeStack(void *pv)
+{
+    return kfree(pv);
+}
+
+/****************************************************************************
+ * Name: kmem_init
  *
  * Description:
  *   Allocate memory from the user heap.
@@ -68,9 +112,11 @@ void kmem_init(void *heapstart, size_t heapsize)
  *
  ****************************************************************************/
 
-void umem_init(struct mem_heap_s *heap, void *heapstart, size_t heapsize)
+void pmem_init(void *heapstart, size_t heapsize)
 {
-    bflb_mem_init(heap, heapstart, heapsize);
+    MEM_LOG("Heap: start=%p size=%zu\r\n", heapstart, heapsize);
+
+    bflb_mem_init(PMEM_HEAP, heapstart, heapsize);
 }
 
 /****************************************************************************
@@ -89,7 +135,7 @@ void umem_init(struct mem_heap_s *heap, void *heapstart, size_t heapsize)
 
 void *malloc(size_t size)
 {
-    return bflb_malloc(KMEM_HEAP, size);
+    return bflb_malloc(PMEM_HEAP, size);
 }
 
 /****************************************************************************
@@ -109,7 +155,7 @@ void *malloc(size_t size)
 
 void *realloc(void *old, size_t newlen)
 {
-    return bflb_realloc(KMEM_HEAP, old, newlen);
+    return bflb_realloc(PMEM_HEAP, old, newlen);
 }
 
 /****************************************************************************
@@ -128,7 +174,7 @@ void *realloc(void *old, size_t newlen)
 
 void *calloc(size_t size, size_t len)
 {
-    return bflb_calloc(KMEM_HEAP, size, len);
+    return bflb_calloc(PMEM_HEAP, size, len);
 }
 
 /****************************************************************************
@@ -146,7 +192,7 @@ void *calloc(size_t size, size_t len)
 
 void *memalign(size_t align, size_t size)
 {
-    return bflb_malloc_align(KMEM_HEAP, align, size);
+    return bflb_malloc_align(PMEM_HEAP, align, size);
 }
 
 /****************************************************************************
@@ -160,9 +206,8 @@ void *memalign(size_t align, size_t size)
 
 void free(void *addr)
 {
-    bflb_free(KMEM_HEAP, addr);
+    bflb_free(PMEM_HEAP, addr);
 }
-
 
 #ifdef CONFIG_SHELL
 #include <shell.h>
@@ -183,6 +228,19 @@ int cmd_free(int argc, char **argv)
     printf(mem);
 
     free(mem);
+
+#if defined(CONFIG_PSRAM) && defined(BL616) // only for bl618
+    mem = malloc(64);
+    bflb_mem_usage(PMEM_HEAP, &info);
+
+    sprintf(mem, "%-8d%-8d%-8d%-8d%-8d%-8d\r\n", info.total_size, info.free_size, info.used_size, info.max_free_size,
+            info.free_node, info.used_node);
+
+    printf(Header);
+    printf(mem);
+
+    free(mem);
+#endif
 
     return 0;
 }

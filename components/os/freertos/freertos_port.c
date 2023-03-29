@@ -17,7 +17,7 @@ __attribute__((weak)) void vApplicationTickHook(void)
 
 __attribute__((weak)) void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
-    printf("vApplicationStackOverflowHook\r\n");
+    printf("vApplicationStackOverflowHook %s\r\n", pcTaskName);
 
     while (1)
         ;
@@ -75,3 +75,16 @@ __attribute__((weak)) void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTime
     configTIMER_TASK_STACK_DEPTH is specified in words, not bytes. */
     *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
+
+#ifndef _REENT_ONLY
+int *__errno()
+{
+    #if(configUSE_POSIX_ERRNO == 1)
+      {
+      extern int FreeRTOS_errno;
+      return &FreeRTOS_errno;
+      }
+    #endif
+    return &_REENT->_errno;
+}
+#endif

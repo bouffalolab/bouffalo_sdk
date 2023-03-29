@@ -25,21 +25,7 @@
 #define _TOUCH_H_
 
 #include "bflb_core.h"
-
-/* spi interface
-    TOUCH_SPI_XPT2046  // Not currently supported
-*/
-
-/* i2c interface
-    TOUCH_I2C_FT6X36
-    TOUCH_I2C_GT911
-*/
-
-/* Select Touch Type */
-#define TOUCH_I2C_FT6X36
-
-#define TOUCH_INTERFACE_SPI 1
-#define TOUCH_INTERFACE_I2C 2
+#include "touch_conf.h"
 
 typedef struct
 {

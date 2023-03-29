@@ -24,7 +24,7 @@ Build with Linux or WSL
    :emphasize-lines: 4-5
 
    $ cd ~
-   $ git clone git@gitee.com:bouffalolab/toolchain_gcc_t-head_linux.git
+   $ git clone https://gitee.com/bouffalolab/toolchain_gcc_t-head_linux.git
    $ sudo cp -rf toolchain_gcc_t-head_linux/ /usr/bin
    $ echo "export PATH=\"$PATH:/usr/bin/toolchain_gcc_t-head_linux/bin\""  >> ~/.bashrc
    $ source ~/.bashrc

@@ -48,7 +48,11 @@
  * Include user defined options first. Anything not defined in these files
  * will be set to standard values. Override anything you don't like!
  */
+#if __has_include("lwipopts_user.h")
+#include "lwipopts_user.h"
+#else
 #include "lwipopts.h"
+#endif
 #include "lwip/debug.h"
 
 /**

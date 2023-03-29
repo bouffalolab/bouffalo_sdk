@@ -132,7 +132,7 @@ void memtest(void)
         Mem_Manage_Show_Heap_Info(pRegion);
 
         printf("<-------初始化内存堆--------->\r\n");
-        umem_init(&g_userheap, pRegion[0].addr, pRegion[0].mem_size);
+        bflb_mem_init(&g_userheap, pRegion[0].addr, pRegion[0].mem_size);
 
         // printf("start块:0x%08x,%d\r\n", (size_t)Mem_Handle.pStart, Mem_Handle.pStart->mem_size);
         // printf("end 块:0x%08x,%d\r\n", (size_t)Mem_Handle.pEnd, Mem_Handle.pEnd->mem_size);

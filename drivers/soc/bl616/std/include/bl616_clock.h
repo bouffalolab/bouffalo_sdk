@@ -104,7 +104,6 @@ typedef enum {
     BL_PERIPHERAL_CLOCK_UART1,       /*!< UART1 clock */
     BL_PERIPHERAL_CLOCK_UART2,       /*!< UART2 clock */
     BL_PERIPHERAL_CLOCK_SPI,         /*!< SPI clock */
-    BL_PERIPHERAL_CLOCK_PEC,         /*!< PEC clock */
     BL_PERIPHERAL_CLOCK_DBI,         /*!< DBI clock */
     BL_PERIPHERAL_CLOCK_EMI,         /*!< EMI clock */
     BL_PERIPHERAL_CLOCK_ISP,         /*!< ISP clock */

@@ -1,12 +1,28 @@
+CHIP ?= bl616
+BOARD ?= bl616dk
+CPU_ID ?=
 
 makefile_files += $(shell find ./peripherals -name 'Makefile' -not -path "*/build/*")
 makefile_dirs = $(sort $(dir $(makefile_files)))
+
+makefile_dirs += ./bflb_block_pool
+makefile_dirs += ./bflog/barebone_sync
+makefile_dirs += ./bflog/freertos_async
+makefile_dirs += ./coremark_v1.01
+makefile_dirs += ./freertos
+makefile_dirs += ./helloworld
+makefile_dirs += ./mbedtls
+makefile_dirs += ./memheap
+makefile_dirs += ./partition
+makefile_dirs += ./posix/freertos
+makefile_dirs += ./printf
+makefile_dirs += ./shell/shell_no_os
+makefile_dirs += ./shell/shell_os
 
 ifeq ($(CHIP),bl602)
 filter_out_dirs += ./peripherals/csi/%
 filter_out_dirs += ./peripherals/emac/%
 filter_out_dirs += ./peripherals/pwm_v2/%
-filter_out_dirs += ./peripherals/iso11898/%
 filter_out_dirs += ./peripherals/usbdev/%
 
 endif
@@ -15,24 +31,36 @@ ifeq ($(CHIP),bl702)
 filter_out_dirs += ./peripherals/csi/%
 filter_out_dirs += ./peripherals/emac/%
 filter_out_dirs += ./peripherals/pwm_v2/%
-filter_out_dirs += ./peripherals/iso11898/%
 endif
 
 ifeq ($(CHIP),bl702L)
 filter_out_dirs += ./peripherals/csi/%
 filter_out_dirs += ./peripherals/emac/%
 filter_out_dirs += ./peripherals/pwm_v2/%
-filter_out_dirs += ./peripherals/iso11898/%
 filter_out_dirs += ./peripherals/usbdev/%
 endif
 
 ifeq ($(CHIP),bl616)
 filter_out_dirs += ./peripherals/csi/%
 filter_out_dirs += ./peripherals/pwm_v1/%
+makefile_dirs += ./fatfs
+makefile_dirs += ./littlefs/kv_test
+makefile_dirs += ./lvgl
+makefile_dirs += ./lua
+makefile_dirs += ./btble/ble_mesh_cli
+makefile_dirs += ./btble/peripheral
+makefile_dirs += ./wifi/mqtt
+makefile_dirs += ./wifi/sta/wifi_http
+makefile_dirs += ./wifi/sta/wifi_tcp
+makefile_dirs += ./wifi/sta/wifi_udp
 endif
 
 ifeq ($(CHIP),bl808)
 filter_out_dirs += ./peripherals/pwm_v1/%
+makefile_dirs += ./fatfs
+makefile_dirs += ./littlefs/kv_test
+makefile_dirs += ./lvgl
+makefile_dirs += ./lua
 endif
 
 build_dirs = $(filter-out $(filter_out_dirs), $(makefile_dirs))

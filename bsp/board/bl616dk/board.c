@@ -3,6 +3,7 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
+#include "bflb_acomp.h"
 #include "board.h"
 #include "bl616_tzc_sec.h"
 #include "bl616_psram.h"
@@ -20,6 +21,8 @@ extern void log_start(void);
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
+extern uint32_t __psram_heap_base;
+extern uint32_t __psram_limit;
 
 static struct bflb_device_s *uart0;
 
@@ -205,6 +208,7 @@ void board_init(void)
 {
     int ret = -1;
     uintptr_t flag;
+    size_t heap_len;
 
     flag = bflb_irq_save();
 
@@ -219,9 +223,12 @@ void board_init(void)
 #ifdef CONFIG_PSRAM
     board_psram_x8_init();
     Tzc_Sec_PSRAMB_Access_Release();
+
+    heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
+    pmem_init((void *)&__psram_heap_base, heap_len);
 #endif
 
-    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     kmem_init((void *)&__HeapBase, heap_len);
 
     bl_show_log();
@@ -229,8 +236,13 @@ void board_init(void)
         printf("flash init fail!!!\r\n");
     }
     bl_show_flashinfo();
-
-    printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+#ifdef CONFIG_PSRAM
+    printf("dynamic memory init success, ocram heap size = %d Kbyte, psram heap size = %d Kbyte\r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
+           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
+#else
+    printf("dynamic memory init success, ocram heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+#endif
 
     printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
     printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
@@ -389,7 +401,7 @@ void board_dvp_gpio_init(void)
 
     gpio = bflb_device_get_by_name("gpio");
 
-#if 0
+#if 1
     /* DVP0 GPIO init */
     /* I2C GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_I2C0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
@@ -461,13 +473,30 @@ void board_i2s_gpio_init()
     bflb_gpio_init(gpio, GPIO_PIN_19, GPIO_FUNC_I2S | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
-void board_iso11898_gpio_init()
+void board_acomp_init()
 {
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
-    bflb_gpio_iso11898_init(gpio, GPIO_PIN_14, GPIO_ISO11898_FUNC_TX);
-    bflb_gpio_iso11898_init(gpio, GPIO_PIN_15, GPIO_ISO11898_FUNC_RX);
+
+    bflb_gpio_init(gpio, GPIO_PIN_13, GPIO_ANALOG | GPIO_PULL_NONE | GPIO_DRV_0);
+    bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_ANALOG | GPIO_PULL_NONE | GPIO_DRV_0);
+
+    struct bflb_acomp_config_s acomp_cfg = {
+        .mux_en = ENABLE,
+        .pos_chan_sel = AON_ACOMP_CHAN_ADC0,
+        .neg_chan_sel = AON_ACOMP_CHAN_VIO_X_SCALING_FACTOR_1,
+        .vio_sel = DEFAULT_ACOMP_VREF_1V65,
+        .scaling_factor = AON_ACOMP_SCALING_FACTOR_1,
+        .bias_prog = AON_ACOMP_BIAS_POWER_MODE1,
+        .hysteresis_pos_volt = AON_ACOMP_HYSTERESIS_VOLT_NONE,
+        .hysteresis_neg_volt = AON_ACOMP_HYSTERESIS_VOLT_NONE,
+    };
+
+    acomp_cfg.pos_chan_sel = AON_ACOMP_CHAN_ADC5;
+    bflb_acomp_init(AON_ACOMP0_ID, &acomp_cfg);
+    acomp_cfg.pos_chan_sel = AON_ACOMP_CHAN_ADC4;
+    bflb_acomp_init(AON_ACOMP1_ID, &acomp_cfg);
 }
 
 #ifdef CONFIG_BFLOG

@@ -4,36 +4,30 @@
 
 #define FFCONF_DEF 80286 /* Revision ID */
 
-#if defined(CONFIG_FATFS_FFCONF_USER) && (CONFIG_FATFS_FFCONF_USER)
+#if __has_include("fatfs_conf_user.h")
 
 /* User external configuration, User need to use this file as a template.
 All configuration items must be included in the file */
-#include "ffconf_user.h"
+#include "fatfs_conf_user.h"
 
 #else
 
-// #warning "There is no user FatFs conf file and the default conf will be used"
+#warning "There is no user FatFs conf file and the default conf will be used"
 
 /*---------------------------------------------------------------------------/
 / Function Configurations
 /---------------------------------------------------------------------------*/
 
-#ifndef FF_FS_CONTINUOUS
-#define FF_FS_CONTINUOUS 1
-#endif
+#define FF_FS_CONTINUOUS 0
 /* Read and write as much data as possible at one time, regardless of the cluster size */
 
-#ifndef FF_FS_READONLY
 #define FF_FS_READONLY 0
-#endif
 /* This option switches read-only configuration. (0:Read/Write or 1:Read-only)
 /  Read-only configuration removes writing API functions, f_write(), f_sync(),
 /  f_unlink(), f_mkdir(), f_chmod(), f_rename(), f_truncate(), f_getfree()
 /  and optional writing functions as well. */
 
-#ifndef FF_FS_MINIMIZE
 #define FF_FS_MINIMIZE 0
-#endif
 /* This option defines minimization level to remove some basic API functions.
 /
 /   0: Basic functions are fully enabled.
@@ -42,59 +36,34 @@ All configuration items must be included in the file */
 /   2: f_opendir(), f_readdir() and f_closedir() are removed in addition to 1.
 /   3: f_lseek() function is removed in addition to 2. */
 
-#ifndef FF_USE_FIND
 #define FF_USE_FIND 1
-#endif
 /* This option switches filtered directory read functions, f_findfirst() and
 /  f_findnext(). (0:Disable, 1:Enable 2:Enable with matching altname[] too) */
 
-#ifndef FF_USE_MKFS
 #define FF_USE_MKFS 1
-#endif
 /* This option switches f_mkfs() function. (0:Disable or 1:Enable) */
 
-#ifndef FF_USE_FASTSEEK
 #define FF_USE_FASTSEEK 1
-#endif
 /* This option switches fast seek function. (0:Disable or 1:Enable) */
 
-#ifndef FF_USE_EXPAND
 #define FF_USE_EXPAND 0
-#endif
 /* This option switches f_expand function. (0:Disable or 1:Enable) */
 
-#ifndef FF_USE_CHMOD
-#define FF_USE_CHMOD 1
-#endif
+#define FF_USE_CHMOD 0
 /* This option switches attribute manipulation functions, f_chmod() and f_utime().
 /  (0:Disable or 1:Enable) Also FF_FS_READONLY needs to be 0 to enable this option. */
 
-#ifndef FF_USE_LABEL
 #define FF_USE_LABEL 0
-#endif
 /* This option switches volume label functions, f_getlabel() and f_setlabel().
 /  (0:Disable or 1:Enable) */
 
-#ifndef FF_USE_FORWARD
 #define FF_USE_FORWARD 0
-#endif
 /* This option switches f_forward() function. (0:Disable or 1:Enable) */
 
-#ifndef FF_USE_STRFUNC
 #define FF_USE_STRFUNC 0
-#endif
-
-#ifndef FF_PRINT_LLI
 #define FF_PRINT_LLI   1
-#endif
-
-#ifndef FF_PRINT_FLOAT
 #define FF_PRINT_FLOAT 1
-#endif
-
-#ifndef FF_STRF_ENCODE
 #define FF_STRF_ENCODE 3
-#endif
 /* FF_USE_STRFUNC switches string functions, f_gets(), f_putc(), f_puts() and
 /  f_printf().
 /
@@ -118,9 +87,7 @@ All configuration items must be included in the file */
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
 
-#ifndef FF_CODE_PAGE
 #define FF_CODE_PAGE 437
-#endif
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect code page setting can cause a file open failure.
 /
@@ -148,9 +115,7 @@ All configuration items must be included in the file */
 /     0 - Include all code pages above and configured by f_setcp()
 */
 
-#ifndef FF_USE_LFN
 #define FF_USE_LFN 2
-#endif
 #define FF_MAX_LFN 255
 /* The FF_USE_LFN switches the support for LFN (long file name).
 /
@@ -169,9 +134,7 @@ All configuration items must be included in the file */
 /  memory for the working buffer, memory management functions, ff_memalloc() and
 /  ff_memfree() exemplified in ffsystem.c, need to be added to the project. */
 
-#ifndef FF_LFN_UNICODE
 #define FF_LFN_UNICODE 0
-#endif
 /* This option switches the character encoding on the API when LFN is enabled.
 /
 /   0: ANSI/OEM in current CP (TCHAR = char)
@@ -189,9 +152,7 @@ All configuration items must be included in the file */
 /  the file names to read. The maximum possible length of the read file name depends
 /  on character encoding. When LFN is not enabled, these options have no effect. */
 
-#ifndef FF_FS_RPATH
-#define FF_FS_RPATH 1
-#endif
+#define FF_FS_RPATH 0
 /* This option configures support for relative path.
 /
 /   0: Disable relative path and remove related functions.
@@ -219,9 +180,7 @@ All configuration items must be included in the file */
 /  const char* VolumeStr[FF_VOLUMES] = {"ram","flash","sd","usb",...
 */
 
-#ifndef FF_MULTI_PARTITION
 #define FF_MULTI_PARTITION 0
-#endif
 /* This option switches support for multiple volumes on the physical drive.
 /  By default (0), each logical drive number is bound to the same physical drive
 /  number and only an FAT volume found on the physical drive will be mounted.
@@ -246,9 +205,7 @@ All configuration items must be included in the file */
 /* Minimum number of sectors to switch GPT as partitioning format in f_mkfs and
 /  f_fdisk function. 0x100000000 max. This option has no effect when FF_LBA64 == 0. */
 
-#ifndef FF_USE_TRIM
 #define FF_USE_TRIM 0
-#endif
 /* This option switches support for ATA-TRIM. (0:Disable or 1:Enable)
 /  To enable Trim function, also CTRL_TRIM command should be implemented to the
 /  disk_ioctl() function. */
@@ -256,24 +213,19 @@ All configuration items must be included in the file */
 /*---------------------------------------------------------------------------/
 / System Configurations
 /---------------------------------------------------------------------------*/
-#ifndef FF_FS_TINY
+
 #define FF_FS_TINY 0
-#endif
 /* This option switches tiny buffer configuration. (0:Normal or 1:Tiny)
 /  At the tiny configuration, size of file object (FIL) is shrinked FF_MAX_SS bytes.
 /  Instead of private sector buffer eliminated from the file object, common sector
 /  buffer in the filesystem object (FATFS) is used for the file data transfer. */
 
-#ifndef FF_FS_EXFAT
 #define FF_FS_EXFAT 0
-#endif
 /* This option switches support for exFAT filesystem. (0:Disable or 1:Enable)
 /  To enable exFAT, also LFN needs to be enabled. (FF_USE_LFN >= 1)
 /  Note that enabling exFAT discards ANSI C (C89) compatibility. */
 
-#ifndef FF_FS_NORTC
 #define FF_FS_NORTC   1
-#endif
 #define FF_NORTC_MON  1
 #define FF_NORTC_MDAY 1
 #define FF_NORTC_YEAR 2022
@@ -286,9 +238,7 @@ All configuration items must be included in the file */
 /  FF_NORTC_MDAY and FF_NORTC_YEAR have no effect.
 /  These options have no effect in read-only configuration (FF_FS_READONLY = 1). */
 
-#ifndef FF_FS_NOFSINFO
 #define FF_FS_NOFSINFO 0
-#endif
 /* If you need to know correct free space on the FAT32 volume, set bit 0 of this
 /  option, and f_getfree() function at the first time after volume mount will force
 /  a full FAT scan. Bit 1 controls the use of last allocated cluster number.
@@ -299,9 +249,7 @@ All configuration items must be included in the file */
 /  bit1=1: Do not trust last allocated cluster number in the FSINFO.
 */
 
-#ifndef FF_FS_LOCK
 #define FF_FS_LOCK 0
-#endif
 /* The option FF_FS_LOCK switches file lock function to control duplicated file open
 /  and illegal operation to open objects. This option must be 0 when FF_FS_READONLY
 /  is 1.
@@ -312,10 +260,7 @@ All configuration items must be included in the file */
 /      can be opened simultaneously under file lock control. Note that the file
 /      lock control is independent of re-entrancy. */
 
-#ifndef FF_FS_REENTRANT
 #define FF_FS_REENTRANT 0
-#endif
-
 #define FF_FS_TIMEOUT   1000
 /* The option FF_FS_REENTRANT switches the re-entrancy (thread safe) of the FatFs
 /  module itself. Note that regardless of this option, file access to different

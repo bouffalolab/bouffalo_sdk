@@ -13,8 +13,7 @@ BouffaloSDK 使用指南
    :caption: 快速入门
 
    get_started/index
-   get_started/flash_prog
-   get_started/devcube
+   get_started/flash_cube
    get_started/debug
    get_started/cmake
    get_started/repo
@@ -24,12 +23,14 @@ BouffaloSDK 使用指南
    :caption: API 手册
 
    api_reference/peripherals/index
+   api_reference/components/index
 
 .. toctree::
    :maxdepth: 1
    :caption: 基础例程
 
    samples/peripherals/index
+   samples/components/index
 
 .. toctree::
    :maxdepth: 1
@@ -43,6 +44,3 @@ BouffaloSDK 使用指南
 
    notes/note_uart
    notes/note_dma
-   notes/note_cache
-   notes/note_808triplecore
-   notes/note_flash_tool

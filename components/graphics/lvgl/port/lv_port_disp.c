@@ -56,20 +56,30 @@ static lv_color_t draw_buf_3[LCD_W * LCD_H] ATTR_EALIGN(64); /*An other screen s
 #endif
 
 #else
+#if defined(CONFIG_PSRAM)
+static lv_color_t draw_buf_1[LCD_W * LCD_H] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
+static lv_color_t draw_buf_2[LCD_W * LCD_H] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
+#else
+#error "No config psram!"
+#endif
 
-#define LVGL_DRAW_BUF1_BASE (0xA8100000)
-#define LVGL_DRAW_BUF2_BASE (0xA8200000)
+// #define LVGL_DRAW_BUF1_BASE (0xA8100000)
+// #define LVGL_DRAW_BUF2_BASE (0xA8200000)
 
-static lv_color_t *draw_buf_1 = (void *)(uintptr_t)LVGL_DRAW_BUF1_BASE;
-static lv_color_t *draw_buf_2 = (void *)(uintptr_t)LVGL_DRAW_BUF2_BASE;
+// static lv_color_t *draw_buf_1 = (void *)(uintptr_t)LVGL_DRAW_BUF1_BASE;
+// static lv_color_t *draw_buf_2 = (void *)(uintptr_t)LVGL_DRAW_BUF2_BASE;
 
 #if RGB_TRIPLE_BUFF_MODE
-
-#define LVGL_DRAW_BUF3_BASE (0xA8300000)
-
-static lv_color_t *draw_buf_3 = (void *)(uintptr_t)LVGL_DRAW_BUF3_BASE;
-static volatile lv_color_t *last_disp_buff_p = (void *)(uintptr_t)LVGL_DRAW_BUF3_BASE;
+// #define LVGL_DRAW_BUF3_BASE (0xA8300000)
+// static lv_color_t *draw_buf_3 = (void *)(uintptr_t)LVGL_DRAW_BUF3_BASE;
+#if defined(CONFIG_PSRAM)
+static lv_color_t draw_buf_3[LCD_W * LCD_H] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
+static volatile lv_color_t *last_disp_buff_p = (void *)(uintptr_t)draw_buf_3;
 static volatile lv_color_t *last_lvgl_flush_p = NULL;
+#else
+#error "No config psram!"
+#endif
+
 #else
 static volatile uint8_t swap_flag = 0;
 #endif
