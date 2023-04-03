@@ -76,8 +76,9 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 
 ## Toolchain
 
-- [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_t-head_windows) toolchain used in windows.
-- [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_t-head_linux) toolchain used in linux.
+- [riscv64-unknown-elf-gcc](https://github.com/bouffalolab/toolchain_gcc_t-head_windows) toolchain used in windows.
+- [riscv64-unknown-elf-gcc](https://github.com/bouffalolab/toolchain_gcc_t-head_linux) toolchain used in linux.
+- T-HEAD official does not provide macos toolchain, so you should build by yourself, refer to [build_toolchain_macos](https://github.com/p4ddy1/pine_ox64/blob/main/build_toolchain_macos.md).
 - [linux-riscv64-linux-gcc](https://gitee.com/bouffalolab/linuxtoolchain_gcc_t-head) toolchain used for compiling linux code.
 
 ## Command Line Development
@@ -144,9 +145,9 @@ If flash using serial port rather than USB, different USB2TTL chips support diff
 | bl702 |  <= 8M |
 | bl616 |  <= 10M |
 
-### Flash_prog_cfg.ini User Guide
+### Flash Cube User Guide
 
-See [flash_prog_cfg.ini doc](tools/bflb_tools/bouffalo_flash_cube/docs/FlashCube_User_Guide.pdf)
+See [bouffalo_flash_cube doc](tools/bflb_tools/bouffalo_flash_cube/docs/FlashCube_User_Guide.pdf)
 
 # Resources
 

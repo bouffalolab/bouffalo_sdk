@@ -78,6 +78,7 @@
 
 - windows 下使用 [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_t-head_windows)
 - Linux 下使用 [riscv64-unknown-elf-gcc](https://gitee.com/bouffalolab/toolchain_gcc_t-head_linux)
+- T-HEAD 官方没有提供 macos toolchain, 需要自行编译，参考 [build_toolchain_macos](https://github.com/p4ddy1/pine_ox64/blob/main/build_toolchain_macos.md)
 - 编译 linux 时使用 [linux-riscv64-linux-gcc](https://gitee.com/bouffalolab/linuxtoolchain_gcc_t-head)
 
 ## 命令行编译
@@ -149,9 +150,9 @@ make flash CHIP=chip_name CPU_ID=m0 COMX=xxx # chip_name should be bl602/bl702/b
 | bl702 |  <= 8M |
 | bl616 |  <= 10M |
 
-### Flash_prog_cfg.ini 使用文档
+### Flash Cube 使用文档
 
-参考 [flash_prog_cfg.ini doc](tools/bflb_tools/bouffalo_flash_cube/docs/FlashCube_User_Guide.pdf)
+参考 [bouffalo_flash_cube doc](tools/bflb_tools/bouffalo_flash_cube/docs/FlashCube_User_Guide.pdf)
 
 # 资源
 
