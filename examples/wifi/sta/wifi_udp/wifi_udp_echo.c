@@ -15,8 +15,7 @@
 #include "bflb_mtimer.h"
 
 // clang-format off
-static const uint8_t send_buf[128] = "wifi udp test, helloworld!\r\n";
-uint32_t __attribute__((section(".psram_data"))) recv_buf[2*1024*256] = {0};
+uint32_t recv_buf[2 * 1024] = {0};
 // clang-format on
 
 shell_sig_func_ptr abort_exec;
@@ -59,7 +58,7 @@ static void wifi_test_udp_echo_init(int argc, char **argv)
         port = "5001";
     }
 
-    memset(&recv_buf[0], 0, (2 * 1024 * 256));
+    memset(&recv_buf[0], 0, sizeof(recv_buf));
 
     while (1) {
         if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {

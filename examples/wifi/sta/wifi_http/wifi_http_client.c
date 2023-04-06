@@ -18,7 +18,7 @@
 
 // clang-format off
 static const uint8_t get_buf[] = "GET / HTTP/1.1 \r\nHost: www.gov.cn\r\n\r\n";
-uint32_t __attribute__((section(".psram_data"))) recv_buf[2 * 1024 * 256] = { 0 };
+uint32_t recv_buf[4 * 1024] = { 0 };
 // clang-format on
 
 shell_sig_func_ptr abort_exec;
@@ -90,11 +90,11 @@ static void wifi_test_http_client_init(int argc, char **argv)
 
         printf("Http client connect server success!\r\n");
         printf("Press CTRL-C to exit.\r\n");
-        memset(recv_buf, 0, 400000);
+        memset(recv_buf, 0, sizeof(recv_buf));
         total_cnt = 0;
         write(sock_client, get_buf, sizeof(get_buf));
         while (1) {
-            total_cnt = recv(sock_client, (uint8_t *)recv_buf, 400000, 0);
+            total_cnt = recv(sock_client, (uint8_t *)recv_buf, sizeof(recv_buf), 0);
             if (total_cnt <= 0)
                 break;
             printf("%s\r\n", (uint8_t *)recv_buf);
