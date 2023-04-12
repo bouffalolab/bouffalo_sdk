@@ -2,13 +2,11 @@ name: build all
 
 on:
   push:
-    branches: [ "master" ]
-    paths: 
-    - '.github/workflows/build_all.yml'
+    branches:
+      - master
   pull_request:
-    branches: [ "master" ]
-    paths: 
-    - '.github/workflows/build_all.yml'
+    branches:
+      - master
 
 jobs:
   build:
