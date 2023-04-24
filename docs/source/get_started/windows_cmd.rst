@@ -99,4 +99,4 @@ Build with Windows CMD
 调试
 -------------
 
-推荐使用 eclipse + cklink 调试，参考 :ref:`eclipse_gcc`，也可以使用命令行调试，这里不做介绍
+推荐使用 eclipse + cklink 调试，参考 :ref:`debug`，也可以使用命令行调试，这里不做介绍

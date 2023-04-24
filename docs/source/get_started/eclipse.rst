@@ -51,7 +51,9 @@ Build and Debug with Eclipse
 调试
 -------------
 
-完成上述步骤以后，如果是在 **flash 上调试，需要先将 bin 文件烧录到芯片中** ，然后才能够进行下面的调试环节。
+完成上述步骤以后，如果是在 **flash 上调试，需要先将 编译的 bin 文件烧录到芯片中并复位** ，然后才能够进行下面的调试环节。
+
+.. note::调试之前需要保证 cklink 已经安装和连接，参考 :ref:`debug`
 
 - 在 Eclipse 中 点击 `debug` 图标，并点击 `Debug Configurations`
 
