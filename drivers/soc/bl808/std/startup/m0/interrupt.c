@@ -31,6 +31,7 @@ struct bflb_irq_info_s g_irqvector[CONFIG_IRQ_NUM];
 extern void default_trap_handler(void);
 extern void default_interrupt_handler(void);
 
+#ifdef CONFIG_IRQ_USE_VECTOR
 const pFunc __Vectors[] __attribute__((section(".vector"), aligned(64))) = {
     default_interrupt_handler, /*         */
     default_interrupt_handler, /*         */
@@ -81,6 +82,7 @@ const pFunc __Vectors[] __attribute__((section(".vector"), aligned(64))) = {
     default_interrupt_handler, //UART0_IRQHandler_Wrapper,                /* 16 + 29 */
     default_interrupt_handler, //UART1_IRQHandler_Wrapper,                /* 16 + 30 */
     default_interrupt_handler, //0,                                       /* 16 + 31 */
+#ifndef CONIFG_DISABLE_INTERRUPT_BEHADN_UART0    
     default_interrupt_handler, //I2C_IRQHandler_Wrapper,                  /* 16 + 32 */
     default_interrupt_handler, //0,                                       /* 16 + 33 */
     default_interrupt_handler, //PWM_IRQHandler_Wrapper,                  /* 16 + 34 */
@@ -113,7 +115,9 @@ const pFunc __Vectors[] __attribute__((section(".vector"), aligned(64))) = {
     default_interrupt_handler, //MAC_GEN_IRQHandler_Wrapper,              /* 16 + 61 */
     default_interrupt_handler, //MAC_PORT_TRG_IRQHandler_Wrapper,         /* 16 + 62 */
     default_interrupt_handler, //WIFI_IPC_PUBLIC_IRQHandler_Wrapper,      /* 16 + 63 */
+#endif    
 };
+#endif
 
 void exception_entry(uintptr_t *regs)
 {

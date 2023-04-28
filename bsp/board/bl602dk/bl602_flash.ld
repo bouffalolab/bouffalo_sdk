@@ -17,8 +17,8 @@ OUTPUT_ARCH( "riscv" )
 /* configure the entry point */
 ENTRY(__start)
 
-StackSize = 0x0400; /*  1KB */
-HeapSize  = 0x1000; /*  4KB */
+StackSize    = 0x0400; /*  1KB */
+HeapMinSize  = 0x1000; /*  4KB */
 
 MEMORY
 {
@@ -38,13 +38,17 @@ SECTIONS
         KEEP(*(.fw_header))
     } > fw_header_memory
 
+    .init :
+    {
+        KEEP (*(SORT_NONE(.init)))
+        KEEP (*(SORT_NONE(.vector)))
+
+    } > xip_memory
+
     .text :
     {
         . = ALIGN(4);
         __text_code_start__ = .;
-
-        KEEP (*(SORT_NONE(.init)))
-        KEEP (*(SORT_NONE(.vector)))
 
         *(.text)
         *(.text.*)
@@ -124,23 +128,6 @@ SECTIONS
         . = ALIGN(4);
         __tcm_data_end__ = .;
     } > dtcm_memory
-
-
-    /* .heap_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of heap sections, and assign
-     * values to heap symbols later */
-    .heap_dummy (NOLOAD):
-    {
-        . = ALIGN(0x4);
-        . = . + HeapSize;
-        . = ALIGN(0x4);
-    } > dtcm_memory
-
-    _HeapBase = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory) - StackSize - HeapSize;
-    _HeapSize = HeapSize;
-
-    /* Check if data + heap + stack exceeds RAM limit */
-    ASSERT(_HeapBase >= __tcm_data_end__, "region RAM overflowed with stack")
 
     /*************************************************************************/
     /* .stack_dummy section doesn't contains any symbols. It is only
@@ -227,7 +214,9 @@ SECTIONS
         . = ALIGN(4);
         __HeapLimit = .;
     } > ram_memory
+
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
+    ASSERT(__HeapLimit - __HeapBase >= HeapMinSize, "heap region overflow")
 
 }
 

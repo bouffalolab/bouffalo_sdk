@@ -1,17 +1,53 @@
 bflb_fw_post_proc is a command line firmware process tool to update correct bootheder information and encrypt or sign firmware.
 In order to achieve this goal, some parameters must be specified:
-  --chipname:  chipname that you are buiding
-  --brdcfgdir: board config directory that you are using,this is used to copy boot2 like file to image directory
-  --imgfile: image file that you want to deal with,',' can be used to split multiple files and '*' can be used to match the only one file
-  --key: AES key when you want to encrypt you image with AES CTR
-  --iv: AES iv when you want to encrypt you image with AES CTR
-  --xtsmode: xts mode enable when you want to encrypt you image with AES xts and your chip support
+  --chipname: chipname that you are building
+  --brdcfgdir: board config directory that you are using, this is used to copy files like boot2 to image directory
+  --imgfile: image file that you want to deal with, ',' can be used to split multiple files and '*' can be used to match the only one file
+  --key: AES key when you want to encrypt image with AES CTR
+  --iv: AES iv when you want to encrypt image with AES CTR
+  --xtsmode: xts mode enable when you want to encrypt image with AES xts and your chip should support it
   --privatekey: private key of ecc-256 in pem format
   --publickey: public key of ecc-256 in pem format
 
-Examples:
-bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/helloworld_bl616.bin
-bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/helloworld_bl616.bin,./build/build_out/boot2_*.bin
-bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/helloworld_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000
-bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/helloworld_bl616.bin --key=000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F --iv=100102030405060708090A0B00000000 --xtsmode=1
-bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/helloworld_bl616.bin --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem
+Examples(examples/wifi/sta/wifi_tcp, bl616):
+
+***No secure boot***
+
+step1: "cd examples/wifi/sta/wifi_tcp"
+step2: "make"
+step3: "bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin"
+
+
+***Secure boot with command line***
+
+step1: "cd examples/wifi/sta/wifi_tcp"
+step2: "make"
+step3: "bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem"
+
+
+***Secure boot with encrypt and sign server***
+
+step1: deploy encrypt and sign server with bflb_fw_post_proc
+step2: "cd examples/wifi/sta/wifi_tcp"
+step3: "make"
+
+step4: upload build/build_out/boot2_xxx.bin to server (optional, if boot2 is not changed and already encrypt and sign,skip this step)
+step5: server excute "bflb_fw_post_proc --chipname=bl616 --imgfile=boot2_xxx.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem"
+step6: download boot2_xxx.bin from server and overwrite the original one
+
+step7: upload build/build_out/wifi_tcp_bl616.bin to server (optional, if boot2 is not changed and already encrypt and sign,skip this step)
+step8: server excute "bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem"
+step9: download wifi_tcp_bl616.bin from server and overwrite the original one
+
+step10: make flash
+step11: make efuse
+
+
+Other options:
+	multi-files: "bflb_fw_post_proc --chipname=bl616 --imgfile=./build/build_out/helloworld_bl616.bin,./build/build_out/boot2_*.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000"
+	--edbg_mode:set dbg mode,open/pswd/close; ex:--edbg_mode=pswd
+	--epswwd:JTAG password value for hex string; ex:--epswwd=1234567890ABCDEF
+	--ehbn_sign:enable/disable signature check when HBN mode wakeup; ex:--ehbn_sign=true
+	--eanti_rollback:enable/disable anti-rollback function; ex:--eanti_rollback=true
+	--ejtag_close:close jtag port; ex:--ejtag_close=true
+	--edata:efuse data content:start,hex_str; ex:0x10,000102030405060708

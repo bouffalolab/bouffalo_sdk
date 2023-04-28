@@ -118,21 +118,21 @@
 /** @defgroup DMA_PERIPHERAL_REGBASE dma peripheral data register address definition
   * @{
   */
-#define DMA_ADDR_UART0_TDR      (0x2000A000 + 0x88)
-#define DMA_ADDR_UART0_RDR      (0x2000A000 + 0x8C)
-#define DMA_ADDR_UART1_TDR      (0x2000A100 + 0x88)
-#define DMA_ADDR_UART1_RDR      (0x2000A100 + 0x8C)
-#define DMA_ADDR_I2C0_TDR       (0x2000A300 + 0x88)
-#define DMA_ADDR_I2C0_RDR       (0x2000A300 + 0x8C)
-#define DMA_ADDR_SPI0_TDR       (0x2000A200 + 0x88)
-#define DMA_ADDR_SPI0_RDR       (0x2000A200 + 0x8C)
-#define DMA_ADDR_I2S_TDR        (0x2000AB00 + 0x88)
-#define DMA_ADDR_I2S_RDR        (0x2000AB00 + 0x8C)
-#define DMA_ADDR_ADC_RDR        (0x20002000 + 0x04)
-#define DMA_ADDR_DAC_TDR        (0x20002000 + 0x48)
-#define DMA_ADDR_DBI_TDR        (0x2000A800 + 0x88)
-#define DMA_ADDR_AUDAC_TDR      (0x20055000 + 0x94)
-#define DMA_ADDR_AUADC_RDR      (0x2000A000 + 0xC88)
+#define DMA_ADDR_UART0_TDR   (0x2000A000 + 0x88)
+#define DMA_ADDR_UART0_RDR   (0x2000A000 + 0x8C)
+#define DMA_ADDR_UART1_TDR   (0x2000A100 + 0x88)
+#define DMA_ADDR_UART1_RDR   (0x2000A100 + 0x8C)
+#define DMA_ADDR_I2C0_TDR    (0x2000A300 + 0x88)
+#define DMA_ADDR_I2C0_RDR    (0x2000A300 + 0x8C)
+#define DMA_ADDR_SPI0_TDR    (0x2000A200 + 0x88)
+#define DMA_ADDR_SPI0_RDR    (0x2000A200 + 0x8C)
+#define DMA_ADDR_I2S_TDR     (0x2000AB00 + 0x88)
+#define DMA_ADDR_I2S_RDR     (0x2000AB00 + 0x8C)
+#define DMA_ADDR_ADC_RDR     (0x20002000 + 0x04)
+#define DMA_ADDR_DAC_TDR     (0x20002000 + 0x48)
+#define DMA_ADDR_DBI_TDR     (0x2000A800 + 0x88)
+#define DMA_ADDR_AUDAC_TDR   (0x20055000 + 0x94)
+#define DMA_ADDR_AUADC_RDR   (0x2000A000 + 0xC88)
 /**
   * @}
   */
@@ -140,22 +140,22 @@
 /** @defgroup DMA_PERIPHERAL_REQUEST dma peripheral request definition
   * @{
   */
-#define DMA_REQUEST_NONE        0x00000000
-#define DMA_REQUEST_UART0_RX    0x00000000
-#define DMA_REQUEST_UART0_TX    0x00000001
-#define DMA_REQUEST_UART1_RX    0x00000002
-#define DMA_REQUEST_UART1_TX    0x00000003
-#define DMA_REQUEST_I2C0_RX     0x00000006
-#define DMA_REQUEST_I2C0_TX     0x00000007
-#define DMA_REQUEST_SPI0_RX     0x0000000A
-#define DMA_REQUEST_SPI0_TX     0x0000000B
-#define DMA_REQUEST_DBI_TX      0x00000014
-#define DMA_REQUEST_AUADC_RX    0x00000015
-#define DMA_REQUEST_AUDAC_TX    0x0000000D
-#define DMA_REQUEST_I2S_RX      0x00000010
-#define DMA_REQUEST_I2S_TX      0x00000011
-#define DMA_REQUEST_ADC         0x00000016
-#define DMA_REQUEST_DAC         0x00000017
+#define DMA_REQUEST_NONE     0x00000000
+#define DMA_REQUEST_UART0_RX 0x00000000
+#define DMA_REQUEST_UART0_TX 0x00000001
+#define DMA_REQUEST_UART1_RX 0x00000002
+#define DMA_REQUEST_UART1_TX 0x00000003
+#define DMA_REQUEST_I2C0_RX  0x00000006
+#define DMA_REQUEST_I2C0_TX  0x00000007
+#define DMA_REQUEST_SPI0_RX  0x0000000A
+#define DMA_REQUEST_SPI0_TX  0x0000000B
+#define DMA_REQUEST_DBI_TX   0x00000014
+#define DMA_REQUEST_AUADC_RX 0x00000015
+#define DMA_REQUEST_AUDAC_TX 0x0000000D
+#define DMA_REQUEST_I2S_RX   0x00000010
+#define DMA_REQUEST_I2S_TX   0x00000011
+#define DMA_REQUEST_ADC      0x00000016
+#define DMA_REQUEST_DAC      0x00000017
 
 /**
   * @}
@@ -289,7 +289,10 @@
 #define DMA_CMD_SET_ADD_MODE          (0x03)
 #define DMA_CMD_SET_REDUCE_MODE       (0x04)
 #define DMA_CMD_SET_LLI_CONFIG        (0x05)
-#define DMA_CMD_GET_LLI_CONTROL       (0x06)
+#define DMA_CMD_GET_LLI_SRCADDR       (0x06)
+#define DMA_CMD_GET_LLI_DSTADDR       (0x07)
+#define DMA_CMD_GET_LLI_CONTROL       (0x08)
+#define DMA_CMD_GET_LLI_COUNT         (0x09)
 /**
   * @}
   */
@@ -366,6 +369,16 @@ struct bflb_dma_channel_config_s {
     uint8_t dst_burst_count;
     uint8_t src_width;
     uint8_t dst_width;
+};
+
+struct bflb_rx_cycle_dma {
+    struct bflb_device_s *dma_ch;
+    uint32_t src_addr;
+    uint8_t *dst_buf;
+    uint32_t dst_buf_size;
+    uint8_t *read_ptr;
+    uint32_t dma_last_lli_count;
+    void (*copy)(uint8_t *data, uint32_t len);
 };
 
 #ifdef __cplusplus
@@ -449,6 +462,35 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev,
 void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
                                     struct bflb_dma_channel_lli_pool_s *lli_pool,
                                     uint32_t used_lli_count);
+
+/**
+ * @brief Init rx cycle dma.
+ *
+ * @param [in] rx_dma rx dma handle
+ * @param [in] dma_ch dma channel handle
+ * @param [in] rx_llipool pointer to lli pool
+ * @param [in] rx_llipool_size number of used lli
+ * @param [in] src_addr dma source addr
+ * @param [in] dst_buf dma dest addr
+ * @param [in] dst_buf_size dma dest buffer size
+ * @param [in] copy pointer to data copy
+ */
+void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
+                      struct bflb_device_s *dma_ch,
+                      struct bflb_dma_channel_lli_pool_s *rx_llipool,
+                      uint8_t rx_llipool_size,
+                      uint32_t src_addr,
+                      uint8_t *dst_buf,
+                      uint32_t dst_buf_size,
+                      void (*copy)(uint8_t *data, uint32_t len));
+
+/**
+ * @brief Rx cycle dma process
+ *
+ * @param [in] rx_dma rx dma handle
+ * @param [in] in_dma_isr if called in dma isr
+ */
+void bflb_rx_cycle_dma_process(struct bflb_rx_cycle_dma *rx_dma, bool in_dma_isr);
 
 /**
  * @brief Control dma feature.

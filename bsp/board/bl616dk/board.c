@@ -156,27 +156,30 @@ void bl_show_flashinfo(void)
 {
     spi_flash_cfg_type flashCfg;
     uint8_t *pFlashCfg = NULL;
+    uint32_t flashSize = 0;
     uint32_t flashCfgLen = 0;
     uint32_t flashJedecId = 0;
 
     flashJedecId = bflb_flash_get_jedec_id();
+    flashSize = bflb_flash_get_size();
     bflb_flash_get_cfg(&pFlashCfg, &flashCfgLen);
     arch_memcpy((void *)&flashCfg, pFlashCfg, flashCfgLen);
-    printf("=========== flash cfg ==============\r\n");
-    printf("jedec id   0x%06X\r\n", flashJedecId);
-    printf("mid            0x%02X\r\n", flashCfg.mid);
-    printf("iomode         0x%02X\r\n", flashCfg.io_mode);
-    printf("clk delay      0x%02X\r\n", flashCfg.clk_delay);
-    printf("clk invert     0x%02X\r\n", flashCfg.clk_invert);
-    printf("read reg cmd0  0x%02X\r\n", flashCfg.read_reg_cmd[0]);
-    printf("read reg cmd1  0x%02X\r\n", flashCfg.read_reg_cmd[1]);
-    printf("write reg cmd0 0x%02X\r\n", flashCfg.write_reg_cmd[0]);
-    printf("write reg cmd1 0x%02X\r\n", flashCfg.write_reg_cmd[1]);
-    printf("qe write len   0x%02X\r\n", flashCfg.qe_write_reg_len);
-    printf("cread support  0x%02X\r\n", flashCfg.c_read_support);
-    printf("cread code     0x%02X\r\n", flashCfg.c_read_mode);
-    printf("burst wrap cmd 0x%02X\r\n", flashCfg.burst_wrap_cmd);
-    printf("=====================================\r\n");
+    printf("======== flash cfg ========\r\n");
+    printf("flash size 0x%08X\r\n", flashSize);
+    printf("jedec id     0x%06X\r\n", flashJedecId);
+    printf("mid              0x%02X\r\n", flashCfg.mid);
+    printf("iomode           0x%02X\r\n", flashCfg.io_mode);
+    printf("clk delay        0x%02X\r\n", flashCfg.clk_delay);
+    printf("clk invert       0x%02X\r\n", flashCfg.clk_invert);
+    printf("read reg cmd0    0x%02X\r\n", flashCfg.read_reg_cmd[0]);
+    printf("read reg cmd1    0x%02X\r\n", flashCfg.read_reg_cmd[1]);
+    printf("write reg cmd0   0x%02X\r\n", flashCfg.write_reg_cmd[0]);
+    printf("write reg cmd1   0x%02X\r\n", flashCfg.write_reg_cmd[1]);
+    printf("qe write len     0x%02X\r\n", flashCfg.qe_write_reg_len);
+    printf("cread support    0x%02X\r\n", flashCfg.c_read_support);
+    printf("cread code       0x%02X\r\n", flashCfg.c_read_mode);
+    printf("burst wrap cmd   0x%02X\r\n", flashCfg.burst_wrap_cmd);
+    printf("===========================\r\n");
 }
 
 extern void bflb_uart_set_console(struct bflb_device_s *dev);
@@ -211,9 +214,9 @@ void board_init(void)
     size_t heap_len;
 
     flag = bflb_irq_save();
-
+#ifndef CONFIG_PSRAM_COPY_CODE
     ret = bflb_flash_init();
-
+#endif
     system_clock_init();
     peripheral_clock_init();
     bflb_irq_initialize();
@@ -221,8 +224,24 @@ void board_init(void)
     console_init();
 
 #ifdef CONFIG_PSRAM
+#ifndef CONFIG_PSRAM_COPY_CODE
     board_psram_x8_init();
     Tzc_Sec_PSRAMB_Access_Release();
+#endif
+    // extern uint32_t __psram_load_addr;
+
+    // extern uint32_t __psram_data_start__;
+    // extern uint32_t __psram_data_end__;
+
+    // uint32_t *pSrc, *pDest;
+
+    // /* BF Add psram data copy */
+    // pSrc = &__psram_load_addr;
+    // pDest = &__psram_data_start__;
+
+    // for (; pDest < &__psram_data_end__;) {
+    //     *pDest++ = *pSrc++;
+    // }
 
     heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
     pmem_init((void *)&__psram_heap_base, heap_len);

@@ -36,6 +36,7 @@
 
 #include "bl808_clock.h"
 #include "bl808_glb.h"
+#include "bl808_glb_gpio.h"
 #include "bl808_aon.h"
 #include "bl808_hbn.h"
 #include "bl808_pds.h"

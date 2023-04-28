@@ -1,21 +1,44 @@
-
 # avoid 'Entering|Leaving directory' messages
 ifndef VERBOSE
 MAKEFLAGS += --no-print-directory
 endif
 
+command_flash = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
+	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --config=flash_prog_cfg.ini
+command_efuse = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
+	--port=$(COMX) --chipname=$(CHIP) --efuse=build/build_out/efusedata.bin
+command_puncover = $(PUNCOVER_PROGRAM) \
+	--elf_file ./build/build_out/*.elf --map_file ./build/build_out/*.map \
+	--build_dir ./build --src_root ${BL_SDK_BASE} --port 5001
+
 ifeq ($(OS),Windows_NT)
 CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
 BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
+PUNCOVER_PROGRAM = puncover_riscv.exe
 cmake_generator = "MinGW Makefiles"
+
 else
 	ifeq ($(shell uname),Darwin)
 	CMAKE = cmake # use user cmake
 	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-macos
+	PUNCOVER_PROGRAM = puncover_riscv
+	cmake_generator = "Unix Makefiles"
+	else ifeq ($(shell uname),FreeBSD)
+	CMAKE = cmake # use user cmake
+	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-freebsd
+	PUNCOVER_PROGRAM = puncover_riscv
+	cmake_generator = "Unix Makefiles"
+	else ifeq ($(patsubst %WSL2,WSL2,$(shell uname -r)), WSL2)
+	PS_PROGRAM = /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
+	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+	command_flash = $(PS_PROGRAM) make flash CHIP=$(CHIP) CPU_ID=$(CPU_ID) COMX=$(COMX) BAUDRATE=$(BAUDRATE)
+	command_efuse = $(PS_PROGRAM) make efuse CHIP=$(CHIP) CPU_ID=$(CPU_ID) COMX=$(COMX) BAUDRATE=$(BAUDRATE)
+	PUNCOVER_PROGRAM = puncover_riscv
 	cmake_generator = "Unix Makefiles"
 	else
 	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
 	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
+	PUNCOVER_PROGRAM = puncover_riscv
 	cmake_generator = "Unix Makefiles"
 	endif
 endif
@@ -47,7 +70,8 @@ cmake_definition+= -DCONFIG_TLSF=$(CONFIG_TLSF)
 
 build:Makefile
 	$(CMAKE) -S . -B build -G $(cmake_generator) $(cmake_definition)
-	cd build && make -j8 && make combine
+	make -C build -j8
+	make -C build combine
 
 ninja:Makefile
 	$(CMAKE) -S . -B build -G Ninja $(cmake_definition)
@@ -60,21 +84,12 @@ menuconfig::
 	python $(BL_SDK_BASE)/tools/kconfig/menuconfig.py
 
 flash:
-	$(BL_FLASH_PROGRAM) \
-	--interface=uart \
-	--baudrate=$(BAUDRATE) \
-	--port=$(COMX) \
-	--chipname=$(CHIP) \
-	--cpu_id=$(CPU_ID) \
-	--config=flash_prog_cfg.ini
+	$(command_flash)
 
 efuse:
-	$(BL_FLASH_PROGRAM) \
-	--interface=uart \
-	--baudrate=$(BAUDRATE) \
-	--port=$(COMX) \
-	--chipname=$(CHIP) \
-	--efuse=build/build_out/efusedata.bin
+	$(command_efuse)
+
+puncover:
+	$(command_puncover)
 
 .PHONY:build clean menuconfig ninja
-

@@ -29,7 +29,7 @@ void *_malloc_r(struct _reent *reent, size_t size)
 {
     void *mem;
 
-    mem = bflb_malloc(KMEM_HEAP, size);
+    mem = bflb_malloc(PMEM_HEAP, size);
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
@@ -51,7 +51,7 @@ void *_realloc_r(struct _reent *reent, void *old, size_t newlen)
 {
     void *mem;
 
-    mem = bflb_realloc(KMEM_HEAP, old, newlen);
+    mem = bflb_realloc(PMEM_HEAP, old, newlen);
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
@@ -73,7 +73,7 @@ void *_calloc_r(struct _reent *reent, size_t nmenb, size_t size)
 {
     void *mem;
 
-    mem = bflb_calloc(KMEM_HEAP, nmenb, size);
+    mem = bflb_calloc(PMEM_HEAP, nmenb, size);
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
@@ -95,7 +95,7 @@ void *_memalign_r(struct _reent *reent, size_t align, size_t size)
 {
     void *mem;
 
-    mem = bflb_malloc_align(KMEM_HEAP, align, size);
+    mem = bflb_malloc_align(PMEM_HEAP, align, size);
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
@@ -118,5 +118,5 @@ void _free_r(struct _reent *reent, void *addr)
         return;
     }
 
-    bflb_free(KMEM_HEAP, addr);
+    bflb_free(PMEM_HEAP, addr);
 }

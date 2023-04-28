@@ -2,6 +2,7 @@
 #define _BFLB_COMMON_H
 
 #include "stdint.h"
+#include "stdbool.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,6 +99,16 @@ uint16_t bflb_soft_crc16(void *in, uint32_t len);
  * @return [in] uint32_t
  */
 uint32_t bflb_soft_crc32(void *in, uint32_t len);
+
+#if defined(BL602) || defined(BL702) || defined(BL702L)
+#define bflb_check_cache_addr(addr)  (false)
+#define bflb_get_no_cache_addr(addr) (addr)
+#else
+bool bflb_check_cache_addr(const void *addr);
+
+void *bflb_get_no_cache_addr(const void *addr);
+
+#endif
 
 #ifdef __cplusplus
 }

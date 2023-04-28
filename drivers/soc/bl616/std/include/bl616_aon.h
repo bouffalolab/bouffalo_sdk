@@ -104,6 +104,8 @@ BL_Err_Type AON_Trim_DcdcVoutTrim(void);
 BL_Err_Type AON_Trim_Ldo11socVoutTrim(void);
 BL_Err_Type AON_Trim_Usb20RcalCode(void);
 /*----------*/
+BL_Err_Type AON_Output_Pulldown_DCDC18(void);
+BL_Err_Type AON_Output_Float_DCDC18(void);
 
 /*@} end of group AON_Public_Functions */
 

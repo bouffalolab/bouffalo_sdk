@@ -100,8 +100,8 @@ extern "C" {
 #else
 #define __I volatile const /*!< Defines 'read only' permissions */
 #endif
-#define __O  volatile /*!< Defines 'write only' permissions */
-#define __IO volatile /*!< Defines 'read / write' permissions */
+#define __O   volatile /*!< Defines 'write only' permissions */
+#define __IO  volatile /*!< Defines 'read / write' permissions */
 
 /* following defines should be used for structure members */
 #define __IM  volatile const /*! Defines 'read only' structure member permissions */
@@ -263,26 +263,26 @@ typedef struct
 #define CACHE_MHCR_L0BTB_Pos 6U                              /*!< CACHE MHCR: L0BTB Position */
 #define CACHE_MHCR_L0BTB_Msk (0x1UL << CACHE_MHCR_L0BTB_Pos) /*!< CACHE MHCR: WA Mask */
 
-#define CACHE_MHCR_BPE_Pos 5U                            /*!< CACHE MHCR: BPE Position */
-#define CACHE_MHCR_BPE_Msk (0x1UL << CACHE_MHCR_BPE_Pos) /*!< CACHE MHCR: BPE Mask */
+#define CACHE_MHCR_BPE_Pos   5U                            /*!< CACHE MHCR: BPE Position */
+#define CACHE_MHCR_BPE_Msk   (0x1UL << CACHE_MHCR_BPE_Pos) /*!< CACHE MHCR: BPE Mask */
 
-#define CACHE_MHCR_RS_Pos 4U                           /*!< CACHE MHCR: RS Position */
-#define CACHE_MHCR_RS_Msk (0x1UL << CACHE_MHCR_RS_Pos) /*!< CACHE MHCR: RS Mask */
+#define CACHE_MHCR_RS_Pos    4U                           /*!< CACHE MHCR: RS Position */
+#define CACHE_MHCR_RS_Msk    (0x1UL << CACHE_MHCR_RS_Pos) /*!< CACHE MHCR: RS Mask */
 
-#define CACHE_MHCR_WB_Pos 3U                           /*!< CACHE MHCR: WB Position */
-#define CACHE_MHCR_WB_Msk (0x1UL << CACHE_MHCR_WB_Pos) /*!< CACHE MHCR: WB Mask */
+#define CACHE_MHCR_WB_Pos    3U                           /*!< CACHE MHCR: WB Position */
+#define CACHE_MHCR_WB_Msk    (0x1UL << CACHE_MHCR_WB_Pos) /*!< CACHE MHCR: WB Mask */
 
-#define CACHE_MHCR_WA_Pos 2U                           /*!< CACHE MHCR: WA Position */
-#define CACHE_MHCR_WA_Msk (0x1UL << CACHE_MHCR_WA_Pos) /*!< CACHE MHCR: WA Mask */
+#define CACHE_MHCR_WA_Pos    2U                           /*!< CACHE MHCR: WA Position */
+#define CACHE_MHCR_WA_Msk    (0x1UL << CACHE_MHCR_WA_Pos) /*!< CACHE MHCR: WA Mask */
 
-#define CACHE_MHCR_DE_Pos 1U                           /*!< CACHE MHCR: DE Position */
-#define CACHE_MHCR_DE_Msk (0x1UL << CACHE_MHCR_DE_Pos) /*!< CACHE MHCR: DE Mask */
+#define CACHE_MHCR_DE_Pos    1U                           /*!< CACHE MHCR: DE Position */
+#define CACHE_MHCR_DE_Msk    (0x1UL << CACHE_MHCR_DE_Pos) /*!< CACHE MHCR: DE Mask */
 
-#define CACHE_MHCR_IE_Pos 0U                           /*!< CACHE MHCR: IE Position */
-#define CACHE_MHCR_IE_Msk (0x1UL << CACHE_MHCR_IE_Pos) /*!< CACHE MHCR: IE Mask */
+#define CACHE_MHCR_IE_Pos    0U                           /*!< CACHE MHCR: IE Position */
+#define CACHE_MHCR_IE_Msk    (0x1UL << CACHE_MHCR_IE_Pos) /*!< CACHE MHCR: IE Mask */
 
-#define CACHE_INV_ADDR_Pos 6U
-#define CACHE_INV_ADDR_Msk (0xFFFFFFFFUL << CACHE_INV_ADDR_Pos)
+#define CACHE_INV_ADDR_Pos   6U
+#define CACHE_INV_ADDR_Msk   (0xFFFFFFFFUL << CACHE_INV_ADDR_Pos)
 
 /*@} end of group CSI_CACHE */
 
@@ -359,13 +359,13 @@ typedef struct
   \brief      Definitions for base addresses, unions, and structures.
   @{
  */
-#define CORET_BASE (PLIC_BASE + 0x4000000UL) /*!< CORET Base Address */
-#define PLIC_BASE  (0x00E0000000UL)          /*!< PLIC Base Address */
+#define CORET_BASE             (PLIC_BASE + 0x4000000UL) /*!< CORET Base Address */
+#define PLIC_BASE              (0x00E0000000UL)          /*!< PLIC Base Address */
 //#define PLIC_BASE           (0x4000000000UL)                          /*!< PLIC Base Address */
 
-#define CORET ((CORET_Type *)CORET_BASE) /*!< SysTick configuration struct */
-#define CLINT ((CORET_Type *)CORET_BASE) /*!< CLINT configuration struct */
-#define PLIC  ((PLIC_Type *)PLIC_BASE)   /*!< PLIC configuration struct */
+#define CORET                  ((CORET_Type *)CORET_BASE) /*!< SysTick configuration struct */
+#define CLINT                  ((CORET_Type *)CORET_BASE) /*!< CLINT configuration struct */
+#define PLIC                   ((PLIC_Type *)PLIC_BASE)   /*!< PLIC configuration struct */
 
 /*@} */
 
@@ -389,9 +389,9 @@ typedef struct
  */
 
 /* The following MACROS handle generation of the register offset and byte masks */
-#define _BIT_SHIFT(IRQn) (((((uint32_t)(int32_t)(IRQn))) & 0x03UL) * 8UL)
-#define _IP_IDX(IRQn)    ((((uint32_t)(int32_t)(IRQn)) >> 5UL))
-#define _IP2_IDX(IRQn)   ((((uint32_t)(int32_t)(IRQn)) >> 2UL))
+#define _BIT_SHIFT(IRQn)       (((((uint32_t)(int32_t)(IRQn))) & 0x03UL) * 8UL)
+#define _IP_IDX(IRQn)          ((((uint32_t)(int32_t)(IRQn)) >> 5UL))
+#define _IP2_IDX(IRQn)         ((((uint32_t)(int32_t)(IRQn)) >> 2UL))
 
 /**
   \brief   Enable External Interrupt
@@ -991,7 +991,7 @@ __STATIC_INLINE void csi_dcache_invalid_range(void *addr, int64_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
     int64_t op_size = dsize + (uint64_t)addr % 64;
-    uint64_t op_addr = (uint64_t)addr;
+    uint64_t op_addr = (uint64_t)addr & CACHE_INV_ADDR_Msk;
     int64_t linesize = 64;
 
     __DSB();
@@ -1041,7 +1041,7 @@ __STATIC_INLINE void csi_dcache_clean_invalid_range(void *addr, int64_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
     int64_t op_size = dsize + (uint64_t)addr % 64;
-    uint64_t op_addr = (uint64_t)addr;
+    uint64_t op_addr = (uint64_t)addr & CACHE_INV_ADDR_Msk;
     int64_t linesize = 64;
 
     __DSB();

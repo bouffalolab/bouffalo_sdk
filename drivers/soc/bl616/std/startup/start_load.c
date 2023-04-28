@@ -23,8 +23,10 @@ extern uint32_t __bss_start__;
 extern uint32_t __bss_end__;
 extern uint32_t __noinit_data_start__;
 extern uint32_t __noinit_data_end__;
+#ifndef CONIFG_DISABLE_NOCACHE_RAM_LOAD
 extern uint32_t __nocache_ram_data_start__;
 extern uint32_t __nocache_ram_data_end__;
+#endif
 
 extern uint32_t __StackTop;
 extern uint32_t __StackLimit;
@@ -64,7 +66,7 @@ void start_load(void)
     for (; pDest < &__ram_data_end__;) {
         *pDest++ = *pSrc++;
     }
-
+#ifndef CONIFG_DISABLE_NOCACHE_RAM_LOAD
     /* BF Add no cache ram data copy */
     pSrc = &__nocache_ram_load_addr;
     pDest = &__nocache_ram_data_start__;
@@ -72,6 +74,7 @@ void start_load(void)
     for (; pDest < &__nocache_ram_data_end__;) {
         *pDest++ = *pSrc++;
     }
+#endif    
 
 #ifdef __STARTUP_CLEAR_BSS
     /*  Single BSS section scheme.

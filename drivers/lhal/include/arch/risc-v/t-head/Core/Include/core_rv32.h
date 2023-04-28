@@ -96,8 +96,8 @@ extern "C" {
 #else
 #define __I volatile const /*!< Defines 'read only' permissions */
 #endif
-#define __O  volatile /*!< Defines 'write only' permissions */
-#define __IO volatile /*!< Defines 'read / write' permissions */
+#define __O   volatile /*!< Defines 'write only' permissions */
+#define __IO  volatile /*!< Defines 'read / write' permissions */
 
 /* following defines should be used for structure members */
 #define __IM  volatile const /*! Defines 'read only' structure member permissions */
@@ -154,35 +154,35 @@ typedef struct
 #define CLIC_INFO_CLICINTCTLBITS_Pos 21U
 #define CLIC_INFO_CLICINTCTLBITS_Msk (0xFUL << CLIC_INFO_CLICINTCTLBITS_Pos)
 
-#define CLIC_INTIP_IP_Pos 0U                           /*!< CLIC INTIP: IP Position */
-#define CLIC_INTIP_IP_Msk (0x1UL << CLIC_INTIP_IP_Pos) /*!< CLIC INTIP: IP Mask */
+#define CLIC_INTIP_IP_Pos            0U                           /*!< CLIC INTIP: IP Position */
+#define CLIC_INTIP_IP_Msk            (0x1UL << CLIC_INTIP_IP_Pos) /*!< CLIC INTIP: IP Mask */
 
-#define CLIC_INTIE_IE_Pos 0U                           /*!< CLIC INTIE: IE Position */
-#define CLIC_INTIE_IE_Msk (0x1UL << CLIC_INTIE_IE_Pos) /*!< CLIC INTIE: IE Mask */
+#define CLIC_INTIE_IE_Pos            0U                           /*!< CLIC INTIE: IE Position */
+#define CLIC_INTIE_IE_Msk            (0x1UL << CLIC_INTIE_IE_Pos) /*!< CLIC INTIE: IE Mask */
 
-#define CLIC_INTIE_T_Pos 7U                          /*!< CLIC INTIE: T Position */
-#define CLIC_INTIE_T_Msk (0x1UL << CLIC_INTIE_T_Pos) /*!< CLIC INTIE: T Mask */
+#define CLIC_INTIE_T_Pos             7U                          /*!< CLIC INTIE: T Position */
+#define CLIC_INTIE_T_Msk             (0x1UL << CLIC_INTIE_T_Pos) /*!< CLIC INTIE: T Mask */
 
-#define CLIC_INTATTR_TRIG_Pos 1U                               /*!< CLIC INTATTR: TRIG Position */
-#define CLIC_INTATTR_TRIG_Msk (0x3UL << CLIC_INTATTR_TRIG_Pos) /*!< CLIC INTATTR: TRIG Mask */
+#define CLIC_INTATTR_TRIG_Pos        1U                               /*!< CLIC INTATTR: TRIG Position */
+#define CLIC_INTATTR_TRIG_Msk        (0x3UL << CLIC_INTATTR_TRIG_Pos) /*!< CLIC INTATTR: TRIG Mask */
 
-#define CLIC_INTATTR_SHV_Pos 0U                              /*!< CLIC INTATTR: SHV Position */
-#define CLIC_INTATTR_SHV_Msk (0x1UL << CLIC_INTATTR_SHV_Pos) /*!< CLIC INTATTR: SHV Mask */
+#define CLIC_INTATTR_SHV_Pos         0U                              /*!< CLIC INTATTR: SHV Position */
+#define CLIC_INTATTR_SHV_Msk         (0x1UL << CLIC_INTATTR_SHV_Pos) /*!< CLIC INTATTR: SHV Mask */
 
-#define CLIC_INTCFG_NVBIT_Pos 5U                               /*!< CLIC INTCFG: NVBIT Position */
-#define CLIC_INTCFG_NVBIT_Msk (0x1UL << CLIC_INTCFG_NVBIT_Pos) /*!< CLIC INTCFG: NVBIT Mask */
+#define CLIC_INTCFG_NVBIT_Pos        5U                               /*!< CLIC INTCFG: NVBIT Position */
+#define CLIC_INTCFG_NVBIT_Msk        (0x1UL << CLIC_INTCFG_NVBIT_Pos) /*!< CLIC INTCFG: NVBIT Mask */
 
-#define CLIC_INTCFG_PRIO_Pos 4U                              /*!< CLIC INTCFG: INTCFG Position */
-#define CLIC_INTCFG_PRIO_Msk (0xFUL << CLIC_INTCFG_PRIO_Pos) /*!< CLIC INTCFG: INTCFG Mask */
+#define CLIC_INTCFG_PRIO_Pos         4U                              /*!< CLIC INTCFG: INTCFG Position */
+#define CLIC_INTCFG_PRIO_Msk         (0xFUL << CLIC_INTCFG_PRIO_Pos) /*!< CLIC INTCFG: INTCFG Mask */
 
-#define CLIC_CLICCFG_NVBIT_Pos 0U                                /*!< CLIC CLICCFG: NVBIT Position */
-#define CLIC_CLICCFG_NVBIT_Msk (0x1UL << CLIC_CLICCFG_NVBIT_Pos) /*!< CLIC CLICCFG: NVBIT Mask */
+#define CLIC_CLICCFG_NVBIT_Pos       0U                                /*!< CLIC CLICCFG: NVBIT Position */
+#define CLIC_CLICCFG_NVBIT_Msk       (0x1UL << CLIC_CLICCFG_NVBIT_Pos) /*!< CLIC CLICCFG: NVBIT Mask */
 
-#define CLIC_CLICCFG_NLBIT_Pos 1U                                /*!< CLIC CLICCFG: NLBIT Position */
-#define CLIC_CLICCFG_NLBIT_Msk (0xFUL << CLIC_CLICCFG_NLBIT_Pos) /*!< CLIC CLICCFG: NLBIT Mask */
+#define CLIC_CLICCFG_NLBIT_Pos       1U                                /*!< CLIC CLICCFG: NLBIT Position */
+#define CLIC_CLICCFG_NLBIT_Msk       (0xFUL << CLIC_CLICCFG_NLBIT_Pos) /*!< CLIC CLICCFG: NLBIT Mask */
 
-#define CLIC_CLICCFG_NMBIT_Pos 5U                                /*!< CLIC CLICCFG: NMBIT Position */
-#define CLIC_CLICCFG_NMBIT_Msk (0x3UL << CLIC_CLICCFG_NMBIT_Pos) /*!< CLIC CLICCFG: NMBIT Mask */
+#define CLIC_CLICCFG_NMBIT_Pos       5U                                /*!< CLIC CLICCFG: NMBIT Position */
+#define CLIC_CLICCFG_NMBIT_Msk       (0x3UL << CLIC_CLICCFG_NMBIT_Pos) /*!< CLIC CLICCFG: NMBIT Mask */
 
 /*@} end of group CSI_CLIC */
 
@@ -193,20 +193,20 @@ typedef struct
   @{
  */
 
-#define PMP_PMPCFG_R_Pos 0U                          /*!< PMP PMPCFG: R Position */
-#define PMP_PMPCFG_R_Msk (0x1UL << PMP_PMPCFG_R_Pos) /*!< PMP PMPCFG: R Mask */
+#define PMP_PMPCFG_R_Pos             0U                          /*!< PMP PMPCFG: R Position */
+#define PMP_PMPCFG_R_Msk             (0x1UL << PMP_PMPCFG_R_Pos) /*!< PMP PMPCFG: R Mask */
 
-#define PMP_PMPCFG_W_Pos 1U                          /*!< PMP PMPCFG: W Position */
-#define PMP_PMPCFG_W_Msk (0x1UL << PMP_PMPCFG_W_Pos) /*!< PMP PMPCFG: W Mask */
+#define PMP_PMPCFG_W_Pos             1U                          /*!< PMP PMPCFG: W Position */
+#define PMP_PMPCFG_W_Msk             (0x1UL << PMP_PMPCFG_W_Pos) /*!< PMP PMPCFG: W Mask */
 
-#define PMP_PMPCFG_X_Pos 2U                          /*!< PMP PMPCFG: X Position */
-#define PMP_PMPCFG_X_Msk (0x1UL << PMP_PMPCFG_X_Pos) /*!< PMP PMPCFG: X Mask */
+#define PMP_PMPCFG_X_Pos             2U                          /*!< PMP PMPCFG: X Position */
+#define PMP_PMPCFG_X_Msk             (0x1UL << PMP_PMPCFG_X_Pos) /*!< PMP PMPCFG: X Mask */
 
-#define PMP_PMPCFG_A_Pos 3U                          /*!< PMP PMPCFG: A Position */
-#define PMP_PMPCFG_A_Msk (0x3UL << PMP_PMPCFG_A_Pos) /*!< PMP PMPCFG: A Mask */
+#define PMP_PMPCFG_A_Pos             3U                          /*!< PMP PMPCFG: A Position */
+#define PMP_PMPCFG_A_Msk             (0x3UL << PMP_PMPCFG_A_Pos) /*!< PMP PMPCFG: A Mask */
 
-#define PMP_PMPCFG_L_Pos 7U                          /*!< PMP PMPCFG: L Position */
-#define PMP_PMPCFG_L_Msk (0x1UL << PMP_PMPCFG_L_Pos) /*!< PMP PMPCFG: L Mask */
+#define PMP_PMPCFG_L_Pos             7U                          /*!< PMP PMPCFG: L Position */
+#define PMP_PMPCFG_L_Msk             (0x1UL << PMP_PMPCFG_L_Pos) /*!< PMP PMPCFG: L Mask */
 
 typedef enum {
     REGION_SIZE_4B = -1,
@@ -262,29 +262,29 @@ typedef struct
 /*@} end of group CSI_PMP */
 
 /* CACHE Register Definitions */
-#define CACHE_MHCR_L0BTB_Pos 12U                             /*!< CACHE MHCR: L0BTB Position */
-#define CACHE_MHCR_L0BTB_Msk (0x1UL << CACHE_MHCR_L0BTB_Pos) /*!< CACHE MHCR: WA Mask */
+#define CACHE_MHCR_L0BTB_Pos    12U                             /*!< CACHE MHCR: L0BTB Position */
+#define CACHE_MHCR_L0BTB_Msk    (0x1UL << CACHE_MHCR_L0BTB_Pos) /*!< CACHE MHCR: WA Mask */
 
-#define CACHE_MHCR_BPE_Pos 5U                            /*!< CACHE MHCR: BPE Position */
-#define CACHE_MHCR_BPE_Msk (0x1UL << CACHE_MHCR_BPE_Pos) /*!< CACHE MHCR: BPE Mask */
+#define CACHE_MHCR_BPE_Pos      5U                            /*!< CACHE MHCR: BPE Position */
+#define CACHE_MHCR_BPE_Msk      (0x1UL << CACHE_MHCR_BPE_Pos) /*!< CACHE MHCR: BPE Mask */
 
-#define CACHE_MHCR_RS_Pos 4U                           /*!< CACHE MHCR: RS Position */
-#define CACHE_MHCR_RS_Msk (0x1UL << CACHE_MHCR_RS_Pos) /*!< CACHE MHCR: RS Mask */
+#define CACHE_MHCR_RS_Pos       4U                           /*!< CACHE MHCR: RS Position */
+#define CACHE_MHCR_RS_Msk       (0x1UL << CACHE_MHCR_RS_Pos) /*!< CACHE MHCR: RS Mask */
 
-#define CACHE_MHCR_WA_Pos 3U                           /*!< CACHE MHCR: WA Position */
-#define CACHE_MHCR_WA_Msk (0x1UL << CACHE_MHCR_WA_Pos) /*!< CACHE MHCR: WA Mask */
+#define CACHE_MHCR_WA_Pos       3U                           /*!< CACHE MHCR: WA Position */
+#define CACHE_MHCR_WA_Msk       (0x1UL << CACHE_MHCR_WA_Pos) /*!< CACHE MHCR: WA Mask */
 
-#define CACHE_MHCR_WB_Pos 2U                           /*!< CACHE MHCR: WB Position */
-#define CACHE_MHCR_WB_Msk (0x1UL << CACHE_MHCR_WB_Pos) /*!< CACHE MHCR: WB Mask */
+#define CACHE_MHCR_WB_Pos       2U                           /*!< CACHE MHCR: WB Position */
+#define CACHE_MHCR_WB_Msk       (0x1UL << CACHE_MHCR_WB_Pos) /*!< CACHE MHCR: WB Mask */
 
-#define CACHE_MHCR_DE_Pos 1U                           /*!< CACHE MHCR: DE Position */
-#define CACHE_MHCR_DE_Msk (0x1UL << CACHE_MHCR_DE_Pos) /*!< CACHE MHCR: DE Mask */
+#define CACHE_MHCR_DE_Pos       1U                           /*!< CACHE MHCR: DE Position */
+#define CACHE_MHCR_DE_Msk       (0x1UL << CACHE_MHCR_DE_Pos) /*!< CACHE MHCR: DE Mask */
 
-#define CACHE_MHCR_IE_Pos 0U                           /*!< CACHE MHCR: IE Position */
-#define CACHE_MHCR_IE_Msk (0x1UL << CACHE_MHCR_IE_Pos) /*!< CACHE MHCR: IE Mask */
+#define CACHE_MHCR_IE_Pos       0U                           /*!< CACHE MHCR: IE Position */
+#define CACHE_MHCR_IE_Msk       (0x1UL << CACHE_MHCR_IE_Pos) /*!< CACHE MHCR: IE Mask */
 
-#define CACHE_INV_ADDR_Pos 5U
-#define CACHE_INV_ADDR_Msk (0xFFFFFFFFUL << CACHE_INV_ADDR_Pos)
+#define CACHE_INV_ADDR_Pos      5U
+#define CACHE_INV_ADDR_Msk      (0xFFFFFFFFUL << CACHE_INV_ADDR_Pos)
 
 /*@} end of group CSI_CACHE */
 
@@ -295,11 +295,11 @@ typedef struct
   @{
  */
 
-#define SYSMAP_SYSMAPCFG_B_Pos 0U                                /*!< SYSMAP SYSMAPCFG: B Position */
-#define SYSMAP_SYSMAPCFG_B_Msk (0x1UL << SYSMAP_SYSMAPCFG_B_Pos) /*!< SYSMAP SYSMAPCFG: B Mask */
+#define SYSMAP_SYSMAPCFG_B_Pos  0U                                /*!< SYSMAP SYSMAPCFG: B Position */
+#define SYSMAP_SYSMAPCFG_B_Msk  (0x1UL << SYSMAP_SYSMAPCFG_B_Pos) /*!< SYSMAP SYSMAPCFG: B Mask */
 
-#define SYSMAP_SYSMAPCFG_C_Pos 1U                                /*!< SYSMAP SYSMAPCFG: C Position */
-#define SYSMAP_SYSMAPCFG_C_Msk (0x1UL << SYSMAP_SYSMAPCFG_C_Pos) /*!< SYSMAP SYSMAPCFG: C Mask */
+#define SYSMAP_SYSMAPCFG_C_Pos  1U                                /*!< SYSMAP SYSMAPCFG: C Position */
+#define SYSMAP_SYSMAPCFG_C_Msk  (0x1UL << SYSMAP_SYSMAPCFG_C_Pos) /*!< SYSMAP SYSMAPCFG: C Mask */
 
 #define SYSMAP_SYSMAPCFG_SO_Pos 2U                                 /*!< SYSMAP SYSMAPCFG: SO Position */
 #define SYSMAP_SYSMAPCFG_SO_Msk (0x1UL << SYSMAP_SYSMAPCFG_SO_Pos) /*!< SYSMAP SYSMAPCFG: SO Mask */
@@ -374,17 +374,17 @@ typedef struct
 
 } DCC_Type;
 
-#define DCC_HCR_JW_Pos 18U                     /*!< DCC HCR: jw_int_en Position */
-#define DCC_HCR_JW_Msk (1UL << DCC_HCR_JW_Pos) /*!< DCC HCR: jw_int_en Mask */
+#define DCC_HCR_JW_Pos         18U                     /*!< DCC HCR: jw_int_en Position */
+#define DCC_HCR_JW_Msk         (1UL << DCC_HCR_JW_Pos) /*!< DCC HCR: jw_int_en Mask */
 
-#define DCC_HCR_JR_Pos 19U                     /*!< DCC HCR: jr_int_en Position */
-#define DCC_HCR_JR_Msk (1UL << DCC_HCR_JR_Pos) /*!< DCC HCR: jr_int_en Mask */
+#define DCC_HCR_JR_Pos         19U                     /*!< DCC HCR: jr_int_en Position */
+#define DCC_HCR_JR_Msk         (1UL << DCC_HCR_JR_Pos) /*!< DCC HCR: jr_int_en Mask */
 
-#define DCC_EHSR_JW_Pos 1U                       /*!< DCC EHSR: jw_vld Position */
-#define DCC_EHSR_JW_Msk (1UL << DCC_EHSR_JW_Pos) /*!< DCC EHSR: jw_vld Mask */
+#define DCC_EHSR_JW_Pos        1U                       /*!< DCC EHSR: jw_vld Position */
+#define DCC_EHSR_JW_Msk        (1UL << DCC_EHSR_JW_Pos) /*!< DCC EHSR: jw_vld Mask */
 
-#define DCC_EHSR_JR_Pos 2U                       /*!< DCC EHSR: jr_vld Position */
-#define DCC_EHSR_JR_Msk (1UL << DCC_EHSR_JR_Pos) /*!< DCC EHSR: jr_vld Mask */
+#define DCC_EHSR_JR_Pos        2U                       /*!< DCC EHSR: jr_vld Position */
+#define DCC_EHSR_JR_Msk        (1UL << DCC_EHSR_JR_Pos) /*!< DCC EHSR: jr_vld Mask */
 
 /*@} end of group CSI_DCC */
 
@@ -421,18 +421,18 @@ typedef struct
  */
 
 /* Memory mapping of THEAD CPU */
-#define TCIP_BASE   (0xE000E000UL)         /*!< Titly Coupled IP Base Address */
-#define CORET_BASE  (0xE0004000UL)         /*!< CORET Base Address */
-#define CLIC_BASE   (0xE0800000UL)         /*!< CLIC Base Address */
-#define SYSMAP_BASE (0xEFFFF000UL)         /*!< SYSMAP Base Address */
-#define DCC_BASE    (0xE4010000UL)         /*!< DCC Base Address */
-#define CACHE_BASE  (TCIP_BASE + 0x1000UL) /*!< CACHE Base Address */
+#define TCIP_BASE              (0xE000E000UL)         /*!< Titly Coupled IP Base Address */
+#define CORET_BASE             (0xE0004000UL)         /*!< CORET Base Address */
+#define CLIC_BASE              (0xE0800000UL)         /*!< CLIC Base Address */
+#define SYSMAP_BASE            (0xEFFFF000UL)         /*!< SYSMAP Base Address */
+#define DCC_BASE               (0xE4010000UL)         /*!< DCC Base Address */
+#define CACHE_BASE             (TCIP_BASE + 0x1000UL) /*!< CACHE Base Address */
 
-#define CORET  ((CORET_Type *)CORET_BASE)   /*!< SysTick configuration struct */
-#define CLIC   ((CLIC_Type *)CLIC_BASE)     /*!< CLIC configuration struct */
-#define DCC    ((DCC_Type *)DCC_BASE)       /*!< DCC configuration struct */
-#define SYSMAP ((SYSMAP_Type *)SYSMAP_BASE) /*!< SYSMAP configuration struct */
-#define CACHE  ((CACHE_Type *)CACHE_BASE)   /*!< cache configuration struct */
+#define CORET                  ((CORET_Type *)CORET_BASE)   /*!< SysTick configuration struct */
+#define CLIC                   ((CLIC_Type *)CLIC_BASE)     /*!< CLIC configuration struct */
+#define DCC                    ((DCC_Type *)DCC_BASE)       /*!< DCC configuration struct */
+#define SYSMAP                 ((SYSMAP_Type *)SYSMAP_BASE) /*!< SYSMAP configuration struct */
+#define CACHE                  ((CACHE_Type *)CACHE_BASE)   /*!< cache configuration struct */
 
 /*@} */
 
@@ -456,9 +456,9 @@ typedef struct
  */
 
 /* The following MACROS handle generation of the register offset and byte masks */
-#define _BIT_SHIFT(IRQn) (((((uint32_t)(int32_t)(IRQn))) & 0x03UL) * 8UL)
-#define _IP_IDX(IRQn)    ((((uint32_t)(int32_t)(IRQn)) >> 5UL))
-#define _IP2_IDX(IRQn)   ((((uint32_t)(int32_t)(IRQn)) >> 2UL))
+#define _BIT_SHIFT(IRQn)       (((((uint32_t)(int32_t)(IRQn))) & 0x03UL) * 8UL)
+#define _IP_IDX(IRQn)          ((((uint32_t)(int32_t)(IRQn)) >> 5UL))
+#define _IP2_IDX(IRQn)         ((((uint32_t)(int32_t)(IRQn)) >> 2UL))
 
 /**
   \brief   Enable External Interrupt
@@ -1202,7 +1202,7 @@ __STATIC_INLINE void csi_dcache_invalid_range(void *addr, int32_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
     int32_t op_size = dsize + (uint32_t)addr % 32;
-    uint32_t op_addr = (uint32_t)addr;
+    uint32_t op_addr = (uint32_t)addr & CACHE_INV_ADDR_Msk;
     int32_t linesize = 32;
 
     __DSB();
@@ -1252,7 +1252,7 @@ __STATIC_INLINE void csi_dcache_clean_invalid_range(void *addr, int32_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
     int32_t op_size = dsize + (uint32_t)addr % 32;
-    uint32_t op_addr = (uint32_t)addr;
+    uint32_t op_addr = (uint32_t)addr & CACHE_INV_ADDR_Msk;
     int32_t linesize = 32;
 
     __DSB();

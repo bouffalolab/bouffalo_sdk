@@ -169,7 +169,7 @@ struct sflash_sec_reg_cfg
 /** @defgroup  SFLAH_Public_Functions
  *  @{
  */
-#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
+#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
 void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg, const struct sf_ctrl_bank2_cfg *p_bank2_cfg);
 #else
 void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg);

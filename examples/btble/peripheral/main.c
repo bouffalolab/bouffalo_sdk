@@ -10,13 +10,16 @@
 #include "ble_lib_api.h"
 #elif defined(BL616)
 #include "btble_lib_api.h"
-#endif
-#include "hci_driver.h"
 #include "bl616_glb.h"
-#include "ble_tp_svc.h"
 #include "rfparam_adapter.h"
-#include "hci_core.h"
+#elif defined(BL808)
+#include "btble_lib_api.h"
+#include "bl808_glb.h"
+#endif
 
+#include "ble_tp_svc.h"
+#include "hci_driver.h"
+#include "hci_core.h"
 
 static struct bflb_device_s *uart0;
 
@@ -126,13 +129,13 @@ int main(void)
 
     /* set ble controller EM Size */
     btblecontroller_em_config();
-
+#if defined(BL616)
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {
         printf("PHY RF init failed!\r\n");
         return 0;
     }
-
+#endif
     // Initialize BLE controller
     #if defined(BL702) || defined(BL602)
     ble_controller_init(configMAX_PRIORITIES - 1);

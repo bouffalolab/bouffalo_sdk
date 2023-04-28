@@ -45,7 +45,7 @@ static uint8_t reg_read_err = 0;
 static uint8_t reg_write_err = 0;
 static uint8_t init_array_write_err = 0;
 static uint8_t array_read_err = 0;
-static uint32_t addr_dump = 0x3000F000;
+//static uint32_t addr_dump = 0x3000F000;
 // 
 static uint32_t addr_rarray = 0x50000000;
 static uint32_t data0_rarray = 0x12345678;
@@ -1193,12 +1193,12 @@ void set_uhs_latency_w(uint32_t uhs_latency)
 uint8_t mr_read_back(void)
 {
     uint8_t cnt1;
-    uint32_t tmpVal;
+    //uint32_t tmpVal;
     for (cnt1=0;cnt1<=4;cnt1++){
         if(cnt1 != 3){
             CHECK_ERR_FLAG(uhs_reg_r,(cnt1,0));
-            tmpVal = BL_RD_REG(PSRAM_UHS_BASE,PSRAM_UHS_UHS_CMD)>>24;
-            uhs_phy_printf("MA%d = 0x%lx\r\n",cnt1,tmpVal);
+            //tmpVal = BL_RD_REG(PSRAM_UHS_BASE,PSRAM_UHS_UHS_CMD)>>24;
+            //uhs_phy_printf("MA%d = 0x%lx\r\n",cnt1,tmpVal);
         }
     }
     return 0;

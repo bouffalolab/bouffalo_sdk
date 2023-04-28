@@ -7,7 +7,7 @@
 |:----------------:|:------:|
 |BL702/BL704/BL706 |        |
 |BL616/BL618       |        |
-|BL808             |  D0 has no irq      |
+|BL808             |  M0 has no irq      |
 
 ## Compile
 

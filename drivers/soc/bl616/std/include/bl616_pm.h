@@ -40,4 +40,6 @@ void HBN_OUT1_IRQ(void);
 void pm_irq_callback(enum pm_event_type event);
 void pm_pds_irq_register(void);
 void PDS_WAKEUP_IRQ(void);
+void pm_rc32k_auto_cal(void);
+void pm_rc32k_auto_cal_init(void);
 void hal_pm_ldo11_use_ext_dcdc(void);

@@ -82,6 +82,22 @@ void bflb_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg);
 uint32_t bflb_flash_get_jedec_id(void);
 
 /**
+ * @brief get flash size
+ *
+ * @return flash size
+ */
+uint32_t bflb_flash_get_size(void);
+
+#if defined(BL616)
+/**
+ * @brief get flash2 size
+ *
+ * @return flash2 size
+ */
+uint32_t bflb_flash2_get_size(void);
+#endif
+
+/**
  * @brief Get flash config.
  *
  * @param [out] cfg_addr pointer to save config
@@ -133,6 +149,15 @@ int bflb_flash_write(uint32_t addr, uint8_t *data, uint32_t len);
 int bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len);
 
 /**
+ * @brief read flash unique id
+ *
+ * @param data
+ * @param id_len
+ * @return int
+ */
+int bflb_flash_get_unique_id(uint8_t *data, uint8_t id_len);
+
+/**
  * @brief Config flash cache.
  *
  * @param [in] cont_read enable or not continuous read mode.
@@ -161,6 +186,15 @@ void bflb_flash_aes_enable(void);
  *
  */
 void bflb_flash_aes_disable(void);
+
+/**
+ * @brief Initialize flash jump to encrypted app.
+ *
+ * @param [in] index region index
+ * @param [in] flash_addr flash physical address.
+ * @param [in] len firmware length.
+ */
+void bflb_flash_jump_encrypted_app(uint8_t index, uint32_t flash_addr, uint32_t len);
 
 #ifdef __cplusplus
 }

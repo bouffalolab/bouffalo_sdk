@@ -103,6 +103,7 @@ int _open_file_r(struct _reent *reent, const char *path, int flags, int mode)
     fp = (FIL *)malloc(sizeof(FIL));
     if (fp == NULL) {
         reent->_errno = ENOMEM;
+        fd_table[fd] = NULL;
         return -1;
     }
 
@@ -113,6 +114,7 @@ int _open_file_r(struct _reent *reent, const char *path, int flags, int mode)
             reent->_errno = fresult_table[fresult];
         }
         free(fp);
+        fd_table[fd] = NULL;
         return -1;
     }
 

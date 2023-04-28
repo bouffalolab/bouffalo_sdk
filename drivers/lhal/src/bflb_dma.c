@@ -390,6 +390,73 @@ void bflb_dma_channel_tcint_clear(struct bflb_device_s *dev)
     putreg32(1 << dev->sub_idx, dma_base[dev->idx] + DMA_INTTCCLEAR_OFFSET);
 }
 
+void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
+                            struct bflb_device_s *dma_ch,
+                            struct bflb_dma_channel_lli_pool_s *rx_llipool,
+                            uint8_t rx_llipool_size,
+                            uint32_t src_addr,
+                            uint8_t *dst_buf,
+                            uint32_t dst_buf_size,
+                            void (*copy)(uint8_t *data, uint32_t len))
+{
+    struct bflb_dma_channel_lli_transfer_s rx_transfers[1];
+
+    rx_dma->dst_buf = dst_buf;
+    rx_dma->dst_buf_size = dst_buf_size;
+    rx_dma->dma_last_lli_count = 0;
+    rx_dma->read_ptr = dst_buf;
+    rx_dma->dma_ch = dma_ch;
+    rx_dma->copy = copy;
+
+    rx_transfers[0].src_addr = (uint32_t)src_addr;
+    rx_transfers[0].dst_addr = (uint32_t)dst_buf;
+    rx_transfers[0].nbytes = dst_buf_size;
+
+    int used_count = bflb_dma_channel_lli_reload(dma_ch, rx_llipool, rx_llipool_size, rx_transfers, 1);
+    bflb_dma_channel_lli_link_head(dma_ch, rx_llipool, used_count);
+}
+
+void bflb_rx_cycle_dma_process(struct bflb_rx_cycle_dma *rx_dma, bool in_dma_isr)
+{
+    uint16_t length;
+    uint32_t dma_lli_count;
+    uint8_t *write_ptr;
+
+    write_ptr = (uint8_t *)bflb_dma_feature_control(rx_dma->dma_ch, DMA_CMD_GET_LLI_DSTADDR, 0);
+    dma_lli_count = bflb_dma_feature_control(rx_dma->dma_ch, DMA_CMD_GET_LLI_COUNT, 0);
+
+    if (write_ptr > rx_dma->read_ptr) {
+        length = write_ptr - rx_dma->read_ptr;
+
+        rx_dma->copy(rx_dma->read_ptr, length);
+
+        // printf("[1] w:%08x, r:%p,len:%d,lli count:%d\r\n",
+        //        write_ptr,
+        //        rx_dma->read_ptr,
+        //        length,
+        //        dma_lli_count);
+    } else {
+        if ((write_ptr != rx_dma->read_ptr) || (dma_lli_count != rx_dma->dma_last_lli_count)) {
+            /* copy the data from read_ptr to tail */
+            length = rx_dma->dst_buf + rx_dma->dst_buf_size - rx_dma->read_ptr;
+            rx_dma->copy(rx_dma->read_ptr, length);
+
+            /* copy the data from head to write_ptr */
+            rx_dma->copy(rx_dma->dst_buf, (write_ptr - rx_dma->dst_buf));
+            length += (write_ptr - rx_dma->dst_buf);
+
+            // printf("[2] w:%08x, r:%p,len:%d,lli count:%d\r\n",
+            //        write_ptr,
+            //        rx_dma->read_ptr,
+            //        length,
+            //        dma_lli_count);
+        }
+    }
+
+    rx_dma->read_ptr = write_ptr;
+    rx_dma->dma_last_lli_count = dma_lli_count;
+}
+
 int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
     int ret = 0;
@@ -445,8 +512,15 @@ int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
         case DMA_CMD_SET_LLI_CONFIG:
             arch_memcpy4((uint32_t *)(channel_base + DMA_CxSRCADDR_OFFSET), (uint32_t *)arg, 4);
             break;
+        case DMA_CMD_GET_LLI_SRCADDR:
+            return getreg32(channel_base + DMA_CxSRCADDR_OFFSET);
+        case DMA_CMD_GET_LLI_DSTADDR:
+            return getreg32(channel_base + DMA_CxDSTADDR_OFFSET);
         case DMA_CMD_GET_LLI_CONTROL:
             return getreg32(channel_base + DMA_CxCONTROL_OFFSET);
+        case DMA_CMD_GET_LLI_COUNT:
+            return (getreg32(channel_base + DMA_CxCONFIG_OFFSET) & DMA_LLICOUNTER_MASK) >> DMA_LLICOUNTER_SHIFT;
+
         default:
             ret = -EPERM;
             break;

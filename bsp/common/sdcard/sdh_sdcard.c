@@ -49,7 +49,7 @@ static SDH_Handle_Cfg_Type SDH_Handle_Cfg_TypeInstance;
 
 static SDH_DMA_Cfg_Type SDH_DMA_Cfg_TypeInstance;
 /*causion: ADMA related variables must on OCRAM or shared ram*/
-static __ALIGNED(64) SDH_ADMA2_Desc_Type adma2Entries[16];
+static __attribute__((aligned(32), section(".noncacheable"))) SDH_ADMA2_Desc_Type adma2Entries[16];
 
 /* Private function prototypes -----------------------------------------------*/
 static void SD_DecodeCid(sd_card_t *card, uint32_t *rawCid);
@@ -206,7 +206,7 @@ static void SD_DecodeScr(sd_card_t *card, uint32_t *rawScr)
 
     /* set block count cmd */
     if (card->scr.commandSupport & 0x02U) {
-        // card->flags |= SD_SupportSetBlockCountCmd;
+        card->flags |= SD_SupportSetBlockCountCmd;
     }
 }
 
@@ -307,7 +307,7 @@ static status_t SDH_SendCardCommand(SDH_CMD_Cfg_Type *cmd)
         BL_DRV_DUMMY;
         BL_DRV_DUMMY;
     }
-    SDH_ClearIntStatus(intFlag);
+    SDH_ClearIntStatus(intFlag & (SDH_INT_CMD_ERRORS | SDH_INT_CMD_COMPLETED));
 
 #endif
 
@@ -1408,6 +1408,7 @@ status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Bloc
     /*set data parameter for READ_MULTIPLE_BLOCK*/
     if (NumberOfBlocks <= 1) {
         SDH_Data_Cfg_TypeInstance.enableAutoCommand12 = DISABLE;
+        SDH_Data_Cfg_TypeInstance.enableAutoCommand23 = DISABLE;
     } else {
         if (pSDCardInfo->flags & SD_SupportSetBlockCountCmd) {
             SDH_Data_Cfg_TypeInstance.enableAutoCommand23 = ENABLE;
@@ -1431,14 +1432,10 @@ status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Bloc
 
     /*set parameters for SDH_DMA_Cfg_TypeInstance*/
     SDH_DMA_Cfg_TypeInstance.dmaMode = SDH_DMA_MODE_ADMA2;
-    SDH_DMA_Cfg_TypeInstance.burstSize = SDH_BURST_SIZE_64_BYTES;
-    SDH_DMA_Cfg_TypeInstance.fifoThreshold = SDH_FIFO_THRESHOLD_256_BYTES;
+    SDH_DMA_Cfg_TypeInstance.burstSize = SDH_BURST_SIZE_128_BYTES;
+    SDH_DMA_Cfg_TypeInstance.fifoThreshold = SDH_BURST_SIZE_128_BYTES;
     SDH_DMA_Cfg_TypeInstance.admaEntries = (uint32_t *)adma2Entries;
     SDH_DMA_Cfg_TypeInstance.maxEntries = sizeof(adma2Entries) / sizeof(adma2Entries[0]);
-
-    bflb_l1c_dcache_clean_range((void *)(readbuff), 0);
-    bflb_l1c_dcache_clean_range((void *)(readbuff) + BlockSize * NumberOfBlocks, 0);
-    bflb_l1c_dcache_invalidate_range((void *)(readbuff), BlockSize * NumberOfBlocks);
 
     errorstatus = SDH_CardTransferNonBlocking(&SDH_DMA_Cfg_TypeInstance, &SDH_Trans_Cfg_TypeInstance);
 
@@ -1496,6 +1493,8 @@ status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Bloc
         goto out;
     }
 
+    bflb_l1c_dcache_invalidate_range((void *)(readbuff), BlockSize * NumberOfBlocks);
+
     SDH_MSG("Read data used time: %ld ms\r\n", (uint32_t)bflb_mtimer_get_time_ms() - time_node);
     SDH_MSG("Read-->OUT, block num: %d, block addr: %d, read buffer addr: 0x%p.\r\n", NumberOfBlocks, ReadAddr, readbuff);
 
@@ -1543,6 +1542,7 @@ status_t SDH_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t B
     /*set data parameter for WRITE_MULTIPLE_BLOCK*/
     if (NumberOfBlocks <= 1) {
         SDH_Data_Cfg_TypeInstance.enableAutoCommand12 = DISABLE;
+        SDH_Data_Cfg_TypeInstance.enableAutoCommand23 = DISABLE;
     } else {
         if (pSDCardInfo->flags & SD_SupportSetBlockCountCmd) {
             SDH_Data_Cfg_TypeInstance.enableAutoCommand23 = ENABLE;
@@ -1563,7 +1563,7 @@ status_t SDH_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t B
     SDH_Data_Cfg_TypeInstance.txData = (uint32_t *)writebuff;
     /*set parameters for SDH_DMA_Cfg_TypeInstance*/
     SDH_DMA_Cfg_TypeInstance.dmaMode = SDH_DMA_MODE_ADMA2;
-    SDH_DMA_Cfg_TypeInstance.burstSize = SDH_BURST_SIZE_64_BYTES;
+    SDH_DMA_Cfg_TypeInstance.burstSize = SDH_BURST_SIZE_128_BYTES;
     SDH_DMA_Cfg_TypeInstance.fifoThreshold = SDH_FIFO_THRESHOLD_256_BYTES;
     SDH_DMA_Cfg_TypeInstance.admaEntries = (uint32_t *)adma2Entries;
     SDH_DMA_Cfg_TypeInstance.maxEntries = sizeof(adma2Entries) / sizeof(adma2Entries[0]);

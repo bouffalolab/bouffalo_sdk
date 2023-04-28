@@ -86,8 +86,6 @@ bouffalolab />blemesh_pb 2 1
 
 - Select “Create a new group to subscribe” option
 
-![img13](img/img13.jpg)
-
 - In the group, clicking on ON and OFF buttons prints the LED information in the serial monitor, indicating that the mesh is working
 
-![img14](img/img14.jpg)
+![img13](img/img13.jpg)

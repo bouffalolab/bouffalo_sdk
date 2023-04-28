@@ -2374,6 +2374,11 @@ static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         .cfg = &flash_cfg_gd_lq08c_le16c_lq32d_wq32e,
     },
     {
+        .jedec_id = 0x1865C8,
+        //.name="gd_wq128e_128_1833",
+        .cfg = &flash_cfg_gd_q32e_q128e,
+    },
+    {
         .jedec_id = 0x1320c2,
         //.name="mx_kh40_04_33",
         .cfg = &flash_cfg_mx_kh25,
@@ -2577,6 +2582,11 @@ static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         .jedec_id = 0x1840a1,
         //.name="fm25q128_128_33",
         .cfg = &flash_cfg_winb_80ew_16fw_32jw_32fw_32fv,
+    },
+    {
+        .jedec_id = 0x1828a1,
+        //.name="fm25w_128_128_1833",
+        .cfg = &flash_cfg_winb_16jv,
     },
     {
         .jedec_id = 0x146085,
@@ -3012,8 +3022,10 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t 
     }
 
     if (flash_pin_cfg & (1 << 2)) {
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
         /* Init sf2 gpio */
         bflb_sf_cfg_init_flash2_gpio(!((flash_pin_cfg >> 5) & 1));
+#endif
         sel_embedded = 0;
     } else if (flash_pin_cfg & (1 << 3)) {
         /* Init sf3 gpio */
@@ -3335,6 +3347,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify(uint8_t call_from_flash, ui
                 continue;
             }
             if (bank == SF_CTRL_FLASH_BANK1) {
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
                 if (flash_pin > SF_IO_EMB_SWAP_IO2CS_AND_SF2) {
                     jedec_id = 0;
                     break;
@@ -3346,6 +3359,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify(uint8_t call_from_flash, ui
                     flash_pin++;
                 }
                 bflb_sf_cfg_init_flash2_gpio(!((flash_pin >> 5) & 1));
+#endif
             } else {
                 if (flash_pin > SF_IO_EXT_SF2) {
                     jedec_id = 0;
@@ -3494,7 +3508,9 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
     }
 
     if (sel & (1 << 2)) {
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
         bflb_sf_cfg_init_flash2_gpio(!((sel >> 5) & 1));
+#endif
         sel_embedded = 0;
     } else if (sel & (1 << 3)) {
         bflb_sf_cfg_init_ext_flash_gpio(1);
@@ -3538,6 +3554,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
         }
     }
 
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
     if (p_bank2_cfg != NULL) {
         if (p_bank2_cfg->sbus2_select) {
             if ((sel >= SF_IO_EMB_SWAP_IO3IO0_AND_SF2_SWAP_IO3IO0 && sel <= SF_IO_EMB_SWAP_IO2CS_AND_SF2_SWAP_IO3IO0)
@@ -3547,12 +3564,14 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
             }
         }
     }
+#endif
 
     bflb_sflash_init(p_sf_ctrl_cfg, p_bank2_cfg);
 
     return 0;
 }
 
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
 /****************************************************************************/ /**
  * @brief  SF Cfg system bus 2 flash init
  *
@@ -3594,6 +3613,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_sbus2_flash_init(uint8_t sel, const struct sf_c
 
     return 0;
 }
+#endif
 #elif defined(BL808) || defined(BL606P)
 /****************************************************************************/ /**
  * @brief  SF Cfg flash init
@@ -3644,6 +3664,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
         bflb_sf_ctrl_set_io_delay(SF_CTRL_PAD2, p_bank2_cfg->do_delay, p_bank2_cfg->di_delay, p_bank2_cfg->oe_delay);
     }
 
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
     if (p_bank2_cfg != NULL) {
         if (p_bank2_cfg->sbus2_select) {
             if (sel >= SF_IO_EMB_SWAP_IO0_IO3_AND_EXT_SF2 && sel <= SF_IO_EMB_SWAP_NONE_DUAL_IO0_AND_EXT_SF2) {
@@ -3652,12 +3673,14 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
             }
         }
     }
+#endif
 
     bflb_sflash_init(p_sf_ctrl_cfg, p_bank2_cfg);
 
     return SUCCESS;
 }
 
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
 /****************************************************************************/ /**
  * @brief  SF Cfg system bus 2 flash init
  *
@@ -3694,6 +3717,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_sbus2_flash_init(uint8_t sel, const struct sf_c
 
     return SUCCESS;
 }
+#endif
 #endif
 
 /*@} end of group SF_CFG_Public_Functions */

@@ -17,11 +17,11 @@ __start:
     la      a0, default_trap_handler
     ori     a0, a0, 3
     csrw    mtvec, a0
-
+#ifdef CONFIG_IRQ_USE_VECTOR
     /* mtvt: for all vector mode IRQs */
     la      a0, __Vectors
     csrw    mtvt, a0
-
+#endif
 #if defined(__riscv_flen)
     /* FP: initial state */
     csrr    t0, mstatus

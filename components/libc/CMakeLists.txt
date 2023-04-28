@@ -81,6 +81,7 @@ sdk_add_include_directories(.)
 
 if(NOT CONFIG_NEWLIB_STANDARD)
 if(CONFIG_VSNPRINTF_NANO)
+sdk_add_compile_definitions(-DCONFIG_VSNPRINTF_NANO=1)
 sdk_library_add_sources(vsnprintf_nano.c)
 else()
 sdk_library_add_sources(vsnprintf.c)

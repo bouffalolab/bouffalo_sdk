@@ -86,7 +86,62 @@ int ATTR_TCM_SECTION arch_memcmp(const void *s1, const void *s2, uint32_t n)
     return d;
 }
 
+#if defined(BL616)
+bool bflb_check_cache_addr(const void *addr)
+{
+    uintptr_t a = (uintptr_t)addr;
 
+    if ((a & 0xFFFF0000UL) >= 0x62FC0000UL) {
+        return true;
+    }
+    return false;
+}
+
+void *bflb_get_no_cache_addr(const void *addr)
+{
+    uintptr_t a = (uintptr_t)addr;
+
+    if (!bflb_check_cache_addr(addr)) {
+        return (void *)addr;
+    }
+
+    // OCRAM
+    if ((a & 0xF0000000UL) == 0x60000000UL) {
+        return (void *)((a & ~0xF0000000UL) | 0x20000000UL);
+    }
+    // pSRAM
+    // if ((a & 0xF0000000UL) == 0xA0000000UL) {
+    //     return (void *)((a & ~0xF0000000UL) | 0x10000000UL);
+    // }
+
+    return NULL;
+}
+#elif defined(BL808) && defined(CPU_M0)
+bool bflb_check_cache_addr(const void *addr)
+{
+    uintptr_t a = (uintptr_t)addr;
+
+    if ((a & 0xFFFF0000UL) >= 0x62020000UL) {
+        return true;
+    }
+    return false;
+}
+void *bflb_get_no_cache_addr(const void *addr)
+{
+    uintptr_t a = (uintptr_t)addr;
+
+    if (!bflb_check_cache_addr(addr)) {
+        return (void *)addr;
+    }
+
+    // OCRAM
+    if ((a & 0xF0000000UL) == 0x60000000UL) {
+        return (void *)((a & ~0xF0000000UL) | 0x20000000UL);
+    }
+
+    return NULL;
+}
+#endif
 // ---------------- POPULAR POLYNOMIALS ----------------
 // CCITT:      x^16 + x^12 + x^5 + x^0                 (0x1021,init 0x0000)
 // CRC-16:     x^16 + x^15 + x^2 + x^0                 (0x8005,init 0xFFFF)

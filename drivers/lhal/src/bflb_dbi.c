@@ -101,8 +101,8 @@ void bflb_dbi_init(struct bflb_device_s *dev, const struct bflb_dbi_config_s *co
     regval = 0;
     regval |= div << DBI_CR_DBI_PRD_S_SHIFT;
     regval |= div << DBI_CR_DBI_PRD_I_SHIFT;
-    regval |= div << DBI_CR_DBI_PRD_D_PH_0_SHIFT;
-    regval |= div << DBI_CR_DBI_PRD_D_PH_1_SHIFT;
+    regval |= (div + 1) << DBI_CR_DBI_PRD_D_PH_0_SHIFT;
+    regval |= (div + 1) << DBI_CR_DBI_PRD_D_PH_1_SHIFT;
     putreg32(regval, reg_base + DBI_PRD_OFFSET);
 
     /* dbi output pixel format cfg */

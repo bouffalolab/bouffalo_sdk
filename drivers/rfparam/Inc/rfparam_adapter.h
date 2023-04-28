@@ -49,7 +49,11 @@
 #define RFPARAM_TLV_BASE_ADDR_MASK              0xF0000000
 #define RFPARAM_TLV_BASE_ADDR_RAM_NO_CACHE      0x22FC0400
 #define RFPARAM_TLV_BASE_ADDR_RAM_CACHE         0x62FC0400
+#ifndef CONFIG_PSRAM_COPY_CODE
 #define RFPARAM_TLV_BASE_ADDR_XIP_FLASH         0xA0000400
+#else
+#define RFPARAM_TLV_BASE_ADDR_XIP_FLASH         0xA8000400
+#endif
 
 #define RFPARAM_WL_API_MEM_SIZE                 544
 
@@ -69,6 +73,6 @@ uint32_t rfparam_tlv_base_addr_get();
 
 void rfparam_get_capcode(uint8_t* capcode_in, uint8_t* capcode_out);
 void rfparam_set_capcode(uint8_t capcode_in, uint8_t capcode_out);
-int32_t rfparam_load(struct wl_param_t *param);
+int8_t rfparam_load(struct wl_param_t *param);
 
 #endif

@@ -1,6 +1,21 @@
 #include "bflb_mtimer.h"
 #include "bflb_sec_sha.h"
+#include "bflb_l1c.h"
 #include "board.h"
+
+const uint8_t sha1_testbuf[2][104 + 1] = {
+    { "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" },
+    { "zyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcbazyxwvutsrqponmlkjihgfedcba" }
+};
+
+const uint8_t sha1_testsum[2][20] = {
+    { 0xd8, 0xcc, 0x4f, 0xd0, 0xa5, 0x7d, 0x0e, 0x0e,
+      0x96, 0xcd, 0xb3, 0xe7, 0x41, 0x64, 0xf7, 0x34,
+      0xc5, 0x93, 0xed, 0x65 },
+    { 0x3a, 0x46, 0x88, 0xd3, 0xc3, 0xf9, 0xfe, 0xe8,
+      0x59, 0xcb, 0xdd, 0x52, 0x11, 0x5a, 0x32, 0x56,
+      0x4f, 0x2c, 0x43, 0x6d }
+};
 
 const uint8_t sha256_testbuf[2][104 + 1] = {
     { "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" },
@@ -45,32 +60,9 @@ const uint8_t sha512_testsum[2][128] = {
       0x84, 0x21, 0xc5, 0x75, 0x9c, 0x85, 0xc3, 0x37 }
 };
 
-ATTR_NOCACHE_RAM_SECTION struct bflb_sha_link_s sha256_link = {
-    .sha_mode = SHA_MODE_SHA256, /* Sha-256 */
-    .sha_newhash_dis = 0,        /* New hash */
-    .sha_intclr = 0,             /* Not clear interrupt */
-    .sha_intset = 0,             /* Not set interrupt */
-    .sha_mode_ext = 0,
-    .sha_msglen = 1,  /* Number of 512-bit block */
-    .sha_srcaddr = 0, /* Message source address */
-    { 0 }             /* Result of SHA */
-};
-
-ATTR_NOCACHE_RAM_SECTION struct bflb_sha_link_s sha512_link = {
-    .sha_mode = SHA_MODE_SHA512, /* Sha-512 */
-    .sha_newhash_dis = 0,        /* New hash */
-    .sha_intclr = 0,             /* Not clear interrupt */
-    .sha_intset = 0,             /* Not set interrupt */
-    .sha_mode_ext = 0,
-    .sha_msglen = 1,  /* Number of 512-bit block */
-    .sha_srcaddr = 0, /* Message source address */
-    { 0 }             /* Result of SHA */
-};
-
-ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(32))) uint8_t sha_input_buf[1000];
-
 uint8_t sha_output_buf[128];
 
+ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha1_link_ctx_s ctx_sha1;
 ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_link_ctx_s ctx_sha256;
 ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha512_link_ctx_s ctx_sha512;
 
@@ -100,18 +92,23 @@ int main(void)
 
     bflb_sha_link_init(sha);
 
-    bflb_sha256_link_start(sha, &ctx_sha256, &sha256_link);
-    memcpy(sha_input_buf, sha256_testbuf[0], 104);
-    bflb_sha256_link_update(sha, &ctx_sha256, sha_input_buf, 80);
-    bflb_sha256_link_update(sha, &ctx_sha256, &sha_input_buf[80], 104 - 80);
+    bflb_sha1_link_start(sha, &ctx_sha1);
+    bflb_l1c_dcache_clean_range((void *)sha1_testbuf[0], 104);
+    bflb_sha1_link_update(sha, &ctx_sha1, sha1_testbuf[0], 104);
+    bflb_sha1_link_finish(sha, &ctx_sha1, sha_output_buf);
+    bflb_data_compare(sha1_testsum[0], sha_output_buf, 20);
+    printf("sha1 link success\r\n");
+
+    bflb_sha256_link_start(sha, &ctx_sha256, 0);
+    bflb_l1c_dcache_clean_range((void *)sha256_testbuf[0], 104);
+    bflb_sha256_link_update(sha, &ctx_sha256, sha256_testbuf[0], 104);
     bflb_sha256_link_finish(sha, &ctx_sha256, sha_output_buf);
     bflb_data_compare(sha256_testsum[0], sha_output_buf, 32);
     printf("sha256 link success\r\n");
 
-    bflb_sha512_link_start(sha, &ctx_sha512, &sha512_link);
-    memcpy(sha_input_buf, sha512_testbuf[0], 208);
-    bflb_sha512_link_update(sha, &ctx_sha512, sha_input_buf, 160);
-    bflb_sha512_link_update(sha, &ctx_sha512, &sha_input_buf[160], 208 - 160);
+    bflb_sha512_link_start(sha, &ctx_sha512, 0);
+    bflb_l1c_dcache_clean_range((void *)sha512_testbuf[0], 208);
+    bflb_sha512_link_update(sha, &ctx_sha512, sha512_testbuf[0], 208);
     bflb_sha512_link_finish(sha, &ctx_sha512, sha_output_buf);
     bflb_data_compare(sha512_testsum[0], sha_output_buf, 64);
     printf("sha512 link success\r\n");

@@ -11,4 +11,5 @@ if(NOT CONFIG_BLE_HOST_DISABLE)
     endif()
 endif()
 
-# sdk_add_compile_definitions(${CFLAGS})
+# disable undef warning
+sdk_add_compile_options(-Wno-undef)

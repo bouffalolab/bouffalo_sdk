@@ -17,9 +17,14 @@
 #define DBG_TAG "rfparam"
 #include "log.h"
 
-#define rfparam_printf(...)   LOG_I("rfparam>>"__VA_ARGS__)
+BFLOG_DEFINE_TAG(RFPARAM, DBG_TAG, true);
 
-static uint8_t g_rfparam_buf[RFPARAM_WL_API_MEM_SIZE] = {0};
+#undef BFLOG_TAG
+#define BFLOG_TAG BFLOG_GET_TAG(RFPARAM)
+
+#define rfparam_printf(...)   LOG_I(__VA_ARGS__)
+
+// static uint8_t g_rfparam_buf[RFPARAM_WL_API_MEM_SIZE] = {0};
 static struct wl_cfg_t *g_rfparam_cfg = NULL;
 static uint32_t g_tlv_base_addr;
 
@@ -326,7 +331,7 @@ int32_t rfparam_get_bz_pwroffset_with_option(uint32_t base_addr,int8_t pwr_offse
 int32_t rfparam_get_cap_code_with_option(uint32_t base_addr, uint8_t *capcode_in, uint8_t *capcode_out, uint8_t reload)
 {
     uint8_t capmode[RFTLV_MAXLEN_XTAL_MODE+1]={0};
-    uint8_t capcode[RFTLV_MAXLEN_XTAL/4]={0};
+    // uint8_t capcode[RFTLV_MAXLEN_XTAL/4]={0};
     uint8_t tmp_buf[32];
 
     if (rfparam_tlv_get(base_addr,RFTLV_TYPE_XTAL_MODE, RFTLV_MAXLEN_XTAL_MODE, capmode) > 0) {
@@ -389,7 +394,7 @@ void rfparam_set_capcode(uint8_t capcode_in, uint8_t capcode_out)
  * @return RFPARAM_SUSS is suss, other is err
  *
 *******************************************************************************/
-int32_t rfparam_load(struct wl_param_t *param)
+int8_t rfparam_load(struct wl_param_t *param)
 {
 
     uint8_t tmp_buf[32]={0};

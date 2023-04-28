@@ -6,15 +6,16 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <sys/errno.h>
 #include <risc-v/csr.h>
 #include <risc-v/riscv_arch.h>
 #include <compiler/compiler_gcc.h>
 #include <compiler/compiler_ld.h>
-#include "bflb_list.h"
+// #include "bflb_list.h"
+#include "bflb_common.h"
 #include "bflb_mtimer.h"
 #include "bflb_irq.h"
-#include "bflb_common.h"
+#include "bflb_l1c.h"
 
 /** @addtogroup LHAL
   * @{

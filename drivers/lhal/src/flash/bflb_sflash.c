@@ -105,10 +105,11 @@
  *
 *******************************************************************************/
 __WEAK
-#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
+#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
 void ATTR_TCM_SECTION bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg,
                                        const struct sf_ctrl_bank2_cfg *p_bank2_cfg)
 {
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
     uint8_t clk_delay = 0;
     uint8_t rx_clk_invert = 0;
 
@@ -143,6 +144,7 @@ void ATTR_TCM_SECTION bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_
     } else {
         bflb_sf_ctrl_sbus2_revoke_replace();
     }
+#endif
 #else
 void ATTR_TCM_SECTION bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg)
 {
@@ -950,12 +952,12 @@ void ATTR_TCM_SECTION bflb_sflash_get_deviceid(uint8_t *data, uint8_t is_32bits_
     flash_cmd.addr_size = 4;
 
     if (is_32bits_addr) {
-        flash_cmd.cmd_buf[0] = (cmd << 24) | (addr >> 8);
-        flash_cmd.cmd_buf[1] = (addr << 24) | (read_mode << 16);
+        flash_cmd.cmd_buf[0] = ((uint32_t)cmd << 24) | (addr >> 8);
+        flash_cmd.cmd_buf[1] = (addr << 24) | ((uint32_t)read_mode << 16);
         flash_cmd.addr_size++;
     } else {
-        flash_cmd.cmd_buf[0] = (cmd << 24) | (addr);
-        flash_cmd.cmd_buf[1] = (read_mode << 24);
+        flash_cmd.cmd_buf[0] = ((uint32_t)cmd << 24) | (addr);
+        flash_cmd.cmd_buf[1] = ((uint32_t)read_mode << 24);
     }
 
     flash_cmd.rw_flag = SF_CTRL_READ;
@@ -999,7 +1001,7 @@ void ATTR_TCM_SECTION bflb_sflash_powerdown(void)
     }
 
     cmd = 0xB9;
-    flash_cmd.cmd_buf[0] = (cmd << 24);
+    flash_cmd.cmd_buf[0] = ((uint32_t)cmd << 24);
     flash_cmd.rw_flag = SF_CTRL_WRITE;
 
     bflb_sf_ctrl_sendcmd(&flash_cmd);

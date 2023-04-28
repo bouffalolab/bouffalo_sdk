@@ -20,6 +20,10 @@ endif()
 
 
 # log
+if(CONFIG_LOG_NCOLOR)
+    sdk_add_compile_definitions(-DCONFIG_LOG_NCOLOR=1)
+endif()
+
 sdk_library_add_sources(log/log.c)
 sdk_add_include_directories(log)
 

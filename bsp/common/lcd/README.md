@@ -1,8 +1,8 @@
 # LCD Support list
 
-| Name | interface |datasheet link |
+| Name | interface | remark |
 |:---:|:------:|:------:|
-| ili9341 | spi/dbi  |  |
-| ili9488 | spi/dbi/dpi  |  |
-| st7789v | spi  |  |
-| gc9503v | dpi  |  |
+| ili9341 | spi/dbi  | spi for allchips, dbi for bl616/bl808 |
+| ili9488 | spi/dbi/dpi  | spi for allchips, dbi for bl616/bl808, dpi for bl808 |
+| st7789v | spi  | spi for allchips |
+| gc9503v | dpi  | dpi for bl808 |

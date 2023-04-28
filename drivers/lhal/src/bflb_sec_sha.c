@@ -524,23 +524,36 @@ void bflb_sha_link_deinit(struct bflb_device_s *dev)
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
 }
 
-void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_link_ctx_s *ctx, struct bflb_sha_link_s *link)
+void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_link_ctx_s *ctx)
 {
     arch_memset(ctx, 0, sizeof(struct bflb_sha1_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
-    ctx->link_addr = (uint32_t)(uintptr_t)link;
+    ctx->link_addr = (uint32_t)(uintptr_t)&ctx->link_cfg;
+    ctx->link_cfg.sha_mode = SHA_MODE_SHA1;
 }
 
-void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_ctx_s *ctx, struct bflb_sha_link_s *link)
+void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_ctx_s *ctx, int is224)
 {
-    return bflb_sha1_link_start(dev, (struct bflb_sha1_link_ctx_s *)ctx, link);
+    arch_memset(ctx, 0, sizeof(struct bflb_sha1_link_ctx_s));
+    ctx->sha_padding[0] = 0x80;
+    ctx->link_addr = (uint32_t)(uintptr_t)&ctx->link_cfg;
+    if (is224) {
+        ctx->link_cfg.sha_mode = SHA_MODE_SHA224;
+    } else {
+        ctx->link_cfg.sha_mode = SHA_MODE_SHA256;
+    }
 }
 
-void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_link_ctx_s *ctx, struct bflb_sha_link_s *link)
+void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_link_ctx_s *ctx, int is384)
 {
     arch_memset(ctx, 0, sizeof(struct bflb_sha512_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
-    ctx->link_addr = (uint32_t)(uintptr_t)link;
+    ctx->link_addr = (uint32_t)(uintptr_t)&ctx->link_cfg;
+    if (is384) {
+        ctx->link_cfg.sha_mode = SHA_MODE_SHA384;
+    } else {
+        ctx->link_cfg.sha_mode = SHA_MODE_SHA512;
+    }
 }
 
 int bflb_sha1_link_update(struct bflb_device_s *dev,

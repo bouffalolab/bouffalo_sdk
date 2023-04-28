@@ -81,13 +81,20 @@ void SystemInit(void)
     for (i = 0; i < IRQn_LAST; i++) {
         CLIC->CLICINT[i].IE = 0;
         CLIC->CLICINT[i].IP = 0;
+#ifdef CONFIG_IRQ_USE_VECTOR
         CLIC->CLICINT[i].ATTR = 1; /* use vector interrupt */
+#else
+        CLIC->CLICINT[i].ATTR = 0; /* use no vector interrupt */
+#endif
     }
 
     /* tspend interrupt will be clear auto*/
     /* tspend use positive interrupt */
+#ifdef CONFIG_IRQ_USE_VECTOR
     CLIC->CLICINT[MSOFT_IRQn].ATTR = 0x3;
-
+#else
+    CLIC->CLICINT[MSOFT_IRQn].ATTR = 0x2;
+#endif
     csi_dcache_enable();
     csi_icache_enable();
 
@@ -119,6 +126,8 @@ void System_Post_Init(void)
     /* make D0 all ram avalable for mcu usage */
     GLB_Set_DSP_L2SRAM_Available_Size(3, 1, 1, 1);
 
+#ifndef CONFIG_FREERTOS
     /* global IRQ enable */
     __enable_irq();
+#endif
 }

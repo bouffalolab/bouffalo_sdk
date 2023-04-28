@@ -1,4 +1,5 @@
 #include "bflb_l1c.h"
+#include "bflb_core.h"
 
 #if (defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)) && !defined(CPU_LP)
 #include "csi_core.h"
@@ -115,6 +116,12 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size
 #endif
 }
 
+ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_t size)
+{
+#if defined(BL702) || defined(BL702L)
+    L1C_Cache_Flush();
+#endif
+}
 #if defined(BL702) || defined(BL702L)
 /****************************************************************************/ /**
  * @brief  L1C cache write set

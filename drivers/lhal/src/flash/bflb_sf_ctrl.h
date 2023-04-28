@@ -72,10 +72,12 @@
 #define BFLB_FLASH_XIP_END     (0x80000000 + 64 * 1024 * 1024)
 #endif
 
-#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
+#if defined(BL628) || defined(BL616)
 #ifndef CONFIG_DISABLE_SBUS2_ENABLE_SUPPORT
 #define BFLB_SF_CTRL_SBUS2_ENABLE
 #endif
+#endif
+#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
 #define BFLB_SF_CTRL_32BITS_ADDR_ENABLE
 #define BFLB_SF_CTRL_AES_XTS_ENABLE
 #endif
@@ -276,7 +278,6 @@ struct sf_ctrl_cfg_type {
     uint8_t oe_delay;                    /*!< Output enable delay */
 };
 
-#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
 /**
  *  @brief SF Ctrl bank2 controller configuration structure type definition
  */
@@ -292,7 +293,6 @@ struct sf_ctrl_bank2_cfg {
     uint8_t remap;                       /*!< Select dual flash memory remap set */
     uint8_t remap_lock;                  /*!< Select memory remap lock */
 };
-#endif
 
 #ifdef BFLB_SF_CTRL_PSRAM_ENABLE
 /**
@@ -446,6 +446,7 @@ void bflb_sf_ctrl_aes_set_key(uint8_t region, uint8_t *key, uint8_t key_type);
 void bflb_sf_ctrl_aes_set_key_be(uint8_t region, uint8_t *key, uint8_t key_type);
 void bflb_sf_ctrl_aes_set_iv(uint8_t region, uint8_t *iv, uint32_t addr_offset);
 void bflb_sf_ctrl_aes_set_iv_be(uint8_t region, uint8_t *iv, uint32_t addr_offset);
+void bflb_sf_ctrl_aes_set_region_offset(uint8_t region,uint32_t addr_offset);
 #ifdef BFLB_SF_CTRL_AES_XTS_ENABLE
 void bflb_sf_ctrl_aes_xts_set_key(uint8_t region, uint8_t *key, uint8_t key_type);
 void bflb_sf_ctrl_aes_xts_set_key_be(uint8_t region, uint8_t *key, uint8_t key_type);

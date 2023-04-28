@@ -38,13 +38,16 @@ SECTIONS
         KEEP(*(.fw_header))
     } > fw_header_memory
 
+    .init :
+    {
+        KEEP (*(SORT_NONE(.init)))
+
+    } > xip_memory
 
     .text :
     {
         . = ALIGN(4);
         __text_code_start__ = .;
-
-        KEEP (*(SORT_NONE(.init)))
 
         *(.text)
         *(.text.*)

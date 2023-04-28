@@ -13,6 +13,7 @@
 #define ATTR_DMA_RAM_SECTION            __attribute__((section(".system_ram")))
 #define ATTR_WIFI_RAM_SECTION           __attribute__((section(".wifi_ram")))
 #define ATTR_NOINIT_PSRAM_SECTION       __attribute__((section(".psram_noinit")))
+#define ATTR_PSRAM_SECTION              __attribute__((section(".psram_data")))
 #define ATTR_NOCACHE_RAM_SECTION        __attribute__((section(".nocache_ram")))
 #define ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((section(".nocache_noinit_ram")))
 #define ATTR_HBN_RAM_SECTION            __attribute__((section(".hbn_ram_code")))

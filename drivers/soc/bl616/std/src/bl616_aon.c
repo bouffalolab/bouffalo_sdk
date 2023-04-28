@@ -710,6 +710,43 @@ BL_Err_Type ATTR_TCM_SECTION AON_Trim_Usb20RcalCode(void)
 }
 #endif
 
+/****************************************************************************/ /**
+ * @brief  DCDC18 Pulldown Output to Groud
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_Pulldown_DCDC18(void)
+{
+    uint32_t tmpVal=0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_DCDC_TOP_1);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_DCDC_PULLDOWN_AON );
+    BL_WR_REG(AON_BASE, AON_DCDC_TOP_1, tmpVal);
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  DCDC18 Output Float
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_Float_DCDC18(void)
+{
+    uint32_t tmpVal=0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_DCDC_TOP_1);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_DCDC_PULLDOWN_AON );
+    BL_WR_REG(AON_BASE, AON_DCDC_TOP_1, tmpVal);
+
+    return SUCCESS;
+}
+
 /*@} end of group AON_Public_Functions */
 
 /*@} end of group AON */

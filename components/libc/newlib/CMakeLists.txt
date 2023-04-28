@@ -11,6 +11,8 @@ if(CONFIG_NEWLIB_STANDARD)
     endforeach()
 endif()
 
+sdk_library_add_sources(port_memory.c)
+
 # newlib syscalls and ports
 if(CONFIG_NEWLIB)
     sdk_add_compile_definitions(-DCONFIG_NEWLIB=1)
@@ -18,7 +20,6 @@ if(CONFIG_NEWLIB)
     sdk_library_add_sources(syscalls.c)
     sdk_library_add_sources(port_tty.c)
     sdk_library_add_sources(port_time.c)
-    sdk_library_add_sources(port_memory.c)
     sdk_library_add_sources(port_init_fini.c)
 
     if(CONFIG_NEWLIB_FATFS)

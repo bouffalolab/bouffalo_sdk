@@ -31,7 +31,7 @@
  * Private Data
  ****************************************************************************/
 
-struct mem_heap_s g_memheap;
+struct mem_heap_s g_kmemheap;
 struct mem_heap_s g_pmemheap;
 
 /****************************************************************************
@@ -54,7 +54,7 @@ struct mem_heap_s g_pmemheap;
 
 void kmem_init(void *heapstart, size_t heapsize)
 {
-    MEM_LOG("Heap: start=%p size=%zu\r\n", heapstart, heapsize);
+    MEM_LOG("Heap: start=%p size=%u\r\n", heapstart, heapsize);
 
     bflb_mem_init(KMEM_HEAP, heapstart, heapsize);
 }
@@ -75,6 +75,8 @@ void kmem_init(void *heapstart, size_t heapsize)
 
 void *kmalloc(size_t size)
 {
+    MEM_LOG("kmalloc %d\r\n", size);
+
     return bflb_malloc(KMEM_HEAP, size);
 }
 
@@ -94,6 +96,8 @@ void *pvPortMallocStack(size_t xSize)
 
 void kfree(void *addr)
 {
+    MEM_LOG("kfree %p\r\n", addr);
+
     bflb_free(KMEM_HEAP, addr);
 }
 
@@ -114,7 +118,7 @@ void vPortFreeStack(void *pv)
 
 void pmem_init(void *heapstart, size_t heapsize)
 {
-    MEM_LOG("Heap: start=%p size=%zu\r\n", heapstart, heapsize);
+    MEM_LOG("Heap: start=%p size=%u\r\n", heapstart, heapsize);
 
     bflb_mem_init(PMEM_HEAP, heapstart, heapsize);
 }
@@ -135,6 +139,8 @@ void pmem_init(void *heapstart, size_t heapsize)
 
 void *malloc(size_t size)
 {
+    MEM_LOG("malloc %d\r\n", size);
+
     return bflb_malloc(PMEM_HEAP, size);
 }
 
@@ -206,7 +212,27 @@ void *memalign(size_t align, size_t size)
 
 void free(void *addr)
 {
+    MEM_LOG("free %p\r\n", addr);
+
     bflb_free(PMEM_HEAP, addr);
+}
+
+
+/****************************************************************************
+ * Name: kfree_size
+ *
+ * Description:
+ *   Returns the free heap size
+ *
+ ****************************************************************************/
+
+uint32_t kfree_size(void)
+{
+    struct meminfo info;
+
+    bflb_mem_usage(PMEM_HEAP, &info);
+
+    return info.free_size;
 }
 
 #ifdef CONFIG_SHELL

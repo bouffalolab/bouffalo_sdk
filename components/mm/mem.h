@@ -34,25 +34,25 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define MEM_ASSERT(x)                              \
-    {                                              \
-        if (!(x)) {                                \
-            printf("[MEM] !!! assert " #x "\r\n"); \
-            bflb_irq_save();                       \
-            while (1)                              \
-                ;                                  \
-        }                                          \
+#define MEM_ASSERT(x)                                                     \
+    {                                                                     \
+        if (!(x)) {                                                       \
+            printf(#x " assert failed at function %s\r\n", __FUNCTION__); \
+            bflb_irq_save();                                              \
+            while (1)                                                     \
+                ;                                                         \
+        }                                                                 \
     }
 
-#define MEM_LOG(fmt, ...)  //printf("[MEM] "fmt, __VA_ARGS__)
+#define MEM_LOG(fmt, ...)  //printf(fmt, __VA_ARGS__)
 
 #define MEM_IS_VALID(heap) ((heap) != NULL && (heap)->mem_impl != NULL)
 
-#define KMEM_HEAP          &g_memheap
+#define KMEM_HEAP          &g_kmemheap
 #if defined(CONFIG_PSRAM) && defined(BL616) // only for bl618
 #define PMEM_HEAP &g_pmemheap
 #else
-#define PMEM_HEAP &g_memheap
+#define PMEM_HEAP &g_kmemheap
 #endif
 
 /****************************************************************************
@@ -88,7 +88,8 @@ extern "C" {
 #define EXTERN extern
 #endif
 
-EXTERN struct mem_heap_s g_memheap;
+EXTERN struct mem_heap_s g_kmemheap;
+EXTERN struct mem_heap_s g_pmemheap;
 
 /****************************************************************************
  * Public Function Prototypes
@@ -97,6 +98,7 @@ EXTERN struct mem_heap_s g_memheap;
 void kmem_init(void *heapstart, size_t heapsize);
 void *kmalloc(size_t size);
 void kfree(void *addr);
+uint32_t kfree_size(void);
 
 void pmem_init(void *heapstart, size_t heapsize);
 

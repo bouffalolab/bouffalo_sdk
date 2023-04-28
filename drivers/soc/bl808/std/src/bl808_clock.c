@@ -337,6 +337,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_MIPI_PLL_Output()
     }
 }
 
+#ifndef CONFIG_SUPPORT_UART_CLOCK_GET_ONLY
 static uint32_t ATTR_CLOCK_SECTION Clock_Get_UHS_PLL_Output()
 {
     uint8_t xtalType = 0;
@@ -419,7 +420,7 @@ static uint32_t ATTR_CLOCK_SECTION Clock_Get_UHS_PLL_Output()
         return (0);
     }
 }
-
+#endif
 static inline uint32_t ATTR_CLOCK_SECTION Clock_DSP_Get_WIFI_PLL_Output(uint32_t pllOut)
 {
     return Clock_Get_WIFI_PLL_Output(pllOut);
@@ -1909,12 +1910,14 @@ uint32_t ATTR_CLOCK_SECTION SystemCoreClockGet(void)
         case GLB_CORE_ID_M0:
             clockVal = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MCU_CLK);
             break;
+#ifndef CONIFG_DISABLE_OTHER_CORE_EXCEPT_M0            
         case GLB_CORE_ID_D0:
             clockVal = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_DSP_CLK);
             break;
         case GLB_CORE_ID_LP:
             clockVal = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_LP_CLK);
             break;
+#endif      
         default:
             clockVal = 0;
             break;
@@ -1941,12 +1944,14 @@ BL_Err_Type ATTR_CLOCK_SECTION CPU_Set_MTimer_RST(uint8_t rstEn)
         case GLB_CORE_ID_M0:
             address = MCU_MISC_BASE + MCU_MISC_MCU_E907_RTC_OFFSET;
             break;
+#ifndef CONIFG_DISABLE_OTHER_CORE_EXCEPT_M0            
         case GLB_CORE_ID_D0:
             address = MM_MISC_BASE + MM_MISC_CPU_RTC_OFFSET;
             break;
         case GLB_CORE_ID_LP:
             address = PDS_BASE + PDS_CPU_CORE_CFG8_OFFSET;
             break;
+#endif      
         default:
             address = MCU_MISC_BASE + MCU_MISC_MCU_E907_RTC_OFFSET;
             break;

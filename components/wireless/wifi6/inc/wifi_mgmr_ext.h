@@ -1,9 +1,8 @@
 #ifndef __WIFI_MGMR_EXT_H_
 #define __WIFI_MGMR_EXT_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-#define PUBLIC_LOW_RATE_CONNECT (1UL<<10)
+#include "stdint.h"
+#include "stdbool.h"
 
 #define MAX_FIXED_CHANNELS_LIMIT (14)
 #define MAX_AP_SCAN 50
@@ -240,8 +239,11 @@ typedef struct rf_pwr_table {
     int8_t     pwr_11n_ht40[8];
     int8_t     pwr_11ac_vht20[10];
     int8_t     pwr_11ac_vht40[10];
+    int8_t     reserved[10];
     int8_t     pwr_11ax_he20[12];
     int8_t     pwr_11ax_he40[12];
+    int8_t     reserved2[12];
+    int8_t     reserved3[12];
 }rf_pwr_table_t;
 
 typedef struct
@@ -504,7 +506,7 @@ char *wifi_mgmr_mode_to_str(uint32_t mode);
  * param:
  *  param1 : instance of scan result
  */
-void show_auth_cipher(struct mac_scan_result *result);
+// void show_auth_cipher(struct mac_scan_result *result);
 
 /**
  * wifi_mgmr_mac_set
@@ -816,4 +818,12 @@ int wifi_mgmr_sta_stop_keep_alive(void);
  *0xFFFF: disable fixed rate
  */
 int wifi_mgmr_rate_config(uint16_t fixed_rate_cfg);
+
+/**
+ *
+ * wifi_mgmr_sta_extra_timcnt_get
+ * return:
+ *  Tim cnt
+ */
+uint8_t wifi_mgmr_sta_extra_timcnt_get(void);
 #endif

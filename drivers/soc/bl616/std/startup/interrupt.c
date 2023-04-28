@@ -30,7 +30,7 @@ struct bflb_irq_info_s g_irqvector[CONFIG_IRQ_NUM];
 
 extern void default_trap_handler(void);
 extern void default_interrupt_handler(void);
-
+#ifdef CONFIG_IRQ_USE_VECTOR
 const pFunc __Vectors[] __attribute__((section(".vector"), aligned(64))) = {
     default_interrupt_handler, /*         */
     default_interrupt_handler, /*         */
@@ -114,6 +114,7 @@ const pFunc __Vectors[] __attribute__((section(".vector"), aligned(64))) = {
     default_interrupt_handler, //MAC_PORT_TRG_IRQHandler_Wrapper,         /* 16 + 62 */
     default_interrupt_handler, //WIFI_IPC_PUBLIC_IRQHandler_Wrapper,      /* 16 + 63 */
 };
+#endif
 
 void exception_entry(uintptr_t *regs)
 {

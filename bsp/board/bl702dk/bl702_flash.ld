@@ -17,7 +17,8 @@ OUTPUT_ARCH( "riscv" )
 /* configure the entry point */
 ENTRY(__start)
 
-StackSize = 0x1000; /*  4KB */
+StackSize    = 0x0400; /*  1KB */
+HeapMinSize  = 0x1000; /*  4KB */
 
 MEMORY
 {
@@ -38,13 +39,17 @@ SECTIONS
         KEEP(*(.fw_header))
     } > fw_header_memory
 
+    .init :
+    {
+        KEEP (*(SORT_NONE(.init)))
+        KEEP (*(SORT_NONE(.vector)))
+
+    } > xip_memory
+
     .text :
     {
         . = ALIGN(4);
         __text_code_start__ = .;
-
-        KEEP (*(SORT_NONE(.init)))
-        KEEP (*(SORT_NONE(.vector)))
 
         *(.text)
         *(.text.*)
@@ -220,10 +225,9 @@ SECTIONS
         __HeapLimit = .;
     } > ram_memory
 
-    PROVIDE (__heap_min_size = 0x400);
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
 
-    ASSERT((__HeapLimit -  __HeapBase ) >= __heap_min_size, "heap size is too short.")
+    ASSERT((__HeapLimit -  __HeapBase ) >= HeapMinSize, "heap size is too short.")
 
 }
 

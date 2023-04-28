@@ -1359,6 +1359,27 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv_be(uint8_t region, uint8_t *iv, ui
     }
 }
 
+/****************************************************************************/ /**
+ * @brief  Serial flash controller set AES decrypt region offset big endian
+ *
+ * @param  region: region number
+ * @param  addr_offset: flash address offset
+ *
+ * @return None
+ *
+*******************************************************************************/
+__WEAK
+void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region_offset(uint8_t region,uint32_t addr_offset)
+{
+#if defined(BL602)
+    uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
+#else
+    uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
+#endif
+
+    putreg32(__REV(addr_offset), region_reg_base+SF_CTRL_SF_AES_IV_W3_OFFSET);
+}
+
 #ifdef BFLB_SF_CTRL_AES_XTS_ENABLE
 /****************************************************************************/ /**
  * @brief  Serial flash controller set AES XTS mode key
@@ -1605,22 +1626,25 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_flash_image_offset(uint32_t addr_offset, 
 
     reg_base = BFLB_SF_CTRL_BASE;
 
-#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
-    if (group) {
-        if (bank == SF_CTRL_FLASH_BANK0) {
+#if defined(BL602) || defined(BL702) || defined(BL702L)
+    putreg32(addr_offset, reg_base+SF_CTRL_SF_ID0_OFFSET_OFFSET);
+#else
+    if (bank == SF_CTRL_FLASH_BANK0) {
+        if (group) {
             putreg32(addr_offset, reg_base+SF_CTRL_SF_ID1_OFFSET_OFFSET);
         } else {
-            putreg32(addr_offset, reg_base+SF_CTRL_SF_BK2_ID1_OFFSET_OFFSET);
-        }
-    } else {
-        if (bank == SF_CTRL_FLASH_BANK0) {
             putreg32(addr_offset, reg_base+SF_CTRL_SF_ID0_OFFSET_OFFSET);
+        }
+    }
+#ifdef BFLB_SF_CTRL_SBUS2_ENABLE
+    else {
+        if (group) {
+            putreg32(addr_offset, reg_base+SF_CTRL_SF_BK2_ID1_OFFSET_OFFSET);
         } else {
             putreg32(addr_offset, reg_base+SF_CTRL_SF_BK2_ID0_OFFSET_OFFSET);
         }
     }
-#else
-    putreg32(addr_offset, reg_base+SF_CTRL_SF_ID0_OFFSET_OFFSET);
+#endif
 #endif
 }
 

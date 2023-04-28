@@ -40,6 +40,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include "bflb_uart.h"
 
 // 'ntoa' conversion buffer size, this must be big enough to hold one converted
 // numeric number including padded zeros (dynamically created on stack)
@@ -216,6 +217,13 @@ static inline void out_buffer(char character, void* buffer, size_t idx, size_t m
   if (idx < maxlen) {
     ((char*)buffer)[idx] = character;
   }
+}
+
+// uart device output
+extern struct bflb_device_s *console;
+static inline void out_console(char character, void* buffer, size_t idx, size_t maxlen)
+{
+  bflb_uart_putchar(console, character);
 }
 
 
@@ -793,7 +801,7 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
   unsigned int flags, width, precision, n;
   size_t idx = 0U;
 
-  if (!buffer) {
+  if ((!buffer) && (out != out_console)) {
     // use null output function
     out = out_discard;
   }
@@ -1061,8 +1069,11 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
     }
   }
 
-  // termination
-  out((char)0, buffer, idx < maxlen ? idx : maxlen - 1U, maxlen);
+  if(out != out_console){
+    // termination
+    // console does not need to output NULL
+    out((char)0, buffer, idx < maxlen ? idx : maxlen - 1U, maxlen);
+  }
 
   // return written chars without terminating \0
   return (int)idx;
@@ -1071,4 +1082,9 @@ static int __vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, cons
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 {
   return __vsnprintf(out_buffer, buf, size, fmt, args);
+}
+
+int console_vsnprintf(const char *fmt, va_list args)
+{
+  return __vsnprintf(out_console, NULL, 0, fmt, args);
 }

@@ -19,15 +19,20 @@ ENTRY(__start)
 
 StackSize    = 0x0400; /*  1KB */
 HeapMinSize  = 0x1000; /*  4KB */
+psram_min_size = 0x1000;
+
+__EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
 
 MEMORY
 {
     fw_header_memory  (rx)  : ORIGIN = 0x58000000 - 0x1000, LENGTH = 4K
     xip_memory  (rx)  : ORIGIN = 0x58000000, LENGTH = 32M
+    ram_psram  (wxa)  : ORIGIN = 0x50000000, LENGTH = 64M
     itcm_memory (rx)  : ORIGIN = 0x62020000, LENGTH = 20K
     dtcm_memory (rx)  : ORIGIN = 0x62025000, LENGTH = 4K
-    nocache_ram_memory (!rx) : ORIGIN = 0x22026000, LENGTH = 40K
-    ram_memory  (!rx) : ORIGIN = 0x62030000, LENGTH = 160K + 64K - 20K - 4K - 40K
+    nocache_ram_memory (!rx) : ORIGIN = 0x22026000, LENGTH = 16K
+    ram_memory  (!rx) : ORIGIN = 0x6202A000, LENGTH = 24K + 64K
+    ram_wifi  (wxa)   : ORIGIN = 0x2203A000, LENGTH = 160K - 64K - __EM_SIZE
     xram_memory  (!rx) : ORIGIN = 0x40000000, LENGTH = 16K
 }
 
@@ -38,13 +43,17 @@ SECTIONS
         KEEP(*(.fw_header))
     } > fw_header_memory
 
+    .init :
+    {
+        KEEP (*(SORT_NONE(.init)))
+        KEEP (*(SORT_NONE(.vector)))
+
+    } > xip_memory
+
     .text :
     {
         . = ALIGN(4);
         __text_code_start__ = .;
-
-        KEEP (*(SORT_NONE(.init)))
-        KEEP (*(SORT_NONE(.vector)))
 
         *(.text)
         *(.text.*)
@@ -193,7 +202,20 @@ SECTIONS
         __ram_data_end__ = .;
     } > ram_memory
 
-    __etext_final = (__ram_load_addr + SIZEOF (RAM_DATA));
+    __psram_load_addr = (__ram_load_addr + SIZEOF (RAM_DATA));
+
+    .psram_data_region : AT (__psram_load_addr)
+    {
+        . = ALIGN(4);
+        __psram_data_start__ = .;
+
+        KEEP(*(.psram_data*))
+
+        . = ALIGN(4);
+        __psram_data_end__ = .;
+    } > ram_psram
+
+    __etext_final = (__psram_load_addr + SIZEOF (.psram_data_region));
     ASSERT(__etext_final <= ORIGIN(xip_memory) + LENGTH(xip_memory), "code memory overflow")
 
     .bss (NOLOAD) :
@@ -248,5 +270,51 @@ SECTIONS
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);
     ASSERT(__HeapLimit - __HeapBase >= HeapMinSize, "heap region overflow")
 
+    .psram_noinit_data (NOLOAD):
+    {
+        . = ALIGN(4);
+        __psram_noinit_data_start__ = .;
+
+        KEEP(*(.psram_noinit*))
+
+        . = ALIGN(4);
+        __psram_noinit_data_end__ = .;
+    } > ram_psram
+
+    .psram_heap (NOLOAD):
+    {
+        . = ALIGN(4);
+        __psram_heap_base = .;
+        KEEP(*(.psram_heap*))
+        . = ALIGN(4);
+        __psram_heap_end = .;
+    } > ram_psram
+
+    __psram_limit = ORIGIN(ram_psram) + LENGTH(ram_psram);
+    ASSERT(__psram_limit - __psram_heap_base >= psram_min_size, "psram heap region overflow")
+ 
+    .wifibss  (NOLOAD) :
+    {
+        PROVIDE( __wifi_bss_start = ADDR(.wifibss) );
+        PROVIDE( __wifi_bss_end = ADDR(.wifibss) + SIZEOF(.wifibss) );
+        *ipc_shared.o(COMMON)
+        *sdu_shared.o(COMMON)
+        *hal_desc.o(COMMON)
+        *txl_buffer_shared.o(COMMON)
+        *txl_frame_shared.o(COMMON)
+        *scan_shared.o(COMMON)
+        *scanu_shared.o(COMMON)
+        *mfp_bip.o(COMMON)
+        *me_mic.o(COMMON)
+        *bl_sta_mgmt_others.o(COMMON)
+        *bl_pmk_mgmt.o(COMMON)
+        *bl_pmk_mgmt_internal.o(COMMON)
+        *libwifi_drv.a:bl_utils.o(COMMON)
+        *libwifi_drv.a:bl_utils.o(.bss*)
+        *(.wifi_ram*)
+        . = ALIGN(16);
+    } > ram_wifi
+
+    PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
 }
 

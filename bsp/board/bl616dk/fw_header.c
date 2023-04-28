@@ -165,5 +165,8 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     /* flashcfg table list len */
     .flash_cfg_table_len = 0x00000000,
 
+    .rsvd0[0] = 0x20000548,
+    .rsvd0[1] = 0x01000000,
+
     .crc32 = 0xdeadbeef
 };

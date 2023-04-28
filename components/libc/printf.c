@@ -3,32 +3,49 @@
 
 struct bflb_device_s *console = NULL;
 
-int puts(const char* c)
+int puts(const char *c)
 {
+    int len;
+
+    if (c == NULL) {
+        return 0;
+    }
+
+    len = strlen(c);
+
     if (console == NULL) {
         return 0;
     }
-    
-    bflb_uart_put(console, (uint8_t *)c, strlen(c));
-    
-    return 0;
+
+    bflb_uart_put(console, (uint8_t *)c, len);
+
+    return len;
 }
 
-int putstring(const char* c)
+int putstring(const char *c)
 {
+    int len;
+
+    if (c == NULL) {
+        return 0;
+    }
+
+    len = strlen(c);
+
     if (console == NULL) {
         return 0;
     }
-    
-    bflb_uart_put(console, (uint8_t *)c, strlen(c));
-    
-    return 0;
+
+    bflb_uart_put(console, (uint8_t *)c, len);
+
+    return len;
 }
 
+#if defined(CONFIG_VSNPRINTF_NANO) && CONFIG_VSNPRINTF_NANO
 int printf(const char *fmt, ...)
 {
     char print_buf[512];
-    uint32_t len;
+    int len;
     va_list ap;
 
     if (console == NULL) {
@@ -43,8 +60,26 @@ int printf(const char *fmt, ...)
 
     bflb_uart_put(console, (uint8_t *)print_buf, len);
 
-    return 0;
+    return len;
 }
+#else
+extern int console_vsnprintf(const char *fmt, va_list args);
+int printf(const char *fmt, ...)
+{
+    int len;
+    va_list ap;
+
+    if (console == NULL) {
+        return 0;
+    }
+
+    va_start(ap, fmt);
+    len = console_vsnprintf(fmt, ap);
+    va_end(ap);
+
+    return len;
+}
+#endif
 
 #define __is_print(ch) ((unsigned int)((ch) - ' ') < 127u - ' ')
 void bflb_dump_hex(const void *ptr, uint32_t buflen)

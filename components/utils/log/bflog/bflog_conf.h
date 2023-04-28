@@ -87,8 +87,8 @@
 /*!< 行缓冲大小, 使用的是栈上空间, 请确保栈空间足够 */
 /*!< 行缓冲设置大小不足时, 一次长LOG输出可能不完整 */
 /*!< line buffer size (in stack) */
-/*!< flush use 4xline buffer size in stack */
-/*!< log   use 2xline buffer size in stack */
+/*!< flush use 3xline buffer size in stack */
+/*!< log   use 1xline buffer size in stack */
 /*!< pay attention to prevent stack overflow */
 #define BFLOG_LINE_BUFFER_SIZE  256
 

@@ -40,27 +40,6 @@ struct bflb_sha512_ctx_s {
     uint8_t sha_feed;                                      /*!< Sha has feed data */
 };
 
-struct bflb_sha1_link_ctx_s {
-    uint32_t total[2];                                    /*!< Number of bytes processed */
-    __attribute__((aligned(32))) uint8_t sha_buf[64];     /*!< Data not processed but in this temp buffer */
-    __attribute__((aligned(32))) uint8_t sha_padding[64]; /*!< Padding data */
-    uint32_t link_addr;                                   /*!< Link configure address */
-};
-
-struct bflb_sha256_link_ctx_s {
-    uint32_t total[2];                                    /*!< Number of bytes processed */
-    __attribute__((aligned(32))) uint8_t sha_buf[64];     /*!< Data not processed but in this temp buffer */
-    __attribute__((aligned(32))) uint8_t sha_padding[64]; /*!< Padding data */
-    uint32_t link_addr;                                   /*!< Link configure address */
-};
-
-struct bflb_sha512_link_ctx_s {
-    uint64_t total[2];                                     /*!< Number of bytes processed */
-    __attribute__((aligned(32))) uint8_t sha_buf[128];     /*!< Data not processed but in this temp buffer */
-    __attribute__((aligned(32))) uint8_t sha_padding[128]; /*!< Padding data */
-    uint32_t link_addr;                                    /*!< Link configure address */
-};
-
 struct bflb_sha_link_s {
     uint32_t                 : 2;  /*!< [1:0]Reserved */
     uint32_t sha_mode        : 3;  /*!< [4:2]Sha-256/sha-224/sha-1/sha-1/sha-512/sha-384/sha-512T224/sha-512T256 */
@@ -75,6 +54,30 @@ struct bflb_sha_link_s {
     uint32_t sha_msglen      : 16; /*!< [31:16]Number of 512-bit block */
     uint32_t sha_srcaddr;          /*!< Message source address */
     uint32_t result[16];           /*!< Result of SHA */
+};
+
+struct bflb_sha1_link_ctx_s {
+    uint32_t total[2];                                    /*!< Number of bytes processed */
+    __attribute__((aligned(32))) uint8_t sha_buf[64];     /*!< Data not processed but in this temp buffer */
+    __attribute__((aligned(32))) uint8_t sha_padding[64]; /*!< Padding data */
+    uint32_t link_addr;                                   /*!< Link configure address */
+    struct bflb_sha_link_s link_cfg;
+};
+
+struct bflb_sha256_link_ctx_s {
+    uint32_t total[2];                                    /*!< Number of bytes processed */
+    __attribute__((aligned(32))) uint8_t sha_buf[64];     /*!< Data not processed but in this temp buffer */
+    __attribute__((aligned(32))) uint8_t sha_padding[64]; /*!< Padding data */
+    uint32_t link_addr;                                   /*!< Link configure address */
+    struct bflb_sha_link_s link_cfg;
+};
+
+struct bflb_sha512_link_ctx_s {
+    uint64_t total[2];                                     /*!< Number of bytes processed */
+    __attribute__((aligned(32))) uint8_t sha_buf[128];     /*!< Data not processed but in this temp buffer */
+    __attribute__((aligned(32))) uint8_t sha_padding[128]; /*!< Padding data */
+    uint32_t link_addr;                                    /*!< Link configure address */
+    struct bflb_sha_link_s link_cfg;
 };
 
 #ifdef __cplusplus
@@ -194,7 +197,7 @@ void bflb_sha_link_deinit(struct bflb_device_s *dev);
  * @param [in] ctx
  * @param [in] link
  */
-void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_link_ctx_s *ctx, struct bflb_sha_link_s *link);
+void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_link_ctx_s *ctx);
 
 /**
  * @brief
@@ -203,7 +206,7 @@ void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_link_ctx_s
  * @param [in] ctx
  * @param [in] link
  */
-void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_ctx_s *ctx, struct bflb_sha_link_s *link);
+void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_ctx_s *ctx, int is224);
 
 /**
  * @brief
@@ -212,7 +215,7 @@ void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_c
  * @param [in] ctx
  * @param [in] link
  */
-void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_link_ctx_s *ctx, struct bflb_sha_link_s *link);
+void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_link_ctx_s *ctx, int is384);
 
 /**
  * @brief

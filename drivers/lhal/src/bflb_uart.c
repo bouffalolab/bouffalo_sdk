@@ -368,6 +368,8 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 
     reg_base = dev->reg_base;
 
+    bflb_uart_disable(dev);
+
     switch (cmd) {
         case UART_CMD_SET_BAUD_RATE:
             /* Cal the baud rate divisor */
@@ -442,6 +444,14 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
         case UART_CMD_SET_RTO_VALUE:
             /* Set rx time-out value */
             putreg32(arg, reg_base + UART_URX_RTO_TIMER_OFFSET);
+
+            int_mask = getreg32(reg_base + UART_INT_MASK_OFFSET);
+            if (arg == 0) {
+                int_mask |= UART_CR_URX_RTO_MASK;
+            } else {
+                int_mask &= ~UART_CR_URX_RTO_MASK;
+            }
+            putreg32(int_mask, reg_base + UART_INT_MASK_OFFSET);
             break;
 
         case UART_CMD_SET_RTS_VALUE:
@@ -713,19 +723,23 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
                 tx_tmp &= ~UART_CR_UTX_CTS_EN;
             }
             putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
+            break;
         case UART_CMD_SET_TX_FIFO_THREHOLD:
             tx_tmp = getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET);
             tx_tmp &= ~UART_TX_FIFO_TH_MASK;
             tx_tmp |= (arg << UART_TX_FIFO_TH_SHIFT) & UART_TX_FIFO_TH_MASK;
             putreg32(tx_tmp, reg_base + UART_FIFO_CONFIG_1_OFFSET);
+            break;
         case UART_CMD_SET_RX_FIFO_THREHOLD:
             rx_tmp = getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET);
             rx_tmp &= ~UART_RX_FIFO_TH_MASK;
             rx_tmp |= (arg << UART_RX_FIFO_TH_SHIFT) & UART_RX_FIFO_TH_MASK;
             putreg32(rx_tmp, reg_base + UART_FIFO_CONFIG_1_OFFSET);
+            break;
         default:
             ret = -EPERM;
             break;
     }
+    bflb_uart_enable(dev);
     return ret;
 }

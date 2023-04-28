@@ -269,8 +269,6 @@ void bflb_mem_init(struct mem_heap_s *heap, void *heapstart, size_t heapsize)
 {
     struct mem_heap_impl_s *impl;
 
-    MEM_LOG("Heap: start=%p size=%zu\r\n", heapstart, heapsize);
-
     /* Reserve a block space for mem_heap_impl_s context */
 
     MEM_ASSERT(heapsize > sizeof(struct mem_heap_impl_s));
@@ -310,8 +308,6 @@ void *bflb_malloc(struct mem_heap_s *heap, size_t nbytes)
 
     MEM_ASSERT(MEM_IS_VALID(heap));
 
-    MEM_LOG("malloc %d\r\n", nbytes);
-
     impl = heap->mem_impl;
 
     /* Firstly, free mm_delaylist */
@@ -333,8 +329,6 @@ void *bflb_malloc(struct mem_heap_s *heap, size_t nbytes)
 void bflb_free(struct mem_heap_s *heap, void *ptr)
 {
     struct mem_heap_impl_s *impl;
-
-    MEM_LOG("Freeing %p\r\n", ptr);
 
     /* Protect against attempts to free a NULL reference */
 

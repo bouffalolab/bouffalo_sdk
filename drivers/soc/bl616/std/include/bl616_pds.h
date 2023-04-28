@@ -569,6 +569,8 @@ BL_Err_Type PDS_IntClear(void);
 BL_Err_Type PDS_Int_Callback_Install(PDS_INT_Type intType, intCallback_Type *cbFun);
 /*----------*/
 BL_Err_Type PDS_Trim_RC32M(void);
+BL_Err_Type PDS_Power_Off_WB(void);
+BL_Err_Type PDS_Power_On_WB(void);
 /*----------*/
 BL_Err_Type PDS_Turn_On_USB(uint8_t waitReady);
 BL_Err_Type PDS_Turn_Off_USB(void);

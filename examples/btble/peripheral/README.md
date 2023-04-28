@@ -7,6 +7,7 @@ This sample description ble peripheral function with READ, WRITE/WRITE NO RESPON
 |      CHIP        | Remark |
 |:----------------:|:------:|
 |BL616/BL618       |        |
+|BL808             |  Only for M0 CPU      |
 
 ## Compile
 
@@ -14,6 +15,12 @@ This sample description ble peripheral function with READ, WRITE/WRITE NO RESPON
 
 ```
 make CHIP=bl616 BOARD=bl616dk
+```
+
+- BL808
+
+```
+make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 ## Flash

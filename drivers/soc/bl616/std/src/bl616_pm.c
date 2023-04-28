@@ -36,7 +36,7 @@
 #endif
 
 #ifndef PM_HBN_LDO_LEVEL_DEFAULT
-#define PM_HBN_LDO_LEVEL_DEFAULT HBN_LDO_LEVEL_0P90V
+#define PM_HBN_LDO_LEVEL_DEFAULT HBN_LDO_LEVEL_1P10V
 #endif
 
 /* Cache Way Disable, will get from l1c register */
@@ -150,7 +150,7 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel2 = {
         .waitXtalRdy = 0,
         .pdsPwrOff = 1,
         .xtalOff = 1,
-        .socEnbForceOn = 1,
+        .socEnbForceOn = 0,
         .pdsRstSocEn = 0,
         .pdsRC32mOn = 0,
         .pdsDcdc11VselEn = 0,
@@ -402,7 +402,7 @@ static PDS_DEFAULT_LV_CFG_Type ATTR_TCM_CONST_SECTION pdsCfgLevel15 = {
         .waitXtalRdy = 1,
         .pdsPwrOff = 1,
         .xtalOff = 1,
-        .socEnbForceOn = 0,
+        .socEnbForceOn = 1,
         .pdsRstSocEn = 1,
         .pdsRC32mOn = 0,
         .pdsDcdc11VselEn = 0,
@@ -933,6 +933,87 @@ void ATTR_TCM_SECTION HBN_OUT1_IRQ(void)
         pm_irq_callback(PM_HBN_ACOMP1_WAKEUP_EVENT);
     }
 }
+
+static uint32_t mtimer_counter0=0;
+static uint32_t rtc_counter0=0;
+
+void pm_rc32k_auto_cal_init(void)
+{
+    mtimer_counter0=0;
+    rtc_counter0=0;
+}
+
+void pm_rc32k_auto_cal(void)
+{
+
+    uint32_t mtimer_counter1=0;
+    uint32_t rtc_counter1=0;
+
+    uint32_t rtc_low,rtc_high;
+    uint32_t delta_time_stamp;
+    uint32_t delta_rtc;
+    uint32_t t,k;
+    uint32_t state;
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+    if(BL_GET_REG_BITS_VAL(tmpVal, HBN_F32K_SEL)){
+        /* rtc use xtal32k, return */
+        return;
+    }
+
+    /* disable gloabal irq */
+    state=bflb_irq_save();
+
+    mtimer_counter1=CPU_Get_MTimer_US()&0xffffffff;
+    HBN_Get_RTC_Timer_Val(&rtc_low,&rtc_high);
+    rtc_counter1=rtc_low;
+    if(mtimer_counter0==0){
+        mtimer_counter0=mtimer_counter1;
+        rtc_counter0=rtc_counter1;
+        bflb_irq_restore(state);
+        return;
+    }
+
+    if(mtimer_counter1>=mtimer_counter0){
+        if(mtimer_counter1-mtimer_counter0>200*1000){
+            if(rtc_counter1>rtc_counter0){
+                delta_time_stamp=mtimer_counter1-mtimer_counter0;
+                delta_rtc=rtc_counter1-rtc_counter0;
+                /*change into 100us*/
+                t=(delta_time_stamp+50)/100;
+                /*change into 32K count*/
+                t=t<<15;
+                /*change into s*/
+                t=t/10000;
+                /* we only do cal when the error is less than 3% */
+                if(t>delta_rtc){
+                    k=t-delta_rtc;
+                }else{
+                    k=delta_rtc-t;
+                }
+                if(k*100/t<3){
+                    HBN_Recal_RC32K(t,delta_rtc);
+                    mtimer_counter0=mtimer_counter1;
+                    rtc_counter0=rtc_counter1;
+                }else{
+                    /* restart */
+                    mtimer_counter0=0;
+                }
+            }else{
+                /* restart */
+                mtimer_counter0=0;
+            }
+        }
+    }else{
+        /* restart */
+        mtimer_counter0=0;
+    }
+    /* restore gloabal irq */
+    bflb_irq_restore(state);
+
+}
+
 
 void hal_pm_ldo11_use_ext_dcdc(void)
 {

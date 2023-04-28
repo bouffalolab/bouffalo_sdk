@@ -1,7 +1,7 @@
 #ifndef _BFLB_L1C_H
 #define _BFLB_L1C_H
 
-#include "bflb_core.h"
+#include "stdint.h"
 
 /** @addtogroup LHAL
   * @{

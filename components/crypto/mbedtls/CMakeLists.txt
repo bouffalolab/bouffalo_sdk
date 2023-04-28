@@ -94,8 +94,6 @@ sdk_library_add_sources(mbedtls/library/x509write_crt.c)
 sdk_library_add_sources(mbedtls/library/x509write_csr.c)
 sdk_library_add_sources(mbedtls/library/xtea.c)
 
-sdk_library_add_sources(port/platform/mbedtls_port_bouffalo_sdk.c)
-
 sdk_library_add_sources(port/pkparse.c)
 
 if(CONFIG_LWIP)
