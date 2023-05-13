@@ -1,6 +1,16 @@
 #include "bflb_ef_ctrl.h"
 #include "hardware/ef_ctrl_reg.h"
 
+#if defined(BL602)
+#include "bl602_ef_ctrl.h"
+#elif defined(BL616)
+#include "bl616_ef_ctrl.h"
+#elif defined(BL702) || defined(BL702L)
+#include "bl702_ef_ctrl.h"
+#elif defined(BL808)
+#include "bl808_ef_ctrl.h"
+#endif
+
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define BFLB_EF_CTRL_BASE ((uint32_t)0x40007000)
 #elif defined(BL616) || defined(BL808) || defined(BL606P)
@@ -30,17 +40,23 @@
 #define EF_CTRL_EFUSE_R0_SIZE 128
 #endif
 
-#ifndef BOOTROM
-#define EF_CTRL_LOAD_BEFORE_READ_R0 bflb_ef_ctrl_load_efuse_r0(dev)
-#define EF_CTRL_LOAD_BEFORE_READ_R1 bflb_ef_ctrl_load_efuse_r1(dev)
-#else
-#define EF_CTRL_LOAD_BEFORE_READ_R0
-#define EF_CTRL_LOAD_BEFORE_READ_R1
-#endif
-#define EF_CTRL_DATA0_CLEAR bflb_ef_ctrl_clear_data_reg0(dev)
-#define EF_CTRL_DATA1_CLEAR bflb_ef_ctrl_clear_data_reg1(dev)
-
+#ifndef BFLB_USE_ROM_DRIVER
+#define EF_CTRL_LOAD_BEFORE_READ_R0(dev) bflb_ef_ctrl_load_efuse_r0(dev)
+#define EF_CTRL_LOAD_BEFORE_READ_R1(dev) bflb_ef_ctrl_load_efuse_r1(dev)
+#define EF_CTRL_SWITCH_AHB_CLK_R0(dev)   bflb_ef_ctrl_switch_ahb_clk_r0(dev)
+#define EF_CTRL_SWITCH_AHB_CLK_R1(dev)   bflb_ef_ctrl_switch_ahb_clk_r1(dev)
+#define EF_CTRL_DATA0_CLEAR(dev)         bflb_ef_ctrl_clear_data_reg0(dev)
+#define EF_CTRL_DATA1_CLEAR(dev)         bflb_ef_ctrl_clear_data_reg1(dev)
 static int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev);
+#else
+#define EF_CTRL_LOAD_BEFORE_READ_R0(dev) EF_Ctrl_Load_Efuse_R0()
+#define EF_CTRL_LOAD_BEFORE_READ_R1(dev) EF_Ctrl_Load_Efuse_R1()
+#define EF_CTRL_SWITCH_AHB_CLK_R0(dev)   EF_Ctrl_Sw_AHB_Clk_0()
+#define EF_CTRL_SWITCH_AHB_CLK_R1(dev)   EF_Ctrl_Sw_AHB_Clk_1()
+#define EF_CTRL_DATA0_CLEAR(dev)         EF_Ctrl_Clear(0, EF_CTRL_EFUSE_R0_SIZE / 4)
+#define EF_CTRL_DATA1_CLEAR(dev)         EF_Ctrl_Clear(1, EF_CTRL_EFUSE_R1_SIZE / 4)
+#endif
+
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 extern void bflb_efuse_switch_cpu_clock_save(void);
 extern void bflb_efuse_switch_cpu_clock_restore(void);
@@ -55,6 +71,7 @@ extern void bflb_efuse_switch_cpu_clock_restore(void);
  * @return None
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r0(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
@@ -84,6 +101,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r0(struct bflb_device_s
     /* Add delay for CLK to be stable */
     arch_delay_us(4);
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Switch efuse region 1 control to AHB clock
@@ -93,7 +111,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r0(struct bflb_device_s
  * @return None
  *
 *******************************************************************************/
-#ifdef EF_CTRL_EFUSE_R1_SIZE
+#if ! defined(BFLB_USE_ROM_DRIVER) && defined(EF_CTRL_EFUSE_R1_SIZE)
 static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r1(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
@@ -275,19 +293,21 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s 
  * @return None
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 static void ATTR_TCM_SECTION bflb_ef_ctrl_clear_data_reg0(struct bflb_device_s *dev)
 {
     uint32_t *pefuse_start = (uint32_t *)(BFLB_EF_CTRL_BASE + 0x00);
     uint32_t i = 0;
 
     /* Switch to AHB clock */
-    bflb_ef_ctrl_switch_ahb_clk_r0(dev);
+    EF_CTRL_SWITCH_AHB_CLK_R0(dev);
 
     /* Clear data */
     for (i = 0; i < EF_CTRL_EFUSE_R0_SIZE / 4; i++) {
         pefuse_start[i] = 0;
     }
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Clear efuse region 1 data register
@@ -297,14 +317,14 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_clear_data_reg0(struct bflb_device_s *
  * @return None
  *
 *******************************************************************************/
-#ifdef EF_CTRL_EFUSE_R1_SIZE
+#if ! defined(BFLB_USE_ROM_DRIVER) && defined(EF_CTRL_EFUSE_R1_SIZE)
 static void ATTR_TCM_SECTION bflb_ef_ctrl_clear_data_reg1(struct bflb_device_s *dev)
 {
     uint32_t *pefuse_start = (uint32_t *)(BFLB_EF_CTRL_BASE + EF_CTRL_EFUSE_R0_SIZE);
     uint32_t i = 0;
 
     /* Switch to AHB clock */
-    bflb_ef_ctrl_switch_ahb_clk_r1(dev);
+    EF_CTRL_SWITCH_AHB_CLK_R1(dev);
 
     /* Clear data */
     for (i = 0; i < EF_CTRL_EFUSE_R1_SIZE / 4; i++) {
@@ -321,12 +341,13 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_clear_data_reg1(struct bflb_device_s *
  * @return None
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
     uint32_t timeout = EF_CTRL_DFT_TIMEOUT_VAL;
 
-    EF_CTRL_DATA0_CLEAR;
+    EF_CTRL_DATA0_CLEAR(dev);
 
     /* Trigger read */
     reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
@@ -384,6 +405,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *de
 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Load efuse region 0
@@ -393,7 +415,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *de
  * @return None
  *
 *******************************************************************************/
-#ifdef EF_CTRL_EFUSE_R1_SIZE
+#if ! defined(BFLB_USE_ROM_DRIVER) && defined(EF_CTRL_EFUSE_R1_SIZE)
 static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
@@ -476,6 +498,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *de
  * @return 1 for busy 0 for not
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 static int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
@@ -488,6 +511,7 @@ static int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev)
 
     return 0;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Check efuse auto load done
@@ -506,7 +530,7 @@ int ATTR_TCM_SECTION bflb_ef_ctrl_autoload_done(struct bflb_device_s *dev)
     // }
 
     /* Switch to AHB clock */
-    bflb_ef_ctrl_switch_ahb_clk_r0(dev);
+    EF_CTRL_SWITCH_AHB_CLK_R0(dev);
 
     reg_val = getreg32(BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
@@ -568,7 +592,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
 #endif
     if (region0_count > 0) {
         /* Switch to AHB clock */
-        bflb_ef_ctrl_switch_ahb_clk_r0(dev);
+        EF_CTRL_SWITCH_AHB_CLK_R0(dev);
 
         arch_memcpy4(pefuse_start, pword, region0_count);
         pefuse_start += region0_count;
@@ -582,7 +606,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
 #ifdef EF_CTRL_EFUSE_R1_SIZE
     if (region1_count > 0) {
         /* Switch to AHB clock */
-        bflb_ef_ctrl_switch_ahb_clk_r1(dev);
+        EF_CTRL_SWITCH_AHB_CLK_R1(dev);
 
         /* Add delay for CLK to be stable */
         arch_delay_us(4);
@@ -653,9 +677,9 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_direct(struct bflb_device_s *dev, uint32
 #endif
     if (region0_count > 0) {
         if (reload) {
-            bflb_ef_ctrl_load_efuse_r0(dev);
+            EF_CTRL_LOAD_BEFORE_READ_R0(dev);
         } else {
-            bflb_ef_ctrl_switch_ahb_clk_r0(dev);
+            EF_CTRL_SWITCH_AHB_CLK_R0(dev);
         }
         arch_memcpy4(pword, pefuse_start, region0_count);
         pword += region0_count;
@@ -664,9 +688,9 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_direct(struct bflb_device_s *dev, uint32
 #ifdef EF_CTRL_EFUSE_R1_SIZE
     if (region1_count > 0) {
         if (reload) {
-            bflb_ef_ctrl_load_efuse_r1(dev);
+            EF_CTRL_LOAD_BEFORE_READ_R1(dev);
         } else {
-            bflb_ef_ctrl_switch_ahb_clk_r1(dev);
+            EF_CTRL_SWITCH_AHB_CLK_R1(dev);
         }
         arch_memcpy4(pword, pefuse_start, region0_count);
     }
@@ -707,9 +731,9 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_common_trim(struct bflb_device_s *dev, c
 #endif
     if (reload) {
         /* Trigger read data from efuse */
-        bflb_ef_ctrl_load_efuse_r0(dev);
+        EF_CTRL_LOAD_BEFORE_READ_R0(dev);
 #ifdef EF_CTRL_EFUSE_R1_SIZE
-        bflb_ef_ctrl_load_efuse_r1(dev);
+        EF_CTRL_LOAD_BEFORE_READ_R1(dev);
 #endif
     }
 
@@ -725,12 +749,12 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_common_trim(struct bflb_device_s *dev, c
             /* switch clock */
             if (trim_list[i].en_addr <= EF_CTRL_EFUSE_R0_SIZE) {
                 /* Switch to AHB clock */
-                bflb_ef_ctrl_switch_ahb_clk_r0(dev);
+                EF_CTRL_SWITCH_AHB_CLK_R0(dev);
             }
 #ifdef EF_CTRL_EFUSE_R1_SIZE
             if (trim_list[i].en_addr > EF_CTRL_EFUSE_R0_SIZE) {
                 /* Switch to AHB clock */
-                bflb_ef_ctrl_switch_ahb_clk_r1(dev);
+                EF_CTRL_SWITCH_AHB_CLK_R1(dev);
             }
 #endif
             trim->len = trim_list[i].value_len;
@@ -804,12 +828,12 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_common_trim(struct bflb_device_s *dev, 
             /* switch clock */
             if (trim_list[i].en_addr <= EF_CTRL_EFUSE_R0_SIZE) {
                 /* Switch to AHB clock */
-                bflb_ef_ctrl_switch_ahb_clk_r0(dev);
+                EF_CTRL_SWITCH_AHB_CLK_R0(dev);
             }
 #ifdef EF_CTRL_EFUSE_R1_SIZE
             if (trim_list[i].en_addr > EF_CTRL_EFUSE_R0_SIZE) {
                 /* Switch to AHB clock */
-                bflb_ef_ctrl_switch_ahb_clk_r1(dev);
+                EF_CTRL_SWITCH_AHB_CLK_R1(dev);
             }
 #endif
             reg_val = getreg32(BFLB_EF_CTRL_BASE + (trim_list[i].en_addr / 32) * 4);

@@ -36,6 +36,7 @@
 
 #include "bl702_ef_cfg.h"
 #include "bl702_glb.h"
+#include "bl702_hbn.h"
 #include "hardware/ef_data_reg.h"
 
 extern int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload);
@@ -43,36 +44,36 @@ extern int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t
 static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {
         .name = "rc32m",
-        .en_addr = 0x78 * 8 + 1,
-        .parity_addr = 0x78 * 8 + 0,
-        .value_addr = 0x7C * 8 + 4,
+        .en_addr = 0x0C * 8 + 19,
+        .parity_addr = 0x0C * 8 + 18,
+        .value_addr = 0x0C * 8 + 10,
         .value_len = 8,
     },
     {
         .name = "rc32k",
-        .en_addr = 0xEC * 8 + 19,
-        .parity_addr = 0xEC * 8 + 18,
-        .value_addr = 0xEC * 8 + 8,
+        .en_addr = 0x0C * 8 + 31,
+        .parity_addr = 0x0C * 8 + 30,
+        .value_addr = 0x0C * 8 + 20,
         .value_len = 10,
     },
     {
         .name = "gpadc_gain",
-        .en_addr = 0xF0 * 8 + 27,
-        .parity_addr = 0xF0 * 8 + 26,
-        .value_addr = 0xF0 * 8 + 14,
+        .en_addr = 0x78 * 8 + 14,
+        .parity_addr = 0x78 * 8 + 13,
+        .value_addr = 0x78 * 8 + 1,
         .value_len = 12,
     },
     {
         .name = "tsen",
-        .en_addr = 0xF0 * 8 + 13,
-        .parity_addr = 0xF0 * 8 + 12,
-        .value_addr = 0xF0 * 8 + 0,
+        .en_addr = 0x78 * 8 + 0,
+        .parity_addr = 0x7C * 8 + 12,
+        .value_addr = 0x7C * 8 + 0,
         .value_len = 12,
     }
 };
 
-static GLB_ROOT_CLK_Type rtClk;
-static uint8_t bdiv, hdiv;
+static HBN_XCLK_CLK_Type hbnXclkClk; // base HBN clock selector
+static HBN_ROOT_CLK_Type hbnRootClk; // HBN root clock selector, may use DLL
 
 /****************************************************************************/ /**
  * @brief  Efuse read write switch clock save
@@ -85,11 +86,9 @@ static uint8_t bdiv, hdiv;
 void  ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_save(void)
 {
     /* all API should be place at tcm section */
-    bdiv = GLB_Get_BCLK_Div();
-    hdiv = GLB_Get_HCLK_Div();
-    rtClk = GLB_Get_Root_CLK_Sel();
+    hbnXclkClk = HBN_Get_XCLK_CLK_Sel();
+    hbnRootClk = HBN_Get_ROOT_CLK_Sel();
     HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_RC32M);
-    GLB_Set_System_CLK_Div(0, 0);
 }
 
 /****************************************************************************/ /**
@@ -103,8 +102,20 @@ void  ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_save(void)
 void ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_restore(void)
 {
     /* all API should be place at tcm section */
-    GLB_Set_System_CLK_Div(hdiv, bdiv);
-    HBN_Set_ROOT_CLK_Sel(rtClk);
+    switch (hbnXclkClk) {
+        case HBN_XCLK_CLK_RC32M:
+            HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_RC32M);
+            break;
+        case HBN_XCLK_CLK_XTAL:
+            HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_XTAL);
+            break;
+        default:
+            return;
+    }
+
+    if (hbnRootClk != HBN_Get_ROOT_CLK_Sel()) {
+        HBN_Set_ROOT_CLK_Sel(hbnRootClk);
+    }
 }
 
 /****************************************************************************/ /**
@@ -168,8 +179,8 @@ uint8_t bflb_efuse_is_mac_address_slot_empty(uint8_t slot, uint8_t reload)
         bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_DBG_PWD_HIGH_OFFSET, &tmp2, 1, reload);
     }
 
-    part1Empty = (bflb_ef_ctrl_is_all_bits_zero(tmp1, 0, 32));
-    part2Empty = (bflb_ef_ctrl_is_all_bits_zero(tmp2, 0, 22));
+    part1Empty = (bflb_ef_ctrl_is_all_bits_zero(tmp1, 16, 16));
+    part2Empty = (bflb_ef_ctrl_is_all_bits_zero(tmp2,  0, 32));
 
     return (part1Empty && part2Empty);
 }
@@ -186,10 +197,10 @@ uint8_t bflb_efuse_is_mac_address_slot_empty(uint8_t slot, uint8_t reload)
 *******************************************************************************/
 int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t program)
 {
-    uint8_t *maclow = (uint8_t *)mac;
-    uint8_t *machigh = (uint8_t *)(mac + 4);
+    uint8_t *maclow = (uint8_t *)(mac);
+    uint8_t *machigh = (uint8_t *)(mac + 2);
     uint32_t tmpval;
-    uint32_t i = 0, cnt;
+    uint32_t i = 0, cnt = 0;
 
     if (slot >= 3) {
         return -1;
@@ -202,8 +213,12 @@ int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t progr
         mac[5 - i] = tmpval;
     }
 
-    /* The low 32 bits */
-    tmpval = BL_RDWD_FRM_BYTEP(maclow);
+    /* The low 16 bits */
+    tmpval  = maclow[0] << 16;
+    tmpval |= maclow[1] << 24;
+
+    cnt += bflb_ef_ctrl_get_byte_zero_cnt((tmpval >> 0) & 0xff);
+    cnt += bflb_ef_ctrl_get_byte_zero_cnt((tmpval >> 8) & 0xff);
 
     if (slot == 0) {
         bflb_ef_ctrl_write_direct(NULL, EF_DATA_EF_WIFI_MAC_LOW_OFFSET, &tmpval, 1, program);
@@ -213,23 +228,30 @@ int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t progr
         bflb_ef_ctrl_write_direct(NULL, EF_DATA_EF_DBG_PWD_LOW_OFFSET, &tmpval, 1, program);
     }
 
-    /* The high 16 bits */
-    tmpval = machigh[0] + (machigh[1] << 8);
-    cnt = 0;
+    /* The high 32 bits */
+    tmpval = BL_RDWD_FRM_BYTEP(machigh);
 
+    /* Compute parity */
     for (i = 0; i < 6; i++) {
         cnt += bflb_ef_ctrl_get_byte_zero_cnt(mac[i]);
     }
 
-    tmpval |= ((cnt & 0x3f) << 16);
+    /* Get current parity data */
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_KEY_SLOT_5_W2_OFFSET, &tmpval, 1, 0);
 
     if (slot == 0) {
-        bflb_ef_ctrl_write_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, &tmpval, 1, program);
+        tmpval &= ~(0x3f << 0);
+        tmpval |= (cnt & 0x3f) << 0;
     } else if (slot == 1) {
-        bflb_ef_ctrl_write_direct(NULL, EF_DATA_EF_KEY_SLOT_5_W1_OFFSET, &tmpval, 1, program);
+        tmpval &= ~(0x3f << 6);
+        tmpval |= (cnt & 0x3f) << 6;
     } else if (slot == 2) {
-        bflb_ef_ctrl_write_direct(NULL, EF_DATA_EF_DBG_PWD_HIGH_OFFSET, &tmpval, 1, program);
+        tmpval &= ~(0x3f << 12);
+        tmpval |= (cnt & 0x3f) << 12;
     }
+
+    /* Set new parity data */
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_KEY_SLOT_5_W2_OFFSET, &tmpval, 1, 0);
 
     return 0;
 }
@@ -246,11 +268,12 @@ int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t progr
 *******************************************************************************/
 int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload)
 {
-    uint8_t *maclow = (uint8_t *)mac;
-    uint8_t *machigh = (uint8_t *)(mac + 4);
+    uint8_t *maclow = (uint8_t *)(mac);
+    uint8_t *machigh = (uint8_t *)(mac + 2);
     uint32_t tmpval = 0;
     uint32_t i = 0;
     uint32_t cnt = 0;
+    uint32_t crc = 0;
 
     if (slot >= 3) {
         return -1;
@@ -264,7 +287,11 @@ int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload
         bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_DBG_PWD_LOW_OFFSET, &tmpval, 1, reload);
     }
 
-    BL_WRWD_TO_BYTEP(maclow, tmpval);
+    cnt += bflb_ef_ctrl_get_byte_zero_cnt((tmpval >> 0) & 0xff);
+    cnt += bflb_ef_ctrl_get_byte_zero_cnt((tmpval >> 8) & 0xff);
+
+    maclow[0] = (tmpval >> 16) & 0xff;
+    maclow[1] = (tmpval >> 24) & 0xff;
 
     if (slot == 0) {
         bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, &tmpval, 1, reload);
@@ -274,15 +301,26 @@ int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload
         bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_DBG_PWD_HIGH_OFFSET, &tmpval, 1, reload);
     }
 
-    machigh[0] = tmpval & 0xff;
-    machigh[1] = (tmpval >> 8) & 0xff;
+    BL_WRWD_TO_BYTEP(machigh, tmpval);
 
-    /* Check parity */
+    /* Compute parity */
     for (i = 0; i < 6; i++) {
         cnt += bflb_ef_ctrl_get_byte_zero_cnt(mac[i]);
     }
 
-    if ((cnt & 0x3f) == ((tmpval >> 16) & 0x3f)) {
+    /* Get original parity */
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_KEY_SLOT_5_W2_OFFSET, &tmpval, 1, reload);
+
+    if (slot == 0) {
+        crc = ((tmpval >> 0) & 0x3f);
+    } else if (slot == 1) {
+        crc = ((tmpval >> 6) & 0x3f);
+    } else if (slot == 2) {
+        crc = ((tmpval >> 12) & 0x3f);
+    }
+
+    /* Check parity */
+    if ((cnt & 0x3f) == crc) {
         /* Change to network order */
         for (i = 0; i < 3; i++) {
             tmpval = mac[i];
@@ -300,7 +338,7 @@ float bflb_efuse_get_adc_trim(void)
     bflb_ef_ctrl_com_trim_t trim;
     uint32_t tmp;
 
-    float coe = 1.0;
+    float coe = 1.0f;
 
     bflb_ef_ctrl_read_common_trim(NULL, "gpadc_gain", &trim, 1);
 
@@ -312,9 +350,9 @@ float bflb_efuse_get_adc_trim(void)
                 tmp = ~tmp;
                 tmp += 1;
                 tmp = tmp & 0xfff;
-                coe = (1.0 + ((float)tmp / 2048.0));
+                coe = (1.0f + ((float)tmp / 2048.0f));
             } else {
-                coe = (1.0 - ((float)tmp / 2048.0));
+                coe = (1.0f - ((float)tmp / 2048.0f));
             }
         }
     }
