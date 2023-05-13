@@ -71,6 +71,7 @@ struct bl_udc {
     struct bl_ep_state out_ep[USB_NUM_BIDIR_ENDPOINTS]; /*!< OUT endpoint parameters            */
 } g_bl_udc;
 
+static void bflb_usb_int_clear(uint32_t int_clear);
 void USBD_IRQHandler(int irq, void *arg);
 
 static void bflb_usb_mem2fifo(uint8_t ep_idx, uint8_t *data, uint32_t length)
@@ -176,6 +177,48 @@ static void bflb_usb_ep_set_nak(uint8_t ep_idx)
     }
 }
 
+static inline void clear_pending_trans_ints(const uint8_t ep_idx)
+{
+    /* We must ignore (clear) all active SETUP/OUT/IN interrupts related to specified 'ep_idx' e.p.
+     * in USB_INT_STS as related transactions were NAKed (because USB_CR_USB_EP0_SW_RDY/USB_CR_EPx_RDY
+     * wasn't set yet) and shouldn't be handled by the ISR.
+     * But we should do this "logically atomically" with writing of USB_CR_USB_EP0_SW_RDY/USB_CR_EPx_RDY bit,
+     * as since this bit was set => any SETUP/IN/OUT transaction on e.p. is allowed to be successfully wired and ACKed,
+     * so any SETUP/IN/OUT.DIT bit in USB_INT_STS asserted after USB_CR_USB_EP0_SW_RDY/USB_CR_EPx_RDY bit was set
+     * must be handled by the ISR. How to achieve atomicity?
+     * Lay on SETUP/IN/OUT.CIT bits, each of which is asserted by USB DC on related TOKEN packet reception
+     * for related e.p, i.e. some time before DATA packet reception/transmission, which will force related DIT bit
+     * assertion, so since both 3 pairs SETUP/IN/OUT.CIT and SETUP/IN/OUT.DIT bits are 0 in case of e.p.0 or
+     * INn/OUTn.CIT and INn/OUTn.DIT pair for other e.p.s => we have some time before at least one of SETUP/IN/OUT.DIT bits
+     * may be asserted as related SETUP/IN/OUT.CIT bit will be set first and some time will be required for
+     * transaction DATA stage packet to be wired */
+    uint32_t pend_trans_ints;
+    uint32_t trans_ints_mask;
+    if (0 == ep_idx) {
+        trans_ints_mask = (USB_EP0_SETUP_CMD_INT | USB_EP0_SETUP_DONE_INT |
+                USB_EP0_IN_CMD_INT | USB_EP0_IN_DONE_INT |
+                USB_EP0_OUT_CMD_INT | USB_EP0_OUT_DONE_INT);
+    } else {
+        trans_ints_mask = (3 << (8 + 2 * ep_idx));
+    }
+
+    while (0 != (pend_trans_ints = (getreg32(BL702_USB_BASE + USB_INT_STS_OFFSET) & trans_ints_mask))) {
+        bflb_usb_int_clear(pend_trans_ints);
+    }
+    /* Now both 3 pairs of SETUP/IN/OUT.CIT and SETUP/IN/OUT.DIT bits for e.p.0 or
+     * INn/OUTn.CIT and INn/OUTn.DIT pair for other e.p. are 0, so we have time to set
+     * USB_CR_USB_EP0_SW_RDY/USB_CR_EPx_RDY bit and dont't worry about SETUP/IN/OUT.DIT
+     * interrupt, which can't came righ now!
+     * In worst case:
+     * 1. SETUP/IN/OUT.CIT interrupt was just asserted if TOKEN packet was just received on related e.p.;
+     * 2. transaction DATA stage will be wired now and it's shortest packet consists of:
+     *    SYNC(8 bits)+PID(8 bits)+DATA(0 bytes: the shortest)+CRC16(16 bits)+EOP(3 bits).
+     *    So we have at least 30 bit intervals on 12MHz (i.e. about 2,5 us) before related DIT
+     *    interrupt will be set.
+     * CPU frequency >100MHz, so we have more than 40 cycles to assert USB_CR_USB_EP0_SW_RDY/USB_CR_EPx_RDY
+     * bit in USB_CONFIG/EPn_CONFIG register */
+}
+
 static void bflb_usb_ep_set_ready(uint8_t ep_idx)
 {
     uint32_t regval;
@@ -186,12 +229,18 @@ static void bflb_usb_ep_set_ready(uint8_t ep_idx)
         regval |= USB_CR_USB_EP0_SW_NACK_OUT;
         regval |= USB_CR_USB_EP0_SW_NACK_IN;
         regval &= ~USB_CR_USB_EP0_SW_STALL;
+        /* Clear all pending 'ep_idx' transfer related interrupts as they should be considered as spurious */
+        clear_pending_trans_ints(ep_idx);
+        /* NOTE: assume we have enough time to update config register before related xxx_DONE_INT event will occur */
         putreg32(regval, BL702_USB_BASE + USB_CONFIG_OFFSET);
     } else {
         regval = getreg32(BL702_USB_BASE + USB_EP1_CONFIG_OFFSET + 4 * (ep_idx - 1));
         regval |= USB_CR_EP1_RDY;
         regval |= USB_CR_EP1_NACK;
         regval &= ~USB_CR_EP1_STALL;
+        /* Clear all pending 'ep_idx' transfer related interrupts as they should be considered as spurious */
+        clear_pending_trans_ints(ep_idx);
+        /* NOTE: assume we have enough time to update config register before related xxx_DONE_INT event will occur */
         putreg32(regval, BL702_USB_BASE + USB_EP1_CONFIG_OFFSET + 4 * (ep_idx - 1));
     }
 }
@@ -266,6 +315,10 @@ int usb_dc_init(void)
 
     regval = 0;
     regval |= USB_CR_USB_RESET_EN;
+    /* CMD_* interrupts added to enabled set. They are needed in advanced bflb_usb_ep_set_ready() logic */
+    regval |= USB_CR_EP0_SETUP_CMD_EN;
+    regval |= USB_CR_EP0_IN_CMD_EN;
+    regval |= USB_CR_EP0_OUT_CMD_EN;
     regval |= USB_CR_EP0_SETUP_DONE_EN;
     regval |= USB_CR_EP0_IN_DONE_EN;
     regval |= USB_CR_EP0_OUT_DONE_EN;
@@ -395,16 +448,29 @@ int usbd_ep_set_stall(const uint8_t ep)
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
 
     if (ep_idx == 0) {
+        /* NOTE: here not even SW_NACK_OUT and SW_NACK_IN bits are being set together with SW_STALL bit,
+         * but also SW_RDY (CRSR). This this contradicts the documentation, but allow to continue successful
+         * operation after STALLing actual control transfer.
+         * 
+         * Suggested logic according to documentation:
+         *  regval &= ~(USB_CR_USB_EP0_SW_NACK_OUT | USB_CR_USB_EP0_SW_NACK_IN);
+         *  regval |= USB_CR_USB_EP0_SW_STALL;
+         * causes errors on next enumeration steps, so enumeration fails */
         regval = getreg32(BL702_USB_BASE + USB_CONFIG_OFFSET);
         regval |= USB_CR_USB_EP0_SW_RDY;
         regval |= USB_CR_USB_EP0_SW_NACK_OUT;
         regval |= USB_CR_USB_EP0_SW_NACK_IN;
         regval |= USB_CR_USB_EP0_SW_STALL;
+        /* Clear all pending 'ep_idx' transfer related interrupts as they should be considered as spurious */
+        clear_pending_trans_ints(ep_idx);
+        /* NOTE: assume we have enough time to update config register before related xxx_DONE_INT event will occur */
         putreg32(regval, BL702_USB_BASE + USB_CONFIG_OFFSET);
-
     } else {
         regval = getreg32(BL702_USB_BASE + USB_EP1_CONFIG_OFFSET + 4 * (ep_idx - 1));
         regval |= USB_CR_EP1_STALL;
+        /* Clear all pending 'ep_idx' transfer related interrupts as they should be considered as spurious */
+        clear_pending_trans_ints(ep_idx);
+        /* NOTE: assume we have enough time to update config register before related xxx_DONE_INT event will occur */
         putreg32(regval, BL702_USB_BASE + USB_EP1_CONFIG_OFFSET + 4 * (ep_idx - 1));
     }
 
@@ -493,6 +559,9 @@ void USBD_IRQHandler(int irq, void *arg)
     for (uint8_t ep_idx = 1; ep_idx < USB_NUM_BIDIR_ENDPOINTS; ep_idx++) {
         if (intstatus & (1 << (9 + 2 * ep_idx))) {
             if (g_bl_udc.in_ep[ep_idx].ep_enable) {
+                while (bflb_usb_ep_isbusy(ep_idx)) {
+                }
+
                 tx_count = MIN(g_bl_udc.in_ep[ep_idx].xfer_len, g_bl_udc.in_ep[ep_idx].ep_mps);
                 g_bl_udc.in_ep[ep_idx].xfer_buf += tx_count;
                 g_bl_udc.in_ep[ep_idx].xfer_len -= tx_count;
@@ -532,13 +601,25 @@ void USBD_IRQHandler(int irq, void *arg)
 
         rx_count = bflb_usb_get_rxcount(0);
         if (rx_count != 8) {
-            printf("setup fail\r\n");
+            if (rx_count) {
+                /* Clear RX FIFO */
+                putreg32(getreg32(BL702_USB_BASE + USB_EP0_FIFO_CONFIG_OFFSET) | USB_EP0_RX_FIFO_CLR,
+                    BL702_USB_BASE + USB_EP0_FIFO_CONFIG_OFFSET);
+
+                rx_count = bflb_usb_get_rxcount(0);
+            }
+            /* Empty or bad SETUP transaction. Enable next control transfer */
+            bflb_usb_ep_set_ready(0);
             return;
         }
         bflb_usb_fifo2mem(0, (uint8_t *)&g_bl_udc.setup, 8);
         usbd_event_ep0_setup_complete_handler((uint8_t *)&g_bl_udc.setup);
     }
     if (intstatus & USB_EP0_IN_DONE_INT) {
+        /* Wait for SWRDY to be reset, as it will guarantee that Host received data slice */
+        while (bflb_usb_ep_isbusy(0)) {
+        }
+
         tx_count = MIN(g_bl_udc.in_ep[0].xfer_len, g_bl_udc.in_ep[0].ep_mps);
         g_bl_udc.in_ep[0].xfer_buf += tx_count;
         g_bl_udc.in_ep[0].xfer_len -= tx_count;
@@ -559,6 +640,12 @@ void USBD_IRQHandler(int irq, void *arg)
         }
 
         rx_count = bflb_usb_get_rxcount(0);
+        if (rx_count && 0 == g_bl_udc.out_ep[0].xfer_buf) {
+            /* No OUT transfer or ZLP was expected => clear RX FIFO and set rx_count to 0 */
+            putreg32(getreg32(BL702_USB_BASE + USB_EP0_FIFO_CONFIG_OFFSET) | USB_EP0_RX_FIFO_CLR,
+                BL702_USB_BASE + USB_EP0_FIFO_CONFIG_OFFSET);
+            rx_count = 0;
+        }
 
         bflb_usb_fifo2mem(0, g_bl_udc.out_ep[0].xfer_buf, rx_count);
         g_bl_udc.out_ep[0].xfer_buf += rx_count;
@@ -576,7 +663,12 @@ void USBD_IRQHandler(int irq, void *arg)
     if (intstatus & USB_RESET_INT) {
         memset(&g_bl_udc, 0, sizeof(g_bl_udc));
 
-        regval = 0;
+        /* Reset interrupt added to enabled set  */
+        regval = USB_CR_USB_RESET_EN;
+        /* CMD_* interrupts added to enabled set. They are needed in advanced bflb_usb_ep_set_ready() logic */
+        regval |= USB_CR_EP0_SETUP_CMD_EN;
+        regval |= USB_CR_EP0_IN_CMD_EN;
+        regval |= USB_CR_EP0_OUT_CMD_EN;
         regval |= USB_CR_EP0_SETUP_DONE_EN;
         regval |= USB_CR_EP0_IN_DONE_EN;
         regval |= USB_CR_EP0_OUT_DONE_EN;
