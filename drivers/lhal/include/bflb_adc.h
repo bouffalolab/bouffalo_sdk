@@ -40,6 +40,7 @@
 /** @defgroup ADC_CLK_DIV adc clock divison definition
   * @{
   */
+#define ADC_CLK_DIV_1  0
 #define ADC_CLK_DIV_4  1
 #define ADC_CLK_DIV_8  2
 #define ADC_CLK_DIV_12 3
