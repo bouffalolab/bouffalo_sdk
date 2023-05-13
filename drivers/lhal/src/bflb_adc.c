@@ -195,7 +195,7 @@ void bflb_adc_link_rxdma(struct bflb_device_s *dev, bool enable)
     putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
 }
 
-int bflb_adc_channel_config(struct bflb_device_s *dev, struct bflb_adc_channel_s *chan, uint8_t channels)
+int bflb_adc_channel_config(struct bflb_device_s *dev, const struct bflb_adc_channel_s *chan, uint8_t channels)
 {
     uint32_t regval;
     uint32_t regval2;
@@ -462,21 +462,21 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                     conv_result = 4095;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 4096 * ref;
+                result[i].millivolt = (float)result[i].value / 4095.0f * ref;
             } else if (resolution == ADC_RESOLUTION_14B) {
                 conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2) / coe);
                 if (conv_result > 16383) {
                     conv_result = 16383;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 16384 * ref;
+                result[i].millivolt = (float)result[i].value / 16383.0f * ref;
             } else if (resolution == ADC_RESOLUTION_16B) {
                 conv_result = (uint32_t)((buffer[i] & 0xffff) / coe);
                 if (conv_result > 65535) {
                     conv_result = 65535;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (int32_t)result[i].value / 65536.0 * ref;
+                result[i].millivolt = (int32_t)result[i].value / 65535.0f * ref;
             } else {
             }
         }
@@ -499,21 +499,21 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                     conv_result = 2047;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 2048 * ref;
+                result[i].millivolt = (float)result[i].value / 2047 * ref;
             } else if (resolution == ADC_RESOLUTION_14B) {
                 conv_result = (uint32_t)(((tmp & 0xffff) >> 2) / coe);
                 if (conv_result > 8191) {
                     conv_result = 8191;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 8192 * ref;
+                result[i].millivolt = (float)result[i].value / 8191 * ref;
             } else if (resolution == ADC_RESOLUTION_16B) {
                 conv_result = (uint32_t)((tmp & 0xffff) / coe);
                 if (conv_result > 32767) {
                     conv_result = 32767;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 32768 * ref;
+                result[i].millivolt = (float)result[i].value / 32767 * ref;
             } else {
             }
 
@@ -613,9 +613,9 @@ float bflb_adc_tsen_get_temp(struct bflb_device_s *dev)
     bflb_adc_parse_result(dev, &raw_data, &result, 1);
     v1 = result.value;
     if (v0 > v1) {
-        temp = (((float)v0 - (float)v1) - (float)tsen_offset) / 7.753;
+        temp = (((float)v0 - (float)v1) - (float)tsen_offset) / 7.753f;
     } else {
-        temp = (((float)v1 - (float)v0) - (float)tsen_offset) / 7.753;
+        temp = (((float)v1 - (float)v0) - (float)tsen_offset) / 7.753f;
     }
 
     return temp;

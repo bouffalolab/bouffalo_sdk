@@ -184,7 +184,7 @@ void bflb_adc_link_rxdma(struct bflb_device_s *dev, bool enable);
  * @param [in] channels pair number of channels
  * @return Zero on success; a negated errno value on failure
  */
-int bflb_adc_channel_config(struct bflb_device_s *dev, struct bflb_adc_channel_s *chan, uint8_t channels);
+int bflb_adc_channel_config(struct bflb_device_s *dev, const struct bflb_adc_channel_s *chan, uint8_t channels);
 
 /**
  * @brief Start adc conversion
