@@ -836,6 +836,32 @@ BL_Err_Type HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_Type xClk)
 }
 
 /****************************************************************************/ /**
+ * @brief  Get current HBN xclk clock type selection
+ *
+ * @return current HBN xclk clock type selection
+ *
+*******************************************************************************/
+HBN_XCLK_CLK_Type ATTR_CLOCK_SECTION HBN_Get_XCLK_CLK_Sel(void)
+{
+    uint32_t tmpVal;
+    uint32_t tmpVal2;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+    tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_ROOT_CLK_SEL);
+
+    switch (tmpVal2 & 0x1) {
+        case 0x0:
+            return HBN_XCLK_CLK_RC32M;
+
+        case 0x1:
+            return HBN_XCLK_CLK_XTAL;
+
+        default:
+            return -1;
+    }
+}
+
+/****************************************************************************/ /**
  * @brief  Select root clk source
  *
  * @param  rootClk: root clock type selection
@@ -879,6 +905,36 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_Type rootClk)
     return SUCCESS;
 }
 #endif
+
+/****************************************************************************/ /**
+ * @brief  Get current HBN root clk source
+ *
+ * @return current HBN root clock selection
+ *
+*******************************************************************************/
+HBN_ROOT_CLK_Type ATTR_CLOCK_SECTION HBN_Get_ROOT_CLK_Sel(void)
+{
+    uint32_t tmpVal;
+    uint32_t tmpVal2;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+    tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_ROOT_CLK_SEL);
+
+    switch (tmpVal2) {
+        case 0x0:
+            return HBN_ROOT_CLK_RC32M;
+
+        case 0x1:
+            return HBN_ROOT_CLK_XTAL;
+
+        case 0x02:
+        case 0x03:
+            return HBN_ROOT_CLK_DLL;
+
+        default:
+            return -1;
+    }
+}
 
 /****************************************************************************/ /**
  * @brief  set HBN_RAM sleep mode
