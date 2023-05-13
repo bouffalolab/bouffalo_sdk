@@ -150,6 +150,7 @@ GLB_ROOT_CLK_Type ATTR_CLOCK_SECTION GLB_Get_Root_CLK_Sel(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#ifndef BFLB_USE_ROM_DRIVER
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_System_CLK_Div(uint8_t hclkDiv, uint8_t bclkDiv)
 {
     /***********************************************************************************/
@@ -177,6 +178,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_System_CLK_Div(uint8_t hclkDiv, uint8_t b
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Get Bus clock divider
