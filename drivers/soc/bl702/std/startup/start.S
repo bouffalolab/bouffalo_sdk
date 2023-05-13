@@ -68,11 +68,14 @@ __start:
 #endif
 
     /* Check for an initialization routine and call it if one exists, otherwise
-     * just skip over the call entirely.   Note that __metal_initialize isn't
-     * actually a full C function, as it doesn't end up with the .bss or .data
-     * segments having been initialized.  This is done to avoid putting a
-     * burden on systems that can be initialized without having a C environment
-     * set up. */
+     * just skip over the call entirely. */
+    .weak __metal_before_start
+    la ra, __metal_before_start
+    beqz ra, 1f
+    jalr ra
+1:
+
+    /* Call Bouffalolab system initialization routine */
     jal SystemInit
 
     /* start load code to itcm like. */
