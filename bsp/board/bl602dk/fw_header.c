@@ -110,13 +110,13 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .boot_cfg.bval.rsvd19_31 = 0x0,          /* [31:19]     rsvd */
 
     .img_segment_info.img_len = 0x00010000, /* image length or segment count */
-    .rsvd0 = 0x00000000,
+    .rsvd0 = 0x23000000,
 #ifdef BFLB_BOOT2
     .img_start.flashoffset = 0x00002000, /* flash controller offset */
-#else     
+#else
     .img_start.flashoffset = 0x00001000, /* flash controller offset */
-#endif    
-    .hash = { 0xdeadbeef },              /* hash of the image */
+#endif
+    .hash = { 0xdeadbeef }, /* hash of the image */
 
     .crc32 = 0xdeadbeef /* 4 */
 };

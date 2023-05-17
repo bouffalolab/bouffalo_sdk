@@ -10,10 +10,7 @@
 
 /* configure the CPU type */
 OUTPUT_ARCH( "riscv" )
-/* link with the standard c library */
-/*INPUT(-lc)*/
-/* link with the standard GCC library */
-/*INPUT(-lgcc)*/
+
 /* configure the entry point */
 ENTRY(__start)
 

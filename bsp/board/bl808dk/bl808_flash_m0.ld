@@ -10,10 +10,7 @@
 
 /* configure the CPU type */
 OUTPUT_ARCH( "riscv" )
-/* link with the standard c library */
-INPUT(-lc)
-/* link with the standard GCC library */
-INPUT(-lgcc)
+
 /* configure the entry point */
 ENTRY(__start)
 
@@ -31,8 +28,8 @@ MEMORY
     itcm_memory (rx)  : ORIGIN = 0x62020000, LENGTH = 20K
     dtcm_memory (rx)  : ORIGIN = 0x62025000, LENGTH = 4K
     nocache_ram_memory (!rx) : ORIGIN = 0x22026000, LENGTH = 16K
-    ram_memory  (!rx) : ORIGIN = 0x6202A000, LENGTH = 24K + 64K
-    ram_wifi  (wxa)   : ORIGIN = 0x2203A000, LENGTH = 160K - 64K - __EM_SIZE
+    ram_memory  (!rx) : ORIGIN = 0x6202A000, LENGTH = 24K
+    ram_wifi  (wxa)   : ORIGIN = 0x22030000, LENGTH = 160K - __EM_SIZE
     xram_memory  (!rx) : ORIGIN = 0x40000000, LENGTH = 16K
 }
 
