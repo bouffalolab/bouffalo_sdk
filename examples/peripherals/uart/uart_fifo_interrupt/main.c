@@ -15,7 +15,6 @@ void uart_isr(int irq, void *arg)
         while (bflb_uart_rxavailable(uartx)) {
             printf("0x%02x\r\n", bflb_uart_getchar(uartx));
         }
-        bflb_uart_feature_control(uartx, UART_CMD_SET_RTS_VALUE, 1);
     }
     if (intstatus & UART_INTSTS_RTO) {
         printf("rto\r\n");
