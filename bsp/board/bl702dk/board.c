@@ -24,6 +24,7 @@ static void system_clock_init(void)
 {
     GLB_Set_System_CLK(GLB_DLL_XTAL_32M, GLB_SYS_CLK_DLL144M);
     GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_BCLK, 71);
+    HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
 }
 
 static void peripheral_clock_init(void)
