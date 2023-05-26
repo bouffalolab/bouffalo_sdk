@@ -1,6 +1,6 @@
 #include "bflb_gpio.h"
 #include "hardware/gpio_reg.h"
-#if defined(BL702) || defined(BL602) || defined(BL702L)
+#if defined(BL702)
 #include "hardware/hbn_reg.h"
 #endif
 
@@ -43,6 +43,7 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 
     real_pin = pin;
 
+#if defined(BL702)
     /* SF pad use exclusive IE/PD/PU/DRIVE/SMTCTRL */
     if (pin >= 23 && pin <= 28) {
         regval = getreg32(GLB_BASE_ADDR + GLB_GPIO_USE_PSRAM__IO_OFFSET_ADDR);
@@ -50,6 +51,7 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
             real_pin += 9;
         }
     }
+#endif
 
     is_odd = real_pin & 1;
 
@@ -104,6 +106,8 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
         cfg |= (1 << (is_odd * 16 + 15));
     }
 #endif
+
+#if defined(BL702)
     /* always on pads IE control (in HBN) */
     if (pin >= 9 && pin <= 13) {
         regval = getreg32(HBN_BASE + HBN_IRQ_MODE_OFFSET);
@@ -138,6 +142,7 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
         regval |= (function << (is_odd * 16 + 8));
         putreg32(regval, reg_base + GLB_GPIO_CFGCTL0_OFFSET + (pin / 2 * 4));
     }
+#endif
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
     cfg_address = reg_base + GLB_GPIO_CFG0_OFFSET + (pin << 2);
     cfg = 0;
