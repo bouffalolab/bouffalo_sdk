@@ -130,7 +130,7 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 
         regval &= HBN_REG_AON_PAD_IE_SMT_UMSK;
         regval |= aon_pad_ie_smt << HBN_REG_AON_PAD_IE_SMT_POS;
-        putreg32(regval, getreg32(HBN_BASE + HBN_IRQ_MODE_OFFSET));
+        putreg32(regval, HBN_BASE + HBN_IRQ_MODE_OFFSET);
     }
 
     /* Pins 23...28: SF pad use exclusive IE/PD/PU/DRIVE/SMTCTRL */
