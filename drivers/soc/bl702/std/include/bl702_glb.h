@@ -749,8 +749,8 @@ BL_Err_Type GLB_Set_SPI_0_ACT_MOD_Sel(GLB_SPI_PAD_ACT_AS_Type mod);
 BL_Err_Type GLB_Select_Internal_Flash(void);
 BL_Err_Type GLB_Select_External_Flash(void);
 BL_Err_Type GLB_Deswap_Flash_Pin(void);
-BL_Err_Type GLB_Swap_Flash_CS_IO2_Pin();
-BL_Err_Type GLB_Swap_Flash_IO0_IO3_Pin();
+BL_Err_Type GLB_Swap_Flash_CS_IO2_Pin(void);
+BL_Err_Type GLB_Swap_Flash_IO0_IO3_Pin(void);
 BL_Err_Type GLB_Swap_Flash_Pin(void);
 BL_Err_Type GLB_Select_Internal_PSram(void);
 /*----------*/

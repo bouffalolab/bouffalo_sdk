@@ -50,14 +50,14 @@ void bflb_mtimer_delay_us(uint32_t time);
  *
  * @return time with us
  */
-uint64_t bflb_mtimer_get_time_us();
+uint64_t bflb_mtimer_get_time_us(void);
 
 /**
  * @brief Get current mtimer time with ms.
  *
  * @return time with ms
  */
-uint64_t bflb_mtimer_get_time_ms();
+uint64_t bflb_mtimer_get_time_ms(void);
 
 #ifdef __cplusplus
 }

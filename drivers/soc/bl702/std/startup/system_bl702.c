@@ -27,7 +27,7 @@
 
 void SystemInit(void)
 {
-    uint32_t *p;
+    uint8_t *p;
     uint8_t i;
     uint32_t tmpVal = 0;
     uint8_t flashCfg = 0;
@@ -57,15 +57,15 @@ void SystemInit(void)
     BL_WR_REG(GLB_BASE, GLB_PARM, tmpVal);
 
     /* CLear all interrupt */
-    p = (uint32_t *)(CLIC_HART0_BASE + CLIC_INTIE_OFFSET);
+    p = (uint8_t *)(CLIC_HART0_BASE + CLIC_INTIE_OFFSET);
 
-    for (i = 0; i < (IRQn_LAST + 3) / 4; i++) {
+    for (i = 0; i < IRQn_LAST; i++) {
         p[i] = 0;
     }
 
-    p = (uint32_t *)(CLIC_HART0_BASE + CLIC_INTIP_OFFSET);
+    p = (uint8_t *)(CLIC_HART0_BASE + CLIC_INTIP_OFFSET);
 
-    for (i = 0; i < (IRQn_LAST + 3) / 4; i++) {
+    for (i = 0; i < IRQn_LAST; i++) {
         p[i] = 0;
     }
 
@@ -109,4 +109,4 @@ void System_Post_Init(void)
     HBN_Trim_RC32K();
     /* global IRQ enable */
     __enable_irq();
-}
+}}

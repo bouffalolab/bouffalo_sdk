@@ -1,5 +1,5 @@
 #ifndef _BFLB_PWM_V1_H
-#define _BFLB_PWM_V2_H
+#define _BFLB_PWM_V1_H
 
 #include "bflb_core.h"
 

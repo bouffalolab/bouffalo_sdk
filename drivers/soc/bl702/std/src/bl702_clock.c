@@ -203,7 +203,7 @@ static inline uint8_t Clock_Get_F32k_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, HBN_F32K_SEL);
 }
 
-static inline uint32_t Clock_Get_AUPLL_Output()
+static inline uint32_t Clock_Get_AUPLL_Output(void)
 {
     uint32_t tmpVal = 0;
 
@@ -322,7 +322,7 @@ static inline uint8_t Clock_Get_SPI_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SPI_CLK_DIV);
 }
 
-static inline uint32_t Clock_I2C_Clk_Mux_Output()
+static inline uint32_t Clock_I2C_Clk_Mux_Output(void)
 {
     /* pbclk */
     return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_BCLK);
