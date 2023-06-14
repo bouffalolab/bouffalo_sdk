@@ -1493,6 +1493,20 @@ if [ -n "${OPENSSL_LEGACY:-}" ]; then
     O_LEGACY_CLI="$O_LEGACY_CLI -connect 127.0.0.1:+SRV_PORT"
 fi
 
+# Newer versions of OpenSSL have a syntax to enable all "ciphers", even
+# low-security ones. This covers not just cipher suites but also protocol
+# versions. It is necessary, for example, to use (D)TLS 1.0/1.1 on
+# OpenSSL 1.1.1f from Ubuntu 20.04. The syntax was only introduced in
+# OpenSSL 1.1.0 (21e0c1d23afff48601eb93135defddae51f7e2e3) and I can't find
+# a way to discover it from -help, so check the openssl version.
+case $($OPENSSL_CMD version) in
+    "OpenSSL 0"*|"OpenSSL 1.0"*) :;;
+    *)
+        O_CLI="$O_CLI -cipher ALL@SECLEVEL=0"
+        O_SRV="$O_SRV -cipher ALL@SECLEVEL=0"
+        ;;
+esac
+
 if [ -n "${OPENSSL_NEXT:-}" ]; then
     O_NEXT_SRV="$O_NEXT_SRV -accept $SRV_PORT"
     O_NEXT_CLI="$O_NEXT_CLI -connect 127.0.0.1:+SRV_PORT"
@@ -6595,6 +6609,7 @@ run_test    "Per-version suites: TLS 1.1" \
 
 requires_config_enabled MBEDTLS_CAMELLIA_C
 requires_config_enabled MBEDTLS_AES_C
+requires_config_enabled MBEDTLS_GCM_C
 run_test    "Per-version suites: TLS 1.2" \
             "$P_SRV version_suites=TLS-RSA-WITH-CAMELLIA-128-CBC-SHA,TLS-RSA-WITH-AES-256-CBC-SHA,TLS-RSA-WITH-AES-128-CBC-SHA,TLS-RSA-WITH-AES-128-GCM-SHA256" \
             "$P_CLI force_version=tls12" \
@@ -9361,12 +9376,9 @@ run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.0" \
             0 \
             -s "fragmenting handshake message"
 
-## Interop test with OpenSSL might trigger a bug in recent versions (including
-## all versions installed on the CI machines), reported here:
-## Bug report: https://github.com/openssl/openssl/issues/6902
-## They should be re-enabled once a fixed version of OpenSSL is available
-## (this should happen in some 1.1.1_ release according to the ticket).
-skip_next_test
+## The two tests below require 1.1.1a or higher version of openssl, otherwise
+## it might trigger a bug due to openssl (https://github.com/openssl/openssl/issues/6902)
+requires_openssl_next
 requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
@@ -9374,7 +9386,7 @@ client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.2" \
             -p "$P_PXY drop=8 delay=8 duplicate=8" \
-            "$O_SRV -dtls1_2 -verify 10" \
+            "$O_NEXT_SRV -dtls1_2 -verify 10" \
             "$P_CLI dtls=1 debug_level=2 \
              crt_file=data_files/server8_int-ca2.crt \
              key_file=data_files/server8.key \
@@ -9383,7 +9395,7 @@ run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.2" \
             -c "fragmenting handshake message" \
             -C "error"
 
-skip_next_test
+requires_openssl_next
 requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
@@ -9391,7 +9403,7 @@ client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.0" \
             -p "$P_PXY drop=8 delay=8 duplicate=8" \
-            "$O_SRV -dtls1 -verify 10" \
+            "$O_NEXT_SRV -dtls1 -verify 10" \
             "$P_CLI dgram_packing=0 dtls=1 debug_level=2 \
              crt_file=data_files/server8_int-ca2.crt \
              key_file=data_files/server8.key \
@@ -9400,6 +9412,8 @@ run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.0" \
             -c "fragmenting handshake message" \
             -C "error"
 
+## the two tests below will time out with certain seed.
+## The cause is an openssl bug (https://github.com/openssl/openssl/issues/18887)
 skip_next_test
 requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
@@ -10425,37 +10439,34 @@ run_test    "DTLS proxy: 3d, min handshake, server-initiated renego, nbio" \
             -s "Extra-header:" \
             -c "HTTP/1.0 200 OK"
 
-## Interop tests with OpenSSL might trigger a bug in recent versions (including
-## all versions installed on the CI machines), reported here:
-## Bug report: https://github.com/openssl/openssl/issues/6902
-## They should be re-enabled once a fixed version of OpenSSL is available
-## (this should happen in some 1.1.1_ release according to the ticket).
-skip_next_test
+## The three tests below require 1.1.1a or higher version of openssl, otherwise
+## it might trigger a bug due to openssl (https://github.com/openssl/openssl/issues/6902)
+requires_openssl_next
 client_needs_more_time 6
 not_with_valgrind # risk of non-mbedtls peer timing out
 run_test    "DTLS proxy: 3d, openssl server" \
             -p "$P_PXY drop=5 delay=5 duplicate=5 protect_hvr=1" \
-            "$O_SRV -dtls1 -mtu 2048" \
+            "$O_NEXT_SRV -dtls1 -mtu 2048" \
             "$P_CLI dgram_packing=0 dtls=1 hs_timeout=500-60000 tickets=0" \
             0 \
             -c "HTTP/1.0 200 OK"
 
-skip_next_test # see above
+requires_openssl_next
 client_needs_more_time 8
 not_with_valgrind # risk of non-mbedtls peer timing out
 run_test    "DTLS proxy: 3d, openssl server, fragmentation" \
             -p "$P_PXY drop=5 delay=5 duplicate=5 protect_hvr=1" \
-            "$O_SRV -dtls1 -mtu 768" \
+            "$O_NEXT_SRV -dtls1 -mtu 768" \
             "$P_CLI dgram_packing=0 dtls=1 hs_timeout=500-60000 tickets=0" \
             0 \
             -c "HTTP/1.0 200 OK"
 
-skip_next_test # see above
+requires_openssl_next
 client_needs_more_time 8
 not_with_valgrind # risk of non-mbedtls peer timing out
 run_test    "DTLS proxy: 3d, openssl server, fragmentation, nbio" \
             -p "$P_PXY drop=5 delay=5 duplicate=5 protect_hvr=1" \
-            "$O_SRV -dtls1 -mtu 768" \
+            "$O_NEXT_SRV -dtls1 -mtu 768" \
             "$P_CLI dgram_packing=0 dtls=1 hs_timeout=500-60000 nbio=2 tickets=0" \
             0 \
             -c "HTTP/1.0 200 OK"

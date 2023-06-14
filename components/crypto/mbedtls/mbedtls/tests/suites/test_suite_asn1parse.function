@@ -417,7 +417,7 @@ void get_integer( const data_t *input,
     }
 
 #if defined(MBEDTLS_BIGNUM_C)
-    ret = mbedtls_test_read_mpi( &expected_mpi, 16, expected_hex );
+    ret = mbedtls_test_read_mpi( &expected_mpi, expected_hex );
     TEST_ASSERT( ret == 0 || ret == MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
     if( ret == MBEDTLS_ERR_MPI_BAD_INPUT_DATA )
     {
@@ -779,7 +779,7 @@ void free_named_data_list( int length )
     for( i = 0; i < length; i++ )
     {
         mbedtls_asn1_named_data *new = NULL;
-        ASSERT_ALLOC( new, sizeof( mbedtls_asn1_named_data ) );
+        ASSERT_ALLOC( new, 1 );
         new->next = head;
         head = new;
     }

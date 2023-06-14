@@ -36,20 +36,7 @@
 #define MBEDTLS_TEST_MUTEX_USAGE
 #endif
 
-#if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
-#else
-#include <stdio.h>
-#define mbedtls_fprintf    fprintf
-#define mbedtls_snprintf   snprintf
-#define mbedtls_calloc     calloc
-#define mbedtls_free       free
-#define mbedtls_exit       exit
-#define mbedtls_time       time
-#define mbedtls_time_t     time_t
-#define MBEDTLS_EXIT_SUCCESS EXIT_SUCCESS
-#define MBEDTLS_EXIT_FAILURE EXIT_FAILURE
-#endif
 
 #include <stddef.h>
 #include <stdint.h>
@@ -57,6 +44,13 @@
 #if defined(MBEDTLS_BIGNUM_C)
 #include "mbedtls/bignum.h"
 #endif
+
+/** The type of test case arguments that contain binary data. */
+typedef struct data_tag
+{
+    uint8_t *   x;
+    uint32_t    len;
+} data_t;
 
 typedef enum
 {
@@ -364,24 +358,36 @@ void mbedtls_test_err_add_check( int high, int low,
 #endif
 
 #if defined(MBEDTLS_BIGNUM_C)
-/** Read an MPI from a string.
+/** Read an MPI from a hexadecimal string.
  *
- * Like mbedtls_mpi_read_string(), but size the resulting bignum based
- * on the number of digits in the string. In particular, construct a
- * bignum with 0 limbs for an empty string, and a bignum with leading 0
- * limbs if the string has sufficiently many leading 0 digits.
+ * Like mbedtls_mpi_read_string(), but with tighter guarantees around
+ * edge cases.
  *
- * This is important so that the "0 (null)" and "0 (1 limb)" and
- * "leading zeros" test cases do what they claim.
+ * - This function guarantees that if \p s begins with '-' then the sign
+ *   bit of the result will be negative, even if the value is 0.
+ *   When this function encounters such a "negative 0", it
+ *   increments #mbedtls_test_case_uses_negative_0.
+ * - The size of the result is exactly the minimum number of limbs needed
+ *   to fit the digits in the input. In particular, this function constructs
+ *   a bignum with 0 limbs for an empty string, and a bignum with leading 0
+ *   limbs if the string has sufficiently many leading 0 digits.
+ *   This is important so that the "0 (null)" and "0 (1 limb)" and
+ *   "leading zeros" test cases do what they claim.
  *
  * \param[out] X        The MPI object to populate. It must be initialized.
- * \param radix         The radix (2 to 16).
- * \param[in] s         The null-terminated string to read from.
+ * \param[in] s         The null-terminated hexadecimal string to read from.
  *
  * \return \c 0 on success, an \c MBEDTLS_ERR_MPI_xxx error code otherwise.
  */
-/* Since the library has exactly the desired behavior, this is trivial. */
-int mbedtls_test_read_mpi( mbedtls_mpi *X, int radix, const char *s );
+int mbedtls_test_read_mpi( mbedtls_mpi *X, const char *s );
+
+/** Nonzero if the current test case had an input parsed with
+ * mbedtls_test_read_mpi() that is a negative 0 (`"-"`, `"-0"`, `"-00"`, etc.,
+ * constructing a result with the sign bit set to -1 and the value being
+ * all-limbs-0, which is not a valid representation in #mbedtls_mpi but is
+ * tested for robustness).
+ */
+extern unsigned mbedtls_test_case_uses_negative_0;
 #endif /* MBEDTLS_BIGNUM_C */
 
 #endif /* TEST_HELPERS_H */

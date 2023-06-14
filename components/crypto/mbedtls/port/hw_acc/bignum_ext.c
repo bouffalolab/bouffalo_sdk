@@ -1,16 +1,8 @@
 #include "common.h"
 
-#if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
-#else
-#include <stdio.h>
-#include <stdlib.h>
-#define mbedtls_printf     printf
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
 
-#include <string.h>
+#include "bflb_sec_pka.h"
 #include "bignum_ext.h"
 
 void dump_mpi(const char *tag, const mbedtls_mpi *bn)
@@ -27,9 +19,40 @@ void dump_mpi(const char *tag, const mbedtls_mpi *bn)
     } else {
         strcpy(buf, "<null>");
     }
-    puts(buf);
-    puts("\r\n");
+    printf(buf);
+    printf("\r\n");
     mbedtls_free(buf);
+}
+
+int mpi_words_to_reg_size(size_t words)
+{
+    size_t bytes = words * 4;
+    if (bytes <= 8) return SEC_ENG_PKA_REG_SIZE_8;
+    else if (bytes <= 16) return SEC_ENG_PKA_REG_SIZE_16;
+    else if (bytes <= 32) return SEC_ENG_PKA_REG_SIZE_32;
+    else if (bytes <= 64) return SEC_ENG_PKA_REG_SIZE_64;
+    else if (bytes <= 96) return SEC_ENG_PKA_REG_SIZE_96;
+    else if (bytes <= 128) return SEC_ENG_PKA_REG_SIZE_128;
+    else if (bytes <= 192) return SEC_ENG_PKA_REG_SIZE_192;
+    else if (bytes <= 256) return SEC_ENG_PKA_REG_SIZE_256;
+    else if (bytes <= 384) return SEC_ENG_PKA_REG_SIZE_384;
+    else if (bytes <= 512) return SEC_ENG_PKA_REG_SIZE_512;
+    else return 0; // too large
+}
+
+size_t mpi_reg_size_to_words(int reg_size)
+{
+    if (reg_size == SEC_ENG_PKA_REG_SIZE_8) return 8 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_16) return 16 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_32) return 32 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_64) return 64 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_96) return 96 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_128) return 128 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_192) return 192 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_256) return 256 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_384) return 384 / 4;
+    else if (reg_size == SEC_ENG_PKA_REG_SIZE_512) return 512 / 4;
+    else return 0;
 }
 
 size_t mpi_words(const mbedtls_mpi *mpi)

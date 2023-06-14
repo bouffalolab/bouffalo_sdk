@@ -1,18 +1,16 @@
 sdk_generate_library()
 
 ## These include paths would be exported to project level
-sdk_add_include_directories(.)
 sdk_add_include_directories(mbedtls/include)
 sdk_add_include_directories(port)
-sdk_add_include_directories(port/platform)
+sdk_add_include_directories(port/hw_acc)
 
 ## not be exported to project level
-sdk_add_private_include_directories(.)
 sdk_add_private_include_directories(mbedtls/library)
 
+sdk_add_compile_definitions(-DCONFIG_MBEDTLS)
 sdk_add_compile_definitions(-DMBEDTLS_CONFIG_FILE=\"mbedtls_sample_config.h\")
 
-sdk_library_add_sources(mbedtls/library/xtea.c)
 sdk_library_add_sources(mbedtls/library/aes.c)
 sdk_library_add_sources(mbedtls/library/aesni.c)
 sdk_library_add_sources(mbedtls/library/arc4.c)
@@ -58,6 +56,7 @@ sdk_library_add_sources(mbedtls/library/oid.c)
 sdk_library_add_sources(mbedtls/library/padlock.c)
 sdk_library_add_sources(mbedtls/library/pem.c)
 sdk_library_add_sources(mbedtls/library/pk.c)
+sdk_library_add_sources(mbedtls/library/pkparse.c)
 sdk_library_add_sources(mbedtls/library/pkcs11.c)
 sdk_library_add_sources(mbedtls/library/pkcs12.c)
 sdk_library_add_sources(mbedtls/library/pkcs5.c)
@@ -94,56 +93,60 @@ sdk_library_add_sources(mbedtls/library/x509write_crt.c)
 sdk_library_add_sources(mbedtls/library/x509write_csr.c)
 sdk_library_add_sources(mbedtls/library/xtea.c)
 
-sdk_library_add_sources(port/pkparse.c)
-
 if(CONFIG_LWIP)
   sdk_add_compile_definitions(-DMBEDTLS_NET_C)
   sdk_library_add_sources(port/net_sockets.c)
 endif()
 
-sdk_library_add_sources(port/hw_entropy_poll.c)
-sdk_library_add_sources(port/bignum_ext.c)
+sdk_library_add_sources(port/entropy_poll_alt.c)
 
-set(MBEDTLS_USE_HW 0)
+set(MBEDTLS_USE_PKA 0)
 
-# bignum HW
-if (CONFIG_MBEDTLS_BIGNUM_USE_HW)
-  set(MBEDTLS_USE_HW 1)
-  sdk_library_add_sources(port/bignum.c)
-  sdk_library_add_sources(port/hw_acc/bignum_hw.c)
-else()
-  sdk_library_add_sources(mbedtls/library/bignum.c)
+# AES HW
+if (CONFIG_MBEDTLS_AES_USE_HW)
+  sdk_add_compile_definitions(-DCONFIG_MBEDTLS_AES_USE_HW)
+  sdk_library_add_sources(port/hw_acc/aes_alt.c)
 endif()
 
 # Hash HW
 if (CONFIG_MBEDTLS_SHA1_USE_HW)
+  sdk_add_compile_definitions(-DCONFIG_MBEDTLS_SHA1_USE_HW)
   sdk_library_add_sources(port/hw_acc/sha1_alt.c)
 endif()
 
 if (CONFIG_MBEDTLS_SHA256_USE_HW)
+  sdk_add_compile_definitions(-DCONFIG_MBEDTLS_SHA256_USE_HW)
   sdk_library_add_sources(port/hw_acc/sha256_alt.c)
 endif()
 
 if (CONFIG_MBEDTLS_SHA512_USE_HW)
+  sdk_add_compile_definitions(-DCONFIG_MBEDTLS_SHA512_USE_HW)
   sdk_library_add_sources(port/hw_acc/sha512_alt.c)
 endif()
 
-# AES HW
-if (CONFIG_MBEDTLS_AES_USE_HW)
-  sdk_library_add_sources(port/hw_acc/aes_alt.c)
+# bignum HW
+if (CONFIG_MBEDTLS_BIGNUM_USE_HW)
+  set(MBEDTLS_USE_PKA 1)
+  sdk_library_add_sources(port/bignum.c)
+  sdk_library_add_sources(port/hw_acc/bignum_alt.c)
+else()
+  sdk_library_add_sources(mbedtls/library/bignum.c)
 endif()
 
 # ECC HW
 if (CONFIG_MBEDTLS_ECC_USE_HW)
-  set(MBEDTLS_USE_HW 1)
+  set(MBEDTLS_USE_PKA 1)
+  sdk_add_compile_definitions(-DCONFIG_MBEDTLS_ECC_USE_HW)
   sdk_library_add_sources(port/hw_acc/ecp_alt.c)
   sdk_library_add_sources(port/hw_acc/ecp_curves_alt.c)
 endif()
 
-if (MBEDTLS_USE_HW)
-  sdk_library_add_sources(port/hw_acc/hw_common.c)
+if(MBEDTLS_USE_PKA)
+  sdk_library_add_sources(port/hw_acc/bignum_ext.c)
 endif()
 
 if (CONFIG_MBEDTLS_SELF_TEST)
   sdk_add_compile_definitions(-DMBEDTLS_SELF_TEST)
 endif()
+
+sdk_library_add_sources(port/sec_mutex.c)

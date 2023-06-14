@@ -38,13 +38,9 @@
 #include "mbedtls/sha256.h"
 #include "mbedtls/sha512.h"
 
-#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/sm3.h"
+
 #include "mbedtls/platform.h"
-#else
-#include <stdlib.h>
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
 
 #include <string.h>
 
@@ -131,6 +127,15 @@ const mbedtls_md_info_t mbedtls_sha512_info = {
 };
 #endif
 
+#if defined(MBEDTLS_SM3_C)
+const mbedtls_md_info_t mbedtls_sm3_info = {
+    "SM3",
+    MBEDTLS_MD_SM3,
+    32,
+    64,
+};
+#endif
+
 /*
  * Reminder: update profiles in x509_crt.c when adding a new hash!
  */
@@ -167,7 +172,9 @@ static const int supported_digests[] = {
 #if defined(MBEDTLS_MD2_C)
         MBEDTLS_MD_MD2,
 #endif
-
+#if defined(MBEDTLS_SM3_C)
+        MBEDTLS_MD_SM3,
+#endif
         MBEDTLS_MD_NONE
 };
 
@@ -216,6 +223,10 @@ const mbedtls_md_info_t *mbedtls_md_info_from_string( const char *md_name )
     if( !strcmp( "SHA512", md_name ) )
         return mbedtls_md_info_from_type( MBEDTLS_MD_SHA512 );
 #endif
+#if defined(MBEDTLS_SM3_C)
+    if( !strcmp( "SM3", md_name ) )
+        return mbedtls_md_info_from_type( MBEDTLS_MD_SM3 );
+#endif
     return( NULL );
 }
 
@@ -256,6 +267,10 @@ const mbedtls_md_info_t *mbedtls_md_info_from_type( mbedtls_md_type_t md_type )
 #endif
         case MBEDTLS_MD_SHA512:
             return( &mbedtls_sha512_info );
+#endif
+#if defined(MBEDTLS_SM3_C)
+        case MBEDTLS_MD_SM3:
+            return( &mbedtls_sm3_info );
 #endif
         default:
             return( NULL );
@@ -313,6 +328,11 @@ void mbedtls_md_free( mbedtls_md_context_t *ctx )
 #endif
             case MBEDTLS_MD_SHA512:
                 mbedtls_sha512_free( ctx->md_ctx );
+                break;
+#endif
+#if defined(MBEDTLS_SM3_C)
+            case MBEDTLS_MD_SM3:
+                mbedtls_sm3_free( ctx->md_ctx );
                 break;
 #endif
             default:
@@ -381,6 +401,11 @@ int mbedtls_md_clone( mbedtls_md_context_t *dst,
 #endif
         case MBEDTLS_MD_SHA512:
             mbedtls_sha512_clone( dst->md_ctx, src->md_ctx );
+            break;
+#endif
+#if defined(MBEDTLS_SM3_C)
+            case MBEDTLS_MD_SM3:
+            mbedtls_sm3_clone( dst->md_ctx, src->md_ctx );
             break;
 #endif
         default:
@@ -454,6 +479,11 @@ int mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_inf
 #endif
         case MBEDTLS_MD_SHA512:
             ALLOC( sha512 );
+            break;
+#endif
+#if defined(MBEDTLS_SM3_C)
+        case MBEDTLS_MD_SM3:
+            ALLOC( sm3 );
             break;
 #endif
         default:

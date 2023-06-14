@@ -1,16 +1,17 @@
 #ifndef MBEDTLS_AES_ALT_H
 #define MBEDTLS_AES_ALT_H
 
-#include <bl_sec_aes.h>
+#include "bflb_sec_aes.h"
 
 /**
  * \brief The AES context-type definition.
  */
 typedef struct mbedtls_aes_context
 {
-    bl_sec_aes_t ctx;
+    struct bflb_device_s *aes;
+    struct bflb_aes_link_s link_ctx;
 }
-mbedtls_aes_context;
+mbedtls_aes_context __attribute__((aligned(32)));
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /**
