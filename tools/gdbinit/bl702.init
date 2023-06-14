@@ -1,0 +1,24 @@
+target remote :1025
+set mem inaccessible-by-default off
+set architecture riscv:rv32
+set remotetimeout 250
+#set disassemble-next-line on
+#mon gdb_breakpoint_override [hard|soft|disable]
+
+#mon reset
+
+set $pc=0x23000000
+set $mie=0
+set $mstatus=0x1880
+
+thb main
+
+mem 0x22010000 0x22014000 rw
+mem 0x42010000 0x42014000 rw
+mem 0x22014000 0x22020000 rw
+mem 0x42014000 0x42020000 rw
+mem 0x22020000  0x22030000 rw
+mem 0x42020000  0x42030000 rw
+
+#flash
+mem 0x23000000 0x23400000 ro
