@@ -51,7 +51,7 @@ sdk_add_include_directories(
 	src/common/include
 	src/common/include/zephyr
 	src/common/include/misc
-	src/common/include/toolchain
+	# src/common/include/toolchain
 	src/common/tinycrypt/include/tinycrypt
 	src/hci_onchip
 	src/bl_hci_wrapper

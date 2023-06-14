@@ -53,6 +53,15 @@
 #define LCD_COLOR_DEPTH              ILI9341_DBI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) ili9341_dbi_##_func(__VA_ARGS__)
 
+#elif defined LCD_DBI_NT35510
+
+#include "mipi_dbi/nt35510_dbi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DBI
+#define LCD_W                        NT35510_DBI_W
+#define LCD_H                        NT35510_DBI_H
+#define LCD_COLOR_DEPTH              NT35510_DBI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) nt35510_dbi_##_func(__VA_ARGS__)
+
 #elif defined LCD_DISP_QSPI_GC9C01
 
 #include "disp_qspi/gc9c01_disp_qspi.h"
@@ -143,7 +152,7 @@
 #define LCD_COLOR_DEPTH              ST7789V_SPI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) st7789v_spi_##_func(__VA_ARGS__)
 
-#elif
+#else
 #error "Please select a screen type"
 #endif
 

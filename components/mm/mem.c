@@ -184,6 +184,24 @@ void *calloc(size_t size, size_t len)
 }
 
 /****************************************************************************
+ * Name: kcalloc
+ *
+ * Description:
+ *   Allocate and zero memory from the user heap.
+ *
+ * Input Parameters:
+ *   size - Size (in bytes) of the memory region to be allocated.
+ *
+ * Returned Value:
+ *   The address of the allocated memory (NULL on failure to allocate)
+ *
+ ****************************************************************************/
+
+void *kcalloc(size_t size, size_t len)
+{
+    return bflb_calloc(KMEM_HEAP, size, len);
+}
+/****************************************************************************
  * Name: memalign
  *
  * Description:

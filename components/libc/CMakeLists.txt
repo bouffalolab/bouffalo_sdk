@@ -93,6 +93,8 @@ sdk_library_add_sources(snprintf.c)
 sdk_library_add_sources(sprintf.c)
 sdk_library_add_sources(vsprintf.c)
 sdk_library_add_sources(printf.c)
+
+sdk_add_link_options(-Wl,-wrap,snprintf -Wl,-wrap,sprintf)
 endif()
 
 # vsnprintf %f %F

@@ -3,9 +3,10 @@
 #include "semphr.h"
 #include "ring_buffer.h"
 #include "bflb_uart.h"
+#include "mem.h"
 
 static int shell_exec_argc;
-static char *shell_exec_argv[SHELL_ARG_NUM];
+static char *shell_exec_argv[SHELL_ARG_NUM+1];
 static char shell_exec_line[SHELL_CMD_SIZE];
 static ptrdiff_t shell_exec_line_diff;
 TaskHandle_t shell_exec_handle;
@@ -48,6 +49,7 @@ int shell_start_exec(cmd_function_t func, int argc, char *argv[])
     for (uint8_t i = 0; i < argc; i++) {
         shell_exec_argv[i] = argv[i] + shell_exec_line_diff;
     }
+    shell_exec_argv[argc] = NULL;
 
     __ASM volatile("fence");
     xReturned = xTaskCreate(shell_exec_task, (char *)"shell_exec_task", SHELL_EXEC_THREAD_STACK_SIZE, func, SHELL_EXEC_THREAD_PRIO, &shell_exec_handle);
@@ -77,7 +79,7 @@ void shell_release_sem(void)
     }
 }
 
-static struct bflb_device_s *uart_shell;
+struct bflb_device_s *uart_shell;
 
 void uart_shell_isr(int irq, void *arg)
 {
@@ -155,6 +157,7 @@ static void ps_cmd(int argc, char **argv)
     }
     strcpy(pcWriteBuffer, pcHeader);
     vTaskList(pcWriteBuffer + strlen(pcHeader));
+    printf("\r\n");
     printf(info);
 
     free(info);

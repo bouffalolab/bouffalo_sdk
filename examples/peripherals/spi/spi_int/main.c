@@ -52,6 +52,9 @@ int bflb_spi_poll_test(uint32_t data_width)
     /* send data */
     for (uint16_t i = 0; i < BUFF_LEN / 4; i++) {
         p_rx[i] = bflb_spi_poll_send(spi0, p_tx[i]);
+#if (SPI_CASE_SELECT == SPI_MASTER_CASE)
+        bflb_mtimer_delay_us(10); /* delay for slave device prepare ok */
+#endif
     }
 
     /* check data */

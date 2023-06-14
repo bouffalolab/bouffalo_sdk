@@ -132,27 +132,27 @@ int st7789v_spi_set_dir(uint8_t dir, uint8_t mir_flag)
     switch (dir) {
         case 0:
             if (!mir_flag)
-                param = 0x08;
+                param = 0x00;
             else
-                param = 0x48;
+                param = 0x40;
             break;
         case 1:
             if (!mir_flag)
-                param = 0x28;
+                param = 0x20;
             else
-                param = 0xA8;
+                param = 0xA0;
             break;
         case 2:
             if (!mir_flag)
-                param = 0x88;
+                param = 0x80;
             else
-                param = 0xC8;
+                param = 0xC0;
             break;
         case 3:
             if (!mir_flag)
-                param = 0xE8;
+                param = 0xE0;
             else
-                param = 0x68;
+                param = 0x60;
 
             break;
         default:

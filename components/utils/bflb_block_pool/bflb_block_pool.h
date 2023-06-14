@@ -24,6 +24,10 @@
 #ifndef _BFLB_BLOCK_POOL_H
 #define _BFLB_BLOCK_POOL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #define BFLB_BLOCK_POOL_ALIGN_1   0x00
@@ -60,5 +64,9 @@ extern int bflb_block_pool_alloc(bflb_block_pool_t *blk_pool, void **addr, uint3
 extern int bflb_block_pool_free(bflb_block_pool_t *blk_pool, void *addr);
 
 extern void bflb_block_pool_info_get(bflb_block_pool_t *blk_pool, uint32_t *total_blk, uint32_t *free_blk);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

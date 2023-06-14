@@ -39,7 +39,7 @@ USB_NOCACHE_RAM_SECTION struct usbd_msc_cfg_priv {
     uint16_t scsi_blk_size;
     uint32_t scsi_blk_nbr;
 
-    uint8_t block_buffer[CONFIG_USBDEV_MSC_BLOCK_SIZE];
+    USB_MEM_ALIGNX uint8_t block_buffer[CONFIG_USBDEV_MSC_BLOCK_SIZE];
 } usbd_msc_cfg;
 
 static void usbd_msc_reset(void)

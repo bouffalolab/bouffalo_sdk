@@ -14,7 +14,7 @@
  *
  * @return The number of characters actually written to buffer.
  */
-int snprintf(char *__restrict buf, size_t size, const char *__restrict fmt, ...)
+int __wrap_snprintf(char *__restrict buf, size_t size, const char *__restrict fmt, ...)
 {
     int n;
     va_list args;

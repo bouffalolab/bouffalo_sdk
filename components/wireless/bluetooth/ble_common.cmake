@@ -254,7 +254,7 @@ if("${CHIP}" STREQUAL "bl702l")
 endif()
 
 # ifeq ($(CONFIG_CHIP_NAME),BL616)
-if("${CHIP}" STREQUAL "bl616")
+if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl808"))
 # ifeq ($(PRIV_CONFIG_GEN_BLE),ble1m0s1bredr0)
 # CONFIG_BT_BREDR := 0
 # CONFIG_EM_SIZE := 32
@@ -592,6 +592,9 @@ endif()
 # CONFIG_LONG_RANG ?= 1
 # CONFIG_LE_PWR_CTRL ?= 1
 # CONFIG_CTE ?= 1
+# CONFIG_PHY_UPDATE ?= 1
+# CONFIG_CLK_ACC ?= 1
+# CONFIG_LE_PING ?= 1
 # CONFIG_BLE_ACT_MAX ?= 5
 sdk_ifndef(CONFIG_BT 1)
 sdk_ifndef(CONFIG_SCO_ESCO 1)
@@ -611,6 +614,9 @@ sdk_ifndef(CONFIG_BIS 1)
 sdk_ifndef(CONFIG_LONG_RANG 1)
 sdk_ifndef(CONFIG_LE_PWR_CTRL 1)
 sdk_ifndef(CONFIG_CTE 1)
+sdk_ifndef(CONFIG_PHY_UPDATE 1)
+sdk_ifndef(CONFIG_LE_PING 1)
+sdk_ifndef(CONFIG_CLK_ACC 1)
 sdk_ifndef(CONFIG_BLE_ACT_MAX 5)
 
 # ADD

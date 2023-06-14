@@ -3,9 +3,8 @@
 #include "board.h"
 
 struct bflb_device_s *uartx;
-static uint8_t uart_txbuf[128] = { 0 };
 
-static uint8_t lse_int_flag = 0;
+static volatile uint8_t lse_int_flag = 0;
 
 void uart_isr(int irq, void *arg)
 {
@@ -35,16 +34,16 @@ int main(void)
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
 
-
-    bflb_uart_errint_mask(uartx, false);
-    bflb_irq_attach(uartx->irq_num, uart_isr, NULL);
-    bflb_irq_enable(uartx->irq_num);
-
+    /* lin config must enable before uart enable */
     bflb_uart_feature_control(uartx, UART_CMD_SET_BREAK_VALUE, 4);
     bflb_uart_feature_control(uartx, UART_CMD_SET_TX_LIN_VALUE, 1);
     bflb_uart_feature_control(uartx, UART_CMD_SET_RX_LIN_VALUE, 1);
 
     bflb_uart_init(uartx, &cfg);
+
+    bflb_uart_errint_mask(uartx, false);
+    bflb_irq_attach(uartx->irq_num, uart_isr, NULL);
+    bflb_irq_enable(uartx->irq_num);
 
     bflb_uart_putchar(uartx, 0xff);
     bflb_uart_putchar(uartx, 0x1);

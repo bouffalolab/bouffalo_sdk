@@ -4,11 +4,18 @@ sdk_add_static_library(lib/libwifi6.a)
 
 add_subdirectory(bl6_os_adapter)
 
-sdk_add_compile_definitions(-DPLATFORM_PRIVDE_ERRNO)
-
 # Enable common section for wifi6
 sdk_add_compile_options(-fcommon)
 
 # disable undef warning
 sdk_add_compile_options(-Wno-undef)
 
+set(CONFIG_VIF_MAX 2)
+set(CONFIG_STA_MAX 4)
+set(CONFIG_MAC_TXQ_DEPTH 16)
+set(CONFIG_MAC_RXQ_DEPTH 12)
+
+sdk_add_compile_definitions(-DCONFIG_VIF_MAX=${CONFIG_VIF_MAX})
+sdk_add_compile_definitions(-DCONFIG_STA_MAX=${CONFIG_STA_MAX})
+sdk_add_compile_definitions(-DCONFIG_MAC_TXQ_DEPTH=${CONFIG_MAC_TXQ_DEPTH})
+sdk_add_compile_definitions(-DCONFIG_MAC_RXQ_DEPTH=${CONFIG_MAC_RXQ_DEPTH})

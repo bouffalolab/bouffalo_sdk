@@ -74,7 +74,7 @@ static struct {
 	.dst = BT_MESH_ADDR_UNASSIGNED,
 };
 
-#if defined(BL602) || defined(BL702) || defined(BL606P) || defined(BL616)
+#if defined(BL602) || defined(BL702) || defined(BL606P) || defined(BL616) || defined(BL808)
 #define vOutputString(...)  printf(__VA_ARGS__)
 #else
 #define vOutputString(...)  bl_print(SYSTEM_UART_ID, PRINT_MODULE_CLI, __VA_ARGS__)

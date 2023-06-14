@@ -97,6 +97,7 @@ EXTERN struct mem_heap_s g_pmemheap;
 
 void kmem_init(void *heapstart, size_t heapsize);
 void *kmalloc(size_t size);
+void *kcalloc(size_t size, size_t len);
 void kfree(void *addr);
 uint32_t kfree_size(void);
 

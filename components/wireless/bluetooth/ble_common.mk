@@ -362,6 +362,9 @@ CONFIG_BIS ?= 1
 CONFIG_LONG_RANG ?= 1
 CONFIG_LE_PWR_CTRL ?= 1
 CONFIG_CTE ?= 1
+CONFIG_PHY_UPDATE ?= 1
+CONFIG_CLK_ACC ?= 1
+CONFIG_LE_PING ?= 1
 
 #Update le adv data and scan rsp data when LE adertising is active, sw need 4 adv buffer at least. 
 CONFIG_BLE_ACT_MAX ?= 7

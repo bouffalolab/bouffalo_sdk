@@ -12,7 +12,7 @@
  *
  * @return The number of characters actually written to buffer.
  */
-int sprintf(char *buf, const char *format, ...)
+int __wrap_sprintf(char *buf, const char *format, ...)
 {
     int32_t n;
     va_list arg_ptr;

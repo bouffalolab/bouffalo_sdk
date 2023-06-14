@@ -334,7 +334,7 @@ struct cdc_ecm_descriptor {
     0x04,                                                  /* bLength */                       \
     CDC_CS_INTERFACE,                                      /* bDescriptorType */               \
     CDC_FUNC_DESC_ABSTRACT_CONTROL_MANAGEMENT,             /* bDescriptorSubtype */            \
-    0x02,                                                  /* bmCapabilities */                \
+    0x06,                                                  /* bmCapabilities */                \
     0x05,                                                  /* bLength */                       \
     CDC_CS_INTERFACE,                                      /* bDescriptorType */               \
     CDC_FUNC_DESC_UNION,                                   /* bDescriptorSubtype */            \

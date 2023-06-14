@@ -160,8 +160,8 @@ typedef struct {
 #if FF_FS_EXFAT
     LBA_t bitbase; /* Allocation bitmap base sector */
 #endif
-    LBA_t winsect;       /* Current sector appearing in the win[] */
-    BYTE win[FF_MAX_SS]; /* Disk access window for Directory, FAT (and file data at tiny cfg) */
+    LBA_t winsect;                                    /* Current sector appearing in the win[] */
+    BYTE __attribute__((aligned(64))) win[FF_MAX_SS]; /* Disk access window for Directory, FAT (and file data at tiny cfg) */
 } FATFS;
 
 /* Object ID and allocation information (FFOBJID) */
@@ -202,7 +202,7 @@ typedef struct {
     DWORD *cltbl; /* Pointer to the cluster link map table (nulled on open, set by application) */
 #endif
 #if !FF_FS_TINY
-    BYTE buf[FF_MAX_SS]; /* File private data read/write window */
+    BYTE __attribute__((aligned(64))) buf[FF_MAX_SS]; /* File private data read/write window */
 #endif
 } FIL;
 
@@ -367,27 +367,27 @@ void ff_mutex_give(int vol);   /* Unlock sync object */
 #define FA_OPEN_APPEND   0x30
 
 /* Fast seek controls (2nd argument of f_lseek) */
-#define CREATE_LINKMAP ((FSIZE_t)0 - 1)
+#define CREATE_LINKMAP   ((FSIZE_t)0 - 1)
 
 /* Format options (2nd argument of f_mkfs) */
-#define FM_FAT   0x01
-#define FM_FAT32 0x02
-#define FM_EXFAT 0x04
-#define FM_ANY   0x07
-#define FM_SFD   0x08
+#define FM_FAT           0x01
+#define FM_FAT32         0x02
+#define FM_EXFAT         0x04
+#define FM_ANY           0x07
+#define FM_SFD           0x08
 
 /* Filesystem type (FATFS.fs_type) */
-#define FS_FAT12 1
-#define FS_FAT16 2
-#define FS_FAT32 3
-#define FS_EXFAT 4
+#define FS_FAT12         1
+#define FS_FAT16         2
+#define FS_FAT32         3
+#define FS_EXFAT         4
 
 /* File attribute bits for directory entry (FILINFO.fattrib) */
-#define AM_RDO 0x01 /* Read only */
-#define AM_HID 0x02 /* Hidden */
-#define AM_SYS 0x04 /* System */
-#define AM_DIR 0x10 /* Directory */
-#define AM_ARC 0x20 /* Archive */
+#define AM_RDO           0x01 /* Read only */
+#define AM_HID           0x02 /* Hidden */
+#define AM_SYS           0x04 /* System */
+#define AM_DIR           0x10 /* Directory */
+#define AM_ARC           0x20 /* Archive */
 
 #ifdef __cplusplus
 }

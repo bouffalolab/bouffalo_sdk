@@ -62,8 +62,15 @@ int MMC_disk_read(BYTE *buff, LBA_t sector, UINT count)
 
 int MMC_disk_write(const BYTE *buff, LBA_t sector, UINT count)
 {
-    if (SD_OK == SDH_WriteMultiBlocks((uint8_t *)buff, sector, gSDCardInfo.blockSize, count)) {
+    status_t ret;
+
+_retry:
+    ret = SDH_WriteMultiBlocks((uint8_t *)buff, sector, gSDCardInfo.blockSize, count);
+
+    if (Status_Success == ret) {
         return 0;
+    } else if (Status_Timeout == ret) {
+        goto _retry;
     } else {
         return -1;
     }

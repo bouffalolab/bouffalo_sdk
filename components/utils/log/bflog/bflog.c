@@ -152,7 +152,16 @@
 /**
  * @}
  */
-
+#if defined(CONFIG_LOG_NCOLOR) && CONFIG_LOG_NCOLOR
+static char *bflog_color_strings[6] = {
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+};
+#else
 static char *bflog_color_strings[6] = {
     BFLOG_COLOR_START BFLOG_COLOR_RESET BFLOG_COLOR_FATAL BFLOG_COLOR_END,
     BFLOG_COLOR_START BFLOG_COLOR_RESET BFLOG_COLOR_ERROR BFLOG_COLOR_END,
@@ -161,6 +170,7 @@ static char *bflog_color_strings[6] = {
     BFLOG_COLOR_START BFLOG_COLOR_RESET BFLOG_COLOR_DEBUG BFLOG_COLOR_END,
     BFLOG_COLOR_START BFLOG_COLOR_RESET BFLOG_COLOR_TRACE BFLOG_COLOR_END
 };
+#endif
 
 static char *bflog_level_strings[6] = {
     BFLOG_LEVEL_FATAL_STRING,

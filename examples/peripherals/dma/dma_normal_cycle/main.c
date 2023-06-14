@@ -11,7 +11,7 @@ static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src3_buffer[DMA_BUFFER_LENGTH];
 static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t dst1_buffer[DMA_BUFFER_LENGTH];
 static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t dst2_buffer[DMA_BUFFER_LENGTH];
 static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t dst3_buffer[DMA_BUFFER_LENGTH];
-static uint8_t dma_tc_flag0 = 0;
+static volatile uint8_t dma_tc_flag0 = 0;
 
 struct bflb_device_s *dma0_ch0;
 

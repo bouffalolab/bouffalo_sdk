@@ -12,6 +12,14 @@ BFLOG_DEFINE_TAG(SVC_LOG, DBG_TAG, true);
 #undef BFLOG_TAG
 #define BFLOG_TAG BFLOG_GET_TAG(SVC_LOG)
 
+#ifndef LOG_THREAD_PRIO
+#define LOG_THREAD_PRIO 3
+#endif
+
+#ifndef LOG_THREAD_STACK_SIZE
+#define LOG_THREAD_STACK_SIZE 1024
+#endif
+
 /* flush notice ------------------------------------------------------------------*/
 
 static EventGroupHandle_t event_group_server_log_flush_notice;
@@ -151,10 +159,10 @@ void log_restart(void)
     /*!< create flush task */
     _ASSERT_FUNC(pdPASS == xTaskCreate(
                                /*!< task function */ task_function_log,
-                               /*!< task name     */ "LOG",
-                               /*!< stack size    */ 4096,
+                               /*!< task name     */ DBG_TAG,
+                               /*!< stack size    */ LOG_THREAD_STACK_SIZE,
                                /*!< task param    */ NULL,
-                               /*!< task priority */ 8,
+                               /*!< task priority */ LOG_THREAD_PRIO,
                                /*!< task handle   */ &task_log));
 
     LOG_I("log restart success\r\n");

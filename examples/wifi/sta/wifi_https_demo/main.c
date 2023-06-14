@@ -24,6 +24,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
+#include "mem.h"
 
 #include <lwip/tcpip.h>
 #include <lwip/sockets.h>
@@ -45,13 +46,14 @@
 #define DBG_TAG "MAIN"
 #include "log.h"
 
+struct bflb_device_s *gpio;
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define WIFI_STACK_SIZE     (1536)
-#define TASK_PRIORITY_FW    (16)
+#define WIFI_STACK_SIZE  (1536)
+#define TASK_PRIORITY_FW (16)
 
 /****************************************************************************
  * Private Types
@@ -65,8 +67,7 @@ static struct bflb_device_s *uart0;
 
 static TaskHandle_t wifi_fw_task;
 
-static wifi_conf_t conf =
-{
+static wifi_conf_t conf = {
     .country_code = "CN",
 };
 
@@ -111,70 +112,52 @@ int wifi_start_firmware_task(void)
     return 0;
 }
 
+volatile uint32_t wifi_state = 0;
 void wifi_event_handler(uint32_t code)
 {
     switch (code) {
-        case CODE_WIFI_ON_INIT_DONE:
-        {
+        case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
             wifi_mgmr_init(&conf);
-        }
-        break;
-        case CODE_WIFI_ON_MGMR_DONE:
-        {
+        } break;
+        case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
-        }
-        break;
-        case CODE_WIFI_ON_SCAN_DONE:
-        {
+        } break;
+        case CODE_WIFI_ON_SCAN_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
             wifi_mgmr_sta_scanlist();
-        }
-        break;
-        case CODE_WIFI_ON_CONNECTED:
-        {
+        } break;
+        case CODE_WIFI_ON_CONNECTED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
             void mm_sec_keydump();
             mm_sec_keydump();
-        }
-        break;
-        case CODE_WIFI_ON_GOT_IP:
-        {
+        } break;
+        case CODE_WIFI_ON_GOT_IP: {
+            wifi_state = 1;
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
-        }
-        break;
-        case CODE_WIFI_ON_DISCONNECT:
-        {
+            LOG_I("[SYS] Memory left is %d Bytes\r\n", kfree_size());
+        } break;
+        case CODE_WIFI_ON_DISCONNECT: {
+            wifi_state = 0;
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
-        }
-        break;
-        case CODE_WIFI_ON_AP_STARTED:
-        {
+        } break;
+        case CODE_WIFI_ON_AP_STARTED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
-        }
-        break;
-        case CODE_WIFI_ON_AP_STOPPED:
-        {
+        } break;
+        case CODE_WIFI_ON_AP_STOPPED: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
-        }
-        break;
-        case CODE_WIFI_ON_AP_STA_ADD:
-        {
+        } break;
+        case CODE_WIFI_ON_AP_STA_ADD: {
             LOG_I("[APP] [EVT] [AP] [ADD] %lld\r\n", xTaskGetTickCount());
-        }
-        break;
-        case CODE_WIFI_ON_AP_STA_DEL:
-        {
+        } break;
+        case CODE_WIFI_ON_AP_STA_DEL: {
             LOG_I("[APP] [EVT] [AP] [DEL] %lld\r\n", xTaskGetTickCount());
-        }
-        break;
-        default:
-        {
+        } break;
+        default: {
             LOG_I("[APP] [EVT] Unknown code %u \r\n", code);
         }
     }
 }
-
 
 int main(void)
 {
@@ -191,4 +174,3 @@ int main(void)
     while (1) {
     }
 }
-

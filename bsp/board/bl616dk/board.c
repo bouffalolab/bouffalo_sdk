@@ -272,7 +272,10 @@ void board_init(void)
 #if (defined(CONFIG_LUA) || defined(CONFIG_BFLOG) || defined(CONFIG_FATFS))
     rtc = bflb_device_get_by_name("rtc");
 #endif
-
+#ifdef CONFIG_MBEDTLS
+    extern void bflb_sec_mutex_init(void);
+    bflb_sec_mutex_init();
+#endif
     bflb_irq_restore(flag);
 }
 
@@ -577,4 +580,5 @@ static void reboot_cmd(int argc, char **argv)
     GLB_SW_POR_Reset();
 }
 SHELL_CMD_EXPORT_ALIAS(reboot_cmd, reboot, reboot);
+
 #endif
