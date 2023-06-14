@@ -53,6 +53,8 @@ src/bflb_kys.c
 src/bflb_pwm_v1.c
 src/bflb_pwm_v2.c
 src/bflb_spi_psram.c
+src/bflb_auadc.c
+src/bflb_ir.c
 )
 elseif("${CHIP}" STREQUAL "bl616")
 sdk_library_add_sources(

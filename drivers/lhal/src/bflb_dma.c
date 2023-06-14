@@ -266,7 +266,7 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev, struct bflb_dma_chann
     putreg32(lli_pool[0].dst_addr, channel_base + DMA_CxDSTADDR_OFFSET);
     putreg32(lli_pool[0].nextlli, channel_base + DMA_CxLLI_OFFSET);
     putreg32(lli_pool[0].control.WORD, channel_base + DMA_CxCONTROL_OFFSET);
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
     /* clean cache, DMA does not pass through the cache */
     bflb_l1c_dcache_clean_range((uint32_t *)(uintptr_t)lli_pool, sizeof(struct bflb_dma_channel_lli_pool_s) * lli_count_used_offset);
 #endif
@@ -284,7 +284,7 @@ void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
     lli_pool[used_lli_count - 1].nextlli = (uint32_t)(uintptr_t)&lli_pool[0];
 
     putreg32(lli_pool[0].nextlli, channel_base + DMA_CxLLI_OFFSET);
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
     /* clean cache, DMA does not pass through the cache */
     bflb_l1c_dcache_clean_range((uint32_t *)lli_pool, sizeof(struct bflb_dma_channel_lli_pool_s) * used_lli_count);
 #endif
@@ -399,7 +399,7 @@ void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
                             uint32_t dst_buf_size,
                             void (*copy)(uint8_t *data, uint32_t len))
 {
-    struct bflb_dma_channel_lli_transfer_s rx_transfers[1];
+    struct bflb_dma_channel_lli_transfer_s rx_transfers[2];
 
     rx_dma->dst_buf = dst_buf;
     rx_dma->dst_buf_size = dst_buf_size;
@@ -410,9 +410,13 @@ void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
 
     rx_transfers[0].src_addr = (uint32_t)src_addr;
     rx_transfers[0].dst_addr = (uint32_t)dst_buf;
-    rx_transfers[0].nbytes = dst_buf_size;
+    rx_transfers[0].nbytes = dst_buf_size / 2;
 
-    int used_count = bflb_dma_channel_lli_reload(dma_ch, rx_llipool, rx_llipool_size, rx_transfers, 1);
+    rx_transfers[1].src_addr = (uint32_t)src_addr;
+    rx_transfers[1].dst_addr = (uint32_t)dst_buf + dst_buf_size / 2;
+    rx_transfers[1].nbytes = dst_buf_size / 2;
+
+    int used_count = bflb_dma_channel_lli_reload(dma_ch, rx_llipool, rx_llipool_size, rx_transfers, 2);
     bflb_dma_channel_lli_link_head(dma_ch, rx_llipool, used_count);
 }
 

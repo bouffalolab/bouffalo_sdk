@@ -604,12 +604,21 @@ int usb_dc_deinit(void)
     regval |= USB_UNPLUG;
     putreg32(regval, BLFB_USB_BASE + USB_PHY_TST_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
-    regval |= USB_SFRST_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    regval = getreg32(BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
+    regval &= ~PDS_REG_USB_PHY_XTLSEL_MASK;
+    putreg32(regval, BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
 
-    while (getreg32(BLFB_USB_BASE + USB_DEV_CTL_OFFSET) & USB_SFRST_HOV) {
-    }
+    regval = getreg32(BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
+    regval &= ~PDS_REG_PU_USB20_PSW;
+    putreg32(regval, BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
+
+    regval = getreg32(BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
+    regval &= ~PDS_REG_USB_PHY_PONRST;
+    putreg32(regval, BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
+
+    regval = getreg32(BFLB_PDS_BASE + PDS_USB_CTL_OFFSET);
+    regval &= ~PDS_REG_USB_EXT_SUSP_N;
+    putreg32(regval, BFLB_PDS_BASE + PDS_USB_CTL_OFFSET);
 
     return 0;
 }

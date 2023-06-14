@@ -837,6 +837,14 @@ BL_Err_Type PDS_Turn_Off_USB(void)
     tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_REG_USB_PHY_PONRST);
     BL_WR_REG(PDS_BASE, PDS_USB_PHY_CTRL, tmpVal);
 
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_USB_CTL);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_REG_USB_SW_RST_N);
+    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_USB_CTL);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_REG_USB_EXT_SUSP_N);
+    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+
     return SUCCESS;
 }
 

@@ -193,6 +193,103 @@ const GLB_WA_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION audioPllCfg_384M[GLB_XTAL_MAX
     { &audioPll384BasicCfg_32M_38P4M_40M, 0x18000, 8 }, /*!< XTAL is RC32M */
 };
 
+/* Audio PLL Config*/
+const GLB_WA_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION audioPll240BasicCfg_24M_26M = {
+    .clkpllRefdivRatio = 2,  /*!< pll_refdiv_ratio */
+    .clkpllIntFracSw = 1,    /*!< pll_int_frac_sw */
+    .clkpllIcp1u = 1,        /*!< pll_icp_1u */
+    .clkpllIcp5u = 0,        /*!< pll_icp_5u */
+    .clkpllRz = 5,           /*!< pll_rz */
+    .clkpllCz = 2,           /*!< pll_cz */
+    .clkpllC3 = 2,           /*!< pll_c3 */
+    .clkpllR4Short = 0,      /*!< pll_r4_short */
+    .clkpllC4En = 1,         /*!< pll_r4_en */
+    .clkpllSelSampleClk = 0, /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 0,     /*!< pll_vco_speed */
+    .clkpllSdmCtrlHw = 0,    /*!< pll_sdm_ctrl_hw */
+    .clkpllSdmBypass = 0,    /*!< pll_sdm_bypass */
+};
+const GLB_WA_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION audioPll240BasicCfg_32M_38P4M_40M = {
+    .clkpllRefdivRatio = 4,  /*!< pll_refdiv_ratio */
+    .clkpllIntFracSw = 1,    /*!< pll_int_frac_sw */
+    .clkpllIcp1u = 1,        /*!< pll_icp_1u */
+    .clkpllIcp5u = 0,        /*!< pll_icp_5u */
+    .clkpllRz = 5,           /*!< pll_rz */
+    .clkpllCz = 2,           /*!< pll_cz */
+    .clkpllC3 = 2,           /*!< pll_c3 */
+    .clkpllR4Short = 0,      /*!< pll_r4_short */
+    .clkpllC4En = 1,         /*!< pll_r4_en */
+    .clkpllSelSampleClk = 1, /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 0,     /*!< pll_vco_speed */
+    .clkpllSdmCtrlHw = 0,    /*!< pll_sdm_ctrl_hw */
+    .clkpllSdmBypass = 0,    /*!< pll_sdm_bypass */
+};
+const GLB_WA_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION audioPllCfg_240M[GLB_XTAL_MAX] = {
+    { NULL, 0x0, 8 },                                   /*!< XTAL is None */
+    { &audioPll240BasicCfg_24M_26M, 0xA000, 8 },        /*!< XTAL is 24M */
+    { &audioPll240BasicCfg_32M_38P4M_40M, 0xF000, 8 },  /*!< XTAL is 32M */
+    { &audioPll240BasicCfg_32M_38P4M_40M, 0xC800, 8 },  /*!< XTAL is 38.4M */
+    { &audioPll240BasicCfg_32M_38P4M_40M, 0xC000, 8 },  /*!< XTAL is 40M */
+    { &audioPll240BasicCfg_24M_26M, 0x93B1, 8 },        /*!< XTAL is 26M */
+    { &audioPll240BasicCfg_32M_38P4M_40M, 0xF000, 8 },  /*!< XTAL is RC32M */
+};
+
+/* Audio PLL Config*/
+const GLB_WA_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION audioPll245P76BasicCfg_24M = {
+    .clkpllRefdivRatio = 2,  /*!< pll_refdiv_ratio */
+    .clkpllIntFracSw = 1,    /*!< pll_int_frac_sw */
+    .clkpllIcp1u = 1,        /*!< pll_icp_1u */
+    .clkpllIcp5u = 0,        /*!< pll_icp_5u */
+    .clkpllRz = 5,           /*!< pll_rz */
+    .clkpllCz = 2,           /*!< pll_cz */
+    .clkpllC3 = 2,           /*!< pll_c3 */
+    .clkpllR4Short = 0,      /*!< pll_r4_short */
+    .clkpllC4En = 1,         /*!< pll_r4_en */
+    .clkpllSelSampleClk = 1, /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 0,     /*!< pll_vco_speed */
+    .clkpllSdmCtrlHw = 0,    /*!< pll_sdm_ctrl_hw */
+    .clkpllSdmBypass = 0,    /*!< pll_sdm_bypass */
+};
+const GLB_WA_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION audioPll245P76BasicCfg_26M = {
+    .clkpllRefdivRatio = 2,  /*!< pll_refdiv_ratio */
+    .clkpllIntFracSw = 1,    /*!< pll_int_frac_sw */
+    .clkpllIcp1u = 1,        /*!< pll_icp_1u */
+    .clkpllIcp5u = 0,        /*!< pll_icp_5u */
+    .clkpllRz = 5,           /*!< pll_rz */
+    .clkpllCz = 2,           /*!< pll_cz */
+    .clkpllC3 = 2,           /*!< pll_c3 */
+    .clkpllR4Short = 0,      /*!< pll_r4_short */
+    .clkpllC4En = 1,         /*!< pll_r4_en */
+    .clkpllSelSampleClk = 0, /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 0,     /*!< pll_vco_speed */
+    .clkpllSdmCtrlHw = 0,    /*!< pll_sdm_ctrl_hw */
+    .clkpllSdmBypass = 0,    /*!< pll_sdm_bypass */
+};
+const GLB_WA_PLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION audioPll245P76BasicCfg_32M_38P4M_40M = {
+    .clkpllRefdivRatio = 4,  /*!< pll_refdiv_ratio */
+    .clkpllIntFracSw = 1,    /*!< pll_int_frac_sw */
+    .clkpllIcp1u = 1,        /*!< pll_icp_1u */
+    .clkpllIcp5u = 0,        /*!< pll_icp_5u */
+    .clkpllRz = 5,           /*!< pll_rz */
+    .clkpllCz = 2,           /*!< pll_cz */
+    .clkpllC3 = 2,           /*!< pll_c3 */
+    .clkpllR4Short = 0,      /*!< pll_r4_short */
+    .clkpllC4En = 1,         /*!< pll_r4_en */
+    .clkpllSelSampleClk = 1, /*!< pll_sel_sample_clk */
+    .clkpllVcoSpeed = 0,     /*!< pll_vco_speed */
+    .clkpllSdmCtrlHw = 0,    /*!< pll_sdm_ctrl_hw */
+    .clkpllSdmBypass = 0,    /*!< pll_sdm_bypass */
+};
+const GLB_WA_PLL_Cfg_Type ATTR_CLOCK_CONST_SECTION audioPllCfg_245P76M[GLB_XTAL_MAX] = {
+    { NULL, 0x0, 8 },                                       /*!< XTAL is None */
+    { &audioPll245P76BasicCfg_24M, 0xA3D7, 8 },             /*!< XTAL is 24M */
+    { &audioPll245P76BasicCfg_32M_38P4M_40M, 0xF5C2, 8 },   /*!< XTAL is 32M */
+    { &audioPll245P76BasicCfg_32M_38P4M_40M, 0xCCCC, 8 },   /*!< XTAL is 38.4M */
+    { &audioPll245P76BasicCfg_32M_38P4M_40M, 0xC49B, 8 },   /*!< XTAL is 40M */
+    { &audioPll245P76BasicCfg_26M, 0x973C, 8 },             /*!< XTAL is 26M */
+    { &audioPll245P76BasicCfg_32M_38P4M_40M, 0xF5C2, 8 },   /*!< XTAL is RC32M */
+};
+
 const GLB_SLAVE_GRP_0_TBL_Type ATTR_CLOCK_CONST_SECTION glb_slave_grp_0_table[GLB_SLAVE_GRP_0_MAX] = {
     { GLB_ADC_CFG0_OFFSET, GLB_GPADC_32M_DIV_EN_POS, GLB_GPADC_32M_CLK_SEL_POS, GLB_GPADC_32M_CLK_DIV_POS, GLB_GPADC_32M_DIV_EN_LEN, GLB_GPADC_32M_CLK_SEL_LEN, GLB_GPADC_32M_CLK_DIV_LEN },
     { GLB_IR_CFG0_OFFSET, GLB_IR_CLK_EN_POS, 0, GLB_IR_CLK_DIV_POS, GLB_IR_CLK_EN_LEN, 0, GLB_IR_CLK_DIV_LEN },
@@ -1020,6 +1117,26 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
         .jedec_id = 0x186085,
         //.name="Puya_Q128H_128_33",
         .cfg = &flash_cfg_Puya_Q32H,
+    },
+    {
+        .jedec_id = 0x1540a1,
+        //.name="FM25Q_16A_16_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x1640a1,
+        //.name="FM25Q_32_32_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x1740a1,
+        //.name="FM25Q_64_64_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x1840a1,
+        //.name="FM25Q_128_128_33",
+        .cfg = &flash_cfg_Winb_16JV,
     },
     {
         .jedec_id = 0x1828a1,
@@ -3287,6 +3404,15 @@ void EF_Ctrl_Read_Direct(uint32_t offset, uint32_t *pword, uint32_t count)
     ARCH_MemCpy4(pword, pEfuseStart0, count);
 }
 
+/****************************************************************************/ /**
+ * @brief  HBN Re-Cal RC32K
+ *
+ * @param  expected_counter: Expected rtc counter
+ * @param  actual_counter: Actual rtc counter
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION HBN_Recal_RC32K(int32_t expected_counter, int32_t actual_counter)
 {
     int32_t tmpVal = 0;
@@ -3322,3 +3448,149 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Recal_RC32K(int32_t expected_counter, int32_t a
 
     return SUCCESS;
 }
+
+/****************************************************************************/ /**
+ * @brief  Configure AUPLL clock to 240M
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_240M(void)
+{
+    /* GLB_XTAL_Type */
+    uint8_t xtalType=GLB_XTAL_NONE;
+
+    HBN_Get_Xtal_Type(&xtalType);
+    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType,audioPllCfg_240M);
+}
+
+/****************************************************************************/ /**
+ * @brief  Configure AUPLL clock to 245.76M
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_245P76M(void)
+{
+    /* GLB_XTAL_Type */
+    uint8_t xtalType=GLB_XTAL_NONE;
+
+    HBN_Get_Xtal_Type(&xtalType);
+    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType,audioPllCfg_245P76M);
+}
+
+/****************************************************************************/ /**
+ * @brief  Set mcu System clock Simple
+ *
+ * @param  clkFreq: mcu system clock type
+ * @param  mcuClkDiv: HCLK divider
+ * @param  mcuPBclkDiv: BCLK divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Simple_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_Type clkFreq, uint8_t mcuClkDiv, uint8_t mcuPBclkDiv)
+{
+    uint32_t tmpVal;
+    uint32_t timeout;
+
+    CHECK_PARAM(IS_GLB_MCU_SYS_CLK_TYPE(clkFreq));
+
+    HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
+
+    /* select pll output clock before select root clock */
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_CPU_CORE_CFG1);
+    switch (clkFreq) {
+        case GLB_MCU_SYS_CLK_TOP_AUPLL_DIV2:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 0);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_AUPLL_DIV1:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 1);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 2);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 3);
+            break;
+        default:
+            break;
+    }
+    BL_WR_REG(PDS_BASE, PDS_CPU_CORE_CFG1, tmpVal);
+
+    /* clock div */
+    /* config hclk_div=mcuClkDiv */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_HCLK_DIV, mcuClkDiv);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG0, tmpVal);
+    /* config bclk_div=mcuPBclkDiv */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_BCLK_DIV, mcuPBclkDiv);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG0, tmpVal);
+    /* bclk act pulse */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_BCLK_DIV_ACT_PULSE, 1);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG1, tmpVal);
+    timeout = 1024;
+    do {
+        tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG1);
+        tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_STS_BCLK_PROT_DONE);
+    } while ((--timeout) && (!tmpVal));
+    if (!timeout) {
+        return ERROR;
+    }
+
+    /* select root clock */
+    switch (clkFreq) {
+        case GLB_MCU_SYS_CLK_RC32M:
+            HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_RC32M);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
+            break;
+        case GLB_MCU_SYS_CLK_XTAL:
+            HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_AUPLL_DIV2:
+            /* For high speed, set DIV first */
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_TOP_AUPLL_DIV2);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_AUPLL_DIV1:
+            /* For high speed, set DIV first */
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_TOP_AUPLL_DIV1);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M:
+            /* For high speed, set DIV first */
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_TOP_WIFIPLL_240M);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M:
+            /* For high speed, set DIV first */
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_TOP_WIFIPLL_320M);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            break;
+        default:
+            break;
+    }
+
+    GLB_CLK_SET_DUMMY_WAIT;
+
+    return SUCCESS;
+}
+

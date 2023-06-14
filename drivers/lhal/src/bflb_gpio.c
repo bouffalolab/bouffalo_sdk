@@ -1,8 +1,5 @@
 #include "bflb_gpio.h"
 #include "hardware/gpio_reg.h"
-#if defined(BL702)
-#include "hardware/hbn_reg.h"
-#endif
 
 void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 {
@@ -29,9 +26,6 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 #endif
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
-#define GLB_BASE_ADDR                         0x40000000
-#define GLB_PARM_OFFSET_ADDR                  0x80
-#define GLB_GPIO_USE_PSRAM__IO_OFFSET_ADDR    0x88
     uint32_t regval;
     uint8_t real_pin;
     uint8_t is_odd = 0;
@@ -44,10 +38,11 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     real_pin = pin;
 
 #if defined(BL702)
+#define GLB_BASE                      0x40000000
+#define GLB_GPIO_USE_PSRAM__IO_OFFSET 0x88
     /* SF pad use exclusive IE/PD/PU/DRIVE/SMTCTRL */
     if (pin >= 23 && pin <= 28) {
-        regval = getreg32(GLB_BASE_ADDR + GLB_GPIO_USE_PSRAM__IO_OFFSET_ADDR);
-        if (regval & (1 << (pin - 23))) {
+        if (getreg32(GLB_BASE + GLB_GPIO_USE_PSRAM__IO_OFFSET) & (1 << (pin - 23))) {
             real_pin += 9;
         }
     }
@@ -102,16 +97,20 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     cfg |= (function << (is_odd * 16 + 8));
 #if defined(BL702L)
     /* configure output mode:set and clr mode */
-    if ((function != 22) || (function != 21)) {
+    if ((function != 22) && (function != 21)) {
         cfg |= (1 << (is_odd * 16 + 15));
     }
 #endif
 
 #if defined(BL702)
+#define HBN_BASE_                    ((uint32_t)0x4000F000)
+#define HBN_IRQ_MODE_OFFSET          (0x14)
+#define HBN_REG_AON_PAD_IE_SMT_SHIFT (8U)
+#define HBN_REG_AON_PAD_IE_SMT_MASK  (0x1f << HBN_REG_AON_PAD_IE_SMT_SHIFT)
     /* always on pads IE control (in HBN) */
     if (pin >= 9 && pin <= 13) {
-        regval = getreg32(HBN_BASE + HBN_IRQ_MODE_OFFSET);
-        uint32_t aon_pad_ie_smt = (regval & HBN_REG_AON_PAD_IE_SMT_MSK) >> HBN_REG_AON_PAD_IE_SMT_POS;
+        regval = getreg32(HBN_BASE_ + HBN_IRQ_MODE_OFFSET);
+        uint32_t aon_pad_ie_smt = (regval & HBN_REG_AON_PAD_IE_SMT_MASK) >> HBN_REG_AON_PAD_IE_SMT_SHIFT;
 
         if (mode != GPIO_ANALOG) {
             /* not analog mode */
@@ -128,9 +127,9 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
             aon_pad_ie_smt &= ~(1 << (pin - 9));
         }
 
-        regval &= HBN_REG_AON_PAD_IE_SMT_UMSK;
-        regval |= aon_pad_ie_smt << HBN_REG_AON_PAD_IE_SMT_POS;
-        putreg32(regval, HBN_BASE + HBN_IRQ_MODE_OFFSET);
+        regval &= ~HBN_REG_AON_PAD_IE_SMT_MASK;
+        regval |= (aon_pad_ie_smt << HBN_REG_AON_PAD_IE_SMT_SHIFT);
+        putreg32(regval, HBN_BASE_ + HBN_IRQ_MODE_OFFSET);
     }
 
     /* Pins 23...28: SF pad use exclusive IE/PD/PU/DRIVE/SMTCTRL */

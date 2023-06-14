@@ -33,40 +33,38 @@
   *
   ******************************************************************************
   */
-
+#include "bflb_efuse.h"
 #include "bl702_ef_cfg.h"
 #include "bl702_glb.h"
 #include "hardware/ef_data_reg.h"
 
-extern int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload);
-
 static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {
         .name = "rc32m",
-        .en_addr = 0x78 * 8 + 1,
-        .parity_addr = 0x78 * 8 + 0,
-        .value_addr = 0x7C * 8 + 4,
+        .en_addr = 0x0C * 8 + 19,
+        .parity_addr = 0x0C * 8 + 18,
+        .value_addr = 0x0C * 8 + 10,
         .value_len = 8,
     },
     {
         .name = "rc32k",
-        .en_addr = 0xEC * 8 + 19,
-        .parity_addr = 0xEC * 8 + 18,
-        .value_addr = 0xEC * 8 + 8,
+        .en_addr = 0x0C * 8 + 31,
+        .parity_addr = 0x0C * 8 + 30,
+        .value_addr = 0x0C * 8 + 20,
         .value_len = 10,
     },
     {
         .name = "gpadc_gain",
-        .en_addr = 0xF0 * 8 + 27,
-        .parity_addr = 0xF0 * 8 + 26,
-        .value_addr = 0xF0 * 8 + 14,
+        .en_addr = 0x78 * 8 + 14,
+        .parity_addr = 0x78 * 8 + 13,
+        .value_addr = 0x78 * 8 + 1,
         .value_len = 12,
     },
     {
         .name = "tsen",
-        .en_addr = 0xF0 * 8 + 13,
-        .parity_addr = 0xF0 * 8 + 12,
-        .value_addr = 0xF0 * 8 + 0,
+        .en_addr = 0x78 * 8 + 0,
+        .parity_addr = 0x7C * 8 + 12,
+        .value_addr = 0x7C * 8 + 0,
         .value_len = 12,
     }
 };

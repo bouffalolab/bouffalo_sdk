@@ -251,12 +251,13 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Program_Direct_R0(uint32_t index, uint32_t *data, uint32_t len){
     return RomDriver_EF_Ctrl_Program_Direct_R0(index,data,len);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Program_Efuse_0(void){
     return RomDriver_EF_Ctrl_Program_Efuse_0();
 }
-#endif
+
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Read_ADC_Gain_Trim(Efuse_ADC_Gain_Coeff_Type *trim){

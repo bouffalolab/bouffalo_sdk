@@ -8,7 +8,7 @@
 #define ADC_GPIP_BASE ((uint32_t)0x20002000)
 #endif
 
-volatile float coe = 1.0;
+volatile float coe = 1.0f;
 volatile uint32_t tsen_offset;
 
 void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
@@ -462,21 +462,21 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                     conv_result = 4095;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 4096 * ref;
+                result[i].millivolt = (int32_t)result[i].value / 4095 * ref;
             } else if (resolution == ADC_RESOLUTION_14B) {
                 conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2) / coe);
                 if (conv_result > 16383) {
                     conv_result = 16383;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 16384 * ref;
+                result[i].millivolt = (int32_t)result[i].value / 16383 * ref;
             } else if (resolution == ADC_RESOLUTION_16B) {
                 conv_result = (uint32_t)((buffer[i] & 0xffff) / coe);
                 if (conv_result > 65535) {
                     conv_result = 65535;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (int32_t)result[i].value / 65536.0 * ref;
+                result[i].millivolt = (int32_t)result[i].value / 65535 * ref;
             } else {
             }
         }
@@ -499,21 +499,21 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                     conv_result = 2047;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 2048 * ref;
+                result[i].millivolt = (int32_t)result[i].value / 2047 * ref;
             } else if (resolution == ADC_RESOLUTION_14B) {
                 conv_result = (uint32_t)(((tmp & 0xffff) >> 2) / coe);
                 if (conv_result > 8191) {
                     conv_result = 8191;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 8192 * ref;
+                result[i].millivolt = (int32_t)result[i].value / 8191 * ref;
             } else if (resolution == ADC_RESOLUTION_16B) {
                 conv_result = (uint32_t)((tmp & 0xffff) / coe);
                 if (conv_result > 32767) {
                     conv_result = 32767;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (float)result[i].value / 32768 * ref;
+                result[i].millivolt = (int32_t)result[i].value / 32767 * ref;
             } else {
             }
 
@@ -540,17 +540,18 @@ void bflb_adc_tsen_init(struct bflb_device_s *dev, uint8_t tsen_mod)
 
     regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
     regval &= ~AON_GPADC_TSVBE_LOW;
-    regval |= (2 << AON_GPADC_DLY_SEL_SHIFT);
-    regval |= (0 << AON_GPADC_TEST_SEL_SHIFT);
     regval &= ~AON_GPADC_TEST_EN;
+    regval &= ~AON_GPADC_TEST_SEL_MASK;
+    regval &= ~AON_GPADC_PGA_VCMI_EN;
+    regval |= (1 << AON_GPADC_CHOP_MODE_SHIFT); /* Vref AZ */
+    regval |= (2 << AON_GPADC_DLY_SEL_SHIFT);
     regval |= AON_GPADC_TS_EN;
     if (tsen_mod) {
         regval |= AON_GPADC_TSEXT_SEL;
     } else {
         regval &= ~AON_GPADC_TSEXT_SEL;
     }
-    regval |= (2 << AON_GPADC_PGA_VCM_SHIFT);
-    regval &= ~AON_GPADC_PGA_VCMI_EN;
+    regval |= (1 << AON_GPADC_PGA_VCM_SHIFT);
     regval |= (0 << AON_GPADC_PGA_OS_CAL_SHIFT);
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 
@@ -613,9 +614,9 @@ float bflb_adc_tsen_get_temp(struct bflb_device_s *dev)
     bflb_adc_parse_result(dev, &raw_data, &result, 1);
     v1 = result.value;
     if (v0 > v1) {
-        temp = (((float)v0 - (float)v1) - (float)tsen_offset) / 7.753;
+        temp = (((float)v0 - (float)v1) - (float)tsen_offset) / 7.753f;
     } else {
-        temp = (((float)v1 - (float)v0) - (float)tsen_offset) / 7.753;
+        temp = (((float)v1 - (float)v0) - (float)tsen_offset) / 7.753f;
     }
 
     return temp;

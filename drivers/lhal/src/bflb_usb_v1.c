@@ -52,7 +52,7 @@
 #define GLB_USB_SLEWRATE_P_RISE_SHIFT (28U)
 #define GLB_USB_SLEWRATE_P_RISE_MASK  (0x7 << GLB_USB_SLEWRATE_P_RISE_SHIFT)
 
-#define USB_NUM_BIDIR_ENDPOINTS 9
+#define USB_NUM_BIDIR_ENDPOINTS 8
 
 /* Endpoint state */
 struct bl_ep_state {

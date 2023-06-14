@@ -74,7 +74,6 @@
 #ifndef BFLB_USE_HAL_DRIVER
 static intCallback_Type *glbBmxToIntCbfArra[BMX_TO_INT_ALL] = { NULL };
 #endif
-static BL_Err_Type GLB_Get_And_Clr_First_Set_From_U64(uint64_t *val, uint32_t *bit);
 
 /*@} end of group GLB_Private_Types */
 
@@ -4422,7 +4421,7 @@ BL_Err_Type GLB_Disrst_Set(uint8_t enable, GLB_DISRST_Type disrst)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-static BL_Err_Type GLB_Get_And_Clr_First_Set_From_U64(uint64_t *val, uint32_t *bit)
+BL_Err_Type GLB_Get_And_Clr_First_Set_From_U64(uint64_t *val, uint32_t *bit)
 {
     if (!*val) {
         return ERROR;

@@ -1,13 +1,13 @@
 #include <stdint.h>
 
-#define __STARTUP_CLEAR_BSS 1
+#define __STARTUP_CLEAR_BSS      1
+#define __STARTUP_CLEAR_WIFI_BSS 1
 
 /*----------------------------------------------------------------------------
   Linker generated Symbols
  *----------------------------------------------------------------------------*/
 extern uint32_t __itcm_load_addr;
 extern uint32_t __dtcm_load_addr;
-extern uint32_t __system_ram_load_addr;
 extern uint32_t __ram_load_addr;
 extern uint32_t __nocache_ram_load_addr;
 
@@ -21,6 +21,8 @@ extern uint32_t __ram_data_start__;
 extern uint32_t __ram_data_end__;
 extern uint32_t __bss_start__;
 extern uint32_t __bss_end__;
+extern uint32_t __wifi_bss_start;
+extern uint32_t __wifi_bss_end;
 extern uint32_t __noinit_data_start__;
 extern uint32_t __noinit_data_end__;
 #ifndef CONIFG_DISABLE_NOCACHE_RAM_LOAD
@@ -74,7 +76,7 @@ void start_load(void)
     for (; pDest < &__nocache_ram_data_end__;) {
         *pDest++ = *pSrc++;
     }
-#endif    
+#endif
 
 #ifdef __STARTUP_CLEAR_BSS
     /*  Single BSS section scheme.
@@ -88,6 +90,22 @@ void start_load(void)
     pDest = &__bss_start__;
 
     for (; pDest < &__bss_end__;) {
+        *pDest++ = 0ul;
+    }
+
+#endif
+#ifdef __STARTUP_CLEAR_WIFI_BSS
+    /*  Single BSS section scheme.
+	 *
+	 *  The BSS section is specified by following symbols
+	 *    __wifi_bss_start: start of the BSS section.
+	 *    __wifi_bss_end: end of the BSS section.
+	 *
+	 *  Both addresses must be aligned to 4 bytes boundary.
+	 */
+    pDest = &__wifi_bss_start;
+
+    for (; pDest < &__wifi_bss_end;) {
         *pDest++ = 0ul;
     }
 

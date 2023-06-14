@@ -696,7 +696,7 @@ void ATTR_TCM_SECTION pm_pds_mode_enter(enum pm_pds_sleep_level pds_level,
     pPdsCfg->pdsCtl.pdsCtlRfSel = 0;
 #endif
 
-    if (0 != (0xF & BL_RD_REG(PDS_BASE, PDS_GPIO_I_SET))) {
+    if (0 != BL_RD_REG(PDS_BASE, PDS_GPIO_I_SET)) {
         pPdsCfg->pdsCtl.ctrlGpioIePuPd = 1;
     }
 
@@ -1017,13 +1017,14 @@ void pm_rc32k_auto_cal(void)
 
 void hal_pm_ldo11_use_ext_dcdc(void)
 {
-    for (uint8_t i = 0; i < 9; i++) {
-        HBN_Set_Ldo11_Rt_Vout(9 - i);
-        HBN_Set_Ldo11_Soc_Vout(9 - i);
-        arch_delay_ms(1);
-    }
-    HBN_Set_Ldo11_Rt_Vout(0);
-    HBN_Set_Ldo11_Soc_Vout(0);
+    AON_Output_Float_DCDC18();
+
+    HBN_Set_Ldo11_Rt_Vout(9);
+    HBN_Set_Ldo11_Soc_Vout(9);
+    arch_delay_ms(1);
+
+    HBN_Set_Ldo11_Rt_Vout(8);
+    HBN_Set_Ldo11_Soc_Vout(8);
 }
 __WEAK void pm_irq_callback(enum pm_event_type event)
 {
