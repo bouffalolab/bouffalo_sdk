@@ -255,7 +255,7 @@ macro(project name)
       COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
 
       # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${proj_name}.elf> ${HEX_FILE}
-      # COMMAND ${SIZE} $<TARGET_FILE:${proj_name}.elf>
+      # COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${proj_name}.elf>
       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${proj_name}.elf> ${OUTPUT_DIR}/${name}/${proj_name}.elf
       COMMAND ${CMAKE_COMMAND} -E copy ${ASM_FILE} ${OUTPUT_DIR}/${name}/${proj_name}.asm
       COMMAND ${CMAKE_COMMAND} -E copy ${MAP_FILE} ${OUTPUT_DIR}/${name}/${proj_name}.map
@@ -270,7 +270,7 @@ macro(project name)
       COMMAND ${CMAKE_OBJDUMP} -d -S $<TARGET_FILE:${proj_name}.elf> >${ASM_FILE}
 
       # COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${proj_name}.elf> ${HEX_FILE}
-      # COMMAND ${SIZE} $<TARGET_FILE:${proj_name}.elf>
+      # COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${proj_name}.elf>
       COMMENT "Generate ${BIN_FILE}\r\n"
     )
   endif()
