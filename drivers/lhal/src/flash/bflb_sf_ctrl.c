@@ -36,6 +36,9 @@
 
 #include "bflb_sf_ctrl.h"
 #include "hardware/sf_ctrl_reg.h"
+#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#include "csi_core.h"
+#endif
 
 /** @addtogroup  BL628_Peripheral_Driver
  *  @{
