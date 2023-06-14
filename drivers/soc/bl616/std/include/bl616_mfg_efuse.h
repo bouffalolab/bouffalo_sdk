@@ -3,6 +3,10 @@
 
 #include "stdint.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 uint8_t mfg_efuse_get_rf_cal_slots(void);
 void mfg_efuse_set_rf_cal_slots(uint8_t slots);
 uint8_t mfg_efuse_is_xtal_capcode_slot_empty(uint8_t reload);
@@ -27,5 +31,9 @@ void mfg_efuse_write_bz_poweroffset(void);
 int mfg_efuse_read_bz_poweroffset(int8_t pwr_offset[20], uint8_t reload);
 void mfg_efuse_program(uint32_t addr,uint32_t *pword,uint32_t countInword,uint32_t program);
 void mfg_efuse_read(uint32_t addr,uint32_t *pword,uint32_t countInword,uint8_t reload);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*__BL616_MFG_EFUSE_H__*/

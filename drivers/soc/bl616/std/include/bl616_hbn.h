@@ -42,6 +42,10 @@
 #include "bl616_common.h"
 #include "bflb_sflash.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -683,5 +687,9 @@ BL_Err_Type HBN_Clear_RTC_INT(void);
 /*@} end of group HBN */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_HBN_H__ */

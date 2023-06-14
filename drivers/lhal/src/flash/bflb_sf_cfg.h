@@ -62,89 +62,89 @@
 /** @defgroup  SF_CFG_Public_Macros
  *  @{
  */
-#define BFLB_GPIO_FUNC_SF             2
+#define BFLB_GPIO_FUNC_SF 2
 #if defined(BL628) || defined(BL616)
 /* Flash option sf2 */
 /* Flash CLK */
-#define BFLB_EXTFLASH_CLK0_GPIO       GPIO_PIN_8
+#define BFLB_EXTFLASH_CLK0_GPIO   GPIO_PIN_8
 /* FLASH CS */
-#define BFLB_EXTFLASH_CS0_GPIO        GPIO_PIN_4
+#define BFLB_EXTFLASH_CS0_GPIO    GPIO_PIN_4
 /* FLASH DATA */
-#define BFLB_EXTFLASH_DATA00_GPIO     GPIO_PIN_7
-#define BFLB_EXTFLASH_DATA10_GPIO     GPIO_PIN_5
-#define BFLB_EXTFLASH_DATA20_GPIO     GPIO_PIN_6
-#define BFLB_EXTFLASH_DATA30_GPIO     GPIO_PIN_9
+#define BFLB_EXTFLASH_DATA00_GPIO GPIO_PIN_7
+#define BFLB_EXTFLASH_DATA10_GPIO GPIO_PIN_5
+#define BFLB_EXTFLASH_DATA20_GPIO GPIO_PIN_6
+#define BFLB_EXTFLASH_DATA30_GPIO GPIO_PIN_9
 /* Flash option sf3 */
 /* Flash CLK */
-#define BFLB_EXTFLASH_CLK1_GPIO       GPIO_PIN_15
+#define BFLB_EXTFLASH_CLK1_GPIO   GPIO_PIN_15
 /* FLASH CS */
-#define BFLB_EXTFLASH_CS1_GPIO        GPIO_PIN_20
+#define BFLB_EXTFLASH_CS1_GPIO    GPIO_PIN_20
 /* FLASH DATA */
-#define BFLB_EXTFLASH_DATA01_GPIO     GPIO_PIN_16
-#define BFLB_EXTFLASH_DATA11_GPIO     GPIO_PIN_19
-#define BFLB_EXTFLASH_DATA21_GPIO     GPIO_PIN_18
-#define BFLB_EXTFLASH_DATA31_GPIO     GPIO_PIN_14
+#define BFLB_EXTFLASH_DATA01_GPIO GPIO_PIN_16
+#define BFLB_EXTFLASH_DATA11_GPIO GPIO_PIN_19
+#define BFLB_EXTFLASH_DATA21_GPIO GPIO_PIN_18
+#define BFLB_EXTFLASH_DATA31_GPIO GPIO_PIN_14
 #elif defined(BL808) || defined(BL606P)
 /* Flash option sf2 */
 /* Flash CLK */
-#define BFLB_EXTFLASH_CLK0_GPIO       GPIO_PIN_34
+#define BFLB_EXTFLASH_CLK0_GPIO   GPIO_PIN_34
 /* FLASH CS */
-#define BFLB_EXTFLASH_CS0_GPIO        GPIO_PIN_35
+#define BFLB_EXTFLASH_CS0_GPIO    GPIO_PIN_35
 /* FLASH DATA */
-#define BFLB_EXTFLASH_DATA00_GPIO     GPIO_PIN_36
-#define BFLB_EXTFLASH_DATA10_GPIO     GPIO_PIN_37
-#define BFLB_EXTFLASH_DATA20_GPIO     GPIO_PIN_38
-#define BFLB_EXTFLASH_DATA30_GPIO     GPIO_PIN_39
+#define BFLB_EXTFLASH_DATA00_GPIO GPIO_PIN_36
+#define BFLB_EXTFLASH_DATA10_GPIO GPIO_PIN_37
+#define BFLB_EXTFLASH_DATA20_GPIO GPIO_PIN_38
+#define BFLB_EXTFLASH_DATA30_GPIO GPIO_PIN_39
 #elif defined(BL702L)
 /* Flash option */
 /* Flash CLK */
-#define BFLB_EXTFLASH_CLK0_GPIO       GPIO_PIN_27
+#define BFLB_EXTFLASH_CLK0_GPIO   GPIO_PIN_27
 /* FLASH CS */
-#define BFLB_EXTFLASH_CS0_GPIO        GPIO_PIN_26
+#define BFLB_EXTFLASH_CS0_GPIO    GPIO_PIN_26
 /* FLASH DATA */
-#define BFLB_EXTFLASH_DATA00_GPIO     GPIO_PIN_23
-#define BFLB_EXTFLASH_DATA10_GPIO     GPIO_PIN_25
-#define BFLB_EXTFLASH_DATA20_GPIO     GPIO_PIN_24
-#define BFLB_EXTFLASH_DATA30_GPIO     GPIO_PIN_28
+#define BFLB_EXTFLASH_DATA00_GPIO GPIO_PIN_23
+#define BFLB_EXTFLASH_DATA10_GPIO GPIO_PIN_25
+#define BFLB_EXTFLASH_DATA20_GPIO GPIO_PIN_24
+#define BFLB_EXTFLASH_DATA30_GPIO GPIO_PIN_28
 #elif defined(BL702)
 /* Flash option 0 */
 /* Flash CLK */
-#define BFLB_EXTFLASH_CLK0_GPIO       GPIO_PIN_21
+#define BFLB_EXTFLASH_CLK0_GPIO      GPIO_PIN_21
 /* FLASH CS */
-#define BFLB_EXTFLASH_CS0_GPIO        GPIO_PIN_19
+#define BFLB_EXTFLASH_CS0_GPIO       GPIO_PIN_19
 /* FLASH DATA */
-#define BFLB_EXTFLASH_DATA00_GPIO     GPIO_PIN_17
-#define BFLB_EXTFLASH_DATA10_GPIO     GPIO_PIN_18
-#define BFLB_EXTFLASH_DATA20_GPIO     GPIO_PIN_22
-#define BFLB_EXTFLASH_DATA30_GPIO     GPIO_PIN_20
+#define BFLB_EXTFLASH_DATA00_GPIO    GPIO_PIN_17
+#define BFLB_EXTFLASH_DATA10_GPIO    GPIO_PIN_18
+#define BFLB_EXTFLASH_DATA20_GPIO    GPIO_PIN_22
+#define BFLB_EXTFLASH_DATA30_GPIO    GPIO_PIN_20
 /* Flash option 1 */
 /* Flash CLK */
-#define BFLB_EXTFLASH_CLK1_GPIO       GPIO_PIN_27
+#define BFLB_EXTFLASH_CLK1_GPIO      GPIO_PIN_27
 /* FLASH CS */
-#define BFLB_EXTFLASH_CS1_GPIO        GPIO_PIN_25
+#define BFLB_EXTFLASH_CS1_GPIO       GPIO_PIN_25
 /* FLASH DATA */
-#define BFLB_EXTFLASH_DATA01_GPIO     GPIO_PIN_28
-#define BFLB_EXTFLASH_DATA11_GPIO     GPIO_PIN_24
-#define BFLB_EXTFLASH_DATA21_GPIO     GPIO_PIN_23
-#define BFLB_EXTFLASH_DATA31_GPIO     GPIO_PIN_26
+#define BFLB_EXTFLASH_DATA01_GPIO    GPIO_PIN_28
+#define BFLB_EXTFLASH_DATA11_GPIO    GPIO_PIN_24
+#define BFLB_EXTFLASH_DATA21_GPIO    GPIO_PIN_23
+#define BFLB_EXTFLASH_DATA31_GPIO    GPIO_PIN_26
 /* Flash option 2 */
 /* Flash CLK */
-#define BFLB_EXTFLASH_CLK2_GPIO       GPIO_PIN_36
+#define BFLB_EXTFLASH_CLK2_GPIO      GPIO_PIN_36
 /* FLASH CS */
-#define BFLB_EXTFLASH_CS2_GPIO        GPIO_PIN_35
+#define BFLB_EXTFLASH_CS2_GPIO       GPIO_PIN_35
 /* FLASH DATA */
-#define BFLB_EXTFLASH_DATA02_GPIO     GPIO_PIN_32
-#define BFLB_EXTFLASH_DATA12_GPIO     GPIO_PIN_34
-#define BFLB_EXTFLASH_DATA22_GPIO     GPIO_PIN_33
-#define BFLB_EXTFLASH_DATA32_GPIO     GPIO_PIN_37
-#define BFLB_FLASH_CFG_SF2_EXT_23_28  0
-#define BFLB_FLASH_CFG_SF2_INT_512K   1
-#define BFLB_FLASH_CFG_SF2_INT_1M     2
-#define BFLB_FLASH_CFG_SF1_EXT_17_22  3
-#define BFLB_SF2_SWAP_NONE            0
-#define BFLB_SF2_SWAP_CS_IO2          1
-#define BFLB_SF2_SWAP_IO0_IO3         2
-#define BFLB_SF2_SWAP_BOTH            3
+#define BFLB_EXTFLASH_DATA02_GPIO    GPIO_PIN_32
+#define BFLB_EXTFLASH_DATA12_GPIO    GPIO_PIN_34
+#define BFLB_EXTFLASH_DATA22_GPIO    GPIO_PIN_33
+#define BFLB_EXTFLASH_DATA32_GPIO    GPIO_PIN_37
+#define BFLB_FLASH_CFG_SF2_EXT_23_28 0
+#define BFLB_FLASH_CFG_SF2_INT_512K  1
+#define BFLB_FLASH_CFG_SF2_INT_1M    2
+#define BFLB_FLASH_CFG_SF1_EXT_17_22 3
+#define BFLB_SF2_SWAP_NONE           0
+#define BFLB_SF2_SWAP_CS_IO2         1
+#define BFLB_SF2_SWAP_IO0_IO3        2
+#define BFLB_SF2_SWAP_BOTH           3
 #elif defined(BL602)
 /*Flash option 0*/
 /*Flash CLK*/
@@ -170,14 +170,19 @@
 #define BFLB_FLASH_CFG_EXT0_17_22     2
 #define BFLB_FLASH_CFG_EXT1_0_2_20_22 3
 #endif
-#define BFLB_FLASH_ID_VALID_FLAG      0x80000000
-#define BFLB_FLASH_ID_VALID_MASK      0x7FFFFFFF
+#define BFLB_FLASH_ID_VALID_FLAG 0x80000000
+#define BFLB_FLASH_ID_VALID_MASK 0x7FFFFFFF
 
 /*@} end of group SF_CFG_Public_Macros */
 
 /** @defgroup  SF_CFG_Public_Functions
  *  @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int bflb_sf_cfg_get_flash_cfg_need_lock(uint32_t flash_id, spi_flash_cfg_type *p_flash_cfg,
                                         uint8_t group, uint8_t bank);
 int bflb_sf_cfg_get_flash_cfg_need_lock_ext(uint32_t flash_id, spi_flash_cfg_type *p_flash_cfg,
@@ -200,12 +205,16 @@ uint32_t bflb_sf_cfg_flash_identify_ext(uint8_t callfromflash, uint8_t flash_pin
                                         spi_flash_cfg_type *p_flash_cfg, uint8_t group, uint8_t bank);
 #if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
 int bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cfg_type *p_sfctrl_cfg,
-                               const struct sf_ctrl_bank2_cfg *p_bank2_cfg);
+                           const struct sf_ctrl_bank2_cfg *p_bank2_cfg);
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
 int bflb_sf_cfg_sbus2_flash_init(uint8_t sel, const struct sf_ctrl_bank2_cfg *p_bank2_cfg);
 #endif
 #else
 int bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cfg_type *p_sfctrl_cfg);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 /*@} end of group SF_CFG_Public_Functions */

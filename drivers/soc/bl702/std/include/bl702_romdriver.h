@@ -46,6 +46,10 @@
 #include "bflb_sf_ctrl.h"
 // #include "softcrc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ROMAPI_INDEX_SECT_SIZE (0x800)
 #define ROMAPI_INDEX_MAX       (ROMAPI_INDEX_SECT_SIZE / 4 - 1)
 
@@ -628,5 +632,9 @@ typedef enum {
 /*@} end of group ROMDRIVER */
 
 /*@} end of group BL702_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL702_ROMDRIVER_H__ */

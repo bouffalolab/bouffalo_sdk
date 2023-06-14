@@ -47,6 +47,10 @@
 #include "bflb_sf_ctrl.h"
 // #include "softcrc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -795,5 +799,9 @@ typedef enum {
 /*@} end of group ROMDRIVER */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_ROMDRIVER_H__ */

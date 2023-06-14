@@ -48,6 +48,10 @@
 #include "bflb_xip_sflash.h"
 // #include "bl616_uart.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  bl616_Peripheral_Driver
  *  @{
  */
@@ -1967,5 +1971,9 @@ typedef enum {
 /*@} end of group ROMDRIVER */
 
 /*@} end of group bl616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __bl616_ROMDRIVER_H__ */

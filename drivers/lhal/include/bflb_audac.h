@@ -148,6 +148,10 @@ struct bflb_audac_volume_config_s {
     uint8_t volume_zero_cross_timeout;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int bflb_audac_init(struct bflb_device_s *dev, const struct bflb_audac_init_config_s *config);
 
 int bflb_audac_volume_init(struct bflb_device_s *dev, const struct bflb_audac_volume_config_s *vol_cfg);
@@ -161,5 +165,9 @@ int bflb_audac_get_intstatus(struct bflb_device_s *dev);
 int bflb_audac_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 
 int bflb_audac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -37,8 +37,10 @@
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define FLASH_XIP_BASE (0x23000000)
-#elif defined(BL616) || defined(BL628)
+#elif defined(BL616)
 #define FLASH_XIP_BASE (0xA0000000)
+#elif defined(BL628)
+#define FLASH_XIP_BASE (0x80000000)
 #elif defined(BL808) || defined(BL606P)
 #define FLASH_XIP_BASE (0x58000000)
 #endif
@@ -65,7 +67,7 @@ extern "C" {
  */
 int bflb_flash_init(void);
 
-#if defined(BL616) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
 /**
  * @brief flash_set_cmds
  *
@@ -88,7 +90,7 @@ uint32_t bflb_flash_get_jedec_id(void);
  */
 uint32_t bflb_flash_get_size(void);
 
-#if defined(BL616)
+#if defined(BL616) || defined(BL628)
 /**
  * @brief get flash2 size
  *

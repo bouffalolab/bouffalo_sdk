@@ -39,6 +39,10 @@
 #include "bflb_ef_ctrl.h"
 #include "bl808_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
  */
@@ -86,5 +90,9 @@ void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo);
 /*@} end of group EF_CTRL */
 
 /*@} end of group BL808_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_EF_CFG_H__ */

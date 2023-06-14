@@ -47,6 +47,10 @@
 #include "bflb_sf_ctrl.h"
 #include "bflb_sf_cfg.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
  */
@@ -229,5 +233,9 @@ BL_Sts_Type GLB_GPIO_Fifo_Disable(void);
 /*@} end of group GLB_GPIO */
 
 /*@} end of group BL808_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_GLB_GPIO_H__ */

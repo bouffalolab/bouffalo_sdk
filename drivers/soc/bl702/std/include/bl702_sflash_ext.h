@@ -39,6 +39,10 @@
 #include "bflb_sflash.h"
 #include "bl702_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
  */
@@ -89,5 +93,9 @@ int bflb_sflash_clear_status_register(spi_flash_cfg_type *p_flash_cfg);
 /*@} end of group SFLAH_EXT */
 
 /*@} end of group BL702_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL702_SFLAH_EXT_H__ */

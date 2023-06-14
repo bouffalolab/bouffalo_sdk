@@ -48,6 +48,10 @@
 #include "bflb_sf_ctrl.h"
 #include "bflb_sf_cfg.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
  */
@@ -2521,5 +2525,9 @@ BL_Err_Type GLB_CSI_Power_Up_MIPIPLL(void);
 /*@} end of group GLB */
 
 /*@} end of group BL808_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_GLB_H__ */

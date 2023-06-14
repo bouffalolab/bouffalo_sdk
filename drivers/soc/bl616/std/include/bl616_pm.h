@@ -1,4 +1,11 @@
+#ifndef __BL616_PM_H__
+#define __BL616_PM_H__
+
 #include "bl616_common.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum pm_pds_sleep_level {
     PM_PDS_LEVEL_1 = 1,
@@ -43,3 +50,9 @@ void PDS_WAKEUP_IRQ(void);
 void pm_rc32k_auto_cal(void);
 void pm_rc32k_auto_cal_init(void);
 void hal_pm_ldo11_use_ext_dcdc(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

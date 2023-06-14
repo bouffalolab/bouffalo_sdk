@@ -5,6 +5,10 @@
 #include "bl808_psram_uhs.h"
 #include "bl808_glb.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef CAL_MODE
 #define CAL_MODE (0)        // 0 is for sw call, 1 is for phy test, 2 is for ate cal
 #endif
@@ -104,7 +108,7 @@ void soft_reset(void);
 void uhs_reset(uint8_t ma_rb);
 void array_write_fix(uint32_t addr,uint32_t len,uint32_t data0,uint32_t data1);
 uint8_t array_read_fix(uint32_t addr,uint32_t len,uint32_t data0,uint32_t data1);
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_UHS_PLL_Freq(GLB_XTAL_Type xtalType, uint32_t pllFreq);
+BL_Err_Type GLB_Config_UHS_PLL_Freq(GLB_XTAL_Type xtalType, uint32_t pllFreq);
 //
 void set_uhs_latency_r(uint32_t uhs_latency);
 void set_uhs_latency_w(uint32_t uhs_latency);
@@ -113,5 +117,9 @@ void cfg_dqs_drv(uint32_t dqs);
 void cfg_ck_cen_drv(uint8_t array_ck_dly_drv,uint8_t array_cen_dly_drv);
 void cfg_dq_rx(uint8_t dq);
 void cfg_dqs_rx(uint8_t dqs);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // __UHS_PHY_H__

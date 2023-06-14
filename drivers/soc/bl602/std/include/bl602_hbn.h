@@ -41,6 +41,10 @@
 #include "bflb_sflash.h"
 #include "bl602_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -493,5 +497,9 @@ BL_Err_Type HBN_Set_BOR_Cfg(HBN_BOR_CFG_Type *cfg);
 /*@} end of group HBN */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_HBN_H__ */

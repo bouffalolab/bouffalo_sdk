@@ -16,6 +16,10 @@ typedef struct rf_para_flash_tag {
     uint32_t crc32;
 } rf_para_flash_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int mfg_flash_init(spi_flash_cfg_type *flashCfg);
 int mfg_flash_write_xtal_capcode_pre(uint8_t capcode, uint8_t program);
 void mfg_flash_write_xtal_capcode(void);
@@ -32,5 +36,9 @@ int mfg_flash_read_macaddr(uint8_t mac[6], uint8_t reload);
 int mfg_flash_write_bz_poweroffset_pre(int8_t pwrOffset[5], uint8_t program);
 void mfg_flash_write_bz_poweroffset(void);
 int mfg_flash_read_bz_poweroffset(int8_t pwrOffset[20], uint8_t reload);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*__BL616_MFG_FLASH_H__*/

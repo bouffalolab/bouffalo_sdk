@@ -81,59 +81,62 @@
 #define SDIO2_DMA_ADDR_OFFSET           (0x0174)
 #define SDIO2_IO_PORT_OFFSET            (0x0178)
 
-
 // Bit Def. Scratch register 0
-#define SDIO2_SCRATCH_OFFSET           (0x0160)
+#define SDIO2_SCRATCH_OFFSET            (0x0160)
+#define SDIO2_SCRATCH_HOST_READY_MASK   (1 << 0)
+#define SDIO2_SCRATCH_SLAVE_READY_MASK  (1 << 1)
+#define SDIO2_SCRATCH_MAX_SIZE_SHIFT    (2)
+#define SDIO2_SCRATCH_MAX_SIZE_MASK     (0x3F << SDIO2_SCRATCH_MAX_SIZE_SHIFT)
 
 // Bit Def. Block size 1 mask (Offset 0x29)
-#define SDIO2_FN1_BLK_SIZE_1_MASK 0x01
+#define SDIO2_FN1_BLK_SIZE_1_MASK       0x01
 
 // Bit Def. Host To Card Interrupt Event (Offset 0x100/200)
-#define SDIO2_HCR_CONFIG_HostPwrUp (1 << 1)
+#define SDIO2_HCR_CONFIG_HostPwrUp      (1 << 1)
 
 // Bit Def. Host Transfer Status (Offset 0x128/228)
-#define SDIO2_CCR_HOST_INT_DnLdReStart (1 << 0)
-#define SDIO2_CCR_HOST_INT_UpLdReStart (1 << 1)
-#define SDIO2_CCR_HOST_INT_DnLdCRC_err (1 << 2)
+#define SDIO2_CCR_HOST_INT_DnLdReStart  (1 << 0)
+#define SDIO2_CCR_HOST_INT_UpLdReStart  (1 << 1)
+#define SDIO2_CCR_HOST_INT_DnLdCRC_err  (1 << 2)
 
 // Bit Def. Card To Host Interrupt Event (Offset 0x130/230)
-#define SDIO2_CCR_CS_DnLdRdy    (1 << 0)
-#define SDIO2_CCR_CS_UpLdRdy    (1 << 1)
-#define SDIO2_CCR_CS_ReadCISRdy (1 << 2)
-#define SDIO2_CCR_CS_IORdy      (1 << 3)
+#define SDIO2_CCR_CS_DnLdRdy            (1 << 0)
+#define SDIO2_CCR_CS_UpLdRdy            (1 << 1)
+#define SDIO2_CCR_CS_ReadCISRdy         (1 << 2)
+#define SDIO2_CCR_CS_IORdy              (1 << 3)
 
 // Bit Def. Card Interrupt Mask (Offset 0x134/234)
-#define SDIO2_CCR_CIM_DnLdOvr (1 << 0)
-#define SDIO2_CCR_CIM_UpLdOvr (1 << 1)
-#define SDIO2_CCR_CIM_Abort   (1 << 2)
-#define SDIO2_CCR_CIM_PwrDn   (1 << 3)
-#define SDIO2_CCR_CIM_PwrUp   (1 << 4)
+#define SDIO2_CCR_CIM_DnLdOvr           (1 << 0)
+#define SDIO2_CCR_CIM_UpLdOvr           (1 << 1)
+#define SDIO2_CCR_CIM_Abort             (1 << 2)
+#define SDIO2_CCR_CIM_PwrDn             (1 << 3)
+#define SDIO2_CCR_CIM_PwrUp             (1 << 4)
 
-#define SDIO2_CCR_CIM_MASK 0x0007
+#define SDIO2_CCR_CIM_MASK              0x0007
 
 // Bit Def. Card Interrupt Status (Offset 0x138/238)
-#define SDIO2_CCR_CIC_DnLdOvr (1 << 0)
-#define SDIO2_CCR_CIC_UpLdOvr (1 << 1)
-#define SDIO2_CCR_CIC_Abort   (1 << 2)
-#define SDIO2_CCR_CIC_PwrDn   (1 << 3)
-#define SDIO2_CCR_CIC_PwrUp   (1 << 4)
+#define SDIO2_CCR_CIC_DnLdOvr           (1 << 0)
+#define SDIO2_CCR_CIC_UpLdOvr           (1 << 1)
+#define SDIO2_CCR_CIC_Abort             (1 << 2)
+#define SDIO2_CCR_CIC_PwrDn             (1 << 3)
+#define SDIO2_CCR_CIC_PwrUp             (1 << 4)
 
-#define SDIO2_CCR_CIC_MASK 0x001F
+#define SDIO2_CCR_CIC_MASK              0x001F
 
 // Bit Def. Card Interrupt RSR (Offset 0x13C/23C)
-#define SDIO2_CCR_CIO_DnLdOvr (1 << 0)
-#define SDIO2_CCR_CIO_UpLdOvr (1 << 1)
-#define SDIO2_CCR_CIO_Abort   (1 << 2)
-#define SDIO2_CCR_CIO_PwrDn   (1 << 3)
-#define SDIO2_CCR_CIO_PwrUp   (1 << 4)
-#define SDIO2_CCR_CIO_MASK    0x001F
+#define SDIO2_CCR_CIO_DnLdOvr           (1 << 0)
+#define SDIO2_CCR_CIO_UpLdOvr           (1 << 1)
+#define SDIO2_CCR_CIO_Abort             (1 << 2)
+#define SDIO2_CCR_CIO_PwrDn             (1 << 3)
+#define SDIO2_CCR_CIO_PwrUp             (1 << 4)
+#define SDIO2_CCR_CIO_MASK              0x001F
 
 //Config2 register mask
-#define SDIO2_CONFIG2_MSK 0x00000C00
+#define SDIO2_CONFIG2_MSK               0x00000C00
 
 //CardIntMode register mask
 
-#define SDIO2_CARD_INT_MODE_MSK 0x00000003
-#define SDIO2_HOST_INT_MSK      0x00000002
+#define SDIO2_CARD_INT_MODE_MSK         0x00000003
+#define SDIO2_HOST_INT_MSK              0x00000002
 
 #endif /* __HARDWARE_SDIO2_H__ */

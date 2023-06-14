@@ -4,6 +4,10 @@
 #include "bl616.h"
 #include "bflb_core.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -182,5 +186,9 @@ void C906_All_Int_Enable(void);
 void C906_All_Int_Disable(void);
 
 /*@} end of group DRIVER_COMMON  */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_COMMON_H__ */

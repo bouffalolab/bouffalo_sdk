@@ -39,6 +39,10 @@
 #include "bl602_common.h"
 #include "bflb_ef_ctrl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -93,5 +97,9 @@ uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **t
 /*@} end of group EF_CTRL */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_EF_CFG_H__ */

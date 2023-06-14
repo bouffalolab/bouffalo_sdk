@@ -39,6 +39,10 @@
 #include "l1c_reg.h"
 #include "bl702_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
  */
@@ -198,5 +202,9 @@ BL_Err_Type L1C_BMX_TIMEOUT_INT_Callback_Install(L1C_BMX_TO_INT_Type intType,
 /*@} end of group L1C */
 
 /*@} end of group BL702_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL702_L1C_H__ */

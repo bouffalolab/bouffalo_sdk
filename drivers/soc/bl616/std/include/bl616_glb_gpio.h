@@ -46,6 +46,10 @@
 #include "bl616_common.h"
 #include "bflb_sf_ctrl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -228,5 +232,9 @@ BL_Err_Type GLB_GPIO_Fifo_Disable(void);
 /*@} end of group GLB_GPIO */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_GLB_GPIO_H__ */

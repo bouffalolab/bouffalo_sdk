@@ -36,26 +36,19 @@
 #ifndef __BFLB_SPI_PSRAM_H__
 #define __BFLB_SPI_PSRAM_H__
 
-#include "sf_ctrl_reg.h"
-#include "bflb_common.h"
 #include "bflb_sf_ctrl.h"
 
-/** @addtogroup  BFLB_Peripheral_Driver
- *  @{
- */
+/** @addtogroup LHAL
+  * @{
+  */
 
-/** @addtogroup  PSRAM
- *  @{
- */
-
-/** @defgroup  PSRAM_Public_Types
- *  @{
- */
+/** @addtogroup SPI_PSRAM
+  * @{
+  */
 
 /**
  *  @brief Psram drive strength type definition
  */
-
 #define PSRAM_DRIVE_STRENGTH_50_OHMS      0  /*!< Drive strength 50 ohms(default) */
 #define PSRAM_DRIVE_STRENGTH_100_OHMS     1  /*!< Drive strength 100 ohms */
 #define PSRAM_DRIVE_STRENGTH_200_OHMS     2  /*!< Drive strength 200 ohms */
@@ -105,27 +98,10 @@ struct spi_psram_cfg_type {
     uint8_t burst_length;                 /*!< Psram burst length size */
 };
 
-/*@} end of group PSRAM_Public_Types */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/** @defgroup  PSRAM_Public_Constants
- *  @{
- */
-
-/*@} end of group PSRAM_Public_Constants */
-
-/** @defgroup  PSRAM_Public_Macros
- *  @{
- */
-
-/*@} end of group PSRAM_Public_Macros */
-
-/** @defgroup  PSRAM_Public_Functions
- *  @{
- */
-
-/**
- *  @brief PSRAM Functions
- */
 void bflb_psram_init(struct spi_psram_cfg_type *psram_cfg, struct sf_ctrl_cmds_cfg *cmds_cfg,
                      struct sf_ctrl_psram_cfg *sf_ctrl_psram_cfg);
 void bflb_psram_readreg(struct spi_psram_cfg_type *psram_cfg, uint8_t *reg_value);
@@ -143,10 +119,16 @@ int bflb_psram_cache_write_set(struct spi_psram_cfg_type *psram_cfg, uint8_t io_
 int bflb_psram_write(struct spi_psram_cfg_type *psram_cfg, uint8_t io_mode, uint32_t addr, uint8_t *data, uint32_t len);
 int bflb_psram_read(struct spi_psram_cfg_type *psram_cfg, uint8_t io_mode, uint32_t addr, uint8_t *data, uint32_t len);
 
-/*@} end of group PSRAM_Public_Functions */
+#ifdef __cplusplus
+}
+#endif
 
-/*@} end of group PSRAM */
+/**
+  * @}
+  */
 
-/*@} end of group BFLB_Peripheral_Driver */
+/**
+  * @}
+  */
 
 #endif /* __BFLB_SPI_PSRAM_H__ */

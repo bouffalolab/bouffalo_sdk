@@ -44,6 +44,10 @@
 #include "bl808_hbn.h"
 #include "bl808_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
  */
@@ -197,5 +201,9 @@ BL_Err_Type CPU_MTimer_Delay_MS(uint32_t cnt);
 /*@} end of group CLOCK */
 
 /*@} end of group BL808_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_CLOCK_H__ */

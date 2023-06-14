@@ -39,6 +39,10 @@
 #include "psram_uhs_reg.h"
 #include "bl808_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
  */
@@ -269,5 +273,9 @@ void Psram_UHS_x16_Init_Override(PSRAM_UHS_Cfg_Type *cfg);
 /*@} end of group PSRAM_UHS */
 
 /*@} end of group BL808_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_PSRAM_UHS_H__ */

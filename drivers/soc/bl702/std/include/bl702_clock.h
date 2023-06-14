@@ -40,6 +40,10 @@
 #include "bl702_hbn.h"
 #include "bl702_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
  */
@@ -130,5 +134,9 @@ uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type);
 /*@} end of group CLOCK */
 
 /*@} end of group BL702_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL702_CLOCK_H__ */

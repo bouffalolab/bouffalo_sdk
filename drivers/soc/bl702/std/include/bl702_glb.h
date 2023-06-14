@@ -48,6 +48,10 @@
 #include "bflb_sf_ctrl.h"
 #include "bflb_sf_cfg.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
  */
@@ -818,5 +822,9 @@ BL_Err_Type GLB_GPIO_INT0_Callback_Install2(GLB_GPIO_Type gpioPin, intCallback_T
 /*@} end of group GLB */
 
 /*@} end of group BL702_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL702_GLB_H__ */

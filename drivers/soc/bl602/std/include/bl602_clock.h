@@ -40,6 +40,10 @@
 #include "bl602_hbn.h"
 #include "bl602_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -124,5 +128,9 @@ uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type);
 /*@} end of group CLOCK */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_CLOCK_H__ */

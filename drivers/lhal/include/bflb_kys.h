@@ -39,6 +39,10 @@ struct bflb_kys_config_s {
 #define KEYSCAN_STS_KEYCODE3 (0x1 << 3)
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void bflb_kys_init(struct bflb_device_s *dev, const struct bflb_kys_config_s *config);
 void bflb_kys_enable(struct bflb_device_s *dev);
 void bflb_kys_disable(struct bflb_device_s *dev);
@@ -50,4 +54,8 @@ void bflb_kys_get_fifo_info(struct bflb_device_s *dev, uint8_t *fifo_head, uint8
 #endif
 uint8_t bflb_kys_read_keyvalue(struct bflb_device_s *dev, uint8_t index);
 
-#endif // _BFLB_KYS_H
+#ifdef __cplusplus
+}
+#endif
+
+#endif

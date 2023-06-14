@@ -39,6 +39,10 @@
 #include "sdh_reg.h"
 #include "bl616_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -975,5 +979,9 @@ SDH_Stat_Type SDH_CreateAdmaEntryConfig(SDH_DMA_Cfg_Type *dmaCfg, SDH_Data_Cfg_T
 /*@} end of group SDH */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_SDH_H__ */

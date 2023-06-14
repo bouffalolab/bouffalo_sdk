@@ -39,6 +39,10 @@
 #include "tzc_sec_reg.h"
 #include "bl616_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -242,5 +246,9 @@ void Tzc_Sec_Set_WTD_Rst_Delay(uint16_t delayValue);
 /*@} end of group TZC_SEC */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_TZC_SEC_H__ */

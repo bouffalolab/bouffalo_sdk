@@ -5,6 +5,10 @@
 #include "bl616_mfg_efuse.h"
 #include "bl616_mfg_flash.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int mfg_media_init_need_lock(spi_flash_cfg_type *flashCfg);
 int mfg_media_init_with_lock(spi_flash_cfg_type *flashCfg);
 uint8_t mfg_media_is_xtal_capcode_slot_empty(uint8_t reload);
@@ -48,5 +52,8 @@ int mfg_media_read_bz_poweroffset_need_lock(int8_t pwrOffset[5], uint8_t reload)
 int mfg_media_read_bz_poweroffset_with_lock(int8_t pwrOffset[5], uint8_t reload);
 int mfg_media_read_bz_poweroffset(int8_t pwrOffset[5], uint8_t reload);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*__BL616_MFG_MEDIA_H__*/

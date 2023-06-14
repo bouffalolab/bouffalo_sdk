@@ -339,6 +339,15 @@ struct sf_ctrl_cmd_cfg_type {
     uint32_t cmd_buf[2];                 /*!< Command buffer */
 };
 
+struct bflb_sf_ctrl_decrypt_type {
+    uint8_t mode;               /*!< Serail flash AES CTR/XTS mode */
+    uint8_t type;               /*!< Serail flash AES key bit length */
+    uint8_t aes_region;         /*!< Serail flash AES region 0/1/2 */
+    uint32_t addr;              /*!< Serail flash AES decrypt start address */
+    uint32_t len;               /*!< Serail flash AES decrypt length */
+    uint8_t *iv;                /*!< Serail flash AES iv */
+};
+
 /*@} end of group SF_CTRL_Public_Types */
 
 /** @defgroup  SF_CTRL_Public_Macros
@@ -409,6 +418,11 @@ struct sf_ctrl_cmd_cfg_type {
 /** @defgroup  SF_CTRL_Public_Functions
  *  @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg);
 void bflb_sf_ctrl_set_io_delay(uint8_t pad, uint8_t dodelay, uint8_t didelay, uint8_t oedelay);
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
@@ -474,6 +488,14 @@ void bflb_sf_ctrl_psram_read_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_v
 uint8_t bflb_sf_ctrl_get_busy_state(void);
 #ifndef BFLB_USE_HAL_DRIVER
 void bflb_sf_ctrl_irqhandler(void);
+#endif
+void bflb_sf_ctrl_aes_get_iv_be(uint8_t region, uint8_t *iv);
+void bflb_sf_ctrl_aes_get_iv_le(uint8_t region, uint8_t *iv);
+int32_t bflb_sf_ctrl_aes_set_decrypt_region_be(struct bflb_sf_ctrl_decrypt_type *parm);
+int32_t bflb_sf_ctrl_aes_set_decrypt_region_le(struct bflb_sf_ctrl_decrypt_type *parm);
+
+#ifdef __cplusplus
+}
 #endif
 
 /*@} end of group SF_CTRL_Public_Functions */

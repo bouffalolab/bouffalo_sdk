@@ -165,6 +165,10 @@ struct bflb_auadc_adc_init_config_s {
     uint8_t adc_measure_rate;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int bflb_auadc_init(struct bflb_device_s *dev, const struct bflb_auadc_init_config_s *config);
 
 int bflb_auadc_adc_init(struct bflb_device_s *dev, const struct bflb_auadc_adc_init_config_s *config);
@@ -178,5 +182,9 @@ int bflb_auadc_int_unmask(struct bflb_device_s *dev, uint32_t int_sts);
 int bflb_auadc_get_intstatus(struct bflb_device_s *dev);
 
 int bflb_auadc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

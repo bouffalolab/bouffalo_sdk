@@ -48,6 +48,10 @@
 #include "bflb_sf_ctrl.h"
 #include "bflb_sf_cfg.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -1695,5 +1699,9 @@ BL_Err_Type GLB_Config_AUDIO_PLL_To_491P52M(void);
 /*@} end of group GLB */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_GLB_H__ */

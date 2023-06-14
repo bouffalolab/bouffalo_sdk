@@ -4,6 +4,10 @@
 #include "bl702.h"
 #include "bflb_core.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Memory access macro
  */
@@ -212,4 +216,9 @@ __ALWAYS_STATIC_INLINE void __disable_irq(void)
 
 void BL702_Delay_US(uint32_t cnt);
 void BL702_Delay_MS(uint32_t cnt);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

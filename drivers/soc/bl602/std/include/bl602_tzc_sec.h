@@ -39,6 +39,10 @@
 #include "tzc_sec_reg.h"
 #include "bl602_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -80,5 +84,9 @@ void TZC_Set_Rom1_R1_Protect(uint32_t start, uint32_t length);
 /*@} end of group TZC_SEC */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_TZC_SEC_H__ */

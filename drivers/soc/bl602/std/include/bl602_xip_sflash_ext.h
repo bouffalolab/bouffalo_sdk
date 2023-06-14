@@ -41,6 +41,10 @@
 #include "bflb_sflash.h"
 #include "bflb_xip_sflash.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -93,5 +97,9 @@ int bflb_xip_sflash_init(spi_flash_cfg_type *p_flash_cfg);
 /*@} end of group XIP_SFLASH_EXT */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_XIP_SFLASH_EXT_H__ */

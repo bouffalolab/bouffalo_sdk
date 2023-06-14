@@ -43,6 +43,10 @@
 #include "bflb_sf_cfg.h"
 #include "bl702_sf_cfg_ext.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
  */
@@ -84,5 +88,9 @@ int bflb_xip_sflash_clear_status_register_need_lock(spi_flash_cfg_type *p_flash_
 /*@} end of group XIP_SFLASH */
 
 /*@} end of group BL702_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL702_XIP_SFLASH_EXT_H__ */

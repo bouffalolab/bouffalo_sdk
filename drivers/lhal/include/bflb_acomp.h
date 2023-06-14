@@ -11,24 +11,23 @@
   * @{
   */
 
-/** @defgroup Analog compare id type definition
- * @{
- */
+/** @defgroup ACOMP_ID Analog compare id type definition
+  * @{
+  */
 #define AON_ACOMP0_ID   0
 #define AON_ACOMP1_ID   1
 
-
-/** @defgroup Analog compare scaling factor type definition
- * @{
- */
+/** @defgroup ACOMP_SCALING_FACTOR Analog compare scaling factor type definition
+  * @{
+  */
 #define AON_ACOMP_SCALING_FACTOR_0P25           0x00    /*!< Analog compare level scaling factor 0.25 */
 #define AON_ACOMP_SCALING_FACTOR_0P5            0x10    /*!< Analog compare level scaling factor 0.5 */
 #define AON_ACOMP_SCALING_FACTOR_0P75           0x20    /*!< Analog compare level scaling factor 0.75 */
 #define AON_ACOMP_SCALING_FACTOR_1              0x30    /*!< Analog compare level scaling factor 1 */
 
-/**
- *  @brief Analog compare channel type definition
- */
+/** @defgroup ACOMP_CHAN Analog compare channel type definition
+  * @{
+  */
 #define AON_ACOMP_CHAN_ADC0                     0   /*!< Analog compare channel,ADC input channel 0 */
 #define AON_ACOMP_CHAN_ADC1                     1   /*!< Analog compare channel,ADC input channel 1 */
 #define AON_ACOMP_CHAN_ADC2                     2   /*!< Analog compare channel,ADC input channel 2 */
@@ -46,17 +45,17 @@
 #define AON_ACOMP_CHAN_VIO_X_SCALING_FACTOR_4   14  /*!< Analog compare channel,forth,VIO * scaling factor */
 #define AON_ACOMP_CHAN_VSS                      15  /*!< Analog compare channel,vss */
 
-/**
- *  @brief Analog compare bias current control type definition
- */
+/** @defgroup ACOMP_BIAS_POWER Analog compare bias current control type definition
+  * @{
+  */
 #define AON_ACOMP_BIAS_POWER_MODE1              0   /*!< Analog compare power mode 1,slow response mode */
 #define AON_ACOMP_BIAS_POWER_MODE2              1   /*!< Analog compare power mode 2,medium response mode */
 #define AON_ACOMP_BIAS_POWER_MODE3              2   /*!< Analog compare power mode 3,fast response mode */
 #define AON_ACOMP_BIAS_POWER_NONE               3   /*!< Analog compare power mode none */
 
-/**
- *  @brief Analog compare hysteresis voltage type definition
- */
+/** @defgroup ACOMP_HYSTERESIS_VOLT Analog compare hysteresis voltage type definition
+  * @{
+  */
 #define AON_ACOMP_HYSTERESIS_VOLT_NONE          0   /*!< Analog compare hysteresis voltage none */
 #define AON_ACOMP_HYSTERESIS_VOLT_10MV          1   /*!< Analog compare hysteresis voltage 10mv */
 #define AON_ACOMP_HYSTERESIS_VOLT_20MV          2   /*!< Analog compare hysteresis voltage 20mv */
@@ -66,18 +65,17 @@
 #define AON_ACOMP_HYSTERESIS_VOLT_60MV          6   /*!< Analog compare hysteresis voltage 60mv */
 #define AON_ACOMP_HYSTERESIS_VOLT_70MV          7   /*!< Analog compare hysteresis voltage 70mv */
 
-
 /**
  * @brief ACOMP configuration structure
  *
  * @param mux_en                    ACOMP mux enable
- * @param pos_chan_sel              ACOMP positive channel select
- * @param neg_chan_sel              ACOMP negtive channel select
+ * @param pos_chan_sel              ACOMP positive channel select, use @ref ACOMP_CHAN
+ * @param neg_chan_sel              ACOMP negtive channel select, use @ref ACOMP_CHAN
  * @param vio_sel                   ACOMP VIO voltage select, (vioSel/66)*avdd33
- * @param scaling_factor            ACOMP scaling factor select factor
- * @param bias_prog                 ACOMP bias current control
- * @param hysteresis_pos_volt       ACOMP hysteresis voltage for positive
- * @param hysteresis_neg_volt       ACOMP hysteresis voltage for negtive
+ * @param scaling_factor            ACOMP scaling factor select factor, use @ref ACOMP_SCALING_FACTOR
+ * @param bias_prog                 ACOMP bias current control, use @ref ACOMP_BIAS_POWER
+ * @param hysteresis_pos_volt       ACOMP hysteresis voltage for positive, use @ref ACOMP_HYSTERESIS_VOLT
+ * @param hysteresis_neg_volt       ACOMP hysteresis voltage for negtive, use @ref ACOMP_HYSTERESIS_VOLT
  */
 struct bflb_acomp_config_s {
     uint8_t mux_en;
@@ -143,20 +141,16 @@ uint32_t bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t* channel);
  */
 uint32_t bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t* pin);
 
-
-#if 0
-/**
- * @brief Get acomp postive input.
- *
- * @param [in] acomp_id acomp index
- * @return acomp postive input
- */
-uint32_t bflb_acomp_get_postive_input(uint8_t acomp_id);
-#endif
-
-
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

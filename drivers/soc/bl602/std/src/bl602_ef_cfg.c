@@ -33,39 +33,38 @@
   *
   ******************************************************************************
   */
+#include "bflb_efuse.h"
 #include "bl602_ef_cfg.h"
 #include "bl602_glb.h"
 #include "hardware/ef_data_reg.h"
 
-extern int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload);
-
-static bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
+static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {
         .name = "rc32m",
-        .en_addr = 0x78 * 8 + 1,
-        .parity_addr = 0x78 * 8 + 0,
-        .value_addr = 0x7C * 8 + 4,
+        .en_addr = 0x0C * 8 + 19,
+        .parity_addr = 0x0C * 8 + 18,
+        .value_addr = 0x0C * 8 + 10,
         .value_len = 8,
     },
     {
         .name = "rc32k",
-        .en_addr = 0xEC * 8 + 19,
-        .parity_addr = 0xEC * 8 + 18,
-        .value_addr = 0xEC * 8 + 8,
+        .en_addr = 0x0C * 8 + 31,
+        .parity_addr = 0x0C * 8 + 30,
+        .value_addr = 0x0C * 8 + 20,
         .value_len = 10,
     },
     {
         .name = "gpadc_gain",
-        .en_addr = 0xF0 * 8 + 27,
-        .parity_addr = 0xF0 * 8 + 26,
-        .value_addr = 0xF0 * 8 + 14,
+        .en_addr = 0x78 * 8 + 14,
+        .parity_addr = 0x78 * 8 + 13,
+        .value_addr = 0x78 * 8 + 1,
         .value_len = 12,
     },
     {
         .name = "tsen",
-        .en_addr = 0xF0 * 8 + 13,
-        .parity_addr = 0xF0 * 8 + 12,
-        .value_addr = 0xF0 * 8 + 0,
+        .en_addr = 0x78 * 8 + 0,
+        .parity_addr = 0x7C * 8 + 12,
+        .value_addr = 0x7C * 8 + 0,
         .value_len = 12,
     }
 };
@@ -345,7 +344,11 @@ void bflb_efuse_read_secure_boot(uint8_t *sign, uint8_t *aes)
 
     bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_CFG_0_OFFSET, &tmpval, 1, 1);
     *sign = ((tmpval & EF_DATA_EF_SBOOT_SIGN_MODE_MSK) >> EF_DATA_EF_SBOOT_SIGN_MODE_POS) & 0x01;
-    *aes = ((tmpval & EF_DATA_EF_SF_AES_MODE_MSK) >> EF_DATA_EF_SF_AES_MODE_POS);
+    if((tmpval & EF_DATA_EF_CPU0_ENC_EN_MSK) >> EF_DATA_EF_CPU0_ENC_EN_POS){
+        *aes = ((tmpval & EF_DATA_EF_SF_AES_MODE_MSK) >> EF_DATA_EF_SF_AES_MODE_POS);
+    }else{
+        *aes = 0;
+    }        
 }
 
 void bflb_efuse_write_aes_key(uint8_t index, uint8_t *data, uint32_t len)

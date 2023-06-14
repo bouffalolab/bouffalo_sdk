@@ -42,6 +42,10 @@
 #include "pds_reg.h"
 #include "bl702_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
  */
@@ -107,5 +111,9 @@ BL_Err_Type AON_Set_Xtal_Cfg(uint8_t gmBoost, uint8_t ampCtrl, uint8_t fastStart
 /*@} end of group AON */
 
 /*@} end of group BL702_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL702_AON_H__ */

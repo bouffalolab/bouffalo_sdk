@@ -40,6 +40,10 @@
 #include "bl808_common.h"
 #include "bl808_glb.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL606P_Peripheral_Driver
  *  @{
  */
@@ -237,5 +241,9 @@ void IPC_D0_IRQHandler(void);
 /*@} end of group IPC */
 
 /*@} end of group BL606P_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL606P_IPC_H__ */

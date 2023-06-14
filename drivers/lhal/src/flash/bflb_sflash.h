@@ -169,6 +169,11 @@ struct sflash_sec_reg_cfg
 /** @defgroup  SFLAH_Public_Functions
  *  @{
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
 void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg, const struct sf_ctrl_bank2_cfg *p_bank2_cfg);
 #else
@@ -216,6 +221,10 @@ int bflb_sflash_clear_status_register(spi_flash_cfg_type *flash_cfg);
 int bflb_sflash_read(spi_flash_cfg_type *flash_cfg, uint8_t io_mode, uint8_t cont_read, uint32_t addr, uint8_t *data,
                          uint32_t len);
 int bflb_sflash_program(spi_flash_cfg_type *flash_cfg, uint8_t io_mode, uint32_t addr, uint8_t *data, uint32_t len);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*@} end of group SFLAH_Public_Functions */
 

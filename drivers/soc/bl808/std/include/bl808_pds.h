@@ -45,6 +45,10 @@
 #include "bflb_sflash.h"
 #include "bflb_sf_ctrl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
  */
@@ -514,5 +518,9 @@ BL_Err_Type PDS_Set_USB_Resume(void);
 /*@} end of group PDS */
 
 /*@} end of group BL808_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_PDS_H__ */

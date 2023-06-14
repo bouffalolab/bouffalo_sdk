@@ -39,6 +39,10 @@
 #include "ef_ctrl_reg.h"
 #include "bl616_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -453,5 +457,9 @@ void EF_Ctrl_Write_Common_Trim(char *name, uint32_t value, uint8_t program);
 /*@} end of group EF_CTRL */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_EF_CTRL_H__ */

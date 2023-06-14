@@ -39,6 +39,10 @@
 #include "psram_reg.h"
 #include "bl808_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
  */
@@ -484,5 +488,9 @@ void PSram_Ctrl_Debug_Timout(PSRAM_ID_Type PSRAM_ID, uint8_t enable, uint32_t ti
 /*@} end of group PSRAM_CTRL */
 
 /*@} end of group BL808_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_PSRAM_CTRL_H__ */

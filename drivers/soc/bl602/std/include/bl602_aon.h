@@ -42,6 +42,10 @@
 #include "pds_reg.h"
 #include "bl602_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -103,5 +107,9 @@ BL_Err_Type AON_Set_LDO11_SOC_Sstart_Delay(uint8_t delay);
 /*@} end of group AON */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_AON_H__ */

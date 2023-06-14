@@ -4,6 +4,10 @@
 #include "bl808.h"
 #include "bflb_core.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __set_MSP
 #define __set_MSP(msp) __ASM volatile("add sp, x0, %0" ::"r"(msp))
 #endif
@@ -188,5 +192,9 @@ int ARCH_MemCmp(const void *s1, const void *s2, uint32_t n);
 void C906_All_Int_Enable(void);
 void C906_All_Int_Disable(void);
 /*@} end of group DRIVER_COMMON  */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_COMMON_H__ */

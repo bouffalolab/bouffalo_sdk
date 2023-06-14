@@ -47,6 +47,10 @@
 #include "bflb_sf_ctrl.h"
 #include "bflb_sf_cfg.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -662,5 +666,9 @@ BL_Err_Type GLB_GPIO_INT0_Callback_Install(GLB_GPIO_Type gpioPin, intCallback_Ty
 /*@} end of group GLB */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_GLB_H__ */

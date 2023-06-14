@@ -40,6 +40,10 @@
 #include "bflb_sflash.h"
 #include "bflb_sf_ctrl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -79,5 +83,9 @@ uint32_t bflb_sf_cfg_flash_identify_ext(uint8_t call_from_flash, uint8_t flash_p
 /*@} end of group SF_CFG_EXT */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_SF_CFG_EXT_H__ */

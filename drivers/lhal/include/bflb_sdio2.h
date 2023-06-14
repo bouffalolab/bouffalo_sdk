@@ -37,35 +37,63 @@
 #ifndef _BFLB_SDIO2_H
 #define _BFLB_SDIO2_H
 
-//#define BFLB_SDIO2_ENUM 1
-
-#ifndef BFLB_SDIO2_ENUM
 #include "bflb_core.h"
-#else
-#include "stdio.h"
-#include "stdint.h"
-struct bflb_device_s {
-    const char *name;
-    uint32_t reg_base;
-    uint8_t irq_num;
-    uint8_t idx;
-    uint8_t sub_idx;
-    uint8_t dev_type;
-    void *user_data;
-};
-#endif
 
 /* SDIO2 buffer size */
-#define SDIO2_BYTE_PER_BUF (1024 * 2)
-#define SDIO2_MAX_PORT_NUM 16
-#define SDIO2_MAX_FUNC     1
+#define SDIO2_DEFAULT_SIZE_MAX        (1024 * 2)
 
-int bflb_sdio2_init(struct bflb_device_s *dev);
+/* No modification */
+#define SDIO2_SIZE_CONSULT_MULTIPLE   (256)
+#define SDIO2_BYTE_MOD_SIZE_MAX       (512)
+#define SDIO2_MAX_PORT_NUM            16
+
+/* card to host interrupt event */
+#define SDIO2_HOST_INT_EVENT_DNLD_RDY (1 << 0)
+#define SDIO2_HOST_INT_EVENT_UPLD_RDY (1 << 1)
+#define SDIO2_HOST_INT_EVENT_CIS_RDY  (1 << 2)
+#define SDIO2_HOST_INT_EVENT_IO_RDY   (1 << 3)
+
+typedef struct
+{
+    uint16_t buff_len;
+    uint16_t data_len;
+    void *buff;
+    void *user_arg;
+} bflb_sdio2_trans_desc_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* initialization */
+int bflb_sdio2_init(struct bflb_device_s *dev, uint32_t dnld_size_max);
 int bflb_sdio2_check_host_ready(struct bflb_device_s *dev);
-uint32_t bflb_sdio2_get_block_size(struct bflb_device_s *dev);
-int bflb_sdio2_tx_rx_queue_init(struct bflb_device_s *dev);
-int bflb_sdio2_send_data(struct bflb_device_s *dev, int qos, uintptr_t *buff, int len);
-int bflb_sdio2_recv_data(struct bflb_device_s *dev, int qos, uintptr_t *buff, int *len);
-void bflb_sdio2_isr(int irq, void *arg);
+int bflb_sdio2_get_block_size(struct bflb_device_s *dev);
+
+/* get trans max size */
+int bflb_sdio2_get_upld_max_size(struct bflb_device_s *dev);
+int bflb_sdio2_get_dnld_max_size(struct bflb_device_s *dev);
+
+/* attach dnld/upld buff */
+int bflb_sdio2_dnld_port_push(struct bflb_device_s *dev, bflb_sdio2_trans_desc_t *trans_desc);
+int bflb_sdio2_upld_port_push(struct bflb_device_s *dev, bflb_sdio2_trans_desc_t *trans_desc);
+
+/* get dnld/upld info */
+int bflb_sdio2_dnld_get_waiting(struct bflb_device_s *dev);
+int bflb_sdio2_dnld_get_available(struct bflb_device_s *dev);
+int bflb_sdio2_upld_get_waiting(struct bflb_device_s *dev);
+int bflb_sdio2_upld_get_available(struct bflb_device_s *dev);
+
+/* isr callback attach */
+int bflb_sdio2_dnld_irq_attach(struct bflb_device_s *dev, void (*callback)(void *arg, bflb_sdio2_trans_desc_t *trans_desc), void *arg);
+int bflb_sdio2_upld_irq_attach(struct bflb_device_s *dev, void (*callback)(void *arg, bflb_sdio2_trans_desc_t *trans_desc), void *arg);
+int bflb_sdio2_error_irq_attach(struct bflb_device_s *dev, void (*callback)(void *arg, bflb_sdio2_trans_desc_t *trans_desc), void *arg);
+
+/* trigger host interrupt event */
+int bflb_sdio2_trig_host_int(struct bflb_device_s *dev, uint32_t event);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _BFLB_SDIO3_H */

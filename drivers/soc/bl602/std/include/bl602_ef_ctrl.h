@@ -39,6 +39,10 @@
 #include "ef_ctrl_reg.h"
 #include "bl602_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -348,5 +352,9 @@ void EF_Ctrl_Read_R0(uint32_t index, uint32_t *data, uint32_t len);
 /*@} end of group EF_CTRL */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_EF_CTRL_H__ */

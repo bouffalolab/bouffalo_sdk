@@ -39,6 +39,10 @@
 #include "psram_reg.h"
 #include "bl616_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -483,5 +487,9 @@ void PSram_Ctrl_Debug_Timout(PSRAM_ID_Type PSRAM_ID, uint8_t enable, uint32_t ti
 /*@} end of group PSRAM_CTRL */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_PSRAM_CTRL_H__ */

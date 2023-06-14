@@ -39,6 +39,10 @@
 #include "bflb_sflash.h"
 #include "bl602_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
  */
@@ -83,5 +87,9 @@ int bflb_sflash_cache_flush(void);
 /*@} end of group SFLAH_EXT */
 
 /*@} end of group BL602_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL602_SFLAH_EXT_H__ */

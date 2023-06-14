@@ -39,6 +39,10 @@
 // #include "pds_reg.h"
 #include "bl616_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -114,5 +118,9 @@ int L1C_Get_None_Cache_Addr(uintptr_t addr);
 /*@} end of group L1C */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_L1C_H__ */

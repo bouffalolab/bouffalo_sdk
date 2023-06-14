@@ -46,6 +46,10 @@
 #include "bflb_sflash.h"
 #include "bflb_sf_ctrl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PDS_WAKEUP_BY_PDS_TIMER_EN           PDS_WAKEUP_BY_PDS_TIMER_EN
 #define PDS_WAKEUP_BY_PDS_TIMER_EN_POS       (10U)
 #define PDS_WAKEUP_BY_PDS_TIMER_EN_LEN       (1U)
@@ -583,5 +587,9 @@ BL_Err_Type PDS_Set_USB_Resume(void);
 /*@} end of group PDS */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_PDS_H__ */

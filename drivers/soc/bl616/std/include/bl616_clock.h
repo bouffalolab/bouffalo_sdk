@@ -43,6 +43,10 @@
 #include "bl616_hbn.h"
 #include "bl616_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
  */
@@ -192,5 +196,9 @@ uint32_t Clock_Get_H264_Clk(void);
 /*@} end of group CLOCK */
 
 /*@} end of group BL616_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL616_CLOCK_H__ */

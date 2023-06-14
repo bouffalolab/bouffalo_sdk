@@ -273,6 +273,15 @@ int bflb_uart_getchar(struct bflb_device_s *dev);
 int bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
 
 /**
+ * @brief Put a block of data on uart.Block before sending done.
+ *
+ * @param [in] dev device handle
+ * @param [in] data pointer to save send data
+ * @param [in] len length to send
+ * @return A negated errno value on failure.
+ */
+int bflb_uart_put_block(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+/**
  * @brief Get a block of data from uart. This is a asynchronous api.
  *
  * @param [in] dev device handle

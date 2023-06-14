@@ -43,6 +43,10 @@
 #include "bl808_ef_ctrl.h"
 #include "bl808_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL808_Peripheral_Driver
  *  @{
  */
@@ -123,5 +127,9 @@ BL_Err_Type AON_Set_DCDC11_Top_Vout(AON_DCDC_LEVEL_Type dcdcLevel);
 /*@} end of group AON */
 
 /*@} end of group BL808_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL808_AON_H__ */

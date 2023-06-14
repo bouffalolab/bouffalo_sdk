@@ -39,6 +39,10 @@
 #include "ef_ctrl_reg.h"
 #include "bl702_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
  */
@@ -325,5 +329,9 @@ void EF_Ctrl_Sw_AHB_Clk_0(void);
 /*@} end of group EF_CTRL */
 
 /*@} end of group BL702_Peripheral_Driver */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __BL702_EF_CTRL_H__ */
