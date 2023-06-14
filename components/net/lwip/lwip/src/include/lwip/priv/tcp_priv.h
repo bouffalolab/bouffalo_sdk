@@ -67,6 +67,17 @@ void tcp_tmr(void);  /* Must be called every
 void tcp_slowtmr(void);
 void tcp_fasttmr(void);
 
+#ifdef CONFIG_LWIP_LP
+/**
+ * bouffalo lp change
+ * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
+ */
+void             tcp_keepalive_tmr(void *arg);
+void             tcp_keepalive_timer_stop(struct tcp_pcb *pcb);
+void             tcp_keepalive_timer_start(struct tcp_pcb *pcb);
+/* bouffalo lp change end */
+#endif
+
 /* Call this from a netif driver (watch out for threading issues!) that has
    returned a memory error on transmit and now has free buffers to send more.
    This iterates all active pcbs that had an error and tries to call
@@ -337,7 +348,9 @@ struct tcp_seg {
 extern struct tcp_pcb *tcp_input_pcb;
 extern u32_t tcp_ticks;
 extern u8_t tcp_active_pcbs_changed;
-
+#ifdef CONFIG_LWIP_LP
+extern const u8_t tcp_persist_backoff[7];
+#endif
 /* The TCP PCB lists. */
 union tcp_listen_pcbs_t /* List of all TCP PCBs in LISTEN state. */
 {

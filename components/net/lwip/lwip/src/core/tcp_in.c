@@ -252,6 +252,15 @@ void tcp_input(struct pbuf *p, struct netif *inp)
        for an active connection. */
     prev = NULL;
 
+#ifdef CONFIG_LWIP_LP
+    /* bouffalo lp change
+    * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
+    **/
+    LWIP_DEBUGF(TCP_DEBUG, ("tcp_timer_opt tcp_input"));
+    tcp_timer_needed();
+    /* bouffalo lp change end */
+#endif
+
     for (pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
         LWIP_ASSERT("tcp_input: active pcb->state != CLOSED", pcb->state != CLOSED);
         LWIP_ASSERT("tcp_input: active pcb->state != TIME-WAIT", pcb->state != TIME_WAIT);
@@ -818,6 +827,15 @@ static void tcp_timewait_input(struct tcp_pcb *pcb)
         pcb->tmr = tcp_ticks;
     }
 
+#ifdef CONFIG_LWIP_LP
+    /* bouffalo lp change
+    * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
+    **/
+    pcb->keep_cnt_sent = 0;
+    tcp_keepalive_timer_stop(pcb);
+    /* bouffalo lp change end */
+#endif
+
     if ((tcplen > 0)) {
         /* Acknowledge data, FIN or out-of-window SYN */
         tcp_ack_now(pcb);
@@ -1122,6 +1140,17 @@ static err_t tcp_process(struct tcp_pcb *pcb)
         default:
             break;
     }
+
+#ifdef CONFIG_LWIP_LP
+    /* bouffalo lp change
+    * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
+    **/
+    if (pcb->state == ESTABLISHED) {
+        pcb->keep_cnt_sent = 0;
+        tcp_keepalive_timer_start(pcb);
+    }
+    /* bouffalo lp change end */
+#endif
 
     return ERR_OK;
 }

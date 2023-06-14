@@ -167,19 +167,50 @@
 /* A port optimised version is provided.  Call the port defined macros. */
     #define taskRECORD_READY_PRIORITY( uxPriority )    portRECORD_READY_PRIORITY( uxPriority, uxTopReadyPriority )
 
+#if (config_CUSTOM_TICKLESS == 1)
 /*-----------------------------------------------------------*/
 
-    #define taskSELECT_HIGHEST_PRIORITY_TASK()                                                  \
-    {                                                                                           \
-        UBaseType_t uxTopPriority;                                                              \
-                                                                                                \
-        /* Find the highest priority list that contains ready tasks. */                         \
-        portGET_HIGHEST_PRIORITY( uxTopPriority, uxTopReadyPriority );                          \
-        configASSERT( listCURRENT_LIST_LENGTH( &( pxReadyTasksLists[ uxTopPriority ] ) ) > 0 ); \
-        listGET_OWNER_OF_NEXT_ENTRY( pxCurrentTCB, &( pxReadyTasksLists[ uxTopPriority ] ) );   \
+#define taskSELECT_HIGHEST_PRIORITY_TASK()                                                   \
+    do {                                                                                     \
+        UBaseType_t uxTopPriority, uxTopReadyPriority_local = uxTopReadyPriority;            \
+        configLIST_VOLATILE TCB_t *pxFirstTCB, *pxNextTCB, *pxSelectedTCB = NULL;            \
+        while (uxTopReadyPriority_local) {                                                   \
+            portGET_HIGHEST_PRIORITY(uxTopPriority, uxTopReadyPriority_local);               \
+            configASSERT(listCURRENT_LIST_LENGTH(&(pxReadyTasksLists[uxTopPriority])) > 0);  \
+            listGET_OWNER_OF_NEXT_ENTRY(pxFirstTCB, &(pxReadyTasksLists[uxTopPriority]));    \
+            do {                                                                             \
+                listGET_OWNER_OF_NEXT_ENTRY(pxNextTCB, &(pxReadyTasksLists[uxTopPriority])); \
+                if (pxNextTCB->vendor_flags == 0) {                                          \
+                    pxSelectedTCB = pxNextTCB;                                               \
+                    break;                                                                   \
+                }                                                                            \
+            } while (pxNextTCB != pxFirstTCB);                                               \
+            if (pxSelectedTCB != NULL) {                                                     \
+                configASSERT(pxSelectedTCB->vendor_flags == 0);                              \
+                pxCurrentTCB = pxSelectedTCB;                                                \
+                break;                                                                       \
+            } else {                                                                         \
+                portRESET_READY_PRIORITY(uxTopPriority, uxTopReadyPriority_local);           \
+            }                                                                                \
+        }                                                                                    \
+    } while (0); /* taskSELECT_HIGHEST_PRIORITY_TASK() */
+
+/*-----------------------------------------------------------*/
+#else
+/*-----------------------------------------------------------*/
+
+#define taskSELECT_HIGHEST_PRIORITY_TASK()                                              \
+    {                                                                                   \
+        UBaseType_t uxTopPriority;                                                      \
+                                                                                        \
+        /* Find the highest priority list that contains ready tasks. */                 \
+        portGET_HIGHEST_PRIORITY(uxTopPriority, uxTopReadyPriority);                    \
+        configASSERT(listCURRENT_LIST_LENGTH(&(pxReadyTasksLists[uxTopPriority])) > 0); \
+        listGET_OWNER_OF_NEXT_ENTRY(pxCurrentTCB, &(pxReadyTasksLists[uxTopPriority])); \
     } /* taskSELECT_HIGHEST_PRIORITY_TASK() */
 
 /*-----------------------------------------------------------*/
+#endif
 
 /* A port optimised version is provided, call it only if the TCB being reset
  * is being referenced from a ready list.  If it is referenced from a delayed
@@ -328,6 +359,11 @@ typedef struct tskTaskControlBlock       /* The old naming convention is used to
 
     #if ( configUSE_POSIX_ERRNO == 1 )
         int iTaskErrno;
+    #endif
+
+    #if (config_CUSTOM_TICKLESS == 1)
+        /* Bouffalo added */
+        uint8_t vendor_flags;
     #endif
 } tskTCB;
 
@@ -1055,6 +1091,9 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
         }
     #endif /* portUSING_MPU_WRAPPERS */
 
+    #if (config_CUSTOM_TICKLESS == 1)
+        pxNewTCB->vendor_flags = 0;
+    #endif
     if( pxCreatedTask != NULL )
     {
         /* Pass the handle out in an anonymous way.  The handle can be used to
@@ -5418,6 +5457,66 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
         }
     #endif /* INCLUDE_vTaskSuspend */
 }
+
+#if (config_CUSTOM_TICKLESS == 1)
+/* Foreach all task handler */
+static void prvForeachTaskWithinSingleList(List_t *pxList, foreach_handler_cb cb, eTaskState state)
+{
+    configLIST_VOLATILE TCB_t * pxNextTCB, * pxFirstTCB;
+    if( listCURRENT_LIST_LENGTH( pxList ) > ( UBaseType_t ) 0 )
+    {
+        listGET_OWNER_OF_NEXT_ENTRY( pxFirstTCB, pxList ); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
+
+        do
+        {
+            listGET_OWNER_OF_NEXT_ENTRY( pxNextTCB, pxList ); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
+            cb((TaskHandle_t)pxNextTCB, state);
+        } while( pxNextTCB != pxFirstTCB );
+    }
+    else
+    {
+        mtCOVERAGE_TEST_MARKER();
+    }
+}
+
+uint8_t * pcTaskGetVendorFlags(TaskHandle_t tsk)
+{
+    configASSERT(tsk != NULL);
+    return &(((TCB_t*)tsk)->vendor_flags);
+}
+
+void vTaskHandleForeach(foreach_handler_cb cb)
+{
+    UBaseType_t uxQueue = configMAX_PRIORITIES;
+    vTaskSuspendAll();
+    {
+        /* Fill in an TaskStatus_t structure with information on each
+         * task in the Ready state. */
+        do
+        {
+            uxQueue--;
+            prvForeachTaskWithinSingleList( &( pxReadyTasksLists[ uxQueue ] ), cb, eReady );
+        } while( uxQueue > ( UBaseType_t ) tskIDLE_PRIORITY ); /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
+
+        prvForeachTaskWithinSingleList( ( List_t * ) pxDelayedTaskList, cb, eBlocked);
+        prvForeachTaskWithinSingleList( ( List_t * ) pxOverflowDelayedTaskList, cb, eBlocked);
+
+        #if ( INCLUDE_vTaskDelete == 1 )
+            {
+                prvForeachTaskWithinSingleList( &xTasksWaitingTermination, cb, eDeleted);
+            }
+        #endif
+
+        #if ( INCLUDE_vTaskSuspend == 1 )
+            {
+                prvForeachTaskWithinSingleList( &xSuspendedTaskList, cb, eSuspended);
+            }
+        #endif
+
+    }
+    ( void ) xTaskResumeAll();
+}
+#endif
 
 /* Code below here allows additional code to be inserted into this source file,
  * especially where access to file scope functions and data is needed (for example

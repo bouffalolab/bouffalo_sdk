@@ -51,6 +51,17 @@
 #include "lwip/ip6.h"
 #include "lwip/ip6_addr.h"
 
+#ifdef CONFIG_LWIP_LP
+/**
+* bouffalo lp change
+* TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
+*/
+#include "lwip/timeouts.h"
+#include "FreeRTOS.h"
+#include "timers.h"
+/** bouffalo lp change end */
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -278,6 +289,10 @@ struct tcp_pcb {
     u8_t last_timer;
     u32_t tmr;
 
+#ifdef CONFIG_LWIP_LP
+    u32_t fin_wait1_tmr;
+#endif
+
     /* receiver variables */
     u32_t rcv_nxt;             /* next seqno expected */
     tcpwnd_size_t rcv_wnd;     /* receiver window available */
@@ -381,6 +396,18 @@ struct tcp_pcb {
     /* KEEPALIVE counter */
     u8_t keep_cnt_sent;
 
+#ifdef CONFIG_LWIP_LP
+    /**
+     * bouffalo lp change
+     * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
+     */
+
+    /* Last persist probe timestamp */
+    u32_t persist_last;
+
+    TimerHandle_t keepalive_os_timer;
+    /** bouffalo lp change end */
+#endif
 #if LWIP_WND_SCALE
     u8_t snd_scale;
     u8_t rcv_scale;

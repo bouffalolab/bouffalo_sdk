@@ -1712,6 +1712,14 @@ static err_t tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb, struct
     TCP_STATS_INC(tcp.xmit);
 
     NETIF_SET_HINTS(netif, &(pcb->netif_hints));
+#ifdef CONFIG_LWIP_LP
+    /* bouffalo lp change
+    * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
+    **/
+    LWIP_DEBUGF(TCP_DEBUG, ("tcp_timer_opt tcp_output_segment"));
+    tcp_timer_needed();
+    /* bouffalo lp change end */
+#endif
     err = ip_output_if(seg->p, &pcb->local_ip, &pcb->remote_ip, pcb->ttl,
                        pcb->tos, IP_PROTO_TCP, netif);
     NETIF_RESET_HINTS(netif);
@@ -2070,6 +2078,14 @@ static err_t tcp_output_control_segment(const struct tcp_pcb *pcb, struct pbuf *
         }
 
         TCP_STATS_INC(tcp.xmit);
+#ifdef CONFIG_LWIP_LP
+        /* bouffalo lp change
+        * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
+        **/
+        LWIP_DEBUGF(TCP_DEBUG, ("tcp_timer_opt tcp_output_control_segment"));
+        tcp_timer_needed();
+        /* bouffalo lp change end */
+#endif
         err = ip_output_if(p, src, dst, ttl, tos, IP_PROTO_TCP, netif);
         NETIF_RESET_HINTS(netif);
     }

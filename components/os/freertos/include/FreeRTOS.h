@@ -794,8 +794,15 @@
     #define configEXPECTED_IDLE_TIME_BEFORE_SLEEP    2
 #endif
 
+#ifndef config_CUSTOM_TICKLESS
+    #define config_CUSTOM_TICKLESS    0
+#endif
+
+#if (config_CUSTOM_TICKLESS == 1)
+#else
 #if configEXPECTED_IDLE_TIME_BEFORE_SLEEP < 2
     #error configEXPECTED_IDLE_TIME_BEFORE_SLEEP must not be less than 2
+#endif
 #endif
 
 #ifndef configUSE_TICKLESS_IDLE
@@ -1225,6 +1232,9 @@ typedef struct xSTATIC_TCB
     #endif
     #if ( configUSE_POSIX_ERRNO == 1 )
         int iDummy22;
+    #endif
+    #if (config_CUSTOM_TICKLESS == 1)
+        uint8_t ucDummy22;
     #endif
 } StaticTask_t;
 

@@ -387,6 +387,30 @@ const ip_addr_t *dns_getserver(u8_t numdns)
     }
 }
 
+#ifdef CONFIG_LWIP_LP 
+/* bouffalo lp change
+ * Disable DNS timer when it is not useful.
+ **/
+static bool dns_check_table_empty(void)
+{
+    u8_t i, num = 0;
+    struct dns_table_entry *entry;
+
+    for (i = 0; i < DNS_TABLE_SIZE; i++) {
+        entry = &dns_table[i];
+        if (entry->state == DNS_STATE_UNUSED) {
+            num++;
+        }
+    }
+
+    if (num == DNS_TABLE_SIZE) {
+        return true;
+    }
+    return false;
+}
+/* bouffalo lp change end */
+#endif
+
 /**
  * The DNS resolver client timer - handle retries and timeouts and should
  * be called every DNS_TMR_INTERVAL milliseconds (every second by default).
@@ -394,7 +418,20 @@ const ip_addr_t *dns_getserver(u8_t numdns)
 void dns_tmr(void)
 {
     LWIP_DEBUGF(DNS_DEBUG, ("dns_tmr: dns_check_entries\n"));
+#ifdef CONFIG_LWIP_LP
+    if (dns_check_table_empty()) {
+        /**
+         * bouffalo lp change
+         * Disable DNS timer when it is not useful.
+         */
+        sys_timeouts_set_timer_enable(false, dns_tmr);
+        /** bouffalo lp change end */
+    } else {
+        dns_check_entries();
+    }
+#else
     dns_check_entries();
+#endif
 }
 
 #if DNS_LOCAL_HOSTLIST
@@ -1605,6 +1642,15 @@ static err_t dns_enqueue(const char *name, size_t hostnamelen, dns_found_callbac
 
     /* force to send query without waiting timer */
     dns_check_entry(i);
+
+#ifdef CONFIG_LWIP_LP
+    /**
+     * bouffalo lp change
+     * Enable DNS timer when it is useful.
+     */
+    sys_timeouts_set_timer_enable(true, dns_tmr);
+    /** bouffalo lp change end */
+#endif
 
     /* dns query is enqueued */
     return ERR_INPROGRESS;

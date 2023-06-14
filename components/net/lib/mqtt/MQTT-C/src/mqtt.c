@@ -157,7 +157,11 @@ void mqtt_init_reconnect(struct mqtt_client *client,
     /* initialize mutex */
     MQTT_PAL_MUTEX_INIT(&client->mutex);
 
+#if !defined(MQTT_USE_CUSTOM_SOCKET_HANDLE)
+    client->socketfd =  (mqtt_pal_socket_handle) -1;
+#else
     client->socketfd->ctx = (union custom_socket_handle_ctx) -1;
+#endif
 
     mqtt_mq_init(&client->mq, NULL, 0uL);
 

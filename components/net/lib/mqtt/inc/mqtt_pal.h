@@ -154,11 +154,11 @@ extern "C" {
     #include <stdarg.h>
     #include "FreeRTOS.h"
     #include "arpa/inet.h"
-  
+
     #define MQTT_PAL_HTONS(s) htons(s)
     #define MQTT_PAL_NTOHS(s) ntohs(s)
 
-    #define MQTT_PAL_TIME() xTaskGetTickCount()
+    #define MQTT_PAL_TIME() (xTaskGetTickCount() / 1000)
 
     typedef uint32_t mqtt_pal_time_t;
     typedef SemaphoreHandle_t mqtt_pal_mutex_t;

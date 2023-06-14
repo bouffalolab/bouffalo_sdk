@@ -3103,6 +3103,11 @@ TaskHandle_t pvTaskIncrementMutexHeldCount( void ) PRIVILEGED_FUNCTION;
  */
 void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut ) PRIVILEGED_FUNCTION;
 
+#if (config_CUSTOM_TICKLESS == 1)
+typedef void (*foreach_handler_cb)(TaskHandle_t, eTaskState);
+uint8_t * pcTaskGetVendorFlags(TaskHandle_t tsk);
+void vTaskHandleForeach(foreach_handler_cb cb);
+#endif
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

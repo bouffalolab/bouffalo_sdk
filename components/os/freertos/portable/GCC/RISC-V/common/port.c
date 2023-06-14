@@ -121,6 +121,13 @@ task stack, not the ISR stack). */
 
 #if( configMTIME_BASE_ADDRESS != 0 ) && ( configMTIMECMP_BASE_ADDRESS != 0 )
 
+#if (config_CUSTOM_TICKLESS == 1)
+#if (configUSE_TICKLESS_IDLE == 2)
+#include "lowpower_timers.h"
+extern struct lp_timeouts_item system_tick;
+extern void lowpower_timeouts_init(void);
+#endif
+#endif
 	void vPortSetupTimerInterrupt( void )
 	{
 	uint32_t ulCurrentTimeHigh, ulCurrentTimeLow;
@@ -145,6 +152,13 @@ task stack, not the ISR stack). */
 
 		/* Prepare the time to use after the next tick interrupt. */
 		ullNextTime += ( uint64_t ) uxTimerIncrementsForOneTick;
+#if (config_CUSTOM_TICKLESS == 1)
+#if (configUSE_TICKLESS_IDLE == 2)
+    lowpower_timeouts_init();
+    /* Record next tick */
+    system_tick.fire_time = ullNextTime;
+#endif
+#endif
 	}
 
 #endif /* ( configMTIME_BASE_ADDRESS != 0 ) && ( configMTIME_BASE_ADDRESS != 0 ) */
