@@ -168,21 +168,21 @@ void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
 
 #if defined(BL602) || defined(BL702)
-    regval = (tx_config->tail_pulse_width_1 & 0xf) << 28 | \
-             (tx_config->tail_pulse_width_0 & 0xf) << 24 | \
-             (tx_config->head_pulse_width_1 & 0xf) << 20 | \
-             (tx_config->head_pulse_width_0 & 0xf) << 16 | \
-             (tx_config->logic1_pulse_width_1 & 0xf) << 12 | \
-             (tx_config->logic1_pulse_width_0 & 0xf) << 8 | \
-             (tx_config->logic0_pulse_width_1 & 0xf) << 4 | \
+    regval = (tx_config->tail_pulse_width_1 & 0xf) << 28 |
+             (tx_config->tail_pulse_width_0 & 0xf) << 24 |
+             (tx_config->head_pulse_width_1 & 0xf) << 20 |
+             (tx_config->head_pulse_width_0 & 0xf) << 16 |
+             (tx_config->logic1_pulse_width_1 & 0xf) << 12 |
+             (tx_config->logic1_pulse_width_0 & 0xf) << 8 |
+             (tx_config->logic0_pulse_width_1 & 0xf) << 4 |
              (tx_config->logic0_pulse_width_0 & 0xf);
     putreg32(regval, reg_base + IRTX_PW_OFFSET);
 #else
-    regval = tx_config->logic0_pulse_width_0 | tx_config->logic0_pulse_width_1 << 8 | \
+    regval = tx_config->logic0_pulse_width_0 | tx_config->logic0_pulse_width_1 << 8 |
              tx_config->logic1_pulse_width_0 << 16 | tx_config->logic1_pulse_width_1 << 24;
     putreg32(regval, reg_base + IRTX_PW_0_OFFSET);
 
-    regval = tx_config->head_pulse_width_0 | tx_config->head_pulse_width_1 << 8 | \
+    regval = tx_config->head_pulse_width_0 | tx_config->head_pulse_width_1 << 8 |
              tx_config->tail_pulse_width_0 << 16 | tx_config->tail_pulse_width_1 << 24;
     putreg32(regval, reg_base + IRTX_PW_1_OFFSET);
 #endif
@@ -214,7 +214,7 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
     if ((regval & IR_CR_IRTX_FRM_EN) == 0) {
         length = length < 4 ? length : 4;
     }
-    while(i < length){
+    while (i < length) {
         if (bflb_ir_get_txfifo_cnt(dev) > 0) {
             putreg32(data[i], reg_base + IR_FIFO_WDATA_OFFSET);
             i++;
@@ -222,16 +222,16 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
     }
 
     if ((getreg32(reg_base + IRTX_CONFIG_OFFSET) & IR_CR_IRTX_FRM_EN) == 0) {
-        while((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0){
+        while ((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0) {
             /* Waiting for sending */
         }
     } else {
-        while(bflb_ir_get_txfifo_cnt(dev) < 4){
+        while (bflb_ir_get_txfifo_cnt(dev) < 4) {
             /* Waiting for sending */
         }
     }
 #else
-    while((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0){
+    while ((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0) {
         /* Waiting for sending */
     }
 #endif
@@ -326,12 +326,12 @@ void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
         }
 
         /* Write to tx fifo */
-        while(bflb_ir_get_txfifo_cnt(dev) == 0){}
+        while (bflb_ir_get_txfifo_cnt(dev) == 0) {}
         putreg32(pwval, reg_base + IR_FIFO_WDATA_OFFSET);
     }
 #endif
 
-    while((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0){
+    while ((bflb_ir_get_txint_status(dev) & IR_TX_INTSTS_END) == 0) {
         /* Waiting for sending */
     }
 
@@ -494,7 +494,7 @@ uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data)
     regval |= IR_CR_IRRX_EN;
     putreg32(regval, reg_base + IRRX_CONFIG_OFFSET);
 
-    while((bflb_ir_get_rxint_status(dev) & IR_RX_INTSTS_END) == 0){
+    while ((bflb_ir_get_rxint_status(dev) & IR_RX_INTSTS_END) == 0) {
         /* Waiting for receiving */
     }
 
@@ -526,7 +526,7 @@ uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t l
     regval |= IR_CR_IRRX_EN;
     putreg32(regval, reg_base + IRRX_CONFIG_OFFSET);
 
-    while((bflb_ir_get_rxint_status(dev) & IR_RX_INTSTS_END) == 0){
+    while ((bflb_ir_get_rxint_status(dev) & IR_RX_INTSTS_END) == 0) {
         if (bflb_ir_get_rxfifo_cnt(dev) != 0 && i < length) {
 #if defined(BL602) || defined(BL702)
             data[i] = getreg32(reg_base + IRRX_SWM_FIFO_RDATA_OFFSET);
@@ -543,7 +543,7 @@ uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t l
 
     bflb_ir_rxint_clear(dev);
 
-    return(getreg32(reg_base + IRRX_DATA_COUNT_OFFSET) & IR_STS_IRRX_DATA_CNT_MASK);
+    return (getreg32(reg_base + IRRX_DATA_COUNT_OFFSET) & IR_STS_IRRX_DATA_CNT_MASK);
 }
 
 void bflb_ir_rx_enable(struct bflb_device_s *dev, bool enable)

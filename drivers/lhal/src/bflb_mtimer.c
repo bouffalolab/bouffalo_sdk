@@ -40,7 +40,7 @@ __WEAK uint32_t ATTR_TCM_SECTION bflb_mtimer_get_freq(void)
     return 1 * 1000 * 1000;
 }
 
-uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_us()
+uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_us(void)
 {
     volatile uint64_t tmp_low, tmp_high, tmp_low1, tmp_high1;
 
@@ -74,12 +74,12 @@ uint32_t ATTR_TCM_SECTION __attribute__((weak)) __div64_32(uint64_t *n, uint32_t
     res = 0;
     if (high >= base) {
         high /= base;
-        res = (uint64_t) high << 32;
-        rem -= (uint64_t) (high*base) << 32;
+        res = (uint64_t)high << 32;
+        rem -= (uint64_t)(high * base) << 32;
     }
     while ((int64_t)b > 0 && b < rem) {
-        b = b+b;
-        d = d+d;
+        b = b + b;
+        d = d + d;
     }
 
     do {
@@ -95,7 +95,7 @@ uint32_t ATTR_TCM_SECTION __attribute__((weak)) __div64_32(uint64_t *n, uint32_t
     return rem;
 }
 
-uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_ms()
+uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_ms(void)
 {
 #ifdef BFLB_BOOT2
     uint64_t ret = bflb_mtimer_get_time_us();

@@ -18,7 +18,7 @@ void bflb_rtc_disable(struct bflb_device_s *dev)
 
     /* Clear & Disable RTC counter */
     regval = getreg32(reg_base + HBN_CTL_OFFSET);
-    regval &=~ HBN_RTC_ENABLE;
+    regval &= ~HBN_RTC_ENABLE;
     putreg32(regval, reg_base + HBN_CTL_OFFSET);
 }
 

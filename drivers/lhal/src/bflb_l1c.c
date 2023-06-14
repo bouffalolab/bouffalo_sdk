@@ -141,24 +141,24 @@ void ATTR_TCM_SECTION bflb_l1c_cache_write_set(uint8_t wt_en, uint8_t wb_en, uin
     regval = getreg32(0x40009000 + 0x0);
 
     if (wt_en) {
-        regval |= (1<<4);
+        regval |= (1 << 4);
     } else {
-        regval &= ~(1<<4);
+        regval &= ~(1 << 4);
     }
 
     if (wb_en) {
-        regval |= (1<<5);
+        regval |= (1 << 5);
     } else {
-        regval &= ~(1<<5);
+        regval &= ~(1 << 5);
     }
 
     if (wa_en) {
-        regval |= (1<<6);
+        regval |= (1 << 6);
     } else {
-        regval &= ~(1<<6);
+        regval &= ~(1 << 6);
     }
 
-    putreg32(regval, 0x40009000+0x0);
+    putreg32(regval, 0x40009000 + 0x0);
 }
 #endif
 

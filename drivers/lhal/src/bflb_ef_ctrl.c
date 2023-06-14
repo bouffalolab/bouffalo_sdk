@@ -40,12 +40,11 @@
 #define EF_CTRL_DATA0_CLEAR bflb_ef_ctrl_clear_data_reg0(dev)
 #define EF_CTRL_DATA1_CLEAR bflb_ef_ctrl_clear_data_reg1(dev)
 
-static int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev);
+static int bflb_ef_ctrl_busy(struct bflb_device_s *dev);
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 extern void bflb_efuse_switch_cpu_clock_save(void);
 extern void bflb_efuse_switch_cpu_clock_restore(void);
 #endif
-
 
 /****************************************************************************/ /**
  * @brief  Switch efuse region 0 control to AHB clock

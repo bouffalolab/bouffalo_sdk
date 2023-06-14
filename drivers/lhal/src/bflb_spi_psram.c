@@ -36,6 +36,7 @@
 
 #include "bflb_spi_psram.h"
 #include "bflb_l1c.h"
+#include "sf_ctrl_reg.h"
 
 /** @addtogroup  BFLB_Peripheral_Driver
  *  @{
@@ -97,7 +98,7 @@
 *******************************************************************************/
 __WEAK
 void ATTR_TCM_SECTION bflb_psram_init(struct spi_psram_cfg_type *psram_cfg, struct sf_ctrl_cmds_cfg *cmds_cfg,
-                                 struct sf_ctrl_psram_cfg *sf_ctrl_psram_cfg)
+                                      struct sf_ctrl_psram_cfg *sf_ctrl_psram_cfg)
 {
     bflb_sf_ctrl_psram_init(sf_ctrl_psram_cfg);
     bflb_sf_ctrl_cmds_set(cmds_cfg, 0);
@@ -501,7 +502,7 @@ int ATTR_TCM_SECTION bflb_psram_softwarereset(struct spi_psram_cfg_type *psram_c
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_psram_set_idbus_cfg(struct spi_psram_cfg_type *psram_cfg,
-                                                 uint8_t io_mode, uint32_t addr, uint32_t len)
+                                              uint8_t io_mode, uint32_t addr, uint32_t len)
 {
     uint8_t cmd, dummy_clks;
     struct sf_ctrl_cmd_cfg_type psram_cmd;

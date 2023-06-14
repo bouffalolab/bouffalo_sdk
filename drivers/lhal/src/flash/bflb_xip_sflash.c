@@ -92,7 +92,7 @@
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_state_save(spi_flash_cfg_type *p_flash_cfg, uint32_t *offset,
-                                                    uint8_t group, uint8_t bank)
+                                                uint8_t group, uint8_t bank)
 {
     /* XIP_SFlash_Delay */
     volatile uint32_t i = 32 * 2;
@@ -141,15 +141,15 @@ int ATTR_TCM_SECTION bflb_xip_sflash_state_save(spi_flash_cfg_type *p_flash_cfg,
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_state_restore(spi_flash_cfg_type *p_flash_cfg, uint32_t offset,
-                                                       uint8_t group, uint8_t bank)
+                                                   uint8_t group, uint8_t bank)
 {
     uint32_t tmp[1];
     uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
     bflb_sf_ctrl_set_flash_image_offset(offset, group, bank);
 
-    if(((p_flash_cfg->io_mode>>4)&0x01) == 0) {
-        if((p_flash_cfg->io_mode&0x0f)==SF_CTRL_QO_MODE || (p_flash_cfg->io_mode&0x0f)==SF_CTRL_QIO_MODE) {
+    if (((p_flash_cfg->io_mode >> 4) & 0x01) == 0) {
+        if ((p_flash_cfg->io_mode & 0x0f) == SF_CTRL_QO_MODE || (p_flash_cfg->io_mode & 0x0f) == SF_CTRL_QIO_MODE) {
             bflb_sflash_set_burst_wrap(p_flash_cfg);
         }
     }
@@ -187,7 +187,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_state_restore(spi_flash_cfg_type *p_flash_c
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_erase_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t start_addr,
-                                                         int len, uint8_t group, uint8_t bank)
+                                                     int len, uint8_t group, uint8_t bank)
 {
     int stat = 0;
     uint32_t offset = 0;
@@ -224,7 +224,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_erase_need_lock(spi_flash_cfg_type *p_flash
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_write_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t addr, uint8_t *data,
-                                                         uint32_t len, uint8_t group, uint8_t bank)
+                                                     uint32_t len, uint8_t group, uint8_t bank)
 {
     int stat = 0;
     uint32_t offset = 0;
@@ -261,7 +261,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_write_need_lock(spi_flash_cfg_type *p_flash
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_read_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t addr, uint8_t *data,
-                                                        uint32_t len, uint8_t group, uint8_t bank)
+                                                    uint32_t len, uint8_t group, uint8_t bank)
 {
     int stat = 0;
     uint32_t offset = 0;
@@ -296,7 +296,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_read_need_lock(spi_flash_cfg_type *p_flash_
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_get_jedecid_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
-                                                               uint8_t group, uint8_t bank)
+                                                           uint8_t group, uint8_t bank)
 {
     int stat = 0;
     uint32_t offset = 0;
@@ -332,7 +332,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_get_jedecid_need_lock(spi_flash_cfg_type *p
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_get_deviceid_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t is_32bits_addr,
-                                                                uint8_t *data, uint8_t group, uint8_t bank)
+                                                            uint8_t *data, uint8_t group, uint8_t bank)
 {
     int stat = 0;
     uint32_t offset = 0;
@@ -368,7 +368,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_get_deviceid_need_lock(spi_flash_cfg_type *
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_get_uniqueid_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
-                                                                uint8_t id_len, uint8_t group, uint8_t bank)
+                                                            uint8_t id_len, uint8_t group, uint8_t bank)
 {
     int stat = 0;
     uint32_t offset = 0;
@@ -390,7 +390,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_get_uniqueid_need_lock(spi_flash_cfg_type *
     return 0;
 }
 
-/****************************************************************************//**
+/****************************************************************************/ /**
  * @brief  Clear flash status register need lock
  *
  * @param  p_flash_cfg: Flash config pointer
@@ -438,11 +438,11 @@ int ATTR_TCM_SECTION bflb_xip_sflash_clear_status_register_need_lock(spi_flash_c
 *******************************************************************************/
 __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_read_via_cache_need_lock(uint32_t addr, uint8_t *data, uint32_t len,
-                                                                  uint8_t group, uint8_t bank)
+                                                              uint8_t group, uint8_t bank)
 {
     uint32_t offset = 0;
 
-    addr = addr & (BFLB_FLASH_XIP_END-BFLB_FLASH_XIP_BASE-1);
+    addr = addr & (BFLB_FLASH_XIP_END - BFLB_FLASH_XIP_BASE - 1);
     addr |= BFLB_FLASH_XIP_BASE;
 
     offset = bflb_sf_ctrl_get_flash_image_offset(group, bank);

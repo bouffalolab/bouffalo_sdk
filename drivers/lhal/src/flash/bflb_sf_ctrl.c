@@ -36,11 +36,6 @@
 
 #include "bflb_sf_ctrl.h"
 #include "hardware/sf_ctrl_reg.h"
-#if defined(BL602) || defined(BL702) || defined(BL702L)
-#include <risc-v/e24/clic.h>
-#else
-#include <csi_core.h>
-#endif
 
 /** @addtogroup  BL628_Peripheral_Driver
  *  @{
@@ -71,7 +66,7 @@
 #else
 #define bflb_sf_ctrl_get_aes_region(addr, r) (addr + SF_CTRL_AES_REGION_OFFSET + (r)*0x80)
 #endif
-#define BL_RDWD_FRM_BYTEP(p)                 ((p[3] << 24) | (p[2] << 16) | (p[1] << 8) | (p[0]))
+#define BL_RDWD_FRM_BYTEP(p) ((p[3] << 24) | (p[2] << 16) | (p[1] << 8) | (p[0]))
 
 /*@} end of group SF_CTRL_Private_Variables */
 
@@ -153,7 +148,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg)
     if (cfg->clk_delay > 0) {
         regval |= SF_CTRL_SF_IF_READ_DLY_EN;
         regval &= ~SF_CTRL_SF_IF_READ_DLY_N_MASK;
-        regval |= ((cfg->clk_delay-1) << SF_CTRL_SF_IF_READ_DLY_N_SHIFT);
+        regval |= ((cfg->clk_delay - 1) << SF_CTRL_SF_IF_READ_DLY_N_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF_READ_DLY_EN;
     }
@@ -169,9 +164,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg)
     } else {
         regval &= ~SF_CTRL_SF_CLK_SF_RX_INV_SEL;
     }
-    putreg32(regval, reg_base+SF_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
 
-#if defined(BL602) ||defined(BL702) || defined(BL702L)
+#if defined(BL602) || defined(BL702) || defined(BL702L)
     bflb_sf_ctrl_set_io_delay(0, cfg->do_delay, cfg->di_delay, cfg->oe_delay);
     bflb_sf_ctrl_set_io_delay(1, cfg->do_delay, cfg->di_delay, cfg->oe_delay);
     bflb_sf_ctrl_set_io_delay(2, cfg->do_delay, cfg->di_delay, cfg->oe_delay);
@@ -181,7 +176,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg)
     regval = getreg32(reg_base + SF_CTRL_1_OFFSET);
     regval |= SF_CTRL_SF_AHB2SRAM_EN;
     regval |= SF_CTRL_SF_IF_EN;
-    putreg32(regval, reg_base+SF_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
 
     bflb_sf_ctrl_set_owner(cfg->owner);
 }
@@ -297,7 +292,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_bank2_enable(const struct sf_ctrl_bank2_cfg *
     } else {
         regval &= ~SF_CTRL_SF2_IF_READ_DLY_SRC;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_IF_IAHB_12_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF_IAHB_12_OFFSET);
 
     /* Select sbus2 clock delay */
     regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_0_OFFSET);
@@ -314,14 +309,14 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_bank2_enable(const struct sf_ctrl_bank2_cfg *
     } else {
         regval &= ~SF_CTRL_SF_IF2_READ_DLY_EN;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_IF2_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_0_OFFSET);
 
     /* Dual flash mode, enable bank2, select pad1 and pad2 */
-    regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_0_OFFSET);
+    regval = getreg32(reg_base + SF_CTRL_2_OFFSET);
     regval |= SF_CTRL_SF_IF_BK2_EN;
     regval |= SF_CTRL_SF_IF_BK2_MODE;
     regval &= ~SF_CTRL_SF_IF_PAD_SEL_MASK;
-    putreg32(regval, reg_base+SF_CTRL_2_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -343,7 +338,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_hold_sram(void)
     /* Sbus2 hold sram */
     regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
     regval |= SF_CTRL_SF_IF2_FN_SEL;
-    putreg32(regval, reg_base+SF_CTRL_SF_IF2_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -365,7 +360,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_release_sram(void)
     /* Sbus2 release sram */
     regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
     regval &= ~SF_CTRL_SF_IF2_FN_SEL;
-    putreg32(regval, reg_base+SF_CTRL_SF_IF2_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -415,7 +410,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_replace(uint8_t pad)
     /* Sbus2 enable */
     regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
     regval |= SF_CTRL_SF_IF2_EN;
-    putreg32(regval, reg_base+SF_CTRL_SF_IF2_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
 
     bflb_sf_ctrl_sbus2_hold_sram();
 
@@ -435,7 +430,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_replace(uint8_t pad)
 
     regval &= ~SF_CTRL_SF_IF2_PAD_SEL_MASK;
     regval |= (pad << SF_CTRL_SF_IF2_PAD_SEL_SHIFT);
-    putreg32(regval, reg_base+SF_CTRL_SF_IF2_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_0_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -461,12 +456,12 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_revoke_replace(void)
     regval &= ~SF_CTRL_SF_IF2_REPLACE_SF1;
     regval &= ~SF_CTRL_SF_IF2_REPLACE_SF2;
     regval &= ~SF_CTRL_SF_IF2_REPLACE_SF3;
-    putreg32(regval, reg_base+SF_CTRL_SF_IF2_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_0_OFFSET);
 
     /* Sbus2 disable */
     regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
     regval &= ~SF_CTRL_SF_IF2_EN;
-    putreg32(regval, reg_base+SF_CTRL_SF_IF2_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -491,7 +486,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_set_delay(uint8_t clk_delay, uint8_t rx
     if (clk_delay > 0) {
         regval |= SF_CTRL_SF_IF2_READ_DLY_EN;
         regval &= ~SF_CTRL_SF_IF2_READ_DLY_N_MASK;
-        regval |= ((clk_delay-1) << SF_CTRL_SF_IF2_READ_DLY_N_SHIFT);
+        regval |= ((clk_delay - 1) << SF_CTRL_SF_IF2_READ_DLY_N_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF2_READ_DLY_EN;
     }
@@ -501,7 +496,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_set_delay(uint8_t clk_delay, uint8_t rx
     } else {
         regval &= ~SF_CTRL_SF_CLK_SF_IF2_RX_INV_SEL;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_IF2_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_0_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -524,7 +519,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_remap_set(uint8_t remap, uint8_t lock)
     regval = getreg32(reg_base + SF_CTRL_2_OFFSET);
     regval &= ~SF_CTRL_SF_AHB2SIF_REMAP_MASK;
     regval |= (remap << SF_CTRL_SF_AHB2SIF_REMAP_SHIFT);
-    putreg32(regval, reg_base+SF_CTRL_2_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 
     regval = getreg32(reg_base + SF_CTRL_2_OFFSET);
     if (lock) {
@@ -532,7 +527,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_remap_set(uint8_t remap, uint8_t lock)
     } else {
         regval &= ~SF_CTRL_SF_AHB2SIF_REMAP_LOCK;
     }
-    putreg32(regval, reg_base+SF_CTRL_2_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
 #endif
 
@@ -559,7 +554,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_32bits_addr_en(uint8_t en32_bits_addr)
     } else {
         regval &= ~SF_CTRL_SF_IF_32B_ADR_EN;
     }
-    putreg32(regval, reg_base+SF_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
 }
 #endif
 
@@ -585,7 +580,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_init(struct sf_ctrl_psram_cfg *psram_cf
     regval = getreg32(reg_base + SF_CTRL_2_OFFSET);
     regval |= SF_CTRL_SF_IF_BK2_EN;
     regval |= SF_CTRL_SF_IF_BK2_MODE;
-    putreg32(regval, reg_base+SF_CTRL_2_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 #endif
 
     /* Select psram clock delay */
@@ -615,13 +610,13 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_init(struct sf_ctrl_psram_cfg *psram_cf
     } else {
         regval &= ~SF_CTRL_SF2_IF_READ_DLY_SRC;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_IF_IAHB_12_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF_IAHB_12_OFFSET);
 
     /* Enable AHB access sram buffer and enable sf interface */
     regval = getreg32(reg_base + SF_CTRL_1_OFFSET);
     regval |= SF_CTRL_SF_AHB2SRAM_EN;
     regval |= SF_CTRL_SF_IF_EN;
-    putreg32(regval, reg_base+SF_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
 
     bflb_sf_ctrl_set_owner(psram_cfg->owner);
 }
@@ -644,11 +639,11 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_clock_delay(void)
     reg_base = BFLB_SF_CTRL_BASE;
 
     regval = getreg32(reg_base + SF_CTRL_0_OFFSET);
-    if ((regval&SF_CTRL_SF_IF_READ_DLY_EN) == 0) {
+    if ((regval & SF_CTRL_SF_IF_READ_DLY_EN) == 0) {
         return 0;
     }
 
-    return ((regval&SF_CTRL_SF_IF_READ_DLY_N_MASK)>>SF_CTRL_SF_IF_READ_DLY_N_SHIFT) + 1;
+    return ((regval & SF_CTRL_SF_IF_READ_DLY_N_MASK) >> SF_CTRL_SF_IF_READ_DLY_N_SHIFT) + 1;
 }
 
 /****************************************************************************/ /**
@@ -671,11 +666,11 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_clock_delay(uint8_t delay)
     if (delay > 0) {
         regval |= SF_CTRL_SF_IF_READ_DLY_EN;
         regval &= ~SF_CTRL_SF_IF_READ_DLY_N_MASK;
-        regval |= ((delay-1) << SF_CTRL_SF_IF_READ_DLY_N_SHIFT);
+        regval |= ((delay - 1) << SF_CTRL_SF_IF_READ_DLY_N_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF_READ_DLY_EN;
     }
-    putreg32(regval, reg_base+SF_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -695,7 +690,7 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_wrap_queue_value(void)
     reg_base = BFLB_SF_CTRL_BASE;
 
     regval = getreg32(reg_base + SF_CTRL_3_OFFSET);
-    return (regval&SF_CTRL_SF_CMDS_2_WRAP_Q) ? 1:0;
+    return (regval & SF_CTRL_SF_CMDS_2_WRAP_Q) ? 1 : 0;
 }
 
 #if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
@@ -749,7 +744,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_cmds_set(struct sf_ctrl_cmds_cfg *cmds_cfg, u
         regval &= ~SF_CTRL_SF_CMDS_1_WRAP_LEN_MASK;
         regval |= ((cmds_cfg->cmds_wrap_len) << SF_CTRL_SF_CMDS_1_WRAP_LEN_SHIFT);
     }
-    putreg32(regval, reg_base+SF_CTRL_3_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_3_OFFSET);
 }
 #elif defined(BL702L)
 /****************************************************************************/ /**
@@ -791,7 +786,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_cmds_set(struct sf_ctrl_cmds_cfg *cmds_cfg, u
         regval &= ~SF_CTRL_SF_CMDS_2_WRAP_LEN_MASK;
         regval |= ((cmds_cfg->cmds_wrap_len) << SF_CTRL_SF_CMDS_2_WRAP_LEN_SHIFT);
     }
-    putreg32(regval, reg_base+SF_CTRL_3_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_3_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -817,7 +812,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_burst_toggle_set(uint8_t burst_toggle_en, uin
     } else {
         regval &= ~SF_CTRL_SF_CMDS_2_BT_EN;
     }
-    putreg32(regval, reg_base+SF_CTRL_3_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_3_OFFSET);
 
     regval = getreg32(reg_base + SF_CTRL_SF_IF_IAHB_6_OFFSET);
     if (mode) {
@@ -825,7 +820,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_burst_toggle_set(uint8_t burst_toggle_en, uin
     } else {
         regval &= ~SF_CTRL_SF_IF_3_QPI_MODE_EN;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_IF_IAHB_6_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF_IAHB_6_OFFSET);
 }
 #elif defined(BL702) || defined(BL602)
 /****************************************************************************/ /**
@@ -866,7 +861,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_cmds_set(struct sf_ctrl_cmds_cfg *cmds_cfg, u
 
     regval &= ~SF_CTRL_SF_CMDS_2_WRAP_LEN_MASK;
     regval |= (cmds_cfg->cmds_wrap_len << SF_CTRL_SF_CMDS_2_WRAP_LEN_SHIFT);
-    putreg32(regval, reg_base+SF_CTRL_3_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_3_OFFSET);
 }
 #endif
 
@@ -898,10 +893,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_pad(uint8_t sel)
         } else {
             /* Select pad2 or pad3 */
             regval &= ~SF_CTRL_SF_IF_PAD_SEL_MASK;
-            regval |= (((sel&0xf) >> 2) << SF_CTRL_SF_IF_PAD_SEL_SHIFT);
+            regval |= (((sel & 0xf) >> 2) << SF_CTRL_SF_IF_PAD_SEL_SHIFT);
         }
-    } else if ((sel >= SF_IO_EMB_SWAP_IO3IO0_AND_SF2_SWAP_IO3IO0 && sel <= SF_IO_EMB_SWAP_IO2CS_AND_SF2_SWAP_IO3IO0)
-             ||(sel >= SF_IO_EMB_SWAP_IO3IO0_AND_SF2 && sel <= SF_IO_EMB_SWAP_IO2CS_AND_SF2)) {
+    } else if ((sel >= SF_IO_EMB_SWAP_IO3IO0_AND_SF2_SWAP_IO3IO0 && sel <= SF_IO_EMB_SWAP_IO2CS_AND_SF2_SWAP_IO3IO0) || (sel >= SF_IO_EMB_SWAP_IO3IO0_AND_SF2 && sel <= SF_IO_EMB_SWAP_IO2CS_AND_SF2)) {
         /* Dual flash mode, enable bank2, select pad1 and pad2 */
         regval |= SF_CTRL_SF_IF_BK2_EN;
         regval |= SF_CTRL_SF_IF_BK2_MODE;
@@ -918,7 +912,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_pad(uint8_t sel)
         } else {
             /* Select pad2 or pad3 */
             regval &= ~SF_CTRL_SF_IF_PAD_SEL_MASK;
-            regval |= (((sel&0xf) >> 2) << SF_CTRL_SF_IF_PAD_SEL_SHIFT);
+            regval |= (((sel & 0xf) >> 2) << SF_CTRL_SF_IF_PAD_SEL_SHIFT);
         }
     } else if (sel >= SF_IO_EMB_SWAP_IO0_IO3_AND_EXT_SF2 && sel <= SF_IO_EMB_SWAP_NONE_DUAL_IO0_AND_EXT_SF2) {
         /* Dual flash mode, enable bank2, select pad1 and pad2 */
@@ -951,7 +945,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_pad(uint8_t sel)
     regval &= ~SF_CTRL_SF_IF_PAD_SEL_MASK;
     regval |= (sel << SF_CTRL_SF_IF_PAD_SEL_SHIFT);
 #endif
-    putreg32(regval, reg_base+SF_CTRL_2_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -976,7 +970,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus_select_bank(uint8_t bank)
     } else {
         regval &= ~SF_CTRL_SF_IF_0_BK_SEL;
     }
-    putreg32(regval, reg_base+SF_CTRL_2_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1019,7 +1013,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_owner(uint8_t owner)
     } else {
         regval &= ~SF_CTRL_SF_AHB2SIF_EN;
     }
-    putreg32(regval, reg_base+SF_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1040,7 +1034,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_disable(void)
 
     regval = getreg32(reg_base + SF_CTRL_1_OFFSET);
     regval &= ~SF_CTRL_SF_IF_EN;
-    putreg32(regval, reg_base+SF_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1064,7 +1058,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable_be(void)
     regval |= SF_CTRL_SF_AES_IV_ENDIAN;
     regval |= SF_CTRL_SF_AES_DIN_ENDIAN;
     regval |= SF_CTRL_SF_AES_DOUT_ENDIAN;
-    putreg32(regval, reg_base+SF_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1088,7 +1082,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable_le(void)
     regval &= ~SF_CTRL_SF_AES_IV_ENDIAN;
     regval &= ~SF_CTRL_SF_AES_DIN_ENDIAN;
     regval &= ~SF_CTRL_SF_AES_DOUT_ENDIAN;
-    putreg32(regval, reg_base+SF_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1105,18 +1099,18 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable_le(void)
  *
 *******************************************************************************/
 __WEAK
-#if defined (BL702) || defined(BL602)
+#if defined(BL702) || defined(BL602)
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable, uint8_t hw_key,
-                                          uint32_t start_addr, uint32_t end_addr, uint8_t locked)
+                                                  uint32_t start_addr, uint32_t end_addr, uint8_t locked)
 {
-    /* 0x30 : sf_aes_cfg */
-    #define SF_CTRL_SF_AES_REGION_CFG_END_SHIFT   (0U)
-    #define SF_CTRL_SF_AES_REGION_CFG_END_MASK    (0x3fff<<SF_CTRL_SF_AES_REGION_END_SHIFT)
-    #define SF_CTRL_SF_AES_REGION_CFG_START_SHIFT (14U)
-    #define SF_CTRL_SF_AES_REGION_CFG_START_MASK  (0x3fff<<SF_CTRL_SF_AES_REGION_START_SHIFT)
-    #define SF_CTRL_SF_AES_REGION_CFG_HW_KEY_EN   (1<<29U)
-    #define SF_CTRL_SF_AES_REGION_CFG_EN          (1<<30U)
-    #define SF_CTRL_SF_AES_REGION_CFG_LOCK        (1<<31U)
+/* 0x30 : sf_aes_cfg */
+#define SF_CTRL_SF_AES_REGION_CFG_END_SHIFT   (0U)
+#define SF_CTRL_SF_AES_REGION_CFG_END_MASK    (0x3fff << SF_CTRL_SF_AES_REGION_END_SHIFT)
+#define SF_CTRL_SF_AES_REGION_CFG_START_SHIFT (14U)
+#define SF_CTRL_SF_AES_REGION_CFG_START_MASK  (0x3fff << SF_CTRL_SF_AES_REGION_START_SHIFT)
+#define SF_CTRL_SF_AES_REGION_CFG_HW_KEY_EN   (1 << 29U)
+#define SF_CTRL_SF_AES_REGION_CFG_EN          (1 << 30U)
+#define SF_CTRL_SF_AES_REGION_CFG_LOCK        (1 << 31U)
 
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
@@ -1150,15 +1144,15 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable
         regval &= ~SF_CTRL_SF_AES_REGION_CFG_LOCK;
     }
     regval &= ~SF_CTRL_SF_AES_REGION_CFG_START_MASK;
-    regval |= ((start_addr/1024) << SF_CTRL_SF_AES_REGION_CFG_START_SHIFT);
+    regval |= ((start_addr / 1024) << SF_CTRL_SF_AES_REGION_CFG_START_SHIFT);
     /* sf_aes_end =1 means 1,11,1111,1111 */
     regval &= ~SF_CTRL_SF_AES_REGION_CFG_END_MASK;
-    regval |= ((end_addr/1024) << SF_CTRL_SF_AES_REGION_CFG_END_SHIFT);
-    putreg32(regval, region_reg_base+SF_CTRL_SF_AES_START_OFFSET);
+    regval |= ((end_addr / 1024) << SF_CTRL_SF_AES_REGION_CFG_END_SHIFT);
+    putreg32(regval, region_reg_base + SF_CTRL_SF_AES_START_OFFSET);
 }
 #else
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable, uint8_t hw_key,
-                                          uint32_t start_addr, uint32_t end_addr, uint8_t locked)
+                                                  uint32_t start_addr, uint32_t end_addr, uint8_t locked)
 {
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
     uint32_t regval = 0;
@@ -1170,8 +1164,8 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable
     regval = getreg32(region_reg_base + SF_CTRL_SF_AES_END_OFFSET);
     /* sf_aes_end =1 means 1,11,1111,1111 */
     regval &= ~SF_CTRL_SF_AES_REGION_END_MASK;
-    regval |= ((end_addr/1024) << SF_CTRL_SF_AES_REGION_END_SHIFT);
-    putreg32(regval, region_reg_base+SF_CTRL_SF_AES_END_OFFSET);
+    regval |= ((end_addr / 1024) << SF_CTRL_SF_AES_REGION_END_SHIFT);
+    putreg32(regval, region_reg_base + SF_CTRL_SF_AES_END_OFFSET);
 
     regval = getreg32(region_reg_base + SF_CTRL_SF_AES_START_OFFSET);
     if (hw_key) {
@@ -1190,8 +1184,8 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable
         regval &= ~SF_CTRL_SF_AES_REGION_LOCK;
     }
     regval &= ~SF_CTRL_SF_AES_REGION_START_MASK;
-    regval |= ((start_addr/1024) << SF_CTRL_SF_AES_REGION_START_SHIFT);
-    putreg32(regval, region_reg_base+SF_CTRL_SF_AES_START_OFFSET);
+    regval |= ((start_addr / 1024) << SF_CTRL_SF_AES_REGION_START_SHIFT);
+    putreg32(regval, region_reg_base + SF_CTRL_SF_AES_START_OFFSET);
 }
 #endif
 
@@ -1222,7 +1216,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key(uint8_t region, uint8_t *key, uin
     regval = getreg32(reg_base + SF_CTRL_SF_AES_OFFSET);
     regval &= ~SF_CTRL_SF_AES_MODE_MASK;
     regval |= ((key_type) << SF_CTRL_SF_AES_MODE_SHIFT);
-    putreg32(regval, reg_base+SF_CTRL_SF_AES_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
 
     if (NULL != key) {
         if (key_type == SF_CTRL_AES_128BITS) {
@@ -1235,7 +1229,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key(uint8_t region, uint8_t *key, uin
 
         regval = SF_CTRL_SF_AES_KEY_7_OFFSET;
         while (i--) {
-            putreg32(__REV(BL_RDWD_FRM_BYTEP(key)), region_reg_base+regval);
+            putreg32(__REV(BL_RDWD_FRM_BYTEP(key)), region_reg_base + regval);
             key += 4;
             regval -= 4;
         }
@@ -1269,7 +1263,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key_be(uint8_t region, uint8_t *key, 
     regval = getreg32(reg_base + SF_CTRL_SF_AES_OFFSET);
     regval &= ~SF_CTRL_SF_AES_MODE_MASK;
     regval |= ((key_type) << SF_CTRL_SF_AES_MODE_SHIFT);
-    putreg32(regval, reg_base+SF_CTRL_SF_AES_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
 
     if (NULL != key) {
         if (key_type == SF_CTRL_AES_128BITS) {
@@ -1282,7 +1276,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key_be(uint8_t region, uint8_t *key, 
 
         regval = SF_CTRL_SF_AES_KEY_0_OFFSET;
         while (i--) {
-            putreg32(BL_RDWD_FRM_BYTEP(key), region_reg_base+regval);
+            putreg32(BL_RDWD_FRM_BYTEP(key), region_reg_base + regval);
             key += 4;
             regval += 4;
         }
@@ -1314,12 +1308,12 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv(uint8_t region, uint8_t *iv, uint3
         regval = SF_CTRL_SF_AES_IV_W3_OFFSET;
 
         while (i--) {
-            putreg32(__REV(BL_RDWD_FRM_BYTEP(iv)), region_reg_base+regval);
+            putreg32(__REV(BL_RDWD_FRM_BYTEP(iv)), region_reg_base + regval);
             iv += 4;
             regval -= 4;
         }
 
-        putreg32(addr_offset, region_reg_base+SF_CTRL_SF_AES_IV_W0_OFFSET);
+        putreg32(addr_offset, region_reg_base + SF_CTRL_SF_AES_IV_W0_OFFSET);
         iv += 4;
     }
 }
@@ -1349,12 +1343,12 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv_be(uint8_t region, uint8_t *iv, ui
         regval = SF_CTRL_SF_AES_IV_W0_OFFSET;
 
         while (i--) {
-            putreg32(BL_RDWD_FRM_BYTEP(iv), region_reg_base+regval);
+            putreg32(BL_RDWD_FRM_BYTEP(iv), region_reg_base + regval);
             iv += 4;
             regval += 4;
         }
 
-        putreg32(__REV(addr_offset), region_reg_base+SF_CTRL_SF_AES_IV_W3_OFFSET);
+        putreg32(__REV(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
         iv += 4;
     }
 }
@@ -1369,7 +1363,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv_be(uint8_t region, uint8_t *iv, ui
  *
 *******************************************************************************/
 __WEAK
-void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region_offset(uint8_t region,uint32_t addr_offset)
+void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region_offset(uint8_t region, uint32_t addr_offset)
 {
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
@@ -1377,7 +1371,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region_offset(uint8_t region,uint32_t
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
 #endif
 
-    putreg32(__REV(addr_offset), region_reg_base+SF_CTRL_SF_AES_IV_W3_OFFSET);
+    putreg32(__REV(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
 }
 
 #ifdef BFLB_SF_CTRL_AES_XTS_ENABLE
@@ -1404,14 +1398,14 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_key(uint8_t region, uint8_t *key,
     regval = getreg32(reg_base + SF_CTRL_SF_AES_OFFSET);
     regval &= ~SF_CTRL_SF_AES_MODE_MASK;
     regval |= ((key_type) << SF_CTRL_SF_AES_MODE_SHIFT);
-    putreg32(regval, reg_base+SF_CTRL_SF_AES_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
 
     if (NULL != key) {
         i = 8;
         regval = SF_CTRL_SF_AES_KEY_7_OFFSET;
 
         while (i--) {
-            putreg32(__REV(BL_RDWD_FRM_BYTEP(key)), region_reg_base+regval);
+            putreg32(__REV(BL_RDWD_FRM_BYTEP(key)), region_reg_base + regval);
             key += 4;
             regval -= 4;
         }
@@ -1441,14 +1435,14 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_key_be(uint8_t region, uint8_t *k
     regval = getreg32(reg_base + SF_CTRL_SF_AES_OFFSET);
     regval &= ~SF_CTRL_SF_AES_MODE_MASK;
     regval |= ((key_type) << SF_CTRL_SF_AES_MODE_SHIFT);
-    putreg32(regval, reg_base+SF_CTRL_SF_AES_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
 
     if (NULL != key) {
         i = 8;
         regval = SF_CTRL_SF_AES_KEY_0_OFFSET;
 
         while (i--) {
-            putreg32(BL_RDWD_FRM_BYTEP(key), region_reg_base+regval);
+            putreg32(BL_RDWD_FRM_BYTEP(key), region_reg_base + regval);
             key += 4;
             regval += 4;
         }
@@ -1477,11 +1471,11 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_iv(uint8_t region, uint8_t *iv, u
 
         while (i--) {
             iv += 4;
-            putreg32(BL_RDWD_FRM_BYTEP(iv), region_reg_base+regval);
+            putreg32(BL_RDWD_FRM_BYTEP(iv), region_reg_base + regval);
             regval += 4;
         }
 
-        putreg32(addr_offset, region_reg_base+SF_CTRL_SF_AES_IV_W0_OFFSET);
+        putreg32(addr_offset, region_reg_base + SF_CTRL_SF_AES_IV_W0_OFFSET);
         iv += 4;
     }
 }
@@ -1508,11 +1502,11 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_iv_be(uint8_t region, uint8_t *iv
 
         while (i--) {
             iv += 4;
-            putreg32(__REV(BL_RDWD_FRM_BYTEP(iv)), region_reg_base+regval);
+            putreg32(__REV(BL_RDWD_FRM_BYTEP(iv)), region_reg_base + regval);
             regval -= 4;
         }
 
-        putreg32(__REV(addr_offset), region_reg_base+SF_CTRL_SF_AES_IV_W3_OFFSET);
+        putreg32(__REV(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
         iv += 4;
     }
 }
@@ -1540,7 +1534,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_mode(uint8_t mode)
     } else {
         regval |= SF_CTRL_SF_AES_BLK_MODE;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_AES_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1561,7 +1555,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable(void)
 
     regval = getreg32(reg_base + SF_CTRL_SF_AES_OFFSET);
     regval |= SF_CTRL_SF_AES_EN;
-    putreg32(regval, reg_base+SF_CTRL_SF_AES_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1582,7 +1576,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_disable(void)
 
     regval = getreg32(reg_base + SF_CTRL_SF_AES_OFFSET);
     regval &= ~SF_CTRL_SF_AES_EN;
-    putreg32(regval, reg_base+SF_CTRL_SF_AES_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1627,21 +1621,21 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_flash_image_offset(uint32_t addr_offset, 
     reg_base = BFLB_SF_CTRL_BASE;
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
-    putreg32(addr_offset, reg_base+SF_CTRL_SF_ID0_OFFSET_OFFSET);
+    putreg32(addr_offset, reg_base + SF_CTRL_SF_ID0_OFFSET_OFFSET);
 #else
     if (bank == SF_CTRL_FLASH_BANK0) {
         if (group) {
-            putreg32(addr_offset, reg_base+SF_CTRL_SF_ID1_OFFSET_OFFSET);
+            putreg32(addr_offset, reg_base + SF_CTRL_SF_ID1_OFFSET_OFFSET);
         } else {
-            putreg32(addr_offset, reg_base+SF_CTRL_SF_ID0_OFFSET_OFFSET);
+            putreg32(addr_offset, reg_base + SF_CTRL_SF_ID0_OFFSET_OFFSET);
         }
     }
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
     else {
         if (group) {
-            putreg32(addr_offset, reg_base+SF_CTRL_SF_BK2_ID1_OFFSET_OFFSET);
+            putreg32(addr_offset, reg_base + SF_CTRL_SF_BK2_ID1_OFFSET_OFFSET);
         } else {
-            putreg32(addr_offset, reg_base+SF_CTRL_SF_BK2_ID0_OFFSET_OFFSET);
+            putreg32(addr_offset, reg_base + SF_CTRL_SF_BK2_ID0_OFFSET_OFFSET);
         }
     }
 #endif
@@ -1708,7 +1702,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_lock_flash_image_offset(uint8_t lock)
     } else {
         regval &= ~SF_CTRL_SF_ID_OFFSET_LOCK;
     }
-    putreg32(regval, reg_base+SF_CTRL_2_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
 
 #if defined(BL702) || defined(BL602)
@@ -1723,7 +1717,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_lock_flash_image_offset(uint8_t lock)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_select_clock(uint8_t sahb_sram_sel)
 {
-    #define SF_CTRL_SF_CLK_SAHB_SRAM_SEL    (1<<5U)
+#define SF_CTRL_SF_CLK_SAHB_SRAM_SEL (1 << 5U)
 
     uint32_t reg_base = 0;
     uint32_t regval = 0;
@@ -1738,12 +1732,11 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_clock(uint8_t sahb_sram_sel)
         regval &= ~SF_CTRL_SF_CLK_SAHB_SRAM_SEL;
     }
 
-    putreg32(regval, reg_base+SF_CTRL_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
 }
 #else
 void ATTR_TCM_SECTION bflb_sf_ctrl_select_clock(uint8_t sahb_sram_sel)
 {
-
 }
 #endif
 
@@ -1796,11 +1789,11 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg)
     /* Clear trigger */
     regval = getreg32(cmd_offset + SF_CTRL_IF_SAHB_0_OFFSET);
     regval &= ~SF_CTRL_IF_0_TRIG;
-    putreg32(regval, cmd_offset+SF_CTRL_IF_SAHB_0_OFFSET);
+    putreg32(regval, cmd_offset + SF_CTRL_IF_SAHB_0_OFFSET);
 
     /* Copy command buffer */
-    putreg32(cfg->cmd_buf[0], cmd_offset+SF_CTRL_IF_SAHB_1_OFFSET);
-    putreg32(cfg->cmd_buf[1], cmd_offset+SF_CTRL_IF_SAHB_2_OFFSET);
+    putreg32(cfg->cmd_buf[0], cmd_offset + SF_CTRL_IF_SAHB_1_OFFSET);
+    putreg32(cfg->cmd_buf[1], cmd_offset + SF_CTRL_IF_SAHB_2_OFFSET);
 
     regval = getreg32(cmd_offset + SF_CTRL_IF_SAHB_0_OFFSET);
     /* Configure SPI and IO mode*/
@@ -1833,7 +1826,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg)
     regval &= ~SF_CTRL_IF_0_ADR_BYTE_MASK;
     if (cfg->addr_size != 0) {
         regval |= SF_CTRL_IF_0_ADR_EN;
-        regval |= ((cfg->addr_size-1) << SF_CTRL_IF_0_ADR_BYTE_SHIFT);
+        regval |= ((cfg->addr_size - 1) << SF_CTRL_IF_0_ADR_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_IF_0_ADR_EN;
     }
@@ -1842,7 +1835,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg)
     regval &= ~SF_CTRL_IF_0_DMY_BYTE_MASK;
     if (cfg->dummy_clks != 0) {
         regval |= SF_CTRL_IF_0_DMY_EN;
-        regval |= ((cfg->dummy_clks-1) << SF_CTRL_IF_0_DMY_BYTE_SHIFT);
+        regval |= ((cfg->dummy_clks - 1) << SF_CTRL_IF_0_DMY_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_IF_0_DMY_EN;
     }
@@ -1851,7 +1844,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg)
     regval &= ~SF_CTRL_IF_0_DAT_BYTE_MASK;
     if (cfg->nb_data != 0) {
         regval |= SF_CTRL_IF_0_DAT_EN;
-        regval |= ((cfg->nb_data-1) << SF_CTRL_IF_0_DAT_BYTE_SHIFT);
+        regval |= ((cfg->nb_data - 1) << SF_CTRL_IF_0_DAT_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_IF_0_DAT_EN;
     }
@@ -1862,14 +1855,14 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg)
     } else {
         regval &= ~SF_CTRL_IF_0_DAT_RW;
     }
-    putreg32(regval, cmd_offset+SF_CTRL_IF_SAHB_0_OFFSET);
+    putreg32(regval, cmd_offset + SF_CTRL_IF_SAHB_0_OFFSET);
 
     //switch sf_clk_sahb_sram_sel = 0
     bflb_sf_ctrl_select_clock(1);
 
     /* Trigger */
     regval |= SF_CTRL_IF_0_TRIG;
-    putreg32(regval, cmd_offset+SF_CTRL_IF_SAHB_0_OFFSET);
+    putreg32(regval, cmd_offset + SF_CTRL_IF_SAHB_0_OFFSET);
 
     time_out = SF_CTRL_BUSY_STATE_TIMEOUT;
     while (bflb_sf_ctrl_get_busy_state()) {
@@ -1907,7 +1900,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_disable_wrap_access(uint8_t disable)
     } else {
         regval |= SF_CTRL_SF_AHB2SIF_DISWRAP;
     }
-    putreg32(regval, reg_base+SF_CTRL_1_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -1943,8 +1936,8 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip_set(struct sf_ctrl_cmd_cfg_type *cfg, uin
     }
 
     /* Copy command buffer */
-    putreg32(cfg->cmd_buf[0], reg_base+SF_CTRL_SF_IF_IAHB_1_OFFSET);
-    putreg32(cfg->cmd_buf[1], reg_base+SF_CTRL_SF_IF_IAHB_2_OFFSET);
+    putreg32(cfg->cmd_buf[0], reg_base + SF_CTRL_SF_IF_IAHB_1_OFFSET);
+    putreg32(cfg->cmd_buf[1], reg_base + SF_CTRL_SF_IF_IAHB_2_OFFSET);
 
     regval = getreg32(reg_base + SF_CTRL_SF_IF_IAHB_0_OFFSET);
     /* Configure SPI and IO mode*/
@@ -1980,7 +1973,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip_set(struct sf_ctrl_cmd_cfg_type *cfg, uin
     regval &= ~SF_CTRL_SF_IF_1_ADR_BYTE_MASK;
     if (cfg->addr_size != 0) {
         regval |= SF_CTRL_SF_IF_1_ADR_EN;
-        regval |= ((cfg->addr_size-1) << SF_CTRL_SF_IF_1_ADR_BYTE_SHIFT);
+        regval |= ((cfg->addr_size - 1) << SF_CTRL_SF_IF_1_ADR_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF_1_ADR_EN;
     }
@@ -1989,7 +1982,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip_set(struct sf_ctrl_cmd_cfg_type *cfg, uin
     regval &= ~SF_CTRL_SF_IF_1_DMY_BYTE_MASK;
     if (cfg->dummy_clks != 0) {
         regval |= SF_CTRL_SF_IF_1_DMY_EN;
-        regval |= ((cfg->dummy_clks-1) << SF_CTRL_SF_IF_1_DMY_BYTE_SHIFT);
+        regval |= ((cfg->dummy_clks - 1) << SF_CTRL_SF_IF_1_DMY_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF_1_DMY_EN;
     }
@@ -2007,7 +2000,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip_set(struct sf_ctrl_cmd_cfg_type *cfg, uin
     } else {
         regval &= ~SF_CTRL_SF_IF_1_DAT_RW;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_IF_IAHB_0_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF_IAHB_0_OFFSET);
 }
 
 #ifdef BFLB_SF_CTRL_PSRAM_ENABLE
@@ -2044,8 +2037,8 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_write_set(struct sf_ctrl_cmd_cfg_type *
     }
 
     /* Copy command buffer */
-    putreg32(cfg->cmd_buf[0], reg_base+SF_CTRL_SF_IF_IAHB_4_OFFSET);
-    putreg32(cfg->cmd_buf[1], reg_base+SF_CTRL_SF_IF_IAHB_5_OFFSET);
+    putreg32(cfg->cmd_buf[0], reg_base + SF_CTRL_SF_IF_IAHB_4_OFFSET);
+    putreg32(cfg->cmd_buf[1], reg_base + SF_CTRL_SF_IF_IAHB_5_OFFSET);
 
     getreg32(reg_base + SF_CTRL_SF_IF_IAHB_3_OFFSET);
     /* Configure SPI and IO mode*/
@@ -2081,7 +2074,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_write_set(struct sf_ctrl_cmd_cfg_type *
     regval &= ~SF_CTRL_SF_IF_2_ADR_BYTE_MASK;
     if (cfg->addr_size != 0) {
         regval |= SF_CTRL_SF_IF_2_ADR_EN;
-        regval |= ((cfg->addr_size-1) << SF_CTRL_SF_IF_2_ADR_BYTE_SHIFT);
+        regval |= ((cfg->addr_size - 1) << SF_CTRL_SF_IF_2_ADR_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF_2_ADR_EN;
     }
@@ -2090,7 +2083,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_write_set(struct sf_ctrl_cmd_cfg_type *
     regval &= ~SF_CTRL_SF_IF_2_DMY_BYTE_MASK;
     if (cfg->dummy_clks != 0) {
         regval |= SF_CTRL_SF_IF_2_DMY_EN;
-        regval |= ((cfg->dummy_clks-1) << SF_CTRL_SF_IF_2_DMY_BYTE_SHIFT);
+        regval |= ((cfg->dummy_clks - 1) << SF_CTRL_SF_IF_2_DMY_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF_2_DMY_EN;
     }
@@ -2108,7 +2101,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_write_set(struct sf_ctrl_cmd_cfg_type *
     } else {
         regval &= ~SF_CTRL_SF_IF_2_DAT_RW;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_IF_IAHB_3_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF_IAHB_3_OFFSET);
 }
 #endif
 
@@ -2149,8 +2142,8 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip2_set(struct sf_ctrl_cmd_cfg_type *cfg, ui
     }
 
     /* Copy command buffer */
-    putreg32(cfg->cmd_buf[0], reg_base+SF_CTRL_SF_IF_IAHB_10_OFFSET);
-    putreg32(cfg->cmd_buf[1], reg_base+SF_CTRL_SF_IF_IAHB_11_OFFSET);
+    putreg32(cfg->cmd_buf[0], reg_base + SF_CTRL_SF_IF_IAHB_10_OFFSET);
+    putreg32(cfg->cmd_buf[1], reg_base + SF_CTRL_SF_IF_IAHB_11_OFFSET);
 
     regval = getreg32(reg_base + SF_CTRL_SF_IF_IAHB_9_OFFSET);
     /* Configure SPI and IO mode*/
@@ -2186,7 +2179,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip2_set(struct sf_ctrl_cmd_cfg_type *cfg, ui
     regval &= ~SF_CTRL_SF_IF_4_ADR_BYTE_MASK;
     if (cfg->addr_size != 0) {
         regval |= SF_CTRL_SF_IF_4_ADR_EN;
-        regval |= ((cfg->addr_size-1) << SF_CTRL_SF_IF_4_ADR_BYTE_SHIFT);
+        regval |= ((cfg->addr_size - 1) << SF_CTRL_SF_IF_4_ADR_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF_4_ADR_EN;
     }
@@ -2195,7 +2188,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip2_set(struct sf_ctrl_cmd_cfg_type *cfg, ui
     regval &= ~SF_CTRL_SF_IF_4_DMY_BYTE_MASK;
     if (cfg->dummy_clks != 0) {
         regval |= SF_CTRL_SF_IF_4_DMY_EN;
-        regval |= ((cfg->dummy_clks-1) << SF_CTRL_SF_IF_4_DMY_BYTE_SHIFT);
+        regval |= ((cfg->dummy_clks - 1) << SF_CTRL_SF_IF_4_DMY_BYTE_SHIFT);
     } else {
         regval &= ~SF_CTRL_SF_IF_4_DMY_EN;
     }
@@ -2213,7 +2206,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip2_set(struct sf_ctrl_cmd_cfg_type *cfg, ui
     } else {
         regval &= ~SF_CTRL_SF_IF_4_DAT_RW;
     }
-    putreg32(regval, reg_base+SF_CTRL_SF_IF_IAHB_9_OFFSET);
+    putreg32(regval, reg_base + SF_CTRL_SF_IF_IAHB_9_OFFSET);
 }
 
 /****************************************************************************/ /**
@@ -2259,6 +2252,168 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_busy_state(void)
 void bflb_sf_ctrl_irqhandler(void)
 {
     /* TODO: Not implemented */
+}
+
+/****************************************************************************/ /**
+ * @brief  SF Controller AES get IV BE
+ *
+ * @param  region: region number
+ * @param  iv: iv data pointer
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION bflb_sf_ctrl_aes_get_iv_be(uint8_t region, uint8_t *iv)
+{
+#if defined(BL602)
+    uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
+#else
+    uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
+#endif
+    uint32_t iv_w[4] = { 0 };
+
+    if (iv != NULL) {
+        iv_w[0] = getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W0_OFFSET);
+        iv_w[1] = getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W1_OFFSET);
+        iv_w[2] = getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W2_OFFSET);
+        iv_w[3] = getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
+        arch_memcpy(iv, (uint8_t *)&iv_w, sizeof(iv_w));
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  SF Controller AES get IV LE
+ *
+ * @param  region: region number
+ * @param  iv: iv data pointer
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION bflb_sf_ctrl_aes_get_iv_le(uint8_t region, uint8_t *iv)
+{
+#if defined(BL602)
+    uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
+#else
+    uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
+#endif
+    uint32_t iv_w[4] = { 0 };
+
+    if (iv != NULL) {
+        iv_w[3] = __REV(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W0_OFFSET));
+        iv_w[2] = __REV(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W1_OFFSET));
+        iv_w[1] = __REV(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W2_OFFSET));
+        iv_w[0] = __REV(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET));
+        arch_memcpy(iv, (uint8_t *)&iv_w, sizeof(iv_w));
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  SF Controller set data decrypt region be
+ *
+ * @param  None
+ *
+ * @return None
+ *
+*******************************************************************************/
+int32_t ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_decrypt_region_be(struct bflb_sf_ctrl_decrypt_type *parm)
+{
+    uint8_t temp_iv[16] = { 0 };
+    uint8_t *p_iv = NULL;
+
+    /* assert, sf_ctrl support max flash size 64M */
+    if ((NULL == parm) || ((parm->addr + parm->len) > (64 * 1024 * 1024))) {
+        return -1;
+    }
+
+    if (parm->len) {
+        if (NULL == parm->iv) {
+            /* get iv from region 0 */
+            bflb_sf_ctrl_aes_get_iv_be(0, temp_iv);
+            p_iv = temp_iv;
+        } else {
+            p_iv = parm->iv;
+        }
+
+        /* set decrypt */
+        bflb_sf_ctrl_aes_disable();
+#ifdef BFLB_SF_CTRL_AES_XTS_ENABLE
+        if (SF_CTRL_AES_XTS_MODE == parm->mode) {
+            /* aes xts mode */
+            bflb_sf_ctrl_disable_wrap_access(0);
+            bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_XTS_MODE);
+            bflb_sf_ctrl_aes_xts_set_key_be(parm->aes_region, NULL, parm->type);
+            bflb_sf_ctrl_aes_xts_set_iv_be(parm->aes_region, p_iv, parm->addr);
+        } else {
+#endif
+            /* aes ctr mode */
+            bflb_sf_ctrl_disable_wrap_access(1);
+            bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_CTR_MODE);
+            bflb_sf_ctrl_aes_set_key_be(parm->aes_region, NULL, parm->type);
+            bflb_sf_ctrl_aes_set_iv_be(parm->aes_region, p_iv, parm->addr);
+#ifdef BFLB_SF_CTRL_AES_XTS_ENABLE
+        }
+#endif
+        bflb_sf_ctrl_aes_set_region(parm->aes_region, 1 /*enable this region*/, 1 /*hardware key*/, parm->addr, parm->addr + parm->len - 1, 0 /*lock*/);
+        bflb_sf_ctrl_aes_enable_be();
+        bflb_sf_ctrl_aes_enable();
+    }
+
+    return 0;
+}
+
+/****************************************************************************/ /**
+ * @brief  SF Controller set data decrypt region le
+ *
+ * @param  None
+ *
+ * @return None
+ *
+*******************************************************************************/
+int32_t ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_decrypt_region_le(struct bflb_sf_ctrl_decrypt_type *parm)
+{
+    uint8_t temp_iv[16] = { 0 };
+    uint8_t *p_iv = NULL;
+
+    /* assert, sf_ctrl support max flash size 64M */
+    if ((NULL == parm) || ((parm->addr + parm->len) > (64 * 1024 * 1024))) {
+        return -1;
+    }
+
+    if (parm->len) {
+        if (NULL == parm->iv) {
+            /* get iv from region 0 */
+            bflb_sf_ctrl_aes_get_iv_le(0, temp_iv);
+            p_iv = temp_iv;
+        } else {
+            p_iv = parm->iv;
+        }
+
+        /* set decrypt */
+        bflb_sf_ctrl_aes_disable();
+#ifdef BFLB_SF_CTRL_AES_XTS_ENABLE
+        if (SF_CTRL_AES_XTS_MODE == parm->mode) {
+            /* aes xts mode */
+            bflb_sf_ctrl_disable_wrap_access(0);
+            bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_XTS_MODE);
+            bflb_sf_ctrl_aes_xts_set_key(parm->aes_region, NULL, parm->type);
+            bflb_sf_ctrl_aes_xts_set_iv(parm->aes_region, p_iv, parm->addr);
+        } else {
+#endif
+            /* aes ctr mode */
+            bflb_sf_ctrl_disable_wrap_access(1);
+            bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_CTR_MODE);
+            bflb_sf_ctrl_aes_set_key(parm->aes_region, NULL, parm->type);
+            bflb_sf_ctrl_aes_set_iv(parm->aes_region, p_iv, parm->addr);
+#ifdef BFLB_SF_CTRL_AES_XTS_ENABLE
+        }
+#endif
+        bflb_sf_ctrl_aes_set_region(parm->aes_region, 1 /*enable this region*/, 1 /*hardware key*/, parm->addr, parm->addr + parm->len - 1, 0 /*lock*/);
+        bflb_sf_ctrl_aes_enable_le();
+        bflb_sf_ctrl_aes_enable();
+    }
+
+    return 0;
 }
 
 /*@} end of group SF_CTRL_Public_Functions */
