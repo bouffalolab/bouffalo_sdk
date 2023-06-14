@@ -26,6 +26,7 @@ del /a /f /s /q .\chips\bl808\img_create\*.bin
 del /a /f /s /q .\chips\bl606p\img_create\*.bin
 del /a /f /s /q .\chips\bl616\img_create\*.bin
 del /a /f /s /q .\chips\wb03\img_create\*.bin
+del /a /f /s /q .\chips\bl628\img_create\*.bin
 del /a /f /s /q .\chips\bl56x\img_create_iot\*.bin
 del /a /f /s /q .\chips\bl60x\img_create_iot\*.bin
 del /a /f /s /q .\chips\bl562\img_create_iot\*.bin
@@ -36,6 +37,7 @@ del /a /f /s /q .\chips\bl808\img_create_iot\*.bin
 del /a /f /s /q .\chips\bl606p\img_create_iot\*.bin
 del /a /f /s /q .\chips\bl616\img_create_iot\*.bin
 del /a /f /s /q .\chips\wb03\img_create_iot\*.bin
+del /a /f /s /q .\chips\bl628\img_create_iot\*.bin
 del /a /f /s /q .\chips\bl56x\img_create_mcu\*.bin
 del /a /f /s /q .\chips\bl60x\img_create_mcu\*.bin
 del /a /f /s /q .\chips\bl562\img_create_mcu\*.bin
@@ -46,6 +48,7 @@ del /a /f /s /q .\chips\bl808\img_create_mcu\*.bin
 del /a /f /s /q .\chips\bl606p\img_create_mcu\*.bin
 del /a /f /s /q .\chips\bl616\img_create_mcu\*.bin
 del /a /f /s /q .\chips\wb03\img_create_mcu\*.bin
+del /a /f /s /q .\chips\bl628\img_create_mcu\*.bin
 del /a /f /s /q .\chips\bl56x\img_create_linux\*.bin
 del /a /f /s /q .\chips\bl60x\img_create_linux\*.bin
 del /a /f /s /q .\chips\bl562\img_create_linux\*.bin
@@ -56,16 +59,8 @@ del /a /f /s /q .\chips\bl808\img_create_linux\*.bin
 del /a /f /s /q .\chips\bl606p\img_create_linux\*.bin
 del /a /f /s /q .\chips\bl616\img_create_linux\*.bin
 del /a /f /s /q .\chips\wb03\img_create_linux\*.bin
-del /a /f /s /q .\chips\bl56x\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\bl60x\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\bl562\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\bl602\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\bl702\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\bl702l\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\bl808\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\bl606p\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\bl616\efuse_bootheader\*.bin
-del /a /f /s /q .\chips\wb03\efuse_bootheader\*.bin
+del /a /f /s /q .\chips\bl628\img_create_linux\*.bin
+
 del /a /f /s /q .\chips\*.pack
 rd /s /Q .\chips\bl56x\ota
 rd /s /Q .\chips\bl60x\ota
@@ -77,6 +72,7 @@ rd /s /Q .\chips\bl808\ota
 rd /s /Q .\chips\bl606p\ota
 rd /s /Q .\chips\bl616\ota
 rd /s /Q .\chips\wb03\ota
+rd /s /Q .\chips\bl628\ota
 rd /s /Q .\chips\bl56x\img_create
 rd /s /Q .\chips\bl60x\img_create
 rd /s /Q .\chips\bl562\img_create
@@ -87,6 +83,7 @@ rd /s /Q .\chips\bl808\img_create
 rd /s /Q .\chips\bl606p\img_create
 rd /s /Q .\chips\bl616\img_create
 rd /s /Q .\chips\wb03\img_create
+rd /s /Q .\chips\bl628\img_create
 rd /s /Q .\chips\bl606p\test_bin
 rd /s /Q .\chips\bl808\test_bin
 del /a /f /s /q ".DS_Store"
