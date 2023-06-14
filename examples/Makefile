@@ -44,13 +44,15 @@ ifeq ($(CHIP),bl616)
 filter_out_dirs += ./peripherals/csi/%
 filter_out_dirs += ./peripherals/pwm_v1/%
 makefile_dirs += ./fatfs
-makefile_dirs += ./littlefs/kv_test
+makefile_dirs += ./littlefs
 makefile_dirs += ./lvgl
 makefile_dirs += ./lua
 makefile_dirs += ./btble/ble_mesh_cli
 makefile_dirs += ./btble/peripheral
-makefile_dirs += ./wifi/mqtt
 makefile_dirs += ./wifi/sta/wifi_http
+makefile_dirs += ./wifi/sta/wifi_https_demo
+makefile_dirs += ./wifi/sta/wifi_mqtt_pub
+makefile_dirs += ./wifi/sta/wifi_mqtt_sub
 makefile_dirs += ./wifi/sta/wifi_tcp
 makefile_dirs += ./wifi/sta/wifi_udp
 endif
@@ -58,7 +60,7 @@ endif
 ifeq ($(CHIP),bl808)
 filter_out_dirs += ./peripherals/pwm_v1/%
 makefile_dirs += ./fatfs
-makefile_dirs += ./littlefs/kv_test
+makefile_dirs += ./littlefs
 makefile_dirs += ./lvgl
 makefile_dirs += ./lua
 endif
