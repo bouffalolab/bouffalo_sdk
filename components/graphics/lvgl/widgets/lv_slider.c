@@ -212,7 +212,7 @@ static void lv_slider_event(const lv_obj_class_t * class_p, lv_event_t * e)
                 /*Make the point relative to the indicator*/
                 new_value = p.x - (obj->coords.x1 + bg_left);
             }
-            new_value = (new_value * range) / indic_w;
+            new_value = (new_value * range + indic_w / 2) / indic_w;
             new_value += slider->bar.min_value;
         }
         else {
@@ -223,7 +223,7 @@ static void lv_slider_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
             /*Make the point relative to the indicator*/
             new_value = p.y - (obj->coords.y2 + bg_bottom);
-            new_value = (-new_value * range) / indic_h;
+            new_value = (-new_value * range + indic_h / 2) / indic_h;
             new_value += slider->bar.min_value;
         }
 
@@ -239,8 +239,12 @@ static void lv_slider_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
         new_value = LV_CLAMP(real_min_value, new_value, real_max_value);
         if(*slider->value_to_set != new_value) {
-            *slider->value_to_set = new_value;
-            lv_obj_invalidate(obj);
+            if(slider->value_to_set == &slider->bar.start_value) {
+                lv_bar_set_start_value(obj, new_value, LV_ANIM_ON);
+            }
+            else {
+                lv_bar_set_value(obj, new_value, LV_ANIM_ON);
+            }
             res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
             if(res != LV_RES_OK) return;
         }

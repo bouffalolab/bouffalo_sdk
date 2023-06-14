@@ -92,6 +92,7 @@ void lv_group_del(lv_group_t * group)
         indev = lv_indev_get_next(indev);
     }
 
+    if(default_group == group) default_group = NULL;
     _lv_ll_clear(&(group->obj_ll));
     _lv_ll_remove(&LV_GC_ROOT(_lv_group_ll), group);
     lv_mem_free(group);
@@ -112,6 +113,9 @@ void lv_group_add_obj(lv_group_t * group, lv_obj_t * obj)
     if(group == NULL) return;
 
     LV_LOG_TRACE("begin");
+
+    /*Be sure the object is removed from its current group*/
+    lv_group_remove_obj(obj);
 
     /*Do not add the object twice*/
     lv_obj_t ** obj_i;

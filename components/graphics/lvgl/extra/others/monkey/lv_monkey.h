@@ -51,35 +51,35 @@ typedef struct {
  * Initialize a monkey config with default values
  * @param config pointer to 'lv_monkey_config_t' variable to initialize
  */
-void lv_monkey_config_init(lv_monkey_config_t *config);
+void lv_monkey_config_init(lv_monkey_config_t * config);
 
 /**
  * Create monkey for test
  * @param config pointer to 'lv_monkey_config_t' variable
  * @return pointer to the created monkey
  */
-lv_monkey_t *lv_monkey_create(const lv_monkey_config_t *config);
+lv_monkey_t * lv_monkey_create(const lv_monkey_config_t * config);
 
 /**
  * Get monkey input device
  * @param monkey pointer to a monkey
  * @return pointer to the input device
  */
-lv_indev_t *lv_monkey_get_indev(lv_monkey_t *monkey);
+lv_indev_t * lv_monkey_get_indev(lv_monkey_t * monkey);
 
 /**
  * Enable monkey
  * @param monkey pointer to a monkey
  * @param en set to true to enable
  */
-void lv_monkey_set_enable(lv_monkey_t *monkey, bool en);
+void lv_monkey_set_enable(lv_monkey_t * monkey, bool en);
 
 /**
  * Get whether monkey is enabled
  * @param monkey pointer to a monkey
  * @return return true if monkey enabled
  */
-bool lv_monkey_get_enable(lv_monkey_t *monkey);
+bool lv_monkey_get_enable(lv_monkey_t * monkey);
 
 #if LV_USE_USER_DATA
 
@@ -88,22 +88,22 @@ bool lv_monkey_get_enable(lv_monkey_t *monkey);
  * @param monkey   pointer to a monkey
  * @param user_data   pointer to the new user_data.
  */
-void lv_monkey_set_user_data(lv_monkey_t *monkey, void *user_data);
+void lv_monkey_set_user_data(lv_monkey_t * monkey, void * user_data);
 
 /**
  * Get the user_data field of the monkey
  * @param monkey pointer to a monkey
  * @return the pointer to the user_data of the monkey
  */
-void *lv_monkey_get_user_data(lv_monkey_t *monkey);
+void * lv_monkey_get_user_data(lv_monkey_t * monkey);
 
-#endif /*LV_USE_USER_DATA*/
+#endif/*LV_USE_USER_DATA*/
 
 /**
  * Delete monkey
  * @param monkey pointer to monkey
  */
-void lv_monkey_del(lv_monkey_t *monkey);
+void lv_monkey_del(lv_monkey_t * monkey);
 
 /**********************
  *      MACROS

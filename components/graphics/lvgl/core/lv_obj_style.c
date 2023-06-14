@@ -314,7 +314,12 @@ bool lv_obj_remove_local_style_prop(lv_obj_t * obj, lv_style_prop_t prop, lv_sty
     /*The style is not found*/
     if(i == obj->style_cnt) return false;
 
-    return lv_style_remove_prop(obj->styles[i].style, prop);
+    lv_res_t res = lv_style_remove_prop(obj->styles[i].style, prop);
+    if(res == LV_RES_OK) {
+        lv_obj_refresh_style(obj, selector, prop);
+    }
+
+    return res;
 }
 
 void _lv_obj_style_create_transition(lv_obj_t * obj, lv_part_t part, lv_state_t prev_state, lv_state_t new_state,
@@ -744,6 +749,7 @@ static void trans_anim_cb(void * _tr, int32_t v)
                 else value_final.ptr = tr->end_value.ptr;
                 break;
             case LV_STYLE_BG_COLOR:
+            case LV_STYLE_BG_GRAD_COLOR:
             case LV_STYLE_BORDER_COLOR:
             case LV_STYLE_TEXT_COLOR:
             case LV_STYLE_SHADOW_COLOR:

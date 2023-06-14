@@ -17,8 +17,8 @@
  *      DEFINES
  *********************/
 
-#define COLOR_FG dark_bg ? lv_color_white() : lv_color_black()
-#define COLOR_BG dark_bg ? lv_color_black() : lv_color_white()
+#define COLOR_FG        dark_bg ? lv_color_white() : lv_color_black()
+#define COLOR_BG        dark_bg ? lv_color_black() : lv_color_white()
 
 #define BORDER_W_NORMAL 1
 #define BORDER_W_PR     3

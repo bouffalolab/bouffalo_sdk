@@ -16,8 +16,8 @@
 /*********************
  *      DEFINES
  *********************/
-#define MODE_DARK      1
-#define RADIUS_DEFAULT (disp_size == DISP_LARGE ? lv_disp_dpx(theme.disp, 12) : lv_disp_dpx(theme.disp, 8))
+#define MODE_DARK        1
+#define RADIUS_DEFAULT   (disp_size == DISP_LARGE ? lv_disp_dpx(theme.disp, 12) : lv_disp_dpx(theme.disp, 8))
 
 /*SCREEN*/
 #define LIGHT_COLOR_SCR  lv_palette_lighten(LV_PALETTE_GREY, 4)
@@ -29,12 +29,12 @@
 #define DARK_COLOR_TEXT  lv_palette_lighten(LV_PALETTE_GREY, 5)
 #define DARK_COLOR_GREY  lv_color_hex(0x2f3237)
 
-#define TRANSITION_TIME LV_THEME_DEFAULT_TRANSITION_TIME
-#define BORDER_WIDTH    lv_disp_dpx(theme.disp, 2)
-#define OUTLINE_WIDTH   lv_disp_dpx(theme.disp, 3)
+#define TRANSITION_TIME  LV_THEME_DEFAULT_TRANSITION_TIME
+#define BORDER_WIDTH     lv_disp_dpx(theme.disp, 2)
+#define OUTLINE_WIDTH    lv_disp_dpx(theme.disp, 3)
 
-#define PAD_DEF (disp_size == DISP_LARGE ? lv_disp_dpx(theme.disp, 24) : disp_size == DISP_MEDIUM ? lv_disp_dpx(theme.disp, 20) : \
-                                                                                                    lv_disp_dpx(theme.disp, 16))
+#define PAD_DEF          (disp_size == DISP_LARGE ? lv_disp_dpx(theme.disp, 24) : disp_size == DISP_MEDIUM ? lv_disp_dpx(theme.disp, 20) : \
+                                                                                                             lv_disp_dpx(theme.disp, 16))
 #define PAD_SMALL (disp_size == DISP_LARGE ? lv_disp_dpx(theme.disp, 14) : disp_size == DISP_MEDIUM ? lv_disp_dpx(theme.disp, 12) : \
                                                                                                       lv_disp_dpx(theme.disp, 10))
 #define PAD_TINY (disp_size == DISP_LARGE ? lv_disp_dpx(theme.disp, 8) : disp_size == DISP_MEDIUM ? lv_disp_dpx(theme.disp, 6) : \
