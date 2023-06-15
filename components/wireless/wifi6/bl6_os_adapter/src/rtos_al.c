@@ -51,7 +51,7 @@ uint8_t *ucHeap = (uint8_t *)__heap_bottom;
  ****************************************************************************************
  */
 
-inline TickType_t rtos_timeout_2_tickcount(int timeout_ms)
+static inline TickType_t rtos_timeout_2_tickcount(int timeout_ms)
 {
     if (timeout_ms < 0)
     {
