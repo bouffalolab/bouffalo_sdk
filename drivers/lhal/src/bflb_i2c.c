@@ -218,9 +218,6 @@ static int bflb_i2c_write_bytes(struct bflb_device_s *dev, uint8_t *data, uint32
         len -= 4;
         start_time = bflb_mtimer_get_time_ms();
         while ((getreg32(reg_base + I2C_FIFO_CONFIG_1_OFFSET) & I2C_TX_FIFO_CNT_MASK) == 0) {
-            if (bflb_i2c_isnak(dev)) {
-                return -EIO;
-            }
             if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
                 return -ETIMEDOUT;
             }
@@ -238,9 +235,6 @@ static int bflb_i2c_write_bytes(struct bflb_device_s *dev, uint8_t *data, uint32
         }
         start_time = bflb_mtimer_get_time_ms();
         while ((getreg32(reg_base + I2C_FIFO_CONFIG_1_OFFSET) & I2C_TX_FIFO_CNT_MASK) == 0) {
-            if (bflb_i2c_isnak(dev)) {
-                return -EIO;
-            }
             if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
                 return -ETIMEDOUT;
             }
@@ -252,16 +246,11 @@ static int bflb_i2c_write_bytes(struct bflb_device_s *dev, uint8_t *data, uint32
     }
 
     start_time = bflb_mtimer_get_time_ms();
-    while (bflb_i2c_isbusy(dev) || !bflb_i2c_isend(dev)) {
+    while (bflb_i2c_isbusy(dev) || !bflb_i2c_isend(dev) || bflb_i2c_isnak(dev)) {
         if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
             return -ETIMEDOUT;
         }
     }
-
-    if (bflb_i2c_isnak(dev)) {
-        return -EIO;
-    }
-
     bflb_i2c_disable(dev);
 
     return 0;
@@ -282,9 +271,6 @@ static int bflb_i2c_read_bytes(struct bflb_device_s *dev, uint8_t *data, uint32_
     while (len >= 4) {
         start_time = bflb_mtimer_get_time_ms();
         while ((getreg32(reg_base + I2C_FIFO_CONFIG_1_OFFSET) & I2C_RX_FIFO_CNT_MASK) == 0) {
-            if (bflb_i2c_isnak(dev)) {
-                return -EIO;
-            }
             if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
                 return -ETIMEDOUT;
             }
@@ -298,9 +284,6 @@ static int bflb_i2c_read_bytes(struct bflb_device_s *dev, uint8_t *data, uint32_
     if (len > 0) {
         start_time = bflb_mtimer_get_time_ms();
         while ((getreg32(reg_base + I2C_FIFO_CONFIG_1_OFFSET) & I2C_RX_FIFO_CNT_MASK) == 0) {
-            if (bflb_i2c_isnak(dev)) {
-                return -EIO;
-            }
             if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
                 return -ETIMEDOUT;
             }
@@ -318,11 +301,6 @@ static int bflb_i2c_read_bytes(struct bflb_device_s *dev, uint8_t *data, uint32_
             return -ETIMEDOUT;
         }
     }
-
-    if (bflb_i2c_isnak(dev)) {
-        return -EIO;
-    }
-
     bflb_i2c_disable(dev);
 
     return 0;
