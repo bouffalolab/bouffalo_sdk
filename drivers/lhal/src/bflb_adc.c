@@ -462,21 +462,21 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                     conv_result = 4095;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (int32_t)result[i].value / 4095 * ref;
+                result[i].millivolt = (int32_t)result[i].value * ref / 4096;
             } else if (resolution == ADC_RESOLUTION_14B) {
                 conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2) / coe);
                 if (conv_result > 16383) {
                     conv_result = 16383;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (int32_t)result[i].value / 16383 * ref;
+                result[i].millivolt = (int32_t)result[i].value * ref / 16384;
             } else if (resolution == ADC_RESOLUTION_16B) {
                 conv_result = (uint32_t)((buffer[i] & 0xffff) / coe);
                 if (conv_result > 65535) {
                     conv_result = 65535;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (int32_t)result[i].value / 65535 * ref;
+                result[i].millivolt = (int32_t)result[i].value * ref / 65536;
             } else {
             }
         }
@@ -499,21 +499,21 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                     conv_result = 2047;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (int32_t)result[i].value / 2047 * ref;
+                result[i].millivolt = (int32_t)result[i].value * ref / 2048;
             } else if (resolution == ADC_RESOLUTION_14B) {
                 conv_result = (uint32_t)(((tmp & 0xffff) >> 2) / coe);
                 if (conv_result > 8191) {
                     conv_result = 8191;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (int32_t)result[i].value / 8191 * ref;
+                result[i].millivolt = (int32_t)result[i].value * ref / 8192;
             } else if (resolution == ADC_RESOLUTION_16B) {
                 conv_result = (uint32_t)((tmp & 0xffff) / coe);
                 if (conv_result > 32767) {
                     conv_result = 32767;
                 }
                 result[i].value = conv_result;
-                result[i].millivolt = (int32_t)result[i].value / 32767 * ref;
+                result[i].millivolt = (int32_t)result[i].value * ref / 32768;
             } else {
             }
 
