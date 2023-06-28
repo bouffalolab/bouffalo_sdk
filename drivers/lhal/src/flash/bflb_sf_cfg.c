@@ -2564,6 +2564,11 @@ static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         .cfg = &flash_cfg_gd_q32e_q128e,
     },
     {
+        .jedec_id = 0x165020,
+        //.name="xm_lu32_32_18",
+        .cfg = &flash_cfg_winb_16jv,
+    },
+    {
         .jedec_id = 0x174220,
         //.name="xm_qw64_64_1833",
         .cfg = &flash_cfg_winb_16jv,

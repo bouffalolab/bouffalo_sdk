@@ -76,7 +76,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
 #if defined(BL808)
     if (config->input_source != CAM_INPUT_SOURCE_CSI) {
 #endif
-        regval = bflb_clk_get_system_clock(BFLB_SYSTEM_PBCLK);
+        regval = bflb_clk_get_system_clock(BFLB_SYSTEM_PBCLK) / 1000000;
         if (regval == 0) {
             regval = 80;
         }

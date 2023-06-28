@@ -492,11 +492,11 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
         case UART_CMD_GET_TX_FIFO_CNT:
             /* Get tx fifo count */
             ret = (getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET) & UART_TX_FIFO_CNT_MASK) >> UART_TX_FIFO_CNT_SHIFT;
-
+            break;
         case UART_CMD_GET_RX_FIFO_CNT:
             /* Get rx fifo count */
             ret = (getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET) & UART_RX_FIFO_CNT_MASK) >> UART_RX_FIFO_CNT_SHIFT;
-
+            break;
         case UART_CMD_SET_AUTO_BAUD:
             /* Set auto baudrate detection  */
             tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
@@ -526,6 +526,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             } else {
                 ret = ((tmp & UART_STS_URX_ABR_PRD_0X55_MASK) >> UART_STS_URX_ABR_PRD_0X55_SHIFT);
             }
+            break;
 #if !defined(BL602)
         case UART_CMD_SET_BREAK_VALUE:
             /* Set lin mode break value */
