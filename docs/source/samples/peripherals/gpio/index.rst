@@ -11,7 +11,7 @@ GPIO
 各开发板支持的 GPIO 引脚如下表：
 
 .. table:: GPIO 口
-    :widths: 25, 25, 25, 25
+    :widths: 25, 25
     :width: 80%
     :align: center
 

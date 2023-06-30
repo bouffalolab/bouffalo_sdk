@@ -6,4 +6,4 @@ Components
     :maxdepth: 1
 
     FreeRTOS <freertos>
-    BLE_CLI <ble_cli>
+    BLE_MESH <ble_mesh>
