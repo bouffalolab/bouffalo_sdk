@@ -7,23 +7,23 @@ BLE
 ------
 - BLE支持的特性：
     + 蓝牙HOST特性
-        + GAP支持的角色：Peripheral与Central，Observer与Broadcaster
+        - GAP支持的角色：Peripheral与Central，Observer与Broadcaster
         - GATT支持的角色：Server与Client
         - 支持配对包括蓝牙4.2中的安全连接特性
         - 支持永久存储蓝牙特定的设置和数据
     + 蓝牙mesh特性
-        + 支持Relay, Friend Node, Low-Power Node (LPN) and GATT Proxy角色
+        - 支持Relay, Friend Node, Low-Power Node (LPN) and GATT Proxy角色
         - 支持两种Provisioning bearers(PB-ADV & PB-GATT)
 - BLE协议栈的架构：
-                        .. figure:: img/image1.png
+                        .. figure:: img/ble1.png
 
     + 总共有3个主要层，共同构成了一个完整的蓝牙低能耗协议栈 
-        + Host：这一层位于应用程序之下,由多个(非实时)网络和传输协议组成，使应用程序能够以标准和互操作的方式与对等设备通信。
+        - Host：这一层位于应用程序之下,由多个(非实时)网络和传输协议组成，使应用程序能够以标准和互操作的方式与对等设备通信。
         - Controller：控制器实现了链路层(LE LL)，这是一种低层次的实时协议，它与无线电硬件一起提供了空中通信的标准互操作。LL处理包的接收和传输，保证数据的传递，并处理所有LL控制程序。
-        * Radio Hardware：实现所需的模拟和数字基带功能块，允许链路层固件在频谱的2.4GHz波段发送和接收。
+        - Radio Hardware：实现所需的模拟和数字基带功能块，允许链路层固件在频谱的2.4GHz波段发送和接收。
 
 - 主控Host：
-                        .. figure:: img/image2.png
+                        .. figure:: img/ble2.png
 
     * 蓝牙Host层实现了所有高级协议和配置文件，最重要的是它为应用程序提供了高级API 
         - HCI:Host与controller接口
@@ -49,670 +49,384 @@ BLE
             - 启动协议栈，开始运行
             - 等待相关事件，及事件处理，例如扫描事件，从机的Notify事件等等。
 
-API参考
-----------
-
-- API介绍
-
-``void ble_controller_init(uint8_t task_priority)``
-
-::
-
-    /**
-    * function      controller层初始化
-    * @param[in]    task_priority：  任务优先级
-    * @return       空
-    */
-
-``int hci_driver_init(void)``
-
-::
-
-    /**
-    * function      HCI接口驱动初始化
-    * @param[in]    空
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_enable(bt_ready_cb_t cb)``
-
-::
-
-    /**
-    * function      Ble使能
-    * @param[in]    cb：如果成功调用回调函数
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_adv_start(const struct bt_le_adv_param *param,const struct bt_data *ad, size_t ad_len,``
-                            ``const struct bt_data *sd, size_t sd_len)``
-
-::
-
-    /**
-    * function      开启BLE广播
-    *
-    * @param[in]    param:  指向广播配置参数指针
-    * @param[in]    ad:     指向广播包中数据指针
-    * @param[in]    ad_len: 广播包中数据的长度
-    * @param[in]    sd:     指向扫描响应包数据指针  
-    * @param[in]    sd_len: 扫描响应包数据的长度  
-    * @return       0:成功，!=0:失败
-    */
-
-
-``int bt_le_adv_update_data(const struct bt_data *ad, size_t ad_len,const struct bt_data *sd, size_t sd_len)``
-
-
-::
-
-    /**
-    * function      更新BLE广播数据
-    * @param[in]    ad:     指向广播包中数据指针
-    * @param[in]    ad_len: 广播包中数据的长度
-    * @param[in]    sd:     指向扫描响应包数据指针  
-    * @param[in]    sd_len: 扫描响应包数据的长度  
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_adv_stop(void)``
-
-
-::
-
-    /**
-    * function      停止BLE广播 
-    * @param[in]    空
-    * @return       0:成功，!=0:失败
-    */
-
-
-``int bt_le_scan_start(const struct bt_le_scan_param *param, bt_le_scan_cb_t cb)``
-
-::
-
-    /**
-    * function      开启BLE扫描
-    * @param[in]    param:  指向扫描参数的指针
-    * @param[in]    cb:     扫描回调函数
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_scan_stop(void)``
-
-::
-
-    /**
-    * function      停止BLE扫描
-    * @param[in]    空
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_whitelist_add(const bt_addr_le_t *addr)``
-
-::
-
-    /**
-    * function      通过地址添加设备到白名单列表中
-    * @param[in]    addr:指向需要添加设备地址的指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_whitelist_rem(const bt_addr_le_t *addr)``
-
-::
-
-
-    /**
-    * function      从白名单列表中移除设备
-    * @param[in]    addr:指向需要移除设备地址的指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_whitelist_clear(void)``
-
-
-::
-
-    /**
-    * function      清除白名单列表
-    * @param[in]    空
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_set_chan_map(u8_t chan_map[5])``
-
-::
-
-    /**
-    * function      设置(LE)通道映射
-    * @param[in]    chan_map：通道数组
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_unpair(u8_t id, const bt_addr_le_t *addr)``
-
-::
-
-    /**
-    * function      清除配对信息
-    * @param[in]    id：    本地标识(大多只是默认的BT ID)
-    * @param[in]    addr：  远端设备地址，NULL或者BT_ADDR_LE_ANY清除所有远端设备
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_conn_get_info(const struct bt_conn *conn, struct bt_conn_info *info)``
-
-::
-
-    /**
-    * function      获取当前连接设备的信息
-    * @param[in]    conn：  指向当前连接的指针
-    * @param[in]    info：  指向当前连接设备信息的指针
-    * @return       0:成功，!=0:失败
-    */
-
-
-``int bt_conn_get_remote_dev_info(struct bt_conn_info *info)``
-
-::
-
-    /**
-    * function      获取已连接设备的信息
-    * @param[in]    info：  指向当前连接设备信息的指针
-    * @return       已连接设备的个数
-    */
-
-``int bt_conn_le_param_update(struct bt_conn *conn,const struct bt_le_conn_param *param)``
-
-::
-
-    /**
-    * function      更新连接参数
-    * @param[in]    conn：  指向当前连接的指针
-    * @param[in]    param： 指向连接参数的指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_conn_disconnect(struct bt_conn *conn, u8_t reason)``
-
-::
-
-    /**
-    * function      断开当前连接
-    * @param[in]    conn：  指向当前连接的指针
-    * @param[in]    reason：断开当前连接的原因
-    * @return       0:成功，!=0:失败
-    */
-
-``struct bt_conn *bt_conn_create_le(const bt_addr_le_t *peer,const struct bt_le_conn_param *param)``
-
-::
-
-    /**
-    * function      创建连接
-    * @param[in]    peer：  需要连接设备地址的指针
-    * @param[in]    param： 指向连接参数指针
-    * @return       成功：有效的连接对象，否则失败
-    */
-
-
-``int bt_conn_create_auto_le(const struct bt_le_conn_param *param)``
-
-::
-
-    /**
-    * function      自动创建连接白名单列表中的设备
-    * @param[in]    param： 指向连接参数指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_conn_create_auto_stop(void)``
-
-::
-
-    /**
-    * function      停止自动创建连接白名单列表中的设备
-    * @param[in]    空
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_set_auto_conn(const bt_addr_le_t *addr,const struct bt_le_conn_param *param)``
-
-::
-
-    /**
-    * function      自动创建连接远端设备
-    * @param[in]    addr：  远端设备地址指针
-    * @param[in]    param： 指向连接参数指针
-    * @return       0:成功，!=0:失败
-    */
-
-``struct bt_conn *bt_conn_create_slave_le(const bt_addr_le_t *peer,const struct bt_le_adv_param *param)``
-
-::
-
-    /**
-    * function      发起定向的广播包给远端设备
-    * @param[in]    peer：  远端设备地址指针
-    * @param[in]    param： 指向广播参数的指针
-    * @return       成功：有效的连接对象，否则失败
-    */
-
-``int bt_conn_set_security(struct bt_conn *conn, bt_security_t sec)``
-
-::
-
-    /**
-    * function      设置连接安全等级
-    * @param[in]    conn：  指向连接对象的指针
-    * @param[in]    sec：   安全等级
-    * @return       0:成功，!=0:失败
-    */
-
-``bt_security_t bt_conn_get_security(struct bt_conn *conn)``
-
-::
-
-    /**
-    * function      获取当前连接的安全等级
-    * @param[in]    conn：  指向连接对象的指针
-    * @return       安全级别
-    */
-
-
-``u8_t bt_conn_enc_key_size(struct bt_conn *conn)``
-
-::
-
-    /**
-    * function      获取当前连接的加密key的大小
-    * @param[in]    conn：  指向连接对象的指针
-    * @return       加密key的大小
-    */
-
-
-``void bt_conn_cb_register(struct bt_conn_cb *cb)``
-
-::
-
-    /**
-    * function      注册连接回调函数
-    * @param[in]    cb：  连接回调函数
-    * @return       空
-    */
-
-``void bt_set_bondable(bool enable)``
-
-::
-
-    /**
-    * function      设置/清除SMP配对请求/响应数据认证需求中的绑定标志
-    * @param[in]    enable：  1，使能，0：不使能
-    * @return       空
-    */
-
-``int bt_conn_auth_cb_register(const struct bt_conn_auth_cb *cb)``
-
-::
-
-    /**
-    * function      注册认证回调函数
-    * @param[in]    cb： 回调函数指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_conn_auth_passkey_entry(struct bt_conn *conn, unsigned int passkey)``
-
-::
-
-    /**
-    * function      用密钥回复对方
-    * @param[in]    conn：    连接对象指针
-    * @param[in]    passkey： 输入的密钥
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_conn_auth_cancel(struct bt_conn *conn)``
-
-::
-
-    /**
-    * function      取消认证过程
-    * @param[in]    conn：    连接对象指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_conn_auth_passkey_confirm(struct bt_conn *conn)``
-
-::
-
-    /**
-    * function      如果密码匹配，回复对方
-    * @param[in]    conn：    连接对象的指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_conn_auth_pincode_entry(struct bt_conn *conn, const char *pin)``
-
-::
-
-    /**
-    * function      用PIN码进行回复对方
-    * @param[in]    conn：  连接对象的指针
-    * @param[in]    pin：   PIN码的指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_le_read_rssi(u16_t handle,int8_t *rssi)``
-
-::
-
-    /**
-    * function      读取对方RSSI值
-    * @param[in]    handle：连接的句柄值
-    * @param[in]    rssi：  rssi的指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_get_local_address(bt_addr_le_t *adv_addr)``
-
-::
-
-    /**
-    * function      读取本机的地址
-    * @param[in]    adv_addr：  指向地址的指针
-    * @return       0:成功，!=0:失败
-    */
-
-``int bt_set_tx_pwr(int8_t power)``
-
-::
-
-    /**
-    * function      设置本机发射功率
-    * @param[in]    power：  功率值
-    * @return       0:成功，!=0:失败
-    */
-
-数据结构参考
----------------
-
-``bt_le_adv_param``\ 数据结构：
-
-.. code-block:: c
-   :linenos:
-
-    /** LE Advertising Parameters. */
-    struct bt_le_adv_param {
-        /** Local identity */
-        u8_t  id;
-
-        /** Bit-field of advertising options */
-        u8_t  options;
-
-        /** Minimum Advertising Interval (N * 0.625) */
-        u16_t interval_min;
-
-        /** Maximum Advertising Interval (N * 0.625) */
-        u16_t interval_max;
-
-        #if defined(CONFIG_BT_STACK_PTS)
-        u8_t  addr_type;
-        #endif
-    };
-
-此数据结构用来配置广播参数，包括本地识别id、广播选项位域、广播间隙等，其中广播选项位域有如下枚举类型参数可选:
-
-.. code-block:: c
-   :linenos:
-
-    enum {
-        /** Convenience value when no options are specified. */
-        BT_LE_ADV_OPT_NONE = 0,
-
-        /** Advertise as connectable. Type of advertising is determined by
-            * providing SCAN_RSP data and/or enabling local privacy support.
-            */
-        BT_LE_ADV_OPT_CONNECTABLE = BIT(0),
-
-        /** Don't try to resume connectable advertising after a connection.
-            *  This option is only meaningful when used together with
-            *  BT_LE_ADV_OPT_CONNECTABLE. If set the advertising will be stopped
-            *  when bt_le_adv_stop() is called or when an incoming (slave)
-            *  connection happens. If this option is not set the stack will
-            *  take care of keeping advertising enabled even as connections
-            *  occur.
-            */
-        BT_LE_ADV_OPT_ONE_TIME = BIT(1),
-
-        /** Advertise using the identity address as the own address.
-            *  @warning This will compromise the privacy of the device, so care
-            *           must be taken when using this option.
-            */
-        BT_LE_ADV_OPT_USE_IDENTITY = BIT(2),
-
-        /** Advertise using GAP device name */
-        BT_LE_ADV_OPT_USE_NAME = BIT(3),
-
-        /** Use low duty directed advertising mode, otherwise high duty mode
-            *  will be used. This option is only effective when used with
-            *  bt_conn_create_slave_le().
-            */
-        BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY = BIT(4),
-
-        /** Enable use of Resolvable Private Address (RPA) as the target address
-            *  in directed advertisements when CONFIG_BT_PRIVACY is not enabled.
-            *  This is required if the remote device is privacy-enabled and
-            *  supports address resolution of the target address in directed
-            *  advertisement.
-            *  It is the responsibility of the application to check that the remote
-            *  device supports address resolution of directed advertisements by
-            *  reading its Central Address Resolution characteristic.
-            */
-        BT_LE_ADV_OPT_DIR_ADDR_RPA = BIT(5),
-
-        /** Use whitelist to filter devices that can request scan response
-            *  data.
-            */
-        BT_LE_ADV_OPT_FILTER_SCAN_REQ = BIT(6),
-
-        /** Use whitelist to filter devices that can connect. */
-        BT_LE_ADV_OPT_FILTER_CONN = BIT(7),
-    };
-如果需要发送一个广播包，配置可以如下：
-
-.. code-block:: c
-   :linenos:
-
-    param.id = 0;
-    param.options = (BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_ONE_TIME);
-    param.interval_min = 0x00a0;
-    param.interval_max = 0x00f0;
-
-``bt_data``\ 数据结构：
-
-.. code-block:: c
-   :linenos:
-
-    struct bt_data {
-        u8_t type;
-        u8_t data_len;
-        const u8_t *data;
-    };
-
-此数据结构用来填充广播包中的数据，具体的数据包类型可以参考如下：
-
-.. code-block:: c
-   :linenos:
-
-    Service UUID
-    Local Name
-    Flags
-    Manufacturer Specific Data
-    TX Power Level
-    Secure Simple Pairing OOB
-    Security Manager OOB
-    Security Manager TK Value
-    Slave Connection Interval Range
-    Service Solicitation
-    Service Data
-    Appearance
-    Public Target Address
-    Random Target Address
-    Advertising Interval
-    LE Bluetooth Device Address
-    LE Role
-    Uniform Resource Identifier
-    LE Supported Features
-    Channel Map Update Indication
-
-用该数据结构配置一个广播包数据，如下所示：
-
-.. code-block:: c
-   :linenos:
-
-    struct bt_data ad_discov[] = {
-        BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-        BT_DATA(BT_DATA_NAME_COMPLETE, "BL602-BLE-DEV", 13),
-    };
-
-``bt_le_scan_param``\ 数据结构：
-
-.. code-block:: c
-   :linenos:
-
-    /** LE scan parameters */
-    struct bt_le_scan_param {
-        /** Scan type (BT_LE_SCAN_TYPE_ACTIVE or BT_LE_SCAN_TYPE_PASSIVE) */
-        u8_t  type;
-
-        /** Bit-field of scanning filter options. */
-        u8_t  filter_dup;
-
-        /** Scan interval (N * 0.625 ms) */
-        u16_t interval;
-
-        /** Scan window (N * 0.625 ms) */
-        u16_t window;
-    };
-
-此数据结构用来填充扫描参数，
-type：为扫描类型有2种类型BT_LE_SCAN_TYPE_ACTIVE（0x01）、BT_LE_SCAN_TYPE_PASSIVE(0x00)。
-filter_dup：0x00,除定向广告外，接受所有广播和扫描响应，0x01,只接收白名单列表中设备的广播和扫描响应。
-interval：扫描间隙。
-window：扫描窗口。
-
-如果开启扫描请求，可以配置如下：
-
-.. code-block:: c
-   :linenos:
-
-    scan_param.type = BT_LE_SCAN_TYPE_PASSIVE
-    scan_param.filter_dup = 0x00
-    interval=BT_GAP_SCAN_SLOW_INTERVAL_1
-    window=BT_GAP_SCAN_SLOW_WINDOW_1
-
-
-``bt_le_conn_param``\ 数据结构：
-
-.. code-block:: c
-   :linenos:
-
-    /** Connection parameters for LE connections */
-    struct bt_le_conn_param {
-        u16_t interval_min;
-        u16_t interval_max;
-        u16_t latency;
-        u16_t timeout;
-
-        #if defined(CONFIG_BT_STACK_PTS)
-        u8_t  own_address_type;
-        #endif
-    };
-
-此数据结构用来填充连接参数，interval_min：连接间隙最少值（0x0018），interval_max：连接间隙最大值(0x0028)，
-latency：指定为连接事件数的连接允许的最大从延迟。
-timeout：连接超时时间。
-
-配置该数据结构，如下：
-
-.. code-block:: c
-   :linenos:
-
-    interval_min=BT_GAP_INIT_CONN_INT_MIN(0x0018)
-    interval_max=BT_GAP_INIT_CONN_INT_MAX(0x0028)
-    latency=0
-    timeout=400
-
-``bt_conn`` 数据结构：
-
-.. code-block:: c
-   :linenos:
-
-    struct bt_conn {
-        u16_t			handle;
-        u8_t			type;
-        u8_t			role;
-
-        ATOMIC_DEFINE(flags, BT_CONN_NUM_FLAGS);
-
-        /* Which local identity address this connection uses */
-        u8_t                    id;
-
-    #if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
-        bt_security_t		sec_level;
-        bt_security_t		required_sec_level;
-        u8_t			encrypt;
-    #endif /* CONFIG_BT_SMP || CONFIG_BT_BREDR */
-
-        /* Connection error or reason for disconnect */
-        u8_t			err;
-
-        bt_conn_state_t		state;
-
-        u16_t		        rx_len;
-        struct net_buf		*rx;
-
-        /* Sent but not acknowledged TX packets with a callback */
-        sys_slist_t		tx_pending;
-        /* Sent but not acknowledged TX packets without a callback before
-        * the next packet (if any) in tx_pending.
-        */
-        u32_t                   pending_no_cb;
-
-        /* Completed TX for which we need to call the callback */
-        sys_slist_t		tx_complete;
-        struct k_work           tx_complete_work;
-
-
-        /* Queue for outgoing ACL data */
-        struct k_fifo		tx_queue;
-
-        /* Active L2CAP channels */
-        sys_slist_t		channels;
-
-        atomic_t		ref;
-
-        /* Delayed work for connection update and other deferred tasks */
-        struct k_delayed_work	update_work;
-
-        union {
-            struct bt_conn_le	le;
-    #if defined(CONFIG_BT_BREDR)
-            struct bt_conn_br	br;
-            struct bt_conn_sco	sco;
-    #endif
-        };
-
-    #if defined(CONFIG_BT_REMOTE_VERSION)
-        struct bt_conn_rv {
-            u8_t  version;
-            u16_t manufacturer;
-            u16_t subversion;
-        } rv;
-    #endif
-    };
-此数据结构为当前连接数据结构，其中包括BLE蓝牙连接相关的参数，连接成功后该数据结构可以被用户调用。
-
-
+CLI 命令
+-------------	 
+
+ble_init
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：ble通用初始化，在所有ble cli操作前，需要先输入该命令
+- 参数：无
+- 示例：输入命令 ``ble_init``
+
+    .. figure:: img/image2.png
+       :alt:
+
+ble_auth
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：注册SMP接口函数
+- 参数：无
+- 示例：输入命令 ``ble_auth``
+ 
+    .. figure:: img/image3.png
+       :alt:	   
+
+ble_unpair
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：清除配对key
+- 第一个参数表示设备地址类型
+  - 0：设备表示public地址类型
+  - 1：表示设备地址为random类型
+  - 2：表示设备地址为可解析的地址或者Public地址
+  - 3：表示设备地址为可解析的地址或者random地址
+- 第二个参数代表设备地址，高字节在前低字节在后，如果为0，代表清除所有设备的key
+- 示例：输入命令 ``ble_unpair 0 0``
+ 
+    .. figure:: img/image21.png
+       :alt:
+	   
+ble_start_adv
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能表示：开启广播
+- 第一个参数表示广播类型
+  - 0：adv_ind 可连接可被扫描;
+  - 1：adv_scan_ind 不可被连接可被扫描;
+  - 2：adv_nonconn_ind 不可被连接不可被扫描;
+  - 3：adv_direct_ind 可被指定的设备连接不可被扫描
+	
+- 第二个参数表示广播模式
+  - 0：General discoverable;
+  - 1：non discoverable;
+  - 2：limit discoverable;
+  
+- 第三个参数表示广播间隙最小值,其计算方式为 0.625ms * N,范围应在20 ms to 10.24 s之间
+- 第四个参数表示广播间隙最大值,其计算方式为 0.625ms * N,范围应在20 ms to 10.24 s之间
+- 示例：输入命令 ``ble_start_adv 0 0 0x80 0x80``
+ 
+    .. figure:: img/image4.png
+       :alt:
+
+ble_stop_adv
+^^^^^^^^^^^^^^^^^^^^
+
+ - 命令功能：停止ADV广播
+ - 参数：无
+ - 示例：输入命令 ``ble_stop_adv``
+ 
+    .. figure:: img/image17.png
+       :alt:
+	   
+ble_start_scan
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：表示扫描广播设备
+- 第一个参数表示扫描类型 
+  - 0：表示scan passive type只监听广播数据
+  - 1：表示scan active,不仅监听当满足条件还会发scan_req包
+  
+- 第二个参数表示过滤设备广播包
+  - 0：表示不启用重复过滤
+  - 1：表示启用重复过滤
+  - 2：仅仅接收白名单列表发起的广播和scan response包，除了指定连接地址不是自己的adv_direct_ind广播包
+  - 4：使用扩展过滤策略，过滤设备
+  
+- 第三个参数表示扫描间隙,其计算方式为 0.625ms * N,范围在2.5 ms to 10.24 s之间,其应该大于等于扫描窗口
+- 第四个参数表示扫描窗口,其计算方式为 0.625ms * N,范围在2.5 ms to 10.24 s之间,其应该小于等于扫描间隙
+- 示例：输入命令 ``ble_start_scan 0 0 0x80 0x40``
+ 
+    .. figure:: img/image11.png
+       :alt:
+ 
+ble_stop_scan
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：停止扫描
+- 参数：无
+- 示例：系统进入SCAN后，输入命令 ``ble_stop_scan``
+ 
+    .. figure:: img/image14.png
+       :alt:
+
+ble_conn_update
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：表示更新连接参数	
+- 第一个参数表示连接间隙的最小值,其计算方式为 N * 1.25 ms,其范围在7.5 ms to 4 s
+- 第二个参数表示连接间隙的最大值,其计算方式为 N * 1.25 ms,其范围在7.5 ms to 4 s
+- 第三个参数表示从设备时延多少个连接事件范围是0~499,比如：该值设置为1，表明延时一个事件的时间进行数据交互，作用是降低交互频率更省电
+- 第四个参数表示连接超时时间，计算方式 N * 10 ms,范围是100 ms to 32 s
+- 示例：连接成功后，输入命令 ``ble_conn_update 0x28 0x28 0x0 0xf4``
+ 
+    .. figure:: img/image7.png
+       :alt:
+ 
+ble_security 
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：设置SMP的加密等级	
+- 第一个参数表示加密等级，总共有5个等级
+  - 0：仅用于BR/EDR，比如SDP服务;
+  - 1：表示不需要加密不需要认证的过程; 
+  - 2：表示需要加密不需要认证的过程 
+  - 3：表示需要加密和认证，比如双方需要输入PIN码 
+  - 4：表示需要加密和认证，通过128bit的key
+  - 示例：连接成功后，输入命令 ``ble_security 2``
+ 
+    .. figure:: img/image8.png
+       :alt:
+
+ble_get_device_name
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：获取本地设备名称
+- 参数：无
+- 示例：输入命令 ``ble_get_device_name``
+ 
+    .. figure:: img/image12.png
+       :alt:
+
+ble_set_device_name
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：设置本地设备名称
+- 参数：需要设置的设备名字
+- 参数：无
+- 示例：输入命令 ``ble_set_device_name bl602``
+ 
+    .. figure:: img/image13.png
+       :alt:
+
+ble_read_local_address
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：读取本地设备地址
+- 参数：无
+- 示例：输入命令 ``ble_read_local_address``
+ 
+    .. figure:: img/image15.png
+       :alt:
+	   
+ble_set_adv_channel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ - 命令功能：设置ADV通道
+ - 参数：需要设定的ADV通道数，其值范围为1-7，参数大小为1byte，bit0代表通道37，bit1代表通道38，bit2代表通道39
+ - 示例：输入命令 ``ble_set_adv_channel 4``
+ 
+    .. figure:: img/image16.png
+       :alt:
+
+ble_connect
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：连接指定地址的设备
+- 第一个参数表示设备地址类型
+  - 0：设备表示public地址类型
+  - 1：表示设备地址为random类型
+  - 2：表示设备地址为可解析的地址或者Public地址
+  - 3：表示设备地址为可解析的地址或者random地址
+- 第二个参数代表设备地址，高字节在前低字节在后
+- 示例：输入命令 ``ble_connect 0 18B905DE96E0``
+ 
+    .. figure:: img/image18.png
+       :alt:
+
+ble_disconnect
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：断开指定地址的设备的连接
+- 第一个参数表示设备地址类型
+  - 0：设备表示public地址类型
+  - 1：表示设备地址为random类型
+  - 2：表示设备地址为可解析的地址或者Public地址
+  - 3：表示设备地址为可解析的地址或者random地址
+- 第二个参数代表设备地址，高字节在前低字节在后
+- 示例：连接成功后，输入命令 ``ble_disconnect 0 18B905DE96E0``
+ 
+    .. figure:: img/image19.png
+       :alt:
+
+ble_select_conn
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：多个连接中，将某一个连接对象设置为当前连接对象
+- 第一个参数表示设备地址类型
+  - 0：设备表示public地址类型
+  - 1：表示设备地址为random类型
+  - 2：表示设备地址为可解析的地址或者Public地址
+  - 3：表示设备地址为可解析的地址或者random地址
+- 第二个参数代表设备地址，高字节在前低字节在后	
+- 示例：多个设备连接成功后，输入命令 ``ble_select_conn 1 5F10546C8D83``，将选定的连接对象设置为当前连接对象，后续的ble_read等操作将会作用在该连接上
+ 
+    .. figure:: img/image20.png
+       :alt:
+
+ble_auth_cancel
+^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：取消加密认证过程
+- 参数：无
+- 示例：当在SMP过程中，输入命令 ``ble_auth_cancel``
+ 
+    .. figure:: img/image22.png
+       :alt:
+
+ble_auth_passkey_confirm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- 命令功能：接收到passkey后回复远端，并且对端设备在配对过程中也有显示该passkey； 例如：配对过程本地打印 Confirm passkey for 48:95:E6:73:1C:1A (random): 745491；可发送该函数进行回复
+   
+- 参数：无
+- 示例：当在SMP过程中，对应security level为3，需要输入命令 ``ble_auth_passkey_confirm``
+ 
+    .. figure:: img/image9.png
+       :alt:
+
+ble_auth_pairing_confirm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：接收到远端配对请求，用此函数回复远端配对请求，例如：配对过程本地打印 Confirm pairing for 00:1B:DC:F2:20:E9 (public)；可发送该函数进行回复
+- 参数：无
+- 示例：当在SMP过程中，对应的security level为2，输入命令 ``ble_auth_pairing_confirm``，
+ 
+    .. figure:: img/image23.png
+       :alt:
+
+ble_auth_passkey
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：请求输入passkey
+- 参数：passkey值，其范围为0-999999
+- 示例：当用ble_security 3命令进行配对，且SMP配对方法为PASSKEY_INPUT（代码中实现方法：用ble_auth注册smp接口函数时，在数据结构bt_conn_auth_cb中将函数passkey_entry填充，passkey_display与passkey_confirm不填充，其它接口函数默认即可），串口将打印出Enter passkey for XX:XX:XX:XX:XX:XX (public)，此时输入命令 ``ble_auth_passkey 111111`` 完成配对
+    
+    .. figure:: img/image24.png
+       :alt:
+	   
+ble_exchange_mtu
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：交换mtu大小
+- 参数： 无
+- 示例：连接成功后，输入命令 ``ble_exchange_mtu``
+ 
+    .. figure:: img/image25.png
+       :alt:
+
+ble_discover
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：查询指定的服务或特性
+- 第一个参数表示需要查询的类型
+  - 0：primary
+  - 1：secondary
+  - 2：include
+  - 3：Characteristic
+  - 4：Descriptor
+- 第二个参数表示2BYTES的uuid
+- 第三个参数表示起始句柄，占2BYTES
+- 第四个参数表示结束句柄，占2BYTES
+- 示例：连接成功后，输入命令 ``ble_discover 0 0x1800 0x1 0xffff``
+ 
+    .. figure:: img/image26.png
+       :alt:
+
+ble_read
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：读取指定句柄的数据
+- 第一个参数表示句柄
+- 第二个参数表示偏移量
+- 示例：连接成功后，输入命令 ``ble_read 0x5 0``
+ 
+    .. figure:: img/image27.png
+       :alt:
+
+ble_write
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：指定句柄写入相应的数据
+- 第一个参数表示句柄，占2bytes
+- 第二个参数表示偏移量，占2bytes
+- 第三个参数表示数据长度，占2bytes,最大不超过512
+- 第四个参数表示需要写入的数据
+ 
+- 示例：连接成功后，写入2个字节的数据，命令为 ``ble_write 0xf 0 2 0102``,其中01为一个byte，02为一个byte
+ 
+    .. figure:: img/image28.png
+       :alt:
+
+ble_write_without_rsp
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：指定句柄写入相应的数据并且不需要回复
+- 第一参数表示是否启动sign write命令
+  - 0：不使能sign write命令
+  - 1：使能sign write命令
+- 第二个参数表示句柄，占2bytes，
+- 第三个参数表示数据的长度，占2bytes，最大不超过512
+- 第四个参数表示写入的数据
+ 
+ - 示例：连接成功后，写入2个字节的数据，命令为 ``ble_write_without_rsp 0 0xf 2 0102``，其中01为一个byte，02为一个byte
+ 
+    .. figure:: img/image29.png
+       :alt:
+
+ble_subscribe
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：订阅CCC
+- 第一个参数表示CCC句柄
+- 第二个参数表示订阅值的句柄
+- 第三个参数表示订阅类型
+  - 1：表示notification
+  - 2：表示indication
+
+ - 示例：连接成功后，输入命令 ``ble_subscribe 0xf 0xd 0x1``，表示使能CCC的notification
+ 
+    .. figure:: img/image30.png
+       :alt:
+ 
+ble_unsubscribe
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：取消订阅CCC
+- 参数：无
+- 示例：输入命令 ``ble_unsubscribe``
+ 
+    .. figure:: img/image31.png
+       :alt:	   
+
+ble_set_data_len
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：设置pdu数据长度
+- 第一个参数表示有效荷载传输的最大值,范围为0x001B - 0x00FB
+- 第二个参数表示有效荷载传输的最大时间,范围值为0x0148 - 0x4290
+ 
+- 示例：当连接成功后，发送命令 ``ble_set_data_len 0xfb 0x0848``
+ 
+    .. figure:: img/image32.png
+       :alt:
+	   
+ble_conn_info
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：获取所有的连接信息
+- 参数：无
+- 示例：当连接成功后，发送命令 ``ble_conn_info`` ，获取已连接的设备
+ 
+    .. figure:: img/image33.png
+       :alt:
+
+ble_disable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：注销BLE
+- 参数：无
+- 示例：当无scan/adv/connect事件，发送命令 ``ble_disable``
+ 
+    .. figure:: img/image34.png
+       :alt:
+
+ble_set_tx_pwr
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- 命令功能：设置发送功率
+- 第一个参数表示设置功率值
+- 示例：发送命令 ``ble_set_tx_pwr 0xa``
+ 
+    .. figure:: img/image35.png
+       :alt:
+
+Functions
+----------------
