@@ -1,5 +1,28 @@
 # Configuration file for the Sphinx documentation builder.
 
+import os
+import os.path
+import subprocess
+import shutil
+
+os.environ[r'BL_SDK_BASE'] = os.path.abspath(r'../..')
+os.environ[r'DOXYGEN_OUTPUT_DIR'] = os.path.abspath(r'_static')
+
+def doxygen_run(bl_sdk_path):
+    shutil.rmtree(os.environ[r'DOXYGEN_OUTPUT_DIR'], ignore_errors=True)
+    doxygen_conf = os.path.join(bl_sdk_path, r'docs/doxygen/Doxyfile')
+    doxygen_cmd = r'doxygen ' + doxygen_conf
+    print(os.path.abspath(doxygen_conf))
+    return_code, out = subprocess.getstatusoutput(doxygen_cmd)
+    #print(out)
+    
+    if 0 != return_code:
+        print("Doxygen failed!!!")
+        print(out)
+
+
+doxygen_run(os.environ[r'BL_SDK_BASE'])
+
 # -- Project information
 
 project = 'BouffaloSDK'
@@ -32,6 +55,3 @@ templates_path = ['_templates']
 # -- Options for HTML output
 
 html_theme = 'sphinx_rtd_theme'
-
-# -- Options for EPUB output
-epub_show_urls = 'footnote'

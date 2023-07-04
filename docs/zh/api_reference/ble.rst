@@ -430,3 +430,5 @@ ble_set_tx_pwr
 
 Functions
 ----------------
+
+ble stack 采用 zephyr ble stack，因此 API 请参考 `zephyr bluetooth api <https://docs.zephyrproject.org/apidoc/latest/group__bluetooth.html>`_ 。

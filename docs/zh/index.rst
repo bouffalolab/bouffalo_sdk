@@ -22,8 +22,11 @@ BouffaloSDK 使用指南
    :maxdepth: 1
    :caption: API 手册
 
-   api_reference/peripherals/index
-   api_reference/components/index
+   api_reference/lhal
+   api_reference/bflog
+   api_reference/ble
+   api_reference/ble_mesh
+   api_reference/wifi
 
 .. toctree::
    :maxdepth: 1
@@ -31,12 +34,6 @@ BouffaloSDK 使用指南
 
    samples/peripherals/index
    samples/components/index
-
-.. toctree::
-   :maxdepth: 1
-   :caption: 进阶例程
-
-   advance_samples/index
 
 .. toctree::
    :maxdepth: 1
