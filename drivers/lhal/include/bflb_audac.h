@@ -3,8 +3,17 @@
 
 #include "bflb_core.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup AUDAC
+  * @{
+  */
+
 /**
- *  @defgroup AUDAC_SAMPLING_RATE audac sampling rate
+ *  @defgroup AUDAC_SAMPLING_RATE audac sampling rate definition
+ * @{
  */
 #define AUDAC_SAMPLING_RATE_8K                      0
 #define AUDAC_SAMPLING_RATE_16K                     1
@@ -18,7 +27,8 @@
   */
 
 /**
- *  @defgroup AUDAC_OUTPUT_MODE audac output mode
+ *  @defgroup AUDAC_OUTPUT_MODE audac output mode definition
+ * @{
  */
 #define AUDAC_OUTPUT_MODE_PWM                       0
 #define AUDAC_OUTPUT_MODE_GPDAC_CH_A                1
@@ -29,7 +39,8 @@
   */
 
 /**
- *  @defgroup AUDAC_SOURCE_CHANNEL source channels num
+ *  @defgroup AUDAC_SOURCE_CHANNEL audac channel mode definition
+ * @{
  */
 #define AUDAC_SOURCE_CHANNEL_SINGLE                 0x01
 #define AUDAC_SOURCE_CHANNEL_DUAL                   0x03
@@ -38,7 +49,9 @@
   */
 
 /**
- *  @defgroup AUDAC_MIXER_MODE audac mixer mode, this parameter is valid only in AUDAC_SOURCE_CHANNEL_DUAL mode
+ *  @defgroup AUDAC_MIXER_MODE audac mixer mode definition
+ *  this parameter is valid only in AUDAC_SOURCE_CHANNEL_DUAL mode
+ * @{
  */
 #define AUDAC_MIXER_MODE_ONLY_L                     0
 #define AUDAC_MIXER_MODE_ONLY_R                     1
@@ -49,7 +62,8 @@
   */
 
 /**
- *  @defgroup AUDAC_DATA_FORMAT audac data format
+ *  @defgroup AUDAC_DATA_FORMAT audac data format definition
+ * @{
  */
 #define AUDAC_DATA_FORMAT_16BIT                     3
 #define AUDAC_DATA_FORMAT_20BIT                     2
@@ -60,7 +74,8 @@
   */
 
 /**
- *  @defgroup AUDAC_RAMP_RATE audac volume ramp rate
+ *  @defgroup AUDAC_RAMP_RATE audac volume ramp rate definition
+ * @{
  */
 #define AUDAC_RAMP_RATE_FS_2                        0
 #define AUDAC_RAMP_RATE_FS_4                        1
@@ -78,7 +93,8 @@
   */
 
 /**
- *  @defgroup AUDAC_VOLUME_UPDATE_MODE audac volume ramp rate
+ *  @defgroup AUDAC_VOLUME_UPDATE_MODE audac volume update mode definition
+ * @{
  */
 #define AUDAC_VOLUME_UPDATE_MODE_FORCE              0
 #define AUDAC_VOLUME_UPDATE_MODE_RAMP               1
@@ -88,6 +104,7 @@
   */
 
 /** @defgroup AUDAC_INTSTS audac interrupt status definition
+ * @{
   * @{
   */
 #define AUDAC_INTSTS_VOLUME_RAMP                    (1 << 0)
@@ -169,5 +186,13 @@ int bflb_audac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif

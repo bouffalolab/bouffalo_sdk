@@ -3,9 +3,17 @@
 
 #include "bflb_core.h"
 
-/**
- *  @defgroup AUADC_SAMPLING_RATE auadc sampling rate
- */
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup AUADC
+  * @{
+  */
+
+/** @defgroup AUADC_SAMPLING_RATE auadc sampling rate definition
+  * @{
+  */
 #define AUADC_SAMPLING_RATE_8K           0  /* audio mode */
 #define AUADC_SAMPLING_RATE_16K          1  /* audio mode */
 #define AUADC_SAMPLING_RATE_24K          2  /* audio mode, same as 22.02K, adjust the AUPLL clock */
@@ -18,9 +26,9 @@
   * @}
   */
 
-/**
- *  @defgroup AUADC_INPUT_MODE auadc input mode
- */
+/** @defgroup AUADC_INPUT_MODE auadc input mode definition
+  * @{
+  */
 #define AUADC_INPUT_MODE_ADC             0 /* Analog ADC */
 #define AUADC_INPUT_MODE_PDM_L           1 /* PDM left channel */
 #define AUADC_INPUT_MODE_PDM_R           2 /* PDM right channel */
@@ -28,8 +36,8 @@
   * @}
   */
 
-/**
- *  @defgroup AUADC_DATA_FORMAT auadc data format
+/** @defgroup AUADC_DATA_FORMAT auadc data format definition
+ * @{
  */
 #define AUADC_DATA_FORMAT_16BIT          3
 #define AUADC_DATA_FORMAT_20BIT          2
@@ -39,8 +47,8 @@
   * @}
   */
 
-/**
- *  @brief AUADC_ADC_ANALOG_CH auadc adc input ch
+/** @defgroup AUADC_ADC_ANALOG_CH auadc adc input ch definition
+ * @{
  */
 #define AUADC_ADC_ANALOG_CH_0            0
 #define AUADC_ADC_ANALOG_CH_1            1
@@ -54,8 +62,8 @@
   * @}
   */
 
-/**
- *  @brief AUADC_ADC_MEASURE_RATE auadc adc Sampling rate in measurement mode, @ AUADC_SAMPLING_RATE_MEASURE_256K
+/** @defgroup AUADC_ADC_MEASURE_RATE auadc adc sampling rate definition
+ * @{
  */
 
 #define AUADC_ADC_MEASURE_RATE_SPS_2_5   0
@@ -76,8 +84,8 @@
   * @}
   */
 
-/**
- *  @brief AUADC_ADC_MODE auadc adc mode
+/** @defgroup AUADC_ADC_MODE auadc adc mode definition
+ * @{
  */
 #define AUADC_ADC_MODE_AUDIO             0
 #define AUADC_ADC_MODE_MEASURE           1
@@ -85,8 +93,8 @@
   * @}
   */
 
-/**
- *  @brief AUADC_ADC_PGA_MODE auadc adc mode, Ac or DC, differential or single
+/** @defgroup AUADC_ADC_PGA_MODE auadc adc pga mode definition
+ * @{
  */
 #define AUADC_ADC_PGA_MODE_AC_DIFFER     0
 #define AUADC_ADC_PGA_MODE_AC_SINGLE     1
@@ -186,5 +194,13 @@ int bflb_auadc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 #ifdef __cplusplus
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #endif
