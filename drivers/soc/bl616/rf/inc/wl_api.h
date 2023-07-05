@@ -53,6 +53,13 @@ enum wl_xtalfreq_enum
     WL_NUM_XTAL
 };
 
+enum
+{
+    WL_ENV_LP_ACQ  = 0,
+    WL_ENV_LP_TRK = 1,
+};
+
+
 struct wl_param_tcal_t
 {
     uint8_t     en_tcal;
@@ -111,13 +118,22 @@ struct wl_param_t
     struct wl_efuse_t            ef;
 };
 
+struct wl_env_t
+{
+    int8_t   lp_bcn_rssi;
+    uint16_t lp_bcn_lost_cnt;
+    uint32_t lp_bcn_time_us;
+    uint8_t  lp_gain_mode;
+    uint8_t  lp_status;
+};
+
 struct wl_cfg_t
 {
     uint32_t    status;
     uint8_t     mode;            // 0b01: wlan; 0b10: bz; 0b11: dual mode
     uint8_t     en_param_load;   // 0: param is in rentention, no read required; 1: read param during init
     uint8_t     en_full_cal;     // 0: cal is ready, no full calibration required; 1: do full cal during init
-    
+
     struct wl_param_t param;
 
     /* platform api to load param data which will be called during init */
@@ -144,10 +160,9 @@ struct wl_cfg_t
 uint32_t wl_rmem_size_get();
 /* Get wireless driver cfg structure:retention sram to save calibration data */
 struct wl_cfg_t* wl_cfg_get(uint8_t* rmem);
-int8_t wl_lp_init(uint8_t* rmem, uint16_t channelfreq_MHz);
+struct wl_env_t* wl_env_get(uint8_t* rmem);
 #else
 struct wl_cfg_t* wl_cfg_get();
-int8_t wl_lp_init(uint16_t channelfreq_MHz);
 #endif
 
 /* 
@@ -167,9 +182,12 @@ void wl_wlan_power_table_update();
 /* A helper function to read rssi from rvec */
 int8_t wl_wlan_rssi_get(void* rvec_ptr);
 /* A helper function to read ppm from rvec */
-float wl_wlan_ppm_get(void* rvec_ptr);
+int8_t wl_wlan_ppm_get(void* rvec_ptr);
 /* Get power cfg for bluetooth/802154 phymode which filled in transmit descriptor */
-uint8_t wl_bz_power_cfg_get(uint8_t phymode, uint8_t phyrate);
+int8_t wl_154_power_cfg_get(uint8_t phyrate);
+int8_t wl_bt_power_cfg_get(uint8_t phyrate);
+int8_t wl_ble_power_cfg_get(uint8_t phyrate);
+
 /* Temperature calibration should be scheduled periodically */
 int8_t wl_rf_tcal_handler(int16_t temperature);
 /* Get tcal period in seconds */
@@ -189,5 +207,17 @@ void wl_rf_set_channel_pwr_comp(uint8_t channel_idx);
 /*
 * rf driver api end
 */
+
+
+/*
+ * LP API DECLARATIONS
+ ****************************************************************************************
+ */
+#if WL_API_RMEM_EN
+int8_t wl_lp_init(uint8_t* rmem, uint16_t channelfreq_MHz);
+#else
+int8_t wl_lp_init(uint16_t channelfreq_MHz);
+#endif
+void wl_lp_status_update(int8_t bcn_rx_status, int8_t bcn_rssi, uint32_t bcn_hbn_time_us);
 
 #endif

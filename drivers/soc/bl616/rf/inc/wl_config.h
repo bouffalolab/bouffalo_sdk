@@ -62,14 +62,14 @@
 #if WL_BB_LOG_EN
 #if WL_API_SDK
 #include <stdio.h>
-#define logprintf printf
+#define wl_logprintf printf
 // #warning ("PHYRF LOG is enabled")
 #else
 void dbg_test_print(const char *fmt, ...);
-#define logprintf(fmt, ...)   dbg_test_print(fmt, ## __VA_ARGS__)
+#define wl_logprintf(fmt, ...)   dbg_test_print(fmt, ## __VA_ARGS__)
 #endif
 #else
-#define logprintf(...)
+#define wl_logprintf(...)
 #endif
 
 // TODO
