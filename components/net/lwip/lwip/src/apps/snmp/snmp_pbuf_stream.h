@@ -50,9 +50,9 @@ extern "C" {
 #endif
 
 struct snmp_pbuf_stream {
-    struct pbuf *pbuf;
-    u16_t offset;
-    u16_t length;
+  struct pbuf *pbuf;
+  u16_t offset;
+  u16_t length;
 };
 
 err_t snmp_pbuf_stream_init(struct snmp_pbuf_stream *pbuf_stream, struct pbuf *p, u16_t offset, u16_t length);

@@ -74,31 +74,23 @@
 
 /** Platform specific diagnostic output.\n
  * Note the default implementation pulls in printf, which may
- * in turn pull in a lot of standard libary code. In resource-constrained
+ * in turn pull in a lot of standard libary code. In resource-constrained 
  * systems, this should be defined to something less resource-consuming.
  */
 #ifndef LWIP_PLATFORM_DIAG
-#define LWIP_PLATFORM_DIAG(x) \
-    do {                      \
-        printf x;             \
-    } while (0)
+#define LWIP_PLATFORM_DIAG(x) do {printf x;} while(0)
 #include <stdio.h>
 #include <stdlib.h>
 #endif
 
 /** Platform specific assertion handling.\n
  * Note the default implementation pulls in printf, fflush and abort, which may
- * in turn pull in a lot of standard libary code. In resource-constrained
+ * in turn pull in a lot of standard libary code. In resource-constrained 
  * systems, this should be defined to something less resource-consuming.
  */
 #ifndef LWIP_PLATFORM_ASSERT
-#define LWIP_PLATFORM_ASSERT(x)                              \
-    do {                                                     \
-        printf("Assertion \"%s\" failed at line %d in %s\n", \
-               x, __LINE__, __FILE__);                       \
-        fflush(NULL);                                        \
-        abort();                                             \
-    } while (0)
+#define LWIP_PLATFORM_ASSERT(x) do {printf("Assertion \"%s\" failed at line %d in %s\n", \
+                                     x, __LINE__, "file21"); fflush(NULL); abort();} while(0)
 #include <stdio.h>
 #include <stdlib.h>
 #endif
@@ -126,21 +118,19 @@
 /* Define generic types used in lwIP */
 #if !LWIP_NO_STDINT_H
 #include <stdint.h>
-/* bouffalo lp change */
-#include <stdbool.h>
 /* stdint.h is C99 which should also provide support for 64-bit integers */
 #if !defined(LWIP_HAVE_INT64) && defined(UINT64_MAX)
 #define LWIP_HAVE_INT64 1
 #endif
-typedef uint8_t u8_t;
-typedef int8_t s8_t;
-typedef uint16_t u16_t;
-typedef int16_t s16_t;
-typedef uint32_t u32_t;
-typedef int32_t s32_t;
+typedef uint8_t   u8_t;
+typedef int8_t    s8_t;
+typedef uint16_t  u16_t;
+typedef int16_t   s16_t;
+typedef uint32_t  u32_t;
+typedef int32_t   s32_t;
 #if LWIP_HAVE_INT64
-typedef uint64_t u64_t;
-typedef int64_t s64_t;
+typedef uint64_t  u64_t;
+typedef int64_t   s64_t;
 #endif
 typedef uintptr_t mem_ptr_t;
 #endif
@@ -157,7 +147,7 @@ typedef uintptr_t mem_ptr_t;
 #if !LWIP_NO_INTTYPES_H
 #include <inttypes.h>
 #ifndef X8_F
-#define X8_F "02" PRIx8
+#define X8_F  "02" PRIx8
 #endif
 #ifndef U16_F
 #define U16_F PRIu16
@@ -209,7 +199,9 @@ typedef uintptr_t mem_ptr_t;
 #include <unistd.h>
 #endif
 #else /* SSIZE_MAX */
+#if !__riscv_xlen || __riscv_xlen != 64
 typedef int ssize_t;
+#endif
 #define SSIZE_MAX INT_MAX
 #endif /* SSIZE_MAX */
 
@@ -226,23 +218,23 @@ typedef int ssize_t;
 #endif
 
 #if LWIP_NO_CTYPE_H
-#define lwip_in_range(c, lo, up) ((u8_t)(c) >= (lo) && (u8_t)(c) <= (up))
-#define lwip_isdigit(c)          lwip_in_range((c), '0', '9')
-#define lwip_isxdigit(c)         (lwip_isdigit(c) || lwip_in_range((c), 'a', 'f') || lwip_in_range((c), 'A', 'F'))
-#define lwip_islower(c)          lwip_in_range((c), 'a', 'z')
-#define lwip_isspace(c)          ((c) == ' ' || (c) == '\f' || (c) == '\n' || (c) == '\r' || (c) == '\t' || (c) == '\v')
-#define lwip_isupper(c)          lwip_in_range((c), 'A', 'Z')
-#define lwip_tolower(c)          (lwip_isupper(c) ? (c) - 'A' + 'a' : c)
-#define lwip_toupper(c)          (lwip_islower(c) ? (c) - 'a' + 'A' : c)
+#define lwip_in_range(c, lo, up)  ((u8_t)(c) >= (lo) && (u8_t)(c) <= (up))
+#define lwip_isdigit(c)           lwip_in_range((c), '0', '9')
+#define lwip_isxdigit(c)          (lwip_isdigit(c) || lwip_in_range((c), 'a', 'f') || lwip_in_range((c), 'A', 'F'))
+#define lwip_islower(c)           lwip_in_range((c), 'a', 'z')
+#define lwip_isspace(c)           ((c) == ' ' || (c) == '\f' || (c) == '\n' || (c) == '\r' || (c) == '\t' || (c) == '\v')
+#define lwip_isupper(c)           lwip_in_range((c), 'A', 'Z')
+#define lwip_tolower(c)           (lwip_isupper(c) ? (c) - 'A' + 'a' : c)
+#define lwip_toupper(c)           (lwip_islower(c) ? (c) - 'a' + 'A' : c)
 #else
 #include <ctype.h>
-#define lwip_isdigit(c)  isdigit((unsigned char)(c))
-#define lwip_isxdigit(c) isxdigit((unsigned char)(c))
-#define lwip_islower(c)  islower((unsigned char)(c))
-#define lwip_isspace(c)  isspace((unsigned char)(c))
-#define lwip_isupper(c)  isupper((unsigned char)(c))
-#define lwip_tolower(c)  tolower((unsigned char)(c))
-#define lwip_toupper(c)  toupper((unsigned char)(c))
+#define lwip_isdigit(c)           isdigit((unsigned char)(c))
+#define lwip_isxdigit(c)          isxdigit((unsigned char)(c))
+#define lwip_islower(c)           islower((unsigned char)(c))
+#define lwip_isspace(c)           isspace((unsigned char)(c))
+#define lwip_isupper(c)           isupper((unsigned char)(c))
+#define lwip_tolower(c)           tolower((unsigned char)(c))
+#define lwip_toupper(c)           toupper((unsigned char)(c))
 #endif
 
 /** C++ const_cast<target_type>(val) equivalent to remove constness from a value (GCC -Wcast-qual) */
@@ -278,7 +270,7 @@ typedef int ssize_t;
  * \#define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u32_t variable_name[(size + sizeof(u32_t) - 1) / sizeof(u32_t)]
  */
 #ifndef LWIP_DECLARE_MEMORY_ALIGNED
-#define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u8_t variable_name[LWIP_MEM_ALIGN_BUFFER(size)]
+#define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u8_t variable_name[LWIP_MEM_ALIGN_BUFFER(size)] __attribute__((section(".wifi_ram")))
 #endif
 
 /** Calculate memory size for an aligned buffer - returns the next highest
@@ -286,7 +278,7 @@ typedef int ssize_t;
  * LWIP_MEM_ALIGN_SIZE(4) will both yield 4 for MEM_ALIGNMENT == 4).
  */
 #ifndef LWIP_MEM_ALIGN_SIZE
-#define LWIP_MEM_ALIGN_SIZE(size) (((size) + MEM_ALIGNMENT - 1U) & ~(MEM_ALIGNMENT - 1U))
+#define LWIP_MEM_ALIGN_SIZE(size) (((size) + MEM_ALIGNMENT - 1U) & ~(MEM_ALIGNMENT-1U))
 #endif
 
 /** Calculate safe memory size for an aligned buffer when using an unaligned
@@ -301,7 +293,7 @@ typedef int ssize_t;
  * so that ADDR % MEM_ALIGNMENT == 0
  */
 #ifndef LWIP_MEM_ALIGN
-#define LWIP_MEM_ALIGN(addr) ((void *)(((mem_ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(mem_ptr_t)(MEM_ALIGNMENT - 1)))
+#define LWIP_MEM_ALIGN(addr) ((void *)(((mem_ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(mem_ptr_t)(MEM_ALIGNMENT-1)))
 #endif
 
 #ifdef __cplusplus

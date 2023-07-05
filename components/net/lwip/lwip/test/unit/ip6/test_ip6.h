@@ -3,6 +3,6 @@
 
 #include "../lwip_check.h"
 
-Suite *ip6_suite(void);
+Suite* ip6_suite(void);
 
 #endif

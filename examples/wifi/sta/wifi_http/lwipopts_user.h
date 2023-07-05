@@ -76,7 +76,7 @@
 #define MAC_TXQ_DEPTH                 CONFIG_MAC_TXQ_DEPTH
 #define MAC_RXQ_DEPTH                 CONFIG_MAC_RXQ_DEPTH
 
-#define TCP_MSS                       1360
+#define TCP_MSS                       (1500 - 40)
 #define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)
 #define TCP_SND_BUF                   (4 * MAC_TXQ_DEPTH * TCP_MSS)
 
@@ -109,7 +109,9 @@
 
 #define LWIP_TIMEVAL_PRIVATE      0 // use sys/time.h for struct timeval
 
-//#define LWIP_PROVIDE_ERRNO
+// #define LWIP_PROVIDE_ERRNO        1
+#define LWIP_ERRNO_STDINCLUDE     1
+#define LWIP_SOCKET_SET_ERRNO     1
 
 #define LWIP_DHCP                 1
 #define LWIP_DNS                  1
@@ -133,6 +135,5 @@ extern int *__errno(void);
 #define LWIP_NETIF_TX_SINGLE_PBUF 1
 #endif
 #define LWIP_RAND()                                      ((u32_t)random())
-#define LWIP_DECLARE_MEMORY_ALIGNED(variable_name, size) u8_t variable_name[size] __attribute__((aligned(4))) __attribute__((section("SHAREDRAM")))
 
 #endif /* LWIP_HDR_LWIPOPTS_H__ */

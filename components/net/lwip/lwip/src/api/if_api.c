@@ -57,24 +57,22 @@
  * value supplied in ifname, which points to a buffer now containing the interface name.
  * Otherwise, the function shall return a NULL pointer.
  */
-char *lwip_if_indextoname(unsigned int ifindex, char *ifname)
+char *
+lwip_if_indextoname(unsigned int ifindex, char *ifname)
 {
 #if LWIP_NETIF_API
-
-    if (ifindex <= 0xff) {
-        err_t err = netifapi_netif_index_to_name((u8_t)ifindex, ifname);
-
-        if (!err && ifname[0] != '\0') {
-            return ifname;
-        }
+  if (ifindex <= 0xff) {
+    err_t err = netifapi_netif_index_to_name((u8_t)ifindex, ifname);
+    if (!err && ifname[0] != '\0') {
+      return ifname;
     }
-
+  }
 #else /* LWIP_NETIF_API */
-    LWIP_UNUSED_ARG(ifindex);
-    LWIP_UNUSED_ARG(ifname);
+  LWIP_UNUSED_ARG(ifindex);
+  LWIP_UNUSED_ARG(ifname);
 #endif /* LWIP_NETIF_API */
-    set_errno(ENXIO);
-    return NULL;
+  set_errno(ENXIO);
+  return NULL;
 }
 
 /**
@@ -84,22 +82,21 @@ char *lwip_if_indextoname(unsigned int ifindex, char *ifname)
  * @return The corresponding index if ifname is the name of an interface;
  * otherwise, zero.
  */
-unsigned int lwip_if_nametoindex(const char *ifname)
+unsigned int
+lwip_if_nametoindex(const char *ifname)
 {
 #if LWIP_NETIF_API
-    err_t err;
-    u8_t idx;
+  err_t err;
+  u8_t idx;
 
-    err = netifapi_netif_name_to_index(ifname, &idx);
-
-    if (!err) {
-        return idx;
-    }
-
+  err = netifapi_netif_name_to_index(ifname, &idx);
+  if (!err) {
+    return idx;
+  }
 #else /* LWIP_NETIF_API */
-    LWIP_UNUSED_ARG(ifname);
+  LWIP_UNUSED_ARG(ifname);
 #endif /* LWIP_NETIF_API */
-    return 0; /* invalid index */
+  return 0; /* invalid index */
 }
 
 #endif /* LWIP_SOCKET */

@@ -43,18 +43,18 @@
 #include "snmp_pbuf_stream.h"
 
 /* According to RFC 3411 */
-#define SNMP_V3_MAX_ENGINE_ID_LENGTH 32
-#define SNMP_V3_MAX_USER_LENGTH      32
+#define SNMP_V3_MAX_ENGINE_ID_LENGTH  32
+#define SNMP_V3_MAX_USER_LENGTH       32
 
-#define SNMP_V3_MAX_AUTH_PARAM_LENGTH 12
-#define SNMP_V3_MAX_PRIV_PARAM_LENGTH 8
+#define SNMP_V3_MAX_AUTH_PARAM_LENGTH  12
+#define SNMP_V3_MAX_PRIV_PARAM_LENGTH  8
 
-#define SNMP_V3_MD5_LEN 16
-#define SNMP_V3_SHA_LEN 20
+#define SNMP_V3_MD5_LEN        16
+#define SNMP_V3_SHA_LEN        20
 
 typedef enum {
-    SNMP_V3_PRIV_MODE_DECRYPT = 0,
-    SNMP_V3_PRIV_MODE_ENCRYPT = 1
+  SNMP_V3_PRIV_MODE_DECRYPT = 0,
+  SNMP_V3_PRIV_MODE_ENCRYPT = 1
 } snmpv3_priv_mode_t;
 
 s32_t snmpv3_get_engine_boots_internal(void);

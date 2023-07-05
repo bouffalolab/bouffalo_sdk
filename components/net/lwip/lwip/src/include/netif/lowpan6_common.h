@@ -57,10 +57,10 @@ extern "C" {
 
 /** Helper define for a link layer address, which can be encoded as 0, 2 or 8 bytes */
 struct lowpan6_link_addr {
-    /* encoded length of the address */
-    u8_t addr_len;
-    /* address bytes */
-    u8_t addr[8];
+  /* encoded length of the address */
+  u8_t addr_len;
+  /* address bytes */
+  u8_t addr[8];
 };
 
 s8_t lowpan6_get_address_mode(const ip6_addr_t *ip6addr, const struct lowpan6_link_addr *mac_addr);

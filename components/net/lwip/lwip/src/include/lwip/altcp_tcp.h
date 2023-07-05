@@ -55,7 +55,7 @@ extern "C" {
 
 struct altcp_pcb *altcp_tcp_new_ip_type(u8_t ip_type);
 
-#define altcp_tcp_new()     altcp_tcp_new_ip_type(IPADDR_TYPE_V4)
+#define altcp_tcp_new() altcp_tcp_new_ip_type(IPADDR_TYPE_V4)
 #define altcp_tcp_new_ip6() altcp_tcp_new_ip_type(IPADDR_TYPE_V6)
 
 struct altcp_pcb *altcp_tcp_alloc(void *arg, u8_t ip_type);

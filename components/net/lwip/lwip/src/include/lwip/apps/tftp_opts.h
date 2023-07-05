@@ -11,7 +11,7 @@
  *
  */
 
-/*
+/* 
  * Redistribution and use in source and binary forms, with or without
  * modification,are permitted provided that the following conditions are met:
  *
@@ -54,35 +54,35 @@
  * Enable TFTP debug messages
  */
 #if !defined TFTP_DEBUG || defined __DOXYGEN__
-#define TFTP_DEBUG LWIP_DBG_OFF
+#define TFTP_DEBUG            LWIP_DBG_OFF
 #endif
 
 /**
  * TFTP server port
  */
 #if !defined TFTP_PORT || defined __DOXYGEN__
-#define TFTP_PORT LWIP_IANA_PORT_TFTP
+#define TFTP_PORT             LWIP_IANA_PORT_TFTP
 #endif
 
 /**
  * TFTP timeout
  */
 #if !defined TFTP_TIMEOUT_MSECS || defined __DOXYGEN__
-#define TFTP_TIMEOUT_MSECS 10000
+#define TFTP_TIMEOUT_MSECS    10000
 #endif
 
 /**
  * Max. number of retries when a file is read from server
  */
 #if !defined TFTP_MAX_RETRIES || defined __DOXYGEN__
-#define TFTP_MAX_RETRIES 5
+#define TFTP_MAX_RETRIES      5
 #endif
 
 /**
  * TFTP timer cyclic interval
  */
 #if !defined TFTP_TIMER_MSECS || defined __DOXYGEN__
-#define TFTP_TIMER_MSECS (TFTP_TIMEOUT_MSECS / 10)
+#define TFTP_TIMER_MSECS      (TFTP_TIMEOUT_MSECS / 10)
 #endif
 
 /**
@@ -96,7 +96,7 @@
  * Max. length of TFTP mode
  */
 #if !defined TFTP_MAX_MODE_LEN || defined __DOXYGEN__
-#define TFTP_MAX_MODE_LEN 7
+#define TFTP_MAX_MODE_LEN     7
 #endif
 
 /**

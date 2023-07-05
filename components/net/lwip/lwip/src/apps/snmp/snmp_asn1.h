@@ -68,24 +68,18 @@ extern "C" {
 #define SNMP_ASN1_CONTEXT_PDU_V2_TRAP      7
 #define SNMP_ASN1_CONTEXT_PDU_REPORT       8
 
-#define SNMP_ASN1_CONTEXT_VARBIND_NO_SUCH_OBJECT  0
-#define SNMP_ASN1_CONTEXT_VARBIND_END_OF_MIB_VIEW 2
+#define SNMP_ASN1_CONTEXT_VARBIND_NO_SUCH_OBJECT      0
+#define SNMP_ASN1_CONTEXT_VARBIND_END_OF_MIB_VIEW     2
 
 struct snmp_asn1_tlv {
-    u8_t type;       /* only U8 because extended types are not specified by SNMP */
-    u8_t type_len;   /* encoded length of 'type' field (normally 1) */
-    u8_t length_len; /* indicates how many bytes are required to encode the 'value_len' field */
-    u16_t value_len; /* encoded length of the value */
+  u8_t  type;       /* only U8 because extended types are not specified by SNMP */
+  u8_t  type_len;   /* encoded length of 'type' field (normally 1) */
+  u8_t  length_len; /* indicates how many bytes are required to encode the 'value_len' field */
+  u16_t value_len;  /* encoded length of the value */
 };
 #define SNMP_ASN1_TLV_HDR_LENGTH(tlv) ((tlv).type_len + (tlv).length_len)
-#define SNMP_ASN1_TLV_LENGTH(tlv)     ((tlv).type_len + (tlv).length_len + (tlv).value_len)
-#define SNMP_ASN1_SET_TLV_PARAMS(tlv, type_, length_len_, value_len_) \
-    do {                                                              \
-        (tlv).type = (type_);                                         \
-        (tlv).type_len = 0;                                           \
-        (tlv).length_len = (length_len_);                             \
-        (tlv).value_len = (value_len_);                               \
-    } while (0);
+#define SNMP_ASN1_TLV_LENGTH(tlv) ((tlv).type_len + (tlv).length_len + (tlv).value_len)
+#define SNMP_ASN1_SET_TLV_PARAMS(tlv, type_, length_len_, value_len_) do { (tlv).type = (type_); (tlv).type_len = 0; (tlv).length_len = (length_len_); (tlv).value_len = (value_len_); } while (0);
 
 err_t snmp_asn1_dec_tlv(struct snmp_pbuf_stream *pbuf_stream, struct snmp_asn1_tlv *tlv);
 err_t snmp_asn1_dec_u32t(struct snmp_pbuf_stream *pbuf_stream, u16_t len, u32_t *value);

@@ -1,7 +1,9 @@
 #include "lwip/apps/fs.h"
 #include "lwip/def.h"
 
-#define file_NULL (struct fsdata_file *)NULL
+
+#define file_NULL (struct fsdata_file *) NULL
+
 
 #ifndef FS_FILE_FLAGS_HEADER_INCLUDED
 #define FS_FILE_FLAGS_HEADER_INCLUDED 1
@@ -19,14 +21,12 @@
 #ifndef FSDATA_ALIGN_POST
 #define FSDATA_ALIGN_POST
 #endif
-#if FSDATA_FILE_ALIGNMENT == 2
+#if FSDATA_FILE_ALIGNMENT==2
 #include "fsdata_alignment.h"
 #endif
-#if FSDATA_FILE_ALIGNMENT == 1
+#if FSDATA_FILE_ALIGNMENT==1
 static const unsigned int dummy_align__img_sics_gif = 0;
 #endif
-// clang-format off
-
 static const unsigned char FSDATA_ALIGN_PRE data__img_sics_gif[] FSDATA_ALIGN_POST = {
 /* /img/sics.gif (14 chars) */
 0x2f,0x69,0x6d,0x67,0x2f,0x73,0x69,0x63,0x73,0x2e,0x67,0x69,0x66,0x00,0x00,0x00,
@@ -306,31 +306,32 @@ static const unsigned char FSDATA_ALIGN_PRE data__index_html[] FSDATA_ALIGN_POST
 0x3e,0x0d,0x0a,0x3c,0x2f,0x62,0x6f,0x64,0x79,0x3e,0x0d,0x0a,0x3c,0x2f,0x68,0x74,
 0x6d,0x6c,0x3e,0x0d,0x0a,0x0d,0x0a,};
 
-// clang-format on
+
 
 const struct fsdata_file file__img_sics_gif[] = { {
-    file_NULL,
-    data__img_sics_gif,
-    data__img_sics_gif + 16,
-    sizeof(data__img_sics_gif) - 16,
-    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-} };
+file_NULL,
+data__img_sics_gif,
+data__img_sics_gif + 16,
+sizeof(data__img_sics_gif) - 16,
+FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+}};
 
 const struct fsdata_file file__404_html[] = { {
-    file__img_sics_gif,
-    data__404_html,
-    data__404_html + 12,
-    sizeof(data__404_html) - 12,
-    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-} };
+file__img_sics_gif,
+data__404_html,
+data__404_html + 12,
+sizeof(data__404_html) - 12,
+FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+}};
 
 const struct fsdata_file file__index_html[] = { {
-    file__404_html,
-    data__index_html,
-    data__index_html + 12,
-    sizeof(data__index_html) - 12,
-    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-} };
+file__404_html,
+data__index_html,
+data__index_html + 12,
+sizeof(data__index_html) - 12,
+FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+}};
 
-#define FS_ROOT     file__index_html
+#define FS_ROOT file__index_html
 #define FS_NUMFILES 3
+

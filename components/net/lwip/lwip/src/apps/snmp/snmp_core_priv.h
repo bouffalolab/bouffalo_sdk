@@ -53,8 +53,8 @@ extern "C" {
 /* error codes which are internal and shall not be used by MIBS
  * shall not be used by MIBS anymore, nevertheless required from core for properly answering a v1 request
  */
-#define SNMP_ERR_TOOBIG             1
-#define SNMP_ERR_AUTHORIZATIONERROR 16
+#define SNMP_ERR_TOOBIG               1
+#define SNMP_ERR_AUTHORIZATIONERROR   16
 
 #define SNMP_ERR_UNKNOWN_ENGINEID     30
 #define SNMP_ERR_UNKNOWN_SECURITYNAME 31
@@ -62,8 +62,9 @@ extern "C" {
 #define SNMP_ERR_NOTINTIMEWINDOW      33
 #define SNMP_ERR_DECRYIPTION_ERROR    34
 
-#define SNMP_ERR_NOSUCHOBJECT SNMP_VARBIND_EXCEPTION_OFFSET + SNMP_ASN1_CONTEXT_VARBIND_NO_SUCH_OBJECT
-#define SNMP_ERR_ENDOFMIBVIEW SNMP_VARBIND_EXCEPTION_OFFSET + SNMP_ASN1_CONTEXT_VARBIND_END_OF_MIB_VIEW
+#define SNMP_ERR_NOSUCHOBJECT         SNMP_VARBIND_EXCEPTION_OFFSET + SNMP_ASN1_CONTEXT_VARBIND_NO_SUCH_OBJECT
+#define SNMP_ERR_ENDOFMIBVIEW         SNMP_VARBIND_EXCEPTION_OFFSET + SNMP_ASN1_CONTEXT_VARBIND_END_OF_MIB_VIEW
+
 
 const struct snmp_node *snmp_mib_tree_resolve_exact(const struct snmp_mib *mib, const u32_t *oid, u8_t oid_len, u8_t *oid_instance_len);
 const struct snmp_node *snmp_mib_tree_resolve_next(const struct snmp_mib *mib, const u32_t *oid, u8_t oid_len, struct snmp_obj_id *oidret);

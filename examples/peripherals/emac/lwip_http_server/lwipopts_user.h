@@ -31,8 +31,8 @@
  ******************************************************************************
  */
 
-#ifndef __LWIPOPTS_H__
-#define __LWIPOPTS_H__
+#ifndef LWIP_HDR_LWIPOPTS_H__
+#define LWIP_HDR_LWIPOPTS_H__
 
 /**
  * NO_SYS==1: Provides VERY minimal functionality. Otherwise,
@@ -121,6 +121,13 @@ a lot of data that needs to be copied, this should be set high. */
 
 /* ---------- Statistics options ---------- */
 #define LWIP_STATS 0
+
+#define LWIP_TIMEVAL_PRIVATE      0 // use sys/time.h for struct timeval
+
+#define LWIP_ERRNO_STDINCLUDE     1
+// #define LWIP_SOCKET_SET_ERRNO     1
+extern int *__errno(void);
+#define errno                         (*__errno())
 
 /* ---------- link callback options ---------- */
 /* LWIP_NETIF_LINK_CALLBACK==1: Support a callback function from an interface
@@ -214,6 +221,7 @@ a lot of data that needs to be copied, this should be set high. */
 
 // /** The server port for HTTPD to use */
 // #define HTTPD_SERVER_PORT LWIP_IANA_PORT_HTTP
+#define HTTPD_FSDATA_FILE "web_demo/fsdata_custom.c"
 
 /*
    ----------------------------------------
@@ -239,6 +247,14 @@ a lot of data that needs to be copied, this should be set high. */
    ---------------------------------
 */
 
+#define osPriorityIdle        0 //< priority: idle (lowest)
+#define osPriorityLow         1 //< priority: low
+#define osPriorityBelowNormal 2 //< priority: below normal
+#define osPriorityNormal      3 //< priority: normal (default)
+#define osPriorityAboveNormal 4 //< priority: above normal
+#define osPriorityHigh        5 //< priority: high
+#define osPriorityRealtime    6 //< priority: realtime (highest)
+
 #define TCPIP_THREAD_NAME         "TCP/IP"
 #define TCPIP_THREAD_STACKSIZE    1024
 #define TCPIP_MBOX_SIZE           50
@@ -248,6 +264,6 @@ a lot of data that needs to be copied, this should be set high. */
 #define DEFAULT_THREAD_STACKSIZE  512
 #define TCPIP_THREAD_PRIO         osPriorityHigh
 
-#endif /* __LWIPOPTS_H__ */
+#endif /* LWIP_HDR_LWIPOPTS_H__ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

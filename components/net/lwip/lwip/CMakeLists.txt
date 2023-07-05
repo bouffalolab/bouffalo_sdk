@@ -47,9 +47,8 @@ sdk_library_add_sources(src/core/timeouts.c)
 sdk_library_add_sources(src/core/udp.c)
 
 sdk_library_add_sources(src/netif/ethernet.c)
-sdk_library_add_sources(system/os/sys_arch.c)
+sdk_library_add_sources(lwip-port/FreeRTOS/sys_arch.c)
 
-sdk_add_include_directories(system)
+sdk_add_include_directories(lwip-port)
 sdk_add_include_directories(src/include)
 sdk_add_include_directories(src/include/compat/posix)
-

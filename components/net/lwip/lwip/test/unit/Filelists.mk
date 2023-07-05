@@ -36,6 +36,7 @@ TESTFILES=$(TESTDIR)/lwip_unittests.c \
 	$(TESTDIR)/core/test_def.c \
 	$(TESTDIR)/core/test_mem.c \
 	$(TESTDIR)/core/test_netif.c \
+	$(TESTDIR)/core/test_ip4_route.c \
 	$(TESTDIR)/core/test_pbuf.c \
 	$(TESTDIR)/core/test_timers.c \
 	$(TESTDIR)/dhcp/test_dhcp.c \

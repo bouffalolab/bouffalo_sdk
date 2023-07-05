@@ -3,6 +3,6 @@
 
 #include "../lwip_check.h"
 
-Suite *mqtt_suite(void);
+Suite* mqtt_suite(void);
 
 #endif

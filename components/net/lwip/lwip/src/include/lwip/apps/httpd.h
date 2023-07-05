@@ -82,7 +82,7 @@ extern "C" {
  *
  */
 typedef const char *(*tCGIHandler)(int iIndex, int iNumParams, char *pcParam[],
-                                   char *pcValue[]);
+                             char *pcValue[]);
 
 /**
  * @ingroup httpd
@@ -111,13 +111,12 @@ struct fs_file;
  * is allocated to file->state via fs_state_init() from fs_open() or fs_open_custom().
  * Content creation via SSI or complete dynamic files can retrieve the CGI params from there.
  */
-extern void httpd_cgi_handler(struct fs_file *file, const char *uri, int iNumParams,
+extern void httpd_cgi_handler(struct fs_file *file, const char* uri, int iNumParams,
                               char **pcParam, char **pcValue
 #if defined(LWIP_HTTPD_FILE_STATE) && LWIP_HTTPD_FILE_STATE
-                              ,
-                              void *connection_state
+                                     , void *connection_state
 #endif /* LWIP_HTTPD_FILE_STATE */
-);
+                                     );
 #endif /* LWIP_HTTPD_CGI_SSI */
 
 #endif /* LWIP_HTTPD_CGI || LWIP_HTTPD_CGI_SSI */
@@ -156,20 +155,18 @@ extern void httpd_cgi_handler(struct fs_file *file, const char *uri, int iNumPar
  */
 typedef u16_t (*tSSIHandler)(
 #if LWIP_HTTPD_SSI_RAW
-    const char *ssi_tag_name,
+                             const char* ssi_tag_name,
 #else /* LWIP_HTTPD_SSI_RAW */
-    int iIndex,
+                             int iIndex,
 #endif /* LWIP_HTTPD_SSI_RAW */
-    char *pcInsert, int iInsertLen
+                             char *pcInsert, int iInsertLen
 #if LWIP_HTTPD_SSI_MULTIPART
-    ,
-    u16_t current_tag_part, u16_t *next_tag_part
+                             , u16_t current_tag_part, u16_t *next_tag_part
 #endif /* LWIP_HTTPD_SSI_MULTIPART */
 #if defined(LWIP_HTTPD_FILE_STATE) && LWIP_HTTPD_FILE_STATE
-    ,
-    void *connection_state
+                             , void *connection_state
 #endif /* LWIP_HTTPD_FILE_STATE */
-);
+                             );
 
 /** Set the SSI handler function
  * (if LWIP_HTTPD_SSI_RAW==1, only the first argument is used)

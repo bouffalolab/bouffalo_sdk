@@ -6,22 +6,22 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+    
 /**
  * @defgroup smtp_opts Options
  * @ingroup smtp
- *
+ * 
  * @{
  */
-
+    
 /** Set this to 1 to enable data handler callback on BODY */
 #ifndef SMTP_BODYDH
-#define SMTP_BODYDH 0
+#define SMTP_BODYDH             0
 #endif
 
 /** SMTP_DEBUG: Enable debugging for SNTP. */
 #ifndef SMTP_DEBUG
-#define SMTP_DEBUG LWIP_DBG_OFF
+#define SMTP_DEBUG              LWIP_DBG_OFF
 #endif
 
 /** Maximum length reserved for server name including terminating 0 byte */
@@ -31,18 +31,18 @@ extern "C" {
 
 /** Maximum length reserved for username */
 #ifndef SMTP_MAX_USERNAME_LEN
-#define SMTP_MAX_USERNAME_LEN 32
+#define SMTP_MAX_USERNAME_LEN   32
 #endif
 
 /** Maximum length reserved for password */
 #ifndef SMTP_MAX_PASS_LEN
-#define SMTP_MAX_PASS_LEN 32
+#define SMTP_MAX_PASS_LEN       32
 #endif
 
 /** Set this to 0 if you know the authentication data will not change
  * during the smtp session, which saves some heap space. */
 #ifndef SMTP_COPY_AUTHDATA
-#define SMTP_COPY_AUTHDATA 1
+#define SMTP_COPY_AUTHDATA      1
 #endif
 
 /** Set this to 0 to save some code space if you know for sure that all data
@@ -50,7 +50,7 @@ extern "C" {
  * WARNING: use this with care!
  */
 #ifndef SMTP_CHECK_DATA
-#define SMTP_CHECK_DATA 1
+#define SMTP_CHECK_DATA         1
 #endif
 
 /** Set this to 1 to enable AUTH PLAIN support */
@@ -65,8 +65,8 @@ extern "C" {
 
 /* Memory allocation/deallocation can be overridden... */
 #ifndef SMTP_STATE_MALLOC
-#define SMTP_STATE_MALLOC(size) mem_malloc(size)
-#define SMTP_STATE_FREE(ptr)    mem_free(ptr)
+#define SMTP_STATE_MALLOC(size)       mem_malloc(size)
+#define SMTP_STATE_FREE(ptr)          mem_free(ptr)
 #endif
 
 /**
@@ -78,3 +78,4 @@ extern "C" {
 #endif
 
 #endif /* SMTP_OPTS_H */
+

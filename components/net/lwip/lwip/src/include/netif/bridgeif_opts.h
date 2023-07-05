@@ -55,7 +55,7 @@
  * ATTENTION: as ==0 relies on tcpip.h, the default depends on NO_SYS setting
  */
 #ifndef BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT
-#define BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT NO_SYS
+#define BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT  NO_SYS
 #endif
 
 /** BRIDGEIF_MAX_PORTS: this is used to create a typedef used for forwarding
@@ -65,22 +65,22 @@
  * The max. number of ports per bridge must still be passed via netif_add parameter!
  */
 #ifndef BRIDGEIF_MAX_PORTS
-#define BRIDGEIF_MAX_PORTS 7
+#define BRIDGEIF_MAX_PORTS                  7
 #endif
 
 /** BRIDGEIF_DEBUG: Enable generic debugging in bridgeif.c. */
 #ifndef BRIDGEIF_DEBUG
-#define BRIDGEIF_DEBUG LWIP_DBG_OFF
+#define BRIDGEIF_DEBUG                      LWIP_DBG_OFF
 #endif
 
 /** BRIDGEIF_DEBUG: Enable FDB debugging in bridgeif.c. */
 #ifndef BRIDGEIF_FDB_DEBUG
-#define BRIDGEIF_FDB_DEBUG LWIP_DBG_OFF
+#define BRIDGEIF_FDB_DEBUG                  LWIP_DBG_OFF
 #endif
 
 /** BRIDGEIF_DEBUG: Enable forwarding debugging in bridgeif.c. */
 #ifndef BRIDGEIF_FW_DEBUG
-#define BRIDGEIF_FW_DEBUG LWIP_DBG_OFF
+#define BRIDGEIF_FW_DEBUG                   LWIP_DBG_OFF
 #endif
 
 /**

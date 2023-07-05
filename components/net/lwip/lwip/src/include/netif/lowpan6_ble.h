@@ -6,7 +6,7 @@
 /*
  * Copyright (c) 2017 Benjamin Aigner
  * Copyright (c) 2015 Inico Technologies Ltd. , Author: Ivan Delamer <delamer@inicotech.com>
- *
+ * 
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -32,10 +32,10 @@
  * OF SUCH DAMAGE.
  *
  * Author: Benjamin Aigner <aignerb@technikum-wien.at>
- *
+ * 
  * Based on the original 6lowpan implementation of lwIP ( @see 6lowpan.c)
  */
-
+ 
 #ifndef LWIP_HDR_LOWPAN6_BLE_H
 #define LWIP_HDR_LOWPAN6_BLE_H
 
@@ -54,12 +54,12 @@ extern "C" {
 #endif
 
 err_t rfc7668_output(struct netif *netif, struct pbuf *q, const ip6_addr_t *ip6addr);
-err_t rfc7668_input(struct pbuf *p, struct netif *netif);
+err_t rfc7668_input(struct pbuf * p, struct netif *netif);
 err_t rfc7668_set_local_addr_eui64(struct netif *netif, const u8_t *local_addr, size_t local_addr_len);
 err_t rfc7668_set_local_addr_mac48(struct netif *netif, const u8_t *local_addr, size_t local_addr_len, int is_public_addr);
 err_t rfc7668_set_peer_addr_eui64(struct netif *netif, const u8_t *peer_addr, size_t peer_addr_len);
 err_t rfc7668_set_peer_addr_mac48(struct netif *netif, const u8_t *peer_addr, size_t peer_addr_len, int is_public_addr);
-err_t rfc7668_set_context(u8_t index, const ip6_addr_t *context);
+err_t rfc7668_set_context(u8_t index, const ip6_addr_t * context);
 err_t rfc7668_if_init(struct netif *netif);
 
 #if !NO_SYS

@@ -56,7 +56,7 @@
  * Default is disabled
  */
 #if !defined LWIP_NETBIOS_RESPOND_NAME_QUERY || defined __DOXYGEN__
-#define LWIP_NETBIOS_RESPOND_NAME_QUERY 0
+#define LWIP_NETBIOS_RESPOND_NAME_QUERY   0
 #endif
 
 /**

@@ -46,7 +46,7 @@
 
 #include "lwip/opt.h"
 
-#if LWIP_IPV6 /* don't build if not configured for use in lwipopts.h */
+#if LWIP_IPV6  /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/ip6_addr.h"
 #include "lwip/err.h"
@@ -60,7 +60,7 @@ extern "C" {
 
 /** Router solicitations are sent in 4 second intervals (see RFC 4861, ch. 6.3.7) */
 #ifndef ND6_RTR_SOLICITATION_INTERVAL
-#define ND6_RTR_SOLICITATION_INTERVAL 4000
+#define ND6_RTR_SOLICITATION_INTERVAL  4000
 #endif
 
 struct pbuf;
