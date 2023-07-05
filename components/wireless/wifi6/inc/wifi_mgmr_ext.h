@@ -165,8 +165,14 @@ typedef struct wifi_mgmr_ap_params {
     uint8_t channel;
     /// Channel type (@ref mac_chan_bandwidth)
     uint8_t type;
+    /// Whether use dhcpd
     bool use_dhcpd;
+    /// STA MAX inactivity under connection
     uint32_t ap_max_inactivity;
+    /// whether use hidden ssid
+    bool hidden_ssid;
+    /// whether enable isolation
+    bool isolation;
 } wifi_mgmr_ap_params_t;
 
 /**
@@ -499,14 +505,6 @@ int wifi_mgmr_ap_stop(void);
  *  Others is the string of mode
  */
 char *wifi_mgmr_mode_to_str(uint32_t mode);
-
-/**
- * show_auth_cipher
- * Print auth and cipher of scan result
- * param:
- *  param1 : instance of scan result
- */
-// void show_auth_cipher(struct mac_scan_result *result);
 
 /**
  * wifi_mgmr_mac_set
