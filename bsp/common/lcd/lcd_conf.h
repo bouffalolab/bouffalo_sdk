@@ -53,7 +53,7 @@
         1: rgb565 (16-bit, output rgb565)
         2: nrgb8888 (32-bit, output rgb888)
     */
-    #define ILI9488_DBI_PIXEL_FORMAT 1
+    #define ILI9488_DBI_PIXEL_FORMAT 2
 
     /* ILI9488 LCD width and height */
     #define ILI9488_DBI_W 320

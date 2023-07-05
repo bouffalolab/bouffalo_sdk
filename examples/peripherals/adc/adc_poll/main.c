@@ -77,8 +77,12 @@ struct bflb_adc_channel_s chan[] = {
 #endif
 };
 
+uint32_t raw_data[TEST_ADC_CHANNELS];
+
 int main(void)
 {
+    struct bflb_adc_result_s result[TEST_ADC_CHANNELS];
+
     board_init();
     board_adc_gpio_init();
 
@@ -104,11 +108,14 @@ int main(void)
         }
 
         for (size_t j = 0; j < TEST_ADC_CHANNELS; j++) {
-            struct bflb_adc_result_s result;
-            uint32_t raw_data = bflb_adc_read_raw(adc);
-            printf("raw data:%08x\r\n", raw_data);
-            bflb_adc_parse_result(adc, &raw_data, &result, 1);
-            printf("pos chan %d,%d mv \r\n", result.pos_chan, result.millivolt);
+            raw_data[j] = bflb_adc_read_raw(adc);
+        }
+
+        bflb_adc_parse_result(adc, raw_data, result, TEST_ADC_CHANNELS);
+
+        for (size_t j = 0; j < TEST_ADC_CHANNELS; j++) {
+            printf("raw data:%08x\r\n", raw_data[j]);
+            printf("pos chan %d,%d mv \r\n", result[j].pos_chan, result[j].millivolt);
         }
 
         bflb_adc_stop_conversion(adc);

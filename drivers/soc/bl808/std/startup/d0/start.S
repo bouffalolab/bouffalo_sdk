@@ -76,14 +76,14 @@ __start:
     la      sp, __StackTop
     csrw    mscratch, sp
 
-    jal     SystemInit
+    call     SystemInit
 
     /* start load code to itcm like. */
-    jal     start_load
+    call     start_load
 
-    jal     System_Post_Init
+    call     System_Post_Init
 
-    jal     main
+    call     main
 
     .size   __start, . - __start
 

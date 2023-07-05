@@ -154,9 +154,9 @@ struct shell_sysvar {
  * @param desc the description of command, which will show in help.
  */
 #define SHELL_CMD_EXPORT(command, desc) \
-    SHELL_FUNCTION_EXPORT_CMD(command, __cmd_##command, desc)
+    SHELL_FUNCTION_EXPORT_CMD(command, command, desc)
 #define SHELL_CMD_EXPORT_ALIAS(command, alias, desc) \
-    SHELL_FUNCTION_EXPORT_CMD(command, __cmd_##alias, desc)
+    SHELL_FUNCTION_EXPORT_CMD(command, alias, desc)
 
 void shell_handler(uint8_t data);
 int shell_set_prompt(const char *prompt);

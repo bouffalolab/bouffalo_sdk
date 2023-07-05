@@ -80,7 +80,7 @@ enum _generic_status {
     Status_OutOfRange = MAKE_STATUS(StatusGroup_Generic, 2),
     Status_InvalidArgument = MAKE_STATUS(StatusGroup_Generic, 3),
     Status_Timeout = MAKE_STATUS(StatusGroup_Generic, 4),
-
+    Status_Busy = MAKE_STATUS(StatusGroup_Generic, 5),
 };
 /*! @brief SD/MMC card API's running status. */
 enum _sdmmc_status {
@@ -280,11 +280,11 @@ typedef struct _sd_csd {
     uint16_t flags;              /*!< Flags in _sd_csd_flag */
     uint32_t deviceSize;         /*!< Device size [73:62] */
     /* Following fields from 'readCurrentVddMin' to 'deviceSizeMultiplier' exist in CSD version 1 */
-    uint8_t readCurrentVddMin;    /*!< Maximum read current at VDD min [61:59] */
-    uint8_t readCurrentVddMax;    /*!< Maximum read current at VDD max [58:56] */
-    uint8_t writeCurrentVddMin;   /*!< Maximum write current at VDD min [55:53] */
-    uint8_t writeCurrentVddMax;   /*!< Maximum write current at VDD max [52:50] */
-    uint8_t deviceSizeMultiplier; /*!< Device size multiplier [49:47] */
+    uint8_t readCurrentVddMin;     /*!< Maximum read current at VDD min [61:59] */
+    uint8_t readCurrentVddMax;     /*!< Maximum read current at VDD max [58:56] */
+    uint8_t writeCurrentVddMin;    /*!< Maximum write current at VDD min [55:53] */
+    uint8_t writeCurrentVddMax;    /*!< Maximum write current at VDD max [52:50] */
+    uint8_t deviceSizeMultiplier;  /*!< Device size multiplier [49:47] */
 
     uint8_t eraseSectorSize;       /*!< Erase sector size [45:39] */
     uint8_t writeProtectGroupSize; /*!< Write protect group size [38:32] */
@@ -313,11 +313,11 @@ typedef struct _sd_ssr {
     uint8_t performanceMove;      /*!< performance move [439:432] */
     uint8_t AUSize;               /*!< AU size [431:428] */
 
-    uint16_t eraseSize;    /*!< erase size [423:408] */
-    uint8_t eraseTimeOut;  /*!< erase timeout [407:402] */
-    uint8_t eraseOffset;   /*!< erase offset [401:400] */
-    uint8_t UHSSpeedGrade; /*!< UHS speed grade [399:396] */
-    uint8_t UHSAUSize;     /*!< UHS AU size [395:392] */
+    uint16_t eraseSize;           /*!< erase size [423:408] */
+    uint8_t eraseTimeOut;         /*!< erase timeout [407:402] */
+    uint8_t eraseOffset;          /*!< erase offset [401:400] */
+    uint8_t UHSSpeedGrade;        /*!< UHS speed grade [399:396] */
+    uint8_t UHSAUSize;            /*!< UHS AU size [395:392] */
 } sd_ssr_t;
 /*!
  * @brief SD card state
@@ -518,8 +518,9 @@ typedef enum _sd_switch_mode {
 bus_wide shoud be SDH_DATA_BUS_WIDTH_1BIT/SDH_DATA_BUS_WIDTH_4BITS/SDH_DATA_BUS_WIDTH_8BITS
 */
 status_t SDH_ClockSet(uint32_t clockInit, uint32_t clockSrc, uint32_t clockTransfer);
-status_t SDH_Init(uint32_t bus_wide, sd_card_t *pOutCardInfo);
 status_t SD_Erase(uint32_t startaddr, uint32_t endaddr);
+
+status_t SDH_Init(uint32_t bus_wide, sd_card_t *pOutCardInfo);
 status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize, uint32_t NumberOfBlocks);
 status_t SDH_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSize, uint32_t NumberOfBlocks);
 

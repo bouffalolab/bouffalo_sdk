@@ -766,7 +766,7 @@ static void indicate_cb(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 
 static void pts_ble_indicate(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 {
-	struct bt_gatt_indicate_params 	params;
+	static struct bt_gatt_indicate_params 	params;
 	u8_t 		data[16];
 	u16_t		len = 0;
 	int			err;

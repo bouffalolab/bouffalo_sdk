@@ -176,6 +176,14 @@ void bflb_adc_deinit(struct bflb_device_s *dev);
 void bflb_adc_link_rxdma(struct bflb_device_s *dev, bool enable);
 
 /**
+ * @brief Select reference channel.
+ *
+ * @param [in] channel channel number
+ * @param [in] millivolt refercence millivolt
+ */
+void bflb_adc_set_reference_channel(int channel, int32_t millivolt);
+
+/**
  * @brief Config adc channels to sample.
  *
  * @param [in] dev device handle

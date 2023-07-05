@@ -86,90 +86,124 @@ uint8_t AON_Get_Xtal_CapCode(void){
     return RomDriver_AON_Get_Xtal_CapCode();
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type CPU_MTimer_Delay_MS(uint32_t cnt){
     return RomDriver_CPU_MTimer_Delay_MS(cnt);
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type CPU_MTimer_Delay_US(uint32_t cnt){
     return RomDriver_CPU_MTimer_Delay_US(cnt);
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type CPU_Reset_MTimer(void){
     return RomDriver_CPU_Reset_MTimer();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type CPU_Set_MTimer_CLK(uint8_t enable, BL_MTimer_Source_Clock_Type mTimerSourceClockType, uint16_t div){
     return RomDriver_CPU_Set_MTimer_CLK(enable,mTimerSourceClockType,div);
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type CPU_Set_MTimer_RST(uint8_t rstEn){
     return RomDriver_CPU_Set_MTimer_RST(rstEn);
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t CPU_Get_MTimer_Clock(void){
     return RomDriver_CPU_Get_MTimer_Clock();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t CPU_Get_MTimer_Source_Clock(void){
     return RomDriver_CPU_Get_MTimer_Source_Clock();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t Clock_Audio_ADC_Clock_Get(void){
     return RomDriver_Clock_Audio_ADC_Clock_Get();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t Clock_Get_ISP_Clk(void){
     return RomDriver_Clock_Get_ISP_Clk();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t Clock_Get_PSRAMB_Clk(void){
     return RomDriver_Clock_Get_PSRAMB_Clk();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type){
     return RomDriver_Clock_Peripheral_Clock_Get(type);
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t Clock_System_Clock_Get(BL_System_Clock_Type type){
     return RomDriver_Clock_System_Clock_Get(type);
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint32_t SystemCoreClockGet(void){
     return RomDriver_SystemCoreClockGet();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint64_t CPU_Get_CPU_Cycle(void){
     return RomDriver_CPU_Get_CPU_Cycle();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint64_t CPU_Get_MTimer_Counter(void){
     return RomDriver_CPU_Get_MTimer_Counter();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint64_t CPU_Get_MTimer_MS(void){
     return RomDriver_CPU_Get_MTimer_MS();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 uint64_t CPU_Get_MTimer_US(void){
     return RomDriver_CPU_Get_MTimer_US();
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type EF_Ctrl_Crc_Result(void){
@@ -251,13 +285,12 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Program_Direct_R0(uint32_t index, uint32_t *data, uint32_t len){
     return RomDriver_EF_Ctrl_Program_Direct_R0(index,data,len);
 }
-#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Program_Efuse_0(void){
     return RomDriver_EF_Ctrl_Program_Efuse_0();
 }
-
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void EF_Ctrl_Read_ADC_Gain_Trim(Efuse_ADC_Gain_Coeff_Type *trim){
@@ -802,10 +835,12 @@ BL_Err_Type GLB_Set_SSC_CLK_From_WIFIPLL(uint8_t enable){
     return RomDriver_GLB_Set_SSC_CLK_From_WIFIPLL(enable);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_Slave_Grp_0_CLK(GLB_SLAVE_GRP_0_Type slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div){
     return RomDriver_GLB_Set_Slave_Grp_0_CLK(slave,enable,clkSel,div);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, HBN_UART_CLK_Type clkSel, uint8_t div){
@@ -897,10 +932,12 @@ BL_Err_Type GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs){
     return RomDriver_GLB_Embedded_Flash_Pad_Enable(swapIo2Cs);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Clr(GLB_GPIO_Type gpioPin){
     return RomDriver_GLB_GPIO_Clr(gpioPin);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Fifo_Clear(void){
@@ -967,10 +1004,12 @@ BL_Err_Type GLB_GPIO_Output_Enable(GLB_GPIO_Type gpioPin){
     return RomDriver_GLB_GPIO_Output_Enable(gpioPin);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Set(GLB_GPIO_Type gpioPin){
     return RomDriver_GLB_GPIO_Set(gpioPin);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Set_HZ(GLB_GPIO_Type gpioPin){
@@ -1078,7 +1117,9 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Disable_AComp0_IRQ(void){
     return RomDriver_HBN_Disable_AComp0_IRQ();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Disable_AComp1_IRQ(void){
     return RomDriver_HBN_Disable_AComp1_IRQ();
@@ -1097,7 +1138,9 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Enable_AComp0_IRQ(void){
     return RomDriver_HBN_Enable_AComp0_IRQ();
 }
+#endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Enable_AComp1_IRQ(void){
     return RomDriver_HBN_Enable_AComp1_IRQ();
@@ -1441,10 +1484,12 @@ void HBN_Mode_Enter(HBN_APP_CFG_Type *cfg){
 }
 #endif
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void HBN_Power_Down_Flash(spi_flash_cfg_type *flash_cfg){
     return RomDriver_HBN_Power_Down_Flash(flash_cfg);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type L1C_DCache_Clean_All(void){
@@ -1501,10 +1546,12 @@ BL_Err_Type L1C_ICache_Invalid_All(void){
     return RomDriver_L1C_ICache_Invalid_All();
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type L1C_ICache_Invalid_By_Addr(uintptr_t addr, uint32_t len){
     return RomDriver_L1C_ICache_Invalid_By_Addr(addr,len);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type L1C_Set_Cache_Setting_By_ID(uint8_t core, L1C_CACHE_Cfg_Type *cacheSetting){
@@ -1575,10 +1622,12 @@ BL_Err_Type PDS_Set_GPIO_Pad_IntClr(PDS_GPIO_INT_SET_Type set){
     return RomDriver_PDS_Set_GPIO_Pad_IntClr(set);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask_Type intMask){
     return RomDriver_PDS_Set_GPIO_Pad_IntMask(pad,intMask);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Set_GPIO_Pad_IntMode(PDS_GPIO_INT_SET_Type set, PDS_GPIO_INT_TRIG_Type trig){
@@ -1630,10 +1679,12 @@ BL_Err_Type PDS_Turn_On_USB(uint8_t waitReady){
     return RomDriver_PDS_Turn_On_USB(waitReady);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Sts_Type PDS_Get_GPIO_Pad_IntStatus(GLB_GPIO_Type pad){
     return RomDriver_PDS_Get_GPIO_Pad_IntStatus(pad);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Sts_Type PDS_Get_IntStatus(PDS_INT_Type intType){

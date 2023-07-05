@@ -60,20 +60,20 @@ lcd_dbi_init_t dbi_para = {
 #endif
 
 const ili9488_dbi_init_cmd_t ili9488_dbi_init_cmds[] = {
-    { 0x01, NULL, 0 },  /* software reset */
-    { 0xFF, NULL, 10 }, /* delay 10ms */
+    { 0x01, NULL, 0 },                                                            /* software reset */
+    { 0xFF, NULL, 10 },                                                           /* delay 10ms */
 
-    { 0x11, NULL, 0 },   /* Sleep Out */
-    { 0xFF, NULL, 120 }, /* delay 120ms */
+    { 0x11, NULL, 0 },                                                            /* Sleep Out */
+    { 0xFF, NULL, 120 },                                                          /* delay 120ms */
 
     { 0xE0, "\x00\x07\x0F\x0D\x1B\x0A\x3C\x78\x4A\x07\x0E\x09\x1B\x1E\x0F", 15 }, /* PGAMCTRL (Positive Gamma Control) */
     { 0xE1, "\x00\x22\x24\x26\x12\x07\x36\x47\x47\x06\x0A\x07\x30\x37\x0F", 15 }, /* NGAMCTRL (Negative Gamma Control) */
 
-    { 0xC0, "\x10\x10", 2 }, /* Power Control 1 */
-    { 0xC1, "\x41", 1 },     /* Power Control 2 */
+    { 0xC0, "\x10\x10", 2 },                                                      /* Power Control 1 */
+    { 0xC1, "\x41", 1 },                                                          /* Power Control 2 */
 
-    { 0xC5, "\x00\x2C\x80", 3 }, /* VCOM Control */
-    { 0x36, "\x08", 1 },         /* Memory Access Control */
+    { 0xC5, "\x00\x2C\x80", 3 },                                                  /* VCOM Control */
+    { 0x36, "\x08", 1 },                                                          /* Memory Access Control */
 
 #if (ILI9488_DBI_PIXEL_FORMAT == 1)
     { 0x3A, "\x55", 1 }, /* Interface Pixel Format RGB565 */
@@ -81,11 +81,13 @@ const ili9488_dbi_init_cmd_t ili9488_dbi_init_cmds[] = {
     { 0x3A, "\x66", 1 }, /* Interface Pixel Format RGB666 */
 #endif
 
-    { 0xB0, "\x00", 1 },     /* Interface Mode Control */
-    { 0xB1, "\xB0", 1 },     /* Frame rate 70Hz */
-    { 0xB4, "\x02", 1 },     /* Display Inversion Control */
-    { 0xB6, "\x02\x22", 2 }, /* Display Function Control */
-    { 0xE9, "\x00", 1 },     /* Set Image Function */
+    { 0x35, "\x00", 1 },             /* enable Tearing Effect Output line */
+
+    { 0xB0, "\x00", 1 },             /* Interface Mode Control */
+    { 0xB1, "\xB0", 1 },             /* Frame rate 70Hz */
+    { 0xB4, "\x02", 1 },             /* Display Inversion Control */
+    { 0xB6, "\x02\x22", 2 },         /* Display Function Control */
+    { 0xE9, "\x00", 1 },             /* Set Image Function */
 
     { 0xF7, "\xA9\x51\x2C\x82", 4 }, /* Adjust Control 3 */
 

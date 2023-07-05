@@ -390,17 +390,20 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 
     reg_base = dev->reg_base;
 
-    bflb_uart_disable(dev);
-
     switch (cmd) {
         case UART_CMD_SET_BAUD_RATE:
+            bflb_uart_disable(dev);
+
             /* Cal the baud rate divisor */
             tmp = (bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_UART, dev->idx) * 10 / arg + 5) / 10;
 
             putreg32(((tmp - 1) << 0x10) | ((tmp - 1) & 0xFFFF), reg_base + UART_BIT_PRD_OFFSET);
+            bflb_uart_enable(dev);
             break;
 
         case UART_CMD_SET_DATA_BITS:
+            bflb_uart_disable(dev);
+
             /* Set data bits */
             tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
             rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
@@ -413,9 +416,12 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 
             putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
             putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
+            bflb_uart_enable(dev);
             break;
 
         case UART_CMD_SET_STOP_BITS:
+            bflb_uart_disable(dev);
+
             /* Set stop bits */
             tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
 
@@ -423,9 +429,12 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             tx_tmp |= arg << UART_CR_UTX_BIT_CNT_P_SHIFT;
 
             putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
+            bflb_uart_enable(dev);
             break;
 
         case UART_CMD_SET_PARITY_BITS:
+            bflb_uart_disable(dev);
+
             /* Set parity mode */
             tx_tmp = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
             rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
@@ -447,6 +456,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 
             putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
             putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
+            bflb_uart_enable(dev);
             break;
 
         case UART_CMD_CLR_TX_FIFO:
@@ -536,7 +546,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             tx_tmp |= arg << UART_CR_UTX_BIT_CNT_B_SHIFT;
 
             putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
-            return 0; /* can not enable uart */
+            break;
 
         case UART_CMD_SET_TX_LIN_VALUE:
             /* Set tx lin mode */
@@ -547,7 +557,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
 
             putreg32(tx_tmp, reg_base + UART_UTX_CONFIG_OFFSET);
-            return 0; /* can not enable uart */
+            break;
 
         case UART_CMD_SET_RX_LIN_VALUE:
             /* Set rx lin mode */
@@ -558,7 +568,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
 
             putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
-            return 0; /* can not enable uart */
+            break;
 #endif
         case UART_CMD_SET_GLITCH_VALUE:
             rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
@@ -763,6 +773,6 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             ret = -EPERM;
             break;
     }
-    bflb_uart_enable(dev);
+
     return ret;
 }

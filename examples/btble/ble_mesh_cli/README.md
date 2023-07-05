@@ -89,3 +89,97 @@ bouffalolab />blemesh_pb 2 1
 - In the group, clicking on ON and OFF buttons prints the LED information in the serial monitor, indicating that the mesh is working
 
 ![img13](img/img13.jpg)
+
+## How to use Provisioner 
+
+The following configuration options need to be enabled when compiling:
+
+CONFIG_BT_MESH_PROVISIONER=1
+
+- Start unprovisioning node and enter the waiting state:
+
+```bash
+bouffalolab />blemesh_init
+......
+
+bouffalolab />blemesh_pb 1 1 
+......
+```
+
+- Start Provisioner .
+
+```bash
+
+bouffalolab />blemesh_pvnr_init
+......
+
+```
+
+    Local node provisioned, net_idx 0x0000 address 0x0001
+
+    Network key:8fe7deea92943001567251dc1f9b0f03
+
+    Dev key:89c2f18f9f286661c6bbb1430d7aadb7
+
+    Provisioning completed
+
+
+- Turn on the unprovision beacon data callback and add node callback, the UUID information of the unprovison device beacon will be print out.
+
+```bash
+
+bouffalolab />blemesh_beacon_listen 0x01
+......
+```
+- Add unprovision node
+
+
+```bash
+
+bouffalolab />blemesh_provision_adv 07af000011112222333318b905de96c2 0 3 0
+    P1：“07af000011112222333318b905de96c2" is UUID information.
+    P2：0：net_idx
+    P3：3： assign node unicast address。
+    P4：0：attention_duration
+......
+```          
+- After the device is successfully connected to the network, the following prompt information will be printed:
+
+    Node added:
+
+    net_idx:[0]
+
+    uuid:[07af000011112222333318b905de96c2]
+
+    addr:[3]
+
+    num_elem:[1]
+
+- Get node composition data
+```bash
+
+bouffalolab /> blemesh_get_comp 0x0000 0x0003 0x00
+
+P1：net index.
+
+P2：dst address.
+
+P3：page number.
+......
+```    
+- Add Node appkey
+
+```bash
+
+bouffalolab />  blemesh_app_key_add 0x0000 0x0003 0x0000 0x0000
+         
+P1：net index.
+
+P2：dst address.
+
+P3：Network key index。
+
+P4：Application key index.
+......
+```  
+  

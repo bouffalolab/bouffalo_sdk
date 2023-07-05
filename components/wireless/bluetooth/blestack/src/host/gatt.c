@@ -2508,10 +2508,10 @@ discover:
 	}
 
 done:
-	params->func(conn, NULL, params);
 #if defined(BFLB_BLE_DISCOVER_ONGOING)
 	discover_ongoing = BT_GATT_ITER_STOP;
 #endif
+	params->func(conn, NULL, params);
 }
 
 static void gatt_find_type_rsp(struct bt_conn *conn, u8_t err,
@@ -2570,10 +2570,10 @@ static void gatt_find_type_rsp(struct bt_conn *conn, u8_t err,
 
 	return;
 done:
-	params->func(conn, NULL, params);
 #if defined(BFLB_BLE_DISCOVER_ONGOING)
 	discover_ongoing = BT_GATT_ITER_STOP;
 #endif
+	params->func(conn, NULL, params);
 }
 
 static int gatt_find_type(struct bt_conn *conn,
@@ -2878,10 +2878,10 @@ static void gatt_read_type_rsp(struct bt_conn *conn, u8_t err,
 	BT_DBG("err 0x%02x", err);
 
 	if (err) {
-		params->func(conn, NULL, params);
 	#if defined(BFLB_BLE_DISCOVER_ONGOING)
 		discover_ongoing = BT_GATT_ITER_STOP;
 	#endif
+		params->func(conn, NULL, params);
 		return;
 	}
 
@@ -3020,10 +3020,10 @@ static void gatt_read_group_rsp(struct bt_conn *conn, u8_t err,
 	BT_DBG("err 0x%02x", err);
 
 	if (err) {
-		params->func(conn, NULL, params);
 	#if defined(BFLB_BLE_DISCOVER_ONGOING)
 		discover_ongoing = BT_GATT_ITER_STOP;
 	#endif
+		params->func(conn, NULL, params);
 		return;
 	}
 
@@ -3178,10 +3178,10 @@ static void gatt_find_info_rsp(struct bt_conn *conn, u8_t err,
 	return;
 
 done:
-	params->func(conn, NULL, params);
 #if defined(BFLB_BLE_DISCOVER_ONGOING)
 	discover_ongoing = BT_GATT_ITER_STOP;
 #endif
+	params->func(conn, NULL, params);
 }
 
 static int gatt_find_info(struct bt_conn *conn,

@@ -3,8 +3,17 @@
 #include "fatfs_diskio_register.h"
 #include "ff.h"
 
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+#include <FreeRTOS.h>
+#include "semphr.h"
+#endif
+
 #define DBG_TAG "MAIN"
 #include "log.h"
+
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+static TaskHandle_t test_handle;
+#endif
 
 FATFS fs;
 __attribute((aligned(8))) static uint32_t workbuf[4096];
@@ -99,7 +108,8 @@ void fatfs_write_read_test()
     }
 
     /* write test */
-    LOG_I("\r\n******************** be about to write test... **********************\r\n");
+    LOG_RI("\r\n");
+    LOG_I("******************** be about to write test... **********************\r\n");
     ret = f_open(&fnew, "/sd/test_file.txt", FA_CREATE_ALWAYS | FA_WRITE);
     if (ret == FR_OK) {
         time_node = (uint32_t)bflb_mtimer_get_time_ms();
@@ -131,7 +141,8 @@ void fatfs_write_read_test()
     }
 
     /* read test */
-    LOG_I("\r\n******************** be about to read test... **********************\r\n");
+    LOG_RI("\r\n");
+    LOG_I("******************** be about to read test... **********************\r\n");
     ret = f_open(&fnew, "/sd/test_file.txt", FA_OPEN_EXISTING | FA_READ);
     if (ret == FR_OK) {
         time_node = (uint32_t)bflb_mtimer_get_time_ms();
@@ -163,7 +174,8 @@ void fatfs_write_read_test()
 
     /* check data */
 #if SDU_DATA_CHECK
-    LOG_I("\r\n******************** be about to check test... **********************\r\n");
+    LOG_RI("\r\n");
+    LOG_I("******************** be about to check test... **********************\r\n");
     ret = f_open(&fnew, "/sd/test_file.txt", FA_OPEN_EXISTING | FA_READ);
     if (ret == FR_OK) {
         ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
@@ -204,9 +216,9 @@ void fatfs_write_read_test()
 #endif
 }
 
-int main(void)
+void fatfs_test_main(void *param)
 {
-    board_init();
+    (void)param;
 
     filesystem_init();
 
@@ -222,4 +234,16 @@ int main(void)
     while (1) {
         bflb_mtimer_delay_ms(200);
     }
+}
+
+int main(void)
+{
+    board_init();
+
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    xTaskCreate(fatfs_test_main, (char *)"test_task", 1024, NULL, configMAX_PRIORITIES - 2, &test_handle);
+    vTaskStartScheduler();
+#else
+    fatfs_test_main(NULL);
+#endif
 }

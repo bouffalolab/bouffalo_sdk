@@ -10,6 +10,8 @@
 
 volatile float coe = 1.0f;
 volatile uint32_t tsen_offset;
+volatile int adc_reference_channel = -1;
+volatile int32_t adc_reference_channel_millivolt = -1;
 
 void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
 {
@@ -193,6 +195,12 @@ void bflb_adc_link_rxdma(struct bflb_device_s *dev, bool enable)
         regval &= ~GPIP_GPADC_DMA_EN;
     }
     putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+}
+
+void bflb_adc_set_reference_channel(int channel, int32_t millivolt)
+{
+    adc_reference_channel = channel;
+    adc_reference_channel_millivolt = millivolt;
 }
 
 int bflb_adc_channel_config(struct bflb_device_s *dev, struct bflb_adc_channel_s *chan, uint8_t channels)
@@ -439,6 +447,7 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
     uint16_t ref = 3200;
     uint8_t neg = 0;
     uint32_t tmp;
+    int32_t chan_vref = 0;
 
     reg_base = dev->reg_base;
 
@@ -452,6 +461,31 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
 
     /* single mode */
     if (diff_mode == 0) {
+        for (uint16_t i = 0; i < count; i++) {
+            if ((buffer[i] >> 21) == adc_reference_channel) {
+                if (resolution == ADC_RESOLUTION_12B) {
+                    conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 4) / coe);
+                    if (conv_result > 4095) {
+                        conv_result = 4095;
+                    }
+                    chan_vref = (int32_t)conv_result * ref / 4096;
+                } else if (resolution == ADC_RESOLUTION_14B) {
+                    conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2) / coe);
+                    if (conv_result > 16383) {
+                        conv_result = 16383;
+                    }
+                    chan_vref = (int32_t)conv_result * ref / 16384;
+                } else if (resolution == ADC_RESOLUTION_16B) {
+                    conv_result = (uint32_t)((buffer[i] & 0xffff) / coe);
+                    if (conv_result > 65535) {
+                        conv_result = 65535;
+                    }
+                    chan_vref = (int32_t)conv_result * ref / 65536;
+                } else {
+                }
+            }
+        }
+
         for (uint16_t i = 0; i < count; i++) {
             result[i].pos_chan = buffer[i] >> 21;
             result[i].neg_chan = -1;
@@ -478,6 +512,10 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
                 result[i].value = conv_result;
                 result[i].millivolt = (int32_t)result[i].value * ref / 65536;
             } else {
+            }
+
+            if ((adc_reference_channel != -1) && ((buffer[i] >> 21) != adc_reference_channel)) {
+                result[i].millivolt = result[i].millivolt * adc_reference_channel_millivolt / chan_vref;
             }
         }
     } else {

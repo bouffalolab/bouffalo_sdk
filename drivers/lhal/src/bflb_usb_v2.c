@@ -166,6 +166,8 @@ struct bl_udc {
     struct bl_ep_state out_ep[USB_NUM_BIDIR_ENDPOINTS]; /*!< OUT endpoint parameters            */
 } g_bl_udc;
 
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_setup_buffer[8];
+
 static void bflb_usb_reset_fifo(uint8_t fifo)
 {
     uint32_t regval;
@@ -181,7 +183,7 @@ static void bflb_usb_reset_fifo(uint8_t fifo)
     }
 }
 
-static void bflb_usb_get_setup_packet(uint32_t setup[2])
+void bflb_usb_get_setup_packet(uint32_t setup[2])
 {
     uint32_t regval;
 
@@ -909,9 +911,13 @@ void USBD_IRQHandler(int irq, void *arg)
             subgroup_intstatus = bflb_usb_get_source_group_intstatus(0);
 
             if (subgroup_intstatus & USB_CX_SETUP_INT) {
-                uint32_t setup[2];
-                bflb_usb_get_setup_packet(setup);
-                usbd_event_ep0_setup_complete_handler((uint8_t *)setup);
+                bflb_usb_vdma_start_read(USB_FIFO_CXF, g_setup_buffer, 8);
+                while (getreg32(BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET) & USB_VDMA_START_CXF) {
+                }
+
+                bflb_usb_source_group_int_clear(3, USB_VDMA_CMPLT_CXF);
+
+                usbd_event_ep0_setup_complete_handler(g_setup_buffer);
             }
         }
         if (dev_intstatus & USB_INT_G1) {

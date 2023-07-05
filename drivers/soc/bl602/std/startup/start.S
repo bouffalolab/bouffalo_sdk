@@ -73,10 +73,10 @@ __start:
      * segments having been initialized.  This is done to avoid putting a
      * burden on systems that can be initialized without having a C environment
      * set up. */
-    jal SystemInit
+    call SystemInit
 
     /* start load code to itcm like. */
-    jal start_load
+    call start_load
 
     call System_Post_Init
 

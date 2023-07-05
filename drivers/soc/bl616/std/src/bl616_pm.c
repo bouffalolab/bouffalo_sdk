@@ -880,14 +880,14 @@ void pm_set_boot2_app_jump_para(uint32_t para)
 
 void pm_hbn_out0_irq_register(void)
 {
-    Interrupt_Handler_Register(HBN_OUT0_IRQn, HBN_OUT0_IRQ);
-    CPU_Interrupt_Enable(HBN_OUT0_IRQn);
+    bflb_irq_attach(HBN_OUT0_IRQn, (irq_callback)HBN_OUT0_IRQn, NULL);
+    bflb_irq_enable(HBN_OUT0_IRQn);
 }
 
 void pm_hbn_out1_irq_register(void)
 {
-    Interrupt_Handler_Register(HBN_OUT1_IRQn, HBN_OUT1_IRQ);
-    CPU_Interrupt_Enable(HBN_OUT1_IRQn);
+    bflb_irq_attach(HBN_OUT1_IRQn, (irq_callback)HBN_OUT1_IRQn, NULL);
+    bflb_irq_enable(HBN_OUT1_IRQn);
 }
 
 void HBN_OUT0_IRQ(void)
@@ -1032,8 +1032,8 @@ __WEAK void pm_irq_callback(enum pm_event_type event)
 
 void pm_pds_irq_register(void)
 {
-    Interrupt_Handler_Register(PDS_WAKEUP_IRQn, PDS_WAKEUP_IRQ);
-    CPU_Interrupt_Enable(PDS_WAKEUP_IRQn);
+    bflb_irq_attach(PDS_WAKEUP_IRQn, (irq_callback)PDS_WAKEUP_IRQ, NULL);
+    bflb_irq_enable(PDS_WAKEUP_IRQn);
 }
 
 void ATTR_TCM_SECTION PDS_WAKEUP_IRQ(void)

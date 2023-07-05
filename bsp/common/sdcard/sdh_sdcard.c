@@ -23,12 +23,21 @@
 
 #if defined(BL616) || defined(BL808) || defined(BL628) || defined(BL606P)
 
+#include <stdbool.h>
 #include "sdh_sdcard.h"
 #include "bflb_mtimer.h"
 #include "bflb_l1c.h"
 
-#define SDIO_CMDTIMEOUT_MS   (1000)
-#define SDIO_SDCARD_INT_MODE (0) /* Interrupt mode, which can be paired with the OS */
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+#include "FreeRTOS.h"
+#include "semphr.h"
+#endif
+
+#ifndef CONFIG_BSP_SDH_SDCARD_INT
+#define CONFIG_BSP_SDH_SDCARD_INT 0 /* Interrupt mode, which can be paired with the OS */
+#endif
+
+#define SDIO_CMDTIMEOUT_MS (1000)
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -39,12 +48,17 @@ static uint32_t sdhClockTransfer = 100ul;
 static sd_card_t *pSDCardInfo = NULL;
 static SDH_Cfg_Type SDH_Cfg_Type_Instance;
 
-#if SDIO_SDCARD_INT_MODE
+#if CONFIG_BSP_SDH_SDCARD_INT
 static volatile SD_Error SDH_DataWaitStatus = SD_WAITING;
 static volatile SD_Error SDH_CMDWaitStatus = SD_WAITING;
 
 static SDH_Trans_Callback_Cfg_Type SDH_Trans_Callback_Cfg_TypeInstance;
 static SDH_Handle_Cfg_Type SDH_Handle_Cfg_TypeInstance;
+
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+static volatile bool SDH_ReadWriteWorking;
+static SemaphoreHandle_t SDH_DataWaitSem = NULL;
+#endif
 #endif
 
 static SDH_DMA_Cfg_Type SDH_DMA_Cfg_TypeInstance;
@@ -55,8 +69,8 @@ static __attribute__((aligned(32), section(".noncacheable"))) SDH_ADMA2_Desc_Typ
 static void SD_DecodeCid(sd_card_t *card, uint32_t *rawCid);
 static void SD_DecodeCsd(sd_card_t *card, uint32_t *rawCsd);
 static void SD_DecodeScr(sd_card_t *card, uint32_t *rawScr);
-#if SDIO_SDCARD_INT_MODE
-static void SDH_INT_Init(void);
+#if CONFIG_BSP_SDH_SDCARD_INT
+static status_t SDH_INT_Init(void);
 #endif
 static status_t SDH_SendCardCommand(SDH_CMD_Cfg_Type *cmd);
 static void SDH_HostInit(void);
@@ -210,7 +224,7 @@ static void SD_DecodeScr(sd_card_t *card, uint32_t *rawScr)
     }
 }
 
-#if SDIO_SDCARD_INT_MODE
+#if CONFIG_BSP_SDH_SDCARD_INT
 /*!< SDH transfer complete callback */
 void SDH_DataTransferFinished_CallBack(SDH_Handle_Cfg_Type *handle, SDH_Stat_Type status, void *userData)
 {
@@ -220,6 +234,15 @@ void SDH_DataTransferFinished_CallBack(SDH_Handle_Cfg_Type *handle, SDH_Stat_Typ
     } else {
         SDH_DataWaitStatus = SD_OK;
     }
+
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    if (SDH_ReadWriteWorking) {
+        SDH_ReadWriteWorking = false;
+        xSemaphoreGiveFromISR(SDH_DataWaitSem, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+#endif
 }
 /*!< SDH transfer complete callback */
 void SDH_CMDTransferFinished_CallBack(SDH_Handle_Cfg_Type *handle, SDH_Stat_Type status, void *userData)
@@ -245,7 +268,7 @@ static void sdh_isr(int irq, void *arg)
  * @return None
  *
 *******************************************************************************/
-static void SDH_INT_Init(void)
+static status_t SDH_INT_Init(void)
 {
     bflb_irq_attach(33, sdh_isr, NULL);
     bflb_irq_enable(33);
@@ -255,6 +278,22 @@ static void SDH_INT_Init(void)
     SDH_Trans_Callback_Cfg_TypeInstance.SDH_CallBack_TransferFinished = SDH_DataTransferFinished_CallBack;
     SDH_Trans_Callback_Cfg_TypeInstance.SDH_CMDCallBack_TransferFinished = SDH_CMDTransferFinished_CallBack;
     SDH_InstallHandleCallback(&SDH_Handle_Cfg_TypeInstance, &SDH_Trans_Callback_Cfg_TypeInstance, NULL);
+
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    if (SDH_DataWaitSem) {
+        vSemaphoreDelete(SDH_DataWaitSem);
+        SDH_DataWaitSem = NULL;
+    }
+
+    SDH_DataWaitSem = xSemaphoreCreateBinary();
+    if (NULL == SDH_DataWaitSem) {
+        return Status_Fail;
+    }
+
+    SDH_ReadWriteWorking = false;
+#endif
+
+    return Status_Success;
 }
 #endif
 
@@ -269,7 +308,7 @@ static status_t SDH_SendCardCommand(SDH_CMD_Cfg_Type *cmd)
     SDH_SendCommand(cmd);
     time_node = (uint32_t)bflb_mtimer_get_time_ms();
 
-#if SDIO_SDCARD_INT_MODE
+#if CONFIG_BSP_SDH_SDCARD_INT
 
     SDH_CMDWaitStatus = SD_WAITING;
     SDH_EnableIntSource(SDH_INT_CMD_COMPLETED | SDH_INT_CMD_ERRORS);
@@ -620,7 +659,7 @@ static status_t SD_SendScr(sd_card_t *card)
     /* Waiting for CSR data */
     time_node = (uint32_t)bflb_mtimer_get_time_ms();
 
-#if SDIO_SDCARD_INT_MODE
+#if CONFIG_BSP_SDH_SDCARD_INT
 
     SDH_DataWaitStatus = SD_WAITING;
     SDH_EnableIntSource(SDH_INT_BUFFER_READ_READY | SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR | SDH_INT_AUTO_CMD12_ERROR);
@@ -734,7 +773,7 @@ static status_t SD_SendSsr(sd_card_t *card)
     /* Waiting for SSR data */
     time_node = (uint32_t)bflb_mtimer_get_time_ms();
 
-#if SDIO_SDCARD_INT_MODE
+#if CONFIG_BSP_SDH_SDCARD_INT
 
     SDH_DataWaitStatus = SD_WAITING;
     SDH_EnableIntSource(SDH_INT_BUFFER_READ_READY | SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR | SDH_INT_AUTO_CMD12_ERROR);
@@ -897,7 +936,7 @@ static status_t SD_SwitchFunction(uint32_t mode, uint32_t group, uint32_t number
     /* Waiting for CSR data */
     time_node = (uint32_t)bflb_mtimer_get_time_ms();
 
-#if SDIO_SDCARD_INT_MODE
+#if CONFIG_BSP_SDH_SDCARD_INT
 
     SDH_DataWaitStatus = SD_WAITING;
     SDH_EnableIntSource(SDH_INT_BUFFER_READ_READY | SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR);
@@ -1201,8 +1240,10 @@ status_t SDH_Init(uint32_t bus_wide, sd_card_t *pOutCardInfo)
 {
     pSDCardInfo = pOutCardInfo;
 
-#if SDIO_SDCARD_INT_MODE
-    SDH_INT_Init();
+#if CONFIG_BSP_SDH_SDCARD_INT
+    if (Status_Success != SDH_INT_Init()) {
+        return Status_Fail;
+    }
 #endif
 
     /* reset SDH controller*/
@@ -1385,6 +1426,13 @@ status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Bloc
     }
 #endif
 
+#if CONFIG_BSP_SDH_SDCARD_INT && defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    if (SDH_ReadWriteWorking) {
+        return Status_Busy;
+    }
+    SDH_ReadWriteWorking = true;
+#endif
+
     /* SDSC card uses byte unit address*/
     if (!(pSDCardInfo->flags & SD_SupportHighCapacityFlag)) {
         BlockSize = 512;
@@ -1445,13 +1493,25 @@ status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Bloc
     }
 
     time_node = (uint32_t)bflb_mtimer_get_time_ms();
+    (void)time_node;
 
-#if SDIO_SDCARD_INT_MODE
+#if CONFIG_BSP_SDH_SDCARD_INT
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    xSemaphoreTake(SDH_DataWaitSem, 0);
+#endif
 
     SDH_DataWaitStatus = SD_WAITING;
     SDH_EnableIntSource(SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR | SDH_INT_AUTO_CMD12_ERROR);
 
     /*wait for Xfer status. might pending here in multi-task OS*/
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    if (pdTRUE != xSemaphoreTake(SDH_DataWaitSem, SDIO_CMDTIMEOUT_MS)) {
+        SDH_MSG("SDH read data timeout: %ld", (uint32_t)bflb_mtimer_get_time_ms() - time_node);
+        SDH_DisableIntSource(SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR | SDH_INT_AUTO_CMD12_ERROR);
+        SDH_ReadWriteWorking = false;
+        return Status_Timeout;
+    }
+#else
     while (SDH_DataWaitStatus == SD_WAITING) {
         if ((uint32_t)bflb_mtimer_get_time_ms() - time_node > SDIO_CMDTIMEOUT_MS) {
             SDH_MSG("SDH read data timeout: %ld", (uint32_t)bflb_mtimer_get_time_ms() - time_node);
@@ -1461,8 +1521,10 @@ status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Bloc
         BL_DRV_DUMMY;
         BL_DRV_DUMMY;
     }
-    sd_status = SDH_DataWaitStatus;
+#endif
+
     SDH_DisableIntSource(SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR | SDH_INT_AUTO_CMD12_ERROR);
+    sd_status = SDH_DataWaitStatus;
 
 #else
 
@@ -1517,6 +1579,13 @@ status_t SDH_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t B
     if ((uintptr_t)writebuff % 8 != 0) {
         return Status_InvalidArgument;
     }
+#endif
+
+#if CONFIG_BSP_SDH_SDCARD_INT && defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    if (SDH_ReadWriteWorking) {
+        return Status_Busy;
+    }
+    SDH_ReadWriteWorking = true;
 #endif
 
     if ((pSDCardInfo != NULL) && (!(pSDCardInfo->flags & SD_SupportHighCapacityFlag))) {
@@ -1578,13 +1647,26 @@ status_t SDH_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t B
     }
 
     time_node = (uint32_t)bflb_mtimer_get_time_ms();
+    (void)time_node;
 
-#if SDIO_SDCARD_INT_MODE
+#if CONFIG_BSP_SDH_SDCARD_INT
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    xSemaphoreTake(SDH_DataWaitSem, 0);
+#endif
 
     SDH_DataWaitStatus = SD_WAITING;
     SDH_EnableIntSource(SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR | SDH_INT_AUTO_CMD12_ERROR);
 
     /*wait for Xfer status. might pending here in multi-task OS*/
+#if defined(CONFIG_FREERTOS) && CONFIG_FREERTOS
+    if (pdTRUE != xSemaphoreTake(SDH_DataWaitSem, SDIO_CMDTIMEOUT_MS)) {
+        SDH_MSG("SDH write data timeout: %ld ms\r\n", (uint32_t)bflb_mtimer_get_time_ms() - time_node);
+        SDH_DisableIntSource(SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR | SDH_INT_AUTO_CMD12_ERROR);
+        errorstatus = Status_Timeout;
+        SDH_ReadWriteWorking = false;
+        goto out;
+    }
+#else
     while (SDH_DataWaitStatus == SD_WAITING) {
         if ((uint32_t)bflb_mtimer_get_time_ms() - time_node > SDIO_CMDTIMEOUT_MS) {
             SDH_MSG("SDH write data timeout: %ld ms\r\n", (uint32_t)bflb_mtimer_get_time_ms() - time_node);
@@ -1595,6 +1677,7 @@ status_t SDH_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t B
         BL_DRV_DUMMY;
         BL_DRV_DUMMY;
     }
+#endif
 
     SDH_DisableIntSource(SDH_INT_DATA_COMPLETED | SDH_INT_DATA_ERRORS | SDH_INT_DMA_ERROR | SDH_INT_AUTO_CMD12_ERROR);
     sd_status = SDH_DataWaitStatus;

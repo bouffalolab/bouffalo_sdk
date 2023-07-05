@@ -137,12 +137,12 @@ typedef enum {
 typedef enum {
     PDS_GPIO_INT_SYNC_FALLING_EDGE = 0,        /*!< GPIO interrupt sync mode, GPIO negedge pulse trigger interrupt */
     PDS_GPIO_INT_SYNC_RISING_EDGE = 1,         /*!< GPIO interrupt sync mode, GPIO posedge pulse trigger interrupt */
-    PDS_GPIO_INT_SYNC_LOW_LEVEL = 2,           /*!< GPIO interrupt sync mode, GPIO negedge level trigger interrupt */
+    // PDS_GPIO_INT_SYNC_LOW_LEVEL = 2,           /*!< Not support. GPIO interrupt sync mode, GPIO negedge level trigger interrupt */
     PDS_GPIO_INT_SYNC_HIGH_LEVEL = 3,          /*!< GPIO interrupt sync mode, GPIO posedge level trigger interrupt */
-    PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE = 4, /*!< GPIO interrupt sync mode, GPIO posedge negedge pulse trigger interrupt */
+    // PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE = 4, /*!< Not support. GPIO interrupt sync mode, GPIO posedge negedge pulse trigger interrupt */
     PDS_GPIO_INT_ASYNC_FALLING_EDGE = 8,       /*!< GPIO interrupt async mode, GPIO negedge pulse trigger interrupt */
     PDS_GPIO_INT_ASYNC_RISING_EDGE = 9,        /*!< GPIO interrupt async mode, GPIO posedge pulse trigger interrupt */
-    PDS_GPIO_INT_ASYNC_LOW_LEVEL = 10,         /*!< GPIO interrupt async mode, GPIO negedge level trigger interrupt */
+    // PDS_GPIO_INT_ASYNC_LOW_LEVEL = 10,         /*!< Not support. GPIO interrupt async mode, GPIO negedge level trigger interrupt */
     PDS_GPIO_INT_ASYNC_HIGH_LEVEL = 11,        /*!< GPIO interrupt async mode, GPIO posedge level trigger interrupt */
 } PDS_GPIO_INT_TRIG_Type;
 
@@ -480,12 +480,9 @@ typedef struct
  */
 #define IS_PDS_GPIO_INT_TRIG_TYPE(type) (((type) == PDS_GPIO_INT_SYNC_FALLING_EDGE) ||        \
                                          ((type) == PDS_GPIO_INT_SYNC_RISING_EDGE) ||         \
-                                         ((type) == PDS_GPIO_INT_SYNC_LOW_LEVEL) ||           \
                                          ((type) == PDS_GPIO_INT_SYNC_HIGH_LEVEL) ||          \
-                                         ((type) == PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE) || \
                                          ((type) == PDS_GPIO_INT_ASYNC_FALLING_EDGE) ||       \
                                          ((type) == PDS_GPIO_INT_ASYNC_RISING_EDGE) ||        \
-                                         ((type) == PDS_GPIO_INT_ASYNC_LOW_LEVEL) ||          \
                                          ((type) == PDS_GPIO_INT_ASYNC_HIGH_LEVEL))
 
 /** @defgroup  PDS_LDO_LEVEL_TYPE

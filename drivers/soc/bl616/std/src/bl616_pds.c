@@ -98,6 +98,8 @@ static intCallback_Type *pdsIntCbfArra[PDS_INT_MAX] = { NULL };
  *
  * @return SUCCESS or ERROR
  *
+ * @note   Pu and Pd not depend on IE
+ *
 *******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(PDS_GPIO_GROUP_SET_Type grp, uint8_t pu, uint8_t pd, uint8_t ie)
 {

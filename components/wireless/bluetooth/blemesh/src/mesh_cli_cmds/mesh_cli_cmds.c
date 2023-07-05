@@ -2300,7 +2300,7 @@ BLEMESH_CLI(cdb_create)
 	vOutputString("Net key:%s\n", bt_hex(net_key, 16));
 }
 
-static void blemeshcli_cdb_clear(char *pcWriteBuffer, int xWriteBufferLen, int argc, char *argv[])
+BLEMESH_CLI(cdb_clear)
 {
 	if(!blemesh_inited){
 		vOutputString("blemesh not init\n");
@@ -3251,7 +3251,7 @@ BLEMESH_CLI(app_key_del)
 }
 
 /* Added bouffalo */
-BLEMESH_CLI(app_key_del)
+BLEMESH_CLI(kr_update)
 {
 	u16_t idx;
 	u8_t kr;

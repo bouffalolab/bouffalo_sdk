@@ -6171,11 +6171,8 @@ int bt_disable_action(void)
     bl_onchiphci_interface_deinit();
 
     //delete task
-#if defined(BL602) || defined(BL702)
     ble_controller_deinit();
-#else
-    btble_controller_deinit();
-#endif
+
     #if (BFLB_BT_CO_THREAD)
     k_thread_delete(&co_thread_data);
     #else

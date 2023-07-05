@@ -1796,6 +1796,8 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Aon_Pad_Ctrl(uint32_t aonPadCtl1, uint32_t aonP
  *
  * @return SUCCESS or ERROR
  *
+ * @note   Pu and Pd not depend on IE. IE ,Pu and Pd depend on ctrlEn
+ *
 *******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION HBN_Aon_Pad_Cfg(uint8_t aonPadHwCtrlEn, HBN_AON_PAD_Type aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg)
 {

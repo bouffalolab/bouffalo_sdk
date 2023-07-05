@@ -44,14 +44,14 @@ int shell_help(int argc, char **argv)
         struct shell_syscall *index;
 
         for (index = _syscall_table_begin; index < _syscall_table_end; index++) {
-            if (strncmp(index->name, "__cmd_", 6) != 0) {
-                continue;
-            }
+            // if (strncmp(index->name, "__cmd_", 6) != 0) {
+            //     continue;
+            // }
 
 #if defined(SHELL_USING_DESCRIPTION)
-            SHELL_DGB("%-16s - %s\r\n", &index->name[6], index->desc);
+            SHELL_DGB("%-16s - %s\r\n", &index->name[0], index->desc);
 #else
-            SHELL_DGB("%s\r\n", &index->name[6]);
+            SHELL_DGB("%s\r\n", &index->name[0]);
 #endif
         }
     }
@@ -349,11 +349,11 @@ static void shell_auto_complete(char *prefix)
     {
         for (index = _syscall_table_begin; index < _syscall_table_end; index++) {
             /* skip finsh shell function */
-            if (strncmp(index->name, "__cmd_", 6) != 0) {
-                continue;
-            }
+            // if (strncmp(index->name, "__cmd_", 6) != 0) {
+            //     continue;
+            // }
 
-            cmd_name = (const char *)&index->name[6];
+            cmd_name = (const char *)&index->name[0];
 
             if (strncmp(prefix, cmd_name, strlen(prefix)) == 0) {
                 if (min_length == 0) {
@@ -470,12 +470,12 @@ static cmd_function_t shell_get_cmd(char *cmd, int size)
     cmd_function_t cmd_func = NULL;
 
     for (index = _syscall_table_begin; index < _syscall_table_end; index++) {
-        if (strncmp(index->name, "__cmd_", 6) != 0) {
-            continue;
-        }
+        // if (strncmp(index->name, "__cmd_", 6) != 0) {
+        //     continue;
+        // }
 
-        if (strncmp(&index->name[6], cmd, size) == 0 &&
-            index->name[6 + size] == '\0') {
+        if (strncmp(&index->name[0], cmd, size) == 0 &&
+            index->name[0 + size] == '\0') {
             cmd_func = (cmd_function_t)index->func;
             break;
         }
