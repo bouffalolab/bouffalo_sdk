@@ -10,10 +10,10 @@ sdk_add_compile_options(-fcommon)
 # disable undef warning
 sdk_add_compile_options(-Wno-undef)
 
-set(CONFIG_VIF_MAX 2)
-set(CONFIG_STA_MAX 4)
-set(CONFIG_MAC_TXQ_DEPTH 16)
-set(CONFIG_MAC_RXQ_DEPTH 12)
+sdk_ifndef(CONFIG_VIF_MAX 2)
+sdk_ifndef(CONFIG_STA_MAX 4)
+sdk_ifndef(CONFIG_MAC_TXQ_DEPTH 32)
+sdk_ifndef(CONFIG_MAC_RXQ_DEPTH 12)
 
 sdk_add_compile_definitions(-DCONFIG_VIF_MAX=${CONFIG_VIF_MAX})
 sdk_add_compile_definitions(-DCONFIG_STA_MAX=${CONFIG_STA_MAX})

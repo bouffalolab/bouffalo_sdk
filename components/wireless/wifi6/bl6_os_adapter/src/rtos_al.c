@@ -27,8 +27,6 @@
  */
 #include "rtos_def.h"
 #include "rtos_al.h"
-#include "stdlib.h"
-
 #define TST_SHRAM_PTR(...)
 #define ASSERT_ERR(...)
 
@@ -51,7 +49,7 @@ uint8_t *ucHeap = (uint8_t *)__heap_bottom;
  ****************************************************************************************
  */
 
-static inline TickType_t rtos_timeout_2_tickcount(int timeout_ms)
+static TickType_t rtos_timeout_2_tickcount(int timeout_ms)
 {
     if (timeout_ms < 0)
     {
@@ -73,43 +71,6 @@ uint32_t rtos_now(bool isr)
     {
         return xTaskGetTickCount();
     }
-}
-
-void *rtos_malloc(uint32_t size)
-{
-    void *ptr;
-
-    ptr = malloc(size);
-    if (NULL == ptr) {
-        while (1) {
-            /*dead loop now*/
-        }
-    }
-    return ptr;
-}
-
-void *rtos_calloc(uint32_t nb_elt, uint32_t size)
-{
-    void * res = malloc(nb_elt * size);
-    if (res)
-        memset(res, 0, nb_elt * size);
-
-    return res;
-}
-
-void rtos_free(void *ptr)
-{
-    free(ptr);
-}
-
-void rtos_heap_info(int *total_size, int *free_size, int *min_free_size)
-{
-    struct meminfo info;
-    bflb_mem_usage(KMEM_HEAP, &info);
-
-    *total_size = info.total_size;
-    *free_size = info.free_size;
-    *min_free_size =info.max_free_size ;
 }
 
 int rtos_task_create(rtos_task_fct func,

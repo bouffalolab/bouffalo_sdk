@@ -74,6 +74,8 @@ void bl_sta_set_keepalive_period(uint8_t time_seconds);
  ****************************************************************************************
  */
 int bl_sta_send_nullframe(void *arg);
+uint8_t bl_nonstandard_ap_detect(void);
+uint8_t bl_tim_cnt_get(void);
 #endif
 
 #endif /*__BL_FW_API_H__*/

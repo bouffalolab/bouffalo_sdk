@@ -33,8 +33,6 @@
 #include "queue.h"
 #include "semphr.h"
 
-#include "mem.h"
-
 #include <stdbool.h>
 /*
  * DEFINITIONS
