@@ -1764,8 +1764,8 @@ uint8_t bflb_sf_ctrl_get_wrap_queue_value(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void bflb_sf_ctrl_32bits_addr_en(BL_Fun_Type en_32bits_addr){
-    return RomDriver_SF_Ctrl_32bits_Addr_En(en_32bits_addr);
+void bflb_sf_ctrl_32bits_addr_en(uint8_t en_32bits_addr){
+    return RomDriver_SF_Ctrl_32bits_Addr_En((BL_Fun_Type)en_32bits_addr);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -2033,8 +2033,8 @@ int bflb_sflash_sector_erase(spi_flash_cfg_type *flash_cfg, uint32_t sec_num){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-int bflb_sflash_set_32bits_addr_mode(spi_flash_cfg_type *flash_cfg, BL_Fun_Type en_32bits_addr){
-    return RomDriver_SFlash_Set32BitsAddrMode(flash_cfg,en_32bits_addr);
+int bflb_sflash_set_32bits_addr_mode(spi_flash_cfg_type *flash_cfg, uint8_t en_32bits_addr){
+    return RomDriver_SFlash_Set32BitsAddrMode(flash_cfg,(BL_Fun_Type)en_32bits_addr);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

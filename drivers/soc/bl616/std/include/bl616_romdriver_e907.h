@@ -1148,10 +1148,10 @@ typedef enum {
     ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin, uint32_t val))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Write])
 
 #define RomDriver_GLB_GPIO_Fifo_Disable                   \
-    ((BL_Sts_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Disable])
+    ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Disable])
 
 #define RomDriver_GLB_GPIO_Fifo_Enable                    \
-    ((BL_Sts_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Enable])
+    ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Enable])
 
 #define RomDriver_GLB_GPIO_Fifo_GetIntStatus              \
     ((BL_Sts_Type (*) (GLB_GPIO_FIFO_INT_Type intType))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_GetIntStatus])

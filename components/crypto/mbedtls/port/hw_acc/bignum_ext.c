@@ -19,8 +19,7 @@ void dump_mpi(const char *tag, const mbedtls_mpi *bn)
     } else {
         strcpy(buf, "<null>");
     }
-    printf(buf);
-    printf("\r\n");
+    printf("%s\r\n", buf);
     mbedtls_free(buf);
 }
 

@@ -165,8 +165,8 @@ void bl_show_flashinfo(void)
     bflb_flash_get_cfg(&pFlashCfg, &flashCfgLen);
     arch_memcpy((void *)&flashCfg, pFlashCfg, flashCfgLen);
     printf("======== flash cfg ========\r\n");
-    printf("flash size 0x%08X\r\n", flashSize);
-    printf("jedec id     0x%06X\r\n", flashJedecId);
+    printf("flash size 0x%08lX\r\n", flashSize);
+    printf("jedec id     0x%06lX\r\n", flashJedecId);
     printf("mid              0x%02X\r\n", flashCfg.mid);
     printf("iomode           0x%02X\r\n", flashCfg.io_mode);
     printf("clk delay        0x%02X\r\n", flashCfg.clk_delay);
@@ -263,9 +263,9 @@ void board_init(void)
     printf("dynamic memory init success, ocram heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 #endif
 
-    printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
-    printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
-    printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
+    printf("sig1:%08lx\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
+    printf("sig2:%08lx\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
+    printf("cgen1:%08lx\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
 
     log_start();
 
