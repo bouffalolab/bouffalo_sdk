@@ -631,7 +631,7 @@ __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, reg
     }
 
     if (!enable) {
-        attr.a = (address_matching_e)0;
+        attr.a = 0;
     }
 
     if (attr.a == ADDRESS_MATCHING_TOR) {
@@ -639,7 +639,7 @@ __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, reg
     } else {
         if (size == REGION_SIZE_4B) {
             addr = base_addr >> 2;
-            attr.a = (address_matching_e)2;
+            attr.a = 2;
         } else {
             addr = ((base_addr >> 2) & (0xFFFFFFFFU - ((1 << (size + 1)) - 1))) | ((1 << size) - 1);
         }
