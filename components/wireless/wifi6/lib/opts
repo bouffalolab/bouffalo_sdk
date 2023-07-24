@@ -1,0 +1,20 @@
+// station build options
+      "CONFIG_VIF_MAX=2",
+      "CONFIG_STA_MAX=4",
+#define CONFIG_MAC_TXQ_DEPTH          16
+#define CONFIG_MAC_RXQ_DEPTH          12
+
+// lwip build options
+#define LWIP_IGMP                 1
+#define LWIP_IPV6 1
+#define LWIP_IPV6_DHCP6 1
+#define LWIP_IPV6_SCOPES 1
+#define LWIP_AUTOIP 1
+#define LWIP_IPV6_MLD 1
+#define LWIP_ND6_RDNSS_MAX_DNS_SERVERS 1
+#define MEMP_NUM_MLD6_GROUP 10
+
+#define LWIP_NETIF_EXT_STATUS_CALLBACK 1
+
+
+
