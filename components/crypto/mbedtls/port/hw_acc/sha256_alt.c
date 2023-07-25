@@ -84,7 +84,7 @@ int mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int is224 )
     if (NULL == ctx->sha) {
         ctx->sha = bflb_device_get_by_name("sha");
     }
-    
+
     bflb_sec_sha_mutex_take();
     memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_sha256_link_ctx_s));
     bflb_sha256_link_start(ctx->sha, &link_ctx_temp, is224);

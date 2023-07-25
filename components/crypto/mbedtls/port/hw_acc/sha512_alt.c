@@ -83,6 +83,7 @@ int mbedtls_sha512_starts_ret( mbedtls_sha512_context *ctx, int is384 )
     SHA512_VALIDATE_RET( is384 == 0 );
 #endif
 
+
     if (NULL == ctx->sha) {
         ctx->sha = bflb_device_get_by_name("sha");
     }
