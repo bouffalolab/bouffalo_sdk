@@ -39,6 +39,8 @@
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA256_BAD_INPUT_DATA )
 #define SHA256_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
 
+static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_link_ctx_s link_ctx_temp;
+
 void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
 {
     SHA256_VALIDATE( ctx != NULL );
@@ -46,9 +48,6 @@ void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
     struct bflb_device_s *sha;
 
     sha = bflb_device_get_by_name("sha");
-
-    bflb_l1c_dcache_clean_invalidate_range((void*)ctx, sizeof(*ctx));
-    ctx = bflb_get_no_cache_addr(ctx);
 
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha256_context ) );
     ctx->sha = sha;
@@ -62,8 +61,6 @@ void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
     if( ctx == NULL )
         return;
 
-    ctx = bflb_get_no_cache_addr(ctx);
-    
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha256_context ) );
 }
 
@@ -74,7 +71,6 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
     SHA256_VALIDATE( src != NULL );
 
     *dst = *src;
-    bflb_l1c_dcache_clean_invalidate_range((void*)dst, sizeof(*dst));
 }
 
 /*
@@ -85,9 +81,15 @@ int mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int is224 )
     SHA256_VALIDATE_RET( ctx != NULL );
     SHA256_VALIDATE_RET( is224 == 0 || is224 == 1 );
 
-    ctx = bflb_get_no_cache_addr(ctx);
-
-    bflb_sha256_link_start(ctx->sha, &ctx->link_ctx, is224);
+    if (NULL == ctx->sha) {
+        ctx->sha = bflb_device_get_by_name("sha");
+    }
+    
+    bflb_sec_sha_mutex_take();
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_sha256_link_ctx_s));
+    bflb_sha256_link_start(ctx->sha, &link_ctx_temp, is224);
+    memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_sha256_link_ctx_s));
+    bflb_sec_sha_mutex_give();
     return( 0 );
 }
 
@@ -114,11 +116,11 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
     if( ilen == 0 )
         return( 0 );
 
-    ctx = bflb_get_no_cache_addr(ctx);
-
     bflb_l1c_dcache_clean_range((void *)input, ilen);
     bflb_sec_sha_mutex_take();
-    bflb_sha256_link_update(ctx->sha, &ctx->link_ctx, input, ilen);
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_sha256_link_ctx_s));
+    bflb_sha256_link_update(ctx->sha, &link_ctx_temp, input, ilen);
+    memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_sha256_link_ctx_s));
     bflb_sec_sha_mutex_give();
     return( 0 );
 }
@@ -143,10 +145,9 @@ int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
     SHA256_VALIDATE_RET( ctx != NULL );
     SHA256_VALIDATE_RET( (unsigned char *)output != NULL );
 
-    ctx = bflb_get_no_cache_addr(ctx);
-
     bflb_sec_sha_mutex_take();
-    bflb_sha256_link_finish(ctx->sha, &ctx->link_ctx, output);
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_sha256_link_ctx_s));
+    bflb_sha256_link_finish(ctx->sha, &link_ctx_temp, output);
     bflb_sec_sha_mutex_give();
     return( 0 );
 }

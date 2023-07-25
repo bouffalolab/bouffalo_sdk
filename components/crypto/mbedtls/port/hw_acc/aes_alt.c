@@ -54,8 +54,10 @@
 static int aes_padlock_ace = -1;
 #endif
 
-ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t ecb_enc_buf[16];
-ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t ecb_dec_buf[16];
+static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t ecb_enc_buf[16];
+static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t ecb_dec_buf[16];
+
+static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_aes_link_s link_ctx_temp;
 
 void mbedtls_aes_init( mbedtls_aes_context *ctx )
 {
@@ -64,9 +66,6 @@ void mbedtls_aes_init( mbedtls_aes_context *ctx )
     struct bflb_device_s *aes;
 
     aes = bflb_device_get_by_name("aes");
-
-    bflb_l1c_dcache_clean_invalidate_range((void*)ctx, sizeof(*ctx));
-    ctx = bflb_get_no_cache_addr(ctx);
 
     memset( ctx, 0, sizeof( mbedtls_aes_context ) );
     ctx->aes = aes;
@@ -79,8 +78,6 @@ void mbedtls_aes_free( mbedtls_aes_context *ctx )
 {
     if( ctx == NULL )
         return;
-
-    ctx = bflb_get_no_cache_addr(ctx);
 
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_aes_context ) );
 }
@@ -113,8 +110,6 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
     AES_VALIDATE_RET( ctx != NULL );
     AES_VALIDATE_RET( key != NULL );
 
-    ctx = bflb_get_no_cache_addr(ctx);
-
     ctx->link_ctx.aes_dec_en = 0;
 
     if(keybits == 128)
@@ -146,8 +141,6 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
 {
     AES_VALIDATE_RET( ctx != NULL );
     AES_VALIDATE_RET( key != NULL );
-
-    ctx = bflb_get_no_cache_addr(ctx);
 
     ctx->link_ctx.aes_dec_en = 1;
 
@@ -304,20 +297,17 @@ int mbedtls_internal_aes_encrypt( mbedtls_aes_context *ctx,
                                   const unsigned char input[16],
                                   unsigned char output[16] )
 {
-    ctx = bflb_get_no_cache_addr(ctx);
-
     ctx->link_ctx.aes_mode = AES_MODE_ECB;
     memset(&ctx->link_ctx.aes_iv0, 0, 16);
 
-    //bflb_l1c_dcache_clean_range((void *)input, 16);
-
     bflb_sec_aes_mutex_take();
     memcpy(ecb_enc_buf, input, 16);
-    bflb_aes_link_update(ctx->aes, (uint32_t)&ctx->link_ctx, ecb_enc_buf, ecb_dec_buf, 16);
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_aes_link_s));
+    bflb_aes_link_update(ctx->aes, (uint32_t)&link_ctx_temp, ecb_enc_buf, ecb_dec_buf, 16);
+    memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_aes_link_s));
     memcpy(output, ecb_dec_buf, 16);
     bflb_sec_aes_mutex_give();
 
-    //bflb_l1c_dcache_invalidate_range((void *)output, 16);
     return( 0 );
 }
 
@@ -337,20 +327,17 @@ int mbedtls_internal_aes_decrypt( mbedtls_aes_context *ctx,
                                   const unsigned char input[16],
                                   unsigned char output[16] )
 {
-    ctx = bflb_get_no_cache_addr(ctx);
-
     ctx->link_ctx.aes_mode = AES_MODE_ECB;
     memset(&ctx->link_ctx.aes_iv0, 0, 16);
 
-    //bflb_l1c_dcache_clean_range((void *)input, 16);
-
     bflb_sec_aes_mutex_take();
     memcpy(ecb_enc_buf, input, 16);
-    bflb_aes_link_update(ctx->aes, (uint32_t)&ctx->link_ctx, ecb_enc_buf, ecb_dec_buf, 16);
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_aes_link_s));
+    bflb_aes_link_update(ctx->aes, (uint32_t)&link_ctx_temp, ecb_enc_buf, ecb_dec_buf, 16);
+    memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_aes_link_s));
     memcpy(output, ecb_dec_buf, 16);
     bflb_sec_aes_mutex_give();
 
-    //bflb_l1c_dcache_invalidate_range((void *)output, 16);
     return( 0 );
 }
 
@@ -434,25 +421,26 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
         //
     }
 #endif
-    ctx = bflb_get_no_cache_addr(ctx);
-
     ctx->link_ctx.aes_mode = AES_MODE_CBC;
     memcpy(&ctx->link_ctx.aes_iv0, iv, 16);
 
-    bflb_l1c_dcache_clean_range((void *)input, length);
+    bflb_l1c_dcache_clean_invalidate_range((void *)input, length);
+    bflb_l1c_dcache_clean_invalidate_range((void *)output, length);
 
     bflb_sec_aes_mutex_take();
     if( mode == MBEDTLS_AES_DECRYPT )
     {
-        bflb_aes_link_update(ctx->aes, (uint32_t)&ctx->link_ctx, input, output, length);
+        memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_aes_link_s));
+        bflb_aes_link_update(ctx->aes, (uint32_t)&link_ctx_temp, input, output, length);
+        memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_aes_link_s));
     }
     else
     {
-        bflb_aes_link_update(ctx->aes, (uint32_t)&ctx->link_ctx, input, output, length);
+        memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_aes_link_s));
+        bflb_aes_link_update(ctx->aes, (uint32_t)&link_ctx_temp, input, output, length);
+        memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_aes_link_s));
     }
     bflb_sec_aes_mutex_give();
-
-    bflb_l1c_dcache_invalidate_range((void *)output, length);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
@@ -780,13 +768,14 @@ int mbedtls_aes_crypt_ctr( mbedtls_aes_context *ctx,
     ctx->link_ctx.aes_mode = AES_MODE_CTR;
     memcpy(&ctx->link_ctx.aes_iv0, nonce_counter, 16);
 
-    bflb_l1c_dcache_clean_range((void *)input, length);
+    bflb_l1c_dcache_clean_invalidate_range((void *)input, length);
+    bflb_l1c_dcache_clean_invalidate_range((void *)output, length);
 
     bflb_sec_aes_mutex_take();
-    bflb_aes_link_update(ctx->aes, (uint32_t)&ctx->link_ctx, input, output, length);
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_aes_link_s));
+    bflb_aes_link_update(ctx->aes, (uint32_t)&link_ctx_temp, input, output, length);
+    memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_aes_link_s));
     bflb_sec_aes_mutex_give();
-
-    bflb_l1c_dcache_invalidate_range((void *)output, length);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CTR */

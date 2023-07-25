@@ -30,20 +30,14 @@
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error.h"
 
-#if defined(_MSC_VER) || defined(__WATCOMC__)
-  #define UL64(x) x##ui64
-#else
-  #define UL64(x) x##ULL
-#endif
-
-#include <string.h>
-
 #include "mbedtls/platform.h"
 #include "sec_mutex.h"
 
 #define SHA512_VALIDATE_RET(cond)                           \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA512_BAD_INPUT_DATA )
 #define SHA512_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
+
+static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha512_link_ctx_s link_ctx_temp;
 
 void mbedtls_sha512_init( mbedtls_sha512_context *ctx )
 {
@@ -52,9 +46,6 @@ void mbedtls_sha512_init( mbedtls_sha512_context *ctx )
     struct bflb_device_s *sha;
 
     sha = bflb_device_get_by_name("sha");
-
-    bflb_l1c_dcache_clean_invalidate_range((void*)ctx, sizeof(*ctx));
-    ctx = bflb_get_no_cache_addr(ctx);
 
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha512_context ) );
     ctx->sha = sha;
@@ -68,8 +59,6 @@ void mbedtls_sha512_free( mbedtls_sha512_context *ctx )
     if( ctx == NULL )
         return;
 
-    ctx = bflb_get_no_cache_addr(ctx);
-    
     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_sha512_context ) );
 }
 
@@ -80,7 +69,6 @@ void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
     SHA512_VALIDATE( src != NULL );
 
     *dst = *src;
-    bflb_l1c_dcache_clean_invalidate_range((void*)dst, sizeof(*dst));
 }
 
 /*
@@ -95,9 +83,15 @@ int mbedtls_sha512_starts_ret( mbedtls_sha512_context *ctx, int is384 )
     SHA512_VALIDATE_RET( is384 == 0 );
 #endif
 
-    ctx = bflb_get_no_cache_addr(ctx);
+    if (NULL == ctx->sha) {
+        ctx->sha = bflb_device_get_by_name("sha");
+    }
 
-    bflb_sha512_link_start(ctx->sha, &ctx->link_ctx, is384);
+    bflb_sec_sha_mutex_take();
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_sha512_link_ctx_s));
+    bflb_sha512_link_start(ctx->sha, &link_ctx_temp, is384);
+    memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_sha512_link_ctx_s));
+    bflb_sec_sha_mutex_give();
     return( 0 );
 }
 
@@ -124,11 +118,11 @@ int mbedtls_sha512_update_ret( mbedtls_sha512_context *ctx,
     if( ilen == 0 )
         return( 0 );
 
-    ctx = bflb_get_no_cache_addr(ctx);
-
     bflb_l1c_dcache_clean_range((void *)input, ilen);
     bflb_sec_sha_mutex_take();
-    bflb_sha512_link_update(ctx->sha, &ctx->link_ctx, input, ilen);
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_sha512_link_ctx_s));
+    bflb_sha512_link_update(ctx->sha, &link_ctx_temp, input, ilen);
+    memcpy(&ctx->link_ctx, &link_ctx_temp, sizeof(struct bflb_sha512_link_ctx_s));
     bflb_sec_sha_mutex_give();
     return( 0 );
 }
@@ -153,10 +147,9 @@ int mbedtls_sha512_finish_ret( mbedtls_sha512_context *ctx,
     SHA512_VALIDATE_RET( ctx != NULL );
     SHA512_VALIDATE_RET( (unsigned char *)output != NULL );
 
-    ctx = bflb_get_no_cache_addr(ctx);
-
     bflb_sec_sha_mutex_take();
-    bflb_sha512_link_finish(ctx->sha, &ctx->link_ctx, output);
+    memcpy(&link_ctx_temp, &ctx->link_ctx, sizeof(struct bflb_sha512_link_ctx_s));
+    bflb_sha512_link_finish(ctx->sha, &link_ctx_temp, output);
     bflb_sec_sha_mutex_give();
     return( 0 );
 }
