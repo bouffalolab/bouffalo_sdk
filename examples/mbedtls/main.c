@@ -405,10 +405,10 @@ int main(void)
 {
     board_init();
 
-    // mbedtls_aes_self_test(1);
-    // mbedtls_sha1_self_test(1);
-    // mbedtls_sha256_self_test(1);
-    // mbedtls_sha512_self_test(1);
+    mbedtls_aes_self_test(1);
+    mbedtls_sha1_self_test(1);
+    mbedtls_sha256_self_test(1);
+    mbedtls_sha512_self_test(1);
 
     printf("\r\n=========== ecdh test ================\r\n");
     mbedtls_ecdh_test();
