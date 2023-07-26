@@ -18,8 +18,8 @@ void uart_isr(int irq, void *arg)
 
     if (intstatus & UART_INTSTS_RTO) {
         //printf("rto\r\n");
-        bflb_rx_cycle_dma_process(&g_uart_rx_dma, 0);
         bflb_uart_int_clear(uartx, UART_INTCLR_RTO);
+        bflb_rx_cycle_dma_process(&g_uart_rx_dma, 0);
     }
 }
 

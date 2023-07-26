@@ -25,7 +25,6 @@
  * Function: Environment variables operating interface. This is the Next Generation version.
  * Created on: 2019-02-02
  */
-
 #include <stdio.h>
 #include <string.h>
 #include <easyflash.h>

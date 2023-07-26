@@ -7,7 +7,7 @@
 
 #define AUADC_SAMPLING_NUM (48 * 1024)
 
-static ATTR_NOCACHE_NOINIT_RAM_SECTION uint16_t record_buff[AUADC_SAMPLING_NUM];
+static __attribute((aligned(32))) uint16_t record_buff[AUADC_SAMPLING_NUM];
 
 /* audio adc config */
 struct bflb_auadc_init_config_s auadc_init_cfg = {
@@ -32,6 +32,7 @@ struct bflb_device_s *auadc_dma_hd;
 
 void audio_dma_callback(void *arg)
 {
+    bflb_l1c_dcache_invalidate_range(record_buff, sizeof(record_buff));
     printf("auadc record end\r\n");
 }
 

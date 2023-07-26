@@ -82,7 +82,7 @@ int printf(const char *fmt, ...)
 #endif
 
 #define __is_print(ch) ((unsigned int)((ch) - ' ') < 127u - ' ')
-void bflb_dump_hex(const void *ptr, uint32_t buflen)
+void bflb_hexdump(const void *ptr, uint32_t buflen)
 {
     unsigned char *buf = (unsigned char *)ptr;
     int i, j;
@@ -108,37 +108,24 @@ void bflb_dump_hex(const void *ptr, uint32_t buflen)
     }
 }
 
-// void bflb_dump_hex(uint8_t *data, uint32_t len)
-// {
-//     uint32_t i = 0;
-
-//     for (i = 0; i < len; i++) {
-//         if (i % 16 == 0) {
-//             printf("\r\n");
-//         }
-
-//         printf("%02x ", data[i]);
-//     }
-
-//     printf("\r\n");
-// }
-
-void bflb_reg_dump(uint32_t addr)
+void bflb_dump(uint8_t *data, uint32_t len)
 {
-    printf("%08lx[31:0]=%08lx\r\n", addr, *(volatile uint32_t *)(addr));
-}
+    uint32_t i = 0;
 
-int bflb_data_compare(const uint8_t *expected, uint8_t *input, uint32_t len)
-{
-    int i = 0;
     for (i = 0; i < len; i++) {
-        if (input[i] != expected[i]) {
-            printf("Compare fail at %d,input %02x, but expect %02x\r\n", i, input[i], expected[i]);
-            return -1;
+        if (i % 16 == 0) {
+            printf("\r\n");
         }
+
+        printf("%02x ", data[i]);
     }
 
-    return 0;
+    printf("\r\n");
+}
+
+void bflb_regdump(uint32_t addr)
+{
+    printf("%08lx[31:0]=%08lx\r\n", addr, *(volatile uint32_t *)(addr));
 }
 
 void bflb_uart_set_console(struct bflb_device_s *dev)

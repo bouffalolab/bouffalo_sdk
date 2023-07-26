@@ -2,8 +2,11 @@ CHIP ?= bl616
 BOARD ?= bl616dk
 CPU_ID ?=
 
-makefile_files += $(shell find ./peripherals -name 'Makefile' -not -path "*/build/*")
-makefile_dirs = $(sort $(dir $(makefile_files)))
+peripherals_makefile_files = $(shell find ./peripherals -name 'Makefile' -not -path "*/build/*")
+wifi_makefile_files = $(shell find ./wifi/sta -name 'Makefile' -not -path "*/build/*")
+btble_makefile_files = $(shell find ./btble -name 'Makefile' -not -path "*/build/*")
+
+makefile_dirs = $(sort $(dir $(peripherals_makefile_files)))
 
 makefile_dirs += ./bflb_block_pool
 makefile_dirs += ./bflog/barebone_sync
@@ -43,22 +46,20 @@ endif
 ifeq ($(CHIP),bl616)
 filter_out_dirs += ./peripherals/csi/%
 filter_out_dirs += ./peripherals/pwm_v1/%
+
 makefile_dirs += ./fatfs
 makefile_dirs += ./littlefs
 makefile_dirs += ./lvgl
 makefile_dirs += ./lua
-makefile_dirs += ./btble/ble_mesh_cli
-makefile_dirs += ./btble/peripheral
-makefile_dirs += ./wifi/sta/wifi_http
-makefile_dirs += ./wifi/sta/wifi_https_demo
-makefile_dirs += ./wifi/sta/wifi_mqtt_pub
-makefile_dirs += ./wifi/sta/wifi_mqtt_sub
-makefile_dirs += ./wifi/sta/wifi_tcp
-makefile_dirs += ./wifi/sta/wifi_udp
+
+makefile_dirs += $(sort $(dir $(wifi_makefile_files)))
+makefile_dirs += $(sort $(dir $(btble_makefile_files)))
+
 endif
 
 ifeq ($(CHIP),bl808)
 filter_out_dirs += ./peripherals/pwm_v1/%
+
 makefile_dirs += ./fatfs
 makefile_dirs += ./littlefs
 makefile_dirs += ./lvgl

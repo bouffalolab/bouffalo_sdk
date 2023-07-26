@@ -16,18 +16,18 @@ void uart_isr(int irq, void *arg)
         }
     }
     if (intstatus & UART_INTSTS_RTO) {
+        bflb_uart_int_clear(uartx, UART_INTCLR_RTO);
         while (bflb_uart_rxavailable(uartx)) {
             printf("0x%02x\r\n", bflb_uart_getchar(uartx));
         }
-        bflb_uart_int_clear(uartx, UART_INTCLR_RTO);
     }
     if (intstatus & UART_INTSTS_TX_END) {
-        printf("tx end\r\n");
         bflb_uart_int_clear(uartx, UART_INTCLR_TX_END);
+        printf("tx end\r\n");
     }
     if (intstatus & UART_INTSTS_RX_END) {
-        printf("rx end\r\n");
         bflb_uart_int_clear(uartx, UART_INTCLR_RX_END);
+        printf("rx end\r\n");
     }
 }
 

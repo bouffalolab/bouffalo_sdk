@@ -30,8 +30,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef CONFIG_FREERTOS
 #include <FreeRTOS.h>
 #include <semphr.h>
+#endif
 #include <bflb_mtd.h>
 #include <ef_cfg.h>
 
@@ -44,8 +46,9 @@ static const ef_env default_env_set[] = {
         {"boot_times", "3", 1}
 };
 
+#ifdef CONFIG_FREERTOS
 static SemaphoreHandle_t env_cache_lock = NULL;
-
+#endif
 /**
  * Flash port for hardware initialize.
  *
@@ -84,13 +87,13 @@ EfErrCode ef_port_init(ef_env const **default_env, size_t *default_env_size) {
     *default_env_size = sizeof(default_env_set) / sizeof(default_env_set[0]);
 
     printf("*default_env_size = 0x%08x\r\n", *default_env_size);
-
+#ifdef CONFIG_FREERTOS
 #if configUSE_RECURSIVE_MUTEXES
     env_cache_lock = xSemaphoreCreateRecursiveMutex();
 #else
     env_cache_lock = xSemaphoreCreateMutex();
 #endif
-    
+#endif
     return EF_NO_ERR;
 }
 
@@ -168,7 +171,7 @@ EfErrCode ef_port_write(uint32_t addr, const uint32_t *buf, size_t size) {
  * lock the ENV ram cache
  */
 void ef_port_env_lock(void) {
-    
+#ifdef CONFIG_FREERTOS    
 #if configUSE_RECURSIVE_MUTEXES
     xSemaphoreTakeRecursive(env_cache_lock,
                  portMAX_DELAY);
@@ -177,19 +180,20 @@ void ef_port_env_lock(void) {
     xSemaphoreTake( env_cache_lock,
                  portMAX_DELAY );
 #endif
-
+#endif
 }
 
 /**
  * unlock the ENV ram cache
  */
 void ef_port_env_unlock(void) {
-    
+#ifdef CONFIG_FREERTOS  
 #if configUSE_RECURSIVE_MUTEXES
     xSemaphoreGiveRecursive(env_cache_lock);
 #else
     /* You can add your code under here. */
     xSemaphoreGive( env_cache_lock );
+#endif
 #endif
 }
 

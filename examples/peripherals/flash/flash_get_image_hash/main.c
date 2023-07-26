@@ -6,7 +6,7 @@
 
 #define XIP_READBUF_SIZE    4096
 #define BFLB_FW_IMG_OFFSET  0x1000
-extern void bflb_dump_hex(const void *ptr, uint32_t buflen);
+extern void bflb_hexdump(const void *ptr, uint32_t buflen);
 
 ATTR_NOCACHE_RAM_SECTION struct bflb_sha256_ctx_s  sha256_ctx ;
 struct bflb_device_s *sha256_handle = NULL;
@@ -36,7 +36,7 @@ static int32_t bflb_image_cal_hash(uint32_t startaddr, uint32_t total_len)
 
         bflb_spi_flash_read_xip(addr, read_buf, readlen);
 
-        //bflb_dump_hex((uint8_t *)read_buf,readlen);
+        //bflb_hexdump((uint8_t *)read_buf,readlen);
 
         /* update hash */
         bflb_sha256_update(sha256_handle, &sha256_ctx, (uint8_t *)read_buf, readlen);
@@ -85,9 +85,9 @@ int main(void)
         if(img_hash_cal[i]!=img_hash_hdr[i]){
             printf("hash cal error:\r\n");
             printf("calculated:\r\n");
-            bflb_dump_hex(img_hash_cal,32);
+            bflb_hexdump(img_hash_cal,32);
             printf("header:\r\n");
-            bflb_dump_hex(img_hash_hdr,32);
+            bflb_hexdump(img_hash_hdr,32);
             while(1);
         }
     }

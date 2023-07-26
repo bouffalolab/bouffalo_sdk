@@ -8,7 +8,7 @@
 
 #define BLOCK_NUM           2
 #define ROW_NUM             (8 * BLOCK_NUM)
-#define CAM_FRAME_COUNT_USE 50
+#define CAM_FRAME_COUNT_USE 5
 
 static struct bflb_device_s *i2c0;
 static struct bflb_device_s *cam0;
@@ -18,6 +18,9 @@ static struct bflb_device_s *mjpeg;
 volatile uint32_t pic_count = 0;
 volatile uint32_t pic_addr[CAM_FRAME_COUNT_USE] = { 0 };
 volatile uint32_t pic_len[CAM_FRAME_COUNT_USE] = { 0 };
+
+static __attribute__((aligned(32))) ATTR_NOINIT_PSRAM_SECTION uint8_t dvp_buffer[480 * 2 * ROW_NUM];
+static __attribute__((aligned(32))) ATTR_NOINIT_PSRAM_SECTION uint8_t mjpeg_buffer[50 * 1024 * CAM_FRAME_COUNT_USE];
 
 void mjpeg_isr(int irq, void *arg)
 {
@@ -84,7 +87,7 @@ int main(void)
     cam_config.with_mjpeg = true;
     cam_config.input_source = CAM_INPUT_SOURCE_DVP;
     cam_config.output_format = CAM_OUTPUT_FORMAT_AUTO;
-    cam_config.output_bufaddr = BFLB_PSRAM_BASE;
+    cam_config.output_bufaddr = (uint32_t)dvp_buffer;
     cam_config.output_bufsize = cam_config.resolution_x * 2 * ROW_NUM;
 
     bflb_cam_init(cam0, &cam_config);
@@ -99,10 +102,10 @@ int main(void)
     config.rows = ROW_NUM;
     config.resolution_x = cam_config.resolution_x;
     config.resolution_y = cam_config.resolution_y;
-    config.input_bufaddr0 = (uint32_t)BFLB_PSRAM_BASE;
+    config.input_bufaddr0 = (uint32_t)dvp_buffer;
     config.input_bufaddr1 = 0;
-    config.output_bufaddr = (uint32_t)BFLB_PSRAM_BASE + cam_config.resolution_x * 2 * ROW_NUM;
-    config.output_bufsize = SIZE_BUFFER - cam_config.resolution_x * 2 * ROW_NUM;
+    config.output_bufaddr = (uint32_t)mjpeg_buffer;
+    config.output_bufsize = sizeof(mjpeg_buffer);
     config.input_yy_table = NULL; /* use default table */
     config.input_uv_table = NULL; /* use default table */
 
@@ -123,6 +126,10 @@ int main(void)
     }
 
     for (uint8_t i = 0; i < CAM_FRAME_COUNT_USE; i++) {
+        if ((pic_addr[i] + pic_len[i]) > ((uint32_t)mjpeg_buffer + sizeof(mjpeg_buffer))) {
+            printf("drop invalid pic\r\n");
+            continue;
+        }
         printf("jpg addr:%08x ,jpg size:%d\r\n", pic_addr[i], pic_len[i]);
         //bflb_mjpeg_dump_hex((uint8_t *)pic_addr[i], pic_len[i]);
     }

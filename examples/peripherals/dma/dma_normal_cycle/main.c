@@ -4,13 +4,14 @@
 
 #define DMA_BUFFER_LENGTH 4100
 
-static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src1_buffer[DMA_BUFFER_LENGTH];
-static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src2_buffer[DMA_BUFFER_LENGTH];
-static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t src3_buffer[DMA_BUFFER_LENGTH];
+static __attribute((aligned(32))) uint8_t src1_buffer[DMA_BUFFER_LENGTH];
+static __attribute((aligned(32))) uint8_t src2_buffer[DMA_BUFFER_LENGTH];
+static __attribute((aligned(32))) uint8_t src3_buffer[DMA_BUFFER_LENGTH];
 
-static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t dst1_buffer[DMA_BUFFER_LENGTH];
-static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t dst2_buffer[DMA_BUFFER_LENGTH];
-static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t dst3_buffer[DMA_BUFFER_LENGTH];
+static __attribute((aligned(32))) uint8_t dst1_buffer[DMA_BUFFER_LENGTH];
+static __attribute((aligned(32))) uint8_t dst2_buffer[DMA_BUFFER_LENGTH];
+static __attribute((aligned(32))) uint8_t dst3_buffer[DMA_BUFFER_LENGTH];
+
 static volatile uint8_t dma_tc_flag0 = 0;
 
 struct bflb_device_s *dma0_ch0;
@@ -37,6 +38,13 @@ void sram_init()
     memset(dst1_buffer, 0, DMA_BUFFER_LENGTH);
     memset(dst2_buffer, 0, DMA_BUFFER_LENGTH);
     memset(dst3_buffer, 0, DMA_BUFFER_LENGTH);
+
+    bflb_l1c_dcache_clean_range(src1_buffer, sizeof(src1_buffer));
+    bflb_l1c_dcache_clean_range(src2_buffer, sizeof(src2_buffer));
+    bflb_l1c_dcache_clean_range(src3_buffer, sizeof(src3_buffer));
+    bflb_l1c_dcache_clean_range(dst1_buffer, sizeof(dst1_buffer));
+    bflb_l1c_dcache_clean_range(dst2_buffer, sizeof(dst2_buffer));
+    bflb_l1c_dcache_clean_range(dst3_buffer, sizeof(dst3_buffer));
 }
 
 int main(void)
@@ -88,6 +96,10 @@ int main(void)
     }
 
     /* Check data */
+    bflb_l1c_dcache_invalidate_range(dst1_buffer, sizeof(dst1_buffer));
+    bflb_l1c_dcache_invalidate_range(dst2_buffer, sizeof(dst2_buffer));
+    bflb_l1c_dcache_invalidate_range(dst3_buffer, sizeof(dst3_buffer));
+
     for (i = 0; i < DMA_BUFFER_LENGTH; i++) {
         if (src1_buffer[i] != dst1_buffer[i]) {
             printf("Error! index: %ld, src1: 0x%02x, dst1: 0x%02x\r\n", i, src1_buffer[i], dst1_buffer[i]);

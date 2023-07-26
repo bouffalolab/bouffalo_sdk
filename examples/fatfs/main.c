@@ -114,7 +114,7 @@ void fatfs_write_read_test()
     if (ret == FR_OK) {
         time_node = (uint32_t)bflb_mtimer_get_time_ms();
         /*write into file*/
-        ret = f_write(&fnew, RW_Buffer, 1024, &fnum);
+        // ret = f_write(&fnew, RW_Buffer, 1024, &fnum);
         for (i = 0; i < 1024; i++) {
             ret = f_write(&fnew, RW_Buffer, sizeof(RW_Buffer), &fnum);
             if (ret) {
@@ -147,7 +147,7 @@ void fatfs_write_read_test()
     if (ret == FR_OK) {
         time_node = (uint32_t)bflb_mtimer_get_time_ms();
 
-        ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
+        // ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
         for (i = 0; i < 1024; i++) {
             ret = f_read(&fnew, RW_Buffer, sizeof(RW_Buffer), &fnum);
             if (ret) {
@@ -178,7 +178,7 @@ void fatfs_write_read_test()
     LOG_I("******************** be about to check test... **********************\r\n");
     ret = f_open(&fnew, "/sd/test_file.txt", FA_OPEN_EXISTING | FA_READ);
     if (ret == FR_OK) {
-        ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
+        // ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
         for (i = 0; i < 1024; i++) {
             ret = f_read(&fnew, RW_Buffer, sizeof(RW_Buffer), &fnum);
             if (ret) {
