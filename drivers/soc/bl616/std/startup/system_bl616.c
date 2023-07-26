@@ -164,9 +164,23 @@ void SystemInit(void)
     BL_WR_REG(GLB_BASE, GLB_UART_CFG1, 0xffffffff);
     BL_WR_REG(GLB_BASE, GLB_UART_CFG2, 0x0000ffff);
 
+    extern uint8_t __LD_CONFIG_EM_SEL;
+    volatile uint32_t em_size;
+
+    em_size = (uint32_t)&__LD_CONFIG_EM_SEL;
+
     uint32_t tmpVal = 0;
     tmpVal = BL_RD_REG(GLB_BASE, GLB_SRAM_CFG3);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00);
+
+    if (em_size == 0) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, GLB_WRAM160KB_EM0KB);
+    } else if (em_size == 32 * 1024) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, GLB_WRAM128KB_EM32KB);
+    } else if (em_size == 64 * 1024) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, GLB_WRAM96KB_EM64KB);
+    } else {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, GLB_WRAM160KB_EM0KB);
+    }
     BL_WR_REG(GLB_BASE, GLB_SRAM_CFG3, tmpVal);
 }
 

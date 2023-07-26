@@ -36,7 +36,6 @@ static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t slaveaddr, 
         regval &= ~I2C_CR_I2C_10B_ADDR_EN;
     }
 #endif
-    regval &= ~I2C_CR_I2C_SCL_SYNC_EN;
     putreg32(subaddr, reg_base + I2C_SUB_ADDR_OFFSET);
     putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
 }
@@ -75,31 +74,41 @@ static void bflb_i2c_set_frequence(struct bflb_device_s *dev, uint32_t freq)
 {
     uint32_t regval;
     uint32_t reg_base;
-    uint32_t phase;
-    uint32_t tmp;
+    uint32_t phase, phase0, phase1, phase2, phase3;
+    uint32_t bias;
 
     reg_base = dev->reg_base;
 
-    phase = bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_I2C, dev->idx) / (freq * 4) - 1;
+    phase = (bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_I2C, dev->idx) + freq / 2) / freq - 4;
+    phase0 = (phase + 4) / 8;
+    phase2 = (phase * 3 + 4) / 8;
+    phase3 = (phase + 4) / 8;
+    phase1 = phase - (phase0 + phase2 + phase3);
+    regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
 
-    if (freq > 100000) {
-        tmp = ((phase / 4) / 0.5);
+    if ((regval & I2C_CR_I2C_DEG_EN) && (regval & I2C_CR_I2C_SCL_SYNC_EN)) {
+        bias = (regval & I2C_CR_I2C_DEG_CNT_MASK) >> I2C_CR_I2C_DEG_CNT_SHIFT;
+        bias += 1;
     } else {
-        tmp = (phase / 4);
+        bias = 0;
+    }
+    if (regval & I2C_CR_I2C_SCL_SYNC_EN) {
+        bias += 3;
     }
 
-    regval = (phase - tmp) << I2C_CR_I2C_PRD_S_PH_0_SHIFT;
-    regval |= (phase + tmp) << I2C_CR_I2C_PRD_S_PH_1_SHIFT;
-    regval |= (phase) << I2C_CR_I2C_PRD_S_PH_2_SHIFT;
-    regval |= (phase) << I2C_CR_I2C_PRD_S_PH_3_SHIFT;
+    if (phase1 < (bias + 1)) {
+        phase1 = 1;
+    } else {
+        phase1 -= bias;
+    }
+
+    regval = phase0 << I2C_CR_I2C_PRD_S_PH_0_SHIFT;
+    regval |= phase1 << I2C_CR_I2C_PRD_S_PH_1_SHIFT;
+    regval |= phase2 << I2C_CR_I2C_PRD_S_PH_2_SHIFT;
+    regval |= phase3 << I2C_CR_I2C_PRD_S_PH_3_SHIFT;
 
     putreg32(regval, reg_base + I2C_PRD_START_OFFSET);
     putreg32(regval, reg_base + I2C_PRD_STOP_OFFSET);
-
-    regval = (phase - tmp) << I2C_CR_I2C_PRD_D_PH_0_SHIFT;
-    regval |= (phase + tmp) << I2C_CR_I2C_PRD_D_PH_1_SHIFT;
-    regval |= (phase + tmp) << I2C_CR_I2C_PRD_D_PH_2_SHIFT;
-    regval |= (phase - tmp) << I2C_CR_I2C_PRD_D_PH_3_SHIFT;
     putreg32(regval, reg_base + I2C_PRD_DATA_OFFSET);
 }
 
@@ -475,7 +484,31 @@ uint32_t bflb_i2c_get_intstatus(struct bflb_device_s *dev)
 int bflb_i2c_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
     int ret = 0;
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = dev->reg_base;
     switch (cmd) {
+        case I2C_CMD_SET_SCL_SYNC:
+            regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
+            if (arg == 0) {
+                regval &= ~I2C_CR_I2C_SCL_SYNC_EN;
+            } else {
+                regval |= I2C_CR_I2C_SCL_SYNC_EN;
+            }
+            putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
+            break;
+        case I2C_CMD_SET_DEGLITCH:
+            regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
+            regval &= ~I2C_CR_I2C_DEG_CNT_MASK;
+            if (arg == 0) {
+                regval &= ~I2C_CR_I2C_DEG_EN;
+            } else {
+                regval |= I2C_CR_I2C_DEG_EN;
+                regval |= ((arg - 1) << I2C_CR_I2C_DEG_CNT_SHIFT);
+            }
+            putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
+            break;
         default:
             ret = -EPERM;
             break;

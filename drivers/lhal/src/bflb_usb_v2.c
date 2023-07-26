@@ -927,13 +927,13 @@ void USBD_IRQHandler(int irq, void *arg)
 
             if (subgroup_intstatus & USB_SUSP_INT) {
                 bflb_usb_source_group_int_clear(2, USB_SUSP_INT);
+                
                 bflb_usb_reset_fifo(USB_FIFO_F0);
                 bflb_usb_reset_fifo(USB_FIFO_F1);
                 bflb_usb_reset_fifo(USB_FIFO_F2);
                 bflb_usb_reset_fifo(USB_FIFO_F3);
                 bflb_usb_reset_fifo(USB_FIFO_CXF);
 
-                memset(&g_bl_udc, 0, sizeof(g_bl_udc));
                 usbd_event_suspend_handler();
             }
             if (subgroup_intstatus & USB_RESM_INT) {

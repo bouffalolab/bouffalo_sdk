@@ -156,6 +156,15 @@ void exception_entry(void)
         WRITE_CSR(CSR_MEPC, epc);
     } else {
         while (1) {
+#ifdef CONFIG_COREDUMP
+            /* For stack check */
+            extern uintptr_t __freertos_irq_stack_top;
+
+            /* XXX change sp to irq stack base */
+            __asm__ volatile("add sp, x0, %0" ::"r"(&__freertos_irq_stack_top));
+            void bl_coredump_run(void);
+            bl_coredump_run();
+#endif
         }
     }
 }

@@ -1,12 +1,6 @@
 sdk_generate_library()
 
-if(NOT CONFIG_ROMAPI)
 sdk_library_add_sources(src/bflb_common.c)
-else()
-if((NOT ("${CHIP}" STREQUAL "bl602")) AND (NOT ("${CHIP}" STREQUAL "bl702")))
-sdk_library_add_sources(src/bflb_common.c)
-endif()
-endif()
 
 sdk_library_add_sources(
 src/bflb_adc.c

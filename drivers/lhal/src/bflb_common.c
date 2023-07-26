@@ -1,7 +1,7 @@
 #include "bflb_common.h"
 #include "bflb_core.h"
 
-void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
+__WEAK void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
 {
     const uint8_t *p = src;
     uint8_t *q = dst;
@@ -13,7 +13,7 @@ void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
     return dst;
 }
 
-uint32_t *ATTR_TCM_SECTION arch_memcpy4(uint32_t *dst, const uint32_t *src, uint32_t n)
+__WEAK uint32_t *ATTR_TCM_SECTION arch_memcpy4(uint32_t *dst, const uint32_t *src, uint32_t n)
 {
     const uint32_t *p = src;
     uint32_t *q = dst;
@@ -25,7 +25,7 @@ uint32_t *ATTR_TCM_SECTION arch_memcpy4(uint32_t *dst, const uint32_t *src, uint
     return dst;
 }
 
-void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n)
+__WEAK void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n)
 {
     uint32_t left, done, i = 0;
     uint8_t *dst = (uint8_t *)pdst;
@@ -47,7 +47,7 @@ void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n
     return dst;
 }
 
-void *ATTR_TCM_SECTION arch_memset(void *s, uint8_t c, uint32_t n)
+__WEAK void *ATTR_TCM_SECTION arch_memset(void *s, uint8_t c, uint32_t n)
 {
     uint8_t *p = (uint8_t *)s;
 
@@ -59,7 +59,7 @@ void *ATTR_TCM_SECTION arch_memset(void *s, uint8_t c, uint32_t n)
     return s;
 }
 
-uint32_t *ATTR_TCM_SECTION arch_memset4(uint32_t *dst, const uint32_t val, uint32_t n)
+__WEAK uint32_t *ATTR_TCM_SECTION arch_memset4(uint32_t *dst, const uint32_t val, uint32_t n)
 {
     uint32_t *q = dst;
 
@@ -70,7 +70,7 @@ uint32_t *ATTR_TCM_SECTION arch_memset4(uint32_t *dst, const uint32_t val, uint3
     return dst;
 }
 
-int ATTR_TCM_SECTION arch_memcmp(const void *s1, const void *s2, uint32_t n)
+__WEAK int ATTR_TCM_SECTION arch_memcmp(const void *s1, const void *s2, uint32_t n)
 {
     const unsigned char *c1 = s1, *c2 = s2;
     int d = 0;
@@ -110,9 +110,9 @@ void *bflb_get_no_cache_addr(const void *addr)
         return (void *)((a & ~0xF0000000UL) | 0x20000000UL);
     }
     // pSRAM
-    // if ((a & 0xF0000000UL) == 0xA0000000UL) {
-    //     return (void *)((a & ~0xF0000000UL) | 0x10000000UL);
-    // }
+    if ((a & 0xF0000000UL) == 0xA0000000UL) {
+        return (void *)((a & ~0xF0000000UL) | 0x10000000UL);
+    }
 
     return NULL;
 }
@@ -305,9 +305,7 @@ uint32_t ATTR_TCM_SECTION bflb_soft_crc32_ex(uint32_t initial, void *in, uint32_
     return ~crc;
 }
 
-#if !defined(BL602) && !defined(BL702)
-uint32_t ATTR_TCM_SECTION bflb_soft_crc32(void *in, uint32_t len)
+__WEAK uint32_t ATTR_TCM_SECTION bflb_soft_crc32(void *in, uint32_t len)
 {
     return bflb_soft_crc32_ex(0, in, len);
 }
-#endif

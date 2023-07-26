@@ -556,6 +556,35 @@ BL_Err_Type HBN_Set_BOD_Config(uint8_t enable, HBN_BOD_THRES_Type threshold, HBN
 }
 
 /****************************************************************************/ /**
+ * @brief  HBN get reset event
+ *
+ * @param[out]  event
+ * [4] : bor_out_ event
+ * [3] : pwr_rst_n event
+ * [2] : sw_rst event
+ * [1] : por_out event
+ * [0] : watch dog reset
+ *
+*******************************************************************************/
+void HBN_Get_Reset_Event(uint8_t* event)
+{
+    uint32_t tmpVal;
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+    *event = BL_GET_REG_BITS_VAL(tmpVal,HBN_RESET_EVENT);
+}
+/****************************************************************************/ /**
+ * @brief  HBN clear reset event
+ *
+*******************************************************************************/
+void HBN_Clr_Reset_Event(void)
+{
+    uint32_t tmpVal;
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+    tmpVal |= (1<<13);
+    BL_WR_REG(HBN_BASE, HBN_GLB, tmpVal);
+}
+
+/****************************************************************************/ /**
  * @brief  HBN set ldo11aon voltage out
  *
  * @param  ldoLevel: LDO volatge level
@@ -1999,6 +2028,7 @@ BL_Err_Type HBN_Disable_BOD_IRQ(void)
 #endif
     return SUCCESS;
 }
+
 
 /****************************************************************************/ /**
  * @brief  HBN out0 install interrupt callback

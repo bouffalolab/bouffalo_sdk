@@ -679,6 +679,8 @@ BL_Err_Type HBN_Power_Off_RC32K(void);
 BL_Err_Type HBN_Trim_Ldo33VoutTrim(void);
 BL_Err_Type HBN_Trim_RC32K(void);
 BL_Err_Type HBN_Set_BOD_Cfg(HBN_BOD_CFG_Type *cfg);
+void HBN_Get_Reset_Event(uint8_t* event);
+void HBN_Clr_Reset_Event(void);
 BL_Err_Type HBN_Clear_RTC_INT(void);
 /*----------*/
 

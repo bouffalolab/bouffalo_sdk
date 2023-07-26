@@ -84,6 +84,16 @@
  * @}
  */
 
+/** @defgroup I2C_CMD i2c feature control cmd definition
+  * @{
+  */
+#define I2C_CMD_SET_SCL_SYNC (0x01) /* Enable or disable multi-master and clock-stretching */
+#define I2C_CMD_SET_DEGLITCH (0x02) /* 0 for disable deglitch, others for deglitch count */
+
+/**
+  * @}
+  */
+
 /**
  * @brief I2C message structure
  *

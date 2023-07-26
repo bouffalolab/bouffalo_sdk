@@ -69,6 +69,11 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval |= (1 << AON_GPADC_V11_SEL_SHIFT);                     /* V11 select 1.1V */
     regval |= (config->clk_div << AON_GPADC_CLK_DIV_RATIO_SHIFT); /* clock div */
     regval |= (config->resolution << AON_GPADC_RES_SEL_SHIFT);    /* resolution */
+#if defined(BL702L)
+    regval |= AON_GPADC_LOWV_DET_EN;  /* low voltage detect enable */
+    regval |= AON_GPADC_VCM_HYST_SEL; /* VCM hyst select */
+    regval |= AON_GPADC_VCM_SEL_EN;   /* VCM select enable */
+#endif
     if (config->scan_conv_mode) {
         regval |= AON_GPADC_SCAN_EN;
         regval |= AON_GPADC_CLK_ANA_INV;
@@ -92,10 +97,14 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval |= (2 << AON_GPADC_DLY_SEL_SHIFT);
     regval |= (2 << AON_GPADC_CHOP_MODE_SHIFT); /* Vref AZ and PGA chop on */
     regval |= (1 << AON_GPADC_PGA1_GAIN_SHIFT); /* gain 1 */
-    regval |= (1 << AON_GPADC_PGA2_GAIN_SHIFT); /* gain 1 */
+#if defined(BL702L)
+    regval &= ~AON_GPADC_PGA2_GAIN_MASK;        /* gain 2 */
+#else
+    regval |= (1 << AON_GPADC_PGA2_GAIN_SHIFT); /* gain 2 */
+#endif
     regval |= AON_GPADC_PGA_EN;
     regval |= (8 << AON_GPADC_PGA_OS_CAL_SHIFT);
-    regval |= (1 << AON_GPADC_PGA_VCM_SHIFT); /* PGA output common mode control 1.4V */
+    regval |= (1 << AON_GPADC_PGA_VCM_SHIFT); /* PGA output common mode control 1.2V */
 
     if (config->vref == ADC_VREF_2P0V) {
         regval |= AON_GPADC_VREF_SEL;
