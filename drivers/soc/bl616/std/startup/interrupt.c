@@ -155,6 +155,12 @@ void exception_entry(uintptr_t *regs)
 
     printf("%s\r\n", mcause_str[cause & 0xf]);
 #endif
+    
+#ifdef CONF_ENABLE_FRAME_PTR
+    extern int backtrace_now(int (*print_func)(const char *fmt, ...), uintptr_t *regs);
+        backtrace_now(printf, regs);
+#endif
+
     if ((cause == 8) || (cause == 11)) {
         epc += 4;
         WRITE_CSR(CSR_MEPC, epc);
