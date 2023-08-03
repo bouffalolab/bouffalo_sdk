@@ -173,13 +173,13 @@ void SystemInit(void)
     tmpVal = BL_RD_REG(GLB_BASE, GLB_SRAM_CFG3);
 
     if (em_size == 0) {
-        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, GLB_WRAM160KB_EM0KB);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00); // GLB_WRAM160KB_EM0KB
     } else if (em_size == 32 * 1024) {
-        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, GLB_WRAM128KB_EM32KB);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x03); // GLB_WRAM128KB_EM32KB
     } else if (em_size == 64 * 1024) {
-        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, GLB_WRAM96KB_EM64KB);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x0f); // GLB_WRAM96KB_EM64KB
     } else {
-        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, GLB_WRAM160KB_EM0KB);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00); // GLB_WRAM160KB_EM0KB
     }
     BL_WR_REG(GLB_BASE, GLB_SRAM_CFG3, tmpVal);
 }
