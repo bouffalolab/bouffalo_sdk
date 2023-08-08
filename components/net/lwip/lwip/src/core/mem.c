@@ -975,6 +975,26 @@ mem_malloc_adjust_lfree:
   return NULL;
 }
 
+size_t mem_get_size(const void *p)
+{
+  size_t mem_size = 0;
+
+  sys_mutex_lock(&mem_mutex);
+
+  struct mem *p_mem = (struct mem *)((uint32_t)p - sizeof(struct mem));
+
+  struct mem *p_next = ptr_to_mem(p_mem->next);
+  struct mem *p_prev = ptr_to_mem(p_mem->prev);
+
+  LWIP_ASSERT("mem_get_size: wrong memory pointer", p_mem == ptr_to_mem(p_next->prev));
+  LWIP_ASSERT("mem_get_size: wrong memory pointer", p_mem == ptr_to_mem(p_prev->next));
+
+  mem_size = p_mem->next - mem_to_ptr(p_mem);
+
+  sys_mutex_unlock(&mem_mutex);
+
+  return mem_size;
+}
 #endif /* MEM_USE_POOLS */
 
 #if MEM_LIBC_MALLOC && (!LWIP_STATS || !MEM_STATS)

@@ -74,6 +74,7 @@ void *mem_trim(void *mem, mem_size_t size);
 void *mem_malloc(mem_size_t size);
 void *mem_calloc(mem_size_t count, mem_size_t size);
 void  mem_free(void *mem);
+size_t mem_get_size(const void *p);
 
 #ifdef __cplusplus
 }
