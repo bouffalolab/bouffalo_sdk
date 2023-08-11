@@ -13,8 +13,7 @@ rd /s /Q .\chips\bl60x
 rd /s /Q .\chips\bl56x
 rd /s /Q .\chips\bl562
 rd /s /Q .\chips\wb03
-rd /s /Q .\utils\flash\bl60x
-rd /s /Q .\utils\flash\wb03
+rd /s /Q .\utils\flash
 rd /s /Q .\chips\img
 del /a /f /s /q .\chips\bl56x\img_create\*.bin
 del /a /f /s /q .\chips\bl60x\img_create\*.bin
@@ -60,7 +59,6 @@ del /a /f /s /q .\chips\bl606p\img_create_linux\*.bin
 del /a /f /s /q .\chips\bl616\img_create_linux\*.bin
 del /a /f /s /q .\chips\wb03\img_create_linux\*.bin
 del /a /f /s /q .\chips\bl628\img_create_linux\*.bin
-
 del /a /f /s /q .\chips\*.pack
 rd /s /Q .\chips\bl56x\ota
 rd /s /Q .\chips\bl60x\ota
