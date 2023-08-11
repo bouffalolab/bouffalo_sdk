@@ -49,7 +49,7 @@ g_irq_sp:
     .type   default_interrupt_handler, %function
 default_interrupt_handler:
     /* ipush */
-    addi  sp, sp, -76
+    addi  sp, sp, -80
 
     /* save x5 x6 then save mepc mcause */
     sw    x5, 4(sp)
@@ -104,7 +104,7 @@ default_interrupt_handler:
     csrs    mstatus, 8
 
     /* keep stack 16bytes aligned */
-    addi    sp, sp, -88
+    addi    sp, sp, -96
 
     /* - 76:  mstatus  */
     csrr    t1, mstatus
@@ -170,7 +170,7 @@ default_interrupt_handler:
     flw     ft11,76(sp)
 
 .F_RegNotLoad:
-    addi    sp, sp, 88
+    addi    sp, sp, 96
     /* mret included, and IRQ tail-chain may happen */
     /* ipop */
 
@@ -200,8 +200,8 @@ default_interrupt_handler:
     lw      x30, 56(sp)
     lw      x31, 60(sp)
 
-    addi    sp, sp, 76
-    mret
+    addi    sp, sp, 80
+    ret
 
     .size   default_interrupt_handler, . - default_interrupt_handler
 
@@ -315,6 +315,11 @@ trap:
  * Config MSOFT IRQ to non-vector mode
  * tspend_handler is a weak alias to default_interrupt_handler
  */
-    j       default_interrupt_handler
+    addi    sp, sp, -16
+    sw      ra, 0(sp)
+    call    default_interrupt_handler
+    lw      ra, 0(sp)
+    addi    sp, sp, 16
+    mret
 
     .size   default_trap_handler, . - default_trap_handler

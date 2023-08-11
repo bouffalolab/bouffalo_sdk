@@ -3,7 +3,9 @@
 #include "usbh_core.h"
 #include "hardware/usb_v2_reg.h"
 
+/* select only one mode */
 // #define CONFIG_USB_PINGPONG_ENABLE
+// #define CONFIG_USB_TRIPLE_ENABLE
 
 #define BLFB_USB_BASE ((uint32_t)0x20072000)
 #define BFLB_PDS_BASE ((uint32_t)0x2000e000)
@@ -456,14 +458,30 @@ static uint8_t usb_get_transfer_fifo(uint8_t ep_idx)
     uint8_t target_fifo_id;
 
     if ((g_bl_udc.out_ep[ep_idx].ep_mps > 512) || (g_bl_udc.in_ep[ep_idx].ep_mps > 512)) {
-#ifdef CONFIG_USB_PINGPONG_ENABLE
-        target_fifo_id = 0;
+#if defined(CONFIG_USB_PINGPONG_ENABLE)
+        target_fifo_id = USB_FIFO_F0;
+#elif defined(CONFIG_USB_TRIPLE_ENABLE)
+        while (1) {}
 #else
-        target_fifo_id = ((2 * ep_idx - 1) - 1);
+        if (ep_idx == 1) {
+            target_fifo_id = USB_FIFO_F0;
+        } else {
+            target_fifo_id = USB_FIFO_F2;
+        }
 #endif
     } else {
-#ifdef CONFIG_USB_PINGPONG_ENABLE
-        target_fifo_id = ((2 * ep_idx - 1) - 1);
+#if defined(CONFIG_USB_PINGPONG_ENABLE)
+        if (ep_idx == 1) {
+            target_fifo_id = USB_FIFO_F0;
+        } else {
+            target_fifo_id = USB_FIFO_F2;
+        }
+#elif defined(CONFIG_USB_TRIPLE_ENABLE)
+        if (ep_idx == 1) {
+            target_fifo_id = USB_FIFO_F0;
+        } else {
+            target_fifo_id = USB_FIFO_F3;
+        }
 #else
         target_fifo_id = (ep_idx - 1);
 #endif
@@ -680,7 +698,7 @@ int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
     }
 
     if (ep_idx != 0) {
-#ifndef CONFIG_USB_PINGPONG_ENABLE
+#if !defined(CONFIG_USB_PINGPONG_ENABLE) && !defined(CONFIG_USB_TRIPLE_ENABLE)
         if (ep_cfg->ep_mps > 512) {
             bflb_usb_set_ep_fifomap(1, USB_FIFO_F0);
             bflb_usb_set_ep_fifomap(2, USB_FIFO_F2);
@@ -722,7 +740,7 @@ int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
                 return -1;
             }
         }
-#else
+#elif defined(CONFIG_USB_PINGPONG_ENABLE)
         if (ep_cfg->ep_mps > 512) {
             bflb_usb_set_ep_fifomap(1, USB_FIFO_F0);
 
@@ -754,6 +772,28 @@ int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
             } else if (ep_idx == 2) {
                 bflb_usb_fifo_config(USB_FIFO_F2, ep_cfg->ep_type, 512, 2, true);
                 bflb_usb_fifo_config(USB_FIFO_F3, ep_cfg->ep_type, 512, 2, false);
+            } else {
+                return -1;
+            }
+        }
+#elif defined(CONFIG_USB_TRIPLE_ENABLE)
+        if (ep_cfg->ep_mps > 512) {
+            return -1;
+        } else {
+            bflb_usb_set_ep_fifomap(1, USB_FIFO_F0);
+            bflb_usb_set_ep_fifomap(2, USB_FIFO_F3);
+
+            bflb_usb_set_fifo_epmap(USB_FIFO_F0, 1, USB_FIFO_DIR_BID);
+            bflb_usb_set_fifo_epmap(USB_FIFO_F1, 1, USB_FIFO_DIR_BID);
+            bflb_usb_set_fifo_epmap(USB_FIFO_F2, 1, USB_FIFO_DIR_BID);
+            bflb_usb_set_fifo_epmap(USB_FIFO_F3, 2, USB_FIFO_DIR_BID);
+
+            if (ep_idx == 1) {
+                bflb_usb_fifo_config(USB_FIFO_F0, ep_cfg->ep_type, 512, 3, true);
+                bflb_usb_fifo_config(USB_FIFO_F1, ep_cfg->ep_type, 512, 3, false);
+                bflb_usb_fifo_config(USB_FIFO_F2, ep_cfg->ep_type, 512, 3, false);
+            } else if (ep_idx == 2) {
+                bflb_usb_fifo_config(USB_FIFO_F3, ep_cfg->ep_type, 512, 1, true);
             } else {
                 return -1;
             }
@@ -927,7 +967,7 @@ void USBD_IRQHandler(int irq, void *arg)
 
             if (subgroup_intstatus & USB_SUSP_INT) {
                 bflb_usb_source_group_int_clear(2, USB_SUSP_INT);
-                
+
                 bflb_usb_reset_fifo(USB_FIFO_F0);
                 bflb_usb_reset_fifo(USB_FIFO_F1);
                 bflb_usb_reset_fifo(USB_FIFO_F2);

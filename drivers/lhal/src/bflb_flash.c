@@ -506,8 +506,15 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
         if (ret == 0) {
             g_jedec_id = jedec_id;
             flash_get_clock_delay(&g_flash_cfg);
+#if defined(BL616) || defined(BL628)
+            flash1_size = flash_get_size_from_jedecid(g_jedec_id);
+#endif
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
             flash2_init();
+#else
+#if defined(BL616) || defined(BL628)
+            flash2_size = 0;
+#endif
 #endif
             return 0;
         }
@@ -529,6 +536,10 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
 
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
     flash2_init();
+#else
+#if defined(BL616) || defined(BL628)
+    flash2_size = 0;
+#endif
 #endif
 
     return ret;
