@@ -162,5 +162,6 @@ void shell_handler(uint8_t data);
 int shell_set_prompt(const char *prompt);
 int shell_set_print(void (*shell_printf)(char *fmt, ...));
 void shell_init(void);
+void shell_exe_cmd(uint8_t *cmd, uint16_t len);
 shell_sig_func_ptr shell_signal(int sig, shell_sig_func_ptr func);
 #endif

@@ -37,6 +37,7 @@ $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
 $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
 # $<$<COMPILE_LANGUAGE:C>:-Werror>
 -fstack-usage
+-save-temps=obj
 )
 
 sdk_add_link_options(

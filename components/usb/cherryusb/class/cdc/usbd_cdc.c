@@ -73,7 +73,7 @@ static int cdc_acm_class_interface_request_handler(struct usb_setup_packet *setu
                         line_coding.bDataBits);
             break;
         case CDC_REQUEST_SEND_BREAK:
-            USB_LOG_DBG("send break\r\n");
+            usbd_cdc_acm_send_break(intf_num);
             break;
         default:
             USB_LOG_WRN("Unhandled CDC Class bRequest 0x%02x\r\n", setup->bRequest);
@@ -110,5 +110,9 @@ __WEAK void usbd_cdc_acm_set_dtr(uint8_t intf, bool dtr)
 }
 
 __WEAK void usbd_cdc_acm_set_rts(uint8_t intf, bool rts)
+{
+}
+
+__WEAK void usbd_cdc_acm_send_break(uint8_t intf)
 {
 }

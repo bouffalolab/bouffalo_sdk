@@ -79,6 +79,19 @@ SECTIONS
         *(.srodata)
         *(.srodata.*)
 
+        /* _dump_sections for bflb_coredump.c*/
+        . = ALIGN(4);
+        PROVIDE( _dump_sections = ABSOLUTE(.));
+        LONG(ORIGIN(itcm_memory));
+        LONG(LENGTH(itcm_memory));
+        LONG(ORIGIN(dtcm_memory));
+        LONG(LENGTH(dtcm_memory));
+        LONG(ORIGIN(ram_memory));
+        LONG(LENGTH(ram_memory));
+        LONG(0xffffffff);
+        LONG(0xffffffff);
+        /* _dump_sections for bl_coredump.c*/
+
         . = ALIGN(4);
         __text_code_end__ = .;
 
@@ -141,6 +154,8 @@ SECTIONS
      * size of stack_dummy section */
     __StackTop = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory);
     PROVIDE( __freertos_irq_stack_top = __StackTop);
+    PROVIDE( _sp_main = __StackTop);
+    PROVIDE( _sp_base = __StackTop - StackSize);
     __StackLimit = __StackTop - SIZEOF(.stack_dummy);
 
     /* Check if data + heap + stack exceeds RAM limit */

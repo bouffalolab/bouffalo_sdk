@@ -85,11 +85,11 @@ void mbedtls_ecdh_test(void)
     mbedtls_mpi_init(&srv_pri);
     mbedtls_mpi_init(&cli_secret);
     mbedtls_mpi_init(&srv_secret);
-    mbedtls_ecp_group_init(&grp);     //³õÊ¼»¯ÍÖÔ²ÇúÏßÈº½á¹¹Ìå
-    mbedtls_ecp_point_init(&cli_pub); //³õÊ¼»¯ÍÖÔ²ÇúÏßµã½á¹¹Ìå cli
-    mbedtls_ecp_point_init(&srv_pub); //³õÊ¼»¯ÍÖÔ²ÇúÏßµã½á¹¹Ìå srv
-    mbedtls_entropy_init(&entropy);   //³õÊ¼»¯ìØ½á¹¹Ìå
-    mbedtls_ctr_drbg_init(&ctr_drbg); //³õÊ¼»¯Ëæ»úÊı½á¹¹Ìå
+    mbedtls_ecp_group_init(&grp);     //åˆå§‹åŒ–æ¤­åœ†æ›²çº¿ç¾¤ç»“æ„ä½“
+    mbedtls_ecp_point_init(&cli_pub); //åˆå§‹åŒ–æ¤­åœ†æ›²çº¿ç‚¹ç»“æ„ä½“ cli
+    mbedtls_ecp_point_init(&srv_pub); //åˆå§‹åŒ–æ¤­åœ†æ›²çº¿ç‚¹ç»“æ„ä½“ srv
+    mbedtls_entropy_init(&entropy);   //åˆå§‹åŒ–ç†µç»“æ„ä½“
+    mbedtls_ctr_drbg_init(&ctr_drbg); //åˆå§‹åŒ–éšæœºæ•°ç»“æ„ä½“
     /*
     mbedtls_entropy_add_source(&entropy, entropy_source, NULL,
                        MBEDTLS_ENTROPY_MAX_GATHER, MBEDTLS_ENTROPY_SOURCE_STRONG);*/
@@ -97,55 +97,55 @@ void mbedtls_ecdh_test(void)
                           pers, strlen(pers));
     mbedtls_printf("setup rng ... ok\r\n");
 
-    //¼ÓÔØÍÖÔ²ÇúÏß£¬Ñ¡ÔñSECP256R1
+    //åŠ è½½æ¤­åœ†æ›²çº¿ï¼Œé€‰æ‹©SECP256R1
     ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
     mbedtls_printf("select ecp group SECP256R1 ... ok\r\n");
-    //cliÉú³É¹«¿ª²ÎÊı
+    //cliç”Ÿæˆå…¬å¼€å‚æ•°
     start_time = bflb_mtimer_get_time_ms();
-    ret = mbedtls_ecdh_gen_public(&grp,     //ÍÖÔ²ÇúÏß½á¹¹Ìå
-                                  &cli_pri, //Êä³öcliË½ÃÜ²ÎÊıd
-                                  &cli_pub, //Êä³öcli¹«¿ª²ÎÊıQ
+    ret = mbedtls_ecdh_gen_public(&grp,     //æ¤­åœ†æ›²çº¿ç»“æ„ä½“
+                                  &cli_pri, //è¾“å‡ºcliç§å¯†å‚æ•°d
+                                  &cli_pub, //è¾“å‡ºcliå…¬å¼€å‚æ•°Q
                                   mbedtls_ctr_drbg_random, &ctr_drbg);
     assert_exit(ret == 0, ret);
     printf("Get public key time=%dms\r\n", (unsigned int)(bflb_mtimer_get_time_ms() - start_time));
-    mbedtls_ecp_point_write_binary(&grp, &cli_pub, //°ÑcliµÄ¹«¿ª²ÎÊıµ½´¦µ½bufÖĞ
+    mbedtls_ecp_point_write_binary(&grp, &cli_pub, //æŠŠcliçš„å…¬å¼€å‚æ•°åˆ°å¤„åˆ°bufä¸­
                                    MBEDTLS_ECP_PF_UNCOMPRESSED, &olen, buf, sizeof(buf));
     dump_buf("1. ecdh client generate public parameter:", buf, olen);
 
-    //srvÉú³É¹«¿ª²ÎÊı
-    ret = mbedtls_ecdh_gen_public(&grp,     //ÍÖÔ²ÇúÏß½á¹¹Ìå
-                                  &srv_pri, //Êä³ösrvË½ÃÜ²ÎÊıd
-                                  &srv_pub, //Êä³ösrv¹«¿ª²ÎÊıQ
+    //srvç”Ÿæˆå…¬å¼€å‚æ•°
+    ret = mbedtls_ecdh_gen_public(&grp,     //æ¤­åœ†æ›²çº¿ç»“æ„ä½“
+                                  &srv_pri, //è¾“å‡ºsrvç§å¯†å‚æ•°d
+                                  &srv_pub, //è¾“å‡ºsrvå…¬å¼€å‚æ•°Q
                                   mbedtls_ctr_drbg_random, &ctr_drbg);
     assert_exit(ret == 0, ret);
-    mbedtls_ecp_point_write_binary(&grp, &srv_pub, //°ÑsrvµÄ¹«¿ª²ÎÊıµ¼³öµ½bufÖĞ
+    mbedtls_ecp_point_write_binary(&grp, &srv_pub, //æŠŠsrvçš„å…¬å¼€å‚æ•°å¯¼å‡ºåˆ°bufä¸­
                                    MBEDTLS_ECP_PF_UNCOMPRESSED, &olen, buf, sizeof(buf));
     dump_buf("2. ecdh server generate public parameter:", buf, olen);
-    //cli¼ÆËã¹²ÏíÃÜÔ¿
+    //cliè®¡ç®—å…±äº«å¯†é’¥
     start_time = bflb_mtimer_get_time_ms();
-    ret = mbedtls_ecdh_compute_shared(&grp,        //ÍÖÔ²ÇúÏß½á¹¹Ìå
-                                      &cli_secret, //cli¼ÆËã³öµÄ¹²ÏíÃÜÔ¿
-                                      &srv_pub,    //ÊäÈësrv¹«¿ª²ÎÊıQ
-                                      &cli_pri,    //ÊäÈëcli±¾ÉíµÄË½ÃÜ²ÎÊıd
+    ret = mbedtls_ecdh_compute_shared(&grp,        //æ¤­åœ†æ›²çº¿ç»“æ„ä½“
+                                      &cli_secret, //cliè®¡ç®—å‡ºçš„å…±äº«å¯†é’¥
+                                      &srv_pub,    //è¾“å…¥srvå…¬å¼€å‚æ•°Q
+                                      &cli_pri,    //è¾“å…¥cliæœ¬èº«çš„ç§å¯†å‚æ•°d
                                       mbedtls_ctr_drbg_random, &ctr_drbg);
     assert_exit(ret == 0, ret);
     printf("Get share key time=%dms\r\n", (unsigned int)(bflb_mtimer_get_time_ms() - start_time));
-    //°Ñcli¼ÆËã³öµÄ¹²ÏíÃÜÔ¿µ¼³öbufÖĞ
+    //æŠŠcliè®¡ç®—å‡ºçš„å…±äº«å¯†é’¥å¯¼å‡ºbufä¸­
     mbedtls_mpi_write_binary(&cli_secret, buf, mbedtls_mpi_size(&cli_secret));
     dump_buf("3. ecdh client generate secret:", buf, mbedtls_mpi_size(&cli_secret));
 
-    //srv¼ÆËã¹²ÏíÃÜÔ¿
-    ret = mbedtls_ecdh_compute_shared(&grp,        //ÍÖÔ²ÇúÏß½á¹¹Ìå
-                                      &srv_secret, //srv¼ÆËã³öµÄ¹²ÏíÃÜÔ¿
-                                      &cli_pub,    //ÊäÈëcli¹«¿ª²ÎÊıQ
-                                      &srv_pri,    //ÊäÈësrv±¾ÉíµÄË½ÃÜ²ÎÊıd
+    //srvè®¡ç®—å…±äº«å¯†é’¥
+    ret = mbedtls_ecdh_compute_shared(&grp,        //æ¤­åœ†æ›²çº¿ç»“æ„ä½“
+                                      &srv_secret, //srvè®¡ç®—å‡ºçš„å…±äº«å¯†é’¥
+                                      &cli_pub,    //è¾“å…¥cliå…¬å¼€å‚æ•°Q
+                                      &srv_pri,    //è¾“å…¥srvæœ¬èº«çš„ç§å¯†å‚æ•°d
                                       mbedtls_ctr_drbg_random, &ctr_drbg);
     assert_exit(ret == 0, ret);
-    //°Ñsrv¼ÆËã³öµÄ¹²ÏíÃÜÔ¿µ¼³öbufÖĞ
+    //æŠŠsrvè®¡ç®—å‡ºçš„å…±äº«å¯†é’¥å¯¼å‡ºbufä¸­
     mbedtls_mpi_write_binary(&srv_secret, buf, mbedtls_mpi_size(&srv_secret));
     dump_buf("4. ecdh server generate secret:", buf, mbedtls_mpi_size(&srv_secret));
 
-    //±È½Ï2¸ö´óÊıÊÇ·ñÏàµÈ
+    //æ¯”è¾ƒ2ä¸ªå¤§æ•°æ˜¯å¦ç›¸ç­‰
     ret = mbedtls_mpi_cmp_mpi(&cli_secret, &srv_secret);
     assert_exit(ret == 0, ret);
     mbedtls_printf("  5. ecdh checking secrets ... ok\n");
@@ -181,7 +181,7 @@ void mbedtls_ecdsa_test()
 
     mbedtls_mpi_init(&r);
     mbedtls_mpi_init(&s);
-    mbedtls_ecdsa_init(&ctx); //³õÊ¼»¯ECDSA½á¹¹Ìå
+    mbedtls_ecdsa_init(&ctx); //åˆå§‹åŒ–ECDSAç»“æ„ä½“
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
     /*
@@ -194,9 +194,9 @@ void mbedtls_ecdsa_test()
 
     mbedtls_md_init(&md_ctx);
     mbedtls_md(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), msg, sizeof(msg), hash);
-    mbedtls_printf("1. hash msg ... ok\n"); //¼ÆËã³ömsgµÄhashÖµ
-    //²úÉúECDSAÃÜÔ¿¶Ô
-    ret = mbedtls_ecdsa_genkey(&ctx, MBEDTLS_ECP_DP_SECP256R1, //Ñ¡ÔñSECP256R1
+    mbedtls_printf("1. hash msg ... ok\n"); //è®¡ç®—å‡ºmsgçš„hashå€¼
+    //äº§ç”ŸECDSAå¯†é’¥å¯¹
+    ret = mbedtls_ecdsa_genkey(&ctx, MBEDTLS_ECP_DP_SECP256R1, //é€‰æ‹©SECP256R1
                                mbedtls_ctr_drbg_random, &ctr_drbg);
     assert_exit(ret == 0, ret);
     mbedtls_ecp_point_write_binary(&ctx.grp, &ctx.Q,
@@ -204,7 +204,7 @@ void mbedtls_ecdsa_test()
     dlen = mbedtls_mpi_size(&ctx.d);
     mbedtls_mpi_write_binary(&ctx.d, buf + qlen, dlen);
     dump_buf("2. ecdsa generate keypair:", buf, qlen + dlen);
-    //ECDSAÇ©Ãû£¬µÃµ½r , s
+    //ECDSAç­¾åï¼Œå¾—åˆ°r , s
     start_time = bflb_mtimer_get_time_ms();
     ret = mbedtls_ecdsa_sign(&ctx.grp, &r, &s, &ctx.d,
                              hash, sizeof(hash), mbedtls_ctr_drbg_random, &ctr_drbg);
@@ -216,7 +216,7 @@ void mbedtls_ecdsa_test()
     mbedtls_mpi_write_binary(&r, buf, rlen);
     mbedtls_mpi_write_binary(&s, buf + rlen, slen);
     dump_buf("3. ecdsa generate signature:", buf, rlen + slen);
-    //ECDSAÑéÇ©£¬·µ»Ø0±íÊ¾ÑéÖ¤³É¹¦
+    //ECDSAéªŒç­¾ï¼Œè¿”å›0è¡¨ç¤ºéªŒè¯æˆåŠŸ
     start_time = bflb_mtimer_get_time_ms();
     ret = mbedtls_ecdsa_verify(&ctx.grp, hash, sizeof(hash), &ctx.Q, &r, &s);
     assert_exit(ret == 0, ret);

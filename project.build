@@ -51,6 +51,7 @@ CONFIG_USB_HS ?=y
 CONFIG_ROMAPI ?=y
 CONFIG_DEBUG ?=y
 CONFIG_TLSF ?=y
+CONFIG_COREDUMP ?=y
 COMX ?=COM5
 BAUDRATE ?=2000000
 BOARD_DIR ?=
@@ -67,6 +68,7 @@ cmake_definition+= -DCONFIG_USB_HS=$(CONFIG_USB_HS)
 cmake_definition+= -DCONFIG_COMX=$(COMX)
 cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF
 cmake_definition+= -DCONFIG_TLSF=$(CONFIG_TLSF)
+cmake_definition+= -DCONFIG_COREDUMP=$(CONFIG_COREDUMP)
 
 build:Makefile
 	$(CMAKE) -S . -B build -G $(cmake_generator) $(cmake_definition)
@@ -92,4 +94,4 @@ efuse:
 puncover:
 	$(command_puncover)
 
-.PHONY:build clean menuconfig ninja
+.PHONY:build clean menuconfig ninja flash efuse puncover

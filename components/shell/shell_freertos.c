@@ -6,7 +6,7 @@
 #include "mem.h"
 
 static int shell_exec_argc;
-static char *shell_exec_argv[SHELL_ARG_NUM+1];
+static char *shell_exec_argv[SHELL_ARG_NUM + 1];
 static char shell_exec_line[SHELL_CMD_SIZE];
 static ptrdiff_t shell_exec_line_diff;
 TaskHandle_t shell_exec_handle;
@@ -73,13 +73,17 @@ void shell_release_sem(void)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    int ret = xSemaphoreGiveFromISR(sem_shell, &xHigherPriorityTaskWoken);
-    if (ret == pdPASS) {
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    if (xPortIsInsideInterrupt()) {
+        int ret = xSemaphoreGiveFromISR(sem_shell, &xHigherPriorityTaskWoken);
+        if (ret == pdPASS) {
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
+    } else {
+        xSemaphoreGive(sem_shell);
     }
 }
 
-struct bflb_device_s *uart_shell;
+struct bflb_device_s *uart_shell = NULL;
 
 void uart_shell_isr(int irq, void *arg)
 {
@@ -116,17 +120,25 @@ static void shell_task(void *pvParameters)
 
 void shell_init_with_task(struct bflb_device_s *shell)
 {
-    uart_shell = shell;
-    vSemaphoreCreateBinary(sem_shell);
+    if (shell) {
+        uart_shell = shell;
+        bflb_uart_rxint_mask(uart_shell, false);
+        bflb_irq_attach(uart_shell->irq_num, uart_shell_isr, NULL);
+        bflb_irq_enable(uart_shell->irq_num);
+    }
 
-    bflb_uart_rxint_mask(uart_shell, false);
-    bflb_irq_attach(uart_shell->irq_num, uart_shell_isr, NULL);
-    bflb_irq_enable(uart_shell->irq_num);
+    vSemaphoreCreateBinary(sem_shell);
 
     Ring_Buffer_Init(&shell_rb, shell_buffer, sizeof(shell_buffer), NULL, NULL);
 
     shell_init();
     xTaskCreate(shell_task, (char *)"shell_task", SHELL_THREAD_STACK_SIZE, NULL, SHELL_THREAD_PRIO, &shell_handle);
+}
+
+void shell_exe_cmd(uint8_t *cmd, uint16_t len)
+{
+    Ring_Buffer_Write(&shell_rb, cmd, len);
+    shell_release_sem();
 }
 
 static void ps_cmd(int argc, char **argv)
@@ -163,3 +175,13 @@ static void ps_cmd(int argc, char **argv)
     free(info);
 }
 SHELL_CMD_EXPORT_ALIAS(ps_cmd, ps, shell ps);
+
+static void version_cmd(int argc, char **argv)
+{
+    printf("kernel version :posix\r\n");
+    printf(BOUFFALO_SDK_VER);
+    printf("\r\n");
+
+    printf("Heap left: %d Bytes\r\n", kfree_size());
+}
+SHELL_CMD_EXPORT_ALIAS(version_cmd, sysver, show sysver);

@@ -6,7 +6,7 @@
 struct bflb_device_s *uartx;
 struct bflb_device_s *dma0_ch0;
 
-#define UART_RX_DMA_BUF_SIZE 1024
+#define UART_RX_DMA_BUF_SIZE 4096
 static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t uart_rx_dma_buf[UART_RX_DMA_BUF_SIZE];
 
 struct bflb_rx_cycle_dma g_uart_rx_dma;
@@ -31,13 +31,13 @@ void dma0_ch0_isr(void *arg)
 
 void bflb_rx_cycle_dma_copy(uint8_t *data, uint32_t len)
 {
-    for (size_t i = 0; i < len; i++) {
+    for (uint16_t i = 0; i < len; i++) {
         if (data[i] != count) {
             printf("rx error\r\n");
             while (1) {}
         }
         count++;
-        count &= 0x0f;
+        count &= 0xff;
     }
 }
 

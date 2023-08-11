@@ -114,14 +114,20 @@ static void console_init()
     bflb_uart_set_console(uart0);
 }
 
+extern int main(void);
+
 void board_init(void)
 {
     int ret = -1;
     uintptr_t flag;
+    int run_from_xip=0;
 
     flag = bflb_irq_save();
 
-    ret = bflb_flash_init();
+    if(((uint32_t)main&0xff000000)==0x23000000){
+        ret = bflb_flash_init();
+        run_from_xip=1;
+    }
 
     system_clock_init();
     peripheral_clock_init();
@@ -133,10 +139,13 @@ void board_init(void)
     kmem_init((void *)&__HeapBase, heap_len);
 
     bl_show_log();
-    if (ret != 0) {
-        printf("flash init fail!!!\r\n");
+
+    if(run_from_xip){
+        if (ret != 0) {
+            printf("flash init fail!!!\r\n");
+        }
+        bl_show_flashinfo();
     }
-    bl_show_flashinfo();
 
     printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 

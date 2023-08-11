@@ -16,7 +16,8 @@
 extern "C" {
 #endif
 
-void dhcpd_start(struct netif *netif);
+/* start, limit is range of dhcpd ip pool, -1 mean use default value */
+void dhcpd_start(struct netif *netif, int start, int limit);
 
 #ifdef __cplusplus
 }

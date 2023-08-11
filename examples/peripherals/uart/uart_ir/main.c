@@ -34,8 +34,8 @@ int main(void)
 
     ircfg.tx_en = 1;
     ircfg.rx_en = 1;
-    ircfg.tx_inverse = 0;
-    ircfg.rx_inverse = 1;
+    ircfg.tx_inverse = 1;
+    ircfg.rx_inverse = 0;
     ircfg.tx_pluse_start = 112;
     ircfg.tx_pluse_stop = 159;
     ircfg.rx_pluse_start = 111;

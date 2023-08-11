@@ -435,7 +435,10 @@ void board_dvp_gpio_init(void)
 
     /* Reset GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_3, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+    bflb_gpio_reset(gpio, GPIO_PIN_3);
+    bflb_mtimer_delay_ms(10);
     bflb_gpio_set(gpio, GPIO_PIN_3);
+    bflb_mtimer_delay_ms(10);
 
     /* MCLK GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
@@ -464,7 +467,10 @@ void board_dvp_gpio_init(void)
 
     /* Reset GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    bflb_gpio_set(gpio, GPIO_PIN_30);
+    bflb_gpio_reset(gpio, GPIO_PIN_3);
+    bflb_mtimer_delay_ms(10);
+    bflb_gpio_set(gpio, GPIO_PIN_3);
+    bflb_mtimer_delay_ms(10);
 
     /* MCLK GPIO */
     bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);

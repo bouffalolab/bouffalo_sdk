@@ -90,10 +90,6 @@ int wifi_start_firmware_task(void)
     GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_IP_WIFI_PHY | GLB_AHB_CLOCK_IP_WIFI_MAC_PHY | GLB_AHB_CLOCK_IP_WIFI_PLATFORM);
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_WIFI);
 
-    /* set ble controller EM Size */
-
-    GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
-
     if (0 != rfparam_init(0, NULL, 0)) {
         LOG_I("PHY RF init failed!\r\n");
         return 0;

@@ -61,7 +61,7 @@
 
 // Support for the exponential notatin floating point conversion specifiers (%e, %g, %E, %G)
 #ifndef CONFIG_LIBC_FLOAT_EX
-#define CONFIG_LIBC_FLOAT_EX 0
+#define CONFIG_LIBC_FLOAT_EX 1
 #endif
 
 // Default precision for the floating point conversion specifiers (the C standard sets this at 6)

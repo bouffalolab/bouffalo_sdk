@@ -35,8 +35,10 @@ enum usbd_event_type {
     USBD_EVENT_RESUME,       /** USB connection resumed by the HOST */
 
     /* USB DEVICE STATUS */
-    USBD_EVENT_CONFIGURED,    /** USB configuration done */
-    USBD_EVENT_SET_INTERFACE, /** USB interface selected */
+    USBD_EVENT_CONFIGURED,        /** USB configuration done */
+    USBD_EVENT_SET_INTERFACE,     /** USB interface selected */
+    USBD_EVENT_SET_REMOTE_WAKEUP, /** USB set remote wakeup */
+    USBD_EVENT_CLR_REMOTE_WAKEUP, /** USB clear remote wakeup */
     USBD_EVENT_UNKNOWN
 };
 
@@ -44,15 +46,12 @@ typedef int (*usbd_request_handler)(struct usb_setup_packet *setup, uint8_t **da
 typedef void (*usbd_endpoint_callback)(uint8_t ep, uint32_t nbytes);
 typedef void (*usbd_notify_handler)(uint8_t event, void *arg);
 
-extern usb_slist_t usbd_intf_head;
-
 struct usbd_endpoint {
     uint8_t ep_addr;
     usbd_endpoint_callback ep_cb;
 };
 
 struct usbd_interface {
-    usb_slist_t list;
     usbd_request_handler class_interface_handler;
     usbd_request_handler class_endpoint_handler;
     usbd_request_handler vendor_handler;
@@ -64,15 +63,18 @@ struct usbd_interface {
 
 struct usb_descriptor {
     const uint8_t *device_descriptor;
-    const uint8_t **fs_config_descriptor;
-    const uint8_t **hs_config_descriptor;
+    const uint8_t *fs_config_descriptor;
+    const uint8_t *hs_config_descriptor;
     const uint8_t *device_quality_descriptor;
-    const uint8_t *other_speed_descriptor;
+    const uint8_t *fs_other_speed_descriptor;
+    const uint8_t *hs_other_speed_descriptor;
     const char **string_descriptor;
     struct usb_msosv1_descriptor *msosv1_descriptor;
     struct usb_msosv2_descriptor *msosv2_descriptor;
+    struct usb_webusb_url_ex_descriptor *webusb_url_descriptor;
     struct usb_bos_descriptor *bos_descriptor;
 };
+
 #ifdef CONFIG_USBDEV_ADVANCE_DESC
 void usbd_desc_register(struct usb_descriptor *desc);
 #else
@@ -86,7 +88,6 @@ void usbd_add_interface(struct usbd_interface *intf);
 void usbd_add_endpoint(struct usbd_endpoint *ep);
 
 bool usb_device_is_configured(void);
-void usbd_configure_done_callback(void);
 int usbd_initialize(void);
 int usbd_deinitialize(void);
 

@@ -30,8 +30,10 @@ target_sources(app PRIVATE lcd/font.c)
 
 target_sources(app PRIVATE lcd/mipi_dbi/bl_mipi_dbi.c)
 target_sources(app PRIVATE lcd/mipi_dbi/ili9488_dbi.c)
+target_sources(app PRIVATE lcd/mipi_dbi/ili9486_dbi.c)
 target_sources(app PRIVATE lcd/mipi_dbi/ili9341_dbi.c)
 target_sources(app PRIVATE lcd/mipi_dbi/nt35510_dbi.c)
+target_sources(app PRIVATE lcd/mipi_dbi/st7796_dbi.c)
 
 target_sources(app PRIVATE lcd/spi/bl_spi_hard_4.c)
 target_sources(app PRIVATE lcd/spi/ili9341_spi.c)
@@ -39,6 +41,10 @@ target_sources(app PRIVATE lcd/spi/ili9488_spi.c)
 target_sources(app PRIVATE lcd/spi/st7796_spi.c)
 target_sources(app PRIVATE lcd/spi/st7789v_spi.c)
 
+target_sources(app PRIVATE lcd/mipi_dpi/bl_mipi_dpi_sim.c)
+target_sources(app PRIVATE lcd/mipi_dpi/standard_dpi.c)
+target_sources(app PRIVATE lcd/mipi_dpi/ili9488_dpi.c)
+target_sources(app PRIVATE lcd/mipi_dpi/gc9503v_dpi.c)
 sdk_add_include_directories(lcd)
 endif()
 

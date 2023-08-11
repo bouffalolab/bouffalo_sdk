@@ -89,7 +89,6 @@ not need to be guarded with a critical section. */
 #endif
 /*-----------------------------------------------------------*/
 
-
 /* Scheduler utilities. */
 extern BaseType_t TrapNetCounter;
 extern void vTaskSwitchContext( void );

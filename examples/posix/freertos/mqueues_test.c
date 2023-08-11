@@ -14,10 +14,9 @@
 // #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "FreeRTOS_POSIX.h"
-#include "FreeRTOS_POSIX/fcntl.h"
-#include "FreeRTOS_POSIX/pthread.h"
-#include "FreeRTOS_POSIX/mqueue.h"
+#include "fcntl.h"
+#include "pthread.h"
+#include "mqueue.h"
 
 #define MQ_NAME_1       "/testmsg1"
 #define MQ_NAME_2       "/testmsg2"

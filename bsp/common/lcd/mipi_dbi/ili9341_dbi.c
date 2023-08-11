@@ -76,7 +76,7 @@ const ili9341_dbi_init_cmd_t ili9341_dbi_init_cmds[] = {
     { 0xC2, "\x11", 1 },
     { 0xC5, "\x40\x30", 2 }, /*VCOM control 1*/
     { 0xC7, "\xa9", 1 },     /*VCOM control 2*/
-    { 0x36, "\x08", 1 },     /*Memory Access Control*/
+    { 0x36, "\x00", 1 },     /*Memory Access Control*/
 
 #if (ILI9341_DBI_PIXEL_FORMAT == 1)
     { 0x3A, "\x55", 1 }, /* Interface Pixel Format RGB565 */

@@ -94,12 +94,19 @@ sdk_library_add_sources(sprintf.c)
 sdk_library_add_sources(vsprintf.c)
 sdk_library_add_sources(printf.c)
 
+if(CONFIG_STACK_SWITCH_CALL_SSCANF)
+sdk_library_add_sources(sscanf.c)
+sdk_add_link_options(-Wl,-wrap,sscanf)
+endif()
+
 sdk_add_link_options(-Wl,-wrap,snprintf -Wl,-wrap,sprintf)
 endif()
 
 # vsnprintf %f %F
 if(CONFIG_VSNPRINTF_FLOAT)
-    sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT=${CONFIG_VSNPRINTF_FLOAT})
+    sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT=1)
+elseif((CONFIG_VSNPRINTF_FLOAT EQUAL 0) )
+    sdk_add_compile_definitions(-DCONFIG_LIBC_FLOAT=0)
 endif()
 # vsnprintf %g %G %e %E
 if(CONFIG_VSNPRINTF_FLOAT_EX)

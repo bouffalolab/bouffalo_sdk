@@ -1,5 +1,6 @@
 #ifndef __GETOPT_H__
 #define __GETOPT_H__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -102,4 +103,5 @@ void *utils_memdrain64_with_check(void *src, size_t len, uint64_t seq);
 #ifdef __cplusplus
 }
 #endif
+
 #endif /* __GETOPT_H__ */

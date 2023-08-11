@@ -23,5 +23,8 @@ void board_acomp_init();
 #define DEFAULT_TEST_UART_DMA_RX_REQUEST DMA_REQUEST_UART1_RX
 #define DEFAULT_TEST_UART_DMA_TDR DMA_ADDR_UART1_TDR
 #define DEFAULT_TEST_UART_DMA_RDR DMA_ADDR_UART1_RDR
-
+#ifdef LP_APP
+void cmd_io_test(char *buf, int len, int argc, char **argv);
+void cmd_acomp_test(char *buf, int len, int argc, char **argv);
+#endif
 #endif

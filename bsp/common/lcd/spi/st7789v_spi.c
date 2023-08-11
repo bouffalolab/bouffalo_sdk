@@ -60,11 +60,22 @@ const st7789v_spi_init_cmd_t st7789v_spi_init_cmds[] = {
     { 0x11, NULL, 0 }, /* Exit sleep */
     { 0xFF, NULL, 120 },
 
-    { 0x3A, "\x55", 1 }, /* pixel format */
+    { 0x3A, "\x05", 1 },
+
+    { 0xB2, "\x0C\x0C\x00\x33\x33", 5 },
+    { 0xB7, "\x35", 1 },
+    { 0xBB, "\x32", 1 },
+    { 0xC2, "\x01", 1 },
+    { 0xC3, "\x15", 1 },
+    { 0xC4, "\x20", 1 },
+    { 0xC6, "\x0F", 1 },
+    { 0xD0, "\xA4\xA1", 2 },
+    { 0xE0, "\xD0\x0A\x10\x0C\x0C\x18\x35\x43\x4D\x39\x13\x13\x2D\x34", 14 },
+    { 0xE1, "\xD0\x05\x0B\x06\x05\x02\x35\x43\x4D\x16\x15\x15\x2E\x32", 14 },
+
     { 0x21, NULL, 0 },
     { 0x29, NULL, 0 },
     { 0x36, "\x00", 1 },
-    { 0xC6, "\x00", 1 },
 };
 
 /**

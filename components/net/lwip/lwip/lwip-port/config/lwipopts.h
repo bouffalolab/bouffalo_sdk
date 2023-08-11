@@ -415,6 +415,15 @@ void sys_thread_sem_deinit(void);
 #define LWIP_NETCONN_THREAD_SEM_GET() sys_thread_sem_get()
 #define LWIP_NETCONN_THREAD_SEM_ALLOC() sys_thread_sem_init()
 #define LWIP_NETCONN_THREAD_SEM_FREE() sys_thread_sem_deinit()
+
+#ifndef LP_APP
+#define TCP_TIMER_PRECISE_NEEDED        0
+#define DHCP_TIMER_PRECISE_NEEDED       0
+#define ARP_TIMER_PRECISE_NEEDED        0
+#define IP4_FRAG_TIMER_PRECISE_NEEDED   0
+#define DNS_FRAG_TIMER_PRECISE_NEEDED   0
+#endif
+
 #endif
 
 #endif /* __LWIPOPTS_H__ */

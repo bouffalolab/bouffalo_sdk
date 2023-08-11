@@ -71,6 +71,12 @@ sdk_add_include_directories(bflb_timestamp)
 sdk_library_add_sources(getopt/utils_getopt.c)
 sdk_add_include_directories(getopt)
 
+if(CONFIG_COREDUMP)
+sdk_add_compile_definitions(-DCONFIG_COREDUMP)
+sdk_library_add_sources(coredump/bflb_coredump.c)
+sdk_add_include_directories(coredump)
+endif()
+
 # partition
 if(CONFIG_PARTITION)
 sdk_library_add_sources(partition/partition.c)
@@ -81,4 +87,18 @@ endif()
 if(CONFIG_BFLB_MTD)
 sdk_library_add_sources(bflb_mtd/bflb_mtd.c bflb_mtd/bflb_boot2.c)
 sdk_add_include_directories(bflb_mtd/include)
+endif()
+
+#cjson
+sdk_library_add_sources(cjson/cJSON.c)
+sdk_add_include_directories(cjson)
+
+# math
+sdk_library_add_sources(math/src/utils_base64.c math/src/utils_crc.c math/src/utils_hex.c)
+sdk_add_include_directories(math/include)
+
+# ota
+if(CONFIG_BFLB_OTA)
+sdk_library_add_sources(bflb_ota/bflb_ota.c bflb_ota/utils_sha256.c)
+sdk_add_include_directories(bflb_ota)
 endif()

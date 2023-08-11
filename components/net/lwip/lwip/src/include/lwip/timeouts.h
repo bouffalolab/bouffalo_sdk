@@ -135,7 +135,7 @@ void sys_restart_timeouts(void);
 void sys_check_timeouts(void);
 u32_t sys_timeouts_sleeptime(void);
 
-#if LWIP_TCP
+#if LWIP_TCP && TCP_TIMER_PRECISE_NEEDED
 void tcpip_tmr_compensate_tick(void);
 #endif
 

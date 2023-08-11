@@ -3545,6 +3545,26 @@
 #if !defined LWIP_PERF || defined __DOXYGEN__
 #define LWIP_PERF                       0
 #endif
+
+#if !defined TCP_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
+#define TCP_TIMER_PRECISE_NEEDED        1
+#endif
+
+#if !defined DHCP_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
+#define DHCP_TIMER_PRECISE_NEEDED       1
+#endif
+
+#if !defined ARP_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
+#define ARP_TIMER_PRECISE_NEEDED        1
+#endif
+
+#if !defined IP4_FRAG_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
+#define IP4_FRAG_TIMER_PRECISE_NEEDED   1
+#endif
+
+#if !defined DNS_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
+#define DNS_TIMER_PRECISE_NEEDED        1
+#endif
 /**
  * @}
  */

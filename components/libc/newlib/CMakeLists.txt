@@ -29,6 +29,19 @@ if(CONFIG_NEWLIB)
         sdk_library_add_sources(port_file_nosys.c)
     endif()
 
+    if(NOT CONFIG_NEWLIB_STANDARD)
+        # newlib nano printf config
+        if(NOT ((CONFIG_VSNPRINTF_FLOAT EQUAL 0) AND (CONFIG_VSNPRINTF_FLOAT_EX EQUAL 0)))
+            sdk_add_link_options(-u_printf_float)
+        endif()
+    endif()
 else()
     sdk_library_add_sources(syscalls_nosys.c)
+endif()
+
+if(NOT CONFIG_NEWLIB_STANDARD)
+    # newlib nano scanf config
+    if(CONFIG_SCANF_FLOAT OR CONFIG_SCANF_FLOAT_EX)
+        sdk_add_link_options(-u_scanf_float)
+    endif()
 endif()

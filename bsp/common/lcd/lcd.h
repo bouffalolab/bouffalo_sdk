@@ -44,6 +44,15 @@
 #define LCD_COLOR_DEPTH              ILI9488_DBI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) ili9488_dbi_##_func(__VA_ARGS__)
 
+#elif defined LCD_DBI_ILI9486
+
+#include "mipi_dbi/ili9486_dbi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DBI
+#define LCD_W                        ILI9486_DBI_W
+#define LCD_H                        ILI9486_DBI_H
+#define LCD_COLOR_DEPTH              ILI9486_DBI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) ili9486_dbi_##_func(__VA_ARGS__)
+
 #elif defined LCD_DBI_ILI9341
 
 #include "mipi_dbi/ili9341_dbi.h"
@@ -61,6 +70,15 @@
 #define LCD_H                        NT35510_DBI_H
 #define LCD_COLOR_DEPTH              NT35510_DBI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) nt35510_dbi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DBI_ST7796
+
+#include "mipi_dbi/st7796_dbi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DBI
+#define LCD_W                        ST7796_DBI_W
+#define LCD_H                        ST7796_DBI_H
+#define LCD_COLOR_DEPTH              ST7796_DBI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) st7796_dbi_##_func(__VA_ARGS__)
 
 #elif defined LCD_DISP_QSPI_GC9C01
 

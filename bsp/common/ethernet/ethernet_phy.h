@@ -23,6 +23,12 @@
 #ifndef __ETHERNET_PHY_H__
 #define __ETHERNET_PHY_H__
 
+#if __has_include("ethernet_phy_user.h")
+
+#include "ethernet_phy_user.h"
+
+#else
+
 #include "bflb_emac.h"
 #include "bflb_mtimer.h"
 
@@ -57,5 +63,7 @@ typedef enum emac_phy_status {
 
 emac_phy_status_t ethernet_phy_status_get(void);
 int ethernet_phy_init(struct bflb_device_s *emac, struct bflb_emac_phy_cfg_s *emac_phy_cfg);
+
+#endif
 
 #endif

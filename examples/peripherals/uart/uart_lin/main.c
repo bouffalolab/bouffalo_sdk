@@ -4,7 +4,8 @@
 
 struct bflb_device_s *uartx;
 
-static volatile uint8_t lse_int_flag = 0;
+static uint8_t uart_txbuf[128] = { 0 };
+static uint8_t uart_rxbuf[128] = { 0 };
 
 void uart_isr(int irq, void *arg)
 {
@@ -12,7 +13,6 @@ void uart_isr(int irq, void *arg)
 
     if (intstatus & UART_INTSTS_RX_LSE) {
         bflb_uart_int_clear(uartx, UART_INTCLR_RX_LSE);
-        lse_int_flag++;
         printf("enter rx lse interrupt");
     }
 }
@@ -23,6 +23,11 @@ int main(void)
     board_uartx_gpio_init();
 
     uartx = bflb_device_get_by_name(DEFAULT_TEST_UART);
+
+    for (uint8_t i = 0; i < 128; i++) {
+        uart_txbuf[i] = i;
+        uart_rxbuf[i] = 0;
+    }
 
     struct bflb_uart_config_s cfg;
 
@@ -45,13 +50,21 @@ int main(void)
     bflb_irq_attach(uartx->irq_num, uart_isr, NULL);
     bflb_irq_enable(uartx->irq_num);
 
-    bflb_uart_putchar(uartx, 0xff);
-    bflb_uart_putchar(uartx, 0x1);
+    for (uint8_t i = 0; i < 128; i++) {
+        bflb_uart_putchar(uartx, uart_txbuf[i]);
+        while (bflb_uart_feature_control(uartx, UART_CMD_GET_RX_FIFO_CNT, 1) == 0) {
+        }
+        uart_rxbuf[i] = bflb_uart_getchar(uartx);
+    }
+    printf("All data arrived\r\n");
+
+    for (uint8_t j = 0; j < 128; j++) {
+        if (uart_txbuf[j] != uart_rxbuf[j]) {
+            printf("check fail, %d tx: %02x, rx: %02x\r\n", j, uart_txbuf[j], uart_rxbuf[j]);
+        }
+    }
 
     while (1) {
-        if (lse_int_flag) {
-            lse_int_flag = 0;
-            printf("RX lin error interrupt\n");
-        }
+        bflb_mtimer_delay_ms(2000);
     }
 }

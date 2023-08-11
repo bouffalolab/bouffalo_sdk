@@ -62,13 +62,14 @@
 #include LWIP_HOOK_FILENAME
 #endif
 
+#if ARP_TIMER_PRECISE_NEEDED
 /**
  * bouffalo lp change
  * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
  */
 static void update_arp_timer_available(void);
 static void enable_arp_timer_available(void);
-/** bouffalo lp change end */
+#endif
 /** Re-request a used ARP entry 1 minute before it would expire to prevent
  *  breaking a steadily used connection because the ARP entry timed out. */
 #define ARP_AGE_REREQUEST_USED_UNICAST   (ARP_MAXAGE - 30)
@@ -81,6 +82,9 @@ static void enable_arp_timer_available(void);
  *  @internal Keep this number at least 2, otherwise it might
  *  run out instantly if the timeout occurs directly after a request.
  */
+#if !ARP_TIMER_PRECISE_NEEDED
+#define ARP_MAXPENDING 5
+#else
 /**
  * bouffalo lp change
  * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
@@ -88,7 +92,7 @@ static void enable_arp_timer_available(void);
  // unit: times (use etharp_entry.ctime)
  // ARP_Pending_Timeout = 5 sec = 5 * 1000 / ARP_TMR_INTERVAL(1000ms)
 #define ARP_MAXPENDING (5 * 1000 / ARP_TMR_INTERVAL)
-/** bouffalo lp change end */
+#endif
 
 /** ARP states */
 enum etharp_state {
@@ -115,12 +119,13 @@ struct etharp_entry {
   struct eth_addr ethaddr;
   u16_t ctime;
   u8_t state;
+#if ARP_TIMER_PRECISE_NEEDED
   /**
   * bouffalo lp change
   * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
   */
   u32_t sec_time;
-  /** bouffalo lp change end */
+#endif
 };
 
 static struct etharp_entry arp_table[ARP_TABLE_SIZE];
@@ -220,12 +225,13 @@ etharp_tmr(void)
   int i;
 
   LWIP_DEBUGF(ETHARP_DEBUG, ("etharp_timer\n"));
+#if ARP_TIMER_PRECISE_NEEDED
   /**
    * bouffalo lp change
    * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
    */
   update_arp_timer_available();
-  /** bouffalo lp change end */
+#endif
 
   /* remove expired entries from the ARP table */
   for (i = 0; i < ARP_TABLE_SIZE; ++i) {
@@ -236,26 +242,31 @@ etharp_tmr(void)
 #endif /* ETHARP_SUPPORT_STATIC_ENTRIES */
        ) {
       arp_table[i].ctime++;
-
+#if !ARP_TIMER_PRECISE_NEEDED
+      if ((arp_table[i].ctime >= ARP_MAXAGE) ||
+          ((arp_table[i].state == ETHARP_STATE_PENDING)  &&
+           (arp_table[i].ctime >= ARP_MAXPENDING))) {
+#else
       /**
        * bouffalo lp change
        * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
        */
       if ((arp_table[i].state == ETHARP_STATE_PENDING)  &&
            (arp_table[i].ctime >= ARP_MAXPENDING)) {
-      /** bouffalo lp change end */
+#endif
 
         /* pending or stable entry has become old! */
         LWIP_DEBUGF(ETHARP_DEBUG, ("etharp_timer: expired %s entry %d.\n",
                                    arp_table[i].state >= ETHARP_STATE_STABLE ? "stable" : "pending", i));
         /* clean up entries that have just been expired */
         etharp_free_entry(i);
+#if ARP_TIMER_PRECISE_NEEDED
         /**
          * bouffalo lp change
          * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
          */
         update_arp_timer_available();
-        /** bouffalo lp change end */
+#endif
       } else if (arp_table[i].state == ETHARP_STATE_STABLE_REREQUESTING_1) {
         /* Don't send more than one request every 2 seconds. */
         arp_table[i].state = ETHARP_STATE_STABLE_REREQUESTING_2;
@@ -493,13 +504,14 @@ etharp_update_arp_entry(struct netif *netif, const ip4_addr_t *ipaddr, struct et
   {
     /* mark it stable */
     arp_table[i].state = ETHARP_STATE_STABLE;
+#if ARP_TIMER_PRECISE_NEEDED
     /**
      * bouffalo lp change
      * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
      */
     update_arp_timer_available();
     arp_table[i].sec_time = sys_now() / 1000;
-    /** bouffalo lp change end */
+#endif
   }
 
   /* record network interface */
@@ -800,6 +812,19 @@ etharp_output_to_arp_index(struct netif *netif, struct pbuf *q, netif_addr_idx_t
      but only if its state is ETHARP_STATE_STABLE to prevent flooding the
      network with ARP requests if this address is used frequently. */
   if (arp_table[arp_idx].state == ETHARP_STATE_STABLE) {
+#if !ARP_TIMER_PRECISE_NEEDED
+    if (arp_table[arp_idx].ctime >= ARP_AGE_REREQUEST_USED_BROADCAST) {
+      /* issue a standard request using broadcast */
+      if (etharp_request(netif, &arp_table[arp_idx].ipaddr) == ERR_OK) {
+        arp_table[arp_idx].state = ETHARP_STATE_STABLE_REREQUESTING_1;
+      }
+    } else if (arp_table[arp_idx].ctime >= ARP_AGE_REREQUEST_USED_UNICAST) {
+      /* issue a unicast request (for 15 seconds) to prevent unnecessary broadcast */
+      if (etharp_request_dst(netif, &arp_table[arp_idx].ipaddr, &arp_table[arp_idx].ethaddr) == ERR_OK) {
+        arp_table[arp_idx].state = ETHARP_STATE_STABLE_REREQUESTING_1;
+      }
+    }
+#else
     /**
      * bouffalo lp change
      * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
@@ -818,8 +843,8 @@ etharp_output_to_arp_index(struct netif *netif, struct pbuf *q, netif_addr_idx_t
         arp_table[arp_idx].state = ETHARP_STATE_STABLE_REREQUESTING_1;
       }
     }
+#endif
   }
-  /* bouffalo lp change end */
 
   return ethernet_output(netif, q, (struct eth_addr *)(netif->hwaddr), &arp_table[arp_idx].ethaddr, ETHTYPE_IP);
 }
@@ -829,7 +854,7 @@ etharp_output_to_arp_index(struct netif *netif, struct pbuf *q, netif_addr_idx_t
  *
  * For IP multicast and broadcast, corresponding Ethernet addresses
  * are selected and the packet is transmitted on the link.
- *
+ *n
  * For unicast addresses, the packet is submitted to etharp_query(). In
  * case the IP address is outside the local network, the IP address of
  * the gateway is used.
@@ -914,6 +939,7 @@ etharp_output(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
       netif_addr_idx_t etharp_cached_entry = netif->hints->addr_hint;
       if (etharp_cached_entry < ARP_TABLE_SIZE) {
 #endif /* LWIP_NETIF_HWADDRHINT */
+#if ARP_TIMER_PRECISE_NEEDED
         /**
          * bouffalo lp change
          * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
@@ -923,7 +949,7 @@ etharp_output(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
           LWIP_DEBUGF(ETHARP_DEBUG, ("etharp_output: expired ARP_MAXAGE etharp_cached_entry %"U16_F"", etharp_cached_entry));
           etharp_free_entry(etharp_cached_entry);
         }
-        /** bouffalo lp change end */
+#endif
         if ((arp_table[etharp_cached_entry].state >= ETHARP_STATE_STABLE) &&
 #if ETHARP_TABLE_MATCH_NETIF
             (arp_table[etharp_cached_entry].netif == netif) &&
@@ -940,6 +966,9 @@ etharp_output(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
 
     /* find stable entry: do this here since this is a critical path for
        throughput and etharp_find_entry() is kind of slow */
+#if !ARP_TIMER_PRECISE_NEEDED
+    for (i = 0; i < ARP_TABLE_SIZE; i++) {
+#else
     /**
      * bouffalo lp change
      * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
@@ -952,7 +981,7 @@ etharp_output(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
         /* clean up entries that have just been expired */
         etharp_free_entry(i);
       }
-      /** bouffalo lp change end */
+#endif
       if ((arp_table[i].state >= ETHARP_STATE_STABLE) &&
 #if ETHARP_TABLE_MATCH_NETIF
           (arp_table[i].netif == netif) &&
@@ -1054,12 +1083,13 @@ etharp_query(struct netif *netif, const ip4_addr_t *ipaddr, struct pbuf *q)
 
   /* do we have a new entry? or an implicit query request? */
   if (is_new_entry || (q == NULL)) {
+#if ARP_TIMER_PRECISE_NEEDED
     /**
      * bouffalo lp change
      * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
      */
     enable_arp_timer_available();
-    /* bouffalo lp change end */
+#endif
     /* try to resolve it; send out ARP request */
     result = etharp_request(netif, ipaddr);
     if (result != ERR_OK) {
@@ -1286,6 +1316,7 @@ etharp_request(struct netif *netif, const ip4_addr_t *ipaddr)
   return etharp_request_dst(netif, ipaddr, &ethbroadcast);
 }
 
+#if ARP_TIMER_PRECISE_NEEDED
 /**
  * bouffalo lp change
  * Stop ARP TMR after arp_entry stable, check and free arp_entry when etharp_output
@@ -1311,5 +1342,5 @@ static void enable_arp_timer_available()
   LWIP_DEBUGF(ETHARP_DEBUG, ("enable_arp_timer_available"));
   sys_timeouts_set_timer_enable(true, etharp_tmr);
 }
-/** bouffalo lp change end */
+#endif
 #endif /* LWIP_IPV4 && LWIP_ARP */

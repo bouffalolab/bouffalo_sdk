@@ -72,7 +72,7 @@
 /* Check if timer's expiry time is greater than time and care about u32_t wraparounds */
 #define TIME_LESS_THAN(t, compare_to) ( (((u32_t)((t)-(compare_to))) > LWIP_MAX_TIMEOUT) ? 1 : 0 )
 
-#if LWIP_TCP
+#if LWIP_TCP && TCP_TIMER_PRECISE_NEEDED
 static void tcpip_tcp_slow_timer(void);
 static void tcpip_tcp_fast_timer(void);
 static bool tcp_timer_calculate_next_wake(u32_t * next_wake_ms);
@@ -84,8 +84,12 @@ struct lwip_cyclic_timer lwip_cyclic_timers[] = {
 #if LWIP_TCP
   /* The TCP timer is a special case: it does not have to run always and
      is triggered to start from TCP using tcp_timer_needed() */
+#if !TCP_TIMER_PRECISE_NEEDED
+  {LWIP_TIMER_STATUS_RUNNING, TCP_TMR_INTERVAL, HANDLER(tcp_tmr)},
+#else
   {LWIP_TIMER_STATUS_RUNNING, TCP_SLOW_INTERVAL, HANDLER(tcpip_tcp_slow_timer)},
   {LWIP_TIMER_STATUS_RUNNING, TCP_FAST_INTERVAL, HANDLER(tcpip_tcp_fast_timer)},
+#endif
 #endif /* LWIP_TCP */
 #if LWIP_IPV4
 #if IP_REASSEMBLY
@@ -128,12 +132,13 @@ const int lwip_num_cyclic_timers = LWIP_ARRAYSIZE(lwip_cyclic_timers);
 /** The one and only timeout list */
 static struct sys_timeo *next_timeout;
 
+#if TCP_TIMER_PRECISE_NEEDED
 /**
  * bouffalo lp change
  * Trigger tcpip_thread fetch mbox, then wait new shorter timer
  */
 static u32_t cur_mbox_fetch_sleeptime;
-/** bouffalo lp change end */
+#endif
 
 /**
 * bouffalo lp change
@@ -142,7 +147,6 @@ static u32_t cur_mbox_fetch_sleeptime;
 #include "FreeRTOS.h"
 #include "timers.h"
 extern u32_t tcp_ticks;
-/** bouffalo lp change end */
 
 static u32_t current_timeout_due_time;
 
@@ -155,7 +159,8 @@ sys_timeouts_get_next_timeout(void)
 #endif
 
 #if LWIP_TCP
-static char tcpip_timer_pending = 0;
+/** global variable that shows if the tcp timer is currently scheduled or not */
+static int tcpip_tcp_timer_active = 0;
 
 void tcpip_tmr_compensate_tick(void)
 {
@@ -172,11 +177,28 @@ void tcpip_tmr_compensate_tick(void)
   }
 }
 
+#if !TCP_TIMER_PRECISE_NEEDED
 /**
  * Timer callback function that calls tcp_tmr() and reschedules itself.
  *
  * @param arg unused argument
  */
+static void
+tcpip_tcp_timer(void *arg)
+{
+  LWIP_UNUSED_ARG(arg);
+  /* call TCP timer handler */
+  tcp_tmr();
+  /* timer still needed? */
+  if (tcp_active_pcbs || tcp_tw_pcbs) {
+    /* restart timer */
+    sys_timeout(TCP_TMR_INTERVAL, tcpip_tcp_timer, NULL);
+  } else {
+    /* disable timer */
+    tcpip_tcp_timer_active = 0;
+  }
+}
+#else
 static void
 tcpip_tcp_slow_timer(void)
 {
@@ -187,7 +209,7 @@ tcpip_tcp_slow_timer(void)
 
   /* call TCP timer handler */
   tcp_slowtmr();
-  tcpip_timer_pending = 0;
+  tcpip_tcp_timer_active = 0;
 
   /* timer still needed? */
   /**
@@ -217,7 +239,7 @@ tcpip_tcp_fast_timer(void)
 
   /* call TCP timer handler */
   tcp_fasttmr();
-  tcpip_timer_pending = 0;
+  tcpip_tcp_timer_active = 0;
 
   /* timer still needed? */
   /**
@@ -236,6 +258,7 @@ tcpip_tcp_fast_timer(void)
     LWIP_DEBUGF(TCP_DEBUG, ("tcpip_tcp_timer: do nothing\n"));
   }
 }
+#endif
 
 /**
  * Called from TCP_REG when registering a new PCB:
@@ -248,15 +271,20 @@ tcp_timer_needed(void)
   LWIP_ASSERT_CORE_LOCKED();
 
   /* timer is off but needed again? */
-  if (tcpip_timer_pending == 0 && (tcp_active_pcbs || tcp_tw_pcbs)) {
+  if (!tcpip_tcp_timer_active && (tcp_active_pcbs || tcp_tw_pcbs)) {
+    /* enable and start timer */
+    tcpip_tcp_timer_active = 1;
+#if !TCP_TIMER_PRECISE_NEEDED
+    sys_timeout(TCP_TMR_INTERVAL, tcpip_tcp_timer, NULL);
+#else
     LWIP_DEBUGF(TCP_DEBUG, ("tcp_timer_needed: start tcp timer\n"));
-    tcpip_timer_pending = 1;
     /* (re)start timer */
     sys_untimeout((sys_timeout_handler)tcpip_tcp_slow_timer, NULL);
     sys_timeout(TCP_SLOW_INTERVAL, (sys_timeout_handler)tcpip_tcp_slow_timer, NULL);
 
     sys_untimeout((sys_timeout_handler)tcpip_tcp_fast_timer, NULL);
     sys_timeout(TCP_FAST_INTERVAL, (sys_timeout_handler)tcpip_tcp_fast_timer, NULL);
+#endif
   }
 }
 #endif /* LWIP_TCP */
@@ -337,23 +365,23 @@ lwip_cyclic_timer(void *arg)
    * because the cyclic->handler may change the cyclic->status value
    */
   if (LWIP_TIMER_STATUS_RUNNING == cyclic->status) {
-      now = sys_now();
-      next_timeout_time = (u32_t)(current_timeout_due_time + cyclic->interval_ms);  /* overflow handled by TIME_LESS_THAN macro */
-      if (TIME_LESS_THAN(next_timeout_time, now)) {
-        /* timer would immediately expire again -> "overload" -> restart without any correction */
+    now = sys_now();
+    next_timeout_time = (u32_t)(current_timeout_due_time + cyclic->interval_ms);  /* overflow handled by TIME_LESS_THAN macro */
+    if (TIME_LESS_THAN(next_timeout_time, now)) {
+      /* timer would immediately expire again -> "overload" -> restart without any correction */
 #if LWIP_DEBUG_TIMERNAMES
-        sys_timeout_abs((u32_t)(now + cyclic->interval_ms), lwip_cyclic_timer, arg, cyclic->handler_name);
+      sys_timeout_abs((u32_t)(now + cyclic->interval_ms), lwip_cyclic_timer, arg, cyclic->handler_name);
 #else
-        sys_timeout_abs((u32_t)(now + cyclic->interval_ms), lwip_cyclic_timer, arg);
+      sys_timeout_abs((u32_t)(now + cyclic->interval_ms), lwip_cyclic_timer, arg);
 #endif
-      } else {
+    } else {
         /* correct cyclic interval with handler execution delay and sys_check_timeouts jitter */
 #if LWIP_DEBUG_TIMERNAMES
-        sys_timeout_abs(next_timeout_time, lwip_cyclic_timer, arg, cyclic->handler_name);
+      sys_timeout_abs(next_timeout_time, lwip_cyclic_timer, arg, cyclic->handler_name);
 #else
-        sys_timeout_abs(next_timeout_time, lwip_cyclic_timer, arg);
+      sys_timeout_abs(next_timeout_time, lwip_cyclic_timer, arg);
 #endif
-      }
+    }
   } else if (LWIP_TIMER_STATUS_STOPPING == cyclic->status) {
     cyclic->status = LWIP_TIMER_STATUS_IDLE;
   }
@@ -365,7 +393,11 @@ void sys_timeouts_init(void)
 {
   size_t i;
   /* tcp_tmr() at index 0 is started on demand */
+#if !TCP_TIMER_PRECISE_NEEDED
+  for (i = (LWIP_TCP ? 1 : 0); i < LWIP_ARRAYSIZE(lwip_cyclic_timers); i++) {
+#else
   for (i = (LWIP_TCP ? 2 : 0); i < LWIP_ARRAYSIZE(lwip_cyclic_timers); i++) {
+#endif
     /* we have to cast via size_t to get rid of const warning
       (this is OK as cyclic_timer() casts back to const* */
     /**
@@ -379,6 +411,7 @@ void sys_timeouts_init(void)
   }
 }
 
+#if TCP_TIMER_PRECISE_NEEDED
 /**
  * bouffalo lp change
  * Trigger tcpip_thread fetch mbox, then wait new shorter timer
@@ -386,7 +419,7 @@ void sys_timeouts_init(void)
 static void sys_timer_callback_for_add_timer(void *ctx) {
   LWIP_DEBUGF(TIMERS_DEBUG, ("sys_timer_callback_for_add_timer\n"));
 }
-/** bouffalo lp change end */
+#endif
 
 /**
  * Create a one-shot timer (aka timeout). Timeouts are processed in the
@@ -419,6 +452,7 @@ sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
 #else
   sys_timeout_abs(next_timeout_time, handler, arg);
 #endif
+#if TCP_TIMER_PRECISE_NEEDED
   /**
    * bouffalo lp change
    * Trigger tcpip_thread fetch mbox, then wait new shorter timer
@@ -426,7 +460,7 @@ sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
   if (cur_mbox_fetch_sleeptime != 0 && msecs < cur_mbox_fetch_sleeptime) {
     tcpip_callback_with_block(sys_timer_callback_for_add_timer, NULL, 0);
   }
-  /** bouffalo lp change end */
+#endif
 }
 
 /**
@@ -583,26 +617,32 @@ sys_timeouts_sleeptime(void)
   LWIP_ASSERT_CORE_LOCKED();
 
   if (next_timeout == NULL) {
+#if TCP_TIMER_PRECISE_NEEDED
     cur_mbox_fetch_sleeptime = SYS_TIMEOUTS_SLEEPTIME_INFINITE;
+#endif
     return SYS_TIMEOUTS_SLEEPTIME_INFINITE;
   }
   now = sys_now();
   if (TIME_LESS_THAN(next_timeout->time, now)) {
+#if TCP_TIMER_PRECISE_NEEDED
     cur_mbox_fetch_sleeptime = 0;
+#endif
     return 0;
   } else {
     u32_t ret = (u32_t)(next_timeout->time - now);
+#if TCP_TIMER_PRECISE_NEEDED
     /**
      * bouffalo lp change
      * Trigger tcpip_thread fetch mbox, then wait new shorter timer
      */
     cur_mbox_fetch_sleeptime = ret;
-    /** bouffalo lp change end */
+#endif
     LWIP_ASSERT("invalid sleeptime", ret <= LWIP_MAX_TIMEOUT);
     return ret;
   }
 }
 
+#if TCP_TIMER_PRECISE_NEEDED
 /**
  * bouffalo lp change
  * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
@@ -635,9 +675,9 @@ static bool tcp_timer_calculate_next_wake(u32_t * next_wake_ms)
 
     if (pcb->persist_backoff > 0) {
       u8_t backoff_cnt = tcp_persist_backoff[pcb->persist_backoff - 1];
-      LWIP_DEBUGF(TCP_DEBUG, ("calculate_next_wake: persist time timeout %ldms\n", (backoff_cnt - (tcp_ticks - pcb->persist_last)) * TCP_SLOW_INTERVAL));
+      LWIP_DEBUGF(TCP_DEBUG, ("calculate_next_wake: persist time timeout %ldms\n", (backoff_cnt - (tcp_ticks - pcb->persist_cnt)) * TCP_SLOW_INTERVAL));
 
-      min_wake_time = LWIP_MIN((backoff_cnt - (tcp_ticks - pcb->persist_last)) * TCP_SLOW_INTERVAL, min_wake_time);
+      min_wake_time = LWIP_MIN((backoff_cnt - (tcp_ticks - pcb->persist_cnt)) * TCP_SLOW_INTERVAL, min_wake_time);
     }
 
     if (pcb->state == FIN_WAIT_1) {
@@ -701,7 +741,9 @@ static bool tcp_timer_calculate_next_wake(u32_t * next_wake_ms)
     return true;
   }
 }
+#endif
 
+#if TCP_TIMER_PRECISE_NEEDED
 void tcp_keepalive_os_timeout(TimerHandle_t timer)
 {
   struct tcp_pcb *pcb = (struct tcp_pcb *)pvTimerGetTimerID(timer);
@@ -744,7 +786,7 @@ void tcp_keepalive_timer_stop(struct tcp_pcb *pcb)
     }
   }
 }
-/** bouffalo lp change end */
+#endif
 #else /* LWIP_TIMERS && !LWIP_TIMERS_CUSTOM */
 /* Satisfy the TCP code which calls this function */
 void

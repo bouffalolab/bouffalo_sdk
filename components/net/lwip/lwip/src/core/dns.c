@@ -313,7 +313,9 @@ static void dns_call_found(u8_t idx, ip_addr_t *addr, struct pbuf *p);
 #else
 static void dns_call_found(u8_t idx, ip_addr_t *addr);
 #endif
+#if DNS_TIMER_PRECISE_NEEDED
 static bool dns_check_table_empty(void);
+#endif
 
 /*-----------------------------------------------------------------------------
  * Globals
@@ -430,16 +432,19 @@ void
 dns_tmr(void)
 {
   LWIP_DEBUGF(DNS_DEBUG, ("dns_tmr: dns_check_entries\n"));
+#if !DNS_TIMER_PRECISE_NEEDED
+  dns_check_entries();
+#else
+  /**
+   * bouffalo lp change
+   * Disable DNS timer when it is not useful.
+   */
   if (dns_check_table_empty()) {
-    /**
-     * bouffalo lp change
-     * Disable DNS timer when it is not useful.
-     */
     sys_timeouts_set_timer_enable(false, dns_tmr);
-    /** bouffalo lp change end */
   } else {
     dns_check_entries();
   }
+#endif
 }
 
 #if DNS_LOCAL_HOSTLIST
@@ -1210,6 +1215,7 @@ dns_check_entries(void)
   }
 }
 
+#if DNS_TIMER_PRECISE_NEEDED
 /* bouffalo lp change
  * Disable DNS timer when it is not useful.
  **/
@@ -1226,7 +1232,7 @@ dns_check_table_empty(void)
 
   return ((i == DNS_TABLE_SIZE) ? true : false);
 }
-/* bouffalo lp change end */
+#endif
 
 /**
  * Save TTL and call dns_call_found for correct response.
@@ -1662,12 +1668,13 @@ dns_enqueue(const char *name, size_t hostnamelen, dns_found_callback found,
 
   /* force to send query without waiting timer */
   dns_check_entry(i);
+#if DNS_TIMER_PRECISE_NEEDED
   /**
    * bouffalo lp change
    * Enable DNS timer when it is useful.
    */
   sys_timeouts_set_timer_enable(true, dns_tmr);
-  /** bouffalo lp change end */
+#endif
 
   /* dns query is enqueued */
   return ERR_INPROGRESS;

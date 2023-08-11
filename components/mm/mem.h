@@ -102,6 +102,7 @@ void kfree(void *addr);
 uint32_t kfree_size(void);
 
 void pmem_init(void *heapstart, size_t heapsize);
+uint32_t pfree_size(void);
 
 /* private api for mm*/
 

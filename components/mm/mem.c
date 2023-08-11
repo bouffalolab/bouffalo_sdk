@@ -248,9 +248,22 @@ uint32_t kfree_size(void)
 {
     struct meminfo info;
 
+    bflb_mem_usage(KMEM_HEAP, &info);
+
+    return info.free_size;
+}
+
+uint32_t pfree_size(void)
+{
+#if defined(CONFIG_PSRAM) && defined(BL616) // only for bl618
+    struct meminfo info;
+
     bflb_mem_usage(PMEM_HEAP, &info);
 
     return info.free_size;
+#else
+    return 0;
+#endif
 }
 
 #ifdef CONFIG_SHELL

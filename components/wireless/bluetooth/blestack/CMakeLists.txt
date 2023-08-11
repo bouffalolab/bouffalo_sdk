@@ -206,10 +206,16 @@ sdk_library_add_sources_ifdef(CONFIG_BT_SPP_SERVER
 # 					src/cli_cmds/bredr_cli_cmds.c \
 # 					src/cli_cmds/pts_cli_cmds.c
 # endif
-if(CONFIG_BT_STACK_CLI)
+
+if(CONFIG_BT_BREDR)
 sdk_library_add_sources_ifdef(CONFIG_BT src/cli_cmds/bredr_cli_cmds.c)
+endif()
+
+if(CONFIG_BT_STACK_CLI)
 sdk_library_add_sources_ifdef(CONFIG_BLE src/cli_cmds/ble_cli_cmds.c)
+if(CONFIG_BT_STACK_PTS)
 sdk_library_add_sources_ifdef(CONFIG_BT_STACK_PTS src/cli_cmds/pts_cli_cmds.c)
+endif()
 endif()
 
 # ifeq ($(CONFIG_BT_BAS_SERVER),1)

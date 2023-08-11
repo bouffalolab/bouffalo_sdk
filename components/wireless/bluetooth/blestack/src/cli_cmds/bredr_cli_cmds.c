@@ -27,13 +27,29 @@
 #include <hfp_hf.h>
 #endif
 
+#if defined(CONFIG_SHELL)
+#include "shell.h"
+#else
 #include "cli.h"
+#endif /* CONFIG_SHELL */
 
 #if PCM_PRINTF
 #include "oi_codec_sbc.h"
 #endif
 
 #include "bt_log.h"
+
+#if defined(CONFIG_SHELL)
+#define BT_CLI(func) static void bredr_##func(int argc, char **argv)
+#define BT_A2DP_CLI(func) static void a2dp_##func(int argc, char **argv)
+#define BT_AVRCP_CLI(func) static void avrcp_##func(int argc, char **argv)
+#define BT_HFP_CLI(func) static void hfp_##func(int argc, char **argv)
+#else
+#define BT_CLI(func) static void bredr_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+#define BT_A2DP_CLI(func) static void a2dp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+#define BT_AVRCP_CLI(func) static void avrcp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+#define BT_HFP_CLI(func) static void hfp_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+#endif
 
 static void bredr_connected(struct bt_conn *conn, u8_t err);
 static void bredr_disconnected(struct bt_conn *conn, u8_t reason);
@@ -74,69 +90,136 @@ static struct avrcp_callback avrcp_callbacks =
 #if PCM_PRINTF
 static void pcm(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
 #endif
-static void bredr_init(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
-static void bredr_write_local_name(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_write_eir(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_discoverable(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_connectable(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_remote_name(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_l2cap_send_test_data(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_l2cap_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_l2cap_echo_req(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void bredr_security(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
+BT_CLI(init);
+BT_CLI(write_local_name);
+BT_CLI(write_eir);
+BT_CLI(discoverable);
+BT_CLI(connectable);
+BT_CLI(connect);
+BT_CLI(disconnect);
+BT_CLI(remote_name);
+BT_CLI(l2cap_send_test_data);
+BT_CLI(l2cap_disconnect);
+BT_CLI(l2cap_echo_req);
+BT_CLI(security);
 
 #if BR_EDR_PTS_TEST
-static void bredr_sdp_client_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
+BT_CLI(sdp_client_connect);
 #endif
 
 #if CONFIG_BT_A2DP
-static void a2dp_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
+BT_A2DP_CLI(connect);
 #if BR_EDR_PTS_TEST
-static void a2dp_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void a2dp_start_discovery(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void a2dp_get_cap(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void a2dp_set_conf(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void a2dp_close_stream(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void a2dp_open_stream(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void a2dp_start_stream(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void a2dp_suspend_stream(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void a2dp_delay_report(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void avdtp_set_conf_reject(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
+BT_A2DP_CLI(disconnect);
+BT_A2DP_CLI(start_discovery);
+BT_A2DP_CLI(get_cap);
+BT_A2DP_CLI(set_conf);
+BT_A2DP_CLI(close_stream);
+BT_A2DP_CLI(open_stream);
+BT_A2DP_CLI(start_stream);
+BT_A2DP_CLI(suspend_stream);
+BT_A2DP_CLI(delay_report);
+BT_A2DP_CLI(set_conf_reject);
 #endif
 #endif
 
 #if CONFIG_BT_AVRCP
-static void avrcp_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void avrcp_pth_key(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void avrcp_pth_key_act(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void avrcp_change_vol(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void avrcp_get_play_status(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
+BT_AVRCP_CLI(connect);
+BT_AVRCP_CLI(pth_key);
+BT_AVRCP_CLI(pth_key_act);
+BT_AVRCP_CLI(change_vol);
+BT_AVRCP_CLI(get_play_status);
 #endif
 
 #if CONFIG_BT_HFP
-static void hfp_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_hf_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void sco_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_answer(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_terminate_call(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_outgoint_call(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_outgoint_call_with_mem_loc(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_outgoint_call_last_number_dialed(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_disable_nrec(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_voice_recognition(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_voice_req_phone_num(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_accept_incoming_caller(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_set_mic_volume(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_set_speaker_volume(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_query_list_calls(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_response_call(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_subscriber_number_info(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_hf_send_indicator(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-static void hfp_hf_update_indicator(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
+BT_HFP_CLI(connect);
+BT_HFP_CLI(hf_disconnect);
+BT_HFP_CLI(sco_connect);
+BT_HFP_CLI(answer);
+BT_HFP_CLI(terminate_call);
+BT_HFP_CLI(outgoint_call);
+BT_HFP_CLI(outgoint_call_with_mem_loc);
+BT_HFP_CLI(outgoint_call_last_number_dialed);
+BT_HFP_CLI(disable_nrec);
+BT_HFP_CLI(voice_recognition);
+BT_HFP_CLI(voice_req_phone_num);
+BT_HFP_CLI(accept_incoming_caller);
+BT_HFP_CLI(set_mic_volume);
+BT_HFP_CLI(set_speaker_volume);
+BT_HFP_CLI(query_list_calls);
+BT_HFP_CLI(response_call);
+BT_HFP_CLI(subscriber_number_info);
+BT_HFP_CLI(hf_send_indicator);
+BT_HFP_CLI(hf_update_indicator);
 #endif
 
+#if defined(CONFIG_SHELL)
+    SHELL_CMD_EXPORT_ALIAS(bredr_init,bredr_init,BREDR Initialize Parameter:[Null]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_write_local_name,bredr_name,bredr_name Parameter:[name]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_write_eir,bredr_eir,bredr_eir Parameter:[Null]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_connectable,bredr_connectable,
+                            bredr_connectable Parameter:[1:enable 0:disable]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_discoverable,bredr_discoverable,
+                            bredr_discoverable Parameter:[1:enable 0:disable]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_connect,bredr_connect,
+                            bredr_connect Parameter:[address eg.18bf591245]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_disconnect,bredr_disconnect,
+                            bredr_disconnect Parameter:[address eg.18bf591245]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_remote_name,bredr_remote_name,
+                            bredr_remote_name Parameter:[Null]);
+    SHELL_CMD_EXPORT_ALIAS(bredr_l2cap_send_test_data,bredr_l2cap_send_test_data,"");
+    SHELL_CMD_EXPORT_ALIAS(bredr_l2cap_disconnect,bredr_l2cap_disconnect_req,"");
+    SHELL_CMD_EXPORT_ALIAS(bredr_security,bredr_security,"");
+    #if BR_EDR_PTS_TEST
+    SHELL_CMD_EXPORT_ALIAS(bredr_sdp_client_connect,bredr_sdp_client_connect,"");
+    #endif
+    #if CONFIG_BT_A2DP
+    SHELL_CMD_EXPORT_ALIAS(a2dp_connect,a2dp_connect,"");
+    #if BR_EDR_PTS_TEST
+    SHELL_CMD_EXPORT_ALIAS(a2dp_disconnect,a2dp_disconnect,"");
+    SHELL_CMD_EXPORT_ALIAS(a2dp_start_discovery,a2dp_start_discovery,"");
+    SHELL_CMD_EXPORT_ALIAS(a2dp_get_cap,a2dp_get_cap,"");
+    SHELL_CMD_EXPORT_ALIAS(a2dp_set_conf,a2dp_set_conf,"");
+    SHELL_CMD_EXPORT_ALIAS(a2dp_open_stream,a2dp_open_stream,"");
+    SHELL_CMD_EXPORT_ALIAS(a2dp_close_stream,a2dp_close_stream,"");
+    SHELL_CMD_EXPORT_ALIAS(a2dp_start_stream,a2dp_start_stream,"");
+    SHELL_CMD_EXPORT_ALIAS(a2dp_suspend_stream,a2dp_suspend_stream,"");
+    SHELL_CMD_EXPORT_ALIAS(a2dp_delay_report,a2dp_delay_report,"");
+    SHELL_CMD_EXPORT_ALIAS(avdtp_set_conf_reject,avdtp_set_conf_reject,"");
+    #endif
+    #endif
+
+    #if CONFIG_BT_AVRCP
+    SHELL_CMD_EXPORT_ALIAS(avrcp_connect,avrcp_connect,"");
+    SHELL_CMD_EXPORT_ALIAS(avrcp_pth_key,avrcp_pth_key,"");
+    SHELL_CMD_EXPORT_ALIAS(avrcp_pth_key_act,avrcp_pth_key_act,"");
+    SHELL_CMD_EXPORT_ALIAS(avrcp_change_vol,avrcp_change_vol,"");
+    SHELL_CMD_EXPORT_ALIAS(avrcp_get_play_status,avrcp_get_play_status,"");
+    #endif
+
+    #if CONFIG_BT_HFP
+    SHELL_CMD_EXPORT_ALIAS(hfp_connect,hfp_connect,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_hf_disconnect,hfp_hf_disconnect,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_sco_connect,hfp_sco_connect,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_answer,hfp_answer,"");
+     SHELL_CMD_EXPORT_ALIAS(hfp_terminate_call,hfp_terminate_call,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_outgoint_call,hfp_outgoint_call,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_outgoint_call_with_mem_loc,hfp_outgoint_call_with_mem_loc,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_outgoint_call_last_number_dialed,hfp_outgoint_call_last_number_dialed,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_disable_nrec,hfp_disable_nrec,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_voice_recognition,hfp_voice_recognition,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_voice_req_phone_num,hfp_voice_req_phone_num,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_accept_incoming_caller,hfp_accept_incoming_caller,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_set_mic_volume,hfp_set_mic_volume,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_set_speaker_volume,hfp_set_speaker_volume,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_query_list_calls,hfp_query_list_calls,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_response_call,hfp_response_call,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_subscriber_number_info,hfp_subscriber_number_info,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_hf_send_indicator,hfp_hf_send_indicator,"");
+    SHELL_CMD_EXPORT_ALIAS(hfp_hf_update_indicator,hfp_hf_update_indicator,"");
+    #endif
+
+#else
 const struct cli_command bredr_cmd_set[] STATIC_CLI_CMD_ATTRIBUTE = {
     #if PCM_PRINTF
     {"pcm", "", pcm},
@@ -183,7 +266,7 @@ const struct cli_command bredr_cmd_set[] STATIC_CLI_CMD_ATTRIBUTE = {
     #if CONFIG_BT_HFP
     {"hfp_connect", "", hfp_connect},
     {"hfp_diconnect","",hfp_hf_disconnect},
-    {"sco_connect", "", sco_connect},
+    {"sco_connect", "", hfp_sco_connect},
     {"hfp_answer", "", hfp_answer},
     {"hfp_terminate_call", "", hfp_terminate_call},
     {"hfp_outgoing_call", "", hfp_outgoint_call},
@@ -202,7 +285,7 @@ const struct cli_command bredr_cmd_set[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"hfp_hf_update_ind","",hfp_hf_update_indicator},
     #endif
 };
-
+#endif /* CONFIG_SHELL */
 
 #if PCM_PRINTF
 extern OI_BYTE sbc_frame[];
@@ -213,9 +296,6 @@ OI_INT16 cool_edit[600000];
 OI_UINT32 byte_index = 0;
 static void pcm(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
 {
-    //a2dp_sbc_decode_init();
-    //a2dp_sbc_decode_process(sbc_frame, sbc_frame_len);
-
     printf("pcm data count: %d \n", byte_index);
 
     OI_UINT32 samps = byte_index / sizeof(OI_INT16);
@@ -226,15 +306,13 @@ static void pcm(char *p_write_buffer, int write_buffer_len, int argc, char **arg
     printf("SAMPLERATE: 44100\n");
     printf("NORMALIZED: FALSE\n");
 
-    for(int i = 0; i < samps; i ++)
-    {
+    for (int i = 0; i < samps; i ++) {
         printf("%d\n", cool_edit[i]);
     }
-
 }
 #endif
 
-static void bredr_init(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+BT_CLI(init)
 {
     if(init){
         printf("bredr has initialized\n");
@@ -302,7 +380,7 @@ static void bredr_disconnected(struct bt_conn *conn, u8_t reason)
     }
 }
 
-static void bredr_write_local_name(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(write_local_name)
 {
     int err;
     char *name = "BL-BT";
@@ -315,7 +393,7 @@ static void bredr_write_local_name(char *p_write_buffer, int write_buffer_len, i
     }
 }
 
-static void bredr_write_eir(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(write_eir)
 {
     int err;
     char *name = "Bouffalolab-classic-bluetooth";
@@ -340,7 +418,7 @@ static void bredr_write_eir(char *p_write_buffer, int write_buffer_len, int argc
     }
 }
 
-static void bredr_discoverable(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(discoverable)
 {
     int err;
     uint8_t action;
@@ -368,7 +446,7 @@ static void bredr_discoverable(char *p_write_buffer, int write_buffer_len, int a
     }
 }
 
-static void bredr_connectable(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(connectable)
 {
     int err;
     uint8_t action;
@@ -396,7 +474,7 @@ static void bredr_connectable(char *p_write_buffer, int write_buffer_len, int ar
     }
 }
 
-static void bredr_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(connect)
 {
     struct bt_conn *conn;
     u8_t  addr_val[6];
@@ -420,7 +498,8 @@ static void bredr_connect(char *p_write_buffer, int write_buffer_len, int argc, 
     }
 }
 
-static void bredr_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+
+BT_CLI(disconnect)
 {
     if(!default_conn){
         printf("Not connected.\n");
@@ -445,7 +524,7 @@ void remote_name(const char *name)
     }
 }
 
-static void bredr_remote_name(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(remote_name)
 {
     u8_t  addr_val[6];
     bt_addr_t peer_addr;
@@ -465,7 +544,7 @@ static void bredr_remote_name(char *p_write_buffer, int write_buffer_len, int ar
     }
 }
 
-static void bredr_l2cap_send_test_data(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(l2cap_send_test_data)
 {
     int err = 0;
     uint8_t test_data[10]={0x01, 0x02, 0x3,0x04,0x05,0x06,0x07,0x08,0x09,0xa0};
@@ -482,7 +561,7 @@ static void bredr_l2cap_send_test_data(char *p_write_buffer, int write_buffer_le
         printf("Send l2cap test data successfully\r\n");
 }
 
-static void bredr_l2cap_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(l2cap_disconnect)
 {
     int err = 0;
     uint16_t tx_cid;
@@ -497,19 +576,18 @@ static void bredr_l2cap_disconnect(char *p_write_buffer, int write_buffer_len, i
         printf("Send l2cap disconnect request successfully\r\n");
 }
 
-static void bredr_l2cap_echo_req(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(l2cap_echo_req)
 {
     int err = 0;
 
     err = bt_l2cap_br_echo_req(default_conn);
-
-    if(err)
+    if (err)
         printf("Fail to send l2cap echo request with error (%d)\r\n", err);
     else
         printf("Send l2cap echo request successfully\r\n");
 }
 
-static void bredr_security(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
+BT_CLI(security)
 {
     int err;
     u8_t sec_level = BT_SECURITY_L2;
@@ -531,12 +609,11 @@ static void bredr_security(char *pcWriteBuffer, int xWriteBufferLen, int argc, c
     }
 }
 
-
 #if BR_EDR_PTS_TEST
-extern int bt_sdp_client_connect(struct bt_conn *conn);
-static void bredr_sdp_client_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_CLI(sdp_client_connect)
 {
-    bt_sdp_client_connect(default_conn);    
+    extern int bt_sdp_client_connect(struct bt_conn *conn);
+    bt_sdp_client_connect(default_conn);
 }
 #endif
 
@@ -563,7 +640,7 @@ static void a2dp_stream(uint8_t state)
     }
 }
 
-static void a2dp_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(connect)
 {
     int ret;
 
@@ -581,7 +658,7 @@ static void a2dp_connect(char *p_write_buffer, int write_buffer_len, int argc, c
 }
 
 #if BR_EDR_PTS_TEST
-static void a2dp_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(disconnect)
 {
     int ret;
 
@@ -598,7 +675,7 @@ static void a2dp_disconnect(char *p_write_buffer, int write_buffer_len, int argc
     }
 }
 
-static void a2dp_start_discovery(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(start_discovery)
 {
     int ret;
 
@@ -615,7 +692,7 @@ static void a2dp_start_discovery(char *p_write_buffer, int write_buffer_len, int
     }
 }
 
-static void a2dp_get_cap(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(get_cap)
 {
     int ret;
 
@@ -632,7 +709,7 @@ static void a2dp_get_cap(char *p_write_buffer, int write_buffer_len, int argc, c
     }
 }
 
-static void a2dp_set_conf(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(set_conf)
 {
     int ret;
 
@@ -649,7 +726,7 @@ static void a2dp_set_conf(char *p_write_buffer, int write_buffer_len, int argc, 
     }
 }
 
-static void a2dp_close_stream(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(close_stream)
 {
     int ret;
 
@@ -666,7 +743,7 @@ static void a2dp_close_stream(char *p_write_buffer, int write_buffer_len, int ar
     }
 }
 
-static void a2dp_open_stream(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(open_stream)
 {
     int ret;
 
@@ -683,7 +760,7 @@ static void a2dp_open_stream(char *p_write_buffer, int write_buffer_len, int arg
     }
 }
 
-static void a2dp_start_stream(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(start_stream)
 {
     int ret;
 
@@ -700,7 +777,7 @@ static void a2dp_start_stream(char *p_write_buffer, int write_buffer_len, int ar
     }
 }
 
-static void a2dp_suspend_stream(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(suspend_stream)
 {
     int ret;
 
@@ -717,7 +794,7 @@ static void a2dp_suspend_stream(char *p_write_buffer, int write_buffer_len, int 
     }
 }
 
-static void a2dp_delay_report(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_A2DP_CLI(delay_report)
 {
     int ret;
 
@@ -767,24 +844,24 @@ static void avrcp_play_status(uint32_t song_len, uint32_t song_pos, uint8_t stat
     printf("%s, song length: %d, song position: %d, play status: %d \n", __func__, song_len, song_pos, status);
 }
 
-static void avrcp_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_AVRCP_CLI(connect)
 {
-    int err;
+    struct bt_avrcp *avrcp = NULL;
 
-    if(!default_conn){
+    if (!default_conn) {
         printf("Not connected.\n");
         return;
     }
 
-    err = bt_avrcp_connect(default_conn);
-    if(err) {
-        printf("avrcp connect failed, err: %d\n", err);
+    avrcp = bt_avrcp_connect(default_conn);
+    if(!avrcp) {
+        printf("avrcp connect failed\n");
     } else {
         printf("avrcp connect successfully.\n");
     }
 }
 
-static void avrcp_pth_key(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_AVRCP_CLI(pth_key)
 {
     int err;
     uint8_t key;
@@ -811,7 +888,7 @@ static void avrcp_pth_key(char *p_write_buffer, int write_buffer_len, int argc, 
     }
 }
 
-static void avrcp_pth_key_act(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_AVRCP_CLI(pth_key_act)
 {
     int err;
     uint8_t key;
@@ -839,7 +916,7 @@ static void avrcp_pth_key_act(char *p_write_buffer, int write_buffer_len, int ar
     }
 }
 
-static void avrcp_change_vol(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_AVRCP_CLI(change_vol)
 {
     int err;
     uint8_t vol;
@@ -857,7 +934,7 @@ static void avrcp_change_vol(char *p_write_buffer, int write_buffer_len, int arg
     }
 }
 
-static void avrcp_get_play_status(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_AVRCP_CLI(get_play_status)
 {
     int err;
 
@@ -904,7 +981,8 @@ static struct bt_rfcomm_dlc rfcomm_dlc = {
 	.mtu = 30,
 };
 #endif
-static void hfp_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+
+BT_HFP_CLI(connect)
 {
     int err;
 
@@ -921,7 +999,7 @@ static void hfp_connect(char *p_write_buffer, int write_buffer_len, int argc, ch
     }
 }
 
-static void sco_connect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(sco_connect)
 {
     struct bt_conn *conn = NULL;
     uint8_t sco_type;
@@ -956,7 +1034,8 @@ static void sco_connect(char *p_write_buffer, int write_buffer_len, int argc, ch
     }
 }
 
-static void hfp_answer(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(answer)
+//static void hfp_answer(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
 {
     int err = 0;
     
@@ -973,7 +1052,8 @@ static void hfp_answer(char *p_write_buffer, int write_buffer_len, int argc, cha
         
 }
 
-static void hfp_terminate_call(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(terminate_call)
+//static void hfp_terminate_call(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
 {
     int err = 0;
     
@@ -990,7 +1070,8 @@ static void hfp_terminate_call(char *p_write_buffer, int write_buffer_len, int a
         
 }
 
-static void hfp_outgoint_call(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(outgoint_call)
+//static void hfp_outgoint_call(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
 {
     int err = 0;
     
@@ -1007,7 +1088,8 @@ static void hfp_outgoint_call(char *p_write_buffer, int write_buffer_len, int ar
         
 }
 
-static void hfp_outgoint_call_with_mem_loc(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(outgoint_call_with_mem_loc)
+//static void hfp_outgoint_call_with_mem_loc(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
 {
     int err = 0;
     uint8_t phone_mem_loc = 0;
@@ -1029,10 +1111,9 @@ static void hfp_outgoint_call_with_mem_loc(char *p_write_buffer, int write_buffe
         
 }
 
-static void hfp_outgoint_call_last_number_dialed(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(outgoint_call_last_number_dialed)
 {
     int err = 0;
-    uint8_t phone_mem_loc = 0;
     char *str = "+BLDN";
     
     if(!default_conn){
@@ -1049,7 +1130,7 @@ static void hfp_outgoint_call_last_number_dialed(char *p_write_buffer, int write
         
 }
 
-static void hfp_disable_nrec(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(disable_nrec)
 {
     int err = 0;
     
@@ -1066,7 +1147,8 @@ static void hfp_disable_nrec(char *p_write_buffer, int write_buffer_len, int arg
         
 }
 
-static void hfp_voice_recognition(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(voice_recognition)
+//static void hfp_voice_recognition(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
 {
     int err = 0;
     uint8_t enable = 0;
@@ -1085,7 +1167,8 @@ static void hfp_voice_recognition(char *p_write_buffer, int write_buffer_len, in
         printf("send voice recognition AT command successfully\r\n");
 }
 
-static void hfp_voice_req_phone_num(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(voice_req_phone_num)
+//static void hfp_voice_req_phone_num(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
 {
     int err = 0;
     uint8_t enable = 0;
@@ -1104,7 +1187,7 @@ static void hfp_voice_req_phone_num(char *p_write_buffer, int write_buffer_len, 
         printf("send reqeust phone number to the AG AT command successfully\r\n");
 }
 
-static void hfp_accept_incoming_caller(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(accept_incoming_caller)
 {
     int err = 0;
     uint8_t call_id = 0;
@@ -1123,7 +1206,7 @@ static void hfp_accept_incoming_caller(char *p_write_buffer, int write_buffer_le
         printf("Accept a incoming call successfully\r\n");
 }
 
-static void hfp_set_mic_volume(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(set_mic_volume)
 {
     int err = 0;
     uint8_t vol = 0;
@@ -1147,8 +1230,7 @@ static void hfp_set_mic_volume(char *p_write_buffer, int write_buffer_len, int a
         printf("Set mic volume successfully\r\n");
 }
 
-
-static void hfp_set_speaker_volume(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(set_speaker_volume)
 {
     int err = 0;
     uint8_t vol = 0;
@@ -1172,7 +1254,7 @@ static void hfp_set_speaker_volume(char *p_write_buffer, int write_buffer_len, i
         printf("Set speaker volume successfully\r\n");
 }
 
-static void hfp_query_list_calls(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(query_list_calls)
 {
     int err = 0;
 
@@ -1188,7 +1270,7 @@ static void hfp_query_list_calls(char *p_write_buffer, int write_buffer_len, int
         printf("Query the list calls successfully\r\n");
 }
 
-static void hfp_response_call(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(response_call)
 {
     int err = 0;
     uint8_t method = 0;
@@ -1210,7 +1292,7 @@ static void hfp_response_call(char *p_write_buffer, int write_buffer_len, int ar
         printf("Response a call successfully\r\n");
 }
 
-static void hfp_subscriber_number_info(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(subscriber_number_info)
 {
     int err = 0;
 
@@ -1226,7 +1308,7 @@ static void hfp_subscriber_number_info(char *p_write_buffer, int write_buffer_le
         printf("Response a call successfully\r\n");
 }
 
-static void hfp_hf_send_indicator(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(hf_send_indicator)
 {
     int err = 0;
     uint16_t id = 0;
@@ -1246,7 +1328,7 @@ static void hfp_hf_send_indicator(char *p_write_buffer, int write_buffer_len, in
 }
 // 1,Enhanced safety : the value is 0 indicate disable it or 1 enable
 // 2,Battery Level : 0-100
-static void hfp_hf_update_indicator(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(hf_update_indicator)
 {
     uint16_t val = 0;
     int err = 0;
@@ -1265,7 +1347,7 @@ static void hfp_hf_update_indicator(char *p_write_buffer, int write_buffer_len, 
         printf("Update indicator successfully\r\n");
 }
 
-static void hfp_hf_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BT_HFP_CLI(hf_disconnect)
 {
     int err = 0;
 
@@ -1289,4 +1371,4 @@ int bredr_cli_register(void)
     // XXX NOTE: Calling this *empty* function is necessary to make cmds_user in this file to be kept in the final link.
     //aos_cli_register_commands(bredr_cmd_set, sizeof(bredr_cmd_set)/sizeof(bredr_cmd_set[0]));
     return 0;
-}	       
+}

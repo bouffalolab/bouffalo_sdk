@@ -221,6 +221,7 @@ struct bt_l2cap_fixed_chan {
 struct bt_l2cap_br_fixed_chan {
 	u16_t		cid;
 	int (*accept)(struct bt_conn *conn, struct bt_l2cap_chan **chan);
+	sys_snode_t	node;
 };
 
 #define BT_L2CAP_BR_CHANNEL_DEFINE(_name, _cid, _accept)		\

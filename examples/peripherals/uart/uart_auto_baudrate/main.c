@@ -17,7 +17,7 @@ void uart_isr(int irq, void *arg)
         baudrate = bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_UART, uartx->idx) / (ret + 1);
         printf("Detected baudrate by 0x55 is %d\r\n", baudrate);
     }
-
+  
     if (intstatus & UART_INTSTS_RX_ADS) {
         bflb_uart_int_clear(uartx, UART_INTCLR_RX_ADS);
         ret = bflb_uart_feature_control(uartx, UART_CMD_GET_AUTO_BAUD, UART_AUTO_BAUD_START);
@@ -45,7 +45,7 @@ int main(void)
     bflb_uart_init(uartx, &cfg);
 
     bflb_uart_feature_control(uartx, UART_CMD_SET_AUTO_BAUD, 1);
-    bflb_uart_feature_control(uartx, UART_CMD_SET_ABR_ALLOWABLE_ERROR, 3);
+    bflb_uart_feature_control(uartx, UART_CMD_SET_ABR_ALLOWABLE_ERROR, 7);
 
     bflb_irq_attach(uartx->irq_num, uart_isr, NULL);
     bflb_irq_enable(uartx->irq_num);

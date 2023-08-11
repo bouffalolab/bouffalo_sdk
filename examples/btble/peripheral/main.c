@@ -21,29 +21,12 @@
 #include "hci_driver.h"
 #include "hci_core.h"
 
+#include "bflb_mtd.h"
+#include "easyflash.h"
+
 static struct bflb_device_s *uart0;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
-
-static int btblecontroller_em_config(void)
-{
-    extern uint8_t __LD_CONFIG_EM_SEL;
-    volatile uint32_t em_size;
-
-    em_size = (uint32_t)&__LD_CONFIG_EM_SEL;
-
-    if (em_size == 0) {
-        GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
-    } else if (em_size == 32*1024) {
-        GLB_Set_EM_Sel(GLB_WRAM128KB_EM32KB);
-    } else if (em_size == 64*1024) {
-        GLB_Set_EM_Sel(GLB_WRAM96KB_EM64KB);
-    } else {
-        GLB_Set_EM_Sel(GLB_WRAM96KB_EM64KB);
-    }
-
-    return 0;
-}
 
 static void ble_connected(struct bt_conn *conn, u8_t err)
 {
@@ -127,8 +110,10 @@ int main(void)
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
 
-    /* set ble controller EM Size */
-    btblecontroller_em_config();
+    bflb_mtd_init();
+    /* ble stack need easyflash kv */
+    easyflash_init();
+
 #if defined(BL616)
     /* Init rf */
     if (0 != rfparam_init(0, NULL, 0)) {

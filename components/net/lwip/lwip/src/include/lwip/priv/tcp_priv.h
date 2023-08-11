@@ -69,6 +69,7 @@ void             tcp_tmr     (void);  /* Must be called every
 void             tcp_slowtmr (void);
 void             tcp_fasttmr (void);
 
+#if TCP_TIMER_PRECISE_NEEDED
 /**
  * bouffalo lp change
  * TCP_TMR Optimization, only enable tcp_tmr MAX_TCP_ONCE_RUNNING_TIME
@@ -76,7 +77,7 @@ void             tcp_fasttmr (void);
 void             tcp_keepalive_tmr(void *arg);
 void             tcp_keepalive_timer_stop(struct tcp_pcb *pcb);
 void             tcp_keepalive_timer_start(struct tcp_pcb *pcb);
-/* bouffalo lp change end */
+#endif
 
 /* Call this from a netif driver (watch out for threading issues!) that has
    returned a memory error on transmit and now has free buffers to send more.
@@ -128,11 +129,7 @@ err_t            tcp_process_refused_data(struct tcp_pcb *pcb);
 #define TCP_SEQ_BETWEEN(a,b,c) (TCP_SEQ_GEQ(a,b) && TCP_SEQ_LEQ(a,c))
 
 #ifndef TCP_TMR_INTERVAL
-#ifdef BL_TCP_OPTIMIZE
-#define TCP_TMR_INTERVAL       50/* The TCP timer interval in milliseconds. */
-#else
-#define TCP_TMR_INTERVAL       250/* The TCP timer interval in milliseconds. */
-#endif
+#define TCP_TMR_INTERVAL       250  /* The TCP timer interval in milliseconds. */
 #endif /* TCP_TMR_INTERVAL */
 
 #ifndef TCP_FAST_INTERVAL
@@ -154,11 +151,11 @@ err_t            tcp_process_refused_data(struct tcp_pcb *pcb);
 
 /* Keepalive values, compliant with RFC 1122. Don't change this unless you know what you're doing */
 #ifndef  TCP_KEEPIDLE_DEFAULT
-#define  TCP_KEEPIDLE_DEFAULT     120000UL //7200000UL /* Default KEEPALIVE timer in milliseconds */
+#define  TCP_KEEPIDLE_DEFAULT     7200000UL /* Default KEEPALIVE timer in milliseconds */
 #endif
 
 #ifndef  TCP_KEEPINTVL_DEFAULT
-#define  TCP_KEEPINTVL_DEFAULT    30000UL //75000UL   /* Default Time between KEEPALIVE probes in milliseconds */
+#define  TCP_KEEPINTVL_DEFAULT    75000UL   /* Default Time between KEEPALIVE probes in milliseconds */
 #endif
 
 #ifndef  TCP_KEEPCNT_DEFAULT

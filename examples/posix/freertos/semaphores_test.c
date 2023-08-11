@@ -13,10 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "FreeRTOS_POSIX.h"
-#include "FreeRTOS_POSIX/fcntl.h"
-#include "FreeRTOS_POSIX/pthread.h"
-#include "FreeRTOS_POSIX/semaphore.h"
+#include "fcntl.h"
+#include "pthread.h"
+#include "semaphore.h"
 
 #define BUF_SIZE	5
 #define Max_Num		10

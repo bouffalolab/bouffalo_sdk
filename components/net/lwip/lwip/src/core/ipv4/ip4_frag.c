@@ -131,6 +131,7 @@ ip_reass_tmr(void)
   struct ip_reassdata *r, *prev = NULL;
 
   r = reassdatagrams;
+#if IP4_FRAG_TIMER_PRECISE_NEEDED
   /**
    * bouffalo lp change
    * ip_reass_tmr enable/disable dynamically
@@ -141,7 +142,7 @@ ip_reass_tmr(void)
   } else {
     sys_timeouts_set_timer_enable(false, ip_reass_tmr);
   }
-  /** bouffalo lp change end */
+#endif
   while (r != NULL) {
     /* Decrement the timer. Once it reaches 0,
      * clean up the incomplete fragment assembly */
@@ -319,13 +320,14 @@ ip_reass_enqueue_new_datagram(struct ip_hdr *fraghdr, int clen)
   /* @todo: no ip options supported? */
   SMEMCPY(&(ipr->iphdr), fraghdr, IP_HLEN);
 
+#if IP4_FRAG_TIMER_PRECISE_NEEDED
   /**
    * bouffalo lp change
    * ip_reass_tmr enable/disable dynamically
    */
   LWIP_DEBUGF(IP_REASS_DEBUG, ("ip_reass_tmr TRUE"));
   sys_timeouts_set_timer_enable(true, ip_reass_tmr);
-  /** bouffalo lp change end */
+#endif
 
   return ipr;
 }

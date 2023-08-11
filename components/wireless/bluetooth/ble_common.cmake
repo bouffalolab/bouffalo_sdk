@@ -505,7 +505,7 @@ else()
 	set(CONFIG_BT 1)
 	set(CONFIG_BT_A2DP 1)
 	set(CONFIG_BT_AVRCP 1)
-	set(CONFIG_BT_HFP 1)
+	set(CONFIG_BT_HFP 0)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_A2DP -DCONFIG_BT_A2DP)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_AVRCP -DCONFIG_BT_AVRCP)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_HFP -DCONFIG_BT_HFP)
@@ -515,6 +515,7 @@ else()
 		-DSBC_DEC_INCLUDED
 		-DSBC_ENC_INCLUDED
 		-DCONFIG_BT_L2CAP_DYNAMIC_CHANNEL
+		-DCONFIG_BT_SETTINGS
 	)
 endif()
 

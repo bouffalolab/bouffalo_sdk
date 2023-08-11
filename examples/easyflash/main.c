@@ -6,6 +6,9 @@
 uint8_t test_data[] = { "1234567890" };
 uint8_t read_buffer[100];
 
+#define WIFI_SSID_KEY   "wifi.ssid"
+#define WIFI_PASSWD_KEY "wifi.passwd"
+
 int main(void)
 {
     board_init();
@@ -45,7 +48,29 @@ int main(void)
         }
     }
     printf("write data: %s\r\n", read_buffer);
-    printf("easyflash ok\r\n");
+
+    printf("ef set env\r\n");
+    ef_set_and_save_env(WIFI_SSID_KEY, (const char *)"helloworld");
+    ef_set_and_save_env(WIFI_PASSWD_KEY, (const char *)"helloworld2023");
+    ef_save_env();
+
+    char ssid[33];
+    char passwd[65];
+    int ret;
+
+    printf("ef get env\r\n");
+    if (ef_get_env(WIFI_SSID_KEY) != NULL) {
+        ret = ef_get_env_blob(WIFI_SSID_KEY, ssid, sizeof(ssid), NULL);
+        ssid[ret] = 0;
+        printf("ssid:%s\r\n",ssid);
+    }
+    if (ef_get_env(WIFI_PASSWD_KEY) != NULL) {
+        ret = ef_get_env_blob(WIFI_PASSWD_KEY, passwd, sizeof(passwd), NULL);
+        passwd[ret] = 0;
+        printf("passwd:%s\r\n",passwd);
+    }
+
+    printf("easyflash case success\r\n");
     while (1) {
     }
 }

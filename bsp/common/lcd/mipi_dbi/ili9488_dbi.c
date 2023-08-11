@@ -73,7 +73,7 @@ const ili9488_dbi_init_cmd_t ili9488_dbi_init_cmds[] = {
     { 0xC1, "\x41", 1 },                                                          /* Power Control 2 */
 
     { 0xC5, "\x00\x2C\x80", 3 },                                                  /* VCOM Control */
-    { 0x36, "\x08", 1 },                                                          /* Memory Access Control */
+    { 0x36, "\x00", 1 },                                                          /* Memory Access Control */
 
 #if (ILI9488_DBI_PIXEL_FORMAT == 1)
     { 0x3A, "\x55", 1 }, /* Interface Pixel Format RGB565 */

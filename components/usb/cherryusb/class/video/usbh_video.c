@@ -85,7 +85,7 @@ int usbh_video_set_cur(struct usbh_video *video_class, uint8_t intf, uint8_t ent
     memcpy(g_video_buf, buf, len);
 
     ret = usbh_control_transfer(video_class->hport->ep0, setup, g_video_buf);
-    usb_osal_msleep(5);
+    usb_osal_msleep(50);
     return ret;
 }
 

@@ -36,31 +36,31 @@ static struct bflb_emac_phy_cfg_s *phy_8201f_cfg = NULL;
 int phy_8201f_reset(void)
 {
     int timeout = 1000;
-    uint16_t regval = PHY_RESET;
+    uint16_t regval = PHY_8201F_RESET;
 
     /* pull the PHY from power down mode if it is in */
-    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_BCR, &regval)) {
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_BCR, &regval)) {
         printf("emac phy reg read fail 0x%04x\r\n", regval);
         return -1;
     }
     printf("emac phy reg read 0x%04x\r\n", regval);
-    if (PHY_POWERDOWN == (regval & PHY_POWERDOWN)) {
-        if (bflb_emac_phy_reg_write(emac_dev, PHY_BCR, regval & (~PHY_POWERDOWN)) != 0) {
+    if (PHY_8201F_POWERDOWN == (regval & PHY_8201F_POWERDOWN)) {
+        if (bflb_emac_phy_reg_write(emac_dev, PHY_8201F_BCR, regval & (~PHY_8201F_POWERDOWN)) != 0) {
             return -1;
         }
     }
 
     /* do sw reset */
-    if (bflb_emac_phy_reg_write(emac_dev, PHY_BCR, PHY_RESET) != 0) {
+    if (bflb_emac_phy_reg_write(emac_dev, PHY_8201F_BCR, PHY_8201F_RESET) != 0) {
         return -1;
     }
 
     for (; timeout; timeout--) {
-        if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_BCR, &regval)) {
+        if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_BCR, &regval)) {
             return -1;
         }
 
-        if (!(regval & PHY_RESET)) {
+        if (!(regval & PHY_8201F_RESET)) {
             return 0;
         }
 
@@ -84,12 +84,12 @@ int phy_8201f_auto_negotiate(struct bflb_emac_phy_cfg_s *cfg)
     uint16_t lpa = 0;
     uint32_t timeout = 100; //10s,in 100ms
 
-    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_PHYID1, &phyid1)) {
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_PHYID1, &phyid1)) {
         printf("read emac phy id 1 error\r\n");
         return -1;
     }
 
-    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_PHYID2, &phyid2)) {
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_PHYID2, &phyid2)) {
         printf("read emac phy id 2 error\r\n");
         return -1;
     }
@@ -102,56 +102,56 @@ int phy_8201f_auto_negotiate(struct bflb_emac_phy_cfg_s *cfg)
         cfg->phy_id = (phyid1 << 16) | phyid2;
     }
 
-    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_BCR, &regval)) {
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_BCR, &regval)) {
         return -1;
     }
 
-    regval &= ~PHY_AUTONEGOTIATION;
-    regval &= ~(PHY_LOOPBACK | PHY_POWERDOWN);
-    regval |= PHY_ISOLATE;
+    regval &= ~PHY_8201F_AUTONEGOTIATION;
+    regval &= ~(PHY_8201F_LOOPBACK | PHY_8201F_POWERDOWN);
+    regval |= PHY_8201F_ISOLATE;
 
-    if (bflb_emac_phy_reg_write(emac_dev, PHY_BCR, regval) != 0) {
+    if (bflb_emac_phy_reg_write(emac_dev, PHY_8201F_BCR, regval) != 0) {
         return -1;
     }
 
     /* set advertisement mode */
-    advertise = PHY_ADVERTISE_100BASETXFULL | PHY_ADVERTISE_100BASETXHALF |
-                PHY_ADVERTISE_10BASETXFULL | PHY_ADVERTISE_10BASETXHALF |
-                PHY_ADVERTISE_8023;
+    advertise = PHY_8201F_ADVERTISE_100BASETXFULL | PHY_8201F_ADVERTISE_100BASETXHALF |
+                PHY_8201F_ADVERTISE_10BASETXFULL | PHY_8201F_ADVERTISE_10BASETXHALF |
+                PHY_8201F_ADVERTISE_8023;
 
-    if (bflb_emac_phy_reg_write(emac_dev, PHY_ADVERTISE, advertise) != 0) {
+    if (bflb_emac_phy_reg_write(emac_dev, PHY_8201F_ADVERTISE, advertise) != 0) {
         return -1;
     }
 
     bflb_mtimer_delay_ms(16);
 
-    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_BCR, &regval)) {
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_BCR, &regval)) {
         return -1;
     }
 
     bflb_mtimer_delay_ms(16);
-    regval |= (PHY_FULLDUPLEX_100M | PHY_AUTONEGOTIATION);
+    regval |= (PHY_8201F_FULLDUPLEX_100M | PHY_8201F_AUTONEGOTIATION);
 
-    if (bflb_emac_phy_reg_write(emac_dev, PHY_BCR, regval) != 0) {
+    if (bflb_emac_phy_reg_write(emac_dev, PHY_8201F_BCR, regval) != 0) {
         return -1;
     }
 
     bflb_mtimer_delay_ms(16);
-    regval |= PHY_RESTART_AUTONEGOTIATION;
-    regval &= ~PHY_ISOLATE;
+    regval |= PHY_8201F_RESTART_AUTONEGOTIATION;
+    regval &= ~PHY_8201F_ISOLATE;
 
-    if (bflb_emac_phy_reg_write(emac_dev, PHY_BCR, regval) != 0) {
+    if (bflb_emac_phy_reg_write(emac_dev, PHY_8201F_BCR, regval) != 0) {
         return -1;
     }
 
     bflb_mtimer_delay_ms(100);
 
     while (1) {
-        if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_BSR, &regval)) {
+        if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_BSR, &regval)) {
             return -1;
         }
 
-        if (regval & PHY_AUTONEGO_COMPLETE) {
+        if (regval & PHY_8201F_AUTONEGO_COMPLETE) {
             /* complete */
             break;
         }
@@ -165,31 +165,31 @@ int phy_8201f_auto_negotiate(struct bflb_emac_phy_cfg_s *cfg)
 
     bflb_mtimer_delay_ms(100);
 
-    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_LPA, &lpa)) {
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_LPA, &lpa)) {
         return -1;
     }
 
     printf("emac phy lpa@0x%x advertise@0x%x\r\n", lpa, advertise);
 
-    if (((advertise & lpa) & PHY_ADVERTISE_100BASETXFULL) != 0) {
+    if (((advertise & lpa) & PHY_8201F_ADVERTISE_100BASETXFULL) != 0) {
         /* 100BaseTX and Full Duplex */
         // printf("emac phy 100BaseTX and Full Duplex\r\n");
         cfg->full_duplex = 1;
         cfg->speed = 100;
         cfg->phy_state = PHY_STATE_READY;
-    } else if (((advertise & lpa) & PHY_ADVERTISE_10BASETXFULL) != 0) {
+    } else if (((advertise & lpa) & PHY_8201F_ADVERTISE_10BASETXFULL) != 0) {
         /* 10BaseT and Full Duplex */
         // printf("emac phy 10BaseTe and Full Duplex\r\n");
         cfg->full_duplex = 1;
         cfg->speed = 10;
         cfg->phy_state = PHY_STATE_READY;
-    } else if (((advertise & lpa) & PHY_ADVERTISE_100BASETXHALF) != 0) {
+    } else if (((advertise & lpa) & PHY_8201F_ADVERTISE_100BASETXHALF) != 0) {
         /* 100BaseTX and half Duplex */
         // printf("emac phy 100BaseTX and half Duplex\r\n");
         cfg->full_duplex = 0;
         cfg->speed = 100;
         cfg->phy_state = PHY_STATE_READY;
-    } else if (((advertise & lpa) & PHY_ADVERTISE_10BASETXHALF) != 0) {
+    } else if (((advertise & lpa) & PHY_8201F_ADVERTISE_10BASETXHALF) != 0) {
         /* 10BaseT and half Duplex */
         // printf("emac phy 10BaseTe and half Duplex\r\n");
         cfg->full_duplex = 0;
@@ -213,38 +213,38 @@ int phy_8201f_link_up(struct bflb_emac_phy_cfg_s *cfg)
 
     bflb_mtimer_delay_ms(16);
 
-    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_BSR, &phy_bsr)) {
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_BSR, &phy_bsr)) {
         return -1;
     }
 
     bflb_mtimer_delay_ms(16);
 
-    if (!(PHY_LINKED_STATUS & phy_bsr)) {
+    if (!(PHY_8201F_LINKED_STATUS & phy_bsr)) {
         return 1; /* error */
     }
 
     bflb_mtimer_delay_ms(16);
 
-    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_SR, &phy_sr)) {
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8201F_SR, &phy_sr)) {
         return -1;
     }
 
-    if ((phy_bsr & PHY_BSR_100BASETXFULL) && PHY_SR_SPEED_MODE_COMPARE(phy_sr, PHY_SR_SPEED_100BASETXFULL)) {
+    if ((phy_bsr & PHY_8201F_BSR_100BASETXFULL) && PHY_8201F_SR_SPEED_MODE_COMPARE(phy_sr, PHY_8201F_SR_SPEED_100BASETXFULL)) {
         /* 100BaseTX and Full Duplex */
         cfg->full_duplex = 1;
         cfg->speed = 100;
         cfg->phy_state = PHY_STATE_UP;
-    } else if ((phy_bsr & PHY_BSR_10BASETXFULL) && PHY_SR_SPEED_MODE_COMPARE(phy_sr, PHY_SR_SPEED_10BASETXFULL)) {
+    } else if ((phy_bsr & PHY_8201F_BSR_10BASETXFULL) && PHY_8201F_SR_SPEED_MODE_COMPARE(phy_sr, PHY_8201F_SR_SPEED_10BASETXFULL)) {
         /* 10BaseT and Full Duplex */
         cfg->full_duplex = 1;
         cfg->speed = 10;
         cfg->phy_state = PHY_STATE_UP;
-    } else if ((phy_bsr & PHY_BSR_100BASETXHALF) && PHY_SR_SPEED_MODE_COMPARE(phy_sr, PHY_SR_SPEED_100BASETXHALF)) {
+    } else if ((phy_bsr & PHY_8201F_BSR_100BASETXHALF) && PHY_8201F_SR_SPEED_MODE_COMPARE(phy_sr, PHY_8201F_SR_SPEED_100BASETXHALF)) {
         /* 100BaseTX and half Duplex */
         cfg->full_duplex = 0;
         cfg->speed = 100;
         cfg->phy_state = PHY_STATE_UP;
-    } else if ((phy_bsr & PHY_BSR_10BASETXHALF) && PHY_SR_SPEED_MODE_COMPARE(phy_sr, PHY_SR_SPEED_10BASETXHALF)) {
+    } else if ((phy_bsr & PHY_8201F_BSR_10BASETXHALF) && PHY_8201F_SR_SPEED_MODE_COMPARE(phy_sr, PHY_8201F_SR_SPEED_10BASETXHALF)) {
         /* 10BaseT and half Duplex */
         cfg->full_duplex = 0;
         cfg->speed = 10;
@@ -311,40 +311,40 @@ int phy_8201f_init(struct bflb_device_s *emac, struct bflb_emac_phy_cfg_s *cfg)
         /*
         uint32_t cnt=0;
         do{
-            if(bflb_emac_phy_reg_read(emac_dev, PHY_BSR, &phyReg) != SUCCESS){
+            if(bflb_emac_phy_reg_read(emac_dev, PHY_8201F_BSR, &phyReg) != SUCCESS){
                 return -1;
             }
             cnt++;
-            if(cnt>PHY_LINK_TO){
+            if(cnt>PHY_8201F_LINK_TO){
                 return -1;
             }
-        }while((phyReg & PHY_LINKED_STATUS) != PHY_LINKED_STATUS);
+        }while((phyReg & PHY_8201F_LINKED_STATUS) != PHY_8201F_LINKED_STATUS);
         */
         if (0 != phy_8201f_auto_negotiate(cfg)) {
             return -1;
         }
     } else {
-        if (bflb_emac_phy_reg_read(emac_dev, PHY_BCR, &phyReg) != 0) {
+        if (bflb_emac_phy_reg_read(emac_dev, PHY_8201F_BCR, &phyReg) != 0) {
             return -1;
         }
 
-        phyReg &= (~PHY_FULLDUPLEX_100M);
+        phyReg &= (~PHY_8201F_FULLDUPLEX_100M);
 
         if (cfg->speed == 10) {
             if (cfg->full_duplex == 1) {
-                phyReg |= PHY_FULLDUPLEX_10M;
+                phyReg |= PHY_8201F_FULLDUPLEX_10M;
             } else {
-                phyReg |= PHY_HALFDUPLEX_10M;
+                phyReg |= PHY_8201F_HALFDUPLEX_10M;
             }
         } else {
             if (cfg->full_duplex == 1) {
-                phyReg |= PHY_FULLDUPLEX_100M;
+                phyReg |= PHY_8201F_FULLDUPLEX_100M;
             } else {
-                phyReg |= PHY_HALFDUPLEX_100M;
+                phyReg |= PHY_8201F_HALFDUPLEX_100M;
             }
         }
 
-        if ((bflb_emac_phy_reg_write(emac_dev, PHY_BCR, phyReg)) != 0) {
+        if ((bflb_emac_phy_reg_write(emac_dev, PHY_8201F_BCR, phyReg)) != 0) {
             return -1;
         }
     }
