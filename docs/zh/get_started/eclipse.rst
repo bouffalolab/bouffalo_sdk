@@ -8,12 +8,12 @@ Build and Debug with Eclipse
 环境搭建
 -------------
 
-- 首先下载 `Eclipse <https://www.eclipse.org/downloads/packages>`_ , 选择  **Eclipse IDE for C/C++ Developers** , 并根据你的电脑版本进行下载。
+- 安装 GCC 工具链，cmake， make 和 ninja 流程参考 :ref:`get_started`
+
+- 下载 `Eclipse <https://www.eclipse.org/downloads/packages>`_ , 选择  **Eclipse IDE for C/C++ Developers** , 并根据你的电脑版本进行下载。
 
 .. figure:: img/eclipse1.png
     :alt:
-
-- 其余步骤参考 :ref:`windows_cmd`
 
 - 解压 Eclipse 并双击打开 `Eclipse.exe`
 
@@ -51,7 +51,21 @@ Build and Debug with Eclipse
 调试
 -------------
 
-- 如果没有安装 cklink，请参考 :ref:`debug` 章节进行安装，确保 cklink 工作正常并且成功 jtag 成功连接
+- 从 T-HEAD 官网下载最新版本 `CKLink 驱动 <https://occ.t-head.cn/community/download?id=4103855596351066112>`_
+
+- 将下载的 CKLink 安装包解压，并双击 `Setup` ,一路 next 即可，安装完成以后，桌面会有一个 `T-HeadDebugServer` 图标
+
+.. figure:: img/cklink1.png
+    :alt:
+
+.. figure:: img/cklink2.png
+    :alt:
+
+- 将板子的 JTAG 引脚和 CKLink 调试器连接以后，点击 **三角** 按钮，如果变成 **圆圈**，则表示 JTAG 连接成功。如果失败，则需要检查 JTAG 线序是否正确。
+
+.. figure:: img/cklink3.png
+    :alt:
+
 - 完成上述步骤以后，如果是在 **flash 上调试，需要先将编译的 bin 文件烧录到芯片中并复位** ，然后才能够进行下面的调试环节。
 
 - 在 Eclipse 中 点击 `debug` 图标，并点击 `Debug Configurations`

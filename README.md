@@ -83,7 +83,7 @@ Note：**√** means supported ; **×** means not supported; **○** means suppo
 
 ## Command Line Development
 
-Before compiling with the command line, you need to select the corresponding toolchain according to your operating system, configure it to the system environment variables, and install the **make** or **ninja**, then you can do the following. For the details, you can visit [BouffaloSDK Environment Setup](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/index.html).
+Before compiling with the command line, you need to select the corresponding toolchain according to your operating system, configure it to the system environment variables, and install the **make** or **ninja**, then you can do the following. For the details, you can visit [BouffaloSDK Environment Setup](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/get_started.html).
 
 - Go to the demo directory where you want to compile and there are `main.c` and `Makefile` files in that directory
 - Just execute the following command, take **BL616** as an example
@@ -113,7 +113,7 @@ TODO
 
 ## Debug
 
-Only supports debug with CKLink currently. See [BouffaloSDK Debug Guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html).
+Only supports debug with CKLink currently. See [BouffaloSDK Debug Guide](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/eclipse.html).
 
 ## Firmware Download
 

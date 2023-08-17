@@ -50,7 +50,7 @@ GPIO - input/output
 编译和烧录
 -----------------------------
 
-参考 :ref:`linux_cmd` 或者 :ref:`windows_cmd`
+参考 :ref:`get_started`
 
 实验现象
 -----------------------------

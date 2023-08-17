@@ -17,12 +17,12 @@ BLE MESH
 软件实现
 -----------------------------
 
-更详细的代码请参考 **examples/btble/ble_mesh_cli**
+更详细的代码请参考 **examples/btble/blemesh_cli**
 
 编译和烧录
 -----------------------------
 
-参考 :ref:`linux_cmd` 或者 :ref:`windows_cmd`
+参考 :ref:`get_started`
 
 实验现象
 -----------------------------

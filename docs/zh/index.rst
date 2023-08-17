@@ -12,10 +12,10 @@ BouffaloSDK 使用指南
    :maxdepth: 1
    :caption: 快速入门
 
-   get_started/index
-   get_started/flash_cube
-   get_started/debug
+   get_started/get_started
+   get_started/eclipse
    get_started/cmake
+   get_started/flash_cube
    get_started/repo
 
 .. toctree::
@@ -26,14 +26,15 @@ BouffaloSDK 使用指南
    api_reference/bflog
    api_reference/ble
    api_reference/ble_mesh
-   api_reference/wifi
+   api_reference/wifi6
 
 .. toctree::
    :maxdepth: 1
-   :caption: 基础例程
+   :caption: 例程
 
    samples/peripherals/index
-   samples/components/index
+   samples/btble/index
+   samples/wifi6/index
 
 .. toctree::
    :maxdepth: 1

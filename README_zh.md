@@ -83,7 +83,7 @@
 
 ## 命令行编译
 
-在进行命令行编译之前，需要根据你的操作系统，选择对应的工具链，并配置到系统环境变量，并安装了 **make** 或者 **ninja** 工具，然后才能进行下面操作。更详细的搭建过程，参考 [BouffaloSDK 环境搭建](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/index.html).
+在进行命令行编译之前，需要根据你的操作系统，选择对应的工具链，并配置到系统环境变量，并安装了 **make** 或者 **ninja** 工具，然后才能进行下面操作。更详细的搭建过程，参考 [BouffaloSDK 环境搭建](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/get_started.html).
 
 - 进入要编译的 demo 目录，且该目录下有 `main.c` 和 `Makefile` 文件
 - 执行下面命令即可,以 **BL616** 为例
@@ -118,7 +118,7 @@ TODO
 
 ## 调试
 
-当前仅支持使用 CKLink 调试。详细参考 [BouffaloSDK 调试指南](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/debug.html)。
+当前仅支持使用 CKLink 调试。详细参考 [BouffaloSDK 调试指南](https://bl-mcu-sdk.readthedocs.io/zh_CN/latest/get_started/eclipse.html)。
 
 ## 固件烧录
 
