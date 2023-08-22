@@ -975,21 +975,24 @@ mem_malloc_adjust_lfree:
   return NULL;
 }
 
-size_t mem_get_size(const void *p)
+size_t lwip_mem_size(const void *p)
 {
   size_t mem_size = 0;
-
+  size_t mem_ptr = 0;
   sys_mutex_lock(&mem_mutex);
 
-  struct mem *p_mem = (struct mem *)((uint32_t)p - sizeof(struct mem));
+  struct mem *p_mem = (struct mem *)((uint32_t)p - SIZEOF_STRUCT_MEM - MEM_SANITY_OFFSET);
 
   struct mem *p_next = ptr_to_mem(p_mem->next);
   struct mem *p_prev = ptr_to_mem(p_mem->prev);
 
-  LWIP_ASSERT("mem_get_size: wrong memory pointer", p_mem == ptr_to_mem(p_next->prev));
-  LWIP_ASSERT("mem_get_size: wrong memory pointer", p_mem == ptr_to_mem(p_prev->next));
+  LWIP_ASSERT("lwip_mem_size: wrong memory pointer", p_mem == ptr_to_mem(p_next->prev));
+  LWIP_ASSERT("lwip_mem_size: wrong memory pointer", p_mem == p_prev || p_mem == ptr_to_mem(p_prev->next));
 
-  mem_size = p_mem->next - mem_to_ptr(p_mem);
+  mem_ptr = mem_to_ptr(p_mem) + SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET;
+  LWIP_ASSERT("lwip_mem_size: wrong memory pointer", p_mem->next >= mem_ptr + MEM_SANITY_OFFSET);
+
+  mem_size = p_mem->next - mem_ptr;
 
   sys_mutex_unlock(&mem_mutex);
 
