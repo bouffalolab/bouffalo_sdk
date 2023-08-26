@@ -8,6 +8,8 @@
 #define MAX_AP_SCAN 50
 #define MGMR_SSID_LEN 32
 #define MGMR_KEY_LEN 64
+#define MGMR_BSSID_LEN 18
+#define MGMR_AKM_LEN 10
 
 /* WiFi async event */
 #define  EV_WIFI                  0x0002
@@ -115,8 +117,8 @@ typedef struct wifi_mgmr_sta_connect_params {
     char key_tail[1];
     uint8_t ssid_len;
     uint8_t key_len;
-    uint8_t bssid[6];
-    char akm_str[10];
+    uint8_t bssid_str[MGMR_BSSID_LEN];
+    char akm_str[MGMR_AKM_LEN];
     uint8_t akm_len;
     uint16_t freq1;
     uint16_t freq2;
@@ -131,6 +133,7 @@ typedef struct wifi_mgmr_sta_connect_params {
     // default: normal connect 
     // if 1, quick connect 
     uint8_t quick_connect;
+    int timeout_ms;
 } wifi_mgmr_sta_connect_params_t;
 
 /// scan params
