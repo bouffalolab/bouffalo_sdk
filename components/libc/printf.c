@@ -1,4 +1,8 @@
+#ifdef CONFIG_CONSOLE_WO
+#include "bflb_wo.h"
+#else
 #include "bflb_uart.h"
+#endif
 #include "stdarg.h"
 
 struct bflb_device_s *console = NULL;
@@ -17,7 +21,11 @@ int puts(const char *c)
         return 0;
     }
 
+#ifdef CONFIG_CONSOLE_WO
+    bflb_wo_uart_put(console, (uint8_t *)c, len);
+#else
     bflb_uart_put(console, (uint8_t *)c, len);
+#endif
 
     return len;
 }
@@ -36,7 +44,11 @@ int putstring(const char *c)
         return 0;
     }
 
+#ifdef CONFIG_CONSOLE_WO
+    bflb_wo_uart_put(console, (uint8_t *)c, len);
+#else
     bflb_uart_put(console, (uint8_t *)c, len);
+#endif
 
     return len;
 }
@@ -58,7 +70,11 @@ int printf(const char *fmt, ...)
 
     len = (len > sizeof(print_buf)) ? sizeof(print_buf) : len;
 
+#ifdef CONFIG_CONSOLE_WO
+    bflb_wo_uart_put(console, (uint8_t *)print_buf, len);
+#else
     bflb_uart_put(console, (uint8_t *)print_buf, len);
+#endif
 
     return len;
 }
@@ -128,7 +144,11 @@ void bflb_regdump(uint32_t addr)
     printf("%08lx[31:0]=%08lx\r\n", addr, *(volatile uint32_t *)(addr));
 }
 
+#ifdef CONFIG_CONSOLE_WO
+void bflb_wo_set_console(struct bflb_device_s *dev)
+#else
 void bflb_uart_set_console(struct bflb_device_s *dev)
+#endif
 {
     console = dev;
 }

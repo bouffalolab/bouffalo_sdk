@@ -12,6 +12,9 @@ sdk_set_linker_script(bl616_flash.ld)
 if(CONFIG_PSRAM)
 sdk_add_compile_definitions(-DCONFIG_PSRAM)
 endif()
+if(CONFIG_CONSOLE_WO)
+sdk_add_compile_definitions(-DCONFIG_CONSOLE_WO)
+endif()
 
 sdk_add_compile_definitions_ifdef(CONFIG_PSRAM_COPY_CODE -DCONFIG_PSRAM_COPY_CODE)
 

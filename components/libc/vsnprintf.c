@@ -40,7 +40,11 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stddef.h>
+#ifdef CONFIG_CONSOLE_WO
+#include "bflb_wo.h"
+#else
 #include "bflb_uart.h"
+#endif
 
 // 'ntoa' conversion buffer size, this must be big enough to hold one converted
 // numeric number including padded zeros (dynamically created on stack)
@@ -223,7 +227,11 @@ static inline void out_buffer(char character, void* buffer, size_t idx, size_t m
 extern struct bflb_device_s *console;
 static inline void out_console(char character, void* buffer, size_t idx, size_t maxlen)
 {
+#ifdef CONFIG_CONSOLE_WO
+  bflb_wo_uart_putchar(console, character);
+#else
   bflb_uart_putchar(console, character);
+#endif
 }
 
 

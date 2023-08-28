@@ -1,4 +1,8 @@
+#ifdef CONFIG_CONSOLE_WO
+#include "bflb_wo.h"
+#else
 #include "bflb_uart.h"
+#endif
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
@@ -24,7 +28,11 @@ extern uint32_t __HeapLimit;
 extern uint32_t __psram_heap_base;
 extern uint32_t __psram_limit;
 
+#ifdef CONFIG_CONSOLE_WO
+static struct bflb_device_s *wo;
+#else
 static struct bflb_device_s *uart0;
+#endif
 
 #if (defined(CONFIG_LUA) || defined(CONFIG_BFLOG) || defined(CONFIG_FATFS))
 static struct bflb_device_s *rtc;
@@ -62,6 +70,7 @@ static void peripheral_clock_init(void)
     PERIPHERAL_CLOCK_USB_ENABLE();
     PERIPHERAL_CLOCK_CAN_ENABLE();
     PERIPHERAL_CLOCK_AUDIO_ENABLE();
+    PERIPHERAL_CLOCK_CKS_ENABLE();
 
     GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
     GLB_Set_SPI_CLK(ENABLE, GLB_SPI_CLK_MCU_MUXPLL_160M, 0);
@@ -182,10 +191,19 @@ void bl_show_flashinfo(void)
     printf("===========================\r\n");
 }
 
+#ifdef CONFIG_CONSOLE_WO
+extern void bflb_wo_set_console(struct bflb_device_s *dev);
+#else
 extern void bflb_uart_set_console(struct bflb_device_s *dev);
+#endif
 
 static void console_init()
 {
+#ifdef CONFIG_CONSOLE_WO
+    wo = bflb_device_get_by_name("wo");
+    bflb_wo_uart_init(wo, 2000000, GPIO_PIN_21);
+    bflb_wo_set_console(wo);
+#else
     struct bflb_device_s *gpio;
 
     gpio = bflb_device_get_by_name("gpio");
@@ -205,6 +223,7 @@ static void console_init()
 
     bflb_uart_init(uart0, &cfg);
     bflb_uart_set_console(uart0);
+#endif
 }
 
 void board_init(void)

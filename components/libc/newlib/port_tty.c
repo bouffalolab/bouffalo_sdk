@@ -4,7 +4,11 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 
+#ifdef CONFIG_CONSOLE_WO
+#include "bflb_wo.h"
+#else
 #include "bflb_uart.h"
+#endif
 
 /** @addtogroup ttyin_config
 -----------------------------------------------------------------------------
@@ -191,6 +195,7 @@ struct bflb_device_s *console = NULL;
 
 static TTYIN_FIFO_DEFINE(stdin_fifo, 512);
 
+#ifndef CONFIG_CONSOLE_WO
 void console_receive_isr(int irq, void *arg)
 {
     uint32_t intstatus = bflb_uart_get_intstatus(console);
@@ -208,14 +213,22 @@ void console_receive_isr(int irq, void *arg)
         bflb_uart_int_clear(console, UART_INTCLR_RTO);
     }
 }
+#endif
 
+#ifdef CONFIG_CONSOLE_WO
+void bflb_wo_set_console(struct bflb_device_s *dev)
+{
+    console = dev;
+}
+#else
 void bflb_uart_set_console(struct bflb_device_s *dev)
 {
     console = dev;
-    bflb_uart_rxint_mask(console, false);
-    bflb_irq_attach(console->irq_num, console_receive_isr, console);
-    bflb_irq_enable(console->irq_num);
+    // bflb_uart_rxint_mask(console, false);
+    // bflb_irq_attach(console->irq_num, console_receive_isr, console);
+    // bflb_irq_enable(console->irq_num);
 }
+#endif
 
 /*****************************************************************************
 * @brief        open
@@ -289,7 +302,9 @@ _ssize_t _read_tty_r(struct _reent *reent, int fd, void *ptr, size_t size)
                 return i;
             } else {
                 ((uint8_t *)ptr)[i] = ch;
+#ifndef CONFIG_CONSOLE_WO
                 bflb_uart_putchar(console, ch);
+#endif
             }
         }
 
@@ -322,7 +337,11 @@ _ssize_t _write_tty_r(struct _reent *reent, int fd, const void *ptr, size_t size
         return -1;
     } else if ((fd == 1) || (fd == 2)) {
         for (size_t i = 0; i < size; i++) {
+#ifdef CONFIG_CONSOLE_WO
+            bflb_wo_uart_putchar(console, ((uint8_t *)ptr)[i]);
+#else
             bflb_uart_putchar(console, ((uint8_t *)ptr)[i]);
+#endif
         }
         return size;
     } else {
