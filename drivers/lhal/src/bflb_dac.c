@@ -113,6 +113,7 @@ void bflb_dac_link_txdma(struct bflb_device_s *dev, bool enable)
     regval1 &= ~GPIP_GPDAC_CH_B_SEL_MASK;
 
     regval2 = getreg32(DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
+    regval2 &= ~GPIP_GPDAC_DMA_FORMAT_MASK;
     if (enable) {
         if (getreg32(reg_base + GLB_GPDAC_ACTRL_OFFSET) & (GLB_GPDAC_A_EN | GLB_GPDAC_IOA_EN)) {
             regval1 |= (1 << GPIP_GPDAC_CH_A_SEL_SHIFT);
@@ -135,6 +136,16 @@ void bflb_dac_link_txdma(struct bflb_device_s *dev, bool enable)
     }
     putreg32(regval2, DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
     putreg32(regval1, DAC_GPIP_BASE + GPIP_GPDAC_CONFIG_OFFSET);
+}
+
+void bflb_dac_set_dma_format(struct bflb_device_s *dev, uint8_t format)
+{
+    uint32_t regval;
+
+    regval = getreg32(DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
+    regval &= ~GPIP_GPDAC_DMA_FORMAT_MASK;
+    regval |= (format << GPIP_GPDAC_DMA_FORMAT_SHIFT);
+    putreg32(regval, DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
 }
 
 void bflb_dac_set_value(struct bflb_device_s *dev, uint8_t ch, uint16_t value)

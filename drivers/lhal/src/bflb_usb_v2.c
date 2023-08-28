@@ -3,6 +3,10 @@
 #include "usbh_core.h"
 #include "hardware/usb_v2_reg.h"
 
+#ifndef CONFIG_USB_EHCI_HCOR_RESERVED_DISABLE
+#error "usb host must enable CONFIG_USB_EHCI_HCOR_RESERVED_DISABLE"
+#endif
+
 /* select only one mode */
 // #define CONFIG_USB_PINGPONG_ENABLE
 // #define CONFIG_USB_TRIPLE_ENABLE

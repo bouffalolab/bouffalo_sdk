@@ -106,7 +106,7 @@
 /**
  * @brief ADC configuration structure
  *
- * @param clk_div                ADC clock divison, use @ref ADC_CLK_DIV
+ * @param clk_div                ADC clock divison, use @ref ADC_CLK_DIV, adc clk must be less than 500K.
  * @param scan_conv_mode         ADC scan mode enable
  * @param continuous_conv_mode   ADC continuous conversion enable
  * @param differential_mode      ADC differential mode enable

@@ -37,7 +37,7 @@
 #include "bl616_hbn.h"
 #include "bflb_acomp.h"
 #include "bl616_glb.h"
-#include "bl616_xip_sflash.h"
+#include "bflb_xip_sflash.h"
 
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
@@ -157,23 +157,23 @@ void ATTR_TCM_SECTION HBN_Mode_Enter(HBN_APP_CFG_Type *cfg)
  * @return None
  *
 *******************************************************************************/
-void ATTR_TCM_SECTION HBN_Power_Down_Flash(SPI_Flash_Cfg_Type *flashCfg)
+void ATTR_TCM_SECTION HBN_Power_Down_Flash(spi_flash_cfg_type *flashCfg)
 {
-    SPI_Flash_Cfg_Type bhFlashCfg;
+    spi_flash_cfg_type bhFlashCfg;
 
     if (flashCfg == NULL) {
-        L1C_DCache_Invalid_By_Addr(BL616_FLASH_XIP_BASE + 8 + 4, sizeof(SPI_Flash_Cfg_Type));
-        XIP_SFlash_Read_Via_Cache_Need_Lock(BL616_FLASH_XIP_BASE + 8 + 4, (uint8_t *)(&bhFlashCfg), sizeof(SPI_Flash_Cfg_Type));
-        L1C_DCache_Invalid_By_Addr(BL616_FLASH_XIP_BASE + 8 + 4, sizeof(SPI_Flash_Cfg_Type));
+        L1C_DCache_Invalid_By_Addr(BL616_FLASH_XIP_BASE + 8 + 4, sizeof(spi_flash_cfg_type));
+        bflb_xip_sflash_read_via_cache_need_lock(BL616_FLASH_XIP_BASE + 8 + 4, (uint8_t *)(&bhFlashCfg), sizeof(spi_flash_cfg_type), 0, SF_CTRL_FLASH_BANK0);
+        L1C_DCache_Invalid_By_Addr(BL616_FLASH_XIP_BASE + 8 + 4, sizeof(spi_flash_cfg_type));
 
-        SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
-        SFlash_Reset_Continue_Read(&bhFlashCfg);
+        bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
+        bflb_sflash_reset_continue_read(&bhFlashCfg);
     } else {
-        SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
-        SFlash_Reset_Continue_Read(flashCfg);
+        bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
+        bflb_sflash_reset_continue_read(flashCfg);
     }
 
-    SFlash_Powerdown();
+    bflb_sflash_powerdown();
 }
 
 /****************************************************************************/ /**
@@ -890,6 +890,7 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_On_Xtal_32K(void)
     tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
 
     tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_XTAL32K_HIZ_EN);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_INV_STRE, 3);
     tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_XTAL32K);
     tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_XTAL32K_BUF);
     BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
@@ -972,14 +973,16 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_Off_RC32K(void)
 *******************************************************************************/
 BL_Err_Type ATTR_CLOCK_SECTION HBN_Trim_Ldo33VoutTrim(void)
 {
-    Efuse_Ana_Ldo33VoutTrim_Type trim;
+    bflb_ef_ctrl_com_trim_t trim;
     int32_t tmpVal = 0;
+    struct bflb_device_s *ef_ctrl;
 
-    EF_Ctrl_Read_Ldo33VoutTrim_Trim(&trim);
-    if (trim.ldo33VoutTrimAonEn) {
-        if (trim.ldo33VoutTrimAonParity == EF_Ctrl_Get_Trim_Parity(trim.ldo33VoutTrimAon, 4)) {
+    ef_ctrl = bflb_device_get_by_name("ef_ctrl");
+    bflb_ef_ctrl_read_common_trim(ef_ctrl, "ldo33_trim", &trim, 1);
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, 4)) {
             tmpVal = BL_RD_REG(HBN_BASE, HBN_VBAT_LDO);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_LDO33_VOUT_TRIM_AON, trim.ldo33VoutTrimAon);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_LDO33_VOUT_TRIM_AON, trim.value);
             BL_WR_REG(HBN_BASE, HBN_VBAT_LDO, tmpVal);
             arch_delay_us(2);
             return SUCCESS;
@@ -999,14 +1002,16 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Trim_Ldo33VoutTrim(void)
 *******************************************************************************/
 BL_Err_Type ATTR_CLOCK_SECTION HBN_Trim_RC32K(void)
 {
-    Efuse_Ana_RC32K_Trim_Type trim;
+    bflb_ef_ctrl_com_trim_t trim;
     int32_t tmpVal = 0;
+    struct bflb_device_s *ef_ctrl;
 
-    EF_Ctrl_Read_RC32K_Trim(&trim);
-    if (trim.rc32kCodeFrExtEn) {
-        if (trim.rc32kCodeFrExtParity == EF_Ctrl_Get_Trim_Parity(trim.rc32kCodeFrExt, 10)) {
+    ef_ctrl = bflb_device_get_by_name("ef_ctrl");
+    bflb_ef_ctrl_read_common_trim(ef_ctrl, "rc32k", &trim, 1);
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, 10)) {
             tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_CTRL0);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT, trim.rc32kCodeFrExt);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT, trim.value);
             tmpVal = BL_SET_REG_BIT(tmpVal, HBN_RC32K_EXT_CODE_EN);
             BL_WR_REG(HBN_BASE, HBN_RC32K_CTRL0, tmpVal);
             arch_delay_us(2);

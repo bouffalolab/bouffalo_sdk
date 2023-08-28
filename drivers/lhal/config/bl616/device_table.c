@@ -296,6 +296,13 @@ struct bflb_device_s bl616_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_PLFMDMA,
       .user_data = NULL },
+    { .name = "wo",
+      .reg_base = GLB_BASE,
+      .irq_num = BL616_IRQ_GPIO_DMA,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_WO,
+      .user_data = NULL },
 };
 
 struct bflb_device_s *bflb_device_get_by_name(const char *name)

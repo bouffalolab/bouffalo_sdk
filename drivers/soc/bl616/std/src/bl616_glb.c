@@ -39,6 +39,7 @@
 #include "bl616_aon.h"
 #include "bl616_hbn.h"
 #include "bl616_pds.h"
+#include "bl616_glb_gpio.h"
 
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
@@ -3458,14 +3459,16 @@ uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
 *******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioVoutSel(void)
 {
-    Efuse_Ana_Ldo18ioVoutSel_Type trim;
+    bflb_ef_ctrl_com_trim_t trim;
     int32_t tmpVal = 0;
+    struct bflb_device_s *ef_ctrl;
 
-    EF_Ctrl_Read_Ldo18ioVoutSel_Trim(&trim);
-    if (trim.ldo18ioVoutSelEn) {
-        if (trim.ldo18ioVoutSelParity == EF_Ctrl_Get_Trim_Parity(trim.ldo18ioVoutSelAon, 4)) {
+    ef_ctrl = bflb_device_get_by_name("ef_ctrl");
+    bflb_ef_ctrl_read_common_trim(ef_ctrl, "ldo18_sel", &trim, 1);
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, 4)) {
             tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_VOUT_SEL, trim.ldo18ioVoutSelAon);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_VOUT_SEL, trim.value);
             BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
             return SUCCESS;
         }
@@ -3484,14 +3487,16 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioVoutSel(void)
 *******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioBypass(void)
 {
-    Efuse_Ana_Ldo18ioBypass_Type trim;
+    bflb_ef_ctrl_com_trim_t trim;
     int32_t tmpVal = 0;
+    struct bflb_device_s *ef_ctrl;
 
-    EF_Ctrl_Read_Ldo18ioBypass_Trim(&trim);
-    if (trim.ldo18ioBypassEn) {
-        if (trim.ldo18ioBypassParity == EF_Ctrl_Get_Trim_Parity(trim.ldo18ioBypassAon, 1)) {
+    ef_ctrl = bflb_device_get_by_name("ef_ctrl");
+    bflb_ef_ctrl_read_common_trim(ef_ctrl, "ldo18_bypass", &trim, 1);
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, 1)) {
             tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_BYPASS, trim.ldo18ioBypassAon);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_BYPASS, trim.value);
             BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
             return SUCCESS;
         }
@@ -3510,14 +3515,16 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioBypass(void)
 *******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioVoutTrim(void)
 {
-    Efuse_Ana_Ldo18ioVoutTrim_Type trim;
+    bflb_ef_ctrl_com_trim_t trim;
     int32_t tmpVal = 0;
+    struct bflb_device_s *ef_ctrl;
 
-    EF_Ctrl_Read_Ldo18ioVoutTrim_Trim(&trim);
-    if (trim.ldo18ioVoutTrimEn) {
-        if (trim.ldo18ioVoutTrimParity == EF_Ctrl_Get_Trim_Parity(trim.ldo18ioVoutTrimAon, 4)) {
+    ef_ctrl = bflb_device_get_by_name("ef_ctrl");
+    bflb_ef_ctrl_read_common_trim(ef_ctrl, "ldo18_trim", &trim, 1);
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, 4)) {
             tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_VOUT_TRIM, trim.ldo18ioVoutTrimAon);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_LDO18IO_VOUT_TRIM, trim.value);
             BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
             return SUCCESS;
         }

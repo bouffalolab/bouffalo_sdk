@@ -88,6 +88,7 @@ void assert_func(uint8_t *file, uint32_t line, uint8_t *function, uint8_t *strin
 #define BFLB_DEVICE_TYPE_SDIO2    39
 #define BFLB_DEVICE_TYPE_SDIO3    40
 #define BFLB_DEVICE_TYPE_PLFMDMA  41
+#define BFLB_DEVICE_TYPE_WO       42
 
 struct bflb_device_s {
     const char *name;

@@ -64,6 +64,7 @@ src/bflb_dbi.c
 src/bflb_audac.c
 src/bflb_auadc.c
 src/bflb_platform_dma.c
+src/bflb_wo.c
 )
 elseif("${CHIP}" STREQUAL "bl628")
 sdk_library_add_sources(
@@ -71,6 +72,7 @@ src/bflb_dac.c
 src/bflb_emac.c
 src/bflb_clock.c
 src/bflb_pwm_v2.c
+src/bflb_wo.c
 )
 elseif("${CHIP}" STREQUAL "bl808")
 sdk_library_add_sources(
@@ -82,6 +84,7 @@ src/bflb_pwm_v2.c
 src/bflb_cam.c
 src/bflb_csi.c
 src/bflb_i2s.c
+src/bflb_wo.c
 )
 endif()
 

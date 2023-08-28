@@ -424,6 +424,17 @@ struct bflb_device_s bl808_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_CSI,
       .user_data = NULL },
+    { .name = "wo",
+      .reg_base = GLB_BASE,
+#if defined(CPU_M0) || defined(CPU_LP)
+      .irq_num = BL808_IRQ_GPIO_DMA,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_WO,
+      .user_data = NULL },
 };
 #else
 struct bflb_device_s bl808_device_table[] = {

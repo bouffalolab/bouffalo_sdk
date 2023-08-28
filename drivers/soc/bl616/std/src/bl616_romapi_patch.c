@@ -4110,4 +4110,31 @@ BL_Err_Type GLB_BMX_TO_Init(BMX_TO_Cfg_Type *BmxCfg)
     return SUCCESS;
 }
 
+/****************************************************************************/ /**
+ * @brief  Power on XTAL 32K
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ * @note can't use GPIO16&17 after calling this function
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_On_Xtal_32K(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+
+    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_XTAL32K_HIZ_EN);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_INV_STRE, 3);
+    tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_XTAL32K);
+    tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_XTAL32K_BUF);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    /* Delay >1s */
+    arch_delay_us(1100);
+
+    return SUCCESS;
+}
+
 
