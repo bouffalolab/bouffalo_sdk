@@ -52,7 +52,7 @@ int main(void)
 #if !defined(BL702L)
         else if (wdg_clk_src_type[i] == WDG_CLKSRC_BCLK) {
             printf("Watchdog Src Clk is BCLK\r\n");
-            cfg.clock_div = 199;
+            cfg.clock_div = 249;
         }
 #endif
         else {

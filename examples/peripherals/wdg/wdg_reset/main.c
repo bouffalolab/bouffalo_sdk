@@ -3,12 +3,11 @@
 #include "board.h"
 
 struct bflb_device_s *wdg;
-static volatile uint8_t wdg_int_arrived = 0;
 
 int main(void)
 {
     board_init();
-    printf("Watchdog interrupt test\r\n");
+    printf("Watchdog reset test\r\n");
 
     struct bflb_wdg_config_s wdg_cfg;
     wdg_cfg.clock_source = WDG_CLKSRC_32K;
@@ -19,40 +18,25 @@ int main(void)
     wdg = bflb_device_get_by_name("watchdog");
     bflb_wdg_init(wdg, &wdg_cfg);
 
-    wdg_int_arrived = 0;
     bflb_wdg_start(wdg);
 
-    /* delay 1s and wdg interrupt should not trigger. */
+    /* delay 1s and wdg reset should not trigger. */
     bflb_mtimer_delay_ms(1000);
     bflb_wdg_reset_countervalue(wdg);
-    if (wdg_int_arrived) {
-        printf("Error! Delay 1s, wdg not reset.\r\n");
-        bflb_wdg_stop(wdg);
-    } else {
-        printf("Delay 1s, wdg interrupt not arrive, pass\r\n");
-    }
+    printf("Delay 1s, triggle set 2s, wdg should not reset, pass.\r\n");
 
     bflb_wdg_set_countervalue(wdg, 4000);
     bflb_mtimer_delay_ms(2000);
+    printf("Delay 2s, triggle set 4s, wdg should not reset, pass.\r\n");
 
-    if (wdg_int_arrived) {
-        printf("Error! Delay 2s, wdg not reset.\r\n");
-        bflb_wdg_stop(wdg);
-    } else {
-        printf("Delay 2s, set 4s, wdg interrupt not arrive, pass\r\n");
-    }
-
-    printf("Next delay 4s, wdg will reset it.");
+    printf("Next continue to delay 2s, wdg will reset it.\r\n");
     /* delay 2s will trigger wdg interrupt */
     bflb_mtimer_delay_ms(2000);
     bflb_wdg_reset_countervalue(wdg);
-    if (wdg_int_arrived) {
-        printf("Delay 2s, wdg reset, pass\r\n");
-    } else {
-        printf("Error! Delay 2s, wdg not reset, count = %d\r\n",
-               bflb_wdg_get_countervalue(wdg));
-    }
     bflb_wdg_stop(wdg);
+
+    printf("Error! Can't run to here, delay 2s, wdg should reset, current count = %d\r\n",
+           bflb_wdg_get_countervalue(wdg));
 
     while (1) {
         bflb_mtimer_delay_ms(1500);

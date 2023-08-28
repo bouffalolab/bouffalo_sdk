@@ -73,7 +73,7 @@ int main(void)
     /* 512K / 1 = 512K */
     bflb_dac_init(dac, DAC_CLK_DIV_1);
     bflb_dac_channel_enable(dac, DAC_CHANNEL_A);
-    bflb_dac_channel_enable(dac, DAC_CHANNEL_B);
+    //bflb_dac_channel_enable(dac, DAC_CHANNEL_B);
     bflb_dac_link_txdma(dac, true);
 
     struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */

@@ -50,7 +50,6 @@ int main(void)
 
     bflb_gpio_int_init(gpio, GPIO_PIN_0, GPIO_INT_TRIG_MODE_SYNC_LOW_LEVEL);
     bflb_gpio_int_mask(gpio, GPIO_PIN_0, false);
-    bflb_gpio_init(gpio, GPIO_PIN_1, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
 
     shell_init();
 
@@ -63,4 +62,4 @@ int main(void)
         }
     }
 }
-    SHELL_CMD_EXPORT_ALIAS(set_int_mode, set_int_mode, shell set_int_triggle_mode.);
+SHELL_CMD_EXPORT_ALIAS(set_int_mode, set_int_mode, shell set_int_triggle_mode.);
