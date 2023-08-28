@@ -22,6 +22,8 @@ sdk_library_add_sources(src/bl808_tzc_sec.c)
 sdk_library_add_sources(src/bl808_psram_uhs.c)
 sdk_library_add_sources(src/bl808_uhs_phy.c)
 
+sdk_library_add_sources(src/bl808_ipc.c)
+
 sdk_library_add_sources(port/bl808_clock.c)
 
 sdk_add_include_directories(
