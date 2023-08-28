@@ -1485,6 +1485,8 @@ status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Bloc
     SDH_DMA_Cfg_TypeInstance.admaEntries = (uint32_t *)adma2Entries;
     SDH_DMA_Cfg_TypeInstance.maxEntries = sizeof(adma2Entries) / sizeof(adma2Entries[0]);
 
+    bflb_l1c_dcache_invalidate_range((void *)(readbuff), BlockSize * NumberOfBlocks);
+    
     errorstatus = SDH_CardTransferNonBlocking(&SDH_DMA_Cfg_TypeInstance, &SDH_Trans_Cfg_TypeInstance);
 
     if (errorstatus != Status_Success) {

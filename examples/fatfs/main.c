@@ -16,7 +16,7 @@ static TaskHandle_t test_handle;
 #endif
 
 FATFS fs;
-__attribute((aligned(8))) static uint32_t workbuf[4096];
+__attribute((aligned(64))) static uint32_t workbuf[4096];
 
 MKFS_PARM fs_para = {
     .fmt = FM_FAT32,     /* Format option (FM_FAT, FM_FAT32, FM_EXFAT and FM_SFD) */
@@ -86,9 +86,9 @@ char test_data[] =
     Somebody I can kiss\r\n\
     I want something just like this\r\n\r\n";
 
-BYTE RW_Buffer[32 * 1024] = { 0 };
+__attribute((aligned(64))) BYTE RW_Buffer[32 * 1024] = { 0 };
 #if SDU_DATA_CHECK
-BYTE Check_Buffer[sizeof(RW_Buffer)] = { 0 };
+__attribute((aligned(64))) BYTE Check_Buffer[sizeof(RW_Buffer)] = { 0 };
 #endif
 
 void fatfs_write_read_test()
@@ -100,10 +100,10 @@ void fatfs_write_read_test()
     uint32_t time_node, i, j;
 
     /* full test data to buff */
-    for (uint32_t size = 0; size < (sizeof(RW_Buffer) - sizeof(test_data)); size += sizeof(test_data)) {
-        memcpy(&RW_Buffer[size], test_data, sizeof(test_data));
+    for (uint32_t cnt = 0; cnt < (sizeof(RW_Buffer) / sizeof(test_data)); cnt++) {
+        memcpy(&RW_Buffer[cnt * sizeof(test_data)], test_data, sizeof(test_data));
 #if SDU_DATA_CHECK
-        memcpy(&Check_Buffer[size], test_data, sizeof(test_data));
+        memcpy(&Check_Buffer[cnt * sizeof(test_data)], test_data, sizeof(test_data));
 #endif
     }
 
@@ -180,6 +180,7 @@ void fatfs_write_read_test()
     if (ret == FR_OK) {
         // ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
         for (i = 0; i < 1024; i++) {
+            memset(RW_Buffer, 0x55, sizeof(RW_Buffer));
             ret = f_read(&fnew, RW_Buffer, sizeof(RW_Buffer), &fnum);
             if (ret) {
                 break;
