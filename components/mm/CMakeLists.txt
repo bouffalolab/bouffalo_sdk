@@ -4,11 +4,12 @@ sdk_add_include_directories(.)
 
 sdk_library_add_sources(mem.c)
 
-# memheap
-if (CONFIG_TLSF)
-    add_subdirectory(tlsf)
+if(CONFIG_TLSF)
+sdk_library_add_sources(tlsf/tlsf.c tlsf/bflb_tlsf.c)
+sdk_add_include_directories(tlsf)
+sdk_add_compile_definitions(-DCONFIG_TLSF)
 else()
-    add_subdirectory(mmheap)
+message(FATAL_ERROR "Please implement your own memheap and then disable this error")
 endif()
 
 if(CONFIG_FREERTOS)

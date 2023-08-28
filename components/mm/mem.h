@@ -28,7 +28,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <bflb_irq.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -59,9 +58,10 @@
  * Public Types
  ****************************************************************************/
 
-struct mem_heap_impl_s; /* Forward reference */
 struct mem_heap_s {
-    struct mem_heap_impl_s *mem_impl;
+    void *priv;
+    void *heapstart;
+    size_t heapsize;
 };
 
 struct meminfo {
