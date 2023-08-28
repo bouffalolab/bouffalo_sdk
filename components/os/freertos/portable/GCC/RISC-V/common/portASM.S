@@ -325,9 +325,10 @@ is_exception:
 	csrr t0, mcause						/* For viewing in the debugger only. */
 	csrr t1, mepc						/* For viewing in the debugger only */
 	csrr t2, mstatus
-	la a0, exception_entry				    /* No other exceptions handled yet. */
-	jr a0
-	# j is_exception				        /* No other exceptions handled yet. */
+	mv a0, sp
+	la t3, exception_entry				    /* No other exceptions handled yet. */
+	jalr t3
+	j processed_source
 
 as_yet_unhandled:
 	csrr t0, mcause						/* For viewing in the debugger only. */
