@@ -5,7 +5,7 @@
 #include <zephyr.h>
 #include <util.h>
 
-//#include <net/buf.h>
+#include <conn.h>
 #include <bluetooth.h>
 #include <hci_core.h>
 
