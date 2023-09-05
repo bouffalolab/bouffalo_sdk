@@ -8,7 +8,6 @@
 #define TEST_USBH_CDC_ACM   1
 #define TEST_USBH_HID       1
 #define TEST_USBH_MSC       1
-#define TEST_USBH_MSC_FATFS 0
 #define TEST_USBH_AUDIO     0
 #define TEST_USBH_VIDEO     0
 
@@ -141,8 +140,9 @@ find_class:
 
 #if TEST_USBH_MSC
 
-#if TEST_USBH_MSC_FATFS
+#if CONFIG_FATFS_USBH
 #include "ff.h"
+#include "fatfs_diskio_register.h"
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_write_buffer[25 * 100];
 
@@ -160,14 +160,14 @@ int usb_msc_fatfs_test()
         memcpy(&read_write_buffer[i * 25], tmp_data, strlen(tmp_data));
     }
 
-    res_sd = f_mount(&fs, "2:", 1);
+    res_sd = f_mount(&fs, "/usb", 1);
     if (res_sd != FR_OK) {
         USB_LOG_RAW("mount fail,res:%d\r\n", res_sd);
         return -1;
     }
 
     USB_LOG_RAW("test fatfs write\r\n");
-    res_sd = f_open(&fnew, "2:test.txt", FA_CREATE_ALWAYS | FA_WRITE);
+    res_sd = f_open(&fnew, "/usb/test.txt", FA_CREATE_ALWAYS | FA_WRITE);
     if (res_sd == FR_OK) {
         res_sd = f_write(&fnew, read_write_buffer, sizeof(read_write_buffer), &fnum);
         if (res_sd == FR_OK) {
@@ -183,7 +183,7 @@ int usb_msc_fatfs_test()
     }
     USB_LOG_RAW("test fatfs read\r\n");
 
-    res_sd = f_open(&fnew, "2:test.txt", FA_OPEN_EXISTING | FA_READ);
+    res_sd = f_open(&fnew, "/usb/test.txt", FA_OPEN_EXISTING | FA_READ);
     if (res_sd == FR_OK) {
         res_sd = f_read(&fnew, read_write_buffer, sizeof(read_write_buffer), &fnum);
         if (res_sd == FR_OK) {
@@ -197,10 +197,10 @@ int usb_msc_fatfs_test()
         USB_LOG_RAW("open fail\r\n");
         goto unmount;
     }
-    f_mount(NULL, "2:", 1);
+    f_mount(NULL, "/usb", 1);
     return 0;
 unmount:
-    f_mount(NULL, "2:", 1);
+    f_mount(NULL, "/usb", 1);
     return -1;
 }
 #endif
@@ -240,7 +240,8 @@ find_class:
         USB_LOG_RAW("\r\n");
 #endif
 
-#if TEST_USBH_MSC_FATFS
+#if CONFIG_FATFS_USBH
+        fatfs_usbh_driver_register();
         usb_msc_fatfs_test();
 #endif
         while (1) {
