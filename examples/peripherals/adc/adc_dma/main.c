@@ -83,6 +83,8 @@ static uint8_t dma_tc_flag0 = 0;
 
 ATTR_NOCACHE_NOINIT_RAM_SECTION uint32_t raw_data[TEST_ADC_CHANNELS * TEST_COUNT];
 
+struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */
+
 void dma0_ch0_isr(void *arg)
 {
     dma_tc_flag0++;
@@ -128,7 +130,6 @@ int main(void)
 
     bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);
 
-    struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */
     struct bflb_dma_channel_lli_transfer_s transfers[1];
 
     memset(raw_data, 0, sizeof(raw_data));

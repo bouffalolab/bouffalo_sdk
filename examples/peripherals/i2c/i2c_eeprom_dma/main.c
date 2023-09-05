@@ -15,6 +15,8 @@ static ATTR_NOCACHE_NOINIT_RAM_SECTION uint32_t receive_buffer[8];
 static volatile uint32_t dma_tc_flag0 = 0;
 static volatile uint32_t dma_tc_flag1 = 0;
 
+struct bflb_dma_channel_lli_pool_s tx_llipool[20]; /* max trasnfer size 4064 * 20 */
+
 void dma0_ch0_isr(void *arg)
 {
     dma_tc_flag0++;
@@ -65,7 +67,6 @@ int main(void)
 
     bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);
 
-    struct bflb_dma_channel_lli_pool_s tx_llipool[20]; /* max trasnfer size 4064 * 20 */
     struct bflb_dma_channel_lli_transfer_s tx_transfers[1];
     tx_transfers[0].src_addr = (uint32_t)send_buffer;
     tx_transfers[0].dst_addr = (uint32_t)DMA_ADDR_I2C0_TDR;

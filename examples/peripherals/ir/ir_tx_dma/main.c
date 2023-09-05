@@ -9,6 +9,8 @@ struct bflb_device_s *dma0_ch0;
 static ATTR_NOCACHE_RAM_SECTION uint32_t tx_buffer[128];
 static volatile uint8_t dma_tc_flag0 = 0;
 
+struct bflb_dma_channel_lli_pool_s tx_llipool[1];
+
 void dma0_ch0_isr(void *arg)
 {
     dma_tc_flag0++;
@@ -20,7 +22,6 @@ int main(void)
 {
 #ifdef IR_TX_NEC
     uint32_t i;
-    struct bflb_dma_channel_lli_pool_s tx_llipool[1];
     struct bflb_dma_channel_lli_transfer_s tx_transfers[1];
 
     struct bflb_ir_tx_config_s tx_cfg = {

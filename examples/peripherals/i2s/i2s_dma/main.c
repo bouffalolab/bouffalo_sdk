@@ -17,6 +17,8 @@ static ATTR_NOCACHE_NOINIT_RAM_SECTION uint16_t rx_buffer[256] __ALIGNED(4);
 
 static volatile uint8_t dma_tc_flag0 = 0;
 static volatile uint8_t dma_tc_flag1 = 0;
+struct bflb_dma_channel_lli_pool_s tx_llipool[1];
+struct bflb_dma_channel_lli_pool_s rx_llipool[1];
 
 void dma0_ch0_isr(void *arg)
 {
@@ -42,9 +44,7 @@ void sram_init()
 
 int main(void)
 {
-    struct bflb_dma_channel_lli_pool_s tx_llipool[1];
     struct bflb_dma_channel_lli_transfer_s tx_transfers[1];
-    struct bflb_dma_channel_lli_pool_s rx_llipool[1];
     struct bflb_dma_channel_lli_transfer_s rx_transfers[1];
 
     uint32_t num;

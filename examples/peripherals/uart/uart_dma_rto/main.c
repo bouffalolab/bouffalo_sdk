@@ -11,6 +11,7 @@ static ATTR_NOCACHE_NOINIT_RAM_SECTION uint8_t uart_rx_dma_buf[UART_RX_DMA_BUF_S
 
 struct bflb_rx_cycle_dma g_uart_rx_dma;
 volatile uint8_t count = 0;
+struct bflb_dma_channel_lli_pool_s rx_llipool[20];
 
 void uart_isr(int irq, void *arg)
 {
@@ -63,7 +64,6 @@ int main(void)
     bflb_irq_attach(uartx->irq_num, uart_isr, NULL);
     bflb_irq_enable(uartx->irq_num);
 
-    bflb_uart_link_txdma(uartx, true);
     bflb_uart_link_rxdma(uartx, true);
 
     dma0_ch0 = bflb_device_get_by_name("dma0_ch0");
@@ -82,8 +82,6 @@ int main(void)
     bflb_dma_channel_init(dma0_ch0, &rxconfig);
 
     bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);
-
-    struct bflb_dma_channel_lli_pool_s rx_llipool[20];
 
     bflb_rx_cycle_dma_init(&g_uart_rx_dma,
                            dma0_ch0,

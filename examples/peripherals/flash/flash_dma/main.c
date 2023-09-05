@@ -13,6 +13,8 @@ static uint8_t dma_tc_flag0 = 0;
 struct bflb_device_s *dma0_ch0;
 static uint64_t start_time;
 
+struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */
+
 static uint8_t src_burst[] = {
     DMA_BURST_INCR1,
     DMA_BURST_INCR1,
@@ -114,7 +116,6 @@ int main(void)
 
         bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);
 
-        struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */
         struct bflb_dma_channel_lli_transfer_s transfers[1];
 
         transfers[0].src_addr = (uint32_t)(FLASH_XIP_BASE - bflb_flash_get_image_offset() + FLASH_RW_START_ADDR + DMA_FLASH_ADDR_OFFSET);

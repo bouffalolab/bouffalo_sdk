@@ -17,6 +17,7 @@ struct bflb_device_s *i2c0;
 struct bflb_device_s *dma0_ch0;
 
 volatile uint8_t dma_tc_flag0 = 0;
+static struct bflb_dma_channel_lli_pool_s tx_llipool[100];
 
 static ES8388_Cfg_Type ES8388Cfg = {
     .work_mode = ES8388_CODEC_MDOE,          /*!< ES8388 work mode */
@@ -59,7 +60,6 @@ void i2s_gpio_init()
 
 void i2s_dma_init()
 {
-    static struct bflb_dma_channel_lli_pool_s tx_llipool[100];
     static struct bflb_dma_channel_lli_transfer_s tx_transfers[1];
 
     struct bflb_i2s_config_s i2s_cfg = {

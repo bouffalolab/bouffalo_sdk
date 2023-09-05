@@ -41,6 +41,8 @@ const uint16_t SIN_LIST[] = {
 
 static uint8_t dma_tc_flag0 = 0;
 
+struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */
+
 void dma0_ch0_isr(void *arg)
 {
     dma_tc_flag0++;
@@ -76,7 +78,6 @@ int main(void)
     //bflb_dac_channel_enable(dac, DAC_CHANNEL_B);
     bflb_dac_link_txdma(dac, true);
 
-    struct bflb_dma_channel_lli_pool_s lli[1]; /* max trasnfer size 4064 * 1 */
     struct bflb_dma_channel_lli_transfer_s transfers[1];
 
     transfers[0].src_addr = (uint32_t)SIN_LIST;

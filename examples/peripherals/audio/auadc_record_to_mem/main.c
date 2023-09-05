@@ -8,6 +8,7 @@
 #define AUADC_SAMPLING_NUM (48 * 1024)
 
 static __attribute((aligned(32))) uint16_t record_buff[AUADC_SAMPLING_NUM];
+static struct bflb_dma_channel_lli_pool_s lli_pool[20];
 
 /* audio adc config */
 struct bflb_auadc_init_config_s auadc_init_cfg = {
@@ -54,7 +55,6 @@ void auadc_init(void)
 
 void auadc_dma_init(void)
 {
-    static struct bflb_dma_channel_lli_pool_s lli_pool[20];
     struct bflb_dma_channel_lli_transfer_s transfers[1];
     struct bflb_dma_channel_config_s auadc_dma_cfg;
 

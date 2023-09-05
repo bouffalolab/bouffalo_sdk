@@ -12,6 +12,8 @@ static uint8_t dma_tc_flag0 = 0;
 
 struct bflb_device_s *dma0_ch0;
 
+struct bflb_dma_channel_lli_pool_s lli[20]; /* max trasnfer size 4064 * 20 */
+
 void dma0_ch0_isr(void *arg)
 {
     dma_tc_flag0++;
@@ -32,7 +34,7 @@ void sram_init()
 int main(void)
 {
     uint32_t i;
-    struct bflb_dma_channel_lli_pool_s lli[20];
+
     struct bflb_dma_channel_lli_transfer_s transfers[3];
 
     board_init();

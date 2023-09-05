@@ -25,6 +25,7 @@ static uint16_t sin_0db_l32_r16_2ch[64] = {
 
 struct bflb_device_s *audac_dma_hd;
 struct bflb_device_s *audac_hd;
+static struct bflb_dma_channel_lli_pool_s lli_pool[10];
 
 void audio_dma_callback(void *arg)
 {
@@ -60,7 +61,6 @@ void audac_gpio_init(void)
 void audac_dma_init(void)
 {
     uint32_t dma_lli_cnt;
-    static struct bflb_dma_channel_lli_pool_s lli_pool[10];
     struct bflb_dma_channel_lli_transfer_s transfers[1];
     struct bflb_dma_channel_config_s audac_dma_cfg;
 

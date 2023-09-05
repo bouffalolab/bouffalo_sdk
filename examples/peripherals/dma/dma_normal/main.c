@@ -17,6 +17,8 @@ static volatile uint8_t dma_tc_flag0 = 0;
 
 struct bflb_device_s *dma0_ch0;
 
+struct bflb_dma_channel_lli_pool_s lli[20]; /* max trasnfer size 4064 * 20 */
+
 void dma0_ch0_isr(void *arg)
 {
     dma_tc_flag0++;
@@ -72,7 +74,6 @@ int main(void)
 
     bflb_dma_channel_irq_attach(dma0_ch0, dma0_ch0_isr, NULL);
 
-    struct bflb_dma_channel_lli_pool_s lli[20]; /* max trasnfer size 4064 * 20 */
     struct bflb_dma_channel_lli_transfer_s transfers[3];
 
     transfers[0].src_addr = (uint32_t)src1_buffer;

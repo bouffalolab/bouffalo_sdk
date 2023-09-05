@@ -9,6 +9,7 @@
 static volatile uint8_t dma_tc_flag0 = 0;
 struct bflb_device_s *cks;
 struct bflb_device_s *dma0_ch0;
+struct bflb_dma_channel_lli_pool_s lli[20]; /* max trasnfer size 4064 * 20 */
 
 void dma0_ch0_isr(void *arg)
 {
@@ -43,7 +44,6 @@ uint16_t get_cks_with_dma(uint8_t* data,uint32_t length)
 {
     uint16_t checksum = 0;
 
-    struct bflb_dma_channel_lli_pool_s lli[20]; /* max trasnfer size 4064 * 20 */
     struct bflb_dma_channel_lli_transfer_s transfers[1];
 
     transfers[0].src_addr = (uint32_t)data;
