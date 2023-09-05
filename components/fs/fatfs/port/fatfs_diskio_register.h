@@ -27,6 +27,7 @@
 #if defined(BL616) || defined(BL808) || defined(BL628) || defined(BL606P)
 
 void fatfs_sdh_driver_register(void);
+void fatfs_usbh_driver_register(void);
 
 #endif
 

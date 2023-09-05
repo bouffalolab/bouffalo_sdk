@@ -4,8 +4,9 @@
 #include <task.h>
 #include <semphr.h>
 
-#if ( INCLUDE_uxTaskGetStackHighWaterMark != 1) || (INCLUDE_xTaskGetSchedulerState != 1)
-#error please enable INCLUDE_uxTaskGetStackHighWaterMark, enable INCLUDE_xTaskGetSchedulerState
+#if ( INCLUDE_uxTaskGetStackBase != 1 ) || ( INCLUDE_xTaskGetSchedulerState != 1 )
+#error please enable INCLUDE_uxTaskGetStackBase, enable INCLUDE_xTaskGetSchedulerState, \
+       and you MUST modify SSCANF_USE_STACK_SIZE macro in your platform.
 #endif
 
 #define MAX_STACK_ARGS (16) //must keep sscanf_stack_top aligned to 16

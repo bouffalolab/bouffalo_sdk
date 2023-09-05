@@ -1506,6 +1506,19 @@ TaskHandle_t xTaskGetHandle( const char * pcNameToQuery ) PRIVILEGED_FUNCTION; /
 /**
  * task.h
  * @code{c}
+ * UBaseType_t uxTaskGetStackBase( TaskHandle_t xTask );
+ * @endcode
+ *
+ * INCLUDE_uxTaskGetStackBase must be set to 1 in FreeRTOSConfig.h for
+ * this function to be available.
+ *
+ * Returns the stack base of xTask.
+ */
+UBaseType_t uxTaskGetStackBase( TaskHandle_t xTask ) PRIVILEGED_FUNCTION;
+
+/**
+ * task.h
+ * @code{c}
  * UBaseType_t uxTaskGetStackHighWaterMark( TaskHandle_t xTask );
  * @endcode
  *

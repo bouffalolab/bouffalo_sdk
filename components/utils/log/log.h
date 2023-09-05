@@ -300,16 +300,16 @@ extern void error_handler(void);
 #define _ASSERT_FALSE_PARAM_MESSAGE _ASSERT_ZERO_PARAM_MESSAGE
 #define _ASSERT_FALSE_FUNC_MESSAGE  _ASSERT_ZERO_FUNC_MESSAGE
 
-#define _ASSERT_PARAM(x)            _ASSERT_PARAM_MESSAGE(x, "Assertion Faild")
-#define _ASSERT_FUNC(x)             _ASSERT_FUNC_MESSAGE(x, "Assertion Faild")
-#define _ASSERT_TRUE_PARAM(x)       _ASSERT_TRUE_PARAM_MESSAGE(x, "Assertion TRUE Faild")
-#define _ASSERT_TRUE_FUNC(x)        _ASSERT_TRUE_FUNC_MESSAGE(x, "Assertion TRUE Faild")
-#define _ASSERT_FALSE_PARAM(x)      _ASSERT_FALSE_PARAM_MESSAGE(x, "Assertion FALSE Faild")
-#define _ASSERT_FALSE_FUNC(x)       _ASSERT_FALSE_FUNC_MESSAGE(x, "Assertion FALSE Faild")
-#define _ASSERT_ZERO_PARAM(x)       _ASSERT_ZERO_PARAM_MESSAGE(x, "Assertion ZERO Faild")
-#define _ASSERT_ZERO_FUNC(x)        _ASSERT_ZERO_FUNC_MESSAGE(x, "Assertion ZERO Faild")
-#define _ASSERT_EQUAL_PARAM(val, x) _ASSERT_EQUAL_PARAM_MESSAGE(val, x, "Assertion EQUAL Faild")
-#define _ASSERT_EQUAL_FUNC(val, x)  _ASSERT_EQUAL_FUNC_MESSAGE(val, x, "Assertion EQUAL Faild")
+#define _ASSERT_PARAM(x)            _ASSERT_PARAM_MESSAGE(x, "Assertion Failed")
+#define _ASSERT_FUNC(x)             _ASSERT_FUNC_MESSAGE(x, "Assertion Failed")
+#define _ASSERT_TRUE_PARAM(x)       _ASSERT_TRUE_PARAM_MESSAGE(x, "Assertion TRUE Failed")
+#define _ASSERT_TRUE_FUNC(x)        _ASSERT_TRUE_FUNC_MESSAGE(x, "Assertion TRUE Failed")
+#define _ASSERT_FALSE_PARAM(x)      _ASSERT_FALSE_PARAM_MESSAGE(x, "Assertion FALSE Failed")
+#define _ASSERT_FALSE_FUNC(x)       _ASSERT_FALSE_FUNC_MESSAGE(x, "Assertion FALSE Failed")
+#define _ASSERT_ZERO_PARAM(x)       _ASSERT_ZERO_PARAM_MESSAGE(x, "Assertion ZERO Failed")
+#define _ASSERT_ZERO_FUNC(x)        _ASSERT_ZERO_FUNC_MESSAGE(x, "Assertion ZERO Failed")
+#define _ASSERT_EQUAL_PARAM(val, x) _ASSERT_EQUAL_PARAM_MESSAGE(val, x, "Assertion EQUAL Failed")
+#define _ASSERT_EQUAL_FUNC(val, x)  _ASSERT_EQUAL_FUNC_MESSAGE(val, x, "Assertion EQUAL Failed")
 
 #define _STATIC_ASSERT              _Static_assert
 
