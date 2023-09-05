@@ -467,12 +467,12 @@ void EF_Ctrl_Writelock_Sw_Usage(uint32_t index, uint8_t program){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_Type swrst){
+BL_Err_Type GLB_AHB_MCU_Software_Reset(uint8_t swrst){
     return RomDriver_GLB_AHB_MCU_Software_Reset(swrst);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_AUPLL_Ref_Clk_Sel(GLB_PLL_REF_CLK_Type refClk){
+BL_Err_Type GLB_AUPLL_Ref_Clk_Sel(uint8_t refClk){
     return RomDriver_GLB_AUPLL_Ref_Clk_Sel(refClk);
 }
 
@@ -514,7 +514,7 @@ BL_Err_Type GLB_Config_SDIO_Host_Reset_System(uint8_t enable){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(GLB_XTAL_Type *calcXtalType){
+BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(uint8_t *calcXtalType){
     return RomDriver_GLB_Get_Auto_Calc_Xtal_Type(calcXtalType);
 }
 
@@ -549,7 +549,7 @@ BL_Err_Type GLB_Invert_ETH_TX_CLK(uint8_t enable){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_MCU_SW_System_Reset(GLB_MCU_SW_SYSTEM_Type sysPart){
+BL_Err_Type GLB_MCU_SW_System_Reset(uint8_t sysPart){
     return RomDriver_GLB_MCU_SW_System_Reset(sysPart);
 }
 
@@ -564,12 +564,12 @@ BL_Err_Type GLB_PER_Clock_UnGate(uint64_t ips){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_PLL_CGEN_Clock_Gate(GLB_PLL_CGEN_Type clk){
+BL_Err_Type GLB_PLL_CGEN_Clock_Gate(uint8_t clk){
     return RomDriver_GLB_PLL_CGEN_Clock_Gate(clk);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_Type clk){
+BL_Err_Type GLB_PLL_CGEN_Clock_UnGate(uint8_t clk){
     return RomDriver_GLB_PLL_CGEN_Clock_UnGate(clk);
 }
 
@@ -599,12 +599,12 @@ BL_Err_Type GLB_Power_On_WIFIPLL(const GLB_WA_PLL_Cfg_Type *const cfg, uint8_t w
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_Type xtalType, GLB_PLL_Type pllType){
+BL_Err_Type GLB_Power_On_XTAL_And_PLL_CLK(uint8_t xtalType, uint8_t pllType){
     return RomDriver_GLB_Power_On_XTAL_And_PLL_CLK(xtalType,pllType);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_SPI_Sig_Swap_Set(GLB_SPI_SIG_SWAP_GRP_Type group, uint8_t swap){
+BL_Err_Type GLB_SPI_Sig_Swap_Set(uint8_t group, uint8_t swap){
     return RomDriver_GLB_SPI_Sig_Swap_Set(group,swap);
 }
 
@@ -630,7 +630,7 @@ BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(GLB_GPIO_Type gpioPin){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_ADC_CLK(uint8_t enable, GLB_ADC_CLK_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_ADC_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_ADC_CLK(enable,clkSel,div);
 }
 #endif
@@ -657,25 +657,25 @@ BL_Err_Type GLB_Set_Audio_SOLO_CLK(uint8_t enable, uint8_t div){
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_Auto_Calc_Xtal_Type(GLB_XTAL_Type calcXtalType){
+BL_Err_Type GLB_Set_Auto_Calc_Xtal_Type(uint8_t calcXtalType){
     return RomDriver_GLB_Set_Auto_Calc_Xtal_Type(calcXtalType);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, GLB_CAM_CLK_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_CAM_CLK(enable,clkSel,div);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_CPU_Reset_Address(GLB_CORE_ID_Type coreID, uint32_t addr){
+BL_Err_Type GLB_Set_CPU_Reset_Address(uint8_t coreID, uint32_t addr){
     return RomDriver_GLB_Set_CPU_Reset_Address(coreID,addr);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_DBI_CLK(uint8_t enable, GLB_DBI_CLK_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_DBI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_DBI_CLK(enable,clkSel,div);
 }
 #endif
@@ -691,66 +691,66 @@ BL_Err_Type GLB_Set_DIG_512K_CLK(uint8_t enable, uint8_t compensationEn, uint8_t
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_DIG_CLK_Sel(GLB_DIG_CLK_Type clkSel){
+BL_Err_Type GLB_Set_DIG_CLK_Sel(uint8_t clkSel){
     return RomDriver_GLB_Set_DIG_CLK_Sel(clkSel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, GLB_DMA_CLK_ID_Type clk){
+BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, uint8_t clk){
     return RomDriver_GLB_Set_DMA_CLK(enable,clk);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_EM_Sel(GLB_EM_Type emType){
+BL_Err_Type GLB_Set_EM_Sel(uint8_t emType){
     return RomDriver_GLB_Set_EM_Sel(emType);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(GLB_ETH_REF_CLK_OUT_Type clkSel){
+BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(uint8_t clkSel){
     return RomDriver_GLB_Set_ETH_REF_O_CLK_Sel(clkSel);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, GLB_I2C_CLK_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_I2C_CLK(enable,clkSel,div);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, GLB_I2S_DI_REF_CLK_Type inRef, GLB_I2S_DO_REF_CLK_Type outRef){
+BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, uint8_t outRef){
     return RomDriver_GLB_Set_I2S_CLK(refClkEn,refClkDiv,inRef,outRef);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, GLB_IR_CLK_SRC_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_IR_CLK(enable,clkSel,div);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_ISP_Muxpll_80M_Sel(GLB_ISP_MUXPLL_80M_CLK_SEL_Type clkSel){
+BL_Err_Type GLB_Set_ISP_Muxpll_80M_Sel(uint8_t clkSel){
     return RomDriver_GLB_Set_ISP_Muxpll_80M_Sel(clkSel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_MCU_Muxpll_160M_Sel(GLB_MCU_MUXPLL_160M_CLK_SEL_Type clkSel){
+BL_Err_Type GLB_Set_MCU_Muxpll_160M_Sel(uint8_t clkSel){
     return RomDriver_GLB_Set_MCU_Muxpll_160M_Sel(clkSel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_MCU_Muxpll_80M_Sel(GLB_MCU_MUXPLL_80M_CLK_SEL_Type clkSel){
+BL_Err_Type GLB_Set_MCU_Muxpll_80M_Sel(uint8_t clkSel){
     return RomDriver_GLB_Set_MCU_Muxpll_80M_Sel(clkSel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_MCU_SPI_0_ACT_MOD_Sel(GLB_SPI_PAD_ACT_AS_Type mod){
+BL_Err_Type GLB_Set_MCU_SPI_0_ACT_MOD_Sel(uint8_t mod){
     return RomDriver_GLB_Set_MCU_SPI_0_ACT_MOD_Sel(mod);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_Type clkFreq){
+BL_Err_Type GLB_Set_MCU_System_CLK(uint8_t clkFreq){
     return RomDriver_GLB_Set_MCU_System_CLK(clkFreq);
 }
 
@@ -760,41 +760,41 @@ BL_Err_Type GLB_Set_MCU_System_CLK_Div(uint8_t mcuClkDiv, uint8_t mcuPBclkDiv){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_PDM_IO_Sel(GLB_PDM_IO_SEL_Type ioSel){
+BL_Err_Type GLB_Set_PDM_IO_Sel(uint8_t ioSel){
     return RomDriver_GLB_Set_PDM_IO_Sel(ioSel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_Type clkSel){
+BL_Err_Type GLB_Set_PKA_CLK_Sel(uint8_t clkSel){
     return RomDriver_GLB_Set_PKA_CLK_Sel(clkSel);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_PSRAMB_CLK_Sel(uint8_t enable, GLB_PSRAMB_PLL_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_PSRAMB_CLK_Sel(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_PSRAMB_CLK_Sel(enable,clkSel,div);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_SEL_Type ioSel){
+BL_Err_Type GLB_Set_PWM1_IO_Sel(uint8_t ioSel){
     return RomDriver_GLB_Set_PWM1_IO_Sel(ioSel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_Peripheral_DMA_CN(GLB_PERI_DMA_Type peri, GLB_PERI_DMA_CN_SEL_Type cn){
+BL_Err_Type GLB_Set_Peripheral_DMA_CN(uint8_t peri, uint8_t cn){
     return RomDriver_GLB_Set_Peripheral_DMA_CN(peri,cn);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_SDH_CLK(uint8_t enable, GLB_SDH_CLK_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_SDH_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_SDH_CLK(enable,clkSel,div);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_SF_CLK(uint8_t enable, GLB_SFLASH_CLK_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_SF_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_SF_CLK(enable,clkSel,div);
 }
 
@@ -810,7 +810,7 @@ BL_Err_Type GLB_Set_SFlash_IO_PARM(uint8_t selEmbedded, uint8_t swapIo3Io0, uint
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, GLB_SPI_CLK_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_SPI_CLK(enable,clkSel,div);
 }
 #endif
@@ -837,13 +837,13 @@ BL_Err_Type GLB_Set_SSC_CLK_From_WIFIPLL(uint8_t enable){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_Slave_Grp_0_CLK(GLB_SLAVE_GRP_0_Type slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div){
+BL_Err_Type GLB_Set_Slave_Grp_0_CLK(uint8_t slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div){
     return RomDriver_GLB_Set_Slave_Grp_0_CLK(slave,enable,clkSel,div);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, HBN_UART_CLK_Type clkSel, uint8_t div){
+BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, uint8_t clkSel, uint8_t div){
     return RomDriver_GLB_Set_UART_CLK(enable,clkSel,div);
 }
 
@@ -873,32 +873,32 @@ BL_Err_Type GLB_Trim_Ldo18ioVoutTrim(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_UART_Fun_Sel(GLB_UART_SIG_Type sig, GLB_UART_SIG_FUN_Type fun){
+BL_Err_Type GLB_UART_Fun_Sel(uint8_t sig, uint8_t fun){
     return RomDriver_GLB_UART_Fun_Sel(sig,fun);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_UART_Sig_Swap_Set(GLB_UART_SIG_SWAP_GRP_Type group, uint8_t swap){
+BL_Err_Type GLB_UART_Sig_Swap_Set(uint8_t group, uint8_t swap){
     return RomDriver_GLB_UART_Sig_Swap_Set(group,swap);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_WIFIPLL_Ref_Clk_Sel(GLB_PLL_REF_CLK_Type refClk){
+BL_Err_Type GLB_WIFIPLL_Ref_Clk_Sel(uint8_t refClk){
     return RomDriver_GLB_WIFIPLL_Ref_Clk_Sel(refClk);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-GLB_CORE_ID_Type GLB_Get_Core_Type(void){
+uint8_t GLB_Get_Core_Type(void){
     return RomDriver_GLB_Get_Core_Type();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-GLB_MCU_MUXPLL_160M_CLK_SEL_Type GLB_Get_MCU_Muxpll_160M_Sel(void){
+uint8_t GLB_Get_MCU_Muxpll_160M_Sel(void){
     return RomDriver_GLB_Get_MCU_Muxpll_160M_Sel();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-GLB_MCU_MUXPLL_80M_CLK_SEL_Type GLB_Get_MCU_Muxpll_80M_Sel(void){
+uint8_t GLB_Get_MCU_Muxpll_80M_Sel(void){
     return RomDriver_GLB_Get_MCU_Muxpll_80M_Sel();
 }
 
@@ -1057,18 +1057,18 @@ uint8_t GLB_GPIO_Get_Fun(GLB_GPIO_Type gpioPin){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_32K_Sel(HBN_32K_CLK_Type clkType){
+BL_Err_Type HBN_32K_Sel(uint8_t clkType){
     return RomDriver_HBN_32K_Sel(clkType);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Aon_Pad_Cfg(uint8_t aonPadHwCtrlEn, HBN_AON_PAD_Type aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg){
+BL_Err_Type HBN_Aon_Pad_Cfg(uint8_t aonPadHwCtrlEn, uint8_t aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg){
     return RomDriver_HBN_Aon_Pad_Cfg(aonPadHwCtrlEn,aonGpio,aonPadCfg);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Aon_Pad_Cfg_Set(uint8_t aonPadHwCtrlEn, HBN_AON_PAD_Type aonGpio){
+BL_Err_Type HBN_Aon_Pad_Cfg_Set(uint8_t aonPadHwCtrlEn, uint8_t aonGpio){
     return RomDriver_HBN_Aon_Pad_Cfg_Set(aonPadHwCtrlEn,aonGpio);
 }
 #endif
@@ -1082,7 +1082,7 @@ BL_Err_Type HBN_Aon_Pad_Ctrl(uint32_t aonPadCtl1, uint32_t aonPadCtl2){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Aon_Pad_WakeUpCfg(BL_Fun_Type puPdEn, HBN_GPIO_INT_Trigger_Type trigMode, uint32_t maskVal, BL_Fun_Type dlyEn, uint8_t dlySec){
+BL_Err_Type HBN_Aon_Pad_WakeUpCfg(BL_Fun_Type puPdEn, uint8_t trigMode, uint32_t maskVal, BL_Fun_Type dlyEn, uint8_t dlySec){
     return RomDriver_HBN_Aon_Pad_WakeUpCfg(puPdEn,trigMode,maskVal,dlyEn,dlySec);
 }
 #endif
@@ -1093,7 +1093,7 @@ BL_Err_Type HBN_Clear_Gpio_Keep(uint8_t gpioKeep){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Clear_IRQ(HBN_INT_Type irqType){
+BL_Err_Type HBN_Clear_IRQ(uint8_t irqType){
     return RomDriver_HBN_Clear_IRQ(irqType);
 }
 
@@ -1168,7 +1168,7 @@ BL_Err_Type HBN_GPIO_INT_Disable(void){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_GPIO_INT_Enable(HBN_GPIO_INT_Trigger_Type gpioIntTrigType){
+BL_Err_Type HBN_GPIO_INT_Enable(uint8_t gpioIntTrigType){
     return RomDriver_HBN_GPIO_INT_Enable(gpioIntTrigType);
 }
 #endif
@@ -1231,7 +1231,7 @@ BL_Err_Type HBN_PIR_Enable(void){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_PIR_HPF_Sel(HBN_PIR_HPF_Type hpf){
+BL_Err_Type HBN_PIR_HPF_Sel(uint8_t hpf){
     return RomDriver_HBN_PIR_HPF_Sel(hpf);
 }
 #endif
@@ -1245,7 +1245,7 @@ BL_Err_Type HBN_PIR_INT_Config(HBN_PIR_INT_CFG_Type *pirIntCfg){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_PIR_LPF_Sel(HBN_PIR_LPF_Type lpf){
+BL_Err_Type HBN_PIR_LPF_Sel(uint8_t lpf){
     return RomDriver_HBN_PIR_LPF_Sel(lpf);
 }
 #endif
@@ -1286,7 +1286,7 @@ BL_Err_Type HBN_Set_BOD_Cfg(HBN_BOD_CFG_Type *cfg){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_BOD_Config(uint8_t enable, HBN_BOD_THRES_Type threshold, HBN_BOD_MODE_Type mode){
+BL_Err_Type HBN_Set_BOD_Config(uint8_t enable, uint8_t threshold, uint8_t mode){
     return RomDriver_HBN_Set_BOD_Config(enable,threshold,mode);
 }
 #endif
@@ -1302,7 +1302,7 @@ BL_Err_Type HBN_Set_Flash_Power_Delay(uint8_t flashPwrDly){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_GPADC_CLK_Sel(HBN_GPADC_CLK_Type clkSel){
+BL_Err_Type HBN_Set_GPADC_CLK_Sel(uint8_t clkSel){
     return RomDriver_HBN_Set_GPADC_CLK_Sel(clkSel);
 }
 
@@ -1324,22 +1324,22 @@ BL_Err_Type HBN_Set_HRAM_slp(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_Ldo11_All_Vout(HBN_LDO_LEVEL_Type ldoLevel){
+BL_Err_Type HBN_Set_Ldo11_All_Vout(uint8_t ldoLevel){
     return RomDriver_HBN_Set_Ldo11_All_Vout(ldoLevel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_Ldo11_Aon_Vout(HBN_LDO_LEVEL_Type ldoLevel){
+BL_Err_Type HBN_Set_Ldo11_Aon_Vout(uint8_t ldoLevel){
     return RomDriver_HBN_Set_Ldo11_Aon_Vout(ldoLevel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_Ldo11_Rt_Vout(HBN_LDO_LEVEL_Type ldoLevel){
+BL_Err_Type HBN_Set_Ldo11_Rt_Vout(uint8_t ldoLevel){
     return RomDriver_HBN_Set_Ldo11_Rt_Vout(ldoLevel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_Ldo11_Soc_Vout(HBN_LDO_LEVEL_Type ldoLevel){
+BL_Err_Type HBN_Set_Ldo11_Soc_Vout(uint8_t ldoLevel){
     return RomDriver_HBN_Set_Ldo11_Soc_Vout(ldoLevel);
 }
 
@@ -1349,12 +1349,12 @@ BL_Err_Type HBN_Set_Ldo18io_Power_Delay_Config(uint16_t pwrOffDly, uint16_t pwrO
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_Type rootClk){
+BL_Err_Type HBN_Set_MCU_Root_CLK_Sel(uint8_t rootClk){
     return RomDriver_HBN_Set_MCU_Root_CLK_Sel(rootClk);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_Type xclk){
+BL_Err_Type HBN_Set_MCU_XCLK_Sel(uint8_t xclk){
     return RomDriver_HBN_Set_MCU_XCLK_Sel(xclk);
 }
 
@@ -1378,7 +1378,7 @@ BL_Err_Type HBN_Set_PIR_Threshold(uint16_t threshold){
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_RTC_Timer(HBN_RTC_INT_Delay_Type delay, uint32_t compValLow, uint32_t compValHigh, uint8_t compMode){
+BL_Err_Type HBN_Set_RTC_Timer(uint8_t delay, uint32_t compValLow, uint32_t compValHigh, uint8_t compMode){
     return RomDriver_HBN_Set_RTC_Timer(delay,compValLow,compValHigh,compMode);
 }
 
@@ -1388,7 +1388,7 @@ BL_Err_Type HBN_Set_Status_Flag(uint32_t flag){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Set_UART_CLK_Sel(HBN_UART_CLK_Type clkSel){
+BL_Err_Type HBN_Set_UART_CLK_Sel(uint8_t clkSel){
     return RomDriver_HBN_Set_UART_CLK_Sel(clkSel);
 }
 
@@ -1423,17 +1423,17 @@ BL_Sts_Type HBN_Get_BOD_OUT_State(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type HBN_Get_INT_State(HBN_INT_Type irqType){
+BL_Sts_Type HBN_Get_INT_State(uint8_t irqType){
     return RomDriver_HBN_Get_INT_State(irqType);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-HBN_MCU_ROOT_CLK_Type HBN_Get_MCU_Root_CLK_Sel(void){
+uint8_t HBN_Get_MCU_Root_CLK_Sel(void){
     return RomDriver_HBN_Get_MCU_Root_CLK_Sel();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-HBN_MCU_XCLK_Type HBN_Get_MCU_XCLK_Sel(void){
+uint8_t HBN_Get_MCU_XCLK_Sel(void){
     return RomDriver_HBN_Get_MCU_XCLK_Sel();
 }
 
@@ -1474,7 +1474,7 @@ uint8_t HBN_Get_User_Boot_Config(void){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void HBN_Enable(uint32_t aGPIOIeCfg, HBN_LDO_LEVEL_Type ldoLevel, HBN_LEVEL_Type hbnLevel, uint8_t dcdcPuSeq){
+void HBN_Enable(uint32_t aGPIOIeCfg, uint8_t ldoLevel, uint8_t hbnLevel, uint8_t dcdcPuSeq){
     return RomDriver_HBN_Enable(aGPIOIeCfg,ldoLevel,hbnLevel,dcdcPuSeq);
 }
 #endif
@@ -1600,7 +1600,7 @@ BL_Err_Type PDS_IntClear(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type PDS_IntMask(PDS_INT_Type intType, BL_Mask_Type intMask){
+BL_Err_Type PDS_IntMask(uint8_t intType, BL_Mask_Type intMask){
     return RomDriver_PDS_IntMask(intType,intMask);
 }
 
@@ -1620,7 +1620,7 @@ BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type PDS_Set_GPIO_Pad_IntClr(PDS_GPIO_INT_SET_Type set){
+BL_Err_Type PDS_Set_GPIO_Pad_IntClr(uint8_t set){
     return RomDriver_PDS_Set_GPIO_Pad_IntClr(set);
 }
 
@@ -1632,12 +1632,12 @@ BL_Err_Type PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask_Type intMask){
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type PDS_Set_GPIO_Pad_IntMode(PDS_GPIO_INT_SET_Type set, PDS_GPIO_INT_TRIG_Type trig){
+BL_Err_Type PDS_Set_GPIO_Pad_IntMode(uint8_t set, uint8_t trig){
     return RomDriver_PDS_Set_GPIO_Pad_IntMode(set,trig);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(PDS_GPIO_GROUP_SET_Type grp, uint8_t pu, uint8_t pd, uint8_t ie){
+BL_Err_Type PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(uint8_t grp, uint8_t pu, uint8_t pd, uint8_t ie){
     return RomDriver_PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(grp,pu,pd,ie);
 }
 
@@ -1689,7 +1689,7 @@ BL_Sts_Type PDS_Get_GPIO_Pad_IntStatus(GLB_GPIO_Type pad){
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type PDS_Get_IntStatus(PDS_INT_Type intType){
+BL_Sts_Type PDS_Get_IntStatus(uint8_t intType){
     return RomDriver_PDS_Get_IntStatus(intType);
 }
 

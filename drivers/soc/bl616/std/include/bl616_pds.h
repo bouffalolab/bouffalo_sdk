@@ -113,58 +113,62 @@ extern "C" {
  *  @{
  */
 
+/** @defgroup PDS GPIO int set type
+  * @{
+  */
+#define PDS_GPIO_INT_SET_1_GPIO0_GPIO7       (0) /*!< gpio int set 1, gpio0 - gpio7          */
+#define PDS_GPIO_INT_SET_2_GPIO8_GPIO15      (1) /*!< gpio int set 2, gpio8 - gpio15         */
+#define PDS_GPIO_INT_SET_3_GPIO20_GPIO27     (2) /*!< gpio int set 3, gpio20 - gpio27        */
+#define PDS_GPIO_INT_SET_4_GPIO28_GPIO34     (3) /*!< gpio int set 4, gpio28 - gpio34        */
 /**
- *  @brief PDS GPIO int set type
- */
-typedef enum {
-    PDS_GPIO_INT_SET_1_GPIO0_GPIO7,   /*!< gpio int set 1, gpio0 - gpio7          */
-    PDS_GPIO_INT_SET_2_GPIO8_GPIO15,  /*!< gpio int set 2, gpio8 - gpio15         */
-    PDS_GPIO_INT_SET_3_GPIO20_GPIO27, /*!< gpio int set 3, gpio20 - gpio27        */
-    PDS_GPIO_INT_SET_4_GPIO28_GPIO34, /*!< gpio int set 4, gpio28 - gpio34        */
-} PDS_GPIO_INT_SET_Type;
+  * @}
+  */
 
+/** @defgroup PDS GPIO group set type
+  * @{
+  */
+#define PDS_GPIO_GROUP_SET_GPIO0_GPIO15      (0) /*!< gpio int set 0, gpio0 - gpio15          */
+#define PDS_GPIO_GROUP_SET_GPIO20_GPIO36     (1) /*!< gpio int set 1, gpio20 - gpio36         */
 /**
- *  @brief PDS GPIO group set type
- */
-typedef enum {
-    PDS_GPIO_GROUP_SET_GPIO0_GPIO15,  /*!< gpio int set 0, gpio0 - gpio15          */
-    PDS_GPIO_GROUP_SET_GPIO20_GPIO36, /*!< gpio int set 1, gpio20 - gpio36         */
-} PDS_GPIO_GROUP_SET_Type;
+  * @}
+  */
 
+/** @defgroup PDS GPIO interrupt control mode type definition
+  * @{
+  */
+#define PDS_GPIO_INT_SYNC_FALLING_EDGE       (0) /*!< GPIO interrupt sync mode, GPIO negedge pulse trigger interrupt */
+#define PDS_GPIO_INT_SYNC_RISING_EDGE        (1) /*!< GPIO interrupt sync mode, GPIO posedge pulse trigger interrupt */
+// #define PDS_GPIO_INT_SYNC_LOW_LEVEL           (2)  /*!< Not support. GPIO interrupt sync mode, GPIO negedge level trigger interrupt */
+#define PDS_GPIO_INT_SYNC_HIGH_LEVEL         (3) /*!< GPIO interrupt sync mode, GPIO posedge level trigger interrupt */
+// #define PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE (4)  /*!< Not support. GPIO interrupt sync mode, GPIO posedge negedge pulse trigger interrupt */
+#define PDS_GPIO_INT_ASYNC_FALLING_EDGE      (8) /*!< GPIO interrupt async mode, GPIO negedge pulse trigger interrupt */
+#define PDS_GPIO_INT_ASYNC_RISING_EDGE       (9) /*!< GPIO interrupt async mode, GPIO posedge pulse trigger interrupt */
+// #define PDS_GPIO_INT_ASYNC_LOW_LEVEL          (10) /*!< Not support. GPIO interrupt async mode, GPIO negedge level trigger interrupt */
+#define PDS_GPIO_INT_ASYNC_HIGH_LEVEL        (11) /*!< GPIO interrupt async mode, GPIO posedge level trigger interrupt */
 /**
- *  @brief PDS GPIO interrupt control mode type definition
- */
-typedef enum {
-    PDS_GPIO_INT_SYNC_FALLING_EDGE = 0,        /*!< GPIO interrupt sync mode, GPIO negedge pulse trigger interrupt */
-    PDS_GPIO_INT_SYNC_RISING_EDGE = 1,         /*!< GPIO interrupt sync mode, GPIO posedge pulse trigger interrupt */
-    // PDS_GPIO_INT_SYNC_LOW_LEVEL = 2,           /*!< Not support. GPIO interrupt sync mode, GPIO negedge level trigger interrupt */
-    PDS_GPIO_INT_SYNC_HIGH_LEVEL = 3,          /*!< GPIO interrupt sync mode, GPIO posedge level trigger interrupt */
-    // PDS_GPIO_INT_SYNC_RISING_FALLING_EDGE = 4, /*!< Not support. GPIO interrupt sync mode, GPIO posedge negedge pulse trigger interrupt */
-    PDS_GPIO_INT_ASYNC_FALLING_EDGE = 8,       /*!< GPIO interrupt async mode, GPIO negedge pulse trigger interrupt */
-    PDS_GPIO_INT_ASYNC_RISING_EDGE = 9,        /*!< GPIO interrupt async mode, GPIO posedge pulse trigger interrupt */
-    // PDS_GPIO_INT_ASYNC_LOW_LEVEL = 10,         /*!< Not support. GPIO interrupt async mode, GPIO negedge level trigger interrupt */
-    PDS_GPIO_INT_ASYNC_HIGH_LEVEL = 11,        /*!< GPIO interrupt async mode, GPIO posedge level trigger interrupt */
-} PDS_GPIO_INT_TRIG_Type;
+  * @}
+  */
 
+/** @defgroup PDS LDO level type definition
+  * @{
+  */
+#define PDS_LDO_LEVEL_0P70V                  (2)  /*!< PDS LDO voltage 0.70V */
+#define PDS_LDO_LEVEL_0P75V                  (3)  /*!< PDS LDO voltage 0.75V */
+#define PDS_LDO_LEVEL_0P80V                  (4)  /*!< PDS LDO voltage 0.80V */
+#define PDS_LDO_LEVEL_0P85V                  (5)  /*!< PDS LDO voltage 0.85V */
+#define PDS_LDO_LEVEL_0P90V                  (6)  /*!< PDS LDO voltage 0.90V */
+#define PDS_LDO_LEVEL_0P95V                  (7)  /*!< PDS LDO voltage 0.95V */
+#define PDS_LDO_LEVEL_1P00V                  (8)  /*!< PDS LDO voltage 1.00V */
+#define PDS_LDO_LEVEL_1P05V                  (9)  /*!< PDS LDO voltage 1.05V */
+#define PDS_LDO_LEVEL_1P10V                  (10) /*!< PDS LDO voltage 1.10V */
+#define PDS_LDO_LEVEL_1P15V                  (11) /*!< PDS LDO voltage 1.15V */
+#define PDS_LDO_LEVEL_1P20V                  (12) /*!< PDS LDO voltage 1.20V */
+#define PDS_LDO_LEVEL_1P25V                  (13) /*!< PDS LDO voltage 1.25V */
+#define PDS_LDO_LEVEL_1P30V                  (14) /*!< PDS LDO voltage 1.30V */
+#define PDS_LDO_LEVEL_1P35V                  (15) /*!< PDS LDO voltage 1.35V */
 /**
- *  @brief PDS LDO level type definition
- */
-typedef enum {
-    PDS_LDO_LEVEL_0P70V = 2,  /*!< PDS LDO voltage 0.70V */
-    PDS_LDO_LEVEL_0P75V = 3,  /*!< PDS LDO voltage 0.75V */
-    PDS_LDO_LEVEL_0P80V = 4,  /*!< PDS LDO voltage 0.80V */
-    PDS_LDO_LEVEL_0P85V = 5,  /*!< PDS LDO voltage 0.85V */
-    PDS_LDO_LEVEL_0P90V = 6,  /*!< PDS LDO voltage 0.90V */
-    PDS_LDO_LEVEL_0P95V = 7,  /*!< PDS LDO voltage 0.95V */
-    PDS_LDO_LEVEL_1P00V = 8,  /*!< PDS LDO voltage 1.00V */
-    PDS_LDO_LEVEL_1P05V = 9,  /*!< PDS LDO voltage 1.05V */
-    PDS_LDO_LEVEL_1P10V = 10, /*!< PDS LDO voltage 1.10V */
-    PDS_LDO_LEVEL_1P15V = 11, /*!< PDS LDO voltage 1.15V */
-    PDS_LDO_LEVEL_1P20V = 12, /*!< PDS LDO voltage 1.20V */
-    PDS_LDO_LEVEL_1P25V = 13, /*!< PDS LDO voltage 1.25V */
-    PDS_LDO_LEVEL_1P30V = 14, /*!< PDS LDO voltage 1.30V */
-    PDS_LDO_LEVEL_1P35V = 15, /*!< PDS LDO voltage 1.35V */
-} PDS_LDO_LEVEL_Type;
+  * @}
+  */
 
 /**
  *  @brief PDS configuration type definition
@@ -226,16 +230,17 @@ typedef struct
     uint32_t rsv28_31    : 4; /*!< [31:28]reserve */
 } PDS_CTL4_Type;
 
+/** @defgroup PDS interrupt type definition
+  * @{
+  */
+#define PDS_INT_WAKEUP           (0) /*!< PDS wakeup interrupt(assert bit while wakeup, include PDS_Timer/...) */
+#define PDS_INT_RF_DONE          (1) /*!< PDS RF done interrupt */
+#define PDS_INT_WIFI_TBTT_SLEEP  (2) /*!< PDS wifi tbtt sleep interrupt */
+#define PDS_INT_WIFI_TBTT_WAKEUP (3) /*!< PDS wifi tbtt wakeup interrupt */
+#define PDS_INT_MAX              (4) /*!< PDS int max number */
 /**
- *  @brief PDS interrupt type definition
- */
-typedef enum {
-    PDS_INT_WAKEUP = 0,           /*!< PDS wakeup interrupt(assert bit while wakeup, include PDS_Timer/...) */
-    PDS_INT_RF_DONE = 1,          /*!< PDS RF done interrupt */
-    PDS_INT_WIFI_TBTT_SLEEP = 2,  /*!< PDS wifi tbtt sleep interrupt */
-    PDS_INT_WIFI_TBTT_WAKEUP = 3, /*!< PDS wifi tbtt wakeup interrupt */
-    PDS_INT_MAX = 4,              /*!< PDS int max number */
-} PDS_INT_Type;
+  * @}
+  */
 
 /**
  *  @brief PDS force configuration type definition
@@ -417,42 +422,43 @@ typedef struct
     uint32_t PDS_WRAM_CFG_RSV                     : 22; /*!< [31:20]reserve */
 } PDS_WRAM_CFG_Type;
 
+/** @defgroup PDS level 0/1/2/3 mode HBN GPIO interrupt trigger type definition
+  * @{
+  */
+#define PDS_AON_GPIO_INT_TRIGGER_SYNC_FALLING_EDGE   (0)  /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync falling edge trigger */
+#define PDS_AON_GPIO_INT_TRIGGER_SYNC_RISING_EDGE    (1)  /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync rising edge trigger */
+#define PDS_AON_GPIO_INT_TRIGGER_SYNC_LOW_LEVEL      (2)  /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync low level trigger */
+#define PDS_AON_GPIO_INT_TRIGGER_SYNC_HIGH_LEVEL     (3)  /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync high level trigger */
+#define PDS_AON_GPIO_INT_TRIGGER_SYNC_RISING_FALLING (7)  /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync rising+falling edge trigger */
+#define PDS_AON_GPIO_INT_TRIGGER_ASYNC_FALLING_EDGE  (8)  /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: async falling edge trigger */
+#define PDS_AON_GPIO_INT_TRIGGER_ASYNC_RISING_EDGE   (9)  /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: async rising edge trigger */
+#define PDS_AON_GPIO_INT_TRIGGER_ASYNC_LOW_LEVEL     (10) /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: async low level trigger */
+#define PDS_AON_GPIO_INT_TRIGGER_ASYNC_HIGH_LEVEL    (11) /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: async high level trigger */
 /**
- *  @brief PDS level 0/1/2/3 mode HBN GPIO interrupt trigger type definition
- */
-typedef enum {
-    PDS_AON_GPIO_INT_TRIGGER_SYNC_FALLING_EDGE = 0,   /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync falling edge trigger */
-    PDS_AON_GPIO_INT_TRIGGER_SYNC_RISING_EDGE = 1,    /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync rising edge trigger */
-    PDS_AON_GPIO_INT_TRIGGER_SYNC_LOW_LEVEL = 2,      /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync low level trigger */
-    PDS_AON_GPIO_INT_TRIGGER_SYNC_HIGH_LEVEL = 3,     /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync high level trigger */
-    PDS_AON_GPIO_INT_TRIGGER_SYNC_RISING_FALLING = 7, /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: sync rising+falling edge trigger */
-    PDS_AON_GPIO_INT_TRIGGER_ASYNC_FALLING_EDGE = 8,  /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: async falling edge trigger */
-    PDS_AON_GPIO_INT_TRIGGER_ASYNC_RISING_EDGE = 9,   /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: async rising edge trigger */
-    PDS_AON_GPIO_INT_TRIGGER_ASYNC_LOW_LEVEL = 10,    /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: async low level trigger */
-    PDS_AON_GPIO_INT_TRIGGER_ASYNC_HIGH_LEVEL = 11,   /*!< PDS level 0/1/2/3 mode HBN GPIO INT trigger type: async high level trigger */
-} PDS_AON_GPIO_INT_Trigger_Type;
+  * @}
+  */
 
 /**
  *  @brief PDS APP configuration type definition
  */
 typedef struct
 {
-    uint8_t pdsLevel;                                 /*!< PDS level */
-    uint8_t turnOffRF;                                /*!< Wheather turn off RF */
-    uint8_t useXtal32k;                               /*!< Wheather use xtal 32K as 32K clock source,otherwise use rc32k */
-    uint8_t pdsAonGpioWakeupSrc;                      /*!< PDS level 0/1/2/3 mode always on GPIO Wakeup source(HBN wakeup pin) */
-    PDS_AON_GPIO_INT_Trigger_Type pdsAonGpioTrigType; /*!< PDS level 0/1/2/3 mode always on GPIO Triger type(HBN wakeup pin) */
-    uint8_t powerDownFlash;                           /*!< Whether power down flash */
-    uint8_t turnOffFlashPad;                          /*!< Whether turn off embedded flash pad */
-    uint8_t ocramRetetion;                            /*!< Whether OCRAM Retention */
-    uint8_t turnoffPLL;                               /*!< Whether trun off PLL */
-    uint8_t xtalType;                                 /*!< XTal type, used when user choose turn off PLL, PDS will turn on when exit PDS mode */
-    uint8_t flashContRead;                            /*!< Whether enable flash continue read */
-    uint32_t sleepTime;                               /*!< PDS sleep time */
-    spi_flash_cfg_type *flashCfg;                     /*!< Flash config pointer, used when power down flash */
-    PDS_LDO_LEVEL_Type ldoLevel;                      /*!< LDO level */
-    void (*preCbFun)(void);                           /*!< Pre callback function */
-    void (*postCbFun)(void);                          /*!< Post callback function */
+    uint8_t pdsLevel;             /*!< PDS level */
+    uint8_t turnOffRF;            /*!< Wheather turn off RF */
+    uint8_t useXtal32k;           /*!< Wheather use xtal 32K as 32K clock source,otherwise use rc32k */
+    uint8_t pdsAonGpioWakeupSrc;  /*!< PDS level 0/1/2/3 mode always on GPIO Wakeup source(HBN wakeup pin) */
+    uint8_t pdsAonGpioTrigType;   /*!< PDS level 0/1/2/3 mode always on GPIO Triger type(HBN wakeup pin) */
+    uint8_t powerDownFlash;       /*!< Whether power down flash */
+    uint8_t turnOffFlashPad;      /*!< Whether turn off embedded flash pad */
+    uint8_t ocramRetetion;        /*!< Whether OCRAM Retention */
+    uint8_t turnoffPLL;           /*!< Whether trun off PLL */
+    uint8_t xtalType;             /*!< XTal type, used when user choose turn off PLL, PDS will turn on when exit PDS mode */
+    uint8_t flashContRead;        /*!< Whether enable flash continue read */
+    uint32_t sleepTime;           /*!< PDS sleep time */
+    spi_flash_cfg_type *flashCfg; /*!< Flash config pointer, used when power down flash */
+    uint8_t ldoLevel;             /*!< LDO level */
+    void (*preCbFun)(void);       /*!< Pre callback function */
+    void (*postCbFun)(void);      /*!< Post callback function */
 } PDS_APP_CFG_Type;
 
 /*@} end of group PDS_Public_Types */
@@ -478,11 +484,11 @@ typedef struct
 /** @defgroup  GLB_GPIO_INT_TRIG_TYPE
  *  @{
  */
-#define IS_PDS_GPIO_INT_TRIG_TYPE(type) (((type) == PDS_GPIO_INT_SYNC_FALLING_EDGE) ||        \
-                                         ((type) == PDS_GPIO_INT_SYNC_RISING_EDGE) ||         \
-                                         ((type) == PDS_GPIO_INT_SYNC_HIGH_LEVEL) ||          \
-                                         ((type) == PDS_GPIO_INT_ASYNC_FALLING_EDGE) ||       \
-                                         ((type) == PDS_GPIO_INT_ASYNC_RISING_EDGE) ||        \
+#define IS_PDS_GPIO_INT_TRIG_TYPE(type) (((type) == PDS_GPIO_INT_SYNC_FALLING_EDGE) ||  \
+                                         ((type) == PDS_GPIO_INT_SYNC_RISING_EDGE) ||   \
+                                         ((type) == PDS_GPIO_INT_SYNC_HIGH_LEVEL) ||    \
+                                         ((type) == PDS_GPIO_INT_ASYNC_FALLING_EDGE) || \
+                                         ((type) == PDS_GPIO_INT_ASYNC_RISING_EDGE) ||  \
                                          ((type) == PDS_GPIO_INT_ASYNC_HIGH_LEVEL))
 
 /** @defgroup  PDS_LDO_LEVEL_TYPE
@@ -543,10 +549,10 @@ typedef struct
 #ifndef BFLB_USE_HAL_DRIVER
 void PDS_WAKEUP_IRQHandler(void);
 #endif
-BL_Err_Type PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(PDS_GPIO_GROUP_SET_Type grp, uint8_t pu, uint8_t pd, uint8_t ie);
+BL_Err_Type PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(uint8_t grp, uint8_t pu, uint8_t pd, uint8_t ie);
 BL_Err_Type PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask_Type intMask);
-BL_Err_Type PDS_Set_GPIO_Pad_IntMode(PDS_GPIO_INT_SET_Type set, PDS_GPIO_INT_TRIG_Type trig);
-BL_Err_Type PDS_Set_GPIO_Pad_IntClr(PDS_GPIO_INT_SET_Type set);
+BL_Err_Type PDS_Set_GPIO_Pad_IntMode(uint8_t set, uint8_t trig);
+BL_Err_Type PDS_Set_GPIO_Pad_IntClr(uint8_t set);
 BL_Sts_Type PDS_Get_GPIO_Pad_IntStatus(GLB_GPIO_Type pad);
 BL_Err_Type PDS_Set_Flash_Pad_Pull_None(uint8_t pinCfg);
 BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg);
@@ -564,10 +570,10 @@ BL_Err_Type PDS_RAM_Config(PDS_CTRL_RAM1_Type *ram1Cfg, PDS_CTRL_RAM2_Type *ram2
 /*----------*/
 BL_Err_Type PDS_Default_Level_Config(PDS_DEFAULT_LV_CFG_Type *defaultLvCfg, uint32_t pdsSleepCnt);
 /*----------*/
-BL_Err_Type PDS_IntMask(PDS_INT_Type intType, BL_Mask_Type intMask);
-BL_Sts_Type PDS_Get_IntStatus(PDS_INT_Type intType);
+BL_Err_Type PDS_IntMask(uint8_t intType, BL_Mask_Type intMask);
+BL_Sts_Type PDS_Get_IntStatus(uint8_t intType);
 BL_Err_Type PDS_IntClear(void);
-BL_Err_Type PDS_Int_Callback_Install(PDS_INT_Type intType, intCallback_Type *cbFun);
+BL_Err_Type PDS_Int_Callback_Install(uint8_t intType, intCallback_Type *cbFun);
 /*----------*/
 BL_Err_Type PDS_Trim_RC32M(void);
 BL_Err_Type PDS_Power_Off_WB(void);

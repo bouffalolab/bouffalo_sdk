@@ -415,11 +415,11 @@ void bflb_efuse_lock_aes_key_read(uint8_t index)
     if ((index <= 3) || (index == 11)) {
         index = ((index == 11) ? 4 : index);
         lock |= (1 << (index + 27));
-        bflb_ef_ctrl_write_direct(NULL, 0x7c, (uint32_t *)lock, 1, 1);
+        bflb_ef_ctrl_write_direct(NULL, 0x7c, (uint32_t *)(uintptr_t)lock, 1, 1);
     } else if ((index < 11) && (index > 3)) {
         index = index - 4;
         lock |= (1 << (index + 25));
-        bflb_ef_ctrl_write_direct(NULL, 0xfc, (uint32_t *)lock, 1, 1);
+        bflb_ef_ctrl_write_direct(NULL, 0xfc, (uint32_t *)(uintptr_t)lock, 1, 1);
     }
 }
 

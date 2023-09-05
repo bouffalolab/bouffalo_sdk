@@ -186,8 +186,8 @@ int bflb_aes_encrypt(struct bflb_device_s *dev,
     }
 
     /* Set input and output address */
-    putreg32((uint32_t)input, reg_base + SEC_ENG_SE_AES_0_MSA_OFFSET);
-    putreg32((uint32_t)output, reg_base + SEC_ENG_SE_AES_0_MDA_OFFSET);
+    putreg32((uint32_t)(uintptr_t)input, reg_base + SEC_ENG_SE_AES_0_MSA_OFFSET);
+    putreg32((uint32_t)(uintptr_t)output, reg_base + SEC_ENG_SE_AES_0_MDA_OFFSET);
 
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval |= SEC_ENG_SE_AES_0_TRIG_1T;
@@ -258,8 +258,8 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
     }
 
     /* Set input and output address */
-    putreg32((uint32_t)input, reg_base + SEC_ENG_SE_AES_0_MSA_OFFSET);
-    putreg32((uint32_t)output, reg_base + SEC_ENG_SE_AES_0_MDA_OFFSET);
+    putreg32((uint32_t)(uintptr_t)input, reg_base + SEC_ENG_SE_AES_0_MSA_OFFSET);
+    putreg32((uint32_t)(uintptr_t)output, reg_base + SEC_ENG_SE_AES_0_MDA_OFFSET);
 
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval |= SEC_ENG_SE_AES_0_TRIG_1T;

@@ -559,7 +559,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
     // if (dev == NULL) {
     //     dev = bflb_device_get_by_name("ef_ctrl");
     // }
-    pefuse_start = (uint32_t *)(BFLB_EF_CTRL_BASE + offset);
+    pefuse_start = (uint32_t *)(uintptr_t)(BFLB_EF_CTRL_BASE + offset);
 
     irq_stat = bflb_irq_save();
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -644,7 +644,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_direct(struct bflb_device_s *dev, uint32
     // if (dev == NULL) {
     //     dev = bflb_device_get_by_name("ef_ctrl");
     // }
-    pefuse_start = (uint32_t *)(BFLB_EF_CTRL_BASE + offset);
+    pefuse_start = (uint32_t *)(uintptr_t)(BFLB_EF_CTRL_BASE + offset);
 
     irq_stat = bflb_irq_save();
 #if defined(BL702) || defined(BL602) || defined(BL702L)

@@ -429,7 +429,7 @@ uint32_t bflb_mjpeg_get_frame_info(struct bflb_device_s *dev, uint8_t **pic)
 
     reg_base = dev->reg_base;
 
-    *pic = (uint8_t *)getreg32(reg_base + MJPEG_START_ADDR0_OFFSET);
+    *pic = (uint8_t *)(uintptr_t)getreg32(reg_base + MJPEG_START_ADDR0_OFFSET);
     bytes = (getreg32(reg_base + MJPEG_BIT_CNT0_OFFSET) + 7) >> 3;
 
     return bytes;
@@ -521,7 +521,7 @@ void bflb_mjpeg_fill_jpeg_header_tail(struct bflb_device_s *dev, uint8_t *header
 
     reg_base = dev->reg_base;
 
-    arch_memcpy_fast((void *)(reg_base + 0x800), header, header_len);
+    arch_memcpy_fast((void *)(uintptr_t)(reg_base + 0x800), header, header_len);
 
     regval = getreg32(reg_base + MJPEG_HEADER_BYTE_OFFSET);
     regval &= ~MJPEG_REG_HEAD_BYTE_MASK;
@@ -552,15 +552,15 @@ void bflb_mjpeg_update_input_output_buff(struct bflb_device_s *dev, void *input_
     reg_base = dev->reg_base;
 
     if (input_buf0 != NULL) {
-        putreg32((uint32_t)input_buf0, reg_base + MJPEG_YY_FRAME_ADDR_OFFSET);
+        putreg32((uint32_t)(uintptr_t)input_buf0, reg_base + MJPEG_YY_FRAME_ADDR_OFFSET);
     }
 
     if (input_buf1 != NULL) {
-        putreg32((uint32_t)input_buf1, reg_base + MJPEG_UV_FRAME_ADDR_OFFSET);
+        putreg32((uint32_t)(uintptr_t)input_buf1, reg_base + MJPEG_UV_FRAME_ADDR_OFFSET);
     }
 
     if (output_buff != NULL) {
-        putreg32((uint32_t)output_buff, reg_base + MJPEG_JPEG_FRAME_ADDR_OFFSET);
+        putreg32((uint32_t)(uintptr_t)output_buff, reg_base + MJPEG_JPEG_FRAME_ADDR_OFFSET);
         putreg32((uint32_t)output_buff_size / 128, reg_base + MJPEG_JPEG_STORE_MEMORY_OFFSET);
     }
 }

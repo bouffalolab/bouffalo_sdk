@@ -408,12 +408,12 @@ void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
     rx_dma->dma_ch = dma_ch;
     rx_dma->copy = copy;
 
-    rx_transfers[0].src_addr = (uint32_t)src_addr;
-    rx_transfers[0].dst_addr = (uint32_t)dst_buf;
+    rx_transfers[0].src_addr = (uint32_t)(uintptr_t)src_addr;
+    rx_transfers[0].dst_addr = (uint32_t)(uintptr_t)dst_buf;
     rx_transfers[0].nbytes = dst_buf_size / 2;
 
-    rx_transfers[1].src_addr = (uint32_t)src_addr;
-    rx_transfers[1].dst_addr = (uint32_t)dst_buf + dst_buf_size / 2;
+    rx_transfers[1].src_addr = (uint32_t)(uintptr_t)src_addr;
+    rx_transfers[1].dst_addr = (uint32_t)(uintptr_t)dst_buf + dst_buf_size / 2;
     rx_transfers[1].nbytes = dst_buf_size / 2;
 
     int used_count = bflb_dma_channel_lli_reload(dma_ch, rx_llipool, rx_llipool_size, rx_transfers, 2);
@@ -426,7 +426,7 @@ void bflb_rx_cycle_dma_process(struct bflb_rx_cycle_dma *rx_dma, bool in_dma_isr
     uint32_t dma_lli_count;
     uint8_t *write_ptr;
 
-    write_ptr = (uint8_t *)bflb_dma_feature_control(rx_dma->dma_ch, DMA_CMD_GET_LLI_DSTADDR, 0);
+    write_ptr = (uint8_t *)(uintptr_t)bflb_dma_feature_control(rx_dma->dma_ch, DMA_CMD_GET_LLI_DSTADDR, 0);
     dma_lli_count = bflb_dma_feature_control(rx_dma->dma_ch, DMA_CMD_GET_LLI_COUNT, 0);
 
     if (write_ptr > rx_dma->read_ptr) {
@@ -514,7 +514,7 @@ int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
 #endif
         case DMA_CMD_SET_LLI_CONFIG:
-            arch_memcpy4((uint32_t *)(channel_base + DMA_CxSRCADDR_OFFSET), (uint32_t *)arg, 4);
+            arch_memcpy4((uint32_t *)(uintptr_t)(channel_base + DMA_CxSRCADDR_OFFSET), (uint32_t *)arg, 4);
             break;
         case DMA_CMD_GET_LLI_SRCADDR:
             return getreg32(channel_base + DMA_CxSRCADDR_OFFSET);

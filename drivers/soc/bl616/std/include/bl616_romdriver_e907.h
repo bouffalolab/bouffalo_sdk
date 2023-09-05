@@ -830,10 +830,10 @@ typedef enum {
     ((void (*) (uint32_t index, uint8_t program))ROM_APITABLE[ROM_API_INDEX_EF_Ctrl_Writelock_Sw_Usage])
 
 #define RomDriver_GLB_AHB_MCU_Software_Reset              \
-    ((BL_Err_Type (*) (GLB_AHB_MCU_SW_Type swrst))ROM_APITABLE[ROM_API_INDEX_GLB_AHB_MCU_Software_Reset])
+    ((BL_Err_Type (*) (uint8_t swrst))ROM_APITABLE[ROM_API_INDEX_GLB_AHB_MCU_Software_Reset])
 
 #define RomDriver_GLB_AUPLL_Ref_Clk_Sel                   \
-    ((BL_Err_Type (*) (GLB_PLL_REF_CLK_Type refClk))ROM_APITABLE[ROM_API_INDEX_GLB_AUPLL_Ref_Clk_Sel])
+    ((BL_Err_Type (*) (uint8_t refClk))ROM_APITABLE[ROM_API_INDEX_GLB_AUPLL_Ref_Clk_Sel])
 
 #define RomDriver_GLB_BMX_TO_Init                         \
     ((BL_Err_Type (*) (BMX_TO_Cfg_Type *BmxCfg))ROM_APITABLE[ROM_API_INDEX_GLB_BMX_TO_Init])
@@ -857,7 +857,7 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t enable))ROM_APITABLE[ROM_API_INDEX_GLB_Config_SDIO_Host_Reset_System])
 
 #define RomDriver_GLB_Get_Auto_Calc_Xtal_Type             \
-    ((BL_Err_Type (*) (GLB_XTAL_Type *calcXtalType))ROM_APITABLE[ROM_API_INDEX_GLB_Get_Auto_Calc_Xtal_Type])
+    ((BL_Err_Type (*) (uint8_t *calcXtalType))ROM_APITABLE[ROM_API_INDEX_GLB_Get_Auto_Calc_Xtal_Type])
 
 #define RomDriver_GLB_Get_MCU_System_CLK_Div              \
     ((BL_Err_Type (*) (uint8_t *mcuClkDiv, uint8_t *mcuPBclkDiv))ROM_APITABLE[ROM_API_INDEX_GLB_Get_MCU_System_CLK_Div])
@@ -878,7 +878,7 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t enable))ROM_APITABLE[ROM_API_INDEX_GLB_Invert_ETH_TX_CLK])
 
 #define RomDriver_GLB_MCU_SW_System_Reset                 \
-    ((BL_Err_Type (*) (GLB_MCU_SW_SYSTEM_Type sysPart))ROM_APITABLE[ROM_API_INDEX_GLB_MCU_SW_System_Reset])
+    ((BL_Err_Type (*) (uint8_t sysPart))ROM_APITABLE[ROM_API_INDEX_GLB_MCU_SW_System_Reset])
 
 #define RomDriver_GLB_PER_Clock_Gate                      \
     ((BL_Err_Type (*) (uint64_t ips))ROM_APITABLE[ROM_API_INDEX_GLB_PER_Clock_Gate])
@@ -887,10 +887,10 @@ typedef enum {
     ((BL_Err_Type (*) (uint64_t ips))ROM_APITABLE[ROM_API_INDEX_GLB_PER_Clock_UnGate])
 
 #define RomDriver_GLB_PLL_CGEN_Clock_Gate                 \
-    ((BL_Err_Type (*) (GLB_PLL_CGEN_Type clk))ROM_APITABLE[ROM_API_INDEX_GLB_PLL_CGEN_Clock_Gate])
+    ((BL_Err_Type (*) (uint8_t clk))ROM_APITABLE[ROM_API_INDEX_GLB_PLL_CGEN_Clock_Gate])
 
 #define RomDriver_GLB_PLL_CGEN_Clock_UnGate               \
-    ((BL_Err_Type (*) (GLB_PLL_CGEN_Type clk))ROM_APITABLE[ROM_API_INDEX_GLB_PLL_CGEN_Clock_UnGate])
+    ((BL_Err_Type (*) (uint8_t clk))ROM_APITABLE[ROM_API_INDEX_GLB_PLL_CGEN_Clock_UnGate])
 
 #define RomDriver_GLB_Platform_Wakeup_PDS_Enable          \
     ((BL_Err_Type (*) (uint8_t enable))ROM_APITABLE[ROM_API_INDEX_GLB_Platform_Wakeup_PDS_Enable])
@@ -908,10 +908,10 @@ typedef enum {
     ((BL_Err_Type (*) (const GLB_WA_PLL_Cfg_Type *const cfg, uint8_t waitStable))ROM_APITABLE[ROM_API_INDEX_GLB_Power_On_WIFIPLL])
 
 #define RomDriver_GLB_Power_On_XTAL_And_PLL_CLK           \
-    ((BL_Err_Type (*) (GLB_XTAL_Type xtalType, GLB_PLL_Type pllType))ROM_APITABLE[ROM_API_INDEX_GLB_Power_On_XTAL_And_PLL_CLK])
+    ((BL_Err_Type (*) (uint8_t xtalType, uint8_t pllType))ROM_APITABLE[ROM_API_INDEX_GLB_Power_On_XTAL_And_PLL_CLK])
 
 #define RomDriver_GLB_SPI_Sig_Swap_Set                    \
-    ((BL_Err_Type (*) (GLB_SPI_SIG_SWAP_GRP_Type group, uint8_t swap))ROM_APITABLE[ROM_API_INDEX_GLB_SPI_Sig_Swap_Set])
+    ((BL_Err_Type (*) (uint8_t group, uint8_t swap))ROM_APITABLE[ROM_API_INDEX_GLB_SPI_Sig_Swap_Set])
 
 #define RomDriver_GLB_SW_CPU_Reset                        \
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_SW_CPU_Reset])
@@ -926,7 +926,7 @@ typedef enum {
     ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_Sel_MCU_TMR_GPIO_Clock])
 
 #define RomDriver_GLB_Set_ADC_CLK                         \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_ADC_CLK_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_ADC_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_ADC_CLK])
 
 #define RomDriver_GLB_Set_Audio_ADC_CLK                   \
     ((BL_Err_Type (*) (uint8_t enable, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Audio_ADC_CLK])
@@ -938,19 +938,19 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t enable, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Audio_SOLO_CLK])
 
 #define RomDriver_GLB_Set_Auto_Calc_Xtal_Type             \
-    ((BL_Err_Type (*) (GLB_XTAL_Type calcXtalType))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Auto_Calc_Xtal_Type])
+    ((BL_Err_Type (*) (uint8_t calcXtalType))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Auto_Calc_Xtal_Type])
 
 #define RomDriver_GLB_Set_CAM_CLK                         \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_CAM_CLK_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_CAM_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_CAM_CLK])
 
 #define RomDriver_GLB_Set_CPU_Reset_Address               \
-    ((BL_Err_Type (*) (GLB_CORE_ID_Type coreID, uint32_t addr))ROM_APITABLE[ROM_API_INDEX_GLB_Set_CPU_Reset_Address])
+    ((BL_Err_Type (*) (uint8_t coreID, uint32_t addr))ROM_APITABLE[ROM_API_INDEX_GLB_Set_CPU_Reset_Address])
 
 #define RomDriver_GLB_Set_Chip_Clock_Out_Sel              \
     ((BL_Err_Type (*) (GLB_CHIP_CLK_OUT_CFG_Type *cfg))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Chip_Clock_Out_Sel])
 
 #define RomDriver_GLB_Set_DBI_CLK                         \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_DBI_CLK_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_DBI_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_DBI_CLK])
 
 #define RomDriver_GLB_Set_DIG_32K_CLK                     \
     ((BL_Err_Type (*) (uint8_t enable, uint8_t compensationEn, uint16_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_DIG_32K_CLK])
@@ -959,64 +959,64 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t enable, uint8_t compensationEn, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_DIG_512K_CLK])
 
 #define RomDriver_GLB_Set_DIG_CLK_Sel                     \
-    ((BL_Err_Type (*) (GLB_DIG_CLK_Type clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_DIG_CLK_Sel])
+    ((BL_Err_Type (*) (uint8_t clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_DIG_CLK_Sel])
 
 #define RomDriver_GLB_Set_DMA_CLK                         \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_DMA_CLK_ID_Type clk))ROM_APITABLE[ROM_API_INDEX_GLB_Set_DMA_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clk))ROM_APITABLE[ROM_API_INDEX_GLB_Set_DMA_CLK])
 
 #define RomDriver_GLB_Set_EM_Sel                          \
-    ((BL_Err_Type (*) (GLB_EM_Type emType))ROM_APITABLE[ROM_API_INDEX_GLB_Set_EM_Sel])
+    ((BL_Err_Type (*) (uint8_t emType))ROM_APITABLE[ROM_API_INDEX_GLB_Set_EM_Sel])
 
 #define RomDriver_GLB_Set_ETH_REF_O_CLK_Sel               \
-    ((BL_Err_Type (*) (GLB_ETH_REF_CLK_OUT_Type clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_ETH_REF_O_CLK_Sel])
+    ((BL_Err_Type (*) (uint8_t clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_ETH_REF_O_CLK_Sel])
 
 #define RomDriver_GLB_Set_I2C_CLK                         \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_I2C_CLK_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_I2C_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_I2C_CLK])
 
 #define RomDriver_GLB_Set_I2S_CLK                         \
-    ((BL_Err_Type (*) (uint8_t refClkEn, uint8_t refClkDiv, GLB_I2S_DI_REF_CLK_Type inRef, GLB_I2S_DO_REF_CLK_Type outRef))ROM_APITABLE[ROM_API_INDEX_GLB_Set_I2S_CLK])
+    ((BL_Err_Type (*) (uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, uint8_t outRef))ROM_APITABLE[ROM_API_INDEX_GLB_Set_I2S_CLK])
 
 #define RomDriver_GLB_Set_IR_CLK                          \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_IR_CLK_SRC_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_IR_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_IR_CLK])
 
 #define RomDriver_GLB_Set_ISP_Muxpll_80M_Sel              \
-    ((BL_Err_Type (*) (GLB_ISP_MUXPLL_80M_CLK_SEL_Type clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_ISP_Muxpll_80M_Sel])
+    ((BL_Err_Type (*) (uint8_t clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_ISP_Muxpll_80M_Sel])
 
 #define RomDriver_GLB_Set_MCU_Muxpll_160M_Sel             \
-    ((BL_Err_Type (*) (GLB_MCU_MUXPLL_160M_CLK_SEL_Type clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_Muxpll_160M_Sel])
+    ((BL_Err_Type (*) (uint8_t clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_Muxpll_160M_Sel])
 
 #define RomDriver_GLB_Set_MCU_Muxpll_80M_Sel              \
-    ((BL_Err_Type (*) (GLB_MCU_MUXPLL_80M_CLK_SEL_Type clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_Muxpll_80M_Sel])
+    ((BL_Err_Type (*) (uint8_t clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_Muxpll_80M_Sel])
 
 #define RomDriver_GLB_Set_MCU_SPI_0_ACT_MOD_Sel           \
-    ((BL_Err_Type (*) (GLB_SPI_PAD_ACT_AS_Type mod))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_SPI_0_ACT_MOD_Sel])
+    ((BL_Err_Type (*) (uint8_t mod))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_SPI_0_ACT_MOD_Sel])
 
 #define RomDriver_GLB_Set_MCU_System_CLK                  \
-    ((BL_Err_Type (*) (GLB_MCU_SYS_CLK_Type clkFreq))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_System_CLK])
+    ((BL_Err_Type (*) (uint8_t clkFreq))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_System_CLK])
 
 #define RomDriver_GLB_Set_MCU_System_CLK_Div              \
     ((BL_Err_Type (*) (uint8_t mcuClkDiv, uint8_t mcuPBclkDiv))ROM_APITABLE[ROM_API_INDEX_GLB_Set_MCU_System_CLK_Div])
 
 #define RomDriver_GLB_Set_PDM_IO_Sel                      \
-    ((BL_Err_Type (*) (GLB_PDM_IO_SEL_Type ioSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_PDM_IO_Sel])
+    ((BL_Err_Type (*) (uint8_t ioSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_PDM_IO_Sel])
 
 #define RomDriver_GLB_Set_PKA_CLK_Sel                     \
-    ((BL_Err_Type (*) (GLB_PKA_CLK_Type clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_PKA_CLK_Sel])
+    ((BL_Err_Type (*) (uint8_t clkSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_PKA_CLK_Sel])
 
 #define RomDriver_GLB_Set_PSRAMB_CLK_Sel                  \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_PSRAMB_PLL_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_PSRAMB_CLK_Sel])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_PSRAMB_CLK_Sel])
 
 #define RomDriver_GLB_Set_PWM1_IO_Sel                     \
-    ((BL_Err_Type (*) (GLB_PWM1_IO_SEL_Type ioSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_PWM1_IO_Sel])
+    ((BL_Err_Type (*) (uint8_t ioSel))ROM_APITABLE[ROM_API_INDEX_GLB_Set_PWM1_IO_Sel])
 
 #define RomDriver_GLB_Set_Peripheral_DMA_CN               \
-    ((BL_Err_Type (*) (GLB_PERI_DMA_Type peri, GLB_PERI_DMA_CN_SEL_Type cn))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Peripheral_DMA_CN])
+    ((BL_Err_Type (*) (uint8_t peri, uint8_t cn))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Peripheral_DMA_CN])
 
 #define RomDriver_GLB_Set_SDH_CLK                         \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_SDH_CLK_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SDH_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SDH_CLK])
 
 #define RomDriver_GLB_Set_SF_CLK                          \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_SFLASH_CLK_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SF_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SF_CLK])
 
 #define RomDriver_GLB_Set_SFlash2_IO_PARM                 \
     ((BL_Err_Type (*) (uint8_t swapIo3Io0))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SFlash2_IO_PARM])
@@ -1025,7 +1025,7 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t selEmbedded, uint8_t swapIo3Io0, uint8_t swapIo2Cs))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SFlash_IO_PARM])
 
 #define RomDriver_GLB_Set_SPI_CLK                         \
-    ((BL_Err_Type (*) (uint8_t enable, GLB_SPI_CLK_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SPI_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SPI_CLK])
 
 #define RomDriver_GLB_Set_SRAM_PARM                       \
     ((BL_Err_Type (*) (uint32_t value))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SRAM_PARM])
@@ -1040,10 +1040,10 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t enable))ROM_APITABLE[ROM_API_INDEX_GLB_Set_SSC_CLK_From_WIFIPLL])
 
 #define RomDriver_GLB_Set_Slave_Grp_0_CLK                 \
-    ((BL_Err_Type (*) (GLB_SLAVE_GRP_0_Type slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Slave_Grp_0_CLK])
+    ((BL_Err_Type (*) (uint8_t slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_Slave_Grp_0_CLK])
 
 #define RomDriver_GLB_Set_UART_CLK                        \
-    ((BL_Err_Type (*) (uint8_t enable, HBN_UART_CLK_Type clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_UART_CLK])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_UART_CLK])
 
 #define RomDriver_GLB_Set_USB_CLK_From_WIFIPLL            \
     ((BL_Err_Type (*) (uint8_t enable))ROM_APITABLE[ROM_API_INDEX_GLB_Set_USB_CLK_From_WIFIPLL])
@@ -1061,22 +1061,22 @@ typedef enum {
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Trim_Ldo18ioVoutTrim])
 
 #define RomDriver_GLB_UART_Fun_Sel                        \
-    ((BL_Err_Type (*) (GLB_UART_SIG_Type sig, GLB_UART_SIG_FUN_Type fun))ROM_APITABLE[ROM_API_INDEX_GLB_UART_Fun_Sel])
+    ((BL_Err_Type (*) (uint8_t sig, uint8_t fun))ROM_APITABLE[ROM_API_INDEX_GLB_UART_Fun_Sel])
 
 #define RomDriver_GLB_UART_Sig_Swap_Set                   \
-    ((BL_Err_Type (*) (GLB_UART_SIG_SWAP_GRP_Type group, uint8_t swap))ROM_APITABLE[ROM_API_INDEX_GLB_UART_Sig_Swap_Set])
+    ((BL_Err_Type (*) (uint8_t group, uint8_t swap))ROM_APITABLE[ROM_API_INDEX_GLB_UART_Sig_Swap_Set])
 
 #define RomDriver_GLB_WIFIPLL_Ref_Clk_Sel                 \
-    ((BL_Err_Type (*) (GLB_PLL_REF_CLK_Type refClk))ROM_APITABLE[ROM_API_INDEX_GLB_WIFIPLL_Ref_Clk_Sel])
+    ((BL_Err_Type (*) (uint8_t refClk))ROM_APITABLE[ROM_API_INDEX_GLB_WIFIPLL_Ref_Clk_Sel])
 
 #define RomDriver_GLB_Get_Core_Type                       \
-    ((GLB_CORE_ID_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Get_Core_Type])
+    ((uint8_t (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Get_Core_Type])
 
 #define RomDriver_GLB_Get_MCU_Muxpll_160M_Sel             \
-    ((GLB_MCU_MUXPLL_160M_CLK_SEL_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Get_MCU_Muxpll_160M_Sel])
+    ((uint8_t (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Get_MCU_Muxpll_160M_Sel])
 
 #define RomDriver_GLB_Get_MCU_Muxpll_80M_Sel              \
-    ((GLB_MCU_MUXPLL_80M_CLK_SEL_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Get_MCU_Muxpll_80M_Sel])
+    ((uint8_t (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Get_MCU_Muxpll_80M_Sel])
 
 #define RomDriver_GLB_Get_SRAM_PARM                       \
     ((uint32_t (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Get_SRAM_PARM])
@@ -1169,25 +1169,25 @@ typedef enum {
     ((uint8_t (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Get_Fun])
 
 #define RomDriver_HBN_32K_Sel                             \
-    ((BL_Err_Type (*) (HBN_32K_CLK_Type clkType))ROM_APITABLE[ROM_API_INDEX_HBN_32K_Sel])
+    ((BL_Err_Type (*) (uint8_t clkType))ROM_APITABLE[ROM_API_INDEX_HBN_32K_Sel])
 
 #define RomDriver_HBN_Aon_Pad_Cfg                         \
-    ((BL_Err_Type (*) (uint8_t aonPadHwCtrlEn, HBN_AON_PAD_Type aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg))ROM_APITABLE[ROM_API_INDEX_HBN_Aon_Pad_Cfg])
+    ((BL_Err_Type (*) (uint8_t aonPadHwCtrlEn, uint8_t aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg))ROM_APITABLE[ROM_API_INDEX_HBN_Aon_Pad_Cfg])
 
 #define RomDriver_HBN_Aon_Pad_Cfg_Set                     \
-    ((BL_Err_Type (*) (uint8_t aonPadHwCtrlEn, HBN_AON_PAD_Type aonGpio))ROM_APITABLE[ROM_API_INDEX_HBN_Aon_Pad_Cfg_Set])
+    ((BL_Err_Type (*) (uint8_t aonPadHwCtrlEn, uint8_t aonGpio))ROM_APITABLE[ROM_API_INDEX_HBN_Aon_Pad_Cfg_Set])
 
 #define RomDriver_HBN_Aon_Pad_Ctrl                        \
     ((BL_Err_Type (*) (uint32_t aonPadCtl1, uint32_t aonPadCtl2))ROM_APITABLE[ROM_API_INDEX_HBN_Aon_Pad_Ctrl])
 
 #define RomDriver_HBN_Aon_Pad_WakeUpCfg                   \
-    ((BL_Err_Type (*) (BL_Fun_Type puPdEn, HBN_GPIO_INT_Trigger_Type trigMode, uint32_t maskVal, BL_Fun_Type dlyEn, uint8_t dlySec))ROM_APITABLE[ROM_API_INDEX_HBN_Aon_Pad_WakeUpCfg])
+    ((BL_Err_Type (*) (BL_Fun_Type puPdEn, uint8_t trigMode, uint32_t maskVal, BL_Fun_Type dlyEn, uint8_t dlySec))ROM_APITABLE[ROM_API_INDEX_HBN_Aon_Pad_WakeUpCfg])
 
 #define RomDriver_HBN_Clear_Gpio_Keep                     \
     ((BL_Err_Type (*) (uint8_t gpioKeep))ROM_APITABLE[ROM_API_INDEX_HBN_Clear_Gpio_Keep])
 
 #define RomDriver_HBN_Clear_IRQ                           \
-    ((BL_Err_Type (*) (HBN_INT_Type irqType))ROM_APITABLE[ROM_API_INDEX_HBN_Clear_IRQ])
+    ((BL_Err_Type (*) (uint8_t irqType))ROM_APITABLE[ROM_API_INDEX_HBN_Clear_IRQ])
 
 #define RomDriver_HBN_Clear_PDS_Gpio_Keep                 \
     ((BL_Err_Type (*) (uint8_t gpioKeep))ROM_APITABLE[ROM_API_INDEX_HBN_Clear_PDS_Gpio_Keep])
@@ -1223,7 +1223,7 @@ typedef enum {
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_GPIO_INT_Disable])
 
 #define RomDriver_HBN_GPIO_INT_Enable                     \
-    ((BL_Err_Type (*) (HBN_GPIO_INT_Trigger_Type gpioIntTrigType))ROM_APITABLE[ROM_API_INDEX_HBN_GPIO_INT_Enable])
+    ((BL_Err_Type (*) (uint8_t gpioIntTrigType))ROM_APITABLE[ROM_API_INDEX_HBN_GPIO_INT_Enable])
 
 #define RomDriver_HBN_Get_Flash_Power_Delay               \
     ((BL_Err_Type (*) (uint8_t *flashPwrDly))ROM_APITABLE[ROM_API_INDEX_HBN_Get_Flash_Power_Delay])
@@ -1256,13 +1256,13 @@ typedef enum {
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_PIR_Enable])
 
 #define RomDriver_HBN_PIR_HPF_Sel                         \
-    ((BL_Err_Type (*) (HBN_PIR_HPF_Type hpf))ROM_APITABLE[ROM_API_INDEX_HBN_PIR_HPF_Sel])
+    ((BL_Err_Type (*) (uint8_t hpf))ROM_APITABLE[ROM_API_INDEX_HBN_PIR_HPF_Sel])
 
 #define RomDriver_HBN_PIR_INT_Config                      \
     ((BL_Err_Type (*) (HBN_PIR_INT_CFG_Type *pirIntCfg))ROM_APITABLE[ROM_API_INDEX_HBN_PIR_INT_Config])
 
 #define RomDriver_HBN_PIR_LPF_Sel                         \
-    ((BL_Err_Type (*) (HBN_PIR_LPF_Type lpf))ROM_APITABLE[ROM_API_INDEX_HBN_PIR_LPF_Sel])
+    ((BL_Err_Type (*) (uint8_t lpf))ROM_APITABLE[ROM_API_INDEX_HBN_PIR_LPF_Sel])
 
 #define RomDriver_HBN_Pin_WakeUp_Mask                     \
     ((BL_Err_Type (*) (uint8_t maskVal))ROM_APITABLE[ROM_API_INDEX_HBN_Pin_WakeUp_Mask])
@@ -1283,7 +1283,7 @@ typedef enum {
     ((BL_Err_Type (*) (HBN_BOD_CFG_Type *cfg))ROM_APITABLE[ROM_API_INDEX_HBN_Set_BOD_Cfg])
 
 #define RomDriver_HBN_Set_BOD_Config                      \
-    ((BL_Err_Type (*) (uint8_t enable, HBN_BOD_THRES_Type threshold, HBN_BOD_MODE_Type mode))ROM_APITABLE[ROM_API_INDEX_HBN_Set_BOD_Config])
+    ((BL_Err_Type (*) (uint8_t enable, uint8_t threshold, uint8_t mode))ROM_APITABLE[ROM_API_INDEX_HBN_Set_BOD_Config])
 
 #define RomDriver_HBN_Set_Core_Reboot_Config              \
     ((BL_Err_Type (*) (uint8_t core, uint8_t hcfg))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Core_Reboot_Config])
@@ -1292,7 +1292,7 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t flashPwrDly))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Flash_Power_Delay])
 
 #define RomDriver_HBN_Set_GPADC_CLK_Sel                   \
-    ((BL_Err_Type (*) (HBN_GPADC_CLK_Type clkSel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_GPADC_CLK_Sel])
+    ((BL_Err_Type (*) (uint8_t clkSel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_GPADC_CLK_Sel])
 
 #define RomDriver_HBN_Set_Gpio_Keep                       \
     ((BL_Err_Type (*) (uint8_t gpioKeep))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Gpio_Keep])
@@ -1304,25 +1304,25 @@ typedef enum {
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_Set_HRAM_slp])
 
 #define RomDriver_HBN_Set_Ldo11_All_Vout                  \
-    ((BL_Err_Type (*) (HBN_LDO_LEVEL_Type ldoLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo11_All_Vout])
+    ((BL_Err_Type (*) (uint8_t ldoLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo11_All_Vout])
 
 #define RomDriver_HBN_Set_Ldo11_Aon_Vout                  \
-    ((BL_Err_Type (*) (HBN_LDO_LEVEL_Type ldoLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo11_Aon_Vout])
+    ((BL_Err_Type (*) (uint8_t ldoLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo11_Aon_Vout])
 
 #define RomDriver_HBN_Set_Ldo11_Rt_Vout                   \
-    ((BL_Err_Type (*) (HBN_LDO_LEVEL_Type ldoLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo11_Rt_Vout])
+    ((BL_Err_Type (*) (uint8_t ldoLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo11_Rt_Vout])
 
 #define RomDriver_HBN_Set_Ldo11_Soc_Vout                  \
-    ((BL_Err_Type (*) (HBN_LDO_LEVEL_Type ldoLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo11_Soc_Vout])
+    ((BL_Err_Type (*) (uint8_t ldoLevel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo11_Soc_Vout])
 
 #define RomDriver_HBN_Set_Ldo18io_Power_Delay_Config      \
     ((BL_Err_Type (*) (uint16_t pwrOffDly, uint16_t pwrOnDly))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Ldo18io_Power_Delay_Config])
 
 #define RomDriver_HBN_Set_MCU_Root_CLK_Sel                \
-    ((BL_Err_Type (*) (HBN_MCU_ROOT_CLK_Type rootClk))ROM_APITABLE[ROM_API_INDEX_HBN_Set_MCU_Root_CLK_Sel])
+    ((BL_Err_Type (*) (uint8_t rootClk))ROM_APITABLE[ROM_API_INDEX_HBN_Set_MCU_Root_CLK_Sel])
 
 #define RomDriver_HBN_Set_MCU_XCLK_Sel                    \
-    ((BL_Err_Type (*) (HBN_MCU_XCLK_Type xclk))ROM_APITABLE[ROM_API_INDEX_HBN_Set_MCU_XCLK_Sel])
+    ((BL_Err_Type (*) (uint8_t xclk))ROM_APITABLE[ROM_API_INDEX_HBN_Set_MCU_XCLK_Sel])
 
 #define RomDriver_HBN_Set_PDS_Gpio_Keep                   \
     ((BL_Err_Type (*) (uint8_t gpioKeep))ROM_APITABLE[ROM_API_INDEX_HBN_Set_PDS_Gpio_Keep])
@@ -1334,13 +1334,13 @@ typedef enum {
     ((BL_Err_Type (*) (uint16_t threshold))ROM_APITABLE[ROM_API_INDEX_HBN_Set_PIR_Threshold])
 
 #define RomDriver_HBN_Set_RTC_Timer                       \
-    ((BL_Err_Type (*) (HBN_RTC_INT_Delay_Type delay, uint32_t compValLow, uint32_t compValHigh, uint8_t compMode))ROM_APITABLE[ROM_API_INDEX_HBN_Set_RTC_Timer])
+    ((BL_Err_Type (*) (uint8_t delay, uint32_t compValLow, uint32_t compValHigh, uint8_t compMode))ROM_APITABLE[ROM_API_INDEX_HBN_Set_RTC_Timer])
 
 #define RomDriver_HBN_Set_Status_Flag                     \
     ((BL_Err_Type (*) (uint32_t flag))ROM_APITABLE[ROM_API_INDEX_HBN_Set_Status_Flag])
 
 #define RomDriver_HBN_Set_UART_CLK_Sel                    \
-    ((BL_Err_Type (*) (HBN_UART_CLK_Type clkSel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_UART_CLK_Sel])
+    ((BL_Err_Type (*) (uint8_t clkSel))ROM_APITABLE[ROM_API_INDEX_HBN_Set_UART_CLK_Sel])
 
 #define RomDriver_HBN_Set_User_Boot_Config                \
     ((BL_Err_Type (*) (uint8_t ubCfg))ROM_APITABLE[ROM_API_INDEX_HBN_Set_User_Boot_Config])
@@ -1361,13 +1361,13 @@ typedef enum {
     ((BL_Sts_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_Get_BOD_OUT_State])
 
 #define RomDriver_HBN_Get_INT_State                       \
-    ((BL_Sts_Type (*) (HBN_INT_Type irqType))ROM_APITABLE[ROM_API_INDEX_HBN_Get_INT_State])
+    ((BL_Sts_Type (*) (uint8_t irqType))ROM_APITABLE[ROM_API_INDEX_HBN_Get_INT_State])
 
 #define RomDriver_HBN_Get_MCU_Root_CLK_Sel                \
-    ((HBN_MCU_ROOT_CLK_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_Get_MCU_Root_CLK_Sel])
+    ((uint8_t (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_Get_MCU_Root_CLK_Sel])
 
 #define RomDriver_HBN_Get_MCU_XCLK_Sel                    \
-    ((HBN_MCU_XCLK_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_Get_MCU_XCLK_Sel])
+    ((uint8_t (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_Get_MCU_XCLK_Sel])
 
 #define RomDriver_HBN_Get_PIR_Interval                    \
     ((uint16_t (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_Get_PIR_Interval])
@@ -1391,7 +1391,7 @@ typedef enum {
     ((uint8_t (*) (void))ROM_APITABLE[ROM_API_INDEX_HBN_Get_User_Boot_Config])
 
 #define RomDriver_HBN_Enable                              \
-    ((void (*) (uint32_t aGPIOIeCfg, HBN_LDO_LEVEL_Type ldoLevel, HBN_LEVEL_Type hbnLevel, uint8_t dcdcPuSeq))ROM_APITABLE[ROM_API_INDEX_HBN_Enable])
+    ((void (*) (uint32_t aGPIOIeCfg, uint8_t ldoLevel, uint8_t hbnLevel, uint8_t dcdcPuSeq))ROM_APITABLE[ROM_API_INDEX_HBN_Enable])
 
 #define RomDriver_HBN_Mode_Enter                          \
     ((void (*) (HBN_APP_CFG_Type *cfg))ROM_APITABLE[ROM_API_INDEX_HBN_Mode_Enter])
@@ -1460,7 +1460,7 @@ typedef enum {
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_PDS_IntClear])
 
 #define RomDriver_PDS_IntMask                             \
-    ((BL_Err_Type (*) (PDS_INT_Type intType, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_PDS_IntMask])
+    ((BL_Err_Type (*) (uint8_t intType, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_PDS_IntMask])
 
 #define RomDriver_PDS_RAM_Config                          \
     ((BL_Err_Type (*) (PDS_CTRL_RAM1_Type *ram1Cfg, PDS_CTRL_RAM2_Type *ram2Cfg, PDS_CTRL_RAM3_Type *ram3Cfg, PDS_CTRL_RAM4_Type *ram4Cfg))ROM_APITABLE[ROM_API_INDEX_PDS_RAM_Config])
@@ -1472,16 +1472,16 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t pinCfg))ROM_APITABLE[ROM_API_INDEX_PDS_Set_Flash_Pad_Pull_None_Fast])
 
 #define RomDriver_PDS_Set_GPIO_Pad_IntClr                 \
-    ((BL_Err_Type (*) (PDS_GPIO_INT_SET_Type set))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntClr])
+    ((BL_Err_Type (*) (uint8_t set))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntClr])
 
 #define RomDriver_PDS_Set_GPIO_Pad_IntMask                \
     ((BL_Err_Type (*) (GLB_GPIO_Type pad, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntMask])
 
 #define RomDriver_PDS_Set_GPIO_Pad_IntMode                \
-    ((BL_Err_Type (*) (PDS_GPIO_INT_SET_Type set, PDS_GPIO_INT_TRIG_Type trig))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntMode])
+    ((BL_Err_Type (*) (uint8_t set, uint8_t trig))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntMode])
 
 #define RomDriver_PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie            \
-    ((BL_Err_Type (*) (PDS_GPIO_GROUP_SET_Type grp, uint8_t pu, uint8_t pd, uint8_t ie))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie])
+    ((BL_Err_Type (*) (uint8_t grp, uint8_t pu, uint8_t pd, uint8_t ie))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie])
 
 #define RomDriver_PDS_Set_MCU0_Clock_Disable              \
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_PDS_Set_MCU0_Clock_Disable])
@@ -1511,7 +1511,7 @@ typedef enum {
     ((BL_Sts_Type (*) (GLB_GPIO_Type pad))ROM_APITABLE[ROM_API_INDEX_PDS_Get_GPIO_Pad_IntStatus])
 
 #define RomDriver_PDS_Get_IntStatus                       \
-    ((BL_Sts_Type (*) (PDS_INT_Type intType))ROM_APITABLE[ROM_API_INDEX_PDS_Get_IntStatus])
+    ((BL_Sts_Type (*) (uint8_t intType))ROM_APITABLE[ROM_API_INDEX_PDS_Get_IntStatus])
 
 #define RomDriver_SF_Cfg_Deinit_Ext_Flash_Gpio            \
     ((int (*) (uint8_t extFlashPin))ROM_APITABLE[ROM_API_INDEX_SF_Cfg_Deinit_Ext_Flash_Gpio])

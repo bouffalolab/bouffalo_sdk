@@ -4,7 +4,7 @@
 #include "bflb_efuse.h"
 
 static uint8_t rf_cal_slots = 3;
-extern void main(void);
+
 #define RF_CAL_SLOT_CFG_OFFSET (4 * 13)
 
 #define mfg_print printf
@@ -27,7 +27,7 @@ static int mfg_efuse_get_empty_slot(char *name, int *slot, int32_t *last_val, ui
 
     *slot = -1;
     *last_val = -1;
-    memcpy(buf, name, len);
+    arch_memcpy(buf, name, len);
     buf[len + 1] = '\0';
 
     if (rf_cal_slots >= 1) {

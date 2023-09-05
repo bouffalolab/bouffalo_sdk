@@ -112,7 +112,7 @@ int bflb_sha1_update(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, con
 
     if (left && len >= fill) {
         arch_memcpy_fast((void *)((uint8_t *)ctx->sha_buf + left), input, fill);
-        putreg32((uint32_t)ctx->sha_buf, reg_base + SEC_ENG_SE_SHA_0_MSA_OFFSET);
+        putreg32((uint32_t)(uintptr_t)ctx->sha_buf, reg_base + SEC_ENG_SE_SHA_0_MSA_OFFSET);
 
         regval &= ~SEC_ENG_SE_SHA_0_MSG_LEN_MASK;
         regval |= (1 << SEC_ENG_SE_SHA_0_MSG_LEN_SHIFT);
@@ -218,7 +218,7 @@ int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx,
 
     if (left && len >= fill) {
         arch_memcpy_fast((void *)((uint8_t *)ctx->sha_buf + left), input, fill);
-        putreg32((uint32_t)ctx->sha_buf, reg_base + SEC_ENG_SE_SHA_0_MSA_OFFSET);
+        putreg32((uint32_t)(uintptr_t)ctx->sha_buf, reg_base + SEC_ENG_SE_SHA_0_MSA_OFFSET);
 
         regval &= ~SEC_ENG_SE_SHA_0_MSG_LEN_MASK;
         regval |= (1 << SEC_ENG_SE_SHA_0_MSG_LEN_SHIFT);

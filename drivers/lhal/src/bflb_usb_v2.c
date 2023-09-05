@@ -822,9 +822,9 @@ int usbd_ep_set_stall(const uint8_t ep)
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
 
     if (ep_idx == 0) {
-        regval = getreg32(BLFB_USB_BASE + USB_DEV_ADR_OFFSET);
+        regval = getreg32(BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
         regval |= USB_CX_STL;
-        putreg32(regval, BLFB_USB_BASE + USB_DEV_ADR_OFFSET);
+        putreg32(regval, BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
     } else {
         if (USB_EP_DIR_IS_OUT(ep)) {
             regval = getreg32(BLFB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);

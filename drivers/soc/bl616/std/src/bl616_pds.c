@@ -101,7 +101,7 @@ static intCallback_Type *pdsIntCbfArra[PDS_INT_MAX] = { NULL };
  * @note   Pu and Pd not depend on IE
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(PDS_GPIO_GROUP_SET_Type grp, uint8_t pu, uint8_t pd, uint8_t ie)
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(uint8_t grp, uint8_t pu, uint8_t pd, uint8_t ie)
 {
     uint32_t tmpVal;
     uint32_t tmpValPu;
@@ -184,7 +184,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMode(PDS_GPIO_INT_SET_Type set, PDS_GPIO_INT_TRIG_Type trig)
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMode(uint8_t set, uint8_t trig)
 {
     uint32_t tmpVal = 0;
 
@@ -221,7 +221,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMode(PDS_GPIO_INT_SET_Type set,
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntClr(PDS_GPIO_INT_SET_Type set)
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntClr(uint8_t set)
 {
     uint32_t tmpVal = 0;
 
@@ -590,7 +590,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Default_Level_Config(PDS_DEFAULT_LV_CFG_Type *d
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type PDS_IntMask(PDS_INT_Type intType, BL_Mask_Type intMask)
+BL_Err_Type PDS_IntMask(uint8_t intType, BL_Mask_Type intMask)
 {
     uint32_t tmpVal = 0;
 
@@ -613,7 +613,7 @@ BL_Err_Type PDS_IntMask(PDS_INT_Type intType, BL_Mask_Type intMask)
  * @return SET or RESET
  *
 *******************************************************************************/
-BL_Sts_Type PDS_Get_IntStatus(PDS_INT_Type intType)
+BL_Sts_Type PDS_Get_IntStatus(uint8_t intType)
 {
     return (BL_RD_REG(PDS_BASE, PDS_INT) & (1 << intType)) ? SET : RESET;
 }
@@ -655,7 +655,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_IntClear(void)
  *
 *******************************************************************************/
 #ifndef BFLB_USE_HAL_DRIVER
-BL_Err_Type PDS_Int_Callback_Install(PDS_INT_Type intType, intCallback_Type *cbFun)
+BL_Err_Type PDS_Int_Callback_Install(uint8_t intType, intCallback_Type *cbFun)
 {
 #ifndef BFLB_USE_HAL_DRIVER
     Interrupt_Handler_Register(PDS_WAKEUP_IRQn, PDS_WAKEUP_IRQHandler);
@@ -901,7 +901,7 @@ BL_Err_Type PDS_Set_USB_Resume(void)
 #ifndef BFLB_USE_HAL_DRIVER
 void PDS_WAKEUP_IRQHandler(void)
 {
-    for (PDS_INT_Type intType = PDS_INT_WAKEUP; intType < PDS_INT_MAX; intType++) {
+    for (uint8_t intType = PDS_INT_WAKEUP; intType < PDS_INT_MAX; intType++) {
         if (PDS_Get_IntStatus(intType) && (pdsIntCbfArra[intType] != NULL)) {
             pdsIntCbfArra[intType]();
         }

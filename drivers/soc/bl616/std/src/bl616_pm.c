@@ -623,7 +623,8 @@ void ATTR_TCM_SECTION pm_pds_mode_enter(enum pm_pds_sleep_level pds_level,
     pm_pds_intc_clr();
 
     /* enable PDS interrupt to wakeup CPU (PDS1:CPU not powerdown, CPU __WFI)*/
-    pm_pds_irq_register();
+    /* if enter pds1, please User call pm_pds_irq_register function before pm_pds_mode_enter */
+    // pm_pds_irq_register();
     /***********************************************************/
 
     switch (pds_level) {

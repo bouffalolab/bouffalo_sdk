@@ -382,7 +382,7 @@ const GLB_SLAVE_GRP_0_TBL_Type ATTR_CLOCK_CONST_SECTION glb_slave_grp_0_table[GL
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_Muxpll_160M_Sel(GLB_MCU_MUXPLL_160M_CLK_SEL_Type clkSel)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_Muxpll_160M_Sel(uint8_t clkSel)
 {
     uint32_t tmpVal;
 
@@ -403,12 +403,12 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_Muxpll_160M_Sel(GLB_MCU_MUXPLL_160M_C
  * @return 160M mux select value
  *
 *******************************************************************************/
-GLB_MCU_MUXPLL_160M_CLK_SEL_Type ATTR_CLOCK_SECTION GLB_Get_MCU_Muxpll_160M_Sel(void)
+uint8_t ATTR_CLOCK_SECTION GLB_Get_MCU_Muxpll_160M_Sel(void)
 {
     uint32_t tmpVal;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_DIG_CLK_CFG1);
-    return (GLB_MCU_MUXPLL_160M_CLK_SEL_Type)(BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_TOP_MUXPLL_160M_SEL));
+    return (uint8_t)(BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_TOP_MUXPLL_160M_SEL));
 }
 
 /****************************************************************************/ /**
@@ -419,7 +419,7 @@ GLB_MCU_MUXPLL_160M_CLK_SEL_Type ATTR_CLOCK_SECTION GLB_Get_MCU_Muxpll_160M_Sel(
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_Muxpll_80M_Sel(GLB_MCU_MUXPLL_80M_CLK_SEL_Type clkSel)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_Muxpll_80M_Sel(uint8_t clkSel)
 {
     uint32_t tmpVal;
 
@@ -440,12 +440,12 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_Muxpll_80M_Sel(GLB_MCU_MUXPLL_80M_CLK
  * @return 80M mux select value
  *
 *******************************************************************************/
-GLB_MCU_MUXPLL_80M_CLK_SEL_Type ATTR_CLOCK_SECTION GLB_Get_MCU_Muxpll_80M_Sel(void)
+uint8_t ATTR_CLOCK_SECTION GLB_Get_MCU_Muxpll_80M_Sel(void)
 {
     uint32_t tmpVal;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_DIG_CLK_CFG1);
-    return (GLB_MCU_MUXPLL_80M_CLK_SEL_Type)(BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_TOP_MUXPLL_80M_SEL));
+    return (uint8_t)(BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_TOP_MUXPLL_80M_SEL));
 }
 
 /****************************************************************************/ /**
@@ -456,7 +456,7 @@ GLB_MCU_MUXPLL_80M_CLK_SEL_Type ATTR_CLOCK_SECTION GLB_Get_MCU_Muxpll_80M_Sel(vo
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_ISP_Muxpll_80M_Sel(GLB_ISP_MUXPLL_80M_CLK_SEL_Type clkSel)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_ISP_Muxpll_80M_Sel(uint8_t clkSel)
 {
     uint32_t tmpVal;
 
@@ -477,12 +477,12 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_ISP_Muxpll_80M_Sel(GLB_ISP_MUXPLL_80M_CLK
  * @return 80M mux select value
  *
 *******************************************************************************/
-GLB_ISP_MUXPLL_80M_CLK_SEL_Type ATTR_CLOCK_SECTION GLB_Get_ISP_Muxpll_80M_Sel(void)
+uint8_t ATTR_CLOCK_SECTION GLB_Get_ISP_Muxpll_80M_Sel(void)
 {
     uint32_t tmpVal;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_DIG_CLK_CFG1);
-    return (GLB_ISP_MUXPLL_80M_CLK_SEL_Type)(BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_ISP_MUXPLL_80M_SEL));
+    return (uint8_t)(BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_ISP_MUXPLL_80M_SEL));
 }
 
 /****************************************************************************/ /**
@@ -494,12 +494,12 @@ GLB_ISP_MUXPLL_80M_CLK_SEL_Type ATTR_CLOCK_SECTION GLB_Get_ISP_Muxpll_80M_Sel(vo
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_Type xtalType, GLB_PLL_Type pllType)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_XTAL_And_PLL_CLK(uint8_t xtalType, uint8_t pllType)
 {
     uint32_t tmpVal;
-    HBN_MCU_XCLK_Type mcuXclkSel;
-    HBN_MCU_ROOT_CLK_Type mcuRootClkSel;
-    volatile GLB_PLL_REF_CLK_Type refClk;
+    uint8_t mcuXclkSel;
+    uint8_t mcuRootClkSel;
+    volatile uint8_t refClk;
 
     CHECK_PARAM(IS_GLB_XTAL_TYPE(xtalType));
     CHECK_PARAM((pllType < (GLB_PLL_AUPLL * 2)));
@@ -514,7 +514,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_Type xtalT
     }
 
 #if defined(DUAL_CORE)
-    GLB_CORE_ID_Type coreType;
+    uint8_t coreType;
     coreType = GLB_Get_Core_Type();
     if ((GLB_CORE_ID_M0 == coreType)) {
 #endif
@@ -612,7 +612,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_Off_WIFIPLL(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_WIFIPLL_Ref_Clk_Sel(GLB_PLL_REF_CLK_Type refClk)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_WIFIPLL_Ref_Clk_Sel(uint8_t refClk)
 {
     uint32_t REG_PLL_BASE_ADDRESS = 0;
     uint32_t tmpVal = 0;
@@ -802,7 +802,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_Off_AUPLL(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_AUPLL_Ref_Clk_Sel(GLB_PLL_REF_CLK_Type refClk)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_AUPLL_Ref_Clk_Sel(uint8_t refClk)
 {
     uint32_t REG_PLL_BASE_ADDRESS = 0;
     uint32_t tmpVal = 0;
@@ -1034,8 +1034,8 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_System_CLK_Div(uint8_t mcuClkDiv, uin
 {
     uint32_t tmpVal;
     uint32_t timeout = 1024;
-    HBN_MCU_XCLK_Type xclkSel;
-    HBN_MCU_ROOT_CLK_Type rootClkSel;
+    uint8_t xclkSel;
+    uint8_t rootClkSel;
 
     /* get root clock */
     xclkSel = HBN_Get_MCU_XCLK_Sel();
@@ -1107,10 +1107,10 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Get_MCU_System_CLK_Div(uint8_t *mcuClkDiv, ui
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_Type clkFreq)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_System_CLK(uint8_t clkFreq)
 {
     uint32_t tmpVal;
-    HBN_MCU_XCLK_Type mcuXclkSel;
+    uint8_t mcuXclkSel;
 
     CHECK_PARAM(IS_GLB_MCU_SYS_CLK_TYPE(clkFreq));
 
@@ -1214,7 +1214,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_Type clkFr
  * @return core type
  *
 *******************************************************************************/
-GLB_CORE_ID_Type ATTR_CLOCK_SECTION GLB_Get_Core_Type(void)
+uint8_t ATTR_CLOCK_SECTION GLB_Get_Core_Type(void)
 {
     uint32_t tmpVal = 0;
 
@@ -1239,7 +1239,7 @@ GLB_CORE_ID_Type ATTR_CLOCK_SECTION GLB_Get_Core_Type(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_CPU_Reset_Address(GLB_CORE_ID_Type coreID, uint32_t addr)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_CPU_Reset_Address(uint8_t coreID, uint32_t addr)
 {
     CHECK_PARAM(IS_GLB_CORE_ID_TYPE(coreID));
 
@@ -1289,7 +1289,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Clr_EMI_Reset_Gate(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_ADC_CLK(uint8_t enable, GLB_ADC_CLK_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_ADC_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
 #ifndef BOOTROM
     uint32_t tmpVal;
@@ -1328,7 +1328,7 @@ BL_Err_Type GLB_Set_ADC_CLK(uint8_t enable, GLB_ADC_CLK_Type clkSel, uint8_t div
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, GLB_DMA_CLK_ID_Type clk)
+BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, uint8_t clk)
 {
     uint32_t tmpVal;
     uint32_t tmpVal2;
@@ -1358,7 +1358,7 @@ BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, GLB_DMA_CLK_ID_Type clk)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Peripheral_DMA_CN(GLB_PERI_DMA_Type peri, GLB_PERI_DMA_CN_SEL_Type cn)
+BL_Err_Type GLB_Set_Peripheral_DMA_CN(uint8_t peri, uint8_t cn)
 {
     uint32_t tmpVal = 0;
 
@@ -1388,7 +1388,7 @@ BL_Err_Type GLB_Set_Peripheral_DMA_CN(GLB_PERI_DMA_Type peri, GLB_PERI_DMA_CN_SE
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, GLB_IR_CLK_SRC_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
 #ifndef BOOTROM
     uint32_t tmpVal = 0;
@@ -1418,7 +1418,7 @@ BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, GLB_IR_CLK_SRC_Type clkSel, uint8_t d
 }
 
 /****************************************************************************/ /**
- * @brief  Select ir rx gpio (gpio11~gpio13)
+ * @brief  Select ir rx gpio (gpio9~gpio23)
  *
  * @param  gpio: IR gpio selected
  *
@@ -1458,7 +1458,7 @@ BL_Err_Type GLB_IR_RX_GPIO_Sel(GLB_GPIO_Type gpio)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, HBN_UART_CLK_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
     uint32_t tmpVal = 0;
 
@@ -1499,7 +1499,7 @@ BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, HBN_UART_CLK_Type clkSel, uint8_t d
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_UART_Fun_Sel(GLB_UART_SIG_Type sig, GLB_UART_SIG_FUN_Type fun)
+BL_Err_Type GLB_UART_Fun_Sel(uint8_t sig, uint8_t fun)
 {
     uint32_t sig_pos = 0;
     uint32_t tmpVal = 0;
@@ -1538,7 +1538,7 @@ BL_Err_Type GLB_UART_Fun_Sel(GLB_UART_SIG_Type sig, GLB_UART_SIG_FUN_Type fun)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_SF_CLK(uint8_t enable, GLB_SFLASH_CLK_Type clkSel, uint8_t div)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_SF_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
     uint32_t tmpVal = 0;
 
@@ -1607,7 +1607,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_SF_CLK(uint8_t enable, GLB_SFLASH_CLK_Typ
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, GLB_I2C_CLK_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
 #ifndef BOOTROM
     uint32_t tmpVal = 0;
@@ -1645,7 +1645,7 @@ BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, GLB_I2C_CLK_Type clkSel, uint8_t div
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, GLB_I2S_DI_REF_CLK_Type inRef, GLB_I2S_DO_REF_CLK_Type outRef)
+BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, uint8_t outRef)
 {
     uint32_t tmpVal = 0;
 
@@ -1677,7 +1677,7 @@ BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, GLB_I2S_DI_REF_
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, GLB_SPI_CLK_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
 #ifndef BOOTROM
     uint32_t tmpVal = 0;
@@ -1714,7 +1714,7 @@ BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, GLB_SPI_CLK_Type clkSel, uint8_t div
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_SPI_Sig_Swap_Set(GLB_SPI_SIG_SWAP_GRP_Type group, uint8_t swap)
+BL_Err_Type GLB_SPI_Sig_Swap_Set(uint8_t group, uint8_t swap)
 {
     uint32_t tmpVal = 0;
     uint32_t tmpVal2 = 0;
@@ -1742,7 +1742,7 @@ BL_Err_Type GLB_SPI_Sig_Swap_Set(GLB_SPI_SIG_SWAP_GRP_Type group, uint8_t swap)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_SEL_Type ioSel)
+BL_Err_Type GLB_Set_PWM1_IO_Sel(uint8_t ioSel)
 {
     uint32_t tmpVal = 0;
 
@@ -1764,7 +1764,7 @@ BL_Err_Type GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_SEL_Type ioSel)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_PDM_IO_Sel(GLB_PDM_IO_SEL_Type ioSel)
+BL_Err_Type GLB_Set_PDM_IO_Sel(uint8_t ioSel)
 {
     uint32_t tmpVal = 0;
 
@@ -1787,7 +1787,7 @@ BL_Err_Type GLB_Set_PDM_IO_Sel(GLB_PDM_IO_SEL_Type ioSel)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_DBI_CLK(uint8_t enable, GLB_DBI_CLK_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_DBI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
 #ifndef BOOTROM
     uint32_t tmpVal = 0;
@@ -1823,7 +1823,7 @@ BL_Err_Type GLB_Set_DBI_CLK(uint8_t enable, GLB_DBI_CLK_Type clkSel, uint8_t div
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_DIG_CLK_Sel(GLB_DIG_CLK_Type clkSel)
+BL_Err_Type GLB_Set_DIG_CLK_Sel(uint8_t clkSel)
 {
     uint32_t tmpVal;
     uint32_t dig512kEn;
@@ -1993,7 +1993,7 @@ BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(GLB_GPIO_Type gpioPin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Chip_Clock_Out0_Sel(GLB_CHIP_CLK_OUT_0_Type clkOutType)
+BL_Err_Type GLB_Set_Chip_Clock_Out0_Sel(uint8_t clkOutType)
 {
     uint32_t tmpVal;
 
@@ -2014,7 +2014,7 @@ BL_Err_Type GLB_Set_Chip_Clock_Out0_Sel(GLB_CHIP_CLK_OUT_0_Type clkOutType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Chip_Clock_Out1_Sel(GLB_CHIP_CLK_OUT_1_Type clkOutType)
+BL_Err_Type GLB_Set_Chip_Clock_Out1_Sel(uint8_t clkOutType)
 {
     uint32_t tmpVal;
 
@@ -2035,7 +2035,7 @@ BL_Err_Type GLB_Set_Chip_Clock_Out1_Sel(GLB_CHIP_CLK_OUT_1_Type clkOutType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Chip_Clock_Out2_Sel(GLB_CHIP_CLK_OUT_2_Type clkOutType)
+BL_Err_Type GLB_Set_Chip_Clock_Out2_Sel(uint8_t clkOutType)
 {
     uint32_t tmpVal;
 
@@ -2056,7 +2056,7 @@ BL_Err_Type GLB_Set_Chip_Clock_Out2_Sel(GLB_CHIP_CLK_OUT_2_Type clkOutType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Chip_Clock_Out3_Sel(GLB_CHIP_CLK_OUT_3_Type clkOutType)
+BL_Err_Type GLB_Set_Chip_Clock_Out3_Sel(uint8_t clkOutType)
 {
     uint32_t tmpVal;
 
@@ -2146,7 +2146,7 @@ BL_Err_Type GLB_Clr_BMX_TO_Status(void)
  *
 *******************************************************************************/
 #ifndef BFLB_USE_HAL_DRIVER
-BL_Err_Type BMX_TIMEOUT_INT_Callback_Install(BMX_TO_INT_Type intType, intCallback_Type *cbFun)
+BL_Err_Type BMX_TIMEOUT_INT_Callback_Install(uint8_t intType, intCallback_Type *cbFun)
 {
     CHECK_PARAM(IS_BMX_TO_INT_TYPE(intType));
 
@@ -2167,7 +2167,7 @@ BL_Err_Type BMX_TIMEOUT_INT_Callback_Install(BMX_TO_INT_Type intType, intCallbac
 #ifndef BFLB_USE_HAL_DRIVER
 void BMX_TO_IRQHandler(void)
 {
-    BMX_TO_INT_Type intType;
+    uint8_t intType;
 
     for (intType = 0; intType < BMX_TO_INT_ALL; intType++) {
         if (glbBmxToIntCbfArra[intType] != NULL) {
@@ -2350,7 +2350,7 @@ BL_Err_Type GLB_Invert_ETH_REF_O_CLK(uint8_t enable)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(GLB_ETH_REF_CLK_OUT_Type clkSel)
+BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(uint8_t clkSel)
 {
     uint32_t tmpVal = 0;
 
@@ -2373,7 +2373,7 @@ BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(GLB_ETH_REF_CLK_OUT_Type clkSel)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, GLB_CAM_CLK_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
 #ifndef BOOTROM
     uint32_t tmpVal = 0;
@@ -2411,7 +2411,7 @@ BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, GLB_CAM_CLK_Type clkSel, uint8_t div
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_SDH_CLK(uint8_t enable, GLB_SDH_CLK_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_SDH_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
 #ifndef BOOTROM
     uint32_t tmpVal = 0;
@@ -2519,7 +2519,7 @@ BL_Err_Type GLB_Config_SDIO_Host_Interrupt_CPU(uint8_t enable)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_UART_Sig_Swap_Set(GLB_UART_SIG_SWAP_GRP_Type group, uint8_t swap)
+BL_Err_Type GLB_UART_Sig_Swap_Set(uint8_t group, uint8_t swap)
 {
     uint32_t tmpVal = 0;
     uint32_t tmpVal2 = 0;
@@ -2566,7 +2566,7 @@ BL_Err_Type GLB_Swap_MCU_SPI_0_MOSI_With_MISO(BL_Fun_Type newState)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_MCU_SPI_0_ACT_MOD_Sel(GLB_SPI_PAD_ACT_AS_Type mod)
+BL_Err_Type GLB_Set_MCU_SPI_0_ACT_MOD_Sel(uint8_t mod)
 {
     uint32_t tmpVal;
 
@@ -2702,7 +2702,7 @@ BL_Err_Type GLB_Get_Reset_Reason(GLB_RESET_RECORD_Type *reason)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_Type swrst)
+BL_Err_Type GLB_AHB_MCU_Software_Reset(uint8_t swrst)
 {
     uint32_t tmpVal = 0;
     uint32_t bit = 0;
@@ -2745,7 +2745,7 @@ BL_Err_Type GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_Type swrst)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Disrst_Set(uint8_t enable, GLB_DISRST_Type disrst)
+BL_Err_Type GLB_Disrst_Set(uint8_t enable, uint8_t disrst)
 {
     uint32_t tmpVal = 0;
 
@@ -3162,7 +3162,7 @@ BL_Err_Type GLB_PER_Clock_UnGate(uint64_t ips)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_PLL_CGEN_Clock_Gate(GLB_PLL_CGEN_Type clk)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_PLL_CGEN_Clock_Gate(uint8_t clk)
 {
     uint32_t tmpVal = 0;
 
@@ -3183,7 +3183,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_PLL_CGEN_Clock_Gate(GLB_PLL_CGEN_Type clk)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_Type clk)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_PLL_CGEN_Clock_UnGate(uint8_t clk)
 {
     uint32_t tmpVal = 0;
 
@@ -3204,7 +3204,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_Type clk)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_Type clkSel)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_PKA_CLK_Sel(uint8_t clkSel)
 {
     uint32_t tmpVal = 0;
 
@@ -3225,7 +3225,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_Type clkSel)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_MCU_SW_System_Reset(GLB_MCU_SW_SYSTEM_Type sysPart)
+BL_Err_Type ATTR_TCM_SECTION GLB_MCU_SW_System_Reset(uint8_t sysPart)
 {
     uint32_t tmpVal = 0;
 
@@ -3297,7 +3297,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_SW_CPU_Reset(void)
     uint32_t tmpVal;
 
 #if defined(DUAL_CORE)
-    GLB_CORE_ID_Type core = GLB_CORE_ID_INVALID;
+    uint8_t core = GLB_CORE_ID_INVALID;
     /* Do reset */
     core = GLB_Get_Core_Type();
     switch (core) {
@@ -3377,7 +3377,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_SW_POR_Reset(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_Auto_Calc_Xtal_Type(GLB_XTAL_Type calcXtalType)
+BL_Err_Type GLB_Set_Auto_Calc_Xtal_Type(uint8_t calcXtalType)
 {
     uint32_t tmpVal = 0;
 
@@ -3400,7 +3400,7 @@ BL_Err_Type GLB_Set_Auto_Calc_Xtal_Type(GLB_XTAL_Type calcXtalType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(GLB_XTAL_Type *calcXtalType)
+BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(uint8_t *calcXtalType)
 {
     uint32_t tmpVal = 0;
 
@@ -3625,7 +3625,7 @@ uint32_t GLB_Get_SRAM_PARM(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_EM_Sel(GLB_EM_Type emType)
+BL_Err_Type GLB_Set_EM_Sel(uint8_t emType)
 {
     uint32_t tmpVal = 0;
 
@@ -3661,7 +3661,7 @@ BL_Err_Type GLB_Set_EM_Sel(GLB_EM_Type emType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_PSRAMB_CLK_Sel(uint8_t enable, GLB_PSRAMB_PLL_Type clkSel, uint8_t div)
+BL_Err_Type GLB_Set_PSRAMB_CLK_Sel(uint8_t enable, uint8_t clkSel, uint8_t div)
 {
 #ifndef BOOTROM
     uint32_t tmpVal = 0;
@@ -3700,7 +3700,7 @@ BL_Err_Type GLB_Set_PSRAMB_CLK_Sel(uint8_t enable, GLB_PSRAMB_PLL_Type clkSel, u
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_Slave_Grp_0_CLK(GLB_SLAVE_GRP_0_Type slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_Slave_Grp_0_CLK(uint8_t slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div)
 {
     uint32_t tmpVal;
     uint32_t regAddr = GLB_BASE + glb_slave_grp_0_table[slave].clkOffSetAddr;
@@ -3751,9 +3751,9 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_Slave_Grp_0_CLK(GLB_SLAVE_GRP_0_Type slav
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(uint8_t xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList)
 {
-    GLB_PLL_REF_CLK_Type refClk;
+    uint8_t refClk;
 
     if (xtalType == GLB_XTAL_RC32M) {
         refClk = GLB_PLL_REFCLK_RC32M;
@@ -3777,9 +3777,9 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL(GLB_XTAL_Type xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL(uint8_t xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList)
 {
-    GLB_PLL_REF_CLK_Type refClk;
+    uint8_t refClk;
 
     if (xtalType == GLB_XTAL_RC32M) {
         refClk = GLB_PLL_REFCLK_RC32M;
@@ -3808,7 +3808,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_240M(void)
     uint8_t xtalType=GLB_XTAL_NONE;
 
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType,audioPllCfg_240M);
+    return GLB_Config_AUDIO_PLL((uint8_t)xtalType,audioPllCfg_240M);
 }
 
 /****************************************************************************/ /**
@@ -3825,7 +3825,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_245P76M(void)
     uint8_t xtalType=GLB_XTAL_NONE;
 
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType,audioPllCfg_245P76M);
+    return GLB_Config_AUDIO_PLL((uint8_t)xtalType,audioPllCfg_245P76M);
 }
 
 /****************************************************************************/ /**
@@ -3844,7 +3844,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_384M(void)
     /* we take 384M for CPU use,so set LDO to 1.2V*/
     HBN_Set_Ldo11_All_Vout(HBN_LDO_LEVEL_1P20V);
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType, audioPllCfg_384M);
+    return GLB_Config_AUDIO_PLL((uint8_t)xtalType, audioPllCfg_384M);
 }
 
 /****************************************************************************/ /**
@@ -3861,7 +3861,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_400M(void)
     uint8_t xtalType = GLB_XTAL_NONE;
 
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType, audioPllCfg_400M);
+    return GLB_Config_AUDIO_PLL((uint8_t)xtalType, audioPllCfg_400M);
 }
 
 /****************************************************************************/ /**
@@ -3878,7 +3878,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_451P58M(void)
     uint8_t xtalType = GLB_XTAL_NONE;
 
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType, audioPllCfg_451P58M);
+    return GLB_Config_AUDIO_PLL((uint8_t)xtalType, audioPllCfg_451P58M);
 }
 
 /****************************************************************************/ /**
@@ -3895,7 +3895,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_491P52M(void)
     uint8_t xtalType = GLB_XTAL_NONE;
 
     HBN_Get_Xtal_Type(&xtalType);
-    return GLB_Config_AUDIO_PLL((GLB_XTAL_Type)xtalType, audioPllCfg_491P52M);
+    return GLB_Config_AUDIO_PLL((uint8_t)xtalType, audioPllCfg_491P52M);
 }
 
 /****************************************************************************/ /**
@@ -3908,7 +3908,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_AUDIO_PLL_To_491P52M(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_CLOCK_SECTION GLB_Simple_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_Type clkFreq, uint8_t mcuClkDiv, uint8_t mcuPBclkDiv)
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Simple_Set_MCU_System_CLK(uint8_t clkFreq, uint8_t mcuClkDiv, uint8_t mcuPBclkDiv)
 {
     uint32_t tmpVal;
     uint32_t timeout;

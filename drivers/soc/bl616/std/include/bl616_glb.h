@@ -64,157 +64,166 @@ extern "C" {
  *  @{
  */
 
+/** @defgroup GLB_CORE_ID definition
+  * @{
+  */
+#define GLB_CORE_ID_M0                                   (0) /*!< M0 */
+#define GLB_CORE_ID_MAX                                  (1) /*!< ID max */
+#define GLB_CORE_ID_INVALID                              (2) /*!< ID invalid */
 /**
- *  @brief GLB core ID type definition
- */
-typedef enum {
-    GLB_CORE_ID_M0,      /*!< M0 */
-    GLB_CORE_ID_MAX,     /*!< ID max */
-    GLB_CORE_ID_INVALID, /*!< ID invalid */
-} GLB_CORE_ID_Type;
+  * @}
+  */
 
+/** @defgroup CCI_ID definition
+  * @{
+  */
+#define CCI0_ID                                          (0) /*!< CCI0 port define */
+#define CCI_ID_MAX                                       (1) /*!< CCI MAX ID define */
 /**
- *  @brief cci ID type definition
- */
-typedef enum {
-    CCI0_ID,    /*!< CCI0 port define */
-    CCI_ID_MAX, /*!< CCI MAX ID define */
-} CCI_ID_Type;
+  * @}
+  */
 
+/** @defgroup GLB MCU all interrupt type definition
+  * @{
+  */
+#define GLB_MCU_ALL_INT_BMX_ERR_INT                      (0)  /*!< bmx_err_intmcu_dec_err_int */
+#define GLB_MCU_ALL_INT_BMX_TIMEOUT_INT_MCU_TIMEOUT_INT  (1)  /*!< bmx_timeout_intmcu_timeout_int */
+#define GLB_MCU_ALL_INT_IPC0_NP2AP_IRQ                   (2)  /*!< ipc0_np2ap_irq */
+#define GLB_MCU_ALL_INT_IPC0_AP2NP_IRQ                   (3)  /*!< ipc0_ap2np_irq */
+#define GLB_MCU_ALL_INT_AUDIO_INT                        (4)  /*!< audio_int */
+#define GLB_MCU_ALL_INT_RF_TOP_INT_0                     (5)  /*!< rf_top_int[0] */
+#define GLB_MCU_ALL_INT_RF_TOP_INT_1                     (6)  /*!< rf_top_int[1] */
+#define GLB_MCU_ALL_INT_LZ4_INT                          (7)  /*!< lz4_int */
+#define GLB_MCU_ALL_INT_RSV8                             (8)  /*!< rsv8 */
+#define GLB_MCU_ALL_INT_SEC_ENG_ID0_GMAC_INT             (9)  /*!< sec_eng_id0_gmac_int */
+#define GLB_MCU_ALL_INT_SEC_ENG_ID0_CDET_INT             (10) /*!< sec_eng_id0_cdet_int */
+#define GLB_MCU_ALL_INT_SEC_ENG_ID0_PKA_INT              (11) /*!< sec_eng_id0_pka_int */
+#define GLB_MCU_ALL_INT_SEC_ENG_ID0_TRNG_INT             (12) /*!< sec_eng_id0_trng_int */
+#define GLB_MCU_ALL_INT_SEC_ENG_ID0_AES_INT              (13) /*!< sec_eng_id0_aes_int */
+#define GLB_MCU_ALL_INT_SEC_ENG_ID0_SHA_INT              (14) /*!< sec_eng_id0_sha_int */
+#define GLB_MCU_ALL_INT_DMA_INTR_ALL                     (15) /*!< DMA_INTR_ALL */
+#define GLB_MCU_ALL_INT_DMA2_INTR_ALL                    (16) /*!< DMA2_INTR_ALL */
+#define GLB_MCU_ALL_INT_SDH_MMC1_INT_SDH2PMU_WAKEUP_INT1 (17) /*!< sdh_mmc1_intsdh2pmu_wakeup_int1 */
+#define GLB_MCU_ALL_INT_MM_IRQ_ALL                       (18) /*!< mm_irq_all */
+#define GLB_MCU_ALL_INT_IRTX_INT                         (19) /*!< irtx_int */
+#define GLB_MCU_ALL_INT_IRRX_INT                         (20) /*!< irrx_int */
+#define GLB_MCU_ALL_INT_USB_INT                          (21) /*!< usb_int */
+#define GLB_MCU_ALL_INT_AUPDM_INT                        (22) /*!< aupdm_int */
+#define GLB_MCU_ALL_INT_SF_CTRL_ID0_INT                  (23) /*!< sf_ctrl_id0_int */
+#define GLB_MCU_ALL_INT_EMAC_INT                         (24) /*!< emac_int */
+#define GLB_MCU_ALL_INT_GPADC_DMA_INT                    (25) /*!< gpadc_dma_int */
+#define GLB_MCU_ALL_INT_EFUSE_INT                        (26) /*!< efuse_int */
+#define GLB_MCU_ALL_INT_SPI_0_INT                        (27) /*!< spi_0_int */
+#define GLB_MCU_ALL_INT_UART_IRQ                         (28) /*!< uart_irq */
+#define GLB_MCU_ALL_INT_UART1_IRQ                        (29) /*!< uart1_irq */
+#define GLB_MCU_ALL_INT_UART2_IRQ                        (30) /*!< uart2_irq */
+#define GLB_MCU_ALL_INT_GPIO_DMA_INT                     (31) /*!< gpio_dma_int */
+#define GLB_MCU_ALL_INT_I2C_0_INT                        (32) /*!< i2c_0_int */
+#define GLB_MCU_ALL_INT_PWM_INT                          (33) /*!< pwm_int */
+#define GLB_MCU_ALL_INT_IPC1_NP2AP_IRQ                   (34) /*!< ipc1_np2ap_irq */
+#define GLB_MCU_ALL_INT_IPC1_AP2NP_IRQ                   (35) /*!< ipc1_ap2np_irq */
+#define GLB_MCU_ALL_INT_TIMER0_2_IRQ                     (36) /*!< timer0_2_irq */
+#define GLB_MCU_ALL_INT_TIMER0_3_IRQ                     (37) /*!< timer0_3_irq */
+#define GLB_MCU_ALL_INT_WDT0_IRQ                         (38) /*!< wdt0_irq */
+#define GLB_MCU_ALL_INT_I2C_1_INT                        (39) /*!< i2c_1_int */
+#define GLB_MCU_ALL_INT_I2S0_INT                         (40) /*!< i2s0_int */
+#define GLB_MCU_ALL_INT_RSV41                            (41) /*!< rsv41 */
+#define GLB_MCU_ALL_INT_RSV42                            (42) /*!< rsv42 */
+#define GLB_MCU_ALL_INT_ANA_OCP_OUT_TO_CPU_IRQ           (43) /*!< ana_ocp_out_to_cpu_irq[2:0] */
+#define GLB_MCU_ALL_INT_GPIO_IRQ                         (44) /*!< gpio_irq */
+#define GLB_MCU_ALL_INT_DM_IRQ                           (45) /*!< dm_irq */
+#define GLB_MCU_ALL_INT_BT_IRQ                           (46) /*!< bt_irq */
+#define GLB_MCU_ALL_INT_M154_REQ_ENH_ACK_INT             (47) /*!< m154_req_enh_ack_int */
+#define GLB_MCU_ALL_INT_M154_INT                         (48) /*!< m154_int */
+#define GLB_MCU_ALL_INT_M154_AES_INT                     (49) /*!< m154_aes_int */
+#define GLB_MCU_ALL_INT_PDS_INT                          (50) /*!< pds_int */
+#define GLB_MCU_ALL_INT_HBN_IRQ_OUT_0                    (51) /*!< hbn_irq_out[0] */
+#define GLB_MCU_ALL_INT_HBN_IRQ_OUT_1                    (52) /*!< hbn_irq_out[1] */
+#define GLB_MCU_ALL_INT_BOR_OUT                          (53) /*!< bor_out */
+#define GLB_MCU_ALL_INT_WIFI_TO_CPU_IRQ_N                (54) /*!< wifi_to_cpu_irq_n */
+#define GLB_MCU_ALL_INT_BZ_PHY_INT                       (55) /*!< bz_phy_int */
+#define GLB_MCU_ALL_INT_BLE_INT                          (56) /*!< ble_int */
+#define GLB_MCU_ALL_INT_MAC_INT_TX_RX_TIMER              (57) /*!< mac_int_tx_rx_timer */
+#define GLB_MCU_ALL_INT_MAC_INT_TX_RX_MISC               (58) /*!< mac_int_tx_rx_misc */
+#define GLB_MCU_ALL_INT_MAC_INT_RX_TRIGGER               (59) /*!< mac_int_rx_trigger */
+#define GLB_MCU_ALL_INT_MAC_INT_TX_TRIGGER               (60) /*!< mac_int_tx_trigger */
+#define GLB_MCU_ALL_INT_MAC_INT_GEN                      (61) /*!< mac_int_gen */
+#define GLB_MCU_ALL_INT_MAC_INT_PROT_TRIGGER             (62) /*!< mac_int_prot_trigger */
+#define GLB_MCU_ALL_INT_WIFI_IPC                         (63) /*!< wifi_ipc */
 /**
- *  @brief GLB MCU all interrupt type definition
- */
-typedef enum {
-    GLB_MCU_ALL_INT_BMX_ERR_INT = 0,                       /*!< bmx_err_intmcu_dec_err_int */
-    GLB_MCU_ALL_INT_BMX_TIMEOUT_INT_MCU_TIMEOUT_INT = 1,   /*!< bmx_timeout_intmcu_timeout_int */
-    GLB_MCU_ALL_INT_IPC0_NP2AP_IRQ = 2,                    /*!< ipc0_np2ap_irq */
-    GLB_MCU_ALL_INT_IPC0_AP2NP_IRQ = 3,                    /*!< ipc0_ap2np_irq */
-    GLB_MCU_ALL_INT_AUDIO_INT = 4,                         /*!< audio_int */
-    GLB_MCU_ALL_INT_RF_TOP_INT_0 = 5,                      /*!< rf_top_int[0] */
-    GLB_MCU_ALL_INT_RF_TOP_INT_1 = 6,                      /*!< rf_top_int[1] */
-    GLB_MCU_ALL_INT_LZ4_INT = 7,                           /*!< lz4_int */
-    GLB_MCU_ALL_INT_RSV8 = 8,                              /*!< rsv8 */
-    GLB_MCU_ALL_INT_SEC_ENG_ID0_GMAC_INT = 9,              /*!< sec_eng_id0_gmac_int */
-    GLB_MCU_ALL_INT_SEC_ENG_ID0_CDET_INT = 10,             /*!< sec_eng_id0_cdet_int */
-    GLB_MCU_ALL_INT_SEC_ENG_ID0_PKA_INT = 11,              /*!< sec_eng_id0_pka_int */
-    GLB_MCU_ALL_INT_SEC_ENG_ID0_TRNG_INT = 12,             /*!< sec_eng_id0_trng_int */
-    GLB_MCU_ALL_INT_SEC_ENG_ID0_AES_INT = 13,              /*!< sec_eng_id0_aes_int */
-    GLB_MCU_ALL_INT_SEC_ENG_ID0_SHA_INT = 14,              /*!< sec_eng_id0_sha_int */
-    GLB_MCU_ALL_INT_DMA_INTR_ALL = 15,                     /*!< DMA_INTR_ALL */
-    GLB_MCU_ALL_INT_DMA2_INTR_ALL = 16,                    /*!< DMA2_INTR_ALL */
-    GLB_MCU_ALL_INT_SDH_MMC1_INT_SDH2PMU_WAKEUP_INT1 = 17, /*!< sdh_mmc1_intsdh2pmu_wakeup_int1 */
-    GLB_MCU_ALL_INT_MM_IRQ_ALL = 18,                       /*!< mm_irq_all */
-    GLB_MCU_ALL_INT_IRTX_INT = 19,                         /*!< irtx_int */
-    GLB_MCU_ALL_INT_IRRX_INT = 20,                         /*!< irrx_int */
-    GLB_MCU_ALL_INT_USB_INT = 21,                          /*!< usb_int */
-    GLB_MCU_ALL_INT_AUPDM_INT = 22,                        /*!< aupdm_int */
-    GLB_MCU_ALL_INT_SF_CTRL_ID0_INT = 23,                  /*!< sf_ctrl_id0_int */
-    GLB_MCU_ALL_INT_EMAC_INT = 24,                         /*!< emac_int */
-    GLB_MCU_ALL_INT_GPADC_DMA_INT = 25,                    /*!< gpadc_dma_int */
-    GLB_MCU_ALL_INT_EFUSE_INT = 26,                        /*!< efuse_int */
-    GLB_MCU_ALL_INT_SPI_0_INT = 27,                        /*!< spi_0_int */
-    GLB_MCU_ALL_INT_UART_IRQ = 28,                         /*!< uart_irq */
-    GLB_MCU_ALL_INT_UART1_IRQ = 29,                        /*!< uart1_irq */
-    GLB_MCU_ALL_INT_UART2_IRQ = 30,                        /*!< uart2_irq */
-    GLB_MCU_ALL_INT_GPIO_DMA_INT = 31,                     /*!< gpio_dma_int */
-    GLB_MCU_ALL_INT_I2C_0_INT = 32,                        /*!< i2c_0_int */
-    GLB_MCU_ALL_INT_PWM_INT = 33,                          /*!< pwm_int */
-    GLB_MCU_ALL_INT_IPC1_NP2AP_IRQ = 34,                   /*!< ipc1_np2ap_irq */
-    GLB_MCU_ALL_INT_IPC1_AP2NP_IRQ = 35,                   /*!< ipc1_ap2np_irq */
-    GLB_MCU_ALL_INT_TIMER0_2_IRQ = 36,                     /*!< timer0_2_irq */
-    GLB_MCU_ALL_INT_TIMER0_3_IRQ = 37,                     /*!< timer0_3_irq */
-    GLB_MCU_ALL_INT_WDT0_IRQ = 38,                         /*!< wdt0_irq */
-    GLB_MCU_ALL_INT_I2C_1_INT = 39,                        /*!< i2c_1_int */
-    GLB_MCU_ALL_INT_I2S0_INT = 40,                         /*!< i2s0_int */
-    GLB_MCU_ALL_INT_RSV41 = 41,                            /*!< rsv41 */
-    GLB_MCU_ALL_INT_RSV42 = 42,                            /*!< rsv42 */
-    GLB_MCU_ALL_INT_ANA_OCP_OUT_TO_CPU_IRQ = 43,           /*!< ana_ocp_out_to_cpu_irq[2:0] */
-    GLB_MCU_ALL_INT_GPIO_IRQ = 44,                         /*!< gpio_irq */
-    GLB_MCU_ALL_INT_DM_IRQ = 45,                           /*!< dm_irq */
-    GLB_MCU_ALL_INT_BT_IRQ = 46,                           /*!< bt_irq */
-    GLB_MCU_ALL_INT_M154_REQ_ENH_ACK_INT = 47,             /*!< m154_req_enh_ack_int */
-    GLB_MCU_ALL_INT_M154_INT = 48,                         /*!< m154_int */
-    GLB_MCU_ALL_INT_M154_AES_INT = 49,                     /*!< m154_aes_int */
-    GLB_MCU_ALL_INT_PDS_INT = 50,                          /*!< pds_int */
-    GLB_MCU_ALL_INT_HBN_IRQ_OUT_0 = 51,                    /*!< hbn_irq_out[0] */
-    GLB_MCU_ALL_INT_HBN_IRQ_OUT_1 = 52,                    /*!< hbn_irq_out[1] */
-    GLB_MCU_ALL_INT_BOR_OUT = 53,                          /*!< bor_out */
-    GLB_MCU_ALL_INT_WIFI_TO_CPU_IRQ_N = 54,                /*!< wifi_to_cpu_irq_n */
-    GLB_MCU_ALL_INT_BZ_PHY_INT = 55,                       /*!< bz_phy_int */
-    GLB_MCU_ALL_INT_BLE_INT = 56,                          /*!< ble_int */
-    GLB_MCU_ALL_INT_MAC_INT_TX_RX_TIMER = 57,              /*!< mac_int_tx_rx_timer */
-    GLB_MCU_ALL_INT_MAC_INT_TX_RX_MISC = 58,               /*!< mac_int_tx_rx_misc */
-    GLB_MCU_ALL_INT_MAC_INT_RX_TRIGGER = 59,               /*!< mac_int_rx_trigger */
-    GLB_MCU_ALL_INT_MAC_INT_TX_TRIGGER = 60,               /*!< mac_int_tx_trigger */
-    GLB_MCU_ALL_INT_MAC_INT_GEN = 61,                      /*!< mac_int_gen */
-    GLB_MCU_ALL_INT_MAC_INT_PROT_TRIGGER = 62,             /*!< mac_int_prot_trigger */
-    GLB_MCU_ALL_INT_WIFI_IPC = 63,                         /*!< wifi_ipc */
-} GLB_MCU_ALL_INT_Type;
+  * @}
+  */
 
+/** @defgroup GLB mcu muxpll 160M clock type definition
+  * @{
+  */
+#define GLB_MCU_MUXPLL_SEL_WIFIPLL_160M                  (0) /*!< mcu muxpll select wifipll 160M */
+#define GLB_MCU_MUXPLL_SEL_AUPLL_DIV3                    (1) /*!< mcu muxpll select aupll div3 */
+#define GLB_MCU_MUXPLL_SEL_TOP_AUPLL_DIV2                (2) /*!< mcu muxpll select top aupll div2 */
+#define GLB_MCU_MUXPLL_SEL_AUPLL_DIV2P5                  (3) /*!< mcu muxpll select aupll div2p5 */
 /**
- *  @brief GLB mcu muxpll 160M clock type definition
- */
-typedef enum {
-    GLB_MCU_MUXPLL_SEL_WIFIPLL_160M,    /*!< mcu muxpll select wifipll 160M */
-    GLB_MCU_MUXPLL_SEL_AUPLL_DIV3,      /*!< mcu muxpll select aupll div3 */
-    GLB_MCU_MUXPLL_SEL_TOP_AUPLL_DIV2,  /*!< mcu muxpll select top aupll div2 */
-    GLB_MCU_MUXPLL_SEL_AUPLL_DIV2P5,    /*!< mcu muxpll select aupll div2p5 */
-} GLB_MCU_MUXPLL_160M_CLK_SEL_Type;
+  * @}
+  */
 
+/** @defgroup GLB mcu muxpll 80M clock type definition
+  * @{
+  */
+#define GLB_MCU_MUXPLL_SEL_WIFIPLL_80M                   (0) /*!< mcu muxpll select wifipll 80M */
+#define GLB_MCU_MUXPLL_SEL_TOP_AUPLL_DIV5                (1) /*!< mcu muxpll select top aupll div5 */
+#define GLB_MCU_MUXPLL_SEL_TOP_AUPLL_DIV6                (2) /*!< mcu muxpll select top aupll div6 */
 /**
- *  @brief GLB mcu muxpll 80M clock type definition
- */
-typedef enum {
-    GLB_MCU_MUXPLL_SEL_WIFIPLL_80M,    /*!< mcu muxpll select wifipll 80M */
-    GLB_MCU_MUXPLL_SEL_TOP_AUPLL_DIV5, /*!< mcu muxpll select top aupll div5 */
-    GLB_MCU_MUXPLL_SEL_TOP_AUPLL_DIV6, /*!< mcu muxpll select top aupll div6 */
-} GLB_MCU_MUXPLL_80M_CLK_SEL_Type;
+  * @}
+  */
 
+/** @defgroup GLB isp muxpll 80M clock type definition
+  * @{
+  */
+#define GLB_ISP_MUXPLL_SEL_WIFIPLL_80M                   (0) /*!< isp muxpll select wifipll 80M */
+#define GLB_ISP_MUXPLL_SEL_AUPLL_DIV5                    (1) /*!< isp muxpll select aupll div5 */
+#define GLB_ISP_MUXPLL_SEL_AUPLL_DIV6                    (2) /*!< isp muxpll select aupll div6 */
 /**
- *  @brief GLB isp muxpll 80M clock type definition
- */
-typedef enum {
-    GLB_ISP_MUXPLL_SEL_WIFIPLL_80M,    /*!< isp muxpll select wifipll 80M */
-    GLB_ISP_MUXPLL_SEL_AUPLL_DIV5,     /*!< isp muxpll select aupll div5 */
-    GLB_ISP_MUXPLL_SEL_AUPLL_DIV6,     /*!< isp muxpll select aupll div6 */
-} GLB_ISP_MUXPLL_80M_CLK_SEL_Type;
+  * @}
+  */
 
+/** @defgroup GLB pll clock gate type definition
+  * @{
+  */
+#define GLB_PLL_CGEN_ISP_WIFIPLL_80M                     (2)  /*!< CGEN for WIFIPLL 80M to ISP       */
+#define GLB_PLL_CGEN_ISP_AUPLL_DIV5                      (3)  /*!< CGEN for AUPLL DIV5 to ISP        */
+#define GLB_PLL_CGEN_ISP_AUPLL_DIV6                      (4)  /*!< CGEN for AUPLL DIV6 to ISP        */
+#define GLB_PLL_CGEN_TOP_AUPLL_DIV5                      (5)  /*!< CGEN for AUPLL DIV5 to TOP        */
+#define GLB_PLL_CGEN_TOP_AUPLL_DIV6                      (6)  /*!< CGEN for AUPLL DIV6 to TOP        */
+#define GLB_PLL_CGEN_PSRAMB_WIFIPLL_320M                 (7)  /*!< CGEN for WIFIPLL 320MHz to psramB */
+#define GLB_PLL_CGEN_PSRAMB_AUPLL_DIV1                   (8)  /*!< CGEN for AUPLL_DIV1 to psramB     */
+#define GLB_PLL_CGEN_TOP_WIFIPLL_240M                    (13) /*!< CGEN for WIFIPLL 240MHz to TOP    */
+#define GLB_PLL_CGEN_TOP_WIFIPLL_320M                    (14) /*!< CGEN for WIFIPLL 320MHz to TOP    */
+#define GLB_PLL_CGEN_TOP_AUPLL_DIV2                      (15) /*!< CGEN for AUPLL_DIV2 to TOP        */
+#define GLB_PLL_CGEN_TOP_AUPLL_DIV1                      (16) /*!< CGEN for AUPLL_DIV1 to TOP        */
 /**
- *  @brief GLB pll clock gate type definition
- */
-typedef enum {
-    GLB_PLL_CGEN_ISP_WIFIPLL_80M     =  2,  /*!< CGEN for WIFIPLL 80M to ISP       */
-    GLB_PLL_CGEN_ISP_AUPLL_DIV5      =  3,  /*!< CGEN for AUPLL DIV5 to ISP        */
-    GLB_PLL_CGEN_ISP_AUPLL_DIV6      =  4,  /*!< CGEN for AUPLL DIV6 to ISP        */
-    GLB_PLL_CGEN_TOP_AUPLL_DIV5      =  5,  /*!< CGEN for AUPLL DIV5 to TOP        */
-    GLB_PLL_CGEN_TOP_AUPLL_DIV6      =  6,  /*!< CGEN for AUPLL DIV6 to TOP        */
-    GLB_PLL_CGEN_PSRAMB_WIFIPLL_320M =  7,  /*!< CGEN for WIFIPLL 320MHz to psramB */
-    GLB_PLL_CGEN_PSRAMB_AUPLL_DIV1   =  8,  /*!< CGEN for AUPLL_DIV1 to psramB     */
-    GLB_PLL_CGEN_TOP_WIFIPLL_240M    = 13,  /*!< CGEN for WIFIPLL 240MHz to TOP    */
-    GLB_PLL_CGEN_TOP_WIFIPLL_320M    = 14,  /*!< CGEN for WIFIPLL 320MHz to TOP    */
-    GLB_PLL_CGEN_TOP_AUPLL_DIV2      = 15,  /*!< CGEN for AUPLL_DIV2 to TOP        */
-    GLB_PLL_CGEN_TOP_AUPLL_DIV1      = 16,  /*!< CGEN for AUPLL_DIV1 to TOP        */
-} GLB_PLL_CGEN_Type;
+  * @}
+  */
 
+/** @defgroup GLB mcu system clock type definition
+  * @{
+  */
+#define GLB_MCU_SYS_CLK_RC32M                            (0) /*!< use RC32M as system clock frequency */
+#define GLB_MCU_SYS_CLK_XTAL                             (1) /*!< use XTAL as system clock */
+#define GLB_MCU_SYS_CLK_TOP_AUPLL_DIV2                   (2) /*!< use TOP_AUPLL_DIV2 output as system clock */
+#define GLB_MCU_SYS_CLK_TOP_AUPLL_DIV1                   (3) /*!< use TOP_AUPLL_DIV1 output as system clock */
+#define GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M                 (4) /*!< use TOP_WIFIPLL_240M output as system clock */
+#define GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M                 (5) /*!< use TOP_WIFIPLL_320M output as system clock */
 /**
- *  @brief GLB mcu system clock type definition
- */
-typedef enum {
-    GLB_MCU_SYS_CLK_RC32M,              /*!< use RC32M as system clock frequency */
-    GLB_MCU_SYS_CLK_XTAL,               /*!< use XTAL as system clock */
-    GLB_MCU_SYS_CLK_TOP_AUPLL_DIV2,     /*!< use TOP_AUPLL_DIV2 output as system clock */
-    GLB_MCU_SYS_CLK_TOP_AUPLL_DIV1,     /*!< use TOP_AUPLL_DIV1 output as system clock */
-    GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M,   /*!< use TOP_WIFIPLL_240M output as system clock */
-    GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M,   /*!< use TOP_WIFIPLL_320M output as system clock */
-} GLB_MCU_SYS_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB PLL reference clock type definition
+  * @{
+  */
+#define GLB_PLL_REFCLK_XTAL                              (0) /*!< use XTAL as pll ref clock */
+#define GLB_PLL_REFCLK_RC32M                             (3) /*!< use RC32M as pll ref clock */
 /**
- *  @brief GLB dsp system clock type definition
- */
-typedef enum {
-    GLB_PLL_REFCLK_XTAL = 0,  /*!< use XTAL as pll ref clock */
-    GLB_PLL_REFCLK_RC32M = 3, /*!< use RC32M as pll ref clock */
-} GLB_PLL_REF_CLK_Type;
+  * @}
+  */
 
 typedef struct {
     uint8_t clkpllRefdivRatio;  /*!< xxx pll_refdiv_ratio */
@@ -233,179 +242,197 @@ typedef struct {
 } GLB_WA_PLL_CFG_BASIC_Type;
 
 typedef struct {
-    const GLB_WA_PLL_CFG_BASIC_Type *const basicCfg;  /*!< pll basic configuration */
-    uint32_t clkpllSdmin;                             /*!< pll sdmin value */
-    uint8_t clkpllPostDiv;                            /*!< aupll aupll_postdiv value */
+    const GLB_WA_PLL_CFG_BASIC_Type *const basicCfg; /*!< pll basic configuration */
+    uint32_t clkpllSdmin;                            /*!< pll sdmin value */
+    uint8_t clkpllPostDiv;                           /*!< aupll aupll_postdiv value */
 } GLB_WA_PLL_Cfg_Type;
 
+/** @defgroup GLB CAM clock type definition
+  * @{
+  */
+#define GLB_CAM_CLK_XCLK                    (0) /*!< Select XCLK as CAM clock */
+#define GLB_CAM_CLK_WIFIPLL_96M             (1) /*!< Select WIFIPLL_96M as CAM clock */
+#define GLB_CAM_CLK_TOP_AUPLL_DIV5          (2) /*!< Select TOP_AUPLL_DIV5 as CAM clock */
 /**
- *  @brief GLB CAM clock type definition
- */
-typedef enum {
-    GLB_CAM_CLK_XCLK,           /*!< Select XCLK as CAM clock */
-    GLB_CAM_CLK_WIFIPLL_96M,    /*!< Select WIFIPLL_96M as CAM clock */
-    GLB_CAM_CLK_TOP_AUPLL_DIV5, /*!< Select TOP_AUPLL_DIV5 as CAM clock */
-} GLB_CAM_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB SDH clock type definition
+  * @{
+  */
+#define GLB_SDH_CLK_WIFIPLL_96M             (0) /*!< Select WIFIPLL_96M as SDH clock */
+#define GLB_SDH_CLK_TOP_AUPLL_DIV5          (1) /*!< Select TOP_AUPLL_DIV5 as SDH clock */
 /**
- *  @brief GLB SDH clock type definition
- */
-typedef enum {
-    GLB_SDH_CLK_WIFIPLL_96M,    /*!< Select WIFIPLL_96M as SDH clock */
-    GLB_SDH_CLK_TOP_AUPLL_DIV5, /*!< Select TOP_AUPLL_DIV5 as SDH clock */
-} GLB_SDH_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB UART sig swap group type definition
+  * @{
+  */
+#define GLB_UART_SIG_SWAP_GRP_GPIO0_GPIO11  (0) /*!< SWAP UART SIG GROUP GPIO0  -  GPIO11 */
+#define GLB_UART_SIG_SWAP_GRP_GPIO12_GPIO23 (1) /*!< SWAP UART SIG GROUP GPIO12 -  GPIO23 */
+#define GLB_UART_SIG_SWAP_GRP_GPIO24_GPIO35 (2) /*!< SWAP UART SIG GROUP GPIO24 -  GPIO35 */
+#define GLB_UART_SIG_SWAP_GRP_GPIO36_GPIO45 (3) /*!< SWAP UART SIG GROUP GPIO36 -  GPIO45 */
 /**
- *  @brief GLB UART sig swap group type definition
- */
-typedef enum {
-    GLB_UART_SIG_SWAP_GRP_GPIO0_GPIO11,  /*!< SWAP UART SIG GROUP GPIO0  -  GPIO11 */
-    GLB_UART_SIG_SWAP_GRP_GPIO12_GPIO23, /*!< SWAP UART SIG GROUP GPIO12 -  GPIO23 */
-    GLB_UART_SIG_SWAP_GRP_GPIO24_GPIO35, /*!< SWAP UART SIG GROUP GPIO24 -  GPIO35 */
-    GLB_UART_SIG_SWAP_GRP_GPIO36_GPIO45, /*!< SWAP UART SIG GROUP GPIO36 -  GPIO45 */
-} GLB_UART_SIG_SWAP_GRP_Type;
+  * @}
+  */
 
+/** @defgroup GLB I2S output ref clock type definition
+  * @{
+  */
+#define GLB_I2S_OUT_REF_CLK_NONE            (0) /*!< no output reference clock on I2S_0 ref_clock port */
+#define GLB_I2S_OUT_REF_CLK_SRC             (1) /*!< output reference clock on I2S_0 ref_clock port */
 /**
- *  @brief GLB I2S output ref clock type definition
- */
-typedef enum {
-    GLB_I2S_OUT_REF_CLK_NONE, /*!< no output reference clock on I2S_0 ref_clock port */
-    GLB_I2S_OUT_REF_CLK_SRC,  /*!< output reference clock on I2S_0 ref_clock port */
-} GLB_I2S_OUT_REF_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB DMA clock ID type definition
+  * @{
+  */
+#define GLB_DMA0_CLK_CH0                    (0) /*!< DMA0 clock ID:channel 0 */
+#define GLB_DMA0_CLK_CH1                    (1) /*!< DMA0 clock ID:channel 1 */
+#define GLB_DMA0_CLK_CH2                    (2) /*!< DMA0 clock ID:channel 2 */
+#define GLB_DMA0_CLK_CH3                    (3) /*!< DMA0 clock ID:channel 3 */
 /**
- *  @brief GLB DMA clock ID type definition
- */
-typedef enum {
-    GLB_DMA0_CLK_CH0, /*!< DMA0 clock ID:channel 0 */
-    GLB_DMA0_CLK_CH1, /*!< DMA0 clock ID:channel 1 */
-    GLB_DMA0_CLK_CH2, /*!< DMA0 clock ID:channel 2 */
-    GLB_DMA0_CLK_CH3, /*!< DMA0 clock ID:channel 3 */
-} GLB_DMA_CLK_ID_Type;
+  * @}
+  */
 
+/** @defgroup GLB peripheral DMA type definition
+  * @{
+  */
+#define GLB_PERI_DMA_UART0_RX               (0)  /*!< uart_rx  */
+#define GLB_PERI_DMA_UART0_TX               (1)  /*!< uart_tx  */
+#define GLB_PERI_DMA_UART1_RX               (2)  /*!< uart1_rx */
+#define GLB_PERI_DMA_UART1_TX               (3)  /*!< uart1_tx */
+#define GLB_PERI_DMA_UART2_RX               (4)  /*!< uart2_rx */
+#define GLB_PERI_DMA_UART2_TX               (5)  /*!< uart2_tx */
+#define GLB_PERI_DMA_I2C_0_RX               (6)  /*!< i2c_0_rx */
+#define GLB_PERI_DMA_I2C_0_TX               (7)  /*!< i2c_0_tx */
+#define GLB_PERI_DMA_IRTX_TX                (8)  /*!< irtx_tx  */
+#define GLB_PERI_DMA_GPIO_TX                (9)  /*!< gpio_tx  */
+#define GLB_PERI_DMA_SPI_RX                 (10) /*!< spi_rx   */
+#define GLB_PERI_DMA_SPI_TX                 (11) /*!< spi_tx   */
+#define GLB_PERI_DMA_AUDIO_RX               (12) /*!< audio_rx */
+#define GLB_PERI_DMA_AUDIO_TX               (13) /*!< audio_tx */
+#define GLB_PERI_DMA_I2C_1_RX               (14) /*!< i2c_1_rx */
+#define GLB_PERI_DMA_I2C_1_TX               (15) /*!< i2c_1_tx */
+#define GLB_PERI_DMA_I2S_0_RX               (16) /*!< i2s_0_rx */
+#define GLB_PERI_DMA_I2S_0_TX               (17) /*!< i2s_0_tx */
+#define GLB_PERI_DMA_PDM_RX                 (18) /*!< pdm_rx   */
+#define GLB_PERI_DMA_PADC                   (19) /*!< padc     */
+#define GLB_PERI_DMA_GAUGE                  (20) /*!< gauge    */
+#define GLB_PERI_DMA_GPADC                  (22) /*!< gpadc    */
+#define GLB_PERI_DMA_GPDAC_TX               (23) /*!< gpdac_tx */
 /**
- *  @brief GLB peripheral DMA type definition
- */
-typedef enum {
-    GLB_PERI_DMA_UART0_RX =  0, /*!< uart_rx  */
-    GLB_PERI_DMA_UART0_TX =  1, /*!< uart_tx  */
-    GLB_PERI_DMA_UART1_RX =  2, /*!< uart1_rx */
-    GLB_PERI_DMA_UART1_TX =  3, /*!< uart1_tx */
-    GLB_PERI_DMA_UART2_RX =  4, /*!< uart2_rx */
-    GLB_PERI_DMA_UART2_TX =  5, /*!< uart2_tx */
-    GLB_PERI_DMA_I2C_0_RX =  6, /*!< i2c_0_rx */
-    GLB_PERI_DMA_I2C_0_TX =  7, /*!< i2c_0_tx */
-    GLB_PERI_DMA_IRTX_TX  =  8, /*!< irtx_tx  */
-    GLB_PERI_DMA_GPIO_TX  =  9, /*!< gpio_tx  */
-    GLB_PERI_DMA_SPI_RX   = 10, /*!< spi_rx   */
-    GLB_PERI_DMA_SPI_TX   = 11, /*!< spi_tx   */
-    GLB_PERI_DMA_AUDIO_RX = 12, /*!< audio_rx */
-    GLB_PERI_DMA_AUDIO_TX = 13, /*!< audio_tx */
-    GLB_PERI_DMA_I2C_1_RX = 14, /*!< i2c_1_rx */
-    GLB_PERI_DMA_I2C_1_TX = 15, /*!< i2c_1_tx */
-    GLB_PERI_DMA_I2S_0_RX = 16, /*!< i2s_0_rx */
-    GLB_PERI_DMA_I2S_0_TX = 17, /*!< i2s_0_tx */
-    GLB_PERI_DMA_PDM_RX   = 18, /*!< pdm_rx   */
-    GLB_PERI_DMA_PADC     = 19, /*!< padc     */
-    GLB_PERI_DMA_GAUGE    = 20, /*!< gauge    */
-    GLB_PERI_DMA_GPADC    = 22, /*!< gpadc    */
-    GLB_PERI_DMA_GPDAC_TX = 23, /*!< gpdac_tx */
-} GLB_PERI_DMA_Type;
+  * @}
+  */
 
+/** @defgroup GLB DMA CN selection type definition
+  * @{
+  */
+#define GLB_PERI_DMA_CN_SEL_DMA0            (0) /*!< peripheral DMA channel select DMA0 */
 /**
- *  @brief GLB DMA CN selection type definition
- */
-typedef enum {
-    GLB_PERI_DMA_CN_SEL_DMA0 = 0, /*!< peripheral DMA channel select DMA0 */
-} GLB_PERI_DMA_CN_SEL_Type;
+  * @}
+  */
 
+/** @defgroup GLB IR clock source type definition
+  * @{
+  */
+#define GLB_IR_CLK_SRC_XCLK                 (0) /*!< IR clock source select XCLK */
 /**
- *  @brief GLB clock source type definition
- */
-typedef enum {
-    GLB_IR_CLK_SRC_XCLK, /*!< IR clock source select XCLK */
-} GLB_IR_CLK_SRC_Type;
+  * @}
+  */
 
+/** @defgroup GLB flash clock type definition
+  * @{
+  */
+#define GLB_SFLASH_CLK_WIFIPLL_120M         (0) /*!< Select WIFIPLL 120M as flash clock */
+#define GLB_SFLASH_CLK_XTAL                 (1) /*!< Select XTAL as flash clock */
+#define GLB_SFLASH_CLK_TOP_AUPLL_DIV5       (2) /*!< Select AUPLL DIV5 as flash clock */
+#define GLB_SFLASH_CLK_MUXPLL_80M           (3) /*!< Select MUXPLL 80M as flash clock */
+#define GLB_SFLASH_CLK_BCLK                 (4) /*!< Select BCLK as flash clock */
+#define GLB_SFLASH_CLK_WIFIPLL_96M          (5) /*!< Select WIFIPLL 96M as flash clock */
 /**
- *  @brief GLB flash clock type definition
- */
-typedef enum {
-    GLB_SFLASH_CLK_WIFIPLL_120M,    /*!< Select WIFIPLL 120M as flash clock */
-    GLB_SFLASH_CLK_XTAL,            /*!< Select XTAL as flash clock */
-    GLB_SFLASH_CLK_TOP_AUPLL_DIV5,  /*!< Select AUPLL DIV5 as flash clock */
-    GLB_SFLASH_CLK_MUXPLL_80M,      /*!< Select MUXPLL 80M as flash clock */
-    GLB_SFLASH_CLK_BCLK,            /*!< Select BCLK as flash clock */
-    GLB_SFLASH_CLK_WIFIPLL_96M,     /*!< Select WIFIPLL 96M as flash clock */
-} GLB_SFLASH_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB I2C clock type definition
+  * @{
+  */
+#define GLB_I2C_CLK_BCLK                    (0) /*!< Select bus clk as I2C clock */
+#define GLB_I2C_CLK_XCLK                    (1) /*!< Select xclk as I2C clock */
 /**
- *  @brief GLB I2C clock type definition
- */
-typedef enum {
-    GLB_I2C_CLK_BCLK,       /*!< Select bus clk as I2C clock */
-    GLB_I2C_CLK_XCLK,       /*!< Select xclk as I2C clock */
-} GLB_I2C_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB SPI clock type definition
+  * @{
+  */
+#define GLB_SPI_CLK_MCU_MUXPLL_160M         (0) /*!< Select MCU MUXPLL 160M as SPI clock */
+#define GLB_SPI_CLK_XCLK                    (1) /*!< Select xclk as SPI clock */
 /**
- *  @brief GLB SPI clock type definition
- */
-typedef enum {
-    GLB_SPI_CLK_MCU_MUXPLL_160M, /*!< Select MCU MUXPLL 160M as SPI clock */
-    GLB_SPI_CLK_XCLK,            /*!< Select xclk as SPI clock */
-} GLB_SPI_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB PWM1 io type definition
+  * @{
+  */
+#define GLB_PWM1_IO_SINGLE_END              (0) /*!< Select pwm1 io single end */
+#define GLB_PWM1_IO_DIFF_END                (1) /*!< Select pwm1 io differential end for BLDC */
 /**
- *  @brief GLB PWM1 io type definition
- */
-typedef enum {
-    GLB_PWM1_IO_SINGLE_END, /*!< Select pwm1 io single end */
-    GLB_PWM1_IO_DIFF_END,   /*!< Select pwm1 io differential end for BLDC */
-} GLB_PWM1_IO_SEL_Type;
+  * @}
+  */
 
+/** @defgroup GLB PDM io type definition
+  * @{
+  */
+#define GLB_PDM_IO_SEL_AUDIO_TOP            (0) /*!< Select audio_top PDM */
+#define GLB_PDM_IO_SEL_AUPDM_TOP            (1) /*!< Select aupdm_top PDM */
 /**
- *  @brief GLB PDM io type definition
- */
-typedef enum {
-    GLB_PDM_IO_SEL_AUDIO_TOP, /*!< Select audio_top PDM */
-    GLB_PDM_IO_SEL_AUPDM_TOP, /*!< Select aupdm_top PDM */
-} GLB_PDM_IO_SEL_Type;
+  * @}
+  */
 
+/** @defgroup GLB DBI clock type definition
+  * @{
+  */
+#define GLB_DBI_CLK_MCU_MUXPLL_160M         (0) /*!< Select MCU MUXPLL 160M as DBI clock */
+#define GLB_DBI_CLK_XCLK                    (1) /*!< Select xclk as DBI clock */
 /**
- *  @brief GLB DBI clock type definition
- */
-typedef enum {
-    GLB_DBI_CLK_MCU_MUXPLL_160M, /*!< Select MCU MUXPLL 160M as DBI clock */
-    GLB_DBI_CLK_XCLK,            /*!< Select xclk as DBI clock */
-} GLB_DBI_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB Audio auto clock type definition
+  * @{
+  */
+#define GLB_AUDIO_AUTO_AUPLL                (0) /*!< Select aupll as audio auto clock */
 /**
- *  @brief GLB Audio auto clock type definition
- */
-typedef enum {
-    GLB_AUDIO_AUTO_AUPLL,   /*!< Select aupll as audio auto clock */
-} GLB_AUDIO_AUTO_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB Audio ADC clock type definition
+  * @{
+  */
+#define GLB_AUDIO_ADC_AUPLL                 (0) /*!< Select aupll as audio adc clock */
 /**
- *  @brief GLB Audio ADC clock type definition
- */
-typedef enum {
-    GLB_AUDIO_ADC_AUPLL,    /*!< Select aupll as audio adc clock */
-} GLB_AUDIO_ADC_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB Audio solo clock type definition
+  * @{
+  */
+#define GLB_AUDIO_SOLO_AUPLL                (0) /*!< Select aupll as audio solo clock */
 /**
- *  @brief GLB Audio solo clock type definition
- */
-typedef enum {
-    GLB_AUDIO_SOLO_AUPLL,   /*!< Select aupll as audio solo clock */
-} GLB_AUDIO_SOLO_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB SPI pad action type definition
+  * @{
+  */
+#define GLB_SPI_PAD_ACT_AS_SLAVE            (0) /*!< SPI pad act as slave */
+#define GLB_SPI_PAD_ACT_AS_MASTER           (1) /*!< SPI pad act as master */
 /**
- *  @brief GLB SPI pad action type definition
- */
-typedef enum {
-    GLB_SPI_PAD_ACT_AS_SLAVE,  /*!< SPI pad act as slave */
-    GLB_SPI_PAD_ACT_AS_MASTER, /*!< SPI pad act as master */
-} GLB_SPI_PAD_ACT_AS_Type;
+  * @}
+  */
 
 /**
  *  @brief GLB reset recorder type definition
@@ -419,437 +446,468 @@ typedef struct {
     uint8_t reset_recorder_sys_reset_n      : 1; /* reset record bit [5] */
     uint8_t reset_recorder_cpu_sys_rstreq_n : 1; /* reset record bit [6] */
     uint8_t reset_recorder_rsvd             : 1; /* reset record bit [7] */
-} GLB_RESET_RECORD_Type ;
+} GLB_RESET_RECORD_Type;
 
+/** @defgroup GLB AHB software type definition
+  * @{
+  */
+#define GLB_AHB_MCU_SW_RSV0         (0)
+#define GLB_AHB_MCU_SW_RSV1         (1)
+#define GLB_AHB_MCU_SW_WIFI         (4)
+#define GLB_AHB_MCU_SW_BTDM         (8)
+#define GLB_AHB_MCU_SW_ZIGBEE       (9)
+#define GLB_AHB_MCU_SW_BLE2         (10)
+#define GLB_AHB_MCU_SW_ZIGBEE2      (11)
+#define GLB_AHB_MCU_SW_EMI_MISC     (16)
+#define GLB_AHB_MCU_SW_MM_MISC      (17)
+#define GLB_AHB_MCU_SW_PSRAM1_CTRL  (18)
+#define GLB_AHB_MCU_SW_EXT_USB      (19)
+#define GLB_AHB_MCU_SW_EXT_AUPWM    (21)
+#define GLB_AHB_MCU_SW_EXT_SDH      (22)
+#define GLB_AHB_MCU_SW_EXT_EMAC     (23)
+#define GLB_AHB_MCU_SW_D2XA         (25)
+#define GLB_AHB_MCU_SW_D2XB         (26)
+#define GLB_AHB_MCU_SW_JENC         (27)
+#define GLB_AHB_MCU_SW_GLB          (32)
+#define GLB_AHB_MCU_SW_MIX          (33)
+#define GLB_AHB_MCU_SW_GPIP         (34)
+#define GLB_AHB_MCU_SW_SEC_DBG      (35)
+#define GLB_AHB_MCU_SW_SEC_ENG      (36)
+#define GLB_AHB_MCU_SW_TZ1          (37)
+#define GLB_AHB_MCU_SW_RSV38        (38)
+#define GLB_AHB_MCU_SW_EFUSE        (39)
+#define GLB_AHB_MCU_SW_RSV40        (40)
+#define GLB_AHB_MCU_SW_PERI         (41)
+#define GLB_AHB_MCU_SW_RSV42        (42)
+#define GLB_AHB_MCU_SW_SF           (43)
+#define GLB_AHB_MCU_SW_DMA          (44)
+#define GLB_AHB_MCU_SW_SDU          (45)
+#define GLB_AHB_MCU_SW_PDS          (46)
+#define GLB_AHB_MCU_SW_RSV47        (47)
+#define GLB_AHB_MCU_SW_UART0        (48)
+#define GLB_AHB_MCU_SW_UART1        (49)
+#define GLB_AHB_MCU_SW_SPI          (50)
+#define GLB_AHB_MCU_SW_I2C0         (51)
+#define GLB_AHB_MCU_SW_PWM          (52)
+#define GLB_AHB_MCU_SW_TIMER        (53)
+#define GLB_AHB_MCU_SW_IR_REMOTE    (54)
+#define GLB_AHB_MCU_SW_CHECKSUM     (55)
+#define GLB_AHB_MCU_SW_DBI          (56)
+#define GLB_AHB_MCU_SW_I2C1         (57)
+#define GLB_AHB_MCU_SW_I2S          (59)
+#define GLB_AHB_MCU_SW_AUSOLO       (60)
+#define GLB_AHB_MCU_SW_RSV61        (61)
+#define GLB_AHB_MCU_SW_RSV62        (62)
+#define GLB_AHB_MCU_SW_RSV63        (63)
+#define GLB_AHB_MCU_SW_PWRON_RST    (64)
+#define GLB_AHB_MCU_SW_CPU_RESET    (65)
+#define GLB_AHB_MCU_SW_SYS_RESET    (66)
+#define GLB_AHB_MCU_SW_CHIP_RESET   (69)
 /**
- *  @brief GLB AHB software type definition
- */
-typedef enum {
-    GLB_AHB_MCU_SW_RSV0 = 0,
-    GLB_AHB_MCU_SW_RSV1 = 1,
-    GLB_AHB_MCU_SW_WIFI = 4,
-    GLB_AHB_MCU_SW_BTDM = 8,
-    GLB_AHB_MCU_SW_ZIGBEE = 9,
-    GLB_AHB_MCU_SW_BLE2 = 10,
-    GLB_AHB_MCU_SW_ZIGBEE2 = 11,
-    GLB_AHB_MCU_SW_EMI_MISC = 16,
-    GLB_AHB_MCU_SW_MM_MISC = 17,
-    GLB_AHB_MCU_SW_PSRAM1_CTRL = 18,
-    GLB_AHB_MCU_SW_EXT_USB = 19,
-    GLB_AHB_MCU_SW_EXT_AUPWM = 21,
-    GLB_AHB_MCU_SW_EXT_SDH = 22,
-    GLB_AHB_MCU_SW_EXT_EMAC = 23,
-    GLB_AHB_MCU_SW_D2XA = 25,
-    GLB_AHB_MCU_SW_D2XB = 26,
-    GLB_AHB_MCU_SW_JENC = 27,
-    GLB_AHB_MCU_SW_GLB = 32,
-    GLB_AHB_MCU_SW_MIX = 33,
-    GLB_AHB_MCU_SW_GPIP = 34,
-    GLB_AHB_MCU_SW_SEC_DBG = 35,
-    GLB_AHB_MCU_SW_SEC_ENG = 36,
-    GLB_AHB_MCU_SW_TZ1 = 37,
-    GLB_AHB_MCU_SW_RSV38 = 38,
-    GLB_AHB_MCU_SW_EFUSE = 39,
-    GLB_AHB_MCU_SW_RSV40 = 40,
-    GLB_AHB_MCU_SW_PERI = 41,
-    GLB_AHB_MCU_SW_RSV42 = 42,
-    GLB_AHB_MCU_SW_SF = 43,
-    GLB_AHB_MCU_SW_DMA = 44,
-    GLB_AHB_MCU_SW_SDU = 45,
-    GLB_AHB_MCU_SW_PDS = 46,
-    GLB_AHB_MCU_SW_RSV47 = 47,
-    GLB_AHB_MCU_SW_UART0 = 48,
-    GLB_AHB_MCU_SW_UART1 = 49,
-    GLB_AHB_MCU_SW_SPI = 50,
-    GLB_AHB_MCU_SW_I2C0 = 51,
-    GLB_AHB_MCU_SW_PWM = 52,
-    GLB_AHB_MCU_SW_TIMER = 53,
-    GLB_AHB_MCU_SW_IR_REMOTE = 54,
-    GLB_AHB_MCU_SW_CHECKSUM = 55,
-    GLB_AHB_MCU_SW_DBI = 56,
-    GLB_AHB_MCU_SW_I2C1 = 57,
-    GLB_AHB_MCU_SW_I2S = 59,
-    GLB_AHB_MCU_SW_AUSOLO = 60,
-    GLB_AHB_MCU_SW_RSV61 = 61,
-    GLB_AHB_MCU_SW_RSV62 = 62,
-    GLB_AHB_MCU_SW_RSV63 = 63,
-    GLB_AHB_MCU_SW_PWRON_RST = 64,
-    GLB_AHB_MCU_SW_CPU_RESET = 65,
-    GLB_AHB_MCU_SW_SYS_RESET = 66,
-    GLB_AHB_MCU_SW_CHIP_RESET = 69,
-} GLB_AHB_MCU_SW_Type;
+  * @}
+  */
 
+/** @defgroup GLB dis reset type definition
+  * @{
+  */
+#define GLB_DISRST_GPIP             (2)
+#define GLB_DISRST_SEC_ENG          (4)
+#define GLB_DISRST_CCI              (8)
+#define GLB_DISRST_SF               (11)
+#define GLB_DISRST_UART0            (16)
+#define GLB_DISRST_UART1            (17)
+#define GLB_DISRST_SPI              (18)
+#define GLB_DISRST_I2C0             (19)
+#define GLB_DISRST_PWM              (20)
+#define GLB_DISRST_TIMER            (21)
+#define GLB_DISRST_IR_REMOTE        (22)
+#define GLB_DISRST_CHECKSUM         (23)
+#define GLB_DISRST_DBI              (24)
+#define GLB_DISRST_I2C1             (25)
 /**
- *  @brief GLB dis reset type definition
- */
-typedef enum {
-    GLB_DISRST_GPIP = 2,
-    GLB_DISRST_SEC_ENG = 4,
-    GLB_DISRST_CCI = 8,
-    GLB_DISRST_SF = 11,
-    GLB_DISRST_UART0 = 16,
-    GLB_DISRST_UART1 = 17,
-    GLB_DISRST_SPI = 18,
-    GLB_DISRST_I2C0 = 19,
-    GLB_DISRST_PWM = 20,
-    GLB_DISRST_TIMER = 21,
-    GLB_DISRST_IR_REMOTE = 22,
-    GLB_DISRST_CHECKSUM = 23,
-    GLB_DISRST_DBI = 24,
-    GLB_DISRST_I2C1 = 25,
-} GLB_DISRST_Type;
+  * @}
+  */
 
+/** @defgroup GLB PKA clock type definition
+  * @{
+  */
+#define GLB_PKA_CLK_MCU_BCLK        (0) /*!< Select MCU_BCLK as PKA clock */
+#define GLB_PKA_CLK_MCU_MUXPLL_160M (1) /*!< Select MCU MUXPLL 160M as PKA clock */
 /**
- *  @brief GLB PKA clock type definition
- */
-typedef enum {
-    GLB_PKA_CLK_MCU_BCLK,        /*!< Select MCU_BCLK as PKA clock */
-    GLB_PKA_CLK_MCU_MUXPLL_160M, /*!< Select MCU MUXPLL 160M as PKA clock */
-} GLB_PKA_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB MCU software system reset type definition
+  * @{
+  */
+#define GLB_MCU_SW_SYSTEM_CTRL_MCU  (1) /*!< mcu reset */
 /**
- *  @brief GLB MCU software system reset type definition
- */
-typedef enum {
-    GLB_MCU_SW_SYSTEM_CTRL_MCU = 1, /*!< mcu reset */
-} GLB_MCU_SW_SYSTEM_Type;
+  * @}
+  */
 
+/** @defgroup BMX arb mode type definition
+  * @{
+  */
+#define BMX_ARB_ROUND_ROBIN         (0) /*!< 0->round-robin */
+#define BMX_ARB_FIX                 (1) /*!< 1->fix */
 /**
- *  @brief BMX arb mode type definition
- */
-typedef enum {
-    BMX_ARB_ROUND_ROBIN = 0, /*!< 0->round-robin */
-    BMX_ARB_FIX = 1,         /*!< 1->fix */
-} BMX_ARB_Type;
+  * @}
+  */
 
+/** @defgroup BMX latch type definition
+  * @{
+  */
+#define BMX_LATCH_FIRST_ERROR       (0) /*!< 0->Latch first error */
+#define BMX_LATCH_LAST_ERROR        (1) /*!< 1->Latch last error */
 /**
- *  @brief BMX latch type definition
- */
-typedef enum {
-    BMX_LATCH_FIRST_ERROR = 0, /*!< 0->Latch first error */
-    BMX_LATCH_LAST_ERROR = 1,  /*!< 1->Latch last error */
-} BMX_LATCH_Type;
+  * @}
+  */
 
 /**
  *  @brief BMX configuration structure type definition
  */
 typedef struct {
-    BMX_ARB_Type arbMod; /*!< 0->fix, 2->round-robin, 3->random */
-    uint8_t timeoutEn;   /*!< Bus timeout enable: detect slave no reaponse in 1024 cycles */
+    uint8_t arbMod;    /*!< 0->fix, 2->round-robin, 3->random */
+    uint8_t timeoutEn; /*!< Bus timeout enable: detect slave no reaponse in 1024 cycles */
 } BMX_TO_Cfg_Type;
 
+/** @defgroup BMX bus err type definition
+  * @{
+  */
+#define BMX_BUS_ERR_TRUSTZONE_DECODE       (0) /*!< Bus trustzone decode error */
+#define BMX_BUS_ERR_ADDR_DECODE            (1) /*!< Bus addr decode error */
 /**
- *  @brief BMX bus err type definition
- */
-typedef enum {
-    BMX_BUS_ERR_TRUSTZONE_DECODE, /*!< Bus trustzone decode error */
-    BMX_BUS_ERR_ADDR_DECODE,      /*!< Bus addr decode error */
-} BMX_BUS_ERR_Type;
+  * @}
+  */
 
+/** @defgroup BMX bus err interrupt type definition
+  * @{
+  */
+#define BMX_ERR_INT_ERR                    (0) /*!< BMX bus err interrupt */
+#define BMX_ERR_INT_ALL                    (1) /*!< BMX bus err interrupt max num */
 /**
- *  @brief BMX bus err interrupt type definition
- */
-typedef enum {
-    BMX_ERR_INT_ERR, /*!< BMX bus err interrupt */
-    BMX_ERR_INT_ALL, /*!< BMX bus err interrupt max num */
-} BMX_ERR_INT_Type;
+  * @}
+  */
 
+/** @defgroup BMX time out interrupt type definition
+  * @{
+  */
+#define BMX_TO_INT_TIMEOUT                 (0) /*!< BMX timeout interrupt */
+#define BMX_TO_INT_ALL                     (1) /*!< BMX timeout interrupt max num */
 /**
- *  @brief BMX time out interrupt type definition
- */
-typedef enum {
-    BMX_TO_INT_TIMEOUT, /*!< BMX timeout interrupt */
-    BMX_TO_INT_ALL,     /*!< BMX timeout interrupt max num */
-} BMX_TO_INT_Type;
+  * @}
+  */
 
+/** @defgroup GLB eth ref clock out type definition
+  * @{
+  */
+#define GLB_ETH_REF_CLK_OUT_OUTSIDE_50M    (0) /*!< select outside 50MHz RMII ref clock */
+#define GLB_ETH_REF_CLK_OUT_INSIDE_50M     (1) /*!< select inside 50MHz RMII ref clock */
 /**
- *  @brief GLB eth ref clock out type definition
- */
-typedef enum {
-    GLB_ETH_REF_CLK_OUT_OUTSIDE_50M, /*!< select outside 50MHz RMII ref clock */
-    GLB_ETH_REF_CLK_OUT_INSIDE_50M,  /*!< select inside 50MHz RMII ref clock */
-} GLB_ETH_REF_CLK_OUT_Type;
+  * @}
+  */
 
+/** @defgroup GLB EM type definition
+  * @{
+  */
+#define GLB_WRAM160KB_EM0KB                (0) /*!< WRAM_160KB EM_0KB */
+#define GLB_WRAM128KB_EM32KB               (1) /*!< WRAM_128KB EM_32KB */
+#define GLB_WRAM96KB_EM64KB                (2) /*!< WRAM_96KB EM_64KB */
 /**
- *  @brief GLB EM type definition
- */
-typedef enum {
-    GLB_WRAM160KB_EM0KB,    /*!< WRAM_160KB EM_0KB */
-    GLB_WRAM128KB_EM32KB,   /*!< WRAM_128KB EM_32KB */
-    GLB_WRAM96KB_EM64KB,    /*!< WRAM_96KB EM_64KB */
-} GLB_EM_Type;
+  * @}
+  */
 
+/** @defgroup GLB ADC clock type definition
+  * @{
+  */
+#define GLB_ADC_CLK_AUPLL                  (0) /*!< use AUPLL as ADC clock */
+#define GLB_ADC_CLK_XCLK                   (1) /*!< use XCLK as ADC clock */
 /**
- *  @brief GLB ADC clock type definition
- */
-typedef enum {
-    GLB_ADC_CLK_AUPLL, /*!< use AUPLL as ADC clock */
-    GLB_ADC_CLK_XCLK,  /*!< use XCLK as ADC clock */
-} GLB_ADC_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB DAC clock type definition
+  * @{
+  */
+#define GLB_DAC_CLK_32M                    (0) /*!< use 32M as DAC clock */
+#define GLB_DAC_CLK_XCLK                   (1) /*!< use XCLK as DAC clock */
 /**
- *  @brief GLB DAC clock type definition
- */
-typedef enum {
-    GLB_DAC_CLK_32M,  /*!< use 32M as DAC clock */
-    GLB_DAC_CLK_XCLK, /*!< use XCLK as DAC clock */
-} GLB_DAC_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB chip clock out 0 type definition
+  * @{
+  */
+#define GLB_CHIP_CLK_OUT_0_CAM_REF_CLK     (0) /*!< cam_ref_clk */
+#define GLB_CHIP_CLK_OUT_0_I2S_REF_CLK     (1) /*!< i2s_ref_clk out */
+#define GLB_CHIP_CLK_OUT_0_NONE            (2) /*!< no clock out */
+#define GLB_CHIP_CLK_OUT_0_SOLO_IN_128FS   (3) /*!< clk_solo_in_128fs */
 /**
- *  @brief GLB chip clock input output type definition
- */
+  * @}
+  */
 
+/** @defgroup GLB chip clock out 1 type definition
+  * @{
+  */
+#define GLB_CHIP_CLK_OUT_1_CAM_REF_CLK     (0) /*!< no chip clock out */
+#define GLB_CHIP_CLK_OUT_1_I2S_REF_CLK     (1) /*!< i2s_ref_clk out */
+#define GLB_CHIP_CLK_OUT_1_NONE            (2) /*!< no clock out */
+#define GLB_CHIP_CLK_OUT_1_SOLO_IN_128FS   (3) /*!< clk_solo_in_128fs */
 /**
- *  @brief GLB chip clock out 0 type definition
- */
-typedef enum {
-    GLB_CHIP_CLK_OUT_0_CAM_REF_CLK = 0,   /*!< cam_ref_clk */
-    GLB_CHIP_CLK_OUT_0_I2S_REF_CLK = 1,   /*!< i2s_ref_clk out */
-    GLB_CHIP_CLK_OUT_0_NONE = 2,          /*!< no clock out */
-    GLB_CHIP_CLK_OUT_0_SOLO_IN_128FS = 3, /*!< clk_solo_in_128fs */
-} GLB_CHIP_CLK_OUT_0_Type;
+  * @}
+  */
 
+/** @defgroup GLB chip clock out 2 type definition
+  * @{
+  */
+#define GLB_CHIP_CLK_OUT_2_CAM_REF_CLK     (0) /*!< cam_ref_clk */
+#define GLB_CHIP_CLK_OUT_2_I2S_REF_CLK     (1) /*!< i2s_ref_clk */
+#define GLB_CHIP_CLK_OUT_2_ANA_XTAL_CLK    (2) /*!< ana_xtal_clk */
+#define GLB_CHIP_CLK_OUT_2_WIFIPLL_32M     (3) /*!< wifipll_32m_clk */
 /**
- *  @brief GLB chip clock out 1 type definition
- */
-typedef enum {
-    GLB_CHIP_CLK_OUT_1_CAM_REF_CLK = 0,   /*!< no chip clock out */
-    GLB_CHIP_CLK_OUT_1_I2S_REF_CLK = 1,   /*!< i2s_ref_clk out */
-    GLB_CHIP_CLK_OUT_1_NONE = 2,          /*!< no clock out */
-    GLB_CHIP_CLK_OUT_1_SOLO_IN_128FS = 3, /*!< clk_solo_in_128fs */
-} GLB_CHIP_CLK_OUT_1_Type;
+  * @}
+  */
 
+/** @defgroup GLB chip clock out 3 type definition
+  * @{
+  */
+#define GLB_CHIP_CLK_OUT_3_CAM_REF_CLK     (0) /*!< no chip clock out */
+#define GLB_CHIP_CLK_OUT_3_I2S_REF_CLK     (1) /*!< i2s_ref_clk out */
+#define GLB_CHIP_CLK_OUT_3_NONE            (2) /*!< no clock out */
+#define GLB_CHIP_CLK_OUT_3_WIFIPLL_48M     (3) /*!< wifipll_48m_clk */
 /**
- *  @brief GLB chip clock out 2 type definition
- */
-typedef enum {
-    GLB_CHIP_CLK_OUT_2_CAM_REF_CLK = 0,  /*!< cam_ref_clk */
-    GLB_CHIP_CLK_OUT_2_I2S_REF_CLK = 1,  /*!< i2s_ref_clk */
-    GLB_CHIP_CLK_OUT_2_ANA_XTAL_CLK = 2, /*!< ana_xtal_clk */
-    GLB_CHIP_CLK_OUT_2_WIFIPLL_32M = 3,  /*!< wifipll_32m_clk */
-} GLB_CHIP_CLK_OUT_2_Type;
+  * @}
+  */
 
+/** @defgroup GLB DIG clock source select type definition
+  * @{
+  */
+#define GLB_DIG_CLK_WIFIPLL_32M            (0) /*!< select WIFIPLL 32M as DIG clock source */
+#define GLB_DIG_CLK_XCLK                   (1) /*!< select XCLK as DIG clock source */
+#define GLB_DIG_CLK_AUPLL                  (2) /*!< select AUPLL as DIG clock source */
 /**
- *  @brief GLB chip clock out 3 type definition
- */
-typedef enum {
-    GLB_CHIP_CLK_OUT_3_CAM_REF_CLK = 0, /*!< no chip clock out */
-    GLB_CHIP_CLK_OUT_3_I2S_REF_CLK = 1, /*!< i2s_ref_clk out */
-    GLB_CHIP_CLK_OUT_3_NONE = 2,        /*!< no clock out */
-    GLB_CHIP_CLK_OUT_3_WIFIPLL_48M = 3, /*!< wifipll_48m_clk */
-} GLB_CHIP_CLK_OUT_3_Type;
+  * @}
+  */
 
+/** @defgroup GLB 512K clock out select type definition
+  * @{
+  */
+#define GLB_512K_CLK_OUT_512K              (0) /*!< select 512K clock out */
+#define GLB_512K_CLK_OUT_256K              (1) /*!< select 256K clock out */
+#define GLB_512K_CLK_OUT_128K              (2) /*!< select 128K clock out */
 /**
- *  @brief GLB DIG clock source select type definition
- */
-typedef enum {
-    GLB_DIG_CLK_WIFIPLL_32M, /*!< select WIFIPLL 32M as DIG clock source */
-    GLB_DIG_CLK_XCLK,        /*!< select XCLK as DIG clock source */
-    GLB_DIG_CLK_AUPLL,       /*!< select AUPLL as DIG clock source */
-} GLB_DIG_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB BT bandwidth type definition
+  * @{
+  */
+#define GLB_BT_BANDWIDTH_1M                (0) /*!< BT bandwidth 1MHz */
+#define GLB_BT_BANDWIDTH_2M                (1) /*!< BT bandwidth 2MHz */
 /**
- *  @brief GLB 512K clock out select type definition
- */
-typedef enum {
-    GLB_512K_CLK_OUT_512K, /*!< select 512K clock out */
-    GLB_512K_CLK_OUT_256K, /*!< select 256K clock out */
-    GLB_512K_CLK_OUT_128K, /*!< select 128K clock out */
-} GLB_512K_CLK_OUT_Type;
+  * @}
+  */
 
+/** @defgroup GLB UART signal type definition
+  * @{
+  */
+#define GLB_UART_SIG_0                     (0)  /*!< UART signal 0 */
+#define GLB_UART_SIG_1                     (1)  /*!< UART signal 1 */
+#define GLB_UART_SIG_2                     (2)  /*!< UART signal 2 */
+#define GLB_UART_SIG_3                     (3)  /*!< UART signal 3 */
+#define GLB_UART_SIG_4                     (4)  /*!< UART signal 4 */
+#define GLB_UART_SIG_5                     (5)  /*!< UART signal 5 */
+#define GLB_UART_SIG_6                     (6)  /*!< UART signal 6 */
+#define GLB_UART_SIG_7                     (7)  /*!< UART signal 7 */
+#define GLB_UART_SIG_8                     (8)  /*!< UART signal 8 */
+#define GLB_UART_SIG_9                     (9)  /*!< UART signal 9 */
+#define GLB_UART_SIG_10                    (10) /*!< UART signal 10 */
+#define GLB_UART_SIG_11                    (11) /*!< UART signal 11 */
 /**
- *  @brief GLB BT bandwidth type definition
- */
-typedef enum {
-    GLB_BT_BANDWIDTH_1M, /*!< BT bandwidth 1MHz */
-    GLB_BT_BANDWIDTH_2M, /*!< BT bandwidth 2MHz */
-} GLB_BT_BANDWIDTH_Type;
+  * @}
+  */
 
+/** @defgroup GLB UART signal function type definition
+  * @{
+  */
+#define GLB_UART_SIG_FUN_UART0_RTS         (0) /*!< UART funtion: UART 0 RTS */
+#define GLB_UART_SIG_FUN_UART0_CTS         (1) /*!< UART funtion: UART 0 CTS */
+#define GLB_UART_SIG_FUN_UART0_TXD         (2) /*!< UART funtion: UART 0 TXD */
+#define GLB_UART_SIG_FUN_UART0_RXD         (3) /*!< UART funtion: UART 0 RXD */
+#define GLB_UART_SIG_FUN_UART1_RTS         (4) /*!< UART funtion: UART 1 RTS */
+#define GLB_UART_SIG_FUN_UART1_CTS         (5) /*!< UART funtion: UART 1 CTS */
+#define GLB_UART_SIG_FUN_UART1_TXD         (6) /*!< UART funtion: UART 1 TXD */
+#define GLB_UART_SIG_FUN_UART1_RXD         (7) /*!< UART funtion: UART 1 RXD */
+#define GLB_UART_SIG_FUN_RESERVED1         (8) /*!< UART funtion: UART 2 RTS */
+#define GLB_UART_SIG_FUN_RESERVED2         (9) /*!< UART funtion: UART 2 CTS */
 /**
- *  @brief GLB UART signal type definition
- */
-typedef enum {
-    GLB_UART_SIG_0,  /*!< UART signal 0 */
-    GLB_UART_SIG_1,  /*!< UART signal 1 */
-    GLB_UART_SIG_2,  /*!< UART signal 2 */
-    GLB_UART_SIG_3,  /*!< UART signal 3 */
-    GLB_UART_SIG_4,  /*!< UART signal 4 */
-    GLB_UART_SIG_5,  /*!< UART signal 5 */
-    GLB_UART_SIG_6,  /*!< UART signal 6 */
-    GLB_UART_SIG_7,  /*!< UART signal 7 */
-    GLB_UART_SIG_8,  /*!< UART signal 8 */
-    GLB_UART_SIG_9,  /*!< UART signal 9 */
-    GLB_UART_SIG_10, /*!< UART signal 10 */
-    GLB_UART_SIG_11, /*!< UART signal 11 */
-} GLB_UART_SIG_Type;
+  * @}
+  */
 
+/** @defgroup XTAL type definition
+  * @{
+  */
+#define GLB_XTAL_NONE                      (0) /*!< XTAL is none */
+#define GLB_XTAL_24M                       (1) /*!< XTAL is 24M */
+#define GLB_XTAL_32M                       (2) /*!< XTAL is 32M */
+#define GLB_XTAL_38P4M                     (3) /*!< XTAL is 38.4M */
+#define GLB_XTAL_40M                       (4) /*!< XTAL is 40M */
+#define GLB_XTAL_26M                       (5) /*!< XTAL is 26M */
+#define GLB_XTAL_RC32M                     (6) /*!< XTAL is RC32M */
+#define GLB_XTAL_MAX                       (7) /*!< type max num */
 /**
- *  @brief GLB UART signal  function type definition
- */
-typedef enum {
-    GLB_UART_SIG_FUN_UART0_RTS, /*!< UART funtion: UART 0 RTS */
-    GLB_UART_SIG_FUN_UART0_CTS, /*!< UART funtion: UART 0 CTS */
-    GLB_UART_SIG_FUN_UART0_TXD, /*!< UART funtion: UART 0 TXD */
-    GLB_UART_SIG_FUN_UART0_RXD, /*!< UART funtion: UART 0 RXD */
-    GLB_UART_SIG_FUN_UART1_RTS, /*!< UART funtion: UART 1 RTS */
-    GLB_UART_SIG_FUN_UART1_CTS, /*!< UART funtion: UART 1 CTS */
-    GLB_UART_SIG_FUN_UART1_TXD, /*!< UART funtion: UART 1 TXD */
-    GLB_UART_SIG_FUN_UART1_RXD, /*!< UART funtion: UART 1 RXD */
-    GLB_UART_SIG_FUN_RESERVED1, /*!< UART funtion: UART 2 RTS */
-    GLB_UART_SIG_FUN_RESERVED2, /*!< UART funtion: UART 2 CTS */
-} GLB_UART_SIG_FUN_Type;
+  * @}
+  */
 
+/** @defgroup PLL power on type definition
+  * @{
+  */
+#define GLB_PLL_NONE                       (0) /*!< power on xtal and pll */
+#define GLB_PLL_WIFIPLL                    (1) /*!< power on WIFIPLL */
+#define GLB_PLL_AUPLL                      (2) /*!< power on AUPLL */
 /**
- *  @brief XTAL type definition
- */
-typedef enum {
-    GLB_XTAL_NONE,  /*!< XTAL is none */
-    GLB_XTAL_24M,   /*!< XTAL is 24M */
-    GLB_XTAL_32M,   /*!< XTAL is 32M */
-    GLB_XTAL_38P4M, /*!< XTAL is 38.4M */
-    GLB_XTAL_40M,   /*!< XTAL is 40M */
-    GLB_XTAL_26M,   /*!< XTAL is 26M */
-    GLB_XTAL_RC32M, /*!< XTAL is RC32M */
-    GLB_XTAL_MAX,   /*!< type max num */
-} GLB_XTAL_Type;
+  * @}
+  */
 
+/** @defgroup WA PLL XTAL type definition
+  * @{
+  */
+#define GLB_WA_PLL_WIFIPLL                 (0) /*!< wifi pll */
+#define GLB_WA_PLL_AUPLL                   (1) /*!< audio pll */
 /**
- *  @brief PLL power on type definition
- */
-typedef enum {
-    GLB_PLL_NONE = 0,    /*!< power on xtal and pll */
-    GLB_PLL_WIFIPLL = 1, /*!< power on WIFIPLL */
-    GLB_PLL_AUPLL = 2,   /*!< power on AUPLL */
-} GLB_PLL_Type;
+  * @}
+  */
 
+/** @defgroup PSRAMB PLL type definition
+  * @{
+  */
+#define GLB_PSRAMB_EMI_WIFIPLL_320M        (0) /*!< emi_wifipll_320m_clk */
+#define GLB_PSRAMB_EMI_AUPLL_DIV1          (1) /*!< emi_aupll_div1_clk */
 /**
- *  @brief WA PLL XTAL type definition
- */
-typedef enum {
-    GLB_WA_PLL_WIFIPLL, /*!< wifi pll */
-    GLB_WA_PLL_AUPLL,   /*!< audio pll */
-} GLB_WA_PLL_Type;
+  * @}
+  */
 
+/** @defgroup GLB UART clock type definition
+  * @{
+  */
+#define GLB_UART_CLK_BCLK                  (0) /*!< Select bclk clock as UART clock */
+#define GLB_UART_CLK_PLL_160M              (1) /*!< Select PLL 160M as UART clock */
 /**
- *  @brief PSRAMB PLL type definition
- */
-typedef enum {
-    GLB_PSRAMB_EMI_WIFIPLL_320M, /*!< emi_wifipll_320m_clk */
-    GLB_PSRAMB_EMI_AUPLL_DIV1,   /*!< emi_aupll_div1_clk */
-} GLB_PSRAMB_PLL_Type;
+  * @}
+  */
 
+/** @defgroup GLB I2S di ref clock type definition
+  * @{
+  */
+#define GLB_I2S_DI_SEL_I2S_DI_INPUT        (0) /*!< Select i2s_di input */
+#define GLB_I2S_DI_SEL_I2S_REF_OUTPUT      (1) /*!< Select i2s_ref_clk output */
 /**
- *  @brief GLB UART clock type definition
- */
-typedef enum {
-    GLB_UART_CLK_BCLK,     /*!< Select bclk clock as UART clock */
-    GLB_UART_CLK_PLL_160M, /*!< Select PLL 160M as UART clock */
-} GLB_UART_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB SPI sig swap group type definition
+  * @{
+  */
+#define GLB_SPI_SIG_SWAP_GRP_GPIO0_GPIO11  (0) /*!< SWAP SPI SIG GROUP GPIO0  -  GPIO11 */
+#define GLB_SPI_SIG_SWAP_GRP_GPIO12_GPIO23 (1) /*!< SWAP SPI SIG GROUP GPIO12 -  GPIO23 */
+#define GLB_SPI_SIG_SWAP_GRP_GPIO24_GPIO35 (2) /*!< SWAP SPI SIG GROUP GPIO24 -  GPIO35 */
+#define GLB_SPI_SIG_SWAP_GRP_GPIO36_GPIO45 (3) /*!< SWAP SPI SIG GROUP GPIO36 -  GPIO45 */
 /**
- *  @brief GLB I2S di ref clock type definition
- */
-typedef enum {
-    GLB_I2S_DI_SEL_I2S_DI_INPUT,   /*!< Select i2s_di input */
-    GLB_I2S_DI_SEL_I2S_REF_OUTPUT, /*!< Select i2s_ref_clk output */
-} GLB_I2S_DI_REF_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB I2S do ref clock type definition
+  * @{
+  */
+#define GLB_I2S_DO_SEL_I2S_DO_OUTPT        (0) /*!< Select i2s_do output */
+#define GLB_I2S_DO_SEL_I2S_REF_OUTPUT      (1) /*!< Select i2s_ref_clk output */
 /**
- *  @brief GLB SPI sig swap group type definition
- */
-typedef enum {
-    GLB_SPI_SIG_SWAP_GRP_GPIO0_GPIO11,  /*!< SWAP SPI SIG GROUP GPIO0  -  GPIO11 */
-    GLB_SPI_SIG_SWAP_GRP_GPIO12_GPIO23, /*!< SWAP SPI SIG GROUP GPIO12 -  GPIO23 */
-    GLB_SPI_SIG_SWAP_GRP_GPIO24_GPIO35, /*!< SWAP SPI SIG GROUP GPIO24 -  GPIO35 */
-    GLB_SPI_SIG_SWAP_GRP_GPIO36_GPIO45, /*!< SWAP SPI SIG GROUP GPIO36 -  GPIO45 */
-} GLB_SPI_SIG_SWAP_GRP_Type;
+  * @}
+  */
 
+/** @defgroup GLB AHB clock IP type definition
+  * @{
+  */
+#define GLB_AHB_CLOCK_IP_CPU               (0)
+#define GLB_AHB_CLOCK_IP_RSVD              (1)
+#define GLB_AHB_CLOCK_IP_SEC               (2)
+#define GLB_AHB_CLOCK_IP_DMA_0             (3)
+#define GLB_AHB_CLOCK_IP_DMA_1             (4)
+#define GLB_AHB_CLOCK_IP_DMA_2             (5)
+#define GLB_AHB_CLOCK_IP_CCI               (6)
+#define GLB_AHB_CLOCK_IP_RF_TOP            (7)
+#define GLB_AHB_CLOCK_IP_GPIP              (8)
+#define GLB_AHB_CLOCK_IP_TZC               (9)
+#define GLB_AHB_CLOCK_IP_EF_CTRL           (10)
+#define GLB_AHB_CLOCK_IP_SF_CTRL           (11)
+#define GLB_AHB_CLOCK_IP_EMAC              (12)
+#define GLB_AHB_CLOCK_IP_UART0             (13)
+#define GLB_AHB_CLOCK_IP_UART1             (14)
+#define GLB_AHB_CLOCK_IP_UART2             (15)
+#define GLB_AHB_CLOCK_IP_UART3             (16)
+#define GLB_AHB_CLOCK_IP_UART4             (17)
+#define GLB_AHB_CLOCK_IP_SPI               (18)
+#define GLB_AHB_CLOCK_IP_I2C               (19)
+#define GLB_AHB_CLOCK_IP_PWM               (20)
+#define GLB_AHB_CLOCK_IP_TIMER             (21)
+#define GLB_AHB_CLOCK_IP_IR                (22)
+#define GLB_AHB_CLOCK_IP_CHECKSUM          (23)
+#define GLB_AHB_CLOCK_IP_QDEC              (24)
+#define GLB_AHB_CLOCK_IP_KYS               (25)
+#define GLB_AHB_CLOCK_IP_I2S               (26)
+#define GLB_AHB_CLOCK_IP_USB11             (27)
+#define GLB_AHB_CLOCK_IP_CAM               (28)
+#define GLB_AHB_CLOCK_IP_MJPEG             (29)
+#define GLB_AHB_CLOCK_IP_BT_BLE_NORMAL     (30)
+#define GLB_AHB_CLOCK_IP_BT_BLE_LP         (31)
+#define GLB_AHB_CLOCK_IP_ZB_NORMAL         (32)
+#define GLB_AHB_CLOCK_IP_ZB_LP             (33)
+#define GLB_AHB_CLOCK_IP_WIFI_NORMAL       (34)
+#define GLB_AHB_CLOCK_IP_WIFI_LP           (35)
+#define GLB_AHB_CLOCK_IP_BT_BLE_2_NORMAL   (36)
+#define GLB_AHB_CLOCK_IP_BT_BLE_2_LP       (37)
+#define GLB_AHB_CLOCK_IP_EMI_MISC          (38)
+#define GLB_AHB_CLOCK_IP_PSRAM0_CTRL       (39)
+#define GLB_AHB_CLOCK_IP_PSRAM1_CTRL       (40)
+#define GLB_AHB_CLOCK_IP_USB20_SDU         (41)
+#define GLB_AHB_CLOCK_IP_MIX2              (42)
+#define GLB_AHB_CLOCK_IP_AUDIO             (43)
+#define GLB_AHB_CLOCK_IP_SDH               (44)
+#define GLB_AHB_CLOCK_IP_ZB2_NORMAL        (45)
+#define GLB_AHB_CLOCK_IP_ZB2_LP            (46)
+#define GLB_AHB_CLOCK_IP_I2C1              (47)
+#define GLB_AHB_CLOCK_IP_WIFI_PHY          (48)
+#define GLB_AHB_CLOCK_IP_WIFI_MAC_PHY      (49)
+#define GLB_AHB_CLOCK_IP_WIFI_PLATFORM     (50)
+#define GLB_AHB_CLOCK_IP_LZ4               (51)
+#define GLB_AHB_CLOCK_IP_AUPDM             (52)
+#define GLB_AHB_CLOCK_IP_GAUGE             (53)
+#define GLB_AHB_CLOCK_IP_DBI               (54)
+#define GLB_AHB_CLOCK_IP_AUSOLO_TOP        (55)
+#define GLB_AHB_CLOCK_IP_DMA_GPIO          (56)
+#define GLB_AHB_CLOCK_IP_MM_MISC           (57)
 /**
- *  @brief GLB I2S do ref clock type definition
- */
-typedef enum {
-    GLB_I2S_DO_SEL_I2S_DO_OUTPT,   /*!< Select i2s_do output */
-    GLB_I2S_DO_SEL_I2S_REF_OUTPUT, /*!< Select i2s_ref_clk output */
-} GLB_I2S_DO_REF_CLK_Type;
+  * @}
+  */
 
+/** @defgroup GLB slave grp0 type definition
+  * @{
+  */
+#define GLB_SLAVE_GRP_0_ADC                (0)
+#define GLB_SLAVE_GRP_0_IR                 (1)
+#define GLB_SLAVE_GRP_0_I2C                (2)
+#define GLB_SLAVE_GRP_0_SPI                (3)
+#define GLB_SLAVE_GRP_0_DBI                (4)
+#define GLB_SLAVE_GRP_0_AUDIO_AUTO         (5)
+#define GLB_SLAVE_GRP_0_AUDIO_ADC          (6)
+#define GLB_SLAVE_GRP_0_AUDIO_SOLO         (7)
+#define GLB_SLAVE_GRP_0_CAM                (8)
+#define GLB_SLAVE_GRP_0_SDH                (9)
+#define GLB_SLAVE_GRP_0_PSRAMB             (10)
+#define GLB_SLAVE_GRP_0_MAX                (11)
 /**
- *  @brief GLB AHB clock IP type definition
- */
-typedef enum {
-    GLB_AHB_CLOCK_IP_CPU,
-    GLB_AHB_CLOCK_IP_RSVD,
-    GLB_AHB_CLOCK_IP_SEC,
-    GLB_AHB_CLOCK_IP_DMA_0,
-    GLB_AHB_CLOCK_IP_DMA_1,
-    GLB_AHB_CLOCK_IP_DMA_2,
-    GLB_AHB_CLOCK_IP_CCI,
-    GLB_AHB_CLOCK_IP_RF_TOP,
-    GLB_AHB_CLOCK_IP_GPIP,
-    GLB_AHB_CLOCK_IP_TZC,
-    GLB_AHB_CLOCK_IP_EF_CTRL,
-    GLB_AHB_CLOCK_IP_SF_CTRL,
-    GLB_AHB_CLOCK_IP_EMAC,
-    GLB_AHB_CLOCK_IP_UART0,
-    GLB_AHB_CLOCK_IP_UART1,
-    GLB_AHB_CLOCK_IP_UART2,
-    GLB_AHB_CLOCK_IP_UART3,
-    GLB_AHB_CLOCK_IP_UART4,
-    GLB_AHB_CLOCK_IP_SPI,
-    GLB_AHB_CLOCK_IP_I2C,
-    GLB_AHB_CLOCK_IP_PWM,
-    GLB_AHB_CLOCK_IP_TIMER,
-    GLB_AHB_CLOCK_IP_IR,
-    GLB_AHB_CLOCK_IP_CHECKSUM,
-    GLB_AHB_CLOCK_IP_QDEC,
-    GLB_AHB_CLOCK_IP_KYS,
-    GLB_AHB_CLOCK_IP_I2S,
-    GLB_AHB_CLOCK_IP_USB11,
-    GLB_AHB_CLOCK_IP_CAM,
-    GLB_AHB_CLOCK_IP_MJPEG,
-    GLB_AHB_CLOCK_IP_BT_BLE_NORMAL,
-    GLB_AHB_CLOCK_IP_BT_BLE_LP,
-    GLB_AHB_CLOCK_IP_ZB_NORMAL,
-    GLB_AHB_CLOCK_IP_ZB_LP,
-    GLB_AHB_CLOCK_IP_WIFI_NORMAL,
-    GLB_AHB_CLOCK_IP_WIFI_LP,
-    GLB_AHB_CLOCK_IP_BT_BLE_2_NORMAL,
-    GLB_AHB_CLOCK_IP_BT_BLE_2_LP,
-    GLB_AHB_CLOCK_IP_EMI_MISC,
-    GLB_AHB_CLOCK_IP_PSRAM0_CTRL,
-    GLB_AHB_CLOCK_IP_PSRAM1_CTRL,
-    GLB_AHB_CLOCK_IP_USB20_SDU,
-    GLB_AHB_CLOCK_IP_MIX2,
-    GLB_AHB_CLOCK_IP_AUDIO,
-    GLB_AHB_CLOCK_IP_SDH,
-    GLB_AHB_CLOCK_IP_ZB2_NORMAL,
-    GLB_AHB_CLOCK_IP_ZB2_LP,
-    GLB_AHB_CLOCK_IP_I2C1,
-    GLB_AHB_CLOCK_IP_WIFI_PHY,
-    GLB_AHB_CLOCK_IP_WIFI_MAC_PHY,
-    GLB_AHB_CLOCK_IP_WIFI_PLATFORM,
-    GLB_AHB_CLOCK_IP_LZ4,
-    GLB_AHB_CLOCK_IP_AUPDM,
-    GLB_AHB_CLOCK_IP_GAUGE,
-    GLB_AHB_CLOCK_IP_DBI,
-    GLB_AHB_CLOCK_IP_AUSOLO_TOP,
-    GLB_AHB_CLOCK_IP_DMA_GPIO,
-    GLB_AHB_CLOCK_IP_MM_MISC,
-} GLB_AHB_CLOCK_IP_Type;
-
-typedef enum {
-    GLB_SLAVE_GRP_0_ADC,
-    GLB_SLAVE_GRP_0_IR,
-    GLB_SLAVE_GRP_0_I2C,
-    GLB_SLAVE_GRP_0_SPI,
-    GLB_SLAVE_GRP_0_DBI,
-    GLB_SLAVE_GRP_0_AUDIO_AUTO,
-    GLB_SLAVE_GRP_0_AUDIO_ADC,
-    GLB_SLAVE_GRP_0_AUDIO_SOLO,
-    GLB_SLAVE_GRP_0_CAM,
-    GLB_SLAVE_GRP_0_SDH,
-    GLB_SLAVE_GRP_0_PSRAMB,
-    GLB_SLAVE_GRP_0_MAX,
-} GLB_SLAVE_GRP_0_Type;
+  * @}
+  */
 
 typedef struct {
     uint32_t clkOffSetAddr;
@@ -862,18 +920,18 @@ typedef struct {
 } GLB_SLAVE_GRP_0_TBL_Type;
 
 typedef union {
-        GLB_ADC_CLK_Type        adcClkSel;
-        GLB_IR_CLK_SRC_Type     irClkSel;
-        GLB_I2C_CLK_Type        i2cClkSel;
-        GLB_SPI_CLK_Type        spiClkSel;
-        GLB_DBI_CLK_Type        dbiClkSel;
-        GLB_AUDIO_AUTO_CLK_Type audioAutoClkSel;
-        GLB_AUDIO_ADC_CLK_Type  audioAdcClkSel;
-        GLB_AUDIO_SOLO_CLK_Type audioSoloClkSel;
-        GLB_CAM_CLK_Type        camClkSel;
-        GLB_SDH_CLK_Type        sdhClkSel;
-        GLB_PSRAMB_PLL_Type     psrambClkSel;
-        uint32_t                clkSel;
+    uint8_t adcClkSel;
+    uint8_t irClkSel;
+    uint8_t i2cClkSel;
+    uint8_t spiClkSel;
+    uint8_t dbiClkSel;
+    uint8_t audioAutoClkSel;
+    uint8_t audioAdcClkSel;
+    uint8_t audioSoloClkSel;
+    uint8_t camClkSel;
+    uint8_t sdhClkSel;
+    uint8_t psrambClkSel;
+    uint32_t clkSel;
 } GLB_SLAVE_GRP_0_CLK_SEL_Type;
 
 /*@} end of group GLB_Public_Types */
@@ -966,9 +1024,9 @@ typedef union {
 /** @defgroup  GLB_MCU_MUXPLL_160M_CLK_SEL_TYPE
  *  @{
  */
-#define IS_GLB_MCU_MUXPLL_160M_CLK_SEL_TYPE(type) (((type) == GLB_MCU_MUXPLL_SEL_WIFIPLL_160M) ||    \
-                                                   ((type) == GLB_MCU_MUXPLL_SEL_AUPLL_DIV3) ||      \
-                                                   ((type) == GLB_MCU_MUXPLL_SEL_TOP_AUPLL_DIV2) ||  \
+#define IS_GLB_MCU_MUXPLL_160M_CLK_SEL_TYPE(type) (((type) == GLB_MCU_MUXPLL_SEL_WIFIPLL_160M) ||   \
+                                                   ((type) == GLB_MCU_MUXPLL_SEL_AUPLL_DIV3) ||     \
+                                                   ((type) == GLB_MCU_MUXPLL_SEL_TOP_AUPLL_DIV2) || \
                                                    ((type) == GLB_MCU_MUXPLL_SEL_AUPLL_DIV2P5))
 
 /** @defgroup  GLB_MCU_MUXPLL_80M_CLK_SEL_TYPE
@@ -981,8 +1039,8 @@ typedef union {
 /** @defgroup  GLB_ISP_MUXPLL_80M_CLK_SEL_TYPE
  *  @{
  */
-#define IS_GLB_ISP_MUXPLL_80M_CLK_SEL_TYPE(type) (((type) == GLB_ISP_MUXPLL_SEL_WIFIPLL_80M) ||    \
-                                                  ((type) == GLB_ISP_MUXPLL_SEL_AUPLL_DIV5) ||     \
+#define IS_GLB_ISP_MUXPLL_80M_CLK_SEL_TYPE(type) (((type) == GLB_ISP_MUXPLL_SEL_WIFIPLL_80M) || \
+                                                  ((type) == GLB_ISP_MUXPLL_SEL_AUPLL_DIV5) ||  \
                                                   ((type) == GLB_ISP_MUXPLL_SEL_AUPLL_DIV6))
 
 /** @defgroup  GLB_PLL_CGEN_TYPE
@@ -1045,14 +1103,14 @@ typedef union {
 /** @defgroup  GLB_CAM_CLK_TYPE
  *  @{
  */
-#define IS_GLB_CAM_CLK_TYPE(type) (((type) == GLB_CAM_CLK_XCLK) ||         \
-                                   ((type) == GLB_CAM_CLK_WIFIPLL_96M) ||  \
+#define IS_GLB_CAM_CLK_TYPE(type) (((type) == GLB_CAM_CLK_XCLK) ||        \
+                                   ((type) == GLB_CAM_CLK_WIFIPLL_96M) || \
                                    ((type) == GLB_CAM_CLK_TOP_AUPLL_DIV5))
 
 /** @defgroup  GLB_SDH_CLK_TYPE
  *  @{
  */
-#define IS_GLB_SDH_CLK_TYPE(type) (((type) == GLB_SDH_CLK_WIFIPLL_96M) ||  \
+#define IS_GLB_SDH_CLK_TYPE(type) (((type) == GLB_SDH_CLK_WIFIPLL_96M) || \
                                    ((type) == GLB_SDH_CLK_TOP_AUPLL_DIV5))
 
 /** @defgroup  GLB_GLB_UART_SIG_SWAP_SET_TYPE
@@ -1081,27 +1139,27 @@ typedef union {
  *  @{
  */
 #define IS_GLB_PERI_DMA_TYPE(type) (((type) == GLB_PERI_DMA_UART0_RX) || \
-                                    ((type) == GLB_PERI_DMA_UART0_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_UART1_RX) ||  \
-                                    ((type) == GLB_PERI_DMA_UART1_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_UART2_RX) ||  \
-                                    ((type) == GLB_PERI_DMA_UART2_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_I2C_0_RX) ||  \
-                                    ((type) == GLB_PERI_DMA_I2C_0_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_IRTX_TX) ||   \
-                                    ((type) == GLB_PERI_DMA_GPIO_TX) ||   \
-                                    ((type) == GLB_PERI_DMA_SPI_RX) ||    \
-                                    ((type) == GLB_PERI_DMA_SPI_TX) ||    \
-                                    ((type) == GLB_PERI_DMA_AUDIO_RX) ||  \
-                                    ((type) == GLB_PERI_DMA_AUDIO_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_I2C_1_RX) ||  \
-                                    ((type) == GLB_PERI_DMA_I2C_1_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_I2S_0_RX) ||  \
-                                    ((type) == GLB_PERI_DMA_I2S_0_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_PDM_RX) ||    \
-                                    ((type) == GLB_PERI_DMA_PADC) ||      \
-                                    ((type) == GLB_PERI_DMA_GAUGE) ||     \
-                                    ((type) == GLB_PERI_DMA_GPADC) ||     \
+                                    ((type) == GLB_PERI_DMA_UART0_TX) || \
+                                    ((type) == GLB_PERI_DMA_UART1_RX) || \
+                                    ((type) == GLB_PERI_DMA_UART1_TX) || \
+                                    ((type) == GLB_PERI_DMA_UART2_RX) || \
+                                    ((type) == GLB_PERI_DMA_UART2_TX) || \
+                                    ((type) == GLB_PERI_DMA_I2C_0_RX) || \
+                                    ((type) == GLB_PERI_DMA_I2C_0_TX) || \
+                                    ((type) == GLB_PERI_DMA_IRTX_TX) ||  \
+                                    ((type) == GLB_PERI_DMA_GPIO_TX) ||  \
+                                    ((type) == GLB_PERI_DMA_SPI_RX) ||   \
+                                    ((type) == GLB_PERI_DMA_SPI_TX) ||   \
+                                    ((type) == GLB_PERI_DMA_AUDIO_RX) || \
+                                    ((type) == GLB_PERI_DMA_AUDIO_TX) || \
+                                    ((type) == GLB_PERI_DMA_I2C_1_RX) || \
+                                    ((type) == GLB_PERI_DMA_I2C_1_TX) || \
+                                    ((type) == GLB_PERI_DMA_I2S_0_RX) || \
+                                    ((type) == GLB_PERI_DMA_I2S_0_TX) || \
+                                    ((type) == GLB_PERI_DMA_PDM_RX) ||   \
+                                    ((type) == GLB_PERI_DMA_PADC) ||     \
+                                    ((type) == GLB_PERI_DMA_GAUGE) ||    \
+                                    ((type) == GLB_PERI_DMA_GPADC) ||    \
                                     ((type) == GLB_PERI_DMA_GPDAC_TX))
 
 /** @defgroup  GLB_PERI_DMA_CN_SEL_TYPE
@@ -1112,16 +1170,16 @@ typedef union {
 /** @defgroup  GLB_IR_CLK_SRC_TYPE
  *  @{
  */
-#define IS_GLB_IR_CLK_SRC_TYPE(type) (((type) == GLB_IR_CLK_SRC_XCLK))
+#define IS_GLB_IR_CLK_SRC_TYPE(type)      (((type) == GLB_IR_CLK_SRC_XCLK))
 
 /** @defgroup  GLB_SFLASH_CLK_TYPE
  *  @{
  */
-#define IS_GLB_SFLASH_CLK_TYPE(type) (((type) == GLB_SFLASH_CLK_WIFIPLL_120M) ||   \
-                                      ((type) == GLB_SFLASH_CLK_XTAL) ||           \
-                                      ((type) == GLB_SFLASH_CLK_TOP_AUPLL_DIV5) || \
-                                      ((type) == GLB_SFLASH_CLK_MUXPLL_80M) ||     \
-                                      ((type) == GLB_SFLASH_CLK_BCLK) ||           \
+#define IS_GLB_SFLASH_CLK_TYPE(type)      (((type) == GLB_SFLASH_CLK_WIFIPLL_120M) || \
+                                      ((type) == GLB_SFLASH_CLK_XTAL) ||              \
+                                      ((type) == GLB_SFLASH_CLK_TOP_AUPLL_DIV5) ||    \
+                                      ((type) == GLB_SFLASH_CLK_MUXPLL_80M) ||        \
+                                      ((type) == GLB_SFLASH_CLK_BCLK) ||              \
                                       ((type) == GLB_SFLASH_CLK_WIFIPLL_96M))
 
 /** @defgroup  GLB_I2C_CLK_TYPE
@@ -1168,7 +1226,7 @@ typedef union {
 /** @defgroup  GLB_AUDIO_ADC_CLK_TYPE
  *  @{
  */
-#define IS_GLB_AUDIO_ADC_CLK_TYPE(type) (((type) == GLB_AUDIO_ADC_AUPLL))
+#define IS_GLB_AUDIO_ADC_CLK_TYPE(type)  (((type) == GLB_AUDIO_ADC_AUPLL))
 
 /** @defgroup  GLB_AUDIO_SOLO_CLK_TYPE
  *  @{
@@ -1269,7 +1327,7 @@ typedef union {
 /** @defgroup  BMX_ARB_TYPE
  *  @{
  */
-#define IS_BMX_ARB_TYPE(type) (((type) == BMX_ARB_ROUND_ROBIN) || \
+#define IS_BMX_ARB_TYPE(type)           (((type) == BMX_ARB_ROUND_ROBIN) || \
                                ((type) == BMX_ARB_FIX))
 
 /** @defgroup  BMX_LATCH_TYPE
@@ -1431,12 +1489,12 @@ typedef union {
  *  @{
  */
 #define IS_GLB_WA_PLL_TYPE(type) (((type) == GLB_WA_PLL_WIFIPLL) || \
-                                   ((type) == GLB_WA_PLL_AUPLL))
+                                  ((type) == GLB_WA_PLL_AUPLL))
 
 /** @defgroup  GLB_PSRAMB_PLL_TYPE
  *  @{
  */
-#define IS_GLB_PSRAMB_PLL_TYPE(type) (((type) == GLB_PSRAMB_EMI_WIFIPLL_320M) ||  \
+#define IS_GLB_PSRAMB_PLL_TYPE(type) (((type) == GLB_PSRAMB_EMI_WIFIPLL_320M) || \
                                       ((type) == GLB_PSRAMB_EMI_AUPLL_DIV1))
 
 /** @defgroup  GLB_UART_CLK_TYPE
@@ -1465,17 +1523,17 @@ typedef union {
 #define IS_GLB_I2S_DO_REF_CLK_TYPE(type) (((type) == GLB_I2S_DO_SEL_I2S_DO_OUTPT) || \
                                           ((type) == GLB_I2S_DO_SEL_I2S_REF_OUTPUT))
 
-#define IS_GLB_SLAVE_GRP_0_TYPE(type) (((type) == GLB_SLAVE_GRP_0_ADC) || \
-                                       ((type) == GLB_SLAVE_GRP_0_IR) || \
-                                       ((type) == GLB_SLAVE_GRP_0_I2C) || \
-                                       ((type) == GLB_SLAVE_GRP_0_SPI) || \
-                                       ((type) == GLB_SLAVE_GRP_0_DBI) || \
+#define IS_GLB_SLAVE_GRP_0_TYPE(type) (((type) == GLB_SLAVE_GRP_0_ADC) ||        \
+                                       ((type) == GLB_SLAVE_GRP_0_IR) ||         \
+                                       ((type) == GLB_SLAVE_GRP_0_I2C) ||        \
+                                       ((type) == GLB_SLAVE_GRP_0_SPI) ||        \
+                                       ((type) == GLB_SLAVE_GRP_0_DBI) ||        \
                                        ((type) == GLB_SLAVE_GRP_0_AUDIO_AUTO) || \
-                                       ((type) == GLB_SLAVE_GRP_0_AUDIO_ADC) || \
+                                       ((type) == GLB_SLAVE_GRP_0_AUDIO_ADC) ||  \
                                        ((type) == GLB_SLAVE_GRP_0_AUDIO_SOLO) || \
-                                       ((type) == GLB_SLAVE_GRP_0_CAM) || \
-                                       ((type) == GLB_SLAVE_GRP_0_SDH) || \
-                                       ((type) == GLB_SLAVE_GRP_0_PSRAMB) || \
+                                       ((type) == GLB_SLAVE_GRP_0_CAM) ||        \
+                                       ((type) == GLB_SLAVE_GRP_0_SDH) ||        \
+                                       ((type) == GLB_SLAVE_GRP_0_PSRAMB) ||     \
                                        ((type) == GLB_SLAVE_GRP_0_MAX))
 
 /*@} end of group GLB_Public_Constants */
@@ -1483,72 +1541,72 @@ typedef union {
 /** @defgroup  GLB_Public_Macros
  *  @{
  */
-#define UART_SIG_SWAP_NONE          (0x00) /* uart_sig[0:11] -> uart_sig[0:11] */
-#define UART_SIG_SWAP_GPIO0_GPIO11  (0x01) /* GPIO0-11  uart_sig[ 0:11] -> uart_sig[ 6:11], uart_sig[ 0: 5] */
-#define UART_SIG_SWAP_GPIO12_GPIO23 (0x02) /* GPIO12-23 uart_sig[12:23] -> uart_sig[18:23], uart_sig[12:17] */
-#define UART_SIG_SWAP_GPIO24_GPIO35 (0x04) /* GPIO24-35 uart_sig[24:35] -> uart_sig[30:35], uart_sig[24:29] */
-#define UART_SIG_SWAP_GPIO36_GPIO47 (0x08) /* GPIO36-47 uart_sig[36:47] -> uart_sig[42:47], uart_sig[36:41] */
+#define UART_SIG_SWAP_NONE            (0x00) /* uart_sig[0:11] -> uart_sig[0:11] */
+#define UART_SIG_SWAP_GPIO0_GPIO11    (0x01) /* GPIO0-11  uart_sig[ 0:11] -> uart_sig[ 6:11], uart_sig[ 0: 5] */
+#define UART_SIG_SWAP_GPIO12_GPIO23   (0x02) /* GPIO12-23 uart_sig[12:23] -> uart_sig[18:23], uart_sig[12:17] */
+#define UART_SIG_SWAP_GPIO24_GPIO35   (0x04) /* GPIO24-35 uart_sig[24:35] -> uart_sig[30:35], uart_sig[24:29] */
+#define UART_SIG_SWAP_GPIO36_GPIO47   (0x08) /* GPIO36-47 uart_sig[36:47] -> uart_sig[42:47], uart_sig[36:41] */
 
-#define JTAG_SIG_SWAP_NONE 0x00 /* GPIO0-22  E21_TMS/E21_TDI/E21_TCK/E21_TDO <- E21_TCK/E21_TDO/E21_TMS/E21_TDI */
+#define JTAG_SIG_SWAP_NONE            0x00 /* GPIO0-22  E21_TMS/E21_TDI/E21_TCK/E21_TDO <- E21_TCK/E21_TDO/E21_TMS/E21_TDI */
 
-#define GLB_AHB_CLOCK_CPU               (1ULL<<GLB_AHB_CLOCK_IP_CPU            )
-#define GLB_AHB_CLOCK_RSVD              (1ULL<<GLB_AHB_CLOCK_IP_RSVD           )
-#define GLB_AHB_CLOCK_SEC               (1ULL<<GLB_AHB_CLOCK_IP_SEC            )
-#define GLB_AHB_CLOCK_DMA_0             (1ULL<<GLB_AHB_CLOCK_IP_DMA_0          )
-#define GLB_AHB_CLOCK_DMA_1             (1ULL<<GLB_AHB_CLOCK_IP_DMA_1          )
-#define GLB_AHB_CLOCK_DMA_2             (1ULL<<GLB_AHB_CLOCK_IP_DMA_2          )
-#define GLB_AHB_CLOCK_CCI               (1ULL<<GLB_AHB_CLOCK_IP_CCI            )
-#define GLB_AHB_CLOCK_RF_TOP            (1ULL<<GLB_AHB_CLOCK_IP_RF_TOP         )
-#define GLB_AHB_CLOCK_GPIP              (1ULL<<GLB_AHB_CLOCK_IP_GPIP           )
-#define GLB_AHB_CLOCK_TZC               (1ULL<<GLB_AHB_CLOCK_IP_TZC            )
-#define GLB_AHB_CLOCK_EF_CTRL           (1ULL<<GLB_AHB_CLOCK_IP_EF_CTRL        )
-#define GLB_AHB_CLOCK_SF_CTRL           (1ULL<<GLB_AHB_CLOCK_IP_SF_CTRL        )
-#define GLB_AHB_CLOCK_EMAC              (1ULL<<GLB_AHB_CLOCK_IP_EMAC           )
-#define GLB_AHB_CLOCK_UART0             (1ULL<<GLB_AHB_CLOCK_IP_UART0          )
-#define GLB_AHB_CLOCK_UART1             (1ULL<<GLB_AHB_CLOCK_IP_UART1          )
-#define GLB_AHB_CLOCK_UART2             (1ULL<<GLB_AHB_CLOCK_IP_UART2          )
-#define GLB_AHB_CLOCK_UART3             (1ULL<<GLB_AHB_CLOCK_IP_UART3          )
-#define GLB_AHB_CLOCK_UART4             (1ULL<<GLB_AHB_CLOCK_IP_UART4          )
-#define GLB_AHB_CLOCK_SPI               (1ULL<<GLB_AHB_CLOCK_IP_SPI            )
-#define GLB_AHB_CLOCK_I2C               (1ULL<<GLB_AHB_CLOCK_IP_I2C            )
-#define GLB_AHB_CLOCK_PWM               (1ULL<<GLB_AHB_CLOCK_IP_PWM            )
-#define GLB_AHB_CLOCK_TIMER             (1ULL<<GLB_AHB_CLOCK_IP_TIMER          )
-#define GLB_AHB_CLOCK_IR                (1ULL<<GLB_AHB_CLOCK_IP_IR             )
-#define GLB_AHB_CLOCK_CHECKSUM          (1ULL<<GLB_AHB_CLOCK_IP_CHECKSUM       )
-#define GLB_AHB_CLOCK_QDEC              (1ULL<<GLB_AHB_CLOCK_IP_QDEC           )
-#define GLB_AHB_CLOCK_KYS               (1ULL<<GLB_AHB_CLOCK_IP_KYS            )
-#define GLB_AHB_CLOCK_I2S               (1ULL<<GLB_AHB_CLOCK_IP_I2S            )
-#define GLB_AHB_CLOCK_USB11             (1ULL<<GLB_AHB_CLOCK_IP_USB11          )
-#define GLB_AHB_CLOCK_CAM               (1ULL<<GLB_AHB_CLOCK_IP_CAM            )
-#define GLB_AHB_CLOCK_MJPEG             (1ULL<<GLB_AHB_CLOCK_IP_MJPEG          )
-#define GLB_AHB_CLOCK_BT_BLE_NORMAL     (1ULL<<GLB_AHB_CLOCK_IP_BT_BLE_NORMAL  )
-#define GLB_AHB_CLOCK_BT_BLE_LP         (1ULL<<GLB_AHB_CLOCK_IP_BT_BLE_LP      )
-#define GLB_AHB_CLOCK_ZB_NORMAL         (1ULL<<GLB_AHB_CLOCK_IP_ZB_NORMAL      )
-#define GLB_AHB_CLOCK_ZB_LP             (1ULL<<GLB_AHB_CLOCK_IP_ZB_LP          )
-#define GLB_AHB_CLOCK_WIFI_NORMAL       (1ULL<<GLB_AHB_CLOCK_IP_WIFI_NORMAL    )
-#define GLB_AHB_CLOCK_WIFI_LP           (1ULL<<GLB_AHB_CLOCK_IP_WIFI_LP        )
-#define GLB_AHB_CLOCK_BT_BLE_2_NORMAL   (1ULL<<GLB_AHB_CLOCK_IP_BT_BLE_2_NORMAL)
-#define GLB_AHB_CLOCK_BT_BLE_2_LP       (1ULL<<GLB_AHB_CLOCK_IP_BT_BLE_2_LP    )
-#define GLB_AHB_CLOCK_EMI_MISC          (1ULL<<GLB_AHB_CLOCK_IP_EMI_MISC       )
-#define GLB_AHB_CLOCK_PSRAM0_CTRL       (1ULL<<GLB_AHB_CLOCK_IP_PSRAM0_CTRL    )
-#define GLB_AHB_CLOCK_PSRAM1_CTRL       (1ULL<<GLB_AHB_CLOCK_IP_PSRAM1_CTRL    )
-#define GLB_AHB_CLOCK_USB20_SDU         (1ULL<<GLB_AHB_CLOCK_IP_USB20_SDU      )
-#define GLB_AHB_CLOCK_MIX2              (1ULL<<GLB_AHB_CLOCK_IP_MIX2           )
-#define GLB_AHB_CLOCK_AUDIO             (1ULL<<GLB_AHB_CLOCK_IP_AUDIO          )
-#define GLB_AHB_CLOCK_SDH               (1ULL<<GLB_AHB_CLOCK_IP_SDH            )
-#define GLB_AHB_CLOCK_ZB_2_NORMAL       (1ULL<<GLB_AHB_CLOCK_IP_ZB2_NORMAL     )
-#define GLB_AHB_CLOCK_ZB_2_LP           (1ULL<<GLB_AHB_CLOCK_IP_ZB2_LP         )
-#define GLB_AHB_CLOCK_I2C1              (1ULL<<GLB_AHB_CLOCK_IP_I2C1           )
-#define GLB_AHB_CLOCK_WIFI_PHY          (1ULL<<GLB_AHB_CLOCK_IP_WIFI_PHY       )
-#define GLB_AHB_CLOCK_WIFI_MAC_PHY      (1ULL<<GLB_AHB_CLOCK_IP_WIFI_MAC_PHY   )
-#define GLB_AHB_CLOCK_WIFI_PLATFORM     (1ULL<<GLB_AHB_CLOCK_IP_WIFI_PLATFORM  )
-#define GLB_AHB_CLOCK_LZ4               (1ULL<<GLB_AHB_CLOCK_IP_LZ4            )
-#define GLB_AHB_CLOCK_AUPDM             (1ULL<<GLB_AHB_CLOCK_IP_AUPDM          )
-#define GLB_AHB_CLOCK_GAUGE             (1ULL<<GLB_AHB_CLOCK_IP_GAUGE          )
-#define GLB_AHB_CLOCK_DBI               (1ULL<<GLB_AHB_CLOCK_IP_DBI            )
-#define GLB_AHB_CLOCK_AUSOLO_TOP        (1ULL<<GLB_AHB_CLOCK_IP_AUSOLO_TOP     )
-#define GLB_AHB_CLOCK_DMA_GPIO          (1ULL<<GLB_AHB_CLOCK_IP_DMA_GPIO       )
-#define GLB_AHB_CLOCK_MM_MISC           (1ULL<<GLB_AHB_CLOCK_IP_MM_MISC        )
+#define GLB_AHB_CLOCK_CPU             (1ULL << GLB_AHB_CLOCK_IP_CPU)
+#define GLB_AHB_CLOCK_RSVD            (1ULL << GLB_AHB_CLOCK_IP_RSVD)
+#define GLB_AHB_CLOCK_SEC             (1ULL << GLB_AHB_CLOCK_IP_SEC)
+#define GLB_AHB_CLOCK_DMA_0           (1ULL << GLB_AHB_CLOCK_IP_DMA_0)
+#define GLB_AHB_CLOCK_DMA_1           (1ULL << GLB_AHB_CLOCK_IP_DMA_1)
+#define GLB_AHB_CLOCK_DMA_2           (1ULL << GLB_AHB_CLOCK_IP_DMA_2)
+#define GLB_AHB_CLOCK_CCI             (1ULL << GLB_AHB_CLOCK_IP_CCI)
+#define GLB_AHB_CLOCK_RF_TOP          (1ULL << GLB_AHB_CLOCK_IP_RF_TOP)
+#define GLB_AHB_CLOCK_GPIP            (1ULL << GLB_AHB_CLOCK_IP_GPIP)
+#define GLB_AHB_CLOCK_TZC             (1ULL << GLB_AHB_CLOCK_IP_TZC)
+#define GLB_AHB_CLOCK_EF_CTRL         (1ULL << GLB_AHB_CLOCK_IP_EF_CTRL)
+#define GLB_AHB_CLOCK_SF_CTRL         (1ULL << GLB_AHB_CLOCK_IP_SF_CTRL)
+#define GLB_AHB_CLOCK_EMAC            (1ULL << GLB_AHB_CLOCK_IP_EMAC)
+#define GLB_AHB_CLOCK_UART0           (1ULL << GLB_AHB_CLOCK_IP_UART0)
+#define GLB_AHB_CLOCK_UART1           (1ULL << GLB_AHB_CLOCK_IP_UART1)
+#define GLB_AHB_CLOCK_UART2           (1ULL << GLB_AHB_CLOCK_IP_UART2)
+#define GLB_AHB_CLOCK_UART3           (1ULL << GLB_AHB_CLOCK_IP_UART3)
+#define GLB_AHB_CLOCK_UART4           (1ULL << GLB_AHB_CLOCK_IP_UART4)
+#define GLB_AHB_CLOCK_SPI             (1ULL << GLB_AHB_CLOCK_IP_SPI)
+#define GLB_AHB_CLOCK_I2C             (1ULL << GLB_AHB_CLOCK_IP_I2C)
+#define GLB_AHB_CLOCK_PWM             (1ULL << GLB_AHB_CLOCK_IP_PWM)
+#define GLB_AHB_CLOCK_TIMER           (1ULL << GLB_AHB_CLOCK_IP_TIMER)
+#define GLB_AHB_CLOCK_IR              (1ULL << GLB_AHB_CLOCK_IP_IR)
+#define GLB_AHB_CLOCK_CHECKSUM        (1ULL << GLB_AHB_CLOCK_IP_CHECKSUM)
+#define GLB_AHB_CLOCK_QDEC            (1ULL << GLB_AHB_CLOCK_IP_QDEC)
+#define GLB_AHB_CLOCK_KYS             (1ULL << GLB_AHB_CLOCK_IP_KYS)
+#define GLB_AHB_CLOCK_I2S             (1ULL << GLB_AHB_CLOCK_IP_I2S)
+#define GLB_AHB_CLOCK_USB11           (1ULL << GLB_AHB_CLOCK_IP_USB11)
+#define GLB_AHB_CLOCK_CAM             (1ULL << GLB_AHB_CLOCK_IP_CAM)
+#define GLB_AHB_CLOCK_MJPEG           (1ULL << GLB_AHB_CLOCK_IP_MJPEG)
+#define GLB_AHB_CLOCK_BT_BLE_NORMAL   (1ULL << GLB_AHB_CLOCK_IP_BT_BLE_NORMAL)
+#define GLB_AHB_CLOCK_BT_BLE_LP       (1ULL << GLB_AHB_CLOCK_IP_BT_BLE_LP)
+#define GLB_AHB_CLOCK_ZB_NORMAL       (1ULL << GLB_AHB_CLOCK_IP_ZB_NORMAL)
+#define GLB_AHB_CLOCK_ZB_LP           (1ULL << GLB_AHB_CLOCK_IP_ZB_LP)
+#define GLB_AHB_CLOCK_WIFI_NORMAL     (1ULL << GLB_AHB_CLOCK_IP_WIFI_NORMAL)
+#define GLB_AHB_CLOCK_WIFI_LP         (1ULL << GLB_AHB_CLOCK_IP_WIFI_LP)
+#define GLB_AHB_CLOCK_BT_BLE_2_NORMAL (1ULL << GLB_AHB_CLOCK_IP_BT_BLE_2_NORMAL)
+#define GLB_AHB_CLOCK_BT_BLE_2_LP     (1ULL << GLB_AHB_CLOCK_IP_BT_BLE_2_LP)
+#define GLB_AHB_CLOCK_EMI_MISC        (1ULL << GLB_AHB_CLOCK_IP_EMI_MISC)
+#define GLB_AHB_CLOCK_PSRAM0_CTRL     (1ULL << GLB_AHB_CLOCK_IP_PSRAM0_CTRL)
+#define GLB_AHB_CLOCK_PSRAM1_CTRL     (1ULL << GLB_AHB_CLOCK_IP_PSRAM1_CTRL)
+#define GLB_AHB_CLOCK_USB20_SDU       (1ULL << GLB_AHB_CLOCK_IP_USB20_SDU)
+#define GLB_AHB_CLOCK_MIX2            (1ULL << GLB_AHB_CLOCK_IP_MIX2)
+#define GLB_AHB_CLOCK_AUDIO           (1ULL << GLB_AHB_CLOCK_IP_AUDIO)
+#define GLB_AHB_CLOCK_SDH             (1ULL << GLB_AHB_CLOCK_IP_SDH)
+#define GLB_AHB_CLOCK_ZB_2_NORMAL     (1ULL << GLB_AHB_CLOCK_IP_ZB2_NORMAL)
+#define GLB_AHB_CLOCK_ZB_2_LP         (1ULL << GLB_AHB_CLOCK_IP_ZB2_LP)
+#define GLB_AHB_CLOCK_I2C1            (1ULL << GLB_AHB_CLOCK_IP_I2C1)
+#define GLB_AHB_CLOCK_WIFI_PHY        (1ULL << GLB_AHB_CLOCK_IP_WIFI_PHY)
+#define GLB_AHB_CLOCK_WIFI_MAC_PHY    (1ULL << GLB_AHB_CLOCK_IP_WIFI_MAC_PHY)
+#define GLB_AHB_CLOCK_WIFI_PLATFORM   (1ULL << GLB_AHB_CLOCK_IP_WIFI_PLATFORM)
+#define GLB_AHB_CLOCK_LZ4             (1ULL << GLB_AHB_CLOCK_IP_LZ4)
+#define GLB_AHB_CLOCK_AUPDM           (1ULL << GLB_AHB_CLOCK_IP_AUPDM)
+#define GLB_AHB_CLOCK_GAUGE           (1ULL << GLB_AHB_CLOCK_IP_GAUGE)
+#define GLB_AHB_CLOCK_DBI             (1ULL << GLB_AHB_CLOCK_IP_DBI)
+#define GLB_AHB_CLOCK_AUSOLO_TOP      (1ULL << GLB_AHB_CLOCK_IP_AUSOLO_TOP)
+#define GLB_AHB_CLOCK_DMA_GPIO        (1ULL << GLB_AHB_CLOCK_IP_DMA_GPIO)
+#define GLB_AHB_CLOCK_MM_MISC         (1ULL << GLB_AHB_CLOCK_IP_MM_MISC)
 
 #define GLB_AUTO_CALC_XTAL_FLAG_MASK  0x0000ff00
 #define GLB_AUTO_CALC_XTAL_FLAG_VALUE 0x5800
@@ -1571,58 +1629,58 @@ void BMX_ERR_IRQHandler(void);
 void BMX_TO_IRQHandler(void);
 #endif
 /*----------*/
-BL_Err_Type GLB_Set_MCU_Muxpll_160M_Sel(GLB_MCU_MUXPLL_160M_CLK_SEL_Type clkSel);
-GLB_MCU_MUXPLL_160M_CLK_SEL_Type GLB_Get_MCU_Muxpll_160M_Sel(void);
-BL_Err_Type GLB_Set_MCU_Muxpll_80M_Sel(GLB_MCU_MUXPLL_80M_CLK_SEL_Type clkSel);
-GLB_MCU_MUXPLL_80M_CLK_SEL_Type GLB_Get_MCU_Muxpll_80M_Sel(void);
-BL_Err_Type GLB_Set_ISP_Muxpll_80M_Sel(GLB_ISP_MUXPLL_80M_CLK_SEL_Type clkSel);
-GLB_ISP_MUXPLL_80M_CLK_SEL_Type GLB_Get_ISP_Muxpll_80M_Sel(void);
+BL_Err_Type GLB_Set_MCU_Muxpll_160M_Sel(uint8_t clkSel);
+uint8_t GLB_Get_MCU_Muxpll_160M_Sel(void);
+BL_Err_Type GLB_Set_MCU_Muxpll_80M_Sel(uint8_t clkSel);
+uint8_t GLB_Get_MCU_Muxpll_80M_Sel(void);
+BL_Err_Type GLB_Set_ISP_Muxpll_80M_Sel(uint8_t clkSel);
+uint8_t GLB_Get_ISP_Muxpll_80M_Sel(void);
 /*----------*/
-BL_Err_Type GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_Type xtalType, GLB_PLL_Type pllPuType);
+BL_Err_Type GLB_Power_On_XTAL_And_PLL_CLK(uint8_t xtalType, uint8_t pllPuType);
 BL_Err_Type GLB_Power_Off_WIFIPLL(void);
-BL_Err_Type GLB_WIFIPLL_Ref_Clk_Sel(GLB_PLL_REF_CLK_Type refClk);
+BL_Err_Type GLB_WIFIPLL_Ref_Clk_Sel(uint8_t refClk);
 BL_Err_Type GLB_Power_On_WIFIPLL(const GLB_WA_PLL_Cfg_Type *const cfg, uint8_t waitStable);
 BL_Err_Type GLB_Power_Off_AUPLL(void);
-BL_Err_Type GLB_AUPLL_Ref_Clk_Sel(GLB_PLL_REF_CLK_Type refClk);
+BL_Err_Type GLB_AUPLL_Ref_Clk_Sel(uint8_t refClk);
 BL_Err_Type GLB_Power_On_AUPLL(const GLB_WA_PLL_Cfg_Type *const cfg, uint8_t waitStable);
 BL_Err_Type GLB_Set_USB_CLK_From_WIFIPLL(uint8_t enable);
 BL_Err_Type GLB_Set_SSC_CLK_From_WIFIPLL(uint8_t enable);
 /*----------*/
 BL_Err_Type GLB_Set_MCU_System_CLK_Div(uint8_t mcuClkDiv, uint8_t mcuPBclkDiv);
 BL_Err_Type GLB_Get_MCU_System_CLK_Div(uint8_t *mcuClkDiv, uint8_t *mcuPBclkDiv);
-BL_Err_Type GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_Type clkFreq);
+BL_Err_Type GLB_Set_MCU_System_CLK(uint8_t clkFreq);
 /*----------*/
-GLB_CORE_ID_Type GLB_Get_Core_Type(void);
-BL_Err_Type GLB_Set_CPU_Reset_Address(GLB_CORE_ID_Type coreID, uint32_t addr);
+uint8_t GLB_Get_Core_Type(void);
+BL_Err_Type GLB_Set_CPU_Reset_Address(uint8_t coreID, uint32_t addr);
 /*----------*/
 BL_Err_Type GLB_Clr_EMI_Reset_Gate(void);
 BL_Err_Type GLB_Set_MCU_MTimer_CLK(uint8_t enable, uint16_t div, uint8_t rst);
-BL_Err_Type GLB_Set_ADC_CLK(uint8_t enable, GLB_ADC_CLK_Type clkSel, uint8_t div);
-BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, GLB_DMA_CLK_ID_Type clk);
-BL_Err_Type GLB_Set_Peripheral_DMA_CN(GLB_PERI_DMA_Type peri, GLB_PERI_DMA_CN_SEL_Type cn);
-BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, GLB_IR_CLK_SRC_Type clkSel, uint8_t div);
+BL_Err_Type GLB_Set_ADC_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, uint8_t clk);
+BL_Err_Type GLB_Set_Peripheral_DMA_CN(uint8_t peri, uint8_t cn);
+BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_IR_RX_GPIO_Sel(GLB_GPIO_Type gpio);
-BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, HBN_UART_CLK_Type clkSel, uint8_t div);
-BL_Err_Type GLB_UART_Fun_Sel(GLB_UART_SIG_Type sig, GLB_UART_SIG_FUN_Type fun);
-BL_Err_Type GLB_Set_SF_CLK(uint8_t enable, GLB_SFLASH_CLK_Type clkSel, uint8_t div);
-BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, GLB_I2C_CLK_Type clkSel, uint8_t div);
-BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, GLB_I2S_DI_REF_CLK_Type inRef, GLB_I2S_DO_REF_CLK_Type outRef);
-BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, GLB_SPI_CLK_Type clkSel, uint8_t div);
-BL_Err_Type GLB_SPI_Sig_Swap_Set(GLB_SPI_SIG_SWAP_GRP_Type group, uint8_t swap);
-BL_Err_Type GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_SEL_Type ioSel);
-BL_Err_Type GLB_Set_PDM_IO_Sel(GLB_PDM_IO_SEL_Type ioSel);
-BL_Err_Type GLB_Set_DBI_CLK(uint8_t enable, GLB_DBI_CLK_Type clkSel, uint8_t div);
+BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+BL_Err_Type GLB_UART_Fun_Sel(uint8_t sig, uint8_t fun);
+BL_Err_Type GLB_Set_SF_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, uint8_t outRef);
+BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+BL_Err_Type GLB_SPI_Sig_Swap_Set(uint8_t group, uint8_t swap);
+BL_Err_Type GLB_Set_PWM1_IO_Sel(uint8_t ioSel);
+BL_Err_Type GLB_Set_PDM_IO_Sel(uint8_t ioSel);
+BL_Err_Type GLB_Set_DBI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 /*----------*/
-BL_Err_Type GLB_Set_DIG_CLK_Sel(GLB_DIG_CLK_Type clkSel);
+BL_Err_Type GLB_Set_DIG_CLK_Sel(uint8_t clkSel);
 BL_Err_Type GLB_Set_DIG_512K_CLK(uint8_t enable, uint8_t compensationEn, uint8_t div);
 BL_Err_Type GLB_Set_DIG_32K_CLK(uint8_t enable, uint8_t compensationEn, uint16_t div);
 BL_Err_Type GLB_Platform_Wakeup_PDS_Enable(uint8_t enable);
 /*----------*/
 BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(GLB_GPIO_Type gpioPin);
-BL_Err_Type GLB_Set_Chip_Clock_Out0_Sel(GLB_CHIP_CLK_OUT_0_Type clkOutType);
-BL_Err_Type GLB_Set_Chip_Clock_Out1_Sel(GLB_CHIP_CLK_OUT_1_Type clkOutType);
-BL_Err_Type GLB_Set_Chip_Clock_Out2_Sel(GLB_CHIP_CLK_OUT_2_Type clkOutType);
-BL_Err_Type GLB_Set_Chip_Clock_Out3_Sel(GLB_CHIP_CLK_OUT_3_Type clkOutType);
+BL_Err_Type GLB_Set_Chip_Clock_Out0_Sel(uint8_t clkOutType);
+BL_Err_Type GLB_Set_Chip_Clock_Out1_Sel(uint8_t clkOutType);
+BL_Err_Type GLB_Set_Chip_Clock_Out2_Sel(uint8_t clkOutType);
+BL_Err_Type GLB_Set_Chip_Clock_Out3_Sel(uint8_t clkOutType);
 
 /*----------*/
 BL_Err_Type GLB_BMX_TO_Init(BMX_TO_Cfg_Type *BmxCfg);
@@ -1636,38 +1694,38 @@ BL_Err_Type GLB_Set_Audio_SOLO_CLK(uint8_t enable, uint8_t div);
 BL_Err_Type GLB_Invert_ETH_RX_CLK(uint8_t enable);
 BL_Err_Type GLB_Invert_ETH_TX_CLK(uint8_t enable);
 BL_Err_Type GLB_Invert_ETH_REF_O_CLK(uint8_t enable);
-BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(GLB_ETH_REF_CLK_OUT_Type clkSel);
+BL_Err_Type GLB_Set_ETH_REF_O_CLK_Sel(uint8_t clkSel);
 /*----------*/
-BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, GLB_CAM_CLK_Type clkSel, uint8_t div);
-BL_Err_Type GLB_Set_SDH_CLK(uint8_t enable, GLB_SDH_CLK_Type clkSel, uint8_t div);
+BL_Err_Type GLB_Set_CAM_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+BL_Err_Type GLB_Set_SDH_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 /*----------*/
 BL_Err_Type GLB_Config_SDIO_Host_Reset_System(uint8_t enable);
 BL_Err_Type GLB_Config_SDIO_Host_Reset_SDU(uint8_t enable);
 BL_Err_Type GLB_Config_SDIO_Host_Interrupt_CPU(uint8_t enable);
 /*----------*/
-BL_Err_Type GLB_UART_Sig_Swap_Set(GLB_UART_SIG_SWAP_GRP_Type group, uint8_t swap);
+BL_Err_Type GLB_UART_Sig_Swap_Set(uint8_t group, uint8_t swap);
 BL_Err_Type GLB_Swap_MCU_SPI_0_MOSI_With_MISO(BL_Fun_Type newState);
-BL_Err_Type GLB_Set_MCU_SPI_0_ACT_MOD_Sel(GLB_SPI_PAD_ACT_AS_Type mod);
+BL_Err_Type GLB_Set_MCU_SPI_0_ACT_MOD_Sel(uint8_t mod);
 BL_Err_Type GLB_Set_SFlash_IO_PARM(uint8_t selEmbedded, uint8_t swapIo3Io0, uint8_t swapIo2Cs);
 BL_Err_Type GLB_Set_SFlash2_IO_PARM(uint8_t swapIo3Io0);
 /*----------*/
 BL_Err_Type GLB_Clr_Reset_Reason(void);
 BL_Err_Type GLB_Get_Reset_Reason(GLB_RESET_RECORD_Type *reason);
 /*----------*/
-BL_Err_Type GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_Type swrst);
+BL_Err_Type GLB_AHB_MCU_Software_Reset(uint8_t swrst);
 BL_Err_Type GLB_PER_Clock_Gate(uint64_t ips);
 BL_Err_Type GLB_PER_Clock_UnGate(uint64_t ips);
-BL_Err_Type GLB_PLL_CGEN_Clock_Gate(GLB_PLL_CGEN_Type clk);
-BL_Err_Type GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_Type clk);
-BL_Err_Type GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_Type clkSel);
-BL_Err_Type GLB_MCU_SW_System_Reset(GLB_MCU_SW_SYSTEM_Type sysPart);
+BL_Err_Type GLB_PLL_CGEN_Clock_Gate(uint8_t clk);
+BL_Err_Type GLB_PLL_CGEN_Clock_UnGate(uint8_t clk);
+BL_Err_Type GLB_Set_PKA_CLK_Sel(uint8_t clkSel);
+BL_Err_Type GLB_MCU_SW_System_Reset(uint8_t sysPart);
 BL_Err_Type GLB_SW_System_Reset(void);
 BL_Err_Type GLB_SW_CPU_Reset(void);
 BL_Err_Type GLB_SW_POR_Reset(void);
-BL_Err_Type GLB_Disrst_Set(uint8_t enable, GLB_DISRST_Type disrst);
+BL_Err_Type GLB_Disrst_Set(uint8_t enable, uint8_t disrst);
 /*----------*/
-BL_Err_Type GLB_Set_Auto_Calc_Xtal_Type(GLB_XTAL_Type calcXtalType);
-BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(GLB_XTAL_Type *calcXtalType);
+BL_Err_Type GLB_Set_Auto_Calc_Xtal_Type(uint8_t calcXtalType);
+BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(uint8_t *calcXtalType);
 BL_Err_Type GLB_Set_Flash_Id_Value(uint32_t idValue);
 uint32_t GLB_Get_Flash_Id_Value(void);
 /*----------*/
@@ -1681,15 +1739,16 @@ BL_Err_Type GLB_Set_SRAM_SLP(uint32_t value);
 uint32_t GLB_Get_SRAM_SLP(void);
 BL_Err_Type GLB_Set_SRAM_PARM(uint32_t value);
 uint32_t GLB_Get_SRAM_PARM(void);
-BL_Err_Type GLB_Set_EM_Sel(GLB_EM_Type emType);
-BL_Err_Type GLB_Set_PSRAMB_CLK_Sel(uint8_t enable, GLB_PSRAMB_PLL_Type clkSel, uint8_t div);
+BL_Err_Type GLB_Set_EM_Sel(uint8_t emType);
+BL_Err_Type GLB_Set_PSRAMB_CLK_Sel(uint8_t enable, uint8_t clkSel, uint8_t div);
 /*----------*/
-BL_Err_Type GLB_Set_Slave_Grp_0_CLK(GLB_SLAVE_GRP_0_Type slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div);
+BL_Err_Type GLB_Set_Slave_Grp_0_CLK(uint8_t slave, uint8_t enable, GLB_SLAVE_GRP_0_CLK_SEL_Type clkSel, uint32_t div);
 /*----------*/
-BL_Err_Type GLB_Config_WIFI_PLL(GLB_XTAL_Type xtalType, const GLB_WA_PLL_Cfg_Type * pllCfgList);
-BL_Err_Type GLB_Config_AUDIO_PLL(GLB_XTAL_Type xtalType, const GLB_WA_PLL_Cfg_Type * pllCfgList);
+BL_Err_Type GLB_Config_WIFI_PLL(uint8_t xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList);
+BL_Err_Type GLB_Config_AUDIO_PLL(uint8_t xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList);
 BL_Err_Type GLB_Config_AUDIO_PLL_To_384M(void);
-BL_Err_Type GLB_Config_AUDIO_PLL_To_400M(void);;
+BL_Err_Type GLB_Config_AUDIO_PLL_To_400M(void);
+;
 BL_Err_Type GLB_Config_AUDIO_PLL_To_451P58M(void);
 BL_Err_Type GLB_Config_AUDIO_PLL_To_491P52M(void);
 /*----------*/

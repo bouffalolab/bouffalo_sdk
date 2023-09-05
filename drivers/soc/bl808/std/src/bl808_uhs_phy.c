@@ -2471,7 +2471,7 @@ uint8_t uhs_diagonal_test(uint32_t data0,uint32_t data1)
         for (CA = CA_init; CA <= CA_init + 0x7; CA = CA + 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            *((volatile uint32_t*)(STRESS_TEST_BASE)) = data0;
+            *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE)) = data0;
         }
     }
     for (RA = 0x0; RA <= RowAddr; RA++){
@@ -2481,7 +2481,7 @@ uint8_t uhs_diagonal_test(uint32_t data0,uint32_t data1)
         for (CA = CA_init; CA <= CA_init + 0x7; CA = CA + 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            dataTmp = *((volatile uint32_t*)(STRESS_TEST_BASE));
+            dataTmp = *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE));
             if(dataTmp != data0){
                 uhs_phy_printfe("addr: 0x%lx\r\n", STRESS_TEST_BASE);
                 uhs_phy_printfe("data_w data0: 0x%lx\r\n", data0);
@@ -2498,7 +2498,7 @@ uint8_t uhs_diagonal_test(uint32_t data0,uint32_t data1)
         for (CA = CA_init; CA <= CA_init + 0x7; CA = CA + 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            *((volatile uint32_t*)(STRESS_TEST_BASE)) = data1;
+            *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE)) = data1;
         }
     }
     for (RA = 0x0; RA <= RowAddr; RA++){
@@ -2508,7 +2508,7 @@ uint8_t uhs_diagonal_test(uint32_t data0,uint32_t data1)
         for (CA = CA_init; CA <= CA_init + 0x7; CA = CA + 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            dataTmp = *((volatile uint32_t*)(STRESS_TEST_BASE));
+            dataTmp = *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE));
             if(dataTmp != data1){
                 uhs_phy_printfe("addr: 0x%lx\r\n", STRESS_TEST_BASE);
                 uhs_phy_printfe("data_w data1: 0x%lx\r\n", data1);
@@ -2546,7 +2546,7 @@ uint8_t uhs_all_addr_test(void)
         for (CA = 0x0; CA <= 0x3ff; CA = CA + 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            *((volatile uint32_t*)(STRESS_TEST_BASE)) = data0; 
+            *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE)) = data0; 
         }
     }         
     for (RA = 0x0; RA <= RowAddr; RA++){
@@ -2555,7 +2555,7 @@ uint8_t uhs_all_addr_test(void)
         for(CA = 0x0; CA <= 0x3ff; CA = CA + 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            dataTmp = *((volatile uint32_t*)(STRESS_TEST_BASE));
+            dataTmp = *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE));
             if(dataTmp != data0){
                 uhs_phy_printfe("addr: 0x%lx\r\n", STRESS_TEST_BASE);
                 uhs_phy_printfe("data_w data0 first: 0x%lx\r\n", data0);
@@ -2571,7 +2571,7 @@ uint8_t uhs_all_addr_test(void)
         for (CA = 0x0; CA <= 0x3ff; CA = CA + 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            *((volatile uint32_t*)(STRESS_TEST_BASE)) = data1;
+            *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE)) = data1;
         }
     }
     // ****** X_address -> Y_address    
@@ -2582,7 +2582,7 @@ uint8_t uhs_all_addr_test(void)
         for(CA = 0x3ff - 1; CA >= 0x0; CA = CA - 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            dataTmp = *((volatile uint32_t*)(STRESS_TEST_BASE));
+            dataTmp = *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE));
             if(dataTmp != data1){
                 uhs_phy_printfe("addr: 0x%lx\r\n", STRESS_TEST_BASE);
                 uhs_phy_printfe("data_w data1: 0x%lx\r\n", data1);
@@ -2598,7 +2598,7 @@ uint8_t uhs_all_addr_test(void)
         for (CA = 0x3ff - 1; CA >= 0x0; CA = CA - 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            *((volatile uint32_t*)(STRESS_TEST_BASE)) = data0;
+            *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE)) = data0;
         }
     }      
     for (RA = RowAddr; RA >= 0x0; RA--){
@@ -2607,7 +2607,7 @@ uint8_t uhs_all_addr_test(void)
         for(CA = 0x3ff - 1; CA >= 0x0; CA = CA - 2){
             STRESS_TEST_BASE = STRESS_TEST_BASE & 0xFFFFF800;
             STRESS_TEST_BASE = STRESS_TEST_BASE | (CA<<1); // STRESS_TEST_BASE[10:2] = CA[9:1], STRESS_TEST_BASE[1:0] = 0;
-            dataTmp = *((volatile uint32_t*)(STRESS_TEST_BASE));
+            dataTmp = *((volatile uint32_t*)((uintptr_t)STRESS_TEST_BASE));
             if(dataTmp != data0){
                 uhs_phy_printfe("addr: 0x%lx\r\n", STRESS_TEST_BASE);
                 uhs_phy_printfe("data_w data0 second: 0x%lx\r\n", data0);
