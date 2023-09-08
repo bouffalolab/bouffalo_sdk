@@ -36,6 +36,15 @@
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+#define TLSF_MALLOC_ASSERT(heap, x, size)                                                                                     \
+    {                                                                                                                         \
+        if (!(x)) {                                                                                                           \
+            printf("tlsf malloc %d bytes failed at function %s using heap base:%p\r\n", size, __FUNCTION__, heap->heapstart); \
+            bflb_irq_save();                                                                                                  \
+            while (1)                                                                                                         \
+                ;                                                                                                             \
+        }                                                                                                                     \
+    }
 
 /****************************************************************************
  * Name: mem_tlfsinfo_walker
@@ -74,7 +83,7 @@ void *bflb_malloc(struct mem_heap_s *heap, size_t nbytes)
     flag = bflb_irq_save();
 
     ret = tlsf_memalign(heap->priv, 32, nbytes);
-    MEM_ASSERT(ret != NULL);
+    TLSF_MALLOC_ASSERT(heap, ret != NULL, nbytes);
 
     bflb_irq_restore(flag);
 
@@ -100,7 +109,7 @@ void *bflb_realloc(struct mem_heap_s *heap, void *ptr, size_t nbytes)
     flag = bflb_irq_save();
 
     ret = tlsf_realloc(heap->priv, ptr, nbytes);
-    MEM_ASSERT(ret != NULL);
+    TLSF_MALLOC_ASSERT(heap, ret != NULL, nbytes);
 
     bflb_irq_restore(flag);
 
@@ -137,7 +146,7 @@ void *bflb_malloc_align(struct mem_heap_s *heap, size_t align, size_t size)
     flag = bflb_irq_save();
 
     ret = tlsf_memalign(heap->priv, align, size);
-    MEM_ASSERT(ret != NULL);
+    TLSF_MALLOC_ASSERT(heap, ret != NULL, size);
 
     bflb_irq_restore(flag);
 
