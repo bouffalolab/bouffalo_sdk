@@ -1,13 +1,12 @@
 #include "bflb_mtimer.h"
 #include "board.h"
 #include "log.h"
-#include "bl616_common.h"
 #include "bl616_glb.h"
 #include "bl616_pds.h"
 #include "bl616_hbn.h"
 #include "bl616_aon.h"
 #include "bl616_pm.h"
-#include "bflb_uart.h"
+
 #define BL_LP_IO_RES_PULL_UP    1
 #define BL_LP_IO_RES_PULL_DOWN  2
 #define BL_LP_IO_RES_NONE       3

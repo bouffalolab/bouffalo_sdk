@@ -1,13 +1,11 @@
 #include "bflb_mtimer.h"
 #include "board.h"
 #include "log.h"
-#include "bl616_common.h"
 #include "bl616_glb.h"
 #include "bl616_pds.h"
 #include "bl616_hbn.h"
 #include "bl616_aon.h"
 #include "bl616_pm.h"
-#include "bflb_uart.h"
 
 int main(void)
 {
@@ -26,8 +24,8 @@ int main(void)
     printf("enter pds mode\r\n");
     bflb_mtimer_delay_ms(100);
 
-    /* Wake up every 10 seconds by pds15 */
-    pm_pds_mode_enter(PM_PDS_LEVEL_15, 32768*10);
+    /* Wake up every 1 seconds by pds15 */
+    pm_pds_mode_enter(PM_PDS_LEVEL_15, 32768*1);
 
     while (1) {
     }
