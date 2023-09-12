@@ -130,6 +130,7 @@ int main(void)
     bl_lp_set_pds_io(0,PDS_GPIO_INT_SYNC_HIGH_LEVEL,BL_LP_IO_RES_PULL_DOWN);
     bl_lp_set_aon_io(19,HBN_GPIO_INT_TRIGGER_SYNC_HIGH_LEVEL,BL_LP_IO_RES_PULL_DOWN);
 
+    /* sleep time must set zero to avoid using rtc */
     pm_pds_mode_enter(PM_PDS_LEVEL_15, 0);
 
     while (1) {

@@ -25,7 +25,7 @@ int main(void)
     bflb_mtimer_delay_ms(100);
 
     /* Wake up every 1 seconds by pds15 */
-    pm_pds_mode_enter(PM_PDS_LEVEL_15, 32768*1);
+    pm_pds_mode_enter(PM_PDS_LEVEL_15, 32768 * 1);
 
     while (1) {
     }

@@ -18,6 +18,7 @@ sdk_library_add_sources(src/bl702_glb.c)
 sdk_library_add_sources(src/bl702_hbn.c)
 sdk_library_add_sources(src/bl702_l1c.c)
 sdk_library_add_sources(src/bl702_pds.c)
+sdk_library_add_sources(src/bl702_pm.c)
 
 sdk_library_add_sources(src/bl702_sflash_ext.c)
 sdk_library_add_sources(src/bl702_xip_sflash_ext.c)

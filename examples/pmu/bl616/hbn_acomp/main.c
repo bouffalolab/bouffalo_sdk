@@ -1,7 +1,6 @@
 #include "bflb_mtimer.h"
 #include "board.h"
 #include "log.h"
-#include "bl616_common.h"
 #include "bl616_glb.h"
 #include "bl616_pds.h"
 #include "bl616_hbn.h"
@@ -32,7 +31,7 @@ int main(void)
     printf("enter hbn mode\r\n");
     bflb_mtimer_delay_ms(100);
 
-    /* sleep time must set zeor to avoid using rtc */
+    /* sleep time must set zero to avoid using rtc */
     pm_hbn_mode_enter(PM_HBN_LEVEL_0, 0);
 
     while (1) {
