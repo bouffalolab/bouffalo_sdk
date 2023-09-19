@@ -531,13 +531,13 @@ endif()
 # ifeq ($(CONFIG_BL_MCU_SDK),1)
 # CFLAGS += -DBL_MCU_SDK
 # endif
-# sdk_add_private_compile_definitions_ifdef(CONFIG_BL_MCU_SDK -DBL_MCU_SDK)
+# sdk_add_compile_definitions_ifdef(CONFIG_BL_MCU_SDK -DBL_MCU_SDK)
 
 # ifeq ($(CONFIG_EM_16K),1)
 # CFLAGS += -DCONFIG_EM_16K
 # endif
 sdk_ifndef(CONFIG_EM_16K 0)
-sdk_add_private_compile_definitions_ifdef(CONFIG_EM_16K -DCONFIG_EM_16K)
+sdk_add_compile_definitions_ifdef(CONFIG_EM_16K -DCONFIG_EM_16K)
 
 # ifeq ($(CONFIG_BT_MFG),1)
 # CFLAGS += -DCONFIG_BT_MFG
@@ -560,7 +560,7 @@ sdk_add_private_compile_definitions_ifdef(CONFIG_EM_16K -DCONFIG_EM_16K)
 
 if(CONFIG_BT_MFG)
 	sdk_add_compile_definitions(-DCONFIG_BT_MFG)
-	sdk_add_private_compile_definitions_ifdef(CONFIG_BT_MFG_HCI_CMD -DCONFIG_BT_MFG_HCI_CMD)
+	sdk_add_compile_definitions_ifdef(CONFIG_BT_MFG_HCI_CMD -DCONFIG_BT_MFG_HCI_CMD)
 	set(CONFIG_BT 1)
 	set(CONFIG_SCO_ESCO 0)
 	set(CONFIG_PCA 0)
@@ -733,7 +733,7 @@ endif()
 # ifeq ($(CONFIG_HW_SEC_ENG_DISABLE),1)
 # CFLAGS += -DCONFIG_HW_SEC_ENG_DISABLE
 # endif
-sdk_add_private_compile_definitions_ifdef(CONFIG_HW_SEC_ENG_DISABLE -DCONFIG_HW_SEC_ENG_DISABLE)
+sdk_add_compile_definitions_ifdef(CONFIG_HW_SEC_ENG_DISABLE -DCONFIG_HW_SEC_ENG_DISABLE)
 
 ##########################################
 ############## BLE STACK #################

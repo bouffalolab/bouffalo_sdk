@@ -2,6 +2,8 @@
 #include "bflb_wdg.h"
 #include "board.h"
 
+#define TEST_ADDR (0x80000000)
+
 struct bflb_device_s *wdg;
 
 int main(void)
@@ -29,7 +31,9 @@ int main(void)
     bflb_mtimer_delay_ms(2000);
     printf("Delay 2s, triggle set 4s, wdg should not reset, pass.\r\n");
 
-    printf("Next continue to delay 2s, wdg will reset it.\r\n");
+    printf("Exception test addr: 0x%08x\r\n", TEST_ADDR);
+    getreg32(TEST_ADDR);
+
     /* delay 2s will trigger wdg interrupt */
     bflb_mtimer_delay_ms(2000);
     bflb_wdg_reset_countervalue(wdg);

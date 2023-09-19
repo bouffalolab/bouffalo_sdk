@@ -763,7 +763,8 @@ int mbedtls_aes_crypt_ctr( mbedtls_aes_context *ctx,
     AES_VALIDATE_RET( input != NULL );
     AES_VALIDATE_RET( output != NULL );
 
-    ctx = bflb_get_no_cache_addr(ctx);
+    if( length % 16 )
+        return( MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH );
 
     ctx->link_ctx.aes_mode = AES_MODE_CTR;
     memcpy(&ctx->link_ctx.aes_iv0, nonce_counter, 16);

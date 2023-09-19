@@ -82,6 +82,12 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
         }
         threshold = (config->h_blank + 4 * config->resolution_x - 2 * config->resolution_x * (config->pixel_clock / 1000000) / regval) / 4;
 
+        if (threshold < 2) {
+            threshold = 2;
+        } else if (threshold > 1024) {
+            threshold = 1024;
+        }
+
         regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
         regval &= ~CAM_FRONT_RG_DVPAS_FIFO_TH_MASK;
         regval |= threshold << CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT;

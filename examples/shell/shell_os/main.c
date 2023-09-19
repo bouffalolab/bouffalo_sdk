@@ -23,3 +23,10 @@ int main(void)
     while (1) {
     }
 }
+
+int shell_test(int argc, char **argv)
+{
+    printf("shell test\r\n");
+    return 0;
+}
+SHELL_CMD_EXPORT_ALIAS(shell_test, test, shell test.);

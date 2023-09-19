@@ -5,6 +5,7 @@
 
 #include "bluetooth.h"
 #include "conn.h"
+#include "conn_internal.h"
 #if defined(BL702) || defined(BL602)
 #include "ble_lib_api.h"
 #elif defined(BL616)
@@ -27,14 +28,46 @@ static struct bflb_device_s *uart0;
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 
+static void ble_connected(struct bt_conn *conn, u8_t err)
+{
+    if(err || conn->type != BT_CONN_TYPE_LE)
+    {
+        return;
+    }
+    printf("%s",__func__);
+}
+
+static void ble_disconnected(struct bt_conn *conn, u8_t reason)
+{ 
+    int ret;
+
+    if(conn->type != BT_CONN_TYPE_LE)
+    {
+        return;
+    }
+
+    printf("%s",__func__);
+
+    // enable adv
+    ret = set_adv_enable(true);
+    if(ret) {
+        printf("Restart adv fail. \r\n");
+    }
+}
+
+static struct bt_conn_cb ble_conn_callbacks = {
+	.connected	=   ble_connected,
+	.disconnected	=   ble_disconnected,
+};
+
 void bt_enable_cb(int err)
 {
     if (!err) {
         bt_addr_le_t bt_addr;
         bt_get_local_public_address(&bt_addr);
         printf("BD_ADDR:(MSB)%02x:%02x:%02x:%02x:%02x:%02x(LSB) \n",
-            bt_addr.a.val[5], bt_addr.a.val[4], bt_addr.a.val[3], bt_addr.a.val[2], bt_addr.a.val[1], bt_addr.a.val[0]);
-        ble_cli_register();
+               bt_addr.a.val[5], bt_addr.a.val[4], bt_addr.a.val[3], bt_addr.a.val[2], bt_addr.a.val[1], bt_addr.a.val[0]);
+        bt_conn_cb_register(&ble_conn_callbacks);
     }
 }
 
@@ -58,18 +91,35 @@ int main(void)
         return 0;
     }
 #endif
-    // Initialize BLE controller
-    #if defined(BL702) || defined(BL602)
-    ble_controller_init(configMAX_PRIORITIES - 1);
-    #else
-    btble_controller_init(configMAX_PRIORITIES - 1);
-    #endif
-    // Initialize BLE Host stack
-    hci_driver_init();
-    bt_enable(bt_enable_cb);
+
+    ble_cli_register();
 
     vTaskStartScheduler();
 
     while (1) {
     }
 }
+
+int btble_enable(int argc, char **argv)
+{
+// Initialize BLE controller
+#if defined(BL702) || defined(BL602)
+    ble_controller_init(configMAX_PRIORITIES - 1);
+#else
+    btble_controller_init(configMAX_PRIORITIES - 1);
+#endif
+    // Initialize BLE Host stack
+    hci_driver_init();
+    bt_enable(bt_enable_cb);
+
+    return 0;
+}
+SHELL_CMD_EXPORT_ALIAS(btble_enable, btble_enable, enable btble.);
+
+int btble_disable(int argc, char **argv)
+{
+    bt_le_adv_stop();
+    bt_disable();
+    return 0;
+}
+SHELL_CMD_EXPORT_ALIAS(btble_disable, btble_disable, disable btble.);

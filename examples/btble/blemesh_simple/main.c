@@ -38,8 +38,22 @@ void bt_enable_cb(int err)
     }
 }
 
-extern void cmd_gen_cli_send(int argc, char **argv);
-SHELL_CMD_EXPORT_ALIAS(cmd_gen_cli_send, gen_cli_send, Gerneric onoff send);
+static TaskHandle_t app_start_handle;
+
+static void app_start_task(void *pvParameters)
+{
+    // Initialize BLE controller
+    #if defined(BL702) || defined(BL602)
+    ble_controller_init(configMAX_PRIORITIES - 1);
+    #else
+    btble_controller_init(configMAX_PRIORITIES - 1);
+    #endif
+    // Initialize BLE Host stack
+    hci_driver_init();
+    bt_enable(bt_enable_cb);
+
+    vTaskDelete(NULL);
+}
 
 int main(void)
 {
@@ -61,18 +75,14 @@ int main(void)
         return 0;
     }
 #endif
-    // Initialize BLE controller
-    #if defined(BL702) || defined(BL602)
-    ble_controller_init(configMAX_PRIORITIES - 1);
-    #else
-    btble_controller_init(configMAX_PRIORITIES - 1);
-    #endif
-    // Initialize BLE Host stack
-    hci_driver_init();
-    bt_enable(bt_enable_cb);
+
+    xTaskCreate(app_start_task, (char *)"app_start", 1024, NULL, configMAX_PRIORITIES - 2, &app_start_handle);
 
     vTaskStartScheduler();
 
     while (1) {
     }
 }
+
+extern void cmd_gen_cli_send(int argc, char **argv);
+SHELL_CMD_EXPORT_ALIAS(cmd_gen_cli_send, gen_cli_send, Gerneric onoff send);

@@ -285,6 +285,23 @@ void bt_enable_cb(int err)
     }
 }
 
+static TaskHandle_t app_start_handle;
+
+static void app_start_task(void *pvParameters)
+{
+    // Initialize BLE controller
+    #if defined(BL702) || defined(BL602)
+    ble_controller_init(configMAX_PRIORITIES - 1);
+    #else
+    btble_controller_init(configMAX_PRIORITIES - 1);
+    #endif
+    // Initialize BLE Host stack
+    hci_driver_init();
+    bt_enable(bt_enable_cb);
+
+    vTaskDelete(NULL);
+}
+
 int main(void)
 {
     board_init();
@@ -305,15 +322,8 @@ int main(void)
         return 0;
     }
 #endif
-    // Initialize BLE controller
-    #if defined(BL702) || defined(BL602)
-    ble_controller_init(configMAX_PRIORITIES - 1);
-    #else
-    btble_controller_init(configMAX_PRIORITIES - 1);
-    #endif
-    // Initialize BLE Host stack
-    hci_driver_init();
-    bt_enable(bt_enable_cb);
+
+    xTaskCreate(app_start_task, (char *)"app_start", 1024, NULL, configMAX_PRIORITIES - 2, &app_start_handle);
 
     vTaskStartScheduler();
 

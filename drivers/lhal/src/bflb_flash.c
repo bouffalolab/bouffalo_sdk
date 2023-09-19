@@ -505,6 +505,7 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
         ret = bflb_sf_cfg_get_flash_cfg_need_lock_ext(jedec_id, &g_flash_cfg, 0, 0);
         if (ret == 0) {
             g_jedec_id = jedec_id;
+            g_flash_cfg.mid = (jedec_id & 0xff);
             flash_get_clock_delay(&g_flash_cfg);
 #if defined(BL616) || defined(BL628)
             flash1_size = flash_get_size_from_jedecid(g_jedec_id);
