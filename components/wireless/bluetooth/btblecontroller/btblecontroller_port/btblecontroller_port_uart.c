@@ -22,6 +22,13 @@
  ****************************************************************************************
  */
 #include "btblecontroller_port_uart.h" // uart definition
+#include "bflb_uart.h"
+#include "bflb_gpio.h"
+#if defined(CFG_IOT_SDK)
+#include "bl_irq.h"
+#endif
+#include <stdint.h>
+#include <stdbool.h>
 
 /*
  * DEFINES
@@ -214,11 +221,16 @@ __attribute__((weak)) void btble_uart_init(uint8_t uartid)
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
     bflb_uart_init(btble_uart, &cfg);
-#ifdef UART_GLITCH_TEST_ENABLE
+    #ifdef UART_GLITCH_TEST_ENABLE
     bflb_uart_feature_control(btble_uart, UART_CMD_SET_GLITCH_VALUE, 12);
-#endif
+    #endif
+    #if defined(CFG_IOT_SDK)
+    bl_irq_register_with_ctx(btble_uart->irq_num, uart_isr, NULL);
+    bl_irq_enable(btble_uart->irq_num);
+    #else
     bflb_irq_attach(btble_uart->irq_num, uart_isr, NULL);
     bflb_irq_enable(btble_uart->irq_num);
+    #endif 
 }
 
 __attribute__((weak)) int8_t btble_uart_reconfig(uint32_t baudrate, uint8_t flow_ctl_en, uint8_t cts_pin, uint8_t rts_pin)

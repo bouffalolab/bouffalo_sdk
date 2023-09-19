@@ -7,7 +7,9 @@ enum{
     BT_HCI_CMD_CMP_EVT,
     BT_HCI_CMD_STAT_EVT,
     BT_HCI_LE_EVT,
-    BT_HCI_EVT
+    BT_HCI_EVT,
+    BT_HCI_SYNC_DATA,
+    BT_HCI_DBG_EVT,
 };
 
 typedef struct{
