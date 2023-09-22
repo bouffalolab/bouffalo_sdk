@@ -37,10 +37,6 @@
 #include "bflb_common.h"
 #include "bflb_xip_sflash.h"
 
-/** @addtogroup  BL628_Peripheral_Driver
- *  @{
- */
-
 /** @addtogroup  XIP_SFLASH
  *  @{
  */
@@ -491,5 +487,3 @@ void ATTR_TCM_SECTION bflb_xip_sflash_opt_exit(uint8_t aes_enable)
 /*@} end of group XIP_SFLASH_Public_Functions */
 
 /*@} end of group XIP_SFLASH */
-
-/*@} end of group BL628_Peripheral_Driver */

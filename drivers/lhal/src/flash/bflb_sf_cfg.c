@@ -38,10 +38,6 @@
 #include "bflb_sf_cfg.h"
 #include "bflb_xip_sflash.h"
 
-/** @addtogroup  BL628_Peripheral_Driver
- *  @{
- */
-
 /** @addtogroup  SF_CFG
  *  @{
  */
@@ -3738,5 +3734,3 @@ int ATTR_TCM_SECTION bflb_sf_cfg_sbus2_flash_init(uint8_t sel, const struct sf_c
 /*@} end of group SF_CFG_Public_Functions */
 
 /*@} end of group SF_CFG */
-
-/*@} end of group BL628_Peripheral_Driver */

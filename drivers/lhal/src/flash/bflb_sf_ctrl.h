@@ -33,14 +33,10 @@
   *
   ******************************************************************************
   */
-#ifndef __BL628_SF_CTRL_H__
-#define __BL628_SF_CTRL_H__
+#ifndef _BFLB_SF_CTRL_H
+#define _BFLB_SF_CTRL_H
 
 #include "bflb_core.h"
-
-/** @addtogroup  BL628_Peripheral_Driver
- *  @{
- */
 
 /** @addtogroup  SF_CTRL
  *  @{
@@ -502,6 +498,4 @@ int32_t bflb_sf_ctrl_aes_set_decrypt_region_le(struct bflb_sf_ctrl_decrypt_type 
 
 /*@} end of group SF_CTRL */
 
-/*@} end of group BL628_Peripheral_Driver */
-
-#endif /* __BL628_SF_CTRL_H__ */
+#endif /* _BFLB_SF_CTRL_H */

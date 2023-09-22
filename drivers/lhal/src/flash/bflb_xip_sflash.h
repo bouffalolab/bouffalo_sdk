@@ -33,14 +33,10 @@
   *
   ******************************************************************************
   */
-#ifndef __BL628_XIP_SFLASH_H__
-#define __BL628_XIP_SFLASH_H__
+#ifndef _BFLB_XIP_SFLASH_H
+#define _BFLB_XIP_SFLASH_H
 
 #include "bflb_sflash.h"
-
-/** @addtogroup  BL628_Peripheral_Driver
- *  @{
- */
 
 /** @addtogroup  XIP_SFLASH
  *  @{
@@ -103,6 +99,4 @@ void bflb_xip_sflash_opt_exit(uint8_t aes_enable);
 
 /*@} end of group XIP_SFLASH */
 
-/*@} end of group BL628_Peripheral_Driver */
-
-#endif /* __BL628_XIP_SFLASH_H__ */
+#endif /* _BFLB_XIP_SFLASH_H */

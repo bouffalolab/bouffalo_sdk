@@ -33,14 +33,10 @@
   *
   ******************************************************************************
   */
-#ifndef __BL628_SFLAH_H__
-#define __BL628_SFLAH_H__
+#ifndef _BFLB_SFLASH_H
+#define _BFLB_SFLASH_H
 
 #include "bflb_sf_ctrl.h"
-
-/** @addtogroup  BL628_Peripheral_Driver
- *  @{
- */
 
 /** @addtogroup  SFLAH
  *  @{
@@ -230,6 +226,4 @@ int bflb_sflash_program(spi_flash_cfg_type *flash_cfg, uint8_t io_mode, uint32_t
 
 /*@} end of group SFLAH */
 
-/*@} end of group BL628_Peripheral_Driver */
-
-#endif /* __BL628_SFLAH_H__ */
+#endif /* _BFLB_SFLASH_H */

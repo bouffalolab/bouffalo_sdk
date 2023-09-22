@@ -33,15 +33,11 @@
   *
   ******************************************************************************
   */
-#ifndef __BL628_SF_CFG_H__
-#define __BL628_SF_CFG_H__
+#ifndef _BFLB_SF_CFG_H
+#define _BFLB_SF_CFG_H
 
 #include "bflb_gpio.h"
 #include "bflb_sflash.h"
-
-/** @addtogroup  BL628_Peripheral_Driver
- *  @{
- */
 
 /** @addtogroup  SF_CFG
  *  @{
@@ -221,6 +217,4 @@ int bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cfg_type *p_sfctrl_
 
 /*@} end of group SF_CFG */
 
-/*@} end of group BL628_Peripheral_Driver */
-
-#endif /* __BL628_SF_CFG_H__ */
+#endif /* _BFLB_SF_CFG_H */

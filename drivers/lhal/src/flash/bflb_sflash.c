@@ -35,11 +35,6 @@
   */
 #include "bflb_sf_ctrl.h"
 #include "bflb_sflash.h"
-//#include "bl628_l1c.h"
-
-/** @addtogroup  BL628_Peripheral_Driver
- *  @{
- */
 
 /** @addtogroup  SFLASH
  *  @{
@@ -2179,5 +2174,3 @@ int ATTR_TCM_SECTION bflb_sflash_program(spi_flash_cfg_type *flash_cfg, uint8_t 
 /*@} end of group SFLASH_Public_Functions */
 
 /*@} end of group SFLASH */
-
-/*@} end of group BL628_Peripheral_Driver */

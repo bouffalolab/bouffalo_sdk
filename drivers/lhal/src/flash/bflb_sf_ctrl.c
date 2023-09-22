@@ -40,10 +40,6 @@
 #include "csi_core.h"
 #endif
 
-/** @addtogroup  BL628_Peripheral_Driver
- *  @{
- */
-
 /** @addtogroup  SF_CTRL
  *  @{
  */
@@ -2422,5 +2418,3 @@ int32_t ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_decrypt_region_le(struct bflb_sf_c
 /*@} end of group SF_CTRL_Public_Functions */
 
 /*@} end of group SF_CTRL */
-
-/*@} end of group BL628_Peripheral_Driver */
