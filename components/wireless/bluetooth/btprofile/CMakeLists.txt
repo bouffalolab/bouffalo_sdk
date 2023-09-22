@@ -1,0 +1,3 @@
+sdk_add_include_directories(include/bluetooth)
+
+sdk_add_static_library(lib/libbtprofile.a)

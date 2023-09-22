@@ -4,7 +4,7 @@
 #define BTBLE_OS_PORT_ASSERT(x)                                                           \
     if ((x) == 0) {                                                                       \
         printf("[BTBLE ASSERT] %s in function %s\r\n", (const char *)(#x), __FUNCTION__); \
-        while (1) {}                                                                      \
+        __asm__ volatile ("ebreak"); \
     }
 
 __attribute__((weak)) int btblecontroller_task_new(btblecontroller_TaskFunction_t taskFunction, const char *name, int stack_size, void *arg, int prio, void *taskHandler)

@@ -1,0 +1,13 @@
+
+target remote 127.0.0.1:1025
+b trap
+
+set logging file gdb.log
+set logging on
+set print pretty on
+#set height 0
+
+define dumppcm
+dump binary memory ./dump.bin 0x55000000 0x55800000
+end
+

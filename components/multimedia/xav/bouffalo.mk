@@ -1,0 +1,7 @@
+COMPONENT_LIB_ONLY := 1
+COMPONENT_ADD_INCLUDEDIRS += include
+LIBS ?= xav_prebuild
+COMPONENT_ADD_LDFLAGS += -L$(COMPONENT_PATH)/libs/bl616 $(addprefix -l,$(LIBS))
+ALL_LIB_FILES := $(patsubst %,$(COMPONENT_PATH)/libs/bl616/lib%.a,$(LIBS))
+COMPONENT_ADD_LINKER_DEPS := $(ALL_LIB_FILES)
+

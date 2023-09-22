@@ -21,7 +21,7 @@
 #include <avrcp.h>
 #endif
 #if CONFIG_BT_AVRCP
-#include <rfcomm.h>
+//#include <rfcomm.h>
 #endif
 #if CONFIG_BT_HFP
 #include <hfp_hf.h>

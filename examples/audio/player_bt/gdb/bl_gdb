@@ -1,0 +1,11 @@
+#!/bin/bash
+
+killall DebugServerConsole.elf
+DebugServerConsole &
+
+cd ..
+# 获取当前文件夹的名字
+current_folder=$(basename "$PWD")
+
+riscv64-unknown-elf-gdb ./build/build_out/${current_folder}_bl616.elf -x ./gdb/gdbinit
+

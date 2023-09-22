@@ -1,0 +1,77 @@
+# debugserver ip
+target remote 127.0.0.1:1025
+#target remote 192.168.56.1:1025
+
+set logging file gdb.log
+set logging on
+set print pretty on
+set height 0
+
+define _task_list
+    set $item = $arg0.xListEnd.pxPrevious
+    while ($item != &$arg0.xListEnd)
+      p $item.pvOwner
+      p ((TCB_t *)$item.pvOwner)->pcTaskName
+      set $item = $item.pxPrevious
+    end
+end
+
+define task_list
+
+    printf "\r\n========== Ready状态 ==========\r\n"
+    set $i = 0
+    while ($i < 32)
+        _task_list pxReadyTasksLists[$i]
+        set $i = $i + 1
+    end
+
+    printf "\r\n========== Delay状态 ==========\r\n"
+    _task_list xDelayedTaskList1
+    _task_list xDelayedTaskList2
+
+    printf "\r\n========== PendingReady状态 ==========\r\n"
+    _task_list xPendingReadyList
+
+    printf "\r\n========== Suspend状态 ==========\r\n"
+    _task_list xSuspendedTaskList
+
+end
+
+define task_dump
+  #set $SAVE_FRAME_SIZE=30 + 34
+  set $SAVE_FRAME_SIZE=30
+  p *(TCB_t *)$arg0
+  set $pc = *((TCB_t *)$arg0).pxTopOfStack - 4
+  set $sp = ((TCB_t *)$arg0).pxTopOfStack + $SAVE_FRAME_SIZE
+
+  # have can run bt
+  set $t0 = *(uint32_t *)($sp - 120 + 8)
+  set $t1 = *(uint32_t *)($sp - 120 + 12)
+  set $t2 = *(uint32_t *)($sp - 120 + 16)
+  set $s0 = *(uint32_t *)($sp - 120 + 20)
+  set $s1 = *(uint32_t *)($sp - 120 + 24)
+  set $a0 = *(uint32_t *)($sp - 120 + 28)
+  set $a1 = *(uint32_t *)($sp - 120 + 32)
+  set $a2 = *(uint32_t *)($sp - 120 + 36)
+  set $a3 = *(uint32_t *)($sp - 120 + 40)
+  set $a4 = *(uint32_t *)($sp - 120 + 44)
+  set $a5 = *(uint32_t *)($sp - 120 + 48)
+  set $a6 = *(uint32_t *)($sp - 120 + 52)
+  set $a7 = *(uint32_t *)($sp - 120 + 56)
+  set $s2 = *(uint32_t *)($sp - 120 + 60)
+  set $s3 = *(uint32_t *)($sp - 120 + 64)
+  set $s4 = *(uint32_t *)($sp - 120 + 68)
+  set $s5 = *(uint32_t *)($sp - 120 + 72)
+  set $s6 = *(uint32_t *)($sp - 120 + 76)
+  set $s7 = *(uint32_t *)($sp - 120 + 80)
+  set $s8 = *(uint32_t *)($sp - 120 + 84)
+  set $s9 = *(uint32_t *)($sp - 120 + 88)
+  set $s10 = *(uint32_t *)($sp - 120 + 92)
+  set $s11 = *(uint32_t *)($sp - 120 + 96)
+  set $t3 = *(uint32_t *)($sp - 120 + 100)
+  set $t4 = *(uint32_t *)($sp - 120 + 104)
+  set $t5 = *(uint32_t *)($sp - 120 + 108)
+  set $t6 = *(uint32_t *)($sp - 120 + 112)
+  bt
+end
+
