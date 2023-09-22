@@ -5,6 +5,7 @@
 #include "bflb_uart.h"
 #include "mem.h"
 
+#if defined(CONFIG_SHELL_EXEC_THREAD) && CONFIG_SHELL_EXEC_THREAD
 static int shell_exec_argc;
 static char *shell_exec_argv[SHELL_ARG_NUM + 1];
 static char shell_exec_line[SHELL_CMD_SIZE];
@@ -61,6 +62,8 @@ int shell_start_exec(cmd_function_t func, int argc, char *argv[])
         return -1;
     }
 }
+
+#endif
 
 static TaskHandle_t shell_handle;
 SemaphoreHandle_t sem_shell = NULL;
