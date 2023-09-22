@@ -550,10 +550,10 @@ typedef struct
 void PDS_WAKEUP_IRQHandler(void);
 #endif
 BL_Err_Type PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(uint8_t grp, uint8_t pu, uint8_t pd, uint8_t ie);
-BL_Err_Type PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask_Type intMask);
+BL_Err_Type PDS_Set_GPIO_Pad_IntMask(uint8_t pad, BL_Mask_Type intMask);
 BL_Err_Type PDS_Set_GPIO_Pad_IntMode(uint8_t set, uint8_t trig);
 BL_Err_Type PDS_Set_GPIO_Pad_IntClr(uint8_t set);
-BL_Sts_Type PDS_Get_GPIO_Pad_IntStatus(GLB_GPIO_Type pad);
+BL_Sts_Type PDS_Get_GPIO_Pad_IntStatus(uint8_t pad);
 BL_Err_Type PDS_Set_Flash_Pad_Pull_None(uint8_t pinCfg);
 BL_Err_Type PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg);
 BL_Err_Type PDS_Disable_GPIO_Keep(void);

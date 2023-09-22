@@ -3898,7 +3898,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_Slave_Grp_0_CLK(uint8_t slave, uint8_t en
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_Clr(GLB_GPIO_Type gpioPin)
+BL_Err_Type GLB_GPIO_Clr(uint8_t gpioPin)
 {
     if (gpioPin < GLB_GPIO_PIN_32) {
         BL_WR_WORD(GLB_BASE + GLB_GPIO_CFG140_OFFSET, 1 << gpioPin);
@@ -3917,7 +3917,7 @@ BL_Err_Type GLB_GPIO_Clr(GLB_GPIO_Type gpioPin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_Set(GLB_GPIO_Type gpioPin)
+BL_Err_Type GLB_GPIO_Set(uint8_t gpioPin)
 {
     if (gpioPin < GLB_GPIO_PIN_32) {
         BL_WR_WORD(GLB_BASE + GLB_GPIO_CFG138_OFFSET, 1 << gpioPin);
@@ -4030,7 +4030,7 @@ BL_Err_Type ATTR_TCM_SECTION L1C_ICache_Invalid_By_Addr(uintptr_t addr, uint32_t
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask_Type intMask)
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMask(uint8_t pad, BL_Mask_Type intMask)
 {
     uint32_t tmpVal = 0;
     uint32_t pos = 0;
@@ -4066,7 +4066,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Sts_Type ATTR_TCM_SECTION PDS_Get_GPIO_Pad_IntStatus(GLB_GPIO_Type pad)
+BL_Sts_Type ATTR_TCM_SECTION PDS_Get_GPIO_Pad_IntStatus(uint8_t pad)
 {
     uint32_t pos = 0;
 

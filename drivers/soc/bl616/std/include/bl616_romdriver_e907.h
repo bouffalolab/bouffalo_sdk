@@ -866,7 +866,7 @@ typedef enum {
     ((BL_Err_Type (*) (GLB_RESET_RECORD_Type *reason))ROM_APITABLE[ROM_API_INDEX_GLB_Get_Reset_Reason])
 
 #define RomDriver_GLB_IR_RX_GPIO_Sel                      \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpio))ROM_APITABLE[ROM_API_INDEX_GLB_IR_RX_GPIO_Sel])
+    ((BL_Err_Type (*) (uint8_t gpio))ROM_APITABLE[ROM_API_INDEX_GLB_IR_RX_GPIO_Sel])
 
 #define RomDriver_GLB_Invert_ETH_REF_O_CLK                \
     ((BL_Err_Type (*) (uint8_t enable))ROM_APITABLE[ROM_API_INDEX_GLB_Invert_ETH_REF_O_CLK])
@@ -923,7 +923,7 @@ typedef enum {
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_SW_System_Reset])
 
 #define RomDriver_GLB_Sel_MCU_TMR_GPIO_Clock              \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_Sel_MCU_TMR_GPIO_Clock])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_Sel_MCU_TMR_GPIO_Clock])
 
 #define RomDriver_GLB_Set_ADC_CLK                         \
     ((BL_Err_Type (*) (uint8_t enable, uint8_t clkSel, uint8_t div))ROM_APITABLE[ROM_API_INDEX_GLB_Set_ADC_CLK])
@@ -1091,13 +1091,13 @@ typedef enum {
     ((uint8_t (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_Get_BMX_TO_Status])
 
 #define RomDriver_GLB_Clr_GPIO_IntStatus                  \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_Clr_GPIO_IntStatus])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_Clr_GPIO_IntStatus])
 
 #define RomDriver_GLB_Embedded_Flash_Pad_Enable           \
     ((BL_Err_Type (*) (uint8_t swapIo2Cs))ROM_APITABLE[ROM_API_INDEX_GLB_Embedded_Flash_Pad_Enable])
 
 #define RomDriver_GLB_GPIO_Clr                            \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Clr])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Clr])
 
 #define RomDriver_GLB_GPIO_Fifo_Clear                     \
     ((BL_Err_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Clear])
@@ -1106,46 +1106,46 @@ typedef enum {
     ((BL_Err_Type (*) (GLB_GPIO_FIFO_CFG_Type *cfg))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Init])
 
 #define RomDriver_GLB_GPIO_Fifo_IntClear                  \
-    ((BL_Err_Type (*) (GLB_GPIO_FIFO_INT_Type intType))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_IntClear])
+    ((BL_Err_Type (*) (uint8_t intType))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_IntClear])
 
 #define RomDriver_GLB_GPIO_Fifo_IntMask                   \
-    ((BL_Err_Type (*) (GLB_GPIO_FIFO_INT_Type intType, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_IntMask])
+    ((BL_Err_Type (*) (uint8_t intType, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_IntMask])
 
 #define RomDriver_GLB_GPIO_Fifo_Push                      \
     ((BL_Err_Type (*) (uint16_t *data, uint16_t len))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Push])
 
 #define RomDriver_GLB_GPIO_Func_Init                      \
-    ((BL_Err_Type (*) (GLB_GPIO_FUNC_Type gpioFun, GLB_GPIO_Type *pinList, uint8_t cnt))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Func_Init])
+    ((BL_Err_Type (*) (uint8_t gpioFun, uint8_t *pinList, uint8_t cnt))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Func_Init])
 
 #define RomDriver_GLB_GPIO_Init                           \
     ((BL_Err_Type (*) (GLB_GPIO_Cfg_Type *cfg))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Init])
 
 #define RomDriver_GLB_GPIO_Input_Disable                  \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Input_Disable])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Input_Disable])
 
 #define RomDriver_GLB_GPIO_Input_Enable                   \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Input_Enable])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Input_Enable])
 
 #define RomDriver_GLB_GPIO_IntMask                        \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_IntMask])
+    ((BL_Err_Type (*) (uint8_t gpioPin, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_IntMask])
 
 #define RomDriver_GLB_GPIO_Int_Init                       \
     ((BL_Err_Type (*) (GLB_GPIO_INT_Cfg_Type *intCfg))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Int_Init])
 
 #define RomDriver_GLB_GPIO_Output_Disable                 \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Output_Disable])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Output_Disable])
 
 #define RomDriver_GLB_GPIO_Output_Enable                  \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Output_Enable])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Output_Enable])
 
 #define RomDriver_GLB_GPIO_Set                            \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Set])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Set])
 
 #define RomDriver_GLB_GPIO_Set_HZ                         \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Set_HZ])
+    ((BL_Err_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Set_HZ])
 
 #define RomDriver_GLB_GPIO_Write                          \
-    ((BL_Err_Type (*) (GLB_GPIO_Type gpioPin, uint32_t val))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Write])
+    ((BL_Err_Type (*) (uint8_t gpioPin, uint32_t val))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Write])
 
 #define RomDriver_GLB_GPIO_Fifo_Disable                   \
     ((BL_Sts_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Disable])
@@ -1154,19 +1154,19 @@ typedef enum {
     ((BL_Sts_Type (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_Enable])
 
 #define RomDriver_GLB_GPIO_Fifo_GetIntStatus              \
-    ((BL_Sts_Type (*) (GLB_GPIO_FIFO_INT_Type intType))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_GetIntStatus])
+    ((BL_Sts_Type (*) (uint8_t intType))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_GetIntStatus])
 
 #define RomDriver_GLB_Get_GPIO_IntStatus                  \
-    ((BL_Sts_Type (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_Get_GPIO_IntStatus])
+    ((BL_Sts_Type (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_Get_GPIO_IntStatus])
 
 #define RomDriver_GLB_GPIO_Fifo_GetCount                  \
     ((uint32_t (*) (void))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Fifo_GetCount])
 
 #define RomDriver_GLB_GPIO_Read                           \
-    ((uint32_t (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Read])
+    ((uint32_t (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Read])
 
 #define RomDriver_GLB_GPIO_Get_Fun                        \
-    ((uint8_t (*) (GLB_GPIO_Type gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Get_Fun])
+    ((uint8_t (*) (uint8_t gpioPin))ROM_APITABLE[ROM_API_INDEX_GLB_GPIO_Get_Fun])
 
 #define RomDriver_HBN_32K_Sel                             \
     ((BL_Err_Type (*) (uint8_t clkType))ROM_APITABLE[ROM_API_INDEX_HBN_32K_Sel])
@@ -1475,7 +1475,7 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t set))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntClr])
 
 #define RomDriver_PDS_Set_GPIO_Pad_IntMask                \
-    ((BL_Err_Type (*) (GLB_GPIO_Type pad, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntMask])
+    ((BL_Err_Type (*) (uint8_t pad, BL_Mask_Type intMask))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntMask])
 
 #define RomDriver_PDS_Set_GPIO_Pad_IntMode                \
     ((BL_Err_Type (*) (uint8_t set, uint8_t trig))ROM_APITABLE[ROM_API_INDEX_PDS_Set_GPIO_Pad_IntMode])
@@ -1508,7 +1508,7 @@ typedef enum {
     ((BL_Err_Type (*) (uint8_t waitReady))ROM_APITABLE[ROM_API_INDEX_PDS_Turn_On_USB])
 
 #define RomDriver_PDS_Get_GPIO_Pad_IntStatus              \
-    ((BL_Sts_Type (*) (GLB_GPIO_Type pad))ROM_APITABLE[ROM_API_INDEX_PDS_Get_GPIO_Pad_IntStatus])
+    ((BL_Sts_Type (*) (uint8_t pad))ROM_APITABLE[ROM_API_INDEX_PDS_Get_GPIO_Pad_IntStatus])
 
 #define RomDriver_PDS_Get_IntStatus                       \
     ((BL_Sts_Type (*) (uint8_t intType))ROM_APITABLE[ROM_API_INDEX_PDS_Get_IntStatus])

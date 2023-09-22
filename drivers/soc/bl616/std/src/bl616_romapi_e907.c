@@ -529,7 +529,7 @@ BL_Err_Type GLB_Get_Reset_Reason(GLB_RESET_RECORD_Type *reason){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_IR_RX_GPIO_Sel(GLB_GPIO_Type gpio){
+BL_Err_Type GLB_IR_RX_GPIO_Sel(uint8_t gpio){
     return RomDriver_GLB_IR_RX_GPIO_Sel(gpio);
 }
 
@@ -624,7 +624,7 @@ BL_Err_Type GLB_SW_System_Reset(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(uint8_t gpioPin){
     return RomDriver_GLB_Sel_MCU_TMR_GPIO_Clock(gpioPin);
 }
 
@@ -923,7 +923,7 @@ uint8_t GLB_Get_BMX_TO_Status(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Clr_GPIO_IntStatus(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_Clr_GPIO_IntStatus(uint8_t gpioPin){
     return RomDriver_GLB_Clr_GPIO_IntStatus(gpioPin);
 }
 
@@ -934,7 +934,7 @@ BL_Err_Type GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Clr(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_GPIO_Clr(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Clr(gpioPin);
 }
 #endif
@@ -950,12 +950,12 @@ BL_Err_Type GLB_GPIO_Fifo_Init(GLB_GPIO_FIFO_CFG_Type *cfg){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Fifo_IntClear(GLB_GPIO_FIFO_INT_Type intType){
+BL_Err_Type GLB_GPIO_Fifo_IntClear(uint8_t intType){
     return RomDriver_GLB_GPIO_Fifo_IntClear(intType);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Fifo_IntMask(GLB_GPIO_FIFO_INT_Type intType, BL_Mask_Type intMask){
+BL_Err_Type GLB_GPIO_Fifo_IntMask(uint8_t intType, BL_Mask_Type intMask){
     return RomDriver_GLB_GPIO_Fifo_IntMask(intType,intMask);
 }
 
@@ -965,7 +965,7 @@ BL_Err_Type GLB_GPIO_Fifo_Push(uint16_t *data, uint16_t len){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Func_Init(GLB_GPIO_FUNC_Type gpioFun, GLB_GPIO_Type *pinList, uint8_t cnt){
+BL_Err_Type GLB_GPIO_Func_Init(uint8_t gpioFun, uint8_t *pinList, uint8_t cnt){
     return RomDriver_GLB_GPIO_Func_Init(gpioFun,pinList,cnt);
 }
 
@@ -975,17 +975,17 @@ BL_Err_Type GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Input_Disable(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_GPIO_Input_Disable(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Input_Disable(gpioPin);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Input_Enable(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_GPIO_Input_Enable(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Input_Enable(gpioPin);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_IntMask(GLB_GPIO_Type gpioPin, BL_Mask_Type intMask){
+BL_Err_Type GLB_GPIO_IntMask(uint8_t gpioPin, BL_Mask_Type intMask){
     return RomDriver_GLB_GPIO_IntMask(gpioPin,intMask);
 }
 
@@ -995,29 +995,29 @@ BL_Err_Type GLB_GPIO_Int_Init(GLB_GPIO_INT_Cfg_Type *intCfg){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Output_Disable(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_GPIO_Output_Disable(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Output_Disable(gpioPin);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Output_Enable(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_GPIO_Output_Enable(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Output_Enable(gpioPin);
 }
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Set(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_GPIO_Set(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Set(gpioPin);
 }
 #endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Set_HZ(GLB_GPIO_Type gpioPin){
+BL_Err_Type GLB_GPIO_Set_HZ(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Set_HZ(gpioPin);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_GPIO_Write(GLB_GPIO_Type gpioPin, uint32_t val){
+BL_Err_Type GLB_GPIO_Write(uint8_t gpioPin, uint32_t val){
     return RomDriver_GLB_GPIO_Write(gpioPin,val);
 }
 
@@ -1032,12 +1032,12 @@ BL_Err_Type GLB_GPIO_Fifo_Enable(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type GLB_GPIO_Fifo_GetIntStatus(GLB_GPIO_FIFO_INT_Type intType){
+BL_Sts_Type GLB_GPIO_Fifo_GetIntStatus(uint8_t intType){
     return RomDriver_GLB_GPIO_Fifo_GetIntStatus(intType);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type GLB_Get_GPIO_IntStatus(GLB_GPIO_Type gpioPin){
+BL_Sts_Type GLB_Get_GPIO_IntStatus(uint8_t gpioPin){
     return RomDriver_GLB_Get_GPIO_IntStatus(gpioPin);
 }
 
@@ -1047,12 +1047,12 @@ uint32_t GLB_GPIO_Fifo_GetCount(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-uint32_t GLB_GPIO_Read(GLB_GPIO_Type gpioPin){
+uint32_t GLB_GPIO_Read(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Read(gpioPin);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-uint8_t GLB_GPIO_Get_Fun(GLB_GPIO_Type gpioPin){
+uint8_t GLB_GPIO_Get_Fun(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Get_Fun(gpioPin);
 }
 
@@ -1626,7 +1626,7 @@ BL_Err_Type PDS_Set_GPIO_Pad_IntClr(uint8_t set){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type PDS_Set_GPIO_Pad_IntMask(GLB_GPIO_Type pad, BL_Mask_Type intMask){
+BL_Err_Type PDS_Set_GPIO_Pad_IntMask(uint8_t pad, BL_Mask_Type intMask){
     return RomDriver_PDS_Set_GPIO_Pad_IntMask(pad,intMask);
 }
 #endif
@@ -1683,7 +1683,7 @@ BL_Err_Type PDS_Turn_On_USB(uint8_t waitReady){
 
 #if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Sts_Type PDS_Get_GPIO_Pad_IntStatus(GLB_GPIO_Type pad){
+BL_Sts_Type PDS_Get_GPIO_Pad_IntStatus(uint8_t pad){
     return RomDriver_PDS_Get_GPIO_Pad_IntStatus(pad);
 }
 #endif
@@ -1766,7 +1766,7 @@ uint8_t bflb_sf_ctrl_get_wrap_queue_value(void){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-void bflb_sf_ctrl_32bits_addr_en(BL_Fun_Type en_32bits_addr){
+void bflb_sf_ctrl_32bits_addr_en(uint8_t en_32bits_addr){
     return RomDriver_SF_Ctrl_32bits_Addr_En(en_32bits_addr);
 }
 
@@ -2035,7 +2035,7 @@ int bflb_sflash_sector_erase(spi_flash_cfg_type *flash_cfg, uint32_t sec_num){
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-int bflb_sflash_set_32bits_addr_mode(spi_flash_cfg_type *flash_cfg, BL_Fun_Type en_32bits_addr){
+int bflb_sflash_set_32bits_addr_mode(spi_flash_cfg_type *flash_cfg, uint8_t en_32bits_addr){
     return RomDriver_SFlash_Set32BitsAddrMode(flash_cfg,en_32bits_addr);
 }
 

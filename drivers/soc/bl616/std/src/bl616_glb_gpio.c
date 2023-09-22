@@ -177,7 +177,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_Func_Init(GLB_GPIO_FUNC_Type gpioFun, GLB_GPIO_Type *pinList, uint8_t cnt)
+BL_Err_Type GLB_GPIO_Func_Init(uint8_t gpioFun, uint8_t *pinList, uint8_t cnt)
 {
     GLB_GPIO_Cfg_Type gpioCfg = {
         .gpioPin = GLB_GPIO_PIN_0,
@@ -208,7 +208,7 @@ BL_Err_Type GLB_GPIO_Func_Init(GLB_GPIO_FUNC_Type gpioFun, GLB_GPIO_Type *pinLis
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Input_Enable(GLB_GPIO_Type gpioPin)
+BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Input_Enable(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -266,7 +266,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Input_Disable(GLB_GPIO_Type gpioPin)
+BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Input_Disable(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -288,7 +288,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Input_Disable(GLB_GPIO_Type gpioPin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Enable(GLB_GPIO_Type gpioPin)
+BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Enable(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -310,7 +310,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Enable(GLB_GPIO_Type gpioPin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Disable(GLB_GPIO_Type gpioPin)
+BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Disable(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -332,7 +332,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Disable(GLB_GPIO_Type gpioPin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Set_HZ(GLB_GPIO_Type gpioPin)
+BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Set_HZ(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -366,7 +366,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Set_HZ(GLB_GPIO_Type gpioPin)
  * @return GPIO function
  *
 *******************************************************************************/
-uint8_t ATTR_TCM_SECTION GLB_GPIO_Get_Fun(GLB_GPIO_Type gpioPin)
+uint8_t ATTR_TCM_SECTION GLB_GPIO_Get_Fun(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -385,7 +385,7 @@ uint8_t ATTR_TCM_SECTION GLB_GPIO_Get_Fun(GLB_GPIO_Type gpioPin)
  * @return GPIO value
  *
 *******************************************************************************/
-uint32_t GLB_GPIO_Read(GLB_GPIO_Type gpioPin)
+uint32_t GLB_GPIO_Read(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -405,7 +405,7 @@ uint32_t GLB_GPIO_Read(GLB_GPIO_Type gpioPin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_Write(GLB_GPIO_Type gpioPin, uint32_t val)
+BL_Err_Type GLB_GPIO_Write(uint8_t gpioPin, uint32_t val)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -432,7 +432,7 @@ BL_Err_Type GLB_GPIO_Write(GLB_GPIO_Type gpioPin, uint32_t val)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_Set(GLB_GPIO_Type gpioPin)
+BL_Err_Type GLB_GPIO_Set(uint8_t gpioPin)
 {
     if (gpioPin < GLB_GPIO_PIN_32) {
         BL_WR_WORD(GLB_BASE + GLB_GPIO_CFG138_OFFSET, 1 << gpioPin);
@@ -451,7 +451,7 @@ BL_Err_Type GLB_GPIO_Set(GLB_GPIO_Type gpioPin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_Clr(GLB_GPIO_Type gpioPin)
+BL_Err_Type GLB_GPIO_Clr(uint8_t gpioPin)
 {
     if (gpioPin < GLB_GPIO_PIN_32) {
         BL_WR_WORD(GLB_BASE + GLB_GPIO_CFG140_OFFSET, 1 << gpioPin);
@@ -494,7 +494,7 @@ BL_Err_Type GLB_GPIO_Int_Init(GLB_GPIO_INT_Cfg_Type *intCfg)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_IntMask(GLB_GPIO_Type gpioPin, BL_Mask_Type intMask)
+BL_Err_Type GLB_GPIO_IntMask(uint8_t gpioPin, BL_Mask_Type intMask)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -515,7 +515,7 @@ BL_Err_Type GLB_GPIO_IntMask(GLB_GPIO_Type gpioPin, BL_Mask_Type intMask)
  * @return SET or RESET
  *
 *******************************************************************************/
-BL_Sts_Type GLB_Get_GPIO_IntStatus(GLB_GPIO_Type gpioPin)
+BL_Sts_Type GLB_Get_GPIO_IntStatus(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
 
@@ -532,7 +532,7 @@ BL_Sts_Type GLB_Get_GPIO_IntStatus(GLB_GPIO_Type gpioPin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Clr_GPIO_IntStatus(GLB_GPIO_Type gpioPin)
+BL_Err_Type GLB_Clr_GPIO_IntStatus(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
@@ -615,7 +615,7 @@ BL_Err_Type GLB_GPIO_FIFO_IRQHandler_Install(void)
  *
 *******************************************************************************/
 #ifndef BFLB_USE_HAL_DRIVER
-BL_Err_Type GLB_GPIO_INT0_Callback_Install(GLB_GPIO_Type gpioPin, intCallback_Type *cbFun)
+BL_Err_Type GLB_GPIO_INT0_Callback_Install(uint8_t gpioPin, intCallback_Type *cbFun)
 {
     if (gpioPin < GLB_GPIO_PIN_MAX) {
         glbGpioInt0CbfArra[gpioPin] = cbFun;
@@ -625,7 +625,7 @@ BL_Err_Type GLB_GPIO_INT0_Callback_Install(GLB_GPIO_Type gpioPin, intCallback_Ty
 }
 #endif
 #ifndef BFLB_USE_HAL_DRIVER
-BL_Err_Type GLB_GPIO_Fifo_Callback_Install(GLB_GPIO_FIFO_INT_Type intType, intCallback_Type *cbFun)
+BL_Err_Type GLB_GPIO_Fifo_Callback_Install(uint8_t intType, intCallback_Type *cbFun)
 {
     /* Check the parameters */
     CHECK_PARAM(IS_GLB_GPIO_FIFO_INT_TYPE(intType));
@@ -647,7 +647,7 @@ BL_Err_Type GLB_GPIO_Fifo_Callback_Install(GLB_GPIO_FIFO_INT_Type intType, intCa
 #ifndef BFLB_USE_HAL_DRIVER
 void GPIO_INT0_IRQHandler(void)
 {
-    GLB_GPIO_Type gpioPin;
+    uint8_t gpioPin;
     uint32_t timeOut = 0;
 
     for (gpioPin = GLB_GPIO_PIN_0; gpioPin < GLB_GPIO_PIN_MAX; gpioPin++) {
@@ -781,7 +781,7 @@ BL_Err_Type GLB_GPIO_Fifo_Clear(void)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_Fifo_IntMask(GLB_GPIO_FIFO_INT_Type intType, BL_Mask_Type intMask)
+BL_Err_Type GLB_GPIO_Fifo_IntMask(uint8_t intType, BL_Mask_Type intMask)
 {
     uint32_t tmpVal;
 
@@ -854,7 +854,7 @@ BL_Err_Type GLB_GPIO_Fifo_IntMask(GLB_GPIO_FIFO_INT_Type intType, BL_Mask_Type i
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_GPIO_Fifo_IntClear(GLB_GPIO_FIFO_INT_Type intType)
+BL_Err_Type GLB_GPIO_Fifo_IntClear(uint8_t intType)
 {
     uint32_t tmpVal;
 
@@ -900,7 +900,7 @@ BL_Err_Type GLB_GPIO_Fifo_IntClear(GLB_GPIO_FIFO_INT_Type intType)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Sts_Type GLB_GPIO_Fifo_GetIntStatus(GLB_GPIO_FIFO_INT_Type intType)
+BL_Sts_Type GLB_GPIO_Fifo_GetIntStatus(uint8_t intType)
 {
     uint32_t tmpVal;
 

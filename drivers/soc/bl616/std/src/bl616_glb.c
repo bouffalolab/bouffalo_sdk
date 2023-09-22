@@ -1425,7 +1425,7 @@ BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_IR_RX_GPIO_Sel(GLB_GPIO_Type gpio)
+BL_Err_Type GLB_IR_RX_GPIO_Sel(uint8_t gpio)
 {
     uint32_t tmpVal = 0;
 
@@ -1955,7 +1955,7 @@ BL_Err_Type GLB_Platform_Wakeup_PDS_Enable(uint8_t enable)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(GLB_GPIO_Type gpioPin)
+BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(uint8_t gpioPin)
 {
     uint32_t tmpVal;
 

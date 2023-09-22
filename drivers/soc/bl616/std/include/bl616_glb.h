@@ -1659,7 +1659,7 @@ BL_Err_Type GLB_Set_ADC_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, uint8_t clk);
 BL_Err_Type GLB_Set_Peripheral_DMA_CN(uint8_t peri, uint8_t cn);
 BL_Err_Type GLB_Set_IR_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
-BL_Err_Type GLB_IR_RX_GPIO_Sel(GLB_GPIO_Type gpio);
+BL_Err_Type GLB_IR_RX_GPIO_Sel(uint8_t gpio);
 BL_Err_Type GLB_Set_UART_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_UART_Fun_Sel(uint8_t sig, uint8_t fun);
 BL_Err_Type GLB_Set_SF_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
@@ -1676,7 +1676,7 @@ BL_Err_Type GLB_Set_DIG_512K_CLK(uint8_t enable, uint8_t compensationEn, uint8_t
 BL_Err_Type GLB_Set_DIG_32K_CLK(uint8_t enable, uint8_t compensationEn, uint16_t div);
 BL_Err_Type GLB_Platform_Wakeup_PDS_Enable(uint8_t enable);
 /*----------*/
-BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(GLB_GPIO_Type gpioPin);
+BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(uint8_t gpioPin);
 BL_Err_Type GLB_Set_Chip_Clock_Out0_Sel(uint8_t clkOutType);
 BL_Err_Type GLB_Set_Chip_Clock_Out1_Sel(uint8_t clkOutType);
 BL_Err_Type GLB_Set_Chip_Clock_Out2_Sel(uint8_t clkOutType);
