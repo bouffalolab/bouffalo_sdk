@@ -247,6 +247,7 @@ macro(project name)
   endif()
 
   get_property(SDK_LIBS_PROPERTY GLOBAL PROPERTY SDK_LIBS)
+  list(SORT SDK_LIBS_PROPERTY)
   target_link_libraries(${proj_name}.elf -Wl,--whole-archive ${SDK_LIBS_PROPERTY} app -Wl,--no-whole-archive)
 
   if(OUTPUT_DIR)
