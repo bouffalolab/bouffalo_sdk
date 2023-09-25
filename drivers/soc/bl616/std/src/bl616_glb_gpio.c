@@ -170,8 +170,33 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
 /****************************************************************************/ /**
  * @brief  init GPIO function in pin list
  *
- * @param  gpioFun: GPIO pin function
- * @param  pinList: GPIO pin list
+ * @param  gpioFun: GPIO pin function, this parameter can be one of the following values:
+ *           @arg GPIO_FUN_SDH
+ *           @arg GPIO_FUN_SPI
+ *           @arg GPIO_FUN_FLASH
+ *           @arg GPIO_FUN_I2S
+ *           @arg GPIO_FUN_PDM
+ *           @arg GPIO_FUN_I2C0
+ *           @arg GPIO_FUN_I2C1
+ *           @arg GPIO_FUN_UART
+ *           @arg GPIO_FUN_ETHER_MAC
+ *           @arg GPIO_FUN_CAM
+ *           @arg GPIO_FUN_ANALOG
+ *           @arg GPIO_FUN_GPIO
+ *           @arg GPIO_FUN_SDIO
+ *           @arg GPIO_FUN_PWM0
+ *           @arg GPIO_FUN_MD_JTAG
+ *           @arg GPIO_FUN_MD_UART
+ *           @arg GPIO_FUN_MD_PWM
+ *           @arg GPIO_FUN_MD_SPI
+ *           @arg GPIO_FUN_MD_I2S
+ *           @arg GPIO_FUN_DBI_B
+ *           @arg GPIO_FUN_DBI_C
+ *           @arg GPIO_FUN_DISP_QSPI
+ *           @arg GPIO_FUN_AUPWM 
+ *           @arg GPIO_FUN_JTAG
+ *           @arg GPIO_FUN_CLOCK_OUT
+ * @param  pinList: GPIO pin list, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  * @param  cnt: GPIO pin count
  *
  * @return SUCCESS or ERROR
@@ -203,7 +228,7 @@ BL_Err_Type GLB_GPIO_Func_Init(uint8_t gpioFun, uint8_t *pinList, uint8_t cnt)
 /****************************************************************************/ /**
  * @brief  GPIO set input function enable
  *
- * @param  gpioPin: GPIO pin
+ * @param  gpioPin: GPIO pin, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -261,7 +286,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs)
 /****************************************************************************/ /**
  * @brief  GPIO set input function disable
  *
- * @param  gpioPin: GPIO pin
+ * @param  gpioPin: GPIO pin, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -283,7 +308,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Input_Disable(uint8_t gpioPin)
 /****************************************************************************/ /**
  * @brief  GPIO set output function enable
  *
- * @param  gpioPin: GPIO pin
+ * @param  gpioPin: GPIO pin, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -305,7 +330,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Enable(uint8_t gpioPin)
 /****************************************************************************/ /**
  * @brief  GPIO set output function disable
  *
- * @param  gpioPin: GPIO pin
+ * @param  gpioPin: GPIO pin, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -327,7 +352,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Disable(uint8_t gpioPin)
 /****************************************************************************/ /**
  * @brief  GPIO set High-Z
  *
- * @param  gpioPin: GPIO pin
+ * @param  gpioPin: GPIO pin, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -361,7 +386,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Set_HZ(uint8_t gpioPin)
 /****************************************************************************/ /**
  * @brief  Get GPIO function
  *
- * @param  gpioPin: GPIO type
+ * @param  gpioPin: GPIO type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return GPIO function
  *
@@ -380,7 +405,7 @@ uint8_t ATTR_TCM_SECTION GLB_GPIO_Get_Fun(uint8_t gpioPin)
 /****************************************************************************/ /**
  * @brief  Read GPIO
  *
- * @param  gpioPin: GPIO type
+ * @param  gpioPin: GPIO type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return GPIO value
  *
@@ -399,7 +424,7 @@ uint32_t GLB_GPIO_Read(uint8_t gpioPin)
 /****************************************************************************/ /**
  * @brief  Write GPIO
  *
- * @param  gpioPin: GPIO type
+ * @param  gpioPin: GPIO type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  * @param  val: GPIO value
  *
  * @return SUCCESS or ERROR
@@ -427,7 +452,7 @@ BL_Err_Type GLB_GPIO_Write(uint8_t gpioPin, uint32_t val)
 /****************************************************************************/ /**
  * @brief  turn GPIO output high
  *
- * @param  gpioPin: GPIO type
+ * @param  gpioPin: GPIO type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -446,7 +471,7 @@ BL_Err_Type GLB_GPIO_Set(uint8_t gpioPin)
 /****************************************************************************/ /**
  * @brief  turn GPIO output low
  *
- * @param  gpioPin: GPIO type
+ * @param  gpioPin: GPIO type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -488,7 +513,7 @@ BL_Err_Type GLB_GPIO_Int_Init(GLB_GPIO_INT_Cfg_Type *intCfg)
 /****************************************************************************/ /**
  * @brief  Set GLB GPIO interrupt mask
  *
- * @param  gpioPin: GPIO type
+ * @param  gpioPin: GPIO type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  * @param  intMask: GPIO interrupt MASK or UNMASK
  *
  * @return SUCCESS or ERROR
@@ -510,7 +535,7 @@ BL_Err_Type GLB_GPIO_IntMask(uint8_t gpioPin, BL_Mask_Type intMask)
 /****************************************************************************/ /**
  * @brief  Get GLB GPIO interrupt status
  *
- * @param  gpioPin: GPIO type
+ * @param  gpioPin: GPIO type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SET or RESET
  *
@@ -527,7 +552,7 @@ BL_Sts_Type GLB_Get_GPIO_IntStatus(uint8_t gpioPin)
 /****************************************************************************/ /**
  * @brief  Clear GLB GPIO interrupt status
  *
- * @param  gpioPin: GPIO type
+ * @param  gpioPin: GPIO type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -608,7 +633,7 @@ BL_Err_Type GLB_GPIO_FIFO_IRQHandler_Install(void)
 /****************************************************************************/ /**
  * @brief  GPIO interrupt IRQ handler callback install
  *
- * @param  gpioPin: GPIO pin type
+ * @param  gpioPin: GPIO pin type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  * @param  cbFun: callback function
  *
  * @return SUCCESS or ERROR
@@ -775,7 +800,11 @@ BL_Err_Type GLB_GPIO_Fifo_Clear(void)
 /****************************************************************************/ /**
  * @brief  Mask or Unmask GPIO FIFO Interrupt
  *
- * @param  intType: interrupt type
+ * @param  intType: interrupt type, this parameter can be one of the following values:
+ *           @arg GLB_GPIO_FIFO_INT_FER
+ *           @arg GLB_GPIO_FIFO_INT_FIFO
+ *           @arg GLB_GPIO_FIFO_INT_END
+ *           @arg GLB_GPIO_FIFO_INT_ALL
  * @param  intMask: MASK or UNMASK
  *
  * @return SUCCESS or ERROR
@@ -849,7 +878,11 @@ BL_Err_Type GLB_GPIO_Fifo_IntMask(uint8_t intType, BL_Mask_Type intMask)
 /****************************************************************************/ /**
  * @brief  Clear GPIO fifo interrupt
  *
- * @param  intType: interrupt type
+ * @param  intType: interrupt type, this parameter can be one of the following values:
+ *           @arg GLB_GPIO_FIFO_INT_FER
+ *           @arg GLB_GPIO_FIFO_INT_FIFO
+ *           @arg GLB_GPIO_FIFO_INT_END
+ *           @arg GLB_GPIO_FIFO_INT_ALL
  *
  * @return SUCCESS or ERROR
  *
@@ -895,7 +928,11 @@ BL_Err_Type GLB_GPIO_Fifo_IntClear(uint8_t intType)
 /****************************************************************************/ /**
  * @brief  Get GPIO fifo interrupt status
  *
- * @param  intType: interrupt type
+ * @param  intType: interrupt type, this parameter can be one of the following values:
+ *           @arg GLB_GPIO_FIFO_INT_FER
+ *           @arg GLB_GPIO_FIFO_INT_FIFO
+ *           @arg GLB_GPIO_FIFO_INT_END
+ *           @arg GLB_GPIO_FIFO_INT_ALL
  *
  * @return SUCCESS or ERROR
  *

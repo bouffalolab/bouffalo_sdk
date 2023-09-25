@@ -91,7 +91,9 @@ static intCallback_Type *pdsIntCbfArra[PDS_INT_MAX] = { NULL };
 /****************************************************************************/ /**
  * @brief  set gpio pad pull type in pds
  *
- * @param  pad: gpio type
+ * @param  grp: this parameter can be one of the following values:
+ *           @arg PDS_GPIO_GROUP_SET_GPIO0_GPIO15
+ *           @arg PDS_GPIO_GROUP_SET_GPIO20_GPIO36
  * @param  pu: power up
  * @param  pd: power down
  * @param  ie: Active IE (interrupt)
@@ -141,7 +143,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(uint8_t grp, uint8_t p
 /****************************************************************************/ /**
  * @brief  set gpio pad int mask type in pds
  *
- * @param  pad: gpio type
+ * @param  pad: gpio type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  * @param  intMask: MASK or UNMASK
  *
  * @return SUCCESS or ERROR
@@ -178,8 +180,18 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMask(uint8_t pad, BL_Mask_Type 
 /****************************************************************************/ /**
  * @brief  set gpio pad trig type in pds
  *
- * @param  set: set type
- * @param  trig: trig type
+ * @param  set: set type, this parameter can be one of the following values:
+ *           @arg PDS_GPIO_INT_SET_1_GPIO0_GPIO7
+ *           @arg PDS_GPIO_INT_SET_2_GPIO8_GPIO15
+ *           @arg PDS_GPIO_INT_SET_3_GPIO20_GPIO27
+ *           @arg PDS_GPIO_INT_SET_4_GPIO28_GPIO34
+ * @param  trig: trig type, this parameter can be one of the following values:
+ *           @arg PDS_GPIO_INT_SYNC_FALLING_EDGE
+ *           @arg PDS_GPIO_INT_SYNC_RISING_EDGE
+ *           @arg PDS_GPIO_INT_SYNC_HIGH_LEVEL
+ *           @arg PDS_GPIO_INT_ASYNC_FALLING_EDGE
+ *           @arg PDS_GPIO_INT_ASYNC_RISING_EDGE
+ *           @arg PDS_GPIO_INT_ASYNC_HIGH_LEVEL
  *
  * @return SUCCESS or ERROR
  *
@@ -216,7 +228,11 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntMode(uint8_t set, uint8_t trig)
 /****************************************************************************/ /**
  * @brief  set gpio pad int clear in pds
  *
- * @param  set: set type
+ * @param  set: set type, this parameter can be one of the following values:
+ *           @arg PDS_GPIO_INT_SET_1_GPIO0_GPIO7
+ *           @arg PDS_GPIO_INT_SET_2_GPIO8_GPIO15
+ *           @arg PDS_GPIO_INT_SET_3_GPIO20_GPIO27
+ *           @arg PDS_GPIO_INT_SET_4_GPIO28_GPIO34
  *
  * @return SUCCESS or ERROR
  *
@@ -293,7 +309,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_IntClr(uint8_t set)
 /****************************************************************************/ /**
  * @brief  get gpio pad int status
  *
- * @param  pad: gpio type
+ * @param  pad: gpio type, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
  *
  * @return SUCCESS or ERROR
  *
@@ -584,7 +600,12 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Default_Level_Config(PDS_DEFAULT_LV_CFG_Type *d
 /****************************************************************************/ /**
  * @brief  power down sleep int mask
  *
- * @param  intType: PDS int type
+ * @param  intType: PDS int type, this parameter can be one of the following values:
+ *           @arg PDS_INT_WAKEUP
+ *           @arg PDS_INT_RF_DONE
+ *           @arg PDS_INT_WIFI_TBTT_SLEEP
+ *           @arg PDS_INT_WIFI_TBTT_WAKEUP
+ *           @arg PDS_INT_MAX
  * @param  intMask: MASK or UNMASK
  *
  * @return SUCCESS or ERROR
@@ -593,6 +614,8 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Default_Level_Config(PDS_DEFAULT_LV_CFG_Type *d
 BL_Err_Type PDS_IntMask(uint8_t intType, BL_Mask_Type intMask)
 {
     uint32_t tmpVal = 0;
+
+    CHECK_PARAM(IS_PDS_INT_TYPE(intType));
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_INT);
     if (intMask != UNMASK) {
@@ -608,13 +631,20 @@ BL_Err_Type PDS_IntMask(uint8_t intType, BL_Mask_Type intMask)
 /****************************************************************************/ /**
  * @brief  get power down sleep int status
  *
- * @param  intType: PDS int type
+ * @param  intType: PDS int type, this parameter can be one of the following values:
+ *           @arg PDS_INT_WAKEUP
+ *           @arg PDS_INT_RF_DONE
+ *           @arg PDS_INT_WIFI_TBTT_SLEEP
+ *           @arg PDS_INT_WIFI_TBTT_WAKEUP
+ *           @arg PDS_INT_MAX
  *
  * @return SET or RESET
  *
 *******************************************************************************/
 BL_Sts_Type PDS_Get_IntStatus(uint8_t intType)
 {
+    CHECK_PARAM(IS_PDS_INT_TYPE(intType));
+
     return (BL_RD_REG(PDS_BASE, PDS_INT) & (1 << intType)) ? SET : RESET;
 }
 
@@ -648,7 +678,12 @@ BL_Err_Type ATTR_TCM_SECTION PDS_IntClear(void)
 /****************************************************************************/ /**
  * @brief  Install PDS interrupt callback function
  *
- * @param  intType: PDS int type
+ * @param  intType: PDS int type, this parameter can be one of the following values:
+ *           @arg PDS_INT_WAKEUP
+ *           @arg PDS_INT_RF_DONE
+ *           @arg PDS_INT_WIFI_TBTT_SLEEP
+ *           @arg PDS_INT_WIFI_TBTT_WAKEUP
+ *           @arg PDS_INT_MAX
  * @param  cbFun: cbFun: Pointer to interrupt callback function. The type should be void (*fn)(void)
  *
  * @return SUCCESS or ERROR

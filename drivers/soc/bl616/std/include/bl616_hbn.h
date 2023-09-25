@@ -63,8 +63,8 @@ extern "C" {
  */
 typedef struct
 {
-    BL_Fun_Type lowIntEn;  /*!< Low will trigger interrupt */
-    BL_Fun_Type highIntEn; /*!< High will trigger interrupt */
+    uint8_t lowIntEn;  /*!< Low will trigger interrupt */
+    uint8_t highIntEn; /*!< High will trigger interrupt */
 } HBN_PIR_INT_CFG_Type;
 
 /** @defgroup HBN PIR low pass filter type definition
