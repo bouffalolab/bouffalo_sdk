@@ -67,6 +67,9 @@ extern "C" {
  */
 int bflb_flash_init(void);
 
+/// Save flash cfg&info to XRAM.
+void bl_save_flash_info();
+
 #if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
 /**
  * @brief flash_set_cmds

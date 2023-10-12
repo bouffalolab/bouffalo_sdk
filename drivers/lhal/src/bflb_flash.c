@@ -545,6 +545,28 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     return ret;
 }
 
+#define XRAM_FLASH_CFG_ADDR (0x40000000 + 0x1000)
+
+struct xram_flash_cfg {
+    spi_flash_cfg_type flash_cfg;
+    uint32_t flash_size;
+    uint32_t flash_id;
+} __attribute__((packed));
+
+void bl_save_flash_info()
+{
+    struct xram_flash_cfg *cfg = (struct xram_flash_cfg *)XRAM_FLASH_CFG_ADDR;
+    uint32_t flash_sz;
+    uint32_t flash_id;
+
+    memcpy(&cfg->flash_cfg, &g_flash_cfg, sizeof(g_flash_cfg));
+    flash_sz = bflb_flash_get_size();
+    memcpy(&cfg->flash_size, &flash_sz, sizeof(flash_sz));
+    flash_id = bflb_flash_get_jedec_id();
+    memcpy(&cfg->flash_id, &flash_id, sizeof(flash_id));
+    csi_dcache_clean_invalid_range(cfg, sizeof(*cfg));
+}
+
 #if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
 void ATTR_TCM_SECTION bflb_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
 {
