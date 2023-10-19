@@ -19,7 +19,7 @@ volatile uint32_t pic_count = 0;
 volatile uint32_t pic_addr[CAM_FRAME_COUNT_USE] = { 0 };
 volatile uint32_t pic_len[CAM_FRAME_COUNT_USE] = { 0 };
 
-static __attribute__((aligned(32))) ATTR_NOINIT_PSRAM_SECTION uint8_t dvp_buffer[480 * 2 * ROW_NUM];
+static __attribute__((aligned(32))) ATTR_NOINIT_PSRAM_SECTION uint8_t dvp_buffer[640 * 2 * ROW_NUM];
 static __attribute__((aligned(32))) ATTR_NOINIT_PSRAM_SECTION uint8_t mjpeg_buffer[50 * 1024 * CAM_FRAME_COUNT_USE];
 
 void mjpeg_isr(int irq, void *arg)

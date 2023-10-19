@@ -12,10 +12,14 @@ int main(void)
 
     pwm = bflb_device_get_by_name("pwm_v2_0");
 
-    /* period = .XCLK / .clk_div / .period = 40MHz / 40 / 1000 = 1KHz */
+    /* period = .XCLK / .clk_div / .period = 40MHz( 32MHZ for bl702l) / 40( 32 for bl702l) / 1000 = 1KHz */
     struct bflb_pwm_v2_config_s cfg = {
         .clk_source = BFLB_SYSTEM_XCLK,
+#if defined(BL702L)
+        .clk_div = 32,
+#else
         .clk_div = 40,
+#endif
         .period = 1000,
     };
 

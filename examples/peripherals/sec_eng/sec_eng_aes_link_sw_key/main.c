@@ -349,6 +349,7 @@ int main(void)
     bflb_data_compare(aes_xts_128bit_ct, aes_enc_buf, 16);
     printf("aes link xts 128 success\r\n");
 
+#if !defined(BL702L)
     bflb_aes_link_update(aes, (uint32_t)&aes_xts_link2, aes_xts_192bit_pt, aes_enc_buf, 32);
     bflb_data_compare(aes_xts_192bit_ct, aes_enc_buf, 32);
     printf("aes link xts 192 success\r\n");
@@ -356,7 +357,7 @@ int main(void)
     bflb_aes_link_update(aes, (uint32_t)&aes_xts_link3, aes_xts_256bit_pt, aes_enc_buf, 32);
     bflb_data_compare(aes_xts_256bit_ct, aes_enc_buf, 32);
     printf("aes link xts 256 success\r\n");
-
+#endif
     printf("aes link success\r\n");
     bflb_group0_release_aes_access(aes);
     while (1) {

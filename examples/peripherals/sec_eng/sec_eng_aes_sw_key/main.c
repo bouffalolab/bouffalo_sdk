@@ -502,6 +502,7 @@ int main(void)
     bflb_data_compare(aes_ecb_128bit_pt[0], aes_dec_buf, aes_ecb_128bit_len[0]);
     printf("aes ecb 128 success\r\n");
 
+#if !defined(BL702L)
     bflb_aes_set_mode(aes, AES_MODE_ECB);
     bflb_aes_setkey(aes, aes_ecb_192bit_key[0], 192);
     bflb_aes_encrypt(aes, aes_ecb_192bit_pt[0], aes_ecb_192bit_iv[0], aes_enc_buf, aes_ecb_192bit_len[0]);
@@ -517,6 +518,7 @@ int main(void)
     bflb_aes_decrypt(aes, aes_enc_buf, aes_ecb_256bit_iv[0], aes_dec_buf, aes_ecb_256bit_len[0]);
     bflb_data_compare(aes_ecb_256bit_pt[0], aes_dec_buf, aes_ecb_256bit_len[0]);
     printf("aes ecb 256 success\r\n");
+#endif
 
     bflb_aes_set_mode(aes, AES_MODE_CBC);
     bflb_aes_setkey(aes, aes_cbc_128bit_key[0], 128);
@@ -526,6 +528,7 @@ int main(void)
     bflb_data_compare(aes_cbc_128bit_pt[0], aes_dec_buf, aes_cbc_128bit_len[0]);
     printf("aes cbc 128 success\r\n");
 
+#if !defined(BL702L)
     bflb_aes_set_mode(aes, AES_MODE_CBC);
     bflb_aes_setkey(aes, aes_cbc_192bit_key[0], 192);
     bflb_aes_encrypt(aes, aes_cbc_192bit_pt[0], aes_cbc_192bit_iv[0], aes_enc_buf, aes_cbc_192bit_len[0]);
@@ -541,6 +544,7 @@ int main(void)
     bflb_aes_decrypt(aes, aes_enc_buf, aes_cbc_256bit_iv[0], aes_dec_buf, aes_cbc_256bit_len[0]);
     bflb_data_compare(aes_cbc_256bit_pt[0], aes_dec_buf, aes_cbc_256bit_len[0]);
     printf("aes cbc 256 success\r\n");
+#endif
 
     bflb_aes_set_mode(aes, AES_MODE_CTR);
     bflb_aes_setkey(aes, aes_ctr_128bit_key[0], 128);
@@ -550,6 +554,7 @@ int main(void)
     bflb_data_compare(aes_ctr_128bit_pt[0], aes_dec_buf, aes_ctr_128bit_len[0]);
     printf("aes ctr 128 success\r\n");
 
+#if !defined(BL702L)
     bflb_aes_set_mode(aes, AES_MODE_CTR);
     bflb_aes_setkey(aes, aes_ctr_192bit_key[0], 192);
     bflb_aes_encrypt(aes, aes_ctr_192bit_pt[0], aes_ctr_192bit_iv[0], aes_enc_buf, aes_ctr_192bit_len[0]);
@@ -565,6 +570,7 @@ int main(void)
     bflb_aes_decrypt(aes, aes_enc_buf, aes_ctr_256bit_iv[0], aes_dec_buf, aes_ctr_256bit_len[0]);
     bflb_data_compare(aes_ctr_256bit_pt[0], aes_dec_buf, aes_ctr_256bit_len[0]);
     printf("aes ctr 256 success\r\n");
+#endif
 
     bflb_aes_set_mode(aes, AES_MODE_XTS);
     bflb_aes_setkey(aes, aes_xts_128bit_key[0], 128);
@@ -574,6 +580,7 @@ int main(void)
     bflb_data_compare(aes_xts_128bit_pt[0], aes_dec_buf, aes_xts_128bit_len[0]);
     printf("aes xts 128 success\r\n");
 
+#if !defined(BL702L)
     bflb_aes_set_mode(aes, AES_MODE_XTS);
     bflb_aes_setkey(aes, aes_xts_192bit_key[0], 192);
     bflb_aes_encrypt(aes, aes_xts_192bit_pt[0], aes_xts_192bit_iv[0], aes_enc_buf, aes_xts_192bit_len[0]);
@@ -589,6 +596,7 @@ int main(void)
     bflb_aes_decrypt(aes, aes_enc_buf, aes_xts_256bit_iv[0], aes_dec_buf, aes_xts_256bit_len[0]);
     bflb_data_compare(aes_xts_256bit_pt[0], aes_dec_buf, aes_xts_256bit_len[0]);
     printf("aes xts 256 success\r\n");
+#endif
 
     printf("aes success\r\n");
     bflb_group0_release_aes_access(aes);

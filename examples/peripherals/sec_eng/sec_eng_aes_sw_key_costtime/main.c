@@ -57,7 +57,7 @@ int main(void)
         bflb_aes_decrypt(aes, aes_enc_buf, aes_iv, aes_dec_buf, 16 * i);
         printf("aes ecb 128 block:%d dec cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
         mbedtls_check(i);
-
+#if !defined(BL702L)
         printf("test aes ecb 256 \r\n");
         bflb_aes_set_mode(aes, AES_MODE_ECB);
         bflb_aes_setkey(aes, aes_256bit_key, 256);
@@ -68,6 +68,7 @@ int main(void)
         bflb_aes_decrypt(aes, aes_enc_buf, aes_iv, aes_dec_buf, 16 * i);
         printf("aes ecb 256 block:%d dec cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
         mbedtls_check(i);
+#endif
     }
 
     for (uint32_t i = 1; i <= 1024; i++) {
@@ -84,6 +85,7 @@ int main(void)
         printf("aes cbc 128 block:%d dec cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
         mbedtls_check(i);
 
+#if !defined(BL702L)
         printf("test aes cbc 256 \r\n");
         memset(aes_iv, 0, 16);
         bflb_aes_set_mode(aes, AES_MODE_CBC);
@@ -97,6 +99,7 @@ int main(void)
         bflb_aes_decrypt(aes, aes_enc_buf, aes_iv, aes_dec_buf, 16 * i);
         printf("aes cbc 256 block:%d dec cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
         mbedtls_check(i);
+#endif
     }
 
     for (uint32_t i = 1; i <= 1024; i++) {
@@ -113,6 +116,7 @@ int main(void)
         printf("aes ctr 128 block:%d dec cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
         mbedtls_check(i);
 
+#if !defined(BL702L)
         printf("test aes ctr 256 \r\n");
         bflb_aes_set_mode(aes, AES_MODE_CTR);
         bflb_aes_setkey(aes, aes_256bit_key, 256);
@@ -125,6 +129,7 @@ int main(void)
         bflb_aes_decrypt(aes, aes_enc_buf, aes_iv, aes_dec_buf, 16 * i);
         printf("aes ctr 256 block:%d dec cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
         mbedtls_check(i);
+#endif
     }
 
     for (uint32_t i = 1; i <= 1024; i++) {
@@ -141,6 +146,7 @@ int main(void)
         printf("aes xts 128 block:%d dec cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
         mbedtls_check(i);
 
+#if !defined(BL702L)
         printf("test aes xts 256 \r\n");
         bflb_aes_set_mode(aes, AES_MODE_XTS);
         bflb_aes_setkey(aes, aes_256bit_key, 256);
@@ -153,6 +159,7 @@ int main(void)
         bflb_aes_decrypt(aes, aes_enc_buf, aes_iv, aes_dec_buf, 16 * i);
         printf("aes xts 256 block:%d dec cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
         mbedtls_check(i);
+#endif
     }
 
     printf("aes success\r\n");

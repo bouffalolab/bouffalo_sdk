@@ -5,10 +5,17 @@
 
 |      CHIP        | Remark |
 |:----------------:|:------:|
+|BL702L/BL704L     |        |
 |BL616/BL618       |        |
 |BL808             |        |
 
 ## Compile
+
+- BL702L/BL704L
+
+```
+make CHIP=bl702l BOARD=bl702ldk
+```
 
 - BL616/BL618
 

@@ -106,12 +106,14 @@ int main(void)
     bflb_data_compare(sha256_testsum[0], sha_output_buf, 32);
     printf("sha256 link success\r\n");
 
+#if !defined(BL702L)
     bflb_sha512_link_start(sha, &ctx_sha512, 0);
     bflb_l1c_dcache_clean_range((void *)sha512_testbuf[0], 208);
     bflb_sha512_link_update(sha, &ctx_sha512, sha512_testbuf[0], 208);
     bflb_sha512_link_finish(sha, &ctx_sha512, sha_output_buf);
     bflb_data_compare(sha512_testsum[0], sha_output_buf, 64);
     printf("sha512 link success\r\n");
+#endif
     bflb_group0_release_sha_access(sha);
     while (1) {
         bflb_mtimer_delay_ms(2000);

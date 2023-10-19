@@ -1,7 +1,15 @@
 #include "bflb_ir.h"
 #include "board.h"
 
-#ifdef IR_TX_NEC
+#if defined(BL602) || defined(BL702) || defined(BL808) || defined(BL702L)
+#define TEST_IR_TX
+#endif
+
+#if defined(BL602) || defined(BL702) || defined(BL808) || defined(BL616)
+#define TEST_IR_RX
+#endif
+
+#ifdef TEST_IR_TX
 struct bflb_device_s *irtx;
 #endif
 #ifdef IR_RX_NEC
@@ -17,7 +25,7 @@ int main(void)
 
     board_ir_gpio_init();
 
-#ifdef IR_TX_NEC
+#ifdef TEST_IR_TX
     uint32_t tx_buffer[1] = { 0x123D };
     struct bflb_ir_tx_config_s tx_cfg;
 
@@ -28,7 +36,7 @@ int main(void)
     bflb_ir_tx_init(irtx, &tx_cfg);
 #endif
 
-#ifdef IR_RX_NEC
+#ifdef TEST_IR_RX
     uint64_t rx_data;
     uint8_t rx_len;
     struct bflb_ir_rx_config_s rx_cfg;
@@ -45,17 +53,17 @@ int main(void)
     bflb_ir_rx_enable(irrx, true);
 #endif
 
-#ifdef IR_TX_NEC
+#ifdef TEST_IR_TX
     /* Send */
     bflb_ir_send(irtx, tx_buffer, 1);
     printf("Send 0x%08lx\r\n", tx_buffer[0]);
 #endif
 
-#ifdef IR_RX_NEC
+#ifdef TEST_IR_RX
     /* Receive */
     rx_len = bflb_ir_receive(irrx, &rx_data);
 
-#ifdef IR_TX_NEC
+#ifdef TEST_IR_TX
     /* Check data received */
     if (rx_data != tx_buffer[0]) {
         printf("Data error! receive bit: %d, value: 0x%016lx\r\n", rx_len, rx_data);

@@ -1,4 +1,4 @@
-# cam_normal
+# mjpeg_cam_normal
 
 
 ## Support CHIP

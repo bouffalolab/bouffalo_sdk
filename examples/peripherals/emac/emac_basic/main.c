@@ -23,6 +23,7 @@ ATTR_NOCACHE_NOINIT_RAM_SECTION static uint8_t test_pattern[TEST_PATTERN_LEN] = 
 
 static volatile uint32_t tx_pkg_cnt = 0;
 static volatile uint32_t tx_err_cnt = 0;
+static volatile uint32_t tx_pkg_cnt_last = 0;
 
 static volatile uint32_t rx_pkg_cnt = 0;
 static volatile uint32_t rx_err_cnt = 0;
@@ -173,10 +174,11 @@ int main(void)
         loop++;
         if ((loop & 0xfffff) == 0) {
             time = bflb_mtimer_get_time_ms();
-            printf("\r\nCurrent Bandwidth: %ldMbps\r\n", ((tx_pkg_cnt * 64 * 8) / (time * 1000)));
+            printf("\r\nCurrent Bandwidth: %ldMbps\r\n", (((tx_pkg_cnt - tx_pkg_cnt_last) * 64 * 8) / ((time - last_time) * 1000)));
             printf("tx cnt: %ld, lose cnt: %ld\n\r", tx_pkg_cnt, tx_err_cnt);
             printf("rx cnt: %ld, lose cnt: %ld, bytes: %ld\n\r", rx_pkg_cnt, rx_err_cnt, rx_bytes);
             last_time = time;
+            tx_pkg_cnt_last = tx_pkg_cnt;
         }
     }
 
