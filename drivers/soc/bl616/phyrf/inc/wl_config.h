@@ -15,7 +15,7 @@
 // #define NX_UF_EN 0
 
 #ifndef WL_BB_CE
-#define WL_BB_CE (0)
+#define WL_BB_CE (1)
 #endif
 
 #if !defined(WL_WB03) && !defined(WL_BL618M) && !defined(WL_BL616)
