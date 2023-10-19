@@ -19,7 +19,11 @@
 #define PWM_CH2       2
 #define PWM_CH3       3
 #define PWM_CH4       4
+#if defined(BL702L)
+#define PWM_V1_CH_MAX 1
+#else
 #define PWM_V1_CH_MAX 5
+#endif
 /**
   * @}
   */

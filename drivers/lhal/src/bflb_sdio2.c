@@ -37,8 +37,11 @@
 #include "bflb_sdio2.h"
 #include "hardware/sdio2_reg.h"
 
-// #define SDIO2_DRV_DBG(a, ...) printf(a, ##__VA_ARGS__)
+#if 0
+#define SDIO2_DRV_DBG(a, ...) printf(a, ##__VA_ARGS__)
+#else
 #define SDIO2_DRV_DBG(a, ...)
+#endif
 
 #ifndef BOOTROM
 #define SDIO2_DRV_ERR(a, ...) printf("[Error]:" a, ##__VA_ARGS__)
@@ -47,30 +50,42 @@ extern void bflb_bootrom_printf(char *fmt, ...);
 #define SDIO2_DRV_ERR(a, ...) bflb_bootrom_printf("[Error]:" a, ##__VA_ARGS__)
 #endif
 
-#if (SDIO2_MAX_PORT_NUM & (SDIO2_MAX_PORT_NUM - 1) != 0)
-#error "sdio2 port num error, must be 2^n"
-#else
-#define SDIO2_MAX_PORT_MASK (SDIO2_MAX_PORT_NUM - 1)
+#if defined(BL602)
+uint32_t sdio2_base[] = { 0x4000d000 };
+#elif defined(BL616)
+uint32_t sdio2_base[] = { 0x2000d000 };
 #endif
 
-struct bflb_sdio2_irq_callback {
-    void (*handler)(void *arg, bflb_sdio2_trans_desc_t *trans_desc);
-    void *arg;
-};
+/* isr */
+static void bflb_sdio2_isr(int irq, void *arg);
+static void bflb_sdio2_reset_irq(int irq, void *arg);
 
-struct bflb_sdio2_irq_callback sdio2_irq_dnld_callback;
-struct bflb_sdio2_irq_callback sdio2_irq_upld_callback;
-struct bflb_sdio2_irq_callback sdio2_irq_error_callback;
+/* dnld irq callback */
+static void *sdio2_dnld_irq_callback_arg;
+static bflb_sdio2_trans_irq_callback_t sdio2_dnld_irq_callback;
+/* upld irq callback */
+static void *sdio2_upld_irq_callback_arg;
+static bflb_sdio2_trans_irq_callback_t sdio2_upld_irq_callback;
+/* error irq callback */
+static void *sdio2_error_irq_callback_arg;
+static bflb_sdio2_error_irq_callback_t sdio2_error_irq_callback;
 
+#if defined(BL616)
+/* reset irq callback */
+static void *sdio2_reset_irq_callback_arg;
+static bflb_sdio2_reset_irq_callback_t sdio2_reset_irq_callback;
+#endif
+
+/* upld/upld max size */
 static volatile uint32_t sdio2_upld_size_max, sdio2_dnld_size_max;
 
+/* dnld ring queue */
 static volatile bflb_sdio2_trans_desc_t sdio_dnld_port_table[SDIO2_MAX_PORT_NUM];
 static volatile uintptr_t sdio_dnld_port_head, sdio_dnld_port_tail;
 
+/* upld ring queue */
 static volatile bflb_sdio2_trans_desc_t sdio_upld_port_table[SDIO2_MAX_PORT_NUM];
 static volatile uintptr_t sdio_upld_port_head, sdio_upld_port_tail;
-
-static void bflb_sdio2_isr(int irq, void *arg);
 
 int bflb_sdio2_dnld_port_push(struct bflb_device_s *dev, bflb_sdio2_trans_desc_t *trans_desc)
 {
@@ -203,7 +218,7 @@ int bflb_sdio2_init(struct bflb_device_s *dev, uint32_t dnld_size_max)
     scratch_reg = (scratch_reg << SDIO2_SCRATCH_MAX_SIZE_SHIFT) | SDIO2_SCRATCH_SLAVE_READY_MASK;
     putreg8(scratch_reg, reg_base + SDIO2_SCRATCH_OFFSET);
 
-    /* clean bitmap */
+    /* clean bitmap (write invalid) */
     putreg16(0, reg_base + SDIO2_RD_BIT_MAP_OFFSET);
     putreg16(0, reg_base + SDIO2_WR_BIT_MAP_OFFSET);
 
@@ -226,6 +241,12 @@ int bflb_sdio2_init(struct bflb_device_s *dev, uint32_t dnld_size_max)
 
     bflb_irq_attach(dev->irq_num, bflb_sdio2_isr, dev);
     bflb_irq_enable(dev->irq_num);
+
+#if defined(BL616)
+#define BL616_IRQ_SDU_SOFT_RST 19
+    bflb_irq_attach(BL616_IRQ_SDU_SOFT_RST, bflb_sdio2_reset_irq, dev);
+    bflb_irq_enable(BL616_IRQ_SDU_SOFT_RST);
+#endif
 
     return 0;
 }
@@ -296,26 +317,39 @@ int bflb_sdio2_get_upld_size_max(struct bflb_device_s *dev)
     return sdio2_upld_size_max;
 }
 
-int bflb_sdio2_dnld_irq_attach(struct bflb_device_s *dev, void (*callback)(void *arg, bflb_sdio2_trans_desc_t *trans_desc), void *arg)
+int bflb_sdio2_dnld_irq_attach(struct bflb_device_s *dev, bflb_sdio2_trans_irq_callback_t dnld_irq_callback, void *arg)
 {
-    sdio2_irq_dnld_callback.handler = callback;
-    sdio2_irq_dnld_callback.arg = arg;
+    sdio2_dnld_irq_callback_arg = arg;
+    sdio2_dnld_irq_callback = dnld_irq_callback;
+
     return 0;
 }
 
-int bflb_sdio2_upld_irq_attach(struct bflb_device_s *dev, void (*callback)(void *arg, bflb_sdio2_trans_desc_t *trans_desc), void *arg)
+int bflb_sdio2_upld_irq_attach(struct bflb_device_s *dev, bflb_sdio2_trans_irq_callback_t upld_irq_callback, void *arg)
 {
-    sdio2_irq_upld_callback.handler = callback;
-    sdio2_irq_upld_callback.arg = arg;
+    sdio2_upld_irq_callback_arg = arg;
+    sdio2_upld_irq_callback = upld_irq_callback;
+
     return 0;
 }
 
-int bflb_sdio2_error_irq_attach(struct bflb_device_s *dev, void (*callback)(void *arg, bflb_sdio2_trans_desc_t *trans_desc), void *arg)
+int bflb_sdio2_error_irq_attach(struct bflb_device_s *dev, bflb_sdio2_error_irq_callback_t error_irq_callback, void *arg)
 {
-    sdio2_irq_error_callback.handler = callback;
-    sdio2_irq_error_callback.arg = arg;
+    sdio2_error_irq_callback_arg = arg;
+    sdio2_error_irq_callback = error_irq_callback;
+
     return 0;
 }
+
+#if defined(BL616)
+int bflb_sdio2_reset_irq_attach(struct bflb_device_s *dev, bflb_sdio2_reset_irq_callback_t reset_irq_callback, void *arg)
+{
+    sdio2_reset_irq_callback_arg = arg;
+    sdio2_reset_irq_callback = reset_irq_callback;
+
+    return 0;
+}
+#endif
 
 int bflb_sdio2_trig_host_int(struct bflb_device_s *dev, uint32_t event)
 {
@@ -365,8 +399,8 @@ static void bflb_sdio2_isr(int irq, void *arg)
                 sdio_upld_port_head += 1;
 
                 /* upld done, isr callback */
-                if (sdio2_irq_upld_callback.handler != NULL) {
-                    sdio2_irq_upld_callback.handler(sdio2_irq_upld_callback.arg, &upld_trans_desc);
+                if (sdio2_upld_irq_callback != NULL) {
+                    sdio2_upld_irq_callback(sdio2_upld_irq_callback_arg, &upld_trans_desc);
                 }
             }
         }
@@ -399,8 +433,8 @@ static void bflb_sdio2_isr(int irq, void *arg)
                 sdio_dnld_port_head += 1;
 
                 /* dnld done, isr callback */
-                if (sdio2_irq_dnld_callback.handler != NULL) {
-                    sdio2_irq_dnld_callback.handler(sdio2_irq_dnld_callback.arg, &trans_desc);
+                if (sdio2_dnld_irq_callback != NULL) {
+                    sdio2_dnld_irq_callback(sdio2_dnld_irq_callback_arg, &trans_desc);
                 }
             }
         }
@@ -409,8 +443,8 @@ static void bflb_sdio2_isr(int irq, void *arg)
     if (crcerror & SDIO2_CCR_HOST_INT_DnLdCRC_err) {
         SDIO2_DRV_ERR("sdio dnld crc error int\r\n");
 
-        if (sdio2_irq_error_callback.handler != NULL) {
-            sdio2_irq_error_callback.handler(sdio2_irq_error_callback.arg, NULL);
+        if (sdio2_error_irq_callback != NULL) {
+            sdio2_error_irq_callback(sdio2_error_irq_callback_arg, SDIO2_ERROR_CRC);
         }
     }
 
@@ -418,5 +452,89 @@ static void bflb_sdio2_isr(int irq, void *arg)
         SDIO2_DRV_ERR("sdio abort int\r\n");
 
         putreg8(~SDIO2_CCR_CIC_Abort, reg_base + SDIO2_CARD_INT_STATUS_OFFSET);
+
+        if (sdio2_error_irq_callback != NULL) {
+            sdio2_error_irq_callback(sdio2_error_irq_callback_arg, SDIO2_ERROR_ABORT);
+        }
     }
 }
+
+#if defined(BL616)
+
+/* sdio2 reset irq (CMD52 write 1<<3 to 0x06) */
+static void bflb_sdio2_reset_irq(int irq, void *arg)
+{
+    struct bflb_device_s *dev = (struct bflb_device_s *)arg;
+    uint32_t reg_base = dev->reg_base;
+    uint32_t regval = 0;
+
+    bflb_irq_clear_pending(BL616_IRQ_SDU_SOFT_RST);
+
+    uint32_t dnld_desc_num = 0;
+    bflb_sdio2_trans_desc_t dnld_desc_s[SDIO2_MAX_PORT_NUM] = { 0 };
+
+    uint32_t upld_desc_num = 0;
+    bflb_sdio2_trans_desc_t upld_desc_s[SDIO2_MAX_PORT_NUM] = { 0 };
+
+    /* save dnld desc */
+    for (; sdio_dnld_port_tail > sdio_dnld_port_head; sdio_dnld_port_head++) {
+        dnld_desc_s[dnld_desc_num] = sdio_dnld_port_table[sdio_dnld_port_head & SDIO2_MAX_PORT_MASK];
+        dnld_desc_num += 1;
+    }
+
+    /* save upld desc */
+    for (; sdio_upld_port_tail > sdio_upld_port_head; sdio_upld_port_head++) {
+        upld_desc_s[upld_desc_num] = sdio_upld_port_table[sdio_upld_port_head & SDIO2_MAX_PORT_MASK];
+        upld_desc_num += 1;
+    }
+
+    /* sdio2 reinit */
+    do {
+        /* reset port point */
+        sdio_dnld_port_head = 0;
+        sdio_dnld_port_tail = 0;
+        sdio_upld_port_head = 0;
+        sdio_upld_port_tail = 0;
+
+        /* automatic negotiation max len */
+        uint8_t scratch_reg = sdio2_dnld_size_max / SDIO2_SIZE_CONSULT_MULTIPLE;
+        scratch_reg = (scratch_reg << SDIO2_SCRATCH_MAX_SIZE_SHIFT) | SDIO2_SCRATCH_SLAVE_READY_MASK;
+        putreg8(scratch_reg, reg_base + SDIO2_SCRATCH_OFFSET);
+
+        /* clean bitmap (write invalid) */
+        putreg16(0, reg_base + SDIO2_RD_BIT_MAP_OFFSET);
+        putreg16(0, reg_base + SDIO2_WR_BIT_MAP_OFFSET);
+
+        /* toggle SDIO_CCR_CIC_DnLdOvr on WL_SDIO_CCR_CARD_INT_CAUSE */
+        putreg8(SDIO2_CCR_CIC_DnLdOvr, reg_base + SDIO2_CARD_INT_STATUS_OFFSET);
+        putreg8(0, reg_base + SDIO2_CARD_INT_STATUS_OFFSET);
+
+        if (1) {
+            /* multiport */
+            regval = getreg32(reg_base + SDIO2_CONFIG2_OFFSET);
+            putreg32(regval | SDIO2_CONFIG2_MSK, reg_base + SDIO2_CONFIG2_OFFSET);
+            regval = getreg8(reg_base + SDIO2_CONFIG_OFFSET);
+            putreg8(regval | 0x00000010, reg_base + SDIO2_CONFIG_OFFSET);
+        }
+
+        /* unmask the interrupts */
+        putreg8(SDIO2_CCR_CIM_MASK, reg_base + SDIO2_CARD_INT_MASK_OFFSET);
+        /* select interrupt reset mode */
+        putreg8(0, reg_base + SDIO2_CARD_INT_MODE_OFFSET);
+
+    } while (0);
+
+    /* reset irq callback */
+    if (sdio2_reset_irq_callback != NULL) {
+        sdio2_reset_irq_callback(sdio2_reset_irq_callback_arg,
+                                 upld_desc_s, upld_desc_num,
+                                 dnld_desc_s, dnld_desc_num);
+    }
+
+    /* automatic negotiation max len (slave ready) */
+    uint8_t scratch_reg = sdio2_dnld_size_max / SDIO2_SIZE_CONSULT_MULTIPLE;
+    scratch_reg = (scratch_reg << SDIO2_SCRATCH_MAX_SIZE_SHIFT) | SDIO2_SCRATCH_SLAVE_READY_MASK;
+    putreg8(scratch_reg, reg_base + SDIO2_SCRATCH_OFFSET);
+}
+
+#endif

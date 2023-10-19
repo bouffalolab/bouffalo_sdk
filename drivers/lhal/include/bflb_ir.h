@@ -11,7 +11,6 @@
   * @{
   */
 
-#if !defined(BL616)
 /** @defgroup IR_TX_MODE ir tx mode definition
   * @{
   */
@@ -60,9 +59,6 @@
   * @}
   */
 
-#endif
-
-#if !defined(BL702L)
 /** @defgroup IR_RX_MODE ir rx mode definition
   * @{
   */
@@ -96,9 +92,7 @@
 /**
   * @}
   */
-#endif
 
-#if !defined(BL616)
 /**
  * @brief IR TX configuration structure
  *
@@ -159,9 +153,7 @@ struct bflb_ir_tx_config_s {
     uint8_t modu_width_0;
     uint16_t pulse_width_unit;
 };
-#endif
 
-#if !defined(BL702L)
 /**
  * @brief IR RX configuration structure
  *
@@ -182,13 +174,11 @@ struct bflb_ir_rx_config_s {
     uint16_t end_threshold;
     uint16_t fifo_threshold;
 };
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if !defined(BL616)
 /**
  * @brief Initialize ir tx.
  *
@@ -271,9 +261,7 @@ uint8_t bflb_ir_get_txfifo_cnt(struct bflb_device_s *dev);
  */
 void bflb_ir_txfifo_clear(struct bflb_device_s *dev);
 #endif
-#endif
 
-#if !defined(BL702L)
 /**
  * @brief Initialize ir rx.
  *
@@ -347,8 +335,6 @@ uint32_t bflb_ir_get_rxint_status(struct bflb_device_s *dev);
  * @param [in] dev device handle
  */
 void bflb_ir_rxint_clear(struct bflb_device_s *dev);
-
-#endif
 
 /**
  * @brief Control ir feature.

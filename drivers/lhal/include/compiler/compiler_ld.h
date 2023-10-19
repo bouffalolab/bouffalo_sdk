@@ -52,11 +52,11 @@
 #endif
 
 #ifndef ATTR_HBN_RAM_SECTION
-#define ATTR_HBN_RAM_SECTION            __attribute__((section(".hbn_ram_code")))
+#define ATTR_HBN_RAM_SECTION            __attribute__((section(".hbn_code." ATTR_UNI_SYMBOL)))
 #endif
 
 #ifndef ATTR_HBN_RAM_CONST_SECTION
-#define ATTR_HBN_RAM_CONST_SECTION      __attribute__((section(".hbn_ram_data")))
+#define ATTR_HBN_RAM_CONST_SECTION      __attribute__((section(".hbn_data." ATTR_UNI_SYMBOL)))
 #endif
 
 #define ATTR_FALLTHROUGH()              __attribute__((fallthrough))

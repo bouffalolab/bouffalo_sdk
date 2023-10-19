@@ -4137,4 +4137,226 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_On_Xtal_32K(void)
     return SUCCESS;
 }
 
+/****************************************************************************/ /**
+ * @brief  LDO15_RF Output Float
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_Float_LDO15_RF(void)
+{
+    uint32_t tmpVal=0;
 
+    /* ldo15rf pulldown select by aon */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_SEL_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    /* ldo15rf float output */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief   LDO15_RF Pulldown Output to Groud
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_Pulldown_LDO15_RF(void)
+{
+    uint32_t tmpVal=0;
+
+    /* ldo15rf pulldown select by aon */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_SEL_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    /* ldo15rf pulldown output to ground */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  LDO15_RF Output Pulldown Controlled by PD Signal
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_LDO15_RF_Ctrl_by_Pd(void)
+{
+    uint32_t tmpVal=0;
+
+    /* output ldo15rf pulldown select by pd signal */
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_LDO15RF_PULLDOWN_SEL_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  power on mic bias
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Power_On_MicBias(void)
+{
+    uint32_t tmpVal = 0;
+
+    /* power on sfreg */
+    tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_GPADC_MICBIAS_EN);
+    BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, tmpVal);
+
+    arch_delay_us(10);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  power off mic bias
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Power_Off_MicBias(void)
+{
+    uint32_t tmpVal = 0;
+
+    /* power off sfreg */
+    tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_GPADC_MICBIAS_EN);
+    BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Power off the power can be shut down in PDS0
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_LowPower_Enter_PDS0(void)
+{
+    uint32_t tmpVal = 0;
+
+    /* power off sfreg */
+    tmpVal = BL_RD_REG(AON_BASE, AON_MISC);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_SW_WB_EN_AON);
+    BL_WR_REG(AON_BASE, AON_MISC, tmpVal);
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_SFREG_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_LDO15RF_AON);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_PU_MBG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    /* gating Clock */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_CGEN_CFG0);
+    tmpVal = tmpVal & (~(1 << 6));
+    tmpVal = tmpVal & (~(1 << 7));
+    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG0, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Power on the power powered down in PDS0
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_LowPower_Exit_PDS0(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_RF_TOP_AON);
+
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_MBG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    arch_delay_us(20);
+
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_LDO15RF_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    arch_delay_us(60);
+
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_PU_SFREG_AON);
+    BL_WR_REG(AON_BASE, AON_RF_TOP_AON, tmpVal);
+
+    arch_delay_us(20);
+
+    /* power on wb */
+    tmpVal = BL_RD_REG(AON_BASE, AON_MISC);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_SW_WB_EN_AON);
+    BL_WR_REG(AON_BASE, AON_MISC, tmpVal);
+
+    /* ungating Clock */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_CGEN_CFG0);
+    tmpVal = tmpVal | ((1 << 6));
+    tmpVal = tmpVal | ((1 << 7));
+    BL_WR_REG(GLB_BASE, GLB_CGEN_CFG0, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  DCDC18 Pulldown Output to Groud
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_Pulldown_DCDC18(void)
+{
+    uint32_t tmpVal=0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_DCDC_TOP_1);
+    tmpVal = BL_SET_REG_BIT(tmpVal, AON_DCDC_PULLDOWN_AON );
+    BL_WR_REG(AON_BASE, AON_DCDC_TOP_1, tmpVal);
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  DCDC18 Output Float
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION AON_Output_Float_DCDC18(void)
+{
+    uint32_t tmpVal=0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_DCDC_TOP_1);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_DCDC_PULLDOWN_AON );
+    BL_WR_REG(AON_BASE, AON_DCDC_TOP_1, tmpVal);
+
+    return SUCCESS;
+}

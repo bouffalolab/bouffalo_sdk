@@ -6,7 +6,7 @@ struct bflb_platform_dma_env_tag dma_env;
 
 void bflb_platform_dma_init(struct bflb_device_s *dev)
 {
-    memset(dma_env.last_dma, 0, sizeof(dma_env.last_dma));
+    arch_memset(dma_env.last_dma, 0, sizeof(dma_env.last_dma));
 
     // configure the channel priorities
     putreg32(0x0C, dev->reg_base + DMA_ARBITRATION_OFFSET);

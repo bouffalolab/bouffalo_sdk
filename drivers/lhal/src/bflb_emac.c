@@ -255,7 +255,6 @@ int bflb_emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in
         if (flags & EMAC_NOCOPY_PACKET) {
             DMADesc->Buffer = (uint32_t)(uintptr_t)data_in;
         } else {
-            // memcpy((void *)(uintptr_t)(DMADesc->Buffer), data_in, len);
             arch_memcpy_fast((void *)(uintptr_t)(DMADesc->Buffer), data_in, len);
         }
 
@@ -305,7 +304,6 @@ int bflb_emac_bd_rx_dequeue(uint32_t flags, uint32_t *len, uint8_t *data_out)
 #endif
 #endif
         if (data_out) {
-            // memcpy(data_out, (const void *)(uintptr_t)DMADesc->Buffer, *len);
             arch_memcpy_fast(data_out, (const void *)(uintptr_t)DMADesc->Buffer, *len);
         }
 

@@ -33,10 +33,9 @@
   *
   ******************************************************************************
   */
+#include "bflb_efuse.h"
 #include "bl616_ef_cfg.h"
 #include "hardware/ef_data_reg.h"
-
-extern int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload);
 
 static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {

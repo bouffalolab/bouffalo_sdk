@@ -150,8 +150,10 @@ void SystemInit(void)
     /* tspend use positive interrupt */
 #ifdef CONFIG_IRQ_USE_VECTOR
     CLIC->CLICINT[MSOFT_IRQn].ATTR = 0x3;
+    CLIC->CLICINT[SDU_SOFT_RST_IRQn].ATTR = 0x3;
 #else
     CLIC->CLICINT[MSOFT_IRQn].ATTR = 0x2;
+    CLIC->CLICINT[SDU_SOFT_RST_IRQn].ATTR = 0x2;
 #endif
     csi_dcache_enable();
     csi_icache_enable();
