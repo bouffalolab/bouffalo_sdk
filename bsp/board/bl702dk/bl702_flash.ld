@@ -132,9 +132,8 @@ SECTIONS
     {
         . = ALIGN(4);
         __hbn_ram_start__ = .;
-        *bl702_hbn_wakeup*.o*(.rodata*)
-        *(.hbn_ram_code*)
-        *(.hbn_ram_data)
+        *(.hbn_code.*)
+        *(.hbn_data.*)
         . = ALIGN(4);
         __hbn_ram_end__ = .;
     } > hbn_memory
