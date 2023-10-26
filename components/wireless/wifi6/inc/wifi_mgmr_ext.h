@@ -2,12 +2,13 @@
 #define __WIFI_MGMR_EXT_H_
 
 #include "stdint.h"
-#include "stdbool.h"
 
 #define MAX_FIXED_CHANNELS_LIMIT (14)
-#define MAX_AP_SCAN 50
-#define MGMR_SSID_LEN 32
-#define MGMR_KEY_LEN 64
+#define MAX_AP_SCAN     50
+#define MGMR_SSID_LEN   32
+#define MGMR_KEY_LEN    64
+#define MGMR_BSSID_LEN  18
+#define MGMR_AKM_LEN    10
 
 /* WiFi async event */
 #define  EV_WIFI                  0x0002
@@ -115,8 +116,8 @@ typedef struct wifi_mgmr_sta_connect_params {
     char key_tail[1];
     uint8_t ssid_len;
     uint8_t key_len;
-    uint8_t bssid[6];
-    char akm_str[10];
+    uint8_t bssid_str[MGMR_BSSID_LEN];
+    char akm_str[MGMR_AKM_LEN];
     uint8_t akm_len;
     uint16_t freq1;
     uint16_t freq2;
@@ -131,6 +132,7 @@ typedef struct wifi_mgmr_sta_connect_params {
     // default: normal connect 
     // if 1, quick connect 
     uint8_t quick_connect;
+    int timeout_ms;
 } wifi_mgmr_sta_connect_params_t;
 
 /// scan params
@@ -165,14 +167,16 @@ typedef struct wifi_mgmr_ap_params {
     uint8_t channel;
     /// Channel type (@ref mac_chan_bandwidth)
     uint8_t type;
-    /// Whether use dhcpd
     bool use_dhcpd;
-    /// STA MAX inactivity under connection
+    /// dhcpd pool start
+    int start;
+    /// dhcpd pool limit
+    int limit;
+    /// ap ip addr
+    uint32_t ap_ipaddr;
+    /// ap subnet mask
+    uint32_t ap_mask;
     uint32_t ap_max_inactivity;
-    /// whether use hidden ssid
-    bool hidden_ssid;
-    /// whether enable isolation
-    bool isolation;
 } wifi_mgmr_ap_params_t;
 
 /**
