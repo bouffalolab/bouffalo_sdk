@@ -305,7 +305,6 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
                     putreg32(regval, reg_base + SPI_FIFO_WDATA_OFFSET);
                     txbuffer += 2;
                     break;
-                case 3:
                 case 4:
                     regval = *(uint32_t *)txbuffer;
                     putreg32(regval, reg_base + SPI_FIFO_WDATA_OFFSET);
@@ -374,8 +373,6 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
                         tx_cnt--;
                     }
                     break;
-                case 3:
-                    /* discard the high 8 bits of data when 24bit-frame */
                 case 4:
                     if (rxbuffer) {
                         *((uint32_t *)rxbuffer) = (uint32_t)regval;

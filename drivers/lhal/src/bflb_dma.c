@@ -417,6 +417,11 @@ void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
     rx_transfers[1].nbytes = dst_buf_size / 2;
 
     int used_count = bflb_dma_channel_lli_reload(dma_ch, rx_llipool, rx_llipool_size, rx_transfers, 2);
+
+    if (used_count < 0) {
+        while (1) {}
+    }
+
     bflb_dma_channel_lli_link_head(dma_ch, rx_llipool, used_count);
 }
 
