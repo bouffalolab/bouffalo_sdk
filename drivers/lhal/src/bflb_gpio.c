@@ -64,31 +64,30 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     cfg &= ~(0xffff << (16 * is_odd));
 
     regval = getreg32(reg_base + GLB_GPIO_CFGCTL34_OFFSET + ((pin >> 5) << 2));
-    if (mode == GPIO_INPUT) {
-        cfg |= (1 << (is_odd * 16 + 0));
-        regval &= ~(1 << (pin & 0x1f));
-        function = 11;
-    } else if (mode == GPIO_OUTPUT) {
-        regval |= (1 << (pin & 0x1f));
-        function = 11;
-#if defined(BL702L)
-        if (function == 22) {
-            regval &= ~(1 << (pin & 0x1f));
-        }
-#endif
-    } else if (mode == GPIO_ANALOG) {
+
+    if (mode & GPIO_ANALOG) {
         regval &= ~(1 << (pin & 0x1f));
         function = 10;
-    } else if (mode == GPIO_ALTERNATE) {
+    } else if (mode & GPIO_ALTERNATE) {
         cfg |= (1 << (is_odd * 16 + 0));
+        regval &= ~(1 << (pin & 0x1f));
 #if defined(BL702L)
         if (function == 22) {
             cfg &= ~(1 << (is_odd * 16 + 0));
         }
 #endif
-        regval &= ~(1 << (pin & 0x1f));
     } else {
+        function = 11;
+
+        if (mode & GPIO_INPUT) {
+            cfg |= (1 << (is_odd * 16 + 0));
+        }
+
+        if (mode & GPIO_OUTPUT) {
+            regval |= (1 << (pin & 0x1f));
+        }
     }
+
     putreg32(regval, reg_base + GLB_GPIO_CFGCTL34_OFFSET + ((pin >> 5) << 2));
 
     if (cfgset & GPIO_PULLUP) {
@@ -112,33 +111,28 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 #endif
 
 #if defined(BL702)
-#define HBN_BASE_                    ((uint32_t)0x4000F000)
+#define HBN_BASE                     ((uint32_t)0x4000F000)
 #define HBN_IRQ_MODE_OFFSET          (0x14)
 #define HBN_REG_AON_PAD_IE_SMT_SHIFT (8U)
 #define HBN_REG_AON_PAD_IE_SMT_MASK  (0x1f << HBN_REG_AON_PAD_IE_SMT_SHIFT)
     /* always on pads IE control (in HBN) */
     if (pin >= 9 && pin <= 13) {
-        regval = getreg32(HBN_BASE_ + HBN_IRQ_MODE_OFFSET);
+        regval = getreg32(HBN_BASE + HBN_IRQ_MODE_OFFSET);
         uint32_t aon_pad_ie_smt = (regval & HBN_REG_AON_PAD_IE_SMT_MASK) >> HBN_REG_AON_PAD_IE_SMT_SHIFT;
 
-        if (mode != GPIO_ANALOG) {
-            /* not analog mode */
-
-            if (mode == GPIO_OUTPUT) {
-                aon_pad_ie_smt &= ~(1 << (pin - 9));
-            } else {
-                aon_pad_ie_smt |= (1 << (pin - 9));
-            }
-        } else {
-            /* analog mode */
-
+        if (mode & GPIO_ANALOG) {
             /* clear AON pad IE */
             aon_pad_ie_smt &= ~(1 << (pin - 9));
+        } else {
+            /* not analog mode */
+            if (mode & GPIO_INPUT) {
+                aon_pad_ie_smt |= (1 << (pin - 9));
+            }
         }
 
         regval &= ~HBN_REG_AON_PAD_IE_SMT_MASK;
         regval |= (aon_pad_ie_smt << HBN_REG_AON_PAD_IE_SMT_SHIFT);
-        putreg32(regval, HBN_BASE_ + HBN_IRQ_MODE_OFFSET);
+        putreg32(regval, HBN_BASE + HBN_IRQ_MODE_OFFSET);
     }
 
     /* Pins 23...28: SF pad use exclusive IE/PD/PU/DRIVE/SMTCTRL */
@@ -156,17 +150,20 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     cfg = 0;
     cfg |= GLB_REG_GPIO_0_INT_MASK;
 
-    if (mode == GPIO_INPUT) {
-        cfg |= GLB_REG_GPIO_0_IE;
-        function = 11;
-    } else if (mode == GPIO_OUTPUT) {
-        cfg |= GLB_REG_GPIO_0_OE;
-        function = 11;
-    } else if (mode == GPIO_ANALOG) {
+    if (mode & GPIO_ANALOG) {
         function = 10;
-    } else if (mode == GPIO_ALTERNATE) {
+    } else if (mode & GPIO_ALTERNATE) {
         cfg |= GLB_REG_GPIO_0_IE;
     } else {
+        function = 11;
+
+        if (mode & GPIO_INPUT) {
+            cfg |= GLB_REG_GPIO_0_IE;
+        }
+
+        if (mode & GPIO_OUTPUT) {
+            cfg |= GLB_REG_GPIO_0_OE;
+        }
     }
 
     if (cfgset & GPIO_PULLUP) {
@@ -270,8 +267,6 @@ void bflb_gpio_int_init(struct bflb_device_s *dev, uint8_t pin, uint8_t trig_mod
     uint32_t regval;
 
     reg_base = dev->reg_base;
-
-    bflb_gpio_init(dev, pin, GPIO_INPUT | GPIO_FLOAT);
 
     bflb_gpio_int_mask(dev, pin, true);
     bflb_gpio_int_clear(dev, pin);

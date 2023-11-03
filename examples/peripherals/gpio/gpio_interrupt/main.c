@@ -32,8 +32,11 @@ int set_int_mode(int argc, char **argv)
         printf("Set gpio interrupt triggle mode to %d\r\n", atoi(argv[1]));
     }
 
+    bflb_irq_disable(gpio->irq_num);
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN);
     bflb_gpio_int_init(gpio, GPIO_PIN_0, atoi(argv[1]));
     bflb_gpio_int_mask(gpio, GPIO_PIN_0, false);
+    bflb_irq_attach(gpio->irq_num, gpio_isr, NULL);
     bflb_irq_enable(gpio->irq_num);
 
     return 0;
@@ -48,13 +51,7 @@ int main(void)
     uart0 = bflb_device_get_by_name("uart0");
     printf("gpio interrupt\r\n");
 
-    bflb_gpio_int_init(gpio, GPIO_PIN_0, GPIO_INT_TRIG_MODE_SYNC_LOW_LEVEL);
-    bflb_gpio_int_mask(gpio, GPIO_PIN_0, false);
-
     shell_init();
-
-    bflb_irq_attach(gpio->irq_num, gpio_isr, gpio);
-    bflb_irq_enable(gpio->irq_num);
 
     while (1) {
         while ((ch = bflb_uart_getchar(uart0)) != -1) {

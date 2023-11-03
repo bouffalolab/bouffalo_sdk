@@ -163,25 +163,25 @@
 #define GPIO_FUNC_CLKOUT (31 << GPIO_FUNC_SHIFT)
 #endif
 
-#define GPIO_MODE_SHIFT                      (5) /* Bits 5-6: Port Mode */
-#define GPIO_MODE_MASK                       (3 << GPIO_MODE_SHIFT)
-#define GPIO_INPUT                           (0 << GPIO_MODE_SHIFT) /* Input Enable */
-#define GPIO_OUTPUT                          (1 << GPIO_MODE_SHIFT) /* Output Enable */
-#define GPIO_ANALOG                          (2 << GPIO_MODE_SHIFT) /* Analog Enable */
-#define GPIO_ALTERNATE                       (3 << GPIO_MODE_SHIFT) /* Alternate Enable */
+#define GPIO_MODE_SHIFT                      (5) /* Bits 5-8: Port Mode */
+#define GPIO_MODE_MASK                       (0xf << GPIO_MODE_SHIFT)
+#define GPIO_INPUT                           (1 << 5) /* Input Enable */
+#define GPIO_OUTPUT                          (1 << 6) /* Output Enable */
+#define GPIO_ANALOG                          (1 << 7) /* Analog Enable */
+#define GPIO_ALTERNATE                       (1 << 8) /* Alternate Enable */
 
-#define GPIO_PUPD_SHIFT                      (7) /* Bits 7-8: Pull-up/down */
+#define GPIO_PUPD_SHIFT                      (9) /* Bits 9-10: Pull-up/down */
 #define GPIO_PUPD_MASK                       (3 << GPIO_PUPD_SHIFT)
 #define GPIO_FLOAT                           (0 << GPIO_PUPD_SHIFT) /* No pull-up, pull-down */
 #define GPIO_PULLUP                          (1 << GPIO_PUPD_SHIFT) /* Pull-up */
 #define GPIO_PULLDOWN                        (2 << GPIO_PUPD_SHIFT) /* Pull-down */
 
-#define GPIO_SMT_SHIFT                       (9) /* Bits 9: SMT Enable */
+#define GPIO_SMT_SHIFT                       (11) /* Bits 11: SMT Enable */
 #define GPIO_SMT_MASK                        (1 << GPIO_SMT_SHIFT)
 #define GPIO_SMT_DIS                         (0 << GPIO_SMT_SHIFT)
 #define GPIO_SMT_EN                          (1 << GPIO_SMT_SHIFT)
 
-#define GPIO_DRV_SHIFT                       (10) /* Bits 10-11: Drive */
+#define GPIO_DRV_SHIFT                       (12) /* Bits 12-13: Drive */
 #define GPIO_DRV_MASK                        (3 << GPIO_DRV_SHIFT)
 #define GPIO_DRV_0                           (0 << GPIO_DRV_SHIFT)
 #define GPIO_DRV_1                           (1 << GPIO_DRV_SHIFT)
