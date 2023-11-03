@@ -29,6 +29,7 @@ int main(void)
     bflb_adc_vbat_enable(adc);
 
     struct bflb_adc_result_s result;
+
     for (uint16_t i = 0; i < 10; i++) {
         bflb_adc_start_conversion(adc);
         while (bflb_adc_get_count(adc) == 0) {
@@ -42,6 +43,8 @@ int main(void)
 
         bflb_mtimer_delay_ms(500);
     }
+
+    bflb_adc_deinit(adc);
     while (1) {
     }
 }

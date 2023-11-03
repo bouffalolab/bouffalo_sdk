@@ -16,19 +16,17 @@ struct bflb_device_s *adc;
 #define TEST_ADC_CHANNEL_9  1
 #define TEST_ADC_CHANNEL_10 1
 
-#define TEST_ADC_CHANNELS (TEST_ADC_CHANNEL_0 + \
-                           TEST_ADC_CHANNEL_1 + \
-                           TEST_ADC_CHANNEL_2 + \
-                           TEST_ADC_CHANNEL_3 + \
-                           TEST_ADC_CHANNEL_4 + \
-                           TEST_ADC_CHANNEL_5 + \
-                           TEST_ADC_CHANNEL_6 + \
-                           TEST_ADC_CHANNEL_7 + \
-                           TEST_ADC_CHANNEL_8 + \
-                           TEST_ADC_CHANNEL_9 + \
+#define TEST_ADC_CHANNELS   (TEST_ADC_CHANNEL_0 + \
+                           TEST_ADC_CHANNEL_1 +   \
+                           TEST_ADC_CHANNEL_2 +   \
+                           TEST_ADC_CHANNEL_3 +   \
+                           TEST_ADC_CHANNEL_4 +   \
+                           TEST_ADC_CHANNEL_5 +   \
+                           TEST_ADC_CHANNEL_6 +   \
+                           TEST_ADC_CHANNEL_7 +   \
+                           TEST_ADC_CHANNEL_8 +   \
+                           TEST_ADC_CHANNEL_9 +   \
                            TEST_ADC_CHANNEL_10)
-
-#define TEST_COUNT 10
 
 struct bflb_adc_channel_s chan[] = {
 #if TEST_ADC_CHANNEL_0
@@ -77,7 +75,10 @@ struct bflb_adc_channel_s chan[] = {
 #endif
 };
 
-volatile uint32_t raw_data[TEST_ADC_CHANNELS];
+#define TEST_COUNT 10
+
+uint32_t raw_data[TEST_ADC_CHANNELS * TEST_COUNT];
+
 volatile uint8_t read_count = 0;
 
 void adc_isr(int irq, void *arg)
@@ -89,13 +90,18 @@ void adc_isr(int irq, void *arg)
         for (size_t i = 0; i < count; i++) {
             raw_data[read_count] = bflb_adc_read_raw(adc);
             read_count++;
+
+            if (read_count == TEST_ADC_CHANNELS * TEST_COUNT) {
+                bflb_adc_stop_conversion(adc);
+                bflb_adc_rxint_mask(adc, true);
+            }
         }
     }
 }
 
 int main(void)
 {
-    struct bflb_adc_result_s result[TEST_ADC_CHANNELS];
+    struct bflb_adc_result_s result[TEST_ADC_CHANNELS * TEST_COUNT];
 
     board_init();
     board_adc_gpio_init();
@@ -106,7 +112,7 @@ int main(void)
     struct bflb_adc_config_s cfg;
     cfg.clk_div = ADC_CLK_DIV_32;
     cfg.scan_conv_mode = true;
-    cfg.continuous_conv_mode = false;
+    cfg.continuous_conv_mode = true; /* do not support single mode */
     cfg.differential_mode = false;
     cfg.resolution = ADC_RESOLUTION_16B;
     cfg.vref = ADC_VREF_3P2V;
@@ -117,24 +123,21 @@ int main(void)
     bflb_irq_attach(adc->irq_num, adc_isr, NULL);
     bflb_irq_enable(adc->irq_num);
 
-    for (size_t i = 0; i < TEST_COUNT; i++) {
-        read_count = 0;
-        bflb_adc_start_conversion(adc);
+    read_count = 0;
+    bflb_adc_start_conversion(adc);
 
-        while (read_count < TEST_ADC_CHANNELS) {
-            bflb_mtimer_delay_ms(1);
-        }
-
-        bflb_adc_parse_result(adc, raw_data, result, TEST_ADC_CHANNELS);
-
-        for (size_t j = 0; j < TEST_ADC_CHANNELS; j++) {
-            printf("raw data:%08x\r\n", raw_data[j]);
-            printf("pos chan %d,%d mv \r\n", result[j].pos_chan, result[j].millivolt);
-        }
-
-        bflb_adc_stop_conversion(adc);
-        bflb_mtimer_delay_ms(100);
+    while (read_count < (TEST_ADC_CHANNELS * TEST_COUNT)) {
+        bflb_mtimer_delay_ms(1);
     }
+
+    bflb_adc_parse_result(adc, raw_data, result, TEST_ADC_CHANNELS * TEST_COUNT);
+
+    for (size_t j = 0; j < TEST_ADC_CHANNELS * TEST_COUNT; j++) {
+        printf("raw data:%08x\r\n", raw_data[j]);
+        printf("pos chan %d,%d mv \r\n", result[j].pos_chan, result[j].millivolt);
+    }
+
+    bflb_adc_deinit(adc);
 
     while (1) {
     }

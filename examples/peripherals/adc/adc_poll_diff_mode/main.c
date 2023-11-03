@@ -53,6 +53,8 @@ int main(void)
         bflb_mtimer_delay_ms(100);
     }
 
+    bflb_adc_deinit(adc);
+    
     while (1) {
     }
 }
