@@ -27,17 +27,8 @@ int main(void)
     bflb_wdg_reset_countervalue(wdg);
     printf("Delay 1s, triggle set 2s, wdg should not reset, pass.\r\n");
 
-    bflb_wdg_set_countervalue(wdg, 4000);
-    bflb_mtimer_delay_ms(2000);
-    printf("Delay 2s, triggle set 4s, wdg should not reset, pass.\r\n");
-
     printf("Exception test addr: 0x%08x\r\n", TEST_ADDR);
     getreg32(TEST_ADDR);
-
-    /* delay 2s will trigger wdg interrupt */
-    bflb_mtimer_delay_ms(2000);
-    bflb_wdg_reset_countervalue(wdg);
-    bflb_wdg_stop(wdg);
 
     printf("Error! Can't run to here, delay 2s, wdg should reset, current count = %d\r\n",
            bflb_wdg_get_countervalue(wdg));
