@@ -1,6 +1,20 @@
 #include "bflb_gpio.h"
 #include "hardware/gpio_reg.h"
 
+struct bflb_gpio_irq_callback {
+    void (*handler)(uint8_t pin);
+};
+
+#if defined(BL702) || defined(BL602) || defined(BL702L)
+struct bflb_gpio_irq_callback g_gpio_irq_callback[32] = { 0 };
+#elif defined(BL616)
+struct bflb_gpio_irq_callback g_gpio_irq_callback[35] = { 0 };
+#elif defined(BL606P) || defined(BL808)
+struct bflb_gpio_irq_callback g_gpio_irq_callback[46] = { 0 };
+#elif defined(BL628)
+struct bflb_gpio_irq_callback g_gpio_irq_callback[35] = { 0 };
+#endif
+
 void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 {
     uint32_t cfg = 0;
@@ -495,4 +509,32 @@ int bflb_gpio_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
     }
     return ret;
+}
+
+struct bflb_device_s *g_gpio_int = NULL;
+
+void gpio_all_isr(int irq, void *arg)
+{
+    for (uint8_t i = 0; i < sizeof(g_gpio_irq_callback) / sizeof(struct bflb_gpio_irq_callback); i++) {
+        if (g_gpio_irq_callback[i].handler && bflb_gpio_get_intstatus(g_gpio_int, i)) {
+            bflb_gpio_int_clear(g_gpio_int, i);
+            g_gpio_irq_callback[i].handler(i);
+        }
+    }
+}
+
+void bflb_gpio_irq_attach(uint8_t pin, void (*callback)(uint8_t pin))
+{
+    g_gpio_int = bflb_device_get_by_name("gpio");
+    bflb_gpio_int_mask(g_gpio_int, pin, true);
+    g_gpio_irq_callback[pin].handler = callback;
+    bflb_gpio_int_mask(g_gpio_int, pin, false);
+    bflb_irq_attach(g_gpio_int->irq_num, gpio_all_isr, NULL);
+}
+
+void bflb_gpio_irq_detach(uint8_t pin)
+{
+    g_gpio_int = bflb_device_get_by_name("gpio");
+    bflb_gpio_int_mask(g_gpio_int, pin, true);
+    g_gpio_irq_callback[pin].handler = NULL;
 }

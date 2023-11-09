@@ -6,15 +6,17 @@
 #include <csi_core.h>
 #endif
 
+#ifndef BL_IOT_SDK
 extern struct bflb_irq_info_s g_irqvector[];
 
 static void irq_unexpected_isr(int irq, void *arg)
 {
     printf("irq :%d unregistered\r\n", irq);
 }
-
+#endif
 void bflb_irq_initialize(void)
 {
+#ifndef BL_IOT_SDK
     int i;
 
     /* Point all interrupt vectors to the unexpected interrupt */
@@ -22,6 +24,7 @@ void bflb_irq_initialize(void)
         g_irqvector[i].handler = irq_unexpected_isr;
         g_irqvector[i].arg = NULL;
     }
+#endif
 }
 
 ATTR_TCM_SECTION uintptr_t bflb_irq_save(void)
@@ -50,8 +53,13 @@ int bflb_irq_attach(int irq, irq_callback isr, void *arg)
     if (irq > CONFIG_IRQ_NUM) {
         return -EINVAL;
     }
+#ifndef BL_IOT_SDK
     g_irqvector[irq].handler = isr;
     g_irqvector[irq].arg = arg;
+#else
+    extern void bl_irq_register_with_ctx(int irqnum, void *handler, void *ctx);
+    bl_irq_register_with_ctx(irq, (void *)isr, arg);
+#endif
     return 0;
 }
 
@@ -60,8 +68,10 @@ int bflb_irq_detach(int irq)
     if (irq > CONFIG_IRQ_NUM) {
         return -EINVAL;
     }
+#ifndef BL_IOT_SDK
     g_irqvector[irq].handler = irq_unexpected_isr;
     g_irqvector[irq].arg = NULL;
+#endif
     return 0;
 }
 

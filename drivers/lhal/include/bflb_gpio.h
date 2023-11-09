@@ -373,6 +373,10 @@ void bflb_gpio_uart_init(struct bflb_device_s *dev, uint8_t pin, uint8_t uart_fu
 
 int bflb_gpio_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
+void bflb_gpio_irq_attach(uint8_t pin, void (*callback)(uint8_t pin));
+
+void bflb_gpio_irq_detach(uint8_t pin);
+
 #ifdef __cplusplus
 }
 #endif

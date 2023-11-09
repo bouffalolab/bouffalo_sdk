@@ -7,13 +7,11 @@
 struct bflb_device_s *gpio;
 struct bflb_device_s *uart0;
 
-void gpio_isr(int irq, void *arg)
+void gpio0_isr(uint8_t pin)
 {
-    static int i = 0;
-    bool intstatus = bflb_gpio_get_intstatus(gpio, GPIO_PIN_0);
-    if (intstatus) {
-        bflb_gpio_int_clear(gpio, GPIO_PIN_0);
-        printf("%d\r\n", i++);
+    static uint32_t i = 0;
+    if (pin == GPIO_PIN_0) {
+        printf("i:%d\r\n", i++);
     }
 }
 
@@ -33,10 +31,9 @@ int set_int_mode(int argc, char **argv)
     }
 
     bflb_irq_disable(gpio->irq_num);
-    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_INPUT | GPIO_FLOAT | GPIO_SMT_EN);
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN);
     bflb_gpio_int_init(gpio, GPIO_PIN_0, atoi(argv[1]));
-    bflb_gpio_int_mask(gpio, GPIO_PIN_0, false);
-    bflb_irq_attach(gpio->irq_num, gpio_isr, NULL);
+    bflb_gpio_irq_attach(GPIO_PIN_0, gpio0_isr);
     bflb_irq_enable(gpio->irq_num);
 
     return 0;
