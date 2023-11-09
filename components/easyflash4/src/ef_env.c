@@ -1910,23 +1910,18 @@ bool env_key_possibly_exist(const char *name, size_t name_len)
 
 static bool env_cache_cb (env_node_obj_t env, void *arg1, void *arg2) 
 {
-    env->name[env->name_len] = '\0';
+    if (ENV_WRITE == env->status) {
+        env->name[env->name_len] = '\0';
 
-    update_env_cache(env->name, env->name_len, env->addr.start);
+        update_env_cache(env->name, env->name_len, env->addr.start);   
+    }
     return false;
 }
 
 void ef_load_env_cache(void) 
 {
+    memset(env_cache_table, 0 ,sizeof(env_cache_table));
     ef_print_env_cb(env_cache_cb);
-
-    int i = 0, cnt = 0;
-    for (i = 0; i < EF_ENV_CACHE_TABLE_SIZE; i++) {
-
-        if (env_cache_table[i].addr != FAILED_ADDR) {
-            cnt ++;
-        }
-    }
 }
 #endif
 
