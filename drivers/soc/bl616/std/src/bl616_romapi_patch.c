@@ -1943,6 +1943,23 @@ uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
 }
 
 /****************************************************************************/ /**
+ * @brief  power down LDO18IO vout
+ *
+ * @param  None
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION GLB_Power_Down_Ldo18ioVout(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_PU_LDO18IO);
+    BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
+}
+
+/****************************************************************************/ /**
  * @brief  Enable PDS power on PLL
  *
  * @return SUCCESS or ERROR
@@ -3775,7 +3792,7 @@ BL_Err_Type PDS_Power_Off_WB(void)
     tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_ISO_EN);
     BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
 
-    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_NP_PWR_OFF);
+    tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_PWR_OFF);
     BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
 
     return SUCCESS;
@@ -3794,7 +3811,7 @@ BL_Err_Type PDS_Power_On_WB(void)
     uint32_t tmpVal = 0;
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL2);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_NP_PWR_OFF);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_PWR_OFF);
     BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
 
     tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_ISO_EN);
@@ -4109,6 +4126,64 @@ BL_Err_Type GLB_BMX_TO_Init(BMX_TO_Cfg_Type *BmxCfg)
 
     return SUCCESS;
 }
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k_capbank
+ *
+ * @param  value
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Capbank(uint8_t value)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_CAPBANK, value);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k's inverter amplify strength
+ *
+ * @param  value
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Inverter_Amplify_Strength(uint8_t value)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_INV_STRE, value);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k_regulator
+ *
+ * @param  level
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Regulator(uint8_t level)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_REG, level);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    return SUCCESS;
+}
+
 
 /****************************************************************************/ /**
  * @brief  Power on XTAL 32K

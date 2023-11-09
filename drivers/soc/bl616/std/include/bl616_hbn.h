@@ -686,6 +686,9 @@ BL_Err_Type HBN_Out1_Callback_Install(uint8_t intType, intCallback_Type *cbFun);
 /*----------*/
 BL_Err_Type HBN_Aon_Pad_WakeUpCfg(BL_Fun_Type puPdEn, uint8_t trigMode, uint32_t maskVal, BL_Fun_Type dlyEn, uint8_t dlySec);
 /*----------*/
+BL_Err_Type HBN_Set_Xtal_32K_Capbank(uint8_t value);
+BL_Err_Type HBN_Set_Xtal_32K_Inverter_Amplify_Strength(uint8_t value);
+BL_Err_Type HBN_Set_Xtal_32K_Regulator(uint8_t level);
 BL_Err_Type HBN_Power_On_Xtal_32K(void);
 BL_Err_Type HBN_Power_Off_Xtal_32K(void);
 BL_Err_Type HBN_Keep_On_RC32K(void);

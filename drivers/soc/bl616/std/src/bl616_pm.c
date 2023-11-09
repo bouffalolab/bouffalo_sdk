@@ -39,6 +39,10 @@
 #define PM_HBN_LDO_LEVEL_DEFAULT HBN_LDO_LEVEL_1P10V
 #endif
 
+#ifndef PM_PDS_LDO18IO_POWER_DOWN
+#define PM_PDS_LDO18IO_POWER_DOWN  0
+#endif
+
 /* Cache Way Disable, will get from l1c register */
 uint8_t cacheWayDisable = 0;
 
@@ -605,6 +609,12 @@ void ATTR_TCM_SECTION pm_pds_mode_enter(enum pm_pds_sleep_level pds_level,
     /* To make it simple and safe*/
     __ASM volatile("csrc mstatus, 8");
 
+    /* Must Disable ADC, Otherwise, the current increase 1mA  */
+    /* adc disable */
+    tmpVal = BL_RD_REG(AON_BASE, AON_GPADC_REG_CMD);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, AON_GPADC_GLOBAL_EN);
+    BL_WR_REG(AON_BASE, AON_GPADC_REG_CMD, tmpVal);
+
     /* get xtal type */
     HBN_Get_Xtal_Type(&xtal_type);
 
@@ -672,11 +682,16 @@ void ATTR_TCM_SECTION pm_pds_mode_enter(enum pm_pds_sleep_level pds_level,
     } else {
     }
 
-    // psram io config
-    for (uint8_t i = 35; i < 56; i++) {
-        //*((volatile uint32_t *)(0x200008C4 + i * 4)) = 0;
-    }
+    /* psram io config */
+    // for (uint8_t i = 41; i < 53; i++) {
+    //     *((volatile uint32_t *)(0x200008C4 + i * 4)) = 0;
+    // }
+#endif
 
+#if PM_PDS_LDO18IO_POWER_DOWN
+    /* must power down ldo18io, Otherwise, the current is abnormal */
+    GLB_Power_Down_Ldo18ioVout();
+    arch_delay_ms(30);
 #endif
 
 #if PM_PDS_GPIO_KEEP_EN

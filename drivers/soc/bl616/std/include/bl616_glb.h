@@ -1732,6 +1732,7 @@ uint32_t GLB_Get_Flash_Id_Value(void);
 BL_Err_Type GLB_Trim_Ldo18ioVoutSel(void);
 BL_Err_Type GLB_Trim_Ldo18ioBypass(void);
 BL_Err_Type GLB_Trim_Ldo18ioVoutTrim(void);
+void GLB_Power_Down_Ldo18ioVout(void);
 /*----------*/
 BL_Err_Type GLB_Set_SRAM_RET(uint32_t value);
 uint32_t GLB_Get_SRAM_RET(void);

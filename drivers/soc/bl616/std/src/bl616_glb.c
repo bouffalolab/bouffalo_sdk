@@ -3773,6 +3773,23 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Trim_Ldo18ioVoutTrim(void)
 }
 
 /****************************************************************************/ /**
+ * @brief  power down LDO18IO vout
+ *
+ * @param  None
+ *
+ * @return None
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION GLB_Power_Down_Ldo18ioVout(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_PU_LDO18IO);
+    BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
+}
+
+/****************************************************************************/ /**
  * @brief  set sram_ret value
  *
  * @param  value: value
@@ -3861,8 +3878,8 @@ uint32_t GLB_Get_SRAM_PARM(void)
  *
  * @param  emType: EM type, this parameter can be one of the following values:
  *           @arg GLB_WRAM160KB_EM0KB,
- *           @arg GLB_WRAM128KB_EM32KB, 
- *           @arg GLB_WRAM96KB_EM64KB, 
+ *           @arg GLB_WRAM128KB_EM32KB,
+ *           @arg GLB_WRAM96KB_EM64KB,
  *
  * @return SUCCESS or ERROR
  *

@@ -599,11 +599,11 @@ BL_Err_Type HBN_Set_BOD_Config(uint8_t enable, uint8_t threshold, uint8_t mode)
  * [0] : watch dog reset
  *
 *******************************************************************************/
-void HBN_Get_Reset_Event(uint8_t* event)
+void HBN_Get_Reset_Event(uint8_t *event)
 {
     uint32_t tmpVal;
     tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
-    *event = BL_GET_REG_BITS_VAL(tmpVal,HBN_RESET_EVENT);
+    *event = BL_GET_REG_BITS_VAL(tmpVal, HBN_RESET_EVENT);
 }
 /****************************************************************************/ /**
  * @brief  HBN clear reset event
@@ -613,7 +613,7 @@ void HBN_Clr_Reset_Event(void)
 {
     uint32_t tmpVal;
     tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
-    tmpVal |= (1<<13);
+    tmpVal |= (1 << 13);
     BL_WR_REG(HBN_BASE, HBN_GLB, tmpVal);
 }
 
@@ -971,6 +971,63 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Set_HRAM_Ret(void)
     tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_RETRAM_SLP);
     tmpVal = BL_SET_REG_BIT(tmpVal, HBN_RETRAM_RET);
     BL_WR_REG(HBN_BASE, HBN_SRAM, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k_capbank
+ *
+ * @param  value
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Capbank(uint8_t value)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_CAPBANK, value);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k's inverter amplify strength
+ *
+ * @param  value
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Inverter_Amplify_Strength(uint8_t value)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_INV_STRE, value);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k_regulator
+ *
+ * @param  level
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Regulator(uint8_t level)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_REG, level);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
 
     return SUCCESS;
 }
@@ -2180,7 +2237,6 @@ BL_Err_Type HBN_Disable_BOD_IRQ(void)
 #endif
     return SUCCESS;
 }
-
 
 /****************************************************************************/ /**
  * @brief  HBN out0 install interrupt callback
