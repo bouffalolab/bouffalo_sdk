@@ -1,0 +1,13 @@
+= Release 1.0.8 =
+Released: 2023-11-1
+
+== FlashCube ==
+Features:
+1. Command line tools add pk_str and sk_str input options, support string format of private and public key.
+2. BL602/702 will search for the encrypted or signed eflash loader bin first if the parameters of encrypt and sign are not provided.
+
+Changes:
+1. Modify the file structure of libs package.
+
+Bug Fixes:
+1. BL602/702 fix the bug of isp download handshake.
