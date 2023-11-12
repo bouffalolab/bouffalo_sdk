@@ -59,7 +59,7 @@ void dma2_isr(int irq, void *arg)
 
     for (uint8_t i = 0; i < 8; i++) {
         if (regval & (1 << i)) {
-            dma_callback[1][i].handler(dma_callback[2][i].arg);
+            dma_callback[2][i].handler(dma_callback[2][i].arg);
         }
     }
 }
