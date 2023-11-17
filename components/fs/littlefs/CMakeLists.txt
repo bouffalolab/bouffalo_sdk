@@ -11,6 +11,14 @@ sdk_library_add_sources(port/lfs_xip_flash.c)
 sdk_add_include_directories(port)
 
 sdk_add_compile_definitions(-DCONFIG_LITTLEFS)
+if(CONFIG_FREERTOS)
+    sdk_add_compile_definitions(-DLFS_THREADSAFE)
+endif()
+
+if(CONFIG_LITTLEFS_KV_EASYFLASH)
+    sdk_library_add_sources(easyflash_port/lfs_easyflash.c)
+    sdk_add_include_directories(easyflash_port)
+endif()
 
 if(CONFIG_LITTLEFS_FLASH_ADDRESS)
     sdk_add_compile_definitions(-DCONFIG_LITTLEFS_FLASH_ADDRESS=${CONFIG_LITTLEFS_FLASH_ADDRESS})

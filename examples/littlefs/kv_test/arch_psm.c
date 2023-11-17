@@ -2,7 +2,7 @@
 
 #include "arch_psm.h"
 
-extern lfs_t lfs;
+extern lfs_t *lfs;
 
 #ifndef CONFIG_KV_PSM_PATH
 #define CONFIG_KV_PSM_PATH ""
@@ -40,11 +40,11 @@ int arch_psm_get_value(const char *name_space, const char *key, void *value, siz
 
     snprintf(name, CONFIG_KV_PSM_KEY_LEN, PSM_KV_FORMAT, CONFIG_KV_PSM_PATH, name_space, key);
 
-    fd = lfs_file_open(&lfs, &file, name, LFS_O_RDONLY);
+    fd = lfs_file_open(lfs, &file, name, LFS_O_RDONLY);
     if (fd < 0)
         return -1;
 
-    ret = lfs_stat(&lfs, name, &info);
+    ret = lfs_stat(lfs, name, &info);
     if (ret < 0)
         goto bail;
 
@@ -53,11 +53,11 @@ int arch_psm_get_value(const char *name_space, const char *key, void *value, siz
     if (payload > length)
         goto bail;
 
-    ret = lfs_file_read(&lfs, &file, value, payload);
+    ret = lfs_file_read(lfs, &file, value, payload);
     if (ret != payload)
         goto bail;
 
-    ret = lfs_file_read(&lfs, &file, &crc, sizeof(uint8_t));
+    ret = lfs_file_read(lfs, &file, &crc, sizeof(uint8_t));
     if (ret != sizeof(uint8_t))
         goto bail;
 
@@ -65,7 +65,7 @@ int arch_psm_get_value(const char *name_space, const char *key, void *value, siz
         ret = -1;
 
 bail:
-    lfs_file_close(&lfs, &file);
+    lfs_file_close(lfs, &file);
 
     return ret > 0 ? payload : ret;
 }
@@ -86,29 +86,29 @@ int arch_psm_set_value(const char *name_space, const char *key, const void *valu
 
     snprintf(name, CONFIG_KV_PSM_KEY_LEN, PSM_KV_FORMAT, CONFIG_KV_PSM_PATH, name_space, key);
 
-    ret = lfs_stat(&lfs, name, &info);
+    ret = lfs_stat(lfs, name, &info);
     if (ret < 0) {
         oflags = LFS_O_RDWR | LFS_O_CREAT;
     } else {
         oflags = LFS_O_RDWR | LFS_O_TRUNC;
     }
 
-    fd = lfs_file_open(&lfs, &file, name, oflags);
+    fd = lfs_file_open(lfs, &file, name, oflags);
     if (fd < 0)
         return -1;
 
-    ret = lfs_file_write(&lfs, &file, value, length);
+    ret = lfs_file_write(lfs, &file, value, length);
     if (ret != length)
         goto bail;
 
     crc = kvs_crc8((uint8_t *)value, length);
 
-    ret = lfs_file_write(&lfs, &file, &crc, sizeof(uint8_t));
+    ret = lfs_file_write(lfs, &file, &crc, sizeof(uint8_t));
 
 bail:
-    ret_close = lfs_file_close(&lfs, &file);
+    ret_close = lfs_file_close(lfs, &file);
     if ((ret_close < 0) && (oflags & LFS_O_CREAT)) {
-        lfs_remove(&lfs, name);
+        lfs_remove(lfs, name);
     }
 
     return ret < 0 ? ret : (ret_close < 0 ? ret_close : length);
@@ -125,7 +125,7 @@ int arch_psm_erase_key(const char *name_space, const char *key)
 
     snprintf(name, CONFIG_KV_PSM_KEY_LEN, PSM_KV_FORMAT, CONFIG_KV_PSM_PATH, name_space, key);
 
-    lfs_remove(&lfs, name);
+    lfs_remove(lfs, name);
 
     return 0;
 }
