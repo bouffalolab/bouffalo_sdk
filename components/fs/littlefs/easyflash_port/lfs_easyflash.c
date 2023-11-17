@@ -181,18 +181,18 @@ ef_set_env_blob(const char *key, const void *value_buf, size_t buf_len)
         EF_GIANT_UNLOCK(EF_WRITE_ERR);
     }
 
-    ret = lfs_file_truncate(lfs, &file, buf_len);
-    if (ret != LFS_ERR_OK) {
-        errno = -ret;
-        LOG_E("lfs_file_truncate failed with errno:%d\r\n", ret);
-        lfs_file_close(lfs, &file);
-        EF_GIANT_UNLOCK(EF_WRITE_ERR);
-    }
-
     ret = lfs_file_write(lfs, &file, value_buf, buf_len);
     if (ret != buf_len) {
         errno = -ret;
         LOG_E("lfs_file_write failed with errno:%d.\r\n", ret);
+        lfs_file_close(lfs, &file);
+        EF_GIANT_UNLOCK(EF_WRITE_ERR);
+    }
+
+    ret = lfs_file_truncate(lfs, &file, buf_len);
+    if (ret != LFS_ERR_OK) {
+        errno = -ret;
+        LOG_E("lfs_file_truncate failed with errno:%d\r\n", ret);
         lfs_file_close(lfs, &file);
         EF_GIANT_UNLOCK(EF_WRITE_ERR);
     }
@@ -257,6 +257,9 @@ ef_get_env(const char *key)
     printf("WARNING!!! ef_get_env is deprecated, use ef_get_env_blob instead.\r\n");
 
     get_size = ef_get_env_blob(key, value, EF_STR_ENV_VALUE_MAX_SIZE, NULL);
+    value[get_size] = '\0';
+
+    get_size = get_size > 0 ? strlen(value) : get_size;
     if (get_size > 0 && ef_is_str((uint8_t *)value, get_size)) {
         value[get_size] = '\0';
         return value;
@@ -269,13 +272,13 @@ ef_get_env(const char *key)
 EfErrCode
 ef_set_env(const char *key, const char *value)
 {
-    return ef_set_env_blob(key, value, strlen(value));
+    return ef_set_env_blob(key, value, strlen(value) + 1);
 }
 
 EfErrCode
 ef_save_env(void)
 {
-	return EF_NO_ERR;
+    return EF_NO_ERR;
 }
 
 /* clear all env */
