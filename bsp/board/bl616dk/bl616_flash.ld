@@ -323,5 +323,20 @@ SECTIONS
     PROVIDE( _heap_wifi_size = ORIGIN(ram_wifi) + LENGTH(ram_wifi) - _heap_wifi_start );
     PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
 
+  PROVIDE( _ld_ram_size0 = LENGTH(xip_memory) );
+  PROVIDE( _ld_ram_addr0 = ORIGIN(xip_memory) );
+  PROVIDE( _ld_ram_size1 = LENGTH(ram_psram) );
+  PROVIDE( _ld_ram_addr1 = ORIGIN(ram_psram) );
+  PROVIDE( _ld_ram_size2 = LENGTH(itcm_memory) );
+  PROVIDE( _ld_ram_addr2 = ORIGIN(itcm_memory) );
+  PROVIDE( _ld_ram_size3 = LENGTH(dtcm_memory) );
+  PROVIDE( _ld_ram_addr3 = ORIGIN(dtcm_memory) );
+  PROVIDE( _ld_ram_size4 = LENGTH(nocache_ram_memory) );
+  PROVIDE( _ld_ram_addr4 = ORIGIN(nocache_ram_memory) );
+  PROVIDE( _ld_ram_size5 = LENGTH(ram_memory) );
+  PROVIDE( _ld_ram_addr5 = ORIGIN(ram_memory) );
+  PROVIDE( _ld_ram_size6 = LENGTH(ram_wifi) );
+  PROVIDE( _ld_ram_addr6 = ORIGIN(ram_wifi) );
 }
+
 
