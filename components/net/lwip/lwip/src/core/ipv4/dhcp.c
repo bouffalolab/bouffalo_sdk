@@ -1252,11 +1252,9 @@ dhcp_bind(struct netif *netif)
     dhcp_set_state(dhcp, DHCP_STATE_BOUND);
 
     netif->addr_ext.arp_for_us_disable = 0;
-    if(netif->addr_ext.dhcp_qc_callback && !ip4_addr_cmp(netif_ip4_addr(netif), &dhcp->offered_ip_addr)) {
-        netif_set_addr(netif, &dhcp->offered_ip_addr, &sn_mask, &gw_addr);
+    netif_set_addr(netif, &dhcp->offered_ip_addr, &sn_mask, &gw_addr);
+    if (netif->addr_ext.dhcp_qc_callback) {
         netif->addr_ext.dhcp_qc_callback(netif);
-    } else {
-        netif_set_addr(netif, &dhcp->offered_ip_addr, &sn_mask, &gw_addr);
     }
     /* interface is used by routing now that an address is set */
     // Add dhcp_timer_coarse_needed to fix the timer runs when WiFi have not connected

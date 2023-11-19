@@ -40,6 +40,6 @@ void __attribute__((section(".bugkiller_code"))) bugkiller_tcp_seg_dump(void *s)
 
 void __attribute__((section(".bugkiller_code"))) bugkiller_tcp_listen_dump(unsigned long accept_num,void *s)
 {
-    struct tcp_pcb_listen *listen_pcb = (struct tcp_pcb_listen *)s;
+    //struct tcp_pcb_listen *listen_pcb = (struct tcp_pcb_listen *)s;
     printf(lwip_bugkiller_tcp_listen_format[0], accept_num);
 }

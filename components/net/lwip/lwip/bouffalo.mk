@@ -43,6 +43,7 @@ endif
 
 ifeq ($(CONFIG_IPV6), 1)
 COMPONENT_SRCDIRS += src/core/ipv6
+CPPFLAGS += -D CFG_IPV6
 endif
 
 ifeq ($(CONFIG_OTBR),1)

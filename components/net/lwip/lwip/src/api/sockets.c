@@ -2106,7 +2106,7 @@ lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
           LWIP_ASSERT("socket gone at the end of select", sock != NULL);
           if (sock != NULL) {
             /* for now, handle select_waiting==0... */
-            LWIP_ASSERT("sock->select_waiting > 0", sock->select_waiting > 0);
+            // LWIP_ASSERT("sock->select_waiting > 0", sock->select_waiting > 0);
             if (sock->select_waiting > 0) {
               sock->select_waiting--;
             }
@@ -2229,7 +2229,7 @@ lwip_pollscan(struct pollfd *fds, nfds_t nfds, enum lwip_pollscan_opts opts)
           }
         } else if ((opts & LWIP_POLLSCAN_DEC_WAIT) != 0) {
           /* for now, handle select_waiting==0... */
-          LWIP_ASSERT("sock->select_waiting > 0", sock->select_waiting > 0);
+          // LWIP_ASSERT("sock->select_waiting > 0", sock->select_waiting > 0);
           if (sock->select_waiting > 0) {
             sock->select_waiting--;
           }

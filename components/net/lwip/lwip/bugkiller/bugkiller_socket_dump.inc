@@ -55,20 +55,20 @@ void __attribute__((section(".bugkiller_code"))) bugkiller_sockets_dump()
 	case NETCONN_UDP:
 	    printf(lwip_bugkiller_format[0], i);
 	    printf(lwip_bugkiller_format[1],
-		   ip4addr_ntoa((const ip4_addr_t *) &sockets[i].conn->pcb.udp->local_ip.addr),
+		   ip4addr_ntoa((const ip4_addr_t *) &sockets[i].conn->pcb.udp->local_ip),
 		   sockets[i].conn->pcb.udp->local_port);
 	    printf(lwip_bugkiller_format[6],
-		   ip4addr_ntoa((const ip4_addr_t *) &sockets[i].conn->pcb.udp->remote_ip.addr),
+		   ip4addr_ntoa((const ip4_addr_t *) &sockets[i].conn->pcb.udp->remote_ip),
 		   sockets[i].conn->pcb.udp->remote_port);
 	    break;
 	case NETCONN_TCP:
 	    printf(lwip_bugkiller_format[3], i);
 	    printf(lwip_bugkiller_format[1],
-		   ip4addr_ntoa((const ip4_addr_t *) &sockets[i].conn->pcb.udp->local_ip.addr),
+		   ip4addr_ntoa((const ip4_addr_t *) &sockets[i].conn->pcb.udp->local_ip),
 		   sockets[i].conn->pcb.tcp->local_port);
 	    if(sockets[i].conn->pcb.tcp->state != LISTEN) {
 		printf(lwip_bugkiller_format[2],
-		       ip4addr_ntoa((const ip4_addr_t *) &sockets[i].conn->pcb.tcp->remote_ip.addr),
+		       ip4addr_ntoa((const ip4_addr_t *) &sockets[i].conn->pcb.tcp->remote_ip),
 		       sockets[i].conn->pcb.tcp->remote_port);
 	    }
 	    puts(lwip_bugkiller_tcp_state[sockets[i].conn->pcb.tcp->state]);
