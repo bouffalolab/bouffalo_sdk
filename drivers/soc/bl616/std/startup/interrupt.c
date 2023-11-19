@@ -158,7 +158,7 @@ void exception_entry(uintptr_t *regs)
     
 #ifdef CONF_ENABLE_FRAME_PTR
     extern int backtrace_now(int (*print_func)(const char *fmt, ...), uintptr_t *regs);
-        backtrace_now(printf, regs);
+        //backtrace_now(printf, regs);
 #endif
 
     if ((cause == 8) || (cause == 11)) {
@@ -166,6 +166,15 @@ void exception_entry(uintptr_t *regs)
         WRITE_CSR(CSR_MEPC, epc);
     } else {
         while (1) {
+#ifdef CONFIG_COREDUMP
+            /* For stack check */
+            extern uintptr_t __freertos_irq_stack_top;
+
+            /* XXX change sp to irq stack base */
+            __asm__ volatile("add sp, x0, %0" ::"r"(&__freertos_irq_stack_top));
+            void bl_coredump_run(void);
+            bl_coredump_run();
+#endif
         }
     }
 }
