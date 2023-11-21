@@ -8,6 +8,7 @@ uint8_t read_buffer[100];
 
 #define WIFI_SSID_KEY   "wifi.ssid"
 #define WIFI_PASSWD_KEY "wifi.passwd"
+#define TEST_KEY1       "g/hwaddr"
 
 int main(void)
 {
@@ -43,10 +44,12 @@ int main(void)
     ef_set_and_save_env(WIFI_SSID_KEY, (const char *)"helloworld");
     ef_set_and_save_env(WIFI_PASSWD_KEY, (const char *)"helloworld2023");
 
+    ef_set_and_save_env(TEST_KEY1, (const char *)"11223344");
     ef_save_env();
 
     char ssid[33];
     char passwd[65];
+    char hwaddr[33];
     int ret;
 
     printf("ef get env\r\n");
@@ -55,11 +58,59 @@ int main(void)
         ssid[ret] = 0;
         printf("ssid:%s\r\n", ssid);
     }
+
     if (ef_get_env(WIFI_PASSWD_KEY) != NULL) {
         ret = ef_get_env_blob(WIFI_PASSWD_KEY, passwd, sizeof(passwd), NULL);
         passwd[ret] = 0;
         printf("passwd:%s\r\n", passwd);
     }
+
+    ret = ef_get_env_blob(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL);
+    hwaddr[ret] = 0;
+    if (ret == 0) {
+        printf("read key1 failed\r\n");
+    } else {
+        printf("hwaddr:%s\r\n", hwaddr);
+    }
+
+    ret = ef_get_env_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 2);
+    hwaddr[ret] = 0;
+    if (ret == 0) {
+        printf("read key1 failed\r\n");
+    } else {
+        printf("hwaddr+2:%s\r\n", hwaddr);
+    }
+
+    ret = ef_get_env_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 3);
+    hwaddr[ret] = 0;
+    if (ret == 0) {
+        printf("read key1 failed\r\n");
+    } else {
+        printf("hwaddr+3:%s\r\n", hwaddr);
+    }
+
+    ret = ef_get_env_blob_offset(TEST_KEY1, hwaddr, sizeof(hwaddr), NULL, 100);
+    hwaddr[ret] = 0;
+    if (ret == 0) {
+        printf("read key1 failed\r\n");
+    } else {
+        printf("hwaddr+100:%s\r\n", hwaddr);
+    }
+
+    ret = ef_get_env_blob("aa/bb", hwaddr, sizeof(hwaddr), NULL);
+    hwaddr[ret] = 0;
+    if (ret == 0) {
+        printf("read aa/bb failed\r\n");
+    } else {
+        printf("hwaddr:%s\r\n", hwaddr);
+    }
+
+    ef_print_env();
+    printf("clear all kv\r\n");
+    /* reset all kv */
+    ef_env_set_default();
+
+    ef_print_env();
 
     printf("easyflash case success\r\n");
     while (1) {

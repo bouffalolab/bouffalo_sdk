@@ -17,7 +17,7 @@
 #include "easyflash.h"
 
 static lfs_t *lfs = NULL;
-static char key_buffer[64];
+static char path_buffer[64];
 
 #ifndef LFS_EF_NAMESPACE
 #define LFS_EF_NAMESPACE "/_ef4_kvs_"
@@ -97,9 +97,55 @@ static void ef_giant_unlock(void)
 #define EF_GIANT_UNLOCK(ret) return (ret)
 #endif
 
+static int
+gen_kv_key_path(char *buf, size_t buf_len, const char *prefix, const char *path)
+{
+    int i, j = 0;
+    int prefix_len = strlen(prefix);
+    int path_len;
+
+    i = prefix_len + 1; /* prefix + '/' */
+    /* cal full path string length */
+    for (j = 0; path[j] != 0; j++) {
+        switch (path[j]) {
+            case '}':
+            case '/':
+                i += 2;
+                break;
+            default:
+                i++;
+        }
+    }
+    path_len = j;
+
+    /* oversize */
+    if (i > buf_len - 1) {
+        return i;
+    }
+
+    /* do strcat */
+    memcpy(buf, prefix, prefix_len);
+    buf[prefix_len] = '/';
+
+    for (j = 0, i = 0; j < path_len; j++) {
+        switch (path[j]) {
+            case '}':
+            case '/':
+                (buf + prefix_len + 1)[i++] = '}';
+                (buf + prefix_len + 1)[i++] = path[j] ^ 0x20;
+                break;
+            default:
+                (buf + prefix_len + 1)[i++] = path[j];
+        }
+    }
+
+    (buf + prefix_len + 1)[i] = 0;
+    return prefix_len + 1 + i;
+}
+
 /* only supported on ef_env.c */
 size_t
-ef_get_env_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len)
+ef_get_env_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len, int offset)
 {
     lfs_file_t file;
     int32_t ret, read_len;
@@ -114,15 +160,22 @@ ef_get_env_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_
 
     EF_GIANT_LOCK();
 
-    ret = snprintf(key_buffer, sizeof(key_buffer), "%s/%s", LFS_EF_NAMESPACE, key);
-    if (ret >= sizeof(key_buffer)) {
+    ret = gen_kv_key_path(path_buffer, sizeof(path_buffer), LFS_EF_NAMESPACE, key);
+    if (ret >= sizeof(path_buffer)) {
         LOG_E("key name is too long to truncated.\r\n");
         EF_GIANT_UNLOCK(0);
     }
 
-    ret = lfs_file_open(lfs, &file, key_buffer, LFS_O_RDONLY);
+    ret = lfs_file_open(lfs, &file, path_buffer, LFS_O_RDONLY);
     if (ret != LFS_ERR_OK) {
         errno = -ret;
+        EF_GIANT_UNLOCK(0);
+    }
+
+    ret = lfs_file_seek(lfs, &file, offset, LFS_SEEK_SET);
+    if (ret < 0) {
+        errno = -ret;
+        lfs_file_close(lfs, &file);
         EF_GIANT_UNLOCK(0);
     }
 
@@ -152,6 +205,12 @@ ef_get_env_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_
     EF_GIANT_UNLOCK(read_len);
 }
 
+size_t
+ef_get_env_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len)
+{
+    return ef_get_env_blob_offset(key, value_buf, buf_len, saved_value_len, 0);
+}
+
 EfErrCode
 ef_set_env_blob(const char *key, const void *value_buf, size_t buf_len)
 {
@@ -168,13 +227,13 @@ ef_set_env_blob(const char *key, const void *value_buf, size_t buf_len)
 
     EF_GIANT_LOCK();
 
-    ret = snprintf(key_buffer, sizeof(key_buffer), "%s/%s", LFS_EF_NAMESPACE, key);
-    if (ret >= sizeof(key_buffer)) {
+    ret = gen_kv_key_path(path_buffer, sizeof(path_buffer), LFS_EF_NAMESPACE, key);
+    if (ret >= sizeof(path_buffer)) {
         LOG_E("key name is too long to truncated.\r\n");
         EF_GIANT_UNLOCK(EF_ENV_NAME_ERR);
     }
 
-    ret = lfs_file_open(lfs, &file, key_buffer, LFS_O_RDWR | LFS_O_CREAT);
+    ret = lfs_file_open(lfs, &file, path_buffer, LFS_O_RDWR | LFS_O_CREAT);
     if (ret != LFS_ERR_OK) {
         errno = -ret;
         LOG_E("lfs_file_open failed with errno:%d\r\n", ret);
@@ -215,13 +274,13 @@ ef_del_env(const char *key)
         return EF_ENV_ARG_ERR;
     }
 
-    ret = snprintf(key_buffer, sizeof(key_buffer), "%s/%s", LFS_EF_NAMESPACE, key);
-    if (ret >= sizeof(key_buffer)) {
+    ret = gen_kv_key_path(path_buffer, sizeof(path_buffer), LFS_EF_NAMESPACE, key);
+    if (ret >= sizeof(path_buffer)) {
         LOG_E("key name is too long to truncated.\r\n");
         EF_GIANT_UNLOCK(EF_ENV_NAME_ERR);
     }
 
-    lfs_remove(lfs, key_buffer);
+    lfs_remove(lfs, path_buffer);
 
     return EF_ENV_ARG_ERR;
 }
@@ -285,7 +344,58 @@ ef_save_env(void)
 EfErrCode
 ef_env_set_default(void)
 {
-    return EF_ENV_ARG_ERR;
+    /* clear all kv */
+    lfs_dir_t dir = {};
+    int ret;
+
+    if (lfs == NULL) {
+        return EF_ENV_INIT_FAILED;
+    }
+
+    EF_GIANT_LOCK();
+
+    ret = lfs_dir_open(lfs, &dir, LFS_EF_NAMESPACE);
+    if (ret != LFS_ERR_OK) {
+      errno = -ret;
+      EF_GIANT_UNLOCK(EF_READ_ERR);
+    }
+
+    struct lfs_info info = {};
+
+    while (1) {
+        ret = lfs_dir_read(lfs, &dir, &info);
+        if (ret < 0) {
+            errno = -ret;
+            ret = EF_READ_ERR;
+            break;
+        } else if (ret == 0) {
+            ret = EF_NO_ERR;
+            break;
+        }
+
+        if (strcmp(info.name, ".") == 0 || strcmp(info.name, "..") == 0) {
+            continue;
+        }
+
+        if (info.type != LFS_TYPE_REG) {
+            LOG_E("Unexpected file type! name:%s, size: %d, type: %d\r\n", info.name, info.size, info.type);
+            ret = EF_ENV_NAME_ERR;
+            break;
+        }
+
+        ret = snprintf(path_buffer, sizeof(path_buffer), "%s/%s", LFS_EF_NAMESPACE, info.name);
+        assert(ret <= sizeof(path_buffer) - 1);
+
+        ret = lfs_remove(lfs, path_buffer);
+        if (ret < 0) {
+            errno = -ret;
+            ret = EF_WRITE_ERR;
+            break;
+        }
+    }
+
+    lfs_dir_close(lfs, &dir);
+    EF_GIANT_UNLOCK(ret);
 }
 
 EfErrCode
@@ -298,4 +408,47 @@ EfErrCode
 ef_del_and_save_env(const char *key)
 {
     return ef_del_env(key);
+}
+
+EfErrCode
+ef_print_env(void)
+{
+    /* clear all kv */
+    lfs_dir_t dir = {};
+    int ret;
+
+    if (lfs == NULL) {
+        return EF_ENV_INIT_FAILED;
+    }
+
+    EF_GIANT_LOCK();
+
+    ret = lfs_dir_open(lfs, &dir, LFS_EF_NAMESPACE);
+    if (ret != LFS_ERR_OK) {
+      errno = -ret;
+      EF_GIANT_UNLOCK(EF_READ_ERR);
+    }
+
+    struct lfs_info info = {};
+
+    while (1) {
+        ret = lfs_dir_read(lfs, &dir, &info);
+        if (ret < 0) {
+            errno = -ret;
+            ret = EF_READ_ERR;
+            break;
+        } else if (ret == 0) {
+            ret = EF_NO_ERR;
+            break;
+        }
+
+        if (strcmp(info.name, ".") == 0 || strcmp(info.name, "..") == 0) {
+            continue;
+        }
+
+        printf("key: %s, size: %d, type: %d\r\n", info.name, info.size, info.type);
+    }
+
+    lfs_dir_close(lfs, &dir);
+    EF_GIANT_UNLOCK(EF_NO_ERR);
 }

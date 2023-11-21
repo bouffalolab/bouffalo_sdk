@@ -31,6 +31,7 @@ EfErrCode easyflash_init(void);
 
 /* only supported on ef_env.c */
 size_t ef_get_env_blob(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len);
+size_t ef_get_env_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len, int offset);
 EfErrCode ef_set_env_blob(const char *key, const void *value_buf, size_t buf_len);
 
 char *ef_get_env(const char *key) __attribute__((deprecated("Not recommended, use ef_get_env_blob instead")));
@@ -44,6 +45,8 @@ EfErrCode ef_env_set_default(void);
 
 EfErrCode ef_set_and_save_env(const char *key, const char *value);
 EfErrCode ef_del_and_save_env(const char *key);
+
+EfErrCode ef_print_env(void);
 
 #ifdef __cplusplus
 }
