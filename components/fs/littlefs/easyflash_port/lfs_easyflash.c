@@ -33,7 +33,6 @@ easyflash_init(void)
 {
     struct lfs_info stat;
     int32_t ret;
-
     lfs = lfs_xip_init();
     if (lfs == NULL) {
         LOG_E("littlefs backend init failed.\r\n");
@@ -282,7 +281,7 @@ ef_del_env(const char *key)
 
     lfs_remove(lfs, path_buffer);
 
-    return EF_ENV_ARG_ERR;
+    return EF_NO_ERR;
 }
 
 /****************************************************************************
@@ -356,8 +355,8 @@ ef_env_set_default(void)
 
     ret = lfs_dir_open(lfs, &dir, LFS_EF_NAMESPACE);
     if (ret != LFS_ERR_OK) {
-      errno = -ret;
-      EF_GIANT_UNLOCK(EF_READ_ERR);
+        errno = -ret;
+        EF_GIANT_UNLOCK(EF_READ_ERR);
     }
 
     struct lfs_info info = {};
@@ -425,8 +424,8 @@ ef_print_env(void)
 
     ret = lfs_dir_open(lfs, &dir, LFS_EF_NAMESPACE);
     if (ret != LFS_ERR_OK) {
-      errno = -ret;
-      EF_GIANT_UNLOCK(EF_READ_ERR);
+        errno = -ret;
+        EF_GIANT_UNLOCK(EF_READ_ERR);
     }
 
     struct lfs_info info = {};
