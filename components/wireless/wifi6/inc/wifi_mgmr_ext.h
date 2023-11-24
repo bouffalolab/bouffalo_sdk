@@ -38,6 +38,9 @@
 #define  CODE_WIFI_ON_EMERGENCY_MAC     23
 #define  CODE_WIFI_ON_EXIT_PS           24
 #define  CODE_WIFI_ON_GOT_IP6           25
+#define  CODE_WIFI_ON_SET_PS_DONE       26
+#define  CODE_WIFI_ON_GOT_IP_TIMEOUT    27
+#define  CODE_WIFI_ON_GOT_IP_ABORT      28
 
 #define WIFI_EVENT_BEACON_IND_AUTH_OPEN            0
 #define WIFI_EVENT_BEACON_IND_AUTH_WEP             1
@@ -142,6 +145,7 @@ typedef struct wifi_mgmr_scan_params {
     uint8_t ssid_array[MGMR_SSID_LEN];
     uint8_t bssid[6];
     uint8_t bssid_set_flag;
+    uint8_t probe_cnt;
     int channels_cnt;
     uint8_t channels[MAX_FIXED_CHANNELS_LIMIT];
     uint32_t duration;
@@ -323,11 +327,26 @@ int wifi_mgmr_sta_connect(const wifi_mgmr_sta_connect_params_t *config);
 int wifi_sta_disconnect(void);
 
 /**
+ * Set IPv4 address of STA interface
+ *
+ * return 0 on success or -1 on error
+ */
+int wifi_mgmr_sta_ip_set(uint32_t ip, uint32_t mask, uint32_t gw, uint32_t dns);
+
+/**
  * Get IPv4 address of STA interface
  *
  * return 0 on success or -1 on error
  */
 int wifi_sta_ip4_addr_get(uint32_t *addr, uint32_t *mask, uint32_t *gw, uint32_t *dns);
+
+/**
+ * Start dhcp client on STA interface
+ * IF STA interface is not connected, just return -1
+ *
+ * return 0 on success or others on error
+ */
+int wifi_sta_dhcp_client_start(void);
 
 #if NX_FHOST_MONITOR
 /**
@@ -820,11 +839,16 @@ int wifi_mgmr_sta_stop_keep_alive(void);
  */
 int wifi_mgmr_rate_config(uint16_t fixed_rate_cfg);
 
-/**
- *
- * wifi_mgmr_sta_extra_timcnt_get
- * return:
- *  Tim cnt
- */
-uint8_t wifi_mgmr_sta_extra_timcnt_get(void);
+/*  获取当前ap是否是tim bit不会清的ap
+    0 正常ap，tim bit 在取出包后会清掉
+    1 异常ap，tim bit 在去除包后不会立刻清掉
+*/
+int wifi_mgmr_sta_nonstandard_ap_get(void);
+
+/* base_time: 唤醒后最小醒来的时间,默认值10ms
+ * alive_wait_ms_cnt：正常路由器，在base_time没有收到包最长等待alive_wait_ms_cnt * 3ms,3ms 检测一次是否收到包，默认值20
+ * abnormal_dtim_cnt：连续多少次唤醒没有收到包，则判断为异常路由器，默认值20
+ * abap_alive_wait_ms_cnt:唤醒后，异常路由器，在base_time没有收到包最长等待abap_alive_wait_ms_cnt * 3ms,3ms 检测一次是否收到包，默认值2
+*/
+int wifi_mgmr_sta_nonstandard_ap_param_set(uint32_t base_time, uint32_t alive_wait_ms_cnt, uint8_t abnormal_dtim_cnt, uint8_t abap_alive_wait_ms_cnt);
 #endif

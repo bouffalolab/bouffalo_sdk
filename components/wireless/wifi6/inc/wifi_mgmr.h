@@ -8,6 +8,7 @@
 
 #define WIFI_MGMR_CONFIG_SCAN_ITEM_TIMEOUT    (15000)
 #define WIFI_MGMR_SCAN_ITEMS_MAX (50)
+#define NX_REMOTE_STA_MAX CONFIG_STA_MAX
 
 struct ieee80211_dot_d {
     char *code;
@@ -16,9 +17,9 @@ struct ieee80211_dot_d {
 
 struct wlan_netif {
     int mode;//0: sta; 1: ap
+    int started;
     int set;
     uint8_t mac[6];
-    uint8_t dhcp_started;
 };
 
 typedef struct wifi_mgmr_sta_basic_info {
@@ -39,7 +40,7 @@ typedef struct wifi_mgmr {
     //router info for sta mode
     wifi_mgmr_connect_ind_stat_info_t wifi_mgmr_stat_info;
     //sta info for AP mode
-    wifi_mgmr_sta_basic_info_t ap_sta_info[4];
+    wifi_mgmr_sta_basic_info_t ap_sta_info[NX_REMOTE_STA_MAX];
     //ap info for AP mode
     wifi_mgmr_ap_info_t ap_info;
     /*Feature Bits*/
