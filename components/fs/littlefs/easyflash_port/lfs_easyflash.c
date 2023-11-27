@@ -272,7 +272,7 @@ ef_del_env(const char *key)
     if (key == NULL) {
         return EF_ENV_ARG_ERR;
     }
-
+    EF_GIANT_LOCK();
     ret = gen_kv_key_path(path_buffer, sizeof(path_buffer), LFS_EF_NAMESPACE, key);
     if (ret >= sizeof(path_buffer)) {
         LOG_E("key name is too long to truncated.\r\n");
@@ -280,8 +280,7 @@ ef_del_env(const char *key)
     }
 
     lfs_remove(lfs, path_buffer);
-
-    return EF_NO_ERR;
+    EF_GIANT_UNLOCK(EF_NO_ERR);
 }
 
 /****************************************************************************
