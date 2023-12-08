@@ -606,4 +606,26 @@ static void reboot_cmd(int argc, char **argv)
 }
 SHELL_CMD_EXPORT_ALIAS(reboot_cmd, reboot, reboot);
 
+#define MFG_CONFIG_REG    (0x2000F100)
+#define MFG_CONFIG_VAL    ("0mfg")
+
+void mfg_config(void)
+{
+    union _reg_t {
+        uint8_t byte[4];
+        uint32_t word;
+    } mfg = {
+        .byte = MFG_CONFIG_VAL,
+    };
+
+    *(volatile uint32_t*)(MFG_CONFIG_REG) = mfg.word;
+}
+
+static void mfg_cmd(int argc, char **argv)
+{
+    mfg_config();
+    GLB_SW_POR_Reset();
+}
+SHELL_CMD_EXPORT_ALIAS(mfg_cmd, mfg, mfg);
+
 #endif

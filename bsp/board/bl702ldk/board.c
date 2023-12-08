@@ -111,8 +111,8 @@ static void console_init()
     cfg.stop_bits = UART_STOP_BITS_1;
     cfg.parity = UART_PARITY_NONE;
     cfg.flow_ctrl = 0;
-    cfg.tx_fifo_threshold = 15;
-    cfg.rx_fifo_threshold = 15;
+    cfg.tx_fifo_threshold = 7;
+    cfg.rx_fifo_threshold = 0;
 
     uart0 = bflb_device_get_by_name("uart0");
 
