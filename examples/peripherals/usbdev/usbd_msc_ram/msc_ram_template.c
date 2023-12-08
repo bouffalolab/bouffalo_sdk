@@ -120,6 +120,43 @@ void usbd_event_handler(uint8_t event)
     }
 }
 
+#ifdef CONFIG_BSP_SDH_SDCARD
+#include "sdh_sdcard.h"
+
+static sd_card_t gSDCardInfo;
+
+void usbd_msc_get_cap(uint8_t lun, uint32_t *block_num, uint16_t *block_size)
+{
+    *block_num = gSDCardInfo.blockCount; //Pretend having so many buffer,not has actually.
+    *block_size = gSDCardInfo.blockSize;
+}
+
+int usbd_msc_sector_read(uint32_t sector, uint8_t *buffer, uint32_t length)
+{
+    if (SD_OK == SDH_ReadMultiBlocks(buffer, sector, gSDCardInfo.blockSize, length / gSDCardInfo.blockSize)) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+int usbd_msc_sector_write(uint32_t sector, uint8_t *buffer, uint32_t length)
+{
+    status_t ret;
+
+_retry:
+    ret = SDH_WriteMultiBlocks((uint8_t *)buffer, sector, gSDCardInfo.blockSize, length / gSDCardInfo.blockSize);
+
+    if (Status_Success == ret) {
+        return 0;
+    } else if (Status_Timeout == ret) {
+        goto _retry;
+    } else {
+        return -1;
+    }
+}
+
+#else
 #define BLOCK_SIZE  512
 #define BLOCK_COUNT 10
 
@@ -132,7 +169,7 @@ BLOCK_TYPE mass_block[BLOCK_COUNT];
 
 void usbd_msc_get_cap(uint8_t lun, uint32_t *block_num, uint16_t *block_size)
 {
-    *block_num = 1000; //Pretend having so many buffer,not has actually.
+    *block_num = 100000; //Pretend having so many buffer,not has actually.
     *block_size = BLOCK_SIZE;
 }
 int usbd_msc_sector_read(uint32_t sector, uint8_t *buffer, uint32_t length)
@@ -148,11 +185,22 @@ int usbd_msc_sector_write(uint32_t sector, uint8_t *buffer, uint32_t length)
         memcpy(mass_block[sector].BlockSpace, buffer, length);
     return 0;
 }
+#endif
 
 struct usbd_interface intf0;
 
 void msc_ram_init(void)
 {
+#ifdef CONFIG_BSP_SDH_SDCARD
+    board_sdh_gpio_init();
+    if (SDH_Init(SDH_DATA_BUS_WIDTH_4BITS, &gSDCardInfo) == SD_OK) {
+    } else {
+        printf("sdh init fail\r\n");
+        while (1) {}
+    }
+
+    printf("block_num:%d,block_size:%d\r\n", gSDCardInfo.blockCount, gSDCardInfo.blockSize);
+#endif
     usbd_desc_register(msc_ram_descriptor);
     usbd_add_interface(usbd_msc_init_intf(&intf0, MSC_OUT_EP, MSC_IN_EP));
 

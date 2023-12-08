@@ -4,23 +4,25 @@
 
 struct bflb_device_s *uartx;
 
+#define RX_BUFF_SIZE 1024
 static uint8_t uart_txbuf[128] = { 0 };
+static uint8_t uart_rxbuf[RX_BUFF_SIZE] = { 0 };
+static uint32_t uart_rx_count = 0;
 
 void uart_isr(int irq, void *arg)
 {
     uint32_t intstatus = bflb_uart_get_intstatus(uartx);
 
     if (intstatus & UART_INTSTS_RX_FIFO) {
-        printf("rx fifo\r\n");
         while (bflb_uart_rxavailable(uartx)) {
-            printf("0x%02x\r\n", bflb_uart_getchar(uartx));
+            uart_rxbuf[uart_rx_count++] = bflb_uart_getchar(uartx);
         }
     }
     if (intstatus & UART_INTSTS_RTO) {
         bflb_uart_int_clear(uartx, UART_INTCLR_RTO);
         printf("rto\r\n");
         while (bflb_uart_rxavailable(uartx)) {
-            printf("0x%02x\r\n", bflb_uart_getchar(uartx));
+            uart_rxbuf[uart_rx_count++] = bflb_uart_getchar(uartx);
         }
     }
     if (intstatus & UART_INTSTS_TX_FIFO) {
@@ -60,6 +62,15 @@ int main(void)
     bflb_irq_enable(uartx->irq_num);
 
     while (1) {
-        bflb_mtimer_delay_ms(2000);
+        if (uart_rx_count > RX_BUFF_SIZE) {
+            uart_rx_count = RX_BUFF_SIZE;
+        }
+        if (uart_rx_count) {
+            for (uint32_t i = 0; i < uart_rx_count; i++) {
+                printf("0x%02x\r\n", uart_rxbuf[i]);
+            }
+            uart_rx_count = 0;
+        }
+        bflb_mtimer_delay_ms(100);
     }
 }
