@@ -11,6 +11,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define MSP_FS_RDONLY                0x0000
+#define MSP_FS_WRONLY                0x0001
+#define MSP_FS_RDWR                  0x0002
+#define MSP_FS_CREAT                 0x0200
+
+int msp_fs_flags(int flags);
+
 int msp_open(const char *path, int flags);
 
 int msp_stat(const char *path, struct stat *st);

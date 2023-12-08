@@ -18,6 +18,8 @@
 
 #include <msp/kernel.h>
 #include <board.h>
+#include "avutil/named_straightfifo.h"
+#include <msp_fs.h>
 
 /* 相关配置需要调整到板卡中，或者app配置文件中 */
 //#define PA_PIN                 4
@@ -84,7 +86,7 @@ int app_player_init(void)
         smtaudio_init(media_evt);
         smtaudio_register_local_play(20, NULL, 0, 1.0f, 48000);
         smtaudio_register_online_music(20, NULL, 0, 1.0f, 48000);
-        smtaudio_register_bt_a2dp(20, NULL, 0, 1.0f, 48000);
+        // smtaudio_register_bt_a2dp(20, NULL, 0, 1.0f, 48000);
 
         player_init();
 
@@ -94,3 +96,53 @@ int app_player_init(void)
     return 0;
 }
 
+#define FRANE_SIZE    4096
+
+static const char music_mp3[] = {
+#include <music_mp3.h>
+};
+
+static void _fifo_task(void *arg)
+{
+    nsfifo_t* tts_fifo;
+    char *pos;
+    int cnt = 0, rc, wlen;
+    uint8_t reof = 0;
+
+    tts_fifo = nsfifo_open("fifo://tts/1", MSP_FS_CREAT, 8*1024);
+
+    smtaudio_start(MEDIA_SYSTEM, "fifo://tts/1", 0, 0);
+
+    while (cnt < sizeof(music_mp3)) {
+        /* 获取fifo的可写指针及长度 */
+        wlen = nsfifo_get_wpos(tts_fifo, &pos, 8*1000);
+
+        /* 获取播放器fifo读端是否退出(可能播放出错) */
+        nsfifo_get_eof(tts_fifo, &reof, NULL);
+        if (wlen <= 0 || reof) {
+            printf("get wpos err. wlen = %d, reof = %d", wlen, reof);
+            break;
+        }
+
+        /* 计算一次写入的长度，不超过 wlen */
+        rc = MIN(wlen, sizeof(music_mp3) - cnt);
+        int real_len = (rc > FRANE_SIZE) ? FRANE_SIZE : rc;
+
+        memcpy(pos, music_mp3 + cnt, real_len);
+
+        /* 设置写指针 */
+        nsfifo_set_wpos(tts_fifo, real_len);
+        cnt += real_len;
+    }
+    /* set write eof */
+    nsfifo_set_eof(tts_fifo, 0, 1);
+    nsfifo_close(tts_fifo);
+    
+    msp_task_exit(0);
+}
+
+int app_play_fifo_music()
+{
+    msp_task_new("fifo_task", _fifo_task, NULL, 4096);
+    return 0;
+}

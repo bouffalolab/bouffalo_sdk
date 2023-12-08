@@ -7,6 +7,7 @@ COMPONENT_ADD_INCLUDEDIRS += include
 COMPONENT_PRIV_INCLUDEDIRS :=
 
 ## This component's src
+ifeq ($(CONFIG_MSP_ENABLE),1)
 COMPONENT_SRCS :=   src/msp_port.c              \
                     src/msp_freertos.c          \
                     src/msp_posixfs.c           \
@@ -18,7 +19,14 @@ COMPONENT_SRCS :=   src/msp_port.c              \
                     src/xav_atempo_all.c        \
                     src/xav_aef_all.c           \
                     src/xav_format_all.c        \
-                    src/xav_parser_all.c        \
+                    src/xav_parser_all.c        
+else
+ifeq ($(CONFIG_MSP_CODEC),1)
+COMPONENT_SRCS :=   src/msp_port.c              \
+                    src/msp_freertos.c          \
+                    src/xav_port.c              
+endif
+endif
 
 COMPONENT_OBJS := $(patsubst %.c,%.o, $(COMPONENT_SRCS))
 

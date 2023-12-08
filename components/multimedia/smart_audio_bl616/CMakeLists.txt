@@ -13,6 +13,7 @@ sdk_library_add_sources(
     src/aud_ctrl_case/local_play.c
     src/aud_ctrl_case/online_music.c
     src/smart_audio.c
+    src/smart_audio_eq_cli.c
     )
 
 if(CONFIG_BT_A2DP)

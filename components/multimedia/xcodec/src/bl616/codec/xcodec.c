@@ -10,6 +10,7 @@
 #include "codec_output.h"
 #include "codec_input.h"
 #include "codec_volume.h"
+#include "msp_bl616_aupwm.h"
 
 #include <xutils/xringbuffer.h>
 #include <msp/kernel.h>
@@ -41,7 +42,7 @@
 #define XCODEC_DMA_INPUT_PER_NODE_SIZE    (1920)//20ms    //(1536)//16ms
 
 #define XCODEC_OUTPUT_TASK_PRI                   (2)
-#define XCODEC_OUTPUT_TASK_STACK_SIZE            (8192) //bytes
+#define XCODEC_OUTPUT_TASK_STACK_SIZE            (1024) //bytes
 #define XCODEC_OUTPUT_EVENT_TIMEROUT             (10)    //ms
 
 #define XCODEC_INPUT_TASK_PRI                    (2)
@@ -185,8 +186,13 @@ xcodec_error_t xcodec_input_config(xcodec_input_t *ch, xcodec_input_config_t *co
     //cfg.negative_pin = config->negative_pin;
 #if !CONFIG_CODEC_USE_I2S_RX 
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
-    codec_auadc_pinmux_config(pin_cfg.input_positive_pin);
-    codec_auadc_pinmux_config(pin_cfg.input_negative_pin);
+    /* means unused pin */
+    if (pin_cfg.input_positive_pin != 255) {
+        codec_auadc_pinmux_config(pin_cfg.input_positive_pin);
+    }
+    if (pin_cfg.input_negative_pin != 255) {
+        codec_auadc_pinmux_config(pin_cfg.input_negative_pin);
+    }
 
     cfg.positive_pin = pin_cfg.input_positive_pin;
     cfg.negative_pin = pin_cfg.input_negative_pin;
@@ -427,9 +433,12 @@ xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t 
     msp_i2s_device_init(config->sample_rate);
 #else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
-    
-    codec_aupwm_pinmux_config(pin_cfg.output_negative_pin);
-    codec_aupwm_pinmux_config(pin_cfg.output_positive_pin);
+    if (pin_cfg.output_negative_pin != 255) { 
+        codec_aupwm_pinmux_config(pin_cfg.output_negative_pin);
+    }
+    if (pin_cfg.output_positive_pin != 255) {
+        codec_aupwm_pinmux_config(pin_cfg.output_positive_pin);
+    }
 #endif
     ret = auo_channel_config(&tx_context, &cfg);
 
@@ -598,8 +607,52 @@ xcodec_error_t xcodec_output_digital_gain(xcodec_output_t *ch, float val)
 {
     //blyoc_audio_output_digital_gain(ch, 1, val);
     // auo_digtal_gain(&tx_context, val*2);
-    spk_digital_gain_set(0, val);//(int ch, float gaindb)
-    LOGD(TAG, "xcodec_output_digital_gain = %ld\r\n", val);
+    //spk_digital_gain_set(0, val);//(int ch, float gaindb)
+    
+    const float val2db[100] = {// val * 2 = real val
+        0, -0.25, -0.5, -0.75, -1, -1.25, -1.5, -1.75, -2, -2.5,
+        -3, -3.5, -4, -4.5, -5, -5.5, -6, -6.5, -7, -7.5,
+        -8, -8.5, -9, -9.5, -10, -10.5, -11, -11.5, -12, -12.5,
+        -13, -13.5, -14, -14.5, -15, -15.5, -16, -16.5, -17, -17.5,
+        -18, -18.5, -19, -19.5, -20, -20.5, -21, -21.5, -22, -22.5,
+        -23, -23.5, -24, -24.5, -25, -25.5, -26, -26.5, -27, -27.5,
+        -28, -28.5, -29, -29.5, -30, -30.5, -31, -31.5, -32, -32.5,
+        -33, -33.5, -34, -34.5, -35, -35.5, -36, -36.5, -37, -37.5,
+        -38, -38.5, -39, -39.5, -40, -40.5, -41, -41.5, -42, -42.5,
+        -43, -43.5, -44, -44.5, -45, -45.5, -46, -46.5, -47, -47.50
+    };
+    int valtmp;
+    uint16_t regval = 0;
+    uint8_t mute = 0;
+
+    if (val > 100) {
+        valtmp = 100;
+    } else if (val < 0) {
+        valtmp = 0;
+    } else {
+        valtmp = (int)val;
+    }
+    
+    if (0 != valtmp) {
+        if (100 == valtmp) {
+            regval = 0;
+        } else {
+            regval = (uint16_t)(val2db[100 - valtmp] * 2 + 512);
+        }
+    } else {
+        mute = 1;
+    }
+
+    printf("val:%f, db=%f, valtmp:%d, regval = %d\r\n",
+            val, val2db[100 - valtmp], valtmp, regval);
+
+    if (0 == mute) {
+        AUPWM_SetMute(0);
+        AUPWM_SetVolume(regval);
+    } else {
+        AUPWM_SetMute(1);
+    }
+
     return XCODEC_OK;
 }
 
@@ -897,7 +950,7 @@ static int test_codec(void)
     output_config.mode = XCODEC_OUTPUT_SINGLE_ENDED;
     output_config.sound_channel_num = 1;
     xcodec_output_config(&codec_output_ch, &output_config);
-    xcodec_output_analog_gain(&codec_output_ch, 0xffad);
+    xcodec_output_analog_gain(&codec_output_ch, 50);
     xcodec_output_buffer_reset(&codec_output_ch);
 
     xcodec_dma_ch_t *dma_hdl_out = msp_zalloc_check(sizeof(xcodec_dma_ch_t));

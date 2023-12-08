@@ -152,7 +152,7 @@ static void _auo_recv(auo_ch_t *context)
     tmp_time = msp_now_ms();
     ret = mringbuffer_get_index(context->ringbuffer, ar);
     if (ret <= 0) {
-        MSP_LOGD("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
+        user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
             ar, context->ringbuffer->read_index, context->ringbuffer->write_index, ret);
 
         context->callback(context, BL_EVENT_WRITE_BUFFER_EMPTY, context->arg);
@@ -166,12 +166,12 @@ static void _auo_recv(auo_ch_t *context)
 
         if ((ret > (context->per_node_size + context->per_node_size / 2))
             || ((old_time != 0) && ((tmp_time - old_time) > 30))) {
-            MSP_LOGD("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld = %lldms\r\n",
+            user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld = %lldms\r\n",
                 ar, context->ringbuffer->read_index, context->ringbuffer->write_index,
                 ret, (tmp_time - old_time));
-            MSP_LOGD("under run because of no enough data. music end ? wireless network signal instability? or enable wifi/bt but no coex?\r\n");
+            user_log("under run because of no enough data. music end ? wireless network signal instability? or enable wifi/bt but no coex?\r\n");
         } else {
-            MSP_LOGD("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
+            user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
                 ar, context->ringbuffer->read_index, context->ringbuffer->write_index, ret);
         }
     }
@@ -312,6 +312,10 @@ int auo_init(auo_ch_t *context)
         user_log("error\r\n");
         return -1;
     }
+#if CONFIG_MSP_USE_STATIC_RAM
+    static uint8_t g_task_buffer[1024];
+    static uint8_t g_task_handle[256];
+#endif
 #if CODEC_OUTPUT_DEBUG_TRACE
     g_auo_ctx = context;
     memset(&(context->debug), 0, sizeof(context->debug));
@@ -326,7 +330,11 @@ int auo_init(auo_ch_t *context)
     context->task_exit = 0;
     msp_event_new(&(context->event), 0);
     msp_mutex_new(&(context->mutex));
+#if CONFIG_MSP_USE_STATIC_RAM
+    msp_task_new_static(&(context->task), "auotsk", auo_task_entry, context, 1024, context->task_pri, &g_task_buffer, &g_task_handle, 256);//aos_DEFAULT_APP_PRI - 6);
+#else
     msp_task_new_ext(&(context->task), "auotsk", auo_task_entry, context, context->stack_size, context->task_pri);//aos_DEFAULT_APP_PRI - 6);
+#endif
     //xTaskCreate(auo_task_entry, "name", context->stack_size, context, context->task_pri, context->task);
     // enable clock
     /* ungate audio */
@@ -608,17 +616,17 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
     } else {
         ms_GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_DMA_2);
     }
-    DMA_Enable(dma_id);
-    DMA_Channel_Disable(dma_id, dma_ch);
+    msp_DMA_Enable(dma_id);
+    msp_DMA_Channel_Disable(dma_id, dma_ch);
 
     //msp_dma_irq_callback_set(dma_ch, _auo_tx_dma_irq_hander, (void *)(context));
-    DMA_LLI_Init(dma_id, dma_ch, (DMA_LLI_Cfg_Type *)&lli_cfg_dma);
-    DMA_LLI_Update(dma_id, dma_ch, (uint32_t)(&(context->dma->node[0].dma_cfg)));
-    DMA_IntMask(dma_id, dma_ch, DMA_INT_ALL, MASK);
+    msp_DMA_LLI_Init(dma_id, dma_ch, (DMA_LLI_Cfg_Type *)&lli_cfg_dma);
+    msp_DMA_LLI_Update(dma_id, dma_ch, (uint32_t)(&(context->dma->node[0].dma_cfg)));
+    msp_DMA_IntMask(dma_id, dma_ch, DMA_INT_ALL, MASK);
 
     // msp_irq_register(MSP_DMA_IRQn, dma_interrupt_cb, (void *)(context));
     // msp_irq_enable(MSP_DMA_IRQn);
-    DMA_IntMask(dma_id, dma_ch, DMA_INT_TCOMPLETED, UNMASK);
+    msp_DMA_IntMask(dma_id, dma_ch, DMA_INT_TCOMPLETED, UNMASK);
 #endif
     
 #if !CONFIG_CODEC_USE_I2S_TX 
@@ -730,10 +738,10 @@ static int _auo_hw_start(auo_ch_t *context)
 #if CONFIG_CODEC_USE_I2S_TX
     msp_i2s_tx_enable();
 #endif
-    DMA_Channel_Enable(context->ctrl_id, context->ch_id);
+    msp_DMA_Channel_Enable(context->ctrl_id, context->ch_id);
 
 #if 1
-    DMA_Request_Enable(context->ctrl_id, context->ch_id);
+    msp_DMA_Request_Enable(context->ctrl_id, context->ch_id);
 #else
     uint32_t val;
     val =(uint32_t)(*(volatile uint32_t *)0x2000c110);
@@ -771,7 +779,7 @@ int auo_stop(auo_ch_t *context)
 #if !CONFIG_CODEC_USE_I2S_TX 
     AUPWM_Disable();
 #endif
-    DMA_Channel_Disable(context->ctrl_id, context->ch_id);
+    msp_DMA_Channel_Disable(context->ctrl_id, context->ch_id);
 #if 0
     DMA_Channel_Disable(dma_id, dma_ch);
     Audio_Analog_Dac_Disable();
@@ -884,10 +892,10 @@ int auo_resume(auo_ch_t *context)
     // mv to head
     auo_ringbuff_format(context);
     // update dma cfg mv 0 idx
-    DMA_LLI_Update(dma_id, dma_ch, (uint32_t)(&(context->dma->node[0].dma_cfg)));
+    msp_DMA_LLI_Update(dma_id, dma_ch, (uint32_t)(&(context->dma->node[0].dma_cfg)));
 
 #if 1
-    DMA_Request_Enable(context->ctrl_id, context->ch_id);
+    msp_DMA_Request_Enable(context->ctrl_id, context->ch_id);
 #else
     uint32_t val;
     val = *(volatile uint32_t *)0x2000c110;
@@ -1001,7 +1009,7 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
 {
     uint32_t ret = 0;
 
-    MSP_LOGD("mringbuffer_put_fflush_cache %d\r\n", size);
+    user_log("mringbuffer_put_fflush_cache %d\r\n", size);
     msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
     ret = mringbuffer_put_fflush_cache(context->ringbuffer,
         (uint8_t *)data, size,

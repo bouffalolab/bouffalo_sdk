@@ -8,6 +8,13 @@ sdk_add_include_directories(
 #     src
 #     )
 
+if (CONFIG_MSP_USE_CODEC_ONLY)
+sdk_library_add_sources(
+    src/msp_freertos.c
+    src/msp_port.c
+    src/xav_port.c
+    )
+else()
 sdk_library_add_sources(
     src/msp_freertos.c
     # src/msp_dma.c
@@ -24,6 +31,7 @@ sdk_library_add_sources(
     src/msp_romfs.c
     #src/codec_es8388.c
     )
+endif()
 
 if (CONFIG_CODEC_USE_I2S_TX)
     sdk_add_compile_definitions(-DCONFIG_CODEC_USE_I2S_TX=1)

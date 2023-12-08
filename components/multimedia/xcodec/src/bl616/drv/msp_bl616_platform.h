@@ -63,8 +63,6 @@
 #define ATTR_DMA_RAM_SECTION                __attribute__((section(".system_ram")))
 #define ATTR_NOCACHE_RAM_SECTION            __attribute__((section(".nocache_ram")))
 #define ATTR_NOCACHE_NOINIT_RAM_SECTION     __attribute__((section(".nocache_noinit_ram")))
-#define ATTR_HBN_RAM_SECTION                __attribute__((section(".hbn_ram_code")))
-#define ATTR_HBN_RAM_CONST_SECTION          __attribute__((section(".hbn_ram_data")))
 #define ATTR_EALIGN(x)                      __attribute__((aligned(x)))
 #define ATTR_FALLTHROUGH()                  __attribute__((fallthrough))
 #define ATTR_USED                           __attribute__((__used__))

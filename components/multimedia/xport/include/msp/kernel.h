@@ -72,6 +72,8 @@ const char *msp_task_get_name(msp_task_t *task);
      */
     int msp_task_new_ext(msp_task_t *task, const char *name, void (*fn)(void *),
                          void *arg, int stack_size, int prio);
+    int msp_task_new_static(msp_task_t *task, const char *name, void (*fn)(void *), void *arg,
+                        int stack_size, int prio, uint32_t *stack_buffer, void *task_handle, uint32_t handle_size);
 
     void msp_task_delete(msp_task_t *task);
 

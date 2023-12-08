@@ -144,7 +144,7 @@ static void mic_rec_start(const char *url, const char *save_name, int rb_size, i
          */
         
         char   buf2[128];
-        time_t tt = time(NULL);
+        long long tt = msp_now_ms();
         if (i == 0) {
             snprintf(buf2, sizeof(buf2), "%s/%d_%s_%s", url, (int)tt, "mic", save_name);
         } else if (i == 1) {

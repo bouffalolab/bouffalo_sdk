@@ -15,19 +15,19 @@
 #define MSP_DEBUG_COLOR (1)
 
 typedef void (*except_process_t)(int err, const char *file, int line, const char *func_name, void *caller);
+
 /**
-  \brief       set user except callback
-  \param[in]   except     callback function
+ *brief       set user except callback
+ *param[in]   except     callback function
 */
 void msp_set_except_callback(except_process_t except);
 
 /**
-  \brief       set default except callback
+ *brief       set default except callback
 */
 void msp_set_except_default();
 
-/* log printf */
-extern void msp_debug(const char *tag, const char *filename, const char *funcname, const long line, const char *format, ...);
+extern void msp_debug(const char *tag, const char *filename, const long line, const char *funcname, const char *format, ...);
 
 #ifndef __FILENAME__
 #define __FILENAME__ \
@@ -36,13 +36,8 @@ extern void msp_debug(const char *tag, const char *filename, const char *funcnam
             : ((strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)))
 #endif
 
-#define MSP_LOGD(...) msp_debug("mspd", __FILENAME__, __func__, __LINE__, __VA_ARGS__)
-#define MSP_LOGI(...) msp_debug("mspi", __FILENAME__, __func__, __LINE__, __VA_ARGS__)
-#define MSP_LOGW(...) msp_debug("mspw", __FILENAME__, __func__, __LINE__, __VA_ARGS__)
-#define MSP_LOGE(...) msp_debug("mspe", __FILENAME__, __func__, __LINE__, __VA_ARGS__)
-#define MSP_LOGA(...) msp_debug("mspa", __FILENAME__, __func__, __LINE__, __VA_ARGS__)
+#define MSP_LOG_TAG __FILENAME__, __LINE__
 
-// aos/debug.h
 #ifndef CHECK_PARAM
 #define CHECK_PARAM(x, ret) \
 	do { \
@@ -94,21 +89,12 @@ extern void msp_debug(const char *tag, const char *filename, const char *funcnam
 
 #define SHORT_FILE __FUNCTION__
 
-#ifdef CONFIG_MSP_DEBUG
 #define debug_print_assert(A, B, C, D, E, F)                                                       \
     do {                                                                                           \
         printf("!!!assert: %s: %d, %s\r\n", D, E, F);                                              \
         while (1);                                                                                 \
     } while (0)
-#else
-#define debug_print_assert(A, B, C, D, E, F)
-#endif
 
-#if (!defined(unlikely))
-#define unlikely(EXPRESSSION) !!(EXPRESSSION)
-#endif
-
-#ifdef CONFIG_MSP_DEBUG
 #define msp_assert(X)                                                                              \
     do {                                                                                           \
         if (unlikely(!(X))) {                                                                      \
@@ -117,10 +103,9 @@ extern void msp_debug(const char *tag, const char *filename, const char *funcnam
     } while (0)
 #define except_process(err) msp_except_process(err, SHORT_FILE, __LINE__,                          \
                                 __PRETTY_FUNCTION__,  __builtin_return_address(0))
-#else
-#define msp_assert(X)
-#define except_process(err) msp_except_process(err, NULL, 0, NULL,                                 \
-                               __builtin_return_address(0))
+
+#if (!defined(unlikely))
+#define unlikely(EXPRESSSION) !!(EXPRESSSION)
 #endif
 
 #if (!defined(msp_check))
@@ -154,28 +139,26 @@ extern void msp_debug(const char *tag, const char *filename, const char *funcnam
 #define msp_check_return_enomem(X) msp_check_return_val(X, ENOMEM)
 #endif
 
-#ifndef LOGG
-#define LOGG(mod, ...)
-#endif
-
-#ifndef LOGF
-#define LOGF(mod, ...)
-#endif
+#define MSP_LOGD(...) msp_debug("mspd", MSP_LOG_TAG, __func__, __VA_ARGS__)
+#define MSP_LOGI(...) msp_debug("mspi", MSP_LOG_TAG, __func__, __VA_ARGS__)
+#define MSP_LOGW(...) msp_debug("mspw", MSP_LOG_TAG, __func__, __VA_ARGS__)
+#define MSP_LOGE(...) msp_debug("mspe", MSP_LOG_TAG, __func__, __VA_ARGS__)
+#define MSP_LOGA(...) msp_debug("mspa", MSP_LOG_TAG, __func__, __VA_ARGS__)
 
 #ifndef LOGE
-#define LOGE(mod, ...)
+#define LOGE(mod, ...) MSP_LOGE(__VA_ARGS__)
 #endif
 
 #ifndef LOGW
-#define LOGW(mod, ...)
+#define LOGW(mod, ...) MSP_LOGW(__VA_ARGS__)
 #endif
 
 #ifndef LOGI
-#define LOGI(mod, ...)
+#define LOGI(mod, ...) MSP_LOGI(__VA_ARGS__)
 #endif
 
 #ifndef LOGD
-#define LOGD(mod, ...)
+#define LOGD(mod, ...) MSP_LOGD(__VA_ARGS__)
 #endif
 
 #ifndef MSP_UNUSED_ARG

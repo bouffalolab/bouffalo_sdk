@@ -70,6 +70,9 @@ void app_main_entry(void *arg)
     /* Init bt */
     app_bt_init();
 
+    extern int app_play_fifo_music();
+    app_play_fifo_music();
+    
     vTaskDelete(NULL);
 }
 

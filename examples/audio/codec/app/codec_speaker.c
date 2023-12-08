@@ -90,7 +90,7 @@ static void _codec_output_task(void *arg)
     //output_config.positive_pin = OUTPUT_POSITIVE_PIN;
     //output_config.pa_pin = 4;
     xcodec_output_config(&codec_output_ch, &output_config);
-    xcodec_output_analog_gain(&codec_output_ch, 0xffad);
+    xcodec_output_analog_gain(&codec_output_ch, 50);
     xcodec_output_buffer_reset(&codec_output_ch);
 
     xcodec_output_link_dma(&codec_output_ch, dma_hdl_out);

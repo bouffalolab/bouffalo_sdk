@@ -12,10 +12,11 @@
 #include <cli.h>
 #include <msp/kernel.h>
 // #include <board.h>
-
+#include <msp_fs.h>
 #include <avutil/vol_scale.h>
 #include <devices/drv_snd_bl616.h>
 // #include "bt/app_bt.h"
+#include "avutil/av_config.h"
 
 #define TAG "player"
 
@@ -90,7 +91,7 @@ static void play_sin(int second)
     wav_head_int[1]  = 32000 * second + 36; /*wav 文件大小 - 8*/
     wav_head_int[10] = 32000 * second;      /* PCM数据字节数 */
 
-    fifo = nsfifo_open("fifo://sintest", O_CREAT, 16000 / 1000 * 16 / 8 * 10 * 400);
+    fifo = nsfifo_open("fifo://sintest", MSP_FS_CREAT, 16000 / 1000 * 16 / 8 * 10 * 400);
 
     smtaudio_stop(MEDIA_SYSTEM);
     smtaudio_start(MEDIA_SYSTEM, "fifo://sintest", 0, 0);
@@ -168,6 +169,7 @@ void play_sintest(int sec)
                         MSP_DEFAULT_APP_PRI);
 }
 
+extern void app_bt_adv_enable(int enable);
 static int cli_player_proc(int argc, char **argv)
 {
     if (argc < 2) {
@@ -279,14 +281,6 @@ static int cli_player_proc(int argc, char **argv)
             printf("%d, %.3f, %.3f\n", i, db, db- db_last);
             db_last = db;
         }
-#ifdef CONFIG_BOARD_AUDIO
-    } else if (strcmp(argv[1], "gain") == 0) {
-        int gain = atoi(argv[2]);
-        printf("set out gain %d", gain);
-        board_audio_out_set_gain(0, gain);
-        /* 重新初始化更新增益参数 */
-        board_audio_init();
-#endif
 #if defined(CONFIG_BT_BREDR) && (CONFIG_BT_BREDR == 1)
     } else if (strcmp(argv[1], "a2dp") == 0) {
         if (argc == 3) {
@@ -323,7 +317,7 @@ static int cli_player_proc(int argc, char **argv)
     return 0;
 }
 
-static void cmd_player_func(char *wbuf, int wbuf_len, int argc, char **argv)
+static void cmd_player_func(char *buf, int len, int argc, char **argv)
 {
     if (argc >= 2) {
         if (cli_player_proc(argc, argv) == 0) {
@@ -340,16 +334,12 @@ static void cmd_player_func(char *wbuf, int wbuf_len, int argc, char **argv)
     }
 }
 
-void cli_reg_cmd_player(void)
-{
-    static const struct cli_command cmd_info = {"smta", "smartaudio test", cmd_player_func};
-
-    aos_cli_register_command(&cmd_info);
-}
-
-const struct cli_command cmds_user[] STATIC_CLI_CMD_ATTRIBUTE = {
-    { "smta", "smartaudio", cmd_player_func},
-};
+#ifdef CONFIG_SHELL
+#include <shell.h>
+SHELL_CMD_EXPORT_ALIAS(cmd_player_func, smta, smartaudio test);
+#else
+const static struct cli_command cmds_user[] STATIC_CLI_CMD_ATTRIBUTE = {{"smta", "smartaudio test", cmd_player_func}};
+#endif
 
 int smartapp_cli_init(void)
 {

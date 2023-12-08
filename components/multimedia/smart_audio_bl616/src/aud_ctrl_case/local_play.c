@@ -10,6 +10,7 @@
 //#include <aos/kv.h>
 #include <avutil/misc.h>
 #include <media.h>
+#include <xav_port.h>
 
 #define TAG "smtaudio_ctrl_local_play"
 
@@ -243,6 +244,10 @@ int8_t smtaudio_register_local_play(uint8_t min_vol, uint8_t *aef_conf, size_t a
 
     ret = smtaudio_ops_register(&ctrl_local_play);
     ctrl_local_play.init();
+
+    if(!config_av_resampler_enable()){
+        resample = 0;
+    }
 
     media_init(aef_conf, aef_conf_size, speed, resample);
 

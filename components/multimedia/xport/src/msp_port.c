@@ -60,7 +60,7 @@ int msp_gpio_output_config(uint8_t pin, uint8_t pull_type)
 
 int msp_gpio_output_set(uint8_t pin, uint8_t value)
 {
-    GLB_GPIO_Write((GLB_GPIO_Type)pin, value ? 1 : 0);
+    GLB_GPIO_Write(pin, value ? 1 : 0);
 
     return 0;
 }

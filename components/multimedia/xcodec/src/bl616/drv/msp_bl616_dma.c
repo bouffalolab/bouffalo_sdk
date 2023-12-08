@@ -204,7 +204,7 @@ static void CPU_Interrupt_Disable_DMA(DMA_ID_Type dmaId)
  * @return None
  *
 *******************************************************************************/
-void DMA_Enable(DMA_ID_Type dmaId)
+void msp_DMA_Enable(DMA_ID_Type dmaId)
 {
     uint32_t tmpVal;
     /* Get DMA register */
@@ -229,7 +229,7 @@ void DMA_Enable(DMA_ID_Type dmaId)
  * @return None
  *
 *******************************************************************************/
-void DMA_Disable(DMA_ID_Type dmaId)
+void msp_DMA_Disable(DMA_ID_Type dmaId)
 {
     uint32_t tmpVal;
     /* Get DMA register */
@@ -252,7 +252,7 @@ void DMA_Disable(DMA_ID_Type dmaId)
  * @return None
  *
 *******************************************************************************/
-void DMA_Channel_Init(DMA_ID_Type dmaId, DMA_Channel_Cfg_Type *chCfg)
+void msp_DMA_Channel_Init(DMA_ID_Type dmaId, DMA_Channel_Cfg_Type *chCfg)
 {
     uint32_t tmpVal;
     /* Get channel register */
@@ -308,7 +308,7 @@ void DMA_Channel_Init(DMA_ID_Type dmaId, DMA_Channel_Cfg_Type *chCfg)
  * @return SUCCESS
  *
 *******************************************************************************/
-void DMA_DeInit(DMA_ID_Type dmaId)
+void msp_DMA_DeInit(DMA_ID_Type dmaId)
 {
     switch (dmaId) {
         case DMA0_ID:
@@ -331,7 +331,7 @@ void DMA_DeInit(DMA_ID_Type dmaId)
  * @return None
  *
 *******************************************************************************/
-void DMA_Channel_Update_SrcMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAddr, uint32_t len)
+void msp_DMA_Channel_Update_SrcMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAddr, uint32_t len)
 {
     uint32_t tmpVal;
     /* Get channel register */
@@ -359,7 +359,7 @@ void DMA_Channel_Update_SrcMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAdd
  * @return None
  *
 *******************************************************************************/
-void DMA_Channel_Update_DstMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAddr, uint32_t len)
+void msp_DMA_Channel_Update_DstMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAddr, uint32_t len)
 {
     uint32_t tmpVal;
     /* Get channel register */
@@ -385,7 +385,7 @@ void DMA_Channel_Update_DstMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAdd
  * @return tranfersize size
  *
 *******************************************************************************/
-uint32_t DMA_Channel_TranferSize(DMA_ID_Type dmaId, uint8_t ch)
+uint32_t msp_DMA_Channel_TranferSize(DMA_ID_Type dmaId, uint8_t ch)
 {
     /* Get channel register */
     uint32_t DMAChs = DMA_Get_Channel(dmaAddr[dmaId], ch);
@@ -406,7 +406,7 @@ uint32_t DMA_Channel_TranferSize(DMA_ID_Type dmaId, uint8_t ch)
  * @return SET or RESET
  *
 *******************************************************************************/
-BL_Sts_Type DMA_Channel_Is_Busy(DMA_ID_Type dmaId, uint8_t ch)
+BL_Sts_Type msp_DMA_Channel_Is_Busy(DMA_ID_Type dmaId, uint8_t ch)
 {
     /* Get channel register */
     uint32_t DMAChs = DMA_Get_Channel(dmaAddr[dmaId], ch);
@@ -427,7 +427,7 @@ BL_Sts_Type DMA_Channel_Is_Busy(DMA_ID_Type dmaId, uint8_t ch)
  * @return None
  *
 *******************************************************************************/
-void DMA_Channel_Enable(DMA_ID_Type dmaId, uint8_t ch)
+void msp_DMA_Channel_Enable(DMA_ID_Type dmaId, uint8_t ch)
 {
     uint32_t tmpVal;
     /* Get channel register */
@@ -451,7 +451,7 @@ void DMA_Channel_Enable(DMA_ID_Type dmaId, uint8_t ch)
  * @return None
  *
 *******************************************************************************/
-void DMA_Channel_Disable(DMA_ID_Type dmaId, uint8_t ch)
+void msp_DMA_Channel_Disable(DMA_ID_Type dmaId, uint8_t ch)
 {
     uint32_t tmpVal;
     /* Get channel register */
@@ -466,7 +466,7 @@ void DMA_Channel_Disable(DMA_ID_Type dmaId, uint8_t ch)
     BL_WR_REG(DMAChs, DMA_CONFIG, tmpVal);
 }
 
-void DMA_Request_Enable(DMA_ID_Type dmaId, uint8_t ch)
+void msp_DMA_Request_Enable(DMA_ID_Type dmaId, uint8_t ch)
 {
 #if 0
     uint32_t tmpVal;
@@ -491,7 +491,7 @@ void DMA_Request_Enable(DMA_ID_Type dmaId, uint8_t ch)
 #endif
 }
 
-void DMA_Request_Disable(DMA_ID_Type dmaId, uint8_t ch)
+void msp_DMA_Request_Disable(DMA_ID_Type dmaId, uint8_t ch)
 {
 #if 0
     uint32_t tmpVal;
@@ -516,7 +516,7 @@ void DMA_Request_Disable(DMA_ID_Type dmaId, uint8_t ch)
 #endif
 }
 
-uint32_t DMA_SrcAddr_Get(DMA_ID_Type dmaId, uint8_t ch)
+uint32_t msp_DMA_SrcAddr_Get(DMA_ID_Type dmaId, uint8_t ch)
 {
 #if 0
     uint32_t tmpVal;
@@ -545,7 +545,7 @@ uint32_t DMA_SrcAddr_Get(DMA_ID_Type dmaId, uint8_t ch)
  * @return None
  *
 *******************************************************************************/
-void DMA_LLI_Init(DMA_ID_Type dmaId, uint8_t ch, DMA_LLI_Cfg_Type *lliCfg)
+void msp_DMA_LLI_Init(DMA_ID_Type dmaId, uint8_t ch, DMA_LLI_Cfg_Type *lliCfg)
 {
     uint32_t tmpVal;
     /* Get channel register */
@@ -580,7 +580,7 @@ void DMA_LLI_Init(DMA_ID_Type dmaId, uint8_t ch, DMA_LLI_Cfg_Type *lliCfg)
  * @return None
  *
 *******************************************************************************/
-void DMA_LLI_Update(DMA_ID_Type dmaId, uint8_t ch, uint32_t LLI)
+void msp_DMA_LLI_Update(DMA_ID_Type dmaId, uint8_t ch, uint32_t LLI)
 {
     /* Get channel register */
     uint32_t DMAChs = DMA_Get_Channel(dmaAddr[dmaId], ch);
@@ -603,7 +603,7 @@ void DMA_LLI_Update(DMA_ID_Type dmaId, uint8_t ch, uint32_t LLI)
  * @return LLI counter
  *
 *******************************************************************************/
-uint32_t DMA_LLI_Get_Counter(DMA_ID_Type dmaId, uint8_t ch)
+uint32_t msp_DMA_LLI_Get_Counter(DMA_ID_Type dmaId, uint8_t ch)
 {
     /* Get channel register */
     uint32_t DMAChs = DMA_Get_Channel(dmaAddr[dmaId], ch);
@@ -656,13 +656,13 @@ BL_Err_Type DMA_LLI_PpStruct_Set_Transfer_Len(DMA_LLI_PP_Struct *dmaPpStruct, ui
  * @return None
  *
 *******************************************************************************/
-void DMA_LLI_PpBuf_Start_New_Transmit(DMA_LLI_PP_Buf *dmaPpBuf)
+void msp_DMA_LLI_PpBuf_Start_New_Transmit(DMA_LLI_PP_Buf *dmaPpBuf)
 {
     CPU_Interrupt_Disable_DMA(dmaPpBuf->dmaId);
 
     if (dmaPpBuf->lliListHeader[dmaPpBuf->idleIndex] != NULL) {
-        DMA_LLI_Update(dmaPpBuf->dmaId, dmaPpBuf->dmaChan, (uint32_t)(uintptr_t)dmaPpBuf->lliListHeader[dmaPpBuf->idleIndex]);
-        DMA_Channel_Enable(dmaPpBuf->dmaId, dmaPpBuf->dmaChan);
+        msp_DMA_LLI_Update(dmaPpBuf->dmaId, dmaPpBuf->dmaChan, (uint32_t)(uintptr_t)dmaPpBuf->lliListHeader[dmaPpBuf->idleIndex]);
+        msp_DMA_Channel_Enable(dmaPpBuf->dmaId, dmaPpBuf->dmaChan);
         dmaPpBuf->idleIndex = (dmaPpBuf->idleIndex == 0) ? 1 : 0;
     }
 
@@ -677,7 +677,7 @@ void DMA_LLI_PpBuf_Start_New_Transmit(DMA_LLI_PP_Buf *dmaPpBuf)
  * @return Next Ping-Pong Buf List Header
  *
 *******************************************************************************/
-DMA_LLI_Ctrl_Type *DMA_LLI_PpBuf_Remove_Completed_List(DMA_LLI_PP_Buf *dmaPpBuf)
+DMA_LLI_Ctrl_Type *msp_DMA_LLI_PpBuf_Remove_Completed_List(DMA_LLI_PP_Buf *dmaPpBuf)
 {
     CPU_Interrupt_Disable_DMA(dmaPpBuf->dmaId);
 
@@ -695,7 +695,7 @@ DMA_LLI_Ctrl_Type *DMA_LLI_PpBuf_Remove_Completed_List(DMA_LLI_PP_Buf *dmaPpBuf)
  * @return None
  *
 *******************************************************************************/
-void DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliList)
+void msp_DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliList)
 {
     DMA_LLI_Ctrl_Type *pLliList = NULL;
     CPU_Interrupt_Disable_DMA(dmaPpBuf->dmaId);
@@ -718,12 +718,12 @@ void DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliLis
         dmaLliList->dmaCtrl.I = 1;
     }
 
-    if (DMA_Channel_Is_Busy(dmaPpBuf->dmaId, dmaPpBuf->dmaChan) == RESET) {
+    if (msp_DMA_Channel_Is_Busy(dmaPpBuf->dmaId, dmaPpBuf->dmaChan) == RESET) {
         /* DMA stopped: maybe stop just a few minutes ago(not enter INT due to CPU_Interrupt_Disable)
 		   or has already stopped before this function is called */
         if (dmaPpBuf->lliListHeader[!dmaPpBuf->idleIndex] == NULL) {
             /* DMA has already stopped before this function is called */
-            DMA_LLI_PpBuf_Start_New_Transmit(dmaPpBuf);
+            msp_DMA_LLI_PpBuf_Start_New_Transmit(dmaPpBuf);
         }
     }
 
@@ -738,10 +738,10 @@ void DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliLis
  * @return None
  *
 *******************************************************************************/
-void DMA_LLI_PpBuf_Destroy(DMA_LLI_PP_Buf *dmaPpBuf)
+void msp_DMA_LLI_PpBuf_Destroy(DMA_LLI_PP_Buf *dmaPpBuf)
 {
     /* DMA LLI Disable */
-    DMA_Channel_Disable(dmaPpBuf->dmaId, dmaPpBuf->dmaChan);
+    msp_DMA_Channel_Disable(dmaPpBuf->dmaId, dmaPpBuf->dmaChan);
 
     if (dmaPpBuf->lliListHeader[0] != NULL && dmaPpBuf->onTransCompleted != NULL) {
         dmaPpBuf->onTransCompleted(dmaPpBuf->lliListHeader[0]);
@@ -768,7 +768,7 @@ void DMA_LLI_PpBuf_Destroy(DMA_LLI_PP_Buf *dmaPpBuf)
  * @return None
  *
 *******************************************************************************/
-void DMA_IntMask(DMA_ID_Type dmaId, uint8_t ch, DMA_INT_Type intType, BL_Mask_Type intMask)
+void msp_DMA_IntMask(DMA_ID_Type dmaId, uint8_t ch, DMA_INT_Type intType, BL_Mask_Type intMask)
 {
     uint32_t tmpVal;
     /* Get channel register */

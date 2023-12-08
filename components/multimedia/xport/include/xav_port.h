@@ -17,5 +17,7 @@ int config_av_sample_num_per_frame_max(void);
 int config_av_atempoer_enable(void);
 int config_av_mixer_enable(void);
 int config_av_aef_enable(void);
+int config_av_resampler_enable(void);
+int config_msp_debug_enable(void);
 
 #endif

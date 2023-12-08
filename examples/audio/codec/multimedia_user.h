@@ -33,7 +33,11 @@
 
 // xav config filtering
 /* Configuration switch for controlling audio speed feature. */
+/* if bt is enabled, CONFIG_ATEMPOER_SONIC must be enabled too */
 #define CONFIG_ATEMPOER_SONIC                (1)
+/* Configuration switch for controlling audio resampling with specified frequency. */
+/* if CONFIG_RESAMPLER_SPEEX set disabled, input audio channel only support mono */
+#define CONFIG_RESAMPLER_SPEEX               (1)
 /* Configuration switch for controlling audio output mixing support. */
 #define CONFIG_AO_MIXER_SUPPORT              (1)
 /* Configuration switch for controlling audio effecter feature. */

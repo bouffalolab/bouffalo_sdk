@@ -19,13 +19,14 @@
 #include "conn_internal.h"
 #include "l2cap.h"
 #include "a2dp.h"
+#include "avdtp_internal.h"
 #include "avrcp.h"
 #include "rfcomm.h"
 #include "hfp_hf.h"
-
+#include "sbc2pcm.h"
 #include "bt.h"
 #include <classic/bt_stack_hfp_hf.h>
-#include <board.h>
+//#include <board.h>
 #include "keys.h"
 // #include <aos/yloop.h>
 #include "smart_audio.h"
@@ -205,10 +206,10 @@ static void t_avrcp_tg_ntf_evt_status(u8_t evt, u8_t *para,u16_t para_len);
 
 static struct avrcp_callback t_avrcp_callbacks =
 {
-    .chain = t_avrcp_chain,
-    .abs_vol = t_avrcp_absvol,
-    .play_status = t_avrcp_play_status,
-    .tg_register_notification_event = t_avrcp_tg_ntf_evt_status,
+    t_avrcp_chain,
+    t_avrcp_absvol,
+    t_avrcp_play_status,
+    t_avrcp_tg_ntf_evt_status,
 };
 
 bt_dev_addr_t t_remote_addr;

@@ -107,7 +107,7 @@ static int _codec_auio_test(uint32_t timeout)
     output_config.sound_channel_num = 2;
     xcodec_output_config(&g_cooutch, &output_config);
     xcodec_output_analog_gain(&g_cooutch, 0x0);   ///< 设置声音大小0x2f
-    xcodec_output_digital_gain(&g_cooutch, 0xffad); // 0xffad
+    xcodec_output_digital_gain(&g_cooutch, 50); // 0xffad
     //xcodec_output_buffer_reset(&g_cooutch);
     xcodec_output_link_dma(&g_cooutch, &g_dmachoutput_handle);
     //xcodec_output_start(&g_cooutch);

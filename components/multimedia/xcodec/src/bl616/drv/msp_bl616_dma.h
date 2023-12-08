@@ -394,32 +394,32 @@ void DMA2_INT5_IRQHandler(void);
 void DMA2_INT6_IRQHandler(void);
 void DMA2_INT7_IRQHandler(void);
 #endif
-void DMA_Enable(DMA_ID_Type dmaId);
-void DMA_Disable(DMA_ID_Type dmaId);
-void DMA_Channel_Init(DMA_ID_Type dmaId, DMA_Channel_Cfg_Type *chCfg);
-void DMA_DeInit(DMA_ID_Type dmaId);
-void DMA_Channel_Update_SrcMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAddr, uint32_t len);
-void DMA_Channel_Update_DstMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAddr, uint32_t len);
-uint32_t DMA_Channel_TranferSize(DMA_ID_Type dmaId, uint8_t ch);
-BL_Sts_Type DMA_Channel_Is_Busy(DMA_ID_Type dmaId, uint8_t ch);
-void DMA_Channel_Enable(DMA_ID_Type dmaId, uint8_t ch);
-void DMA_Channel_Disable(DMA_ID_Type dmaId, uint8_t ch);
-void DMA_Request_Enable(DMA_ID_Type dmaId, uint8_t ch);
-void DMA_Request_Disable(DMA_ID_Type dmaId, uint8_t ch);
-uint32_t DMA_SrcAddr_Get(DMA_ID_Type dmaId, uint8_t ch);
-void DMA_LLI_Init(DMA_ID_Type dmaId, uint8_t ch, DMA_LLI_Cfg_Type *lliCfg);
-void DMA_LLI_Update(DMA_ID_Type dmaId, uint8_t ch, uint32_t LLI);
-uint32_t DMA_LLI_Get_Counter(DMA_ID_Type dmaId, uint8_t ch);
-void DMA_IntMask(DMA_ID_Type dmaId, uint8_t ch, DMA_INT_Type intType, BL_Mask_Type intMask);
-void DMA_LLI_PpBuf_Start_New_Transmit(DMA_LLI_PP_Buf *dmaPpBuf);
-DMA_LLI_Ctrl_Type *DMA_LLI_PpBuf_Remove_Completed_List(DMA_LLI_PP_Buf *dmaPpBuf);
-void DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliList);
-void DMA_LLI_PpBuf_Destroy(DMA_LLI_PP_Buf *dmaPpBuf);
+void msp_DMA_Enable(DMA_ID_Type dmaId);
+void msp_DMA_Disable(DMA_ID_Type dmaId);
+void msp_DMA_Channel_Init(DMA_ID_Type dmaId, DMA_Channel_Cfg_Type *chCfg);
+void msp_DMA_DeInit(DMA_ID_Type dmaId);
+void msp_DMA_Channel_Update_SrcMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAddr, uint32_t len);
+void msp_DMA_Channel_Update_DstMemcfg(DMA_ID_Type dmaId, uint8_t ch, uint32_t memAddr, uint32_t len);
+uint32_t msp_DMA_Channel_TranferSize(DMA_ID_Type dmaId, uint8_t ch);
+BL_Sts_Type msp_DMA_Channel_Is_Busy(DMA_ID_Type dmaId, uint8_t ch);
+void msp_DMA_Channel_Enable(DMA_ID_Type dmaId, uint8_t ch);
+void msp_DMA_Channel_Disable(DMA_ID_Type dmaId, uint8_t ch);
+void msp_DMA_Request_Enable(DMA_ID_Type dmaId, uint8_t ch);
+void msp_DMA_Request_Disable(DMA_ID_Type dmaId, uint8_t ch);
+uint32_t msp_DMA_SrcAddr_Get(DMA_ID_Type dmaId, uint8_t ch);
+void msp_DMA_LLI_Init(DMA_ID_Type dmaId, uint8_t ch, DMA_LLI_Cfg_Type *lliCfg);
+void msp_DMA_LLI_Update(DMA_ID_Type dmaId, uint8_t ch, uint32_t LLI);
+uint32_t msp_DMA_LLI_Get_Counter(DMA_ID_Type dmaId, uint8_t ch);
+void msp_DMA_IntMask(DMA_ID_Type dmaId, uint8_t ch, DMA_INT_Type intType, BL_Mask_Type intMask);
+void msp_DMA_LLI_PpBuf_Start_New_Transmit(DMA_LLI_PP_Buf *dmaPpBuf);
+DMA_LLI_Ctrl_Type *msp_DMA_LLI_PpBuf_Remove_Completed_List(DMA_LLI_PP_Buf *dmaPpBuf);
+void msp_DMA_LLI_PpBuf_Append(DMA_LLI_PP_Buf *dmaPpBuf, DMA_LLI_Ctrl_Type *dmaLliList);
+void msp_DMA_LLI_PpBuf_Destroy(DMA_LLI_PP_Buf *dmaPpBuf);
 //void DMA_Int_Callback_Install(DMA_ID_Type dmaId, DMA_Chan_Type dmaChan, DMA_INT_Type intType, intCallback_Type *cbFun);
-void DMA_LLI_PpStruct_Start(DMA_LLI_PP_Struct *dmaPpStruct);
-void DMA_LLI_PpStruct_Stop(DMA_LLI_PP_Struct *dmaPpStruct);
-BL_Err_Type DMA_LLI_PpStruct_Init(DMA_LLI_PP_Struct *dmaPpStruct);
-BL_Err_Type DMA_LLI_PpStruct_Set_Transfer_Len(DMA_LLI_PP_Struct *dmaPpStruct,
+void msp_DMA_LLI_PpStruct_Start(DMA_LLI_PP_Struct *dmaPpStruct);
+void msp_DMA_LLI_PpStruct_Stop(DMA_LLI_PP_Struct *dmaPpStruct);
+BL_Err_Type msp_DMA_LLI_PpStruct_Init(DMA_LLI_PP_Struct *dmaPpStruct);
+BL_Err_Type msp_DMA_LLI_PpStruct_Set_Transfer_Len(DMA_LLI_PP_Struct *dmaPpStruct,
                                               uint16_t Ping_Transfer_len, uint16_t Pong_Transfer_len);
 
 /*@} end of group DMA_Public_Functions */

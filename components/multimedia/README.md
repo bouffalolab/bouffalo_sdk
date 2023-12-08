@@ -37,29 +37,30 @@ Note: √ indicates supported, × indicates not supported, ○ indicates support
 
 ## 代码目录
 
-| Name               | Description                       |
-|:----------------------|:-------------------------------|
-| aacdec                | AAC decoder                                |
-| amrnb                 | AMR-NB decoder                             |
-| amrwb                 | AMR-WB decoder                             |
-| drv_snd_bl606p        | drv_snd_bl606p decoder                     |
-| drv_snd_bl616         | drv_snd_bl616 decoder                      |
-| flac                  | FLAC decoder                               |
-| ogg                   | Ogg decoder                                |
-| opus                  | Opus decoder                               |
-| pvmp3dec              | PVMP3 decoder                              |
-| sonic                 | Sonic decoder                              |
-| speex                 | Speex decoder                              |
-| speexdsp              | SpeexDSP decoder                           |
-| vorbis                | Vorbis decoder                             |
-| algrtc                | Audio algorithms (AEC, VAD, etc.)          |
-| uservice              | Essential audio system service             |
-| bl606p_player         | BL606P player for BT integration           |
-| smart_audio_bl616     | Smart Audio BL616                          |
-| minialsa              | Standard audio driver interface (MiniALSA) |
-| xav                   | Streaming media service framework          |
-| xcodec                | Low-level codec interface                  |
-| xport                 | Operating system platform adaptationlayer  |
-| xutils                | General utility functions                  |
-| bl616_blimpls         | bl616 BT/BLE adapter                       |
-| audio_flowctrl_bridge | Audio Stream Control Manager acts as a bridge between BT (Bluetooth) and the player. |
+| Name                  | Description                                    |
+|:----------------------|:-----------------------------------------------|
+| aacdec                | AAC decoder                                    |
+| amrnb                 | AMR-NB decoder                                 |
+| amrwb                 | AMR-WB decoder                                 |
+| drv_snd_bl606p        | drv_snd_bl606p decoder                         |
+| drv_snd_bl616         | drv_snd_bl616 decoder                          |
+| flac                  | FLAC decoder                                   |
+| ogg                   | Ogg decoder                                    |
+| opus                  | Opus decoder                                   |
+| pvmp3dec              | PVMP3 decoder                                  |
+| sonic                 | Sonic decoder                                  |
+| speex                 | Speex decoder                                  |
+| speexdsp              | SpeexDSP decoder                               |
+| vorbis                | Vorbis decoder                                 |
+| algrtc                | Audio algorithms (AEC, VAD, etc.)              |
+| uservice              | Essential audio system service                 |
+| bl606p_player         | BL606P player for BT integration               |
+| smart_audio_bl616     | Smart Audio BL616                              |
+| minialsa              | Standard audio driver interface (MiniALSA)     |
+| xav                   | Streaming media service framework              |
+| xcodec                | Low-level codec interface                      |
+| xport                 | Operating system platform adaptationlayer      |
+| xutils                | General utility functions                      |
+| bl616_blimpls         | bl616 BT/BLE adapter                           |
+| audio_flowctrl_bridge | Audio Stream Control Manager acts as a bridge  |
+|                       |     between BT (Bluetooth) and the player.     |

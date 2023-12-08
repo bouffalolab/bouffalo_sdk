@@ -18,7 +18,3 @@ sdk_library_add_sources(
     )
 
 sdk_add_compile_options(--save-temps)
-
-sdk_add_compile_definitions(
-  -DCONFIG_MSP_DEBUG=1
-)

@@ -32,12 +32,34 @@
 #define CONFIG_STREAMER_ASHX                 (1)
 
 // xav config filtering
-/* Configuration switch for controlling audio speed feature. */
-/* if bt is enabled, CONFIG_ATEMPOER_SONIC must be enabled too */
+/* Configuration switch for controlling audio speed feature.
+ * If bt is enabled, CONFIG_ATEMPOER_SONIC must be enabled too */
 #define CONFIG_ATEMPOER_SONIC                (1)
+/* Configuration switch for controlling audio resampling with specified frequency.
+ * If CONFIG_RESAMPLER_SPEEX set disabled, input audio channel only supports mono */
+#define CONFIG_RESAMPLER_SPEEX               (1)
 /* Configuration switch for controlling audio output mixing support. */
 #define CONFIG_AO_MIXER_SUPPORT              (1)
 /* Configuration switch for controlling audio effecter feature. */
-#define CONFIG_AEF_EQ_ENABLE                 (0) // need sona lib
+#define CONFIG_AEF_EQ_ENABLE                 (1) // need sona lib
+
+// player config settings
+/* Size of the stream cache, when the value is set too low, playback stuttering may occur.*/
+#define CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT          (10*1024)
+/* When the cache reaches the specified threshold
+ * (CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT*CONFIG_AV_STREAM_CACHE_THRESHOLD_DEFAULT%),
+ * the player begins to play */
+#define CONFIG_AV_STREAM_CACHE_THRESHOLD_DEFAULT     (80)
+/* Size of the player task stack. When you're concerned about memory overhead,
+ * you can reduce it, but make sure it still functions properly. */
+#define CONFIG_PLAYER_TASK_STACK_SIZE                (20*1024)
+/* Size of the stream task stack, used to continuously acquire streaming data. */
+#define CONFIG_WEB_CACHE_TASK_STACK_SIZE             (6144)
+/* Size of the buffer that demuxer used to determine the audio format. */
+#define CONFIG_AV_PROBE_SIZE_MAX                     (2048)
+/* Size of the sample num per frame. */
+#define CONFIG_AV_SAMPLE_NUM_PER_FRAME_MAX           (320)
+
+#define CONFIG_MSP_DEBUG                     (0)
 
 #endif

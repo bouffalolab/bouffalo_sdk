@@ -84,7 +84,7 @@ int app_player_init(void)
         smtaudio_init(media_evt);
         smtaudio_register_local_play(20, NULL, 0, 1.0f, 48000);
         smtaudio_register_online_music(20, NULL, 0, 1.0f, 48000);
-        smtaudio_register_bt_a2dp(20, NULL, 0, 1.0f, 48000);
+        // smtaudio_register_bt_a2dp(20, NULL, 0, 1.0f, 48000);
 
         player_init();
 

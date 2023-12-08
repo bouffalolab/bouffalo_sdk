@@ -27,9 +27,9 @@ static int sdbuf_open(recio_t *io, const char *path)
 
     if (uri_get_item_value(path, "handle", filename, 128) == 0) {
         LOGD(TAG, "sdbuf open file %s", filename);
-        // priv->wtfd = msp_open(filename, O_WRONLY | O_CREAT | O_TRUNC);
+        // priv->wtfd = msp_open(filename, msp_fs_flags(MSP_FS_WRONLY) | msp_fs_flags(MSP_FS_CREAT) | msp_fs_flags(MSP_FS_TRUNC));
         priv->wtfd = 0;
-        priv->rdfd = msp_open(filename, O_RDONLY);
+        priv->rdfd = msp_open(filename, msp_fs_flags(MSP_FS_RDONLY));
 
         if (priv->wtfd < 0 || priv->rdfd < 0) {
             LOGW(TAG, "open file failed %d %d", priv->rdfd, priv->wtfd);

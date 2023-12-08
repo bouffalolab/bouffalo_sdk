@@ -52,6 +52,36 @@ int msp_task_new_ext(msp_task_t *task, const char *name, void (*fn)(void *), voi
     return 0;
 }
 
+int msp_task_new_static(msp_task_t *task, const char *name, void (*fn)(void *), void *arg,
+                     int stack_size, int prio, uint32_t *stack_buffer, void *task_handle, uint32_t handle_size)
+{
+    TaskHandle_t xHandle = NULL;
+    
+    /* vreify param */
+    if (fn == NULL || (stack_size % 4 != 0) ) {
+        return -1;
+    }
+
+    /*create task */
+    if (name == NULL) {
+        name = "default_name";
+    }
+    if (handle_size < sizeof(StaticTask_t)) {
+        return -1;
+    }
+    xHandle = xTaskCreateStatic(fn, name, stack_size>>2, arg, configMAX_PRIORITIES-prio, stack_buffer, task_handle);
+    if (xHandle != NULL) {
+        if(task) {
+            *task = xHandle;
+        }
+        //aos_task_create_hook_lwip_thread_sem(task);
+        return 0; 
+    } else {
+        return -1;
+    }
+    return -1;
+}
+
 int msp_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {
@@ -290,7 +320,7 @@ int msp_timer_new_ext(msp_timer_t *timer, void (*fn)(void *, void *),
                       void *arg, int ms, int repeat, unsigned char auto_run)
 {
     /* verify param */
-    if (NULL == timer || NULL == *timer || 0 == ms|| NULL == fn) {
+    if (NULL == timer || 0 == ms|| NULL == fn) {
         return -1;
     }
 
@@ -308,7 +338,7 @@ int msp_timer_new_ext(msp_timer_t *timer, void (*fn)(void *, void *),
     /* create timer by kernel api */
     TimerHandle_t ptimer = xTimerCreate("Timer", pdMS_TO_TICKS(ms), repeat, tmr_adapter, tmr_adapt_cb);
 
-    if (NULL == timer) {
+    if (NULL == ptimer) {
         vPortFree(tmr_adapter);
         return -1;
     }

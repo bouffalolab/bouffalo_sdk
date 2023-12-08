@@ -291,30 +291,39 @@ static void audioadc_analog_digital_init(aui_cfg_t *config)
         .measure_filter_mode = AUADC_ADC_MEASURE_FILTER_FILE_SINC3, /* digital dicimation filter selection when in measuring mode */
         .measure_rate = AUADC_ADC_MEASURE_RATE_SPS_2_5,             /* audadc ouput data rate selection when configured to measuring mode */
     };
-#if 0
-    if (CODEC_INPUT_SINGLE_ENDED == mode) {
-        //auadc_adc_cfg.pga_nega_ch = AUADC_ADC_PGA_MODE_AC_DIFF;
-        auadc_adc_cfg.pga_coupled_mode = AUADC_ADC_PGA_MODE_AC_SINGLE;
-    } else {
-        //auadc_adc_cfg.pga_nega_ch = AUADC_ADC_PGA_MODE_AC_DIFF;
+    
+    if ((config->positive_pin != 255) && (config->negative_pin != 255)) {
+        printf("input mode:diff\r\n");
         auadc_adc_cfg.pga_coupled_mode = AUADC_ADC_PGA_MODE_AC_DIFF;
+    } else {
+        printf("input mode:single\r\n");
+        auadc_adc_cfg.pga_coupled_mode = AUADC_ADC_PGA_MODE_AC_SINGLE;
     }
-#endif
+    
     int channel = -1;
 
-    channel = audioadc_pin_to_channel(config->positive_pin);
-    if (channel != -1) {
-        printf("posi:%d\r\n", channel);
-        auadc_adc_cfg.pga_posi_ch = channel;
+    if (config->positive_pin != 255) {
+        channel = audioadc_pin_to_channel(config->positive_pin);
+        if (channel != -1) {
+            printf("posi:%d\r\n", channel);
+            auadc_adc_cfg.pga_posi_ch = channel;
+        } else {
+            user_log("aui pin is error, pin:%d\r\n", config->positive_pin);
+        }
     } else {
-        user_log("aui pin is error\r\n");
+        auadc_adc_cfg.pga_positive_en = DISABLE;
     }
-    channel = audioadc_pin_to_channel(config->negative_pin);
-    if (channel != -1) {
-        printf("nega:%d\r\n", channel);
-        auadc_adc_cfg.pga_nega_ch= channel;
+
+    if (config->negative_pin != 255) {
+        channel = audioadc_pin_to_channel(config->negative_pin);
+        if (channel != -1) {
+            printf("nega:%d\r\n", channel);
+            auadc_adc_cfg.pga_nega_ch= channel;
+        } else {
+            user_log("aui pin is error, pin:%d\r\n", config->negative_pin);
+        }
     } else {
-        user_log("aui pin is error\r\n");
+        auadc_adc_cfg.pga_negative_en= DISABLE;
     }
 
     /* auadc init */
@@ -594,18 +603,18 @@ static int _aui_rx_dma_link(aui_ch_t *context, void *dma)
     bflb_dma_channel_init(device_dma, &config);
 
     bflb_dma_channel_irq_attach(device_dma, _aui_rx_dma_irq_hander, (void *)(context));
-    DMA_Enable(dma_id);
-    DMA_Channel_Disable(dma_id, dma_ch);
+    msp_DMA_Enable(dma_id);
+    msp_DMA_Channel_Disable(dma_id, dma_ch);
 
     //msp_dma_irq_callback_set(dma_ch, _aui_rx_dma_irq_hander, (void *)(context));
 
-    DMA_LLI_Init(dma_id, dma_ch, (DMA_LLI_Cfg_Type *)&lli_cfg_dma);
-    DMA_LLI_Update(dma_id, dma_ch, (uint32_t)(&(context->dma->node[0].dma_cfg)));
-    DMA_IntMask(dma_id, dma_ch, DMA_INT_ALL, MASK);
+    msp_DMA_LLI_Init(dma_id, dma_ch, (DMA_LLI_Cfg_Type *)&lli_cfg_dma);
+    msp_DMA_LLI_Update(dma_id, dma_ch, (uint32_t)(&(context->dma->node[0].dma_cfg)));
+    msp_DMA_IntMask(dma_id, dma_ch, DMA_INT_ALL, MASK);
 
     // msp_irq_register(MSP_DMA_IRQn, dma_interrupt_cb, (void *)(context));//_aui_rx_dma_irq_hander
     // msp_irq_enable(MSP_DMA_IRQn);
-    DMA_IntMask(dma_id, dma_ch, DMA_INT_TCOMPLETED, UNMASK);
+    msp_DMA_IntMask(dma_id, dma_ch, DMA_INT_TCOMPLETED, UNMASK);
 #endif
     user_log("init_src:%x\r\n", (*((volatile uint32_t *)(uintptr_t)(context->dma->src_addr))));
     
@@ -703,7 +712,7 @@ uint32_t aui_buffer_reset(aui_ch_t *context)
     blyoc_dma_channel_disable(dma_id, dma_ch);
     Audio_RxFifoClear();
 #endif
-    DMA_Channel_Disable(dma_id, dma_ch);
+    msp_DMA_Channel_Disable(dma_id, dma_ch);
     
 #if !CONFIG_CODEC_USE_I2S_RX 
     AUADC_FifoClear();
@@ -737,7 +746,7 @@ static int _aui_hw_start(aui_ch_t *context)
     AUADC_FifoClear();
 #endif
     // clean underrun overrun
-    DMA_Channel_Enable(context->ctrl_id, context->ch_id);
+    msp_DMA_Channel_Enable(context->ctrl_id, context->ch_id);
 
     // Audio_Ckg_En();
 
@@ -766,7 +775,7 @@ int aui_stop(aui_ch_t *context)
     user_log("context = %p\r\n", context);
 
     // _aui_rx_fifo_disable(context->sound_channel_num);
-    DMA_Channel_Disable(context->ctrl_id, context->ch_id);
+    msp_DMA_Channel_Disable(context->ctrl_id, context->ch_id);
 
 #if 0
     Audio_ADC_Disable(AUDIO_ADC_0);
@@ -808,7 +817,7 @@ int aui_pause(aui_ch_t *context)
     context->debug.count_pause++;
 #endif
     msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
-    DMA_Channel_Disable(context->ctrl_id, context->ch_id);
+    msp_DMA_Channel_Disable(context->ctrl_id, context->ch_id);
     msp_mutex_unlock(&(context->mutex));
     return 0;
 }
@@ -819,7 +828,7 @@ int aui_resume(aui_ch_t *context)
     context->debug.count_resume++;
 #endif
     msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);    
-    DMA_Channel_Enable(context->ctrl_id, context->ch_id);
+    msp_DMA_Channel_Enable(context->ctrl_id, context->ch_id);
     msp_mutex_unlock(&(context->mutex));
     return 0;
 }

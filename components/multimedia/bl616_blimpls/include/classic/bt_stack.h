@@ -181,7 +181,7 @@ typedef union
     struct auth_cmpl_param {
         bt_stack_status_t status;
         bt_dev_addr_t     bda;         /*!< remote bluetooth device address*/
-        char *            device_name; /*!< device name */
+        char              device_name[32]; /*!< device name */
     } auth_cmpl;                       /*!< authentication complete parameter struct */
 
     /**

@@ -10,11 +10,12 @@ COMPONENT_PRIV_INCLUDEDIRS :=
 ## This component's src
 COMPONENT_SRCS :=   src/smart_audio.c                    \
                     src/smart_audio_cli.c                \
+                    src/smart_audio_eq_cli.c             \
                     src/aud_ctrl_case/local_play.c       \
                     src/aud_ctrl_case/online_music.c     \
 
 ifeq ($(CONFIG_BT_A2DP),1)
-COMPONENT_SRCS :=   src/aud_ctrl_case/bt_a2dp.c          \
+COMPONENT_SRCS +=   src/aud_ctrl_case/bt_a2dp.c          \
                     src/aud_ctrl_case/bt_vol.c
 endif
 

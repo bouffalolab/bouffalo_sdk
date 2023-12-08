@@ -174,7 +174,7 @@ static int _codec_loop_init(void)
     //output_config.positive_pin = OUTPUT_POSITIVE_PIN;
     //output_config.pa_pin = 4;
     xcodec_output_config(&g_codec_output_ch, &output_config);
-    xcodec_output_analog_gain(&g_codec_output_ch, 0xffad);
+    xcodec_output_analog_gain(&g_codec_output_ch, 50);
     xcodec_output_buffer_reset(&g_codec_output_ch);
 
     msp_msleep(INPUT_CACHE_TIME - 200);    
