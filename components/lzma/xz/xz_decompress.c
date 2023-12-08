@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2016 ~ 2023, Bouffalolab Team
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "xz.h"
 #include <stdlib.h>
 #include <stdint.h>
