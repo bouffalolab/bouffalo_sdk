@@ -1153,6 +1153,11 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
         //.name="FM25W_128_128_1833",
         .cfg = &flash_cfg_Winb_16JV,
     },
+    {
+        .jedec_id = 0x1660c4,
+        //.name="gt25q32_32",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
 };
 
 //CLOCK
@@ -2218,6 +2223,28 @@ BL_Err_Type HBN_Disable_AComp_IRQ(uint8_t acompId, uint8_t edge)
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP1_EN, tmpVal2);
         BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
     }
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN select 32K
+ *
+ * @param  clkType: HBN 32k clock type
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_32K_Sel(uint8_t clkType)
+{
+    uint32_t tmpVal;
+
+    /* Check the parameters */
+    CHECK_PARAM(IS_HBN_32K_CLK_TYPE(clkType));
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_F32K_SEL, clkType);
+    BL_WR_REG(HBN_BASE, HBN_GLB, tmpVal);
 
     return SUCCESS;
 }
@@ -3790,10 +3817,10 @@ BL_Err_Type PDS_Power_Off_WB(void)
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL2);
     tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_ISO_EN);
-    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+    BL_WR_REG(PDS_BASE, PDS_CTL2, tmpVal);
 
     tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_PWR_OFF);
-    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+    BL_WR_REG(PDS_BASE, PDS_CTL2, tmpVal);
 
     return SUCCESS;
 }
@@ -3812,10 +3839,10 @@ BL_Err_Type PDS_Power_On_WB(void)
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL2);
     tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_PWR_OFF);
-    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+    BL_WR_REG(PDS_BASE, PDS_CTL2, tmpVal);
 
     tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_ISO_EN);
-    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+    BL_WR_REG(PDS_BASE, PDS_CTL2, tmpVal);
 
     return SUCCESS;
 }

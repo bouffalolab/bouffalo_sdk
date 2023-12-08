@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Nuttx
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 /************************************************************************************
  * Included Files

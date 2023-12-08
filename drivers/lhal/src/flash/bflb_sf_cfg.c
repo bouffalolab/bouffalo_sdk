@@ -2674,6 +2674,26 @@ static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         //.name="zd25a16_16_33",
         .cfg = &flashcfg_xtx_q80b_f16b,
     },
+    {
+        .jedec_id = 0x1660c4,
+        //.name="gt25q32_32_33",
+        .cfg = &flash_cfg_winb_16jv,
+    },
+    {
+        .jedec_id = 0x152085,
+        //.name="py25q16hb_16_33",
+        .cfg = &flash_cfg_puya_q80l_q80h_q16h,
+    },
+    {
+        .jedec_id = 0x162085,
+        //.name="py25q32hb_32_33",
+        .cfg = &flash_cfg_puya_q80l_q80h_q16h,
+    },
+    {
+        .jedec_id = 0x166125,
+        //.name="sk25e032_32_33",
+        .cfg = &flash_cfg_puya_q80l_q80h_q16h,
+    },
 };
 
 /*@} end of group SF_CFG_Private_Variables */

@@ -14,6 +14,18 @@
 #define BFLB_RTC_SEC2TIME(s)    (s * 32768)
 #define BFLB_RTC_TIME2SEC(time) (time / 32768)
 
+/* This struct is the same with struct tm */
+struct bflb_tm {
+    int tm_sec;
+    int tm_min;
+    int tm_hour;
+    int tm_mday;
+    int tm_mon;
+    int tm_year;
+    int tm_wday;
+    int tm_yday;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,6 +52,20 @@ void bflb_rtc_set_time(struct bflb_device_s *dev, uint64_t time);
  * @return current rtc running time
  */
 uint64_t bflb_rtc_get_time(struct bflb_device_s *dev);
+
+/**
+ * @brief Set current utc time.
+ *
+ * @param [in] time tm handle
+ */
+void bflb_rtc_set_utc_time(const struct bflb_tm *time);
+
+/**
+ * @brief Get current utc time.
+ *
+ * @param [out] time tm handle
+ */
+void bflb_rtc_get_utc_time(struct bflb_tm *time);
 
 #ifdef __cplusplus
 }

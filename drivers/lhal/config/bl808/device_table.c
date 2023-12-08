@@ -525,16 +525,6 @@ struct bflb_device_s *bflb_device_get_by_name(const char *name)
     return NULL;
 }
 
-struct bflb_device_s *bflb_device_get_by_id(uint8_t type, uint8_t idx)
-{
-    for (uint8_t i = 0; i < sizeof(bl808_device_table) / sizeof(bl808_device_table[0]); i++) {
-        if ((bl808_device_table[i].dev_type == type) && (bl808_device_table[i].idx = idx)) {
-            return &bl808_device_table[i];
-        }
-    }
-    return NULL;
-}
-
 void bflb_device_set_userdata(struct bflb_device_s *device, void *user_data)
 {
     device->user_data = user_data;

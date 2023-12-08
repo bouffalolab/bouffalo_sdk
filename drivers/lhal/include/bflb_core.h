@@ -113,15 +113,6 @@ extern "C" {
 struct bflb_device_s *bflb_device_get_by_name(const char *name);
 
 /**
- * @brief Get device handle by type and index.
- *
- * @param [in] type device type
- * @param [in] idx device index
- * @return device handle
- */
-struct bflb_device_s *bflb_device_get_by_id(uint8_t type, uint8_t idx);
-
-/**
  * @brief Set user data into device handle.
  *
  * @param [in] device device handle

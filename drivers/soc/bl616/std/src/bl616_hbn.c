@@ -778,8 +778,6 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_32K_Sel(uint8_t clkType)
     /* Check the parameters */
     CHECK_PARAM(IS_HBN_32K_CLK_TYPE(clkType));
 
-    HBN_Trim_RC32K();
-
     tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_F32K_SEL, clkType);
     BL_WR_REG(HBN_BASE, HBN_GLB, tmpVal);

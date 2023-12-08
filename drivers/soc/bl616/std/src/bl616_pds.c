@@ -752,10 +752,10 @@ BL_Err_Type PDS_Power_Off_WB(void)
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL2);
     tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_ISO_EN);
-    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+    BL_WR_REG(PDS_BASE, PDS_CTL2, tmpVal);
 
     tmpVal = BL_SET_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_PWR_OFF);
-    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+    BL_WR_REG(PDS_BASE, PDS_CTL2, tmpVal);
 
     return SUCCESS;
 }
@@ -774,10 +774,10 @@ BL_Err_Type PDS_Power_On_WB(void)
 
     tmpVal = BL_RD_REG(PDS_BASE, PDS_CTL2);
     tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_PWR_OFF);
-    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+    BL_WR_REG(PDS_BASE, PDS_CTL2, tmpVal);
 
     tmpVal = BL_CLR_REG_BIT(tmpVal, PDS_CR_PDS_FORCE_WB_ISO_EN);
-    BL_WR_REG(PDS_BASE, PDS_USB_CTL, tmpVal);
+    BL_WR_REG(PDS_BASE, PDS_CTL2, tmpVal);
 
     return SUCCESS;
 }

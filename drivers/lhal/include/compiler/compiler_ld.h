@@ -51,12 +51,16 @@
 #define ATTR_PSRAM_SECTION              __attribute__((section(".psram_data")))
 #endif
 
-#ifndef ATTR_HBN_RAM_SECTION
-#define ATTR_HBN_RAM_SECTION            __attribute__((section(".hbn_code." ATTR_UNI_SYMBOL)))
+#ifndef ATTR_HBN_CODE_SECTION
+#define ATTR_HBN_CODE_SECTION            __attribute__((section(".hbn_code." ATTR_UNI_SYMBOL)))
 #endif
 
-#ifndef ATTR_HBN_RAM_CONST_SECTION
-#define ATTR_HBN_RAM_CONST_SECTION      __attribute__((section(".hbn_data." ATTR_UNI_SYMBOL)))
+#ifndef ATTR_HBN_DATA_SECTION
+#define ATTR_HBN_DATA_SECTION           __attribute__((section(".hbn_data." ATTR_UNI_SYMBOL)))
+#endif
+
+#ifndef ATTR_HBN_CONST_SECTION
+#define ATTR_HBN_CONST_SECTION          __attribute__((section(".hbn_data." ATTR_UNI_SYMBOL)))
 #endif
 
 #define ATTR_FALLTHROUGH()              __attribute__((fallthrough))

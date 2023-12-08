@@ -135,3 +135,5 @@ sdk_add_static_library(src/pka/libpka.a)
 else()
 # add_subdirectory(src/pka)
 endif()
+
+sdk_add_private_compile_definitions_ifdef(CONFIG_FLASH_2LINE_ENABLE -DCONFIG_FLASH_2LINE_ENABLE)

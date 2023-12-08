@@ -363,10 +363,10 @@ static int ATTR_TCM_SECTION flash_config_init(spi_flash_cfg_type *p_flash_cfg, u
     if (ret == 0) {
         p_flash_cfg->mid = (jid & 0xff);
     }
-
-    // p_flash_cfg->io_mode = 0x11;
-    // p_flash_cfg->c_read_support = 0x00;
-
+#ifdef CONFIG_FLASH_2LINE_ENABLE
+    p_flash_cfg->io_mode = 0x13;
+    p_flash_cfg->c_read_support = 0x00;
+#endif
     /* Set flash controler from p_flash_cfg */
 #if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
     bflb_flash_set_cmds(p_flash_cfg);

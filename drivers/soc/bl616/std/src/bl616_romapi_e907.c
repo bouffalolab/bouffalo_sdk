@@ -1056,10 +1056,12 @@ uint8_t GLB_GPIO_Get_Fun(uint8_t gpioPin){
     return RomDriver_GLB_GPIO_Get_Fun(gpioPin);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_32K_Sel(uint8_t clkType){
     return RomDriver_HBN_32K_Sel(clkType);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Aon_Pad_Cfg(uint8_t aonPadHwCtrlEn, uint8_t aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg){
