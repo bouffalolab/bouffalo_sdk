@@ -30,6 +30,7 @@
 #include "bflb_l1c.h"
 #include "bflb_uart.h"
 #include "board.h"
+#include "bflb_mtd.h"
 
 #include "log.h"
 #include "lfs.h"
@@ -39,39 +40,13 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/*!< use memory area after 512k */
-#define LITTLEFS_FLASH_SIZE        (0x71000)
-#define LITTLEFS_FLASH_BLOCK_SIZE  4096
-#define LITTLEFS_FLASH_BLOCK_COUNT (LITTLEFS_FLASH_SIZE / LITTLEFS_FLASH_BLOCK_SIZE)
-#define LITTLEFS_FLASH_BLOCK_CYCLE 500
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
 static struct bflb_device_s *uart0;
-
-lfs_t lfs;
+lfs_t *lfs;
 lfs_file_t file;
-
-/*!< configuration of the filesystem is provided by this struct */
-const struct lfs_config cfg = {
-    // block device operations
-    .read = lfs_xip_flash_read,
-    .prog = lfs_xip_flash_prog,
-    .erase = lfs_xip_flash_erase,
-    .sync = lfs_xip_flash_sync,
-
-    // block device configuration
-    .read_size = 16,
-    .prog_size = 16,
-    .lookahead_size = 16,
-    .cache_size = 16,
-
-    .block_size = LITTLEFS_FLASH_BLOCK_SIZE,
-    .block_count = LITTLEFS_FLASH_BLOCK_COUNT,
-    .block_cycles = LITTLEFS_FLASH_BLOCK_CYCLE,
-};
 
 /****************************************************************************
  * Private Function Prototypes
@@ -88,45 +63,30 @@ SHELL_CMD_EXPORT_ALIAS(cmd_kv_test, kv_test, shell kv test);
 int main(void)
 {
     board_init();
+    bflb_mtd_init();
 
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
 
-    // mount the filesystem
-    int err = lfs_mount(&lfs, &cfg);
-
-    // reformat if we can't mount the filesystem
-    // this should only happen on the first boot
-    if (err) {
-        LOG_W("try to reformat \r\n");
-        err = lfs_format(&lfs, &cfg);
-        if (err) {
-            LOG_F("reformat fail\r\n");
-            _CALL_ERROR();
-        }
-
-        LOG_I("reformat success\r\n");
-        err = lfs_mount(&lfs, &cfg);
-        if (err) {
-            LOG_F("mount fail\r\n");
-            _CALL_ERROR();
-        }
+    lfs = lfs_xip_init();
+    if (lfs == NULL) {
+        LOG_F("lfs_xip_init failed. errno: %d\r\n", errno);
+        while (1)
+            ;
     }
-
-    LOG_I("mount success\r\n");
 
     // read current count
     uint32_t boot_count = 0;
-    lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
-    lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
+    lfs_file_open(lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
+    lfs_file_read(lfs, &file, &boot_count, sizeof(boot_count));
 
     // update boot count
     boot_count += 1;
-    lfs_file_rewind(&lfs, &file);
-    lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count));
+    lfs_file_rewind(lfs, &file);
+    lfs_file_write(lfs, &file, &boot_count, sizeof(boot_count));
 
     // remember the storage is not updated until the file is closed successfully
-    lfs_file_close(&lfs, &file);
+    lfs_file_close(lfs, &file);
 
     // release any resources we were using
     // lfs_unmount(&lfs);
