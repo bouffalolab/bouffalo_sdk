@@ -530,7 +530,7 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_16JV = {
 
     .qe_index = 1,
     .qe_bit = 0x01,
-    .qe_write_reg_len = 0x02, /*Q08BV,Q16DV: 0x02.Q32FW,Q32FV: 0x01 */
+    .qe_write_reg_len = 0x01, /*Q08BV,Q16DV: 0x02.Q32FW,Q32FV: 0x01 */
     .qe_read_reg_len = 0x1,
 
     .busy_index = 0,
@@ -541,7 +541,7 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_16JV = {
     .read_reg_cmd[0] = 0x05,
     .read_reg_cmd[1] = 0x35,
     .write_reg_cmd[0] = 0x01,
-    .write_reg_cmd[1] = 0x01,
+    .write_reg_cmd[1] = 0x31,
 
     .fast_read_qio_cmd = 0xeb,
     .fr_qio_dmy_clk = 16 / 8,
@@ -601,12 +601,12 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_16JV = {
     .exit_qpi = 0xff,
 
     /*AC*/
-    .time_e_sector = 300,
-    .time_e_32k = 1200,
-    .time_e_64k = 1200,
+    .time_e_sector = 400,
+    .time_e_32k = 1600,
+    .time_e_64k = 2000,
     .time_page_pgm = 5,
     .time_ce = 33 * 1000,
-    .pd_delay = 3,
+    .pd_delay = 20,
     .qe_data = 0,
 };
 
@@ -1152,6 +1152,36 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
         .jedec_id = 0x1828a1,
         //.name="FM25W_128_128_1833",
         .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x1660c4,
+        //.name="gt25q32_32_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x1560c4,
+        //.name="gt25q16_16_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x1760c4,
+        //.name="gt25q64_64_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x152085,
+        //.name="py25q16hb_16_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x162085,
+        //.name="py25q32hb_32_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x166125,
+        //.name="sk25e032_32_33",
+        .cfg = &flash_cfg_GD_LQ64E,
     },
 };
 
