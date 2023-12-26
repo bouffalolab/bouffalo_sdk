@@ -117,6 +117,7 @@ void dhcp_network_changed(struct netif *netif);
 void dhcp_arp_reply(struct netif *netif, const ip4_addr_t *addr, const struct eth_addr *hwaddr);
 #endif
 u8_t dhcp_supplied_address(const struct netif *netif);
+u8_t dhcp_supplied_address_on_checking(const struct netif *netif);
 /* to be called every minute */
 void dhcp_coarse_tmr(void);
 /* to be called every half second */

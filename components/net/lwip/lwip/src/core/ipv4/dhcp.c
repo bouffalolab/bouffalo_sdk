@@ -760,20 +760,6 @@ dhcp_handle_ack(struct netif *netif, struct dhcp_msg *msg_in)
     dns_setserver(n, &dns_addr);
   }
 #endif /* LWIP_DHCP_PROVIDE_DNS_SERVERS */
-            printf( " IP:%u.%u.%u.%u\r\n MASK: %u.%u.%u.%u\r\n Gateway: %u.%u.%u.%u\r\n",
-                    (unsigned int)((dhcp->offered_ip_addr.addr & 0x000000FF) >> 0),
-                    (unsigned int)((dhcp->offered_ip_addr.addr & 0x0000FF00) >> 8),
-                    (unsigned int)((dhcp->offered_ip_addr.addr & 0x00FF0000) >> 16),
-                    (unsigned int)((dhcp->offered_ip_addr.addr & 0xFF000000) >> 24),
-                    (unsigned int)((dhcp->offered_sn_mask.addr & 0x000000FF) >> 0),
-                    (unsigned int)((dhcp->offered_sn_mask.addr & 0x0000FF00) >> 8),
-                    (unsigned int)((dhcp->offered_sn_mask.addr & 0x00FF0000) >> 16),
-                    (unsigned int)((dhcp->offered_sn_mask.addr & 0xFF000000) >> 24),
-                    (unsigned int)((dhcp->offered_gw_addr.addr & 0x000000FF) >> 0),
-                    (unsigned int)((dhcp->offered_gw_addr.addr & 0x0000FF00) >> 8),
-                    (unsigned int)((dhcp->offered_gw_addr.addr & 0x00FF0000) >> 16),
-                    (unsigned int)((dhcp->offered_gw_addr.addr & 0xFF000000) >> 24)
-                  );
 }
 
 /**
@@ -1256,6 +1242,22 @@ dhcp_bind(struct netif *netif)
     if (netif->addr_ext.dhcp_qc_callback) {
         netif->addr_ext.dhcp_qc_callback(netif);
     }
+
+    printf( " IP:%u.%u.%u.%u\r\n MASK: %u.%u.%u.%u\r\n Gateway: %u.%u.%u.%u\r\n",
+            (unsigned int)((dhcp->offered_ip_addr.addr & 0x000000FF) >> 0),
+            (unsigned int)((dhcp->offered_ip_addr.addr & 0x0000FF00) >> 8),
+            (unsigned int)((dhcp->offered_ip_addr.addr & 0x00FF0000) >> 16),
+            (unsigned int)((dhcp->offered_ip_addr.addr & 0xFF000000) >> 24),
+            (unsigned int)((dhcp->offered_sn_mask.addr & 0x000000FF) >> 0),
+            (unsigned int)((dhcp->offered_sn_mask.addr & 0x0000FF00) >> 8),
+            (unsigned int)((dhcp->offered_sn_mask.addr & 0x00FF0000) >> 16),
+            (unsigned int)((dhcp->offered_sn_mask.addr & 0xFF000000) >> 24),
+            (unsigned int)((dhcp->offered_gw_addr.addr & 0x000000FF) >> 0),
+            (unsigned int)((dhcp->offered_gw_addr.addr & 0x0000FF00) >> 8),
+            (unsigned int)((dhcp->offered_gw_addr.addr & 0x00FF0000) >> 16),
+            (unsigned int)((dhcp->offered_gw_addr.addr & 0xFF000000) >> 24)
+          );
+
     /* interface is used by routing now that an address is set */
     // Add dhcp_timer_coarse_needed to fix the timer runs when WiFi have not connected
     dhcp_timer_coarse_needed();
@@ -2126,6 +2128,16 @@ dhcp_supplied_address(const struct netif *netif)
     struct dhcp *dhcp = netif_dhcp_data(netif);
     return (dhcp->state == DHCP_STATE_BOUND) || (dhcp->state == DHCP_STATE_RENEWING) ||
            (dhcp->state == DHCP_STATE_REBINDING);
+  }
+  return 0;
+}
+
+u8_t
+dhcp_supplied_address_on_checking(const struct netif *netif)
+{
+  if ((netif != NULL) && (netif_dhcp_data(netif) != NULL)) {
+    struct dhcp *dhcp = netif_dhcp_data(netif);
+    return (dhcp->state == DHCP_STATE_CHECKING);
   }
   return 0;
 }

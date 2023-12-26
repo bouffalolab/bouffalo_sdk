@@ -5,11 +5,11 @@
 #include "stdbool.h"
 
 #define MAX_FIXED_CHANNELS_LIMIT (14)
-#define MAX_AP_SCAN 50
-#define MGMR_SSID_LEN 32
-#define MGMR_KEY_LEN 64
-#define MGMR_BSSID_LEN 18
-#define MGMR_AKM_LEN 10
+#define MAX_AP_SCAN     50
+#define MGMR_SSID_LEN   32
+#define MGMR_KEY_LEN    64
+#define MGMR_BSSID_LEN  18
+#define MGMR_AKM_LEN    10
 
 /* WiFi async event */
 #define  EV_WIFI                  0x0002
@@ -39,8 +39,10 @@
 #define  CODE_WIFI_ON_EXIT_PS           24
 #define  CODE_WIFI_ON_GOT_IP6           25
 #define  CODE_WIFI_ON_SET_PS_DONE       26
-#define  CODE_WIFI_ON_GOT_IP_TIMEOUT    27
-#define  CODE_WIFI_ON_GOT_IP_ABORT      28
+#define  CODE_WIFI_ON_GOT_IP_START_FAIL 27
+#define  CODE_WIFI_ON_GOT_IP_TIMEOUT    28
+#define  CODE_WIFI_ON_GOT_IP_TIMEOUT_IN_CHECKING  29
+#define  CODE_WIFI_ON_GOT_IP_ABORT      30
 
 #define WIFI_EVENT_BEACON_IND_AUTH_OPEN            0
 #define WIFI_EVENT_BEACON_IND_AUTH_WEP             1
@@ -130,13 +132,17 @@ typedef struct wifi_mgmr_sta_connect_params {
     // listen_interval to monitor AP beacon
     // range:[1, 100]
     uint8_t listen_interval;
-    // default: 1, scan on all channels
-    // if 0, quick scan, connect to the first ssid_matched AP
+    // default: 0, scan on all channels
+    // if 1, quick scan, connect to the first ssid_matched AP
     uint8_t scan_mode;
     // default: normal connect 
     // if 1, quick connect 
     uint8_t quick_connect;
     int timeout_ms;
+    // conn scan duration, In TUs.
+    uint16_t duration;
+    // conn scan probe req cnt
+    uint16_t probe_cnt;
 } wifi_mgmr_sta_connect_params_t;
 
 /// scan params
@@ -268,6 +274,35 @@ typedef struct
     uint8_t ucPWD[65];          /**< WPA/WPA2 passphrase. */
     uint8_t ucChannel;          /**< Channel number. */
 } wifi_mgmr_ap_info_t;
+
+/// legacy RATE definitions
+enum tx_hw_rate
+{
+    /// 1Mbps
+    LG_RATE_1MBPS = 0,
+    /// 2Mbps
+    LG_RATE_2MBPS,
+    /// 5.5Mbps
+    LG_RATE_5_5MBPS,
+    /// 11Mbps
+    LG_RATE_11MBPS,
+    /// 6Mbps
+    LG_RATE_6MBPS,
+    /// 9Mbps
+    LG_RATE_9MBPS,
+    /// 12Mbps
+    LG_RATE_12MBPS,
+    /// 18Mbps
+    LG_RATE_18MBPS,
+    /// 24Mbps
+    LG_RATE_24MBPS,
+    /// 36Mbps
+    LG_RATE_36MBPS,
+    /// 48Mbps
+    LG_RATE_48MBPS,
+    /// 54Mbps
+    LG_RATE_54MBPS
+};
 
 typedef void (*scan_item_cb_t)(void *env, void *arg, wifi_mgmr_scan_item_t *item);
 
@@ -527,6 +562,14 @@ int wifi_mgmr_ap_stop(void);
  *  Others is the string of mode
  */
 char *wifi_mgmr_mode_to_str(uint32_t mode);
+
+/**
+ * show_auth_cipher
+ * Print auth and cipher of scan result
+ * param:
+ *  param1 : instance of scan result
+ */
+//void show_auth_cipher(struct mac_scan_result *result);
 
 /**
  * wifi_mgmr_mac_set
@@ -851,4 +894,9 @@ int wifi_mgmr_sta_nonstandard_ap_get(void);
  * abap_alive_wait_ms_cnt:唤醒后，异常路由器，在base_time没有收到包最长等待abap_alive_wait_ms_cnt * 3ms,3ms 检测一次是否收到包，默认值2
 */
 int wifi_mgmr_sta_nonstandard_ap_param_set(uint32_t base_time, uint32_t alive_wait_ms_cnt, uint8_t abnormal_dtim_cnt, uint8_t abap_alive_wait_ms_cnt);
+
+/*set tx null data rate
+ * rate: null date rate
+ * */
+int wifi_mgmr_set_null_frame_rate(enum tx_hw_rate rate);
 #endif
