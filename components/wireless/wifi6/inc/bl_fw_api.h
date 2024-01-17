@@ -32,6 +32,9 @@
 #define WLAN_FW_TRAFFIC_LOSS                                     22
 #define WLAN_FW_SWITCH_CHANNEL_FAILURE                           23
 #define WLAN_FW_AUTH_OR_ASSOC_RESPONSE_CFM_FAILURE               24
+#define WLAN_FW_DEAUTH_BEFORE_4WAY2                              25
+#define WLAN_FW_AP_STA_ENCRYPTION_TYPE_MISMATCH                  26
+#define WLAN_FW_INVALID_CODE                                     0xFF
 
 /*--------------------------------------------------------------------*/
 /* AP Mode Status Codes - these codes are used in bouffalolab fw actions      */
@@ -74,8 +77,9 @@ void bl_sta_set_keepalive_period(uint8_t time_seconds);
  ****************************************************************************************
  */
 int bl_sta_send_nullframe(void *arg);
-uint8_t bl_nonstandard_ap_detect(void);
-uint8_t bl_tim_cnt_get(void);
+int bl_nonstandard_ap_detect(void);
+int bl_nonstandard_ap_param_set(uint32_t base_time, uint32_t alive_wait_ms_cnt, uint8_t abnormal_dtim_cnt, uint8_t abap_alive_wait_ms_cnt);
+int bl_set_null_frame_rate(uint8_t rate);
 #endif
 
 #endif /*__BL_FW_API_H__*/
