@@ -1,9 +1,24 @@
+= Release 1.0.9 =
+Released: 2024-01-17
+
+== FlashCube ==
+Features:
+1. Add bl616 A1 support.
+2. BL602/702 puts the encrypted or signed eflash loader bin into package.
+
+Changes:
+1. BLFlashCommand tools update --build parameter.
+
+Bug Fixes:
+1. Fix BL602 OpenOCD download error.
+
+
 = Release 1.0.8 =
 Released: 2023-11-1
 
 == FlashCube ==
 Features:
-1. Command line tools add pk_str and sk_str input options, support string format of private and public key.
+1. Command line tools add pk_str and sk_str input options, support string format of private and public key. 
 2. BL602/702 will search for the encrypted or signed eflash loader bin first if the parameters of encrypt and sign are not provided.
 
 Changes:
