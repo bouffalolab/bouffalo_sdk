@@ -1,6 +1,28 @@
 #include "bflb_mjpeg.h"
 #include "hardware/mjpeg_reg.h"
 
+static const uint16_t q_table_50_y[64] = {
+    16, 11, 10, 16, 24, 40, 51, 61,
+    12, 12, 14, 19, 26, 58, 60, 55,
+    14, 13, 16, 24, 40, 57, 69, 56,
+    14, 17, 22, 29, 51, 87, 80, 62,
+    18, 22, 37, 56, 68, 109, 103, 77,
+    24, 35, 55, 64, 81, 104, 113, 92,
+    49, 64, 78, 87, 103, 121, 120, 101,
+    72, 92, 95, 98, 112, 100, 103, 99
+};
+
+static const uint16_t q_table_50_uv[64] = {
+    17, 18, 24, 47, 99, 99, 99, 99,
+    18, 21, 26, 66, 99, 99, 99, 99,
+    24, 26, 56, 99, 99, 99, 99, 99,
+    47, 66, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99
+};
+
 static void bflb_mjpeg_set_yuv422_interleave_order(struct bflb_device_s *dev, uint8_t y0, uint8_t u0, uint8_t y1, uint8_t v0)
 {
     uint32_t regval;
@@ -37,6 +59,18 @@ static void bflb_mjpeg_set_framesize(struct bflb_device_s *dev, uint16_t x, uint
 
 void bflb_mjpeg_init(struct bflb_device_s *dev, const struct bflb_mjpeg_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_MJPEG_FORMAT(config->format));
+    LHAL_PARAM_ASSERT(IS_MJPEG_QUALITY(config->quality));
+    LHAL_PARAM_ASSERT(IS_MJPEG_RESOLUTION(config->resolution_x));
+    LHAL_PARAM_ASSERT(IS_MJPEG_RESOLUTION(config->resolution_y));
+    LHAL_PARAM_ASSERT(IS_MJPEG_ADDR(config->input_bufaddr0));
+    LHAL_PARAM_ASSERT(IS_MJPEG_ADDR(config->input_bufaddr1));
+    LHAL_PARAM_ASSERT(IS_MJPEG_ADDR(config->output_bufaddr));
+
+#ifdef romapi_bflb_mjpeg_init
+    romapi_bflb_mjpeg_init(dev, config);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint16_t blocks;
@@ -181,47 +215,29 @@ void bflb_mjpeg_init(struct bflb_device_s *dev, const struct bflb_mjpeg_config_s
     /* Clear interrupt */
     putreg32(0x3F00, reg_base + MJPEG_FRAME_FIFO_POP_OFFSET);
 
-    static uint16_t q_table_50_y[64] = {
-        16, 11, 10, 16, 24, 40, 51, 61,
-        12, 12, 14, 19, 26, 58, 60, 55,
-        14, 13, 16, 24, 40, 57, 69, 56,
-        14, 17, 22, 29, 51, 87, 80, 62,
-        18, 22, 37, 56, 68, 109, 103, 77,
-        24, 35, 55, 64, 81, 104, 113, 92,
-        49, 64, 78, 87, 103, 121, 120, 101,
-        72, 92, 95, 98, 112, 100, 103, 99
-    };
-
-    static uint16_t q_table_50_uv[64] = {
-        17, 18, 24, 47, 99, 99, 99, 99,
-        18, 21, 26, 66, 99, 99, 99, 99,
-        24, 26, 56, 99, 99, 99, 99, 99,
-        47, 66, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99
-    };
-
     uint16_t tmp_table_y[64] = { 0 };
     uint16_t tmp_table_uv[64] = { 0 };
 
     if (config->input_yy_table) {
         bflb_mjpeg_calculate_quantize_table(config->quality, config->input_yy_table, tmp_table_y);
     } else {
-        bflb_mjpeg_calculate_quantize_table(config->quality, q_table_50_y, tmp_table_y);
+        bflb_mjpeg_calculate_quantize_table(config->quality, (uint16_t *)q_table_50_y, tmp_table_y);
     }
     if (config->input_uv_table) {
         bflb_mjpeg_calculate_quantize_table(config->quality, config->input_uv_table, tmp_table_uv);
     } else {
-        bflb_mjpeg_calculate_quantize_table(config->quality, q_table_50_uv, tmp_table_uv);
+        bflb_mjpeg_calculate_quantize_table(config->quality, (uint16_t *)q_table_50_uv, tmp_table_uv);
     }
 
     bflb_mjpeg_fill_quantize_table(dev, tmp_table_y, tmp_table_uv);
+#endif
 }
 
 void bflb_mjpeg_start(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_mjpeg_start
+    romapi_bflb_mjpeg_start(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -230,10 +246,14 @@ void bflb_mjpeg_start(struct bflb_device_s *dev)
     regval = getreg32(reg_base + MJPEG_CONTROL_1_OFFSET);
     regval |= MJPEG_REG_MJPEG_ENABLE;
     putreg32(regval, reg_base + MJPEG_CONTROL_1_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_stop(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_mjpeg_stop
+    romapi_bflb_mjpeg_stop(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -242,10 +262,14 @@ void bflb_mjpeg_stop(struct bflb_device_s *dev)
     regval = getreg32(reg_base + MJPEG_CONTROL_1_OFFSET);
     regval &= ~MJPEG_REG_MJPEG_ENABLE;
     putreg32(regval, reg_base + MJPEG_CONTROL_1_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_sw_run(struct bflb_device_s *dev, uint8_t frame_count)
 {
+#ifdef romapi_bflb_mjpeg_sw_run
+    romapi_bflb_mjpeg_sw_run(dev, frame_count);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -269,10 +293,14 @@ void bflb_mjpeg_sw_run(struct bflb_device_s *dev, uint8_t frame_count)
     regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
     regval &= ~MJPEG_REG_MJPEG_SW_RUN;
     putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_kick_run(struct bflb_device_s *dev, uint16_t kick_count)
 {
+#ifdef romapi_bflb_mjpeg_kick_run
+    romapi_bflb_mjpeg_kick_run(dev, kick_count);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -303,10 +331,14 @@ void bflb_mjpeg_kick_run(struct bflb_device_s *dev, uint16_t kick_count)
     regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
     regval &= ~MJPEG_REG_MJPEG_SW_RUN;
     putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_kick_stop(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_mjpeg_kick_stop
+    romapi_bflb_mjpeg_kick_stop(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -324,10 +356,14 @@ void bflb_mjpeg_kick_stop(struct bflb_device_s *dev)
     regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
     regval &= ~MJPEG_REG_MJPEG_SW_MODE;
     putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_kick(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_mjpeg_kick
+    romapi_bflb_mjpeg_kick(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -336,10 +372,14 @@ void bflb_mjpeg_kick(struct bflb_device_s *dev)
     regval = getreg32(reg_base + MJPEG_CONTROL_2_OFFSET);
     regval |= MJPEG_REG_SW_KICK;
     putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_tcint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_mjpeg_tcint_mask
+    romapi_bflb_mjpeg_tcint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -354,10 +394,14 @@ void bflb_mjpeg_tcint_mask(struct bflb_device_s *dev, bool mask)
     }
 
     putreg32(regval, reg_base + MJPEG_CONTROL_3_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_errint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_mjpeg_errint_mask
+    romapi_bflb_mjpeg_errint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -380,10 +424,14 @@ void bflb_mjpeg_errint_mask(struct bflb_device_s *dev, bool mask)
     }
 
     putreg32(regval, reg_base + MJPEG_CONTROL_3_OFFSET);
+#endif
 }
 
 uint32_t bflb_mjpeg_get_intstatus(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_mjpeg_get_intstatus
+    return romapi_bflb_mjpeg_get_intstatus(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -393,37 +441,53 @@ uint32_t bflb_mjpeg_get_intstatus(struct bflb_device_s *dev)
     regval &= 0xf0;
 
     return regval;
+#endif
 }
 
 void bflb_mjpeg_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
 {
+#ifdef romapi_bflb_mjpeg_int_clear
+    romapi_bflb_mjpeg_int_clear(dev, int_clear);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     putreg32(int_clear, reg_base + MJPEG_FRAME_FIFO_POP_OFFSET);
+#endif
 }
 
 uint8_t bflb_mjpeg_get_frame_count(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_mjpeg_get_frame_count
+    return romapi_bflb_mjpeg_get_frame_count(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     return ((getreg32(reg_base + MJPEG_CONTROL_3_OFFSET) & MJPEG_FRAME_VALID_CNT_MASK) >> MJPEG_FRAME_VALID_CNT_SHIFT);
+#endif
 }
 
 void bflb_mjpeg_pop_one_frame(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_mjpeg_pop_one_frame
+    romapi_bflb_mjpeg_pop_one_frame(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     putreg32(1, reg_base + MJPEG_FRAME_FIFO_POP_OFFSET);
+#endif
 }
 
 uint32_t bflb_mjpeg_get_frame_info(struct bflb_device_s *dev, uint8_t **pic)
 {
+#ifdef romapi_bflb_mjpeg_get_frame_info
+    return romapi_bflb_mjpeg_get_frame_info(dev, pic);
+#else
     uint32_t bytes;
     uint32_t reg_base;
 
@@ -433,10 +497,14 @@ uint32_t bflb_mjpeg_get_frame_info(struct bflb_device_s *dev, uint8_t **pic)
     bytes = (getreg32(reg_base + MJPEG_BIT_CNT0_OFFSET) + 7) >> 3;
 
     return bytes;
+#endif
 }
 
 void bflb_mjpeg_calculate_quantize_table(uint8_t quality, uint16_t *input_table, uint16_t *output_table)
 {
+#ifdef romapi_bflb_mjpeg_calculate_quantize_table
+    romapi_bflb_mjpeg_calculate_quantize_table(dev, input_table, output_table);
+#else
     uint32_t scale_factor, i;
 
     if (quality == 0) {
@@ -460,10 +528,14 @@ void bflb_mjpeg_calculate_quantize_table(uint8_t quality, uint16_t *input_table,
             output_table[i] = 0xff;
         }
     }
+#endif
 }
 
 void bflb_mjpeg_fill_quantize_table(struct bflb_device_s *dev, uint16_t *input_yy, uint16_t *input_uv)
 {
+#ifdef romapi_bflb_mjpeg_fill_quantize_table
+    romapi_bflb_mjpeg_fill_quantize_table(dev, input_yy, input_uv);
+#else
 #define MJPEG_Q_PARAM_00_OFFSET (0x400)
 #define MJPEG_Q_PARAM_40_OFFSET (0x480)
 
@@ -512,10 +584,14 @@ void bflb_mjpeg_fill_quantize_table(struct bflb_device_s *dev, uint16_t *input_y
     regval = getreg32(reg_base + MJPEG_Q_ENC_OFFSET);
     regval |= MJPEG_REG_Q_SRAM_SW;
     putreg32(regval, reg_base + MJPEG_Q_ENC_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_fill_jpeg_header_tail(struct bflb_device_s *dev, uint8_t *header, uint32_t header_len)
 {
+#ifdef romapi_bflb_mjpeg_fill_jpeg_header_tail
+    romapi_bflb_mjpeg_fill_jpeg_header_tail(dev, header, header_len);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -528,10 +604,14 @@ void bflb_mjpeg_fill_jpeg_header_tail(struct bflb_device_s *dev, uint8_t *header
     regval |= (header_len << MJPEG_REG_HEAD_BYTE_SHIFT);
     regval |= MJPEG_REG_TAIL_EXP;
     putreg32(regval, reg_base + MJPEG_HEADER_BYTE_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_set_yuv420sp_cam_input(struct bflb_device_s *dev, uint8_t yy, uint8_t uv)
 {
+#ifdef romapi_bflb_mjpeg_set_yuv420sp_cam_input
+    romapi_bflb_mjpeg_set_yuv420sp_cam_input(dev, yy, uv);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -543,10 +623,14 @@ void bflb_mjpeg_set_yuv420sp_cam_input(struct bflb_device_s *dev, uint8_t yy, ui
     regval |= (yy << MJPEG_REG_YY_DVP2AXI_SEL_SHIFT);
     regval |= (uv << MJPEG_REG_UV_DVP2AXI_SEL_SHIFT);
     putreg32(regval, reg_base + MJPEG_CONTROL_2_OFFSET);
+#endif
 }
 
 void bflb_mjpeg_update_input_output_buff(struct bflb_device_s *dev, void *input_buf0, void *input_buf1, void *output_buff, size_t output_buff_size)
 {
+#ifdef romapi_bflb_mjpeg_update_input_output_buff
+    romapi_bflb_mjpeg_update_input_output_buff(dev, input_buf0, input_buf1, output_buff, output_buff_size);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
@@ -563,10 +647,14 @@ void bflb_mjpeg_update_input_output_buff(struct bflb_device_s *dev, void *input_
         putreg32((uint32_t)(uintptr_t)output_buff, reg_base + MJPEG_JPEG_FRAME_ADDR_OFFSET);
         putreg32((uint32_t)output_buff_size / 128, reg_base + MJPEG_JPEG_STORE_MEMORY_OFFSET);
     }
+#endif
 }
 
 int bflb_mjpeg_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_mjpeg_feature_control
+    return romapi_bflb_mjpeg_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t reg_base;
 
@@ -586,4 +674,5 @@ int bflb_mjpeg_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     }
 
     return ret;
+#endif
 }

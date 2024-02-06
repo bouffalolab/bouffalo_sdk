@@ -971,6 +971,10 @@ BL_Err_Type GLB_GPIO_Func_Init(uint8_t gpioFun, uint8_t *pinList, uint8_t cnt){
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg){
+    uint8_t gpioPin = cfg->gpioPin;
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
     return RomDriver_GLB_GPIO_Init(cfg);
 }
 
@@ -991,6 +995,10 @@ BL_Err_Type GLB_GPIO_IntMask(uint8_t gpioPin, BL_Mask_Type intMask){
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Int_Init(GLB_GPIO_INT_Cfg_Type *intCfg){
+    uint8_t gpioPin = intCfg->gpioPin;
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
     return RomDriver_GLB_GPIO_Int_Init(intCfg);
 }
 
@@ -1001,6 +1009,9 @@ BL_Err_Type GLB_GPIO_Output_Disable(uint8_t gpioPin){
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Output_Enable(uint8_t gpioPin){
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
     return RomDriver_GLB_GPIO_Output_Enable(gpioPin);
 }
 
@@ -1013,11 +1024,17 @@ BL_Err_Type GLB_GPIO_Set(uint8_t gpioPin){
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Set_HZ(uint8_t gpioPin){
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
     return RomDriver_GLB_GPIO_Set_HZ(gpioPin);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_GPIO_Write(uint8_t gpioPin, uint32_t val){
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
     return RomDriver_GLB_GPIO_Write(gpioPin,val);
 }
 
@@ -1065,6 +1082,11 @@ BL_Err_Type HBN_32K_Sel(uint8_t clkType){
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Aon_Pad_Cfg(uint8_t aonPadHwCtrlEn, uint8_t aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg){
+    if (GLB_PACKAGE_TYPE_QFN56 != GLB_Get_Package_Type()) {
+        if ((aonGpio == HBN_AON_PAD_GPIO18) || (aonGpio == HBN_AON_PAD_GPIO19)) {
+            return ERROR;
+        }
+    }
     return RomDriver_HBN_Aon_Pad_Cfg(aonPadHwCtrlEn,aonGpio,aonPadCfg);
 }
 
@@ -1637,11 +1659,12 @@ __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Set_GPIO_Pad_IntMode(uint8_t set, uint8_t trig){
     return RomDriver_PDS_Set_GPIO_Pad_IntMode(set,trig);
 }
-
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(uint8_t grp, uint8_t pu, uint8_t pd, uint8_t ie){
     return RomDriver_PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(grp,pu,pd,ie);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type PDS_Set_MCU0_Clock_Disable(void){

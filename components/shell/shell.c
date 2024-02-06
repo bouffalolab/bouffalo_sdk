@@ -120,9 +120,11 @@ static char *shell_get_prompt(void)
     static char shell_prompt[SHELL_CONSOLEBUF_SIZE + 1] = { 0 };
 
     if (shell_prompt_custom) {
-        strcpy(shell_prompt, shell_prompt_custom);
+        if(strlcpy(shell_prompt, shell_prompt_custom, sizeof(shell_prompt)) >= sizeof(shell_prompt))
+            printf("[OS]: strlcpy truncated \r\n");
     } else {
-        strcpy(shell_prompt, SHELL_DEFAULT_NAME);
+	if(strlcpy(shell_prompt, SHELL_DEFAULT_NAME, sizeof(shell_prompt)) >= sizeof(shell_prompt))
+            printf("[OS]: strlcpy truncated \r\n");
     }
 #if defined(SHELL_USING_FS)
     /* get current working directory */
@@ -130,7 +132,8 @@ static char *shell_get_prompt(void)
              SHELL_CONSOLEBUF_SIZE - strlen(shell_prompt));
 #endif
 
-    strcat(shell_prompt, "/>");
+    if(strlcat(shell_prompt, "/>", sizeof(shell_prompt)) >= sizeof(shell_prompt))
+        printf("[OS]: strlcat truncated \r\n");
 
     return shell_prompt;
 }
@@ -213,7 +216,7 @@ void shell_auto_complete_path(char *path)
     // if (*path != '/') {
     //     f_getcwd(full_path, 256);
     //     if (full_path[strlen(full_path) - 1] != '/')
-    //         strcat(full_path, "/");
+    //         strlcat(full_path, "/");
     // } else
     *full_path = '\0';
 
@@ -276,7 +279,8 @@ void shell_auto_complete_path(char *path)
                 if (min_length == 0) {
                     min_length = strlen(fno.fname);
                     /* save dirent name */
-                    strcpy(full_path, fno.fname);
+                    if(strlcpy(full_path, fno.fname, sizeof(str_buff)) >= sizeof(str_buff))
+                        printf("[OS]: strlcpy truncated \r\n");
                 }
 
                 length = str_common(fno.fname, full_path);
@@ -376,7 +380,7 @@ static void shell_auto_complete(char *prefix)
 
     /* auto complete string */
     if (name_ptr != NULL) {
-        strncpy(prefix, name_ptr, min_length);
+        strlcpy(prefix, name_ptr, min_length + 1);
     }
 
     SHELL_PROMPT("%s", shell_get_prompt());
@@ -841,7 +845,8 @@ int shell_set_prompt(const char *prompt)
     if (prompt) {
         shell_prompt_custom = (char *)SHELL_MALLOC(strlen(prompt) + 1);
         if (shell_prompt_custom) {
-            strcpy(shell_prompt_custom, prompt);
+            if(strlcpy(shell_prompt_custom, prompt, strlen(prompt) + 1) >= strlen(prompt) + 1)
+                printf("[OS]: strlcpy truncated \r\n");
         }
     }
 

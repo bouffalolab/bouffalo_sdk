@@ -42,6 +42,7 @@
  *   included in the msg[n] flags
  */
 
+#define I2C_M_WRITE   0x0000 /* Write data, from master to slave */
 #define I2C_M_READ    0x0001 /* Read data, from slave to master */
 #define I2C_M_TEN     0x0002 /* Ten bit address */
 #define I2C_M_DMA     0x0004 /* Enable dma mode */
@@ -89,6 +90,8 @@
   */
 #define I2C_CMD_SET_SCL_SYNC (0x01) /* Enable or disable multi-master and clock-stretching */
 #define I2C_CMD_SET_DEGLITCH (0x02) /* 0 for disable deglitch, others for deglitch count */
+#define I2C_CMD_SET_TIMING   (0x03) /* Set I2C timing */
+#define I2C_CMD_GET_TIMING   (0x04) /* Get I2C timing */
 
 /**
   * @}
@@ -107,6 +110,37 @@ struct bflb_i2c_msg_s {
     uint16_t flags;
     uint8_t *buffer;
     uint16_t length;
+};
+
+/**
+ * @brief I2C timing structure
+ *
+ * @param data_phase0  Length of data phase 0
+ * @param data_phase1  Length of data phase 1
+ * @param data_phase2  Length of data phase 2
+ * @param data_phase3  Length of data phase 3
+ * @param start_phase0 Length of start condition phase 0
+ * @param start_phase1 Length of start condition phase 1
+ * @param start_phase2 Length of start condition phase 2
+ * @param start_phase3 Length of start condition phase 3
+ * @param stop_phase0  Length of stop condition phase 0
+ * @param stop_phase1  Length of stop condition phase 1
+ * @param stop_phase2  Length of stop condition phase 2
+ * @param stop_phase3  Length of stop condition phase 3
+ */
+struct bflb_i2c_timing_s {
+    uint8_t data_phase0;
+    uint8_t data_phase1;
+    uint8_t data_phase2;
+    uint8_t data_phase3;
+    uint8_t start_phase0;
+    uint8_t start_phase1;
+    uint8_t start_phase2;
+    uint8_t start_phase3;
+    uint8_t stop_phase0;
+    uint8_t stop_phase1;
+    uint8_t stop_phase2;
+    uint8_t stop_phase3;
 };
 
 #ifdef __cplusplus

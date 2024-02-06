@@ -4,6 +4,13 @@
 
 void bflb_pwm_v2_init(struct bflb_device_s *dev, const struct bflb_pwm_v2_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_PWM_CLK_SOURCE(config->clk_source));
+    LHAL_PARAM_ASSERT(IS_PWM_CLK_DIV(config->clk_div));
+
+#ifdef romapi_bflb_pwm_v2_init
+    romapi_bflb_pwm_v2_init(dev, config);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint64_t start_time;
@@ -43,10 +50,14 @@ void bflb_pwm_v2_init(struct bflb_device_s *dev, const struct bflb_pwm_v2_config
     regval &= ~PWM_PERIOD_MASK;
     regval |= (uint32_t)config->period << PWM_PERIOD_SHIFT;
     putreg32(regval, reg_base + PWM_MC0_PERIOD_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_deinit(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_pwm_v2_deinit
+    romapi_bflb_pwm_v2_deinit(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint64_t start_time;
@@ -94,10 +105,14 @@ void bflb_pwm_v2_deinit(struct bflb_device_s *dev)
     putreg32(0xFFFFFFFF, reg_base + PWM_MC0_INT_CLEAR_OFFSET);
     /* restore pwm_mc0_int_en register with default value */
     putreg32(0xFFFFFFFF, reg_base + PWM_MC0_INT_EN_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_set_period(struct bflb_device_s *dev, uint16_t period)
 {
+#ifdef romapi_bflb_pwm_v2_set_period
+    romapi_bflb_pwm_v2_set_period(dev, period);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -106,10 +121,14 @@ void bflb_pwm_v2_set_period(struct bflb_device_s *dev, uint16_t period)
     regval &= ~PWM_PERIOD_MASK;
     regval |= (uint32_t)period << PWM_PERIOD_SHIFT;
     putreg32(regval, reg_base + PWM_MC0_PERIOD_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_start(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_pwm_v2_start
+    romapi_bflb_pwm_v2_start(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint64_t start_time;
@@ -127,10 +146,14 @@ void bflb_pwm_v2_start(struct bflb_device_s *dev)
             return;
         }
     } while (regval != 0);
+#endif
 }
 
 void bflb_pwm_v2_stop(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_pwm_v2_stop
+    romapi_bflb_pwm_v2_stop(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint64_t start_time;
@@ -148,10 +171,14 @@ void bflb_pwm_v2_stop(struct bflb_device_s *dev)
             return;
         }
     } while (regval == 0);
+#endif
 }
 
 float bflb_pwm_v2_get_frequency(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_pwm_v2_get_frequency
+    return romapi_bflb_pwm_v2_get_frequency(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint32_t tmp;
@@ -184,10 +211,14 @@ float bflb_pwm_v2_get_frequency(struct bflb_device_s *dev)
     period = (float)tmp;
     /* calculate freaueny */
     return (src / div / period);
+#endif
 }
 
 void bflb_pwm_v2_channel_init(struct bflb_device_s *dev, uint8_t ch, struct bflb_pwm_v2_channel_config_s *config)
 {
+#ifdef romapi_bflb_pwm_v2_channel_init
+    romapi_bflb_pwm_v2_channel_init(dev, ch, config);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -228,18 +259,26 @@ void bflb_pwm_v2_channel_init(struct bflb_device_s *dev, uint8_t ch, struct bflb
     regval &= ~(PWM_CH0_DTG_MASK << ch * 8);
     regval |= ((uint32_t)config->dead_time << ch * 8);
     putreg32(regval, reg_base + PWM_MC0_DEAD_TIME_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_channel_set_threshold(struct bflb_device_s *dev, uint8_t ch, uint16_t low_threhold, uint16_t high_threhold)
 {
+#ifdef romapi_bflb_pwm_v2_channel_set_threshold
+    romapi_bflb_pwm_v2_channel_set_threshold(dev, ch, low_threhold, high_threhold);
+#else
     uint32_t regval;
 
     regval = ((uint32_t)high_threhold << 16) | low_threhold;
     putreg32(regval, dev->reg_base + PWM_MC0_CH0_THRE_OFFSET + ch * 4);
+#endif
 }
 
 void bflb_pwm_v2_channel_positive_start(struct bflb_device_s *dev, uint8_t ch)
 {
+#ifdef romapi_bflb_pwm_v2_channel_positive_start
+    romapi_bflb_pwm_v2_channel_positive_start(dev, ch);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -247,10 +286,14 @@ void bflb_pwm_v2_channel_positive_start(struct bflb_device_s *dev, uint8_t ch)
     regval = getreg32(reg_base + PWM_MC0_CONFIG1_OFFSET);
     regval |= (PWM_CH0_PEN << 4 * ch);
     putreg32(regval, reg_base + PWM_MC0_CONFIG1_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_channel_negative_start(struct bflb_device_s *dev, uint8_t ch)
 {
+#ifdef romapi_bflb_pwm_v2_channel_negative_start
+    romapi_bflb_pwm_v2_channel_negative_start(dev, ch);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -258,10 +301,14 @@ void bflb_pwm_v2_channel_negative_start(struct bflb_device_s *dev, uint8_t ch)
     regval = getreg32(reg_base + PWM_MC0_CONFIG1_OFFSET);
     regval |= (PWM_CH0_NEN << 4 * ch);
     putreg32(regval, reg_base + PWM_MC0_CONFIG1_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_channel_positive_stop(struct bflb_device_s *dev, uint8_t ch)
 {
+#ifdef romapi_bflb_pwm_v2_channel_positive_stop
+    romapi_bflb_pwm_v2_channel_positive_stop(dev, ch);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -269,10 +316,14 @@ void bflb_pwm_v2_channel_positive_stop(struct bflb_device_s *dev, uint8_t ch)
     regval = getreg32(reg_base + PWM_MC0_CONFIG1_OFFSET);
     regval &= ~(PWM_CH0_PEN << 4 * ch);
     putreg32(regval, reg_base + PWM_MC0_CONFIG1_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_channel_negative_stop(struct bflb_device_s *dev, uint8_t ch)
 {
+#ifdef romapi_bflb_pwm_v2_channel_negative_stop
+    romapi_bflb_pwm_v2_channel_negative_stop(dev, ch);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -280,10 +331,14 @@ void bflb_pwm_v2_channel_negative_stop(struct bflb_device_s *dev, uint8_t ch)
     regval = getreg32(reg_base + PWM_MC0_CONFIG1_OFFSET);
     regval &= ~(PWM_CH0_NEN << 4 * ch);
     putreg32(regval, reg_base + PWM_MC0_CONFIG1_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_int_enable(struct bflb_device_s *dev, uint32_t int_en, bool enable)
 {
+#ifdef romapi_bflb_pwm_v2_int_enable
+    romapi_bflb_pwm_v2_int_enable(dev, int_en, enable);
+#else
     uint32_t reg_base;
     uint32_t regval_mask, regval_en;
 
@@ -299,15 +354,23 @@ void bflb_pwm_v2_int_enable(struct bflb_device_s *dev, uint32_t int_en, bool ena
     }
     putreg32(regval_mask, reg_base + PWM_MC0_INT_MASK_OFFSET);
     putreg32(regval_en, reg_base + PWM_MC0_INT_EN_OFFSET);
+#endif
 }
 
 void bflb_pwm_v2_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
 {
+#ifdef romapi_bflb_pwm_v2_int_clear
+    romapi_bflb_pwm_v2_int_clear(dev, int_clear);
+#else
     putreg32(int_clear, dev->reg_base + PWM_MC0_INT_CLEAR_OFFSET);
+#endif
 }
 
 uint32_t bflb_pwm_v2_get_intstatus(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_pwm_v2_get_intstatus
+    return romapi_bflb_pwm_v2_get_intstatus(dev);
+#else
     uint32_t reg_base;
     uint32_t regval_sts, regval_mask, regval_en;
 
@@ -316,10 +379,14 @@ uint32_t bflb_pwm_v2_get_intstatus(struct bflb_device_s *dev)
     regval_mask = getreg32(reg_base + PWM_MC0_INT_MASK_OFFSET);
     regval_en = getreg32(reg_base + PWM_MC0_INT_EN_OFFSET);
     return (regval_sts & ~regval_mask & regval_en);
+#endif
 }
 
 int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_pwm_v2_feature_control
+    return romapi_bflb_pwm_v2_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t reg_base;
     uint32_t regval;
@@ -385,4 +452,5 @@ int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
     }
     return ret;
+#endif
 }

@@ -125,6 +125,17 @@
   * @}
   */
 
+// clang-format off
+#define IS_PWM_CLK_SOURCE(type)   (((type) == BFLB_SYSTEM_PBCLK) || \
+                                  ((type) == BFLB_SYSTEM_XCLK) || \
+                                  ((type) == BFLB_SYSTEM_32K_CLK))
+
+#define IS_PWM_CLK_DIV(type)   ((type) >= 1)
+
+#define IS_PWM_PERIOD(type)   ((type) >= 2)
+
+// clang-format on
+
 /**
  * @brief PWM channel configuration structure
  *

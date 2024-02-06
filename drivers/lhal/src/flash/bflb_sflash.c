@@ -181,6 +181,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_read_reg(spi_flash_cfg_type *flash_cfg, uint8_t reg_index,
                                           uint8_t *reg_value, uint8_t reg_len)
 {
+#ifdef romapi_bflb_sflash_read_reg
+    return romapi_bflb_sflash_read_reg(flash_cfg, reg_index, reg_value, reg_len);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
     uint32_t cnt = 0;
@@ -208,6 +211,7 @@ int ATTR_TCM_SECTION bflb_sflash_read_reg(spi_flash_cfg_type *flash_cfg, uint8_t
 
     arch_memcpy(reg_value, flash_ctrl_buf, reg_len);
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -225,6 +229,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_write_reg(spi_flash_cfg_type *flash_cfg, uint8_t reg_index,
                                            uint8_t *reg_value, uint8_t reg_len)
 {
+#ifdef romapi_bflb_sflash_write_reg
+    return romapi_bflb_sflash_write_reg(flash_cfg, reg_index, reg_value, reg_len);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t cnt = 0;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
@@ -254,6 +261,7 @@ int ATTR_TCM_SECTION bflb_sflash_write_reg(spi_flash_cfg_type *flash_cfg, uint8_
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -271,6 +279,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_read_reg_with_cmd(spi_flash_cfg_type *flash_cfg,
                                                    uint8_t read_reg_cmd, uint8_t *reg_value, uint8_t reg_len)
 {
+#ifdef romapi_bflb_sflash_read_reg_with_cmd
+    return romapi_bflb_sflash_read_reg_with_cmd(flash_cfg, read_reg_cmd, reg_value, reg_len);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
     uint32_t cnt = 0;
@@ -298,6 +309,7 @@ int ATTR_TCM_SECTION bflb_sflash_read_reg_with_cmd(spi_flash_cfg_type *flash_cfg
 
     arch_memcpy(reg_value, flash_ctrl_buf, reg_len);
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -315,6 +327,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_write_reg_with_cmd(spi_flash_cfg_type *flash_cfg,
                                                     uint8_t write_reg_cmd, uint8_t *reg_value, uint8_t reg_len)
 {
+#ifdef romapi_bflb_sflash_write_reg_with_cmd
+    return romapi_bflb_sflash_write_reg_with_cmd(flash_cfg, write_reg_cmd, reg_value, reg_len);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t cnt = 0;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
@@ -344,6 +359,7 @@ int ATTR_TCM_SECTION bflb_sflash_write_reg_with_cmd(spi_flash_cfg_type *flash_cf
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -357,6 +373,9 @@ int ATTR_TCM_SECTION bflb_sflash_write_reg_with_cmd(spi_flash_cfg_type *flash_cf
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_busy(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_busy
+    return romapi_bflb_sflash_busy(flash_cfg);
+#else
     uint32_t stat = 0;
     bflb_sflash_read_reg(flash_cfg, flash_cfg->busy_index, (uint8_t *)&stat, flash_cfg->busy_read_reg_len);
 
@@ -365,6 +384,7 @@ int ATTR_TCM_SECTION bflb_sflash_busy(spi_flash_cfg_type *flash_cfg)
     }
 
     return 1;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -378,6 +398,9 @@ int ATTR_TCM_SECTION bflb_sflash_busy(spi_flash_cfg_type *flash_cfg)
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_write_enable(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_write_enable
+    return romapi_bflb_sflash_write_enable(flash_cfg);
+#else
     uint32_t stat = 0;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
 
@@ -400,6 +423,7 @@ int ATTR_TCM_SECTION bflb_sflash_write_enable(spi_flash_cfg_type *flash_cfg)
     }
 
     return -1;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -413,6 +437,9 @@ int ATTR_TCM_SECTION bflb_sflash_write_enable(spi_flash_cfg_type *flash_cfg)
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_qspi_enable(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_qspi_enable
+    return romapi_bflb_sflash_qspi_enable(flash_cfg);
+#else
     uint32_t stat = 0, ret = 0;
 
     if (flash_cfg->qe_read_reg_len == 0) {
@@ -477,6 +504,7 @@ int ATTR_TCM_SECTION bflb_sflash_qspi_enable(spi_flash_cfg_type *flash_cfg)
     }
 
     return -1;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -490,6 +518,9 @@ int ATTR_TCM_SECTION bflb_sflash_qspi_enable(spi_flash_cfg_type *flash_cfg)
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_qspi_disable(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_qspi_disable
+    return romapi_bflb_sflash_qspi_disable(flash_cfg);
+#else
     uint32_t stat = 0, ret = 0;
 
     if (flash_cfg->qe_read_reg_len == 0) {
@@ -532,6 +563,7 @@ int ATTR_TCM_SECTION bflb_sflash_qspi_disable(spi_flash_cfg_type *flash_cfg)
     }
 
     return -1;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -545,6 +577,9 @@ int ATTR_TCM_SECTION bflb_sflash_qspi_disable(spi_flash_cfg_type *flash_cfg)
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_volatile_reg_write_enable(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_volatile_reg_write_enable
+    romapi_bflb_sflash_volatile_reg_write_enable(flash_cfg);
+#else
     struct sf_ctrl_cmd_cfg_type flash_cmd;
 
     if (((uintptr_t)&flash_cmd) % 4 == 0) {
@@ -557,6 +592,7 @@ void ATTR_TCM_SECTION bflb_sflash_volatile_reg_write_enable(spi_flash_cfg_type *
     flash_cmd.rw_flag = SF_CTRL_WRITE;
 
     bflb_sf_ctrl_sendcmd(&flash_cmd);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -570,6 +606,9 @@ void ATTR_TCM_SECTION bflb_sflash_volatile_reg_write_enable(spi_flash_cfg_type *
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_chip_erase(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_chip_erase
+    return romapi_bflb_sflash_chip_erase(flash_cfg);
+#else
     struct sf_ctrl_cmd_cfg_type flash_cmd;
     uint32_t cnt = 0;
     uint32_t timeout = 0;
@@ -607,6 +646,7 @@ int ATTR_TCM_SECTION bflb_sflash_chip_erase(spi_flash_cfg_type *flash_cfg)
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -621,6 +661,9 @@ int ATTR_TCM_SECTION bflb_sflash_chip_erase(spi_flash_cfg_type *flash_cfg)
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_sector_erase(spi_flash_cfg_type *flash_cfg, uint32_t sector_num)
 {
+#ifdef romapi_bflb_sflash_sector_erase
+    return romapi_bflb_sflash_sector_erase(flash_cfg, sector_num);
+#else
     uint32_t cnt = 0;
     uint8_t is_32bits_addr = 0;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
@@ -662,6 +705,7 @@ int ATTR_TCM_SECTION bflb_sflash_sector_erase(spi_flash_cfg_type *flash_cfg, uin
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -676,6 +720,9 @@ int ATTR_TCM_SECTION bflb_sflash_sector_erase(spi_flash_cfg_type *flash_cfg, uin
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_blk32_erase(spi_flash_cfg_type *flash_cfg, uint32_t blk_num)
 {
+#ifdef romapi_bflb_sflash_blk32_erase
+    return romapi_bflb_sflash_blk32_erase(flash_cfg, blk_num);
+#else
     uint32_t cnt = 0;
     uint8_t is_32bits_addr = 0;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
@@ -716,6 +763,7 @@ int ATTR_TCM_SECTION bflb_sflash_blk32_erase(spi_flash_cfg_type *flash_cfg, uint
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -730,6 +778,9 @@ int ATTR_TCM_SECTION bflb_sflash_blk32_erase(spi_flash_cfg_type *flash_cfg, uint
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_blk64_erase(spi_flash_cfg_type *flash_cfg, uint32_t blk_num)
 {
+#ifdef romapi_bflb_sflash_blk64_erase
+    return romapi_bflb_sflash_blk64_erase(flash_cfg, blk_num);
+#else
     struct sf_ctrl_cmd_cfg_type flash_cmd;
     uint32_t cnt = 0;
     uint8_t is_32bits_addr = 0;
@@ -770,6 +821,7 @@ int ATTR_TCM_SECTION bflb_sflash_blk64_erase(spi_flash_cfg_type *flash_cfg, uint
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -785,6 +837,9 @@ int ATTR_TCM_SECTION bflb_sflash_blk64_erase(spi_flash_cfg_type *flash_cfg, uint
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_erase(spi_flash_cfg_type *flash_cfg, uint32_t start_addr, uint32_t end_addr)
 {
+#ifdef romapi_bflb_sflash_erase
+    return romapi_bflb_sflash_erase(flash_cfg, start_addr, end_addr);
+#else
     uint32_t len = 0;
     uint32_t erase_len = 0;
     uint8_t ret = 0;
@@ -823,6 +878,7 @@ int ATTR_TCM_SECTION bflb_sflash_erase(spi_flash_cfg_type *flash_cfg, uint32_t s
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -837,6 +893,9 @@ int ATTR_TCM_SECTION bflb_sflash_erase(spi_flash_cfg_type *flash_cfg, uint32_t s
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_get_uniqueid(uint8_t *data, uint8_t id_len)
 {
+#ifdef romapi_bflb_sflash_get_uniqueid
+    romapi_bflb_sflash_get_uniqueid(data, id_len);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint8_t cmd = 0, dummy_clks = 0;
     uint32_t timeout = 0;
@@ -868,6 +927,7 @@ void ATTR_TCM_SECTION bflb_sflash_get_uniqueid(uint8_t *data, uint8_t id_len)
     }
 
     arch_memcpy(data, flash_ctrl_buf, id_len);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -882,6 +942,9 @@ void ATTR_TCM_SECTION bflb_sflash_get_uniqueid(uint8_t *data, uint8_t id_len)
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_get_jedecid(spi_flash_cfg_type *flash_cfg, uint8_t *data)
 {
+#ifdef romapi_bflb_sflash_get_jedecid
+    romapi_bflb_sflash_get_jedecid(flash_cfg, data);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint8_t cmd = 0, dummy_clks = 0;
     uint32_t timeout = 0;
@@ -913,6 +976,7 @@ void ATTR_TCM_SECTION bflb_sflash_get_jedecid(spi_flash_cfg_type *flash_cfg, uin
     }
 
     arch_memcpy(data, flash_ctrl_buf, 3);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -927,6 +991,9 @@ void ATTR_TCM_SECTION bflb_sflash_get_jedecid(spi_flash_cfg_type *flash_cfg, uin
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_get_deviceid(uint8_t *data, uint8_t is_32bits_addr)
 {
+#ifdef romapi_bflb_sflash_get_deviceid
+    romapi_bflb_sflash_get_deviceid(data, is_32bits_addr);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint8_t cmd = 0, dummy_clks = 0;
     uint32_t timeout = 0;
@@ -972,6 +1039,7 @@ void ATTR_TCM_SECTION bflb_sflash_get_deviceid(uint8_t *data, uint8_t is_32bits_
     }
 
     arch_memcpy(data, flash_ctrl_buf, 2);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -985,6 +1053,9 @@ void ATTR_TCM_SECTION bflb_sflash_get_deviceid(uint8_t *data, uint8_t is_32bits_
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_powerdown(void)
 {
+#ifdef romapi_bflb_sflash_powerdown
+    romapi_bflb_sflash_powerdown();
+#else
     struct sf_ctrl_cmd_cfg_type flash_cmd;
     uint8_t cmd = 0;
     uint32_t timeout = 0;
@@ -1010,6 +1081,7 @@ void ATTR_TCM_SECTION bflb_sflash_powerdown(void)
             return;
         }
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1023,6 +1095,9 @@ void ATTR_TCM_SECTION bflb_sflash_powerdown(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_release_powerdown(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_release_powerdown
+    romapi_bflb_sflash_release_powerdown(flash_cfg);
+#else
     uint8_t cmd = 0;
     uint32_t timeout = 0;
 
@@ -1049,6 +1124,7 @@ void ATTR_TCM_SECTION bflb_sflash_release_powerdown(spi_flash_cfg_type *flash_cf
             return;
         }
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1065,6 +1141,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_restore_from_powerdown(spi_flash_cfg_type *flash_cfg,
                                                         uint8_t flash_cont_read, uint8_t bank)
 {
+#ifdef romapi_bflb_sflash_restore_from_powerdown
+    return romapi_bflb_sflash_restore_from_powerdown(flash_cfg, flash_cont_read, bank);
+#else
     int stat = 0;
     uint32_t jedecid = 0;
     uint8_t tmp[8];
@@ -1099,6 +1178,7 @@ int ATTR_TCM_SECTION bflb_sflash_restore_from_powerdown(spi_flash_cfg_type *flas
     }
 
     return stat;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1112,6 +1192,9 @@ int ATTR_TCM_SECTION bflb_sflash_restore_from_powerdown(spi_flash_cfg_type *flas
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_set_burst_wrap(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_set_burst_wrap
+    romapi_bflb_sflash_set_burst_wrap(flash_cfg);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint8_t cmd = 0, dummy_clks = 0;
     uint32_t wrap_data = 0;
@@ -1140,6 +1223,7 @@ void ATTR_TCM_SECTION bflb_sflash_set_burst_wrap(spi_flash_cfg_type *flash_cfg)
     flash_cmd.nb_data = 1;
 
     bflb_sf_ctrl_sendcmd(&flash_cmd);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1153,6 +1237,9 @@ void ATTR_TCM_SECTION bflb_sflash_set_burst_wrap(spi_flash_cfg_type *flash_cfg)
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_disable_burst_wrap(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_disable_burst_wrap
+    romapi_bflb_sflash_disable_burst_wrap(flash_cfg);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint8_t cmd = 0, dummy_clks = 0;
     uint32_t wrap_data = 0;
@@ -1176,6 +1263,7 @@ void ATTR_TCM_SECTION bflb_sflash_disable_burst_wrap(spi_flash_cfg_type *flash_c
     flash_cmd.nb_data = 1;
 
     bflb_sf_ctrl_sendcmd(&flash_cmd);
+#endif
 }
 
 #ifdef BFLB_SF_CTRL_32BITS_ADDR_ENABLE
@@ -1192,6 +1280,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_set_32bits_addr_mode(spi_flash_cfg_type *flash_cfg,
                                                       uint8_t en_32bits_addr)
 {
+#ifdef romapi_bflb_sflash_set_32bits_addr_mode
+    return romapi_bflb_sflash_set_32bits_addr_mode(flash_cfg, en_32bits_addr);
+#else
     struct sf_ctrl_cmd_cfg_type flash_cmd;
     uint8_t cmd = 0;
 
@@ -1220,6 +1311,7 @@ int ATTR_TCM_SECTION bflb_sflash_set_32bits_addr_mode(spi_flash_cfg_type *flash_
     bflb_sf_ctrl_sendcmd(&flash_cmd);
 
     return 0;
+#endif
 }
 #endif
 
@@ -1234,6 +1326,9 @@ int ATTR_TCM_SECTION bflb_sflash_set_32bits_addr_mode(spi_flash_cfg_type *flash_
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_software_reset(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_software_reset
+    return romapi_bflb_sflash_software_reset(flash_cfg);
+#else
     uint16_t cnt = 0;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
 
@@ -1269,6 +1364,7 @@ int ATTR_TCM_SECTION bflb_sflash_software_reset(spi_flash_cfg_type *flash_cfg)
     arch_delay_us(50);
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1282,6 +1378,9 @@ int ATTR_TCM_SECTION bflb_sflash_software_reset(spi_flash_cfg_type *flash_cfg)
 __WEAK
 void ATTR_TCM_SECTION bflb_sflash_reset_continue_read(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_reset_continue_read
+    romapi_bflb_sflash_reset_continue_read(flash_cfg);
+#else
     struct sf_ctrl_cmd_cfg_type flash_cmd;
 
     if (((uintptr_t)&flash_cmd) % 4 == 0) {
@@ -1296,6 +1395,7 @@ void ATTR_TCM_SECTION bflb_sflash_reset_continue_read(spi_flash_cfg_type *flash_
     flash_cmd.rw_flag = SF_CTRL_READ;
     flash_cmd.addr_size = flash_cfg->reset_c_read_cmd_size;
     bflb_sf_ctrl_sendcmd(&flash_cmd);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1315,6 +1415,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_set_xip_cfg(spi_flash_cfg_type *flash_cfg, uint8_t io_mode,
                                              uint8_t cont_read, uint32_t addr, uint32_t len, uint8_t bank)
 {
+#ifdef romapi_bflb_sflash_set_xip_cfg
+    romapi_bflb_sflash_set_xip_cfg(flash_cfg, io_mode, cont_read, addr, len, bank);
+#else
     uint8_t cmd = 0, dummy_clks = 0;
     struct sf_ctrl_cmd_cfg_type flash_cmd;
     uint8_t cmd_valid = 1;
@@ -1418,6 +1521,7 @@ int ATTR_TCM_SECTION bflb_sflash_set_xip_cfg(spi_flash_cfg_type *flash_cfg, uint
 #endif
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1435,6 +1539,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_xip_read_enable(spi_flash_cfg_type *flash_cfg,
                                                  uint8_t io_mode, uint8_t cont_read, uint8_t bank)
 {
+#ifdef romapi_bflb_sflash_xip_read_enable
+    return romapi_bflb_sflash_xip_read_enable(flash_cfg, io_mode, cont_read, bank);
+#else
     int stat = 0;
 
     stat = bflb_sflash_set_xip_cfg(flash_cfg, io_mode, cont_read, 0, 32, bank);
@@ -1443,6 +1550,7 @@ int ATTR_TCM_SECTION bflb_sflash_xip_read_enable(spi_flash_cfg_type *flash_cfg,
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1473,6 +1581,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_rcv_enable(spi_flash_cfg_type *flash_cfg, uint8_t r_cmd,
                                             uint8_t w_cmd, uint8_t bit_pos)
 {
+#ifdef romapi_bflb_sflash_rcv_enable
+    return romapi_bflb_sflash_rcv_enable(flash_cfg, r_cmd, w_cmd, bit_pos);
+#else
     int stat = 0;
     uint32_t cnt = 0;
     uint32_t temp_val = 0;
@@ -1525,6 +1636,7 @@ int ATTR_TCM_SECTION bflb_sflash_rcv_enable(spi_flash_cfg_type *flash_cfg, uint8
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1540,6 +1652,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_erase_security_register(spi_flash_cfg_type *flash_cfg,
                                                          struct sflash_sec_reg_cfg *p_sec_reg_cfg)
 {
+#ifdef romapi_bflb_sflash_erase_security_register
+    return romapi_bflb_sflash_erase_security_register(flash_cfg, p_sec_reg_cfg);
+#else
     int stat = 0;
     uint32_t cnt = 0;
     uint8_t cmd = 0;
@@ -1622,6 +1737,7 @@ int ATTR_TCM_SECTION bflb_sflash_erase_security_register(spi_flash_cfg_type *fla
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1637,6 +1753,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_program_security_register(spi_flash_cfg_type *flash_cfg,
                                                            struct sflash_sec_reg_cfg *p_sec_reg_cfg)
 {
+#ifdef romapi_bflb_sflash_program_security_register
+    return romapi_bflb_sflash_program_security_register(flash_cfg, p_sec_reg_cfg);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t i = 0, cur_len = 0;
     uint32_t cnt = 0;
@@ -1750,6 +1869,7 @@ int ATTR_TCM_SECTION bflb_sflash_program_security_register(spi_flash_cfg_type *f
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1763,6 +1883,9 @@ int ATTR_TCM_SECTION bflb_sflash_program_security_register(spi_flash_cfg_type *f
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_read_security_register(struct sflash_sec_reg_cfg *p_sec_reg_cfg)
 {
+#ifdef romapi_bflb_sflash_read_security_register
+    return romapi_bflb_sflash_read_security_register(p_sec_reg_cfg);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t cur_len = 0, i = 0;
     uint8_t cmd = 0;
@@ -1867,6 +1990,7 @@ int ATTR_TCM_SECTION bflb_sflash_read_security_register(struct sflash_sec_reg_cf
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1880,6 +2004,9 @@ int ATTR_TCM_SECTION bflb_sflash_read_security_register(struct sflash_sec_reg_cf
 __WEAK
 int ATTR_TCM_SECTION bflb_sflash_clear_status_register(spi_flash_cfg_type *flash_cfg)
 {
+#ifdef romapi_bflb_sflash_clear_status_register
+    return romapi_bflb_sflash_clear_status_register(flash_cfg);
+#else
     uint32_t ret = 0;
     uint32_t qe_value = 0;
     uint32_t reg_value = 0;
@@ -1926,6 +2053,7 @@ int ATTR_TCM_SECTION bflb_sflash_clear_status_register(spi_flash_cfg_type *flash
         bflb_sflash_write_reg(flash_cfg, 1, (uint8_t *)&reg_value, 1);
     }
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1945,6 +2073,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_read(spi_flash_cfg_type *flash_cfg, uint8_t io_mode,
                                       uint8_t cont_read, uint32_t addr, uint8_t *data, uint32_t len)
 {
+#ifdef romapi_bflb_sflash_read
+    return romapi_bflb_sflash_read(flash_cfg, io_mode, cont_read, addr, data, len);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t cur_len = 0, i = 0;
     uint8_t cmd = 0, dummy_clks = 0;
@@ -2070,6 +2201,7 @@ int ATTR_TCM_SECTION bflb_sflash_read(spi_flash_cfg_type *flash_cfg, uint8_t io_
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -2088,6 +2220,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sflash_program(spi_flash_cfg_type *flash_cfg, uint8_t io_mode,
                                          uint32_t addr, uint8_t *data, uint32_t len)
 {
+#ifdef romapi_bflb_sflash_program
+    return romapi_bflb_sflash_program(flash_cfg, io_mode, addr, data, len);
+#else
     uint8_t *const flash_ctrl_buf = (uint8_t *)BFLB_SF_CTRL_BUF_BASE;
     uint32_t i = 0, cur_len = 0;
     uint32_t cnt = 0;
@@ -2169,6 +2304,7 @@ int ATTR_TCM_SECTION bflb_sflash_program(spi_flash_cfg_type *flash_cfg, uint8_t 
     }
 
     return 0;
+#endif
 }
 
 /*@} end of group SFLASH_Public_Functions */

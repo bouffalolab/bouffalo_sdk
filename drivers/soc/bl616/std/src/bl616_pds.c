@@ -116,7 +116,16 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(uint8_t grp, uint8_t p
     tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_I_SET);
     tmpValPu = BL_GET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_GPIO_PU_SET);
     if (pu) {
-        tmpValPu |= (1 << grp);
+        if (GLB_PACKAGE_TYPE_QFN56 != GLB_Get_Package_Type()) {
+            if (SET == GLB_Get_PAD_Bonging_to_GND_Sts()) {
+                /* IF it is 40 PACKAGE TYPE and PAD Bonging to GND, Pull-UP is forbidden */
+                tmpValPu &= ~(1 << grp);
+            } else {
+                tmpValPu |= (1 << grp);
+            }
+        } else {
+            tmpValPu |= (1 << grp);
+        }
     } else {
         tmpValPu &= ~(1 << grp);
     }

@@ -23,6 +23,8 @@ src/flash/bflb_sf_cfg.c
 src/flash/bflb_xip_sflash.c
 src/flash/bflb_sflash.c
 src/flash/bflb_sf_ctrl.c
+src/flash/bflb_flash_secreg_port.c
+src/flash/bflb_flash_secreg.c
 )
 
 if("${CHIP}" STREQUAL "bl602")
@@ -63,7 +65,6 @@ src/bflb_i2s.c
 src/bflb_dbi.c
 src/bflb_audac.c
 src/bflb_auadc.c
-src/bflb_platform_dma.c
 src/bflb_wo.c
 )
 elseif("${CHIP}" STREQUAL "bl628")
@@ -136,4 +137,4 @@ else()
 # add_subdirectory(src/pka)
 endif()
 
-sdk_add_private_compile_definitions_ifdef(CONFIG_FLASH_2LINE_ENABLE -DCONFIG_FLASH_2LINE_ENABLE)
+sdk_add_private_compile_definitions_ifdef(CONFIG_FLASH_2LINE -D${CONFIG_FLASH_2LINE})

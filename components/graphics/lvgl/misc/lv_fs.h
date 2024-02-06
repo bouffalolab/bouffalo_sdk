@@ -57,7 +57,6 @@ enum {
 };
 typedef uint8_t lv_fs_mode_t;
 
-
 /**
  * Seek modes.
  */
@@ -80,7 +79,7 @@ typedef struct _lv_fs_drv_t {
     lv_fs_res_t (*tell_cb)(struct _lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p);
 
     void * (*dir_open_cb)(struct _lv_fs_drv_t * drv, const char * path);
-    lv_fs_res_t (*dir_read_cb)(struct _lv_fs_drv_t * drv, void * rddir_p, char * fn);
+    lv_fs_res_t (*dir_read_cb)(struct _lv_fs_drv_t * drv, void * rddir_p, char * fn, uint32_t fn_len);
     lv_fs_res_t (*dir_close_cb)(struct _lv_fs_drv_t * drv, void * rddir_p);
 
 #if LV_USE_USER_DATA
@@ -212,9 +211,10 @@ lv_fs_res_t lv_fs_dir_open(lv_fs_dir_t * rddir_p, const char * path);
  * The name of the directories will begin with '/'
  * @param rddir_p   pointer to an initialized 'fs_dir_t' variable
  * @param fn        pointer to a buffer to store the filename
+ * @param fn_len    the length of the buffer for storing file names
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_dir_read(lv_fs_dir_t * rddir_p, char * fn);
+lv_fs_res_t lv_fs_dir_read(lv_fs_dir_t * rddir_p, char * fn, uint32_t fn_len);
 
 /**
  * Close the directory reading

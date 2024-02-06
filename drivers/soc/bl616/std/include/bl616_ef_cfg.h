@@ -55,15 +55,6 @@ extern "C" {
  *  @{
  */
 
-typedef struct
-{
-    uint32_t rsvd       : 22; /*!< Reserved */
-    uint32_t deviceInfo : 2;  /*!< Efuse device information */
-    uint32_t psramInfo  : 2;  /*!< Efuse psram info 0:no psram, 1:WB 4MB*/
-    uint32_t memoryInfo : 3;  /*!< Efuse memory info 0:no memory, 1:2MB flash, 2:4MB flash, 3:6MB flash, 4:8MB flash */
-    uint32_t chipInfo   : 3;  /*!< Efuse chip revision */
-} bflb_efuse_device_info_type;
-
 /*@} end of group EF_CTRL_Public_Types */
 
 /** @defgroup  EF_CTRL_Public_Constants
@@ -81,7 +72,6 @@ typedef struct
 /** @defgroup  EF_CTRL_Public_Functions
  *  @{
  */
-void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo);
 
 /*@} end of group EF_CTRL_Public_Functions */
 

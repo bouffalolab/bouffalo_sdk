@@ -405,11 +405,11 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_GD_LQ64E = {
     .exit_qpi = 0xff,
 
     /*AC*/
-    .time_e_sector = 500,
-    .time_e_32k = 2000,
-    .time_e_64k = 2000,
+    .time_e_sector = 3000,
+    .time_e_32k = 4000,
+    .time_e_64k = 4000,
     .time_page_pgm = 5,
-    .time_ce = 33 * 1000,
+    .time_ce = 65 * 1000,
     .pd_delay = 3,
     .qe_data = 0,
 };
@@ -530,7 +530,7 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_16JV = {
 
     .qe_index = 1,
     .qe_bit = 0x01,
-    .qe_write_reg_len = 0x02, /*Q08BV,Q16DV: 0x02.Q32FW,Q32FV: 0x01 */
+    .qe_write_reg_len = 0x01, /*Q08BV,Q16DV: 0x02.Q32FW,Q32FV: 0x01 */
     .qe_read_reg_len = 0x1,
 
     .busy_index = 0,
@@ -541,7 +541,7 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_16JV = {
     .read_reg_cmd[0] = 0x05,
     .read_reg_cmd[1] = 0x35,
     .write_reg_cmd[0] = 0x01,
-    .write_reg_cmd[1] = 0x01,
+    .write_reg_cmd[1] = 0x31,
 
     .fast_read_qio_cmd = 0xeb,
     .fr_qio_dmy_clk = 16 / 8,
@@ -601,12 +601,12 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_16JV = {
     .exit_qpi = 0xff,
 
     /*AC*/
-    .time_e_sector = 300,
-    .time_e_32k = 1200,
-    .time_e_64k = 1200,
+    .time_e_sector = 400,
+    .time_e_32k = 1600,
+    .time_e_64k = 2000,
     .time_page_pgm = 5,
     .time_ce = 33 * 1000,
-    .pd_delay = 3,
+    .pd_delay = 20,
     .qe_data = 0,
 };
 
@@ -1119,6 +1119,11 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
         .cfg = &flash_cfg_GD_LQ64E,
     },
     {
+        .jedec_id = 0x18400b,
+        //.name="xt_25f128b_128_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
         .jedec_id = 0x176085,
         //.name="Puya_Q64H_64_33",
         .cfg = &flash_cfg_Puya_Q32H,
@@ -1127,6 +1132,36 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
         .jedec_id = 0x186085,
         //.name="Puya_Q128H_128_33",
         .cfg = &flash_cfg_Puya_Q32H,
+    },
+    {
+        .jedec_id = 0x142085,
+        //.name="py25q80hb_80_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x152085,
+        //.name="py25q16hb_16_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x162085,
+        //.name="py25q32hb_32_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x172085,
+        //.name="py25q64ha_64_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x182085,
+        //.name="py25q128ha_128_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x192085,
+        //.name="py25q256hb_256_33",
+        .cfg = &flash_cfg_GD_LQ64E,
     },
     {
         .jedec_id = 0x1540a1,
@@ -1155,8 +1190,23 @@ static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
     },
     {
         .jedec_id = 0x1660c4,
-        //.name="gt25q32_32",
+        //.name="gt25q32_32_33",
         .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x1560c4,
+        //.name="gt25q16_16_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x1760c4,
+        //.name="gt25q64_64_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x166125,
+        //.name="sk25e032_32_33",
+        .cfg = &flash_cfg_GD_LQ64E,
     },
 };
 
@@ -1922,7 +1972,7 @@ BL_Err_Type GLB_Set_Chip_Clock_Out3_Sel(uint8_t clkOutType)
 *******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Id_Value(uint32_t idValue)
 {
-    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, (idValue | BFLB_FLASH_ID_VALID_FLAG));
+    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, ((idValue&0xFFFFFF)|0x5A000000));
 
     return SUCCESS;
 }
@@ -1940,8 +1990,8 @@ uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
     uint32_t tmpVal = 0;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_HW_RSV1);
-    if ((tmpVal & BFLB_FLASH_ID_VALID_FLAG) != 0) {
-        return (tmpVal & BFLB_FLASH_ID_VALID_MASK);
+    if ((tmpVal&0x7F000000) == 0x5A000000) {
+        return (tmpVal&0x00FFFFFF);
     }
 
     return 0x00000000;
@@ -1962,6 +2012,142 @@ void ATTR_TCM_SECTION GLB_Power_Down_Ldo18ioVout(void)
     tmpVal = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
     tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_PU_LDO18IO);
     BL_WR_REG(GLB_BASE, GLB_LDO18IO, tmpVal);
+}
+
+
+/****************************************************************************/ /**
+ * @brief  GLB GET Package Type From EFUSE
+ *
+ * @param  None
+ *
+ * @return Package Type
+ *
+*******************************************************************************/
+uint8_t ATTR_TCM_SECTION GLB_Get_Package_Type(void)
+{
+    uint32_t tmpVal = 0;
+    uint8_t package_type = 0;
+
+    /* get device_info[1:0] from efuse */
+    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_EF_WIFI_MAC_HIGH);
+
+    package_type = (uint8_t)((tmpVal >> 22) & 0x3);
+
+    return package_type;
+}
+
+/****************************************************************************/ /**
+ * @brief  GLB GET Status of PAD Bonging to GND
+ *
+ * @param  None
+ *
+ * @return status of pad bonding to GND
+ *
+*******************************************************************************/
+BL_Sts_Type ATTR_TCM_SECTION GLB_Get_PAD_Bonging_to_GND_Sts(void)
+{
+    uint32_t tmpVal = 0;
+    uint8_t package_cfg = 0;
+
+    /* get package_cfg[2:0] from efuse */
+    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_EF_KEY_SLOT_10_W0);
+
+    package_cfg = (uint8_t)((tmpVal >> 28) & 0x7);
+
+    if (0 == package_cfg) {
+        return RESET;
+    } else {
+        return SET;
+    }
+}
+
+/****************************************************************************/ /**
+ * @brief  GLB GPIO CHECK PAD Whether Lead Out no not
+ *
+ * @param  None
+ *
+ * @return RESET or SET
+ *
+*******************************************************************************/
+BL_Sts_Type ATTR_TCM_SECTION GLB_GPIO_Pad_LeadOut_Sts(uint8_t gpioPin)
+{
+    uint8_t package_type;
+
+    package_type = GLB_Get_Package_Type();
+
+    if ( GLB_PACKAGE_TYPE_QFN56 == package_type ){
+        return SET;
+    }
+
+    /* */
+    if ((( gpioPin >= GLB_GPIO_PIN_0) && (gpioPin < GLB_GPIO_PIN_4))
+    || (( gpioPin > GLB_GPIO_PIN_9) && (gpioPin < GLB_GPIO_PIN_18))
+    || (( gpioPin > GLB_GPIO_PIN_19) && (gpioPin < GLB_GPIO_PIN_23))
+    || (( gpioPin > GLB_GPIO_PIN_26) && (gpioPin < GLB_GPIO_PIN_31))) {
+        return SET;
+    }
+
+    return RESET;
+
+}
+
+/****************************************************************************/ /**
+ * @brief  set gpio pad pull type in pds
+ *
+ * @param  pad: gpio type
+ * @param  pu: power up
+ * @param  pd: power down
+ * @param  ie: Active IE (interrupt)
+ *
+ * @return SUCCESS or ERROR
+ *
+ * @note   Pu and Pd not depend on IE
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(uint8_t grp, uint8_t pu, uint8_t pd, uint8_t ie)
+{
+    uint32_t tmpVal;
+    uint32_t tmpValPu;
+    uint32_t tmpValPd;
+    uint32_t tmpValIe;
+
+    CHECK_PARAM(IS_PDS_GPIO_GROUP_SET_TYPE(grp));
+
+    /* pu/pd/ie config */
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_I_SET);
+    tmpValPu = BL_GET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_GPIO_PU_SET);
+    if (pu) {
+        if (GLB_PACKAGE_TYPE_QFN56 != GLB_Get_Package_Type()) {
+            if (SET == GLB_Get_PAD_Bonging_to_GND_Sts()) {
+                /* IF it is 40 PACKAGE TYPE and PAD Bonging to GND, Pull-UP is forbidden */
+                tmpValPu &= ~(1 << grp);
+            } else {
+                tmpValPu |= (1 << grp);
+            }
+        } else {
+            tmpValPu |= (1 << grp);
+        }
+    } else {
+        tmpValPu &= ~(1 << grp);
+    }
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_GPIO_PU_SET, tmpValPu);
+    tmpValPd = BL_GET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_GPIO_PD_SET);
+    if (pd) {
+        tmpValPd |= (1 << grp);
+    } else {
+        tmpValPd &= ~(1 << grp);
+    }
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_GPIO_PD_SET, tmpValPd);
+    tmpValIe = BL_GET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_GPIO_IE_SET);
+    if (ie) {
+        tmpValIe |= (1 << grp);
+    } else {
+        tmpValIe &= ~(1 << grp);
+    }
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CR_PDS_GPIO_IE_SET, tmpValIe);
+    BL_WR_REG(PDS_BASE, PDS_GPIO_I_SET, tmpVal);
+
+    return SUCCESS;
 }
 
 /****************************************************************************/ /**
@@ -3963,6 +4149,10 @@ BL_Err_Type GLB_GPIO_Clr(uint8_t gpioPin)
 *******************************************************************************/
 BL_Err_Type GLB_GPIO_Set(uint8_t gpioPin)
 {
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
+
     if (gpioPin < GLB_GPIO_PIN_32) {
         BL_WR_WORD(GLB_BASE + GLB_GPIO_CFG138_OFFSET, 1 << gpioPin);
     } else {

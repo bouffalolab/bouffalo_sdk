@@ -15,8 +15,15 @@ struct bflb_gpio_irq_callback g_gpio_irq_callback[46] = { 0 };
 struct bflb_gpio_irq_callback g_gpio_irq_callback[35] = { 0 };
 #endif
 
+#if defined(BL616)
+extern void bflb_gpio_pad_check(uint8_t pin);
+#endif
+
 void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
 {
+#ifdef romapi_bflb_gpio_init
+    romapi_bflb_gpio_init(dev, pin, cfgset);
+#else
     uint32_t cfg = 0;
     uint32_t reg_base;
     uint32_t cfg_address;
@@ -31,6 +38,8 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     drive = (cfgset & GPIO_DRV_MASK) >> GPIO_DRV_SHIFT;
 
 #if defined(BL616)
+    bflb_gpio_pad_check(pin);
+
     /* disable muxed to be xtal32k */
     if (pin == GPIO_PIN_16) {
         *(volatile uint32_t *)(0x2000f000 + 0x38) &= ~(1 << 20);
@@ -198,61 +207,72 @@ void bflb_gpio_init(struct bflb_device_s *dev, uint8_t pin, uint32_t cfgset)
     cfg |= 0x1 << GLB_REG_GPIO_0_MODE_SHIFT;
 #endif
     putreg32(cfg, cfg_address);
+#endif
 }
 
 void bflb_gpio_deinit(struct bflb_device_s *dev, uint8_t pin)
 {
+#ifdef romapi_bflb_gpio_deinit
+    romapi_bflb_gpio_deinit(dev, pin);
+#else
+#if defined(BL616)
+    bflb_gpio_pad_check(pin);
+#endif
     bflb_gpio_init(dev, pin, GPIO_INPUT | GPIO_FLOAT);
+#endif
 }
 
 void bflb_gpio_set(struct bflb_device_s *dev, uint8_t pin)
 {
+#ifdef romapi_bflb_gpio_set
+    romapi_bflb_gpio_set(dev, pin);
+#else
 #if defined(BL702) || defined(BL602)
     uint32_t regval = getreg32(dev->reg_base + GLB_GPIO_CFGCTL32_OFFSET);
     putreg32(regval | 1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFGCTL32_OFFSET);
 #elif defined(BL702L)
     putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFGCTL35_OFFSET);
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616)
+    bflb_gpio_pad_check(pin);
+#endif
     putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFG138_OFFSET + ((pin >> 5) << 2));
+#endif
 #endif
 }
 
 void bflb_gpio_reset(struct bflb_device_s *dev, uint8_t pin)
 {
+#ifdef romapi_bflb_gpio_reset
+    romapi_bflb_gpio_reset(dev, pin);
+#else
 #if defined(BL702) || defined(BL602)
     uint32_t regval = getreg32(dev->reg_base + GLB_GPIO_CFGCTL32_OFFSET);
     putreg32(regval & ~(1 << (pin & 0x1f)), dev->reg_base + GLB_GPIO_CFGCTL32_OFFSET);
 #elif defined(BL702L)
     putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFGCTL36_OFFSET);
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616)
+    bflb_gpio_pad_check(pin);
+#endif
     putreg32(1 << (pin & 0x1f), dev->reg_base + GLB_GPIO_CFG140_OFFSET + ((pin >> 5) << 2));
+#endif
 #endif
 }
 
 bool bflb_gpio_read(struct bflb_device_s *dev, uint8_t pin)
 {
+#ifdef romapi_bflb_gpio_read
+    return romapi_bflb_gpio_read(dev, pin);
+#else
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     return (getreg32(dev->reg_base + GLB_GPIO_CFGCTL30_OFFSET) & (1 << pin));
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616)
+    bflb_gpio_pad_check(pin);
+#endif
     return (getreg32(dev->reg_base + GLB_GPIO_CFG0_OFFSET + (pin << 2)) & GLB_REG_GPIO_0_I);
 #endif
-}
-
-void bflb_gpio_pin0_31_write(struct bflb_device_s *dev, uint32_t val)
-{
-#if defined(BL702) || defined(BL602) || defined(BL702L)
-    putreg32(val, dev->reg_base + GLB_GPIO_CFGCTL32_OFFSET);
-#elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
-    putreg32(val, dev->reg_base + GLB_GPIO_CFG136_OFFSET);
-#endif
-}
-
-void bflb_gpio_pin32_63_write(struct bflb_device_s *dev, uint32_t val)
-{
-#if defined(BL702) || defined(BL602) || defined(BL702L)
-    putreg32(val, dev->reg_base + GLB_GPIO_CFGCTL33_OFFSET);
-#elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
-    putreg32(val, dev->reg_base + GLB_GPIO_CFG137_OFFSET);
 #endif
 }
 
@@ -276,6 +296,9 @@ uint32_t bflb_gpio_pin32_63_read(struct bflb_device_s *dev)
 
 void bflb_gpio_int_init(struct bflb_device_s *dev, uint8_t pin, uint8_t trig_mode)
 {
+#ifdef romapi_bflb_gpio_int_init
+    romapi_bflb_gpio_int_init(dev, pin, trig_mode);
+#else
     uint32_t reg_base;
     uint32_t cfg_address;
     uint32_t regval;
@@ -302,10 +325,14 @@ void bflb_gpio_int_init(struct bflb_device_s *dev, uint8_t pin, uint8_t trig_mod
     regval |= (trig_mode << GLB_REG_GPIO_0_INT_MODE_SET_SHIFT);
 #endif
     putreg32(regval, cfg_address);
+#endif
 }
 
 void bflb_gpio_int_mask(struct bflb_device_s *dev, uint8_t pin, bool mask)
 {
+#ifdef romapi_bflb_gpio_int_mask
+    romapi_bflb_gpio_int_mask(dev, pin, mask);
+#else
     uint32_t reg_base;
     uint32_t cfg_address;
     uint32_t regval;
@@ -331,19 +358,27 @@ void bflb_gpio_int_mask(struct bflb_device_s *dev, uint8_t pin, bool mask)
     }
 #endif
     putreg32(regval, cfg_address);
+#endif
 }
 
 bool bflb_gpio_get_intstatus(struct bflb_device_s *dev, uint8_t pin)
 {
+#ifdef romapi_bflb_gpio_get_intstatus
+    return romapi_bflb_gpio_get_intstatus(dev, pin);
+#else
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     return (getreg32(dev->reg_base + GLB_GPIO_INT_STAT1_OFFSET) & (1 << pin));
 #elif defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
     return (getreg32(dev->reg_base + GLB_GPIO_CFG0_OFFSET + (pin << 2)) & GLB_GPIO_0_INT_STAT);
 #endif
+#endif
 }
 
 void bflb_gpio_int_clear(struct bflb_device_s *dev, uint8_t pin)
 {
+#ifdef romapi_bflb_gpio_int_clear
+    romapi_bflb_gpio_int_clear(dev, pin);
+#else
     uint32_t reg_base;
     uint32_t cfg_address;
     uint32_t regval;
@@ -366,16 +401,23 @@ void bflb_gpio_int_clear(struct bflb_device_s *dev, uint8_t pin)
     regval &= ~GLB_REG_GPIO_0_INT_CLR;
     putreg32(regval, cfg_address);
 #endif
+#endif
 }
 
 void bflb_gpio_uart_init(struct bflb_device_s *dev, uint8_t pin, uint8_t uart_func)
 {
+#ifdef romapi_bflb_gpio_uart_init
+    romapi_bflb_gpio_uart_init(dev, pin, uart_func);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint8_t sig;
     uint8_t sig_pos;
 
     reg_base = dev->reg_base;
+#if defined(BL616)
+    bflb_gpio_pad_check(pin);
+#endif
 #if defined(BL702) || defined(BL602)
 #define GLB_UART_SIG_SEL_0_OFFSET (0xC0)
     regval = getreg32(reg_base + GLB_UART_SIG_SEL_0_OFFSET);
@@ -479,10 +521,14 @@ void bflb_gpio_uart_init(struct bflb_device_s *dev, uint8_t pin, uint8_t uart_fu
     }
 #endif
     bflb_gpio_init(dev, pin, (7 << GPIO_FUNC_SHIFT) | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
+#endif
 }
 
 int bflb_gpio_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_gpio_feature_control
+    return romapi_bflb_gpio_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t reg_base;
     uint32_t regval;
@@ -509,6 +555,7 @@ int bflb_gpio_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
     }
     return ret;
+#endif
 }
 
 struct bflb_device_s *g_gpio_int = NULL;

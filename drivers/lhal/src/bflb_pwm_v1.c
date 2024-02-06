@@ -4,6 +4,11 @@
 
 void bflb_pwm_v1_channel_init(struct bflb_device_s *dev, uint8_t ch, const struct bflb_pwm_v1_channel_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_PWM_CLK_SOURCE(config->clk_source));
+    LHAL_PARAM_ASSERT(IS_PWM_CLK_DIV(config->clk_div));
+    LHAL_PARAM_ASSERT(IS_PWM_PERIOD(config->period));
+
     uint32_t reg_base;
     uint32_t regval;
     uint64_t start_time;

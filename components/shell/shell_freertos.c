@@ -157,7 +157,8 @@ static void ps_cmd(int argc, char **argv)
     pcWriteBuffer = info;
 
     /* Generate a table of task stats. */
-    strcpy(pcWriteBuffer, "Task");
+    if(strlcpy(pcWriteBuffer, "Task", 1536) >= 1536)
+        printf("[OS]: strlcpy truncated \r\n");
     pcWriteBuffer += strlen(pcWriteBuffer);
 
     /* Minus three for the null terminator and half the number of characters in
@@ -170,7 +171,9 @@ static void ps_cmd(int argc, char **argv)
         /* Ensure always terminated. */
         *pcWriteBuffer = 0x00;
     }
-    strcpy(pcWriteBuffer, pcHeader);
+    if(strlcpy(pcWriteBuffer, pcHeader, 1536 - (pcWriteBuffer - info)) >= \
+               1536 - (pcWriteBuffer - info))
+        printf("[OS]: strlcpy truncated \r\n");
     vTaskList(pcWriteBuffer + strlen(pcHeader));
     printf("\r\n");
     printf(info);
@@ -178,13 +181,3 @@ static void ps_cmd(int argc, char **argv)
     free(info);
 }
 SHELL_CMD_EXPORT_ALIAS(ps_cmd, ps, shell ps);
-
-static void version_cmd(int argc, char **argv)
-{
-    printf("kernel version :posix\r\n");
-    printf(BOUFFALO_SDK_VER);
-    printf("\r\n");
-
-    printf("Heap left: %d Bytes\r\n", kfree_size());
-}
-SHELL_CMD_EXPORT_ALIAS(version_cmd, sysver, show sysver);

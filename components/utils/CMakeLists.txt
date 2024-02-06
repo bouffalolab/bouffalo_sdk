@@ -83,7 +83,7 @@ sdk_library_add_sources(partition/partition.c)
 sdk_add_include_directories(partition)
 endif()
 
-# blmtd
+# bflb_mtd
 if(CONFIG_BFLB_MTD)
 sdk_library_add_sources(bflb_mtd/bflb_mtd.c bflb_mtd/bflb_boot2.c)
 sdk_add_include_directories(bflb_mtd/include)
@@ -102,3 +102,6 @@ if(CONFIG_BFLB_OTA)
 sdk_library_add_sources(bflb_ota/bflb_ota.c bflb_ota/utils_sha256.c)
 sdk_add_include_directories(bflb_ota)
 endif()
+
+# list
+sdk_add_include_directories(list)

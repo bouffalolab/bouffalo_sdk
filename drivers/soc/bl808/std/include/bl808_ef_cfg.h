@@ -58,13 +58,6 @@ extern "C" {
 /**
  *  @brief Efuse analog device info type definition
  */
-typedef struct
-{
-    uint8_t chipInfo;   /*!< Efuse chip revision */
-    uint8_t memoryInfo; /*!< Efuse memory info 0:no memory, 8:1MB flash */
-    uint8_t psramInfo;  /*!< Efuse psram info 0:no psram, 1:WB 4MB, 2:UHS 32MB, 3:UHS 64MB, 4:WB 32MB, 5:WB 16MB */
-    uint8_t deviceInfo; /*!< Efuse device information */
-} bflb_efuse_device_info_type;
 
 /*@} end of group EF_CTRL_Public_Types */
 
@@ -83,7 +76,6 @@ typedef struct
 /** @defgroup  EF_CTRL_Public_Functions
  *  @{
  */
-void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo);
 
 /*@} end of group EF_CTRL_Public_Functions */
 

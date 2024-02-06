@@ -39,11 +39,12 @@
 
 #include "bflb_common.h"
 
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Network interface name */
-#define IFNAME0                  'b'
-#define IFNAME1                  'l'
+#define IFNAME0                  'e'
+#define IFNAME1                  'x'
 
 #define ETH_DMA_TRANSMIT_TIMEOUT (20U)
 
@@ -76,10 +77,10 @@ uint8_t DHCP_state = DHCP_OFF;
 struct bflb_device_s *emac0;
 struct bflb_emac_phy_cfg_s phy_cfg = {
     .auto_negotiation = 1, /*!< Speed and mode auto negotiation */
-    .full_duplex = 0,      /*!< Duplex mode */
-    .speed = 0,            /*!< Speed mode */
+    .full_duplex = 1,      /*!< Duplex mode */
+    .speed = 100,            /*!< Speed mode */
 #ifdef PHY_8720
-    .phy_address = 1,  /*!< PHY address */
+    .phy_address = 0x01,  /*!< PHY address */
     .phy_id = 0x7c0f0, /*!< PHY OUI, masked */
 #else
 #ifdef PHY_8201F
@@ -204,7 +205,7 @@ void low_level_init(struct netif *netif)
 
     /* phy module init */
     ret = ethernet_phy_init(emac0, &phy_cfg);
-    printf("ETH PHY init ok!\r\n");
+    printf("ETH PHY init done! %d\r\n", ret);
     ethernet_phy_status_get();
     if (PHY_STATE_UP == phy_cfg.phy_state) {
         printf("PHY[%lx] @%d ready on %dMbps, %s duplex\n\r", phy_cfg.phy_id, phy_cfg.phy_address, phy_cfg.speed, phy_cfg.full_duplex ? "full" : "half");
@@ -476,7 +477,7 @@ void ethernet_link_status_updated(struct netif *netif)
         /* IP address default setting */
         ethernet_set_static_ip(netif);
         uint8_t iptxt[20];
-        sprintf((char *)iptxt, "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
+        snprintf((char *)iptxt, sizeof(iptxt), "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
         printf("Static IP address: %s\r\n", iptxt);
 #endif
     } else {
@@ -498,47 +499,45 @@ void ethernet_link_check_state(struct netif *netif)
     emac_phy_status_t phy_state;
 
     uint32_t linkchanged = 0;
-    // uint32_t speed = 0, duplex = 0;
+    uint32_t speed = 0, duplex = 0;
 
     phy_state = ethernet_phy_status_get();
 
     if (netif_is_link_up(netif) && (phy_state <= EMAC_PHY_STAT_LINK_DOWN)) {
-        printf("Link Down\r\n");
-        bflb_emac_stop(emac0);
+        printf("Link Down!\r\n");
+        // bflb_emac_stop(emac0);
         netif_set_down(netif);
         netif_set_link_down(netif);
-    } else if (!netif_is_link_up(netif) && (phy_state <= EMAC_PHY_STAT_LINK_DOWN)) {
-        printf("Reinit\r\n");
-        ethernet_phy_init(emac0, &phy_cfg);
     } else if (!netif_is_link_up(netif) && (phy_state > EMAC_PHY_STAT_LINK_UP)) {
-        // switch (phy_state) {
-        //     case EMAC_PHY_STAT_100MBITS_FULLDUPLEX:
-        //         duplex = 1;
-        //         speed = 100;
-        //         linkchanged = 1;
-        //         break;
+        printf("Link Up!\r\n");
+        switch (phy_state) {
+            case EMAC_PHY_STAT_100MBITS_FULLDUPLEX:
+                duplex = 1;
+                speed = 100;
+                linkchanged = 1;
+                break;
 
-        //     case EMAC_PHY_STAT_100MBITS_HALFDUPLEX:
-        //         duplex = 0;
-        //         speed = 100;
-        //         linkchanged = 1;
-        //         break;
+            case EMAC_PHY_STAT_100MBITS_HALFDUPLEX:
+                duplex = 0;
+                speed = 100;
+                linkchanged = 1;
+                break;
 
-        //     case EMAC_PHY_STAT_10MBITS_FULLDUPLEX:
-        //         duplex = 1;
-        //         speed = 10;
-        //         linkchanged = 1;
-        //         break;
+            case EMAC_PHY_STAT_10MBITS_FULLDUPLEX:
+                duplex = 1;
+                speed = 10;
+                linkchanged = 1;
+                break;
 
-        //     case EMAC_PHY_STAT_10MBITS_HALFDUPLEX:
-        //         duplex = 0;
-        //         speed = 10;
-        //         linkchanged = 1;
-        //         break;
+            case EMAC_PHY_STAT_10MBITS_HALFDUPLEX:
+                duplex = 0;
+                speed = 10;
+                linkchanged = 1;
+                break;
 
-        //     default:
-        //         break;
-        // }
+            default:
+                break;
+        }
 
         if (linkchanged) {
             /* Get MAC Config MAC */
@@ -565,6 +564,11 @@ void dhcp_thread(void const *argument)
 
     for (;;) {
         switch (DHCP_state) {
+            case DHCP_OFF: {
+                printf("DHCP OFF!\r\n");
+                vTaskDelay(1000);
+            }
+            break;
             case DHCP_START: {
                 ip_addr_set_zero_ip4(&netif->ip_addr);
                 ip_addr_set_zero_ip4(&netif->netmask);
@@ -576,7 +580,7 @@ void dhcp_thread(void const *argument)
             case DHCP_WAIT_ADDRESS: {
                 if (dhcp_supplied_address(netif)) {
                     DHCP_state = DHCP_ADDRESS_ASSIGNED;
-                    sprintf((char *)iptxt, "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
+                    snprintf((char *)iptxt, sizeof(iptxt), "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
                     printf("IP address assigned by a DHCP server: %s\r\n", iptxt);
                 } else {
                     dhcp = (struct dhcp *)netif_get_client_data(netif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP);
@@ -587,7 +591,7 @@ void dhcp_thread(void const *argument)
 
                         /* Static address used */
                         ethernet_set_static_ip(netif);
-                        sprintf((char *)iptxt, "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
+                        snprintf((char *)iptxt, sizeof(iptxt), "%s", ip4addr_ntoa(netif_ip4_addr(netif)));
                         printf("DHCP Timeout !! \r\n");
                         printf("Static IP address: %s\r\n", iptxt);
                     }
@@ -596,6 +600,11 @@ void dhcp_thread(void const *argument)
             case DHCP_ADDRESS_ASSIGNED: {
                 netif->state = DHCP_ADDRESS_ASSIGNED;
             } break;
+            case DHCP_TIMEOUT: {
+                printf("DHCP TIMEOUT!\r\n");
+                netif->state = DHCP_LINK_DOWN;
+            }
+            break;
             case DHCP_LINK_DOWN: {
                 DHCP_state = DHCP_OFF;
                 printf("The network cable is not connected \r\n");

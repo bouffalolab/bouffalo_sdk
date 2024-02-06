@@ -4,15 +4,6 @@
 .clangd
 cscope*
 compile_commands.*
-/components
-/drivers
-/bsp
-examples/solutions
-examples/wifi
-examples/btble
-examples/zigbee
-tools/bflb_tools
-tools/CI
 chiptest
 **/__pycache__
 **/build
@@ -26,6 +17,5 @@ chiptest
 *.pptx
 *.svd
 **/_build
-tools/reg_parser/Peripherals/*_reg.h
-tools/reg_parser/InitVals/*_register.c
 **/img_create_iot
+docs/zh/_static/**

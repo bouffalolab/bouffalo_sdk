@@ -67,6 +67,16 @@ void dma2_isr(int irq, void *arg)
 
 void bflb_dma_channel_init(struct bflb_device_s *dev, const struct bflb_dma_channel_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_DMA_DIRECTION(config->direction));
+    LHAL_PARAM_ASSERT(IS_DMA_BURST_COUNT(config->src_burst_count));
+    LHAL_PARAM_ASSERT(IS_DMA_BURST_COUNT(config->dst_burst_count));
+    LHAL_PARAM_ASSERT(IS_DMA_DATA_WIDTH(config->src_width));
+    LHAL_PARAM_ASSERT(IS_DMA_DATA_WIDTH(config->dst_width));
+
+#ifdef romapi_bflb_dma_channel_init
+    romapi_bflb_dma_channel_init(dev, config);
+#else
     uint32_t regval;
     uint32_t channel_base;
 
@@ -124,37 +134,26 @@ void bflb_dma_channel_init(struct bflb_device_s *dev, const struct bflb_dma_chan
     /* clear irq status */
     putreg32(1 << dev->sub_idx, dma_base[dev->idx] + DMA_INTTCCLEAR_OFFSET);
     putreg32(1 << dev->sub_idx, dma_base[dev->idx] + DMA_INTERRCLR_OFFSET);
-
-#if (defined(BL606P) || defined(BL808)) && (defined(CPU_M0) || defined(CPU_LP))
-    bflb_irq_attach(31, dma0_isr, NULL);
-    bflb_irq_attach(32, dma1_isr, NULL);
-    bflb_irq_enable(31);
-    bflb_irq_enable(32);
-#elif (defined(BL606P) || defined(BL808)) && defined(CPU_D0)
-    bflb_irq_attach(40, dma2_isr, NULL);
-    bflb_irq_attach(41, dma2_isr, NULL);
-    bflb_irq_attach(42, dma2_isr, NULL);
-    bflb_irq_attach(43, dma2_isr, NULL);
-    bflb_irq_attach(44, dma2_isr, NULL);
-    bflb_irq_attach(45, dma2_isr, NULL);
-    bflb_irq_attach(46, dma2_isr, NULL);
-    bflb_irq_attach(47, dma2_isr, NULL);
-    bflb_irq_enable(40);
-    bflb_irq_enable(41);
-    bflb_irq_enable(42);
-    bflb_irq_enable(43);
-    bflb_irq_enable(44);
-    bflb_irq_enable(45);
-    bflb_irq_enable(46);
-    bflb_irq_enable(47);
-#else
-    bflb_irq_attach(dev->irq_num, dma0_isr, NULL);
-    bflb_irq_enable(dev->irq_num);
 #endif
 }
 
-void bflb_dma_lli_config(struct bflb_device_s *dev, struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t lli_count, uint32_t src_addr, uint32_t dst_addr, uint32_t transfer_offset, uint32_t last_transfer_len)
+void bflb_dma_lli_config(struct bflb_device_s *dev,
+                         struct bflb_dma_channel_lli_pool_s *lli_pool,
+                         uint32_t lli_count,
+                         uint32_t src_addr,
+                         uint32_t dst_addr,
+                         uint32_t transfer_offset,
+                         uint32_t last_transfer_len)
 {
+#ifdef romapi_bflb_dma_lli_config
+    romapi_bflb_dma_lli_config(dev,
+                               lli_pool,
+                               lli_count,
+                               src_addr,
+                               dst_addr,
+                               transfer_offset,
+                               last_transfer_len);
+#else
     uint32_t channel_base;
     union bflb_dma_lli_control_s dma_ctrl_cfg;
 
@@ -190,10 +189,14 @@ void bflb_dma_lli_config(struct bflb_device_s *dev, struct bflb_dma_channel_lli_
 
         lli_pool[i].control = dma_ctrl_cfg;
     }
+#endif
 }
 
 int bflb_dma_channel_lli_reload(struct bflb_device_s *dev, struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t max_lli_count, struct bflb_dma_channel_lli_transfer_s *transfer, uint32_t count)
 {
+#ifdef romapi_bflb_dma_channel_lli_reload
+    return romapi_bflb_dma_channel_lli_reload(dev, lli_pool, max_lli_count, transfer, count);
+#else
     uint32_t channel_base;
     uint32_t actual_transfer_offset = 0;
     uint32_t actual_transfer_len = 0;
@@ -271,12 +274,16 @@ int bflb_dma_channel_lli_reload(struct bflb_device_s *dev, struct bflb_dma_chann
     bflb_l1c_dcache_clean_range((uint32_t *)(uintptr_t)lli_pool, sizeof(struct bflb_dma_channel_lli_pool_s) * lli_count_used_offset);
 #endif
     return lli_count_used_offset;
+#endif
 }
 
 void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
                                     struct bflb_dma_channel_lli_pool_s *lli_pool,
                                     uint32_t used_lli_count)
 {
+#ifdef romapi_bflb_dma_channel_lli_link_head
+    romapi_bflb_dma_channel_lli_link_head(dev, lli_pool, used_lli_count);
+#else
     uint32_t channel_base;
 
     channel_base = dev->reg_base;
@@ -288,10 +295,14 @@ void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
     /* clean cache, DMA does not pass through the cache */
     bflb_l1c_dcache_clean_range((uint32_t *)lli_pool, sizeof(struct bflb_dma_channel_lli_pool_s) * used_lli_count);
 #endif
+#endif
 }
 
 void bflb_dma_channel_start(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_dma_channel_start
+    romapi_bflb_dma_channel_start(dev);
+#else
     uint32_t regval;
     uint32_t channel_base;
 
@@ -301,10 +312,14 @@ void bflb_dma_channel_start(struct bflb_device_s *dev)
     regval = getreg32(channel_base + DMA_CxCONFIG_OFFSET);
     regval |= DMA_E;
     putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
+#endif
 }
 
 void bflb_dma_channel_stop(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_dma_channel_stop
+    romapi_bflb_dma_channel_stop(dev);
+#else
     uint32_t regval;
     uint32_t channel_base;
 
@@ -314,10 +329,14 @@ void bflb_dma_channel_stop(struct bflb_device_s *dev)
     regval = getreg32(channel_base + DMA_CxCONFIG_OFFSET);
     regval &= ~DMA_E;
     putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
+#endif
 }
 
 bool bflb_dma_channel_isbusy(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_dma_channel_isbusy
+    romapi_bflb_dma_channel_isbusy(dev);
+#else
     uint32_t regval;
     uint32_t channel_base;
 
@@ -329,10 +348,14 @@ bool bflb_dma_channel_isbusy(struct bflb_device_s *dev)
     } else {
         return false;
     }
+#endif
 }
 
 void bflb_dma_channel_tcint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_dma_channel_tcint_mask
+    romapi_bflb_dma_channel_tcint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t channel_base;
 
@@ -342,27 +365,51 @@ void bflb_dma_channel_tcint_mask(struct bflb_device_s *dev, bool mask)
         regval = getreg32(channel_base + DMA_CxCONFIG_OFFSET);
         regval |= DMA_ITC;
         putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
-
-        regval = getreg32(channel_base + DMA_CxCONTROL_OFFSET);
-        regval &= ~DMA_I;
-        putreg32(regval, channel_base + DMA_CxCONTROL_OFFSET);
     } else {
         regval = getreg32(channel_base + DMA_CxCONFIG_OFFSET);
         regval &= ~DMA_ITC;
         putreg32(regval, channel_base + DMA_CxCONFIG_OFFSET);
-
-        regval = getreg32(channel_base + DMA_CxCONTROL_OFFSET);
-        regval |= DMA_I;
-        putreg32(regval, channel_base + DMA_CxCONTROL_OFFSET);
     }
+#endif
 }
 
 void bflb_dma_channel_irq_attach(struct bflb_device_s *dev, void (*callback)(void *arg), void *arg)
 {
+    static uint8_t init_attach = 0;
     dma_callback[dev->idx][dev->sub_idx].handler = callback;
     dma_callback[dev->idx][dev->sub_idx].arg = arg;
 
     bflb_dma_channel_tcint_mask(dev, false);
+
+    if (init_attach == 0) {
+        init_attach = 1;
+#if (defined(BL606P) || defined(BL808)) && (defined(CPU_M0) || defined(CPU_LP))
+        bflb_irq_attach(31, dma0_isr, NULL);
+        bflb_irq_attach(32, dma1_isr, NULL);
+        bflb_irq_enable(31);
+        bflb_irq_enable(32);
+#elif (defined(BL606P) || defined(BL808)) && defined(CPU_D0)
+        bflb_irq_attach(40, dma2_isr, NULL);
+        bflb_irq_attach(41, dma2_isr, NULL);
+        bflb_irq_attach(42, dma2_isr, NULL);
+        bflb_irq_attach(43, dma2_isr, NULL);
+        bflb_irq_attach(44, dma2_isr, NULL);
+        bflb_irq_attach(45, dma2_isr, NULL);
+        bflb_irq_attach(46, dma2_isr, NULL);
+        bflb_irq_attach(47, dma2_isr, NULL);
+        bflb_irq_enable(40);
+        bflb_irq_enable(41);
+        bflb_irq_enable(42);
+        bflb_irq_enable(43);
+        bflb_irq_enable(44);
+        bflb_irq_enable(45);
+        bflb_irq_enable(46);
+        bflb_irq_enable(47);
+#else
+        bflb_irq_attach(dev->irq_num, dma0_isr, NULL);
+        bflb_irq_enable(dev->irq_num);
+#endif
+    }
 }
 
 void bflb_dma_channel_irq_detach(struct bflb_device_s *dev)
@@ -375,6 +422,9 @@ void bflb_dma_channel_irq_detach(struct bflb_device_s *dev)
 
 bool bflb_dma_channel_get_tcint_status(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_dma_channel_get_tcint_status
+    return romapi_bflb_dma_channel_get_tcint_status(dev);
+#else
     uint32_t regval;
 
     regval = getreg32(dma_base[dev->idx] + DMA_INTTCSTATUS_OFFSET);
@@ -383,22 +433,37 @@ bool bflb_dma_channel_get_tcint_status(struct bflb_device_s *dev)
     } else {
         return false;
     }
+#endif
 }
 
 void bflb_dma_channel_tcint_clear(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_dma_channel_tcint_clear
+    romapi_bflb_dma_channel_tcint_clear(dev);
+#else
     putreg32(1 << dev->sub_idx, dma_base[dev->idx] + DMA_INTTCCLEAR_OFFSET);
+#endif
 }
 
-void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
-                            struct bflb_device_s *dma_ch,
-                            struct bflb_dma_channel_lli_pool_s *rx_llipool,
-                            uint8_t rx_llipool_size,
-                            uint32_t src_addr,
-                            uint8_t *dst_buf,
-                            uint32_t dst_buf_size,
-                            void (*copy)(uint8_t *data, uint32_t len))
+int bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
+                           struct bflb_device_s *dma_ch,
+                           struct bflb_dma_channel_lli_pool_s *rx_llipool,
+                           uint8_t rx_llipool_size,
+                           uint32_t src_addr,
+                           uint8_t *dst_buf,
+                           uint32_t dst_buf_size,
+                           void (*copy)(uint8_t *data, uint32_t len))
 {
+#ifdef romapi_bflb_rx_cycle_dma_init
+    return romapi_bflb_rx_cycle_dma_init(rx_dma,
+                                         dma_ch,
+                                         rx_llipool,
+                                         rx_llipool_size,
+                                         src_addr,
+                                         dst_buf,
+                                         dst_buf_size,
+                                         copy);
+#else
     struct bflb_dma_channel_lli_transfer_s rx_transfers[2];
 
     rx_dma->dst_buf = dst_buf;
@@ -419,14 +484,19 @@ void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
     int used_count = bflb_dma_channel_lli_reload(dma_ch, rx_llipool, rx_llipool_size, rx_transfers, 2);
 
     if (used_count < 0) {
-        while (1) {}
+        return -1;
     }
 
     bflb_dma_channel_lli_link_head(dma_ch, rx_llipool, used_count);
+    return 0;
+#endif
 }
 
 void bflb_rx_cycle_dma_process(struct bflb_rx_cycle_dma *rx_dma, bool in_dma_isr)
 {
+#ifdef romapi_bflb_rx_cycle_dma_process
+    romapi_bflb_rx_cycle_dma_process(rx_dma, in_dma_isr);
+#else
     uint16_t length;
     uint32_t dma_lli_count;
     uint8_t *write_ptr;
@@ -464,10 +534,14 @@ void bflb_rx_cycle_dma_process(struct bflb_rx_cycle_dma *rx_dma, bool in_dma_isr
 
     rx_dma->read_ptr = write_ptr;
     rx_dma->dma_last_lli_count = dma_lli_count;
+#endif
 }
 
 int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_dma_feature_control
+    return romapi_bflb_dma_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t regval;
     uint32_t channel_base;
@@ -535,4 +609,5 @@ int bflb_dma_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
     }
     return ret;
+#endif
 }

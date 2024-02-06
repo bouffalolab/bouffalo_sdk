@@ -10,6 +10,14 @@ static volatile uint32_t g_audac_channel_mode = 0;
 
 int bflb_audac_init(struct bflb_device_s *dev, const struct bflb_audac_init_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_AUDAC_SAMPLING_RATE(config->sampling_rate));
+    LHAL_PARAM_ASSERT(IS_AUDAC_OUTPUT_MODE(config->output_mode));
+    LHAL_PARAM_ASSERT(IS_AUDAC_SOURCE_CHANNEL(config->source_channels_num));
+    LHAL_PARAM_ASSERT(IS_AUDAC_MIXER_MODE(config->mixer_mode));
+    LHAL_PARAM_ASSERT(IS_AUDAC_DATA_FORMAT(config->data_format));
+    LHAL_PARAM_ASSERT(IS_AUDAC_THRESHOLD(config->fifo_threshold));
+
     uint32_t reg_base;
     uint32_t regval;
 
@@ -121,6 +129,11 @@ int bflb_audac_init(struct bflb_device_s *dev, const struct bflb_audac_init_conf
 
 int bflb_audac_volume_init(struct bflb_device_s *dev, const struct bflb_audac_volume_config_s *vol_cfg)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_AUDAC_RAMP_RATE(vol_cfg->mute_up_ramp_rate));
+    LHAL_PARAM_ASSERT(IS_AUDAC_RAMP_RATE(vol_cfg->mute_down_ramp_rate));
+    LHAL_PARAM_ASSERT(IS_AUDAC_VOLUME_UPDATE_MODE(vol_cfg->volume_update_mode));
+
     uint32_t reg_base;
     uint32_t regval;
 

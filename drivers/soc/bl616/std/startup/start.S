@@ -13,6 +13,12 @@ __start:
 .option pop
     csrci   mstatus, 8
 
+    lui a0, 0x20056
+    lw  a1, 0xb0(a0)
+    lui a0, 0x40281
+    bne a0, a1, 1f
+    j .
+1:
     /* mtvec: for all exceptions and non-vector mode IRQs */
     la      a0, default_trap_handler
     ori     a0, a0, 3

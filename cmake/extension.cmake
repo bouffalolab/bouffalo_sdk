@@ -277,5 +277,6 @@ macro(project name)
   endif()
 
   include(${BL_SDK_BASE}/cmake/bflb_flash.cmake)
+  include(${BL_SDK_BASE}/cmake/footprint.cmake)
   include(${BL_SDK_BASE}/cmake/gen_c_cpp_properties_json.cmake)
 endmacro()

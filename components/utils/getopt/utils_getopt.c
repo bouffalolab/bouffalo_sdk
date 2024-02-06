@@ -162,7 +162,7 @@ void get_bytearray_from_string(char **params, uint8_t *result, int array_size)
     char rand[3];
 
     for (i = 0; i < array_size; i++) {
-        strncpy(rand, (const char *)*params, 2);
+        memcpy(rand, *params, 2);
         rand[2] = '\0';
         result[i] = strtol(rand, NULL, 16);
         *params = *params + 2;

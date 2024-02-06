@@ -7,6 +7,9 @@
 #if !defined(BL616)
 void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s *config)
 {
+#ifdef romapi_bflb_ir_tx_init
+    romapi_bflb_ir_tx_init(dev, config);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint32_t ir_clock;
@@ -186,10 +189,14 @@ void bflb_ir_tx_init(struct bflb_device_s *dev, const struct bflb_ir_tx_config_s
              tx_config->tail_pulse_width_0 << 16 | tx_config->tail_pulse_width_1 << 24;
     putreg32(regval, reg_base + IRTX_PW_1_OFFSET);
 #endif
+#endif
 }
 
 void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
 {
+#ifdef romapi_bflb_ir_send
+    romapi_bflb_ir_send(dev, data, length);
+#else
     uint32_t reg_base;
     uint32_t regval;
 #if !defined(BL602) && !defined(BL702)
@@ -240,10 +247,14 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
 
     bflb_ir_txint_clear(dev);
+#endif
 }
 
 void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
 {
+#ifdef romapi_bflb_ir_swm_send
+    romapi_bflb_ir_swm_send(dev, data, length);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint16_t min_data = data[0];
@@ -340,10 +351,14 @@ void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
 
     bflb_ir_txint_clear(dev);
+#endif
 }
 
 void bflb_ir_tx_enable(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_ir_tx_enable
+    romapi_bflb_ir_tx_enable(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -355,10 +370,14 @@ void bflb_ir_tx_enable(struct bflb_device_s *dev, bool enable)
         regval &= ~IR_CR_IRTX_EN;
     }
     putreg32(regval, reg_base + IRTX_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_ir_txint_mask(struct bflb_device_s *dev, uint8_t int_type, bool mask)
 {
+#ifdef romapi_bflb_ir_txint_mask
+    romapi_bflb_ir_txint_mask(dev, int_type, mask);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -370,10 +389,14 @@ void bflb_ir_txint_mask(struct bflb_device_s *dev, uint8_t int_type, bool mask)
         regval &= ~((int_type & 0x7) << 8);
     }
     putreg32(regval, reg_base + IRTX_INT_STS_OFFSET);
+#endif
 }
 
 void bflb_ir_txint_clear(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ir_txint_clear
+    romapi_bflb_ir_txint_clear(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -381,19 +404,27 @@ void bflb_ir_txint_clear(struct bflb_device_s *dev)
     regval = getreg32(reg_base + IRTX_INT_STS_OFFSET);
     regval |= IR_CR_IRTX_END_CLR;
     putreg32(regval, reg_base + IRTX_INT_STS_OFFSET);
+#endif
 }
 
 uint32_t bflb_ir_get_txint_status(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ir_get_txint_status
+    return romapi_bflb_ir_get_txint_status(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
     return (getreg32(reg_base + IRTX_INT_STS_OFFSET) & 0x7);
+#endif
 }
 
 #if !defined(BL602) && !defined(BL702)
 void bflb_ir_link_txdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_ir_link_txdma
+    romapi_bflb_ir_link_txdma(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -405,18 +436,26 @@ void bflb_ir_link_txdma(struct bflb_device_s *dev, bool enable)
         regval &= ~IRTX_DMA_EN;
     }
     putreg32(regval, reg_base + IR_FIFO_CONFIG_0_OFFSET);
+#endif
 }
 
 uint8_t bflb_ir_get_txfifo_cnt(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ir_get_txfifo_cnt
+    return romapi_bflb_ir_get_txfifo_cnt(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
     return ((getreg32(reg_base + IR_FIFO_CONFIG_1_OFFSET) & IR_TX_FIFO_CNT_MASK) >> IR_TX_FIFO_CNT_SHIFT);
+#endif
 }
 
 void bflb_ir_txfifo_clear(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ir_txfifo_clear
+    romapi_bflb_ir_txfifo_clear(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -424,6 +463,7 @@ void bflb_ir_txfifo_clear(struct bflb_device_s *dev)
     regval = getreg32(reg_base + IR_FIFO_CONFIG_0_OFFSET);
     regval |= IR_TX_FIFO_CLR;
     putreg32(regval, reg_base + IR_FIFO_CONFIG_0_OFFSET);
+#endif
 }
 #endif
 #endif
@@ -431,6 +471,9 @@ void bflb_ir_txfifo_clear(struct bflb_device_s *dev)
 #if !defined(BL702L)
 void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s *config)
 {
+#ifdef romapi_bflb_ir_rx_init
+    romapi_bflb_ir_rx_init(dev, config);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint32_t ir_clock;
@@ -480,10 +523,14 @@ void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s
     regval |= config->fifo_threshold << IR_RX_FIFO_TH_SHIFT;
     putreg32(regval, reg_base + IR_FIFO_CONFIG_1_OFFSET);
 #endif
+#endif
 }
 
 uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data)
 {
+#ifdef romapi_bflb_ir_receive
+    return romapi_bflb_ir_receive(dev, data);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -511,10 +558,14 @@ uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data)
     }
 
     return regval;
+#endif
 }
 
 uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
 {
+#ifdef romapi_bflb_ir_swm_receive
+    return romapi_bflb_ir_swm_receive(dev, data, length);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint32_t i = 0;
@@ -544,10 +595,14 @@ uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t l
     bflb_ir_rxint_clear(dev);
 
     return (getreg32(reg_base + IRRX_DATA_COUNT_OFFSET) & IR_STS_IRRX_DATA_CNT_MASK);
+#endif
 }
 
 void bflb_ir_rx_enable(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_ir_rx_enable
+    romapi_bflb_ir_rx_enable(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -559,10 +614,14 @@ void bflb_ir_rx_enable(struct bflb_device_s *dev, bool enable)
         regval &= ~IR_CR_IRRX_EN;
     }
     putreg32(regval, reg_base + IRRX_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_ir_rxint_mask(struct bflb_device_s *dev, uint8_t int_type, bool mask)
 {
+#ifdef romapi_bflb_ir_rxint_mask
+    romapi_bflb_ir_rxint_mask(dev, int_type, mask);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -574,10 +633,14 @@ void bflb_ir_rxint_mask(struct bflb_device_s *dev, uint8_t int_type, bool mask)
         regval &= ~((int_type & 0x7) << 8);
     }
     putreg32(regval, reg_base + IRRX_INT_STS_OFFSET);
+#endif
 }
 
 void bflb_ir_rxint_clear(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ir_rxint_clear
+    romapi_bflb_ir_rxint_clear(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -585,18 +648,26 @@ void bflb_ir_rxint_clear(struct bflb_device_s *dev)
     regval = getreg32(reg_base + IRRX_INT_STS_OFFSET);
     regval |= IR_CR_IRRX_END_CLR;
     putreg32(regval, reg_base + IRRX_INT_STS_OFFSET);
+#endif
 }
 
 uint32_t bflb_ir_get_rxint_status(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ir_get_rxint_status
+    return romapi_bflb_ir_get_rxint_status(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
     return (getreg32(reg_base + IRRX_INT_STS_OFFSET) & 0x7);
+#endif
 }
 
 uint8_t bflb_ir_get_rxfifo_cnt(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ir_get_rxfifo_cnt
+    return romapi_bflb_ir_get_rxfifo_cnt(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
@@ -605,10 +676,14 @@ uint8_t bflb_ir_get_rxfifo_cnt(struct bflb_device_s *dev)
 #else
     return ((getreg32(reg_base + IR_FIFO_CONFIG_1_OFFSET) & IR_RX_FIFO_CNT_MASK) >> IR_RX_FIFO_CNT_SHIFT);
 #endif
+#endif
 }
 
 void bflb_ir_rxfifo_clear(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ir_rxfifo_clear
+    romapi_bflb_ir_rxfifo_clear(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -621,6 +696,7 @@ void bflb_ir_rxfifo_clear(struct bflb_device_s *dev)
     regval = getreg32(reg_base + IR_FIFO_CONFIG_0_OFFSET);
     regval |= IR_RX_FIFO_CLR;
     putreg32(regval, reg_base + IR_FIFO_CONFIG_0_OFFSET);
+#endif
 #endif
 }
 #endif

@@ -134,7 +134,7 @@ void lv_label_set_text(lv_obj_t * obj, const char * text)
         label->text = lv_mem_alloc(len);
         LV_ASSERT_MALLOC(label->text);
         if(label->text == NULL) return;
-        strcpy(label->text, text);
+        strlcpy(label->text, text, len);
 #endif
 
         /*Now the text is dynamically allocated*/

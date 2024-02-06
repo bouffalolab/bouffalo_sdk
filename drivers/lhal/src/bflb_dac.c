@@ -9,6 +9,12 @@
 
 void bflb_dac_init(struct bflb_device_s *dev, uint8_t clk_div)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_DAC_CLK_DIV(clk_div));
+
+#ifdef romapi_bflb_dac_init
+    romapi_bflb_dac_init(dev, clk_div);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -52,10 +58,14 @@ void bflb_dac_init(struct bflb_device_s *dev, uint8_t clk_div)
     regval = getreg32(DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
     regval &= ~GPIP_GPDAC_DMA_TX_EN;
     putreg32(regval, DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_dac_channel_enable(struct bflb_device_s *dev, uint8_t ch)
 {
+#ifdef romapi_bflb_dac_channel_enable
+    romapi_bflb_dac_channel_enable(dev, ch);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -77,10 +87,14 @@ void bflb_dac_channel_enable(struct bflb_device_s *dev, uint8_t ch)
         putreg32(regval, reg_base + GLB_GPDAC_ACTRL_OFFSET);
 #endif
     }
+#endif
 }
 
 void bflb_dac_channel_disable(struct bflb_device_s *dev, uint8_t ch)
 {
+#ifdef romapi_bflb_dac_channel_disable
+    romapi_bflb_dac_channel_disable(dev, ch);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -97,10 +111,14 @@ void bflb_dac_channel_disable(struct bflb_device_s *dev, uint8_t ch)
         regval &= ~(GLB_GPDAC_B_EN | GLB_GPDAC_IOB_EN);
         putreg32(regval, reg_base + GLB_GPDAC_BCTRL_OFFSET);
     }
+#endif
 }
 
 void bflb_dac_link_txdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_dac_link_txdma
+    romapi_bflb_dac_link_txdma(dev, enable);
+#else
     uint32_t regval1;
     uint32_t regval2;
     uint32_t reg_base;
@@ -136,20 +154,28 @@ void bflb_dac_link_txdma(struct bflb_device_s *dev, bool enable)
     }
     putreg32(regval2, DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
     putreg32(regval1, DAC_GPIP_BASE + GPIP_GPDAC_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_dac_set_dma_format(struct bflb_device_s *dev, uint8_t format)
 {
+#ifdef romapi_bflb_dac_set_dma_format
+    romapi_bflb_dac_set_dma_format(dev, format);
+#else
     uint32_t regval;
 
     regval = getreg32(DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
     regval &= ~GPIP_GPDAC_DMA_FORMAT_MASK;
     regval |= (format << GPIP_GPDAC_DMA_FORMAT_SHIFT);
     putreg32(regval, DAC_GPIP_BASE + GPIP_GPDAC_DMA_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_dac_set_value(struct bflb_device_s *dev, uint8_t ch, uint16_t value)
 {
+#ifdef romapi_bflb_dac_set_value
+    romapi_bflb_dac_set_value(dev, ch, value);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -168,4 +194,5 @@ void bflb_dac_set_value(struct bflb_device_s *dev, uint8_t ch, uint16_t value)
     }
 
     putreg32(regval, reg_base + GLB_GPDAC_DATA_OFFSET);
+#endif
 }

@@ -183,11 +183,13 @@ typedef struct _lv_obj_t {
     lv_obj_flag_t flags;
     lv_state_t state;
     uint16_t layout_inv : 1;
+    uint16_t readjust_scroll_after_layout : 1;
     uint16_t scr_layout_inv : 1;
     uint16_t skip_trans : 1;
     uint16_t style_cnt  : 6;
     uint16_t h_layout   : 1;
     uint16_t w_layout   : 1;
+    uint16_t being_deleted   : 1;
 } lv_obj_t;
 
 

@@ -31,8 +31,10 @@
 #endif
 #include "bflb_xip_sflash.h"
 #include "bflb_sf_cfg.h"
+#include "bflb_sflash.h"
 #include "bflb_flash.h"
 #include "hardware/sf_ctrl_reg.h"
+#include "bflb_efuse.h"
 
 #if defined(BL616) || defined(BL628)
 static uint32_t flash1_size = 4 * 1024 * 1024;
@@ -243,7 +245,7 @@ static spi_flash_cfg_type g_flash2_cfg = {
     .qe_data = 0,
 };
 
-static bflb_efuse_device_info_type deviceInfo;
+static bflb_efuse_device_info_type device_info;
 #endif
 
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
@@ -339,6 +341,25 @@ static void ATTR_TCM_SECTION flash_set_l1c_wrap(spi_flash_cfg_type *p_flash_cfg)
     }
 }
 
+#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
+static void ATTR_TCM_SECTION bflb_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
+{
+    struct sf_ctrl_cmds_cfg cmds_cfg;
+
+    cmds_cfg.ack_latency = 1;
+    cmds_cfg.cmds_core_en = 1;
+    cmds_cfg.cmds_en = 1;
+    cmds_cfg.cmds_wrap_mode = 1;
+    cmds_cfg.cmds_wrap_len = 9;
+
+    if ((p_flash_cfg->io_mode & 0x1f) == SF_CTRL_QIO_MODE) {
+        cmds_cfg.cmds_wrap_mode = 2;
+        cmds_cfg.cmds_wrap_len = 2;
+    }
+    bflb_sf_ctrl_cmds_set(&cmds_cfg, 0);
+}
+#endif
+
 /**
  * @brief flash_config_init
  *
@@ -363,8 +384,11 @@ static int ATTR_TCM_SECTION flash_config_init(spi_flash_cfg_type *p_flash_cfg, u
     if (ret == 0) {
         p_flash_cfg->mid = (jid & 0xff);
     }
-#ifdef CONFIG_FLASH_2LINE_ENABLE
-    p_flash_cfg->io_mode = 0x13;
+#ifdef CONFIG_FLASH_2LINE
+#if (CONFIG_FLASH_2LINE != 0x11) && (CONFIG_FLASH_2LINE != 0x13)
+#error flash 2 line only supports 0x11 or 0x13
+#endif
+    p_flash_cfg->io_mode = CONFIG_FLASH_2LINE;
     p_flash_cfg->c_read_support = 0x00;
 #endif
     /* Set flash controler from p_flash_cfg */
@@ -417,7 +441,7 @@ static int ATTR_TCM_SECTION flash2_init(void)
     cmds_cfg.cmds_wrap_mode = 1;
     cmds_cfg.cmds_wrap_len = SF_CTRL_WRAP_LEN_4096;
 
-    if (deviceInfo.memoryInfo == 3) {
+    if (device_info.flash_info == 3) {
         /* memoryInfo==3, embedded 4MB+2MB flash */
         flash2_enable = 1;
     }
@@ -468,7 +492,7 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
 #endif
 
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
-    bflb_ef_ctrl_get_device_info(&deviceInfo);
+    bflb_efuse_get_device_info(&device_info);
 #endif
 
 #if defined(BL602) || defined(BL702)
@@ -545,25 +569,6 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
 
     return ret;
 }
-
-#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
-void ATTR_TCM_SECTION bflb_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
-{
-    struct sf_ctrl_cmds_cfg cmds_cfg;
-
-    cmds_cfg.ack_latency = 1;
-    cmds_cfg.cmds_core_en = 1;
-    cmds_cfg.cmds_en = 1;
-    cmds_cfg.cmds_wrap_mode = 1;
-    cmds_cfg.cmds_wrap_len = 9;
-
-    if ((p_flash_cfg->io_mode & 0x1f) == SF_CTRL_QIO_MODE) {
-        cmds_cfg.cmds_wrap_mode = 2;
-        cmds_cfg.cmds_wrap_len = 2;
-    }
-    bflb_sf_ctrl_cmds_set(&cmds_cfg, 0);
-}
-#endif
 
 uint32_t bflb_flash_get_jedec_id(void)
 {

@@ -8,8 +8,6 @@
 #ifndef LFS_H
 #define LFS_H
 
-#include <stdint.h>
-#include <stdbool.h>
 #include "lfs_util.h"
 
 #ifdef __cplusplus
@@ -23,14 +21,14 @@ extern "C"
 // Software library version
 // Major (top-nibble), incremented on backwards incompatible changes
 // Minor (bottom-nibble), incremented on feature additions
-#define LFS_VERSION 0x00020005
+#define LFS_VERSION 0x00020008
 #define LFS_VERSION_MAJOR (0xffff & (LFS_VERSION >> 16))
 #define LFS_VERSION_MINOR (0xffff & (LFS_VERSION >>  0))
 
 // Version of On-disk data structures
 // Major (top-nibble), incremented on backwards incompatible changes
 // Minor (bottom-nibble), incremented on feature additions
-#define LFS_DISK_VERSION 0x00020000
+#define LFS_DISK_VERSION 0x00020001
 #define LFS_DISK_VERSION_MAJOR (0xffff & (LFS_DISK_VERSION >> 16))
 #define LFS_DISK_VERSION_MINOR (0xffff & (LFS_DISK_VERSION >>  0))
 
@@ -114,6 +112,8 @@ enum lfs_type {
     LFS_TYPE_SOFTTAIL       = 0x600,
     LFS_TYPE_HARDTAIL       = 0x601,
     LFS_TYPE_MOVESTATE      = 0x7ff,
+    LFS_TYPE_CCRC           = 0x500,
+    LFS_TYPE_FCRC           = 0x5ff,
 
     // internal chip sources
     LFS_FROM_NOOP           = 0x000,
@@ -263,6 +263,14 @@ struct lfs_config {
     // can help bound the metadata compaction time. Must be <= block_size.
     // Defaults to block_size when zero.
     lfs_size_t metadata_max;
+
+#ifdef LFS_MULTIVERSION
+    // On-disk version to use when writing in the form of 16-bit major version
+    // + 16-bit minor version. This limiting metadata to what is supported by
+    // older minor versions. Note that some features will be lost. Defaults to 
+    // to the most recent minor version when zero.
+    uint32_t disk_version;
+#endif
 };
 
 // File info structure
@@ -278,6 +286,27 @@ struct lfs_info {
     // reduce RAM. LFS_NAME_MAX is stored in superblock and must be
     // respected by other littlefs drivers.
     char name[LFS_NAME_MAX+1];
+};
+
+// Filesystem info structure
+struct lfs_fsinfo {
+    // On-disk version.
+    uint32_t disk_version;
+
+    // Size of a logical block in bytes.
+    lfs_size_t block_size;
+
+    // Number of logical blocks in filesystem.
+    lfs_size_t block_count;
+
+    // Upper limit on the length of file names in bytes.
+    lfs_size_t name_max;
+
+    // Upper limit on the size of files in bytes.
+    lfs_size_t file_max;
+
+    // Upper limit on the size of custom attributes in bytes.
+    lfs_size_t attr_max;
 };
 
 // Custom attribute structure, used to describe custom attributes
@@ -410,6 +439,7 @@ typedef struct lfs {
     } free;
 
     const struct lfs_config *cfg;
+    lfs_size_t block_count;
     lfs_size_t name_max;
     lfs_size_t file_max;
     lfs_size_t attr_max;
@@ -659,6 +689,12 @@ int lfs_dir_rewind(lfs_t *lfs, lfs_dir_t *dir);
 
 /// Filesystem-level filesystem operations
 
+// Find on-disk info about the filesystem
+//
+// Fills out the fsinfo structure based on the filesystem found on-disk.
+// Returns a negative error code on failure.
+int lfs_fs_stat(lfs_t *lfs, struct lfs_fsinfo *fsinfo);
+
 // Finds the current size of the filesystem
 //
 // Note: Result is best effort. If files share COW structures, the returned
@@ -675,6 +711,40 @@ lfs_ssize_t lfs_fs_size(lfs_t *lfs);
 //
 // Returns a negative error code on failure.
 int lfs_fs_traverse(lfs_t *lfs, int (*cb)(void*, lfs_block_t), void *data);
+
+// Attempt to proactively find free blocks
+//
+// Calling this function is not required, but may allowing the offloading of
+// the expensive block allocation scan to a less time-critical code path.
+//
+// Note: littlefs currently does not persist any found free blocks to disk.
+// This may change in the future.
+//
+// Returns a negative error code on failure. Finding no free blocks is
+// not an error.
+int lfs_fs_gc(lfs_t *lfs);
+
+#ifndef LFS_READONLY
+// Attempt to make the filesystem consistent and ready for writing
+//
+// Calling this function is not required, consistency will be implicitly
+// enforced on the first operation that writes to the filesystem, but this
+// function allows the work to be performed earlier and without other
+// filesystem changes.
+//
+// Returns a negative error code on failure.
+int lfs_fs_mkconsistent(lfs_t *lfs);
+#endif
+
+#ifndef LFS_READONLY
+// Grows the filesystem to a new size, updating the superblock with the new
+// block count.
+//
+// Note: This is irreversible.
+//
+// Returns a negative error code on failure.
+int lfs_fs_grow(lfs_t *lfs, lfs_size_t block_count);
+#endif
 
 #ifndef LFS_READONLY
 #ifdef LFS_MIGRATE

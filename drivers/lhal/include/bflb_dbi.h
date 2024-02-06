@@ -123,13 +123,26 @@
   * @}
   */
 
-/**
-  * @}
-  */
+// clang-format off
+#if (DBI_QSPI_SUPPORT)
+#define IS_DBI_MODE(type)      ((type) <= DBI_MODE_TYPE_C_3_WIRE)
+#else
+#define IS_DBI_MODE(type)      ((type) <= DBI_MODE_EX_QSPI)
+#endif
 
-/**
-  * @}
-  */
+#define IS_DBI_PIXEL_INPUT_FORMAT(type)      ((type) <= DBI_PIXEL_INPUT_FORMAT_RGB_565)
+
+#define IS_DBI_PIXEL_OUTPUT_FORMAT(type) (((type) == DBI_PIXEL_OUTPUT_FORMAT_RGB_565) || \
+                                  ((type) == DBI_PIXEL_OUTPUT_FORMAT_RGB_888))
+
+#define IS_DBI_CLOCK_MODE(type)   (((type) == DBI_CLOCK_MODE_0) || \
+                                  ((type) == DBI_CLOCK_MODE_1) || \
+                                  ((type) == DBI_CLOCK_MODE_2) || \
+                                  ((type) == DBI_CLOCK_MODE_3))
+
+#define IS_DBI_THRESHLOD(type)   ((type) < 16)
+
+// clang-format on
 
 /**
  * @brief DBI configuration structure

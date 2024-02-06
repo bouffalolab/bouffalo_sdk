@@ -3,6 +3,15 @@
 
 int bflb_auadc_init(struct bflb_device_s *dev, const struct bflb_auadc_init_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_AUADC_SAMPLING_RATE(config->sampling_rate));
+    LHAL_PARAM_ASSERT(IS_AUADC_INPUT_MODE(config->input_mode));
+    LHAL_PARAM_ASSERT(IS_AUADC_DATA_FORMAT(config->data_format));
+    LHAL_PARAM_ASSERT(IS_AUADC_ADC_THRESHOLD(config->fifo_threshold));
+
+#ifdef romapi_bflb_auadc_init
+    return romapi_bflb_auadc_init(dev, config);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -94,10 +103,22 @@ int bflb_auadc_init(struct bflb_device_s *dev, const struct bflb_auadc_init_conf
     putreg32(regval, reg_base + AUADC_AUDPDM_ITF_OFFSET);
 
     return 0;
+#endif
 }
 
 int bflb_auadc_adc_init(struct bflb_device_s *dev, const struct bflb_auadc_adc_init_config_s *adc_analog_cfg)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_AUADC_ADC_MODE(adc_analog_cfg->adc_mode));
+    LHAL_PARAM_ASSERT(IS_AUADC_ADC_PGA_MODE(adc_analog_cfg->adc_pga_mode));
+    LHAL_PARAM_ASSERT(IS_AUADC_ADC_ANALOG_CH(adc_analog_cfg->adc_pga_posi_ch));
+    LHAL_PARAM_ASSERT(IS_AUADC_ADC_ANALOG_CH(adc_analog_cfg->adc_pga_nega_ch));
+    LHAL_PARAM_ASSERT(IS_AUADC_ADC_PGA_GAIN(adc_analog_cfg->adc_pga_gain));
+    LHAL_PARAM_ASSERT(IS_AUADC_ADC_MEASURE_RATE(adc_analog_cfg->adc_measure_rate));
+
+#ifdef romapi_bflb_auadc_adc_init
+    return romapi_bflb_auadc_adc_init(dev, adc_analog_cfg);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -159,10 +180,14 @@ int bflb_auadc_adc_init(struct bflb_device_s *dev, const struct bflb_auadc_adc_i
     putreg32(regval, reg_base + AUADC_AUDADC_CMD_OFFSET);
 
     return 0;
+#endif
 }
 
 int bflb_auadc_link_rxdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_auadc_link_rxdma
+    return romapi_bflb_auadc_link_rxdma(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -175,12 +200,15 @@ int bflb_auadc_link_rxdma(struct bflb_device_s *dev, bool enable)
         regval &= ~AUADC_RX_DRQ_EN;
     }
     putreg32(regval, reg_base + AUADC_AUDADC_RX_FIFO_CTRL_OFFSET);
-
     return 0;
+#endif
 }
 
 int bflb_auadc_int_mask(struct bflb_device_s *dev, uint32_t int_sts)
 {
+#ifdef romapi_bflb_auadc_int_mask
+    return romapi_bflb_auadc_int_mask(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -190,12 +218,15 @@ int bflb_auadc_int_mask(struct bflb_device_s *dev, uint32_t int_sts)
     regval = getreg32(reg_base + AUADC_AUDADC_RX_FIFO_CTRL_OFFSET);
     regval &= ~int_sts;
     putreg32(regval, reg_base + AUADC_AUDADC_RX_FIFO_CTRL_OFFSET);
-
     return 0;
+#endif
 }
 
 int bflb_auadc_int_unmask(struct bflb_device_s *dev, uint32_t int_sts)
 {
+#ifdef romapi_bflb_auadc_int_unmask
+    return romapi_bflb_auadc_int_unmask(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -205,12 +236,15 @@ int bflb_auadc_int_unmask(struct bflb_device_s *dev, uint32_t int_sts)
     regval = getreg32(reg_base + AUADC_AUDADC_RX_FIFO_CTRL_OFFSET);
     regval |= int_sts;
     putreg32(regval, reg_base + AUADC_AUDADC_RX_FIFO_CTRL_OFFSET);
-
     return 0;
+#endif
 }
 
 int bflb_auadc_get_intstatus(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_auadc_get_intstatus
+    return romapi_bflb_auadc_get_intstatus(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
     int32_t int_sts;
@@ -230,10 +264,14 @@ int bflb_auadc_get_intstatus(struct bflb_device_s *dev)
     }
 
     return int_sts;
+#endif
 }
 
 int bflb_auadc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_auadc_feature_control
+    return romapi_bflb_auadc_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t reg_base;
     uint32_t regval;
@@ -288,4 +326,5 @@ int bflb_auadc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     }
 
     return ret;
+#endif
 }

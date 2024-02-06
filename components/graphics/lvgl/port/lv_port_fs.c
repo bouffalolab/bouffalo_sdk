@@ -35,10 +35,10 @@
  * If you are using a File System library
  * it already should have a File type.
  * For example FatFS has `file_t `. In this case use `typedef file_t  file_t`*/
-typedef uint32_t file_t; /* 没有实际作用, 使用时是通过指针强转的 */
+typedef uint32_t file_t; /* No practical effect, it is used by casting a pointer. */
 
 /*Similarly to `file_t` create a type for directory reading too */
-typedef uint32_t dir_t; /* 没有实际作用, 使用时是通过指针强转的 */
+typedef uint32_t dir_t; /* No practical effect, it is used by casting a pointer. */
 
 #if (LV_USING_FATFS)
 
@@ -61,7 +61,7 @@ static lv_fs_res_t fs_trunc(lv_fs_drv_t *drv, void *file_p);
 static lv_fs_res_t fs_rename(lv_fs_drv_t *drv, const char *oldname, const char *newname);
 static lv_fs_res_t fs_free(lv_fs_drv_t *drv, uint32_t *total_p, uint32_t *free_p);
 static lv_fs_res_t fs_dir_open(lv_fs_drv_t *drv, void *rddir_p, const char *path);
-static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *rddir_p, char *fn);
+static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *rddir_p, char *fn, uint32_t fn_len);
 static lv_fs_res_t fs_dir_close(lv_fs_drv_t *drv, void *rddir_p);
 
 extern void fatfs_sd_driver_register(void);
@@ -247,11 +247,13 @@ static lv_fs_res_t fs_open(lv_fs_drv_t *drv, void *file_p, const char *path, lv_
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
     BYTE fatfs_mode;
     char *path_buf = NULL;
+    uint32_t buf_len = 0;
 
     switch (drv->letter) {
         case 'S':
-            path_buf = (char *)malloc(sizeof(char) * (strlen(path) + 5));
-            sprintf(path_buf, "SD:/%s", path);
+            buf_len = sizeof(char) * (strlen(path) + 5);
+            path_buf = (char *)malloc(buf_len);
+            lv_snprintf(path_buf, buf_len, "SD:/%s", path);
             break;
 
         default:
@@ -406,11 +408,13 @@ static lv_fs_res_t fs_remove(lv_fs_drv_t *drv, const char *path)
 
     /* Add your code here*/
     char *path_buf = NULL;
+    uint32_t buf_len = 0;
 
     switch (drv->letter) {
         case 'S':
-            path_buf = (char *)malloc(sizeof(char) * (strlen(path) + 5));
-            sprintf(path_buf, "SD:/%s", path);
+            buf_len = sizeof(char) * (strlen(path) + 5);
+            path_buf = (char *)malloc(buf_len);
+            lv_snprintf(path_buf, buf_len, "SD:/%s", path);
             break;
 
         default:
@@ -457,13 +461,16 @@ static lv_fs_res_t fs_rename(lv_fs_drv_t *drv, const char *oldname, const char *
     /* Add your code here*/
     char *path_old_buf = NULL;
     char *path_new_buf = NULL;
+    uint32_t oname_buflen, nname_buflen;
 
     switch (drv->letter) {
         case 'S':
-            path_old_buf = (char *)malloc(sizeof(char) * (strlen(oldname) + 5));
-            path_new_buf = (char *)malloc(sizeof(char) * (strlen(newname) + 5));
-            sprintf(path_old_buf, "SD:/%s", oldname);
-            sprintf(path_new_buf, "SD:/%s", newname);
+            oname_buflen = sizeof(char) * (strlen(oldname) + 5);
+            nname_buflen = sizeof(char) * (strlen(newname) + 5);
+            path_old_buf = (char *)malloc(oname_buflen);
+            path_new_buf = (char *)malloc(nname_buflen);
+            lv_snprintf(path_old_buf, oname_buflen, "SD:/%s", oldname);
+            lv_snprintf(path_new_buf, nname_buflen, "SD:/%s", newname);
             break;
 
         default:
@@ -526,11 +533,13 @@ static lv_fs_res_t fs_dir_open(lv_fs_drv_t *drv, void *rddir_p, const char *path
 
     /* Add your code here*/
     char *path_buf = NULL;
+    uint32_t buf_len = 0;
 
     switch (drv->letter) {
         case 'S':
-            path_buf = (char *)malloc(sizeof(char) * (strlen(path) + 5));
-            sprintf(path_buf, "SD:/%s", path);
+            buf_len = sizeof(char) * (strlen(path) + 5);
+            path_buf = (char *)malloc(buf_len);
+            lv_snprintf(path_buf, buf_len, "SD:/%s", path);
             break;
 
         default:
@@ -551,9 +560,10 @@ static lv_fs_res_t fs_dir_open(lv_fs_drv_t *drv, void *rddir_p, const char *path
  * @param drv pointer to a driver where this function belongs
  * @param rddir_p pointer to an initialized 'lv_fs_dir_t' variable
  * @param fn pointer to a buffer to store the filename
+ * @param fn_len    the length of the buffer for storing file names
  * @return LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *rddir_p, char *fn)
+static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *rddir_p, char *fn, uint32_t fn_len)
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
     FILINFO entry;
@@ -563,7 +573,7 @@ static lv_fs_res_t fs_dir_read(lv_fs_drv_t *drv, void *rddir_p, char *fn)
     res = res_fatfs_to_lv(res);
 
     if (res == LV_FS_RES_OK) {
-        sprintf(fn, "%s%s", (entry.fattrib & AM_DIR) ? "/" : "", entry.fname);
+        lv_snprintf(fn, fn_len, "%s%s", (entry.fattrib & AM_DIR) ? "/" : "", entry.fname);
     }
 
     return res;
@@ -592,11 +602,13 @@ static lv_fs_res_t lvport_romfs_open(lv_fs_drv_t *drv, void *file_p, const char 
 {
     lv_fs_res_t res = LV_FS_RES_NOT_IMP;
     char *path_buf = NULL;
+    uint32_t buf_len = 0;
 
     switch (drv->letter) {
         case 'R':
-            path_buf = (char *)malloc(sizeof(char) * (strlen(path) + 8));
-            sprintf(path_buf, "/romfs/%s", path);
+            buf_len = sizeof(char) * (strlen(path) + 8);
+            path_buf = (char *)malloc(buf_len);
+            lv_snprintf(path_buf, buf_len, "/romfs/%s", path);
             break;
 
         default:
@@ -668,13 +680,15 @@ static lv_fs_res_t lvport_romfs_dir_close(struct _lv_fs_drv_t *drv, void *rddir_
 static lv_fs_res_t lvport_romfs_dir_open(struct _lv_fs_drv_t *drv, void *rddir_p,const char *path)
 {
     char *path_buf = NULL;
+    uint32_t buf_len = 0;
 
     if(rddir_p == NULL){
         return LV_FS_RES_UNKNOWN;
     }
 
-    path_buf = (char *)malloc(sizeof(char) * (strlen(path) + 8));
-    sprintf(path_buf, "/romfs/%s", path);
+    buf_len = sizeof(char) * (strlen(path) + 8);
+    path_buf = (char *)malloc(buf_len);
+    lv_snprintf(path_buf, buf_len, "/romfs/%s", path);
 
     return romfs_opendir((romfs_dir_t *)rddir_p,(const char *)path_buf);
 }

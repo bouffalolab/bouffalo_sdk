@@ -53,6 +53,7 @@ sdk_add_link_options(
 -ffunction-sections
 -fdata-sections
 --specs=nano.specs
+-Wl,--print-memory-usage
 )
 
 sdk_add_link_libraries(c m)

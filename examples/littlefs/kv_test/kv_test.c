@@ -369,8 +369,12 @@ static void kv_test_save_key(char *namespace, char *key, char *value, int v_len,
     memset(&store_key[index], 0, sizeof(struct st_kv_key));
     store_key[index].valid = 1;
     store_key[index].type = type;
-    strcpy(store_key[index].namespace, namespace);
-    strcpy(store_key[index].key, key);
+    if (strlcpy(store_key[index].namespace, namespace, sizeof(store_key[index].namespace)) >= sizeof(store_key[index].namespace)) {
+        printf("[OS]: strlcpy truncated \r\n"); 
+    }
+    if (strlcpy(store_key[index].key, key, sizeof(store_key[index].key)) >= sizeof(store_key[index].key)) {
+        printf("[OS]: strlcpy truncated \r\n"); 
+    }
     store_key[index].valuelen = v_len;
     arch_md5(value, v_len, store_key[index].hash);
     for (i = 0; i < KV_TEST_KEEP_KV; i++) {
@@ -839,8 +843,12 @@ static void kv_test3_proc(void *arg)
             continue;
         }
         arch_os_mutex_get(kv_test_store_mutex, ARCH_OS_WAIT_FOREVER);
-        strcpy(kv_namespace, store_key[index].namespace);
-        strcpy(kv_key, store_key[index].key);
+        if (strlcpy(kv_namespace, store_key[index].namespace, sizeof(kv_namespace)) >= sizeof(kv_namespace)) {
+            printf("[OS]: strlcpy truncated \r\n"); 
+        }
+        if (strlcpy(kv_key, store_key[index].key, sizeof(kv_key)) >= sizeof(kv_key)) {
+            printf("[OS]: strlcpy truncated \r\n"); 
+        }
         valuelen = kv_test_create_value(kv_value, 0);
 
         LOG_INFO_TAG(KV_LOG_TAG, "3 modify kv[%d] %s.%s, value:%d", index, store_key[index].namespace,

@@ -48,7 +48,7 @@
 #define GPIP_GPDAC_DMA_WDATA_OFFSET      (0x48) /* gpdac_dma_wdata */
 #define GPIP_GPDAC_TX_FIFO_STATUS_OFFSET (0x4C) /* gpdac_tx_fifo_status */
 /* glb base */
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define GLB_GPDAC_CTRL_OFFSET  (0x308) /* gpdac_ctrl */
 #define GLB_GPDAC_ACTRL_OFFSET (0x30C) /* gpdac_actrl */
 #define GLB_GPDAC_BCTRL_OFFSET (0x310) /* gpdac_bctrl */
@@ -63,7 +63,7 @@
 
 /* 0x40 : gpdac_config */
 #define GPIP_GPDAC_EN (1 << 0U)
-#if defined(BL702)
+#if defined(BL702) || defined(BL602)
 #define GPIP_GPDAC_EN2      (1 << 1U)
 #define GPIP_DSM_MODE_SHIFT (4U)
 #define GPIP_DSM_MODE_MASK  (0x3 << GPIP_DSM_MODE_SHIFT)

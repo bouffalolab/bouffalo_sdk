@@ -97,6 +97,35 @@ static intCallback_Type *ATTR_TCM_CONST_SECTION glbGpioFifoCbfArra[GLB_GPIO_FIFO
  */
 
 /****************************************************************************/ /**
+ * @brief  GLB GPIO CHECK PAD Whether Lead Out no not
+ *
+ * @param  None
+ *
+ * @return RESET or SET
+ *
+*******************************************************************************/
+BL_Sts_Type ATTR_TCM_SECTION GLB_GPIO_Pad_LeadOut_Sts(uint8_t gpioPin)
+{
+    uint8_t package_type;
+
+    package_type = GLB_Get_Package_Type();
+
+    if ( GLB_PACKAGE_TYPE_QFN56 == package_type ){
+        return SET;
+    }
+
+    /* */
+    if ((( gpioPin >= GLB_GPIO_PIN_0) && (gpioPin < GLB_GPIO_PIN_4))
+    || (( gpioPin > GLB_GPIO_PIN_9) && (gpioPin < GLB_GPIO_PIN_18))
+    || (( gpioPin > GLB_GPIO_PIN_19) && (gpioPin < GLB_GPIO_PIN_23))
+    || (( gpioPin > GLB_GPIO_PIN_26) && (gpioPin < GLB_GPIO_PIN_31))) {
+        return SET;
+    }
+
+    return RESET;
+}
+
+/****************************************************************************/ /**
  * @brief  GPIO initialization
  *
  * @param  cfg: GPIO configuration
@@ -109,6 +138,10 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
     uint8_t gpioPin = cfg->gpioPin;
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
+
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
 
     /* drive strength(drive) = 0  <=>  8.0mA  @ 3.3V */
     /* drive strength(drive) = 1  <=>  9.6mA  @ 3.3V */
@@ -193,7 +226,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg)
  *           @arg GPIO_FUN_DBI_B
  *           @arg GPIO_FUN_DBI_C
  *           @arg GPIO_FUN_DISP_QSPI
- *           @arg GPIO_FUN_AUPWM 
+ *           @arg GPIO_FUN_AUPWM
  *           @arg GPIO_FUN_JTAG
  *           @arg GPIO_FUN_CLOCK_OUT
  * @param  pinList: GPIO pin list, this parameter can be GLB_GPIO_PIN_xx where xx is 0~34
@@ -318,6 +351,10 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Output_Enable(uint8_t gpioPin)
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
 
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
+
     gpioCfgAddress = GLB_BASE + GLB_GPIO_CFG0_OFFSET + (gpioPin << 2);
 
     tmpVal = BL_RD_WORD(gpioCfgAddress);
@@ -361,6 +398,10 @@ BL_Err_Type ATTR_TCM_SECTION GLB_GPIO_Set_HZ(uint8_t gpioPin)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
+
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
 
     gpioCfgAddress = GLB_BASE + GLB_GPIO_CFG0_OFFSET + (gpioPin << 2);
 
@@ -435,6 +476,10 @@ BL_Err_Type GLB_GPIO_Write(uint8_t gpioPin, uint32_t val)
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
 
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
+
     gpioCfgAddress = GLB_BASE + GLB_GPIO_CFG0_OFFSET + (gpioPin << 2);
     tmpVal = BL_RD_WORD(gpioCfgAddress);
 
@@ -459,6 +504,10 @@ BL_Err_Type GLB_GPIO_Write(uint8_t gpioPin, uint32_t val)
 *******************************************************************************/
 BL_Err_Type GLB_GPIO_Set(uint8_t gpioPin)
 {
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
+
     if (gpioPin < GLB_GPIO_PIN_32) {
         BL_WR_WORD(GLB_BASE + GLB_GPIO_CFG138_OFFSET, 1 << gpioPin);
     } else {
@@ -500,6 +549,13 @@ BL_Err_Type GLB_GPIO_Int_Init(GLB_GPIO_INT_Cfg_Type *intCfg)
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
     uint32_t gpioPin = intCfg->gpioPin;
+
+    CHECK_PARAM(IS_GLB_GPIO_INT_TRIG_TYPE(intCfg->trig));
+    CHECK_PARAM(IS_BL_MASK_TYPE(intCfg->intMask));
+
+    if (RESET == GLB_GPIO_Pad_LeadOut_Sts(gpioPin)) {
+        return ERROR;
+    }
 
     gpioCfgAddress = GLB_BASE + GLB_GPIO_CFG0_OFFSET + (gpioPin << 2);
     tmpVal = BL_RD_WORD(gpioCfgAddress);

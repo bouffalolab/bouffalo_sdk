@@ -81,6 +81,11 @@
 #define BFLB_SF_CTRL_PSRAM_ENABLE
 #endif
 
+#if defined(BL602) || defined(BL702) || defined(BL702L)
+#define BFLB_SF_CTRL_HAS_SAHB_CLOCK
+#define BFLB_SF_CTRL_HAS_AHB2SIF_MODE
+#endif
+
 /**
  *  @brief Serial flash pad type definition
  */
@@ -157,11 +162,15 @@
 /**
  *  @brief Serial flash controller wrap mode type definition
  */
+#if defined(BL702) || defined(BL602)
+#define SF_CTRL_WRAP_MODE_DISABLE                       0    /*!< Wrap mode enable */
+#define SF_CTRL_WRAP_MODE_ENABLE                        1    /*!< Wrap mode disable */
+#else
 #define SF_CTRL_WRAP_MODE_0                             0    /*!< Cmds bypass wrap commands to macro, original mode */
 #define SF_CTRL_WRAP_MODE_1                             1    /*!< Cmds handle wrap commands, original mode */
 #define SF_CTRL_WRAP_MODE_2                             2    /*!< Cmds bypass wrap commands to macro, cmds force wrap16*4 splitted into two wrap8*4 */
 #define SF_CTRL_WRAP_MODE_3                             3    /*!< Cmds handle wrap commands, cmds force wrap16*4 splitted into two wrap8*4 */
-
+#endif
 /**
  *  @brief Serail flash controller wrap mode len type definition
  */
@@ -263,6 +272,12 @@
  */
 struct sf_ctrl_cfg_type {
     uint8_t owner;                       /*!< Sflash interface bus owner */
+#ifdef BFLB_SF_CTRL_HAS_SAHB_CLOCK
+    uint8_t sahb_clock;                  /*!< Sflash clock sahb sram select */
+#endif
+#ifdef BFLB_SF_CTRL_HAS_AHB2SIF_MODE
+    uint8_t ahb2sif_mode;                /*!< Sflash ahb2sif mode */
+#endif
 #ifdef BFLB_SF_CTRL_32BITS_ADDR_ENABLE
     uint8_t en32b_addr;                  /*!< Sflash enable 32-bits address */
 #endif
@@ -309,12 +324,14 @@ struct sf_ctrl_psram_cfg {
  *  @brief SF Ctrl cmds configuration structure type definition
  */
 struct sf_ctrl_cmds_cfg {
+#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
     uint8_t ack_latency;                 /*!< SF Ctrl ack latency cycles */
     uint8_t cmds_core_en;                /*!< SF Ctrl cmds core enable */
+#endif
+    uint8_t cmds_en;                     /*!< SF Ctrl cmds enable */
 #if defined(BL702)
     uint8_t burst_toggle_en;             /*!< SF Ctrl burst toggle mode enable */
 #endif
-    uint8_t cmds_en;                     /*!< SF Ctrl cmds enable */
     uint8_t cmds_wrap_mode;              /*!< SF Ctrl cmds wrap mode */
     uint8_t cmds_wrap_len;               /*!< SF Ctrl cmds wrap length */
 };

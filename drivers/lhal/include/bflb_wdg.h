@@ -31,6 +31,16 @@
   * @}
   */
 
+// clang-format off
+#define IS_WDG_CLKSRC(type) ((type) <= 5)
+
+#define IS_WDG_MODE(type)   (((type) == WDG_MODE_INTERRUPT) || \
+                            ((type) == WDG_MODE_RESET))
+
+#define IS_WDG_CLOCK_DIV(type) ((type) <= 255)
+
+// clang-format on
+
 /**
  * @brief WDG configuration structure
  *

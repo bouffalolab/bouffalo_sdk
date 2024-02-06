@@ -40,6 +40,7 @@
 #include "bl616_hbn.h"
 #include "bl616_pds.h"
 #include "bl616_glb_gpio.h"
+#include "ef_data_reg.h"
 
 /** @addtogroup  BL616_Peripheral_Driver
  *  @{
@@ -3663,7 +3664,7 @@ BL_Err_Type GLB_Get_Auto_Calc_Xtal_Type(uint8_t *calcXtalType)
 *******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Id_Value(uint32_t idValue)
 {
-    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, (idValue | BFLB_FLASH_ID_VALID_FLAG));
+    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, ((idValue&0xFFFFFF)|0x5A000000));
 
     return SUCCESS;
 }
@@ -3681,8 +3682,8 @@ uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
     uint32_t tmpVal = 0;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_HW_RSV1);
-    if ((tmpVal & BFLB_FLASH_ID_VALID_FLAG) != 0) {
-        return (tmpVal & BFLB_FLASH_ID_VALID_MASK);
+    if ((tmpVal&0x7F000000) == 0x5A000000) {
+        return (tmpVal&0x00FFFFFF);
     }
 
     return 0x00000000;
@@ -4302,6 +4303,53 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Simple_Set_MCU_System_CLK(uint8_t clkFreq, ui
     GLB_CLK_SET_DUMMY_WAIT;
 
     return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  GLB GET Package Type From EFUSE
+ *
+ * @param  None
+ *
+ * @return Package Type
+ *
+*******************************************************************************/
+uint8_t ATTR_TCM_SECTION GLB_Get_Package_Type(void)
+{
+    uint32_t tmpVal = 0;
+    uint8_t package_type = 0;
+
+    /* get device_info[1:0] from efuse */
+    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_EF_WIFI_MAC_HIGH);
+
+    package_type = (uint8_t)((tmpVal >> 22) & 0x3);
+
+    return package_type;
+}
+
+
+/****************************************************************************/ /**
+ * @brief  GLB GET Status of PAD Bonging to GND
+ *
+ * @param  None
+ *
+ * @return status of pad bonding to GND
+ *
+*******************************************************************************/
+BL_Sts_Type ATTR_TCM_SECTION GLB_Get_PAD_Bonging_to_GND_Sts(void)
+{
+    uint32_t tmpVal = 0;
+    uint8_t package_cfg = 0;
+
+    /* get package_cfg[2:0] from efuse */
+    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_EF_KEY_SLOT_10_W0);
+
+    package_cfg = (uint8_t)((tmpVal >> 28) & 0x7);
+
+    if (0 == package_cfg) {
+        return RESET;
+    } else {
+        return SET;
+    }
 }
 
 /*@} end of group GLB_Public_Functions */

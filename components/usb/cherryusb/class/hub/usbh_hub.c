@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include "usbh_core.h"
 #include "usbh_hub.h"
 
 #define DEV_FORMAT             "/dev/hub%d"
@@ -14,12 +15,8 @@
 
 #define EXTHUB_FIRST_INDEX     2
 
-#if CONFIG_USBHOST_MAX_EXTHUBS > 0
-static uint32_t g_devinuse = 0;
-#endif
-
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_hub_buf[32];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_hub_intbuf[CONFIG_USBHOST_MAX_EXTHUBS + 1][1];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_hub_intbuf[CONFIG_USBHOST_MAX_EXTHUBS + 1][CONFIG_USB_ALIGN_SIZE];
 
 usb_slist_t hub_class_head = USB_SLIST_OBJECT_INIT(hub_class_head);
 
@@ -28,37 +25,45 @@ usb_osal_mq_t hub_mq;
 
 struct usbh_hub roothub;
 
-#if CONFIG_USBHOST_MAX_EXTHUBS > 0
-struct usbh_hub exthub[CONFIG_USBHOST_MAX_EXTHUBS];
-#endif
-extern int usbh_hport_activate_ep0(struct usbh_hubport *hport);
-extern int usbh_hport_deactivate_ep0(struct usbh_hubport *hport);
+extern int usbh_free_devaddr(struct usbh_hubport *hport);
 extern int usbh_enumerate(struct usbh_hubport *hport);
-static void usbh_hub_thread_wakeup(struct usbh_hub *hub);
 
 static const char *speed_table[] = { "error-speed", "low-speed", "full-speed", "high-speed", "wireless-speed", "super-speed", "superplus-speed" };
 
+#ifdef CONFIG_USBHOST_XHCI
+struct usbh_hubport *usbh_get_roothub_port(unsigned int port)
+{
+    return &roothub.child[port - 1];
+}
+#endif
+
 #if CONFIG_USBHOST_MAX_EXTHUBS > 0
-static int usbh_hub_devno_alloc(void)
+static struct usbh_hub g_hub_class[CONFIG_USBHOST_MAX_EXTHUBS];
+static uint32_t g_devinuse = 0;
+
+static struct usbh_hub *usbh_hub_class_alloc(void)
 {
     int devno;
 
-    for (devno = EXTHUB_FIRST_INDEX; devno < 32; devno++) {
-        uint32_t bitno = 1 << devno;
-        if ((g_devinuse & bitno) == 0) {
-            g_devinuse |= bitno;
-            return devno;
+    for (devno = 0; devno < CONFIG_USBHOST_MAX_EXTHUBS; devno++) {
+        if ((g_devinuse & (1 << devno)) == 0) {
+            g_devinuse |= (1 << devno);
+            memset(&g_hub_class[devno], 0, sizeof(struct usbh_hub));
+            g_hub_class[devno].index = EXTHUB_FIRST_INDEX + devno;
+            return &g_hub_class[devno];
         }
     }
-
-    return -EMFILE;
+    return NULL;
 }
 
-static void usbh_hub_devno_free(uint8_t devno)
+static void usbh_hub_class_free(struct usbh_hub *hub_class)
 {
-    if (devno >= EXTHUB_FIRST_INDEX && devno < 32) {
+    int devno = hub_class->index - EXTHUB_FIRST_INDEX;
+
+    if (devno >= 0 && devno < 32) {
         g_devinuse &= ~(1 << devno);
     }
+    memset(hub_class, 0, sizeof(struct usbh_hub));
 }
 #endif
 
@@ -82,18 +87,27 @@ static int _usbh_hub_get_hub_descriptor(struct usbh_hub *hub, uint8_t *buffer)
 
     setup->bmRequestType = USB_REQUEST_DIR_IN | USB_REQUEST_CLASS | USB_REQUEST_RECIPIENT_DEVICE;
     setup->bRequest = USB_REQUEST_GET_DESCRIPTOR;
-    setup->wValue = HUB_DESCRIPTOR_TYPE_HUB << 8;
+
+    /* TODO: hub descriptor has some difference between USB 2.0 and USB 3.x,
+       and we havn't handle the difference here */
+    if ((hub->parent->speed == USB_SPEED_SUPER) ||
+        (hub->parent->speed == USB_SPEED_SUPER_PLUS)) {
+        setup->wValue = HUB_DESCRIPTOR_TYPE_HUB3 << 8;
+    } else {
+        setup->wValue = HUB_DESCRIPTOR_TYPE_HUB << 8;
+    }
+
     setup->wIndex = 0;
     setup->wLength = USB_SIZEOF_HUB_DESC;
 
-    ret = usbh_control_transfer(hub->parent->ep0, setup, g_hub_buf);
+    ret = usbh_control_transfer(hub->parent, setup, g_hub_buf);
     if (ret < 0) {
         return ret;
     }
     memcpy(buffer, g_hub_buf, USB_SIZEOF_HUB_DESC);
     return ret;
 }
-
+#if 0
 static int _usbh_hub_get_status(struct usbh_hub *hub, uint8_t *buffer)
 {
     struct usb_setup_packet *setup;
@@ -107,13 +121,14 @@ static int _usbh_hub_get_status(struct usbh_hub *hub, uint8_t *buffer)
     setup->wIndex = 0;
     setup->wLength = 2;
 
-    ret = usbh_control_transfer(hub->parent->ep0, setup, g_hub_buf);
+    ret = usbh_control_transfer(hub->parent, setup, g_hub_buf);
     if (ret < 0) {
         return ret;
     }
     memcpy(buffer, g_hub_buf, 2);
     return ret;
 }
+#endif
 #endif
 
 static int _usbh_hub_get_portstatus(struct usbh_hub *hub, uint8_t port, struct hub_port_status *port_status)
@@ -129,7 +144,7 @@ static int _usbh_hub_get_portstatus(struct usbh_hub *hub, uint8_t port, struct h
     setup->wIndex = port;
     setup->wLength = 4;
 
-    ret = usbh_control_transfer(hub->parent->ep0, setup, g_hub_buf);
+    ret = usbh_control_transfer(hub->parent, setup, g_hub_buf);
     if (ret < 0) {
         return ret;
     }
@@ -149,7 +164,7 @@ static int _usbh_hub_set_feature(struct usbh_hub *hub, uint8_t port, uint8_t fea
     setup->wIndex = port;
     setup->wLength = 0;
 
-    return usbh_control_transfer(hub->parent->ep0, setup, NULL);
+    return usbh_control_transfer(hub->parent, setup, NULL);
 }
 
 static int _usbh_hub_clear_feature(struct usbh_hub *hub, uint8_t port, uint8_t feature)
@@ -164,7 +179,22 @@ static int _usbh_hub_clear_feature(struct usbh_hub *hub, uint8_t port, uint8_t f
     setup->wIndex = port;
     setup->wLength = 0;
 
-    return usbh_control_transfer(hub->parent->ep0, setup, NULL);
+    return usbh_control_transfer(hub->parent, setup, NULL);
+}
+
+static int _usbh_hub_set_depth(struct usbh_hub *hub, uint16_t depth)
+{
+    struct usb_setup_packet *setup;
+
+    setup = hub->parent->setup;
+
+    setup->bmRequestType = USB_REQUEST_DIR_OUT | USB_REQUEST_CLASS | USB_REQUEST_RECIPIENT_DEVICE;
+    setup->bRequest = HUB_REQUEST_SET_HUB_DEPTH;
+    setup->wValue = depth;
+    setup->wIndex = 0;
+    setup->wLength = 0;
+
+    return usbh_control_transfer(hub->parent, setup, NULL);
 }
 
 #if CONFIG_USBHOST_MAX_EXTHUBS > 0
@@ -209,7 +239,7 @@ static int usbh_hub_get_portstatus(struct usbh_hub *hub, uint8_t port, struct hu
     }
 }
 
-static int usbh_hub_set_feature(struct usbh_hub *hub, uint8_t port, uint8_t feature)
+int usbh_hub_set_feature(struct usbh_hub *hub, uint8_t port, uint8_t feature)
 {
     struct usb_setup_packet roothub_setup;
     struct usb_setup_packet *setup;
@@ -227,7 +257,7 @@ static int usbh_hub_set_feature(struct usbh_hub *hub, uint8_t port, uint8_t feat
     }
 }
 
-static int usbh_hub_clear_feature(struct usbh_hub *hub, uint8_t port, uint8_t feature)
+int usbh_hub_clear_feature(struct usbh_hub *hub, uint8_t port, uint8_t feature)
 {
     struct usb_setup_packet roothub_setup;
     struct usb_setup_packet *setup;
@@ -242,6 +272,45 @@ static int usbh_hub_clear_feature(struct usbh_hub *hub, uint8_t port, uint8_t fe
         return usbh_roothub_control(setup, NULL);
     } else {
         return _usbh_hub_clear_feature(hub, port, feature);
+    }
+}
+
+static int usbh_hub_set_depth(struct usbh_hub *hub, uint16_t depth)
+{
+    struct usb_setup_packet roothub_setup;
+    struct usb_setup_packet *setup;
+
+    if (hub->is_roothub) {
+        setup = &roothub_setup;
+        setup->bmRequestType = USB_REQUEST_DIR_OUT | USB_REQUEST_CLASS | USB_REQUEST_RECIPIENT_DEVICE;
+        setup->bRequest = HUB_REQUEST_SET_HUB_DEPTH;
+        setup->wValue = depth;
+        setup->wIndex = 0;
+        setup->wLength = 0;
+        return usbh_roothub_control(setup, NULL);
+    } else {
+        return _usbh_hub_set_depth(hub, depth);
+    }
+}
+
+static void usbh_hub_thread_wakeup(struct usbh_hub *hub)
+{
+    usb_osal_mq_send(hub_mq, (uintptr_t)hub);
+}
+
+static void usbh_hubport_release(struct usbh_hubport *child)
+{
+    if (child->connected) {
+        child->connected = false;
+        usbh_free_devaddr(child);
+        for (uint8_t i = 0; i < child->config.config_desc.bNumInterfaces; i++) {
+            if (child->config.intf[i].class_driver && child->config.intf[i].class_driver->disconnect) {
+                CLASS_DISCONNECT(child, i);
+            }
+        }
+        child->config.config_desc.bNumInterfaces = 0;
+        usbh_kill_urb(&child->ep0_urb);
+        usb_osal_mutex_delete(child->mutex);
     }
 }
 
@@ -260,21 +329,15 @@ static int usbh_hub_connect(struct usbh_hubport *hport, uint8_t intf)
     struct usb_endpoint_descriptor *ep_desc;
     struct hub_port_status port_status;
     int ret;
-    int index;
 
-    index = usbh_hub_devno_alloc();
-    if (index > (CONFIG_USBHOST_MAX_EXTHUBS + EXTHUB_FIRST_INDEX - 1)) {
-        USB_LOG_ERR("No memory to alloc hub class\r\n");
-        usbh_hub_devno_free(index);
-        return -ENOMEM;
+    struct usbh_hub *hub = usbh_hub_class_alloc();
+    if (hub == NULL) {
+        USB_LOG_ERR("Fail to alloc hub_class\r\n");
+        return -USB_ERR_NOMEM;
     }
 
-    struct usbh_hub *hub = &exthub[index - EXTHUB_FIRST_INDEX];
-
-    memset(hub, 0, sizeof(struct usbh_hub));
     hub->hub_addr = hport->dev_addr;
     hub->parent = hport;
-    hub->index = index;
 
     hport->config.intf[intf].priv = hub;
 
@@ -292,9 +355,23 @@ static int usbh_hub_connect(struct usbh_hubport *hport, uint8_t intf)
 
     ep_desc = &hport->config.intf[intf].altsetting[0].ep[0].ep_desc;
     if (ep_desc->bEndpointAddress & 0x80) {
-        usbh_hport_activate_epx(&hub->intin, hport, ep_desc);
+        USBH_EP_INIT(hub->intin, ep_desc);
     } else {
         return -1;
+    }
+
+    if (hport->speed == USB_SPEED_SUPER) {
+        uint16_t depth = 0;
+        struct usbh_hubport *parent = hport->parent->parent;
+        while (parent) {
+            depth++;
+            parent = parent->parent->parent;
+        }
+
+        ret = usbh_hub_set_depth(hub, depth);
+        if (ret < 0) {
+            return ret;
+        }
     }
 
     for (uint8_t port = 0; port < hub->hub_desc.bNbrPorts; port++) {
@@ -318,7 +395,7 @@ static int usbh_hub_connect(struct usbh_hubport *hport, uint8_t intf)
     USB_LOG_INFO("Register HUB Class:%s\r\n", hport->config.intf[intf].devname);
 
     hub->int_buffer = g_hub_intbuf[hub->index - 1];
-    usbh_int_urb_fill(&hub->intin_urb, hub->intin, hub->int_buffer, 1, 0, hub_int_complete_callback, hub);
+    usbh_int_urb_fill(&hub->intin_urb, hub->parent, hub->intin, hub->int_buffer, 1, 0, hub_int_complete_callback, hub);
     usbh_submit_urb(&hub->intin_urb);
     return 0;
 }
@@ -331,47 +408,37 @@ static int usbh_hub_disconnect(struct usbh_hubport *hport, uint8_t intf)
     struct usbh_hub *hub = (struct usbh_hub *)hport->config.intf[intf].priv;
 
     if (hub) {
-        usbh_hub_devno_free(hub->index);
-
         if (hub->intin) {
-            usbh_pipe_free(hub->intin);
+            usbh_kill_urb(&hub->intin_urb);
         }
 
         for (uint8_t port = 0; port < hub->hub_desc.bNbrPorts; port++) {
             child = &hub->child[port];
-            usbh_hport_deactivate_ep0(child);
-            for (uint8_t i = 0; i < child->config.config_desc.bNumInterfaces; i++) {
-                if (child->config.intf[i].class_driver && child->config.intf[i].class_driver->disconnect) {
-                    CLASS_DISCONNECT(child, i);
-                }
-            }
-
-            child->config.config_desc.bNumInterfaces = 0;
+            usbh_hubport_release(child);
             child->parent = NULL;
         }
 
-        usbh_hub_unregister(hub);
-        memset(hub, 0, sizeof(struct usbh_hub));
-
-        if (hport->config.intf[intf].devname[0] != '\0')
+        if (hport->config.intf[intf].devname[0] != '\0') {
             USB_LOG_INFO("Unregister HUB Class:%s\r\n", hport->config.intf[intf].devname);
+            usbh_hub_unregister(hub);
+        }
+
+        usbh_hub_class_free(hub);
     }
     return ret;
 }
 #endif
 
-static void usbh_hubport_release(struct usbh_hubport *child)
+static void usbh_hubport_enumerate_thread(void *argument)
 {
-    if (child->connected) {
-        child->connected = false;
-        usbh_hport_deactivate_ep0(child);
-        for (uint8_t i = 0; i < child->config.config_desc.bNumInterfaces; i++) {
-            if (child->config.intf[i].class_driver && child->config.intf[i].class_driver->disconnect) {
-                CLASS_DISCONNECT(child, i);
-            }
-        }
-        child->config.config_desc.bNumInterfaces = 0;
+    struct usbh_hubport *child = (struct usbh_hubport *)argument;
+
+    if (usbh_enumerate(child) < 0) {
+        /** release child sources */
+        usbh_hubport_release(child);
+        USB_LOG_ERR("Port %u enumerate fail\r\n", child->port);
     }
+    usb_osal_thread_delete(NULL);
 }
 
 static void usbh_hub_events(struct usbh_hub *hub)
@@ -390,9 +457,10 @@ static void usbh_hub_events(struct usbh_hub *hub)
         return;
     }
 
-    for (uint8_t port = 0; port < hub->hub_desc.bNbrPorts; port++) {
-        portchange_index = hub->int_buffer[0];
+    portchange_index = hub->int_buffer[0];
+    hub->int_buffer[0] = 0;
 
+    for (uint8_t port = 0; port < hub->hub_desc.bNbrPorts; port++) {
         USB_LOG_DBG("Port change:0x%02x\r\n", portchange_index);
 
         if (!(portchange_index & (1 << (port + 1)))) {
@@ -502,9 +570,25 @@ static void usbh_hub_events(struct usbh_hub *hub)
                         speed = USB_SPEED_HIGH;
                     } else if (portstatus & HUB_PORT_STATUS_LOW_SPEED) {
                         speed = USB_SPEED_LOW;
-                    } else {
+                    }
+#ifdef CONFIG_USBHOST_XHCI
+                    else {
+                        extern uint8_t usbh_get_port_speed(struct usbh_hub * hub, const uint8_t port);
+
+                        /* USB3.0 speed cannot get from portstatus, checkout port speed instead */
+                        uint8_t super_speed = usbh_get_port_speed(hub, port + 1);
+                        if (super_speed > USB_SPEED_HIGH) {
+                            /* assert that when using USB 3.0 ports, attached device must also be USB 3.0 speed */
+                            speed = super_speed;
+                        } else {
+                            speed = USB_SPEED_FULL;
+                        }
+                    }
+#else
+                    else {
                         speed = USB_SPEED_FULL;
                     }
+#endif
 
                     child = &hub->child[port];
                     /** release child sources first */
@@ -515,22 +599,19 @@ static void usbh_hub_events(struct usbh_hub *hub)
                     child->connected = true;
                     child->port = port + 1;
                     child->speed = speed;
-                    
+                    child->mutex = usb_osal_mutex_create();
+
                     USB_LOG_INFO("New %s device on Hub %u, Port %u connected\r\n", speed_table[speed], hub->index, port + 1);
 
-                    /* Configure EP0 with the default maximum packet size */
-                    usbh_hport_activate_ep0(child);
-
-                    if (usbh_enumerate(child) < 0) {
-                        /** release child sources */
-                        usbh_hubport_release(child);
-                        USB_LOG_ERR("Port %u enumerate fail\r\n", port + 1);
-                    }
+                    /* create disposable thread to enumerate device on current hport, do not block hub thread */
+                    usb_osal_thread_create("usbh_enum", CONFIG_USBHOST_PSC_STACKSIZE, CONFIG_USBHOST_PSC_PRIO + 1, usbh_hubport_enumerate_thread, (void *)child);
                 } else {
                     child = &hub->child[port];
                     /** release child sources */
                     usbh_hubport_release(child);
-                    USB_LOG_ERR("Failed to enable port %u\r\n", port + 1);
+
+                    /** some USB 3.0 ip may failed to enable USB 2.0 port for USB 3.0 device */
+                    USB_LOG_WRN("Failed to enable port %u\r\n", port + 1);
 
                     continue;
                 }
@@ -543,7 +624,6 @@ static void usbh_hub_events(struct usbh_hub *hub)
         }
     }
 
-    hub->int_buffer[0] = 0;
     /* Start next hub int transfer */
     if (!hub->is_roothub && hub->connected) {
         usbh_submit_urb(&hub->intin_urb);
@@ -557,7 +637,7 @@ static void usbh_hub_thread(void *argument)
 
     usb_hc_init();
     while (1) {
-        ret = usb_osal_mq_recv(hub_mq, (uint32_t *)&hub, 0xffffffff);
+        ret = usb_osal_mq_recv(hub_mq, (uintptr_t *)&hub, USB_OSAL_WAITING_FOREVER);
         if (ret < 0) {
             continue;
         }
@@ -567,6 +647,8 @@ static void usbh_hub_thread(void *argument)
 
 static void usbh_roothub_register(void)
 {
+    usb_slist_init(&hub_class_head);
+
     memset(&roothub, 0, sizeof(struct usbh_hub));
 
     roothub.connected = true;
@@ -576,11 +658,6 @@ static void usbh_roothub_register(void)
     roothub.hub_addr = 1;
     roothub.hub_desc.bNbrPorts = CONFIG_USBHOST_MAX_RHPORTS;
     usbh_hub_register(&roothub);
-}
-
-static void usbh_hub_thread_wakeup(struct usbh_hub *hub)
-{
-    usb_osal_mq_send(hub_mq, (uint32_t)hub);
 }
 
 void usbh_roothub_thread_wakeup(uint8_t port)
@@ -605,6 +682,36 @@ int usbh_hub_initialize(void)
     }
     return 0;
 }
+
+int usbh_hub_deinitialize(void)
+{
+    usb_slist_t *i;
+    struct usbh_hubport *hport;
+    size_t flags;
+    
+    flags = usb_osal_enter_critical_section();
+
+    usb_slist_for_each(i, &hub_class_head)
+    {
+        struct usbh_hub *hub = usb_slist_entry(i, struct usbh_hub, list);
+
+        for (uint8_t port = 0; port < hub->hub_desc.bNbrPorts; port++) {
+            hport = &hub->child[port];
+
+            usbh_hubport_release(hport);
+        }
+    }
+
+    usb_hc_deinit();
+
+    usb_osal_leave_critical_section(flags);
+
+    usb_osal_mq_delete(hub_mq);
+    usb_osal_thread_delete(hub_thread);
+
+    return 0;
+}
+
 #if CONFIG_USBHOST_MAX_EXTHUBS > 0
 const struct usbh_class_driver hub_class_driver = {
     .driver_name = "hub",

@@ -9,15 +9,21 @@
 #endif
 
 volatile float coe = 1.0f;
+volatile uint32_t os1 = 0;
+volatile int os2 = 0;
 volatile uint32_t tsen_offset;
 volatile int adc_reference_channel = -1;
 volatile int32_t adc_reference_channel_millivolt = -1;
-volatile uint32_t gnd_offset = 0;
 
-void __bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
+void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
 {
     uint32_t regval;
     uint32_t reg_base;
+
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_ADC_CLK_DIV(config->clk_div));
+    LHAL_PARAM_ASSERT(IS_ADC_RESOLUTION(config->resolution));
+    LHAL_PARAM_ASSERT(IS_ADC_VREF(config->vref));
 
     reg_base = dev->reg_base;
 
@@ -104,10 +110,6 @@ void __bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *
         regval |= AON_GPADC_VREF_SEL;
     }
 
-    if (config->differential_mode) {
-        regval |= AON_GPADC_DIFF_MODE;
-    }
-
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
@@ -149,28 +151,76 @@ void __bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *
     regval |= AON_GPADC_POS_SATUR_MASK;
     putreg32(regval, reg_base + AON_GPADC_REG_ISR_OFFSET);
 
-    coe = bflb_efuse_get_adc_trim();              /* read from efuse */
+    coe = bflb_efuse_get_adc_trim(); /* read from efuse */
+    bflb_update_adc_trim(dev, config);
     tsen_offset = bflb_efuse_get_adc_tsen_trim(); /* read from efuse */
 }
 
-void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
+void bflb_update_adc_trim(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
 {
     uint32_t regval;
     uint32_t reg_base;
-    uint32_t gnd_val = 0;
+    uint32_t os_val = 0;
+    uint8_t neg = 0;
 
     reg_base = dev->reg_base;
-
-    __bflb_adc_init(dev, config);
 
     regval = getreg32(reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
     regval |= AON_GPADC_CONT_CONV_EN;
     regval &= ~AON_GPADC_SCAN_EN;
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
 
+    regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+    regval |= AON_GPADC_DIFF_MODE; /*diff mode en*/
+    regval |= AON_GPADC_VBAT_EN;   /*vbat en*/
+    putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+
     regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
     regval &= ~AON_GPADC_NEG_GND;
+    regval &= ~AON_GPADC_POS_SEL_MASK;
+    regval &= ~AON_GPADC_NEG_SEL_MASK;
+    regval |= (ADC_CHANNEL_VABT_HALF << AON_GPADC_POS_SEL_SHIFT);
+    regval |= (ADC_CHANNEL_VABT_HALF << AON_GPADC_NEG_SEL_SHIFT);
     putreg32(regval, reg_base + AON_GPADC_REG_CMD_OFFSET);
+
+    bflb_adc_start_conversion(dev);
+
+    for (uint16_t i = 0; i < 10; i++) {
+        regval = getreg32(ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+        regval |= GPIP_GPADC_FIFO_CLR;
+        putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+
+        while (bflb_adc_get_count(dev) == 0) {}
+        regval = bflb_adc_read_raw(dev);
+        if (i > 4) {
+            if (regval & 0x8000) {
+                regval = ~regval;
+                regval += 1;
+                neg = 1;
+            }
+            os_val += (regval & 0xffff);
+        }
+    }
+
+    bflb_adc_stop_conversion(dev);
+    bflb_mtimer_delay_ms(10);
+
+    if (neg) {
+        os2 = (os_val / 5) * 2 - (os_val / 5) * 4;
+    } else {
+        os2 = (os_val / 5) * 2;
+    }
+    coe = coe - os2 / 40960.0;
+
+    os_val = 0;
+    regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
+    regval |= AON_GPADC_NEG_GND;
+    putreg32(regval, reg_base + AON_GPADC_REG_CMD_OFFSET);
+
+    regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+    regval &= ~AON_GPADC_DIFF_MODE; /*diff mode disable*/
+    regval &= ~AON_GPADC_VBAT_EN;   /*vbat disable*/
+    putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
     regval &= ~AON_GPADC_POS_SEL_MASK;
@@ -187,21 +237,20 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
         putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
 
         while (bflb_adc_get_count(dev) == 0) {}
-
         regval = bflb_adc_read_raw(dev);
 
         if (i > 4) {
-            gnd_val += (regval & 0xffff);
+            os_val += (regval & 0xffff);
         }
     }
 
     bflb_adc_stop_conversion(dev);
     bflb_mtimer_delay_ms(10);
 
-    if (gnd_val > 0) {
-        gnd_offset = gnd_val / 5;
+    if (os_val > 0) {
+        os1 = os_val / 5;
     } else {
-        gnd_offset = 0;
+        os1 = 0;
     }
 
     /* restore config from user */
@@ -235,8 +284,8 @@ void bflb_adc_deinit(struct bflb_device_s *dev)
 
     reg_base = dev->reg_base;
 
-    putreg32(0xf78, reg_base + AON_GPADC_REG_CMD_OFFSET);
-    putreg32(0xc0002, reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
+    putreg32(0xF78, reg_base + AON_GPADC_REG_CMD_OFFSET);
+    putreg32(0xC0002, reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
     putreg32(0x19100, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 }
 
@@ -264,6 +313,9 @@ int bflb_adc_channel_config(struct bflb_device_s *dev, struct bflb_adc_channel_s
     uint32_t regval;
     uint32_t regval2;
     uint32_t reg_base;
+
+    LHAL_PARAM_ASSERT(IS_ADC_CHANNEL(chan->pos_chan));
+    LHAL_PARAM_ASSERT(IS_ADC_CHANNEL(chan->neg_chan));
 
     reg_base = dev->reg_base;
 
@@ -493,6 +545,32 @@ void bflb_adc_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
     }
 }
 
+static uint32_t bflb_get_conv_value(uint32_t os1, int os2, uint32_t val)
+{
+    int conv_val = 0;
+
+    if (os2 < 0) {
+        if (val < 1.5 * os1) {
+            conv_val = (val - os1) / coe;
+        } else if (val >= (1.5 * os1 - os2)) {
+            conv_val = (val - os2) / coe;
+        } else {
+            conv_val = val / coe;
+        }
+    } else if (os2 >= 0) {
+        if (val < (os1 + os2)) {
+            conv_val = (val - os1) / coe;
+        } else {
+            conv_val = (val - os2) / coe;
+        }
+    }
+    if (val < os1) {
+        return 0;
+    } else {
+        return conv_val;
+    }
+}
+
 void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct bflb_adc_result_s *result, uint16_t count)
 {
     uint32_t reg_base;
@@ -514,25 +592,26 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
     if (vref == ADC_VREF_2P0V) {
         ref = 2000;
     }
-
+    //  printf("os1: %d   os2:%d\r\n",os1,os2);
+    //  printf("gaincal = %f\r\n",coe);
     /* single mode */
     if (diff_mode == 0) {
         for (uint16_t i = 0; i < count; i++) {
             if ((buffer[i] >> 21) == adc_reference_channel) {
                 if (resolution == ADC_RESOLUTION_12B) {
-                    conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 4) / coe);
+                    conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 4));
                     if (conv_result > 4095) {
                         conv_result = 4095;
                     }
                     chan_vref = (int32_t)conv_result * ref / 4096;
                 } else if (resolution == ADC_RESOLUTION_14B) {
-                    conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2) / coe);
+                    conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2));
                     if (conv_result > 16383) {
                         conv_result = 16383;
                     }
                     chan_vref = (int32_t)conv_result * ref / 16384;
                 } else if (resolution == ADC_RESOLUTION_16B) {
-                    conv_result = (uint32_t)((buffer[i] & 0xffff) / coe);
+                    conv_result = (uint32_t)((buffer[i] & 0xffff));
                     if (conv_result > 65535) {
                         conv_result = 65535;
                     }
@@ -547,34 +626,25 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
             result[i].neg_chan = -1;
 
             if (resolution == ADC_RESOLUTION_12B) {
-                conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 4) / coe);
-                if (conv_result > 4095) {
-                    conv_result = 4095;
+                conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 4));
+                result[i].value = bflb_get_conv_value(os1, os2, conv_result);
+                if (result[i].value > 4095) {
+                    result[i].value = 4095;
                 }
-                if (conv_result > gnd_offset) {
-                    conv_result -= gnd_offset;
-                }
-                result[i].value = conv_result;
                 result[i].millivolt = (int32_t)result[i].value * ref / 4096;
             } else if (resolution == ADC_RESOLUTION_14B) {
-                conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2) / coe);
-                if (conv_result > 16383) {
-                    conv_result = 16383;
+                conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2));
+                result[i].value = bflb_get_conv_value(os1, os2, conv_result);
+                if (result[i].value > 16383) {
+                    result[i].value = 16383;
                 }
-                if (conv_result > gnd_offset) {
-                    conv_result -= gnd_offset;
-                }
-                result[i].value = conv_result;
                 result[i].millivolt = (int32_t)result[i].value * ref / 16384;
             } else if (resolution == ADC_RESOLUTION_16B) {
-                conv_result = (uint32_t)((buffer[i] & 0xffff) / coe);
-                if (conv_result > 65535) {
-                    conv_result = 65535;
+                conv_result = (uint32_t)((buffer[i] & 0xffff));
+                result[i].value = bflb_get_conv_value(os1, os2, conv_result);
+                if (result[i].value > 65535) {
+                    result[i].value = 65535;
                 }
-                if (conv_result > gnd_offset) {
-                    conv_result -= gnd_offset;
-                }
-                result[i].value = conv_result;
                 result[i].millivolt = (int32_t)result[i].value * ref / 65536;
             } else {
             }
@@ -751,4 +821,58 @@ void bflb_adc_vbat_disable(struct bflb_device_s *dev)
     regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
     regval &= ~AON_GPADC_VBAT_EN;
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+}
+
+int bflb_adc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
+{
+#ifdef bflb_adc_feature_control
+    return bflb_adc_feature_control(dev, cmd, arg);
+#else
+    int ret = 0;
+    uint32_t regval;
+    uint32_t reg_base;
+    bool dma_en;
+
+    reg_base = dev->reg_base;
+
+    switch (cmd) {
+        case ADC_CMD_CLR_FIFO:
+            /* disable adc dma en bit */
+            regval = getreg32(ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+            if (regval & GPIP_GPADC_DMA_EN) {
+                dma_en = true;
+            } else {
+                dma_en = false;
+            }
+            regval &= ~GPIP_GPADC_DMA_EN;
+            putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+
+            regval = getreg32(ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+            regval |= GPIP_GPADC_FIFO_CLR;
+            putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+
+            /* restore adc dma en bit */
+            regval = getreg32(ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+            if (dma_en) {
+                regval |= GPIP_GPADC_DMA_EN;
+            }
+            putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
+            break;
+
+        case ADC_CMD_VBAT_EN:
+            if (arg) {
+                regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+                regval |= AON_GPADC_VBAT_EN;
+                putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+            } else {
+                regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+                regval &= ~AON_GPADC_VBAT_EN;
+                putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+            }
+        default:
+            ret = -EPERM;
+            break;
+    }
+    return ret;
+#endif
 }

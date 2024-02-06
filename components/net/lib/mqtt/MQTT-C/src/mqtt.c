@@ -1740,6 +1740,8 @@ ssize_t mqtt_unpack_response(struct mqtt_response* response, const uint8_t *buf,
     }
 
     if (rv < 0) return rv;
+    if (rv > bufsz) return -1;
+
     buf += rv;
     return buf - start;
 }

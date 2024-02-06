@@ -123,6 +123,34 @@
   * @}
   */
 
+// clang-format off
+#define IS_SPI_ROLE(type)         (((type) == SPI_ROLE_MASTER) || \
+                                  ((type) == SPI_ROLE_SLAVE))
+
+#define IS_SPI_MODE(type)         (((type) == SPI_MODE0) || \
+                                  ((type) == SPI_MODE1) || \
+                                  ((type) == SPI_MODE2) || \
+                                  ((type) == SPI_MODE3))
+
+#define IS_SPI_DATA_WIDTH(type)   (((type) == SPI_DATA_WIDTH_8BIT) || \
+                                  ((type) == SPI_DATA_WIDTH_16BIT) || \
+                                  ((type) == SPI_DATA_WIDTH_24BIT) || \
+                                  ((type) == SPI_DATA_WIDTH_32BIT))
+
+#define IS_SPI_BIT_ORDER(type)         (((type) == SPI_BIT_LSB) || \
+                                      ((type) == SPI_BIT_MSB))
+                                    
+#if !defined(BL602) && !defined(BL702)
+#define IS_SPI_BYTE_ORDER(type)         (((type) == SPI_BYTE_LSB) || \
+                                      ((type) == SPI_BYTE_MSB))
+#else
+#define IS_SPI_BYTE_ORDER(type)       ((type) == SPI_BYTE_LSB)
+#endif
+
+#define IS_SPI_THRESHOLD(type)  ((type) < 4)
+
+// clang-format on
+
 /**
  * @brief SPI configuration structure
  *

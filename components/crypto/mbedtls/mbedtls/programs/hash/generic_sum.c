@@ -128,7 +128,7 @@ static int generic_check( const mbedtls_md_info_t *md_info, char *filename )
         nb_tot2++;
 
         for( i = 0; i < mbedtls_md_get_size( md_info ); i++ )
-            sprintf( buf + i * 2, "%02x", sum[i] );
+            mbedtls_snprintf( buf + i * 2, sizeof(buf) - (i * 2), "%02x", sum[i] );
 
         /* Use constant-time buffer comparison */
         diff = 0;

@@ -103,7 +103,8 @@ int bflb_mtd_open(const char *name, bflb_mtd_handle_t *handle, unsigned int flag
         return -1;
     }
     memset(handle_prv, 0, sizeof(struct bflb_mtd_handle_priv));
-    strncpy(handle_prv->name, name, sizeof(handle_prv->name));
+    if(strlcpy(handle_prv->name, name, sizeof(handle_prv->name)) >= sizeof(handle_prv->name))
+        printf("[OS]: strlcpy truncated \r\n");
 
     if (flags & BFLB_MTD_OPEN_FLAG_BACKUP) {
         /* open backup mtd partition*/
@@ -165,7 +166,8 @@ int bflb_mtd_info(bflb_mtd_handle_t handle, bflb_mtd_info_t *info)
 {
     bflb_mtd_handle_priv_t handle_prv = (bflb_mtd_handle_priv_t)handle;
 
-    strcpy(info->name, handle_prv->name);
+    if(strlcpy(info->name, handle_prv->name, sizeof(info->name)) >= sizeof(info->name))
+        printf("[OS]: strlcpy truncated \r\n");
     info->offset = handle_prv->offset;
     info->size = handle_prv->size;
     info->xip_addr = handle_prv->xip_addr;

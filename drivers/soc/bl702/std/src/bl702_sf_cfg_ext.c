@@ -356,11 +356,11 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flashcfg_fm_q80 = {
     .exit_qpi = 0xff,
 
     /*AC*/
-    .time_e_sector = 300,
-    .time_e_32k = 1200,
-    .time_e_64k = 1200,
+    .time_e_sector = 3000,
+    .time_e_32k = 4000,
+    .time_e_64k = 4000,
     .time_page_pgm = 5,
-    .time_ce = 33000,
+    .time_ce = 65*1000,
     .pd_delay = 20,
     .qe_data = 0,
 };
@@ -553,6 +553,61 @@ static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         .jedec_id = 0x15345E,
         .name = "ZB_25Q16A_15_33",
         .cfg = &flashcfg_winb_16jv,
+    },
+    {
+        .jedec_id = 0x1660c4,
+        .name = "gt25q32_32_33",
+        .cfg = &flashcfg_winb_16jv,
+    },
+    {
+        .jedec_id = 0x1560c4,
+        .name = "gt25q16_16_33",
+        .cfg = &flashcfg_winb_16jv,
+    },
+    {
+        .jedec_id = 0x142085,
+        .name = "py25q80hb_80_33",
+        .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x152085,
+        .name = "py25q16hb_16_33",
+        .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x162085,
+        .name = "py25q32hb_32_33",
+        .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x172085,
+        .name = "py25q64ha_64_33",
+        .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x182085,
+        .name = "py25q128ha_128_33",
+        .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x192085,
+        .name = "py25q256hb_256_33",
+        .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x166125,
+        .name = "sk25e032_32_33",
+        .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x17400B,
+        .name = "xt_25f64b_64_33",
+        .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x18400B,
+        .name = "xt_25f128b_128_33",
+        .cfg = &flashcfg_fm_q80,
     },
 };
 

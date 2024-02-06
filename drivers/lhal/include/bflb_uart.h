@@ -11,6 +11,18 @@
   * @{
   */
 
+#if defined(BL602) || defined(BL702)
+#define UART_FIFO_MAX           32
+#elif defined(BL606P) || defined(BL808)
+#define UART_FIFO_MAX           32
+#elif defined(BL616) || defined(BL628)
+#define UART_FIFO_MAX           32
+#elif defined(BL702L)
+#define UART_FIFO_MAX           16
+#else
+#error "unknown device"
+#endif
+
 /** @defgroup UART_DIRECTION uart direction enable definition
   * @{
   */
@@ -161,6 +173,30 @@
 #define UART_AUTO_BAUD_START             0
 #define UART_AUTO_BAUD_0X55              1
 
+// clang-format off
+#define IS_UART_DATABITS(type)   (((type) == UART_DATA_BITS_5) || \
+                                  ((type) == UART_DATA_BITS_6) || \
+                                  ((type) == UART_DATA_BITS_7) || \
+                                  ((type) == UART_DATA_BITS_8))
+
+#define IS_UART_STOPBITS(type)   (((type) == UART_STOP_BITS_0_5) || \
+                                  ((type) == UART_STOP_BITS_1) || \
+                                  ((type) == UART_STOP_BITS_1_5) || \
+                                  ((type) == UART_STOP_BITS_2))
+
+#define IS_UART_PARITY(type)   (((type) == UART_PARITY_NONE) || \
+                                  ((type) == UART_PARITY_ODD) || \
+                                  ((type) == UART_PARITY_EVEN) || \
+                                  ((type) == UART_PARITY_MARK) || \
+                                  ((type) == UART_PARITY_SPACE))
+
+#define IS_UART_BITORDER(type)   (((type) == UART_LSB_FIRST) || \
+                                  ((type) == UART_MSB_FIRST))
+
+#define IS_UART_FIFO_THRESHOLD(type) ((type) < UART_FIFO_MAX)
+
+// clang-format on
+
 struct bflb_uart_ir_config_s {
     bool tx_en;
     bool rx_en;
@@ -181,8 +217,8 @@ struct bflb_uart_ir_config_s {
  * @param parity            UART parity bit, use @ref UART_PARITY
  * @param bit_order         UART bit first, use @ref UART_BITORDER
  * @param flow_ctrl         UART flow control setting, use @ref UART_FLOWCTRL
- * @param tx_fifo_threshold UART tx fifo threshold, should be less than 32.
- * @param rx_fifo_threshold UART rx fifo threshold, should be less than 32.
+ * @param tx_fifo_threshold UART tx fifo threshold, should be less than UART_FIFO_MAX.
+ * @param rx_fifo_threshold UART rx fifo threshold, should be less than UART_FIFO_MAX.
  */
 struct bflb_uart_config_s {
     uint32_t baudrate;
@@ -290,6 +326,14 @@ int bflb_uart_put_block(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
  * @return actual received length
  */
 int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len);
+
+/**
+ * @brief Wait for tx transfer done and fifo is empty.
+ *
+ * @param [in] dev device handle
+ * @return A negated errno value on failure.
+ */
+int bflb_uart_wait_tx_done(struct bflb_device_s *dev);
 
 /**
  * @brief Check if there is free space in tx fifo.

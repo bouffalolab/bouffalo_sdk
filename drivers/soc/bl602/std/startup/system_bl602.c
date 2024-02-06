@@ -1,5 +1,5 @@
 /**
- * @file system_bl702.c
+ * @file system_bl602.c
  * @brief
  *
  * Copyright (c) 2021 Bouffalolab team
@@ -43,6 +43,14 @@ void SystemInit(void)
     tmpVal = BL_RD_REG(GLB_BASE, GLB_SEAM_MISC);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00); //GLB_EM_0KB
     BL_WR_REG(GLB_BASE, GLB_SEAM_MISC, tmpVal);
+
+    /* Fix 26M xtal clkpll_sdmin */
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_CLKPLL_SDM);
+
+    if (0x49D39D == BL_GET_REG_BITS_VAL(tmpVal, PDS_CLKPLL_SDMIN)) {
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_CLKPLL_SDMIN, 0x49D89E);
+        BL_WR_REG(PDS_BASE, PDS_CLKPLL_SDM, tmpVal);
+    }
 
     /* Restore default setting*/
     /* GLB_UART_Sig_Swap_Set(UART_SIG_SWAP_NONE); */

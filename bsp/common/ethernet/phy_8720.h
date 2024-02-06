@@ -61,6 +61,21 @@
 #define PHY_8720_ADVERTISE_8023          (1 << 0)
 #define PHY_8720_LPA                     ((uint16_t)0x05U) /*!< Auto-negotiation link partner base page ability    */
 #define PHY_8720_EXPANSION               ((uint16_t)0x06U) /*!< Auto-negotiation expansion           */
+
+// Special Modes Register
+#define PHY_8720_SMR                     ((uint16_t)0x12U) /*!< Special Modes Register                */
+#define PHY_8720_SMR_MODE_OFFSET         (5)               /*!< MODE 0x000 10H; 0x001 10F; 0x010 100H; 0x011 100F; 0x100 100HA; 0x101 100HAR; 0x110 PDM; 0x111 all capable Auto-negotiation */
+#define PHY_8720_SMR_MODE_MASK           (0x7 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_MODE_10H_NA         (0x0 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_MODE_10F_NA         (0x1 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_MODE_100H_NA        (0x2 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_MODE_100F_NA        (0x3 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_MODE_100H_AO        (0x4 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_MODE_100HR_AO       (0x5 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_MODE_PDM            (0x6 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_MODE_ALL_CAPABLE    (0x7 << PHY_8720_SMR_MODE_OFFSET)
+#define PHY_8720_SMR_PHYAD_OFFSET        (0x0)
+
 /* Section 4: Extended PHY Registers */
 #define PHY_8720_CTRL_STATUS                         ((uint16_t)17U)   /*!< PHY MODE CONTROL/STATUS REGISTER Offset     */
 #define PHY_8720_CTRL_STATUS_EDPWRDOWN               (1 << 13)         /*!< EDPWRDOWN */

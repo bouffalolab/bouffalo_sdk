@@ -143,11 +143,11 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     /* cpu cfg */
     .cpu_cfg.config_enable = 0x01, /* coinfig this cpu */
     .cpu_cfg.halt_cpu = 0x0,       /* halt this cpu */
-    .cpu_cfg.cache_enable = 0x0,   /* cache setting :only for BL Cache */
-    .cpu_cfg.cache_wa = 0x0,       /* cache setting :only for BL Cache*/
-    .cpu_cfg.cache_wb = 0x0,       /* cache setting :only for BL Cache*/
-    .cpu_cfg.cache_wt = 0x0,       /* cache setting :only for BL Cache*/
-    .cpu_cfg.cache_way_dis = 0x0,  /* cache setting :only for BL Cache*/
+    .cpu_cfg.cache_enable = 0x0,   /* cache setting :only for Bouffalo Cache */
+    .cpu_cfg.cache_wa = 0x0,       /* cache setting :only for Bouffalo Cache*/
+    .cpu_cfg.cache_wb = 0x0,       /* cache setting :only for Bouffalo Cache*/
+    .cpu_cfg.cache_wt = 0x0,       /* cache setting :only for Bouffalo Cache*/
+    .cpu_cfg.cache_way_dis = 0x0,  /* cache setting :only for Bouffalo Cache*/
     .cpu_cfg.rsvd = 0x0,
 
     /* image_address_offset */

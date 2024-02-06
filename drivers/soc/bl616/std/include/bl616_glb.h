@@ -613,9 +613,14 @@ typedef struct {
 #define GLB_WRAM160KB_EM0KB                (0) /*!< WRAM_160KB EM_0KB */
 #define GLB_WRAM128KB_EM32KB               (1) /*!< WRAM_128KB EM_32KB */
 #define GLB_WRAM96KB_EM64KB                (2) /*!< WRAM_96KB EM_64KB */
+
 /**
-  * @}
-  */
+ *  @brief GLB Package Type type definition
+ */
+#define GLB_PACKAGE_TYPE_QFN40             (0) /*!< Package Type is QFN40 */
+#define GLB_PACKAGE_TYPE_QFN40M            (1) /*!< Package Type is QFN40M */
+#define GLB_PACKAGE_TYPE_QFN56             (2) /*!< Package Type is QFN56 */
+
 
 /** @defgroup GLB ADC clock type definition
   * @{
@@ -1749,9 +1754,13 @@ BL_Err_Type GLB_Config_WIFI_PLL(uint8_t xtalType, const GLB_WA_PLL_Cfg_Type *pll
 BL_Err_Type GLB_Config_AUDIO_PLL(uint8_t xtalType, const GLB_WA_PLL_Cfg_Type *pllCfgList);
 BL_Err_Type GLB_Config_AUDIO_PLL_To_384M(void);
 BL_Err_Type GLB_Config_AUDIO_PLL_To_400M(void);
-;
+
 BL_Err_Type GLB_Config_AUDIO_PLL_To_451P58M(void);
 BL_Err_Type GLB_Config_AUDIO_PLL_To_491P52M(void);
+
+/*----------*/
+uint8_t GLB_Get_Package_Type(void);
+BL_Sts_Type GLB_Get_PAD_Bonging_to_GND_Sts(void);
 /*----------*/
 
 /*@} end of group GLB_Public_Functions */

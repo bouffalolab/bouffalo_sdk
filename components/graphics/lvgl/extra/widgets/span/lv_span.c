@@ -144,18 +144,22 @@ void lv_spangroup_del_span(lv_obj_t * obj, lv_span_t * span)
 
 void lv_span_set_text(lv_span_t * span, const char * text)
 {
+    uint32_t buf_len = 0;
+
     if(span == NULL || text == NULL) {
         return;
     }
 
+    buf_len = strlen(text) + 1;
+
     if(span->txt == NULL || span->static_flag == 1) {
-        span->txt = lv_mem_alloc(strlen(text) + 1);
+        span->txt = lv_mem_alloc(buf_len);
     }
     else {
-        span->txt = lv_mem_realloc(span->txt, strlen(text) + 1);
+        span->txt = lv_mem_realloc(span->txt, buf_len);
     }
     span->static_flag = 0;
-    strcpy(span->txt, text);
+    strlcpy(span->txt, text, buf_len);
 
     refresh_self_size(span->spangroup);
 }
@@ -779,7 +783,7 @@ static void lv_draw_span(lv_obj_t * obj, lv_draw_ctx_t * draw_ctx)
     lv_coord_t max_width = lv_area_get_width(&coords);
     lv_coord_t indent = convert_indent_pct(obj, max_width);
     lv_coord_t max_w  = max_width - indent; /* first line need minus indent */
-    lv_opa_t obj_opa = lv_obj_get_style_opa(obj, LV_PART_MAIN);
+    lv_opa_t obj_opa = lv_obj_get_style_opa_recursive(obj, LV_PART_MAIN);
 
     /* coords of draw span-txt */
     lv_point_t txt_pos;

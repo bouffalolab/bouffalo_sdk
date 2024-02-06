@@ -11,7 +11,7 @@
 // #define CONFIG_USB_PINGPONG_ENABLE
 // #define CONFIG_USB_TRIPLE_ENABLE
 
-#define BLFB_USB_BASE ((uint32_t)0x20072000)
+#define BFLB_USB_BASE ((uint32_t)0x20072000)
 #define BFLB_PDS_BASE ((uint32_t)0x2000e000)
 
 #define PDS_USB_CTL_OFFSET      (0x500) /* usb_ctl */
@@ -104,31 +104,31 @@ void usb_hc_low_level_init(void)
     regval &= ~PDS_REG_USB_IDDIG;
     putreg32(regval, BFLB_PDS_BASE + PDS_USB_CTL_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_OTG_CSR_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_OTG_CSR_OFFSET);
     regval |= USB_A_BUS_DROP_HOV;
     regval &= ~USB_A_BUS_REQ_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_OTG_CSR_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_OTG_CSR_OFFSET);
 
     bflb_mtimer_delay_ms(10);
 
     /* enable vbus and bus control */
-    regval = getreg32(BLFB_USB_BASE + USB_OTG_CSR_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_OTG_CSR_OFFSET);
     regval &= ~USB_A_BUS_DROP_HOV;
     regval |= USB_A_BUS_REQ_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_OTG_CSR_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_OTG_CSR_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_GLB_INT_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_GLB_INT_OFFSET);
     regval |= USB_MDEV_INT;
     regval |= USB_MOTG_INT;
     regval &= ~USB_MHC_INT;
-    putreg32(regval, BLFB_USB_BASE + USB_GLB_INT_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_GLB_INT_OFFSET);
 }
 
 uint8_t usbh_get_port_speed(const uint8_t port)
 {
     uint8_t speed = 3;
 
-    speed = (getreg32(BLFB_USB_BASE + USB_OTG_CSR_OFFSET) & USB_SPD_TYP_HOV_POV_MASK) >> USB_SPD_TYP_HOV_POV_SHIFT;
+    speed = (getreg32(BFLB_USB_BASE + USB_OTG_CSR_OFFSET) & USB_SPD_TYP_HOV_POV_MASK) >> USB_SPD_TYP_HOV_POV_SHIFT;
 
     if (speed == 0) {
         return USB_SPEED_FULL;
@@ -179,13 +179,13 @@ static void bflb_usb_reset_fifo(uint8_t fifo)
     uint32_t regval;
 
     if (fifo == USB_FIFO_CXF) {
-        regval = getreg32(BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
         regval |= USB_CX_CLR;
-        putreg32(regval, BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
     } else {
-        regval = getreg32(BLFB_USB_BASE + USB_DEV_FIBC0_OFFSET + 4 * fifo);
+        regval = getreg32(BFLB_USB_BASE + USB_DEV_FIBC0_OFFSET + 4 * fifo);
         regval |= USB_FFRST0_HOV;
-        putreg32(regval, BLFB_USB_BASE + USB_DEV_FIBC0_OFFSET + 4 * fifo);
+        putreg32(regval, BFLB_USB_BASE + USB_DEV_FIBC0_OFFSET + 4 * fifo);
     }
 }
 
@@ -193,16 +193,16 @@ void bflb_usb_get_setup_packet(uint32_t setup[2])
 {
     uint32_t regval;
 
-    regval = getreg32(BLFB_USB_BASE + USB_DMA_TFN_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DMA_TFN_OFFSET);
     regval |= USB_ACC_CXF_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_DMA_TFN_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DMA_TFN_OFFSET);
 
-    setup[0] = getreg32(BLFB_USB_BASE + USB_DMA_CPS3_OFFSET);
-    setup[1] = getreg32(BLFB_USB_BASE + USB_DMA_CPS3_OFFSET);
+    setup[0] = getreg32(BFLB_USB_BASE + USB_DMA_CPS3_OFFSET);
+    setup[1] = getreg32(BFLB_USB_BASE + USB_DMA_CPS3_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_DMA_TFN_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DMA_TFN_OFFSET);
     regval &= ~USB_ACC_CXF_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_DMA_TFN_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DMA_TFN_OFFSET);
 }
 
 static void bflb_usb_set_ep_fifomap(uint8_t ep_idx, uint8_t fifo)
@@ -210,17 +210,17 @@ static void bflb_usb_set_ep_fifomap(uint8_t ep_idx, uint8_t fifo)
     uint32_t regval;
 
     if (ep_idx < 5) {
-        regval = getreg32(BLFB_USB_BASE + USB_DEV_EPMAP0_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_DEV_EPMAP0_OFFSET);
         regval &= ~(0xff << ((ep_idx - 1) * 8));
         regval |= (fifo << ((ep_idx - 1) * 8));
         regval |= (fifo << ((ep_idx - 1) * 8 + 4));
-        putreg32(regval, BLFB_USB_BASE + USB_DEV_EPMAP0_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_DEV_EPMAP0_OFFSET);
     } else {
-        regval = getreg32(BLFB_USB_BASE + USB_DEV_EPMAP1_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_DEV_EPMAP1_OFFSET);
         regval &= ~(0xff << ((ep_idx - 4 - 1) * 8));
         regval |= (fifo << ((ep_idx - 4 - 1) * 8));
         regval |= (fifo << ((ep_idx - 4 - 1) * 8 + 4));
-        putreg32(regval, BLFB_USB_BASE + USB_DEV_EPMAP1_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_DEV_EPMAP1_OFFSET);
     }
 }
 
@@ -228,38 +228,38 @@ static void bflb_usb_set_fifo_epmap(uint8_t fifo, uint8_t ep_idx, uint8_t dir)
 {
     uint32_t regval;
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_FMAP_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_FMAP_OFFSET);
     regval &= ~(0x3f << (fifo * 8));
     regval |= (ep_idx << (fifo * 8));
     regval |= (dir << (fifo * 8 + 4));
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_FMAP_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_FMAP_OFFSET);
 }
 
 static void bflb_usb_set_outep_mps(uint8_t ep_idx, uint16_t ep_mps)
 {
     uint32_t regval;
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
     regval &= ~USB_MAXPS_OEP1_MASK;
     regval |= ep_mps;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
 }
 
 static void bflb_usb_set_inep_mps(uint8_t ep_idx, uint16_t ep_mps)
 {
     uint32_t regval;
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
     regval &= ~USB_MAXPS_IEP1_MASK;
     regval |= ep_mps;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
 }
 
 static uint8_t bflb_usb_get_fifo_ep(uint8_t fifo)
 {
     uint32_t regval;
 
-    regval = (getreg32(BLFB_USB_BASE + USB_DEV_FMAP_OFFSET) & (0xf << (fifo * 8)));
+    regval = (getreg32(BFLB_USB_BASE + USB_DEV_FMAP_OFFSET) & (0xf << (fifo * 8)));
     regval >>= (fifo * 8);
     return regval;
 }
@@ -269,7 +269,7 @@ static void bflb_usb_fifo_config(uint8_t fifo, uint8_t ep_type, uint16_t block_s
     uint32_t regval;
 
     if (fifo < 4) {
-        regval = getreg32(BLFB_USB_BASE + USB_DEV_FCFG_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_DEV_FCFG_OFFSET);
         regval &= ~(0x3f << (fifo * 8));
         regval |= (ep_type << (fifo * 8 + 0));
         regval |= ((block_num - 1) << (fifo * 8 + 2));
@@ -280,7 +280,7 @@ static void bflb_usb_fifo_config(uint8_t fifo, uint8_t ep_type, uint16_t block_s
         if (fifo_en) {
             regval |= (1 << (fifo * 8 + 5));
         }
-        putreg32(regval, BLFB_USB_BASE + USB_DEV_FCFG_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_DEV_FCFG_OFFSET);
     }
 }
 
@@ -289,31 +289,31 @@ static void bflb_usb_vdma_start_write(uint8_t fifo, const uint8_t *data, uint32_
     uint32_t regval;
 
     if (fifo == USB_FIFO_CXF) {
-        regval = getreg32(BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
         regval &= ~USB_VDMA_LEN_CXF_MASK;
         regval &= ~USB_VDMA_IO_CXF;
         regval |= USB_VDMA_TYPE_CXF;
         regval |= (len << USB_VDMA_LEN_CXF_SHIFT);
-        putreg32(regval, BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
 
-        putreg32((uint32_t)data, BLFB_USB_BASE + USB_VDMA_CXFPS2_OFFSET);
+        putreg32((uint32_t)data, BFLB_USB_BASE + USB_VDMA_CXFPS2_OFFSET);
 
-        regval = getreg32(BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
         regval |= USB_VDMA_START_CXF;
-        putreg32(regval, BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
     } else {
-        regval = getreg32(BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
+        regval = getreg32(BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
         regval &= ~USB_VDMA_LEN_CXF_MASK;
         regval &= ~USB_VDMA_IO_CXF;
         regval |= USB_VDMA_TYPE_CXF;
         regval |= (len << USB_VDMA_LEN_CXF_SHIFT);
-        putreg32(regval, BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
+        putreg32(regval, BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
 
-        putreg32((uint32_t)data, BLFB_USB_BASE + USB_VDMA_F0PS2_OFFSET + fifo * 8);
+        putreg32((uint32_t)data, BFLB_USB_BASE + USB_VDMA_F0PS2_OFFSET + fifo * 8);
 
-        regval = getreg32(BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
+        regval = getreg32(BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
         regval |= USB_VDMA_START_CXF;
-        putreg32(regval, BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
+        putreg32(regval, BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
     }
 }
 
@@ -322,31 +322,31 @@ static void bflb_usb_vdma_start_read(uint8_t fifo, uint8_t *data, uint32_t len)
     uint32_t regval;
 
     if (fifo == USB_FIFO_CXF) {
-        regval = getreg32(BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
         regval &= ~USB_VDMA_LEN_CXF_MASK;
         regval &= ~USB_VDMA_IO_CXF;
         regval &= ~USB_VDMA_TYPE_CXF;
         regval |= (len << USB_VDMA_LEN_CXF_SHIFT);
-        putreg32(regval, BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
 
-        putreg32((uint32_t)data, BLFB_USB_BASE + USB_VDMA_CXFPS2_OFFSET);
+        putreg32((uint32_t)data, BFLB_USB_BASE + USB_VDMA_CXFPS2_OFFSET);
 
-        regval = getreg32(BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
         regval |= USB_VDMA_START_CXF;
-        putreg32(regval, BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET);
     } else {
-        regval = getreg32(BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
+        regval = getreg32(BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
         regval &= ~USB_VDMA_LEN_CXF_MASK;
         regval &= ~USB_VDMA_IO_CXF;
         regval &= ~USB_VDMA_TYPE_CXF;
         regval |= (len << USB_VDMA_LEN_CXF_SHIFT);
-        putreg32(regval, BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
+        putreg32(regval, BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
 
-        putreg32((uint32_t)data, BLFB_USB_BASE + USB_VDMA_F0PS2_OFFSET + fifo * 8);
+        putreg32((uint32_t)data, BFLB_USB_BASE + USB_VDMA_F0PS2_OFFSET + fifo * 8);
 
-        regval = getreg32(BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
+        regval = getreg32(BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
         regval |= USB_VDMA_START_CXF;
-        putreg32(regval, BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
+        putreg32(regval, BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8);
     }
 }
 
@@ -355,11 +355,11 @@ static uint32_t bflb_usb_vdma_get_remain_size(uint8_t fifo)
     uint32_t regval;
 
     if (fifo == USB_FIFO_CXF) {
-        regval = (getreg32(BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET) & USB_VDMA_LEN_CXF_MASK);
+        regval = (getreg32(BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET) & USB_VDMA_LEN_CXF_MASK);
         regval >>= USB_VDMA_LEN_CXF_SHIFT;
 
     } else {
-        regval = (getreg32(BLFB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8) & USB_VDMA_LEN_CXF_MASK);
+        regval = (getreg32(BFLB_USB_BASE + USB_VDMA_F0PS1_OFFSET + fifo * 8) & USB_VDMA_LEN_CXF_MASK);
         regval >>= USB_VDMA_LEN_CXF_SHIFT;
     }
 
@@ -370,63 +370,63 @@ static inline void bflb_usb_control_transfer_done(void)
 {
     uint32_t regval;
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
     regval |= USB_CX_DONE;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
 }
 
 static inline void bflb_usb_set_mult(uint8_t ep_idx, uint8_t mult)
 {
     uint32_t regval;
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
     regval &= ~USB_TX_NUM_HBW_IEP1_MASK;
     regval |= (mult << USB_TX_NUM_HBW_IEP1_SHIFT);
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
 }
 
 static inline void bflb_usb_send_zlp(uint8_t ep_idx)
 {
     uint32_t regval;
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
     regval |= USB_TX0BYTE_IEP1;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
 }
 
 static inline uint32_t bflb_usb_get_tx_zlp_intstatus(void)
 {
-    return getreg32(BLFB_USB_BASE + USB_DEV_TXZ_OFFSET);
+    return getreg32(BFLB_USB_BASE + USB_DEV_TXZ_OFFSET);
 }
 
 static inline uint32_t bflb_usb_get_rx_zlp_intstatus(void)
 {
-    return getreg32(BLFB_USB_BASE + USB_DEV_RXZ_OFFSET);
+    return getreg32(BFLB_USB_BASE + USB_DEV_RXZ_OFFSET);
 }
 
 static inline void bflb_usb_clear_tx_zlp_intstatus(uint8_t ep_idx)
 {
-    putreg32((1 << (ep_idx - 1)), BLFB_USB_BASE + USB_DEV_TXZ_OFFSET);
+    putreg32((1 << (ep_idx - 1)), BFLB_USB_BASE + USB_DEV_TXZ_OFFSET);
 }
 
 static inline void bflb_usb_clear_rx_zlp_intstatus(uint8_t ep_idx)
 {
-    putreg32((1 << (ep_idx - 1)), BLFB_USB_BASE + USB_DEV_RXZ_OFFSET);
+    putreg32((1 << (ep_idx - 1)), BFLB_USB_BASE + USB_DEV_RXZ_OFFSET);
 }
 
 static uint32_t bflb_usb_get_source_group_intstatus(uint8_t group)
 {
     switch (group) {
         case 0:
-            return (getreg32(BLFB_USB_BASE + USB_DEV_ISG0_OFFSET) & ~getreg32(BLFB_USB_BASE + USB_DEV_MISG0_OFFSET));
+            return (getreg32(BFLB_USB_BASE + USB_DEV_ISG0_OFFSET) & ~getreg32(BFLB_USB_BASE + USB_DEV_MISG0_OFFSET));
         case 1:
-            return (getreg32(BLFB_USB_BASE + USB_DEV_ISG1_OFFSET) & ~getreg32(BLFB_USB_BASE + USB_DEV_MISG1_OFFSET));
+            return (getreg32(BFLB_USB_BASE + USB_DEV_ISG1_OFFSET) & ~getreg32(BFLB_USB_BASE + USB_DEV_MISG1_OFFSET));
         case 2:
-            return (getreg32(BLFB_USB_BASE + USB_DEV_ISG2_OFFSET) & ~getreg32(BLFB_USB_BASE + USB_DEV_MISG2_OFFSET));
+            return (getreg32(BFLB_USB_BASE + USB_DEV_ISG2_OFFSET) & ~getreg32(BFLB_USB_BASE + USB_DEV_MISG2_OFFSET));
         case 3:
-            return (getreg32(BLFB_USB_BASE + USB_DEV_ISG3_OFFSET) & ~getreg32(BLFB_USB_BASE + USB_DEV_MISG3_OFFSET));
+            return (getreg32(BFLB_USB_BASE + USB_DEV_ISG3_OFFSET) & ~getreg32(BFLB_USB_BASE + USB_DEV_MISG3_OFFSET));
         case 4:
-            return (getreg32(BLFB_USB_BASE + USB_DEV_ISG4_OFFSET) & ~getreg32(BLFB_USB_BASE + USB_DEV_MISG4_OFFSET));
+            return (getreg32(BFLB_USB_BASE + USB_DEV_ISG4_OFFSET) & ~getreg32(BFLB_USB_BASE + USB_DEV_MISG4_OFFSET));
         default:
             break;
     }
@@ -437,19 +437,19 @@ static void bflb_usb_source_group_int_clear(uint8_t group, uint32_t int_clear)
 {
     switch (group) {
         case 0:
-            putreg32(int_clear, BLFB_USB_BASE + USB_DEV_ISG0_OFFSET);
+            putreg32(int_clear, BFLB_USB_BASE + USB_DEV_ISG0_OFFSET);
             break;
         case 1:
-            putreg32(int_clear, BLFB_USB_BASE + USB_DEV_ISG1_OFFSET);
+            putreg32(int_clear, BFLB_USB_BASE + USB_DEV_ISG1_OFFSET);
             break;
         case 2:
-            putreg32(int_clear, BLFB_USB_BASE + USB_DEV_ISG2_OFFSET);
+            putreg32(int_clear, BFLB_USB_BASE + USB_DEV_ISG2_OFFSET);
             break;
         case 3:
-            putreg32(int_clear, BLFB_USB_BASE + USB_DEV_ISG3_OFFSET);
+            putreg32(int_clear, BFLB_USB_BASE + USB_DEV_ISG3_OFFSET);
             break;
         case 4:
-            putreg32(int_clear, BLFB_USB_BASE + USB_DEV_ISG4_OFFSET);
+            putreg32(int_clear, BFLB_USB_BASE + USB_DEV_ISG4_OFFSET);
             break;
 
         default:
@@ -504,41 +504,41 @@ int usb_dc_init(void)
     bflb_irq_enable(37);
 
     /* disable global irq */
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
     regval &= ~USB_GLINT_EN_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
     regval |= USB_UNPLUG;
-    putreg32(regval, BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
     regval &= ~USB_CAP_RMWAKUP;
     regval |= USB_CHIP_EN_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
     regval |= USB_SFRST_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
 
-    while (getreg32(BLFB_USB_BASE + USB_DEV_CTL_OFFSET) & USB_SFRST_HOV) {
+    while (getreg32(BFLB_USB_BASE + USB_DEV_CTL_OFFSET) & USB_SFRST_HOV) {
     }
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_ADR_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_ADR_OFFSET);
     regval &= ~USB_AFT_CONF;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_ADR_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_ADR_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_SMT_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_SMT_OFFSET);
     regval &= ~USB_SOFMT_MASK;
 #ifdef CONFIG_USB_HS
     regval |= USB_SOF_TIMER_MASK_AFTER_RESET_HS;
 #else
     regval |= USB_SOF_TIMER_MASK_AFTER_RESET_FS;
 #endif
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_SMT_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_SMT_OFFSET);
 
     /* enable setup irq in source group0 */
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_MISG0_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_MISG0_OFFSET);
     regval &= ~USB_MCX_SETUP_INT;
     regval |= USB_MCX_IN_INT;
     regval |= (1 << 3);
@@ -546,10 +546,10 @@ int usb_dc_init(void)
     regval |= USB_MCX_IN_INT;
     regval |= USB_MCX_COMFAIL_INT;
     regval |= USB_MCX_COMABORT_INT;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_MISG0_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_MISG0_OFFSET);
 
     /* disable all fifo irq in source group1 */
-    putreg32(0xffffffff, BLFB_USB_BASE + USB_DEV_MISG1_OFFSET);
+    putreg32(0xffffffff, BFLB_USB_BASE + USB_DEV_MISG1_OFFSET);
 
     /* enable rst/tx0/rx0 irq in source group2 */
     regval = 0xffffffff;
@@ -558,7 +558,7 @@ int usb_dc_init(void)
     regval &= ~USB_MRESM_INT;
     regval &= ~USB_MTX0BYTE_INT;
     regval &= ~USB_MRX0BYTE_INT;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_MISG2_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_MISG2_OFFSET);
 
     /* enable vdma cmplt and error irq in source group3 */
     regval = 0xffffffff;
@@ -572,23 +572,23 @@ int usb_dc_init(void)
     //             USB_MVDMA_ERROR_F1 |
     //             USB_MVDMA_ERROR_F2 |
     //             USB_MVDMA_ERROR_F3);
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_MISG3_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_MISG3_OFFSET);
 
     /* enable group irq */
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_MIGR_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_MIGR_OFFSET);
     regval &= ~USB_MINT_G0;
     regval &= ~USB_MINT_G1;
     regval &= ~USB_MINT_G2;
     regval &= ~USB_MINT_G3;
     regval &= ~USB_MINT_G4;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_MIGR_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_MIGR_OFFSET);
 
     /* enable device irq */
-    regval = getreg32(BLFB_USB_BASE + USB_GLB_INT_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_GLB_INT_OFFSET);
     regval |= USB_MHC_INT;
     regval |= USB_MOTG_INT;
     regval &= ~USB_MDEV_INT;
-    putreg32(regval, BLFB_USB_BASE + USB_GLB_INT_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_GLB_INT_OFFSET);
 
     bflb_usb_source_group_int_clear(2, 0x3ff);
     bflb_usb_source_group_int_clear(3, 0xffffffff);
@@ -599,18 +599,18 @@ int usb_dc_init(void)
     }
 
     /* enable vdma */
-    regval = getreg32(BLFB_USB_BASE + USB_VDMA_CTRL_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_VDMA_CTRL_OFFSET);
     regval |= USB_VDMA_EN;
-    putreg32(regval, BLFB_USB_BASE + USB_VDMA_CTRL_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_VDMA_CTRL_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
     regval &= ~USB_UNPLUG;
-    putreg32(regval, BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
     /* enable global irq */
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
     regval |= USB_GLINT_EN_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
 
     return 0;
 }
@@ -620,13 +620,13 @@ int usb_dc_deinit(void)
     uint32_t regval;
 
     /* disable global irq */
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
     regval &= ~USB_GLINT_EN_HOV;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_CTL_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_CTL_OFFSET);
 
-    regval = getreg32(BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
     regval |= USB_UNPLUG;
-    putreg32(regval, BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
     regval = getreg32(BFLB_PDS_BASE + PDS_USB_PHY_CTRL_OFFSET);
     regval &= ~PDS_REG_USB_PHY_XTLSEL_MASK;
@@ -651,10 +651,10 @@ int usbd_set_address(const uint8_t addr)
 {
     uint32_t regval;
 
-    regval = getreg32(BLFB_USB_BASE + USB_DEV_ADR_OFFSET);
+    regval = getreg32(BFLB_USB_BASE + USB_DEV_ADR_OFFSET);
     regval &= ~USB_DEVADR_MASK;
     regval |= addr;
-    putreg32(regval, BLFB_USB_BASE + USB_DEV_ADR_OFFSET);
+    putreg32(regval, BFLB_USB_BASE + USB_DEV_ADR_OFFSET);
 
     return 0;
 }
@@ -663,7 +663,7 @@ uint8_t usbd_get_port_speed(const uint8_t port)
 {
     uint8_t speed = 3;
 
-    speed = (getreg32(BLFB_USB_BASE + USB_OTG_CSR_OFFSET) & USB_SPD_TYP_HOV_POV_MASK) >> USB_SPD_TYP_HOV_POV_SHIFT;
+    speed = (getreg32(BFLB_USB_BASE + USB_OTG_CSR_OFFSET) & USB_SPD_TYP_HOV_POV_MASK) >> USB_SPD_TYP_HOV_POV_SHIFT;
 
     if (speed == 0) {
         return USB_SPEED_FULL;
@@ -803,9 +803,9 @@ int usbd_ep_open(const struct usbd_endpoint_cfg *ep_cfg)
             }
         }
 #endif
-        regval = getreg32(BLFB_USB_BASE + USB_DEV_ADR_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_DEV_ADR_OFFSET);
         regval |= USB_AFT_CONF;
-        putreg32(regval, BLFB_USB_BASE + USB_DEV_ADR_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_DEV_ADR_OFFSET);
     }
     return 0;
 }
@@ -822,20 +822,20 @@ int usbd_ep_set_stall(const uint8_t ep)
     uint8_t ep_idx = USB_EP_GET_IDX(ep);
 
     if (ep_idx == 0) {
-        regval = getreg32(BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
+        regval = getreg32(BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
         regval |= USB_CX_STL;
-        putreg32(regval, BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
+        putreg32(regval, BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
     } else {
         if (USB_EP_DIR_IS_OUT(ep)) {
-            regval = getreg32(BLFB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
+            regval = getreg32(BFLB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
             regval |= USB_STL_OEP1;
             //regval |= USB_RSTG_OEP1;
-            putreg32(regval, BLFB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
+            putreg32(regval, BFLB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
         } else {
-            regval = getreg32(BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+            regval = getreg32(BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
             regval |= USB_STL_IEP1;
             //regval |= USB_RSTG_IEP1;
-            putreg32(regval, BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+            putreg32(regval, BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
         }
     }
 
@@ -851,15 +851,15 @@ int usbd_ep_clear_stall(const uint8_t ep)
     if (ep_idx == 0) {
     } else {
         if (USB_EP_DIR_IS_OUT(ep)) {
-            regval = getreg32(BLFB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
+            regval = getreg32(BFLB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
             //regval &= ~USB_RSTG_OEP1;
             regval &= ~USB_STL_OEP1;
-            putreg32(regval, BLFB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
+            putreg32(regval, BFLB_USB_BASE + USB_DEV_OUTMPS1_OFFSET + (ep_idx - 1) * 4);
         } else {
-            regval = getreg32(BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+            regval = getreg32(BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
             //regval &= ~USB_RSTG_IEP1;
             regval &= ~USB_STL_IEP1;
-            putreg32(regval, BLFB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
+            putreg32(regval, BFLB_USB_BASE + USB_DEV_INMPS1_OFFSET + (ep_idx - 1) * 4);
         }
     }
 
@@ -947,16 +947,16 @@ void USBD_IRQHandler(int irq, void *arg)
     uint32_t regval;
     uint8_t ep_idx;
 
-    glb_intstatus = getreg32(BLFB_USB_BASE + USB_GLB_ISR_OFFSET);
+    glb_intstatus = getreg32(BFLB_USB_BASE + USB_GLB_ISR_OFFSET);
 
     if (glb_intstatus & USB_DEV_INT) {
-        dev_intstatus = getreg32(BLFB_USB_BASE + USB_DEV_IGR_OFFSET);
+        dev_intstatus = getreg32(BFLB_USB_BASE + USB_DEV_IGR_OFFSET);
         if (dev_intstatus & USB_INT_G0) {
             subgroup_intstatus = bflb_usb_get_source_group_intstatus(0);
 
             if (subgroup_intstatus & USB_CX_SETUP_INT) {
                 bflb_usb_vdma_start_read(USB_FIFO_CXF, g_setup_buffer, 8);
-                while (getreg32(BLFB_USB_BASE + USB_VDMA_CXFPS1_OFFSET) & USB_VDMA_START_CXF) {
+                while (getreg32(BFLB_USB_BASE + USB_VDMA_CXFPS1_OFFSET) & USB_VDMA_START_CXF) {
                 }
 
                 bflb_usb_source_group_int_clear(3, USB_VDMA_CMPLT_CXF);
@@ -1012,14 +1012,14 @@ void USBD_IRQHandler(int irq, void *arg)
                 bflb_usb_reset_fifo(USB_FIFO_F3);
                 bflb_usb_reset_fifo(USB_FIFO_CXF);
 
-                regval = getreg32(BLFB_USB_BASE + USB_DEV_SMT_OFFSET);
+                regval = getreg32(BFLB_USB_BASE + USB_DEV_SMT_OFFSET);
                 regval &= ~USB_SOFMT_MASK;
 #ifdef CONFIG_USB_HS
                 regval |= USB_SOF_TIMER_MASK_AFTER_RESET_HS;
 #else
                 regval |= USB_SOF_TIMER_MASK_AFTER_RESET_FS;
 #endif
-                putreg32(regval, BLFB_USB_BASE + USB_DEV_SMT_OFFSET);
+                putreg32(regval, BFLB_USB_BASE + USB_DEV_SMT_OFFSET);
 
                 memset(&g_bl_udc, 0, sizeof(g_bl_udc));
 
@@ -1073,33 +1073,33 @@ void usbd_execute_test_mode(struct usb_setup_packet *setup)
     switch (index) {
         case 1: // Test_J
         {
-            regval = getreg32(BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+            regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             regval |= USB_TST_JSTA;
-            putreg32(regval, BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+            putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             bflb_usb_control_transfer_done();
         } break;
         case 2: // Test_K
         {
-            regval = getreg32(BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+            regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             regval |= USB_TST_KSTA;
-            putreg32(regval, BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+            putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
             bflb_usb_control_transfer_done();
         } break;
         case 3: // TEST_SE0_NAK
         {
-            regval = getreg32(BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+            regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             regval |= USB_TST_SE0NAK;
-            putreg32(regval, BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+            putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
             bflb_usb_control_transfer_done();
         } break;
         case 4: // Test_Packet
         {
             bflb_usb_control_transfer_done();
-            regval = getreg32(BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+            regval = getreg32(BFLB_USB_BASE + USB_PHY_TST_OFFSET);
             regval |= USB_TST_PKT;
-            putreg32(regval, BLFB_USB_BASE + USB_PHY_TST_OFFSET);
+            putreg32(regval, BFLB_USB_BASE + USB_PHY_TST_OFFSET);
 
             __attribute__((aligned(32))) uint8_t temp[53];
             uint8_t *pp;
@@ -1139,9 +1139,9 @@ void usbd_execute_test_mode(struct usb_setup_packet *setup)
 
             bflb_usb_vdma_start_write(USB_FIFO_CXF, temp, 53);
 
-            regval = getreg32(BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
+            regval = getreg32(BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
             regval |= USB_TST_PKDONE;
-            putreg32(regval, BLFB_USB_BASE + USB_DEV_CXCFE_OFFSET);
+            putreg32(regval, BFLB_USB_BASE + USB_DEV_CXCFE_OFFSET);
 
         } break;
         case 5: // Test_Force_Enable

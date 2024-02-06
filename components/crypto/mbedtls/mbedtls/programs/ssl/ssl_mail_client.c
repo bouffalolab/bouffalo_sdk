@@ -649,7 +649,7 @@ int main( int argc, char *argv[] )
         fflush( stdout );
 
         gethostname( hostname, 32 );
-        len = sprintf( (char *) buf, "EHLO %s\r\n", hostname );
+        len = mbedtls_snprintf( (char *) buf, sizeof(buf), "EHLO %s\r\n", hostname );
         ret = write_ssl_and_get_response( &ssl, buf, len );
         if( ret < 200 || ret > 299 )
         {
@@ -675,7 +675,7 @@ int main( int argc, char *argv[] )
         fflush( stdout );
 
         gethostname( hostname, 32 );
-        len = sprintf( (char *) buf, "EHLO %s\r\n", hostname );
+        len = mbedtls_snprintf( (char *) buf, sizeof(buf), "EHLO %s\r\n", hostname );
         ret = write_and_get_response( &server_fd, buf, len );
         if( ret < 200 || ret > 299 )
         {
@@ -689,7 +689,7 @@ int main( int argc, char *argv[] )
         fflush( stdout );
 
         gethostname( hostname, 32 );
-        len = sprintf( (char *) buf, "STARTTLS\r\n" );
+        len = mbedtls_snprintf( (char *) buf, sizeof(buf), "STARTTLS\r\n" );
         ret = write_and_get_response( &server_fd, buf, len );
         if( ret < 200 || ret > 299 )
         {
@@ -709,7 +709,7 @@ int main( int argc, char *argv[] )
         mbedtls_printf( "  > Write AUTH LOGIN to server:" );
         fflush( stdout );
 
-        len = sprintf( (char *) buf, "AUTH LOGIN\r\n" );
+        len = mbedtls_snprintf( (char *) buf, sizeof(buf), "AUTH LOGIN\r\n" );
         ret = write_ssl_and_get_response( &ssl, buf, len );
         if( ret < 200 || ret > 399 )
         {
@@ -729,7 +729,7 @@ int main( int argc, char *argv[] )
             mbedtls_printf( " failed\n  ! mbedtls_base64_encode returned %d\n\n", ret );
             goto exit;
         }
-        len = sprintf( (char *) buf, "%s\r\n", base );
+        len = mbedtls_snprintf( (char *) buf, sizeof(buf), "%s\r\n", base );
         ret = write_ssl_and_get_response( &ssl, buf, len );
         if( ret < 300 || ret > 399 )
         {
@@ -749,7 +749,7 @@ int main( int argc, char *argv[] )
             mbedtls_printf( " failed\n  ! mbedtls_base64_encode returned %d\n\n", ret );
             goto exit;
         }
-        len = sprintf( (char *) buf, "%s\r\n", base );
+        len = mbedtls_snprintf( (char *) buf, sizeof(buf), "%s\r\n", base );
         ret = write_ssl_and_get_response( &ssl, buf, len );
         if( ret < 200 || ret > 399 )
         {
@@ -764,7 +764,7 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "  > Write MAIL FROM to server:" );
     fflush( stdout );
 
-    len = sprintf( (char *) buf, "MAIL FROM:<%s>\r\n", opt.mail_from );
+    len = mbedtls_snprintf( (char *) buf, sizeof(buf), "MAIL FROM:<%s>\r\n", opt.mail_from );
     ret = write_ssl_and_get_response( &ssl, buf, len );
     if( ret < 200 || ret > 299 )
     {
@@ -777,7 +777,7 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "  > Write RCPT TO to server:" );
     fflush( stdout );
 
-    len = sprintf( (char *) buf, "RCPT TO:<%s>\r\n", opt.mail_to );
+    len = mbedtls_snprintf( (char *) buf, sizeof(buf), "RCPT TO:<%s>\r\n", opt.mail_to );
     ret = write_ssl_and_get_response( &ssl, buf, len );
     if( ret < 200 || ret > 299 )
     {
@@ -790,7 +790,7 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "  > Write DATA to server:" );
     fflush( stdout );
 
-    len = sprintf( (char *) buf, "DATA\r\n" );
+    len = mbedtls_snprintf( (char *) buf, sizeof(buf), "DATA\r\n" );
     ret = write_ssl_and_get_response( &ssl, buf, len );
     if( ret < 300 || ret > 399 )
     {
@@ -803,14 +803,14 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "  > Write content to server:" );
     fflush( stdout );
 
-    len = sprintf( (char *) buf, "From: %s\r\nSubject: mbed TLS Test mail\r\n\r\n"
+    len = mbedtls_snprintf( (char *) buf, sizeof(buf), "From: %s\r\nSubject: mbed TLS Test mail\r\n\r\n"
             "This is a simple test mail from the "
             "mbed TLS mail client example.\r\n"
             "\r\n"
             "Enjoy!", opt.mail_from );
     ret = write_ssl_data( &ssl, buf, len );
 
-    len = sprintf( (char *) buf, "\r\n.\r\n");
+    len = mbedtls_snprintf( (char *) buf, sizeof(buf), "\r\n.\r\n");
     ret = write_ssl_and_get_response( &ssl, buf, len );
     if( ret < 200 || ret > 299 )
     {

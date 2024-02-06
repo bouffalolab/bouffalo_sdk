@@ -36,6 +36,7 @@
 #include "bflb_efuse.h"
 #include "bl616_ef_cfg.h"
 #include "hardware/ef_data_reg.h"
+#include "hardware/glb_reg.h"
 
 static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {
@@ -295,18 +296,104 @@ uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **p
 /****************************************************************************/ /**
  * @brief  Efuse read device info
  *
- * @param  deviceInfo: info pointer
+ * @param  device_info: info pointer
  *
  * @return None
  *
 *******************************************************************************/
-void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo)
+void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info)
 {
-    uint32_t *p = (uint32_t *)deviceInfo;
+    uint32_t tmpval;
 
-    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, p, 1, 1);
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, &tmpval, 1, 1);
+    device_info->package = (tmpval >> 22) & 3;
+    device_info->flash_info = (tmpval >> 26) & 7;
+    device_info->psram_info = (tmpval >> 24) & 3;
+    device_info->version = (tmpval >> 29) & 7;
+
+    switch (device_info->package) {
+        case 0:
+            device_info->package_name = "QFN40";
+            break;
+        case 1:
+            device_info->package_name = "QFN40M";
+            break;
+        case 2:
+            device_info->package_name = "QFN56";
+            break;
+        default:
+            device_info->package_name = "ERROR";
+            break;
+    }
+    switch (device_info->flash_info) {
+        case 0:
+            device_info->flash_info_name = "NO";
+            break;
+        case 1:
+            device_info->flash_info_name = "2MB";
+            break;
+        case 2:
+            device_info->flash_info_name = "4MB";
+            break;
+        case 3:
+            device_info->flash_info_name = "6MB";
+            break;
+        case 4:
+            device_info->flash_info_name = "8MB";
+            break;
+        default:
+            device_info->flash_info_name = "ERROR";
+            break;
+    }
+    switch (device_info->psram_info) {
+        case 0:
+            device_info->psram_info_name = "NO";
+            break;
+        case 1:
+            device_info->psram_info_name = "WB_4MB";
+            break;
+        default:
+            device_info->psram_info_name = "ERROR";
+    }
+
+    BL_WR_REG(GLB_BASE, GLB_PROC_MON, 0x00000401);
+    arch_delay_us(110);
+    BL_WR_REG(GLB_BASE, GLB_PROC_MON, 0x00000403);
+    arch_delay_us(110);
+    BL_WR_REG(GLB_BASE, GLB_PROC_MON, 0x00000413);
+    arch_delay_us(110);
+    BL_WR_REG(GLB_BASE, GLB_PROC_MON, 0x00000433);
+    arch_delay_us(1100);
+    tmpval = BL_RD_REG(GLB_BASE, GLB_PROC_MON);
+    tmpval = BL_GET_REG_BITS_VAL(tmpval, GLB_RING_FREQ);
+    device_info->process_corner = tmpval;
+    if (device_info->process_corner <= 480) {
+        snprintf(device_info->process_corner_name, sizeof(device_info->process_corner_name), "%s", "SS");
+    } else if (device_info->process_corner < 540) {
+        uint16_t ss, tt;
+        ss = ((device_info->process_corner - 480) * 100 + 30) / 60;
+        tt = 100 - ss;
+        snprintf(device_info->process_corner_name, sizeof(device_info->process_corner_name), "%d%%TT+%d%%SS", ss, tt);
+    } else if (device_info->process_corner == 540) {
+        snprintf(device_info->process_corner_name, sizeof(device_info->process_corner_name), "%s", "TT");
+    } else if (device_info->process_corner < 610) {
+        uint16_t tt, ff;
+        tt = ((device_info->process_corner - 540) * 100 + 35) / 70;
+        ff = 100 - tt;
+        snprintf(device_info->process_corner_name, sizeof(device_info->process_corner_name), "%d%%TT+%d%%FF", ff, tt);
+    } else { /* >= 610 */
+        snprintf(device_info->process_corner_name, sizeof(device_info->process_corner_name), "%s", "FF");
+    }
 }
 
+/****************************************************************************/ /**
+ * @brief  Efuse read chip identification
+ *
+ * @param  chipid: id pointer
+ *
+ * @return None
+ *
+*******************************************************************************/
 void bflb_efuse_get_chipid(uint8_t chipid[8])
 {
     bflb_efuse_read_mac_address_opt(0, chipid, 1);

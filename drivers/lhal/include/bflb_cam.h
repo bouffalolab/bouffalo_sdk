@@ -157,6 +157,25 @@
 #define CAM_CMD_INVERSE_HSYNC_POLARITY 10
 #endif
 
+// clang-format off
+#define IS_CAM_INPUT_FORMAT(type)  ((type) <= CAM_INPUT_FORMAT_BGR888)
+
+#if !defined(BL702)
+#define IS_CAM_OUTPUT_FORMAT(type)  ((type) <= CAM_OUTPUT_FORMAT_RGB888_TO_RGBA8888)
+#else
+#define IS_CAM_OUTPUT_FORMAT(type)  ((type) <= CAM_OUTPUT_FORMAT_RGB888_OR_BGR888)
+#endif
+
+#if defined(BL808)
+#define IS_CAM_INPUT_SOURCE(type)  ((type) <= CAM_INPUT_SOURCE_CSI)
+#else
+#define IS_CAM_INPUT_SOURCE(type)  ((type) == CAM_INPUT_SOURCE_DVP)
+#endif
+
+#define IS_CAM_ADDR(type)   (!((type) % 16))
+
+// clang-format on
+
 /**
   * @}
   */

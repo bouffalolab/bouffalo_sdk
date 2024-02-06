@@ -127,9 +127,11 @@ void bflb_aes_deinit(struct bflb_device_s *dev);
 /**
  * @brief Set aes hardware key.
  *
- * @param [in] keysel hardware key mode in efuse table
+ * @param [in] dev device handle
+ * @param [in] keysel0 hardware key mode in efuse table
+ * @param [in] keysel1 hardware key mode in efuse table
  */
-void bflb_aes_set_hwkey(uint8_t keysel);
+void bflb_aes_select_hwkey(struct bflb_device_s *dev, uint8_t keysel0, uint8_t keysel1);
 
 /**
  * @brief Set aes hardware key source.

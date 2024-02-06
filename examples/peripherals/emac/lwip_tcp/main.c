@@ -86,6 +86,17 @@ static void netif_config(void)
 #endif
 }
 
+static void ethernet_link_check_task(void *pvParameters)
+{
+    /* Infinite loop */
+    for (;;) {
+        vTaskDelay(100);
+        ethernet_link_check_state(&gnetif);
+    }
+}
+
+static StackType_t link_check_stack[512];
+static StaticTask_t link_check_handle;
 static void ethernet_lwip_init()
 {
     printf("lwip statck init\r\n");
@@ -96,6 +107,8 @@ static void ethernet_lwip_init()
     printf("netif config\r\n");
     /* Configure the Network interface */
     netif_config();
+
+    xTaskCreateStatic((void *)ethernet_link_check_task, (char *)"link_check", sizeof(link_check_stack) / 4, NULL, osPriorityHigh, link_check_stack, &link_check_handle);
 }
 
 void emac_init_txrx_buffer(struct bflb_device_s *emac)

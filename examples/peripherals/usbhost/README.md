@@ -1,5 +1,6 @@
 # usbhost
 
+If you use bl808, please modify configs (like CONFIG_USBHOST_MAX_INTF_ALTSETTINGS) in usb_config.h because bl808 does not have too much memory.
 
 ## Support CHIP
 

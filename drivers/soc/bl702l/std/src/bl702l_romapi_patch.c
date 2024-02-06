@@ -142,12 +142,164 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_Winb_16JV = {
     .pd_delay = 3,
     .qe_data = 0,
 };
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_GD_LQ64E = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
+    .mid = 0xc8,
+
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
+
+    /*reg*/
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
+
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x02,
+    .qe_read_reg_len = 0x1,
+
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
+
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x01,
+
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 1,
+    .c_read_mode = 0xa0,
+
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
+    /*erase*/
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
+    /*write*/
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
+
+    .io_mode = SF_CTRL_QIO_MODE,
+    .clk_delay = 1,
+    .clk_invert = 0x3d,
+
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
+
+    /*id*/
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+    .qpi_jedec_id_cmd = 0x9f,
+    .qpi_jedec_id_cmd_dmy_clk = 0x00,
+    .sector_size = 4,
+    .page_size = 256,
+
+    /*read*/
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
+
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
+
+    /* qpi mode */
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
+
+    /*AC*/
+    .time_e_sector = 3000,
+    .time_e_32k = 4000,
+    .time_e_64k = 4000,
+    .time_page_pgm = 5,
+    .time_ce = 65 * 1000,
+    .pd_delay = 3,
+    .qe_data = 0,
+};
 
 static const ATTR_TCM_CONST_SECTION Flash_Info_t flash_infos[] = {
     {
         .jedec_id = 0x14650b,
         //.name="XTX_25W08F_08_1833",
         .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x17400b,
+        //.name="XT_25F64B_64_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x18400b,
+        //.name="xt_25f128b_128_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x1660c4,
+        //.name="gt25q32_32_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x1560c4,
+        //.name="gt25q16_16_33",
+        .cfg = &flash_cfg_Winb_16JV,
+    },
+    {
+        .jedec_id = 0x142085,
+        //.name="py25q80hb_80_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x152085,
+        //.name="py25q16hb_16_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x162085,
+        //.name="py25q32hb_32_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x172085,
+        //.name="py25q64ha_64_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x182085,
+        //.name="py25q128ha_128_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x192085,
+        //.name="py25q256hb_256_33",
+        .cfg = &flash_cfg_GD_LQ64E,
+    },
+    {
+        .jedec_id = 0x166125,
+        //.name="sk25e032_32_33",
+        .cfg = &flash_cfg_GD_LQ64E,
     },
 };
 
@@ -244,3 +396,28 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify_ext(uint8_t call_from_flash
     }
 }
 
+/****************************************************************************/ /**
+ * @brief  Power on XTAL 32K
+ *
+ * @param  None
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_On_Xtal_32K(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_XTAL32K_HIZ_EN);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_INV_STRE, 3);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_XTAL32K_AC_CAP_SHORT);
+    tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_XTAL32K);
+    tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_XTAL32K_BUF);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    /* Delay >1s, but 1s is too long, so user should delay after this function */
+    arch_delay_us(1100);
+
+    return SUCCESS;
+}

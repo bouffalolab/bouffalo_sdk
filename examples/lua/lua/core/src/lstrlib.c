@@ -1299,12 +1299,13 @@ static const char *getformat(lua_State *L, const char *strfrmt,
 /*
 ** add length modifier into formats
 */
-static void addlenmod(char *form, const char *lenmod)
+static void addlenmod(char *form, const char *lenmod, size_t size)
 {
     size_t l = luaport_strlen(form);
     size_t lm = luaport_strlen(lenmod);
     char spec = form[l - 1];
-    luaport_strcpy(form + l - 1, lenmod);
+    if (luaport_strlcpy(form + l - 1, lenmod, size - l + 1) >= (size - l + 1))
+        printf("[OS]: strlcpy truncated \r\n"); 
     form[l + lm - 1] = spec;
     form[l + lm] = '\0';
 }
@@ -1352,14 +1353,14 @@ static int str_format(lua_State *L)
                 intcase : {
                     lua_Integer n = luaL_checkinteger(L, arg);
                     checkformat(L, form, flags, 1);
-                    addlenmod(form, LUA_INTEGER_FRMLEN);
+                    addlenmod(form, LUA_INTEGER_FRMLEN, sizeof(form));
                     nb = l_sprintf(buff, maxitem, form, (LUAI_UACINT)n);
                     break;
                 }
                 case 'a':
                 case 'A':
                     checkformat(L, form, L_FMTFLAGSF, 1);
-                    addlenmod(form, LUA_NUMBER_FRMLEN);
+                    addlenmod(form, LUA_NUMBER_FRMLEN, sizeof(form));
                     nb = lua_number2strx(L, buff, maxitem, form,
                                          luaL_checknumber(L, arg));
                     break;
@@ -1373,7 +1374,7 @@ static int str_format(lua_State *L)
                 case 'G': {
                     lua_Number n = luaL_checknumber(L, arg);
                     checkformat(L, form, L_FMTFLAGSF, 1);
-                    addlenmod(form, LUA_NUMBER_FRMLEN);
+                    addlenmod(form, LUA_NUMBER_FRMLEN, sizeof(form));
                     nb = l_sprintf(buff, maxitem, form, (LUAI_UACNUMBER)n);
                     break;
                 }

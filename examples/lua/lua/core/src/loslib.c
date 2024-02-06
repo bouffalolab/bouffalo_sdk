@@ -120,7 +120,8 @@
 
 #define lua_tmpnam(b, e)                       \
     {                                          \
-        luaport_strcpy(b, LUA_TMPNAMTEMPLATE); \
+        if (luaport_strlcpy(b, LUA_TMPNAMTEMPLATE, LUA_TMPNAMBUFSIZE) >= LUA_TMPNAMBUFSIZE) \
+            printf("[OS]: strlcpy truncated \r\n"); \
         e = mkstemp(b);                        \
         if (e != -1)                           \
             close(e);                          \

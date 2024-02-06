@@ -8,6 +8,7 @@ sdk_add_include_directories(class/msc)
 sdk_add_include_directories(class/audio)
 sdk_add_include_directories(class/video)
 sdk_add_include_directories(class/hub)
+sdk_add_include_directories(class/wireless)
 
 sdk_add_compile_definitions(-DCONFIG_CHERRYUSB)
 
@@ -41,8 +42,9 @@ endif()
 if(CONFIG_CHERRYUSB_DEVICE_VIDEO)
 sdk_library_add_sources(class/video/usbd_video.c)
 endif()
+endif()
 
-elseif(CONFIG_CHERRYUSB_HOST)
+if(CONFIG_CHERRYUSB_HOST)
 sdk_library_add_sources(core/usbh_core.c)
 sdk_library_add_sources(port/ehci/usb_hc_ehci.c)
 sdk_library_add_sources(osal/usb_osal_freertos.c)
@@ -53,11 +55,8 @@ sdk_library_add_sources(class/hub/usbh_hub.c)
 sdk_library_add_sources(class/video/usbh_video.c)
 sdk_library_add_sources(class/audio/usbh_audio.c)
 
-sdk_add_link_libraries(
--ucdc_acm_class_driver 
--uhid_class_driver 
--umsc_class_driver 
--uvideo_ctrl_class_driver 
--uaudio_ctrl_class_driver)
+if(CONFIG_CHERRYUSB_HOST_ECM)
+sdk_library_add_sources(class/cdc/usbh_cdc_ecm.c)
+endif()
 
 endif()

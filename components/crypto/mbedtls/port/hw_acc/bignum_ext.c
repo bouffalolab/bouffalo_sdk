@@ -17,7 +17,7 @@ void dump_mpi(const char *tag, const mbedtls_mpi *bn)
     if (bn) {
         mbedtls_mpi_write_string(bn, 16, buf, buf_len, &olen);
     } else {
-        strcpy(buf, "<null>");
+        strlcpy(buf, "<null>", buf_len);
     }
     printf(buf);
     printf("\r\n");

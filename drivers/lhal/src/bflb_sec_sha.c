@@ -29,6 +29,9 @@
 
 void bflb_sha_init(struct bflb_device_s *dev, uint8_t mode)
 {
+#ifdef romapi_bflb_sha_init
+    romapi_bflb_sha_init(dev, mode);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -39,10 +42,14 @@ void bflb_sha_init(struct bflb_device_s *dev, uint8_t mode)
     regval &= ~SEC_ENG_SE_SHA_0_MODE_MASK;
     regval |= (mode << SEC_ENG_SE_SHA_0_MODE_SHIFT);
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_sha1_start(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx)
 {
+#ifdef romapi_bflb_sha1_start
+    romapi_bflb_sha1_start(dev, ctx);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -55,15 +62,23 @@ void bflb_sha1_start(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx)
     regval |= SEC_ENG_SE_SHA_0_EN;
     regval &= ~SEC_ENG_SE_SHA_0_HASH_SEL;
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_sha256_start(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx)
 {
+#ifdef romapi_bflb_sha256_start
+    romapi_bflb_sha256_start(dev, ctx);
+#else
     return bflb_sha1_start(dev, (struct bflb_sha1_ctx_s *)ctx);
+#endif
 }
 
 void bflb_sha512_start(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx)
 {
+#ifdef romapi_bflb_sha_init
+    romapi_bflb_sha_init(dev, ctx);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -76,10 +91,14 @@ void bflb_sha512_start(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx)
     regval |= SEC_ENG_SE_SHA_0_EN;
     regval &= ~SEC_ENG_SE_SHA_0_HASH_SEL;
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+#endif
 }
 
 int bflb_sha1_update(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, const uint8_t *input, uint32_t len)
 {
+#ifdef romapi_bflb_sha1_update
+    return romapi_bflb_sha1_update(dev, ctx, input, len);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint32_t fill;
@@ -178,15 +197,23 @@ int bflb_sha1_update(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, con
         }
     }
     return 0;
+#endif
 }
 
 int bflb_sha256_update(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx, const uint8_t *input, uint32_t len)
 {
+#ifdef romapi_bflb_sha256_update
+    return romapi_bflb_sha256_update(dev, ctx, input, len);
+#else
     return bflb_sha1_update(dev, (struct bflb_sha1_ctx_s *)ctx, input, len);
+#endif
 }
 
 int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx, const uint8_t *input, uint64_t len)
 {
+#ifdef romapi_bflb_sha512_update
+    return romapi_bflb_sha512_update(dev, ctx, input, len);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint32_t fill;
@@ -284,10 +311,14 @@ int bflb_sha512_update(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx,
         }
     }
     return 0;
+#endif
 }
 
 void bflb_sha1_finish(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, uint8_t *output)
 {
+#ifdef romapi_bflb_sha1_finish
+    romapi_bflb_sha1_finish(dev, ctx, output);
+#else
     uint32_t last, padn;
     uint32_t high, low;
     uint8_t msgLen[8];
@@ -366,15 +397,23 @@ void bflb_sha1_finish(struct bflb_device_s *dev, struct bflb_sha1_ctx_s *ctx, ui
     regval &= ~SEC_ENG_SE_SHA_0_HASH_SEL;
     regval &= ~SEC_ENG_SE_SHA_0_EN;
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_sha256_finish(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx, uint8_t *output)
 {
+#ifdef romapi_bflb_sha256_finish
+    romapi_bflb_sha256_finish(dev, ctx, output);
+#else
     return bflb_sha1_finish(dev, (struct bflb_sha1_ctx_s *)ctx, output);
+#endif
 }
 
 void bflb_sha512_finish(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx, uint8_t *output)
 {
+#ifdef romapi_bflb_sha512_finish
+    romapi_bflb_sha512_finish(dev, ctx, output);
+#else
     uint64_t last, padn;
     uint64_t high, low;
     uint8_t msgLen[16];
@@ -496,10 +535,14 @@ void bflb_sha512_finish(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx
     regval &= ~SEC_ENG_SE_SHA_0_HASH_SEL;
     regval &= ~SEC_ENG_SE_SHA_0_EN;
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_sha_link_init(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_sha_link_init
+    romapi_bflb_sha_link_init(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -509,10 +552,14 @@ void bflb_sha_link_init(struct bflb_device_s *dev)
     regval |= SEC_ENG_SE_SHA_0_EN;
     regval |= SEC_ENG_SE_SHA_0_LINK_MODE;
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_sha_link_deinit(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_sha_link_deinit
+    romapi_bflb_sha_link_deinit(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -522,18 +569,26 @@ void bflb_sha_link_deinit(struct bflb_device_s *dev)
     regval &= ~SEC_ENG_SE_SHA_0_EN;
     regval &= ~SEC_ENG_SE_SHA_0_LINK_MODE;
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_sha1_link_start(struct bflb_device_s *dev, struct bflb_sha1_link_ctx_s *ctx)
 {
+#ifdef romapi_bflb_sha1_link_start
+    romapi_bflb_sha1_link_start(dev, ctx);
+#else
     arch_memset(ctx, 0, sizeof(struct bflb_sha1_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
     ctx->link_addr = (uint32_t)(uintptr_t)&ctx->link_cfg;
     ctx->link_cfg.sha_mode = SHA_MODE_SHA1;
+#endif
 }
 
 void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_ctx_s *ctx, int is224)
 {
+#ifdef romapi_bflb_sha256_link_start
+    romapi_bflb_sha256_link_start(dev, ctx, is224);
+#else
     arch_memset(ctx, 0, sizeof(struct bflb_sha1_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
     ctx->link_addr = (uint32_t)(uintptr_t)&ctx->link_cfg;
@@ -542,10 +597,14 @@ void bflb_sha256_link_start(struct bflb_device_s *dev, struct bflb_sha256_link_c
     } else {
         ctx->link_cfg.sha_mode = SHA_MODE_SHA256;
     }
+#endif
 }
 
 void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_link_ctx_s *ctx, int is384)
 {
+#ifdef romapi_bflb_sha512_link_start
+    romapi_bflb_sha512_link_start(dev, ctx, is384);
+#else
     arch_memset(ctx, 0, sizeof(struct bflb_sha512_link_ctx_s));
     ctx->sha_padding[0] = 0x80;
     ctx->link_addr = (uint32_t)(uintptr_t)&ctx->link_cfg;
@@ -554,6 +613,7 @@ void bflb_sha512_link_start(struct bflb_device_s *dev, struct bflb_sha512_link_c
     } else {
         ctx->link_cfg.sha_mode = SHA_MODE_SHA512;
     }
+#endif
 }
 
 int bflb_sha1_link_update(struct bflb_device_s *dev,
@@ -561,6 +621,9 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
                           const uint8_t *input,
                           uint32_t len)
 {
+#ifdef romapi_bflb_sha1_link_update
+    return romapi_bflb_sha1_link_update(dev, ctx, input, len);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint32_t fill;
@@ -648,6 +711,7 @@ int bflb_sha1_link_update(struct bflb_device_s *dev,
         }
     }
     return 0;
+#endif
 }
 
 int bflb_sha256_link_update(struct bflb_device_s *dev,
@@ -655,7 +719,11 @@ int bflb_sha256_link_update(struct bflb_device_s *dev,
                             const uint8_t *input,
                             uint32_t len)
 {
+#ifdef romapi_bflb_sha_init
+    return romapi_bflb_sha_init(dev, ctx, input, len);
+#else
     return bflb_sha1_link_update(dev, (struct bflb_sha1_link_ctx_s *)ctx, input, len);
+#endif
 }
 
 int bflb_sha512_link_update(struct bflb_device_s *dev,
@@ -663,6 +731,9 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
                             const uint8_t *input,
                             uint64_t len)
 {
+#ifdef romapi_bflb_sha512_link_update
+    return romapi_bflb_sha512_link_update(dev, ctx, input, len);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint32_t fill;
@@ -749,12 +820,17 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
         }
     }
     return 0;
+#endif
+
 }
 
 void bflb_sha1_link_finish(struct bflb_device_s *dev,
                            struct bflb_sha1_link_ctx_s *ctx,
                            uint8_t *output)
 {
+#ifdef romapi_bflb_sha1_link_finish
+    romapi_bflb_sha1_link_finish(dev, ctx, output);
+#else
     uint32_t last, padn;
     uint32_t high, low;
     uint8_t msgLen[8];
@@ -803,19 +879,27 @@ void bflb_sha1_link_finish(struct bflb_device_s *dev,
 
     /* Choose new hash in the next time */
     *((uint32_t *)(uintptr_t)ctx->link_addr) &= ~0x40;
+#endif
 }
 
 void bflb_sha256_link_finish(struct bflb_device_s *dev,
                              struct bflb_sha256_link_ctx_s *ctx,
                              uint8_t *output)
 {
+#ifdef romapi_bflb_sha1_link_finish
+    romapi_bflb_sha1_link_finish(dev, ctx, output);
+#else
     return bflb_sha1_link_finish(dev, (struct bflb_sha1_link_ctx_s *)ctx, output);
+#endif
 }
 
 void bflb_sha512_link_finish(struct bflb_device_s *dev,
                              struct bflb_sha512_link_ctx_s *ctx,
                              uint8_t *output)
 {
+#ifdef romapi_bflb_sha512_link_finish
+    romapi_bflb_sha512_link_finish(dev, ctx, output);
+#else
     uint64_t last, padn;
     uint64_t high, low;
     uint8_t msgLen[16];
@@ -864,10 +948,14 @@ void bflb_sha512_link_finish(struct bflb_device_s *dev,
 
     /* Choose new hash in the next time */
     *((uint32_t *)(uintptr_t)ctx->link_addr) &= ~0x40;
+#endif
 }
 
 void bflb_group0_request_sha_access(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_group0_request_sha_access
+    romapi_bflb_group0_request_sha_access(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -881,13 +969,18 @@ void bflb_group0_request_sha_access(struct bflb_device_s *dev)
         if ((regval & 0x03) == 0x01) {
         }
     }
+#endif
 }
 
 void bflb_group0_release_sha_access(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_group0_release_sha_access
+    romapi_bflb_group0_release_sha_access(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     putreg32(0x06, reg_base + SEC_ENG_SE_SHA_0_CTRL_PROT_OFFSET);
+#endif
 }

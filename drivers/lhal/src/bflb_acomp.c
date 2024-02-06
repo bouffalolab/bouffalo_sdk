@@ -11,6 +11,9 @@
 
 void bflb_acomp_init(uint8_t acomp_id, const struct bflb_acomp_config_s *config)
 {
+#ifdef romapi_bflb_acomp_init
+    romapi_bflb_acomp_init(acomp_id, config);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -50,10 +53,14 @@ void bflb_acomp_init(uint8_t acomp_id, const struct bflb_acomp_config_s *config)
     regval &= ~AON_ACOMP_VREF_SEL_MASK;
     regval |= (config->vio_sel << AON_ACOMP_POS_SEL_SHIFT);
     putreg32(regval, reg_base);
+#endif
 }
 
 void bflb_acomp_enable(uint8_t acomp_id)
 {
+#ifdef romapi_bflb_acomp_enable
+    romapi_bflb_acomp_enable(acomp_id);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -66,10 +73,14 @@ void bflb_acomp_enable(uint8_t acomp_id)
     regval = getreg32(reg_base);
     regval |= AON_ACOMP_EN;
     putreg32(regval, reg_base);
+#endif
 }
 
 void bflb_acomp_disable(uint8_t acomp_id)
 {
+#ifdef romapi_bflb_acomp_disable
+    romapi_bflb_acomp_disable(acomp_id);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -83,10 +94,14 @@ void bflb_acomp_disable(uint8_t acomp_id)
     regval = getreg32(reg_base);
     regval &= ~AON_ACOMP_EN;
     putreg32(regval, reg_base);
+#endif
 }
 
 uint32_t bflb_acomp_get_result(uint8_t acomp_id)
 {
+#ifdef romapi_bflb_acomp_get_result
+    return romapi_bflb_acomp_get_result(acomp_id);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -98,10 +113,14 @@ uint32_t bflb_acomp_get_result(uint8_t acomp_id)
     } else {
         return (regval & AON_ACOMP1_OUT_RAW_DATA_MASK) >> AON_ACOMP1_OUT_RAW_DATA_SHIFT;
     }
+#endif
 }
 
-uint32_t bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t *channel)
+int bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t *channel)
 {
+#ifdef romapi_bflb_acomp_gpio_2_chanid
+    return romapi_bflb_acomp_gpio_2_chanid(pin, channel);
+#else
 #if defined(BL602)
     if (pin == GPIO_PIN_12) {
         *channel = AON_ACOMP_CHAN_ADC0;
@@ -206,10 +225,14 @@ uint32_t bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t *channel)
     return -1;
 #endif
     return 0;
+#endif
 }
 
-uint32_t bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t *pin)
+int bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t *pin)
 {
+#ifdef romapi_bflb_acomp_chanid_2_gpio
+    romapi_bflb_acomp_chanid_2_gpio(channel, pin);
+#else
 #if defined(BL602)
     if (channel == AON_ACOMP_CHAN_ADC0) {
         *pin = GPIO_PIN_12;
@@ -314,4 +337,5 @@ uint32_t bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t *pin)
     return -1;
 #endif
     return 0;
+#endif
 }

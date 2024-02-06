@@ -41,7 +41,6 @@
 #define luaport_feof     feof
 #define luaport_ferror   ferror
 #define luaport_fopen    fopen
-#define luaport_sprintf  sprintf
 #define luaport_remove   remove
 #define luaport_rename   rename
 #define luaport_snprintf snprintf
@@ -53,7 +52,7 @@
 #define luaport_strchr   strchr
 #define luaport_strcmp   strcmp
 #define luaport_strcoll  strcoll
-#define luaport_strcpy   strcpy
+#define luaport_strlcpy  strlcpy
 #define luaport_strerror strerror
 #define luaport_strlen   strlen
 #define luaport_strncmp  strncmp

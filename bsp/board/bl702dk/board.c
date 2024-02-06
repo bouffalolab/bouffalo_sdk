@@ -82,7 +82,6 @@ struct spi_psram_cfg_type ap_memory1604 = {
 };
 
 struct sf_ctrl_cmds_cfg cmds_cfg = {
-    .cmds_core_en = 1,
     .cmds_en = 1,
     .burst_toggle_en = 1,
     .cmds_wrap_mode = 0,

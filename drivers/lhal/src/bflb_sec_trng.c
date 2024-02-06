@@ -9,14 +9,23 @@
         p[3] = (val >> 24) & 0xff;   \
     }
 
+#if defined(BL702) || defined(BL602) || defined(BL702L)
+#define BFLB_SEC_ENG_BASE ((uint32_t)0x40004000)
+#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#define BFLB_SEC_ENG_BASE ((uint32_t)0x20004000)
+#endif
+
 int bflb_trng_read(struct bflb_device_s *dev, uint8_t data[32])
 {
+#ifdef romapi_bflb_trng_read
+    return romapi_bflb_trng_read(dev, data);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint64_t start_time;
     uint8_t *p = (uint8_t *)data;
 
-    reg_base = dev->reg_base;
+    reg_base = BFLB_SEC_ENG_BASE;
 
     /* enable trng */
     regval = getreg32(reg_base + SEC_ENG_SE_TRNG_0_CTRL_0_OFFSET);
@@ -101,20 +110,17 @@ int bflb_trng_read(struct bflb_device_s *dev, uint8_t data[32])
     putreg32(regval, reg_base + SEC_ENG_SE_TRNG_0_CTRL_0_OFFSET);
 
     return 0;
+#endif
 }
 
 int bflb_trng_readlen(uint8_t *data, uint32_t len)
 {
-    struct bflb_device_s *trng;
-
     uint8_t tmp_buf[32];
     uint32_t readlen = 0;
     uint32_t i = 0, cnt = 0;
 
-    trng = bflb_device_get_by_name("trng");
-
     while (readlen < len) {
-        if (bflb_trng_read(trng, tmp_buf) != 0) {
+        if (bflb_trng_read(NULL, tmp_buf) != 0) {
             return -ETIMEDOUT;
         }
 
@@ -137,20 +143,24 @@ int bflb_trng_readlen(uint8_t *data, uint32_t len)
 __WEAK long random(void)
 {
     uint32_t data[8];
-    struct bflb_device_s *trng;
+    uintptr_t flag;
 
-    trng = bflb_device_get_by_name("trng");
-    bflb_trng_read(trng, (uint8_t *)data);
+    flag = bflb_irq_save();
+    bflb_trng_read(NULL, (uint8_t *)data);
+    bflb_irq_restore(flag);
 
     return data[0];
 }
 
 void bflb_group0_request_trng_access(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_group0_request_trng_access
+    romapi_bflb_group0_request_trng_access(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
-    reg_base = dev->reg_base;
+    reg_base = BFLB_SEC_ENG_BASE;
 
     regval = getreg32(reg_base + SEC_ENG_SE_CTRL_PROT_RD_OFFSET);
     if (((regval >> 4) & 0x03) == 0x03) {
@@ -160,13 +170,18 @@ void bflb_group0_request_trng_access(struct bflb_device_s *dev)
         if (((regval >> 4) & 0x03) == 0x01) {
         }
     }
+#endif
 }
 
 void bflb_group0_release_trng_access(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_group0_release_trng_access
+    romapi_bflb_group0_release_trng_access(dev);
+#else
     uint32_t reg_base;
 
-    reg_base = dev->reg_base;
+    reg_base = BFLB_SEC_ENG_BASE;
 
     putreg32(0x06, reg_base + SEC_ENG_SE_TRNG_0_CTRL_PROT_OFFSET);
+#endif
 }

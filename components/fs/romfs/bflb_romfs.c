@@ -549,8 +549,9 @@ romfs_dirent_t *romfs_readdir(romfs_dir_t *dir)
         }
 
         ROMFS_DEBUG("romfs: name = %s\r\n", (char *)(dir->dir_cur_addr + 16));
-        strncpy(dir->cur_dirent.d_name, dir->dir_cur_addr + 16, ROMFS_MAX_NAME_LEN);
-        dir->cur_dirent.d_name[ROMFS_MAX_NAME_LEN] = '\0';
+        if(strlcpy(dir->cur_dirent.d_name, dir->dir_cur_addr + 16, ROMFS_MAX_NAME_LEN + 1) >= ROMFS_MAX_NAME_LEN + 1)
+            printf("[OS]: strlcpy truncated \r\n");
+        //dir->cur_dirent.d_name[ROMFS_MAX_NAME_LEN] = '\0';
         ROMFS_DEBUG("romfs: name = %s\r\n", dir->cur_dirent.d_name);
 
         if (0 == dirent_hardfh(dir->dir_cur_addr)) {

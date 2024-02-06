@@ -6,10 +6,11 @@
 #define BFLB_PUT_LE32(p) ((p[3] << 24) | (p[2] << 16) | (p[1] << 8) | (p[0]))
 #define BFLB_PUT_BE32(p) ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | (p[3]))
 
-volatile uint8_t hw_key_sel = 1;
-
 void bflb_aes_init(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_aes_init
+    romapi_bflb_aes_init(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -24,10 +25,14 @@ void bflb_aes_init(struct bflb_device_s *dev)
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval |= SEC_ENG_SE_AES_0_EN;
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_aes_deinit(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_aes_deinit
+    romapi_bflb_aes_deinit(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -36,15 +41,36 @@ void bflb_aes_deinit(struct bflb_device_s *dev)
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
     regval &= ~SEC_ENG_SE_AES_0_EN;
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+#endif
 }
 
-void bflb_aes_set_hwkey(uint8_t keysel)
+void bflb_aes_select_hwkey(struct bflb_device_s *dev, uint8_t keysel0, uint8_t keysel1)
 {
-    hw_key_sel = keysel;
+#ifdef romapi_bflb_aes_select_hwkey
+    romapi_bflb_aes_select_hwkey(dev, keysel0, keysel1);
+#else
+    uint32_t regval;
+    uint32_t reg_base;
+
+    reg_base = dev->reg_base;
+
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_0_KEY_SEL_OFFSET);
+    regval &= ~SEC_ENG_SE_AES_0_KEY_SEL_MASK;
+    regval |= (keysel0 << SEC_ENG_SE_AES_0_KEY_SEL_SHIFT);
+    putreg32(regval, reg_base + SEC_ENG_SE_AES_0_KEY_SEL_OFFSET);
+
+    regval = getreg32(reg_base + SEC_ENG_SE_AES_1_KEY_SEL_OFFSET);
+    regval &= ~SEC_ENG_SE_AES_1_KEY_SEL_MASK;
+    regval |= (keysel1 << SEC_ENG_SE_AES_1_KEY_SEL_SHIFT);
+    putreg32(regval, reg_base + SEC_ENG_SE_AES_1_KEY_SEL_OFFSET);
+#endif
 }
 
 void bflb_aes_set_mode(struct bflb_device_s *dev, uint8_t mode)
 {
+#ifdef romapi_bflb_aes_set_mode
+    romapi_bflb_aes_set_mode(dev, mode);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -61,10 +87,14 @@ void bflb_aes_set_mode(struct bflb_device_s *dev, uint8_t mode)
     }
 
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_aes_setkey(struct bflb_device_s *dev, const uint8_t *key, uint16_t keybits)
 {
+#ifdef romapi_bflb_aes_setkey
+    romapi_bflb_aes_setkey(dev, key, keybits);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint8_t mode;
@@ -92,17 +122,7 @@ void bflb_aes_setkey(struct bflb_device_s *dev, const uint8_t *key, uint16_t key
     }
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
 
-    if (key == NULL) {
-        regval = getreg32(reg_base + SEC_ENG_SE_AES_0_KEY_SEL_OFFSET);
-        regval &= ~SEC_ENG_SE_AES_0_KEY_SEL_MASK;
-        regval |= (hw_key_sel << SEC_ENG_SE_AES_0_KEY_SEL_SHIFT);
-        putreg32(regval, reg_base + SEC_ENG_SE_AES_0_KEY_SEL_OFFSET);
-
-        regval = getreg32(reg_base + SEC_ENG_SE_AES_1_KEY_SEL_OFFSET);
-        regval &= ~SEC_ENG_SE_AES_1_KEY_SEL_MASK;
-        regval |= (hw_key_sel << SEC_ENG_SE_AES_1_KEY_SEL_SHIFT);
-        putreg32(regval, reg_base + SEC_ENG_SE_AES_1_KEY_SEL_OFFSET);
-    } else {
+    if (key) {
         putreg32(BFLB_PUT_LE32(temp_key), reg_base + SEC_ENG_SE_AES_0_KEY_0_OFFSET);
         temp_key += 4;
         putreg32(BFLB_PUT_LE32(temp_key), reg_base + SEC_ENG_SE_AES_0_KEY_1_OFFSET);
@@ -126,8 +146,10 @@ void bflb_aes_setkey(struct bflb_device_s *dev, const uint8_t *key, uint16_t key
             temp_key += 4;
             putreg32(BFLB_PUT_LE32(temp_key), reg_base + SEC_ENG_SE_AES_0_KEY_7_OFFSET);
             temp_key += 4;
+        } else {
         }
     }
+#endif
 }
 
 int bflb_aes_encrypt(struct bflb_device_s *dev,
@@ -136,6 +158,9 @@ int bflb_aes_encrypt(struct bflb_device_s *dev,
                      uint8_t *output,
                      uint32_t len)
 {
+#ifdef romapi_bflb_aes_encrypt
+    return romapi_bflb_aes_encrypt(dev, input, iv, output, len);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint64_t start_time;
@@ -200,6 +225,7 @@ int bflb_aes_encrypt(struct bflb_device_s *dev,
         }
     }
     return 0;
+#endif
 }
 
 int bflb_aes_decrypt(struct bflb_device_s *dev,
@@ -208,6 +234,9 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
                      uint8_t *output,
                      uint32_t len)
 {
+#ifdef romapi_bflb_aes_decrypt
+    return romapi_bflb_aes_decrypt(dev, input, iv, output, len);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint64_t start_time;
@@ -272,10 +301,14 @@ int bflb_aes_decrypt(struct bflb_device_s *dev,
         }
     }
     return 0;
+#endif
 }
 
 void bflb_aes_link_init(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_aes_link_init
+    romapi_bflb_aes_link_init(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -291,10 +324,14 @@ void bflb_aes_link_init(struct bflb_device_s *dev)
     regval |= SEC_ENG_SE_AES_0_LINK_MODE;
     regval |= SEC_ENG_SE_AES_0_EN;
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+#endif
 }
 
 void bflb_aes_link_deinit(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_aes_link_deinit
+    romapi_bflb_aes_link_deinit(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -304,6 +341,7 @@ void bflb_aes_link_deinit(struct bflb_device_s *dev)
     regval &= ~SEC_ENG_SE_AES_0_LINK_MODE;
     regval &= ~SEC_ENG_SE_AES_0_EN;
     putreg32(regval, reg_base + SEC_ENG_SE_AES_0_CTRL_OFFSET);
+#endif
 }
 
 int bflb_aes_link_update(struct bflb_device_s *dev,
@@ -312,6 +350,9 @@ int bflb_aes_link_update(struct bflb_device_s *dev,
                          uint8_t *output,
                          uint32_t len)
 {
+#ifdef romapi_bflb_aes_link_update
+    return romapi_bflb_aes_link_update(dev, link_addr, input, output, len);
+#else
     uint32_t regval;
     uint32_t reg_base;
     uint64_t start_time;
@@ -351,10 +392,14 @@ int bflb_aes_link_update(struct bflb_device_s *dev,
     }
 
     return 0;
+#endif
 }
 
 void bflb_group0_request_aes_access(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_group0_request_aes_access
+    romapi_bflb_group0_request_aes_access(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -368,15 +413,20 @@ void bflb_group0_request_aes_access(struct bflb_device_s *dev)
         if (((regval >> 2) & 0x03) == 0x01) {
         }
     }
+#endif
 }
 
 void bflb_group0_release_aes_access(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_group0_release_aes_access
+    romapi_bflb_group0_release_aes_access(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     putreg32(0x06, reg_base + SEC_ENG_SE_AES_0_CTRL_PROT_OFFSET);
+#endif
 }
 
 void bflb_aes_set_hwkey_source(struct bflb_device_s *dev, uint8_t source)

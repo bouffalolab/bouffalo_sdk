@@ -33,6 +33,7 @@
   *
   ******************************************************************************
   */
+#include "bflb_efuse.h"
 #include "bl808_ef_cfg.h"
 #include "hardware/ef_data_0_reg.h"
 #include "hardware/ef_data_1_reg.h"
@@ -136,26 +137,75 @@ uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **p
 /****************************************************************************/ /**
  * @brief  Efuse read device info
  *
- * @param  deviceInfo: info pointer
+ * @param  device_info: info pointer
  *
  * @return None
  *
 *******************************************************************************/
-void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo)
+void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info)
 {
     uint32_t tmpval;
 
     //tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_EF_WIFI_MAC_HIGH);
     bflb_ef_ctrl_read_direct(NULL, EF_DATA_0_EF_WIFI_MAC_HIGH_OFFSET, &tmpval, 1, 1);
-
-    deviceInfo->chipInfo = (tmpval >> 29) & 0x7;
-    deviceInfo->memoryInfo = (tmpval >> 27) & 0x3;
-    deviceInfo->psramInfo = (tmpval >> 25) & 0x3;
-    deviceInfo->deviceInfo = (tmpval >> 22) & 0x7;
+    device_info->version = (tmpval >> 29) & 0x7;
+    device_info->flash_info = (tmpval >> 27) & 0x3;
+    device_info->psram_info = (tmpval >> 25) & 0x3;
+    device_info->package = (tmpval >> 22) & 0x7;
 
     bflb_ef_ctrl_read_direct(NULL, EF_DATA_0_EF_CFG_0_OFFSET, &tmpval, 1, 1);
+    device_info->psram_info |= ((tmpval >> 20) & 0x1) << 2;
 
-    deviceInfo->psramInfo |= ((tmpval >> 20) & 0x1) << 2;
+    switch (device_info->package) {
+        case 0:
+            device_info->package_name = "QFN68";
+            break;
+        case 1:
+            device_info->package_name = "QFN88(808C)";
+            break;
+        case 2:
+            device_info->package_name = "QFN88(808D)";
+            break;
+        case 3:
+            device_info->package_name = "QFN88(608P)";
+            break;
+        default:
+            device_info->package_name = "ERROR";
+            break;
+    }
+    switch (device_info->flash_info) {
+        case 0:
+            device_info->flash_info_name = "NO";
+            break;
+        case 1:
+            device_info->flash_info_name = "8MB";
+            break;
+        default:
+            device_info->flash_info_name = "ERROR";
+            break;
+    }
+    switch (device_info->psram_info) {
+        case 0:
+            device_info->psram_info_name = "NO";
+            break;
+        case 1:
+            device_info->psram_info_name = "WB_4MB";
+            break;
+        case 2:
+            device_info->psram_info_name = "UHS_32MB";
+            break;
+        case 3:
+            device_info->psram_info_name = "UHS_64MB";
+            break;
+        case 4:
+            device_info->psram_info_name = "WB_32MB";
+            break;
+        case 5:
+            device_info->psram_info_name = "WB_16MB";
+            break;
+        default:
+            device_info->psram_info_name = "ERROR";
+    }
 }
 
 void bflb_efuse_get_chipid(uint8_t chipid[8])

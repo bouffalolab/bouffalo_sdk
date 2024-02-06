@@ -9,6 +9,9 @@ static uint16_t wo_uart_buff16[10];
 
 void bflb_wo_pin_init(struct bflb_device_s *dev, uint8_t pin, uint8_t mode)
 {
+#ifdef romapi_bflb_wo_pin_init
+    romapi_bflb_wo_pin_init(dev, pin, mode);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -23,10 +26,14 @@ void bflb_wo_pin_init(struct bflb_device_s *dev, uint8_t pin, uint8_t mode)
         regval |= (3 << GLB_REG_GPIO_0_MODE_SHIFT);
     }
     putreg32(regval, reg_base);
+#endif
 }
 
 void bflb_wo_init(struct bflb_device_s *dev, struct bflb_wo_cfg_s *cfg)
 {
+#ifdef romapi_bflb_wo_init
+    romapi_bflb_wo_init(dev, cfg);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -80,10 +87,14 @@ void bflb_wo_init(struct bflb_device_s *dev, struct bflb_wo_cfg_s *cfg)
     regval = getreg32(reg_base + GLB_GPIO_CFG142_OFFSET);
     regval |= GLB_CR_GPIO_TX_EN;
     putreg32(regval, reg_base + GLB_GPIO_CFG142_OFFSET);
+#endif
 }
 
 void bflb_wo_enable(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_wo_enable
+    romapi_bflb_wo_enable(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -91,10 +102,14 @@ void bflb_wo_enable(struct bflb_device_s *dev)
     regval = getreg32(reg_base + GLB_GPIO_CFG142_OFFSET);
     regval |= GLB_CR_GPIO_TX_EN;
     putreg32(regval, reg_base + GLB_GPIO_CFG142_OFFSET);
+#endif
 }
 
 void bflb_wo_disable(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_wo_disable
+    romapi_bflb_wo_disable(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -102,20 +117,28 @@ void bflb_wo_disable(struct bflb_device_s *dev)
     regval = getreg32(reg_base + GLB_GPIO_CFG142_OFFSET);
     regval &= ~GLB_CR_GPIO_TX_EN;
     putreg32(regval, reg_base + GLB_GPIO_CFG142_OFFSET);
+#endif
 }
 
 uint32_t bflb_wo_get_fifo_available_cnt(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_wo_get_fifo_available_cnt
+    return romapi_bflb_wo_get_fifo_available_cnt(dev);
+#else
     uint32_t regval;
 
     regval = getreg32(dev->reg_base + GLB_GPIO_CFG143_OFFSET);
     regval &= GLB_GPIO_TX_FIFO_CNT_MASK;
     regval >>= GLB_GPIO_TX_FIFO_CNT_SHIFT;
     return regval;
+#endif
 }
 
 uint32_t bflb_wo_push_fifo(struct bflb_device_s *dev, uint16_t *data, uint32_t len)
 {
+#ifdef romapi_bflb_wo_push_fifo
+    return romapi_bflb_wo_push_fifo(dev, data, len);
+#else
     uint32_t idx = 0;
     uint32_t fclk = bflb_clk_get_system_clock(BFLB_SYSTEM_CPU_CLK);
     uint32_t xclk = bflb_clk_get_system_clock(BFLB_SYSTEM_XCLK);
@@ -134,10 +157,14 @@ uint32_t bflb_wo_push_fifo(struct bflb_device_s *dev, uint16_t *data, uint32_t l
         }
     }
     return idx;
+#endif
 }
 
 void bflb_wo_clear_fifo(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_wo_clear_fifo
+    romapi_bflb_wo_clear_fifo(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -145,10 +172,14 @@ void bflb_wo_clear_fifo(struct bflb_device_s *dev)
     regval = getreg32(reg_base + GLB_GPIO_CFG143_OFFSET);
     regval |= GLB_GPIO_TX_FIFO_CLR;
     putreg32(regval, reg_base + GLB_GPIO_CFG143_OFFSET);
+#endif
 }
 
 void bflb_wo_enable_dma(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_wo_enable_dma
+    romapi_bflb_wo_enable_dma(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -156,10 +187,14 @@ void bflb_wo_enable_dma(struct bflb_device_s *dev)
     regval = getreg32(reg_base + GLB_GPIO_CFG143_OFFSET);
     regval |= GLB_CR_GPIO_DMA_TX_EN;
     putreg32(regval, reg_base + GLB_GPIO_CFG143_OFFSET);
+#endif
 }
 
 void bflb_wo_disable_dma(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_wo_disable_dma
+    romapi_bflb_wo_disable_dma(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -167,10 +202,14 @@ void bflb_wo_disable_dma(struct bflb_device_s *dev)
     regval = getreg32(reg_base + GLB_GPIO_CFG143_OFFSET);
     regval &= ~GLB_CR_GPIO_DMA_TX_EN;
     putreg32(regval, reg_base + GLB_GPIO_CFG143_OFFSET);
+#endif
 }
 
 uint32_t bflb_wo_get_int_status(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_wo_get_int_status
+    return romapi_bflb_wo_get_int_status(dev);
+#else
     uint32_t regval;
     uint32_t sts = 0;
 
@@ -185,10 +224,14 @@ uint32_t bflb_wo_get_int_status(struct bflb_device_s *dev)
         sts |= WO_INT_FER;
     }
     return sts;
+#endif
 }
 
 void bflb_wo_int_mask(struct bflb_device_s *dev, uint32_t int_type)
 {
+#ifdef romapi_bflb_wo_int_mask
+    romapi_bflb_wo_int_mask(dev, int_type);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -204,10 +247,14 @@ void bflb_wo_int_mask(struct bflb_device_s *dev, uint32_t int_type)
         regval |= GLB_CR_GPIO_TX_FER_MASK;
     }
     putreg32(regval, reg_base + GLB_GPIO_CFG143_OFFSET);
+#endif
 }
 
 void bflb_wo_int_unmask(struct bflb_device_s *dev, uint32_t int_type)
 {
+#ifdef romapi_bflb_wo_int_unmask
+    romapi_bflb_wo_int_unmask(dev, int_type);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -223,10 +270,14 @@ void bflb_wo_int_unmask(struct bflb_device_s *dev, uint32_t int_type)
         regval &= ~GLB_CR_GPIO_TX_FER_MASK;
     }
     putreg32(regval, reg_base + GLB_GPIO_CFG143_OFFSET);
+#endif
 }
 
 void bflb_wo_int_clear(struct bflb_device_s *dev, uint32_t int_type)
 {
+#ifdef romapi_bflb_wo_int_clear
+    romapi_bflb_wo_int_clear(dev, int_type);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -241,6 +292,7 @@ void bflb_wo_int_clear(struct bflb_device_s *dev, uint32_t int_type)
         regval |= GLB_GPIO_TX_FIFO_CLR;
     }
     putreg32(regval, reg_base + GLB_GPIO_CFG143_OFFSET);
+#endif
 }
 
 void bflb_wo_uart_init(struct bflb_device_s *dev, uint32_t baudrate, uint8_t pin)

@@ -143,6 +143,7 @@ void process_http_request(const char *requset, uint16_t length)
     char *str = NULL;
     char *body = NULL;
     char *url = NULL;
+    char *saveptr;
 
     mem = malloc(length);
     memset(mem, 0, length);
@@ -156,7 +157,7 @@ void process_http_request(const char *requset, uint16_t length)
 
     /* get http request method */
     if (str != NULL) {
-        str = strtok(str, " ");
+        str = strtok_r(str, " ", &saveptr);
         if (!strcmp(str, "GET")) {
             method = HTTP_GET;
             OS_MSG("[LOG] Methon: GET\r\n");
@@ -171,11 +172,12 @@ void process_http_request(const char *requset, uint16_t length)
 
     /* get url */
     if (str != NULL) {
-        str = strtok(NULL, " ");
+        str = strtok_r(NULL, " ", &saveptr);
         if (str != NULL) {
             url = malloc(strlen(str) + 1);
             memset(url, 0, strlen(str) + 1);
-            strcpy(url, str);
+            if(strlcpy(url, str, strlen(str) + 1) >= strlen(str) + 1)
+                printf("[OS]: strlcpy truncated \r\n");
             OS_MSG("[LOG] URL: %s\r\n", url);
         }
     }

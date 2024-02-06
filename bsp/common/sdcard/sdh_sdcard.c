@@ -63,7 +63,7 @@ static SemaphoreHandle_t SDH_DataWaitSem = NULL;
 
 static SDH_DMA_Cfg_Type SDH_DMA_Cfg_TypeInstance;
 /*causion: ADMA related variables must on OCRAM or shared ram*/
-static __attribute__((aligned(32), section(".noncacheable"))) SDH_ADMA2_Desc_Type adma2Entries[16];
+static __ALIGNED(32) ATTR_NOCACHE_RAM_SECTION  SDH_ADMA2_Desc_Type adma2Entries[32];
 
 /* Private function prototypes -----------------------------------------------*/
 static void SD_DecodeCid(sd_card_t *card, uint32_t *rawCid);
@@ -1485,7 +1485,13 @@ status_t SDH_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Bloc
     SDH_DMA_Cfg_TypeInstance.admaEntries = (uint32_t *)adma2Entries;
     SDH_DMA_Cfg_TypeInstance.maxEntries = sizeof(adma2Entries) / sizeof(adma2Entries[0]);
 
+#if 0
+    bflb_l1c_dcache_clean_range((void *)(readbuff), 1);
+    bflb_l1c_dcache_clean_range((void *)(readbuff + BlockSize * NumberOfBlocks), 1);
     bflb_l1c_dcache_invalidate_range((void *)(readbuff), BlockSize * NumberOfBlocks);
+#else
+    bflb_l1c_dcache_clean_range((void *)(readbuff), BlockSize * NumberOfBlocks);
+#endif
     
     errorstatus = SDH_CardTransferNonBlocking(&SDH_DMA_Cfg_TypeInstance, &SDH_Trans_Cfg_TypeInstance);
 

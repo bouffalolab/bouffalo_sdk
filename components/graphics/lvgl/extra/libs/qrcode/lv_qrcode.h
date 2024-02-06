@@ -38,7 +38,7 @@ extern const lv_obj_class_t lv_qrcode_class;
  * @param light_color light color of the QR code
  * @return pointer to the created QR code object
  */
-lv_obj_t *lv_qrcode_create(lv_obj_t *parent, lv_coord_t size, lv_color_t dark_color, lv_color_t light_color);
+lv_obj_t * lv_qrcode_create(lv_obj_t * parent, lv_coord_t size, lv_color_t dark_color, lv_color_t light_color);
 
 /**
  * Set the data of a QR code object
@@ -47,14 +47,14 @@ lv_obj_t *lv_qrcode_create(lv_obj_t *parent, lv_coord_t size, lv_color_t dark_co
  * @param data_len length of data in bytes
  * @return LV_RES_OK: if no error; LV_RES_INV: on error
  */
-lv_res_t lv_qrcode_update(lv_obj_t *qrcode, const void *data, uint32_t data_len);
+lv_res_t lv_qrcode_update(lv_obj_t * qrcode, const void * data, uint32_t data_len);
 
 /**
  * DEPRECATED: Use normal lv_obj_del instead
  * Delete a QR code object
  * @param qrcode pointer to a QR code object
  */
-void lv_qrcode_delete(lv_obj_t *qrcode);
+void lv_qrcode_delete(lv_obj_t * qrcode);
 
 /**********************
  *      MACROS

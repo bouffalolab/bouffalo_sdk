@@ -246,7 +246,7 @@ static BaseType_t prvCreateNewMessageQueue( QueueListElement_t ** ppxMessageQueu
         {
             /* Copy queue name. Copying xNameLength+1 will cause strncpy to add
              * the null-terminator. */
-            ( void ) strncpy( ( *ppxMessageQueue )->pcName, pcName, xNameLength + 1 );
+            ( void ) strlcpy( ( *ppxMessageQueue )->pcName, pcName, xNameLength + 1 );
         }
     }
 

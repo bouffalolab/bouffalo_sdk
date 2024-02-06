@@ -30,6 +30,10 @@
     #include "../draw/stm32_dma2d/lv_gpu_stm32_dma2d.h"
 #endif
 
+#if LV_USE_GPU_RA6M3_G2D
+    #include "../draw/renesas/lv_gpu_d2_ra6m3.h"
+#endif
+
 #if LV_USE_GPU_SWM341_DMA2D
     #include "../draw/swm341_dma2d/lv_gpu_swm341_dma2d.h"
 #endif
@@ -119,6 +123,11 @@ void lv_init(void)
     lv_draw_stm32_dma2d_init();
 #endif
 
+#if LV_USE_GPU_RA6M3_G2D
+    /*Initialize G2D GPU*/
+    lv_draw_ra6m3_g2d_init();
+#endif
+
 #if LV_USE_GPU_SWM341_DMA2D
     /*Initialize DMA2D GPU*/
     lv_draw_swm341_dma2d_init();
@@ -140,9 +149,9 @@ void lv_init(void)
     lv_img_cache_set_size(LV_IMG_CACHE_DEF_SIZE);
 #endif
     /*Test if the IDE has UTF-8 encoding*/
-    char * txt = "Á";
+    const char * txt = "Á";
 
-    uint8_t * txt_u8 = (uint8_t *)txt;
+    const uint8_t * txt_u8 = (uint8_t *)txt;
     if(txt_u8[0] != 0xc3 || txt_u8[1] != 0x81 || txt_u8[2] != 0x00) {
         LV_LOG_WARN("The strings have no UTF-8 encoding. Non-ASCII characters won't be displayed.");
     }
@@ -223,12 +232,22 @@ void lv_obj_add_flag(lv_obj_t * obj, lv_obj_flag_t f)
 
     bool was_on_layout = lv_obj_is_layout_positioned(obj);
 
+    /* We must invalidate the area occupied by the object before we hide it as calls to invalidate hidden objects are ignored */
     if(f & LV_OBJ_FLAG_HIDDEN) lv_obj_invalidate(obj);
 
     obj->flags |= f;
 
     if(f & LV_OBJ_FLAG_HIDDEN) {
-        lv_obj_invalidate(obj);
+        if(lv_obj_has_state(obj, LV_STATE_FOCUSED)) {
+            lv_group_t * group = lv_obj_get_group(obj);
+            if(group != NULL) {
+                lv_group_focus_next(group);
+                lv_obj_t * next_obj = lv_group_get_focused(group);
+                if(next_obj != NULL) {
+                    lv_obj_invalidate(next_obj);
+                }
+            }
+        }
     }
 
     if((was_on_layout != lv_obj_is_layout_positioned(obj)) || (f & (LV_OBJ_FLAG_LAYOUT_1 |  LV_OBJ_FLAG_LAYOUT_2))) {
@@ -494,6 +513,11 @@ static void lv_obj_draw(lv_event_t * e)
             return;
         }
 
+        if(lv_obj_get_style_opa(obj, LV_PART_MAIN) < LV_OPA_MAX) {
+            info->res = LV_COVER_RES_NOT_COVER;
+            return;
+        }
+
         info->res = LV_COVER_RES_COVER;
 
     }
@@ -678,7 +702,7 @@ static lv_res_t scrollbar_init_draw_dsc(lv_obj_t * obj, lv_draw_rect_dsc_t * dsc
         }
     }
 
-    lv_opa_t opa = lv_obj_get_style_opa(obj, LV_PART_SCROLLBAR);
+    lv_opa_t opa = lv_obj_get_style_opa_recursive(obj, LV_PART_SCROLLBAR);
     if(opa < LV_OPA_MAX) {
         dsc->bg_opa = (dsc->bg_opa * opa) >> 8;
         dsc->border_opa = (dsc->bg_opa * opa) >> 8;
@@ -709,9 +733,9 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
     }
     else if(code == LV_EVENT_RELEASED) {
         lv_obj_clear_state(obj, LV_STATE_PRESSED);
-        void * param = lv_event_get_param(e);
+        lv_indev_t * indev = lv_event_get_indev(e);
         /*Go the checked state if enabled*/
-        if(lv_indev_get_scroll_obj(param) == NULL && lv_obj_has_flag(obj, LV_OBJ_FLAG_CHECKABLE)) {
+        if(lv_indev_get_scroll_obj(indev) == NULL && lv_obj_has_flag(obj, LV_OBJ_FLAG_CHECKABLE)) {
             if(!(lv_obj_get_state(obj) & LV_STATE_CHECKED)) lv_obj_add_state(obj, LV_STATE_CHECKED);
             else lv_obj_clear_state(obj, LV_STATE_CHECKED);
 
@@ -837,6 +861,10 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
         if(layout || align || w == LV_SIZE_CONTENT || h == LV_SIZE_CONTENT) {
             lv_obj_mark_layout_as_dirty(obj);
         }
+    }
+    else if(code == LV_EVENT_CHILD_DELETED) {
+        obj->readjust_scroll_after_layout = 1;
+        lv_obj_mark_layout_as_dirty(obj);
     }
     else if(code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
         lv_coord_t d = lv_obj_calculate_ext_draw_size(obj, LV_PART_MAIN);

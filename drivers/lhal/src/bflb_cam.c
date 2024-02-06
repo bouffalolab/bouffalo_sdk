@@ -14,6 +14,15 @@
 
 void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_CAM_INPUT_FORMAT(config->input_format));
+    LHAL_PARAM_ASSERT(IS_CAM_INPUT_SOURCE(config->input_source));
+    LHAL_PARAM_ASSERT(IS_CAM_OUTPUT_FORMAT(config->output_format));
+    LHAL_PARAM_ASSERT(IS_CAM_ADDR(config->output_bufaddr));
+
+#ifdef romapi_bflb_cam_init
+    romapi_bflb_cam_init(dev, config);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint8_t data_mode = 0;
@@ -389,10 +398,14 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
     putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
 #endif
 #endif
+#endif
 }
 
 void bflb_cam_start(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_cam_start
+    romapi_bflb_cam_start(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -400,10 +413,14 @@ void bflb_cam_start(struct bflb_device_s *dev)
     regval = getreg32(reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
     regval |= CAM_REG_DVP_ENABLE;
     putreg32(regval, reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
+#endif
 }
 
 void bflb_cam_stop(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_cam_stop
+    romapi_bflb_cam_stop(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -411,10 +428,14 @@ void bflb_cam_stop(struct bflb_device_s *dev)
     regval = getreg32(reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
     regval &= ~CAM_REG_DVP_ENABLE;
     putreg32(regval, reg_base + CAM_DVP2AXI_CONFIGUE_OFFSET);
+#endif
 }
 
 void bflb_cam_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask)
 {
+#ifdef romapi_bflb_cam_int_mask
+    romapi_bflb_cam_int_mask(dev, int_type, mask);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -434,41 +455,61 @@ void bflb_cam_int_mask(struct bflb_device_s *dev, uint32_t int_type, bool mask)
 #else
     putreg32(regval, reg_base + CAM_DVP_STATUS_AND_ERROR_OFFSET);
 #endif
+#endif
 }
 
 void bflb_cam_int_clear(struct bflb_device_s *dev, uint32_t int_type)
 {
+#ifdef romapi_bflb_cam_int_clear
+    romapi_bflb_cam_int_clear(dev, int_type);
+#else
     putreg32(int_type, dev->reg_base + CAM_DVP_FRAME_FIFO_POP_OFFSET);
+#endif
 }
 
 void bflb_cam_crop_vsync(struct bflb_device_s *dev, uint16_t start_line, uint16_t end_line)
 {
+#ifdef romapi_bflb_cam_crop_vsync
+    romapi_bflb_cam_crop_vsync(dev, start_line, end_line);
+#else
     /* Get start_line ~ (end_line - 1), not include end_line */
     putreg32(start_line << 16 | end_line, dev->reg_base + CAM_DVP2AXI_VSYNC_CROP_OFFSET);
+#endif
 }
 
 void bflb_cam_crop_hsync(struct bflb_device_s *dev, uint16_t start_pixel, uint16_t end_pixel)
 {
+#ifdef romapi_bflb_cam_crop_hsync
+    romapi_bflb_cam_crop_hsync(dev, start_pixel, end_pixel);
+#else
 #if defined(BL702)
     start_pixel = start_pixel * 2;
     end_pixel = end_pixel * 2;
 #endif
     /* Get start_pixel ~ (end_pixel - 1), not include end_pixel */
     putreg32(start_pixel << 16 | end_pixel, dev->reg_base + CAM_DVP2AXI_HSYNC_CROP_OFFSET);
+#endif
 }
 
 void bflb_cam_pop_one_frame(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_cam_pop_one_frame
+    romapi_bflb_cam_pop_one_frame(dev);
+#else
 #if defined(BL702)
     putreg32(3, dev->reg_base + CAM_DVP_FRAME_FIFO_POP_OFFSET);
 #else
     putreg32(1, dev->reg_base + CAM_DVP_FRAME_FIFO_POP_OFFSET);
+#endif
 #endif
 }
 
 #if !defined(BL702)
 void bflb_cam_swap_input_yu_order(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_cam_swap_input_yu_order
+    romapi_bflb_cam_swap_input_yu_order(dev, enable);
+#else
     uint32_t regval;
 
     /* If image sensor output format is YUYV, it will be changed to UYVY */
@@ -479,19 +520,27 @@ void bflb_cam_swap_input_yu_order(struct bflb_device_s *dev, bool enable)
         regval &= ~CAM_FRONT_RG_DVPAS_DA_ORDER;
     }
     putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_cam_filter_frame_period(struct bflb_device_s *dev, uint8_t frame_count, uint32_t frame_valid)
 {
+#ifdef romapi_bflb_cam_filter_frame_period
+    romapi_bflb_cam_filter_frame_period(dev, frame_count, frame_valid);
+#else
     /* For example: frame_count is 4, frame_valid is 0x14 (10100b). Third/fifth frame will be retained,
        First/second/fourth frame will be dropped in every (4 + 1) frames */
     putreg32(frame_count, dev->reg_base + CAM_DVP2AXI_FRAME_PERIOD_OFFSET);
     putreg32(frame_valid, dev->reg_base + CAM_DVP2AXI_FRAME_VLD_OFFSET);
+#endif
 }
 #endif
 
 uint8_t bflb_cam_get_frame_count(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_cam_get_frame_count
+    return romapi_bflb_cam_get_frame_count(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -499,10 +548,14 @@ uint8_t bflb_cam_get_frame_count(struct bflb_device_s *dev)
     regval = getreg32(reg_base + CAM_DVP_STATUS_AND_ERROR_OFFSET);
     regval &= CAM_FRAME_VALID_CNT_MASK;
     return (regval >> CAM_FRAME_VALID_CNT_SHIFT);
+#endif
 }
 
 uint32_t bflb_cam_get_frame_info(struct bflb_device_s *dev, uint8_t **pic)
 {
+#ifdef romapi_bflb_cam_get_frame_info
+    return romapi_bflb_cam_get_frame_info(dev, pic);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
@@ -512,15 +565,23 @@ uint32_t bflb_cam_get_frame_info(struct bflb_device_s *dev, uint8_t **pic)
 #else
     return (getreg32(reg_base + CAM_DVP2AXI_FRAME_BCNT_OFFSET));
 #endif
+#endif
 }
 
 uint32_t bflb_cam_get_intstatus(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_cam_get_intstatus
+    return romapi_bflb_cam_get_intstatus(dev);
+#else
     return (getreg32(dev->reg_base + CAM_DVP_STATUS_AND_ERROR_OFFSET));
+#endif
 }
 
 int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_cam_feature_control
+    return romapi_bflb_cam_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t reg_base;
     uint32_t regval;
@@ -627,4 +688,5 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
     }
     return ret;
+#endif
 }

@@ -312,7 +312,7 @@ static void PrintConstant(const Proto *f, int i)
             break;
         case LUA_VNUMFLT: {
             char buff[100];
-            luaport_sprintf(buff, LUA_NUMBER_FMT, fltvalue(o));
+            luaport_snprintf(buff, sizeof(buf), LUA_NUMBER_FMT, fltvalue(o));
             luaport_printf("%s", buff);
             if (buff[luaport_strspn(buff, "-0123456789")] == '\0')
                 luaport_printf(".0");

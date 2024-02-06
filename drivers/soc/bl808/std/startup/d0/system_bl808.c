@@ -1,5 +1,5 @@
 #include "bl808_clock.h"
-#include "bl808_ef_cfg.h"
+#include "bflb_efuse.h"
 
 #define BL808_B0 (0x0)
 #define BL808_B1 (0x1)
@@ -43,9 +43,9 @@ void System_Post_Init(void)
     /* fix amr setting */
     uintptr_t tmpVal = 0;
     bflb_efuse_device_info_type chip_info;
-    bflb_ef_ctrl_get_device_info(&chip_info);
+    bflb_efuse_get_device_info(&chip_info);
     /* if not B0 enable AMR */
-    if (chip_info.chipInfo != BL808_B0) {
+    if (chip_info.version != BL808_B0) {
         tmpVal = __get_MHINT();
         tmpVal |= (1 << 3);
         __set_MHINT(tmpVal);

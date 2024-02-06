@@ -57,6 +57,22 @@
   * @}
   */
 
+// clang-format off
+
+#define IS_TIMER_COUNTER_MODE(type)   (((type) == TIMER_COUNTER_MODE_PROLOAD) || \
+                                      ((type) == TIMER_COUNTER_MODE_UP))
+
+#define IS_TIMER_CLK_SOURCE(type)   ((type) <= 3)
+
+#define IS_TIMER_COMP_ID(type)   (((type) == TIMER_COMP_ID_0) || \
+                                  ((type) == TIMER_COMP_ID_1) || \
+                                  ((type) == TIMER_COMP_ID_2) || \
+                                  ((type) == TIMER_COMP_NONE))
+
+#define IS_TIMER_CLOCK_DIV(type) ((type) <= 255)
+
+// clang-format on
+
 /**
  * @brief TIMER configuration structure
  *

@@ -17,6 +17,12 @@
  *      DEFINES
  *********************/
 
+#ifdef CONFIG_PSRAM 
+#define DRAW_BUFF_ATTR __attribute__((section(".psram_noinit"), aligned(64)))
+#else
+#define DRAW_BUFF_ATTR __attribute__((aligned(64)))
+#endif
+
 #if (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_DSI_VIDIO)
 /* Triple buffer mode, An additional video memory is required, for better performance */
 #define RGB_TRIPLE_BUFF_MODE 1
@@ -40,8 +46,8 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
 #if (LCD_INTERFACE_TYPE == LCD_INTERFACE_DBI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_SPI)
 /* MCU LCD Common interface */
 
-static lv_color_t draw_buf_1[LCD_W * LCD_H / 8] __attribute__((aligned(64))); /* A buffer */
-static lv_color_t draw_buf_2[LCD_W * LCD_H / 8] __attribute__((aligned(64))); /* An other buffer */
+static lv_color_t DRAW_BUFF_ATTR draw_buf_1[LCD_W * LCD_H / 8]; /* A buffer */
+static lv_color_t DRAW_BUFF_ATTR draw_buf_2[LCD_W * LCD_H / 8]; /* An other buffer */
 static volatile lv_disp_drv_t *p_disp_drv_cb = NULL;
 
 #elif (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_DSI_VIDIO)
@@ -57,8 +63,8 @@ static lv_color_t draw_buf_3[LCD_W * LCD_H] ATTR_EALIGN(64); /*An other screen s
 
 #else
 #if defined(CONFIG_PSRAM)
-static lv_color_t draw_buf_1[LCD_W * LCD_H] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
-static lv_color_t draw_buf_2[LCD_W * LCD_H] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
+static lv_color_t DRAW_BUFF_ATTR draw_buf_1[LCD_W * LCD_H];
+static lv_color_t DRAW_BUFF_ATTR draw_buf_2[LCD_W * LCD_H];
 #else
 #error "No config psram!"
 #endif
@@ -73,7 +79,7 @@ static lv_color_t draw_buf_2[LCD_W * LCD_H] ATTR_NOINIT_PSRAM_SECTION __attribut
 // #define LVGL_DRAW_BUF3_BASE (0xA8300000)
 // static lv_color_t *draw_buf_3 = (void *)(uintptr_t)LVGL_DRAW_BUF3_BASE;
 #if defined(CONFIG_PSRAM)
-static lv_color_t draw_buf_3[LCD_W * LCD_H] ATTR_NOINIT_PSRAM_SECTION __attribute__((aligned(64)));
+static lv_color_t DRAW_BUFF_ATTR draw_buf_3[LCD_W * LCD_H];
 static volatile lv_color_t *last_disp_buff_p = (void *)(uintptr_t)draw_buf_3;
 static volatile lv_color_t *last_lvgl_flush_p = NULL;
 #else

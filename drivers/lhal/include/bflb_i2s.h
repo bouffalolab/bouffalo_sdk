@@ -89,6 +89,24 @@
   * @}
   */
 
+// clang-format off
+#define IS_I2S_ROLE(type)         (((type) == I2S_ROLE_MASTER) || \
+                                  ((type) == I2S_ROLE_SLAVE))
+
+#define IS_I2S_FORMAT_MODE(type)   (((type) == I2S_MODE_LEFT_JUSTIFIED) || \
+                                  ((type) == I2S_MODE_RIGHT_JUSTIFIED) || \
+                                  ((type) == I2S_MODE_DSP_SHORT_FRAME_SYNC) || \
+                                  ((type) == I2S_MODE_DSP_LONG_FRAME_SYNC))
+
+#define IS_I2S_CHANNEL_MODE(type)   ((type) <= I2S_CHANNEL_MODE_NUM_6)
+
+#define IS_I2S_SLOT_WIDTH(type)   (((type) == I2S_SLOT_WIDTH_8) || \
+                                  ((type) == I2S_SLOT_WIDTH_16) || \
+                                  ((type) == I2S_SLOT_WIDTH_24) || \
+                                  ((type) == I2S_SLOT_WIDTH_32))
+
+// clang-format on
+
 /**
  * @brief I2S configuration structure
  *

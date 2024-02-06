@@ -90,6 +90,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_state_save(spi_flash_cfg_type *p_flash_cfg, uint32_t *offset,
                                                 uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_state_save
+    return romapi_bflb_xip_sflash_state_save(p_flash_cfg, offset, group, bank);
+#else
     /* XIP_SFlash_Delay */
     volatile uint32_t i = 32 * 2;
 
@@ -122,6 +125,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_state_save(spi_flash_cfg_type *p_flash_cfg,
     bflb_sf_ctrl_set_flash_image_offset(0, group, bank);
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -139,6 +143,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_state_restore(spi_flash_cfg_type *p_flash_cfg, uint32_t offset,
                                                    uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_state_restore
+    return romapi_bflb_xip_sflash_state_restore(p_flash_cfg, offset, group, bank);
+#else
     uint32_t tmp[1];
     uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
 
@@ -161,6 +168,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_state_restore(spi_flash_cfg_type *p_flash_c
 #endif
 
     return 0;
+#endif
 }
 
 /*@} end of group XIP_SFLASH_Private_Functions */
@@ -185,6 +193,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_erase_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t start_addr,
                                                      int len, uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_erase_need_lock
+    return romapi_bflb_xip_sflash_erase_need_lock(p_flash_cfg, start_addr, len, group, bank);
+#else
     int stat = 0;
     uint32_t offset = 0;
     uint8_t aes_enable = 0;
@@ -203,6 +214,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_erase_need_lock(spi_flash_cfg_type *p_flash
     bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -222,6 +234,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_write_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t addr, uint8_t *data,
                                                      uint32_t len, uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_write_need_lock
+    return romapi_bflb_xip_sflash_write_need_lock(p_flash_cfg, addr, data, len, group, bank);
+#else
     int stat = 0;
     uint32_t offset = 0;
     uint8_t aes_enable = 0;
@@ -240,6 +255,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_write_need_lock(spi_flash_cfg_type *p_flash
     bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -259,6 +275,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_read_need_lock(spi_flash_cfg_type *p_flash_cfg, uint32_t addr, uint8_t *data,
                                                     uint32_t len, uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_read_need_lock
+    return romapi_bflb_xip_sflash_read_need_lock(p_flash_cfg, addr, data, len, group, bank);
+#else
     int stat = 0;
     uint32_t offset = 0;
     uint8_t aes_enable = 0;
@@ -277,6 +296,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_read_need_lock(spi_flash_cfg_type *p_flash_
     bflb_xip_sflash_opt_exit(aes_enable);
 
     return stat;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -294,6 +314,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_get_jedecid_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
                                                            uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_get_jedecid_need_lock
+    return romapi_bflb_xip_sflash_get_jedecid_need_lock(p_flash_cfg, data, group, bank);
+#else
     int stat = 0;
     uint32_t offset = 0;
     uint8_t aes_enable = 0;
@@ -312,6 +335,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_get_jedecid_need_lock(spi_flash_cfg_type *p
     bflb_xip_sflash_opt_exit(aes_enable);
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -330,6 +354,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_get_deviceid_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t is_32bits_addr,
                                                             uint8_t *data, uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_get_deviceid_need_lock
+    return romapi_bflb_xip_sflash_get_deviceid_need_lock(p_flash_cfg, is_32bits_addr, data, group, bank);
+#else
     int stat = 0;
     uint32_t offset = 0;
     uint8_t aes_enable = 0;
@@ -348,6 +375,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_get_deviceid_need_lock(spi_flash_cfg_type *
     bflb_xip_sflash_opt_exit(aes_enable);
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -366,6 +394,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_get_uniqueid_need_lock(spi_flash_cfg_type *p_flash_cfg, uint8_t *data,
                                                             uint8_t id_len, uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_get_uniqueid_need_lock
+    return romapi_bflb_xip_sflash_get_uniqueid_need_lock(p_flash_cfg, data, id_len, group, bank);
+#else
     int stat = 0;
     uint32_t offset = 0;
     uint8_t aes_enable = 0;
@@ -384,6 +415,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_get_uniqueid_need_lock(spi_flash_cfg_type *
     bflb_xip_sflash_opt_exit(aes_enable);
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -400,6 +432,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_clear_status_register_need_lock(spi_flash_cfg_type *p_flash_cfg,
                                                                      uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_clear_status_register_need_lock
+    return romapi_bflb_xip_sflash_clear_status_register_need_lock(p_flash_cfg, group, bank);
+#else
     int stat = 0;
     uint32_t offset = 0;
     uint8_t aes_enable = 0;
@@ -418,6 +453,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_clear_status_register_need_lock(spi_flash_c
     bflb_xip_sflash_opt_exit(aes_enable);
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -436,6 +472,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_xip_sflash_read_via_cache_need_lock(uint32_t addr, uint8_t *data, uint32_t len,
                                                               uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_xip_sflash_read_via_cache_need_lock
+    return romapi_bflb_xip_sflash_read_via_cache_need_lock(addr, data, len, group, bank);
+#else
     uint32_t offset = 0;
 
     addr = addr & (BFLB_FLASH_XIP_END - BFLB_FLASH_XIP_BASE - 1);
@@ -448,6 +487,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_read_via_cache_need_lock(uint32_t addr, uin
     bflb_sf_ctrl_set_flash_image_offset(offset, group, bank);
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -461,11 +501,15 @@ int ATTR_TCM_SECTION bflb_xip_sflash_read_via_cache_need_lock(uint32_t addr, uin
 __WEAK
 void ATTR_TCM_SECTION bflb_xip_sflash_opt_enter(uint8_t *aes_enable)
 {
+#ifdef romapi_bflb_xip_sflash_opt_enter
+    romapi_bflb_xip_sflash_opt_enter(aes_enable);
+#else
     *aes_enable = bflb_sf_ctrl_is_aes_enable();
 
     if (*aes_enable) {
         bflb_sf_ctrl_aes_disable();
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -479,9 +523,13 @@ void ATTR_TCM_SECTION bflb_xip_sflash_opt_enter(uint8_t *aes_enable)
 __WEAK
 void ATTR_TCM_SECTION bflb_xip_sflash_opt_exit(uint8_t aes_enable)
 {
+#ifdef romapi_bflb_xip_sflash_opt_exit
+    romapi_bflb_xip_sflash_opt_exit(aes_enable);
+#else
     if (aes_enable) {
         bflb_sf_ctrl_aes_enable();
     }
+#endif
 }
 
 /*@} end of group XIP_SFLASH_Public_Functions */

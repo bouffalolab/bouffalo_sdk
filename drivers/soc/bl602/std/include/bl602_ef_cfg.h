@@ -58,16 +58,6 @@ extern "C" {
 /**
  *  @brief Efuse Ctrl key slot type definition
  */
-typedef struct {
-    uint32_t rsvd_18_0  : 19; /*!< Reserved */
-    uint32_t chip_ver   : 3;  /*!< chip revision */
-    uint32_t rsvd_23_22 : 2;  /*!< Reserved */
-    uint32_t extInfo    : 3;  /*!< Efuse device info extension: 1:BL602C, 2:BL602L, 3:BL602E, 4:POS/AT */
-    uint32_t memoryInfo : 2;  /*!< Efuse memory info 0:no memory, 1:1MB flash, 2:2MB flash, 3:4MB flash */
-    uint32_t rsvd_29    : 1;  /*!< Efuse reserved */
-    uint32_t mcuInfo    : 1;  /*!< Efuse mcu info 0:wifi, 1:mcu */
-    uint32_t pinInfo    : 1;  /*!< Efuse pin info 0:QFN32, 1:QFN40 */
-} bflb_efuse_device_info_type;
 
 /*@} end of group EF_CTRL_Public_Types */
 
@@ -89,7 +79,6 @@ typedef struct {
 
 void bflb_efuse_switch_cpu_clock_save(void);
 void bflb_efuse_switch_cpu_clock_restore(void);
-void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo);
 uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **trim_list);
 
 /*@} end of group EF_CTRL_Public_Functions */

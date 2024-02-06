@@ -5,57 +5,101 @@
 #include "csi_core.h"
 void bflb_l1c_icache_enable(void)
 {
+#ifdef romapi_bflb_l1c_icache_enable
+    romapi_bflb_l1c_icache_enable();
+#else
     csi_icache_enable();
+#endif
 }
 
 void bflb_l1c_icache_disable(void)
 {
+#ifdef romapi_bflb_l1c_icache_disable
+    romapi_bflb_l1c_icache_disable();
+#else
     csi_icache_disable();
+#endif
 }
 
 ATTR_TCM_SECTION void bflb_l1c_icache_invalid_all(void)
 {
+#ifdef romapi_bflb_l1c_icache_invalid_all
+    romapi_bflb_l1c_icache_invalid_all();
+#else
     csi_icache_invalid();
+#endif
 }
 
 void bflb_l1c_dcache_enable(void)
 {
+#ifdef romapi_bflb_l1c_dcache_enable
+    romapi_bflb_l1c_dcache_enable();
+#else
     csi_dcache_enable();
+#endif
 }
 
 void bflb_l1c_dcache_disable(void)
 {
+#ifdef romapi_bflb_l1c_dcache_disable
+    romapi_bflb_l1c_dcache_disable();
+#else
     csi_dcache_disable();
+#endif
 }
 
 ATTR_TCM_SECTION void bflb_l1c_dcache_clean_all(void)
 {
+#ifdef romapi_bflb_l1c_dcache_clean_all
+    romapi_bflb_l1c_dcache_clean_all();
+#else
     csi_dcache_clean();
+#endif
 }
 
 ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_all(void)
 {
+#ifdef romapi_bflb_l1c_dcache_invalidate_all
+    romapi_bflb_l1c_dcache_invalidate_all();
+#else
     csi_dcache_invalid();
+#endif
 }
 
 ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_all(void)
 {
+#ifdef romapi_bflb_l1c_dcache_clean_invalidate_all
+    romapi_bflb_l1c_dcache_clean_invalidate_all();
+#else
     csi_dcache_clean_invalid();
+#endif
 }
 
 ATTR_TCM_SECTION void bflb_l1c_dcache_clean_range(void *addr, uint32_t size)
 {
+#ifdef romapi_bflb_l1c_dcache_clean_range
+    romapi_bflb_l1c_dcache_clean_range(addr, size);
+#else
     csi_dcache_clean_range(addr, size);
+#endif
 }
 
 ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size)
 {
+#ifdef romapi_bflb_l1c_dcache_invalidate_range
+    romapi_bflb_l1c_dcache_invalidate_range(addr, size);
+#else
     csi_dcache_invalid_range(addr, size);
+#endif
 }
 
 ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_t size)
 {
+#ifdef romapi_bflb_l1c_dcache_clean_invalidate_range
+    romapi_bflb_l1c_dcache_clean_invalidate_range(addr, size);
+#else
     csi_dcache_clean_invalid_range(addr, size);
+#endif
 }
 #else
 

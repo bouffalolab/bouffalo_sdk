@@ -1,5 +1,7 @@
 #include "bl616_clock.h"
 #include "bl616_pds.h"
+#include "bl616_hbn.h"
+#include "bl616_psram.h"
 #include "tzc_sec_reg.h"
 #include "rv_hart.h"
 #include "rv_pmp.h"
@@ -9,7 +11,6 @@
 #define SF_CTRL_SF_IF_BK2_MODE (1 << 29U)
 #define SF_CTRL_SF_IF_BK2_EN   (1 << 30U)
 
-#ifndef CONFIG_PSRAM_COPY_CODE
 static void Tzc_Sec_PSRAMB_Access_Set_Not_Lock(uint8_t region, uint32_t startAddr, uint32_t endAddr, uint8_t group)
 {
     uint32_t tmpVal = 0;
@@ -96,7 +97,6 @@ static void pmp_init(void)
     rvpmp_init(pmp_entry_tab, sizeof(pmp_entry_tab) / sizeof(pmp_config_entry_t));
 }
 #endif
-#endif
 
 static void flash_bank2_access_init(void)
 {
@@ -109,17 +109,35 @@ static void flash_bank2_access_init(void)
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
 }
 
+void System_BOD_Init(void)
+{
+    HBN_BOD_CFG_Type bodCfg;
+    bodCfg.enableBod = 1;
+    /*0:BOD not trigger interrupt,1:trigger interrupt*/
+    bodCfg.enableBodInt = 0;
+    /* 0:2.05v,1:2.10v,2:2.15v....7:2.4v */
+    bodCfg.bodThreshold = 7;
+    /*1:BOD will cause reset */
+    bodCfg.enablePorInBod = 1;
+    HBN_Set_BOD_Cfg(&bodCfg);
+}
+
 void SystemInit(void)
 {
     uint32_t i = 0;
 
-#ifndef CONFIG_PSRAM_COPY_CODE
+    /* turn off U power */
+    *(volatile uint32_t *)(0x2000e500) = (1 << 5);
+    *(volatile uint32_t *)(0x2000e504) = 0;
+
     /* CPU Prefetching barrier */
-    Tzc_Sec_PSRAMB_Access_Set_Not_Lock(0, 0x0, 64 * 1024 * 1024, 0);
+    if (BL616_PSRAM_INIT_DONE == 0) {
+        Tzc_Sec_PSRAMB_Access_Set_Not_Lock(0, 0x0, 64 * 1024 * 1024, 0);
+    }
     Tzc_Sec_ROM_Access_Set_Not_Lock(1, 0x90020000, ((256 * 1024 * 1024) - (128 * 1024)), 0);
     flash_bank2_access_init();
     //pmp_init();
-#endif
+
     /* enable mstatus FS */
     uint32_t mstatus = __get_MSTATUS();
     mstatus |= (1 << 13);
@@ -184,6 +202,9 @@ void SystemInit(void)
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00); // GLB_WRAM160KB_EM0KB
     }
     BL_WR_REG(GLB_BASE, GLB_SRAM_CFG3, tmpVal);
+
+    /* config chip pod */
+    System_BOD_Init();
 }
 
 void System_Post_Init(void)

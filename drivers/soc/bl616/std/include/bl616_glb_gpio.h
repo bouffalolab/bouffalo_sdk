@@ -182,6 +182,8 @@ typedef struct
 void GPIO_INT0_IRQHandler(void);
 #endif
 /*----------*/
+BL_Sts_Type GLB_GPIO_Pad_LeadOut_Sts(uint8_t gpioPin);
+/*----------*/
 BL_Err_Type GLB_GPIO_Init(GLB_GPIO_Cfg_Type *cfg);
 BL_Err_Type GLB_GPIO_Func_Init(uint8_t gpioFun, uint8_t *pinList, uint8_t cnt);
 BL_Err_Type GLB_GPIO_Input_Enable(uint8_t gpioPin);

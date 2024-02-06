@@ -221,7 +221,7 @@ int main( void )
     mbedtls_printf( "  > Write to server:" );
     fflush( stdout );
 
-    len = sprintf( (char *) buf, GET_REQUEST );
+    len = mbedtls_snprintf( (char *) buf, sizeof(buf), GET_REQUEST );
 
     while( ( ret = mbedtls_ssl_write( &ssl, buf, len ) ) <= 0 )
     {

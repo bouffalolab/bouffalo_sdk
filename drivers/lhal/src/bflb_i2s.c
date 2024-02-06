@@ -4,6 +4,16 @@
 
 void bflb_i2s_init(struct bflb_device_s *dev, const struct bflb_i2s_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_I2S_ROLE(config->role));
+    LHAL_PARAM_ASSERT(IS_I2S_FORMAT_MODE(config->format_mode));
+    LHAL_PARAM_ASSERT(IS_I2S_CHANNEL_MODE(config->channel_mode));
+    LHAL_PARAM_ASSERT(IS_I2S_SLOT_WIDTH(config->frame_width));
+    LHAL_PARAM_ASSERT(IS_I2S_SLOT_WIDTH(config->data_width));
+
+#ifdef romapi_bflb_i2s_init
+    romapi_bflb_i2s_init(dev, config);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint32_t div;
@@ -76,6 +86,9 @@ void bflb_i2s_init(struct bflb_device_s *dev, const struct bflb_i2s_config_s *co
     /* integer frequency segmentation by rounding */
     div = (bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_I2S, dev->idx) / 2 * 10 / config->bclk_freq_hz + 5) / 10;
     div = (div) ? (div - 1) : 0;
+
+    LHAL_PARAM_ASSERT(div <= 0xfff);
+
     div = (div > 0xfff) ? 0xfff : div;
 
     /* bclk timing config */
@@ -127,10 +140,14 @@ void bflb_i2s_init(struct bflb_device_s *dev, const struct bflb_i2s_config_s *co
         regval |= I2S_CR_I2S_S_EN;
     }
     putreg32(regval, reg_base + I2S_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_i2s_deinit(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_i2s_deinit
+    romapi_bflb_i2s_deinit(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -141,10 +158,14 @@ void bflb_i2s_deinit(struct bflb_device_s *dev)
     regval &= ~I2S_CR_I2S_S_EN;
     regval &= ~I2S_CR_I2S_M_EN;
     putreg32(regval, reg_base + I2S_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_i2s_link_txdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_i2s_link_txdma
+    romapi_bflb_i2s_link_txdma(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -156,10 +177,14 @@ void bflb_i2s_link_txdma(struct bflb_device_s *dev, bool enable)
         regval &= ~I2S_DMA_TX_EN;
     }
     putreg32(regval, reg_base + I2S_FIFO_CONFIG_0_OFFSET);
+#endif
 }
 
 void bflb_i2s_link_rxdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_i2s_link_rxdma
+    romapi_bflb_i2s_link_rxdma(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -171,10 +196,14 @@ void bflb_i2s_link_rxdma(struct bflb_device_s *dev, bool enable)
         regval &= ~I2S_DMA_RX_EN;
     }
     putreg32(regval, reg_base + I2S_FIFO_CONFIG_0_OFFSET);
+#endif
 }
 
 void bflb_i2s_txint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_i2s_txint_mask
+    romapi_bflb_i2s_txint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
 
@@ -185,10 +214,14 @@ void bflb_i2s_txint_mask(struct bflb_device_s *dev, bool mask)
         regval &= ~I2S_CR_I2S_TXF_MASK;
     }
     putreg32(regval, reg_base + I2S_INT_STS_OFFSET);
+#endif
 }
 
 void bflb_i2s_rxint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_i2s_rxint_mask
+    romapi_bflb_i2s_rxint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
 
@@ -199,10 +232,14 @@ void bflb_i2s_rxint_mask(struct bflb_device_s *dev, bool mask)
         regval &= ~I2S_CR_I2S_RXF_MASK;
     }
     putreg32(regval, reg_base + I2S_INT_STS_OFFSET);
+#endif
 }
 
 void bflb_i2s_errint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_i2s_errint_mask
+    romapi_bflb_i2s_errint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
 
@@ -213,10 +250,14 @@ void bflb_i2s_errint_mask(struct bflb_device_s *dev, bool mask)
         regval &= ~I2S_CR_I2S_FER_MASK;
     }
     putreg32(regval, reg_base + I2S_INT_STS_OFFSET);
+#endif
 }
 
 uint32_t bflb_i2s_get_intstatus(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_i2s_get_intstatus
+    return romapi_bflb_i2s_get_intstatus(dev);
+#else
     uint32_t reg_base;
     uint32_t int_status;
     uint32_t int_mask;
@@ -228,10 +269,14 @@ uint32_t bflb_i2s_get_intstatus(struct bflb_device_s *dev)
     int_mask = (getreg32(reg_base + I2S_INT_STS_OFFSET) >> 8) & 0x1f;
 
     return (int_status & ~int_mask);
+#endif
 }
 
 int bflb_i2s_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_i2s_feature_control
+    return romapi_bflb_i2s_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t reg_base;
     uint32_t regval;
@@ -338,4 +383,5 @@ int bflb_i2s_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     }
 
     return ret;
+#endif
 }

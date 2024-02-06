@@ -3,10 +3,10 @@
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
+#include "bflb_efuse.h"
 #include "bl808_glb.h"
 #include "bl808_psram_uhs.h"
 #include "bl808_tzc_sec.h"
-#include "bl808_ef_cfg.h"
 #include "bl808_uhs_phy.h"
 #include "board.h"
 
@@ -107,10 +107,10 @@ int uhs_psram_init(void)
     };
 
     bflb_efuse_device_info_type chip_info;
-    bflb_ef_ctrl_get_device_info(&chip_info);
-    if (chip_info.psramInfo == UHS_32MB_PSRAM) {
+    bflb_efuse_get_device_info(&chip_info);
+    if (chip_info.psram_info == UHS_32MB_PSRAM) {
         psramDefaultCfg.psramMemSize = PSRAM_MEM_SIZE_32MB;
-    } else if (chip_info.psramInfo == UHS_64MB_PSRAM) {
+    } else if (chip_info.psram_info == UHS_64MB_PSRAM) {
         psramDefaultCfg.psramMemSize = PSRAM_MEM_SIZE_64MB;
     } else {
         return -1;

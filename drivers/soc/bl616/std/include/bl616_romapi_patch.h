@@ -40,6 +40,7 @@
 #include "bflb_xip_sflash.h"
 #include "bl616_pds.h"
 #include "bl616_clock.h"
+#include "ef_data_reg.h"
 // #include "bl616_uart.h"
 
 #endif

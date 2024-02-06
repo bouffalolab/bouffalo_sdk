@@ -701,11 +701,13 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_On_Xtal_32K(void)
 
     tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
     tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_XTAL32K_HIZ_EN);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_INV_STRE, 3);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_XTAL32K_AC_CAP_SHORT);
     tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_XTAL32K);
     tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PU_XTAL32K_BUF);
     BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
 
-    /* Delay >1s */
+    /* Delay >1s, but 1s is too long, so user should delay after this function */
     arch_delay_us(1100);
 
     return SUCCESS;

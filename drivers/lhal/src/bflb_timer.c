@@ -4,6 +4,15 @@
 
 void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_TIMER_COUNTER_MODE(config->counter_mode));
+    LHAL_PARAM_ASSERT(IS_TIMER_CLK_SOURCE(config->clock_source));
+    LHAL_PARAM_ASSERT(IS_TIMER_CLOCK_DIV(config->clock_div));
+    LHAL_PARAM_ASSERT(IS_TIMER_COMP_ID(config->trigger_comp_id));
+
+#ifdef romapi_bflb_timer_init
+    romapi_bflb_timer_init(dev, config);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -86,10 +95,14 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
         bflb_timer_set_compvalue(dev, TIMER_COMP_ID_1, 0xffffffff);
         bflb_timer_set_compvalue(dev, TIMER_COMP_ID_2, 0xffffffff);
     }
+#endif
 }
 
 void bflb_timer_deinit(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_timer_deinit
+    romapi_bflb_timer_deinit(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -98,10 +111,14 @@ void bflb_timer_deinit(struct bflb_device_s *dev)
     regval = getreg32(reg_base + TIMER_TCER_OFFSET);
     regval &= ~(1 << (dev->idx + 1));
     putreg32(regval, reg_base + TIMER_TCER_OFFSET);
+#endif
 }
 
 void bflb_timer_start(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_timer_start
+    romapi_bflb_timer_start(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -110,10 +127,14 @@ void bflb_timer_start(struct bflb_device_s *dev)
     regval = getreg32(reg_base + TIMER_TCER_OFFSET);
     regval |= (1 << (dev->idx + 1));
     putreg32(regval, reg_base + TIMER_TCER_OFFSET);
+#endif
 }
 
 void bflb_timer_stop(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_timer_stop
+    romapi_bflb_timer_stop(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -122,46 +143,66 @@ void bflb_timer_stop(struct bflb_device_s *dev)
     regval = getreg32(reg_base + TIMER_TCER_OFFSET);
     regval &= ~(1 << (dev->idx + 1));
     putreg32(regval, reg_base + TIMER_TCER_OFFSET);
+#endif
 }
 
 void bflb_timer_set_preloadvalue(struct bflb_device_s *dev, uint32_t val)
 {
+#ifdef romapi_bflb_timer_set_preloadvalue
+    romapi_bflb_timer_set_preloadvalue(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     putreg32(val, reg_base + TIMER_TPLVR0_OFFSET + 4 * dev->idx);
+#endif
 }
 
 void bflb_timer_set_compvalue(struct bflb_device_s *dev, uint8_t cmp_no, uint32_t val)
 {
+#ifdef romapi_bflb_timer_set_compvalue
+    romapi_bflb_timer_set_compvalue(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     putreg32(val, reg_base + TIMER_TMR0_0_OFFSET + 0x0c * dev->idx + 4 * cmp_no);
+#endif
 }
 
 uint32_t bflb_timer_get_compvalue(struct bflb_device_s *dev, uint8_t cmp_no)
 {
+#ifdef romapi_bflb_timer_get_compvalue
+    romapi_bflb_timer_get_compvalue(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     return getreg32(reg_base + TIMER_TMR0_0_OFFSET + 0x0c * dev->idx + 4 * cmp_no);
+#endif
 }
 
 uint32_t bflb_timer_get_countervalue(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_timer_get_countervalue
+    romapi_bflb_timer_get_countervalue(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     return getreg32(reg_base + TIMER_TCR0_OFFSET + 4 * dev->idx);
+#endif
 }
 
 void bflb_timer_compint_mask(struct bflb_device_s *dev, uint8_t cmp_no, bool mask)
 {
+#ifdef romapi_bflb_timer_compint_mask
+    romapi_bflb_timer_compint_mask(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -173,10 +214,14 @@ void bflb_timer_compint_mask(struct bflb_device_s *dev, uint8_t cmp_no, bool mas
         regval |= (1 << cmp_no);
     }
     putreg32(regval, reg_base + TIMER_TIER0_OFFSET + 4 * dev->idx);
+#endif
 }
 
 bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no)
 {
+#ifdef romapi_bflb_timer_get_compint_status
+    romapi_bflb_timer_get_compint_status(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -188,10 +233,14 @@ bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no)
     } else {
         return false;
     }
+#endif
 }
 
 void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no)
 {
+#ifdef romapi_bflb_timer_compint_clear
+    romapi_bflb_timer_compint_clear(dev);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -199,4 +248,5 @@ void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no)
     regval = getreg32(reg_base + TIMER_TICR0_OFFSET + 4 * dev->idx);
     regval |= (1 << cmp_no);
     putreg32(regval, reg_base + TIMER_TICR0_OFFSET + 4 * dev->idx);
+#endif
 }

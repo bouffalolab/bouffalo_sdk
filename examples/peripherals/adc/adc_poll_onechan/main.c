@@ -2,7 +2,7 @@
 #include "bflb_mtimer.h"
 #include "board.h"
 
-#define TEST_ADC_CHANNEL_x ADC_CHANNEL_8
+#define TEST_ADC_CHANNEL_x ADC_CHANNEL_0
 
 static struct bflb_adc_channel_s chan[1] = {
     { .pos_chan = TEST_ADC_CHANNEL_x,
@@ -45,6 +45,9 @@ void test_adc_poll(void)
 
         if (i > 4) {
             raw_data += bflb_adc_read_raw(adc);
+        } else {
+            /* drop incorrect data */
+            bflb_adc_read_raw(adc);
         }
     }
 

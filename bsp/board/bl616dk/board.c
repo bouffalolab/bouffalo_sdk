@@ -8,14 +8,13 @@
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
 #include "bflb_acomp.h"
+#include "bflb_efuse.h"
 #include "board.h"
 #include "bl616_tzc_sec.h"
 #include "bl616_psram.h"
 #include "bl616_glb.h"
 
 #include "mem.h"
-
-#define WB_4MB_PSRAM (1)
 
 #ifdef CONFIG_BSP_SDH_SDCARD
 #include "sdh_sdcard.h"
@@ -161,6 +160,40 @@ void bl_show_log(void)
     printf("Copyright (c) 2022 Bouffalolab team\r\n");
 }
 
+static const char* bl_sys_version(const char ***ctx)
+{
+    extern uint8_t _version_info_section_start;
+    extern uint8_t _version_info_section_end;
+    const char ** const version_section_start = (const char**)&_version_info_section_start;
+    const char ** const version_section_end = (const char**)&_version_info_section_end;
+    const char *version_str;
+
+    //init
+    if (NULL == (*ctx)) {
+        (*ctx) = version_section_start;
+    }
+    //check the end
+    if (version_section_end == (*ctx)) {
+        return NULL;
+    }
+    version_str = (**ctx);
+    *ctx = (*ctx) + 1;
+    return version_str;
+}
+
+void bl_show_component_version(void)
+{
+    const char **ctx = NULL;
+    const char *version_str;
+
+    puts("Version of used components:\r\n");
+    while ((version_str = bl_sys_version(&ctx))) {
+        puts("\tVersion: ");
+        puts(version_str);
+        puts("\r\n");
+    }
+}
+
 void bl_show_flashinfo(void)
 {
     spi_flash_cfg_type flashCfg;
@@ -210,7 +243,7 @@ static void console_init()
     bflb_gpio_uart_init(gpio, GPIO_PIN_21, GPIO_UART_FUNC_UART0_TX);
     bflb_gpio_uart_init(gpio, GPIO_PIN_22, GPIO_UART_FUNC_UART0_RX);
 
-    struct bflb_uart_config_s cfg;
+    struct bflb_uart_config_s cfg = {0};
     cfg.baudrate = 2000000;
     cfg.data_bits = UART_DATA_BITS_8;
     cfg.stop_bits = UART_STOP_BITS_1;
@@ -218,6 +251,7 @@ static void console_init()
     cfg.flow_ctrl = 0;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
+    cfg.bit_order = UART_LSB_FIRST;
 
     uart0 = bflb_device_get_by_name("uart0");
 
@@ -233,7 +267,7 @@ void board_init(void)
     size_t heap_len;
 
     flag = bflb_irq_save();
-#ifndef CONFIG_PSRAM_COPY_CODE
+#ifndef CONFIG_BOARD_FLASH_INIT_SKIP
     ret = bflb_flash_init();
 #endif
     system_clock_init();
@@ -242,25 +276,22 @@ void board_init(void)
 
     console_init();
 
+    bl_show_log();
+    bl_show_component_version();
+
 #ifdef CONFIG_PSRAM
-#ifndef CONFIG_PSRAM_COPY_CODE
-    board_psram_x8_init();
-    Tzc_Sec_PSRAMB_Access_Release();
-#endif
-    // extern uint32_t __psram_load_addr;
+    static bflb_efuse_device_info_type device_info;
 
-    // extern uint32_t __psram_data_start__;
-    // extern uint32_t __psram_data_end__;
+    bflb_efuse_get_device_info(&device_info);
+    if (device_info.psram_info == 0) {
+        printf("This chip has no psram, please disable CONFIG_PSRAM\r\n");
+        while (1) {}
+    }
 
-    // uint32_t *pSrc, *pDest;
-
-    // /* BF Add psram data copy */
-    // pSrc = &__psram_load_addr;
-    // pDest = &__psram_data_start__;
-
-    // for (; pDest < &__psram_data_end__;) {
-    //     *pDest++ = *pSrc++;
-    // }
+    if (BL616_PSRAM_INIT_DONE == 0) {
+        board_psram_x8_init();
+        Tzc_Sec_PSRAMB_Access_Release();
+    }
 
     heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
     pmem_init((void *)&__psram_heap_base, heap_len);
@@ -269,7 +300,6 @@ void board_init(void)
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     kmem_init((void *)&__HeapBase, heap_len);
 
-    bl_show_log();
     if (ret != 0) {
         printf("flash init fail!!!\r\n");
     }
@@ -378,8 +408,6 @@ void board_adc_gpio_init()
     bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     /* ADC_CH10 */
     bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
-    /* ADC_CH11 */
-    bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
 }
 
 void board_dac_gpio_init()
@@ -606,8 +634,8 @@ static void reboot_cmd(int argc, char **argv)
 }
 SHELL_CMD_EXPORT_ALIAS(reboot_cmd, reboot, reboot);
 
-#define MFG_CONFIG_REG    (0x2000F100)
-#define MFG_CONFIG_VAL    ("0mfg")
+#define MFG_CONFIG_REG (0x2000F100)
+#define MFG_CONFIG_VAL ("0mfg")
 
 void mfg_config(void)
 {
@@ -618,7 +646,7 @@ void mfg_config(void)
         .byte = MFG_CONFIG_VAL,
     };
 
-    *(volatile uint32_t*)(MFG_CONFIG_REG) = mfg.word;
+    *(volatile uint32_t *)(MFG_CONFIG_REG) = mfg.word;
 }
 
 static void mfg_cmd(int argc, char **argv)

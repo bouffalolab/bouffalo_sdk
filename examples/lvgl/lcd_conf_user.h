@@ -7,6 +7,10 @@
 
   mipi dbi interface
     LCD_DBI_ILI9488
+    LCD_DBI_ILI9486
+    LCD_DBI_ILI9341
+    LCD_DBI_NT35510
+    LCD_DBI_ST7796
 
   mipi dpi (RGB) interface
     LCD_DPI_ILI9488
@@ -22,7 +26,7 @@
     LCD_SPI_ST7796
     LCD_SPI_ST7789V
 */
-#define LCD_SPI_ST7796
+#define LCD_SPI_ILI9341
 
 /* dbi ili9488 config */
 #if defined LCD_DBI_ILI9488
@@ -58,10 +62,143 @@
     */
    #define ILI9488_DBI_COLOR_REVERSAL 0
 
-#endif
+#elif defined LCD_DBI_ILI9486
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* enable the lcd reset function
+        0: Does not care about lcd hard reset
+        1: use gpio to reset the lcd
+    */
+    #define LCD_RESET_EN 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ILI9486_DBI_PIXEL_FORMAT 2
+
+    /* ILI9486 LCD width and height */
+    #define ILI9486_DBI_W 320
+    #define ILI9486_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ILI9486_DBI_OFFSET_X 0
+    #define ILI9486_DBI_OFFSET_Y 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9486_DBI_COLOR_REVERSAL 0
+
+/* dbi ili9341 config */
+#elif defined LCD_DBI_ILI9341
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeC-3wire, typeC-4wire, typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* enable the lcd reset function
+        0: Does not care about lcd hard reset
+        1: use gpio to reset the lcd
+    */
+    #define LCD_RESET_EN 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ILI9341_DBI_PIXEL_FORMAT 2
+
+    /* ILI9341 LCD width and height */
+    #define ILI9341_DBI_W 240
+    #define ILI9341_DBI_H 320
+
+    /* The offset of the area can be displayed */
+    #define ILI9341_DBI_OFFSET_X 0
+    #define ILI9341_DBI_OFFSET_Y 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ILI9341_DBI_COLOR_REVERSAL 0
+
+   /* dbi ili9341 config */
+#elif defined LCD_DBI_NT35510
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* enable the lcd reset function
+        0: Does not care about lcd hard reset
+        1: use gpio to reset the lcd
+    */
+    #define LCD_RESET_EN 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define NT35510_DBI_PIXEL_FORMAT 1
+
+    /* NT35510 LCD width and height */
+    #define NT35510_DBI_W 480
+    #define NT35510_DBI_H 800
+
+    /* The offset of the area can be displayed */
+    #define NT35510_DBI_OFFSET_X 0
+    #define NT35510_DBI_OFFSET_Y 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define NT35510_DBI_COLOR_REVERSAL 0
+
+   /* dbi st7796 config */
+#elif defined LCD_DBI_ST7796
+
+    /* Selecting interface type, more configuration of peripherals comes later
+        1: DBI peripheral, supported functions: typeB-x8(8080); (support chips: bl616, bl606p, bl808),
+    */
+    #define LCD_DBI_INTERFACE_TYPE 1
+
+    /* enable the lcd reset function
+        0: Does not care about lcd hard reset
+        1: use gpio to reset the lcd
+    */
+    #define LCD_RESET_EN 1
+
+    /* Selecting pixel format
+        1: rgb565 (16-bit, output rgb565)
+        2: nrgb8888 (32-bit, output rgb888)
+    */
+    #define ST7796_DBI_PIXEL_FORMAT 1
+
+    /* ST7796 LCD width and height */
+    #define ST7796_DBI_W 320
+    #define ST7796_DBI_H 480
+
+    /* The offset of the area can be displayed */
+    #define ST7796_DBI_OFFSET_X 0
+    #define ST7796_DBI_OFFSET_Y 0
+
+    /* Color reversal, Some screens are required
+        0: disable
+        1: enable
+    */
+   #define ST7796_DBI_COLOR_REVERSAL 0
 
 /* dpi gc9503v config */
-#if defined LCD_DPI_GC9503V
+#elif defined LCD_DPI_GC9503V
 
     /* Selecting DPI working mode
         1: DPI peripheral (support: bl808)
@@ -172,7 +309,6 @@
     /* Maximum refresh frame rate per second, Used to automatically calculate the clock frequency */
     #define STANDARD_DPI_FRAME_RATE 70
 
-
 /* spi ili9488 config */
 #elif defined LCD_SPI_ILI9488
 
@@ -205,7 +341,6 @@
         1: enable
     */
    #define ILI9488_SPI_COLOR_REVERSAL 0
-
 
 /* spi ili9341 config */
 #elif defined LCD_SPI_ILI9341
@@ -240,7 +375,6 @@
     */
    #define ILI341_SPI_COLOR_REVERSAL 0
 
-
 /* spi st7789v config */
 #elif defined LCD_SPI_ST7789V
 
@@ -267,7 +401,6 @@
     /* The offset of the area can be displayed */
     #define ST7789V_SPI_OFFSET_X 0
     #define ST7789V_SPI_OFFSET_Y 0
-
 
 /* spi st7796 config */
 #elif defined LCD_SPI_ST7796

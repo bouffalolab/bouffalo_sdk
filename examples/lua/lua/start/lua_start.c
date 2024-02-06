@@ -153,16 +153,16 @@ static int sl_docall(lua_State *L, int narg, int nres)
 
 static void sl_print_version(void)
 {
-    char *token;
+    char *token, *outer_ptr = NULL;
     LOG_I("%s\r\n", LUA_COPYRIGHT);
     LOG_I("LUA_ROOT          %s\r\n", LUA_ROOT);
     LOG_I("LUA_LDIR          %s\r\n", LUA_LDIR);
     LOG_I("LUA_CDIR          %s\r\n", LUA_CDIR);
     LOG_I("LUA_PATH_DEFAULT\r\n");
-    token = strtok(lua_path_default, ";");
+    token = strtok_r(lua_path_default, ";", &outer_ptr);
     while (token != NULL) {
         LOG_I("                  %s\r\n", token);
-        token = strtok(NULL, ";");
+        token = strtok_r(NULL, ";", &outer_ptr);
     }
 
     LOG_I("\r\n");

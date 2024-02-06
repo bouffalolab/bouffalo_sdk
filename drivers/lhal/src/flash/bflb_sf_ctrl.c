@@ -91,8 +91,7 @@
  *  @{
  */
 
-#if defined(BL702L) || defined(BL702) || defined(BL602)
-__attribute__((always_inline)) __STATIC_INLINE uint32_t __REV(uint32_t value)
+__attribute__((always_inline)) __STATIC_INLINE uint32_t bflb_sf_ctrl_bswap32(uint32_t value)
 {
     //return __builtin_bswap32(value);
     uint32_t res = 0;
@@ -103,7 +102,6 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __REV(uint32_t value)
 
     return res;
 }
-#endif
 
 /****************************************************************************/ /**
  * @brief  Enable serail flash controller
@@ -116,6 +114,9 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __REV(uint32_t value)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg)
 {
+#ifdef romapi_bflb_sf_ctrl_enable
+    romapi_bflb_sf_ctrl_enable(cfg);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
     uint32_t time_out = 0;
@@ -178,6 +179,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg)
     putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
 
     bflb_sf_ctrl_set_owner(cfg->owner);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -194,6 +196,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_set_io_delay(uint8_t pad, uint8_t do_delay, uint8_t di_delay, uint8_t oe_delay)
 {
+#ifdef romapi_bflb_sf_ctrl_set_io_delay
+    romapi_bflb_sf_ctrl_set_io_delay(pad, do_delay, di_delay, oe_delay);
+#else
     uint32_t offset = 0;
     uint32_t regval = 0;
 
@@ -241,6 +246,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_io_delay(uint8_t pad, uint8_t do_delay, u
     regval &= ~SF_CTRL_IO_3_OE_DLY_SEL_MASK;
     regval |= (oe_delay << SF_CTRL_IO_3_OE_DLY_SEL_SHIFT);
     putreg32(regval, offset + SF_CTRL_IO_DLY_4_OFFSET);
+#endif
 }
 
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
@@ -255,6 +261,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_io_delay(uint8_t pad, uint8_t do_delay, u
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_bank2_enable(const struct sf_ctrl_bank2_cfg *bank2_cfg)
 {
+#ifdef romapi_bflb_sf_ctrl_bank2_enable
+    romapi_bflb_sf_ctrl_bank2_enable(bank2_cfg);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -316,6 +325,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_bank2_enable(const struct sf_ctrl_bank2_cfg *
     regval |= SF_CTRL_SF_IF_BK2_MODE;
     regval &= ~SF_CTRL_SF_IF_PAD_SEL_MASK;
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -329,6 +339,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_bank2_enable(const struct sf_ctrl_bank2_cfg *
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_hold_sram(void)
 {
+#ifdef romapi_bflb_sf_ctrl_sbus2_hold_sram
+    romapi_bflb_sf_ctrl_sbus2_hold_sram();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -338,6 +351,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_hold_sram(void)
     regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
     regval |= SF_CTRL_SF_IF2_FN_SEL;
     putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -351,6 +365,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_hold_sram(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_release_sram(void)
 {
+#ifdef romapi_bflb_sf_ctrl_sbus2_release_sram
+    romapi_bflb_sf_ctrl_sbus2_release_sram();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -360,6 +377,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_release_sram(void)
     regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
     regval &= ~SF_CTRL_SF_IF2_FN_SEL;
     putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -373,6 +391,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_release_sram(void)
 __WEAK
 uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_is_sbus2_enable(void)
 {
+#ifdef romapi_bflb_sf_ctrl_is_sbus2_enable
+    romapi_bflb_sf_ctrl_is_sbus2_enable();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -388,6 +409,7 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_is_sbus2_enable(void)
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -401,6 +423,9 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_is_sbus2_enable(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_replace(uint8_t pad)
 {
+#ifdef romapi_bflb_sf_ctrl_sbus2_replace
+    romapi_bflb_sf_ctrl_sbus2_replace(pad);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -430,6 +455,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_replace(uint8_t pad)
     regval &= ~SF_CTRL_SF_IF2_PAD_SEL_MASK;
     regval |= (pad << SF_CTRL_SF_IF2_PAD_SEL_SHIFT);
     putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_0_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -443,6 +469,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_replace(uint8_t pad)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_revoke_replace(void)
 {
+#ifdef romapi_bflb_sf_ctrl_sbus2_revoke_replace
+    romapi_bflb_sf_ctrl_sbus2_revoke_replace();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -461,6 +490,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_revoke_replace(void)
     regval = getreg32(reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
     regval &= ~SF_CTRL_SF_IF2_EN;
     putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_1_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -475,6 +505,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_revoke_replace(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_set_delay(uint8_t clk_delay, uint8_t rx_clk_invert)
 {
+#ifdef romapi_bflb_sf_ctrl_sbus2_set_delay
+    romapi_bflb_sf_ctrl_sbus2_set_delay(clk_delay, rx_clk_invert);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -496,6 +529,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_set_delay(uint8_t clk_delay, uint8_t rx
         regval &= ~SF_CTRL_SF_CLK_SF_IF2_RX_INV_SEL;
     }
     putreg32(regval, reg_base + SF_CTRL_SF_IF2_CTRL_0_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -510,6 +544,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus2_set_delay(uint8_t clk_delay, uint8_t rx
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_remap_set(uint8_t remap, uint8_t lock)
 {
+#ifdef romapi_bflb_sf_ctrl_remap_set
+    romapi_bflb_sf_ctrl_remap_set(remap, lock);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -527,6 +564,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_remap_set(uint8_t remap, uint8_t lock)
         regval &= ~SF_CTRL_SF_AHB2SIF_REMAP_LOCK;
     }
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
+#endif
 }
 #endif
 
@@ -542,6 +580,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_remap_set(uint8_t remap, uint8_t lock)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_32bits_addr_en(uint8_t en32_bits_addr)
 {
+#ifdef romapi_bflb_sf_ctrl_32bits_addr_en
+    romapi_bflb_sf_ctrl_32bits_addr_en(en32_bits_addr);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -554,6 +595,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_32bits_addr_en(uint8_t en32_bits_addr)
         regval &= ~SF_CTRL_SF_IF_32B_ADR_EN;
     }
     putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
+#endif
 }
 #endif
 
@@ -569,6 +611,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_32bits_addr_en(uint8_t en32_bits_addr)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_psram_init(struct sf_ctrl_psram_cfg *psram_cfg)
 {
+#ifdef romapi_bflb_sf_ctrl_psram_init
+    romapi_bflb_sf_ctrl_psram_init(psram_cfg);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -618,6 +663,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_init(struct sf_ctrl_psram_cfg *psram_cf
     putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
 
     bflb_sf_ctrl_set_owner(psram_cfg->owner);
+#endif
 }
 #endif
 
@@ -632,6 +678,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_init(struct sf_ctrl_psram_cfg *psram_cf
 __WEAK
 uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_clock_delay(void)
 {
+#ifdef romapi_bflb_sf_ctrl_get_clock_delay
+    return romapi_bflb_sf_ctrl_get_clock_delay();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -643,6 +692,7 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_clock_delay(void)
     }
 
     return ((regval & SF_CTRL_SF_IF_READ_DLY_N_MASK) >> SF_CTRL_SF_IF_READ_DLY_N_SHIFT) + 1;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -656,6 +706,9 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_clock_delay(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_set_clock_delay(uint8_t delay)
 {
+#ifdef romapi_bflb_sf_ctrl_set_clock_delay
+    romapi_bflb_sf_ctrl_set_clock_delay(delay);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -670,6 +723,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_clock_delay(uint8_t delay)
         regval &= ~SF_CTRL_SF_IF_READ_DLY_EN;
     }
     putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -683,6 +737,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_clock_delay(uint8_t delay)
 __WEAK
 uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_wrap_queue_value(void)
 {
+#ifdef romapi_bflb_sf_ctrl_get_wrap_queue_value
+    return romapi_bflb_sf_ctrl_get_wrap_queue_value();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -690,6 +747,7 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_wrap_queue_value(void)
 
     regval = getreg32(reg_base + SF_CTRL_3_OFFSET);
     return (regval & SF_CTRL_SF_CMDS_2_WRAP_Q) ? 1 : 0;
+#endif
 }
 
 #if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
@@ -875,6 +933,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_cmds_set(struct sf_ctrl_cmds_cfg *cmds_cfg, u
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_select_pad(uint8_t sel)
 {
+#ifdef romapi_bflb_sf_ctrl_select_pad
+    romapi_bflb_sf_ctrl_select_pad(sel);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -945,6 +1006,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_pad(uint8_t sel)
     regval |= (sel << SF_CTRL_SF_IF_PAD_SEL_SHIFT);
 #endif
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -958,6 +1020,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_pad(uint8_t sel)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_sbus_select_bank(uint8_t bank)
 {
+#ifdef romapi_bflb_sf_ctrl_sbus_select_bank
+    romapi_bflb_sf_ctrl_sbus_select_bank(bank);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -970,6 +1035,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus_select_bank(uint8_t bank)
         regval &= ~SF_CTRL_SF_IF_0_BK_SEL;
     }
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -983,6 +1049,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sbus_select_bank(uint8_t bank)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_set_owner(uint8_t owner)
 {
+#ifdef romapi_bflb_sf_ctrl_set_owner
+    romapi_bflb_sf_ctrl_set_owner(owner);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
     uint32_t time_out = 0;
@@ -1013,6 +1082,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_owner(uint8_t owner)
         regval &= ~SF_CTRL_SF_AHB2SIF_EN;
     }
     putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1026,6 +1096,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_owner(uint8_t owner)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_disable(void)
 {
+#ifdef romapi_bflb_sf_ctrl_disable
+    romapi_bflb_sf_ctrl_disable();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1034,6 +1107,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_disable(void)
     regval = getreg32(reg_base + SF_CTRL_1_OFFSET);
     regval &= ~SF_CTRL_SF_IF_EN;
     putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1047,6 +1121,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_disable(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable_be(void)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_enable_be
+    romapi_bflb_sf_ctrl_aes_enable_be();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1058,6 +1135,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable_be(void)
     regval |= SF_CTRL_SF_AES_DIN_ENDIAN;
     regval |= SF_CTRL_SF_AES_DOUT_ENDIAN;
     putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1071,6 +1149,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable_be(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable_le(void)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_enable_le
+    romapi_bflb_sf_ctrl_aes_enable_le();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1082,6 +1163,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable_le(void)
     regval &= ~SF_CTRL_SF_AES_DIN_ENDIAN;
     regval &= ~SF_CTRL_SF_AES_DOUT_ENDIAN;
     putreg32(regval, reg_base + SF_CTRL_0_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1153,6 +1235,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable, uint8_t hw_key,
                                                   uint32_t start_addr, uint32_t end_addr, uint8_t locked)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_region
+    romapi_bflb_sf_ctrl_aes_set_region(region, enable, hw_key, start_addr, end_addr, locked);
+#else
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
     uint32_t regval = 0;
 
@@ -1185,6 +1270,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable
     regval &= ~SF_CTRL_SF_AES_REGION_START_MASK;
     regval |= ((start_addr / 1024) << SF_CTRL_SF_AES_REGION_START_SHIFT);
     putreg32(regval, region_reg_base + SF_CTRL_SF_AES_START_OFFSET);
+#endif
 }
 #endif
 
@@ -1201,6 +1287,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region(uint8_t region, uint8_t enable
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key(uint8_t region, uint8_t *key, uint8_t key_type)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_key
+    romapi_bflb_sf_ctrl_aes_set_key(region, key, key_type);
+#else
     uint32_t reg_base = 0;
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
@@ -1228,11 +1317,12 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key(uint8_t region, uint8_t *key, uin
 
         regval = SF_CTRL_SF_AES_KEY_7_OFFSET;
         while (i--) {
-            putreg32(__REV(BL_RDWD_FRM_BYTEP(key)), region_reg_base + regval);
+            putreg32(bflb_sf_ctrl_bswap32(BL_RDWD_FRM_BYTEP(key)), region_reg_base + regval);
             key += 4;
             regval -= 4;
         }
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1248,6 +1338,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key(uint8_t region, uint8_t *key, uin
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key_be(uint8_t region, uint8_t *key, uint8_t key_type)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_key_be
+    romapi_bflb_sf_ctrl_aes_set_key_be(region, key, key_type);
+#else
     uint32_t reg_base = 0;
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
@@ -1280,6 +1373,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key_be(uint8_t region, uint8_t *key, 
             regval += 4;
         }
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1295,6 +1389,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_key_be(uint8_t region, uint8_t *key, 
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv(uint8_t region, uint8_t *iv, uint32_t addr_offset)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_iv
+    romapi_bflb_sf_ctrl_aes_set_iv(region, iv, addr_offset);
+#else
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
 #else
@@ -1307,7 +1404,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv(uint8_t region, uint8_t *iv, uint3
         regval = SF_CTRL_SF_AES_IV_W3_OFFSET;
 
         while (i--) {
-            putreg32(__REV(BL_RDWD_FRM_BYTEP(iv)), region_reg_base + regval);
+            putreg32(bflb_sf_ctrl_bswap32(BL_RDWD_FRM_BYTEP(iv)), region_reg_base + regval);
             iv += 4;
             regval -= 4;
         }
@@ -1315,6 +1412,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv(uint8_t region, uint8_t *iv, uint3
         putreg32(addr_offset, region_reg_base + SF_CTRL_SF_AES_IV_W0_OFFSET);
         iv += 4;
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1330,6 +1428,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv(uint8_t region, uint8_t *iv, uint3
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv_be(uint8_t region, uint8_t *iv, uint32_t addr_offset)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_iv_be
+    romapi_bflb_sf_ctrl_aes_set_iv_be(region, iv, addr_offset);
+#else
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
 #else
@@ -1347,9 +1448,10 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv_be(uint8_t region, uint8_t *iv, ui
             regval += 4;
         }
 
-        putreg32(__REV(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
+        putreg32(bflb_sf_ctrl_bswap32(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
         iv += 4;
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1364,13 +1466,17 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_iv_be(uint8_t region, uint8_t *iv, ui
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region_offset(uint8_t region, uint32_t addr_offset)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_region_offset
+    romapi_bflb_sf_ctrl_aes_set_region_offset(region, addr_offset);
+#else
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
 #else
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
 #endif
 
-    putreg32(__REV(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
+    putreg32(bflb_sf_ctrl_bswap32(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
+#endif
 }
 
 #ifdef BFLB_SF_CTRL_AES_XTS_ENABLE
@@ -1387,6 +1493,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_region_offset(uint8_t region, uint32_
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_key(uint8_t region, uint8_t *key, uint8_t key_type)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_xts_set_key
+    romapi_bflb_sf_ctrl_aes_xts_set_key(region, key, key_type);
+#else
     uint32_t reg_base = 0;
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
     uint32_t regval = 0;
@@ -1404,11 +1513,12 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_key(uint8_t region, uint8_t *key,
         regval = SF_CTRL_SF_AES_KEY_7_OFFSET;
 
         while (i--) {
-            putreg32(__REV(BL_RDWD_FRM_BYTEP(key)), region_reg_base + regval);
+            putreg32(bflb_sf_ctrl_bswap32(BL_RDWD_FRM_BYTEP(key)), region_reg_base + regval);
             key += 4;
             regval -= 4;
         }
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1424,6 +1534,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_key(uint8_t region, uint8_t *key,
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_key_be(uint8_t region, uint8_t *key, uint8_t key_type)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_xts_set_key_be
+    romapi_bflb_sf_ctrl_aes_xts_set_key_be(region, key, key_type);
+#else
     uint32_t reg_base = 0;
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
     uint32_t regval = 0;
@@ -1446,6 +1559,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_key_be(uint8_t region, uint8_t *k
             regval += 4;
         }
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1461,6 +1575,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_key_be(uint8_t region, uint8_t *k
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_iv(uint8_t region, uint8_t *iv, uint32_t addr_offset)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_xts_set_iv
+    romapi_bflb_sf_ctrl_aes_xts_set_iv(region, iv, addr_offset);
+#else
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
     uint32_t regval = 0;
     uint32_t i = 3;
@@ -1477,6 +1594,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_iv(uint8_t region, uint8_t *iv, u
         putreg32(addr_offset, region_reg_base + SF_CTRL_SF_AES_IV_W0_OFFSET);
         iv += 4;
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1492,6 +1610,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_iv(uint8_t region, uint8_t *iv, u
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_iv_be(uint8_t region, uint8_t *iv, uint32_t addr_offset)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_xts_set_iv_be
+    romapi_bflb_sf_ctrl_aes_xts_set_iv_be(region, iv, addr_offset);
+#else
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, region);
     uint32_t regval = 0;
     uint32_t i = 3;
@@ -1501,13 +1622,14 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_iv_be(uint8_t region, uint8_t *iv
 
         while (i--) {
             iv += 4;
-            putreg32(__REV(BL_RDWD_FRM_BYTEP(iv)), region_reg_base + regval);
+            putreg32(bflb_sf_ctrl_bswap32(BL_RDWD_FRM_BYTEP(iv)), region_reg_base + regval);
             regval -= 4;
         }
 
-        putreg32(__REV(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
+        putreg32(bflb_sf_ctrl_bswap32(addr_offset), region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
         iv += 4;
     }
+#endif
 }
 #endif
 
@@ -1522,6 +1644,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_xts_set_iv_be(uint8_t region, uint8_t *iv
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_mode(uint8_t mode)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_mode
+    romapi_bflb_sf_ctrl_aes_set_mode(mode);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1534,6 +1659,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_mode(uint8_t mode)
         regval |= SF_CTRL_SF_AES_BLK_MODE;
     }
     putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1547,6 +1673,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_mode(uint8_t mode)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable(void)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_enable
+    romapi_bflb_sf_ctrl_aes_enable();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1555,6 +1684,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable(void)
     regval = getreg32(reg_base + SF_CTRL_SF_AES_OFFSET);
     regval |= SF_CTRL_SF_AES_EN;
     putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1568,6 +1698,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_enable(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_disable(void)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_disable
+    romapi_bflb_sf_ctrl_aes_disable();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1576,6 +1709,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_disable(void)
     regval = getreg32(reg_base + SF_CTRL_SF_AES_OFFSET);
     regval &= ~SF_CTRL_SF_AES_EN;
     putreg32(regval, reg_base + SF_CTRL_SF_AES_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1589,6 +1723,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_disable(void)
 __WEAK
 uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_is_aes_enable(void)
 {
+#ifdef romapi_bflb_sf_ctrl_is_aes_enable
+    romapi_bflb_sf_ctrl_is_aes_enable();
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1600,6 +1737,7 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_is_aes_enable(void)
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1615,6 +1753,9 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_is_aes_enable(void)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_set_flash_image_offset(uint32_t addr_offset, uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_sf_ctrl_set_flash_image_offset
+    romapi_bflb_sf_ctrl_set_flash_image_offset(addr_offset, group, bank);
+#else
     uint32_t reg_base = 0;
 
     reg_base = BFLB_SF_CTRL_BASE;
@@ -1639,6 +1780,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_flash_image_offset(uint32_t addr_offset, 
     }
 #endif
 #endif
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1653,6 +1795,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_set_flash_image_offset(uint32_t addr_offset, 
 __WEAK
 uint32_t ATTR_TCM_SECTION bflb_sf_ctrl_get_flash_image_offset(uint8_t group, uint8_t bank)
 {
+#ifdef romapi_bflb_sf_ctrl_get_flash_image_offset
+    return romapi_bflb_sf_ctrl_get_flash_image_offset(group, bank);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1677,6 +1822,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_ctrl_get_flash_image_offset(uint8_t group, uin
 #endif
 
     return regval;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1690,6 +1836,9 @@ uint32_t ATTR_TCM_SECTION bflb_sf_ctrl_get_flash_image_offset(uint8_t group, uin
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_lock_flash_image_offset(uint8_t lock)
 {
+#ifdef romapi_bflb_sf_ctrl_lock_flash_image_offset
+    romapi_bflb_sf_ctrl_lock_flash_image_offset(lock);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1702,6 +1851,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_lock_flash_image_offset(uint8_t lock)
         regval &= ~SF_CTRL_SF_ID_OFFSET_LOCK;
     }
     putreg32(regval, reg_base + SF_CTRL_2_OFFSET);
+#endif
 }
 
 #if defined(BL702) || defined(BL602)
@@ -1750,6 +1900,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_select_clock(uint8_t sahb_sram_sel)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg)
 {
+#ifdef romapi_bflb_sf_ctrl_sendcmd
+    romapi_bflb_sf_ctrl_sendcmd(cfg);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
     uint32_t time_out = 0;
@@ -1875,6 +2028,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg)
 
     //switch sf_clk_sahb_sram_sel = 0
     bflb_sf_ctrl_select_clock(0);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1888,6 +2042,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_disable_wrap_access(uint8_t disable)
 {
+#ifdef romapi_bflb_sf_ctrl_disable_wrap_access
+    romapi_bflb_sf_ctrl_disable_wrap_access(disable);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
 
@@ -1900,6 +2057,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_disable_wrap_access(uint8_t disable)
         regval |= SF_CTRL_SF_AHB2SIF_DISWRAP;
     }
     putreg32(regval, reg_base + SF_CTRL_1_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -1914,6 +2072,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_disable_wrap_access(uint8_t disable)
 __WEAK
 void ATTR_TCM_SECTION bflb_sf_ctrl_xip_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_valid)
 {
+#ifdef romapi_bflb_sf_ctrl_xip_set
+    romapi_bflb_sf_ctrl_xip_set(cfg, cmd_valid);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
     uint32_t time_out = 0;
@@ -2000,6 +2161,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip_set(struct sf_ctrl_cmd_cfg_type *cfg, uin
         regval &= ~SF_CTRL_SF_IF_1_DAT_RW;
     }
     putreg32(regval, reg_base + SF_CTRL_SF_IF_IAHB_0_OFFSET);
+#endif
 }
 
 #ifdef BFLB_SF_CTRL_PSRAM_ENABLE
@@ -2120,6 +2282,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_psram_read_set(struct sf_ctrl_cmd_cfg_type *c
 void ATTR_TCM_SECTION bflb_sf_ctrl_xip2_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_valid)
 #endif
 {
+#ifdef romapi_bflb_sf_ctrl_xip2_set
+    romapi_bflb_sf_ctrl_xip2_set(cfg, cmd_valid);
+#else
     uint32_t reg_base = 0;
     uint32_t regval = 0;
     uint32_t time_out = 0;
@@ -2206,6 +2371,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip2_set(struct sf_ctrl_cmd_cfg_type *cfg, ui
         regval &= ~SF_CTRL_SF_IF_4_DAT_RW;
     }
     putreg32(regval, reg_base + SF_CTRL_SF_IF_IAHB_9_OFFSET);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -2219,6 +2385,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_xip2_set(struct sf_ctrl_cmd_cfg_type *cfg, ui
 __WEAK
 uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_busy_state(void)
 {
+#ifdef romapi_bflb_sf_ctrl_get_busy_state
+    return romapi_bflb_sf_ctrl_get_busy_state();
+#else
     uint32_t regval = 0;
     uint32_t cmd_offset = 0;
 
@@ -2238,6 +2407,7 @@ uint8_t ATTR_TCM_SECTION bflb_sf_ctrl_get_busy_state(void)
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -2264,6 +2434,9 @@ void bflb_sf_ctrl_irqhandler(void)
 *******************************************************************************/
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_get_iv_be(uint8_t region, uint8_t *iv)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_get_iv_be
+    romapi_bflb_sf_ctrl_aes_get_iv_be(region, iv);
+#else
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
 #else
@@ -2278,6 +2451,7 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_get_iv_be(uint8_t region, uint8_t *iv)
         iv_w[3] = getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET);
         arch_memcpy(iv, (uint8_t *)&iv_w, sizeof(iv_w));
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -2291,6 +2465,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_get_iv_be(uint8_t region, uint8_t *iv)
 *******************************************************************************/
 void ATTR_TCM_SECTION bflb_sf_ctrl_aes_get_iv_le(uint8_t region, uint8_t *iv)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_get_iv_le
+    romapi_bflb_sf_ctrl_aes_get_iv_le(region, iv);
+#else
 #if defined(BL602)
     uint32_t region_reg_base = bflb_sf_ctrl_get_aes_region(BFLB_SF_CTRL_BASE, !region);
 #else
@@ -2299,12 +2476,13 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_get_iv_le(uint8_t region, uint8_t *iv)
     uint32_t iv_w[4] = { 0 };
 
     if (iv != NULL) {
-        iv_w[3] = __REV(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W0_OFFSET));
-        iv_w[2] = __REV(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W1_OFFSET));
-        iv_w[1] = __REV(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W2_OFFSET));
-        iv_w[0] = __REV(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET));
+        iv_w[3] = bflb_sf_ctrl_bswap32(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W0_OFFSET));
+        iv_w[2] = bflb_sf_ctrl_bswap32(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W1_OFFSET));
+        iv_w[1] = bflb_sf_ctrl_bswap32(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W2_OFFSET));
+        iv_w[0] = bflb_sf_ctrl_bswap32(getreg32(region_reg_base + SF_CTRL_SF_AES_IV_W3_OFFSET));
         arch_memcpy(iv, (uint8_t *)&iv_w, sizeof(iv_w));
     }
+#endif
 }
 
 /****************************************************************************/ /**
@@ -2317,6 +2495,9 @@ void ATTR_TCM_SECTION bflb_sf_ctrl_aes_get_iv_le(uint8_t region, uint8_t *iv)
 *******************************************************************************/
 int32_t ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_decrypt_region_be(struct bflb_sf_ctrl_decrypt_type *parm)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_decrypt_region_be
+    return romapi_bflb_sf_ctrl_aes_set_decrypt_region_be(parm);
+#else
     uint8_t temp_iv[16] = { 0 };
     uint8_t *p_iv = NULL;
 
@@ -2359,6 +2540,7 @@ int32_t ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_decrypt_region_be(struct bflb_sf_c
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -2371,6 +2553,9 @@ int32_t ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_decrypt_region_be(struct bflb_sf_c
 *******************************************************************************/
 int32_t ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_decrypt_region_le(struct bflb_sf_ctrl_decrypt_type *parm)
 {
+#ifdef romapi_bflb_sf_ctrl_aes_set_decrypt_region_le
+    return romapi_bflb_sf_ctrl_aes_set_decrypt_region_le(parm);
+#else
     uint8_t temp_iv[16] = { 0 };
     uint8_t *p_iv = NULL;
 
@@ -2413,6 +2598,7 @@ int32_t ATTR_TCM_SECTION bflb_sf_ctrl_aes_set_decrypt_region_le(struct bflb_sf_c
     }
 
     return 0;
+#endif
 }
 
 /*@} end of group SF_CTRL_Public_Functions */

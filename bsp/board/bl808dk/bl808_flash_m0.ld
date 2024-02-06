@@ -16,20 +16,20 @@ ENTRY(__start)
 
 StackSize    = 0x0400; /*  1KB */
 HeapMinSize  = 0x1000; /*  4KB */
-psram_min_size = 0x1000;
-
+psram_heap_min_size = 0x1000;
 __EM_SIZE = DEFINED(btble_controller_init) ? 32K : 0K;
+wifi_ram_max_size = 0K;
+
+remain_wifi_ram = 160K - wifi_ram_max_size - __EM_SIZE;
 
 MEMORY
 {
     fw_header_memory  (rx)  : ORIGIN = 0x58000000 - 0x1000, LENGTH = 4K
     xip_memory  (rx)  : ORIGIN = 0x58000000, LENGTH = 32M
     ram_psram  (wxa)  : ORIGIN = 0x50000000, LENGTH = 64M
-    itcm_memory (rx)  : ORIGIN = 0x62020000, LENGTH = 20K
-    dtcm_memory (rx)  : ORIGIN = 0x62025000, LENGTH = 4K
-    nocache_ram_memory (!rx) : ORIGIN = 0x22026000, LENGTH = 16K
-    ram_memory  (!rx) : ORIGIN = 0x6202A000, LENGTH = 24K
-    ram_wifi  (wxa)   : ORIGIN = 0x22030000, LENGTH = 160K - __EM_SIZE
+    ram_nocache (!rx) : ORIGIN = 0x22020400, LENGTH = 64K - 1K + remain_wifi_ram /* reserved 1k for security */
+    ram_memory  (!rx) : ORIGIN = 0x62020400, LENGTH = 64K - 1K + remain_wifi_ram /* reserved 1k for security */
+    ram_wifi  (wxa)   : ORIGIN = 0x23038000 - wifi_ram_max_size - __EM_SIZE, LENGTH = wifi_ram_max_size
     xram_memory  (!rx) : ORIGIN = 0x40000000, LENGTH = 16K
 }
 
@@ -94,14 +94,10 @@ SECTIONS
         /* _dump_sections for bflb_coredump.c*/
         . = ALIGN(4);
         PROVIDE( _dump_sections = ABSOLUTE(.));
-        LONG(ORIGIN(itcm_memory));
-        LONG(LENGTH(itcm_memory));
-        LONG(ORIGIN(dtcm_memory));
-        LONG(LENGTH(dtcm_memory));
         LONG(ORIGIN(ram_memory));
         LONG(LENGTH(ram_memory));
-        LONG(ORIGIN(nocache_ram_memory));
-        LONG(LENGTH(nocache_ram_memory));
+        LONG(ORIGIN(ram_nocache));
+        LONG(LENGTH(ram_nocache));
         LONG(ORIGIN(ram_wifi));
         LONG(LENGTH(ram_wifi));
         LONG(ORIGIN(xram_memory));
@@ -121,7 +117,38 @@ SECTIONS
     } > xip_memory
 
     . = ALIGN(4);
-    __itcm_load_addr = .;
+    __nocache_ram_load_addr = .;
+
+    .nocache_ram_region  : AT (__nocache_ram_load_addr)
+    {
+        . = ALIGN(4);
+        __nocache_ram_data_start__ = .;
+
+        *(.nocache_ram)
+
+        . = ALIGN(4);
+        __nocache_ram_data_end__ = .;
+    } > ram_nocache
+
+    .nocache_noinit_ram_region (NOLOAD) :
+    {
+        . = ALIGN(4);
+        __nocache_noinit_ram_data_start__ = .;
+
+        *(.nocache_noinit_ram)
+        *(.noncacheable)
+
+        . = ALIGN(4);
+        __nocache_noinit_ram_data_end__ = .;
+    } > ram_nocache
+
+    /* Skip the nocache region */ 
+    .ram_skip_nocache_region (NOLOAD) :
+    {
+        . += (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache));
+    } > ram_memory
+
+    __itcm_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
 
     .itcm_region : AT (__itcm_load_addr)
     {
@@ -150,7 +177,7 @@ SECTIONS
 
         . = ALIGN(4);
         __tcm_code_end__ = .;
-    } > itcm_memory
+    } > ram_memory
 
     __dtcm_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
 
@@ -164,44 +191,9 @@ SECTIONS
 
         . = ALIGN(4);
         __tcm_data_end__ = .;
-    } > dtcm_memory
+    } > ram_memory
 
-    /*************************************************************************/
-    /* .stack_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of stack sections, and assign
-     * values to stack symbols later */
-    .stack_dummy (NOLOAD):
-    {
-        . = ALIGN(0x4);
-        . = . + StackSize;
-        . = ALIGN(0x4);
-    } > dtcm_memory
-
-    /* Set stack top to end of RAM, and stack limit move down by
-     * size of stack_dummy section */
-    __StackTop = ORIGIN(dtcm_memory) + LENGTH(dtcm_memory);
-    PROVIDE( __freertos_irq_stack_top = __StackTop);
-    PROVIDE( _sp_main = __StackTop);
-    PROVIDE( _sp_base = __StackTop - StackSize);
-    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
-
-    /* Check if data + heap + stack exceeds RAM limit */
-    ASSERT(__StackLimit >= __tcm_data_end__, "region RAM overflowed with stack")
-    /*************************************************************************/
-    __nocache_ram_load_addr = __dtcm_load_addr + SIZEOF(.dtcm_region);
-
-    .nocache_ram_region  : AT (__nocache_ram_load_addr)
-    {
-        . = ALIGN(4);
-        __nocache_ram_data_start__ = .;
-
-        *(.nocache_ram)
-
-        . = ALIGN(4);
-        __nocache_ram_data_end__ = .;
-    } > nocache_ram_memory
-
-    __ram_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
+    __ram_load_addr = __dtcm_load_addr + SIZEOF(.nocache_ram_region);
 
     /* Data section */
     RAM_DATA : AT (__ram_load_addr)
@@ -217,6 +209,20 @@ SECTIONS
         *(.sdata.*)
         *(.sdata2)
         *(.sdata2.*)
+
+        . = ALIGN(8);
+        *(._k_queue.static.*)
+        *(._k_sem.static.*)
+        *(._k_mutex.static.*)
+        _bt_gatt_service_static_list_start = .;
+        KEEP(*(SORT_BY_NAME("._bt_gatt_service_static.static.*")))
+        _bt_gatt_service_static_list_end = .;
+        _bt_l2cap_fixed_chan_list_start = .;
+        KEEP(*(SORT_BY_NAME("._bt_l2cap_fixed_chan.static.*")))
+        _bt_l2cap_fixed_chan_list_end = .;
+        _bt_l2cap_br_fixed_chan_list_start = .;
+        KEEP(*(SORT_BY_NAME("._bt_l2cap_br_fixed_chan.static.*")))
+        _bt_l2cap_br_fixed_chan_list_end = .;
 
         . = ALIGN(4);
         __bflog_tags_start__ = .;
@@ -242,6 +248,19 @@ SECTIONS
     __etext_final = (__psram_load_addr + SIZEOF (.psram_data_region));
     ASSERT(__etext_final <= ORIGIN(xip_memory) + LENGTH(xip_memory), "code memory overflow")
 
+    .stack (NOLOAD):
+    {
+        __StackLimit = .;
+        . = ALIGN(16);
+        . = . + StackSize;
+        __StackTop = .;
+        __freertos_irq_stack_top = .;
+    } > ram_memory
+
+    PROVIDE( __freertos_irq_stack_top = __StackTop);
+    PROVIDE( _sp_main = __StackTop);
+    PROVIDE( _sp_base = __StackLimit);
+
     .bss (NOLOAD) :
     {
         . = ALIGN(4);
@@ -265,18 +284,6 @@ SECTIONS
         . = ALIGN(4);
         __noinit_data_end__ = .;
     } > ram_memory
-
-    .nocache_noinit_ram_region (NOLOAD) :
-    {
-        . = ALIGN(4);
-        __nocache_noinit_ram_data_start__ = .;
-
-        *(.nocache_noinit_ram)
-        *(.noncacheable)
-
-        . = ALIGN(4);
-        __nocache_noinit_ram_data_end__ = .;
-    } > nocache_ram_memory
 
     .heap (NOLOAD):
     {
@@ -315,30 +322,8 @@ SECTIONS
     } > ram_psram
 
     __psram_limit = ORIGIN(ram_psram) + LENGTH(ram_psram);
-    ASSERT(__psram_limit - __psram_heap_base >= psram_min_size, "psram heap region overflow")
+    ASSERT(__psram_limit - __psram_heap_base >= psram_heap_min_size, "psram heap region overflow")
  
-    .wifibss  (NOLOAD) :
-    {
-        PROVIDE( __wifi_bss_start = ADDR(.wifibss) );
-        PROVIDE( __wifi_bss_end = ADDR(.wifibss) + SIZEOF(.wifibss) );
-        *ipc_shared.o(COMMON)
-        *sdu_shared.o(COMMON)
-        *hal_desc.o(COMMON)
-        *txl_buffer_shared.o(COMMON)
-        *txl_frame_shared.o(COMMON)
-        *scan_shared.o(COMMON)
-        *scanu_shared.o(COMMON)
-        *mfp_bip.o(COMMON)
-        *me_mic.o(COMMON)
-        *bl_sta_mgmt_others.o(COMMON)
-        *bl_pmk_mgmt.o(COMMON)
-        *bl_pmk_mgmt_internal.o(COMMON)
-        *libwifi_drv.a:bl_utils.o(COMMON)
-        *libwifi_drv.a:bl_utils.o(.bss*)
-        *(.wifi_ram*)
-        . = ALIGN(16);
-    } > ram_wifi
-
     PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
 }
 

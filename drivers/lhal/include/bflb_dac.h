@@ -63,6 +63,14 @@
   * @}
   */
 
+// clang-format off
+#define IS_DAC_CLK_DIV(type)   (((type) == DAC_CLK_DIV_16) || \
+                                  ((type) == DAC_CLK_DIV_32) || \
+                                  ((type) == DAC_CLK_DIV_64) || \
+                                  ((type) == DAC_CLK_DIV_1))
+
+// clang-format on
+
 #ifdef __cplusplus
 extern "C" {
 #endif

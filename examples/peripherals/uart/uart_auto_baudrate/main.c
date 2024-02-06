@@ -42,6 +42,7 @@ int main(void)
     cfg.flow_ctrl = 0;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 7;
+    cfg.bit_order = UART_LSB_FIRST;
     bflb_uart_init(uartx, &cfg);
 
     bflb_uart_feature_control(uartx, UART_CMD_SET_AUTO_BAUD, 1);

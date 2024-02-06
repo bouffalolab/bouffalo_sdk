@@ -287,22 +287,6 @@ void bflb_gpio_reset(struct bflb_device_s *dev, uint8_t pin);
 bool bflb_gpio_read(struct bflb_device_s *dev, uint8_t pin);
 
 /**
- * @brief Write gpio pin 0~31.
- *
- * @param [in] dev device handle
- * @param [in] val gpio pin 0~31 value
- */
-void bflb_gpio_pin0_31_write(struct bflb_device_s *dev, uint32_t val);
-
-/**
- * @brief Write gpio pin 32~63.
- *
- * @param [in] dev device handle
- * @param [in] val gpio pin 32~63 value
- */
-void bflb_gpio_pin32_63_write(struct bflb_device_s *dev, uint32_t val);
-
-/**
  * @brief Read level from gpio pin 0~31.
  *
  * @param [in] dev device handle

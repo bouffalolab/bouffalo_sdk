@@ -30,9 +30,14 @@ void audio_gpio_init(void)
 
     gpio = bflb_device_get_by_name("gpio");
 
-    /* auadc input */
-    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* ain_ch4 */
-    bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0); /* ain_ch5 */
+    /* auadc ch0 */
+    //bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+    /* auadc ch3 */
+    //bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+    /* auadc ch4 */
+    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+    /* auadc ch7 */
+    bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
 
     /* audac pwm output mode */
     // bflb_gpio_init(gpio, GPIO_PIN_14, GPIO_FUNC_AUDAC_PWM | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
@@ -66,7 +71,7 @@ static void auadc_init(void)
         .adc_mode = AUADC_ADC_MODE_AUDIO,
         .adc_pga_mode = AUADC_ADC_PGA_MODE_AC_DIFFER,
         .adc_pga_posi_ch = AUADC_ADC_ANALOG_CH_4,
-        .adc_pga_nega_ch = AUADC_ADC_ANALOG_CH_5,
+        .adc_pga_nega_ch = AUADC_ADC_ANALOG_CH_7,
         .adc_pga_gain = 21,
     };
 

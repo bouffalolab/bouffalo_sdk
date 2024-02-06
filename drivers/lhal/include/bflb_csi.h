@@ -59,6 +59,11 @@
   * @}
   */
 
+// clang-format off
+#define IS_CSI_LANE_NUMBER(type)      ((type) <= CSI_LANE_NUMBER_2)
+
+// clang-format on
+
 /**
  * @brief CSI configuration structure
  *

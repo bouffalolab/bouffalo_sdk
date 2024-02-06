@@ -2035,6 +2035,12 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Aon_Pad_Cfg(uint8_t aonPadHwCtrlEn, uint8_t aon
 
     CHECK_PARAM(IS_HBN_AON_PAD_TYPE(aonGpio));
 
+    if (GLB_PACKAGE_TYPE_QFN56 != GLB_Get_Package_Type()) {
+        if ((aonGpio == HBN_AON_PAD_GPIO18) || (aonGpio == HBN_AON_PAD_GPIO19)) {
+            return ERROR;
+        }
+    }
+
     if (NULL == aonPadCfg) {
         return ERROR;
     }

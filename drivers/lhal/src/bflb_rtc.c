@@ -11,6 +11,9 @@
 
 void bflb_rtc_disable(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_rtc_disable
+    romapi_bflb_rtc_disable(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -20,10 +23,14 @@ void bflb_rtc_disable(struct bflb_device_s *dev)
     regval = getreg32(reg_base + HBN_CTL_OFFSET);
     regval &= ~HBN_RTC_ENABLE;
     putreg32(regval, reg_base + HBN_CTL_OFFSET);
+#endif
 }
 
 void bflb_rtc_set_time(struct bflb_device_s *dev, uint64_t time)
 {
+#ifdef romapi_bflb_rtc_set_time
+    romapi_bflb_rtc_set_time(dev, time);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint64_t rtc_cnt;
@@ -62,10 +69,14 @@ void bflb_rtc_set_time(struct bflb_device_s *dev, uint64_t time)
     regval = getreg32(reg_base + HBN_CTL_OFFSET);
     regval |= HBN_RTC_ENABLE;
     putreg32(regval, reg_base + HBN_CTL_OFFSET);
+#endif
 }
 
 uint64_t bflb_rtc_get_time(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_rtc_get_time
+    return romapi_bflb_rtc_get_time(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint64_t time_l;
@@ -85,6 +96,7 @@ uint64_t bflb_rtc_get_time(struct bflb_device_s *dev)
     time_h = getreg32(reg_base + HBN_RTC_TIME_H_OFFSET) & 0xff;
 
     return (((uint64_t)time_h << 32) | (uint64_t)time_l);
+#endif
 }
 
 #define SEC_PER_MIN  ((time_t)60)

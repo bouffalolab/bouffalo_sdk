@@ -54,9 +54,9 @@ void open_nb_socket(BIO**       bio,
 
     /* open BIO socket */
     char * addr_copy = (char*)malloc(strlen(addr) + 1);
-    strcpy(addr_copy,addr);
+    strlcpy(addr_copy, addr, strlen(addr) + 1);
     char * port_copy = (char*)malloc(strlen(port) + 1);
-    strcpy(port_copy,port);
+    strlcpy(port_copy, port, strlen(port) + 1);
 
     *bio = BIO_new_ssl_connect(*ssl_ctx);
     BIO_get_ssl(*bio, &ssl);

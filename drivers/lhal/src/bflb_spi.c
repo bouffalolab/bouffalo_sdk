@@ -10,6 +10,18 @@
 
 void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_SPI_ROLE(config->role));
+    LHAL_PARAM_ASSERT(IS_SPI_MODE(config->mode));
+    LHAL_PARAM_ASSERT(IS_SPI_DATA_WIDTH(config->data_width));
+    LHAL_PARAM_ASSERT(IS_SPI_BIT_ORDER(config->bit_order));
+    LHAL_PARAM_ASSERT(IS_SPI_BYTE_ORDER(config->byte_order));
+    LHAL_PARAM_ASSERT(IS_SPI_THRESHOLD(config->tx_fifo_threshold));
+    LHAL_PARAM_ASSERT(IS_SPI_THRESHOLD(config->rx_fifo_threshold));
+
+#ifdef romapi_bflb_spi_init
+    romapi_bflb_spi_init(dev, config);
+#else
     uint32_t reg_base;
     uint32_t regval;
     uint32_t div;
@@ -122,20 +134,28 @@ void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *co
         regval &= ~SPI_CR_SPI_M_EN;
     }
     putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_spi_deinit(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_spi_deinit
+    romapi_bflb_spi_deinit(dev);
+#else
     uint32_t regval;
     /* disable SPI */
     regval = getreg32(dev->reg_base + SPI_CONFIG_OFFSET);
     regval &= ~SPI_CR_SPI_S_EN;
     regval &= ~SPI_CR_SPI_M_EN;
     putreg32(regval, dev->reg_base + SPI_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_spi_link_txdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_spi_link_txdma
+    romapi_bflb_spi_link_txdma(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -147,10 +167,14 @@ void bflb_spi_link_txdma(struct bflb_device_s *dev, bool enable)
         regval &= ~SPI_DMA_TX_EN;
     }
     putreg32(regval, reg_base + SPI_FIFO_CONFIG_0_OFFSET);
+#endif
 }
 
 void bflb_spi_link_rxdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_spi_link_rxdma
+    romapi_bflb_spi_link_rxdma(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -162,11 +186,15 @@ void bflb_spi_link_rxdma(struct bflb_device_s *dev, bool enable)
         regval &= ~SPI_DMA_RX_EN;
     }
     putreg32(regval, reg_base + SPI_FIFO_CONFIG_0_OFFSET);
+#endif
 }
 
 /* Read and write a frame of data */
 ATTR_TCM_SECTION uint32_t bflb_spi_poll_send(struct bflb_device_s *dev, uint32_t data)
 {
+#ifdef romapi_bflb_spi_poll_send
+    return romapi_bflb_spi_poll_send(dev, data);
+#else
     uint32_t reg_base = dev->reg_base;
     uint32_t regval;
     uint8_t fifo_cnt;
@@ -227,11 +255,15 @@ ATTR_TCM_SECTION uint32_t bflb_spi_poll_send(struct bflb_device_s *dev, uint32_t
     regval = getreg32(reg_base + SPI_FIFO_RDATA_OFFSET);
 
     return regval;
+#endif
 }
 
 /* read and write data */
 ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const void *txbuffer, void *rxbuffer, size_t nbytes)
 {
+#ifdef romapi_bflb_spi_poll_exchange
+    return romapi_bflb_spi_poll_exchange(dev, txbuffer, rxbuffer, nbytes);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
     uint32_t tx_cnt;
@@ -395,10 +427,14 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
         }
     }
     return 0;
+#endif
 }
 
 void bflb_spi_txint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_spi_txint_mask
+    romapi_bflb_spi_txint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
 
@@ -409,10 +445,14 @@ void bflb_spi_txint_mask(struct bflb_device_s *dev, bool mask)
         regval &= ~SPI_CR_SPI_TXF_MASK;
     }
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
+#endif
 }
 
 void bflb_spi_rxint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_spi_rxint_mask
+    romapi_bflb_spi_rxint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
 
@@ -423,10 +463,14 @@ void bflb_spi_rxint_mask(struct bflb_device_s *dev, bool mask)
         regval &= ~SPI_CR_SPI_RXF_MASK;
     }
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
+#endif
 }
 
 void bflb_spi_tcint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_spi_tcint_mask
+    romapi_bflb_spi_tcint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
 
@@ -437,10 +481,14 @@ void bflb_spi_tcint_mask(struct bflb_device_s *dev, bool mask)
         regval &= ~SPI_CR_SPI_END_MASK;
     }
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
+#endif
 }
 
 void bflb_spi_errint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_spi_errint_mask
+    romapi_bflb_spi_errint_mask(dev, mask);
+#else
     uint32_t regval;
     uint32_t reg_base = dev->reg_base;
 
@@ -455,10 +503,14 @@ void bflb_spi_errint_mask(struct bflb_device_s *dev, bool mask)
         regval &= ~SPI_CR_SPI_FER_MASK;
     }
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
+#endif
 }
 
 uint32_t bflb_spi_get_intstatus(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_spi_get_intstatus
+    return romapi_bflb_spi_get_intstatus(dev);
+#else
     uint32_t reg_base;
     uint32_t int_status;
     uint32_t int_mask;
@@ -467,10 +519,14 @@ uint32_t bflb_spi_get_intstatus(struct bflb_device_s *dev)
     int_status = getreg32(reg_base + SPI_INT_STS_OFFSET) & 0x1f;
     int_mask = getreg32(reg_base + SPI_INT_STS_OFFSET) >> 8 & 0x1f;
     return (int_status & ~int_mask);
+#endif
 }
 
 void bflb_spi_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
 {
+#ifdef romapi_bflb_spi_int_clear
+    romapi_bflb_spi_int_clear(dev, int_clear);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -478,10 +534,14 @@ void bflb_spi_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
     regval = getreg32(reg_base + SPI_INT_STS_OFFSET);
     regval |= int_clear;
     putreg32(regval, reg_base + SPI_INT_STS_OFFSET);
+#endif
 }
 
 bool bflb_spi_isbusy(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_spi_isbusy
+    romapi_bflb_spi_isbusy(dev);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -506,10 +566,14 @@ bool bflb_spi_isbusy(struct bflb_device_s *dev)
     }
 
     return false;
+#endif
 }
 
 int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_spi_init
+    return romapi_bflb_spi_init(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t reg_base;
     uint32_t regval;
@@ -694,4 +758,5 @@ int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     }
 
     return ret;
+#endif
 }

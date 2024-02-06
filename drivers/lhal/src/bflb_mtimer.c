@@ -42,6 +42,10 @@ __WEAK uint32_t ATTR_TCM_SECTION bflb_mtimer_get_freq(void)
 
 uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_us(void)
 {
+    volatile uint32_t timeout = 0;
+#ifdef romapi_bflb_mtimer_get_time_us
+    return romapi_bflb_mtimer_get_time_us();
+#else
     volatile uint64_t tmp_low, tmp_high, tmp_low1, tmp_high1;
 
     do {
@@ -56,11 +60,16 @@ uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_us(void)
         tmp_low1 = (uint64_t)csi_coret_get_value();
         tmp_high1 = (uint64_t)csi_coret_get_valueh();
 #endif
+        timeout++;
+        if (timeout == 1000) {
+            return 0;
+        }
     } while (tmp_low > tmp_low1 || tmp_high != tmp_high1);
 #ifdef CONFIG_MTIMER_CUSTOM_FREQUENCE
     return ((uint64_t)(((tmp_high1 << 32) + tmp_low1)) * ((uint64_t)(1 * 1000 * 1000)) / bflb_mtimer_get_freq());
 #else
     return (uint64_t)(((tmp_high1 << 32) + tmp_low1));
+#endif
 #endif
 }
 
@@ -97,6 +106,9 @@ uint32_t ATTR_TCM_SECTION __attribute__((weak)) __div64_32(uint64_t *n, uint32_t
 
 uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_ms(void)
 {
+#ifdef romapi_bflb_mtimer_get_time_ms
+    return romapi_bflb_mtimer_get_time_ms();
+#else
 #ifdef BFLB_BOOT2
     uint64_t ret = bflb_mtimer_get_time_us();
     __div64_32(&ret, 1000);
@@ -104,20 +116,29 @@ uint64_t ATTR_TCM_SECTION bflb_mtimer_get_time_ms(void)
 #else
     return bflb_mtimer_get_time_us() / 1000;
 #endif
+#endif
 }
 
 void ATTR_TCM_SECTION bflb_mtimer_delay_us(uint32_t time)
 {
+#ifdef romapi_bflb_mtimer_delay_us
+    return romapi_bflb_mtimer_delay_us(time);
+#else
     uint64_t start_time = bflb_mtimer_get_time_us();
 
     while (bflb_mtimer_get_time_us() - start_time < time) {
     }
+#endif
 }
 
 void ATTR_TCM_SECTION bflb_mtimer_delay_ms(uint32_t time)
 {
+#ifdef romapi_bflb_mtimer_delay_ms
+    return romapi_bflb_mtimer_delay_ms(time);
+#else
     uint64_t start_time = bflb_mtimer_get_time_ms();
 
     while (bflb_mtimer_get_time_ms() - start_time < time) {
     }
+#endif
 }

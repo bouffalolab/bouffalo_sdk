@@ -7,9 +7,9 @@
 #include "bl616_aon.h"
 #include "bl616_pm.h"
 
-#define BL_LP_IO_RES_PULL_UP    1
-#define BL_LP_IO_RES_PULL_DOWN  2
-#define BL_LP_IO_RES_NONE       3
+#define BL_LP_IO_RES_PULL_UP   1
+#define BL_LP_IO_RES_PULL_DOWN 2
+#define BL_LP_IO_RES_NONE      3
 
 static void bl_lp_set_aon_io(int pin, int trigMode, int res_mode)
 {
@@ -67,10 +67,10 @@ static void bl_lp_set_pds_io(int pin, int trigMode, int res_mode)
     uint8_t gpio_grp;
     uint32_t tmpVal;
 
-    if( pin > 19) {
-        gpio_grp = (pin-4)/8;
+    if (pin > 19) {
+        gpio_grp = (pin - 4) / 8;
     } else {
-        gpio_grp = pin/8;
+        gpio_grp = pin / 8;
     }
 
     gpio_cfg.drive = 0;
@@ -93,17 +93,16 @@ static void bl_lp_set_pds_io(int pin, int trigMode, int res_mode)
         pd = 0;
     }
 
-    PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(gpio_grp, pu, pd, 1);
+    PDS_Set_GPIO_Pad_Pn_Pu_Pd_Ie(gpio_grp / 2, pu, pd, 1);
 
     PDS_Set_GPIO_Pad_IntClr(gpio_grp);
     PDS_Set_GPIO_Pad_IntMode(gpio_grp, trigMode);
 
-
     tmpVal = BL_RD_REG(PDS_BASE, PDS_GPIO_PD_SET);
-    if( pin > 19) {
-        tmpVal &= ~(1<<(pin-4));
+    if (pin > 19) {
+        tmpVal &= ~(1 << (pin - 4));
     } else {
-        tmpVal &= ~(1<<pin);
+        tmpVal &= ~(1 << pin);
     }
     BL_WR_REG(PDS_BASE, PDS_GPIO_PD_SET, tmpVal);
 
@@ -127,8 +126,8 @@ int main(void)
     printf("enter pds mode\r\n");
     bflb_mtimer_delay_ms(100);
 
-    bl_lp_set_pds_io(0,PDS_GPIO_INT_SYNC_HIGH_LEVEL,BL_LP_IO_RES_PULL_DOWN);
-    bl_lp_set_aon_io(19,HBN_GPIO_INT_TRIGGER_SYNC_HIGH_LEVEL,BL_LP_IO_RES_PULL_DOWN);
+    bl_lp_set_pds_io(0, PDS_GPIO_INT_SYNC_HIGH_LEVEL, BL_LP_IO_RES_PULL_DOWN);
+    bl_lp_set_aon_io(19, HBN_GPIO_INT_TRIGGER_SYNC_HIGH_LEVEL, BL_LP_IO_RES_PULL_DOWN);
 
     /* sleep time must set zero to avoid using rtc */
     pm_pds_mode_enter(PM_PDS_LEVEL_15, 0);

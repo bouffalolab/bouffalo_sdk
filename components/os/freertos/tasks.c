@@ -321,6 +321,9 @@ typedef struct tskTaskControlBlock       /* The old naming convention is used to
 
     #if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 )
         void * pvThreadLocalStoragePointers[ configNUM_THREAD_LOCAL_STORAGE_POINTERS ];
+    #if ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+        TlsDeleteCallbackFunction_t pvThreadLocalStoragePointersDelCallback[ configNUM_THREAD_LOCAL_STORAGE_POINTERS ];
+    #endif
     #endif
 
     #if ( configGENERATE_RUN_TIME_STATS == 1 )
@@ -1014,6 +1017,9 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
     #if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS != 0 )
         {
             memset( ( void * ) &( pxNewTCB->pvThreadLocalStoragePointers[ 0 ] ), 0x00, sizeof( pxNewTCB->pvThreadLocalStoragePointers ) );
+            #if ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS == 1)
+            memset( ( void * ) &( pxNewTCB->pvThreadLocalStoragePointersDelCallback[ 0 ] ), 0x00, sizeof( pxNewTCB->pvThreadLocalStoragePointersDelCallback ) );
+            #endif
         }
     #endif
 
@@ -1189,6 +1195,46 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
         mtCOVERAGE_TEST_MARKER();
     }
 }
+/*-----------------------------------------------------------*/
+
+#if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 ) && ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+
+    UBaseType_t vTaskSetThreadLocalStoragePointerAndDelCallback( TaskHandle_t xTaskToSet, BaseType_t xIndex, void *pvValue , TlsDeleteCallbackFunction_t xDelCallback)
+    {
+        TCB_t *pxTCB;
+        UBaseType_t uxReturn = pdFALSE;
+
+        if( xIndex >= configNUM_THREAD_LOCAL_STORAGE_POINTERS )
+        {
+            return uxReturn;
+        }
+
+        taskENTER_CRITICAL();
+        pxTCB = prvGetTCBFromHandle( xTaskToSet );
+        pxTCB->pvThreadLocalStoragePointers[ xIndex ] = pvValue;
+        pxTCB->pvThreadLocalStoragePointersDelCallback[ xIndex ] = xDelCallback;
+        taskEXIT_CRITICAL();
+
+        uxReturn = pdTRUE;
+        return uxReturn;
+    }
+
+    static void prvDeleteTLS( TCB_t *pxTCB )
+    {
+        configASSERT( pxTCB );
+        for( int x = 0; x < configNUM_THREAD_LOCAL_STORAGE_POINTERS; x++ )
+        {
+            if (pxTCB->pvThreadLocalStoragePointersDelCallback[ x ] != NULL)
+            {
+                pxTCB->pvThreadLocalStoragePointersDelCallback[ x ](x, pxTCB->pvThreadLocalStoragePointers[ x ]);
+            }
+
+            pxTCB->pvThreadLocalStoragePointers[ x ] = NULL;
+            pxTCB->pvThreadLocalStoragePointersDelCallback[ x ] = NULL;
+        }
+    }
+
+#endif /* ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 ) && ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS ) */
 /*-----------------------------------------------------------*/
 
 #if ( INCLUDE_vTaskDelete == 1 )
@@ -4026,6 +4072,13 @@ static void prvCheckTasksWaitingTermination( void )
          * above the vPortFree() calls.  The call is also used by ports/demos that
          * want to allocate and clean RAM statically. */
         portCLEAN_UP_TCB( pxTCB );
+
+        /* Check if TLS is enable, and there are Callbacks which are used for cleaning TLS related storage */
+        #if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 ) && ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+        {
+            prvDeleteTLS( pxTCB );
+        }
+        #endif
 
         /* Free up the memory allocated by the scheduler for the task.  It is up
          * to the task to free any memory allocated at the application level.

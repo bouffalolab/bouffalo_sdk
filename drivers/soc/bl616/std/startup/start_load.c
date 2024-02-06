@@ -10,6 +10,7 @@ extern uint32_t __itcm_load_addr;
 extern uint32_t __dtcm_load_addr;
 extern uint32_t __ram_load_addr;
 extern uint32_t __nocache_ram_load_addr;
+extern uint32_t __psram_load_addr;
 
 extern uint32_t __text_code_start__;
 extern uint32_t __text_code_end__;
@@ -25,6 +26,8 @@ extern uint32_t __wifi_bss_start;
 extern uint32_t __wifi_bss_end;
 extern uint32_t __noinit_data_start__;
 extern uint32_t __noinit_data_end__;
+extern uint32_t __psram_data_start__;
+extern uint32_t __psram_data_end__;
 #ifndef CONIFG_DISABLE_NOCACHE_RAM_LOAD
 extern uint32_t __nocache_ram_data_start__;
 extern uint32_t __nocache_ram_data_end__;
@@ -61,15 +64,24 @@ void start_load(void)
         *pDest++ = *pSrc++;
     }
 
-    /* BF Add OCARAM data copy */
+    /* Add OCARAM data copy */
     pSrc = &__ram_load_addr;
     pDest = &__ram_data_start__;
 
     for (; pDest < &__ram_data_end__;) {
         *pDest++ = *pSrc++;
     }
+
+    /* Add psram data copy */
+    pSrc = &__psram_load_addr;
+    pDest = &__psram_data_start__;
+
+    for (; pDest < &__psram_data_end__;) {
+        *pDest++ = *pSrc++;
+    }
+
 #ifndef CONIFG_DISABLE_NOCACHE_RAM_LOAD
-    /* BF Add no cache ram data copy */
+    /* Add no cache ram data copy */
     pSrc = &__nocache_ram_load_addr;
     pDest = &__nocache_ram_data_start__;
 

@@ -65,6 +65,22 @@
 #define AON_ACOMP_HYSTERESIS_VOLT_60MV          6   /*!< Analog compare hysteresis voltage 60mv */
 #define AON_ACOMP_HYSTERESIS_VOLT_70MV          7   /*!< Analog compare hysteresis voltage 70mv */
 
+// clang-format off
+#define IS_ACOMP_ID(type)             (((type) == AON_ACOMP0_ID) || \
+                                      ((type) == AON_ACOMP1_ID))
+
+#define IS_ACOMP_SCALING_FACTOR(type) (((type) == AON_ACOMP_SCALING_FACTOR_0P25) || \
+                                      ((type) == AON_ACOMP_SCALING_FACTOR_0P5) || \
+                                      ((type) == AON_ACOMP_SCALING_FACTOR_0P75) || \
+                                      ((type) == AON_ACOMP_SCALING_FACTOR_1))
+
+#define IS_ACOMP_CHAN(type)           ((type) <= AON_ACOMP_CHAN_VSS)
+
+#define IS_ACOMP_BIAS_POWER(type)     ((type) <= AON_ACOMP_BIAS_POWER_NONE)
+
+#define IS_ACOMP_HYSTERESIS_VOLT(type) ((type) <= AON_ACOMP_HYSTERESIS_VOLT_70MV)
+// clang-format on
+
 /**
  * @brief ACOMP configuration structure
  *
@@ -130,7 +146,7 @@ uint32_t bflb_acomp_get_result(uint8_t acomp_id);
  * @param [out] channel adc channel index
  * @return Zero on success; a negated errno value on failure
  */
-uint32_t bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t* channel);
+int bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t* channel);
 
 /**
  * @brief adc_chan_id change gpio index.
@@ -139,7 +155,7 @@ uint32_t bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t* channel);
  * @param [out] pin gpio index
  * @return Zero on success; a negated errno value on failure
  */
-uint32_t bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t* pin);
+int bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t* pin);
 
 #ifdef __cplusplus
 }

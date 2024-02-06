@@ -75,9 +75,10 @@ struct bflb_adc_channel_s chan[] = {
 #endif
 };
 
-#define TEST_COUNT 10
+#define TEST_COUNT (16 + 10) /* must drop 10 counts */
 
-uint32_t raw_data[TEST_ADC_CHANNELS * TEST_COUNT];
+uint32_t raw_data[TEST_COUNT];
+struct bflb_adc_result_s result[TEST_COUNT];
 
 volatile uint8_t read_count = 0;
 
@@ -91,7 +92,7 @@ void adc_isr(int irq, void *arg)
             raw_data[read_count] = bflb_adc_read_raw(adc);
             read_count++;
 
-            if (read_count == TEST_ADC_CHANNELS * TEST_COUNT) {
+            if (read_count == TEST_COUNT) {
                 bflb_adc_stop_conversion(adc);
                 bflb_adc_rxint_mask(adc, true);
             }
@@ -101,8 +102,6 @@ void adc_isr(int irq, void *arg)
 
 int main(void)
 {
-    struct bflb_adc_result_s result[TEST_ADC_CHANNELS * TEST_COUNT];
-
     board_init();
     board_adc_gpio_init();
 
@@ -111,30 +110,37 @@ int main(void)
     /* adc clock = XCLK / 2 / 32 */
     struct bflb_adc_config_s cfg;
     cfg.clk_div = ADC_CLK_DIV_32;
-    cfg.scan_conv_mode = true;
+    cfg.scan_conv_mode = false;      /* do not support scan mode */
     cfg.continuous_conv_mode = true; /* do not support single mode */
     cfg.differential_mode = false;
     cfg.resolution = ADC_RESOLUTION_16B;
     cfg.vref = ADC_VREF_3P2V;
 
     bflb_adc_init(adc, &cfg);
-    bflb_adc_channel_config(adc, chan, TEST_ADC_CHANNELS);
-    bflb_adc_rxint_mask(adc, false);
+    bflb_adc_rxint_mask(adc, true);
     bflb_irq_attach(adc->irq_num, adc_isr, NULL);
     bflb_irq_enable(adc->irq_num);
 
-    read_count = 0;
-    bflb_adc_start_conversion(adc);
+    for (size_t i = 0; i < TEST_ADC_CHANNELS; i++) {
+        printf("ch :%d\r\n", i);
 
-    while (read_count < (TEST_ADC_CHANNELS * TEST_COUNT)) {
-        bflb_mtimer_delay_ms(1);
-    }
+        read_count = 0;
+        memset(raw_data, 0, sizeof(raw_data));
 
-    bflb_adc_parse_result(adc, raw_data, result, TEST_ADC_CHANNELS * TEST_COUNT);
+        bflb_adc_feature_control(adc, ADC_CMD_CLR_FIFO, 0);
+        bflb_adc_channel_config(adc, &chan[i], 1);
+        bflb_adc_rxint_mask(adc, false);
+        bflb_adc_start_conversion(adc);
+        while (read_count < TEST_COUNT) {
+            bflb_mtimer_delay_ms(1);
+        }
 
-    for (size_t j = 0; j < TEST_ADC_CHANNELS * TEST_COUNT; j++) {
-        printf("raw data:%08x\r\n", raw_data[j]);
-        printf("pos chan %d,%d mv \r\n", result[j].pos_chan, result[j].millivolt);
+        bflb_adc_stop_conversion(adc);
+        bflb_adc_parse_result(adc, raw_data, result, TEST_COUNT);
+        for (size_t j = 10; j < TEST_COUNT; j++) {
+            printf("raw data:%08x\r\n", raw_data[j]);
+            printf("pos chan %d,%d mv \r\n", result[j].pos_chan, result[j].millivolt);
+        }
     }
 
     bflb_adc_deinit(adc);

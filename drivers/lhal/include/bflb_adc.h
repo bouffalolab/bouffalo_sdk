@@ -25,7 +25,9 @@
 #define ADC_CHANNEL_8         8
 #define ADC_CHANNEL_9         9
 #define ADC_CHANNEL_10        10
+#if !defined(BL616)
 #define ADC_CHANNEL_11        11
+#endif
 #define ADC_CHANNEL_DACA      12
 #define ADC_CHANNEL_DACB      13
 #define ADC_CHANNEL_TSEN_P    14
@@ -103,6 +105,29 @@
   * @}
   */
 
+/** @defgroup ADC_CMD dma feature control cmd definition
+  * @{
+  */
+#define ADC_CMD_CLR_FIFO          0x00
+#define ADC_CMD_VBAT_EN           0x01
+/**
+  * @}
+  */
+
+// clang-format off
+#define IS_ADC_CHANNEL(type)      ((type) <= ADC_CHANNEL_GND)
+
+#define IS_ADC_CLK_DIV(type)      (((type) <= ADC_CLK_DIV_32) && ((type) <= ADC_CLK_DIV_4))
+
+#define IS_ADC_RESOLUTION(type)   (((type) == ADC_RESOLUTION_12B) || \
+                                  ((type) == ADC_RESOLUTION_14B) || \
+                                  ((type) == ADC_RESOLUTION_16B))
+
+#define IS_ADC_VREF(type)         (((type) == ADC_VREF_3P2V) || \
+                                  ((type) == ADC_VREF_2P0V))
+
+// clang-format on
+
 /**
  * @brief ADC configuration structure
  *
@@ -159,6 +184,14 @@ extern "C" {
  * @param [in] config pointer to save adc configuration
  */
 void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config);
+
+/**
+ * @brief Update adc trim.
+ *
+ * @param [in] dev device handle
+ * @param [in] config pointer to save adc configuration
+ */
+void bflb_update_adc_trim(struct bflb_device_s *dev, const struct bflb_adc_config_s *config);
 
 /**
  * @brief Deinitialize adc.
@@ -295,6 +328,16 @@ void bflb_adc_vbat_enable(struct bflb_device_s *dev);
  * @param [in] dev device handle
  */
 void bflb_adc_vbat_disable(struct bflb_device_s *dev);
+
+/**
+ * @brief Control adc feature.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmd feature command. use @ref ADC_CMD
+ * @param [in] arg user data
+ * @return A negated errno value on failure.
+ */
+int bflb_adc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
 
 #ifdef __cplusplus
 }

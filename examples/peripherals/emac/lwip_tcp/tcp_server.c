@@ -97,8 +97,8 @@ void tcp_netconn_send_test(void)
     // set listen
     netconn_listen(conn);
 
-    tmpnetif = netif_find("bl");
-    sprintf((char *)iptxt, "%s", ip4addr_ntoa(&tmpnetif->ip_addr));
+    tmpnetif = netif_find("ex");
+    snprintf((char *)iptxt, sizeof(iptxt), "%s", ip4addr_ntoa(&tmpnetif->ip_addr));
     printf("Create server success, server ip & listen port:%s:%d\r\n", iptxt, TCP_SERVER_TEST_PORT);
 
     while (1) {
@@ -137,8 +137,8 @@ void tcp_server_netconn_test(void)
     // set listen
     netconn_listen(conn);
 
-    tmpnetif = netif_find("bl");
-    sprintf((char *)iptxt, "%s", ip4addr_ntoa(&tmpnetif->ip_addr));
+    tmpnetif = netif_find("ex");
+    snprintf((char *)iptxt, sizeof(iptxt), "%s", ip4addr_ntoa(&tmpnetif->ip_addr));
     printf("Create server success, server ip & listen port:%s:%d\r\n", iptxt, TCP_SERVER_TEST_PORT);
 
     while (1) {
@@ -226,7 +226,7 @@ static void tcp_server_socket_thread(void *arg)
     int sock, newconn, size;
     struct sockaddr_in address, remotehost;
 
-    tmpnetif = netif_find("bl");
+    tmpnetif = netif_find("ex");
 
 #if LWIP_DHCP
     while (tmpnetif->state != 3) {
@@ -255,7 +255,7 @@ static void tcp_server_socket_thread(void *arg)
     /* listen for incoming connections (TCP listen backlog = 5) */
     listen(sock, 5);
 
-    sprintf((char *)iptxt, "%s", ip4addr_ntoa(&tmpnetif->ip_addr));
+    snprintf((char *)iptxt, sizeof(iptxt), "%s", ip4addr_ntoa(&tmpnetif->ip_addr));
     printf("Create server success, server ip & listen port:%s:%d\r\n", iptxt, TCP_SERVER_TEST_PORT);
 
     size = sizeof(remotehost);

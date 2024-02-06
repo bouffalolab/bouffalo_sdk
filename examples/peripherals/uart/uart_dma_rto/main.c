@@ -58,11 +58,11 @@ int main(void)
     cfg.flow_ctrl = 0;
     cfg.tx_fifo_threshold = 7;
     cfg.rx_fifo_threshold = 0;
+    cfg.bit_order = UART_LSB_FIRST;
     bflb_uart_init(uartx, &cfg);
 
     bflb_uart_feature_control(uartx, UART_CMD_SET_RTO_VALUE, 0x80);
     bflb_irq_attach(uartx->irq_num, uart_isr, NULL);
-    bflb_irq_enable(uartx->irq_num);
 
     bflb_uart_link_rxdma(uartx, true);
 
@@ -93,6 +93,7 @@ int main(void)
                            bflb_rx_cycle_dma_copy);
 
     bflb_dma_channel_start(dma0_ch0);
+    bflb_irq_enable(uartx->irq_num);
 
     /* simulate flash operation */
     uintptr_t flag = bflb_irq_save();

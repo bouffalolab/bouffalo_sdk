@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "tlsf.h"
 
@@ -524,6 +525,9 @@ static size_t adjust_request_size(size_t size, size_t align)
         {
             adjust = tlsf_max(aligned, block_size_min);
         }
+    }
+    if ((SIZE_MAX - size) < align) {
+        return 0;
     }
     return adjust;
 }
@@ -1139,6 +1143,9 @@ void *tlsf_malloc(tlsf_t tlsf, size_t size)
 {
     control_t *control = tlsf_cast(control_t *, tlsf);
     const size_t adjust = adjust_request_size(size, ALIGN_SIZE);
+    if (adjust == 0) {
+        return NULL;
+    }
     block_header_t *block = block_locate_free(control, adjust);
     return block_prepare_used(control, block, adjust);
 }
@@ -1147,6 +1154,9 @@ void *tlsf_memalign(tlsf_t tlsf, size_t align, size_t size)
 {
     control_t *control = tlsf_cast(control_t *, tlsf);
     const size_t adjust = adjust_request_size(size, ALIGN_SIZE);
+    if (adjust == 0) {
+        return NULL;
+    }
 
     /*
     ** We must allocate an additional minimum block size bytes so that if
@@ -1158,6 +1168,9 @@ void *tlsf_memalign(tlsf_t tlsf, size_t align, size_t size)
     */
     const size_t gap_minimum = sizeof(block_header_t);
     const size_t size_with_gap = adjust_request_size(adjust + align + gap_minimum, align);
+    if (size_with_gap == 0) {
+        return NULL;
+    }
 
     /*
     ** If alignment is less than or equals base alignment, we're done.

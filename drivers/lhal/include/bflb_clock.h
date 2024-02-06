@@ -166,7 +166,7 @@
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
 
-#elif defined(BL616) || defined(BL606P) || defined(BL808)
+#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
 #define PERIPHERAL_CLOCK_USB_ENABLE()                             \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \

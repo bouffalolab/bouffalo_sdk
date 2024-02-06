@@ -305,7 +305,8 @@ static const char *l_str2d(const char *s, lua_Number *result)
         const char *pdot = luaport_strchr(s, '.');
         if (pdot == NULL || luaport_strlen(s) > L_MAXLENNUM)
             return NULL;                          /* string too long or no dot; fail */
-        luaport_strcpy(buff, s);                  /* copy string to buffer */
+        if (luaport_strlcpy(buff, s, L_MAXLENNUM + 1) >= L_MAXLENNUM + 1) /* copy string to buffer */ 
+            printf("[OS]: strlcpy truncated \r\n"); 
         buff[pdot - s] = lua_getlocaledecpoint(); /* correct decimal point */
         endptr = l_str2dloc(buff, result, mode);  /* try again */
         if (endptr != NULL)

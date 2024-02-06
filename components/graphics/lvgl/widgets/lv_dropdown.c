@@ -146,7 +146,7 @@ void lv_dropdown_set_options(lv_obj_t * obj, const char * options)
     if(dropdown->options == NULL) return;
 
 #if LV_USE_ARABIC_PERSIAN_CHARS == 0
-    strcpy(dropdown->options, options);
+    strlcpy(dropdown->options, options, len);
 #else
     _lv_txt_ap_proc(options, dropdown->options);
 #endif
@@ -203,7 +203,7 @@ void lv_dropdown_add_option(lv_obj_t * obj, const char * option, uint32_t pos)
         LV_ASSERT_MALLOC(dropdown->options);
         if(dropdown->options == NULL) return;
 
-        strcpy(dropdown->options, static_options);
+        strlcpy(dropdown->options, static_options, len);
         dropdown->static_txt = 0;
     }
 
@@ -243,11 +243,11 @@ void lv_dropdown_add_option(lv_obj_t * obj, const char * option, uint32_t pos)
     LV_ASSERT_MALLOC(ins_buf);
     if(ins_buf == NULL) return;
 #if LV_USE_ARABIC_PERSIAN_CHARS == 0
-    strcpy(ins_buf, option);
+    strlcpy(ins_buf, option, ins_len + 2);
 #else
     _lv_txt_ap_proc(option, ins_buf);
 #endif
-    if(pos < dropdown->option_cnt) strcat(ins_buf, "\n");
+    if(pos < dropdown->option_cnt) strlcat(ins_buf, "\n", ins_len + 2);
 
     _lv_txt_ins(dropdown->options, _lv_txt_encoded_get_char_id(dropdown->options, insert_pos), ins_buf);
     lv_mem_buf_release(ins_buf);
@@ -284,6 +284,10 @@ void lv_dropdown_set_selected(lv_obj_t * obj, uint16_t sel_opt)
 
     dropdown->sel_opt_id      = sel_opt < dropdown->option_cnt ? sel_opt : dropdown->option_cnt - 1;
     dropdown->sel_opt_id_orig = dropdown->sel_opt_id;
+
+    if(dropdown->list) {
+        position_to_selected(obj);
+    }
 
     lv_obj_invalidate(obj);
 }
@@ -403,14 +407,19 @@ int32_t lv_dropdown_get_option_index(lv_obj_t * obj, const char * option)
     const char * opts = lv_dropdown_get_options(obj);
     uint32_t char_i = 0;
     uint32_t opt_i = 0;
+    uint32_t option_len = strlen(option);
     const char * start = opts;
 
     while(start[char_i] != '\0') {
         for(char_i = 0; (start[char_i] != '\n') && (start[char_i] != '\0'); char_i++);
 
-        if(memcmp(start, option, LV_MIN(strlen(option), char_i)) == 0) return opt_i;
+        if(option_len == char_i && memcmp(start, option, LV_MIN(option_len, char_i)) == 0) {
+            return opt_i;
+        }
+
         start = &start[char_i];
         if(start[0] == '\n') start++;
+        char_i = 0;
         opt_i++;
     }
 

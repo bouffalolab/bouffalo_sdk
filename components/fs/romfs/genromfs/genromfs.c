@@ -456,13 +456,14 @@ struct filenode *newnode(const char *base, const char *name, int curroffset)
 	}
 	if (strlen(base))
 		len++;
-	str = malloc(strlen(base)+len+1);
+	len = strlen(base)+len+1;
+	str = malloc(len);
 	if (!str) {
 		fprintf(stderr,"out of memory\n");
 		exit(1);
 	}
 	if (strlen(base)) {
-		sprintf(str, "%s/%s", base, name);
+		snprintf(str, len, "%s/%s", base, name);
 	} else {
 		strcpy(str, name);
 	}
@@ -780,7 +781,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (!volname) {
-		sprintf(buf, "rom %08lx", time(NULL));
+		snprintf(buf, sizeof(buf), "rom %08lx", time(NULL));
 		volname = buf;
 	}
 	if (!outf) {

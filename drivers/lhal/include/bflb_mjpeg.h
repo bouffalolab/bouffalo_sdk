@@ -54,6 +54,17 @@
 
 #define MJPEG_MAX_FRAME_COUNT      4
 
+// clang-format off
+#define IS_MJPEG_FORMAT(type)   ((type) <= MJPEG_FORMAT_GRAY)
+
+#define IS_MJPEG_RESOLUTION(type)   (!((type) % 8))
+
+#define IS_MJPEG_QUALITY(type)   ((type) <= 100)
+
+#define IS_MJPEG_ADDR(type)   (!((type) % 16))
+
+// clang-format on
+
 /**
  * @brief MJPEG configuration structure
  *

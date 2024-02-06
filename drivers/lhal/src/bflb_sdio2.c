@@ -58,7 +58,9 @@ uint32_t sdio2_base[] = { 0x2000d000 };
 
 /* isr */
 static void bflb_sdio2_isr(int irq, void *arg);
+#if defined(BL616)
 static void bflb_sdio2_reset_irq(int irq, void *arg);
+#endif
 
 /* dnld irq callback */
 static void *sdio2_dnld_irq_callback_arg;

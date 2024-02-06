@@ -2,7 +2,6 @@
 #define _BFLB_FLASH_H
 
 #include "bflb_core.h"
-#include "bflb_sflash.h"
 
 /** @addtogroup LHAL
   * @{
@@ -66,15 +65,6 @@ extern "C" {
  * @return Zero on success; a negated errno value on failure
  */
 int bflb_flash_init(void);
-
-#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
-/**
- * @brief flash_set_cmds
- *
- * @return None
- */
-void bflb_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg);
-#endif
 
 /**
  * @brief Get flash jedec id.

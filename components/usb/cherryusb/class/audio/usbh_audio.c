@@ -6,44 +6,49 @@
 #include "usbh_core.h"
 #include "usbh_audio.h"
 
-#define DEV_FORMAT                  "/dev/audio%d"
+#define DEV_FORMAT "/dev/audio%d"
 
 /* general descriptor field offsets */
-#define DESC_bLength                0 /** Length offset */
-#define DESC_bDescriptorType        1 /** Descriptor type offset */
-#define DESC_bDescriptorSubType     2 /** Descriptor subtype offset */
+#define DESC_bLength            0 /** Length offset */
+#define DESC_bDescriptorType    1 /** Descriptor type offset */
+#define DESC_bDescriptorSubType 2 /** Descriptor subtype offset */
 
 /* interface descriptor field offsets */
 #define INTF_DESC_bInterfaceNumber  2 /** Interface number offset */
 #define INTF_DESC_bAlternateSetting 3 /** Alternate setting offset */
 
-static uint32_t g_devinuse = 0;
+#ifndef CONFIG_USBHOST_MAX_AUDIO_CLASS
+#define CONFIG_USBHOST_MAX_AUDIO_CLASS 4
+#endif
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t g_audio_buf[128];
 
-static int usbh_audio_devno_alloc(struct usbh_audio *audio_class)
+static struct usbh_audio g_audio_class[CONFIG_USBHOST_MAX_AUDIO_CLASS];
+static uint32_t g_devinuse = 0;
+
+static struct usbh_audio *usbh_audio_class_alloc(void)
 {
     int devno;
 
-    for (devno = 0; devno < 32; devno++) {
-        uint32_t bitno = 1 << devno;
-        if ((g_devinuse & bitno) == 0) {
-            g_devinuse |= bitno;
-            audio_class->minor = devno;
-            return 0;
+    for (devno = 0; devno < CONFIG_USBHOST_MAX_AUDIO_CLASS; devno++) {
+        if ((g_devinuse & (1 << devno)) == 0) {
+            g_devinuse |= (1 << devno);
+            memset(&g_audio_class[devno], 0, sizeof(struct usbh_audio));
+            g_audio_class[devno].minor = devno;
+            return &g_audio_class[devno];
         }
     }
-
-    return -EMFILE;
+    return NULL;
 }
 
-static void usbh_audio_devno_free(struct usbh_audio *audio_class)
+static void usbh_audio_class_free(struct usbh_audio *audio_class)
 {
     int devno = audio_class->minor;
 
     if (devno >= 0 && devno < 32) {
         g_devinuse &= ~(1 << devno);
     }
+    memset(audio_class, 0, sizeof(struct usbh_audio));
 }
 
 int usbh_audio_open(struct usbh_audio *audio_class, const char *name, uint32_t samp_freq)
@@ -57,7 +62,7 @@ int usbh_audio_open(struct usbh_audio *audio_class, const char *name, uint32_t s
     uint8_t altsetting = 1;
 
     if (audio_class->is_opened) {
-        return -EMFILE;
+        return 0;
     }
 
     for (uint8_t i = 0; i < audio_class->module_num; i++) {
@@ -74,7 +79,7 @@ int usbh_audio_open(struct usbh_audio *audio_class, const char *name, uint32_t s
         }
     }
 
-    return -ENODEV;
+    return -USB_ERR_NODEV;
 
 freq_found:
 
@@ -84,7 +89,7 @@ freq_found:
     setup->wIndex = intf;
     setup->wLength = 0;
 
-    ret = usbh_control_transfer(audio_class->hport->ep0, setup, NULL);
+    ret = usbh_control_transfer(audio_class->hport, setup, NULL);
     if (ret < 0) {
         return ret;
     }
@@ -98,7 +103,7 @@ freq_found:
     setup->wLength = 3;
 
     memcpy(g_audio_buf, &samp_freq, 3);
-    ret = usbh_control_transfer(audio_class->hport->ep0, setup, g_audio_buf);
+    ret = usbh_control_transfer(audio_class->hport, setup, g_audio_buf);
     if (ret < 0) {
         return ret;
     }
@@ -107,10 +112,10 @@ freq_found:
     mps = ep_desc->wMaxPacketSize & USB_MAXPACKETSIZE_MASK;
     if (ep_desc->bEndpointAddress & 0x80) {
         audio_class->isoin_mps = mps * (mult + 1);
-        usbh_hport_activate_epx(&audio_class->isoin, audio_class->hport, ep_desc);
+        USBH_EP_INIT(audio_class->isoin, ep_desc);
     } else {
         audio_class->isoout_mps = mps * (mult + 1);
-        usbh_hport_activate_epx(&audio_class->isoout, audio_class->hport, ep_desc);
+        USBH_EP_INIT(audio_class->isoout, ep_desc);
     }
 
     USB_LOG_INFO("Open audio module :%s, altsetting: %u\r\n", name, altsetting);
@@ -133,7 +138,7 @@ int usbh_audio_close(struct usbh_audio *audio_class, const char *name)
     }
 
     if (intf == 0xff) {
-        return -ENODEV;
+        return -USB_ERR_NODEV;
     }
 
     USB_LOG_INFO("Close audio module :%s\r\n", name);
@@ -142,12 +147,10 @@ int usbh_audio_close(struct usbh_audio *audio_class, const char *name)
     ep_desc = &audio_class->hport->config.intf[intf].altsetting[altsetting].ep[0].ep_desc;
     if (ep_desc->bEndpointAddress & 0x80) {
         if (audio_class->isoin) {
-            usbh_pipe_free(audio_class->isoin);
             audio_class->isoin = NULL;
         }
     } else {
         if (audio_class->isoout) {
-            usbh_pipe_free(audio_class->isoout);
             audio_class->isoout = NULL;
         }
     }
@@ -158,7 +161,7 @@ int usbh_audio_close(struct usbh_audio *audio_class, const char *name)
     setup->wIndex = intf;
     setup->wLength = 0;
 
-    ret = usbh_control_transfer(audio_class->hport->ep0, setup, NULL);
+    ret = usbh_control_transfer(audio_class->hport, setup, NULL);
 
     return ret;
 }
@@ -179,7 +182,7 @@ int usbh_audio_set_volume(struct usbh_audio *audio_class, const char *name, uint
     }
 
     if (intf == 0xff) {
-        return -ENODEV;
+        return -USB_ERR_NODEV;
     }
 
     setup->bmRequestType = USB_REQUEST_DIR_OUT | USB_REQUEST_CLASS | USB_REQUEST_RECIPIENT_INTERFACE;
@@ -191,7 +194,7 @@ int usbh_audio_set_volume(struct usbh_audio *audio_class, const char *name, uint
     volume_hex = -0xDB00 / 100 * volume + 0xdb00;
 
     memcpy(g_audio_buf, &volume_hex, 2);
-    ret = usbh_control_transfer(audio_class->hport->ep0, setup, NULL);
+    ret = usbh_control_transfer(audio_class->hport, setup, NULL);
 
     return ret;
 }
@@ -211,7 +214,7 @@ int usbh_audio_set_mute(struct usbh_audio *audio_class, const char *name, uint8_
     }
 
     if (intf == 0xff) {
-        return -ENODEV;
+        return -USB_ERR_NODEV;
     }
 
     setup->bmRequestType = USB_REQUEST_DIR_OUT | USB_REQUEST_CLASS | USB_REQUEST_RECIPIENT_INTERFACE;
@@ -221,8 +224,8 @@ int usbh_audio_set_mute(struct usbh_audio *audio_class, const char *name, uint8_
     setup->wLength = 1;
 
     memcpy(g_audio_buf, &mute, 1);
-    ret = usbh_control_transfer(audio_class->hport->ep0, setup, g_audio_buf);
-    
+    ret = usbh_control_transfer(audio_class->hport, setup, g_audio_buf);
+
     return ret;
 }
 
@@ -269,14 +272,12 @@ static int usbh_audio_ctrl_connect(struct usbh_hubport *hport, uint8_t intf)
     uint8_t format_offset = 0;
     uint8_t *p;
 
-    struct usbh_audio *audio_class = usb_malloc(sizeof(struct usbh_audio));
+    struct usbh_audio *audio_class = usbh_audio_class_alloc();
     if (audio_class == NULL) {
         USB_LOG_ERR("Fail to alloc audio_class\r\n");
-        return -ENOMEM;
+        return -USB_ERR_NOMEM;
     }
 
-    memset(audio_class, 0, sizeof(struct usbh_audio));
-    usbh_audio_devno_alloc(audio_class);
     audio_class->hport = hport;
     audio_class->ctrl_intf = intf;
     audio_class->num_of_intf_altsettings = hport->config.intf[intf + 1].altsetting_num;
@@ -383,7 +384,7 @@ static int usbh_audio_ctrl_connect(struct usbh_hubport *hport, uint8_t intf)
     }
 
     if ((input_offset != output_offset) && (input_offset != feature_unit_offset) && (input_offset != format_offset)) {
-        return -EINVAL;
+        return -USB_ERR_INVAL;
     }
 
     audio_class->module_num = input_offset;
@@ -412,22 +413,18 @@ static int usbh_audio_ctrl_disconnect(struct usbh_hubport *hport, uint8_t intf)
     struct usbh_audio *audio_class = (struct usbh_audio *)hport->config.intf[intf].priv;
 
     if (audio_class) {
-        usbh_audio_devno_free(audio_class);
-
         if (audio_class->isoin) {
-            usbh_pipe_free(audio_class->isoin);
         }
 
         if (audio_class->isoout) {
-            usbh_pipe_free(audio_class->isoout);
         }
 
-        usbh_audio_stop(audio_class);
-        memset(audio_class, 0, sizeof(struct usbh_audio));
-        usb_free(audio_class);
-
-        if (hport->config.intf[intf].devname[0] != '\0')
+        if (hport->config.intf[intf].devname[0] != '\0') {
             USB_LOG_INFO("Unregister Audio Class:%s\r\n", hport->config.intf[intf].devname);
+            usbh_audio_stop(audio_class);
+        }
+
+        usbh_audio_class_free(audio_class);
     }
 
     return ret;

@@ -301,6 +301,23 @@
   * @}
   */
 
+// clang-format off
+#define IS_DMA_DIRECTION(type)   (((type) == DMA_MEMORY_TO_MEMORY) || \
+                                  ((type) == DMA_MEMORY_TO_PERIPH) || \
+                                  ((type) == DMA_PERIPH_TO_MEMORY) || \
+                                  ((type) == DMA_PERIPH_TO_PERIPH))
+
+#define IS_DMA_DATA_WIDTH(type)   (((type) == DMA_DATA_WIDTH_8BIT) || \
+                                  ((type) == DMA_DATA_WIDTH_16BIT) || \
+                                  ((type) == DMA_DATA_WIDTH_32BIT))
+
+#define IS_DMA_BURST_COUNT(type)   (((type) == DMA_BURST_INCR1) || \
+                                  ((type) == DMA_BURST_INCR4) || \
+                                  ((type) == DMA_BURST_INCR8) || \
+                                  ((type) == DMA_BURST_INCR16))
+
+// clang-format on
+
 union bflb_dma_lli_control_s {
     struct
     {
@@ -479,7 +496,7 @@ void bflb_dma_channel_lli_link_head(struct bflb_device_s *dev,
  * @param [in] dst_buf_size dma dest buffer size
  * @param [in] copy pointer to data copy
  */
-void bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
+int bflb_rx_cycle_dma_init(struct bflb_rx_cycle_dma *rx_dma,
                       struct bflb_device_s *dma_ch,
                       struct bflb_dma_channel_lli_pool_s *rx_llipool,
                       uint8_t rx_llipool_size,

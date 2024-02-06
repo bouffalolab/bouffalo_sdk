@@ -339,7 +339,19 @@ int phy_8720_init(struct bflb_device_s *emac, struct bflb_emac_phy_cfg_s *cfg)
  */
 emac_phy_status_t phy_8720_status_get(void)
 {
+    uint16_t phy_BSR;
     CHECK_PARAM(NULL != phy_8720_cfg);
+
+    if (0 != bflb_emac_phy_reg_read(emac_dev, PHY_8720_BSR, &phy_BSR)) {
+        return -1;
+    }
+
+    // printf("read BSR 0x01 =%x\r\n", phy_BSR);
+    if (phy_BSR & 0x4) {
+        phy_8720_cfg->phy_state = PHY_STATE_UP;
+    } else {
+        phy_8720_cfg->phy_state = PHY_STATE_DOWN;
+    }
 
     if ((100 == phy_8720_cfg->speed) &&
         (phy_8720_cfg->full_duplex) &&

@@ -26,4 +26,5 @@ else()
     set(VSCODE_DIR_ ${BL_SDK_CMAKE_DIR}/../.vscode)
 endif()
 
-configure_file(${BL_SDK_BASE}/tools/vscode/c_cpp_properties.json ${VSCODE_DIR_}/c_cpp_properties.json)
+# may cause fails when multi-threading ci build
+# configure_file(${BL_SDK_BASE}/tools/vscode/c_cpp_properties.json ${VSCODE_DIR_}/c_cpp_properties.json)

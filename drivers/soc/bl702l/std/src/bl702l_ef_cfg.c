@@ -96,8 +96,6 @@ static uint8_t bdiv, hdiv;
 /****************************************************************************/ /**
  * @brief  Efuse read write switch clock save
  *
- * @param  deviceInfo: info pointer
- *
  * @return None
  *
 *******************************************************************************/
@@ -113,8 +111,6 @@ void  ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_save(void)
 
 /****************************************************************************/ /**
  * @brief  Efuse read write switch clock restore
- *
- * @param  deviceInfo: info pointer
  *
  * @return None
  *
@@ -143,16 +139,68 @@ uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **p
 /****************************************************************************/ /**
  * @brief  Efuse read device info
  *
- * @param  deviceInfo: info pointer
+ * @param  device_info: info pointer
  *
  * @return None
  *
 *******************************************************************************/
-void bflb_ef_ctrl_get_device_info(bflb_efuse_device_info_type *deviceInfo)
+void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info)
 {
-    uint32_t *p = (uint32_t *)deviceInfo;
+    uint32_t tmpval;
 
-    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, p, 1, 1);
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, &tmpval, 1, 1);
+    device_info->sf_swap_cfg = (tmpval >> 22) & 3;
+    device_info->flash_info = (tmpval >> 26) & 0x7;
+    device_info->psram_info = (tmpval >> 24) & 0x3;
+    device_info->package = (tmpval >> 30) & 0x3;
+
+    switch (device_info->package) {
+        case 0:
+            device_info->package_name = "QFN32";
+            break;
+        case 1:
+            device_info->package_name = "QFN40";
+            break;
+        case 2:
+            device_info->package_name = "QFN48";
+            break;
+        default:
+            device_info->package_name = "ERROR";
+            break;
+    }
+    switch (device_info->flash_info) {
+        case 0:
+            device_info->flash_info_name = "EXTERNAL FLASH SF2";
+            break;
+        case 1:
+            device_info->flash_info_name = "0.5MB";
+            break;
+        case 2:
+            device_info->flash_info_name = "1MB";
+            break;
+        case 3:
+            device_info->flash_info_name = "EXTERNAL FLASH SF1";
+            break;
+        case 5:
+            device_info->flash_info_name = "2MB";
+            break;
+        default:
+            device_info->flash_info_name = "ERROR";
+            break;
+    }
+    switch (device_info->psram_info) {
+        case 0:
+            device_info->psram_info_name = "NO";
+            break;
+        case 1:
+            device_info->psram_info_name = "2MB";
+            break;
+        case 2:
+            device_info->psram_info_name = "EXTERNAL";
+            break;
+        default:
+            device_info->psram_info_name = "ERROR";
+    }
 }
 
 void bflb_efuse_get_chipid(uint8_t chipid[8])

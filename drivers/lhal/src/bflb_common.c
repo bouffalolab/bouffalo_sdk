@@ -3,6 +3,9 @@
 
 __WEAK void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
 {
+#ifdef romapi_arch_memcpy
+    return romapi_arch_memcpy(dst, src, n);
+#else
     const uint8_t *p = src;
     uint8_t *q = dst;
 
@@ -11,10 +14,14 @@ __WEAK void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n
     }
 
     return dst;
+#endif
 }
 
 __WEAK uint32_t *ATTR_TCM_SECTION arch_memcpy4(uint32_t *dst, const uint32_t *src, uint32_t n)
 {
+#ifdef romapi_arch_memcpy4
+    return romapi_arch_memcpy4(dst, src, n);
+#else
     const uint32_t *p = src;
     uint32_t *q = dst;
 
@@ -23,10 +30,14 @@ __WEAK uint32_t *ATTR_TCM_SECTION arch_memcpy4(uint32_t *dst, const uint32_t *sr
     }
 
     return dst;
+#endif
 }
 
 __WEAK void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uint32_t n)
 {
+#ifdef romapi_arch_memcpy_fast
+    return romapi_arch_memcpy_fast(pdst, psrc, n);
+#else
     uint32_t left, done, i = 0;
     uint8_t *dst = (uint8_t *)pdst;
     uint8_t *src = (uint8_t *)psrc;
@@ -45,10 +56,14 @@ __WEAK void *ATTR_TCM_SECTION arch_memcpy_fast(void *pdst, const void *psrc, uin
     }
 
     return dst;
+#endif
 }
 
 __WEAK void *ATTR_TCM_SECTION arch_memset(void *s, uint8_t c, uint32_t n)
 {
+#ifdef romapi_arch_memset
+    return romapi_arch_memset(s, c, n);
+#else
     uint8_t *p = (uint8_t *)s;
 
     while (n > 0) {
@@ -57,10 +72,14 @@ __WEAK void *ATTR_TCM_SECTION arch_memset(void *s, uint8_t c, uint32_t n)
     }
 
     return s;
+#endif
 }
 
 __WEAK uint32_t *ATTR_TCM_SECTION arch_memset4(uint32_t *dst, const uint32_t val, uint32_t n)
 {
+#ifdef romapi_arch_memset4
+    return romapi_arch_memset4(dst, val, n);
+#else
     uint32_t *q = dst;
 
     while (n--) {
@@ -68,10 +87,14 @@ __WEAK uint32_t *ATTR_TCM_SECTION arch_memset4(uint32_t *dst, const uint32_t val
     }
 
     return dst;
+#endif
 }
 
 __WEAK int ATTR_TCM_SECTION arch_memcmp(const void *s1, const void *s2, uint32_t n)
 {
+#ifdef romapi_arch_memcmp
+    return romapi_arch_memcmp(s1, s2, n);
+#else
     const unsigned char *c1 = s1, *c2 = s2;
     int d = 0;
 
@@ -84,6 +107,7 @@ __WEAK int ATTR_TCM_SECTION arch_memcmp(const void *s1, const void *s2, uint32_t
     }
 
     return d;
+#endif
 }
 
 #if defined(BL616)
@@ -199,6 +223,9 @@ const uint8_t chCRCLTalbe[] = {
 
 uint16_t bflb_soft_crc16(void *in, uint32_t len)
 {
+#ifdef romapi_bflb_soft_crc16
+    return romapi_bflb_soft_crc16(in, len);
+#else
     uint8_t chCRCHi = 0xFF;
     uint8_t chCRCLo = 0xFF;
     uint16_t wIndex;
@@ -211,6 +238,7 @@ uint16_t bflb_soft_crc16(void *in, uint32_t len)
     }
 
     return ((chCRCHi << 8) | chCRCLo);
+#endif
 }
 
 /*
@@ -264,6 +292,9 @@ const uint32_t crc32Tab[256] = {
 
 uint32_t bflb_soft_crc32_table(void *in, uint32_t len)
 {
+#ifdef romapi_bflb_soft_crc32_table
+    return romapi_bflb_soft_crc32_table(in, len);
+#else
     uint32_t crc = 0;
     uint8_t *data = (uint8_t *)in;
 
@@ -274,6 +305,7 @@ uint32_t bflb_soft_crc32_table(void *in, uint32_t len)
     }
 
     return crc ^ 0xffffffff;
+#endif
 }
 
 /******************************************************************************
@@ -288,6 +320,9 @@ uint32_t bflb_soft_crc32_table(void *in, uint32_t len)
 *****************************************************************************/
 uint32_t ATTR_TCM_SECTION bflb_soft_crc32_ex(uint32_t initial, void *in, uint32_t len)
 {
+#ifdef romapi_bflb_soft_crc32_ex
+    return romapi_bflb_soft_crc32_ex(initial, in, len);
+#else
     uint8_t i;
     uint32_t crc = ~initial; // Initial value
     uint8_t *data = (uint8_t *)in;
@@ -303,9 +338,14 @@ uint32_t ATTR_TCM_SECTION bflb_soft_crc32_ex(uint32_t initial, void *in, uint32_
         }
     }
     return ~crc;
+#endif
 }
 
 __WEAK uint32_t ATTR_TCM_SECTION bflb_soft_crc32(void *in, uint32_t len)
 {
+#ifdef romapi_bflb_soft_crc32
+    return romapi_bflb_soft_crc32(in, len);
+#else
     return bflb_soft_crc32_ex(0, in, len);
+#endif
 }

@@ -1160,7 +1160,9 @@ static EfErrCode move_env(env_node_obj_t env)
         if (in_recovery_check) {
             struct env_node_obj env_bak;
             char name[EF_ENV_NAME_MAX + 1] = { 0 };
-            strncpy(name, env->name, env->name_len);
+            if (strlcpy(name, env->name, sizeof(name)) >= sizeof(name)) {
+                EF_ASSERT(0);
+            }
             /* check the ENV in flash is already create success */
             if (find_env_no_cache(name, &env_bak)) {
                 /* already create success, don't need to duplicate */

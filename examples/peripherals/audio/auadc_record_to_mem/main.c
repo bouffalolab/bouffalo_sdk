@@ -23,7 +23,7 @@ struct bflb_auadc_adc_init_config_s auadc_analog_init_cfg = {
     .auadc_analog_en = true,
     .adc_mode = AUADC_ADC_MODE_AUDIO,
     .adc_pga_mode = AUADC_ADC_PGA_MODE_AC_DIFFER,
-    .adc_pga_posi_ch = AUADC_ADC_ANALOG_CH_6,
+    .adc_pga_posi_ch = AUADC_ADC_ANALOG_CH_4,
     .adc_pga_nega_ch = AUADC_ADC_ANALOG_CH_7,
     .adc_pga_gain = 30,
 };
@@ -88,21 +88,13 @@ void auadc_gpio_init(void)
 
     /* auadc ch0 */
     //bflb_gpio_init(gpio, GPIO_PIN_20, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-    /* auadc ch1 */
-    //bflb_gpio_init(gpio, GPIO_PIN_21, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-
-    /* auadc ch2 */
-    //bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+ 
     /* auadc ch3 */
-    //bflb_gpio_init(gpio, GPIO_PIN_23, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+    //bflb_gpio_init(gpio, GPIO_PIN_22, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
 
     /* auadc ch4 */
-    //bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
-    /* auadc ch5 */
-    //bflb_gpio_init(gpio, GPIO_PIN_28, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
+    bflb_gpio_init(gpio, GPIO_PIN_27, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
 
-    /* auadc ch6 */
-    bflb_gpio_init(gpio, GPIO_PIN_29, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
     /* auadc ch7 */
     bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_ANALOG | GPIO_FLOAT | GPIO_SMT_EN | GPIO_DRV_2);
 }

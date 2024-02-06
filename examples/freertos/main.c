@@ -46,7 +46,7 @@ static void producer_task(void *pvParameters)
         if (xSemaphoreTake(sem_empty, portMAX_DELAY) == pdTRUE) {
             xSemaphoreTake(mtx_lock, portMAX_DELAY);
             buf++;
-            sprintf((char *)sharedBuf, "%d", buf);
+            snprintf((char *)sharedBuf, sizeof(sharedBuf), "%d", buf);
             LOG_I("Producer generates:%s\r\n", sharedBuf);
             xSemaphoreGive(mtx_lock);
             xSemaphoreGive(sem_full);

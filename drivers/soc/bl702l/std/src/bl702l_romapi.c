@@ -951,10 +951,12 @@ BL_Err_Type HBN_Set_HRAM_Ret(void){
     return RomDriver_HBN_Set_HRAM_Ret();
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Power_On_Xtal_32K(void){
     return RomDriver_HBN_Power_On_Xtal_32K();
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Power_Off_Xtal_32K(void){

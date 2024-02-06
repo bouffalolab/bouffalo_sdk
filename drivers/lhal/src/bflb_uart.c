@@ -6,6 +6,17 @@
 
 void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *config)
 {
+    LHAL_PARAM_ASSERT(dev);
+    LHAL_PARAM_ASSERT(IS_UART_DATABITS(config->data_bits));
+    LHAL_PARAM_ASSERT(IS_UART_STOPBITS(config->stop_bits));
+    LHAL_PARAM_ASSERT(IS_UART_PARITY(config->parity));
+    LHAL_PARAM_ASSERT(IS_UART_BITORDER(config->bit_order));
+    LHAL_PARAM_ASSERT(IS_UART_FIFO_THRESHOLD(config->tx_fifo_threshold));
+    LHAL_PARAM_ASSERT(IS_UART_FIFO_THRESHOLD(config->rx_fifo_threshold));
+
+#ifdef romapi_bflb_uart_init
+    romapi_bflb_uart_init(dev, config);
+#else
     uint32_t div = 0;
     uint32_t tx_cfg;
     uint32_t rx_cfg;
@@ -15,6 +26,8 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
     reg_base = dev->reg_base;
     /* Cal the baud rate divisor */
     div = (bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_UART, dev->idx) * 10 / config->baudrate + 5) / 10;
+
+    LHAL_PARAM_ASSERT(div < 0xFFFF);
 
     tx_cfg = getreg32(reg_base + UART_UTX_CONFIG_OFFSET);
     rx_cfg = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
@@ -117,10 +130,14 @@ void bflb_uart_init(struct bflb_device_s *dev, const struct bflb_uart_config_s *
     rx_cfg |= UART_CR_URX_EN;
     putreg32(tx_cfg, reg_base + UART_UTX_CONFIG_OFFSET);
     putreg32(rx_cfg, reg_base + UART_URX_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_uart_deinit(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_deinit
+    romapi_bflb_uart_deinit(dev);
+#else
     uint32_t reg_base;
     uint32_t tx_cfg;
     uint32_t rx_cfg;
@@ -132,10 +149,14 @@ void bflb_uart_deinit(struct bflb_device_s *dev)
     rx_cfg &= ~UART_CR_URX_EN;
     putreg32(tx_cfg, reg_base + UART_UTX_CONFIG_OFFSET);
     putreg32(rx_cfg, reg_base + UART_URX_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_uart_enable(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_enable
+    romapi_bflb_uart_enable(dev);
+#else
     uint32_t reg_base;
     uint32_t tx_cfg;
     uint32_t rx_cfg;
@@ -147,10 +168,14 @@ void bflb_uart_enable(struct bflb_device_s *dev)
     rx_cfg |= UART_CR_URX_EN;
     putreg32(tx_cfg, reg_base + UART_UTX_CONFIG_OFFSET);
     putreg32(rx_cfg, reg_base + UART_URX_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_uart_disable(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_disable
+    romapi_bflb_uart_disable(dev);
+#else
     uint32_t reg_base;
     uint32_t tx_cfg;
     uint32_t rx_cfg;
@@ -162,10 +187,14 @@ void bflb_uart_disable(struct bflb_device_s *dev)
     rx_cfg &= ~UART_CR_URX_EN;
     putreg32(tx_cfg, reg_base + UART_UTX_CONFIG_OFFSET);
     putreg32(rx_cfg, reg_base + UART_URX_CONFIG_OFFSET);
+#endif
 }
 
 void bflb_uart_link_txdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_uart_link_txdma
+    romapi_bflb_uart_link_txdma(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -177,10 +206,14 @@ void bflb_uart_link_txdma(struct bflb_device_s *dev, bool enable)
         regval &= ~UART_DMA_TX_EN;
     }
     putreg32(regval, reg_base + UART_FIFO_CONFIG_0_OFFSET);
+#endif
 }
 
 void bflb_uart_link_rxdma(struct bflb_device_s *dev, bool enable)
 {
+#ifdef romapi_bflb_uart_link_rxdma
+    romapi_bflb_uart_link_rxdma(dev, enable);
+#else
     uint32_t reg_base;
     uint32_t regval;
 
@@ -192,10 +225,14 @@ void bflb_uart_link_rxdma(struct bflb_device_s *dev, bool enable)
         regval &= ~UART_DMA_RX_EN;
     }
     putreg32(regval, reg_base + UART_FIFO_CONFIG_0_OFFSET);
+#endif
 }
 
 ATTR_TCM_SECTION int bflb_uart_putchar(struct bflb_device_s *dev, int ch)
 {
+#ifdef romapi_bflb_uart_putchar
+    return romapi_bflb_uart_putchar(dev, ch);
+#else
     uint64_t start_time;
     uint32_t reg_base;
 
@@ -208,10 +245,14 @@ ATTR_TCM_SECTION int bflb_uart_putchar(struct bflb_device_s *dev, int ch)
     }
     putreg8(ch, reg_base + UART_FIFO_WDATA_OFFSET);
     return 0;
+#endif
 }
 
 ATTR_TCM_SECTION int bflb_uart_getchar(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_getchar
+    return romapi_bflb_uart_getchar(dev);
+#else
     int ch = -1;
     uint32_t reg_base;
 
@@ -221,10 +262,14 @@ ATTR_TCM_SECTION int bflb_uart_getchar(struct bflb_device_s *dev)
     }
 
     return ch;
+#endif
 }
 
 ATTR_TCM_SECTION int bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
 {
+#ifdef romapi_bflb_uart_put
+    return romapi_bflb_uart_put(dev, config);
+#else
     int ret;
     for (uint32_t i = 0; i < len; i++) {
         ret = bflb_uart_putchar(dev, data[i]);
@@ -233,6 +278,7 @@ ATTR_TCM_SECTION int bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uin
         }
     }
     return 0;
+#endif
 }
 
 ATTR_TCM_SECTION int bflb_uart_put_block(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
@@ -257,6 +303,9 @@ ATTR_TCM_SECTION int bflb_uart_put_block(struct bflb_device_s *dev, uint8_t *dat
 
 ATTR_TCM_SECTION int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
 {
+#ifdef romapi_bflb_uart_get
+    return romapi_bflb_uart_get(dev, data, len);
+#else
     int ch = -1;
     uint32_t count = 0;
 
@@ -268,10 +317,34 @@ ATTR_TCM_SECTION int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uin
         count++;
     }
     return count;
+#endif
+}
+
+int bflb_uart_wait_tx_done(struct bflb_device_s *dev)
+{
+    uint64_t start_time;
+
+    start_time = bflb_mtimer_get_time_ms();
+    while (!bflb_uart_txempty(dev)) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 1000) {
+            return -ETIMEDOUT;
+        }
+    }
+
+    start_time = bflb_mtimer_get_time_ms();
+    while (getreg32(dev->reg_base + UART_STATUS_OFFSET) & UART_STS_UTX_BUS_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 1000) {
+            return -ETIMEDOUT;
+        }
+    }
+    return 0;
 }
 
 bool bflb_uart_txready(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_txready
+    return romapi_bflb_uart_txready(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
@@ -280,10 +353,14 @@ bool bflb_uart_txready(struct bflb_device_s *dev)
     } else {
         return false;
     }
+#endif
 }
 
 bool bflb_uart_txempty(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_txempty
+    return romapi_bflb_uart_txempty(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
@@ -292,18 +369,26 @@ bool bflb_uart_txempty(struct bflb_device_s *dev)
     } else {
         return false;
     }
+#endif
 }
 
 bool bflb_uart_rxavailable(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_rxavailable
+    return romapi_bflb_uart_rxavailable(dev);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
     return ((getreg32(reg_base + UART_FIFO_CONFIG_1_OFFSET) & UART_RX_FIFO_CNT_MASK) != 0);
+#endif
 }
 
 void bflb_uart_txint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_uart_txint_mask
+    romapi_bflb_uart_txint_mask(dev, mask);
+#else
     uint32_t reg_base;
     uint32_t int_mask;
 
@@ -315,10 +400,14 @@ void bflb_uart_txint_mask(struct bflb_device_s *dev, bool mask)
         int_mask &= ~UART_CR_UTX_FIFO_MASK;
     }
     putreg32(int_mask, reg_base + UART_INT_MASK_OFFSET);
+#endif
 }
 
 void bflb_uart_rxint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_uart_rxint_mask
+    romapi_bflb_uart_rxint_mask(dev, mask);
+#else
     uint32_t reg_base;
     uint32_t int_mask;
 
@@ -332,10 +421,14 @@ void bflb_uart_rxint_mask(struct bflb_device_s *dev, bool mask)
         int_mask &= ~UART_CR_URX_RTO_MASK;
     }
     putreg32(int_mask, reg_base + UART_INT_MASK_OFFSET);
+#endif
 }
 
 void bflb_uart_errint_mask(struct bflb_device_s *dev, bool mask)
 {
+#ifdef romapi_bflb_uart_errint_mask
+    romapi_bflb_uart_errint_mask(dev, mask);
+#else
     uint32_t reg_base;
     uint32_t int_mask;
 
@@ -357,10 +450,14 @@ void bflb_uart_errint_mask(struct bflb_device_s *dev, bool mask)
 #endif
     }
     putreg32(int_mask, reg_base + UART_INT_MASK_OFFSET);
+#endif
 }
 
 uint32_t bflb_uart_get_intstatus(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_get_intstatus
+    return romapi_bflb_uart_get_intstatus(dev);
+#else
     uint32_t reg_base;
     uint32_t int_status;
     uint32_t int_mask;
@@ -369,18 +466,26 @@ uint32_t bflb_uart_get_intstatus(struct bflb_device_s *dev)
     int_status = getreg32(reg_base + UART_INT_STS_OFFSET);
     int_mask = getreg32(reg_base + UART_INT_MASK_OFFSET);
     return (int_status & ~int_mask);
+#endif
 }
 
 void bflb_uart_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
 {
+#ifdef romapi_bflb_uart_int_clear
+    romapi_bflb_uart_int_clear(dev, int_clear);
+#else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
     putreg32(int_clear, reg_base + UART_INT_CLEAR_OFFSET);
+#endif
 }
 
 int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_uart_feature_control
+    return romapi_bflb_uart_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     uint32_t reg_base;
     uint32_t tmp;
@@ -775,4 +880,5 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     }
 
     return ret;
+#endif
 }

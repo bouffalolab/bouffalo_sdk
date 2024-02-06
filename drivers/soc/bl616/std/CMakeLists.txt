@@ -33,6 +33,7 @@ sdk_library_add_sources(src/bl616_mfg_flash.c)
 sdk_library_add_sources(src/bl616_mfg_media.c)
 endif()
 
+sdk_library_add_sources(port/bl616_gpio.c)
 sdk_library_add_sources(port/bl616_clock.c)
 
 sdk_add_include_directories(

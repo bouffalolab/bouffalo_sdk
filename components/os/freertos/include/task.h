@@ -1634,6 +1634,18 @@ configSTACK_DEPTH_TYPE uxTaskGetStackHighWaterMark2( TaskHandle_t xTask ) PRIVIL
     void * pvTaskGetThreadLocalStoragePointer( TaskHandle_t xTaskToQuery,
                                                BaseType_t xIndex ) PRIVILEGED_FUNCTION;
 
+    #if ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+
+        /**
+         * Prototype of local storage pointer deletion callback.
+         */
+        typedef void (*TlsDeleteCallbackFunction_t)( int, void * );
+
+        /**
+         * Set local storage pointer and deletion callback.
+         */
+        UBaseType_t vTaskSetThreadLocalStoragePointerAndDelCallback( TaskHandle_t xTaskToSet, BaseType_t xIndex, void *pvValue, TlsDeleteCallbackFunction_t pvDelCallback);
+    #endif
 #endif
 
 #if ( configCHECK_FOR_STACK_OVERFLOW > 0 )

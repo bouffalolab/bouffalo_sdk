@@ -126,6 +126,43 @@
   * @}
   */
 
+// clang-format off
+#define IS_AUDAC_SAMPLING_RATE(type)   (((type) == AUDAC_SAMPLING_RATE_8K) || \
+                                  ((type) == AUDAC_SAMPLING_RATE_16K) || \
+                                  ((type) == AUDAC_SAMPLING_RATE_22P05K) || \
+                                  ((type) == AUDAC_SAMPLING_RATE_24K) || \
+                                  ((type) == AUDAC_SAMPLING_RATE_32K) || \
+                                  ((type) == AUDAC_SAMPLING_RATE_44P1K) || \
+                                  ((type) == AUDAC_SAMPLING_RATE_48K))
+
+#define IS_AUDAC_OUTPUT_MODE(type)  (((type) == AUDAC_OUTPUT_MODE_PWM) || \
+                                  ((type) == AUDAC_OUTPUT_MODE_GPDAC_CH_A) || \
+                                  ((type) == AUDAC_OUTPUT_MODE_GPDAC_CH_B) || \
+                                  ((type) == AUDAC_OUTPUT_MODE_GPDAC_CH_A_B))
+
+#define IS_AUDAC_SOURCE_CHANNEL(type)  (((type) == AUDAC_SOURCE_CHANNEL_SINGLE) || \
+                                  ((type) == AUDAC_SOURCE_CHANNEL_DUAL))
+
+#define IS_AUDAC_MIXER_MODE(type)  (((type) == AUDAC_MIXER_MODE_ONLY_L) || \
+                                  ((type) == AUDAC_MIXER_MODE_ONLY_R) || \
+                                  ((type) == AUDAC_MIXER_MODE_SUM) || \
+                                  ((type) == AUDAC_MIXER_MODE_AVERAGE))
+
+#define IS_AUDAC_DATA_FORMAT(type)  (((type) == AUDAC_DATA_FORMAT_16BIT) || \
+                                  ((type) == AUDAC_DATA_FORMAT_20BIT) || \
+                                  ((type) == AUDAC_DATA_FORMAT_24BIT) || \
+                                  ((type) == AUDAC_DATA_FORMAT_32BIT))
+
+#define IS_AUDAC_RAMP_RATE(type)  ((type) <= AUDAC_RAMP_RATE_FS_2048)
+
+#define IS_AUDAC_VOLUME_UPDATE_MODE(type)  (((type) == AUDAC_VOLUME_UPDATE_MODE_FORCE) || \
+                                  ((type) == AUDAC_VOLUME_UPDATE_MODE_RAMP) || \
+                                  ((type) == AUDAC_VOLUME_UPDATE_MODE_RAMP_ZERO_CROSSING))
+
+#define IS_AUDAC_THRESHOLD(type)      ((type) <= 7)
+
+// clang-format on
+
 /**
  * @brief AUDAC initialization configuration structure
  *

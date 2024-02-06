@@ -75,7 +75,7 @@ static void producer_task(void *pvParameters)
             LOG_I("total [%4ld] free [%4ld]\r\n", total, free);
 
             cnt++;
-            sprintf((char *)block_ptr, "this is [%ld] info in block [%08lx]\r\n", cnt, (uint32_t)block_ptr);
+            snprintf((char *)block_ptr, BLK_SIZE, "this is [%ld] info in block [%08lx]\r\n", cnt, (uint32_t)block_ptr);
             LOG_I("Producer send >> %s\r\n", (char *)block_ptr);
             if (pdTRUE != xQueueSend(queue, (void *)&block_ptr, 1000)) {
                 LOG_E("queue send faild\r\n");

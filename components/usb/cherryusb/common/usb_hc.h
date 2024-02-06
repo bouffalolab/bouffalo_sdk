@@ -13,21 +13,6 @@ extern "C" {
 #endif
 
 typedef void (*usbh_complete_callback_t)(void *arg, int nbytes);
-typedef void *usbh_pipe_t;
-
-/**
- * @brief USB Endpoint Configuration.
- *
- * Structure containing the USB endpoint configuration.
- */
-struct usbh_endpoint_cfg {
-    struct usbh_hubport *hport;
-    uint8_t ep_addr;     /* Endpoint addr with direction */
-    uint8_t ep_type;     /* Endpoint type */
-    uint16_t ep_mps;     /* Endpoint max packet size */
-    uint8_t ep_interval; /* Endpoint interval */
-    uint8_t mult;        /* Endpoint additional transcation */
-};
 
 /**
  * @brief USB Iso Configuration.
@@ -47,7 +32,10 @@ struct usbh_iso_frame_packet {
  * Structure containing the USB Urb configuration.
  */
 struct usbh_urb {
-    usbh_pipe_t pipe;
+    void *hcpriv;
+    struct usbh_hubport *hport;
+    struct usb_endpoint_descriptor *ep;
+    uint8_t data_toggle;
     struct usb_setup_packet *setup;
     uint8_t *transfer_buffer;
     uint32_t transfer_buffer_length;
@@ -59,7 +47,11 @@ struct usbh_urb {
     uint32_t start_frame;
     usbh_complete_callback_t complete;
     void *arg;
+#if defined(__ICCARM__) || defined(__ICCRISCV__) || defined(__ICCRX__)
+    struct usbh_iso_frame_packet *iso_packet;
+#else
     struct usbh_iso_frame_packet iso_packet[0];
+#endif
 };
 
 /**
@@ -68,6 +60,13 @@ struct usbh_urb {
  * @return On success will return 0, and others indicate fail.
  */
 int usb_hc_init(void);
+
+/**
+ * @brief usb host controller hardware deinit.
+ *
+ * @return On success will return 0, and others indicate fail.
+ */
+int usb_hc_deinit(void);
 
 /**
  * @brief Get frame number.
@@ -85,34 +84,6 @@ uint16_t usbh_get_frame_number(void);
 int usbh_roothub_control(struct usb_setup_packet *setup, uint8_t *buf);
 
 /**
- * @brief reconfig endpoint pipe.
- *
- * @param pipe A memory allocated for pipe.
- * @param dev_addr device address.
- * @param ep_mps endpoint max packet size.
- * @param mult endpoint additional transcation
- * @return On success will return 0, and others indicate fail.
- */
-int usbh_ep_pipe_reconfigure(usbh_pipe_t pipe, uint8_t dev_addr, uint8_t ep_mps, uint8_t mult);
-
-/**
- * @brief Allocate pipe for endpoint
- *
- * @param pipe A memory location provided by the caller in which to save the allocated pipe.
- * @param ep_cfg Describes the endpoint info to be allocated.
- * @return  On success will return 0, and others indicate fail.
- */
-int usbh_pipe_alloc(usbh_pipe_t *pipe, const struct usbh_endpoint_cfg *ep_cfg);
-
-/**
- * @brief Free a pipe in which saves endpoint info.
- *
- * @param pipe A memory location provided by the caller in which to free the allocated endpoint info.
- * @return On success will return 0, and others indicate fail.
- */
-int usbh_pipe_free(usbh_pipe_t pipe);
-
-/**
  * @brief Submit a usb transfer request to an endpoint.
  *
  * If timeout is not zero, this function will be in poll transfer mode,
@@ -126,7 +97,7 @@ int usbh_submit_urb(struct usbh_urb *urb);
 /**
  * @brief Cancel a transfer request.
  *
- * This function will call When calls usbh_submit_urb and return -ETIMEOUT or -ESHUTDOWN.
+ * This function will call When calls usbh_submit_urb and return -USB_ERR_TIMEOUT or -USB_ERR_SHUTDOWN.
  *
  * @param urb Usb request block.
  * @return  On success will return 0, and others indicate fail.

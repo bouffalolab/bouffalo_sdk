@@ -28,6 +28,11 @@ else
 	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-freebsd
 	PUNCOVER_PROGRAM = puncover_riscv
 	cmake_generator = "Unix Makefiles"
+	else ifeq ($(shell arch),aarch64)
+	CMAKE = cmake # use user cmake
+	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-arm
+	PUNCOVER_PROGRAM = puncover_riscv
+	cmake_generator = "Unix Makefiles"
 	else ifeq ($(patsubst %WSL2,WSL2,$(shell uname -r)), WSL2)
 	PS_PROGRAM = /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
 	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
@@ -82,6 +87,12 @@ ninja:Makefile
 clean::
 	$(RM) build
 
+# Pack built outs and clean
+pack_clean::
+	proj_name=`find . -name "*.elf" | xargs basename -s .elf`; \
+	tar czvf $${proj_name}_imgs.tar.gz build/build_out/$${proj_name}.*;
+	$(RM) build
+
 menuconfig::
 	python $(BL_SDK_BASE)/tools/kconfig/menuconfig.py
 
@@ -94,4 +105,7 @@ efuse:
 puncover:
 	$(command_puncover)
 
-.PHONY:build clean menuconfig ninja flash efuse puncover
+size:
+	$(MAKE) -C build size_report
+
+.PHONY:build clean menuconfig ninja flash efuse puncover size

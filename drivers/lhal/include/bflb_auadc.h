@@ -51,12 +51,8 @@
  * @{
  */
 #define AUADC_ADC_ANALOG_CH_0            0
-#define AUADC_ADC_ANALOG_CH_1            1
-#define AUADC_ADC_ANALOG_CH_2            2
 #define AUADC_ADC_ANALOG_CH_3            3
 #define AUADC_ADC_ANALOG_CH_4            4
-#define AUADC_ADC_ANALOG_CH_5            5
-#define AUADC_ADC_ANALOG_CH_6            6
 #define AUADC_ADC_ANALOG_CH_7            7
 /**
   * @}
@@ -136,6 +132,44 @@
 /**
   * @}
   */
+
+// clang-format off
+#define IS_AUADC_SAMPLING_RATE(type) (((type) == AUADC_SAMPLING_RATE_8K) || \
+                                   ((type) == AUADC_SAMPLING_RATE_16K) || \
+                                   ((type) == AUADC_SAMPLING_RATE_24K) || \
+                                   ((type) == AUADC_SAMPLING_RATE_32K) || \
+                                   ((type) == AUADC_SAMPLING_RATE_48K) || \
+                                   ((type) == AUADC_SAMPLING_RATE_MEASURE_128K) || \
+                                   ((type) == AUADC_SAMPLING_RATE_MEASURE_256K) || \
+                                   ((type) == AUADC_SAMPLING_RATE_MEASURE_512K))
+
+#define IS_AUADC_INPUT_MODE(type)  (((type) == AUADC_INPUT_MODE_ADC) || \
+                                  ((type) == AUADC_INPUT_MODE_PDM_L) || \
+                                  ((type) == AUADC_INPUT_MODE_PDM_R))
+
+#define IS_AUADC_DATA_FORMAT(type)         (((type) == AUADC_DATA_FORMAT_16BIT) || \
+                                          ((type) == AUADC_DATA_FORMAT_20BIT) || \
+                                          ((type) == AUADC_DATA_FORMAT_24BIT) || \
+                                          ((type) == AUADC_DATA_FORMAT_32BIT))
+
+#define IS_AUADC_ADC_THRESHOLD(type)      ((type) <= 7)
+
+#define IS_AUADC_ADC_ANALOG_CH(type)      ((type) <= AUADC_ADC_ANALOG_CH_7)
+
+#define IS_AUADC_ADC_MEASURE_RATE(type)      ((type) <= AUADC_ADC_MEASURE_RATE_SPS_4000)
+
+#define IS_AUADC_ADC_MODE(type)  (((type) == AUADC_ADC_MODE_AUDIO) || \
+                                  ((type) == AUADC_ADC_MODE_MEASURE))
+
+#define IS_AUADC_ADC_PGA_MODE(type)  (((type) == AUADC_ADC_PGA_MODE_AC_DIFFER) || \
+                                  ((type) == AUADC_ADC_PGA_MODE_AC_SINGLE) || \
+                                  ((type) == AUADC_ADC_PGA_MODE_DC_DIFFER) || \
+                                  ((type) == AUADC_ADC_PGA_MODE_DC_SINGLE))
+
+#define IS_AUADC_ADC_PGA_GAIN(type)      (((type) <= 42) && ((type) >= 6))
+
+// clang-format on
+
 
 /**
  * @brief auadc initialization configuration structure

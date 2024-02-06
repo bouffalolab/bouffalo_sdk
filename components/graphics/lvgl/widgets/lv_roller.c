@@ -123,7 +123,7 @@ void lv_roller_set_options(lv_obj_t * obj, const char * options, lv_roller_mode_
         char * opt_extra = lv_mem_buf_get(opt_len * LV_ROLLER_INF_PAGES);
         uint8_t i;
         for(i = 0; i < LV_ROLLER_INF_PAGES; i++) {
-            strcpy(&opt_extra[opt_len * i], options);
+            strlcpy(&opt_extra[opt_len * i], options, opt_len);
             opt_extra[opt_len * (i + 1) - 1] = '\n';
         }
         opt_extra[opt_len * LV_ROLLER_INF_PAGES - 1] = '\0';

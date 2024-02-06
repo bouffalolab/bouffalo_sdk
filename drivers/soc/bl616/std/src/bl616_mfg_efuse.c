@@ -98,7 +98,7 @@ int mfg_efuse_write_xtal_capcode_pre(uint8_t capcode, uint8_t program)
     if (slot == -1) {
         return -1;
     } else {
-        sprintf(buf, "xtal%d", slot);
+        snprintf(buf, sizeof(buf), "xtal%d", slot);
         bflb_ef_ctrl_write_common_trim(NULL, buf, capcode, program);
         mfg_print("Write slot:%d\r\n", slot);
         return 0;
@@ -176,7 +176,7 @@ int mfg_efuse_write_hp_poweroffset_pre(int8_t pwr_offset[14], uint8_t program)
     if (slot == -1) {
         return -1;
     } else {
-        sprintf(buf, "hp_poffset%d", slot);
+        snprintf(buf, sizeof(buf), "hp_poffset%d", slot);
         cur_val = (pwr_offset[0] & 0x1f) | ((pwr_offset[6] & 0x1f) << 5) | ((pwr_offset[12] & 0x1f) << 10);
         bflb_ef_ctrl_write_common_trim(NULL, buf, cur_val, program);
         mfg_print("Write slot:%d\r\n", slot);
@@ -244,7 +244,7 @@ int mfg_efuse_write_lp_poweroffset_pre(int8_t pwr_offset[14], uint8_t program)
     if (slot == -1) {
         return -1;
     } else {
-        sprintf(buf, "lp_poffset%d", slot);
+        snprintf(buf, sizeof(buf), "lp_poffset%d", slot);
         cur_val = (pwr_offset[0] & 0x1f) | ((pwr_offset[6] & 0x1f) << 5) | ((pwr_offset[12] & 0x1f) << 10);
         bflb_ef_ctrl_write_common_trim(NULL, buf, cur_val, program);
         mfg_print("Write slot:%d\r\n", slot);
@@ -385,7 +385,7 @@ int mfg_efuse_write_bz_poweroffset_pre(int8_t pwr_offset[5], uint8_t program)
     if (slot == -1) {
         return -1;
     } else {
-        sprintf(buf, "bz_poffset%d", slot);
+        snprintf(buf, sizeof(buf), "bz_poffset%d", slot);
         cur_val = (pwr_offset[0] & 0x1f) | ((pwr_offset[1] & 0x1f) << 5) | ((pwr_offset[2] & 0x1f) << 10) | ((pwr_offset[3] & 0x1f) << 15) | ((pwr_offset[4] & 0x1f) << 20);
         bflb_ef_ctrl_write_common_trim(NULL, buf, cur_val, program);
         mfg_print("Write slot:%d\r\n", slot);

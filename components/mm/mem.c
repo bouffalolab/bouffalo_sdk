@@ -279,7 +279,7 @@ int cmd_free(int argc, char **argv)
     mem = malloc(64);
     bflb_mem_usage(KMEM_HEAP, &info);
 
-    sprintf(mem, "%-8d%-8d%-8d%-8d%-8d%-8d\r\n", info.total_size, info.free_size, info.used_size, info.max_free_size,
+    snprintf(mem, 64, "%-8d%-8d%-8d%-8d%-8d%-8d\r\n", info.total_size, info.free_size, info.used_size, info.max_free_size,
             info.free_node, info.used_node);
 
     printf(Header);
@@ -291,7 +291,7 @@ int cmd_free(int argc, char **argv)
     mem = malloc(64);
     bflb_mem_usage(PMEM_HEAP, &info);
 
-    sprintf(mem, "%-8d%-8d%-8d%-8d%-8d%-8d\r\n", info.total_size, info.free_size, info.used_size, info.max_free_size,
+    snprintf(mem, 64, "%-8d%-8d%-8d%-8d%-8d%-8d\r\n", info.total_size, info.free_size, info.used_size, info.max_free_size,
             info.free_node, info.used_node);
 
     printf(Header);
