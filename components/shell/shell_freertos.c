@@ -19,8 +19,8 @@ static void shell_exec_task(void *pvParameters)
     ((cmd_function_t)(pvParameters))(shell_exec_argc, shell_exec_argv);
     shell_exec_end = true;
     __ASM volatile("fence");
-    vTaskDelete(shell_exec_handle);
     shell_exec_handle = NULL;
+    vTaskDelete(shell_exec_handle);
 }
 
 void shell_dup_line(char *cmd, uint32_t length)
@@ -43,8 +43,11 @@ void shell_abort_exec(int sig)
 int shell_start_exec(cmd_function_t func, int argc, char *argv[])
 {
     BaseType_t xReturned;
-    shell_abort_exec(SHELL_SIGINT);
     shell_exec_argc = argc;
+    if (shell_exec_handle != NULL) {
+        printf("shell is running can't exec another cmd\r\n");
+        return -1;
+    }
 
     for (uint8_t i = 0; i < argc; i++) {
         shell_exec_argv[i] = argv[i] + shell_exec_line_diff;
