@@ -16,15 +16,25 @@ static struct {
     pt_table_stuff_config table;
 } boot2_partition_table;//XXX Dont change the name of varaible, since we refer this boot2_partition_table in linker script
 
+static struct {
+    uint8_t partition_active_idx;
+    uint8_t pad[3];
+    pt_table_stuff_config table;
+} partition_table_write;
+
 int bflb_boot2_update_ptable(bflb_partition_config_t *ptEntry_hal)
 {
     int ret;
     //FIXME force covert
     pt_table_entry_config *ptEntry = (pt_table_entry_config*)ptEntry_hal;
 
+    /* copy to write partition incase reboot not issue due to some reason,
+       in this case,boot2_partition_table changed and next get from this table
+       will cause a wrong active_index */
+    memcpy(&partition_table_write,&boot2_partition_table,sizeof(partition_table_write));
     ptEntry->active_index = !ptEntry->active_index;
     (ptEntry->age)++;
-    ret = pt_table_update_entry(!boot2_partition_table.partition_active_idx, &boot2_partition_table.table, ptEntry);
+    ret = pt_table_update_entry(!partition_table_write.partition_active_idx, &partition_table_write.table, ptEntry);
     return ret;
 }
 
