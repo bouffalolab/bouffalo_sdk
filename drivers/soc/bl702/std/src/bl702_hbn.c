@@ -35,6 +35,7 @@
   */
 
 #include "bl702_hbn.h"
+#include "bflb_acomp.h"
 #include "bl702_glb.h"
 #include "bflb_xip_sflash.h"
 
@@ -805,7 +806,7 @@ BL_Err_Type HBN_Set_UART_CLK_Sel(HBN_UART_CLK_Type clkSel)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_Type xClk)
+BL_Err_Type ATTR_TCM_SECTION HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_Type xClk)
 {
     uint32_t tmpVal;
     uint32_t tmpVal2;
@@ -1494,6 +1495,80 @@ BL_Err_Type HBN_Disable_AComp1_IRQ(HBN_ACOMP_INT_EDGE_Type edge)
     tmpVal2 = tmpVal2 & (~(1 << edge));
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP1_EN, tmpVal2);
     BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN enable ACOMP interrupt
+ *
+ * @param  acompId: HBN Acomp ID
+ * @param  edge: HBN acomp interrupt edge type, this parameter can be one of the following values:
+ *           @arg HBN_ACOMP_INT_EDGE_POSEDGE
+ *           @arg HBN_ACOMP_INT_EDGE_NEGEDGE
+ *           @arg HBN_ACOMP_INT_EDGE_POSEDGE_NEGEDGE
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type HBN_Enable_AComp_IRQ(uint8_t acompId, uint8_t edge)
+{
+    uint32_t tmpVal;
+    uint32_t tmpVal2;
+
+    CHECK_PARAM(IS_AON_ACOMP_ID_TYPE(acompId));
+    CHECK_PARAM(IS_HBN_ACOMP_INT_EDGE_TYPE(edge));
+
+    if (acompId == (uint8_t)AON_ACOMP0_ID) {
+        tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+        tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP0_EN);
+        tmpVal2 = tmpVal2 | edge;
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP0_EN, tmpVal2);
+        BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+    } else if (acompId == (uint8_t)AON_ACOMP1_ID) {
+        tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+        tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP1_EN);
+        tmpVal2 = tmpVal2 | edge;
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP1_EN, tmpVal2);
+        BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+    }
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  HBN disable ACOMP interrupt
+ *
+ * @param  acompId: HBN Acomp ID
+ * @param  edge: HBN acomp interrupt edge type, this parameter can be one of the following values:
+ *           @arg HBN_ACOMP_INT_EDGE_POSEDGE
+ *           @arg HBN_ACOMP_INT_EDGE_NEGEDGE
+ *           @arg HBN_ACOMP_INT_EDGE_POSEDGE_NEGEDGE
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type HBN_Disable_AComp_IRQ(uint8_t acompId, uint8_t edge)
+{
+    uint32_t tmpVal;
+    uint32_t tmpVal2;
+
+    CHECK_PARAM(IS_AON_ACOMP_ID_TYPE(acompId));
+    CHECK_PARAM(IS_HBN_ACOMP_INT_EDGE_TYPE(edge));
+
+    if (acompId == (uint8_t)AON_ACOMP0_ID) {
+        tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+        tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP0_EN);
+        tmpVal2 = tmpVal2 & (~edge);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP0_EN, tmpVal2);
+        BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+    } else if (acompId == (uint8_t)AON_ACOMP1_ID) {
+        tmpVal = BL_RD_REG(HBN_BASE, HBN_IRQ_MODE);
+        tmpVal2 = BL_GET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP1_EN);
+        tmpVal2 = tmpVal2 & (~edge);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_IRQ_ACOMP1_EN, tmpVal2);
+        BL_WR_REG(HBN_BASE, HBN_IRQ_MODE, tmpVal);
+    }
 
     return SUCCESS;
 }

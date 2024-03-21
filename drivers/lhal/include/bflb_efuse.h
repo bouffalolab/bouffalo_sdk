@@ -39,7 +39,7 @@ typedef struct
 extern "C" {
 #endif
 
-void bflb_efuse_get_chipid(uint8_t chipid[8]);
+int bflb_efuse_get_chipid(uint8_t chipid[8]);
 
 uint8_t bflb_efuse_is_mac_address_slot_empty(uint8_t slot, uint8_t reload);
 int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t program);

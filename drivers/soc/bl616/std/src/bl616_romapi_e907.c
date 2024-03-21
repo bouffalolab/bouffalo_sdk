@@ -1320,10 +1320,12 @@ BL_Err_Type HBN_Set_Core_Reboot_Config(uint8_t core, uint8_t hcfg){
     return RomDriver_HBN_Set_Core_Reboot_Config(core,hcfg);
 }
 
+#if 0
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Set_Flash_Power_Delay(uint8_t flashPwrDly){
     return RomDriver_HBN_Set_Flash_Power_Delay(flashPwrDly);
 }
+#endif
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Set_GPADC_CLK_Sel(uint8_t clkSel){

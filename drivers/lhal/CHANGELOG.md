@@ -1,3 +1,31 @@
+# Bouffalolab LHAL Release v1.3.0
+
+Change Log Since v1.2.0 Release
+
+- [fix][efuse]fix bflb_ef_ctrl_write_common_trim putreg32 bug
+- [fix]fix efuse trim read/write en address range error
+- [fix][ef_ctrl] fix bflb_ef_ctrl_write_direct when pword=NULL, need to check program
+- [fix][efuse] fix return para for bflb_efuse_get_chipid
+- [fix] fix romapi return and input
+- [update][cam] move some configs into feature control
+- [update][config] add bl628 config
+- [update][common] remove crc32 table
+- [fix] remove some flash cfg for bl808 boot2
+- [update] remove platform dma reg
+- [fix][auadc] fix romapi name
+- [update][adc] add adc clear fifo cmd
+- [fix][adc] remove adc channel 11 in bl616
+- [fix][trng] add lock for random
+- [refactor] remove platform dma
+- [feat] add process corner interface
+- [fix][clock] fix build for bl628
+- [fix][config] remove bl616 dma ch4~7
+- [fix][auadc] Remove unsupported analog channels of AUADC.
+- [fix][gpio] delete api of 32bits write to GPIO, because GPIO mode is set/clr
+- [fix][dac] fix dac offset in bl602
+- [update][gpio] add check for pin
+- [fix][lhal] fix dma tc int mask
+
 # Bouffalolab LHAL Release v1.2.0
 
 Change Log Since v1.1.0 Release

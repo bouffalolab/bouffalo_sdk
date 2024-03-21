@@ -115,6 +115,9 @@ int bflb_trng_read(struct bflb_device_s *dev, uint8_t data[32])
 
 int bflb_trng_readlen(uint8_t *data, uint32_t len)
 {
+#ifdef romapi_bflb_trng_readlen
+    return romapi_bflb_trng_readlen(data, len);
+#else
     uint8_t tmp_buf[32];
     uint32_t readlen = 0;
     uint32_t i = 0, cnt = 0;
@@ -138,10 +141,14 @@ int bflb_trng_readlen(uint8_t *data, uint32_t len)
     }
 
     return 0;
+#endif
 }
 
 __WEAK long random(void)
 {
+#ifdef romapi_random
+    return romapi_random();
+#else
     uint32_t data[8];
     uintptr_t flag;
 
@@ -150,6 +157,7 @@ __WEAK long random(void)
     bflb_irq_restore(flag);
 
     return data[0];
+#endif
 }
 
 void bflb_group0_request_trng_access(struct bflb_device_s *dev)

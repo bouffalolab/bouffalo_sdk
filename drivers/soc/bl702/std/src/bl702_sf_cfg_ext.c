@@ -463,6 +463,106 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flashcfg_winb_16jv = {
     .qe_data = 0,
 };
 
+static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_winb_128jw_128jv = {
+    .reset_c_read_cmd = 0xff,
+    .reset_c_read_cmd_size = 3,
+    .mid = 0xef,
+
+    .de_burst_wrap_cmd = 0x77,
+    .de_burst_wrap_cmd_dmy_clk = 0x3,
+    .de_burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .de_burst_wrap_data = 0xF0,
+
+    /*reg*/
+    .write_enable_cmd = 0x06,
+    .wr_enable_index = 0x00,
+    .wr_enable_bit = 0x01,
+    .wr_enable_read_reg_len = 0x01,
+
+    .qe_index = 1,
+    .qe_bit = 0x01,
+    .qe_write_reg_len = 0x01,
+    .qe_read_reg_len = 0x1,
+
+    .busy_index = 0,
+    .busy_bit = 0x00,
+    .busy_read_reg_len = 0x1,
+    .release_powerdown = 0xab,
+
+    .read_reg_cmd[0] = 0x05,
+    .read_reg_cmd[1] = 0x35,
+    .write_reg_cmd[0] = 0x01,
+    .write_reg_cmd[1] = 0x31,
+
+    .fast_read_qio_cmd = 0xeb,
+    .fr_qio_dmy_clk = 16 / 8,
+    .c_read_support = 0,
+    .c_read_mode = 0xFF,
+
+    .burst_wrap_cmd = 0x77,
+    .burst_wrap_cmd_dmy_clk = 0x3,
+    .burst_wrap_data_mode = SF_CTRL_DATA_4_LINES,
+    .burst_wrap_data = 0x40,
+    /*erase*/
+    .chip_erase_cmd = 0xc7,
+    .sector_erase_cmd = 0x20,
+    .blk32_erase_cmd = 0x52,
+    .blk64_erase_cmd = 0xd8,
+    /*write*/
+    .page_program_cmd = 0x02,
+    .qpage_program_cmd = 0x32,
+    .qpp_addr_mode = SF_CTRL_ADDR_1_LINE,
+
+    .io_mode = SF_CTRL_QIO_MODE,
+    .clk_delay = 1,
+    .clk_invert = 0x3f,
+
+    .reset_en_cmd = 0x66,
+    .reset_cmd = 0x99,
+    .c_rexit = 0xff,
+    .wr_enable_write_reg_len = 0x00,
+
+    /*id*/
+    .jedec_id_cmd = 0x9f,
+    .jedec_id_cmd_dmy_clk = 0,
+
+    .qpi_jedec_id_cmd = 0x9f,
+    .qpi_jedec_id_cmd_dmy_clk = 0x00,
+
+    .sector_size = 4,
+    .page_size = 256,
+
+    /*read*/
+    .fast_read_cmd = 0x0b,
+    .fr_dmy_clk = 8 / 8,
+    .qpi_fast_read_cmd = 0x0b,
+    .qpi_fr_dmy_clk = 8 / 8,
+    .fast_read_do_cmd = 0x3b,
+    .fr_do_dmy_clk = 8 / 8,
+    .fast_read_dio_cmd = 0xbb,
+    .fr_dio_dmy_clk = 0,
+    .fast_read_qo_cmd = 0x6b,
+    .fr_qo_dmy_clk = 8 / 8,
+
+    .qpi_fast_read_qio_cmd = 0xeb,
+    .qpi_fr_qio_dmy_clk = 16 / 8,
+    .qpi_page_program_cmd = 0x02,
+    .write_vreg_enable_cmd = 0x50,
+
+    /* qpi mode */
+    .enter_qpi = 0x38,
+    .exit_qpi = 0xff,
+
+    /*AC*/
+    .time_e_sector = 400,
+    .time_e_32k = 1600,
+    .time_e_64k = 2000,
+    .time_page_pgm = 5,
+    .time_ce = 33 * 1000,
+    .pd_delay = 3,
+    .qe_data = 0,
+};
+
 static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
     {
         .jedec_id = 0x134051,
@@ -608,6 +708,11 @@ static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         .jedec_id = 0x18400B,
         .name = "xt_25f128b_128_33",
         .cfg = &flashcfg_fm_q80,
+    },
+    {
+        .jedec_id = 0x1760ef,
+        .name = "Winb_64JW_64_33",
+        .cfg = &flash_cfg_winb_128jw_128jv,
     },
 };
 

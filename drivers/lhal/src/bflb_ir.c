@@ -703,6 +703,9 @@ void bflb_ir_rxfifo_clear(struct bflb_device_s *dev)
 
 int bflb_ir_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
+#ifdef romapi_bflb_ir_feature_control
+    return romapi_bflb_ir_feature_control(dev, cmd, arg);
+#else
     int ret = 0;
     switch (cmd) {
         default:
@@ -710,4 +713,5 @@ int bflb_ir_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             break;
     }
     return ret;
+#endif
 }

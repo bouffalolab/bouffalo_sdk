@@ -175,7 +175,7 @@ void bflb_timer_set_compvalue(struct bflb_device_s *dev, uint8_t cmp_no, uint32_
 uint32_t bflb_timer_get_compvalue(struct bflb_device_s *dev, uint8_t cmp_no)
 {
 #ifdef romapi_bflb_timer_get_compvalue
-    romapi_bflb_timer_get_compvalue(dev);
+    return romapi_bflb_timer_get_compvalue(dev);
 #else
     uint32_t reg_base;
 
@@ -188,7 +188,7 @@ uint32_t bflb_timer_get_compvalue(struct bflb_device_s *dev, uint8_t cmp_no)
 uint32_t bflb_timer_get_countervalue(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_timer_get_countervalue
-    romapi_bflb_timer_get_countervalue(dev);
+    return romapi_bflb_timer_get_countervalue(dev);
 #else
     uint32_t reg_base;
 
@@ -201,7 +201,7 @@ uint32_t bflb_timer_get_countervalue(struct bflb_device_s *dev)
 void bflb_timer_compint_mask(struct bflb_device_s *dev, uint8_t cmp_no, bool mask)
 {
 #ifdef romapi_bflb_timer_compint_mask
-    romapi_bflb_timer_compint_mask(dev);
+    return romapi_bflb_timer_compint_mask(dev, cmp_no, mask);
 #else
     uint32_t regval;
     uint32_t reg_base;
@@ -220,7 +220,7 @@ void bflb_timer_compint_mask(struct bflb_device_s *dev, uint8_t cmp_no, bool mas
 bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no)
 {
 #ifdef romapi_bflb_timer_get_compint_status
-    romapi_bflb_timer_get_compint_status(dev);
+    return romapi_bflb_timer_get_compint_status(dev, cmp_no);
 #else
     uint32_t regval;
     uint32_t reg_base;
@@ -239,7 +239,7 @@ bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no)
 void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no)
 {
 #ifdef romapi_bflb_timer_compint_clear
-    romapi_bflb_timer_compint_clear(dev);
+    romapi_bflb_timer_compint_clear(dev, cmp_no);
 #else
     uint32_t regval;
     uint32_t reg_base;

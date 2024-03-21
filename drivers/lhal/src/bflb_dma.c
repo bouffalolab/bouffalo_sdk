@@ -335,7 +335,7 @@ void bflb_dma_channel_stop(struct bflb_device_s *dev)
 bool bflb_dma_channel_isbusy(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_dma_channel_isbusy
-    romapi_bflb_dma_channel_isbusy(dev);
+    return romapi_bflb_dma_channel_isbusy(dev);
 #else
     uint32_t regval;
     uint32_t channel_base;

@@ -68,7 +68,7 @@ void SystemInit(void)
     for (i = 0; i < (IRQn_LAST + 3) / 4; i++) {
         p[i] = 0;
     }
-
+#ifndef CONFIG_BL702_USE_SF3_BOOT
     /* SF io select from efuse value */
     tmpVal = BL_RD_WORD(0x40007074);
     flashCfg = ((tmpVal >> 26) & 7);
@@ -90,7 +90,7 @@ void SystemInit(void)
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_CFG_GPIO_USE_PSRAM_IO, 0x00);
     }
     BL_WR_REG(GLB_BASE, GLB_GPIO_USE_PSRAM__IO, tmpVal);
-
+#endif
     BL_WR_REG(GLB_BASE, GLB_UART_SIG_SEL_0, 0xffffffff);
 
     /* init bor for all platform */

@@ -268,7 +268,7 @@ ATTR_TCM_SECTION int bflb_uart_getchar(struct bflb_device_s *dev)
 ATTR_TCM_SECTION int bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
 {
 #ifdef romapi_bflb_uart_put
-    return romapi_bflb_uart_put(dev, config);
+    return romapi_bflb_uart_put(dev, data, len);
 #else
     int ret;
     for (uint32_t i = 0; i < len; i++) {
@@ -283,6 +283,9 @@ ATTR_TCM_SECTION int bflb_uart_put(struct bflb_device_s *dev, uint8_t *data, uin
 
 ATTR_TCM_SECTION int bflb_uart_put_block(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
 {
+#ifdef romapi_bflb_uart_put_block
+    return romapi_bflb_uart_put_block(dev, data, len);
+#else
     int ret;
     uint32_t timeoutCnt = UART_TX_TIMEOUT_COUNT;
     for (uint32_t i = 0; i < len; i++) {
@@ -299,6 +302,7 @@ ATTR_TCM_SECTION int bflb_uart_put_block(struct bflb_device_s *dev, uint8_t *dat
         }
     }
     return 0;
+#endif
 }
 
 ATTR_TCM_SECTION int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
@@ -322,6 +326,9 @@ ATTR_TCM_SECTION int bflb_uart_get(struct bflb_device_s *dev, uint8_t *data, uin
 
 int bflb_uart_wait_tx_done(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_uart_wait_tx_done
+    return bflb_uart_wait_tx_done(dev);
+#else
     uint64_t start_time;
 
     start_time = bflb_mtimer_get_time_ms();
@@ -338,6 +345,7 @@ int bflb_uart_wait_tx_done(struct bflb_device_s *dev)
         }
     }
     return 0;
+#endif
 }
 
 bool bflb_uart_txready(struct bflb_device_s *dev)

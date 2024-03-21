@@ -504,38 +504,6 @@ void bflb_cam_pop_one_frame(struct bflb_device_s *dev)
 #endif
 }
 
-#if !defined(BL702)
-void bflb_cam_swap_input_yu_order(struct bflb_device_s *dev, bool enable)
-{
-#ifdef romapi_bflb_cam_swap_input_yu_order
-    romapi_bflb_cam_swap_input_yu_order(dev, enable);
-#else
-    uint32_t regval;
-
-    /* If image sensor output format is YUYV, it will be changed to UYVY */
-    regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
-    if (enable) {
-        regval |= CAM_FRONT_RG_DVPAS_DA_ORDER;
-    } else {
-        regval &= ~CAM_FRONT_RG_DVPAS_DA_ORDER;
-    }
-    putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
-#endif
-}
-
-void bflb_cam_filter_frame_period(struct bflb_device_s *dev, uint8_t frame_count, uint32_t frame_valid)
-{
-#ifdef romapi_bflb_cam_filter_frame_period
-    romapi_bflb_cam_filter_frame_period(dev, frame_count, frame_valid);
-#else
-    /* For example: frame_count is 4, frame_valid is 0x14 (10100b). Third/fifth frame will be retained,
-       First/second/fourth frame will be dropped in every (4 + 1) frames */
-    putreg32(frame_count, dev->reg_base + CAM_DVP2AXI_FRAME_PERIOD_OFFSET);
-    putreg32(frame_valid, dev->reg_base + CAM_DVP2AXI_FRAME_VLD_OFFSET);
-#endif
-}
-#endif
-
 uint8_t bflb_cam_get_frame_count(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_cam_get_frame_count
@@ -671,16 +639,42 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
         case CAM_CMD_INVERSE_VSYNC_POLARITY:
             /* Inverse vsync polarity */
             regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
-            regval |= CAM_FRONT_RG_DVPAS_VS_INV;
+            if (arg) {
+                regval |= CAM_FRONT_RG_DVPAS_VS_INV;
+            } else {
+                regval &= ~CAM_FRONT_RG_DVPAS_VS_INV;
+            }
             putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
             break;
 
         case CAM_CMD_INVERSE_HSYNC_POLARITY:
             /* Inverse hsync polarity */
             regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
-            regval |= CAM_FRONT_RG_DVPAS_HS_INV;
+            if (arg) {
+                regval |= CAM_FRONT_RG_DVPAS_HS_INV;
+            } else {
+                regval &= ~CAM_FRONT_RG_DVPAS_HS_INV;
+            }
             putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
             break;
+        case CAM_CMD_INVERSE_YUYV2UYVY:
+            /* If image sensor output format is YUYV, it will be changed to UYVY */
+            regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
+            if (arg) {
+                regval |= CAM_FRONT_RG_DVPAS_DA_ORDER;
+            } else {
+                regval &= ~CAM_FRONT_RG_DVPAS_DA_ORDER;
+            }
+            putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
+            break;
+        case CAM_CMD_FRAME_FILTER: {
+            /* For example: frame_count is 4, frame_valid is 0x14 (10100b). 
+            Third/fifth frame will be retained,First/second/fourth frame will be dropped in every (4 + 1) frames */
+            struct bflb_cam_frame_filter_config_s *config = (struct bflb_cam_frame_filter_config_s *)arg;
+
+            putreg32(config->frame_count, reg_base + CAM_DVP2AXI_FRAME_PERIOD_OFFSET);
+            putreg32(config->frame_valid, reg_base + CAM_DVP2AXI_FRAME_VLD_OFFSET);
+        } break;
 #endif
 
         default:

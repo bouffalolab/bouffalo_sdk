@@ -1469,6 +1469,7 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Get_Xtal_Value(uint32_t *xtalVal)
     return ERROR;
 }
 
+#if 0
 /****************************************************************************/ /**
  * @brief  Set Flash Power Delay
  *
@@ -1488,6 +1489,7 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Set_Flash_Power_Delay(uint8_t flashPwrDly)
 
     return SUCCESS;
 }
+#endif
 
 /****************************************************************************/ /**
  * @brief  Get Flash Power Delay
@@ -1514,6 +1516,51 @@ BL_Err_Type ATTR_TCM_SECTION HBN_Get_Flash_Power_Delay(uint8_t *flashPwrDly)
     return ERROR;
 }
 
+/****************************************************************************/ /**
+ * @brief  Set Reset Reason
+ *
+ * @param  rstReason:Reset Reason
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_Set_Reset_Reason(uint16_t rstReason)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_RSV3);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_FLASH_POWER_STS, HBN_RESET_REASON_FLAG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_FLASH_POWER_DLY, rstReason);
+    BL_WR_REG(HBN_BASE, HBN_RSV3, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Set Reset Reason
+ *
+ * @param  flashPwrDly:flash power delay
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_TCM_SECTION HBN_Get_Reset_Reason(uint16_t *rstReason)
+{
+    uint32_t tmpVal = 0;
+
+    if (NULL == rstReason) {
+        return ERROR;
+    }
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_RSV3);
+    if (HBN_RESET_REASON_FLAG == BL_GET_REG_BITS_VAL(tmpVal, HBN_FLASH_POWER_STS)) {
+        *rstReason = BL_GET_REG_BITS_VAL(tmpVal, HBN_FLASH_POWER_DLY);
+        return SUCCESS;
+    }
+
+    return ERROR;
+
+}
 /****************************************************************************/ /**
  * @brief  Set HBN Gpio Keep
  *

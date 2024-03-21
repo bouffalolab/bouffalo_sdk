@@ -548,6 +548,10 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
 #endif
 
     if (offset > total_size || (offset + count * 4) > total_size || pword == NULL) {
+        if (program) {
+            bflb_ef_ctrl_program_efuse_r0(dev);
+            arch_delay_us(100);
+        }
         return;
     }
 
@@ -733,12 +737,12 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_common_trim(struct bflb_device_s *dev, c
     for (i = 0; i < trim_list_len; i++) {
         if (arch_memcmp(name, trim_list[i].name, bflb_ef_ctrl_strlen(name)) == 0) {
             /* switch clock */
-            if (trim_list[i].en_addr <= EF_CTRL_EFUSE_R0_SIZE) {
+            if (trim_list[i].en_addr < EF_CTRL_EFUSE_R0_SIZE * 8) {
                 /* Switch to AHB clock */
                 bflb_ef_ctrl_switch_ahb_clk_r0(dev);
             }
 #ifdef EF_CTRL_EFUSE_R1_SIZE
-            if (trim_list[i].en_addr > EF_CTRL_EFUSE_R0_SIZE) {
+            if (trim_list[i].en_addr >= EF_CTRL_EFUSE_R0_SIZE * 8) {
                 /* Switch to AHB clock */
                 bflb_ef_ctrl_switch_ahb_clk_r1(dev);
             }
@@ -812,49 +816,51 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_common_trim(struct bflb_device_s *dev, 
             bflb_efuse_switch_cpu_clock_save();
 #endif
             /* switch clock */
-            if (trim_list[i].en_addr <= EF_CTRL_EFUSE_R0_SIZE) {
+            if (trim_list[i].en_addr < EF_CTRL_EFUSE_R0_SIZE * 8) {
                 /* Switch to AHB clock */
                 bflb_ef_ctrl_switch_ahb_clk_r0(dev);
             }
 #ifdef EF_CTRL_EFUSE_R1_SIZE
-            if (trim_list[i].en_addr > EF_CTRL_EFUSE_R0_SIZE) {
+            if (trim_list[i].en_addr >= EF_CTRL_EFUSE_R0_SIZE * 8) {
                 /* Switch to AHB clock */
                 bflb_ef_ctrl_switch_ahb_clk_r1(dev);
             }
 #endif
             reg_val = getreg32(BFLB_EF_CTRL_BASE + (trim_list[i].en_addr / 32) * 4);
             reg_val |= (1 << (trim_list[i].en_addr % 32));
-            putreg32(BFLB_EF_CTRL_BASE + (trim_list[i].en_addr / 32) * 4, reg_val);
+            putreg32(reg_val, BFLB_EF_CTRL_BASE + (trim_list[i].en_addr / 32) * 4);
 
             parity = bflb_ef_ctrl_get_trim_parity(value, trim_list[i].value_len);
             if (parity) {
                 reg_val = getreg32(BFLB_EF_CTRL_BASE + (trim_list[i].parity_addr / 32) * 4);
                 reg_val |= (1 << (trim_list[i].parity_addr % 32));
-                putreg32(BFLB_EF_CTRL_BASE + (trim_list[i].parity_addr / 32) * 4, reg_val);
+                putreg32(reg_val, BFLB_EF_CTRL_BASE + (trim_list[i].parity_addr / 32) * 4);
             }
 
             if (((trim_list[i].value_addr % 32) + trim_list[i].value_len) > 32) {
                 reg_val = getreg32(BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4);
                 reg_val |= (value << (trim_list[i].value_addr % 32));
-                putreg32(BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4, reg_val);
+                putreg32(reg_val, BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4);
 
                 reg_val = getreg32(BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4) + 4;
                 reg_val |= (value >> (32 - (trim_list[i].value_addr % 32)));
-                putreg32(BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4 + 4, reg_val);
+                putreg32(reg_val, BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4 + 4);
             } else {
                 reg_val = getreg32(BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4);
                 reg_val |= (value << (trim_list[i].value_addr % 32));
-                putreg32(BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4, reg_val);
+                putreg32(reg_val, BFLB_EF_CTRL_BASE + (trim_list[i].value_addr / 32) * 4);
             }
 
             if (program) {
                 /* program */
-                if (trim_list[i].en_addr <= EF_CTRL_EFUSE_R0_SIZE) {
+                if (trim_list[i].en_addr < EF_CTRL_EFUSE_R0_SIZE * 8) {
                     bflb_ef_ctrl_program_efuse_r0(dev);
+                    arch_delay_us(100);
                 }
 #ifdef EF_CTRL_EFUSE_R1_SIZE
-                if (trim_list[i].en_addr > EF_CTRL_EFUSE_R0_SIZE) {
+                if (trim_list[i].en_addr >= EF_CTRL_EFUSE_R0_SIZE * 8) {
                     bflb_ef_ctrl_program_efuse_r1(dev);
+                    arch_delay_us(100);
                 }
 #endif
             }

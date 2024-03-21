@@ -685,7 +685,7 @@ void bflb_dbi_errint_mask(struct bflb_device_s *dev, bool mask)
 uint32_t bflb_dbi_get_intstatus(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_dbi_get_intstatus
-    romapi_bflb_dbi_get_intstatus(dev);
+    return romapi_bflb_dbi_get_intstatus(dev);
 #else
     uint32_t reg_base;
     uint32_t regval;

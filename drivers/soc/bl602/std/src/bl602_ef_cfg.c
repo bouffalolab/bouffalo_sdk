@@ -229,11 +229,20 @@ void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info)
     }
 }
 
-void bflb_efuse_get_chipid(uint8_t chipid[8])
+/****************************************************************************/ /**
+ * @brief  Efuse read chip identification
+ *
+ * @param  chipid: id pointer
+ *
+ * @return 0 or -1
+ *
+*******************************************************************************/
+int bflb_efuse_get_chipid(uint8_t chipid[8])
 {
-    bflb_efuse_read_mac_address_opt(0, chipid, 1);
     chipid[6] = 0;
     chipid[7] = 0;
+
+    return bflb_efuse_read_mac_address_opt(0, chipid, 1);
 }
 
 /****************************************************************************/ /**

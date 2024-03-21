@@ -155,6 +155,8 @@
 #define CAM_CMD_FRAME_ID_RESET         8
 #define CAM_CMD_INVERSE_VSYNC_POLARITY 9
 #define CAM_CMD_INVERSE_HSYNC_POLARITY 10
+#define CAM_CMD_INVERSE_YUYV2UYVY      11
+#define CAM_CMD_FRAME_FILTER           12
 #endif
 
 // clang-format off
@@ -205,6 +207,11 @@ struct bflb_cam_config_s {
     uint8_t output_format;
     uint32_t output_bufaddr;
     uint32_t output_bufsize;
+};
+
+struct bflb_cam_frame_filter_config_s {
+    uint32_t frame_count;
+    uint32_t frame_valid;
 };
 
 #ifdef __cplusplus
@@ -274,25 +281,6 @@ void bflb_cam_crop_hsync(struct bflb_device_s *dev, uint16_t start_pixel, uint16
  * @param [in] dev device handle
  */
 void bflb_cam_pop_one_frame(struct bflb_device_s *dev);
-
-#if !defined(BL702)
-/**
- * @brief Swap input order of y and uv.
- *
- * @param [in] dev device handle
- * @param [in] enable enable or disable
- */
-void bflb_cam_swap_input_yu_order(struct bflb_device_s *dev, bool enable);
-
-/**
- * @brief Set frame filter, if frame_count = 3, frame_valid = 101b, second frame will be dropped every 3 frames.
- *
- * @param [in] dev device handle
- * @param [in] frame_count frame filter period
- * @param [in] frame_valid frame valid
- */
-void bflb_cam_filter_frame_period(struct bflb_device_s *dev, uint8_t frame_count, uint32_t frame_valid);
-#endif
 
 /**
  * @brief Get frame count.

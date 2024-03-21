@@ -540,7 +540,7 @@ void bflb_spi_int_clear(struct bflb_device_s *dev, uint32_t int_clear)
 bool bflb_spi_isbusy(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_spi_isbusy
-    romapi_bflb_spi_isbusy(dev);
+    return romapi_bflb_spi_isbusy(dev);
 #else
     uint32_t reg_base;
     uint32_t regval;

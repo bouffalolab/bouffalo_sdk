@@ -105,6 +105,12 @@ int mfg_efuse_write_xtal_capcode_pre(uint8_t capcode, uint8_t program)
     }
 }
 
+void mfg_efuse_write_xtal_capcode(void)
+{
+    bflb_ef_ctrl_write_direct(NULL, 0, NULL, 0, 1);
+}
+
+
 int mfg_efuse_read_xtal_capcode(uint8_t *capcode, uint8_t reload)
 {
     int slot;

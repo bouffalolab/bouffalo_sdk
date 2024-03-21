@@ -531,6 +531,9 @@ BL_Err_Type HBN_Disable_AComp0_IRQ(HBN_ACOMP_INT_EDGE_Type edge);
 BL_Err_Type HBN_Enable_AComp1_IRQ(HBN_ACOMP_INT_EDGE_Type edge);
 BL_Err_Type HBN_Disable_AComp1_IRQ(HBN_ACOMP_INT_EDGE_Type edge);
 /*----------*/
+BL_Err_Type HBN_Enable_AComp_IRQ(uint8_t acompId, uint8_t edge);
+BL_Err_Type HBN_Disable_AComp_IRQ(uint8_t acompId, uint8_t edge);
+/*----------*/
 BL_Err_Type HBN_Enable_BOR_IRQ(void);
 BL_Err_Type HBN_Disable_BOR_IRQ(void);
 /*----------*/

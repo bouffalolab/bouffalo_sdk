@@ -12,6 +12,7 @@ void mfg_efuse_set_rf_cal_slots(uint8_t slots);
 uint8_t mfg_efuse_is_xtal_capcode_slot_empty(uint8_t reload);
 int mfg_efuse_write_xtal_capcode_pre(uint8_t capcode, uint8_t program);
 void mfg_efuse_write_xtal_capcode(void);
+void mfg_efuse_write_xtal_capcode(void);
 int mfg_efuse_read_xtal_capcode(uint8_t *capcode, uint8_t reload);
 uint8_t mfg_efuse_is_hp_poweroffset_slot_empty(uint8_t reload);
 int mfg_efuse_write_hp_poweroffset_pre(int8_t pwr_offset[14], uint8_t program);

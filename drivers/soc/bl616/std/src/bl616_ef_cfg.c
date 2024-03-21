@@ -352,6 +352,12 @@ void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info)
         case 1:
             device_info->psram_info_name = "WB_4MB";
             break;
+        case 2:
+            device_info->psram_info_name = "WB_8MB";
+            break;
+        case 3:
+            device_info->psram_info_name = "WB_16MB";
+            break;
         default:
             device_info->psram_info_name = "ERROR";
     }
@@ -391,14 +397,15 @@ void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info)
  *
  * @param  chipid: id pointer
  *
- * @return None
+ * @return 0 or -1
  *
 *******************************************************************************/
-void bflb_efuse_get_chipid(uint8_t chipid[8])
+int bflb_efuse_get_chipid(uint8_t chipid[8])
 {
-    bflb_efuse_read_mac_address_opt(0, chipid, 1);
     chipid[6] = 0;
     chipid[7] = 0;
+
+    return bflb_efuse_read_mac_address_opt(0, chipid, 1);
 }
 
 /****************************************************************************/ /**
