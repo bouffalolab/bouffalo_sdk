@@ -62,18 +62,7 @@ struct mem_heap_s {
     void *priv;
     void *heapstart;
     size_t heapsize;
-};
-
-struct meminfo {
-    int total_size;    /* This is the total size of memory allocated
-                        * for use by malloc in bytes. */
-    int free_node;     /* This is the number of free (not in use) chunks */
-    int used_node;     /* This is the number of allocated (in use) chunks */
-    int max_free_size; /* Size of the largest free (not in use) chunk */
-    int used_size;     /* This is the total size of memory occupied by
-                        * chunks handed out by malloc. */
-    int free_size;     /* This is the total size of memory occupied
-                        * by free (not in use) chunks. */
+    size_t free_bytes;
 };
 
 /****************************************************************************
@@ -117,8 +106,6 @@ void *bflb_realloc(struct mem_heap_s *heap, void *ptr, size_t nbytes);
 void *bflb_calloc(struct mem_heap_s *heap, size_t count, size_t size);
 
 void *bflb_malloc_align(struct mem_heap_s *heap, size_t align, size_t size);
-
-void bflb_mem_usage(struct mem_heap_s *heap, struct meminfo *info);
 
 #undef EXTERN
 #ifdef __cplusplus

@@ -236,7 +236,6 @@ void free(void *addr)
     bflb_free(PMEM_HEAP, addr);
 }
 
-
 /****************************************************************************
  * Name: kfree_size
  *
@@ -247,21 +246,13 @@ void free(void *addr)
 
 uint32_t kfree_size(void)
 {
-    struct meminfo info;
-
-    bflb_mem_usage(KMEM_HEAP, &info);
-
-    return info.free_size;
+    return g_kmemheap.free_bytes;
 }
 
 uint32_t pfree_size(void)
 {
 #if defined(CONFIG_PSRAM) && defined(BL616) // only for bl618
-    struct meminfo info;
-
-    bflb_mem_usage(PMEM_HEAP, &info);
-
-    return info.free_size;
+    return g_pmemheap.free_bytes;
 #else
     return 0;
 #endif
@@ -272,34 +263,8 @@ uint32_t pfree_size(void)
 
 int cmd_free(int argc, char **argv)
 {
-    const char *Header = "total   free    alloc   mxblk   frnode  alnode  \r\n";
-    struct meminfo info;
-    char *mem;
-
-    mem = malloc(64);
-    bflb_mem_usage(KMEM_HEAP, &info);
-
-    snprintf(mem, 64, "%-8d%-8d%-8d%-8d%-8d%-8d\r\n", info.total_size, info.free_size, info.used_size, info.max_free_size,
-            info.free_node, info.used_node);
-
-    printf(Header);
-    printf(mem);
-
-    free(mem);
-
-#if defined(CONFIG_PSRAM) && defined(BL616) // only for bl618
-    mem = malloc(64);
-    bflb_mem_usage(PMEM_HEAP, &info);
-
-    snprintf(mem, 64, "%-8d%-8d%-8d%-8d%-8d%-8d\r\n", info.total_size, info.free_size, info.used_size, info.max_free_size,
-            info.free_node, info.used_node);
-
-    printf(Header);
-    printf(mem);
-
-    free(mem);
-#endif
-
+    printf("sram free size:%d\r\n", kfree_size());
+    printf("psram free size:%d\r\n", pfree_size());
     return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_free, free, show memory usage);
