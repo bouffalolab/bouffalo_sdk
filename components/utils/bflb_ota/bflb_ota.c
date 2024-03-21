@@ -167,7 +167,7 @@ int bflb_ota_finish(uint8_t check_hash)
     if (pt_table_get_active_entries_by_name(&pt_table_stuff[active_id], (uint8_t *)BL_MTD_PARTITION_NAME_FW_DEFAULT, &pt_fw_entry))
     {
         printf("PtTable_Get_Active_Entries fail\r\n");
-        blfb_mtd_close(ota_parm->mtd_handle);
+        bflb_mtd_close(ota_parm->mtd_handle);
         free(ota_parm);
         ota_parm = NULL;
         return -1;
@@ -186,7 +186,7 @@ int bflb_ota_finish(uint8_t check_hash)
 
         r_buf = malloc(CHECK_IMG_BUF_SIZE);
         if (r_buf == NULL) {
-            blfb_mtd_close(ota_parm->mtd_handle);
+            bflb_mtd_close(ota_parm->mtd_handle);
             free(ota_parm);
             ota_parm = NULL;
             printf("malloc error\r\n");
@@ -201,7 +201,7 @@ int bflb_ota_finish(uint8_t check_hash)
         offset = 0;
         while (offset < bin_size) {
             (bin_size - offset >= CHECK_IMG_BUF_SIZE) ? (read_size = CHECK_IMG_BUF_SIZE):(read_size = bin_size - offset);
-            if (blfb_mtd_read(ota_parm->mtd_handle, offset, read_size, r_buf)) {
+            if (bflb_mtd_read(ota_parm->mtd_handle, offset, read_size, r_buf)) {
                 printf("mtd read failed\r\n");
                 bflb_mtd_close(ota_parm->mtd_handle);
                 free(ota_parm);
@@ -217,7 +217,7 @@ int bflb_ota_finish(uint8_t check_hash)
         utils_sha256_finish(&sha256_ctx, sha_check);
         free(r_buf);
 
-        blfb_mtd_read(ota_parm->mtd_handle, offset, 32, dst_sha);
+        bflb_mtd_read(ota_parm->mtd_handle, offset, 32, dst_sha);
         for (i = 0; i < 32; i++) {
             printf("%02X", dst_sha[i]);
         }
@@ -247,7 +247,7 @@ int bflb_ota_finish(uint8_t check_hash)
         printf("pt table update fail! %d\r\n", status);
     }
 
-    blfb_mtd_close(ota_parm->mtd_handle);
+    bflb_mtd_close(ota_parm->mtd_handle);
     free(ota_parm);
     ota_parm = NULL;
 
@@ -266,7 +266,7 @@ int bflb_ota_read(uint32_t offset, uint8_t *buf, uint32_t buf_len)
         return -1;
     }
 
-    return blfb_mtd_read(ota_parm->mtd_handle, offset, buf_len, buf);
+    return bflb_mtd_read(ota_parm->mtd_handle, offset, buf_len, buf);
 }
 
 int bflb_ota_check(void)
@@ -278,7 +278,7 @@ int bflb_ota_check(void)
     uint32_t bin_size; 
 
     if (ota_parm->file_size <= 32) {
-        blfb_mtd_close(ota_parm->mtd_handle);
+        bflb_mtd_close(ota_parm->mtd_handle);
         free(ota_parm);
         ota_parm = NULL;
         return -1;
@@ -296,7 +296,7 @@ int bflb_ota_check(void)
 
     r_buf = malloc(CHECK_IMG_BUF_SIZE);
     if (r_buf == NULL) {
-        blfb_mtd_close(ota_parm->mtd_handle);
+        bflb_mtd_close(ota_parm->mtd_handle);
         free(ota_parm);
         ota_parm = NULL;
         printf("malloc error\r\n");
@@ -311,9 +311,9 @@ int bflb_ota_check(void)
     offset = 0;
     while (offset < bin_size) {
         (bin_size - offset >= CHECK_IMG_BUF_SIZE) ? (read_size = CHECK_IMG_BUF_SIZE):(read_size = bin_size - offset);
-        if (blfb_mtd_read(ota_parm->mtd_handle, offset, read_size, r_buf)) {
+        if (bflb_mtd_read(ota_parm->mtd_handle, offset, read_size, r_buf)) {
             printf("mtd read failed\r\n");
-            blfb_mtd_close(ota_parm->mtd_handle);
+            bflb_mtd_close(ota_parm->mtd_handle);
             free(ota_parm);
             ota_parm = NULL;
             free(r_buf);
@@ -327,7 +327,7 @@ int bflb_ota_check(void)
     utils_sha256_finish(&sha256_ctx, sha_check);
     free(r_buf);
 
-    blfb_mtd_read(ota_parm->mtd_handle, offset, 32, dst_sha);
+    bflb_mtd_read(ota_parm->mtd_handle, offset, 32, dst_sha);
     for (i = 0; i < 32; i++) {
         printf("%02X", dst_sha[i]);
     }
@@ -338,7 +338,7 @@ int bflb_ota_check(void)
 
     if (memcmp(sha_check, (const void *)dst_sha, 32) != 0) {
         printf("sha256 check error\r\n");
-        blfb_mtd_close(ota_parm->mtd_handle);
+        bflb_mtd_close(ota_parm->mtd_handle);
         free(ota_parm);
         ota_parm = NULL;
         utils_sha256_free(&sha256_ctx);
@@ -362,7 +362,7 @@ int bflb_ota_apply(void)
     int status = 0;
     
     if (ota_parm->file_size <= 32) {
-        blfb_mtd_close(ota_parm->mtd_handle);
+        bflb_mtd_close(ota_parm->mtd_handle);
         free(ota_parm);
         ota_parm = NULL;
         return -1;
@@ -382,7 +382,7 @@ int bflb_ota_apply(void)
     if (pt_table_get_active_entries_by_name(&pt_table_stuff[active_id], (uint8_t *)BL_MTD_PARTITION_NAME_FW_DEFAULT, &pt_fw_entry))
     {
         printf("PtTable_Get_Active_Entries fail\r\n");
-        blfb_mtd_close(ota_parm->mtd_handle);
+        bflb_mtd_close(ota_parm->mtd_handle);
         free(ota_parm);
         ota_parm = NULL;
         return -1;
@@ -397,7 +397,7 @@ int bflb_ota_apply(void)
         printf("pt table update fail! %d\r\n", status);
     }
 
-    blfb_mtd_close(ota_parm->mtd_handle);
+    bflb_mtd_close(ota_parm->mtd_handle);
     free(ota_parm);
     ota_parm = NULL;
     return 0;
@@ -406,7 +406,7 @@ void bflb_ota_abort(void)
 {
     if (ota_parm != NULL) 
     {
-        blfb_mtd_close(ota_parm->mtd_handle);
+        bflb_mtd_close(ota_parm->mtd_handle);
         free(ota_parm);
         ota_parm = NULL;
     }
