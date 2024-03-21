@@ -126,13 +126,6 @@ at the top of this file. */
 .extern portasmHANDLE_INTERRUPT
 .extern exception_entry
 
-/* stat trap variable */
-.extern vCountLastTrapCost
-.extern ulLastTrapCount
-.extern lLastTrapNum
-.extern ulSwitchOutExtra
-.extern ulSwitchInExtra
-
 /*-----------------------------------------------------------*/
 .section .text.vectors.freertos_risc_v_trap_handler, "ax", %progbits
 .align 8
@@ -140,11 +133,6 @@ at the top of this file. */
 freertos_risc_v_trap_handler:
 	addi sp, sp, -portCONTEXT_SIZE
 	store_x x1, 1 * portWORD_SIZE( sp )
-
-	/* save trapin count, use 1 register at least */
-	rdcycle x1
-	csrw mscratch, x1
-
 	store_x x5, 2 * portWORD_SIZE( sp )
 	store_x x6, 3 * portWORD_SIZE( sp )
 	store_x x7, 4 * portWORD_SIZE( sp )
@@ -172,16 +160,6 @@ freertos_risc_v_trap_handler:
 	store_x x29, 26 * portWORD_SIZE( sp )
 	store_x x30, 27 * portWORD_SIZE( sp )
 	store_x x31, 28 * portWORD_SIZE( sp )
-
-	/* stat last trap cost */
-	la t0, vCountLastTrapCost
-	jalr t0
-	/* save uLastTrapCount cause to lLastTrapNum */
-	csrr  a0, mcause
-	li t0, 0x80000FFF
-	and  a0, a0, t0
-	la t0, lLastTrapNum
-	store_x a0, (t0)
 
 	csrr t0, mstatus					/* Required for MPIE bit. */
 	store_x t0, 29 * portWORD_SIZE( sp )
@@ -420,23 +398,6 @@ f_reg_skip_restore1:
 	load_x  x26, 23 * portWORD_SIZE( sp )	/* s10 */
 	load_x  x27, 24 * portWORD_SIZE( sp )	/* s11 */
 	load_x  x28, 25 * portWORD_SIZE( sp )	/* t3 */
-
-	/* calc cost, use 2 registers at least */
-	rdcycle x31
-	csrr x30, mscratch
-	sub x31, x31, x30
-	la x30, ulLastTrapCount
-	store_x x31, (x30)
-
-	/* test if switch, update ulSwitchInExtra, use 3 resgister at least */
-	la x30, ulSwitchOutExtra
-	load_x x29, (x30)
-	beq x29, x0, dont_set_switch_in_extra
-	sub x31, x31, x29
-	la x30, ulSwitchInExtra
-	store_x x31, (x30)
-
-dont_set_switch_in_extra:
 	load_x  x29, 26 * portWORD_SIZE( sp )	/* t4 */
 	load_x  x30, 27 * portWORD_SIZE( sp )	/* t5 */
 	load_x  x31, 28 * portWORD_SIZE( sp )	/* t6 */
@@ -532,12 +493,6 @@ f_reg_skip_restore2:
 	load_x  x27, 24 * portWORD_SIZE( sp )	/* s11 */
 	load_x  x28, 25 * portWORD_SIZE( sp )	/* t3 */
 	load_x  x29, 26 * portWORD_SIZE( sp )	/* t4 */
-
-	/* update first task ulSwitchInExtra, use 2 resgister at least */
-	rdcycle x31
-	la x30, ulSwitchInExtra
-	store_x x31, (x30)
-
 	load_x  x30, 27 * portWORD_SIZE( sp )	/* t5 */
 	load_x  x31, 28 * portWORD_SIZE( sp )	/* t6 */
 

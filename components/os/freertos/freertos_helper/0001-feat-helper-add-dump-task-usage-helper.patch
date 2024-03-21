@@ -1,0 +1,348 @@
+From b6b6b40cb3f57b7fb415f5437f4c837883e032dd Mon Sep 17 00:00:00 2001
+From: ybwang <ybwang@bouffalolab.com>
+Date: Mon, 10 Jul 2023 14:27:45 +0800
+Subject: [PATCH] [feat][helper] add dump task usage helper
+
+Change-Id: If344cbcaeac82359f7e2bba3899004b6d0ba4071
+Reviewed-on: https://gerrit.bouffalolab.com/c/bouffalo/components/freertos/+/2723
+Reviewed-by: jenkins <jenkins@bouffalolab.com>
+Code-Lint: jenkins <jenkins@bouffalolab.com>
+Reviewed-by: zrrong <zrrong@bouffalolab.com>
+Tested-by: zrrong <zrrong@bouffalolab.com>
+Code-Lint: zrrong <zrrong@bouffalolab.com>
+Tested-by: jenkins <jenkins@bouffalolab.com>
+---
+ CMakeLists.txt                              |   3 +
+ include/portable.h                          |  28 ++
+ portable/GCC/RISC-V/common/portASM.S        |  45 +++
+ portable/GCC/RISC-V/common/portmacro.h      |  28 ++
+ portable/GCC/RISC-V/portStatTrap.c          | 105 +++++++
+ tasks.c                                     |  26 +-
+
+diff --git a/include/portable.h b/include/portable.h
+index 1247fb7..790e0eb 100644
+--- a/include/portable.h
++++ b/include/portable.h
+@@ -92,6 +92,10 @@
+     #define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP    0
+ #endif
+ 
++#ifndef portHAS_STAT_TRAP_TIME
++    #define portHAS_STAT_TRAP_TIME 0
++#endif
++
+ /* *INDENT-OFF* */
+ #ifdef __cplusplus
+     extern "C" {
+@@ -216,6 +220,30 @@ void vPortEndScheduler( void ) PRIVILEGED_FUNCTION;
+                                     uint32_t ulStackDepth ) PRIVILEGED_FUNCTION;
+ #endif
+ 
++#if ( portHAS_STAT_TRAP_TIME == 1 )
++    void vPortRegisterReportIrqCost(void (*pvFun)(int irqnum, uint64_t cost));
++    void vPortRegisterReportExpCost(void (*pvFun)(int irqnum, uint64_t cost));
++    void vPortUpdateSwitchOutExtra( uint64_t ullNow );
++    uint64_t ullPortGetRunningTrapCostAndSwitchExtra( void );
++    void vPortResetRunningTrapCost( void );
++    uint64_t ullPortGetRunningTrapCostFromTask( void );
++    uint32_t ulPortGetSwitchInExtra( void );
++    uint64_t ullPortGetTrapAllCurrentTime( void );
++#else
++    inline uint64_t ullPortGetTrapAllCurrentTime( void )
++    {
++        return 0;
++    }
++    inline void vPortRegisterReportIrqCost(void (*pvFun)(int irqnum, uint64_t cost))
++    {
++        return;
++    }
++    inline void vPortRegisterReportExpCost(void (*pvFun)(int irqnum, uint64_t cost))
++    {
++        return;
++    }
++#endif
++
+ /* *INDENT-OFF* */
+ #ifdef __cplusplus
+     }
+diff --git a/portable/GCC/RISC-V/common/portASM.S b/portable/GCC/RISC-V/common/portASM.S
+index ac10892..4bb1821 100644
+--- a/portable/GCC/RISC-V/common/portASM.S
++++ b/portable/GCC/RISC-V/common/portASM.S
+@@ -126,6 +126,13 @@ at the top of this file. */
+ .extern portasmHANDLE_INTERRUPT
+ .extern exception_entry
+ 
++/* stat trap variable */
++.extern vCountLastTrapCost
++.extern ulLastTrapCount
++.extern lLastTrapNum
++.extern ulSwitchOutExtra
++.extern ulSwitchInExtra
++
+ /*-----------------------------------------------------------*/
+ 
+ .align 8
+@@ -133,6 +140,11 @@ at the top of this file. */
+ freertos_risc_v_trap_handler:
+ 	addi sp, sp, -portCONTEXT_SIZE
+ 	store_x x1, 1 * portWORD_SIZE( sp )
++
++	/* save trapin count, use 1 register at least */
++	rdcycle x1
++	csrw mscratch, x1
++
+ 	store_x x5, 2 * portWORD_SIZE( sp )
+ 	store_x x6, 3 * portWORD_SIZE( sp )
+ 	store_x x7, 4 * portWORD_SIZE( sp )
+@@ -161,6 +173,16 @@ freertos_risc_v_trap_handler:
+ 	store_x x30, 27 * portWORD_SIZE( sp )
+ 	store_x x31, 28 * portWORD_SIZE( sp )
+ 
++	/* stat last trap cost */
++	la t0, vCountLastTrapCost
++	jalr t0
++	/* save uLastTrapCount cause to lLastTrapNum */
++	csrr  a0, mcause
++	li t0, 0x80000FFF
++	and  a0, a0, t0
++	la t0, lLastTrapNum
++	store_x a0, (t0)
++
+ 	csrr t0, mstatus					/* Required for MPIE bit. */
+ 	store_x t0, 29 * portWORD_SIZE( sp )
+ 
+@@ -396,6 +418,23 @@ f_reg_skip_restore1:
+ 	load_x  x26, 23 * portWORD_SIZE( sp )	/* s10 */
+ 	load_x  x27, 24 * portWORD_SIZE( sp )	/* s11 */
+ 	load_x  x28, 25 * portWORD_SIZE( sp )	/* t3 */
++
++	/* calc cost, use 2 registers at least */
++	rdcycle x31
++	csrr x30, mscratch
++	sub x31, x31, x30
++	la x30, ulLastTrapCount
++	store_x x31, (x30)
++
++	/* test if switch, update ulSwitchInExtra, use 3 resgister at least */
++	la x30, ulSwitchOutExtra
++	load_x x29, (x30)
++	beq x29, x0, dont_set_switch_in_extra
++	sub x31, x31, x29
++	la x30, ulSwitchInExtra
++	store_x x31, (x30)
++
++dont_set_switch_in_extra:
+ 	load_x  x29, 26 * portWORD_SIZE( sp )	/* t4 */
+ 	load_x  x30, 27 * portWORD_SIZE( sp )	/* t5 */
+ 	load_x  x31, 28 * portWORD_SIZE( sp )	/* t6 */
+@@ -491,6 +530,12 @@ f_reg_skip_restore2:
+ 	load_x  x27, 24 * portWORD_SIZE( sp )	/* s11 */
+ 	load_x  x28, 25 * portWORD_SIZE( sp )	/* t3 */
+ 	load_x  x29, 26 * portWORD_SIZE( sp )	/* t4 */
++
++	/* update first task ulSwitchInExtra, use 2 resgister at least */
++	rdcycle x31
++	la x30, ulSwitchInExtra
++	store_x x31, (x30)
++
+ 	load_x  x30, 27 * portWORD_SIZE( sp )	/* t5 */
+ 	load_x  x31, 28 * portWORD_SIZE( sp )	/* t6 */
+ 
+diff --git a/portable/GCC/RISC-V/common/portmacro.h b/portable/GCC/RISC-V/common/portmacro.h
+index 110f514..f814db7 100644
+--- a/portable/GCC/RISC-V/common/portmacro.h
++++ b/portable/GCC/RISC-V/common/portmacro.h
+@@ -89,6 +89,34 @@ not need to be guarded with a critical section. */
+ #endif
+ /*-----------------------------------------------------------*/
+ 
++/* There is already a high frequency timer running - just reset its count back
++to zero. */
++static inline unsigned long long getCycleCounter() {
++#if __riscv_xlen == 32
++  register unsigned int cycle, cycleh, cycleh_tmp;
++  do {
++    asm volatile ("rdcycleh %0" : "=r"(cycleh));
++    asm volatile ("rdcycle %0" : "=r"(cycle));
++    asm volatile ("rdcycleh %0" : "=r"(cycleh_tmp));
++  } while(cycleh != cycleh_tmp);
++  return ((unsigned long long)cycleh << 32) | cycle;
++#elif __riscv_xlen == 64
++  register unsigned long long cycle;
++  asm volatile ("rdcycle %0" : "=r"(cycle));
++  return cycle;
++#endif
++}
++
++static inline void resetCycleCounter() {
++  asm volatile ("csrw mcycle, x0");
++}
++
++#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() resetCycleCounter()
++#define portGET_RUN_TIME_COUNTER_VALUE() getCycleCounter()
++#define configCPU_CORE_CLOCK_HZ (320 * 1000 * 1000)
++#define portHAS_STAT_TRAP_TIME 1
++
++/*-----------------------------------------------------------*/
+ 
+ /* Scheduler utilities. */
+ extern BaseType_t TrapNetCounter;
+diff --git a/portable/GCC/RISC-V/portStatTrap.c b/portable/GCC/RISC-V/portStatTrap.c
+new file mode 100644
+index 0000000..f315d08
+--- /dev/null
++++ b/portable/GCC/RISC-V/portStatTrap.c
+@@ -0,0 +1,105 @@
++#include <stdint.h>
++//#include "encoding.h"
++#define read_csr(reg) ({ unsigned long __tmp;                                   \
++            asm volatile ("csrr %0, " #reg : "=r"(__tmp));                      \
++            __tmp; })
++#include <FreeRTOS.h>
++//#include <atomic.h>
++
++/* Normal trap timepoint graph:
++ *
++ *  trapin           trapout
++ *    |-------t1--------|
++ *
++ * Switch trap timepoint graph:
++ *
++ *  trapin  switch   trapout
++ *    |--t2---|----t3---|
++ *
++ * t3 + t1 + t2 need excluded from ulRunTimeCounter of TCB
++ */
++
++/* one certain task t1 stats in ullRunningTrapCost during running. */
++static uint64_t ullRunningTrapCost = 0ULL;
++
++/* trap current runtime counter */
++static uint64_t ullTrapAllCurrentTime = 0ULL;
++
++/* extra cost between switch context */
++uint32_t ulSwitchOutExtra = 0UL;
++uint32_t ulSwitchInExtra = 0UL;
++
++/* record last trap info */
++uint32_t ulLastTrapCount = 0UL;
++int32_t lLastTrapNum = 0L;
++
++void (*pvReportIrqCost)(int irqnum, uint64_t cost) = NULL;
++void (*pvReportExpCost)(int expnum, uint64_t cost) = NULL;
++
++void vPortRegisterReportIrqCost(void (*pvFun)(int irqnum, uint64_t cost))
++{
++    pvReportIrqCost = pvFun;
++}
++
++void vPortRegisterReportExpCost(void (*pvFun)(int expnum, uint64_t cost))
++{
++    pvReportExpCost = pvFun;
++}
++
++/* called in trap, before ISR execute stat last trap cost */
++void vCountLastTrapCost( void )
++{
++    /* first trap */
++    if( lLastTrapNum == 0 ) {
++        return;
++    }
++
++    /* last trap isn't switch context trap,
++       or else reset ulSwitchOutExtra */
++    if( ulSwitchOutExtra == 0 ) {
++        ullRunningTrapCost += ulLastTrapCount;
++    }
++    else {
++        ulSwitchOutExtra = 0;
++    }
++
++    if( lLastTrapNum > 0 ) {
++        if(pvReportExpCost)
++            pvReportExpCost( lLastTrapNum & 0x000003FF, ulLastTrapCount );
++    } else {
++        if(pvReportIrqCost)
++            pvReportIrqCost( lLastTrapNum & 0x000003FF, ulLastTrapCount );
++    }
++}
++
++void vPortUpdateSwitchOutExtra( uint64_t ullNow )
++{
++    ulSwitchOutExtra = ( uint32_t ) ullNow - ( uint32_t ) read_csr( mscratch );
++}
++
++uint64_t ullPortGetRunningTrapCostAndSwitchExtra( void )
++{
++    return ulSwitchInExtra + ullRunningTrapCost + ulSwitchOutExtra;
++}
++
++void vPortResetRunningTrapCost( void )
++{
++    ullTrapAllCurrentTime += ulSwitchInExtra + ullRunningTrapCost + ulSwitchOutExtra;
++    ullRunningTrapCost = 0;
++}
++
++uint64_t ullPortGetRunningTrapCostFromTask( void )
++{
++    return ullRunningTrapCost + ulLastTrapCount;
++}
++
++uint32_t ulPortGetSwitchInExtra( void )
++{
++    return ulSwitchInExtra;
++}
++
++/* all trap runtime include prev tasks cost and current task cost. */
++uint64_t ullPortGetTrapAllCurrentTime( void )
++{
++    return ullTrapAllCurrentTime;
++}
+diff --git a/tasks.c b/tasks.c
+index 7d4b7fe..85febe2 100644
+--- a/tasks.c
++++ b/tasks.c
+@@ -3057,6 +3057,21 @@ BaseType_t xTaskIncrementTick( void )
+ #endif /* configUSE_APPLICATION_TASK_TAG */
+ /*-----------------------------------------------------------*/
+ 
++#if ( portHAS_STAT_TRAP_TIME == 1 ) && ( configGENERATE_RUN_TIME_STATS == 1 )
++void vGetTaskRunningTimeSnapshot( uint64_t *TaskTime , uint64_t *AllTime )
++{
++    taskENTER_CRITICAL();
++    {
++       *AllTime = portGET_RUN_TIME_COUNTER_VALUE();
++       *TaskTime = *AllTime - ulTaskSwitchedInTime - ulPortGetSwitchInExtra() \
++       - ullPortGetRunningTrapCostFromTask() \
++       + pxCurrentTCB->ulRunTimeCounter;
++    }
++    taskEXIT_CRITICAL();
++}
++#endif /* portHAS_STAT_TRAP_TIME */
++/*-----------------------------------------------------------*/
++
+ void vTaskSwitchContext( void )
+ {
+     if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
+@@ -3087,7 +3102,16 @@ void vTaskSwitchContext( void )
+                  * are provided by the application, not the kernel. */
+                 if( ulTotalRunTime > ulTaskSwitchedInTime )
+                 {
+-                    pxCurrentTCB->ulRunTimeCounter += ( ulTotalRunTime - ulTaskSwitchedInTime );
++                    /* ulRunTimeCounter in TCB includes switchin cost, switchout cost and
++                     * running trap cost, exclude these cost */
++                    #if ( portHAS_STAT_TRAP_TIME == 1 )
++                        vPortUpdateSwitchOutExtra( ulTotalRunTime );
++                        pxCurrentTCB->ulRunTimeCounter += ( ulTotalRunTime - ulTaskSwitchedInTime \
++                                                            - ullPortGetRunningTrapCostAndSwitchExtra() );
++                        vPortResetRunningTrapCost();
++                    #else
++                        pxCurrentTCB->ulRunTimeCounter += ( ulTotalRunTime - ulTaskSwitchedInTime );
++                    #endif
+                 }
+                 else
+                 {
+-- 
+2.25.1
+

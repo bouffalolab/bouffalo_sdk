@@ -3103,21 +3103,6 @@ BaseType_t xTaskIncrementTick( void )
 #endif /* configUSE_APPLICATION_TASK_TAG */
 /*-----------------------------------------------------------*/
 
-#if ( portHAS_STAT_TRAP_TIME == 1 ) && ( configGENERATE_RUN_TIME_STATS == 1 )
-void vGetTaskRunningTimeSnapshot( uint64_t *TaskTime , uint64_t *AllTime )
-{
-    taskENTER_CRITICAL();
-    {
-       *AllTime = portGET_RUN_TIME_COUNTER_VALUE();
-       *TaskTime = *AllTime - ulTaskSwitchedInTime - ulPortGetSwitchInExtra() \
-       - ullPortGetRunningTrapCostFromTask() \
-       + pxCurrentTCB->ulRunTimeCounter;
-    }
-    taskEXIT_CRITICAL();
-}
-#endif /* portHAS_STAT_TRAP_TIME */
-/*-----------------------------------------------------------*/
-
 void vTaskSwitchContext( void )
 {
     if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
@@ -3148,16 +3133,7 @@ void vTaskSwitchContext( void )
                  * are provided by the application, not the kernel. */
                 if( ulTotalRunTime > ulTaskSwitchedInTime )
                 {
-                    /* ulRunTimeCounter in TCB includes switchin cost, switchout cost and
-                     * running trap cost, exclude these cost */
-                    #if ( portHAS_STAT_TRAP_TIME == 1 )
-                        vPortUpdateSwitchOutExtra( ulTotalRunTime );
-                        pxCurrentTCB->ulRunTimeCounter += ( ulTotalRunTime - ulTaskSwitchedInTime \
-                                                            - ullPortGetRunningTrapCostAndSwitchExtra() );
-                        vPortResetRunningTrapCost();
-                    #else
-                        pxCurrentTCB->ulRunTimeCounter += ( ulTotalRunTime - ulTaskSwitchedInTime );
-                    #endif
+                    pxCurrentTCB->ulRunTimeCounter += ( ulTotalRunTime - ulTaskSwitchedInTime );
                 }
                 else
                 {

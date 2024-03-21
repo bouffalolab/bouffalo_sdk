@@ -92,10 +92,6 @@
     #define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP    0
 #endif
 
-#ifndef portHAS_STAT_TRAP_TIME
-    #define portHAS_STAT_TRAP_TIME 0
-#endif
-
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     extern "C" {
@@ -219,15 +215,6 @@ void vPortEndScheduler( void ) PRIVILEGED_FUNCTION;
                                     StackType_t * pxBottomOfStack,
                                     uint32_t ulStackDepth ) PRIVILEGED_FUNCTION;
 #endif
-
-    void vPortRegisterReportIrqCost(void (*pvFun)(int irqnum, uint64_t cost));
-    void vPortRegisterReportExpCost(void (*pvFun)(int irqnum, uint64_t cost));
-    void vPortUpdateSwitchOutExtra( uint64_t ullNow );
-    uint64_t ullPortGetRunningTrapCostAndSwitchExtra( void );
-    void vPortResetRunningTrapCost( void );
-    uint64_t ullPortGetRunningTrapCostFromTask( void );
-    uint32_t ulPortGetSwitchInExtra( void );
-    uint64_t ullPortGetTrapAllCurrentTime( void );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
