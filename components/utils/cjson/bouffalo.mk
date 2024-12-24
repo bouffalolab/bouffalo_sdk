@@ -7,7 +7,7 @@ COMPONENT_ADD_INCLUDEDIRS += .
 COMPONENT_PRIV_INCLUDEDIRS :=
 
 ## This component's src 
-COMPONENT_SRCS := cJSON.c
+COMPONENT_SRCS := cJSON.c cJSON_Utils.c
 
 
 COMPONENT_OBJS := $(patsubst %.c,%.o, $(COMPONENT_SRCS))
