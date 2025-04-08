@@ -1917,7 +1917,7 @@ BL_Err_Type GLB_Set_Chip_Clock_Out3_Sel(GLB_CHIP_CLK_OUT_3_Type clkOutType)
 *******************************************************************************/
 BL_Err_Type ATTR_TCM_SECTION GLB_Set_Flash_Id_Value(uint32_t idValue)
 {
-    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, (idValue | BFLB_FLASH_ID_VALID_FLAG));
+    BL_WR_REG(GLB_BASE, GLB_HW_RSV1, ((idValue&0xFFFFFF)|0x5A000000));
 
     return SUCCESS;
 }
@@ -1935,8 +1935,8 @@ uint32_t ATTR_TCM_SECTION GLB_Get_Flash_Id_Value(void)
     uint32_t tmpVal = 0;
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_HW_RSV1);
-    if ((tmpVal & BFLB_FLASH_ID_VALID_FLAG) != 0) {
-        return (tmpVal & BFLB_FLASH_ID_VALID_MASK);
+    if ((tmpVal&0x7F000000) == 0x5A000000) {
+        return (tmpVal&0x00FFFFFF);
     }
 
     return 0x00000000;
