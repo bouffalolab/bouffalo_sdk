@@ -200,7 +200,9 @@ int32_t bl_TcpSslConnect(const char *dst, uint16_t port)
         printf("mbedtls_ssl_setup returned -0x%x\r\n", -ret);
         return BL_TCP_CREATE_CONNECT_ERR;
     }
-
+#ifdef MBEDTLS_SSL_SERVER_NAME_INDICATION
+    mbedtls_ssl_set_hostname(&bl_hsbuf->ssl, dst);
+#endif
     mbedtls_net_init(&bl_hsbuf->server_fd);
 
     bl_hsbuf->server_fd.fd = socket(AF_INET, SOCK_STREAM, 0);
