@@ -26,6 +26,31 @@
 #include "hog.h"
 #endif
 
+#include "bluetooth.h"
+#include "hci_driver.h"
+
+#define BLE_CLI_QUEUE_LEN   10
+#define CLI_PRIO (CONFIG_BT_RX_PRIO - 2)
+static struct k_thread ble_cli_task_h;
+static struct k_fifo ble_cli_queue;
+typedef enum{
+    CLI_MSG_ENABLE_ADV,
+    CLI_MSG_DISCONNECT,
+    CLI_MSG_MULTI_ADV_STOP,
+    CLI_MSG_GATT_CANCEL_PREPARE_WRITES,
+}ble_cli_msg_type_t;
+
+typedef struct{
+    ble_cli_msg_type_t msg_type;
+    struct bt_conn *conn;
+    uint8_t reason;
+}ble_disconnect_params;
+
+typedef struct{
+    ble_cli_msg_type_t msg_type;
+    struct bt_conn *conn;
+    struct bt_gatt_write_params *write_params;
+}ble_gatt_cancel_prepare_writes_params;
 
 #define 		PASSKEY_MAX  		0xF423F
 #define 		NAME_LEN 			30
@@ -38,13 +63,6 @@ bool 			ble_inited 	= false;
 struct bt_conn *default_conn = NULL;
 #endif
 
-uint8_t non_disc = BT_LE_AD_NO_BREDR;
-uint8_t gen_disc = BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL;
-uint8_t lim_disc = BT_LE_AD_NO_BREDR | BT_LE_AD_LIMITED;
-struct bt_data ad_discov[2] = {
-    BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL),
-    BT_DATA_BYTES(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME),
-};
 #if defined(CONFIG_BLE_MULTI_ADV)
 static int ble_adv_id;
 #endif
@@ -56,8 +74,10 @@ static int ble_adv_id;
 #define BLE_CLI(func) static void blecli_##func(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv)
 #endif
 
+BLE_CLI(enable);
+BLE_CLI(set_chan_map);
 BLE_CLI(init);
-#if defined(BL702)
+#if defined(BL702) || defined (BL616) || defined(BL702L)
 BLE_CLI(set_2M_phy);
 BLE_CLI(set_coded_phy);
 BLE_CLI(set_default_phy);
@@ -84,14 +104,20 @@ BLE_CLI(tp_start);
 #if defined(CONFIG_BT_CONN)
 #if defined(CONFIG_BT_CENTRAL)
 BLE_CLI(connect);
+#if defined(CONFIG_BT_WHITELIST)
+BLE_CLI(auto_connect);
+BLE_CLI(whitelist_add);
+BLE_CLI(whitelist_rem);
+BLE_CLI(whitelist_clear);
+#endif /* CONFIG_BT_WHITELIST */
 #endif
 BLE_CLI(disconnect);
 BLE_CLI(select_conn);
 BLE_CLI(conn_update);
 BLE_CLI(send_l2cap_conn_param_update_req);
 #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
-BLE_CLI(l2cap_send_test_data(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
-BLE_CLI(l2cap_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv);
+BLE_CLI(l2cap_send_test_data);
+BLE_CLI(l2cap_disconnect);
 #endif
 #if(BFLB_BLE_ENABLE_TEST_PSM)
 BLE_CLI(register_test_psm);
@@ -99,6 +125,9 @@ BLE_CLI(connect_test_psm);
 #endif
 BLE_CLI(read_rssi);
 BLE_CLI(unpair);
+#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+BLE_CLI(ble_throughput_calc);
+#endif
 #endif
 #if defined(CONFIG_BT_SMP)
 BLE_CLI(security);
@@ -139,15 +168,22 @@ BLE_CLI(gatts_get_char);
 BLE_CLI(gatts_get_desp);
 #endif
 #endif
+BLE_CLI(le_tx_test);
+BLE_CLI(le_rx_test);
+BLE_CLI(le_enh_tx_test);
+BLE_CLI(le_enh_rx_test);
+BLE_CLI(le_test_end);
 
 #if defined(CONFIG_SHELL)
+    SHELL_CMD_EXPORT_ALIAS(blecli_enable, ble_enable, ble enable Parameter:[Null]);
+    SHELL_CMD_EXPORT_ALIAS(blecli_set_chan_map, ble_set_chan_map, ble set channel map Parameter:[channels]);
     SHELL_CMD_EXPORT_ALIAS(blecli_init, ble_init, ble Initialize Parameter:[Null]);
     SHELL_CMD_EXPORT_ALIAS(blecli_get_device_name, ble_get_device_name, ble get device name Parameter:[Null]);
     SHELL_CMD_EXPORT_ALIAS(blecli_set_device_name, ble_set_device_name, ble set device name Parameter:[Lenth of name] [name]);
 #if defined(CONFIG_BLE_TP_SERVER)
     SHELL_CMD_EXPORT_ALIAS(blecli_tp_start, ble_tp_start, throughput start Parameter:[TP test 1:enable; 0:disable]);
 #endif /* CONFIG_BLE_TP_SERVER */
-#if defined(BL702)
+#if defined(BL702) || defined (BL616) || defined(BL702L)
 #if defined(CONFIG_BT_CONN)
     SHELL_CMD_EXPORT_ALIAS(blecli_set_default_phy, ble_set_default_phy, ble set default phy Parameter:[defualt phys]);
     SHELL_CMD_EXPORT_ALIAS(blecli_set_2M_phy, ble_set_2M_Phy, ble set 2M Phy Parameter:[defualt phys]);
@@ -190,6 +226,18 @@ BLE_CLI(gatts_get_desp);
     SHELL_CMD_EXPORT_ALIAS(blecli_connect, ble_connect, ble Connect remote device \
         Parameter:[Address type: 0:ADDR_PUBLIC; 1:ADDR_RAND; 2:ADDR_RPA_OR_PUBLIC; 3:ADDR_RPA_OR_RAND] \
         [Address value; e.g.112233AABBCC]);
+    #if defined(CONFIG_BT_WHITELIST)
+    SHELL_CMD_EXPORT_ALIAS(blecli_auto_connect, ble_auto_connect, ble Connect remote device \
+        Parameter:[Address type: 0:ADDR_PUBLIC; 1:ADDR_RAND; 2:ADDR_RPA_OR_PUBLIC; 3:ADDR_RPA_OR_RAND] \
+        [Address value: e.g.112233AABBCC]);
+    SHELL_CMD_EXPORT_ALIAS(blecli_whitelist_add, ble_whitelist_add, Add white list \
+        Parameter [Address type: 0:ADDR_PUBLIC; 1:ADDR_RAND; 2:ADDR_RPA_OR_PUBLIC; 3:ADDR_RPA_OR_RAND] \
+        [Address value: e.g.112233AABBCC]);
+    SHELL_CMD_EXPORT_ALIAS(blecli_whitelist_rem, ble_whitelist_rem, Remove white list \
+        Parameter [Address type: 0:ADDR_PUBLIC; 1:ADDR_RAND; 2:ADDR_RPA_OR_PUBLIC; 3:ADDR_RPA_OR_RAND] \
+        [Address value: e.g.112233AABBCC]);
+    SHELL_CMD_EXPORT_ALIAS(blecli_whitelist_clear, ble_whitelist_clear, Clear white list Parameter []);
+#endif /* CONFIG_BT_WHITELIST */
 #endif /* CONFIG_BT_CENTRAL */
     SHELL_CMD_EXPORT_ALIAS(blecli_disconnect, ble_disconnect, Disconnect remote device \
         Parameter:[Address type: 0:ADDR_PUBLIC; 1:ADDR_RAND; 2:ADDR_RPA_OR_PUBLIC; 3:ADDR_RPA_OR_RAND] \
@@ -210,6 +258,10 @@ BLE_CLI(gatts_get_desp);
         [Conn Interval Max: 0x0006-0C80; e.g.0030] \
         [Conn Latency: 0x0000-01f3; e.g.0004] \
         [Supervision Timeout: 0x000A-0C80; e.g.0010]);
+#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+    SHELL_CMD_EXPORT_ALIAS(blecli_ble_throughput_calc, ble_set_throughput_calc, ble set throughputcalc \
+        Parameter:[enable];[duration]);
+#endif
     #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
     SHELL_CMD_EXPORT_ALIAS(blecli_l2cap_send_test_data, ble_l2cap_send_test_data, ble send l2cap data Parameter:[channel id]);
     SHELL_CMD_EXPORT_ALIAS(blecli_l2cap_disconnect, ble_l2cap_disconnect, ble send l2cap data Parameter:[channel id]);
@@ -274,18 +326,29 @@ BLE_CLI(gatts_get_desp);
     SHELL_CMD_EXPORT_ALIAS(blecli_gatts_get_desp, ble_get_svc_desp, );
 #endif /* CONFIG_BT_PERIPHERAL */
 #endif /* BFLB_BLE_DYNAMIC_SERVICE */
-#else
+    SHELL_CMD_EXPORT_ALIAS(blecli_le_tx_test, ble_tx_test, LE tx test \
+        parameter:[tx channel:1 datalen:1 octet;packet payload:1);
+    SHELL_CMD_EXPORT_ALIAS(blecli_le_rx_test, ble_rx_test, LE tx test \
+        parameter:[rx channel:1);
+    SHELL_CMD_EXPORT_ALIAS(blecli_le_enh_tx_test, ble_enh_tx_test, LE enh tx test \
+        parameter:[tx channel:1 octet;test data length:1 octet;packet payload:1 octet; phy:1 octet);
+    SHELL_CMD_EXPORT_ALIAS(blecli_le_enh_rx_test, ble_enh_rx_test, LE enh tx test \
+        parameter:[rx channel:1 octet;phy:1 octet;modulation index:1 octet);
+    SHELL_CMD_EXPORT_ALIAS(blecli_le_test_end, ble_test_end, );
+#else /* CONFIG_SHELL */
 const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
 #if 1
     /*1.The cmd string to type, 2.Cmd description, 3.The function to run, 4.Number of parameters*/
 
+    {"ble_enable", "ble enable\r\nParameter [Null]\r\n", blecli_enable},
+    {"ble_set_chan_map", "ble set channel map\r\nParameter [channels]\r\n", blecli_set_chan_map},
     {"ble_init", "ble Initialize\r\nParameter [Null]\r\n", blecli_init},
     {"ble_get_device_name", "ble get device name\r\nParameter [Null]\r\n", blecli_get_device_name},
     {"ble_set_device_name", "ble set device name\r\nParameter [Lenth of name] [name]\r\n", blecli_set_device_name},
 #if defined(CONFIG_BLE_TP_SERVER)
     {"ble_tp_start", "throughput start\r\nParameter [TP test,1:enable, 0:disable]\r\n", blecli_tp_start},
 #endif
-#if defined(BL702)
+#if defined(BL702)|| defined (BL616) || defined(BL702L)
 #if defined(CONFIG_BT_CONN)
     {"ble_set_default_phy", "ble set default phy\r\nParameter [defualt phys]\r\n", blecli_set_default_phy},
     {"ble_set_2M_Phy", "ble set 2M Phy\r\nParameter [defualt phys]\r\n", blecli_set_2M_phy},
@@ -328,6 +391,19 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"ble_connect", "ble Connect remote device\r\n\
      Parameter [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
      [Address value, e.g.112233AABBCC]\r\n", blecli_connect},
+#if defined(CONFIG_BT_WHITELIST)
+    {"ble_auto_connect", "ble Connect remote device\r\n\
+    Parameter [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
+    [Address value, e.g.112233AABBCC]\r\n", blecli_auto_connect},
+    {"ble_whitelist_add", "Add white list\r\n\
+    Parameter [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
+    [Address value, e.g.112233AABBCC]\r\n", blecli_whitelist_add},
+    {"ble_whitelist_rem", "Remove white list\r\n\
+    Parameter [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
+    [Address value, e.g.112233AABBCC]\r\n", blecli_whitelist_rem},
+    {"ble_whitelist_clear", "Clear white list\r\n\
+    Parameter []\r\n", blecli_whitelist_clear},
+#endif /* CONFIG_BT_WHITELIST */
 #endif
     {"ble_disconnect", "Disconnect remote device\r\n\
     Parameter [Address type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND]\r\n\
@@ -347,7 +423,10 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     Parameter [Conn Interval Min,0x0006-0C80,e.g.0030]\r\n\
     [Conn Interval Max,0x0006-0C80,e.g.0030]\r\n\
     [Conn Latency,0x0000-01f3,e.g.0004]\r\n\
-    [Supervision Timeout,0x000A-0C80,e.g.0010]\r\n", blecli_send_l2cap_conn_param_update_req}, 
+    [Supervision Timeout,0x000A-0C80,e.g.0010]\r\n", blecli_send_l2cap_conn_param_update_req},
+    #if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+    {"ble_set_throughput_calc", "ble set throughputcalc\r\nParameter [enable]\r\n [duration]\r\n", blecli_ble_throughput_calc},
+    #endif
     #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
     {"ble_l2cap_send_test_data", "ble send l2cap data\r\nParameter [channel id]\r\n", blecli_l2cap_send_test_data}, 
     {"ble_l2cap_disconnect", "ble send l2cap data\r\nParameter [channel id]\r\n", blecli_l2cap_disconnect},
@@ -413,6 +492,9 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
     {"ble_get_svc_desp","",blecli_gatts_get_desp},
 #endif
 #endif
+    {"ble_tx_test","LE tx test\r\nparameter [tx channel, 1 octet, test data length, 1 octet, packet payload, 1 octet, phy, 1 octet]",blecli_le_enh_tx_test},
+    {"ble_rx_test","LE tx test\r\nparameter [rx channel, 1 octet, phy, 1 octet, modulation index, 1 octet]",blecli_le_enh_rx_test},
+    {"ble_test_end","",blecli_le_test_end},
 #else
     {"ble_init", "", blecli_init},
 #if defined(CONFIG_BLE_TP_SERVER)
@@ -474,9 +556,7 @@ const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
 #endif
     {"ble_set_data_len", "", blecli_set_data_len},
     {"ble_conn_info", "", blecli_get_all_conn_info},
-#if defined(CONFIG_SET_TX_PWR)
     {"ble_set_tx_pwr", "", blecli_set_tx_pwr},
-#endif
 #if defined(CONFIG_HOGP_SERVER)
     {"ble_hog_srv_notify", "", blecli_hog_srv_notify},
 #endif
@@ -497,8 +577,14 @@ static void connected(struct bt_conn *conn, u8_t err)
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
 #if defined(CONFIG_BLE_MULTI_ADV)
-    if(ble_adv_id && !bt_le_multi_adv_stop(ble_adv_id)){
-        ble_adv_id = 0;
+    if(ble_adv_id){
+        uint8_t *msg = k_malloc(sizeof(uint8_t));
+        if(!msg){
+            vOutputString("Fail to allocate buffer.");
+            return;
+        }
+        *msg = CLI_MSG_MULTI_ADV_STOP;
+        k_fifo_put(&ble_cli_queue, (void *)msg);
     }
 #endif /* CONFIG_BLE_MULTI_ADV */
 
@@ -515,11 +601,15 @@ static void connected(struct bt_conn *conn, u8_t err)
 
 #if defined(CONFIG_BLE_RECONNECT_TEST)
     if (conn->role == BT_CONN_ROLE_MASTER) {
-        if(bt_conn_disconnect(conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN)) {
-            vOutputString("Disconnection fail. \r\n");
-        }else{
-            vOutputString("Disconnect success. \r\n");
+        ble_disconnect_params *params = k_malloc(sizeof(ble_disconnect_params));
+        if(!params){
+            vOutputString("Fail to allocate buffer.");
+            return;
         }
+        params->msg_type = CLI_MSG_DISCONNECT;
+        params->conn = conn;
+        params->reason = BT_HCI_ERR_REMOTE_USER_TERM_CONN;
+        k_fifo_put(&ble_cli_queue, (void *)params);
     }
 #endif
 }
@@ -538,19 +628,17 @@ static void disconnected(struct bt_conn *conn, u8_t reason)
 
 #if defined(CONFIG_BLE_RECONNECT_TEST)
     if(conn->role == BT_CONN_ROLE_SLAVE) {
-        if(set_adv_enable(true)) {
-            vOutputString("Restart adv fail. \r\n");
-        } else {
-            vOutputString("Restart adv success. \r\n");
+        uint8_t *msg = k_malloc(sizeof(uint8_t));
+        if(!msg){
+            vOutputString("Fail to allocate buffer.");
+            return;
         }
+        *msg = CLI_MSG_ENABLE_ADV;
+        k_fifo_put(&ble_cli_queue, (void *)msg);
     }
 #endif
 
     if (default_conn == conn) {
-        #if defined(CONFIG_BT_CENTRAL)
-        if(conn->role == BT_HCI_ROLE_MASTER)
-            bt_conn_unref(conn);
-        #endif
         default_conn = NULL;
     }
 }
@@ -600,6 +688,14 @@ static void security_changed(struct bt_conn *conn, bt_security_t level, enum bt_
 }
 #endif
 
+#if (CONFIG_BT_REMOTE_VERSION)
+static void remote_version(struct bt_conn *conn, u8_t version,
+		u16_t manufacturer, u16_t subversion)
+{
+    printf("Remote Version: %d, Manufacturer: %d, Subversion: %d \r\n", version, manufacturer, subversion);
+}
+#endif /* CONFIG_BT_REMOTE_VERSION */
+
 static struct bt_conn_cb conn_callbacks = {
 	.connected = connected,
 	.disconnected = disconnected,
@@ -609,25 +705,93 @@ static struct bt_conn_cb conn_callbacks = {
 	.identity_resolved = identity_resolved,
 	.security_changed = security_changed,
 #endif
+#if (CONFIG_BT_REMOTE_VERSION)
+	.remote_version = remote_version,
+#endif /* CONFIG_BT_REMOTE_VERSION */
 };
 #endif //CONFIG_BT_CONN
 
-BLE_CLI(init)
+void btcli_enable_cb(int err)
 {
-    if(ble_inited){
-        vOutputString("Has initialized \r\n");
+    if (!err) {
+        bt_addr_le_t bt_addr;
+        bt_conn_cb_register(&conn_callbacks);
+        bt_get_local_public_address(&bt_addr);
+        printf("BD_ADDR:(MSB)%02x:%02x:%02x:%02x:%02x:%02x(LSB) \r\n",
+            bt_addr.a.val[5], bt_addr.a.val[4], bt_addr.a.val[3], bt_addr.a.val[2], bt_addr.a.val[1], bt_addr.a.val[0]);
+    }else{
+         printf("bt_enable_failed\n");
+    }
+}
+
+BLE_CLI(enable)
+{
+    if (atomic_test_bit(bt_dev.flags, BT_DEV_ENABLE)) {
+        return;
+    }
+    // Initialize BLE controller
+    #if defined(BL702) || defined(BL602)
+    ble_controller_init(configMAX_PRIORITIES - 1);
+    #else
+    btble_controller_init(configMAX_PRIORITIES - 1);
+    #endif
+    // Initialize BLE Host stack
+    hci_driver_init();
+
+    bt_enable(btcli_enable_cb);
+}
+
+BLE_CLI(set_chan_map)
+{
+    u8_t chan_map[5] = {0};
+    uint8_t nb_good_channels = 0;
+    int err,i,j;
+
+    if(argc != 2){
+       vOutputString("Number of Parameters is not correct\r\n");
+       return;
+    }
+    get_bytearray_from_string(&argv[1], chan_map, sizeof(chan_map));
+
+    // Make sure that the three most significant bits are 0
+    if (chan_map[5 - 1] >> 5){
+        vOutputString("Parameters is not correct\r\n");
         return;
     }
 
+    // Count number of good channels
+    for(i = 0; i < 5; ++i){
+        for(j = 0; j < 8; ++j){
+            if(chan_map[i]&(1<<j)){
+                nb_good_channels++;
+            }
+        }
+    }
+    if(nb_good_channels == 0){
+        vOutputString("Parameters is not correct\r\n");
+        return;
+    }
+
+    printf("channel map %02x %02x %02x %02x %02x\r\n",
+            chan_map[0], chan_map[1], chan_map[2], chan_map[3], chan_map[4]);
+    err = bt_le_set_chan_map(chan_map);
+    if(!err){
+        vOutputString("Set ble channel map pending\r\n");
+    }else{
+        vOutputString("Failed to set ble channel map\r\n");
+    }
+}
+
+BLE_CLI(init)
+{
     #if defined(CONFIG_BT_CONN)
     default_conn = NULL;
     bt_conn_cb_register(&conn_callbacks);
     #endif
-    ble_inited = true;
-    vOutputString("Init successfully \r\n");
+    vOutputString("Init successfully\r\n");
 }
 
-#if defined(BL702)
+#if defined(BL702) || defined (BL616) ||defined(BL702L)
 #if defined(CONFIG_BT_CONN)
 BLE_CLI(set_2M_phy)
 {
@@ -659,9 +823,9 @@ BLE_CLI(set_coded_phy)
         return;
     }
 
-    btble_get_uint8_from_string(&argv[1], &all_phys);
+    get_uint8_from_string(&argv[1], &all_phys);
 
-    btble_get_uint8_from_string(&argv[2], &opts);
+    get_uint8_from_string(&argv[2], &opts);
     if(opts == 2)
     {
         coded_opts = BT_HCI_LE_PHY_CODED_S2;
@@ -685,7 +849,7 @@ BLE_CLI(set_default_phy)
 {
     u8_t default_phy = 0;
     
-    btble_get_uint8_from_string(&argv[1], &default_phy);
+    get_uint8_from_string(&argv[1], &default_phy);
     
     if(!hci_le_set_default_phy(default_phy)){
         vOutputString("Set ble default Phy successfully \r\n");
@@ -695,6 +859,125 @@ BLE_CLI(set_default_phy)
 }
 #endif
 #endif
+
+BLE_CLI(le_rx_test)
+{
+    int err;
+    u8_t rx_ch;
+
+    if(argc != 2){
+       vOutputString("Number of Parameters is not correct\r\n");
+       return;
+    }
+    get_uint8_from_string(&argv[1], &rx_ch); 
+    
+    err = bt_ble_rx_test_cmd(rx_ch);
+    if(err)
+    {
+        vOutputString("le rx test failed (err %d)\r\n", err); 
+    }
+    else
+    {
+        vOutputString("le rx test success\r\n");
+    }
+}
+
+BLE_CLI(le_tx_test)
+{
+    int err;
+    u8_t tx_ch;
+    u8_t data_len;
+    u8_t pkt_payload;
+
+    if(argc != 4){
+       vOutputString("Number of Parameters is not correct\r\n");
+       return;
+    }
+    get_uint8_from_string(&argv[1], &tx_ch); 
+    get_uint8_from_string(&argv[2], &data_len); 
+    get_uint8_from_string(&argv[3], &pkt_payload); 
+    
+    err = bt_ble_tx_test_cmd(tx_ch, data_len, pkt_payload);
+    if(err)
+    {
+        vOutputString("le tx test failed (err %d)\r\n", err); 
+    }
+    else
+    {
+        vOutputString("le tx test success\r\n");
+    }
+}
+
+BLE_CLI(le_enh_tx_test)
+{
+    int err;
+    u8_t tx_ch;
+    u8_t test_data_len;
+    u8_t pkt_payload;
+    u8_t phy;
+
+    if(argc != 5){
+       vOutputString("Number of Parameters is not correct\r\n");
+       return;
+    }
+    get_uint8_from_string(&argv[1], &tx_ch); 
+    get_uint8_from_string(&argv[2], &test_data_len); 
+    get_uint8_from_string(&argv[3], &pkt_payload); 
+    get_uint8_from_string(&argv[4], &phy); 
+    
+    err = bt_le_enh_tx_test(tx_ch, test_data_len, pkt_payload, phy);
+    if(err)
+    {
+        vOutputString("le tx test failed (err %d)\r\n", err); 
+    }
+    else
+    {
+        vOutputString("le tx test success\r\n");
+    }
+
+}
+
+BLE_CLI(le_enh_rx_test)
+{
+    int err;
+    u8_t rx_ch;
+    u8_t phy;
+    u8_t mod_index;
+
+    if(argc != 4){
+       vOutputString("Number of Parameters is not correct\r\n");
+       return;
+    }
+    get_uint8_from_string(&argv[1], &rx_ch); 
+    get_uint8_from_string(&argv[2], &phy); 
+    get_uint8_from_string(&argv[3], &mod_index); 
+    
+    err = bt_le_enh_rx_test(rx_ch, phy, mod_index);
+    if(err)
+    {
+        vOutputString("le rx test failed (err %d)\r\n", err); 
+    }
+    else
+    {
+        vOutputString("le rx test success\r\n");
+    }
+}
+
+BLE_CLI(le_test_end)
+{
+    int err;
+    err = bt_le_test_end();
+    if(err)
+    {
+        vOutputString("set le test end failed (err %d)\r\n", err); 
+    }
+    else
+    {
+        vOutputString("set le test end success\r\n");
+    }  
+}
+
+
 
 BLE_CLI(get_device_name)
 {
@@ -720,12 +1003,17 @@ BLE_CLI(set_device_name)
 		vOutputString("Invaild lenth(%d)\r\n",strlen(argv[1]));
 	}
 }
+
 #if defined(CONFIG_BLE_TP_SERVER)
 BLE_CLI(tp_start)
 {
     extern u8_t tp_start;
-    
-    btble_get_uint8_from_string(&argv[1], &tp_start);
+    if(argc != 2){
+        vOutputString("Number of Parameters is not correct\r\n");
+        return;
+    }
+
+    get_uint8_from_string(&argv[1], &tp_start);
     if( tp_start == 1 ){
         vOutputString("Ble Throughput enable\r\n");
     }else if(tp_start == 0){
@@ -734,7 +1022,6 @@ BLE_CLI(tp_start)
         vOutputString("Invalid parameter\r\n");
     }
 }
-
 #endif
 
 #if defined(CONFIG_BT_OBSERVER)
@@ -780,13 +1067,13 @@ BLE_CLI(start_scan)
         return;
     }
 
-    btble_get_uint8_from_string(&argv[1], &scan_param.type);
+    get_uint8_from_string(&argv[1], &scan_param.type);
     
-    btble_get_uint8_from_string(&argv[2], &scan_param.filter_dup);
+    get_uint8_from_string(&argv[2], &scan_param.filter_dup);
     
-    btble_get_uint16_from_string(&argv[3], &scan_param.interval);
+    get_uint16_from_string(&argv[3], &scan_param.interval);
     
-    btble_get_uint16_from_string(&argv[4], &scan_param.window);
+    get_uint16_from_string(&argv[4], &scan_param.window);
 
     err = bt_le_scan_start(&scan_param, device_found);
     
@@ -796,7 +1083,6 @@ BLE_CLI(start_scan)
         vOutputString("Start scan successfully \r\n");
     }
 }
-
 
 BLE_CLI(stop_scan)
 {
@@ -821,7 +1107,7 @@ BLE_CLI(scan_filter_size)
         return;
     }
     
-    btble_get_uint8_from_string(&argv[1], &size);
+    get_uint8_from_string(&argv[1], &size);
     
 	err = ble_controller_set_scan_filter_table_size(size);
 	if (err) {
@@ -861,7 +1147,7 @@ BLE_CLI(set_local_address)
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    btble_get_bytearray_from_string(&argv[1], addr_val,6);
+    get_bytearray_from_string(&argv[1], addr_val,6);
     reverse_bytearray(addr_val, addr.a.val, 6);
 
     err = bt_set_local_public_address(addr.a.val);
@@ -886,7 +1172,7 @@ BLE_CLI(set_adv_channel)
         return;
     }
 
-    btble_get_uint8_from_string(&argv[1], &channel);
+    get_uint8_from_string(&argv[1], &channel);
 
     if (set_adv_channel_map(channel) == 0)
     {
@@ -911,12 +1197,21 @@ BLE_CLI(start_advertise)
         return;
     }
 
+    uint8_t non_disc = BT_LE_AD_NO_BREDR;
+    uint8_t gen_disc = BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL;
+    uint8_t lim_disc = BT_LE_AD_NO_BREDR | BT_LE_AD_LIMITED;
+    char *adv_name = (char*)bt_get_name();
+    struct bt_data ad_discov[2] = {
+        BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL),
+        BT_DATA(BT_DATA_NAME_COMPLETE, adv_name, strlen(adv_name)),
+    };
+ 
     param.id = selected_id;
     param.interval_min = BT_GAP_ADV_FAST_INT_MIN_2;
     param.interval_max = BT_GAP_ADV_FAST_INT_MAX_2;
 
     /*Get adv type, 0:adv_ind,  1:adv_scan_ind, 2:adv_nonconn_ind 3: adv_direct_ind*/
-    btble_get_uint8_from_string(&argv[1], &adv_type);
+    get_uint8_from_string(&argv[1], &adv_type);
     vOutputString("adv_type 0x%x\r\n",adv_type);
     if(adv_type == 0){
         param.options = (BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_ONE_TIME);
@@ -930,7 +1225,7 @@ BLE_CLI(start_advertise)
     }
     
     /*Get mode, 0:General discoverable,  1:limit discoverable, 2:non discoverable*/
-    btble_get_uint8_from_string(&argv[2], &mode);
+    get_uint8_from_string(&argv[2], &mode);
     vOutputString("mode 0x%x\r\n",mode);
     
     if (mode == 0) {
@@ -949,8 +1244,8 @@ BLE_CLI(start_advertise)
 
 
     if(argc == 5){
-        btble_get_uint16_from_string(&argv[3], &param.interval_min);
-        btble_get_uint16_from_string(&argv[4], &param.interval_max);
+        get_uint16_from_string(&argv[3], &param.interval_min);
+        get_uint16_from_string(&argv[4], &param.interval_max);
 
       	vOutputString("interval min 0x%x\r\n",param.interval_min);  
       	vOutputString("interval max 0x%x\r\n",param.interval_max);  
@@ -1010,6 +1305,11 @@ BLE_CLI(start_multi_advertise)
     size_t ad_len_1, ad_len_2;
     int err_1, err_2;
     int instant_id_1, instant_id_2;
+    char *adv_name = (char*)bt_get_name();
+    struct bt_data ad_discov[2] = {
+        BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR | BT_LE_AD_GENERAL),
+        BT_DATA(BT_DATA_NAME_COMPLETE, adv_name, strlen(adv_name)),
+    };
 
     param_1.id = 0;
     param_1.interval_min = 0x00A0;
@@ -1048,7 +1348,7 @@ BLE_CLI(stop_multi_advertise)
 {
     uint8_t instant_id;
 
-    btble_get_uint8_from_string(&argv[1], &instant_id);
+    get_uint8_from_string(&argv[1], &instant_id);
     printf("Try to stop multi adv instant of: %d\n", instant_id);
 
     if(bt_le_multi_adv_stop(instant_id)) {
@@ -1082,31 +1382,131 @@ BLE_CLI(connect)
 
 	(void)memset(addr_val,0,6);
 
-    if(argc != 3){
+    if(argc != 3 && argc != 6){
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
        
-    btble_get_uint8_from_string(&argv[1], (u8_t *)&type);
+    get_uint8_from_string(&argv[1], (u8_t *)&type);
 
 	/*Get addr type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND*/
     addr.type = type;
 
-    btble_get_bytearray_from_string(&argv[2], addr_val,6);
+    get_bytearray_from_string(&argv[2], addr_val,6);
      for(i=0;i<6;i++){
 		vOutputString("addr[%d]:[0x%x]\r\n",i,addr_val[i]);
     }
 	
     reverse_bytearray(addr_val, addr.a.val, 6);
-   
+    if(argc == 6)
+    {
+        get_uint16_from_string(&argv[3], &param.interval_min);
+        get_uint16_from_string(&argv[4], &param.interval_max);
+        get_uint16_from_string(&argv[5], &param.timeout);
+    }
+
     conn = bt_conn_create_le(&addr, /*BT_LE_CONN_PARAM_DEFAULT*/&param);
 
     if(!conn){
         vOutputString("Connection failed\r\n");
     }else{
-        vOutputString("Connection pending\r\n");
+        if(conn->state == BT_CONN_CONNECTED)
+            vOutputString("Le link with this peer device has existed\r\n");
+        else
+            vOutputString("Connection pending\r\n");
     }
 }
+
+#if defined(CONFIG_BT_WHITELIST)
+BLE_CLI(auto_connect)
+{
+	int err;
+	unsigned char enable = 0U;
+	struct bt_le_conn_param param = {
+		.interval_min =  BT_GAP_INIT_CONN_INT_MIN,
+		.interval_max =  BT_GAP_INIT_CONN_INT_MAX,
+		.latency = 0,
+		.timeout = 400,
+	};
+	/*Auto connect whitelist device, enable : 0x01, disable : 0x02*/
+	get_uint8_from_string(&argv[1], &enable);
+
+	if(enable == 0x01){
+		err = bt_conn_create_auto_le(&param);
+		if(err){
+			vOutputString("Auto connect failed (err = [%d])\r\n",err);
+			return;
+		}else{
+			vOutputString("Auto connection is succeed\r\n");
+		}
+	}else if(enable == 0x02){
+		err = bt_conn_create_auto_stop();
+		if(err){
+			vOutputString("Auto connection stop (err = [%d])\r\n",err);
+			return ;
+		}
+	}
+}
+
+BLE_CLI(whitelist_add)
+{
+	bt_addr_le_t waddr;
+	int 		err;
+	u8_t 		val[6];
+
+	if(argc != 3){
+		printf("Number of Parameters is not correct (argc = [%d])\r\n",argc);
+		return;
+	}
+	// 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND*
+	get_uint8_from_string(&argv[1], &waddr.type);
+	get_bytearray_from_string(&argv[2], val,6);
+
+	reverse_bytearray(val, waddr.a.val, 6);
+
+	err = bt_le_whitelist_add(&waddr);
+	if(err){
+		printf("Failed to add device to whitelist (err = [%d])\r\n",err);
+	}
+}
+
+BLE_CLI(whitelist_rem)
+{
+	bt_addr_le_t waddr;
+	int 		err;
+	u8_t 		val[6];
+
+	if(argc != 3){
+		printf("Number of Parameters is not correct (argc = [%d])\r\n",argc);
+		return;
+	}
+
+	get_uint8_from_string(&argv[1], &waddr.type);
+	get_bytearray_from_string(&argv[2], val,6);
+
+	reverse_bytearray(val, waddr.a.val, 6);
+
+	err = bt_le_whitelist_rem(&waddr);
+	if(err){
+		printf("Failed to add device to whitelist (err = [%d])\r\n",err);
+	}
+}
+
+BLE_CLI(whitelist_clear)
+{
+	int 		err;
+
+	if(argc != 1){
+		printf("Number of Parameters is not correct (argc = [%d])\r\n",argc);
+		return;
+	}
+
+	err = bt_le_whitelist_clear();
+	if(err){
+		printf("Clear white list device failed (err = [%d])\r\n",err);
+	}
+}
+#endif /* CONFIG_BT_WHITELIST */
 
 #endif //#if defined(CONFIG_BT_CENTRAL)
 
@@ -1121,8 +1521,8 @@ BLE_CLI(disconnect)
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    btble_get_uint8_from_string(&argv[1], (u8_t *)&type);
-    btble_get_bytearray_from_string(&argv[2], addr_val,6);
+    get_uint8_from_string(&argv[1], (u8_t *)&type);
+    get_bytearray_from_string(&argv[2], addr_val,6);
     reverse_bytearray(addr_val, addr.a.val, 6);
 
 	/*Get addr type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND*/
@@ -1158,9 +1558,9 @@ BLE_CLI(select_conn)
     }
 
     /*Get addr type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND*/
-    btble_get_uint8_from_string(&argv[1], &addr.type);
+    get_uint8_from_string(&argv[1], &addr.type);
 
-    btble_get_bytearray_from_string(&argv[2], addr_val,6);
+    get_bytearray_from_string(&argv[2], addr_val,6);
 
     reverse_bytearray(addr_val, addr.a.val, 6);
     
@@ -1171,8 +1571,8 @@ BLE_CLI(select_conn)
         return;
     }
 
-    if(default_conn){
-        bt_conn_unref(default_conn);
+    if(conn){
+        bt_conn_unref(conn);
     }
 
     default_conn = conn;
@@ -1190,9 +1590,9 @@ BLE_CLI(unpair)
     }
 
     /*Get addr type, 0:ADDR_PUBLIC, 1:ADDR_RAND, 2:ADDR_RPA_OR_PUBLIC, 3:ADDR_RPA_OR_RAND*/
-    btble_get_uint8_from_string(&argv[1], &addr.type);
+    get_uint8_from_string(&argv[1], &addr.type);
     
-    btble_get_bytearray_from_string(&argv[2], addr_val,6);
+    get_bytearray_from_string(&argv[2], addr_val,6);
 
     reverse_bytearray(addr_val, addr.a.val, 6);
         
@@ -1214,10 +1614,10 @@ BLE_CLI(conn_update)
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    btble_get_uint16_from_string(&argv[1], &param.interval_min);
-    btble_get_uint16_from_string(&argv[2], &param.interval_max);
-    btble_get_uint16_from_string(&argv[3], &param.latency);
-    btble_get_uint16_from_string(&argv[4], &param.timeout);	
+    get_uint16_from_string(&argv[1], &param.interval_min);
+    get_uint16_from_string(&argv[2], &param.interval_max);
+    get_uint16_from_string(&argv[3], &param.latency);
+    get_uint16_from_string(&argv[4], &param.timeout);	
     err = bt_conn_le_param_update(default_conn, &param);
 
 	if (err) {
@@ -1236,10 +1636,10 @@ BLE_CLI(send_l2cap_conn_param_update_req)
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    btble_get_uint16_from_string(&argv[1], &param.interval_min);
-    btble_get_uint16_from_string(&argv[2], &param.interval_max);
-    btble_get_uint16_from_string(&argv[3], &param.latency);
-    btble_get_uint16_from_string(&argv[4], &param.timeout);	
+    get_uint16_from_string(&argv[1], &param.interval_min);
+    get_uint16_from_string(&argv[2], &param.interval_max);
+    get_uint16_from_string(&argv[3], &param.latency);
+    get_uint16_from_string(&argv[4], &param.timeout);	
     err = bt_l2cap_update_conn_param(default_conn, &param);
 
 	if (err) {
@@ -1250,22 +1650,21 @@ BLE_CLI(send_l2cap_conn_param_update_req)
 }
 
 #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
-BLE_CLI(l2cap_send_test_data(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BLE_CLI(l2cap_send_test_data)
 {
     int err = 0;
     uint8_t test_data[10] = {0x01, 0x02, 0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a};
     uint8_t large_test_data[30];
     uint16_t cid;
-    bool isLarge;
-    struct bt_l2cap_chan *chan;
+    uint8_t isLarge;
 
     if(argc != 3){
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
      
-    btble_get_uint16_from_string(&argv[1], &cid);
-    btble_get_uint8_from_string(&argv[2], &isLarge);
+    get_uint16_from_string(&argv[1], &cid);
+    get_uint8_from_string(&argv[2], &isLarge);
 
     extern int bt_l2cap_send_data(struct bt_conn *conn, uint16_t cid, uint8_t *data, uint8_t len);
     if(isLarge)
@@ -1284,17 +1683,17 @@ BLE_CLI(l2cap_send_test_data(char *p_write_buffer, int write_buffer_len, int arg
 }
 
 
-BLE_CLI(l2cap_disconnect(char *p_write_buffer, int write_buffer_len, int argc, char **argv)
+BLE_CLI(l2cap_disconnect)
 {
     int err = 0;
     uint16_t tx_cid;
 
-    if(argc != 1){
+    if(argc != 2){
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
     
-    btble_get_uint16_from_string(&argv[1], &tx_cid);
+    get_uint16_from_string(&argv[1], &tx_cid);
 
     err = bt_l2cap_disconnect(default_conn, tx_cid);
 
@@ -1311,16 +1710,20 @@ BLE_CLI(register_test_psm)
     int err = 0;
     uint16_t psm;
     uint8_t sec_level;
+    uint8_t l2cap_policy;
+    bool add_allow;
 
-    if(argc != 3){
+    if(argc != 5){
         vOutputString("Number of Parameters is not correct\r\n");
         return;
     }
-    btble_get_uint16_from_string(&argv[1], &psm);
-    btble_get_uint8_from_string(&argv[2], &sec_level);
-    
-    extern int bt_register_test_psm(uint16_t psm, uint8_t sec_level);
-    bt_register_test_psm(psm, sec_level);
+    get_uint16_from_string(&argv[1], &psm);
+    get_uint8_from_string(&argv[2], &sec_level);
+    get_uint8_from_string(&argv[3], &l2cap_policy);
+    get_uint8_from_string(&argv[4], (uint8_t *)&add_allow);
+
+    extern int bt_register_test_psm(uint16_t psm, uint8_t sec_level, uint8_t policy,bool add_allow);
+    err = bt_register_test_psm(psm, sec_level,l2cap_policy,add_allow);
 
     if (err) {
         vOutputString("Fail to register test psm(err %d)\r\n", err);
@@ -1339,7 +1742,7 @@ BLE_CLI(connect_test_psm)
         return;
     }
 
-    btble_get_uint16_from_string(&argv[1], &psm);
+    get_uint16_from_string(&argv[1], &psm);
     
     extern int bt_connect_test_psm(struct bt_conn *conn, uint16_t psm);
     bt_connect_test_psm(default_conn, psm);
@@ -1370,6 +1773,32 @@ BLE_CLI(read_rssi)
     }
 }
 
+#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+BLE_CLI(ble_throughput_calc)
+{  
+    int err;
+    u8_t enable;
+    u8_t interval;
+    if(argc != 3){
+       vOutputString("Number of Parameters is not correct\r\n");
+       return;
+    }
+    get_uint8_from_string(&argv[1], (uint8_t *)&enable); 
+    get_uint8_from_string(&argv[2], &interval); 
+    extern int bt_le_throughput_calc(bool enable, u8_t interval);
+    err = bt_le_throughput_calc(enable,interval);
+    if(err)
+    {
+        vOutputString("set le throughput calculation failed (err %d)\r\n", err); 
+    }
+    else
+    {
+        vOutputString("set le throughput calculation success\r\n");
+    }
+    
+}
+#endif
+
 #endif //#if defined(CONFIG_BT_CONN)
 
 #if defined(CONFIG_BT_SMP)
@@ -1384,7 +1813,7 @@ BLE_CLI(security)
     }
 
     if(argc == 2)
-        btble_get_uint8_from_string(&argv[1], &sec_level);
+        get_uint8_from_string(&argv[1], &sec_level);
     
     err = bt_conn_set_security(default_conn, sec_level);
 
@@ -1623,6 +2052,11 @@ u8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *attr, struct
 
 	if (!attr) {
 		vOutputString( "Discover complete\r\n");
+		#if defined(BFLB_BLE_PATCH_ADD_ERRNO_IN_DISCOVER_CALLBACK)
+		if(params->err != 0){
+			printf("Discover erro %x\n", params->err);
+		}
+		#endif /* BFLB_BLE_PATCH_ADD_ERRNO_IN_DISCOVER_CALLBACK */
 		(void)memset(params, 0, sizeof(*params));
 		return BT_GATT_ITER_STOP;
 	}
@@ -1674,7 +2108,7 @@ BLE_CLI(discover)
 	discover_params.start_handle = 0x0001;
 	discover_params.end_handle = 0xffff;
 
-    btble_get_uint8_from_string(&argv[1], &disc_type);
+    get_uint8_from_string(&argv[1], &disc_type);
     if(disc_type == 0){
         discover_params.type = BT_GATT_DISCOVER_PRIMARY;
     }else if(disc_type == 1){
@@ -1689,15 +2123,15 @@ BLE_CLI(discover)
         vOutputString("Invalid discovery type\r\n");
         return;
     }
-    btble_get_uint16_from_string(&argv[2], &uuid.val);
+    get_uint16_from_string(&argv[2], &uuid.val);
 	
     if(uuid.val)
         discover_params.uuid = &uuid.uuid;
     else
         discover_params.uuid = NULL;
 
-    btble_get_uint16_from_string(&argv[3], &discover_params.start_handle);
-    btble_get_uint16_from_string(&argv[4], &discover_params.end_handle);
+    get_uint16_from_string(&argv[3], &discover_params.start_handle);
+    get_uint16_from_string(&argv[4], &discover_params.end_handle);
 
 	err = bt_gatt_discover(default_conn, &discover_params);
 	if (err) {
@@ -1749,8 +2183,8 @@ BLE_CLI(read)
 		return;
 	}
 
-    btble_get_uint16_from_string(&argv[1], &read_params.single.handle);
-    btble_get_uint16_from_string(&argv[2], &read_params.single.offset);
+    get_uint16_from_string(&argv[1], &read_params.single.handle);
+    get_uint16_from_string(&argv[2], &read_params.single.offset);
 
     read_params.func = read_func;
 	read_params.handle_count = 1;
@@ -1764,20 +2198,33 @@ BLE_CLI(read)
 }
 
 static struct bt_gatt_write_params write_params;
-
+static u8_t *gatt_write_buf = NULL;
 static void write_func(struct bt_conn *conn, u8_t err,
 		       struct bt_gatt_write_params *params)
 {
 	vOutputString("Write complete: err %u \r\n", err);
-
-	(void)memset(&write_params, 0, sizeof(write_params));
+    if(gatt_write_buf != NULL){
+        k_free(gatt_write_buf);
+        gatt_write_buf = NULL;
+    }
+    if(err == BT_ATT_ERR_PREPARE_QUEUE_FULL){
+        ble_gatt_cancel_prepare_writes_params *cancel_params = k_malloc(sizeof(ble_gatt_cancel_prepare_writes_params));
+        if(!cancel_params){
+            vOutputString("Fail to allocate buffer");
+            return;
+        }
+        cancel_params->msg_type = CLI_MSG_GATT_CANCEL_PREPARE_WRITES;
+        cancel_params->conn = conn;
+        cancel_params->write_params = params;
+        k_fifo_put(&ble_cli_queue, (void *)cancel_params);
+    }else
+        memset(params, 0, sizeof(struct bt_gatt_write_params));
 }
 
 BLE_CLI(write)
 {
 	int err;
     uint16_t data_len;
-    u8_t *gatt_write_buf;
 
     if(argc != 5){
         vOutputString("Number of Parameters is not correct\r\n");
@@ -1794,9 +2241,9 @@ BLE_CLI(write)
 		return;
 	}
 
-    btble_get_uint16_from_string(&argv[1], &write_params.handle);  
-    btble_get_uint16_from_string(&argv[2], &write_params.offset);
-    btble_get_uint16_from_string(&argv[3], &write_params.length);
+    get_uint16_from_string(&argv[1], &write_params.handle);  
+    get_uint16_from_string(&argv[2], &write_params.offset);
+    get_uint16_from_string(&argv[3], &write_params.length);
     data_len = write_params.length;
     gatt_write_buf = k_malloc(data_len);
     if(!gatt_write_buf)
@@ -1804,15 +2251,13 @@ BLE_CLI(write)
         vOutputString("Failed to alloc buffer for the data\r\n");
         return;
     }
-    btble_get_bytearray_from_string(&argv[4], gatt_write_buf,data_len);
+    get_bytearray_from_string(&argv[4], gatt_write_buf,data_len);
     
 	write_params.data = gatt_write_buf;
 	write_params.length = data_len;
 	write_params.func = write_func;
-	
-	err = bt_gatt_write(default_conn, &write_params);
 
-    k_free(gatt_write_buf);
+	err = bt_gatt_write(default_conn, &write_params);
     
 	if (err) {
 		vOutputString("Write failed (err %d)\r\n", err);
@@ -1839,16 +2284,16 @@ BLE_CLI(write_without_rsp)
 		return;
 	}
 
-    btble_get_uint8_from_string(&argv[1], (uint8_t *)&sign);
-    btble_get_uint16_from_string(&argv[2], &handle);
-	btble_get_uint16_from_string(&argv[3], &len);
+    get_uint8_from_string(&argv[1], (uint8_t *)&sign);
+    get_uint16_from_string(&argv[2], &handle);
+	get_uint16_from_string(&argv[3], &len);
     gatt_write_buf = k_malloc(len);
     if(!gatt_write_buf)
     {
         vOutputString("Failed to alloc buffer for the data\r\n");
         return;
     }
-	btble_get_bytearray_from_string(&argv[4], gatt_write_buf,len);
+	get_bytearray_from_string(&argv[4], gatt_write_buf,len);
 	
 	err = bt_gatt_write_without_response(default_conn, handle, gatt_write_buf, len, sign);
 
@@ -1866,7 +2311,6 @@ static u8_t notify_func(struct bt_conn *conn,
 #if defined(CONFIG_BLE_TP_TEST)
     static u32_t time = 0;
     static int len = 0;
-    static int8_t rssi;
 #endif  
 
     if (!params->value) {
@@ -1881,8 +2325,7 @@ static u8_t notify_func(struct bt_conn *conn,
     }
     len += length;
     if(k_now_ms()- time >= 1000){
-        bt_le_read_rssi(default_conn->handle, &rssi);
-        vOutputString("data rate = [%d byte], rssi = [%d dbm]\r\n", len, rssi);
+        vOutputString("data rate = [%d byte]\r\n", len);
         time = k_now_ms();
         len = 0;
     }
@@ -1904,9 +2347,9 @@ BLE_CLI(subscribe)
         return;
     }
 
-    btble_get_uint16_from_string(&argv[1], &subscribe_params.ccc_handle);
-    btble_get_uint16_from_string(&argv[2], &subscribe_params.value_handle);
-    btble_get_uint16_from_string(&argv[3], &subscribe_params.value);
+    get_uint16_from_string(&argv[1], &subscribe_params.ccc_handle);
+    get_uint16_from_string(&argv[2], &subscribe_params.value_handle);
+    get_uint16_from_string(&argv[3], &subscribe_params.value);
     subscribe_params.notify = notify_func;
 
     int err = bt_gatt_subscribe(default_conn, &subscribe_params);
@@ -1955,8 +2398,8 @@ BLE_CLI(set_data_len)
 		return;
 	}
 
-	btble_get_uint16_from_string(&argv[1], &tx_octets);
-	btble_get_uint16_from_string(&argv[2], &tx_time);
+	get_uint16_from_string(&argv[1], &tx_octets);
+	get_uint16_from_string(&argv[2], &tx_time);
 
 	err = bt_le_set_data_len(default_conn, tx_octets, tx_time);
 	if (err) {
@@ -1989,7 +2432,7 @@ BLE_CLI(get_all_conn_info)
 	        vOutputString("[%d]: address %s\r\n", i, le_addr);
         }
 }
-#endif /* CONFIG_BT_CONN*/
+#endif /* CONFIG_BT_CONN */
 
 BLE_CLI(set_tx_pwr)
 {
@@ -2001,7 +2444,7 @@ BLE_CLI(set_tx_pwr)
 	    return;
 	}
 
-    btble_get_uint8_from_string(&argv[1],&power);
+    get_uint8_from_string(&argv[1],&power);
     #if defined(BL602)
     if(power > 21){
         vOutputString("ble_set_tx_pwr, invalid value, value shall be in [%d - %d]\r\n", 0, 21);
@@ -2036,7 +2479,7 @@ BLE_CLI(disable)
         vOutputString("Disable bt successfully\r\n");
     }
 }
-#endif
+#endif /* BFLB_DISABLE_BT */
 
 #if defined(CONFIG_HOGP_SERVER)
 BLE_CLI(hog_srv_notify)
@@ -2050,8 +2493,8 @@ BLE_CLI(hog_srv_notify)
         return;
     }
 
-    btble_get_uint16_from_string(&argv[1],&hid_usage);
-    btble_get_uint8_from_string(&argv[2],&press);
+    get_uint16_from_string(&argv[1],&hid_usage);
+    get_uint8_from_string(&argv[2],&press);
 
     err = hog_notify(default_conn,hid_usage,press);
     if(err){
@@ -2060,7 +2503,7 @@ BLE_CLI(hog_srv_notify)
         vOutputString("Notification sent successfully\r\n");
     }
 }
-#endif
+#endif /* CONFIG_HOGP_SERVER */
 #if defined(BFLB_BLE_DYNAMIC_SERVICE)
 #if defined(CONFIG_BT_PERIPHERAL)
 
@@ -2076,7 +2519,7 @@ BLE_CLI(del_spp_service)
     void bt_dyn_unregister_spp_srv(void);
     bt_dyn_unregister_spp_srv();
 }
-#endif
+#endif /* CONFIG_BT_SPP_SERVER */
 
 BLE_CLI(gatts_get_service_info)
 {
@@ -2089,7 +2532,7 @@ BLE_CLI(gatts_get_service_info)
     }
 
     memset(svc_info,0,sizeof(svc_info));
-    btble_get_uint16_from_string(&argv[1],&svc_id);
+    get_uint16_from_string(&argv[1],&svc_id);
 
     bt_gatts_get_service_simple_info(svc_id,&svc_info[0],sizeof(svc_info)/sizeof(struct simple_svc_info));
     for(int i=0;i<sizeof(svc_info)/sizeof(struct simple_svc_info);i++){
@@ -2109,7 +2552,7 @@ BLE_CLI(gatts_get_char)
     }
 
     memset(cinfo,0,sizeof(cinfo));
-    btble_get_uint16_from_string(&argv[1],&svc_id);
+    get_uint16_from_string(&argv[1],&svc_id);
 
     bt_gatts_get_service_char(svc_id,cinfo,sizeof(cinfo)/sizeof(struct char_info));
     for(int i=0;i<sizeof(cinfo)/sizeof(struct char_info);i++){
@@ -2130,7 +2573,7 @@ BLE_CLI(gatts_get_desp)
         return;
     }
 
-    btble_get_uint16_from_string(&argv[1],&svc_id);
+    get_uint16_from_string(&argv[1],&svc_id);
     bt_gatts_get_service_desc(svc_id,dinfo,sizeof(dinfo)/sizeof(struct descrip_info));
 
     for(int i=0;i<sizeof(dinfo)/sizeof(struct descrip_info);i++){
@@ -2138,13 +2581,85 @@ BLE_CLI(gatts_get_desp)
             dinfo[i].uuid,dinfo[i].desp_idx);
     }
 }
-#endif
-#endif
+#endif /* CONFIG_BT_PERIPHERAL */
+#endif /* BFLB_BLE_DYNAMIC_SERVICE */
+
+static void ble_cli_task(void *pvParameters)
+{
+    int ret = 0;
+
+    while(1){
+         uint8_t *msg = k_fifo_get(&ble_cli_queue, K_FOREVER);
+         if(msg == NULL)
+             continue;
+
+         switch(*msg){
+             case CLI_MSG_ENABLE_ADV:
+             {
+                 ret = set_adv_enable(true);
+                if(ret) {
+                    vOutputString("Fail to enable adv.\r\n");
+                }else{
+                    vOutputString("Enable adv success.\r\n");
+                }
+             }
+             break;
+             case CLI_MSG_DISCONNECT:
+             {
+                 ble_disconnect_params *params = (ble_disconnect_params *)msg;
+                 if(params->conn != NULL){
+                     ret = bt_conn_disconnect(params->conn, params->reason);
+                     if(ret) {
+                         vOutputString("Disconnection fail. \r\n");
+                     }else{
+                         vOutputString("Disconnect success. \r\n");
+                     }
+                 }else{
+                     vOutputString("Invalid parameters in CLI_MSG_DISCONNECT,conn=%p", params->conn);
+                 }
+             }
+             break;
+             #if defined(CONFIG_BLE_MULTI_ADV)
+             case CLI_MSG_MULTI_ADV_STOP:
+             {
+                  if(ble_adv_id && !bt_le_multi_adv_stop(ble_adv_id))
+                       ble_adv_id = 0;
+             }
+             break;
+             #endif
+             case CLI_MSG_GATT_CANCEL_PREPARE_WRITES:
+             {
+                ble_gatt_cancel_prepare_writes_params *gatt_cancel_params = (ble_gatt_cancel_prepare_writes_params *)msg;
+                if(gatt_cancel_params->conn != NULL && gatt_cancel_params->write_params != NULL)
+                {
+                    ret = bt_gatt_cancle_prepare_writes(gatt_cancel_params->conn, gatt_cancel_params->write_params);
+                    if(ret){
+                        vOutputString("Fail to cancel prepare writes(err %d)\r\n", ret);
+                    }else{
+                        vOutputString("Cancel prepare writes pending\r\n");
+                    }
+                }else{
+                    vOutputString("Invalid parameters in CLI_MSG_GATT_CANCEL_PREPARE_WRITES,conn=%p,write_params=%p", gatt_cancel_params->conn, gatt_cancel_params->write_params);
+                }
+             }
+             break;
+
+             default:
+             break;
+         }
+
+         k_free(msg);
+    }
+}
+
 int ble_cli_register(void)
 {
     // static command(s) do NOT need to call aos_cli_register_command(s) to register.
     // However, calling aos_cli_register_command(s) here is OK but is of no effect as cmds_user are included in cmds list.
     // XXX NOTE: Calling this *empty* function is necessary to make cmds_user in this file to be kept in the final link.
     //aos_cli_register_commands(btStackCmdSet, sizeof(btStackCmdSet)/sizeof(btStackCmdSet[0]));
+     k_fifo_init(&ble_cli_queue, BLE_CLI_QUEUE_LEN);
+     if(ble_cli_queue._queue.hdl)
+         k_thread_create(&ble_cli_task_h, "blecli", 1024,(k_thread_entry_t)ble_cli_task, CLI_PRIO);
     return 0;
 }

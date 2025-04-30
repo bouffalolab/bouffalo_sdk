@@ -201,6 +201,7 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
     uint32_t regval;
 #if !defined(BL602) && !defined(BL702)
     uint32_t i = 0;
+    uint32_t data_bits;
 #endif
 
     bflb_ir_txint_clear(dev);
@@ -219,7 +220,9 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
 
 #if !defined(BL602) && !defined(BL702)
     if ((regval & IR_CR_IRTX_FRM_EN) == 0) {
-        length = length < 4 ? length : 4;
+        data_bits = (regval & IR_CR_IRTX_DATA_NUM_MASK) >> IR_CR_IRTX_DATA_NUM_SHIFT;
+        data_bits = data_bits / 32 + 1;
+        length = length < data_bits ? length : data_bits;
     }
     while (i < length) {
         if (bflb_ir_get_txfifo_cnt(dev) > 0) {
@@ -250,7 +253,7 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length)
 #endif
 }
 
-void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
+void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint32_t length)
 {
 #ifdef romapi_bflb_ir_swm_send
     romapi_bflb_ir_swm_send(dev, data, length);
@@ -258,17 +261,19 @@ void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
     uint32_t reg_base;
     uint32_t regval;
     uint16_t min_data = data[0];
-#if defined(BL602) || defined(BL702)
-    uint32_t count = (length + 7) / 8;
-#else
-    uint32_t count = (length + 3) / 4;
-#endif
+    uint32_t count;
     uint32_t pwval = 0;
     uint32_t i, j;
 
     if (length > 128) {
         length = 128;
     }
+
+#if defined(BL602) || defined(BL702)
+    count = (length + 7) / 8;
+#else
+    count = (length + 3) / 4;
+#endif
 
     bflb_ir_txint_clear(dev);
 
@@ -526,7 +531,7 @@ void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s
 #endif
 }
 
-uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data)
+uint16_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data)
 {
 #ifdef romapi_bflb_ir_receive
     return romapi_bflb_ir_receive(dev, data);
@@ -561,7 +566,7 @@ uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data)
 #endif
 }
 
-uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t length)
+uint16_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint16_t length)
 {
 #ifdef romapi_bflb_ir_swm_receive
     return romapi_bflb_ir_swm_receive(dev, data, length);
@@ -707,7 +712,32 @@ int bflb_ir_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
     return romapi_bflb_ir_feature_control(dev, cmd, arg);
 #else
     int ret = 0;
+#if !defined(BL616)
+    uint32_t regval;
+#endif
+
     switch (cmd) {
+#if !defined(BL616)
+        case IR_CMD_SWM_SET_DATA_LEN:
+            regval = getreg32(dev->reg_base + IRTX_CONFIG_OFFSET);
+            regval &= ~IR_CR_IRTX_DATA_NUM_MASK;
+            regval |= arg << IR_CR_IRTX_DATA_NUM_SHIFT;
+            putreg32(regval, dev->reg_base + IRTX_CONFIG_OFFSET);
+            break;
+
+#if !defined(BL602) && !defined(BL702)
+        case IR_CMD_SWM_WRITE_TX_FIFO:
+            putreg32(arg, dev->reg_base + IR_FIFO_WDATA_OFFSET);
+            break;
+#endif
+#endif
+
+#if !defined(BL602) && !defined(BL702) && !defined(BL702L)
+        case IR_CMD_SWM_READ_RX_FIFO:
+            ret = getreg32(dev->reg_base + IR_FIFO_RDATA_OFFSET);
+            break;
+#endif
+
         default:
             ret = -EPERM;
             break;

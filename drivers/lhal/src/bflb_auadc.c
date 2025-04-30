@@ -33,11 +33,15 @@ int bflb_auadc_init(struct bflb_device_s *dev, const struct bflb_auadc_init_conf
 
     /* pdm or adc input */
     regval = getreg32(reg_base + AUADC_PDM_DAC_0_OFFSET);
+#if (AUADC_ANALOG_ADC_SUPPORT)
     if (config->input_mode == AUADC_INPUT_MODE_ADC) {
         regval &= ~AUADC_ADC_0_SRC;
     } else {
         regval |= AUADC_ADC_0_SRC;
     }
+#else
+    regval |= AUADC_ADC_0_SRC;
+#endif
     putreg32(regval, reg_base + AUADC_PDM_DAC_0_OFFSET);
 
     /* pdm cfg */
@@ -60,7 +64,8 @@ int bflb_auadc_init(struct bflb_device_s *dev, const struct bflb_auadc_init_conf
 
     regval = getreg32(reg_base + AUADC_AUDADC_CMD_OFFSET);
     /* audio osr configuration */
-    if (config->input_mode != AUADC_INPUT_MODE_ADC && (config->sampling_rate == AUADC_SAMPLING_RATE_32K || config->sampling_rate == AUADC_SAMPLING_RATE_48K)) {
+    if ((config->input_mode == AUADC_INPUT_MODE_PDM_L || config->input_mode == AUADC_INPUT_MODE_PDM_R) &&
+        (config->sampling_rate == AUADC_SAMPLING_RATE_32K || config->sampling_rate == AUADC_SAMPLING_RATE_48K)) {
         /* osr 64 */
         regval |= AUADC_AUDADC_AUDIO_OSR_SEL;
     } else {
@@ -106,6 +111,7 @@ int bflb_auadc_init(struct bflb_device_s *dev, const struct bflb_auadc_init_conf
 #endif
 }
 
+#if (AUADC_ANALOG_ADC_SUPPORT)
 int bflb_auadc_adc_init(struct bflb_device_s *dev, const struct bflb_auadc_adc_init_config_s *adc_analog_cfg)
 {
     LHAL_PARAM_ASSERT(dev);
@@ -182,6 +188,7 @@ int bflb_auadc_adc_init(struct bflb_device_s *dev, const struct bflb_auadc_adc_i
     return 0;
 #endif
 }
+#endif
 
 int bflb_auadc_link_rxdma(struct bflb_device_s *dev, bool enable)
 {
@@ -303,6 +310,7 @@ int bflb_auadc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + AUADC_PDM_ADC_S0_OFFSET);
             break;
 
+#if (AUADC_ANALOG_ADC_SUPPORT)
         case AUADC_CMD_SET_PGA_GAIN_VAL:
             /* set adc pga gain, range 6dB ~ 42dB, step by 3db */
             volume_val = arg / 3;
@@ -311,6 +319,7 @@ int bflb_auadc_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             regval |= (volume_val << AUADC_AUDADC_PGA_GAIN_SHIFT) & AUADC_AUDADC_PGA_GAIN_MASK;
             putreg32(regval, reg_base + AUADC_AUDADC_CMD_OFFSET);
             break;
+#endif
 
         case AUADC_CMD_CLEAR_RX_FIFO:
             /* get rx fifo cnt */

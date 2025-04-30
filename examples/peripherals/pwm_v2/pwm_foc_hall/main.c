@@ -3,9 +3,7 @@
 #include "bflb_clock.h"
 #include "board.h"
 #include "math.h"
-#include "bl616_glb.h"
-#include "bl616_glb_gpio.h"
-#include "bl616_gpio.h"
+#include "bflb_gpio.h"
 #include "../foc.h"
 
 #define PWM_TRI_CH_U (PWM_CH2)
@@ -67,7 +65,7 @@ void peri_pwm_init(void)
     bflb_gpio_init(gpio, PWM_PIN_V_L, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, PWM_PIN_W_H, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, PWM_PIN_W_L, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
+    board_bldc_pre_init();
     bflb_pwm_v2_init(pwm, &cfg);
     bflb_pwm_v2_channel_init(pwm, PWM_TRI_CH_U, &ch_cfg);
     bflb_pwm_v2_channel_init(pwm, PWM_TRI_CH_V, &ch_cfg);

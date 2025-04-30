@@ -35,7 +35,16 @@
 #define LCD_INTERFACE_DPI       3
 #define LCD_INTERFACE_DSI_VIDIO 4
 
-#if defined LCD_DBI_ILI9488
+#if defined LCD_DBI_GC9307
+
+#include "mipi_dbi/gc9307_dbi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DBI
+#define LCD_W                        GC9307_DBI_W
+#define LCD_H                        GC9307_DBI_H
+#define LCD_COLOR_DEPTH              GC9307_DBI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) gc9307_dbi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DBI_ILI9488
 
 #include "mipi_dbi/ili9488_dbi.h"
 #define LCD_INTERFACE_TYPE           LCD_INTERFACE_DBI
@@ -62,6 +71,15 @@
 #define LCD_COLOR_DEPTH              ILI9341_DBI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) ili9341_dbi_##_func(__VA_ARGS__)
 
+#elif defined LCD_DBI_JD9853
+
+#include "mipi_dbi/jd9853_dbi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DBI
+#define LCD_W                        JD9853_DBI_W
+#define LCD_H                        JD9853_DBI_H
+#define LCD_COLOR_DEPTH              JD9853_DBI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) jd9853_dbi_##_func(__VA_ARGS__)
+
 #elif defined LCD_DBI_NT35510
 
 #include "mipi_dbi/nt35510_dbi.h"
@@ -79,6 +97,17 @@
 #define LCD_H                        ST7796_DBI_H
 #define LCD_COLOR_DEPTH              ST7796_DBI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) st7796_dbi_##_func(__VA_ARGS__)
+
+#elif defined LCD_DBI_ST77926
+
+#include "mipi_dbi/st77926_dbi_qspi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DBI
+#define LCD_W                        ST77926_DBI_W
+#define LCD_H                        ST77926_DBI_H
+#define LCD_PIXEL_ALIGN_X            ST77926_DBI_PIXEL_ALIGN
+#define LCD_PIXEL_ALIGN_Y            ST77926_DBI_PIXEL_ALIGN
+#define LCD_COLOR_DEPTH              ST77926_DBI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) st77926_dbi_##_func(__VA_ARGS__)
 
 #elif defined LCD_DISP_QSPI_GC9C01
 
@@ -134,6 +163,15 @@
 #define LCD_COLOR_DEPTH              ILI9881C_DSI_VIDIO_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) ili9881c_dsi_vidio_##_func(__VA_ARGS__)
 
+#elif defined LCD_SPI_GC9307
+
+#include "spi/gc9307_spi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_SPI
+#define LCD_W                        GC9307_SPI_W
+#define LCD_H                        GC9307_SPI_H
+#define LCD_COLOR_DEPTH              GC9307_SPI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) gc9307_spi_##_func(__VA_ARGS__)
+
 #elif defined LCD_SPI_ILI9488
 
 #include "spi/ili9488_spi.h"
@@ -170,8 +208,25 @@
 #define LCD_COLOR_DEPTH              ST7789V_SPI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) st7789v_spi_##_func(__VA_ARGS__)
 
+#elif defined LCD_SPI_ST7735
+
+#include "spi/st7735_spi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_SPI
+#define LCD_W                        ST7735_SPI_W
+#define LCD_H                        ST7735_SPI_H
+#define LCD_COLOR_DEPTH              ST7735_SPI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) st7735_spi_##_func(__VA_ARGS__)
+
 #else
 #error "Please select a screen type"
+#endif
+
+#ifndef LCD_PIXEL_ALIGN_X
+#define LCD_PIXEL_ALIGN_X 1
+#endif
+
+#ifndef LCD_PIXEL_ALIGN_Y
+#define LCD_PIXEL_ALIGN_Y 1
 #endif
 
 #define LCD_COLOR_RGB888(r, g, b) (((r << 16) | (g << 8) | (b)) & 0xffffff)

@@ -98,7 +98,7 @@ typedef enum {
     RESERVED16 = IRQ_NUM_BASE + 45,            /*!< RESERVED Interrupt                                                */
     RESERVED17 = IRQ_NUM_BASE + 46,            /*!< RESERVED Interrupt                                                */
     M154_REQ_ENH_ACK_IRQn = IRQ_NUM_BASE + 47, /*!< M154_REQ Interrupt                                                */
-    M154_IRQn = IRQ_NUM_BASE + 48,             /*!< M154 Interrupt                                                    */
+    M154_INT_IRQn = IRQ_NUM_BASE + 48,         /*!< M154 Interrupt                                                    */
     M154_AES_IRQn = IRQ_NUM_BASE + 49,         /*!< M154_AES Interrupt                                                */
     PDS_WAKEUP_IRQn = IRQ_NUM_BASE + 50,       /*!< PDS Wakeup Interrupt                                              */
     HBN_OUT0_IRQn = IRQ_NUM_BASE + 51,         /*!< Hibernate out 0 Interrupt                                         */
@@ -192,38 +192,40 @@ typedef enum {
 #define HBN_RAM_BASE ((uint32_t)0x40010000)
 
 typedef enum {
-    BL_AHB_SLAVE1_RSVD0 = 0x00,
-    BL_AHB_SLAVE1_RSVD1 = 0x01,
-    BL_AHB_SLAVE1_GPIP = 0x02,
-    BL_AHB_SLAVE1_SEC_DBG = 0x03,
-    BL_AHB_SLAVE1_SEC = 0x04,
-    BL_AHB_SLAVE1_TZ1 = 0x05,
-    BL_AHB_SLAVE1_RSVD6 = 0x06,
-    BL_AHB_SLAVE1_EFUSE = 0x07,
-    BL_AHB_SLAVE1_RSVD8 = 0x08,
-    BL_AHB_SLAVE1_RSVD9 = 0x09,
-    BL_AHB_SLAVE1_RSVD10 = 0x0A,
-    BL_AHB_SLAVE1_SFC = 0x0B,
-    BL_AHB_SLAVE1_DMA = 0x0C,
-    BL_AHB_SLAVE1_RSVD13 = 0x0D,
-    BL_AHB_SLAVE1_RSVD14 = 0x0E,
-    BL_AHB_SLAVE1_RSVD15 = 0x0F,
-    BL_AHB_SLAVE1_UART0 = 0x10,
-    BL_AHB_SLAVE1_RSVD17 = 0x11,
-    BL_AHB_SLAVE1_SPI = 0x12,
-    BL_AHB_SLAVE1_I2C = 0x13,
-    BL_AHB_SLAVE1_PWM = 0x14,
-    BL_AHB_SLAVE1_TMR = 0x15,
-    BL_AHB_SLAVE1_IRR = 0x16,
-    BL_AHB_SLAVE1_CKS = 0x17,
-    BL_AHB_SLAVE1_RSVD24 = 0x18,
-    BL_AHB_SLAVE1_KYS = 0x19,
-    BL_AHB_SLAVE1_RSVD26 = 0x1A,
-    BL_AHB_SLAVE1_RSVD27 = 0x1B,
-    BL_AHB_SLAVE1_RSVD28 = 0x1C,
-    BL_AHB_SLAVE1_AUDIO = 0x1D,
+    BL_AHB_SLAVE1_RSVD0 = 0x00,   // GLB
+    BL_AHB_SLAVE1_RSVD1 = 0x01,   // MIX
+    BL_AHB_SLAVE1_GPIP = 0x02,    // GPIP
+    BL_AHB_SLAVE1_SEC_DBG = 0x03, // SEC_DBG
+    BL_AHB_SLAVE1_SEC = 0x04,     // SEC_ENG
+    BL_AHB_SLAVE1_TZ1 = 0x05,     // TZ1
+    BL_AHB_SLAVE1_RSVD6 = 0x06,   // TZ2
+    BL_AHB_SLAVE1_EFUSE = 0x07,   // EFUSE
+    BL_AHB_SLAVE1_RSVD8 = 0x08,   // CCI
+    BL_AHB_SLAVE1_RSVD9 = 0x09,   // L1C
+    BL_AHB_SLAVE1_RSVD10 = 0x0A,  // NONE
+    BL_AHB_SLAVE1_SFC = 0x0B,     // SFC
+    BL_AHB_SLAVE1_DMA = 0x0C,     // DMA
+    BL_AHB_SLAVE1_RSVD13 = 0x0D,  // NONE
+    BL_AHB_SLAVE1_RSVD14 = 0x0E,  // PDS
+    BL_AHB_SLAVE1_RSVD15 = 0x0F,  // NONE
+    BL_AHB_SLAVE1_UART0 = 0x10,   // UART0
+    BL_AHB_SLAVE1_RSVD17 = 0x11,  // NONE
+    BL_AHB_SLAVE1_SPI = 0x12,     // SPI
+    BL_AHB_SLAVE1_I2C = 0x13,     // I2C
+    BL_AHB_SLAVE1_PWM = 0x14,     // PWM
+    BL_AHB_SLAVE1_TMR = 0x15,     // TIMER
+    BL_AHB_SLAVE1_IRR = 0x16,     // IR Remote
+    BL_AHB_SLAVE1_CKS = 0x17,     // CKS
+    BL_AHB_SLAVE1_RSVD24 = 0x18,  // NONE
+    BL_AHB_SLAVE1_KYS = 0x19,     // KYS
+    BL_AHB_SLAVE1_RSVD26 = 0x1A,  // NONE
+    BL_AHB_SLAVE1_RSVD27 = 0x1B,  // NONE
+    BL_AHB_SLAVE1_RSVD28 = 0x1C,  // NONE
+    BL_AHB_SLAVE1_AUDIO = 0x1D,   // AUSOLO
     BL_AHB_SLAVE1_MAX = 0x1E,
 } BL_AHB_Slave1_Type;
+
+typedef int BL_ENUM_Type;
 
 /**
   * @}

@@ -124,6 +124,7 @@ typedef enum {
     BL_PERIPHERAL_CLOCK_CAM,      /*!< CAM clock */
     BL_PERIPHERAL_CLOCK_SDH,      /*!< SDH clock */
     BL_PERIPHERAL_CLOCK_PKA,      /*!< PKA clock */
+    BL_PERIPHERAL_CLOCK_RTC,      /*!< RTC clock */
     BL_PERIPHERAL_CLOCK_MAX,
 } BL_Peripheral_Type;
 

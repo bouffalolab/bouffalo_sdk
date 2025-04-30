@@ -71,30 +71,27 @@ typedef enum {
 /**
  *  @brief Efuse Ctrl sign type definition
  */
-typedef enum {
-    EF_CTRL_SIGN_NONE, /*!< no sign */
-    EF_CTRL_SIGN_RSA,  /*!< use RSA to sign */
-    EF_CTRL_SIGN_ECC,  /*!< use ECC to sign */
-} EF_Ctrl_Sign_Type;
+#define EF_CTRL_SIGN_NONE (0) /*!< no sign */
+#define EF_CTRL_SIGN_RSA  (1) /*!< use RSA to sign */
+#define EF_CTRL_SIGN_ECC  (2) /*!< use ECC to sign */
+#define EF_Ctrl_Sign_Type uint8_t
 
 /**
  *  @brief Efuse Ctrl flash AES type definition
  */
-typedef enum {
-    EF_CTRL_SF_AES_NONE, /*!< No AES */
-    EF_CTRL_SF_AES_128,  /*!< AES 128 */
-    EF_CTRL_SF_AES_192,  /*!< AES 192 */
-    EF_CTRL_SF_AES_256,  /*!< AES 256 */
-} EF_Ctrl_SF_AES_Type;
+#define EF_CTRL_SF_AES_NONE (0) /*!< No AES */
+#define EF_CTRL_SF_AES_128  (1) /*!< AES 128 */
+#define EF_CTRL_SF_AES_192  (2) /*!< AES 192 */
+#define EF_CTRL_SF_AES_256  (3) /*!< AES 256 */
+#define EF_Ctrl_SF_AES_Type uint8_t
 
 /**
  *  @brief Efuse Ctrl Dbg type definition
  */
-typedef enum {
-    EF_CTRL_DBG_OPEN = 0,  /*!< Open debug */
-    EF_CTRL_DBG_PASSWORD,  /*!< Open debug with password */
-    EF_CTRL_DBG_CLOSE = 4, /*!< Close debug */
-} EF_Ctrl_Dbg_Mode_Type;
+#define EF_CTRL_DBG_OPEN     (0) /*!< Open debug */
+#define EF_CTRL_DBG_PASSWORD (1) /*!< Open debug with password */
+#define EF_CTRL_DBG_CLOSE    (4) /*!< Close debug */
+#define EF_Ctrl_Dbg_Mode_Type uint8_t
 
 /**
  *  @brief Efuse Ctrl clock type definition

@@ -371,6 +371,17 @@ size_t romfs_read(romfs_file_t *fp, char *buf, size_t length)
     return len;
 }
 
+int romfs_getbuf(romfs_file_t *fp, romfs_filebuf_t *file_buf)
+{
+    if (!file_buf) {
+        return -1;
+    }
+    file_buf->buf = ((char *)fp->f_arg) + ALIGNUP16(strlen(((char *)fp->f_arg) + 16) + 1) + 16;
+    file_buf->bufsize = dirent_size(fp->f_arg);
+
+    return 0;
+}
+
 // int romfs_ioctl(romfs_file_t *fp, int cmd, unsigned long arg)
 // {
 //     int ret = -1;

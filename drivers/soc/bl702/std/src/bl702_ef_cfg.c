@@ -70,6 +70,7 @@ static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
 };
 
 static GLB_ROOT_CLK_Type rtClk;
+static HBN_XCLK_CLK_Type xclk;
 static uint8_t bdiv, hdiv;
 
 /****************************************************************************/ /**
@@ -84,6 +85,7 @@ void  ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_save(void)
     bdiv = GLB_Get_BCLK_Div();
     hdiv = GLB_Get_HCLK_Div();
     rtClk = GLB_Get_Root_CLK_Sel();
+    xclk = HBN_Get_XCLK_CLK_Sel();
     HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_RC32M);
     GLB_Set_System_CLK_Div(0, 0);
 }
@@ -99,6 +101,7 @@ void ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_restore(void)
     /* all API should be place at tcm section */
     GLB_Set_System_CLK_Div(hdiv, bdiv);
     HBN_Set_ROOT_CLK_Sel(rtClk);
+    HBN_Set_XCLK_CLK_Sel(xclk);
 }
 
 /****************************************************************************/ /**
@@ -127,7 +130,7 @@ void bflb_efuse_get_device_info(bflb_efuse_device_info_type *device_info)
 {
     uint32_t tmpval;
 
-    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_WIFI_MAC_HIGH_OFFSET, &tmpval, 1, 1);
+    bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_KEY_SLOT_5_W2_OFFSET, &tmpval, 1, 1);
     device_info->sf_swap_cfg = (tmpval >> 22) & 3;
     device_info->flash_info = (tmpval >> 26) & 0x7;
     device_info->psram_info = (tmpval >> 24) & 0x3;
@@ -367,9 +370,9 @@ float bflb_efuse_get_adc_trim(void)
                 tmp = ~tmp;
                 tmp += 1;
                 tmp = tmp & 0xfff;
-                coe = (1.0 + ((float)tmp / 2048.0));
+                coe = (1.0f + ((float)tmp / 2048.0f));
             } else {
-                coe = (1.0 - ((float)tmp / 2048.0));
+                coe = (1.0f - ((float)tmp / 2048.0f));
             }
         }
     }

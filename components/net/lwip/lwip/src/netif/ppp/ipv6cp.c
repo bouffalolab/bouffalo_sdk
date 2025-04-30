@@ -414,7 +414,7 @@ llv6_ntoa(eui64_t ifaceid)
 {
     static char b[26];
 
-    sprintf(b, "fe80::%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+    snprintf(b, sizeof(b),"fe80::%02x%02x:%02x%02x:%02x%02x:%02x%02x", 
       ifaceid.e8[0], ifaceid.e8[1], ifaceid.e8[2], ifaceid.e8[3],
       ifaceid.e8[4], ifaceid.e8[5], ifaceid.e8[6], ifaceid.e8[7]);
 
@@ -1371,9 +1371,9 @@ ipv6cp_script(script)
     char strspeed[32], strlocal[32], strremote[32];
     char *argv[8];
 
-    sprintf(strspeed, "%d", baud_rate);
-    strcpy(strlocal, llv6_ntoa(ipv6cp_gotoptions[0].ourid));
-    strcpy(strremote, llv6_ntoa(ipv6cp_hisoptions[0].hisid));
+    snprintf(strspeed, sizeof(strspeed), "%d", baud_rate);
+    strlcpy(strlocal, llv6_ntoa(ipv6cp_gotoptions[0].ourid), sizeof(strlocal));
+    strlcpy(strremote, llv6_ntoa(ipv6cp_hisoptions[0].hisid), sizeof(strremote));
 
     argv[0] = script;
     argv[1] = ifname;

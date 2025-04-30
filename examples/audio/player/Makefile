@@ -11,4 +11,3 @@ CROSS_COMPILE ?= riscv64-unknown-elf-
 #cmake_definition+=-Dxxx=sss
 
 include $(BL_SDK_BASE)/project.build
-$(shell ./tools/genromfs/genromfs -d romfs/ -f ./build/build_out/romfs.bin)

@@ -43,7 +43,14 @@
 #define lcd_dbi_transmit_cmd_pixel_fill_async lcd_dbi_transmit_cmd_pixel_fill_async
 
 lcd_dbi_init_t dbi_para = {
+#if (LCD_DBI_WORK_MODE == 3)
+    /* typeB */
+    .clock_freq = 27 * 1000 * 1000,
+#else
+    /* typeC */
     .clock_freq = 40 * 1000 * 1000,
+#endif
+
 #if (ILI9486_DBI_PIXEL_FORMAT == 1)
     .pixel_format = LCD_DBI_LCD_PIXEL_FORMAT_RGB565,
 #elif (ILI9486_DBI_PIXEL_FORMAT == 2)
@@ -60,31 +67,36 @@ lcd_dbi_init_t dbi_para = {
 #endif
 
 const ili9486_dbi_init_cmd_t ili9486_dbi_init_cmds[] = {
-    { 0x01, NULL, 0 },                                                            /* software reset */
-    { 0xFF, NULL, 10 },                                                           /* delay 10ms */
+    { 0x01, NULL, 0 },  /* software reset */
+    { 0xFF, NULL, 10 }, /* delay 10ms */
 
-    { 0x11, NULL, 0 },                                                            /* Sleep Out */
-    { 0xFF, NULL, 120 },                                                          /* delay 120ms */
+    { 0x11, NULL, 0 },   /* Sleep Out */
+    { 0xFF, NULL, 120 }, /* delay 120ms */
 
     { 0xF1, "\x36\x04\x00\x3C\x0F\x8F", 6 },
     { 0xF2, "\x18\xA3\x12\x02\xB2\x12\xFF\x10\x00", 9 },
-    { 0xF8, "\x21\x04", 2 },  
-    { 0xF9, "\x00\x08", 2 },    
+    { 0xF8, "\x21\x04", 2 },
+    { 0xF9, "\x00\x08", 2 },
 
-    { 0xC0, "\x13\x13", 2 },   
-    { 0xC1, "\x42", 1 }, 
-    { 0xC2, "\x22", 1 }, 
+    { 0xC0, "\x13\x13", 2 },
+    { 0xC1, "\x42", 1 },
+    { 0xC2, "\x22", 1 },
     { 0xC5, "\x00\x01", 2 },
 
-    { 0xB1, "\xC0\x11", 2 }, 
-    { 0xB4, "\x00", 1 },   
-    { 0xB6, "\x00\x42\x3B", 3 }, 
-    { 0xB7, "\xC6", 1 },   
+    { 0xB1, "\xC0\x11", 2 },
+    { 0xB4, "\x00", 1 },
+    { 0xB6, "\x00\x42\x3B", 3 },
+    { 0xB7, "\xC6", 1 },
 
     { 0xE0, "\x00\x14\x13\x0E\x0E\x05\x49\x78\x3F\x0A\x16\x09\x10\x06\x00", 15 }, /* PGAMCTRL (Positive Gamma Control) */
     { 0xE1, "\x0F\x38\x33\x0A\x0B\x03\x45\x42\x30\x04\x0F\x03\x19\x14\x0F", 15 }, /* NGAMCTRL (Negative Gamma Control) */
 
-    { 0x36, "\x00", 1 },                                                          /* Memory Access Control */
+/* Color RGB order */
+#if ILI9486_DBI_COLOR_ORDER
+    { 0x36, "\x08", 1 }, /* Memory Access Control */
+#else
+    { 0x36, "\x00", 1 },
+#endif
 
 #if (ILI9486_DBI_PIXEL_FORMAT == 1)
     { 0x3A, "\x55", 1 }, /* Interface Pixel Format RGB565 */
@@ -95,7 +107,7 @@ const ili9486_dbi_init_cmd_t ili9486_dbi_init_cmds[] = {
     { 0x2A, "\x00\x00\x01\x3F", 4 },
     { 0x2B, "\x00\x00\x01\xDF", 4 },
 
-    { 0x35, "\x00", 1 },             /* enable Tearing Effect Output line */
+    { 0x35, "\x00", 1 }, /* enable Tearing Effect Output line */
 
 #if ILI9486_DBI_COLOR_REVERSAL
     { 0x21, NULL, 0 }, /* Color reversal */
@@ -165,37 +177,25 @@ int ili9486_dbi_init()
  */
 int ili9486_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
 {
+    uint8_t dir_param[4] = { 0x00, 0xA0, 0xC0, 0x60 };
+    uint8_t mir_param[4] = { 0x40, 0x20, 0x80, 0xE0 };
     uint8_t param;
-    switch (dir) {
-        case 0:
-            if (!mir_flag)
-                param = 0x00;
-            else
-                param = 0x01;
-            break;
-        case 1:
-            if (!mir_flag)
-                param = 0x60;
-            else
-                param = 0x20;
-            break;
-        case 2:
-            if (!mir_flag)
-                param = 0xC0;
-            else
-                param = 0x80;
-            break;
-        case 3:
-            if (!mir_flag)
-                param = 0xA0;
-            else
-                param = 0xE0;
 
-            break;
-        default:
-            return -1;
-            break;
+    if (dir >= 4) {
+        return -1;
     }
+
+    if (mir_flag) {
+        param = mir_param[dir];
+    } else {
+        param = dir_param[dir];
+    }
+
+/* Color RGB order */
+#if ILI9486_DBI_COLOR_ORDER
+    param |= 0x08;
+#endif
+
     lcd_dbi_transmit_cmd_para(0x36, (void *)&param, 1);
     return dir;
 }

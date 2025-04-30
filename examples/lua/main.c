@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include "bflb_mtimer.h"
-#include "board.h"
+
+#include "fatfs_diskio_register.h"
 #include "ff.h"
+
+#include "board.h"
 #include "log.h"
 
 FATFS fs;

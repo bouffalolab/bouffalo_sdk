@@ -41,28 +41,40 @@
 #include <stdbool.h>
 #include "bflb_flash.h"
 
+/** @addtogroup LHAL
+  * @{
+  */
+
+/** @addtogroup FLASH
+  * @{
+  */
+
+/** @defgroup FLASH_SECREG_API flash secreg api definition
+  * @{
+  */
 #define BFLB_FLASH_SECREG_API_TYPE_GENERAL 0U
 #define BFLB_FLASH_SECREG_API_TYPE_ISSI    1U
 #define BFLB_FLASH_SECREG_API_TYPE_MXIC    2U
+/**
+  * @}
+  */
 
 #if defined(BL602) || defined(BL702)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x4000B700)
 #elif defined(BL702L)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x4000B600)
-#elif defined(BL606P) || defined(BL808) || defined(BL616)
+#elif defined(BL808) || defined(BL616)
 #define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x2000B600)
-#elif defined(BL628)
-#define BFLB_SF_CTRL_BUF_BASE ((uint32_t)0x20082600)
 #endif
 
 struct flash_secreg_api {
     int (*read)(const spi_flash_cfg_type *flash_cfg, uint32_t address, void *data, uint32_t len);
     int (*write)(const spi_flash_cfg_type *flash_cfg, uint32_t address, const void *data, uint32_t len);
     int (*erase)(const spi_flash_cfg_type *flash_cfg, uint32_t address);
-    int (*get_lock)(const spi_flash_cfg_type *flash_cfg, uint8_t lb_count, uint8_t lb_offset, uint8_t *lb);
-    int (*set_lock)(const spi_flash_cfg_type *flash_cfg, uint8_t lb_count, uint8_t lb_offset, uint8_t lb, uint8_t lb_write_len);
+    int (*get_lock)(const bflb_flash_secreg_param_t *param, uint8_t *lb);
+    int (*set_lock)(const spi_flash_cfg_type *flash_cfg, const bflb_flash_secreg_param_t *param, uint8_t lb);
 };
 
-extern struct flash_secreg_api flash_secreg_apis[];
+extern const struct flash_secreg_api flash_secreg_apis[];
 
 #endif

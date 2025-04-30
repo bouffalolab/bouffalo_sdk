@@ -4234,6 +4234,7 @@ FRESULT f_read(
                 if (clst == 0xFFFFFFFF)
                     ABORT(fs, FR_DISK_ERR);
                 fp->clust = clst; /* Update current cluster */
+                clst = 0;
             }
             sect = clst2sect(fs, fp->clust); /* Get current sector */
             if (sect == 0)

@@ -7,7 +7,7 @@
 
 #include "avutil/av_config.h"
 
-#if CONFIG_STREAMER_FILE
+#if defined(CONFIG_ROMFS) && CONFIG_ROMFS
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -16,46 +16,41 @@
 #include <xutils/debug.h>
 #include <msp_fs.h>
 
-#define MSP_FS_RDONLY                0x0000
-#define MSP_FS_WRONLY                0x0001
-#define MSP_FS_RDWR                  0x0002
-#define MSP_FS_CREAT                 0x0200
-
-int msp_fs_flags(int flags)
+int msp_romfs_flags(int flags)
 {
-    switch(flags) {
-    case MSP_FS_RDONLY:
-        return O_RDONLY;
+    int true_flags = 0;
 
-    case MSP_FS_WRONLY:
-        return O_WRONLY;
-
-    case MSP_FS_RDWR:
-        return O_RDWR;
-
-    case MSP_FS_CREAT:
-        return O_CREAT;
-
-    default:
-        MSP_LOGE("fs flags type not support!\r\n");
+    if (flags & MSP_FS_CREAT) {
+        true_flags |= O_CREAT;
     }
 
-    return -1;
+    if (flags & MSP_FS_RDWR) {
+        true_flags |= O_RDWR;
+    } else if (flags & MSP_FS_WRONLY) {
+        true_flags |= O_WRONLY;
+    } else if (flags & MSP_FS_RDONLY) {
+        true_flags |= O_RDONLY;
+    } else {
+        MSP_LOGE("fs flags type not support!\r\n");
+        return -1;
+    }
+
+    return true_flags;
 }
 
-int msp_open(const char *path, int flags)
+int msp_romfs_open(const char *path, int flags)
 {
     int ret;
     romfs_file_t *fp = msp_malloc(sizeof(romfs_file_t));
     ret = romfs_open(fp, path, flags);
     if (ret != 0) {
         msp_free(fp);
-        return -1;
+        return 0;
     }
     return (int)fp;
 }
 
-int msp_stat(const char *path, struct stat *st)
+int msp_romfs_stat(const char *path, struct stat *st)
 {
     int ret;
     romfs_stat_t stat = {0};
@@ -64,24 +59,24 @@ int msp_stat(const char *path, struct stat *st)
     return ret;
 }
 
-int msp_close(int fd)
+int msp_romfs_close(int fd)
 {
     int ret = romfs_close((romfs_file_t *)fd);
     msp_free((void *)fd);
     return ret;
 }
 
-int msp_read(int fd, void *buf, size_t nbytes)
+int msp_romfs_read(int fd, void *buf, size_t nbytes)
 {
     return romfs_read((romfs_file_t *)fd, buf, nbytes);
 }
 
-int msp_write(int fd, const void *buf, size_t nbytes)
+int msp_romfs_write(int fd, const void *buf, size_t nbytes)
 {
     return 0;
 }
 
-int msp_lseek(int fd, off_t offset, int whence)
+int msp_romfs_lseek(int fd, off_t offset, int whence)
 {
     return romfs_lseek((romfs_file_t *)fd, offset, whence);
 }

@@ -10,7 +10,7 @@
 #include <string.h>
 #include "atomic.h"
 
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
@@ -29,11 +29,15 @@ extern int bl_rand();
 
  int  ble_rand()
 {
-    //#if defined(CONFIG_HW_SEC_ENG_DISABLE)
+    #if defined(CFG_IOT_SDK) || defined(BL_MCU_SDK)
+    #if defined(CONFIG_HW_SEC_ENG_DISABLE)
     return random();
-    //#else
-    //return bl_rand();
-    //#endif
+    #else /* CONFIG_HW_SEC_ENG_DISABLE */
+    return bl_rand();
+    #endif /* CONFIG_HW_SEC_ENG_DISABLE */
+    #else /* CFG_IOT_SDK BL_MCU_SDK */
+    return random();
+    #endif /* CFG_IOT_SDK BL_MCU_SDK */
 }
 
 
@@ -62,11 +66,10 @@ void k_queue_init(struct k_queue *queue, int size)
     //int size = 20;
     uint8_t blk_size = sizeof(void *);
 
-
+    sys_dlist_init(&queue->poll_events);
     queue->hdl = xQueueCreate(size, blk_size);
     BT_ASSERT(queue->hdl != NULL);
 
-    sys_dlist_init(&queue->poll_events);
 }
 
 void k_queue_insert(struct k_queue *queue, void *prev, void *data)
@@ -182,7 +185,7 @@ int k_sem_take(struct k_sem *sem, uint32_t timeout)
         t = BL_NO_WAIT;
     }
 
-    if(NULL == sem){
+    if(NULL == sem || NULL == sem->sem.hdl){
         return -1;
     }
 
@@ -194,8 +197,8 @@ int k_sem_give(struct k_sem *sem)
 {
     BaseType_t ret;
     (void) ret;
-
-    if (NULL == sem) {
+    
+    if (NULL == sem || NULL == sem->sem.hdl) {
         BT_ERR("sem is NULL\n");
         return -EINVAL;
     }
@@ -218,6 +221,11 @@ int k_sem_delete(struct k_sem *sem)
 
 unsigned int k_sem_count_get(struct k_sem *sem)
 {
+    if (NULL == sem || NULL == sem->sem.hdl) {
+        BT_ERR("sem is NULL\n");
+        return 0;
+    }
+    
     return uxQueueMessagesWaiting(sem->sem.hdl);
 }
 
@@ -375,9 +383,23 @@ void k_timer_delete(k_timer_t *timer)
     BT_ASSERT(ret == pdPASS);
 }
 
+bool k_timer_is_active(k_timer_t *timer)
+{
+    BaseType_t ret;
+    (void) ret;
+
+    BT_ASSERT(timer != NULL);
+
+    ret = xTimerIsTimerActive(timer->timer.hdl);
+    if(ret == pdPASS)
+        return true;
+    else
+        return false;
+}
+
 long long k_now_ms(void)
 {
-    return (long long)(xTaskGetTickCount() * 1000)/configTICK_RATE_HZ;
+    return (long long)xTaskGetTickCount() * 1000 / configTICK_RATE_HZ;
 }
 
 void k_get_random_byte_array(uint8_t *buf, size_t len)
@@ -391,23 +413,24 @@ void k_get_random_byte_array(uint8_t *buf, size_t len)
 
 void *k_malloc(size_t size)
 {
-#if defined(CFG_USE_PSRAM)
-    return pvPortMallocPsram(size);
-#else
-    return pvPortMalloc(size);
-#endif /* CFG_USE_PSRAM */
+    return malloc(size);
 }
 
 void k_free(void *buf)
 {
-#if defined(CFG_USE_PSRAM)
-    return vPortFreePsram(buf);
-#else
-    return vPortFree(buf);
-#endif
+    return free(buf);
 }
 
 void bt_assert(void)
 {
+    BT_ERR("%s, ra = 0x%lx\r\n", __func__, (uint32_t)__builtin_return_address(0));
+    #if defined(CFG_IOT_SDK) || defined(BL_MCU_SDK)
+    extern void user_vAssertCalled(void);
+    user_vAssertCalled();
+    #else /* CFG_IOT_SDK BL_MCU_SDK */
+    #if defined (CONFIG_BL_SDK)
+    vAssertCalled();
+    #endif
 
+    #endif /* CFG_IOT_SDK BL_MCU_SDK */
 }

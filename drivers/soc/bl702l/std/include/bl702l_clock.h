@@ -59,7 +59,7 @@ extern "C" {
 /**
  *  @brief System clock type definition
  */
-typedef enum {
+enum {
     BL_SYSTEM_CLOCK_ROOT,   /*!< ROOT clock */
     BL_SYSTEM_CLOCK_FCLK,   /*!< Fast clock/CPU clock */
     BL_SYSTEM_CLOCK_HCLK,   /*!< HCLK */
@@ -70,9 +70,10 @@ typedef enum {
     BL_SYSTEM_CLOCK_DIG32K, /*!< DIG_32K clock */
     BL_SYSTEM_CLOCK_MTIMER, /*!< MTIMER clock */
     BL_SYSTEM_CLOCK_MAX,    /*!< MAX type of system clock */
-} BL_System_Clock_Type;
+};
+typedef BL_ENUM_Type BL_System_Clock_Type;
 
-typedef enum {
+enum {
     BL_PERIPHERAL_CLOCK_UART0,   /*!< UART0 clock */
     BL_PERIPHERAL_CLOCK_SPI0,    /*!< SPI0 clock */
     BL_PERIPHERAL_CLOCK_I2C0,    /*!< I2C0 clock */
@@ -90,7 +91,8 @@ typedef enum {
     BL_PERIPHERAL_CLOCK_PKA,     /*!< PKA clock */
     BL_PERIPHERAL_CLOCK_KYS,     /*!< KYS clock */
     BL_PERIPHERAL_CLOCK_MAX,
-} BL_Peripheral_Type;
+};
+typedef BL_ENUM_Type BL_Peripheral_Type;
 
 /*@} end of group CLOCK_Public_Types */
 

@@ -93,8 +93,10 @@ typedef struct bridgeif_initdata_s {
 
 err_t bridgeif_init(struct netif *netif);
 err_t bridgeif_add_port(struct netif *bridgeif, struct netif *portif);
+err_t bridgeif_has_port(struct netif *bridgeif, struct netif *portif);
 err_t bridgeif_fdb_add(struct netif *bridgeif, const struct eth_addr *addr, bridgeif_portmask_t ports);
 err_t bridgeif_fdb_remove(struct netif *bridgeif, const struct eth_addr *addr);
+int netif_bridged(struct netif *portif);
 
 /* FDB interface, can be replaced by own implementation */
 void                bridgeif_fdb_update_src(void *fdb_ptr, struct eth_addr *src_addr, u8_t port_idx);

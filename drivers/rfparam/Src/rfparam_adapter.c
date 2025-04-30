@@ -383,7 +383,18 @@ void rfparam_get_capcode(uint8_t* capcode_in, uint8_t* capcode_out)
 
 void rfparam_set_capcode(uint8_t capcode_in, uint8_t capcode_out)
 {
-    AON_Set_Xtal_CapCode(capcode_in, capcode_out);
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(AON_BASE, AON_XTAL_CFG);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_IN_AON, capcode_in);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_XTAL_CAPCODE_OUT_AON, capcode_out);
+    BL_WR_REG(AON_BASE, AON_XTAL_CFG, tmpVal);
+
+    //arch_delay_us(100);
+
+    //return SUCCESS;
+
+    //AON_Set_Xtal_CapCode(capcode_in, capcode_out);
 }
 
 /****************************************************************************//**
@@ -396,19 +407,27 @@ void rfparam_set_capcode(uint8_t capcode_in, uint8_t capcode_out)
 *******************************************************************************/
 int8_t rfparam_load(struct wl_param_t *param)
 {
-
     uint8_t tmp_buf[32]={0};
 
+#ifdef CONFIG_RFPARAM_TLV_FIXED_ADDRESS
 
-    if(((uint32_t)rfparam_load & RFPARAM_TLV_BASE_ADDR_MASK) == (RFPARAM_TLV_BASE_ADDR_RAM_CACHE & RFPARAM_TLV_BASE_ADDR_MASK)){
+    if (((uint32_t)rfparam_load & RFPARAM_TLV_BASE_ADDR_MASK) == (RFPARAM_TLV_BASE_ADDR_RAM_CACHE & RFPARAM_TLV_BASE_ADDR_MASK)) {
         g_tlv_base_addr = RFPARAM_TLV_BASE_ADDR_RAM_CACHE;
-    }else if(((uint32_t)rfparam_load & RFPARAM_TLV_BASE_ADDR_MASK) == (RFPARAM_TLV_BASE_ADDR_RAM_NO_CACHE & RFPARAM_TLV_BASE_ADDR_MASK)){
+    } else if (((uint32_t)rfparam_load & RFPARAM_TLV_BASE_ADDR_MASK) == (RFPARAM_TLV_BASE_ADDR_RAM_NO_CACHE & RFPARAM_TLV_BASE_ADDR_MASK)) {
         g_tlv_base_addr = RFPARAM_TLV_BASE_ADDR_RAM_NO_CACHE;
-    }else if(((uint32_t)rfparam_load & RFPARAM_TLV_BASE_ADDR_MASK) == (RFPARAM_TLV_BASE_ADDR_XIP_FLASH & RFPARAM_TLV_BASE_ADDR_MASK)){
+    } else if (((uint32_t)rfparam_load & RFPARAM_TLV_BASE_ADDR_MASK) == (RFPARAM_TLV_BASE_ADDR_XIP_FLASH & RFPARAM_TLV_BASE_ADDR_MASK)) {
         g_tlv_base_addr = RFPARAM_TLV_BASE_ADDR_XIP_FLASH;
-    }else{
+    } else {
+        rfparam_printf("ERROR: No tlv address found!\r\n");
         return RFPARAM_ERR_TLV_BASE_ADDR;
     }
+#else
+
+    extern uint32_t _ld_symbol_rftlv_address;
+    g_tlv_base_addr = (uint32_t)(uintptr_t)&_ld_symbol_rftlv_address;
+#endif
+
+    rfparam_printf("RF_PARAM TLV ADDRESS: 0x%08X\r\n", g_tlv_base_addr);
 
     if(param == NULL){
         return RFPARAM_ERR_PARAM_CHECK;
@@ -489,7 +508,7 @@ int8_t rfparam_load(struct wl_param_t *param)
     	rfparam_printf("pwr_11ac_vht40 null\r\n");
     	return RFPARAM_ERR_PWR_11AC_VHT40_NULL;
     }
-
+#if 0
     if (rfparam_tlv_get(g_tlv_base_addr,RFTLV_TYPE_PWR_TABLE_11AC_VHT80, RFTLV_MAXLEN_PWR_TABLE_11AC_VHT80, tmp_buf) > 0) {
         memcpy(param->pwrtarget.pwr_11ac_vht80,tmp_buf,sizeof(param->pwrtarget.pwr_11ac_vht80));
         rfparam_array_printf((char *)"pwr_11ac_vht80",(void *)param->pwrtarget.pwr_11ac_vht80,sizeof(param->pwrtarget.pwr_11ac_vht80),TYPE_INT8);
@@ -497,7 +516,7 @@ int8_t rfparam_load(struct wl_param_t *param)
     	rfparam_printf("pwr_11ac_vht80 null\r\n");
     	return RFPARAM_ERR_PWR_11AC_VHT80_NULL;
     }
-
+#endif
     if (rfparam_tlv_get(g_tlv_base_addr,RFTLV_TYPE_PWR_TABLE_11AX_HE20, RFTLV_MAXLEN_PWR_TABLE_11AX_HE20, tmp_buf) > 0) {
         memcpy(param->pwrtarget.pwr_11ax_he20,tmp_buf,sizeof(param->pwrtarget.pwr_11ax_he20));
         rfparam_array_printf((char *)"pwr_11ax_he20",(void *)param->pwrtarget.pwr_11ax_he20,sizeof(param->pwrtarget.pwr_11ax_he20),TYPE_INT8);
@@ -513,7 +532,7 @@ int8_t rfparam_load(struct wl_param_t *param)
     	rfparam_printf("pwr_11ax_he40 null\r\n");
     	return RFPARAM_ERR_PWR_11AX_HE40_NULL;
     }
-
+#if 0
     if (rfparam_tlv_get(g_tlv_base_addr,RFTLV_TYPE_PWR_TABLE_11AX_HE80, RFTLV_MAXLEN_PWR_TABLE_11AX_HE80, tmp_buf) > 0) {
         memcpy(param->pwrtarget.pwr_11ax_he80,tmp_buf,sizeof(param->pwrtarget.pwr_11ax_he80));
         rfparam_array_printf((char *)"pwr_11ax_he80",(void *)param->pwrtarget.pwr_11ax_he80,sizeof(param->pwrtarget.pwr_11ax_he80),TYPE_INT8);
@@ -529,7 +548,7 @@ int8_t rfparam_load(struct wl_param_t *param)
     	rfparam_printf("pwr_11ax_he160 null\r\n");
     	return RFPARAM_ERR_PWR_11AX_HE160_NULL;
     }
-
+#endif
     /* capcode */
     if(RFPARAM_SUSS == rfparam_get_cap_code_with_option(g_tlv_base_addr,&param->xtalcapcode_in,&param->xtalcapcode_out,1)){
         rfparam_printf("capcode_in %d,capcode_out %d\r\n",param->xtalcapcode_in,param->xtalcapcode_out);
@@ -643,6 +662,57 @@ int8_t rfparam_load(struct wl_param_t *param)
         return RFPARAM_ERR_COUNTRY_CODE_NULL;
     }
 
+    /* tcap_cal */
+    if (rfparam_tlv_get(g_tlv_base_addr,RFTLV_TYPE_EN_TCAPCAL, RFTLV_MAXLEN_EN_TCAPCAL, tmp_buf) > 0) {
+        param->tcap.en_tcap = tmp_buf[0];
+        rfparam_printf("en_tcap = %d \r\n", (int)param->tcap.en_tcap);
+
+    }else{
+        rfparam_printf("en_tcap Null\r\n");
+        //return RFPARAM_ERR_EN_TCAP;
+    }
+
+    if (rfparam_tlv_get(g_tlv_base_addr,RFTLV_TYPE_TCAP_TSEN, RFTLV_MAXLEN_TCAP_TSEN, tmp_buf) > 0) {
+        for(int i = 0; i < RFTLV_MAXLEN_TCAP_TSEN; i++){
+            param->tcap.tcap_tsen[i] = tmp_buf[i];
+        }
+        rfparam_array_printf((char *)"tcap_tsen", param->tcap.tcap_tsen,RFTLV_MAXLEN_TCAP_TSEN,TYPE_INT8);
+
+    }else{
+        rfparam_printf("tcal_tsen Null\r\n");
+        //return RFPARAM_ERR_TCAP_TSEN;
+    }
+
+    if (rfparam_tlv_get(g_tlv_base_addr,RFTLV_TYPE_TCAP_CAPCODE, RFTLV_MAXLEN_TCAP_CAPCODE, tmp_buf) > 0) {
+        for(int i = 0; i < RFTLV_MAXLEN_TCAP_CAPCODE; i++){
+            param->tcap.tcap_cap[i] = tmp_buf[i];
+        }
+        rfparam_array_printf((char *)"tcap_cap", param->tcap.tcap_cap,RFTLV_MAXLEN_TCAP_CAPCODE,TYPE_INT8);
+
+    }else{
+        rfparam_printf("tcap_cap Null\r\n");
+        //return RFPARAM_ERR_TCAP_CAP;
+    }
+
+    for(int i = 0; i < NUM_WLAN_CHANNELS; i++){
+        if (rfparam_tlv_get(g_tlv_base_addr,RFTLV_TYPE_POWER_LIMIT_2G_EXT_CH1+i, RFTLV_MAXLEN_PWR_LIMIT_EXT, tmp_buf) > 0) {
+            param->pwrlim[i].en = 1; 
+            param->pwrlim[i].b_dsss = tmp_buf[0];
+            param->pwrlim[i].b_cck  = tmp_buf[1];
+            param->pwrlim[i].g      = tmp_buf[2];
+            param->pwrlim[i].n20    = tmp_buf[3];
+            param->pwrlim[i].ax20   = tmp_buf[5];
+            param->pwrlim[i].n40    = tmp_buf[6];
+            param->pwrlim[i].ax40   = tmp_buf[8];
+            
+            rfparam_printf("pwr_limit channel %d:%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n",i+1,tmp_buf[0],tmp_buf[1],tmp_buf[2],tmp_buf[3],tmp_buf[4],tmp_buf[5],tmp_buf[6],tmp_buf[7],tmp_buf[8],tmp_buf[9],tmp_buf[10],tmp_buf[11]);
+
+        }else{
+            param->pwrlim[i].en = 0;
+            memset(&param->pwrlim[i],0,sizeof(param->pwrlim[i]));
+        }
+    }
+
     return RFPARAM_SUSS;
 
 
@@ -675,6 +745,7 @@ int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
 
     int32_t ret;
     uint32_t xtal_value;
+	bflb_ef_ctrl_com_trim_t trim;
 #if defined(WL_API_RMEM_EN) && WL_API_RMEM_EN
 #define WL_API_RMEM_ADDR  0x20010600
     g_rfparam_cfg = wl_cfg_get((uint8_t*)WL_API_RMEM_ADDR);
@@ -687,9 +758,82 @@ int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
     g_rfparam_cfg->en_full_cal = 1;
     g_rfparam_cfg->en_param_load = 1;
     g_rfparam_cfg->mode = WL_API_MODE_ALL;
+    g_rfparam_cfg->log_level = WL_LOG_LEVEL_NONE;
+    g_rfparam_cfg->log_printf = NULL;
+
     HBN_Get_Xtal_Value(&xtal_value);
     g_rfparam_cfg->param.xtalfreq_hz = xtal_value;
     rfparam_printf("xtal value %d\r\n",(int)xtal_value);
+
+    bflb_ef_ctrl_read_common_trim(NULL, "dcdc_trim", &trim, 1);
+    if (trim.empty) {
+        rfparam_printf("dcdc_trim empty\r\n");
+        rfparam_printf("dcdc_trim use default value 0x80\r\n"); // request from xueliang
+        g_rfparam_cfg->param.ef.dcdc_vout_trim_aon = 0x80;
+    } else {
+        if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            g_rfparam_cfg->param.ef.dcdc_vout_trim_aon = trim.value;
+            rfparam_printf("dcdc_trim value %d\r\n",(int)trim.value);
+        }else {
+            rfparam_printf("dcdc_trim param error\r\n");
+            rfparam_printf("dcdc_trim use default value 0x80\r\n"); // request from xueliang
+            g_rfparam_cfg->param.ef.dcdc_vout_trim_aon = 0x80;
+        }
+    }
+
+
+    bflb_ef_ctrl_read_common_trim(NULL, "icx", &trim, 1);
+    if (trim.empty) {
+        rfparam_printf("icx empty\r\n");
+        rfparam_printf("icx use default value 0x80\r\n"); // request from xueliang
+        g_rfparam_cfg->param.ef.icx_code = 0x80;
+    } else {
+        if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            g_rfparam_cfg->param.ef.icx_code = trim.value;
+            rfparam_printf("icx value %d\r\n",(int)trim.value);
+        }else {
+            rfparam_printf("icx param error\r\n");
+            rfparam_printf("icx use default value 0x80\r\n"); // request from xueliang
+            g_rfparam_cfg->param.ef.icx_code = 0x80;
+        }
+    }
+
+    bflb_ef_ctrl_read_common_trim(NULL, "iptat", &trim, 1);
+    if (trim.empty) {
+        rfparam_printf("iptat empty\r\n");
+        rfparam_printf("iptat use default value 0x80\r\n"); // request from xueliang
+        g_rfparam_cfg->param.ef.iptat_code = 0x80;
+    } else {
+        if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            g_rfparam_cfg->param.ef.iptat_code = trim.value;
+            rfparam_printf("iptat value %d\r\n",(int)trim.value);
+        }else {
+            rfparam_printf("iptat param error\r\n");
+            rfparam_printf("iptat use default value 0x80\r\n"); // request from xueliang
+            g_rfparam_cfg->param.ef.iptat_code = 0x80;
+        }
+    }
+
+    bflb_ef_ctrl_read_common_trim(NULL, "tmp_mp2", &trim, 1);
+    if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+        g_rfparam_cfg->param.pwrcal.Temperature_MP = trim.value;
+        rfparam_printf("tmp_mp2 value %d\r\n",(int)trim.value);
+    }else{
+        bflb_ef_ctrl_read_common_trim(NULL, "tmp_mp1", &trim, 1);
+        if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+            g_rfparam_cfg->param.pwrcal.Temperature_MP = trim.value;
+            rfparam_printf("tmp_mp1 value %d\r\n",(int)trim.value);
+        }else{
+            bflb_ef_ctrl_read_common_trim(NULL, "tmp_mp0", &trim, 1);
+            if (trim.en == 1 && trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+                g_rfparam_cfg->param.pwrcal.Temperature_MP = trim.value;
+                rfparam_printf("tmp_mp0 value %d\r\n",(int)trim.value);
+            }else{
+                g_rfparam_cfg->param.pwrcal.Temperature_MP = 35; // request from xueliang
+                rfparam_printf("tmp_mp use default value 35\r\n");
+            }
+        }
+    }
 
     ret = wl_init();
 

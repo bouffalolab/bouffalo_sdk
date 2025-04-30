@@ -20,22 +20,10 @@
 #define BT_VOICE_CVSD_16BIT     0x0060
 #define BT_VOICE_MSBC_16BIT     0x0063
 
-#if (BFLB_BT_CO_THREAD)
-enum{
-    BT_CMD_SYNC_NONE =0,
-    BT_CMD_SYNC_TX = 1,
-    BT_CMD_SYNC_TX_DONE = 2
-};
-#endif
-
 /* k_poll event tags */
 enum {
 	BT_EVENT_CMD_TX,
 	BT_EVENT_CONN_TX_QUEUE,
-	#if (BFLB_BT_CO_THREAD)
-    BT_EVENT_RX_QUEUE,
-    BT_EVENT_WORK_QUEUE,
-    #endif
 };
 
 /* bt_dev flags: the flags defined here represent BT controller state */
@@ -48,6 +36,8 @@ enum {
 	BT_DEV_PUB_KEY_BUSY,
 
 	BT_DEV_ADVERTISING,
+	BT_DEV_ADVERTISING2,
+	BT_DEV_ADVERTISING2_SETTING,
 	BT_DEV_ADVERTISING_NAME,
 	BT_DEV_ADVERTISING_CONNECTABLE,
 	BT_DEV_KEEP_ADVERTISING,
@@ -72,7 +62,7 @@ enum {
 	BT_DEV_ADV_ADDRESS_IS_PUBLIC,
 #endif
 
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_STACK_PTS) || defined(CONFIG_AUTO_PTS)
 	BT_DEV_SETTED_NON_RESOLV_ADDR, //The non-reslovable address have been set.
 #endif
 
@@ -119,12 +109,18 @@ struct bt_dev_le {
 #endif /* CONFIG_BT_WHITELIST */
 };
 
+enum {
+	BT_A2DP_SOURCE_ROLE,
+	BT_A2DP_SINK_ROLE,
+};
+
 #if defined(CONFIG_BT_BREDR)
 struct bt_dev_br {
 	/* Max controller's acceptable ACL packet length */
 	u16_t         mtu;
 	struct k_sem  pkts;
 	u16_t         esco_pkt_type;
+	u8_t         a2dp_role;
 };
 #endif
 
@@ -148,6 +144,10 @@ struct bt_dev {
 	/* Current local Random Address */
 	bt_addr_le_t		random_addr;
 
+	#if defined(BFLB_BLE)
+	/* Current local Public Address */
+	bt_addr_le_t		public_addr;
+	#endif
 	/* Controller version & manufacturer information */
 	u8_t			hci_version;
 	u8_t			lmp_version;
@@ -208,6 +208,9 @@ struct bt_dev {
 #if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
 	char			name[CONFIG_BT_DEVICE_NAME_MAX + 1];
 #endif
+#if defined(BFLB_BLE_SMP_SUPPORT_DISABLE_PAIR)
+    bool disable_pair;
+#endif
 };
 
 #if defined (CONFIG_BT_STACK_PTS)
@@ -235,6 +238,19 @@ typedef enum __packed{
 #endif 
 
 extern struct bt_dev bt_dev;
+
+#if !defined(BL602) && !defined(BL702)
+struct bt_controller_sdk_ver{
+    uint8_t status;
+    uint8_t ver_major;
+    uint8_t ver_minor;
+    uint8_t ver_patch;
+    uint32_t sdk_commit_id;
+};
+/*If this API return a value other than 0, it means it fails to get controller sdk version.*/
+int bt_get_controller_sdk_version(struct bt_controller_sdk_ver *version);
+#endif
+
 #if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
 extern const struct bt_conn_auth_cb *bt_auth;
 #endif /* CONFIG_BT_SMP || CONFIG_BT_BREDR */
@@ -270,12 +286,11 @@ int bt_le_adv_start_instant(const struct bt_le_adv_param *param,
 #endif
 
 #if defined (BFLB_BLE)
-
 int bt_le_read_rssi(u16_t handle,int8_t *rssi);
 int set_ad_and_rsp_d(u16_t hci_op, u8_t *data, u32_t ad_len);
 int set_adv_enable(bool enable);
 int set_adv_param(const struct bt_le_adv_param *param);
-int set_adv_channel_map(u8_t channel);
+int set_adv_channel_map(bt_gap_adv_chnl_map_t channel);
 int bt_get_local_public_address(bt_addr_le_t *adv_addr);
 int bt_get_local_ramdon_address(bt_addr_le_t *adv_addr);
 int bt_set_local_public_address(u8_t *adv_addr);
@@ -289,6 +304,21 @@ int hci_le_set_default_phy(u8_t default_phy);
 int bt_set_bd_addr(const bt_addr_t *addr);
 
 int bt_set_tx_pwr(int8_t power);
+#if defined(BL702L) || defined(BL602) || defined(BL702)
+int8_t bt_get_tx_pwr(void);
+#endif
+int bt_le_read_chan_map(struct bt_conn *conn, struct bt_hci_rp_le_read_chan_map *rsp_buf);
+
+#if defined(BL702L) || defined(BL616) || defined(BL606P) || defined(BL808)
+int bt_le_throughput_calc(bool enable, u8_t interval);
+int bt_le_set_conn_window(u8_t percentage);
+#endif
+
+int bt_le_enh_tx_test(u8_t tx_ch, u8_t test_data_len, u8_t pkt_payload, u8_t phy);
+int bt_le_enh_rx_test(u8_t rx_ch, u8_t phy, u8_t mod_index);
+int bt_ble_tx_test_cmd(u8_t tx_ch,u8_t  data_len,u8_t  pkt_payload);
+int bt_ble_rx_test_cmd(u8_t rx_ch);
+int bt_le_test_end(void);
 
 #if defined(BFLB_HOST_ASSISTANT)
 struct blhast_cb{
@@ -305,5 +335,5 @@ void bt_register_host_assist_cb(struct blhast_cb *cb);
 
 typedef void (*bredr_name_callback)(const char *name);
 int remote_name_req(const bt_addr_t *addr, bredr_name_callback cb);
-
+bool bt_is_ready(void);
 #endif

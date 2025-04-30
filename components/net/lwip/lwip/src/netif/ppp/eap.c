@@ -1368,7 +1368,7 @@ static void eap_request(ppp_pcb *pcb, u_char *inp, int id, int len) {
 			pcb->eap.es_usedpseudo = 1;
 			/* Try to get a pseudonym */
 			if ((fd = open_pn_file(O_RDONLY)) >= 0) {
-				strcpy(rhostname, SRP_PSEUDO_ID);
+				strlcpy(rhostname, SRP_PSEUDO_ID, sizeof(rhostname));
 				len = read(fd, rhostname + SRP_PSEUDO_LEN,
 				    sizeof (rhostname) - SRP_PSEUDO_LEN);
 				/* XXX NAI unsupported */

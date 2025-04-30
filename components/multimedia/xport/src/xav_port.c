@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "xav_port.h"
+
 #if __has_include("avutil/av_config.h")
 #include "avutil/av_config.h"
 #endif
@@ -151,4 +153,23 @@ NOINLINE_FUNC int config_msp_debug_enable(void)
 #endif
 }
 
+// CONFIG_STREAMER_CUSTOM
+#if defined(CONFIG_STREAMER_CUSTOM) && CONFIG_STREAMER_CUSTOM
+static custom_decode_cb_t g_custom_decode_cb;
+NOINLINE_FUNC custom_decode_cb_t get_custom_decode_cb(void)
+{
+    return g_custom_decode_cb;
+}
+
+NOINLINE_FUNC void register_custom_decode_cb(custom_decode_cb_t custom_decode_cb)
+{
+    if(custom_decode_cb){
+        g_custom_decode_cb = custom_decode_cb;
+    }
+
+    return;
+}
 #endif
+
+#endif
+

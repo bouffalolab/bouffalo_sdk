@@ -78,7 +78,7 @@
 
 #define TCP_MSS                       (1500 - 40)
 #define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)
-#define TCP_SND_BUF                   (4 * MAC_TXQ_DEPTH * TCP_MSS)
+#define TCP_SND_BUF                   (4 * TCP_MSS)
 
 #define TCP_QUEUE_OOSEQ               1
 #define MEMP_NUM_TCP_SEG              ((4 * TCP_SND_BUF) / TCP_MSS)
@@ -92,6 +92,7 @@
 #define MEM_MIN                       MEM_MIN_TCP
 #define MEM_ALIGNMENT                 4
 
+#define LWIP_HEAP_SIZE (15 * 1024)
 #ifdef LWIP_HEAP_SIZE
 #define MEM_SIZE LWIP_HEAP_SIZE
 #else

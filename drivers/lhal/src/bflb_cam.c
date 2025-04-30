@@ -33,7 +33,9 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
 #endif
 #if defined(BL808)
     uint32_t tmpval;
+#endif
 
+#if defined(BL808)
     if (config->input_source) {
         tmpval = 0x15;
         regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_PIX_DATA_CTRL_OFFSET);
@@ -194,7 +196,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
         case CAM_INPUT_FORMAT_YUV422_UYVY:
 #if defined(BL808)
             if (config->output_format >= CAM_OUTPUT_FORMAT_RGB888_OR_BGR888 && config->output_format <= CAM_OUTPUT_FORMAT_RGB888_TO_RGBA8888) {
-                bflb_cam_swap_input_yu_order(dev, true);
+                bflb_cam_feature_control(dev, CAM_CMD_INVERSE_YUYV2UYVY, true);
                 tmpval = 0x23;
                 if (config->input_source) {
                     putreg32(0x18000000, CAM_FRONT_BASE + CAM_FRONT_Y2RA_CONFIG_0_OFFSET);
@@ -386,6 +388,7 @@ void bflb_cam_init(struct bflb_device_s *dev, const struct bflb_cam_config_s *co
 #endif
 
 #if !defined(BL702)
+
 #if defined(BL808)
     if (config->input_source == 0) {
         regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
@@ -527,7 +530,7 @@ uint32_t bflb_cam_get_frame_info(struct bflb_device_s *dev, uint8_t **pic)
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
-    *pic = (uint8_t *)getreg32(reg_base + CAM_FRAME_START_ADDR0_OFFSET);
+    *pic = (uint8_t *)(uintptr_t)getreg32(reg_base + CAM_FRAME_START_ADDR0_OFFSET);
 #if defined(BL702)
     return (getreg32(reg_base + CAM_FRAME_BYTE_CNT0_0_OFFSET));
 #else
@@ -657,6 +660,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
             putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
             break;
+
         case CAM_CMD_INVERSE_YUYV2UYVY:
             /* If image sensor output format is YUYV, it will be changed to UYVY */
             regval = getreg32(CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
@@ -667,6 +671,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
             putreg32(regval, CAM_FRONT_BASE + CAM_FRONT_CONFIG_OFFSET);
             break;
+
         case CAM_CMD_FRAME_FILTER: {
             /* For example: frame_count is 4, frame_valid is 0x14 (10100b). 
             Third/fifth frame will be retained,First/second/fourth frame will be dropped in every (4 + 1) frames */
@@ -676,6 +681,7 @@ int bflb_cam_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(config->frame_valid, reg_base + CAM_DVP2AXI_FRAME_VLD_OFFSET);
         } break;
 #endif
+
 
         default:
             ret = -EPERM;

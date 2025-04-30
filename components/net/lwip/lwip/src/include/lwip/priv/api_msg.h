@@ -191,6 +191,7 @@ struct dns_api_msg {
 int lwip_netconn_is_deallocated_msg(void *msg);
 #endif
 int lwip_netconn_is_err_msg(void *msg, err_t *err);
+int lwip_netconn_is_tcp_polling(struct netconn *conn);
 void lwip_netconn_do_newconn         (void *m);
 void lwip_netconn_do_delconn         (void *m);
 void lwip_netconn_do_bind            (void *m);

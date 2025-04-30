@@ -1,6 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+void board_recovery(void);
 void board_init(void);
 
 void board_uartx_gpio_init();

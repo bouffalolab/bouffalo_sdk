@@ -78,6 +78,18 @@ SECTIONS
         *(.srodata)
         *(.srodata.*)
 
+        /* global object for c++ */
+        . = ALIGN(4);
+        __preinit_array_start = .;
+        KEEP (*(.preinit_array))
+        __preinit_array_end = .;
+
+        . = ALIGN(4);
+        __init_array_start = .;
+        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
+        KEEP (*(.init_array))
+        __init_array_end = .;
+
         /* _dump_sections for bflb_coredump.c*/
         . = ALIGN(4);
         PROVIDE( _dump_sections = ABSOLUTE(.));
@@ -95,6 +107,13 @@ SECTIONS
 
         . = ALIGN(4);
         __text_code_end__ = .;
+    } > xip_memory
+
+    .build_id :
+    {
+        . = ALIGN(4);
+        elf_build_id = ABSOLUTE(.) + 16;
+        *(.note.gnu.build-id)
     } > xip_memory
 
     . = ALIGN(4);
@@ -134,6 +153,7 @@ SECTIONS
         __hbn_ram_start__ = .;
         *(.hbn_code.*)
         *(.hbn_data.*)
+        *(.retention)
         . = ALIGN(4);
         __hbn_ram_end__ = .;
     } > hbn_memory

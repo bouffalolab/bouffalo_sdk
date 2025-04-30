@@ -110,6 +110,12 @@ static void shell_task(void *pvParameters)
 {
     uint8_t data;
     uint32_t len;
+
+    bflb_uart_feature_control(uart_shell, UART_CMD_CLR_RX_FIFO, 0);
+    bflb_uart_rxint_mask(uart_shell, false);
+    bflb_irq_attach(uart_shell->irq_num, uart_shell_isr, NULL);
+    bflb_irq_enable(uart_shell->irq_num);
+
     while (1) {
         if (xSemaphoreTake(sem_shell, portMAX_DELAY) == pdTRUE) {
             len = Ring_Buffer_Get_Length(&shell_rb);
@@ -123,14 +129,8 @@ static void shell_task(void *pvParameters)
 
 void shell_init_with_task(struct bflb_device_s *shell)
 {
-    if (shell) {
-        uart_shell = shell;
-        bflb_uart_rxint_mask(uart_shell, false);
-        bflb_irq_attach(uart_shell->irq_num, uart_shell_isr, NULL);
-        bflb_irq_enable(uart_shell->irq_num);
-    }
-
     vSemaphoreCreateBinary(sem_shell);
+    uart_shell = shell;
 
     Ring_Buffer_Init(&shell_rb, shell_buffer, sizeof(shell_buffer), NULL, NULL);
 
@@ -157,7 +157,7 @@ static void ps_cmd(int argc, char **argv)
     pcWriteBuffer = info;
 
     /* Generate a table of task stats. */
-    if(strlcpy(pcWriteBuffer, "Task", 1536) >= 1536)
+    if (strlcpy(pcWriteBuffer, "Task", 1536) >= 1536)
         printf("[OS]: strlcpy truncated \r\n");
     pcWriteBuffer += strlen(pcWriteBuffer);
 
@@ -171,8 +171,8 @@ static void ps_cmd(int argc, char **argv)
         /* Ensure always terminated. */
         *pcWriteBuffer = 0x00;
     }
-    if(strlcpy(pcWriteBuffer, pcHeader, 1536 - (pcWriteBuffer - info)) >= \
-               1536 - (pcWriteBuffer - info))
+    if (strlcpy(pcWriteBuffer, pcHeader, 1536 - (pcWriteBuffer - info)) >=
+        1536 - (pcWriteBuffer - info))
         printf("[OS]: strlcpy truncated \r\n");
     vTaskList(pcWriteBuffer + strlen(pcHeader));
     printf("\r\n");

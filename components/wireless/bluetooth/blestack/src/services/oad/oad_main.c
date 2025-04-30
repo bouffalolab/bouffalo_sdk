@@ -9,27 +9,27 @@
 #include "ef_def.h"
 #endif
 #include "conn_internal.h"
-#if !defined(CONFIG_BL_MCU_SDK)
+#if !defined(CONFIG_BL_SDK)
 #include "hal_boot2.h"
 #include "bl_flash.h"
 #include "bl_sys.h"
 #include "hosal_ota.h"
-#include "bl702_common.h"
+#include "softcrc.h"
 #include "hal_sys.h"
 #else
 #include "partition.h"
-#include "hal_flash.h"
-#include <sys/errno.h>
-#include "bl702_glb.h"
-#include "mbedtls/sha256.h"
+#include "bflb_flash.h"
+#include "utils_sha256.h"
 #endif
 #include "bt_log.h"
-#include "bl702.h"
-#include "softcrc.h"
-#if defined(CONFIG_BL_MCU_SDK)
-#define BL_SDK_VER "1.00"
-#define BOOT2_PARTITION_ADDR    (0x4202DC00)
-#endif //CONFIG_BL_MCU_SDK
+
+#if defined(CONFIG_BL_SDK)
+pt_table_stuff_config pt_table_stuff[2];
+pt_table_id_type active_id;
+pt_table_entry_config pt_fw_entry;
+#define OTA_PARTITION_NAME_TYPE_FW    "FW"
+static int fw_check_hash256(void);
+#endif //CONFIG_BL_SDK
 
 #define OTA_WRITE_FLASH_SIZE    (256*16)
 #define WBUF_SIZE(CON)          (OTA_WRITE_FLASH_SIZE + bt_gatt_get_mtu(CON))
@@ -45,12 +45,6 @@ struct wflash_data_t{
 
 static struct wflash_data_t wData;
 
-#if defined(CONFIG_BL_MCU_SDK)
-static int hal_boot2_partition_addr_inactive(const char *name, uint32_t *addr, uint32_t *size);
-static int hal_boot2_get_active_entries_byname(u8_t *name, pt_table_entry_config *ptEntry_hal);
-static int hal_boot2_update_ptable(pt_table_entry_config *ptEntry_hal);
-static int fw_check_hash256(void);
-#endif
 static bool check_data_valid(struct oad_file_info *file_info)
 {
     if(file_info->manu_code != oad_env.file_info.manu_code || file_info->file_ver != oad_env.upgrd_file_ver)
@@ -65,7 +59,7 @@ static void oad_notify_image_info(struct bt_conn *conn)
     u8_t index = 0;
     char *build_date = __DATE__;
     char *build_time = __TIME__;
-    char *build_ver =  BL_SDK_VER;
+    char *build_ver =  BTBLE_SDK_VER;
 
     if(buf){
         memset(buf,0,256);
@@ -127,7 +121,7 @@ static void oad_notify_upgrd_end(struct bt_conn *conn, u8_t status)
     if(status == OAD_SUCC)
     {
         BT_WARN("Submit upgrade work\r\n");
-        #if !defined(CONFIG_BL_MCU_SDK)
+        #if !defined(CONFIG_BL_SDK)
         if(!hosal_ota_finish(1,0))
         #else
         if(!fw_check_hash256())
@@ -180,7 +174,7 @@ void ota_finish(struct k_work *work)
     bt_settings_set_bin(NV_IMG_info, (uint8_t*)&ef_info, sizeof(struct oad_ef_info));
 #endif
 
-    #if defined(CONFIG_BL_MCU_SDK)
+    #if defined(CONFIG_BL_SDK)
     GLB_SW_POR_Reset();
     #else
     hal_reboot();
@@ -189,20 +183,24 @@ void ota_finish(struct k_work *work)
 
 static u8_t oad_write_flash(uint32_t filesize, uint32_t offset,u8_t *data, u16_t len)
 {
-    #if defined(CONFIG_BL_MCU_SDK)
+    #if defined(CONFIG_BL_SDK)
     uint32_t size = 0;
     uint32_t wflash_address = 0;
 
     if (!oad_env.new_img_addr){
-        if (hal_boot2_partition_addr_inactive("FW",(uint32_t *)&oad_env.new_img_addr,&size)){
-            BT_WARN("New img address is null\r\n");
+
+        if (pt_table_get_active_entries_by_name(&pt_table_stuff[active_id], (uint8_t *)OTA_PARTITION_NAME_TYPE_FW, &pt_fw_entry)) {
+            BT_WARN("PtTable get active entry fail!\r\n");
             return OAD_ABORT;
         }
+
+        oad_env.new_img_addr = pt_fw_entry.start_address[!pt_fw_entry.active_index];
+        size = pt_fw_entry.max_len[!pt_fw_entry.active_index];
         
         BT_WARN("Upgrade file size is %d\r\n", oad_env.upgrd_file_size);
         if(oad_env.upgrd_file_size <= size){
             BT_WARN("flash erase\r\n");
-            flash_erase(oad_env.new_img_addr, oad_env.upgrd_file_size);
+            bflb_flash_erase(oad_env.new_img_addr, oad_env.upgrd_file_size);
         }else{
             return -1;
         }
@@ -219,7 +217,7 @@ static u8_t oad_write_flash(uint32_t filesize, uint32_t offset,u8_t *data, u16_t
     }
     
     BT_WARN("Start address : 0x%x\r\n",wflash_address);
-    flash_write(wflash_address, data, len);
+    bflb_flash_write(wflash_address, data, len);
     oad_env.w_img_end_addr = wflash_address + len;
     BT_WARN("End address : 0x%x\r\n",wflash_address + len);
     #else
@@ -257,6 +255,7 @@ static u8_t oad_image_data_handler(struct bt_conn *conn,const u8_t *data, u16_t 
 			memcpy((wData.wdata_buf+wData.index),data,left_size);
 			wData.index += left_size;
 			if(wData.index == OTA_WRITE_FLASH_SIZE){
+                
 				if(oad_write_flash(oad_env.upgrd_file_size,oad_env.hosal_offset,wData.wdata_buf,OTA_WRITE_FLASH_SIZE)){
 					BT_ERR("Failed to write flash\r\n");
 					return OAD_ABORT;
@@ -276,7 +275,7 @@ static u8_t oad_image_data_handler(struct bt_conn *conn,const u8_t *data, u16_t 
 			ef_info.upgrd_crc32 = oad_env.upgrd_crc32;
 
 			bt_settings_set_bin(NV_IMG_info, (uint8_t*)&ef_info, sizeof(struct oad_ef_info));
-			BT_WARN("ef_info: file ver(%d) manu code(0x%x) file offset(0x%x) last_adder (0x%x)\r\n",ef_info.file_info.file_ver,ef_info.file_info.manu_code,
+			BT_WARN("ef_info: file ver(%lu) manu code(0x%x) file offset(0x%lx) last_adder (0x%lx)\r\n",ef_info.file_info.file_ver,ef_info.file_info.manu_code,
 																					   ef_info.file_offset,ef_info.last_wflash_addr);
 #endif
 			wData.index = 0;
@@ -343,10 +342,10 @@ static u8_t oad_image_block_resp_handler(struct bt_conn *conn, const u8_t *data,
         break;
         case OAD_ABORT:
         {
-			#if !defined(CONFIG_BL_MCU_SDK)
+			#if !defined(CONFIG_BL_SDK)
 			bl_flash_erase(oad_env.new_img_addr, oad_env.upgrd_file_size);
 			#else
-            flash_erase(oad_env.new_img_addr, oad_env.upgrd_file_size);
+            bflb_flash_erase(oad_env.new_img_addr, oad_env.upgrd_file_size);
 			#endif
         }
         break;
@@ -364,7 +363,7 @@ static void oad_image_identity_handler(struct bt_conn *conn, const u8_t *data, u
     struct oad_image_identity_t *identity = (struct oad_image_identity_t *)(data);
 	int err = 0;
 
-    BT_WARN("File size=[0x%x] [0x%x] [0x%x] [0x%x]\r\n",identity->file_size,identity->file_info.file_ver,
+    BT_WARN("File size=[0x%lx] [0x%lx] [0x%x] [0x%lx]\r\n",identity->file_size,identity->file_info.file_ver,
                                                 identity->file_info.manu_code,identity->crc32);
 #if defined(CONFIG_BT_SETTINGS)
     size_t  llen = 0;
@@ -372,7 +371,7 @@ static void oad_image_identity_handler(struct bt_conn *conn, const u8_t *data, u
 
     memset(&ef_info,0,sizeof(struct oad_ef_info));
     bt_settings_get_bin(NV_IMG_info, (uint8_t*)&ef_info,sizeof(struct oad_ef_info),&llen);
-    BT_WARN("ef_info: file ver(%d) manu code(0x%x) file offset(0x%x) last_adder (0x%x)\r\n",ef_info.file_info.file_ver,ef_info.file_info.manu_code,
+    BT_WARN("ef_info: file ver(%lu) manu code(0x%x) file offset(0x%lx) last_adder (0x%lx)\r\n",ef_info.file_info.file_ver,ef_info.file_info.manu_code,
                                                                                            ef_info.file_offset,ef_info.last_wflash_addr);
 #else
     oad_env.new_img_addr = 0;
@@ -396,6 +395,9 @@ static void oad_image_identity_handler(struct bt_conn *conn, const u8_t *data, u
             oad_env.upgrd_offset = 0x00;
         }
 
+        #if defined (BFLB_BLE_ENABLE_OR_DISABLE_SLAVE_PREF_CONN_PARAM_UDPATE)
+        bt_conn_enable_peripheral_pref_param_update(conn, false);
+        #endif
         conn_param.interval_max = 6;
         conn_param.interval_min = 6;
 		conn_param.latency = 0;
@@ -410,7 +412,7 @@ static void oad_image_identity_handler(struct bt_conn *conn, const u8_t *data, u
         oad_env.upgrd_file_size = identity->file_size;
         oad_env.upgrd_crc32 = identity->crc32;
         BT_WARN("Send the image block request\r\n");
-        #if !defined(CONFIG_BL_MCU_SDK)
+        #if !defined(CONFIG_BL_SDK)
         hosal_ota_start(oad_env.upgrd_file_size);
         #endif
         oad_notify_block_req(conn);
@@ -441,23 +443,12 @@ static void oad_disc_callback(struct bt_conn *conn,u8_t reason)
         wData.index = 0;
     }
 }
-#if defined(CONFIG_BL_MCU_SDK)
-static struct {
-    u8_t partition_active_idx;
-    u8_t pad[3];
-    pt_table_stuff_config table;
-} boot2_partition_table;
-
-//#define PARTITION_MAGIC    (0x54504642)
-
-pt_table_id_type active_id = PT_TABLE_ID_INVALID;
-pt_table_stuff_config pt_table_stuff[2];
+#if defined(CONFIG_BL_SDK)
 
 static int fw_check_hash256(void)
 {
     uint32_t bin_size;
     uint32_t hash_addr;
-    pt_table_entry_config ptEntry;
 
     if (oad_env.upgrd_file_size <= 32) {
         return -1;
@@ -469,146 +460,86 @@ static int fw_check_hash256(void)
     bin_size = oad_env.upgrd_file_size - 32;
     hash_addr = oad_env.w_img_end_addr - 32;
 
-    if(hal_boot2_get_active_entries_byname((uint8_t*)"FW",&ptEntry)){
+    if (pt_table_get_active_entries_by_name(&pt_table_stuff[active_id], (uint8_t *)OTA_PARTITION_NAME_TYPE_FW, &pt_fw_entry)) 
+    {
         BT_WARN("Failed to get active entries by name\r\n");
-        return-1;
+        return -1;
     }
 
 #define CHECK_IMG_BUF_SIZE 512
-    uint8_t sha_check[32] = {0};
-    uint8_t dst_sha[32] = {0};
     uint32_t read_size;
-    mbedtls_sha256_context sha256_ctx;
+    sha256_context ctx_sha256;
+    uint8_t sha256_result[32];
+    uint8_t sha256_img[32];
     int i, offset = 0;
     uint8_t r_buf[CHECK_IMG_BUF_SIZE];
 
     BT_WARN("[OTA]prepare OTA partition info\r\n");
-    mbedtls_sha256_init(&sha256_ctx);
-    mbedtls_sha256_starts_ret(&sha256_ctx,0);
+    utils_sha256_init(&ctx_sha256);
+    utils_sha256_starts(&ctx_sha256);
+    memset(sha256_result, 0, sizeof(sha256_result));
 
-    memset(sha_check, 0, 32);
-    memset(dst_sha , 0, 32);
     offset = 0;
     while (offset < bin_size) {
         (bin_size - offset >= CHECK_IMG_BUF_SIZE) ? (read_size = CHECK_IMG_BUF_SIZE):(read_size = bin_size - offset);
-        if (flash_read(oad_env.new_img_addr+offset, r_buf, read_size)) {
+        if (bflb_flash_read(oad_env.new_img_addr+offset, r_buf, read_size)) {
             BT_WARN("flash read failed \r\n");
             return -1;
         }
-        mbedtls_sha256_update_ret(&sha256_ctx, (const uint8_t *)r_buf, read_size);
+        utils_sha256_update(&ctx_sha256, (const uint8_t *)r_buf, read_size);
         offset += read_size;
     }
 
-    mbedtls_sha256_finish_ret(&sha256_ctx, sha_check);
+    utils_sha256_finish(&ctx_sha256, sha256_result);
 
-    flash_read(hash_addr,dst_sha,32);
+    bflb_flash_read(hash_addr,sha256_img,32);
     for (i = 0; i < 32; i++) {
-        BT_WARN("%02X", dst_sha[i]);
+        BT_WARN("%02X", sha256_img[i]);
     }
-    puts("\r\nHeader SET SHA256 Checksum:");
+    BT_WARN("\r\nHeader SET SHA256 Checksum:");
     for (i = 0; i < 32; i++) {
-        BT_WARN("%02X", sha_check[i]);
+        BT_WARN("%02X", sha256_result[i]);
     }
 
-    if (memcmp(sha_check, (const void *)dst_sha, 32) != 0) {
+    if (memcmp(sha256_result, (const void *)sha256_img, 32) != 0) {
         BT_WARN("sha256 check error\r\n");
         return -1;
     }
-    ptEntry.len = bin_size;
-    BT_WARN("[OTA] Update PARTITION, partition len is %lu\r\n", ptEntry.len);
-    hal_boot2_update_ptable(&ptEntry);
 
-    return 0;
-}
-
-static int oad_hal_boot2_partition_addr(const char *name, uint32_t *addr0, uint32_t *addr1, uint32_t *size0, uint32_t *size1, int *active)
-{
-    int i;
-
-    if (BFLB_PT_MAGIC_CODE != boot2_partition_table.table.pt_table.magicCode) {
-        return -EIO;
-    }
-
-    /*Get Target partition*/
-    for (i = 0; i < boot2_partition_table.table.pt_table.entryCnt; i++) {
-        if (0 == strcmp((char *)&(boot2_partition_table.table.pt_entries[i].name[0]), name)) {
-            break;
-        }
-    }
-    if (boot2_partition_table.table.pt_table.entryCnt == i) {
-        return -ENOENT;
-    }
-    *addr0 = boot2_partition_table.table.pt_entries[i].start_address[0];
-    *addr1 = boot2_partition_table.table.pt_entries[i].start_address[1];
-    *size0 = boot2_partition_table.table.pt_entries[i].max_len[0];
-    *size1 = boot2_partition_table.table.pt_entries[i].max_len[1];
-    *active = boot2_partition_table.table.pt_entries[i].active_index;
-
-    return 0;
-}
-
-static int hal_boot2_partition_addr_inactive(const char *name, uint32_t *addr, uint32_t *size)
-{
-    uint32_t addr0, addr1;
-    uint32_t size0, size1;
-    int active, ret;
-
-    if ((ret = oad_hal_boot2_partition_addr(name, &addr0, &addr1, &size0, &size1, &active))){
-        return ret;
-    }
-    *addr = active ? addr0 : addr1;
-    *size = active ? size0 : size1;
-
-    return 0;
-}
-
-static pt_table_error_type oad_PtTable_Get_Active_Entries_By_Name(pt_table_stuff_config *ptStuff,
-                                                    u8_t *name,
-                                                    pt_table_entry_config *ptEntry)
-{
-    uint32_t i=0;
-    uint32_t len=strlen((char *)name);
-
-    if(ptStuff==NULL||ptEntry==NULL){
-        return PT_ERROR_PARAMETER;
-    }
-    for (i=0; i < ptStuff->pt_table.entryCnt; i++) {
-        if (strlen((char *)ptStuff->pt_entries[i].name) == len &&
-        memcmp((char *)ptStuff->pt_entries[i].name,(char *)name,len) == 0){
-            ARCH_MemCpy_Fast(ptEntry,&ptStuff->pt_entries[i],sizeof(pt_table_entry_config));
-            return PT_ERROR_SUCCESS;
-        }
-    }
-    return PT_ERROR_ENTRY_NOT_FOUND;
-}
-
-static int hal_boot2_update_ptable(pt_table_entry_config *ptEntry_hal)
-{
-    int ret;
-    //FIXME force covert
-    pt_table_entry_config *ptEntry = (pt_table_entry_config*)ptEntry_hal;
-
-    ptEntry->active_index = !ptEntry->active_index;
-    (ptEntry->age)++;
-    ret = pt_table_update_entry((pt_table_id_type)(!active_id), &pt_table_stuff[!active_id], ptEntry);
-    return ret;
-}
-
-static int hal_boot2_get_active_entries_byname(uint8_t *name, pt_table_entry_config *ptEntry_hal)
-{
-    pt_table_entry_config *ptEntry = (pt_table_entry_config*)ptEntry_hal;
-    if (oad_PtTable_Get_Active_Entries_By_Name(&boot2_partition_table.table, name, ptEntry)) {
+    pt_fw_entry.len = bin_size;
+    BT_WARN("[OTA] Update PARTITION, partition len is %lu\r\n", pt_fw_entry.len);
+    pt_fw_entry.active_index = !(pt_fw_entry.active_index & 0x01);
+    pt_fw_entry.age++;
+    int status = pt_table_update_entry(!active_id, &pt_table_stuff[active_id], &pt_fw_entry);
+    if (status != 0) 
+    {
+        BT_WARN("pt table update fail! %d\r\n", status);
         return -1;
     }
     return 0;
 }
 
-static int oad_get_boot2_partition_table(void)
+void my_dump_partition(pt_table_stuff_config *pt_stuff)
 {
-    memcpy(&boot2_partition_table.table,&pt_table_stuff[active_id],sizeof(pt_table_stuff_config));
-    boot2_partition_table.partition_active_idx = active_id;
-    BT_WARN("magicCode: 0x%x\r\n",boot2_partition_table.table.pt_table.magicCode);
-    return 0;
+    BT_WARN("======= PtTable_Config @%p=======\r\n", pt_stuff);
+    BT_WARN("magicCode 0x%08X;", (unsigned int)(pt_stuff->pt_table.magicCode));
+    BT_WARN(" version 0x%04X;", pt_stuff->pt_table.version);
+    BT_WARN(" entryCnt %u;", pt_stuff->pt_table.entryCnt);
+    BT_WARN(" age %lu;", pt_stuff->pt_table.age);
+    BT_WARN(" crc32 0x%08X\r\n", (unsigned int)pt_stuff->pt_table.crc32);
+    BT_WARN(" idx  type device active_index    name    address[0]   address[1]   length[0]    length[1]   age \r\n");
+    for (uint32_t i = 0; i < pt_stuff->pt_table.entryCnt; i++) {
+        BT_WARN("[%02d] ", i);
+        BT_WARN("  %02u", (pt_stuff->pt_entries[i].type));
+        BT_WARN("     %u", (pt_stuff->pt_entries[i].device));
+        BT_WARN("        %u", (pt_stuff->pt_entries[i].active_index));
+        BT_WARN("       %8s", (pt_stuff->pt_entries[i].name));
+        BT_WARN("   0x%08lx", (pt_stuff->pt_entries[i].start_address[0]));
+        BT_WARN("   0x%08lx", (pt_stuff->pt_entries[i].start_address[1]));
+        BT_WARN("   0x%08lx", (pt_stuff->pt_entries[i].max_len[0]));
+        BT_WARN("   0x%08lx", (pt_stuff->pt_entries[i].max_len[1]));
+        BT_WARN("   %lu\r\n", (pt_stuff->pt_entries[i].age));
+    }
 }
 #endif
 void oad_service_enable(app_check_oad_cb cb)
@@ -623,11 +554,14 @@ void oad_service_enable(app_check_oad_cb cb)
     bt_oad_register_recv_cb(oad_recv_callback);
     bt_oad_register_disc_cb(oad_disc_callback); 
 
-#if defined(CONFIG_BL_MCU_SDK)
-    flash_init();
-    pt_table_set_flash_operation(flash_erase, flash_write, flash_read);
+#if defined(CONFIG_BL_SDK)
     active_id = pt_table_get_active_partition_need_lock(pt_table_stuff);
-    oad_get_boot2_partition_table();
+    if (PT_TABLE_ID_INVALID == active_id) {
+        BT_WARN("No valid PT\r\n");
+        return;
+    }
+    BT_WARN("Active PT:%d,Age %d\r\n", active_id, pt_table_stuff[active_id].pt_table.age);
+    //my_dump_partition(&pt_table_stuff[active_id]);
 #endif
     k_delayed_work_init(&oad_env.upgrd_work, ota_finish);
 }

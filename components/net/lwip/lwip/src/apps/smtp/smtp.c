@@ -37,7 +37,7 @@
     if(bdh->state >= 10) {
        return BDH_DONE;
     }
-    sprintf(bdh->buffer,"Line #%2d\r\n",bdh->state);
+    snprintf(bdh->buffer, sizeof(bdh->buffer), "Line #%2d\r\n",bdh->state);
     bdh->length = strlen(bdh->buffer);
     ++bdh->state;
     return BDH_WORKING;
@@ -430,11 +430,13 @@ smtp_set_auth(const char* username, const char* pass)
   *smtp_auth_plain = 0;
   if (username != NULL) {
     smtp_username = smtp_auth_plain + 1;
-    strcpy(smtp_username, username);
+    if (strlcpy(smtp_username, username, sizeof(smtp_auth_plain) - 1) >= sizeof(smtp_auth_plain) - 1)
+      LWIP_ASSERT("strlcpy failed", 0);
   }
   if (pass != NULL) {
     smtp_pass = smtp_auth_plain + uname_len + 2;
-    strcpy(smtp_pass, pass);
+    if (strlcpy(smtp_pass, pass, sizeof(smtp_auth_plain) - (uname_len + 2)) >= sizeof(smtp_auth_plain) - (uname_len + 2))
+      LWIP_ASSERT("strlcpy failed", 0);
   }
   smtp_auth_plain_len = uname_len + pass_len + 2;
 

@@ -23,7 +23,8 @@
 						BT_GATT_PERM_WRITE_ENCRYPT)
 #define BT_GATT_PERM_AUTHEN_MASK		(BT_GATT_PERM_READ_AUTHEN | \
 						BT_GATT_PERM_WRITE_AUTHEN)
-
+#define BT_GATT_PERM_LESC_MASK			(BT_GATT_PERM_READ_LESC | \
+						BT_GATT_PERM_WRITE_LESC)
 void bt_gatt_init(void);
 #if defined(BFLB_BLE)
 void bt_gatt_deinit(void);

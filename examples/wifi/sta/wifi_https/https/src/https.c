@@ -114,7 +114,7 @@ static int is_valid_ip_address(const char *ipAddress)
     return result != 0;
 }
 
-int32_t blTcpSslConnect(const char *dst, uint16_t port)
+int32_t bl_TcpSslConnect(const char *dst, uint16_t port)
 {
     in_addr_t dst_addr;
     int ret;
@@ -247,12 +247,12 @@ int32_t blTcpSslConnect(const char *dst, uint16_t port)
     return (int32_t)&bl_hsbuf->ssl;
 }
 
-void blTcpSslDisconnect(int32_t fd)
+void bl_TcpSslDisconnect(int32_t fd)
 {
     mbedtls_ssl_context *pssl = (mbedtls_ssl_context *)fd;
 
     if (NULL == pssl) {
-        printf("blTcpSslDisconnect\r\n");
+        printf("bl_TcpSslDisconnect\r\n");
     }
 
     mbedtls_ssl_close_notify(pssl);
@@ -271,12 +271,12 @@ void blTcpSslDisconnect(int32_t fd)
     free(bl_hsbuf);
 
     bl_hsbuf = NULL;
-    printf("blTcpSslDisconnect end\r\n");
+    printf("bl_TcpSslDisconnect end\r\n");
 }
 
-int32_t blTcpSslState(int32_t fd)
+int32_t bl_TcpSslState(int32_t fd)
 {
-    //printf("blTcpSslState start\r\n");
+    //printf("bl_TcpSslState start\r\n");
     int errcode = BL_TCP_NO_ERROR;
     mbedtls_ssl_context *pssl = (mbedtls_ssl_context *)fd;
     int tcp_fd = ((mbedtls_net_context*)(pssl->p_bio))->fd;
@@ -337,9 +337,9 @@ int32_t blTcpSslState(int32_t fd)
     return errcode;
 }
 
-int32_t blTcpSslSend(int32_t fd, const uint8_t* buf, uint16_t len)
+int32_t bl_TcpSslSend(int32_t fd, const uint8_t* buf, uint16_t len)
 {
-    //puts("blTcpSslSend start\r\n");
+    //puts("bl_TcpSslSend start\r\n");
     int ret = 0;
     mbedtls_ssl_context *pssl = (mbedtls_ssl_context *)fd;
 
@@ -352,13 +352,13 @@ int32_t blTcpSslSend(int32_t fd, const uint8_t* buf, uint16_t len)
     if(ret > 0) {
         return ret;
     } else {
-        printf("blTcpSslsend error ret = 0X%X\r\n", -ret);
+        printf("bl_TcpSslsend error ret = 0X%X\r\n", -ret);
         return BL_TCP_SEND_ERR;
     }
     return ret;
 }
 
-int32_t blTcpSslRead(int32_t fd, uint8_t* buf, uint16_t len)
+int32_t bl_TcpSslRead(int32_t fd, uint8_t* buf, uint16_t len)
 {
     int ret = 0;
     mbedtls_ssl_context *pssl = (mbedtls_ssl_context *)fd;
@@ -374,7 +374,7 @@ int32_t blTcpSslRead(int32_t fd, uint8_t* buf, uint16_t len)
     } else if(MBEDTLS_ERR_SSL_WANT_READ == ret) {
         return 0;
     } else {
-        printf("blTcpSslRead ret = 0X%X\r\n", ret);
+        printf("bl_TcpSslRead ret = 0X%X\r\n", ret);
         return BL_TCP_READ_ERR;
     }
 }

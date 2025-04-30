@@ -1,9 +1,12 @@
 #include "bflb_mtimer.h"
-#include "board.h"
-#include "log.h"
-
 #include "bflb_emac.h"
-#include "ethernet_phy.h"
+
+#include "eth_phy.h"
+#include "ephy_general.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+
 #include "lwip/opt.h"
 #include "lwip/init.h"
 #include "netif/etharp.h"
@@ -12,12 +15,15 @@
 #if LWIP_DHCP
 #include "lwip/dhcp.h"
 #endif
-#include "ethernetif.h"
-#include "FreeRTOS.h"
-#include "task.h"
+#include "lwip_netif_emac.h"
 
 #include "tcp_client.h"
 #include "tcp_server.h"
+
+#include "board.h"
+
+#define DBG_TAG "MAIN"
+#include "log.h"
 
 // Local IP address define
 /*Static IP ADDRESS: IP_ADDR0.IP_ADDR1.IP_ADDR2.IP_ADDR3 */
@@ -43,18 +49,12 @@
 /* global network interface struct define */
 struct netif gnetif;
 
-/* For emac tx and rx buffer,we put here to make controlling it's size easy */
-#define ETH_RXBUFNB 5
-#define ETH_TXBUFNB 5
-ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(4))) uint8_t ethRxBuff[ETH_RXBUFNB][ETH_RX_BUFFER_SIZE]; /* Ethernet Receive Buffers */
-ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(4))) uint8_t ethTxBuff[ETH_TXBUFNB][ETH_TX_BUFFER_SIZE]; /* Ethernet Transmit Buffers */
-
 /**
   * @brief  Setup the network interface
   * @param  None
   * @retval None
   */
-static void netif_config(void)
+static int netif_config(void)
 {
     ip_addr_t ipaddr;
     ip_addr_t netmask;
@@ -75,45 +75,66 @@ static void netif_config(void)
 #endif
 
     /* add the network interface */
-    netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
+    struct netif *p_gnetif = netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &eth_emac_if_init, &tcpip_input);
+    if (p_gnetif == NULL) {
+        LOG_E("netif_add failed\r\n");
+        return -1;
+    }
 
     /*  Registers the default network interface */
     netif_set_default(&gnetif);
-    ethernet_link_status_updated(&gnetif);
 
-#if LWIP_NETIF_LINK_CALLBACK
-    netif_set_link_callback(&gnetif, ethernet_link_status_updated);
-#endif
+    return 0;
 }
 
-static void ethernet_link_check_task(void *pvParameters)
+void lwip_status_update_task(void *pvParameters)
 {
+    LOG_I("lwip_status_update_task Run...\r\n");
+
     /* Infinite loop */
-    for (;;) {
-        vTaskDelay(100);
-        ethernet_link_check_state(&gnetif);
+    while (1) {
+        vTaskDelay(200);
+
+        /* update link status */
+        eth_link_state_update(&gnetif);
+
+#if LWIP_DHCP
+        /* update dhcp status */
+        dhcp_sta_update(&gnetif);
+#endif
     }
 }
 
-static StackType_t link_check_stack[512];
-static StaticTask_t link_check_handle;
-static void ethernet_lwip_init()
+void app_start_task(void *pvParameters)
 {
-    printf("lwip statck init\r\n");
+    LOG_I("app_start_task Run...\r\n");
+    vTaskDelay(10);
 
+    struct bflb_device_s *uart0 = bflb_device_get_by_name("uart0");
+    extern void shell_init_with_task(struct bflb_device_s * shell);
+    shell_init_with_task(uart0);
+    LOG_I("Shell Ready...\r\n");
+
+    LOG_I("lwip statck init\r\n");
     /* Initialize the LwIP stack */
     tcpip_init(NULL, NULL);
 
-    printf("netif config\r\n");
+    LOG_I("netif config\r\n");
     /* Configure the Network interface */
-    netif_config();
+    if(netif_config() < 0){
+        LOG_E("netif_config failed\r\n");
+        LOG_I("app_start_task Delete...\r\n");
+        vTaskDelete(NULL);
+    }
 
-    xTaskCreateStatic((void *)ethernet_link_check_task, (char *)"link_check", sizeof(link_check_stack) / 4, NULL, osPriorityHigh, link_check_stack, &link_check_handle);
-}
+    /* lwip status update task */
+    xTaskCreate((void *)lwip_status_update_task, (char *)"lwip_sta_update", 256, NULL, osPriorityHigh, NULL);
 
-void emac_init_txrx_buffer(struct bflb_device_s *emac)
-{
-    bflb_emac_bd_init(emac, (uint8_t *)ethTxBuff, ETH_TXBUFNB, (uint8_t *)ethRxBuff, ETH_RXBUFNB);
+    /* tcp server int */
+    tcp_server_init();
+
+    LOG_I("app_start_task Delete...\r\n");
+    vTaskDelete(NULL);
 }
 
 int main(void)
@@ -122,23 +143,16 @@ int main(void)
     /* emac gpio init */
     board_emac_gpio_init();
 
-    printf("EMAC lwip test case !\r\n");
+    printf("EMAC lwip tcp test case !\r\n");
 
-    ethernet_lwip_init();
+    LOG_I("Create app_start task.\r\n");
+    xTaskCreate(app_start_task, (char *)"app_start_task", 512, NULL, configMAX_PRIORITIES - 1, NULL);
 
-    printf("[OS] Starting tcp server task...\r\n");
-    tcp_server_init();
-
-    // tcp_server_raw_init();
-
-    // printf("[OS] Starting tcp client task...\r\n");
-    // tcp_client_init();
-
-    // tcp_client_raw_init();
-
+    LOG_I("Start Scheduler.\r\n");
     vTaskStartScheduler();
 
-    printf("case success!\r\n");
+    LOG_E("vTaskStart failed.\r\n");
+
     while (1) {
     }
 }

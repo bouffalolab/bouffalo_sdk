@@ -21,7 +21,7 @@
 #include <sys/types.h>
 #include <misc/util.h>
 #include <conn.h>
-#include <../bluetooth/uuid.h>
+#include <../bluetooth/bt_uuid.h>
 #include <port/include/config.h>
 
 #include <att.h>
@@ -72,6 +72,18 @@ enum {
 	 *  passed to write callback.
 	 */
 	BT_GATT_PERM_PREPARE_WRITE = BIT(6),
+	
+	/** @brief Attribute read permission with LE Secure Connection encryption.
+	 *
+	 *  If set, requires that LE Secure Connections is used for read access.
+	 */
+	BT_GATT_PERM_READ_LESC = BIT(7),
+
+	/** @brief Attribute write permission with LE Secure Connection encryption.
+	 *
+	 *  If set, requires that LE Secure Connections is used for write access.
+	 */
+	BT_GATT_PERM_WRITE_LESC = BIT(8),
 };
 
 /**  @def BT_GATT_ERR
@@ -325,6 +337,14 @@ int bt_gatt_service_register(struct bt_gatt_service *svc);
  */
 int bt_gatt_service_unregister(struct bt_gatt_service *svc);
 
+/** @brief Get GATT attribute via attribute handle.
+ * *
+ *  @param handle  attribute handle.
+ *
+ *  @return attrubte pointer in case of success or NULL in case of error.
+ */
+struct bt_gatt_attr * bt_gatt_find_attr(uint16_t handle);
+
 enum {
 	BT_GATT_ITER_STOP = 0,
 	BT_GATT_ITER_CONTINUE,
@@ -560,7 +580,11 @@ ssize_t bt_gatt_attr_read_chrc(struct bt_conn *conn,
 	BT_GATT_ATTRIBUTE(_uuid, _perm, _read, _write, _value)
 
 #if IS_ENABLED(CONFIG_BT_SETTINGS_CCC_LAZY_LOADING)
-	#define BT_GATT_CCC_MAX (CONFIG_BT_MAX_CONN)
+/*For bonded peer device, ccc cfg is cleared when unpaired. In case that the bonded peer devices are disconnected, 
+ *the oldest bonded peer device will be unpaired if there is no space to store new bonded device's keys.
+ *For unbonded peer device, ccc cfg is cleared when disconnected.
+ */
+	#define BT_GATT_CCC_MAX (CONFIG_BT_MAX_PAIRED + CONFIG_BT_MAX_CONN)
 #else
 	#define BT_GATT_CCC_MAX (CONFIG_BT_MAX_PAIRED + CONFIG_BT_MAX_CONN)
 #endif
@@ -968,6 +992,10 @@ bool bt_gatt_is_subscribed(struct bt_conn *conn,
  */
 u16_t bt_gatt_get_mtu(struct bt_conn *conn);
 
+#if defined(BFLB_BLE_SET_LOCAL_ATT_MTU_SIZE)
+void bt_gatt_set_mtu(u16_t size);
+#endif
+
 /** @} */
 
 /**
@@ -1080,6 +1108,10 @@ struct bt_gatt_discover_params {
 	u16_t end_handle;
 	/** Discover type */
 	u8_t type;
+	#if defined(BFLB_BLE_PATCH_ADD_ERRNO_IN_DISCOVER_CALLBACK)
+	/** Discover rsp errno */
+	u8_t err;
+	#endif /* BFLB_BLE_PATCH_ADD_ERRNO_IN_DISCOVER_CALLBACK */
 };
 
 /** @brief GATT Discover function
@@ -1221,6 +1253,7 @@ struct bt_gatt_write_params {
  */
 int bt_gatt_write(struct bt_conn *conn, struct bt_gatt_write_params *params);
 
+int bt_gatt_cancle_prepare_writes(struct bt_conn *conn, struct bt_gatt_write_params *params);
 
 #if defined(CONFIG_BT_STACK_PTS)
 int bt_gatt_prepare_write(struct bt_conn *conn,
@@ -1374,12 +1407,14 @@ int bt_gatt_unsubscribe(struct bt_conn *conn,
  *  @param params Requested params address.
  */
 void bt_gatt_cancel(struct bt_conn *conn, void *params);
-
 #if defined(BFLB_BLE_MTU_CHANGE_CB)
 typedef void (*bt_gatt_mtu_changed_cb_t)(struct bt_conn *conn, int mtu);
 void bt_gatt_register_mtu_callback(bt_gatt_mtu_changed_cb_t cb);
 #endif
 #if defined(CONFIG_BT_GATT_CLIENT)
+#if defined(BFLB_BLE_DISCOVER_ONGOING)
+void bt_gatt_discover_status_set(uint8_t status);
+#endif
 #if defined(BFLB_BLE_NOTIFY_ALL)
 typedef void(*bt_notification_all_cb_t)(struct bt_conn *conn, u16_t handle,const void *data, u16_t length);
 void bt_gatt_register_notification_callback(bt_notification_all_cb_t cb);
@@ -1392,6 +1427,12 @@ void bt_gatt_register_notification_callback(bt_notification_all_cb_t cb);
  *  @param void.
  */
 void bt_gatt_ccc_load(void);
+/** @brief Send service changed indication.
+ *
+ *  @param start start attribute handle.
+ *  @param end end attribute handle.
+*/
+void bt_gatt_sc_indicate(u16_t start, u16_t end);
 #endif
 #if defined(BFLB_BLE_DYNAMIC_SERVICE)
 #if defined(CONFIG_BT_PERIPHERAL)
@@ -1438,6 +1479,16 @@ struct customer_svc_list{
     uint16_t svc_idx;
     sys_snode_t node;
 };
+
+/** @brief Get a Dynamic attrubute hanle(chrc_handle,vaule_handle,descriptor)
+ *
+ *  @return Registered handle value of characteristic or descriptor attribute.
+ *    eg. if you want get its handle after calling the function bt_gatts_add_serv_attr or 
+      bt_gatts_add_char or bt_gatts_add_desc,you can call the funciton. 
+      of course,  the actual handle is bt_gatts_get_dync_attr_handle() + bt_gatt_get_last_handle().
+ *    
+ */
+uint16_t bt_gatts_get_dync_attr_handle(void);
 
 /** @brief Add service
  *

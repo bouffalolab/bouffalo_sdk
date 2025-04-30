@@ -210,7 +210,7 @@ static void udp_echo_socket_test(void)
             printf("UDP socket unable to bind\r\n");
             return;
         }
-        printf("udp socket bind\r\n");
+        printf("udp socket bind, port:%d\r\n", UDP_TEST_PORT);
 
         while (1) {
             recv_len = recvfrom(sock, recv_buf, sizeof(recv_buf), 0, (struct sockaddr *)&seraddr, &addr_len);

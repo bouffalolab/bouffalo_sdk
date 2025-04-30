@@ -153,7 +153,7 @@ int record_start(rec_hdl_t hdl)
     if (node->chunk_size <= 0) {
         node->chunk_size = READ_PIECE_SIZE;
     }
-    sprintf(task_name, "rec:%s->%s", from, to);
+    snprintf(task_name, sizeof(task_name), "rec:%s->%s", from, to);
     node->task_name = strdup(task_name);
     msp_task_new(node->task_name, _record_task, (void *)node, 4096);
     free(from);

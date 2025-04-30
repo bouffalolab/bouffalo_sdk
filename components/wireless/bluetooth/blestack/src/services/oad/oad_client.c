@@ -102,7 +102,7 @@ static void oad_start_identity(char *pcWriteBuffer, int xWriteBufferLen, int arg
         return;
 
     memset(buf,0,50);
-    btble_get_bytearray_from_string(&argv[1],buf,50);
+    get_bytearray_from_string(&argv[1],buf,50);
     len = buf[1];
     if(len + 2 >= 50){
         BT_WARN("Failed to receved data\r\n");
@@ -120,7 +120,7 @@ static void oad_start_update(char *pcWriteBuffer, int xWriteBufferLen, int argc,
         return;
         
     memset(buf,0,MAX_ATT_SIZE);
-    btble_get_bytearray_from_string(&argv[1],buf,MAX_ATT_SIZE);
+    get_bytearray_from_string(&argv[1],buf,MAX_ATT_SIZE);
    
     oad_send_block_resp_to_servicer(default_conn,buf,MAX_ATT_SIZE);
 }
@@ -195,7 +195,7 @@ static void oad_discovery(char *pcWriteBuffer, int xWriteBufferLen, int argc, ch
 	discover_params.end_handle = 0xffff;
     discover_params.uuid = NULL;
     
-    btble_get_uint8_from_string(&argv[1], &disc_type);
+    get_uint8_from_string(&argv[1], &disc_type);
     BT_WARN("disc_type = [%d]\r\n",disc_type);
     if(disc_type == 0){
         discover_params.type = BT_GATT_DISCOVER_PRIMARY;

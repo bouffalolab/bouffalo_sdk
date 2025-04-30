@@ -9,7 +9,7 @@
 #include "avutil/av_config.h"
 #include "aef/aef_param.h"
 
-#define MAX_EQ_DATA_BYTE 512
+// #define MAX_EQ_DATA_BYTE 512
 
 #define TAG "EQSET"
 
@@ -102,21 +102,16 @@
 #if defined(CONFIG_AEF_EQ_ENABLE) && CONFIG_AEF_EQ_ENABLE
 #include <aef/aef_param.h>
 
-t_aefCompanderParam g_companderParam = {
-                                        .enable = 1,
-                                        .compress_trd = -0.005,
-                                        .expand_trd = -0.08,
-                                        .attack_time = 0.0005,
-                                        .release_time = 0.2,
-                                        .average_time = 0.05,
-                                        .hold_time = 0.05,
-                                        .compr_ratio = 5,
-                                        .expand_ratio = 5,
-                                        .width = 0
-                                        };
+t_aefNoiseGtParam g_noisegtParam = {
+                        .enable = 0,
+                        .threshold=-80,
+                        .attack_time = 0.005,
+                        .release_time=0.320,
+                        .hold_time = 0.200
+                        };
 
 t_aefCompressorParam g_compressorParam = {
-                                        .enable = 1,
+                                        .enable = 0,
                                         .threshold = -10,
                                         .attack_time = 0.005,
                                         .release_time = 0.320,
@@ -125,20 +120,33 @@ t_aefCompressorParam g_compressorParam = {
                                         .width = 5
                                         };
 
+t_aefCompanderParam g_companderParam = {
+                                .enable = 0,
+                                .compress_trd = -9.5,
+                                .expand_trd = -67.1,
+                                .attack_time = 0.005,
+                                .release_time = 0.05,
+                                .average_time = 0.05,
+                                .hold_time = 0.05,
+                                .compr_ratio = 1.5,
+                                .expand_ratio = 2.0,
+                                .width = 8
+                                        };
+
 t_aefLimitParam g_limitParam = {
-                                .enable = 1,
+                                .enable = 0,
                                 .threshold = -9.4,
                                 .attack_time = 0.005,
                                 .release_time = 0.320
                                 };
 
 t_aefEqFilterParam g_eq_params[] = {
-                                    {1, AEF_BQF_HP2, 0.0, 0.7, 50},
-                                    {1, AEF_BQF_HP2, 0.0, 0.8, 60},
-                                    {1, AEF_BQF_PEAK, 1.8, 1.2, 60},
-                                    {1, AEF_BQF_HS2, 6.2, 0.54, 4000},
-                                    {1, AEF_BQF_PEAK, 5.0, 2.2, 5400},
-                                    {1, AEF_BQF_PEAK, 5.0, 2.5, 10500},
+                                    {0, AEF_BQF_HP2, 0.0, 0.7, 50},
+                                    {0, AEF_BQF_HP2, 0.0, 0.8, 60},
+                                    {0, AEF_BQF_PEAK, 1.8, 1.2, 60},
+                                    {0, AEF_BQF_HS2, 6.2, 0.54, 4000},
+                                    {0, AEF_BQF_PEAK, 5.0, 2.2, 5400},
+                                    {0, AEF_BQF_PEAK, 5.0, 2.5, 10500},
                                     {0, AEF_BQF_PEAK, 2.6, 1.3, 180},
                                     {0, AEF_BQF_PEAK, 2.6, 1.3, 180},
                                     {0, AEF_BQF_PEAK, 2.6, 1.3, 180},
@@ -146,7 +154,7 @@ t_aefEqFilterParam g_eq_params[] = {
                                     };
 
 t_aefGainParam g_gainParam = {
-                            .enable = 1,
+                            .enable = 0,
                             .mute = 0,
                             .gain = 0.8,
                             .phase = 0
@@ -356,6 +364,65 @@ static void cmd_limiter_set_func(char *buf, int len, int argc, char **argv)
 }
 
 #ifdef CONFIG_SHELL
+static void cmd_noisegt_set_func(int argc, char **argv)
+#else
+static void cmd_noisegt_set_func(char *buf, int len, int argc, char **argv)
+#endif
+{
+    int ret = -1;
+
+    void *noisegateIns;
+    noisegateIns = get_noisegate_ins();
+    if (noisegateIns == NULL) {
+        printf("please init noisegt!\r\n");
+        return;
+    }
+    
+    if (argc == 2) {
+        if (strcmp(argv[1], "GET") == 0) {
+            if(g_noisegtParam.enable){
+                printf("MSP_NOISEGT GET ON %.2f %.3f %.3f %.4f\r\n", g_noisegtParam.threshold, g_noisegtParam.attack_time*1000, 
+                                    g_noisegtParam.release_time*1000, g_noisegtParam.hold_time*1000);
+            }else{
+                printf("MSP_NOISEGT GET OFF %.2f %.3f %.3f %.4f\r\n", g_noisegtParam.threshold, g_noisegtParam.attack_time*1000, 
+                                    g_noisegtParam.release_time*1000, g_noisegtParam.hold_time*1000);
+            }
+        } else {
+            printf("param error!\r\n");
+        }
+    } else if (argc == 7) {
+        if (strcmp(argv[2], "ON") == 0) {
+            g_noisegtParam.enable = 1;    
+        } else if (strcmp(argv[2], "OFF") == 0) {
+            g_noisegtParam.enable = 0;
+            ret = aef_noisegate_set_param(noisegateIns, &g_noisegtParam);
+            if (ret == 0) {
+                printf("set noisegt success!\r\n");
+            } else {
+                printf("set noisegt failed!\r\n");
+            }
+            return;
+        } else {
+            printf("param is error:%s\r\n", argv[1]);
+            return;
+        }
+
+        g_noisegtParam.threshold = atof(argv[3]);
+        g_noisegtParam.attack_time = atof(argv[4])/1000;
+        g_noisegtParam.release_time = atof(argv[5])/1000;
+        g_noisegtParam.hold_time = atof(argv[6])/1000;
+        ret = aef_noisegate_set_param(noisegateIns, &g_noisegtParam);
+        if (ret == 0) {
+            printf("set noisegt success!\r\n");
+        } else {
+            printf("set noisegt failed!\r\n");
+        }
+    } else {
+        printf("param error!\r\n");
+    }
+}
+
+#ifdef CONFIG_SHELL
 static void cmd_gain_set_func(int argc, char **argv)
 #else
 static void cmd_gain_set_func(char *buf, int len, int argc, char **argv)
@@ -434,9 +501,10 @@ static void cmd_compander_set_func(char *buf, int len, int argc, char **argv)
             }else{
                 enable = "OFF";
             }
-            printf("MSP_COMPAND GET %s %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\r\n", enable, g_companderParam.attack_time*1000, g_companderParam.release_time*1000, g_companderParam.average_time*1000,
-                                                                                                    g_companderParam.hold_time*1000, g_companderParam.expand_trd, g_companderParam.expand_ratio,
-                                                                                                  g_companderParam.compress_trd, g_companderParam.compr_ratio,  g_companderParam.width);
+            printf("MSP_COMPAND GET %s %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\r\n", enable, 
+                g_companderParam.attack_time*1000, g_companderParam.release_time*1000, g_companderParam.average_time*1000,
+                g_companderParam.hold_time*1000, g_companderParam.expand_trd, g_companderParam.expand_ratio,
+                g_companderParam.compress_trd, g_companderParam.compr_ratio,  g_companderParam.width);
         } else {
             printf("param error!\r\n");
         }
@@ -545,6 +613,7 @@ static void cmd_compressor_set_func(char *buf, int len, int argc, char **argv)
 #include <shell.h>
 // SHELL_CMD_EXPORT_ALIAS(cmd_eqset_func, eq, set eq);
 // SHELL_CMD_EXPORT_ALIAS(cmd_drcset_func, drc, set drc);
+SHELL_CMD_EXPORT_ALIAS(cmd_noisegt_set_func, MSP_NOISEGT, set noisegt);
 SHELL_CMD_EXPORT_ALIAS(cmd_peq_set_func, MSP_PEQ, set peq);
 SHELL_CMD_EXPORT_ALIAS(cmd_limiter_set_func, MSP_LIMITER, set limiter);
 SHELL_CMD_EXPORT_ALIAS(cmd_gain_set_func, MSP_GAIN, set gain);
@@ -555,6 +624,7 @@ SHELL_CMD_EXPORT_ALIAS(cmd_compressor_set_func, MSP_COMPRESSOR, set compressor);
 const static struct cli_command cmds_user[] STATIC_CLI_CMD_ATTRIBUTE = {
     // {"eq", "set eq", cmd_eqset_func},
     // {"drc", "set drc", cmd_drcset_func},
+    {"MSP_NOISEGT", "set noisegt", cmd_noisegt_set_func},
     {"MSP_PEQ", "set peq", cmd_peq_set_func},
     {"MSP_LIMITER", "set limiter", cmd_limiter_set_func},
     {"MSP_GAIN", "set gain", cmd_gain_set_func},

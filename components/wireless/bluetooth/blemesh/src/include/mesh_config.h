@@ -26,15 +26,23 @@
 #endif
 
 #ifndef CONFIG_BT_MESH_CRPL
+#if defined(CONFIG_AUTO_PTS)
+#define CONFIG_BT_MESH_CRPL (2)
+#else
 #define CONFIG_BT_MESH_CRPL (CONFIG_BT_MESH_NODE_COUNT)
+#endif /* CONFIG_AUTO_PTS */
 #endif
 
 #ifndef CONFIG_BT_MESH_ADV_BUF_COUNT
+#if defined(CONFIG_AUTO_PTS)
+#define CONFIG_BT_MESH_ADV_BUF_COUNT 10
+#else
 #define CONFIG_BT_MESH_ADV_BUF_COUNT 60
+#endif
 #endif
 
 #ifndef CONFIG_BT_MESH_LABEL_COUNT
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 #define CONFIG_BT_MESH_LABEL_COUNT (CONFIG_BT_MESH_MODEL_GROUP_COUNT)
 #else
 #define CONFIG_BT_MESH_LABEL_COUNT 1
@@ -42,7 +50,7 @@
 #endif
 
 #ifndef CONFIG_BT_MESH_TX_SEG_MAX
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 #define CONFIG_BT_MESH_TX_SEG_MAX  13
 #else
 #define CONFIG_BT_MESH_TX_SEG_MAX  6
@@ -55,15 +63,15 @@
 
 
 #ifndef CONFIG_BT_MESH_MSG_CACHE_SIZE
-#if defined(CONFIG_AUTO_PTS)
-#define CONFIG_BT_MESH_MSG_CACHE_SIZE 10
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
+#define CONFIG_BT_MESH_MSG_CACHE_SIZE (10)
 #else
 #define CONFIG_BT_MESH_MSG_CACHE_SIZE (2*CONFIG_BT_MESH_TX_SEG_MAX+CONFIG_BT_MESH_NODE_COUNT)
 #endif
 #endif
 
 #ifndef CONFIG_BT_MESH_TX_SEG_MSG_COUNT
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 #define CONFIG_BT_MESH_TX_SEG_MSG_COUNT 4
 #else
 #define CONFIG_BT_MESH_TX_SEG_MSG_COUNT 2
@@ -83,7 +91,11 @@
 #endif
 
 #ifndef CONFIG_MESH_ADV_STACK_SIZE
+#if defined(CONFIG_AUTO_PTS)
+#define CONFIG_MESH_ADV_STACK_SIZE (1024+128)
+#else
 #define CONFIG_MESH_ADV_STACK_SIZE (1024+512)
+#endif
 #endif
 
 #ifndef CONFIG_BT_MESH_PROXY_FILTER_SIZE
@@ -197,11 +209,35 @@
 #endif
 
 #ifndef CONFIG_BT_MESH_LOOPBACK_BUFS
-#define CONFIG_BT_MESH_LOOPBACK_BUFS (CONFIG_BT_MESH_TX_SEG_MAX \
-								+ CONFIG_BT_MESH_RX_SEG_MAX) //temp value, need to check
+#define CONFIG_BT_MESH_LOOPBACK_BUFS (4)
 #endif
 
-#define BL_COMP_ID                           0x07AF
+#ifndef CONFIG_BT_MESH_BLOB_BLOCK_SIZE_MIN
+#define CONFIG_BT_MESH_BLOB_BLOCK_SIZE_MIN 256
+#endif
+
+#ifndef CONFIG_BT_MESH_BLOB_BLOCK_SIZE_MAX
+#define CONFIG_BT_MESH_BLOB_BLOCK_SIZE_MAX 1024
+#endif
+
+/*
+ * From MshMBT_v1.0,section 5.2.4 The Maximum BLOB Poll Interval is designated "T_MBPI" and shall be set to 30 seconds.
+ * From MshMBT_v1.0,section 6.2.4.2, initial block report timer value = 2*T_MBPI+7[seconds]
+ */
+#ifndef CONFIG_BT_MESH_BLOB_REPORT_TIMEOUT
+#define CONFIG_BT_MESH_BLOB_REPORT_TIMEOUT 67
+#endif
+
+#ifndef CONFIG_BT_MESH_BLOB_SRV_PULL_REQ_COUNT
+#define CONFIG_BT_MESH_BLOB_SRV_PULL_REQ_COUNT 4
+#endif
+
+#ifndef CONFIG_BT_MESH_BLOB_SIZE_MAX
+#define CONFIG_BT_MESH_BLOB_SIZE_MAX 0x6500
+#endif
+
+#define BL_COMP_ID                           0x0A38
+#define BL_PRODUCT_ID                        0x0001
 
 /********************************BFLB_BLE patch to fix mesh bug**************************************/
 #define BFLB_BLE_MESH_PATCH_DEL_APPKEY
@@ -211,4 +247,5 @@
 #define BFLB_BLE_MESH_PATCH_MOD_PUB_VA_SET
 #define BFLB_BLE_MESH_PATCH_HEARTBEAT_SUB_GET
 #define BFLB_BLE_MESH_PATCH_HEARTBEAT_SUB_SET
+#define BFLB_BLE_MESH_PATCH_PROV_NODE_CFM_RECVED_BEFORE_DH
 #endif

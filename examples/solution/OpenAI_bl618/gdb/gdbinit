@@ -1,0 +1,31 @@
+
+target remote 127.0.0.1:1025
+b trap
+
+set logging file gdb.log
+set logging on
+set print pretty on
+#set height 0
+
+set print elements 0
+set print pretty on
+set print array on
+set print repeats 0
+set print address off
+set print frame-arguments all
+set print sevenbit-strings off
+#set print demangle-style none
+set print union off
+set print static-members off
+set print vtbl off
+set print object off
+set print array-indexes off
+set print symbol-filenames off
+set print demangle-style none
+set print demangle-style none
+set print demangle-style none
+
+define dumppcm
+dump binary memory ./dump.bin 0x55000000 0x55800000
+end
+

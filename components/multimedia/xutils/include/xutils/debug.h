@@ -27,6 +27,7 @@ void msp_set_except_callback(except_process_t except);
 */
 void msp_set_except_default();
 
+extern void msp_print_version(const char *format, ...);
 extern void msp_debug(const char *tag, const char *filename, const long line, const char *funcname, const char *format, ...);
 
 #ifndef __FILENAME__

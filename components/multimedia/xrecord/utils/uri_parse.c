@@ -39,7 +39,7 @@ int uri_get_item_value(const char *url, const char *item, char *value, size_t le
             }
 
             if (((cnt > 0) && (len > cnt))) {
-                strncpy(value, p1, cnt);
+                strlcpy(value, p1, cnt);
                 value[cnt] = '\0';
                 return 0;
             }
@@ -81,7 +81,7 @@ int uri_get_item_value_int(const char *url, const char *item, uint32_t *value)
             }
 
             if (((cnt > 0) && (len > cnt))) {
-                strncpy(str, p1, cnt);
+                strlcpy(str, p1, cnt);
                 str[cnt] = '\0';
                 *value = strtoul(str, &end_ptr, 10);
                 (void)end_ptr;

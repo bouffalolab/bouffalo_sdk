@@ -13,3 +13,5 @@ Peripherals
     I2C <i2c/index>
     IR <ir/index>
     UART <uart/index>
+    SEC_DBG <sec_dbg/index>
+    ANTI_ROLLBACK <anti_rollback/index>

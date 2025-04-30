@@ -24,12 +24,6 @@ __BEGIN_DECLS__
 int xplayer_register_yoc();
 
 /**
- * @brief  regist xplayer for allwinner
- * @return 0/-1
- */
-int xplayer_register_tplayer();
-
-/**
  * @brief  regist xplayer
  * @return 0/-1
  */
@@ -38,10 +32,6 @@ static inline int xplayer_register()
 #if defined(CONFIG_PLAYER_YOC)
     REGISTER_PLAYER(YOC, yoc);
 #endif
-#if defined(CONFIG_PLAYER_TPLAYER)
-    REGISTER_PLAYER(TPLAYER, tplayer);
-#endif
-
     return 0;
 }
 

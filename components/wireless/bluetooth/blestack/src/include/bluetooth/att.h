@@ -60,7 +60,6 @@ struct bt_att_req {
 	bool retrying;
 #endif /* CONFIG_BT_SMP */
 };
-struct bt_att_req *bt_att_get_att_req(struct bt_conn *conn);
 
 #ifdef __cplusplus
 }

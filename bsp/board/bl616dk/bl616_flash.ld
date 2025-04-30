@@ -27,6 +27,8 @@ __RFTLV_SIZE_HOLE = 2K;
 __RFTLV_HEAD1_H = (0x46524C42); /* BLRF */
 __RFTLV_HEAD1_L = (0x41524150); /* PAPA */
 
+VerOffset = 0xc00;
+
 MEMORY
 {
     fw_header_memory  (rx)  : ORIGIN = 0xA0000000 - 0x1000, LENGTH = 4K
@@ -63,25 +65,34 @@ SECTIONS
         . = ORIGIN(xip_memory) + __RFTLV_SIZE_OFFSET + __RFTLV_SIZE_HOLE;
     } > xip_memory
 
+    .ver : AT(ORIGIN(xip_memory) + VerOffset)
+    {
+		LONG(0x42464c42); /* BLFB */
+		LONG(0x46524556); /* VERF */
+		KEEP (*(.blverinf))
+		LONG(0x42464c42); /* BLFB */
+		LONG(0x46524556); /* VERF */
+		KEEP (*(.verinfo))
+    } > xip_memory
+
     .text :
     {
         . = ALIGN(4);
         __text_code_start__ = .;
 
-        *(.text)
-        *(.text.*)
-
-        /* section information for shell */
-        . = ALIGN(4);
-        __fsymtab_start = .;
-        KEEP(*(FSymTab))
-        __fsymtab_end = .;
+        *(EXCLUDE_FILE(*_udivdi3*.o*) .text*)
 
         /* section information for components's version */
         . = ALIGN(4);
         _version_info_section_start = .;
         KEEP(*(.version.*))
         _version_info_section_end = .;
+
+        /* section information for shell */
+        . = ALIGN(4);
+        __fsymtab_start = .;
+        KEEP(*(FSymTab))
+        __fsymtab_end = .;
 
         . = ALIGN(4);
         __vsymtab_start = .;
@@ -104,18 +115,35 @@ SECTIONS
                         *bl616_sflash*.o* \
                         *bl616_xip_sflash*.o* \
                         *bl616_ef_ctrl*.o* \
+                        *bl616_ef_cfg*.o* \
+                        *bl616_clock*.o* \
+                        *_clz*.o* \
                         *bl616_romapi_patch*.o* ).rodata*)
 
-        *(.srodata)
-        *(.srodata.*)
+        *(.srodata*)
+
+        /* global object for c++ */
+        . = ALIGN(4);
+        __preinit_array_start = .;
+        KEEP (*(.preinit_array))
+        __preinit_array_end = .;
+
+        . = ALIGN(4);
+        __init_array_start = .;
+        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
+        KEEP (*(.init_array))
+        __init_array_end = .;
+
+        . = ALIGN(4);
+        *(.gcc_except_table.*)
 
         /* _dump_sections for bflb_coredump.c*/
         . = ALIGN(4);
         PROVIDE( _dump_sections = ABSOLUTE(.));
-        LONG(ORIGIN(ram_memory));
-        LONG(LENGTH(ram_memory));
+        LONG(ORIGIN(ram_memory) + (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache)));
+        LONG(LENGTH(ram_memory) - (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache)));
         LONG(ORIGIN(ram_nocache));
-        LONG(LENGTH(ram_nocache));
+        LONG(__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache));
         LONG(ORIGIN(ram_wifi));
         LONG(LENGTH(ram_wifi));
         /*
@@ -132,45 +160,53 @@ SECTIONS
         __text_code_end__ = .;
     } > xip_memory
 
-    . = ALIGN(4);
-    __nocache_ram_load_addr = .;
-
-    .nocache_ram_region  : AT (__nocache_ram_load_addr)
+    .build_id :
     {
         . = ALIGN(4);
-        __nocache_ram_data_start__ = .;
+        elf_build_id = ABSOLUTE(.) + 16;
+        *(.note.gnu.build-id)
+        . = ALIGN(4);
+    } > xip_memory
+
+    .nocache_ram_region  :
+    {
+        __nocache_ram_load_addr = LOADADDR(.nocache_ram_region);
+        __nocache_ram_data_start__ = ADDR(.nocache_ram_region);
+        __nocache_ram_data_end__ = ADDR(.nocache_ram_region) + SIZEOF(.nocache_ram_region);
+
+        . = ALIGN(4);
 
         *(.nocache_ram)
 
         . = ALIGN(4);
-        __nocache_ram_data_end__ = .;
-    } > ram_nocache
+    } > ram_nocache AT > xip_memory
 
     .nocache_noinit_ram_region (NOLOAD) :
     {
-        . = ALIGN(4);
-        __nocache_noinit_ram_data_start__ = .;
+        __nocache_noinit_ram_data_start__ = ADDR(.nocache_noinit_ram_region);
+        __nocache_noinit_ram_data_end__ = ADDR(.nocache_noinit_ram_region) + SIZEOF(.nocache_noinit_ram_region);
 
+        . = ALIGN(4);
         *(.nocache_noinit_ram)
         *(.noncacheable)
 
         . = ALIGN(4);
-        __nocache_noinit_ram_data_end__ = .;
     } > ram_nocache
 
-    /* Skip the nocache region */ 
+    /* Skip the nocache region */
     .ram_skip_nocache_region (NOLOAD) :
     {
         . += (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache));
+        . = ALIGN(32);
     } > ram_memory
 
-    __itcm_load_addr = __nocache_ram_load_addr + SIZEOF(.nocache_ram_region);
-
-    .itcm_region : AT (__itcm_load_addr)
+    .itcm_region :
     {
-        . = ALIGN(4);
-        __tcm_code_start__ = .;
+        __itcm_load_addr = LOADADDR(.itcm_region);
+        __tcm_code_start__ = ADDR(.itcm_region);
+        __tcm_code_end__ = ADDR(.itcm_region) + SIZEOF(.itcm_region);
 
+        . = ALIGN(4);
         *(.tcm_code.*)
         *(.tcm_const.*)
         *(.sclock_rlt_code.*)
@@ -184,16 +220,22 @@ SECTIONS
         *bl616_sflash*.o*(.rodata*)
         *bl616_xip_sflash*.o*(.rodata*)
         *bl616_ef_ctrl*.o*(.rodata*)
+        *bl616_ef_cfg*.o*(.rodata*)
+        *bl616_clock*.o*(.rodata*)
+        *_clz*.o*(.rodata*)
         *bl616_romapi_patch*.o*(.rodata*)
 
+        *_udivdi3*.o*(.text*)
+
         . = ALIGN(4);
-        __tcm_code_end__ = .;
-    } > ram_memory
+    } > ram_memory AT > xip_memory
 
-    __dtcm_load_addr = __itcm_load_addr + SIZEOF(.itcm_region);
-
-    .dtcm_region : AT (__dtcm_load_addr)
+    .dtcm_region :
     {
+        __dtcm_load_addr = LOADADDR(.dtcm_region);
+        __tcm_data_start__ = ADDR(.dtcm_region);
+        __tcm_data_end__ = ADDR(.dtcm_region) + SIZEOF(.dtcm_region);
+
         . = ALIGN(4);
         __tcm_data_start__ = .;
 
@@ -202,15 +244,16 @@ SECTIONS
 
         . = ALIGN(4);
         __tcm_data_end__ = .;
-    } > ram_memory
-
-    __ram_load_addr = __dtcm_load_addr + SIZEOF(.dtcm_region);
+    } > ram_memory AT > xip_memory
 
     /* Data section */
-    RAM_DATA : AT (__ram_load_addr)
+    RAM_DATA :
     {
+        __ram_load_addr = LOADADDR(RAM_DATA);
+        __ram_data_start__ = ADDR(RAM_DATA);
+        __ram_data_end__ = ADDR(RAM_DATA) + SIZEOF(RAM_DATA);
+
         . = ALIGN(4);
-        __ram_data_start__ = .;
 
         PROVIDE( __global_pointer$ = . + 0x800 );
 
@@ -240,23 +283,27 @@ SECTIONS
         *(.bflog_tags_array)
         . = ALIGN(4);
         __bflog_tags_end__ = .;
-        __ram_data_end__ = .;
-    } > ram_memory
+    } > ram_memory AT > xip_memory
 
-    __psram_load_addr = (__ram_load_addr + SIZEOF (RAM_DATA));
-
-    .psram_data_region : AT (__psram_load_addr)
+    .psram_data_region :
     {
-        . = ALIGN(4);
-        __psram_data_start__ = .;
+        __psram_load_addr = LOADADDR(.psram_data_region);
+        __psram_data_start__ = ADDR(.psram_data_region);
+        __psram_data_end__ = ADDR(.psram_data_region) + SIZEOF(.psram_data_region);
+
+        . = ALIGN(32);
+
+        KEEP(*(.psram_code*))
+
+        . = ALIGN(32);
 
         KEEP(*(.psram_data*))
 
-        . = ALIGN(4);
-        __psram_data_end__ = .;
-    } > ram_psram
+        . = ALIGN(32);
+    } > ram_psram AT > xip_memory
 
     __etext_final = (__psram_load_addr + SIZEOF (.psram_data_region));
+    __edata_etext_final = ALIGN(__etext_final, 1024);
     ASSERT(__etext_final <= ORIGIN(xip_memory) + LENGTH(xip_memory), "code memory overflow")
 
     .stack (NOLOAD):
@@ -298,12 +345,12 @@ SECTIONS
 
     .heap (NOLOAD):
     {
-        . = ALIGN(4);
+        . = ALIGN(32);
         __HeapBase = .;
 
         KEEP(*(.heap*))
 
-        . = ALIGN(4);
+        . = ALIGN(32);
         __HeapLimit = .;
     } > ram_memory
 
@@ -324,16 +371,16 @@ SECTIONS
 
     .psram_heap (NOLOAD):
     {
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_heap_base = .;
         KEEP(*(.psram_heap*))
-        . = ALIGN(4);
+        . = ALIGN(32);
         __psram_heap_end = .;
     } > ram_psram
 
     __psram_limit = ORIGIN(ram_psram) + LENGTH(ram_psram);
     ASSERT(__psram_limit - __psram_heap_base >= psram_heap_min_size, "psram heap region overflow")
- 
+
     .wifibss (NOLOAD) :
     {
       PROVIDE( __wifi_bss_start = ADDR(.wifibss) );
@@ -360,4 +407,3 @@ SECTIONS
     PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
     ASSERT((wifi_ram_max_size + __EM_SIZE) <= 160K,"wifi ram overflow")
 }
-

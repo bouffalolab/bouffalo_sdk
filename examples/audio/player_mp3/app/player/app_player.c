@@ -106,7 +106,7 @@ int app_play_local_music()
      * mem://addr=2687922304&size=10152&avformat=mp3&acodec=mp3
      * file:///romfs/music.mp3
      */ 
-    sprintf(url, "mem://addr=%lu&size=%lu&avformat=mp3&acodec=mp3", music_mp3, sizeof(music_mp3));
+    snprintf(url, sizeof(url), "mem://addr=%lu&size=%lu&avformat=mp3&acodec=mp3", music_mp3, sizeof(music_mp3));
     if (SMTAUDIO_STATE_MUTE != smtaudio_get_state()) {
         smtaudio_start(MEDIA_MUSIC, url, 0, 0);
     }

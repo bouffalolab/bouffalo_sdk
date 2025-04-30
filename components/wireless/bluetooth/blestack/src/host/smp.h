@@ -185,3 +185,9 @@ int ble_get_smp_paramters(const struct bt_conn *conn,struct smp_parameters *para
 #if defined(BFLB_BLE_SMP_LOCAL_AUTH)
 void smp_set_auth(u8_t auth);
 #endif
+#if defined(BFLB_BLE_SMP_SC_ONLY)
+void bt_smp_set_sc_only(bool sc_only);
+#endif
+#if defined(BFLB_BLE_SMP_SUPPORT_DISABLE_PAIR)
+void bt_smp_disable_pair(bool not_support);
+#endif

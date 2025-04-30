@@ -4,15 +4,15 @@
 
 #if (__has_include("bflb_dbi.h"))
 
-#if ((LCD_DBI_WORK_MODE == 4) && (DBI_QSPI_SUPPORT == 0))
-#error : "The DBI of this chip does not support QSPI mode."
-#endif
-
 #include "bl_mipi_dbi.h"
 #include "bflb_dbi.h"
 #include "bflb_dma.h"
 #include "bflb_gpio.h"
 #include "bflb_l1c.h"
+
+#if ((LCD_DBI_WORK_MODE == 4) && (DBI_QSPI_SUPPORT == 0))
+#error : "The DBI of this chip does not support QSPI mode."
+#endif
 
 #define LCD_DBI_DMA_LLI_NUM (DBI_DBI_DATA_SIZE_MAX / 4 / 4064 + 1)
 
@@ -133,10 +133,18 @@ int lcd_dbi_init(lcd_dbi_init_t *dbi_parra)
 #endif
 
     if (dbi_parra->pixel_format == LCD_DBI_LCD_PIXEL_FORMAT_RGB565) {
-        dbi_cfg.pixel_input_format = DBI_PIXEL_INPUT_FORMAT_RGB_565;
+        if (LCD_RGB_ORDER_MODE) {
+            dbi_cfg.pixel_input_format = DBI_PIXEL_INPUT_FORMAT_BGR_565;
+        } else {
+            dbi_cfg.pixel_input_format = DBI_PIXEL_INPUT_FORMAT_RGB_565;
+        }
         dbi_cfg.pixel_output_format = DBI_PIXEL_OUTPUT_FORMAT_RGB_565;
     } else if (dbi_parra->pixel_format == LCD_DBI_LCD_PIXEL_FORMAT_NRGB8888) {
-        dbi_cfg.pixel_input_format = DBI_PIXEL_INPUT_FORMAT_NRGB_8888;
+        if (LCD_RGB_ORDER_MODE) {
+            dbi_cfg.pixel_input_format = DBI_PIXEL_INPUT_FORMAT_NBGR_8888;
+        } else {
+            dbi_cfg.pixel_input_format = DBI_PIXEL_INPUT_FORMAT_NRGB_8888;
+        }
         dbi_cfg.pixel_output_format = DBI_PIXEL_OUTPUT_FORMAT_RGB_888;
     }
 
@@ -145,6 +153,17 @@ int lcd_dbi_init(lcd_dbi_init_t *dbi_parra)
     for (uint8_t i = 0; i < sizeof(dbi_gpio_list) / sizeof(dbi_gpio_list[0]); i++) {
         bflb_gpio_init(gpio, dbi_gpio_list[i], dbi_gpio_func | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
     }
+
+    /* get dma dev */
+    dbi_dma_hd = bflb_device_get_by_name(LCD_DBI_DMA_NAME);
+#if defined(BL616L)
+    if (dbi_dma_hd->sub_idx < 6) {
+        /* ch0~ch1: 64Byte, ch2~ch5: 32Byte, ch6~ch7: 16Byte */
+        dbi_cfg.tx_fifo_threshold = 7;
+        dma_dbi_config.src_burst_count = DMA_BURST_INCR8;
+        dma_dbi_config.dst_burst_count = DMA_BURST_INCR8;
+    }
+#endif
 
     /* dbi init */
     dbi_hd = bflb_device_get_by_name("dbi");
@@ -158,9 +177,7 @@ int lcd_dbi_init(lcd_dbi_init_t *dbi_parra)
     bflb_irq_enable(dbi_hd->irq_num);
 
     /* dma init */
-    dbi_dma_hd = bflb_device_get_by_name(LCD_DBI_DMA_NAME);
     bflb_dma_channel_init(dbi_dma_hd, &dma_dbi_config);
-
     return 0;
 }
 

@@ -133,8 +133,8 @@ typedef enum {
  *  @brief PSRAM Burst Type
  */
 typedef enum {
-    PSRAM_HYBRID_BURST,  /*!< PSRAM use hybrid brust */
-    PSRAM_WRAPPED_BURST, /*!< PSRAM use warpped brust */
+    PSRAM_HYBRID_BURST,  /*!< PSRAM use hybrid burst */
+    PSRAM_WRAPPED_BURST, /*!< PSRAM use warpped burst */
 } PSRAM_Burst_Type;
 
 /**
@@ -149,18 +149,38 @@ typedef enum {
 } PSRAM_Latency_ApMem_Type;
 
 /**
- *  @brief PSRAM Drive Strength type definition for Winbon 4M
+ *  @brief PSRAM Drive Strength type definition for Winbon
  */
-typedef enum {
-    PSRAM_WINBOND_DRIVE_STRENGTH_50_OHMS_FOR_4M_34_OHMS_FOR_8M,  /*!< drive strength 50 ohms for 4M size ,34 ohms for 8M size */
-    PSRAM_WINBOND_DRIVE_STRENGTH_35_OHMS_FOR_4M_115_OHMS_FOR_8M, /*!< drive strength 35 ohms for 4M size ,115 ohms for 8M size */
-    PSRAM_WINBOND_DRIVE_STRENGTH_100_OHMS_FOR_4M_67_OHMS_FOR_8M, /*!< drive strength 100 ohms for 4M size ,67 ohms for 8M size */
-    PSRAM_WINBOND_DRIVE_STRENGTH_200_OHMS_FOR_4M_46_OHMS_FOR_8M, /*!< drive strength 200 ohms for 4M size ,46 ohms for 8M size */
-    PSRAM_DRIVE_STRENGTH_34_OHMS_ONLY_FOR_8M,                    /*!< drive strength 34 ohms only for 8M size */
-    PSRAM_DRIVE_STRENGTH_27_OHMS_ONLY_FOR_8M,                    /*!< drive strength 27 ohms only for 8M size */
-    PSRAM_DRIVE_STRENGTH_22_OHMS_ONLY_FOR_8M,                    /*!< drive strength 22 ohms only for 8M size */
-    PSRAM_DRIVE_STRENGTH_19_OHMS_ONLY_FOR_8M,                    /*!< drive strength 19 ohms only for 8M size */
-} PSRAM_Winbond_Drive_Strength;
+
+/* 4M Size Drive Strength Configurations */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_50_OHMS_FOR_4M   0 /*!< Drive strength 50Ω for 4M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_35_OHMS_FOR_4M   1 /*!< Drive strength 35Ω for 4M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_100_OHMS_FOR_4M  2 /*!< Drive strength 100Ω for 4M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_200_OHMS_FOR_4M  3 /*!< Drive strength 200Ω for 4M size */
+
+/* 8M Size Drive Strength Configurations */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_25_OHMS_FOR_8M   0 /*!< Drive strength 25Ω for 8M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_50_OHMS_FOR_8M   1 /*!< Drive strength 50Ω for 8M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_100_OHMS_FOR_8M  2 /*!< Drive strength 100Ω for 8M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_200_OHMS_FOR_8M  3 /*!< Drive strength 200Ω for 8M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_300_OHMS_FOR_8M  4 /*!< Drive strength 300Ω for 8M size */
+
+/* 16M Size Drive Strength Configurations */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_25_OHMS_FOR_16M  0 /*!< Drive strength 25Ω for 16M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_50_OHMS_FOR_16M  1 /*!< Drive strength 50Ω for 16M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_100_OHMS_FOR_16M 2 /*!< Drive strength 100Ω for 16M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_200_OHMS_FOR_16M 3 /*!< Drive strength 200Ω for 16M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_300_OHMS_FOR_16M 4 /*!< Drive strength 300Ω for 16M size */
+
+/* 32M Size Drive Strength Configurations */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_34_OHMS_FOR_32M  0 /*!< Drive strength 34Ω for 32M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_115_OHMS_FOR_32M 1 /*!< Drive strength 115Ω for 32M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_67_OHMS_FOR_32M  2 /*!< Drive strength 67Ω for 32M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_46_OHMS_FOR_32M  3 /*!< Drive strength 46Ω for 32M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_34_OHMS_ONLY_32M 4 /*!< Drive strength 34Ω (exclusive) for 32M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_27_OHMS_ONLY_32M 5 /*!< Drive strength 27Ω (exclusive) for 32M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_22_OHMS_ONLY_32M 6 /*!< Drive strength 22Ω (exclusive) for 32M size */
+#define PSRAM_WINBOND_DRIVE_STRENGTH_19_OHMS_ONLY_32M 7 /*!< Drive strength 19Ω (exclusive) for 32M size */
 
 /**
  *  @brief PSRAM Drive Strength type definition for Winbon 8MB
@@ -263,18 +283,18 @@ typedef struct
  */
 typedef struct
 {
-    BL_Fun_Type rst;                            /*!< Winbond pSRAM CR1 - Software Reset */
-    PSRAM_Clock_Type clockType;                 /*!< Winbond pSRAM CR1 - Master Clock Type */
-    BL_Fun_Type inputPowerDownMode;             /*!< Winbond pSRAM CR1 - Input Power Down */
-    BL_Fun_Type linear_dis;                     /*!< Winbond pSRAM linear burst disable */
-    BL_Fun_Type hybridSleepMode;                /*!< Winbond pSRAM CR1 - Hybrid Sleep Mode configuration */
-    PSRAM_Partial_Array_Refresh PASR;           /*!< Winbond pSRAM CR1 - Partial Array Refresh + Distributed Refresh Interval */
-    BL_Fun_Type disDeepPowerDownMode;           /*!< Winbond pSRAM CR0 - Deep Power-Down Disable configuration */
-    BL_Fun_Type fixedLatency;                   /*!< Winbond pSRAM CR1 - Fix Latency configuration */
-    PSRAM_Winbond_Burst_Length brustLen;        /*!< Winbond pSRAM CR0 - Burst Length configuration */
-    PSRAM_Burst_Type brustType;                 /*!< Winbond pSRAM CR0 - Hybrid Burst Enable */
-    PSRAM_Winbond_Drive_Strength driveStrength; /*!< Winbond pSRAM CR0 - Drive Strength configuration */
-    PSRAM_Latency_Winbond_Type latency;         /*!< Winbond pSRAM CR0 - Latency Counter configuration */
+    BL_Fun_Type rst;                     /*!< Winbond pSRAM CR1 - Software Reset */
+    PSRAM_Clock_Type clockType;          /*!< Winbond pSRAM CR1 - Master Clock Type */
+    BL_Fun_Type inputPowerDownMode;      /*!< Winbond pSRAM CR1 - Input Power Down */
+    BL_Fun_Type linear_dis;              /*!< Winbond pSRAM linear burst disable */
+    BL_Fun_Type hybridSleepMode;         /*!< Winbond pSRAM CR1 - Hybrid Sleep Mode configuration */
+    PSRAM_Partial_Array_Refresh PASR;    /*!< Winbond pSRAM CR1 - Partial Array Refresh + Distributed Refresh Interval */
+    BL_Fun_Type disDeepPowerDownMode;    /*!< Winbond pSRAM CR0 - Deep Power-Down Disable configuration */
+    BL_Fun_Type fixedLatency;            /*!< Winbond pSRAM CR1 - Fix Latency configuration */
+    PSRAM_Winbond_Burst_Length burstLen;        /*!< Winbond pSRAM CR0 - Burst Length configuration */
+    PSRAM_Burst_Type burstType;                 /*!< Winbond pSRAM CR0 - Hybrid Burst Enable */
+    uint8_t driveStrength;               /*!< Winbond pSRAM CR0 - Drive Strength configuration */
+    PSRAM_Latency_Winbond_Type latency;  /*!< Winbond pSRAM CR0 - Latency Counter configuration */
 } PSRAM_Winbond_Cfg_Type;
 
 /**
@@ -293,8 +313,8 @@ typedef struct
     BL_Fun_Type deepPowerDownModeEnable;      /*!< AP Memory pSRAM configure MR6 - Deep Power Down enable */
     BL_Fun_Type crossBoundaryEnable;          /*!< AP Memory pSRAM configure MR8 - cross boundary enable 1'b0 - Read within 1K boundary 1'b1 -
                                                  Read cross 1K boundary */
-    PSRAM_Burst_Type brustType;               /*!< AP Memory pSRAM configure MR8 - burst type */
-    PSRAM_ApMem_Burst_Length brustLen;        /*!< AP Memory pSRAM configure MR8 - burst length */
+    PSRAM_Burst_Type burstType;               /*!< AP Memory pSRAM configure MR8 - burst type */
+    PSRAM_ApMem_Burst_Length burstLen;        /*!< AP Memory pSRAM configure MR8 - burst length */
 } PSRAM_APMemory_Cfg_Type;
 
 /*@} end of group PSRAM_CTRL_Public_Types */
@@ -378,18 +398,6 @@ typedef struct
                                            ((type) == PSRAM_APMEM_5_CLOCKS_LATENCY) || \
                                            ((type) == PSRAM_APMEM_6_CLOCKS_LATENCY) || \
                                            ((type) == PSRAM_APMEM_7_CLOCKS_LATENCY))
-
-/** @defgroup  PSRAM_WINBOND_DRIVE_STRENGTH
- *  @{
- */
-#define IS_PSRAM_WINBOND_DRIVE_STRENGTH(type) (((type) == PSRAM_WINBOND_DRIVE_STRENGTH_50_OHMS_FOR_4M_34_OHMS_FOR_8M) ||  \
-                                               ((type) == PSRAM_WINBOND_DRIVE_STRENGTH_35_OHMS_FOR_4M_115_OHMS_FOR_8M) || \
-                                               ((type) == PSRAM_WINBOND_DRIVE_STRENGTH_100_OHMS_FOR_4M_67_OHMS_FOR_8M) || \
-                                               ((type) == PSRAM_WINBOND_DRIVE_STRENGTH_200_OHMS_FOR_4M_46_OHMS_FOR_8M) || \
-                                               ((type) == PSRAM_DRIVE_STRENGTH_34_OHMS_ONLY_FOR_8M) ||                    \
-                                               ((type) == PSRAM_DRIVE_STRENGTH_27_OHMS_ONLY_FOR_8M) ||                    \
-                                               ((type) == PSRAM_DRIVE_STRENGTH_22_OHMS_ONLY_FOR_8M) ||                    \
-                                               ((type) == PSRAM_DRIVE_STRENGTH_19_OHMS_ONLY_FOR_8M))
 
 /** @defgroup  PSRAM_APMEM_DRIVE_STRENGTH
  *  @{

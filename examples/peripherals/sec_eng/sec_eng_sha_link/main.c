@@ -106,7 +106,7 @@ int main(void)
     bflb_data_compare(sha256_testsum[0], sha_output_buf, 32);
     printf("sha256 link success\r\n");
 
-#if !defined(BL702L)
+#if !defined(BL702L) && !defined(BL602) && !defined(BL702)
     bflb_sha512_link_start(sha, &ctx_sha512, 0);
     bflb_l1c_dcache_clean_range((void *)sha512_testbuf[0], 208);
     bflb_sha512_link_update(sha, &ctx_sha512, sha512_testbuf[0], 208);

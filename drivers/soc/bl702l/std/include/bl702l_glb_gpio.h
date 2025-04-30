@@ -67,7 +67,7 @@ extern "C" {
 /**
  *  @brief GLB GPIO interrupt trigger mode type definition
  */
-typedef enum {
+enum {
     GLB_GPIO_INT_TRIG_SYNC_FALLING_EDGE = 0,        /*!< GPIO interrupt sync mode, GPIO falling edge trigger interrupt */
     GLB_GPIO_INT_TRIG_SYNC_RISING_EDGE = 1,         /*!< GPIO interrupt sync mode, GPIO rising edge trigger interrupt */
     GLB_GPIO_INT_TRIG_SYNC_LOW_LEVEL = 2,           /*!< GPIO interrupt sync mode, GPIO low level trigger interrupt (32k 3T) */
@@ -77,15 +77,17 @@ typedef enum {
     GLB_GPIO_INT_TRIG_ASYNC_RISING_EDGE = 9,        /*!< GPIO interrupt async mode, GPIO rising edge trigger interrupt */
     GLB_GPIO_INT_TRIG_ASYNC_LOW_LEVEL = 10,         /*!< GPIO interrupt async mode, GPIO low level trigger interrupt (32k 3T) */
     GLB_GPIO_INT_TRIG_ASYNC_HIGH_LEVEL = 11,        /*!< GPIO interrupt async mode, GPIO high level trigger interrupt (32k 3T) */
-} GLB_GPIO_INT_TRIG_Type;
+};
+typedef BL_ENUM_Type GLB_GPIO_INT_TRIG_Type;
 
 /**
  *  @brief GLB GPIO output mode type definition
  */
-typedef enum {
+enum {
     GLB_GPIO_OUTPUT_MODE_WRITE = 0,  /*!< GPIO output mode write */
     GLB_GPIO_OUTPUT_MODE_SETCLR = 1, /*!< GPIO output mode set/clr */
-} GLB_GPIO_OUTPUT_MODE_Type;
+};
+typedef BL_ENUM_Type GLB_GPIO_OUTPUT_MODE_Type;
 
 /**
  *  @brief GPIO interrupt configuration structure type definition

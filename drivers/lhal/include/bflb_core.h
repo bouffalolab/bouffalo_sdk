@@ -17,6 +17,10 @@
 #include "bflb_irq.h"
 #include "bflb_l1c.h"
 
+#ifdef CONFIG_LHAL_ROMAPI
+#include "bflb_lhal_romdriver.h"
+#endif
+
 /** @addtogroup LHAL
   * @{
   */
@@ -26,25 +30,25 @@
   */
 
 #if !defined(BL602) && !defined(BL702) && !defined(BL702L) && \
-    !defined(BL616) && !defined(BL606P) && !defined(BL808) && !defined(BL628)
+    !defined(BL616)   && \
+    !defined(BL808) 
 #error please define a supported chip
 #endif
 
 #ifdef CONFIG_LHAL_PARAM_ASSERT
 #define LHAL_PARAM_ASSERT(expr) ((expr) ? (void)0 : bflb_lhal_assert_func(__FILE__, __LINE__, __FUNCTION__, #expr))
-void bflb_lhal_assert_func(const char *file, uint32_t line, const char *function, const char *string);
 #else
 #define LHAL_PARAM_ASSERT(expr) ((void)0U)
 #endif
 
 #if defined(BL702)
 #define BFLB_PSRAM_BASE 0x26000000
+#elif defined(BL702L)
+#define BFLB_PSRAM_BASE 0x24000000
 #elif defined(BL616)
 #define BFLB_PSRAM_BASE 0xA8000000
 #elif defined(BL808)
 #define BFLB_PSRAM_BASE 0x50000000
-#elif defined(BL606P)
-#define BFLB_PSRAM_BASE 0x54000000
 #endif
 
 #define BFLB_DEVICE_TYPE_ADC      0
@@ -89,6 +93,9 @@ void bflb_lhal_assert_func(const char *file, uint32_t line, const char *function
 #define BFLB_DEVICE_TYPE_SDIO3    40
 #define BFLB_DEVICE_TYPE_PLFMDMA  41
 #define BFLB_DEVICE_TYPE_WO       42
+#define BFLB_DEVICE_TYPE_GMAC     43
+#define BFLB_DEVICE_TYPE_IPC      44
+#define BFLB_DEVICE_TYPE_MJDEC    45
 
 struct bflb_device_s {
     const char *name;

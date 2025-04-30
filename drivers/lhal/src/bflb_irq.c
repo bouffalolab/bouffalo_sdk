@@ -56,9 +56,10 @@ ATTR_TCM_SECTION void bflb_irq_restore(uintptr_t flags)
 #endif
 }
 
+
 int bflb_irq_attach(int irq, irq_callback isr, void *arg)
 {
-    if (irq > CONFIG_IRQ_NUM) {
+    if (irq >= CONFIG_IRQ_NUM) {
         return -EINVAL;
     }
 #ifndef BL_IOT_SDK
@@ -73,7 +74,7 @@ int bflb_irq_attach(int irq, irq_callback isr, void *arg)
 
 int bflb_irq_detach(int irq)
 {
-    if (irq > CONFIG_IRQ_NUM) {
+    if (irq >= CONFIG_IRQ_NUM) {
         return -EINVAL;
     }
 #ifndef BL_IOT_SDK
@@ -89,14 +90,14 @@ void bflb_irq_enable(int irq)
     romapi_bflb_irq_enable(irq);
 #else
 #if defined(BL702) || defined(BL602) || defined(BL702L)
-        putreg8(1, CLIC_HART0_BASE + CLIC_INTIE_OFFSET + irq);
+    putreg8(1, CLIC_HART0_BASE + CLIC_INTIE_OFFSET + irq);
 #else
-#if (defined(BL808) || defined(BL606P)) && defined(CPU_D0)
-        if (csi_vic_get_prio(irq) == 0) {
-            csi_vic_set_prio(irq, 1);
-        }
+#if defined(BL808) && defined(CPU_D0)
+    if (csi_vic_get_prio(irq) == 0) {
+        csi_vic_set_prio(irq, 1);
+    }
 #endif
-        csi_vic_enable_irq(irq);
+    csi_vic_enable_irq(irq);
 #endif
 #endif
 }
@@ -158,6 +159,9 @@ void bflb_irq_set_nlbits(uint8_t nlbits)
 
 void bflb_irq_set_priority(int irq, uint8_t preemptprio, uint8_t subprio)
 {
+    if (irq >= CONFIG_IRQ_NUM) {
+        return;
+    }
 #ifdef romapi_bflb_irq_set_priority
     romapi_bflb_irq_set_priority(irq, preemptprio, subprio);
 #else

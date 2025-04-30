@@ -228,12 +228,14 @@ static void tcp_server_socket_thread(void *arg)
 
     tmpnetif = netif_find("ex");
 
-#if LWIP_DHCP
-    while (tmpnetif->state != 3) {
-        printf("wait DHCP get ip...\r\n");
-        vTaskDelay(1000);
-    }
-#endif
+// #if LWIP_DHCP
+//     while (tmpnetif->state != 3) {
+//         printf("wait DHCP get ip...\r\n");
+//         vTaskDelay(1000);
+//     }
+// #endif
+
+    vTaskDelay(3000);
 
     printf("TCP Server create socket\r\n");
 

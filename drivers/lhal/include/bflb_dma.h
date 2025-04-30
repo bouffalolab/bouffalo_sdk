@@ -158,12 +158,11 @@
 #define DMA_REQUEST_I2S_TX   0x00000011
 #define DMA_REQUEST_ADC      0x00000016
 #define DMA_REQUEST_DAC      0x00000017
-
 /**
   * @}
   */
 
-#elif defined(BL808) || defined(BL606P)
+#elif defined(BL808)
 /** @defgroup DMA_PERIPHERAL_REGBASE dma peripheral data register address definition
   * @{
   */
@@ -187,12 +186,15 @@
 #define DMA_ADDR_SPI0_RDR    (0x2000A200 + 0x8C)
 #define DMA_ADDR_SPI1_TDR    (0x30008000 + 0x88)
 #define DMA_ADDR_SPI1_RDR    (0x30008000 + 0x8C)
+#define DMA_ADDR_DBI_TDR     (0x3001b000 + 0x88)
 #define DMA_ADDR_I2S_TDR     (0x2000AB00 + 0x88)
 #define DMA_ADDR_I2S_RDR     (0x2000AB00 + 0x8C)
 #define DMA_ADDR_ADC_RDR     (0x20002000 + 0x04)
 #define DMA_ADDR_DAC_TDR     (0x20002000 + 0x48)
 #define DMA_ADDR_IR_TDR      (0x2000A600 + 0x88)
 #define DMA_ADDR_WO_TDR      (0x20000000 + 0xB04)
+
+
 /**
   * @}
   */
@@ -219,6 +221,7 @@
 #define DMA_REQUEST_I2C1_TX  0x0000000F
 #define DMA_REQUEST_I2S_RX   0x00000010
 #define DMA_REQUEST_I2S_TX   0x00000011
+#define DMA_REQUEST_DBI_TX   0x00000014
 #define DMA_REQUEST_ADC      0x00000016
 #define DMA_REQUEST_DAC      0x00000017
 
@@ -235,55 +238,8 @@
   * @}
   */
 
-#elif defined(BL628)
-/** @defgroup DMA_PERIPHERAL_REGBASE dma peripheral data register address definition
-  * @{
-  */
-#define DMA_ADDR_UART0_TDR   (0x20010000 + 0x88)
-#define DMA_ADDR_UART0_RDR   (0x20010000 + 0x8C)
-#define DMA_ADDR_UART1_TDR   (0x20011000 + 0x88)
-#define DMA_ADDR_UART1_RDR   (0x20011000 + 0x8C)
-#define DMA_ADDR_UART2_TDR   (0x20012000 + 0x88)
-#define DMA_ADDR_UART2_RDR   (0x20012000 + 0x8C)
-#define DMA_ADDR_I2C0_TDR    (0x20014000 + 0x88)
-#define DMA_ADDR_I2C0_RDR    (0x20014000 + 0x8C)
-#define DMA_ADDR_I2C1_TDR    (0x20015000 + 0x88)
-#define DMA_ADDR_I2C1_RDR    (0x20015000 + 0x8C)
-#define DMA_ADDR_SPI0_TDR    (0x20018000 + 0x88)
-#define DMA_ADDR_SPI0_RDR    (0x20018000 + 0x8C)
-#define DMA_ADDR_I2S_TDR     (0x2001E000 + 0x88)
-#define DMA_ADDR_I2S_RDR     (0x2001E000 + 0x8C)
-#define DMA_ADDR_ADC_RDR     (0x20002000 + 0x04)
-#define DMA_ADDR_DAC_TDR     (0x20002000 + 0x48)
-/**
-  * @}
-  */
-
-/** @defgroup DMA_PERIPHERAL_REQUEST dma peripheral request definition
-  * @{
-  */
-#define DMA_REQUEST_NONE     0x00000000
-#define DMA_REQUEST_UART0_RX 0x00000000
-#define DMA_REQUEST_UART0_TX 0x00000001
-#define DMA_REQUEST_UART1_RX 0x00000002
-#define DMA_REQUEST_UART1_TX 0x00000003
-#define DMA_REQUEST_UART2_RX 0x00000004
-#define DMA_REQUEST_UART2_TX 0x00000005
-#define DMA_REQUEST_I2C0_RX  0x00000006
-#define DMA_REQUEST_I2C0_TX  0x00000007
-#define DMA_REQUEST_I2C1_RX  0x00000008
-#define DMA_REQUEST_I2C1_TX  0x00000009
-#define DMA_REQUEST_SPI0_RX  0x0000000A
-#define DMA_REQUEST_SPI0_TX  0x0000000B
-#define DMA_REQUEST_I2S_RX   0x00000010
-#define DMA_REQUEST_I2S_TX   0x00000011
-#define DMA_REQUEST_ADC      0x00000016
-#define DMA_REQUEST_DAC      0x00000017
-/**
-  * @}
-  */
-
 #endif
+
 
 /** @defgroup DMA_CMD dma feature control cmd definition
   * @{
@@ -297,6 +253,7 @@
 #define DMA_CMD_GET_LLI_DSTADDR       (0x07)
 #define DMA_CMD_GET_LLI_CONTROL       (0x08)
 #define DMA_CMD_GET_LLI_COUNT         (0x09)
+#define DMA_CMD_GET_TRANSFER_PENDING  (0x0f)
 /**
   * @}
   */
@@ -472,6 +429,7 @@ void bflb_dma_channel_irq_detach(struct bflb_device_s *dev);
 int bflb_dma_channel_lli_reload(struct bflb_device_s *dev,
                                 struct bflb_dma_channel_lli_pool_s *lli_pool, uint32_t max_lli_count,
                                 struct bflb_dma_channel_lli_transfer_s *transfer, uint32_t count);
+
 
 /**
  * @brief Enable lli continueous mode.

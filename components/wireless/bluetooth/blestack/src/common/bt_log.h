@@ -53,13 +53,18 @@ extern "C" {
 #define BT_ERR(fmt, ...)   printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
 #define BT_WARN(fmt, ...)  printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
 #define BT_INFO(fmt, ...)   //printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
+
+#define LOG_DBG(fmt, ...) BT_DBG(fmt, ##__VA_ARGS__)
+#define LOG_ERR(fmt, ...) BT_ERR(fmt, ##__VA_ARGS__)
+#define LOG_WRN(fmt, ...) BT_WARN(fmt, ##__VA_ARGS__)
+#define LOG_INF(fmt, ...) BT_INFO(fmt, ##__VA_ARGS__)
 #endif
 
 #if defined(CONFIG_BT_STACK_PTS) || defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 #if defined(BL_MCU_SDK)
-#define BT_PTS(fmt, ...)   bflb_platform_printf(fmt"\r\n", ##__VA_ARGS__)
+#define BT_PTS(fmt, ...)   bflb_platform_printf("[PTS]"fmt"\r\n", ##__VA_ARGS__)
 #else
-#define BT_PTS(fmt, ...)   printf(fmt"\r\n", ##__VA_ARGS__)
+#define BT_PTS(fmt, ...)   printf("[PTS][%s]"fmt"\r\n", __func__, ##__VA_ARGS__)
 #endif
 #endif
 

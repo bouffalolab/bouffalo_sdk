@@ -48,14 +48,18 @@
   * @}
   */
 
-/** @defgroup TIMER_CAPTURE_POLARITY timer capture polarity definition
+
+/** @defgroup TIMER_GPIO_PULSE_POLARITY timer gpio pulse polarity definition
   * @{
   */
-#define TIMER_CAPTURE_POLARITY_POSITIVE 0
-#define TIMER_CAPTURE_POLARITY_NEGATIVE 1
+#define TIMER_GPIO_PULSE_POLARITY_POSITIVE 0
+#define TIMER_GPIO_PULSE_POLARITY_NEGATIVE 1
 /**
   * @}
   */
+
+
+
 
 // clang-format off
 
@@ -68,6 +72,8 @@
                                   ((type) == TIMER_COMP_ID_1) || \
                                   ((type) == TIMER_COMP_ID_2) || \
                                   ((type) == TIMER_COMP_NONE))
+
+#define IS_TIMER_COMP_VAL(value) ((value) >= 2)
 
 #define IS_TIMER_CLOCK_DIV(type) ((type) <= 255)
 
@@ -96,16 +102,6 @@ struct bflb_timer_config_s {
     uint32_t preload_val;
 };
 
-/**
- * @brief TIMER capture configuration structure
- *
- * @param pin      Timer capture pin
- * @param polarity Timer capture polarity, use @ref TIMER_CAPTURE_POLARITY
- */
-struct bflb_timer_capture_config_s {
-    uint8_t pin;
-    uint8_t polarity;
-};
 
 #ifdef __cplusplus
 extern "C" {
@@ -199,6 +195,17 @@ bool bflb_timer_get_compint_status(struct bflb_device_s *dev, uint8_t cmp_no);
  * @param [in] cmp_no compare id, use @ref TIMER_COMP_ID
  */
 void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no);
+
+/**
+ * @brief Control timer feature.
+ *
+ * @param [in] dev device handle
+ * @param [in] cmd feature command, use @ref TIMER_CMD
+ * @param [in] arg user data
+ * @return A negated errno value on failure.
+ */
+int bflb_timer_feature_control(struct bflb_device_s *dev, int cmd, size_t arg);
+
 
 #ifdef __cplusplus
 }

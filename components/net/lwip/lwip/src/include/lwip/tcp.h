@@ -519,6 +519,8 @@ void *tcp_ext_arg_get(const struct tcp_pcb *pcb, uint8_t id);
 int tcp_get_pcbs(struct tcp_pcb **const**list);
 #endif
 
+int tcp_owner_is_netconn(struct tcp_pcb *pcb);
+
 #ifdef __cplusplus
 }
 #endif

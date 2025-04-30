@@ -74,6 +74,7 @@ static void test_case1(void){
     for(i = 0;i < DATA_LEN; i++){
         ((uint8_t *)data_src1)[i] = i & 0xff;
     }
+    bflb_l1c_dcache_clean_range(data_src1, DATA_LEN);
     
     time = (unsigned int)bflb_mtimer_get_time_us();
     

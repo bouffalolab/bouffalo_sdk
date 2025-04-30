@@ -11,6 +11,14 @@
   * @{
   */
 
+#if (defined(BL616) || defined(BL808)) && !defined(CPU_LP)
+#if ((defined(BL808)) && defined(CPU_D0))
+#define BFLB_CACHE_LINE_SIZE 64
+#else
+#define BFLB_CACHE_LINE_SIZE 32
+#endif
+#endif
+
 /**
  * @brief
  *

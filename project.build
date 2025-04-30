@@ -6,45 +6,52 @@ endif
 command_flash = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
 	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --config=flash_prog_cfg.ini
 command_efuse = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
-	--port=$(COMX) --chipname=$(CHIP) --efuse=build/build_out/efusedata.bin
+	--port=$(COMX) --chipname=$(CHIP) --efusefile=build/build_out/efusedata.bin
 command_puncover = $(PUNCOVER_PROGRAM) \
 	--elf_file ./build/build_out/*.elf --map_file ./build/build_out/*.map \
 	--build_dir ./build --src_root ${BL_SDK_BASE} --port 5001
 
 ifeq ($(OS),Windows_NT)
-CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
-BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
-PUNCOVER_PROGRAM = puncover_riscv.exe
-cmake_generator = "MinGW Makefiles"
-
+	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
+	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
+	PUNCOVER_PROGRAM = puncover_riscv.exe
+	cmake_generator = "MinGW Makefiles"
 else
 	ifeq ($(shell uname),Darwin)
-	CMAKE = cmake # use user cmake
-	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-macos
-	PUNCOVER_PROGRAM = puncover_riscv
-	cmake_generator = "Unix Makefiles"
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-macos
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
 	else ifeq ($(shell uname),FreeBSD)
-	CMAKE = cmake # use user cmake
-	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-freebsd
-	PUNCOVER_PROGRAM = puncover_riscv
-	cmake_generator = "Unix Makefiles"
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-freebsd
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
 	else ifeq ($(shell arch),aarch64)
-	CMAKE = cmake # use user cmake
-	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-arm
-	PUNCOVER_PROGRAM = puncover_riscv
-	cmake_generator = "Unix Makefiles"
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-arm
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
 	else ifeq ($(patsubst %WSL2,WSL2,$(shell uname -r)), WSL2)
-	PS_PROGRAM = /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
-	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
-	command_flash = $(PS_PROGRAM) make flash CHIP=$(CHIP) CPU_ID=$(CPU_ID) COMX=$(COMX) BAUDRATE=$(BAUDRATE)
-	command_efuse = $(PS_PROGRAM) make efuse CHIP=$(CHIP) CPU_ID=$(CPU_ID) COMX=$(COMX) BAUDRATE=$(BAUDRATE)
-	PUNCOVER_PROGRAM = puncover_riscv
-	cmake_generator = "Unix Makefiles"
+		ifeq ($(patsubst /dev/tty%,/dev/tty,$(COMX)), /dev/tty)
+			# Linux serial port style, try to flash firmware with BLFlashCommand-ubuntu
+			CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+			BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
+			PUNCOVER_PROGRAM = puncover_riscv
+			cmake_generator = "Unix Makefiles"
+		else
+			PS_PROGRAM = /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
+			CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+			command_flash = $(PS_PROGRAM) make flash CHIP=$(CHIP) CPU_ID=$(CPU_ID) COMX=$(COMX) BAUDRATE=$(BAUDRATE)
+			command_efuse = $(PS_PROGRAM) make efuse CHIP=$(CHIP) CPU_ID=$(CPU_ID) COMX=$(COMX) BAUDRATE=$(BAUDRATE)
+			PUNCOVER_PROGRAM = puncover_riscv
+			cmake_generator = "Unix Makefiles"
+		endif
 	else
-	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
-	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
-	PUNCOVER_PROGRAM = puncover_riscv
-	cmake_generator = "Unix Makefiles"
+		CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
 	endif
 endif
 
@@ -57,6 +64,8 @@ CONFIG_ROMAPI ?=y
 CONFIG_DEBUG ?=y
 CONFIG_TLSF ?=y
 CONFIG_COREDUMP ?=y
+CONFIG_ANTI_ROLLBACK ?= n
+CONFIG_APP_ANTI_ROLLBACK_VER ?= 0
 COMX ?=COM5
 BAUDRATE ?=2000000
 BOARD_DIR ?=
@@ -74,10 +83,15 @@ cmake_definition+= -DCONFIG_COMX=$(COMX)
 cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF
 cmake_definition+= -DCONFIG_TLSF=$(CONFIG_TLSF)
 cmake_definition+= -DCONFIG_COREDUMP=$(CONFIG_COREDUMP)
+cmake_definition+= -DCMAKE_COLOR_DIAGNOSTICS=ON
+cmake_definition+= -DCONFIG_ANTI_ROLLBACK=$(CONFIG_ANTI_ROLLBACK)
+cmake_definition+= -DCONFIG_APP_ANTI_ROLLBACK_VER=$(CONFIG_APP_ANTI_ROLLBACK_VER)
 
 build:Makefile
 	$(CMAKE) -S . -B build -G $(cmake_generator) $(cmake_definition)
+	$(MAKE) -C build pre_build
 	$(MAKE) -C build -j8
+	$(MAKE) -C build post_build
 	$(MAKE) -C build combine
 
 ninja:Makefile

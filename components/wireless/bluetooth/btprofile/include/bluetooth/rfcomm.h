@@ -54,7 +54,7 @@ struct bt_rfcomm_dlc_ops {
 	 *
 	 *  @param dlc The dlc that has been Disconnected
 	 */
-	void (*disconnected)(struct bt_rfcomm_dlc *dlc);
+	void (*disconnected)(struct bt_rfcomm_dlc *dlc, struct bt_conn *conn);
 
 	/** DLC recv callback
 	 *

@@ -63,7 +63,9 @@ p_pt_table_flash_erase gp_pt_table_flash_erase = NULL;
 p_pt_table_flash_write gp_pt_table_flash_write = NULL;
 p_pt_table_flash_read gp_pt_table_flash_read = NULL;
 pt_table_iap_param_type p_iap_param;
+static pt_table_stuff_config pt_table_stuff_save[2];
 
+static pt_table_id_type pt_active_id = PT_TABLE_ID_INVALID;
 /*@} end of group PARTITION_Private_Variables */
 
 /** @defgroup  PARTITION_Global_Variables
@@ -185,6 +187,24 @@ pt_table_id_type pt_table_get_active_partition_need_lock(pt_table_stuff_config p
     }
 
     return activePtID;
+}
+
+/****************************************************************************/ /**
+ * @brief  Get active partition table whole stuff from ram
+ *
+ * @param  ptStuff[2]: Partition table stuff pointer
+ *
+ * @return Active partition table ID
+ *
+*******************************************************************************/
+pt_table_id_type pt_table_get_active_partition_from_ram(pt_table_stuff_config ptStuff[2])
+{
+    if (pt_active_id == PT_TABLE_ID_INVALID) {
+        pt_active_id = pt_table_get_active_partition_need_lock(pt_table_stuff_save);
+    }
+
+    memcpy(ptStuff, pt_table_stuff_save, sizeof(pt_table_stuff_save));
+    return pt_active_id;
 }
 
 /****************************************************************************/ /**

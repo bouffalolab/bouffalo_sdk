@@ -53,9 +53,10 @@
 #define SPI_FIFO_CONFIG_1_OFFSET (0x84) /* spi_fifo_config_1 */
 #define SPI_FIFO_WDATA_OFFSET    (0x88) /* spi_fifo_wdata */
 #define SPI_FIFO_RDATA_OFFSET    (0x8C) /* spi_fifo_rdata */
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL808)
 #define SPI_BACKUP_IO_EN_OFFSET (0xFC) /* backup_io_en */
 #endif
+
 /* Register Bitfield definitions *****************************************************/
 
 /* 0x0 : spi_config */
@@ -140,7 +141,7 @@
 #define SPI_TX_FIFO_CNT_MASK (0x7 << SPI_TX_FIFO_CNT_SHIFT)
 #elif defined(BL702L)
 #define SPI_TX_FIFO_CNT_MASK (0x1f << SPI_TX_FIFO_CNT_SHIFT)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define SPI_TX_FIFO_CNT_MASK (0x3f << SPI_TX_FIFO_CNT_SHIFT)
 #endif
 #define SPI_RX_FIFO_CNT_SHIFT (8U)
@@ -148,7 +149,7 @@
 #define SPI_RX_FIFO_CNT_MASK (0x7 << SPI_RX_FIFO_CNT_SHIFT)
 #elif defined(BL702L)
 #define SPI_RX_FIFO_CNT_MASK (0x1f << SPI_RX_FIFO_CNT_SHIFT)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define SPI_RX_FIFO_CNT_MASK (0x3f << SPI_RX_FIFO_CNT_SHIFT)
 #endif
 #define SPI_TX_FIFO_TH_SHIFT (16U)
@@ -156,7 +157,7 @@
 #define SPI_TX_FIFO_TH_MASK (0x3 << SPI_TX_FIFO_TH_SHIFT)
 #elif defined(BL702L)
 #define SPI_TX_FIFO_TH_MASK (0xf << SPI_TX_FIFO_TH_SHIFT)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define SPI_TX_FIFO_TH_MASK (0x1f << SPI_TX_FIFO_TH_SHIFT)
 #endif
 #define SPI_RX_FIFO_TH_SHIFT (24U)
@@ -164,7 +165,7 @@
 #define SPI_RX_FIFO_TH_MASK (0x3 << SPI_RX_FIFO_TH_SHIFT)
 #elif defined(BL702L)
 #define SPI_RX_FIFO_TH_MASK (0xf << SPI_RX_FIFO_TH_SHIFT)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define SPI_RX_FIFO_TH_MASK (0x1f << SPI_RX_FIFO_TH_SHIFT)
 #endif
 
@@ -176,7 +177,8 @@
 #define SPI_FIFO_RDATA_SHIFT (0U)
 #define SPI_FIFO_RDATA_MASK  (0xffffffff << SPI_FIFO_RDATA_SHIFT)
 
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+
+#if defined(BL616) || defined(BL808)
 /* 0xFC : backup_io_en */
 #define SPI_BACKUP_IO_EN (1 << 0U)
 #endif

@@ -560,4 +560,52 @@ bridgeif_add_port(struct netif *bridgeif, struct netif *portif)
   return ERR_OK;
 }
 
+/**
+ * Check if the given network interface is part of the specified bridge interface
+ */
+err_t bridgeif_has_port(struct netif *bridgeif, struct netif *portif)
+{
+    bridgeif_private_t *bridge = NULL;
+    bridgeif_port_t *port = NULL;
+
+    if (!bridgeif || !portif) {
+        return 0;
+    }
+    /* Check if the provided network interface is a bridge interface */
+#if BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT
+    if (portif->input != bridgeif_input) {
+#else
+    if (portif->input != bridgeif_tcpip_input) {
+#endif
+        /* The provided network interface is not a bridge interface */
+        return 0;
+    }
+
+    bridge = (bridgeif_private_t *)bridgeif->state;
+    for (int i = 0; i < bridge->num_ports; i++) {
+        port = &bridge->ports[i];
+        if (port->port_netif == portif) {
+            /* Found the network interface in the bridge interface */
+            return 1;
+        }
+    }
+
+    /* The network interface is not part of the specified bridge interface */
+    return 0;
+}
+
+int netif_bridged(struct netif *portif)
+{
+    if (!portif)
+        return 0;
+#if BRIDGEIF_PORT_NETIFS_OUTPUT_DIRECT
+    if (portif->input != bridgeif_input) {
+#else
+    if (portif->input != bridgeif_tcpip_input) {
+#endif
+        /* The provided network interface is not a bridge interface */
+        return 0;
+    }
+    return 1;
+}
 #endif /* LWIP_NUM_NETIF_CLIENT_DATA */

@@ -71,6 +71,11 @@ typedef struct {
     int fd;        /* file fd */
 } romfs_file_t;
 
+typedef struct {
+    char *buf;
+    uint32_t bufsize;
+} romfs_filebuf_t;
+
 /* readdir 返回的路径结构体，被包含在 romfs_dir_t 中*/
 typedef struct {
     int d_ino;      /* file number */
@@ -90,6 +95,7 @@ int romfs_mount(uint32_t addr);
 int romfs_open(romfs_file_t *fp, const char *path, int flags);
 int romfs_close(romfs_file_t *fp);
 int romfs_size(romfs_file_t *fp);
+int romfs_getbuf(romfs_file_t *fp, romfs_filebuf_t *file_buf);
 size_t romfs_read(romfs_file_t *fp, char *buf, size_t length);
 size_t romfs_lseek(romfs_file_t *fp, int off, romfs_whence_t whence);
 int romfs_stat(const char *path, romfs_stat_t *st);

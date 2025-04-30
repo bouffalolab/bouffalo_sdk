@@ -1310,7 +1310,8 @@ tcp_slowtmr_start:
                                       " pcb->rto %"S16_F"\n",
                                       pcb->rtime, pcb->rto));
 #else
-        if (pcb->unacked != NULL && (tcp_ticks - pcb->rtime) >= pcb->rto) {
+
+        if ((pcb->unacked != NULL || ((pcb->unacked == NULL) && (pcb->unsent != NULL))) && (tcp_ticks - pcb->rtime) >= pcb->rto) {
           /* Time for a retransmission. */
           LWIP_DEBUGF(TCP_RTO_DEBUG, ("tcp_slowtmr: rtime %ld"
                                       " pcb->rto %d\n",
@@ -1361,16 +1362,6 @@ tcp_slowtmr_start:
       }
     }
     /* Check if this PCB has stayed too long in FIN-WAIT-2 */
-#if !TCP_TIMER_PRECISE_NEEDED
-    if (pcb->state == FIN_WAIT_1 && pcb->fin_wait1_tmr != 0) {
-        if ((u32_t)(tcp_ticks - pcb->fin_wait1_tmr) >=
-            TCP_FIN_WAIT_TIMEOUT / TCP_SLOW_INTERVAL) {
-          pcb->fin_wait1_tmr = 0;
-          ++pcb_remove;
-          LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: removing pcb stuck in FIN-WAIT-1\n"));
-        }
-    }
-#endif
     if (pcb->state == FIN_WAIT_2) {
       /* If this PCB is in FIN_WAIT_2 because of SHUT_WR don't let it time out. */
       if (pcb->flags & TF_RXCLOSED) {
@@ -1451,12 +1442,21 @@ tcp_slowtmr_start:
       }
     }
 
-#if !TCP_TIMER_PRECISE_NEEDED
     /* Check if this PCB has stayed too lang in FIN_WAIT_1 or CLOSING */
+#if !TCP_TIMER_PRECISE_NEEDED
     if (pcb->state == FIN_WAIT_1 || pcb->state == CLOSING) {
       if ((u32_t)(tcp_ticks - pcb->tmr) > LWIP_TCP_CLOSE_TIMEOUT_MS_DEFAULT / TCP_SLOW_INTERVAL) {
         ++pcb_remove;
         LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: removing pcb stuck in FIN_WAIT_1/CLOSING"));
+      }
+    }
+#else
+    if (pcb->state == FIN_WAIT_1 && pcb->fin_wait1_tmr != 0) {
+      if ((u32_t)(tcp_ticks - pcb->fin_wait1_tmr) >=
+          TCP_FIN_WAIT_TIMEOUT / TCP_SLOW_INTERVAL) {
+        pcb->fin_wait1_tmr = 0;
+        ++pcb_remove;
+        LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: removing pcb stuck in FIN-WAIT-1\n"));
       }
     }
 #endif

@@ -604,6 +604,12 @@ extern void bflog_unix2time(uint32_t timestamp, bflog_tm_t *time);
 #define BFLOG_LEVEL_ENABLE BFLOG_LEVEL_INFO
 #endif
 
+#ifdef _WIN32_DEBUG_PATH
+#define __PATH_DELIMITER '\\'
+#else
+#define __PATH_DELIMITER '/'
+#endif
+
 #ifndef __BFLOG_FILENAME__
 #ifndef BFLOG_FILENAME_ENABLE
 #define __BFLOG_FILENAME__ ""
@@ -611,7 +617,7 @@ extern void bflog_unix2time(uint32_t timestamp, bflog_tm_t *time);
 #ifndef BFLOG_SHORT_FILENAME
 #define __BFLOG_FILENAME__ __FILE__
 #else
-#define __BFLOG_FILENAME__ (strrchr(__FILE__, '/') + 1)
+#define __BFLOG_FILENAME__ (strrchr(__FILE__, __PATH_DELIMITER) + 1)
 #endif
 #endif
 #endif

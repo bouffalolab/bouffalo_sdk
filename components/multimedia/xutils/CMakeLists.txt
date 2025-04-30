@@ -17,4 +17,4 @@ sdk_library_add_sources(
     #src/time_patch.c
     )
 
-sdk_add_compile_options(--save-temps)
+sdk_add_private_compile_options(--save-temps)

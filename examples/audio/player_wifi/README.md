@@ -7,7 +7,10 @@
 |      Chip        | Remark |
 |:----------------:|:------:|
 | BL616/BL618      |        |
-| BL606p/BL808     |        |
+
+## Software Adaptation
+
+Please refer to the codec demo
 
 ## Compilation
 

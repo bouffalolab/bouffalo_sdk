@@ -1,6 +1,64 @@
 #include "bl702l_romdriver.h"
 
 
+/**
+ *  @brief Serail flash controller configuration structure type definition
+ */
+typedef struct
+{
+    BL_ENUM_Type owner;               /*!< Sflash interface bus owner */
+    BL_ENUM_Type sahbClock;           /*!< Sflash clock sahb sram select */
+    BL_ENUM_Type ahb2sifMode;         /*!< Sflash ahb2sif mode */
+    uint8_t clkDelay;                 /*!< Clock count for read due to pad delay */
+    uint8_t clkInvert;                /*!< Clock invert */
+    uint8_t rxClkInvert;              /*!< RX clock invert */
+    uint8_t doDelay;                  /*!< Data out delay */
+    uint8_t diDelay;                  /*!< Data in delay */
+    uint8_t oeDelay;                  /*!< Output enable delay */
+} SF_Ctrl_Cfg_Type;
+
+/**
+ *  @brief SF Ctrl psram controller configuration structure type definition
+ */
+typedef struct
+{
+    BL_ENUM_Type owner;               /*!< Psram interface bus owner */
+    BL_ENUM_Type padSel;              /*!< SF Ctrl pad select */
+    BL_ENUM_Type bankSel;             /*!< SF Ctrl bank select */
+    BL_ENUM_Type psramRxClkInvertSrc; /*!< Select psram rx clock invert source */
+    BL_ENUM_Type psramRxClkInvertSel; /*!< Select inveted psram rx clock */
+    BL_ENUM_Type psramDelaySrc;       /*!< Select psram read delay source */
+    uint8_t psramClkDelay;            /*!< Psram read delay cycle = n + 1 */
+} SF_Ctrl_Psram_Cfg;
+
+/**
+ *  @brief SF Ctrl cmds configuration structure type definition
+ */
+typedef struct
+{
+    BL_ENUM_Type cmdsEn;              /*!< SF Ctrl cmds enable */
+    uint8_t wrapMode;                 /*!< SF Ctrl cmds wrap mode */
+    BL_ENUM_Type wrapLen;             /*!< SF Ctrl cmds wrap length */
+} SF_Ctrl_Cmds_Cfg;
+
+/**
+ *  @brief Serail flash command configuration structure type definition
+ */
+typedef struct
+{
+    uint8_t rwFlag;                   /*!< Read write flag */
+    BL_ENUM_Type cmdMode;             /*!< Command mode */
+    BL_ENUM_Type addrMode;            /*!< Address mode */
+    uint8_t addrSize;                 /*!< Address size */
+    uint8_t dummyClks;                /*!< Dummy clocks */
+    BL_ENUM_Type dummyMode;           /*!< Dummy mode */
+    BL_ENUM_Type dataMode;            /*!< Data mode */
+    uint8_t rsv[1];                   /*!<  */
+    uint32_t nbData;                  /*!< Transfer number of bytes */
+    uint32_t cmdBuf[2];               /*!< Command buffer */
+} SF_Ctrl_Cmd_Cfg_Type;
+
+
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type AON_Power_On_MBG(void){
     return RomDriver_AON_Power_On_MBG();
@@ -1384,12 +1442,32 @@ uint32_t bflb_sf_cfg_flash_identify(uint8_t call_from_flash, uint8_t flash_pin_c
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg){
-    return RomDriver_SF_Ctrl_Enable(cfg);
+    SF_Ctrl_Cfg_Type sf_ctrl_cfg = {
+        .owner = cfg->owner,
+        .sahbClock = cfg->sahb_clock,
+        .ahb2sifMode = cfg->ahb2sif_mode,
+        .clkDelay = cfg->clk_delay,
+        .clkInvert = cfg->clk_invert,
+        .rxClkInvert = cfg->rx_clk_invert,
+        .doDelay = cfg->do_delay,
+        .diDelay = cfg->di_delay,
+        .oeDelay = cfg->oe_delay,
+    };
+    return RomDriver_SF_Ctrl_Enable((const struct sf_ctrl_cfg_type *)&sf_ctrl_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_sf_ctrl_psram_init(struct sf_ctrl_psram_cfg *sf_ctrl_psram_cfg){
-    return RomDriver_SF_Ctrl_Psram_Init(sf_ctrl_psram_cfg);
+    SF_Ctrl_Psram_Cfg cfg = {
+        .owner = sf_ctrl_psram_cfg->owner,
+        .padSel = sf_ctrl_psram_cfg->pad_sel,
+        .bankSel = sf_ctrl_psram_cfg->bank_sel,
+        .psramRxClkInvertSrc = sf_ctrl_psram_cfg->psram_rx_clk_invert_src,
+        .psramRxClkInvertSel = sf_ctrl_psram_cfg->psram_rx_clk_invert_sel,
+        .psramDelaySrc = sf_ctrl_psram_cfg->psram_delay_src,
+        .psramClkDelay = sf_ctrl_psram_cfg->psram_clk_delay,
+    };
+    return RomDriver_SF_Ctrl_Psram_Init((struct sf_ctrl_psram_cfg *)&cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1404,7 +1482,12 @@ void bflb_sf_ctrl_set_clock_delay(uint8_t delay){
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_sf_ctrl_cmds_set(struct sf_ctrl_cmds_cfg *cmds_cfg, uint8_t sel){
-    return RomDriver_SF_Ctrl_Cmds_Set(cmds_cfg,sel);
+    SF_Ctrl_Cmds_Cfg cfg = {
+        .cmdsEn = cmds_cfg->cmds_en,
+        .wrapMode = cmds_cfg->cmds_wrap_mode,
+        .wrapLen = cmds_cfg->cmds_wrap_len,
+    };
+    return RomDriver_SF_Ctrl_Cmds_Set((struct sf_ctrl_cmds_cfg *)&cfg,sel);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1494,22 +1577,66 @@ uint32_t bflb_sf_ctrl_get_flash_image_offset(uint8_t group, uint8_t bank){
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_sf_ctrl_sendcmd(struct sf_ctrl_cmd_cfg_type *cfg){
-    return RomDriver_SF_Ctrl_SendCmd(cfg);
+    SF_Ctrl_Cmd_Cfg_Type cmd_cfg = {
+        .rwFlag = cfg->rw_flag,
+        .cmdMode = cfg->cmd_mode,
+        .addrMode = cfg->addr_mode,
+        .addrSize = cfg->addr_size,
+        .dummyClks = cfg->dummy_clks,
+        .dummyMode = cfg->dummy_mode,
+        .dataMode = cfg->data_mode,
+        .nbData = cfg->nb_data,
+        .cmdBuf = {cfg->cmd_buf[0], cfg->cmd_buf[1]},
+    };
+    return RomDriver_SF_Ctrl_SendCmd((struct sf_ctrl_cmd_cfg_type *)&cmd_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_sf_ctrl_flash_read_icache_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_valid){
-    return RomDriver_SF_Ctrl_Flash_Read_Icache_Set(cfg,cmd_valid);
+    SF_Ctrl_Cmd_Cfg_Type cmd_cfg = {
+        .rwFlag = cfg->rw_flag,
+        .cmdMode = cfg->cmd_mode,
+        .addrMode = cfg->addr_mode,
+        .addrSize = cfg->addr_size,
+        .dummyClks = cfg->dummy_clks,
+        .dummyMode = cfg->dummy_mode,
+        .dataMode = cfg->data_mode,
+        .nbData = cfg->nb_data,
+        .cmdBuf = {cfg->cmd_buf[0], cfg->cmd_buf[1]},
+    };
+    return RomDriver_SF_Ctrl_Flash_Read_Icache_Set((struct sf_ctrl_cmd_cfg_type *)&cmd_cfg,cmd_valid);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_sf_ctrl_psram_write_icache_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_valid){
-    return RomDriver_SF_Ctrl_Psram_Write_Icache_Set(cfg,cmd_valid);
+    SF_Ctrl_Cmd_Cfg_Type cmd_cfg = {
+        .rwFlag = cfg->rw_flag,
+        .cmdMode = cfg->cmd_mode,
+        .addrMode = cfg->addr_mode,
+        .addrSize = cfg->addr_size,
+        .dummyClks = cfg->dummy_clks,
+        .dummyMode = cfg->dummy_mode,
+        .dataMode = cfg->data_mode,
+        .nbData = cfg->nb_data,
+        .cmdBuf = {cfg->cmd_buf[0], cfg->cmd_buf[1]},
+    };
+    return RomDriver_SF_Ctrl_Psram_Write_Icache_Set((struct sf_ctrl_cmd_cfg_type *)&cmd_cfg,cmd_valid);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_sf_ctrl_psram_read_icache_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_valid){
-    return RomDriver_SF_Ctrl_Psram_Read_Icache_Set(cfg,cmd_valid);
+    SF_Ctrl_Cmd_Cfg_Type cmd_cfg = {
+        .rwFlag = cfg->rw_flag,
+        .cmdMode = cfg->cmd_mode,
+        .addrMode = cfg->addr_mode,
+        .addrSize = cfg->addr_size,
+        .dummyClks = cfg->dummy_clks,
+        .dummyMode = cfg->dummy_mode,
+        .dataMode = cfg->data_mode,
+        .nbData = cfg->nb_data,
+        .cmdBuf = {cfg->cmd_buf[0], cfg->cmd_buf[1]},
+    };
+    return RomDriver_SF_Ctrl_Psram_Read_Icache_Set((struct sf_ctrl_cmd_cfg_type *)&cmd_cfg,cmd_valid);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1519,7 +1646,18 @@ uint8_t bflb_sf_ctrl_get_busy_state(void){
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
 void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg){
-    return RomDriver_SFlash_Init(p_sf_ctrl_cfg);
+    SF_Ctrl_Cfg_Type sf_ctrl_cfg = {
+        .owner = p_sf_ctrl_cfg->owner,
+        .sahbClock = p_sf_ctrl_cfg->sahb_clock,
+        .ahb2sifMode = p_sf_ctrl_cfg->ahb2sif_mode,
+        .clkDelay = p_sf_ctrl_cfg->clk_delay,
+        .clkInvert = p_sf_ctrl_cfg->clk_invert,
+        .rxClkInvert = p_sf_ctrl_cfg->rx_clk_invert,
+        .doDelay = p_sf_ctrl_cfg->do_delay,
+        .diDelay = p_sf_ctrl_cfg->di_delay,
+        .oeDelay = p_sf_ctrl_cfg->oe_delay,
+    };
+    return RomDriver_SFlash_Init((const struct sf_ctrl_cfg_type *)&sf_ctrl_cfg);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

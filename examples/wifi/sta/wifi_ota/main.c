@@ -57,7 +57,7 @@
 #define WIFI_STACK_SIZE  (1536)
 #define TASK_PRIORITY_FW (16)
 
-#define AUTO_CONNECT_WIFI (1)
+#define AUTO_CONNECT_WIFI (0)
 
 /****************************************************************************
  * Private Types

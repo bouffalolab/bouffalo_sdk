@@ -7,6 +7,7 @@
 |:----------------:|:------:|
 |BL616/BL618       |        |
 |BL808             |  Only for M0 CPU      |
+|BL628             |        |
 
 ## Compile
 
@@ -20,6 +21,12 @@ make CHIP=bl616 BOARD=bl616dk
 
 ```
 make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
+```
+
+- BL628
+
+```
+make CHIP=bl628 BOARD=bl628dk
 ```
 
 ## Flash

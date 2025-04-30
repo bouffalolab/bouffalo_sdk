@@ -74,7 +74,7 @@ struct bt_keys *bt_keys_get_addr(u8_t id, const bt_addr_le_t *addr)
 			}
 		}
 
-		bt_unpair(oldest->id, &oldest->addr);
+		(void)bt_unpair(oldest->id, &oldest->addr);
 		if (!bt_addr_le_cmp(&oldest->addr, BT_ADDR_LE_ANY)) {
 			first_free_slot = oldest - &key_pool[0];
 		}
@@ -261,8 +261,14 @@ void bt_keys_clear(struct bt_keys *keys)
     memset(keys, 0, sizeof(*keys));
     
     #if defined (CONFIG_BT_SETTINGS)
-    ef_del_env(NV_KEY_POOL);
-    #endif
+    #if (EF_SW_VERSION_NUM == 0x40099)
+    struct env_node_obj env;
+    if(!ef_get_env_obj(NV_KEY_POOL, &env)){
+        BT_DBG("Not found %s in settings", NV_KEY_POOL);
+    }else
+    #endif /* F_SW_VERSION_NUM == 0x40099 */
+        ef_del_env(NV_KEY_POOL);
+    #endif /* CONFIG_BT_SETTINGS */
 #else
 	BT_DBG("%s (keys 0x%04x)", bt_addr_le_str(&keys->addr), keys->keys);
 
@@ -298,9 +304,12 @@ static void keys_clear_id(struct bt_keys *keys, void *data)
 	u8_t *id = data;
 
 	if (*id == keys->id) {
-		if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
-			bt_gatt_clear(*id, &keys->addr);
-		}
+	#if !defined(BFLB_BLE_PATCH_DO_GATT_CLEAR_IF_UNPAIRED)
+	if (IS_ENABLED(CONFIG_BT_SETTINGS))
+	#endif
+	{
+		bt_gatt_clear(*id, &keys->addr);
+	}
 
 		bt_keys_clear(keys);
 	}
@@ -496,7 +505,7 @@ void bt_keys_update_usage(u8_t id, const bt_addr_le_t *addr)
 	keys->aging_counter = ++aging_counter_val;
 	last_keys_updated = keys;
 
-	BT_DBG("Aging counter for %s is set to %u", bt_addr_le_str(addr),
+	BT_DBG("Aging counter for %s is set to %lu", bt_addr_le_str(addr),
 	       keys->aging_counter);
 
 	if (IS_ENABLED(CONFIG_BT_KEYS_SAVE_AGING_COUNTER_ON_PAIRING)) {

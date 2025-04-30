@@ -2327,7 +2327,7 @@ scan_authfile(f, client, server, secret, addrs, opts, filename, flags)
     char *filename;
     int flags;
 {
-    int newline, xxx;
+    int newline, xxx, ap_len;
     int got_flag, best_flag;
     FILE *sf;
     struct wordlist *ap, *addr_list, *alist, **app;
@@ -2429,12 +2429,12 @@ scan_authfile(f, client, server, secret, addrs, opts, filename, flags)
 	for (;;) {
 	    if (!getword(f, word, &newline, filename) || newline)
 		break;
-	    ap = (struct wordlist *)
-		    malloc(sizeof(struct wordlist) + strlen(word) + 1);
+	    ap_len = sizeof(struct wordlist) + strlen(word) + 1;
+	    ap = (struct wordlist *)malloc(ap_len);
 	    if (ap == NULL)
 		novm("authorized addresses");
 	    ap->word = (char *) (ap + 1);
-	    strcpy(ap->word, word);
+	    strlcpy(ap->word, word, ap_len - 1);
 	    *app = ap;
 	    app = &ap->next;
 	}

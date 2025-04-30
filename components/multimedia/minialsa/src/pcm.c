@@ -281,6 +281,7 @@ msp_pcm_sframes_t msp_pcm_writei(msp_pcm_t *pcm, const void *buffer, msp_pcm_ufr
         if ((actl_flags & PCM_EVT_XRUN) == PCM_EVT_XRUN) {
             LOGW(TAG,"pcm write PCM_EVT_XRUN\r\n");
             ret = -EPIPE;
+            printf("xrun ret:%d\r\n", ret);
             break;
         }
 

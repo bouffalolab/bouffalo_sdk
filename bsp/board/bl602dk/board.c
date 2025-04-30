@@ -157,6 +157,9 @@ void board_init(void)
 #endif
 
     bflb_irq_restore(flag);
+
+    printf("board init done\r\n");
+    printf("===========================\r\n");
 }
 
 void board_uartx_gpio_init()

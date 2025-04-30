@@ -139,7 +139,7 @@
 
 /* TRUE -> application should provide PCM buffer, FALSE PCM buffer reside in SBC_ENC_PARAMS */
 #ifndef SBC_NO_PCM_CPY_OPTION
-#define SBC_NO_PCM_CPY_OPTION FALSE
+#define SBC_NO_PCM_CPY_OPTION TRUE//FALSE
 #endif
 
 #define MINIMUM_ENC_VX_BUFFER_SIZE (8*10*2)

@@ -1,12 +1,10 @@
 # btble_cli
 
-
 ## Support CHIP
 
 |      CHIP        | Remark |
 |:----------------:|:------:|
 |BL616/BL618       |        |
-|BL808             |  Only for M0 CPU      |
 
 ## Compile
 
@@ -14,12 +12,6 @@
 
 ```
 make CHIP=bl616 BOARD=bl616dk
-```
-
-- BL808
-
-```
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
 ```
 
 ## Flash

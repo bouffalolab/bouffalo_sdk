@@ -59,6 +59,7 @@ uint64_t bflb_mtimer_get_time_us(void);
  */
 uint64_t bflb_mtimer_get_time_ms(void);
 
+
 #ifdef __cplusplus
 }
 #endif

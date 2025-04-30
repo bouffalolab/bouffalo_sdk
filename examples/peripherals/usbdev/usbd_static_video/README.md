@@ -6,7 +6,6 @@
 |      CHIP        | Remark |
 |:----------------:|:------:|
 |BL616/BL618       |        |
-|BL808             |   D0 has no irq     |
 
 ## Compile
 

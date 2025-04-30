@@ -43,6 +43,7 @@ void bflb_wo_init(struct bflb_device_s *dev, struct bflb_wo_cfg_s *cfg)
     regval &= ~GLB_CR_GPIO_TX_EN;
     putreg32(regval, reg_base + GLB_GPIO_CFG142_OFFSET);
 
+
     /* config wo wave count and polarity */
     regval = getreg32(reg_base + GLB_GPIO_CFG142_OFFSET);
     regval &= ~GLB_CR_CODE_TOTAL_TIME_MASK;

@@ -15,6 +15,8 @@ void board_emac_gpio_init(void);
 void board_sdh_gpio_init(void);
 void board_dvp_gpio_init(void);
 void board_csi_gpio_init(void);
+void board_timer_gpio_init(void);
+void board_bldc_pre_init(void);
 
 #define DEFAULT_TEST_UART                "uart1"
 #define DEFAULT_TEST_UART_DMA_TX_REQUEST DMA_REQUEST_UART1_TX

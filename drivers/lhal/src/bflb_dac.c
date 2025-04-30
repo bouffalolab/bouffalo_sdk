@@ -3,7 +3,7 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define DAC_GPIP_BASE ((uint32_t)0x40002000)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define DAC_GPIP_BASE ((uint32_t)0x20002000)
 #endif
 

@@ -35,7 +35,7 @@
 #ifndef FFTWRAP_H
 #define FFTWRAP_H
 
-#include "speex/arch.h"
+#include "arch.h"
 
 /** Compute tables for an FFT */
 void *spx_fft_init(int size);

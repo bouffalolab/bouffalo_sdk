@@ -46,9 +46,6 @@
 #ifndef CONFIG_PLAYER_YOC
 #define CONFIG_PLAYER_YOC                              (1)
 #endif
-#ifndef CONFIG_PLAYER_TPLAYER
-#define CONFIG_PLAYER_TPLAYER                          (0)
-#endif
 
 // eq config
 #ifndef CONFIG_EQXER_SILAN

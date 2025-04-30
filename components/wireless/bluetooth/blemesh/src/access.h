@@ -34,7 +34,9 @@ u8_t bt_mesh_elem_count(void);
 
 /* Find local element based on unicast or group address */
 struct bt_mesh_elem *bt_mesh_elem_find(u16_t addr);
-#if defined(CONFIG_AUTO_PTS)
+bool bt_mesh_has_addr(uint16_t addr);
+
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 bool bt_mesh_model_has_key(struct bt_mesh_model *mod, uint16_t key);
 #endif /* CONFIG_AUTO_PTS */
 

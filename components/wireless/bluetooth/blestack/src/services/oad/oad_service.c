@@ -8,6 +8,7 @@
 oad_upper_recv_cb upper_recv_cb;
 oad_disc_cb disc_cb;
 struct bt_conn *ble_oad_conn = NULL;
+bool enable_data_len_exchange = true;
 
 static void ble_oad_connected(struct bt_conn *conn, u8_t err);
 static void ble_oad_disconnected(struct bt_conn *conn, u8_t reason);
@@ -20,6 +21,7 @@ static struct bt_conn_cb ble_oad_conn_callbacks = {
 static void ble_oad_tx_mtu_size(struct bt_conn *conn, u8_t err,
 			  struct bt_gatt_exchange_params *params)
 {
+   k_free(params);
    if(!err)
    {
         BT_WARN("ble oad echange mtu size success, mtu size: %d\n", bt_gatt_get_mtu(ble_oad_conn));
@@ -46,26 +48,29 @@ static void ble_oad_connected(struct bt_conn *conn, u8_t err)
 		ble_oad_conn = conn;
 	}
 
-	//set data length after connected.
-	ret = bt_le_set_data_len(ble_oad_conn, tx_octets, tx_time);
-	if(!ret)
+	if(enable_data_len_exchange)
 	{
-		BT_WARN("ble oad set data length success.\n");
-	}
-	else
-	{
-		BT_WARN("ble oad set data length failure, err: %d\n", ret);
-	}
-
-	//exchange mtu size after connected.
-	struct bt_gatt_exchange_params *exchg_mtu = k_malloc(sizeof(struct bt_gatt_exchange_params));
-	exchg_mtu->func = ble_oad_tx_mtu_size;
-	ret = bt_gatt_exchange_mtu(ble_oad_conn, exchg_mtu);
-	if (!ret) {
-		BT_WARN("ble oad exchange mtu size pending.\n");
-	} else {
-		BT_WARN("ble oad exchange mtu size failure, err: %d\n", ret);
-	}
+		//set data length after connected.
+		ret = bt_le_set_data_len(ble_oad_conn, tx_octets, tx_time);
+		if(!ret)
+		{
+			BT_WARN("ble oad set data length success.\n");
+		}
+		else
+		{
+			BT_WARN("ble oad set data length failure, err: %d\n", ret);
+		}
+		//exchange mtu size after connected.
+		struct bt_gatt_exchange_params *exchg_mtu = k_malloc(sizeof(struct bt_gatt_exchange_params));
+		exchg_mtu->func = ble_oad_tx_mtu_size;
+		ret = bt_gatt_exchange_mtu(ble_oad_conn, exchg_mtu);
+		if (!ret) {
+			BT_WARN("ble oad exchange mtu size pending.\n");
+		} else {
+			k_free(exchg_mtu);
+			BT_WARN("ble oad exchange mtu size failure, err: %d\n", ret);
+		}
+    }
 }
 
 static void ble_oad_disconnected(struct bt_conn *conn, u8_t reason)
@@ -123,6 +128,11 @@ void bt_oad_register_recv_cb(oad_upper_recv_cb cb)
 void bt_oad_register_disc_cb(oad_disc_cb cb)
 {
     disc_cb = cb;
+}
+
+void bt_oad_enable_data_len_exchange(bool enable)
+{
+    enable_data_len_exchange = enable;
 }
 
 void bt_oad_service_enable(void)

@@ -20,6 +20,8 @@
 #ifndef ZEPHYR_INCLUDE_BLUETOOTH_A2DP_CODEC_H_
 #define ZEPHYR_INCLUDE_BLUETOOTH_A2DP_CODEC_H_
 
+#include "sbc_encoder.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,6 +58,13 @@ extern "C" {
 #define BT_A2DP_SBC_SUB_BAND(preset)     ((preset->config[1] >> 2) & 0x03)
 #define BT_A2DP_SBC_ALLOC_MTHD(preset)   ((preset->config[1]) & 0x03)
 
+/* Codec Types */
+#define A2DP_CODEC_SBC		0x00
+#define A2DP_CODEC_MPEG12	0x01
+#define A2DP_CODEC_MPEG24	0x02
+#define A2DP_CODEC_ATRAC	0x04
+#define A2DP_CODEC_VENDOR	0xff
+
 /** @brief SBC Codec */
 struct bt_a2dp_codec_sbc_params {
 	/** First two octets of configuration */
@@ -65,6 +74,22 @@ struct bt_a2dp_codec_sbc_params {
 	/** Maximum Bitpool Value */
 	uint8_t max_bitpool;
 } __packed;
+
+typedef struct {
+	uint8_t channel_mode:4;
+	uint8_t frequency:4;
+	uint8_t allocation_method:2;
+	uint8_t subbands:2;
+	uint8_t block_length:4;
+	uint8_t min_bitpool;
+	uint8_t max_bitpool;
+} __packed a2dp_sbc_t;
+
+typedef struct {
+	SBC_ENC_PARAMS context;
+	int num_data_bytes;
+	uint8_t sbc_packet[1030];
+} bt_encoder_t;
 
 #ifdef __cplusplus
 }

@@ -33,7 +33,7 @@
   *
   ******************************************************************************
   */
-#ifndef  __HARDWARE_MJPEG_REG_H__
+#ifndef __HARDWARE_MJPEG_REG_H__
 #define  __HARDWARE_MJPEG_REG_H__
 
 /****************************************************************************
@@ -292,6 +292,7 @@
 #define MJPEG_REG_Q_SRAM_SW                                     (1<<24U)
 #define MJPEG_STS_Q_SRAM_ENC                                    (1<<25U)
 
+
 /* 0x110 : mjpeg_frame_id_10 */
 #define MJPEG_FRAME_ID_0_SHIFT                                  (0U)
 #define MJPEG_FRAME_ID_0_MASK                                   (0xffff<<MJPEG_FRAME_ID_0_SHIFT)
@@ -310,6 +311,7 @@
 #define MJPEG_REG_MJPEG_DBG_SEL_MASK                            (0xf<<MJPEG_REG_MJPEG_DBG_SEL_SHIFT)
 #define MJPEG_REG_ID_LATCH_HBLK_SHIFT                           (8U)
 #define MJPEG_REG_ID_LATCH_HBLK_MASK                            (0xf<<MJPEG_REG_ID_LATCH_HBLK_SHIFT)
+
 
 /* 0x1FC : mjpeg_dummy_reg */
 #define MJPEG_DUMMY_REG_SHIFT                                   (0U)

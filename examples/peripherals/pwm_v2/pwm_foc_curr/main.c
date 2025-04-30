@@ -3,11 +3,9 @@
 #include "bflb_adc.h"
 #include "bflb_dma.h"
 #include "bflb_clock.h"
+#include "bflb_gpio.h"
 #include "board.h"
 #include "math.h"
-#include "bl616_glb.h"
-#include "bl616_glb_gpio.h"
-#include "bl616_gpio.h"
 #include "../foc.h"
 
 #define PWM_CH_U   (PWM_CH2)
@@ -67,7 +65,6 @@ void delay(void)
 
 void dma0_ch0_isr(void *arg)
 {
-    csi_dcache_clean_invalid_range(adc_val, sizeof(adc_val));
     // printf("0x%08X, 0x%08X, 0x%08X\n", adc_val[0], adc_val[1], adc_val[2]);
     foc_hall_calc_angle(&foc.hall);
     foc.svpwm.angle = foc.hall.angle + 16384; /* add 90 degree */
@@ -172,7 +169,7 @@ void peri_init(void)
     bflb_gpio_init(gpio, HALL_PIN_V, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_init(gpio, HALL_PIN_W, GPIO_INPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_0);
     /* config adc */
-    GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 4);
+    board_bldc_pre_init();
     bflb_gpio_init(gpio, CURR_PIN_U, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_init(gpio, CURR_PIN_V, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_init(gpio, CURR_PIN_W, GPIO_ANALOG | GPIO_SMT_EN | GPIO_DRV_0);
@@ -191,7 +188,6 @@ void peri_init(void)
     bflb_gpio_init(gpio, PWM_PIN_VL, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, PWM_PIN_WH, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, PWM_PIN_WL, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
     bflb_pwm_v2_init(pwm, &pwm_cfg);
     bflb_pwm_v2_feature_control(pwm, PWM_CMD_SET_TRIG_ADC_SRC, PWM_TRIG_ADC_SRC_PERIOD);
     bflb_pwm_v2_channel_init(pwm, PWM_CH_U, &pwm_ch_cfg);

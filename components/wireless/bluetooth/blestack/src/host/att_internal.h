@@ -14,8 +14,11 @@
 #define BT_ATT_MTU CONFIG_BT_L2CAP_TX_MTU
 #endif
 
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_AUTO_PTS)||defined(CONFIG_BT_STACK_PTS)
+#ifdef BT_ATT_MTU
+#undef BT_ATT_MTU
 #define BT_ATT_MTU 23
+#endif
 #endif
 
 struct bt_att_hdr {
@@ -250,6 +253,9 @@ void att_req_sent(struct bt_conn *conn, void *user_data);
 
 void bt_att_init(void);
 u16_t bt_att_get_mtu(struct bt_conn *conn);
+#if defined(BFLB_BLE_SET_LOCAL_ATT_MTU_SIZE)
+void bt_att_set_mtu(u16_t mtu);
+#endif
 
 #if defined(CONFIG_BLE_AT_CMD)
 void set_mtu_size(u16_t size);

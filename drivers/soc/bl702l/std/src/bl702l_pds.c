@@ -303,7 +303,7 @@ BL_Sts_Type ATTR_TCM_SECTION PDS_Get_GPIO_Pad_IntStatus(PDS_GPIO_Type pin)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None(SF_Ctrl_Pin_Select pinCfg)
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None(uint8_t pinCfg)
 {
     PDS_GPIO_Cfg_Type pds_io_cfg = {
         .pd_en = 0,
@@ -334,7 +334,7 @@ BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None(SF_Ctrl_Pin_Select pinC
  *
  * @note ext_flash need call this function after pds mode
 *******************************************************************************/
-BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None_Fast(SF_Ctrl_Pin_Select pinCfg)
+BL_Err_Type ATTR_TCM_SECTION PDS_Set_Flash_Pad_Pull_None_Fast(uint8_t pinCfg)
 {
     uint32_t tmpVal;
 

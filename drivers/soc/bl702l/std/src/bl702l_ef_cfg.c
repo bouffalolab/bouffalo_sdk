@@ -68,6 +68,20 @@ static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
         .value_len = 8,
     },
     {
+        .name = "xtal_2",
+        .en_addr = 0x58 * 8 + 19,
+        .parity_addr = 0x58 * 8 + 18,
+        .value_addr = 0x58 * 8 + 10,
+        .value_len = 8,
+    },
+    {
+        .name = "xtal_3",
+        .en_addr = 0x58 * 8 + 29,
+        .parity_addr = 0x58 * 8 + 28,
+        .value_addr = 0x58 * 8 + 20,
+        .value_len = 8,
+    },
+    {
         .name = "ldo11_trim",
         .en_addr = 0x78 * 8 + 20,
         .parity_addr = 0x78 * 8 + 19,
@@ -91,6 +105,7 @@ static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
 };
 
 static GLB_ROOT_CLK_Type rtClk;
+static HBN_XCLK_CLK_Type xclk;
 static uint8_t bdiv, hdiv;
 
 /****************************************************************************/ /**
@@ -105,6 +120,7 @@ void  ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_save(void)
     bdiv = GLB_Get_BCLK_Div();
     hdiv = GLB_Get_HCLK_Div();
     rtClk = GLB_Get_Root_CLK_Sel();
+    xclk = HBN_Get_XCLK_CLK_Sel();
     HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_RC32M);
     GLB_Set_System_CLK_Div(0, 0);
 }
@@ -120,6 +136,7 @@ void ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_restore(void)
     /* all API should be place at tcm section */
     GLB_Set_System_CLK_Div(hdiv, bdiv);
     HBN_Set_ROOT_CLK_Sel(rtClk);
+    HBN_Set_XCLK_CLK_Sel(xclk);
 }
 
 /****************************************************************************/ /**
@@ -388,9 +405,9 @@ float bflb_efuse_get_adc_trim(void)
                 tmp = ~tmp;
                 tmp += 1;
                 tmp = tmp & 0xfff;
-                coe = (1.0 + ((float)tmp / 2048.0));
+                coe = (1.0f + ((float)tmp / 2048.0f));
             } else {
-                coe = (1.0 - ((float)tmp / 2048.0));
+                coe = (1.0f - ((float)tmp / 2048.0f));
             }
         }
     }
@@ -419,4 +436,24 @@ void bflb_efuse_read_secure_boot(uint8_t *sign, uint8_t *aes)
     bflb_ef_ctrl_read_direct(NULL, EF_DATA_EF_CFG_0_OFFSET, &tmpval, 1, 1);
     *sign = ((tmpval & EF_DATA_EF_SBOOT_SIGN_MODE_MSK) >> EF_DATA_EF_SBOOT_SIGN_MODE_POS) & 0x01;
     *aes = ((tmpval & EF_DATA_EF_SF_AES_MODE_MSK) >> EF_DATA_EF_SF_AES_MODE_POS);
+}
+
+int bflb_efuse_read_xtal_capcode(uint8_t *capcode)
+{
+    char xtal_string_list[][8] = {"xtal", "xtal_2", "xtal_3"};
+    int xtal_idx = sizeof(xtal_string_list) / sizeof(xtal_string_list[0]) - 1;
+    bflb_ef_ctrl_com_trim_t trim;
+
+    for (; xtal_idx >= 0 ; xtal_idx --) {
+
+        bflb_ef_ctrl_read_common_trim(NULL, xtal_string_list[xtal_idx], &trim, 1);
+        if (trim.en) {
+            if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
+                *capcode = trim.value;
+                return xtal_idx;
+            }
+        }
+    }
+
+    return xtal_idx;
 }

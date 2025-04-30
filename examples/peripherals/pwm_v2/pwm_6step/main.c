@@ -1,11 +1,9 @@
 #include "bflb_mtimer.h"
 #include "bflb_pwm_v2.h"
 #include "bflb_clock.h"
+#include "bflb_gpio.h"
 #include "board.h"
 #include "math.h"
-#include "bl616_glb.h"
-#include "bl616_glb_gpio.h"
-#include "bl616_gpio.h"
 #include "../foc.h"
 
 #define PWM_TRI_CH_U (PWM_CH0)
@@ -17,6 +15,8 @@
 #define PWM_PIN_V_L  (GPIO_PIN_27)
 #define PWM_PIN_W_H  (GPIO_PIN_28)
 #define PWM_PIN_W_L  (GPIO_PIN_29)
+#define TEST_PIN     (GPIO_PIN_17)
+
 struct bflb_device_s *pwm;
 struct bflb_device_s *gpio;
 
@@ -46,7 +46,7 @@ uint8_t hall_get(void)
 void pwm_isr(int irq, void *arg)
 {
     bflb_pwm_v2_int_clear(pwm, PWM_INTSTS_PERIOD);
-    *(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG17_OFFSET) = 0x00400B6A | (1 << 24);
+    bflb_gpio_set(gpio, TEST_PIN);
     foc_hall_init(&hall);
     if (hall.angle == ANGLE0) {
         bflb_pwm_v2_channel_positive_stop(pwm, PWM_TRI_CH_U);
@@ -73,7 +73,7 @@ void pwm_isr(int irq, void *arg)
         bflb_pwm_v2_channel_positive_start(pwm, PWM_TRI_CH_U);
         bflb_gpio_set(gpio, PWM_PIN_W_L);
     }
-    *(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG17_OFFSET) = 0x00400B6A;
+    bflb_gpio_reset(gpio, TEST_PIN);
 }
 
 void peri_pwm_init(void)
@@ -100,7 +100,7 @@ void peri_pwm_init(void)
     bflb_gpio_init(gpio, PWM_PIN_U_L, GPIO_OUTPUT | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_init(gpio, PWM_PIN_V_L, GPIO_OUTPUT | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_0);
     bflb_gpio_init(gpio, PWM_PIN_W_L, GPIO_OUTPUT | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_0);
-    GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
+    board_bldc_pre_init();
     bflb_pwm_v2_init(pwm, &cfg);
     bflb_pwm_v2_channel_init(pwm, PWM_TRI_CH_U, &ch_cfg);
     bflb_pwm_v2_channel_init(pwm, PWM_TRI_CH_V, &ch_cfg);

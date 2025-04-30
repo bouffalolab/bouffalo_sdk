@@ -8,7 +8,7 @@
 
 #include <zephyr.h>
 #include <string.h>
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <stdbool.h>
 #include <atomic.h>
 #include <misc/byteorder.h>
@@ -16,7 +16,7 @@
 
 #include <hci_host.h>
 #include <bluetooth.h>
-#include <uuid.h>
+#include <bt_uuid.h>
 #include <gatt.h>
 #include <hci_driver.h>
 
@@ -95,15 +95,9 @@ extern volatile u8_t event_flag;
 static struct bt_att bt_req_pool[CONFIG_BT_MAX_CONN];
 static struct bt_att_req cancel;
 
-
-#if defined(CONFIG_BLE_AT_CMD)
-static u16_t mtu_size = BT_ATT_MTU;
-void set_mtu_size(u16_t size)
-{
-	mtu_size = size;
-}
+#if defined(BFLB_BLE_SET_LOCAL_ATT_MTU_SIZE)
+static u16_t local_mtu_size = BT_ATT_MTU;
 #endif
-
 
 static void att_req_destroy(struct bt_att_req *req)
 {
@@ -135,13 +129,13 @@ static bt_conn_tx_cb_t att_cb(struct net_buf *buf);
 static int att_send(struct bt_conn *conn, struct net_buf *buf,
 		    bt_conn_tx_cb_t cb, void *user_data)
 {
+    #if defined(CONFIG_BT_SMP) && defined(CONFIG_BT_SIGNING)
 	struct bt_att_hdr *hdr;
 
 	hdr = (void *)buf->data;
 
 	BT_DBG("code 0x%02x", hdr->code);
-    
-    #if defined(CONFIG_BT_SMP) && defined(CONFIG_BT_SIGNING)
+
 	if (hdr->code == BT_ATT_OP_SIGNED_WRITE_CMD) {
 		int err;
 
@@ -171,6 +165,14 @@ void att_pdu_sent(struct bt_conn *conn, void *user_data)
 			/* Save request state so it can be resent */
 			net_buf_simple_save(&att->req->buf->b,
 					    &att->req->state);
+			#if defined(BFLB_BLE_PATCH_ATT_SEND_REQ_WHEN_TX_SEM_BUSY_BUF_ERR)
+			if (!att_send(conn, net_buf_ref(buf), NULL, NULL)) {
+				return;
+			}
+			net_buf_unref(buf);
+			att->req->buf = NULL;
+			#endif /* BFLB_BLE_PATCH_ATT_SEND_REQ_WHEN_TX_SEM_BUSY_BUF_ERR */
+			continue;
 		}
 
 		if (!att_send(conn, buf, NULL, NULL)) {
@@ -284,7 +286,11 @@ static u8_t att_mtu_req(struct bt_att *att, struct net_buf *buf)
 		return BT_ATT_ERR_UNLIKELY;
 	}
 
+	#if defined(BFLB_BLE_SET_LOCAL_ATT_MTU_SIZE)
+	mtu_server = local_mtu_size;
+	#else
 	mtu_server = BT_ATT_MTU;
+	#endif
 
 	BT_DBG("Server MTU %u", mtu_server);
 
@@ -354,12 +360,23 @@ static void att_process(struct bt_att *att)
 	sys_snode_t *node;
 
 	BT_DBG("");
-
+	#if defined(BFLB_BLE_PATCH_AVOID_NEXT_ATT_REQ_SENT_BEFORE_PREVIOUS_ATT_RSP_RCVD)
+	unsigned int key = irq_lock();
+	att->req = NULL;
+	#endif
 	/* Pull next request from the list */
 	node = sys_slist_get(&att->reqs);
 	if (!node) {
+        #if defined(BFLB_BLE_PATCH_AVOID_NEXT_ATT_REQ_SENT_BEFORE_PREVIOUS_ATT_RSP_RCVD)
+        irq_unlock(key);
+        #endif
 		return;
 	}
+
+	#if defined(BFLB_BLE_PATCH_AVOID_NEXT_ATT_REQ_SENT_BEFORE_PREVIOUS_ATT_RSP_RCVD)
+	att->req = ATT_REQ(node);
+	irq_unlock(key);
+	#endif
 
 	att_send_req(att, ATT_REQ(node));
 }
@@ -403,8 +420,9 @@ static u8_t att_handle_rsp(struct bt_att *att, void *pdu, u16_t len, u8_t err)
 		att_req_destroy(att->req);
 	}
 
+#if !defined(BFLB_BLE_PATCH_AVOID_NEXT_ATT_REQ_SENT_BEFORE_PREVIOUS_ATT_RSP_RCVD)
 	att->req = NULL;
-
+#endif
 process:
 	/* Process pending requests */
 	att_process(att);
@@ -433,7 +451,11 @@ static u8_t att_mtu_rsp(struct bt_att *att, struct net_buf *buf)
 		return att_handle_rsp(att, NULL, 0, BT_ATT_ERR_INVALID_PDU);
 	}
 
+	#if defined(BFLB_BLE_SET_LOCAL_ATT_MTU_SIZE)
+	att->chan.rx.mtu = MIN(mtu, local_mtu_size);
+	#else
 	att->chan.rx.mtu = MIN(mtu, BT_ATT_MTU);
+	#endif
 
 	/* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part F] page 484:
 	 *
@@ -2175,6 +2197,13 @@ static void att_timeout(struct k_work *work)
 
 	BT_ERR("ATT Timeout");
 
+#if defined(BFLB_BLE_DO_DISCONNECT_WHEN_ATT_TIMEOUT)
+      if(bt_conn_disconnect(ch->chan.conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN)) {
+              BT_ERR("ATT Timeout disconnect fail.");
+      }else{
+              BT_ERR("ATT Timeout disconnect success.");
+      }
+#else
 	/* BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part F] page 480:
 	 *
 	 * A transaction not completed within 30 seconds shall time out. Such a
@@ -2188,6 +2217,7 @@ static void att_timeout(struct k_work *work)
 	/* Consider the channel disconnected */
 	bt_gatt_disconnected(ch->chan.conn);
 	ch->chan.conn = NULL;
+#endif /* BFLB_BLE_DO_DISCONNECT_WHEN_ATT_TIMEOUT */
 }
 
 static void bt_att_connected(struct bt_l2cap_chan *chan)
@@ -2271,14 +2301,8 @@ static void bt_att_encrypt_change(struct bt_l2cap_chan *chan,
 		return;
 	}
 
-    #if (BFLB_BT_CO_THREAD)
-     if (k_sem_take(&att->tx_sem, K_NO_WAIT) < 0) {
-        k_fifo_put(&att->tx_queue, att->req->buf);
-		return;
-	}
-    #else
     k_sem_take(&att->tx_sem, K_FOREVER);
-    #endif
+
 	if (!att_is_connected(att)) {
 		BT_WARN("Disconnected");
 		k_sem_give(&att->tx_sem);
@@ -2341,14 +2365,81 @@ static int bt_att_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 }
 
 #if(BFLB_BLE_ENABLE_TEST_PSM)
+
+static struct bt_conn *l2cap_allowlist[CONFIG_BT_MAX_CONN];
+static uint8_t l2cap_policy;
+static bool    l2cap_allow_add;
+#define L2CAP_POLICY_NONE		0x00
+#define L2CAP_POLICY_ALLOWLIST		0x01
+#define L2CAP_POLICY_16BYTE_KEY		0x02
+
+static void l2cap_allowlist_remove(struct bt_conn *conn)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(l2cap_allowlist); i++) {
+		if (l2cap_allowlist[i] == conn) {
+			bt_conn_unref(l2cap_allowlist[i]);
+			l2cap_allowlist[i] = NULL;
+		}
+	}
+}
+
+static int l2cap_accept_policy(struct bt_conn *conn)
+{
+	int i;
+
+	BT_WARN("l2cap_policy =0%x",l2cap_policy);
+	
+	if (l2cap_policy == L2CAP_POLICY_16BYTE_KEY) {
+		uint8_t enc_key_size = bt_conn_enc_key_size(conn);
+
+		if (enc_key_size && enc_key_size < BT_ENC_KEY_SIZE_MAX) {
+			return -EPERM;
+		}
+	} else if (l2cap_policy == L2CAP_POLICY_ALLOWLIST) {
+		for (i = 0; i < ARRAY_SIZE(l2cap_allowlist); i++) {
+			if (l2cap_allowlist[i] == conn) {
+				return 0;
+			}
+		}
+
+		return -EACCES;
+	}
+
+	return 0;
+}
+
+int psm_cmd_allowlist_add(struct bt_conn * conn)
+{
+	int i;
+
+	if (!conn) {
+		BT_ERR("Not connected");
+		return 0;
+	}
+
+	for (i = 0; i < ARRAY_SIZE(l2cap_allowlist); i++) {
+		if (l2cap_allowlist[i] == NULL) {
+			l2cap_allowlist[i] = bt_conn_ref(conn);
+			return 0;
+		}
+	}
+
+	return -ENOMEM;
+}
+
 static void bt_test_connected(struct bt_l2cap_chan *chan)
 {
-    printf("bt_test_connected\r\n");    
+	l2cap_allowlist_remove(chan->conn);
+	printf("bt_test_connected\r\n"); 
+
 }
 
 static void bt_test_disconnected(struct bt_l2cap_chan *chan)
 {
     printf("bt_test_disconnected\r\n");
+
 }
 
 static int bt_test_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
@@ -2369,9 +2460,20 @@ static struct bt_l2cap_le_chan test_chan = {
 
 static int bt_test_accept(struct bt_conn *conn, struct bt_l2cap_chan **chan)
 {
-	//return bt_att_accept(conn, chan);
+	if(l2cap_allow_add == true)
+		psm_cmd_allowlist_add(conn);
+
+	int err = l2cap_accept_policy(conn);
+
+	if (err < 0) {
+		return err;
+	}
+
+	if(test_chan.chan.conn)
+	    return -ENOMEM;
 	*chan = &test_chan.chan;
-    return 0;
+  
+	return 0;
 }
 
 int bt_connect_test_psm(struct bt_conn *conn, uint16_t psm)
@@ -2399,13 +2501,14 @@ int bt_connect_test_psm(struct bt_conn *conn, uint16_t psm)
 	return err;
 }
 
-int bt_register_test_psm(uint16_t psm, uint8_t sec_level)
+int bt_register_test_psm(uint16_t psm, uint8_t sec_level, uint8_t policy,bool allow)
 {
     int err;
 	static struct bt_l2cap_server test_server;
 
 	BT_DBG("");
-
+    l2cap_policy = policy;
+    l2cap_allow_add = allow;
     test_server.psm = psm;
     test_server.sec_level = sec_level;
     test_server.accept = bt_test_accept;
@@ -2457,6 +2560,18 @@ u16_t bt_att_get_mtu(struct bt_conn *conn)
 	/* tx and rx MTU shall be symmetric */
 	return att->chan.tx.mtu;
 }
+
+#if defined(BFLB_BLE_SET_LOCAL_ATT_MTU_SIZE)
+void bt_att_set_mtu(u16_t mtu)
+{
+	if(mtu > 0 && mtu <= BT_ATT_MTU){
+		local_mtu_size = mtu;
+	}else{
+		BT_ERR("Invalid MTU size %d",mtu);
+	}
+}
+#endif
+
 
 int bt_att_send(struct bt_conn *conn, struct net_buf *buf, bt_conn_tx_cb_t cb,
 		void *user_data)
@@ -2519,17 +2634,6 @@ int bt_att_req_send(struct bt_conn *conn, struct bt_att_req *req)
 	return att_send_req(att, req);
 }
 
-struct bt_att_req *bt_att_get_att_req(struct bt_conn *conn)
-{
-    struct bt_att *att;
-
-    att = att_chan_get(conn);
-    if(att)
-        return att->req;
-    else
-        return NULL;
-}
-
 void bt_att_req_cancel(struct bt_conn *conn, struct bt_att_req *req)
 {
 	struct bt_att *att;
@@ -2544,6 +2648,11 @@ void bt_att_req_cancel(struct bt_conn *conn, struct bt_att_req *req)
 	if (!att) {
 		return;
 	}
+
+	#if defined(BFLB_BLE_PATCH_CANCEL_ATT_TIMEOUT_TIMER_WHEN_ATT_REQ_CANCELLED)
+	/* Cancel timeout if ongoing */
+	k_delayed_work_cancel(&att->timeout_work);
+	#endif
 
 	/* Check if request is outstanding */
 	if (att->req == req) {

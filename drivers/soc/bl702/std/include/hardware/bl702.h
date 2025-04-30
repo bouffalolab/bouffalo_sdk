@@ -107,7 +107,7 @@ typedef enum {
     TOUCH_IRQn = IRQ_NUM_BASE + 45,            /*!< TOUCH Interrupt                                                   */
     RESERVED7 = IRQ_NUM_BASE + 46,             /*!< RESERVED Interrupt                                                */
     M154_REQ_ENH_ACK_IRQn = IRQ_NUM_BASE + 47, /*!< M154_REQ Interrupt                                                */
-    M154_IRQn = IRQ_NUM_BASE + 48,             /*!< M154 Interrupt                                                    */
+    M154_INT_IRQn = IRQ_NUM_BASE + 48,         /*!< M154 Interrupt                                                    */
     M154_AES_IRQn = IRQ_NUM_BASE + 49,         /*!< M154_AES Interrupt                                                */
     PDS_WAKEUP_IRQn = IRQ_NUM_BASE + 50,       /*!< PDS Wakeup Interrupt                                              */
     HBN_OUT0_IRQn = IRQ_NUM_BASE + 51,         /*!< Hibernate out 0 Interrupt                                         */

@@ -384,7 +384,7 @@ static bool mac_bin_to_str(char *str, uint8_t *mac)
     }
 
     for (i = 5; i >= 0; i--) {
-        sprintf((char *)(str + 3 * (5 - i)), "%02X:", mac[i]);
+        snprintf((char *)(str + 3 * (5 - i)), 3, "%02X:", mac[i]);
     }
 
     str[17] = '\0';

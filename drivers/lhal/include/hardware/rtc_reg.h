@@ -56,7 +56,7 @@
 #if defined(BL602) || defined(BL702)
 #define HBN_RTC_CTL_MASK             (0x3f << HBN_RTC_CTL_SHIFT)
 #define HBN_RTC_DLY_OPTION           (1 << 24U)
-#elif  defined(BL808) || defined(BL606P) || defined(BL616) || defined(BL702L) || defined(BL628)
+#elif defined(BL808) || defined(BL616) || defined(BL702L)
 #define HBN_RTC_CTL_MASK             (0x7 << HBN_RTC_CTL_SHIFT)
 #define HBN_RTC_DLY_OPTION           (1 << 4U)
 #endif

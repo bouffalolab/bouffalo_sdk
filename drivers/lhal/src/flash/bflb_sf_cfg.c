@@ -168,7 +168,7 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_winb_80dv = {
 };
 #endif
 
-static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_winb_16jv = {
+__UNUSED static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_winb_16jv = {
     .reset_c_read_cmd = 0xff,
     .reset_c_read_cmd_size = 3,
     .mid = 0xef,
@@ -477,7 +477,7 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_winb_128jw_128j
     .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_issi = {
+__UNUSED static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_issi = {
     .reset_c_read_cmd = 0xff,
     .reset_c_read_cmd_size = 3,
     .mid = 0x9d,
@@ -788,7 +788,7 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_gd_lq08c_le16c_
     .qe_data = 0,
 };
 
-static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_gd_q80e_q16e = {
+__UNUSED static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flash_cfg_gd_q80e_q16e = {
     .reset_c_read_cmd = 0xff,
     .reset_c_read_cmd_size = 3,
     .mid = 0xc8,
@@ -2234,7 +2234,7 @@ static const ATTR_TCM_CONST_SECTION spi_flash_cfg_type flashcfg_xtx_q80b_f16b = 
 };
 #endif
 
-static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
+__UNUSED static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
 #ifndef CONFIG_NOT_SUPPORT_0X13_0X14_0X15_0X16_FLASH
     {
         .jedec_id = 0x134051,
@@ -2737,6 +2737,16 @@ static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         //.name="mx_u25643g_256_18",
         .cfg = &flash_cfg_mxic_25l256,
     },
+    {
+        .jedec_id = 0x1765C8,
+        //.name="gd_wq64e_64_1833",
+        .cfg = &flash_cfg_gd_q32e_q128e,
+    },
+    {
+        .jedec_id = 0x1460c4,
+        //.name="gt25q80_08_33",
+        .cfg = &flash_cfg_winb_16jv,
+    },
 };
 
 /*@} end of group SF_CFG_Private_Variables */
@@ -2751,7 +2761,7 @@ static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
  *  @{
  */
 
-#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL602) || defined(BL702) || defined(BL702L)
+#if defined(BL616) || defined(BL808) || defined(BL602) || defined(BL702) || defined(BL702L)
 /**
  * @brief Error type definition
  */
@@ -2763,16 +2773,13 @@ typedef enum {
     NORESC = 4   /* no resource or resource temperary unavailable */
 } BL_Err_Type;
 #endif
-#if defined(BL808) || defined(BL606P)
+#if defined(BL808)
 extern BL_Err_Type GLB_Set_Flash_IO_PARM(uint8_t sel_embedded, uint8_t swap);
 #elif defined(BL616)
 extern BL_Err_Type GLB_Set_SFlash_IO_PARM(uint8_t sel_embedded, uint8_t swapIo3Io0, uint8_t swapIo2Cs);
 extern BL_Err_Type GLB_Set_SFlash2_IO_PARM(uint8_t swapIo3Io0);
 #elif defined(BL702L)
 extern BL_Err_Type GLB_Set_Embedded_FLash_IO_PARM(uint8_t reverse, uint8_t swapIo3Io0, uint8_t swapIo2Cs);
-#elif defined(BL628)
-extern void bflb_glb_set_sflash_io_parm(uint8_t sel_embedded, uint8_t swap_io3_io0, uint8_t swap_io2_cs);
-extern void bflb_glb_set_sflash2_io_parm(uint8_t swap_io3_io0);
 #elif defined(BL602)
 extern BL_Err_Type GLB_Select_Internal_Flash(void);
 extern BL_Err_Type GLB_Select_External_Flash(void);
@@ -2872,6 +2879,9 @@ void ATTR_TCM_SECTION bflb_sf_cfg_restore_gpio17_fun(uint8_t fun)
 __WEAK
 int ATTR_TCM_SECTION bflb_sf_cfg_init_ext_flash_gpio(uint8_t ext_flash_pin)
 {
+#ifdef romapi_bflb_sf_cfg_init_ext_flash_gpio
+    return romapi_bflb_sf_cfg_init_ext_flash_gpio(ext_flash_pin);
+#else
     struct bflb_device_s *gpio;
     uint8_t gpio_pins[6];
     uint8_t i = 0;
@@ -2884,7 +2894,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_ext_flash_gpio(uint8_t ext_flash_pin)
         gpio_pins[3] = BFLB_EXTFLASH_DATA10_GPIO;
         gpio_pins[4] = BFLB_EXTFLASH_DATA20_GPIO;
         gpio_pins[5] = BFLB_EXTFLASH_DATA30_GPIO;
-#if defined(BL628) || defined(BL616)
+#if defined(BL616)
     } else if (ext_flash_pin == 1) {
         gpio_pins[0] = BFLB_EXTFLASH_CLK1_GPIO;
         gpio_pins[1] = BFLB_EXTFLASH_CS1_GPIO;
@@ -2926,6 +2936,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_ext_flash_gpio(uint8_t ext_flash_pin)
     }
 
     return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -2939,6 +2950,9 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_ext_flash_gpio(uint8_t ext_flash_pin)
 __WEAK
 int ATTR_TCM_SECTION bflb_sf_cfg_deinit_ext_flash_gpio(uint8_t ext_flash_pin)
 {
+#ifdef romapi_bflb_sf_cfg_deinit_ext_flash_gpio
+    return romapi_bflb_sf_cfg_deinit_ext_flash_gpio(ext_flash_pin);
+#else
     struct bflb_device_s *gpio;
     uint8_t gpio_pins[6];
     uint8_t i = 0;
@@ -2951,7 +2965,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_deinit_ext_flash_gpio(uint8_t ext_flash_pin)
         gpio_pins[3] = BFLB_EXTFLASH_DATA10_GPIO;
         gpio_pins[4] = BFLB_EXTFLASH_DATA20_GPIO;
         gpio_pins[5] = BFLB_EXTFLASH_DATA30_GPIO;
-#if defined(BL628) || defined(BL616)
+#if defined(BL616)
     } else if (ext_flash_pin == 1) {
         gpio_pins[0] = BFLB_EXTFLASH_CLK1_GPIO;
         gpio_pins[1] = BFLB_EXTFLASH_CS1_GPIO;
@@ -2992,6 +3006,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_deinit_ext_flash_gpio(uint8_t ext_flash_pin)
     }
 
     return 0;
+#endif
 }
 
 /*@} end of group SF_CFG_Private_Functions */
@@ -3010,20 +3025,19 @@ int ATTR_TCM_SECTION bflb_sf_cfg_deinit_ext_flash_gpio(uint8_t ext_flash_pin)
  *
 *******************************************************************************/
 __WEAK
-#if defined(BL628) || defined(BL616)
+#if defined(BL616)
 int ATTR_TCM_SECTION bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t restore_default)
 {
+#ifdef romapi_bflb_sf_cfg_init_flash_gpio
+    return romapi_bflb_sf_cfg_init_flash_gpio(flash_pin_cfg, restore_default);
+#else
     uint8_t sel_embedded = 0;
     uint8_t swap_io2_cs = 0;
     uint8_t swap_io3_io0 = 0;
 
     if (restore_default) {
         /* Set Default first */
-#if defined(BL628)
-        bflb_glb_set_sflash_io_parm(1, 1, 0);
-#else
         GLB_Set_SFlash_IO_PARM(1, 1, 0);
-#endif
         bflb_sf_ctrl_select_pad(SF_IO_EMB_SWAP_IO3IO0);
 
         /* Default is set, so return */
@@ -3053,16 +3067,13 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t 
     swap_io3_io0 = ((flash_pin_cfg >> 1) & 1);
     swap_io3_io0 = (!swap_io3_io0);
     swap_io2_cs = ((flash_pin_cfg >> 0) & 1);
-#if defined(BL628)
-    bflb_glb_set_sflash_io_parm(sel_embedded, swap_io3_io0, swap_io2_cs);
-#else
     GLB_Set_SFlash_IO_PARM(sel_embedded, swap_io3_io0, swap_io2_cs);
-#endif
     bflb_sf_ctrl_select_pad(flash_pin_cfg);
 
     return 0;
+#endif
 }
-#elif defined(BL808) || defined(BL606P)
+#elif defined(BL808)
 int ATTR_TCM_SECTION bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t restore_default)
 {
     uint8_t sel_embedded = 0;
@@ -3297,14 +3308,16 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_flash_gpio(uint8_t flash_pin_cfg, uint8_t 
 __WEAK
 int ATTR_TCM_SECTION bflb_sf_cfg_init_flash2_gpio(uint8_t swap)
 {
+#ifdef romapi_bflb_sf_cfg_init_flash2_gpio
+    return romapi_bflb_sf_cfg_init_flash2_gpio(swap);
+#else
     bflb_sf_cfg_init_ext_flash_gpio(0);
-#if defined(BL628)
-    bflb_glb_set_sflash2_io_parm(swap);
-#elif defined(BL616)
+#if defined(BL616)
     GLB_Set_SFlash2_IO_PARM(swap);
 #endif
 
     return 0;
+#endif
 }
 #endif
 
@@ -3355,7 +3368,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify(uint8_t call_from_flash, ui
     if (auto_scan) {
         flash_pin = 0;
         do {
-#if defined(BL628) || defined(BL616)
+#if defined(BL616)
             if (!IS_SF_CTRL_PIN_SELECT(flash_pin)) {
                 flash_pin++;
                 continue;
@@ -3384,7 +3397,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify(uint8_t call_from_flash, ui
                 }
                 bflb_sf_cfg_init_flash_gpio(flash_pin, restore_default);
             }
-#elif defined(BL808) || defined(BL606P)
+#elif defined(BL808)
             if (flash_pin > SF_IO_EMB_SWAP_NONE_DUAL_IO0_AND_EXT_SF2) {
                 jedec_id = 0;
                 break;
@@ -3477,7 +3490,7 @@ uint32_t ATTR_TCM_SECTION bflb_sf_cfg_flash_identify(uint8_t call_from_flash, ui
 #endif
 }
 
-#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL808)
 /****************************************************************************/ /**
  * @brief  Identify one flash patch
  *
@@ -3551,7 +3564,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_get_flash_cfg_need_lock(uint32_t flash_id, spi_
 #endif
 }
 
-#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808) || defined(BL702L)
+#if defined(BL616) || defined(BL808) || defined(BL702L)
 /****************************************************************************/ /**
  * @brief  Get flash config according to flash ID patch
  *
@@ -3571,7 +3584,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_get_flash_cfg_need_lock_ext(uint32_t flash_id, 
 }
 #endif
 
-#if defined(BL628) || defined(BL616)
+#if defined(BL616)
 /****************************************************************************/ /**
  * @brief  SF Cfg flash init
  *
@@ -3586,6 +3599,9 @@ __WEAK
 int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg,
                                             const struct sf_ctrl_bank2_cfg *p_bank2_cfg)
 {
+#ifdef romapi_bflb_sf_cfg_flash_init
+    return romapi_bflb_sf_cfg_flash_init(sel, p_sf_ctrl_cfg, p_bank2_cfg);
+#else
     uint8_t sel_embedded = 0;
     uint8_t swap_io2_cs = 0;
     uint8_t swap_io3_io0 = 0;
@@ -3613,11 +3629,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
     swap_io3_io0 = ((sel >> 1) & 1);
     swap_io3_io0 = (!swap_io3_io0);
     swap_io2_cs = ((sel >> 0) & 1);
-#if defined(BL628)
-    bflb_glb_set_sflash_io_parm(sel_embedded, swap_io3_io0, swap_io2_cs);
-#else
     GLB_Set_SFlash_IO_PARM(sel_embedded, swap_io3_io0, swap_io2_cs);
-#endif
     bflb_sf_ctrl_select_pad(sel);
 
     if (sel <= SF_IO_EMB_SWAP_IO2CS) {
@@ -3654,6 +3666,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
     bflb_sflash_init(p_sf_ctrl_cfg, p_bank2_cfg);
 
     return 0;
+#endif
 }
 
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
@@ -3669,6 +3682,9 @@ int ATTR_TCM_SECTION bflb_sf_cfg_flash_init(uint8_t sel, const struct sf_ctrl_cf
 __WEAK
 int ATTR_TCM_SECTION bflb_sf_cfg_sbus2_flash_init(uint8_t sel, const struct sf_ctrl_bank2_cfg *p_bank2_cfg)
 {
+#ifdef romapi_bflb_sf_cfg_sbus2_flash_init
+    return romapi_bflb_sf_cfg_sbus2_flash_init(sel, p_bank2_cfg);
+#else
     if (sel < SF_IO_EMB_SWAP_IO3IO0_AND_SF2_SWAP_IO3IO0 || sel > SF_IO_EMB_SWAP_IO2CS_AND_SF2) {
         return -1;
     }
@@ -3695,9 +3711,10 @@ int ATTR_TCM_SECTION bflb_sf_cfg_sbus2_flash_init(uint8_t sel, const struct sf_c
     bflb_sflash_init(NULL, p_bank2_cfg);
 
     return 0;
+#endif
 }
 #endif
-#elif defined(BL808) || defined(BL606P)
+#elif defined(BL808)
 /****************************************************************************/ /**
  * @brief  SF Cfg flash init
  *

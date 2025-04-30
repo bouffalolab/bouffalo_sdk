@@ -2,6 +2,7 @@
 #include "board.h"
 #include "bflb_flash_secreg.h"
 #include "bflb_sf_cfg.h"
+#include "bflb_flash.h"
 
 #define DBG_TAG "MAIN"
 #include "log.h"
@@ -11,18 +12,25 @@
 #define REGION_WREAD 2
 #define REGION_EREAD 3
 
+bflb_flash_otp_config_t flash_otp_cfg;
+
 void ATTR_TCM_SECTION print_param(const bflb_flash_secreg_param_t *param)
 {
     LOG_I("Security Register Param\r\n");
-    LOG_I("region_offset = %u\r\n", param->region_offset);
-    LOG_I("region_count  = %u\r\n", param->region_count);
-    LOG_I("region_size   = %u\r\n", param->region_size * 256);
-    LOG_I("secreg_size   = %u\r\n", param->secreg_size * 256);
-    LOG_I("api_type      = %u\r\n", param->api_type);
-    LOG_I("lb_share      = %u\r\n", param->lb_share);
-    LOG_I("lb_offset     = %u\r\n", param->lb_offset);
-    LOG_I("lb_write_len  = %u\r\n", param->lb_write_len);
-    LOG_I("lb_read_len   = %u\r\n", param->lb_read_len);
+    LOG_I("region_offset  = %u\r\n", param->region_offset);
+    LOG_I("region_count   = %u\r\n", param->region_count);
+    LOG_I("region_size    = %u\r\n", param->region_size * 256);
+    LOG_I("secreg_size    = %u\r\n", param->secreg_size * 256);
+    LOG_I("api_type       = %u\r\n", param->api_type);
+    LOG_I("lb_share       = %u\r\n", param->lb_share);
+    LOG_I("lb_offset      = %u\r\n", param->lb_offset);
+    LOG_I("lb_write_cmd   = %u\r\n", param->lb_write_cmd);
+    LOG_I("lb_write_len   = %u\r\n", param->lb_write_len);
+    for (int i = 0; i < sizeof(param->lb_read_cmd) / sizeof(param->lb_read_cmd[0]); i++) {
+        LOG_I("lb_read_cmd[%d] = 0x%02x\r\n", i, param->lb_read_cmd[i]);
+    }
+    LOG_I("lb_read_len    = %u\r\n", param->lb_read_len);
+    LOG_I("lb_read_loop   = %u\r\n", param->lb_read_loop);
     LOG_I("================================\r\n");
 }
 
@@ -66,11 +74,9 @@ bool ATTR_TCM_SECTION region_rwe_test(const bflb_flash_secreg_region_info_t *inf
                 LOG_W("Region is locked\r\n");
             }
 
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_opunlock());
             beg = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_erase_by_idx(info->index));
+            _ASSERT_ZERO_FUNC(bflb_flash_secreg_erase_by_idx(&flash_otp_cfg, info->index));
             end = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_oplock());
             test->erase_byte += info->secreg_size;
             LOG_I("Erase region %u done, bytes %u cost %u us\r\n", info->index, info->secreg_size, end - beg);
             LOG_I("================================\r\n");
@@ -82,11 +88,9 @@ bool ATTR_TCM_SECTION region_rwe_test(const bflb_flash_secreg_region_info_t *inf
                 LOG_W("Region is locked\r\n");
             }
 
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_opunlock());
             beg = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_write_by_idx(info->index, 0, test->wbuf + info->secreg_size * info->index, info->secreg_size));
+            _ASSERT_ZERO_FUNC(bflb_flash_secreg_write_by_idx(&flash_otp_cfg, info->index, 0, test->wbuf + info->secreg_size * info->index, info->secreg_size));
             end = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_oplock());
             test->write_byte += info->secreg_size;
             LOG_I("Write region %u done, bytes %u cost %u us\r\n", info->index, info->secreg_size, end - beg);
             LOG_I("================================\r\n");
@@ -95,7 +99,7 @@ bool ATTR_TCM_SECTION region_rwe_test(const bflb_flash_secreg_region_info_t *inf
         case REGION_WREAD:
             LOG_I("Try to read after write region %u\r\n", info->index);
             beg = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_read_by_idx(info->index, 0, test->wrbuf + info->secreg_size * info->index, info->secreg_size));
+            _ASSERT_ZERO_FUNC(bflb_flash_secreg_read_by_idx(&flash_otp_cfg, info->index, 0, test->wrbuf + info->secreg_size * info->index, info->secreg_size));
             end = bflb_mtimer_get_time_us();
             test->wread_byte += info->secreg_size;
             LOG_I("Read region %u done, bytes %u cost %u us\r\n", info->index, info->secreg_size, end - beg);
@@ -105,7 +109,7 @@ bool ATTR_TCM_SECTION region_rwe_test(const bflb_flash_secreg_region_info_t *inf
         case REGION_EREAD:
             LOG_I("Try to read after erase region %u\r\n", info->index);
             beg = bflb_mtimer_get_time_us();
-            _ASSERT_ZERO_FUNC(bflb_flash_secreg_read_by_idx(info->index, 0, test->erbuf + info->secreg_size * info->index, info->secreg_size));
+            _ASSERT_ZERO_FUNC(bflb_flash_secreg_read_by_idx(&flash_otp_cfg, info->index, 0, test->erbuf + info->secreg_size * info->index, info->secreg_size));
             end = bflb_mtimer_get_time_us();
             test->eread_byte += info->secreg_size;
             LOG_I("Read region %u done, bytes %u cost %u us\r\n", info->index, info->secreg_size, end - beg);
@@ -125,12 +129,15 @@ static uint8_t ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(4) wbuf[16 * 1024];
 static uint8_t ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(4) wrbuf[16 * 1024];
 static uint8_t ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(4) erbuf[16 * 1024];
 
-int ATTR_TCM_SECTION main(void)
+int main(void)
 {
     uint32_t beg;
     uint32_t end;
     const bflb_flash_secreg_param_t *param;
     struct region_test_data test;
+    uint8_t *p_flash_cfg = NULL;
+    uint32_t flash_cfg_len = 0;
+    uint32_t jedec_id = 0;
     uint8_t lb;
 
     uint8_t count = 0;
@@ -145,19 +152,22 @@ int ATTR_TCM_SECTION main(void)
     test.wrbuf = wrbuf;
     test.erbuf = erbuf;
 
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_get_param(&param));
+    bflb_flash_get_cfg(&p_flash_cfg, &flash_cfg_len);
+    jedec_id = bflb_flash_get_jedec_id();
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_get_param(jedec_id, &param));
+
+    /* Initialize OTP configuration */
+    flash_otp_cfg.flash_cfg = (spi_flash_cfg_type *)p_flash_cfg;;
+    flash_otp_cfg.param = param;
     LOG_I("Test %d ok\r\n", ++count);
     print_param(param);
 
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_get_param(&param));
-    LOG_I("Test %d ok\r\n", ++count);
-
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_get_lockbits(&lb));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_get_lockbits(&flash_otp_cfg, &lb));
     LOG_I("lock bit is 0x%02x\r\n", lb);
     LOG_I("Test %d ok\r\n", ++count);
     LOG_I("================================\r\n");
 
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(print_region, NULL));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(&flash_otp_cfg, print_region, NULL));
     LOG_I("Test %d ok\r\n", ++count);
 
     for (uint32_t i = 0; i < sizeof(wbuf); i++) {
@@ -168,14 +178,14 @@ int ATTR_TCM_SECTION main(void)
 
     test.test = REGION_ERASE;
     test.erase_byte = 0;
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(region_rwe_test, (void *)&test));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(&flash_otp_cfg, region_rwe_test, (void *)&test));
     LOG_I("Total erase byte %u\r\n", test.erase_byte);
     LOG_I("Test %d ok\r\n", ++count);
     LOG_I("================================\r\n");
 
     test.test = REGION_EREAD;
     test.eread_byte = 0;
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(region_rwe_test, (void *)&test));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(&flash_otp_cfg, region_rwe_test, (void *)&test));
     LOG_I("Total read after erase byte %u\r\n", test.eread_byte);
     LOG_I("Test %d ok\r\n", ++count);
     LOG_I("================================\r\n");
@@ -194,14 +204,14 @@ int ATTR_TCM_SECTION main(void)
 
     test.test = REGION_WRITE;
     test.write_byte = 0;
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(region_rwe_test, (void *)&test));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(&flash_otp_cfg, region_rwe_test, (void *)&test));
     LOG_I("Total write byte %u\r\n", test.write_byte);
     LOG_I("Test %d ok\r\n", ++count);
     LOG_I("================================\r\n");
 
     test.test = REGION_WREAD;
     test.wread_byte = 0;
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(region_rwe_test, (void *)&test));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_region_foreach(&flash_otp_cfg, region_rwe_test, (void *)&test));
     LOG_I("Total read after write byte %u\r\n", test.wread_byte);
     LOG_I("Test %d ok\r\n", ++count);
     LOG_I("================================\r\n");
@@ -225,18 +235,16 @@ int ATTR_TCM_SECTION main(void)
     }
 
     test.erase_byte = param->region_count * param->secreg_size * 256;
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_opunlock());
     beg = bflb_mtimer_get_time_us();
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_erase(0, test.erase_byte));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_erase(&flash_otp_cfg, 0, test.erase_byte));
     end = bflb_mtimer_get_time_us();
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_oplock());
     LOG_I("Total erase byte %u cost %u us\r\n", test.erase_byte, end - beg);
     LOG_I("Test %d ok\r\n", ++count);
     LOG_I("================================\r\n");
 
     test.eread_byte = param->region_count * param->secreg_size * 256;
     beg = bflb_mtimer_get_time_us();
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_read(0, test.erbuf, test.eread_byte));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_read(&flash_otp_cfg, 0, test.erbuf, test.eread_byte));
     end = bflb_mtimer_get_time_us();
     LOG_I("Total read after erase byte %u cost %u us\r\n", test.eread_byte, end - beg);
     LOG_I("Test %d ok\r\n", ++count);
@@ -255,18 +263,16 @@ int ATTR_TCM_SECTION main(void)
     LOG_I("================================\r\n");
 
     test.write_byte = param->region_count * param->secreg_size * 256;
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_opunlock());
     beg = bflb_mtimer_get_time_us();
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_write(0, test.wbuf, test.write_byte));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_write(&flash_otp_cfg, 0, test.wbuf, test.write_byte));
     end = bflb_mtimer_get_time_us();
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_oplock());
     LOG_I("Total write byte %u cost %u us\r\n", test.write_byte, end - beg);
     LOG_I("Test %d ok\r\n", ++count);
     LOG_I("================================\r\n");
 
     test.wread_byte = param->region_count * param->secreg_size * 256;
     beg = bflb_mtimer_get_time_us();
-    _ASSERT_ZERO_FUNC(bflb_flash_secreg_read(0, test.wrbuf, test.wread_byte));
+    _ASSERT_ZERO_FUNC(bflb_flash_secreg_read(&flash_otp_cfg, 0, test.wrbuf, test.wread_byte));
     end = bflb_mtimer_get_time_us();
     LOG_I("Total read after write byte %u cost %u us\r\n", test.wread_byte, end - beg);
     LOG_I("Test %d ok\r\n", ++count);

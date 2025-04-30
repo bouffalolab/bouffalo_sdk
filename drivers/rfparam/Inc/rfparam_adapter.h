@@ -34,6 +34,9 @@
 #define RFPARAM_ERR_COUNTRY_CODE_NULL               -27
 #define RFPARAM_ERR_TLV_BASE_ADDR                   -28
 #define RFPARAM_ERR_PWR_OFFSET_LP_NULL              -29
+#define RFPARAM_ERR_EN_TCAP                         -30
+#define RFPARAM_ERR_TCAP_TSEN                       -31
+#define RFPARAM_ERR_TCAP_CAP                        -32
 
 
 #define RFPARAM_ERR_PARAM_CHECK                    	-50
@@ -49,11 +52,7 @@
 #define RFPARAM_TLV_BASE_ADDR_MASK              0xF0000000
 #define RFPARAM_TLV_BASE_ADDR_RAM_NO_CACHE      0x22FC0400
 #define RFPARAM_TLV_BASE_ADDR_RAM_CACHE         0x62FC0400
-#ifndef CONFIG_PSRAM_COPY_CODE
 #define RFPARAM_TLV_BASE_ADDR_XIP_FLASH         0xA0000400
-#else
-#define RFPARAM_TLV_BASE_ADDR_XIP_FLASH         0xA8000400
-#endif
 
 #define RFPARAM_WL_API_MEM_SIZE                 544
 

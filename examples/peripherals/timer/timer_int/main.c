@@ -2,7 +2,7 @@
 #include "bflb_timer.h"
 #include "board.h"
 
-#define TEST_TIMER_COMP_ID TIMER_COMP_ID_2
+#define TEST_TIMER_COMP_ID TIMER_COMP_ID_0
 
 struct bflb_device_s *timer0;
 struct bflb_device_s *timer1;
@@ -56,9 +56,9 @@ int main(void)
     cfg0.clock_source = TIMER_CLKSRC_XTAL;
     cfg0.clock_div = 39; /* for bl616/bl808/bl606p is 39, for bl702 is 31 */
     cfg0.trigger_comp_id = TEST_TIMER_COMP_ID;
-    cfg0.comp0_val = 1000000; /* match value 0  */
-    cfg0.comp1_val = 1500000; /* match value 1 */
-    cfg0.comp2_val = 2500000; /* match value 2 */
+    cfg0.comp0_val = 64000; /* match value 0  */
+    cfg0.comp1_val = 0xFFFFFFFF; /* match value 1 */
+    cfg0.comp2_val = 0xFFFFFFFF; /* match value 2 */
     cfg0.preload_val = 0;    /* preload value */
 
     struct bflb_timer_config_s cfg1;
@@ -72,23 +72,24 @@ int main(void)
     cfg1.preload_val = 0;    /* preload value */
 
     timer0 = bflb_device_get_by_name("timer0");
-    timer1 = bflb_device_get_by_name("timer1");
+    // timer1 = bflb_device_get_by_name("timer1");
 
     /* Timer init with default configuration */
     bflb_timer_init(timer0, &cfg0);
-    bflb_timer_init(timer1, &cfg1);
+    // bflb_timer_init(timer1, &cfg1);
 
     bflb_irq_attach(timer0->irq_num, timer0_isr, NULL);
-    bflb_irq_attach(timer1->irq_num, timer1_isr, NULL);
+    // bflb_irq_attach(timer1->irq_num, timer1_isr, NULL);
     bflb_irq_enable(timer0->irq_num);
-    bflb_irq_enable(timer1->irq_num);
+    // bflb_irq_enable(timer1->irq_num);
 
     /* Enable timer */
     bflb_timer_start(timer0);
-    bflb_timer_start(timer1);
+    // bflb_timer_start(timer1);
 
     printf("case success.\r\n");
     while (1) {
         bflb_mtimer_delay_ms(1500);
+        printf("hello\n\r");
     }
 }

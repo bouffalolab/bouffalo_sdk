@@ -59,8 +59,8 @@
 #define configUSE_TICK_HOOK                     0
 #define configCPU_CLOCK_HZ                      ((uint32_t)(1 * 1000 * 1000))
 #define configTICK_RATE_HZ                      ((TickType_t)1000)
-#define configMAX_PRIORITIES                    (7)
-#define configMINIMAL_STACK_SIZE                ((unsigned short)128) /* Only needs to be this high as some demo tasks also use this constant.  In production only the idle task would use this. */
+#define configMAX_PRIORITIES                    (31)
+#define configMINIMAL_STACK_SIZE                ((unsigned short)256) /* Only needs to be this high as some demo tasks also use this constant.  In production only the idle task would use this. */
 #define configTOTAL_HEAP_SIZE                   ((size_t)24 * 1024)
 #define configMAX_TASK_NAME_LEN                 (16)
 #define configUSE_TRACE_FACILITY                1
@@ -78,6 +78,8 @@
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_TICKLESS_IDLE                 0
 #define configUSE_POSIX_ERRNO                   1
+
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 0
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES                   0

@@ -31,6 +31,18 @@ extern "C" {
  */
 int bt_mesh_proxy_identity_enable(void);
 
+#if defined(CONFIG_BT_MESH_V1d1)
+/** @brief Enable advertising with Private Node Identity.
+ *
+ *  This API requires that GATT Proxy support has been enabled. Once called
+ *  each subnet will start advertising using Private Node Identity for the next
+ *  60 seconds.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_proxy_private_identity_enable(void);
+#endif /* CONFIG_BT_MESH_V1d1 */
+
 #ifdef __cplusplus
 }
 #endif

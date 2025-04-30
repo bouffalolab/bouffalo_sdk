@@ -14,6 +14,7 @@ BouffaloSDK 使用指南
 
    get_started/get_started
    get_started/eclipse
+   get_started/openocd
    get_started/cmake
    get_started/flash_cube
    get_started/repo
@@ -26,6 +27,7 @@ BouffaloSDK 使用指南
    api_reference/bflog
    api_reference/ble
    api_reference/ble_mesh
+   api_reference/bt
    api_reference/wifi6
 
 .. toctree::

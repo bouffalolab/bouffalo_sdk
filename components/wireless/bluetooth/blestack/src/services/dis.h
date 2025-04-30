@@ -24,6 +24,16 @@ enum{
     USB_IMPL_VID    
 };
 void dis_init(u8_t vid_src, u16_t vid, u16_t pid, u16_t pnp_ver);
+void dis_deinit(void);
+
+#if defined(CONFIG_BT_SETTINGS) && defined(CONFIG_BT_GATT_DIS_SETTINGS)
+
+#if defined(BFLB_BLE)
+int dis_settings_init(const char *name, char* setting,size_t setting_len);
+#endif
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif

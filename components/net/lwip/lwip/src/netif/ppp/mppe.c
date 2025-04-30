@@ -145,9 +145,9 @@ mppe_init(ppp_pcb *pcb, ppp_mppe_state *state, u8_t options)
 		       (state->stateful) ? "stateful" : "stateless"));
 
 		for (i = 0; i < (int)sizeof(state->master_key); i++)
-			sprintf(mkey + i * 2, "%02x", state->master_key[i]);
+			snprintf(mkey + i * 2, sizeof(mkey) - i * 2, "%02x", state->master_key[i]);
 		for (i = 0; i < (int)sizeof(state->session_key); i++)
-			sprintf(skey + i * 2, "%02x", state->session_key[i]);
+			snprintf(skey + i * 2, sizeof(skey) - i * 2, "%02x", state->session_key[i]);
 		PPPDEBUG(LOG_DEBUG,
 		       ("%s[%d]: keys: master: %s initial session: %s\n",
 		       debugstr, pcb->netif->num, mkey, skey));

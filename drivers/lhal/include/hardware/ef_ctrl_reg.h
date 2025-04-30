@@ -146,8 +146,36 @@
 #define EF_CTRL_EF_IF_PROT_CODE_CYC_MASK    (((1U << EF_CTRL_EF_IF_PROT_CODE_CYC_LEN) - 1) << EF_CTRL_EF_IF_PROT_CODE_CYC_POS)
 #define EF_CTRL_EF_IF_PROT_CODE_CYC_UMASK   (~(((1U << EF_CTRL_EF_IF_PROT_CODE_CYC_LEN) - 1) << EF_CTRL_EF_IF_PROT_CODE_CYC_POS))
 
-/* 0x80C : ef_if_0_manual, 606P and 808 manual config is the same but not need witch clock */
-#if defined(BL702) || defined(BL602) || defined(BL702L) || defined(BL606P) || defined(BL808)
+/* 0x808*/
+#define EF_CTRL_EF_IF_CYC_PI                EF_CTRL_EF_IF_CYC_PI
+#define EF_CTRL_EF_IF_CYC_PI_POS            (0U)
+#define EF_CTRL_EF_IF_CYC_PI_LEN            (6U)
+#define EF_CTRL_EF_IF_CYC_PI_MASK           (((1U << EF_CTRL_EF_IF_CYC_PI_LEN) - 1) << EF_CTRL_EF_IF_CYC_PI_POS)
+#define EF_CTRL_EF_IF_CYC_PI_UMASK          (~(((1U << EF_CTRL_EF_IF_CYC_PI_LEN) - 1) << EF_CTRL_EF_IF_CYC_PI_POS))
+#define EF_CTRL_EF_IF_CYC_PP                EF_CTRL_EF_IF_CYC_PP
+#define EF_CTRL_EF_IF_CYC_PP_POS            (6U)
+#define EF_CTRL_EF_IF_CYC_PP_LEN            (8U)
+#define EF_CTRL_EF_IF_CYC_PP_MASK           (((1U << EF_CTRL_EF_IF_CYC_PP_LEN) - 1) << EF_CTRL_EF_IF_CYC_PP_POS)
+#define EF_CTRL_EF_IF_CYC_PP_UMASK          (~(((1U << EF_CTRL_EF_IF_CYC_PP_LEN) - 1) << EF_CTRL_EF_IF_CYC_PP_POS))
+#define EF_CTRL_EF_IF_CYC_WR_ADR            EF_CTRL_EF_IF_CYC_WR_ADR
+#define EF_CTRL_EF_IF_CYC_WR_ADR_POS        (14U)
+#define EF_CTRL_EF_IF_CYC_WR_ADR_LEN        (6U)
+#define EF_CTRL_EF_IF_CYC_WR_ADR_MASK       (((1U << EF_CTRL_EF_IF_CYC_WR_ADR_LEN) - 1) << EF_CTRL_EF_IF_CYC_WR_ADR_POS)
+#define EF_CTRL_EF_IF_CYC_WR_ADR_UMASK      (~(((1U << EF_CTRL_EF_IF_CYC_WR_ADR_LEN) - 1) << EF_CTRL_EF_IF_CYC_WR_ADR_POS))
+#define EF_CTRL_EF_IF_CYC_PS_CS             EF_CTRL_EF_IF_CYC_PS_CS
+#define EF_CTRL_EF_IF_CYC_PS_CS_POS         (20U)
+#define EF_CTRL_EF_IF_CYC_PS_CS_LEN         (6U)
+#define EF_CTRL_EF_IF_CYC_PS_CS_MASK        (((1U << EF_CTRL_EF_IF_CYC_PS_CS_LEN) - 1) << EF_CTRL_EF_IF_CYC_PS_CS_POS)
+#define EF_CTRL_EF_IF_CYC_PS_CS_UMASK       (~(((1U << EF_CTRL_EF_IF_CYC_PS_CS_LEN) - 1) << EF_CTRL_EF_IF_CYC_PS_CS_POS))
+#define EF_CTRL_EF_IF_CYC_PS_CS_H           EF_CTRL_EF_IF_CYC_PS_CS_H
+#define EF_CTRL_EF_IF_CYC_PS_CS_H_POS       (26U)
+#define EF_CTRL_EF_IF_CYC_PS_CS_H_LEN       (6U)
+#define EF_CTRL_EF_IF_CYC_PS_CS_H_MASK      (((1U << EF_CTRL_EF_IF_CYC_PS_CS_H_LEN) - 1) << EF_CTRL_EF_IF_CYC_PS_CS_H_POS)
+#define EF_CTRL_EF_IF_CYC_PS_CS_H_UMASK     (~(((1U << EF_CTRL_EF_IF_CYC_PS_CS_H_LEN) - 1) << EF_CTRL_EF_IF_CYC_PS_CS_H_POS))
+
+
+/* 0x80C : ef_if_0_manual, 808 manual config is the same but not need witch clock */
+#if defined(BL702) || defined(BL602) || defined(BL702L) || defined(BL808)
 #define EF_CTRL_EF_IF_0_MANUAL_OFFSET        (0x80C)
 #define EF_CTRL_EF_IF_A                      EF_CTRL_EF_IF_A
 #define EF_CTRL_EF_IF_A_POS                  (0U)
@@ -197,11 +225,13 @@
 #else
 /* 0x80C : ef_if_0_manual_0 */
 #define EF_CTRL_EF_IF_0_MANUAL_0_OFFSET      (0x80C)
+
 #define EF_CTRL_EF_IF_A                      EF_CTRL_EF_IF_A
 #define EF_CTRL_EF_IF_A_POS                  (0U)
 #define EF_CTRL_EF_IF_A_LEN                  (12U)
 #define EF_CTRL_EF_IF_A_MASK                 (((1U << EF_CTRL_EF_IF_A_LEN) - 1) << EF_CTRL_EF_IF_A_POS)
 #define EF_CTRL_EF_IF_A_UMASK                (~(((1U << EF_CTRL_EF_IF_A_LEN) - 1) << EF_CTRL_EF_IF_A_POS))
+
 #define EF_CTRL_EF_IF_PD                     EF_CTRL_EF_IF_PD
 #define EF_CTRL_EF_IF_PD_POS                 (18U)
 #define EF_CTRL_EF_IF_PD_LEN                 (1U)
@@ -239,7 +269,7 @@
 #define EF_CTRL_EF_IF_PROT_CODE_MANUAL_UMASK (~(((1U << EF_CTRL_EF_IF_PROT_CODE_MANUAL_LEN) - 1) << EF_CTRL_EF_IF_PROT_CODE_MANUAL_POS))
 #endif
 
-#if defined(BL606P) || defined(BL808)
+#if defined(BL808)
 /* 0x900 : ef_if_ctrl_1 */
 #define EF_CTRL_EF_IF_CTRL_1_OFFSET      (0x900)
 #define EF_CTRL_EF_IF_1_BUSY             EF_CTRL_EF_IF_1_BUSY

@@ -249,6 +249,17 @@ static void audioadc_analog_digital_init(aui_cfg_t *config)
         DISABLE,
         AUADC_SOURCE_ANALOG,
     };
+    if (config->sample_rate == 8000) {
+        auadc_cfg.clk = AUADC_CLK_8K_HZ;
+    } else if (config->sample_rate == 16000) {
+        auadc_cfg.clk = AUADC_CLK_16K_HZ;
+    } else if (config->sample_rate == 32000) {
+        auadc_cfg.clk = AUADC_CLK_32K_HZ;
+    } else if (config->sample_rate == 48000) {
+        auadc_cfg.clk = AUADC_CLK_48K_HZ;
+    } else {
+        auadc_cfg.clk = AUADC_CLK_16K_HZ;
+    } 
 
     AUADC_FifoCfg_Type auadc_fifo_cfg = {
         AUADC_RES_16_BITS,
@@ -353,8 +364,7 @@ int aui_init(aui_ch_t *context)
 #endif
     context->task_exit = 0;
     msp_event_new(&(context->event), 0);
-    msp_mutex_new(&(context->mutex));
-    msp_task_new_ext(&(context->task), "auitsk", aui_task_entry, context,
+    msp_task_new_ext(&(context->task), AUI_TASK, aui_task_entry, context,
                      context->stack_size, context->task_pri);
 
     return 0;
@@ -584,7 +594,7 @@ static int _aui_rx_dma_link(aui_ch_t *context, void *dma)
     struct bflb_device_s *device_dma;
     char dma_name[10] = {0};
    
-    sprintf(dma_name, "dma%d_ch%d", dma_id, dma_ch);
+    snprintf(dma_name, sizeof(dma_name), "dma%d_ch%d", dma_id, dma_ch);
     printf("dma_dma_name:%s\r\n", dma_name);
     dma_name[9] = '\0';
 
@@ -768,10 +778,18 @@ int aui_start(aui_ch_t *context)
 int aui_stop(aui_ch_t *context)
 {
     uint32_t count = 0;
+
+    msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
+    
+    if (!msp_task_exist(AUI_TASK)) {
+        user_log("aui not init\r\n");
+        return -1;
+    }
+
 #if CODEC_INPUT_DEBUG_TRACE
     context->debug.count_stop++;
 #endif
-    msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
+    
     user_log("context = %p\r\n", context);
 
     // _aui_rx_fifo_disable(context->sound_channel_num);
@@ -807,7 +825,7 @@ int aui_stop(aui_ch_t *context)
     context->pre_indx = 0;
 
     msp_mutex_unlock(&(context->mutex));
-    msp_mutex_free(&context->mutex);
+
     return 0;
 }
 
@@ -847,7 +865,7 @@ uint32_t aui_read(aui_ch_t *context, const void *data, uint32_t size)
     ret = mringbuffer_data_len(context->ringbuffer);
 
     /* less data */
-    if (ret > size) {
+    if (ret >= size) {
         rel_size = size;
     } else {
         rel_size = ret - ret % 6;

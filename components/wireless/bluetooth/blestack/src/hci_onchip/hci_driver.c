@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -40,7 +40,12 @@
 //#include "init.h"
 //#include "hal/debug.h"
 #if defined(BFLB_BLE)
+#if defined(CONFIG_BT_HOST_HCI_TL)
+#include "bl_hci_tl.h"
+#include "bl_gpio.h"
+#else
 #include "bl_hci_wrapper.h"
+#endif
 #endif
 
 #define NODE_RX(_node) CONTAINER_OF(_node, struct radio_pdu_node_rx, \
@@ -287,7 +292,6 @@ static inline struct net_buf *process_hbuf(struct radio_pdu_node_rx *n)
 #endif
 
 #if defined(BFLB_BLE)
-#if (!BFLB_BT_CO_THREAD)
 static void recv_thread(void *p1)
 {
     UNUSED(p1);
@@ -365,7 +369,6 @@ static void recv_thread(void *p1)
 	}
 }
 #endif
-#endif
 
 #if !defined(BFLB_BLE)
 static int cmd_handle(struct net_buf *buf)
@@ -411,9 +414,12 @@ static int hci_driver_send(struct net_buf *buf)
 	}
 
 #if defined(BFLB_BLE)
+    #if defined (CONFIG_BT_HOST_HCI_TL)
+    err = bl_hci_send(buf);
+    #else
     err = bl_onchiphci_send_2_controller(buf);
+    #endif
     net_buf_unref(buf);
-    return err;
 #else
 	type = bt_buf_get_type(buf);
 	switch (type) {
@@ -432,18 +438,18 @@ static int hci_driver_send(struct net_buf *buf)
 	}
 
 	if (!err) {
-        
 		net_buf_unref(buf);
+	} else {
+
 	}
-    else
-    {
-    }
 
 	BT_DBG("exit: %d", err);
 #endif
 	return err;
 }
-
+#if defined(CONFIG_BT_HOST_HCI_TL)
+char hci_port[14];
+#endif
 static int hci_driver_open(void)
 {
 #if !defined(BFLB_BLE) 
@@ -467,21 +473,29 @@ static int hci_driver_open(void)
 	hci_init(NULL);
 #endif
 #endif
-#if (!BFLB_BT_CO_THREAD)
     k_fifo_init(&recv_fifo, 20);
-#endif
 #if defined(BFLB_BLE)
-#if (!BFLB_BT_CO_THREAD)
     k_thread_create(&recv_thread_data, "recv_thread",
 			CONFIG_BT_RX_STACK_SIZE/*K_THREAD_STACK_SIZEOF(recv_thread_stack)*/,
 			recv_thread,
 			K_PRIO_COOP(CONFIG_BT_RX_PRIO));
-#endif
 #else
         k_thread_create(&prio_recv_thread_data, prio_recv_thread_stack,
 			K_THREAD_STACK_SIZEOF(prio_recv_thread_stack),
 			prio_recv_thread, NULL, NULL, NULL,
 			K_PRIO_COOP(CONFIG_BT_CTLR_RX_PRIO), 0, K_NO_WAIT);
+#endif
+
+#if defined(BFLB_BLE)
+    #if defined(CONFIG_BT_HOST_HCI_TL)
+    bl_gpio_enable_output(CTRL_RESET_PIN, 0, 0);
+    bl_gpio_output_set(CTRL_RESET_PIN, 0);
+    k_sleep(10);
+    bl_gpio_output_set(CTRL_RESET_PIN, 1);
+    k_sleep(500); // wait controller ready
+
+    return bl_hci_init(hci_port);
+    #endif
 #endif
 
 	BT_DBG("Success.");
@@ -492,10 +506,6 @@ static int hci_driver_open(void)
 void hci_driver_enque_recvq(struct net_buf *buf)
 {
     net_buf_put(&recv_fifo, buf);
-    #if (BFLB_BT_CO_THREAD)
-    extern struct k_sem g_poll_sem;
-    k_sem_give(&g_poll_sem);
-    #endif
 }
 
 static const struct bt_hci_driver drv = {

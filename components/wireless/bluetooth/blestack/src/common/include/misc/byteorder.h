@@ -191,6 +191,21 @@ static inline void sys_put_be32(u32_t val, u8_t dst[4])
 }
 
 /**
+ *  @brief Put a 64-bit integer as big-endian to arbitrary location.
+ *
+ *  Put a 64-bit integer, originally in host endianness, to a
+ *  potentially unaligned memory location in big-endian format.
+ *
+ *  @param val 64-bit integer in host endianness.
+ *  @param dst Destination memory address to store the result.
+ */
+static inline void sys_put_be64(uint64_t val, uint8_t dst[8])
+{
+	sys_put_be32(val >> 32, dst);
+	sys_put_be32(val, &dst[4]);
+}
+
+/**
  *  @brief Put a 16-bit integer as little-endian to arbitrary location.
  *
  *  Put a 16-bit integer, originally in host endianness, to a
@@ -368,6 +383,23 @@ static inline u64_t sys_get_le64(const u8_t src[8])
  * @param src A valid pointer on a memory area where to copy the data from
  * @param length Size of both dst and src memory areas
  */
+#if defined(BFLB_BLE)
+static inline void sys_memcpy_swap(void *dst, const void *src, size_t length)
+{
+	u8_t *pdst = (u8_t *)dst;
+	const u8_t *psrc = (const u8_t *)src;
+
+	__ASSERT(((psrc < pdst && (psrc + length) <= pdst) ||
+		  (psrc > pdst && (pdst + length) <= psrc)),
+		 "Source and destination buffers must not overlap");
+
+	psrc += length - 1;
+
+	for (; length > 0; length--) {
+		*pdst++ = *psrc--;
+	}
+}
+#else
 static inline void sys_memcpy_swap(void *dst, const void *src, size_t length)
 {
 	__ASSERT(((src < dst && (src + length) <= dst) ||
@@ -380,7 +412,7 @@ static inline void sys_memcpy_swap(void *dst, const void *src, size_t length)
 		*((u8_t *)dst++) = *((u8_t *)src--);
 	}
 }
-
+#endif
 /**
  * @brief Swap buffer content
  *

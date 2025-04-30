@@ -96,7 +96,7 @@ err_t try_send_file(const char *path)
 
 void serch_send_file(const char *url)
 {
-    static uint16_t router_length = sizeof(httpRouter) / sizeof(HtmlRequestMethod_TypeDef);
+    static uint16_t router_length = sizeof(httpRouter) / sizeof(HtmlServerRouter_TypeDef);
     uint16_t i = 0;
 
     for (i = 0; i < router_length; i++) {
@@ -251,6 +251,8 @@ void http_server_thread(void *arg)
 
 void http_server_init(void)
 {
+    vSemaphoreCreateBinary(console_lock);
+
     // sys_thread_new("http_server", http_server_thread, NULL, 512, 2);
     xTaskCreateStatic((void *)http_server_thread, (char *)"http_server", sizeof(http_server_stack) / 4, NULL, osPriorityAboveNormal, http_server_stack, &http_server_handle);
 }

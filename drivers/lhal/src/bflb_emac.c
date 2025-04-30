@@ -33,845 +33,776 @@
   *
   ******************************************************************************
   */
+
 #include "bflb_emac.h"
 #include "bflb_clock.h"
-#include "bflb_l1c.h"
 #include "hardware/emac_reg.h"
 
-/* private definition */
-// #define TAG                   "EMAC_BD: "
-#define EMAC_TX_COMMON_FLAGS (EMAC_BD_TX_RD_MASK | EMAC_BD_TX_IRQ_MASK | EMAC_BD_TX_PAD_MASK | EMAC_BD_TX_CRC_MASK | EMAC_BD_TX_EOF_MASK)
-#define EMAC_RX_COMMON_FLAGS ((ETH_MAX_PACKET_SIZE << 16) | EMAC_BD_RX_IRQ_MASK)
+#ifdef EMAC_DEBUG
+#define EMAC_DRV_DBG(a, ...) printf("[emac drv]" a, ##__VA_ARGS__)
+#else
+#define EMAC_DRV_DBG(a, ...)
+#endif
 
-/**
- *  @brief Note: Always write DWORD1 (buffer addr) first then DWORD0 for racing concern.
- */
-struct bflb_emac_bd_desc_s {
-    uint32_t C_S_L;  /*!< Buffer Descriptors(BD) control,status,length */
-    uint32_t Buffer; /*!< BD buffer address */
+/* emac int */
+void bflb_emac_isr(int irq, void *arg);
+
+struct bflb_emac_queue_ctrl_s {
+    uint32_t emac_tx_bd_head;
+    uint32_t emac_tx_bd_tail;
+
+    uint32_t emac_rx_bd_head;
+    uint32_t emac_rx_bd_tail;
 };
 
-/**
- * @brief emac handle type definition
- * @param bd             Tx descriptor header pointer
- * @param tx_index_emac  TX index: EMAC
- * @param tx_index_cpu   TX index: CPU/SW
- * @param tx_buff_limit  TX index max
- * @param rsv0           rsv0
- * @param rx_index_emac  RX index: EMAC
- * @param rx_index_cpu   RX index: CPU/SW
- * @param rx_buff_limit  RX index max
- * @param rsv1           rsv1
- *
- */
-struct bflb_emac_handle_s {
-    struct bflb_emac_bd_desc_s *bd;
-    uint8_t tx_index_emac;
-    uint8_t tx_index_cpu;
-    uint8_t tx_buff_limit;
-    uint8_t rsv0;
-    uint8_t rx_index_emac;
-    uint8_t rx_index_cpu;
-    uint8_t rx_buff_limit;
-    uint8_t rsv1;
-};
+/* isr event callback */
+static void *emac_irq_arg = NULL;
+static bflb_emac_irq_cb_t emac_irq_event_cb = NULL;
 
-static struct bflb_emac_handle_s eth_handle;
-static struct bflb_emac_handle_s *thiz = NULL;
+static volatile struct bflb_emac_queue_ctrl_s emac_ctrl = { 0 };
 
-/**
- *
- * @brief get emac current active buffer describe index
- * @param dev
- * @param bdt @ref emac buffer descriptors type define
- * @return uint32_t
- *
- */
-uint32_t bflb_emac_bd_get_cur_active(struct bflb_device_s *dev, uint8_t bdt)
+int bflb_emac_init(struct bflb_device_s *dev, const struct bflb_emac_config_s *config)
 {
-    uint32_t bd = 0;
     uint32_t reg_base;
+    uint32_t regval;
+
     reg_base = dev->reg_base;
-
-    bd = getreg32(reg_base + EMAC_TX_BD_NUM_OFFSET);
-
-    if (bdt == EMAC_BD_TYPE_TX) {
-        bd &= EMAC_TXBDPTR_MASK;
-        bd >>= EMAC_TXBDPTR_SHIFT;
-    }
-
-    if (bdt == EMAC_BD_TYPE_RX) {
-        bd &= EMAC_RXBDPTR_MASK;
-        bd >>= EMAC_RXBDPTR_SHIFT;
-    }
-
-    return bd;
-}
-/**
- * @brief
- *
- * @param index
- *
- */
-void bflb_emac_bd_rx_enqueue(uint32_t index)
-{
-    thiz->rx_index_emac = index;
-}
-
-/**
- * @brief
- *
- * @param index
- *
- */
-void bflb_emac_bd_rx_on_err(uint32_t index)
-{
-    /* handle error */
-    if (thiz->bd[index].C_S_L & EMAC_BD_RX_OR_MASK) {
-        printf("EMAC RX OR Error at %s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_RX_RE_MASK) {
-        printf("MAC RX RE Error at %s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_RX_DN_MASK) {
-        printf("MAC RX DN Error at %s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_RX_TL_MASK) {
-        printf("MAC RX TL Error at %s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_RX_CRC_MASK) {
-        printf("MAC RX CRC Error at %s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_RX_LC_MASK) {
-        printf("MAC RX LC Error at %s:%d\r\n", __func__, __LINE__);
-    }
-
-    thiz->bd[index].C_S_L &= ~0xff;
-    /* RX BD is ready for RX */
-    thiz->bd[index].C_S_L |= EMAC_BD_RX_E_MASK;
-}
-
-/**
- * @brief this func will be called in ISR
- *
- * @param index
- *
- */
-void bflb_emac_bd_tx_dequeue(uint32_t index)
-{
-    struct bflb_emac_bd_desc_s *DMADesc;
-
-    thiz->tx_index_emac = index;
-    DMADesc = &thiz->bd[thiz->tx_index_emac];
-    /* release this tx BD to SW (HW will do this) */
-    DMADesc->C_S_L &= ~EMAC_BD_TX_RD_MASK;
-}
-
-/**
- * @brief
- *
- * @param index
- * @return int
- */
-void bflb_emac_bd_tx_on_err(uint32_t index)
-{
-    /* handle error */
-    if (thiz->bd[index].C_S_L & EMAC_BD_TX_UR_MASK) {
-        printf("%s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_TX_RTRY_MASK) {
-        printf("%s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_TX_RL_MASK) {
-        printf("%s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_TX_LC_MASK) {
-        printf("%s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_TX_DF_MASK) {
-        printf("%s:%d\r\n", __func__, __LINE__);
-    }
-
-    if (thiz->bd[index].C_S_L & EMAC_BD_TX_CS_MASK) {
-        printf("%s:%d\r\n", __func__, __LINE__);
-    }
-
-    thiz->bd[index].C_S_L &= ~0xff;
-}
-/**
- * @brief
- *
- * @param none
- * @return int
- */
-int emac_bd_fragment_support(void)
-{
-#if defined(BL616) || defined(BL808)
-    return 1;
-#elif defined(BL702)
-    return 0;
-#elif defined(BL628)
-    return 1;
-#endif
-}
-/**
- * @brief
- *
- * @param flags
- * @param len
- * @param data_in
- * @return int
- */
-int bflb_emac_bd_tx_enqueue(uint32_t flags, uint32_t len, const uint8_t *data_in)
-{
-    uint32_t err = 0;
-    struct bflb_emac_bd_desc_s *DMADesc;
-    uint32_t tx_flags = EMAC_TX_COMMON_FLAGS;
-    DMADesc = &thiz->bd[thiz->tx_index_cpu];
-
-    if (flags & EMAC_FRAGMENT_PACKET) {
-        /* Fragment packet, clear EOF */
-        tx_flags &= ~EMAC_BD_TX_EOF_MASK;
-    }
-
-    if (DMADesc->C_S_L & EMAC_BD_TX_RD_MASK) {
-        /* no free BD, lost sync with DMA TX? */
-        err = 4;
-        //printf(TAG"%s:%d\n", __func__, __LINE__);
-    } else {
-#if defined(BL616)
-        __ASM volatile("fence");
-#endif
-        // printf("tx q flags:%d,len:%d,data:0x%x\r\n", flags, len, data_in);
-        if (flags & EMAC_NOCOPY_PACKET) {
-            DMADesc->Buffer = (uint32_t)(uintptr_t)data_in;
-        } else {
-            arch_memcpy_fast((void *)(uintptr_t)(DMADesc->Buffer), data_in, len);
-        }
-
-#ifdef EMAC_DO_FLUSH_DATA
-#if defined(BL616)
-        bflb_l1c_dcache_invalidate_range((void *)DMADesc->Buffer, len);
-#endif
-#endif
-        DMADesc->C_S_L = tx_flags | (len << EMAC_BD_TX_LEN_SHIFT);
-
-        /* move to next TX BD */
-        if ((++thiz->tx_index_cpu) > thiz->tx_buff_limit) {
-            /* the last BD */
-            DMADesc->C_S_L |= EMAC_BD_TX_WR_MASK;
-            /* wrap back */
-            thiz->tx_index_cpu = 0;
-        }
-    }
-
-    return err;
-}
-
-/**
- * @brief
- *
- * @param flags
- * @param len
- * @param data_out
- * @return int
- */
-int bflb_emac_bd_rx_dequeue(uint32_t flags, uint32_t *len, uint8_t *data_out)
-{
-    uint32_t err = 0;
-    struct bflb_emac_bd_desc_s *DMADesc;
-
-    DMADesc = &thiz->bd[thiz->rx_index_cpu];
-
-    if (DMADesc->C_S_L & EMAC_BD_RX_E_MASK) {
-        /* current RX BD is empty */
-        err = 4;
-        *len = 0;
-    } else {
-        *len = (thiz->bd[thiz->rx_index_cpu].C_S_L & EMAC_BD_RX_LEN_MASK) >> EMAC_BD_RX_LEN_SHIFT;
-#ifdef EMAC_DO_FLUSH_DATA
-#if defined(BL616)
-        bflb_l1c_dcache_invalidate_range((void *)DMADesc->Buffer, *len);
-#endif
-#endif
-        if (data_out) {
-            arch_memcpy_fast(data_out, (const void *)(uintptr_t)DMADesc->Buffer, *len);
-        }
-
-        /* RX BD can be used for another receive */
-        DMADesc->C_S_L |= EMAC_BD_RX_E_MASK;
-
-        /* move to next RX BD */
-        if ((++thiz->rx_index_cpu) > thiz->rx_buff_limit) {
-            /* the last BD */
-            DMADesc->C_S_L |= EMAC_BD_RX_WR_MASK;
-            /* wrap back */
-            thiz->rx_index_cpu = thiz->tx_buff_limit + 1;
-        }
-    }
-
-    return err;
-}
-
-/**
- * @brief bflb emac init
- *
- * @param dev
- * @param config
- *
- */
-void bflb_emac_init(struct bflb_device_s *dev, const struct bflb_emac_config_s *config)
-{
-    uint32_t reg_base;
-    uint32_t reg_val;
 
 #if defined(BL616) || defined(BL808)
 #define GLB_EMAC_CLK_OUT_ADDRESS (0x20000390)
 #define GLB_UNGATE_CFG2_ADDRESS  (0x20000588)
 
     /* GLB select inside clock or Not */
-    reg_val = getreg32(GLB_EMAC_CLK_OUT_ADDRESS);
-    if (config->inside_clk == EMAC_CLK_USE_INTERNAL) {
-        reg_val |= (1 << 5);
-        reg_val |= (1 << 6);
-        reg_val &= ~(1 << 7);
-        reg_val |= (1 << 10);
+    regval = getreg32(GLB_EMAC_CLK_OUT_ADDRESS);
+    if (config->clk_internal_mode) {
+        regval |= (1 << 5);  /* 1: ref_clk out mode */
+        regval |= (1 << 6);  /* 1: ref_clk out invert */
+        regval &= ~(1 << 7); /* 1: mac_tx_clk invert */
+        regval |= (1 << 10); /* 1: mac_rx_clk invert */
     } else {
-        reg_val &= ~(1 << 5);
-        reg_val &= ~(1 << 6);
-        reg_val &= ~(1 << 7);
+        regval &= ~(1 << 5); /* 0: ref_clk in mode */
+        regval &= ~(1 << 6);
+        regval &= ~(1 << 7);
+        regval &= ~(1 << 10);
     }
-    putreg32(reg_val, GLB_EMAC_CLK_OUT_ADDRESS);
+    putreg32(regval, GLB_EMAC_CLK_OUT_ADDRESS);
 
     /* ungate emac clock */
-    reg_val = getreg32(GLB_UNGATE_CFG2_ADDRESS);
-    reg_val |= (1 << 23);
-    putreg32(reg_val, GLB_UNGATE_CFG2_ADDRESS);
+    regval = getreg32(GLB_UNGATE_CFG2_ADDRESS);
+    regval |= (1 << 23);
+    putreg32(regval, GLB_UNGATE_CFG2_ADDRESS);
+
 #elif defined(BL702)
-    /* enable audio clock and GLB select inside clock or Not */
-// #define PDS_AUDIO_PLL_EN_ADDRESS (0x4000E41C)
+/* enable audio clock and GLB select inside clock or Not */
 #define GLB_UNGATE_CFG1_ADDRESS (0x40000024)
 #define GLB_CLOCK_CFG3_ADDRESS  (0x4000000C)
 
-    // reg_val = getreg32(PDS_AUDIO_PLL_EN_ADDRESS);
-    // reg_val |= (1 << 7);
-    // putreg32(reg_val, PDS_AUDIO_PLL_EN_ADDRESS);
-
-    reg_val = getreg32(GLB_CLOCK_CFG3_ADDRESS);
-    if (config->inside_clk == EMAC_CLK_USE_INTERNAL) {
-        reg_val |= (1 << 5);
+    regval = getreg32(GLB_CLOCK_CFG3_ADDRESS);
+    if (config->clk_internal_mode) {
+        regval |= (1 << 5);
     } else {
-        reg_val &= ~(1 << 5);
+        regval &= ~(1 << 5);
     }
-    putreg32(reg_val, GLB_CLOCK_CFG3_ADDRESS);
+    putreg32(regval, GLB_CLOCK_CFG3_ADDRESS);
 
     /* ungate emac clock */
-    reg_val = getreg32(GLB_UNGATE_CFG1_ADDRESS);
-    reg_val |= (1 << 0x0d);
-    putreg32(reg_val, GLB_UNGATE_CFG1_ADDRESS);
+    regval = getreg32(GLB_UNGATE_CFG1_ADDRESS);
+    regval |= (1 << 0x0d);
+    putreg32(regval, GLB_UNGATE_CFG1_ADDRESS);
 #endif
 
-    reg_base = dev->reg_base;
-    /* set mac defualt config , enable rmii and other*/
-    reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
-    reg_val |= (EMAC_RMII_EN);
-    reg_val |= (EMAC_PRO);
-    reg_val |= (EMAC_BRO);
-    reg_val &= ~(EMAC_NOPRE);
-    reg_val |= (EMAC_PAD);
-    reg_val |= (EMAC_CRCEN);
-    reg_val &= ~(EMAC_HUGEN);
-    reg_val |= (EMAC_RECSMALL);
-    reg_val |= (EMAC_IFG);
-    putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+    /* disbale tx and rx */
+    regval = getreg32(reg_base + EMAC_MODE_OFFSET);
+    regval &= ~EMAC_TX_EN;
+    regval &= ~EMAC_RX_EN;
+    putreg32(regval, reg_base + EMAC_MODE_OFFSET);
 
-    /* set inter frame gap defualt value */
-    reg_val = getreg32(reg_base + EMAC_IPGT_OFFSET);
-    reg_val &= ~(EMAC_IPGT_MASK);
-    reg_val |= (0x18) << EMAC_IPGT_SHIFT;
-    putreg32(reg_val, reg_base + EMAC_IPGT_OFFSET);
+    /* clean all db */
+    for (int i = 0; i < 128 * 2; i++) {
+        putreg32(0, reg_base + EMAC_DMA_DESC_OFFSET + i * 4);
+    }
 
-    /* set MII interface */
-    reg_val = getreg32(reg_base + EMAC_MIIMODE_OFFSET);
-    reg_val |= EMAC_MIINOPRE;
-    reg_val &= ~(EMAC_CLKDIV_MASK);
-    reg_val |= (config->mii_clk_div) << EMAC_CLKDIV_SHIFT;
-    putreg32(reg_val, reg_base + EMAC_MIIMODE_OFFSET);
+    /* defualt config */
+    regval = getreg32(reg_base + EMAC_MODE_OFFSET);
+    /* enable rmii */
+    regval |= EMAC_RMII_EN;
+    /* receive small frame */
+    regval |= EMAC_RECSMALL;
+    /* add pads to small frame */
+    regval |= EMAC_PAD;
+    /* all additional bytes are dropped */
+    regval &= ~EMAC_HUGEN;
+    /* enable tx crc */
+    regval |= EMAC_CRCEN;
+    /* half duplex mode */
+    regval &= ~EMAC_FULLD;
+    /* disbale frame gap check */
+    regval |= EMAC_IFG;
+    /* receive all mac_addr frames */
+    regval |= EMAC_PRO;
+    /* receive all broadcast frames */
+    regval |= EMAC_BRO;
+    /* enable sent preamble */
+    regval &= ~EMAC_NOPRE;
+#if (EMAC_SPEED_10M_SUPPORT)
+    /* 100M mode */
+    regval |= EMAC_100M;
+#endif
+    putreg32(regval, reg_base + EMAC_MODE_OFFSET);
 
-    /* set collision */
-    reg_val = getreg32(reg_base + EMAC_COLLCONFIG_OFFSET);
-    reg_val &= ~(EMAC_MAXFL_MASK | EMAC_COLLVALID_MASK);
-    reg_val |= (0xf) << EMAC_MAXFL_SHIFT;
-    reg_val |= (0x10) << EMAC_COLLVALID_SHIFT;
-    putreg32(reg_val, reg_base + EMAC_COLLCONFIG_OFFSET);
+    /* packet gap, defualt value: 24 clock */
+    regval = getreg32(reg_base + EMAC_IPGT_OFFSET);
+    regval &= ~(EMAC_IPGT_MASK);
+    regval |= (0x18 << EMAC_IPGT_SHIFT) & EMAC_IPGT_MASK;
+    putreg32(regval, reg_base + EMAC_IPGT_OFFSET);
 
-    /* set frame length */
-    reg_val = getreg32(reg_base + EMAC_PACKETLEN_OFFSET);
-    reg_val &= ~(EMAC_MINFL_MASK | EMAC_MAXFL_MASK);
-    reg_val |= (config->min_frame_len) << EMAC_MINFL_SHIFT;
-    reg_val |= (config->max_frame_len) << EMAC_MAXFL_SHIFT;
-    putreg32(reg_val, reg_base + EMAC_PACKETLEN_OFFSET);
-
-    /* set emac address */
-    reg_val = getreg32(reg_base + EMAC_MAC_ADDR0_OFFSET);
-    reg_val &= ~(EMAC_MAC_B2_MASK | EMAC_MAC_B3_MASK | EMAC_MAC_B4_MASK | EMAC_MAC_B5_MASK);
-    reg_val |= (config->mac_addr[5]) << EMAC_MAC_B5_SHIFT;
-    reg_val |= (config->mac_addr[4]) << EMAC_MAC_B4_SHIFT;
-    reg_val |= (config->mac_addr[3]) << EMAC_MAC_B3_SHIFT;
-    reg_val |= (config->mac_addr[2]) << EMAC_MAC_B2_SHIFT;
-    putreg32(reg_val, reg_base + EMAC_MAC_ADDR0_OFFSET);
-    reg_val = getreg32(reg_base + EMAC_MAC_ADDR1_OFFSET);
-    reg_val &= ~(EMAC_MAC_B0_MASK | EMAC_MAC_B1_MASK);
-    reg_val |= (config->mac_addr[1]) << EMAC_MAC_B1_SHIFT;
-    reg_val |= (config->mac_addr[0]) << EMAC_MAC_B0_SHIFT;
-    putreg32(reg_val, reg_base + EMAC_MAC_ADDR1_OFFSET);
-}
-
-/**
- * @brief bflb emac deinit
- *
- * @param dev
- *
- */
-void bflb_emac_deinit(struct bflb_device_s *dev)
-{
-    uint32_t reg_base;
-    uint32_t reg_val;
-
-    reg_base = dev->reg_base;
-
-    reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
-    reg_val &= ~(EMAC_TX_EN | EMAC_RX_EN);
-    putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
-}
-
-/**
- * @brief bflb emac interrupt enable
- *
- * @param dev
- * @param flag
- * @param enable
- *
- */
-void bflb_emac_int_enable(struct bflb_device_s *dev, uint32_t flag, bool enable)
-{
-    uint32_t reg_base;
-    uint32_t reg_val_mask; // reg_val_en;
-
-    reg_base = dev->reg_base;
-    reg_val_mask = getreg32(reg_base + EMAC_INT_MASK_OFFSET);
-    if (enable) {
-        reg_val_mask &= ~(flag);
+    /* packe len limit */
+    regval = getreg32(reg_base + EMAC_PACKETLEN_OFFSET);
+    regval &= ~(EMAC_MINFL_MASK | EMAC_MAXFL_MASK);
+    /* min len */
+    if (config->min_frame_len) {
+        regval |= (config->min_frame_len << EMAC_MINFL_SHIFT) & EMAC_MINFL_MASK;
     } else {
-        reg_val_mask |= (flag);
+        regval |= (0x40 << EMAC_MINFL_SHIFT) & EMAC_MINFL_MASK;
     }
-    putreg32(reg_val_mask, reg_base + EMAC_INT_MASK_OFFSET);
-};
-
-/**
- * @brief bflb emac interrupt clear
- *
- * @param dev
- * @param flag
- *
- */
-void bflb_emac_int_clear(struct bflb_device_s *dev, uint32_t flag)
-{
-    putreg32(flag, dev->reg_base + EMAC_INT_SOURCE_OFFSET);
-}
-
-/**
- * @brief bflb emac get interrupt status
- *
- * @param dev
- * @return uint32_t
- */
-uint32_t bflb_emac_get_int_status(struct bflb_device_s *dev)
-{
-    uint32_t reg_base;
-    uint32_t reg_sts_val, reg_mask_val;
-
-    reg_base = dev->reg_base;
-    reg_sts_val = getreg32(reg_base + EMAC_INT_SOURCE_OFFSET);
-    reg_mask_val = getreg32(reg_base + EMAC_INT_MASK_OFFSET);
-
-    return (reg_sts_val & (~reg_mask_val));
-}
-
-/**
- * @brief emac dma description list init
- *
- * @param reg_base
- * @param handle
- * @param tx_buff
- * @param tx_buff_cnt
- * @param rx_buff
- * @param rx_buff_cnt
- *
- */
-static void emac_dma_desc_list_init(uint32_t reg_base, struct bflb_emac_handle_s *handle, uint8_t *tx_buff, uint32_t tx_buff_cnt, uint8_t *rx_buff, uint32_t rx_buff_cnt)
-{
-    uint32_t i = 0;
-
-    /* Set the Ethernet handler env */
-    handle->bd = (struct bflb_emac_bd_desc_s *)(uintptr_t)(reg_base + EMAC_DMA_DESC_OFFSET);
-    handle->tx_index_emac = 0;
-    handle->tx_index_cpu = 0;
-    handle->tx_buff_limit = tx_buff_cnt - 1;
-    /* The receive descriptors' address starts right after the last transmit BD. */
-    handle->rx_index_emac = tx_buff_cnt;
-    handle->rx_index_cpu = tx_buff_cnt;
-    handle->rx_buff_limit = tx_buff_cnt + rx_buff_cnt - 1;
-
-    /* Fill each DMARxDesc descriptor with the right values */
-    for (i = 0; i < tx_buff_cnt; i++) {
-        /* Get the pointer on the ith member of the Tx Desc list */
-        handle->bd[i].Buffer = (NULL == tx_buff) ? 0 : (uint32_t)(uintptr_t)(tx_buff + (ETH_MAX_PACKET_SIZE * i));
-        handle->bd[i].C_S_L = 0;
+    /* max len */
+    if (config->max_frame_len) {
+        regval |= (config->max_frame_len << EMAC_MAXFL_SHIFT) & EMAC_MAXFL_MASK;
+    } else {
+        regval |= (0x40 << EMAC_MAXFL_SHIFT) & EMAC_MAXFL_MASK;
     }
+    putreg32(regval, reg_base + EMAC_PACKETLEN_OFFSET);
 
-    /* For the last TX DMA Descriptor, it should be wrap back */
-    handle->bd[handle->tx_buff_limit].C_S_L |= EMAC_BD_TX_WR_MASK;
+    /* set collision retry and time_window */
+    regval = getreg32(reg_base + EMAC_COLLCONFIG_OFFSET);
+    regval &= ~(EMAC_MAXRET_MASK | EMAC_COLLVALID_MASK);
+    regval |= (0xf << EMAC_MAXRET_SHIFT) & EMAC_MAXRET_MASK;
+    regval |= (0x10 << EMAC_COLLVALID_SHIFT) & EMAC_COLLVALID_MASK;
+    putreg32(regval, reg_base + EMAC_COLLCONFIG_OFFSET);
 
-    for (i = tx_buff_cnt; i < (tx_buff_cnt + rx_buff_cnt); i++) {
-        /* Get the pointer on the ith member of the Rx Desc list */
-        handle->bd[i].Buffer = (NULL == rx_buff) ? 0 : (uint32_t)(uintptr_t)(rx_buff + (ETH_MAX_PACKET_SIZE * (i - tx_buff_cnt)));
-        handle->bd[i].C_S_L = (ETH_MAX_PACKET_SIZE << 16) | EMAC_BD_RX_IRQ_MASK | EMAC_BD_RX_E_MASK;
-    }
+    /* set mac address B2~B5 */
+    regval = getreg32(reg_base + EMAC_MAC_ADDR0_OFFSET);
+    regval &= ~(EMAC_MAC_B2_MASK | EMAC_MAC_B3_MASK | EMAC_MAC_B4_MASK | EMAC_MAC_B5_MASK);
+    regval |= config->mac_addr[5] << EMAC_MAC_B5_SHIFT;
+    regval |= config->mac_addr[4] << EMAC_MAC_B4_SHIFT;
+    regval |= config->mac_addr[3] << EMAC_MAC_B3_SHIFT;
+    regval |= config->mac_addr[2] << EMAC_MAC_B2_SHIFT;
+    putreg32(regval, reg_base + EMAC_MAC_ADDR0_OFFSET);
+    /* set mac address B0~B1 */
+    regval = getreg32(reg_base + EMAC_MAC_ADDR1_OFFSET);
+    regval &= ~(EMAC_MAC_B0_MASK | EMAC_MAC_B1_MASK);
+    regval |= config->mac_addr[1] << EMAC_MAC_B1_SHIFT;
+    regval |= config->mac_addr[0] << EMAC_MAC_B0_SHIFT;
+    putreg32(regval, reg_base + EMAC_MAC_ADDR1_OFFSET);
 
-    /* For the last RX DMA Descriptor, it should be wrap back */
-    handle->bd[handle->rx_buff_limit].C_S_L |= EMAC_BD_RX_WR_MASK;
+    /* Management Data (MD) clk div */
+    regval = getreg32(reg_base + EMAC_MIIMODE_OFFSET);
+    regval &= ~(EMAC_CLKDIV_MASK);
+    regval |= (config->md_clk_div << EMAC_CLKDIV_SHIFT) & EMAC_CLKDIV_MASK;
+    /* enable preamble sent */
+    regval &= ~EMAC_MIINOPRE;
+    putreg32(regval, reg_base + EMAC_MIIMODE_OFFSET);
 
-    /* For the TX DMA Descriptor, it will wrap to 0 according to EMAC_TX_BD_NUM*/
-    putreg32(tx_buff_cnt, reg_base + EMAC_TX_BD_NUM_OFFSET);
-}
+    /* enable int event */
+    regval = getreg32(reg_base + EMAC_INT_MASK_OFFSET);
+    regval &= ~(EMAC_RXC_M | EMAC_BUSY_M | EMAC_RXE_M | EMAC_RXB_M); /* rx int */
+    regval &= ~(EMAC_TXC_M | EMAC_TXE_M | EMAC_TXB_M);               /* rx int */
+    putreg32(regval, reg_base + EMAC_INT_MASK_OFFSET);
 
-/**
- * @brief emac buffer description init
- *
- * @param eth_tx_buff
- * @param tx_buf_count
- * @param eth_rx_buff
- * @param rx_buf_count
- *
- */
-void bflb_emac_bd_init(struct bflb_device_s *dev, uint8_t *eth_tx_buff, uint8_t tx_buf_count, uint8_t *eth_rx_buff, uint8_t rx_buf_count)
-{
-    thiz = &eth_handle;
-    uint32_t reg_base;
-    reg_base = dev->reg_base;
-    /* init the BDs in emac with buffer address */
-    emac_dma_desc_list_init(reg_base, thiz, (uint8_t *)eth_tx_buff, tx_buf_count, (uint8_t *)eth_rx_buff, rx_buf_count);
-}
-
-/**
- * @brief bflb emac phy register read
- *
- * @param dev
- * @param phy_reg
- * @param phy_reg_val
- * @return int
- *
- */
-int bflb_emac_phy_reg_read(struct bflb_device_s *dev, uint16_t phy_reg, uint16_t *phy_reg_val)
-{
-    uint32_t reg_val;
-
-    /* Set Register Address */
-    reg_val = getreg32(dev->reg_base + EMAC_MIIADDRESS_OFFSET);
-    reg_val &= ~(EMAC_RGAD_MASK);
-    reg_val |= ((uint32_t)phy_reg << EMAC_RGAD_SHIFT);
-    putreg32(reg_val, dev->reg_base + EMAC_MIIADDRESS_OFFSET);
-
-    /* Trigger read */
-    reg_val = getreg32(dev->reg_base + EMAC_MIICOMMAND_OFFSET);
-    reg_val |= (EMAC_RSTAT);
-    putreg32(reg_val, dev->reg_base + EMAC_MIICOMMAND_OFFSET);
-
-    __ASM volatile("nop");
-    __ASM volatile("nop");
-    __ASM volatile("nop");
-    __ASM volatile("nop");
-
-    do {
-        reg_val = getreg32(dev->reg_base + EMAC_MIISTATUS_OFFSET);
-        bflb_mtimer_delay_us(16);
-    } while ((reg_val & (EMAC_MIIM_BUSY)) != 0);
-
-    *phy_reg_val = getreg32(dev->reg_base + EMAC_MIIRX_DATA_OFFSET);
+#ifndef NOT_USE_BFLB_LHAL_IRQ_ATTACH
+    /* enable irq */
+    bflb_irq_attach(dev->irq_num, bflb_emac_isr, dev);
+    bflb_irq_enable(dev->irq_num);
+#endif
 
     return 0;
 }
 
-/**
- * @brief bflb emac phy register write
- *
- * @param dev
- * @param phy_reg
- * @param phy_reg_val
- * @return int
- *
- */
-int bflb_emac_phy_reg_write(struct bflb_device_s *dev, uint16_t phy_reg, uint16_t phy_reg_val)
+int bflb_emac_deinit(struct bflb_device_s *dev)
 {
-    uint32_t reg_val;
+    uint32_t reg_base;
+    uint32_t regval;
 
-    /* Set Register Address */
-    reg_val = getreg32(dev->reg_base + EMAC_MIIADDRESS_OFFSET);
-    reg_val &= ~(EMAC_RGAD_MASK);
-    reg_val |= ((uint32_t)phy_reg << EMAC_RGAD_SHIFT);
-    putreg32(reg_val, dev->reg_base + EMAC_MIIADDRESS_OFFSET);
+    reg_base = dev->reg_base;
 
-    /* Set Write data */
-    putreg32(phy_reg_val, dev->reg_base + EMAC_MIITX_DATA_OFFSET);
+    /* disbale tx and rx */
+    regval = getreg32(reg_base + EMAC_MODE_OFFSET);
+    regval &= ~EMAC_TX_EN;
+    regval &= ~EMAC_RX_EN;
+    putreg32(regval, reg_base + EMAC_MODE_OFFSET);
 
-    /* Trigger write */
-    reg_val = getreg32(dev->reg_base + EMAC_MIICOMMAND_OFFSET);
-    reg_val |= (EMAC_WCTRLDATA);
-    putreg32(reg_val, dev->reg_base + EMAC_MIICOMMAND_OFFSET);
+    /* disable irq */
+    bflb_irq_disable(dev->irq_num);
 
-    __ASM volatile("nop");
-    __ASM volatile("nop");
-    __ASM volatile("nop");
-    __ASM volatile("nop");
+    /* TODO: reset emac hw */
+    /* clean bd */
+    for (int i = 0; i < 128; i++) {
+        putreg32(0, reg_base + EMAC_DMA_DESC_OFFSET + i * 4);
+    }
 
-    do {
-        reg_val = getreg32(dev->reg_base + EMAC_MIISTATUS_OFFSET);
-        bflb_mtimer_delay_us(16);
-    } while ((reg_val & (EMAC_MIIM_BUSY)) != 0);
+    /* clean ctrl */
+    arch_memset((void *)&emac_ctrl, 0, sizeof(struct bflb_emac_queue_ctrl_s));
 
     return 0;
 }
 
-/**
- * @brief bflb emac feature control
- *
- * @param dev
- * @param cmd
- * @param arg
- * @return int
- *
- */
+int bflb_emac_bd_ctrl_clean(struct bflb_device_s *dev)
+{
+    uint32_t reg_base = dev->reg_base;
+
+    /* lock */
+    uintptr_t flag = bflb_irq_save();
+
+    /* clean bd */
+    for (int i = 0; i < 128; i++) {
+        putreg32(0, reg_base + EMAC_DMA_DESC_OFFSET + i * 4);
+    }
+
+    /* clean ctrl */
+    arch_memset((void *)&emac_ctrl, 0, sizeof(struct bflb_emac_queue_ctrl_s));
+
+    /* unlock */
+    bflb_irq_restore(flag);
+
+    return 0;
+}
+
+int bflb_emac_md_read(struct bflb_device_s *dev, uint8_t phy_addr, uint8_t reg_addr, uint16_t *data)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = dev->reg_base;
+
+    /* set phy and reg addr */
+    regval = getreg32(reg_base + EMAC_MIIADDRESS_OFFSET);
+    regval &= ~(EMAC_FIAD_MASK | EMAC_RGAD_MASK);
+    regval |= (phy_addr << EMAC_FIAD_SHIFT) & EMAC_FIAD_MASK;
+    regval |= (reg_addr << EMAC_RGAD_SHIFT) & EMAC_RGAD_MASK;
+    putreg32(regval, reg_base + EMAC_MIIADDRESS_OFFSET);
+
+    /* trigger read */
+    regval = getreg32(reg_base + EMAC_MIICOMMAND_OFFSET);
+    regval |= (EMAC_RSTAT);
+    putreg32(regval, reg_base + EMAC_MIICOMMAND_OFFSET);
+
+    /* wait */
+    do {
+        arch_delay_us(10);
+        regval = getreg32(reg_base + EMAC_MIISTATUS_OFFSET);
+    } while (regval & EMAC_MIIM_BUSY);
+
+    regval = getreg32(dev->reg_base + EMAC_MIIRX_DATA_OFFSET);
+    *data = (uint16_t)(regval & EMAC_PRSD_MASK);
+
+    return 0;
+}
+
+int bflb_emac_md_write(struct bflb_device_s *dev, uint8_t phy_addr, uint8_t reg_addr, uint16_t data)
+{
+    uint32_t reg_base;
+    uint32_t regval;
+
+    reg_base = dev->reg_base;
+
+    /* set phy and reg addr */
+    regval = getreg32(reg_base + EMAC_MIIADDRESS_OFFSET);
+    regval &= ~(EMAC_FIAD_MASK | EMAC_RGAD_MASK);
+    regval |= (phy_addr << EMAC_FIAD_SHIFT) & EMAC_FIAD_MASK;
+    regval |= (reg_addr << EMAC_RGAD_SHIFT) & EMAC_RGAD_MASK;
+    putreg32(regval, reg_base + EMAC_MIIADDRESS_OFFSET);
+
+    /* set write data */
+    regval = getreg32(reg_base + EMAC_MIITX_DATA_OFFSET);
+    regval &= ~EMAC_CTRLDATA_MASK;
+    regval |= (data << EMAC_CTRLDATA_SHIFT) & EMAC_CTRLDATA_MASK;
+    putreg32(regval, dev->reg_base + EMAC_MIITX_DATA_OFFSET);
+
+    /* trigger write */
+    regval = getreg32(reg_base + EMAC_MIICOMMAND_OFFSET);
+    regval |= (EMAC_WCTRLDATA);
+    putreg32(regval, reg_base + EMAC_MIICOMMAND_OFFSET);
+
+    /* wait */
+    do {
+        arch_delay_us(10);
+        regval = getreg32(reg_base + EMAC_MIISTATUS_OFFSET);
+    } while (regval & EMAC_MIIM_BUSY);
+
+    return 0;
+}
+
+int bflb_emac_queue_tx_push(struct bflb_device_s *dev, struct bflb_emac_trans_desc_s *tx_desc)
+{
+    uint32_t reg_base = dev->reg_base;
+    uint32_t regval = 0;
+    uint32_t bd_index;
+
+    /* lock */
+    uintptr_t flag = bflb_irq_save();
+
+    /* check tx_bd_tail */
+    if (emac_ctrl.emac_tx_bd_tail - emac_ctrl.emac_tx_bd_head >= EMAC_TX_BD_BUM_MAX) {
+        /* the ring queue is full */
+        /* unlock */
+        bflb_irq_restore(flag);
+        return -1;
+    }
+
+    bd_index = emac_ctrl.emac_tx_bd_tail & EMAC_TX_BD_BUM_MASK;
+    /* update tx_bd_tail */
+    emac_ctrl.emac_tx_bd_tail += 1;
+
+    /*  */
+    if (!(tx_desc->attr_flag & EMAC_TX_FLAG_FRAGMENT)) {
+        regval |= EMAC_BD_TX_EOF_MASK;
+    }
+    /* enable crc */
+    if (!(tx_desc->attr_flag & EMAC_TX_FLAG_NO_CRC)) {
+        regval |= EMAC_BD_TX_CRC_MASK;
+    }
+    /* enable padding attach */
+    if (!(tx_desc->attr_flag & EMAC_TX_FLAG_NO_PAD)) {
+        regval |= EMAC_BD_TX_PAD_MASK;
+    }
+    /* enable int */
+    if (!(tx_desc->attr_flag & EMAC_TX_FLAG_NO_INT)) {
+        regval |= EMAC_BD_TX_IRQ_MASK;
+    }
+    /* DB end */
+    if (bd_index == EMAC_TX_BD_BUM_MASK) {
+        regval |= EMAC_BD_TX_WR_MASK;
+    }
+    /* db ready */
+    regval |= EMAC_BD_TX_RD_MASK;
+    /* data length */
+    regval |= (tx_desc->data_len << EMAC_BD_TX_LEN_SHIFT) & EMAC_BD_TX_LEN_MASK;
+
+    /* hw tx db address */
+    uint32_t tx_db_addr = reg_base + EMAC_DMA_DESC_OFFSET + bd_index * sizeof(struct bflb_emac_hw_buff_desc_s);
+
+    /* buff addr */
+    putreg32((uintptr_t)tx_desc->buff_addr, tx_db_addr + 4);
+    /* len and attr, tx ready */
+    putreg32(regval, tx_db_addr);
+
+    /* unlock */
+    bflb_irq_restore(flag);
+
+    return 0;
+}
+
+int bflb_emac_queue_rx_push(struct bflb_device_s *dev, struct bflb_emac_trans_desc_s *rx_desc)
+{
+    uint32_t reg_base = dev->reg_base;
+    uint32_t regval = 0;
+    uint32_t bd_index;
+
+    /* lock */
+    uintptr_t flag = bflb_irq_save();
+
+    /* check rx_bd_tail */
+    if (emac_ctrl.emac_rx_bd_tail - emac_ctrl.emac_rx_bd_head >= EMAC_RX_BD_BUM_MAX) {
+        /* the ring queue is full */
+        /* unlock */
+        bflb_irq_restore(flag);
+        return -1;
+    }
+
+    bd_index = emac_ctrl.emac_rx_bd_tail & EMAC_RX_BD_BUM_MASK;
+    /* update rx_bd_tail */
+    emac_ctrl.emac_rx_bd_tail += 1;
+
+    /* enable int */
+    if (!(rx_desc->attr_flag & EMAC_RX_FLAG_NO_INT)) {
+        regval |= EMAC_BD_RX_IRQ_MASK;
+    }
+    /* DB end */
+    if (bd_index == EMAC_RX_BD_BUM_MASK) {
+        regval |= EMAC_BD_RX_WR_MASK;
+    }
+    /* db ready */
+    regval |= EMAC_BD_RX_E_MASK;
+
+    /* hw rx db address */
+    uint32_t rx_db_addr = reg_base + EMAC_DMA_DESC_OFFSET + (bd_index + 64) * sizeof(struct bflb_emac_hw_buff_desc_s);
+
+    /* buff addr */
+    putreg32((uint32_t)(uintptr_t)rx_desc->buff_addr, rx_db_addr + 4);
+    /* len and attr, rx ready */
+    putreg32(regval, rx_db_addr);
+
+    /* unlock */
+    bflb_irq_restore(flag);
+
+    return 0;
+}
+
 int bflb_emac_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
     int ret = 0;
-    uint32_t reg_val;
-    uint32_t reg_base;
+    uint32_t reg_base = dev->reg_base;
+    uint32_t regval;
 
-    reg_base = dev->reg_base;
     switch (cmd) {
-        case EMAC_CMD_NO_PREAMBLE_MODE:
-            reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
+        case EMAC_CMD_SET_TX_EN:
+            /* enable tx, Default:false */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
             if (arg) {
-                reg_val |= EMAC_NOPRE;
+                regval |= EMAC_TX_EN;
             } else {
-                reg_val &= ~(EMAC_NOPRE);
+                regval &= ~EMAC_TX_EN;
             }
-            putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_EN_PROMISCUOUS:
-            reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
+        case EMAC_CMD_SET_TX_AUTO_PADDING:
+            /* Add pads to short frames, until the length equals MINFL. Default:true  */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
             if (arg) {
-                reg_val |= EMAC_PRO;
+                regval |= EMAC_PAD;
             } else {
-                reg_val &= ~(EMAC_PRO);
+                regval &= ~EMAC_PAD;
             }
-            putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_FRAME_GAP_CHECK:
-            reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
+        case EMAC_CMD_SET_TX_CRC_FIELD_EN:
+            /* TX MAC will append CRC field to every frame. Default:true */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
             if (arg) {
-                reg_val |= EMAC_IFG;
+                regval |= EMAC_CRCEN;
             } else {
-                reg_val &= ~(EMAC_IFG);
+                regval &= ~EMAC_CRCEN;
             }
-            putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_FULL_DUPLEX:
-            reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
+        case EMAC_CMD_SET_TX_PREAMBLE:
+            /* 7-byte preamble will be sent. Default:true */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
             if (arg) {
-                reg_val |= EMAC_FULLD;
+                regval &= ~EMAC_NOPRE;
             } else {
-                reg_val &= ~(EMAC_FULLD);
+                regval |= EMAC_NOPRE;
             }
-            putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_EN_TX_CRC_FIELD:
-            reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
+        case EMAC_CMD_SET_TX_GAP_CLK:
+            /* Inter packet gap. Default value is 0x18 (24 clock cycles), which equals 9.6 us for 10 Mbps and 0.96 us for 100 Mbps mode*/
+            regval = getreg32(reg_base + EMAC_IPGT_OFFSET);
+            regval &= ~EMAC_IPGT_MASK;
+            regval |= (arg << EMAC_IPGT_SHIFT) & EMAC_IPGT_MASK;
+            putreg32(regval, reg_base + EMAC_IPGT_OFFSET);
+            break;
+
+        case EMAC_CMD_SET_TX_COLLISION:
+            /* Collision valid, This field specifies a collision time window, Default value is 0x3f */
+            regval = getreg32(reg_base + EMAC_COLLCONFIG_OFFSET);
+            regval &= ~EMAC_COLLVALID_MASK;
+            regval |= (arg << EMAC_COLLVALID_SHIFT) & EMAC_COLLVALID_MASK;
+            putreg32(regval, reg_base + EMAC_COLLCONFIG_OFFSET);
+            break;
+
+        case EMAC_CMD_SET_TX_MAXRET:
+            /* maximum number of consequential retransmission attempts after the collision is detected. Default value is 0x0f */
+            regval = getreg32(reg_base + EMAC_COLLCONFIG_OFFSET);
+            regval &= ~EMAC_MAXRET_MASK;
+            regval |= (arg << EMAC_MAXRET_SHIFT) & EMAC_MAXRET_MASK;
+            putreg32(regval, reg_base + EMAC_COLLCONFIG_OFFSET);
+            break;
+
+        case EMAC_CMD_SET_RX_EN:
+            /* enable rx, Default:false */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
             if (arg) {
-                reg_val |= EMAC_CRCEN;
+                regval |= EMAC_RX_EN;
             } else {
-                reg_val &= ~(EMAC_CRCEN);
+                regval &= ~EMAC_RX_EN;
             }
-            putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_RECV_HUGE_FRAMES:
-            reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
+        case EMAC_CMD_SET_RX_SMALL_FRAME:
+            /* Frames smaller than MINFL are accepted, Default:true */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
             if (arg) {
-                reg_val |= EMAC_HUGEN;
+                regval |= EMAC_RECSMALL;
             } else {
-                reg_val &= ~(EMAC_HUGEN);
+                regval &= ~EMAC_RECSMALL;
             }
-            putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_EN_AUTO_PADDING:
-            reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
+        case EMAC_CMD_SET_RX_HUGE_FRAME:
+            /* Frame size is not limited by MAXFL and can be up to 64K bytes. Default:false  */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
             if (arg) {
-                reg_val |= EMAC_PAD;
+                regval |= EMAC_HUGEN;
             } else {
-                reg_val &= ~(EMAC_PAD);
+                regval &= ~EMAC_HUGEN;
             }
-            putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_RECV_SMALL_FRAME:
-            reg_val = getreg32(reg_base + EMAC_MODE_OFFSET);
+        case EMAC_CMD_SET_RX_GAP_CHECK:
+            /* All frames are received regardless to IFG requirement. Default:false  */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
             if (arg) {
-                reg_val |= EMAC_RECSMALL;
+                regval |= EMAC_IFG;
             } else {
-                reg_val &= ~(EMAC_RECSMALL);
+                regval &= ~EMAC_IFG;
             }
-            putreg32(reg_val, reg_base + EMAC_MODE_OFFSET);
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_SET_PHY_ADDRESS:
-            reg_val = getreg32(reg_base + EMAC_MIIADDRESS_OFFSET);
-            reg_val &= ~(EMAC_FIAD_MASK);
-            reg_val |= (uint32_t)(arg << EMAC_FIAD_SHIFT);
-            putreg32(reg_val, reg_base + EMAC_MIIADDRESS_OFFSET);
+        case EMAC_CMD_SET_RX_PROMISCUOUS:
+            /* All frames received regardless of the address. Default:true  */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
+            if (arg) {
+                regval |= EMAC_PRO;
+            } else {
+                regval &= ~EMAC_PRO;
+            }
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_SET_MAXRET:
-            reg_val = getreg32(reg_base + EMAC_COLLCONFIG_OFFSET);
-            reg_val &= ~(EMAC_MAXFL_MASK);
-            reg_val |= (arg) << EMAC_MAXFL_SHIFT;
-            putreg32(reg_val, reg_base + EMAC_COLLCONFIG_OFFSET);
+        case EMAC_CMD_SET_RX_BROADCASE:
+            /* Receive all frames containing broadcast address. Default:true  */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
+            if (arg) {
+                regval |= EMAC_BRO;
+            } else {
+                regval &= ~EMAC_BRO;
+            }
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_SET_COLLVALID:
-            reg_val = getreg32(reg_base + EMAC_COLLCONFIG_OFFSET);
-            reg_val &= ~(EMAC_COLLVALID_MASK);
-            reg_val |= (arg) << EMAC_COLLVALID_SHIFT;
-            putreg32(reg_val, reg_base + EMAC_COLLCONFIG_OFFSET);
+        case EMAC_CMD_SET_FULL_DUPLEX:
+            /* enable full duplex. Default:false */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
+            if (arg) {
+                regval |= EMAC_FULLD;
+            } else {
+                regval &= ~EMAC_FULLD;
+            }
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
             break;
 
-        case EMAC_CMD_SET_PACKET_GAP:
-            reg_val = getreg32(reg_base + EMAC_IPGT_OFFSET);
-            reg_val &= ~(EMAC_IPGT_MASK);
-            reg_val |= (arg) << EMAC_IPGT_SHIFT;
-            putreg32(reg_val, reg_base + EMAC_IPGT_OFFSET);
+#if defined(BL616) || defined(BL808)
+        case EMAC_CMD_SET_MAC_RX_CLK_INVERT:
+            /* MAC RX clock invert. Default: ref_clk_out mode: true, ref_clk_in mode: false */
+            regval = getreg32(GLB_EMAC_CLK_OUT_ADDRESS);
+            if (arg) {
+                regval |= (1 << 10);
+            } else {
+                regval &= ~(1 << 10);
+            }
+            putreg32(regval, GLB_EMAC_CLK_OUT_ADDRESS);
+            break;
+#endif
+
+#if (EMAC_SPEED_10M_SUPPORT)
+        case EMAC_CMD_SET_SPEED_10M:
+            /* Switch to 10M mode. Default:100M mode */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
+            regval &= ~EMAC_100M;
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
+            break;
+
+        case EMAC_CMD_SET_SPEED_100M:
+            /* Switch to 100M mode. Default:100M mode */
+            regval = getreg32(reg_base + EMAC_MODE_OFFSET);
+            regval |= EMAC_100M;
+            putreg32(regval, reg_base + EMAC_MODE_OFFSET);
+            break;
+#else
+        case EMAC_CMD_SET_SPEED_100M:
+            /* Always in 100M mode */
+            break;
+#endif
+
+        case EMAC_CMD_GET_TX_DB_AVAILABLE:
+            ret = EMAC_TX_BD_BUM_MAX - (emac_ctrl.emac_tx_bd_tail - emac_ctrl.emac_tx_bd_head);
+            break;
+
+        case EMAC_CMD_GET_RX_DB_AVAILABLE:
+            ret = EMAC_RX_BD_BUM_MAX - (emac_ctrl.emac_rx_bd_tail - emac_ctrl.emac_rx_bd_head);
+            break;
+
+        case EMAC_CMD_GET_TX_BD_PTR:
+            regval = getreg32(reg_base + EMAC_TX_BD_NUM_OFFSET);
+            ret = (regval & EMAC_TXBDPTR_MASK) >> EMAC_TXBDPTR_SHIFT;
+            break;
+
+        case EMAC_CMD_GET_RX_BD_PTR:
+            regval = getreg32(reg_base + EMAC_TX_BD_NUM_OFFSET);
+            ret = ((regval & EMAC_RXBDPTR_MASK) >> EMAC_RXBDPTR_SHIFT) - 64;
             break;
 
         default:
             ret = -EPERM;
             break;
     }
+
     return ret;
 }
 
-/**
- * @brief bflb emac stop
- *
- * @param dev
- *
- */
-void bflb_emac_stop(struct bflb_device_s *dev)
+/* isr callback attach */
+int bflb_emac_irq_attach(struct bflb_device_s *dev, bflb_emac_irq_cb_t irq_event_cb, void *arg)
 {
-    /* disable emac */
-    uint32_t reg_val;
+    emac_irq_event_cb = irq_event_cb;
+    emac_irq_arg = arg;
 
-    reg_val = getreg32(dev->reg_base + EMAC_MODE_OFFSET);
-    reg_val &= ~(EMAC_TX_EN | EMAC_RX_EN);
-    putreg32(reg_val, dev->reg_base + EMAC_MODE_OFFSET);
+    return 0;
 }
 
-/**
- * @brief bflb emac start
- *
- * @param dev
- *
- */
-void bflb_emac_start(struct bflb_device_s *dev)
+static void bflb_emac_isr_cb_rx(struct bflb_device_s *dev)
 {
-    /* enable emac */
-    uint32_t reg_val;
+    uint32_t reg_base = dev->reg_base;
 
-    reg_val = getreg32(dev->reg_base + EMAC_MODE_OFFSET);
-    reg_val |= (EMAC_TX_EN | EMAC_RX_EN);
-    putreg32(reg_val, dev->reg_base + EMAC_MODE_OFFSET);
+    /* clean int */
+    putreg32((EMAC_RXC | EMAC_RXB | EMAC_RXE), reg_base + EMAC_INT_SOURCE_OFFSET);
+
+    uint32_t rx_bd_num = emac_ctrl.emac_rx_bd_tail - emac_ctrl.emac_rx_bd_head;
+
+    for (uint32_t i = 0; i < rx_bd_num; i++) {
+        /* get hw bd */
+        uint32_t rx_bd_index = emac_ctrl.emac_rx_bd_head & EMAC_RX_BD_BUM_MASK;
+        struct bflb_emac_hw_buff_desc_s rx_bd = *(struct bflb_emac_hw_buff_desc_s *)(reg_base + EMAC_DMA_DESC_OFFSET + (rx_bd_index + 64) * sizeof(struct bflb_emac_hw_buff_desc_s));
+        /* check bd status */
+        if (rx_bd.attribute & EMAC_BD_RX_E_MASK) {
+            /* no event */
+            break;
+        }
+
+        /*  update rx_head */
+        emac_ctrl.emac_rx_bd_head += 1;
+        /* check cb */
+        if (emac_irq_event_cb == NULL) {
+            continue;
+        }
+
+        struct bflb_emac_trans_desc_s rx_desc = {
+            .buff_addr = (void *)(uintptr_t)rx_bd.address,
+            .data_len = rx_bd.length,
+        };
+        /* get err status */
+        if (rx_bd.attribute & EMAC_BD_RX_CRC_MASK) {
+            rx_desc.err_status |= EMAC_RX_STA_ERR_CRC;
+        }
+        if (rx_bd.attribute & EMAC_BD_RX_LC_MASK) {
+            rx_desc.err_status |= EMAC_RX_STA_ERR_COLLISION;
+        }
+        if (rx_bd.attribute & EMAC_BD_RX_TL_MASK) {
+            rx_desc.err_status |= EMAC_RX_STA_ERR_LONG_FRAME;
+        }
+        if (rx_bd.attribute & EMAC_BD_RX_OR_MASK) {
+            rx_desc.err_status |= EMAC_RX_STA_ERR_FIFO;
+        }
+
+        /* callback */
+        if (rx_desc.err_status) {
+            emac_irq_event_cb(emac_irq_arg, EMAC_IRQ_EVENT_RX_ERR_FRAME, &rx_desc);
+        } else if (rx_bd.attribute & EMAC_BD_RX_CF_MASK) {
+            emac_irq_event_cb(emac_irq_arg, EMAC_IRQ_EVENT_RX_CTRL_FRAME, &rx_desc);
+        } else {
+            emac_irq_event_cb(emac_irq_arg, EMAC_IRQ_EVENT_RX_FRAME, &rx_desc);
+        }
+    }
 }
 
-/**
- * @brief bflb emac start tx
- *
- * @param dev
- *
- */
-void bflb_emac_start_tx(struct bflb_device_s *dev)
+static void bflb_emac_isr_cb_tx(struct bflb_device_s *dev)
 {
-    uint32_t reg_val;
+    uint32_t reg_base = dev->reg_base;
 
-    reg_val = getreg32(dev->reg_base + EMAC_MODE_OFFSET);
-    reg_val |= (EMAC_TX_EN);
-    putreg32(reg_val, dev->reg_base + EMAC_MODE_OFFSET);
+    /* clean int */
+    putreg32((EMAC_TXC | EMAC_TXB | EMAC_TXE), reg_base + EMAC_INT_SOURCE_OFFSET);
+
+    uint32_t tx_bd_num = emac_ctrl.emac_tx_bd_tail - emac_ctrl.emac_tx_bd_head;
+
+    for (uint32_t i = 0; i < tx_bd_num; i++) {
+        /* get hw bd */
+        uint32_t tx_bd_index = emac_ctrl.emac_tx_bd_head & EMAC_TX_BD_BUM_MASK;
+        struct bflb_emac_hw_buff_desc_s tx_bd = *(struct bflb_emac_hw_buff_desc_s *)(reg_base + EMAC_DMA_DESC_OFFSET + tx_bd_index * sizeof(struct bflb_emac_hw_buff_desc_s));
+        /* check bd status */
+        if (tx_bd.attribute & EMAC_BD_TX_RD_MASK) {
+            /* no event */
+            break;
+        }
+
+        /*update tx_head*/
+        emac_ctrl.emac_tx_bd_head += 1;
+        /* check cb */
+        if (emac_irq_event_cb == NULL) {
+            continue;
+        }
+
+        struct bflb_emac_trans_desc_s tx_desc = {
+            .buff_addr = (void *)(uintptr_t)tx_bd.address,
+            .data_len = tx_bd.length,
+        };
+        /* get err status */
+        if (tx_bd.attribute & EMAC_BD_TX_LC_MASK) {
+            tx_desc.err_status |= EMAC_TX_STA_ERR_COLLISION;
+        }
+        if (tx_bd.attribute & EMAC_BD_TX_CS_MASK) {
+            tx_desc.err_status |= EMAC_TX_STA_ERR_CS;
+        }
+        if (tx_bd.attribute & EMAC_BD_TX_RL_MASK) {
+            tx_desc.err_status |= EMAC_TX_STA_ERR_RETRY_LIMIT;
+        }
+        if (tx_bd.attribute & EMAC_BD_TX_UR_MASK) {
+            tx_desc.err_status |= EMAC_TX_STA_ERR_FIFO;
+        }
+
+        /* callback */
+        if (tx_desc.err_status) {
+            emac_irq_event_cb(emac_irq_arg, EMAC_IRQ_EVENT_TX_ERR_FRAME, &tx_desc);
+        } else {
+            emac_irq_event_cb(emac_irq_arg, EMAC_IRQ_EVENT_TX_FRAME, &tx_desc);
+        }
+    }
 }
 
-/**
- * @brief bflb emac stop tx
- *
- * @param dev
- *
- */
-void bflb_emac_stop_tx(struct bflb_device_s *dev)
+void bflb_emac_isr(int irq, void *arg)
 {
-    uint32_t reg_val;
+    struct bflb_device_s *dev = (struct bflb_device_s *)arg;
+    uint32_t reg_base;
+    uint32_t intsta, intmask;
 
-    reg_val = getreg32(dev->reg_base + EMAC_MODE_OFFSET);
-    reg_val &= ~(EMAC_TX_EN);
-    putreg32(reg_val, dev->reg_base + EMAC_MODE_OFFSET);
-}
+    EMAC_DRV_DBG("emac int come\r\n");
 
-/**
- * @brief bflb emac start rx
- *
- * @param dev
- *
- */
-void bflb_emac_start_rx(struct bflb_device_s *dev)
-{
-    uint32_t reg_val;
+    reg_base = dev->reg_base;
 
-    reg_val = getreg32(dev->reg_base + EMAC_MODE_OFFSET);
-    reg_val |= (EMAC_RX_EN);
-    putreg32(reg_val, dev->reg_base + EMAC_MODE_OFFSET);
-}
+    /* get int sta */
+    intmask = getreg32(reg_base + EMAC_INT_MASK_OFFSET);
+    intsta = getreg32(reg_base + EMAC_INT_SOURCE_OFFSET) & (~intmask);
 
-/**
- * @brief bflb emac stop rx
- *
- * @param dev
- *
- */
-void bflb_emac_stop_rx(struct bflb_device_s *dev)
-{
-    uint32_t reg_val;
+    /* 1. rx busy, packet is being received and there is no empty buffer descriptor to use */
+    if (intsta & EMAC_BUSY) {
+        EMAC_DRV_DBG("emac rx_busy\r\n");
 
-    reg_val = getreg32(dev->reg_base + EMAC_MODE_OFFSET);
-    reg_val &= ~(EMAC_RX_EN);
-    putreg32(reg_val, dev->reg_base + EMAC_MODE_OFFSET);
+        /* clean int */
+        putreg32(EMAC_BUSY, reg_base + EMAC_INT_SOURCE_OFFSET);
+        /* callback */
+        if (emac_irq_event_cb != NULL) {
+            emac_irq_event_cb(emac_irq_arg, EMAC_IRQ_EVENT_RX_BUSY, NULL);
+        }
+    }
+
+    /* 2. rx done */
+    if (intsta & (EMAC_RXC | EMAC_RXB | EMAC_RXE)) {
+        EMAC_DRV_DBG("emac rx_done\r\n");
+
+        bflb_emac_isr_cb_rx(dev);
+    }
+
+    /* 3. tx done */
+    if (intsta & (EMAC_TXC | EMAC_TXB | EMAC_TXE)) {
+        EMAC_DRV_DBG("emac tx_done\r\n");
+
+        bflb_emac_isr_cb_tx(dev);
+    }
 }

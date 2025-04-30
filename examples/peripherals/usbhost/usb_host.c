@@ -9,7 +9,7 @@
 #define TEST_USBH_HID       1
 #define TEST_USBH_MSC       1
 #define TEST_USBH_MSC_FATFS 0
-#define TEST_USBH_CDC_ECM   0
+#define TEST_USBH_CDC_ECM   1
 #define TEST_USBH_RNDIS     0
 
 #if TEST_USBH_CDC_ACM
@@ -699,12 +699,26 @@ void usbh_msc_stop(struct usbh_msc *msc_class)
 }
 #endif
 
+#if TEST_USBH_CDC_ECM || TEST_USBH_RNDIS
+const uint8_t message[] = {
+    0x55, 0x53, 0x42, 0x43, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11,
+    0x06, 0x20, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+struct usbh_msc_modeswitch_config config = {
+    .name = "huawei",
+    .vid = 0x12d1,
+    .pid = 0x1f01,
+    .message_content = message
+};
+#endif
+
 void usbh_class_test(void)
 {
 #ifdef __RTTHREAD__
     /* do nothing */
 #else
 #if TEST_USBH_CDC_ECM || TEST_USBH_RNDIS
+    usbh_msc_modeswitch_enable(&config);
     /* Initialize the LwIP stack */
     tcpip_init(NULL, NULL);
 #endif

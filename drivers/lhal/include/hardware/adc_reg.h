@@ -45,7 +45,7 @@
 /* gpip base */
 #define GPIP_GPADC_CONFIG_OFFSET    (0x0) /* gpadc_config */
 #define GPIP_GPADC_DMA_RDATA_OFFSET (0x4) /* gpadc_dma_rdata */
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL808)
 #define GPIP_GPADC_PIR_TRAIN_OFFSET (0x20) /* gpadc_pir_train */
 #endif
 /* aon base */
@@ -113,7 +113,7 @@
 #define AON_GPADC_MICBIAS_EN    (1 << 14U)
 #define AON_GPADC_MICPGA_EN     (1 << 15U)
 #define AON_GPADC_BYP_MICBOOST  (1 << 16U)
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL808)
 #define AON_GPADC_RCAL_EN (1 << 17U)
 #endif
 #define AON_GPADC_DWA_EN              (1 << 18U)
@@ -124,7 +124,7 @@
 #define AON_GPADC_MICBOOST_32DB_EN    (1 << 23U)
 #define AON_GPADC_CHIP_SEN_PU         (1 << 27U)
 #define AON_GPADC_SEN_SEL_SHIFT       (28U)
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL808)
 #define AON_GPADC_SEN_SEL_MASK (0x7 << AON_GPADC_SEN_SEL_SHIFT)
 #define AON_GPADC_SEN_TEST_EN  (1 << 31U)
 #elif defined(BL702) || defined(BL602) || defined(BL702L)
@@ -140,7 +140,7 @@
 #define AON_GPADC_VCM_SEL_EN    (1 << 8U)
 #define AON_GPADC_VCM_HYST_SEL  (1 << 9U)
 #define AON_GPADC_LOWV_DET_EN   (1 << 10U)
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL808)
 #define AON_GPADC_PWM_TRG_EN        (1 << 11U)
 #define AON_GPADC_CLK_ANA_DLY_SHIFT (12U)
 #define AON_GPADC_CLK_ANA_DLY_MASK  (0xf << AON_GPADC_CLK_ANA_DLY_SHIFT)

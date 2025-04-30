@@ -21,6 +21,12 @@ extern "C" {
 #define BT_ADDR_LE_PUBLIC_ID    0x02
 #define BT_ADDR_LE_RANDOM_ID    0x03
 
+#if defined(CONFIG_BT_STACK_PTS) || defined(CONFIG_AUTO_PTS)
+#define BT_ADDR_TYPE_RPA        0x04
+#define BT_ADDR_TYPE_NON_RPA    0x05
+#endif /* CONFIG_BT_STACK_PTS || CONFIG_AUTO_PTS */
+
+
 /** Bluetooth Device Address */
 typedef struct {
 	u8_t  val[6];

@@ -1,0 +1,46 @@
+# Changes
+## 2024-11-13
+1.[blemesh] MESH_IOPT_BV_02_C: Reduce num of mesh model registration and support publication of Health Client. 
+
+## 2024-07-15
+1.[BleMesh]Fixed adv_send failed when executing mesh suspend and then resume.
+
+## 2024-07-15
+1. Support mesh 1.1
+
+## 2024-06-05
+1. Add LC models to second element, PTS need this mode to pass MMDL/SR/MLTEL/BV-01-C
+
+## 2024-05-28
+1. Resolve BLEMESH compilation errors related to parameter format.
+2. Add Generic Property Client Model PTS CLI support.
+
+## 2024-05-24
+1. [PTS] Add Lighting CTL/HSL state bind with Genneric Level.
+
+## 2024-05-20
+1. Fix Mesh net/app key update and key refresh CLI command parameter error.
+
+## 2024-05-07
+1. Fix lpn_group_del and lpn_group_add incorrect parameter.
+2. Add blemesh proxy identity cli command.
+
+## 2024-04-24
+1. [MMDL][PTS] Add gen power model powerup behavior related models state restore.
+
+## 2024-04-23
+1. [PTS][BLEMESH] Use PTS V8.5.3 default TSPX device public key.
+
+## 2024-04-12
+1. [PTS]IUT output mesh auth value
+2. Add Models Binding related callback
+3. [PTS] enhanced LPN CLI command and remove LC server and LC Setup server
+4. [PTS]Add models client command send cli
+
+## 2024-03-28
+1. Add LPN CLI Command: Friend Req, Poll, Friend Clear
+
+## 2024-03-27
+1. BLEMESH Use BL_COMP_ID replace BT_COMP_ID_LF (PTS Case: MESH/SR/HM/CFS/BV-01-C MESH/SR/HM/CFS/BV-03-C)
+
+

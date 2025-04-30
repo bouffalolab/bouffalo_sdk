@@ -16,13 +16,14 @@
 #define DBI_YUV_SUPPORT         1
 #define DBI_WRITE_DATA_BYTE_MAX 256
 #define DBI_READ_DATA_BYTE_MAX  8
-#define SPI_FIFO_NUM_MAX        8
-#elif defined(BL606P) || defined(BL808)
+#define DBI_FIFO_NUM_MAX        8
+
+#elif defined(BL808)
 #define DBI_QSPI_SUPPORT        0
 #define DBI_YUV_SUPPORT         0
 #define DBI_WRITE_DATA_BYTE_MAX 4
 #define DBI_READ_DATA_BYTE_MAX  4
-#define SPI_FIFO_NUM_MAX        8
+#define DBI_FIFO_NUM_MAX        8
 #else
 #error "unknown device"
 #endif
@@ -49,8 +50,8 @@
 #define DBI_PIXEL_INPUT_FORMAT_NRGB_8888 1 /* 32-bit/pixel, memory byte: [0]->pixel[0][B], [1]->pixel[0][G], [2]->pixel[0][R], [3]->invalid, [4]->pixel[1][B], ... */
 #define DBI_PIXEL_INPUT_FORMAT_BGRN_8888 2 /* 32-bit/pixel, memory byte: [0]->invalid, [1]->pixel[0][R], [2]->pixel[0][G], [3]->pixel[0][B], [4]->invalid, [5]->pixel[1][R], ... */
 #define DBI_PIXEL_INPUT_FORMAT_RGBN_8888 3 /* 32-bit/pixel, memory byte: [0]->invalid, [1]->pixel[0][B], [2]->pixel[0][G], [3]->pixel[0][R], [4]->invalid, [5]->pixel[1][B], ... */
-#define DBI_PIXEL_INPUT_FORMAT_RGB_888   4 /* 24-bit/pixel, memory byte: [0]->pixel[0][R], [1]->pixel[0][G], [2]->pixel[0][B], [3]->pixel[1][R], [4]->pixel[1][G], ... */
-#define DBI_PIXEL_INPUT_FORMAT_BGR_888   5 /* 24-bit/pixel, memory byte: [0]->pixel[0][B], [1]->pixel[0][G], [2]->pixel[0][R], [3]->pixel[1][B], [4]->pixel[1][G], ... */
+#define DBI_PIXEL_INPUT_FORMAT_BGR_888   4 /* 24-bit/pixel, memory byte: [0]->pixel[0][R], [1]->pixel[0][G], [2]->pixel[0][B], [3]->pixel[1][R], [4]->pixel[1][G], ... */
+#define DBI_PIXEL_INPUT_FORMAT_RGB_888   5 /* 24-bit/pixel, memory byte: [0]->pixel[0][B], [1]->pixel[0][G], [2]->pixel[0][R], [3]->pixel[1][B], [4]->pixel[1][G], ... */
 #define DBI_PIXEL_INPUT_FORMAT_BGR_565   6 /* 16-bit/pixel, */
 #define DBI_PIXEL_INPUT_FORMAT_RGB_565   7 /* 16-bit/pixel, */
 /**
@@ -86,12 +87,12 @@
   * @}
   */
 
-/** @defgroup SPI_INTSTS dbi interrupt status definition
+/** @defgroup DBI_INTSTS dbi interrupt status definition
   * @{
   */
 #define DBI_INTSTS_TC                    (1 << 0)
-#define SPI_INTSTS_TX_FIFO               (1 << 1)
-#define SPI_INTSTS_FIFO_ERR              (1 << 2)
+#define DBI_INTSTS_TX_FIFO               (1 << 1)
+#define DBI_INTSTS_FIFO_ERR              (1 << 2)
 /**
   * @}
   */
@@ -279,7 +280,7 @@ uint32_t bflb_dbi_get_intstatus(struct bflb_device_s *dev);
  * @brief Clear dbi interrupt status.
  *
  * @param [in] dev device handle
- * @param [in] int_clear clear value, use @ref SPI_INTCLR
+ * @param [in] int_clear clear value, use @ref DBI_INTCLR
  */
 void bflb_dbi_int_clear(struct bflb_device_s *dev, uint32_t int_clear);
 

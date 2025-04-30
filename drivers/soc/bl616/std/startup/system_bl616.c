@@ -202,13 +202,13 @@ void SystemInit(void)
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00); // GLB_WRAM160KB_EM0KB
     }
     BL_WR_REG(GLB_BASE, GLB_SRAM_CFG3, tmpVal);
-
-    /* config chip pod */
-    System_BOD_Init();
 }
 
 void System_Post_Init(void)
 {
+    /* config chip pod */
+    System_BOD_Init();
+
     /* Bootrom not use dcache,so ignore this flush*/
 #ifndef BOOTROM
     csi_dcache_clean();

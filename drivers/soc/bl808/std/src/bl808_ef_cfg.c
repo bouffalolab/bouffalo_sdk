@@ -393,9 +393,9 @@ float bflb_efuse_get_adc_trim(void)
                 tmp = ~tmp;
                 tmp += 1;
                 tmp = tmp & 0xfff;
-                coe = (1.0 + ((float)tmp / 2048.0));
+                coe = (1.0f + ((float)tmp / 2048.0f));
             } else {
-                coe = (1.0 - ((float)tmp / 2048.0));
+                coe = (1.0f - ((float)tmp / 2048.0f));
             }
         }
     }

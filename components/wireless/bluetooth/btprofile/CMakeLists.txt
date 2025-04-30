@@ -1,3 +1,6 @@
 sdk_add_include_directories(include/bluetooth)
-
+if (CONFIG_BT_A2DP_SOURCE)
+sdk_add_static_library(lib/libbtprofile_a2dp_source.a)
+else()
 sdk_add_static_library(lib/libbtprofile.a)
+endif()

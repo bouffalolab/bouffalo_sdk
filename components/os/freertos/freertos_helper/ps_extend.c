@@ -6,37 +6,39 @@
 #include "shell.h"
 #include "ps_extend.h"
 
-#error "please add and modify code to FreeRTOSConfig.h, then remove this error \
-/* There is already a high frequency timer running - just reset its count back \
-to zero. */ \
-static inline unsigned long long getCycleCounter() { \
-#if __riscv_xlen == 32 \
-  register unsigned int cycle, cycleh, cycleh_tmp; \
-  do { \
-    asm volatile ("rdcycleh %0" : "=r"(cycleh)); \
-    asm volatile ("rdcycle %0" : "=r"(cycle)); \
-    asm volatile ("rdcycleh %0" : "=r"(cycleh_tmp)); \
-  } while(cycleh != cycleh_tmp); \
-  return ((unsigned long long)cycleh << 32) | cycle; \
-#elif __riscv_xlen == 64 \
-  register unsigned long long cycle; \
-  asm volatile ("rdcycle %0" : "=r"(cycle)); \
-  return cycle; \
-#endif \
-} \
- \
-static inline void resetCycleCounter() { \
-  asm volatile ("csrw mcycle, x0"); \
-} \
- \
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() resetCycleCounter() \
-#define portGET_RUN_TIME_COUNTER_VALUE() getCycleCounter() \
- \
-#define configCPU_CORE_CLOCK_HZ (320 * 1000 * 1000) \
-#define portHAS_STAT_TRAP_TIME 1 \
-#define configGENERATE_RUN_TIME_STATS 1 \
-#define INCLUDE_xTaskGetIdleTaskHandle 1 \
+//#error "please add and modify code to FreeRTOSConfig.h, then remove this error
+/* There is already a high frequency timer running - just reset its count back
+to zero. */
+/*
+static inline unsigned long long getCycleCounter() {
+#if __riscv_xlen == 32
+  register unsigned int cycle, cycleh, cycleh_tmp;
+  do {
+    asm volatile ("rdcycleh %0" : "=r"(cycleh));
+    asm volatile ("rdcycle %0" : "=r"(cycle));
+    asm volatile ("rdcycleh %0" : "=r"(cycleh_tmp));
+  } while(cycleh != cycleh_tmp);
+  return ((unsigned long long)cycleh << 32) | cycle;
+#elif __riscv_xlen == 64
+  register unsigned long long cycle;
+  asm volatile ("rdcycle %0" : "=r"(cycle));
+  return cycle;
+#endif
+}
+
+static inline void resetCycleCounter() {
+  asm volatile ("csrw mcycle, x0");
+}
+
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() resetCycleCounter()
+#define portGET_RUN_TIME_COUNTER_VALUE() getCycleCounter()
+
+#define configCPU_CORE_CLOCK_HZ (320 * 1000 * 1000)
+#define portHAS_STAT_TRAP_TIME 1
+#define configGENERATE_RUN_TIME_STATS 1
+#define INCLUDE_xTaskGetIdleTaskHandle 1
 #define configRUN_TIME_COUNTER_TYPE uint64_t
+*/
 
 
 struct irq_ctx {

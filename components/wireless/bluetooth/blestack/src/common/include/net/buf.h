@@ -77,7 +77,13 @@ enum
     ACL_TX,
     FRAG,
     PREP,
-    
+#if defined(CONFIG_AUTO_PTS)
+	SERVER,
+	DATA,
+#endif /* CONFIG_AUTO_PTS */
+#if defined(CONFIG_DYNAMIC_GATTS)
+	GATTSERVER,
+#endif /* CONFIG_AUTO_PTS */   
 };
 #endif
 /** @brief Simple network buffer representation.
@@ -304,6 +310,54 @@ void net_buf_simple_add_le32(struct net_buf_simple *buf, u32_t val);
 void net_buf_simple_add_be32(struct net_buf_simple *buf, u32_t val);
 
 /**
+ * @brief Add 48-bit value at the end of the buffer
+ *
+ * Adds 48-bit value in little endian format at the end of buffer.
+ * Increments the data length of a buffer to account for more data
+ * at the end.
+ *
+ * @param buf Buffer to update.
+ * @param val 48-bit value to be added.
+ */
+void net_buf_simple_add_le48(struct net_buf_simple *buf, uint64_t val);
+
+/**
+ * @brief Add 48-bit value at the end of the buffer
+ *
+ * Adds 48-bit value in big endian format at the end of buffer.
+ * Increments the data length of a buffer to account for more data
+ * at the end.
+ *
+ * @param buf Buffer to update.
+ * @param val 48-bit value to be added.
+ */
+void net_buf_simple_add_be48(struct net_buf_simple *buf, uint64_t val);
+
+/**
+ * @brief Add 64-bit value at the end of the buffer
+ *
+ * Adds 64-bit value in little endian format at the end of buffer.
+ * Increments the data length of a buffer to account for more data
+ * at the end.
+ *
+ * @param buf Buffer to update.
+ * @param val 64-bit value to be added.
+ */
+void net_buf_simple_add_le64(struct net_buf_simple *buf, uint64_t val);
+
+/**
+ * @brief Add 64-bit value at the end of the buffer
+ *
+ * Adds 64-bit value in big endian format at the end of buffer.
+ * Increments the data length of a buffer to account for more data
+ * at the end.
+ *
+ * @param buf Buffer to update.
+ * @param val 64-bit value to be added.
+ */
+void net_buf_simple_add_be64(struct net_buf_simple *buf, uint64_t val);
+
+/**
  *  @brief Push data to the beginning of the buffer.
  *
  *  Modifies the data pointer and buffer length to account for more data
@@ -431,6 +485,30 @@ u16_t net_buf_simple_pull_le16(struct net_buf_simple *buf);
  *  @return 16-bit value converted from big endian to host endian.
  */
 u16_t net_buf_simple_pull_be16(struct net_buf_simple *buf);
+
+/**
+ * @brief Remove and convert 24 bits from the beginning of the buffer.
+ *
+ * Same idea as with net_buf_simple_pull(), but a helper for operating
+ * on 24-bit little endian data.
+ *
+ * @param buf A valid pointer on a buffer.
+ *
+ * @return 24-bit value converted from little endian to host endian.
+ */
+uint32_t net_buf_simple_pull_le24(struct net_buf_simple *buf);
+
+/**
+ * @brief Remove and convert 24 bits from the beginning of the buffer.
+ *
+ * Same idea as with net_buf_simple_pull(), but a helper for operating
+ * on 24-bit big endian data.
+ *
+ * @param buf A valid pointer on a buffer.
+ *
+ * @return 24-bit value converted from big endian to host endian.
+ */
+uint32_t net_buf_simple_pull_be24(struct net_buf_simple *buf);
 
 /**
  *  @brief Remove and convert 32 bits from the beginning of the buffer.
@@ -1356,6 +1434,54 @@ static inline void *net_buf_user_data(const struct net_buf *buf)
  *  @return 32-bit value converted from big endian to host endian.
  */
 #define net_buf_pull_be32(buf) net_buf_simple_pull_be32(&(buf)->b)
+
+/**
+ * @brief Remove and convert 48 bits from the beginning of the buffer.
+ *
+ * Same idea as with net_buf_simple_pull(), but a helper for operating
+ * on 48-bit little endian data.
+ *
+ * @param buf A valid pointer on a buffer.
+ *
+ * @return 48-bit value converted from little endian to host endian.
+ */
+uint64_t net_buf_simple_pull_le48(struct net_buf_simple *buf);
+
+/**
+ * @brief Remove and convert 48 bits from the beginning of the buffer.
+ *
+ * Same idea as with net_buf_simple_pull(), but a helper for operating
+ * on 48-bit big endian data.
+ *
+ * @param buf A valid pointer on a buffer.
+ *
+ * @return 48-bit value converted from big endian to host endian.
+ */
+uint64_t net_buf_simple_pull_be48(struct net_buf_simple *buf);
+
+/**
+ * @brief Remove and convert 64 bits from the beginning of the buffer.
+ *
+ * Same idea as with net_buf_simple_pull(), but a helper for operating
+ * on 64-bit little endian data.
+ *
+ * @param buf A valid pointer on a buffer.
+ *
+ * @return 64-bit value converted from little endian to host endian.
+ */
+uint64_t net_buf_simple_pull_le64(struct net_buf_simple *buf);
+
+/**
+ * @brief Remove and convert 64 bits from the beginning of the buffer.
+ *
+ * Same idea as with net_buf_simple_pull(), but a helper for operating
+ * on 64-bit big endian data.
+ *
+ * @param buf A valid pointer on a buffer.
+ *
+ * @return 64-bit value converted from big endian to host endian.
+ */
+uint64_t net_buf_simple_pull_be64(struct net_buf_simple *buf);
 
 /**
  *  @def net_buf_tailroom

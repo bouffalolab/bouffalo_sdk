@@ -1,30 +1,29 @@
 #include "bflb_ef_ctrl.h"
 #include "hardware/ef_ctrl_reg.h"
+#include "bflb_clock.h"
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define BFLB_EF_CTRL_BASE ((uint32_t)0x40007000)
-#elif defined(BL616) || defined(BL808) || defined(BL606P)
+#elif defined(BL616) || defined(BL808)
 #define BFLB_EF_CTRL_BASE ((uint32_t)0x20056000)
-#elif defined(BL628)
-#define BFLB_EF_CTRL_BASE ((uint32_t)0x2000C000)
 #endif
 
-#define EF_CTRL_EFUSE_CYCLE_PROTECT (0xbf << 24)
-#define EF_CTRL_EFUSE_CTRL_PROTECT  (0xbf << 8)
-#define EF_CTRL_OP_MODE_AUTO        0
-#define EF_CTRL_PARA_DFT            0
+#define EF_CTRL_EFUSE_CTRL_PROTECT (0xbf << 8)
+#define EF_CTRL_OP_MODE_AUTO 0
+#define EF_CTRL_PARA_DFT 0
+#define EF_CTRL_EFUSE_CYCLE_PROTECT (0x0)
 #if defined(BL702) || defined(BL602) || defined(BL702L)
-#define EF_CTRL_EF_CLK   0
+#define EF_CTRL_EF_CLK 0
 #define EF_CTRL_SAHB_CLK 1
 #endif
 #define EF_CTRL_DFT_TIMEOUT_VAL (160 * 1000)
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define EF_CTRL_EFUSE_R0_SIZE 128
-#elif defined(BL606P) || defined(BL808)
+#elif defined(BL808)
 #define EF_CTRL_EFUSE_R0_SIZE 128
 #define EF_CTRL_EFUSE_R1_SIZE 128
-#elif defined(BL616) || defined(BL628)
+#elif defined(BL616)
 #define EF_CTRL_EFUSE_R0_SIZE 512
 #else
 #define EF_CTRL_EFUSE_R0_SIZE 128
@@ -38,7 +37,10 @@ extern void bflb_efuse_switch_cpu_clock_save(void);
 extern void bflb_efuse_switch_cpu_clock_restore(void);
 #endif
 
-static ATTR_TCM_SECTION size_t bflb_ef_ctrl_strlen(const char *s)
+#define bflb_power_on_efuse()
+#define bflb_power_off_efuse()
+
+__UNUSED static ATTR_TCM_SECTION size_t bflb_ef_ctrl_strlen(const char *s)
 {
     const char *sc;
     for (sc = s; *sc != '\0'; ++sc) {}
@@ -53,8 +55,11 @@ static ATTR_TCM_SECTION size_t bflb_ef_ctrl_strlen(const char *s)
  * @return 1 for busy 0 for not
  *
 *******************************************************************************/
-static int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev)
+int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev)
 {
+#ifdef romapi_bflb_ef_ctrl_busy
+    return romapi_bflb_ef_ctrl_busy(dev);
+#else
     uint32_t reg_val;
 
     reg_val = getreg32(BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
@@ -64,6 +69,24 @@ static int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev)
     }
 
     return 0;
+#endif
+}
+
+/****************************************************************************/ /**
+ * @brief  Check efuse busy status
+ *
+ * @param dev  ef control device pointer
+ *
+ * @return 1 for busy 0 for not
+ *
+*******************************************************************************/
+__UNUSED static int ATTR_TCM_SECTION bflb_ef_ctrl_update_para(struct bflb_device_s *dev)
+{
+#ifdef romapi_bflb_ef_ctrl_update_para
+    return bflb_ef_ctrl_update_para(dev);
+#else
+    return 0;
+#endif
 }
 
 /****************************************************************************/ /**
@@ -86,7 +109,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r0(struct bflb_device_s
         }
     }
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -127,7 +150,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r1(struct bflb_device_s
 
     /* Note:ef_if_ctrl_1 has no EF_CTRL_EF_CLK_SAHB_DATA_SEL_POS bit as ef_if_ctrl_0,
 	   so we select it(them) in ef_if_ctrl_0 */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_AUTO_RD_EN_POS) |
@@ -138,7 +161,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r1(struct bflb_device_s
 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_1_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_1_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_1_INT_CLR_POS) |
@@ -160,12 +183,12 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_switch_ahb_clk_r1(struct bflb_device_s
  * @return None
  *
 *******************************************************************************/
-static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r0(struct bflb_device_s *dev)
+__UNUSED static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r0(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
 
     /* Select auto mode and select ef clock */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -180,7 +203,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r0(struct bflb_device_s 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
     /* Program */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -198,7 +221,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r0(struct bflb_device_s 
     arch_delay_us(4);
 
     /* Trigger */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -229,7 +252,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s 
     /* Select auto mode and select ef clock */
     /* Note:ef_if_ctrl_1 has no EF_CTRL_EF_CLK_SAHB_DATA_SEL_POS bit as ef_if_ctrl_0,
 	   so we select it(them) in ef_if_ctrl_0 */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_AUTO_RD_EN_POS) |
@@ -240,7 +263,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s 
 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_1_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_1_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_1_INT_CLR_POS) |
@@ -252,7 +275,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s 
     /* Program */
     /* Note:ef_if_ctrl_1 has no EF_CTRL_EF_CLK_SAHB_DATA_SEL_POS bit as ef_if_ctrl_0,
 	so we select it(them) in ef_if_ctrl_0 */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_AUTO_RD_EN_POS) |
@@ -266,7 +289,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s 
     /* Add delay for POR to be stable */
     arch_delay_us(4);
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_1_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_1_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_1_INT_CLR_POS) |
@@ -275,7 +298,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_program_efuse_r1(struct bflb_device_s 
 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_1_OFFSET);
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_1_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_1_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_1_INT_CLR_POS) |
@@ -340,7 +363,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_clear_data_reg1(struct bflb_device_s *
  * @return None
  *
 *******************************************************************************/
-static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *dev)
+__UNUSED static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *dev)
 {
     uint32_t reg_val;
     uint32_t timeout = EF_CTRL_DFT_TIMEOUT_VAL;
@@ -348,7 +371,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *de
     EF_CTRL_DATA0_CLEAR;
 
     /* Trigger read */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -362,7 +385,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *de
 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -389,7 +412,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r0(struct bflb_device_s *de
     } while ((reg_val & EF_CTRL_EF_IF_0_BUSY_MASK) || (!(reg_val & EF_CTRL_EF_IF_0_AUTOLOAD_DONE_MASK)));
 
     /* Switch to AHB clock */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -422,7 +445,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *de
     /* Trigger read */
     /* Note:ef_if_ctrl_1 has no EF_CTRL_EF_CLK_SAHB_DATA_SEL_POS bit as ef_if_ctrl_0,
 	so we select it(them) in ef_if_ctrl_0 */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_AUTO_RD_EN_POS) |
@@ -433,7 +456,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *de
 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_1_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_1_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_1_INT_CLR_POS) |
@@ -442,7 +465,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *de
 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_1_OFFSET);
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_1_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_1_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_1_INT_CLR_POS) |
@@ -465,7 +488,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *de
     /* Switch to AHB clock since often read efuse data after load */
     /* Note:ef_if_ctrl_1 has no EF_CTRL_EF_CLK_SAHB_DATA_SEL_POS bit as ef_if_ctrl_0,
 	   so we select it(them) in ef_if_ctrl_0 */
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_0_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_AUTO_RD_EN_POS) |
@@ -476,7 +499,7 @@ static void ATTR_TCM_SECTION bflb_ef_ctrl_load_efuse_r1(struct bflb_device_s *de
 
     putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
 
-    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) |
+    reg_val = (EF_CTRL_EFUSE_CTRL_PROTECT) | (EF_CTRL_EFUSE_CYCLE_PROTECT) |
               (EF_CTRL_OP_MODE_AUTO << EF_CTRL_EF_IF_1_MANUAL_EN_POS) |
               (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_1_CYC_MODIFY_POS) |
               (1 << EF_CTRL_EF_IF_1_INT_CLR_POS) |
@@ -520,6 +543,49 @@ int ATTR_TCM_SECTION bflb_ef_ctrl_autoload_done(struct bflb_device_s *dev)
 }
 
 /****************************************************************************/ /**
+ * @brief  Check efuse auto load done
+ *
+ * @param para  parameter for efuse program or read
+ *
+ * @return 1 for auto load done 0 for not
+ *
+*******************************************************************************/
+int ATTR_TCM_SECTION bflb_ef_ctrl_set_para(bflb_ef_ctrl_para_t *para)
+{
+#ifdef romapi_bflb_ef_ctrl_set_para
+    return romapi_bflb_ef_ctrl_set_para(para);
+#else
+    uint32_t reg_val;
+
+    /* Switch to AHB clock */
+    bflb_ef_ctrl_switch_ahb_clk_r0(NULL);
+
+    reg_val = ((para->rd_dmy << 0) |
+               (para->rd_dat << 6) |
+               (para->rd_adr << 12) |
+               (para->cs << 18) |
+               (para->pd_cs_s << 24));
+
+    putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CYC_0_OFFSET);
+
+    reg_val = ((para->pi << 0) |
+               (para->pp << 6) |
+               (para->wr_adr << 14) |
+               (para->ps_cs << 20) |
+               (para->pd_cs_h << 26));
+
+    putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CYC_1_OFFSET);
+
+    reg_val = getreg32(BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
+    reg_val |= EF_CTRL_EFUSE_CYCLE_PROTECT;
+    reg_val |= (EF_CTRL_PARA_DFT << EF_CTRL_EF_IF_0_CYC_MODIFY_POS);
+    putreg32(reg_val, BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_0_OFFSET);
+
+    return 0;
+#endif
+}
+
+/****************************************************************************/ /**
  * @brief  write data to efuse
  *
  * @param dev  ef control device pointer
@@ -540,6 +606,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
     uint32_t region0_count = 0, region1_count = 0;
     uint32_t total_size = EF_CTRL_EFUSE_R0_SIZE;
     uintptr_t irq_stat;
+    uint32_t timeout = EF_CTRL_DFT_TIMEOUT_VAL;
 
 #ifdef EF_CTRL_EFUSE_R1_SIZE
     total_size += EF_CTRL_EFUSE_R1_SIZE;
@@ -547,10 +614,39 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
     (void)region1_count;
 #endif
 
+    bflb_ef_ctrl_update_para(dev);
+
     if (offset > total_size || (offset + count * 4) > total_size || pword == NULL) {
         if (program) {
+            irq_stat = bflb_irq_save();
+#if defined(BL702) || defined(BL602) || defined(BL702L)
+            bflb_efuse_switch_cpu_clock_save();
+#endif
+            /* Switch to AHB clock */
+            bflb_ef_ctrl_switch_ahb_clk_r0(dev);
+            bflb_power_on_efuse();
             bflb_ef_ctrl_program_efuse_r0(dev);
+            while (bflb_ef_ctrl_busy(dev) == 1) {
+                timeout--;
+                if (timeout == 0) {
+                    break;
+                }
+                arch_delay_us(10);
+            }
+            bflb_power_off_efuse();
             arch_delay_us(100);
+#ifdef EF_CTRL_EFUSE_R1_SIZE
+            /* Switch to AHB clock */
+            bflb_ef_ctrl_switch_ahb_clk_r1(dev);
+            /* Add delay for CLK to be stable */
+            arch_delay_us(4);
+            bflb_ef_ctrl_program_efuse_r1(dev);
+            arch_delay_us(100);
+#endif
+#if defined(BL702) || defined(BL602) || defined(BL702L)
+            bflb_efuse_switch_cpu_clock_restore();
+#endif
+            bflb_irq_restore(irq_stat);
         }
         return;
     }
@@ -584,7 +680,16 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
         pword += region0_count;
 
         if (program) {
+            bflb_power_on_efuse();
             bflb_ef_ctrl_program_efuse_r0(dev);
+            while (bflb_ef_ctrl_busy(dev) == 1) {
+                timeout--;
+                if (timeout == 0) {
+                    break;
+                }
+                arch_delay_us(10);
+            }
+            bflb_power_off_efuse();
             arch_delay_us(100);
         }
     }
@@ -640,7 +745,23 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_direct(struct bflb_device_s *dev, uint32
     (void)region1_count;
 #endif
 
+    bflb_ef_ctrl_update_para(dev);
+
     if (offset > total_size || (offset + count * 4) > total_size || pword == NULL) {
+        if (reload) {
+            irq_stat = bflb_irq_save();
+#if defined(BL702) || defined(BL602) || defined(BL702L)
+            bflb_efuse_switch_cpu_clock_save();
+#endif
+            bflb_ef_ctrl_load_efuse_r0(dev);
+#ifdef EF_CTRL_EFUSE_R1_SIZE
+            bflb_ef_ctrl_load_efuse_r1(dev);
+#endif
+#if defined(BL702) || defined(BL602) || defined(BL702L)
+            bflb_efuse_switch_cpu_clock_restore();
+#endif
+            bflb_irq_restore(irq_stat);
+        }
         return;
     }
 
@@ -705,6 +826,9 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_direct(struct bflb_device_s *dev, uint32
 *******************************************************************************/
 void ATTR_TCM_SECTION bflb_ef_ctrl_read_common_trim(struct bflb_device_s *dev, char *name, bflb_ef_ctrl_com_trim_t *trim, uint8_t reload)
 {
+#ifdef romapi_bflb_ef_ctrl_read_common_trim
+    romapi_bflb_ef_ctrl_read_common_trim(dev, name, trim, reload);
+#else
     uint32_t reg_val;
     uint32_t i = 0;
     const bflb_ef_ctrl_com_trim_cfg_t *trim_list = NULL;
@@ -716,6 +840,9 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_common_trim(struct bflb_device_s *dev, c
     // }
 
     irq_stat = bflb_irq_save();
+
+    bflb_ef_ctrl_update_para(dev);
+
 #if defined(BL702) || defined(BL602) || defined(BL702L)
     bflb_efuse_switch_cpu_clock_save();
 #endif
@@ -781,6 +908,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_common_trim(struct bflb_device_s *dev, c
     bflb_efuse_switch_cpu_clock_restore();
 #endif
     bflb_irq_restore(irq_stat);
+#endif
 }
 
 /****************************************************************************/ /**
@@ -796,12 +924,16 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_common_trim(struct bflb_device_s *dev, c
 *******************************************************************************/
 void ATTR_TCM_SECTION bflb_ef_ctrl_write_common_trim(struct bflb_device_s *dev, char *name, uint32_t value, uint8_t program)
 {
+#ifdef romapi_bflb_ef_ctrl_write_common_trim
+    romapi_bflb_ef_ctrl_write_common_trim(dev, name, value, program);
+#else
     uint32_t reg_val;
     uint32_t i = 0;
     uint8_t parity = 0;
     const bflb_ef_ctrl_com_trim_cfg_t *trim_list = NULL;
     uint32_t trim_list_len;
-    uintptr_t irq_stat;
+    uintptr_t irq_stat;    
+    uint32_t timeout = EF_CTRL_DFT_TIMEOUT_VAL;
 
     // if (dev == NULL) {
     //     dev = bflb_device_get_by_name("ef_ctrl");
@@ -810,6 +942,9 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_common_trim(struct bflb_device_s *dev, 
     trim_list_len = bflb_ef_ctrl_get_common_trim_list(&trim_list);
 
     irq_stat = bflb_irq_save();
+
+    bflb_ef_ctrl_update_para(dev);
+
     for (i = 0; i < trim_list_len; i++) {
         if (arch_memcmp(name, trim_list[i].name, bflb_ef_ctrl_strlen(name)) == 0) {
 #if defined(BL702) || defined(BL602) || defined(BL702L)
@@ -854,7 +989,16 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_common_trim(struct bflb_device_s *dev, 
             if (program) {
                 /* program */
                 if (trim_list[i].en_addr < EF_CTRL_EFUSE_R0_SIZE * 8) {
+                    bflb_power_on_efuse();
                     bflb_ef_ctrl_program_efuse_r0(dev);
+                    while (bflb_ef_ctrl_busy(dev) == 1) {
+                        timeout--;
+                        if (timeout == 0) {
+                            break;
+                        }
+                        arch_delay_us(10);
+                    }
+                    bflb_power_off_efuse();
                     arch_delay_us(100);
                 }
 #ifdef EF_CTRL_EFUSE_R1_SIZE
@@ -871,6 +1015,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_common_trim(struct bflb_device_s *dev, 
         }
     }
     bflb_irq_restore(irq_stat);
+#endif
 }
 
 /****************************************************************************/ /**

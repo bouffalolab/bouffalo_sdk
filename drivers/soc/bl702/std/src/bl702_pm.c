@@ -960,11 +960,12 @@ ATTR_TCM_SECTION void pm_pds_mode_enter(enum pm_pds_sleep_level pds_level, uint3
     for (uint32_t pin = 23; pin <= 28; pin++) {
         GLB_GPIO_Set_HZ(pin);
     }
+    /* borad flash_io with pull-down resistor, cannot pull-up flash_io */
     /* SF io select from efuse value */
-    uint32_t flash_select = BL_RD_WORD(0x40007074);
-    if (((flash_select >> 26) & 7) == 0) {
-        HBN_Set_Pad_23_28_Pullup();
-    }
+    // uint32_t flash_select = BL_RD_WORD(0x40007074);
+    // if (((flash_select >> 26) & 7) == 0) {
+    //     HBN_Set_Pad_23_28_Pullup();
+    // }
     pPdsCfg->pdsCtl.puFlash = 1;
 #endif
 
@@ -1389,7 +1390,7 @@ void HBN_OUT0_IRQ(void)
     }
     if (SET == HBN_Get_INT_State(HBN_INT_GPIO12)) {
         HBN_Clear_IRQ(HBN_INT_GPIO12);
-    } 
+    }
     HBN_Clear_IRQ(HBN_INT_RTC);
     HBN_Clear_RTC_INT();
 }

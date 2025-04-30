@@ -5,8 +5,7 @@ include $(COMPONENT_PATH)/../ble_common.mk
 # Component Makefile
 #
 ##################################################################################
-ble_stack_srcs_dirs := src/bl_hci_wrapper \
-					src/port \
+ble_stack_srcs_dirs := src/port \
 					src/common \
 					src/common/tinycrypt/source  \
 					src/hci_onchip   \
@@ -14,6 +13,13 @@ ble_stack_srcs_dirs := src/bl_hci_wrapper \
 					src/services \
 					src/sbc/dec \
 					src/sbc/enc \
+
+ifeq ($(CONFIG_BT_HOST_HCI_TL),1)
+CFLAGS += -DCONFIG_BT_HOST_HCI_TL
+ble_stack_srcs_dirs+= src/bl_hci_tl
+else
+ble_stack_srcs_dirs+= src/bl_hci_wrapper
+endif
 
 ifeq ($(CONFIG_BT_OAD_SERVER),1)
 ble_stack_srcs_dirs+= src/services/oad
@@ -36,13 +42,18 @@ ble_stack_srcs_include_dirs    += src/port/include \
 								src/common/include/toolchain \
 								src/common/tinycrypt/include/tinycrypt  \
 								src/hci_onchip   \
-								src/bl_hci_wrapper \
 								src/host   \
 								src/include/bluetooth  \
 								src/include/drivers/bluetooth  \
 								src/profiles \
 								src/cli_cmds \
 								src/services
+
+ifeq ($(CONFIG_BT_HOST_HCI_TL),1)
+ble_stack_srcs_include_dirs  += src/bl_hci_tl
+else
+ble_stack_srcs_include_dirs  += src/bl_hci_wrapper
+endif
 
 ifneq ($(CONFIG_BT_OAD_SERVER)_$(CONFIG_BT_OAD_CLIENT),0_0)
 ble_stack_srcs_include_dirs    += src/services/oad
@@ -51,7 +62,7 @@ endif
 # Component Makefile
 #
 ## These include paths would be exported to project level
-COMPONENT_ADD_INCLUDEDIRS := $(ble_stack_srcs_include_dirs)
+COMPONENT_ADD_INCLUDEDIRS += $(ble_stack_srcs_include_dirs)
 
 ## not be exported to project level
 COMPONENT_PRIV_INCLUDEDIRS   :=
@@ -82,7 +93,6 @@ ble_stack_srcs  := src/port/bl_port.c \
 					src/common/tinycrypt/source/hmac_prng.c \
 					src/common/tinycrypt/source/sha256.c \
 					src/common/tinycrypt/source/utils.c \
-					src/bl_hci_wrapper/bl_hci_wrapper.c \
 					src/hci_onchip/hci_driver.c \
 					src/host/crypto.c \
 					src/host/hci_core.c \
@@ -90,6 +100,17 @@ ble_stack_srcs  := src/port/bl_port.c \
 					src/host/l2cap.c \
 					src/host/uuid.c
 
+ifeq ($(CONFIG_BT_HOST_HCI_TL),1)
+# FIXME
+#ble_stack_srcs  += src/bl_hci_tl/bl_hci_tl.c src/bl_hci_tl/bl_hci_uart.c
+ble_stack_srcs  += src/bl_hci_tl/bl_hci_tl.c src/bl_hci_tl/hci_uart_lp.c
+else
+ble_stack_srcs  += src/bl_hci_wrapper/bl_hci_wrapper.c
+endif
+
+ble_stack_srcs_dirs += ..
+ble_stack_srcs  += ../version_btble_component.c
+				
 ifneq ($(CONFIG_BT_CONN), 0)
 ble_stack_srcs  += src/host/att.c \
                    src/host/conn.c \
@@ -118,14 +139,24 @@ ble_stack_srcs   += src/services/oad/oad_main.c \
 endif
 
 ifeq ($(CONFIG_BT_SPP_SERVER),1)
-ble_stack_srcs   += src/services/spp.c
+ble_stack_srcs   += src/services/ble_spp.c
 endif
 
+ifeq ($(CONFIG_DYNAMIC_GATTS),1)
+ble_stack_srcs   += src/host/dynamic_gatts.c
+endif
 
 ifeq ($(CONFIG_BT_STACK_CLI),1)
-ble_stack_srcs   += src/cli_cmds/ble_cli_cmds.c \
-					src/cli_cmds/bredr_cli_cmds.c \
-					src/cli_cmds/pts_cli_cmds.c
+ble_stack_srcs   += src/cli_cmds/ble_cli_cmds.c
+ifeq ($(CONFIG_BT_BREDR),1)
+ble_stack_srcs   += src/cli_cmds/bredr_cli_cmds.c
+endif
+ifeq ($(CONFIG_BT_TP_CLI),1)
+ble_stack_srcs   += src/cli_cmds/ble_tp_cli_cmd.c
+endif
+ifeq ($(CONFIG_BT_STACK_PTS),1)
+ble_stack_srcs   += src/cli_cmds/pts_cli_cmds.c
+endif
 endif
 
 ifeq ($(CONFIG_BT_BAS_SERVER),1)
@@ -168,7 +199,7 @@ endif
 ble_audio_srcs   := src/host/iso.c
 
 bredr_stack_srcs := src/host/keys_br.c \
-                    src/host/l2cap_br.c \
+                    src/host/l2cap_br.c
 
 sbc_codec_srcs := 	src/sbc/dec/alloc.c \
 					src/sbc/dec/bitalloc.c \
@@ -191,10 +222,10 @@ sbc_codec_srcs := 	src/sbc/dec/alloc.c \
 					src/sbc/enc/sbc_enc_bit_alloc_ste.c \
 					src/sbc/enc/sbc_enc_coeffs.c \
 					src/sbc/enc/sbc_encoder.c \
-					src/sbc/enc/sbc_packing.c \
+					src/sbc/enc/sbc_packing.c
 
 sbc_codec_include_dirs := 	src/sbc/dec \
-							src/sbc/enc \
+							src/sbc/enc
 
 COMPONENT_SRCS := $(ble_stack_srcs)
 
@@ -211,3 +242,15 @@ endif
 COMPONENT_OBJS   := $(patsubst %.c,%.o, $(COMPONENT_SRCS))
 
 COMPONENT_SRCDIRS := $(ble_stack_srcs_dirs)
+
+ifdef CONFIG_BT_RX_STACK_SIZE
+CPPFLAGS += -DCONFIG_BT_RX_STACK_SIZE=$(CONFIG_BT_RX_STACK_SIZE)
+endif
+
+ifdef CONFIG_BT_WORK_QUEUE_STACK_SIZE
+CPPFLAGS += -DCONFIG_BT_WORK_QUEUE_STACK_SIZE=$(CONFIG_BT_WORK_QUEUE_STACK_SIZE)
+endif
+
+ifeq ($(CONFIG_BLE_ADV_TWO_PAYLOAD_IN_ONE_ADV_INTERVAL_WITH_ROME_CODE),1)
+    CFLAGS += -DCFG_BLE_ADV_TWO_PAYLOAD_IN_ONE_ADV_INTERVAL_WITH_ROME_CODE
+endif

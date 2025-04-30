@@ -198,13 +198,14 @@ typedef struct
 /**
  *  @brief PDS interrupt type definition
  */
-typedef enum {
+enum {
     PDS_INT_WAKEUP = 0,  /*!< PDS wakeup interrupt(assert bit while wakeup, include PDS_Timer/...) */
     PDS_INT_RF_DONE = 2, /*!< PDS RF done interrupt */
     PDS_INT_MAX,         /*!< PDS int max number */
-} PDS_INT_Type;
+};
+typedef BL_ENUM_Type PDS_INT_Type;
 
-typedef enum {
+enum {
     PDS_WAKEUP_SRC_HBN_IRQ_OUT = 0, /*!< wakeup trigger by hbn_irq_out[1:0] */
     PDS_WAKEUP_SRC_KYD_WAKEUP,      /*!< wakeup trigger by pds_kyd_wakeup */
     PDS_WAKEUP_SRC_GPIO_IRQ,        /*!< wakeup trigger by gpio_irq */
@@ -212,11 +213,13 @@ typedef enum {
     PDS_WAKEUP_SRC_BLE_SLP_IRQ,     /*!< wakeup trigger by ble_slp_irq */
     PDS_WAKEUP_SRC_KYS_INT,         /*!< wakeup trigger by kys_int */
     PDS_WAKEUP_SRC_WDG_TIMEOUT,     /*!< wakeup trigger by pds_watchdog_timeout event */
-} PDS_WAKEUP_SRC_Type;
+};
+typedef BL_ENUM_Type PDS_WAKEUP_SRC_Type;
+
 /**
  *  @brief PDS GPIO type definition
  */
-typedef enum {
+enum {
     PDS_GPIO_PIN_0 = 0,
     PDS_GPIO_PIN_1,
     PDS_GPIO_PIN_2,
@@ -240,9 +243,10 @@ typedef enum {
     PDS_GPIO_PIN_28,
     PDS_GPIO_PIN_29,
     PDS_GPIO_PIN_MAX,
-} PDS_GPIO_Type;
+};
+typedef BL_ENUM_Type PDS_GPIO_Type;
 
-typedef enum {
+enum {
     PDS_KEY_ROW_0 = 0,
     PDS_KEY_ROW_1,
     PDS_KEY_ROW_2,
@@ -251,9 +255,10 @@ typedef enum {
     PDS_KEY_ROW_5,
     PDS_KEY_ROW_6,
     PDS_KEY_ROW_7,
-} PDS_KEY_ROW_Type;
+};
+typedef BL_ENUM_Type PDS_KEY_ROW_Type;
 
-typedef enum {
+enum {
     PDS_KEY_COL_0 = 0,
     PDS_KEY_COL_1,
     PDS_KEY_COL_2,
@@ -262,12 +267,13 @@ typedef enum {
     PDS_KEY_COL_5,
     PDS_KEY_COL_6,
     PDS_KEY_COL_7,
-} PDS_KEY_COL_Type;
+};
+typedef BL_ENUM_Type PDS_KEY_COL_Type;
 
 /**
  * @brief PDS KYS COL and ROW GPIO Select
  */
-typedef enum {
+enum {
     PDS_KYS_GPIO_PIN_0 = 0,
     PDS_KYS_GPIO_PIN_1,
     PDS_KYS_GPIO_PIN_2,
@@ -298,21 +304,23 @@ typedef enum {
     PDS_KYS_GPIO_PIN_30,
     PDS_KYS_GPIO_PIN_31,
     PDS_KYS_GPIO_PIN_MAX,
-} PDS_KYS_GPIO_Type;
+};
+typedef BL_ENUM_Type PDS_KYS_GPIO_Type;
 
 /**
  * @brief PDS KYD White Key Select
  */
-typedef enum {
+enum {
     PDS_KYD_NO_WHITE_KEY_MODE = 0,
     PDS_KYD_INVERT_DETECT_MODE,
     PDS_KYD_MASK_DETECT_MODE,
-} PDS_KYD_WHITE_KEY_MODE_Type;
+};
+typedef BL_ENUM_Type PDS_KYD_WHITE_KEY_MODE_Type;
 
 /**
  *  @brief PDS GPIO group set type
  */
-typedef enum {
+enum {
     PDS_GPIO_GROUP_SET_GPIO0_GPIO3,   /*!< gpio int set 0, gpio0 - gpio3   */
     PDS_GPIO_GROUP_SET_GPIO7,         /*!< gpio int set 1, gpio7           */
     PDS_GPIO_GROUP_SET_GPIO8,         /*!< gpio int set 2, gpio8           */
@@ -321,33 +329,36 @@ typedef enum {
     PDS_GPIO_GROUP_SET_GPIO20_GPIO23, /*!< gpio int set 5, gpio20 - gpio23 */
     PDS_GPIO_GROUP_SET_GPIO24_GPIO27, /*!< gpio int set 6, gpio14 - gpio17 */
     PDS_GPIO_GROUP_SET_GPIO28_GPIO29, /*!< gpio int set 7, gpio28 - gpio29 */
-} PDS_GPIO_GROUP_SET_Type;
+};
+typedef BL_ENUM_Type PDS_GPIO_GROUP_SET_Type;
 
 /**
  *  @brief PDS reset event type definition
  */
-typedef enum {
+enum {
     PDS_RST_EVENT_BUS_RST,        /*!< hreset_n (Bus Reset) */
     PDS_RST_EVENT_HBN_PWR_ON_RST, /*!< pwr_rst_n (hbn power on reset) */
     PDS_RST_EVENT_PDS_RST,        /*!< pds_rst_n (pds reset) */
     PDS_RST_EVENT_MAX,            /*!< PDS rst event max number */
-} PDS_RST_EVENT_Type;
+};
+typedef BL_ENUM_Type PDS_RST_EVENT_Type;
 
 /**
  *  @brief PDS RF status type definition
  */
-typedef enum {
+enum {
     PDS_RF_STS_OFF = 0,        /*!< 4'b0000 */
     PDS_RF_STS_PU_MBG = 1,     /*!< 4'b0001 */
     PDS_RF_STS_PU_LDO15RF = 3, /*!< 4'b0011 */
     PDS_RF_STS_PU_SFREG = 7,   /*!< 4'b0111 */
     PDS_RF_STS_BZ_EN_AON = 15, /*!< 4'b1111 */
-} PDS_RF_STS_Type;
+};
+typedef BL_ENUM_Type PDS_RF_STS_Type;
 
 /**
  *  @brief PDS status type definition
  */
-typedef enum {
+enum {
     PDS_STS_IDLE = 0,            /*!< 4'b0000 */
     PDS_STS_ECG = 8,             /*!< 4'b1000 */
     PDS_STS_ERST = 12,           /*!< 4'b1100 */
@@ -364,7 +375,8 @@ typedef enum {
     PDS_STS_DCG = 13,            /*!< 4'b1101 */
     PDS_STS_DRST = 11,           /*!< 4'b1011 */
     PDS_STS_WAIT_EFUSE = 9,      /*!< 4'b1001 */
-} PDS_STS_Type;
+};
+typedef BL_ENUM_Type PDS_STS_Type;
 
 /**
  *  @brief PDS auto power down configuration type definition
@@ -405,11 +417,12 @@ typedef struct
 /**
  *  @brief PDS force type definition
  */
-typedef enum {
+enum {
     PDS_FORCE_NP,  /*!< PDS force NP */
     PDS_FORCE_RSV, /*!< rsv */
     PDS_FORCE_BZ,  /*!< PDS force BZ */
-} PDS_FORCE_Type;
+};
+typedef BL_ENUM_Type PDS_FORCE_Type;
 
 /*@} end of group PDS_Public_Types */
 
@@ -526,7 +539,7 @@ typedef enum {
 /**
  *  @brief PDS GPIO interrupt control mode type definition
  */
-typedef enum {
+enum {
     PDS_GPIO_INT_SYNC_FALLING_EDGE = 0,        /*!< GPIO interrupt sync mode, GPIO negedge pulse trigger interrupt */
     PDS_GPIO_INT_SYNC_RISING_EDGE = 1,         /*!< GPIO interrupt sync mode, GPIO posedge pulse trigger interrupt */
     PDS_GPIO_INT_SYNC_LOW_LEVEL = 2,           /*!< GPIO interrupt sync mode, GPIO negedge level trigger interrupt */
@@ -536,7 +549,8 @@ typedef enum {
     PDS_GPIO_INT_ASYNC_RISING_EDGE = 9,        /*!< GPIO interrupt async mode, GPIO posedge pulse trigger interrupt */
     PDS_GPIO_INT_ASYNC_LOW_LEVEL = 10,         /*!< GPIO interrupt async mode, GPIO negedge level trigger interrupt */
     PDS_GPIO_INT_ASYNC_HIGH_LEVEL = 11,        /*!< GPIO interrupt async mode, GPIO posedge level trigger interrupt */
-} PDS_GPIO_INT_TRIG_Type;
+};
+typedef BL_ENUM_Type PDS_GPIO_INT_TRIG_Type;
 
 /** @defgroup  PDS_RST_EVENT_TYPE
  *  @{

@@ -124,6 +124,16 @@ xcodec_error_t xcodec_input_open(xcodec_t *codec, xcodec_input_t *ch, uint32_t c
         return XCODEC_ERROR;
     }
 
+    if (!msp_mutex_is_valid(&rx_context.mutex))
+    {
+        msp_mutex_new(&rx_context.mutex);
+    } else {
+        user_log("an input already open, close first please!!!\r\n");
+        return XCODEC_ERROR;
+    }
+
+    msp_mutex_lock(&(rx_context.mutex), MSP_WAIT_FOREVER);
+
     msp_dma_ch_cfg_t dma_channel_cfg;        
     //rx_context.ctrl_id = dma->ctrl_id;
     //rx_context.ch_id = dma->ch_id;
@@ -150,8 +160,9 @@ xcodec_error_t xcodec_input_open(xcodec_t *codec, xcodec_input_t *ch, uint32_t c
     ch->state.readable    = 0U;
     ch->state.writeable   = 0U;
     
-   
     ret = aui_init(&rx_context);
+
+    msp_mutex_unlock(&(rx_context.mutex));
 
     if (ret) {
         return XCODEC_ERROR;
@@ -184,7 +195,9 @@ xcodec_error_t xcodec_input_config(xcodec_input_t *ch, xcodec_input_config_t *co
     rx_context.maxcount = config->buffer_size / (config->period + sizeof(aui_segment_t));
     //cfg.positive_pin = config->positive_pin;
     //cfg.negative_pin = config->negative_pin;
-#if !CONFIG_CODEC_USE_I2S_RX 
+#if CONFIG_CODEC_USE_I2S_RX || CONFIG_CODEC_USE_ES8388 
+    msp_i2s_device_init(config->sample_rate);
+#else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
     /* means unused pin */
     if (pin_cfg.input_positive_pin != 255) {
@@ -311,6 +324,9 @@ void xcodec_input_close(xcodec_input_t *ch)
         msp_free(rx_context.dma);
         rx_context.dma = NULL;
     }
+
+    msp_mutex_free(&rx_context.mutex);
+
     return ;
 }
 
@@ -368,6 +384,16 @@ xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t
 {
     int ret = -1;
 
+    if (!msp_mutex_is_valid(&tx_context.mutex))
+    {
+        msp_mutex_new(&tx_context.mutex);
+    } else {
+        user_log("an output already open, close first please!!!\r\n");
+        return XCODEC_ERROR;
+    }
+
+    msp_mutex_lock(&(tx_context.mutex), MSP_WAIT_FOREVER);
+
     tx_context.ch_idx = ch_idx;
     tx_context.ringbuffer = ch->ring_buf;
     tx_context.dma = msp_malloc(sizeof(auo_dma_t));
@@ -388,6 +414,7 @@ xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t
     tx_context.dma->dst_addr = 0x2000C100 + 0x100 * tx_context.ch_id;
     tx_context.dma->halt_reg = tx_context.dma->dst_addr + 0x10;
     tx_context.dma->halt = 0x00040000;
+    tx_context.dma->halt_flag = 0;
     tx_context.dma->unhalt = 0xFFFBFFFF;
 
     codec->output_chs     = ch;
@@ -397,6 +424,8 @@ xcodec_error_t xcodec_output_open(xcodec_t *codec, xcodec_output_t *ch, uint32_t
     ch->state.readable    = 0U;
     ch->state.writeable   = 0U;
     ret = auo_init(&tx_context);
+
+    msp_mutex_unlock(&(tx_context.mutex));
 
     if (ret) {
         return XCODEC_ERROR;
@@ -429,7 +458,7 @@ xcodec_error_t xcodec_output_config(xcodec_output_t *ch, xcodec_output_config_t 
     cfg.per_node_size = config->period;
     tx_context.maxcount = config->buffer_size / (config->period + sizeof(auo_segment_t));
     //cfg.pa_pin = config->pa_pin;
-#if CONFIG_CODEC_USE_I2S_TX
+#if CONFIG_CODEC_USE_I2S_TX || CONFIG_CODEC_USE_ES8388
     msp_i2s_device_init(config->sample_rate);
 #else
     msp_codec_pin_cfg_t pin_cfg = msp_codec_pin_config();
@@ -538,9 +567,11 @@ uint32_t xcodec_output_write_async(xcodec_output_t *ch, const void *data, uint32
         user_log("codec have close ?\r\n");
         return 0;
     }
+    /* 32 bytes align */
+    uint32_t align_size = size & ~31;
     //printf("----***********************************\r\n");
     //return 0;
-    return auo_write(&tx_context, data, size);
+    return auo_write(&tx_context, data, align_size);
 }
 
 void xcodec_output_stop(xcodec_output_t *ch)
@@ -561,6 +592,10 @@ void xcodec_output_close(xcodec_output_t *ch)
         msp_free(tx_context.dma);
         tx_context.dma = NULL;
     }
+
+    msp_mutex_free(&tx_context.mutex);
+
+    return;
 }
 
 
@@ -678,6 +713,7 @@ xcodec_error_t xcodec_output_get_state(xcodec_output_t *ch, xcodec_state_t *stat
 
 void xcodec_uninit(xcodec_t *codec)
 {
+    return;
 }
 
 

@@ -8,12 +8,13 @@
 
 #include <zephyr.h>
 #include <stdbool.h>
-#include <sys/errno.h>
+#include <bt_errno.h>
 
 #include <net/buf.h>
 #include <bluetooth.h>
 #include <conn.h>
-#include "../../blestack/src/include/bluetooth/uuid.h"
+#include <hci_core.h>
+#include "../../blestack/src/include/bluetooth/bt_uuid.h"
 
 #include <include/mesh.h>
 
@@ -49,11 +50,11 @@ int bt_mesh_provision(const u8_t net_key[16], u16_t net_idx,
 	/* Added debug infomation by bouffalo */
 	printf("mesh provision, network key : %s\n", bt_hex(net_key, 16));
 	printf("mesh provision, device key : %s\n", bt_hex(dev_key, 16));
-	printf("mesh provison, network key index :0x%04x flags :0x%02x iv index :0x%04x\n", 
+	printf("mesh provison, network key index :0x%04x flags :0x%02x iv index :0x%04lx\n", 
 				net_idx, flags, iv_index);
 
 	BT_INFO("Primary Element: 0x%04x", addr);
-	BT_DBG("net_idx 0x%04x flags 0x%02x iv_index 0x%04x",
+	BT_DBG("net_idx 0x%04x flags 0x%02x iv_index 0x%04lx",
 	       net_idx, flags, iv_index);
 
 	if (IS_ENABLED(CONFIG_BT_MESH_PB_GATT)) {
@@ -130,7 +131,7 @@ int bt_mesh_provision(const u8_t net_key[16], u16_t net_idx,
 
 	/* Modified by bouffalo, don't refresh seq */
 	//bt_mesh.seq = 0U;
-	BT_WARN("mesh seq %d", bt_mesh.seq);
+	BT_WARN("mesh seq %lu", bt_mesh.seq);
 
 	bt_mesh_comp_provision(addr);
 
@@ -253,6 +254,16 @@ int bt_mesh_suspend(void)
 	if (atomic_test_and_set_bit(bt_mesh.flags, BT_MESH_SUSPENDED)) {
 		return -EALREADY;
 	}
+
+#if defined(BFLB_BLE)
+	bt_mesh_adv_update();
+	err = bt_le_adv_stop();
+	if (err) {
+		atomic_clear_bit(bt_mesh.flags, BT_MESH_SUSPENDED);
+		BT_WARN("Disabling advertising failed (err %d)", err);
+		return err;
+	}
+#endif /*BFLB_BLE*/
 
 	err = bt_mesh_scan_disable();
 	if (err) {

@@ -2,7 +2,7 @@
 #include "hardware/audac_reg.h"
 #include "hardware/dac_reg.h"
 
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL808)
 #define GLB_BASE ((uint32_t)0x20000000)
 #endif
 
@@ -55,7 +55,7 @@ int bflb_audac_init(struct bflb_device_s *dev, const struct bflb_audac_init_conf
     regval = getreg32(reg_base + AUDAC_FIFO_CTRL_OFFSET);
     /* data format */
     regval &= ~AUDAC_TX_DATA_MODE_MASK;
-    regval |= config->data_format;
+    regval |= config->data_format << AUDAC_TX_DATA_MODE_SHIFT;
 
     /* fifo threshold */
     regval &= ~AUDAC_TX_TRG_LEVEL_MASK;

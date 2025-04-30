@@ -3,13 +3,13 @@
 
 #include <stdint.h>
 
-#ifndef WL_API_RMEM_EN
-#define WL_API_RMEM_EN (1)
+#if WL_NIC
+    #ifndef WL_API_RMEM_EN
+    #define WL_API_RMEM_EN (1)
+    #endif
 #else
-#if !WL_NIC
-#undef WL_API_RMEM_EN
-#define WL_API_RMEM_EN (1)
-#endif
+    #undef WL_API_RMEM_EN
+    #define WL_API_RMEM_EN (1)
 #endif
 
 
@@ -126,6 +126,7 @@ struct wl_efuse_t
     uint8_t     iptat_code;
     uint8_t     icx_code;
     uint8_t     dcdc_vout_trim_aon;
+    int8_t      Temperature_MP; // temperature of Tsensor while power cal at production line
 };
 
 struct wl_param_tcap_t
@@ -133,6 +134,12 @@ struct wl_param_tcap_t
     uint8_t     en_tcap;
     int8_t      tcap_tsen[10];
     int8_t      tcap_cap[11];
+};
+
+struct wl_param_spur_rules_t
+{
+    uint32_t    cfg20;
+    uint32_t    cfg40;
 };
 
 struct wl_param_t
@@ -151,6 +158,9 @@ struct wl_param_t
     uint8_t                      pwr_update;      // power update flag
     #endif
     struct wl_param_tcap_t       tcap;
+    struct wl_param_spur_rules_t spur_rules[NUM_WLAN_CHANNELS];
+    uint8_t                      spur_rules_en[NUM_WLAN_CHANNELS];
+    uint8_t                      bz_backoff_db[21];
 };
 
 struct wl_env_t
@@ -207,6 +217,7 @@ struct wl_cfg_t
     uint8_t     mode;            // 0b01: wlan; 0b10: bz; 0b11: dual mode
     uint8_t     en_param_load;   // 0: param is in rentention, no read required; 1: read param during init
     uint8_t     en_full_cal;     // 0: cal is ready, no full calibration required; 1: do full cal during init
+    uint8_t     en_capcode_set;  // 0: no capcode update; 1: capcode update
 
     struct wl_param_t param;
 
@@ -217,7 +228,7 @@ struct wl_cfg_t
     /* platform api to get capcode register */
     void (*capcode_get)(uint8_t* capcode_in, uint8_t* capcode_out);
     /* platform logging api */
-    void (*log_printf)(const char *format, ...);
+    int (*log_printf)(const char *format, ...);
 
     uint8_t     log_level;
     uint8_t     device_info; // QFN40,QFN40M,QFN56
@@ -284,6 +295,7 @@ int8_t wl_init();
 
 /* BB API */
 void wl_wlan_bb_reset();
+void wl_wlan_bb_partial_reset();
 void wl_wlan_bb_pre_proc(void* rvec_ptr);
 #if WL_NIC
 void wl_wlan_bb_post_proc(void* rvec_ptr, uint16_t type_subtype, int8_t gainopt);
@@ -323,9 +335,12 @@ void wl_bz_rx_optimize_restore(); // Restore default setting when exit BTBLE
 
 void wl_rf_set_bz_target_power_table(int8_t target_pwr_dbm);// modified the bz power table according to the target power of bz before set bz tx
 void wl_rf_set_154_tx_power(uint32_t target_pwr_dbm);
+int8_t wl_rf_set_154_tx_power_with_power_limit(uint32_t target_pwr_dbm, uint8_t channel_idx, const char *country_code);
 void wl_rf_cfg_init(void);//set default values to rf members of struct, //by Lx
 void wl_rf_set_channel_pwr_comp(uint8_t channel_idx);
 void wl_rf_set_bz_channel_pwr_comp();
+void wl_rf_set_status(uint8_t rf_en);// turn on/off rf domain
+void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
 /*
 * rf driver api end
 */
@@ -340,6 +355,15 @@ int8_t wl_lp_init(uint8_t* rmem, uint16_t channelfreq_MHz);
 #else
 int8_t wl_lp_init(uint16_t channelfreq_MHz);
 #endif
+void wl_lp_config(uint32_t cfg, uint32_t cfg_cal);
 void wl_lp_status_update(int8_t bcn_rx_status, int8_t bcn_rssi, uint32_t bcn_hbn_time_us);
+uint32_t wl_cal_read();
+
+/**
+ * @brief Get phyrf version string
+ * 
+ * @return const char* Version string in format "YYYY-MM-DD commit_hash" or "YYYY-MM-DD commit_hash (dirty)"
+ */
+const char* wl_get_version(void);
 
 #endif

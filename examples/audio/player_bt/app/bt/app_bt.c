@@ -78,7 +78,7 @@ void app_bt_adv_enable(int enable)
 
         memset(dev_name, 0, sizeof(dev_name));
         ble_stack_get_local_addr(&addr);
-        sprintf(dev_name,
+        snprintf(dev_name, sizeof(dev_name),
                 "BouffaloMSP[%02X:%02X:%02X]",
                 addr.val[0], addr.val[1], addr.val[2]);
         printf("bt device_name: %s\r\n", dev_name);

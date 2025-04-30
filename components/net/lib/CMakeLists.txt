@@ -1,2 +1,5 @@
 sdk_add_subdirectory_ifdef(CONFIG_MQTT mqtt)
 sdk_add_subdirectory_ifdef(CONFIG_RTSP rtsp)
+sdk_add_subdirectory_ifdef(CONFIG_LIBPEER libpeer)
+sdk_add_subdirectory_ifdef(CONFIG_SRTP srtp)
+

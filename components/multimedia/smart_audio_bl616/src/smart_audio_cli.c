@@ -91,7 +91,7 @@ static void play_sin(int second)
     wav_head_int[1]  = 32000 * second + 36; /*wav 文件大小 - 8*/
     wav_head_int[10] = 32000 * second;      /* PCM数据字节数 */
 
-    fifo = nsfifo_open("fifo://sintest", MSP_FS_CREAT, 16000 / 1000 * 16 / 8 * 10 * 400);
+    fifo = nsfifo_open("fifo://sintest", MSP_FS_CREAT, 16000 / 1000 * 16 / 8 * 10 * 40);
 
     smtaudio_stop(MEDIA_SYSTEM);
     smtaudio_start(MEDIA_SYSTEM, "fifo://sintest", 0, 0);

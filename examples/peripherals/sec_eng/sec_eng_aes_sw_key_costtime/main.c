@@ -132,6 +132,7 @@ int main(void)
 #endif
     }
 
+#if !defined(BL602) && !defined(BL702)
     for (uint32_t i = 1; i <= 1024; i++) {
         printf("test aes xts 128 \r\n");
         bflb_aes_set_mode(aes, AES_MODE_XTS);
@@ -161,6 +162,7 @@ int main(void)
         mbedtls_check(i);
 #endif
     }
+#endif
 
     printf("aes success\r\n");
     bflb_group0_release_aes_access(aes);

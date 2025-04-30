@@ -181,7 +181,7 @@ void ES8388_Codec_Mode(ES8388_Cfg_Type *cfg)
 
         //mic1 select 
         ES8388_Write_Reg(0x0A, 0xf8); // Fixed stereo problems
-        ES8388_Write_Reg(0x0B, 0x02); // stereo
+        ES8388_Write_Reg(0x0B, 0x82); // stereo
     }
 
     tempVal = cfg->data_width;
@@ -239,10 +239,8 @@ void ES8388_Codec_Mode(ES8388_Cfg_Type *cfg)
     ES8388_Write_Reg(0x30, 0x1E);
     ES8388_Write_Reg(0x31, 0x1E);
 
-    ES8388_Write_Reg(0x04,0x3C);//enable LOUT & ROUT
-    // ES8388_Write_Reg(0x04, 0x24);
-    // ES8388_Write_Reg(0x04, 0x18);
-
+    //ES8388_Write_Reg(0x04,0x3C);//enable LOUT & ROUT
+    ES8388_Write_Reg(0x04, 0x24);
     ES8388_Write_Reg(0x26, 0x01);
     ES8388_Write_Reg(0x03, 0x09); //power up ADC Enable LIN &RIN.
 }

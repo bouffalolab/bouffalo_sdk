@@ -10,6 +10,12 @@ void bflb_timer_init(struct bflb_device_s *dev, const struct bflb_timer_config_s
     LHAL_PARAM_ASSERT(IS_TIMER_CLOCK_DIV(config->clock_div));
     LHAL_PARAM_ASSERT(IS_TIMER_COMP_ID(config->trigger_comp_id));
 
+    if (!IS_TIMER_COMP_VAL(config->comp0_val) ||
+        !IS_TIMER_COMP_VAL(config->comp1_val) ||
+        !IS_TIMER_COMP_VAL(config->comp2_val)) {
+        bflb_lhal_assert_func(__FILE__, __LINE__, __func__, "comp value is error");
+    }
+
 #ifdef romapi_bflb_timer_init
     romapi_bflb_timer_init(dev, config);
 #else
@@ -149,7 +155,7 @@ void bflb_timer_stop(struct bflb_device_s *dev)
 void bflb_timer_set_preloadvalue(struct bflb_device_s *dev, uint32_t val)
 {
 #ifdef romapi_bflb_timer_set_preloadvalue
-    romapi_bflb_timer_set_preloadvalue(dev);
+    romapi_bflb_timer_set_preloadvalue(dev, val);
 #else
     uint32_t reg_base;
 
@@ -162,7 +168,7 @@ void bflb_timer_set_preloadvalue(struct bflb_device_s *dev, uint32_t val)
 void bflb_timer_set_compvalue(struct bflb_device_s *dev, uint8_t cmp_no, uint32_t val)
 {
 #ifdef romapi_bflb_timer_set_compvalue
-    romapi_bflb_timer_set_compvalue(dev);
+    romapi_bflb_timer_set_compvalue(dev, cmp_no, val);
 #else
     uint32_t reg_base;
 
@@ -175,7 +181,7 @@ void bflb_timer_set_compvalue(struct bflb_device_s *dev, uint8_t cmp_no, uint32_
 uint32_t bflb_timer_get_compvalue(struct bflb_device_s *dev, uint8_t cmp_no)
 {
 #ifdef romapi_bflb_timer_get_compvalue
-    return romapi_bflb_timer_get_compvalue(dev);
+    return romapi_bflb_timer_get_compvalue(dev, cmp_no);
 #else
     uint32_t reg_base;
 
@@ -250,3 +256,22 @@ void bflb_timer_compint_clear(struct bflb_device_s *dev, uint8_t cmp_no)
     putreg32(regval, reg_base + TIMER_TICR0_OFFSET + 4 * dev->idx);
 #endif
 }
+
+int bflb_timer_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
+{
+#ifdef romapi_bflb_timer_feature_control
+    return romapi_bflb_timer_feature_control(dev, cmd, arg);
+#else
+    int ret = 0;
+
+    switch (cmd) {
+
+        default:
+            ret = -EPERM;
+            break;
+    }
+
+    return ret;
+#endif
+}
+

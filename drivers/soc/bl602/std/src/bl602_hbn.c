@@ -37,6 +37,8 @@
 #include "bl602_hbn.h"
 #include "bl602_glb.h"
 #include "bflb_xip_sflash.h"
+#include "bflb_efuse.h"
+#include "bl602_ef_cfg.h"
 // #include "risc-v/Core/Include/clic.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
@@ -160,13 +162,13 @@ void ATTR_TCM_SECTION HBN_Mode_Enter_Ext(HBN_APP_CFG_Type *cfg)
 *******************************************************************************/
 #ifndef BFLB_USE_ROM_DRIVER
 __WEAK
-void ATTR_TCM_SECTION HBN_Power_Down_Flash(SPI_Flash_Cfg_Type *flashCfg)
+void ATTR_TCM_SECTION HBN_Power_Down_Flash(spi_flash_cfg_type *flashCfg)
 {
-    SPI_Flash_Cfg_Type bhFlashCfg;
+    spi_flash_cfg_type bhFlashCfg;
 
     if (flashCfg == NULL) {
         SFlash_Cache_Flush();
-        XIP_SFlash_Read_Via_Cache_Need_Lock(BL602_FLASH_XIP_BASE + 8 + 4, (uint8_t *)(&bhFlashCfg), sizeof(SPI_Flash_Cfg_Type));
+        XIP_SFlash_Read_Via_Cache_Need_Lock(BL602_FLASH_XIP_BASE + 8 + 4, (uint8_t *)(&bhFlashCfg), sizeof(spi_flash_cfg_type));
         SFlash_Cache_Flush();
 
         SF_Ctrl_Set_Owner(SF_CTRL_OWNER_SAHB);
@@ -758,6 +760,30 @@ BL_Err_Type HBN_Set_UART_CLK_Sel(HBN_UART_CLK_Type clkSel)
 }
 
 /****************************************************************************/ /**
+ * @brief  get xclk clock selection
+ *
+ * @param  None
+ *
+ * @return xclk clock selection
+ *
+*******************************************************************************/
+HBN_XCLK_CLK_Type ATTR_CLOCK_SECTION HBN_Get_XCLK_CLK_Sel(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+
+    switch (BL_GET_REG_BITS_VAL(tmpVal, GLB_HBN_ROOT_CLK_SEL) & 1) {
+        case 0:
+            return HBN_XCLK_CLK_RC32M;
+        case 1:
+            return HBN_XCLK_CLK_XTAL;
+        default:
+            return HBN_XCLK_CLK_RC32M;
+    }
+}
+
+/****************************************************************************/ /**
  * @brief  Select xclk clock source
  *
  * @param  xClk: xclk clock type selection
@@ -1010,15 +1036,16 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_Off_RC32K(void)
 __WEAK
 BL_Err_Type ATTR_CLOCK_SECTION HBN_Trim_RC32K(void)
 {
-    Efuse_Ana_RC32K_Trim_Type trim;
-    int32_t tmpVal = 0;
+    bflb_ef_ctrl_com_trim_t trim;
+    uint32_t tmpVal;
+    char trim_name[] = "rc32k";
 
-    EF_Ctrl_Read_RC32K_Trim(&trim);
+    bflb_ef_ctrl_read_common_trim(NULL, trim_name, &trim, 1);
 
-    if (trim.trimRc32kExtCodeEn) {
-        if (trim.trimRc32kCodeFrExtParity == EF_Ctrl_Get_Trim_Parity(trim.trimRc32kCodeFrExt, 10)) {
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
             tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_CTRL0);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT, trim.trimRc32kCodeFrExt);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_RC32K_CODE_FR_EXT, trim.value);
             tmpVal = BL_SET_REG_BIT(tmpVal, HBN_RC32K_EXT_CODE_EN);
             BL_WR_REG(HBN_BASE, HBN_RC32K_CTRL0, tmpVal);
             BL602_Delay_US(2);

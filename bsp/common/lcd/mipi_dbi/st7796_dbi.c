@@ -43,7 +43,14 @@
 #define lcd_dbi_transmit_cmd_pixel_fill_async lcd_dbi_transmit_cmd_pixel_fill_async
 
 lcd_dbi_init_t dbi_para = {
+#if (LCD_DBI_WORK_MODE == 3)
+    /* typeB */
+    .clock_freq = 27 * 1000 * 1000,
+#else
+    /* typeC */
     .clock_freq = 40 * 1000 * 1000,
+#endif
+
 #if (ST7796_DBI_PIXEL_FORMAT == 1)
     .pixel_format = LCD_DBI_LCD_PIXEL_FORMAT_RGB565,
 #elif (ST7796_DBI_PIXEL_FORMAT == 2)
@@ -69,6 +76,13 @@ const st7796_dbi_init_cmd_t st7796_dbi_init_cmds[] = {
     { 0xF0, "\x96", 1 },
 
     { 0x36, "\x00", 1 },
+
+/* Color RGB order */
+#if ST7796_DBI_COLOR_ORDER
+    { 0x36, "\x08", 1 },
+#else
+    { 0x36, "\x00", 1 },
+#endif
 
 #if (ST7796_DBI_PIXEL_FORMAT == 1)
     { 0x3A, "\x55", 1 }, /* Interface Pixel Format RGB565 */
@@ -155,37 +169,25 @@ int st7796_dbi_init()
  */
 int st7796_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
 {
+    uint8_t dir_param[4] = { 0x00, 0xA0, 0xC0, 0x60 };
+    uint8_t mir_param[4] = { 0x40, 0x20, 0x80, 0xE0 };
     uint8_t param;
-    switch (dir) {
-        case 0:
-            if (!mir_flag)
-                param = 0x00;
-            else
-                param = 0x40;
-            break;
-        case 1:
-            if (!mir_flag)
-                param = 0x20;
-            else
-                param = 0xA0;
-            break;
-        case 2:
-            if (!mir_flag)
-                param = 0x80;
-            else
-                param = 0xC0;
-            break;
-        case 3:
-            if (!mir_flag)
-                param = 0xE0;
-            else
-                param = 0x60;
 
-            break;
-        default:
-            return -1;
-            break;
+    if (dir >= 4) {
+        return -1;
     }
+
+    if (mir_flag) {
+        param = mir_param[dir];
+    } else {
+        param = dir_param[dir];
+    }
+
+/* Color RGB order */
+#if ST7796_DBI_COLOR_ORDER
+    param |= 0x08;
+#endif
+
     lcd_dbi_transmit_cmd_para(0x36, (void *)&param, 1);
     return dir;
 }

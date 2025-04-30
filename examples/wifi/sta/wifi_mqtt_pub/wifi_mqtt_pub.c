@@ -189,7 +189,7 @@ static int example_mqtt(int argc, const char *argv[])
 
         /* print a message */
         char application_message[256] = {"{\"hello mqtt by bl616/8 !\"}\r\n"};
-        sprintf(&application_message[strlen(application_message)], "Now time is %s", time_buf);
+        snprintf(&application_message[strlen(application_message)], sizeof(application_message) - strlen(application_message), "Now time is %s", time_buf);
         printf("%s published : \"%s\"\r\n", argv[0], application_message);
 
         /* publish the time */

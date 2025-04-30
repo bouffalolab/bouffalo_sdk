@@ -72,13 +72,20 @@ void start_load(void)
         *pDest++ = *pSrc++;
     }
 
-    /* Add psram data copy */
-    pSrc = &__psram_load_addr;
-    pDest = &__psram_data_start__;
+#ifdef CONFIG_PSRAM
+    /* check efuse */
+#define PSRAM_EF_INFO_ADDR (0x20056000 + 0x18)
+#define PSRAM_EF_INFO_MASK (0x0000003 << 24)
+    if (*((volatile uint32_t *)(PSRAM_EF_INFO_ADDR)) & PSRAM_EF_INFO_MASK) {
+        /* Add psram data copy */
+        pSrc = &__psram_load_addr;
+        pDest = &__psram_data_start__;
 
-    for (; pDest < &__psram_data_end__;) {
-        *pDest++ = *pSrc++;
+        for (; pDest < &__psram_data_end__;) {
+            *pDest++ = *pSrc++;
+        }
     }
+#endif
 
 #ifndef CONIFG_DISABLE_NOCACHE_RAM_LOAD
     /* Add no cache ram data copy */

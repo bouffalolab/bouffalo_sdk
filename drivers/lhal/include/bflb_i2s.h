@@ -14,8 +14,8 @@
 /** @defgroup I2S_ROLE i2s role definition
   * @{
   */
-#define I2S_ROLE_MASTER 0
-#define I2S_ROLE_SLAVE  1
+#define I2S_ROLE_MASTER               0
+#define I2S_ROLE_SLAVE                1
 /**
   * @}
   */
@@ -34,11 +34,11 @@
 /** @defgroup I2S_CHANNEL_MODE i2s mode definition
   * @{
   */
-#define I2S_CHANNEL_MODE_NUM_1 0
-#define I2S_CHANNEL_MODE_NUM_2 1
-#define I2S_CHANNEL_MODE_NUM_3 2 /* only DSP mode, frame_size must equal data_size */
-#define I2S_CHANNEL_MODE_NUM_4 3 /* only DSP mode, frame_size must equal data_size */
-#define I2S_CHANNEL_MODE_NUM_6 4 /* only DSP mode, frame_size must equal data_size */
+#define I2S_CHANNEL_MODE_NUM_1        0
+#define I2S_CHANNEL_MODE_NUM_2        1
+#define I2S_CHANNEL_MODE_NUM_3        2 /* only DSP mode, frame_size must equal data_size */
+#define I2S_CHANNEL_MODE_NUM_4        3 /* only DSP mode, frame_size must equal data_size */
+#define I2S_CHANNEL_MODE_NUM_6        4 /* only DSP mode, frame_size must equal data_size */
 /**
   * @}
   */
@@ -46,10 +46,10 @@
 /** @defgroup I2S_SLOT_WIDTH i2s slot width definition
   * @{
   */
-#define I2S_SLOT_WIDTH_8  0
-#define I2S_SLOT_WIDTH_16 1
-#define I2S_SLOT_WIDTH_24 2
-#define I2S_SLOT_WIDTH_32 3
+#define I2S_SLOT_WIDTH_8              0
+#define I2S_SLOT_WIDTH_16             1
+#define I2S_SLOT_WIDTH_24             2
+#define I2S_SLOT_WIDTH_32             3
 /**
   * @}
   */
@@ -57,9 +57,9 @@
 /** @defgroup I2S_INTSTS i2s interrupt status definition
   * @{
   */
-#define I2S_INTSTS_TX_FIFO  (1 << 1)
-#define I2S_INTSTS_RX_FIFO  (1 << 2)
-#define I2S_INTSTS_FIFO_ERR (1 << 3)
+#define I2S_INTSTS_TX_FIFO            (1 << 1)
+#define I2S_INTSTS_RX_FIFO            (1 << 2)
+#define I2S_INTSTS_FIFO_ERR           (1 << 3)
 /**
   * @}
   */
@@ -67,14 +67,16 @@
 /** @defgroup I2S_CMD i2s feature control cmd definition
   * @{
   */
-#define I2S_CMD_CLEAR_TX_FIFO    (0x01)
-#define I2S_CMD_CLEAR_RX_FIFO    (0x02)
-#define I2S_CMD_RX_DEGLITCH      (0x03)
-#define I2S_CMD_DATA_ENABLE      (0x04)
-#define I2S_CMD_CHANNEL_LR_MERGE (0x05)
-#define I2S_CMD_CHANNEL_LR_EXCHG (0x06)
-#define I2S_CMD_MUTE             (0x07)
-#define I2S_CMD_BIT_REVERSE      (0x08)
+#define I2S_CMD_CLEAR_TX_FIFO         (0x01)
+#define I2S_CMD_CLEAR_RX_FIFO         (0x02)
+#define I2S_CMD_GET_TX_FIFO_CNT       (0x03)
+#define I2S_CMD_GET_RX_FIFO_CNT       (0x04)
+#define I2S_CMD_SET_DEGLITCH_CNT      (0x05)
+#define I2S_CMD_DATA_ENABLE           (0x06)
+#define I2S_CMD_CHANNEL_LR_MERGE      (0x07)
+#define I2S_CMD_CHANNEL_LR_EXCHG      (0x08)
+#define I2S_CMD_MUTE                  (0x09)
+#define I2S_CMD_BIT_REVERSE           (0x0A)
 /**
   * @}
   */
@@ -82,8 +84,8 @@
 /** @defgroup I2S_CMD_DATA_ENABLE_TYPE i2s data enable type
   * @{
   */
-#define I2S_CMD_DATA_ENABLE_TX (1 << 1)
-#define I2S_CMD_DATA_ENABLE_RX (1 << 2)
+#define I2S_CMD_DATA_ENABLE_TX        (1 << 1)
+#define I2S_CMD_DATA_ENABLE_RX        (1 << 2)
 
 /**
   * @}

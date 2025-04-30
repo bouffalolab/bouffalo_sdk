@@ -68,6 +68,11 @@ typedef enum {
     SMTAUDIO_PLAYER_EVENT_PAUSE = AUI_PLAYER_EVENT_PAUSE,
 } smtaudio_player_evtid_t;
 
+typedef struct {
+    uint64_t  duration;            ///< ms, maybe a dynamic time
+    uint64_t  curtime;             ///< ms, current time
+} smtaudio_play_time_t;
+
 typedef struct smtaudio_ops_node {
     const char *name;
     int         prio;
@@ -84,6 +89,7 @@ typedef struct smtaudio_ops_node {
     int (*vol_set)(int vol);
     int (*vol_up)(int vol);
     int (*vol_down)(int vol);
+    int (*info)(smtaudio_play_time_t *t);
     void (*callback)(int type, smtaudio_player_evtid_t evt_id);
 } smtaudio_ops_node_t;
 
@@ -243,6 +249,14 @@ int8_t smtaudio_start(int type, char *url, uint64_t seek_time, uint8_t resume);
  * @return 0 on success, negative value on failed
  */
 int8_t smtaudio_stop(int type);
+
+/**
+ * @brief  get media current time and duration
+ * @param  [in] type
+ * @param  [out] t
+ * @return 0 on success, negative value on failed
+ */
+int8_t smtaudio_info(int type, smtaudio_play_time_t *t);
 
 #define smtaudio_set_speed(speed) aui_player_set_speed(MEDIA_MUSIC, speed)
 #define smtaudio_get_speed(speed) aui_player_get_speed(MEDIA_MUSIC, speed)

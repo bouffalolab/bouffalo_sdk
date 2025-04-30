@@ -169,6 +169,8 @@ static void
 ip_napt_deinit(void)
 {
   napt_list = NO_IDX;
+  napt_list_last = NO_IDX;
+  napt_free = 0;
   ip_napt_max = 0;
   ip_portmap_max = 0;
   mem_free(ip_napt_table);
@@ -294,7 +296,7 @@ ip_napt_send_rst(u32_t src_be, u16_t sport_be, u32_t dst_be, u16_t dport_be, u32
   if (netif != NULL) {
     err_t res = ip4_output_if(p, ip_2_ip4(&src), ip_2_ip4(&dst), ICMP_TTL, 0, IP_PROTO_TCP, netif);
     LWIP_UNUSED_ARG(res); /* might be unused if debugging off */
-    LWIP_DEBUGF(NAPT_DEBUG, ("SEND RST to %#x:%u from %#x:%u seq %u ack %u res %d\n",
+    LWIP_DEBUGF(NAPT_DEBUG, ("SEND RST to %"X32_F":%"U16_F" from %"X32_F":%"U16_F" seq %"U32_F" ack %"U32_F" res %"S32_F"\n",
         lwip_ntohl(src_be), lwip_ntohs(sport_be), lwip_ntohl(dst_be), lwip_ntohs(dport_be),
         seqno_le, ackno_le, res));
   }
@@ -553,6 +555,7 @@ ip_portmap_add(u8_t proto, u32_t maddr, u16_t mport, u32_t daddr, u16_t dport)
     if (p->valid && p->proto == proto && p->mport == mport) {
       p->dport = dport;
       p->daddr = daddr;
+      p->maddr = maddr;
     } else if (!p->valid) {
       p->maddr = maddr;
       p->daddr = daddr;
@@ -859,7 +862,7 @@ ip_napt_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp, struct 
       if (m->mport != udphdr->src)
         ip_napt_modify_port_udp(udphdr, 0, m->mport);
       ip_napt_modify_addr_udp(udphdr, &iphdr->src, m->maddr);
-      LWIP_DEBUGF(NAPT_DEBUG, ("Modify UDP addr %x %x", iphdr->src.addr, m->maddr));
+      LWIP_DEBUGF(NAPT_DEBUG, ("Modify UDP addr %X32_F %X32_F", iphdr->src.addr, m->maddr));
       ip_napt_modify_addr(iphdr, &iphdr->src, m->maddr);
       return ERR_OK;
     }
@@ -946,7 +949,7 @@ ip_napt_gc(uint32_t now, bool force)
     forced++;
     STATS_INC(ip_napt.nr_forced_evictions);
   }
-  LWIP_DEBUGF(NAPT_DEBUG, ("ip_napt_gc(%d): chk %d evict %d (forced %d), oldest %u\n",
+  LWIP_DEBUGF(NAPT_DEBUG, ("ip_napt_gc(%S32_F): chk %"S32_F" evict %"S32_F" (forced %"S32_F"), oldest %U32_F\n",
                            force, checked, evicted, forced, oldest_age));
 }
 

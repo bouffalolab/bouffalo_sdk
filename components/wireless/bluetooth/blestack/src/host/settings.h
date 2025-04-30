@@ -5,6 +5,7 @@
  */
 
 #if defined(BFLB_BLE)
+#include <sys/types.h>
 #include "addr.h"
 #endif
 
@@ -13,6 +14,21 @@
 
 /* Base64-encoded string buffer size of in_size bytes */
 #define BT_SETTINGS_SIZE(in_size) ((((((in_size) - 1) / 3) * 4) + 4) + 1)
+
+/**
+ * Function used to read the data from the settings storage in
+ * h_set handler implementations.
+ *
+ * @param[in] cb_arg  arguments for the read function. Appropriate cb_arg is
+ *                    transferred to h_set handler implementation by
+ *                    the backend.
+ * @param[out] data  the destination buffer
+ * @param[in] len    length of read
+ *
+ * @return positive: Number of bytes read, 0: key-value pair is deleted.
+ *                   On error returns -ERRNO code.
+ */ /* Added by bouffalo */
+typedef ssize_t (*settings_read_cb)(void *cb_arg, void *data, size_t len);
 
 /* Helpers for keys containing a bdaddr */
 void bt_settings_encode_key(char *path, size_t path_size, const char *subsys,
@@ -29,6 +45,7 @@ int bt_settings_init(void);
 #define NV_LOCAL_IRK       "LOCAL_IRK"
 #define NV_KEY_POOL        "KEY_POOL"
 #define NV_IMG_info        "IMG_INFO"
+#define NV_ATVV_CCC        "ATVV_CCC"
 
 int bt_settings_get_bin(const char *key, u8_t *value, size_t exp_len, size_t *real_len);
 int bt_settings_set_bin(const char *key, const u8_t *value, size_t length);

@@ -11,13 +11,13 @@
 #include <zephyr/types.h>
 #include <stddef.h>
 #include <string.h>
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <byteorder.h>
 #include <zephyr.h>
 
 #include <bluetooth.h>
 #include <conn.h>
-#include <uuid.h>
+#include <bt_uuid.h>
 #include <gatt.h>
 #include "hog.h"
 #include "bt_log.h"

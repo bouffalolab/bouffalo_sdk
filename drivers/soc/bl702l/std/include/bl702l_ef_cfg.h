@@ -79,6 +79,8 @@ void bflb_efuse_switch_cpu_clock_save(void);
 void bflb_efuse_switch_cpu_clock_restore(void);
 uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **trim_list);
 
+int bflb_efuse_read_xtal_capcode(uint8_t *capcode);
+
 /*@} end of group EF_CTRL_Public_Functions */
 
 /*@} end of group EF_CTRL */

@@ -19,7 +19,7 @@
 #define CONFIG_DECODER_PVMP3                 (1)
 #define CONFIG_DECODER_SPEEX                 (1)
 #define CONFIG_DECODER_ADPCM_MS              (1)
-#define CONFIG_DECODER_FLAC                  (1)
+#define CONFIG_DECODER_FLAC                  (0)
 
 // xav config streaming
 #define CONFIG_STREAMER_FILE                 (0)
@@ -30,6 +30,7 @@
 #define CONFIG_STREAMER_MEM                  (1)
 #define CONFIG_STREAMER_DASH                 (0)
 #define CONFIG_STREAMER_ASHX                 (1)
+#define CONFIG_STREAMER_CUSTOM               (0)
 
 // xav config filtering
 /* Configuration switch for controlling audio speed feature.

@@ -156,7 +156,7 @@ utask_t *utask_new(const char *name, size_t stack_size, int queue_count, int pri
 
         task->qname    = msp_zalloc(nlen + 2);
         task->qname[0] = '/';
-        strcpy(task->qname + 1, name);
+        strlcpy(task->qname + 1, name, nlen + 1);
         task->qname[nlen + 1] = '\0';
 
         mq_unlink(task->qname);

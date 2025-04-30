@@ -574,7 +574,7 @@ void USBD_IRQHandler(int irq, void *arg)
     }
 
     if (intstatus & USB_RESET_INT) {
-        memset(&g_bl_udc, 0, sizeof(g_bl_udc));
+        arch_memset(&g_bl_udc, 0, sizeof(g_bl_udc));
 
         regval = 0;
         regval |= USB_CR_EP0_SETUP_DONE_EN;

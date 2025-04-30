@@ -30,6 +30,10 @@ void app_main_entry(void *arg)
         return 0;
     }
 
+#if CONFIG_CODEC_USE_I2S_RX || CONFIG_CODEC_USE_I2S_TX
+    extern msp_i2s_port_init(void);
+    msp_i2s_port_init();
+#endif
     /* Init wifi */
     app_wifi_init();
 

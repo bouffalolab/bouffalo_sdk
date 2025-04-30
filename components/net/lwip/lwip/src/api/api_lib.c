@@ -1301,8 +1301,7 @@ netconn_gethostbyname(const char *name, ip_addr_t *addr)
 
   API_VAR_ALLOC(struct dns_api_msg, MEMP_DNS_API_MSG, msg, ERR_MEM);
 #if LWIP_MPU_COMPATIBLE
-  strncpy(API_VAR_REF(msg).name, name, DNS_MAX_NAME_LENGTH - 1);
-  API_VAR_REF(msg).name[DNS_MAX_NAME_LENGTH - 1] = 0;
+  strlcpy(API_VAR_REF(msg).name, name, DNS_MAX_NAME_LENGTH);
 #else /* LWIP_MPU_COMPATIBLE */
   msg.err = &err;
   msg.sem = &sem;

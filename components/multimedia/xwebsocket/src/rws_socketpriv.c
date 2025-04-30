@@ -133,7 +133,7 @@ void rws_socket_send_ping(rws_socket s)
     size_t len = 0;
     _rws_frame * frame = rws_frame_create();
 
-    len = rws_sprintf(buff, 16, "%u", rws_socket_get_next_message_id(s));
+    len = rws_snprintf(buff, 16, "%u", rws_socket_get_next_message_id(s));
 
     frame->is_masked = rws_true;
     frame->opcode = rws_opcode_ping;
@@ -577,7 +577,7 @@ void rws_socket_send_disconnect(rws_socket s)
     size_t len = 0;
     _rws_frame * frame = rws_frame_create();
 
-    len = rws_sprintf(buff, 16, "%u", rws_socket_get_next_message_id(s));
+    len = rws_snprintf(buff, 16, "%u", rws_socket_get_next_message_id(s));
 
     frame->is_masked = rws_true;
     frame->opcode = rws_opcode_connection_close;
@@ -593,27 +593,27 @@ void rws_socket_send_handshake(rws_socket s)
     char buff[512];
     char * ptr = buff;
     size_t writed = 0;
-    writed = rws_sprintf(ptr, 512, "GET %s HTTP/%s\r\n", s->path, k_rws_socket_min_http_ver);
+    writed = rws_snprintf(ptr, 512, "GET %s HTTP/%s\r\n", s->path, k_rws_socket_min_http_ver);
 
     if (s->port == 80) {
-        writed += rws_sprintf(ptr + writed, 512 - writed, "Host: %s\r\n", s->host);
+        writed += rws_snprintf(ptr + writed, 512 - writed, "Host: %s\r\n", s->host);
     } else {
-        writed += rws_sprintf(ptr + writed, 512 - writed, "Host: %s:%i\r\n", s->host, s->port);
+        writed += rws_snprintf(ptr + writed, 512 - writed, "Host: %s:%i\r\n", s->host, s->port);
     }
 
-    writed += rws_sprintf(ptr + writed, 512 - writed,
+    writed += rws_snprintf(ptr + writed, 512 - writed,
                           "Upgrade: websocket\r\n"
                           "Connection: Upgrade\r\n"
                           "Origin: %s://%s\r\n",
                           s->scheme, s->host);
     
     if (s->token && s->token_field) {
-        writed += rws_sprintf(ptr + writed, 512 - writed,
+        writed += rws_snprintf(ptr + writed, 512 - writed,
                         "%s: %s\r\n",
                         s->token_field, s->token);
     }
 
-    writed += rws_sprintf(ptr + writed, 512 - writed,
+    writed += rws_snprintf(ptr + writed, 512 - writed,
                           "Sec-WebSocket-Key: %s\r\n"
                           "Sec-WebSocket-Protocol: chat, superchat\r\n"
                           "Sec-WebSocket-Version: 13\r\n"
@@ -643,7 +643,7 @@ struct addrinfo * rws_socket_connect_getaddr_info(rws_socket s)
 
     rws_error_delete_clean(&s->error);
 
-    rws_sprintf(portstr, 16, "%i", s->port);
+    rws_snprintf(portstr, 16, "%i", s->port);
     while (++retry_number < RWS_CONNECT_ATTEMPS) {
         result = NULL;
         memset(&hints, 0, sizeof(hints));

@@ -21,7 +21,7 @@ NOTES
 #include "conn_internal.h"
 #include "gatt.h"
 #include "hci_core.h"
-#include "uuid.h"
+#include "bt_uuid.h"
 #include "ble_tp_svc.h"
 #include "bt_log.h"
 

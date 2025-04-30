@@ -1,17 +1,7 @@
-
 #if defined(BL616)
 #include "bl616_memorymap.h"
 #include "bl616_glb.h"
 #include "bl616_ef_cfg.h"
-#elif defined(BL628)
-#include "bl628_memorymap.h"
-#include "bl628_glb.h"
-#include "bl628_ef_cfg.h"
-#include "bl628_l1c.h"
-#elif defined(BL606P)
-#include "bl606p_memorymap.h"
-#include "bl606p_glb.h"
-#include "bl606p_ef_cfg.h"
 #elif defined(BL808)
 #include "bl808_memorymap.h"
 #include "bl808_glb.h"
@@ -36,7 +26,7 @@
 #include "hardware/sf_ctrl_reg.h"
 #include "bflb_efuse.h"
 
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
 static uint32_t flash1_size = 4 * 1024 * 1024;
 static uint32_t flash2_size = 2 * 1024 * 1024;
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
@@ -282,7 +272,7 @@ static uint32_t ATTR_TCM_SECTION flash_get_size_from_jedecid(uint32_t jedec_id)
     return flash_size;
 }
 
-#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808) || defined(BL702L)
+#if defined(BL616) || defined(BL808) || defined(BL702L)
 static int flash_get_clock_delay(spi_flash_cfg_type *cfg)
 {
     uint32_t reg_base = 0;
@@ -325,23 +315,19 @@ static void ATTR_TCM_SECTION flash_set_qspi_enable(spi_flash_cfg_type *p_flash_c
 static void ATTR_TCM_SECTION flash_set_l1c_wrap(spi_flash_cfg_type *p_flash_cfg)
 {
     if ((p_flash_cfg->io_mode & 0x1f) == SF_CTRL_QIO_MODE) {
-#if defined(BL628)
-        bflb_l1c_set_wrap(1);
-#else
+#if defined(BL602) || defined(BL702) || defined(BL702L)
         L1C_Set_Wrap(ENABLE);
 #endif
         bflb_sflash_set_burst_wrap(p_flash_cfg);
     } else {
-#if defined(BL628)
-        bflb_l1c_set_wrap(0);
-#else
+#if defined(BL602) || defined(BL702) || defined(BL702L)
         L1C_Set_Wrap(DISABLE);
 #endif
         bflb_sflash_disable_burst_wrap(p_flash_cfg);
     }
 }
 
-#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL808)
 static void ATTR_TCM_SECTION bflb_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
 {
     struct sf_ctrl_cmds_cfg cmds_cfg;
@@ -392,7 +378,7 @@ static int ATTR_TCM_SECTION flash_config_init(spi_flash_cfg_type *p_flash_cfg, u
     p_flash_cfg->c_read_support = 0x00;
 #endif
     /* Set flash controler from p_flash_cfg */
-#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL808)
     bflb_flash_set_cmds(p_flash_cfg);
 #endif
     flash_set_qspi_enable(p_flash_cfg);
@@ -467,7 +453,7 @@ static int ATTR_TCM_SECTION flash2_init(void)
         }
         bflb_sf_ctrl_sbus2_revoke_replace();
 
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
         flash2_size = flash_get_size_from_jedecid(g_jedec_id2);
 #endif
     }
@@ -489,6 +475,9 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     uint8_t clk_delay = 1;
     uint8_t clk_invert = 1;
     uintptr_t flag;
+#if defined(BL702)
+    bflb_efuse_device_info_type device_info;
+#endif
 #endif
 
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
@@ -496,6 +485,13 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
 #endif
 
 #if defined(BL602) || defined(BL702)
+#if defined(BL702)
+    bflb_efuse_get_device_info(&device_info);
+    if (device_info.flash_info == 5 && device_info.psram_info == 1) {
+        *(volatile uint32_t *)0x40000130 |= (1U << 16);
+        *(volatile uint32_t *)0x40000134 |= (1U << 16);
+    }
+#endif
     flag = bflb_irq_save();
 #if defined(BL602)
     bflb_sflash_cache_flush();
@@ -520,24 +516,20 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     g_flash_cfg.clk_delay = clk_delay;
     g_flash_cfg.clk_invert = clk_invert;
 #else
-#if defined(BL628)
-    jedec_id = bflb_glb_get_flash_id_value();
-#else
     jedec_id = GLB_Get_Flash_Id_Value();
-#endif
     if (jedec_id != 0) {
         ret = bflb_sf_cfg_get_flash_cfg_need_lock_ext(jedec_id, &g_flash_cfg, 0, 0);
         if (ret == 0) {
             g_jedec_id = jedec_id;
             g_flash_cfg.mid = (jedec_id & 0xff);
             flash_get_clock_delay(&g_flash_cfg);
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
             flash1_size = flash_get_size_from_jedecid(g_jedec_id);
 #endif
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
             flash2_init();
 #else
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
             flash2_size = 0;
 #endif
 #endif
@@ -548,21 +540,17 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
     ret = flash_config_init(&g_flash_cfg, (uint8_t *)&jedec_id);
 
     flash_get_clock_delay(&g_flash_cfg);
-#if defined(BL628)
-    bflb_glb_set_flash_id_value(g_jedec_id);
-#else
     GLB_Set_Flash_Id_Value(g_jedec_id);
 #endif
-#endif
 
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
     flash1_size = flash_get_size_from_jedecid(g_jedec_id);
 #endif
 
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
     flash2_init();
 #else
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
     flash2_size = 0;
 #endif
 #endif
@@ -572,10 +560,7 @@ int ATTR_TCM_SECTION bflb_flash_init(void)
 
 uint32_t bflb_flash_get_jedec_id(void)
 {
-    uint32_t jid = 0;
-
-    jid = ((g_jedec_id & 0xff) << 16) + (g_jedec_id & 0xff00) + ((g_jedec_id & 0xff0000) >> 16);
-    return jid;
+    return g_jedec_id;
 }
 
 uint32_t bflb_flash_get_size(void)
@@ -583,7 +568,7 @@ uint32_t bflb_flash_get_size(void)
     return flash_get_size_from_jedecid(g_jedec_id);
 }
 
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
 uint32_t bflb_flash2_get_size(void)
 {
@@ -592,7 +577,7 @@ uint32_t bflb_flash2_get_size(void)
 #endif
 #endif
 
-void bflb_flash_get_cfg(uint8_t **cfg_addr, uint32_t *len)
+void ATTR_TCM_SECTION bflb_flash_get_cfg(uint8_t **cfg_addr, uint32_t *len)
 {
     *cfg_addr = (uint8_t *)&g_flash_cfg;
     *len = sizeof(spi_flash_cfg_type);
@@ -616,7 +601,7 @@ void ATTR_TCM_SECTION bflb_flash_set_iomode(uint8_t iomode)
         g_flash_cfg.io_mode |= iomode;
     }
 
-#if defined(BL616) || defined(BL628) || defined(BL606P) || defined(BL808)
+#if defined(BL616) || defined(BL808)
     bflb_flash_set_cmds(&g_flash_cfg);
 #endif
     flash_set_qspi_enable(&g_flash_cfg);
@@ -647,7 +632,7 @@ int ATTR_TCM_SECTION bflb_flash_erase(uint32_t startaddr, uint32_t len)
     int stat = -1;
     uintptr_t flag;
 
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
     if ((startaddr + len) > (flash1_size + flash2_size)) {
         return -ENOMEM;
     } else if ((startaddr + len) <= flash1_size) {
@@ -708,7 +693,7 @@ int ATTR_TCM_SECTION bflb_flash_write(uint32_t addr, uint8_t *data, uint32_t len
     int stat = -1;
     uintptr_t flag;
 
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
     if ((addr + len) > (flash1_size + flash2_size)) {
         return -ENOMEM;
     } else if ((addr + len) <= flash1_size) {
@@ -769,7 +754,7 @@ int ATTR_TCM_SECTION bflb_flash_read(uint32_t addr, uint8_t *data, uint32_t len)
     int stat = -1;
     uintptr_t flag;
 
-#if defined(BL616) || defined(BL628)
+#if defined(BL616)
     if ((addr + len) > (flash1_size + flash2_size)) {
         return -ENOMEM;
     } else if ((addr + len) <= flash1_size) {
@@ -861,7 +846,7 @@ int ATTR_TCM_SECTION bflb_flash_set_cache(uint8_t cont_read, uint8_t cache_enabl
         }
     }
 
-#if defined(BL602) || defined(BL702)
+#if defined(BL602) || defined(BL702) || defined(BL702L)
 #if defined(BL602)
     bflb_sflash_cache_enable_set(0xf);
 #else
@@ -902,6 +887,7 @@ void ATTR_TCM_SECTION bflb_flash_aes_init(struct bflb_flash_aes_config_s *config
 
 void ATTR_TCM_SECTION bflb_flash_aes_enable(void)
 {
+    bflb_sf_ctrl_aes_enable_be();
     bflb_sf_ctrl_aes_enable();
 }
 

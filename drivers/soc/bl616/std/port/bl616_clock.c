@@ -46,6 +46,9 @@ uint32_t bflb_clk_get_peripheral_clock(uint8_t type, uint8_t idx)
         return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_DBI);
     } else if (type == BFLB_DEVICE_TYPE_I2S) {
         return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_I2S);
+    } else if (type == BFLB_DEVICE_TYPE_RTC) {
+        return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_RTC);
     }
+
     return 0;
 }

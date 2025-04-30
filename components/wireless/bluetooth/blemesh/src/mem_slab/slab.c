@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "slab.h"
-#include "errno.h"
+#include "bt_errno.h"
 #include "zephyr.h"
 
 

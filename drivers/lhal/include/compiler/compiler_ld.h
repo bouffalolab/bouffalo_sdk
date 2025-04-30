@@ -43,12 +43,24 @@
 #define ATTR_WIFI_RAM_SECTION           __attribute__((section(".wifi_ram")))
 #endif
 
+#ifdef CONFIG_PSRAM
 #ifndef ATTR_NOINIT_PSRAM_SECTION
 #define ATTR_NOINIT_PSRAM_SECTION       __attribute__((section(".psram_noinit")))
 #endif
 
-#ifndef ATTR_PSRAM_SECTION
-#define ATTR_PSRAM_SECTION              __attribute__((section(".psram_data")))
+#ifndef ATTR_PSRAM_DATA_SECTION
+#define ATTR_PSRAM_DATA_SECTION         __attribute__((section(".psram_data")))
+#endif
+
+#ifndef ATTR_PSRAM_CODE_SECTION
+#define ATTR_PSRAM_CODE_SECTION         __attribute__((section(".psram_code")))
+#endif
+#endif
+
+#ifdef CONFIG_LPAPP
+#ifndef ATTR_NOCACHE_NOINIT_LPFW_SHARE
+#define ATTR_NOCACHE_NOINIT_LPFW_SHARE __attribute__((section(".lpfw_share_nocache_noinit")))
+#endif
 #endif
 
 #ifndef ATTR_HBN_CODE_SECTION

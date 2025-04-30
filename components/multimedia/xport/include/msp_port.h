@@ -46,6 +46,7 @@ int msp_gpio_output_set(uint8_t pin, uint8_t value);
 void msp_i2s_tx_enable(void);
 void msp_i2s_rx_enable(void);
 void msp_i2s_device_init(uint32_t sample_rate);
+void msp_i2s_port_init(void);
 #else
 msp_codec_pin_cfg_t msp_codec_pin_config(void);
 #endif

@@ -5,7 +5,7 @@
 #ifndef __NAMED_STRAIGHTFIFO_H__
 #define __NAMED_STRAIGHTFIFO_H__
 
-#include <fcntl.h>
+#include <msp_fs.h>
 #include "straight_fifo.h"
 
 __BEGIN_DECLS__
@@ -15,8 +15,8 @@ typedef struct named_sfifo nsfifo_t;
 /**
  * @brief  open or create a named fifo
  * @param  [in] name
- * @param  [in] mode : O_CREAT/O_RDONLY
- * @param  [in] ...  : if mode == O_CREAT, params size is needed
+ * @param  [in] mode : MSP_FS_CREAT/MSP_FS_RDONLY
+ * @param  [in] ...  : if mode == MSP_FS_CREAT, params size is needed
  * @param              size : size of the straight fifo
  * @return NULL on err
  */

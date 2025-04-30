@@ -48,8 +48,11 @@ enum bt_buf_type {
 #endif
 
 /** Data size neeed for HCI RX buffers */
+#if defined(CONFIG_BT_STACK_PTS) || defined(CONFIG_AUTO_PTS) // L2CAP/LE/CFC/BV-26-C
+#define BT_BUF_RX_SIZE (BT_BUF_RESERVE + 10 + CONFIG_BT_RX_BUF_LEN)
+#else
 #define BT_BUF_RX_SIZE (BT_BUF_RESERVE + CONFIG_BT_RX_BUF_LEN)
-
+#endif
 int bt_buf_get_rx_avail_cnt(void);
 
 /** Allocate a buffer for incoming data

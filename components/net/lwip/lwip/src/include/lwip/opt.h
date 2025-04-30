@@ -115,6 +115,9 @@
 #endif
 #endif
 
+#if !defined LWIP_IGMP_TIMERS_ONDEMAND || defined __DOXYGEN__
+#define LWIP_IGMP_TIMERS_ONDEMAND       0
+#endif
 /**
  * LWIP_TIMERS_CUSTOM==1: Provide your own timer implementation.
  * Function prototypes in timeouts.h and the array of lwip-internal cyclic timers
@@ -510,7 +513,7 @@
  * The number of sys timeouts used by the core stack (not apps)
  * The default number of timeouts is calculated here for all enabled modules.
  */
-#define LWIP_NUM_SYS_TIMEOUT_INTERNAL   (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD)))
+#define LWIP_NUM_SYS_TIMEOUT_INTERNAL   (LWIP_TCP*2 + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + (LWIP_IGMP_TIMERS_ONDEMAND ? 0 : LWIP_IGMP) + LWIP_DNS + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD)))
 
 /**
  * MEMP_NUM_SYS_TIMEOUT: the number of simultaneously active timeouts.
@@ -1567,6 +1570,17 @@
  */
 #if !defined LWIP_PBUF_REF_T || defined __DOXYGEN__
 #define LWIP_PBUF_REF_T                 u8_t
+#endif
+/**
+ * @}
+ */
+
+/**
+ * LWIP_PBUF_CUSTOM_DATA: Store private data on pbufs (e.g. timestamps)
+ * This extends struct pbuf so user can store custom data on every pbuf.
+ */
+#if !defined LWIP_PBUF_CUSTOM_DATA || defined __DOXYGEN__
+#define LWIP_PBUF_CUSTOM_DATA
 #endif
 /**
  * @}
@@ -3547,23 +3561,23 @@
 #endif
 
 #if !defined TCP_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
-#define TCP_TIMER_PRECISE_NEEDED        1
+#define TCP_TIMER_PRECISE_NEEDED        0
 #endif
 
 #if !defined DHCP_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
-#define DHCP_TIMER_PRECISE_NEEDED       1
+#define DHCP_TIMER_PRECISE_NEEDED       0
 #endif
 
 #if !defined ARP_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
-#define ARP_TIMER_PRECISE_NEEDED        1
+#define ARP_TIMER_PRECISE_NEEDED        0
 #endif
 
 #if !defined IP4_FRAG_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
-#define IP4_FRAG_TIMER_PRECISE_NEEDED   1
+#define IP4_FRAG_TIMER_PRECISE_NEEDED   0
 #endif
 
 #if !defined DNS_TIMER_PRECISE_NEEDED || defined __DOXYGEN__
-#define DNS_TIMER_PRECISE_NEEDED        1
+#define DNS_TIMER_PRECISE_NEEDED        0
 #endif
 /**
  * @}

@@ -65,10 +65,31 @@ void bt_enable_cb(int err)
     if (!err) {
         bt_addr_le_t bt_addr;
         bt_get_local_public_address(&bt_addr);
-        printf("BD_ADDR:(MSB)%02x:%02x:%02x:%02x:%02x:%02x(LSB) \n",
+        printf("BD_ADDR:(MSB)%02x:%02x:%02x:%02x:%02x:%02x(LSB) \r\n",
                bt_addr.a.val[5], bt_addr.a.val[4], bt_addr.a.val[3], bt_addr.a.val[2], bt_addr.a.val[1], bt_addr.a.val[0]);
         bt_conn_cb_register(&ble_conn_callbacks);
+        ble_cli_register();
+        #if defined(CONFIG_BT_BREDR)
+        bredr_cli_register();
+        #endif
     }
+}
+
+static TaskHandle_t app_start_handle;
+
+static void app_start_task(void *pvParameters)
+{
+    // Initialize BLE controller
+    #if defined(BL702) || defined(BL602)
+    ble_controller_init(configMAX_PRIORITIES - 1);
+    #else
+    btble_controller_init(configMAX_PRIORITIES - 1);
+    #endif
+    // Initialize BLE Host stack
+    hci_driver_init();
+    bt_enable(bt_enable_cb);
+
+    vTaskDelete(NULL);
 }
 
 int main(void)
@@ -92,34 +113,10 @@ int main(void)
     }
 #endif
 
-    ble_cli_register();
+    xTaskCreate(app_start_task, (char *)"app_start", 1024, NULL, configMAX_PRIORITIES - 2, &app_start_handle);
 
     vTaskStartScheduler();
 
     while (1) {
     }
 }
-
-int btble_enable(int argc, char **argv)
-{
-// Initialize BLE controller
-#if defined(BL702) || defined(BL602)
-    ble_controller_init(configMAX_PRIORITIES - 1);
-#else
-    btble_controller_init(configMAX_PRIORITIES - 1);
-#endif
-    // Initialize BLE Host stack
-    hci_driver_init();
-    bt_enable(bt_enable_cb);
-
-    return 0;
-}
-SHELL_CMD_EXPORT_ALIAS(btble_enable, btble_enable, enable btble.);
-
-int btble_disable(int argc, char **argv)
-{
-    bt_le_adv_stop();
-    bt_disable();
-    return 0;
-}
-SHELL_CMD_EXPORT_ALIAS(btble_disable, btble_disable, disable btble.);

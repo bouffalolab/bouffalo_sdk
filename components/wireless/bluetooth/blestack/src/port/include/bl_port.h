@@ -12,12 +12,6 @@
 #include <string.h>
 #include "types.h"
 #include "bl_port.h"
-#include "utils_getopt.h"
-
-#define btble_get_bytearray_from_string(params, result, array_size)       get_bytearray_from_string(params, result, array_size)
-#define btble_get_uint8_from_string(params, result)                       get_uint8_from_string(params, result)
-#define btble_get_uint16_from_string(params, result)                      get_uint16_from_string(params, result)
-#define btble_get_uint32_from_string(params, result)                      get_uint32_from_string(params, result)
 
 #define BT_UINT_MAX        0xffffffff
 #define BL_WAIT_FOREVER    0xffffffffu
@@ -75,6 +69,8 @@ void k_queue_append_list(struct k_queue *queue, void *head, void *tail);
 void *k_queue_get(struct k_queue *queue, s32_t timeout);
 int k_queue_is_empty(struct k_queue *queue);
 int k_queue_get_cnt(struct k_queue *queue);
+void k_queue_append_from_isr(struct k_queue *queue, void *data);
+
 
 struct k_lifo {
     struct k_queue _queue;
@@ -202,6 +198,13 @@ void k_timer_stop(k_timer_t *timer);
  *
  */
 void k_timer_delete(k_timer_t *timer);
+
+/**
+ * @brief Check if a timer is active.
+ *
+ */
+bool k_timer_is_active(k_timer_t *timer);
+
 
 /*time define*/
 #define MSEC_PER_SEC 1000

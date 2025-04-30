@@ -1,0 +1,48 @@
+sdk_generate_library()
+
+sdk_add_include_directories(.)
+
+if("${CHIP}" STREQUAL "bl602")
+    sdk_library_add_sources(bl602/bl602_sys.c)
+    if(CONFIG_PM)
+        sdk_library_add_sources(bl602/bl602_lp.c)
+    endif()
+elseif("${CHIP}" STREQUAL "bl702")
+    sdk_library_add_sources(bl702/bl702_sys.c)
+    if(CONFIG_PM)
+        sdk_library_add_sources(bl702/bl702_xip_recovery.c
+                                bl702/bl702_lp_debug.c
+                                bl702/bl702_lp.c)
+    endif()
+elseif("${CHIP}" STREQUAL "bl702l")
+    sdk_library_add_sources(bl702l/bl702l_sys.c)
+    if(CONFIG_PM)
+        sdk_library_add_sources(bl702l/bl702l_lp.c)
+    endif()
+elseif("${CHIP}" STREQUAL "bl616")
+    sdk_library_add_sources(bl616/bl616_sys.c)
+    if(CONFIG_PM)
+        sdk_library_add_sources(bl616/bl616_lp.c)
+    endif()
+elseif("${CHIP}" STREQUAL "bl808")
+    sdk_library_add_sources(bl808/bl808_sys.c)
+    if(CONFIG_PM)
+        sdk_library_add_sources(bl808/bl808_lp.c)
+    endif()
+elseif("${CHIP}" STREQUAL "bl628")
+    sdk_library_add_sources(bl628/bl628_sys.c)
+    if(CONFIG_PM)
+        sdk_library_add_sources(bl628/bl628_lp.c)
+    endif()
+endif()
+
+if(CONFIG_PM)
+    sdk_add_compile_definitions(-D CONFIG_PM)
+endif()
+
+if(CONFIG_LPAPP)
+    sdk_add_compile_definitions(-D CONFIG_LPAPP)
+endif()
+
+sdk_add_include_directories(${CHIP})
+

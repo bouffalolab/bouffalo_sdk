@@ -4,7 +4,10 @@
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
 #include "bflb_spi_psram.h"
+#include "bflb_ef_ctrl.h"
+
 #include "bl702_glb.h"
+#include "ef_data_reg.h"
 #include "board.h"
 
 #include "mem.h"
@@ -224,6 +227,13 @@ static void console_init()
     bflb_uart_set_console(uart0);
 }
 
+void board_recovery(void)
+{
+    system_clock_init();
+    peripheral_clock_init();
+    console_init();
+}
+
 void board_init(void)
 {
     int ret = -1;
@@ -261,7 +271,15 @@ void board_init(void)
     rtc = bflb_device_get_by_name("rtc");
 #endif
 
+#ifdef CONFIG_MBEDTLS
+    extern void bflb_sec_mutex_init(void);
+    bflb_sec_mutex_init();
+#endif
+
     bflb_irq_restore(flag);
+
+    printf("board init done\r\n");
+    printf("===========================\r\n");
 }
 
 void board_uartx_gpio_init()
@@ -417,6 +435,71 @@ void board_dvp_gpio_init(void)
 
     GLB_SWAP_EMAC_CAM_Pin(GLB_EMAC_CAM_PIN_CAM);
 }
+
+#if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
+void rf_full_cal_start_callback(uint32_t addr, uint32_t size)
+{
+    /** TBD: need to check memory access conflict on DMA and rf calculation*/
+}
+#endif
+
+#ifdef CONFIG_SHELL
+#ifdef CONFIG_PM
+#include "shell.h"
+#include "bl_lp.h"
+#include "bflb_acomp.h"
+
+static void test_acomp_wakeup_status(uint8_t acomp_num)
+{
+    int wakeup_mode;
+
+    wakeup_mode = bl_lp_wakeup_acomp_get_mode(acomp_num);
+
+    if (wakeup_mode) {
+        printf("ACOMP %d wakeup: ", acomp_num);
+        if (wakeup_mode == BL_LP_ACOMP_WAKEUP_MODE_FALLING) {
+            printf("edge falling\r\n");
+        } else if (wakeup_mode == BL_LP_ACOMP_WAKEUP_MODE_RISING) {
+            printf("edge rising\r\n");
+        } else {
+            printf("unkown error: %d\r\n", wakeup_mode);
+        }
+    }
+}
+
+void test_wakeup_acomp_callback(uint32_t wake_up_acomp_bits)
+{
+    printf("acomp wakeup bits 0x%02X\r\n", wake_up_acomp_bits);
+
+    for (uint8_t i = 0; i < BL_LP_WAKEUP_ACOMP_MAX_NUM; i++) {
+        test_acomp_wakeup_status(i);
+    }
+}
+
+void cmd_acomp_test(char *buf, int len, int argc, char **argv)
+{
+    static bl_lp_acomp_cfg_t lp_wake_acomp_cfg = {
+        /* input enable, use @ref BL_LP_ACOMP_EN */
+        .acomp0_en = BL_LP_ACOMP_ENABLE,
+        .acomp1_en = BL_LP_ACOMP_DISABLE,
+
+        /* Map to pins num, 702's range: 7, 8, 9, 10, 14, 15, 17 */
+        .acomp0_io_num = 17,
+        .acomp1_io_num = 0,
+
+        /* trigger mode, use @ref BL_LP_ACOMP_TRIG  */
+        .acomp0_trig_mode = BL_LP_ACOMP_TRIG_EDGE_FALLING_RISING,
+        .acomp1_trig_mode = BL_LP_ACOMP_TRIG_EDGE_FALLING_RISING,
+    };
+
+    bl_lp_acomp_wakeup_cfg(&lp_wake_acomp_cfg);
+
+    /* register acomp wakeup callback */
+    bl_lp_wakeup_acomp_int_register(test_wakeup_acomp_callback);
+}
+SHELL_CMD_EXPORT_ALIAS(cmd_acomp_test, acomp_test, acomp_test);
+#endif
+#endif
 
 #ifdef CONFIG_BFLOG
 __attribute__((weak)) uint64_t bflog_clock(void)

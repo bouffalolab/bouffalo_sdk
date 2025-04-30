@@ -18,7 +18,7 @@
 #include "mesh_settings.h"
 
 #include "include/cdb.h"
-#include "errno.h"
+#include "bt_errno.h"
 
 
 struct bt_mesh_cdb bt_mesh_cdb = {

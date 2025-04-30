@@ -19,6 +19,8 @@ extern "C" {
 
 #define CODEC_OUTPUT_DEBUG_TRACE    (1)
 
+#define AUO_TASK "auotsk"
+
 typedef struct _auo_segment {
     uint32_t        dirty;    // 0-dirty; 1-clear; 2-valid data
     uint32_t        remain;   //
@@ -48,6 +50,7 @@ typedef struct _auo_dma {
     uint32_t         halt_reg;
     uint32_t         halt;
     uint32_t         unhalt;
+    uint32_t         halt_flag;
     auo_segment_t    *node;
 } auo_dma_t;
 

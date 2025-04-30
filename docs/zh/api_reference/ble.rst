@@ -51,6 +51,8 @@ BLE
 
 CLI 命令
 -------------	 
+``需要注意，请勿在FreeRTOS的timer task，idle task，以及blestack的recv_thread中调用蓝牙的API，防止task被``
+``阻塞引起问题。``
 
 ble_init
 ^^^^^^^^^^^^^^^^^^^^

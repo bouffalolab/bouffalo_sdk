@@ -1,6 +1,67 @@
 #include "bflb_common.h"
 #include "bflb_core.h"
 
+#include "bflb_ef_ctrl.h"
+#include "bflb_flash.h"
+
+#define BFLB_COMMON_UINT32_BIT_LEN  (32)
+#define BFLB_COMMON_UINT64_BIT_LEN  (64)
+#define BFLB_COMMON_UINT96_BIT_LEN  (96)
+#define BFLB_COMMON_UINT128_BIT_LEN (128)
+
+#if defined(BL616)
+#define ANTI_ROLLBACK_ENABLE_OFFSET        (0x7C)
+#define ANTI_ROLLBACK_ENABLE_MASK          (0x01)
+#define ANTI_ROLLBACK_ENABLE_POS           (12)
+#define ANTI_ROLLBACK_BOOT2_VERSION_OFFSET (0x170)
+#define ANTI_ROLLBACK_APP_VERSION_OFFSET   (0x180)
+#elif defined(BL702L)
+#define ANTI_ROLLBACK_ENABLE_OFFSET        (0x74)
+#define ANTI_ROLLBACK_ENABLE_MASK          (0x01)
+#define ANTI_ROLLBACK_ENABLE_POS           (13)
+#define ANTI_ROLLBACK_BOOT2_VERSION_OFFSET (0x4C)
+#define ANTI_ROLLBACK_APP_VERSION_OFFSET   (0x04)
+#endif
+
+#if defined(BL702L)
+#define BFLB_BOOT2_IMG_OFFSET 4 * 1024
+#else
+#define BFLB_BOOT2_IMG_OFFSET 8 * 1024
+#endif
+
+#if defined(BL616) || defined(BL702L)
+#if !defined(CONFIG_BOOT2)
+#define COMPILE_TIME __DATE__ " " __TIME__
+static const char ver_name[4] __attribute__ ((section(".verinfo"))) = "app";
+static const char git_commit[41] __attribute__ ((section(".verinfo"))) = "";
+static const char time_info[30] __attribute__ ((section(".verinfo"))) = COMPILE_TIME;
+
+const blverinf_t app_ver __attribute__ ((section(".blverinf"))) = {
+    .anti_rollback = CONFIG_APP_ANTI_ROLLBACK_VER,
+    .x = APP_VER_X,
+    .y = APP_VER_Y,
+    .z = APP_VER_Z,
+    .name = (uint32_t)ver_name,
+    .build_time = (uint32_t)time_info,
+    .commit_id = (uint32_t)git_commit,
+    .rsvd0 = 0,
+    .rsvd1 = 0,
+};
+#endif
+#endif
+
+__WEAK int ATTR_TCM_SECTION arch_strcmp(const char *str1, const char *str2) {
+#ifdef romapi_arch_strcmp
+    return romapi_arch_strcmp(str1, str2);
+#else
+    while (*str1 && (*str1 == *str2)) {
+        str1++;
+        str2++;
+    }
+    return *(unsigned char *)str1 - *(unsigned char *)str2;
+#endif
+}
+
 __WEAK void *ATTR_TCM_SECTION arch_memcpy(void *dst, const void *src, uint32_t n)
 {
 #ifdef romapi_arch_memcpy
@@ -166,6 +227,18 @@ void *bflb_get_no_cache_addr(const void *addr)
     return NULL;
 }
 #endif
+
+#if (defined(BL616) || defined(BL808)) && !defined(CPU_LP)
+bool bflb_check_cache_addr_aligned(uintptr_t addr)
+{
+    if (addr & (BFLB_CACHE_LINE_SIZE - 1)) {
+        return false;
+    } else {
+        return true;
+    }
+}
+#endif
+
 // ---------------- POPULAR POLYNOMIALS ----------------
 // CCITT:      x^16 + x^12 + x^5 + x^0                 (0x1021,init 0x0000)
 // CRC-16:     x^16 + x^15 + x^2 + x^0                 (0x8005,init 0xFFFF)
@@ -281,4 +354,314 @@ __WEAK uint32_t ATTR_TCM_SECTION bflb_soft_crc32(void *in, uint32_t len)
 #else
     return bflb_soft_crc32_ex(0, in, len);
 #endif
+}
+
+__WEAK int32_t bflb_get_app_version_from_efuse(uint8_t *version)
+{
+#ifdef romapi_bflb_get_app_version_from_efuse
+    return romapi_bflb_get_app_version_from_efuse(version);
+#else
+#if defined(BL616) || defined(BL702L)
+    uint32_t otp_ef_boot2_anti_rollback_en = 0;
+    uint32_t tmpVal;
+
+    if (NULL == version) {
+        return 1;
+    }
+
+    bflb_ef_ctrl_read_direct(NULL, ANTI_ROLLBACK_ENABLE_OFFSET, &tmpVal, 1, 1);
+    /* get anti-rollback enable bit */
+    otp_ef_boot2_anti_rollback_en = ((tmpVal >> ANTI_ROLLBACK_ENABLE_POS) & ANTI_ROLLBACK_ENABLE_MASK);
+
+    if (0 == otp_ef_boot2_anti_rollback_en) {
+        return 1;
+    }
+
+#if defined(BL616)
+    uint32_t version_low_low = 0;
+    uint32_t version_low = 0;
+    uint32_t version_high = 0;
+    uint32_t version_high_high = 0;
+#if defined(BL616)
+    uint32_t value[8];
+#endif
+    /* read efuse value */
+    bflb_ef_ctrl_read_direct(NULL, ANTI_ROLLBACK_APP_VERSION_OFFSET, value, sizeof(value) / 4, 1);
+#if defined(BL616)
+    /* get real version from efuse */
+    version_low_low = value[0] | value[4];
+    version_low = value[1] | value[5];
+    version_high = value[2] | value[6];
+    version_high_high = value[3] | value[7];
+#endif
+
+    /* version_real[127:96] case */
+    if (version_high_high) {
+        *version = BFLB_COMMON_UINT128_BIT_LEN - __builtin_clz(version_high_high);
+        return 0;
+    }
+
+    /* version_real[95:64] case */
+    if (version_high) {
+        *version = BFLB_COMMON_UINT96_BIT_LEN - __builtin_clz(version_high);
+        return 0;
+    }
+
+    /* version_real[63:32] case */
+    if (version_low) {
+        *version = BFLB_COMMON_UINT64_BIT_LEN - __builtin_clz(version_low);
+        return 0;
+    }
+
+    /* version_real[31:0] case */
+    if (version_low_low) {
+        *version = BFLB_COMMON_UINT32_BIT_LEN - __builtin_clz(version_low_low);
+        return 0;
+    }
+#elif defined(BL702L)
+    uint32_t value[2];
+    uint32_t version_low = 0;
+    uint32_t version_high = 0;
+
+    /* read efuse value */
+    bflb_ef_ctrl_read_direct(NULL, ANTI_ROLLBACK_APP_VERSION_OFFSET, value, sizeof(value) / 4, 1);
+
+    /* get real version from efuse */
+    version_low = value[0];
+    version_high = value[1];
+
+    /* version_real[63:32] case */
+    if (version_high) {
+        *version = BFLB_COMMON_UINT64_BIT_LEN - __builtin_clz(version_high);
+        return 0;
+    }
+
+    /* version_real[31:0] case */
+    if (version_low) {
+        *version = BFLB_COMMON_UINT32_BIT_LEN - __builtin_clz(version_low);
+        return 0;
+    }
+#endif
+    *version = 0;
+    return 0;
+#else
+    return 1;
+#endif
+#endif
+}
+
+__WEAK int32_t bflb_set_app_version_to_efuse(uint8_t version)
+{
+#ifdef romapi_bflb_set_app_version_to_efuse
+    return romapi_bflb_set_app_version_to_efuse(version);
+#else
+#if defined(BL616) || defined(BL702L)
+    uint8_t version_old;
+    uint32_t tmpVal;
+
+    bflb_ef_ctrl_read_direct(NULL, ANTI_ROLLBACK_ENABLE_OFFSET, &tmpVal, 1, 1);
+    /* Set anti-rollback enable bit */
+    tmpVal |= (1 << ANTI_ROLLBACK_ENABLE_POS);
+    bflb_ef_ctrl_write_direct(NULL, ANTI_ROLLBACK_ENABLE_OFFSET, &tmpVal, 0x1, 1);
+
+    if (bflb_get_app_version_from_efuse(&version_old) != 0) {
+        return 1;
+    }
+
+    if (version_old > version) {
+        return 1;
+    } else if (version_old == version) {
+        return 0;
+    }
+
+#if defined(BL616)
+    uint32_t version_low_low = 0;
+    uint32_t version_low = 0;
+    uint32_t version_high = 0;
+    uint32_t version_high_high = 0;
+#if defined(BL616)
+    uint32_t value[8];
+#endif
+
+    if (version <= BFLB_COMMON_UINT32_BIT_LEN) {
+        version_low_low = (1 << (version - 1));
+    } else if (version <= BFLB_COMMON_UINT64_BIT_LEN) {
+        version_low = (1 << (version - BFLB_COMMON_UINT32_BIT_LEN - 1));
+    } else if (version <= BFLB_COMMON_UINT96_BIT_LEN) {
+        version_high = (1 << (version - BFLB_COMMON_UINT64_BIT_LEN - 1));
+    } else if (version <= BFLB_COMMON_UINT128_BIT_LEN) {
+        version_high_high = (1 << (version - BFLB_COMMON_UINT96_BIT_LEN - 1));
+    }
+#if defined(BL616)
+    value[0] = value[4] = version_low_low;
+    value[1] = value[5] = version_low;
+    value[2] = value[6] = version_high;
+    value[3] = value[7] = version_high_high;
+#endif
+    /* write efuse value */
+    bflb_ef_ctrl_write_direct(NULL, ANTI_ROLLBACK_APP_VERSION_OFFSET, value, sizeof(value) / 4, 1);
+#elif defined(BL702L)
+    uint32_t value[2];
+    uint32_t version_low = 0;
+    uint32_t version_high = 0;
+
+    if (version > BFLB_COMMON_UINT64_BIT_LEN) {
+        return 1;
+    }
+
+    if (version > BFLB_COMMON_UINT32_BIT_LEN) {
+        version_high = (1 << (version - BFLB_COMMON_UINT32_BIT_LEN - 1));
+    } else {
+        version_low = (1 << (version - 1));
+    }
+
+    value[0] = version_low;
+    value[1] = version_high;
+
+    /* write efuse value */
+    bflb_ef_ctrl_write_direct(NULL, ANTI_ROLLBACK_APP_VERSION_OFFSET, value, sizeof(value) / 4, 1);
+#endif
+    return 0;
+#else
+    return 1;
+#endif
+#endif
+}
+
+__WEAK int32_t bflb_get_boot2_version_from_efuse(uint8_t *version)
+{
+#ifdef romapi_bflb_get_boot2_version_from_efuse
+    return romapi_bflb_get_boot2_version_from_efuse(version);
+#else
+#if defined(BL616) || defined(BL702L)
+    uint32_t otp_ef_boot2_anti_rollback_en = 0;
+    uint32_t tmpVal;
+
+    if (NULL == version) {
+        return 1;
+    }
+
+    bflb_ef_ctrl_read_direct(NULL, ANTI_ROLLBACK_ENABLE_OFFSET, &tmpVal, 1, 1);
+    /* get anti-rollback enable bit */
+    otp_ef_boot2_anti_rollback_en = ((tmpVal >> ANTI_ROLLBACK_ENABLE_POS) & ANTI_ROLLBACK_ENABLE_MASK);
+
+    if (0 == otp_ef_boot2_anti_rollback_en) {
+        return 1;
+    }
+
+#if defined(BL616)
+    uint32_t version_high = 0;
+    uint32_t version_low = 0;
+#if defined(BL616)
+    uint32_t value[4];
+#endif
+
+    /* read efuse value */
+    bflb_ef_ctrl_read_direct(NULL, ANTI_ROLLBACK_BOOT2_VERSION_OFFSET, value, sizeof(value) / 4, 1);
+#if defined(BL616)
+    /* get real version from efuse */
+    version_low = value[0] | value[2];
+    version_high = value[1] | value[3];
+#endif
+
+    /* version_real[63:32] case */
+    if (version_high) {
+        *version = BFLB_COMMON_UINT64_BIT_LEN - __builtin_clz(version_high);
+        return 0;
+    }
+
+    /* version_real[31:0] case */
+    if (version_low) {
+        *version = BFLB_COMMON_UINT32_BIT_LEN - __builtin_clz(version_low);
+        return 0;
+    }
+
+#elif defined(BL702L)
+    uint32_t value[1];
+
+    /* read efuse value */
+    bflb_ef_ctrl_read_direct(NULL, ANTI_ROLLBACK_BOOT2_VERSION_OFFSET, value, sizeof(value) / 4, 1);
+
+    /* version_real[31:0] case */
+    if (value[0]) {
+        *version = BFLB_COMMON_UINT32_BIT_LEN - __builtin_clz(value[0]);
+        return 0;
+    }
+#endif
+    *version = 0;
+    return 0;
+#else
+    return 1;
+#endif
+#endif
+}
+
+__WEAK int32_t bflb_set_boot2_version_to_efuse(uint8_t version)
+{
+#ifdef romapi_bflb_set_boot2_version_to_efuse
+    return romapi_bflb_set_boot2_version_to_efuse(version);
+#else
+#if defined(BL616) || defined(BL702L)
+    uint8_t version_old;
+    uint32_t tmpVal;
+
+    bflb_ef_ctrl_read_direct(NULL, ANTI_ROLLBACK_ENABLE_OFFSET, &tmpVal, 1, 1);
+    /* Set anti-rollback enable bit */
+    tmpVal |= (1 << ANTI_ROLLBACK_ENABLE_POS);
+    bflb_ef_ctrl_write_direct(NULL, ANTI_ROLLBACK_ENABLE_OFFSET, &tmpVal, 0x1, 1);
+
+    if (bflb_get_boot2_version_from_efuse(&version_old) != 0) {
+        return 1;
+    }
+
+    if (version_old > version) {
+        return 1;
+    } else if (version_old == version) {
+        return 0;
+    }
+
+#if defined(BL616)
+    uint32_t version_high = 0;
+    uint32_t version_low = 0;
+#if defined(BL616)
+    uint32_t value[4];
+#endif
+
+    if (version <= BFLB_COMMON_UINT32_BIT_LEN) {
+        version_low = (1 << (version - 1));
+    } else if (version <= BFLB_COMMON_UINT64_BIT_LEN) {
+        version_high = (1 << (version - BFLB_COMMON_UINT32_BIT_LEN - 1));
+    }
+#if defined(BL616)
+    value[0] = value[2] = version_low;
+    value[1] = value[3] = version_high;
+#endif
+    /* write efuse value */
+    bflb_ef_ctrl_write_direct(NULL, ANTI_ROLLBACK_BOOT2_VERSION_OFFSET, value, sizeof(value) / 4, 1);
+
+#elif defined(BL702L)
+    uint32_t value[1];
+
+    if (version > BFLB_COMMON_UINT32_BIT_LEN) {
+        return 1;
+    }
+
+    value[0] = (1 << (version - 1));
+
+    /* write efuse value */
+    bflb_ef_ctrl_write_direct(NULL, ANTI_ROLLBACK_BOOT2_VERSION_OFFSET, value, sizeof(value) / 4, 1);
+#endif
+    return 0;
+#else
+    return 1;
+#endif
+#endif
+}
+
+__WEAK int32_t bflb_get_boot2_info_from_flash(blverinf_t *version)
+{
+    uint32_t addr = 0xC08;
+    bflb_flash_read(addr + BFLB_BOOT2_IMG_OFFSET, (uint8_t *)version, sizeof(blverinf_t));
+
+    return 0;
 }

@@ -11,7 +11,7 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define BFLB_SEC_ENG_BASE ((uint32_t)0x40004000)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define BFLB_SEC_ENG_BASE ((uint32_t)0x20004000)
 #endif
 
@@ -172,7 +172,7 @@ void bflb_group0_request_trng_access(struct bflb_device_s *dev)
 
     regval = getreg32(reg_base + SEC_ENG_SE_CTRL_PROT_RD_OFFSET);
     if (((regval >> 4) & 0x03) == 0x03) {
-        putreg32(0x04, reg_base + SEC_ENG_SE_TRNG_0_CTRL_PROT_OFFSET);
+        putreg32(0x02, reg_base + SEC_ENG_SE_TRNG_0_CTRL_PROT_OFFSET);
 
         regval = getreg32(reg_base + SEC_ENG_SE_CTRL_PROT_RD_OFFSET);
         if (((regval >> 4) & 0x03) == 0x01) {

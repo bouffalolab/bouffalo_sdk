@@ -212,42 +212,25 @@ PRIVATE void OI_SBC_ReadSamples(OI_CODEC_SBC_DECODER_CONTEXT *context, OI_BITSTR
     OI_CODEC_SBC_COMMON_CONTEXT *common = &context->common;
     OI_UINT nrof_blocks = common->frameInfo.nrof_blocks;
     OI_INT32 *RESTRICT s = common->subdata;
-    OI_UINT8 *ptr = global_bs->ptr.w;
+    const uint8_t* ptr = global_bs->ptr.r;
     OI_UINT32 value = global_bs->value;
     OI_UINT bitPtr = global_bs->bitPtr;
 
-    const OI_UINT iter_count = common->frameInfo.nrof_channels * common->frameInfo.nrof_subbands / 4;
+    const OI_UINT iter_count = common->frameInfo.nrof_channels * common->frameInfo.nrof_subbands;
     do {
-        OI_UINT i;
-        for (i = 0; i < iter_count; ++i) {
-            OI_UINT32 sf_by4 = ((OI_UINT32 *)common->scale_factor)[i];
-            OI_UINT32 bits_by4 = common->bits.uint32[i];
-            OI_UINT n;
-            for (n = 0; n < 4; ++n) {
-                OI_INT32 dequant;
-                OI_UINT bits;
-                OI_INT sf;
-
-                if (OI_CPU_BYTE_ORDER == OI_LITTLE_ENDIAN_BYTE_ORDER) {
-                    bits = bits_by4 & 0xFF;
-                    bits_by4 >>= 8;
-                    sf = sf_by4 & 0xFF;
-                    sf_by4 >>= 8;
+        OI_UINT n;
+        for (n = 0; n < iter_count; ++n) {
+            int32_t dequant;
+            OI_UINT bits = common->bits.uint8[n];
+            OI_INT sf = common->scale_factor[n];
+            if (bits) {
+                uint32_t raw;
+                OI_BITSTREAM_READUINT(raw, bits, ptr, value, bitPtr);
+                dequant = OI_SBC_Dequant(raw, sf, bits);
                 } else {
-                    bits = (bits_by4 >> 24) & 0xFF;
-                    bits_by4 <<= 8;
-                    sf = (sf_by4 >> 24) & 0xFF;
-                    sf_by4 <<= 8;
+                dequant = 0;
                 }
-                if (bits) {
-                    OI_UINT32 raw;
-                    OI_BITSTREAM_READUINT(raw, bits, ptr, value, bitPtr);
-                    dequant = OI_SBC_Dequant(raw, sf, bits);
-                } else {
-                    dequant = 0;
-                }
-                *s++ = dequant;
-            }
+            *s++ = dequant;
         }
     } while (--nrof_blocks);
 }

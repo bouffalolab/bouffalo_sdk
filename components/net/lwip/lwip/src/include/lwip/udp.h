@@ -190,6 +190,8 @@ void udp_netif_ip_addr_changed(const ip_addr_t* old_addr, const ip_addr_t* new_a
 struct udp_pcb *udp_get_pcbs(void);
 #endif
 
+int udp_owner_is_netconn(struct udp_pcb *pcb);
+
 #ifdef __cplusplus
 }
 #endif

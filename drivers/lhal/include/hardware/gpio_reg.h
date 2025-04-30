@@ -33,7 +33,7 @@
   *
   ******************************************************************************
   */
-#ifndef  __HARDWARE_GPIO_H__
+#ifndef __HARDWARE_GPIO_H__
 #define  __HARDWARE_GPIO_H__
 
 /****************************************************************************
@@ -41,7 +41,7 @@
 ****************************************************************************/
 
 /* Register offsets *********************************************************/
-#if defined(BL616) || defined(BL808) || defined(BL606P) || defined(BL628)
+#if defined(BL616) || defined(BL808)
 #define GLB_GPIO_CFG0_OFFSET                                    (0x8C4)/* gpio_cfg0 */
 #define GLB_GPIO_CFG1_OFFSET                                    (0x8C8)/* gpio_cfg1 */
 #define GLB_GPIO_CFG2_OFFSET                                    (0x8CC)/* gpio_cfg2 */
@@ -897,7 +897,7 @@
 #define GLB_REG_GPIO_35_DRV_MASK                                (0x3<<GLB_REG_GPIO_35_DRV_SHIFT)
 #define GLB_REG_GPIO_35_PU                                      (1<<4U)
 #define GLB_REG_GPIO_35_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_35_OE                                      (1<<6U)
 #define GLB_REG_GPIO_35_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_35_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_35_FUNC_SEL_SHIFT)
@@ -921,7 +921,7 @@
 #define GLB_REG_GPIO_36_DRV_MASK                                (0x3<<GLB_REG_GPIO_36_DRV_SHIFT)
 #define GLB_REG_GPIO_36_PU                                      (1<<4U)
 #define GLB_REG_GPIO_36_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_36_OE                                      (1<<6U)
 #define GLB_REG_GPIO_36_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_36_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_36_FUNC_SEL_SHIFT)
@@ -945,7 +945,7 @@
 #define GLB_REG_GPIO_37_DRV_MASK                                (0x3<<GLB_REG_GPIO_37_DRV_SHIFT)
 #define GLB_REG_GPIO_37_PU                                      (1<<4U)
 #define GLB_REG_GPIO_37_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_37_OE                                      (1<<6U)
 #define GLB_REG_GPIO_37_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_37_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_37_FUNC_SEL_SHIFT)
@@ -969,7 +969,7 @@
 #define GLB_REG_GPIO_38_DRV_MASK                                (0x3<<GLB_REG_GPIO_38_DRV_SHIFT)
 #define GLB_REG_GPIO_38_PU                                      (1<<4U)
 #define GLB_REG_GPIO_38_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_38_OE                                      (1<<6U)
 #define GLB_REG_GPIO_38_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_38_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_38_FUNC_SEL_SHIFT)
@@ -993,7 +993,7 @@
 #define GLB_REG_GPIO_39_DRV_MASK                                (0x3<<GLB_REG_GPIO_39_DRV_SHIFT)
 #define GLB_REG_GPIO_39_PU                                      (1<<4U)
 #define GLB_REG_GPIO_39_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_39_OE                                      (1<<6U)
 #define GLB_REG_GPIO_39_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_39_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_39_FUNC_SEL_SHIFT)
@@ -1017,7 +1017,7 @@
 #define GLB_REG_GPIO_40_DRV_MASK                                (0x3<<GLB_REG_GPIO_40_DRV_SHIFT)
 #define GLB_REG_GPIO_40_PU                                      (1<<4U)
 #define GLB_REG_GPIO_40_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_40_OE                                      (1<<6U)
 #define GLB_REG_GPIO_40_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_40_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_40_FUNC_SEL_SHIFT)
@@ -1041,7 +1041,7 @@
 #define GLB_REG_GPIO_41_DRV_MASK                                (0x3<<GLB_REG_GPIO_41_DRV_SHIFT)
 #define GLB_REG_GPIO_41_PU                                      (1<<4U)
 #define GLB_REG_GPIO_41_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_41_OE                                      (1<<6U)
 #define GLB_REG_GPIO_41_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_41_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_41_FUNC_SEL_SHIFT)
@@ -1065,7 +1065,7 @@
 #define GLB_REG_GPIO_42_DRV_MASK                                (0x3<<GLB_REG_GPIO_42_DRV_SHIFT)
 #define GLB_REG_GPIO_42_PU                                      (1<<4U)
 #define GLB_REG_GPIO_42_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_42_OE                                      (1<<6U)
 #define GLB_REG_GPIO_42_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_42_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_42_FUNC_SEL_SHIFT)
@@ -1089,7 +1089,7 @@
 #define GLB_REG_GPIO_43_DRV_MASK                                (0x3<<GLB_REG_GPIO_43_DRV_SHIFT)
 #define GLB_REG_GPIO_43_PU                                      (1<<4U)
 #define GLB_REG_GPIO_43_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_43_OE                                      (1<<6U)
 #define GLB_REG_GPIO_43_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_43_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_43_FUNC_SEL_SHIFT)
@@ -1113,7 +1113,7 @@
 #define GLB_REG_GPIO_44_DRV_MASK                                (0x3<<GLB_REG_GPIO_44_DRV_SHIFT)
 #define GLB_REG_GPIO_44_PU                                      (1<<4U)
 #define GLB_REG_GPIO_44_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_44_OE                                      (1<<6U)
 #define GLB_REG_GPIO_44_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_44_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_44_FUNC_SEL_SHIFT)
@@ -1137,7 +1137,7 @@
 #define GLB_REG_GPIO_45_DRV_MASK                                (0x3<<GLB_REG_GPIO_45_DRV_SHIFT)
 #define GLB_REG_GPIO_45_PU                                      (1<<4U)
 #define GLB_REG_GPIO_45_PD                                      (1<<5U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG_GPIO_45_OE                                      (1<<6U)
 #define GLB_REG_GPIO_45_FUNC_SEL_SHIFT                          (8U)
 #define GLB_REG_GPIO_45_FUNC_SEL_MASK                           (0x1f<<GLB_REG_GPIO_45_FUNC_SEL_SHIFT)
@@ -1288,7 +1288,7 @@
 #define GLB_REG2_GPIO_32_I                                      (1<<0U)
 #define GLB_REG2_GPIO_33_I                                      (1<<1U)
 #define GLB_REG2_GPIO_34_I                                      (1<<2U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG2_GPIO_35_I                                      (1<<3U)
 #define GLB_REG2_GPIO_36_I                                      (1<<4U)
 #define GLB_REG2_GPIO_37_I                                      (1<<5U)
@@ -1340,7 +1340,7 @@
 #define GLB_REG2_GPIO_32_O                                      (1<<0U)
 #define GLB_REG2_GPIO_33_O                                      (1<<1U)
 #define GLB_REG2_GPIO_34_O                                      (1<<2U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG2_GPIO_35_O                                      (1<<3U)
 #define GLB_REG2_GPIO_36_O                                      (1<<4U)
 #define GLB_REG2_GPIO_37_O                                      (1<<5U)
@@ -1392,7 +1392,7 @@
 #define GLB_REG2_GPIO_32_SET                                    (1<<0U)
 #define GLB_REG2_GPIO_33_SET                                    (1<<1U)
 #define GLB_REG2_GPIO_34_SET                                    (1<<2U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG2_GPIO_35_SET                                    (1<<3U)
 #define GLB_REG2_GPIO_36_SET                                    (1<<4U)
 #define GLB_REG2_GPIO_37_SET                                    (1<<5U)
@@ -1444,7 +1444,7 @@
 #define GLB_REG2_GPIO_32_CLR                                    (1<<0U)
 #define GLB_REG2_GPIO_33_CLR                                    (1<<1U)
 #define GLB_REG2_GPIO_34_CLR                                    (1<<2U)
-#if defined(BL808)||defined(BL606P)
+#if defined(BL808)
 #define GLB_REG2_GPIO_35_CLR                                    (1<<3U)
 #define GLB_REG2_GPIO_36_CLR                                    (1<<4U)
 #define GLB_REG2_GPIO_37_CLR                                    (1<<5U)

@@ -382,6 +382,32 @@ int lcd_draw_str_ascii16(uint16_t x, uint16_t y, lcd_color_t color, lcd_color_t 
  */
 int lcd_init(lcd_color_t *screen_buffer)
 {
+#if (defined(LCD_RESET_EN) && LCD_RESET_EN)
+    struct bflb_device_s *gpio;
+
+    /* gpio init */
+    gpio = bflb_device_get_by_name("gpio");
+    bflb_gpio_init(gpio, LCD_RESET_PIN, GPIO_OUTPUT | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+
+    /* lcd reset */
+#if LCD_RESET_ACTIVE_LEVEL
+    bflb_gpio_set(gpio, LCD_RESET_PIN);
+#else
+    bflb_gpio_reset(gpio, LCD_RESET_PIN);
+#endif
+
+    bflb_mtimer_delay_ms(LCD_RESET_HOLD_MS);
+
+    /* lcd recovery */
+#if LCD_RESET_ACTIVE_LEVEL
+    bflb_gpio_reset(gpio, LCD_RESET_PIN);
+#else
+    bflb_gpio_set(gpio, LCD_RESET_PIN);
+#endif
+
+    bflb_mtimer_delay_ms(LCD_RESET_DELAY);
+#endif
+
     return _LCD_FUNC_DEFINE(init, screen_buffer);
 }
 

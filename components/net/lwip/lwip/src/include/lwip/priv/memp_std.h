@@ -131,7 +131,11 @@ LWIP_MEMPOOL(MLD6_GROUP,     MEMP_NUM_MLD6_GROUP,      sizeof(struct mld_group),
  *     (Example: pbuf_payload_size=0 allocates only size for the struct)
  */
 LWIP_MEMPOOL(PBUF,           MEMP_NUM_PBUF,            sizeof(struct pbuf),           "PBUF_REF/ROM")
+#ifdef CONFIG_FHOST_RX_COPY_ENABLE
+LWIP_MEMPOOL_ATTR(PBUF_POOL, PBUF_POOL_SIZE,           PBUF_POOL_BUFSIZE,             "PBUF_POOL")
+#else
 LWIP_PBUF_MEMPOOL(PBUF_POOL, PBUF_POOL_SIZE,           PBUF_POOL_BUFSIZE,             "PBUF_POOL")
+#endif
 
 
 /*
@@ -147,6 +151,9 @@ LWIP_PBUF_MEMPOOL(PBUF_POOL, PBUF_POOL_SIZE,           PBUF_POOL_BUFSIZE,       
  * (#undef is ignored for something that is not defined)
  */
 #undef LWIP_MEMPOOL
+#ifdef CONFIG_FHOST_RX_COPY_ENABLE
+#undef LWIP_MEMPOOL_ATTR
+#endif
 #undef LWIP_MALLOC_MEMPOOL
 #undef LWIP_MALLOC_MEMPOOL_START
 #undef LWIP_MALLOC_MEMPOOL_END

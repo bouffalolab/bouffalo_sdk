@@ -90,6 +90,13 @@ SECTIONS
         __text_code_end__ = .;
     } > xip_memory
 
+    .build_id :
+    {
+        . = ALIGN(4);
+        elf_build_id = ABSOLUTE(.) + 16;
+        *(.note.gnu.build-id)
+    } > xip_memory
+
     . = ALIGN(4);
     __itcm_load_addr = .;
 

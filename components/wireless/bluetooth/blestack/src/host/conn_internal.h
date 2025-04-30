@@ -34,7 +34,11 @@ enum {
 	BT_CONN_AUTO_PHY_COMPLETE,      /* Auto-initiated PHY procedure done */
 	BT_CONN_AUTO_FEATURE_EXCH,	/* Auto-initiated LE Feat done */
 	BT_CONN_AUTO_VERSION_INFO,      /* Auto-initiated LE version done */
+	BT_CONN_PARAM_UPDATE_GOING,
 
+	#if defined(BFLB_BLE_AVOID_REMOVE_GATT_SUBSCRIPTION_RISK)
+	BT_CONN_GATT_REMOVE_SUBSCRIPTION_GOING,
+	#endif
 	/* Total number of flags - must be at the end of the enum */
 	BT_CONN_NUM_FLAGS,
 };
@@ -61,7 +65,9 @@ struct bt_conn_le {
 #if defined(CONFIG_BT_STACK_PTS)
 	u8_t 			own_adder_type;
 #endif
-
+#if defined(BFLB_BLE_GAP_SET_PERIPHERAL_PREF_PARAMS)
+    bool disable_pref_conn_param_update;
+#endif
 };
 
 #if defined(CONFIG_BT_BREDR)
@@ -165,12 +171,16 @@ struct bt_conn {
 #endif
 	};
 
-#if defined(CONFIG_BT_REMOTE_VERSION)
+#if (CONFIG_BT_REMOTE_VERSION)
 	struct bt_conn_rv {
 		u8_t  version;
 		u16_t manufacturer;
 		u16_t subversion;
 	} rv;
+#endif
+#if defined(BFLB_BLE_PATCH_AVOID_CONNECT_DISCONNECT_RISK)
+	bool notPermit_disconnect;
+	bool disconnect_was_triggered;
 #endif
 };
 
@@ -269,9 +279,16 @@ void notify_le_param_updated(struct bt_conn *conn);
 
 void notify_le_phy_updated(struct bt_conn *conn, u8_t tx_phy, u8_t rx_phy);
 
+#if defined(CONFIG_USER_DATA_LEN_UPDATE)
+void notify_le_datalen_updated(struct bt_conn *conn, u16_t tx_octets, u16_t tx_time,u16_t rx_octets,u16_t rx_time);
+#endif
+
 bool le_param_req(struct bt_conn *conn, struct bt_le_conn_param *param);
 
 #if defined(CONFIG_BT_SMP)
+/* If role specific LTK is present */
+bool bt_conn_ltk_present(const struct bt_conn *conn);
+
 /* rand and ediv should be in BT order */
 int bt_conn_le_start_encryption(struct bt_conn *conn, u8_t rand[8],
 				u8_t ediv[2], const u8_t *ltk, size_t len);
@@ -333,11 +350,7 @@ struct k_sem *bt_conn_get_pkts(struct bt_conn *conn);
 /* k_poll related helpers for the TX thread */
 int bt_conn_prepare_events(struct k_poll_event events[]);
 
-#if (BFLB_BT_CO_THREAD)
-void bt_conn_process_tx(struct bt_conn *conn, struct net_buf *tx_buf);
-#else
 void bt_conn_process_tx(struct bt_conn *conn);
-#endif
 
 #if defined(BFLB_BLE)
 /** @brief Get connection handle for a connection.

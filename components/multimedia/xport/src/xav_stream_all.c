@@ -82,13 +82,13 @@ NOINLINE_FUNC int stream_register_ashx()
 }
 
 /**
- * @brief  regist stream for dash
+ * @brief  regist stream for custom
  * @return 0/-1
  */
-NOINLINE_FUNC int stream_register_dash()
+NOINLINE_FUNC int stream_register_custom()
 {
-    extern struct stream_ops stream_ops_dash;
-    return stream_ops_register(&stream_ops_dash);
+    extern struct stream_ops stream_ops_custom;
+    return stream_ops_register(&stream_ops_custom);
 }
 
 /**
@@ -118,8 +118,8 @@ NOINLINE_FUNC int stream_register_all()
 #if defined(CONFIG_STREAMER_ASHX)
     REGISTER_STREAMER(ASHX, ashx);
 #endif
-#if defined(CONFIG_STREAMER_DASH)
-    REGISTER_STREAMER(DASH, dash);
+#if defined(CONFIG_STREAMER_CUSTOM)
+    REGISTER_STREAMER(CUSTOM, custom);
 #endif
     return 0;
 }

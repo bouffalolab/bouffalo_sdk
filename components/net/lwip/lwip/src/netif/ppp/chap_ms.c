@@ -683,7 +683,7 @@ static void GenerateAuthenticatorResponse(const u_char PasswordHashHash[MD4_SIGN
 
     /* Convert to ASCII hex string. */
     for (i = 0; i < LWIP_MAX((MS_AUTH_RESPONSE_LENGTH / 2), (int)sizeof(Digest)); i++)
-	sprintf((char *)&authResponse[i * 2], "%02X", Digest[i]);
+	snprintf((char *)&authResponse[i * 2], MS_AUTH_RESPONSE_LENGTH+1-(i*2), "%02X", Digest[i]);
 }
 
 

@@ -232,14 +232,26 @@ static inline uint32_t ATTR_CLOCK_SECTION Clock_F32k_Mux_Output(uint8_t sel)
     tmpVal = BL_RD_REG(GLB_BASE, GLB_DIG_CLK_CFG0);
     div = BL_GET_REG_BITS_VAL(tmpVal, GLB_DIG_32K_DIV);
 
-    if (sel == 0) {
-        /* src32k */
-        return (32 * 1000);
+    if (sel == 0 || sel == 2) {
+        /* rc32k */
+        return (32768);
     } else if (sel == 1) {
         /* xtal 32K */
-        return (32 * 1000);
+        return (32768);
     } else {
-        return Clock_Xtal_Output() / (div + 1);
+        /* dig32k */
+        if (BL_GET_REG_BITS_VAL(tmpVal, GLB_DIG_32K_EN) == 0) {
+            return 0;
+        } else {
+            sel = BL_GET_REG_BITS_VAL(tmpVal, GLB_DIG_CLK_SRC_SEL);
+            if (sel == 0) {
+                return Clock_Get_WIFI_PLL_Output(32 * 1000 * 1000) / div;
+            } else if (sel == 1) {
+                return Clock_Xtal_Output() / div;
+            } else {
+                return Clock_Get_Audio_PLL_Output() / div;
+            }
+        }
     }
 }
 
@@ -911,6 +923,18 @@ uint32_t Clock_Audio_ADC_Clock_Get(void)
 
 /****************************************************************************/ /**
 
+ * @brief  Get RTC Clock
+ *
+ * @return RTC clock value
+ *
+*******************************************************************************/
+static inline uint32_t Clock_RTC_Clock_Get(void)
+{
+    return 32768;
+}
+
+/****************************************************************************/ /**
+
  * @brief  Get Peripheral1 Clock
  *
  * @param  type: Peripheral1 clock type
@@ -1020,6 +1044,10 @@ uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type)
         /*!< PKA clock */
         case BL_PERIPHERAL_CLOCK_PKA:
             return Clock_PKA_Clk_Mux_Output(Clock_Get_PKA_Clk_Sel_Val());
+
+        /*!< RTC clock */
+        case BL_PERIPHERAL_CLOCK_RTC:
+            return Clock_RTC_Clock_Get();
 
         default:
             return 0;

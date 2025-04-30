@@ -7,7 +7,7 @@
  */
 
 #include <string.h>
-#include <sys/errno.h>
+#include <bt_errno.h>
 
 #include <bluetooth/mesh.h>
 

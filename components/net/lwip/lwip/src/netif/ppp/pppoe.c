@@ -488,8 +488,7 @@ pppoe_disc_input(struct netif *netif, struct pbuf *pb)
     if (err_msg != NULL) {
       char error_tmp[PPPOE_ERRORSTRING_LEN];
       u16_t error_len = LWIP_MIN(len, sizeof(error_tmp)-1);
-      strncpy(error_tmp, (char*)pb->payload + off + sizeof(pt), error_len);
-      error_tmp[error_len] = '\0';
+      strlcpy(error_tmp, (char*)pb->payload + off + sizeof(pt), PPPOE_ERRORSTRING_LEN);
       if (sc) {
         PPPDEBUG(LOG_DEBUG, ("pppoe: %c%c%"U16_F": %s: %s\n", sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num, err_msg, error_tmp));
       } else {

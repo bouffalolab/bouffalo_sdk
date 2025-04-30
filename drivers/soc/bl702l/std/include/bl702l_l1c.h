@@ -69,11 +69,12 @@ typedef struct
 /**
  *  @brief L1C BMX arb mode type definition
  */
-typedef enum {
+enum {
     L1C_BMX_ARB_FIX,         /*!< 0->fix */
     L1C_BMX_ARB_ROUND_ROBIN, /*!< 2->round-robin */
     L1C_BMX_ARB_RANDOM,      /*!< 3->random */
-} L1C_BMX_ARB_Type;
+};
+typedef BL_ENUM_Type L1C_BMX_ARB_Type;
 
 /**
  *  @brief L1C BMX configuration structure type definition
@@ -88,26 +89,29 @@ typedef struct
 /**
  *  @brief L1C BMX bus err type definition
  */
-typedef enum {
+enum {
     L1C_BMX_BUS_ERR_TRUSTZONE_DECODE, /*!< Bus trustzone decode error */
     L1C_BMX_BUS_ERR_ADDR_DECODE,      /*!< Bus addr decode error */
-} L1C_BMX_BUS_ERR_Type;
+};
+typedef BL_ENUM_Type L1C_BMX_BUS_ERR_Type;
 
 /**
  *  @brief L1C BMX bus err interrupt type definition
  */
-typedef enum {
+enum {
     L1C_BMX_ERR_INT_ERR, /*!< L1C BMX bus err interrupt */
     L1C_BMX_ERR_INT_ALL, /*!< L1C BMX bus err interrupt max num */
-} L1C_BMX_ERR_INT_Type;
+};
+typedef BL_ENUM_Type L1C_BMX_ERR_INT_Type;
 
 /**
  *  @brief L1C BMX time out interrupt type definition
  */
-typedef enum {
+enum {
     L1C_BMX_TO_INT_TIMEOUT, /*!< L1C_BMX timeout interrupt */
     L1C_BMX_TO_INT_ALL,     /*!< L1C_BMX timeout interrupt max num */
-} L1C_BMX_TO_INT_Type;
+};
+typedef BL_ENUM_Type L1C_BMX_TO_INT_Type;
 
 /*@} end of group L1C_Public_Types */
 

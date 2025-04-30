@@ -93,6 +93,8 @@ sdk_library_add_sources(snprintf.c)
 sdk_library_add_sources(sprintf.c)
 sdk_library_add_sources(vsprintf.c)
 sdk_library_add_sources(printf.c)
+sdk_library_add_sources(vprintf.c)
+sdk_library_add_sources(assert.c)
 
 if(CONFIG_STACK_SWITCH_CALL_SSCANF)
 sdk_library_add_sources(sscanf.c)

@@ -33,7 +33,7 @@
   *
   ******************************************************************************
   */
-#ifndef  __HARDWARE_CAM_FRONT_H__
+#ifndef __HARDWARE_CAM_FRONT_H__
 #define  __HARDWARE_CAM_FRONT_H__
 
 /****************************************************************************
@@ -66,6 +66,7 @@
 
 /* Register Bitfield definitions *****************************************************/
 
+
 /* 0x0 : config */
 #define CAM_FRONT_RG_DVPAS_ENABLE                               (1<<0U)
 #define CAM_FRONT_RG_DVPAS_HS_INV                               (1<<1U)
@@ -73,6 +74,7 @@
 #define CAM_FRONT_RG_DVPAS_DA_ORDER                             (1<<3U)
 #define CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT                        (16U)
 #define CAM_FRONT_RG_DVPAS_FIFO_TH_MASK                         (0x7ff<<CAM_FRONT_RG_DVPAS_FIFO_TH_SHIFT)
+
 
 #if defined(BL808)
 /* 0x4 : pix_data_ctrl */
@@ -180,6 +182,5 @@
 #define CAM_FRONT_REG_YUV_IDGEN_EDGE                            (1<<1U)
 #define CAM_FRONT_REG_YUV_IDGEN_CNT_INCR_SHIFT                  (16U)
 #define CAM_FRONT_REG_YUV_IDGEN_CNT_INCR_MASK                   (0xffff<<CAM_FRONT_REG_YUV_IDGEN_CNT_INCR_SHIFT)
-
 
 #endif  /* __CAM_FRONT_REG_H__ */

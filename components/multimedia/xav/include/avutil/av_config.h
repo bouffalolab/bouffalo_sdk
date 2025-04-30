@@ -62,9 +62,6 @@
 #ifndef CONFIG_STREAMER_CRYPTO
 #define CONFIG_STREAMER_CRYPTO                         (1)
 #endif
-#ifndef CONFIG_STREAMER_DASH
-#define CONFIG_STREAMER_DASH                           (1)
-#endif
 #ifndef CONFIG_STREAMER_FIFO
 #define CONFIG_STREAMER_FIFO                           (1)
 #endif
@@ -247,6 +244,14 @@
 #endif
 #endif
 
+/*
+ * HLS streaming require the use of http for data 
+ * transmission.
+ */
+#if (defined(CONFIG_STREAMER_HLS) && CONFIG_STREAMER_HLS) && \
+    !(defined(CONFIG_STREAMER_HTTP) && CONFIG_STREAMER_HTTP)
+#error "CONFIG_STREAMER_HLS is enabled, but CONFIG_STREAMER_HTTP is disabled"
+#endif
 
 /*
  * HTTP and HLS streaming require the use of TCP/IP for 
@@ -258,7 +263,7 @@
 #define CONFIG_TCPIP                                   (1)
 #else
 #if !CONFIG_TCPIP
-#error "CONFIG_STREAMER_HLS or CONFIG_STREAMER_HTTP defined, but CONFIG_TCPIP not defined"
+#error "CONFIG_STREAMER_HLS or CONFIG_STREAMER_HTTP is enabled, but CONFIG_TCPIP is disabled"
 #endif
 #endif
 #ifndef CONFIG_USING_TLS
@@ -276,7 +281,7 @@
 #define CONFIG_USING_TLS                               (1)
 #else
 #if !CONFIG_USING_TLS
-#error "CONFIG_DEMUXER_MP4 or CONFIG_STREAMER_CRYPTO defined, but CONFIG_USING_TLS not defined"
+#error "CONFIG_DEMUXER_MP4 or CONFIG_STREAMER_CRYPTO is enabled, but CONFIG_USING_TLS is disabled"
 #endif
 #endif
 #endif

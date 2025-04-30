@@ -43,7 +43,14 @@
 #define lcd_dbi_transmit_cmd_pixel_fill_async lcd_dbi_transmit_cmd_pixel_fill_async
 
 lcd_dbi_init_t dbi_para = {
-    .clock_freq = 80 * 1000 * 1000,
+#if (LCD_DBI_WORK_MODE == 3)
+    /* typeB */
+    .clock_freq = 27 * 1000 * 1000,
+#else
+    /* typeC */
+    .clock_freq = 40 * 1000 * 1000,
+#endif
+
 #if (NT35510_DBI_PIXEL_FORMAT == 1)
     .pixel_format = LCD_DBI_LCD_PIXEL_FORMAT_RGB565,
 #elif (NT35510_DBI_PIXEL_FORMAT == 2)
@@ -118,7 +125,13 @@ const nt35510_dbi_init_cmd_t nt35510_dbi_init_cmds[] = {
     { 0xBF, "\x01\x84\x07\x31\x00", 5 },
 
     { 0x35, "\x00", 1 },
-    { 0x36, "\x08", 1 }, /* Display direction control */
+
+/* Color RGB order */
+#if NT35510_DBI_COLOR_ORDER
+    { 0x36, "\x08", 1 },
+#else
+    { 0x36, "\x00", 1 },
+#endif
 
 #if (NT35510_DBI_COLOR_REVERSAL == 0)
     { 0x20, NULL, 0 },
@@ -220,38 +233,25 @@ int nt35510_dbi_init()
  */
 int nt35510_dbi_set_dir(uint8_t dir, uint8_t mir_flag)
 {
+    uint8_t dir_param[4] = { 0x00, 0xA0, 0xC0, 0x60 };
+    uint8_t mir_param[4] = { 0x40, 0x20, 0x80, 0xE0 };
     uint8_t param[2] = { 0 };
 
-    switch (dir) {
-        case 0:
-            if (!mir_flag)
-                param[1] = 0x08;
-            else
-                param[1] = 0x09;
-            break;
-        case 1:
-            if (!mir_flag)
-                param[1] = 0x68;
-            else
-                param[1] = 0x28;
-            break;
-        case 2:
-            if (!mir_flag)
-                param[1] = 0xC8;
-            else
-                param[1] = 0x88;
-            break;
-        case 3:
-            if (!mir_flag)
-                param[1] = 0xA8;
-            else
-                param[1] = 0xE8;
-
-            break;
-        default:
-            return -1;
-            break;
+    if (dir >= 4) {
+        return -1;
     }
+
+    if (mir_flag) {
+        param[1] = mir_param[dir];
+    } else {
+        param[1] = dir_param[dir];
+    }
+
+/* Color RGB order */
+#if (NT35510_DBI_COLOR_ORDER)
+    param[1] |= 0x08;
+#endif
+
     lcd_dbi_transmit_cmd_para(0x36, NULL, 0);
     lcd_dbi_transmit_cmd_para(0, (void *)&param, 2);
     return dir;

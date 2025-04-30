@@ -14,30 +14,30 @@
 
 int msp_fs_flags(int flags)
 {
-    switch(flags) {
-    case MSP_FS_RDONLY:
-        return O_RDONLY;
+    int true_flags = 0;
 
-    case MSP_FS_WRONLY:
-        return O_WRONLY;
-
-    case MSP_FS_RDWR:
-        return O_RDWR;
-
-    case MSP_FS_CREAT:
-        return O_CREAT;
-
-    default:
-        MSP_LOGE("fs flags type not support!\r\n");
+    if (flags & MSP_FS_CREAT) {
+        true_flags |= O_CREAT;
     }
 
-    return -1;
+    if (flags & MSP_FS_RDWR) {
+        true_flags |= O_RDWR;
+    } else if (flags & MSP_FS_WRONLY) {
+        true_flags |= O_WRONLY;
+    } else if (flags & MSP_FS_RDONLY) {
+        true_flags |= O_RDONLY;
+    } else {
+        MSP_LOGE("fs flags type not support!\r\n");
+        return -1;
+    }
+
+    return true_flags;
 }
 
 int msp_open(const char *path, int flags)
 {
-	int ret = open(path, flags);
-	return (ret > 0) ? ret : 0;
+    int ret = open(path, msp_fs_flags(flags));
+    return (ret > 0) ? ret : 0;
 }
 
 int msp_stat(const char *path, struct stat *st)
@@ -45,22 +45,22 @@ int msp_stat(const char *path, struct stat *st)
     return stat(path, st);
 }
 
-int msp_close(int fd)
+int msp_close(const char *path, int fd)
 {
     return close(fd);
 }
 
-int msp_read(int fd, void *buf, size_t nbytes)
+int msp_read(const char *path, int fd, void *buf, size_t nbytes)
 {
     return read(fd, buf, nbytes);
 }
 
-int msp_write(int fd, const void *buf, size_t nbytes)
+int msp_write(const char *path, int fd, const void *buf, size_t nbytes)
 {
     return write(fd, buf, nbytes);
 }
 
-int msp_lseek(int fd, off_t offset, int whence)
+int msp_lseek(const char *path, int fd, off_t offset, int whence)
 {
     return lseek(fd, offset, whence);
 }

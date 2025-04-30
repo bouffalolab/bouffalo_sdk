@@ -43,6 +43,7 @@
 /* Register offsets *********************************************************/
 
 #define SDIO2_IO_ENABLE_OFFSET          (0x0002) /* SDIO I/O Enable */
+#define SDIO2_BUS_WIDTH_OFFSET          (0x0007) /* Bus Interface Control */
 #define SDIO2_FN1_BLK_SIZE_0_OFFSET     (0x0028) /* SDIO block size infor */
 #define SDIO2_FN1_BLK_SIZE_1_OFFSET     (0x0029) /* SDIO block size infor */
 #define SDIO2_DEV_SLEEP_OFFSET          (0x0092) /* SDIO Device Sleep */
@@ -70,8 +71,14 @@
 #define SDIO2_CHIP_VERSION_OFFSET       (0x015C)
 #define SDIO2_IP_VERSION0_OFFSET        (0x015E)
 #define SDIO2_IP_VERSION1_OFFSET        (0x015F)
-#define SDIO2_SCRATCH2_OFFSET           (0x0164)
-#define SDIO2_SCRATCH1_OFFSET           (0x0166)
+#define SDIO2_SCRATCH0_0_OFFSET         (0x0160) /* host ready / upld max size (*CONSULT_MULTIPLE ) */
+#define SDIO2_SCRATCH0_1_OFFSET         (0x0161) /* card ready / dnld max size (*CONSULT_MULTIPLE ) */
+#define SDIO2_SCRATCH0_2_OFFSET         (0x0162) /* sdio status flag */
+#define SDIO2_SCRATCH0_3_OFFSET         (0x0163) /* */
+#define SDIO2_SCRATCH1_0_OFFSET         (0x0164) /* */
+#define SDIO2_SCRATCH1_1_OFFSET         (0x0165) /* */
+#define SDIO2_SCRATCH1_2_OFFSET         (0x0166) /* */
+#define SDIO2_SCRATCH1_3_OFFSET         (0x0167) /* */
 #define SDIO2_OCR0_OFFSET               (0x0168)
 #define SDIO2_OCR1_OFFSET               (0x0169)
 #define SDIO2_OCR2_OFFSET               (0x016A)
@@ -80,13 +87,6 @@
 #define SDIO2_DEBUG_OFFSET              (0x0170)
 #define SDIO2_DMA_ADDR_OFFSET           (0x0174)
 #define SDIO2_IO_PORT_OFFSET            (0x0178)
-
-// Bit Def. Scratch register 0
-#define SDIO2_SCRATCH_OFFSET            (0x0160)
-#define SDIO2_SCRATCH_HOST_READY_MASK   (1 << 0)
-#define SDIO2_SCRATCH_SLAVE_READY_MASK  (1 << 1)
-#define SDIO2_SCRATCH_MAX_SIZE_SHIFT    (2)
-#define SDIO2_SCRATCH_MAX_SIZE_MASK     (0x3F << SDIO2_SCRATCH_MAX_SIZE_SHIFT)
 
 // Bit Def. Block size 1 mask (Offset 0x29)
 #define SDIO2_FN1_BLK_SIZE_1_MASK       0x01
@@ -111,7 +111,6 @@
 #define SDIO2_CCR_CIM_Abort             (1 << 2)
 #define SDIO2_CCR_CIM_PwrDn             (1 << 3)
 #define SDIO2_CCR_CIM_PwrUp             (1 << 4)
-
 #define SDIO2_CCR_CIM_MASK              0x0007
 
 // Bit Def. Card Interrupt Status (Offset 0x138/238)

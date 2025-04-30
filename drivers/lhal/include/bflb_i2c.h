@@ -88,10 +88,10 @@
 /** @defgroup I2C_CMD i2c feature control cmd definition
   * @{
   */
-#define I2C_CMD_SET_SCL_SYNC (0x01) /* Enable or disable multi-master and clock-stretching */
-#define I2C_CMD_SET_DEGLITCH (0x02) /* 0 for disable deglitch, others for deglitch count */
-#define I2C_CMD_SET_TIMING   (0x03) /* Set I2C timing */
-#define I2C_CMD_GET_TIMING   (0x04) /* Get I2C timing */
+#define I2C_CMD_SET_SCL_SYNC     (0x01) /* Enable or disable multi-master and clock-stretching */
+#define I2C_CMD_SET_DEGLITCH_CNT (0x02) /* 0 for disable deglitch, others for deglitch count */
+#define I2C_CMD_SET_TIMING       (0x03) /* Set I2C timing */
+#define I2C_CMD_GET_TIMING       (0x04) /* Get I2C timing */
 
 /**
   * @}

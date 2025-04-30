@@ -33,7 +33,6 @@ extern long long msp_now_ms(void);
 #define user_log(M, ...)
 #endif
 
-
 volatile uint16_t digital_volume_reg = 0;
 volatile uint8_t mute_flag = 0;
 #if CODEC_OUTPUT_DEBUG_TRACE
@@ -107,10 +106,12 @@ static void _auo_clean_used_buffer(auo_ch_t *context)
 }
 #endif
 
+#define ALIGN_TO_32(addr) ((addr) & ~0x1F)
+
 static void _auo_recv(auo_ch_t *context)
 {
     static uint64_t old_time = 0, tmp_time = 0;
-    int32_t ret;
+    int32_t ret, val;
     uint32_t dst;
     uint32_t wi, ri, ar, get_size;
 
@@ -118,44 +119,66 @@ static void _auo_recv(auo_ch_t *context)
         context->debug.count_read++;
 #endif
     dst = (*((volatile uint32_t *)(uintptr_t)(context->dma->dst_addr)));
-    ar =  dst - context->head;
-    
+    ar =  ALIGN_TO_32(dst - context->head);
     wi = context->ringbuffer->write_index;
     ri = context->ringbuffer->read_index;
-    
-    if (ri >= wi) {
-        if (ar > ri) {
-            get_size = ar - ri;
-            memset(context->ringbuffer->buffer_ptr + ri, 0, get_size);
-            msp_cache_flush((uint32_t *)context->ringbuffer->buffer_ptr, get_size);
-        } else if (ar <= wi) {
-            get_size = context->ringbuffer->buffer_size - (ri - ar);
-            memset(context->ringbuffer->buffer_ptr + ri, 0, context->ringbuffer->buffer_size - ri);
-            msp_cache_flush((uint32_t *)(context->ringbuffer->buffer_ptr + ri), context->ringbuffer->buffer_size - ri);
-            memset(context->ringbuffer->buffer_ptr, 0, ar);
-            msp_cache_flush((uint32_t *)context->ringbuffer->buffer_ptr, ar);
-        } else {
-            memset(context->ringbuffer->buffer_ptr, 0, context->ringbuffer->buffer_size);
-            msp_cache_flush((uint32_t *)context->ringbuffer->buffer_ptr, context->ringbuffer->buffer_size);
-        }
+    if ((wi % 32 !=0) ||(ri %32 !=0)) {
+        user_log("wi:%d,ri:%d\r\n", wi,ri);
+    }
+    /* dma irq is trigger，per_node_size is Consumed, but ringbuffer read_index not move now ,so mringbuffer_data_len() <= context->per_node_size, means ringbuffer empty */
+    ret = mringbuffer_data_len(context->ringbuffer); 
+    if((context->per_node_size > ret) || (context->per_node_size == ret)) {
+        memset(context->ringbuffer->buffer_ptr, 0, context->ringbuffer->buffer_size);
+        msp_cache_flush((uint32_t *)context->ringbuffer->buffer_ptr, context->ringbuffer->buffer_size);
+        /* dma halt */
+        val = *(volatile uint32_t *)(context->dma->halt_reg);
+        *(volatile uint32_t *)(context->dma->halt_reg) = (val | context->dma->halt);
+        context->dma->halt_flag = 1;
+        context->callback(context, BL_EVENT_WRITE_BUFFER_EMPTY, context->arg);
     } else {
-        if ((ar > ri) && (ar <= wi)) {
-            get_size = ar - ri;
-            memset(context->ringbuffer->buffer_ptr + ri, 0, get_size);
-            msp_cache_flush((uint32_t *)(context->ringbuffer->buffer_ptr + ri), get_size);
+        if (ri >= wi) {
+            if (ar > ri) {
+                get_size = ar - ri;
+                memset(context->ringbuffer->buffer_ptr + ri, 0, get_size);
+                msp_cache_flush((uint32_t *)(context->ringbuffer->buffer_ptr + ri), get_size);
+            } else if (ar <= wi) {
+                get_size = context->ringbuffer->buffer_size - (ri - ar);
+                memset(context->ringbuffer->buffer_ptr + ri, 0, context->ringbuffer->buffer_size - ri);
+                msp_cache_flush((uint32_t *)(context->ringbuffer->buffer_ptr + ri), context->ringbuffer->buffer_size - ri);
+                memset(context->ringbuffer->buffer_ptr, 0, ar);
+                msp_cache_flush((uint32_t *)context->ringbuffer->buffer_ptr, ar);
+            } else {
+                memset(context->ringbuffer->buffer_ptr, 0, context->ringbuffer->buffer_size);
+                msp_cache_flush((uint32_t *)context->ringbuffer->buffer_ptr, context->ringbuffer->buffer_size);
+                /* dma halt */
+                val = *(volatile uint32_t *)(context->dma->halt_reg);
+                *(volatile uint32_t *)(context->dma->halt_reg) = (val | context->dma->halt);
+                context->dma->halt_flag = 1;
+                context->callback(context, BL_EVENT_WRITE_BUFFER_EMPTY, context->arg);
+            }
         } else {
-            memset(context->ringbuffer->buffer_ptr, 0, context->ringbuffer->buffer_size );
-            msp_cache_flush((uint32_t *)context->ringbuffer->buffer_ptr, context->ringbuffer->buffer_size);
+            if ((ar > ri) && (ar <= wi)) {
+                get_size = ar - ri;
+                memset(context->ringbuffer->buffer_ptr + ri, 0, get_size);
+                msp_cache_flush((uint32_t *)(context->ringbuffer->buffer_ptr + ri), get_size);
+            } else {
+                memset(context->ringbuffer->buffer_ptr, 0, context->ringbuffer->buffer_size);
+                msp_cache_flush((uint32_t *)context->ringbuffer->buffer_ptr, context->ringbuffer->buffer_size);
+                /* dma halt */
+                val = *(volatile uint32_t *)(context->dma->halt_reg);
+                *(volatile uint32_t *)(context->dma->halt_reg) = (val | context->dma->halt);
+                context->dma->halt_flag = 1;
+                context->callback(context, BL_EVENT_WRITE_BUFFER_EMPTY, context->arg);
+            }
         }
     }
-
     tmp_time = msp_now_ms();
     ret = mringbuffer_get_index(context->ringbuffer, ar);
     if (ret <= 0) {
         user_log("ar:0x%08lx, ri:0x%08lx, wi:0x%08lx, ret:%ld\r\n",
             ar, context->ringbuffer->read_index, context->ringbuffer->write_index, ret);
 
-        context->callback(context, BL_EVENT_WRITE_BUFFER_EMPTY, context->arg);
+        // context->callback(context, BL_EVENT_WRITE_BUFFER_EMPTY, context->arg);
     } else {
 #if CODEC_OUTPUT_DEBUG_TRACE
         context->debug.bytes_read += ret;
@@ -207,7 +230,6 @@ static void auo_task_entry(void *arg)
         }
     }
     msp_event_free(&context->event);
-    msp_mutex_free(&context->mutex);
     context->task_exit = 1;
     msp_task_exit(0);
 }
@@ -253,7 +275,8 @@ static void audiopwm_analog_digital_init(uint32_t sample_rate, uint32_t channel_
     msp_config_audiopll();// pll ,fixme ungate power ?
 #endif
     AUPWM_VolumeConfig(&aupwm_volume_cfg);
-
+    AUPWM_ZeroDetectInit(1, 512);
+    
     //AUPWM_SetVolume((uint16_t)(int16_t)(0));
     if (channel_num == 1) {
         aupwm_fifo_cfg.mixType = AUPWM_MIXER_ONLY_LEFT; 
@@ -299,8 +322,8 @@ void audio_poweron(void)
     //codec_gpio_pinmux_config(pa_pin, 0);
     msp_codec_pa_init_pre();
     
-#if !CONFIG_CODEC_USE_I2S_TX 
     AUPWM_Enable();
+#if !CONFIG_CODEC_USE_I2S_TX 
     msp_config_audiopll();// pll ,fixme ungate power ?
 #endif
     msp_msleep(10);
@@ -316,6 +339,7 @@ int auo_init(auo_ch_t *context)
     static uint8_t g_task_buffer[1024];
     static uint8_t g_task_handle[256];
 #endif
+
 #if CODEC_OUTPUT_DEBUG_TRACE
     g_auo_ctx = context;
     memset(&(context->debug), 0, sizeof(context->debug));
@@ -329,11 +353,10 @@ int auo_init(auo_ch_t *context)
     //codec_pa_disable();// gpio18
     context->task_exit = 0;
     msp_event_new(&(context->event), 0);
-    msp_mutex_new(&(context->mutex));
 #if CONFIG_MSP_USE_STATIC_RAM
-    msp_task_new_static(&(context->task), "auotsk", auo_task_entry, context, 1024, context->task_pri, &g_task_buffer, &g_task_handle, 256);//aos_DEFAULT_APP_PRI - 6);
+    msp_task_new_static(&(context->task), AUO_TASK, auo_task_entry, context, 1024, context->task_pri, &g_task_buffer, &g_task_handle, 256);//aos_DEFAULT_APP_PRI - 6);
 #else
-    msp_task_new_ext(&(context->task), "auotsk", auo_task_entry, context, context->stack_size, context->task_pri);//aos_DEFAULT_APP_PRI - 6);
+    msp_task_new_ext(&(context->task), AUO_TASK, auo_task_entry, context, context->stack_size, context->task_pri);//aos_DEFAULT_APP_PRI - 6);
 #endif
     //xTaskCreate(auo_task_entry, "name", context->stack_size, context, context->task_pri, context->task);
     // enable clock
@@ -577,7 +600,7 @@ static int _auo_tx_dma_link(auo_ch_t *context, void *dma)
     struct bflb_device_s *device_dma;
     char dma_name[10] = {0};
    
-    sprintf(dma_name, "dma%d_ch%d", dma_id, dma_ch);
+    snprintf(dma_name, sizeof(dma_name), "dma%d_ch%d", dma_id, dma_ch);
     printf("dma_dma_name:%s\r\n", dma_name);
     dma_name[9] = '\0';
 
@@ -766,11 +789,17 @@ int auo_start(auo_ch_t *context)
 int auo_stop(auo_ch_t *context)
 {
     uint32_t count = 0;
+
+    msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
+    
+    if (!msp_task_exist(AUO_TASK)) {
+        user_log("auo not init\r\n");
+        return -1;
+    }
+
 #if CODEC_OUTPUT_DEBUG_TRACE
     context->debug.count_stop++;
 #endif
-    msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
-
     user_log("context = %p\r\n", context);
 
     //uint32_t pa_pin = context->pa_pin;
@@ -1005,19 +1034,65 @@ uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
     return ret;
 }
 #else
+
+#ifdef CONFIG_XCODEC_OUTPUT_CACHE
+#define CACHE_SIZE  (320*10)
+#endif
 uint32_t auo_write(auo_ch_t *context, const void *data, uint32_t size)
 {
     uint32_t ret = 0;
-
+    uintptr_t irq_stat;
     user_log("mringbuffer_put_fflush_cache %d\r\n", size);
     msp_mutex_lock(&(context->mutex), MSP_WAIT_FOREVER);
+    
+#ifdef CONFIG_XCODEC_OUTPUT_CACHE
+    static uint32_t cache_total = 0;
+    static uint32_t cache_flag = 0;
+#endif
+    irq_stat = bflb_irq_save();    
+    if (context->dma->halt_flag) {
+#ifdef CONFIG_XCODEC_OUTPUT_CACHE
+        if (!cache_flag)
+#endif
+        {
+            mringbuffer_reset(context->ringbuffer);
+        }
+    }
     ret = mringbuffer_put_fflush_cache(context->ringbuffer,
         (uint8_t *)data, size,
         msp_cache_flush);
 
+    if (context->dma->halt_flag) {
+#ifdef CONFIG_XCODEC_OUTPUT_CACHE
+        cache_flag = 1;
+        cache_total += size;
+        if (cache_total >= CACHE_SIZE) {
+            cache_total = 0;
+            cache_flag = 0;
+            msp_DMA_LLI_Update(context->ctrl_id, context->ch_id, (uint32_t)(&(context->dma->node[0].dma_cfg)));
+            msp_DMA_Request_Enable(context->ctrl_id, context->ch_id);
+            context->dma->halt_flag = 0;
+        }
+#else
+        msp_DMA_LLI_Update(context->ctrl_id, context->ch_id, (uint32_t)(&(context->dma->node[0].dma_cfg)));
+        msp_DMA_Request_Enable(context->ctrl_id, context->ch_id);
+        context->dma->halt_flag = 0;
+#endif
+    }
+    bflb_irq_restore(irq_stat);
+
     if (0 == context->st) {
+#ifdef CONFIG_XCODEC_OUTPUT_CACHE
+         cache_total += size;
+         if (cache_total >= CACHE_SIZE) {
+            cache_total = 0;
+            context->st = 1;
+            _auo_hw_start(context);
+         }
+#else
         context->st = 1;
         _auo_hw_start(context);
+#endif
         // fixme for nosie at startup
     }
 

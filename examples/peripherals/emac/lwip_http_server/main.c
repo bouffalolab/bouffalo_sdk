@@ -1,10 +1,9 @@
 #include "bflb_mtimer.h"
 #include "bflb_emac.h"
-#include "board.h"
-#include "log.h"
 
-#include "ethernet_phy.h"
-#include "ethernetif.h"
+#include "eth_phy.h"
+#include "ephy_general.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -16,9 +15,15 @@
 #if LWIP_DHCP
 #include "lwip/dhcp.h"
 #endif
+#include "lwip_netif_emac.h"
+
+#include "board.h"
 
 #include "http_server.h"
 #include "http_led.h"
+
+#define DBG_TAG "MAIN"
+#include "log.h"
 
 // Local IP address define
 /*Static IP ADDRESS: IP_ADDR0.IP_ADDR1.IP_ADDR2.IP_ADDR3 */
@@ -44,24 +49,12 @@
 /* global network interface struct define */
 struct netif gnetif;
 
-static StackType_t start_task_stack[512];
-static StaticTask_t start_task_handle;
-
-static StackType_t led_task_stack[256];
-static StaticTask_t led_task_handle;
-
-/* For emac tx and rx buffer,we put here to make controlling it's size easy */
-#define ETH_RXBUFNB 5
-#define ETH_TXBUFNB 5
-ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(4))) uint8_t ethRxBuff[ETH_RXBUFNB][ETH_RX_BUFFER_SIZE]; /* Ethernet Receive Buffers */
-ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(4))) uint8_t ethTxBuff[ETH_TXBUFNB][ETH_TX_BUFFER_SIZE]; /* Ethernet Transmit Buffers */
-
 /**
   * @brief  Setup the network interface
   * @param  None
   * @retval None
   */
-static void netif_config(void)
+static int netif_config(void)
 {
     ip_addr_t ipaddr;
     ip_addr_t netmask;
@@ -82,39 +75,69 @@ static void netif_config(void)
 #endif
 
     /* add the network interface */
-    netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
+    struct netif *p_gnetif = netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &eth_emac_if_init, &tcpip_input);
+    if (p_gnetif == NULL) {
+        LOG_E("netif_add failed\r\n");
+        return -1;
+    }
 
     /*  Registers the default network interface */
     netif_set_default(&gnetif);
-    ethernet_link_status_updated(&gnetif);
 
-#if LWIP_NETIF_LINK_CALLBACK
-    netif_set_link_callback(&gnetif, ethernet_link_status_updated);
-#endif
+    return 0;
 }
 
-static void ethernet_lwip_init()
+void lwip_status_update_task(void *pvParameters)
 {
-    printf("lwip statck init\r\n");
+    LOG_I("lwip_status_update_task Run...\r\n");
 
+    /* Infinite loop */
+    while (1) {
+        vTaskDelay(200);
+
+        /* update link status */
+        eth_link_state_update(&gnetif);
+
+#if LWIP_DHCP
+        /* update dhcp status */
+        dhcp_sta_update(&gnetif);
+#endif
+    }
+}
+
+void app_start_task(void *pvParameters)
+{
+    LOG_I("app_start_task Run...\r\n");
+    vTaskDelay(10);
+
+    struct bflb_device_s *uart0 = bflb_device_get_by_name("uart0");
+    extern void shell_init_with_task(struct bflb_device_s * shell);
+    shell_init_with_task(uart0);
+    LOG_I("Shell Ready...\r\n");
+
+    LOG_I("lwip statck init\r\n");
     /* Initialize the LwIP stack */
     tcpip_init(NULL, NULL);
 
-    printf("netif config\r\n");
+    LOG_I("netif config\r\n");
     /* Configure the Network interface */
-    netif_config();
+    if(netif_config() < 0){
+        LOG_E("netif_config failed\r\n");
+        LOG_I("app_start_task Delete...\r\n");
+        vTaskDelete(NULL);
+    }
+
+    /* lwip status update task */
+    xTaskCreate((void *)lwip_status_update_task, (char *)"lwip_sta_update", 256, NULL, osPriorityHigh, NULL);
+
+    /* led task */
+    xTaskCreate((void *)led_task, (char *)"led_task", 512, NULL, osPriorityNormal, NULL);
 
     // http_server_netconn_init();
     http_server_init();
 
+    LOG_I("app_start_task Delete...\r\n");
     vTaskDelete(NULL);
-    while (1) {
-    }
-}
-
-void emac_init_txrx_buffer(struct bflb_device_s *emac)
-{
-    bflb_emac_bd_init(emac, (uint8_t *)ethTxBuff, ETH_TXBUFNB, (uint8_t *)ethRxBuff, ETH_RXBUFNB);
 }
 
 int main(void)
@@ -125,16 +148,14 @@ int main(void)
 
     printf("EMAC lwip http test case !\r\n");
 
-    // ethernet_lwip_init();
-    vSemaphoreCreateBinary(console_lock);
+    LOG_I("Create app_start task.\r\n");
+    xTaskCreate(app_start_task, (char *)"app_start_task", 512, NULL, configMAX_PRIORITIES - 1, NULL);
 
-    xTaskCreateStatic((void *)ethernet_lwip_init, (char *)"start_task", sizeof(start_task_stack) / 4, NULL, osPriorityNormal, start_task_stack, &start_task_handle);
-    // sys_thread_new((char *)"led_task", (void *)led_task, NULL, 256, osPriorityNormal);
-    xTaskCreateStatic((void *)led_task, (char *)"led_task", sizeof(led_task_stack) / 4, NULL, osPriorityNormal, led_task_stack, &led_task_handle);
-
+    LOG_I("Start Scheduler.\r\n");
     vTaskStartScheduler();
 
-    printf("case success!\r\n");
+    LOG_E("vTaskStart failed.\r\n");
+
     while (1) {
     }
 }

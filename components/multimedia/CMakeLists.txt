@@ -1,9 +1,6 @@
-sdk_add_subdirectory_ifdef(CONFIG_ALGRTC algrtc)
-
 sdk_add_subdirectory_ifdef(CONFIG_AACDEC aacdec)
 sdk_add_subdirectory_ifdef(CONFIG_AMRNB amrnb)
 sdk_add_subdirectory_ifdef(CONFIG_AMRWB amrwb)
-sdk_add_subdirectory_ifdef(CONFIG_FLAC flac)
 sdk_add_subdirectory_ifdef(CONFIG_PVMP3DEC pvmp3dec)
 sdk_add_subdirectory_ifdef(CONFIG_OPUS opus)
 sdk_add_subdirectory_ifdef(CONFIG_SPEEX speex)
@@ -11,7 +8,7 @@ sdk_add_subdirectory_ifdef(CONFIG_VORBIS vorbis)
 sdk_add_subdirectory_ifdef(CONFIG_OGG ogg)
 
 sdk_add_subdirectory_ifdef(CONFIG_AUIDIO_FLOWCTRL_BRIDGE audio_flowctrl_bridge)
-sdk_add_subdirectory_ifdef(CONFIG_BL616_BLIMPLS bl616_blimpls)
+sdk_add_subdirectory_ifdef(CONFIG_BL616_IMPLS bl616_impls)
 
 sdk_add_subdirectory_ifdef(CONFIG_SONIC sonic)
 sdk_add_subdirectory_ifdef(CONFIG_MINIALSA minialsa)
@@ -26,5 +23,3 @@ sdk_add_subdirectory_ifdef(CONFIG_XPORT xport)
 sdk_add_subdirectory_ifdef(CONFIG_XUTILS xutils)
 sdk_add_subdirectory_ifdef(CONFIG_XRECORD xrecord)
 sdk_add_subdirectory_ifdef(CONFIG_XWEBSOCKET xwebsocket)
-
-sdk_add_compile_options(-fno-inline)

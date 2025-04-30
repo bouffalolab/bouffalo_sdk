@@ -68,142 +68,157 @@ extern "C" {
 /**
  *  @brief GLB IR_LED type definition
  */
-typedef enum {
+enum {
     GLB_IR_LED0, /*!< IR_LED0 */
     GLB_IR_LED1, /*!< IR_LED1 */
-} GLB_IR_LED_Type;
+};
+typedef BL_ENUM_Type GLB_IR_LED_Type;
 
 /**
  *  @brief GLB root clock type definition
  */
-typedef enum {
+enum {
     GLB_ROOT_CLK_RC32M, /*!< root clock select RC32M */
     GLB_ROOT_CLK_XTAL,  /*!< root clock select XTAL */
     GLB_ROOT_CLK_DLL,   /*!< root clock select DLL others */
-} GLB_ROOT_CLK_Type;
+};
+typedef BL_ENUM_Type GLB_ROOT_CLK_Type;
 
 /**
  *  @brief GLB system clock type definition
  */
-typedef enum {
+enum {
     GLB_SYS_CLK_RC32M,     /*!< use RC32M as system clock frequency */
     GLB_SYS_CLK_XTAL,      /*!< use XTAL as system clock */
     GLB_SYS_CLK_DLL25P6M,  /*!< use DLL output 25.6MHz as system clock */
     GLB_SYS_CLK_DLL42P67M, /*!< use DLL output 42.67MHz as system clock */
     GLB_SYS_CLK_DLL64M,    /*!< use DLL output 64MHz as system clock */
     GLB_SYS_CLK_DLL128M,   /*!< use DLL output 128MHz as system clock */
-} GLB_SYS_CLK_Type;
+};
+typedef BL_ENUM_Type GLB_SYS_CLK_Type;
 
 /**
  *  @brief GLB AUDIO clock source type definition
  */
-typedef enum {
+enum {
     GLB_AUDIO_CLK_SRC_2P032M, /*!< Select 2.032MHz as AUDIO clock source */
     GLB_AUDIO_CLK_SRC_6P095M, /*!< Select 6.095MHz as AUDIO clock source */
-} GLB_AUDIO_CLK_SRC_Type;
+};
+typedef BL_ENUM_Type GLB_AUDIO_CLK_SRC_Type;
 
 /**
  *  @brief GLB KYS clock source type definition
  */
-typedef enum {
+enum {
     GLB_KYS_CLK_SRC_XCLK, /*!< KYS clock source select XCLK */
     GLB_KYS_CLK_SRC_F32K, /*!< KYS clock source select f32k */
-} GLB_KYS_CLK_SRC_Type;
+};
+typedef BL_ENUM_Type GLB_KYS_CLK_SRC_Type;
 
 /**
  *  @brief GLB DMA clock ID type definition
  */
-typedef enum {
+enum {
     GLB_DMA_CLK_DMA0_CH0, /*!< DMA clock ID:channel 0 */
     GLB_DMA_CLK_DMA0_CH1, /*!< DMA clock ID:channel 1 */
     GLB_DMA_CLK_DMA0_CH2, /*!< DMA clock ID:channel 2 */
     GLB_DMA_CLK_DMA0_CH3, /*!< DMA clock ID:channel 3 */
-} GLB_DMA_CLK_ID_Type;
+};
+typedef BL_ENUM_Type GLB_DMA_CLK_ID_Type;
 
 /**
  *  @brief GLB IR clock source type definition
  */
-typedef enum {
+enum {
     GLB_IR_CLK_SRC_XCLK, /*!< IR clock source select XCLK */
-} GLB_IR_CLK_SRC_Type;
+};
+typedef BL_ENUM_Type GLB_IR_CLK_SRC_Type;
 
 /**
  *  @brief GLB flash clock type definition
  */
-typedef enum {
+enum {
     GLB_SFLASH_CLK_XCLK,   /*!< Select XCLK as flash clock */
     GLB_SFLASH_CLK_64M,    /*!< Select 64M as flash clock */
     GLB_SFLASH_CLK_BCLK,   /*!< Select BCLK as flash clock */
     GLB_SFLASH_CLK_42P67M, /*!< Select 42.67M as flash clock */
-} GLB_SFLASH_CLK_Type;
+};
+typedef BL_ENUM_Type GLB_SFLASH_CLK_Type;
 
 /**
  *  @brief GLB chip clock out 0 type definition
  */
-typedef enum {
+enum {
     GLB_CHIP_CLK_OUT_0_NONE,   /*!< no chip clock out */
     GLB_CHIP_CLK_OUT_0_2P032M, /*!< DLL div63 2.032MHz clock out */
     GLB_CHIP_CLK_OUT_0_6P095M, /*!< DLL div21 6.095MHz clock out */
     GLB_CHIP_CLK_OUT_0_XCLK,   /*!< clk_xclk */
-} GLB_CHIP_CLK_OUT_0_Type;
+};
+typedef BL_ENUM_Type GLB_CHIP_CLK_OUT_0_Type;
 
 /**
  *  @brief GLB chip clock out 1 type definition
  */
-typedef enum {
+enum {
     GLB_CHIP_CLK_OUT_1_NONE,     /*!< no chip clock out */
     GLB_CHIP_CLK_OUT_1_F32K,     /*!< f32k clock out */
     GLB_CHIP_CLK_OUT_1_ANA_XTAL, /*!< ana xtal clock out */
     GLB_CHIP_CLK_OUT_1_DIG_XTAL, /*!< dig xtal clock out */
-} GLB_CHIP_CLK_OUT_1_Type;
+};
+typedef BL_ENUM_Type GLB_CHIP_CLK_OUT_1_Type;
 
 /**
  *  @brief GLB I2C clock source type definition
  */
-typedef enum {
+enum {
     GLB_I2C_CLK_SRC_BCLK, /*!< I2C clock source select BCLK */
     GLB_I2C_CLK_SRC_XCLK, /*!< I2C clock source select XCLK */
-} GLB_I2C_CLK_SRC_Type;
+};
+typedef BL_ENUM_Type GLB_I2C_CLK_SRC_Type;
 
 /**
  *  @brief GLB SPI clock source type definition
  */
-typedef enum {
+enum {
     GLB_SPI_CLK_SRC_BCLK, /*!< SPI clock source select BCLK */
     GLB_SPI_CLK_SRC_XCLK, /*!< SPI clock source select XCLK */
-} GLB_SPI_CLK_SRC_Type;
+};
+typedef BL_ENUM_Type GLB_SPI_CLK_SRC_Type;
 
 /**
  *  @brief GLB SPI pad action type definition
  */
-typedef enum {
+enum {
     GLB_SPI_PAD_ACT_AS_SLAVE,  /*!< SPI pad act as slave */
     GLB_SPI_PAD_ACT_AS_MASTER, /*!< SPI pad act as master */
-} GLB_SPI_PAD_ACT_AS_Type;
+};
+typedef BL_ENUM_Type GLB_SPI_PAD_ACT_AS_Type;
 
 /**
  *  @brief GLB PKA clock source type definition
  */
-typedef enum {
+enum {
     GLB_PKA_CLK_SRC_HCLK,      /*!< PKA clock source select HCLK */
     GLB_PKA_CLK_SRC_DLL128M,   /*!< PKA clock source select DLL128M */
     GLB_PKA_CLK_SRC_DLL64M,    /*!< PKA clock source select DLL64M */
     GLB_PKA_CLK_SRC_DLL42P67M, /*!< PKA clock source select DLL42.67M */
-} GLB_PKA_CLK_SRC_Type;
+};
+typedef BL_ENUM_Type GLB_PKA_CLK_SRC_Type;
 
 /**
  *  @brief BMX arb mode type definition
  */
-typedef enum {
+enum {
     BMX_ARB_FIX,         /*!< 0->fix */
     BMX_ARB_ROUND_ROBIN, /*!< 2->round-robin */
     BMX_ARB_RANDOM,      /*!< 3->random */
-} BMX_ARB_Type;
+};
+typedef BL_ENUM_Type BMX_ARB_Type;
 
 /**
  *  @brief GLB AHB software type definition
  */
-typedef enum {
+enum {
     GLB_AHB_MCU_SW_M154 = 4,
     GLB_AHB_MCU_SW_BLE = 8,
     GLB_AHB_MCU_SW_GLB = 32,
@@ -231,12 +246,13 @@ typedef enum {
     GLB_AHB_MCU_SW_PWRON_RST = 64,
     GLB_AHB_MCU_SW_CPU_RESET = 65,
     GLB_AHB_MCU_SW_SYS_RESET = 66,
-} GLB_AHB_MCU_SW_Type;
+};
+typedef BL_ENUM_Type GLB_AHB_MCU_SW_Type;
 
 /**
  *  @brief GLB dis reset type definition
  */
-typedef enum {
+enum {
     GLB_DISRST_MIX = 1,
     GLB_DISRST_GPIP = 2,
     GLB_DISRST_CCI = 8,
@@ -251,7 +267,8 @@ typedef enum {
     GLB_DISRST_CHECKSUM = 23,
     GLB_DISRST_KYS = 25,
     GLB_DISRST_AUSOLO = 29,
-} GLB_DISRST_Type;
+};
+typedef BL_ENUM_Type GLB_DISRST_Type;
 
 /**
  *  @brief BMX configuration structure type definition
@@ -265,100 +282,111 @@ typedef struct {
 /**
  *  @brief RTC mode type definition
  */
-typedef enum {
+enum {
     RTC_MODE_LOWPOWER, /*!< RTC work on low power mode */
     RTC_MODE_NORMAL,   /*!< RTC work on normal mode */
-} RTC_MODE_Type;
+};
+typedef BL_ENUM_Type RTC_MODE_Type;
 
 /**
  *  @brief BMX bus err type definition
  */
-typedef enum {
+enum {
     BMX_BUS_ERR_TRUSTZONE_DECODE, /*!< Bus trustzone decode error */
     BMX_BUS_ERR_ADDR_DECODE,      /*!< Bus addr decode error */
-} BMX_BUS_ERR_Type;
+};
+typedef BL_ENUM_Type BMX_BUS_ERR_Type;
 
 /**
  *  @brief BMX bus err interrupt type definition
  */
-typedef enum {
+enum {
     BMX_ERR_INT_ERR, /*!< BMX bus err interrupt */
     BMX_ERR_INT_ALL, /*!< BMX bus err interrupt max num */
-} BMX_ERR_INT_Type;
+};
+typedef BL_ENUM_Type BMX_ERR_INT_Type;
 
 /**
  *  @brief BMX time out interrupt type definition
  */
-typedef enum {
+enum {
     BMX_TO_INT_TIMEOUT, /*!< BMX timeout interrupt */
     BMX_TO_INT_ALL,     /*!< BMX timeout interrupt max num */
-} BMX_TO_INT_Type;
+};
+typedef BL_ENUM_Type BMX_TO_INT_Type;
 
 /**
  *  @brief GLB EM type definition
  */
-typedef enum {
+enum {
     GLB_EM_0KB = 0x0,  /*!< 0x0 --> 0KB */
     GLB_EM_8KB = 0x3,  /*!< 0x3 --> 8KB */
     GLB_EM_16KB = 0xF, /*!< 0xF --> 16KB */
-} GLB_EM_Type;
+};
+typedef BL_ENUM_Type GLB_EM_Type;
 
 /**
  *  @brief GLB MTIMER clock type definition
  */
-typedef enum {
+enum {
     GLB_MTIMER_CLK_XCLK, /*!< BUS clock */
     GLB_MTIMER_CLK_F32K, /*!< 32KHz */
-} GLB_MTIMER_CLK_Type;
+};
+typedef BL_ENUM_Type GLB_MTIMER_CLK_Type;
 
 /**
  *  @brief GLB ADC clock source type definition
  */
-typedef enum {
+enum {
     GLB_ADC_CLK_SRC_F32K, /*!< ADC clock source select F32K */
     GLB_ADC_CLK_SRC_XCLK, /*!< ADC clock source select XCLK */
-} GLB_ADC_CLK_SRC_Type;
+};
+typedef BL_ENUM_Type GLB_ADC_CLK_SRC_Type;
 
 /**
  *  @brief GLB DIG clock source select type definition
  */
-typedef enum {
+enum {
     GLB_DIG_CLK_SRC_XTAL32M, /*!< select XTAL32M as DIG clock source */
     GLB_DIG_CLK_SRC_RC32M,   /*!< select RC32M as DIG clock source */
-} GLB_DIG_CLK_SRC_Type;
+};
+typedef BL_ENUM_Type GLB_DIG_CLK_SRC_Type;
 
 /**
  *  @brief GLB BT bandwidth type definition
  */
-typedef enum {
+enum {
     GLB_BT_BANDWIDTH_1M, /*!< BT bandwidth 1MHz */
     GLB_BT_BANDWIDTH_2M, /*!< BT bandwidth 2MHz */
-} GLB_BT_BANDWIDTH_Type;
+};
+typedef BL_ENUM_Type GLB_BT_BANDWIDTH_Type;
 
 /**
  *  @brief GLB UART signal type definition
  */
-typedef enum {
+enum {
     GLB_UART_SIG_0, /*!< UART signal 0 */
     GLB_UART_SIG_1, /*!< UART signal 1 */
     GLB_UART_SIG_2, /*!< UART signal 2 */
     GLB_UART_SIG_3, /*!< UART signal 3 */
-} GLB_UART_SIG_Type;
+};
+typedef BL_ENUM_Type GLB_UART_SIG_Type;
 
 /**
  *  @brief GLB UART signal  function type definition
  */
-typedef enum {
+enum {
     GLB_UART_SIG_FUN_UART0_RTS, /*!< UART funtion: UART 0 RTS */
     GLB_UART_SIG_FUN_UART0_CTS, /*!< UART funtion: UART 0 CTS */
     GLB_UART_SIG_FUN_UART0_TXD, /*!< UART funtion: UART 0 TXD */
     GLB_UART_SIG_FUN_UART0_RXD, /*!< UART funtion: UART 0 RXD */
-} GLB_UART_SIG_FUN_Type;
+};
+typedef BL_ENUM_Type GLB_UART_SIG_FUN_Type;
 
 /**
  *  @brief GLB DLL output clock type definition
  */
-typedef enum {
+enum {
     GLB_DLL_CLK_RF,     /*!< DLL output div1 RF clock */
     GLB_DLL_CLK_2P032M, /*!< DLL output 2.032MHz clock */
     GLB_DLL_CLK_6P095M, /*!< DLL output 6.095MHz clock */
@@ -366,21 +394,23 @@ typedef enum {
     GLB_DLL_CLK_42P67M, /*!< DLL output 42.67MHz clock */
     GLB_DLL_CLK_64M,    /*!< DLL output 64MHz clock */
     GLB_DLL_CLK_128M,   /*!< DLL output 128MHz clock */
-} GLB_DLL_CLK_Type;
+};
+typedef BL_ENUM_Type GLB_DLL_CLK_Type;
 
 /**
  *  @brief PLL XTAL type definition
  */
-typedef enum {
+enum {
     GLB_DLL_XTAL_NONE,  /*!< XTAL is none */
     GLB_DLL_XTAL_32M,   /*!< XTAL is 32M */
     GLB_DLL_XTAL_RC32M, /*!< XTAL is RC32M */
-} GLB_DLL_XTAL_Type;
+};
+typedef BL_ENUM_Type GLB_DLL_XTAL_Type;
 
 /**
  *  @brief GLB AHB clock IP type definition
  */
-typedef enum {
+enum {
     GLB_AHB_CLOCK_IP_CPU,
     GLB_AHB_CLOCK_IP_SDU,
     GLB_AHB_CLOCK_IP_SEC,
@@ -441,7 +471,8 @@ typedef enum {
     GLB_AHB_CLOCK_IP_AUSOLO_TOP,
     GLB_AHB_CLOCK_IP_DMA_GPIO,
     GLB_AHB_CLOCK_IP_MM_MISC,
-} GLB_AHB_CLOCK_IP_Type;
+};
+typedef BL_ENUM_Type GLB_AHB_CLOCK_IP_Type;
 
 /*@} end of group GLB_Public_Types */
 
@@ -809,6 +840,9 @@ BL_Err_Type GLB_BLE_Reset(void);
 BL_Err_Type GLB_Disrst_Set(uint8_t enable, GLB_DISRST_Type disrst);
 BL_Err_Type GLB_PER_Clock_Gate(uint64_t ips);
 BL_Err_Type GLB_PER_Clock_UnGate(uint64_t ips);
+/*----------*/
+BL_Err_Type GLB_AHB_Slave1_Reset(BL_AHB_Slave1_Type slave1);
+BL_Err_Type GLB_AHB_Slave1_Clock_Gate(uint8_t enable, BL_AHB_Slave1_Type slave1);
 /*----------*/
 BL_Err_Type GLB_Set_RTC_Mode(RTC_MODE_Type rtcMode);
 /*----------*/

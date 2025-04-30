@@ -74,6 +74,7 @@
 #define UART_FIFO_WDATA_OFFSET    (0x88) /* uart_fifo_wdata */
 #define UART_FIFO_RDATA_OFFSET    (0x8C) /* uart_fifo_rdata */
 
+
 /* Register Bitfield definitions *****************************************************/
 
 /* 0x0 : utx_config */
@@ -135,7 +136,7 @@
 #define UART_CR_URX_BIT_PRD_MASK  (0xffff << UART_CR_URX_BIT_PRD_SHIFT)
 
 /* 0xC : data_config */
-#define UART_CR_UART_BIT_INV (1 << 0U)
+#define UART_CR_UART_BIT_INV      (1 << 0U)
 
 #if !defined(BL702L)
 /* 0x10 : utx_ir_position */
@@ -366,5 +367,6 @@
 /* 0x8C : uart_fifo_rdata */
 #define UART_FIFO_RDATA_SHIFT (0U)
 #define UART_FIFO_RDATA_MASK  (0xff << UART_FIFO_RDATA_SHIFT)
+
 
 #endif /* __HARDWARE_UART_H__ */

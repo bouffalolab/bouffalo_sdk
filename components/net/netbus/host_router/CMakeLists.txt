@@ -1,0 +1,3 @@
+sdk_add_subdirectory_ifdef(CONFIG_HOSTROUTER dev_net_mgmr)
+sdk_add_subdirectory_ifdef(CONFIG_HOSTROUTER dev_net_sdio)
+sdk_add_subdirectory_ifdef(CONFIG_HOSTROUTER dev_pkt_filter)

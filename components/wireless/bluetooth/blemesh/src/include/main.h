@@ -24,6 +24,18 @@ extern "C" {
 #include "include/access.h" /* Add by bouffalo */
 #include "prov.h" /* Add by bouffalo */
 
+/** Available authentication algorithms. */
+enum {
+	BT_MESH_PROV_AUTH_CMAC_AES128_AES_CCM,
+	BT_MESH_PROV_AUTH_HMAC_SHA256_AES_CCM,
+};
+
+/** OOB Type field values. */
+enum {
+	BT_MESH_STATIC_OOB_AVAILABLE = BIT(0), /**< Static OOB information available */
+	BT_MESH_OOB_AUTH_REQUIRED    = BIT(1)  /**< OOB authentication required */
+};
+
 /** Available Provisioning output authentication actions. */
 typedef enum {
 	BT_MESH_NO_OUTPUT       = 0,
@@ -60,6 +72,8 @@ typedef enum {
 	BT_MESH_PROV_OOB_NFC       = BIT(4),
 	BT_MESH_PROV_OOB_NUMBER    = BIT(5),
 	BT_MESH_PROV_OOB_STRING    = BIT(6),
+	BT_MESH_PROV_CERT_BASED    = BIT(7),
+	BT_MESH_PROV_RECORDS       = BIT(8),
 	/* 7 - 10 are reserved */
 	BT_MESH_PROV_OOB_ON_BOX    = BIT(11),
 	BT_MESH_PROV_OOB_IN_BOX    = BIT(12),
@@ -67,6 +81,27 @@ typedef enum {
 	BT_MESH_PROV_OOB_IN_MANUAL = BIT(14),
 	BT_MESH_PROV_OOB_ON_DEV    = BIT(15),
 } bt_mesh_prov_oob_info_t;
+
+#define PROC_RECORDS_CERTIFICATE_BASED_PROVISIONING_BASE_URI    0x0000
+#define PROC_RECORDS_DEVICE_CERTIFICATE                         0x0001
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_1                 0x0002
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_2                 0x0003
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_3                 0x0004
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_4                 0x0005
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_5                 0x0006
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_6                 0x0007
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_7                 0x0008
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_8                 0x0009
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_9                 0x000A
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_10                0x000B
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_11                0x000C
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_12                0x000D
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_13                0x000E
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_14                0x000F
+#define PROC_RECORDS_INTERMEDIATE_CERTIFICATE_15                0x0010
+#define PROC_RECORDS_COMPLETE_LOCAL_NAME                        0x0011
+#define PROC_RECORDS_APPEARANCE                                 0x0012
+#define PROC_RECORDS_MAX                                        0x0013
 
 /** Provisioning properties & capabilities. */
 struct bt_mesh_prov {
@@ -82,6 +117,9 @@ struct bt_mesh_prov {
 
 	/** Out of Band information field. */
 	bt_mesh_prov_oob_info_t oob_info;
+
+	/** Flag indicates whether unprovisioned devices support OOB public key */
+	bool oob_pub_key;
 
 	/** Static OOB value */
 	const u8_t *static_val;
@@ -239,6 +277,12 @@ struct bt_mesh_prov {
     int (*mod_sub_add_cb)(struct bt_mesh_model *model, 
                 u16_t elem_addr, u16_t group_addr);
 #endif /* CONFIG_BT_MESH_MOD_SUB_ADD_CB */
+#if defined(CONFIG_BLE_MESH_CERT_BASED_PROV)
+    int (*node_cert_based_prov_init_cb)(void);
+    int (*node_cert_based_prov_deinit_cb)(void);
+    int (*prov_record_req_cb)(struct net_buf_simple *buf, uint16_t record_id, uint16_t offset, uint16_t max_size);
+    int (*prov_records_get_cb)(struct net_buf_simple *buf);
+#endif /* CONFIG_BLE_MESH_CERT_BASED_PROV */
 };
 
 /** @brief Provide provisioning input OOB string.
@@ -262,6 +306,16 @@ int bt_mesh_input_string(const char *str);
  *  @return Zero on success or (negative) error code otherwise.
  */
 int bt_mesh_input_number(u32_t num);
+
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
+/** @brief Provide Device public key.
+ *
+ *  @param public_key Device public key.
+ *
+ *  @return Zero on success or (negative) error code otherwise.
+ */
+int bt_mesh_prov_remote_pub_key_set(const uint8_t public_key[64]);
+#endif /* CONFIG_AUTO_PTS */
 
 /** @brief Enable specific provisioning bearers
  *
@@ -337,6 +391,16 @@ bool bt_mesh_is_provisioned(void);
  * @{
  */
 
+/** Bluetooth Mesh feature states */
+enum bt_mesh_feat_state {
+	/** Feature is supported, but disabled. */
+	BT_MESH_FEATURE_DISABLED,
+	/** Feature is supported and enabled. */
+	BT_MESH_FEATURE_ENABLED,
+	/** Feature is not supported, and cannot be enabled. */
+	BT_MESH_FEATURE_NOT_SUPPORTED,
+};
+
 /* Primary Network Key index */
 #define BT_MESH_NET_PRIMARY                 0x000
 
@@ -352,9 +416,16 @@ bool bt_mesh_is_provisioned(void);
 #define BT_MESH_BEACON_DISABLED             0x00
 #define BT_MESH_BEACON_ENABLED              0x01
 
+#define BT_MESH_PRIV_BEACON_DISABLED        BT_MESH_FEATURE_DISABLED
+#define BT_MESH_PRIV_BEACON_ENABLED         BT_MESH_FEATURE_ENABLED
+
 #define BT_MESH_GATT_PROXY_DISABLED         0x00
 #define BT_MESH_GATT_PROXY_ENABLED          0x01
 #define BT_MESH_GATT_PROXY_NOT_SUPPORTED    0x02
+
+#define BT_MESH_PRIV_GATT_PROXY_DISABLED      BT_MESH_FEATURE_DISABLED
+#define BT_MESH_PRIV_GATT_PROXY_ENABLED       BT_MESH_FEATURE_ENABLED
+#define BT_MESH_PRIV_GATT_PROXY_NOT_SUPPORTED BT_MESH_FEATURE_NOT_SUPPORTED
 
 #define BT_MESH_FRIEND_DISABLED             0x00
 #define BT_MESH_FRIEND_ENABLED              0x01

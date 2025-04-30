@@ -88,7 +88,9 @@
 #else
 #define IR_FIFO_CONFIG_0_OFFSET (0x80) /* ir_fifo_config_0 */
 #define IR_FIFO_CONFIG_1_OFFSET (0x84) /* ir_fifo_config_1 */
+#if !defined(BL616)
 #define IR_FIFO_WDATA_OFFSET    (0x88) /* ir_fifo_wdata */
+#endif
 #if !defined(BL702L)
 #define IR_FIFO_RDATA_OFFSET    (0x8C) /* ir_fifo_rdata */
 #endif

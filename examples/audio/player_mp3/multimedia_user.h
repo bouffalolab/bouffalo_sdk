@@ -30,6 +30,7 @@
 #define CONFIG_STREAMER_MEM                  (1)
 #define CONFIG_STREAMER_DASH                 (0)
 #define CONFIG_STREAMER_ASHX                 (0)
+#define CONFIG_STREAMER_CUSTOM               (0)
 
 // xav config filtering
 /* Configuration switch for controlling audio speed feature.

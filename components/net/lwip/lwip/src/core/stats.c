@@ -46,6 +46,7 @@
 #include "lwip/debug.h"
 #if LWIP_TCP
 #include "lwip/tcp.h"
+#include "lwip/priv/tcp_priv.h"
 #endif
 #if LWIP_UDP
 #include "lwip/udp.h"
@@ -54,7 +55,12 @@
 #include "lwip/raw.h"
 #endif
 
+#if IP_NAPT
+#include "lwip/lwip_napt.h"
+#endif
+
 #include <string.h>
+#include "lwip/api.h"
 
 struct stats_ lwip_stats;
 
@@ -191,66 +197,176 @@ stats_display(void)
 
 #endif /* LWIP_STATS_DISPLAY */
 
+#if LWIP_TCP
+static void
+netstat_tcp_listen_pcbs_dump(union tcp_listen_pcbs_t *pcb_head)
+{
+  char ip_str[50];
+  char str_laddr[64];
+  uint32_t txq_size = 0;
+  uint32_t rxq_size = 0;
+  struct tcp_pcb_listen *lpcb;
+  const char *str_raddr = "-:*";
+
+  if (!pcb_head)
+    return;
+
+  /*
+   * NB: do not touch members after lpcb->local_port, because you don't
+   * know if this is a listen_pcb or a full tcp_pcb.
+   */
+  for (lpcb = pcb_head->listen_pcbs; lpcb != NULL; lpcb = lpcb->next) {
+    ipaddr_ntoa_r(&lpcb->local_ip, ip_str, sizeof(ip_str));
+    snprintf(str_laddr, sizeof(str_laddr) - 1,
+             "%s:%"U16_F, ip_str, lpcb->local_port);
+    LWIP_PLATFORM_DIAG(("%-10s%-16"U32_F"%-8"U32_F"%-25s%-25s%-15s\r\n",
+                IP_IS_V4(&lpcb->local_ip) ? "tcp" : "tcp6",
+                rxq_size, txq_size, str_laddr, str_raddr,
+                tcp_debug_state_str(lpcb->state)));
+  }
+}
+
+static void
+netstat_tcp_pcbs_dump(struct tcp_pcb *pcb_head)
+{
+  char ip_str[50];
+  char str_rxq[32];
+  uint32_t txq_size;
+  struct tcp_pcb *pcb;
+  uint32_t rxq_size, rxmem_size;
+  char str_laddr[64], str_raddr[64];
+
+  for (pcb = pcb_head; pcb != NULL; pcb = pcb->next) {
+    rxq_size = (pcb->refused_data ? pcb->refused_data->tot_len : 0);
+#if LWIP_NETCONN
+    if (tcp_owner_is_netconn(pcb)) {
+#if LWIP_SO_RCVBUF
+      struct netconn *netconn = pcb->callback_arg;
+      /* received in sequence, but not processed by application yet */
+      rxq_size += (netconn ? netconn->recv_avail : 0);
+#endif /* LWIP_SO_RCVBUF */
+    }
+#endif /* LWIP_NETCONN */
+#if TCP_QUEUE_OOSEQ
+    rxmem_size = rxq_size + (pcb->ooseq ? pcb->ooseq->len : 0);
+#else
+    rxmem_size = rxq_size;
+#endif
+
+    txq_size = (pcb->unsent ? pcb->unsent->len : 0) +
+        (pcb->unacked ? pcb->unacked->len : 0);
+
+    snprintf(str_rxq, sizeof(str_rxq) - 1, "%"U32_F"(%"U32_F")",
+             rxmem_size, rxq_size);
+    ipaddr_ntoa_r(&pcb->local_ip, ip_str, sizeof(ip_str));
+    snprintf(str_laddr, sizeof(str_laddr) - 1,
+             "%s:%"U16_F, ip_str, pcb->local_port);
+    ipaddr_ntoa_r(&pcb->remote_ip, ip_str, sizeof(ip_str));
+    snprintf(str_raddr, sizeof(str_raddr) - 1,
+             "%s:%"U16_F, ip_str, pcb->remote_port);
+    LWIP_PLATFORM_DIAG(("%-10s%-16s%-8"U32_F"%-25s%-25s%-15s\r\n",
+                IP_IS_V4(&pcb->local_ip) ? "tcp" : "tcp6",
+                str_rxq, txq_size, str_laddr, str_raddr,
+                tcp_debug_state_str(pcb->state)));
+  }
+}
+#endif /* LWIP_TCP */
+
+#ifdef LWIP_UDP
+static void
+netstat_udp_pcbs_dump(struct udp_pcb *pcb_head)
+{
+  char ip_str[50];
+  char str_laddr[64];
+  char str_raddr[64];
+  struct udp_pcb *pcb = pcb_head;
+
+  for (pcb = pcb_head; pcb != NULL; pcb = pcb->next) {
+    /**
+     * TODO an UDP connection is established if we saw data flows in two
+     * directions.
+     */
+    const char *state = "-";
+    uint32_t txq_size = 0, rxq_size = 0;
+
+#if LWIP_NETCONN
+    if (udp_owner_is_netconn(pcb)) {
+#if LWIP_SO_RCVBUF
+      struct netconn *netconn = pcb->recv_arg;
+      /* received but not processed by application yet */
+      rxq_size = (netconn ? netconn->recv_avail : 0);
+#endif /* LWIP_SO_RCVBUF */
+    }
+#endif /* LWIP_NETCONN */
+    ipaddr_ntoa_r(&pcb->local_ip, ip_str, sizeof(ip_str));
+    snprintf(str_laddr, sizeof(str_laddr) - 1, "%s:%"U16_F,
+             ip_str, pcb->local_port);
+    ipaddr_ntoa_r(&pcb->remote_ip, ip_str, sizeof(ip_str));
+    snprintf(str_raddr, sizeof(str_raddr) - 1, "%s:%"U16_F,
+            ip_str, pcb->remote_port);
+    LWIP_PLATFORM_DIAG(("%-10s%-8"U32_F"%-8"U32_F"%-25s%-25s%-15s\r\n",
+                IP_IS_V4(&pcb->local_ip) ? "udp" : "udp6",
+                rxq_size, txq_size, str_laddr, str_raddr, state));
+  }
+}
+#endif /* LWIP_UDP */
+
+#if LWIP_RAW
+static void
+netstat_raw_pcbs_dump(struct raw_pcb *pcb_head)
+{
+  struct raw_pcb *pcb;
+  char str_laddr[50], str_raddr[50];
+
+  for (pcb = pcb_head; pcb != NULL; pcb = pcb->next) {
+    ipaddr_ntoa_r(&pcb->local_ip, str_laddr, sizeof(str_laddr));
+    ipaddr_ntoa_r(&pcb->remote_ip, str_raddr, sizeof(str_raddr));
+    LWIP_PLATFORM_DIAG(("%-10s%-25s%-25s%-10d",
+                IP_IS_V4(&pcb->local_ip) ? "raw" : "raw6",
+                str_laddr, str_raddr, pcb->protocol));
+  }
+}
+#endif /* LWIP_RAW */
+
 void
 stats_netstat(void *ctx)
 {
   LWIP_UNUSED_ARG(ctx);
   LWIP_ASSERT_CORE_LOCKED();
 
-  int i                    = 0;
-  char ip_str[128]         = {0};
-#if LWIP_TCP
-  struct tcp_pcb **const*_tcp_pcb_list = NULL;
-  struct tcp_pcb *curr_tcp = NULL;
-  int tcp_pcb_num = tcp_get_pcbs(&_tcp_pcb_list);
-#endif
-#if LWIP_UDP
-  struct udp_pcb *_udp_pcbs = udp_get_pcbs();
-  struct udp_pcb *curr_udp = NULL; 
-#endif
-#if LWIP_RAW
-  struct raw_pcb *_raw_pcbs = raw_get_pcbs();
-  struct raw_pcb *curr_raw = NULL; 
-#endif
-  LWIP_PLATFORM_DIAG(("netstat tools\r\n"));
+  /* title strings */
+  const char *ts_proto = "Proto";
+  const char *ts_rxq = "Recv-Q";
+  const char *ts_txq = "Send-Q";
+  const char *ts_laddr = "Local Address";
+  const char *ts_raddr = "Foreign Address";
+  const char *ts_state = "State";
 
-  /* foreach tcp/udp/raw control block */
 #if LWIP_TCP
-  // TCP
-  for (i=0; i<tcp_pcb_num; i++) { 
-    // foreach pcb lists
-    for (curr_tcp = *_tcp_pcb_list[i]; curr_tcp != NULL; curr_tcp = curr_tcp->next) { 
-      ipaddr_ntoa_r(&curr_tcp->local_ip, ip_str, sizeof ip_str);
-      LWIP_PLATFORM_DIAG(("TCP\t%s:%"U16_F"\t", ip_str, curr_tcp->local_port));
-      
-      ipaddr_ntoa_r(&curr_tcp->remote_ip, ip_str, sizeof ip_str);
-      LWIP_PLATFORM_DIAG(("%s:%"U16_F"\t%s\r\n", ip_str, curr_tcp->remote_port, 
-            tcp_debug_state_str(curr_tcp->state)));
-    }
-  }
-#endif
-  
+  LWIP_PLATFORM_DIAG(("%-10s%-16s%-8s%-25s%-25s%-15s\r\n",
+              ts_proto, ts_rxq, ts_txq, ts_laddr, ts_raddr, ts_state));
+  netstat_tcp_listen_pcbs_dump(&tcp_listen_pcbs);
+  netstat_tcp_pcbs_dump(tcp_bound_pcbs);
+  netstat_tcp_pcbs_dump(tcp_active_pcbs);
+  netstat_tcp_pcbs_dump(tcp_tw_pcbs);
+  LWIP_PLATFORM_DIAG(("\r\nNote: tcp Recv-Q A(B), A - recv buffer size, "
+                      "B - recv queue size\r\n"));
+  LWIP_PLATFORM_DIAG(("\r\n\r\n"));
+#endif /* LWIP_TCP */
+
 #if LWIP_UDP
-  // UDP
-  for (curr_udp = _udp_pcbs; curr_udp != NULL; curr_udp = curr_udp->next) {
-    ipaddr_ntoa_r(&curr_udp->local_ip, ip_str, sizeof ip_str);
-    LWIP_PLATFORM_DIAG(("UDP\t%s:%"U16_F"\t", ip_str, curr_udp->local_port));
-    
-    ipaddr_ntoa_r(&curr_udp->remote_ip, ip_str, sizeof ip_str);
-    LWIP_PLATFORM_DIAG(("%s:%"U16_F"\r\n", ip_str, curr_udp->remote_port));
-  }
+  LWIP_PLATFORM_DIAG(("%-10s%-8s%-8s%-25s%-25s%-15s\r\n",
+              ts_proto, ts_rxq, ts_txq, ts_laddr, ts_raddr, ts_state));
+  netstat_udp_pcbs_dump(udp_pcbs);
+  LWIP_PLATFORM_DIAG(("\r\n\r\n"));
 #endif
 
 #if LWIP_RAW
-  // RAW
-  for (curr_raw = _raw_pcbs; curr_raw != NULL; curr_raw = curr_raw->next) {
-    ipaddr_ntoa_r(&curr_raw->local_ip, ip_str, sizeof ip_str);
-    LWIP_PLATFORM_DIAG(("RAW\t%s\t", ip_str));
-    
-    ipaddr_ntoa_r(&curr_raw->remote_ip, ip_str, sizeof ip_str);
-    LWIP_PLATFORM_DIAG(("%s\t%d\r\n", ip_str, curr_raw->protocol));
-  }
-#endif
+  LWIP_PLATFORM_DIAG(("%-10s%-25s%-25s%-10s\r\n",
+              ts_proto, ts_laddr, ts_raddr, "protocol"));
+  netstat_raw_pcbs_dump(raw_get_pcbs());
+  LWIP_PLATFORM_DIAG(("\r\n\r\n"));
+#endif /* LWIP_RAW */
 }
 
 #endif /* LWIP_STATS */

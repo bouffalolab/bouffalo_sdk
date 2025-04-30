@@ -25,7 +25,7 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define BFLB_GLB_CGEN1_BASE (0x40000000 + 0x24)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define BFLB_GLB_CGEN1_BASE (0x20000000 + 0x584)
 #define BFLB_GLB_CGEN2_BASE (0x20000000 + 0x588)
 #endif
@@ -40,6 +40,7 @@
 #define PERIPHERAL_CLOCK_SEC_ENABLE()                             \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
+        regval |= (1 << 3);                                       \
         regval |= (1 << 4);                                       \
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
@@ -51,7 +52,7 @@
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
 
-#if defined(BL606P) || defined(BL808)
+#if defined(BL808)
 #define PERIPHERAL_CLOCK_DMA1_ENABLE()
 #define PERIPHERAL_CLOCK_DMA2_ENABLE()
 #endif
@@ -70,11 +71,12 @@
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
 
-#if defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL808)
 #define PERIPHERAL_CLOCK_UART2_ENABLE()
 #endif
 
-#if defined(BL606P) || defined(BL808)
+
+#if defined(BL808)
 #define PERIPHERAL_CLOCK_SPI0_1_ENABLE()                          \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
@@ -97,7 +99,7 @@
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
 
-#if defined(BL606P) || defined(BL808) || defined(BL616) || defined(BL628)
+#if defined(BL808) || defined(BL616)
 #define PERIPHERAL_CLOCK_I2C1_ENABLE()                            \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
@@ -135,14 +137,14 @@
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
 
-#if defined(BL606P) || defined(BL808)
+#if defined(BL808)
 #define PERIPHERAL_CLOCK_CAN_UART2_ENABLE()                       \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
         regval |= (1 << 26);                                      \
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
-#elif defined(BL616) || defined(BL628)
+#elif defined(BL616)
 #define PERIPHERAL_CLOCK_CAN_ENABLE()                             \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
@@ -158,32 +160,33 @@
         regval |= (1 << 28);                                      \
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
-
-#define PERIPHERAL_CLOCK_I2S_ENABLE()                             \
-    do {                                                          \
-        volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
-        regval |= (1 << 26);                                      \
-        putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
-    } while (0)
-
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define PERIPHERAL_CLOCK_USB_ENABLE()                             \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
         regval |= (1 << 13);                                      \
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
+#endif
 
+
+#if defined(BL702)
+#define PERIPHERAL_CLOCK_I2S_ENABLE()                             \
+    do {                                                          \
+        volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
+        regval |= (1 << 26);                                      \
+        putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
+    } while (0)
+#elif defined(BL616) || defined(BL808)
 #define PERIPHERAL_CLOCK_I2S_ENABLE()                             \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
         regval |= (1 << 27);                                      \
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
-
 #endif
 
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#if defined(BL616) || defined(BL808)
 #define PERIPHERAL_CLOCK_SDH_ENABLE()                             \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN2_BASE); \
@@ -199,7 +202,7 @@
         regval |= (1 << 13);                                      \
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
-#elif defined(BL616) || defined(BL606P) || defined(BL808)
+#elif defined(BL616) || defined(BL808)
 #define PERIPHERAL_CLOCK_EMAC_ENABLE()                            \
     do {                                                          \
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN2_BASE); \
@@ -214,6 +217,16 @@
         volatile uint32_t regval = getreg32(BFLB_GLB_CGEN2_BASE); \
         regval |= (1 << 21);                                      \
         putreg32(regval, BFLB_GLB_CGEN2_BASE);                    \
+    } while (0)
+#endif
+
+
+#if defined(BL616)
+#define PERIPHERAL_CLOCK_DBI_ENABLE()                             \
+    do {                                                          \
+        volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
+        regval |= (1 << 24);                                      \
+        putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
 #endif
 

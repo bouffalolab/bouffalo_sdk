@@ -81,7 +81,7 @@ extern "C" {
  * @brief KYS Interrupt Status type definition
  *
  */
-typedef enum {
+enum {
     KYS_INT_KS_DONE,          /*!< keyscan done status */
     KYS_INT_KEYFIFO_FULL,     /*!< keycode FIFO full detection */
     KYS_INT_KEYFIFO_HALF,     /*!< keycode FIFO half detection */
@@ -89,14 +89,16 @@ typedef enum {
     KYS_INT_KEYFIFO_NONEMPTY, /*!< keycode FIFO nonempty detection */
     KYS_INT_GHOST_DET,        /*!< ghost key event detection status (keycode=0xF5 is ghost key) */
     KYS_INT_ALL,
-} KYS_INT_Type;
+};
+typedef BL_ENUM_Type KYS_INT_Type;
 
-typedef enum {
+enum {
     KYS_INT_KS_DONE_CLR = 7,
     KYS_INT_KEYFIFO_CLR = 8,
     KYS_INT_GHOST_CLR = 12,
     KYS_INT_CLR_ALL,
-} KYS_INT_CLR_Type;
+};
+typedef BL_ENUM_Type KYS_INT_CLR_Type;
 
 /**
  *  @brief KYS configuration structure type definition

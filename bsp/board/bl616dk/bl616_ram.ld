@@ -71,6 +71,8 @@ SECTIONS
 
         *(.text)
         *(.text.*)
+        *(.rodata)
+        *(.rodata*)
 
         /* section information for shell */
         . = ALIGN(4);
@@ -195,6 +197,10 @@ SECTIONS
         . = ALIGN(4);
         __psram_data_start__ = .;
 
+        KEEP(*(.psram_code*))
+
+        . = ALIGN(32);
+
         KEEP(*(.psram_data*))
 
         . = ALIGN(4);
@@ -267,7 +273,7 @@ SECTIONS
 
     __psram_limit = ORIGIN(ram_psram) + LENGTH(ram_psram);
     ASSERT(__psram_limit - __psram_heap_base >= psram_min_size, "psram heap region overflow")
- 
+
     .wifibss (NOLOAD) :
     {
       PROVIDE( __wifi_bss_start = ADDR(.wifibss) );

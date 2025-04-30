@@ -42,9 +42,9 @@ Functions for manipulating input bitstreams.
 PRIVATE void OI_BITSTREAM_ReadInit(OI_BITSTREAM *bs,
                                    const OI_BYTE *buffer)
 {
-    bs->value = ((OI_INT32)buffer[0] << 16) | ((OI_INT32)buffer[1] << 8) | (buffer[2]);
-    bs->ptr.r = buffer + 3;
-    bs->bitPtr = 8;
+    bs->value = 0;
+    bs->ptr.r = buffer;
+    bs->bitPtr = 32;
 }
 
 PRIVATE OI_UINT32 OI_BITSTREAM_ReadUINT(OI_BITSTREAM *bs, OI_UINT bits)

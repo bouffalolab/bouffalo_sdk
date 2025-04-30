@@ -334,7 +334,7 @@ static int ws_write(recio_t *io, uint8_t *buffer, int length, int timeoutms)
 	if (p_sendmtx) {
 		msp_mutex_lock(p_sendmtx, MSP_WAIT_FOREVER);
 	}
-    strcpy((char *)tmpbuf, priv->save_name);
+    strlcpy((char *)tmpbuf, priv->save_name, slen + 1);
     memcpy(tmpbuf + strlen(priv->save_name) + 1, buffer, length);
     ret = ws_send_bin(sock, tmpbuf, slen);
 	if (ret == rws_false) {

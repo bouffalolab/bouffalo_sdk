@@ -1,7 +1,7 @@
 /*  Bluetooth Mesh */
 
 #include <string.h>
-#include <sys/errno.h>
+#include <bt_errno.h>
 
 #include "mesh.h"
 #include "lpn.h"
@@ -157,8 +157,8 @@ int bt_mesh_local_model_bind_direct(u16_t net_idx, u16_t mod_app_idx)
 {
 	int i, j, err = 0;
 	const struct bt_mesh_comp* dev_comp = bt_mesh_comp_get();
-	u16_t addr = bt_mesh_primary_addr();
-	u8_t status;
+	//u16_t addr = bt_mesh_primary_addr();
+	//u8_t status;
 
 	for (i = 0; i < dev_comp->elem_count; i++) {
 		struct bt_mesh_elem *elem = &dev_comp->elem[i];

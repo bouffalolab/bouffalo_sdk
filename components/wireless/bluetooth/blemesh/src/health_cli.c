@@ -8,7 +8,7 @@
 
 #include <zephyr.h>
 #include <string.h>
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <stdbool.h>
 #include <types.h>
 #include <util.h>
@@ -24,7 +24,7 @@
 
 #include "net.h"
 #include "foundation.h"
-#include "errno.h"
+#include "bt_errno.h"
 
 static s32_t msg_timeout = K_SECONDS(2);
 

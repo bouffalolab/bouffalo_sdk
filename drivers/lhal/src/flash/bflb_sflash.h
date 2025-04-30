@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    bl628_sflah.h
+  * @file    bflb_sflah.h
   * @version V1.0
   * @date
   * @brief   This file is the standard driver header file
@@ -51,7 +51,7 @@
  */
 typedef struct
 {
-    uint8_t  io_mode;                   /*!< Serail flash interface mode,bit0-3:IF mode,bit4:unwrap,bit5:32-bits addr mode support */
+    uint8_t  io_mode;                   /*!< Serial flash interface mode,bit0-3:IF mode,bit4:unwrap,bit5:32-bits addr mode support */
     uint8_t  c_read_support;            /*!< Support continuous read mode,bit0:continuous read mode support,bit1:read mode cfg */
     uint8_t  clk_delay;                 /*!< SPI clock delay,bit0-3:delay,bit4-6:pad delay */
     uint8_t  clk_invert;                /*!< SPI clock phase invert,bit0:clck invert,bit1:rx invert,bit2-4:pad delay,bit5-7:pad delay */
@@ -170,7 +170,7 @@ struct sflash_sec_reg_cfg
 extern "C" {
 #endif
 
-#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
+#if defined(BL616) || defined(BL808)
 void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg, const struct sf_ctrl_bank2_cfg *p_bank2_cfg);
 #else
 void bflb_sflash_init(const struct sf_ctrl_cfg_type *p_sf_ctrl_cfg);

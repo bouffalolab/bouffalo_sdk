@@ -4,8 +4,9 @@
 #include "image_sensor.h"
 #include "board.h"
 
-#define CROP_WQVGA_X        416
-#define CROP_WQVGA_Y        240
+#define CROP_WQVGA_X                416
+#define CROP_WQVGA_Y                240
+#define CAM_OUTPUT_BUFFER_SZIE      (CROP_WQVGA_X * CROP_WQVGA_Y * 2 * 2)
 #define CAM_FRAME_COUNT_USE 50
 
 static struct bflb_device_s *i2c0;
@@ -41,8 +42,13 @@ int main(void)
     cam_config.with_mjpeg = false;
     cam_config.input_source = CAM_INPUT_SOURCE_DVP;
     cam_config.output_format = CAM_OUTPUT_FORMAT_AUTO;
-    cam_config.output_bufaddr = BFLB_PSRAM_BASE;
-    cam_config.output_bufsize = CROP_WQVGA_X * CROP_WQVGA_Y * 8;
+    cam_config.output_bufaddr = (uint32_t)memalign(32, CAM_OUTPUT_BUFFER_SZIE);
+    if (cam_config.output_bufaddr == 0) {
+        printf("\r\nError! Can't allocate memory!\r\n");
+        while (1) {
+        }
+    }
+    cam_config.output_bufsize = CAM_OUTPUT_BUFFER_SZIE;
 
     bflb_cam_init(cam0, &cam_config);
     bflb_cam_start(cam0);

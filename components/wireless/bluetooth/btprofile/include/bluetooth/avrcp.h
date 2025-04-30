@@ -16,6 +16,8 @@ extern "C" {
 
 #include <avctp.h>
 
+
+
 /** AVRCP ctype */
 #define AVRCP_CONTROL           0x00
 #define AVRCP_STATUS            0x01
@@ -166,10 +168,19 @@ struct bt_avrcp {
 };
 
 struct avrcp_callback {
-	void (*chain)(struct bt_conn *conn, uint8_t state);
-	void (*abs_vol)(uint8_t vol);
-	void (*play_status)(uint32_t song_len, uint32_t song_pos, uint8_t status);
-	void (*tg_register_notification_event)(uint8_t evt, uint8_t *para,uint16_t para_len);
+    void (*chain)(struct bt_conn *conn, uint8_t state);
+    void (*abs_vol)(uint8_t vol);
+    void (*play_status)(uint32_t song_len, uint32_t song_pos, uint8_t status);
+    void (*tg_reg_ntf_evt)(uint8_t evt, uint8_t *para,uint16_t para_len);
+    void (*rp_passthrough)(uint8_t released,uint8_t option_id);
+    void (*passthrough_handler)(uint8_t released,uint8_t option_id);
+};
+
+struct avrcp_media_player {
+    uint32_t        position;
+    uint32_t        duration;
+    uint8_t         status; 
+    int8_t          volume;
 };
 
 int bt_avrcp_init(void);
@@ -181,10 +192,14 @@ int avrcp_pasthr_cmd(struct bt_avctp *session, uint8_t released, uint8_t opid);
 int avrcp_get_play_status_cmd(struct bt_avctp *session);
 int avrcp_reg_not_cmd(struct bt_avctp *session, uint8_t event);
 
+void avrcp_set_player_parameter(uint8_t status,uint32_t position,uint32_t duration);
 int avrcp_change_volume(uint8_t vol);
 int avrcp_hdl_set_abs_vol(struct bt_avctp *session, uint8_t trans_lab, uint8_t *params);
 int avrcp_hdl_reg_not_vol(struct bt_avctp *session, uint8_t trans_lab, uint8_t rsp_type);
-
+int avrcp_set_absvol_cmd(struct bt_avctp *session, uint8_t avrcp_vol);
+int avrcp_send_volume_notification(struct bt_avctp *session);
+int avrcp_response_play_status(struct bt_avctp *session, uint8_t trans_lab);
+int avrcp_reg_play_status_notification(struct bt_avctp *session);
 #ifdef __cplusplus
 }
 #endif

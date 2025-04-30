@@ -21,9 +21,9 @@ MEMORY
 {
     fw_header_memory  (rx)  : ORIGIN = 0x23000000 - 0x1000, LENGTH = 4K
     xip_memory  (rx)  : ORIGIN = 0x23000000, LENGTH = 1024K
-    itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 12K
-    dtcm_memory (rx)  : ORIGIN = 0x42017000, LENGTH = 4K
-    ram_memory  (!rx) : ORIGIN = 0x42018000, LENGTH = 96K
+    itcm_memory (rx)  : ORIGIN = 0x22014000, LENGTH = 14K
+    dtcm_memory (rx)  : ORIGIN = 0x42017800, LENGTH = 4K
+    ram_memory  (!rx) : ORIGIN = 0x42018800, LENGTH = 94K
     hbn_memory  (rx)  : ORIGIN = 0x40010000, LENGTH = 0xE00     /* hbn ram 4K used 3.5K*/
 }
 
@@ -78,6 +78,18 @@ SECTIONS
         *(.srodata)
         *(.srodata.*)
 
+        /* global object for c++ */
+        . = ALIGN(4);
+        __preinit_array_start = .;
+        KEEP (*(.preinit_array))
+        __preinit_array_end = .;
+
+        . = ALIGN(4);
+        __init_array_start = .;
+        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
+        KEEP (*(.init_array))
+        __init_array_end = .;
+
         /* _dump_sections for bflb_coredump.c*/
         . = ALIGN(4);
         PROVIDE( _dump_sections = ABSOLUTE(.));
@@ -95,6 +107,13 @@ SECTIONS
 
         . = ALIGN(4);
         __text_code_end__ = .;
+    } > xip_memory
+
+    .build_id :
+    {
+        . = ALIGN(4);
+        elf_build_id = ABSOLUTE(.) + 16;
+        *(.note.gnu.build-id)
     } > xip_memory
 
     . = ALIGN(4);
@@ -130,13 +149,18 @@ SECTIONS
 
     .hbn_ram_region : AT (__hbn_load_addr)
     {
-        . = ALIGN(4);
-        __hbn_ram_start__ = .;
+        __hbn_ram_start__ = ADDR(.hbn_ram_region);
+        __hbn_ram_end__ = ADDR(.hbn_ram_region) + SIZEOF(.hbn_ram_region);
+
+        /* put bl702_rf_private.o in hbnram to avoid ocram conflict during rf calibration */
+        *libphyrf.a:bl702_rf_private.c.o*(.retention .retention_noinit)
+        *libphyrf.a:bl702_rf_private.c.o*(.sdata.* .sbss.* .bss.* COMMON)
+
         *(.hbn_code.*)
         *(.hbn_data.*)
-        . = ALIGN(4);
-        __hbn_ram_end__ = .;
     } > hbn_memory
+    
+    ASSERT(SIZEOF(.hbn_ram_region) <= 0x400, ".hbn_ram_region overlapped with IOT2LP_PARA(refer to bl_lp.h)")
 
     __dtcm_load_addr = __hbn_load_addr + SIZEOF(.hbn_ram_region);
 

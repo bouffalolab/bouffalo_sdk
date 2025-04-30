@@ -433,15 +433,17 @@ uint32_t mringbuffer_get_index(struct mringbuffer *rb, uint32_t r_index)
         } else if (ar <= wi) {
             get_size = rb->buffer_size - (ri - ar);
         } else {
+            get_size = rb->buffer_size - (ri - wi);
             // under run because of no enough data. wireless network signal instability? or enable wifi/bt but no coex?
-            return -2;
+            //return -2;
         }
     } else {
         if ((ar > ri) && (ar <= wi)) {
             get_size = ar - ri;
         } else {
+            get_size = wi -ri;
             // under run because of no enough data. wireless network signal instability? or enable wifi/bt but no coex?
-            return -3;
+            //return -3;
         }
     }
 

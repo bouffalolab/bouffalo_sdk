@@ -133,6 +133,24 @@ struct bt_hfp_hf_cb {
 	 *  @param value battery indicator value received from the AG.
 	 */
 	void (*battery)(struct bt_conn *conn, uint32_t value);
+	/** VGS indicator Callback
+	 *
+	 *  This callback vgs indicator value to the application
+	 *
+	 *  @param conn Connection object.
+	 *  @param value VGS.
+	 */
+	void (*vgs_indication)(struct bt_conn *conn, uint32_t value);
+		/** VGM indicator Callback
+	 *
+	 *  This callback vgs indicator value to the application
+	 *
+	 *  @param conn Connection object.
+	 *  @param value VGS.
+	 */
+	void (*vgm_indication)(struct bt_conn *conn, uint32_t value);
+
+
 	/** HF incoming call Ring indication callback to application
 	 *
 	 *  If this callback is provided it will be called whenever there

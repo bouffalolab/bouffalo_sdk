@@ -394,15 +394,16 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_System_CLK(GLB_PLL_XTAL_Type xtalType, GL
 __WEAK
 BL_Err_Type ATTR_CLOCK_SECTION System_Core_Clock_Update_From_RC32M(void)
 {
-    SF_Ctrl_Cfg_Type sfCtrlCfg = {
+    struct sf_ctrl_cfg_type sfCtrlCfg = {
         .owner = SF_CTRL_OWNER_IAHB,
-        .clkDelay = 1,
-        .clkInvert = 1,
-        .rxClkInvert = 1,
-        .doDelay = 0,
-        .diDelay = 0,
-        .oeDelay = 0,
+        .clk_delay = 1,
+        .clk_invert = 1,
+        .rx_clk_invert = 1,
+        .do_delay = 0,
+        .di_delay = 0,
+        .oe_delay = 0,
     };
+
     /* Use RC32M as PLL ref source to set up PLL to 160M */
     GLB_Set_System_CLK(GLB_PLL_XTAL_RC32M, GLB_SYS_CLK_PLL160M);
     /* Flash controller also need changes since system (bus) clock changed */

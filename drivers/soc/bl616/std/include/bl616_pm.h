@@ -50,7 +50,8 @@ void PDS_WAKEUP_IRQ(void);
 void pm_rc32k_auto_cal(void);
 void pm_rc32k_auto_cal_init(void);
 void hal_pm_ldo11_use_ext_dcdc(void);
-
+void hal_pm_ldo11_cfg(uint8_t soc_v, uint8_t rt_v, uint8_t aon_v);
+void hal_pm_ldo11_cfg_get(uint8_t *soc_v, uint8_t *rt_v, uint8_t *aon_v);
 #ifdef __cplusplus
 }
 #endif

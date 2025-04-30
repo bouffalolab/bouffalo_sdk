@@ -90,7 +90,7 @@ static void _codec_output_task(void *arg)
     //output_config.positive_pin = OUTPUT_POSITIVE_PIN;
     //output_config.pa_pin = 4;
     xcodec_output_config(&codec_output_ch, &output_config);
-    xcodec_output_analog_gain(&codec_output_ch, 50);
+    xcodec_output_digital_gain(&codec_output_ch, 50);
     xcodec_output_buffer_reset(&codec_output_ch);
 
     xcodec_output_link_dma(&codec_output_ch, dma_hdl_out);
@@ -101,6 +101,8 @@ static void _codec_output_task(void *arg)
         res = xcodec_output_write_async(&codec_output_ch, wa_16K_16bit_mono_pcm + output_num, wa_16K_16bit_mono_pcm_len - output_num);
         msp_msleep(5);
         output_num += res;
+        if(0 == res && (wa_16K_16bit_mono_pcm_len <= output_num + 32))
+            break;
         //printf("res:%d, output_num:%d, src:%x\r\n", res, output_num, *(uint32_t *)0x2000C100);
     }
     printf("stop code output\r\n");

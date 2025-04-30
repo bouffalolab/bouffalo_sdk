@@ -1,11 +1,9 @@
 #include "bflb_mtimer.h"
 #include "bflb_pwm_v2.h"
 #include "bflb_clock.h"
+#include "bflb_gpio.h"
 #include "board.h"
 #include "math.h"
-#include "bl616_glb.h"
-#include "bl616_glb_gpio.h"
-#include "bl616_gpio.h"
 
 #define TEST_EN                     (1)
 
@@ -20,6 +18,7 @@
 #define PWM_PIN_V_L                 (GPIO_PIN_27)
 #define PWM_PIN_W_H                 (GPIO_PIN_28)
 #define PWM_PIN_W_L                 (GPIO_PIN_29)
+#define TEST_PIN                    (GPIO_PIN_17)
 
 #define PWM_MATH_ROUND_DEGREE_WIDTH (16)
 #define PWM_MATH_SIN_TAB_CNT_WIDTH  (6)
@@ -78,18 +77,9 @@ void pwm_calc_threshold(uint16_t *threL, uint16_t *threH, uint16_t angle)
 void pwm_isr(int irq, void *arg)
 {
 #if TEST_EN
-    *(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG17_OFFSET) = 0x00400B6A | (1 << 24);
+    bflb_gpio_set(gpio, TEST_PIN);
 #endif
-#if TEST_EN
-    static int flag = 0;
-    if (flag & 1) {
-        *(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG16_OFFSET) = 0x00400B6A;
-    } else {
-        *(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG16_OFFSET) = 0x00400B6A | (1 << 24);
-    }
-    flag ^= 1;
 
-#endif
     uint16_t threL, threH;
 
     bflb_pwm_v2_int_clear(pwm, PWM_INTSTS_PERIOD);
@@ -109,7 +99,7 @@ void pwm_isr(int irq, void *arg)
     // printf("w:%d,%d,%d\n\n", angle_w, threL, threH);
     bflb_pwm_v2_channel_set_threshold(pwm, PWM_TRI_CH_W, threL, threH);
 #if TEST_EN
-    *(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG17_OFFSET) = 0x00400B6A;
+    bflb_gpio_reset(gpio, TEST_PIN);
 #endif
 }
 
@@ -140,7 +130,7 @@ void peri_pwm_init(void)
     bflb_gpio_init(gpio, PWM_PIN_V_L, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, PWM_PIN_W_H, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, PWM_PIN_W_L, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
+    board_bldc_pre_init();
     bflb_pwm_v2_init(pwm, &cfg);
     bflb_pwm_v2_channel_init(pwm, PWM_TRI_CH_U, &ch_cfg);
     bflb_pwm_v2_channel_init(pwm, PWM_TRI_CH_V, &ch_cfg);

@@ -1,18 +1,22 @@
-if(NOT DEFINED ENV{BL_SDK_BASE})
-    message( "please set BL_SDK_BASE in your system environment")
-endif()
 
 if(MINGW OR CYGWIN OR WIN32)
 SET(CMAKE_SYSTEM_NAME Generic)
-elseif(UNIX)
-SET(CMAKE_SYSTEM_NAME Linux)
 elseif(APPLE)
 SET(CMAKE_SYSTEM_NAME Darwin)
+elseif(UNIX)
+SET(CMAKE_SYSTEM_NAME Linux)
 endif()
 SET(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_SYSTEM_PROCESSOR RISCV)
 
-set(BL_SDK_BASE $ENV{BL_SDK_BASE})
+if(NOT DEFINED ENV{BL_SDK_BASE})
+    message(FATAL_ERROR "please set BL_SDK_BASE in your system environment")
+endif()
+
+get_filename_component(BL_SDK_BASE $ENV{BL_SDK_BASE} REALPATH)
+if(NOT EXISTS ${BL_SDK_BASE})
+    message(FATAL_ERROR "BL_SDK_BASE:${BL_SDK_BASE} does not exist")
+endif()
 
 set(build_dir ${CMAKE_CURRENT_BINARY_DIR}/build_out)
 set(PROJECT_SOURCE_DIR ${BL_SDK_BASE})

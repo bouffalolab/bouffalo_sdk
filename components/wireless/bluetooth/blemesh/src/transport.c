@@ -7,7 +7,7 @@
  */
 
 #include <zephyr.h>
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <string.h>
 #include <types.h>
 #include <util.h>
@@ -39,7 +39,6 @@
 #include "util.h"
 //#endif
 #include "mesh_config.h"
-
 #if defined(CONFIG_AUTO_PTS)
 #include "testing.h"
 #endif
@@ -531,7 +530,7 @@ static int send_seg(struct bt_mesh_net_tx *net_tx, struct net_buf_simple *sdu,
 		tx->ttl = net_tx->ctx->send_ttl;
 	}
 
-	#if defined(CONFIG_AUTO_PTS)
+	#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 	BT_PTS("SeqZero 0x%04x (segs: %u)",
 		(u16_t)(tx->seq_auth & TRANS_SEQ_ZERO_MASK), tx->nack_count);
 	#else
@@ -565,7 +564,7 @@ static int send_seg(struct bt_mesh_net_tx *net_tx, struct net_buf_simple *sdu,
 		len = MIN(sdu->len, seg_len(!!ctl_op));
 		memcpy(buf, net_buf_simple_pull_mem(sdu, len), len);
 
-		#if defined(CONFIG_AUTO_PTS)
+		#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 		BT_PTS("seg %u: %s", seg_o, bt_hex(buf, len));
 		#else
 		BT_DBG("seg %u: %s", seg_o, bt_hex(buf, len));
@@ -632,7 +631,7 @@ static int send_seg(struct bt_mesh_net_tx *net_tx, struct net_buf_simple *sdu,
 	return 0;
 }
 
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 static struct bt_mesh_app_key *app_key_alloc(uint16_t app_idx)
 {
 	struct bt_mesh_app_key *app_key = NULL;
@@ -1180,10 +1179,10 @@ static int trans_ack(struct bt_mesh_net_rx *rx, u8_t hdr,
 
 #if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 	BT_PTS("[PTS]   - SeqZero: 0x%04X", seq_zero);
-	BT_PTS("[PTS]   - BlockAck: 0x%08X", ack);
+	BT_PTS("[PTS]   - BlockAck: 0x%08lX", ack);
 #endif
 
-	BT_DBG("OBO %u seq_zero 0x%04x ack 0x%08x", obo, seq_zero, ack);
+	BT_DBG("OBO %u seq_zero 0x%04x ack 0x%08lx", obo, seq_zero, ack);
 
 	tx = seg_tx_lookup(seq_zero, obo, rx->ctx.addr);
 	if (!tx) {
@@ -1282,7 +1281,7 @@ static int ctl_recv(struct bt_mesh_net_rx *rx, u8_t hdr,
 		return trans_heartbeat(rx, buf);
 	}
 
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
     BT_PTS("rx->local_match[%x]", rx->local_match);
 #endif /* CONFIG_AUTO_PTS */
 	/* Only acks and heartbeats may need processing without local_match */
@@ -1291,7 +1290,7 @@ static int ctl_recv(struct bt_mesh_net_rx *rx, u8_t hdr,
 	}
 
 	if (IS_ENABLED(CONFIG_BT_MESH_FRIEND) && !bt_mesh_lpn_established()) {
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 	BT_PTS("ctl_op[%x]", ctl_op);
 #endif /* CONFIG_AUTO_PTS */
 		switch (ctl_op) {
@@ -1353,10 +1352,10 @@ static int trans_unseg(struct net_buf_simple *buf, struct bt_mesh_net_rx *rx,
 
 	if (bt_mesh_rpl_check(rx, NULL)) {
 #if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
-		BT_PTS("[PTS] Replayed message (SEQ = 0x%06X) ignored", rx->seq);
+		BT_PTS("[PTS] Replayed message (SEQ = 0x%06lX) ignored", rx->seq);
 #endif
 
-		BT_WARN("Replay: src 0x%04x dst 0x%04x seq 0x%06x",
+		BT_WARN("Replay: src 0x%04x dst 0x%04x seq 0x%06lx",
 			rx->ctx.addr, rx->ctx.recv_dst, rx->seq);
 		return -EINVAL;
 	}
@@ -1443,7 +1442,7 @@ static int send_ack(struct bt_mesh_subnet *sub, u16_t src, u16_t dst,
 	u16_t seq_zero = *seq_auth & TRANS_SEQ_ZERO_MASK;
 	u8_t buf[6];
 
-	BT_DBG("SeqZero 0x%04x Block 0x%08x OBO %u", seq_zero, block, obo);
+	BT_DBG("SeqZero 0x%04x Block 0x%08lx OBO %u", seq_zero, block, obo);
 
 	if (bt_mesh_lpn_established()) {
 		BT_WARN("Not sending ack when LPN is enabled");
@@ -1459,7 +1458,7 @@ static int send_ack(struct bt_mesh_subnet *sub, u16_t src, u16_t dst,
 	}
 
 #if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
-	BT_PTS("[PTS] Sending BlockAck 0x%08X (SeqZero = 0x%04X)", block, seq_zero);
+	BT_PTS("[PTS] Sending BlockAck 0x%08lX (SeqZero = 0x%04X)", block, seq_zero);
 #endif
 
 	sys_put_be16(((seq_zero << 2) & 0x7ffc) | (obo << 15), buf);
@@ -1631,7 +1630,7 @@ static struct seg_rx *seg_rx_alloc(struct bt_mesh_net_rx *net_rx,
 		rx->dst = net_rx->ctx.recv_dst;
 		rx->block = 0U;
 
-		BT_DBG("New RX context. Block Complete 0x%08x",
+		BT_DBG("New RX context. Block Complete 0x%08lx",
 		       BLOCK_COMPLETE(seg_n));
 
 		return rx;
@@ -1658,7 +1657,7 @@ static int trans_seg(struct net_buf_simple *buf, struct bt_mesh_net_rx *net_rx,
 	}
 
 	if (bt_mesh_rpl_check(net_rx, &rpl)) {
-		BT_WARN("Replay: src 0x%04x dst 0x%04x seq 0x%06x",
+		BT_WARN("Replay: src 0x%04x dst 0x%04x seq 0x%06lx",
 			net_rx->ctx.addr, net_rx->ctx.recv_dst, net_rx->seq);
 		return -EINVAL;
 	}
@@ -1720,7 +1719,7 @@ static int trans_seg(struct net_buf_simple *buf, struct bt_mesh_net_rx *net_rx,
 		}
 
 		if (rx->in_use) {
-			BT_DBG("Existing RX context. Block 0x%08x", rx->block);
+			BT_DBG("Existing RX context. Block 0x%08lx", rx->block);
 			goto found_rx;
 		}
 
@@ -1886,7 +1885,7 @@ int bt_mesh_trans_recv(struct net_buf_simple *buf, struct bt_mesh_net_rx *rx)
 		rx->friend_match = false;
 	}
 
-	BT_DBG("src 0x%04x dst 0x%04x seq 0x%08x friend_match %u",
+	BT_DBG("src 0x%04x dst 0x%04x seq 0x%08lx friend_match %u",
 	       rx->ctx.addr, rx->ctx.recv_dst, rx->seq, rx->friend_match);
 
 	/* Remove network headers */

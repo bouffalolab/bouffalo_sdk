@@ -99,13 +99,18 @@ struct lwip_cyclic_timer lwip_cyclic_timers[] = {
   {LWIP_TIMER_STATUS_RUNNING, ARP_TMR_INTERVAL, HANDLER(etharp_tmr)},
 #endif /* LWIP_ARP */
 #if LWIP_DHCP
+#if DHCP_TIMER_PRECISE_NEEDED
+  {LWIP_TIMER_STATUS_IDLE, DHCP_COARSE_TIMER_MSECS, HANDLER(dhcp_coarse_tmr)},
+  {LWIP_TIMER_STATUS_IDLE, DHCP_FINE_TIMER_MSECS, HANDLER(dhcp_fine_tmr)},
+#else
   {LWIP_TIMER_STATUS_RUNNING, DHCP_COARSE_TIMER_MSECS, HANDLER(dhcp_coarse_tmr)},
   {LWIP_TIMER_STATUS_RUNNING, DHCP_FINE_TIMER_MSECS, HANDLER(dhcp_fine_tmr)},
+#endif
 #endif /* LWIP_DHCP */
 #if LWIP_AUTOIP
   {LWIP_TIMER_STATUS_RUNNING, AUTOIP_TMR_INTERVAL, HANDLER(autoip_tmr)},
 #endif /* LWIP_AUTOIP */
-#if LWIP_IGMP
+#if LWIP_IGMP && !LWIP_IGMP_TIMERS_ONDEMAND
   {LWIP_TIMER_STATUS_RUNNING, IGMP_TMR_INTERVAL, HANDLER(igmp_tmr)},
 #endif /* LWIP_IGMP */
 #endif /* LWIP_IPV4 */
@@ -661,13 +666,14 @@ static bool tcp_timer_calculate_next_wake(u32_t * next_wake_ms)
   //                        8. all active pcb's flags must not TF_ACK_DELAY or TF_CLOSEPEND
   //                        9. no time_wait pcb
   struct tcp_pcb *pcb = tcp_active_pcbs;
+  extern int lwip_netconn_is_tcp_polling(struct netconn *conn);
   while (pcb != NULL) {
     if (((pcb->flags & TF_ACK_DELAY) || (pcb->flags & TF_CLOSEPEND)) || pcb->refused_data != NULL) {
       LWIP_DEBUGF(TCP_DEBUG, ("calculate_next_wake: TCP_FAST_INTERVAL\n"));
       min_wake_time = LWIP_MIN(TCP_FAST_INTERVAL, min_wake_time);
     }
 
-    if (pcb->unacked != NULL) {
+    if (pcb->unacked != NULL || ((pcb->unacked == NULL) && (pcb->unsent != NULL))) {
       /* calculate retransmission timeouts */
       LWIP_DEBUGF(TCP_DEBUG, ("calculate_next_wake: retransmission timeout %ldms\n", (pcb->rto - (tcp_ticks - pcb->rtime)) * TCP_SLOW_INTERVAL));
       min_wake_time = LWIP_MIN((pcb->rto - (tcp_ticks - pcb->rtime)) * TCP_SLOW_INTERVAL, min_wake_time);
@@ -713,6 +719,11 @@ static bool tcp_timer_calculate_next_wake(u32_t * next_wake_ms)
       min_wake_time = LWIP_MIN(2 * TCP_MSL - (tcp_ticks - pcb->tmr) * TCP_SLOW_INTERVAL, min_wake_time);
     }
 
+    if (lwip_netconn_is_tcp_polling((struct netconn *)pcb->callback_arg)) {
+      LWIP_DEBUGF(TCP_DEBUG, ("calculate_next_wake: tcp poll timeout %ldms\n", TCP_SLOW_INTERVAL));
+      min_wake_time = LWIP_MIN(TCP_SLOW_INTERVAL, min_wake_time);
+    }
+
     pcb = pcb->next;
   }
 
@@ -721,6 +732,11 @@ static bool tcp_timer_calculate_next_wake(u32_t * next_wake_ms)
     LWIP_ASSERT("calculate_next_wake: TIME-WAIT pcb->state == TIME-WAIT", pcb->state == TIME_WAIT);
     LWIP_DEBUGF(TCP_DEBUG, ("calculate_next_wake: TIME-WAIT timeout %ldms\n", 2 * TCP_MSL - (tcp_ticks - pcb->tmr) * TCP_SLOW_INTERVAL));
     min_wake_time = LWIP_MIN(2 * TCP_MSL - (tcp_ticks - pcb->tmr) * TCP_SLOW_INTERVAL, min_wake_time);
+
+    if (lwip_netconn_is_tcp_polling((struct netconn *)pcb->callback_arg)) {
+      LWIP_DEBUGF(TCP_DEBUG, ("calculate_next_wake: tcp poll timeout %ldms\n", TCP_SLOW_INTERVAL));
+      min_wake_time = LWIP_MIN(TCP_SLOW_INTERVAL, min_wake_time);
+    }
 
     pcb = pcb->next;
   }

@@ -282,4 +282,5 @@
 #define TIMER_WCDR_FORCE  (1 << 4U)
 #endif
 
+
 #endif /* __HARDWARE_TIMER_H__ */

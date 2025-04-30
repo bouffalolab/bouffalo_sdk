@@ -7,6 +7,21 @@
 
 struct bflb_device_s *console = NULL;
 
+int putchar(int c)
+{
+    if (console == NULL) {
+        return EOF;
+    }
+
+#ifdef CONFIG_CONSOLE_WO
+    bflb_wo_uart_putchar(console, (uint8_t)c);
+#else
+    bflb_uart_putchar(console, (uint8_t)c);
+#endif
+
+    return c;
+}
+
 int puts(const char *c)
 {
     int len;
@@ -141,7 +156,7 @@ void bflb_dump(uint8_t *data, uint32_t len)
 
 void bflb_regdump(uint32_t addr)
 {
-    printf("%08lx[31:0]=%08lx\r\n", addr, *(volatile uint32_t *)(addr));
+    printf("%08lx[31:0]=%08lx\r\n", addr, *(volatile uint32_t *)(uintptr_t)(addr));
 }
 
 #ifdef CONFIG_CONSOLE_WO

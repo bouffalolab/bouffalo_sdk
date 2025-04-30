@@ -724,71 +724,69 @@ static const unsigned char FSDATA_ALIGN_PRE data__index_html[] FSDATA_ALIGN_POST
 0x2f,0x73,0x63,0x72,0x69,0x70,0x74,0x3e,0x0a,0x20,0x20,0x20,0x20,0x3c,0x2f,0x62,
 0x6f,0x64,0x79,0x3e,0x0a,0x3c,0x2f,0x68,0x74,0x6d,0x6c,0x3e,0x0a,};
 
-
-
 const struct fsdata_file file__asset_favicon_ico[] = { {
-file_NULL,
-data__asset_favicon_ico,
-data__asset_favicon_ico + 20,
-sizeof(data__asset_favicon_ico) - 20,
-FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-}};
+    file_NULL,
+    data__asset_favicon_ico,
+    data__asset_favicon_ico + 20,
+    sizeof(data__asset_favicon_ico) - 20,
+    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+} };
 
 const struct fsdata_file file__asset_off_png[] = { {
-file__asset_favicon_ico,
-data__asset_off_png,
-data__asset_off_png + 16,
-sizeof(data__asset_off_png) - 16,
-FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-}};
+    file__asset_favicon_ico,
+    data__asset_off_png,
+    data__asset_off_png + 16,
+    sizeof(data__asset_off_png) - 16,
+    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+} };
 
 const struct fsdata_file file__asset_ok_json[] = { {
-file__asset_off_png,
-data__asset_ok_json,
-data__asset_ok_json + 16,
-sizeof(data__asset_ok_json) - 16,
-FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_SSI,
-}};
+    file__asset_off_png,
+    data__asset_ok_json,
+    data__asset_ok_json + 16,
+    sizeof(data__asset_ok_json) - 16,
+    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_SSI,
+} };
 
 const struct fsdata_file file__asset_on_png[] = { {
-file__asset_ok_json,
-data__asset_on_png,
-data__asset_on_png + 16,
-sizeof(data__asset_on_png) - 16,
-FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-}};
+    file__asset_ok_json,
+    data__asset_on_png,
+    data__asset_on_png + 16,
+    sizeof(data__asset_on_png) - 16,
+    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+} };
 
 const struct fsdata_file file__css_style_css[] = { {
-file__asset_on_png,
-data__css_style_css,
-data__css_style_css + 16,
-sizeof(data__css_style_css) - 16,
-FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-}};
+    file__asset_on_png,
+    data__css_style_css,
+    data__css_style_css + 16,
+    sizeof(data__css_style_css) - 16,
+    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+} };
 
 const struct fsdata_file file__js_main_js[] = { {
-file__css_style_css,
-data__js_main_js,
-data__js_main_js + 12,
-sizeof(data__js_main_js) - 12,
-FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-}};
+    file__css_style_css,
+    data__js_main_js,
+    data__js_main_js + 12,
+    sizeof(data__js_main_js) - 12,
+    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+} };
 
 const struct fsdata_file file__404_html[] = { {
-file__js_main_js,
-data__404_html,
-data__404_html + 12,
-sizeof(data__404_html) - 12,
-FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-}};
+    file__js_main_js,
+    data__404_html,
+    data__404_html + 12,
+    sizeof(data__404_html) - 12,
+    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+} };
 
 const struct fsdata_file file__index_html[] = { {
-file__404_html,
-data__index_html,
-data__index_html + 12,
-sizeof(data__index_html) - 12,
-FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
-}};
+    file__404_html,
+    data__index_html,
+    data__index_html + 12,
+    sizeof(data__index_html) - 12,
+    FS_FILE_FLAGS_HEADER_INCLUDED | FS_FILE_FLAGS_HEADER_PERSISTENT,
+} };
 
 #define FS_ROOT file__index_html
 #define FS_NUMFILES 8

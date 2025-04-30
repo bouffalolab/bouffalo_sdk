@@ -9,7 +9,11 @@
 #include "hci_driver.h"
 #include "byteorder.h"
 #include "bt_log.h"
-#include <sys/errno.h>
+#include <bt_errno.h>
+#if defined(CONFIG_BT_HOST_HCI_TL)
+#include "bl_hci_tl.h"
+#include "bl_gpio.h"
+#endif
 
 struct blhast_le_adv_data{
     u8_t ad[31];
@@ -227,7 +231,7 @@ static int blhast_br_reset(void)
 	}
 
 	name_cp = net_buf_add(buf, sizeof(*name_cp));
-	strncpy((char *)name_cp->local_name, CONFIG_BT_DEVICE_NAME,
+	strlcpy((char *)name_cp->local_name, CONFIG_BT_DEVICE_NAME,
 		sizeof(name_cp->local_name));
 
 	err = bt_hci_cmd_send_sync(BT_HCI_OP_WRITE_LOCAL_NAME, buf, NULL);
@@ -364,8 +368,22 @@ static void blhast_host_state_restore(void)
 
 void blhast_bt_reset(void)
 {
+    #if defined(BL602) || defined(BL702)
     ble_controller_reset();
-	blhast_host_state_restore();
+    #else
+    #if defined(CONFIG_BT_HOST_HCI_TL)
+    bl_gpio_enable_output(CTRL_RESET_PIN, 0, 0);
+    bl_gpio_output_set(CTRL_RESET_PIN, 0);
+    k_sleep(10);
+    bl_gpio_output_set(CTRL_RESET_PIN, 1);
+    k_sleep(500); // wait controller ready
+
+    bl_hci_reset();
+    #else
+    btble_controller_reset();
+    #endif  
+    #endif
+    blhast_host_state_restore();
 }
 
 void blhast_init(void)

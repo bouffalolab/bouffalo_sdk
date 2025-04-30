@@ -3,6 +3,15 @@ bouffalo_sdk Release Notes
 此文件包含 bouffalo_sdk 软件开发包的发行说明。
 每个版本的文字说明与发布时的说明保持一致（可能会有错别字的勘误）。
 
+bouffalo_sdk Release V2.2.0
+----------------------------
+Note:
+    1.update ethernet driver
+    2.update lvgl to support v8 & v9
+    3.add bl616 openai solution
+    4.add bl616 image transmission solution
+    5.update all chips std driver
+
 bouffalo_sdk Release V2.0
 ----------------------------
 

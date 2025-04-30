@@ -6,6 +6,7 @@
 #include <csi_core.h>
 #endif
 
+
 static void (*systick_callback)(void);
 static uint64_t current_set_ticks = 0;
 
@@ -136,9 +137,10 @@ void ATTR_TCM_SECTION bflb_mtimer_delay_ms(uint32_t time)
 #ifdef romapi_bflb_mtimer_delay_ms
     return romapi_bflb_mtimer_delay_ms(time);
 #else
-    uint64_t start_time = bflb_mtimer_get_time_ms();
+    uint64_t start_time = bflb_mtimer_get_time_us();
 
-    while (bflb_mtimer_get_time_ms() - start_time < time) {
+    while (bflb_mtimer_get_time_us() - start_time < ((uint64_t)time * 1000)) {
     }
 #endif
 }
+

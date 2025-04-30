@@ -250,6 +250,21 @@ static inline short MULT16_16_16(int a, int b)
    return res;
 }
 
+/* result fits in 32 bits */
+static inline int MULT16_32_32(int a, long long b)
+{
+   long long res;
+   if (!VERIFY_SHORT(a) || !VERIFY_INT(b))
+   {
+      fprintf (stderr, "MULT16_32_32: inputs are not short+int: %d %d\n", a, (int)b);
+   }
+   res = a*b;
+   if (!VERIFY_INT(res))
+      fprintf (stderr, "MULT16_32_32: output is not int: %d\n", (int)res);
+   spx_mips++;
+   return res;
+}
+
 #define MULT16_16(a, b) _MULT16_16(a, b, __FILE__, __LINE__)
 static inline int _MULT16_16(int a, int b, char *file, int line)
 {
@@ -279,7 +294,7 @@ static inline int _MULT16_32_QX(int a, long long b, int Q, char *file, int line)
    {
       fprintf (stderr, "MULT16_32_Q%d: inputs are not short+int: %d %d in %s: line %d\n", Q, (int)a, (int)b, file, line);
    }
-   if (ABS32(b)>=(EXTEND32(1)<<(15+Q)))
+   if (ABS(b)>>(16+Q))
       fprintf (stderr, "MULT16_32_Q%d: second operand too large: %d %d in %s: line %d\n", Q, (int)a, (int)b, file, line);
    res = (((long long)a)*(long long)b) >> Q;
    if (!VERIFY_INT(res))
@@ -295,7 +310,7 @@ static inline int MULT16_32_PX(int a, long long b, int Q)
    {
       fprintf (stderr, "MULT16_32_P%d: inputs are not short+int: %d %d\n", Q, (int)a, (int)b);
    }
-   if (ABS32(b)>=(EXTEND32(1)<<(15+Q)))
+   if (ABS(b)>>(16+Q))
       fprintf (stderr, "MULT16_32_Q%d: second operand too large: %d %d\n", Q, (int)a, (int)b);
    res = ((((long long)a)*(long long)b) + ((EXTEND32(1)<<Q)>>1))>> Q;
    if (!VERIFY_INT(res))
@@ -305,11 +320,6 @@ static inline int MULT16_32_PX(int a, long long b, int Q)
 }
 
 
-#define MULT16_32_Q11(a,b) MULT16_32_QX(a,b,11)
-#define MAC16_32_Q11(c,a,b) ADD32((c),MULT16_32_Q11((a),(b)))
-#define MULT16_32_Q12(a,b) MULT16_32_QX(a,b,12)
-#define MULT16_32_Q13(a,b) MULT16_32_QX(a,b,13)
-#define MULT16_32_Q14(a,b) MULT16_32_QX(a,b,14)
 #define MULT16_32_Q15(a,b) MULT16_32_QX(a,b,15)
 #define MULT16_32_P15(a,b) MULT16_32_PX(a,b,15)
 #define MAC16_32_Q15(c,a,b) ADD32((c),MULT16_32_Q15((a),(b)))

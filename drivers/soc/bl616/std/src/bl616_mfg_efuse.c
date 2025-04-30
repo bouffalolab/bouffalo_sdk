@@ -153,7 +153,9 @@ static void mfg_efuse_poweroffset_linear(int8_t pwr_offset[14], int8_t pwr_offse
 
     pwr_offset[12] = pwr_offset_tmp[2];
 
-    pwr_offset[13] = (step * 7 + 50) / 100 + pwr_offset_tmp[1];
+    /* Step 6MHz, 2472 + 12 = 2484MHz */
+    step = (pwr_offset_tmp[2] - pwr_offset_tmp[1]) * 100 / 5;
+    pwr_offset[13] = (step * 2 + 50) / 100 + pwr_offset_tmp[2];
 }
 
 uint8_t mfg_efuse_is_hp_poweroffset_slot_empty(uint8_t reload)
@@ -192,9 +194,7 @@ int mfg_efuse_write_hp_poweroffset_pre(int8_t pwr_offset[14], uint8_t program)
 
 void mfg_efuse_write_hp_poweroffset(void)
 {
-    // EF_Ctrl_Program_Direct(0, NULL, 0);
-    // while (SET == EF_Ctrl_Busy())
-    //     ;
+    bflb_ef_ctrl_write_direct(NULL, 0, NULL, 0, 1);
 }
 
 int mfg_efuse_read_hp_poweroffset(int8_t pwr_offset[14], uint8_t reload)

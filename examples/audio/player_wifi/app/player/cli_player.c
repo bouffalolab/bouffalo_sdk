@@ -196,11 +196,10 @@ static int cli_player_proc(int argc, char **argv)
             printf("Device is mute\n");
         }
     } else if (strcmp(argv[1], "get_curtime") == 0) {
-        aui_play_time_t ptime;
-
-        int ret = aui_player_get_time(MEDIA_MUSIC, &ptime);
+        smtaudio_play_time_t t;
+        int ret = smtaudio_info(MEDIA_MUSIC, &t);
         if (ret == 0) {
-            printf("get current time %lld %lld\n", (long long)ptime.curtime, (long long)ptime.duration);
+            printf("get current time %lld %lld\n", (long long)t.curtime, (long long)t.duration);
         } else {
             printf("get time failed");
         }

@@ -19,14 +19,14 @@ FATFS fs;
 __attribute((aligned(64))) static uint32_t workbuf[4096];
 
 MKFS_PARM fs_para = {
-    .fmt = FM_FAT32,     /* Format option (FM_FAT, FM_FAT32, FM_EXFAT and FM_SFD) */
+    .fmt = FM_ANY,       /* Format option (FM_FAT, FM_FAT32, FM_EXFAT and FM_SFD) */
     .n_fat = 1,          /* Number of FATs */
     .align = 0,          /* Data area alignment (sector) */
-    .n_root = 1,         /* Number of root directory entries */
+    .n_root = 0,         /* Number of root directory entries */
     .au_size = 512 * 32, /* Cluster size (byte) */
 };
 
-void filesystem_init(void)
+int filesystem_init(void)
 {
     FRESULT ret;
 
@@ -42,28 +42,26 @@ void filesystem_init(void)
 
         ret = f_mkfs("/sd", &fs_para, workbuf, sizeof(workbuf));
 
-        if (ret != FR_OK) {
-            LOG_F("fail to make filesystem %d\r\n", ret);
-            _CALL_ERROR();
-        }
-
         if (ret == FR_OK) {
             LOG_I("done with formatting.\r\n");
             LOG_I("first start to unmount.\r\n");
             ret = f_mount(NULL, "/sd", 1);
             LOG_I("then start to remount.\r\n");
+        } else {
+            LOG_F("fail to make filesystem %d\r\n", ret);
         }
-    } else if (ret != FR_OK) {
-        LOG_F("fail to mount filesystem,error= %d\r\n", ret);
-        LOG_F("SD card might fail to initialise.\r\n");
-        _CALL_ERROR();
-    } else {
-        LOG_D("Succeed to mount filesystem\r\n");
     }
 
-    if (ret == FR_OK) {
+    if (ret != FR_OK) {
+        LOG_F("fail to mount filesystem,error= %d\r\n", ret);
+        LOG_F("SD card might fail to initialise.\r\n");
+        return -1;
+    } else {
+        LOG_D("Succeed to mount filesystem\r\n");
         LOG_I("FileSystem cluster size:%d-sectors (%d-Byte)\r\n", fs.csize, fs.csize * 512);
     }
+
+    return 0;
 }
 
 #define SDU_DATA_CHECK 1
@@ -91,7 +89,7 @@ __attribute((aligned(64))) BYTE RW_Buffer[32 * 1024] = { 0 };
 __attribute((aligned(64))) BYTE Check_Buffer[sizeof(RW_Buffer)] = { 0 };
 #endif
 
-void fatfs_write_read_test()
+int fatfs_write_read_test()
 {
     FRESULT ret;
     FIL fnew;
@@ -133,11 +131,11 @@ void fatfs_write_read_test()
             LOG_I("Time:%dms, Write Speed:%d KB/s \r\n", time_node, ((sizeof(RW_Buffer) * i) >> 10) * 1000 / time_node);
         } else {
             LOG_F("Fail to write files(%d) num:%d\n", ret, i);
-            return;
+            return -1;
         }
     } else {
         LOG_F("Fail to open or create files: %d.\r\n", ret);
-        return;
+        return -1;
     }
 
     /* read test */
@@ -165,11 +163,11 @@ void fatfs_write_read_test()
             LOG_I("Time:%dms, Read Speed:%d KB/s \r\n", time_node, ((sizeof(RW_Buffer) * i) >> 10) * 1000 / time_node);
         } else {
             LOG_F("Fail to read file: (%d), num:%d\n", ret, i);
-            return;
+            return -1;
         }
     } else {
         LOG_F("Fail to open files.\r\n");
-        return;
+        return -1;
     }
 
     /* check data */
@@ -208,22 +206,31 @@ void fatfs_write_read_test()
 
         } else {
             LOG_F("Fail to read file: (%d), num:%d\n", ret, i);
-            return;
+            return -1;
         }
     } else {
         LOG_F("Fail to open files.\r\n");
-        return;
+        return -1;
     }
 #endif
+
+    return 0;
 }
 
 void fatfs_test_main(void *param)
 {
     (void)param;
+    int test_cnt = 0;
 
-    filesystem_init();
+    while (1) {
+        LOG_W("test_cnt: %d\r\n", test_cnt++);
 
-    fatfs_write_read_test();
+        if (filesystem_init() < 0) {
+            break;
+        }
+        if (fatfs_write_read_test() < 0) {
+            break;
+        }
 
 #if defined(CONFIG_NEWLIB) && CONFIG_NEWLIB && defined(CONFIG_NEWLIB_FATFS) && CONFIG_NEWLIB_FATFS
     FILE *fp;
@@ -231,6 +238,9 @@ void fatfs_test_main(void *param)
     fprintf(fp, "hello world\r\n");
     fclose(fp);
 #endif
+
+        f_unmount("/sd");
+    }
 
     while (1) {
         bflb_mtimer_delay_ms(200);

@@ -36,6 +36,8 @@
 
 #include "bl602.h"
 #include "bl602_pds.h"
+#include "bflb_efuse.h"
+#include "bl602_ef_cfg.h"
 
 /** @addtogroup  BL602_Peripheral_Driver
  *  @{
@@ -398,15 +400,17 @@ BL_Err_Type PDS_Int_Callback_Install(PDS_INT_Type intType, intCallback_Type *cbF
 __WEAK
 BL_Err_Type ATTR_CLOCK_SECTION PDS_Trim_RC32M(void)
 {
-    Efuse_Ana_RC32M_Trim_Type trim;
-    int32_t tmpVal = 0;
 
-    EF_Ctrl_Read_RC32M_Trim(&trim);
+    bflb_ef_ctrl_com_trim_t trim;
+    uint32_t tmpVal;
+    char trim_name[] = "rc32m";
 
-    if (trim.trimRc32mExtCodeEn) {
-        if (trim.trimRc32mCodeFrExtParity == EF_Ctrl_Get_Trim_Parity(trim.trimRc32mCodeFrExt, 8)) {
+    bflb_ef_ctrl_read_common_trim(NULL, trim_name, &trim, 1);
+
+    if (trim.en) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
             tmpVal = BL_RD_REG(PDS_BASE, PDS_RC32M_CTRL0);
-            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_RC32M_CODE_FR_EXT, trim.trimRc32mCodeFrExt);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_RC32M_CODE_FR_EXT, trim.value);
             tmpVal = BL_SET_REG_BIT(tmpVal, PDS_RC32M_EXT_CODE_EN);
             BL_WR_REG(PDS_BASE, PDS_RC32M_CTRL0, tmpVal);
             BL602_Delay_US(2);

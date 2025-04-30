@@ -71,9 +71,17 @@ sdk_add_include_directories(bflb_timestamp)
 sdk_library_add_sources(getopt/utils_getopt.c)
 sdk_add_include_directories(getopt)
 
-if(CONFIG_COREDUMP)
+if(CONFIG_COREDUMP_V2)
 sdk_add_compile_definitions(-DCONFIG_COREDUMP)
-sdk_library_add_sources(coredump/bflb_coredump.c)
+sdk_library_add_sources(coredump/coredump.c)
+sdk_library_add_sources(coredump/encoder_v2.c)
+sdk_library_add_sources(coredump/bin_fmt_v2.c)
+sdk_add_include_directories(coredump)
+elseif(CONFIG_COREDUMP)
+sdk_add_compile_definitions(-DCONFIG_COREDUMP)
+sdk_library_add_sources(coredump/coredump.c)
+sdk_library_add_sources(coredump/encoder_v1.c)
+sdk_library_add_sources(coredump/bin_fmt_v1.c)
 sdk_add_include_directories(coredump)
 endif()
 
@@ -90,7 +98,7 @@ sdk_add_include_directories(bflb_mtd/include)
 endif()
 
 #cjson
-sdk_library_add_sources(cjson/cJSON.c)
+sdk_library_add_sources(cjson/cJSON.c cjson/cJSON_Utils.c)
 sdk_add_include_directories(cjson)
 
 # math
@@ -105,3 +113,4 @@ endif()
 
 # list
 sdk_add_include_directories(list)
+sdk_library_add_sources(list/utils_list.c)

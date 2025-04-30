@@ -95,6 +95,16 @@ void msp_task_delete(msp_task_t *task)
     }
 }
 
+int msp_task_exist(const char *name)
+{
+    TaskHandle_t xHandle = xTaskGetHandle(name);
+    if (NULL == xHandle) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
 void msp_task_exit(int code)
 {
     (void)code;
@@ -116,6 +126,7 @@ void msp_mutex_free(msp_mutex_t *mutex)
 {
     if (mutex && *mutex) {
         vSemaphoreDelete(*mutex);
+        *mutex = NULL;
     }
 }
 
@@ -170,6 +181,7 @@ void msp_sem_free(msp_sem_t *sem)
     }
 
     vSemaphoreDelete(*sem);
+    *sem = NULL;
 }
 
 int msp_sem_wait(msp_sem_t *sem, unsigned int ms)
@@ -509,6 +521,10 @@ void msp_kernel_sched_resume()
 
 void *msp_zalloc(unsigned int size)
 {
+    if(size == 0) {
+        return NULL;
+    }
+    
     void* ptr = pvPortMalloc(size);
     if(ptr) {
         bzero(ptr,size);
@@ -520,7 +536,12 @@ void *msp_zalloc(unsigned int size)
 
 void *msp_malloc(unsigned int size)
 {
+    if(size == 0) {
+        return NULL;
+    }
+
     void *p = NULL;
+
     p = pvPortMalloc(size);
 
     return p;

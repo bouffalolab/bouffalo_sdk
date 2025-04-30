@@ -1,6 +1,10 @@
 #ifndef __FW_HEADER_H__
 #define __FW_HEADER_H__
 
+#if __has_include("fw_header_overlay.h")
+#include "fw_header_overlay.h"
+#else
+
 #include "stdint.h"
 #include "stdio.h"
 
@@ -196,5 +200,7 @@ struct __attribute__((packed, aligned(4))) bootheader_t {
 
 #define BFLB_FW_LENGTH_OFFSET 132
 #define BFLB_FW_HASH_OFFSET   136
+
+#endif
 
 #endif

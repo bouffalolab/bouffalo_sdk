@@ -5,7 +5,7 @@
  */
 
 #include <zephyr.h>
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <stdlib.h>
 #include <string.h>
 //#include <sys/types.h>
@@ -30,6 +30,7 @@
 #include "crypto.h"
 #include "transport.h"
 #include "access.h"
+#include "beacon.h"
 #include "foundation.h"
 #include "proxy.h"
 #include "settings.h"
@@ -45,21 +46,6 @@
 
 /* Added by bouffalolab for mesh sequence compensate, when power up */
 #define BT_MESH_SEQ_PWRON_COMPENSATE (100) 
-
-/**
- * Function used to read the data from the settings storage in
- * h_set handler implementations.
- *
- * @param[in] cb_arg  arguments for the read function. Appropriate cb_arg is
- *                    transferred to h_set handler implementation by
- *                    the backend.
- * @param[out] data  the destination buffer
- * @param[in] len    length of read
- *
- * @return positive: Number of bytes read, 0: key-value pair is deleted.
- *                   On error returns -ERRNO code.
- */ /* Added by bouffalo */
-typedef ssize_t (*settings_read_cb)(void *cb_arg, void *data, size_t len);
 
 /* Added by bouffalo */
 static int settings_name_next(const char *name, const char **next);
@@ -197,7 +183,7 @@ static struct {
 	struct cfg_val cfg;
 } stored_cfg;
 
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 int bt_mesh_settings_set(settings_read_cb read_cb, void *cb_arg,
 			 void *out, size_t read_len)
 {
@@ -294,7 +280,7 @@ static int iv_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 	atomic_set_bit_to(bt_mesh.flags, BT_MESH_IVU_IN_PROGRESS, iv.iv_update);
 	bt_mesh.ivu_duration = iv.iv_duration;
 
-	BT_DBG("IV Index 0x%04x (IV Update Flag %u) duration %u hours",
+	BT_DBG("IV Index 0x%04lx (IV Update Flag %u) duration %u hours",
 	       iv.iv_index, iv.iv_update, iv.iv_duration);
 
 	return 0;
@@ -332,7 +318,7 @@ static int seq_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 		bt_mesh.seq--;
 	}
 
-	BT_DBG("Sequence Number 0x%06x", bt_mesh.seq);
+	BT_DBG("Sequence Number 0x%06lx", bt_mesh.seq);
 
 	return 0;
 }
@@ -408,7 +394,7 @@ static int rpl_set(const char *name, size_t len_rd,
 	entry->seq = rpl.seq;
 	entry->old_iv = rpl.old_iv;
 
-	BT_DBG("RPL entry for 0x%04x: Seq 0x%06x old_iv %u", entry->src,
+	BT_DBG("RPL entry for 0x%04x: Seq 0x%06lx old_iv %u", entry->src,
 	       entry->seq, entry->old_iv);
 
 	return 0;
@@ -1148,7 +1134,7 @@ static void commit_mod(struct bt_mesh_model *mod, struct bt_mesh_elem *elem,
 		s32_t ms = bt_mesh_model_pub_period_get(mod);
 
 		if (ms > 0) {
-			BT_DBG("Starting publish timer (period %u ms)", ms);
+			BT_DBG("Starting publish timer (period %lu ms)", ms);
 			k_delayed_work_submit(&mod->pub->timer, K_MSEC(ms));
 		}
 	}
@@ -1265,7 +1251,7 @@ static void schedule_store(int flag)
 		return;
 	}
 
-	BT_DBG("Waiting %d seconds", timeout_ms / MSEC_PER_SEC);
+	BT_DBG("Waiting %ld seconds", timeout_ms / MSEC_PER_SEC);
 
 	k_delayed_work_submit(&pending_store, K_MSEC(timeout_ms));
 }
@@ -1379,7 +1365,7 @@ static void store_rpl(struct bt_mesh_rpl *entry)
 	char path[18];
 	int err;
 
-	BT_DBG("src 0x%04x seq 0x%06x old_iv %u", entry->src, entry->seq,
+	BT_DBG("src 0x%04x seq 0x%06lx old_iv %u", entry->src, entry->seq,
 	       entry->old_iv);
 
 	rpl.seq = entry->seq;
@@ -2003,7 +1989,7 @@ static void store_pending_mod_pub(struct bt_mesh_model *mod, bool vnd)
         BT_ERR("Failed to store mod sub");
 	} else {
 		/* Modified by bouffalo */
-        BT_DBG("Stored %s value");
+        BT_DBG("Stored value");
 	}
 }
 
@@ -2317,7 +2303,7 @@ void bt_mesh_clear_rpl(void)
 /* Added by bouffalolab */
 void bt_mesh_clear_node_rpl(u16_t src)
 {
-	int i, err;
+	int i;
 
 	BT_DBG("");
 
@@ -2328,7 +2314,7 @@ void bt_mesh_clear_node_rpl(u16_t src)
 			#ifdef CONFIG_BT_SETTINGS
 			char path[18];
 			snprintk(path, sizeof(path), "bt/mesh/RPL/%x", rpl->src);
-			err = settings_delete(path);
+			int err = settings_delete(path);
 			if (err) {
 				BT_ERR("Failed to clear RPL");
 			} else {
@@ -2575,8 +2561,8 @@ int bt_mesh_model_data_store(struct bt_mesh_model *mod, bool vnd,
 
 	encode_mod_path(mod, vnd, "data", path, sizeof(path));
 	if (name) {
-		strcat(path, "/");
-		strncat(path, name, 8);
+		strlcat(path, "/", sizeof(path));
+		strlcat(path, name, 8);
 	}
 
 	if (data_len) {
@@ -2613,7 +2599,7 @@ static ssize_t mesh_settings_read_cb(void *cb_arg, void *data, size_t data_len)
 		return 0;
 	}
 
-	BT_DBG("Env[%.*s] Data len[%d]\n", env->name_len, env->name, env->value_len);
+	BT_DBG("Env[%.*s] Data len[%ld]\n", env->name_len, env->name, env->value_len);
 	if (env->value_len < EF_STR_ENV_VALUE_MAX_SIZE ) {
         if(EF_NO_ERR != ef_port_read(env->addr.value, (uint32_t *) data, data_len)){
 			BT_ERR("Flash read fail");
@@ -2635,7 +2621,7 @@ static bool setting_env_cb(env_node_obj_t env, void *arg1, void *arg2)
     if (env->crc_is_ok) {
         /* check ENV */
         if (env->status == ENV_WRITE) {
-			BT_WARN("Env[%.*s] Data len[%d]", env->name_len, env->name, env->value_len);
+			BT_WARN("Env[%.*s] Data len[%lu]", env->name_len, env->name, env->value_len);
 			#if 1
 			char *pname, name[EF_ENV_NAME_MAX+1];
 			const char* next;

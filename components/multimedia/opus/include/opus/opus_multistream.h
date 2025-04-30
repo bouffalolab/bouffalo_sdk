@@ -72,7 +72,8 @@ extern "C" {
   */
 /**@{*/
 
-/** Gets the encoder state for an individual stream of a multistream encoder.  * @param[in] x <tt>opus_int32</tt>: The index of the stream whose encoder you
+/** Gets the encoder state for an individual stream of a multistream encoder.
+  * @param[in] x <tt>opus_int32</tt>: The index of the stream whose encoder you
   *                                   wish to retrieve.
   *                                   This must be non-negative and less than
   *                                   the <code>streams</code> parameter used
@@ -142,7 +143,7 @@ extern "C" {
   * <a href="https://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-810004.3.9">Vorbis
   * channel ordering</a>. A decoder may wish to apply an additional permutation
   * to the mapping the encoder used to achieve a different output channel
-  * order (e.g. for outputing in WAV order).
+  * order (e.g. for outputting in WAV order).
   *
   * Each multistream packet contains an Opus packet for each stream, and all of
   * the Opus packets in a single multistream packet must have the same

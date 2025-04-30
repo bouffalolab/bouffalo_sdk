@@ -37,7 +37,7 @@
 #ifndef __BL702L_GPIO_H__
 #define __BL702L_GPIO_H__
 
-typedef enum {
+enum {
     GLB_GPIO_PIN_0 = 0,
     GLB_GPIO_PIN_1,
     GLB_GPIO_PIN_2,
@@ -71,7 +71,8 @@ typedef enum {
     GLB_GPIO_PIN_30,
     GLB_GPIO_PIN_31,
     GLB_GPIO_PIN_MAX,
-} GLB_GPIO_Type;
+};
+typedef BL_ENUM_Type GLB_GPIO_Type;
 
 #define GPIO_MODE_INPUT  ((uint32_t)0x00000000U) /*!< Input Floating Mode                   */
 #define GPIO_MODE_OUTPUT ((uint32_t)0x00000001U) /*!< Output Push Pull Mode                 */
@@ -81,7 +82,7 @@ typedef enum {
 #define GPIO_PULL_DOWN   ((uint32_t)0x00000001U) /*!< GPIO pull down                        */
 #define GPIO_PULL_NONE   ((uint32_t)0x00000002U) /*!< GPIO no pull up or down               */
 
-typedef enum {
+enum {
     GPIO_FUN_CLK_OUT = 0,
     GPIO_FUN_BT_COEXIST = 1,
     GPIO_FUN_FLASH_PSRAM = 2,
@@ -125,7 +126,8 @@ typedef enum {
     GPIO_FUN_WAKEUP = 0xFE,
 
     GPIO_FUN_UNUSED = 0xFF,
-} GLB_GPIO_FUNC_Type;
+};
+typedef BL_ENUM_Type GLB_GPIO_FUNC_Type;
 
 typedef struct
 {

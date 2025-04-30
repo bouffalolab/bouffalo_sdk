@@ -47,7 +47,7 @@
 #include "lwip/memp.h"
 #include "lwip/priv/tcpip_priv.h"
 
-#include <string.h> /* strncpy */
+#include <string.h> /* strlcpy */
 
 #define NETIFAPI_VAR_REF(name)      API_VAR_REF(name)
 #define NETIFAPI_VAR_DECLARE(name)  API_VAR_DECLARE(struct netifapi_msg, name)
@@ -333,8 +333,7 @@ netifapi_netif_name_to_index(const char *name, u8_t *idx)
   *idx = 0;
 
 #if LWIP_MPU_COMPATIBLE
-  strncpy(NETIFAPI_VAR_REF(msg).msg.ifs.name, name, NETIF_NAMESIZE - 1);
-  NETIFAPI_VAR_REF(msg).msg.ifs.name[NETIF_NAMESIZE - 1] = '\0';
+  strlcpy(NETIFAPI_VAR_REF(msg).msg.ifs.name, name, NETIF_NAMESIZE);
 #else
   NETIFAPI_VAR_REF(msg).msg.ifs.name = LWIP_CONST_CAST(char *, name);
 #endif /* LWIP_MPU_COMPATIBLE */
@@ -369,8 +368,7 @@ netifapi_netif_index_to_name(u8_t idx, char *name)
   err = tcpip_api_call(netifapi_do_index_to_name, &API_VAR_REF(msg).call);
 #if LWIP_MPU_COMPATIBLE
   if (!err) {
-    strncpy(name, NETIFAPI_VAR_REF(msg).msg.ifs.name, NETIF_NAMESIZE - 1);
-    name[NETIF_NAMESIZE - 1] = '\0';
+    strlcpy(name, NETIFAPI_VAR_REF(msg).msg.ifs.name, NETIF_NAMESIZE);
   }
 #endif /* LWIP_MPU_COMPATIBLE */
   NETIFAPI_VAR_FREE(msg);

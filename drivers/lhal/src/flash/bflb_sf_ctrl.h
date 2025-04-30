@@ -48,32 +48,27 @@
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define BFLB_SF_CTRL_BASE      ((uint32_t)0x4000B000)
-#elif defined(BL606P) || defined(BL808) || defined(BL616)
+#elif defined(BL808) || defined(BL616)
 #define BFLB_SF_CTRL_BASE      ((uint32_t)0x2000b000)
-#elif defined(BL628)
-#define BFLB_SF_CTRL_BASE      ((uint32_t)0x20082000)
 #endif
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define BFLB_FLASH_XIP_BASE    (0x23000000)
 #define BFLB_FLASH_XIP_END     (0x23000000 + 16 * 1024 * 1024)
-#elif defined(BL606P) || defined(BL808)
+#elif defined(BL808)
 #define BFLB_FLASH_XIP_BASE    (0x58000000)
 #define BFLB_FLASH_XIP_END     (0x58000000 + 64 * 1024 * 1024)
 #elif defined(BL616)
 #define BFLB_FLASH_XIP_BASE    (0xA0000000)
 #define BFLB_FLASH_XIP_END     (0xA0000000 + 64 * 1024 * 1024)
-#elif defined(BL628)
-#define BFLB_FLASH_XIP_BASE    (0x80000000)
-#define BFLB_FLASH_XIP_END     (0x80000000 + 64 * 1024 * 1024)
 #endif
 
-#if defined(BL628) || defined(BL616)
+#if defined(BL616)
 #ifndef CONFIG_DISABLE_SBUS2_ENABLE_SUPPORT
 #define BFLB_SF_CTRL_SBUS2_ENABLE
 #endif
 #endif
-#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
+#if defined(BL616) || defined(BL808)
 #define BFLB_SF_CTRL_32BITS_ADDR_ENABLE
 #define BFLB_SF_CTRL_AES_XTS_ENABLE
 #endif
@@ -96,7 +91,7 @@
 /**
  *  @brief Serial flash config pin select type definition
  */
-#if defined(BL628) || defined(BL616)
+#if defined(BL616)
 #define SF_IO_EMB_SWAP_IO3IO0                           0x0  /*!< SF select embedded flash swap io3 with io0 */
 #define SF_IO_EMB_SWAP_IO3IO0_IO2CS                     0x1  /*!< SF select embedded flash swap io3 with io0 and io2 with cs */
 #define SF_IO_EMB_SWAP_NONE                             0x2  /*!< SF select embedded flash no swap */
@@ -112,7 +107,7 @@
 #define SF_IO_EMB_SWAP_IO3IO0_IO2CS_AND_SF2             0x35 /*!< SF select embedded flash swap io3 with io0、io2 with cs and SF2 use gpio4-9 */
 #define SF_IO_EMB_SWAP_NONE_AND_SF2                     0x36 /*!< SF select embedded flash no swap and SF2 use gpio4-9 */
 #define SF_IO_EMB_SWAP_IO2CS_AND_SF2                    0x37 /*!< SF select embedded flash swap io2 with cs and SF2 use gpio4-9 */
-#elif defined(BL808) || defined(BL606P)
+#elif defined(BL808)
 #define SF_IO_EMB_SWAP_IO0_IO3                          0x0  /*!< SF select embedded flash swap io0 with io3 */
 #define SF_IO_EMB_SWAP_DUAL_IO0_IO3                     0x1  /*!< SF select embedded flash swap dual io0 with io3 */
 #define SF_IO_EMB_SWAP_NONE                             0x2  /*!< SF select embedded flash no swap */
@@ -172,7 +167,7 @@
 #define SF_CTRL_WRAP_MODE_3                             3    /*!< Cmds handle wrap commands, cmds force wrap16*4 splitted into two wrap8*4 */
 #endif
 /**
- *  @brief Serail flash controller wrap mode len type definition
+ *  @brief Serial flash controller wrap mode len type definition
  */
 #define SF_CTRL_WRAP_LEN_8                              0    /*!< SF Ctrl wrap length: 8 */
 #define SF_CTRL_WRAP_LEN_16                             1    /*!< SF Ctrl wrap length: 16 */
@@ -186,7 +181,7 @@
 #define SF_CTRL_WRAP_LEN_4096                           9    /*!< SF Ctrl wrap length: 4096 */
 
 /**
- *  @brief Serail flash controller memory remap type define
+ *  @brief Serial flash controller memory remap type define
  */
 #define SF_CTRL_ORIGINAL_MEMORY_MAP                     0    /*!< Remap none, use two addr map when use dual flash */
 #define SF_CTRL_REMAP_16MB                              1    /*!< Remap HADDR>16MB region to psram port HADDR[24] -> HADDR[28] */
@@ -208,11 +203,11 @@
 /**
  *  @brief Read and write type definition
  */
-#define SF_CTRL_READ                                    0    /*!< Serail flash read command flag */
-#define SF_CTRL_WRITE                                   1    /*!< Serail flash write command flag */
+#define SF_CTRL_READ                                    0    /*!< Serial flash read command flag */
+#define SF_CTRL_WRITE                                   1    /*!< Serial flash write command flag */
 
 /**
- *  @brief Serail flash interface IO type definition
+ *  @brief Serial flash interface IO type definition
  */
 #define SF_CTRL_NIO_MODE                                0    /*!< Normal IO mode define */
 #define SF_CTRL_DO_MODE                                 1    /*!< Dual Output mode define */
@@ -221,54 +216,54 @@
 #define SF_CTRL_QIO_MODE                                4    /*!< Quad IO mode define */
 
 /**
- *  @brief Serail flash controller interface mode type definition
+ *  @brief Serial flash controller interface mode type definition
  */
 #define SF_CTRL_SPI_MODE                                0    /*!< SPI mode define */
 #define SF_CTRL_QPI_MODE                                1    /*!< QPI mode define */
 
 /**
- *  @brief Serail flash controller command mode type definition
+ *  @brief Serial flash controller command mode type definition
  */
 #define SF_CTRL_CMD_1_LINE                              0    /*!< Command in one line mode */
 #define SF_CTRL_CMD_4_LINES                             1   /*!< Command in four lines mode */
 
 /**
- *  @brief Serail flash controller address mode type definition
+ *  @brief Serial flash controller address mode type definition
  */
 #define SF_CTRL_ADDR_1_LINE                             0    /*!< Address in one line mode */
 #define SF_CTRL_ADDR_2_LINES                            1    /*!< Address in two lines mode */
 #define SF_CTRL_ADDR_4_LINES                            2    /*!< Address in four lines mode */
 
 /**
- *  @brief Serail flash controller dummy mode type definition
+ *  @brief Serial flash controller dummy mode type definition
  */
 #define SF_CTRL_DUMMY_1_LINE                            0    /*!< Dummy in one line mode */
 #define SF_CTRL_DUMMY_2_LINES                           1    /*!< Dummy in two lines mode */
 #define SF_CTRL_DUMMY_4_LINES                           2    /*!< Dummy in four lines mode */
 
 /**
- *  @brief Serail flash controller data mode type definition
+ *  @brief Serial flash controller data mode type definition
  */
 #define SF_CTRL_DATA_1_LINE                             0    /*!< Data in one line mode */
 #define SF_CTRL_DATA_2_LINES                            1    /*!< Data in two lines mode */
 #define SF_CTRL_DATA_4_LINES                            2    /*!< Data in four lines mode */
 
 /**
- *  @brief Serail flash controller AES mode type definition
+ *  @brief Serial flash controller AES mode type definition
  */
-#define SF_CTRL_AES_CTR_MODE                            0    /*!< Serail flash AES CTR mode */
-#define SF_CTRL_AES_XTS_MODE                            1    /*!< Serail flash AES XTS mode */
+#define SF_CTRL_AES_CTR_MODE                            0    /*!< Serial flash AES CTR mode */
+#define SF_CTRL_AES_XTS_MODE                            1    /*!< Serial flash AES XTS mode */
 
 /**
- *  @brief Serail flash controller AES key len type definition
+ *  @brief Serial flash controller AES key len type definition
  */
-#define SF_CTRL_AES_128BITS                             0    /*!< Serail flash AES key 128 bits length */
-#define SF_CTRL_AES_256BITS                             1    /*!< Serail flash AES key 256 bits length */
-#define SF_CTRL_AES_192BITS                             2    /*!< Serail flash AES key 192 bits length */
-#define SF_CTRL_AES_128BITS_DOUBLE_KEY                  3    /*!< Serail flash AES key 128 bits length double key */
+#define SF_CTRL_AES_128BITS                             0    /*!< Serial flash AES key 128 bits length */
+#define SF_CTRL_AES_256BITS                             1    /*!< Serial flash AES key 256 bits length */
+#define SF_CTRL_AES_192BITS                             2    /*!< Serial flash AES key 192 bits length */
+#define SF_CTRL_AES_128BITS_DOUBLE_KEY                  3    /*!< Serial flash AES key 128 bits length double key */
 
 /**
- *  @brief Serail flash controller configuration structure type definition
+ *  @brief Serial flash controller configuration structure type definition
  */
 struct sf_ctrl_cfg_type {
     uint8_t owner;                       /*!< Sflash interface bus owner */
@@ -324,7 +319,7 @@ struct sf_ctrl_psram_cfg {
  *  @brief SF Ctrl cmds configuration structure type definition
  */
 struct sf_ctrl_cmds_cfg {
-#if defined(BL628) || defined(BL616) || defined(BL808) || defined(BL606P)
+#if defined(BL616) || defined(BL808)
     uint8_t ack_latency;                 /*!< SF Ctrl ack latency cycles */
     uint8_t cmds_core_en;                /*!< SF Ctrl cmds core enable */
 #endif
@@ -337,7 +332,7 @@ struct sf_ctrl_cmds_cfg {
 };
 
 /**
- *  @brief Serail flash command configuration structure type definition
+ *  @brief Serial flash command configuration structure type definition
  */
 struct sf_ctrl_cmd_cfg_type {
     uint8_t rw_flag;                     /*!< Read write flag */
@@ -353,12 +348,23 @@ struct sf_ctrl_cmd_cfg_type {
 };
 
 struct bflb_sf_ctrl_decrypt_type {
-    uint8_t mode;               /*!< Serail flash AES CTR/XTS mode */
-    uint8_t type;               /*!< Serail flash AES key bit length */
-    uint8_t aes_region;         /*!< Serail flash AES region 0/1/2 */
-    uint32_t addr;              /*!< Serail flash AES decrypt start address */
-    uint32_t len;               /*!< Serail flash AES decrypt length */
-    uint8_t *iv;                /*!< Serail flash AES iv */
+    uint8_t mode;               /*!< Serial flash AES CTR/XTS mode */
+    uint8_t type;               /*!< Serial flash AES key bit length */
+    uint8_t aes_region;         /*!< Serial flash AES region 0/1/2 */
+    uint8_t lock;               /*!< Serial flash AES region config lock */
+    uint32_t addr;              /*!< Serial flash AES decrypt start address */
+    uint32_t len;               /*!< Serial flash AES decrypt length */
+    uint8_t *key;               /*!< Serial flash AES key */
+    uint8_t *iv;                /*!< Serial flash AES iv */
+};
+
+struct bflb_sf_ctrl_io_cs_clk_delay_cfg {
+    uint8_t do_delay;               /*!< DO delay select */
+    uint8_t di_delay;               /*!< DI delay select */
+    uint8_t oe_delay;               /*!< OE delay select */
+    uint8_t cs_delay;               /*!< CS delay select */
+    uint8_t cs_clk_delay;           /*!< CS clock delay select */
+    uint8_t rsv[3];                 /*!< Reserved */
 };
 
 /*@} end of group SF_CTRL_Public_Types */
@@ -375,7 +381,7 @@ struct bflb_sf_ctrl_decrypt_type {
 #define NOR_FLASH_CTRL_BUF_SIZE     256
 #define NAND_FLASH_CTRL_BUF_SIZE    512
 
-#if defined(BL628) || defined(BL616)
+#if defined(BL616)
 #define IS_SF_CTRL_PIN_SELECT(type) (((type) == SF_IO_EMB_SWAP_IO3IO0) ||                           \
                                      ((type) == SF_IO_EMB_SWAP_IO3IO0_IO2CS) ||                     \
                                      ((type) == SF_IO_EMB_SWAP_NONE) ||                             \
@@ -391,7 +397,7 @@ struct bflb_sf_ctrl_decrypt_type {
                                      ((type) == SF_IO_EMB_SWAP_IO3IO0_IO2CS_AND_SF2) ||             \
                                      ((type) == SF_IO_EMB_SWAP_NONE_AND_SF2) ||                     \
                                      ((type) == SF_IO_EMB_SWAP_IO2CS_AND_SF2))
-#elif defined(BL808) || defined(BL606P)
+#elif defined(BL808)
 #define IS_SF_CTRL_PIN_SELECT(type) (((type) == SF_IO_EMB_SWAP_IO0_IO3) ||                  \
                                      ((type) == SF_IO_EMB_SWAP_DUAL_IO0_IO3) ||             \
                                      ((type) == SF_IO_EMB_SWAP_NONE) ||                     \
@@ -437,7 +443,14 @@ extern "C" {
 #endif
 
 void bflb_sf_ctrl_enable(const struct sf_ctrl_cfg_type *cfg);
-void bflb_sf_ctrl_set_io_delay(uint8_t pad, uint8_t dodelay, uint8_t didelay, uint8_t oedelay);
+void bflb_sf_ctrl_set_io_delay(uint8_t pad, uint8_t do_delay, uint8_t di_delay, uint8_t oe_delay);
+void bflb_sf_ctrl_get_io_delay(uint8_t pad, uint8_t *do_delay, uint8_t *di_delay, uint8_t *oe_delay);
+void bflb_sf_ctrl_set_cs_clk_delay(uint8_t pad, uint8_t cs_delay, uint8_t clk_delay);
+void bflb_sf_ctrl_get_cs_clk_delay(uint8_t pad, uint8_t *cs_delay, uint8_t *clk_delay);
+void bflb_sf_ctrl_set_flash_io_cs_clk_delay(struct bflb_sf_ctrl_io_cs_clk_delay_cfg cfg);
+void bflb_sf_ctrl_get_flash_io_cs_clk_delay(struct bflb_sf_ctrl_io_cs_clk_delay_cfg *cfg);
+void bflb_sf_ctrl_set_dqs_delay(uint8_t pad, uint8_t dodelay, uint8_t didelay, uint8_t oedelay);
+
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
 void bflb_sf_ctrl_bank2_enable(const struct sf_ctrl_bank2_cfg *bank2cfg);
 void bflb_sf_ctrl_sbus2_hold_sram(void);
@@ -464,6 +477,9 @@ void bflb_sf_ctrl_burst_toggle_set(uint8_t burst_toggle_en, uint8_t mode);
 void bflb_sf_ctrl_select_pad(uint8_t sel);
 void bflb_sf_ctrl_sbus_select_bank(uint8_t bank);
 void bflb_sf_ctrl_set_owner(uint8_t owner);
+uint8_t bflb_sf_ctrl_get_owner();
+void bflb_sf_ctrl_set_owner_flag(uint8_t owner);
+uint8_t bflb_sf_ctrl_get_owner_flag(void);
 void bflb_sf_ctrl_disable(void);
 void bflb_sf_ctrl_aes_enable_be(void);
 void bflb_sf_ctrl_aes_enable_le(void);
@@ -499,9 +515,6 @@ void bflb_sf_ctrl_psram_write_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_
 void bflb_sf_ctrl_psram_read_set(struct sf_ctrl_cmd_cfg_type *cfg, uint8_t cmd_valid);
 #endif
 uint8_t bflb_sf_ctrl_get_busy_state(void);
-#ifndef BFLB_USE_HAL_DRIVER
-void bflb_sf_ctrl_irqhandler(void);
-#endif
 void bflb_sf_ctrl_aes_get_iv_be(uint8_t region, uint8_t *iv);
 void bflb_sf_ctrl_aes_get_iv_le(uint8_t region, uint8_t *iv);
 int32_t bflb_sf_ctrl_aes_set_decrypt_region_be(struct bflb_sf_ctrl_decrypt_type *parm);

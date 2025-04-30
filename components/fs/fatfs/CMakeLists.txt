@@ -10,8 +10,8 @@ sdk_add_compile_definitions(-DCONFIG_FATFS)
 
 # fatfs use sdcard over sdio
 if(CONFIG_FATFS_SDH_SDCARD)
-sdk_add_compile_definitions(-DCONFIG_FATFS_SDH_SDCARD)
-sdk_library_add_sources(port/fatfs_sdh_sdcard.c)
+    sdk_add_compile_definitions(-DCONFIG_FATFS_SDH_SDCARD)
+    sdk_library_add_sources(port/fatfs_sdh_lhal_sdcard.c)
 endif()
 
 # fatfs use usb host

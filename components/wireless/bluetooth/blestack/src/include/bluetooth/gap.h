@@ -31,6 +31,7 @@ extern "C" {
 #define BT_DATA_TX_POWER                0x0a /* Tx Power */
 #define BT_DATA_SM_TK_VALUE             0x10 /* Security Manager TK Value */
 #define BT_DATA_SM_OOB_FLAGS            0x11 /* Security Manager OOB Flags */
+#define BT_DATA_PERIPHERAL_CONN_INTVL_RANGE 0x12 /*Peripheral Connection Interval Range*/
 #define BT_DATA_SOLICIT16               0x14 /* Solicit UUIDs, 16-bit */
 #define BT_DATA_SOLICIT128              0x15 /* Solicit UUIDs, 128-bit */
 #define BT_DATA_SVC_DATA16              0x16 /* Service data, 16-bit UUID */
@@ -46,6 +47,7 @@ extern "C" {
 #define BT_DATA_MESH_PROV               0x29 /* Mesh Provisioning PDU */
 #define BT_DATA_MESH_MESSAGE            0x2a /* Mesh Networking PDU */
 #define BT_DATA_MESH_BEACON             0x2b /* Mesh Beacon */
+#define BT_DATA_3D_INFOR_DATA           0x3d /* 3D Synchronization Profile */
 
 #define BT_DATA_MANUFACTURER_DATA       0xff /* Manufacturer Specific Data */
 
@@ -54,6 +56,7 @@ extern "C" {
 #define BT_LE_AD_NO_BREDR               0x04 /* BR/EDR not supported */
 
 /* Defined GAP timers */
+#define BT_GAP_SCAN_FAST_INTERVAL_MIN           0x0030  /* 30 ms    */
 #define BT_GAP_SCAN_FAST_INTERVAL               0x0060  /* 60 ms    */
 #define BT_GAP_SCAN_FAST_WINDOW                 0x0030  /* 30 ms    */
 #define BT_GAP_SCAN_SLOW_INTERVAL_1             0x0800  /* 1.28 s   */
@@ -78,6 +81,17 @@ extern "C" {
 #define BT_GAP_ADV_SLOW_INT_MAX                 0x0780  /* 1.2 s    */
 #define BT_GAP_INIT_CONN_INT_MIN                0x0018  /* 30 ms    */
 #define BT_GAP_INIT_CONN_INT_MAX                0x0028  /* 50 ms    */
+
+/*Defined by Bouffalo*/
+typedef enum {
+	BT_GAP_ADV_CHNL_37_EN = 0x01,  /*Byte value for advertising channel map for channel 37 enable*/
+	BT_GAP_ADV_CHNL_38_EN = 0x02,  /*Byte value for advertising channel map for channel 38 enable*/
+	BT_GAP_ADV_CHNL_39_EN = 0x04,  /*Byte value for advertising channel map for channel 39 enable*/
+	BT_GAP_ADV_CHNL_ALL_EN = 0x07, /*Byte value for advertising channel map for channel 37, 38 and 39 enable*/
+}bt_gap_adv_chnl_map_t;
+/*Defined by Bouffalo,end*/
+
+void bt_gap_set_local_device_appearance(u16_t device_appearance);
 
 #ifdef __cplusplus
 }

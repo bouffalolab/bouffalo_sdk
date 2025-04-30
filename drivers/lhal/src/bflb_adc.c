@@ -4,7 +4,7 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define ADC_GPIP_BASE ((uint32_t)0x40002000)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define ADC_GPIP_BASE ((uint32_t)0x20002000)
 #endif
 
@@ -14,6 +14,7 @@ volatile int os2 = 0;
 volatile uint32_t tsen_offset;
 volatile int adc_reference_channel = -1;
 volatile int32_t adc_reference_channel_millivolt = -1;
+volatile int adc_cali_complete = 0;
 
 void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
 {
@@ -110,6 +111,10 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
         regval |= AON_GPADC_VREF_SEL;
     }
 
+    if (config->differential_mode) {
+        regval |= AON_GPADC_DIFF_MODE;
+    }
+
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
@@ -151,9 +156,13 @@ void bflb_adc_init(struct bflb_device_s *dev, const struct bflb_adc_config_s *co
     regval |= AON_GPADC_POS_SATUR_MASK;
     putreg32(regval, reg_base + AON_GPADC_REG_ISR_OFFSET);
 
-    coe = bflb_efuse_get_adc_trim(); /* read from efuse */
-    bflb_update_adc_trim(dev, config);
-    tsen_offset = bflb_efuse_get_adc_tsen_trim(); /* read from efuse */
+    /* only calibrate one time after power on, do not calibrate after reinit even wakeup from pds */
+    if (adc_cali_complete == 0) {
+        coe = bflb_efuse_get_adc_trim(); /* read from efuse */
+        bflb_update_adc_trim(dev, config);
+        tsen_offset = bflb_efuse_get_adc_tsen_trim(); /* read from efuse */
+        adc_cali_complete = 1;
+    }
 }
 
 void bflb_update_adc_trim(struct bflb_device_s *dev, const struct bflb_adc_config_s *config)
@@ -210,7 +219,7 @@ void bflb_update_adc_trim(struct bflb_device_s *dev, const struct bflb_adc_confi
     } else {
         os2 = (os_val / 5) * 2;
     }
-    coe = coe - os2 / 40960.0;
+    coe = coe - os2 / 40960.0f;
 
     os_val = 0;
     regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
@@ -264,6 +273,14 @@ void bflb_update_adc_trim(struct bflb_device_s *dev, const struct bflb_adc_confi
         regval |= AON_GPADC_SCAN_EN;
     }
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
+
+    regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
+    if (config->differential_mode) {
+        regval |= AON_GPADC_DIFF_MODE;
+    } else {
+        regval &= ~AON_GPADC_DIFF_MODE;
+    }
+    putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
     if (config->differential_mode) {
@@ -625,23 +642,21 @@ void bflb_adc_parse_result(struct bflb_device_s *dev, uint32_t *buffer, struct b
             result[i].pos_chan = buffer[i] >> 21;
             result[i].neg_chan = -1;
 
+            conv_result = (uint32_t)((buffer[i] & 0xffff));
+            result[i].value = bflb_get_conv_value(os1, os2, conv_result);
             if (resolution == ADC_RESOLUTION_12B) {
-                conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 4));
-                result[i].value = bflb_get_conv_value(os1, os2, conv_result);
+                result[i].value >>= 4;
                 if (result[i].value > 4095) {
                     result[i].value = 4095;
                 }
                 result[i].millivolt = (int32_t)result[i].value * ref / 4096;
             } else if (resolution == ADC_RESOLUTION_14B) {
-                conv_result = (uint32_t)(((buffer[i] & 0xffff) >> 2));
-                result[i].value = bflb_get_conv_value(os1, os2, conv_result);
+                result[i].value >>= 2;
                 if (result[i].value > 16383) {
                     result[i].value = 16383;
                 }
                 result[i].millivolt = (int32_t)result[i].value * ref / 16384;
             } else if (resolution == ADC_RESOLUTION_16B) {
-                conv_result = (uint32_t)((buffer[i] & 0xffff));
-                result[i].value = bflb_get_conv_value(os1, os2, conv_result);
                 if (result[i].value > 65535) {
                     result[i].value = 65535;
                 }
@@ -712,7 +727,7 @@ void bflb_adc_tsen_init(struct bflb_device_s *dev, uint8_t tsen_mod)
     regval &= ~AON_GPADC_SEN_TEST_EN;
     regval |= (0 << AON_GPADC_SEN_SEL_SHIFT);
     regval &= ~AON_GPADC_CHIP_SEN_PU;
-    regval |= AON_GPADC_DWA_EN;
+    regval &= ~AON_GPADC_DWA_EN;
     putreg32(regval, reg_base + AON_GPADC_REG_CMD_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
@@ -720,6 +735,7 @@ void bflb_adc_tsen_init(struct bflb_device_s *dev, uint8_t tsen_mod)
     regval &= ~AON_GPADC_TEST_EN;
     regval &= ~AON_GPADC_TEST_SEL_MASK;
     regval &= ~AON_GPADC_PGA_VCMI_EN;
+    regval &= ~AON_GPADC_CHOP_MODE_MASK;
     regval |= (1 << AON_GPADC_CHOP_MODE_SHIFT); /* Vref AZ */
     regval |= (2 << AON_GPADC_DLY_SEL_SHIFT);
     regval |= AON_GPADC_TS_EN;
@@ -733,7 +749,7 @@ void bflb_adc_tsen_init(struct bflb_device_s *dev, uint8_t tsen_mod)
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
-    regval |= AON_GPADC_DITHER_EN;
+    regval &= ~AON_GPADC_DITHER_EN;
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG1_OFFSET);
 
     regval = getreg32(reg_base + AON_GPADC_REG_CMD_OFFSET);
@@ -745,11 +761,11 @@ float bflb_adc_tsen_get_temp(struct bflb_device_s *dev)
 {
     uint32_t regval;
     uint32_t reg_base;
-    struct bflb_adc_result_s result;
     uint32_t v0 = 0, v1 = 0;
     float temp = 0;
     uint32_t raw_data;
     uint64_t start_time;
+    uint32_t sum;
 
     reg_base = dev->reg_base;
 
@@ -762,16 +778,30 @@ float bflb_adc_tsen_get_temp(struct bflb_device_s *dev)
     regval &= ~AON_GPADC_TSVBE_LOW;
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 
+    sum = 0;
     bflb_adc_start_conversion(dev);
-    start_time = bflb_mtimer_get_time_ms();
-    while (bflb_adc_get_count(dev) == 0) {
-        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
-            return -ETIMEDOUT;
+    for (uint32_t i = 0; i < 8; i++) {
+        start_time = bflb_mtimer_get_time_ms();
+        while (bflb_adc_get_count(dev) == 0) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
+        bflb_adc_read_raw(dev);
     }
-    raw_data = bflb_adc_read_raw(dev);
-    bflb_adc_parse_result(dev, &raw_data, &result, 1);
-    v0 = result.value;
+    for (uint32_t i = 0; i < 16; i++) {
+        start_time = bflb_mtimer_get_time_ms();
+        while (bflb_adc_get_count(dev) == 0) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
+        }
+        raw_data = bflb_adc_read_raw(dev);
+        sum += (raw_data & 0xFFFF);
+    }
+    bflb_adc_stop_conversion(dev);
+    v0 = (sum + 8) / 16;
+
     regval = getreg32(ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
     regval |= GPIP_GPADC_FIFO_CLR;
     putreg32(regval, ADC_GPIP_BASE + GPIP_GPADC_CONFIG_OFFSET);
@@ -780,16 +810,30 @@ float bflb_adc_tsen_get_temp(struct bflb_device_s *dev)
     regval |= AON_GPADC_TSVBE_LOW;
     putreg32(regval, reg_base + AON_GPADC_REG_CONFIG2_OFFSET);
 
+    sum = 0;
     bflb_adc_start_conversion(dev);
-    start_time = bflb_mtimer_get_time_ms();
-    while (bflb_adc_get_count(dev) == 0) {
-        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
-            return -ETIMEDOUT;
+    for (uint32_t i = 0; i < 8; i++) {
+        start_time = bflb_mtimer_get_time_ms();
+        while (bflb_adc_get_count(dev) == 0) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
         }
+        bflb_adc_read_raw(dev);
     }
-    raw_data = bflb_adc_read_raw(dev);
-    bflb_adc_parse_result(dev, &raw_data, &result, 1);
-    v1 = result.value;
+    for (uint32_t i = 0; i < 16; i++) {
+        start_time = bflb_mtimer_get_time_ms();
+        while (bflb_adc_get_count(dev) == 0) {
+            if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+                return -ETIMEDOUT;
+            }
+        }
+        raw_data = bflb_adc_read_raw(dev);
+        sum += (raw_data & 0xFFFF);
+    }
+    bflb_adc_stop_conversion(dev);
+    v1 = (sum + 8) / 16;
+
     if (v0 > v1) {
         temp = (((float)v0 - (float)v1) - (float)tsen_offset) / 7.753f;
     } else {

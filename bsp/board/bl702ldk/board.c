@@ -1,10 +1,20 @@
+#include "math.h"
+
 #include "bflb_uart.h"
 #include "bflb_gpio.h"
 #include "bflb_clock.h"
 #include "bflb_rtc.h"
 #include "bflb_flash.h"
+#include "bflb_ef_ctrl.h"
+
 #include "bl702l_glb.h"
 #include "bl702l_clock.h"
+#include "ef_data_reg.h"
+#if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
+#include "bl702l_ef_cfg.h"
+#include "bl702l_phy.h"
+#endif
+
 #include "board.h"
 
 #include "mem.h"
@@ -22,11 +32,23 @@ static struct bflb_device_s *rtc;
 
 static void system_clock_init(void)
 {
+#if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
+    int idx_cap_code = -1;
+    uint8_t capcode;
+#endif
+
     GLB_Set_System_CLK(GLB_DLL_XTAL_32M, GLB_SYS_CLK_DLL128M);
     GLB_Set_MTimer_CLK(1, GLB_MTIMER_CLK_XCLK, Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK) / 1000000 - 1);
     HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_XTAL);
     // HBN_Power_On_Xtal_32K();
     // HBN_32K_Sel(HBN_32K_XTAL);
+
+#if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
+    idx_cap_code = bflb_efuse_read_xtal_capcode(&capcode);
+    if (idx_cap_code >= 0) {
+        AON_Set_Xtal_CapCode(capcode, capcode);
+    }
+#endif
 }
 
 static void peripheral_clock_init(void)
@@ -150,7 +172,16 @@ void board_init(void)
 #if defined(CONFIG_BFLOG)
     rtc = bflb_device_get_by_name("rtc");
 #endif
+
+#ifdef CONFIG_MBEDTLS
+    extern void bflb_sec_mutex_init(void);
+    bflb_sec_mutex_init();
+#endif
+
     bflb_irq_restore(flag);
+
+    printf("board init done\r\n");
+    printf("===========================\r\n");
 }
 
 void board_uartx_gpio_init()
@@ -299,6 +330,33 @@ void board_keyscan_gpio_init(void)
     bflb_gpio_init(gpio, GPIO_PIN_30, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
     bflb_gpio_init(gpio, GPIO_PIN_31, GPIO_FUN_KEY_SCAN_IN | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_INPUT | GPIO_SMT_EN | GPIO_DRV_1); //
 }
+
+void board_timer_gpio_init()
+{
+    struct bflb_device_s *gpio;
+
+    gpio = bflb_device_get_by_name("gpio");
+    GLB_Sel_TMR_GPIO_Clock(GPIO_PIN_0);
+    bflb_gpio_init(gpio, GPIO_PIN_0, GPIO_FUNC_CLKOUT | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+}
+
+#if (defined CFG_BLUETOOTH_ENABLED) || (defined CFG_M154_ENABLED)
+void rf_reset_done_callback(void)
+{
+#if (defined CFG_BLUETOOTH_ENABLED) && (defined CFG_M154_ENABLED)
+    rf_set_bz_mode(MODE_BZ_COEX);
+#elif defined (CFG_BLUETOOTH_ENABLED)
+    rf_set_bz_mode(MODE_BLE_ONLY);
+else
+    rf_set_bz_mode(MODE_ZB_ONLY);
+#endif
+}
+
+void rf_full_cal_start_callback(uint32_t addr, uint32_t size)
+{
+    /** TBD: need to check memory access conflict on DMA and rf calculation*/
+}
+#endif
 
 #ifdef CONFIG_BFLOG
 __attribute__((weak)) uint64_t bflog_clock(void)

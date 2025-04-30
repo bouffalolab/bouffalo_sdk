@@ -7,17 +7,25 @@ DESCRIPTION
 
 ****************************************************************************/
 
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
 #include "bluetooth.h"
 #include "gatt.h"
-#include "uuid.h"
+#include "bt_uuid.h"
 #include "ias.h"
 #include "bt_log.h"
 
+/*************************************************************************
+*  NAME: ias recv callback
+*/
+static ias_recv_callbck_func_t ias_recv_callback=NULL;
 
+void ias_register_recv_callback(ias_recv_callbck_func_t cb)
+{
+    ias_recv_callback=cb;
+}
 /*************************************************************************
 *  NAME: ias_recv_wr
 */
@@ -30,6 +38,8 @@ static int ias_recv_wr(struct bt_conn *conn, const struct bt_gatt_attr *attr,
     {
         BT_INFO("rcv write command");
         //handle alert level.
+        if(ias_recv_callback)
+            ias_recv_callback(conn,buf,len);
     }
 
     return len;
@@ -63,4 +73,10 @@ void ias_init()
     bt_gatt_service_register(&ias_server);
 }
 
-
+/*************************************************************************
+*  NAME: ias_deinit
+*/
+void ias_deinit()
+{
+    bt_gatt_service_unregister(&ias_server);
+}

@@ -1,6 +1,10 @@
 #ifndef __BOARD_RF_H__
 #define __BOARD_RF_H__
 
+#if __has_include("board_rf_overlay.h")
+#include "board_rf_overlay.h"
+#else
+
 enum board_ctl_ops {
   /* @ rf configuration start {  */
   BRD_CTL_RF_RESET_DEFAULT,
@@ -22,4 +26,5 @@ enum board_ctl_ops {
 
 int board_rf_ctl(enum board_ctl_ops ops, ...);
 
+#endif
 #endif

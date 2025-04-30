@@ -36,7 +36,6 @@
 
 #include "bflb_spi_psram.h"
 #include "bflb_l1c.h"
-#include "sf_ctrl_reg.h"
 
 /** @addtogroup  BFLB_Peripheral_Driver
  *  @{

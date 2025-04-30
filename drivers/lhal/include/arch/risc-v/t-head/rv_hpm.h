@@ -133,7 +133,7 @@ inline __attribute__((always_inline)) void RV_HPM_L1_ICache_Miss_Stop_M(uint64_t
 /* M-mode: Conditional Branch Mispredict rate measure Init      */
 inline __attribute__((always_inline)) void RV_HPM_L1_BrPredict_Miss_Init_M(void)
 {
-#ifdef CPU_M0
+#if (__riscv_xlen == 32)
     __asm volatile("csrw mhpmevent8, 6"
                    :
                    :
@@ -144,8 +144,7 @@ inline __attribute__((always_inline)) void RV_HPM_L1_BrPredict_Miss_Init_M(void)
                    : "memory");
     RV_HPM_SET_COUNTER(mhpmcounter8, 0);
     RV_HPM_SET_COUNTER(mhpmcounter9, 0);
-#endif
-#ifdef CPU_D0
+#else
     __asm volatile("csrw mhpmevent9, 6"
                    :
                    :
@@ -163,11 +162,10 @@ inline __attribute__((always_inline)) void RV_HPM_L1_BrPredict_Miss_Init_M(void)
 inline __attribute__((always_inline)) void RV_HPM_L1_BrPredict_Miss_Stop_M(uint64_t *m, uint64_t *c)
 {
     uint64_t miss, count;
-#ifdef CPU_M0
+#if (__riscv_xlen == 32)
     RV_HPM_GET_COUNTER(mhpmcounter9, count);
     RV_HPM_GET_COUNTER(mhpmcounter8, miss);
-#endif
-#ifdef CPU_D0
+#else
     RV_HPM_GET_COUNTER(mhpmcounter10, count);
     RV_HPM_GET_COUNTER(mhpmcounter9, miss);
 #endif
@@ -178,7 +176,7 @@ inline __attribute__((always_inline)) void RV_HPM_L1_BrPredict_Miss_Stop_M(uint6
 /* M-mode: L1 DCache read miss rate measure Init      */
 inline __attribute__((always_inline)) void RV_HPM_L1_DCache_RdMiss_Init_M(void)
 {
-#ifdef CPU_M0
+#if (__riscv_xlen == 32)
     __asm volatile("csrw mhpmevent14, 12"
                    :
                    :
@@ -189,8 +187,7 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_RdMiss_Init_M(void)
                    : "memory");
     RV_HPM_SET_COUNTER(mhpmcounter14, 0);
     RV_HPM_SET_COUNTER(mhpmcounter15, 0);
-#endif
-#ifdef CPU_D0
+#else
     __asm volatile("csrw mhpmevent5, 12"
                    :
                    :
@@ -208,11 +205,10 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_RdMiss_Init_M(void)
 inline __attribute__((always_inline)) void RV_HPM_L1_DCache_RdMiss_Stop_M(uint64_t *m, uint64_t *c)
 {
     uint64_t miss, count;
-#ifdef CPU_M0
+#if (__riscv_xlen == 32)
     RV_HPM_GET_COUNTER(mhpmcounter14, count);
     RV_HPM_GET_COUNTER(mhpmcounter15, miss);
-#endif
-#ifdef CPU_D0
+#else
     RV_HPM_GET_COUNTER(mhpmcounter5, count);
     RV_HPM_GET_COUNTER(mhpmcounter6, miss);
 #endif
@@ -223,7 +219,7 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_RdMiss_Stop_M(uint64
 /* M-mode: L1 DCache write miss rate measure Init      */
 inline __attribute__((always_inline)) void RV_HPM_L1_DCache_WrMiss_Init_M(void)
 {
-#ifdef CPU_M0
+#if (__riscv_xlen == 32)
     __asm volatile("csrw mhpmevent16, 14"
                    :
                    :
@@ -234,8 +230,7 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_WrMiss_Init_M(void)
                    : "memory");
     RV_HPM_SET_COUNTER(mhpmcounter16, 0);
     RV_HPM_SET_COUNTER(mhpmcounter17, 0);
-#endif
-#ifdef CPU_D0
+#else
     __asm volatile("csrw mhpmevent7, 14"
                    :
                    :
@@ -253,11 +248,10 @@ inline __attribute__((always_inline)) void RV_HPM_L1_DCache_WrMiss_Init_M(void)
 inline __attribute__((always_inline)) void RV_HPM_L1_DCache_WrMiss_Stop_M(uint64_t *m, uint64_t *c)
 {
     uint64_t miss, count;
-#ifdef CPU_M0
+#if (__riscv_xlen == 32)
     RV_HPM_GET_COUNTER(mhpmcounter16, count);
     RV_HPM_GET_COUNTER(mhpmcounter17, miss);
-#endif
-#ifdef CPU_D0
+#else
     RV_HPM_GET_COUNTER(mhpmcounter7, count);
     RV_HPM_GET_COUNTER(mhpmcounter8, miss);
 #endif

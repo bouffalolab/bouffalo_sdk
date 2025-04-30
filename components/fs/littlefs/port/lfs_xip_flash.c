@@ -18,63 +18,40 @@
 
 /*!< use memory area after 512k */
 #ifdef CONFIG_LITTLEFS_FLASH_ADDRESS
-#define LITTLEFS_FLASH_SIZE (0x71000)
+#ifndef LITTLEFS_FLASH_SIZE
+#error not def LITTLEFS_FLASH_SIZE
 #endif
-
-#define LITTLEFS_FLASH_BLOCK_SIZE  4096
-#define LITTLEFS_FLASH_BLOCK_CYCLE 500
-
-static lfs_t lfs;
-static char lfs_inited = 0;
+#endif
 
 #if defined(LFS_THREADSAFE) && defined(CONFIG_FREERTOS)
 static int lfs_xip_giant_lock(const struct lfs_config *c);
 static int lfs_xip_giant_unlock(const struct lfs_config *c);
 #endif
 
-static struct lfs_context {
-    uint32_t flash_addr;
-#ifdef CONFIG_FREERTOS
-    SemaphoreHandle_t fs_giant_lock;
-#endif
-} lfs_xip_ctx;
-
-/*!< configuration of the filesystem is provided by this struct */
-static struct lfs_config cfg = {
-    .context = &lfs_xip_ctx,
-    // block device operations
-    .read = lfs_xip_flash_read,
-    .prog = lfs_xip_flash_prog,
-    .erase = lfs_xip_flash_erase,
-    .sync = lfs_xip_flash_sync,
-#if defined(LFS_THREADSAFE) && defined(CONFIG_FREERTOS)
-    .lock = lfs_xip_giant_lock,
-    .unlock = lfs_xip_giant_unlock,
-#endif
-
-    // block device configuration
-    .read_size = 256,
-    .prog_size = 256,
-    .lookahead_size = 256,
-    .cache_size = 512,
-
-    .block_size = LITTLEFS_FLASH_BLOCK_SIZE,
-    .block_cycles = LITTLEFS_FLASH_BLOCK_CYCLE,
-};
-
-lfs_t *lfs_xip_init(void)
+lfs_t *lfs_xip_init(struct lfs_context *lfs_xip_ctx, struct lfs_config *cfg)
 {
     int ret;
+    lfs_t *lfs = &lfs_xip_ctx->lfs;
 
-    if (lfs_inited) {
-        return &lfs;
+    if (lfs->cfg == cfg) {
+        return lfs;
+    } else {
+        cfg->context = lfs_xip_ctx;
+        cfg->read = lfs_xip_flash_read;
+        cfg->prog = lfs_xip_flash_prog;
+        cfg->erase = lfs_xip_flash_erase;
+        cfg->sync = lfs_xip_flash_sync;
+#if defined(LFS_THREADSAFE) && defined(CONFIG_FREERTOS)
+        cfg->lock = lfs_xip_giant_lock;
+        cfg->unlock = lfs_xip_giant_unlock;
+#endif
     }
 
 #ifndef CONFIG_LITTLEFS_FLASH_ADDRESS
     bflb_mtd_info_t info;
     bflb_mtd_handle_t handle;
 
-    ret = bflb_mtd_open(BFLB_MTD_PARTITION_NAME_PSM, &handle, BFLB_MTD_OPEN_FLAG_BUSADDR);
+    ret = bflb_mtd_open(lfs_xip_ctx->partition_name, &handle, BFLB_MTD_OPEN_FLAG_BUSADDR);
     if (ret < 0) {
         LOG_E("no valid PSM partition found\r\n");
         errno = LFS_ERR_IO;
@@ -87,30 +64,30 @@ lfs_t *lfs_xip_init(void)
           info.xip_addr,
           info.offset,
           info.size);
-    lfs_xip_ctx.flash_addr = info.offset;
-    cfg.block_count = info.size / LITTLEFS_FLASH_BLOCK_SIZE;
+    lfs_xip_ctx->flash_addr = info.offset;
+    cfg->block_count = info.size / cfg->block_size;
     bflb_mtd_close(handle);
 #else
-    lfs_xip_ctx.flash_addr = CONFIG_LITTLEFS_FLASH_ADDRESS;
-    cfg.block_count = LITTLEFS_FLASH_SIZE / LITTLEFS_FLASH_BLOCK_SIZE;
+    lfs_xip_ctx->flash_addr = CONFIG_LITTLEFS_FLASH_ADDRESS;
+    cfg.block_count = LITTLEFS_FLASH_SIZE / cfg->block_size;
 #endif
 
 #ifdef CONFIG_FREERTOS
 #if configUSE_RECURSIVE_MUTEXES
-    lfs_xip_ctx.fs_giant_lock = xSemaphoreCreateRecursiveMutex();
+    lfs_xip_ctx->fs_giant_lock = xSemaphoreCreateRecursiveMutex();
 #else
-    lfs_xip_ctx.fs_giant_lock = xSemaphoreCreateMutex();
+    lfs_xip_ctx->fs_giant_lock = xSemaphoreCreateMutex();
 #endif
 #endif
 
     // mount the filesystem
-    ret = lfs_mount(&lfs, &cfg);
+    ret = lfs_mount(lfs, cfg);
 
     // reformat if we can't mount the filesystem
     // this should only happen on the first boot
     if (ret == LFS_ERR_CORRUPT) {
         LOG_W("try to reformat \r\n");
-        ret = lfs_format(&lfs, &cfg);
+        ret = lfs_format(lfs, cfg);
         if (ret) {
             LOG_F("reformat fail\r\n");
             errno = LFS_ERR_CORRUPT;
@@ -118,7 +95,7 @@ lfs_t *lfs_xip_init(void)
         }
 
         LOG_I("reformat success\r\n");
-        ret = lfs_mount(&lfs, &cfg);
+        ret = lfs_mount(lfs, cfg);
         if (ret) {
             errno = ret;
             return NULL;
@@ -129,9 +106,8 @@ lfs_t *lfs_xip_init(void)
     }
 
     LOG_I("mount success\r\n");
-    lfs_inited = 1;
 
-    return &lfs;
+    return lfs;
 }
 
 #if defined(LFS_THREADSAFE) && defined(CONFIG_FREERTOS)

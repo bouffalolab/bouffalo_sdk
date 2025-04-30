@@ -8,8 +8,20 @@ In order to achieve this goal, some parameters must be specified:
   --xtsmode: xts mode enable when you want to encrypt image with AES xts and your chip should support it
   --privatekey: private key of ecc-256 in pem format
   --publickey: public key of ecc-256 in pem format
+  --publickey_sign: signature of the public key, in base64 format
+  --publickey_hash_sign: signature of the public key's hash, in base64 format
+  --imgfile_sign: signature of the image file, in base64 format
+  --appkeys: true: APP uses different keys from bootloader; shared: APP uses the same key as bootloader; "not specified" or other: App is neither encrypted nor signed
 
 Examples(examples/wifi/sta/wifi_tcp, bl616):
+
+
+***Secure boot with sign***
+step1: sign the helloworld_bl616.bin with privatekey_uecc.pem and convert into base64 format as input imgfile_sign
+step2: sign the publickey_uecc.pem with privatekey_uecc.pem and convert into base64 format as input publickey_sign
+step3: sign the hash(sha256) of publickey_uecc.pem with privatekey_uecc.pem and convert into base64 format as input publickey_hash_sign
+step4: "QConn_Secure --imgfile=helloworld_bl616.bin --publickey_sign=tdZGKpDE0/BysnPH166h86/d4vJOrqxW2ObGuGp+SxpXFJouWQ+8bTVaBbYpVjgEfXE5dlDWz/BC+21hMiMlgg== --publickey_hash_sign=E4U3TCWEezXSRnzVVzsOQtLML0z3VX4FNunVj0tuqf0=  --imgfile_sign=Ft+u9TD6IM7nOf4lqssT4Ed9+KnnRzdUdUgKN1DLIu9doQUAhqVa1yq/Vyz2cvcA2eu1I/cZzFdKCipRTppz2g=="
+
 
 ***No secure boot***
 
@@ -20,12 +32,40 @@ step3: "bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config 
 
 ***Secure boot with command line***
 
+****Boot2 and APP use the same key
+
 step1: "cd examples/wifi/sta/wifi_tcp"
 step2: "make"
-step3: "bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem"
+step3: "bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem --appkeys=shared"
+
+****Boot2 and APP use individual keys
+
+step1: "cd examples/wifi/sta/wifi_tcp"
+step2: "make"
+step3: "bflb_fw_post_proc --chipname=bl616 --imgfile=./build/build_out/boot2_xxx.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem"
+step4: "bflb_fw_post_proc --chipname=bl616 --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=0123456789ABCDEF0123456789ABCDEF --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc_app.pem --publickey=publickey_uecc_app.pem --edatafile_in=./build/build_out/efusedata.bin --appkeys=true"
 
 
 ***Secure boot with encrypt and sign server***
+
+****Boot2 and APP use the same key
+
+step1: deploy encrypt and sign server with bflb_fw_post_proc
+step2: "cd examples/wifi/sta/wifi_tcp"
+step3: "make"
+
+step4: upload build/build_out/boot2_xxx.bin to server (optional, if boot2 is not changed and already encrypt and sign,skip this step)
+step5: upload build/build_out/wifi_tcp_bl616.bin to server (optional, if APP is not changed and already encrypt and sign,skip this step)
+step6: server excute "bflb_fw_post_proc --chipname=bl616 --imgfile=boot2_xxx.bin,wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem --appkeys=shared"
+
+step7: download boot2_xxx.bin from server and overwrite the original one
+step8: download wifi_tcp_bl616.bin from server and overwrite the original one
+
+step9: make flash
+step10: make efuse
+
+
+****Boot2 and APP use individual keys
 
 step1: deploy encrypt and sign server with bflb_fw_post_proc
 step2: "cd examples/wifi/sta/wifi_tcp"
@@ -35,8 +75,8 @@ step4: upload build/build_out/boot2_xxx.bin to server (optional, if boot2 is not
 step5: server excute "bflb_fw_post_proc --chipname=bl616 --imgfile=boot2_xxx.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem"
 step6: download boot2_xxx.bin from server and overwrite the original one
 
-step7: upload build/build_out/wifi_tcp_bl616.bin to server (optional, if boot2 is not changed and already encrypt and sign,skip this step)
-step8: server excute "bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --publickey=publickey_uecc.pem"
+step7: upload build/build_out/wifi_tcp_bl616.bin to server (optional, if APP is not changed and already encrypt and sign,skip this step)
+step8: server excute "bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=0123456789ABCDEF0123456789ABCDEF --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc_app.pem --publickey=publickey_uecc_app.pem --edatafile_in=efusedata.bin --appkeys=true"
 step9: download wifi_tcp_bl616.bin from server and overwrite the original one
 
 step10: make flash
@@ -44,10 +84,103 @@ step11: make efuse
 
 
 Other options:
-	multi-files: "bflb_fw_post_proc --chipname=bl616 --imgfile=./build/build_out/helloworld_bl616.bin,./build/build_out/boot2_*.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000"
-	--edbg_mode:set dbg mode,open/pswd/close; ex:--edbg_mode=pswd
-	--epswwd:JTAG password value for hex string; ex:--epswwd=1234567890ABCDEF
-	--ehbn_sign:enable/disable signature check when HBN mode wakeup; ex:--ehbn_sign=true
-	--eanti_rollback:enable/disable anti-rollback function; ex:--eanti_rollback=true
-	--ejtag_close:close jtag port; ex:--ejtag_close=true
-	--edata:efuse data content:start,hex_str; ex:0x10,000102030405060708
+  multi-files: "bflb_fw_post_proc --chipname=bl616 --imgfile=./build/build_out/helloworld_bl616.bin,./build/build_out/boot2_*.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000"
+
+  --edatafile_in: input efuse data file;
+  e.g.: bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --edbg_mode=close
+
+  --ehbn_jump: enable/disable hbn jump function;
+  e.g.1: encrypt image and disable hbn jump
+  bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --ehbn_jump=false
+  e.g.2: append hbn jump option for efusedata.bin
+  bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --ehbn_jump=false
+
+  --eflash_pdelay: flash power up delay value, value: 0-3, 0:0ms, 1:1ms, 2:8ms, 3:16ms;
+  e.g.1: encrypt image and set flash power up delay value
+  bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --eflash_pdelay=3
+  e.g.2: append flash power up delay value for efusedata.bin
+  bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --eflash_pdelay=3
+
+  --edbg_mode:set dbg mode,open/pswd/close;
+  e.g.1: encrypt image and set dbg mode
+  bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --edbg_mode=pswd
+  e.g.2: append set dbg mode for efusedata.bin
+  bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --edbg_mode=pswd
+
+  --epswd:Debug port password value for hex string; password len should be 16 bytes
+  e.g.1: encrypt image and set debug port password value
+  bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --epswd=1234567890ABCDEF1234567890ABCDEF
+  e.g.2: append set debug port password value for efusedata.bin
+  bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --epswd=1234567890ABCDEF1234567890ABCDEF
+
+  --ehbn_sign:enable/disable signature check when HBN mode wakeup;
+  e.g.1: encrypt image and enable signature check
+  bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --ehbn_sign=true
+  e.g.2: append enable signature check for efusedata.bin
+  bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --ehbn_sign=true
+
+  --eanti_rollback:enable/disable anti-rollback function;
+  e.g.1: encrypt image and enable anti-rollback
+  bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --eanti_rollback=true
+  e.g.2: append enable anti-rollback for efusedata.bin
+  bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --eanti_rollback=true
+
+  --ejtag_close:close jtag port;
+  e.g.1: encrypt image and close jtag port
+  bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --ejtag_close=true
+  e.g.2: append close jtag port option for efusedata.bin
+  bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --ejtag_close=true
+
+  --edata:append new efuse data:start,hex_str;
+  e.g.: bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin --edata="0x14,000102030405060708;0x55,99887766"
+
+  --datafile: user data file to encrypt like image,efuse will also be update;
+  e.g.: bflb_fw_post_proc --chipname=bl616 --datafile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000
+
+  --keyoffset:AES Key offset in efuse;
+  e.g.: bflb_fw_post_proc --chipname=bl616 --datafile=./build/build_out/wifi_tcp_bl616.bin --edatafile_in=./efusedata.bin --keyoffset=0x100 --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000
+
+  --dump_data:dump efuse data,mode: true/false
+  e.g.: bflb_fw_post_proc --chipname=bl616 --edatafile_in=./efusedata.bin -dump_data=true
+
+  --hd_append:header append file
+  e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --hd_append=./hd_append.bin
+
+  --fw_append_pkh:firmware append public key hash;
+  e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --fw_append_pkh=true --publickey=publickey_uecc.pem
+
+  --publickey_str:ECC public key base 64 string;--privatekey_str:ECC private key base 64 string;
+  e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=./build/build_out/wifi_tcp_bl616.bin --publickey_str=MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEb0B+ztCy6iK0K53PsEEWfPBSFTiUYY8MgtZEM/VNOnngKPnGDY9acMOvCX7l3cPpo6/fAiNCSgY9qnpcJdhRuQ== --privatekey_str=MHcCAQEEIPWAZexo3e8wEvbqxaK5NJfIsdOq9X9Iqke+etCNxZfmoAoGCCqGSM49AwEHoUQDQgAEb0B+ztCy6iK0K53PsEEWfPBSFTiUYY8MgtZEM/VNOnngKPnGDY9acMOvCX7l3cPpo6/fAiNCSgY9qnpcJdhRuQ==
+
+  --checkpartition:check partition in whole_flash_data.bin;
+  e.g.: bflb_fw_post_proc --chipname=bl616 --checkpartition=whole_flash_data.bin
+  
+  --add_pincode:add pincode protect for efusedata.bin: true/false;--pincode:8 decimal digits pincode;
+  e.g.1: Encrypt efuse data useing pincode
+  bflb_fw_post_proc --chipname=bl616 --add_pincode=true --pincode=12345678 --edatafile_in=efusedata.bin
+  e.g.2: Decrypt efuse data useing pincode
+  bflb_fw_post_proc --chipname=bl616 --dump_data=true --pincode=12345678 --edatafile_in=efusedata_pincode.bin
+  
+  --eisp_mode:isp mode:open/pswd/close
+  e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --edbg_mode=pswd --epswd=12345678223456783234567842345678 --eisp_mode=pswd
+  
+  --secp384r1: true: use secp384r1 as ecdsa parameter
+  e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --privatekey=privatekey_secp384r1.pem --secp384r1=true --appkeys=true
+
+  --appignore:ignore app firmware when only deal boot2/mfg
+  e.g.: bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --appignore=true
+  
+  --boot2ignore:ignore boot2 when only deal app/mfg
+  e.g.: bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --boot2ignore=true
+  
+  --mfgignore:ignore mfg when only deal boot2/app
+  e.g.: bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --mfgignore=true
+  
+  --ptfile、--dtsfile、--boot2file、--mfgfile：In the iot burning scenario, select the corresponding bin file to burn
+  e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=./build/build_out/wifi_tcp_bl616.bin --ptfile=bsp/board/bl616dk/config/partition_cfg_4M.toml --dtsfile=bsp/board/bl616dk/config/bl_factory_params_IoTKitA_auto.dts --boot2file=bsp/board/bl616dk/config/boot2_bl616_isp_release_v8.1.6.bin --mfgfile=bsp/board/bl616dk/config/mfg_bl616_gu_ef9d197c5_v2.50.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000
+  
+  --pkh192:Just for bl616l, trim pk hash from 256 bits to 192 bits
+  e.g.: bflb_fw_post_proc --chipname=bl616l --imgfile=./build/build_out/wifi_tcp_bl616l.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --appkeys=shared --pkh192=true
+  
+  --pkh_to_flash_otp:Just for bl616l, put publickey hash to flash otp areas, generate pk_hash_to_flash_otp.bin
+  e.g.: bflb_fw_post_proc --chipname=bl616l --imgfile=./build/build_out/wifi_tcp_bl616l.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --appkeys=true --pkh_to_flash_otp=true

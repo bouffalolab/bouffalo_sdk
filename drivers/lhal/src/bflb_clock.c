@@ -3,16 +3,10 @@
 #include "bl702_clock.h"
 #elif defined(BL702L)
 #include "bl702l_clock.h"
-#elif defined(BL606P)
-#include "bl606p_clock.h"
 #elif defined(BL808)
 #include "bl808_clock.h"
 #elif defined(BL616)
 #include "bl616_clock.h"
-#elif defined(WB03)
-#include "wb03_clock.h"
-#elif defined(BL628)
-#include "bl628_clock.h"
 #endif
 
 /****************************************************************************/ /**

@@ -233,6 +233,7 @@ int main(void)
     }
     printf("sha384 success\r\n");
 
+#if !defined(BL602) && !defined(BL702)
     bflb_sha_init(sha, SHA_MODE_SHA512);
     for (uint8_t i = 0; i < 3; i++) {
         bflb_sha512_start(sha, &ctx_sha512);
@@ -250,6 +251,7 @@ int main(void)
         bflb_data_compare(sha512_test_sum[i + 3], sha_output_buf, 64);
     }
     printf("sha512 success\r\n");
+#endif
 #endif
 
     bflb_group0_release_sha_access(sha);

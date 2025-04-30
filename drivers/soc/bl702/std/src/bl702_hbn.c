@@ -38,6 +38,7 @@
 #include "bflb_acomp.h"
 #include "bl702_glb.h"
 #include "bflb_xip_sflash.h"
+#include <risc-v/e24/clic.h>
 
 /** @addtogroup  BL702_Peripheral_Driver
  *  @{
@@ -298,6 +299,12 @@ void ATTR_TCM_SECTION HBN_Enable_Ext(uint8_t aGPIOIeCfg, HBN_LDO_LEVEL_Type ldoL
     /* Set power on option:0 for por reset twice for robust 1 for reset only once*/
     tmpVal = BL_CLR_REG_BIT(tmpVal, HBN_PWR_ON_OPTION);
     BL_WR_REG(HBN_BASE, HBN_CTL, tmpVal);
+
+    *(volatile uint8_t *)(CLIC_HART0_BASE + CLIC_INTIP_OFFSET + HBN_OUT0_IRQn) = 0;
+    *(volatile uint8_t *)(CLIC_HART0_BASE + CLIC_INTIP_OFFSET + HBN_OUT1_IRQn) = 0;
+
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0xffffffff);
+    BL_WR_REG(HBN_BASE, HBN_IRQ_CLR, 0);
 
     /* Enable HBN mode */
     tmpVal = BL_RD_REG(HBN_BASE, HBN_CTL);
@@ -796,6 +803,30 @@ BL_Err_Type HBN_Set_UART_CLK_Sel(HBN_UART_CLK_Type clkSel)
     BL_WR_REG(HBN_BASE, HBN_GLB, tmpVal);
 
     return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  get xclk clock selection
+ *
+ * @param  None
+ *
+ * @return xclk clock selection
+ *
+*******************************************************************************/
+HBN_XCLK_CLK_Type ATTR_CLOCK_SECTION HBN_Get_XCLK_CLK_Sel(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+
+    switch (BL_GET_REG_BITS_VAL(tmpVal, GLB_HBN_ROOT_CLK_SEL) & 1) {
+        case 0:
+            return HBN_XCLK_CLK_RC32M;
+        case 1:
+            return HBN_XCLK_CLK_XTAL;
+        default:
+            return HBN_XCLK_CLK_RC32M;
+    }
 }
 
 /****************************************************************************/ /**

@@ -214,6 +214,8 @@ int bflb_audac_link_rxdma(struct bflb_device_s *dev, bool enable);
 
 int bflb_audac_int_mask(struct bflb_device_s *dev, uint32_t mask);
 
+int bflb_audac_int_unmask(struct bflb_device_s *dev, uint32_t int_sts);
+
 int bflb_audac_get_intstatus(struct bflb_device_s *dev);
 
 int bflb_audac_int_clear(struct bflb_device_s *dev, uint32_t int_clear);

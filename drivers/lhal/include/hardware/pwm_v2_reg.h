@@ -205,4 +205,5 @@
 #define PWM_CR_PWM_BRK_EN  (1 << 9U)
 #define PWM_CR_PWM_REPT_EN (1 << 10U)
 
+
 #endif /* __HARDWARE_PWM_V2_H__ */

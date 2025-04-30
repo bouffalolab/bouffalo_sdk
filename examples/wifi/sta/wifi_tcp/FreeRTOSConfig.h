@@ -125,4 +125,11 @@ void vApplicationSleep(uint32_t xExpectedIdleTime);
 
 // #define portUSING_MPU_WRAPPERS
 
+/* Enable TLS */
+#define config_ENABLE_OS_TLS_SWITCH
+#ifdef config_ENABLE_OS_TLS_SWITCH
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS     1
+#define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
+#endif
+
 #endif /* FREERTOS_CONFIG_H */

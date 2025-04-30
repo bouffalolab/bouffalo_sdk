@@ -15,6 +15,7 @@
 extern "C" {
 #endif
 
+#define BT_A2DP_PROFILE_VERSION     0x0103
 #include "avdtp.h"
 
 /** @brief Stream Structure */
@@ -60,10 +61,18 @@ struct bt_a2dp_endpoint {
 	uint8_t codec_id;
 	/** Stream End Point Information */
 	struct bt_avdtp_seid_lsep info;
+	/**Extend of struct bt_avdtp_seid_lsep */
+	struct bt_avdtp_local_sep sep;
 	/** Pointer to preset codec chosen */
 	struct bt_a2dp_preset *preset;
 	/** Capabilities */
 	struct bt_a2dp_preset *caps;
+};
+
+struct bt_a2dp_source_endpoint {
+	struct bt_a2dp_endpoint end_point;
+	/**Extend of struct bt_avdtp_seid_lsep */
+	struct bt_avdtp_local_sep sep;
 };
 
 /** @brief Stream Configuration */
@@ -76,7 +85,7 @@ struct bt_a2dp_config {
 	uint8_t samp_freq;
 	/** Allocation Method */
 	uint8_t alloc_meth;
-    	/** Subbands */
+	/** Subbands */
 	uint8_t sub_band;
 	/** Block Length */
 	uint8_t block_len;
@@ -99,8 +108,8 @@ enum ROLE_TYPE {
 	/** Sink Role */
 	BT_A2DP_SINK = 1
 };
-/** @brief A2DP Callback State */
 
+/** @brief A2DP Callback State */
 enum A2DP_CB_STATE {
 	BT_A2DP_INVALID_STATE = 0,
 	/** Chain State */
@@ -116,9 +125,11 @@ enum A2DP_CB_STATE {
 struct a2dp_callback {
 	void (*chain)(struct bt_conn *conn, uint8_t state);
 	void (*stream)(uint8_t state);
+    void (*start_cfm)(void);
+	void (*suspend_cfm)(void);
 };
 
-typedef struct __a2dp_pcm_process {
+typedef struct{
     int (*write)(uint8_t *data,uint32_t size);
     int (*read)(uint8_t *data,uint32_t size);
     int (*start)(void);
@@ -155,6 +166,19 @@ void a2dp_cb_register(struct a2dp_callback *cb);
  */
 struct bt_a2dp *bt_a2dp_connect(struct bt_conn *conn);
 
+#if BR_EDR_PTS_TEST
+int bt_a2dp_disconnect(struct bt_conn *conn);
+int bt_a2dp_sink_open_stream(struct bt_conn *conn);
+int bt_a2dp_start_discovery(struct bt_conn *conn);
+int bt_a2dp_get_cap(struct bt_conn *conn);
+int bt_a2dp_set_conf(struct bt_conn *conn,uint8_t acp_seid);
+int bt_a2dp_start_stream(struct bt_conn *conn);
+int bt_a2dp_close_stream(struct bt_conn *conn);
+int bt_a2dp_open_stream(struct bt_conn *conn);
+int bt_a2dp_suspend_stream(struct bt_conn *conn);
+int bt_a2dp_delay_report(struct bt_conn *conn);
+#endif
+
 /** @brief Endpoint Registration.
  *
  *  This function is used for registering the stream end points. The user has
@@ -182,9 +206,11 @@ int a2dp_sbc_decode_init();
  */
 int a2dp_sbc_decode_process(uint8_t* media_data, uint16_t data_len);
 
-
-/* To be called when first SEP is being registered */
-int bt_a2dp_init(void);
+void audio_run(void);
+int bt_start_discovery(struct bt_conn *conn);
+int bt_stream_resume(struct bt_conn *conn);
+int bt_stream_suspend(struct bt_conn *conn);
+int bt_a2dp_send_media(const void *buf, uint32_t size);
 
 #ifdef __cplusplus
 }

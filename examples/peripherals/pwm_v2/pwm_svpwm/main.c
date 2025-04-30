@@ -1,11 +1,9 @@
 #include "bflb_mtimer.h"
 #include "bflb_pwm_v2.h"
 #include "bflb_clock.h"
+#include "bflb_gpio.h"
 #include "board.h"
 #include "math.h"
-#include "bl616_glb.h"
-#include "bl616_glb_gpio.h"
-#include "bl616_gpio.h"
 
 #define PWM_TRI_CH_U (PWM_CH0)
 #define PWM_TRI_CH_V (PWM_CH1)
@@ -16,6 +14,8 @@
 #define PWM_PIN_V_L  (GPIO_PIN_27)
 #define PWM_PIN_W_H  (GPIO_PIN_28)
 #define PWM_PIN_W_L  (GPIO_PIN_29)
+#define TEST_PIN     (GPIO_PIN_17)
+
 struct bflb_device_s *pwm;
 struct bflb_device_s *gpio;
 volatile int flag = 0;
@@ -262,14 +262,14 @@ void bl_pwm_out(struct foc_svpwm_s *svpwm)
 void pwm_isr(int irq, void *arg)
 {
     bflb_pwm_v2_int_clear(pwm, PWM_INTSTS_PERIOD);
-    *(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG17_OFFSET) = 0x00400B6A | (1 << 24);
+    bflb_gpio_set(gpio, TEST_PIN);
     // svpwm.angle += 100;
     foc_calc_sincos(&svpwm);
     foc_calc_xyx(&svpwm);
     foc_calc_sector(&svpwm);
     foc_calc_pwm_threshold(&svpwm);
     bl_pwm_out(&svpwm);
-    *(volatile uint32_t *)(GLB_BASE + GLB_GPIO_CFG17_OFFSET) = 0x00400B6A;
+    bflb_gpio_reset(gpio, TEST_PIN);
     if (flag) {
         printf("%d, angle = %5d, sector = %d, sin = %5d, cos = %5d, x = %5d, y = %5d, z = %5d, aon = %5d, bon = %5d, con = %5d, u = %5d, v = %5d, w = %5d\n",
                svpwm.angle / 182,
@@ -317,7 +317,7 @@ void peri_pwm_init(void)
     bflb_gpio_init(gpio, PWM_PIN_V_L, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, PWM_PIN_W_H, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
     bflb_gpio_init(gpio, PWM_PIN_W_L, GPIO_FUNC_PWM0 | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
-    GLB_Set_PWM1_IO_Sel(GLB_PWM1_IO_DIFF_END);
+    board_bldc_pre_init();
     bflb_pwm_v2_init(pwm, &cfg);
     bflb_pwm_v2_channel_init(pwm, PWM_TRI_CH_U, &ch_cfg);
     bflb_pwm_v2_channel_init(pwm, PWM_TRI_CH_V, &ch_cfg);

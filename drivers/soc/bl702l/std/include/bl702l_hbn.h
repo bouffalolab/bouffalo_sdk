@@ -69,24 +69,26 @@ typedef struct
 /**
  *  @brief HBN PIR low pass filter type definition
  */
-typedef enum {
+enum {
     HBN_PIR_LPF_DIV1, /*!< HBN PIR lpf div 1 */
     HBN_PIR_LPF_DIV2, /*!< HBN PIR lpf div 2 */
-} HBN_PIR_LPF_Type;
+};
+typedef BL_ENUM_Type HBN_PIR_LPF_Type;
 
 /**
  *  @brief HBN PIR high pass filter type definition
  */
-typedef enum {
+enum {
     HBN_PIR_HPF_METHOD0, /*!< HBN PIR hpf calc method 0, 1-z^-1 */
     HBN_PIR_HPF_METHOD1, /*!< HBN PIR hpf calc method 1, 1-z^-2 */
     HBN_PIR_HPF_METHOD2, /*!< HBN PIR hpf calc method 2, 1-z^-3 */
-} HBN_PIR_HPF_Type;
+};
+typedef BL_ENUM_Type HBN_PIR_HPF_Type;
 
 /**
  *  @brief HBN BOR threshold type definition
  */
-typedef enum {
+enum {
     HBN_BOR_THRES_1P80V, /*!< BOR threshold 1.80V */
     HBN_BOR_THRES_1P85V, /*!< BOR threshold 1.85V */
     HBN_BOR_THRES_1P90V, /*!< BOR threshold 1.90V */
@@ -95,63 +97,70 @@ typedef enum {
     HBN_BOR_THRES_2P05V, /*!< BOR threshold 2.05V */
     HBN_BOR_THRES_2P10V, /*!< BOR threshold 2.10V */
     HBN_BOR_THRES_2P15V, /*!< BOR threshold 2.15V */
-} HBN_BOR_THRES_Type;
+};
+typedef BL_ENUM_Type HBN_BOR_THRES_Type;
 
 /**
  *  @brief HBN BOR mode type definition
  */
-typedef enum {
+enum {
     HBN_BOR_MODE_POR_INDEPENDENT, /*!< POR is independent of BOR */
     HBN_BOR_MODE_POR_RELEVANT,    /*!< POR is relevant to BOR */
-} HBN_BOR_MODE_Type;
+};
+typedef BL_ENUM_Type HBN_BOR_MODE_Type;
 
 /**
  *  @brief HBN 32K clock type definition
  */
-typedef enum {
+enum {
     HBN_32K_RC = 0,  /*!< HBN use rc 32k */
     HBN_32K_XTAL,    /*!< HBN use xtal 32k */
     HBN_32K_DIG = 3, /*!< HBN use dig 32k */
-} HBN_32K_CLK_Type;
+};
+typedef BL_ENUM_Type HBN_32K_CLK_Type;
 
 /**
  *  @brief HBN xclk clock type definition
  */
-typedef enum {
+enum {
     HBN_XCLK_CLK_RC32M, /*!< use RC32M as xclk clock */
     HBN_XCLK_CLK_XTAL,  /*!< use XTAL as xclk clock */
-} HBN_XCLK_CLK_Type;
+};
+typedef BL_ENUM_Type HBN_XCLK_CLK_Type;
 
 /**
  *  @brief HBN root clock type definition
  */
-typedef enum {
+enum {
     HBN_ROOT_CLK_RC32M, /*!< use RC32M as root clock */
     HBN_ROOT_CLK_XTAL,  /*!< use XTAL as root clock */
     HBN_ROOT_CLK_DLL,   /*!< use DLL as root clock */
-} HBN_ROOT_CLK_Type;
+};
+typedef BL_ENUM_Type HBN_ROOT_CLK_Type;
 
 /**
  *  @brief HBN UART clock type definition
  */
-typedef enum {
+enum {
     HBN_UART_CLK_FCLK = 0, /*!< Select FCLK as UART clock */
     HBN_UART_CLK_64M,      /*!< Select 64M as UART clock */
     HBN_UART_CLK_XCLK,     /*!< Select XCLK as UART clock */
-} HBN_UART_CLK_Type;
+};
+typedef BL_ENUM_Type HBN_UART_CLK_Type;
 
 /**
  *  @brief HBN RTC interrupt delay type definition
  */
-typedef enum {
+enum {
     HBN_RTC_INT_DELAY_32T = 0, /*!< HBN RTC interrupt delay 32T */
     HBN_RTC_INT_DELAY_0T = 1,  /*!< HBN RTC interrupt delay 0T */
-} HBN_RTC_INT_Delay_Type;
+};
+typedef BL_ENUM_Type HBN_RTC_INT_Delay_Type;
 
 /**
  *  @brief HBN aon pad type definition
  */
-typedef enum {
+enum {
     HBN_AON_PAD_GPIO9 = 0,  /*!< HBN aon pad type: GPIO16 */
     HBN_AON_PAD_GPIO10 = 1, /*!< HBN aon pad type: GPIO17 */
     HBN_AON_PAD_GPIO11 = 2, /*!< HBN aon pad type: GPIO18 */
@@ -159,12 +168,13 @@ typedef enum {
     HBN_AON_PAD_GPIO13 = 4, /*!< HBN aon pad type: GPIO19 */
     HBN_AON_PAD_GPIO30 = 5, /*!< HBN aon pad type: GPIO19 */
     HBN_AON_PAD_GPIO31 = 6, /*!< HBN aon pad type: GPIO19 */
-} HBN_AON_PAD_Type;
+};
+typedef BL_ENUM_Type HBN_AON_PAD_Type;
 
 /**
  *  @brief HBN interrupt type definition
  */
-typedef enum {
+enum {
     HBN_INT_GPIO9 = 0,   /*!< HBN interrupt type: GPIO9 */
     HBN_INT_GPIO10 = 1,  /*!< HBN interrupt type: GPIO10 */
     HBN_INT_GPIO11 = 2,  /*!< HBN interrupt type: GPIO11 */
@@ -179,27 +189,30 @@ typedef enum {
     HBN_INT_BOD = 18,    /*!< HBN interrupt type: BOR */
     HBN_INT_ACOMP0 = 20, /*!< HBN interrupt type: ACOMP0 */
     HBN_INT_ACOMP1 = 22, /*!< HBN interrupt type: ACOMP1 */
-} HBN_INT_Type;
+};
+typedef BL_ENUM_Type HBN_INT_Type;
 
 /**
  *  @brief HBN acomp interrupt type definition
  */
-typedef enum {
+enum {
     HBN_ACOMP_INT_EDGE_POSEDGE = 1,         /*!< HBN acomp interrupt edge posedge */
     HBN_ACOMP_INT_EDGE_NEGEDGE = 2,         /*!< HBN acomp interrupt edge negedge */
     HBN_ACOMP_INT_EDGE_POSEDGE_NEGEDGE = 3, /*!< HBN acomp interrupt edge posedge and negedge */
-} HBN_ACOMP_INT_EDGE_Type;
+};
+typedef BL_ENUM_Type HBN_ACOMP_INT_EDGE_Type;
 
 /**
  *  @brief HBN reset event type definition
  */
-typedef enum {
+enum {
     HBN_RST_EVENT_POR_OUT,   /*!< por_out event */
     HBN_RST_EVENT_EXT_RST_N, /*!< ext_rst_n event */
     HBN_RST_EVENT_SW_RST,    /*!< sw_rst event */
     HBN_RST_EVENT_PWR_RST_N, /*!< pwr_rst_n event */
     HBN_RST_EVENT_BOR_OUT,   /*!< bor_out_ event */
-} HBN_RST_EVENT_Type;
+};
+typedef BL_ENUM_Type HBN_RST_EVENT_Type;
 
 /**
  *  @brief HBN AON PAD configuration type definition
@@ -216,7 +229,7 @@ typedef struct
 /**
  *  @brief HBN GPIO interrupt trigger type definition
  */
-typedef enum {
+enum {
     HBN_GPIO_INT_TRIGGER_SYNC_FALLING_EDGE,  /*!< HBN GPIO INT trigger type: sync falling edge trigger */
     HBN_GPIO_INT_TRIGGER_SYNC_RISING_EDGE,   /*!< HBN GPIO INT trigger type: sync rising edge trigger */
     HBN_GPIO_INT_TRIGGER_SYNC_LOW_LEVEL,     /*!< HBN GPIO INT trigger type: sync low level trigger */
@@ -225,12 +238,13 @@ typedef enum {
     HBN_GPIO_INT_TRIGGER_ASYNC_RISING_EDGE,  /*!< HBN GPIO INT trigger type: async rising edge trigger */
     HBN_GPIO_INT_TRIGGER_ASYNC_LOW_LEVEL,    /*!< HBN GPIO INT trigger type: async low level trigger */
     HBN_GPIO_INT_TRIGGER_ASYNC_HIGH_LEVEL,   /*!< HBN GPIO INT trigger type: async high level trigger */
-} HBN_GPIO_INT_Trigger_Type;
+};
+typedef BL_ENUM_Type HBN_GPIO_INT_Trigger_Type;
 
 /**
  *  @brief HBN OUT0 interrupt type definition
  */
-typedef enum {
+enum {
     HBN_OUT0_INT_GPIO9 = 0,  /*!< HBN out 0 interrupt type: GPIO9 */
     HBN_OUT0_INT_GPIO10 = 1, /*!< HBN out 0 interrupt type: GPIO10 */
     HBN_OUT0_INT_GPIO11 = 2, /*!< HBN out 0 interrupt type: GPIO11 */
@@ -243,22 +257,24 @@ typedef enum {
     HBN_OUT0_INT_GPIO22 = 9, /*!< HBN out 0 interrupt type: GPIO22 */
     HBN_OUT0_INT_RTC = 16,   /*!< HBN out 0 interrupt type: RTC */
     HBN_OUT0_INT_MAX,        /*!< HBN out 0 max num */
-} HBN_OUT0_INT_Type;
+};
+typedef BL_ENUM_Type HBN_OUT0_INT_Type;
 
 /**
  *  @brief HBN OUT0 interrupt type definition
  */
-typedef enum {
+enum {
     HBN_OUT1_INT_BOD,    /*!< HBN out 1 interrupt type: BOD */
     HBN_OUT1_INT_ACOMP0, /*!< HBN out 1 interrupt type: ACOMP0 */
     HBN_OUT1_INT_ACOMP1, /*!< HBN out 1 interrupt type: ACOMP1 */
     HBN_OUT1_INT_MAX,    /*!< HBN out 1 max num */
-} HBN_OUT1_INT_Type;
+};
+typedef BL_ENUM_Type HBN_OUT1_INT_Type;
 
 /**
  *  @brief HBN LDO level type definition
  */
-typedef enum {
+enum {
     HBN_LDO11_LEVEL_0P60V = 0,  /*!< VDD11_AON voltage 0.60V */
     HBN_LDO11_LEVEL_0P65V = 1,  /*!< VDD11_AON voltage 0.65V */
     HBN_LDO11_LEVEL_0P70V = 2,  /*!< VDD11_AON voltage 0.70V */
@@ -270,12 +286,13 @@ typedef enum {
     HBN_LDO11_LEVEL_1P00V = 8,  /*!< VDD11_AON voltage 1.00V */
     HBN_LDO11_LEVEL_1P05V = 9,  /*!< VDD11_AON voltage 1.05V */
     HBN_LDO11_LEVEL_1P10V = 10, /*!< VDD11_AON voltage 1.10V */
-} HBN_LDO11_LEVEL_Type;
+};
+typedef BL_ENUM_Type HBN_LDO11_LEVEL_Type;
 
 /**
  *  @brief HBN LDO level type definition
  */
-typedef enum {
+enum {
     HBN_LDO_LEVEL_0P60V = 0,  /*!< HBN LDO voltage 0.60V */
     HBN_LDO_LEVEL_0P65V = 1,  /*!< HBN LDO voltage 0.65V */
     HBN_LDO_LEVEL_0P70V = 2,  /*!< HBN LDO voltage 0.70V */
@@ -292,26 +309,29 @@ typedef enum {
     HBN_LDO_LEVEL_1P25V = 13, /*!< HBN LDO voltage 1.25V */
     HBN_LDO_LEVEL_1P30V = 14, /*!< HBN LDO voltage 1.30V */
     HBN_LDO_LEVEL_1P35V = 15, /*!< HBN LDO voltage 1.35V */
-} HBN_LDO_LEVEL_Type;
+};
+typedef BL_ENUM_Type HBN_LDO_LEVEL_Type;
 
 /**
  *  @brief HBN LDO11RT drive strength type definition
  */
-typedef enum {
+enum {
     HBN_LDO11RT_DRIVE_STRENGTH_5_50UA = 0,   /*!< HBN LDO11RT drive strength 0: 5uA to 50uA */
     HBN_LDO11RT_DRIVE_STRENGTH_10_100UA = 1, /*!< HBN LDO11RT drive strength 1: 10uA to 100uA */
     HBN_LDO11RT_DRIVE_STRENGTH_15_150UA = 2, /*!< HBN LDO11RT drive strength 2: 15uA to 150uA */
     HBN_LDO11RT_DRIVE_STRENGTH_25_250UA = 3, /*!< HBN LDO11RT drive strength 3: 25uA to 250uA */
-} HBN_LDO11RT_DRIVE_STRENGTH_Type;
+};
+typedef BL_ENUM_Type HBN_LDO11RT_DRIVE_STRENGTH_Type;
 
 /**
  *  @brief HBN level type definition
  */
-typedef enum {
+enum {
     HBN_LEVEL_0, /*!< HBN pd_core */
     HBN_LEVEL_1, /*!< HBN pd_aon_hbncore + pd_core */
     HBN_LEVEL_2, /*!< HBN pd_aon_hbnrtc + pd_aon_hbncore + pd_core */
-} HBN_LEVEL_Type;
+};
+typedef BL_ENUM_Type HBN_LEVEL_Type;
 
 /**
  *  @brief HBN BOR configuration type definition
@@ -656,6 +676,7 @@ BL_Err_Type HBN_Set_Ldo11_All_Vout(HBN_LDO_LEVEL_Type ldoLevel);
 /*----------*/
 BL_Err_Type HBN_32K_Sel(HBN_32K_CLK_Type clkType);
 BL_Err_Type HBN_Set_UART_CLK_Sel(HBN_UART_CLK_Type clkSel);
+HBN_XCLK_CLK_Type HBN_Get_XCLK_CLK_Sel(void);
 BL_Err_Type HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_Type xClk);
 BL_Err_Type HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_Type rootClk);
 /*----------*/
@@ -707,6 +728,9 @@ BL_Err_Type HBN_Out1_Callback_Install(HBN_OUT1_INT_Type intType, intCallback_Typ
 BL_Err_Type HBN_GPIO_Dbg_Pull_Cfg(BL_Fun_Type pupdEn, BL_Fun_Type dlyEn,
                                   uint8_t dlySec, HBN_INT_Type gpioIrq, BL_Mask_Type gpioMask);
 /*----------*/
+BL_Err_Type HBN_Set_Xtal_32K_Capbank(uint8_t value);
+BL_Err_Type HBN_Set_Xtal_32K_Inverter_Amplify_Strength(uint8_t value);
+BL_Err_Type HBN_Set_Xtal_32K_Regulator(uint8_t level);
 BL_Err_Type HBN_Power_On_Xtal_32K(void);
 BL_Err_Type HBN_Power_Off_Xtal_32K(void);
 BL_Err_Type HBN_Power_On_RC32K(void);

@@ -77,8 +77,8 @@ extern "C" {
 #define _tinydir_char_t char
 #define TINYDIR_STRING(s) s
 #define _tinydir_strlen strlen
-#define _tinydir_strcpy strcpy
-#define _tinydir_strcat strcat
+#define _tinydir_strlcpy strlcpy
+#define _tinydir_strlcat strlcat
 #define _tinydir_strcmp strcmp
 #define _tinydir_strrchr strrchr
 #define _tinydir_strncmp strncmp
@@ -283,7 +283,7 @@ int tinydir_open(tinydir_dir *dir, const _tinydir_char_t *path)
 #endif
 	tinydir_close(dir);
 
-	_tinydir_strcpy(dir->path, path);
+	_tinydir_strlcpy(dir->path, path, _TINYDIR_PATH_MAX);
 	/* Remove trailing slashes */
 	pathp = &dir->path[_tinydir_strlen(dir->path) - 1];
 	while (pathp != dir->path && (*pathp == TINYDIR_STRING('\\') || *pathp == TINYDIR_STRING('/')))
@@ -292,8 +292,8 @@ int tinydir_open(tinydir_dir *dir, const _tinydir_char_t *path)
 		pathp++;
 	}
 #ifdef _MSC_VER
-	_tinydir_strcpy(path_buf, dir->path);
-	_tinydir_strcat(path_buf, TINYDIR_STRING("\\*"));
+	_tinydir_strlcpy(path_buf, dir->path, _TINYDIR_PATH_MAX);
+	_tinydir_strlcat(path_buf, TINYDIR_STRING("\\*"), _TINYDIR_PATH_MAX);
 #if (defined WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP)
 	dir->_h = FindFirstFileEx(path_buf, FindExInfoStandard, &dir->_f, FindExSearchNameMatch, NULL, 0);
 #else
@@ -524,16 +524,16 @@ int tinydir_readfile(const tinydir_dir *dir, tinydir_file *file)
 		return -1;
 	}
 
-	_tinydir_strcpy(file->path, dir->path);
-	_tinydir_strcat(file->path, TINYDIR_STRING("/"));
-	_tinydir_strcpy(file->name,
+	_tinydir_strlcpy(file->path, dir->path, _TINYDIR_PATH_MAX);
+	_tinydir_strlcat(file->path, TINYDIR_STRING("/"), _TINYDIR_PATH_MAX);
+	_tinydir_strlcpy(file->name,
 #ifdef _MSC_VER
 		dir->_f.cFileName
 #else
 		dir->_e->d_name
 #endif
-	);
-	_tinydir_strcat(file->path, file->name);
+	, _TINYDIR_FILENAME_MAX);
+	_tinydir_strlcat(file->path, file->name, _TINYDIR_PATH_MAX);
 #ifndef _MSC_VER
 #ifdef __MINGW32__
 	if (_tstat(
@@ -610,7 +610,7 @@ int tinydir_open_subdir_n(tinydir_dir *dir, size_t i)
 		return -1;
 	}
 
-	_tinydir_strcpy(path, dir->_files[i].path);
+	_tinydir_strlcpy(path, dir->_files[i].path, _TINYDIR_PATH_MAX);
 	tinydir_close(dir);
 	if (tinydir_open_sorted(dir, path) == -1)
 	{
@@ -682,18 +682,18 @@ int tinydir_file_open(tinydir_file *file, const _tinydir_char_t *path)
 	empty */
 	if (drive_buf[0] == '\0' && dir_name_buf[0] == '\0')
 	{
-		_tinydir_strcpy(dir_name_buf, TINYDIR_STRING("."));
+		_tinydir_strlcpy(dir_name_buf, TINYDIR_STRING("."), _TINYDIR_PATH_MAX);
 	}
 	/* Concatenate the drive letter and dir name to form full dir name */
-	_tinydir_strcat(drive_buf, dir_name_buf);
+	_tinydir_strlcat(drive_buf, dir_name_buf, _TINYDIR_PATH_MAX);
 	dir_name = drive_buf;
 	/* Concatenate the file name and extension to form base name */
-	_tinydir_strcat(file_name_buf, ext_buf);
+	_tinydir_strlcat(file_name_buf, ext_buf, _TINYDIR_FILENAME_MAX);
 	base_name = file_name_buf;
 #else
-	_tinydir_strcpy(dir_name_buf, path);
+	_tinydir_strlcpy(dir_name_buf, path, _TINYDIR_PATH_MAX);
 	dir_name = dirname(dir_name_buf);
-	_tinydir_strcpy(file_name_buf, path);
+	_tinydir_strlcpy(file_name_buf, path, _TINYDIR_FILENAME_MAX);
 	base_name =basename(file_name_buf);
 #endif
 

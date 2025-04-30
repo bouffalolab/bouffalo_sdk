@@ -10,6 +10,10 @@
 #include "bflb_gpio.h"
 #include "bflb_l1c.h"
 
+#if(LCD_SPI_HARD_4_PIXEL_CNT_MAX < LCD_H * LCD_W)
+#error LCD_SPI_HARD_4_PIXEL_CNT_MAX too small.
+#endif
+
 #define LCD_SPI_HARD_4_DMA_LLI_NUM (LCD_SPI_HARD_4_PIXEL_CNT_MAX / 4064 + 1)
 
 /* asynchronous flush interrupt callback */
@@ -116,7 +120,7 @@ int lcd_spi_hard_4_init(lcd_spi_hard_4_init_t *dbi_parra)
     spi_cfg.tx_fifo_threshold = (2 * 4 - 1);
     spi_cfg.rx_fifo_threshold = (2 * 4 - 1);
     spi_cfg.byte_order = SPI_BYTE_MSB;
-#elif
+#else
     spi_cfg.tx_fifo_threshold = 4 - 1;
     spi_cfg.rx_fifo_threshold = 4 - 1;
 #endif
@@ -216,7 +220,7 @@ int lcd_spi_hard_4_transmit_cmd_para(uint8_t cmd, uint32_t *para, size_t para_nu
 int lcd_spi_hard_4_transmit_cmd_pixel_sync(uint8_t cmd, uint32_t *pixel, size_t pixel_num)
 {
 #if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT == 0)
-    lcd_swap_color_data16(picture, picture, pixel_num);
+    lcd_swap_color_data16((uint16_t *)pixel, (uint16_t *)pixel, pixel_num);
 #endif
 
     LCD_SPI_HARD_4_DC_LOW;
@@ -250,7 +254,7 @@ int lcd_spi_hard_4_transmit_cmd_pixel_sync(uint8_t cmd, uint32_t *pixel, size_t 
 int lcd_spi_hard_4_transmit_cmd_pixel_async(uint8_t cmd, uint32_t *pixel, size_t pixel_num)
 {
 #if (SPI_FIFO_WIDTH_VARIABLE_SUPPORT == 0)
-    lcd_swap_color_data16(picture, picture, pixel_num);
+    lcd_swap_color_data16((uint16_t *)pixel, (uint16_t *)pixel, pixel_num);
 #endif
 
     LCD_SPI_HARD_4_DC_LOW;

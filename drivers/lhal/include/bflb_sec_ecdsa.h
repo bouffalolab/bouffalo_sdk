@@ -10,9 +10,13 @@
 /** @addtogroup SEC_ECDSA
   * @{
   */
+#define ECP_SUPPORT_384 1
 
 #define ECP_SECP256R1 0
 #define ECP_SECP256K1 1
+#ifdef ECP_SUPPORT_384
+#define ECP_SECP384R1 2
+#endif
 
 struct bflb_ecdsa_s {
     uint8_t ecpId;

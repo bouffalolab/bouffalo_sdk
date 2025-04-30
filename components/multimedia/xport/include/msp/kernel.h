@@ -84,6 +84,8 @@ const char *msp_task_get_name(msp_task_t *task);
      */
     void msp_task_exit(int code);
 
+    int msp_task_exist(const char *name);
+
     /**
      * Alloc a mutex.
      *

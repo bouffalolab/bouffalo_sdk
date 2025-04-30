@@ -42,6 +42,6 @@ typedef void (*bt_hci_recv_cb)(uint8_t pkt_type, uint16_t src_id, uint8_t *param
 
 uint8_t bt_onchiphci_interface_init(bt_hci_recv_cb cb);
 int8_t bt_onchiphci_send(uint8_t pkt_type, uint16_t dest_id, hci_pkt_struct *pkt);
-uint16_t bt_onchiphci_hanlde_rx_acl(void *param, uint8_t *host_buf_data);
+uint16_t bt_onchiphci_handle_rx_acl(void *param, uint8_t *host_buf_data);
 
 #endif

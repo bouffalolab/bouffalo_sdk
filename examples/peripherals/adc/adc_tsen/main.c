@@ -9,8 +9,6 @@ int main(void)
 {
     board_init();
     board_adc_gpio_init();
-    uint16_t i = 0;
-    float average_filter = 0.0;
 
     adc = bflb_device_get_by_name("adc");
 
@@ -18,7 +16,7 @@ int main(void)
     struct bflb_adc_config_s cfg;
     cfg.clk_div = ADC_CLK_DIV_32;
     cfg.scan_conv_mode = false;
-    cfg.continuous_conv_mode = false;
+    cfg.continuous_conv_mode = true;
     cfg.differential_mode = false;
     cfg.resolution = ADC_RESOLUTION_16B;
     cfg.vref = ADC_VREF_2P0V;
@@ -31,14 +29,10 @@ int main(void)
     bflb_adc_init(adc, &cfg);
     bflb_adc_channel_config(adc, &chan, 1);
     bflb_adc_tsen_init(adc, ADC_TSEN_MOD_INTERNAL_DIODE);
-
-    while (1) {
-        for (i = 0; i < 50; i++) {
-            average_filter += bflb_adc_tsen_get_temp(adc);
-            bflb_mtimer_delay_ms(10);
-        }
-
-        printf("temp = %d\r\n", (uint32_t)(average_filter / 50.0));
-        average_filter = 0;
+    for (uint32_t cnt = 0; cnt < 5; cnt++) {
+        bflb_mtimer_delay_ms(100);
+        printf("temp = %d\r\n", (uint32_t)(bflb_adc_tsen_get_temp(adc)));
     }
+
+    return 0;
 }

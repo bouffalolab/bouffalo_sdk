@@ -1,11 +1,11 @@
 /*
  *  Description: ECC over GF(p) hardware acceleration
- *  Copyright (C) Bouffalo Lab 2016-2022
+ *  Copyright (C) Bouffalo Lab 2016-2023
  *  SPDX-License-Identifier: Apache-2.0
  *  File Name:   ecp_alt.c
  *  Author:      Chien Wong(qwang@bouffalolab.com)
  *  Start Date:  May 28, 2022
- *  Last Update: Jun 9, 2022
+ *  Last Update: Jan 9, 2023
  */
 
 /*
@@ -136,15 +136,7 @@ void Sec_Eng_PKA_LCMP(uint8_t *out, uint8_t s0t, uint8_t s0i, uint8_t s1t, uint8
 #define ECP_VALIDATE( cond )        \
     MBEDTLS_INTERNAL_VALIDATE( cond )
 
-#if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
-#else
-#include <stdlib.h>
-#include <stdio.h>
-#define mbedtls_printf     printf
-#define mbedtls_calloc    calloc
-#define mbedtls_free       free
-#endif
 
 #include "mbedtls/ecp_internal.h"
 
@@ -157,11 +149,6 @@ void Sec_Eng_PKA_LCMP(uint8_t *out, uint8_t s0t, uint8_t s0i, uint8_t s1t, uint8
 #error "Invalid configuration detected. Include check_config.h to ensure that the configuration is valid."
 #endif
 #endif /* MBEDTLS_ECP_NO_INTERNAL_RNG */
-
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
-    !defined(inline) && !defined(__cplusplus)
-#define inline __inline
-#endif
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
@@ -1477,6 +1464,85 @@ cleanup:
     return ret;
 }
 
+static int ecp_init_swst( mbedtls_ecp_group *grp, uint8_t *op_sz_o, uint8_t *op_ws_o, uint8_t *s_o )
+{
+    int ret = 0;
+    void *tmp_buf = NULL;
+    uint8_t op_sz = 0, op_ws = 0;
+    uint8_t s = 0; // 0 is invalid reg size
+    uint8_t r2s;
+    int i;
+    mbedtls_mpi PrimeN;
+
+    mbedtls_mpi_init( &PrimeN );
+    i = ( grp->pbits + 7 ) / 8; // bytes
+    i = ( i + 3 ) / 4; // words
+    if( ( s = mpi_words_to_reg_size( i ) ) == 0 )
+    {
+        ret = MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
+        goto cleanup;
+    }
+    op_ws = mpi_reg_size_to_words( s );
+    op_sz = op_ws * 4;
+
+    if( ( r2s = mpi_words_to_reg_size( op_ws * 2 + 1 ) ) == 0 )
+    {
+        ret = MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
+        goto cleanup;
+    }
+
+    if( ( tmp_buf = mbedtls_calloc( 1, op_sz ) ) == NULL )
+    {
+        ret = MBEDTLS_ERR_ECP_ALLOC_FAILED;
+        goto cleanup;
+    }
+
+    if( grp->PrimeN == NULL )
+    {
+        if( ( grp->PrimeN = mbedtls_calloc( 1, op_sz ) ) == NULL )
+        {
+            ret = MBEDTLS_ERR_ECP_ALLOC_FAILED;
+            goto cleanup;
+        }
+        MBEDTLS_MPI_CHK( mpi_hensel_quad_mod_inv_prime_n( &PrimeN, &grp->P, op_sz * 8 ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &PrimeN, grp->PrimeN, op_sz ) );
+    }
+
+    Sec_Eng_PKA_Reset();
+    Sec_Eng_PKA_BigEndian_Enable();
+    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &grp->P, tmp_buf, op_sz ) );
+    REGW( 0, tmp_buf );
+    REGW( 1, grp->PrimeN );
+    Sec_Eng_PKA_CREG( r2s, 2, mpi_reg_size_to_words( r2s ), 1 );
+    Sec_Eng_PKA_Write_Immediate( r2s, 2, 0x1, 1 );
+    Sec_Eng_PKA_LMUL2N( r2s, 2, r2s, 2, op_ws * 32 * 2, 0 );
+    Sec_Eng_PKA_MREM( s, 2, r2s, 2, s, 0, 1 );
+#define LOAD_C(r, v) \
+    Sec_Eng_PKA_CREG( s, r, op_ws, 1 ); \
+    Sec_Eng_PKA_Write_Immediate( s, r, v, 1 );
+
+    LOAD_C( 3, 1 );
+    LOAD_C( 4, 2 );
+    LOAD_C( 5, 3 );
+    LOAD_C( 6, 4 );
+    LOAD_C( 7, 8 );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &grp->A, tmp_buf, op_sz ) );
+    REGW( 8, tmp_buf );
+
+    for( i = 4; i <= 8; ++i )
+        MMUL( i, i, 2 );
+
+    *op_sz_o = op_sz;
+    *op_ws_o = op_ws;
+    *s_o = s;
+
+cleanup:
+    mbedtls_free( tmp_buf );
+    mbedtls_mpi_free( &PrimeN );
+
+    return( ret );
+}
+
 static int ecp_mul_swst( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
                          const mbedtls_mpi *m, const mbedtls_ecp_point *P,
                          int (*f_rng)(void *, unsigned char *, size_t),
@@ -1492,11 +1558,9 @@ static int ecp_mul_swst( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     void *T = NULL;
     void *TZ = NULL;
     size_t table_size;
-    mbedtls_mpi PrimeN;
     void *tmp_buf = NULL;
     uint8_t op_sz = 0, op_ws = 0;
     uint8_t s = 0; // 0 is invalid reg size
-    uint8_t r2s;
     int i;
     uint8_t t_start_idx;
     uint8_t p_eq_g, T_ok = 0;
@@ -1504,25 +1568,11 @@ static int ecp_mul_swst( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
 
     (void)ecp_drbg_seed;
 
-    mbedtls_mpi_init( &PrimeN );
     m_u32_len = mpi_words(m);
     table_size = 1 << (w - 2);
 
-    i = ( grp->pbits + 7 ) / 8; // bytes
-    i = ( i + 3 ) / 4; // words
-    if( ( s = mpi_words_to_reg_size( i ) ) == 0 )
-    {
-        ret = MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
+    if( ( ret = ecp_init_swst( grp, &op_sz, &op_ws, &s ) ) )
         goto cleanup;
-    }
-    op_ws = mpi_reg_size_to_words( s );
-    op_sz = op_ws * 4;
-
-    if( ( r2s = mpi_words_to_reg_size( op_ws * 2 + 1 ) )  == 0 )
-    {
-        ret = MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
-        goto cleanup;
-    }
 
     if( ( tmp_buf = mbedtls_calloc( 1, op_sz ) ) == NULL )
     {
@@ -1538,17 +1588,6 @@ static int ecp_mul_swst( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     {
         ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
         goto cleanup;
-    }
-
-    if( grp->PrimeN == NULL )
-    {
-        if( ( grp->PrimeN = mbedtls_calloc( 1, op_sz ) ) == NULL )
-        {
-            ret = MBEDTLS_ERR_ECP_ALLOC_FAILED;
-            goto cleanup;
-        }
-        MBEDTLS_MPI_CHK( mpi_hensel_quad_mod_inv_prime_n( &PrimeN, &grp->P, op_sz * 8 ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &PrimeN, grp->PrimeN, op_sz ) );
     }
 
     /* Is P the base point ? */
@@ -1579,30 +1618,6 @@ static int ecp_mul_swst( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
             goto cleanup;
         }
     }
-
-    Sec_Eng_PKA_Reset();
-    Sec_Eng_PKA_BigEndian_Enable();
-    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &grp->P, tmp_buf, op_sz ) );
-    REGW( 0, tmp_buf );
-    REGW( 1, grp->PrimeN );
-    Sec_Eng_PKA_CREG( r2s, 2, mpi_reg_size_to_words( r2s ), 1 );
-    Sec_Eng_PKA_Write_Immediate( r2s, 2, 0x1, 1 );
-    Sec_Eng_PKA_LMUL2N( r2s, 2, r2s, 2, op_ws * 32 * 2, 0 );
-    Sec_Eng_PKA_MREM( s, 2, r2s, 2, s, 0, 1 );
-#define LOAD_C(r, v) \
-    Sec_Eng_PKA_CREG( s, r, op_ws, 1 ); \
-    Sec_Eng_PKA_Write_Immediate( s, r, v, 1 );
-
-    LOAD_C( 3, 1 );
-    LOAD_C( 4, 2 );
-    LOAD_C( 5, 3 );
-    LOAD_C( 6, 4 );
-    LOAD_C( 7, 8 );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &grp->A, tmp_buf, op_sz ) );
-    REGW( 8, tmp_buf );
-
-    for( i = 4; i <= 8; ++i )
-        MMUL( i, i, 2 );
 
     t_start_idx = 24;
 
@@ -1697,7 +1712,6 @@ cleanup:
     mbedtls_free( T );
     mbedtls_free( TZ );
     mbedtls_free( tmp_buf );
-    mbedtls_mpi_free( &PrimeN );
     mbedtls_free( m_encoding );
     return( ret );
 }
@@ -1824,9 +1838,12 @@ static int ecp_mul_mont( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
         MMUL( i, i, 2 );
 
     /* Randomize coordinates of the starting point */
+    int have_rng = 1;
 #if defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
-    if( f_rng != NULL )
+    if( f_rng == NULL )
+        have_rng = 0;
 #endif
+    if( have_rng )
     {
         MBEDTLS_MPI_CHK( mbedtls_mpi_random( &rand, 2, &grp->P, f_rng, p_rng ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &rand, tmp_buf, op_sz ) );
@@ -1837,7 +1854,7 @@ static int ecp_mul_mont( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     }
 
     /* Loop invariant: R = result so far, RP = R + P */
-    i = mbedtls_mpi_bitlen( m ); /* one past the (zero-based) most significant bit */
+    i = grp->nbits + 1; /* one past the (zero-based) required msb for private keys */
     while( i-- > 0 )
     {
         uint8_t ix, iz, jx, jz, px, pz, qx, qz;
@@ -1884,9 +1901,12 @@ static int ecp_mul_mont( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
      *
      * Avoid the leak by randomizing coordinates before we normalize them.
      */
+    have_rng = 1;
 #if defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
-    if( f_rng != NULL )
+    if( f_rng == NULL )
+        have_rng = 0;
 #endif
+    if( have_rng )
     {
         MBEDTLS_MPI_CHK( mbedtls_mpi_random( &rand, 2, &grp->P, f_rng, p_rng ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &rand, tmp_buf, op_sz ) );
@@ -1947,10 +1967,12 @@ static int mbedtls_ecp_mul_restartable_wo_lock( mbedtls_ecp_group *grp, mbedtls_
         MBEDTLS_MPI_CHK( mbedtls_internal_ecp_init( grp ) );
 #endif /* MBEDTLS_ECP_INTERNAL_ALT */
 
+    int restarting = 0;
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-    /* skip argument check when restarting */
-    if( rs_ctx == NULL || rs_ctx->rsm == NULL )
+    restarting = ( rs_ctx != NULL && rs_ctx->rsm != NULL );
 #endif
+    /* skip argument check when restarting */
+    if( !restarting )
     {
         /* check_privkey is free */
         MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_CHK );
@@ -2077,14 +2099,17 @@ static int mbedtls_ecp_mul_shortcuts( mbedtls_ecp_group *grp,
 
     if( mbedtls_mpi_cmp_int( m, 0 ) == 0 )
     {
+        MBEDTLS_MPI_CHK( mbedtls_ecp_check_pubkey( grp, P ) );
         MBEDTLS_MPI_CHK( mbedtls_ecp_set_zero( R ) );
     }
     else if( mbedtls_mpi_cmp_int( m, 1 ) == 0 )
     {
+        MBEDTLS_MPI_CHK( mbedtls_ecp_check_pubkey( grp, P ) );
         MBEDTLS_MPI_CHK( mbedtls_ecp_copy( R, P ) );
     }
     else if( mbedtls_mpi_cmp_int( m, -1 ) == 0 )
     {
+        MBEDTLS_MPI_CHK( mbedtls_ecp_check_pubkey( grp, P ) );
         MBEDTLS_MPI_CHK( mbedtls_ecp_copy( R, P ) );
         if( mbedtls_mpi_cmp_int( &R->Y, 0 ) != 0 )
             MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &R->Y, &grp->P, &R->Y ) );
@@ -2112,7 +2137,6 @@ int mbedtls_ecp_muladd_restartable_impl(
     mbedtls_ecp_point mP;
     mbedtls_ecp_point *pmP = &mP;
     mbedtls_ecp_point *pR = R;
-    int i;
     void *tmp_buf = NULL;
     uint8_t op_sz = 0, op_ws = 0;
     uint8_t s = 0; // 0 is invalid reg size
@@ -2127,26 +2151,19 @@ int mbedtls_ecp_muladd_restartable_impl(
     if( mbedtls_ecp_get_type( grp ) != MBEDTLS_ECP_TYPE_SHORT_WEIERSTRASS )
         return( MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE );
 
-    i = ( grp->pbits + 7 ) / 8; // bytes
-    i = ( i + 3 ) / 4; // words
-    if( ( s = mpi_words_to_reg_size( i ) ) == 0 )
-    {
-        ret = MBEDTLS_ERR_MPI_NOT_ACCEPTABLE;
+    mbedtls_ecp_point_init( &mP );
+
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, pmP, m, P, NULL ) );
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, pR,  n, Q, NULL ) );
+
+    if( ( ret = ecp_init_swst( grp, &op_sz, &op_ws, &s ) ) )
         goto cleanup;
-    }
-    op_ws = mpi_reg_size_to_words( s );
-    op_sz = op_ws * 4;
 
     if( ( tmp_buf = mbedtls_calloc( 1, op_sz ) ) == NULL )
     {
         ret = MBEDTLS_ERR_ECP_ALLOC_FAILED;
         goto cleanup;
     }
-
-    mbedtls_ecp_point_init( &mP );
-
-    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, pmP, m, P, NULL ) );
-    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, pR,  n, Q, NULL ) );
 
 #define LOAD_COORDINATE_X(x, reg) \
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( x, tmp_buf, op_sz ) ); \

@@ -371,28 +371,16 @@ ip4_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
     return;
   }
   /* transmit pbuf on chosen interface */
-#if BL_IP_FORWARD
-  if (p->type_internal == PBUF_REF)
+  if ((p->type_internal & PBUF_REF) == PBUF_REF)
   {
       struct pbuf *q = pbuf_clone(PBUF_LINK, PBUF_RAM, p);
       if (q != NULL) {
-          if(ERR_OK != netif->output(netif, q, ip4_current_dest_addr())){
-              STATS_INC(ip_napt.output_err);
-          }
+          netif->output(netif, q, ip4_current_dest_addr());
           pbuf_free(q);
-      } else {
-          MIB2_STATS_INC(mib2.ipinaddrerrors);
-          MIB2_STATS_INC(mib2.ipindiscards);
-          STATS_INC(ip_napt.mem_alloc_err);
       }
   } else {
-     if(ERR_OK != netif->output(netif, p, ip4_current_dest_addr())){
-          STATS_INC(ip_napt.output_err);
-     }
+     netif->output(netif, p, ip4_current_dest_addr());
   }
-#else
-  netif->output(netif, p, ip4_current_dest_addr());
-#endif /* BL_IP_FORWARD */
   return;
 return_noroute:
   MIB2_STATS_INC(mib2.ipoutnoroutes);

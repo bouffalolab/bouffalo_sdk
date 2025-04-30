@@ -66,6 +66,7 @@ int main(void)
         printf("sha384 block:%d cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
     }
 
+#if !defined(BL602) && !defined(BL702)
     bflb_sha_init(sha, SHA_MODE_SHA512);
     for (uint32_t i = 1; i <= 1024; i++) {
         start_time = bflb_mtimer_get_time_us();
@@ -74,6 +75,7 @@ int main(void)
         bflb_sha512_finish(sha, &ctx_sha512, sha_output_buf);
         printf("sha512 block:%d cost time:%d us\r\n", i, (uint32_t)(bflb_mtimer_get_time_us() - start_time));
     }
+#endif
 #endif
 
     bflb_group0_release_sha_access(sha);

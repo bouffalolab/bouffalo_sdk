@@ -85,11 +85,31 @@ static void mclk_out_init()
     It needs to be called before i2s is initialized
     clock source 25M
     */
-    GLB_Set_I2S_CLK(ENABLE, 2, GLB_I2S_DI_SEL_I2S_DI_INPUT, GLB_I2S_DO_SEL_I2S_DO_OUTPT);
+    GLB_Set_I2S_CLK(ENABLE, 3, GLB_I2S_DI_SEL_I2S_DI_INPUT, GLB_I2S_DO_SEL_I2S_DO_OUTPT);
     GLB_Set_Chip_Clock_Out3_Sel(GLB_CHIP_CLK_OUT_3_I2S_REF_CLK);
 }
 
 static struct bflb_device_s *i2s0;
+
+void msp_i2s_port_init(void)
+{
+    static ES8388_Cfg_Type ES8388Cfg = {
+        .work_mode = ES8388_CODEC_MDOE,          /*!< ES8388 work mode */
+        .role = ES8388_SLAVE,                    /*!< ES8388 role */
+        .mic_input_mode = ES8388_DIFF_ENDED_MIC, /*!< ES8388 mic input mode */
+        .mic_pga = ES8388_MIC_PGA_3DB,           /*!< ES8388 mic PGA */
+        .i2s_frame = ES8388_LEFT_JUSTIFY_FRAME,  /*!< ES8388 I2S frame */
+        .data_width = ES8388_DATA_LEN_16,        /*!< ES8388 I2S dataWitdh */
+    };
+    /* mclk clkout init */
+    mclk_out_init();
+    /* init ES8388 Codec */
+    printf("es8388 init\n\r");
+    ES8388_Init(&ES8388Cfg);
+    printf("es8388 init down\n\r");
+    ES8388_Set_Voice_Volume(100);
+}
+
 void msp_i2s_device_init(uint32_t sample_rate)
 {
     struct bflb_i2s_config_s i2s_cfg = {
@@ -101,27 +121,14 @@ void msp_i2s_device_init(uint32_t sample_rate)
         .data_width = I2S_SLOT_WIDTH_16,
         .fs_offset_cycle = 0,
 
-        .tx_fifo_threshold = 0,
+        .tx_fifo_threshold = 3,
         .rx_fifo_threshold = 0,
-    };
-    static ES8388_Cfg_Type ES8388Cfg = {
-        .work_mode = ES8388_CODEC_MDOE,          /*!< ES8388 work mode */
-        .role = ES8388_SLAVE,                    /*!< ES8388 role */
-        .mic_input_mode = ES8388_DIFF_ENDED_MIC, /*!< ES8388 mic input mode */
-        .mic_pga = ES8388_MIC_PGA_3DB,           /*!< ES8388 mic PGA */
-        .i2s_frame = ES8388_LEFT_JUSTIFY_FRAME,  /*!< ES8388 I2S frame */
-        .data_width = ES8388_DATA_LEN_16,        /*!< ES8388 I2S dataWitdh */
     };
     
     i2s_cfg.bclk_freq_hz = sample_rate * 16 * 2;
     /* gpio init */ 
     i2s_gpio_init();
-    /* mclk clkout init */
-    mclk_out_init();
-    /* init ES8388 Codec */
-    printf("es8388 init\n\r");
-    ES8388_Init(&ES8388Cfg);
-    ES8388_Set_Voice_Volume(100);
+
     i2s0 = bflb_device_get_by_name("i2s0");
     /* i2s init */
     bflb_i2s_init(i2s0, &i2s_cfg);

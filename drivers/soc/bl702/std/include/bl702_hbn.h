@@ -500,6 +500,7 @@ BL_Err_Type HBN_Set_Ldo11rt_Drive_Strength(HBN_LDO11RT_DRIVE_STRENGTH_Type stren
 /*----------*/
 BL_Err_Type HBN_32K_Sel(HBN_32K_CLK_Type clkType);
 BL_Err_Type HBN_Set_UART_CLK_Sel(HBN_UART_CLK_Type clkSel);
+HBN_XCLK_CLK_Type HBN_Get_XCLK_CLK_Sel(void);
 BL_Err_Type HBN_Set_XCLK_CLK_Sel(HBN_XCLK_CLK_Type xClk);
 BL_Err_Type HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_Type rootClk);
 /*----------*/

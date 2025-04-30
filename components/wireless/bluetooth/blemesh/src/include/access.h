@@ -10,6 +10,9 @@
 #ifndef ZEPHYR_INCLUDE_BLUETOOTH_MESH_ACCESS_H_
 #define ZEPHYR_INCLUDE_BLUETOOTH_MESH_ACCESS_H_
 
+#define BT_MESH_MODEL_RUNTIME_INIT(_user_data)			\
+	.rt = &(struct bt_mesh_model_rt_ctx){ .user_data = (_user_data) },
+
 /**
  * @brief Bluetooth Mesh Access Layer
  * @defgroup bt_mesh_access Bluetooth Mesh Access Layer
@@ -84,6 +87,10 @@ struct bt_mesh_elem {
 #define BT_MESH_MODEL_ID_HEALTH_SRV                0x0002
 #define BT_MESH_MODEL_ID_HEALTH_CLI                0x0003
 
+/** Private Beacon Server */
+#define BT_MESH_MODEL_ID_PRIV_BEACON_SRV           0x000a
+/** Private Beacon Client */
+#define BT_MESH_MODEL_ID_PRIV_BEACON_CLI           0x000b
 /* Models from the Mesh Model Specification */
 #define BT_MESH_MODEL_ID_GEN_ONOFF_SRV             0x1000
 #define BT_MESH_MODEL_ID_GEN_ONOFF_CLI             0x1001
@@ -140,6 +147,31 @@ struct bt_mesh_elem {
 #define BT_MESH_MODEL_ID_LIGHT_LC_SETUP_SRV        0x1310
 #define BT_MESH_MODEL_ID_LIGHT_LC_CLI              0x1311
 
+/**
+ * @name Models from the Mesh Binary Large Object Transfer Model Specification
+ * @{
+ */
+/** BLOB Transfer Server */
+#define BT_MESH_MODEL_ID_BLOB_SRV                  0x1400
+/** BLOB Transfer Client */
+#define BT_MESH_MODEL_ID_BLOB_CLI                  0x1401
+/**
+ * @}
+ */
+
+/**
+ *  @name Models from the Mesh Device Firmware Update Model Specification
+ * @{
+ */
+/** Firmware Update Server */
+#define BT_MESH_MODEL_ID_DFU_SRV                   0x1402
+/** Firmware Update Client */
+#define BT_MESH_MODEL_ID_DFU_CLI                   0x1403
+/** Firmware Distribution Server */
+#define BT_MESH_MODEL_ID_DFD_SRV                   0x1404
+/** Firmware Distribution Client */
+#define BT_MESH_MODEL_ID_DFD_CLI                   0x1405
+
 /** Message sending context. */
 struct bt_mesh_msg_ctx {
 	/** NetKey Index of the subnet to send the message on. */
@@ -184,7 +216,7 @@ struct bt_mesh_model_op {
 	const u32_t  opcode;
 
 	/** Minimum required message length */
-	const size_t min_len;
+	const int min_len;
 
 	/** @brief Handler function for this opcode.
 	 *
@@ -201,6 +233,11 @@ struct bt_mesh_model_op {
 #define BT_MESH_MODEL_OP_1(b0) (b0)
 #define BT_MESH_MODEL_OP_2(b0, b1) (((b0) << 8) | (b1))
 #define BT_MESH_MODEL_OP_3(b0, cid) ((((b0) << 16) | 0xc00000) | (cid))
+
+/** Macro for encoding exact message length for fixed-length messages.  */
+#define BT_MESH_LEN_EXACT(len) (-len)
+/** Macro for encoding minimum message length for variable-length messages.  */
+#define BT_MESH_LEN_MIN(len) (len)
 
 /** End of the opcode list. Must always be present. */
 #define BT_MESH_MODEL_OP_END { 0, 0, NULL }
@@ -274,6 +311,7 @@ struct bt_mesh_model_op {
 #define BT_MESH_MODEL_CB(_id, _op, _pub, _user_data, _cb)                    \
 {                                                                            \
 	.id = (_id),                                                         \
+	BT_MESH_MODEL_RUNTIME_INIT(_user_data)                               \
 	.pub = _pub,                                                         \
 	.keys = { [0 ... (CONFIG_BT_MESH_MODEL_KEY_COUNT - 1)] =             \
 			BT_MESH_KEY_UNUSED },                                \
@@ -551,6 +589,19 @@ struct bt_mesh_model {
 	u8_t  elem_idx;   /* Belongs to Nth element */
 	u8_t  mod_idx;    /* Is the Nth model in the element */
 	u16_t flags;      /* Model flags for internal bookkeeping */
+        /* Model runtime information */
+	struct bt_mesh_model_rt_ctx {
+		uint8_t  elem_idx;   /* Belongs to Nth element */
+		uint8_t  mod_idx;    /* Is the Nth model in the element */
+		uint16_t flags;      /* Model flags for internal bookkeeping */
+
+#ifdef CONFIG_BT_MESH_MODEL_EXTENSIONS
+        /* Pointer to the next model in a model extension list. */
+		const struct bt_mesh_model *next;
+#endif
+        /** Model-specific user data */
+		void *user_data;
+	} * const rt;
 
 	/** Model Publication */
 	struct bt_mesh_model_pub * const pub;

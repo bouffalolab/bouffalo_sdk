@@ -94,10 +94,18 @@ int ATTR_TCM_SECTION bflb_xip_sflash_state_save(spi_flash_cfg_type *p_flash_cfg,
     return romapi_bflb_xip_sflash_state_save(p_flash_cfg, offset, group, bank);
 #else
     /* XIP_SFlash_Delay */
-    volatile uint32_t i = 32 * 2;
+    uint32_t i = 0;
+    uint8_t sfc_owner = SF_CTRL_OWNER_IAHB;
 
-    while (i--)
-        ;
+    for ( i = 0; i < 64; i++) {
+        __asm__ volatile ("nop");
+    }
+
+    sfc_owner = bflb_sf_ctrl_get_owner();
+    bflb_sf_ctrl_set_owner_flag(sfc_owner);
+    if (sfc_owner == SF_CTRL_OWNER_SAHB) {
+        return 0;
+    }
 
 #ifdef BFLB_SF_CTRL_SBUS2_ENABLE
     if (bank == SF_CTRL_FLASH_BANK1) {
@@ -105,9 +113,9 @@ int ATTR_TCM_SECTION bflb_xip_sflash_state_save(spi_flash_cfg_type *p_flash_cfg,
     }
 #endif
     bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
-    /* Exit form continous read for accepting command */
+    /* Exit from continous read for accepting command */
     bflb_sflash_reset_continue_read(p_flash_cfg);
-    /* For disable command that is setting register instaed of send command, we need write enable */
+    /* For disable command that is setting register instead of send command, we need write enable */
     bflb_sflash_disable_burst_wrap(p_flash_cfg);
 #ifdef BFLB_SF_CTRL_32BITS_ADDR_ENABLE
     /* Enable 32Bits addr mode again in case reset command make it reset */
@@ -120,7 +128,7 @@ int ATTR_TCM_SECTION bflb_xip_sflash_state_save(spi_flash_cfg_type *p_flash_cfg,
     /* Deburst again to make sure */
     bflb_sflash_disable_burst_wrap(p_flash_cfg);
 
-    /* Clear offset setting*/
+    /* Clear offset setting */
     *offset = bflb_sf_ctrl_get_flash_image_offset(group, bank);
     bflb_sf_ctrl_set_flash_image_offset(0, group, bank);
 
@@ -148,6 +156,12 @@ int ATTR_TCM_SECTION bflb_xip_sflash_state_restore(spi_flash_cfg_type *p_flash_c
 #else
     uint32_t tmp[1];
     uint8_t io_mode = p_flash_cfg->io_mode & 0xf;
+    uint8_t sfc_owner = SF_CTRL_OWNER_IAHB;
+
+    sfc_owner = bflb_sf_ctrl_get_owner_flag();
+    if (sfc_owner == SF_CTRL_OWNER_SAHB) {
+        return 0;
+    }
 
     bflb_sf_ctrl_set_flash_image_offset(offset, group, bank);
 

@@ -61,6 +61,8 @@ void app_main_entry(void *arg)
     /* romsfs init mount use media factory*/
     romfs_mount(0x378000);
 
+    // filesystem_init();
+
     /* Init wifi */
     app_wifi_init();
 
@@ -70,9 +72,12 @@ void app_main_entry(void *arg)
     /* Init bt */
     app_bt_init();
 
+#if CONFIG_CODEC_USE_I2S_RX || CONFIG_CODEC_USE_I2S_TX
+    extern msp_i2s_port_init(void);
+    msp_i2s_port_init();
+#endif
     extern int app_play_fifo_music();
     app_play_fifo_music();
-    
     vTaskDelete(NULL);
 }
 

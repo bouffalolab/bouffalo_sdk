@@ -82,8 +82,13 @@
 #define SF_CTRL_SF_IF_IAHB_10_OFFSET                            (0x94)/* sf_if_iahb_10 */
 #define SF_CTRL_SF_IF_IAHB_11_OFFSET                            (0x98)/* sf_if_iahb_11 */
 #define SF_CTRL_SF_IF_IAHB_12_OFFSET                            (0x9C)/* sf_if_iahb_12 */
+#if defined(BL602)
+#define SF_CTRL_SF_ID0_OFFSET_OFFSET                            (0x434)/* sf_id0_offset */
+#define SF_CTRL_SF_ID1_OFFSET_OFFSET                            (0x438)/* sf_id1_offset */
+#else
 #define SF_CTRL_SF_ID0_OFFSET_OFFSET                            (0xA0)/* sf_id0_offset */
 #define SF_CTRL_SF_ID1_OFFSET_OFFSET                            (0xA4)/* sf_id1_offset */
+#endif
 #define SF_CTRL_SF_BK2_ID0_OFFSET_OFFSET                        (0xA8)/* sf_bk2_id0_offset */
 #define SF_CTRL_SF_BK2_ID1_OFFSET_OFFSET                        (0xAC)/* sf_bk2_id1_offset */
 #define SF_CTRL_SF_DBG_OFFSET                                   (0xB0)/* sf_dbg */
@@ -108,6 +113,23 @@
 #define SF_CTRL_SF_AES_IV_R0_W3_OFFSET                          (0x22C)/* sf_aes_iv_r0_w3 */
 #define SF_CTRL_SF_AES_R0_START_OFFSET                          (0x230)/* sf_aes_r0_start */
 #define SF_CTRL_SF_AES_R0_END_OFFSET                            (0x234)/* sf_aes_r0_end */
+
+#if defined(BL602)
+#define SF_CTRL_SF_AES_KEY_R1_0_OFFSET                          (0x300)/* sf_aes_key_r1_0 */
+#define SF_CTRL_SF_AES_KEY_R1_1_OFFSET                          (0x304)/* sf_aes_key_r1_1 */
+#define SF_CTRL_SF_AES_KEY_R1_2_OFFSET                          (0x308)/* sf_aes_key_r1_2 */
+#define SF_CTRL_SF_AES_KEY_R1_3_OFFSET                          (0x30C)/* sf_aes_key_r1_3 */
+#define SF_CTRL_SF_AES_KEY_R1_4_OFFSET                          (0x310)/* sf_aes_key_r1_4 */
+#define SF_CTRL_SF_AES_KEY_R1_5_OFFSET                          (0x314)/* sf_aes_key_r1_5 */
+#define SF_CTRL_SF_AES_KEY_R1_6_OFFSET                          (0x318)/* sf_aes_key_r1_6 */
+#define SF_CTRL_SF_AES_KEY_R1_7_OFFSET                          (0x31C)/* sf_aes_key_r1_7 */
+#define SF_CTRL_SF_AES_IV_R1_W0_OFFSET                          (0x320)/* sf_aes_iv_r1_w0 */
+#define SF_CTRL_SF_AES_IV_R1_W1_OFFSET                          (0x324)/* sf_aes_iv_r1_w1 */
+#define SF_CTRL_SF_AES_IV_R1_W2_OFFSET                          (0x328)/* sf_aes_iv_r1_w2 */
+#define SF_CTRL_SF_AES_IV_R1_W3_OFFSET                          (0x32C)/* sf_aes_iv_r1_w3 */
+#define SF_CTRL_SF_AES_R1_START_OFFSET                          (0x330)/* sf_aes_r1_start */
+#define SF_CTRL_SF_AES_R1_END_OFFSET                            (0x334)/* sf_aes_r1_end */
+#else
 #define SF_CTRL_SF_AES_KEY_R1_0_OFFSET                          (0x280)/* sf_aes_key_r1_0 */
 #define SF_CTRL_SF_AES_KEY_R1_1_OFFSET                          (0x284)/* sf_aes_key_r1_1 */
 #define SF_CTRL_SF_AES_KEY_R1_2_OFFSET                          (0x288)/* sf_aes_key_r1_2 */
@@ -122,6 +144,24 @@
 #define SF_CTRL_SF_AES_IV_R1_W3_OFFSET                          (0x2AC)/* sf_aes_iv_r1_w3 */
 #define SF_CTRL_SF_AES_R1_START_OFFSET                          (0x2B0)/* sf_aes_r1_start */
 #define SF_CTRL_SF_AES_R1_END_OFFSET                            (0x2B4)/* sf_aes_r1_end */
+#endif
+
+#if defined(BL602)
+#define SF_CTRL_SF_AES_KEY_R2_0_OFFSET                          (0x400)/* sf_aes_key_r2_0 */
+#define SF_CTRL_SF_AES_KEY_R2_1_OFFSET                          (0x404)/* sf_aes_key_r2_1 */
+#define SF_CTRL_SF_AES_KEY_R2_2_OFFSET                          (0x408)/* sf_aes_key_r2_2 */
+#define SF_CTRL_SF_AES_KEY_R2_3_OFFSET                          (0x40C)/* sf_aes_key_r2_3 */
+#define SF_CTRL_SF_AES_KEY_R2_4_OFFSET                          (0x410)/* sf_aes_key_r2_4 */
+#define SF_CTRL_SF_AES_KEY_R2_5_OFFSET                          (0x414)/* sf_aes_key_r2_5 */
+#define SF_CTRL_SF_AES_KEY_R2_6_OFFSET                          (0x418)/* sf_aes_key_r2_6 */
+#define SF_CTRL_SF_AES_KEY_R2_7_OFFSET                          (0x41C)/* sf_aes_key_r2_7 */
+#define SF_CTRL_SF_AES_IV_R2_W0_OFFSET                          (0x420)/* sf_aes_iv_r2_w0 */
+#define SF_CTRL_SF_AES_IV_R2_W1_OFFSET                          (0x424)/* sf_aes_iv_r2_w1 */
+#define SF_CTRL_SF_AES_IV_R2_W2_OFFSET                          (0x428)/* sf_aes_iv_r2_w2 */
+#define SF_CTRL_SF_AES_IV_R2_W3_OFFSET                          (0x42C)/* sf_aes_iv_r2_w3 */
+#define SF_CTRL_SF_AES_R2_START_OFFSET                          (0x430)/* sf_aes_r2_start */
+#define SF_CTRL_SF_AES_R2_END_OFFSET                            (0x434)/* sf_aes_r2_end */
+#else
 #define SF_CTRL_SF_AES_KEY_R2_0_OFFSET                          (0x300)/* sf_aes_key_r2_0 */
 #define SF_CTRL_SF_AES_KEY_R2_1_OFFSET                          (0x304)/* sf_aes_key_r2_1 */
 #define SF_CTRL_SF_AES_KEY_R2_2_OFFSET                          (0x308)/* sf_aes_key_r2_2 */
@@ -136,6 +176,7 @@
 #define SF_CTRL_SF_AES_IV_R2_W3_OFFSET                          (0x32C)/* sf_aes_iv_r2_w3 */
 #define SF_CTRL_SF_AES_R2_START_OFFSET                          (0x330)/* sf_aes_r2_start */
 #define SF_CTRL_SF_AES_R2_END_OFFSET                            (0x334)/* sf_aes_r2_end */
+#endif
 
 /* Register Bitfield definitions *****************************************************/
 

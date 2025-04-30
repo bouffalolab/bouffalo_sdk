@@ -345,6 +345,7 @@ int main(void)
     bflb_data_compare(aes_ctr_128bit_ct, aes_enc_buf, 16);
     printf("aes link ctr 128 success\r\n");
 
+#if !defined(BL602) && !defined(BL702)
     bflb_aes_link_update(aes, (uint32_t)&aes_xts_link1, aes_xts_128bit_pt, aes_enc_buf, 16);
     bflb_data_compare(aes_xts_128bit_ct, aes_enc_buf, 16);
     printf("aes link xts 128 success\r\n");
@@ -357,6 +358,7 @@ int main(void)
     bflb_aes_link_update(aes, (uint32_t)&aes_xts_link3, aes_xts_256bit_pt, aes_enc_buf, 32);
     bflb_data_compare(aes_xts_256bit_ct, aes_enc_buf, 32);
     printf("aes link xts 256 success\r\n");
+#endif
 #endif
     printf("aes link success\r\n");
     bflb_group0_release_aes_access(aes);

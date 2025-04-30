@@ -19,6 +19,8 @@ extern "C" {
 
 #define CODEC_INPUT_DEBUG_TRACE           (1)
 
+#define AUI_TASK "auitsk"
+
 #define DEF_AUDIO_ANALOG_GAIN_INPUT1      (33)//33db,   check 0 ? or 6~42(step 3 db)
 #define DEF_AUDIO_ANALOG_GAIN_INPUT2      (33)//33db,   check 0 ? or 6~42(step 3 db)
 #define DEF_AUDIO_ANALOG_GAIN_INPUT3      (0) // 0db,   check 0 ? or 6~42(step 3 db)

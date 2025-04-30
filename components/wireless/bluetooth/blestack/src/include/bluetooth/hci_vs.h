@@ -133,7 +133,7 @@ struct bt_hci_cp_vs_set_scan_req_reports {
 } __packed;
 #endif //BFLB_BLE
 
-#if defined(BL616)
+#if defined(BL616) || defined(BL702L)
 #define BT_HCI_OP_VS_SET_TX_PWR             BT_OP(BT_OGF_VS, 0x0073)
 #else
 #define BT_HCI_OP_VS_SET_TX_PWR             BT_OP(BT_OGF_VS, 0x0061)
@@ -152,6 +152,22 @@ struct bt_hci_cp_vs_set_bd_addr {
     bt_addr_t bdaddr;
 }__packed;
 
+#define BT_HCI_OP_VS_LE_THROUGHPUT_CALC     BT_OP(BT_OGF_VS, 0x0078)
+struct bt_hci_cp_vs_le_throughput_calc {
+    bool enable;
+    u8_t interval;
+}__packed;
+
+#if !defined(BL602) && !defined(BL702)
+#define BT_HCI_OP_VS_GET_CONTROLLER_SDK_VER BT_OP(BT_OGF_VS, 0x007C)
+struct bt_hci_rp_get_controller_sdk_ver{
+    uint8_t status;
+    uint8_t ver_major;
+    uint8_t ver_minor;
+    uint8_t ver_patch;
+    uint8_t sdk_commit_id[4];
+} __packed;
+#endif
 
 /* Events */
 
@@ -323,6 +339,37 @@ struct bt_hci_evt_mesh_scanning_report {
 	u8_t num_reports;
 	struct bt_hci_evt_mesh_scan_report reports[0];
 } __packed;
+
+#define HCI_VS_BT_A2DP_STATUS_CMD_OPCODE        BT_OP(BT_OGF_VS, 0x0076)
+struct bt_hci_cp_vs_set_a2dp_status {
+    u16_t conhdl;
+    u8_t status;
+}__packed;
+
+#define HCI_VS_BT_A2DP_DUTY_CYCLE_CMD_OPCODE    BT_OP(BT_OGF_VS, 0x0077)
+struct hci_vsc_set_a2dp_duty_cycle_cmd {
+    u8_t duty_cycle;
+}__packed;
+
+#define HCI_VS_BLE_CONN_WINDOW_SETTING_CMD_OPCODE   BT_OP(BT_OGF_VS, 0x0079)
+struct hci_vsc_ble_conn_window_setting_cmd
+{
+    uint8_t percentage;
+}__packed;
+
+#define HCI_VS_BT_SET_TX_PWR   BT_OP(BT_OGF_VS, 0x007a)
+struct hci_vsc_bt_tx_pwr_cmd
+{
+    int8_t br_power;
+    int8_t edr_power;
+}__packed;
+
+#define BT_HCI_OP_VS_LE_SET_ADV_DATA_CMD_OPCODE BT_OP(BT_OGF_VS, 0x007D)
+
+#define BT_HCI_OP_VS_LE_SET_SCAN_RSP_DATA_CMD_OPCODE BT_OP(BT_OGF_VS, 0x007E)
+
+#define BT_HCI_OP_VS_LE_SET_ADV_EN_CMD_OPCODE BT_OP(BT_OGF_VS, 0x007F)
+
 
 #ifdef __cplusplus
 }

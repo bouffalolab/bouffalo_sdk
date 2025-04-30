@@ -17,7 +17,7 @@
  * @{
  */
 
-#include <../bluetooth/uuid.h>
+#include <../bluetooth/bt_uuid.h>
 #include <../bluetooth/conn.h>
 
 #ifdef __cplusplus

@@ -1,0 +1,97 @@
+/dts-v1/;
+// version: 17
+// last_comp_version: 16
+// boot_cpuid_phys: 0x0
+
+/ {
+    model = "bl bl702 AVB board";
+    compatible = "bl,bl702-sample", "bl,bl702-common";
+    #address-cells = <0x1>;
+    #size-cells = <0x1>;
+    gpio {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        max_num = <40>;
+        gpio0 {
+            status = "okay";
+            pin  = <18>;
+            feature = "led";
+            active = "Hi"; //Hi or Lo
+            mode = "onoff";
+            time = <100>; //Unused for onoff mode
+        };
+        gpio1 {
+            status = "disable";
+            pin = <16>;
+            feature = "button";
+            active = "Lo"; //Unused for button feature
+            mode = "multipress";
+            hbn_use = "disable";
+            button {
+                debounce = <10>;
+                trig_level = "Hi"; //Hi or Lo
+                short_press_ms {
+                    start = <30>;
+                    end = <4000>;
+                    kevent = <2>;
+                };
+                long_press_ms {
+                    start = <4001>;
+                    end = <10000>;
+                    kevent = <3>;
+                };
+                longlong_press_ms {
+                    start = <10001>;
+                    kevent = <4>;
+                };
+            };
+        };
+    };
+    uart {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        uart@4000A000 {
+            status = "okay";
+            id = <0>;
+            compatible = "bl702_uart";
+            path = "/dev/ttyS0";
+            baudrate = <2000000>;
+            pin {
+                rx = <15>;
+                tx = <14>;
+            };
+            feature {
+                tx = "okay";
+                rx = "okay";
+                cts = "disable";
+                rts = "disable";
+            };
+        };
+    };
+    wireless {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        mac {
+            mode = "MBF";  // 'M': manufacture; 'B': efuse; 'F': flash
+            mac_addr = [C8 43 57 82 73 40 88 88];
+        };
+        brd_rf {
+            xtal_mode = "MF";
+            xtal = <118 118 0 60 60>;
+            pwr = <10>;  //range:0~10dbm
+            pwr_mode = "bf";//B: only use power offset in EFUSE; b: use power offset in EFUSE with incremental mode; F: only use power offset in Flash; f: use power offset in Flash with incremental mode
+            //due to the limit of current DTC, negative value is used. So we work around by adding all the poweroffset with 10. so 8 represents -2; 10 represents 0; 13 represents 3
+            pwr_offset_zigbee = <10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10>;
+            pwr_offset_ble = <10 10 10 10>;
+        };
+        rf_temp {
+            en_tcal = <0>;
+        };
+        cap_temp {
+            //negative value is NOT supported. So we use '255' for -1.
+            //support table size from 3 to 30
+            temp = <216 221 226 231 236 241 246 251 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 105>;
+            capcode_offset = <253 4 11 14 17 19 19 19 17 15 12 7 3 0 252 250 246 242 240 238 237 236 236 238 240 245 250 1 12 26>;
+        };
+    };
+};

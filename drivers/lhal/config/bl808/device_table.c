@@ -435,6 +435,17 @@ struct bflb_device_s bl808_device_table[] = {
       .sub_idx = 0,
       .dev_type = BFLB_DEVICE_TYPE_WO,
       .user_data = NULL },
+    { .name = BFLB_NAME_SDH,
+      .reg_base = SDH_BASE,
+#if defined(CPU_M0)
+      .irq_num = BL808_IRQ_SDH,
+#else
+      .irq_num = 0xff,
+#endif
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_SDH,
+      .user_data = NULL },
 };
 #else
 struct bflb_device_s bl808_device_table[] = {

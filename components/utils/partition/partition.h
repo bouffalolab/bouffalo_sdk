@@ -184,6 +184,7 @@ typedef int (*p_pt_table_flash_read)(uint32_t addr, uint8_t *data, uint32_t len)
  */
 void pt_table_set_flash_operation(p_pt_table_flash_erase erase, p_pt_table_flash_write write, p_pt_table_flash_read read);
 pt_table_id_type pt_table_get_active_partition_need_lock(pt_table_stuff_config ptStuff[2]);
+pt_table_id_type pt_table_get_active_partition_from_ram(pt_table_stuff_config ptStuff[2]);
 pt_table_error_type pt_table_get_active_entries_by_id(pt_table_stuff_config *pt_stuff,
                                                       pt_table_entry_type type,
                                                       pt_table_entry_config *pt_entry);

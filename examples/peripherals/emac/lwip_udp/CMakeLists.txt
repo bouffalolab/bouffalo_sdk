@@ -7,6 +7,7 @@ find_package(bouffalo_sdk REQUIRED HINTS $ENV{BL_SDK_BASE})
 sdk_add_include_directories(.)
 
 target_sources(app PRIVATE udp_echo.c)
+
 sdk_set_main_file(main.c)
 
 project(lwip_udp)

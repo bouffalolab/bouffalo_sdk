@@ -53,6 +53,10 @@ extern uint32_t __StackLimit;
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
 
+extern uint32_t __hbn_load_addr;
+extern uint32_t __hbn_ram_start__;
+extern uint32_t __hbn_ram_end__;
+
 //extern uint32_t __copy_table_start__;
 //extern uint32_t __copy_table_end__;
 //extern uint32_t __zero_table_start__;
@@ -92,6 +96,14 @@ void start_load(void)
     pDest = &__ram_data_start__;
 
     for (; pDest < &__ram_data_end__;) {
+        *pDest++ = *pSrc++;
+    }
+
+    /* BF Add HBNRAM data copy */
+    pSrc = &__hbn_load_addr;
+    pDest = &__hbn_ram_start__;
+
+    for (; pDest < &__hbn_ram_end__;) {
         *pDest++ = *pSrc++;
     }
 

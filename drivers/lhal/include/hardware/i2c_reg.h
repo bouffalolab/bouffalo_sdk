@@ -64,7 +64,7 @@
 #define I2C_CR_I2C_SUB_ADDR_EN       (1 << 4U)
 #define I2C_CR_I2C_SUB_ADDR_BC_SHIFT (5U)
 #define I2C_CR_I2C_SUB_ADDR_BC_MASK  (0x3 << I2C_CR_I2C_SUB_ADDR_BC_SHIFT)
-#if defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628) || defined(BL702L)
+#if defined(BL616) || defined(BL808) || defined(BL702L)
 #define I2C_CR_I2C_10B_ADDR_EN    (1 << 7U)
 #define I2C_CR_I2C_SLV_ADDR_SHIFT (8U)
 #define I2C_CR_I2C_SLV_ADDR_MASK  (0x3ff << I2C_CR_I2C_SLV_ADDR_SHIFT)
@@ -147,6 +147,8 @@
 #define I2C_CR_I2C_PRD_D_PH_3_SHIFT (24U)
 #define I2C_CR_I2C_PRD_D_PH_3_MASK  (0xff << I2C_CR_I2C_PRD_D_PH_3_SHIFT)
 
+
+
 /* 0x80 : i2c_fifo_config_0 */
 #define I2C_DMA_TX_EN         (1 << 0U)
 #define I2C_DMA_RX_EN         (1 << 1U)
@@ -172,5 +174,6 @@
 /* 0x8C : i2c_fifo_rdata */
 #define I2C_FIFO_RDATA_SHIFT (0U)
 #define I2C_FIFO_RDATA_MASK  (0xffffffff << I2C_FIFO_RDATA_SHIFT)
+
 
 #endif /* __HARDWARE_I2C_H__ */

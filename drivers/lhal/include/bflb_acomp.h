@@ -157,6 +157,13 @@ int bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t* channel);
  */
 int bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t* pin);
 
+/**
+ * @brief get ACOMP positive channel select of acomp index.
+ *
+ * @param [in] acomp_id acomp index
+ * @return ACOMP positive channel select
+ */
+uint32_t bflb_acomp_get_postive_input(uint8_t acomp_id);
 #ifdef __cplusplus
 }
 #endif

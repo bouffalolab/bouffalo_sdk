@@ -24,7 +24,7 @@
 
 #include "sbc_encoder.h"
 #include "sbc_enc_func_declare.h"
-
+#include <stddef.h>
 #if defined(SBC_ENC_INCLUDED)
 
 #if (SBC_ARM_ASM_OPT==TRUE)
@@ -84,17 +84,19 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
 #endif
 
     pu8PacketPtr    = pstrEncParams->pu8NextPacket;    /*Initialize the ptr*/
-    if (pstrEncParams->sbc_mode != SBC_MODE_MSBC) {
-        *pu8PacketPtr++ = (UINT8)SBC_SYNC_WORD_STD;  /*Sync word*/
-        *pu8PacketPtr++ = (UINT8)(pstrEncParams->FrameHeader);
-
-        *pu8PacketPtr = (UINT8)(pstrEncParams->s16BitPool & 0x00FF);
+    
+    /* BK4BTSTACK_CHANGE START */
+    uint8_t * reserved_ptr = NULL;
+    if (/*pstrEncParams->mSBCEnabled*/0){
+        *pu8PacketPtr++ = (UINT8)0xAD;  /*Sync word*/
+        reserved_ptr = pu8PacketPtr;
     } else {
-        *pu8PacketPtr++ = (UINT8)SBC_SYNC_WORD_MSBC; /*Sync word*/
-        // two reserved bytes
-        *pu8PacketPtr++ = 0;
-        *pu8PacketPtr = 0;
+        *pu8PacketPtr++ = (UINT8)0x9C;  /*Sync word*/
     }
+    /* BK4BTSTACK_CHANGE END */ 
+    *pu8PacketPtr++=(UINT8)(pstrEncParams->FrameHeader);
+
+    *pu8PacketPtr = (UINT8)(pstrEncParams->s16BitPool & 0x00FF);
     pu8PacketPtr += 2;  /*skip for CRC*/
 
     /*here it indicate if it is byte boundary or nibble boundary*/
@@ -222,6 +224,15 @@ void EncPacking(SBC_ENC_PARAMS *pstrEncParams)
     pu8PacketPtr = pstrEncParams->pu8NextPacket + 1;  /*Initialize the ptr*/
     u8CRC = 0x0F;
     s32LoopCount = s32Sb >> 1;
+
+    /* BK4BTSTACK_CHANGE START */
+    if (reserved_ptr){
+        // overwrite fixed values for mSBC before CRC calculation
+        *reserved_ptr++ = 0;
+        *reserved_ptr++ = 0;        
+    }
+    /* BK4BTSTACK_CHANGE END */ 
+  
 
     /*
     The loops is run from the start of the packet till the scale factor

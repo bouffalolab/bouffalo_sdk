@@ -60,10 +60,7 @@ static const spx_float_t FLOAT_ZERO = {0,0};
 static const spx_float_t FLOAT_ONE = {16384,-14};
 static const spx_float_t FLOAT_HALF = {16384,-15};
 
-#ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-
 static inline spx_float_t PSEUDOFLOAT(spx_int32_t x)
 {
    int e=0;

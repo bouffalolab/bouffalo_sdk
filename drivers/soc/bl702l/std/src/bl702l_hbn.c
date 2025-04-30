@@ -40,7 +40,7 @@
 #include "bflb_xip_sflash.h"
 #include "bl702l_ef_cfg.h"
 #include <risc-v/e24/clic.h>
-
+#include "bl702l_ef_ctrl.h"
 /** @addtogroup  BL702L_Peripheral_Driver
  *  @{
  */
@@ -253,11 +253,6 @@ void ATTR_TCM_SECTION HBN_Enable(HBN_LDO_LEVEL_Type ldoLevel, HBN_LEVEL_Type hbn
             break;
 
         case HBN_LEVEL_2:
-            tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PWRDN_HBN_CORE);
-            tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PWRDN_HBN_RTC);
-            break;
-
-        case HBN_LEVEL_3:
             tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PWRDN_HBN_CORE);
             tmpVal = BL_SET_REG_BIT(tmpVal, HBN_PWRDN_HBN_RTC);
             break;
@@ -565,6 +560,30 @@ BL_Err_Type HBN_Set_UART_CLK_Sel(HBN_UART_CLK_Type clkSel)
 }
 
 /****************************************************************************/ /**
+ * @brief  get xclk clock selection
+ *
+ * @param  None
+ *
+ * @return xclk clock selection
+ *
+*******************************************************************************/
+HBN_XCLK_CLK_Type ATTR_CLOCK_SECTION HBN_Get_XCLK_CLK_Sel(void)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_GLB);
+
+    switch (BL_GET_REG_BITS_VAL(tmpVal, GLB_HBN_ROOT_CLK_SEL) & 1) {
+        case 0:
+            return HBN_XCLK_CLK_RC32M;
+        case 1:
+            return HBN_XCLK_CLK_XTAL;
+        default:
+            return HBN_XCLK_CLK_RC32M;
+    }
+}
+
+/****************************************************************************/ /**
  * @brief  Select xclk clock source
  *
  * @param  xClk: xclk clock type selection
@@ -687,6 +706,65 @@ BL_Err_Type HBN_Set_HRAM_Ret(void)
     return SUCCESS;
 }
 
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k_capbank
+ *
+ * @param  value
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Capbank(uint8_t value)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_CAPBANK, value);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    return SUCCESS;
+}
+
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k's inverter amplify strength
+ *
+ * @param  value
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Inverter_Amplify_Strength(uint8_t value)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_INV_STRE, value);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  Set xtal32k_regulator
+ *
+ * @param  level
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION HBN_Set_Xtal_32K_Regulator(uint8_t level)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(HBN_BASE, HBN_XTAL32K);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_XTAL32K_REG, level);
+    BL_WR_REG(HBN_BASE, HBN_XTAL32K, tmpVal);
+
+    return SUCCESS;
+}
+
 /****************************************************************************/ /**
  * @brief  Power on XTAL 32K
  *
@@ -786,13 +864,14 @@ BL_Err_Type ATTR_CLOCK_SECTION HBN_Power_Off_RC32K(void)
 __WEAK
 BL_Err_Type ATTR_CLOCK_SECTION HBN_Trim_RC32K(void)
 {
-    Efuse_Common_Trim_Type trim;
+    bflb_ef_ctrl_com_trim_t trim;
     int32_t tmpVal = 0;
 
-    EF_Ctrl_Read_Common_Trim("rc32k", &trim);
+    //EF_Ctrl_Read_Common_Trim("rc32k", &trim);
+    bflb_ef_ctrl_read_common_trim(NULL, "rc32k", &trim, 0);
 
     if (trim.en) {
-        if (trim.parity == EF_Ctrl_Get_Trim_Parity(trim.value, trim.len)) {
+        if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
             tmpVal = BL_RD_REG(HBN_BASE, HBN_RC32K_CTRL0);
             tmpVal = BL_SET_REG_BITS_VAL(tmpVal, HBN_RC32K_CAP_SEL, trim.value);
             BL_WR_REG(HBN_BASE, HBN_RC32K_CTRL0, tmpVal);

@@ -10,15 +10,16 @@
         (field)[3] = (uint8_t)((value) >> 24); \
     } while (0)
 
-static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t slaveaddr, uint32_t subaddr, uint8_t subaddr_size, bool is_addr_10bit)
+__UNUSED static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t slaveaddr, uint8_t *subaddr, uint8_t subaddr_size, bool is_addr_10bit)
 {
     uint32_t regval;
     uint32_t reg_base;
+    uint32_t subaddr_offset;
+    uint8_t subaddr_idx;
 
     reg_base = dev->reg_base;
 
     regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
-
     if (subaddr_size > 0) {
         regval |= I2C_CR_I2C_SUB_ADDR_EN;
         regval &= ~I2C_CR_I2C_SUB_ADDR_BC_MASK;
@@ -26,7 +27,35 @@ static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t slaveaddr, 
     } else {
         regval &= ~I2C_CR_I2C_SUB_ADDR_EN;
     }
+    putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
 
+    subaddr_idx = 0;
+    while (subaddr_idx < subaddr_size) {
+        subaddr_offset = subaddr_idx & ~3;
+        if (subaddr_idx + 1 >= subaddr_size) {
+            regval = subaddr[subaddr_idx];
+            putreg32(regval, reg_base + I2C_SUB_ADDR_OFFSET + subaddr_offset);
+            break;
+        } else if (subaddr_idx + 2 >= subaddr_size) {
+            regval = subaddr[subaddr_idx] | (subaddr[subaddr_idx + 1] << 8);
+            putreg32(regval, reg_base + I2C_SUB_ADDR_OFFSET + subaddr_offset);
+            break;
+        } else if (subaddr_idx + 3 >= subaddr_size) {
+            regval = subaddr[subaddr_idx] | (subaddr[subaddr_idx + 1] << 8) | (subaddr[subaddr_idx + 2] << 16);
+            putreg32(regval, reg_base + I2C_SUB_ADDR_OFFSET + subaddr_offset);
+            break;
+        } else if (subaddr_idx + 4 >= subaddr_size) {
+            regval = subaddr[subaddr_idx] | (subaddr[subaddr_idx + 1] << 8) | (subaddr[subaddr_idx + 2] << 16) | (subaddr[subaddr_idx + 3] << 24);
+            putreg32(regval, reg_base + I2C_SUB_ADDR_OFFSET + subaddr_offset);
+            break;
+        } else {
+            regval = subaddr[subaddr_idx] | (subaddr[subaddr_idx + 1] << 8) | (subaddr[subaddr_idx + 2] << 16) | (subaddr[subaddr_idx + 3] << 24);
+            putreg32(regval, reg_base + I2C_SUB_ADDR_OFFSET + subaddr_offset);
+            subaddr_idx += 4;
+        }
+    }
+
+    regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
     regval &= ~I2C_CR_I2C_SLV_ADDR_MASK;
     regval |= (slaveaddr << I2C_CR_I2C_SLV_ADDR_SHIFT);
 #if !defined(BL602) && !defined(BL702)
@@ -36,7 +65,6 @@ static void bflb_i2c_addr_config(struct bflb_device_s *dev, uint16_t slaveaddr, 
         regval &= ~I2C_CR_I2C_10B_ADDR_EN;
     }
 #endif
-    putreg32(subaddr, reg_base + I2C_SUB_ADDR_OFFSET);
     putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
 }
 
@@ -70,7 +98,7 @@ static inline void bflb_i2c_set_datalen(struct bflb_device_s *dev, uint16_t data
     putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
 }
 
-static void bflb_i2c_set_frequence(struct bflb_device_s *dev, uint32_t freq)
+__UNUSED static void bflb_i2c_set_frequence(struct bflb_device_s *dev, uint32_t freq)
 {
     uint32_t regval;
     uint32_t reg_base;
@@ -235,7 +263,7 @@ static inline bool bflb_i2c_isenable(struct bflb_device_s *dev)
     return false;
 }
 
-static int bflb_i2c_write_bytes(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
+__UNUSED static int bflb_i2c_write_bytes(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
 {
     uint32_t reg_base;
     uint32_t temp = 0;
@@ -290,7 +318,7 @@ static int bflb_i2c_write_bytes(struct bflb_device_s *dev, uint8_t *data, uint32
     return 0;
 }
 
-static int bflb_i2c_read_bytes(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
+__UNUSED static int bflb_i2c_read_bytes(struct bflb_device_s *dev, uint8_t *data, uint32_t len)
 {
     uint32_t reg_base;
     uint32_t temp = 0;
@@ -435,7 +463,6 @@ int bflb_i2c_transfer(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, in
 #ifdef romapi_bflb_i2c_transfer
     return romapi_bflb_i2c_transfer(dev, msgs, count);
 #else
-    uint16_t subaddr = 0;
     uint16_t subaddr_size = 0;
     bool is_addr_10bit = false;
     int ret = 0;
@@ -453,19 +480,13 @@ int bflb_i2c_transfer(struct bflb_device_s *dev, struct bflb_i2c_msg_s *msgs, in
             is_addr_10bit = false;
         }
         if (msgs[i].flags & I2C_M_NOSTOP) {
-            subaddr = 0;
-            for (uint8_t j = 0; j < msgs[i].length; j++) {
-                subaddr += msgs[i].buffer[j] << (j * 8);
-            }
             subaddr_size = msgs[i].length;
-            bflb_i2c_addr_config(dev, msgs[i].addr, subaddr, subaddr_size, is_addr_10bit);
+            bflb_i2c_addr_config(dev, msgs[i].addr, msgs[i].buffer, subaddr_size, is_addr_10bit);
             i++;
         } else {
-            subaddr = 0;
             subaddr_size = 0;
-            bflb_i2c_addr_config(dev, msgs[i].addr, subaddr, subaddr_size, is_addr_10bit);
+            bflb_i2c_addr_config(dev, msgs[i].addr, msgs[i].buffer, subaddr_size, is_addr_10bit);
         }
-
         if (msgs[i].length > 256) {
             return -EINVAL;
         }
@@ -538,7 +559,7 @@ uint32_t bflb_i2c_get_intstatus(struct bflb_device_s *dev)
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
-    return (getreg32(reg_base + I2C_INT_STS_OFFSET) & 0xff);
+    return (getreg32(reg_base + I2C_INT_STS_OFFSET) & 0x7f);
 #endif
 }
 
@@ -563,14 +584,14 @@ int bflb_i2c_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             }
             putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
             break;
-        case I2C_CMD_SET_DEGLITCH:
+        case I2C_CMD_SET_DEGLITCH_CNT:
             regval = getreg32(reg_base + I2C_CONFIG_OFFSET);
             regval &= ~I2C_CR_I2C_DEG_CNT_MASK;
             if (arg == 0) {
                 regval &= ~I2C_CR_I2C_DEG_EN;
             } else {
                 regval |= I2C_CR_I2C_DEG_EN;
-                regval |= ((arg - 1) << I2C_CR_I2C_DEG_CNT_SHIFT);
+                regval |= (arg << I2C_CR_I2C_DEG_CNT_SHIFT);
             }
             putreg32(regval, reg_base + I2C_CONFIG_OFFSET);
             break;

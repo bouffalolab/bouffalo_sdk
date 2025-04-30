@@ -17,7 +17,7 @@ BLE MESH
 软件实现
 -----------------------------
 
-更详细的代码请参考 **examples/btble/blemesh_cli**
+更详细的代码请参考 **examples/btble/btble_cli**
 
 编译和烧录
 -----------------------------

@@ -81,6 +81,19 @@ const ili9488_spi_init_cmd_t ili9488_spi_init_cmds[] = {
 
     { 0xF7, "\xA9\x51\x2C\x82", 4 }, /* Adjust Control 3 */
 
+/* Color RGB order */
+#if ILI9488_SPI_COLOR_ORDER
+    { 0x36, "\x08", 1 },
+#else
+    { 0x36, "\x00", 1 },
+#endif
+
+#if (ILI9488_SPI_PIXEL_FORMAT == 1)
+    { 0x3A, "\x55", 1 }, /* Interface Pixel Format RGB565 */
+#elif (ILI9488_SPI_PIXEL_FORMAT == 2)
+    { 0x3A, "\x66", 1 }, /* Interface Pixel Format RGB666 */
+#endif
+
 #if ILI9488_SPI_COLOR_REVERSAL
     { 0x21, NULL, 0 }, /* Color reversal */
 #endif
@@ -149,38 +162,24 @@ int ili9488_spi_init()
  */
 int ili9488_spi_set_dir(uint8_t dir, uint8_t mir_flag)
 {
+    uint8_t dir_param[4] = { 0x00, 0xA0, 0xC0, 0x60 };
+    uint8_t mir_param[4] = { 0x40, 0x20, 0x80, 0xE0 };
     uint8_t param;
 
-    switch (dir) {
-        case 0:
-            if (!mir_flag)
-                param = 0x00;
-            else
-                param = 0x01;
-            break;
-        case 1:
-            if (!mir_flag)
-                param = 0x60;
-            else
-                param = 0x20;
-            break;
-        case 2:
-            if (!mir_flag)
-                param = 0xC0;
-            else
-                param = 0x80;
-            break;
-        case 3:
-            if (!mir_flag)
-                param = 0xA0;
-            else
-                param = 0xE0;
-
-            break;
-        default:
-            return -1;
-            break;
+    if (dir >= 4) {
+        return -1;
     }
+
+    if (mir_flag) {
+        param = mir_param[dir];
+    } else {
+        param = dir_param[dir];
+    }
+
+/* Color RGB order */
+#if ILI9488_SPI_COLOR_ORDER
+    param |= 0x08;
+#endif
 
     lcd_spi_transmit_cmd_para(0x36, (void *)&param, 1);
 

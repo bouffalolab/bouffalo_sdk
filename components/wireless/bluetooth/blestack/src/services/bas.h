@@ -26,6 +26,8 @@ extern "C" {
 
 void bas_init(void);
 
+void bas_deinit(void);
+
 /** @brief Read battery level value.
  *
  * Read the characteristic value of the battery level
@@ -43,7 +45,7 @@ u8_t bt_gatt_bas_get_battery_level(void);
  *
  *  @return Zero in case of success and error code in case of error.
  */
-int bt_gatt_bas_set_battery_level(u8_t level);
+int bt_gatt_bas_set_battery_level(struct bt_conn *conn, u8_t level);
 
 
 #ifdef __cplusplus

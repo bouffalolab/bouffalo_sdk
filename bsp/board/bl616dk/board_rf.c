@@ -1,3 +1,8 @@
+
+#if __has_include("board_rf_overlay.h")
+/* Use board_rf_overlay.c instead of this file */
+#else
+
 #include <stdint.h>
 #include <stdarg.h>
 #include <errno.h>
@@ -106,3 +111,5 @@ int board_rf_ctl(enum board_ctl_ops ops, ...)
   va_end(ops_arg);
   return ret;
 }
+
+#endif

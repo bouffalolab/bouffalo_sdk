@@ -5,10 +5,16 @@ macro(sdk_generate_library)
     get_filename_component(library_name ${CMAKE_CURRENT_LIST_DIR} NAME)
   endif()
 
+  set(library_name "lib${library_name}")
   message(STATUS "[register library : ${library_name}], path:${CMAKE_CURRENT_LIST_DIR}")
 
   set(CURRENT_STATIC_LIBRARY ${library_name})
   add_library(${library_name} STATIC)
+  set_target_properties(${library_name} PROPERTIES 
+    PREFIX ""    
+    OUTPUT_NAME "${library_name}"
+    SUFFIX ".a"
+  )
   set_property(GLOBAL APPEND PROPERTY SDK_LIBS ${library_name})
   target_link_libraries(${library_name} PUBLIC sdk_intf_lib)
 endmacro()
@@ -247,8 +253,41 @@ macro(project name)
   endif()
 
   get_property(SDK_LIBS_PROPERTY GLOBAL PROPERTY SDK_LIBS)
-  list(SORT SDK_LIBS_PROPERTY)
-  target_link_libraries(${proj_name}.elf -Wl,--whole-archive ${SDK_LIBS_PROPERTY} app -Wl,--no-whole-archive)
+  # message(STATUS "SDK_LIBS_PROPERTY:")
+  # foreach(lib ${SDK_LIBS_PROPERTY})
+  #     message(STATUS "  ${lib}")
+  # endforeach()
+
+  # Get the base name and sort.
+  set(BASIC_NAMES_LIST "")
+  foreach(lib ${SDK_LIBS_PROPERTY})
+    get_filename_component(lib_name ${lib} NAME_WE)
+    list(APPEND BASIC_NAMES_LIST ${lib_name})
+  endforeach()
+  list(SORT BASIC_NAMES_LIST)
+  # Restoring full paths based on the sorted results by name.
+  set(SORTED_SDK_LIBS "")
+  foreach(name ${BASIC_NAMES_LIST})
+    foreach(lib ${SDK_LIBS_PROPERTY})
+        get_filename_component(lib_name ${lib} NAME_WE)
+        if(lib_name STREQUAL name)
+            if(NOT lib IN_LIST SORTED_SDK_LIBS)     # Check if the library is already in the sorted list
+                list(APPEND SORTED_SDK_LIBS ${lib}) # Add the original path to the sorted list
+                break()
+            endif()
+        endif()
+    endforeach()
+  endforeach()
+
+  # message(STATUS "List of all libraries in the order of connection:")
+  # foreach(lib ${SORTED_SDK_LIBS})
+  #     message(STATUS "  ${lib}")
+  # endforeach()
+
+  # update SDK_LIBS
+  set_property(GLOBAL PROPERTY SDK_LIBS ${SORTED_SDK_LIBS})
+  # link
+  target_link_libraries(${proj_name}.elf -Wl,--whole-archive ${SORTED_SDK_LIBS} app -Wl,--no-whole-archive)
 
   if(OUTPUT_DIR)
     add_custom_command(TARGET ${proj_name}.elf POST_BUILD

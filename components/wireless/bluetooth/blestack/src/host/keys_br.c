@@ -26,11 +26,6 @@
 
 static struct bt_keys_link_key key_pool[CONFIG_BT_MAX_PAIRED];
 
-#if IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
-static uint32_t aging_counter_val;
-static struct bt_keys_link_key *last_keys_updated;
-#endif /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
-
 #if defined(BFLB_BT_LINK_KEYS_STORE)
 #define LINK_KEY "link_key"
 #define MAX_LINK_KEY_NUMBER 	8
@@ -153,8 +148,6 @@ static struct bt_keys_link_key* bt_keys_link_key_get(const bt_addr_t *addr)
 {
 	struct bt_keys_link_key *link_key;
 	bt_addr_t *bd_addr = NULL;
-	int len = sizeof(struct bt_link_keys);
-	int ret = 0;
 
 	for(int i=0; i<MAX_LINK_KEY_NUMBER;i++){
 		bd_addr = &key_list.keys.link_key[i].addr;
@@ -299,7 +292,10 @@ void bt_keys_link_key_store(struct bt_keys_link_key *link_key)
 }
 #if !defined(BFLB_BLE)
 #if defined(CONFIG_BT_SETTINGS)
-
+#if IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
+static uint32_t aging_counter_val = 0;
+static struct bt_keys_link_key *last_keys_updated;
+#endif /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
 static int link_key_set(const char *name, size_t len_rd,
 			settings_read_cb read_cb, void *cb_arg)
 {

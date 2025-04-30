@@ -60,9 +60,9 @@ struct bt_mesh_health_cli {
  *
  *  @param cli_data Pointer to a @ref bt_mesh_health_cli instance.
  */
-#define BT_MESH_MODEL_HEALTH_CLI(cli_data)                                     \
+#define BT_MESH_MODEL_HEALTH_CLI(cli_data,pub)                                     \
 	BT_MESH_MODEL_CB(BT_MESH_MODEL_ID_HEALTH_CLI, bt_mesh_health_cli_op,   \
-			 NULL, cli_data, &bt_mesh_health_cli_cb)
+			 pub, cli_data, &bt_mesh_health_cli_cb)
 
 /** @brief Set Health client model instance to use for communication.
  *

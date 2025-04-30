@@ -8,7 +8,7 @@ DESCRIPTION
 
 ****************************************************************************/
 
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -17,7 +17,7 @@ DESCRIPTION
 #include "conn_internal.h"
 #include "gatt.h"
 #include "hci_core.h"
-#include "uuid.h"
+#include "bt_uuid.h"
 
 #include "atvv.h"
 #include "bt_log.h"

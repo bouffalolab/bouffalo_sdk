@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <zephyr.h>
 #include <bluetooth.h>
 #include <conn.h>
@@ -57,8 +57,8 @@ void bt_settings_encode_key(char *path, size_t path_size, const char *subsys,
 		/* Key format:
 		 *  "bt/<subsys>/<addr><type>/<key>", "/<key>" is optional
 		 */
-		strcpy(path, "bt/");
-		strncpy(&path[len], subsys, path_size - len);
+		strlcpy(path, "bt/", path_size);
+		strlcpy(&path[len], subsys, path_size - len);
 		len = strlen(path);
 		if (len < path_size) {
 			path[len] = '/';
@@ -81,7 +81,7 @@ void bt_settings_encode_key(char *path, size_t path_size, const char *subsys,
 		if (key && len < path_size) {
 			path[len] = '/';
 			len++;
-			strncpy(&path[len], key, path_size - len);
+			strlcpy(&path[len], key, path_size - len);
 			len += strlen(&path[len]);
 		}
 
@@ -280,6 +280,13 @@ int bt_settings_get_bin(const char *key, u8_t *value, size_t exp_len, size_t *re
 
 int settings_delete(const char *key)
 {
+#if (EF_SW_VERSION_NUM == 0x40099)
+    struct env_node_obj env;
+    if(!ef_get_env_obj(key, &env)){
+        BT_DBG("Not found %s in settings", key);
+        return 0;
+    }
+#endif /* EF_SW_VERSION_NUM == 0x40099 */
     return ef_del_env(key);
 }
 

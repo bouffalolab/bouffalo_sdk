@@ -18,6 +18,8 @@
 #define SHA_MODE_SHA384     5
 #define SHA_MODE_SHA512T224 6
 #define SHA_MODE_SHA512T256 7
+#define SHA_MODE_CRC16      9
+#define SHA_MODE_CRC32      10
 
 struct bflb_sha1_ctx_s {
     uint32_t total[2];                                    /*!< Number of bytes processed */
@@ -79,6 +81,28 @@ struct bflb_sha512_link_ctx_s {
     uint32_t link_addr;                                    /*!< Link configure address */
     struct bflb_sha_link_s link_cfg;
 };
+
+struct bflb_crc_link_s {
+    uint32_t               : 2;  /*!< [1:0]Reserved */
+    uint32_t sha_mode      : 3;  /*!< [4:2]Sha-256/sha-224/sha-1/sha-1/sha-512/sha-384/sha-512T224/sha-512T256 */
+    uint32_t               : 1;  /*!< [5]Reserved */
+    uint32_t sha_hash_sel  : 1;  /*!< [6]New hash or accumulate last hash */
+    uint32_t               : 2;  /*!< [8:7]Reserved */
+    uint32_t sha_int_clear : 1;  /*!< [9]Clear interrupt */
+    uint32_t sha_int_set   : 1;  /*!< [10]Set interrupt */
+    uint32_t               : 1;  /*!< [11]Reserved */
+    uint32_t sha_mode_ext  : 2;  /*!< [13:12]Extention,0:sha 1:md5 2:crc16 3:crc32 */
+    uint32_t               : 2;  /*!< [15:14]Reserved */
+    uint32_t sha_msg_len   : 16; /*!< [31:16]Number of 512-bit block */
+    uint32_t sha_src_addr;       /*!< Message source address */
+    uint32_t poly;               /*!< poly of CRC */
+    uint32_t dout_inv : 1;       /*!< [0]dout inv of CRC */
+    uint32_t dout_ref : 1;       /*!< [1]dout ref of CRC */
+    uint32_t din_ref  : 1;       /*!< [2]din ref of CRC */
+    uint32_t          : 29;      /*!< [31:3]Reserved */
+    uint32_t iv_and_hash;        /*!< CRC hash and also used as iv in 1st block */
+
+} __attribute__((aligned(4)));
 
 #ifdef __cplusplus
 extern "C" {
@@ -305,6 +329,17 @@ void bflb_group0_request_sha_access(struct bflb_device_s *dev);
  * @param [in] dev
  */
 void bflb_group0_release_sha_access(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] dev
+ * @param [in] addr
+ * @param [in] in
+ * @param [in] len
+ * @param [in] out
+ */
+int bflb_sha_crc32_link_work(struct bflb_device_s *dev, uint32_t addr, const uint8_t *in, uint32_t len, uint8_t *out);
 
 #ifdef __cplusplus
 }

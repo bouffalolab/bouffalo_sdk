@@ -774,6 +774,32 @@ int8_t smtaudio_resume()
     return ret;
 }
 
+int8_t smtaudio_info(int type, smtaudio_play_time_t *t)
+{
+    int                  ret = -1;
+    smtaudio_ops_node_t *tmp_node = NULL;
+
+    if(!msp_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
+        LOGE(TAG, "smtaudio is not initialized.");
+        return -1;
+    }
+
+    LPM_RETURN_RET(-1);
+    LOGD(TAG, "Enter %s: current state [%d]", __FUNCTION__, smtaudio_ctx.cur_state);
+    SMTAUDIO_LOCK();
+    if(SMTAUDIO_ONLINE_MUSIC == type) {
+        msp_dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
+            if (tmp_node->id == type) {
+                ret = tmp_node->info(t);
+            }
+        }
+    } else {
+        return -1;
+    }
+    SMTAUDIO_UNLOCK();
+    return ret;   
+}
+
 void smtaudio_clear_ready_list(void)
 {
     if(!msp_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {

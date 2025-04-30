@@ -45,8 +45,16 @@
  ****************************************************************************/
 
 static struct bflb_device_s *uart0;
+static struct lfs_context lfs_ctx = { .partition_name = "PSM" };
+static struct lfs_config lfs_cfg = { .read_size = 256,
+                                     .prog_size = 256,
+                                     .lookahead_size = 256,
+                                     .cache_size = 512,
+                                     .block_size = 4096,
+                                     .block_cycles = 500
+                                   };
+static lfs_file_t file;
 lfs_t *lfs;
-lfs_file_t file;
 
 /****************************************************************************
  * Private Function Prototypes
@@ -68,7 +76,7 @@ int main(void)
     uart0 = bflb_device_get_by_name("uart0");
     shell_init_with_task(uart0);
 
-    lfs = lfs_xip_init();
+    lfs = lfs_xip_init(&lfs_ctx, &lfs_cfg);
     if (lfs == NULL) {
         LOG_F("lfs_xip_init failed. errno: %d\r\n", errno);
         while (1)

@@ -28,20 +28,29 @@ sdk_library_add_sources(
     src/xav_aef_all.c
     src/xav_format_all.c
     src/xav_parser_all.c
+    src/msp_fatfs.c
     src/msp_romfs.c
+    src/msp_fs.c
+    src/msp_ltfs.c
     #src/codec_es8388.c
     )
 endif()
 
-if (CONFIG_CODEC_USE_I2S_TX)
-    sdk_add_compile_definitions(-DCONFIG_CODEC_USE_I2S_TX=1)
-    sdk_library_add_sources(src/codec_es8388.c)
+if (CONFIG_CODEC_USE_I2S_RX OR CONFIG_CODEC_USE_I2S_TX OR CONFIG_CODEC_USE_ES8388)
+    sdk_library_add_sources(src/codec_es8388.c
+    )
 endif()
 
-if (CONFIG_CODEC_USE_I2S_RX)
-    sdk_add_compile_definitions(-DCONFIG_CODEC_USE_I2S_RX=1)
-    sdk_library_add_sources(src/codec_es8388.c)
+if (CONFIG_ROMFS)
+    sdk_add_compile_definitions(-DCONFIG_ROMFS=1)
 endif()
 
+if (CONFIG_LTFS)
+    sdk_add_compile_definitions(-DCONFIG_LTFS=1)
+endif()
 
-sdk_add_compile_options(--save-temps)
+if (CONFIG_FATFS)
+    sdk_add_compile_definitions(-DCONFIG_FATFS=1)
+endif()
+
+sdk_add_private_compile_options(--save-temps)

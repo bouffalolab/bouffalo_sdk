@@ -190,16 +190,13 @@ float bflb_pwm_v2_get_frequency(struct bflb_device_s *dev)
     tmp = (regval & PWM_REG_CLK_SEL_MASK) >> PWM_REG_CLK_SEL_SHIFT;
     switch (tmp) {
         case 0:
-            src = (float)bflb_clk_get_system_clock(0); /* TODO: because this function has not been implemented */
+            src = (float)bflb_clk_get_system_clock(BFLB_SYSTEM_XCLK);
             break;
         case 1:
-            src = (float)bflb_clk_get_system_clock(1); /* TODO: because this function has not been implemented */
-            break;
-        case 2:
-            src = (float)bflb_clk_get_system_clock(2); /* TODO: because this function has not been implemented */
+            src = (float)bflb_clk_get_system_clock(BFLB_SYSTEM_PBCLK);
             break;
         default:
-            src = 0.0f;
+            src = (float)bflb_clk_get_system_clock(BFLB_SYSTEM_32K_CLK);
             break;
     }
     /* get clock dividor */
@@ -446,6 +443,7 @@ int bflb_pwm_v2_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             regval |= (arg << PWM_ADC_TRG_SRC_SHIFT);
             putreg32(regval, reg_base + PWM_MC0_CONFIG0_OFFSET);
             break;
+
 
         default:
             ret = -EPERM;

@@ -9,14 +9,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <sys/errno.h>
+#include <bt_errno.h>
 #include <stdbool.h>
 #include <zephyr/types.h>
 
 #include "bluetooth.h"
 #include "conn.h"
 #include "gatt.h"
-#include "uuid.h"
+#include "bt_uuid.h"
 #include "bas.h"
 
 #if !defined(BFLB_BLE)
@@ -32,9 +32,8 @@ static void blvl_ccc_cfg_changed(const struct bt_gatt_attr *attr,
 {
 	ARG_UNUSED(attr);
 
-	bool notif_enabled = (value == BT_GATT_CCC_NOTIFY);
-
 #if !defined(BFLB_BLE)
+	bool notif_enabled = (value == BT_GATT_CCC_NOTIFY);
 	LOG_INF("BAS Notifications %s", notif_enabled ? "enabled" : "disabled");
 #endif
 }
@@ -67,12 +66,18 @@ void bas_init(void)
     bt_gatt_service_register(&bas);
 }
 
+void bas_deinit(void)
+{
+    bt_gatt_service_unregister(&bas);
+}
+
+
 u8_t bt_gatt_bas_get_battery_level(void)
 {
 	return battery_level;
 }
 
-int bt_gatt_bas_set_battery_level(u8_t level)
+int bt_gatt_bas_set_battery_level(struct bt_conn *conn, u8_t level)
 {
 	int rc;
 
@@ -82,7 +87,7 @@ int bt_gatt_bas_set_battery_level(u8_t level)
 
 	battery_level = level;
 
-	rc = bt_gatt_notify(NULL, &bas.attrs[1], &level, sizeof(level));
+	rc = bt_gatt_notify(conn, &bas.attrs[1], &level, sizeof(level));
 
 	return rc == -ENOTCONN ? 0 : rc;
 }

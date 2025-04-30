@@ -1,3 +1,8 @@
+
+#if __has_include("fw_header_overlay.h")
+/* Use fw_header_overlay.c instead of this file */
+#else
+
 #include "fw_header.h"
 
 __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
@@ -8,7 +13,7 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
     .flash_cfg.cfg.ioMode = 0x11,               /*!< Serail flash interface mode,bit0-3:IF mode,bit4:unwrap */
     .flash_cfg.cfg.cReadSupport = 0x00,         /*!< Support continuous read mode,bit0:continuous read mode support,bit1:read mode cfg */
     .flash_cfg.cfg.clkDelay = 0x01,             /*!< SPI clock delay,bit0-3:delay,bit4-6:pad delay */
-    .flash_cfg.cfg.clkInvert = 0x01,            /*!< SPI clock phase invert,bit0:clck invert,bit1:rx invert,bit2-4:pad delay,bit5-7:pad delay */
+    .flash_cfg.cfg.clkInvert = 0x01,            /*!< SPI clock phase invert,bit0:clock invert,bit1:rx invert,bit2-4:pad delay,bit5-7:pad delay */
     .flash_cfg.cfg.resetEnCmd = 0x66,           /*!< Flash enable reset command */
     .flash_cfg.cfg.resetCmd = 0x99,             /*!< Flash reset command */
     .flash_cfg.cfg.resetCreadCmd = 0xff,        /*!< Flash reset continuous read command */
@@ -170,3 +175,5 @@ __attribute__((section(".fw_header"))) struct bootheader_t fw_header = {
 
     .crc32 = 0xdeadbeef
 };
+
+#endif

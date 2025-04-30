@@ -27,14 +27,24 @@ static char path_buffer[64];
 static SemaphoreHandle_t env_giant_lock = NULL;
 #endif
 
+static struct lfs_context lfs_ctx = { .partition_name = "PSM" };
+static struct lfs_config lfs_cfg = { .read_size = 256,
+                                     .prog_size = 256,
+                                     .lookahead_size = 256,
+                                     .cache_size = 512,
+                                     .block_size = 4096,
+                                     .block_cycles = 500
+                                   };
+
 /* littlefs init */
 EfErrCode
 easyflash_init(void)
 {
+    lfs_t *lfs;
     struct lfs_info stat;
     int32_t ret;
 
-    lfs = lfs_xip_init();
+    lfs = lfs_xip_init(&lfs_ctx, &lfs_cfg);
     if (lfs == NULL) {
         LOG_E("littlefs backend init failed.\r\n");
         return EF_ENV_INIT_FAILED;

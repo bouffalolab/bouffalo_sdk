@@ -1,8 +1,0 @@
-sdk_generate_library()
-sdk_library_add_sources(src/tm_layers_fp8.c)
-sdk_library_add_sources(src/tm_layers_O1.c)
-sdk_library_add_sources(src/tm_model.c)
-sdk_library_add_sources(src/tm_stat.c)
-sdk_add_include_directories(src)
-sdk_add_include_directories(tools)
-sdk_add_include_directories(examples)

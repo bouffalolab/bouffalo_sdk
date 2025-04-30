@@ -8,7 +8,10 @@
 #ifndef __NET_H__
 #define __NET_H__
 
-
+#include "zephyr.h"
+#include "util.h"
+#include "net/buf.h"
+#include "crypto.h"
 #include "mesh_config.h"
 #include "include/access.h"
 
@@ -19,6 +22,9 @@
 #define BT_MESH_KR_PHASE_1        0x01
 #define BT_MESH_KR_PHASE_2        0x02
 #define BT_MESH_KR_PHASE_3        0x03
+
+/** Which of the two subnet.keys should be used for sending. */
+#define SUBNET_KEY_TX_IDX(sub) ((sub)->kr_phase == BT_MESH_KR_PHASE_2)
 
 #define BT_MESH_IV_UPDATE(flags)   ((flags >> 1) & 0x01)
 #define BT_MESH_KEY_REFRESH(flags) (flags & 0x01)
@@ -46,7 +52,33 @@ struct bt_mesh_node {
 	u8_t  num_elem;
 };
 
+#if defined(CONFIG_BT_MESH_V1d1)
+struct bt_mesh_beacon {
+	uint32_t sent;        /* Timestamp of last sent beacon */
+	uint32_t recv;        /* Timestamp of last received beacon */
+	uint8_t  last;       /* Number of beacons during last
+				      * observation window
+				      */
+	uint8_t  cur;        /* Number of beacons observed during
+				      * currently ongoing window.
+				      */
+	uint8_t  cache[8];   /* Cached last beacon auth value */
+	uint8_t  auth[8];    /* Beacon Authentication Value */
+};
+#endif /* CONFIG_BT_MESH_V1d1 */
+
 struct bt_mesh_subnet {
+#if defined(CONFIG_BT_MESH_V1d1)
+	struct bt_mesh_beacon secure_beacon;
+#if defined(CONFIG_BT_MESH_PRIV_BEACONS)
+	struct bt_mesh_beacon priv_beacon;
+	struct {
+		uint16_t idx;        /* Private beacon random index */
+		bool node_id;        /* Private Node Identity enabled */
+		uint8_t data[5];     /* Private Beacon data */
+	} priv_beacon_ctx;
+#endif /* CONFIG_BT_MESH_PRIV_BEACONS */
+#else
 	u32_t beacon_sent;        /* Timestamp of last sent beacon */
 	u8_t  beacons_last;       /* Number of beacons during last
 				   * observation window
@@ -56,6 +88,7 @@ struct bt_mesh_subnet {
 				   */
 
 	u8_t  beacon_cache[21];   /* Cached last authenticated beacon */
+#endif /* CONFIG_BT_MESH_V1d1 */
 
 	u16_t net_idx;            /* NetKeyIndex */
 
@@ -65,7 +98,9 @@ struct bt_mesh_subnet {
 	u8_t  node_id;            /* Node Identity State */
 	u32_t node_id_start;      /* Node Identity started timestamp */
 
+#if !defined(CONFIG_BT_MESH_V1d1)
 	u8_t  auth[8];            /* Beacon Authentication Value */
+#endif /* CONFIG_BT_MESH_V1d1 */
 
 	struct bt_mesh_subnet_keys {
 		u8_t net[16];       /* NetKey */
@@ -73,10 +108,17 @@ struct bt_mesh_subnet {
 		u8_t enc[16];       /* EncKey */
 		u8_t net_id[8];     /* Network ID */
 #if defined(CONFIG_BT_MESH_GATT_PROXY)
+#if defined(CONFIG_BT_MESH_V1d1)
+		struct bt_mesh_key identity;  /* IdentityKey */
+#else
 		u8_t identity[16];  /* IdentityKey */
+#endif/* CONFIG_BT_MESH_V1d1 */
 #endif
 		u8_t privacy[16];   /* PrivacyKey */
 		u8_t beacon[16];    /* BeaconKey */
+#if defined(CONFIG_BT_MESH_V1d1)
+		struct bt_mesh_key priv_beacon; /* PrivateBeaconKey */
+#endif
 	} keys[2];
 };
 
@@ -229,6 +271,15 @@ enum {
 	BT_MESH_MOD_PENDING,
 	BT_MESH_VA_PENDING,
 
+	/* Feature flags */
+	BT_MESH_RELAY,
+	BT_MESH_BEACON,
+	BT_MESH_GATT_PROXY,
+	BT_MESH_FRIEND,
+	BT_MESH_PRIV_BEACON,
+	BT_MESH_PRIV_GATT_PROXY,
+	BT_MESH_OD_PRIV_PROXY,
+
 	/* Don't touch - intentionally last */
 	BT_MESH_FLAG_COUNT,
 };
@@ -255,6 +306,9 @@ struct bt_mesh_net {
 	/* Number of hours in current IV Update state */
 	u8_t  ivu_duration;
 
+#if defined(CONFIG_BT_MESH_V1d1) &&defined(CONFIG_BT_MESH_PRIV_BEACONS)
+	uint8_t priv_beacon_int;
+#endif /* CONFIG_BT_MESH_V1d1 && CONFIG_BT_MESH_PRIV_BEACONS */
 	/* Timer to track duration in current IV Update state */
 	struct k_delayed_work ivu_timer;
 
@@ -322,7 +376,9 @@ bool bt_mesh_kr_update(struct bt_mesh_subnet *sub, u8_t new_kr, bool new_key);
 
 void bt_mesh_net_revoke_keys(struct bt_mesh_subnet *sub);
 
+#if !defined(CONFIG_BT_MESH_V1d1)
 int bt_mesh_net_beacon_update(struct bt_mesh_subnet *sub);
+#endif /* CONFIG_BT_MESH_V1d1 */
 
 void bt_mesh_rpl_reset(void);
 
@@ -332,9 +388,18 @@ void bt_mesh_net_sec_update(struct bt_mesh_subnet *sub);
 
 struct bt_mesh_subnet *bt_mesh_subnet_get(u16_t net_idx);
 
+#if defined(CONFIG_BT_MESH_V1d1)
+struct bt_mesh_subnet *bt_mesh_subnet_find(bool (*cb)(struct bt_mesh_subnet *sub, void *cb_data),
+					   void *cb_data);
+#else
 struct bt_mesh_subnet *bt_mesh_subnet_find(const u8_t net_id[8], u8_t flags,
 					   u32_t iv_index, const u8_t auth[8],
 					   bool *new_key);
+#endif /* CONFIG_BT_MESH_V1d1 */
+
+#if defined(CONFIG_BT_MESH_V1d1)
+size_t bt_mesh_subnet_foreach(void (*cb)(struct bt_mesh_subnet *sub));
+#endif /* CONFIG_BT_MESH_V1d1 */
 
 int bt_mesh_net_encode(struct bt_mesh_net_tx *tx, struct net_buf_simple *buf,
 		       bool proxy);
@@ -401,6 +466,26 @@ static inline void send_cb_finalize(const struct bt_mesh_send_cb *cb,
 		cb->end(0, cb_data);
 	}
 }
+
+#if defined(CONFIG_BT_MESH_V1d1)
+/** Kind of currently enabled Node Identity state on one or more subnets. */
+enum bt_mesh_subnets_node_id_state {
+	/* None node identity states are enabled on any subnets. */
+	BT_MESH_SUBNETS_NODE_ID_STATE_NONE,
+	/* Node Identity state is enabled on one or more subnets. */
+	BT_MESH_SUBNETS_NODE_ID_STATE_ENABLED,
+	/* Private Node Identity state is enabled on one or more subnets. */
+	BT_MESH_SUBNETS_NODE_ID_STATE_ENABLED_PRIVATE,
+};
+
+/** @brief Returns what kind of node identity state is currently enabled on one or more subnets.
+ *
+ * Only one kind (either non-private or private) can be enabled at the same time on all subnets.
+ *
+ * @returns Kind of node identity state that is currently enabled.
+ */
+enum bt_mesh_subnets_node_id_state bt_mesh_subnets_node_id_state_get(void);
+#endif /* CONFIG_BT_MESH_V1d1 */
 
 #endif /*__NET_H__*/
 

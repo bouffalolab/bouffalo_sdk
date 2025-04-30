@@ -40,7 +40,12 @@ void bflb_sha_init(struct bflb_device_s *dev, uint8_t mode)
     regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
     regval &= ~SEC_ENG_SE_SHA_0_MODE_EXT_MASK;
     regval &= ~SEC_ENG_SE_SHA_0_MODE_MASK;
-    regval |= (mode << SEC_ENG_SE_SHA_0_MODE_SHIFT);
+    if (mode < 8) {
+        regval |= (mode << SEC_ENG_SE_SHA_0_MODE_SHIFT);
+    } else {
+        regval |= ((mode - 7) << SEC_ENG_SE_SHA_0_MODE_EXT_SHIFT);
+    }
+
     putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
 #endif
 }
@@ -76,8 +81,8 @@ void bflb_sha256_start(struct bflb_device_s *dev, struct bflb_sha256_ctx_s *ctx)
 
 void bflb_sha512_start(struct bflb_device_s *dev, struct bflb_sha512_ctx_s *ctx)
 {
-#ifdef romapi_bflb_sha_init
-    romapi_bflb_sha_init(dev, ctx);
+#ifdef romapi_bflb_sha512_start
+    romapi_bflb_sha512_start(dev, ctx);
 #else
     uint32_t regval;
     uint32_t reg_base;
@@ -719,8 +724,8 @@ int bflb_sha256_link_update(struct bflb_device_s *dev,
                             const uint8_t *input,
                             uint32_t len)
 {
-#ifdef romapi_bflb_sha_init
-    return romapi_bflb_sha_init(dev, ctx, input, len);
+#ifdef romapi_bflb_sha256_link_update
+    return romapi_bflb_sha256_link_update(dev, ctx, input, len);
 #else
     return bflb_sha1_link_update(dev, (struct bflb_sha1_link_ctx_s *)ctx, input, len);
 #endif
@@ -821,7 +826,6 @@ int bflb_sha512_link_update(struct bflb_device_s *dev,
     }
     return 0;
 #endif
-
 }
 
 void bflb_sha1_link_finish(struct bflb_device_s *dev,
@@ -829,7 +833,7 @@ void bflb_sha1_link_finish(struct bflb_device_s *dev,
                            uint8_t *output)
 {
 #ifdef romapi_bflb_sha1_link_finish
-    romapi_bflb_sha1_link_finish(dev, ctx, output);
+    return romapi_bflb_sha1_link_finish(dev, ctx, output);
 #else
     uint32_t last, padn;
     uint32_t high, low;
@@ -886,8 +890,8 @@ void bflb_sha256_link_finish(struct bflb_device_s *dev,
                              struct bflb_sha256_link_ctx_s *ctx,
                              uint8_t *output)
 {
-#ifdef romapi_bflb_sha1_link_finish
-    romapi_bflb_sha1_link_finish(dev, ctx, output);
+#ifdef romapi_bflb_sha256_link_finish
+    return romapi_bflb_sha256_link_finish(dev, ctx, output);
 #else
     return bflb_sha1_link_finish(dev, (struct bflb_sha1_link_ctx_s *)ctx, output);
 #endif
@@ -954,7 +958,7 @@ void bflb_sha512_link_finish(struct bflb_device_s *dev,
 void bflb_group0_request_sha_access(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_group0_request_sha_access
-    romapi_bflb_group0_request_sha_access(dev);
+    return romapi_bflb_group0_request_sha_access(dev);
 #else
     uint32_t regval;
     uint32_t reg_base;
@@ -975,12 +979,55 @@ void bflb_group0_request_sha_access(struct bflb_device_s *dev)
 void bflb_group0_release_sha_access(struct bflb_device_s *dev)
 {
 #ifdef romapi_bflb_group0_release_sha_access
-    romapi_bflb_group0_release_sha_access(dev);
+    return romapi_bflb_group0_release_sha_access(dev);
 #else
     uint32_t reg_base;
 
     reg_base = dev->reg_base;
 
     putreg32(0x06, reg_base + SEC_ENG_SE_SHA_0_CTRL_PROT_OFFSET);
+#endif
+}
+
+int bflb_sha_crc32_link_work(struct bflb_device_s *dev, uint32_t addr, const uint8_t *in, uint32_t len, uint8_t *out)
+{
+#ifdef romapi_bflb_sha_crc32_link_work
+    return romapi_bflb_sha_crc32_link_work(dev, addr, in, len, out);
+#else
+    uint32_t regval;
+    uint32_t reg_base;
+    uint64_t start_time;
+
+    reg_base = dev->reg_base;
+    /* Link address should word align */
+    if ((addr & 0x03) != 0) {
+        return -EINVAL;
+    }
+
+    /* Set link address */
+    putreg32(addr, reg_base + SEC_ENG_SE_SHA_0_LINK_OFFSET);
+
+    /* Change source buffer address and destination buffer address */
+    *(uint32_t *)(uintptr_t)(addr + 4) = (uint32_t)(uintptr_t)in;
+
+    /* Set data length , 32 bits per block*/
+    *((uint16_t *)(uintptr_t)addr + 1) = len * 8 / 32;
+
+    /* Trigger */
+    regval = getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+    regval |= SEC_ENG_SE_SHA_0_TRIG_1T;
+    putreg32(regval, reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET);
+
+    start_time = bflb_mtimer_get_time_ms();
+    while (getreg32(reg_base + SEC_ENG_SE_SHA_0_CTRL_OFFSET) & SEC_ENG_SE_SHA_0_BUSY) {
+        if ((bflb_mtimer_get_time_ms() - start_time) > 100) {
+            return -ETIMEDOUT;
+        }
+    }
+
+    /* CRC32 code len is 32 bits */
+    arch_memcpy_fast(out, (uint8_t *)(uintptr_t)(addr + 0x10), 4);
+
+    return 0;
 #endif
 }

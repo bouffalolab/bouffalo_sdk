@@ -19,13 +19,14 @@
 #include "partition.h"
 #include "ring_buffer.h"
 
-#define SW_SHA256 0
-#define HW_SHA256 1
-#define SHA256_EN HW_SHA256
+#define UTILS_SHA256 0
+#define MBEDTLS_SHA256 1
+#define SHA256_SEL MBEDTLS_SHA256
 
-#if SHA256_EN
-#include "bflb_sec_sha.h"
-ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_ctx_s ctx_sha256;
+#if SHA256_SEL
+#include "mbedtls/sha256.h"
+#include "mbedtls_sample_config.h"
+mbedtls_sha256_context ctx_sha256;
 #else
 #include "utils_sha256.h"
 #endif
@@ -54,8 +55,6 @@ typedef struct ota_header {
 #define OTA_PARTITION_NAME_TYPE_PSM   "PSM"
 #define OTA_PARTITION_NAME_TYPE_ROMFS "media"
 
-// clang-format off
-static const uint8_t get_buf[] = "GET /wifi_ota_bl616.bin.ota HTTP/1.1 \r\nHost: 192.168.123.120\r\n\r\n";
 // clang-format on
 
 // extern Ring_Buffer_Type shell_rb;
@@ -161,7 +160,7 @@ static void wifi_test_ota_test_init(int argc, char **argv)
     /* Set flash operation function, read via xip */
     pt_table_set_flash_operation(bflb_flash_erase, bflb_flash_write, bflb_flash_read);
 
-    active_id = pt_table_get_active_partition_need_lock(pt_table_stuff);
+    active_id = pt_table_get_active_partition_from_ram(pt_table_stuff);
     if (PT_TABLE_ID_INVALID == active_id) {
         printf("No valid PT\r\n");
         return;
@@ -174,7 +173,7 @@ static void wifi_test_ota_test_init(int argc, char **argv)
     struct sockaddr_in remote_addr;
     struct hostent *hostinfo;
 
-    if (argc < 3) {
+    if (argc < 2) {
         printf("%s", PING_USAGE);
         return;
     }
@@ -258,12 +257,9 @@ static void wifi_test_ota_test_init(int argc, char **argv)
     /* init sha */
     uint8_t sha256_img[32];
     uint8_t sha256_result[32];
-#if SHA256_EN
-    struct bflb_device_s *sha;
-    sha = bflb_device_get_by_name("sha");
-    bflb_group0_request_sha_access(sha);
-    bflb_sha_init(sha, SHA_MODE_SHA256);
-    bflb_sha256_start(sha, &ctx_sha256);
+#if SHA256_SEL
+    mbedtls_sha256_init(&ctx_sha256);
+    mbedtls_sha256_starts_ret(&ctx_sha256, 0);
 #else
     sha256_context ctx_sha256;
     utils_sha256_init(&ctx_sha256);
@@ -271,16 +267,10 @@ static void wifi_test_ota_test_init(int argc, char **argv)
 #endif
     memset(sha256_result, 0, sizeof(sha256_result));
 
-    /* http ota */
-    write(sock_client, get_buf, sizeof(get_buf));
-
-    /* first 207 http ack*/
-    read(sock_client, recv_buffer, 207);
     /* first 512 bytes of TCP stream is OTA header; now not support */
     printf("ota test connect server success!\r\n");
     printf("Press CTRL-C to exit.\r\n");
     while (1) {
-        // printf("read!\r\n");
         ret = read(sock_client, recv_buffer + buffer_offset, OTA_PROGRAM_SIZE - buffer_offset);
         if (ret < 0) {
             printf("ret = %d, err = %d\r\n", ret, errno);
@@ -320,7 +310,7 @@ static void wifi_test_ota_test_init(int argc, char **argv)
             }
 
             if (bin_size != total_cnt) {
-                if (buffer_offset < OTA_PROGRAM_SIZE) {
+                if (buffer_offset < OTA_PROGRAM_SIZE && bin_size - total_cnt >= OTA_PROGRAM_SIZE) {
                     continue;
                 } else if (buffer_offset > OTA_PROGRAM_SIZE) {
                     printf("[OTA] [TCP] Assert for unexpected error %d\r\n", buffer_offset);
@@ -337,9 +327,9 @@ static void wifi_test_ota_test_init(int argc, char **argv)
                 }
             }
             printf("Will Write %u to %08X from %p left %lu.\r\n", buffer_offset, ota_addr + flash_offset, recv_buffer, bin_size - total_cnt);
-#if SHA256_EN
+#if SHA256_SEL
             bflb_l1c_dcache_clean_range(recv_buffer, buffer_offset);
-            status = bflb_sha256_update(sha, &ctx_sha256, recv_buffer, buffer_offset);
+            status = mbedtls_sha256_update_ret(&ctx_sha256, recv_buffer, buffer_offset);
             if (status != 0) {
                 printf("sha256 update fail! %d\r\n", status);
             }
@@ -359,8 +349,8 @@ static void wifi_test_ota_test_init(int argc, char **argv)
 
             if (bin_size == total_cnt) {
                 closesocket(sock_client);
-#if SHA256_EN
-                bflb_sha256_finish(sha, &ctx_sha256, sha256_result);
+#if SHA256_SEL
+                mbedtls_sha256_finish_ret(&ctx_sha256, sha256_result);
 #else
                 utils_sha256_finish(&ctx_sha256, sha256_result);
 #endif
@@ -409,8 +399,10 @@ static void wifi_test_ota_test_init(int argc, char **argv)
 
 int cmd_wifi_ota_test(int argc, char **argv)
 {
+    /* This api default cmd like: <wifi_ota_test <host_ip> <port>\r\n> */
     wifi_test_ota_test_init(argc, argv);
-    printf("ota failed!!!\r\nreboot now!\r\n");
+
+    printf("ota done!!!\r\nreboot now!\r\n");
     GLB_SW_POR_Reset();
     return 0;
 }

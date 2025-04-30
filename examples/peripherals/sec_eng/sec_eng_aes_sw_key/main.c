@@ -572,6 +572,7 @@ int main(void)
     printf("aes ctr 256 success\r\n");
 #endif
 
+#if !defined(BL602) && !defined(BL702)
     bflb_aes_set_mode(aes, AES_MODE_XTS);
     bflb_aes_setkey(aes, aes_xts_128bit_key[0], 128);
     bflb_aes_encrypt(aes, aes_xts_128bit_pt[0], aes_xts_128bit_iv[0], aes_enc_buf, aes_xts_128bit_len[0]);
@@ -596,6 +597,7 @@ int main(void)
     bflb_aes_decrypt(aes, aes_enc_buf, aes_xts_256bit_iv[0], aes_dec_buf, aes_xts_256bit_len[0]);
     bflb_data_compare(aes_xts_256bit_pt[0], aes_dec_buf, aes_xts_256bit_len[0]);
     printf("aes xts 256 success\r\n");
+#endif
 #endif
 
     printf("aes success\r\n");

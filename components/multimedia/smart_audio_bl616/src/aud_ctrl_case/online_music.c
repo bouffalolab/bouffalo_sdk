@@ -17,6 +17,7 @@ static int online_music_start(const char *url, uint64_t seek_time, int resume);
 static int online_music_pause(void);
 static int online_music_stop(void);
 static int online_music_resume(void);
+static int online_music_info(smtaudio_play_time_t *t);
 
 smtaudio_ops_node_t ctrl_online_music = {
     .name     = "online_music",
@@ -33,6 +34,7 @@ smtaudio_ops_node_t ctrl_online_music = {
     .vol_set  = NULL, /* use system volume */
     .vol_up   = NULL, /* use system volume */
     .vol_down = NULL, /* use system volume */
+    .info     = online_music_info,
 };
 
 static int online_music_init(void)
@@ -79,6 +81,19 @@ static int online_music_stop(void)
 static int online_music_resume(void)
 {
     return aui_player_resume(SMTAUDIO_ONLINE_MUSIC);
+}
+
+static int online_music_info(smtaudio_play_time_t *t)
+{
+    aui_play_time_t ptime;
+
+    int ret = aui_player_get_time(MEDIA_MUSIC, &ptime);
+    if (ret == 0) {
+        t->curtime = ptime.curtime;
+        t->duration = ptime.duration;
+    }
+
+    return ret;
 }
 
 int8_t smtaudio_register_online_music(uint8_t min_vol, uint8_t *aef_conf, size_t aef_conf_size, float speed, int resample)

@@ -1,14 +1,28 @@
 #include "bflb_mtimer.h"
+#include "bflb_emac.h"
+
+#include "eth_phy.h"
+#include "ephy_general.h"
+#include "ephy_lan8720.h"
+
 #include "board.h"
+
+#define DBG_TAG "MAIN"
 #include "log.h"
 
-#include "bflb_emac.h"
-#include "ethernet_phy.h"
+struct bflb_device_s *emac0;
+eth_phy_ctrl_t phy_ctrl;
 
-#define EMAC_TEST_INTERVAL       (9)
-#define EMAC_TEST_TX_INTERVAL_US (3000)
+volatile uint32_t tx_success_cnt = 0;
+volatile uint32_t tx_error_cnt = 0;
+volatile uint64_t tx_total_size = 0;
 
-static const uint8_t test_frame[42] = {
+volatile uint32_t rx_success_cnt = 0;
+volatile uint32_t rx_error_cnt = 0;
+volatile uint32_t rx_busy_cnt = 0;
+volatile uint64_t rx_total_size = 0;
+
+static const uint8_t arp_data[42] = {
     /* ARP reply to 192.168.123.178(e4:54:e8:ca:31:16): 192.168.123.100 is at 18:b9:05:12:34:56 */
     0xb0, 0x7b, 0x25, 0x00, 0x89, 0x53,                         // dst mac b0:7b:25:00:89:53
     0x18, 0xB9, 0x05, 0x12, 0x34, 0x56,                         // src mac
@@ -18,177 +32,264 @@ static const uint8_t test_frame[42] = {
     0xb0, 0x7b, 0x25, 0x00, 0x89, 0x53,                         // dst mac b0:7b:25:00:89:53
     0xc0, 0xa8, 0x7b, 0xb2                                      // dst ip 192.168.123.178
 };
-#define TEST_PATTERN_LEN (ETH_MAX_PACKET_SIZE - 32)
-ATTR_NOCACHE_NOINIT_RAM_SECTION static uint8_t test_pattern[TEST_PATTERN_LEN] = { 0 };
 
-static volatile uint32_t tx_pkg_cnt = 0;
-static volatile uint32_t tx_err_cnt = 0;
-static volatile uint32_t tx_pkg_cnt_last = 0;
+ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(32) uint8_t eth_tx_buff[2 * 1024];
+ATTR_NOCACHE_NOINIT_RAM_SECTION __ALIGNED(32) uint8_t eth_rx_buff[2 * 1024];
 
-static volatile uint32_t rx_pkg_cnt = 0;
-static volatile uint32_t rx_err_cnt = 0;
-
-static volatile uint32_t rx_bytes = 0;
-
-static uint32_t time = 0;
-static uint32_t last_time = 0;
-#define ETH_RXBUFNB 5
-#define ETH_TXBUFNB 5
-
-ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(4))) uint8_t ethRxBuff[ETH_RXBUFNB][ETH_RX_BUFFER_SIZE]; /* Ethernet Receive Buffers */
-ATTR_NOCACHE_NOINIT_RAM_SECTION __attribute__((aligned(4))) uint8_t ethTxBuff[ETH_TXBUFNB][ETH_TX_BUFFER_SIZE]; /* Ethernet Transmit Buffers */
-
-struct bflb_device_s *emac0;
-
-void emac_isr(int irq, void *arg)
+void emac_irq_cb(void *arg, uint32_t irq_event, struct bflb_emac_trans_desc_s *trans_desc)
 {
-    uint32_t int_sts_val;
-    uint32_t index = 0;
-    int_sts_val = bflb_emac_get_int_status(emac0);
-    // printf("emac int:%08lx\r\n", int_sts_val);
-    if (int_sts_val & EMAC_INT_STS_TX_DONE) {
-        index = bflb_emac_bd_get_cur_active(emac0, EMAC_BD_TYPE_TX);
-        bflb_emac_bd_tx_dequeue(index);
-        bflb_emac_int_clear(emac0, EMAC_INT_STS_TX_DONE);
-        tx_pkg_cnt++;
+    switch (irq_event) {
+        case EMAC_IRQ_EVENT_RX_BUSY:
+            rx_busy_cnt++;
+            break;
+        case EMAC_IRQ_EVENT_RX_FRAME:
+            rx_success_cnt++;
+            rx_total_size += trans_desc->data_len;
+            break;
+
+        case EMAC_IRQ_EVENT_RX_CTRL_FRAME:
+            rx_success_cnt++;
+            rx_total_size += trans_desc->data_len;
+            break;
+
+        case EMAC_IRQ_EVENT_RX_ERR_FRAME:
+            LOG_W("rx err sta:%d\r\n", trans_desc->err_status);
+            rx_error_cnt++;
+            break;
+
+        case EMAC_IRQ_EVENT_TX_FRAME:
+            tx_success_cnt++;
+            tx_total_size += trans_desc->data_len;
+            break;
+
+        case EMAC_IRQ_EVENT_TX_ERR_FRAME:
+            if (trans_desc->err_status & (~EMAC_TX_STA_ERR_CS)) {
+                LOG_W("tx err sta:%d\r\n", trans_desc->err_status);
+                tx_error_cnt++;
+            } else {
+                tx_success_cnt++;
+                tx_total_size += trans_desc->data_len;
+            }
+
+            break;
+
+        default:
+            break;
+    }
+}
+
+int emac_test_init(void)
+{
+    int ret;
+
+    /* phy cfg */
+    eth_phy_init_cfg_t phy_cfg = {
+        .speed_mode = EPHY_SPEED_MODE_AUTO_NEGOTIATION,
+        .local_auto_negotiation_ability = EPHY_ABILITY_100M_TX | EPHY_ABILITY_100M_FULL_DUPLEX,
+    };
+
+    /* emac cfg */
+    struct bflb_emac_config_s emac_cfg = {
+        .mac_addr = { 0x18, 0xB9, 0x05, 0x12, 0x34, 0x56 },
+        .md_clk_div = 39,
+        .min_frame_len = 14 + 46 + 4,
+        .max_frame_len = 14 + 1500 + 4,
+    };
+
+    /* emac init */
+    emac0 = bflb_device_get_by_name("emac0");
+    if (emac0 == NULL) {
+        LOG_E("device_get error\r\n");
+        return -1;
+    }
+    bflb_emac_init(emac0, &emac_cfg);
+    bflb_emac_irq_attach(emac0, emac_irq_cb, NULL);
+
+    /* scan eth_phy */
+    ret = eth_phy_scan(&phy_ctrl, EPHY_ADDR_MIN, EPHY_ADDR_MAX);
+    if (ret < 0) {
+        return -1;
     }
 
-    if (int_sts_val & EMAC_INT_STS_TX_ERROR) {
-        bflb_emac_int_clear(emac0, EMAC_INT_STS_TX_ERROR);
-        index = bflb_emac_bd_get_cur_active(emac0, EMAC_BD_TYPE_TX);
-        bflb_emac_bd_tx_on_err(index);
-
-        printf("EMAC tx error !!!\r\n");
-        tx_err_cnt++;
+    /* eth_phy init */
+    ret = eth_phy_init(&phy_ctrl, &phy_cfg);
+    if (ret < 0) {
+        return -1;
     }
 
-    if (int_sts_val & EMAC_INT_STS_RX_DONE) {
-        bflb_emac_int_clear(emac0, EMAC_INT_STS_RX_DONE);
-        index = bflb_emac_bd_get_cur_active(emac0, EMAC_BD_TYPE_RX);
-        bflb_emac_bd_rx_enqueue(index);
+    /* LAN8720 Timing Adjustment: When in ref_clk input mode, invert the rx_clk. */
+    if( (emac_cfg.clk_internal_mode == false) &&
+        (phy_ctrl.phy_drv->phy_id == EPHY_LAN8720_ID)) {
+        LOG_W("Invert rx_clk for LAN8720 Timing Adjustment.\r\n");
+        bflb_emac_feature_control(emac0, EMAC_CMD_SET_MAC_RX_CLK_INVERT, true);
+    }
 
-        uint32_t rx_len;
-        bflb_emac_bd_rx_dequeue(-1, &rx_len, NULL);
+    /* wait link up */
+    LOG_I("waiting link_up...\r\n");
+    while (eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_LINK_STA, 0) != EPHY_LINK_STA_UP) {
+        bflb_mtimer_delay_ms(10);
+    }
+    LOG_W("EPHY LINK UP\r\n");
 
-        if (rx_len) {
-            rx_pkg_cnt++;
-            rx_bytes += rx_len;
+    int speed_mode = eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_SPEED_MODE, 0);
+    if (speed_mode == EPHY_SPEED_MODE_10M_HALF_DUPLEX) {
+        LOG_I("eth_phy speed: 10M_HALF_DUPLEX\r\n");
+    } else if (speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX) {
+        LOG_I("eth_phy speed: 10M_FULL_DUPLEX\r\n");
+    } else if (speed_mode == EPHY_SPEED_MODE_100M_HALF_DUPLEX) {
+        LOG_I("eth_phy speed: 100M_HALF_DUPLEX\r\n");
+    } else if (speed_mode == EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
+        LOG_I("eth_phy speed: 100M_FULL_DUPLEX\r\n");
+    }
+
+    if (speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX || speed_mode == EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
+        bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, true);
+    } else {
+        bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, false);
+    }
+
+#if 0
+    /* loop back mode */
+    eth_phy_ctrl(&phy_ctrl, EPHY_CMD_SET_LOOPBACK_MODE, true);
+    LOG_I("eth_phy loopback mode\r\n");
+
+    bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, true);
+#endif
+
+    LOG_I("eth_phy init done\r\n\r\n");
+    return 0;
+}
+
+void emac_test(void)
+{
+    uint32_t time_node;
+
+    uint32_t tx_cnt_old = 0;
+    uint32_t rx_cnt_old = 0;
+
+    uint64_t tx_total_size_old = 0;
+    uint64_t rx_total_size_old = 0;
+
+    uint32_t tx_push_cnt = 0;
+    uint32_t rx_push_cnt = 0;
+
+    if (emac_test_init() < 0) {
+        LOG_E("emac test init falied\r\n");
+        return;
+    }
+
+    /* tx arp data */
+    memcpy(eth_tx_buff, arp_data, sizeof(arp_data));
+
+    struct bflb_emac_trans_desc_s tx_test_desc = {
+        .buff_addr = eth_tx_buff,
+        .data_len = sizeof(arp_data),
+    };
+
+    struct bflb_emac_trans_desc_s rx_test_desc = {
+        .buff_addr = eth_rx_buff,
+    };
+
+    /* enable tx and rx */
+    bflb_emac_feature_control(emac0, EMAC_CMD_SET_TX_EN, true);
+    bflb_emac_feature_control(emac0, EMAC_CMD_SET_RX_EN, true);
+
+    time_node = bflb_mtimer_get_time_ms();
+
+    while (1) {
+        /* try to push tx */
+        if (bflb_emac_feature_control(emac0, EMAC_CMD_GET_TX_DB_AVAILABLE, 0) > 0) {
+            if (bflb_emac_queue_tx_push(emac0, &tx_test_desc) == 0) {
+                tx_push_cnt += 1;
+            }
         }
-    }
 
-    if (int_sts_val & EMAC_INT_STS_RX_ERROR) {
-        bflb_emac_int_clear(emac0, EMAC_INT_STS_RX_ERROR);
-        index = bflb_emac_bd_get_cur_active(emac0, EMAC_BD_TYPE_RX);
-        bflb_emac_bd_rx_on_err(index);
+        /* try to push rx */
+        if (bflb_emac_feature_control(emac0, EMAC_CMD_GET_RX_DB_AVAILABLE, 0) > 0) {
+            if (bflb_emac_queue_rx_push(emac0, &rx_test_desc) == 0) {
+                rx_push_cnt += 1;
+            }
+        }
 
-        printf("EMAC rx error!!!\r\n");
-        rx_err_cnt++;
-    }
+        /* get info */
+        if (bflb_mtimer_get_time_ms() - time_node > 2 * 1000) {
+            time_node = bflb_mtimer_get_time_ms();
 
-    if (int_sts_val & EMAC_INT_STS_RX_BUSY) {
-        printf("emac rx busy at %s:%d\r\n", __func__, __LINE__);
-        bflb_emac_int_clear(emac0, EMAC_INT_STS_RX_BUSY);
+            uint32_t tx_db_avail = bflb_emac_feature_control(emac0, EMAC_CMD_GET_TX_DB_AVAILABLE, 0);
+            uint32_t rx_db_avail = bflb_emac_feature_control(emac0, EMAC_CMD_GET_RX_DB_AVAILABLE, 0);
+
+            uint64_t tx_size = tx_total_size - tx_total_size_old;
+            tx_total_size_old = tx_total_size;
+            uint32_t tx_cnt = tx_success_cnt - tx_cnt_old;
+            tx_cnt_old = tx_success_cnt;
+            LOG_I("TX: Speed: %dMbps, valid_data_speed: %dMbps\r\n", (uint32_t)(tx_cnt * 64 * 8 / 2 / 1000 / 1000), (uint32_t)(tx_size * 8 / 2 / 1000 / 1000));
+            LOG_I("    success cnt:%d, error cnt:%d, total size:%lldByte\r\n", tx_success_cnt, tx_error_cnt, tx_total_size);
+            LOG_I("    push_cnt:%d, tx_db available:%d\r\n", tx_push_cnt, tx_db_avail);
+
+            uint64_t rx_size = rx_total_size - rx_total_size_old;
+            rx_total_size_old = rx_total_size;
+            uint32_t rx_cnt = rx_success_cnt - rx_cnt_old;
+            rx_cnt_old = rx_success_cnt;
+            LOG_I("RX: Speed: %dMbps, valid_data_speed: %dMbps\r\n", (uint32_t)(rx_cnt * 64 * 8 / 2 / 1000 / 1000), (uint32_t)(rx_size * 8 / 2 / 1000 / 1000));
+            LOG_I("    success cnt:%d, error cnt:%d, total size:%lldByte\r\n", rx_success_cnt, rx_error_cnt, rx_total_size);
+            LOG_I("    push_cnt:%d, rx_db available:%d, busy cnt:%d\r\n", rx_push_cnt, rx_db_avail, rx_busy_cnt);
+            LOG_RI("\r\n");
+
+            /* check link sta */
+            if (eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_LINK_STA, 0) != EPHY_LINK_STA_UP) {
+                LOG_W("EPHY LINK DOWN\r\n");
+                /* disable tx and rx, and clean tx/rx bd */
+                bflb_emac_feature_control(emac0, EMAC_CMD_SET_TX_EN, false);
+                bflb_emac_feature_control(emac0, EMAC_CMD_SET_RX_EN, false);
+                bflb_emac_bd_ctrl_clean(emac0);
+
+                LOG_I("waiting link_up...\r\n");
+                while (eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_LINK_STA, 0) != EPHY_LINK_STA_UP) {
+                    bflb_mtimer_delay_ms(10);
+                }
+                LOG_W("EPHY LINK UP\r\n");
+
+                int speed_mode = eth_phy_ctrl(&phy_ctrl, EPHY_CMD_GET_SPEED_MODE, 0);
+                if (speed_mode == EPHY_SPEED_MODE_10M_HALF_DUPLEX) {
+                    LOG_I("eth_phy speed: 10M_HALF_DUPLEX\r\n");
+                } else if (speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX) {
+                    LOG_I("eth_phy speed: 10M_FULL_DUPLEX\r\n");
+                } else if (speed_mode == EPHY_SPEED_MODE_100M_HALF_DUPLEX) {
+                    LOG_I("eth_phy speed: 100M_HALF_DUPLEX\r\n");
+                } else if (speed_mode == EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
+                    LOG_I("eth_phy speed: 100M_FULL_DUPLEX\r\n");
+                }
+
+                if (speed_mode == EPHY_SPEED_MODE_10M_FULL_DUPLEX || speed_mode == EPHY_SPEED_MODE_100M_FULL_DUPLEX) {
+                    bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, true);
+                } else {
+                    bflb_emac_feature_control(emac0, EMAC_CMD_SET_FULL_DUPLEX, false);
+                }
+                /* enable tx and rx */
+                bflb_emac_feature_control(emac0, EMAC_CMD_SET_TX_EN, true);
+                bflb_emac_feature_control(emac0, EMAC_CMD_SET_RX_EN, true);
+
+                time_node = bflb_mtimer_get_time_ms();
+            }
+        }
     }
 }
 
 int main(void)
 {
-    struct bflb_emac_config_s emac_cfg = {
-        .inside_clk = EMAC_CLK_USE_EXTERNAL,
-        .mii_clk_div = 49,
-        .min_frame_len = 64,
-        .max_frame_len = ETH_MAX_PACKET_SIZE,
-        .mac_addr[0] = 0x18,
-        .mac_addr[1] = 0xB9,
-        .mac_addr[2] = 0x05,
-        .mac_addr[3] = 0x12,
-        .mac_addr[4] = 0x34,
-        .mac_addr[5] = 0x56,
-    };
-
-    struct bflb_emac_phy_cfg_s phy_cfg = {
-        .auto_negotiation = 1, /*!< Speed and mode auto negotiation */
-        .full_duplex = 0,      /*!< Duplex mode */
-        .speed = 0,            /*!< Speed mode */
-#ifdef PHY_8720
-        .phy_address = 1,  /*!< PHY address */
-        .phy_id = 0x7c0f0, /*!< PHY OUI, masked */
-#else
-#ifdef PHY_8201F
-        .phy_address = 0, /*!< PHY address */
-        .phy_id = 0x120,  /*!< PHY OUI, masked */
-#endif
-#endif
-        .phy_state = PHY_STATE_DOWN,
-    };
-
-    uint32_t rx_len = 0;
-    uint32_t loop = 0;
-
     board_init();
     /* emac gpio init */
     board_emac_gpio_init();
 
-    /* emac & BD init and interrupt attach */
-    emac0 = bflb_device_get_by_name("emac0");
-    bflb_emac_init(emac0, &emac_cfg);
-    bflb_emac_bd_init(emac0, (uint8_t *)ethTxBuff, ETH_TXBUFNB, (uint8_t *)ethRxBuff, ETH_RXBUFNB);
-    bflb_irq_attach(emac0->irq_num, emac_isr, emac0);
-    bflb_emac_int_clear(emac0, EMAC_INT_EN_ALL);
-    bflb_emac_int_enable(emac0, EMAC_INT_EN_ALL, 1);
+    bflb_mtimer_delay_ms(100);
 
-    printf("EMAC ARP Packet test!\r\n");
+    LOG_I("EMAC ARP Packet test!\r\n");
 
-    /* phy module init */
-    ethernet_phy_init(emac0, &phy_cfg);
-    printf("ETH PHY init ok!\r\n");
-    ethernet_phy_status_get();
-    if (PHY_STATE_UP == phy_cfg.phy_state) {
-        printf("PHY[%lx] @%d ready on %dMbps, %s duplex\n\r", phy_cfg.phy_id, phy_cfg.phy_address, phy_cfg.speed, phy_cfg.full_duplex ? "full" : "half");
-    } else {
-        printf("PHY Init fail\n\r");
-        while (1) {
-            bflb_mtimer_delay_ms(10);
-        }
-    }
+    emac_test();
 
-    /* test data */
-    memset(test_pattern, 0x5a, TEST_PATTERN_LEN);
-    memcpy(test_pattern, test_frame, sizeof(test_frame));
-
-    /* EMAC transmit start */
-    printf("EMAC start\r\n");
-    bflb_emac_start(emac0);
-    bflb_irq_enable(emac0->irq_num);
+    LOG_I("EMAC ARP Packet test end!\r\n");
 
     while (1) {
-        /* start tx queue and rx queue */
-        bflb_emac_bd_tx_enqueue(EMAC_NORMAL_PACKET, sizeof(test_frame), test_pattern);
-        test_pattern[27]++;
-        bflb_emac_bd_rx_dequeue(EMAC_NORMAL_PACKET, &rx_len, NULL);
-        bflb_emac_bd_tx_enqueue(EMAC_NORMAL_PACKET, sizeof(test_frame), test_pattern);
-        test_pattern[27]++;
-        bflb_emac_bd_tx_enqueue(EMAC_NORMAL_PACKET, sizeof(test_frame), test_pattern);
-        test_pattern[27]++;
-        bflb_emac_bd_rx_dequeue(EMAC_NORMAL_PACKET, &rx_len, NULL);
-        loop++;
-        if ((loop & 0xfffff) == 0) {
-            time = bflb_mtimer_get_time_ms();
-            printf("\r\nCurrent Bandwidth: %ldMbps\r\n", (((tx_pkg_cnt - tx_pkg_cnt_last) * 64 * 8) / ((time - last_time) * 1000)));
-            printf("tx cnt: %ld, lose cnt: %ld\n\r", tx_pkg_cnt, tx_err_cnt);
-            printf("rx cnt: %ld, lose cnt: %ld, bytes: %ld\n\r", rx_pkg_cnt, rx_err_cnt, rx_bytes);
-            last_time = time;
-            tx_pkg_cnt_last = tx_pkg_cnt;
-        }
-    }
-
-    while (1) {
-        LOG_F("emac basic\r\n");
-        LOG_E("emac basic\r\n");
-        LOG_W("emac basic\r\n");
-        LOG_I("emac basic\r\n");
-        LOG_D("emac basic\r\n");
-        LOG_T("emac basic\r\n");
         bflb_mtimer_delay_ms(1000);
     }
 }

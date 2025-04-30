@@ -107,6 +107,9 @@ struct bt_conn *bt_conn_lookup_addr_le(u8_t id, const bt_addr_le_t *peer);
 #if defined(BFLB_BLE)
 bool le_check_valid_conn(void);
 void notify_disconnected(struct bt_conn *conn);
+#if (CONFIG_BT_REMOTE_VERSION)
+void notify_remote_version(struct bt_conn *conn);
+#endif /* CONFIG_BT_REMOTE_VERSION */
 #if defined(BFLB_HOST_ASSISTANT)
 void bt_notify_disconnected(void);
 #endif
@@ -384,6 +387,7 @@ static inline int __deprecated bt_conn_security(struct bt_conn *conn,
  *  @return Encryption key size.
  */
 u8_t bt_conn_enc_key_size(struct bt_conn *conn);
+struct bt_conn *bt_conn_get(u8_t id);
 
 enum bt_security_err {
 	/** Security procedure successful. */
@@ -502,6 +506,11 @@ struct bt_conn_cb {
 	 *  @param rx_phy Receive phy.
 	 */
 	void (*le_phy_updated)(struct bt_conn *conn, u8_t tx_phy, u8_t rx_phy);
+
+#if defined(CONFIG_USER_DATA_LEN_UPDATE)
+	void (*le_datalen_updated)(struct bt_conn *conn, u16_t tx_octets, u16_t tx_time,u16_t rx_octets,u16_t rx_time);
+#endif
+
 #if defined(CONFIG_BT_SMP)
 	/** @brief Remote Identity Address has been resolved.
 	 *
@@ -529,6 +538,10 @@ struct bt_conn_cb {
 	void (*security_changed)(struct bt_conn *conn, bt_security_t level,
 				 enum bt_security_err err);
 #endif /* defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR) */
+#if (CONFIG_BT_REMOTE_VERSION)
+	void (*remote_version)(struct bt_conn *conn, u8_t version,
+		u16_t manufacturer, u16_t subversion);
+#endif /* CONFIG_BT_REMOTE_VERSION */
 	struct bt_conn_cb *_next;
 };
 
@@ -965,7 +978,6 @@ struct esco_para {
 #define ESCO_PARAM_S3 ESCO_PARAM(8000,8000,10,BT_VOICE_CVSD_16BIT,1,HCI_PKT_TYPE_ESCO_2EV3)
 #define ESCO_PARAM_S4 ESCO_PARAM(8000,8000,12,BT_VOICE_CVSD_16BIT,2,HCI_PKT_TYPE_ESCO_2EV3)
 
-
 /** @brief Initiate an SCO connection to a remote device.
  *
  *  Allows initiate new SCO link to remote peer using its address.
@@ -978,6 +990,47 @@ struct esco_para {
 struct bt_conn *bt_conn_create_sco(const bt_addr_t *peer,const struct esco_para *para);
 
 #endif
+#if defined (BFLB_BLE_GAP_SET_PERIPHERAL_PREF_PARAMS)
+/** @brief Set peripheral preferred connection parameters
+ *
+ * @param  param the preferred connection parameters to be set.
+ *
+ * @return 0 in case of success or negative value in case of error.
+ */
+int bt_conn_set_peripheral_pref_params(struct bt_le_conn_param *param);
+
+/** @brief Get peripheral preferred connection parameters
+ *
+ * @param param this API will assign peripheral preferred connection parameters.
+ *
+ * @return 0 in case of success or negative value in case of error.
+ */
+int bt_conn_get_peripheral_pref_params(struct bt_le_conn_param *param);
+
+#if defined (BFLB_BLE_ENABLE_OR_DISABLE_SLAVE_PREF_CONN_PARAM_UDPATE)
+/** @brief Enable or disable peripheral preferred connection parameters udpate
+ *
+ * @param conn Connection object.
+ * @param enable true:enable,false:disable
+ *
+ * @return 0 in case of success or negative value in case of error.
+ */
+int bt_conn_enable_peripheral_pref_param_update(struct bt_conn *conn, bool enable);
+#endif
+#endif
+
+#if defined(BFLB_BLE_SUPPORT_CUSTOMIZED_SCAN_PARAMERS_IN_GENERAL_CONN_ESTABLISH)
+/** @brief Set scan interval and scan window in scanning procedure of ble general conection establishement.
+ *
+ * @param scan_interval scan interval.
+ * @param scan_window  scan window.
+ *
+ * @return 0 in case of success or negative value in case of error.
+ * In ble general conection establishement,the default scan interval is 30ms and the default scan window is 30 ms in scanning procedure.
+ * Appllication layer shall call this API before bt_conn_create_le.
+ */
+int bt_conn_set_scan_parameters_in_general_conn_establish(u16_t scan_interval, u16_t scan_window);
+#endif //BFLB_BLE_SUPPORT_CUSTOMIZED_SCAN_PARAMERS_IN_GENERAL_CONN_ESTABLISH
 #endif
 
 #ifdef __cplusplus

@@ -1,7 +1,7 @@
 #include "bflb_l1c.h"
 #include "bflb_core.h"
 
-#if (defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)) && !defined(CPU_LP)
+#if (defined(BL616) || defined(BL808)) && !defined(CPU_LP)
 #include "csi_core.h"
 void bflb_l1c_icache_enable(void)
 {
@@ -80,7 +80,9 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_range(void *addr, uint32_t size)
 #ifdef romapi_bflb_l1c_dcache_clean_range
     romapi_bflb_l1c_dcache_clean_range(addr, size);
 #else
-    csi_dcache_clean_range(addr, size);
+    if (bflb_check_cache_addr(addr)) {
+        csi_dcache_clean_range(addr, size);
+    }
 #endif
 }
 
@@ -89,7 +91,9 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size
 #ifdef romapi_bflb_l1c_dcache_invalidate_range
     romapi_bflb_l1c_dcache_invalidate_range(addr, size);
 #else
-    csi_dcache_invalid_range(addr, size);
+    if (bflb_check_cache_addr(addr)) {
+        csi_dcache_invalid_range(addr, size);
+    }
 #endif
 }
 
@@ -98,7 +102,9 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
 #ifdef romapi_bflb_l1c_dcache_clean_invalidate_range
     romapi_bflb_l1c_dcache_clean_invalidate_range(addr, size);
 #else
-    csi_dcache_clean_invalid_range(addr, size);
+    if (bflb_check_cache_addr(addr)) {
+        csi_dcache_clean_invalid_range(addr, size);
+    }
 #endif
 }
 #else
@@ -106,6 +112,8 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
 #if defined(BL702) || defined(BL702L)
 extern void L1C_Cache_Enable_Set(uint8_t wayDisable);
 extern void L1C_Cache_Flush(void);
+#elif defined(BL602)
+extern int bflb_sflash_cache_flush(void);
 #endif
 
 void bflb_l1c_icache_enable(void)
@@ -139,6 +147,8 @@ void bflb_l1c_dcache_invalidate_all(void)
 {
 #if defined(BL702) || defined(BL702L)
     L1C_Cache_Flush();
+#elif defined(BL602)
+    bflb_sflash_cache_flush();
 #endif
 }
 
@@ -146,6 +156,8 @@ void bflb_l1c_dcache_clean_invalidate_all(void)
 {
 #if defined(BL702) || defined(BL702L)
     L1C_Cache_Flush();
+#elif defined(BL602)
+    bflb_sflash_cache_flush();
 #endif
 }
 
@@ -157,6 +169,8 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_invalidate_range(void *addr, uint32_t size
 {
 #if defined(BL702) || defined(BL702L)
     L1C_Cache_Flush();
+#elif defined(BL602)
+    bflb_sflash_cache_flush();
 #endif
 }
 
@@ -164,6 +178,8 @@ ATTR_TCM_SECTION void bflb_l1c_dcache_clean_invalidate_range(void *addr, uint32_
 {
 #if defined(BL702) || defined(BL702L)
     L1C_Cache_Flush();
+#elif defined(BL602)
+    bflb_sflash_cache_flush();
 #endif
 }
 #if defined(BL702) || defined(BL702L)

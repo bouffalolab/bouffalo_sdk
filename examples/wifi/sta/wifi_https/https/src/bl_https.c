@@ -121,16 +121,16 @@ int https_request(const char *server, uint16_t port, const uint8_t *request, int
 
     uint32_t start_time = 0, stop_time = 0;
     start_time = xTaskGetTickCount();
-    fd = blTcpSslConnect(server, port);
+    fd = bl_TcpSslConnect(server, port);
 
-    LOG_I("bl connect fd = 0x%08lx\r\n", fd);
+    LOG_I("bouffalo connect fd = 0x%08lx\r\n", fd);
 
     if (fd == BL_TCP_CREATE_CONNECT_ERR) {
         LOG_E("ssl connect error\r\n");
         ret_val = BL_HTTPSC_RET_ERR;
         goto exit;
     } else {
-        ret = blTcpSslState(fd);
+        ret = bl_TcpSslState(fd);
     }
 
     LOG_I("ret = %ld\r\n", ret);
@@ -140,7 +140,7 @@ int https_request(const char *server, uint16_t port, const uint8_t *request, int
         // count += 100;
         // vTaskDelay(100);
         if (ret == BL_TCP_CONNECTING) {
-            ret = blTcpSslState(fd);
+            ret = bl_TcpSslState(fd);
         } else if(ret == BL_TCP_CONNECT_ERR) {
             LOG_E("ssl tcp connect failed\r\n");
             ret_val = BL_HTTPSC_RET_ERR;
@@ -160,10 +160,10 @@ int https_request(const char *server, uint16_t port, const uint8_t *request, int
     LOG_I("total time:%d ms\r\n", (stop_time - start_time));
 
     if (ret == BL_TCP_NO_ERROR) {
-        send_ret = blTcpSslSend(fd, request, req_len);
+        send_ret = bl_TcpSslSend(fd, request, req_len);
         if (send_ret > 0) {
             while(1) {
-                rcv_ret = blTcpSslRead(fd, rcv_buf, buf_sz);
+                rcv_ret = bl_TcpSslRead(fd, rcv_buf, buf_sz);
                 if (rcv_ret > 0) {
                     LOG_I("rcv_ret = %ld\r\n", rcv_ret);
                     if (!http_head_proced) {
@@ -204,7 +204,7 @@ int https_request(const char *server, uint16_t port, const uint8_t *request, int
         }
     }
 exit:
-    blTcpSslDisconnect(fd);
+    bl_TcpSslDisconnect(fd);
     *res_len = resp_write_off;
     free(rcv_buf);
     return ret_val;

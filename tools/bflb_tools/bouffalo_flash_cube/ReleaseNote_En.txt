@@ -1,3 +1,73 @@
+
+= Release 1.3.0 =
+Released: 2025-03
+
+== FlashCube ==
+Changes:
+1. Replace ecdsa, pcryptodome, bflb-crypto-plus with cryptography
+
+
+= Release 1.2.0 =
+Released: 2024-12
+
+== FlashCube ==
+Features:
+1. Add flash otp page
+2. Add host_rx_timeout config
+3. Support BL616L sign with sha384
+
+
+= Release 1.1.3 =
+Released: 2024-11
+
+== FlashCube ==
+Changes:
+1. Modify sync number of 55 to 300
+2. Change timeout from 10s to 2s before flash and efuse write
+
+Bug Fixes:
+1. Fix bug of flash otp
+
+
+= Release 1.1.2 =
+Released: 2024-10
+
+== FlashCube ==
+Features:
+1. Support BL616L and BL616D 
+2. Support flash otp 
+3. Support password in ram download
+4. Support option for cpu reset after download
+5. Support user-defined aes key obtained through cfg.bin
+6. Support efuse data input encrypted by rsa pubkey
+
+Changes:
+1. Set return code to 1 when the command execution in error
+2. Remove setting flash config when efuse download only 
+
+
+= Release 1.1.1 =
+Released: 2024-06-06
+
+== FlashCube ==
+Features:
+1. Print "chip is protected or closed" when the communication with bootrom receives 0a0a
+2. Report error if the end address is larger than the flash size when reading flash in flash utils page
+3. Add ram program auto download
+
+Changes:
+1. Remove error report when writing efusedata.bin without efusedata_mask.bin
+2. The temporary generated bin file will be deleted automatically after the download is completed when using skip function
+3. The log file can still be generated after deleting the log folder under linux
+4. Set the security_write value of bl602/bl702 to false, and the other chips to true
+5. Set the child window of add image file always on top of the main window
+
+Bug Fixes:
+1. Fix the error of --whole_chip input option
+2. Fix the bug of dbg password mode writing efuse
+3. Modify the logging process to avoid the loss of log printing when abnormal characters appear
+
+
 = Release 1.1.0 =
 Released: 2024-02-29
 
@@ -11,7 +81,7 @@ Changes:
 
 Bug Fixes:
 1. Fix error in saving configuration
-2. fix bug of boot2 isp mode
+2. Fix bug of boot2 isp mode
 
 
 = Release 1.0.9 =
@@ -30,7 +100,7 @@ Bug Fixes:
 
 
 = Release 1.0.8 =
-Released: 2023-11-1
+Released: 2023-11-01
 
 == FlashCube ==
 Features:

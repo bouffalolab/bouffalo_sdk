@@ -13,9 +13,9 @@
 
 #if defined(BL602) || defined(BL702)
 #define UART_FIFO_MAX           32
-#elif defined(BL606P) || defined(BL808)
+#elif defined(BL808)
 #define UART_FIFO_MAX           32
-#elif defined(BL616) || defined(BL628)
+#elif defined(BL616)
 #define UART_FIFO_MAX           32
 #elif defined(BL702L)
 #define UART_FIFO_MAX           16
@@ -148,7 +148,7 @@
 #define UART_CMD_SET_BREAK_VALUE         (0x0d)
 #define UART_CMD_SET_TX_LIN_VALUE        (0x0e)
 #define UART_CMD_SET_RX_LIN_VALUE        (0x0f)
-#define UART_CMD_SET_GLITCH_VALUE        (0x10)
+#define UART_CMD_SET_DEGLITCH_CNT        (0x10)
 #define UART_CMD_SET_TX_RS485_EN         (0x11)
 #define UART_CMD_SET_TX_RS485_POLARITY   (0x12)
 #define UART_CMD_SET_ABR_ALLOWABLE_ERROR (0x13)
@@ -172,6 +172,7 @@
 
 #define UART_AUTO_BAUD_START             0
 #define UART_AUTO_BAUD_0X55              1
+#define UART_AUTO_BAUD_CLOSE             2
 
 // clang-format off
 #define IS_UART_DATABITS(type)   (((type) == UART_DATA_BITS_5) || \

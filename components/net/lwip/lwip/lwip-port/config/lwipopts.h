@@ -77,9 +77,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_NUM_PBUF           26
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
-#ifdef OPENTHREAD_BORDER_ROUTER
-#define MEMP_NUM_UDP_PCB        20
-#else
+#ifndef MEMP_NUM_UDP_PCB
 #define MEMP_NUM_UDP_PCB        6
 #endif
 
@@ -380,6 +378,12 @@ a lot of data that needs to be copied, this should be set high. */
 
 #define LWIP_RAW                        1
 
+#ifdef MATTER_SUPPORT
+#include "lwip/arch.h"
+#include <lwip/mem.h>
+#define LWIP_PBUF_CUSTOM_DATA           mem_size_t pool;
+#endif
+
 /*
    ---------------------------------
    ---------- MISC. options ----------
@@ -415,15 +419,6 @@ void sys_thread_sem_deinit(void);
 #define LWIP_NETCONN_THREAD_SEM_GET() sys_thread_sem_get()
 #define LWIP_NETCONN_THREAD_SEM_ALLOC() sys_thread_sem_init()
 #define LWIP_NETCONN_THREAD_SEM_FREE() sys_thread_sem_deinit()
-
-#ifndef LP_APP
-#define TCP_TIMER_PRECISE_NEEDED        0
-#define DHCP_TIMER_PRECISE_NEEDED       0
-#define ARP_TIMER_PRECISE_NEEDED        0
-#define IP4_FRAG_TIMER_PRECISE_NEEDED   0
-#define DNS_FRAG_TIMER_PRECISE_NEEDED   0
-#endif
-
 #endif
 
 #endif /* __LWIPOPTS_H__ */

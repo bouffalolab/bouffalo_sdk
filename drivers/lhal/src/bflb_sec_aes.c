@@ -431,6 +431,9 @@ void bflb_group0_release_aes_access(struct bflb_device_s *dev)
 
 void bflb_aes_set_hwkey_source(struct bflb_device_s *dev, uint8_t source)
 {
+#ifdef romapi_bflb_aes_set_hwkey_source
+    romapi_bflb_aes_set_hwkey_source(dev, source);
+#else
     uint32_t regval;
     uint32_t reg_base;
 
@@ -438,5 +441,6 @@ void bflb_aes_set_hwkey_source(struct bflb_device_s *dev, uint8_t source)
 
     regval = getreg32(reg_base + SEC_ENG_SE_AES_0_SBOOT_OFFSET);
     regval |= (source << 0);
-    putreg32(0x02, reg_base + SEC_ENG_SE_AES_0_SBOOT_OFFSET);
+    putreg32(regval, reg_base + SEC_ENG_SE_AES_0_SBOOT_OFFSET);
+#endif
 }

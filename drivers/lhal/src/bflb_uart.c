@@ -630,11 +630,13 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 #if !defined(BL602) && !defined(BL702)
                 rx_tmp &= ~UART_CR_URX_AD5_MASK;
 #endif
-            } else {
+            } else if (arg == UART_AUTO_BAUD_START) {
                 tmp |= UART_CR_URX_ABR_EN;
 #if !defined(BL602) && !defined(BL702)
                 rx_tmp &= ~UART_CR_URX_ADS_MASK;
 #endif
+            } else if (arg == UART_AUTO_BAUD_CLOSE) {
+                tmp &= ~UART_CR_URX_ABR_EN;
             }
 
             putreg32(tmp, reg_base + UART_URX_CONFIG_OFFSET);
@@ -683,7 +685,7 @@ int bflb_uart_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(rx_tmp, reg_base + UART_URX_CONFIG_OFFSET);
             break;
 #endif
-        case UART_CMD_SET_GLITCH_VALUE:
+        case UART_CMD_SET_DEGLITCH_CNT:
             rx_tmp = getreg32(reg_base + UART_URX_CONFIG_OFFSET);
             rx_tmp &= ~UART_CR_URX_DEG_CNT_MASK;
             rx_tmp &= ~UART_CR_URX_DEG_EN;

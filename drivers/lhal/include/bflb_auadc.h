@@ -11,6 +11,13 @@
   * @{
   */
 
+#if defined(BL616) || defined(BL702L)
+#define AUADC_ANALOG_ADC_SUPPORT  1
+
+#else
+#error "unknown device"
+#endif
+
 /** @defgroup AUADC_SAMPLING_RATE auadc sampling rate definition
   * @{
   */
@@ -19,9 +26,11 @@
 #define AUADC_SAMPLING_RATE_24K          2  /* audio mode, same as 22.02K, adjust the AUPLL clock */
 #define AUADC_SAMPLING_RATE_32K          3  /* audio mode */
 #define AUADC_SAMPLING_RATE_48K          4  /* audio mode, same as 44.1K, adjust the AUPLL clock */
+#if (AUADC_ANALOG_ADC_SUPPORT)
 #define AUADC_SAMPLING_RATE_MEASURE_128K 8  /* only used in ADC measurement mode */
 #define AUADC_SAMPLING_RATE_MEASURE_256K 9  /* only used in ADC measurement mode */
 #define AUADC_SAMPLING_RATE_MEASURE_512K 10 /* only used in ADC measurement mode */
+#endif
 /**
   * @}
   */
@@ -29,7 +38,9 @@
 /** @defgroup AUADC_INPUT_MODE auadc input mode definition
   * @{
   */
+#if (AUADC_ANALOG_ADC_SUPPORT)
 #define AUADC_INPUT_MODE_ADC             0 /* Analog ADC */
+#endif
 #define AUADC_INPUT_MODE_PDM_L           1 /* PDM left channel */
 #define AUADC_INPUT_MODE_PDM_R           2 /* PDM right channel */
 /**
@@ -47,6 +58,7 @@
   * @}
   */
 
+#if (AUADC_ANALOG_ADC_SUPPORT)
 /** @defgroup AUADC_ADC_ANALOG_CH auadc adc input ch definition
  * @{
  */
@@ -75,7 +87,6 @@
 #define AUADC_ADC_MEASURE_RATE_SPS_1000  10
 #define AUADC_ADC_MEASURE_RATE_SPS_2000  11
 #define AUADC_ADC_MEASURE_RATE_SPS_4000  12
-
 /**
   * @}
   */
@@ -99,6 +110,7 @@
 /**
   * @}
   */
+#endif
 
 /** @defgroup AUADC_INTMASK auadc interrupt status definition
   * @{
@@ -170,7 +182,6 @@
 
 // clang-format on
 
-
 /**
  * @brief auadc initialization configuration structure
  *
@@ -186,6 +197,7 @@ struct bflb_auadc_init_config_s {
     uint8_t fifo_threshold;
 };
 
+#if (AUADC_ANALOG_ADC_SUPPORT)
 /**
  * @brief auadc adc analog initialization configuration structure
  *
@@ -206,6 +218,7 @@ struct bflb_auadc_adc_init_config_s {
     uint8_t adc_pga_gain;
     uint8_t adc_measure_rate;
 };
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -213,7 +226,9 @@ extern "C" {
 
 int bflb_auadc_init(struct bflb_device_s *dev, const struct bflb_auadc_init_config_s *config);
 
+#if (AUADC_ANALOG_ADC_SUPPORT)
 int bflb_auadc_adc_init(struct bflb_device_s *dev, const struct bflb_auadc_adc_init_config_s *config);
+#endif
 
 int bflb_auadc_link_rxdma(struct bflb_device_s *dev, bool enable);
 

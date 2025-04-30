@@ -13,7 +13,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #define AVDTP_SEID_OFFSET 0x02
 enum bt_avdtp_stream_state{
     /*State machine has been initialized*/
@@ -33,18 +32,18 @@ enum bt_avdtp_stream_state{
 
 /** @brief AVDTP SEID Information */
 struct bt_avdtp_seid_info {
-	/** Stream End Point ID */
-	uint8_t id:6;
-	/** End Point usage status */
-	uint8_t inuse:1;
 	/** Reserved */
 	uint8_t rfa0:1;
-	/** Media-type of the End Point */
-	uint8_t media_type:4;
-	/** TSEP of the End Point */
-	uint8_t tsep:1;
+	/** End Point usage status */
+	uint8_t inuse:1;
+	/** Stream End Point ID */
+	uint8_t id:6;
 	/** Reserved */
 	uint8_t rfa1:3;
+	/** TSEP of the End Point */
+	uint8_t tsep:1;
+	/** Media-type of the End Point */
+	uint8_t media_type:4;
 } __packed;
 
 /** @brief AVDTP Local SEP*/
@@ -55,13 +54,36 @@ struct bt_avdtp_seid_lsep {
 	struct bt_avdtp_seid_lsep *next;
 };
 
+struct bt_avdtp_local_sep {
+	struct bt_avdtp_stream *stream;
+	struct bt_avdtp_seid_info info;
+	uint8_t codec;
+	uint8_t delay_reporting;
+	void *caps;
+	void *user_data;
+};
+
 /** @brief AVDTP Stream */
 struct bt_avdtp_stream {
+	struct bt_avdtp *avdtp;
 	struct bt_l2cap_br_chan chan; /* Transport Channel*/
 	struct bt_avdtp_seid_info *lsep; /* Configured Local SEP */
 	struct bt_avdtp_seid_info rsep; /* Configured Remote SEP*/
-	uint8_t state; /* current state of the stream */
+	struct bt_avdtp_local_sep *lsep_ext;
+	struct bt_avdtp_remote_sep *rsep_ext;
+	enum bt_avdtp_stream_state state; /* current state of the stream */
+	uint8_t delay_reporting:1;
+	uint8_t open_acp:1;
+	uint8_t close_int:1;
+	uint8_t starting:1;
+	uint8_t abort_int:1;
+	uint16_t delay;
+	struct k_delayed_work delay_work; /* Start timer */
+	void *caps;
 	struct bt_avdtp_stream *next;
+	#if BR_EDR_PTS_TEST
+	atomic_t    flags[1]; /* For internal use only */
+	#endif
 };
 
 

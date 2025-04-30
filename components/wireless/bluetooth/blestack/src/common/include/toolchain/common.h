@@ -134,6 +134,7 @@
 #endif /* #ifndef ZTEST_UNITTEST */
 
 #ifndef BUILD_ASSERT
+#error "+++++++++++++++"
 /* compile-time assertion that makes the build fail */
 #define BUILD_ASSERT(EXPR) \
 	enum _CONCAT(__build_assert_enum, __COUNTER__) { \

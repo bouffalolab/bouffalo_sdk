@@ -5,7 +5,7 @@
 
 #if defined(BL702) || defined(BL602) || defined(BL702L)
 #define ACOMP_BASE ((uint32_t)0x4000f000)
-#elif defined(BL616) || defined(BL606P) || defined(BL808) || defined(BL628)
+#elif defined(BL616) || defined(BL808)
 #define ACOMP_BASE ((uint32_t)0x2000f000)
 #endif
 
@@ -51,7 +51,7 @@ void bflb_acomp_init(uint8_t acomp_id, const struct bflb_acomp_config_s *config)
     reg_base = ACOMP_BASE + AON_ACOMP_REG_ACOMP_CFG_OFFSET;
     regval = getreg32(reg_base);
     regval &= ~AON_ACOMP_VREF_SEL_MASK;
-    regval |= (config->vio_sel << AON_ACOMP_POS_SEL_SHIFT);
+    regval |= (config->vio_sel << AON_ACOMP_VREF_SEL_SHIFT);
     putreg32(regval, reg_base);
 #endif
 }
@@ -114,6 +114,22 @@ uint32_t bflb_acomp_get_result(uint8_t acomp_id)
         return (regval & AON_ACOMP1_OUT_RAW_DATA_MASK) >> AON_ACOMP1_OUT_RAW_DATA_SHIFT;
     }
 #endif
+}
+
+uint32_t bflb_acomp_get_postive_input(uint8_t acomp_id)
+{
+    uint32_t regval;
+    uint32_t reg_base;
+
+    if (acomp_id == AON_ACOMP0_ID) {
+        reg_base = ACOMP_BASE + AON_ACOMP_REG_ACOMP0_CTRL_OFFSET;
+    } else {
+        reg_base = ACOMP_BASE + AON_ACOMP_REG_ACOMP1_CTRL_OFFSET;
+    }
+
+    regval = getreg32(reg_base);
+
+    return (regval & AON_ACOMP_POS_SEL_MASK) >> AON_ACOMP_POS_SEL_SHIFT;
 }
 
 int bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t *channel)
@@ -201,7 +217,7 @@ int bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t *channel)
     } else {
         return -1;
     }
-#elif defined(BL606P) || defined(BL808)
+#elif defined(BL808)
     if (pin == GPIO_PIN_17) {
         *channel = AON_ACOMP_CHAN_ADC0;
     } else if (pin == GPIO_PIN_5) {
@@ -231,7 +247,7 @@ int bflb_acomp_gpio_2_chanid(uint32_t pin, uint32_t *channel)
 int bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t *pin)
 {
 #ifdef romapi_bflb_acomp_chanid_2_gpio
-    romapi_bflb_acomp_chanid_2_gpio(channel, pin);
+    return romapi_bflb_acomp_chanid_2_gpio(channel, pin);
 #else
 #if defined(BL602)
     if (channel == AON_ACOMP_CHAN_ADC0) {
@@ -313,7 +329,7 @@ int bflb_acomp_chanid_2_gpio(uint32_t channel, uint32_t *pin)
     } else {
         return -1;
     }
-#elif defined(BL606P) || defined(BL808)
+#elif defined(BL808)
     if (channel == AON_ACOMP_CHAN_ADC0) {
         *pin = GPIO_PIN_17;
     } else if (channel == AON_ACOMP_CHAN_ADC1) {

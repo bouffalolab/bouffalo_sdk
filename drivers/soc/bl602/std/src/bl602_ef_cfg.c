@@ -38,7 +38,7 @@
 #include "bl602_glb.h"
 #include "hardware/ef_data_reg.h"
 
-static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
+static ATTR_TCM_CONST_SECTION bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
     {
         .name = "rc32m",
         .en_addr = 0x0C * 8 + 19,
@@ -133,6 +133,7 @@ static const bflb_ef_ctrl_com_trim_cfg_t trim_list[] = {
 };
 
 static GLB_ROOT_CLK_Type rtClk;
+static HBN_XCLK_CLK_Type xclk;
 static uint8_t bdiv, hdiv;
 
 /****************************************************************************/ /**
@@ -147,6 +148,7 @@ void ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_save(void)
     bdiv = GLB_Get_BCLK_Div();
     hdiv = GLB_Get_HCLK_Div();
     rtClk = GLB_Get_Root_CLK_Sel();
+    xclk = HBN_Get_XCLK_CLK_Sel();
     HBN_Set_ROOT_CLK_Sel(HBN_ROOT_CLK_RC32M);
     GLB_Set_System_CLK_Div(0, 0);
 }
@@ -162,6 +164,7 @@ void ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_restore(void)
     /* all API should be place at tcm section */
     GLB_Set_System_CLK_Div(hdiv, bdiv);
     HBN_Set_ROOT_CLK_Sel(rtClk);
+    HBN_Set_XCLK_CLK_Sel(xclk);
 }
 
 /****************************************************************************/ /**
@@ -172,7 +175,7 @@ void ATTR_TCM_SECTION bflb_efuse_switch_cpu_clock_restore(void)
  * @return Trim list count
  *
 *******************************************************************************/
-uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **ptrim_list)
+uint32_t ATTR_TCM_SECTION bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **ptrim_list)
 {
     *ptrim_list = &trim_list[0];
     return sizeof(trim_list) / sizeof(trim_list[0]);
@@ -403,8 +406,9 @@ float bflb_efuse_get_adc_trim(void)
     uint32_t tmp;
 
     float coe = 1.0;
+    char trim_name[] = "gpadc_gain";
 
-    bflb_ef_ctrl_read_common_trim(NULL, "gpadc_gain", &trim, 1);
+    bflb_ef_ctrl_read_common_trim(NULL, trim_name, &trim, 1);
 
     if (trim.en) {
         if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
@@ -414,9 +418,9 @@ float bflb_efuse_get_adc_trim(void)
                 tmp = ~tmp;
                 tmp += 1;
                 tmp = tmp & 0xfff;
-                coe = (1.0 + ((float)tmp / 2048.0));
+                coe = (1.0f + ((float)tmp / 2048.0f));
             } else {
-                coe = (1.0 - ((float)tmp / 2048.0));
+                coe = (1.0f - ((float)tmp / 2048.0f));
             }
         }
     }
@@ -427,8 +431,9 @@ float bflb_efuse_get_adc_trim(void)
 uint32_t bflb_efuse_get_adc_tsen_trim(void)
 {
     bflb_ef_ctrl_com_trim_t trim;
+    char trim_name[] = "tsen";
 
-    bflb_ef_ctrl_read_common_trim(NULL, "tsen", &trim, 1);
+    bflb_ef_ctrl_read_common_trim(NULL, trim_name, &trim, 1);
     if (trim.en) {
         if (trim.parity == bflb_ef_ctrl_get_trim_parity(trim.value, trim.len)) {
             return trim.value;
@@ -448,5 +453,5 @@ void bflb_efuse_read_secure_boot(uint8_t *sign, uint8_t *aes)
         *aes = ((tmpval & EF_DATA_EF_SF_AES_MODE_MSK) >> EF_DATA_EF_SF_AES_MODE_POS);
     }else{
         *aes = 0;
-    }        
+    }
 }

@@ -1757,7 +1757,12 @@ BL_Err_Type GLB_Config_AUDIO_PLL_To_400M(void);
 
 BL_Err_Type GLB_Config_AUDIO_PLL_To_451P58M(void);
 BL_Err_Type GLB_Config_AUDIO_PLL_To_491P52M(void);
-
+/*----------*/
+void glb_40M_delay_us(uint32_t us);
+BL_Err_Type GLB_Fast_Power_On_WIFIPLL(const GLB_WA_PLL_Cfg_Type *const cfg, uint8_t waitStable);
+BL_Err_Type GLB_Fast_Power_On_XTAL_40M_And_WIFIPLL(void);
+BL_Err_Type GLB_Fast_Set_MCU_System_CLK_Div(uint8_t mcuClkDiv, uint8_t mcuPBclkDiv);
+BL_Err_Type GLB_Fast_Set_MCU_System_CLK(uint8_t clkFreq);
 /*----------*/
 uint8_t GLB_Get_Package_Type(void);
 BL_Sts_Type GLB_Get_PAD_Bonging_to_GND_Sts(void);

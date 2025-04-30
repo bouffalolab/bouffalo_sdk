@@ -18,6 +18,9 @@ int k_work_q_start();
 enum {
     K_WORK_STATE_PENDING,
 	K_WORK_STATE_PERIODIC,
+    #if defined(BFLB_BLE_AVOID_WORKQ_TIMER_CANCEL_RISK)
+    K_WORK_STATE_CANCLE_ONGOING,
+    #endif
 };
 struct k_work;
 /* work define*/

@@ -76,10 +76,18 @@
 #include "lwip/mld6.h"
 
 #define LWIP_MEMPOOL(name,num,size,desc) LWIP_MEMPOOL_DECLARE(name,num,size,desc)
+
+#ifdef CONFIG_FHOST_RX_COPY_ENABLE
+#define LWIP_MEMPOOL_ATTR(name,num,size,desc) LWIP_MEMPOOL_ATTR_DECLARE(name,num,size,desc)
+#endif
+
 #include "lwip/priv/memp_std.h"
 
 const struct memp_desc *const memp_pools[MEMP_MAX] = {
 #define LWIP_MEMPOOL(name,num,size,desc) &memp_ ## name,
+#ifdef CONFIG_FHOST_RX_COPY_ENABLE
+#define LWIP_MEMPOOL_ATTR(name,num,size,desc) &memp_ ## name,
+#endif
 #include "lwip/priv/memp_std.h"
 };
 

@@ -40,6 +40,25 @@ typedef struct
 } bflb_ef_ctrl_com_trim_t;
 
 /**
+ *  @brief Efuse ctrl para type definition
+ */
+typedef struct
+{
+    uint16_t pd_1st;      /*!< stable */
+    uint16_t pd_cs_s;     /*!< >500ns */
+    uint16_t cs;          /*!< >6.6ns */
+    uint16_t rd_adr;      /*!< >6.3ns */
+    uint16_t rd_dat;      /*!< >199ns */
+    uint16_t rd_dmy;      /*!< >14.9ns */
+    uint16_t pd_cs_h;     /*!< >1ns */
+    uint16_t ps_cs;       /*!< >50ns */
+    uint16_t wr_adr;      /*!< >6.3ns */
+    uint16_t pp;          /*!< >11-13us */
+    uint16_t pi;          /*!< >14.9ns */
+} bflb_ef_ctrl_para_t;
+
+
+/**
  * @brief Get efuse control common trim list.
  *
  * @param [in] trim_list pointer to save trim list
@@ -54,6 +73,14 @@ uint32_t bflb_ef_ctrl_get_common_trim_list(const bflb_ef_ctrl_com_trim_cfg_t **t
  * @return int
  */
 int bflb_ef_ctrl_autoload_done(struct bflb_device_s *dev);
+
+/**
+ * @brief
+ *
+ * @param [in] para parameter for efuse program or read
+ * @return int
+ */
+int bflb_ef_ctrl_set_para(bflb_ef_ctrl_para_t *para);
 
 /**
  * @brief
@@ -123,6 +150,17 @@ uint32_t bflb_ef_ctrl_get_byte_zero_cnt(uint8_t val);
  * @return uint8_t
  */
 uint8_t bflb_ef_ctrl_get_trim_parity(uint32_t val, uint8_t len);
+
+
+/**
+ * @brief  Check efuse busy status
+ *
+ * @param dev  ef control device pointer
+ *
+ * @return 1 for busy 0 for not
+ *
+ */
+int bflb_ef_ctrl_busy(struct bflb_device_s *dev);
 
 #ifdef __cplusplus
 }

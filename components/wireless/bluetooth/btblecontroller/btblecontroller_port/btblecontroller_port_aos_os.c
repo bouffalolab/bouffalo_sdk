@@ -74,3 +74,14 @@ __attribute__((weak)) void btblecontroller_task_delay(uint32_t ms)
 {
     vTaskDelay(pdMS_TO_TICKS(ms));
 }
+
+__attribute__((weak)) void *btblecontroller_malloc(size_t xWantedSize)
+{
+    return aos_malloc(xWantedSize);
+}
+
+__attribute__((weak)) void btblecontroller_free(void *buf)
+{
+    return aos_free(buf);
+}
+

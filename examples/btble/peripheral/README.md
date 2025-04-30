@@ -7,7 +7,6 @@ This sample description ble peripheral function with READ, WRITE/WRITE NO RESPON
 |      CHIP        | Remark |
 |:----------------:|:------:|
 |BL616/BL618       |        |
-|BL808             |  Only for M0 CPU      |
 
 ## Compile
 
@@ -17,14 +16,14 @@ This sample description ble peripheral function with READ, WRITE/WRITE NO RESPON
 make CHIP=bl616 BOARD=bl616dk
 ```
 
-- BL808
-
-```
-make CHIP=bl808 BOARD=bl808dk CPU_ID=m0
-```
-
 ## Flash
 
 ```
 make flash CHIP=chip_name COMX=xxx # xxx is your com name
+```
+
+## Generate BlE OTA file
+
+```
+python components/wireless/bluetooth/tools/GenerateOAD.py FW.bin FW.bin.sha256
 ```

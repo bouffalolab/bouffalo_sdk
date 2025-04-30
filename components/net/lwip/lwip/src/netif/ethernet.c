@@ -291,8 +291,19 @@ ethernet_output(struct netif * netif, struct pbuf * p,
   } else
 #endif /* ETHARP_SUPPORT_VLAN && defined(LWIP_HOOK_VLAN_SET) */
   {
-    if (pbuf_add_header(p, SIZEOF_ETH_HDR) != 0) {
-      goto pbuf_header_failed;
+    /* The pbuf structure and payload used by sdio are not in a contiguous ram, 
+     * we use the pbuf_header_force api just for adjusts the payload pointer
+     * to reveal headers in the payload. The pbuf_header api used for pbuf structure 
+     * and payload are in a contiguous ram.
+     */
+    if (p->type_internal & PBUF_TYPE_FLAG_STRUCT_DATA_CONTIGUOUS) {
+      if (pbuf_add_header(p, SIZEOF_ETH_HDR) != 0) {
+        goto pbuf_header_failed;
+      }
+    } else {
+        if (pbuf_add_header_force(p, SIZEOF_ETH_HDR) != 0) {
+          goto pbuf_header_failed;
+        }
     }
   }
 

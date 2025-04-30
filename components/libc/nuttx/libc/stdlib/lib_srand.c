@@ -35,7 +35,7 @@
 /* First, second, and thired order congruential generators are supported */
 
 #ifndef CONFIG_LIB_RAND_ORDER
-#  define CONFIG_LIB_RAND_ORDER 1
+#  define CONFIG_LIB_RAND_ORDER 2
 #endif
 
 #if CONFIG_LIB_RAND_ORDER > 3

@@ -4,7 +4,7 @@
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define GLB_SPI_MODE_ADDRESS 0x40000080
-#elif defined(BL606P) || defined(BL808) || defined(BL616) || defined(BL628)
+#elif defined(BL808) || defined(BL616)
 #define GLB_SPI_MODE_ADDRESS 0x20000510
 #endif
 
@@ -101,6 +101,7 @@ void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *co
     /* data frame size cfg */
     regval &= ~SPI_CR_SPI_FRAME_SIZE_MASK;
     regval |= (config->data_width - 1) << SPI_CR_SPI_FRAME_SIZE_SHIFT;
+
 
     /* disable SPI */
     regval &= ~SPI_CR_SPI_S_EN;
@@ -330,17 +331,17 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
                 case 1:
                     regval = *(uint8_t *)txbuffer;
                     putreg32(regval, reg_base + SPI_FIFO_WDATA_OFFSET);
-                    txbuffer += 1;
+                    txbuffer = (uint8_t *)txbuffer + 1;
                     break;
                 case 2:
                     regval = *(uint16_t *)txbuffer;
                     putreg32(regval, reg_base + SPI_FIFO_WDATA_OFFSET);
-                    txbuffer += 2;
+                    txbuffer = (uint8_t *)txbuffer + 2;
                     break;
                 case 4:
                     regval = *(uint32_t *)txbuffer;
                     putreg32(regval, reg_base + SPI_FIFO_WDATA_OFFSET);
-                    txbuffer += 4;
+                    txbuffer = (uint8_t *)txbuffer + 4;
                     break;
                 default:
                     break;
@@ -349,7 +350,7 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
     } else {
         /* Send idle Data */
         for (; fifo_cnt > 0; fifo_cnt--) {
-            putreg32(0xFFFFFFFF, reg_base + SPI_FIFO_WDATA_OFFSET);
+            putreg32(BFLB_SPI_IDEL_DATA, reg_base + SPI_FIFO_WDATA_OFFSET);
         }
     }
 
@@ -376,15 +377,15 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
                 case 1:
                     if (rxbuffer) {
                         *((uint8_t *)rxbuffer) = (uint8_t)regval;
-                        rxbuffer += 1;
+                        rxbuffer = (uint8_t *)rxbuffer + 1;
                     }
                     if (tx_cnt) {
                         if (txbuffer) {
                             regval = *(uint8_t *)txbuffer;
                             putreg32(regval, reg_base + SPI_FIFO_WDATA_OFFSET);
-                            txbuffer++;
+                            txbuffer = (uint8_t *)txbuffer + 1;
                         } else {
-                            putreg32(0xFFFFFFFF, reg_base + SPI_FIFO_WDATA_OFFSET);
+                            putreg32(BFLB_SPI_IDEL_DATA, reg_base + SPI_FIFO_WDATA_OFFSET);
                         }
                         tx_cnt--;
                     }
@@ -392,15 +393,15 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
                 case 2:
                     if (rxbuffer) {
                         *((uint16_t *)rxbuffer) = (uint16_t)regval;
-                        rxbuffer += 2;
+                        rxbuffer = (uint8_t *)rxbuffer + 2;
                     }
                     if (tx_cnt) {
                         if (txbuffer) {
                             regval = *(uint16_t *)txbuffer;
                             putreg32(regval, reg_base + SPI_FIFO_WDATA_OFFSET);
-                            txbuffer += 2;
+                            txbuffer = (uint8_t *)txbuffer + 2;
                         } else {
-                            putreg32(0xFFFFFFFF, reg_base + SPI_FIFO_WDATA_OFFSET);
+                            putreg32(BFLB_SPI_IDEL_DATA, reg_base + SPI_FIFO_WDATA_OFFSET);
                         }
                         tx_cnt--;
                     }
@@ -408,15 +409,15 @@ ATTR_TCM_SECTION int bflb_spi_poll_exchange(struct bflb_device_s *dev, const voi
                 case 4:
                     if (rxbuffer) {
                         *((uint32_t *)rxbuffer) = (uint32_t)regval;
-                        rxbuffer += 4;
+                        rxbuffer = (uint8_t *)rxbuffer + 4;
                     }
                     if (tx_cnt) {
                         if (txbuffer) {
                             regval = *(uint32_t *)txbuffer;
                             putreg32(regval, reg_base + SPI_FIFO_WDATA_OFFSET);
-                            txbuffer += 4;
+                            txbuffer = (uint8_t *)txbuffer + 4;
                         } else {
-                            putreg32(0xFFFFFFFF, reg_base + SPI_FIFO_WDATA_OFFSET);
+                            putreg32(BFLB_SPI_IDEL_DATA, reg_base + SPI_FIFO_WDATA_OFFSET);
                         }
                         tx_cnt--;
                     }
@@ -571,8 +572,8 @@ bool bflb_spi_isbusy(struct bflb_device_s *dev)
 
 int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
 {
-#ifdef romapi_bflb_spi_init
-    return romapi_bflb_spi_init(dev, cmd, arg);
+#ifdef romapi_bflb_spi_feature_control
+    return romapi_bflb_spi_feature_control(dev, cmd, arg);
 #else
     int ret = 0;
     uint32_t reg_base;
@@ -628,15 +629,19 @@ int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
             putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
             break;
 
-        case SPI_CMD_RX_IGNORE:
-            /* set rx ignore, start: arg[20:16], stop: arg[4:0] */
+        case SPI_CMD_RX_IGNORE_ENABLE:
+            /* enable rx ignore, start: arg[20:16], stop: arg[4:0] */
             regval = getreg32(reg_base + SPI_CONFIG_OFFSET);
-            if (arg) {
-                regval |= SPI_CR_SPI_RXD_IGNR_EN;
-                putreg32(arg, reg_base + SPI_RXD_IGNR_OFFSET);
-            } else {
-                regval &= ~SPI_CR_SPI_RXD_IGNR_EN;
-            }
+            regval |= SPI_CR_SPI_RXD_IGNR_EN;
+            putreg32(arg, reg_base + SPI_RXD_IGNR_OFFSET);
+            putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
+            break;
+
+        case SPI_CMD_RX_IGNORE_DISABLE:
+            /* disable rx ignore, start: arg[20:16], stop: arg[4:0] */
+            regval = getreg32(reg_base + SPI_CONFIG_OFFSET);
+            regval &= ~SPI_CR_SPI_RXD_IGNR_EN;
+            putreg32(arg, reg_base + SPI_RXD_IGNR_OFFSET);
             putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
             break;
 
@@ -749,6 +754,60 @@ int bflb_spi_feature_control(struct bflb_device_s *dev, int cmd, size_t arg)
                 ret = !SPI_BYTE_LSB;
             } else {
                 ret = SPI_BYTE_LSB;
+            }
+            break;
+
+        case SPI_CMD_SET_DEGLITCH_CNT:
+            /* set de-glitch function cycle count, 0 for disable de-glitch function */
+            regval = getreg32(reg_base + SPI_CONFIG_OFFSET);
+            regval &= ~SPI_CR_SPI_DEG_CNT_MASK;
+            regval &= ~SPI_CR_SPI_DEG_EN;
+            if (arg) {
+                regval |= (arg << SPI_CR_SPI_DEG_CNT_SHIFT) & SPI_CR_SPI_DEG_CNT_MASK;
+                regval |= SPI_CR_SPI_DEG_EN;
+            }
+            putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
+            break;
+
+        case SPI_CMD_SET_CS_DISABLE:
+            /* 3-pin mode (SS_n is disabled / don't care) */
+            regval = getreg32(reg_base + SPI_CONFIG_OFFSET);
+            if (arg) {
+                regval |= SPI_CR_SPI_S_3PIN_MODE;
+            } else {
+                regval &= ~SPI_CR_SPI_S_3PIN_MODE;
+            }
+            putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
+            break;
+
+
+        case SPI_CMD_SET_ROLE:
+            /* GLB select master or slave mode */
+            regval = getreg32(GLB_SPI_MODE_ADDRESS);
+            if (arg == SPI_ROLE_MASTER) {
+                regval |= 1 << 12;
+            } else {
+                regval &= ~(1 << 12);
+            }
+            putreg32(regval, GLB_SPI_MODE_ADDRESS);
+
+            /* enable spi */
+            regval = getreg32(reg_base + SPI_CONFIG_OFFSET);
+            if (arg == SPI_ROLE_MASTER) {
+                regval |= SPI_CR_SPI_M_EN;
+                regval &= ~SPI_CR_SPI_S_EN;
+            } else {
+                regval |= SPI_CR_SPI_S_EN;
+                regval &= ~SPI_CR_SPI_M_EN;
+            }
+            putreg32(regval, reg_base + SPI_CONFIG_OFFSET);
+            break;
+        case SPI_CMD_GET_ROLE:
+            regval = getreg32(reg_base + SPI_CONFIG_OFFSET);
+            if (regval & SPI_CR_SPI_M_EN) {
+                ret = SPI_ROLE_MASTER;
+            } else {
+                ret = SPI_ROLE_SLAVE;
             }
             break;
 

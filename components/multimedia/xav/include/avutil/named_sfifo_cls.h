@@ -5,7 +5,6 @@
 #ifndef __NAMED_SFIFO_CLS_H__
 #define __NAMED_SFIFO_CLS_H__
 
-#include <fcntl.h>
 #include "avutil/common.h"
 
 __BEGIN_DECLS__

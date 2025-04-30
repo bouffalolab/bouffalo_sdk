@@ -46,6 +46,7 @@ static smtaudio_ops_node_t ctrl_local_play = {
     .vol_set  = local_play_vol_set,
     .vol_up   = local_play_vol_up,
     .vol_down = local_play_vol_down,
+    .info     = NULL,
 };
 
 #if 0
@@ -88,8 +89,8 @@ static int media_init(uint8_t *aef_conf, size_t aef_conf_size, float speed, int 
     if (ret == 0) {
         aui_player_config_init(&media_config);
 
-        media_config.web_cache_size      = 20 * 1024;
-        media_config.web_start_threshold = 30;
+        media_config.web_cache_size      = config_av_stream_cache_size_default();
+        media_config.web_start_threshold = config_av_stream_cache_threshold_default();
         media_config.resample_rate       = resample;
         if (aef_conf && aef_conf_size) {
             media_config.aef_conf      = aef_conf;

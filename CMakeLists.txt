@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
+sdk_add_compile_definitions(-D CONFIG_BOUFFALO_SDK)
+
 # check VERSION file
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
     # read info from VERSION file
@@ -10,7 +12,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
 else()
     # get git tag
     execute_process(
-        COMMAND git describe --abbrev=8 --tags --dirty --always
+        COMMAND git describe --abbrev=8 --tags --dirty --always --match "sdk-*"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_TAG
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -31,14 +33,26 @@ set(SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 sdk_add_compile_options("-fmacro-prefix-map=${SOURCE_PATH}=.")
 sdk_add_compile_options("-fdebug-prefix-map=${SOURCE_PATH}=.")
 
+if(CONFIG_ANTI_ROLLBACK)
+    sdk_add_compile_definitions(-DCONFIG_ANTI_ROLLBACK)
+endif()
+sdk_add_compile_definitions(-DCONFIG_APP_ANTI_ROLLBACK_VER=${CONFIG_APP_ANTI_ROLLBACK_VER})
+
 add_subdirectory(bsp)
 add_subdirectory(components)
 add_subdirectory(drivers/lhal)
 add_subdirectory(drivers/soc/${CHIP}/std)
+if("${CHIP}" STREQUAL "bl702")
+add_subdirectory(drivers/sys)
+endif()
+if("${CHIP}" STREQUAL "bl702l")
+add_subdirectory(drivers/sys)
+endif()
 if("${CHIP}" STREQUAL "bl616")
-sdk_add_subdirectory_ifdef(CONFIG_PM drivers/pm)
+add_subdirectory(drivers/sys)
 endif()
 sdk_add_subdirectory_ifdef(CONFIG_RF drivers/soc/${CHIP}/phyrf)
 if("${CHIP}" STREQUAL "bl616")
 sdk_add_subdirectory_ifdef(CONFIG_RF drivers/rfparam)
+sdk_add_subdirectory_ifdef(CONFIG_PHY_LPFW drivers/soc/bl616/phyrf)
 endif()

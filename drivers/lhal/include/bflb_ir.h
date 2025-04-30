@@ -93,6 +93,18 @@
   * @}
   */
 
+/** @defgroup IR_CMD ir feature control cmd definition
+  * @{
+  */
+#define IR_CMD_SWM_SET_DATA_LEN  (0x01)
+#if !defined(BL602) && !defined(BL702)
+#define IR_CMD_SWM_WRITE_TX_FIFO (0x02)
+#define IR_CMD_SWM_READ_RX_FIFO  (0x03)
+#endif
+/**
+  * @}
+  */
+
 /**
  * @brief IR TX configuration structure
  *
@@ -203,7 +215,7 @@ void bflb_ir_send(struct bflb_device_s *dev, uint32_t *data, uint32_t length);
  * @param [in] data data data buffer to send
  * @param [in] length length of data buffer
  */
-void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint8_t length);
+void bflb_ir_swm_send(struct bflb_device_s *dev, uint16_t *data, uint32_t length);
 
 /**
  * @brief Enable or disable ir tx.
@@ -277,7 +289,7 @@ void bflb_ir_rx_init(struct bflb_device_s *dev, const struct bflb_ir_rx_config_s
  * @param [out] data data received
  * @return Bit count of data received
  */
-uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data);
+uint16_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data);
 
 /**
  * @brief Receive data in software mode.
@@ -287,7 +299,7 @@ uint8_t bflb_ir_receive(struct bflb_device_s *dev, uint64_t *data);
  * @param [in] length of data buffer
  * @return Length of data received
  */
-uint8_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint8_t length);
+uint16_t bflb_ir_swm_receive(struct bflb_device_s *dev, uint16_t *data, uint16_t length);
 
 /**
  * @brief Enable or disable ir rx.

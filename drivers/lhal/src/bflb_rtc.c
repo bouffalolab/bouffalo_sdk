@@ -3,10 +3,8 @@
 
 #if defined(BL602) || defined(BL702) || defined(BL702L)
 #define BFLB_RTC_BASE 0x4000F000
-#elif defined(BL808) || defined(BL606P) || defined(BL616)
+#elif defined(BL808) || defined(BL616)
 #define BFLB_RTC_BASE 0x2000F000
-#elif defined(BL628)
-#define BFLB_RTC_BASE 0x2008F000
 #endif
 
 void bflb_rtc_disable(struct bflb_device_s *dev)
@@ -324,7 +322,7 @@ static time_t __mktime(struct bflb_tm *tp)
     return ret;
 }
 
-#define BL_RTC_COUNTER_TO_MS(CNT) ((uint64_t)(CNT)*1000 / 32768) // ((CNT)*(1024-16-8)/32768)
+#define BL_RTC_COUNTER_TO_MS(CNT) ((uint64_t)(CNT) * 1000 / 32768) // ((CNT)*(1024-16-8)/32768)
 #define BL_RTC_MAX_COUNTER        (0x000000FFFFFFFFFFllu)
 
 uint64_t bl_rtc_get_delta_counter(uint64_t ref_cnt)
@@ -355,7 +353,7 @@ static volatile uint64_t s_rtc_ref_cnt = 0;
 
 void bflb_rtc_set_utc_time(const struct bflb_tm *time)
 {
-    memcpy((void *)&g_rtc_tm, time, sizeof(struct bflb_tm));
+    arch_memcpy((void *)&g_rtc_tm, time, sizeof(struct bflb_tm));
     s_rtc_ref_cnt = bflb_rtc_get_time(NULL);
 }
 
@@ -367,4 +365,15 @@ void bflb_rtc_get_utc_time(struct bflb_tm *time)
     time_stamp_ms = time_stamp_ms / 1000;
     time_stamp_ms += __mktime((struct bflb_tm *)&g_rtc_tm);
     __gmtime_r((const time_t *)&time_stamp_ms, time);
+}
+
+uint64_t bflb_rtc_get_utc_timestamp(void)
+{
+    uint64_t time_stamp_ms;
+
+    time_stamp_ms = bl_rtc_get_delta_time_ms(s_rtc_ref_cnt);
+    time_stamp_ms = time_stamp_ms / 1000;
+    time_stamp_ms += __mktime((struct bflb_tm *)&g_rtc_tm);
+
+    return time_stamp_ms;
 }

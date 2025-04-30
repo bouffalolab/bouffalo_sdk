@@ -41,15 +41,7 @@ On Linux server pc run netcat command, listen localhost 3365 port, if client con
 
 ```bash
 $ cd build/build_out
-$ cat wifi_ota_bl616.bin.ota|nc -nvl 3365
-```
-
-Or run an http server using the python command in the directory where the OTA bin file is located.
-like this:
-
-```bash
-$ cd build/build_out
-$ python -m http.server 3365
+$ cat wifi_ota_bl616.bin.ota | nc -nvl 3365
 ```
 
 ### Connect wifi

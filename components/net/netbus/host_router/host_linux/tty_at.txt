@@ -1,0 +1,38 @@
+This document describes how to send and receive AT commands through a TTY device file on Linux.
+
+1. Using Linux Shell Commands
+First, set the TTY attributes to raw mode:
+
+stty -F /dev/ttyACM0 raw
+
+Send an AT command using the echo command. Ensure that the AT command ends with \r\n:
+
+echo -ne "AT\r\n" > /dev/ttyACM0
+
+In another terminal, continuously read from the TTY device:
+
+cat /dev/ttyACM0
+
+This will display the received data.
+
+2. Using a Programmatic Approach
+You can refer to the source code in the following directory:
+
+components/net/netbus/host_router/host_linux/userspace/
+
+The tty_at_helper tool serves as both an AT command communication tool and a programming reference for sending and receiving AT commands. This tool reads commands from stdin, writes them to the TTY device, and displays data received from the TTY device on stdout.
+
+Build and Compile
+Navigate to the userspace directory and execute:
+
+make tty_at_helper
+
+For cross-compilation, please configure accordingly.
+
+Usage
+./tty_at_helper /dev/ttyACM0
+
+Notes
+1. The above examples assume that the TTY device file is /dev/ttyACM0. Please confirm the actual device name before performing operations.
+2. A TTY device can be opened by multiple processes. Ensure that only one process reads from it, as data may be lost if consumed by another reader.
+3. For details on AT command usage, refer to the relevant documentation.

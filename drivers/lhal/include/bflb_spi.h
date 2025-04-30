@@ -14,10 +14,10 @@
 #if defined(BL602) || defined(BL702)
 #define SPI_FIFO_WORD_NUM_MAX           4
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 0
-#elif defined(BL606P) || defined(BL808)
+#elif defined(BL808)
 #define SPI_FIFO_BYTE_NUM_MAX           32
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 1
-#elif defined(BL616) || defined(BL628)
+#elif defined(BL616)
 #define SPI_FIFO_BYTE_NUM_MAX           32
 #define SPI_FIFO_WIDTH_VARIABLE_SUPPORT 1
 #elif defined(BL702L)
@@ -109,7 +109,7 @@
 #define SPI_CMD_CLEAR_TX_FIFO        (0x03)
 #define SPI_CMD_CLEAR_RX_FIFO        (0x04)
 #define SPI_CMD_SET_CS_INTERVAL      (0x05)
-#define SPI_CMD_RX_IGNORE            (0x06)
+#define SPI_CMD_RX_IGNORE_ENABLE     (0x06)
 #define SPI_CMD_SET_MODE             (0x07)
 #define SPI_CMD_GET_MODE             (0x08)
 #define SPI_CMD_SET_FREQ             (0x09)
@@ -118,6 +118,11 @@
 #define SPI_CMD_GET_BIT_ORDER        (0x0C)
 #define SPI_CMD_SET_BYTE_ORDER       (0x0E)
 #define SPI_CMD_GET_BYTE_ORDER       (0x0F)
+#define SPI_CMD_SET_DEGLITCH_CNT     (0x10)
+#define SPI_CMD_SET_CS_DISABLE       (0x11)
+#define SPI_CMD_RX_IGNORE_DISABLE    (0x16)
+#define SPI_CMD_SET_ROLE             (0x17)
+#define SPI_CMD_GET_ROLE             (0x18)
 
 /**
   * @}
@@ -148,6 +153,10 @@
 #endif
 
 #define IS_SPI_THRESHOLD(type)  ((type) < 4)
+
+#ifndef BFLB_SPI_IDEL_DATA
+#define BFLB_SPI_IDEL_DATA 0xFFFFFFFF
+#endif
 
 // clang-format on
 

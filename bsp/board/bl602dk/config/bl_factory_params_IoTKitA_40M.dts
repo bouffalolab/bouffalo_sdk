@@ -339,9 +339,9 @@
             //negative value is NOT supported. So we use '256' for 0, '255' for -1, '257' for 1,'511' for 256
         };
         cap_temp {
-            en_cap_temp = <0>; //0x0060 长度1
-            temp = <253 252 20 39 39 40 41 42 43 44 >; //0x0061 长度10
-            capcode = <28 29 30 31 32 33 34 35 36 37 38 >; //0x0062 长度11
+            en_cap_temp = <0>; //0x0060 length:1
+            temp = <253 252 20 39 39 40 41 42 43 44 >; //0x0061 length:10
+            capcode = <28 29 30 31 32 33 34 35 36 37 38 >; //0x0062 length:11
         };
     };
     bluetooth {

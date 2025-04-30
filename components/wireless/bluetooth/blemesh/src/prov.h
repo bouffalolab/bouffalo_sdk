@@ -22,6 +22,41 @@
 #define PROV_ERR_UNEXP_ERR     0x07
 #define PROV_ERR_ADDR          0x08
 
+#define PUB_KEY_NO_OOB         0x00
+#define PUB_KEY_OOB            0x01
+
+#define PDU_LEN_INVITE         1
+#define PDU_LEN_CAPABILITIES   11
+#define PDU_LEN_START          5
+#define PDU_LEN_PUB_KEY        64
+#define PDU_LEN_INPUT_COMPLETE 0
+#if defined(CONFIG_BT_MESH_V1d1)
+#define PDU_LEN_CONFIRM        32 /* Max size */
+#define PDU_LEN_RANDOM         32 /* Max size */
+#else
+#define PDU_LEN_CONFIRM        16 /* Max size */
+#define PDU_LEN_RANDOM         16 /* Max size */
+#endif
+#define PDU_LEN_DATA           33
+#define PDU_LEN_COMPLETE       0
+#define PDU_LEN_FAILED         1
+#if defined(CONFIG_BLE_MESH_CERT_BASED_PROV)
+#define PDU_LEN_RECORD_REQ     6
+#define PDU_LEN_RECORD_RSP     7
+#define PDU_LEN_RECORDS_GET    0
+#define PDU_LEN_RECORDS_LIST   2
+#endif /* CONFIG_BLE_MESH_CERT_BASED_PROV */
+
+#define PDU_OP_LEN             1
+
+#define PROV_IO_OOB_SIZE_MAX   8  /* in bytes */
+#if IS_ENABLED(CONFIG_BT_MESH_ECDH_P256_HMAC_SHA256_AES_CCM)
+#define PROV_AUTH_MAX_LEN   32
+#else
+#define PROV_AUTH_MAX_LEN   16
+#endif
+
+
 /* Add by bouffalo */
 typedef struct{
 	u8_t num_ele;//Number of Elements.
@@ -76,7 +111,7 @@ void bt_mesh_prov_mod_sub_add_cb(struct bt_mesh_model *model,
             u16_t elem_addr, u16_t group_addr);
 #endif /* CONFIG_BT_MESH_MOD_SUB_ADD_CB */
 
-#if defined(CONFIG_AUTO_PTS)
+#if defined(CONFIG_BT_MESH_PTS) || defined(CONFIG_AUTO_PTS)
 /* add by bouffalolab */
 void prov_set_method(uint8_t method, uint8_t action, uint8_t size);
 /* add by bouffalolab */

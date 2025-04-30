@@ -58,7 +58,7 @@ extern "C" {
 /**
  *  @brief Efuse Ctrl key slot type definition
  */
-typedef enum {
+enum {
     EF_CTRL_KEY_SLOT0, /*!< key slot 0 */
     EF_CTRL_KEY_SLOT1, /*!< key slot 1 */
     EF_CTRL_KEY_SLOT2, /*!< key slot 2 */
@@ -66,59 +66,66 @@ typedef enum {
     EF_CTRL_KEY_SLOT4, /*!< key slot 4 */
     EF_CTRL_KEY_SLOT5, /*!< key slot 5 */
     EF_CTRL_KEY_MAX,   /*!<  */
-} EF_Ctrl_Key_Type;
+};
+typedef BL_ENUM_Type EF_Ctrl_Key_Type;
 
 /**
  *  @brief Efuse Ctrl sign type definition
  */
-typedef enum {
+enum {
     EF_CTRL_SIGN_NONE, /*!< no sign */
     EF_CTRL_SIGN_RSA,  /*!< use RSA to sign */
     EF_CTRL_SIGN_ECC,  /*!< use ECC to sign */
-} EF_Ctrl_Sign_Type;
+};
+typedef BL_ENUM_Type EF_Ctrl_Sign_Type;
 
 /**
  *  @brief Efuse Ctrl flash AES type definition
  */
-typedef enum {
+enum {
     EF_CTRL_SF_AES_NONE, /*!< No AES */
     EF_CTRL_SF_AES_128,  /*!< AES 128 */
     EF_CTRL_SF_AES_192,  /*!< AES 192 */
     EF_CTRL_SF_AES_256,  /*!< AES 256 */
-} EF_Ctrl_SF_AES_Type;
+};
+typedef BL_ENUM_Type EF_Ctrl_SF_AES_Type;
 
 /**
  *  @brief Efuse Ctrl Dbg type definition
  */
-typedef enum {
+enum {
     EF_CTRL_DBG_OPEN = 0,  /*!< Open debug */
     EF_CTRL_DBG_PASSWORD,  /*!< Open debug with password */
     EF_CTRL_DBG_CLOSE = 4, /*!< Close debug */
-} EF_Ctrl_Dbg_Mode_Type;
+};
+typedef BL_ENUM_Type EF_Ctrl_Dbg_Mode_Type;
 
 /**
  *  @brief Efuse Ctrl clock type definition
  */
-typedef enum {
+enum {
     EF_CTRL_EF_CLK,   /*!< Select efuse clock */
     EF_CTRL_SAHB_CLK, /*!< Select SAHB clock */
-} EF_Ctrl_CLK_Type;
+};
+typedef BL_ENUM_Type EF_Ctrl_CLK_Type;
 
 /**
  *  @brief Efuse Ctrl clock type definition
  */
-typedef enum {
+enum {
     EF_CTRL_PARA_DFT,    /*!< Select default cyc parameter */
     EF_CTRL_PARA_MANUAL, /*!< Select manual cyc parameter */
-} EF_Ctrl_CYC_PARA_Type;
+};
+typedef BL_ENUM_Type EF_Ctrl_CYC_PARA_Type;
 
 /**
  *  @brief Efuse Ctrl clock type definition
  */
-typedef enum {
+enum {
     EF_CTRL_OP_MODE_AUTO,   /*!< Select efuse program auto mode */
     EF_CTRL_OP_MODE_MANUAL, /*!< Select efuse program manual mode */
-} EF_Ctrl_OP_MODE_Type;
+};
+typedef BL_ENUM_Type EF_Ctrl_OP_MODE_Type;
 
 /**
  *  @brief Efuse Ctrl secure configuration structure type definition

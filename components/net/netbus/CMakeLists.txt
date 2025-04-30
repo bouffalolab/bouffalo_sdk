@@ -1,0 +1,2 @@
+add_subdirectory(host_router)
+sdk_add_subdirectory_ifdef(CONFIG_NETIFD_NANO netifd_nano)

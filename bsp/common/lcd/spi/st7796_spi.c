@@ -63,9 +63,19 @@ const st7796_spi_init_cmd_t st7796_spi_init_cmds[] = {
     { 0xF0, "\xC3", 1 },
     { 0xF0, "\x96", 1 },
 
-    { 0x36, "\x48", 1 },
+/* Color RGB order */
+#if ST7796_SPI_COLOR_ORDER
+    { 0x36, "\x08", 1 },
+#else
+    { 0x36, "\x00", 1 },
+#endif
 
-    { 0x3A, "\x05", 1 }, /* RGB565 */
+#if (ST7796_SPI_PIXEL_FORMAT == 1)
+    { 0x3A, "\x55", 1 }, /* Interface Pixel Format RGB565 */
+#elif (ST7796_SPI_PIXEL_FORMAT == 2)
+    { 0x3A, "\x66", 1 }, /* Interface Pixel Format RGB666 */
+#endif
+
     { 0xE6, "\x0F\xF2\x3F\x4F\x4F\x28\x0E\x00", 8 },
     { 0xC5, "\x2A", 1 },
 
@@ -145,38 +155,24 @@ int st7796_spi_init()
  */
 int st7796_spi_set_dir(uint8_t dir, uint8_t mir_flag)
 {
+    uint8_t dir_param[4] = { 0x00, 0xA0, 0xC0, 0x60 };
+    uint8_t mir_param[4] = { 0x40, 0x20, 0x80, 0xE0 };
     uint8_t param;
 
-    switch (dir) {
-        case 0:
-            if (!mir_flag)
-                param = 0x00;
-            else
-                param = 0x40;
-            break;
-        case 1:
-            if (!mir_flag)
-                param = 0x20;
-            else
-                param = 0xA0;
-            break;
-        case 2:
-            if (!mir_flag)
-                param = 0x80;
-            else
-                param = 0xC0;
-            break;
-        case 3:
-            if (!mir_flag)
-                param = 0xE0;
-            else
-                param = 0x60;
-
-            break;
-        default:
-            return -1;
-            break;
+    if (dir >= 4) {
+        return -1;
     }
+
+    if (mir_flag) {
+        param = mir_param[dir];
+    } else {
+        param = dir_param[dir];
+    }
+
+/* Color RGB order */
+#if ST7796_SPI_COLOR_ORDER
+    param |= 0x08;
+#endif
 
     lcd_spi_transmit_cmd_para(0x36, (void *)&param, 1);
 

@@ -41,7 +41,7 @@ void bflb_dbi_init(struct bflb_device_s *dev, const struct bflb_dbi_config_s *co
 #else
     uint32_t reg_base;
     uint32_t regval;
-    uint32_t div;
+    uint32_t div, div_0, div_1;
 
     reg_base = dev->reg_base;
 
@@ -105,17 +105,18 @@ void bflb_dbi_init(struct bflb_device_s *dev, const struct bflb_dbi_config_s *co
 
     /* clock cfg */
     /* integer frequency segmentation by rounding */
-    div = (bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_DBI, dev->idx) / 2 * 10 / config->clk_freq_hz + 5) / 10;
-    div = (div) ? (div - 1) : 0;
-
-    LHAL_PARAM_ASSERT(div <= 0xff);
+    div = (bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_DBI, dev->idx) * 10 / config->clk_freq_hz + 5) / 10;
+    div_0 = (div + 1) / 2;
+    div_0 = (div_0 > 0xff) ? (0xff) : ((div_0 > 0) ? (div_0 - 1) : 0);
+    div_1 = (div) / 2;
+    div_1 = (div_1 > 0xff) ? (0xff) : ((div_1 > 0) ? (div_1 - 1) : 0);
 
     div = (div > 0xff) ? 0xff : div;
     regval = 0;
-    regval |= div << DBI_CR_DBI_PRD_S_SHIFT;
-    regval |= div << DBI_CR_DBI_PRD_I_SHIFT;
-    regval |= (div + 1) << DBI_CR_DBI_PRD_D_PH_0_SHIFT;
-    regval |= (div + 1) << DBI_CR_DBI_PRD_D_PH_1_SHIFT;
+    regval |= div_0 << DBI_CR_DBI_PRD_S_SHIFT;
+    regval |= div_1 << DBI_CR_DBI_PRD_I_SHIFT;
+    regval |= div_0 << DBI_CR_DBI_PRD_D_PH_0_SHIFT;
+    regval |= div_1 << DBI_CR_DBI_PRD_D_PH_1_SHIFT;
     putreg32(regval, reg_base + DBI_PRD_OFFSET);
 
     /* dbi output pixel format cfg */
@@ -263,7 +264,7 @@ void bflb_dbi_qspi_set_addr(struct bflb_device_s *dev, uint8_t addr_byte_size, u
 }
 #endif
 
-static void bflb_dbi_fill_fifo(struct bflb_device_s *dev, uint32_t words_cnt, uint32_t *data_buff)
+__UNUSED static void bflb_dbi_fill_fifo(struct bflb_device_s *dev, uint32_t words_cnt, uint32_t *data_buff)
 {
     uint32_t reg_base;
     uint32_t regval;
@@ -290,7 +291,7 @@ static void bflb_dbi_fill_fifo(struct bflb_device_s *dev, uint32_t words_cnt, ui
     }
 }
 
-static uint32_t bflb_dbi_get_words_cnt_form_pixel(struct bflb_device_s *dev, uint32_t pixle_cnt)
+__UNUSED static uint32_t bflb_dbi_get_words_cnt_form_pixel(struct bflb_device_s *dev, uint32_t pixle_cnt)
 {
     uint32_t reg_base;
     uint32_t regval;
@@ -393,12 +394,12 @@ int bflb_dbi_send_cmd_data(struct bflb_device_s *dev, uint8_t cmd, uint8_t data_
 
     /* first fill some data into the fifo */
     if (data_len) {
-        if (data_len <= SPI_FIFO_NUM_MAX * 4) {
+        if (data_len <= DBI_FIFO_NUM_MAX * 4) {
             bflb_dbi_fill_fifo(dev, (data_len + 3) / 4, (uint32_t *)data_buff);
             data_len = 0;
         } else {
-            bflb_dbi_fill_fifo(dev, SPI_FIFO_NUM_MAX, (uint32_t *)data_buff);
-            data_len -= SPI_FIFO_NUM_MAX * 4;
+            bflb_dbi_fill_fifo(dev, DBI_FIFO_NUM_MAX, (uint32_t *)data_buff);
+            data_len -= DBI_FIFO_NUM_MAX * 4;
         }
     }
 
@@ -703,12 +704,12 @@ uint32_t bflb_dbi_get_intstatus(struct bflb_device_s *dev)
 
     /* fifo threshold interrupt */
     if (regval & DBI_TXF_INT) {
-        int_sts |= SPI_INTSTS_TX_FIFO;
+        int_sts |= DBI_INTSTS_TX_FIFO;
     }
 
     /* fifo error (underflow or overflow) interrupt */
     if (regval & DBI_FER_INT) {
-        int_sts |= SPI_INTSTS_FIFO_ERR;
+        int_sts |= DBI_INTSTS_FIFO_ERR;
     }
 
     return int_sts;
