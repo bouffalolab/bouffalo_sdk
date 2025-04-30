@@ -20,7 +20,7 @@ jobs:
     
     - name: Cache toolchain
       id: cache
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       with: 
         path: /opt/riscv64-unknown-elf
         key : ${{runner.OS}}-riscv64-unknown-elf-caches-v1-${{ hashFiles('bin/riscv64-unknown-elf-gcc') }}
