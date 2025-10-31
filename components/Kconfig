@@ -1,0 +1,5 @@
+
+source "$BL_SDK_BASE/components/wireless/Kconfig"
+source "$BL_SDK_BASE/components/crypto/Kconfig"
+source "$BL_SDK_BASE/components/net/netbus/atmodule/Kconfig"
+

@@ -1,0 +1,3 @@
+CHIP ?= bl616
+BOARD ?= bl616dk
+

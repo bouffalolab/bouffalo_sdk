@@ -1,0 +1,12 @@
+#
+# Kconfig for net
+#
+menu "Network"
+
+config NET_ENABLE
+    bool "Enable net"
+    default n
+    help
+      Enable or disable compilation of the net component.
+
+endmenu

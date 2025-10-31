@@ -1,0 +1,4 @@
+add_subdirectory(host_router)
+sdk_add_subdirectory_ifdef(CONFIG_NETIFD_NANO netifd_nano)
+sdk_add_subdirectory_ifdef(CONFIG_ATMODULE atmodule)
+sdk_add_subdirectory_ifdef(CONFIG_SPISYNC atmodule/transport/spisync)

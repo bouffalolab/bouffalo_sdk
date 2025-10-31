@@ -1,0 +1,2 @@
+pyelftools~=0.29
+anytree~=2.8.0

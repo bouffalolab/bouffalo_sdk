@@ -1,0 +1,11 @@
+#
+# Bouffalo SDK Configuration (main menu)
+#
+
+mainmenu "Bouffalo SDK Configuration"
+
+#
+# Include all other component Kconfigs
+#
+source "$BL_SDK_BASE/components/Kconfig"
+

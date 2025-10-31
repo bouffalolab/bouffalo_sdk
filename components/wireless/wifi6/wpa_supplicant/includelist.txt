@@ -1,0 +1,8 @@
+# minimum wpa_supplicant files
+   wpa_supplicant
+   src
+   src/utils
+   src/crypto
+   src/l2_packet
+   src/rsn_supp
+   src/drivers

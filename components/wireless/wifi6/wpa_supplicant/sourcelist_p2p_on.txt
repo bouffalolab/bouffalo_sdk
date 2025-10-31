@@ -1,0 +1,51 @@
+# Source file to support P2P mode
+   wpa_supplicant/p2p_supplicant.c
+   wpa_supplicant/p2p_supplicant_sd.c
+   wpa_supplicant/offchannel.c
+   wpa_supplicant/wps_supplicant.c
+   wpa_supplicant/gas_query.c
+
+   src/utils/uuid.c
+   src/utils/base64.c
+
+   src/crypto/dh_groups.c
+   src/crypto/dh_group5.c
+   src/crypto/crypto_internal-modexp.c
+   src/crypto/aes-cbc.c
+
+   src/common/gas.c
+
+   src/ap/p2p_hostapd.c
+   src/ap/wps_hostapd.c
+
+   src/p2p/p2p_build.c
+   src/p2p/p2p_dev_disc.c
+   src/p2p/p2p_go_neg.c
+   src/p2p/p2p_group.c
+   src/p2p/p2p_invitation.c
+   src/p2p/p2p_parse.c
+   src/p2p/p2p_pd.c
+   src/p2p/p2p_sd.c
+   src/p2p/p2p_utils.c
+   src/p2p/p2p.c
+
+   src/eapol_supp/eapol_supp_sm.c
+
+   src/eap_peer/eap.c
+   src/eap_peer/eap_methods.c
+   src/eap_peer/eap_wsc.c
+   src/eap_server/eap_server_wsc.c
+   src/eap_common/eap_wsc_common.c
+
+   src/tls/bignum.c
+
+   src/wps/wps.c
+   src/wps/wps_common.c
+   src/wps/wps_enrollee.c
+   src/wps/wps_attr_parse.c
+   src/wps/wps_attr_process.c
+   src/wps/wps_registrar.c
+   src/wps/wps_attr_build.c
+   src/wps/wps_dev_attr.c
+
+   src/rsn_supp/pmksa_cache.c

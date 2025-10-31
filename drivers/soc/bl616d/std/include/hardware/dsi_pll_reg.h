@@ -1,0 +1,452 @@
+/**
+  ******************************************************************************
+  * @file    dsi_pll_reg.h
+  * @version V1.0
+  * @date    2025-09-04
+  * @brief   This file is the description of.IP register
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; COPYRIGHT(c) 2020 Bouffalo Lab</center></h2>
+  *
+  * Redistribution and use in source and binary forms, with or without modification,
+  * are permitted provided that the following conditions are met:
+  *   1. Redistributions of source code must retain the above copyright notice,
+  *      this list of conditions and the following disclaimer.
+  *   2. Redistributions in binary form must reproduce the above copyright notice,
+  *      this list of conditions and the following disclaimer in the documentation
+  *      and/or other materials provided with the distribution.
+  *   3. Neither the name of Bouffalo Lab nor the names of its contributors
+  *      may be used to endorse or promote products derived from this software
+  *      without specific prior written permission.
+  *
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  ******************************************************************************
+  */
+#ifndef __DSI_PLL_REG_H__
+#define __DSI_PLL_REG_H__
+
+/* 00 : dsipll_ana_ctrl */
+#define DSIPLL_ANA_CTRL_OFFSET              (00)
+#define DSIPLL_FBDIV_SEL_SAMPLE_CLK         DSIPLL_FBDIV_SEL_SAMPLE_CLK
+#define DSIPLL_FBDIV_SEL_SAMPLE_CLK_POS     (0U)
+#define DSIPLL_FBDIV_SEL_SAMPLE_CLK_LEN     (2U)
+#define DSIPLL_FBDIV_SEL_SAMPLE_CLK_MSK     (((1U << DSIPLL_FBDIV_SEL_SAMPLE_CLK_LEN) - 1) << DSIPLL_FBDIV_SEL_SAMPLE_CLK_POS)
+#define DSIPLL_FBDIV_SEL_SAMPLE_CLK_UMSK    (~(((1U << DSIPLL_FBDIV_SEL_SAMPLE_CLK_LEN) - 1) << DSIPLL_FBDIV_SEL_SAMPLE_CLK_POS))
+#define DSIPLL_FBDIV_SEL_ADPLL_CLK          DSIPLL_FBDIV_SEL_ADPLL_CLK
+#define DSIPLL_FBDIV_SEL_ADPLL_CLK_POS      (2U)
+#define DSIPLL_FBDIV_SEL_ADPLL_CLK_LEN      (1U)
+#define DSIPLL_FBDIV_SEL_ADPLL_CLK_MSK      (((1U << DSIPLL_FBDIV_SEL_ADPLL_CLK_LEN) - 1) << DSIPLL_FBDIV_SEL_ADPLL_CLK_POS)
+#define DSIPLL_FBDIV_SEL_ADPLL_CLK_UMSK     (~(((1U << DSIPLL_FBDIV_SEL_ADPLL_CLK_LEN) - 1) << DSIPLL_FBDIV_SEL_ADPLL_CLK_POS))
+#define DSIPLL_TDC_DLY_SEL                  DSIPLL_TDC_DLY_SEL
+#define DSIPLL_TDC_DLY_SEL_POS              (3U)
+#define DSIPLL_TDC_DLY_SEL_LEN              (1U)
+#define DSIPLL_TDC_DLY_SEL_MSK              (((1U << DSIPLL_TDC_DLY_SEL_LEN) - 1) << DSIPLL_TDC_DLY_SEL_POS)
+#define DSIPLL_TDC_DLY_SEL_UMSK             (~(((1U << DSIPLL_TDC_DLY_SEL_LEN) - 1) << DSIPLL_TDC_DLY_SEL_POS))
+#define DSIPLL_DTC_R_SEL                    DSIPLL_DTC_R_SEL
+#define DSIPLL_DTC_R_SEL_POS                (4U)
+#define DSIPLL_DTC_R_SEL_LEN                (2U)
+#define DSIPLL_DTC_R_SEL_MSK                (((1U << DSIPLL_DTC_R_SEL_LEN) - 1) << DSIPLL_DTC_R_SEL_POS)
+#define DSIPLL_DTC_R_SEL_UMSK               (~(((1U << DSIPLL_DTC_R_SEL_LEN) - 1) << DSIPLL_DTC_R_SEL_POS))
+#define DSIPLL_DTC_BYPASS_EN                DSIPLL_DTC_BYPASS_EN
+#define DSIPLL_DTC_BYPASS_EN_POS            (6U)
+#define DSIPLL_DTC_BYPASS_EN_LEN            (1U)
+#define DSIPLL_DTC_BYPASS_EN_MSK            (((1U << DSIPLL_DTC_BYPASS_EN_LEN) - 1) << DSIPLL_DTC_BYPASS_EN_POS)
+#define DSIPLL_DTC_BYPASS_EN_UMSK           (~(((1U << DSIPLL_DTC_BYPASS_EN_LEN) - 1) << DSIPLL_DTC_BYPASS_EN_POS))
+#define DSIPLL_VCO_SPEED                    DSIPLL_VCO_SPEED
+#define DSIPLL_VCO_SPEED_POS                (8U)
+#define DSIPLL_VCO_SPEED_LEN                (3U)
+#define DSIPLL_VCO_SPEED_MSK                (((1U << DSIPLL_VCO_SPEED_LEN) - 1) << DSIPLL_VCO_SPEED_POS)
+#define DSIPLL_VCO_SPEED_UMSK               (~(((1U << DSIPLL_VCO_SPEED_LEN) - 1) << DSIPLL_VCO_SPEED_POS))
+#define DSIPLL_VCO_LDO_STARTUP_EN           DSIPLL_VCO_LDO_STARTUP_EN
+#define DSIPLL_VCO_LDO_STARTUP_EN_POS       (11U)
+#define DSIPLL_VCO_LDO_STARTUP_EN_LEN       (1U)
+#define DSIPLL_VCO_LDO_STARTUP_EN_MSK       (((1U << DSIPLL_VCO_LDO_STARTUP_EN_LEN) - 1) << DSIPLL_VCO_LDO_STARTUP_EN_POS)
+#define DSIPLL_VCO_LDO_STARTUP_EN_UMSK      (~(((1U << DSIPLL_VCO_LDO_STARTUP_EN_LEN) - 1) << DSIPLL_VCO_LDO_STARTUP_EN_POS))
+#define DSIPLL_VCO_LDO_BYPASS               DSIPLL_VCO_LDO_BYPASS
+#define DSIPLL_VCO_LDO_BYPASS_POS           (12U)
+#define DSIPLL_VCO_LDO_BYPASS_LEN           (1U)
+#define DSIPLL_VCO_LDO_BYPASS_MSK           (((1U << DSIPLL_VCO_LDO_BYPASS_LEN) - 1) << DSIPLL_VCO_LDO_BYPASS_POS)
+#define DSIPLL_VCO_LDO_BYPASS_UMSK          (~(((1U << DSIPLL_VCO_LDO_BYPASS_LEN) - 1) << DSIPLL_VCO_LDO_BYPASS_POS))
+#define DSIPLL_VCO_IDAC_EXTRA               DSIPLL_VCO_IDAC_EXTRA
+#define DSIPLL_VCO_IDAC_EXTRA_POS           (14U)
+#define DSIPLL_VCO_IDAC_EXTRA_LEN           (2U)
+#define DSIPLL_VCO_IDAC_EXTRA_MSK           (((1U << DSIPLL_VCO_IDAC_EXTRA_LEN) - 1) << DSIPLL_VCO_IDAC_EXTRA_POS)
+#define DSIPLL_VCO_IDAC_EXTRA_UMSK          (~(((1U << DSIPLL_VCO_IDAC_EXTRA_LEN) - 1) << DSIPLL_VCO_IDAC_EXTRA_POS))
+#define DSIPLL_VCO_RSHT_EN                  DSIPLL_VCO_RSHT_EN
+#define DSIPLL_VCO_RSHT_EN_POS              (16U)
+#define DSIPLL_VCO_RSHT_EN_LEN              (1U)
+#define DSIPLL_VCO_RSHT_EN_MSK              (((1U << DSIPLL_VCO_RSHT_EN_LEN) - 1) << DSIPLL_VCO_RSHT_EN_POS)
+#define DSIPLL_VCO_RSHT_EN_UMSK             (~(((1U << DSIPLL_VCO_RSHT_EN_LEN) - 1) << DSIPLL_VCO_RSHT_EN_POS))
+#define DSIPLL_VCO_RSHT_SEL                 DSIPLL_VCO_RSHT_SEL
+#define DSIPLL_VCO_RSHT_SEL_POS             (17U)
+#define DSIPLL_VCO_RSHT_SEL_LEN             (2U)
+#define DSIPLL_VCO_RSHT_SEL_MSK             (((1U << DSIPLL_VCO_RSHT_SEL_LEN) - 1) << DSIPLL_VCO_RSHT_SEL_POS)
+#define DSIPLL_VCO_RSHT_SEL_UMSK            (~(((1U << DSIPLL_VCO_RSHT_SEL_LEN) - 1) << DSIPLL_VCO_RSHT_SEL_POS))
+#define DSIPLL_REFCLK_SEL                   DSIPLL_REFCLK_SEL
+#define DSIPLL_REFCLK_SEL_POS               (20U)
+#define DSIPLL_REFCLK_SEL_LEN               (2U)
+#define DSIPLL_REFCLK_SEL_MSK               (((1U << DSIPLL_REFCLK_SEL_LEN) - 1) << DSIPLL_REFCLK_SEL_POS)
+#define DSIPLL_REFCLK_SEL_UMSK              (~(((1U << DSIPLL_REFCLK_SEL_LEN) - 1) << DSIPLL_REFCLK_SEL_POS))
+#define DSIPLL_REFCLK_DIV_RATIO             DSIPLL_REFCLK_DIV_RATIO
+#define DSIPLL_REFCLK_DIV_RATIO_POS         (24U)
+#define DSIPLL_REFCLK_DIV_RATIO_LEN         (4U)
+#define DSIPLL_REFCLK_DIV_RATIO_MSK         (((1U << DSIPLL_REFCLK_DIV_RATIO_LEN) - 1) << DSIPLL_REFCLK_DIV_RATIO_POS)
+#define DSIPLL_REFCLK_DIV_RATIO_UMSK        (~(((1U << DSIPLL_REFCLK_DIV_RATIO_LEN) - 1) << DSIPLL_REFCLK_DIV_RATIO_POS))
+#define DSIPLL_RSTB                         DSIPLL_RSTB
+#define DSIPLL_RSTB_POS                     (28U)
+#define DSIPLL_RSTB_LEN                     (1U)
+#define DSIPLL_RSTB_MSK                     (((1U << DSIPLL_RSTB_LEN) - 1) << DSIPLL_RSTB_POS)
+#define DSIPLL_RSTB_UMSK                    (~(((1U << DSIPLL_RSTB_LEN) - 1) << DSIPLL_RSTB_POS))
+#define DSIPLL_PU_DSIPLL                    DSI_PU_DSIPLL
+#define DSIPLL_PU_DSIPLL_POS                (31U)
+#define DSIPLL_PU_DSIPLL_LEN                (1U)
+#define DSIPLL_PU_DSIPLL_MSK                (((1U << DSIPLL_PU_DSIPLL_LEN) - 1) << DSIPLL_PU_DSIPLL_POS)
+#define DSIPLL_PU_DSIPLL_UMSK               (~(((1U << DSIPLL_PU_DSIPLL_LEN) - 1) << DSIPLL_PU_DSIPLL_POS))
+
+/* 0x4 : dsipll_spd_fcal */
+#define DSIPLL_SPD_FCAL_OFFSET              (0x4)
+#define DSIPLL_FCAL_THRESHOLD               DSIPLL_FCAL_THRESHOLD
+#define DSIPLL_FCAL_THRESHOLD_POS           (0U)
+#define DSIPLL_FCAL_THRESHOLD_LEN           (1U)
+#define DSIPLL_FCAL_THRESHOLD_MSK           (((1U << DSIPLL_FCAL_THRESHOLD_LEN) - 1) << DSIPLL_FCAL_THRESHOLD_POS)
+#define DSIPLL_FCAL_THRESHOLD_UMSK          (~(((1U << DSIPLL_FCAL_THRESHOLD_LEN) - 1) << DSIPLL_FCAL_THRESHOLD_POS))
+#define DSIPLL_FCAL_PHAERR_LIMIT            DSIPLL_FCAL_PHAERR_LIMIT
+#define DSIPLL_FCAL_PHAERR_LIMIT_POS        (1U)
+#define DSIPLL_FCAL_PHAERR_LIMIT_LEN        (1U)
+#define DSIPLL_FCAL_PHAERR_LIMIT_MSK        (((1U << DSIPLL_FCAL_PHAERR_LIMIT_LEN) - 1) << DSIPLL_FCAL_PHAERR_LIMIT_POS)
+#define DSIPLL_FCAL_PHAERR_LIMIT_UMSK       (~(((1U << DSIPLL_FCAL_PHAERR_LIMIT_LEN) - 1) << DSIPLL_FCAL_PHAERR_LIMIT_POS))
+#define DSIPLL_FCAL_NDIV_ADJ_EN             DSIPLL_FCAL_NDIV_ADJ_EN
+#define DSIPLL_FCAL_NDIV_ADJ_EN_POS         (4U)
+#define DSIPLL_FCAL_NDIV_ADJ_EN_LEN         (1U)
+#define DSIPLL_FCAL_NDIV_ADJ_EN_MSK         (((1U << DSIPLL_FCAL_NDIV_ADJ_EN_LEN) - 1) << DSIPLL_FCAL_NDIV_ADJ_EN_POS)
+#define DSIPLL_FCAL_NDIV_ADJ_EN_UMSK        (~(((1U << DSIPLL_FCAL_NDIV_ADJ_EN_LEN) - 1) << DSIPLL_FCAL_NDIV_ADJ_EN_POS))
+#define DSIPLL_FCAL_MOMCAP_INI_EXT          DSIPLL_FCAL_MOMCAP_INI_EXT
+#define DSIPLL_FCAL_MOMCAP_INI_EXT_POS      (8U)
+#define DSIPLL_FCAL_MOMCAP_INI_EXT_LEN      (7U)
+#define DSIPLL_FCAL_MOMCAP_INI_EXT_MSK      (((1U << DSIPLL_FCAL_MOMCAP_INI_EXT_LEN) - 1) << DSIPLL_FCAL_MOMCAP_INI_EXT_POS)
+#define DSIPLL_FCAL_MOMCAP_INI_EXT_UMSK     (~(((1U << DSIPLL_FCAL_MOMCAP_INI_EXT_LEN) - 1) << DSIPLL_FCAL_MOMCAP_INI_EXT_POS))
+#define DSIPLL_FCAL_MODE                    DSIPLL_FCAL_MODE
+#define DSIPLL_FCAL_MODE_POS                (16U)
+#define DSIPLL_FCAL_MODE_LEN                (2U)
+#define DSIPLL_FCAL_MODE_MSK                (((1U << DSIPLL_FCAL_MODE_LEN) - 1) << DSIPLL_FCAL_MODE_POS)
+#define DSIPLL_FCAL_MODE_UMSK               (~(((1U << DSIPLL_FCAL_MODE_LEN) - 1) << DSIPLL_FCAL_MODE_POS))
+#define DSIPLL_FAST_INC_DVAR_COMP_EN        DSIPLL_FAST_INC_DVAR_COMP_EN
+#define DSIPLL_FAST_INC_DVAR_COMP_EN_POS    (20U)
+#define DSIPLL_FAST_INC_DVAR_COMP_EN_LEN    (1U)
+#define DSIPLL_FAST_INC_DVAR_COMP_EN_MSK    (((1U << DSIPLL_FAST_INC_DVAR_COMP_EN_LEN) - 1) << DSIPLL_FAST_INC_DVAR_COMP_EN_POS)
+#define DSIPLL_FAST_INC_DVAR_COMP_EN_UMSK   (~(((1U << DSIPLL_FAST_INC_DVAR_COMP_EN_LEN) - 1) << DSIPLL_FAST_INC_DVAR_COMP_EN_POS))
+#define DSIPLL_FAST_INC_FCAL_EN             DSIPLL_FAST_INC_FCAL_EN
+#define DSIPLL_FAST_INC_FCAL_EN_POS         (21U)
+#define DSIPLL_FAST_INC_FCAL_EN_LEN         (1U)
+#define DSIPLL_FAST_INC_FCAL_EN_MSK         (((1U << DSIPLL_FAST_INC_FCAL_EN_LEN) - 1) << DSIPLL_FAST_INC_FCAL_EN_POS)
+#define DSIPLL_FAST_INC_FCAL_EN_UMSK        (~(((1U << DSIPLL_FAST_INC_FCAL_EN_LEN) - 1) << DSIPLL_FAST_INC_FCAL_EN_POS))
+#define DSIPLL_INC_FCAL_EN                  DSIPLL_INC_FCAL_EN
+#define DSIPLL_INC_FCAL_EN_POS              (23U)
+#define DSIPLL_INC_FCAL_EN_LEN              (1U)
+#define DSIPLL_INC_FCAL_EN_MSK              (((1U << DSIPLL_INC_FCAL_EN_LEN) - 1) << DSIPLL_INC_FCAL_EN_POS)
+#define DSIPLL_INC_FCAL_EN_UMSK             (~(((1U << DSIPLL_INC_FCAL_EN_LEN) - 1) << DSIPLL_INC_FCAL_EN_POS))
+#define DSIPLL_SPD_UNLOCK_DLY               DSIPLL_SPD_UNLOCK_DLY
+#define DSIPLL_SPD_UNLOCK_DLY_POS           (24U)
+#define DSIPLL_SPD_UNLOCK_DLY_LEN           (1U)
+#define DSIPLL_SPD_UNLOCK_DLY_MSK           (((1U << DSIPLL_SPD_UNLOCK_DLY_LEN) - 1) << DSIPLL_SPD_UNLOCK_DLY_POS)
+#define DSIPLL_SPD_UNLOCK_DLY_UMSK          (~(((1U << DSIPLL_SPD_UNLOCK_DLY_LEN) - 1) << DSIPLL_SPD_UNLOCK_DLY_POS))
+#define DSIPLL_SPD_GAIN                     DSIPLL_SPD_GAIN
+#define DSIPLL_SPD_GAIN_POS                 (26U)
+#define DSIPLL_SPD_GAIN_LEN                 (2U)
+#define DSIPLL_SPD_GAIN_MSK                 (((1U << DSIPLL_SPD_GAIN_LEN) - 1) << DSIPLL_SPD_GAIN_POS)
+#define DSIPLL_SPD_GAIN_UMSK                (~(((1U << DSIPLL_SPD_GAIN_LEN) - 1) << DSIPLL_SPD_GAIN_POS))
+#define DSIPLL_COARSE_PATH_FORCE_ON         DSIPLL_COARSE_PATH_FORCE_ON
+#define DSIPLL_COARSE_PATH_FORCE_ON_POS     (28U)
+#define DSIPLL_COARSE_PATH_FORCE_ON_LEN     (1U)
+#define DSIPLL_COARSE_PATH_FORCE_ON_MSK     (((1U << DSIPLL_COARSE_PATH_FORCE_ON_LEN) - 1) << DSIPLL_COARSE_PATH_FORCE_ON_POS)
+#define DSIPLL_COARSE_PATH_FORCE_ON_UMSK    (~(((1U << DSIPLL_COARSE_PATH_FORCE_ON_LEN) - 1) << DSIPLL_COARSE_PATH_FORCE_ON_POS))
+#define DSIPLL_COARSE_GAIN                  DSIPLL_COARSE_GAIN
+#define DSIPLL_COARSE_GAIN_POS              (29U)
+#define DSIPLL_COARSE_GAIN_LEN              (2U)
+#define DSIPLL_COARSE_GAIN_MSK              (((1U << DSIPLL_COARSE_GAIN_LEN) - 1) << DSIPLL_COARSE_GAIN_POS)
+#define DSIPLL_COARSE_GAIN_UMSK             (~(((1U << DSIPLL_COARSE_GAIN_LEN) - 1) << DSIPLL_COARSE_GAIN_POS))
+
+/* 0x8 : dsipll_lf_vctrl */
+#define DSIPLL_LF_VCTRL_OFFSET              (0x8)
+#define DSIPLL_MOM_UPDATE_PERIOD            DSIPLL_MOM_UPDATE_PERIOD
+#define DSIPLL_MOM_UPDATE_PERIOD_POS        (0U)
+#define DSIPLL_MOM_UPDATE_PERIOD_LEN        (2U)
+#define DSIPLL_MOM_UPDATE_PERIOD_MSK        (((1U << DSIPLL_MOM_UPDATE_PERIOD_LEN) - 1) << DSIPLL_MOM_UPDATE_PERIOD_POS)
+#define DSIPLL_MOM_UPDATE_PERIOD_UMSK       (~(((1U << DSIPLL_MOM_UPDATE_PERIOD_LEN) - 1) << DSIPLL_MOM_UPDATE_PERIOD_POS))
+#define DSIPLL_MOM_FORCE_HOLD               DSIPLL_MOM_FORCE_HOLD
+#define DSIPLL_MOM_FORCE_HOLD_POS           (3U)
+#define DSIPLL_MOM_FORCE_HOLD_LEN           (1U)
+#define DSIPLL_MOM_FORCE_HOLD_MSK           (((1U << DSIPLL_MOM_FORCE_HOLD_LEN) - 1) << DSIPLL_MOM_FORCE_HOLD_POS)
+#define DSIPLL_MOM_FORCE_HOLD_UMSK          (~(((1U << DSIPLL_MOM_FORCE_HOLD_LEN) - 1) << DSIPLL_MOM_FORCE_HOLD_POS))
+#define DSIPLL_MOM_CODE_BYPASS              DSIPLL_MOM_CODE_BYPASS
+#define DSIPLL_MOM_CODE_BYPASS_POS          (4U)
+#define DSIPLL_MOM_CODE_BYPASS_LEN          (1U)
+#define DSIPLL_MOM_CODE_BYPASS_MSK          (((1U << DSIPLL_MOM_CODE_BYPASS_LEN) - 1) << DSIPLL_MOM_CODE_BYPASS_POS)
+#define DSIPLL_MOM_CODE_BYPASS_UMSK         (~(((1U << DSIPLL_MOM_CODE_BYPASS_LEN) - 1) << DSIPLL_MOM_CODE_BYPASS_POS))
+#define DSIPLL_DCOMASH_BYPASS               DSIPLL_DCOMASH_BYPASS
+#define DSIPLL_DCOMASH_BYPASS_POS           (6U)
+#define DSIPLL_DCOMASH_BYPASS_LEN           (1U)
+#define DSIPLL_DCOMASH_BYPASS_MSK           (((1U << DSIPLL_DCOMASH_BYPASS_LEN) - 1) << DSIPLL_DCOMASH_BYPASS_POS)
+#define DSIPLL_DCOMASH_BYPASS_UMSK          (~(((1U << DSIPLL_DCOMASH_BYPASS_LEN) - 1) << DSIPLL_DCOMASH_BYPASS_POS))
+#define DSIPLL_LO_OPEN                      DSIPLL_LO_OPEN
+#define DSIPLL_LO_OPEN_POS                  (8U)
+#define DSIPLL_LO_OPEN_LEN                  (1U)
+#define DSIPLL_LO_OPEN_MSK                  (((1U << DSIPLL_LO_OPEN_LEN) - 1) << DSIPLL_LO_OPEN_POS)
+#define DSIPLL_LO_OPEN_UMSK                 (~(((1U << DSIPLL_LO_OPEN_LEN) - 1) << DSIPLL_LO_OPEN_POS))
+#define DSIPLL_FORCE_LF_FAST_MODE           DSIPLL_FORCE_LF_FAST_MODE
+#define DSIPLL_FORCE_LF_FAST_MODE_POS       (10U)
+#define DSIPLL_FORCE_LF_FAST_MODE_LEN       (1U)
+#define DSIPLL_FORCE_LF_FAST_MODE_MSK       (((1U << DSIPLL_FORCE_LF_FAST_MODE_LEN) - 1) << DSIPLL_FORCE_LF_FAST_MODE_POS)
+#define DSIPLL_FORCE_LF_FAST_MODE_UMSK      (~(((1U << DSIPLL_FORCE_LF_FAST_MODE_LEN) - 1) << DSIPLL_FORCE_LF_FAST_MODE_POS))
+#define DSIPLL_LF_LSB_EXT                   DSIPLL_LF_LSB_EXT
+#define DSIPLL_LF_LSB_EXT_POS               (12U)
+#define DSIPLL_LF_LSB_EXT_LEN               (6U)
+#define DSIPLL_LF_LSB_EXT_MSK               (((1U << DSIPLL_LF_LSB_EXT_LEN) - 1) << DSIPLL_LF_LSB_EXT_POS)
+#define DSIPLL_LF_LSB_EXT_UMSK              (~(((1U << DSIPLL_LF_LSB_EXT_LEN) - 1) << DSIPLL_LF_LSB_EXT_POS))
+#define DSIPLL_LF_BETA_FAST                 DSIPLL_LF_BETA_FAST
+#define DSIPLL_LF_BETA_FAST_POS             (20U)
+#define DSIPLL_LF_BETA_FAST_LEN             (1U)
+#define DSIPLL_LF_BETA_FAST_MSK             (((1U << DSIPLL_LF_BETA_FAST_LEN) - 1) << DSIPLL_LF_BETA_FAST_POS)
+#define DSIPLL_LF_BETA_FAST_UMSK            (~(((1U << DSIPLL_LF_BETA_FAST_LEN) - 1) << DSIPLL_LF_BETA_FAST_POS))
+#define DSIPLL_LF_BETA_EXP                  DSIPLL_LF_BETA_EXP
+#define DSIPLL_LF_BETA_EXP_POS              (21U)
+#define DSIPLL_LF_BETA_EXP_LEN              (3U)
+#define DSIPLL_LF_BETA_EXP_MSK              (((1U << DSIPLL_LF_BETA_EXP_LEN) - 1) << DSIPLL_LF_BETA_EXP_POS)
+#define DSIPLL_LF_BETA_EXP_UMSK             (~(((1U << DSIPLL_LF_BETA_EXP_LEN) - 1) << DSIPLL_LF_BETA_EXP_POS))
+#define DSIPLL_LF_BETA_BASE                 DSIPLL_LF_BETA_BASE
+#define DSIPLL_LF_BETA_BASE_POS             (24U)
+#define DSIPLL_LF_BETA_BASE_LEN             (2U)
+#define DSIPLL_LF_BETA_BASE_MSK             (((1U << DSIPLL_LF_BETA_BASE_LEN) - 1) << DSIPLL_LF_BETA_BASE_POS)
+#define DSIPLL_LF_BETA_BASE_UMSK            (~(((1U << DSIPLL_LF_BETA_BASE_LEN) - 1) << DSIPLL_LF_BETA_BASE_POS))
+#define DSIPLL_LF_ALPHA_FAST                DSIPLL_LF_ALPHA_FAST
+#define DSIPLL_LF_ALPHA_FAST_POS            (26U)
+#define DSIPLL_LF_ALPHA_FAST_LEN            (2U)
+#define DSIPLL_LF_ALPHA_FAST_MSK            (((1U << DSIPLL_LF_ALPHA_FAST_LEN) - 1) << DSIPLL_LF_ALPHA_FAST_POS)
+#define DSIPLL_LF_ALPHA_FAST_UMSK           (~(((1U << DSIPLL_LF_ALPHA_FAST_LEN) - 1) << DSIPLL_LF_ALPHA_FAST_POS))
+#define DSIPLL_LF_ALPHA_EXP                 DSIPLL_LF_ALPHA_EXP
+#define DSIPLL_LF_ALPHA_EXP_POS             (28U)
+#define DSIPLL_LF_ALPHA_EXP_LEN             (3U)
+#define DSIPLL_LF_ALPHA_EXP_MSK             (((1U << DSIPLL_LF_ALPHA_EXP_LEN) - 1) << DSIPLL_LF_ALPHA_EXP_POS)
+#define DSIPLL_LF_ALPHA_EXP_UMSK            (~(((1U << DSIPLL_LF_ALPHA_EXP_LEN) - 1) << DSIPLL_LF_ALPHA_EXP_POS))
+#define DSIPLL_LF_ALPHA_BASE                DSIPLL_LF_ALPHA_BASE
+#define DSIPLL_LF_ALPHA_BASE_POS            (31U)
+#define DSIPLL_LF_ALPHA_BASE_LEN            (1U)
+#define DSIPLL_LF_ALPHA_BASE_MSK            (((1U << DSIPLL_LF_ALPHA_BASE_LEN) - 1) << DSIPLL_LF_ALPHA_BASE_POS)
+#define DSIPLL_LF_ALPHA_BASE_UMSK           (~(((1U << DSIPLL_LF_ALPHA_BASE_LEN) - 1) << DSIPLL_LF_ALPHA_BASE_POS))
+
+/* 0xC : dsipll_sdmin */
+#define DSIPLL_SDMIN_OFFSET                 (0xC)
+#define DSIPLL_SDM_IN                       DSIPLL_SDM_IN
+#define DSIPLL_SDM_IN_POS                   (0U)
+#define DSIPLL_SDM_IN_LEN                   (19U)
+#define DSIPLL_SDM_IN_MSK                   (((1U << DSIPLL_SDM_IN_LEN) - 1) << DSIPLL_SDM_IN_POS)
+#define DSIPLL_SDM_IN_UMSK                  (~(((1U << DSIPLL_SDM_IN_LEN) - 1) << DSIPLL_SDM_IN_POS))
+
+/* 0x10 : dsipll_sdm_lms */
+#define DSIPLL_SDM_LMS_OFFSET               (0x10)
+#define DSIPLL_LMS_EXT_VALUE                DSIPLL_LMS_EXT_VALUE
+#define DSIPLL_LMS_EXT_VALUE_POS            (0U)
+#define DSIPLL_LMS_EXT_VALUE_LEN            (6U)
+#define DSIPLL_LMS_EXT_VALUE_MSK            (((1U << DSIPLL_LMS_EXT_VALUE_LEN) - 1) << DSIPLL_LMS_EXT_VALUE_POS)
+#define DSIPLL_LMS_EXT_VALUE_UMSK           (~(((1U << DSIPLL_LMS_EXT_VALUE_LEN) - 1) << DSIPLL_LMS_EXT_VALUE_POS))
+#define DSIPLL_LMS_EXT_EN                   DSIPLL_LMS_EXT_EN
+#define DSIPLL_LMS_EXT_EN_POS               (7U)
+#define DSIPLL_LMS_EXT_EN_LEN               (1U)
+#define DSIPLL_LMS_EXT_EN_MSK               (((1U << DSIPLL_LMS_EXT_EN_LEN) - 1) << DSIPLL_LMS_EXT_EN_POS)
+#define DSIPLL_LMS_EXT_EN_UMSK              (~(((1U << DSIPLL_LMS_EXT_EN_LEN) - 1) << DSIPLL_LMS_EXT_EN_POS))
+#define DSIPLL_LMS_POLARITY                 DSIPLL_LMS_POLARITY
+#define DSIPLL_LMS_POLARITY_POS             (8U)
+#define DSIPLL_LMS_POLARITY_LEN             (1U)
+#define DSIPLL_LMS_POLARITY_MSK             (((1U << DSIPLL_LMS_POLARITY_LEN) - 1) << DSIPLL_LMS_POLARITY_POS)
+#define DSIPLL_LMS_POLARITY_UMSK            (~(((1U << DSIPLL_LMS_POLARITY_LEN) - 1) << DSIPLL_LMS_POLARITY_POS))
+#define DSIPLL_PHA_CANCEL_EN                DSIPLL_PHA_CANCEL_EN
+#define DSIPLL_PHA_CANCEL_EN_POS            (12U)
+#define DSIPLL_PHA_CANCEL_EN_LEN            (1U)
+#define DSIPLL_PHA_CANCEL_EN_MSK            (((1U << DSIPLL_PHA_CANCEL_EN_LEN) - 1) << DSIPLL_PHA_CANCEL_EN_POS)
+#define DSIPLL_PHA_CANCEL_EN_UMSK           (~(((1U << DSIPLL_PHA_CANCEL_EN_LEN) - 1) << DSIPLL_PHA_CANCEL_EN_POS))
+#define DSIPLL_SDM_OUT_DLY                  DSIPLL_SDM_OUT_DLY
+#define DSIPLL_SDM_OUT_DLY_POS              (16U)
+#define DSIPLL_SDM_OUT_DLY_LEN              (1U)
+#define DSIPLL_SDM_OUT_DLY_MSK              (((1U << DSIPLL_SDM_OUT_DLY_LEN) - 1) << DSIPLL_SDM_OUT_DLY_POS)
+#define DSIPLL_SDM_OUT_DLY_UMSK             (~(((1U << DSIPLL_SDM_OUT_DLY_LEN) - 1) << DSIPLL_SDM_OUT_DLY_POS))
+#define DSIPLL_SDM_ORDER                    DSIPLL_SDM_ORDER
+#define DSIPLL_SDM_ORDER_POS                (17U)
+#define DSIPLL_SDM_ORDER_LEN                (1U)
+#define DSIPLL_SDM_ORDER_MSK                (((1U << DSIPLL_SDM_ORDER_LEN) - 1) << DSIPLL_SDM_ORDER_POS)
+#define DSIPLL_SDM_ORDER_UMSK               (~(((1U << DSIPLL_SDM_ORDER_LEN) - 1) << DSIPLL_SDM_ORDER_POS))
+#define DSIPLL_SDM_DITH_FORCE_EN            DSIPLL_SDM_DITH_FORCE_EN
+#define DSIPLL_SDM_DITH_FORCE_EN_POS        (23U)
+#define DSIPLL_SDM_DITH_FORCE_EN_LEN        (1U)
+#define DSIPLL_SDM_DITH_FORCE_EN_MSK        (((1U << DSIPLL_SDM_DITH_FORCE_EN_LEN) - 1) << DSIPLL_SDM_DITH_FORCE_EN_POS)
+#define DSIPLL_SDM_DITH_FORCE_EN_UMSK       (~(((1U << DSIPLL_SDM_DITH_FORCE_EN_LEN) - 1) << DSIPLL_SDM_DITH_FORCE_EN_POS))
+#define DSIPLL_SDM_BYPASS                   DSIPLL_SDM_BYPASS
+#define DSIPLL_SDM_BYPASS_POS               (24U)
+#define DSIPLL_SDM_BYPASS_LEN               (1U)
+#define DSIPLL_SDM_BYPASS_MSK               (((1U << DSIPLL_SDM_BYPASS_LEN) - 1) << DSIPLL_SDM_BYPASS_POS)
+#define DSIPLL_SDM_BYPASS_UMSK              (~(((1U << DSIPLL_SDM_BYPASS_LEN) - 1) << DSIPLL_SDM_BYPASS_POS))
+
+/* 0x14 : dsipll_ssc */
+#define DSIPLL_SSC_OFFSET                   (0x14)
+#define DSIPLL_SSC_START_GATE_EN            DSIPLL_SSC_START_GATE_EN
+#define DSIPLL_SSC_START_GATE_EN_POS        (0U)
+#define DSIPLL_SSC_START_GATE_EN_LEN        (1U)
+#define DSIPLL_SSC_START_GATE_EN_MSK        (((1U << DSIPLL_SSC_START_GATE_EN_LEN) - 1) << DSIPLL_SSC_START_GATE_EN_POS)
+#define DSIPLL_SSC_START_GATE_EN_UMSK       (~(((1U << DSIPLL_SSC_START_GATE_EN_LEN) - 1) << DSIPLL_SSC_START_GATE_EN_POS))
+#define DSIPLL_SSC_GAIN                     DSIPLL_SSC_GAIN
+#define DSIPLL_SSC_GAIN_POS                 (4U)
+#define DSIPLL_SSC_GAIN_LEN                 (3U)
+#define DSIPLL_SSC_GAIN_MSK                 (((1U << DSIPLL_SSC_GAIN_LEN) - 1) << DSIPLL_SSC_GAIN_POS)
+#define DSIPLL_SSC_GAIN_UMSK                (~(((1U << DSIPLL_SSC_GAIN_LEN) - 1) << DSIPLL_SSC_GAIN_POS))
+#define DSIPLL_SSC_CNT                      DSIPLL_SSC_CNT
+#define DSIPLL_SSC_CNT_POS                  (8U)
+#define DSIPLL_SSC_CNT_LEN                  (8U)
+#define DSIPLL_SSC_CNT_MSK                  (((1U << DSIPLL_SSC_CNT_LEN) - 1) << DSIPLL_SSC_CNT_POS)
+#define DSIPLL_SSC_CNT_UMSK                 (~(((1U << DSIPLL_SSC_CNT_LEN) - 1) << DSIPLL_SSC_CNT_POS))
+#define DSIPLL_SSC_EN                       DSIPLL_SSC_EN
+#define DSIPLL_SSC_EN_POS                   (16U)
+#define DSIPLL_SSC_EN_LEN                   (1U)
+#define DSIPLL_SSC_EN_MSK                   (((1U << DSIPLL_SSC_EN_LEN) - 1) << DSIPLL_SSC_EN_POS)
+#define DSIPLL_SSC_EN_UMSK                  (~(((1U << DSIPLL_SSC_EN_LEN) - 1) << DSIPLL_SSC_EN_POS))
+
+/* 0x18 : dsipll_clktree */
+#define DSIPLL_CLKTREE_OFFSET               (0x18)
+#define DSI_MIPLPLL_CLK_EN                  DSI_MIPLPLL_CLK_EN
+#define DSI_MIPLPLL_CLK_EN_POS              (0U)
+#define DSI_MIPLPLL_CLK_EN_LEN              (1U)
+#define DSI_MIPLPLL_CLK_EN_MSK              (((1U << DSI_MIPLPLL_CLK_EN_LEN) - 1) << DSI_MIPLPLL_CLK_EN_POS)
+#define DSI_MIPLPLL_CLK_EN_UMSK             (~(((1U << DSI_MIPLPLL_CLK_EN_LEN) - 1) << DSI_MIPLPLL_CLK_EN_POS))
+#define DSIPLL_BICLK_DIV                    DSIPLL_BICLK_DIV
+#define DSIPLL_BICLK_DIV_POS                (4U)
+#define DSIPLL_BICLK_DIV_LEN                (4U)
+#define DSIPLL_BICLK_DIV_MSK                (((1U << DSIPLL_BICLK_DIV_LEN) - 1) << DSIPLL_BICLK_DIV_POS)
+#define DSIPLL_BICLK_DIV_UMSK               (~(((1U << DSIPLL_BICLK_DIV_LEN) - 1) << DSIPLL_BICLK_DIV_POS))
+#define DSIPLL_POSTDIV_EN                   DSIPLL_POSTDIV_EN
+#define DSIPLL_POSTDIV_EN_POS               (23U)
+#define DSIPLL_POSTDIV_EN_LEN               (1U)
+#define DSIPLL_POSTDIV_EN_MSK               (((1U << DSIPLL_POSTDIV_EN_LEN) - 1) << DSIPLL_POSTDIV_EN_POS)
+#define DSIPLL_POSTDIV_EN_UMSK              (~(((1U << DSIPLL_POSTDIV_EN_LEN) - 1) << DSIPLL_POSTDIV_EN_POS))
+#define DSIPLL_POSTDIV                      DSIPLL_POSTDIV
+#define DSIPLL_POSTDIV_POS                  (24U)
+#define DSIPLL_POSTDIV_LEN                  (8U)
+#define DSIPLL_POSTDIV_MSK                  (((1U << DSIPLL_POSTDIV_LEN) - 1) << DSIPLL_POSTDIV_POS)
+#define DSIPLL_POSTDIV_UMSK                 (~(((1U << DSIPLL_POSTDIV_LEN) - 1) << DSIPLL_POSTDIV_POS))
+
+/* 0x1C : dsipll_reserve */
+#define DSIPLL_RESERVE_OFFSET               (0x1C)
+#define DSIPLL_RESV0                        DSIPLL_RESV0
+#define DSIPLL_RESV0_POS                    (0U)
+#define DSIPLL_RESV0_LEN                    (8U)
+#define DSIPLL_RESV0_MSK                    (((1U << DSIPLL_RESV0_LEN) - 1) << DSIPLL_RESV0_POS)
+#define DSIPLL_RESV0_UMSK                   (~(((1U << DSIPLL_RESV0_LEN) - 1) << DSIPLL_RESV0_POS))
+#define DSIPLL_RESV1                        DSIPLL_RESV1
+#define DSIPLL_RESV1_POS                    (8U)
+#define DSIPLL_RESV1_LEN                    (8U)
+#define DSIPLL_RESV1_MSK                    (((1U << DSIPLL_RESV1_LEN) - 1) << DSIPLL_RESV1_POS)
+#define DSIPLL_RESV1_UMSK                   (~(((1U << DSIPLL_RESV1_LEN) - 1) << DSIPLL_RESV1_POS))
+#define DSIPLL_VCO_FREQ_RECORD              DSIPLL_VCO_FREQ_RECORD
+#define DSIPLL_VCO_FREQ_RECORD_POS          (16U)
+#define DSIPLL_VCO_FREQ_RECORD_LEN          (16U)
+#define DSIPLL_VCO_FREQ_RECORD_MSK          (((1U << DSIPLL_VCO_FREQ_RECORD_LEN) - 1) << DSIPLL_VCO_FREQ_RECORD_POS)
+#define DSIPLL_VCO_FREQ_RECORD_UMSK         (~(((1U << DSIPLL_VCO_FREQ_RECORD_LEN) - 1) << DSIPLL_VCO_FREQ_RECORD_POS))
+
+/* 0x20 : dsipll_test */
+#define DSIPLL_TEST_OFFSET                  (0x20)
+#define DSIPLL_TEST_DATA_MUX                DSIPLL_TEST_DATA_MUX
+#define DSIPLL_TEST_DATA_MUX_POS            (0U)
+#define DSIPLL_TEST_DATA_MUX_LEN            (1U)
+#define DSIPLL_TEST_DATA_MUX_MSK            (((1U << DSIPLL_TEST_DATA_MUX_LEN) - 1) << DSIPLL_TEST_DATA_MUX_POS)
+#define DSIPLL_TEST_DATA_MUX_UMSK           (~(((1U << DSIPLL_TEST_DATA_MUX_LEN) - 1) << DSIPLL_TEST_DATA_MUX_POS))
+#define DSIPLL_TEST_START_MUX               DSIPLL_TEST_START_MUX
+#define DSIPLL_TEST_START_MUX_POS           (4U)
+#define DSIPLL_TEST_START_MUX_LEN           (1U)
+#define DSIPLL_TEST_START_MUX_MSK           (((1U << DSIPLL_TEST_START_MUX_LEN) - 1) << DSIPLL_TEST_START_MUX_POS)
+#define DSIPLL_TEST_START_MUX_UMSK          (~(((1U << DSIPLL_TEST_START_MUX_LEN) - 1) << DSIPLL_TEST_START_MUX_POS))
+#define DSIPLL_TEST_CLK_INV                 DSIPLL_TEST_CLK_INV
+#define DSIPLL_TEST_CLK_INV_POS             (6U)
+#define DSIPLL_TEST_CLK_INV_LEN             (1U)
+#define DSIPLL_TEST_CLK_INV_MSK             (((1U << DSIPLL_TEST_CLK_INV_LEN) - 1) << DSIPLL_TEST_CLK_INV_POS)
+#define DSIPLL_TEST_CLK_INV_UMSK            (~(((1U << DSIPLL_TEST_CLK_INV_LEN) - 1) << DSIPLL_TEST_CLK_INV_POS))
+#define DSIPLL_TEST_EN                      DSIPLL_TEST_EN
+#define DSIPLL_TEST_EN_POS                  (8U)
+#define DSIPLL_TEST_EN_LEN                  (1U)
+#define DSIPLL_TEST_EN_MSK                  (((1U << DSIPLL_TEST_EN_LEN) - 1) << DSIPLL_TEST_EN_POS)
+#define DSIPLL_TEST_EN_UMSK                 (~(((1U << DSIPLL_TEST_EN_LEN) - 1) << DSIPLL_TEST_EN_POS))
+#define DSIPLL_DTEN_DSIPLL_REFCLK           DSI_DTEN_DSIPLL_REFCLK
+#define DSIPLL_DTEN_DSIPLL_REFCLK_POS       (10U)
+#define DSIPLL_DTEN_DSIPLL_REFCLK_LEN       (1U)
+#define DSIPLL_DTEN_DSIPLL_REFCLK_MSK       (((1U << DSI_DTEN_DSIPLL_REFCLK_LEN) - 1) << DSI_DTEN_DSIPLL_REFCLK_POS)
+#define DSIPLL_DTEN_DSIPLL_REFCLK_UMSK      (~(((1U << DSI_DTEN_DSIPLL_REFCLK_LEN) - 1) << DSI_DTEN_DSIPLL_REFCLK_POS))
+#define DSIPLL_DTEN_DSIPLL_POSTDIV          DSI_DTEN_DSIPLL_POSTDIV
+#define DSIPLL_DTEN_DSIPLL_POSTDIV_POS      (12U)
+#define DSIPLL_DTEN_DSIPLL_POSTDIV_LEN      (1U)
+#define DSIPLL_DTEN_DSIPLL_POSTDIV_MSK      (((1U << DSI_DTEN_DSIPLL_POSTDIV_LEN) - 1) << DSI_DTEN_DSIPLL_POSTDIV_POS)
+#define DSIPLL_DTEN_DSIPLL_POSTDIV_UMSK     (~(((1U << DSI_DTEN_DSIPLL_POSTDIV_LEN) - 1) << DSI_DTEN_DSIPLL_POSTDIV_POS))
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FSDM       DSI_DTEN_DSIPLL_FBDIV_FSDM
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FSDM_POS   (16U)
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FSDM_LEN   (1U)
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FSDM_MSK   (((1U << DSI_DTEN_DSIPLL_FBDIV_FSDM_LEN) - 1) << DSI_DTEN_DSIPLL_FBDIV_FSDM_POS)
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FSDM_UMSK  (~(((1U << DSI_DTEN_DSIPLL_FBDIV_FSDM_LEN) - 1) << DSI_DTEN_DSIPLL_FBDIV_FSDM_POS))
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FFB        DSI_DTEN_DSIPLL_FBDIV_FFB
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FFB_POS    (20U)
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FFB_LEN    (1U)
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FFB_MSK    (((1U << DSI_DTEN_DSIPLL_FBDIV_FFB_LEN) - 1) << DSI_DTEN_DSIPLL_FBDIV_FFB_POS)
+#define DSIPLL_DTEN_DSIPLL_FBDIV_FFB_UMSK   (~(((1U << DSI_DTEN_DSIPLL_FBDIV_FFB_LEN) - 1) << DSI_DTEN_DSIPLL_FBDIV_FFB_POS))
+#define DSIPLL_TEN_DSIPLL                   DSI_TEN_DSIPLL
+#define DSIPLL_TEN_DSIPLL_POS               (28U)
+#define DSIPLL_TEN_DSIPLL_LEN               (1U)
+#define DSIPLL_TEN_DSIPLL_MSK               (((1U << DSI_TEN_DSIPLL_LEN) - 1) << DSI_TEN_DSIPLL_POS)
+#define DSIPLL_TEN_DSIPLL_UMSK              (~(((1U << DSI_TEN_DSIPLL_LEN) - 1) << DSI_TEN_DSIPLL_POS))
+
+/* 0x24 : dsipll_readback */
+#define DSIPLL_READBACK_OFFSET              (0x24)
+#define DSIPLL_TEST_START                   DSIPLL_TEST_START
+#define DSIPLL_TEST_START_POS               (9U)
+#define DSIPLL_TEST_START_LEN               (1U)
+#define DSIPLL_TEST_START_MSK               (((1U << DSIPLL_TEST_START_LEN) - 1) << DSIPLL_TEST_START_POS)
+#define DSIPLL_TEST_START_UMSK              (~(((1U << DSIPLL_TEST_START_LEN) - 1) << DSIPLL_TEST_START_POS))
+#define DSIPLL_VCTRL_OUT_RANGE              DSIPLL_VCTRL_OUT_RANGE
+#define DSIPLL_VCTRL_OUT_RANGE_POS          (12U)
+#define DSIPLL_VCTRL_OUT_RANGE_LEN          (1U)
+#define DSIPLL_VCTRL_OUT_RANGE_MSK          (((1U << DSIPLL_VCTRL_OUT_RANGE_LEN) - 1) << DSIPLL_VCTRL_OUT_RANGE_POS)
+#define DSIPLL_VCTRL_OUT_RANGE_UMSK         (~(((1U << DSIPLL_VCTRL_OUT_RANGE_LEN) - 1) << DSIPLL_VCTRL_OUT_RANGE_POS))
+#define DSIPLL_SOC_MOM_UPDATE_TOTAL_OU      DSIPLL_SOC_MOM_UPDATE_TOTAL_OU
+#define DSIPLL_SOC_MOM_UPDATE_TOTAL_OU_POS  (16U)
+#define DSIPLL_SOC_MOM_UPDATE_TOTAL_OU_LEN  (2U)
+#define DSIPLL_SOC_MOM_UPDATE_TOTAL_OU_MSK  (((1U << DSIPLL_SOC_MOM_UPDATE_TOTAL_OU_LEN) - 1) << DSIPLL_SOC_MOM_UPDATE_TOTAL_OU_POS)
+#define DSIPLL_SOC_MOM_UPDATE_TOTAL_OU_UMSK (~(((1U << DSIPLL_SOC_MOM_UPDATE_TOTAL_OU_LEN) - 1) << DSIPLL_SOC_MOM_UPDATE_TOTAL_OU_POS))
+#define DSIPLL_LO_UNLOCK                    DSIPLL_LO_UNLOCK
+#define DSIPLL_LO_UNLOCK_POS                (20U)
+#define DSIPLL_LO_UNLOCK_LEN                (1U)
+#define DSIPLL_LO_UNLOCK_MSK                (((1U << DSIPLL_LO_UNLOCK_LEN) - 1) << DSIPLL_LO_UNLOCK_POS)
+#define DSIPLL_LO_UNLOCK_UMSK               (~(((1U << DSIPLL_LO_UNLOCK_LEN) - 1) << DSIPLL_LO_UNLOCK_POS))
+#define DSIPLL_LO_LOCK                      DSIPLL_LO_LOCK
+#define DSIPLL_LO_LOCK_POS                  (24U)
+#define DSIPLL_LO_LOCK_LEN                  (1U)
+#define DSIPLL_LO_LOCK_MSK                  (((1U << DSIPLL_LO_LOCK_LEN) - 1) << DSIPLL_LO_LOCK_POS)
+#define DSIPLL_LO_LOCK_UMSK                 (~(((1U << DSIPLL_LO_LOCK_LEN) - 1) << DSIPLL_LO_LOCK_POS))
+#define DSIPLL_FAST_INC_FCAL_OVFLOW         DSIPLL_FAST_INC_FCAL_OVFLOW
+#define DSIPLL_FAST_INC_FCAL_OVFLOW_POS     (28U)
+#define DSIPLL_FAST_INC_FCAL_OVFLOW_LEN     (1U)
+#define DSIPLL_FAST_INC_FCAL_OVFLOW_MSK     (((1U << DSIPLL_FAST_INC_FCAL_OVFLOW_LEN) - 1) << DSIPLL_FAST_INC_FCAL_OVFLOW_POS)
+#define DSIPLL_FAST_INC_FCAL_OVFLOW_UMSK    (~(((1U << DSIPLL_FAST_INC_FCAL_OVFLOW_LEN) - 1) << DSIPLL_FAST_INC_FCAL_OVFLOW_POS))
+
+/* 0x28 : dsipll_adpll_test_out */
+#define DSIPLL_ADPLL_TEST_OUT_OFFSET        (0x28)
+#define DSIPLL_TEST_OUT                     DSIPLL_TEST_OUT
+#define DSIPLL_TEST_OUT_POS                 (0U)
+#define DSIPLL_TEST_OUT_LEN                 (32U)
+#define DSIPLL_TEST_OUT_MSK                 (((1U << DSIPLL_TEST_OUT_LEN) - 1) << DSIPLL_TEST_OUT_POS)
+#define DSIPLL_TEST_OUT_UMSK                (~(((1U << DSIPLL_TEST_OUT_LEN) - 1) << DSIPLL_TEST_OUT_POS))
+
+#endif /* __DSI_PLL_REG_H__ */

@@ -1,0 +1,22 @@
+# mjdec_normal
+
+
+## Support CHIP
+
+|      CHIP        | Remark |
+|:----------------:|:------:|
+|BL616D            |        |
+
+## Compile
+
+- BL616D
+
+```
+make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap
+```
+
+## Flash
+
+```
+make flash CHIP=chip_name COMX=xxx # xxx is your com name
+```

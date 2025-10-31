@@ -1,0 +1,21 @@
+/** 
+* @brief Zephyr HTTP component version used in this project
+* 
+* Format: MAJOR.MINOR.PATCH
+* 
+* Corresponds to Zephyr OS release v4.1.0
+*/
+ZEPHYR_HTTP_VERSION "v4.1.0"
+
+/**
+* @brief Git hash of the original Zephyr HTTP component
+* 
+* Commit hash: 7823374e872145b5bd018bfe447839eb36042611
+*/
+ZEPHYR_HTTP_GIT_HASH "7823374"
+
+/**
+* @brief Zephyr HTTP component license information
+*/
+ZEPHYR_HTTP_LICENSE "Apache-2.0"
+

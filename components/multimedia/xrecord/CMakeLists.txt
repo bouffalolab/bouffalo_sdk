@@ -1,0 +1,11 @@
+sdk_generate_library()
+
+sdk_add_include_directories(include)
+sdk_library_add_sources(utils/uri_parse.c)
+sdk_library_add_sources(recio/recio.c)
+sdk_library_add_sources(recio/ws.c)
+sdk_library_add_sources(recio/ringb.c)
+sdk_library_add_sources(recio/mic.c)
+sdk_library_add_sources(recio/null.c)
+sdk_library_add_sources(cli/cli_record.c)
+sdk_library_add_sources(record/record.c)

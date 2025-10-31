@@ -1,0 +1,112 @@
+#
+# Kconfig for atmodule
+#
+menu "atmodule"
+
+#
+# AT Moudle support
+#
+config ATMODULE
+    bool "Enable AT Moudele"
+    default n
+    help
+      Enable or disable compilation of the AT Moudele component.
+
+if ATMODULE
+
+    #
+    # AT Moudle transport
+    #
+    choice
+        prompt "Select atmodule transport"
+        default ATMODULE_UART
+
+    config ATMODULE_USB
+        bool "Transport us usb"
+        help
+          Transport us usb.
+
+    config ATMODULE_UART
+        bool "Transport us uart"
+        help
+          Transport us uart.
+
+    config ATMODULE_NXSPI
+        bool "Transport us nxspi"
+        help
+          Transport us nxspi.
+
+    config ATMODULE_TTY
+        bool "Transport us tty"
+        help
+          Transport us tty.
+
+    endchoice
+
+    menu "AT Module Components" 
+        depends on ATMODULE
+        # AT Moudle components support 
+        config ATMODULE_WIFI
+            bool "Enable AT WIFI module"
+            default y
+            help
+                This enables AT WIFI module support.
+        config ATMODULE_BLUETOOTH
+            bool "Enable AT BLE module"
+            help
+                This enables AT BLE module support.
+        config ATMODULE_NETWORK
+            bool "Enable AT network module"
+            help
+                This enables AT network support.
+        config ATMODULE_HTTP
+            depends on ATMODULE_NETWORK
+            bool "Enable AT HTTP module"
+            help
+                This enables AT HTTP module support.
+         config ATMODULE_MQTT
+            depends on ATMODULE_NETWORK
+            bool "Enable AT MQTT module"
+            help
+                This enables AT MQTT module support.
+        config ATMODULE_FS
+            bool "Enable AT FS module"
+            help
+                This enables AT FS module support.
+        config ATMODULE_OTA
+            bool "Enable AT OTA module"
+            help
+                This enables AT OTA module support.
+        config ATMODULE_LP
+            bool "Enable AT LowPower module"
+            help
+                This enables AT LowPower module support.
+        config ATMODULE_FLASH
+            bool "Enable AT flash r/w/e module"
+            help
+                This enables AT flash r/w/e module support.
+        config ATMODULE_EFUSE
+            bool "Enable AT efuse r/w module"
+            help
+                This enables AT efuse r/w module support.
+        config ATMODULE_GPIO
+            bool "Enable AT GPIO module"
+            help
+                This enables AT GPIO module support.
+        config ATMODULE_CONFIG_STORAGE
+            bool "Enable AT Module Configuration Persistent Storage"
+            default y
+            help
+                This enables AT Module Configuration Persistent Storage.
+        config ATMODULE_ANTENNA_CTL
+            depends on ATMODULE_WIFI
+            bool "Enable AT Module antenna diversity control"
+            help
+                This enables AT Module antenna diversity control.
+
+    endmenu  # Atmodule Components
+
+endif  # ATMODULE
+
+endmenu  # atmodule
+

@@ -1,0 +1,8 @@
+#
+# Kconfig for crypto
+#
+menu "crypto"
+
+source "$BL_SDK_BASE/components/crypto/mbedtls/Kconfig"
+
+endmenu

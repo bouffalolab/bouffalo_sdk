@@ -1,0 +1,72 @@
+define task_dump
+  # 30 words, 120 bytes for general register
+  # 34 words, 136 bytes for fp register
+  set $SAVE_FRAME_SIZE=30
+  #set $SAVE_FRAME_SIZE=30 + 34
+  p *(TCB_t *)$arg0
+  set $pc = *((TCB_t *)$arg0).pxTopOfStack - 4
+  set $sp = ((TCB_t *)$arg0).pxTopOfStack + $SAVE_FRAME_SIZE
+  # have can run bt
+
+  set $ra = *(uint32_t *)($sp - 120 + 4)
+  set $t0 = *(uint32_t *)($sp - 120 + 8)
+  set $t1 = *(uint32_t *)($sp - 120 + 12)
+  set $t2 = *(uint32_t *)($sp - 120 + 16)
+  set $s0 = *(uint32_t *)($sp - 120 + 20)
+  set $s1 = *(uint32_t *)($sp - 120 + 24)
+  set $a0 = *(uint32_t *)($sp - 120 + 28)
+  set $a1 = *(uint32_t *)($sp - 120 + 32)
+  set $a2 = *(uint32_t *)($sp - 120 + 36)
+  set $a3 = *(uint32_t *)($sp - 120 + 40)
+  set $a4 = *(uint32_t *)($sp - 120 + 44)
+  set $a5 = *(uint32_t *)($sp - 120 + 48)
+  set $a6 = *(uint32_t *)($sp - 120 + 52)
+  set $a7 = *(uint32_t *)($sp - 120 + 56)
+  set $s2 = *(uint32_t *)($sp - 120 + 60)
+  set $s3 = *(uint32_t *)($sp - 120 + 64)
+  set $s4 = *(uint32_t *)($sp - 120 + 68)
+  set $s5 = *(uint32_t *)($sp - 120 + 72)
+  set $s6 = *(uint32_t *)($sp - 120 + 76)
+  set $s7 = *(uint32_t *)($sp - 120 + 80)
+  set $s8 = *(uint32_t *)($sp - 120 + 84)
+  set $s9 = *(uint32_t *)($sp - 120 + 88)
+  set $s10 = *(uint32_t *)($sp - 120 + 92)
+  set $s11 = *(uint32_t *)($sp - 120 + 96)
+  set $t3 = *(uint32_t *)($sp - 120 + 100)
+  set $t4 = *(uint32_t *)($sp - 120 + 104)
+  set $t5 = *(uint32_t *)($sp - 120 + 108)
+  set $t6 = *(uint32_t *)($sp - 120 + 112)
+  bt
+end
+define task_list
+  set $item = $arg0.xListEnd.pxPrevious
+  while ($item != &$arg0.xListEnd)
+    p $item.pvOwner
+    p ((TCB_t *)$item.pvOwner)->pcTaskName
+    set $item = $item.pxPrevious
+  end
+end
+define task_list_ready
+  set $i = 0
+  while ($i < sizeof(pxReadyTasksLists)/sizeof(struct xLIST))
+      task_list pxReadyTasksLists[$i]
+      set $i = $i + 1
+  end
+end
+define task_list_wait
+  # Delay
+  task_list xDelayedTaskList1
+  task_list xDelayedTaskList2
+  # PendingReady
+  task_list xPendingReadyList
+  # Suspend
+  task_list xSuspendedTaskList
+end
+
+file build/build_out/crash_bl616.elf
+target remote :1234
+restore build/build_out/crash_bl616.elf
+restore crash.bin
+p/x elf_build_id
+p/x core_build_id
+task_dump pxCurrentTCB

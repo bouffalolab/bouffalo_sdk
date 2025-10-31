@@ -1,0 +1,47 @@
+#
+# Kconfig for wireless
+#
+menu "Wireless"
+
+#
+# Wi‑Fi support
+#
+config CONFIG_WIRELESS_ENABLE
+    bool "Enable Wi‑Fi"
+    default y
+    help
+      Enable or disable compilation of the Wi‑Fi component.
+
+    # Automatically enable the Coexistence module if BT/BLE is enabled
+    select CONFIG_COEX_MODULE_ENABLE if CONFIG_BTBLE_ENABLE
+
+if CONFIG_WIRELESS_ENABLE
+
+    #
+    # Wi‑Fi operating modes
+    #
+    choice
+        prompt "Select Wi‑Fi mode"
+        default WIFI_MODE_APSTA
+
+    config WIFI_MODE_STA
+        bool "Station (STA) mode"
+        help
+          Device operates as a Wi‑Fi station (client).
+
+    config WIFI_MODE_AP
+        bool "Access Point (AP) mode"
+        help
+          Device operates as a Wi‑Fi access point (host).
+
+    config WIFI_MODE_APSTA
+        bool "AP+STA (dual) mode"
+        help
+          Device operates simultaneously as AP and STA.
+
+    endchoice
+
+endif  # CONFIG_WIRELESS_ENABLE
+
+endmenu  # Wireless
+

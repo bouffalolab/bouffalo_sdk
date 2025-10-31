@@ -1,0 +1,45 @@
+stages:
+  - review
+
+commit_message_check:
+  stage: review
+  tags:
+    - bouffalosdk-builder
+  script:
+    - |
+      COMMIT_MSG=$(git log -1 --pretty=%B)
+      if ! python3 -m pip show openai &> /dev/null; then
+        echo "openai is not installed. Installing now..."
+        python3 -m pip install openai
+      else
+        echo "openai is already installed."
+      fi
+      if ! python3 -m pip show requests &> /dev/null; then
+        echo "requests is not installed. Installing now..."
+        python3 -m pip install requests
+      else
+        echo "requests is already installed."
+      fi
+      python3 scripts/commit_check.py "$COMMIT_MSG" sk-110385e2f0e34f6b934f96904da1734d
+
+    # get Merge Request
+    - |
+      if [ -n "$CI_MERGE_REQUEST_ID" ]; then
+        echo "Fetching origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME..."
+        git fetch --depth=100 origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        DIFF_FILE_NAME="${CI_COMMIT_SHA}.diff"
+        git diff "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD" > "$DIFF_FILE_NAME" || true
+        # Check that diff file exists and show its size & first few lines
+        if [ -f "$DIFF_FILE_NAME" ]; then
+          echo "✅ Diff file created: $DIFF_FILE_NAME ($(wc -l < "$DIFF_FILE_NAME") lines)"
+          cat "$DIFF_FILE_NAME" | head -n 100
+          python3 scripts/diff_check.py "$DIFF_FILE_NAME" sk-110385e2f0e34f6b934f96904da1734d
+        else
+          echo "❌ Diff file not found!"
+          exit 1
+        fi
+      else
+        echo "Skipping non‑Merge Request scenario."
+      fi
+  only:
+    - merge_requests

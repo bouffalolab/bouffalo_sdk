@@ -1,0 +1,187 @@
+include $(BL_SDK_BASE)/board.build
+
+# avoid 'Entering|Leaving directory' messages
+ifndef VERBOSE
+MAKEFLAGS += --no-print-directory
+endif
+
+BUILD_DIR?=build
+
+ifeq ($(OS),Windows_NT)
+    ELF_FILE := $(firstword $(wildcard build/build_out/*.elf))
+else
+    ELF_FILE := $(shell find build/build_out -name "*.elf" 2>/dev/null | head -n1)
+endif
+
+ifeq ($(strip $(ELF_FILE)),)
+    PROJ_NAME :=
+else
+    PROJ_NAME := $(basename $(notdir $(ELF_FILE)))
+endif
+
+command_flash = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
+	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --config=flash_prog_cfg.ini
+command_ram = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
+	--port=$(COMX) --chipname=$(CHIP) --cpu_id=$(CPU_ID) --firmware=$(BUILD_DIR)/build_out/$(PROJ_NAME)*.bin --ram
+command_efuse = $(BL_FLASH_PROGRAM) --interface=uart --baudrate=$(BAUDRATE) \
+	--port=$(COMX) --chipname=$(CHIP) --efusefile=$(BUILD_DIR)/build_out/efusedata.bin
+command_puncover = $(PUNCOVER_PROGRAM) \
+	--elf_file ./$(BUILD_DIR)/build_out/*.elf --map_file ./$(BUILD_DIR)/build_out/*.map \
+	--build_dir ./$(BUILD_DIR) --src_root ${BL_SDK_BASE} --port 5001
+
+ifeq ($(OS),Windows_NT)
+	CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake.exe
+	BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
+	PUNCOVER_PROGRAM = puncover_riscv.exe
+	cmake_generator = "MinGW Makefiles"
+else
+	ifeq ($(shell uname),Darwin)
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-macos
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
+	else ifeq ($(shell uname),FreeBSD)
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-freebsd
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
+	else ifeq ($(shell arch),aarch64)
+		CMAKE = cmake # use user cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-arm
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
+	else ifeq ($(patsubst %WSL2,WSL2,$(shell uname -r)), WSL2)
+		ifeq ($(patsubst /dev/tty%,/dev/tty,$(COMX)), /dev/tty)
+			# Linux serial port style, try to flash firmware with BLFlashCommand-ubuntu
+			CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+			BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
+			PUNCOVER_PROGRAM = puncover_riscv
+			cmake_generator = "Unix Makefiles"
+		else
+			CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+			BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand.exe
+			PUNCOVER_PROGRAM = puncover_riscv
+			cmake_generator = "Unix Makefiles"
+		endif
+	else
+		CMAKE = $(BL_SDK_BASE)/tools/cmake/bin/cmake
+		BL_FLASH_PROGRAM = ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu
+		PUNCOVER_PROGRAM = puncover_riscv
+		cmake_generator = "Unix Makefiles"
+	endif
+endif
+
+# The command to remove a file.
+RM = $(CMAKE) -E remove_directory
+
+CPU_ID ?=
+CPU_MODEL ?=a0
+CONFIG_ROMAPI ?=y
+CONFIG_DEBUG ?=y
+CONFIG_TLSF ?=y
+CONFIG_COREDUMP ?=y
+CONFIG_ANTI_ROLLBACK ?= n
+CONFIG_APP_ANTI_ROLLBACK_VER ?= 0
+CONFIG_XTAL_POWER_TYPE_ACTIVE ?= n
+COMX ?=COM5
+BAUDRATE ?=2000000
+BOARD_DIR ?=
+VSCODE_PARSE_EN ?=y
+
+#cmake definition config
+cmake_definition+= -DCROSS_COMPILE=${CROSS_COMPILE}
+cmake_definition+= -DCHIP=$(CHIP)
+cmake_definition+= -DCPU_ID=$(CPU_ID)
+cmake_definition+= -DCPU_MODEL=$(CPU_MODEL)
+cmake_definition+= -DBOARD=$(BOARD)
+cmake_definition+= -DBOARD_DIR=$(BOARD_DIR)
+cmake_definition+= -DCONFIG_DEBUG=$(CONFIG_DEBUG)
+cmake_definition+= -DCONFIG_ROMAPI=$(CONFIG_ROMAPI)
+cmake_definition+= -DCONFIG_COMX=$(COMX)
+cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF
+cmake_definition+= -DCONFIG_TLSF=$(CONFIG_TLSF)
+cmake_definition+= -DCONFIG_COREDUMP=$(CONFIG_COREDUMP)
+cmake_definition+= -DCMAKE_COLOR_DIAGNOSTICS=ON
+cmake_definition+= -DCONFIG_ANTI_ROLLBACK=$(CONFIG_ANTI_ROLLBACK)
+cmake_definition+= -DCONFIG_APP_ANTI_ROLLBACK_VER=$(CONFIG_APP_ANTI_ROLLBACK_VER)
+cmake_definition+= -DCONFIG_XTAL_POWER_TYPE_ACTIVE=$(CONFIG_XTAL_POWER_TYPE_ACTIVE)
+cmake_definition+= -DBUILD_DIR=$(BUILD_DIR)
+cmake_definition+= -DVSCODE_PARSE_EN=$(VSCODE_PARSE_EN)
+cmake_definition+= -DSDK_DEMO_PATH=$(SDK_DEMO_PATH)
+cmake_definition+= -DMACSW_CONFIG_SELECT=$(MACSW_CONFIG_SELECT)
+
+
+$(BUILD_DIR): Makefile cmake_cache
+	$(MAKE) -C $(BUILD_DIR) pre_build
+	$(MAKE) -C $(BUILD_DIR) -j8
+	$(MAKE) -C $(BUILD_DIR) post_build
+	$(MAKE) -C $(BUILD_DIR) combine
+
+cmake_cache:
+	$(CMAKE) -S . -B $(BUILD_DIR) -G $(cmake_generator) $(cmake_definition)
+
+app_deps:
+	@DIR=$(BUILD_DIR) sh -c 'find $${DIR} -mindepth 4 -name CMakeFiles |while read x; do y=$${x##$${DIR}/build_out/}; echo $${y%%CMakeFiles}; done'
+
+ninja:Makefile
+	$(CMAKE) -S . -B $(BUILD_DIR) -G Ninja $(cmake_definition)
+	cd $(BUILD_DIR) && ninja && ninja combine
+
+clean::
+	$(RM) $(BUILD_DIR)
+
+# Pack built outs and clean
+pack_clean::
+	tar czvf $(PROJ_NAME)_imgs.tar.gz $(BUILD_DIR)/build_out/$(PROJ_NAME).*;
+	$(RM) $(BUILD_DIR)
+
+CONFIG_DOTCONFIG_FILE=.config
+CONFIG_CMAKE_FILE=.config.cmake
+
+menuconfig:
+	mkdir -p $(BUILD_DIR)/generated
+	KCONFIG_CONFIG=$(CONFIG_DOTCONFIG_FILE) python3 $(BL_SDK_BASE)/tools/kconfig/menuconfig.py
+	# Generate local config.cmake for the example
+	@python3 $(BL_SDK_BASE)/tools/kconfig/kconfig2cmake.py --config $(CONFIG_DOTCONFIG_FILE) --output $(CONFIG_CMAKE_FILE)
+	@$(MAKE) $(CONFIG_CMAKE_FILE)
+
+guiconfig:
+	mkdir -p $(BUILD_DIR)/generated
+	KCONFIG_CONFIG=$(CONFIG_DOTCONFIG_FILE) python3 $(BL_SDK_BASE)/tools/kconfig/guiconfig.py
+	# Generate local config.cmake for the example
+	@python3 $(BL_SDK_BASE)/tools/kconfig/kconfig2cmake.py --config $(CONFIG_DOTCONFIG_FILE) --output $(CONFIG_CMAKE_FILE)
+	@$(MAKE) $(CONFIG_CMAKE_FILE)
+
+diffconfig::
+	@args="$(filter-out $@,$(MAKECMDGOALS))"; \
+	if [ -z "$$args" ]; then \
+		python3 $(BL_SDK_BASE)/tools/kconfig/diffconfig.py $(USER_DOTCONFIG_FILE).old $(USER_DOTCONFIG_FILE); \
+	else \
+		python3 $(BL_SDK_BASE)/tools/kconfig/diffconfig.py $$args; \
+	fi
+
+flash:
+	$(command_flash)
+
+ram:
+	$(command_ram)
+
+whole:
+	$(CMAKE) -E copy flash_prog_cfg.ini $(BUILD_DIR)/flash_prog_cfg.ini
+	sed -i 's/\.\/build/\./g' $(BUILD_DIR)/flash_prog_cfg.ini
+	$(CMAKE) -E chdir $(BUILD_DIR) ../$(command_flash) --build
+	$(CMAKE) -E copy ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/chips/$(CHIP)/img_create/whole_flash_data.bin $(BUILD_DIR)/whole_flash_data.bin
+
+efuse:
+	$(command_efuse)
+
+puncover:
+	$(command_puncover)
+
+size:
+	$(MAKE) -C $(BUILD_DIR) size_report
+
+.PHONY: $(BUILD_DIR) clean clean-build menuconfig ninja flash efuse puncover size \
+        config-show config-info load-defconfig save-defconfig guiconfig diffconfig
+
+-include $(BL_SDK_BASE)/library.mk

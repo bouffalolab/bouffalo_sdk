@@ -1,0 +1,142 @@
+[pt_table]
+#partition table is 4K in size
+address0 = 0xE000
+address1 = 0xF000
+# If version is 2, It will use dynamic mode.
+version = 2
+
+[[pt_entry]]
+type = 16
+name = "Boot2"
+device = 0
+address0 = 0
+size0 = 0xE000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 1
+# If header is 1 and security is 1, It will be encrypted.
+security = 1
+
+[[pt_entry]]
+type = 0
+name = "FW"
+device = 0
+address0 = 0x10000
+size0 = 0x280000
+address1 = 0x290000
+size1 = 0x200000
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 1
+# If header is 1 and security is 1, It will be encrypted.
+security = 1
+
+[[pt_entry]]
+type = 10
+name = "mfg"
+device = 0
+address0 = 0x290000
+size0 = 0xA0000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 1
+# If header is 1 and security is 1, It will be encrypted.
+security = 1
+
+[[pt_entry]]
+type = 2
+name = "D0FW"
+device = 0
+address0 = 0x4F0000
+size0 = 0x120000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 1
+# If header is 1 and security is 1, It will be encrypted.
+security = 1
+
+[[pt_entry]]
+type = 3
+name = "IMTB"
+device = 0
+address0 = 0x610000
+size0 = 0x2000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 0
+# If header is 1 and security is 1, It will be encrypted.
+security = 0
+
+[[pt_entry]]
+type = 4
+name = "kv"
+device = 0
+address0 = 0x620000
+size0 = 0x10000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 0
+# If header is 1 and security is 1, It will be encrypted.
+security = 0
+
+[[pt_entry]]
+type = 5
+name = "media"
+device = 0
+address0 = 0x630000
+size0 = 0x100000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 0
+# If header is 1 and security is 1, It will be encrypted.
+security = 0
+
+[[pt_entry]]
+type = 7
+name = "Yocboot"
+device = 0
+address0 = 0x730000
+size0 = 0x10000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 1
+# If header is 1 and security is 1, It will be encrypted.
+security = 1
+
+[[pt_entry]]
+type = 8
+# It shows Dts in DevCube 
+name = "factory"
+device = 0
+address0 = 0x740000
+size0 = 0x8000
+address1 = 0
+size1 = 0
+# compressed image must set len,normal image can left it to 0
+len = 0
+# If header is 1, it will add the header.
+header = 0
+# If header is 1 and security is 1, It will be encrypted.
+security = 0

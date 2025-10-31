@@ -1,0 +1,17 @@
+sdk_add_include_directories(include)
+
+if(CONFIG_INCLUDE_PHYRF_HEADER)
+sdk_add_include_directories(reg)
+sdk_add_include_directories(reg/mac154)
+sdk_add_include_directories(reg/rf)
+sdk_add_include_directories(reg/phybz)
+sdk_add_include_directories(reg/wlan11)
+endif()
+
+if(CONFIG_PHY_LPFW)
+sdk_add_static_library(lib-gcc_10.2.0-toolchain_V2.6.1/libbl616_phyrf_lpfw.a)
+elseif(CONFIG_PHY_CLI)
+sdk_add_static_library(lib-gcc_10.2.0-toolchain_V2.6.1/libbl616_phyrf_mfg.a)
+else()
+sdk_add_static_library(lib-gcc_10.2.0-toolchain_V2.6.1/libbl616_phyrf.a)
+endif()
