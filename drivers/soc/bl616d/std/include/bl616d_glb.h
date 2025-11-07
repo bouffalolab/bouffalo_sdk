@@ -164,6 +164,9 @@ extern "C" {
 #define GLB_PLL_CGEN_ISP_WIFIPLL_80M                     (2)  /*!< CGEN for WIFIPLL 80M to ISP       */
 #define GLB_PLL_CGEN_PSRAMB_WIFIPLL_320M                 (7)  /*!< CGEN for WIFIPLL 320MHz to psramB */
 #define GLB_PLL_CGEN_PSRAMB_AUPLL_DIV1                   (8)  /*!< CGEN for AUPLL_DIV1 to psramB     */
+#if !defined(CPU_MODEL_A0)
+#define GLB_PLL_CGEN_TOP_WIFIPLL_480M                    (12) /*!< CGEN for WIFIPLL 480MHz to TOP    */
+#endif
 #define GLB_PLL_CGEN_TOP_WIFIPLL_240M                    (13) /*!< CGEN for WIFIPLL 240MHz to TOP    */
 #define GLB_PLL_CGEN_TOP_WIFIPLL_320M                    (14) /*!< CGEN for WIFIPLL 320MHz to TOP    */
 /**
@@ -175,9 +178,15 @@ extern "C" {
   */
 #define GLB_MCU_SYS_CLK_RC32M                            (0) /*!< use RC32M as system clock frequency */
 #define GLB_MCU_SYS_CLK_XTAL                             (1) /*!< use XTAL as system clock */
+#if defined(CPU_MODEL_A0)
 #define GLB_MCU_SYS_CLK_CPUPLL_DIV2                      (2) /*!< use CPUPLL_DIV2 output as system clock */
 #define GLB_MCU_SYS_CLK_CPUPLL_DIV3                      (3) /*!< use CPUPLL_DIV3 output as system clock */
 #define GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M                 (4) /*!< use TOP_WIFIPLL_240M output as system clock */
+#else
+#define GLB_MCU_SYS_CLK_CPUPLL_DIV1                      (2) /*!< use CPUPLL_DIV1 output as system clock */
+#define GLB_MCU_SYS_CLK_CPUPLL_DIV3                      (3) /*!< use CPUPLL_DIV3 output as system clock */
+#define GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M                 (4) /*!< use TOP_WIFIPLL_480M output as system clock */
+#endif
 #define GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M                 (5) /*!< use TOP_WIFIPLL_320M output as system clock */
 
 /** @defgroup GLB wl x clock type definition
@@ -191,9 +200,13 @@ extern "C" {
   */
 #define GLB_WL_MCU_SYS_CLK_RC32M                         (0) /*!< use RC32M as system clock frequency */
 #define GLB_WL_MCU_SYS_CLK_XTAL                          (1) /*!< use XTAL as system clock */
-#define GLB_WL_MCU_SYS_CLK_CPUPLL_DIV1                   (2) /*!< use CPUPLL_DIV2 output as system clock */
-#define GLB_WL_MCU_SYS_CLK_CPUPLL_DIV2                   (3) /*!< use CPUPLL_DIV3 output as system clock */
-#define GLB_WL_MCU_SYS_CLK_CPUPLL_DIV3                   (4) /*!< use CPUPLL_DIV4 output as system clock */
+#if defined(CPU_MODEL_A0)
+#define GLB_WL_MCU_SYS_CLK_CPUPLL_DIV1                   (2) /*!< use CPUPLL_DIV1 output as system clock */
+#else
+#define GLB_WL_MCU_SYS_CLK_WIFIPLL_DIV2                  (2) /*!< use WIFIPLL_DIV2 output as system clock */
+#endif
+#define GLB_WL_MCU_SYS_CLK_CPUPLL_DIV2                   (3) /*!< use CPUPLL_DIV2 output as system clock */
+#define GLB_WL_MCU_SYS_CLK_CPUPLL_DIV3                   (4) /*!< use CPUPLL_DIV3 output as system clock */
 
 /**
   * @}
@@ -346,20 +359,45 @@ typedef struct {
 #define GLB_PERI_DMA_I2C_0_RX               (6)  /*!< i2c_0_rx */
 #define GLB_PERI_DMA_I2C_0_TX               (7)  /*!< i2c_0_tx */
 #define GLB_PERI_DMA_IRTX_TX                (8)  /*!< irtx_tx  */
-#define GLB_PERI_DMA_GPIO_TX                (9)  /*!< gpio_tx  */
+#define GLB_PERI_DMA_WO                     (9)  /*!< wo  */
 #define GLB_PERI_DMA_SPI_RX                 (10) /*!< spi_rx   */
 #define GLB_PERI_DMA_SPI_TX                 (11) /*!< spi_tx   */
-#define GLB_PERI_DMA_AUDIO_RX               (12) /*!< audio_rx */
-#define GLB_PERI_DMA_AUDIO_TX               (13) /*!< audio_tx */
+#define GLB_PERI_DMA_AUDAC_TX               (13) /*!< audio_dac_tx */
 #define GLB_PERI_DMA_I2C_1_RX               (14) /*!< i2c_1_rx */
 #define GLB_PERI_DMA_I2C_1_TX               (15) /*!< i2c_1_tx */
 #define GLB_PERI_DMA_I2S_0_RX               (16) /*!< i2s_0_rx */
 #define GLB_PERI_DMA_I2S_0_TX               (17) /*!< i2s_0_tx */
-#define GLB_PERI_DMA_PDM_RX                 (18) /*!< pdm_rx   */
-#define GLB_PERI_DMA_PADC                   (19) /*!< padc     */
-#define GLB_PERI_DMA_GAUGE                  (20) /*!< gauge    */
-#define GLB_PERI_DMA_GPADC                  (22) /*!< gpadc    */
-#define GLB_PERI_DMA_GPDAC_TX               (23) /*!< gpdac_tx */
+#define GLB_PERI_DMA_ADC0                   (18) /*!< adc0 */
+#define GLB_PERI_DMA_ADC1                   (19) /*!< adc1 */
+#define GLB_PERI_DMA_DBI_TX                 (20) /*!< dbi_tx */
+#define GLB_PERI_DMA_AUADC_RX               (21) /*!< audio_adc_rx */
+#if defined(CPU_MODEL_A0)
+#define GLB_PERI_DMA_DAC                    (23) /*!< gpdac */
+#define GLB_PERI_DMA_PEC_SM0_RX             (24) /*!< pec_sm0_rx */
+#define GLB_PERI_DMA_PEC_SM1_RX             (25) /*!< pec_sm1_rx */
+#define GLB_PERI_DMA_PEC_SM2_RX             (26) /*!< pec_sm2_rx */
+#define GLB_PERI_DMA_PEC_SM3_RX             (27) /*!< pec_sm3_rx */
+#define GLB_PERI_DMA_PEC_SM0_TX             (28) /*!< pec_sm0_tx */
+#define GLB_PERI_DMA_PEC_SM1_TX             (29) /*!< pec_sm1_tx */
+#define GLB_PERI_DMA_PEC_SM2_TX             (30) /*!< pec_sm2_tx */
+#define GLB_PERI_DMA_PEC_SM3_TX             (31) /*!< pec_sm3_tx */
+#else
+#define GLB_PERI_DMA_DSI_TX                 (22) /*!< dsi_tx */
+#define GLB_PERI_DMA_DSI_RX                 (23) /*!< dsi_rx */
+#define GLB_PERI_DMA_SPI1_RX                (24) /*!< spi1_rx */
+#define GLB_PERI_DMA_SPI1_TX                (25) /*!< spi1_tx */
+#define GLB_PERI_DMA_SPI2_RX                (26) /*!< spi2_rx */
+#define GLB_PERI_DMA_SPI2_TX                (27) /*!< spi2_tx */
+
+#define GLB_PERI_DMA_PEC_SM0_TX             (28) /*!< pec_sm0_tx, only for DMA0 */
+#define GLB_PERI_DMA_PEC_SM1_TX             (29) /*!< pec_sm1_tx, only for DMA0 */
+#define GLB_PERI_DMA_PEC_SM2_TX             (28) /*!< pec_sm2_tx, only for DMA1 */
+#define GLB_PERI_DMA_PEC_SM3_TX             (29) /*!< pec_sm3_tx, only for DMA1 */
+#define GLB_PERI_DMA_PEC_SM0_RX             (30) /*!< pec_sm0_rx, only for DMA0 */
+#define GLB_PERI_DMA_PEC_SM1_RX             (31) /*!< pec_sm1_rx, only for DMA0 */
+#define GLB_PERI_DMA_PEC_SM2_RX             (30) /*!< pec_sm2_rx, only for DMA1 */
+#define GLB_PERI_DMA_PEC_SM3_RX             (31) /*!< pec_sm3_rx, only for DMA1 */
+#endif
 /**
   * @}
   */
@@ -368,6 +406,7 @@ typedef struct {
   * @{
   */
 #define GLB_PERI_DMA_CN_SEL_DMA0            (0) /*!< peripheral DMA channel select DMA0 */
+#define GLB_PERI_DMA_CN_SEL_DMA1            (1) /*!< peripheral DMA channel select DMA1 */
 /**
   * @}
   */
@@ -1104,21 +1143,39 @@ typedef union {
 /** @defgroup  GLB_PLL_CGEN_TYPE
  *  @{
  */
+#if defined(CPU_MODEL_A0)
 #define IS_GLB_PLL_CGEN_TYPE(type) (((type) == GLB_PLL_CGEN_ISP_WIFIPLL_80M) ||     \
                                     ((type) == GLB_PLL_CGEN_PSRAMB_WIFIPLL_320M) || \
                                     ((type) == GLB_PLL_CGEN_PSRAMB_AUPLL_DIV1) ||   \
                                     ((type) == GLB_PLL_CGEN_TOP_WIFIPLL_240M) ||    \
                                     ((type) == GLB_PLL_CGEN_TOP_WIFIPLL_320M))
+#else
+#define IS_GLB_PLL_CGEN_TYPE(type) (((type) == GLB_PLL_CGEN_ISP_WIFIPLL_80M) ||     \
+                                    ((type) == GLB_PLL_CGEN_PSRAMB_WIFIPLL_320M) || \
+                                    ((type) == GLB_PLL_CGEN_PSRAMB_AUPLL_DIV1) ||   \
+                                    ((type) == GLB_PLL_CGEN_TOP_WIFIPLL_480M) ||    \
+                                    ((type) == GLB_PLL_CGEN_TOP_WIFIPLL_240M) ||    \
+                                    ((type) == GLB_PLL_CGEN_TOP_WIFIPLL_320M))
+#endif
 
 /** @defgroup  GLB_MCU_SYS_CLK_TYPE
  *  @{
  */
+#if defined(CPU_MODEL_A0)
 #define IS_GLB_MCU_SYS_CLK_TYPE(type) (((type) == GLB_MCU_SYS_CLK_RC32M) ||            \
                                        ((type) == GLB_MCU_SYS_CLK_XTAL) ||             \
                                        ((type) == GLB_MCU_SYS_CLK_CPUPLL_DIV2) ||      \
                                        ((type) == GLB_MCU_SYS_CLK_CPUPLL_DIV3) ||      \
                                        ((type) == GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M) || \
                                        ((type) == GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M))
+#else
+#define IS_GLB_MCU_SYS_CLK_TYPE(type) (((type) == GLB_MCU_SYS_CLK_RC32M) ||            \
+                                       ((type) == GLB_MCU_SYS_CLK_XTAL) ||             \
+                                       ((type) == GLB_MCU_SYS_CLK_CPUPLL_DIV1) ||      \
+                                       ((type) == GLB_MCU_SYS_CLK_CPUPLL_DIV3) ||      \
+                                       ((type) == GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M) || \
+                                       ((type) == GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M))
+#endif
 
 /** @defgroup  GLB_CPUPLL_REF_CLK_TYPE
  *  @{
@@ -1175,6 +1232,7 @@ typedef union {
 /** @defgroup  GLB_PERI_DMA_TYPE
  *  @{
  */
+#if defined(CPU_MODEL_A0)
 #define IS_GLB_PERI_DMA_TYPE(type) (((type) == GLB_PERI_DMA_UART0_RX) || \
                                     ((type) == GLB_PERI_DMA_UART0_TX) || \
                                     ((type) == GLB_PERI_DMA_UART1_RX) || \
@@ -1183,26 +1241,71 @@ typedef union {
                                     ((type) == GLB_PERI_DMA_UART2_TX) || \
                                     ((type) == GLB_PERI_DMA_I2C_0_RX) || \
                                     ((type) == GLB_PERI_DMA_I2C_0_TX) || \
-                                    ((type) == GLB_PERI_DMA_IRTX_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_GPIO_TX) ||  \
-                                    ((type) == GLB_PERI_DMA_SPI_RX) ||   \
-                                    ((type) == GLB_PERI_DMA_SPI_TX) ||   \
-                                    ((type) == GLB_PERI_DMA_AUDIO_RX) || \
-                                    ((type) == GLB_PERI_DMA_AUDIO_TX) || \
+                                    ((type) == GLB_PERI_DMA_IRTX_TX) || \
+                                    ((type) == GLB_PERI_DMA_WO) || \
+                                    ((type) == GLB_PERI_DMA_SPI_RX) || \
+                                    ((type) == GLB_PERI_DMA_SPI_TX) || \
+                                    ((type) == GLB_PERI_DMA_AUDAC_TX) || \
                                     ((type) == GLB_PERI_DMA_I2C_1_RX) || \
                                     ((type) == GLB_PERI_DMA_I2C_1_TX) || \
                                     ((type) == GLB_PERI_DMA_I2S_0_RX) || \
                                     ((type) == GLB_PERI_DMA_I2S_0_TX) || \
-                                    ((type) == GLB_PERI_DMA_PDM_RX) ||   \
-                                    ((type) == GLB_PERI_DMA_PADC) ||     \
-                                    ((type) == GLB_PERI_DMA_GAUGE) ||    \
-                                    ((type) == GLB_PERI_DMA_GPADC) ||    \
-                                    ((type) == GLB_PERI_DMA_GPDAC_TX))
+                                    ((type) == GLB_PERI_DMA_ADC0) || \
+                                    ((type) == GLB_PERI_DMA_ADC1) || \
+                                    ((type) == GLB_PERI_DMA_DBI_TX) || \
+                                    ((type) == GLB_PERI_DMA_AUADC_RX) || \
+                                    ((type) == GLB_PERI_DMA_DAC) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM0_RX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM1_RX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM2_RX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM3_RX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM0_TX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM1_TX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM2_TX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM3_TX))
+#else
+#define IS_GLB_PERI_DMA_TYPE(type) (((type) == GLB_PERI_DMA_UART0_RX) || \
+                                    ((type) == GLB_PERI_DMA_UART0_TX) || \
+                                    ((type) == GLB_PERI_DMA_UART1_RX) || \
+                                    ((type) == GLB_PERI_DMA_UART1_TX) || \
+                                    ((type) == GLB_PERI_DMA_UART2_RX) || \
+                                    ((type) == GLB_PERI_DMA_UART2_TX) || \
+                                    ((type) == GLB_PERI_DMA_I2C_0_RX) || \
+                                    ((type) == GLB_PERI_DMA_I2C_0_TX) || \
+                                    ((type) == GLB_PERI_DMA_IRTX_TX) || \
+                                    ((type) == GLB_PERI_DMA_WO) || \
+                                    ((type) == GLB_PERI_DMA_SPI_RX) || \
+                                    ((type) == GLB_PERI_DMA_SPI_TX) || \
+                                    ((type) == GLB_PERI_DMA_AUDAC_TX) || \
+                                    ((type) == GLB_PERI_DMA_I2C_1_RX) || \
+                                    ((type) == GLB_PERI_DMA_I2C_1_TX) || \
+                                    ((type) == GLB_PERI_DMA_I2S_0_RX) || \
+                                    ((type) == GLB_PERI_DMA_I2S_0_TX) || \
+                                    ((type) == GLB_PERI_DMA_ADC0) || \
+                                    ((type) == GLB_PERI_DMA_ADC1) || \
+                                    ((type) == GLB_PERI_DMA_DBI_TX) || \
+                                    ((type) == GLB_PERI_DMA_AUADC_RX) || \
+                                    ((type) == GLB_PERI_DMA_DSI_TX) || \
+                                    ((type) == GLB_PERI_DMA_DSI_RX) || \
+                                    ((type) == GLB_PERI_DMA_SPI1_RX) || \
+                                    ((type) == GLB_PERI_DMA_SPI1_TX) || \
+                                    ((type) == GLB_PERI_DMA_SPI2_RX) || \
+                                    ((type) == GLB_PERI_DMA_SPI2_TX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM0_TX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM1_TX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM2_TX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM3_TX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM0_RX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM1_RX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM2_RX) || \
+                                    ((type) == GLB_PERI_DMA_PEC_SM3_RX))
+#endif
 
 /** @defgroup  GLB_PERI_DMA_CN_SEL_TYPE
  *  @{
  */
-#define IS_GLB_PERI_DMA_CN_SEL_TYPE(type) (((type) == GLB_PERI_DMA_CN_SEL_DMA0))
+#define IS_GLB_PERI_DMA_CN_SEL_TYPE(type) (((type) == GLB_PERI_DMA_CN_SEL_DMA0) || \
+                                           ((type) == GLB_PERI_DMA_CN_SEL_DMA1))
 
 /** @defgroup  GLB_IR_CLK_SRC_TYPE
  *  @{

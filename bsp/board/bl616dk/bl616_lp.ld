@@ -25,6 +25,10 @@ __RFTLV_SIZE_HOLE = 2K;
 __RFTLV_HEAD1_H = (0x46524C42); /* BLRF */
 __RFTLV_HEAD1_L = (0x41524150); /* PAPA */
 
+/* Link stage feature control */
+PROVIDE( __macsw_conf_bl_wifi_ps_enable = 1 );
+PROVIDE( __macsw_conf_plat_dma_enable = 0 );
+
 VerOffset = 0xc00;
 
 MEMORY
@@ -318,7 +322,7 @@ SECTIONS
     __edata_etext_final = ALIGN(__etext_final, 1024);
     ASSERT(__etext_final <= ORIGIN(xip_memory) + LENGTH(xip_memory), "code memory overflow")
 
-    .lpfw : 
+    .lpfw :
     {
         /* For DMA Burst copy lpfw binary from flash to ram */
         . = ALIGN(32);
@@ -427,7 +431,7 @@ SECTIONS
         . = (__lpfw_share_used < __lpfw_share_end) ? __lpfw_share_end : .;
 
     } > ram_wifi_nocache
- 
+
     .wram.nocache_noinit (NOLOAD) :
     {
         PROVIDE( __wifi_bss_start = ADDR(.wram.nocache_noinit) );
@@ -453,4 +457,3 @@ SECTIONS
     PROVIDE( _heap_wifi_size = ORIGIN(ram_wifi_nocache) + LENGTH(ram_wifi_nocache) - _heap_wifi_start );
     PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
 }
-

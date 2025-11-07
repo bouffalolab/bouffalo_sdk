@@ -15,7 +15,7 @@
 #include "state_machine.h"
 #include "l2_packet/l2_packet.h"
 #include "common/eapol_common.h"
-#include "crypto/aes_wrap.h"
+#include "wpa_crypto/aes_wrap.h"
 #include "ieee802_1x_cp.h"
 #include "ieee802_1x_key.h"
 #include "ieee802_1x_kay.h"

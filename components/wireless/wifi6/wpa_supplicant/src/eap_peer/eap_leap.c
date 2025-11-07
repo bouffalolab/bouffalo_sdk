@@ -9,9 +9,9 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/ms_funcs.h"
-#include "crypto/crypto.h"
-#include "crypto/random.h"
+#include "wpa_crypto/ms_funcs.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/random.h"
 #include "eap_i.h"
 
 #define LEAP_VERSION 1

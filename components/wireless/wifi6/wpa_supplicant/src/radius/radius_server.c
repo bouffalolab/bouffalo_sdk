@@ -17,7 +17,7 @@
 #include "eloop.h"
 #include "eap_server/eap.h"
 #include "ap/ap_config.h"
-#include "crypto/tls.h"
+#include "wpa_crypto/tls.h"
 #include "radius_server.h"
 
 /**

@@ -9,9 +9,9 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/ms_funcs.h"
-#include "crypto/sha1.h"
-#include "crypto/tls.h"
+#include "wpa_crypto/ms_funcs.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/tls.h"
 #include "eap_common/chap.h"
 #include "eap_common/eap_ttls.h"
 #include "mschapv2.h"

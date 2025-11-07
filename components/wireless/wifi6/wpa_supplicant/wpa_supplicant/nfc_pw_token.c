@@ -9,7 +9,7 @@
 #include "includes.h"
 
 #include "utils/common.h"
-#include "crypto/random.h"
+#include "wpa_crypto/random.h"
 #include "wpa_supplicant_i.h"
 #include "config.h"
 #include "wps_supplicant.h"

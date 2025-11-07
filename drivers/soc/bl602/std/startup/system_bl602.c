@@ -76,7 +76,7 @@ void SystemInit(void)
     /* init bor for all platform */
     // HBN_BOR_CFG_Type borCfg = { 0 /* pu_bor */, 0 /* irq_bor_en */, 1 /* bor_vth */, 0 /* bor_sel */ };
     // HBN_Set_BOR_Cfg(&borCfg);
-#if defined(CFG_BLE_ENABLE)
+
     extern uint8_t __LD_CONFIG_EM_SEL;
     volatile uint32_t em_size;
 
@@ -94,7 +94,7 @@ void SystemInit(void)
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_EM_SEL, 0x00); 
     }
     BL_WR_REG(GLB_BASE, GLB_SEAM_MISC, tmpVal);
-#endif
+
 }
 
 void System_Post_Init(void)

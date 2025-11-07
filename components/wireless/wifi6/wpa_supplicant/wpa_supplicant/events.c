@@ -31,7 +31,7 @@
 #include "common/gas_server.h"
 #include "common/dpp.h"
 #include "common/ptksa_cache.h"
-#include "crypto/random.h"
+#include "wpa_crypto/random.h"
 #include "bssid_ignore.h"
 #include "wpas_glue.h"
 #include "wps_supplicant.h"

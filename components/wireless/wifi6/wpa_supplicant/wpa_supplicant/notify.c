@@ -18,7 +18,7 @@
 #include "dbus/dbus_new.h"
 #include "rsn_supp/wpa.h"
 #include "fst/fst.h"
-#include "crypto/tls.h"
+#include "wpa_crypto/tls.h"
 #include "bss.h"
 #include "driver_i.h"
 #include "scan.h"

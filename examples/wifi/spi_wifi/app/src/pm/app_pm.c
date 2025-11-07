@@ -28,7 +28,7 @@
 #include "board.h"
 #include "board_rf.h"
 #include "shell.h"
-#if defined(CFG_BLE_ENABLE)
+#if defined(CONFIG_BLE_ENABLE)
 #include "bluetooth.h"
 #include "conn.h"
 #include "conn_internal.h"

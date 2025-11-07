@@ -16,8 +16,8 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/ms_funcs.h"
-#include "crypto/random.h"
+#include "wpa_crypto/ms_funcs.h"
+#include "wpa_crypto/random.h"
 #include "common/wpa_ctrl.h"
 #include "mschapv2.h"
 #include "eap_i.h"

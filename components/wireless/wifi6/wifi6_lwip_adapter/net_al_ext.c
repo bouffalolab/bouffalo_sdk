@@ -361,12 +361,20 @@ static int show_ip(uint8_t fhost_vif_idx)
     if (net_al_ext_get_vif_ip(fhost_vif_idx, &ip_cfg))
         return -1;
 
+    /* Calculate subnet mask bits by counting all 1s in the mask */
+    uint32_t mask = ip_cfg.ipv4.mask;
+    int mask_bits = 0;
+    while (mask) {
+        mask_bits += (mask & 1);
+        mask >>= 1;
+    }
+
     printf(fmt, fhost_vif_idx, ifname,
                 mac_addr[0], mac_addr[1], mac_addr[2],
                 mac_addr[3], mac_addr[4], mac_addr[5],
                 ip_cfg.ipv4.addr & 0xff, (ip_cfg.ipv4.addr >> 8) & 0xff,
                 (ip_cfg.ipv4.addr >> 16) & 0xff, (ip_cfg.ipv4.addr >> 24) & 0xff,
-                32 - __builtin_clz(ip_cfg.ipv4.mask), state, connected);
+                mask_bits, state, connected);
     return 0;
 }
 
@@ -398,11 +406,10 @@ static int wifi_sta_dhcpc_start(uint8_t fhost_vif_idx)
         PLATFORM_HOOK(prevent_sleep, PSM_EVENT_CONNECT, 0);
         return -1;
     } else {
-        platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
         show_ip(fhost_vif_idx);
         PLATFORM_HOOK(prevent_sleep, PSM_EVENT_CONNECT, 0);
         if(wifi_mgmr_sta_connect_params_get() & LOW_RATE_CONNECT) {
-            wifi_mgmr_rate_config(0xFFFF);
+            wifi_mgmr_rate_config_sta(0xFFFF);
         }
     }
     return 0;
@@ -513,8 +520,6 @@ static void qc_callback(struct netif *net_if)
     ip4_addr_copy(saved_ip_addr, *netif_ip4_addr(nif));
     ip4_addr_copy(saved_ip_mask, *netif_ip4_netmask(nif));
     ip4_addr_copy(saved_ip_gw, *netif_ip4_gw(nif));
-#define  EV_WIFI                  0x0002
-#define  CODE_WIFI_ON_GOT_IP      7
     platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
 }
 
@@ -604,4 +609,35 @@ void net_al_ext_dhcp_disconnect(void)
     }
 }
 
+void net_al_ext_netif_status_callback(struct netif *netif)
+{
+    static ip4_addr_t old_addr;
+
+    printf("[lwip] netif status callback\r\n");
+    if (ip4_addr_cmp((&old_addr), netif_ip4_addr(netif)) == 0) {
+        if (ip4_addr_isany(netif_ip4_addr(netif))) {
+            platform_post_event(EV_WIFI, CODE_WIFI_ON_LOST_IP, 0);
+        } else if (netif_is_flag_set(netif, NETIF_FLAG_UP)){
+            platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
+            //wifi_mgmr_sta_ps_change();
+        }
+    }
+    ip4_addr_copy(old_addr, *netif_ip4_addr(netif));
+
+#ifdef CFG_IPV6
+    static uint8_t old_state[LWIP_IPV6_NUM_ADDRESSES];
+    uint8_t state;
+    for (uint8_t i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
+        state = netif_ip6_addr_state(netif, i);
+        if (ip6_addr_isglobal(netif_ip6_addr(netif, i))) {
+            if (state & IP6_ADDR_VALID && !(old_state[i] & IP6_ADDR_VALID)) {
+                platform_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP6, 0);
+            } else if (old_state[i] & IP6_ADDR_VALID && !(state & IP6_ADDR_VALID)){
+                platform_post_event(EV_WIFI, CODE_WIFI_ON_LOST_IP6, 0);
+            }
+        }
+        old_state[i] = netif_ip6_addr_state(netif, i);
+    }
+#endif
+}
 #endif // NET_AL_NO_IP

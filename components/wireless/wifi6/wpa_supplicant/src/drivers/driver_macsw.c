@@ -1391,6 +1391,27 @@ static int wpa_macsw_driver_update_bcn(struct wpa_macsw_driver_itf_data *drv,
 	return res;
 }
 
+int wpa_macsw_driver_control_bcn(struct wpa_macsw_driver_itf_data *drv,
+                                     uint8_t bcn_mode, int bcn_timer, bool bcn_stop)
+{
+       struct cfgmacsw_bcn_control cmd;
+       struct cfgmacsw_resp resp;
+       int res = 0;
+
+       wpa_macsw_msg_hdr_init(drv, &cmd.hdr, CFGMACSW_BCN_CONTROL_CMD, sizeof(cmd));
+       wpa_macsw_msg_hdr_init(drv, &resp.hdr, CFGMACSW_BCN_CONTROL_RESP, sizeof(resp));
+
+       cmd.fhost_vif_idx = drv->fhost_vif_idx;
+       cmd.bcn_mode = bcn_mode;
+       cmd.bcn_timer = bcn_timer;
+       cmd.bcn_stop = bcn_stop;
+
+       if (fhost_cntrl_cfgmacsw_cmd_send(&cmd.hdr, &resp.hdr) && (resp.status != CFGMACSW_SUCCESS))
+            res = -1;
+
+       return res;
+}
+
 static struct hostapd_hw_modes *wpa_macsw_driver_get_hw_feature_data(void *priv,
 								    u16 *num_modes,
 								    u16 *flags, u8 *dfs)
@@ -1425,7 +1446,8 @@ static struct hostapd_hw_modes *wpa_macsw_driver_get_hw_feature_data(void *priv,
 
 	mode = modes;
 	if (feat.chan->chan2G4_cnt) {
-		mode->mode = HOSTAPD_MODE_IEEE80211G;
+        // support work on channel 14
+        mode->mode = HOSTAPD_MODE_IEEE80211B;
 		mode->num_channels = feat.chan->chan2G4_cnt;
 		mode->channels = os_malloc(feat.chan->chan2G4_cnt *
 					   sizeof(struct hostapd_channel_data));

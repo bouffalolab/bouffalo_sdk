@@ -9,11 +9,11 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/aes_wrap.h"
-#include "crypto/crypto.h"
-#include "crypto/dh_group5.h"
-#include "crypto/sha256.h"
-#include "crypto/random.h"
+#include "wpa_crypto/aes_wrap.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/dh_group5.h"
+#include "wpa_crypto/sha256.h"
+#include "wpa_crypto/random.h"
 #include "common/ieee802_11_defs.h"
 #include "wps_i.h"
 

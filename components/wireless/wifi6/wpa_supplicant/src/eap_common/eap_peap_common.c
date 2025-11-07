@@ -9,7 +9,7 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/sha1.h"
+#include "wpa_crypto/sha1.h"
 #include "eap_peap_common.h"
 
 int peap_prfplus(int version, const u8 *key, size_t key_len,

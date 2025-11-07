@@ -9,7 +9,7 @@
 #ifndef TLSV1_RECORD_H
 #define TLSV1_RECORD_H
 
-#include "crypto/crypto.h"
+#include "wpa_crypto/crypto.h"
 
 #define TLS_MAX_WRITE_MAC_SECRET_LEN 32
 #define TLS_MAX_WRITE_KEY_LEN 32

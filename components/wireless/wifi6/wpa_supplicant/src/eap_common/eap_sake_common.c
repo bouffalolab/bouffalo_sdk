@@ -10,7 +10,7 @@
 
 #include "common.h"
 #include "wpabuf.h"
-#include "crypto/sha1.h"
+#include "wpa_crypto/sha1.h"
 #include "eap_defs.h"
 #include "eap_sake_common.h"
 

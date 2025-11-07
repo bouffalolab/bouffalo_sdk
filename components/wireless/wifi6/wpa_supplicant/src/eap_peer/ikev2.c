@@ -9,8 +9,8 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/dh_groups.h"
-#include "crypto/random.h"
+#include "wpa_crypto/dh_groups.h"
+#include "wpa_crypto/random.h"
 #include "ikev2.h"
 
 

@@ -10,9 +10,9 @@
 
 #include "utils/common.h"
 #include "utils/eloop.h"
-#include "crypto/sha1.h"
-#include "crypto/sha256.h"
-#include "crypto/random.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/sha256.h"
+#include "wpa_crypto/random.h"
 #include "wpa_auth.h"
 #include "wpa_auth_i.h"
 #include "wpa_auth_ie.h"

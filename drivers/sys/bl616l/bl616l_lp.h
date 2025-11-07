@@ -217,4 +217,19 @@ typedef struct {
 #define HBN_SYS_RESET_REASON      (iot2lp_para->reset_keep.reset_reason)
 #define HBN_SYS_RESET_REASON_CHK  (iot2lp_para->reset_keep.reset_reason_chk)
 
+/* Cause of wakeup */
+#define LPFW_WAKEUP_UNKOWN    0
+#define LPFW_WAKEUP_TIME_OUT  (1 << 0)
+#define LPFW_WAKEUP_WIFI      (1 << 1)
+#define LPFW_WAKEUP_AP_LOSS   (1 << 2)
+#define LPFW_WAKEUP_IO        (1 << 3)
+#define LPFW_WAKEUP_ACOMP     (1 << 4)
+#define LPFW_WAKEUP_BLE       (1 << 5)
+#define LPFW_WAKEUP_LOSS_CFG_OVER   (1 << 6)
+
+int bl_lp_get_wake_reason(void);
+void bl_lp_set_resume_wifi(void);
+void bl_lp_clear_resume_wifi(void);
+int bl_lp_get_resume_wifi(void);
+
 #endif

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "mac_types.h"
 
 #if defined(BL616D)
 #define MAX_FIXED_CHANNELS_LIMIT (42)
@@ -43,6 +44,8 @@
 #define  CODE_WIFI_ON_EMERGENCY_MAC     23
 #define  CODE_WIFI_ON_EXIT_PS           24
 #define  CODE_WIFI_ON_GOT_IP6           25
+#define  CODE_WIFI_ON_LOST_IP           26
+#define  CODE_WIFI_ON_LOST_IP6          27
 #define  CODE_WIFI_ON_SCAN_DONE_CONNECTING  31
 
 #define WIFI_EVENT_BEACON_IND_AUTH_OPEN            0
@@ -73,13 +76,17 @@ typedef enum
 typedef enum
 {
     ACCEPT_ACL,
-    DENY_ACL
+    DENY_ACL,
+    MAX_ACL_TYPE
 } ap_acl_type;
 
 typedef enum
 {
     ADD_ACL,
-    DELETE_ACL
+    DELETE_ACL,
+    SHOW_ACL,
+    CLEAR_ACL,
+    MAX_ACL_ACTION
 } ap_action_type;
 
 typedef enum
@@ -87,7 +94,7 @@ typedef enum
     DISABLE_ACL,
     ACCEPT_UNLESS_DENIED,
     DENY_UNLESS_ACCEPTED
-} ap_acl_prem;
+} ap_acl_perm;
 
 typedef struct wifi_mgmr_scan_item {
     uint32_t mode;
@@ -198,6 +205,30 @@ typedef struct wifi_mgmr_raw_send_params {
     uint8_t channel;
 } wifi_mgmr_raw_send_params_t;
 
+typedef void (*cb_adhoc_tx_cfm)(void *, uint32_t);
+typedef struct wifi_mgmr_adhoc_pkt_params {
+    // Ethernet frame
+    void *eth_frame;
+    // length of the packet to send
+    uint32_t len;
+    // SSID
+    char *ssid;
+    // RA
+    struct mac_addr *ra;
+    // TA
+    struct mac_addr *ta;
+} wifi_mgmr_adhoc_pkt_params_t;
+
+typedef struct wifi_mgmr_adhoc_start_params {
+    // channel for ad-hoc mode
+    uint8_t channel;
+    // cb func for rx
+    void *cb;
+    void *cb_arg;
+    // cb func for tx confirmtion
+    void *cb_tx_cfm;
+} wifi_mgmr_adhoc_start_params_t;
+
 /// ap start params
 typedef struct wifi_mgmr_ap_params {
     /// must be setted
@@ -235,6 +266,16 @@ typedef struct wifi_mgmr_ap_params {
     //  the maximum length supported is MAX_AP_VENDOR_ELEMENTS_LEN,
     /// ref wap_supplicant.conf
     char *ap_vendor_elements;
+    /// bcn_mode:
+    /// 0   Start/Stop beacon transmissions automatically
+    ///         a.Beacon transmission is NOT started when SAP is started.
+    ///         b.Once a Probe Request frame having the same SSID is received, replies with a Probe Response frame, then Beacon transmission is started.
+    ///         c.Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds.
+    /// 1   Do not transmit beacon frames
+    /// 2   Transmit beacon frames (Default)
+    uint8_t bcn_mode;
+    /// Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds
+    int bcn_timer;
     /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames
     bool disable_wmm;
 } wifi_mgmr_ap_params_t;
@@ -260,6 +301,34 @@ struct bl_frame_info
      * Received signal strength (in dBm)
      */
     int8_t rssi;
+    /**
+     * Received to ds
+     */
+    bool tods;
+    /**
+     * Received from ds
+     */
+    bool fromds;
+    /**
+     * Received rate_idx
+     */
+    int rate_idx;
+    /**
+     * Received address
+     */
+    struct mac_addr *ra;
+    /**
+     * Transmitting address
+     */
+    struct mac_addr *ta;
+    /**
+     *  Ethernet frame
+     */
+    uint8_t *eth_frame;
+    /**
+     *  Ethernet frame length
+     */
+    uint16_t eth_frame_length;
     /**
      * Frame payload. Can be NULL if monitor mode is started with @p uf parameter set to
      * true. In this case all other fields are still valid.
@@ -288,6 +357,8 @@ typedef struct wifi_mgmr_connect_ind_stat_info {
     uint8_t ch_idx;
     /// Flag indicating if the AP is supporting QoS
     bool qos;
+    /// bss mode
+    uint8_t bss_mode;
 } wifi_mgmr_connect_ind_stat_info_t;
 
 typedef struct wifi_conf {
@@ -564,6 +635,41 @@ int wifi_mgmr_sta_connect_ind_stat_get(wifi_mgmr_connect_ind_stat_info_t *wifi_m
 int wifi_mgmr_sta_scan(const wifi_mgmr_scan_params_t *config);
 
 /**
+ * wifi_mgmr_ap_bcn_mode_set
+ * Beacon Transmission Control Setting in the SAP modex
+ *
+ * Attention:
+ *  MUST called before ap start
+ * param:
+ *  bcn_mode : Configuration of beacon transmissions mode
+ *      0 : Start/Stop beacon transmissions automatically
+ *              a.Beacon transmission is NOT started when SAP is started.
+ *              b.Once a Probe Request frame having the same SSID is received, replies with a Probe Response frame, then Beacon transmission is started.
+ *              c.Beacon transmission is stopped again if no STA is associated for more than bcn_timer (configurable) seconds.
+ *      1 : Do not transmit beacon frames
+ *              Not transmit beacon frames even while in an operational state.
+ *      2 : Transmit beacon frames (Default)
+ *              Transmit beacon frames while in an operational state.
+ *  bcn_timer : Beacon Transmission Duration after all STAs are disconnected (unit: seconds)
+ *
+ * return:
+ *  0 : Success
+ *  -1 : Failed
+ *  Others is Failed
+ */
+int wifi_mgmr_ap_bcn_mode_set(uint8_t bcn_mode, int bcn_timer);
+
+/**
+ * wifi_mgmr_ap_bcn_mode_get
+ * Get Beacon Transmission Control Setting in the SAP modex
+ *
+ * param:
+ *  bcn_mode: refer to wifi_mgmr_ap_bcn_mode_set
+ *  bcn_timer: refer to wifi_mgmr_ap_bcn_mode_set
+ */
+void wifi_mgmr_ap_bcn_mode_get(uint8_t *bcn_mode, int *bcn_timer);
+
+/**
  * wifi_mgmr_sta_scanlist
  * List the scan results in last scan
  * return:
@@ -643,7 +749,7 @@ int wifi_mgmr_ap_stop(void);
  *  -1 : Failed
  *  Others is Failed
  */
-int wifi_mgmr_ap_acl_enable(ap_acl_prem default_prem);
+int wifi_mgmr_ap_acl_enable(ap_acl_perm default_perm);
 
 /**
  * wifi_mgmr_ap_acl_set
@@ -677,6 +783,48 @@ char *wifi_mgmr_mode_to_str(uint32_t mode);
  *  Others is Failed
  */
 int wifi_mgmr_mac_set(uint8_t mac[6]);
+
+/**
+ * wifi_mgmr_sta_set_mac
+ * Set mac addr for sta mode
+ * param:
+ *  param1 : Array of mac address
+ * return:
+ *  0 : Success
+ *  -1 : Failed
+ *  Others is Failed
+ *
+ * Attention:
+ *  This interface will override the modification of the MAC address in STA mode done by wifi_mgmr_mac_set().
+ *
+ * Attention:
+ *  This interface should be called before the initialization of the Wi-Fi module(wifi_start_firmware_task()).
+ *
+ * Attention:
+ *  The AP and STA MAC addresses can only differ by one bit.
+ * */
+int wifi_mgmr_sta_set_mac(uint8_t mac[6]);
+
+/**
+ * wifi_mgmr_ap_set_mac
+ * Set mac addr for ap mode
+ * param:
+ *  param1 : Array of mac address
+ * return:
+ *  0 : Success
+ *  -1 : Failed
+ *  Others is Failed
+ *
+ * Attention:
+ *  This interface will override the modification of the MAC address in AP mode done by wifi_mgmr_mac_set().
+ *
+ * Attention:
+ *  This interface should be called before the initialization of the Wi-Fi module(wifi_start_firmware_task()).
+ *
+ * Attention:
+ *  The AP and STA MAC addresses can only differ by one bit.
+ * */
+int wifi_mgmr_ap_set_mac(uint8_t mac[6]);
 
 /**
  * wifi_mgmr_sta_mac_get
@@ -1011,6 +1159,9 @@ int wifi_mgmr_ap_sta_delete(uint8_t sta_idx);
  */
 int wifi_mgmr_raw_80211_send(const wifi_mgmr_raw_send_params_t *config);
 
+int wifi_mgmr_get_stats(struct ieee80211_stats *stats, uint8_t num_stats);
+
+int wifi_mgmr_clear_stats(void);
 #ifdef CFG_BL_WIFI_PS_ENABLE
 /**
  * wifi_mgmr_null_data_send
@@ -1035,6 +1186,12 @@ int wifi_mgmr_psk_cal(char *password, const uint8_t *ssid, int ssid_len, char *o
 
 /**
  * wifi_mgmr_rate_config
+ * param: fixed_rate_cfg
+ * 11ax: MCS9-893, MCS8-881, MCS7-869, MCS6-857, MCS5-845, MCS4-833, MCS3-821, MCS2-809, MCS1-797, MCS0-785;
+ * 11n: MCS7-44, MCS6-40, MCS5-36, MCS4-32, MCS3-28, MCS2-24, MCS1-20, MCS0-16;
+ * 11g: 54M-15, 48M-14, 36M-13, 24M-12, 18M-11, 12M-10, 9M-9, 6M-8;
+ * 11b: 11M-7, 5.5M-5, 2M-3, 1M-1
+ *
  * return:
  *  0 : Success
  *  -1 : Failed
@@ -1056,6 +1213,153 @@ int wifi_mgmr_rate_config(uint16_t fixed_rate_cfg);
  *  Others is Failed
  */
 int wifi_mgmr_set_ht40_enable(uint8_t value);
+
+/*
+ * wifi_mgmr_sta_ap_tx_power_set
+ * Set value of Tx power in unit of 0.5dBm for sta/ap mode
+ * ref tx_power_limit_tables[2] for setting limit
+*/
+int wifi_mgmr_sta_ap_tx_power_set(tx_pwr_table_t *pwr_table);
+
+/*
+ * wifi_mgmr_sta_ap_tx_power_set
+ * Get value of Tx power in unit of 0.5dBm for sta/ap mode
+*/
+int wifi_mgmr_sta_ap_tx_power_get(void);
+
+/**
+ * wifi_mgmr_sta_ap_retry_limit_set
+ * Set tx retry limit for ap/sta mode
+ */
+int wifi_mgmr_sta_ap_retry_limit_set(uint8_t retry_limit);
+
+/**
+ * wifi_mgmr_sta_ap_retry_limit_set
+ * Get tx retry limit for ap/sta mode
+ */
+uint32_t wifi_mgmr_sta_ap_retry_limit_get(void);
+
+/**
+ * wifi_mgmr_set_tx_queue_params
+ * Set CWmin, CWmax, and AIFS for each Tx Queue
+ */
+int wifi_mgmr_set_tx_queue_params(int queue, int aifs, int cw_min,
+                           int cw_max, int burst_time);
+/**
+ * wifi_mgmr_set_tx_queue_params
+ * Get CWmin, CWmax, and AIFS for each Tx Queue
+ */
+int wifi_mgmr_get_tx_queue_params(uint8_t queue, uint8_t *aifsn, uint16_t *cwmin, uint16_t *cwmax);
+
+/**
+ * wifi_mgmr_get_remaining_tx
+ * Get the number of frames remaining in each Tx queue.
+ */
+int wifi_mgmr_get_remaining_tx(uint8_t *tx0_cnt, uint8_t *tx1_cnt, uint8_t *tx2_cnt, uint8_t *tx3_cnt);
+
+/**
+ * wifi_mgmr_set_mode
+ * param:
+ * ap_or_sta: 1 = ap, 0 = sta
+ * mode: @ref WiFi_Mode_t
+ */
+int wifi_mgmr_set_mode(uint8_t ap_or_sta, int mode);
+
+/**
+ * wifi_mgmr_get_mode
+ * param:
+ * ap_or_sta: 1 = ap, 0 = sta
+ * return:
+ * @ref WiFi_Mode_t
+ * */
+int wifi_mgmr_get_mode(uint8_t ap_or_sta);
+
+/**
+ * wifi_mgmr_adhoc_set_rate
+ * Set tx rate
+ * 1 Mbps: 7’d0
+ * 2 Mbps: 7’d1
+ * 5.5 Mbps: 7’d2
+ * 11 Mbps: 7’d3
+ * 6 Mbps: 7’d4
+ * 9 Mbps: 7’d5
+ * 12 Mbps: 7’d6
+ * 18 Mbps: 7’d7
+ * 24 Mbps: 7’d8
+ * 36 Mbps: 7’d9
+ * 48 Mbps: 7’d10
+ * 54 Mbps: 7’d11
+ * HT rates: 7’dMCS Index
+ * VHT rates: {3’dnSS, 4’dMCS index}
+ * HE rates: {3’dnSS, 4’dMCS index
+ * Note that nSS is the number of spatial stream minus 1
+ */
+int8_t wifi_mgmr_adhoc_set_rate(uint8_t rate);
+/**
+ * wifi_mgmr_adhoc_get_rate
+ * Get tx rate
+ */
+uint8_t wifi_mgmr_adhoc_get_rate();
+/**
+ * wifi_mgmr_adoc_set_rts_thrshold
+ * Set/ RTS threshold
+ */
+int8_t wifi_mgmr_adhoc_set_rts_thrshold(uint8_t rts_thrshold);
+/**
+ * wifi_mgmr_adoc_get_rts_thrshold
+ * Get RTS threshold
+ */
+uint8_t wifi_mgmr_adhoc_get_rts_thrshold();
+
+/**
+ * wifi_mgmr_adoc_set_tx_power
+ * Set Tx power
+ * 8’h80 : -128 dBm
+ * 8’hFF : -1 dBm
+ * 8’h00 : 0 dBm
+ * 8’h01 : 1 dBm
+ * 8’h3F : 127dBm
+ */
+int8_t wifi_mgmr_adhoc_set_tx_power(int8_t tx_power);
+
+/**
+ * wifi_mgmr_adoc_get_tx_power
+ * Get Tx power
+ */
+int8_t wifi_mgmr_adhoc_get_tx_power();
+
+/**
+ * wifi_mgmr_adoc_set_retry_limit
+ * Set retry limit
+ */
+int8_t wifi_mgmr_adhoc_set_retry_limit(uint8_t retry_limit);
+
+/**
+ * wifi_mgmr_adoc_get_retry_limit
+ * Get retry limit
+ */
+uint8_t wifi_mgmr_adhoc_get_retry_limit();
+
+/**
+ * wifi_mgmr_adhoc_get_channel
+ * Get channel of ad-hoc mode
+ */
+uint8_t wifi_mgmr_adhoc_get_channel();
+/**
+ * wifi_mgmr_adhoc_pkt_send
+ * Send packets for testing
+ */
+int wifi_mgmr_adhoc_pkt_send(const wifi_mgmr_adhoc_pkt_params_t *config);
+/**
+ * wifi_mgmr_adhoc_start
+ * Start adhoc mode
+ */
+int wifi_mgmr_adhoc_start(const wifi_mgmr_adhoc_start_params_t *config);
+/**
+ * wifi_mgmr_adhoc_stop
+ * Stop adhoc mode
+ */
+int wifi_mgmr_adhoc_stop(void);
 
 /**
  * wifi_mgmr_coex_enable

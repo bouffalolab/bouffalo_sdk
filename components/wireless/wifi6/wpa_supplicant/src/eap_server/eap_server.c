@@ -15,7 +15,7 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/sha256.h"
+#include "wpa_crypto/sha256.h"
 #include "eap_i.h"
 #include "state_machine.h"
 #include "common/wpa_ctrl.h"

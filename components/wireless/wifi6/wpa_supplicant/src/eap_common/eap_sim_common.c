@@ -10,11 +10,11 @@
 
 #include "common.h"
 #include "wpabuf.h"
-#include "crypto/aes_wrap.h"
-#include "crypto/crypto.h"
-#include "crypto/sha1.h"
-#include "crypto/sha256.h"
-#include "crypto/random.h"
+#include "wpa_crypto/aes_wrap.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/sha256.h"
+#include "wpa_crypto/random.h"
 #include "eap_common/eap_defs.h"
 #include "eap_common/eap_sim_common.h"
 

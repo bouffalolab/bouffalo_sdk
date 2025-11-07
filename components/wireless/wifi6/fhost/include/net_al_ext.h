@@ -77,4 +77,5 @@ int net_al_gw_service_enable(net_al_if_t net_if);
 int net_al_gw_service_disable(net_al_if_t net_if);
 void net_al_ext_dhcp_connect(void);
 void net_al_ext_dhcp_disconnect(void);
+void net_al_ext_netif_status_callback(struct netif *netif);
 #endif

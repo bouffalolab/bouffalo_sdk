@@ -11,4 +11,5 @@ src/encrypt_layer.c
 src/payload.c
 src/transfer.c
 bflb_blesync_app.c
+wifi_adapter/wifiprov_${CHIP}.c
 )

@@ -71,6 +71,13 @@
 /// MIB memory
 #define __MIB __attribute__ ((section("MACHWMIB")))
 
+#define _ZERO_WITH_COMMA_1 0,
+#define _second_arg(__ignored, val, ...) val
+#define _is_enabled(x)                __is_enabled(x)
+#define __is_enabled(val)             ___is_enabled(_ZERO_WITH_COMMA_##val)
+#define ___is_enabled(junk_or_comma)  _second_arg(junk_or_comma 1, 0)
+#define IS_ENABLED(config)            _is_enabled(config)
+
 #define MACSW_HOOK(x, ...) do { \
   extern int __WEAK macsw_hook_##x (); \
   if( &macsw_hook_##x ) {macsw_hook_##x(__VA_ARGS__);} \
@@ -1128,8 +1135,13 @@ __INLINE struct co_list_hdr *co_list_next(const struct co_list_hdr *const list_h
 #define LLC_ETHERTYPE_IP             0x0800
 #define LLC_ETHERTYPE_ARP            0x0806
 
+#ifdef CFG_ADHOC_ENABLE
+#define WLAN_802_11_MTU                   2304
+#define RX_MAX_AMSDU_SUBFRAME_LEN (WLAN_802_11_MTU + LLC_ETHER_HDR_LEN + LLC_802_2_HDR_LEN)
+#else
 /// Maximum A-MSDU subframe length we support (Ethernet Header + LLC/SNAP + Ethernet MTU)
 #define RX_MAX_AMSDU_SUBFRAME_LEN (LLC_ETHER_MTU + LLC_ETHER_HDR_LEN + LLC_802_2_HDR_LEN)
+#endif
 
 /// LLC/SNAP structure
 struct llc_snap_short
@@ -1253,9 +1265,12 @@ struct me_chan_config_req
 };
 
 enum ME_PARAM_ID_E {
+    ME_PARAM_ID_TX_SINGLE_RETRY_CNT_LIMIT,
     ME_PARAM_ID_TX_AMPDU_RETRY_CNT_LIMIT,
     ME_PARAM_ID_TX_AMPDU_PROTECT_ENABLE,
     ME_PARAM_ID_TX_AMPDU_DROP_TO_SINGLETON_RETRYCNT_THRESHOLD,
+    ME_PARAM_ID_TX_POWER,
+    ME_PARAM_ID_MAX,
 };
 
 enum ME_PARAM_CMD_E {
@@ -1270,8 +1285,102 @@ struct me_param_req
     enum ME_PARAM_ID_E id;
     enum ME_PARAM_CMD_E cmd;//GET or SET.
     /// payload of the param. Max is 32 Bytes
-    uint8_t value[32];//GET or SET through value
+    uint8_t value[50];//GET or SET through value
 };
+
+/// Pointer to callback function
+typedef void (*cb_raw_send_wait_end_ptr)(void* env);
+
+/// Pointer to callback function for adhoc tx
+typedef void (*cb_adhoc_tx_cfm_ptr)(void* env, uint32_t status);
+
+/// Structure containing the parameters of the @ref MM_RAW_SEND_STRAT_REQ message.
+struct mm_raw_send_start_req
+{
+    /// List of waiting raw send req
+    struct co_list_hdr list_hdr;
+    /// Raw send wait RX response timer
+    struct mm_timer_tag wait_rx;
+    /// Channel information
+    struct mac_chan_op chan;
+    /// Index of the VIF
+    int vif_idx;
+    /// Pakcet buffer
+    void *pkt;
+    /// Packet len
+    uint32_t len;
+    /// Duration in ms, default 20ms
+    uint32_t duration;
+    /// Raw Send wait end callback
+    cb_raw_send_wait_end_ptr cb;
+    /// event env
+    void *env;
+    /// whether need wait resp
+    int need_rx;
+    /// Ad-hoc mode
+    bool adhoc;
+    /// Receiver address
+    struct mac_addr *ra;
+    /// Transmitter address
+    struct mac_addr *ta;
+    /// Tx rate
+    uint8_t rate;
+    /// RTS thrshold
+    uint8_t rts_thrshold;
+    /// Tx retry limit
+    uint8_t retry_limit;
+    /// Tx power
+    int8_t tx_power;
+    /// cb func for adhoc tx
+    cb_adhoc_tx_cfm_ptr cb_cfm;
+
+};
+
+/// Structure containing the parameters of the @ref MM_RAW_SEND_STRAT_CFM message.
+struct mm_raw_send_start_cfm
+{
+    /// Status of operation (different from 0 if unsuccessful)
+    uint8_t status;
+};
+
+//THD STATINFO fields
+//----------------------------------------------------------------------------------------
+/// Number of RTS frame retries offset
+#define NUM_RTS_RETRIES_OFT                0
+/// Number of RTS frame retries mask
+#define NUM_RTS_RETRIES_MSK               (0xFF << NUM_RTS_RETRIES_OFT)
+/// Number of MPDU frame retries offset
+#define NUM_MPDU_RETRIES_OFT               8
+/// Number of MPDU frame retries mask
+#define NUM_MPDU_RETRIES_MSK              (0xFF << NUM_MPDU_RETRIES_OFT)
+/// Retry limit reached: frame unsuccessful
+#define RETRY_LIMIT_REACHED_BIT            CO_BIT(16)
+/// Frame lifetime expired: frame unsuccessful
+#define LIFETIME_EXPIRED_BIT               CO_BIT(17)
+/// BA frame not received - valid only for MPDUs part of AMPDU
+#define BA_FRAME_RECEIVED_BIT              CO_BIT(18)
+/// Frame was transmitted in a HE TB PPDU - Set by SW
+#define HE_TB_TX_BIT                       CO_BIT(22)
+/// Frame successful by TX DMA: Ack received successfully
+#define FRAME_SUCCESSFUL_TX_BIT            CO_BIT(23)
+/// Last MPDU of an A-MPDU
+#define A_MPDU_LAST                        (0x0F << 26)
+/// Transmission bandwidth offset
+#define BW_TX_OFT                          24
+/// Transmission bandwidth mask
+#define BW_TX_MSK                          (0x3 << BW_TX_OFT)
+/// Transmission bandwidth - 20MHz
+#define BW_20MHZ_TX                        (0x0 << BW_TX_OFT)
+/// Transmission bandwidth - 40MHz
+#define BW_40MHZ_TX                        (0x1 << BW_TX_OFT)
+/// Transmission bandwidth - 80MHz
+#define BW_80MHZ_TX                        (0x2 << BW_TX_OFT)
+/// Transmission bandwidth - 160MHz
+#define BW_160MHZ_TX                       (0x3 << BW_TX_OFT)
+/// Descriptor done bit: Set by HW for TX DMA
+#define DESC_DONE_TX_BIT                   CO_BIT(31)
+/// Descriptor done bit: Set by SW for TX DMA
+#define DESC_DONE_SW_TX_BIT                CO_BIT(30)
 
 /// AMSDU TX values
 enum amsdu_tx
@@ -1351,6 +1460,7 @@ struct sm_connect_ind
     /// Status code of the connection procedure
     uint16_t status_code;
     uint16_t ieeetypes_code;
+    uint8_t ssid[MAC_SSID_LEN + 1];
     /// BSSID
     struct mac_addr bssid;
     /// Flag indicating if the indication refers to an internal roaming or from a host request
@@ -1374,6 +1484,8 @@ struct sm_connect_ind
     /// AP operating channel
     struct mac_chan_op chan;
     uint8_t security;
+    /// bss mode
+    uint8_t bss_mode;
     /// EDCA parameters
     uint32_t ac_param[AC_MAX];
     /// IE buffer
@@ -1645,20 +1757,6 @@ struct mm_key_del_req
 {
     /// HW index of the key to be deleted
     uint8_t hw_key_idx;
-};
-
-struct scan_raw_send_req
-{
-    /// Channel information
-    struct mac_chan_op chan;
-    /// Index of the RF for which the channel has to be set (0: operating (primary), 1:secondary
-    /// RF (used for additional radar detection). This parameter is reserved if no secondary RF
-    /// is available in the system
-    uint8_t index;
-
-    void *pkt;
-    uint32_t len;
-    int vif_idx;
 };
 
 /// Structure containing the parameters of the @ref SCANU_START_REQ and
@@ -2009,6 +2107,34 @@ struct me_rc_set_rate_req
     uint16_t fixed_rate_cfg;
 };
 
+struct me_get_edca_req
+{
+    /// HW queue for which the parameters are getted
+    uint8_t hw_queue;
+};
+
+struct me_get_edca_cfm
+{
+    /// EDCA parameters of the queue (as expected by edcaACxReg HW register)
+    uint32_t ac_param;
+};
+
+struct me_get_remaining_tx_cfm
+{
+    /// The number of frames remaining in each Tx queue.
+    uint8_t tx0_cnt;
+    uint8_t tx1_cnt;
+    uint8_t tx2_cnt;
+    uint8_t tx3_cnt;
+};
+
+struct me_get_stats_cfm
+{
+    struct ieee80211_stats sta_stats;
+    struct ieee80211_stats ap_stats;
+    struct ieee80211_stats adhoc_stats;
+};
+
 #if MACSW_POWERSAVE
 /// Structure containing the parameters of the @ref ME_SET_PS_MODE_REQ message.
 struct me_set_ps_mode_req
@@ -2140,6 +2266,13 @@ struct mm_start_req
     uint16_t tx_timeout[AC_MAX];
     /// coex_mode for MAC_SW, 0 is default and no coex
     uint8_t coex_mode;
+};
+
+struct mm_bcn_control_req
+{
+    uint8_t bcn_tx_mode;
+    int bcn_tx_timer;
+    bool bcn_tx_stop;
 };
 
 ///TWT Flow configuration
@@ -2979,6 +3112,10 @@ enum mm_msg_tag
     MM_BCN_CHANGE_REQ,
     /// Confirmation of the beacon change
     MM_BCN_CHANGE_CFM,
+    ///Beacon Transmission Control
+    MM_BCN_CONTROL_REQ,
+    /// CFM of Beacon Transmission Control
+    MM_BCN_CONTROL_CFM,
     /// Request to update the TIM in the beacon (i.e to indicate traffic bufferized at AP)
     MM_TIM_UPDATE_REQ,
     /// Confirmation of the TIM update
@@ -3059,6 +3196,10 @@ enum mm_msg_tag
     MM_SET_BSS_COLOR_REQ,
     /// HE BSS Color Configuration Confirmation.
     MM_SET_BSS_COLOR_CFM,
+    /// RAW send start request.
+    MM_RAW_SEND_STRAT_REQ,
+    /// RAW send start confirmation.
+    MM_RAW_SEND_STRAT_CFM,
 
     /*
      * Section of internal MM messages. No MM API messages should be defined below this point
@@ -3073,9 +3214,10 @@ enum mm_msg_tag
     MM_SCAN_CHANNEL_END_IND,
     /// Internal request to move the AP TBTT by an offset
     MM_TBTT_MOVE_REQ,
-    /// Message indicating that start to send raw packet
+    /// Internal request to send raw packet.
     MM_RAW_SEND_REQ,
 
+    /// Timer for link statistics monitor
     MM_LINK_TIMER_IND,
     MM_BBP_START_REQ,
     MM_BBP_STOP_REQ,
@@ -3168,7 +3310,22 @@ enum
     ME_SET_PS_MODE_REQ,
     /// Set Power Save mode confirmation
     ME_SET_PS_MODE_CFM,
+    // Get EDCA request
+    ME_GET_EDCA_REQ,
+    // Get EDCA confirmation
+    ME_GET_EDCA_CFM,
+    // Get the number of frames remaining in each Tx queue request
+    ME_GET_REMAINING_TX_REQ,
+    // Get the number of frames remaining in each Tx queue confirmation
+    ME_GET_REMAINING_TX_CFM,
 
+    // Get wifi stats request
+    ME_GET_STATS_REQ,
+    // Get wifi stats confirmation
+    ME_GET_STATS_CFM,
+
+    // Clear wifi stats
+    ME_CLR_STATS_REQ,
     /*
      * Section of internal ME messages. No ME API messages should be defined below this point
      */
@@ -3276,9 +3433,6 @@ enum scan_msg_tag
      * Section of internal SCAN messages. No SCAN API messages should be defined below this point
      */
     SCAN_PROBE_TIMER,
-
-    SCAN_RAW_SEND_REQ,
-    SCAN_RAW_SEND_CFM,
 
     /// MAX number of messages
     SCAN_MAX,
@@ -3885,6 +4039,12 @@ uint8_t inline_macsw_mac_tkip_getf();
 uint8_t inline_macsw_mac_ccmp_getf();
 uint8_t inline_macsw_mac_gcmp_getf();
 bool inline_hal_machw_he_support(void);
+
+// wifi statistics functions
+uint8_t export_stats_get_tx_mcs();
+uint8_t export_stats_get_rx_mcs();
+char* export_stats_get_rx_format();
+char* export_stats_get_tx_format();
 
 
 int8_t export_hal_desc_get_rssi(void *rx_vec_1, int8_t *rx_rssi);

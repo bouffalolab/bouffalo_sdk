@@ -9,8 +9,8 @@
 #include "utils/includes.h"
 
 #include "utils/common.h"
-#include "crypto/sha1.h"
-#include "crypto/tls.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/tls.h"
 #include "radius/radius_client.h"
 #include "common/ieee802_11_defs.h"
 #include "common/ieee802_1x_defs.h"

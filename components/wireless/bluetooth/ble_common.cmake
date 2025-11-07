@@ -975,10 +975,10 @@ if(("${CHIP}" STREQUAL "bl616") OR ("${CHIP}" STREQUAL "bl808") OR ("${CHIP}" ST
 endif()
 # 
 # ifndef CONFIG_FREERTOS_DISABLE
-# CFLAGS   += -DCONFG_FREERTOS
+# CFLAGS   += -DCONFIG_FREERTOS
 # endif
 if(NOT DEFINED CONFIG_FREERTOS_DISABLE)
-	sdk_add_compile_definitions(-DCONFG_FREERTOS)
+	sdk_add_compile_definitions(-DCONFIG_FREERTOS)
 endif()
 # 
 # CFLAGS   += -DARCH_RISCV
@@ -1051,21 +1051,21 @@ if("${CHIP}" STREQUAL "bl702l")
 endif()
 # 
 # ifeq ($(CONFIG_DBG_RUN_ON_FPGA), y)
-# CFLAGS   += -DCONFG_DBG_RUN_ON_FPGA
+# CFLAGS   += -DCONFIG_DBG_RUN_ON_FPGA
 # endif
-sdk_add_compile_definitions_ifdef(CONFIG_DBG_RUN_ON_FPGA -DCONFG_DBG_RUN_ON_FPGA)
+sdk_add_compile_definitions_ifdef(CONFIG_DBG_RUN_ON_FPGA -DCONFIG_DBG_RUN_ON_FPGA)
 # 
 # ifeq ($(CONFIG_BUILD_ROM_CODE),1)
 # CFLAGS += -DBUILD_ROM_CODE
 # endif
 sdk_add_compile_definitions_ifdef(CONFIG_BUILD_ROM_CODE -DBUILD_ROM_CODE)
 # 
-# CFLAGS   += -DCONFG_BLE_ENABLE
-# CPPFLAGS += -DCONFG_BLE_ENABLE
+# CFLAGS   += -DCONFIG_BLE_ENABLE
+# CPPFLAGS += -DCONFIG_BLE_ENABLE
 # 
 # CFLAGS   += -DBFLB_BLE
-# CFLAGS   += -DCONFG_BLE
-sdk_add_compile_definitions(-DCONFG_BLE_ENABLE)
+# CFLAGS   += -DCONFIG_BLE
+sdk_add_compile_definitions(-DCONFIG_BLE_ENABLE)
 sdk_add_compile_definitions(-DBFLB_BLE)
 sdk_add_compile_definitions(-DCONFIG_BLE)
 #
@@ -1134,12 +1134,12 @@ else()
 endif()
 #
 # ifeq ($(CONFIG_BL702L_A1),1)
-# CFLAGS += -DCONFG_BL702L_A1
+# CFLAGS += -DCONFIG_BL702L_A1
 # CONFIG_BLE_TX_BUFF_DATA = 2
 # endif
 #
 if(CONFIG_BL702L_A1)
-	sdk_add_compile_definitions(-DCONFG_BL702L_A1)
+	sdk_add_compile_definitions(-DCONFIG_BL702L_A1)
 	set(CONFIG_BLE_TX_BUFF_DATA 2)
 endif()
 # 
@@ -1156,10 +1156,10 @@ endif()
 # CFLAGS += -DCONFIG_BL_SDK
 # endif
 # ifneq ($(CONFIG_IOT_SDK_DISABLE),1)
-# CFLAGS   += -DCONFG_IOT_SDK
+# CFLAGS   += -DCONFIG_IOT_SDK
 # endif
 sdk_add_compile_definitions(-DCONFIG_BL_SDK)
-# sdk_add_compile_definitions_ifndef(CONFIG_IOT_SDK_DISABLE -DCONFG_IOT_SDK)
+# sdk_add_compile_definitions_ifndef(CONFIG_IOT_SDK_DISABLE -DCONFIG_IOT_SDK)
 # 
 # CONFIG_EM_16K ?= 0
 # ifeq ($(CONFIG_EM_16K),1)
@@ -1252,9 +1252,9 @@ sdk_ifndef(CONFIG_BLE_ACT_MAX 7)
 sdk_ifndef(CONFIG_HW_SEC_ENG_DISABLE n)
 # 
 # CONFIG_BT_CONN?=1
-# CFLAGS += -DCONFG_CON=$(CONFIG_BT_CONN)
+# CFLAGS += -DCONFIG_CON=$(CONFIG_BT_CONN)
 # CONFIG_BLE_TX_BUFF_DATA?=2
-# CFLAGS += -DCONFG_BLE_TX_BUFF_DATA=$(CONFIG_BLE_TX_BUFF_DATA)
+# CFLAGS += -DCONFIG_BLE_TX_BUFF_DATA=$(CONFIG_BLE_TX_BUFF_DATA)
 # CONFIG_BT_ALLROLES?=1
 # CONFIG_BT_CENTRAL?=1
 # CONFIG_BT_OBSERVER?=1
@@ -1472,15 +1472,15 @@ endif()
 sdk_add_compile_definitions_ifdef(CONFIG_BT_GEN_RANDOM_BY_SW -DCONFIG_BT_GEN_RANDOM_BY_SW)
 # 
 # ifeq ($(CONFIG_BLE_PDS),1)
-# CFLAGS += -DCONFG_BLE_PDS
+# CFLAGS += -DCONFIG_BLE_PDS
 # CFLAGS += -DCONFIG_HW_SEC_ENG_DISABLE
 # endif
-sdk_add_compile_definitions_ifdef(CONFIG_BLE_PDS -DCONFG_BLE_PDS -DCONFIG_HW_SEC_ENG_DISABLE)
+sdk_add_compile_definitions_ifdef(CONFIG_BLE_PDS -DCONFIG_BLE_PDS -DCONFIG_HW_SEC_ENG_DISABLE)
 # 
 # ifeq ($(CONFIG_EM_HEAP_DISABLE),1)
-# CFLAGS += -DCONFG_EM_HEAP_DISABLE
+# CFLAGS += -DCONFIG_EM_HEAP_DISABLE
 # endif
-sdk_add_compile_definitions_ifdef(CONFIG_EM_HEAP_DISABLE -DCONFG_EM_HEAP_DISABLE)
+sdk_add_compile_definitions_ifdef(CONFIG_EM_HEAP_DISABLE -DCONFIG_EM_HEAP_DISABLE)
 # 
 # ifneq ($(CONFIG_BT_CONN),0)
 # CFLAGS   += 	-DCONFIG_BT_CONN
@@ -1539,9 +1539,9 @@ sdk_add_compile_definitions_ifdef(CONFIG_BT_GATT_CLIENT -DCONFIG_BT_GATT_CLIENT)
 sdk_add_compile_definitions_ifdef(CONFIG_BT_DATA_LEN_UPDATE -DCONFIG_BT_DATA_LEN_UPDATE)
 # 
 # ifeq ($(CONFIG_BT_RESET),1)
-# CFLAGS   += -DCONFG_BT_RESET
+# CFLAGS   += -DCONFIG_BT_RESET
 # endif
-sdk_add_compile_definitions_ifdef(CONFIG_BT_RESET -DCONFG_BT_RESET)
+sdk_add_compile_definitions_ifdef(CONFIG_BT_RESET -DCONFIG_BT_RESET)
 # 
 # ifneq ($(CONFIG_DISABLE_BT_SMP), y)
 # CFLAGS += -DCONFIG_BT_SMP \
@@ -1580,9 +1580,9 @@ if(NOT CONFIG_DBG_RUN_ON_FPGA)
 endif()
 # 
 # ifeq ($(CONFIG_BLE_STACK_DBG_PRINT),1)
-# CFLAGS += -DCONFG_BLE_STACK_DBG_PRINT
+# CFLAGS += -DCONFIG_BLE_STACK_DBG_PRINT
 # endif
-sdk_add_compile_definitions_ifdef(CONFIG_BLE_STACK_DBG_PRINT -DCONFG_BLE_STACK_DBG_PRINT)
+sdk_add_compile_definitions_ifdef(CONFIG_BLE_STACK_DBG_PRINT -DCONFIG_BLE_STACK_DBG_PRINT)
 # 
 # ifeq ($(CONFIG_BT_DEBUG_MONITOR),1)
 # CFLAGS += -DCONFIG_BT_DEBUG_MONITOR
@@ -1770,7 +1770,7 @@ sdk_add_compile_definitions_ifdef(CONFIG_DYNAMIC_GATTS -DCONFIG_DYNAMIC_GATTS)
 # CFLAGS += -DCONFIG_BT_MESH_MOD_SUB_ADD_CB
 # endif
 # ifeq ($(CONFIG_BLE_STACK_DBG_PRINT),1)
-# CFLAGS += -DCONFG_BLE_STACK_DBG_PRINT
+# CFLAGS += -DCONFIG_BLE_STACK_DBG_PRINT
 # endif
 # ifeq ($(CONFIG_BT_MESH_SYNC),1)
 # CFLAGS += -DCONFIG_BT_MESH_SYNC
@@ -1790,7 +1790,7 @@ sdk_add_compile_definitions_ifdef(CONFIG_DYNAMIC_GATTS -DCONFIG_DYNAMIC_GATTS)
 # endif 
 # ifeq ($(CONFIG_BT_MESH_PROVISIONER),1)
 # CFLAGS += -DCONFIG_BT_MESH_PROVISIONER
-# CFLAGS += -DCONFIG_BT_MESH_CONFG_CLI
+# CFLAGS += -DCONFIG_BT_MESH_CFG_CLI
 # CFLAGS += -DCONFIG_BT_MESH_HEALTH_CLI
 # endif
 # ifeq ($(CONFIG_BT_MESH_OTA_TARGET),1)
@@ -1855,7 +1855,7 @@ if(CONFIG_BT_MESH)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MOD_BIND_CB -DCONFIG_BT_MESH_MOD_BIND_CB)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_APPKEY_ADD_CB -DCONFIG_BT_MESH_APPKEY_ADD_CB)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_MOD_SUB_ADD_CB -DCONFIG_BT_MESH_MOD_SUB_ADD_CB)
-	sdk_add_compile_definitions_ifdef(CONFIG_BLE_STACK_DBG_PRINT -DCONFG_BLE_STACK_DBG_PRINT)
+	sdk_add_compile_definitions_ifdef(CONFIG_BLE_STACK_DBG_PRINT -DCONFIG_BLE_STACK_DBG_PRINT)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_SYNC -DCONFIG_BT_MESH_SYNC)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG -DCONFIG_BT_MESH_NODE_SEND_CFGCLI_MSG)
     if(CONFIG_BT_MESH_CDB)
@@ -1872,7 +1872,7 @@ if(CONFIG_BT_MESH)
 	)
 	sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_PROVISIONER 
 	#	-DCONFIG_BT_MESH_PROVISIONER
-		-DCONFIG_BT_MESH_CONFG_CLI
+	#	-DCONFIG_BT_MESH_CFG_CLI
 		-DCONFIG_BT_MESH_HEALTH_CLI
 	)
     sdk_add_compile_definitions_ifdef(CONFIG_BT_MESH_OTA_TARGET -DCONFIG_BT_MESH_OTA_TARGET)
@@ -1889,9 +1889,9 @@ if(CONFIG_BT_MESH)
 endif()
 # 
 # ifeq ($(CONFIG_USE_XTAL32K),1)
-# CFLAGS += -DCONFG_USE_XTAL32K
+# CFLAGS += -DCONFIG_USE_XTAL32K
 # endif
-sdk_add_compile_definitions_ifdef(CONFIG_USE_XTAL32K -DCONFG_USE_XTAL32K)
+sdk_add_compile_definitions_ifdef(CONFIG_USE_XTAL32K -DCONFIG_USE_XTAL32K)
 # 
 # #CFLAGS   += -Wno-unused-const-variable  \
 # #CFLAGS   += -Wno-unused-but-set-variable \

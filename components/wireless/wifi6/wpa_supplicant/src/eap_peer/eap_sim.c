@@ -10,8 +10,8 @@
 
 #include "common.h"
 #include "pcsc_funcs.h"
-#include "crypto/milenage.h"
-#include "crypto/random.h"
+#include "wpa_crypto/milenage.h"
+#include "wpa_crypto/random.h"
 #include "eap_peer/eap_i.h"
 #include "eap_config.h"
 #include "eap_common/eap_sim_common.h"

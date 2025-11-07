@@ -30,10 +30,7 @@
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 
-#include "bl_fw_api.h"
-#include "fhost_api.h"
 #include "wifi_mgmr_ext.h"
-#include "wifi_mgmr.h"
 
 #include "bflb_irq.h"
 #include "bflb_uart.h"

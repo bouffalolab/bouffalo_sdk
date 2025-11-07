@@ -9,8 +9,8 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/tls.h"
-#include "crypto/sha1.h"
+#include "wpa_crypto/tls.h"
+#include "wpa_crypto/sha1.h"
 #include "eap_common/eap_tlv_common.h"
 #include "eap_i.h"
 #include "eap_tls_common.h"

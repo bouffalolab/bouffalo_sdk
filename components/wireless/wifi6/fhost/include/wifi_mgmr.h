@@ -38,6 +38,15 @@ typedef struct wifi_mgmr_sta_basic_info {
     uint16_t aid;
 } wifi_mgmr_sta_basic_info_t;
 
+typedef struct wifi_mgmr_adhoc_info {
+    uint8_t channel;
+    uint8_t rate;
+    uint8_t rts_thrshold;
+    int8_t tx_power;
+    uint8_t retry_limit;
+    cb_adhoc_tx_cfm tx_cfm;
+} wifi_mgmr_adhoc_info_t;
+
 typedef struct wifi_mgmr {
     struct wlan_netif wlan_sta;
     struct wlan_netif wlan_ap;
@@ -90,6 +99,18 @@ typedef struct wifi_mgmr {
     //3: WPA2_PSK
     //4: WPA_WPA2_PSK
     uint8_t wps_auth;
+    wifi_mgmr_adhoc_info_t adhoc_info;
+
+    /// ap_bcn_mode:
+    /// 0      Start/Stop beacon transmissions automatically
+    ///         a.Beacon transmission is NOT started when SAP is started.
+    ///         b.Once a Probe Request frame having the same SSID is received, replies with a Probe Response frame, then Beacon transmission is started.
+    ///         c.Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds.
+    /// 1      Do not transmit beacon frames
+    /// 2      Transmit beacon frames (Default)
+    int ap_bcn_mode;
+    /// Beacon transmission is stopped again if no STA is associated for more than ap_bcn_timer seconds.
+    int ap_bcn_timer;
 } wifi_mgmr_t;
 extern wifi_mgmr_t wifiMgmr;
 

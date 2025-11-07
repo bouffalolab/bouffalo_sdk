@@ -360,6 +360,34 @@ struct fhost_frame_info
      */
     int8_t rssi;
     /**
+     * Received to ds
+     */
+    bool tods;
+    /**
+     * Received from ds
+     */
+    bool fromds;
+    /**
+     * Received rate_idx
+     */
+    int rate_idx;
+    /**
+     * Received address
+     */
+    struct mac_addr *ra;
+    /**
+     * Transmitting address
+     */
+    struct mac_addr *ta;
+    /**
+     *  Ethernet frame
+     */
+    uint8_t *eth_frame;
+    /**
+     *  Ethernet frame length
+     */
+    uint16_t eth_frame_length;
+    /**
      * Frame payload. Can be NULL if monitor mode is started with @p uf parameter set to
      * true. In this case all other fields are still valid.
      */
@@ -608,6 +636,18 @@ struct fhost_vif_ap_cfg
      * Additional vendor specific elements for Beacon and Probe Response frames
      */
     char *ap_vendor_elements;
+
+    /// bcn_mode:
+    /// 0   Start/Stop beacon transmissions automatically
+    ///         a.Beacon transmission is NOT started when SAP is started.
+    ///         b.Once a Probe Request frame having the same SSID is received, replies with a Probe Response frame, then Beacon transmission is started.
+    ///         c.Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds.
+    /// 1   Do not transmit beacon frames
+    /// 2   Transmit beacon frames (Default)
+    uint8_t bcn_mode;
+
+    /// Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds.
+    int bcn_timer;
 
     /// Disable advertising WME/WMM Information Element in Beacon/ProbeResponse frames
     bool disable_wmm;

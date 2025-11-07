@@ -9,7 +9,7 @@
 #ifndef TLSV1_COMMON_H
 #define TLSV1_COMMON_H
 
-#include "crypto/crypto.h"
+#include "wpa_crypto/crypto.h"
 
 #define TLS_VERSION_1 0x0301 /* TLSv1 */
 #define TLS_VERSION_1_1 0x0302 /* TLSv1.1 */

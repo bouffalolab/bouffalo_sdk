@@ -9,8 +9,8 @@
 #include "utils/includes.h"
 
 #include "utils/common.h"
-#include "crypto/aes.h"
-#include "crypto/aes_siv.h"
+#include "wpa_crypto/aes.h"
+#include "wpa_crypto/aes_siv.h"
 #include "tls/asn1.h"
 #include "dpp.h"
 #include "dpp_i.h"

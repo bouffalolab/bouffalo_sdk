@@ -15,7 +15,7 @@
 #include "common/wpa_common.h"
 #include "common/ieee802_11_defs.h"
 #include "common/ieee802_11_common.h"
-#include "crypto/sha256.h"
+#include "wpa_crypto/sha256.h"
 #include "wps/wps.h"
 #include "fst/fst.h"
 #include "vlan.h"
@@ -458,6 +458,8 @@ struct hostapd_bss_config {
 
 	int ap_max_inactivity;
 	int ignore_broadcast_ssid;
+    int bcn_mode;
+    int bcn_timer;
 	int no_probe_resp_if_max_sta;
 
 	int wmm_enabled;

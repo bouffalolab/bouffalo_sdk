@@ -15,7 +15,7 @@
 #include "common/sae.h"
 #include "common/wpa_ctrl.h"
 #include "common/ptksa_cache.h"
-#include "crypto/sha1.h"
+#include "wpa_crypto/sha1.h"
 #include "eapol_auth/eapol_auth_sm.h"
 #include "eapol_auth/eapol_auth_sm_i.h"
 #include "eap_server/eap.h"

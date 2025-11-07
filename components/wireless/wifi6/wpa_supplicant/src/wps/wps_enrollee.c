@@ -9,9 +9,9 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/crypto.h"
-#include "crypto/sha256.h"
-#include "crypto/random.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/sha256.h"
+#include "wpa_crypto/random.h"
 #include "wps_i.h"
 #include "wps_dev_attr.h"
 

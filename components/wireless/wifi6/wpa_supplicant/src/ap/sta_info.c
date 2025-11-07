@@ -18,7 +18,7 @@
 #include "radius/radius_client.h"
 #include "p2p/p2p.h"
 #include "fst/fst.h"
-#include "crypto/crypto.h"
+#include "wpa_crypto/crypto.h"
 #include "hostapd.h"
 #include "accounting.h"
 #include "ieee802_1x.h"

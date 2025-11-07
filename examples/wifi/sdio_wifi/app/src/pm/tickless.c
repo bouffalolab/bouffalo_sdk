@@ -265,7 +265,7 @@ __enter_disconnected:
         tickless_debugf("wakeup OTHERS.\r\n");
     }
 
-#ifdef CFG_BLE_ENABLE
+#ifdef CONFIG_BLE_ENABLE
     GLB_AHB_MCU_Software_Reset(GLB_AHB_MCU_SW_PDS);
 #endif
 

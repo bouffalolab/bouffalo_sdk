@@ -9,10 +9,10 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/crypto.h"
-#include "crypto/md5.h"
-#include "crypto/sha1.h"
-#include "crypto/random.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/md5.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/random.h"
 #include "ikev2_common.h"
 
 

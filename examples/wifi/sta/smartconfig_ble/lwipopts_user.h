@@ -66,9 +66,9 @@
 
 #define PBUF_LINK_ENCAPSULATION_HLEN  388
 
-#define MEMP_NUM_NETBUF               32
-#define MEMP_NUM_NETCONN              16
-#define MEMP_NUM_UDP_PCB              16
+#define MEMP_NUM_NETBUF               16
+#define MEMP_NUM_NETCONN              12
+#define MEMP_NUM_UDP_PCB              12
 
 #define MAC_TXQ_DEPTH                 16
 #define MAC_RXQ_DEPTH                 12
@@ -91,6 +91,10 @@
 #define MEM_MIN_TCP                   (2300 + MEMP_NUM_PBUF * (100 + PBUF_LINK_ENCAPSULATION_HLEN))
 #define MEM_MIN                       MEM_MIN_TCP
 #define MEM_ALIGNMENT                 4
+
+#if (defined(BL602))
+#define LWIP_HEAP_SIZE (8 * 1024)
+#endif
 
 #ifdef LWIP_HEAP_SIZE
 #define MEM_SIZE LWIP_HEAP_SIZE

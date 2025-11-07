@@ -11,7 +11,7 @@
 #include "common.h"
 #include "eap_i.h"
 #include "eap_tls_common.h"
-#include "crypto/tls.h"
+#include "wpa_crypto/tls.h"
 
 
 static void eap_tls_reset(struct eap_sm *sm, void *priv);

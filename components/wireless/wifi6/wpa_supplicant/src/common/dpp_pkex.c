@@ -11,9 +11,9 @@
 
 #include "utils/common.h"
 #include "common/wpa_ctrl.h"
-#include "crypto/aes.h"
-#include "crypto/aes_siv.h"
-#include "crypto/crypto.h"
+#include "wpa_crypto/aes.h"
+#include "wpa_crypto/aes_siv.h"
+#include "wpa_crypto/crypto.h"
 #include "dpp.h"
 #include "dpp_i.h"
 

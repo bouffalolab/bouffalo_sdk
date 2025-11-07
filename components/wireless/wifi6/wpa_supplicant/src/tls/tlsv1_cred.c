@@ -10,8 +10,8 @@
 
 #include "common.h"
 #include "base64.h"
-#include "crypto/crypto.h"
-#include "crypto/sha1.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/sha1.h"
 #include "pkcs5.h"
 #include "pkcs8.h"
 #include "x509v3.h"

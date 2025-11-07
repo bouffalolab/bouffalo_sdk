@@ -37,6 +37,11 @@
 #define VERSION_FHOST_MAJOR 1
 #define VERSION_FHOST_MINOR 7
 #define VERSION_FHOST_PATCH 10
+
+#ifndef MAC2STR
+#define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
+#define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
+#endif
 uint32_t dbg_vsnprintf_offset(char *buffer, uint32_t size, uint32_t offset, const char *fmt, va_list args);
 #define dbg_vsnprintf(buffer, size, fmt, args) dbg_vsnprintf_offset(buffer, size, 0, fmt, args)
 
@@ -53,7 +58,11 @@ uint32_t dbg_vsnprintf_offset(char *buffer, uint32_t size, uint32_t offset, cons
 /// Number of RX buffers
 #if MACSW_AMPDU_RX
 #ifndef FHOST_RX_BUF_CNT
+#ifndef CFG_ADHOC_ENABLE
 #define FHOST_RX_BUF_CNT            (MACSW_MAX_BA_RX * MACSW_AMPDU_RX_BUF_SIZE + 2)
+#else
+#define FHOST_RX_BUF_CNT            (MACSW_AMPDU_RX_BUF_SIZE + 2)
+#endif
 #endif
 #else
 #define FHOST_RX_BUF_CNT             4

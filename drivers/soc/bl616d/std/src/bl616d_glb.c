@@ -1208,6 +1208,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Get_MCU_System_CLK_Div(uint8_t *mcuClkDiv, ui
     return SUCCESS;
 }
 
+#if defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
  * @brief  Set mcu System clock
  *
@@ -1262,14 +1263,9 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_System_CLK(uint8_t clkFreq)
     switch (clkFreq) {
         case GLB_MCU_SYS_CLK_RC32M:
             //AON_Set_RC32M_Speed_As_8M(false);
-            GLB_Set_MCU_System_CLK_Div(0, 0);
-            HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_RC32M);
-            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
             break;
         case GLB_MCU_SYS_CLK_XTAL:
-            GLB_Set_MCU_System_CLK_Div(0, 0);
             HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
-            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
             break;
         case GLB_MCU_SYS_CLK_CPUPLL_DIV2:
             /* For high speed, set DIV first */
@@ -1320,16 +1316,126 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_System_CLK(uint8_t clkFreq)
 
     return SUCCESS;
 }
+#else
+/****************************************************************************/ /**
+ * @brief  Set mcu System clock
+ *
+ * @param  clkFreq: mcu system clock type, this parameter can be one of the following values:
+ *           @arg GLB_MCU_SYS_CLK_RC32M
+ *           @arg GLB_MCU_SYS_CLK_XTAL
+ *           @arg GLB_MCU_SYS_CLK_CPUPLL_DIV1
+ *           @arg GLB_MCU_SYS_CLK_CPUPLL_DIV3
+ *           @arg GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M
+ *           @arg GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_MCU_System_CLK(uint8_t clkFreq)
+{
+    uint32_t tmpVal;
+    uint8_t mcuXclkSel;
 
+    CHECK_PARAM(IS_GLB_MCU_SYS_CLK_TYPE(clkFreq));
+
+    /* get xclk&&rootclk clock */
+    mcuXclkSel = HBN_Get_MCU_XCLK_Sel();
+
+    /* change root clock to rc32m */
+    //AON_Set_RC32M_Speed_As_8M(false);
+    HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_RC32M);
+    HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
+    GLB_Set_MCU_System_CLK_Div(0, 0);
+
+    /* select pll output clock before select root clock */
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_CPU_CORE_CFG1);
+    switch (clkFreq) {
+        case GLB_MCU_SYS_CLK_CPUPLL_DIV1:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 0);
+            break;
+        case GLB_MCU_SYS_CLK_CPUPLL_DIV3:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 1);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 2);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 3);
+            break;
+        default:
+            break;
+    }
+    BL_WR_REG(PDS_BASE, PDS_CPU_CORE_CFG1, tmpVal);
+
+    /* select root clock */
+    switch (clkFreq) {
+        case GLB_MCU_SYS_CLK_RC32M:
+            //AON_Set_RC32M_Speed_As_8M(false);
+            break;
+        case GLB_MCU_SYS_CLK_XTAL:
+            HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
+            break;
+        case GLB_MCU_SYS_CLK_CPUPLL_DIV1:
+            /* For high speed, set DIV first */
+            GLB_Set_MCU_System_CLK_Div(0, 3);
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            /* recover xclk */
+            HBN_Set_MCU_XCLK_Sel(mcuXclkSel);
+            break;
+        case GLB_MCU_SYS_CLK_CPUPLL_DIV3:
+            /* For high speed, set DIV first */
+            GLB_Set_MCU_System_CLK_Div(0, 1);
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            /* recover xclk */
+            HBN_Set_MCU_XCLK_Sel(mcuXclkSel);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M:
+            /* For high speed, set DIV first */
+            GLB_Set_MCU_System_CLK_Div(0, 2);
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_TOP_WIFIPLL_480M);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            /* recover xclk */
+            HBN_Set_MCU_XCLK_Sel(mcuXclkSel);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M:
+            /* For high speed, set DIV first */
+            GLB_Set_MCU_System_CLK_Div(0, 1);
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_TOP_WIFIPLL_320M);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            /* recover xclk */
+            HBN_Set_MCU_XCLK_Sel(mcuXclkSel);
+            break;
+        default:
+            break;
+    }
+
+    GLB_CLK_SET_DUMMY_WAIT;
+
+    return SUCCESS;
+}
+#endif
+
+#if defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
  * @brief  Set wl mcu System clock
  *
  * @param  clkFreq: wl mcu system clock type, this parameter can be one of the following values:
- *           @arg GLB_MCU_SYS_CLK_RC32M
- *           @arg GLB_MCU_SYS_CLK_XTAL
- *           @arg GLB_MCU_SYS_CLK_CPUPLL_DIV2
- *           @arg GLB_MCU_SYS_CLK_CPUPLL_DIV3
- *           @arg GLB_MCU_SYS_CLK_CPUPLL_DIV4
+ *           @arg GLB_WL_MCU_SYS_CLK_RC32M
+ *           @arg GLB_WL_MCU_SYS_CLK_XTAL
+ *           @arg GLB_WL_MCU_SYS_CLK_CPUPLL_DIV1
+ *           @arg GLB_WL_MCU_SYS_CLK_CPUPLL_DIV2
+ *           @arg GLB_WL_MCU_SYS_CLK_CPUPLL_DIV3
  * @param  cpuClkDiv: CPU clock divider
  * @param  BusclkDiv: Bus clock divider
  *
@@ -1395,6 +1501,82 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_WL_MCU_System_CLK(uint8_t clkFreq, uint8_
 
     return SUCCESS;
 }
+#else
+/****************************************************************************/ /**
+ * @brief  Set wl mcu System clock
+ *
+ * @param  clkFreq: wl mcu system clock type, this parameter can be one of the following values:
+ *           @arg GLB_WL_MCU_SYS_CLK_RC32M
+ *           @arg GLB_WL_MCU_SYS_CLK_XTAL
+ *           @arg GLB_WL_MCU_SYS_CLK_WIFIPLL_DIV2
+ *           @arg GLB_WL_MCU_SYS_CLK_CPUPLL_DIV2
+ *           @arg GLB_WL_MCU_SYS_CLK_CPUPLL_DIV3
+ * @param  cpuClkDiv: CPU clock divider
+ * @param  BusclkDiv: Bus clock divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_WL_MCU_System_CLK(uint8_t clkFreq, uint8_t cpuClkDiv, uint8_t BusClkDiv)
+{
+    uint32_t tmpVal;
+    uint32_t timeout;
+
+    CHECK_PARAM(IS_GLB_WL_MCU_SYS_CLK_TYPE(clkFreq));
+
+    tmpVal = BL_RD_REG(GLB_WL_BASE, GLB_WL_CLK_CPU);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_BCLK_DIV, BusClkDiv);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_CLK_DIV, cpuClkDiv);
+    BL_WR_REG(GLB_WL_BASE, GLB_WL_CLK_CPU, tmpVal);
+
+    /* bclk act pulse */
+    tmpVal = BL_RD_REG(GLB_WL_BASE, GLB_WL_CLK_CTRL_CPU);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_BCLK_DIV_ACT_PULSE, 1);
+    BL_WR_REG(GLB_WL_BASE, GLB_WL_CLK_CTRL_CPU, tmpVal);
+    timeout = 1024;
+    do {
+        tmpVal = BL_RD_REG(GLB_WL_BASE, GLB_WL_CLK_CTRL_CPU);
+        tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_WL_STS_BCLK_PROT_DONE);
+    } while ((--timeout) && (!tmpVal));
+    if (!timeout) {
+        return ERROR;
+    }
+
+    GLB_CLK_SET_DUMMY_WAIT;
+
+    tmpVal = BL_RD_REG(GLB_WL_BASE, GLB_WL_CLK_CTRL_CPU);
+    tmpVal |= 0x07;
+    switch (clkFreq) {
+        case GLB_WL_MCU_SYS_CLK_RC32M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_ROOT_CLK_SEL, 0);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_XCLK_CLK_SEL, 0);
+            break;
+        case GLB_WL_MCU_SYS_CLK_XTAL:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_ROOT_CLK_SEL, 0);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_XCLK_CLK_SEL, 1);
+            break;
+        case GLB_WL_MCU_SYS_CLK_WIFIPLL_DIV2:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_ROOT_CLK_SEL, 1);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_CLK_SEL, 0);
+            break;
+        case GLB_WL_MCU_SYS_CLK_CPUPLL_DIV2:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_ROOT_CLK_SEL, 1);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_CLK_SEL, 1);
+            break;
+        case GLB_WL_MCU_SYS_CLK_CPUPLL_DIV3:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_ROOT_CLK_SEL, 1);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_CLK_SEL, 2);
+            break;
+        default:
+            break;
+    }
+    BL_WR_REG(GLB_WL_BASE, GLB_WL_CLK_CTRL_CPU, tmpVal);
+
+    GLB_CLK_SET_DUMMY_WAIT;
+
+    return SUCCESS;
+}
+#endif
 
 /****************************************************************************/ /**
  * @brief  Select wl x clock source
@@ -1435,7 +1617,6 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_WL_XCLK_Sel(uint8_t clkSel)
 void ATTR_CLOCK_SECTION GLB_Set_WIFIPLL_Fine_Tune(void)
 {
     uint32_t tmpVal;
-    uint32_t val;
 
     /* WIFIPLL HW CTRL @ 0x200010D4 */
     tmpVal = BL_RD_WORD(RF_BASE + RF_ANA1_WIFIPLL_HW_CTRL_OFFSET);
@@ -1663,6 +1844,7 @@ BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, uint8_t clk)
     return SUCCESS;
 }
 
+#if defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
  * @brief  set peripheral DMA cn
  *
@@ -1676,26 +1858,82 @@ BL_Err_Type GLB_Set_DMA_CLK(uint8_t enable, uint8_t clk)
  *           @arg GLB_PERI_DMA_I2C_0_RX
  *           @arg GLB_PERI_DMA_I2C_0_TX
  *           @arg GLB_PERI_DMA_IRTX_TX
- *           @arg GLB_PERI_DMA_GPIO_TX
+ *           @arg GLB_PERI_DMA_WO
  *           @arg GLB_PERI_DMA_SPI_RX
  *           @arg GLB_PERI_DMA_SPI_TX
- *           @arg GLB_PERI_DMA_AUDIO_RX
- *           @arg GLB_PERI_DMA_AUDIO_TX
+ *           @arg GLB_PERI_DMA_AUDAC_TX
  *           @arg GLB_PERI_DMA_I2C_1_RX
  *           @arg GLB_PERI_DMA_I2C_1_TX
  *           @arg GLB_PERI_DMA_I2S_0_RX
  *           @arg GLB_PERI_DMA_I2S_0_TX
- *           @arg GLB_PERI_DMA_PDM_RX
- *           @arg GLB_PERI_DMA_PADC
- *           @arg GLB_PERI_DMA_GAUGE
- *           @arg GLB_PERI_DMA_GPADC
- *           @arg GLB_PERI_DMA_GPDAC_TX
+ *           @arg GLB_PERI_DMA_ADC0
+ *           @arg GLB_PERI_DMA_ADC1
+ *           @arg GLB_PERI_DMA_DBI_TX
+ *           @arg GLB_PERI_DMA_AUADC_RX
+ *           @arg GLB_PERI_DMA_DAC
+ *           @arg GLB_PERI_DMA_PEC_SM0_RX
+ *           @arg GLB_PERI_DMA_PEC_SM1_RX
+ *           @arg GLB_PERI_DMA_PEC_SM2_RX
+ *           @arg GLB_PERI_DMA_PEC_SM3_RX
+ *           @arg GLB_PERI_DMA_PEC_SM0_TX
+ *           @arg GLB_PERI_DMA_PEC_SM1_TX
+ *           @arg GLB_PERI_DMA_PEC_SM2_TX
+ *           @arg GLB_PERI_DMA_PEC_SM3_TX
  * @param  cn: cn, this parameter can be one of the following values:
  *           @arg GLB_PERI_DMA_CN_SEL_DMA0
+ *           @arg GLB_PERI_DMA_CN_SEL_DMA1
  *
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#else
+/****************************************************************************/ /**
+ * @brief  set peripheral DMA cn
+ *
+ * @param  peri: peripheral, this parameter can be one of the following values:
+ *           @arg GLB_PERI_DMA_UART0_RX
+ *           @arg GLB_PERI_DMA_UART0_TX
+ *           @arg GLB_PERI_DMA_UART1_RX
+ *           @arg GLB_PERI_DMA_UART1_TX
+ *           @arg GLB_PERI_DMA_UART2_RX
+ *           @arg GLB_PERI_DMA_UART2_TX
+ *           @arg GLB_PERI_DMA_I2C_0_RX
+ *           @arg GLB_PERI_DMA_I2C_0_TX
+ *           @arg GLB_PERI_DMA_IRTX_TX
+ *           @arg GLB_PERI_DMA_WO
+ *           @arg GLB_PERI_DMA_SPI_RX
+ *           @arg GLB_PERI_DMA_SPI_TX
+ *           @arg GLB_PERI_DMA_AUDAC_TX
+ *           @arg GLB_PERI_DMA_I2C_1_RX
+ *           @arg GLB_PERI_DMA_I2C_1_TX
+ *           @arg GLB_PERI_DMA_I2S_0_RX
+ *           @arg GLB_PERI_DMA_I2S_0_TX
+ *           @arg GLB_PERI_DMA_ADC0
+ *           @arg GLB_PERI_DMA_ADC1
+ *           @arg GLB_PERI_DMA_DBI_TX
+ *           @arg GLB_PERI_DMA_AUADC_RX
+ *           @arg GLB_PERI_DMA_DSI_TX
+ *           @arg GLB_PERI_DMA_DSI_RX
+ *           @arg GLB_PERI_DMA_SPI1_RX
+ *           @arg GLB_PERI_DMA_SPI1_TX
+ *           @arg GLB_PERI_DMA_SPI2_RX
+ *           @arg GLB_PERI_DMA_SPI2_TX
+ *           @arg GLB_PERI_DMA_PEC_SM0_TX
+ *           @arg GLB_PERI_DMA_PEC_SM1_TX
+ *           @arg GLB_PERI_DMA_PEC_SM2_TX
+ *           @arg GLB_PERI_DMA_PEC_SM3_TX
+ *           @arg GLB_PERI_DMA_PEC_SM0_RX
+ *           @arg GLB_PERI_DMA_PEC_SM1_RX
+ *           @arg GLB_PERI_DMA_PEC_SM2_RX
+ *           @arg GLB_PERI_DMA_PEC_SM3_RX
+ * @param  cn: cn, this parameter can be one of the following values:
+ *           @arg GLB_PERI_DMA_CN_SEL_DMA0
+ *           @arg GLB_PERI_DMA_CN_SEL_DMA1
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+#endif
 BL_Err_Type GLB_Set_Peripheral_DMA_CN(uint8_t peri, uint8_t cn)
 {
     uint32_t tmpVal = 0;
@@ -1707,6 +1945,9 @@ BL_Err_Type GLB_Set_Peripheral_DMA_CN(uint8_t peri, uint8_t cn)
     switch (cn) {
         case GLB_PERI_DMA_CN_SEL_DMA0:
             tmpVal &= ~(1 << peri);
+            break;
+        case GLB_PERI_DMA_CN_SEL_DMA1:
+            tmpVal |= (1 << peri);
             break;
         default:
             break;
@@ -4210,6 +4451,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Config_CPUPLL(uint8_t xtalType, const GLB_CPU
     return SUCCESS;
 }
 
+#if defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
  * @brief  Set mcu System clock Simple
  *
@@ -4282,11 +4524,9 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Simple_Set_MCU_System_CLK(uint8_t clkFreq, ui
         case GLB_MCU_SYS_CLK_RC32M:
             //AON_Set_RC32M_Speed_As_8M(false);
             HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_RC32M);
-            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
             break;
         case GLB_MCU_SYS_CLK_XTAL:
             HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
-            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
             break;
         case GLB_MCU_SYS_CLK_CPUPLL_DIV2:
             /* For high speed, set DIV first */
@@ -4325,6 +4565,121 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Simple_Set_MCU_System_CLK(uint8_t clkFreq, ui
 
     return SUCCESS;
 }
+#else
+/****************************************************************************/ /**
+ * @brief  Set mcu System clock Simple
+ *
+ * @param  clkFreq: mcu system clock type, this parameter can be one of the following values:
+ *           @arg GLB_MCU_SYS_CLK_RC32M
+ *           @arg GLB_MCU_SYS_CLK_XTAL
+ *           @arg GLB_MCU_SYS_CLK_CPUPLL_DIV1
+ *           @arg GLB_MCU_SYS_CLK_CPUPLL_DIV3
+ *           @arg GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M
+ *           @arg GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M
+ * @param  mcuClkDiv: HCLK divider
+ * @param  mcuPBclkDiv: BCLK divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Simple_Set_MCU_System_CLK(uint8_t clkFreq, uint8_t mcuClkDiv, uint8_t mcuPBclkDiv)
+{
+    uint32_t tmpVal;
+    uint32_t timeout;
+
+    CHECK_PARAM(IS_GLB_MCU_SYS_CLK_TYPE(clkFreq));
+
+    HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_XCLK);
+
+    /* select pll output clock before select root clock */
+    tmpVal = BL_RD_REG(PDS_BASE, PDS_CPU_CORE_CFG1);
+    switch (clkFreq) {
+        case GLB_MCU_SYS_CLK_CPUPLL_DIV1:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 0);
+            break;
+        case GLB_MCU_SYS_CLK_CPUPLL_DIV3:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 1);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 2);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, PDS_REG_PLL_SEL, 3);
+            break;
+        default:
+            break;
+    }
+    BL_WR_REG(PDS_BASE, PDS_CPU_CORE_CFG1, tmpVal);
+
+    /* clock div */
+    /* config hclk_div=mcuClkDiv */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_MAIN_FCLK_DIV, mcuClkDiv);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG0, tmpVal);
+    /* config bclk_div=mcuPBclkDiv */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_BCLK_DIV, mcuPBclkDiv);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG0, tmpVal);
+    /* bclk act pulse */
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_BCLK_DIV_ACT_PULSE, 1);
+    BL_WR_REG(GLB_BASE, GLB_SYS_CFG1, tmpVal);
+    timeout = 1024;
+    do {
+        tmpVal = BL_RD_REG(GLB_BASE, GLB_SYS_CFG1);
+        tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_STS_BCLK_PROT_DONE);
+    } while ((--timeout) && (!tmpVal));
+    if (!timeout) {
+        return ERROR;
+    }
+
+    /* select root clock */
+    switch (clkFreq) {
+        case GLB_MCU_SYS_CLK_RC32M:
+            //AON_Set_RC32M_Speed_As_8M(false);
+            HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_RC32M);
+            break;
+        case GLB_MCU_SYS_CLK_XTAL:
+            HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
+            break;
+        case GLB_MCU_SYS_CLK_CPUPLL_DIV1:
+            /* For high speed, set DIV first */
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            break;
+        case GLB_MCU_SYS_CLK_CPUPLL_DIV3:
+            /* For high speed, set DIV first */
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M:
+            /* For high speed, set DIV first */
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            /* unuseful for mcu, useful for dsp, just for safe */
+            GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_TOP_WIFIPLL_480M);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            break;
+        case GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M:
+            /* For high speed, set DIV first */
+            /* Set IROM 2T Access 0 since we use RC32M, unuseful now */
+            /* MCU_MISC_IROM_2T_Access_Set(0); */
+            GLB_PLL_CGEN_Clock_UnGate(GLB_PLL_CGEN_TOP_WIFIPLL_320M);
+            HBN_Set_MCU_Root_CLK_Sel(HBN_MCU_ROOT_CLK_PLL);
+            break;
+        default:
+            break;
+    }
+
+    GLB_CLK_SET_DUMMY_WAIT;
+
+    return SUCCESS;
+}
+#endif
 
 /****************************************************************************/ /**
  * @brief  enable or disable flash xip mode

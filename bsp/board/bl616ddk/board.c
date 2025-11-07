@@ -54,7 +54,11 @@ static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
         GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL | GLB_PLL_CPUPLL);
         GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M);
         HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_RC32M);
+#if defined(CPU_MODEL_A0)
         GLB_Set_WL_MCU_System_CLK(GLB_WL_MCU_SYS_CLK_CPUPLL_DIV1, 0, 2);
+#else
+        GLB_Set_WL_MCU_System_CLK(GLB_WL_MCU_SYS_CLK_WIFIPLL_DIV2, 0, 1);
+#endif
         GLB_Set_WL_XCLK_Sel(GLB_WL_MCU_XCLK_XTAL);
 #if 0
         /* RC32M=8M */

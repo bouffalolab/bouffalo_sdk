@@ -9,7 +9,7 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/crypto.h"
+#include "wpa_crypto/crypto.h"
 #include "asn1.h"
 #include "x509v3.h"
 

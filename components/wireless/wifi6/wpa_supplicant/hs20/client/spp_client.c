@@ -16,8 +16,8 @@
 #include "xml-utils.h"
 #include "http-utils.h"
 #include "utils/base64.h"
-#include "crypto/crypto.h"
-#include "crypto/sha256.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/sha256.h"
 #include "osu_client.h"
 
 

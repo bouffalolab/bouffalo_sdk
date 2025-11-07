@@ -15,7 +15,7 @@
 #include "common/wpa_common.h"
 #include "common/ieee802_11_defs.h"
 #include "common/sae.h"
-#include "crypto/sha384.h"
+#include "wpa_crypto/sha384.h"
 
 /* STA flags */
 #define WLAN_STA_AUTH BIT(0)

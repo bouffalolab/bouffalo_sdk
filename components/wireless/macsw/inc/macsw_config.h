@@ -49,7 +49,11 @@
 #define CFG_FHOST_MONITOR
 #define TX_RETRY_ENABLE 1
 
+#define CFG_ENABLE_AP_PS
+
 #define WIFI_STATISTIC_ENABLE 0
+
+#define CFG_RAW_SEND_ENABLE
 
 #ifdef BL616L
 #define CFG_PLATFORM_DMA_ENABLE 0
@@ -61,13 +65,14 @@
 #include MACSW_CONFIG_SELECT
 #endif
 
-#ifndef CFG_BL_WIFI_PS_ENABLE
-#undef CFG_BL_WIFI_PS_ENABLE
-#endif
+/* enable ps by default */
+/* TODO: remove this macro, enable by defualt in code? */
+#define CFG_BL_WIFI_PS_ENABLE 1
 
 /* XXX hacks start */
 // 这些宏需要简化成1-2个。
 //#define CFG_LPM
+#undef CFG_LPM
 //#define CFG_HE_TB ??
 #ifndef RC_EZ23Q4
 #define RC_EZ23Q4 0
@@ -75,6 +80,10 @@
 
 #ifndef RC_EZ23Q4_BCN
 #define RC_EZ23Q4_BCN 0
+#endif
+
+#ifndef RC_EZ23Q4_EDCA
+#define RC_EZ23Q4_EDCA 0
 #endif
 
 #ifndef WL_BB_TPC
@@ -131,5 +140,17 @@
 #define CONFIG_COEX_TDMA_NONE 0
 #endif
 /* coex end */
+
+/* linkage feature control */
+#define MACSW_LINKSTAGE_CONF(f) \
+  (&__macsw_conf_ ## f)
+
+#define MACSW_LINKSTAGE_CONF_DEF(f) \
+  extern int __macsw_conf_ ## f __attribute__((weak))
+
+MACSW_LINKSTAGE_CONF_DEF(bl_wifi_ps_enable);
+MACSW_LINKSTAGE_CONF_DEF(plat_dma_enable);
+
+#undef MACSW_LINKSTAGE_CONF_DEF
 
 #endif

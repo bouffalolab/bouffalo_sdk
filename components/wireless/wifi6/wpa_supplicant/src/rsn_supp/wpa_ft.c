@@ -9,9 +9,9 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/aes_wrap.h"
-#include "crypto/sha384.h"
-#include "crypto/random.h"
+#include "wpa_crypto/aes_wrap.h"
+#include "wpa_crypto/sha384.h"
+#include "wpa_crypto/random.h"
 #include "common/ieee802_11_defs.h"
 #include "common/ieee802_11_common.h"
 #include "common/ocv.h"

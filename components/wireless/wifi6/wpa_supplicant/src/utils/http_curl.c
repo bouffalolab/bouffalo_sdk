@@ -27,7 +27,7 @@
 #include "xml-utils.h"
 #include "http-utils.h"
 #ifdef EAP_TLS_OPENSSL
-#include "crypto/tls_openssl.h"
+#include "wpa_crypto/tls_openssl.h"
 #endif /* EAP_TLS_OPENSSL */
 
 

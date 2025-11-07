@@ -21,6 +21,9 @@ StackSize = 0x1000; /*  4KB */
 VerOffset = 0xc00;
 Boot2Size = 0xC000;
 PROVIDE(__boot2_pass_param_addr = 0x42049C00);/* 0x42030000+103*1024 */
+
+__EM_SIZE = DEFINED(ble_controller_init) ? 8K : 0K;
+
 MEMORY
 {
     fw_header_memory  (rx)  : ORIGIN = 0x23000000 - 0x2000, LENGTH = 8K
@@ -193,6 +196,9 @@ SECTIONS
 
     PROVIDE( __wifi_bss_start = 0 );
     PROVIDE( __wifi_bss_end = 0 );
+
+    /* EM size */
+    PROVIDE( __LD_CONFIG_EM_SEL = __EM_SIZE );
 
 }
 

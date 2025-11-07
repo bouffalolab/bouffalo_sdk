@@ -10,10 +10,10 @@
 
 #include "utils/common.h"
 #include "utils/json.h"
-#include "crypto/crypto.h"
-#include "crypto/random.h"
-#include "crypto/aes.h"
-#include "crypto/aes_siv.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/random.h"
+#include "wpa_crypto/aes.h"
+#include "wpa_crypto/aes_siv.h"
 #include "dpp.h"
 #include "dpp_i.h"
 

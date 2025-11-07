@@ -9,9 +9,9 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/md5.h"
-#include "crypto/sha1.h"
-#include "crypto/sha256.h"
+#include "wpa_crypto/md5.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/sha256.h"
 #include "tlsv1_common.h"
 #include "tlsv1_record.h"
 

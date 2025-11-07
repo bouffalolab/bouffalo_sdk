@@ -10,8 +10,8 @@
 
 #include "utils/common.h"
 #include "utils/module_tests.h"
-#include "crypto/crypto.h"
-#include "crypto/dh_groups.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/dh_groups.h"
 #include "ieee802_11_common.h"
 #include "ieee802_11_defs.h"
 #include "gas.h"

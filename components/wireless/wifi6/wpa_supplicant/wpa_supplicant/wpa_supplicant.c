@@ -17,8 +17,8 @@
 #endif /* CONFIG_MATCH_IFACE */
 
 #include "common.h"
-#include "crypto/random.h"
-#include "crypto/sha1.h"
+#include "wpa_crypto/random.h"
+#include "wpa_crypto/sha1.h"
 #include "eapol_supp/eapol_supp_sm.h"
 #include "eap_peer/eap.h"
 #include "eap_peer/eap_proxy.h"

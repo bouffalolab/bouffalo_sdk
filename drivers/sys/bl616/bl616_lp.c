@@ -312,7 +312,7 @@ static void rtc_wakeup_init(uint64_t rtc_wakeup_cmp_cnt, uint64_t sleep_us)
 }
 
 #if 1
-ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_ctx_s ctx_sha256;
+static ATTR_NOCACHE_NOINIT_RAM_SECTION struct bflb_sha256_ctx_s ctx_sha256;
 
 static void lpfw_sec_sha256(uint32_t addr, uint32_t len, uint8_t *result)
 {

@@ -530,5 +530,50 @@ struct mac_ftm_results
     } meas[FTM_RSP_MAX];
 };
 
+struct ieee80211_stats {
+    /* Number of Rx Data frames - received successfully */
+    uint32_t rx_data;
+    /* Number of Rx Mgmt frames - received successfully */
+    uint32_t rx_mgmt;
+    /* Number of Tx Data frames - transmitted successfully */
+    uint32_t tx_data;
+    /* Number of Tx Data frames - dropped due to retry limit  */
+    uint32_t tx_data_dropped;
+    /* Number of Tx Mgmt frames - transmitted successfully */
+    uint32_t tx_mgmt;
+    /* Number of Tx Mgmt frames - dropped due to retry limit  */
+    uint32_t tx_mgmt_dropped;
+};
+
+typedef struct tx_pwr_table {
+    //unit 0.5dbm
+    int8_t     pwr_11b[4];
+    int8_t     pwr_11g[8];
+    int8_t     pwr_11n[8];
+    int8_t     pwr_11ac[10];
+    int8_t     pwr_11ax[10];
+}tx_pwr_table_t;
+
+extern tx_pwr_table_t tx_power_limit_tables[2];
+#define POWER_TABLE_CHECK(power_table, array) \
+    for (int i = 0; i < sizeof(power_table->array)/sizeof(power_table->array[0]); i++) { \
+        int8_t pwr = power_table->array[i]; \
+        if (pwr <= tx_power_limit_tables[1].array[i] && pwr >= tx_power_limit_tables[0].array[i]) \
+            continue; \
+        else { \
+            printf("Error: array=%s, index=%d, value=%d, min=%d, max=%d\n", \
+                   #array, i, pwr, tx_power_limit_tables[0].array[i], tx_power_limit_tables[1].array[i]); \
+            goto end; \
+        } \
+    }
+
+#define POWER_TABLE_PRINT(power_table, array) \
+    for (int i = 0; i < sizeof(power_table->array)/sizeof(power_table->array[0]); i++) { \
+        int8_t pwr = power_table->array[i]; \
+            printf("Info: array=%s, index=%d, value=%d, min=%d, max=%d\n", \
+                   #array, i, pwr, tx_power_limit_tables[0].array[i], tx_power_limit_tables[1].array[i]); \
+    }
+
+
 /// @}
 #endif // _MAC_TYPES_H_

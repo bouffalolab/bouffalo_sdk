@@ -227,8 +227,13 @@ static int ATTR_TCM_SECTION clk_pll_set(uint32_t sdmin)
         ret = 0;
     }
 
+#if defined(CPU_MODEL_A0)
     GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_240M);
     GLB_Set_MCU_System_CLK_Div(0, 3);
+#else
+    GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_480M);
+    GLB_Set_MCU_System_CLK_Div(1, 3);
+#endif
 
     return ret;
 }

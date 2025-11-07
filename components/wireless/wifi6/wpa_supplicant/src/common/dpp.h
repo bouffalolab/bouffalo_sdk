@@ -13,8 +13,8 @@
 #ifdef CONFIG_DPP
 #include "utils/list.h"
 #include "common/wpa_common.h"
-#include "crypto/sha256.h"
-#include "crypto/crypto.h"
+#include "wpa_crypto/sha256.h"
+#include "wpa_crypto/crypto.h"
 
 struct hostapd_ip_addr;
 struct dpp_global;

@@ -9,7 +9,7 @@
 #include "utils/includes.h"
 
 #include "utils/common.h"
-#include "crypto/tls.h"
+#include "wpa_crypto/tls.h"
 #include "eap_server/eap.h"
 #include "eap_server/eap_sim_db.h"
 #include "eapol_auth/eapol_auth_sm.h"

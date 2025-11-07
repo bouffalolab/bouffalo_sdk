@@ -124,6 +124,10 @@ enum cfgmacsw_msg_index {
     CFGMACSW_BCN_UPDATE_CMD,
     /// Response to CFGMACSW_BCN_UPDATE (param: @ref cfgmacsw_resp)
     CFGMACSW_BCN_UPDATE_RESP,
+    /// Beacon Transmission Control
+    CFGMACSW_BCN_CONTROL_CMD,
+    /// resp of Beacon Transmission Control
+    CFGMACSW_BCN_CONTROL_RESP,
     /// Send to supplicant to register a new Station (param: @ref cfgmacsw_sta_add)
     CFGMACSW_STA_ADD_CMD,
     /// Response to CFGMACSW_STA_ADD_CMD (param: @ref cfgmacsw_resp)
@@ -218,6 +222,21 @@ enum cfgmacsw_msg_index {
     /// Requset to config TWT teardown
     CFGMACSW_TWT_TEARDOWN_CMD,
     CFGMACSW_TWT_TEARDOWN_RESP,
+    /// Sent to get edca (param: @ref cfgmacsw_get_edca)
+    CFGMACSW_GET_EDCA_CMD,
+    /// Response to CFGMACSW_GET_EDCA_CMD  (param: @ref cfgmacsw_get_edca_resp)
+    CFGMACSW_GET_EDCA_RESP,
+    /// Sent to get the number of frames remaining in each Tx queue  (param: @ref cfgmacsw_msg)
+    CFGMACSW_GET_REMAINING_TX_CMD,
+    /// Response to CFGMACSW_GET_REMAINING_TX_CMD  (param: @ref cfgmacsw_get_remaining_tx_resp)
+    CFGMACSW_GET_REMAINING_TX_RESP,
+
+    /// Get wifi stats
+    CFGMACSW_GET_STATS_CMD,
+    /// Clear wifi stats
+    CFGMACSW_CLR_STATS_CMD,
+
+    CFGMACSW_STATS_RESP,
 #ifdef CFG_BL_WIFI_PS_ENABLE
     /// Requset to send null packet
     CFGMACSW_NULL_DATA_SEND_CMD,
@@ -390,14 +409,45 @@ struct cfgmacsw_status_code_print {
     const char *msg;
 
 };
+typedef void (*cfgmacsw_raw_send_done)(void* env);
+typedef void (*cfgmacsw_adhoc_tx_cfm)(void* env, uint32_t status);
 struct cfgmacsw_raw_send {
     /// header
     struct cfgmacsw_msg_hdr hdr;
     /// Vif idx
     int fhost_vif_idx;
+    /// Socket to use to send CFGRWNX events
+    int sock;
+    /// Sending channel
     int channel;
+    /// Pakcet buffer
     void *pkt;
+    /// Packet len
     uint32_t len;
+    /// Send done callback
+    cfgmacsw_raw_send_done cb;
+    /// callback env
+    void *env;
+    /// Duration in ms, default 20ms
+    uint32_t duration;
+    /// whether need wait resp
+    int need_rx;
+    /// adhoc mode
+    bool adhoc;
+    /// Receiver address
+    struct mac_addr *ra;
+    /// Transmitter address
+    struct mac_addr *ta;
+    /// Tx rate
+    uint8_t rate;
+    /// Tx rts thrshold
+    uint8_t rts_thrshold;
+    /// Tx power
+    int8_t tx_power;
+    /// Tx retry limit
+    uint8_t retry_limit;
+    /// callback func for adhoc tx
+    cfgmacsw_adhoc_tx_cfm cb_cfm;
 };
 
 #ifdef CFG_BL_WIFI_PS_ENABLE
@@ -627,12 +677,41 @@ struct fhost_mm_version_cfm
     uint8_t max_vif_nb;
 };
 
+struct cfgmacsw_get_edca {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// HW queue
+    uint8_t hw_queue;
+};
+
 /// Structure for @ref CFGMACSW_LIST_FEATURES_RESP
 struct cfgmacsw_list_features_resp {
     /// header
     struct cfgmacsw_msg_hdr hdr;
     /// structure containing FW/PHY features
     struct fhost_mm_version_cfm version;
+};
+
+struct cfgmacsw_get_edca_resp {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Arbitration InterFrame Space Number
+    uint8_t aifsn;
+    /// Contention Window minimum
+    uint16_t cwmin;
+    /// Contention Window maximum
+    uint16_t cwmax;
+    /// Status
+    uint32_t status;
+};
+
+struct cfgmacsw_get_remaining_tx_resp {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// the number of frames remaining in each Tx queue.
+    uint8_t tx_cnt[AC_MAX];
+    /// Status
+    uint32_t status;
 };
 
 /// Structure for @ref CFGMACSW_SET_VIF_TYPE_CMD
@@ -779,6 +858,25 @@ struct cfgmacsw_bcn_update {
     uint8_t csa_oft[BCN_MAX_CSA_CPT];
 };
 
+struct cfgmacsw_bcn_control {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    /// Vif idx
+    uint16_t fhost_vif_idx;
+    /// bcn_mode:
+    /// 0      Start/Stop beacon transmissions automatically
+    ///         a.Beacon transmission is NOT started when SAP is started.
+    ///         b.Once a Probe Request frame having the same SSID is received, replies with a Probe Response frame, then Beacon transmission is started.
+    ///         c.Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds.
+    /// 1      Do not transmit beacon frames
+    /// 2      Transmit beacon frames (Default)
+    uint8_t bcn_mode;
+    /// Beacon transmission is stopped again if no STA is associated for more than bcn_timer seconds.
+    int bcn_timer;
+    /// should bcn tx stop
+    bool bcn_stop;
+};
+
 /// Structure for CFGMACSW_STA_ADD_CMD
 struct cfgmacsw_sta_add {
     /// header
@@ -888,10 +986,28 @@ struct cfgmacsw_twt_teardown_req {
     uint8_t id;
 };
 
+enum stats_vif_type
+{
+    STATS_STA,
+    STATS_AP,
+    STATS_ADHOC,
+    STATS_MAX,
+};
+
+struct cfgmacsw_get_stats_resp {
+    /// header
+    struct cfgmacsw_msg_hdr hdr;
+    struct ieee80211_stats stats[STATS_MAX];
+    /// Status
+    uint8_t status;
+};
+
 enum CFGMACSW_ME_PARAM_ID_E {
+    CFGMACSW_ME_PARAM_ID_TX_SINGLE_RETRY_CNT_LIMIT,
     CFGMACSW_ME_PARAM_ID_TX_AMPDU_RETRY_CNT_LIMIT,
     CFGMACSW_ME_PARAM_ID_TX_AMPDU_PROTECT_ENABLE,
     CFGMACSW_ME_PARAM_ID_TX_AMPDU_DROP_TO_SINGLETON_RETRYCNT_THRESHOLD,
+    CFGMACSW_ME_PARAM_ID_TX_POWER,
 };
 
 enum CFGMACSW_ME_PARAM_CMD_E {
@@ -905,7 +1021,7 @@ struct cfgmacsw_me_param {
     /// me param
     enum CFGMACSW_ME_PARAM_ID_E id;
     enum CFGMACSW_ME_PARAM_CMD_E cmd;// GET or SET
-    uint8_t data[32];
+    uint8_t data[50];
 };
 
 /// structure for CFGMACSW_ME_PARAM_RESP
@@ -915,7 +1031,7 @@ struct cfgmacsw_me_param_resp {
     /// me param
     enum CFGMACSW_ME_PARAM_ID_E id;
     enum CFGMACSW_ME_PARAM_CMD_E cmd;// GET or SET
-    uint8_t data[32];
+    uint8_t data[50];
 };
 
 /// structure for CFGMACSW_GET_STA_INFO_CMD

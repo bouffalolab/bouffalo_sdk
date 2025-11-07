@@ -9,7 +9,7 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/sha1.h"
+#include "wpa_crypto/sha1.h"
 
 
 int main(int argc, char *argv[])

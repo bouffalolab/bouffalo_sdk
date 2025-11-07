@@ -51,6 +51,7 @@ sdk_add_link_options(
 -Wl,--gc-sections
 -nostartfiles
 -fms-extensions
+-flto
 -ffunction-sections
 -fdata-sections
 --specs=nano.specs

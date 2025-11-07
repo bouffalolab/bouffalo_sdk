@@ -14,8 +14,8 @@
 
 #include "common.h"
 #include "eloop.h"
-#include "crypto/sha1.h"
-#include "crypto/crypto.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/crypto.h"
 #include "l2_packet.h"
 
 

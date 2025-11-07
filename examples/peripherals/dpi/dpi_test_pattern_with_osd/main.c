@@ -15,7 +15,7 @@ volatile int32_t blend_y_step = 2;
 
 extern const uint8_t picture_moon_80x96_rgb565[];
 
-ATTR_NOINIT_PSRAM_SECTION uint16_t osd_layer_buffer[OSD_LAYER_MOON_PIXEL];
+uint16_t osd_layer_buffer[OSD_LAYER_MOON_PIXEL];
 
 static struct bflb_osd_blend_config_s osd_blend_config = {
     .blend_format = OSD_BLEND_FORMAT_RGB565,

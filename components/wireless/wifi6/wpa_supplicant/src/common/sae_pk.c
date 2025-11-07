@@ -13,9 +13,9 @@
 #include "utils/base64.h"
 #include "common/ieee802_11_defs.h"
 #include "common/ieee802_11_common.h"
-#include "crypto/crypto.h"
-#include "crypto/aes.h"
-#include "crypto/aes_siv.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/aes.h"
+#include "wpa_crypto/aes_siv.h"
 #include "sae.h"
 
 

@@ -9,7 +9,7 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/random.h"
+#include "wpa_crypto/random.h"
 #include "eap_server/eap_i.h"
 #include "eap_common/eap_sim_common.h"
 #include "eap_server/eap_sim_db.h"

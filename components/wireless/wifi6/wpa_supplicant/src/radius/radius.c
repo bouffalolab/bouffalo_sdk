@@ -10,8 +10,8 @@
 
 #include "utils/common.h"
 #include "utils/wpabuf.h"
-#include "crypto/md5.h"
-#include "crypto/crypto.h"
+#include "wpa_crypto/md5.h"
+#include "wpa_crypto/crypto.h"
 #include "radius.h"
 
 

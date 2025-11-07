@@ -777,6 +777,8 @@ void wifi_sta_info_cmd(int argc, char **argv)
     fhost_printf("  11ax(he160): ");
     _print_sta_pwr(12, power_table.pwr_11ax_he160);
 #endif
+    fhost_printf("  last rx rate: format:%s,mcs:%u \r\n", export_stats_get_rx_format(), export_stats_get_rx_mcs());
+    fhost_printf("  last tx rate: format:%s,mcs:%u \r\n", export_stats_get_tx_format(), export_stats_get_tx_mcs());
     fhost_printf("================================================================\r\n");
 }
 
@@ -797,7 +799,7 @@ void wifi_mgmr_ap_start_cmd(int argc, char **argv)
     config.use_dhcpd = true;
 
     utils_al_getopt_init(&getopt_env, 0);
-    while ((opt = utils_al_getopt(&getopt_env, argc, argv, "b:s:k:c:a:t:h:i:g:d:I:S:L:n:")) != -1) {
+    while ((opt = utils_al_getopt(&getopt_env, argc, argv, "b:s:k:c:a:t:h:i:g:d:I:S:L:n:w:")) != -1) {
         switch (opt) {
 	case 'b':
 	    config.type = (uint8_t)atoi(getopt_env.optarg);
@@ -1054,6 +1056,9 @@ SHELL_CMD_EXPORT_ALIAS(cmd_ac_set, ac_set, access_category config);
 #ifdef CFG_FOR_COEXISTENCE_TEST_STOPAP_PATCH
 SHELL_CMD_EXPORT_ALIAS(cmd_ap_stop, ap_stop, ap stop);
 #endif
+SHELL_CMD_EXPORT_ALIAS(wifi_ap_bcn_mode_set_cmd, bcn_mode_set, wifi ap bcn mode set);
+SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_acl_set_cmd, ap_acl_set, wifi ap acl set);
+SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_acl_enable_cmd, ap_acl_perm_set, wifi ap acl perm set);
 SHELL_CMD_EXPORT_ALIAS(wifi_scan_cmd, wifi_scan, wifi scan);
 SHELL_CMD_EXPORT_ALIAS(wifi_connect_cmd, wifi_sta_connect, wifi station connect);
 SHELL_CMD_EXPORT_ALIAS(wifi_disconnect_cmd, wifi_sta_disconnect, wifi station disconnect);
@@ -1079,7 +1084,6 @@ SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_start_cmd, wifi_ap_start, start AP mode);
 SHELL_CMD_EXPORT_ALIAS(wifi_mgmr_ap_stop_cmd, wifi_ap_stop, stop AP mode);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_mac_get, wifi_ap_mac_get, get wifi ap mac);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_conf_max_sta, wifi_ap_conf_max_sta, config AP mac sta);
-SHELL_CMD_EXPORT_ALIAS(cmd_wifi_raw_send, wifi_raw_send, wifi raw send test);
 #ifdef CFG_TG
 SHELL_CMD_EXPORT_ALIAS(cmd_tg, tg, wifi tg);
 #endif
@@ -1093,7 +1097,11 @@ SHELL_CMD_EXPORT_ALIAS(wifi_sta_static_ipv4, set_ipv4, ipc task set);
 #ifdef CFG_IPERF
 SHELL_CMD_EXPORT_ALIAS(cmd_iperf, iperf, iperf test throughput);
 #endif
+#ifdef CFG_RAW_SEND_ENABLE
+SHELL_CMD_EXPORT_ALIAS(cmd_wifi_raw_send, wifi_raw_send, wifi raw send test);
+#endif
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_wps_pbc, wps_pbc, Start wps pbc for sta);
+SHELL_CMD_EXPORT_ALIAS(cmd_wifi_stats, wifi_stats, Get/Clear stats for wifi);
 SHELL_CMD_EXPORT_ALIAS(cmd_rc, rc, Print the Rate Control Table);
 SHELL_CMD_EXPORT_ALIAS(cmd_rate, rate, set g_fw_rate);
 SHELL_CMD_EXPORT_ALIAS(cmd_non_pref_chan, non_pref_chan, set non_pref_chan);
@@ -1101,6 +1109,7 @@ SHELL_CMD_EXPORT_ALIAS(cmd_non_pref_chan_notify, non_pref_chan_notify, notify no
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mgmr_sta_twt_setup, wifi_mgmr_sta_twt_setup, Setup WiFi Manager STA TWT functionality);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mgmr_sta_twt_teardown, wifi_mgmr_sta_twt_teardown, Teardown WiFi Manager STA TWT functionality);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_mode_set, wifi_mode_set, set ap/sta mode);
+SHELL_CMD_EXPORT_ALIAS(cmd_wifi_get_tx_remaining, get_tx_remaining, get tx remaining);
 #if WIFI_STATISTIC_ENABLE
 SHELL_CMD_EXPORT_ALIAS(cmd_fw_dbg, fw_dbg, fw debug param);
 #endif

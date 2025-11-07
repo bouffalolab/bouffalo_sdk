@@ -13,9 +13,9 @@
 
 #include "utils/common.h"
 #include "utils/eloop.h"
-#include "crypto/md5.h"
-#include "crypto/crypto.h"
-#include "crypto/random.h"
+#include "wpa_crypto/md5.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/random.h"
 #include "common/ieee802_11_defs.h"
 #include "radius/radius.h"
 #include "radius/radius_client.h"

@@ -15,7 +15,7 @@
 #include "common.h"
 #include "utils/ext_password.h"
 #include "common/version.h"
-#include "crypto/tls.h"
+#include "wpa_crypto/tls.h"
 #include "config.h"
 #include "eapol_supp/eapol_supp_sm.h"
 #include "eap_peer/eap.h"

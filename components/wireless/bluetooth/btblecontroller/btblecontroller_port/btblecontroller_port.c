@@ -199,9 +199,9 @@ __attribute__((weak)) int btblecontroller_efuse_read_mac(uint8_t mac[6])
     status = bl_efuse_read_mac(tmp);
     #endif
     #else
-    #if defined(BL616)
+    #if defined(BL616) || defined(BL616D)
     status = mfg_media_read_macaddr_with_lock(tmp, 1);
-    #elif defined(BL616L) || defined(BL616D)
+    #elif defined(BL616L)
     //BL616L_todo, BL616D_todo
     return 1;
     #endif

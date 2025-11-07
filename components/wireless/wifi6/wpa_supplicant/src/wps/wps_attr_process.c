@@ -9,7 +9,7 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/sha256.h"
+#include "wpa_crypto/sha256.h"
 #include "wps_i.h"
 
 

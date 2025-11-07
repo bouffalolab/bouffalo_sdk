@@ -21,8 +21,8 @@
 #include "common/wpa_ctrl.h"
 #include "common/wpa_helpers.h"
 #include "eap_common/eap_defs.h"
-#include "crypto/crypto.h"
-#include "crypto/sha256.h"
+#include "wpa_crypto/crypto.h"
+#include "wpa_crypto/sha256.h"
 #include "osu_client.h"
 
 const char *spp_xsd_fname = "spp.xsd";

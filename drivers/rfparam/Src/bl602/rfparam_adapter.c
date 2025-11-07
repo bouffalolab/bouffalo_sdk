@@ -230,7 +230,7 @@ break_scan:
         rfparam_printf("Using Default pwr offset\r\n");//all zeros actually
     }
     log_buf_int8(poweroffset, sizeof(poweroffset));
-#ifdef CFG_BLE_ENABLE
+#ifdef CONFIG_BLE_ENABLE
     extern void ble_rf_set_pwr_offset_table(int8_t *poweroffset_table);
 	ble_rf_set_pwr_offset_table(poweroffset);
 #endif
@@ -411,7 +411,7 @@ static int hal_board_load_rftv_info(uint32_t rftlv_addr)
     } else {
         LOG_E("RFTLV_TYPE_PWR_TABLE_BLE NULL\r\n");
     }
-#ifdef CFG_BLE_ENABLE
+#ifdef CONFIG_BLE_ENABLE
         ble_controller_set_tx_pwr(pwr_table_ble);
 #endif
 

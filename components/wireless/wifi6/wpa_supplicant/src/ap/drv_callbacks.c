@@ -18,7 +18,7 @@
 #include "common/dpp.h"
 #include "common/sae.h"
 #include "common/hw_features_common.h"
-#include "crypto/random.h"
+#include "wpa_crypto/random.h"
 #include "p2p/p2p.h"
 #include "wps/wps.h"
 #include "fst/fst.h"

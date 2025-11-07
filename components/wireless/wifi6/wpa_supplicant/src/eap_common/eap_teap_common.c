@@ -9,10 +9,10 @@
 #include "includes.h"
 
 #include "common.h"
-#include "crypto/sha1.h"
-#include "crypto/sha256.h"
-#include "crypto/sha384.h"
-#include "crypto/tls.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/sha256.h"
+#include "wpa_crypto/sha384.h"
+#include "wpa_crypto/tls.h"
 #include "eap_defs.h"
 #include "eap_teap_common.h"
 

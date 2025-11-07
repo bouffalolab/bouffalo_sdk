@@ -11,7 +11,7 @@
 
 #include "utils/common.h"
 #include "utils/const_time.h"
-#include "crypto/crypto.h"
+#include "wpa_crypto/crypto.h"
 #include "dragonfly.h"
 
 

@@ -14,7 +14,7 @@
 #include "common/defs.h"
 #include "common/sae.h"
 #include "common/wpa_ctrl.h"
-#include "crypto/sha384.h"
+#include "wpa_crypto/sha384.h"
 #include "eapol_supp/eapol_supp_sm.h"
 #include "wps/wps_defs.h"
 #include "config_ssid.h"

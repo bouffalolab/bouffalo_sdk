@@ -656,6 +656,10 @@ struct wpa_ssid {
 	 */
 	int ignore_broadcast_ssid;
 
+    int bcn_mode;
+
+    int bcn_timer;
+
     int disable_wmm;
 
 	/**

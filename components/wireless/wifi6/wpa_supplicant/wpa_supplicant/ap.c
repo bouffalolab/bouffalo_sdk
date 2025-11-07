@@ -15,7 +15,7 @@
 #include "common/ieee802_11_defs.h"
 #include "common/wpa_ctrl.h"
 #include "eapol_supp/eapol_supp_sm.h"
-#include "crypto/dh_group5.h"
+#include "wpa_crypto/dh_group5.h"
 #include "ap/hostapd.h"
 #include "ap/ap_config.h"
 #include "ap/ap_drv_ops.h"
@@ -546,6 +546,8 @@ static int wpa_supplicant_conf_ap(struct wpa_supplicant *wpa_s,
 	bss->ssid.ssid_set = 1;
 
 	bss->ignore_broadcast_ssid = ssid->ignore_broadcast_ssid;
+    bss->bcn_mode = ssid->bcn_mode;
+    bss->bcn_timer = ssid->bcn_timer;
 
 	if (ssid->auth_alg)
 		bss->auth_algs = ssid->auth_alg;
@@ -1528,7 +1530,7 @@ int ap_ctrl_iface_acl_add_mac(struct wpa_supplicant *wpa_s, bool accept, const c
 {
     if (wpa_s->ap_iface == NULL)
         return -1;
-    struct hostapd_data *hapd = wpa_s->ap_iface->bss[0]; 
+    struct hostapd_data *hapd = wpa_s->ap_iface->bss[0];
 
     if (accept) {
         return hostapd_ctrl_iface_acl_add_mac(
@@ -1547,11 +1549,11 @@ int ap_ctrl_iface_acl_del_mac(struct wpa_supplicant *wpa_s, bool accept, const c
 		return -1;
     struct hostapd_data *hapd = wpa_s->ap_iface->bss[0];
     if (accept) {
-        return hostapd_ctrl_iface_acl_add_mac(
+        return hostapd_ctrl_iface_acl_del_mac(
             &hapd->conf->accept_mac,
             &hapd->conf->num_accept_mac, txtaddr);
     } else {
-        return hostapd_ctrl_iface_acl_add_mac(
+        return hostapd_ctrl_iface_acl_del_mac(
             &hapd->conf->deny_mac,
             &hapd->conf->num_deny_mac, txtaddr);
     }

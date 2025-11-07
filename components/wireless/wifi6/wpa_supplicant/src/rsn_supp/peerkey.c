@@ -12,9 +12,9 @@
 
 #include "common.h"
 #include "eloop.h"
-#include "crypto/sha1.h"
-#include "crypto/sha256.h"
-#include "crypto/random.h"
+#include "wpa_crypto/sha1.h"
+#include "wpa_crypto/sha256.h"
+#include "wpa_crypto/random.h"
 #include "common/ieee802_11_defs.h"
 #include "wpa.h"
 #include "wpa_i.h"

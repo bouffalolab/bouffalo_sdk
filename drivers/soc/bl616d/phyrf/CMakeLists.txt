@@ -1,2 +1,6 @@
 sdk_add_include_directories(include)
+if(CONFIG_PHY_CLI)
+sdk_add_static_library(lib-gcc_10.2.0-toolchain_V2.6.1/libbl616d_phyrf_4mfg.a)
+else()
 sdk_add_static_library(lib-gcc_10.2.0-toolchain_V2.6.1/libbl616d_phyrf.a)
+endif()
