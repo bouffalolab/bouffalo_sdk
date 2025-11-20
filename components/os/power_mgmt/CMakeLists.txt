@@ -1,0 +1,28 @@
+sdk_generate_library()
+sdk_library_add_sources(clock_manager.c)
+sdk_library_add_sources(pm_manager.c)
+sdk_add_include_directories(.)
+
+if (CONFIG_TICKLESS_ACCURATE)
+    # sdk_add_compile_definitions(-DTICKLESS_DEBUG=4)
+    sdk_add_compile_definitions(-DLP_APP)
+    sdk_add_compile_definitions(-DconfigUSE_TICKLESS_IDLE=1)
+    sdk_add_compile_definitions(-DPM_PDS_LDO_LEVEL_SOC_DEFAULT=10)
+    sdk_add_compile_definitions(-DPM_PDS_LDO_LEVEL_AON_DEFAULT=10)
+    sdk_add_compile_definitions(-DCONFIG_LPFW_INIT_SKIP_COPY=1)
+    sdk_add_compile_definitions(-DLP_APP)
+
+    if (CONFIG_ACTIVE_CRYSTAL)
+        sdk_add_compile_definitions(-DCFG_ACTIVE_CRYSTAL)
+    endif ()
+
+    if (CONFIG_DCDC_ENABLE)
+        sdk_add_compile_definitions(-DPM_PDS_LDO_LEVEL_RT_DEFAULT=8)
+    else ()
+        sdk_add_compile_definitions(-DPM_PDS_LDO_LEVEL_RT_DEFAULT=10)
+    endif ()
+
+    sdk_add_compile_definitions(-DconfigEXPECTED_IDLE_TIME_BEFORE_SLEEP=40)
+    sdk_add_compile_definitions(-Dconfig_CUSTOM_TICKLESS=2)
+    sdk_library_add_sources(tickless_accurate.c)
+endif()

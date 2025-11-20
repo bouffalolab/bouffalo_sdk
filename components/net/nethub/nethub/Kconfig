@@ -1,0 +1,131 @@
+#
+# nethub framework configuration options
+#
+
+menu "nethub Framework Configuration"
+
+config NETHUB_ENABLE
+    bool "Enable nethub Framework"
+    default y
+    help
+      Enable nethub network forwarding framework support.
+      This provides a flexible network interface and packet forwarding system.
+
+config NETHUB_LOG_LEVEL
+    int "nethub Log Level"
+    range 0 4
+    default 1
+    help
+      Set the minimum log level for nethub framework output.
+      Controls which messages will be compiled into the binary:
+      0: No logging
+      1: Error messages (nh_err)
+      2: Warning messages (nh_err, nh_warn)
+      3: Info messages (nh_err, nh_warn, nh_info)
+      4: Debug messages (nh_err, nh_warn, nh_info, nh_debug)
+
+      Higher values include lower levels. Use only when debugging or
+      developing drivers.
+
+
+comment "Interface Type Configuration"
+
+menu "Network Interface Types"
+
+config NETHUB_IF_STA
+    bool "Enable STA interface"
+    default y
+    help
+      Enable WiFi Station interface support.
+
+config NETHUB_IF_AP
+    bool "Enable AP interface"
+    default y
+    help
+      Enable WiFi Access Point interface support.
+
+config NETHUB_IF_TCPIPSTA
+    bool "Enable TCPIP STA interface"
+    default y
+    help
+      Enable TCP/IP Stack STA mode interface support.
+
+config NETHUB_IF_TCPIPAP
+    bool "Enable TCPIP AP interface"
+    default y
+    help
+      Enable TCP/IP Stack AP mode interface support.
+
+config NETHUB_IF_TCPIPNAT
+    bool "Enable TCPIP NAT interface"
+    default y
+    help
+      Enable TCP/IP Stack NAT mode interface support.
+
+config NETHUB_IF_SDIO
+    bool "Enable SDIO interface"
+    default y
+    help
+      Enable SDIO transport interface support.
+
+config NETHUB_IF_USB
+    bool "Enable USB interface"
+    default y
+    help
+      Enable USB transport interface support.
+
+config NETHUB_IF_SPI
+    bool "Enable SPI interface"
+    default y
+    help
+      Enable SPI transport interface support.
+
+config NETHUB_IF_BRIDGE
+    bool "Enable Bridge interface"
+    default y
+    help
+      Enable network bridge interface support.
+
+endmenu
+
+comment "Performance Optimization Configuration"
+
+config NETHUB_INLINE_FUNCTIONS
+    bool "Enable function inlining for performance"
+    default y
+    help
+      Enable inline functions for better performance.
+      This may increase code size but improve execution speed.
+
+config NETHUB_FAST_LOOKUP
+    bool "Enable fast lookup tables"
+    default y
+    help
+      Enable fast lookup tables for interface and rule lookup.
+      Uses more memory but improves lookup performance.
+
+comment "Forwarding Rules Configuration"
+
+menu "Forwarding Rules Configuration"
+
+config NETHUB_FWD_SDIOWIFI
+    bool "Use SDIO WiFi forwarding rules"
+    default y
+    depends on NETHUB_IF_SDIO && NETHUB_IF_STA && NETHUB_IF_TCPIPSTA
+    help
+      Use SDIO WiFi application forwarding rules configuration.
+      This provides static forwarding rules: STA -> TCPIPSTA -> SDIO.
+      Suitable for SDIO-based WiFi devices.
+
+config NETHUB_FWD_HOSTLESS
+    bool "Use Hostless forwarding rules"
+    default y
+    depends on NETHUB_IF_STA && NETHUB_IF_AP && NETHUB_IF_TCPIPSTA && NETHUB_IF_TCPIPAP
+    help
+      Use Hostless application forwarding rules configuration.
+      This provides static forwarding rules: STA <-> TCPIPSTA, AP <-> TCPIPAP.
+      Suitable for standalone network scenarios.
+
+endmenu
+
+endmenu

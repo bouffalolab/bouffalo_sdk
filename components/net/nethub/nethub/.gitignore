@@ -1,0 +1,81 @@
+# Build output directories
+build/
+Build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Build artifacts
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.bin
+*.hex
+*.elf
+
+# Executable files
+examples/*/*.a
+examples/*/*.so
+examples/*/*.exe
+examples/*/*.out
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+*~
+
+# IDE and editor files
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-*
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# CMake related files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+compile_commands.json
+
+# Cache files
+.cache/
+__pycache__/
+
+# Test coverage files
+gcov/
+*.gcov
+*.gcda
+*.gcno
+coverage.info
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Documentation generation files
+docs/doxygen/
+
+# Configuration temporary files
+*.config.tmp
+*.defconfig.tmp

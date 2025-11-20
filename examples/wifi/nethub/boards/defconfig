@@ -1,0 +1,25 @@
+
+#
+# Wireless
+#
+CONFIG_CONFIG_WIRELESS_ENABLE=y
+# CONFIG_WIFI_MODE_STA is not set
+# CONFIG_WIFI_MODE_AP is not set
+CONFIG_WIFI_MODE_APSTA=y
+# end of Wireless
+
+#
+# crypto
+#
+# CONFIG_MBEDTLS is not set
+# end of crypto
+
+#
+# atmodule
+#
+CONFIG_ATMODULE=y
+# CONFIG_ATMODULE_USB is not set
+# CONFIG_ATMODULE_UART is not set
+# CONFIG_ATMODULE_NXSPI is not set
+CONFIG_ATMODULE_TTY=y
+# end of atmodule
