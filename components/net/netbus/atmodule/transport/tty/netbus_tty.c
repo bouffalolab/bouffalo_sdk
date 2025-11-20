@@ -4,7 +4,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-#include "bl616_glb.h"
 #include "bflb_clock.h"
 #include "bflb_uart.h"
 #include <bflb_gpio.h>
@@ -36,7 +35,7 @@ int netbus_tty_init(netbus_tty_ctx_t *pctx, uint32_t txbuf_size, uint32_t rxbuf_
 	pctx->rxbuf   = xStreamBufferCreate(rxbuf_size, 1);
 	pctx->w_mutex = xSemaphoreCreateMutex();
 
-    bflb_tty_dnld_register(netbus_tty_dnld, pctx);
+	bflb_tty_dnld_register(netbus_tty_dnld, pctx);
 	return 0;
 }
 

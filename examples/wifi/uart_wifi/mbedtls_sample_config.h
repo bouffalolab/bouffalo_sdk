@@ -72,10 +72,7 @@
 #define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
 
-//XXX TODO remove bflb_undefp
-#if defined(CFG_CHIP_BFLB_undefP) || defined(CFG_CHIP_BFLB_undef)
 #define MBEDTLS_PKCS5_C
-#endif
 #define MBEDTLS_PKCS1_V15
 #define MBEDTLS_PKCS1_V21
 
@@ -121,6 +118,8 @@
 #define MBEDTLS_SSL_TLS_C
 #define MBEDTLS_X509_USE_C
 #define MBEDTLS_X509_CRT_PARSE_C
+
+#define MBEDTLS_PK_WRITE_C
 
 //#define MBEDTLS_NET_C
 

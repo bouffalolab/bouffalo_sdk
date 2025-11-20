@@ -33,7 +33,7 @@ typedef enum {
 } at_cmd_type;
 
 
-#define AT_CORE_PRINTF //printf
+#define AT_CORE_PRINTF AT_CMD_PRINTF
 
 struct at_struct *at = NULL;
 static uint32_t at_error = AT_SUB_OK;
@@ -61,7 +61,14 @@ uint32_t at_cmd_get_version(void)
 
 int at_cmd_get_compile_time(char *time, size_t buf_len)
 {
-    snprintf(time, buf_len, "%s %s", __DATE__, __TIME__);
+    if (!time || buf_len == 0) {
+        return -1;
+    }
+    
+    int ret = snprintf(time, buf_len, "%s %s", __DATE__, __TIME__);
+    if (ret < 0 || ret >= buf_len) {
+        return -1;
+    }
     return 0;
 }
 
@@ -90,7 +97,7 @@ static int at_arg_is_string(const char *arg)
 
 int at_arg_is_null(const char *arg)
 {
-    if (strlen(arg) <= 0)
+    if (!arg || strlen(arg) <= 0)
         return 1;
     else
         return 0;
@@ -98,13 +105,17 @@ int at_arg_is_null(const char *arg)
 
 int at_arg_get_number(const char *arg, int *value)
 {
-    int i;
-
-    if (!arg) {
+    if (!arg || !value) {
         return 0;
     }
-    for (i=0; i<strlen(arg); i++) {
-        if (!((arg[i] >= '0' && arg[i] <= '9') || (i == 0 && arg[i] == '-')))
+    int i, len = 0;
+
+    len = strlen(arg);
+    if (!len) {
+        return 0;
+    }
+    for (i=0; i<len; i++) {
+        if (!((arg[i] >= '0' && arg[i] <= '9')  || (i == 0 && arg[i] == '-' && len > 1)))
             return 0;
     }
 
@@ -114,13 +125,16 @@ int at_arg_get_number(const char *arg, int *value)
 
 int at_arg_get_string(const char *arg, char *string, int max)
 {
+    if (!arg || !string || max <= 0) {
+        return 0;
+    }
     int len;
 
     if (!at_arg_is_string(arg))
         return 0;
 
     len = strlen(arg)-2;
-    if (len >= max)
+    if (len >= max || len < 0)
         return 0;
 
     strlcpy(string, arg+1, max);
@@ -133,10 +147,6 @@ static int at_register_command(const at_cmd_struct *cmd)
     int i;
 
     if (!at) {
-        return -1;
-    }
-
-    if (!cmd->at_name ) {
         return -1;
     }
 
@@ -190,7 +200,7 @@ void at_cmd_syslog(uint32_t error)
 {
     char outbuf[64];
 
-    if (at->syslog) {
+    if (at && at->syslog) {
         snprintf(outbuf, sizeof(outbuf), "ERR CODE:0x%08lx\r\n", error);
         at->device_ops.write_data((uint8_t *)outbuf, strlen(outbuf));
     }
@@ -201,14 +211,12 @@ int at_cmd_register(const at_cmd_struct *cmds, int num_cmds)
     int i;
     int err;
 
-    if (!at) {
+    if (!at || !num_cmds) {
         return -1;
     }
 
-    for (i = 0; i < num_cmds; i++) {
-        if ((err = at_register_command(cmds++)) != 0) {
-            return err;
-        }
+    if ((err = at_register_command(cmds)) != 0) {
+        return err;
     }
 
     return 0;
@@ -223,10 +231,8 @@ int at_cmd_unregister(const at_cmd_struct *cmds, int num_cmds)
         return -1;
     }
 
-    for (i = 0; i < num_cmds; i++) {
-        if ((err = at_unregister_command(cmds++)) != 0) {
-            return err;
-        }
+    if ((err = at_unregister_command(cmds)) != 0) {
+        return err;
     }
 
     return 0;
@@ -236,15 +242,16 @@ static const at_cmd_struct *at_cmd_lookup(char *name)
 {
     int i = 0;
     int n = 0;
+    at_cmd_struct *cmds;
 
     while (i < AT_CMD_MAX_NUM && n < at->num_commands) {
-        if (at->commands[i]->at_name == NULL) {
-            i++;
-            continue;
-        }
 
-        if (!strcasecmp(at->commands[i]->at_name, name)) {
-            return at->commands[i];
+        cmds = at->commands[n];
+        while (cmds->at_name) {
+            if (!strcasecmp(cmds->at_name, name)) {
+                return cmds;
+            }
+            cmds++;
         }
 
         i++;
@@ -267,10 +274,10 @@ static int at_cmd_proc(char *name, at_cmd_type type, int argc, char **argv)
 
     if (type == AT_CMD_TYPE_TEST) {
         AT_CORE_PRINTF("test Cmd!\r\n");
-        if (cmd->at_test_cmd == NULL)
-            return AT_RESULT_CODE_ERROR;
-        else
-            return cmd->at_test_cmd(argc, (const char **)argv);
+        //if (cmd->at_test_cmd == NULL)
+        return AT_RESULT_CODE_ERROR;
+        //else
+        //    return cmd->at_test_cmd(argc, (const char **)argv);
     }
     else if (type == AT_CMD_TYPE_QUERY) {
          AT_CORE_PRINTF("query Cmd!\r\n");
@@ -309,22 +316,22 @@ static int at_cmd_gettype(int equal, int quest, int argc, char **argv)
 
     if (equal && quest) {
         if (argc > 0)
-            return AT_RESULT_CODE_ERROR;
+            return AT_CMD_TYPE_QUERY;
         type = AT_CMD_TYPE_TEST;
     }
     else if (!equal && quest) {
         if (argc > 0)
-            return AT_RESULT_CODE_ERROR;
+            return AT_CMD_TYPE_ERROR;
         type = AT_CMD_TYPE_QUERY;
     }
     else  if (equal && !quest) {
         if (argc <= 0)
-            return AT_RESULT_CODE_ERROR;
+            return AT_CMD_TYPE_ERROR;
         type = AT_CMD_TYPE_SETUP;
     }
     else {
         if (argc > 0)
-            return AT_RESULT_CODE_ERROR;
+            return AT_CMD_TYPE_ERROR;
         type = AT_CMD_TYPE_EXE;
     }
  

@@ -277,6 +277,8 @@
 #define BFLB_PERIPHERAL_CAM0                   (47)
 #define BFLB_PERIPHERAL_EMI_MISC               (48)
 #define BFLB_PERIPHERAL_PEC                    (49)
+#define BFLB_PERIPHERAL_SPI2                   (50)
+#define BFLB_PERIPHERAL_SPI3                   (51)
 #endif
 
 #if defined(BL616L)

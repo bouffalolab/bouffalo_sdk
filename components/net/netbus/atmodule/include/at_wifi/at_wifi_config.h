@@ -33,7 +33,7 @@ extern "C" {
 #define AT_CONFIG_KEY_WIFI_ANTDIV           "ANTDIV"
 #define AT_CONFIG_KEY_WIFI_NETMODE          "NETMODE"
 
-#define AT_WIFI_COUNTRY_CODE                {"CN", "JP", "US", "EU", "00"}
+#define AT_WIFI_COUNTRY_CODE                {"CN", "JP", "US", "EU", "WW"}
 
 #define IP_SET_ADDR(a,b,c,d) (((uint32_t)((a) & 0xff)) | \
                                             ((uint32_t)((b) & 0xff) << 8) | \

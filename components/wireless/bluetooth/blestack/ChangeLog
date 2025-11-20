@@ -1,6 +1,10 @@
 # Changes
+## 2025-11-10
+1.[blestack]: fix CCC subscription crash and prevent configuration sharing.
+
 ## 2025-10-30
-1. [blestack] set default CONFIG_BT_DEVICE_APPEARANCE to 0x0000(unknown device). 
+1. [blestack] set default CONFIG_BT_DEVICE_APPEARANCE to 0x0000(unknown device).
+ 
 ## 2025-10-10
 1. [blestack]remove easyflash4 for bouffalo sdk.
 

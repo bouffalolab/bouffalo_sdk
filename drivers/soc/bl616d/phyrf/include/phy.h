@@ -565,7 +565,7 @@ void phy_update_power_table(void);
 /// @}
 
 
-void phy_mdm_reset();
+void phy_mdm_reset(void);
 extern int8_t rxgain[];
 void phy_init_btble_test(void);
 

@@ -69,6 +69,10 @@
 /* TODO: remove this macro, enable by defualt in code? */
 #define CFG_BL_WIFI_PS_ENABLE 1
 
+#ifndef CFG_TX_PBD_CNT
+#define CFG_TX_PBD_CNT 5
+#endif
+
 /* XXX hacks start */
 // 这些宏需要简化成1-2个。
 //#define CFG_LPM

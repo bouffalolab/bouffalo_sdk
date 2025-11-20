@@ -555,11 +555,15 @@ static void show_sys_version_cmd(int argc, char **argv)
 }
 SHELL_CMD_EXPORT_ALIAS(show_sys_version_cmd, sysver, show sys version);
 
-#if 0
 extern int bl_sys_reset_por(void);
 
 static void reboot_cmd(int argc, char **argv)
 {
+    if(argc > 1){
+        if(strcmp(argv[1],"uart")==0){
+            HBN_Set_User_Boot_Config(1);
+        }
+    }
     bl_sys_reset_por();
 }
 SHELL_CMD_EXPORT_ALIAS(reboot_cmd, reboot, reboot);
@@ -585,7 +589,6 @@ static void mfg_cmd(int argc, char **argv)
     bl_sys_reset_por();
 }
 SHELL_CMD_EXPORT_ALIAS(mfg_cmd, mfg, mfg);
-#endif
 
 #ifdef LP_APP
 #include "bl_lp.h"

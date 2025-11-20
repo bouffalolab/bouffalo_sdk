@@ -23,35 +23,11 @@
 
 base_config *at_base_config = NULL;
 
-static at_base_adc_tsen_init(void)
-{
-    struct bflb_device_s *adc;
-    
-    struct bflb_adc_config_s cfg;
-    struct bflb_adc_channel_s chan;
-    
-    adc = bflb_device_get_by_name("adc");
-
-    /* adc clock = XCLK / 2 / 32 */
-    cfg.clk_div = ADC_CLK_DIV_32;
-    cfg.scan_conv_mode = false;
-    cfg.continuous_conv_mode = false;
-    cfg.differential_mode = false;
-    cfg.resolution = ADC_RESOLUTION_16B;
-    cfg.vref = ADC_VREF_2P0V;
-
-    chan.pos_chan = ADC_CHANNEL_TSEN_P;
-    chan.neg_chan = ADC_CHANNEL_GND;
-
-    bflb_adc_init(adc, &cfg);
-    bflb_adc_channel_config(adc, &chan, 1);
-    bflb_adc_tsen_init(adc, ADC_TSEN_MOD_INTERNAL_DIODE);
-}
-
 int at_base_config_init(void)
 {
-    at_base_config = (base_config *)pvPortMalloc(sizeof(base_config));
+    at_base_config = (base_config *)at_malloc(sizeof(base_config));
     if (at_base_config == NULL) {
+        AT_CMD_PRINTF("Failed to allocate memory for at_base_config\r\n");
         return -1;
     }
 
@@ -66,6 +42,7 @@ int at_base_config_init(void)
     }
 #endif
 
+#if CONFIG_ATMODULE_CONFIG_STORAGE
     if (!at_config_read(AT_CONFIG_KEY_SYS_MSG, &at_base_config->sysmsg_cfg, sizeof(base_sysmsg_cfg))) {
         at_base_config->sysmsg_cfg.bit.quit_throughput_msg = 0;
         at_base_config->sysmsg_cfg.bit.link_msg_type = 0;
@@ -75,23 +52,29 @@ int at_base_config_init(void)
 
     //bx_rtc_init();
     at_base_config->systime_stamp = 0;
-    at_base_config->sleep_mode = BASE_SLEEP_MODE_DISABLE;
-    at_base_adc_tsen_init();
+#endif
     return 0;
 }
 
 int at_base_config_save(const char *key)
 {
+#if CONFIG_ATMODULE_CONFIG_STORAGE
+    if (!at_base_config || !key) {
+        AT_CMD_PRINTF("Invalid arguments to at_base_config_save\r\n");
+        return -1;
+    }
     if (strcmp(key, AT_CONFIG_KEY_SYS_MSG) == 0)
         return at_config_write(key, &at_base_config->sysmsg_cfg, sizeof(base_sysmsg_cfg));
-    else
-        return -1;
+#endif
+
     return 0;
 }
 
 int at_base_config_default(void)
 {
+#if CONFIG_ATMODULE_CONFIG_STORAGE
     at_config_delete(AT_CONFIG_KEY_SYS_MSG);
+#endif
     return 0;
 }
 

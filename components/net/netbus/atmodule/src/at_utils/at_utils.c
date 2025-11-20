@@ -1,7 +1,7 @@
-
 #include <stdint.h>
 #include <FreeRTOS.h>
 #include <at_utils.h>
+#include "at_pal.h"
 
 #define UTILS_MEMP_ALLOCED_NODE_PATTERN 0XA5
 #define MEM_ALIGN(addr, align) (((addr) + (align) -1) & ~((align)-1))
@@ -9,6 +9,9 @@
 
 int utils_memp_init(utils_memp_pool_t **pool, uint16_t node_size, uint16_t pool_cap, uint8_t align_req)
 {
+    if (!pool || node_size == 0 || pool_cap == 0) {
+        return -1;
+    }
     utils_memp_pool_t *npool;
     struct utils_memp_node *node;
     struct utils_memp_node *pool_mem;
@@ -23,7 +26,7 @@ int utils_memp_init(utils_memp_pool_t **pool, uint16_t node_size, uint16_t pool_
     size = MEM_ALIGN(size, align_req);
     size += padded_node_size * pool_cap;
 
-    npool = pvPortMalloc(size);
+    npool = at_malloc(size);
 
     if (!npool) {
         return -1;
@@ -56,7 +59,7 @@ int utils_memp_deinit(utils_memp_pool_t *pool)
     if (!pool) {
         return -1;
     }
-    vPortFree(pool);
+    at_free(pool);
 
     return 0;
 }
@@ -85,14 +88,14 @@ void *utils_memp_malloc(utils_memp_pool_t *pool)
 
 int utils_memp_free(utils_memp_pool_t *pool, void *node)
 {
+    if (!pool || !node) {
+        return -1;
+    }
     struct utils_memp_node *utils_memp_node;
     node = node - sizeof(struct utils_memp_node);
     uint32_t *pat;
     int diff;
 
-    if (!pool || !node) {
-        return -1;
-    }
     if (pool->pool_size == 0) {
         return -1;
     }

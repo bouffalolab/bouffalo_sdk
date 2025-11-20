@@ -1,6 +1,7 @@
 #ifndef __BL616_LP_H__
 #define __BL616_LP_H__
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef BL_WIFI_LP_FW
 extern uint64_t (*shared_cpu_get_mtimer_counter)(void);
@@ -43,13 +44,24 @@ extern int32_t (*shared_pds_default_level_config)(uint32_t*, uint32_t);
 
 #define BEACON_DATA_RATE          (iot2lp_para->beacon_leg_rate)
 
-// #define LPFW_WIFI_RX_BUFF         (iot2lp_para->wifi_rx_buff)
+#define LPFW_WIFI_RX_BUFF         ((uintptr_t)iot2lp_para->wifi_rx_buff)
 
 #define PDS_WAKEUP_MINI_LIMIT_US  (1220)
 #define PDS_WAKEUP_MINI_LIMIT_CNT (40)
 
 #define PDS_WAKEUP_DELAY_US       (1000)
 #define PDS_WAKEUP_DELAY_CNT      (33)
+
+
+#define WL_API_RMEM_ADDR      0x20010600
+#define LP_FW_PRE_JUMP_ADDR   0x20010000
+#define BL616_UART_TX         21
+#define BL616_UART_RX         22
+#define BL616_UART_ID         0
+#define BL616_UART_FREQ       40000000
+#define UART_BAUDRATE         (2000000)
+
+#define BL616_ACOMP_VREF_1V65 33
 
 enum PSM_EVENT {
     PSM_EVENT_SCAN = 0,
@@ -195,6 +207,10 @@ typedef struct {
     /* beacon  */
     int32_t tpre;
 
+    uint8_t bcmc_dtim_mode;
+    uint8_t last_beacon_dtim_count; /* last beacon dtim count */
+    uint8_t beacon_dtim_period; /* beacon dtim period */
+
     int32_t last_sleep_error_us;
     uint32_t last_beacon_stamp_rtc_valid;
     uint64_t last_beacon_stamp_rtc_us;    /*  */
@@ -217,6 +233,9 @@ typedef struct {
     uint8_t bcn_delay_sliding_win_status;
     int32_t last_beacon_delay_us; /* beacon delay */
     int32_t bcn_delay_offset;
+
+    uint32_t buf_addr;
+    uint32_t pack_env;
 
     uint32_t continuous_loss_cnt;
     uint32_t continuous_loss_cnt_max;
@@ -264,11 +283,12 @@ typedef int (*bl_lp_cb_t)(void *arg);
 #define LPFW_WAKEUP_UNKOWN    0
 #define LPFW_WAKEUP_TIME_OUT  (1 << 0)
 #define LPFW_WAKEUP_WIFI      (1 << 1)
-#define LPFW_WAKEUP_AP_LOSS   (1 << 2)
-#define LPFW_WAKEUP_IO        (1 << 3)
-#define LPFW_WAKEUP_ACOMP     (1 << 4)
-#define LPFW_WAKEUP_BLE       (1 << 5)
-#define LPFW_WAKEUP_LOSS_CFG_OVER   (1 << 6)
+#define LPFW_WAKEUP_WIFI_BROADCAST      (1 << 2)
+#define LPFW_WAKEUP_AP_LOSS   (1 << 3)
+#define LPFW_WAKEUP_IO        (1 << 4)
+#define LPFW_WAKEUP_ACOMP     (1 << 5)
+#define LPFW_WAKEUP_BLE       (1 << 6)
+#define LPFW_WAKEUP_LOSS_CFG_OVER   (1 << 7)
 
 /* beacon stamp valid type */
 #define BEACON_STAMP_LPFW     1
@@ -294,6 +314,7 @@ typedef struct {
     int8_t rssi;
     uint8_t bssid[6];
     uint8_t mac[6];
+    uint8_t bcmc_dtim_mode;
     uint8_t dtim_num;
     uint8_t dtim_origin;
     uint32_t mtimer_timeout_mini_us;
@@ -308,6 +329,9 @@ typedef struct {
     int32_t wakeup_reason;  /* Cause of wakeup */
     uint32_t lpfw_recv_cnt; /* count of loss packet during rtc_timeout_ms */
     uint32_t lpfw_loss_cnt; /* count of wakeup during rtc_timeout_ms */
+
+    uint32_t buf_addr;
+    uint32_t pack_env;
 } bl_lp_fw_cfg_t;
 
 extern bl_lp_fw_cfg_t lpfw_cfg;
@@ -572,15 +596,16 @@ int bl_lp_update_beacon_stamp(uint64_t beacon_timestamp);
 void bl_lp_rtc_use_xtal32K(void);
 void bl_lp_rtc_use_rc32k(void);
 uint64_t bl_lp_get_virtual_us(void);
+void bl_lp_power_on_xtal32k(uint8_t type);
 
 /* 32k clock */
 int bl_lp_rtc_rc32k_coarse_adj(uint32_t expect_time, uint32_t rc32k_actual_time);
 int bl_lp_set_32k_clock_ready(uint8_t ready_val);
-int bl_lp_get_32k_clock_ready();
+int bl_lp_get_32k_clock_ready(void);
 int bl_lp_set_32k_trim_ready(uint8_t ready_val);
-int bl_lp_get_32k_trim_ready();
+int bl_lp_get_32k_trim_ready(void);
 
-int bl_lp_get_bcn_delay_ready();
+int bl_lp_get_bcn_delay_ready(void);
 
 /* bcn loss cfg */
 void bl_lp_fw_bcn_loss_cfg(lp_fw_bcn_loss_level_t *cfg_table, uint16_t table_num, uint16_t loop_start, uint16_t loss_max);
@@ -616,4 +641,6 @@ void bl_lp_xip_recovery(void);
 void bl_lp_bod_init(uint8_t en, uint8_t rst, uint8_t irq, uint32_t threshold);
 void bl_lp_turnoff_rf(void);
 void bl_lp_turnon_rf(void);
+void bl_pm_resume_wifi(bool isr);
+
 #endif

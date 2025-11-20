@@ -21,6 +21,15 @@ CONFIG_ATMODULE=y
 # CONFIG_ATMODULE_USB is not set
 CONFIG_ATMODULE_UART=y
 # CONFIG_ATMODULE_NXSPI is not set
-# CONFIG_ATMODULE_TTY is not set 
+# CONFIG_ATMODULE_TTY is not set
 CONFIG_ATMODULE_WIFI=y
 # end of atmodule
+
+#
+# WiFi Stack Configuration - Default to FHOST
+#
+CONFIG_FHOST=y
+# CONFIG_WL80211 is not set
+
+# Automatically disabled when FHOST is selected
+# CONFIG_BL_WPA_SUPPLICANT is not set

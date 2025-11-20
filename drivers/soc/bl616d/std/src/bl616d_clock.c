@@ -320,6 +320,121 @@ static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_Peri_BClk_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_BCLK_DIV);
 }
 
+static inline uint32_t ATTR_CLOCK_SECTION Clock_WL_CPU_PLL_Clk_Mux_Output(uint8_t sel)
+{
+    if (sel == 0) {
+        /* wifipll div2 clk, 480MHz */
+        return Clock_Get_WIFI_PLL_Output(480 * 1000 * 1000);
+    } else if (sel == 1) {
+        /* cpupll div2 clk */
+        return Clock_Get_CPUPLL_Output(CLOCK_CPUPLL_DIV2);
+    } else if (sel == 2) {
+        /* cpupll div3 clk */
+        return Clock_Get_CPUPLL_Output(CLOCK_CPUPLL_DIV3);
+    } else {
+        return 0;
+    }
+}
+
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_WL_Root_Clk_Sel_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_WL_BASE, GLB_WL_CLK_CTRL_CPU);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_ROOT_CLK_SEL);
+
+    return (tmpVal & 0x1);
+}
+
+static inline uint32_t ATTR_CLOCK_SECTION Clock_WL_Root_Clk_Mux_Output(uint8_t sel)
+{
+    uint32_t tmpVal;
+
+    if (sel == 0) {
+        /* xclk */
+        return Clock_XClk_Mux_Output(Clock_Get_WL_XClk_Sel_Val());
+    } else if (sel == 1) {
+        /* pll */
+        tmpVal = BL_RD_REG(GLB_WL_BASE, GLB_WL_CLK_CTRL_CPU);
+        sel = BL_GET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_CLK_SEL);
+        return Clock_WL_CPU_PLL_Clk_Mux_Output(sel);
+    } else {
+        return 0;
+    }
+}
+
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_WL_CPU_HClk_Div_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_WL_BASE, GLB_WL_CLK_CPU);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, GLB_WL_REG_CPU_CLK_DIV);
+}
+
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_WL_Peri_BClk_Div_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_WL_BASE, GLB_WL_CLK_CPU);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, GLB_WL_REG_BCLK_DIV);
+}
+
+#if !defined(CPU_MODEL_A0)
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_MINI_XClk_Sel_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_ROOT_CLK_SEL);
+
+    return (tmpVal & 0x1);
+}
+#endif
+
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_MINI_Root_Clk_Sel_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_SEL);
+
+    return (tmpVal & 0x3);
+}
+
+static inline uint32_t ATTR_CLOCK_SECTION Clock_MINI_Root_Clk_Mux_Output(uint8_t sel)
+{
+    if (sel == 0) {
+        /* mini xclk */
+#if !defined(CPU_MODEL_A0)
+        return Clock_XClk_Mux_Output(Clock_Get_MINI_XClk_Sel_Val());
+#else
+        return Clock_XClk_Mux_Output(Clock_Get_MCU_XClk_Sel_Val());
+#endif
+    } else if (sel == 1) {
+        /* wifipll 120MHz clk */
+        return Clock_Get_WIFI_PLL_Output(120 * 1000 * 1000);
+    } else if (sel == 2) {
+        /* wifipll 80MHz clk */
+        return Clock_Get_WIFI_PLL_Output(80 * 1000 * 1000);
+    } else if (sel == 3) {
+        /* wifipll 48MHz clk */
+        return Clock_Get_WIFI_PLL_Output(48 * 1000 * 1000);
+    } else {
+        return 0;
+    }
+}
+
+static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_MINI_CPU_HClk_Div_Val(void)
+{
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
+
+    return BL_GET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_DIV);
+}
+
 /****************************************************************************/ /**
  * @brief  Get System Clock
  *
@@ -363,12 +478,57 @@ uint32_t ATTR_CLOCK_SECTION Clock_System_Clock_Get(BL_System_Clock_Type type)
             return Clock_XClk_Mux_Output(Clock_Get_MCU_XClk_Sel_Val());
 
         case BL_SYSTEM_CLOCK_WL_XCLK:
-            /*!< wifi xclk */
+            /*!< wireless part xclk */
             return Clock_XClk_Mux_Output(Clock_Get_WL_XClk_Sel_Val());
 
         case BL_SYSTEM_CLOCK_XTAL:
             /*!< xtal clock */
             return Clock_Xtal_Output();
+
+        case BL_SYSTEM_CLOCK_WL_ROOT_CLK:
+            /*!< wireless part root clock */
+            return Clock_WL_Root_Clk_Mux_Output(Clock_Get_WL_Root_Clk_Sel_Val());
+
+        case BL_SYSTEM_CLOCK_WL_CPU_CLK:
+            /*!< wireless part fast clock/CPU clock */
+            clock = Clock_WL_Root_Clk_Mux_Output(Clock_Get_WL_Root_Clk_Sel_Val());
+            div = Clock_Get_WL_CPU_HClk_Div_Val();
+            return clock / (div + 1);
+
+        case BL_SYSTEM_CLOCK_WL_BCLK:
+            /*!< wireless part BUS clock */
+            ATTR_FALLTHROUGH();
+
+        case BL_SYSTEM_CLOCK_WL_PBCLK:
+            /*!< wireless part peri BUS clock */
+            clock = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_WL_CPU_CLK);
+            div = Clock_Get_WL_Peri_BClk_Div_Val();
+            return clock / (div + 1);
+
+        case BL_SYSTEM_CLOCK_MINI_XCLK:
+            /*!< mini part xclk */
+#if !defined(CPU_MODEL_A0)
+            return Clock_XClk_Mux_Output(Clock_Get_MINI_XClk_Sel_Val());
+#else
+            return Clock_XClk_Mux_Output(Clock_Get_MCU_XClk_Sel_Val());
+#endif
+        case BL_SYSTEM_CLOCK_MINI_ROOT_CLK:
+            /*!< mini part root clock */
+            return Clock_MINI_Root_Clk_Mux_Output(Clock_Get_MINI_Root_Clk_Sel_Val());
+
+        case BL_SYSTEM_CLOCK_MINI_CPU_CLK:
+            /*!< mini part fast clock/CPU clock */
+            clock = Clock_MINI_Root_Clk_Mux_Output(Clock_Get_MINI_Root_Clk_Sel_Val());
+            div = Clock_Get_MINI_CPU_HClk_Div_Val();
+            return clock / (div + 1);
+
+        case BL_SYSTEM_CLOCK_MINI_BCLK:
+            /*!< mini part BUS clock */
+            ATTR_FALLTHROUGH();
+
+        case BL_SYSTEM_CLOCK_MINI_PBCLK:
+            /*!< mini part peri BUS clock */
+            return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MINI_CPU_CLK);
 
         default:
             return 0;
@@ -562,7 +722,11 @@ static inline uint32_t Clock_SPI_Clk_Mux_Output(uint8_t sel)
     }
 }
 
-static inline uint8_t Clock_Get_SPI_Clk_Sel_Val(void)
+#if defined(CPU_MODEL_A0)
+static inline uint8_t Clock_Get_SPI0_Clk_Sel_Val(void)
+#else
+static inline uint8_t Clock_Get_SPI0_2_Clk_Sel_Val(void)
+#endif
 {
     uint32_t tmpVal;
 
@@ -571,7 +735,11 @@ static inline uint8_t Clock_Get_SPI_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SPI_CLK_SEL);
 }
 
+#if defined(CPU_MODEL_A0)
 static inline uint8_t Clock_Get_SPI1_Clk_Sel_Val(void)
+#else
+static inline uint8_t Clock_Get_SPI3_Clk_Sel_Val(void)
+#endif
 {
     uint32_t tmpVal;
 
@@ -580,7 +748,11 @@ static inline uint8_t Clock_Get_SPI1_Clk_Sel_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_SPI_CLK_SEL);
 }
 
-static inline uint8_t Clock_Get_SPI_Div_Val(void)
+#if defined(CPU_MODEL_A0)
+static inline uint8_t Clock_Get_SPI0_Div_Val(void)
+#else
+static inline uint8_t Clock_Get_SPI0_2_Div_Val(void)
+#endif
 {
     uint32_t tmpVal;
 
@@ -589,7 +761,11 @@ static inline uint8_t Clock_Get_SPI_Div_Val(void)
     return BL_GET_REG_BITS_VAL(tmpVal, GLB_SPI_CLK_DIV);
 }
 
+#if defined(CPU_MODEL_A0)
 static inline uint8_t Clock_Get_SPI1_Div_Val(void)
+#else
+static inline uint8_t Clock_Get_SPI3_Div_Val(void)
+#endif
 {
     uint32_t tmpVal;
 
@@ -1083,14 +1259,33 @@ uint32_t Clock_Peripheral_Clock_Get(BL_Peripheral_Type type)
 
         /*!< spi0 clock */
         case BL_PERIPHERAL_CLOCK_SPI0:
-            clock = Clock_SPI_Clk_Mux_Output(Clock_Get_SPI_Clk_Sel_Val());
-            div = Clock_Get_SPI_Div_Val();
+#if defined(CPU_MODEL_A0)
+            clock = Clock_SPI_Clk_Mux_Output(Clock_Get_SPI0_Clk_Sel_Val());
+            div = Clock_Get_SPI0_Div_Val();
             return clock / (div + 1);
+#else
+            ATTR_FALLTHROUGH();
+#endif
 
         /*!< spi1 clock */
         case BL_PERIPHERAL_CLOCK_SPI1:
+#if !defined(CPU_MODEL_A0)
+            ATTR_FALLTHROUGH();
+
+        /*!< spi2 clock */
+        case BL_PERIPHERAL_CLOCK_SPI2:
+            clock = Clock_SPI_Clk_Mux_Output(Clock_Get_SPI0_2_Clk_Sel_Val());
+            div = Clock_Get_SPI0_2_Div_Val();
+            return clock / (div + 1);
+
+        /*!< spi3 clock */
+        case BL_PERIPHERAL_CLOCK_SPI3:
+            clock = Clock_SPI_Clk_Mux_Output(Clock_Get_SPI3_Clk_Sel_Val());
+            div = Clock_Get_SPI3_Div_Val();
+#else
             clock = Clock_SPI_Clk_Mux_Output(Clock_Get_SPI1_Clk_Sel_Val());
             div = Clock_Get_SPI1_Div_Val();
+#endif
             return clock / (div + 1);
 
         /*!< pec clock */
@@ -1242,6 +1437,12 @@ uint32_t ATTR_CLOCK_SECTION SystemCoreClockGet(void)
     switch (GLB_Get_Core_Type()) {
         case GLB_CORE_ID_AP:
             clockVal = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MCU_CLK);
+            break;
+        case GLB_CORE_ID_NP:
+            clockVal = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_WL_CPU_CLK);
+            break;
+        case GLB_CORE_ID_LP:
+            clockVal = Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MINI_CPU_CLK);
             break;
         default:
             clockVal = 0;

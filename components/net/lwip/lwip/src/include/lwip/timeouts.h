@@ -144,6 +144,10 @@ struct sys_timeo** sys_timeouts_get_next_timeout(void);
 void lwip_cyclic_timer(void *arg);
 #endif
 
+#if LWIP_IPV6
+void ipv6_timer_switch(u8_t enable);
+#endif
+
 #endif /* LWIP_TIMERS */
 
 #ifdef __cplusplus

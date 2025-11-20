@@ -26,8 +26,8 @@ name = "FW0"
 device = 0
 address0 = 0x10000
 size0 = 0x100000
-address1 = 0x230000
-size1 = 0x80000
+address1 = 0x210000
+size1 = 0xA0000
 # compressed image must set len,normal image can left it to 0
 len = 0
 # If header is 1, it will add the header.
@@ -40,7 +40,7 @@ type = 1
 name = "FW1"
 device = 0
 address0 = 0x110000
-size0 = 0x120000
+size0 = 0x100000
 address1 = 0x2B0000
 size1 = 0xC8000
 # compressed image must set len,normal image can left it to 0
@@ -54,8 +54,8 @@ security= 1
 type = 10
 name = "mfg"
 device = 0
-address0 = 0x230000
-size0 = 0x148000
+address0 = 0x210000
+size0 = 0x168000
 address1 = 0
 size1 = 0
 # compressed image must set len,normal image can left it to 0

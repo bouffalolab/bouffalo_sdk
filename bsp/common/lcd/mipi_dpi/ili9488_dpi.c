@@ -28,17 +28,35 @@
 #include "ili9488_dpi.h"
 #include "bflb_mtimer.h"
 #include "bflb_gpio.h"
-#include "bl_mipi_dpi_sim.h"
 
 #if (LCD_DPI_INIT_INTERFACE_TYPE == 1)
+
 #include "bl_dpi_init_spi_soft_3.h"
 
 #define lcd_dpi_init_init              lcd_dpi_init_spi_soft_3_init
 #define lcd_dpi_init_transmit_cmd_para lcd_dpi_init_spi_soft_3_transmit_cmd_para
+
+#elif (LCD_DPI_INIT_INTERFACE_TYPE == 2)
+
+#include "bl_dpi_init_spi_soft_4.h"
+
+#define lcd_dpi_init_init              lcd_dpi_init_spi_soft_4_init
+#define lcd_dpi_init_transmit_cmd_para lcd_dpi_init_spi_soft_4_transmit_cmd_para
 #endif
 
+#if (LCD_DPI_INTERFACE_TYPE == 2)
+
+#include "bl_mipi_dpi_sim.h"
+
+#define lcd_mipi_dpi_init                    lcd_mipi_dpi_sim_init
+#define lcd_mipi_dpi_screen_switch           lcd_mipi_dpi_sim_screen_switch
+#define lcd_mipi_dpi_get_screen_using        lcd_mipi_dpi_sim_get_screen_using
+#define lcd_mipi_dpi_frame_callback_register lcd_mipi_dpi_sim_frame_callback_register
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP     LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_SWAP
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE    LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_CYCLE
+
 /* mipi dpi (RGB) paramant */
-static lcd_mipi_dpi_init_t dpi_para = {
+static lcd_mipi_dpi_sim_init_t dpi_para = {
     .width = ILI9488_DPI_W,  /* LCD Active Width */
     .height = ILI9488_DPI_H, /* LCD Active Height */
                              /* Total Width = HSW + HBP + Active_Width + HFP */
@@ -53,12 +71,44 @@ static lcd_mipi_dpi_init_t dpi_para = {
     .frame_rate = 60, /* Maximum refresh frame rate per second, Used to automatically calculate the clock frequency */
 
 #if (ILI9488_DPI_PIXEL_FORMAT == 1)
-    .pixel_format = LCD_MIPI_DPI_PIXEL_FORMAT_RGB565,
+    .pixel_format = LCD_MIPI_DPI_SIM_PIXEL_FORMAT_RGB565,
 #endif
     .de_mode_en = 1,
     .frame_buff = NULL,
 };
+#elif (LCD_DPI_INTERFACE_TYPE == 3)
 
+#include "bl_mipi_dpi_v2.h"
+
+#define lcd_mipi_dpi_init                    bl_mipi_dpi_v2_init
+#define lcd_mipi_dpi_screen_switch           bl_mipi_dpi_v2_screen_switch
+#define lcd_mipi_dpi_get_screen_using        bl_mipi_dpi_v2_get_screen_using
+#define lcd_mipi_dpi_frame_callback_register bl_mipi_dpi_v2_frame_callback_register
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP     LCD_MIPI_DPI_V2_FRAME_INT_TYPE_SWAP
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE    LCD_MIPI_DPI_V2_FRAME_INT_TYPE_CYCLE
+
+static lcd_mipi_dpi_v2_init_t dpi_para = {
+    .width = ILI9488_DPI_W,
+    .height = ILI9488_DPI_H,
+
+    .hsw = 45,
+    .hbp = 45,
+    .hfp = 89,
+
+    .vsw = 6,
+    .vbp = 8,
+    .vfp = 5,
+
+    .frame_rate = 60,
+#if (ILI9488_DPI_PIXEL_FORMAT == 1)
+    .pixel_format = LCD_MIPI_DPI_V2_PIXEL_FORMAT_RGB565,
+#else
+    .pixel_format = LCD_MIPI_DPI_V2_PIXEL_FORMAT_NRGB888,
+#endif
+    .de_mode_en = 1,
+    .frame_buff = NULL,
+};
+#endif
 static const ili9488_dpi_init_cmd_t ili9488_dpi_mode_init_cmds[] = {
     { 0x01, NULL, 0 },  /* software reset */
     { 0xFF, NULL, 10 }, /* delay 10ms */
@@ -94,9 +144,8 @@ static const ili9488_dpi_init_cmd_t ili9488_dpi_mode_init_cmds[] = {
 int ili9488_dpi_init(ili9488_dpi_color_t *screen_buffer)
 {
     lcd_dpi_init_init();
-
     for (uint16_t i = 0; i < (sizeof(ili9488_dpi_mode_init_cmds) / sizeof(ili9488_dpi_init_cmd_t)); i++) {
-        if (ili9488_dpi_mode_init_cmds[i].cmd == 0xFF && (ili9488_dpi_mode_init_cmds[i].data == NULL) && (ili9488_dpi_mode_init_cmds[i].databytes) ) {
+        if (ili9488_dpi_mode_init_cmds[i].cmd == 0xFF && (ili9488_dpi_mode_init_cmds[i].data == NULL) && (ili9488_dpi_mode_init_cmds[i].databytes)) {
             bflb_mtimer_delay_ms(ili9488_dpi_mode_init_cmds[i].databytes);
         } else {
             /* send cmd and para */

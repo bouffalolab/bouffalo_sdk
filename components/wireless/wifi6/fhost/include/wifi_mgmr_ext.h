@@ -1368,6 +1368,14 @@ int wifi_mgmr_adhoc_stop(void);
 void wifi_mgmr_coex_enable(bool en);
 
 /**
+ * wifi_sta_ipv6_enable
+ * Enable or disable ipv6
+ */
+#ifdef CFG_IPV6
+int wifi_sta_ipv6_enable(int enable);
+#endif
+
+/**
  * wifi_mgmr_set_mode
  * Set sta/ap mode (e.g. b/g/n/ax)
  */

@@ -34,7 +34,7 @@
 /* GATT server context */
 #define SERVER_MAX_SERVICES		3
 #define SERVER_MAX_ATTRIBUTES   50
-#define SERVER_BUF_SIZE			1024
+#define SERVER_BUF_SIZE			3072
 
 /* bt_gatt_attr_next cannot be used on non-registered services */
 #define NEXT_DB_ATTR(attr) (attr + 1)
@@ -47,7 +47,6 @@ static struct bt_gatt_service server_svcs[SERVER_MAX_SERVICES];
 static struct bt_gatt_attr server_db[SERVER_MAX_ATTRIBUTES];
 static struct net_buf *server_buf;
 static struct bt_gatt_attr *db_attr = NULL;
-static uint8_t ccc_value;
 
 static dynamic_gatt_rd_callbck_func_t read_callback=NULL;
 
@@ -90,10 +89,9 @@ struct set_value {
 
 static void ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
 {
-	ccc_value = value;
 	if(noti_callback!=NULL)
 	{
-		noti_callback(attr,ccc_value);
+		noti_callback(attr,value);
 	}
 }
 
@@ -202,22 +200,29 @@ int ble_dynamic_unregister_service(void)
 
 	return err;
 }
-static struct bt_gatt_attr ccc = BT_GATT_CCC(ccc_cfg_changed,
-					     BT_GATT_PERM_READ |
-					     BT_GATT_PERM_WRITE);
 
 static struct bt_gatt_attr *add_ccc(const struct bt_gatt_attr *attr)
 {
 	struct bt_gatt_attr *attr_desc;
 	struct bt_gatt_chrc *chrc = attr->user_data;
 	struct gatt_value *value = NEXT_DB_ATTR(attr)->user_data;
-
+	struct _bt_gatt_ccc *ccc_ptr;
 	/* Check characteristic properties */
 	if (!(chrc->properties &(BT_GATT_CHRC_NOTIFY | BT_GATT_CHRC_INDICATE))) {
 		return NULL;
 	}
-	/* Add CCC descriptor to GATT database */
-	attr_desc = gatt_db_add(&ccc, 0);
+	
+	/* Initialize the CCC structure */
+	ccc_ptr = (struct _bt_gatt_ccc *)server_buf_push(sizeof(struct _bt_gatt_ccc));
+	if (!ccc_ptr) {
+		return NULL;
+	}
+	memset(ccc_ptr, 0, sizeof(struct _bt_gatt_ccc));
+	ccc_ptr->cfg_changed = ccc_cfg_changed;
+	ccc_ptr->value = 0;
+
+	/* Create CCC attribute using BT_GATT_CCC_MANAGED */
+	attr_desc = gatt_db_add(&(struct bt_gatt_attr)BT_GATT_CCC_MANAGED(ccc_ptr,BT_GATT_PERM_READ |BT_GATT_PERM_WRITE),0);
 	if (!attr_desc) {
 		return NULL;
 	}

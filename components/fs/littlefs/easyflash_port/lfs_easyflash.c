@@ -195,14 +195,15 @@ size_t
 ef_get_env_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t *saved_value_len, int offset)
 {
     lfs_file_t file;
-    int32_t ret, read_len;
+    int32_t ret, read_len = 0;
 
-    if (lfs == NULL) {
+    if (lfs == NULL || key == NULL) {
         return 0;
     }
 
-    if (key == NULL || value_buf == NULL || buf_len == 0) {
-        return 0;
+    /* if key not exist, also set saved_value_len */
+    if (saved_value_len != NULL) {
+        *saved_value_len = 0;
     }
 
     EF_GIANT_LOCK();
@@ -219,22 +220,24 @@ ef_get_env_blob_offset(const char *key, void *value_buf, size_t buf_len, size_t 
         EF_GIANT_UNLOCK(0);
     }
 
-    ret = lfs_file_seek(lfs, &file, offset, LFS_SEEK_SET);
-    if (ret < 0) {
-        errno = -ret;
-        lfs_file_close(lfs, &file);
-        EF_GIANT_UNLOCK(0);
-    }
+    if (value_buf != NULL && buf_len != 0) {
+        ret = lfs_file_seek(lfs, &file, offset, LFS_SEEK_SET);
+        if (ret < 0) {
+            errno = -ret;
+            lfs_file_close(lfs, &file);
+            EF_GIANT_UNLOCK(0);
+        }
 
-    ret = lfs_file_read(lfs, &file, value_buf, buf_len);
-    if (ret < 0) {
-        LOG_E("lfs_file_read failed with errno:%d.\r\n", ret);
-        errno = -ret;
-        lfs_file_close(lfs, &file);
-        EF_GIANT_UNLOCK(0);
-    }
+        ret = lfs_file_read(lfs, &file, value_buf, buf_len);
+        if (ret < 0) {
+            LOG_E("lfs_file_read failed with errno:%d.\r\n", ret);
+            errno = -ret;
+            lfs_file_close(lfs, &file);
+            EF_GIANT_UNLOCK(0);
+        }
 
-    read_len = ret;
+        read_len = ret;
+    }
 
     if (saved_value_len != NULL) {
         ret = lfs_file_size(lfs, &file);

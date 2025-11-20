@@ -22,6 +22,8 @@
 #include <avutil/vol_scale.h>
 
 #include "app_player.h"
+#include "app_player_mixer.h"
+#include "test_audio.h"
 //#include "bt/app_bt.h"
 
 #define TAG "player"
@@ -103,7 +105,7 @@ static void play_sin(int second)
         printf("fifo open failed!!!\r\n");
         return;
     }
-    
+
     aui_player_stop(MEDIA_SYSTEM);
     aui_player_play(MEDIA_SYSTEM, "fifo://sintest", 0);
 
@@ -338,10 +340,118 @@ static int cli_player_proc(int argc, char **argv)
         } else {
             printf("loop play is already run!\r\n");
         }
-    } else {
+    }
+#if defined(CONFIG_PLAYER_MIXER_ENABLE) && CONFIG_PLAYER_MIXER_ENABLE
+    else if (strcmp(argv[1], "mixer") == 0) {
+        if (strcmp(argv[2], "play") == 0) {
+            char *  url;
+            uint8_t vol;
+            if (argc == 5) {
+                url = argv[3];
+                vol = atoi(argv[4]);
+            } else {
+                url = argv[3];
+                vol = 40;
+            }
+            player_mixer_start(url, vol);
+        } else if (strcmp(argv[2], "vol") == 0) {
+            uint8_t vol;
+            uint8_t id;
+            if (argc == 5) {
+                id = atoi(argv[3]);
+                vol = atoi(argv[4]);
+                if(!player_mixer_vol(id, vol)) {
+                    printf("vol set failed\n");
+                }
+            }
+        } else if (strcmp(argv[2], "info") == 0) {
+            player_mixer_info();
+        } else if (strcmp(argv[2], "pause") == 0) {
+            uint8_t id;
+            if (argc == 4) {
+                id = atoi(argv[3]);
+                player_mixer_pause(id);
+            }
+        } else if (strcmp(argv[2], "resume") == 0) {
+            uint8_t id;
+            if (argc == 4) {
+                id = atoi(argv[3]);
+                player_mixer_resume(id);
+            }
+        } else if (strcmp(argv[2], "stop") == 0) {
+            uint8_t id;
+            if (argc == 4) {
+                id = atoi(argv[3]);
+                player_mixer_stop(id);
+            }
+        } else if (strcmp(argv[2], "speed") == 0) {
+            uint8_t id;
+            float speed;
+            if (argc == 5) {
+                id = atoi(argv[3]);
+                speed = atof(argv[4]);
+                if(player_mixer_set_speed(id, speed)) {
+                    printf("speed set success, speed: %f\n", speed);
+                } else {
+                    printf("speed set failed\n");
+                }
+            }
+        } else if (strcmp(argv[2], "get_speed") == 0) {
+            uint8_t id;
+            float speed;
+            if (argc == 4) {
+                id = atoi(argv[3]);
+                if(!player_mixer_get_speed(id, &speed)) {
+                    printf("speed get success, speed: %f\n", speed);
+                } else {
+                    printf("speed get failed\n");
+                }
+            }
+        } else if (strcmp(argv[2], "get_time") == 0) {
+            uint8_t id;
+            xplay_time_t time;
+            if (argc == 4) {
+                id = atoi(argv[3]);
+                if(!player_mixer_get_curttime(id, &time)) {
+                    printf("curttime get success, curtime: %lldms, duration: %lldms\n", time.curtime, time.duration);
+                } else {
+                    printf("curttime get failed\n");
+                }
+            }
+        } else if (strcmp(argv[2], "pause_all") == 0) {
+            player_mixer_pause_all();
+        } else if (strcmp(argv[2], "resume_all") == 0) {
+            player_mixer_resume_all();
+        } else if (strcmp(argv[2], "stop_all") == 0) {
+            player_mixer_stop_all();
+        }
+    }
+#endif
+    else {
         return -1;
     }
     return 0;
+}
+
+#ifdef CONFIG_SHELL
+static void cmd_player_mixer_local(int argc, char **argv)
+#else
+static void cmd_player_mixer_local(char *wbuf, int wbuf_len, int argc, char **argv)
+#endif
+{
+#if defined(CONFIG_PLAYER_MIXER_ENABLE) && CONFIG_PLAYER_MIXER_ENABLE
+    uint8_t vol = 0;
+    char url[64] = {0};
+    if (argc == 2) {
+        vol = atoi(argv[1]);
+    } else {
+        vol = 20;
+    }
+    sprintf(url, "mem://addr=%lu&size=%lu&avformat=mp3&acodec=mp3", mixer_audio_file, sizeof(mixer_audio_file));
+    player_mixer_start(url, vol);
+#else
+    printf("player mixer not support\n");
+#endif
 }
 
 #ifdef CONFIG_SHELL
@@ -371,12 +481,14 @@ static void cmd_player_func(char *wbuf, int wbuf_len, int argc, char **argv)
 #ifdef CONFIG_SHELL
 #include <shell.h>
 SHELL_CMD_EXPORT_ALIAS(cmd_player_func, smta, smta play test);
+SHELL_CMD_EXPORT_ALIAS(cmd_player_mixer_local, play_mixer_local, smta play mixer test);
 #else
 void cli_reg_cmd_player(void)
 {
     static const struct cli_command cmd_info = {"smta", "smartaudio test", cmd_player_func};
-
+    static const struct cli_command cmd_info_mixer = {"play_mixer_local", "play mixer test", cmd_player_mixer_local};
     msp_cli_register_command(&cmd_info);
+    msp_cli_register_command(&cmd_info_mixer);
 }
 #endif
 

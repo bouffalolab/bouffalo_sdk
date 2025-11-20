@@ -12,6 +12,7 @@ target_sources(app PRIVATE
                    app/bt/app_bt.c
                    app/wifi/app_wifi.c
                    app/player/app_player.c
+                   app/player/app_player_mixer.c
                    app/player/cli_player.c
                    multimedia_port.c
                    )

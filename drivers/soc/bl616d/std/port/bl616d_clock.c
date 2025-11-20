@@ -32,11 +32,19 @@ uint32_t bflb_clk_get_peripheral_clock(uint8_t type, uint8_t idx)
     } else if (type == BFLB_DEVICE_TYPE_UART) {
         return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_UART0);
     } else if (type == BFLB_DEVICE_TYPE_SPI) {
-        if(idx == 0) {
+#if defined(CPU_MODEL_A0)
+        if (idx == 0) {
             return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_SPI0);
-        } else if(idx == 1) {
+        } else if (idx == 1) {
             return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_SPI1);
         }
+#else
+        if (idx == 0||idx == 1||idx == 2) {
+            return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_SPI0);
+        } else if (idx == 3) {
+            return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_SPI3);
+        }
+#endif
     } else if (type == BFLB_DEVICE_TYPE_I2C) {
         return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_I2C0);
     } else if (type == BFLB_DEVICE_TYPE_FLASH) {
@@ -58,19 +66,19 @@ uint32_t bflb_clk_get_peripheral_clock(uint8_t type, uint8_t idx)
     } else if (type == BFLB_DEVICE_TYPE_PEC) {
         return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PEC);
     } else if (type == BFLB_DEVICE_TYPE_TIMER) {
-        if(idx == 0) {
+        if (idx == 0) {
             return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_TIMER0);
-        } else if(idx == 1) {
+        } else if (idx == 1) {
             return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_TIMER1);
-        } else if(idx == 2) {
+        } else if (idx == 2) {
             return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_TIMER2);
-        } else if(idx == 3) {
+        } else if (idx == 3) {
             return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_TIMER3);
         }
     } else if (type == BFLB_DEVICE_TYPE_PWM) {
-        if(idx == 0) {
+        if (idx == 0) {
             return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PWM0);
-        } else if(idx == 1) {
+        } else if (idx == 1) {
             return Clock_Peripheral_Clock_Get(BL_PERIPHERAL_CLOCK_PWM1);
         }
     }
@@ -107,6 +115,16 @@ uint32_t bflb_peripheral_clock_get_by_id(uint8_t peri)
             dev_type = BFLB_DEVICE_TYPE_SPI;
             idx = 1;
             break;
+#if !defined(CPU_MODEL_A0)
+        case BFLB_PERIPHERAL_SPI2:
+            dev_type = BFLB_DEVICE_TYPE_SPI;
+            idx = 2;
+            break;
+        case BFLB_PERIPHERAL_SPI3:
+            dev_type = BFLB_DEVICE_TYPE_SPI;
+            idx = 3;
+            break;
+#endif
         case BFLB_PERIPHERAL_DBI:
             dev_type = BFLB_DEVICE_TYPE_DBI;
             idx = 0;
@@ -243,6 +261,12 @@ int ATTR_CLOCK_SECTION bflb_peripheral_clock_control_by_id(uint8_t peri, bool en
             bitop(&regval1, 17);
             break;
         case BFLB_PERIPHERAL_SPI0:
+#if !defined(CPU_MODEL_A0)
+             ATTR_FALLTHROUGH();
+        case BFLB_PERIPHERAL_SPI1:
+            ATTR_FALLTHROUGH();
+        case BFLB_PERIPHERAL_SPI2:
+#endif
             bitop(&regval1, 18);
             break;
         case BFLB_PERIPHERAL_I2C0:
@@ -357,6 +381,12 @@ int bflb_peripheral_clock_status_get_by_id(uint8_t peri)
             tmpval = (regval1 >> 17) & 0x01;
             break;
         case BFLB_PERIPHERAL_SPI0:
+#if !defined(CPU_MODEL_A0)
+             ATTR_FALLTHROUGH();
+        case BFLB_PERIPHERAL_SPI1:
+            ATTR_FALLTHROUGH();
+        case BFLB_PERIPHERAL_SPI2:
+#endif
             tmpval = (regval1 >> 18) & 0x01;
             break;
         case BFLB_PERIPHERAL_I2C0:

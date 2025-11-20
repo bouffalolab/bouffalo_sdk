@@ -23,11 +23,12 @@
 #include "bl616_clock.h"
 #include "macsw.h"
 
-extern int lpfw_recal_rc32k(uint64_t beacon_timestamp_now_us, uint64_t rtc_timestamp_now_us, uint32_t mode);
+extern int lpfw_recal_rc32k(uint64_t beacon_timestamp_now_us, uint64_t rtc_timestamp_now_us, uint32_t mode, int clock_ready_check);
 extern int32_t lpfw_calculate_beacon_delay(uint64_t beacon_timestamp_us, uint64_t rtc_timestamp_us, uint32_t mode);
 // extern int32_t lpfw_beacon_delay_sliding_win_update(int32_t beacon_delay_us, uint64_t beacon_timestamp_us);
 
 extern int bl_lp_beacon_interval_update(uint16_t beacon_interval_tu);
+extern int bl_lp_beacon_tim_update(uint8_t *tim, uint8_t mode);
 #endif
 
 /* User defined wifi event handler */
@@ -36,8 +37,8 @@ extern void wifi_event_handler(uint32_t code1, uint32_t code2);
 /* FIXME: Registers should not be read directly */
 /// Address of the MONOTONIC_COUNTER_2_LO register
 #define MACSW_MAC_TSF_TIMER_LO_ADDR 0x24B080A4
-#define REG_PL_RD(addr)         (*(volatile uint32_t *)(addr))
-#define MAC_TSF_TIMER_LOW       REG_PL_RD(MACSW_MAC_TSF_TIMER_LO_ADDR)
+#define REG_PL_RD(addr)             (*(volatile uint32_t *)(addr))
+#define MAC_TSF_TIMER_LOW           REG_PL_RD(MACSW_MAC_TSF_TIMER_LO_ADDR)
 
 /**
  ****************************************************************************************
@@ -256,17 +257,17 @@ void platform_hook_beacon(uint32_t rhd, uint32_t tim, bcn_param_t *param)
 #endif
 
     /* rc32k recal */
-    lpfw_recal_rc32k(beacon_stamp_us, rtc_stamp_us, BEACON_STAMP_APP);
+    lpfw_recal_rc32k(beacon_stamp_us, rtc_stamp_us, BEACON_STAMP_APP, 1);
 
     /* calculate_beacon_delay, and update rtc timestamp */
     beacon_delay_us = lpfw_calculate_beacon_delay(beacon_stamp_us, rtc_stamp_us, BEACON_STAMP_APP);
     /* update beacon delay sliding_window  */
     // lpfw_beacon_delay_sliding_win_update(beacon_delay_us, beacon_stamp_us);
 
-    /* update beacon intercal */
+    /* update beacon interval */
     bl_lp_beacon_interval_update(bcn->bcnint);
-
-    // printf("rssi:%d\r\n",param->beacon_rssi);
+    /* update beacon tim */
+    bl_lp_beacon_tim_update((uint8_t *)tim, BEACON_STAMP_APP);
 
     /************** TODO:  beacon loss debug info ******************/
 #if 0
@@ -311,13 +312,15 @@ void platform_hook_prevent_sleep(enum PSM_EVENT event, uint8_t prevent)
 }
 
 /* macsw hook when beacon received */
-int macsw_hook_beacon(uintptr_t bcn, uint32_t tim, bcn_param_t *beacon_param) {
+int macsw_hook_beacon(const char *f, uintptr_t bcn, uint32_t tim, bcn_param_t *beacon_param) {
+  (void)f;
   PLATFORM_HOOK(beacon, (uintptr_t)bcn, tim, beacon_param);
   return 0;
 }
 
 /* macsw hook when disconnected */
-int macsw_hook_evt_disconnected(void) {
+int macsw_hook_evt_disconnected(const char *f) {
+  (void)f;
   PLATFORM_HOOK(prevent_sleep, PSM_EVENT_DISCONNECT, 1);
   return 0;
 }

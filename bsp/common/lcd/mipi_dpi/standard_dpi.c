@@ -22,13 +22,23 @@
  */
 
 #include "../lcd.h"
+#include "standard_dpi.h"
 
 #if defined(LCD_DPI_STANDARD)
 
-#include "standard_dpi.h"
+#if (LCD_DPI_INTERFACE_TYPE == 2)
+
+#include "bl_mipi_dpi_sim.h"
+
+#define lcd_mipi_dpi_init                    lcd_mipi_dpi_sim_init
+#define lcd_mipi_dpi_screen_switch           lcd_mipi_dpi_sim_screen_switch
+#define lcd_mipi_dpi_get_screen_using        lcd_mipi_dpi_sim_get_screen_using
+#define lcd_mipi_dpi_frame_callback_register lcd_mipi_dpi_sim_frame_callback_register
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP     LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_SWAP
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE    LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_CYCLE
 
 /* mipi dpi (RGB) paramant */
-static lcd_mipi_dpi_init_t dpi_para = {
+static lcd_mipi_dpi_sim_init_t dpi_para = {
     .width = STANDARD_DPI_W,  /* LCD Active Width */
     .height = STANDARD_DPI_H, /* LCD Active Height */
                               /* Total Width = HSW + HBP + Active_Width + HFP */
@@ -43,11 +53,47 @@ static lcd_mipi_dpi_init_t dpi_para = {
     .frame_rate = STANDARD_DPI_FRAME_RATE, /* Maximum refresh frame rate per second, Used to automatically calculate the clock frequency */
 
 #if (STANDARD_DPI_PIXEL_FORMAT == 1)
-    .pixel_format = LCD_MIPI_DPI_PIXEL_FORMAT_RGB565,
+    .pixel_format = LCD_MIPI_DPI_SIM_PIXEL_FORMAT_RGB565,
 #endif
 
     .frame_buff = NULL,
 };
+
+#elif (LCD_DPI_INTERFACE_TYPE == 3)
+
+#include "bl_mipi_dpi_v2.h"
+
+#define lcd_mipi_dpi_init                    bl_mipi_dpi_v2_init
+#define lcd_mipi_dpi_screen_switch           bl_mipi_dpi_v2_screen_switch
+#define lcd_mipi_dpi_get_screen_using        bl_mipi_dpi_v2_get_screen_using
+#define lcd_mipi_dpi_frame_callback_register bl_mipi_dpi_v2_frame_callback_register
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP     LCD_MIPI_DPI_V2_FRAME_INT_TYPE_SWAP
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE    LCD_MIPI_DPI_V2_FRAME_INT_TYPE_CYCLE
+
+static lcd_mipi_dpi_v2_init_t dpi_para = {
+    .width = STANDARD_DPI_W,
+    .height = STANDARD_DPI_H,
+    .hsw = STANDARD_DPI_HSW,
+    .hbp = STANDARD_DPI_HBP,
+    .hfp = STANDARD_DPI_HFP,
+    .vsw = STANDARD_DPI_VSW,
+    .vbp = STANDARD_DPI_VBP,
+    .vfp = STANDARD_DPI_VFP,
+
+    .frame_rate = STANDARD_DPI_FRAME_RATE,
+#if (STANDARD_DPI_PIXEL_FORMAT == 1)
+    .pixel_format = LCD_MIPI_DPI_V2_PIXEL_FORMAT_RGB565,
+#else
+    .pixel_format = LCD_MIPI_DPI_V2_PIXEL_FORMAT_NRGB888,
+#endif
+    .frame_buff = NULL,
+};
+
+#else
+
+#error "Configuration error"
+
+#endif
 
 int standard_dpi_init(standard_dpi_color_t *screen_buffer)
 {

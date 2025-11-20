@@ -30,11 +30,11 @@
 
 /* Do not modify this file ! */
 
-#define LCD_MIPI_DPI_PIXEL_FORMAT_RGB565  0
-#define LCD_MIPI_DPI_PIXEL_FORMAT_NRGB888 1
+#define LCD_MIPI_DPI_SIM_PIXEL_FORMAT_RGB565  0
+#define LCD_MIPI_DPI_SIM_PIXEL_FORMAT_NRGB888 1
 
-#define LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE 0
-#define LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP  1
+#define LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_CYCLE 0
+#define LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_SWAP  1
 
 typedef struct {
     uint16_t width;  /* LCD Active Width */
@@ -53,7 +53,7 @@ typedef struct {
     uint8_t de_mode_en;
 
     void *frame_buff; /* The frame buffer */
-} lcd_mipi_dpi_init_t;
+} lcd_mipi_dpi_sim_init_t;
 
 typedef struct {
     void *disp_buff;
@@ -68,11 +68,11 @@ typedef struct {
 /******************************************************************
 DPI
 ******************************************************************/
-#define GPIO_FUNC_SIM (27)
+#define GPIO_FUNC_SIM       (27)
 /* Signal polarity selection */
-#define V_SYNC_SINGLE_POL 0
-#define H_SYNC_SINGLE_POL 0
-#define DE_SINGLE_POL     1
+#define V_SYNC_SINGLE_POL   0
+#define H_SYNC_SINGLE_POL   0
+#define DE_SINGLE_POL       1
 
 struct bflb_sim_dpi_s {
     uint16_t width;
@@ -136,10 +136,10 @@ void sim_glb_clock_set(uint8_t enable, uint8_t src, uint8_t div) {
 #define DPI_SIM_VALID_PIXEL_MAX (800 * 480)
 #endif
 
-int lcd_mipi_dpi_init(lcd_mipi_dpi_init_t *dpi_para);
-int lcd_mipi_dpi_screen_switch(void *screen_buffer);
-void *lcd_mipi_dpi_get_screen_using(void);
-int lcd_mipi_dpi_frame_callback_register(uint32_t callback_type, void (*callback)(void));
+int lcd_mipi_dpi_sim_init(lcd_mipi_dpi_sim_init_t *dpi_para);
+int lcd_mipi_dpi_sim_screen_switch(void *screen_buffer);
+void *lcd_mipi_dpi_sim_get_screen_using(void);
+int lcd_mipi_dpi_sim_frame_callback_register(uint32_t callback_type, void (*callback)(void));
 
 #endif
 #endif

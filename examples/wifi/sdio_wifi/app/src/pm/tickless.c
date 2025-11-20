@@ -30,7 +30,6 @@ int enable_tickless = 0;
 extern int ps_resume_flag;
 
 extern int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg);
-extern void bl_pm_resume_wifi(void);
 
 int pds_wakeup_overhead = 0;
 static uint64_t ulLowPowerTimeEnterFunction;
@@ -272,7 +271,7 @@ __enter_disconnected:
     tickless_debugf("E:%ld, R:%ld, O:%ld W:0x%lx", xExpectedIdleTime, real_rtc_tick, pds_wakeup_overhead, wake_reason);
 
     /* resume wifi task must followed by vTaskStepTick */
-    bl_pm_resume_wifi();
+    bl_pm_resume_wifi(1);
 
     tickless_debugf("wifi resume done!");
 

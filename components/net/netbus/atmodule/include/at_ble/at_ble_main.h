@@ -48,6 +48,8 @@ int at_ble_conn(int idx, uint8_t *addr, int addr_type, int timeout);
 
 int at_ble_conn_get_addr(int idx, uint8_t *addr);
 
+int at_ble_conn_get_role(int idx);
+
 int at_ble_conn_get_param(int idx, int *min_interval, int *max_interval, int *cur_interval, int *latency, int *timeout);
 
 int at_ble_conn_update_param(int idx, int min_interval, int max_interval, int latency, int timeout);
@@ -72,9 +74,9 @@ int at_ble_gatts_service_char_get(int srv_idx, int char_idx, uint8_t *char_uuid,
 
 int at_ble_gatts_service_char_set(int srv_idx, int char_idx, uint8_t *char_uuid, uint32_t char_prop,uint32_t char_perm, uint8_t uuid_type);
 
-int at_ble_gatts_service_notify(int srv_idx, int char_idx, void * buffer, int length);
+int at_ble_gatts_service_notify(int idx,int srv_idx, int char_idx, void * buffer, int length);
 
-int at_ble_gatts_service_indicate(int srv_idx, int char_idx, void * buffer, int length);
+int at_ble_gatts_service_indicate(int idx,int srv_idx, int char_idx, void * buffer, int length);
 
 int at_ble_gatts_service_read(int srv_idx, int char_idx, void * buffer, int length);
 

@@ -850,7 +850,9 @@ httpc_fs_tcp_recv(void *arg, struct altcp_pcb *pcb, struct pbuf *p, err_t err)
   struct pbuf* q;
   LWIP_UNUSED_ARG(err);
 
-  LWIP_ASSERT("p != NULL", p != NULL);
+  if (p == NULL) {
+    return ERR_OK;
+  }
 
   for (q = p; q != NULL; q = q->next) {
     fwrite(q->payload, 1, q->len, filestate->file);

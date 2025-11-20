@@ -82,6 +82,10 @@ static inline void free_ctx(struct at_http_ctx *ctx)
 
 static int httpc_get_recvcnt(struct at_http_ctx *ctx)
 {
+    if (!ctx) {
+        printf("httpc_get_recvcnt: ctx is NULL\r\n");
+        return 0;
+    }
     if (g_https_cfg.recv_mode == AT_HTTPC_RECV_MODE_ACTIVE) {
         return 0;
     }
@@ -91,9 +95,16 @@ static int httpc_get_recvcnt(struct at_http_ctx *ctx)
 
 static int httpc_get_recvsize(int linkid)
 {
+    if (linkid < 0 || linkid >= AT_HTTPC_HANDLE_MAX) {
+        printf("httpc_get_recvsize: invalid linkid %d\r\n", linkid);
+        return 0;
+    }
     int size = 0;
     struct at_http_ctx *ctx = &g_httpc_handle[linkid];
-
+    if (!ctx) {
+        printf("httpc_get_recvsize: ctx is NULL for linkid %d\r\n", linkid);
+        return 0;
+    }
     AT_HTTP_LOCK(ctx->mutex);
     size = ctx->recv_avail;
     if (ctx->lastbuf) {
@@ -105,6 +116,10 @@ static int httpc_get_recvsize(int linkid)
 
 static inline uint8_t httpc_recvbuf_overflow(struct at_http_ctx *ctx)
 {
+    if (!ctx) {
+        printf("httpc_recvbuf_overflow: ctx is NULL\r\n");
+        return 1;
+    }
     if (httpc_get_recvcnt(ctx) >= AT_HTTPC_RECVBUF_CNT_MAX || httpc_get_recvsize(ctx->linkid) >= g_https_cfg.recvbuf_size) {
         return 1;
     }
@@ -113,6 +128,10 @@ static inline uint8_t httpc_recvbuf_overflow(struct at_http_ctx *ctx)
 
 static int httpc_buffer_write(struct at_http_ctx *ctx, struct pbuf *p)
 {
+    if (!ctx || !p) {
+        printf("httpc_buffer_write: ctx or p is NULL\r\n");
+        return -1;
+    }
     int ret = 0;
 
     AT_HTTP_LOCK(ctx->mutex);
@@ -123,8 +142,13 @@ static int httpc_buffer_write(struct at_http_ctx *ctx, struct pbuf *p)
     AT_HTTP_UNLOCK(ctx->mutex);
 
     if (ret != pdTRUE) {
-        /* It will never run to here. */
         at_write("+HTTPCLOST:%d,%d\r\n", ctx->linkid, p->tot_len);
+        printf("httpc_buffer_write: failed to send to queue for linkid %d\r\n", ctx->linkid);
+        /* prevent pbuf leak when queue is full */
+        if (ctx->altcp_conn) {
+            altcp_recved(ctx->altcp_conn, p->tot_len);
+        }
+        pbuf_free(p);
         ret = -1;
     }
 
@@ -133,6 +157,10 @@ static int httpc_buffer_write(struct at_http_ctx *ctx, struct pbuf *p)
 
 static ssize_t httpc_buffer_read(struct at_http_ctx *ctx, void *mem, int len, int flags)
 {
+    if (!ctx || !mem || len <= 0) {
+        printf("httpc_buffer_read: invalid arguments\r\n");
+        return -1;
+    }
     ssize_t recvd = 0;
     ssize_t recv_left = (len <= SSIZE_MAX) ? (ssize_t)len : SSIZE_MAX;
 
@@ -228,6 +256,12 @@ static err_t cb_altcp_recv_fn(void *arg, struct altcp_pcb *conn, struct pbuf *p,
 {
     struct at_http_ctx *ctx = (struct at_http_ctx *)arg;
 
+    /* p == NULL indicates remote close or error; nothing to free */
+    if (p == NULL) {
+        ctx->altcp_conn = conn;
+        return ERR_OK;
+    }
+
     if (g_https_cfg.recv_mode == AT_HTTPC_RECV_MODE_ACTIVE) {
         if (p->tot_len) {
             AT_CMD_DATA_SEND(p->payload, p->tot_len);
@@ -254,7 +288,7 @@ static void cb_httpc_result(void *arg, httpc_result_t httpc_result, u32_t rx_con
     } else {
         at_response_string("\r\n+HTTPSTATUS:%d,%d\r\n", ctx->linkid, httpc_result);
     }
-    free(ctx->data);
+    at_free(ctx->data);
     ctx->data = NULL;
 #if LWIP_ALTCP_TLS && LWIP_ALTCP_TLS_MBEDTLS 
     if (ctx->settings.tls_config) {
@@ -274,7 +308,7 @@ static err_t cb_httpc_headers_done_fn(httpc_state_t *connection, void *arg, stru
     //printf((char *)hdr->payload);
 
     if (ctx->settings.req_type == REQ_TYPE_HEAD) {
-        if (hdr->tot_len) {
+        if (hdr && hdr->tot_len) {
             at_write("%s:%d,%d,", at_resp_string[ctx->settings.req_type], ctx->linkid, hdr_len);
             AT_CMD_DATA_SEND(hdr->payload, hdr->tot_len);
         }
@@ -326,38 +360,80 @@ static int at_httpc_request(struct at_http_ctx *ctx,
         if (ctx->https_auth_type == AT_HTTPS_NOT_AUTH) {
 
             ctx->settings.tls_config = altcp_tls_create_config_client(NULL, 0);
+            if (ctx->settings.tls_config == NULL) {
+                free_ctx(ctx);
+                return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_RESOURCE);
+            }
 
         } else if (ctx->https_auth_type == AT_HTTPS_CLIENT_AUTH) {
 
-            at_load_file(ctx->cert_file, &cert_buf, &cert_len);
-            at_load_file(ctx->key_file, &privkey_buf, &privkey_len);
+            if (at_load_file(ctx->cert_file, &cert_buf, &cert_len) != 0 ||
+                at_load_file(ctx->key_file, &privkey_buf, &privkey_len) != 0 ||
+                cert_buf == NULL || cert_len == 0 ||
+                privkey_buf == NULL || privkey_len == 0) {
+                at_free(cert_buf);
+                at_free(privkey_buf);
+                free_ctx(ctx);
+                return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_ALLOWED);
+            }
 
             ctx->settings.tls_config = altcp_tls_create_config_client_2wayauth(NULL, 0,
                                                                                privkey_buf, privkey_len,
                                                                                NULL, 0,
                                                                                cert_buf, cert_len);
+            if (ctx->settings.tls_config == NULL) {
+                at_free(cert_buf);
+                at_free(privkey_buf);
+                free_ctx(ctx);
+                return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_RESOURCE);
+            }
 
-            free(cert_buf);
-            free(privkey_buf);
+            at_free(cert_buf);
+            at_free(privkey_buf);
         } else if (ctx->https_auth_type == AT_HTTPS_SERVER_AUTH) {
 
-            at_load_file(ctx->ca_file, &ca_buf, &ca_len);
+            if (at_load_file(ctx->ca_file, &ca_buf, &ca_len) != 0 || ca_buf == NULL || ca_len == 0) {
+                at_free(ca_buf);
+                free_ctx(ctx);
+                return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_ALLOWED);
+            }
             ctx->settings.tls_config = altcp_tls_create_config_client(ca_buf, ca_len);
-            free(ca_buf);
+            if (ctx->settings.tls_config == NULL) {
+                at_free(ca_buf);
+                free_ctx(ctx);
+                return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_RESOURCE);
+            }
+            at_free(ca_buf);
 
         } else if (ctx->https_auth_type == AT_HTTPS_BOTH_AUTH) {
 
-            at_load_file(ctx->cert_file, &cert_buf, &cert_len);
-            at_load_file(ctx->key_file, &privkey_buf, &privkey_len);
-            at_load_file(ctx->ca_file, &ca_buf, &ca_len);
+            if (at_load_file(ctx->cert_file, &cert_buf, &cert_len) != 0 ||
+                at_load_file(ctx->key_file, &privkey_buf, &privkey_len) != 0 ||
+                at_load_file(ctx->ca_file, &ca_buf, &ca_len) != 0 ||
+                cert_buf == NULL || cert_len == 0 ||
+                privkey_buf == NULL || privkey_len == 0 ||
+                ca_buf == NULL || ca_len == 0) {
+                at_free(cert_buf);
+                at_free(privkey_buf);
+                at_free(ca_buf);
+                free_ctx(ctx);
+                return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_ALLOWED);
+            }
 
             ctx->settings.tls_config = altcp_tls_create_config_client_2wayauth(ca_buf, ca_len,
                                                                                privkey_buf, privkey_len,
                                                                                NULL, 0,
                                                                                cert_buf, cert_len);
-            free(cert_buf);
-            free(privkey_buf);
-            free(ca_buf);
+            if (ctx->settings.tls_config == NULL) {
+                at_free(cert_buf);
+                at_free(privkey_buf);
+                at_free(ca_buf);
+                free_ctx(ctx);
+                return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_RESOURCE);
+            }
+            at_free(cert_buf);
+            at_free(privkey_buf);
+            at_free(ca_buf);
         }
 
 #endif
@@ -371,6 +447,16 @@ static int at_httpc_request(struct at_http_ctx *ctx,
     }
 
     host_name = strdup(url);
+    if (host_name == NULL) {
+#if LWIP_ALTCP_TLS && LWIP_ALTCP_TLS_MBEDTLS 
+        if (ctx->settings.tls_config) {
+            altcp_tls_free_config(ctx->settings.tls_config);
+            ctx->settings.tls_config = NULL;
+        }
+#endif
+        free_ctx(ctx);
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
+    }
     host_name[param - url] = '\0';
     
     if ((p_port = strstr(host_name, ":")) != NULL) {
@@ -400,8 +486,14 @@ static int at_httpc_request(struct at_http_ctx *ctx,
                 &req);
     }
 
-    free(host_name);
+    at_free(host_name);
     if (ret != ERR_OK) {
+#if LWIP_ALTCP_TLS && LWIP_ALTCP_TLS_MBEDTLS 
+        if (ctx->settings.tls_config) {
+            altcp_tls_free_config(ctx->settings.tls_config);
+            ctx->settings.tls_config = NULL;
+        }
+#endif
     	free_ctx(ctx);
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
     }
@@ -488,7 +580,7 @@ static int at_setup_cmd_httpclient(int argc, const char **argv)
     struct at_http_ctx *ctx = NULL;
     uint8_t data_valid = 0;
     char url_buf[256];
-    char *data = malloc(256);
+    char *data = at_malloc(256);
    
     if (!data) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
@@ -520,7 +612,7 @@ static int at_setup_cmd_httpclient(int argc, const char **argv)
     
     if (strlen(url_buf) == 0) {
         if ((ctx->url == NULL) && (ctx->url_size == 0)) {
-            free(ctx->data);
+            at_free(ctx->data);
             free_ctx(ctx);
             return AT_RESULT_WITH_SUB_CODE(AT_SUB_OP_ADDR_ERROR);
         }
@@ -535,7 +627,7 @@ static int at_setup_cmd_httpclient(int argc, const char **argv)
 
     int ret = at_httpc_request(ctx, url_buf, cb_httpc_result, cb_httpc_headers_done_fn, cb_altcp_recv_fn, ctx);
     if (ret != 0) {
-        free(data);
+        at_free(data);
         ctx->data = NULL;
         return ret;
     }
@@ -554,6 +646,9 @@ static err_t cb_httpgetsize_headers_done_fn(httpc_state_t *connection, void *arg
 
 static err_t cb_httpgetsize_recv_fn(void *arg, struct altcp_pcb *conn, struct pbuf *p, err_t err)
 {
+    if (p == NULL) {
+        return ERR_OK;
+    }
     altcp_recved(conn, p->tot_len);
     pbuf_free(p);
     return 0;
@@ -669,7 +764,7 @@ static int at_setup_cmd_httpcget(int argc, const char **argv)
 
 static int at_setup_cmd_httpcpost(int argc, const char **argv)
 {
-    int ret, linkid;
+    int ret, err, linkid;
     int len, recv_num = 0;
     struct at_http_ctx *ctx = NULL;
     char url_buf[256];
@@ -698,7 +793,7 @@ static int at_setup_cmd_httpcpost(int argc, const char **argv)
         strlcpy(url_buf, ctx->url, sizeof(url_buf));
     }   
 
-    ctx->data = malloc(len + 1);
+    ctx->data = at_malloc(len + 1);
     if (!ctx->data) {
         free_ctx(ctx);
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
@@ -719,24 +814,24 @@ static int at_setup_cmd_httpcpost(int argc, const char **argv)
     at_response_string("Recv %d bytes\r\n", recv_num);
 
     if (len == recv_num) {
-        ret = AT_RESULT_CODE_SEND_OK;
+        err = AT_RESULT_CODE_SEND_OK;
     } else {
-        ret = AT_RESULT_CODE_SEND_FAIL;
+        err = AT_RESULT_CODE_SEND_FAIL;
     }
     
     ret = at_httpc_request(ctx, url_buf, cb_httpc_result, cb_httpc_headers_done_fn, cb_altcp_recv_fn, ctx);
     if (ret != 0) {
-        free(ctx->data);
+        at_free(ctx->data);
         ctx->data = NULL;
         return ret;
     }
 
-    return AT_RESULT_CODE_IGNORE;
+    return err;
 }
 
 static int at_setup_cmd_httpcput(int argc, const char **argv)
 {
-    int ret, linkid;
+    int ret, err, linkid;
     int len, content_type, recv_num = 0;
     struct at_http_ctx *ctx = NULL;
     char url_buf[256];
@@ -768,7 +863,7 @@ static int at_setup_cmd_httpcput(int argc, const char **argv)
         strlcpy(url_buf, ctx->url, sizeof(url_buf));
     }   
 
-    ctx->data = malloc(len + 1);
+    ctx->data = at_malloc(len + 1);
     if (!ctx->data) {
         free_ctx(ctx);
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
@@ -790,19 +885,19 @@ static int at_setup_cmd_httpcput(int argc, const char **argv)
     at_response_string("Recv %d bytes\r\n", recv_num);
 
     if (len == recv_num) {
-        ret = AT_RESULT_CODE_SEND_OK;
+        err = AT_RESULT_CODE_SEND_OK;
     } else {
-        ret = AT_RESULT_CODE_SEND_FAIL;
+        err = AT_RESULT_CODE_SEND_FAIL;
     }
     
     ret = at_httpc_request(ctx, url_buf, cb_httpc_result, cb_httpc_headers_done_fn, cb_altcp_recv_fn, ctx);
     if (ret != 0) {
-        free(ctx->data);
+        at_free(ctx->data);
         ctx->data = NULL;
         return ret;
     }
 
-    return AT_RESULT_CODE_IGNORE;
+    return err;
 }
 
 static int at_setup_cmd_httpcurlcfg(int argc, const char **argv)
@@ -827,7 +922,7 @@ static int at_setup_cmd_httpcurlcfg(int argc, const char **argv)
     }
 
     if (len == 0) {
-        free(ctx->url);
+        at_free(ctx->url);
         ctx->url_size = 0;
         ctx->url = NULL;
         return AT_RESULT_CODE_OK;
@@ -836,7 +931,7 @@ static int at_setup_cmd_httpcurlcfg(int argc, const char **argv)
     if (ctx->url != NULL) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     }
-    ctx->url = malloc(len + 1);
+    ctx->url = at_malloc(len + 1);
     if (!ctx->url) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
     }
@@ -869,7 +964,7 @@ static int at_query_cmd_httpcurlcfg(int argc, const char **argv)
     
     ctx = &g_httpc_handle[linkid];
 
-    at_response_string("+HTTPURLCFG:%d,%d,%s\r\n", linkid, ctx->url_size, ctx->url);
+    at_response_string("+HTTPURLCFG:%d,%d,%s\r\n", linkid, ctx->url_size, ctx->url ? ctx->url : "");
     return AT_RESULT_CODE_OK;
 }
 
@@ -944,12 +1039,16 @@ static int at_setup_cmd_httprecvdata(int argc, const char **argv)
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     }
 
-    buffer = (char *)pvPortMalloc(size + 48);
+    /* allocate enough for header and CRLF */
+    buffer = (uint8_t *)at_malloc(size + 64);
+    if (buffer == NULL) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
+    }
 
     read_len = httpc_get_recvsize(linkid);
     read_len = read_len > size ? size : read_len;
 
-    n = snprintf(buffer + offset, 48, "+HTTPRECVDATA:%d,", read_len);
+    n = snprintf((char *)buffer + offset, 48, "+HTTPRECVDATA:%d,", read_len);
     if (n > 0) {
         offset += n;
     }
@@ -967,7 +1066,7 @@ static int at_setup_cmd_httprecvdata(int argc, const char **argv)
     offset += 2;
     AT_CMD_DATA_SEND((uint8_t *)buffer, offset);
     
-    vPortFree(buffer);
+    at_free(buffer);
 
     return AT_RESULT_CODE_OK;
 }
@@ -1008,17 +1107,18 @@ static int at_query_cmd_httprecvlen(int argc, const char **argv)
 }
 
 static const at_cmd_struct at_http_cmd[] = {
-    {"+HTTPRECVDATA", NULL, NULL, at_setup_cmd_httprecvdata, NULL, 2, 2},
-    {"+HTTPRECVMODE", NULL, at_query_cmd_httprecvmode, at_setup_cmd_httprecvmode, NULL, 1, 1},
-    {"+HTTPRECVBUF", NULL, at_query_cmd_httprecvbuf, at_setup_cmd_httprecvbuf, NULL, 1, 1},
-    {"+HTTPRECVLEN", NULL, at_query_cmd_httprecvlen, NULL, NULL, 1, 1},
-    {"+HTTPCLIENT", NULL, NULL, at_setup_cmd_httpclient, NULL, 4, 5},
-    {"+HTTPGETSIZE", NULL, NULL, at_setup_cmd_httpgetsize, NULL, 2, 3},
-    {"+HTTPCGET", NULL, NULL, at_setup_cmd_httpcget, NULL, 2, 3},
-    {"+HTTPCPOST", NULL, NULL, at_setup_cmd_httpcpost, NULL, 3, 3},
-    {"+HTTPCPUT", NULL, NULL, at_setup_cmd_httpcput, NULL, 4, 4},
-    {"+HTTPURLCFG", NULL, at_query_cmd_httpcurlcfg, at_setup_cmd_httpcurlcfg, NULL, 1, 2},
-    {"+HTTPSSLCFG", NULL, at_query_cmd_httpsslcfg, at_setup_cmd_httpsslcfg, NULL, 2, 5},
+    {"+HTTPRECVDATA", NULL, at_setup_cmd_httprecvdata, NULL, 2, 2},
+    {"+HTTPRECVMODE", at_query_cmd_httprecvmode, at_setup_cmd_httprecvmode, NULL, 1, 1},
+    {"+HTTPRECVBUF",  at_query_cmd_httprecvbuf, at_setup_cmd_httprecvbuf, NULL, 1, 1},
+    {"+HTTPRECVLEN",  at_query_cmd_httprecvlen, NULL, NULL, 1, 1},
+    {"+HTTPCLIENT",   NULL, at_setup_cmd_httpclient, NULL, 4, 5},
+    {"+HTTPGETSIZE",  NULL, at_setup_cmd_httpgetsize, NULL, 2, 3},
+    {"+HTTPCGET",     NULL, at_setup_cmd_httpcget, NULL, 2, 3},
+    {"+HTTPCPOST",    NULL, at_setup_cmd_httpcpost, NULL, 3, 3},
+    {"+HTTPCPUT",     NULL, at_setup_cmd_httpcput, NULL, 4, 4},
+    {"+HTTPURLCFG",   at_query_cmd_httpcurlcfg, at_setup_cmd_httpcurlcfg, NULL, 1, 2},
+    {"+HTTPSSLCFG",   at_query_cmd_httpsslcfg, at_setup_cmd_httpsslcfg, NULL, 2, 5},
+    {NULL,              NULL, NULL, NULL, 0, 0},
 };
 
 bool at_http_cmd_regist(void)

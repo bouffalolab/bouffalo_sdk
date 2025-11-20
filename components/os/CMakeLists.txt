@@ -1,1 +1,3 @@
 sdk_add_subdirectory_ifdef(CONFIG_FREERTOS freertos)
+sdk_add_subdirectory_ifdef(CONFIG_PWRMGMT power_mgmt)
+

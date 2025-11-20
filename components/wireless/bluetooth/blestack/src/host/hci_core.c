@@ -52,11 +52,11 @@
 #endif
 #else
 #include "bl_hci_wrapper.h"
-#endif
 #if defined(BL702) || defined(BL602)
 #include "ble_lib_api.h"
 #else
-//#include "btble_lib_api.h"
+#include "btble_lib_api.h"
+#endif
 #endif
 #include "work_q.h"
 #endif

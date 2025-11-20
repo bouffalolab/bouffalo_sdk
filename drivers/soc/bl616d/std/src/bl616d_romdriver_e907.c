@@ -39,7 +39,7 @@
 
 
 
-/** @addtogroup  BL616_Periph_Driver
+/** @addtogroup  BL616D_Periph_Driver
  *  @{
  */
 
@@ -162,6 +162,9 @@ uint32_t const romDriverTable[]={
     [ROM_API_INDEX_bflb_efuse_get_device_info]                                 = (uint32_t)bflb_efuse_get_device_info,
     [ROM_API_INDEX_bflb_efuse_read_mac_address]                                = (uint32_t)bflb_efuse_read_mac_address,
     [ROM_API_INDEX_bflb_efuse_get_chipid]                                      = (uint32_t)bflb_efuse_get_chipid,
+    [ROM_API_INDEX_bflb_efuse_is_mac_address_slot_empty]                       = (uint32_t)bflb_efuse_is_mac_address_slot_empty,
+    [ROM_API_INDEX_bflb_efuse_write_mac_address_opt]                           = (uint32_t)bflb_efuse_write_mac_address_opt,
+    [ROM_API_INDEX_bflb_efuse_read_mac_address_opt]                            = (uint32_t)bflb_efuse_read_mac_address_opt,
     [ROM_API_INDEX_bflb_efuse_get_adc_trim]                                    = (uint32_t)bflb_efuse_get_adc_trim,
     [ROM_API_INDEX_bflb_efuse_get_adc_tsen_trim]                               = (uint32_t)bflb_efuse_get_adc_tsen_trim,
     [ROM_API_INDEX_bflb_efuse_read_secure_boot]                                = (uint32_t)bflb_efuse_read_secure_boot,
@@ -177,7 +180,12 @@ uint32_t const romDriverTable[]={
     [ROM_API_INDEX_GLB_Power_Off_CPUPLL]                                       = (uint32_t)GLB_Power_Off_CPUPLL,
     [ROM_API_INDEX_GLB_CPUPLL_Ref_Clk_Sel]                                     = (uint32_t)GLB_CPUPLL_Ref_Clk_Sel,
     [ROM_API_INDEX_GLB_Power_On_CPUPLL]                                        = (uint32_t)GLB_Power_On_CPUPLL,
+    [ROM_API_INDEX_GLB_Power_Off_DSIPLL]                                       = (uint32_t)GLB_Power_Off_DSIPLL,
+    [ROM_API_INDEX_GLB_DSIPLL_Ref_Clk_Sel]                                     = (uint32_t)GLB_DSIPLL_Ref_Clk_Sel,
+    [ROM_API_INDEX_GLB_Power_On_DSIPLL]                                        = (uint32_t)GLB_Power_On_DSIPLL,
+    [ROM_API_INDEX_GLB_Power_On_DSIPLL_Clk]                                    = (uint32_t)GLB_Power_On_DSIPLL_Clk,
     [ROM_API_INDEX_GLB_Set_CPUPLL_PostOut]                                     = (uint32_t)GLB_Set_CPUPLL_PostOut,
+    [ROM_API_INDEX_GLB_Set_WIFIPLL_PostOut]                                    = (uint32_t)GLB_Set_WIFIPLL_PostOut,
     [ROM_API_INDEX_GLB_Set_USB_CLK_From_WIFIPLL]                               = (uint32_t)GLB_Set_USB_CLK_From_WIFIPLL,
     [ROM_API_INDEX_GLB_Set_SSC_CLK_From_WIFIPLL]                               = (uint32_t)GLB_Set_SSC_CLK_From_WIFIPLL,
     [ROM_API_INDEX_GLB_Set_MCU_System_CLK_Div]                                 = (uint32_t)GLB_Set_MCU_System_CLK_Div,
@@ -185,6 +193,7 @@ uint32_t const romDriverTable[]={
     [ROM_API_INDEX_GLB_Set_MCU_System_CLK]                                     = (uint32_t)GLB_Set_MCU_System_CLK,
     [ROM_API_INDEX_GLB_Set_WL_MCU_System_CLK]                                  = (uint32_t)GLB_Set_WL_MCU_System_CLK,
     [ROM_API_INDEX_GLB_Set_WL_XCLK_Sel]                                        = (uint32_t)GLB_Set_WL_XCLK_Sel,
+    [ROM_API_INDEX_GLB_Set_WIFIPLL_Fine_Tune]                                  = (uint32_t)GLB_Set_WIFIPLL_Fine_Tune,
     [ROM_API_INDEX_GLB_Get_Core_Type]                                          = (uint32_t)GLB_Get_Core_Type,
     [ROM_API_INDEX_GLB_Set_CPU_Reset_Address]                                  = (uint32_t)GLB_Set_CPU_Reset_Address,
     [ROM_API_INDEX_GLB_Clr_EMI_Reset_Gate]                                     = (uint32_t)GLB_Clr_EMI_Reset_Gate,
@@ -198,7 +207,6 @@ uint32_t const romDriverTable[]={
     [ROM_API_INDEX_GLB_Set_SF_CLK]                                             = (uint32_t)GLB_Set_SF_CLK,
     [ROM_API_INDEX_GLB_Set_I2C_CLK]                                            = (uint32_t)GLB_Set_I2C_CLK,
     [ROM_API_INDEX_GLB_Set_I2S_CLK]                                            = (uint32_t)GLB_Set_I2S_CLK,
-    [ROM_API_INDEX_GLB_Set_SPI_CLK]                                            = (uint32_t)GLB_Set_SPI_CLK,
     [ROM_API_INDEX_GLB_SPI_Sig_Swap_Set]                                       = (uint32_t)GLB_SPI_Sig_Swap_Set,
     [ROM_API_INDEX_GLB_Set_PEC_CLK]                                            = (uint32_t)GLB_Set_PEC_CLK,
     [ROM_API_INDEX_GLB_Set_PWM1_IO_Sel]                                        = (uint32_t)GLB_Set_PWM1_IO_Sel,
@@ -265,11 +273,11 @@ uint32_t const romDriverTable[]={
     [ROM_API_INDEX_GLB_Halt_Mini_Sys]                                          = (uint32_t)GLB_Halt_Mini_Sys,
     [ROM_API_INDEX_GLB_Release_Mini_Sys]                                       = (uint32_t)GLB_Release_Mini_Sys,
     [ROM_API_INDEX_GLB_MINI_PER_Software_Reset]                                = (uint32_t)GLB_MINI_PER_Software_Reset,
-    [ROM_API_INDEX_GLB_Set_SPI1_CLK]                                           = (uint32_t)GLB_Set_SPI1_CLK,
     [ROM_API_INDEX_GLB_Set_MINI_FCLK]                                          = (uint32_t)GLB_Set_MINI_FCLK,
     [ROM_API_INDEX_GLB_MINI_PER_Clock_Gate]                                    = (uint32_t)GLB_MINI_PER_Clock_Gate,
     [ROM_API_INDEX_GLB_MINI_PER_Clock_UnGate]                                  = (uint32_t)GLB_MINI_PER_Clock_UnGate,
     [ROM_API_INDEX_GLB_Select_LPCPU_Jtag]                                      = (uint32_t)GLB_Select_LPCPU_Jtag,
+    [ROM_API_INDEX_GLB_Select_NPCPU_Jtag]                                      = (uint32_t)GLB_Select_NPCPU_Jtag,
     [ROM_API_INDEX_GLB_Halt_CPU]                                               = (uint32_t)GLB_Halt_CPU,
     [ROM_API_INDEX_GLB_Release_CPU]                                            = (uint32_t)GLB_Release_CPU,
     [ROM_API_INDEX_GLB_RC32M_Force_On]                                         = (uint32_t)GLB_RC32M_Force_On,
@@ -279,6 +287,9 @@ uint32_t const romDriverTable[]={
     [ROM_API_INDEX_GLB_Set_NP2MINI_Interrupt_Mask]                             = (uint32_t)GLB_Set_NP2MINI_Interrupt_Mask,
     [ROM_API_INDEX_GLB_Get_NP2MINI_Interrupt_Mask]                             = (uint32_t)GLB_Get_NP2MINI_Interrupt_Mask,
     [ROM_API_INDEX_GLB_Embedded_Flash_Pad_Enable]                              = (uint32_t)GLB_Embedded_Flash_Pad_Enable,
+    [ROM_API_INDEX_GLB_Get_LP_CPU_Status]                                      = (uint32_t)GLB_Get_LP_CPU_Status,
+    [ROM_API_INDEX_GLB_Get_Mini_System_Status]                                 = (uint32_t)GLB_Get_Mini_System_Status,
+    [ROM_API_INDEX_GLB_SET_JTAG_CHAIN]                                         = (uint32_t)GLB_SET_JTAG_CHAIN,
     [ROM_API_INDEX_HBN_Power_Down_Flash]                                       = (uint32_t)HBN_Power_Down_Flash,
     [ROM_API_INDEX_HBN_Level_Select]                                           = (uint32_t)HBN_Level_Select,
     [ROM_API_INDEX_HBN_Reset]                                                  = (uint32_t)HBN_Reset,
@@ -344,8 +355,6 @@ uint32_t const romDriverTable[]={
     [ROM_API_INDEX_HBN_Aon_Pad_Ctrl]                                           = (uint32_t)HBN_Aon_Pad_Ctrl,
     [ROM_API_INDEX_HBN_Aon_Pad_Cfg]                                            = (uint32_t)HBN_Aon_Pad_Cfg,
     [ROM_API_INDEX_HBN_Aon_Pad_Cfg_Set]                                        = (uint32_t)HBN_Aon_Pad_Cfg_Set,
-    [ROM_API_INDEX_HBN_Enable_AComp_IRQ]                                       = (uint32_t)HBN_Enable_AComp_IRQ,
-    [ROM_API_INDEX_HBN_Disable_AComp_IRQ]                                      = (uint32_t)HBN_Disable_AComp_IRQ,
     [ROM_API_INDEX_HBN_Enable_BOD_IRQ]                                         = (uint32_t)HBN_Enable_BOD_IRQ,
     [ROM_API_INDEX_HBN_Disable_BOD_IRQ]                                        = (uint32_t)HBN_Disable_BOD_IRQ,
     [ROM_API_INDEX_HBN_Aon_Pad_WakeUpCfg]                                      = (uint32_t)HBN_Aon_Pad_WakeUpCfg,

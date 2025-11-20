@@ -51,6 +51,8 @@ int wl80211_mac_do_scan(void);
 int wl80211_mac_do_connect(void);
 int wl80211_mac_ctrl_port(uint8_t sta_id, int control_port_open);
 int wl80211_mac_set_ps_mode(int enable);
+int wl80211_mac_chan_config_update(uint8_t channel24G_num, uint8_t *channel24G_chan, uint8_t channel5G_num, uint8_t *channel5G_chan);
+struct mac_chan_def *wl80211_mac_chan_get(int freq);
 
 // only for type checker
 struct wl80211_tx_header;

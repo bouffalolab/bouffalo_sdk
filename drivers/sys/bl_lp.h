@@ -22,4 +22,9 @@
 #include "bl616d_lp.h"
 #endif
 
+#define LP_HOOK(x, ...)           \
+    if (&lp_hook_##x) {           \
+        lp_hook_##x(__VA_ARGS__); \
+    }
+
 #endif

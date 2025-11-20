@@ -171,11 +171,16 @@ int wl80211_mac_do_scan(void) {
   struct wl80211_scan_ops *last_ops;
   assert(req != NULL && ops != NULL);
 
-  int scan_param_passive = 0;
-  uint32_t scan_param_duration = 0;
-  uint32_t scan_param_probe_cnt = 0;
+  int scan_param_passive = WG.scan_params.passive;
+  uint32_t scan_param_duration = WG.scan_params.duration;
+  uint32_t scan_param_probe_cnt = WG.scan_params.probe_cnt;
   int i, probe_interval;
+  uint8_t channel;
+  int freq;
+  struct mac_chan_def *chan;
+  int nb_chans = 0;
 
+  memset(req, 0, sizeof(struct scanu_start_req));
   // FIXME: SCAN_PASSIVE_DURATION (220000) -> 215*TU
   probe_interval = (scan_param_duration ? scan_param_duration : 215) /
                    (scan_param_probe_cnt ? scan_param_probe_cnt : 2);
@@ -184,15 +189,49 @@ int wl80211_mac_do_scan(void) {
     goto EXIT;
   }
 
-  memcpy(&req->chan[0], _macsw_chan_def.chan2G4,
-         _macsw_chan_def.chan2G4_cnt * sizeof(struct mac_chan_def));
-#if 0
-  memcpy(&req->chan[chan_def.chan2G4_cnt], _macsw_chan_def.chan5G,
-         _macsw_chan_def.chan5G_cnt * sizeof(struct mac_chan_def));
-  req->chan_cnt = _macsw_chan_def.chan2G4_cnt + _macsw_chan_def.chan5G_cnt;
-#else
-  req->chan_cnt = _macsw_chan_def.chan2G4_cnt;
-#endif
+  if (WG.scan_params.channels_cnt) {
+    for (i = 0; i < WG.scan_params.channels_cnt && nb_chans < SCAN_CHANNEL_MAX; i++) {
+      channel = WG.scan_params.channels[i];
+      if (!wl80211_channel_valid_check(channel)) {
+        if (channel > MAC_DOMAINCHANNEL_24G_MAX) {
+          freq = phy_channel_to_freq(PHY_BAND_5G, channel);
+        } else {
+          freq = phy_channel_to_freq(PHY_BAND_2G4, channel);
+        }
+        chan = wl80211_mac_chan_get(freq);
+        if (chan) {
+          memcpy(&req->chan[nb_chans++], chan, sizeof(struct mac_chan_def));
+        }
+      }
+    }
+  } else {
+    uint8_t channel24G_num;
+    uint8_t channel5G_num;
+    uint8_t *channel24G_list;
+    uint8_t *channel5G_list;
+
+    wl80211_get_channel_nums(wl80211_glb.country_code, (uint8_t *)&channel24G_num, (uint8_t *)&channel5G_num);
+    wl80211_get_channel_list(wl80211_glb.country_code, &channel24G_list, &channel5G_list);
+
+    for (i = 0; i < channel24G_num && nb_chans < SCAN_CHANNEL_MAX; i++) {
+      channel = channel24G_list[i];
+      freq = phy_channel_to_freq(PHY_BAND_2G4, channel);
+      chan = wl80211_mac_chan_get(freq);
+      if (chan) {
+        memcpy(&req->chan[nb_chans++], chan, sizeof(struct mac_chan_def));
+      }
+    }
+    for (i = 0; i < channel5G_num && nb_chans < SCAN_CHANNEL_MAX; i++) {
+      channel = channel5G_list[i];
+      freq = phy_channel_to_freq(PHY_BAND_5G, channel);
+      chan = wl80211_mac_chan_get(freq);
+      if (chan) {
+        memcpy(&req->chan[nb_chans++], chan, sizeof(struct mac_chan_def));
+      }
+    }
+  }
+  assert(nb_chans > 0);
+  req->chan_cnt = nb_chans;
 
   if (scan_param_passive) {
     for (i = 0; i < req->chan_cnt; i++)
@@ -200,17 +239,19 @@ int wl80211_mac_do_scan(void) {
   }
 
   req->ssid_cnt = 1;
-  memcpy(req->ssid->array, WG.ssid, 32);
-  req->ssid->length = strlen((char *)WG.ssid);
+  if (WG.scan_params.ssid_length <= MAC_SSID_LEN) {
+    memcpy(req->ssid[0].array, WG.scan_params.ssid, WG.scan_params.ssid_length);
+    req->ssid[0].length = WG.scan_params.ssid_length;
+  }
 
   struct mac_addr empty_bssid = {{0, 0, 0}};
 
   // install bssid
-  if (memcmp(WG.bssid, empty_bssid.array, 6) == 0) {
+  if (memcmp(WG.scan_params.bssid, empty_bssid.array, 6) == 0) {
     struct mac_addr broadcast = {{0xffff, 0xffff, 0xffff}};
     MAC_ADDR_CPY(&req->bssid, &broadcast);
   } else {
-    MAC_ADDR_CPY(&req->bssid, WG.bssid);
+    MAC_ADDR_CPY(&req->bssid, WG.scan_params.bssid);
   }
 
   req->add_ies = (uintptr_t)NULL;
@@ -227,6 +268,7 @@ int wl80211_mac_do_scan(void) {
   ops->o.scan_start = scan_start;
   ops->o.scan_ap_ind = scan_ind_cb;
   ops->o.scan_done_ind = scan_done_cb;
+  ops->o.is_connecting_scan = 0;
 
   // add req to scan operation list
   GLOBAL_INT_DISABLE();

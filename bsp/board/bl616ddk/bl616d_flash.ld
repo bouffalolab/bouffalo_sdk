@@ -32,7 +32,7 @@ MEMORY
     ram_psram  (wxa)   : ORIGIN = 0x88000000, LENGTH = 4M
     ram_nocache (!rx) : ORIGIN = 0x21000400, LENGTH = 320K - 1K /* reserved 1k for security */
     ram_memory  (!rx) : ORIGIN = 0x61000400, LENGTH = 320K - 1K /* reserved 1k for security */
-    ram_wifi  (wxa)   : ORIGIN = 0x21078000, LENGTH = 160K
+    ram_wifi  (wxa)   : ORIGIN = 0x21050000, LENGTH = 320K
 }
 
 SECTIONS

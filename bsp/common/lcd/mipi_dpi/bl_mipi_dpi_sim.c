@@ -64,11 +64,11 @@ static volatile void *next_disp_buffer;
 /* record pix_format, width, height */
 static volatile uint16_t pix_format, width, height;
 
-static int sim_dpi_dma_lli_init(lcd_mipi_dpi_init_t *dpi_para);
+static int sim_dpi_dma_lli_init(lcd_mipi_dpi_sim_init_t *dpi_para);
 static int sim_dpi_dma_lli_update(void *disp_buff);
 static void sim_dpi_dma_interrupt(void *arg);
 
-int lcd_mipi_dpi_init(lcd_mipi_dpi_init_t *dpi_para)
+int lcd_mipi_dpi_sim_init(lcd_mipi_dpi_sim_init_t *dpi_para)
 {
     if (dpi_para == NULL) {
         return -1;
@@ -117,9 +117,9 @@ int lcd_mipi_dpi_init(lcd_mipi_dpi_init_t *dpi_para)
     width = dpi_para->width;
     height = dpi_para->height;
 
-    if (dpi_para->pixel_format == LCD_MIPI_DPI_PIXEL_FORMAT_RGB565) {
+    if (dpi_para->pixel_format == LCD_MIPI_DPI_SIM_PIXEL_FORMAT_RGB565) {
         dpi_sim.data_format = 16;
-    } else if (dpi_para->pixel_format == LCD_MIPI_DPI_PIXEL_FORMAT_NRGB888) {
+    } else if (dpi_para->pixel_format == LCD_MIPI_DPI_SIM_PIXEL_FORMAT_NRGB888) {
         dpi_sim.data_format = 24;
     } else {
         return -2;
@@ -189,12 +189,12 @@ int lcd_mipi_dpi_init(lcd_mipi_dpi_init_t *dpi_para)
     return 0;
 }
 
-int lcd_mipi_dpi_screen_switch(void *screen_buffer)
+int lcd_mipi_dpi_sim_screen_switch(void *screen_buffer)
 {
     /* clean cache */
-    if (pix_format == LCD_MIPI_DPI_PIXEL_FORMAT_RGB565) {
+    if (pix_format == LCD_MIPI_DPI_SIM_PIXEL_FORMAT_RGB565) {
         bflb_l1c_dcache_clean_range((void *)(screen_buffer), width * height * 2);
-    } else if (pix_format == LCD_MIPI_DPI_PIXEL_FORMAT_NRGB888) {
+    } else if (pix_format == LCD_MIPI_DPI_SIM_PIXEL_FORMAT_NRGB888) {
         bflb_l1c_dcache_clean_range((void *)(screen_buffer), width * height * 4);
     }
 
@@ -202,7 +202,7 @@ int lcd_mipi_dpi_screen_switch(void *screen_buffer)
     return 0;
 }
 
-void *lcd_mipi_dpi_get_screen_using(void)
+void *lcd_mipi_dpi_sim_get_screen_using(void)
 {
     return (void *)screen_last;
 }
@@ -241,25 +241,25 @@ static void sim_dpi_dma_interrupt(void *arg)
     }
 }
 
-int lcd_mipi_dpi_frame_callback_register(uint32_t callback_type, void (*callback)(void))
+int lcd_mipi_dpi_sim_frame_callback_register(uint32_t callback_type, void (*callback)(void))
 {
-    if (callback_type == LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP) {
+    if (callback_type == LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_SWAP) {
         lcd_mipi_dpi_frame_swap_callback = callback;
-    } else if (callback_type == LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE) {
+    } else if (callback_type == LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_CYCLE) {
         lcd_mipi_dpi_frame_callback = callback;
     }
     return 0;
 }
 
-static int sim_dpi_dma_lli_init(lcd_mipi_dpi_init_t *dpi_para)
+static int sim_dpi_dma_lli_init(lcd_mipi_dpi_sim_init_t *dpi_para)
 {
     uint16_t i, j;
     uint32_t temp, dma_count;
 
     /* get total number of dma_transfer */
-    if (dpi_para->pixel_format == LCD_MIPI_DPI_PIXEL_FORMAT_RGB565) {
+    if (dpi_para->pixel_format == LCD_MIPI_DPI_SIM_PIXEL_FORMAT_RGB565) {
         dma_count = (dpi_para->width * dpi_para->height) * 2 / 4;
-    } else if (dpi_para->pixel_format == LCD_MIPI_DPI_PIXEL_FORMAT_NRGB888) {
+    } else if (dpi_para->pixel_format == LCD_MIPI_DPI_SIM_PIXEL_FORMAT_NRGB888) {
         dma_count = (dpi_para->width * dpi_para->height);
     } else {
         return -1;

@@ -360,11 +360,6 @@ SECTIONS
         *(COMMON)
 
         . = ALIGN(4);
-        PROVIDE( __lp_mon_start = ADDR(.lp_mon) );
-        PROVIDE( __lp_mon_end = ADDR(.lp_mon) + SIZEOF(.lp_mon) );
-        *(.lp_mon_ctx)
-
-        . = ALIGN(4);
         __bss_end__ = .;
     } > ram_memory
 
@@ -388,6 +383,13 @@ SECTIONS
 
         . = ALIGN(32);
         __HeapLimit = .;
+    } > ram_memory
+
+    .lp_mon (NOLOAD)   :
+    {
+        PROVIDE( __lp_mon_start = ADDR(.lp_mon) );
+        PROVIDE( __lp_mon_end = ADDR(.lp_mon) + SIZEOF(.lp_mon) );
+        *(.lp_mon_ctx)
     } > ram_memory
 
     __HeapLimit = ORIGIN(ram_memory) + LENGTH(ram_memory);

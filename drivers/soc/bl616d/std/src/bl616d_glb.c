@@ -2277,7 +2277,11 @@ BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, 
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
-BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+#if defined(CPU_MODEL_A0)
+BL_Err_Type GLB_Set_SPI0_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+#else
+BL_Err_Type GLB_Set_SPI0_2_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+#endif
 {
     uint32_t tmpVal = 0;
 
@@ -4689,7 +4693,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Simple_Set_MCU_System_CLK(uint8_t clkFreq, ui
  * @return NONE
  *
 *******************************************************************************/
-void GLB_Set_Flash_Xip(uint8_t enable)
+void ATTR_TCM_SECTION GLB_Set_Flash_Xip(uint8_t enable)
 {
     uint32_t tmpVal;
 
@@ -4771,23 +4775,42 @@ BL_Err_Type GLB_MINI_PER_Software_Reset(uint8_t swrst)
     return SUCCESS;
 }
 
+#if defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
- * @brief  set MINI SPI1 clock
+ * @brief  set SPI 1 clock
  *
  * @param  enable: Enable or disable SPI clock
  * @param  clkSel: clock selection, this parameter can be one of the following values:
- *           @arg GLB_SPI_CLK_WIFIPLL_160M
- *           @arg GLB_SPI_CLK_XCLK
+ *           @arg GLB_SPI1_CLK_WIFIPLL_160M
+ *           @arg GLB_SPI1_CLK_XCLK
  * @param  div: divider
  *
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
 BL_Err_Type GLB_Set_SPI1_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+#else
+/****************************************************************************/ /**
+ * @brief  set SPI 3 clock
+ *
+ * @param  enable: Enable or disable SPI clock
+ * @param  clkSel: clock selection, this parameter can be one of the following values:
+ *           @arg GLB_SPI3_CLK_WIFIPLL_160M
+ *           @arg GLB_SPI3_CLK_XCLK
+ * @param  div: divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type GLB_Set_SPI3_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+#endif
 {
     uint32_t tmpVal = 0;
-
-    CHECK_PARAM(IS_GLB_MINI_SPI1_CLK_TYPE(clkSel));
+#if defined(CPU_MODEL_A0)
+    CHECK_PARAM(IS_GLB_SPI1_CLK_TYPE(clkSel));
+#else
+    CHECK_PARAM(IS_GLB_SPI3_CLK_TYPE(clkSel));
+#endif
     CHECK_PARAM((div <= 0x1F));
 
     tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_1);
@@ -4809,6 +4832,7 @@ BL_Err_Type GLB_Set_SPI1_CLK(uint8_t enable, uint8_t clkSel, uint8_t div)
     return SUCCESS;
 }
 
+#if defined(CPU_MODEL_A0)
 /****************************************************************************/ /**
  * @brief  set MINI FCLK
  *
@@ -4831,10 +4855,6 @@ BL_Err_Type GLB_Set_MINI_FCLK(uint8_t enable, uint8_t clkSel, uint8_t div)
     CHECK_PARAM((div <= 0x7F));
 
     tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
-    tmpVal = BL_CLR_REG_BIT(tmpVal, MINI_MISC_CR_FCLK_EN);
-    BL_WR_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0, tmpVal);
-
-    tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_DIV, div);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_SEL, clkSel);
     BL_WR_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0, tmpVal);
@@ -4848,6 +4868,68 @@ BL_Err_Type GLB_Set_MINI_FCLK(uint8_t enable, uint8_t clkSel, uint8_t div)
     BL_WR_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0, tmpVal);
     return SUCCESS;
 }
+#else
+/****************************************************************************/ /**
+ * @brief  set MINI FCLK
+ *
+ * @param  enable: Enable or disable mini_fclk
+ * @param  clkSel: clock selection, this parameter can be one of the following values:
+ *           @arg GLB_MINI_FCLK_RC32M
+ *           @arg GLB_MINI_FCLK_XTAL
+ *           @arg GLB_MINI_FCLK_WIFIPLL_120M
+ *           @arg GLB_MINI_FCLK_WIFIPLL_80M
+ *           @arg GLB_MINI_FCLK_WIFIPLL_48M
+ * @param  div: divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type GLB_Set_MINI_FCLK(uint8_t enable, uint8_t clkSel, uint8_t div)
+{
+    uint32_t tmpVal = 0;
+
+    CHECK_PARAM(IS_GLB_MINI_FCLK_TYPE(clkSel));
+    CHECK_PARAM((div <= 0x7F));
+
+    tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, MINI_MISC_CR_FCLK_EN);
+    BL_WR_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0, tmpVal);
+
+    tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_DIV, div);
+    switch (clkSel) {
+        case GLB_MINI_FCLK_RC32M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_SEL, 0);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_ROOT_CLK_SEL, 0);
+            break;
+        case GLB_MINI_FCLK_XTAL:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_SEL, 0);
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_ROOT_CLK_SEL, 1);
+            break;
+        case GLB_MINI_FCLK_WIFIPLL_120M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_SEL, 1);
+            break;
+        case GLB_MINI_FCLK_WIFIPLL_80M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_SEL, 2);
+            break;
+        case GLB_MINI_FCLK_WIFIPLL_48M:
+            tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_SEL, 3);
+            break;
+        default:
+            break;
+    }
+    BL_WR_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0, tmpVal);
+
+    tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
+    if (enable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, MINI_MISC_CR_FCLK_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, MINI_MISC_CR_FCLK_EN);
+    }
+    BL_WR_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0, tmpVal);
+    return SUCCESS;
+}
+#endif
 
 /****************************************************************************/ /**
  * @brief  gate pll clock cgen
@@ -4859,6 +4941,7 @@ BL_Err_Type GLB_Set_MINI_FCLK(uint8_t enable, uint8_t clkSel, uint8_t div)
  *           @arg GLB_MINI_MISC_BCLK_TIM1
  *           @arg GLB_MINI_MISC_BCLK_I2C2
  *           @arg GLB_MINI_MISC_BCLK_PWM1
+ *           @arg GLB_MINI_MISC_BCLK_SPI3
  *
  * @return SUCCESS or ERROR
  *
@@ -4886,6 +4969,7 @@ BL_Err_Type GLB_MINI_PER_Clock_Gate(uint32_t clk)
  *           @arg GLB_MINI_MISC_BCLK_TIM1
  *           @arg GLB_MINI_MISC_BCLK_I2C2
  *           @arg GLB_MINI_MISC_BCLK_PWM1
+ *           @arg GLB_MINI_MISC_BCLK_SPI3
  *
  * @return SUCCESS or ERROR
  *
@@ -5201,7 +5285,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs)
 {
     uint32_t gpioCfgAddress;
     uint32_t tmpVal;
-    uint8_t gpioPin[4];
+    uint8_t gpioPin[6];
     uint8_t i;
 
     if (swapIo2Cs) {
@@ -5209,18 +5293,30 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs)
         gpioPin[1] = 56;
         gpioPin[2] = 54;
         gpioPin[3] = 58;
+        gpioPin[4] = 53;
+        gpioPin[5] = 57;
     } else {
         gpioPin[0] = 55;
         gpioPin[1] = 56;
         gpioPin[2] = 57;
         gpioPin[3] = 58;
+        gpioPin[4] = 53;
+        gpioPin[5] = 54;
     }
     for (i = 0; i < 4; i++) {
         gpioCfgAddress = GLB_BASE + GLB_GPIO_CFG0_OFFSET + (gpioPin[i] << 2);
         tmpVal = BL_RD_WORD(gpioCfgAddress);
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_REG_GPIO_0_IE);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_GPIO_0_DRV, 3);
         BL_WR_WORD(gpioCfgAddress, tmpVal);
     }
+
+    for (i = 4; i < 6; i++) {
+        gpioCfgAddress = GLB_BASE + GLB_GPIO_CFG0_OFFSET + (gpioPin[i] << 2);
+        tmpVal = BL_RD_WORD(gpioCfgAddress);
+        tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_GPIO_0_DRV, 3);
+        BL_WR_WORD(gpioCfgAddress, tmpVal);
+    }  
 
     return SUCCESS;
 }

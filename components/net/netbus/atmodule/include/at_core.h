@@ -86,12 +86,19 @@ typedef enum {
 #endif
 #define BIT_ISSET(data, bit)      ((data) & BIT(bit))
 
+#if CONFIG_AT_DEBUG_ENABLE
+#define AT_CMD_PRINTF printf 
+#else
+#define AT_CMD_PRINTF  
+#endif 
+
 #define AT_CMD_DATA_SEND(s,len) at->device_ops.write_data((uint8_t *)(s), len)
 #define AT_CMD_DATA_RECV(s,len) at->device_ops.read_data((uint8_t *)(s), len)
 #define AT_CMD_RESPONSE(s) at->device_ops.write_data((uint8_t *)(s), strlen(s))
   
 #define AT_CMD_PARSE_STRING(i, string, max) do { \
     if (!at_arg_get_string(argv[i], string, max)) { \
+        AT_CMD_PRINTF("para parse error!\r\n");    \
         at_cmd_set_error(AT_CMD_ERROR_PARA_PARSE_FAIL(i)); \
         return AT_RESULT_CODE_ERROR; \
     } \
@@ -99,6 +106,7 @@ typedef enum {
 
 #define AT_CMD_PARSE_NUMBER(i, num) do {\
     if (!at_arg_get_number(argv[i], num)) { \
+        AT_CMD_PRINTF("para parse error!\r\n");    \
         at_cmd_set_error(AT_CMD_ERROR_PARA_PARSE_FAIL(i)); \
         return AT_RESULT_CODE_ERROR; \
     } \
@@ -107,6 +115,7 @@ typedef enum {
 #define AT_CMD_PARSE_OPT_STRING(i, string, max, valid) do { \
     if(argc > i && !at_arg_is_null(argv[i])) { \
         if (!at_arg_get_string(argv[i], string, max)) { \
+            AT_CMD_PRINTF("para parse error!\r\n");    \
             at_cmd_set_error(AT_CMD_ERROR_PARA_PARSE_FAIL(i)); \
             return AT_RESULT_CODE_ERROR; \
         } \
@@ -117,6 +126,7 @@ typedef enum {
 #define AT_CMD_PARSE_OPT_NUMBER(i, num, valid) do {\
     if(argc > i && !at_arg_is_null(argv[i])) { \
         if (!at_arg_get_number(argv[i], num)) { \
+            AT_CMD_PRINTF("para parse error!\r\n");    \
             at_cmd_set_error(AT_CMD_ERROR_PARA_PARSE_FAIL(i)); \
             return AT_RESULT_CODE_ERROR; \
         } \

@@ -11,5 +11,9 @@ src/encrypt_layer.c
 src/payload.c
 src/transfer.c
 bflb_blesync_app.c
-wifi_adapter/wifiprov_${CHIP}.c
 )
+if(CONFIG_WIFI6)
+sdk_library_add_sources(wifi_adapter/wifiprov_bl616.c)
+else()
+sdk_library_add_sources(wifi_adapter/wifiprov_bl602.c)
+endif()

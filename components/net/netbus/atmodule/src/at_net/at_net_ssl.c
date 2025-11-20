@@ -15,6 +15,7 @@
 #include <lwip/sys.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
+#include "at_pal.h"
 
 //#include <hosal_rng.h>
 
@@ -185,7 +186,7 @@ void *mbedtls_ssl_connect(int fd, const ssl_conn_param_t *param)
         ssl_mutex_unlock);
 #endif
 
-    ssl_param = (ssl_param_t *)pvPortMalloc(sizeof(ssl_param_t));
+    ssl_param = (ssl_param_t *)at_malloc(sizeof(ssl_param_t));
     if (NULL == ssl_param) {
         AT_NET_SSL_PRINTF("[MBEDTLS] ssl connect: malloc(%d) fail\r\n", sizeof(ssl_param_t));
         return NULL;
@@ -260,7 +261,10 @@ void *mbedtls_ssl_connect(int fd, const ssl_conn_param_t *param)
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&ssl_param->conf, ssl_debug, NULL);
 #endif
-    
+
+#if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
+    mbedtls_ssl_conf_max_frag_len(&ssl_param->conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096); 
+#endif
     if (param->alpn_num && param->alpn) {
         mbedtls_ssl_conf_alpn_protocols(&ssl_param->conf, param->alpn);
     }
@@ -315,13 +319,70 @@ ERROR:
         mbedtls_ssl_free(&ssl_param->ssl);
         mbedtls_ssl_config_free(&ssl_param->conf);
 
-        vPortFree(ssl_param);
+        at_free(ssl_param);
         ssl_param = NULL;
     }
     return NULL;
 }
 
-void *mbedtls_ssl_accept(int fd, const char *ca_cert, int ca_cert_len, 
+static const unsigned char default_server_crt[] =
+"-----BEGIN CERTIFICATE-----\n"
+"MIIEXTCCAkUCFCwk/PwiFLweYlswmu163hrv3TdHMA0GCSqGSIb3DQEBCwUAMGox\n"
+"CzAJBgNVBAYTAkNOMRIwEAYDVQQIDAlHdWFuZ2RvbmcxETAPBgNVBAcMCFNoZW56\n"
+"aGVuMQ4wDAYDVQQKDAVNeU9yZzEPMA0GA1UECwwGUm9vdENBMRMwEQYDVQQDDApN\n"
+"eSBSb290IENBMB4XDTI1MDUyMzA3MzMzMFoXDTM1MDUyMTA3MzMzMFowbDELMAkG\n"
+"A1UEBhMCQ04xEjAQBgNVBAgMCUd1YW5nZG9uZzERMA8GA1UEBwwIU2hlbnpoZW4x\n"
+"DjAMBgNVBAoMBU15T3JnMQ8wDQYDVQQLDAZTZXJ2ZXIxFTATBgNVBAMMDHNlcnZl\n"
+"ci5sb2NhbDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANG9UW3VzuR8\n"
+"Ugpqc16mxP/EmdbEiOuA9xr5eikredP7DcaluQ5nzaQh2/pbFBSAhj950dn9yJU6\n"
+"3B/C/2a4CJ7AGW3aOaOuNhrOcfVDJ0GfkSz/kEq1nvp5qzOHOW3OI/U/AWnVCrov\n"
+"kdIhUNLyHq2C1rFnYm1E8q02a9+vzX3iPWFOxO0V4z1q+juZSn58rd/PuSqeX8Dg\n"
+"eCHibLHa2XTFNVzPRRjREDmqpQ6ZRGeM0znTeNW4hTlo215TKGUaeHNxtxjKNGxO\n"
+"PKYoNjHAbvGM+Ib/ytfAGoPR73iRKgVC47/xYlm3atsuJrkeVpxLSCwbvISUwCvv\n"
+"bmQlbwaGoekCAwEAATANBgkqhkiG9w0BAQsFAAOCAgEAakFzjNXb1RDkTMkyoxL9\n"
+"/YtBJHWkyAEe6MybyZLYhfF3rK32syjN6aPqa5KNKvSkz/aXB9lgujr1Dhe5WitS\n"
+"K/QTzm4MyRppEG0BjVh4xlZE9jD5k1M/5vTGfZ7K8STs945p9GAdjJWil42AfXhb\n"
+"oy1UFOdriMWeuoKZqeG1lC3QcOPcXhJy+ZkadEYecPSQ6qhtytlEm+yITQbQa6KZ\n"
+"0Xmj4bL3e6QK3Gm13tQ8TVq+t+/cgHe1nTIck4vSJHDTm4BcGeT4MO5WcrCsCnnY\n"
+"krULdIgSA/WcyqExyFauMaxfNPbD1kg33mPxVgNRgArwSzd+mWrasuAyO2IHb+yP\n"
+"7FsdE3bOS/O7R5sGRzQm+rcaZPFoJIDLtHftUOkr9KmNOEsKAbuNQE43218tWGDO\n"
+"SX9aOO/44c8rOi05gD/PX8yhgY8idhzyQSvsZf8nGsyRoVJTit/vnQleW2r3NH6e\n"
+"LODUfMpAtRl6sTagocibpAC7J4xUkiw2mAmRX234DIXnV8AFPH3lNs1/WgBbyRuA\n"
+"C7FPvMaI7kdNF4w7YlQ8CQstkr0A2V78AdyuctVIqgFrLmUvt09xdBhAryn/qRiQ\n"
+"QXOhg90JshV0wQESCiaVvTQ055D+lgAbpxlyw3nNTFn7PKuoCCJky2+S5KtT/PcP\n"
+"PajA/1n15JNfI5fxkMxbP10=\n"
+"-----END CERTIFICATE-----\n";
+
+static const unsigned char default_server_key[] =
+"-----BEGIN RSA PRIVATE KEY-----\n"
+"MIIEpgIBAAKCAQEA0b1RbdXO5HxSCmpzXqbE/8SZ1sSI64D3Gvl6KSt50/sNxqW5\n"
+"DmfNpCHb+lsUFICGP3nR2f3IlTrcH8L/ZrgInsAZbdo5o642Gs5x9UMnQZ+RLP+Q\n"
+"SrWe+nmrM4c5bc4j9T8BadUKui+R0iFQ0vIerYLWsWdibUTyrTZr36/NfeI9YU7E\n"
+"7RXjPWr6O5lKfnyt38+5Kp5fwOB4IeJssdrZdMU1XM9FGNEQOaqlDplEZ4zTOdN4\n"
+"1biFOWjbXlMoZRp4c3G3GMo0bE48pig2McBu8Yz4hv/K18Aag9HveJEqBULjv/Fi\n"
+"Wbdq2y4muR5WnEtILBu8hJTAK+9uZCVvBoah6QIDAQABAoIBAQDAE7Ko9a9dTAUO\n"
+"COLTAcNTwEZqit4hXp/uEh6v6WLOoRHCpC5PZPzMnT2JjzNae0F2jCeEjYfOMnM4\n"
+"mymudkdequoe0kULAxYFgp6WUAN5c5pOLVWFNcL7+8Svkd0kFC6WADdZJoOGct4G\n"
+"JACSzq0Nlc7r9JQNIaFkw3wTBDsaVhbx4N1UX892LE8euvtDedEKsz1FCNM+hd+k\n"
+"x/tHsJQiZazitA1XWyVfl1TDf0LVdPMNcVNvyOjuD5+fu5edFkufTu4hoMuIXRQi\n"
+"BPNYa/n+MYWiNaie+3od/+8vusUpTIOAtCpIb46HyfsqD7G1Afg2psgpgJUVkzb2\n"
+"JR51VdjJAoGBAPl1wIt9L9BtKwOLZcPopJwp6gRK0e6avYDcqJi974aDSZBlwSet\n"
+"OSAJn4XEVau96x5WazGnXeLI4s0hGtiWn9atYPk3Bj/731RMIBJkjr9yGqMgDcI7\n"
+"66/OnIuBlmJu1fCc6grZuy6m446ccOxKmXjxNNAst3VPMsoyzKrlmlobAoGBANc8\n"
+"+4yzYX0ofj/0ZVZBrL9pddnlh+eRQuMpHCy5tuCnAGlxuUJV4W+ve08VoQqAs7Ih\n"
+"liceIIUUvRsmIWjOryTz/iN0l9q0l207GmX+lxSe8+ziXPjMZ0/jqrwY/fMEeVVA\n"
+"qn9GwMWEtXSDTrdXKgdKq9O7EMx6aO9k7pbsDnRLAoGBAO0HPLeNcKQrRoasqjpW\n"
+"0CnuDYScjxKXh15sy+mt92ypTHnepYSMrE3Ltv6ESh7Qaxo9ZMceTzAQTqg4P2jy\n"
+"3dc+kHjcFp0vNsnDN2oikBxKUBMVft1C0DQRLl/D9t96jt98SUmcDqZKPsgfz5BF\n"
+"ZcQr9FGlW4Aki47ia+QqG9pnAoGBAKlMaVxxmEQW/r8VYEQpolRpAm7i8TQ++Qqu\n"
+"wl+XsHYiRduqvRqlbI4pzGcXTzVwqGd7rZyVQOUMu/ZH1s2WjQMW/BYtVmiL1fPw\n"
+"IkKJr5JjuN/h6Vk1him7nQcY7V8ibMGW/MTiBS0Xxpaf1eG2KPPVUzRWls8Plcx/\n"
+"an/Bq1jjAoGBAOMn2aeAOXFTeh0AnO4/dcJbVv4WAT3cqiUqOWVINAb6Zas9se9M\n"
+"9u48D0TBAGIchBbr0c258HrmjYvGdjb3NyUy2amn0NxzTK1gKC1PXtNvbkUGD10y\n"
+"3UxjKNfIcnZHIMoAaZ2gFfiOUzWaVEmy/dm/Q6xFkQ5PxImd0hTLGI4+\n"
+"-----END RSA PRIVATE KEY-----\n";
+
+void *mbedtls_ssl_accept(int fd, const char *ca_cert, int ca_cert_len,
 					 const char *srv_cert, int srv_cert_len, const char *private_cert, int private_cert_len)
 {
     int ret;
@@ -338,10 +399,17 @@ void *mbedtls_ssl_accept(int fd, const char *ca_cert, int ca_cert_len,
         ssl_mutex_unlock);
 #endif
 
-    ssl_param = (ssl_param_t *)pvPortMalloc(sizeof(ssl_param_t));
+    ssl_param = (ssl_param_t *)at_malloc(sizeof(ssl_param_t));
     if (NULL == ssl_param) {
         AT_NET_SSL_PRINTF("[MBEDTLS] ssl server: malloc(%d) fail\r\n", sizeof(ssl_param_t));
         return NULL;
+    }
+
+    if (!srv_cert || srv_cert_len <= 0 || !private_cert || private_cert_len <= 0) {
+        srv_cert = (const char *)default_server_crt;
+        srv_cert_len = sizeof(default_server_crt);
+        private_cert = (const char *)default_server_key;
+        private_cert_len = sizeof(default_server_key);
     }
 
     memset(ssl_param, 0, sizeof(ssl_param_t));
@@ -445,7 +513,7 @@ ERROR:
         mbedtls_ssl_free(&ssl_param->ssl);
         mbedtls_ssl_config_free(&ssl_param->conf);
 
-        vPortFree(ssl_param);
+        at_free(ssl_param);
         ssl_param = NULL;
     }
     return NULL;
@@ -582,7 +650,7 @@ int mbedtls_ssl_close(void *ssl)
     mbedtls_threading_free_alt();
 #endif
 
-    vPortFree(ssl_param);
+    at_free(ssl_param);
     return 0;
 }
 

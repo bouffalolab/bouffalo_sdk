@@ -16,6 +16,22 @@ extern "C" {
 
 #include "at_wifi_config.h"
 
+#ifndef WIFI_MGMR_SCAN_ITEMS_MAX
+#define WIFI_MGMR_SCAN_ITEMS_MAX 50
+#endif
+#define  AT_WIFI_EVENT_INIT_DONE       1
+#define  AT_WIFI_EVENT_CONNECTED       2
+#define  AT_WIFI_EVENT_DISCONNECTED    3
+#define  AT_WIFI_EVENT_GOTIP           4
+#define  AT_WIFI_EVENT_SCAN_DONE       5
+#define  AT_WIFI_EVENT_AP_STARTED      6
+#define  AT_WIFI_EVENT_AP_STOP         7
+#define  AT_WIFI_EVENT_AP_STA_ADD      8
+#define  AT_WIFI_EVENT_AP_STA_DEL      9
+
+#define AT_WIFI_VIF_STA      0
+#define AT_WIFI_VIF_AP       1
+
 #define AT_WIFI_ENC_OPEN     0
 #define AT_WIFI_ENC_WPA_PSK  2
 #define AT_WIFI_ENC_WPA2_PSK 3
@@ -54,6 +70,8 @@ int at_wifi_hostname_set(char *hostname);
 int at_wifi_mode_set(uint8_t ap_or_sta, wifi_proto proto);
 
 wifi_proto at_wifi_mode_get(uint8_t ap_or_sta);
+
+void at_wifi_event_notify(void *private_data, uint32_t code);
 
 #ifdef __cplusplus
 }

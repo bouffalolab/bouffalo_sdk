@@ -19,6 +19,7 @@
 
 #include "at_main.h"
 #include "at_core.h"
+#include "at_pal.h"
 #include "at_port.h"
 #include "at_base_cmd.h"
 #include "at_base_config.h"
@@ -29,14 +30,20 @@
 #include "at_http_cmd.h"
 #include "at_through.h"
 #include "at_ble_cmd.h"
+
+#if CONFIG_ATMODULE_NANO
+#define ATCMD_TASK_STACK_SIZE (384)
+#else
 #define ATCMD_TASK_STACK_SIZE (896)
+#endif
 #define ATCMD_TASK_PRIORITY 28
-#define AT_CMD_PRINTF printf
 
-#define AT_WORK_QUEUE 1
-
-#if AT_WORK_QUEUE
+#if CONFIG_ATMODULE_WORK_Q
+/* Static task stack and control block for at_workq_task */
+#define AT_WORKQ_TASK_STACK_SIZE 384
+static __attribute__((section(".wifi_ram."))) StackType_t at_workq_task_stack[AT_WORKQ_TASK_STACK_SIZE];
 static QueueHandle_t g_work_queue;
+static StaticTask_t at_workq_task_tcb;
 #endif
 
 uint64_t at_current_ms_get()
@@ -50,7 +57,7 @@ uint64_t at_current_ms_get()
     return current_ms;
 }
 
-void at_response_result(int result_code)
+void at_response_result(uint32_t result_code)
 {
     int sub_code = 0;
 
@@ -103,8 +110,8 @@ void at_response_string(const char *format , ...)
     char outbuf[256];
     int outstr_len = 0;
 
-    if (!at) {
-        AT_CMD_PRINTF("ERROR: atcmd has not been initialized\r\n");
+    if (!at || !format) {
+        AT_CMD_PRINTF("ERROR: atcmd has not been initialized or format is NULL\r\n");
         return;
     }
 
@@ -153,7 +160,8 @@ at_work_mode at_get_work_mode(void)
     return at->incmd;
 }
 
-#if AT_WORK_QUEUE
+#if CONFIG_ATMODULE_WORK_Q
+
 int at_workq_send(int id, struct at_workq *q, int timeout)
 {
 
@@ -161,7 +169,7 @@ int at_workq_send(int id, struct at_workq *q, int timeout)
         return 0;
     }
     q->eventid = id;
-    
+
     return xQueueSend(g_work_queue, q, timeout);
 }
 
@@ -173,7 +181,7 @@ int at_workq_dowork(int eventid, int timeout)
     if (!g_work_queue) {
         return -1;
     }
-    
+
     xQueuePeek(g_work_queue, &work, timeout);
     if (work.eventid != eventid) {
         return 0;
@@ -199,7 +207,7 @@ static void at_workq_task(void *pvParameters)
         }
     }
 }
-#endif 
+#endif
 
 static void at_main_task(void *pvParameters)
 {
@@ -246,7 +254,9 @@ static void at_main_task(void *pvParameters)
                 if (ret == -1) {
                 	printf("at_through_input fail, exit throughput mode %d\r\n", ret);
                     at_set_work_mode(AT_WORK_MODE_CMD);
+#ifdef CONFIG_ATMODULE_BASE
                     if (at_base_config->sysmsg_cfg.bit.quit_throughput_msg)
+#endif
                         at->device_ops.write_data((uint8_t *)AT_CMD_MSG_QUIT_THROUGHPUT, strlen(AT_CMD_MSG_QUIT_THROUGHPUT));
                 }
                 else if (ret == -2) {
@@ -264,14 +274,15 @@ static void at_main_task(void *pvParameters)
 int at_module_init(void)
 {
     int ret = -1;
-    int bufLen = (AT_THROUGH_MAX_LEN > AT_CMD_MAX_LEN) ? AT_THROUGH_MAX_LEN : AT_CMD_MAX_LEN;
- 
+
+    static __attribute__((section(".wifi_ram."))) uint8_t at_through_buffer[(AT_THROUGH_MAX_LEN > AT_CMD_MAX_LEN) ? AT_THROUGH_MAX_LEN : AT_CMD_MAX_LEN];
+
     if (at) {
         AT_CMD_PRINTF( "ERROR: atcmd has been initialized\r\n");
         return -1;
     }
 
-    at = (struct at_struct *)pvPortMalloc(sizeof(struct at_struct) + bufLen);
+    at = (struct at_struct *)at_malloc(sizeof(struct at_struct));
     if (at == NULL) {
         return -1;
     }
@@ -287,7 +298,7 @@ int at_module_init(void)
     at->device_ops.deinit_device = at_port_deinit;
     at->device_ops.read_data = at_port_read_data;
     at->device_ops.write_data = at_port_write_data;
-    at->inbuf = (char *)((char *)at + sizeof(struct at_struct));
+    at->inbuf = (char *)at_through_buffer;
 
     ret = at->device_ops.init_device();
     if (ret < 0) {
@@ -298,17 +309,18 @@ int at_module_init(void)
     /* register network AT command */
     at_net_cmd_regist();
 #endif
-   
+
 #ifdef CONFIG_ATMODULE_FS
     /* register at fs */
     at_fs_register();
-#endif  
+#endif
 
     /* register base AT command */
+#ifdef CONFIG_ATMODULE_BASE
     at_base_cmd_regist();
-
     at->syslog = at_base_config->sysmsg_cfg.syslog;
-    
+#endif
+
     /* register user AT command */
     at_user_cmd_regist();
 #ifdef CONFIG_ATMODULE_WIFI
@@ -318,7 +330,7 @@ int at_module_init(void)
 #ifdef CONFIG_ATMODULE_MQTT
     /* register mqtt AT command */
     at_mqtt_cmd_regist();
-#endif 
+#endif
 #ifdef CONFIG_ATMODULE_HTTP
     /* register http AT command */
     at_http_cmd_regist();
@@ -338,10 +350,13 @@ int at_module_init(void)
         goto INIT_ERROR;
     }
 
-#if AT_WORK_QUEUE
-    ret = xTaskCreate(at_workq_task, (char*)"at_workq", 512, NULL, 15, NULL);
-    if (ret != pdPASS) {
-        AT_CMD_PRINTF("ERROR: create net_main_task failed, ret = %d\r\n", ret);
+#if CONFIG_ATMODULE_WORK_Q
+    TaskHandle_t at_workq_task_handle = NULL;
+    at_workq_task_handle = xTaskCreateStatic(at_workq_task, (char*)"at_workq",
+                                            AT_WORKQ_TASK_STACK_SIZE, NULL, 15,
+                                            at_workq_task_stack, &at_workq_task_tcb);
+    if (at_workq_task_handle == NULL) {
+        AT_CMD_PRINTF("ERROR: create at_workq_task failed\r\n");
         return -1;
     }
 #endif
@@ -350,7 +365,7 @@ int at_module_init(void)
 
 INIT_ERROR:
     if (at) {
-        vPortFree(at);
+        at_free(at);
         at = NULL;
     }
     return -1;
@@ -369,7 +384,7 @@ int at_module_deinit(void)
     vTaskDelay(1000);
 
     at->device_ops.deinit_device();
-    vPortFree(at);
+    at_free(at);
     at = NULL;
     return 0;
 }
@@ -393,7 +408,12 @@ int at_module_func(char *cmd, int (*resp_func) (uint8_t *data, int len))
 
 int at_output_redirect_register(int (*f_output_redirect) (void))
 {
+    if (!at) {
+        AT_CMD_PRINTF("ERROR: atcmd has not been initialized\r\n");
+        return -1;
+    }
     at->device_ops.f_output_redirect = f_output_redirect;
+    return 0;
 }
 
 int at_output_is_redirect()

@@ -43,9 +43,14 @@ if ATMODULE
 
     endchoice
 
-    menu "AT Module Components" 
+    menu "AT Module Components"
         depends on ATMODULE
-        # AT Moudle components support 
+        # AT Moudle components support
+        config ATMODULE_NANO
+            bool "Enable AT module nano config"
+            default y
+            help
+                Enable AT module nano config.
         config ATMODULE_WIFI
             bool "Enable AT WIFI module"
             default y
@@ -55,7 +60,12 @@ if ATMODULE
             bool "Enable AT BLE module"
             help
                 This enables AT BLE module support.
+        config ATMODULE_WORK_Q
+            bool "Enable AT work queue"
+            help
+                This enables AT module work queue.
         config ATMODULE_NETWORK
+            depends on ATMODULE_WORK_Q
             bool "Enable AT network module"
             help
                 This enables AT network support.
@@ -69,11 +79,18 @@ if ATMODULE
             bool "Enable AT MQTT module"
             help
                 This enables AT MQTT module support.
+        config ATMODULE_BASE
+            bool "Enable AT base module"
+            help
+                This enables AT base module support.
         config ATMODULE_FS
+            depends on ATMODULE_BASE
             bool "Enable AT FS module"
             help
                 This enables AT FS module support.
         config ATMODULE_OTA
+            depends on ATMODULE_BASE
+            depends on ATMODULE_WORK_Q
             bool "Enable AT OTA module"
             help
                 This enables AT OTA module support.
@@ -82,18 +99,22 @@ if ATMODULE
             help
                 This enables AT LowPower module support.
         config ATMODULE_FLASH
+            depends on ATMODULE_BASE
             bool "Enable AT flash r/w/e module"
             help
                 This enables AT flash r/w/e module support.
         config ATMODULE_EFUSE
+            depends on ATMODULE_BASE
             bool "Enable AT efuse r/w module"
             help
                 This enables AT efuse r/w module support.
         config ATMODULE_GPIO
+            depends on ATMODULE_BASE
             bool "Enable AT GPIO module"
             help
                 This enables AT GPIO module support.
         config ATMODULE_CONFIG_STORAGE
+            depends on ATMODULE_BASE
             bool "Enable AT Module Configuration Persistent Storage"
             default y
             help
@@ -103,6 +124,11 @@ if ATMODULE
             bool "Enable AT Module antenna diversity control"
             help
                 This enables AT Module antenna diversity control.
+        config ATMODULE_MINIDUMP
+            depends on ATMODULE_BASE
+            bool "Enable AT Module minidump"
+            help
+                This enables AT Module minidump.
 
     endmenu  # Atmodule Components
 

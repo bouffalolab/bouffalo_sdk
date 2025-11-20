@@ -1,49 +1,23 @@
 #include <assert.h>
 #include "bflb_core.h"
-// #include <wl_api.h>
-#include <bl616_pm.h>
-#include <bflb_rtc.h>
-#include <bl_lp.h>
-#include <bl_sys.h>
-#include <bl616_pds.h>
-#include <bl616_hbn.h>
+#include "bl616_pm.h"
+#include "bflb_rtc.h"
+#include "bl_lp.h"
+#include "bl_sys.h"
+#include "bl616_pds.h"
+#include "bl616_hbn.h"
 #include "hardware/timer_reg.h"
 #include "ef_data_reg.h"
-#include <bl616_glb_gpio.h>
-#include <bflb_dma.h>
-#include <bl616_aon.h>
-#include <bflb_acomp.h>
-#include <bflb_flash.h>
-#include <bflb_sflash.h>
-#include <bflb_sf_ctrl.h>
-#include "sf_ctrl_reg.h"
-#include <bl616_l1c.h>
-#include <bl616_clock.h>
-#include <bl616_tzc_sec.h>
-// #include <utils_crc.h>
+#include "bl616_glb_gpio.h"
+#include "bflb_dma.h"
+#include "bl616_aon.h"
+#include "bflb_acomp.h"
 #include "bflb_sec_sha.h"
-// #include <bl_gpio.h>
-
-#if (!defined(BL_WIFI_LP_FW) && defined(CFG_BL_WIFI_PS_ENABLE))
-#include "wifi_mgmr_ext.h"
-#endif
-
-// #include "time_statics.h"
-
-#define LP_HOOK(x, ...)           \
-    if (&lp_hook_##x) {           \
-        lp_hook_##x(__VA_ARGS__); \
-    }
-
-#define WL_API_RMEM_ADDR      0x20010600
-#define LP_FW_PRE_JUMP_ADDR   0x20010000
-#define BL616_UART_TX         21
-#define BL616_UART_RX         22
-#define BL616_UART_ID         0
-#define BL616_UART_FREQ       40000000
-#define UART_BAUDRATE         (2000000)
-
-#define BL616_ACOMP_VREF_1V65 33
+#include "bl616_tzc_sec.h"
+#include "tzc_sec_reg.h"
+#include "bl616_l1c.h"
+#include "bl616_clock.h"
+#include "bl616_xip_recovery.h"
 
 #if (0 && !defined(BL_WIFI_LP_FW))
 #define BL_LP_LOG        printf
@@ -53,15 +27,11 @@
 #define BL_LP_TIME_DEBUG 0
 #endif
 
-#define SF_Ctrl_Get_AES_Region(addr, r) (addr + SF_CTRL_AES_REGION_OFFSET + (r) * 0x80)
 
 // extern void CPU_Interrupt_Enable(uint32_t irq_num);
 // extern void CPU_Interrupt_Disable(uint32_t irq_num);
-static void bl_lp_xip_para_save(void);
-static void bl_lp_tzc_para_save(void);
-extern int lpfw_recal_rc32k(uint64_t beacon_timestamp_now_us, uint64_t rtc_timestamp_now_us, uint32_t mode);
+extern int lpfw_recal_rc32k(uint64_t beacon_timestamp_now_us, uint64_t rtc_timestamp_now_us, uint32_t mode, int clock_ready_check);
 extern int32_t lpfw_calculate_beacon_delay(uint64_t beacon_timestamp_us, uint64_t rtc_timestamp_us, uint32_t mode);
-// extern int32_t lpfw_beacon_delay_sliding_win_update(int32_t beacon_delay_us, uint64_t beacon_timestamp_us);
 extern int32_t lpfw_beacon_delay_sliding_win_get_average();
 extern int32_t AON_Set_LDO11_SOC_Sstart_Delay(uint8_t delay);
 extern uint32_t *export_get_rx_buffer1_addr(void);
@@ -72,7 +42,6 @@ void (*shared_arch_delay_ms)(uint32_t) = NULL;
 void (*shared_arch_delay_us)(uint32_t) = NULL;
 int32_t (*shared_cpu_reset_mtimer)(void) = NULL;
 int32_t (*shared_lpfw_calculate_beacon_delay)(uint64_t, uint64_t, uint32_t) = NULL;
-// int32_t (*shared_lpfw_beacon_delay_sliding_win_update)(int32_t,uint64_t) = NULL;
 int32_t (*shared_lpfw_beacon_delay_sliding_win_get_average)(void) = NULL;
 int32_t (*shared_aon_set_ldo11_soc_sstart_delay)(uint32_t) = NULL;
 int32_t (*shared_pds_default_level_config)(uint32_t *, uint32_t) = NULL;
@@ -85,8 +54,6 @@ bl_lp_fw_cfg_t lpfw_cfg = {
     .dtim_origin = BL_DTIM_NUM,
     .dtim_num = 0,
 };
-
-struct bflb_sf_ctrl_io_cs_clk_delay_cfg io_cs_delay_cfg;
 
 struct lp_env {
     void *sys_enter_arg;
@@ -104,18 +71,17 @@ struct lp_env {
     uint32_t gpio_stat;
 };
 
-static lp_fw_sf_sec_t sf_sec_info;
 static lp_fw_tzc_t tzc_info;
 static struct lp_env *gp_lp_env = NULL;
-
-static void bl_lp_vtime_before_sleep(void);
-static void bl_lp_vtime_after_sleep(void);
 
 static uint64_t g_rtc_timestamp_before_sleep_us = 0;    /* rtc 1 */
 static uint64_t g_rtc_timestamp_after_sleep_us = 0;     /* rtc 2 */
 static uint64_t g_mtimer_timestamp_before_sleep_us = 0; /* mtime 1 */
 static uint64_t g_mtimer_timestamp_after_sleep_us = 0;  /* mtime 2 */
 static uint64_t g_virtual_timestamp_base_us = 0;        /* virtual time base */
+
+static void bl_lp_vtime_before_sleep(void);
+static void bl_lp_vtime_after_sleep(void);
 
 static void bl_lp_io_wakeup_init(bl_lp_io_cfg_t *io_wakeup_cfg);
 static void bl_lp_acomp_wakeup_init(bl_lp_acomp_cfg_t *acomp_wakeup_cfg);
@@ -345,7 +311,6 @@ static void shared_func_init(void)
     flag |= set_shared_func(2, (uint32_t *)arch_delay_us);
     flag |= set_shared_func(3, (uint32_t *)CPU_Reset_MTimer);
     flag |= set_shared_func(4, (uint32_t *)lpfw_calculate_beacon_delay);
-    // flag |= set_shared_func(5,(uint32_t*)lpfw_beacon_delay_sliding_win_update);
     flag |= set_shared_func(6, (uint32_t *)lpfw_beacon_delay_sliding_win_get_average);
     flag |= set_shared_func(7, (uint32_t *)AON_Set_LDO11_SOC_Sstart_Delay);
     flag |= set_shared_func(8, (uint32_t *)PDS_Default_Level_Config);
@@ -433,6 +398,23 @@ int bl_lpfw_ram_verify(void)
     return 0;
 }
 
+static void bl_lp_tzc_para_save(void)
+{
+    iot2lp_para->tzc_cfg = &tzc_info;
+
+    iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_ctrl = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_CTRL);
+    iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r0 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R0);
+    iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r1 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R1);
+    iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r2 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R2);
+
+    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_ctrl = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL);
+    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r0 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R0);
+    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r1 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R1);
+    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r2 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R2);
+    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_msb = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_MSB);
+}
+
+
 /********************  ********************/
 
 void bl_lp_fw_init()
@@ -511,15 +493,6 @@ void bl_lp_fw_init()
     }
 #endif
 
-    /* flash info save */
-    uint32_t flash_cfg_len;
-    bflb_flash_get_cfg((uint8_t **)&iot2lp_para->flash_cfg, &flash_cfg_len);
-    iot2lp_para->flash_jdec_id = GLB_Get_Flash_Id_Value();
-
-    /* flash io cs clk delay info save */
-    bflb_sf_ctrl_get_flash_io_cs_clk_delay((struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)&io_cs_delay_cfg);
-    iot2lp_para->flash_io_cs_clk_delay_cfg = (void *)&io_cs_delay_cfg;
-
     bl_lp_xip_para_save();
     bl_lp_tzc_para_save();
     printf("[LP] flash jdec_id: 0x%08lX\r\n", (unsigned long)iot2lp_para->flash_jdec_id);
@@ -569,7 +542,38 @@ void bl_lp_fw_bcn_loss_cfg(lp_fw_bcn_loss_level_t *cfg_table, uint16_t table_num
     iot2lp_para->bcn_loss_level = 0;
     iot2lp_para->continuous_loss_cnt = 0;
 }
+int bl_lp_beacon_tim_update(uint8_t *tim, uint8_t mode)
+{
+    uint8_t tim_id = tim[0];
+    uint8_t tim_len = tim[1];
+    uint8_t dtim_count = tim[2];
+    uint8_t dtim_period = tim[3];
 
+    if (tim_id != 5 || tim_len < 4) {
+        BL_LP_LOG("tim elem error, id:%d,len:%d\r\n", tim_id, tim_len);
+        return -1;
+    }
+
+    if (dtim_count >= dtim_period) {
+        BL_LP_LOG("dtim count %d >= period %d\r\n", dtim_count, dtim_period);
+        return -1;
+    }
+
+    if (mode == BEACON_STAMP_LPFW) {
+        if ((iot2lp_para->beacon_dtim_period != dtim_period) && iot2lp_para->beacon_dtim_period) {
+            return -1; /* not allow change dtim period */
+        }
+    } else {
+        iot2lp_para->beacon_dtim_period = dtim_period;
+    }
+
+    iot2lp_para->last_beacon_dtim_count = dtim_count;
+
+    BL_LP_LOG("[LP] beacon tim update: id:%d, len:%d, dtim_count:%d, dtim_period:%d\r\n",
+                  tim_id, tim_len, dtim_count, dtim_period);
+
+    return 0;
+}
 void bl_lp_fw_bcn_loss_cfg_dtim_default(uint8_t dtim_num)
 {
     int32_t cfg_table_num;
@@ -836,6 +840,54 @@ void bl_lp_fw_disconnection()
     iot2lp_para->last_rc32trim_stamp_rtc_us = 0;
 }
 
+void modify_bit(uint32_t *reg_addr, uint8_t bit_position, uint8_t bit_value)
+{
+    if (bit_value) {
+        *reg_addr |= (1U << bit_position);
+    } else {
+        *reg_addr &= ~(1U << bit_position);
+    }
+}
+
+static void xtal32k_input(void)
+{
+    modify_bit(0x2000F204, 19, 0x1);
+    modify_bit(0x2000F204, 21, 0x1);
+    modify_bit(0x2000F204, 2, 0x1);
+    modify_bit(0x2000F204, 10, 0);
+    modify_bit(0x2000F204, 9, 0);
+    modify_bit(0x2000F204, 17, 0x0);
+}
+
+void bl_lp_power_on_xtal32k(uint8_t type)
+{
+    GLB_GPIO_Cfg_Type gpioCfg = {
+        .gpioPin = GLB_GPIO_PIN_0,
+        .gpioFun = GPIO_FUN_ANALOG,
+        .gpioMode = GPIO_MODE_ANALOG,
+        .pullType = GPIO_PULL_NONE,
+        .drive = 1,
+        .smtCtrl = 1
+    };
+    if (type) {
+        gpioCfg.gpioPin = 16;
+        GLB_GPIO_Init(&gpioCfg);
+    }
+    gpioCfg.gpioPin = 17;
+    GLB_GPIO_Init(&gpioCfg);
+    BL_WR_WORD(0x2000F204, 0x210288);
+
+    if (type) {
+        /* power on */
+        HBN_Set_Xtal_32K_Inverter_Amplify_Strength(3);
+        HBN_Power_On_Xtal_32K();
+    } else {
+        HBN_Power_On_Xtal_32K();
+        xtal32k_input();
+    }
+}
+
+
 void bl_lp_rtc_use_xtal32K()
 {
     GLB_GPIO_Cfg_Type gpioCfg = {
@@ -910,6 +962,7 @@ int bl_lp_rtc_rc32k_coarse_adj(uint32_t expect_time, uint32_t rc32k_actual_time)
     return diff_ppm;
 }
 
+
 int bl_lp_set_32k_clock_ready(uint8_t ready_val)
 {
     iot2lp_para->rc32k_clock_ready = ready_val;
@@ -948,161 +1001,6 @@ int bl_lp_get_32k_trim_ready()
     return iot2lp_para->rc32k_trim_ready;
 }
 
-static __inline uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Clk_Sel_Val(void)
-{
-    uint32_t tmpVal;
-
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_SF_CFG0);
-
-    return BL_GET_REG_BITS_VAL(tmpVal, GLB_SF_CLK_SEL);
-}
-
-static __inline uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Div_Val(void)
-{
-    uint32_t tmpVal;
-
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_SF_CFG0);
-
-    return BL_GET_REG_BITS_VAL(tmpVal, GLB_SF_CLK_DIV);
-}
-
-static __inline uint8_t ATTR_CLOCK_SECTION Clock_Get_SF_Clk_Sel2_Val(void)
-{
-    uint32_t tmpVal;
-
-    tmpVal = BL_RD_REG(GLB_BASE, GLB_SF_CFG0);
-
-    return BL_GET_REG_BITS_VAL(tmpVal, GLB_SF_CLK_SEL2);
-}
-
-static void bl_lp_xip_get_flash_clock(uint8_t *flash_clk, uint8_t *flash_clk_div)
-{
-    uint8_t sel = Clock_Get_SF_Clk_Sel_Val();
-    uint8_t sel2 = Clock_Get_SF_Clk_Sel2_Val();
-
-    if (sel == 0) {
-        /* sf sel2 */
-        if (sel2 == 0) {
-            /* wifi pll 120m */
-            *flash_clk = 0;
-        } else if (sel2 == 1) {
-            /* xtal */
-            *flash_clk = 1;
-        } else if (sel2 == 2) {
-            /* wifi pll 120m */
-            *flash_clk = 0;
-        } else {
-            /* aupll div5 clk */
-            *flash_clk = 2;
-        }
-    } else if (sel == 1) {
-        /* mux 80m */
-        *flash_clk = 3;
-    } else if (sel == 2) {
-        /* mcu pbclk */
-        *flash_clk = 4;
-    } else {
-        /* wifi 96m */
-        *flash_clk = 5;
-    }
-    *flash_clk_div = Clock_Get_SF_Div_Val();
-}
-
-extern uint32_t __binary_length;
-static void bl_lp_xip_para_save(void)
-{
-    iot2lp_para->sec_cfg = &sf_sec_info;
-
-    uint32_t tmpVal;
-    uint32_t regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 0);
-    uint32_t *iv = iot2lp_para->sec_cfg->r0_aes_iv;
-    //spi_flash_cfg_type *flash_cfg;
-    uint8_t flash_clk, flash_clk_div;
-
-    tmpVal = getreg32(SF_CTRL_BASE + SF_CTRL_SF_AES_OFFSET);
-
-    if (((tmpVal >> SF_CTRL_SF_AES_BLK_MODE_POS) & 0x1) == 1) {
-        iot2lp_para->sec_cfg->xts_mode = 1;
-    } else {
-        iot2lp_para->sec_cfg->xts_mode = 0;
-    }
-    iot2lp_para->sec_cfg->encrypt_type = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_MODE);
-
-    // AES_Region0
-    regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 0);
-    tmpVal = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_START_OFFSET);
-    iot2lp_para->sec_cfg->r0_aes_en = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_EN);
-    iot2lp_para->sec_cfg->r0_aes_hw_key_en = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_HW_KEY_EN);
-    iot2lp_para->sec_cfg->r0_aes_lock = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_LOCK);
-    iot2lp_para->sec_cfg->r0_aes_start = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_START) * 1024;
-    tmpVal = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_END_OFFSET);
-    iot2lp_para->sec_cfg->r0_aes_end = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_END) * 1024;
-
-    iv = iot2lp_para->sec_cfg->r0_aes_iv;
-    iv[0] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W0_OFFSET);
-    iv[1] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W1_OFFSET);
-    iv[2] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W2_OFFSET);
-    iv[3] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W3_OFFSET);
-
-    // AES_Region1
-    regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 1);
-    tmpVal = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_START_OFFSET);
-    iot2lp_para->sec_cfg->r1_aes_en = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_EN);
-    iot2lp_para->sec_cfg->r1_aes_hw_key_en = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_HW_KEY_EN);
-    iot2lp_para->sec_cfg->r1_aes_lock = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_LOCK);
-    iot2lp_para->sec_cfg->r1_aes_start = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_START) * 1024;
-    tmpVal = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_END_OFFSET);
-    iot2lp_para->sec_cfg->r1_aes_end = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_END) * 1024;
-
-    iv = iot2lp_para->sec_cfg->r1_aes_iv;
-    iv[0] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W0_OFFSET);
-    iv[1] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W1_OFFSET);
-    iv[2] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W2_OFFSET);
-    iv[3] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W3_OFFSET);
-
-    // AES_Region2
-    regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 2);
-    tmpVal = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_START_OFFSET);
-    iot2lp_para->sec_cfg->r2_aes_en = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_EN);
-    iot2lp_para->sec_cfg->r2_aes_hw_key_en = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_HW_KEY_EN);
-    iot2lp_para->sec_cfg->r2_aes_lock = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_LOCK);
-    iot2lp_para->sec_cfg->r2_aes_start = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_START) * 1024;
-    tmpVal = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_END_OFFSET);
-    iot2lp_para->sec_cfg->r2_aes_end = BL_GET_REG_BITS_VAL(tmpVal, SF_CTRL_SF_AES_REGION_END) * 1024;
-
-    iv = iot2lp_para->sec_cfg->r2_aes_iv;
-    iv[0] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W0_OFFSET);
-    iv[1] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W1_OFFSET);
-    iv[2] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W2_OFFSET);
-    iv[3] = BL_RD_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W3_OFFSET);
-
-    uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
-    iot2lp_para->img_len = (int)(&__binary_length) + lpfw_size;
-    printf("[LP] flash: app_len: %d, lp_len: %d, image_len: %d\r\n", (int)&__binary_length, (int)lpfw_size, (int)iot2lp_para->img_len);
-
-    bl_lp_xip_get_flash_clock(&flash_clk, &flash_clk_div);
-    iot2lp_para->flash_clk = flash_clk;
-    iot2lp_para->flash_clk_div = flash_clk_div;
-    printf("[LP] flash_clk: %d, flash_clk_div: %d\r\n", flash_clk, flash_clk_div);
-
-    iot2lp_para->do_xip_recovery = 0;
-}
-
-static void bl_lp_tzc_para_save(void)
-{
-    iot2lp_para->tzc_cfg = &tzc_info;
-
-    iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_ctrl = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_CTRL);
-    iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r0 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R0);
-    iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r1 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R1);
-    iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r2 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R2);
-
-    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_ctrl = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL);
-    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r0 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R0);
-    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r1 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R1);
-    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r2 = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R2);
-    iot2lp_para->tzc_cfg->tzc_sf_tzsrg_msb = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_MSB);
-}
 
 static uint8_t bl_lp_wakeup_check(void)
 {
@@ -1123,9 +1021,6 @@ __WEAK uint8_t bl_lp_check_acomp_int(void)
     uint8_t result = 0;
     return result;
 }
-
-uint64_t ulLowPowerTimeEnterFunction;
-uint64_t ulLowPowerTimeAfterSleep;
 
 void bl_lp_debug_record_time(iot2lp_para_t *iot_lp_para, char *info_str)
 {
@@ -1188,11 +1083,11 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     // uintptr_t dst_addr = LP_FW_START_ADDR;
     // uint32_t lpfw_size = *((uint32_t *)__lpfw_load_addr - 7);
 
-    uint32_t dtim_num, bcn_loss_level;
+    uint32_t dtim_num, bcn_past_num, bcn_loss_level;
     lp_fw_bcn_loss_level_t *bcn_loss_cfg = NULL;
 
     uint64_t rtc_cnt, rtc_now_us, last_beacon_rtc_us;
-    uint32_t dtim_period_us, pds_sleep_us, beacon_interval_us, total_error;
+    uint32_t pds_sleep_us, beacon_interval_us, total_error;
     int32_t rtc32k_error_us;
     uint64_t rtc_sleep_us, rtc_wakeup_cmp_cnt;
 
@@ -1209,6 +1104,9 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
     }
 
     bl_lp_debug_record_time(iot2lp_para, "bl_lp_fw_enter");
+
+    iot2lp_para->buf_addr = bl_lp_fw_cfg->buf_addr;
+    iot2lp_para->pack_env = bl_lp_fw_cfg->pack_env;
 
     /* clean wake bits */
     iot2lp_para->wake_io_bits = 0;
@@ -1243,6 +1141,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
         rtc_sleep_us = ((uint64_t)24 * 60 * 60 * 1000 * 1000);
     }
 
+    iot2lp_para->bcmc_dtim_mode = bl_lp_fw_cfg->bcmc_dtim_mode;
     /* tim interval */
     if (bl_lp_fw_cfg->dtim_num != 0) {
         iot2lp_para->dtim_num = bl_lp_fw_cfg->dtim_num;
@@ -1266,12 +1165,14 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
         dtim_num = bcn_loss_cfg->dtim_num;
     }
 
-    dtim_period_us = dtim_num * beacon_interval_us;
+    // dtim_period_us = dtim_num * beacon_interval_us;
 
     /* last beacon timestamp */
     last_beacon_rtc_us = iot2lp_para->last_beacon_stamp_rtc_us;
     /* beacon delay */
     last_beacon_rtc_us -= iot2lp_para->last_beacon_delay_us;
+
+    bflb_l1c_dcache_clean_all();
 
     /* Gets the current rtc time */
     HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
@@ -1279,31 +1180,36 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     /* calculate pds and rtc sleep time */
     if (iot2lp_para->last_beacon_stamp_rtc_valid) {
-        /* Time to the next beacon */
-        if (last_beacon_rtc_us + dtim_period_us > rtc_now_us) {
-            /* Before the expected time */
-            pds_sleep_us = last_beacon_rtc_us + dtim_period_us - rtc_now_us;
+        /* beacon num form (last bcn -> now) */
+        bcn_past_num = (rtc_now_us - last_beacon_rtc_us + PROTECT_BF_MS * 1000) / beacon_interval_us;
 
-            /* rc32k error value */
-            rtc32k_error_us = (int32_t)((int64_t)dtim_period_us * iot2lp_para->rtc32k_error_ppm / (1000 * 1000));
+        if (iot2lp_para->bcmc_dtim_mode) {
+            dtim_num = dtim_num * iot2lp_para->beacon_dtim_period;
 
+            dtim_num = dtim_num - (bcn_past_num % dtim_num);
+
+            uint8_t next_dtim_count = (iot2lp_para->last_beacon_dtim_count + bcn_past_num + dtim_num) % iot2lp_para->beacon_dtim_period;
+            if (next_dtim_count) {
+                if (dtim_num + next_dtim_count > iot2lp_para->beacon_dtim_period) {
+                    dtim_num = dtim_num + next_dtim_count - iot2lp_para->beacon_dtim_period;
+                } else {
+                    dtim_num = dtim_num + next_dtim_count;
+                }
+            }
         } else {
-            /* After the expected time */
-            pds_sleep_us = beacon_interval_us - ((rtc_now_us - last_beacon_rtc_us) % beacon_interval_us);
-
-            /* rc32k error value */
-            rtc32k_error_us = (int32_t)((int64_t)(pds_sleep_us + rtc_now_us - last_beacon_rtc_us) * iot2lp_para->rtc32k_error_ppm / (1000 * 1000));
+            dtim_num = dtim_num - (bcn_past_num % dtim_num);
         }
 
-        if (pds_sleep_us <= PROTECT_AF_MS * 1000) {
-            /* Time is too short, delay to a beacon */
-            pds_sleep_us += beacon_interval_us;
+        /* last bcn -> next bcn */
+        pds_sleep_us = (dtim_num + bcn_past_num) * beacon_interval_us;
 
-            /* rc32k error value */
-            rtc32k_error_us += (int32_t)((int64_t)beacon_interval_us * iot2lp_para->rtc32k_error_ppm / (1000 * 1000));
-        }
+        /* rc32k error compensation (last bcn -> next bcn) */
+        rtc32k_error_us = (int32_t)((int64_t)pds_sleep_us * iot2lp_para->rtc32k_error_ppm / (1000 * 1000));
 
-        /* error compensation */
+        /* now -> next bcn */
+        pds_sleep_us = pds_sleep_us - (uint32_t)(rtc_now_us - last_beacon_rtc_us);
+
+        /* rc32k error */
         if (rtc32k_error_us > 0 || pds_sleep_us > (-rtc32k_error_us)) {
             pds_sleep_us += rtc32k_error_us;
         } else {
@@ -1335,7 +1241,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
 
     } else {
         /* It shouldn't be here */
-        pds_sleep_us = dtim_period_us / 2;
+        pds_sleep_us = dtim_num * beacon_interval_us / 2;
     }
 
 #if 0
@@ -1378,7 +1284,7 @@ int ATTR_TCM_SECTION bl_lp_fw_enter(bl_lp_fw_cfg_t *bl_lp_fw_cfg)
         bl_lp_acomp_wakeup_init(&g_lp_acomp_cfg_bak);
     }
 
-    // iot2lp_para->wifi_rx_buff = (uint8_t *)((uint32_t)export_get_rx_buffer1_addr() & 0x2FFFFFFF);
+    iot2lp_para->wifi_rx_buff = (uint8_t *)((uint32_t)export_get_rx_buffer1_addr() & 0x2FFFFFFF);
     /* lpfw cfg: system para */
     iot2lp_para->mcu_sts = bl_lp_fw_cfg->mcu_sts;
     // iot2lp_para->lpfw_loss_cnt = 0;
@@ -1729,7 +1635,8 @@ int bl_lp_hbn_enter(bl_lp_hbn_fw_cfg_t *bl_lp_hbn_fw_cfg)
 int bl_lp_fw_enter_check_allow(void)
 {
     uint64_t last_beacon_rtc_us, rtc_now_us, rtc_cnt;
-    uint32_t dtim_period_us, beacon_interval_us;
+    uint32_t beacon_interval_us;
+    uint32_t dtim_num, bcn_past_num, now_dtim_count = 0;
 
     if (iot2lp_para->last_beacon_stamp_rtc_valid == 0) {
         /* It shouldn't be here */
@@ -1739,6 +1646,17 @@ int bl_lp_fw_enter_check_allow(void)
     /* beacon interval us, TU * 1024 */
     beacon_interval_us = iot2lp_para->beacon_interval_tu * 1024;
 
+    /* get period of dtim */
+    if (iot2lp_para->continuous_loss_cnt) {
+        uint32_t bcn_loss_level = iot2lp_para->bcn_loss_level;
+        lp_fw_bcn_loss_level_t *bcn_loss_cfg = &(iot2lp_para->bcn_loss_cfg_table[bcn_loss_level]);
+        dtim_num = bcn_loss_cfg->dtim_num;
+        // dtim_period_us = bcn_loss_cfg->dtim_num * beacon_interval_us;
+    } else {
+        dtim_num = iot2lp_para->dtim_num;
+        // dtim_period_us = dtim_num * beacon_interval_us;
+    }
+
     /* Time stamp of the last beacon */
     last_beacon_rtc_us = iot2lp_para->last_beacon_stamp_rtc_us;
     last_beacon_rtc_us -= iot2lp_para->last_beacon_delay_us;
@@ -1747,38 +1665,40 @@ int bl_lp_fw_enter_check_allow(void)
     HBN_Get_RTC_Timer_Val((uint32_t *)&rtc_cnt, (uint32_t *)&rtc_cnt + 1);
     rtc_now_us = BL_PDS_CNT_TO_US(rtc_cnt);
 
-    /* get period of dtim */
-    if (iot2lp_para->continuous_loss_cnt) {
-        uint32_t bcn_loss_level = iot2lp_para->bcn_loss_level;
-        lp_fw_bcn_loss_level_t *bcn_loss_cfg = &(iot2lp_para->bcn_loss_cfg_table[bcn_loss_level]);
-        dtim_period_us = bcn_loss_cfg->dtim_num * beacon_interval_us;
-    } else {
-        dtim_period_us = iot2lp_para->dtim_num * beacon_interval_us;
-    }
+    /* beacon num form (last bcn -> now) */
+    /* The time difference since the last beacon was received, divided by beacon interval */
+    bcn_past_num = (rtc_now_us - last_beacon_rtc_us + beacon_interval_us / 2) / beacon_interval_us;
 
-    /* next beacon */
-    if (last_beacon_rtc_us + dtim_period_us >= rtc_now_us) {
-        /* */
-        if ((last_beacon_rtc_us + dtim_period_us - rtc_now_us) < PROTECT_BF_MS * 1000) {
-            /* beacon will be received soon */
-            BL_LP_LOG("---- Not allowed sleep BF1 ----");
-            return 0;
-        }
+    if (bcn_past_num == 0) {
+        return 1;
     } else {
-        /* Get the nearest beacon */
-        int32_t next_time = ((rtc_now_us - last_beacon_rtc_us) % beacon_interval_us);
-
-        if (next_time < beacon_interval_us / 2) {
-            if (next_time < PROTECT_AF_MS * 1000) {
-                BL_LP_LOG("---- Not allowed sleep AF ----");
-                return 0;
+        if (iot2lp_para->bcmc_dtim_mode) {
+            dtim_num = dtim_num * iot2lp_para->beacon_dtim_period;
+            now_dtim_count = (iot2lp_para->last_beacon_dtim_count + bcn_past_num) % iot2lp_para->beacon_dtim_period;
+    
+            if (now_dtim_count != 0) {
+                return 1;
             }
+    
+            if ((bcn_past_num + (iot2lp_para->beacon_dtim_period - iot2lp_para->last_beacon_dtim_count) % iot2lp_para->beacon_dtim_period) % dtim_num != 0) {
+                return 1;
+            }
+    
         } else {
-            next_time = beacon_interval_us - next_time;
-            if (next_time < PROTECT_BF_MS * 1000) {
-                BL_LP_LOG("---- Not allowed sleep BF2 ----");
-                return 0;
+            if (bcn_past_num % dtim_num != 0) {
+                return 1;
             }
+        }
+
+        /* now bcn */
+        uint64_t now_beacon_rtc_us = last_beacon_rtc_us + bcn_past_num * beacon_interval_us;
+
+        if (rtc_now_us < now_beacon_rtc_us && now_beacon_rtc_us - rtc_now_us < (PROTECT_BF_MS + 3) * 1000) {
+            BL_LP_LOG("-Not allowed sleep BF: now_dtim_cnt:%d, past_num:%d \r\n", now_dtim_count, bcn_past_num);
+            return 0;
+        } else if (rtc_now_us - now_beacon_rtc_us < (PROTECT_AF_MS) * 1000) {
+            BL_LP_LOG("-Not allowed sleep AF: now_dtim_cnt:%d, past_num:%d \r\n", now_dtim_count, bcn_past_num);
+            return 0;
         }
     }
 
@@ -2491,377 +2411,6 @@ int bl_lp_acomp_wakeup_cfg(bl_lp_acomp_cfg_t *acomp_wakeup_cfg)
     return 0;
 }
 
-#ifdef BL_WIFI_LP_FW
-
-static void bl_lp_xip_set_sf_ctrl(spi_flash_cfg_type *pFlashCfg)
-{
-    struct sf_ctrl_cfg_type sfCtrlCfg;
-
-    sfCtrlCfg.owner = SF_CTRL_OWNER_SAHB;
-
-#ifdef BFLB_SF_CTRL_32BITS_ADDR_ENABLE
-    /* address 32bits */
-    sfCtrlCfg.en32b_addr = 0;
-#endif
-    /* bit0-3 for clk delay */
-    sfCtrlCfg.clk_delay = (pFlashCfg->clk_delay & 0x0f);
-    /* bit0 for clk invert */
-    sfCtrlCfg.clk_invert = pFlashCfg->clk_invert & 0x01;
-    /* bit1 for rx clk invert */
-    sfCtrlCfg.rx_clk_invert = (pFlashCfg->clk_invert >> 1) & 0x01;
-    /* bit4-6 for do delay */
-    sfCtrlCfg.do_delay = 0;
-    /* bit2-4 for di delay */
-    sfCtrlCfg.di_delay = 0;
-    /* bit5-7 for oe delay */
-    sfCtrlCfg.oe_delay = 0;
-
-    bflb_sflash_init(&sfCtrlCfg, NULL);
-}
-
-static int bl_lp_xip_read_enable(spi_flash_cfg_type *pFlashCfg, uint8_t cont_read, uint32_t image_offset)
-{
-    uint32_t tmp[1];
-
-    if ((pFlashCfg->c_read_support & 0x01) == 0) {
-        cont_read = 0;
-    }
-
-    if (cont_read == 1) {
-        bflb_sf_ctrl_set_owner(SF_CTRL_OWNER_SAHB);
-        bflb_sflash_read(pFlashCfg, pFlashCfg->io_mode & 0xf, 1, 0x00000000, (uint8_t *)tmp, sizeof(tmp));
-    }
-
-    bflb_sf_ctrl_set_flash_image_offset(image_offset, 0, SF_CTRL_FLASH_BANK0);
-    bflb_sflash_xip_read_enable(pFlashCfg, pFlashCfg->io_mode & 0xf, cont_read, SF_CTRL_FLASH_BANK0);
-
-    return 0;
-}
-
-static void bflb_bootrom_media_boot_set_encrypt(void)
-{
-    uint8_t encrypt_type = iot2lp_para->sec_cfg->encrypt_type; /* the origin val */
-    uint8_t xts_mode = iot2lp_para->sec_cfg->xts_mode;
-    uint32_t regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 0);
-
-    if (xts_mode) {
-        bflb_sf_ctrl_disable_wrap_access(0);
-        bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_XTS_MODE);
-    } else {
-        bflb_sf_ctrl_disable_wrap_access(1);
-        bflb_sf_ctrl_aes_set_mode(SF_CTRL_AES_CTR_MODE);
-    }
-
-    // AES_Region0
-    if (iot2lp_para->sec_cfg->r0_aes_en) {
-        if (xts_mode) {
-            bflb_sf_ctrl_aes_xts_set_key_be(0, NULL, encrypt_type);
-        } else {
-            bflb_sf_ctrl_aes_set_key_be(0, NULL, encrypt_type);
-        }
-
-        regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 0);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W0_OFFSET, iot2lp_para->sec_cfg->r0_aes_iv[0]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W1_OFFSET, iot2lp_para->sec_cfg->r0_aes_iv[1]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W2_OFFSET, iot2lp_para->sec_cfg->r0_aes_iv[2]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W3_OFFSET, iot2lp_para->sec_cfg->r0_aes_iv[3]);
-
-        bflb_sf_ctrl_aes_set_region(0, iot2lp_para->sec_cfg->r0_aes_en,
-                                    iot2lp_para->sec_cfg->r0_aes_hw_key_en,
-                                    iot2lp_para->sec_cfg->r0_aes_start,
-                                    iot2lp_para->sec_cfg->r0_aes_end,
-                                    iot2lp_para->sec_cfg->r0_aes_lock);
-    }
-
-    // AES_Region1
-    if (iot2lp_para->sec_cfg->r1_aes_en) {
-        if (xts_mode) {
-            bflb_sf_ctrl_aes_xts_set_key_be(1, NULL, encrypt_type);
-        } else {
-            bflb_sf_ctrl_aes_set_key_be(1, NULL, encrypt_type);
-        }
-
-        regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 1);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W0_OFFSET, iot2lp_para->sec_cfg->r1_aes_iv[0]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W1_OFFSET, iot2lp_para->sec_cfg->r1_aes_iv[1]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W2_OFFSET, iot2lp_para->sec_cfg->r1_aes_iv[2]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W3_OFFSET, iot2lp_para->sec_cfg->r1_aes_iv[3]);
-
-        bflb_sf_ctrl_aes_set_region(1, iot2lp_para->sec_cfg->r1_aes_en,
-                                    iot2lp_para->sec_cfg->r1_aes_hw_key_en,
-                                    iot2lp_para->sec_cfg->r1_aes_start,
-                                    iot2lp_para->sec_cfg->r1_aes_end,
-                                    iot2lp_para->sec_cfg->r1_aes_lock);
-    }
-
-    // AES_Region2
-    if (iot2lp_para->sec_cfg->r2_aes_en) {
-        if (xts_mode) {
-            bflb_sf_ctrl_aes_xts_set_key_be(2, NULL, encrypt_type);
-        } else {
-            bflb_sf_ctrl_aes_set_key_be(2, NULL, encrypt_type);
-        }
-
-        regionRegBase = SF_Ctrl_Get_AES_Region(SF_CTRL_BASE, 2);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W0_OFFSET, iot2lp_para->sec_cfg->r2_aes_iv[0]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W1_OFFSET, iot2lp_para->sec_cfg->r2_aes_iv[1]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W2_OFFSET, iot2lp_para->sec_cfg->r2_aes_iv[2]);
-        BL_WR_WORD(regionRegBase + SF_CTRL_SF_AES_IV_W3_OFFSET, iot2lp_para->sec_cfg->r2_aes_iv[3]);
-
-        bflb_sf_ctrl_aes_set_region(2, iot2lp_para->sec_cfg->r2_aes_en,
-                                    iot2lp_para->sec_cfg->r2_aes_hw_key_en,
-                                    iot2lp_para->sec_cfg->r2_aes_start,
-                                    iot2lp_para->sec_cfg->r2_aes_end,
-                                    iot2lp_para->sec_cfg->r2_aes_lock);
-    }
-
-    bflb_sf_ctrl_aes_enable_be();
-    bflb_sf_ctrl_aes_enable();
-}
-
-static void bl_lp_set_power(void)
-{
-    AON_Trim_DcdcDis();
-    HBN_Trim_Ldo33VoutTrim();
-    AON_Trim_DcdcVoutSel();
-    AON_Trim_DcdcVoutTrim();
-    AON_Trim_Ldo11socVoutTrim();
-}
-
-void bl_lp_flash_set_cmds(spi_flash_cfg_type *p_flash_cfg)
-{
-    struct sf_ctrl_cmds_cfg cmds_cfg;
-
-    cmds_cfg.ack_latency = 1;
-    cmds_cfg.cmds_core_en = 1;
-    cmds_cfg.cmds_en = 1;
-    cmds_cfg.cmds_wrap_mode = 1;
-    cmds_cfg.cmds_wrap_len = 9;
-
-    if ((p_flash_cfg->io_mode & 0x1f) == SF_CTRL_QIO_MODE) {
-        cmds_cfg.cmds_wrap_mode = 2;
-        cmds_cfg.cmds_wrap_len = 2;
-    }
-    bflb_sf_ctrl_cmds_set(&cmds_cfg, 0);
-}
-static void bflb_bootrom_sboot_set(uint8_t val)
-{
-    uint32_t tmpVal;
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, TZC_SEC_TZC_SBOOT_DONE, val);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL, tmpVal);
-}
-
-int format_printf(const char *format, ...);
-void bl_lp_xip_recovery()
-{
-    uint32_t flash_pin = 0;
-    uint32_t encrypted = 0;
-    uint32_t jdec_id = 0;
-    uint32_t timeout = 0;
-    uint32_t tmp_val;
-    uint32_t ret = 0;
-    uint32_t power_trim_disable = 0;
-    uint32_t ldo18io_cfg_dis = 0;
-
-    bl_lp_debug_record_time(iot2lp_para, "xip flash start");
-
-    spi_flash_cfg_type *pFlashCfg = (spi_flash_cfg_type *)iot2lp_para->flash_cfg;
-
-    /* called from lowpower, open clock */
-    *((volatile uint32_t *)0x20000584) = 0xffffffff;
-
-    //EF_Ctrl_Load_Efuse_R0();
-
-    /* system power set */
-    power_trim_disable = BL_RD_WORD(0x2005605C);
-    power_trim_disable = (power_trim_disable >> 22) & 0x1;
-    if (!power_trim_disable) {
-        bl_lp_set_power();
-    }
-    ldo18io_cfg_dis = BL_RD_WORD(0x20056060);
-    ldo18io_cfg_dis = (ldo18io_cfg_dis >> 27) & 0x1;
-    if (!ldo18io_cfg_dis) {
-        GLB_Trim_Ldo18ioVoutSel();
-        GLB_Trim_Ldo18ioVoutTrim();
-        GLB_Trim_Ldo18ioBypass();
-    }
-
-    /* power on flash power */
-    /* pu_ldo18flash=1 */
-    ret = BL_RD_REG(GLB_BASE, GLB_LDO18IO);
-    ret = BL_SET_REG_BIT(ret, GLB_PU_LDO18IO);
-    BL_WR_REG(GLB_BASE, GLB_LDO18IO, ret);
-
-    // arch_delay_us(200);
-#ifdef SHARED_FUNC_EN
-    shared_arch_delay_us(200);
-#else
-    arch_delay_us(200);
-#endif
-    /* get flash gpio info */
-    flash_pin = BL_RD_WORD(0x2005605C);
-    flash_pin = (flash_pin >> 14) & 0x3f;
-    /* init flash gpio */
-    bflb_sf_cfg_init_flash_gpio((uint8_t)flash_pin, 0);
-
-    uint32_t REG_PLL_BASE_ADDRESS = 0;
-    uint32_t tmpVal = 0;
-
-    REG_PLL_BASE_ADDRESS = GLB_BASE + GLB_WIFI_PLL_CFG0_OFFSET;
-    if (iot2lp_para->flash_clk == 0) {
-        tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 8);
-        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV8); //120M
-        BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 8, tmpVal);
-    } else if (iot2lp_para->flash_clk == 2) {
-        GLB_Config_AUDIO_PLL_To_491P52M();
-    } else if (iot2lp_para->flash_clk == 3) {
-        tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 8);
-        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV12); //80M
-        BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 8, tmpVal);
-    } else if (iot2lp_para->flash_clk == 5) {
-        tmpVal = BL_RD_WORD(REG_PLL_BASE_ADDRESS + 4 * 8);
-        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_WIFIPLL_EN_DIV10); //96M
-        BL_WR_WORD(REG_PLL_BASE_ADDRESS + 4 * 8, tmpVal);
-    }
-
-    /* set flash clock */
-    GLB_Set_SF_CLK(1, iot2lp_para->flash_clk, iot2lp_para->flash_clk_div);
-
-    /* update flash controller */
-    bl_lp_xip_set_sf_ctrl(pFlashCfg);
-
-    /* set flash io cs clk delay */
-    bflb_sf_ctrl_set_flash_io_cs_clk_delay(*(struct bflb_sf_ctrl_io_cs_clk_delay_cfg *)iot2lp_para->flash_io_cs_clk_delay_cfg);
-
-    /* set flash cmds */
-    bl_lp_flash_set_cmds(pFlashCfg);
-
-    /* do flash recovery */
-    bflb_sflash_release_powerdown(pFlashCfg);
-#ifdef SHARED_FUNC_EN
-    shared_arch_delay_us(120);
-#else
-    arch_delay_us(120);
-#endif
-    timeout = 0;
-    do {
-        timeout++;
-        if (timeout > 2000) {
-            break;
-        } else if (timeout > 0) {
-#ifdef SHARED_FUNC_EN
-            shared_arch_delay_us(10);
-#else
-            arch_delay_us(10);
-#endif
-        }
-        bflb_sflash_reset_continue_read(pFlashCfg);
-        /* Send software reset command(80bv has no this command)to deburst wrap for ISSI like */
-        bflb_sflash_software_reset(pFlashCfg);
-        /* Disable burst may be removed(except for 80BV) and only work with winbond,but just for make sure */
-        bflb_sflash_write_enable(pFlashCfg);
-        /* For disable command that is setting register instaed of send command, we need write enable */
-        /* Delete this line before the other flash_2_wires glitch */
-        //SFlash_DisableBurstWrap(pFlashCfg);
-
-        bflb_sflash_set_spi_mode(SF_CTRL_SPI_MODE);
-        bflb_sflash_get_jedecid(pFlashCfg, (uint8_t *)&jdec_id);
-        /* Dummy disable burstwrap for make sure */
-        bflb_sflash_write_enable(pFlashCfg);
-    } while (jdec_id != iot2lp_para->flash_jdec_id);
-
-    GLB_Set_Flash_Id_Value(jdec_id);
-
-    timeout = 0;
-    do {
-        timeout++;
-        if (timeout > 50000) {
-            break;
-        } else if (timeout > 0) {
-#ifdef SHARED_FUNC_EN
-            shared_arch_delay_us(10);
-#else
-            arch_delay_us(10);
-#endif
-        }
-        ret = bflb_sflash_busy(pFlashCfg);
-    } while (1 == ret);
-
-    /* set flash into 32bits address mode,maybe flash is already in 32bits mode,but it's OK*/
-    if (pFlashCfg->io_mode & 0x20) {
-        bflb_sflash_set_32bits_addr_mode(pFlashCfg, ENABLE);
-    }
-
-#if 0
-    /* Enable QE again */
-    if ((pFlashCfg->io_mode & 0x0f) == SF_CTRL_QO_MODE || (pFlashCfg->io_mode & 0x0f) == SF_CTRL_QIO_MODE) {
-        SFlash_Qspi_Enable(pFlashCfg);
-    }
-#endif
-    /* set burst wrap */
-    if (((pFlashCfg->io_mode >> 4) & 0x01) == 1) {
-        L1C_Set_Wrap(DISABLE); //useless, reserved for bootrom architecture
-    } else {
-        L1C_Set_Wrap(ENABLE); //useless, reserved for bootrom architecture
-        /* For command that is setting register instead of send command, we need write enable */
-        bflb_sflash_write_enable(pFlashCfg);
-        if ((pFlashCfg->io_mode & 0x0f) == SF_CTRL_QO_MODE || (pFlashCfg->io_mode & 0x0f) == SF_CTRL_QIO_MODE) {
-            bflb_sflash_set_burst_wrap(pFlashCfg);
-        }
-    }
-
-    timeout = 0;
-    do {
-        timeout++;
-        bflb_sflash_read(pFlashCfg, pFlashCfg->io_mode & 0xf, 0, 0x00000000, (uint8_t *)&tmp_val, 4);
-#ifdef SHARED_FUNC_EN
-        shared_arch_delay_us(10);
-#else
-        arch_delay_us(10);
-#endif
-    } while (timeout < 1000 && tmp_val != 0x504e4642);
-    bflb_bootrom_sboot_set(0xf);
-
-    encrypted = BL_RD_WORD(0x20056000);
-    encrypted = encrypted & 0x03;
-    if (encrypted == 0) {
-        bl_lp_xip_read_enable(pFlashCfg, 1 /* cont read*/, iot2lp_para->flash_offset);
-    } else {
-        bflb_bootrom_media_boot_set_encrypt();
-        bl_lp_xip_read_enable(pFlashCfg, 0 /* not cont read*/, iot2lp_para->flash_offset);
-    }
-
-    /* recovery tzc register */
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R0, iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r0);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R1, iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r1);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_R2, iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_r2);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_OCRAM_TZSRG_CTRL, iot2lp_para->tzc_cfg->tzc_ocram_tzsrg_ctrl);
-
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R0, iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r0);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R1, iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r1);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_R2, iot2lp_para->tzc_cfg->tzc_sf_tzsrg_r2);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_MSB, iot2lp_para->tzc_cfg->tzc_sf_tzsrg_msb);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_SF_TZSRG_CTRL, iot2lp_para->tzc_cfg->tzc_sf_tzsrg_ctrl);
-
-    BL_WR_REG(GLB_BASE, GLB_UART_CFG1, 0xffffffff);
-    BL_WR_REG(GLB_BASE, GLB_UART_CFG2, 0x0000ffff);
-
-    iot2lp_para->wakeup_flag = 1;
-
-    //csi_icache_enable();
-    //csi_dcache_enable();
-
-    csi_icache_invalid();
-    csi_dcache_invalid();
-
-    bl_lp_debug_record_time(iot2lp_para, "xip flash end");
-
-    void (*pFunc)(uint32_t);
-    pFunc = (void (*)(uint32_t))iot2lp_para->app_entry;
-    pFunc(iot2lp_para->args[0]);
-}
-#endif
 void bl_lp_bod_init(uint8_t en, uint8_t rst, uint8_t irq, uint32_t threshold)
 {
     HBN_BOD_CFG_Type bod_cfg;
@@ -2884,100 +2433,4 @@ void bl_lp_bod_init(uint8_t en, uint8_t rst, uint8_t irq, uint32_t threshold)
     HBN_Set_BOD_Cfg(&bod_cfg);
 }
 
-#if (!defined(BL_WIFI_LP_FW) && defined(CFG_BL_WIFI_PS_ENABLE))
-static uint32_t ps_mamager_event = 0;
 
-void bl_pm_event_bit_set(enum PSM_EVENT event_bit)
-{
-    ps_mamager_event |= 1 << event_bit;
-}
-
-void bl_pm_event_bit_clear(enum PSM_EVENT event_bit)
-{
-    ps_mamager_event &= ~(1 << event_bit);
-}
-
-uint32_t bl_pm_event_get(void)
-{
-    return ps_mamager_event;
-}
-
-void bl_pm_enter_ps(void)
-{
-    wifi_mgmr_sta_ps_enter();
-    bl_pm_event_bit_clear(PSM_EVENT_PS);
-}
-
-void bl_pm_exit_ps(void)
-{
-    wifi_mgmr_sta_ps_exit();
-    bl_pm_event_bit_set(PSM_EVENT_PS);
-}
-
-int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg)
-{
-    int ret;
-    uint8_t channel;
-    #ifdef CFG_LPM
-    int rssi;
-    #endif
-
-    ret = wifi_mgmr_sta_get_bssid(pcfg->bssid);
-    if (ret) {
-        return -1;
-    }
-    ret = wifi_mgmr_sta_channel_get(&channel);
-    if (ret) {
-        return -1;
-    }
-    #ifdef CFG_LPM
-    ret = wifi_mgmr_sta_rssi_get(&rssi);
-    if (ret) {
-        return -1;
-    }
-    #endif
-
-    pcfg->aid = wifi_mgmr_sta_aid_get();
-    if (pcfg->aid < 0) {
-        return -1;
-    }
-
-    pcfg->channel = channel;
-    #ifdef CFG_LPM
-    pcfg->rssi = rssi;
-    #endif
-
-    return 0;
-}
-
-/// FIXME
-extern void resume_wifi_internal(int connected, uint8_t bssid[6], uint8_t mac[6]);
-extern void wifi_task_resume(bool isr);
-
-void bl_pm_resume_wifi(void)
-{
-    uint8_t bssid[6];
-    uint8_t mac[6];
-
-    wifi_mgmr_sta_get_bssid(bssid);
-    wifi_mgmr_sta_mac_get(mac);
-    resume_wifi_internal(wifi_mgmr_sta_state_get(), bssid, mac);
-    wifi_task_resume(1);
-}
-
-void bl_pm_enter_pds(void *arg)
-{
-    return;
-}
-
-void bl_lp_turnoff_rf(void)
-{
-    PDS_Power_Off_WB();
-}
-
-void bl_lp_turnon_rf(void)
-{
-    PDS_Power_On_WB();
-}
-
-#endif

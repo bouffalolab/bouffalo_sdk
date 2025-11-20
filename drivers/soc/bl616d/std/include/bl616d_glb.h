@@ -969,7 +969,11 @@ typedef struct {
   */
 
 #define GLB_MINI_MISC_FCLK                 (0)
+#if defined(CPU_MODEL_A0)
 #define GLB_MINI_MISC_BCLK_SPI1            (1)
+#else
+#define GLB_MINI_MISC_BCLK_SPI3            (1)
+#endif
 #define GLB_MINI_MISC_BCLK_UART3           (2)
 #define GLB_MINI_MISC_BCLK_TIM1            (3)
 #define GLB_MINI_MISC_BCLK_I2C2            (4)
@@ -979,7 +983,11 @@ typedef struct {
   * @{
   */
 #define GLB_MINI_MISC_SW_RST_DMA2          (0)
+#if defined(CPU_MODEL_A0)
 #define GLB_MINI_MISC_SW_RST_SPI1          (1)
+#else
+#define GLB_MINI_MISC_SW_RST_SPI3          (1)
+#endif
 #define GLB_MINI_MISC_SW_RST_UART3         (2)
 #define GLB_MINI_MISC_SW_RST_TMR1          (3)
 #define GLB_MINI_MISC_SW_RST_I2C2          (4)
@@ -988,11 +996,16 @@ typedef struct {
   * @}
   */
 
-/** @defgroup MINI SPI1 clock type definition
+/** @defgroup MINI SPI clock type definition
   * @{
   */
-#define GLB_MINI_SPI1_CLK_WIFIPLL_160M           (0)
-#define GLB_MINI_SPI1_CLK_XCLK                   (1)
+#if defined(CPU_MODEL_A0)
+#define GLB_SPI1_CLK_WIFIPLL_160M           (0)
+#define GLB_SPI1_CLK_XCLK                   (1)
+#else
+#define GLB_SPI3_CLK_WIFIPLL_160M           (0)
+#define GLB_SPI3_CLK_XCLK                   (1)
+#endif
 /**
   * @}
   */
@@ -1000,10 +1013,18 @@ typedef struct {
 /** @defgroup MINI FCLK type definition
   * @{
   */
+#if defined(CPU_MODEL_A0)
 #define GLB_MINI_FCLK_XCLK                 (0)
 #define GLB_MINI_FCLK_WIFIPLL_120M         (1)
 #define GLB_MINI_FCLK_WIFIPLL_80M          (2)
 #define GLB_MINI_FCLK_WIFIPLL_48M          (3)
+#else
+#define GLB_MINI_FCLK_RC32M                (0)
+#define GLB_MINI_FCLK_XTAL                 (1)
+#define GLB_MINI_FCLK_WIFIPLL_120M         (2)
+#define GLB_MINI_FCLK_WIFIPLL_80M          (3)
+#define GLB_MINI_FCLK_WIFIPLL_48M          (4)
+#endif
 /**
   * @}
   */
@@ -1680,6 +1701,7 @@ typedef union {
                                        ((type) == GLB_SLAVE_GRP_0_PSRAMB) ||     \
                                        ((type) == GLB_SLAVE_GRP_0_MAX))
 
+#if defined(CPU_MODEL_A0)
 /** @defgroup  GLB_MINI_MISC_CLOCK_TYPE
  *  @{
  */
@@ -1689,7 +1711,19 @@ typedef union {
                                            ((type) == GLB_MINI_MISC_BCLK_TIM1) ||  \
                                            ((type) == GLB_MINI_MISC_BCLK_I2C2) ||  \
                                            ((type) == GLB_MINI_MISC_BCLK_PWM1))
+#else
+/** @defgroup  GLB_MINI_MISC_CLOCK_TYPE
+ *  @{
+ */
+#define IS_GLB_MINI_MISC_CLOCK_TYPE(type) (((type) == GLB_MINI_MISC_FCLK) ||       \
+                                           ((type) == GLB_MINI_MISC_BCLK_SPI3) ||  \
+                                           ((type) == GLB_MINI_MISC_BCLK_UART3) || \
+                                           ((type) == GLB_MINI_MISC_BCLK_TIM1) ||  \
+                                           ((type) == GLB_MINI_MISC_BCLK_I2C2) ||  \
+                                           ((type) == GLB_MINI_MISC_BCLK_PWM1))
+#endif
 
+#if defined(CPU_MODEL_A0)
 /** @defgroup  GLB_MINI_MISC_SW_RST_TYPE
  *  @{
  */
@@ -1699,23 +1733,46 @@ typedef union {
                                             ((type) == GLB_MINI_MISC_SW_RST_TMR1) ||  \
                                             ((type) == GLB_MINI_MISC_SW_RST_I2C2) ||  \
                                             ((type) == GLB_MINI_MISC_SW_RST_PWM1))
-
-/** @defgroup  GLB_MINI_SPI1_CLK_TYPE
+#else
+/** @defgroup  GLB_MINI_MISC_SW_RST_TYPE
  *  @{
  */
-#define IS_GLB_MINI_SPI1_CLK_TYPE(type) (((type) == GLB_MINI_SPI1_CLK_WIFIPLL_160M) || \
-                                         ((type) == GLB_MINI_SPI1_CLK_XCLK))
+#define IS_GLB_MINI_MISC_SW_RST_TYPE(type) (((type) == GLB_MINI_MISC_SW_RST_DMA2) ||  \
+                                            ((type) == GLB_MINI_MISC_SW_RST_SPI3) ||  \
+                                            ((type) == GLB_MINI_MISC_SW_RST_UART3) || \
+                                            ((type) == GLB_MINI_MISC_SW_RST_TMR1) ||  \
+                                            ((type) == GLB_MINI_MISC_SW_RST_I2C2) ||  \
+                                            ((type) == GLB_MINI_MISC_SW_RST_PWM1))
+#endif
 
+#if defined(CPU_MODEL_A0)
+/** @defgroup  GLB_SPI1_CLK_TYPE
+ *  @{
+ */
+#define IS_GLB_SPI1_CLK_TYPE(type) (((type) == GLB_SPI1_CLK_WIFIPLL_160M) || \
+                                         ((type) == GLB_SPI1_CLK_XCLK))
+#else
+/** @defgroup  GLB_SPI3_CLK_TYPE
+ *  @{
+ */
+#define IS_GLB_SPI3_CLK_TYPE(type) (((type) == GLB_SPI3_CLK_WIFIPLL_160M) || \
+                                         ((type) == GLB_SPI3_CLK_XCLK))
+#endif
 /** @defgroup  GLB_MINI_FCLK_TYPE
  *  @{
  */
-#define IS_GLB_MINI_FCLK_TYPE(type) (((type) == GLB_MINI_FCLK_XCLK) || \
-                                     ((type) == GLB_MINI_FCLK_WIFIPLL_120M) ||  \
+#if defined(CPU_MODEL_A0)
+ #define IS_GLB_MINI_FCLK_TYPE(type) (((type) == GLB_MINI_FCLK_XCLK) ||        \
+                                     ((type) == GLB_MINI_FCLK_WIFIPLL_120M) || \
                                      ((type) == GLB_MINI_FCLK_WIFIPLL_80M) ||  \
                                      ((type) == GLB_MINI_FCLK_WIFIPLL_48M))
-
-
-
+#else
+#define IS_GLB_MINI_FCLK_TYPE(type) (((type) == GLB_MINI_FCLK_RC32M) ||        \
+                                     ((type) == GLB_MINI_FCLK_XTAL) ||         \
+                                     ((type) == GLB_MINI_FCLK_WIFIPLL_120M) || \
+                                     ((type) == GLB_MINI_FCLK_WIFIPLL_80M) ||  \
+                                     ((type) == GLB_MINI_FCLK_WIFIPLL_48M))
+#endif
 
 /*@} end of group GLB_Public_Constants */
 
@@ -1844,7 +1901,11 @@ BL_Err_Type GLB_UART_Fun_Sel(uint8_t sig, uint8_t fun);
 BL_Err_Type GLB_Set_SF_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, uint8_t outRef);
-BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+#if defined(CPU_MODEL_A0)
+BL_Err_Type GLB_Set_SPI0_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+#else
+BL_Err_Type GLB_Set_SPI0_2_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+#endif
 BL_Err_Type GLB_SPI_Sig_Swap_Set(uint8_t group, uint8_t swap);
 BL_Err_Type GLB_Set_PEC_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_Set_PWM1_IO_Sel(uint8_t ioSel);
@@ -1933,7 +1994,6 @@ uint64_t GLB_Get_NP2MINI_Interrupt_Mask(void);
 BL_Err_Type GLB_Halt_Mini_Sys(void);
 BL_Err_Type GLB_Release_Mini_Sys(void);
 BL_Err_Type GLB_MINI_PER_Software_Reset(uint8_t swrst);
-BL_Err_Type GLB_Set_MINI_SPI1_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_Set_MINI_FCLK(uint8_t enable, uint8_t clkSel, uint8_t div);
 BL_Err_Type GLB_MINI_PER_Clock_Gate(uint32_t clk);
 BL_Err_Type GLB_MINI_PER_Clock_UnGate(uint32_t clk);
@@ -1943,14 +2003,20 @@ BL_Err_Type GLB_SET_JTAG_CHAIN(uint8_t enable);
 BL_Err_Type GLB_Halt_CPU(uint8_t coreID);
 BL_Err_Type GLB_Release_CPU(uint8_t coreID);
 BL_Err_Type GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs);
-
 BL_Err_Type GLB_Set_WL_MCU_System_CLK(uint8_t clkFreq, uint8_t cpuClkDiv, uint8_t BusClkDiv);
 BL_Err_Type GLB_Set_WL_XCLK_Sel(uint8_t clkSel);
 void GLB_Set_WIFIPLL_Fine_Tune(void);
+#if defined(CPU_MODEL_A0)
 BL_Err_Type GLB_Set_SPI1_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
-
+#else
+BL_Err_Type GLB_Set_SPI3_CLK(uint8_t enable, uint8_t clkSel, uint8_t div);
+#endif
 uint32_t GLB_Get_LP_CPU_Status(void);
 uint32_t GLB_Get_Mini_System_Status(void);
+BL_Err_Type GLB_Power_Off_DSIPLL(void);
+BL_Err_Type GLB_DSIPLL_Ref_Clk_Sel(uint8_t refClk);
+BL_Err_Type GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *const cfg, uint8_t waitStable);
+
 /*@} end of group GLB_Public_Functions */
 
 /*@} end of group GLB */

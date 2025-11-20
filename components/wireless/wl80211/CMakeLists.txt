@@ -2,6 +2,7 @@ sdk_generate_library()
 
 sdk_add_private_compile_options(-Wno-unused-function)
 sdk_add_private_compile_options(-Wno-unused-variable)
+sdk_add_private_compile_options(-Wstrict-prototypes)
 
 # !! MANDATORY REQUIREMENT !!
 sdk_add_private_compile_options(-Werror)
@@ -30,5 +31,6 @@ sdk_library_add_sources(macsw/scan.c)
 sdk_library_add_sources(macsw/connect.c)
 sdk_library_add_sources(macsw/disconnect.c)
 sdk_library_add_sources(macsw/ps.c)
+sdk_library_add_sources(macsw/chan.c)
 
 sdk_library_add_sources(macsw/supplicant_api.c)

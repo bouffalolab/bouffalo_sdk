@@ -197,9 +197,9 @@ typedef enum
  * @var log_printf
  *      Type: void (*)(const char *format, ...)
  *      Description: A function pointer that behaves similarly to the standard printf function, accepting a format string and a corresponding variable argument list.
- *                   This function is used for internal logging within the wl library. The main program implementing this function must ensure it is thread-safe and 
+ *                   This function is used for internal logging within the wl library. The main program implementing this function must ensure it is thread-safe and
  *                   can handle printf-like format strings and arguments correctly.
- *                   Example: On certain IoT platforms, a tested and working approach was using 'vprint' function. It's essential that the function provided 
+ *                   Example: On certain IoT platforms, a tested and working approach was using 'vprint' function. It's essential that the function provided
  *                   handles variable argument lists appropriately as in standard 'printf' function.
  *      Requirement: The main program must provide an implementation of this function and assign this function pointer to it during the initialization of the wl_api_t structure.
  *
@@ -236,7 +236,7 @@ struct wl_cfg_t
 
 /**
  * Example of initializing the wireless driver:
- * 
+ *
  * This snippet demonstrates the setup required before initializing the wireless driver.
  * It involves populating the wl_cfg_t structure with appropriate function handlers and parameters.
  * Each function handler corresponds to a platform-specific implementation necessary for the wireless driver's operations.
@@ -254,16 +254,16 @@ struct wl_cfg_t
  * cfg->param_load = platform_dependent_param_load_function_handler;
  *
  * Enable the loading of parameters, indicating that the driver should use the param_load function.
- * cfg->en_param_load = 1; 
+ * cfg->en_param_load = 1;
  *
  * Enable full calibration mode for more accurate wireless operations.
  * cfg->en_full_cal = 1;
  *
  * Set the operating mode of the wireless driver to WLAN.
  * cfg->mode = WL_API_MODE_WLAN;
- * 
+ *
  * Additional configuration for logging and device information:
- * Set the function for logging within the wireless driver. 
+ * Set the function for logging within the wireless driver.
  * Here, 'vprint' is a platform-specific implementation of a printf-like function.
  * cfg->log_printf = vprint;
  *
@@ -272,30 +272,30 @@ struct wl_cfg_t
  *
  * Set device-specific information.
  * cfg->device_info = 0;
- * 
+ *
  * Initialize the wireless driver, checking for successful initialization.
  * int status = wl_init();
  */
 
 #if WL_API_RMEM_EN
 /* Get retention memory size in bytes for wl driver */
-uint32_t wl_rmem_size_get();
+uint32_t wl_rmem_size_get(void);
 /* Get wireless driver cfg structure:retention sram to save calibration data */
 struct wl_cfg_t* wl_cfg_get(uint8_t* rmem);
 struct wl_env_t* wl_env_get(uint8_t* rmem);
 #else
-struct wl_cfg_t* wl_cfg_get();
+struct wl_cfg_t* wl_cfg_get(void);
 #endif
 
-/* 
+/*
  * Wireless driver init with param loading and full calibration which can be
  * skipped by configure en_param_load, en_full_cal in cfg structure
  */
-int8_t wl_init();
+int8_t wl_init(void);
 
 /* BB API */
-void wl_wlan_bb_reset();
-void wl_wlan_bb_partial_reset();
+void wl_wlan_bb_reset(void);
+void wl_wlan_bb_partial_reset(void);
 void wl_wlan_bb_pre_proc(void* rvec_ptr);
 #if WL_NIC
 void wl_wlan_bb_post_proc(void* rvec_ptr, uint16_t type_subtype, int8_t gainopt);
@@ -305,7 +305,7 @@ void wl_wlan_bb_post_proc(void* rvec_ptr, uint16_t type_subtype);
 /* Get power cfg for rate indicated by formatmod and mcs.
  * The return value will be filled in transmit descriptor */
 uint8_t wl_wlan_power_cfg_get(uint8_t formatmod, uint8_t rate);
-void wl_wlan_power_table_update();
+void wl_wlan_power_table_update(void);
 /* A helper function to read rssi from rvec */
 int8_t wl_wlan_rssi_get(void* rvec_ptr);
 /* A helper function to read ppm from rvec */
@@ -318,7 +318,7 @@ int8_t wl_ble_power_cfg_get(uint8_t phyrate);
 /* Temperature calibration should be scheduled periodically */
 int8_t wl_rf_tcal_handler(int16_t temperature);
 /* Get tcal period in seconds */
-uint32_t wl_rf_tcal_period_get();
+uint32_t wl_rf_tcal_period_get(void);
 
 extern struct wl_cfg_t* wl_cfg;
 extern uint8_t*         wl_cal;
@@ -328,17 +328,17 @@ extern uint8_t*         wl_cal;
 */
 
 void wl_154_optimize(uint16_t channel_freq); // only for 802154 optimize
-void wl_154_optimize_restore(); // Restore default setting when exit 802154
+void wl_154_optimize_restore(void); // Restore default setting when exit 802154
 
 void wl_bz_rx_optimize(uint16_t channel_freq); // only for BTBLE Rx optimize
-void wl_bz_rx_optimize_restore(); // Restore default setting when exit BTBLE
+void wl_bz_rx_optimize_restore(void); // Restore default setting when exit BTBLE
 
 void wl_rf_set_bz_target_power_table(int8_t target_pwr_dbm);// modified the bz power table according to the target power of bz before set bz tx
 void wl_rf_set_154_tx_power(uint32_t target_pwr_dbm);
 int8_t wl_rf_set_154_tx_power_with_power_limit(uint32_t target_pwr_dbm, uint8_t channel_idx, const char *country_code);
 void wl_rf_cfg_init(void);//set default values to rf members of struct, //by Lx
 void wl_rf_set_channel_pwr_comp(uint8_t channel_idx);
-void wl_rf_set_bz_channel_pwr_comp();
+void wl_rf_set_bz_channel_pwr_comp(void);
 void wl_rf_set_status(uint8_t rf_en);// turn on/off rf domain
 void wl_rf_temp_optimize(int16_t temperature); // rf optimize for temperature
 /*
@@ -357,11 +357,11 @@ int8_t wl_lp_init(uint16_t channelfreq_MHz);
 #endif
 void wl_lp_config(uint32_t cfg, uint32_t cfg_cal);
 void wl_lp_status_update(int8_t bcn_rx_status, int8_t bcn_rssi, uint32_t bcn_hbn_time_us);
-uint32_t wl_cal_read();
+uint32_t wl_cal_read(void);
 
 /**
  * @brief Get phyrf version string
- * 
+ *
  * @return const char* Version string in format "YYYY-MM-DD commit_hash" or "YYYY-MM-DD commit_hash (dirty)"
  */
 const char* wl_get_version(void);

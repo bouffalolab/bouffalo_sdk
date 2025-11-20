@@ -51,7 +51,7 @@
 #define AT_MQTT_CLIENTID_MAX_LEN         23
 #define AT_MQTT_USERNAME_MAX_LEN         128
 #define AT_MQTT_PASSWD_MAX_LEN           128
-
+#define AT_MQTT_BNUFFER_SIZE_MAX         (3*1024)
 #define _at_offset(type, member) ((size_t) &((type *)0)->member)
 
 #define _at_container_of(ptr, type, member) \
@@ -82,8 +82,8 @@ typedef struct at_mqtt {
     char topic[128];
     char remote_host[128];
     char remote_port[8];
-    uint8_t sendbuf[1536];
-    uint8_t recvbuf[1536];
+    uint8_t *p_sendbuf;
+    uint8_t *p_recvbuf;
 
     struct {
         char *topic;
@@ -97,9 +97,12 @@ static __attribute__((section(".wifi_ram."))) at_mqtt_t g_at_mqtt[AT_MQTT_LINK_M
 static int at_ssl_sni_set(int linkid, const char *sni)
 {
     if (g_at_mqtt[linkid].ssl_hostname) {
-        free(g_at_mqtt[linkid].ssl_hostname);
+        at_free(g_at_mqtt[linkid].ssl_hostname);
     }
     g_at_mqtt[linkid].ssl_hostname = strdup(sni);
+    if (g_at_mqtt[linkid].ssl_hostname == NULL) {
+        return -1;
+    }
     return 0;
 }
 
@@ -111,13 +114,16 @@ static char *at_ssl_sni_get(int linkid)
 static int at_ssl_alpn_set(int linkid, int alpn_num, const char *alpn)
 {
     if (alpn == NULL) {
-        free(g_at_mqtt[linkid].ssl_alpn[alpn_num]);
+        at_free(g_at_mqtt[linkid].ssl_alpn[alpn_num]);
         g_at_mqtt[linkid].ssl_alpn[alpn_num] = NULL;
     } else {
         if (g_at_mqtt[linkid].ssl_alpn[alpn_num]) {
-            free(g_at_mqtt[linkid].ssl_alpn[alpn_num]);
+            at_free(g_at_mqtt[linkid].ssl_alpn[alpn_num]);
         }
         g_at_mqtt[linkid].ssl_alpn[alpn_num] = strdup(alpn);
+        if (g_at_mqtt[linkid].ssl_alpn[alpn_num] == NULL) {
+            return -1;
+        }
     }
 
     g_at_mqtt[linkid].ssl_alpn_num = 0;
@@ -223,9 +229,9 @@ static int initserver_tls(ssl_param_t **ctx, const char* addr, const char* port,
     }
     //mbedtls_ssl_conf_read_timeout(&(*ctx)->conf, 200);
 
-    free(ssl_param.ca_cert);
-    free(ssl_param.own_cert);
-    free(ssl_param.private_cert);
+    at_free(ssl_param.ca_cert);
+    at_free(ssl_param.own_cert);
+    at_free(ssl_param.private_cert);
 
     return net_ctx.fd;
 }
@@ -302,6 +308,14 @@ static uint8_t socketfd_is_connected(mqtt_pal_socket_handle sockfd)
     return 0;
 }
 
+static void mqtt_buf_free(at_mqtt_t *pat_mqtt)
+{
+    at_free(pat_mqtt->p_sendbuf);
+    pat_mqtt->p_sendbuf = NULL;
+    at_free(pat_mqtt->p_recvbuf);
+    pat_mqtt->p_recvbuf = NULL;
+}
+
 /**
  * @brief Safelty closes the \p sockfd and cancels the \p client_daemon before \c exit.
  */
@@ -346,6 +360,7 @@ static void client_refresher_task(void* arg)
         }
         vTaskDelay(200);
     }
+    mqtt_buf_free(pat_mqtt);
     pat_mqtt->client_task = NULL;
     vTaskDelete(NULL);
 }
@@ -357,7 +372,12 @@ static void reconnect_client(struct mqtt_client* client, void **reconnect_state_
 
     /* Close the clients socket if this isn't the initial reconnect call */
     if (client->error != MQTT_ERROR_INITIAL_RECONNECT) {
+        if (socketfd_is_connected(client->socketfd)) {
+            at_response_string("+MQTT:DISCONNECTED,%d\r\n", 0);
+        }
         socketfd_close(client->socketfd);
+
+        reconnect_state->state = AT_MQTT_STATE_DISCONNECT;
     }
 
     /* Perform error handling here. */
@@ -378,8 +398,8 @@ static void reconnect_client(struct mqtt_client* client, void **reconnect_state_
     
     /* Reinitialize the client. */
     mqtt_reinit(client, &reconnect_state->sockfd,
-                reconnect_state->sendbuf, sizeof(reconnect_state->sendbuf),
-                reconnect_state->recvbuf, sizeof(reconnect_state->recvbuf));
+                reconnect_state->p_sendbuf, AT_MQTT_BNUFFER_SIZE_MAX,
+                reconnect_state->p_recvbuf, AT_MQTT_BNUFFER_SIZE_MAX);
 
     /* Send connection request to the broker. */
     ret = mqtt_connect(&reconnect_state->client, 
@@ -406,27 +426,41 @@ static void publish_callback_1(void** arg, struct mqtt_response_publish *publish
 {
     char *buffer;
     uint32_t len;
+    int offset = 0;
     int linkid = (int)(*arg);
 
     len = published->topic_name_size + published->application_message_size + 32;
-    buffer = (char*)malloc(len);
+    buffer = (char*)at_malloc(len);
 
     if (!buffer) {
-        printf("No memory to receive published msg\r\n");
+        printf("[MQTT] Error: failed to allocate buffer\r\n");
         return;
     }
 
-    snprintf(buffer, len, "+MQTT:SUBRECV:%d,%d,%d,\"%.*s\",%.*s\r\n", 
+    offset = snprintf(buffer, len, "+MQTT:SUBRECV:%d,%d,%d,\"%.*s\",", 
              linkid, 
              (int)published->topic_name_size,  
              (int)published->application_message_size,
-             (int)published->topic_name_size, published->topic_name, 
-             (int)published->application_message_size, published->application_message);
+             (int)published->topic_name_size, published->topic_name); 
+    if (offset <= 0 || offset >= len) {
+        printf("[MQTT] Error: snprintf failed\r\n");
+        at_free(buffer);
+        return;
+    }
+    
+    if (offset + published->application_message_size + 2 > len) {
+        printf("[MQTT] Error: buffer too small\r\n");
+        at_free(buffer);
+        return;
+    }
+    memcpy(buffer + offset, published->application_message, published->application_message_size);
+    offset += published->application_message_size;
+    memcpy(buffer + offset, "\r\n", 2);
+    offset += 2;
 
+    AT_CMD_DATA_SEND(buffer, offset);
 
-    AT_CMD_DATA_SEND(buffer, strlen(buffer));
-
-    free(buffer);
+    at_free(buffer);
 }
 
 
@@ -440,7 +474,7 @@ static void mqtt_unsub_all(int linkid)
     int i;
     for (i = 0; i < AT_MQTT_SUB_TOPIC_MAX; i++) {
         if (g_at_mqtt[linkid].sub_topic[i].topic) {
-            free(g_at_mqtt[linkid].sub_topic[i].topic);
+            at_free(g_at_mqtt[linkid].sub_topic[i].topic);
             g_at_mqtt[linkid].sub_topic[i].topic = NULL;
         }
     }
@@ -456,23 +490,23 @@ static void mqtt_handle_clear(int linkid)
     g_at_mqtt[linkid].connect_flags = MQTT_CONNECT_CLEAN_SESSION;
 
     if (g_at_mqtt[linkid].client_id) {
-        free(g_at_mqtt[linkid].client_id);
+        at_free(g_at_mqtt[linkid].client_id);
         g_at_mqtt[linkid].client_id = NULL;
     }
 
     if (g_at_mqtt[linkid].user_name) {
-        free(g_at_mqtt[linkid].user_name);
+        at_free(g_at_mqtt[linkid].user_name);
         g_at_mqtt[linkid].user_name = NULL;
     }
 
     if (g_at_mqtt[linkid].password) {
-        free(g_at_mqtt[linkid].password);
+        at_free(g_at_mqtt[linkid].password);
         g_at_mqtt[linkid].password = NULL;
     }
 
     for (int i = 0; i < AT_MQTT_SUB_TOPIC_MAX; i++) {
         if (g_at_mqtt[linkid].sub_topic[i].topic) {
-            free(g_at_mqtt[linkid].sub_topic[i].topic);
+            at_free(g_at_mqtt[linkid].sub_topic[i].topic);
             g_at_mqtt[linkid].sub_topic[i].topic = NULL;
         }
     }
@@ -545,7 +579,7 @@ static int at_setup_cmd_mqttusercfg(int argc, const char **argv)
     }
 
     if (g_at_mqtt[linkid].client_id) {
-        free(g_at_mqtt[linkid].client_id);
+        at_free(g_at_mqtt[linkid].client_id);
         g_at_mqtt[linkid].client_id = NULL;
     }
 
@@ -556,7 +590,7 @@ static int at_setup_cmd_mqttusercfg(int argc, const char **argv)
  
     if (user_name_valid) {
         if (g_at_mqtt[linkid].user_name) {
-            free(g_at_mqtt[linkid].user_name);
+            at_free(g_at_mqtt[linkid].user_name);
             g_at_mqtt[linkid].user_name = NULL;
         }
         g_at_mqtt[linkid].user_name = strdup(user_name);
@@ -566,7 +600,7 @@ static int at_setup_cmd_mqttusercfg(int argc, const char **argv)
     }
     if (password_valid) {
         if (g_at_mqtt[linkid].password) {
-            free(g_at_mqtt[linkid].password);
+            at_free(g_at_mqtt[linkid].password);
             g_at_mqtt[linkid].password = NULL;
         }
         g_at_mqtt[linkid].password = strdup(password);
@@ -635,11 +669,11 @@ static int at_setup_cmd_mqttclientid(int argc, const char **argv)
     }
 
     if (g_at_mqtt[linkid].client_id) {
-        free(g_at_mqtt[linkid].client_id);
+        at_free(g_at_mqtt[linkid].client_id);
         g_at_mqtt[linkid].client_id = NULL;
     }
 
-    g_at_mqtt[linkid].client_id = malloc(length + 1);
+    g_at_mqtt[linkid].client_id = at_malloc(length + 1);
     if (!g_at_mqtt[linkid].client_id) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
     }
@@ -687,11 +721,11 @@ static int at_setup_cmd_mqttusername(int argc, const char **argv)
     }
 
     if (g_at_mqtt[linkid].user_name) {
-        free(g_at_mqtt[linkid].user_name);
+        at_free(g_at_mqtt[linkid].user_name);
         g_at_mqtt[linkid].user_name = NULL;
     }
 
-    g_at_mqtt[linkid].user_name = malloc(length + 1);
+    g_at_mqtt[linkid].user_name = at_malloc(length + 1);
     if (!g_at_mqtt[linkid].user_name) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
     }
@@ -739,11 +773,11 @@ static int at_setup_cmd_mqttpassword(int argc, const char **argv)
     }
 
     if (g_at_mqtt[linkid].password) {
-        free(g_at_mqtt[linkid].password);
+        at_free(g_at_mqtt[linkid].password);
         g_at_mqtt[linkid].password = NULL;
     }
 
-    g_at_mqtt[linkid].password = malloc(length + 1);
+    g_at_mqtt[linkid].password = at_malloc(length + 1);
     if (!g_at_mqtt[linkid].password) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
     }
@@ -899,15 +933,32 @@ static int at_setup_cmd_mqttconn(int argc, const char **argv)
     printf("client_id:%s user_name:%s password:%s\r\n", g_at_mqtt[linkid].client_id, 
            g_at_mqtt[linkid].user_name, g_at_mqtt[linkid].password);
 
+    if (g_at_mqtt[linkid].p_sendbuf || g_at_mqtt[linkid].p_recvbuf) {
+        printf("mqtt buffer not free\r\n");
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_NOT_ALLOWED);
+    }
+
+    g_at_mqtt[linkid].p_sendbuf = at_calloc(AT_MQTT_BNUFFER_SIZE_MAX, 1);
+    if (!g_at_mqtt[linkid].p_sendbuf) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
+    }
+
+    g_at_mqtt[linkid].p_recvbuf = at_calloc(AT_MQTT_BNUFFER_SIZE_MAX, 1);
+    if (!g_at_mqtt[linkid].p_recvbuf) {
+        at_free(g_at_mqtt[linkid].p_sendbuf);
+        g_at_mqtt[linkid].p_sendbuf = NULL;
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
+    }
+
     /* setup a client */ 
     if (reconnect) {
 
         mqtt_reinit(&g_at_mqtt[linkid].client, 
                   &g_at_mqtt[linkid].sockfd, 
-                  g_at_mqtt[linkid].sendbuf, 
-                  sizeof(g_at_mqtt[linkid].sendbuf), 
-                  g_at_mqtt[linkid].recvbuf, 
-                  sizeof(g_at_mqtt[linkid].recvbuf));
+                  g_at_mqtt[linkid].p_sendbuf, 
+                  AT_MQTT_BNUFFER_SIZE_MAX, 
+                  g_at_mqtt[linkid].p_recvbuf, 
+                  AT_MQTT_BNUFFER_SIZE_MAX);
     } else {
  
         /* open the non-blocking TCP socket (connecting to the broker) */
@@ -920,15 +971,16 @@ static int at_setup_cmd_mqttconn(int argc, const char **argv)
         if (ret < 0) {
             printf("Failed to open socket: %d\r\n", ret);
             mqtt_close(linkid);
+            mqtt_buf_free(&g_at_mqtt[linkid]);
             return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
         }
 
         mqtt_reinit(&g_at_mqtt[linkid].client, 
                   &g_at_mqtt[linkid].sockfd, 
-                  g_at_mqtt[linkid].sendbuf, 
-                  sizeof(g_at_mqtt[linkid].sendbuf), 
-                  g_at_mqtt[linkid].recvbuf, 
-                  sizeof(g_at_mqtt[linkid].recvbuf));
+                  g_at_mqtt[linkid].p_sendbuf, 
+                  AT_MQTT_BNUFFER_SIZE_MAX, 
+                  g_at_mqtt[linkid].p_recvbuf, 
+                  AT_MQTT_BNUFFER_SIZE_MAX);
  
 
         /* Send connection request to the broker. */
@@ -945,12 +997,14 @@ static int at_setup_cmd_mqttconn(int argc, const char **argv)
         if (ret != MQTT_OK) {
             printf("fail \r\n");
             mqtt_close(linkid);
+            mqtt_buf_free(&g_at_mqtt[linkid]);
             return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
         }
         /* check that we don't have any errors */
         if (g_at_mqtt[linkid].client.error != MQTT_OK) {
             printf("error: %s\r\n", mqtt_error_str(g_at_mqtt[linkid].client.error));
             mqtt_close(linkid);
+            mqtt_buf_free(&g_at_mqtt[linkid]);
             return AT_RESULT_WITH_SUB_CODE(AT_SUB_CMD_EXEC_FAIL);
         }
         _mqtt_connected_event(linkid);
@@ -993,11 +1047,11 @@ static int at_setup_cmd_mqttpub(int argc, const char **argv)
     }
 
     if (qos == 0) {
-        publish_flags |= MQTT_CONNECT_WILL_QOS_0;
+        publish_flags |= MQTT_PUBLISH_QOS_0;
     } else if (qos == 1) {
-        publish_flags |= MQTT_CONNECT_WILL_QOS_1;
+        publish_flags |= MQTT_PUBLISH_QOS_1;
     } else if (qos == 2) {
-        publish_flags |= MQTT_CONNECT_WILL_QOS_2;
+        publish_flags |= MQTT_PUBLISH_QOS_2;
     }
 
     if (retain) {
@@ -1025,6 +1079,10 @@ static int at_setup_cmd_mqttpubraw(int argc, const char **argv)
     AT_CMD_PARSE_NUMBER(3, &qos);
     AT_CMD_PARSE_NUMBER(4, &retain);
     
+    if (length > AT_MQTT_BNUFFER_SIZE_MAX) {
+        return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_RESOURCE);
+    }
+
     if (mqtt_linkid_valid(linkid)) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_HANDLE_INVALID);
     }
@@ -1042,18 +1100,18 @@ static int at_setup_cmd_mqttpubraw(int argc, const char **argv)
     }
 
     if (qos == 0) {
-        publish_flags |= MQTT_CONNECT_WILL_QOS_0;
+        publish_flags |= MQTT_PUBLISH_QOS_0;
     } else if (qos == 1) {
-        publish_flags |= MQTT_CONNECT_WILL_QOS_1;
+        publish_flags |= MQTT_PUBLISH_QOS_1;
     } else if (qos == 2) {
-        publish_flags |= MQTT_CONNECT_WILL_QOS_2;
+        publish_flags |= MQTT_PUBLISH_QOS_2;
     }
 
     if (retain) {
         publish_flags |= MQTT_CONNECT_WILL_RETAIN;
     }
  
-    buffer = malloc(length + 1);
+    buffer = at_malloc(length + 1);
     if (!buffer) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_NO_MEMORY);
     }
@@ -1073,11 +1131,11 @@ static int at_setup_cmd_mqttpubraw(int argc, const char **argv)
         ret = AT_RESULT_CODE_SEND_FAIL;
     }
  
-    if (mqtt_publish(&g_at_mqtt[linkid].client, (const char *)topic_name, buffer, strlen(buffer), publish_flags) != MQTT_OK) {
+    if (mqtt_publish(&g_at_mqtt[linkid].client, (const char *)topic_name, buffer, length, publish_flags) != MQTT_OK) {
         ret = AT_RESULT_CODE_SEND_FAIL;
     }
 
-    free(buffer);
+    at_free(buffer);
     
     return ret;
 }
@@ -1167,7 +1225,7 @@ static int at_setup_cmd_mqttunsub(int argc, const char **argv)
     for (i = 0; i < AT_MQTT_SUB_TOPIC_MAX; i++) {
         if (g_at_mqtt[linkid].sub_topic[i].topic) {
             if (strcmp(g_at_mqtt[linkid].sub_topic[i].topic, topic_name) == 0) {
-                free(g_at_mqtt[linkid].sub_topic[i].topic);
+                at_free(g_at_mqtt[linkid].sub_topic[i].topic);
                 g_at_mqtt[linkid].sub_topic[i].topic = NULL;
                 unsub = 1;
             }
@@ -1229,7 +1287,7 @@ static int at_setup_cmd_mqttalpn(int argc, const char **argv)
 
     AT_CMD_PARSE_NUMBER(1, &count);
 
-    if (count < 0 || count > AT_MQTT_ALPN_MAX) {
+    if (count < 0 || count >= AT_MQTT_ALPN_MAX) {
         return AT_RESULT_WITH_SUB_CODE(AT_SUB_PARA_VALUE_INVALID);
     }
     if (count != argc - 2) {
@@ -1308,19 +1366,20 @@ static int at_query_cmd_mqttsni(int argc, const char **argv)
 }
 
 static const at_cmd_struct at_mqtt_cmd[] = {
-    {"+MQTTUSERCFG", NULL, at_query_cmd_mqttusercfg, at_setup_cmd_mqttusercfg, NULL, 3, 8},
-    {"+MQTTCLIENTID", NULL, at_query_cmd_mqttclientid, at_setup_cmd_mqttclientid, NULL, 2, 2},
-    {"+MQTTUSERNAME", NULL, at_query_cmd_mqttusername, at_setup_cmd_mqttusername, NULL, 2, 2},
-    {"+MQTTPASSWORD", NULL, at_query_cmd_mqttpassword, at_setup_cmd_mqttpassword, NULL, 2, 2},
-    {"+MQTTCONNCFG", NULL, at_query_cmd_mqttconncfg, at_setup_cmd_mqttconncfg, NULL, 7, 7},
-    {"+MQTTCONN", NULL, at_query_cmd_mqttconn, at_setup_cmd_mqttconn, NULL, 4, 4},
-    {"+MQTTALPN", NULL, at_query_cmd_mqttalpn, at_setup_cmd_mqttalpn, NULL, 2, 8},
-    {"+MQTTSNI", NULL, at_query_cmd_mqttsni, at_setup_cmd_mqttsni, NULL, 2, 2},
-    {"+MQTTPUB", NULL, NULL, at_setup_cmd_mqttpub, NULL, 5, 5},
-    {"+MQTTPUBRAW", NULL, NULL, at_setup_cmd_mqttpubraw, NULL, 5, 5},
-    {"+MQTTSUB", NULL, at_query_cmd_mqttsub, at_setup_cmd_mqttsub, NULL, 3, 3},
-    {"+MQTTUNSUB", NULL, NULL, at_setup_cmd_mqttunsub, NULL, 2, 2},
-    {"+MQTTCLEAN", NULL, NULL, at_setup_cmd_mqttclean, NULL, 1, 1},
+    {"+MQTTUSERCFG",  at_query_cmd_mqttusercfg, at_setup_cmd_mqttusercfg, NULL, 3, 8},
+    {"+MQTTCLIENTID", at_query_cmd_mqttclientid, at_setup_cmd_mqttclientid, NULL, 2, 2},
+    {"+MQTTUSERNAME", at_query_cmd_mqttusername, at_setup_cmd_mqttusername, NULL, 2, 2},
+    {"+MQTTPASSWORD", at_query_cmd_mqttpassword, at_setup_cmd_mqttpassword, NULL, 2, 2},
+    {"+MQTTCONNCFG",  at_query_cmd_mqttconncfg, at_setup_cmd_mqttconncfg, NULL, 7, 7},
+    {"+MQTTCONN",     at_query_cmd_mqttconn, at_setup_cmd_mqttconn, NULL, 4, 4},
+    {"+MQTTALPN",     at_query_cmd_mqttalpn, at_setup_cmd_mqttalpn, NULL, 2, 8},
+    {"+MQTTSNI",      at_query_cmd_mqttsni, at_setup_cmd_mqttsni, NULL, 2, 2},
+    {"+MQTTPUB",      NULL, at_setup_cmd_mqttpub, NULL, 5, 5},
+    {"+MQTTPUBRAW",   NULL, at_setup_cmd_mqttpubraw, NULL, 5, 5},
+    {"+MQTTSUB",      at_query_cmd_mqttsub, at_setup_cmd_mqttsub, NULL, 3, 3},
+    {"+MQTTUNSUB",    NULL, at_setup_cmd_mqttunsub, NULL, 2, 2},
+    {"+MQTTCLEAN",    NULL, at_setup_cmd_mqttclean, NULL, 1, 1},
+    {NULL,              NULL, NULL, NULL, 0, 0},
 };
 
 int at_mqtt_init()
@@ -1331,7 +1390,7 @@ int at_mqtt_init()
         g_at_mqtt[i].client.publish_response_callback_state = (void *)i;
         g_at_mqtt[i].client.socketfd = &g_at_mqtt[i].sockfd;
         mqtt_init_reconnect(&g_at_mqtt[i].client,
-                            reconnect_client, 
+                            reconnect_client,
                             &g_at_mqtt[i],
                             publish_callback_1);
     }

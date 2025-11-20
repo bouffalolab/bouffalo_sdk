@@ -54,6 +54,11 @@ static int scan_result_ind(ke_msg_id_t const msgid, void *param,
   struct info_element *found_ie;
   uint16_t found_ie_len;
 
+  // update only happens during connecting
+  if (!ops->is_connecting_scan && msgid == SCANU_RESULT_UPDATE) {
+    return 0;
+  }
+
   found_ie = (void *)(uintptr_t)mac_ie_find(
       (uintptr_t)beacon->variable, ind->length - sizeof(struct mac_hdr),
       IE_ID_DS_CHANNEL, &found_ie_len);
@@ -158,15 +163,18 @@ static int connect_ind(ke_msg_id_t const msgid, void *param,
   }
 
   if (ind->status_code) {
+    WG.status_code = ind->status_code;
+    WG.reason_code = ind->ieeetypes_code;
     WG.associated = 0;
-    wl80211_post_event(WL80211_EVT_DISCONNECTED,
-                       (ind->status_code << 16) | (ind->ieeetypes_code));
+    wl80211_post_event(WL80211_EVT_DISCONNECTED, (WG.status_code << 16) | (WG.reason_code));
   } else {
     ap_idx = ind->ap_idx;
 
     WG.associated = 1;
     WG.aid = ind->aid;
     WG.freq = ind->chan.center1_freq;
+    WG.chan_band = ind->chan.band;
+    WG.security = ind->security;
 
     memcpy(WG.bssid, ind->bssid.array, sizeof(WG.bssid));
 
@@ -209,6 +217,8 @@ static int ctrl_port_cfm(ke_msg_id_t const msgid, void *param,
   struct me_set_control_port_cfm *cfm = param;
 
   if (cfm->control_port_open) {
+    WG.status_code = WLAN_FW_SUCCESSFUL;
+    WG.reason_code = 0;
     WG.link_up = 1;
     // connect & link up event, notify upper layer(start DHCP etc.)
     wl80211_post_event(WL80211_EVT_CONNECTED, 0);
@@ -225,11 +235,8 @@ static int disconnect_ind(ke_msg_id_t const msgid, void *param,
 
   struct sm_disconnect_ind *ind = param;
 
-  WG.link_up = 0;
-  WG.associated = 0;
-  WG.authenticating = 0;
-  WG.aid = 0;
-  WG.freq = 0;
+  WG.status_code = ind->status_code;
+  WG.reason_code = ind->reason_code;
 
   if (g_sae_ctx) {
     free(g_sae_ctx);
@@ -241,12 +248,17 @@ static int disconnect_ind(ke_msg_id_t const msgid, void *param,
   memset(WG.bssid, 0, sizeof(WG.bssid));
   if (WG.authenticating && WG.link_up == 0) {
     // deauth when authentication, is password error
-    wl80211_post_event(WL80211_EVT_DISCONNECTED,
-                       WLAN_FW_AUTHENTICATION_FAIILURE);
+    WG.status_code = WLAN_FW_AUTHENTICATION_FAIILURE;
+    wl80211_post_event(WL80211_EVT_DISCONNECTED, (WG.status_code << 16) | (WG.reason_code));
   } else {
-    wl80211_post_event(WL80211_EVT_DISCONNECTED, ind->reason_code);
+    wl80211_post_event(WL80211_EVT_DISCONNECTED, (WG.status_code << 16) | (WG.reason_code));
   }
 
+  WG.link_up = 0;
+  WG.associated = 0;
+  WG.authenticating = 0;
+  WG.aid = 0;
+  WG.freq = 0;
   return 0;
 }
 
@@ -425,69 +437,6 @@ static const uint8_t mm_start[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-/** List of supported Channel */
-const struct me_chan_config_req _macsw_chan_def = {
-/// define a channel
-#define CHAN(_freq, _band, _flags, _pwr)                                       \
-  {                                                                            \
-      .freq = (_freq),                                                         \
-      .band = (_band),                                                         \
-      .flags = (_flags),                                                       \
-      .tx_power = (_pwr),                                                      \
-  }
-
-/// define a channel in 2.4GHz band
-#define CHAN_24(_freq, _flag, _pwr) CHAN(_freq, PHY_BAND_2G4, _flag, _pwr)
-/// define a channel in 5GHz band
-#define CHAN_5(_freq, _flag, _pwr) CHAN(_freq, PHY_BAND_5G, _flag, _pwr)
-
-    .chan2G4_cnt = 14,
-    .chan2G4[0] = CHAN_24(2412, 0, 20),
-    .chan2G4[1] = CHAN_24(2417, 0, 20),
-    .chan2G4[2] = CHAN_24(2422, 0, 20),
-    .chan2G4[3] = CHAN_24(2427, 0, 20),
-    .chan2G4[4] = CHAN_24(2432, 0, 20),
-    .chan2G4[5] = CHAN_24(2437, 0, 20),
-    .chan2G4[6] = CHAN_24(2442, 0, 20),
-    .chan2G4[7] = CHAN_24(2447, 0, 20),
-    .chan2G4[8] = CHAN_24(2452, 0, 20),
-    .chan2G4[9] = CHAN_24(2457, 0, 20),
-    .chan2G4[10] = CHAN_24(2462, 0, 20),
-    .chan2G4[11] = CHAN_24(2467, 0, 20),
-    .chan2G4[12] = CHAN_24(2472, 0, 20),
-    .chan2G4[13] = CHAN_24(2484, 0, 20),
-
-    .chan5G_cnt = 28,
-    .chan5G[0] = CHAN_5(5180, 0, 20),                        // 36
-    .chan5G[1] = CHAN_5(5200, 0, 20),                        // 40
-    .chan5G[2] = CHAN_5(5220, 0, 20),                        // 44
-    .chan5G[3] = CHAN_5(5240, 0, 20),                        // 48
-    .chan5G[4] = CHAN_5(5260, CHAN_NO_IR | CHAN_RADAR, 20),  // 52
-    .chan5G[5] = CHAN_5(5280, CHAN_NO_IR | CHAN_RADAR, 20),  // 56
-    .chan5G[6] = CHAN_5(5300, CHAN_NO_IR | CHAN_RADAR, 20),  // 60
-    .chan5G[7] = CHAN_5(5320, CHAN_NO_IR | CHAN_RADAR, 20),  // 64
-    .chan5G[8] = CHAN_5(5500, CHAN_NO_IR | CHAN_RADAR, 20),  // 100
-    .chan5G[9] = CHAN_5(5520, CHAN_NO_IR | CHAN_RADAR, 20),  // 104
-    .chan5G[10] = CHAN_5(5540, CHAN_NO_IR | CHAN_RADAR, 20), // 108
-    .chan5G[11] = CHAN_5(5560, CHAN_NO_IR | CHAN_RADAR, 20), // 112
-    .chan5G[12] = CHAN_5(5580, CHAN_NO_IR | CHAN_RADAR, 20), // 116
-    .chan5G[13] = CHAN_5(5600, CHAN_NO_IR | CHAN_RADAR, 20), // 120
-    .chan5G[14] = CHAN_5(5620, CHAN_NO_IR | CHAN_RADAR, 20), // 124
-    .chan5G[15] = CHAN_5(5640, CHAN_NO_IR | CHAN_RADAR, 20), // 128
-    .chan5G[16] = CHAN_5(5660, CHAN_NO_IR | CHAN_RADAR, 20), // 132
-    .chan5G[17] = CHAN_5(5680, CHAN_NO_IR | CHAN_RADAR, 20), // 136
-    .chan5G[18] = CHAN_5(5700, CHAN_NO_IR | CHAN_RADAR, 20), // 140
-    .chan5G[19] = CHAN_5(5720, CHAN_NO_IR | CHAN_RADAR, 20), // 144
-    .chan5G[20] = CHAN_5(5745, 0, 20),                       // 149
-    .chan5G[21] = CHAN_5(5765, 0, 20),                       // 153
-    .chan5G[22] = CHAN_5(5785, 0, 20),                       // 157
-    .chan5G[23] = CHAN_5(5805, 0, 20),                       // 161
-    .chan5G[24] = CHAN_5(5825, 0, 20),                       // 165
-    .chan5G[25] = CHAN_5(5845, 0, 20),
-    .chan5G[26] = CHAN_5(5865, 0, 20),
-    .chan5G[27] = CHAN_5(5885, 0, 20),
-};
-
 extern int _macsw_macif_init(void);
 extern void wl80211_mac_rx_init(void);
 extern void wl80211_mac_tx_init(void);
@@ -553,8 +502,7 @@ void wl80211_mac_init(void) {
                   (void *)me_config, sizeof(struct me_config_req));
 
   // init channels
-  macif_kmsg_call(ME_CHAN_CONFIG_CFM, NULL, 0, ME_CHAN_CONFIG_REQ, TASK_ME,
-                  (void *)&_macsw_chan_def, sizeof(_macsw_chan_def));
+  wl80211_set_country_code(wl80211_glb.country_code);
 
   // Start MACSW
   macif_kmsg_call(MM_START_CFM, NULL, 0, MM_START_REQ, TASK_MM,

@@ -16,6 +16,26 @@ extern "C" {
 
 #include "lwip/ip_addr.h"
 
+#define ip4_addr_eq(addr1, addr2) ((addr1)->addr == (addr2)->addr)
+
+#if LWIP_IPV6
+#define ip6_addr_zone_eq(ip6addr1, ip6addr2) ((ip6addr1)->zone == (ip6addr2)->zone)
+    /** Compare IPv6 addresses, ignoring zone information. To be used sparingly! */
+#define ip6_addr_zoneless_eq(addr1, addr2) (((addr1)->addr[0] == (addr2)->addr[0]) && \
+                                    ((addr1)->addr[1] == (addr2)->addr[1]) && \
+                                    ((addr1)->addr[2] == (addr2)->addr[2]) && \
+                                    ((addr1)->addr[3] == (addr2)->addr[3]))
+#define ip6_addr_eq(addr1, addr2) (ip6_addr_zoneless_eq((addr1), (addr2)) && \
+                                    ip6_addr_zone_eq((addr1), (addr2)))
+/** @ingroup ipaddr
+ *  Check if two ip addresses are equal. */
+#define ip_addr_eq(addr1, addr2)    ((IP_GET_TYPE(addr1) != IP_GET_TYPE(addr2)) ? 0 : (IP_IS_V6_VAL(*(addr1)) ? \
+  ip6_addr_eq(ip_2_ip6(addr1), ip_2_ip6(addr2)) : \
+  ip4_addr_eq(ip_2_ip4(addr1), ip_2_ip4(addr2))))
+#else /* LWIP_IPV6 */
+#define ip_addr_eq(addr1, addr2)                ip4_addr_eq(addr1, addr2)
+#endif
+
 #define AT_NET_CLIENT_HANDLE_MAX 5
 #define AT_NET_SERVER_HANDLE_MAX 1
 
@@ -47,7 +67,7 @@ int at_net_client_is_connected(int id);
 
 int at_net_client_set_remote(int id, ip_addr_t *ipaddr, uint16_t port);
 
-int at_net_client_get_info(int id, char *type, ip_addr_t *remote_ip, uint16_t *remote_port, uint16_t *local_port, uint8_t *tetype);
+int at_net_client_get_info(int id, char *type, uint16_t len, ip_addr_t *remote_ip, uint16_t *remote_port, uint16_t *local_port, uint8_t *tetype);
 
 int at_net_client_get_recvsize(int id);
 
@@ -100,6 +120,8 @@ int at_string_host_to_ip(char *host, ip_addr_t *ip);
 int at_net_dns_load(void);
 
 int at_lwip_heap_free_size(void);
+
+int at_net_poll_start(int interval_ms);
 
 #ifdef __cplusplus
 }

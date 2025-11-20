@@ -38,6 +38,10 @@ int at_port_deinit(void)
 
 int at_port_read_data(uint8_t*data, int len)
 {
+    if (!data || len <= 0) {
+        AT_PORT_PRINTF("Invalid arguments to at_port_read_data\r\n");
+        return 0;
+    }
     int nBytes = 0;
 
     nBytes = netbus_uart_receive(&at_uart, data, len, portMAX_DELAY);
@@ -56,6 +60,10 @@ int at_port_read_data(uint8_t*data, int len)
 #define AT_PORT_WRITE_TIMEOUT      (10000)// 10s
 int at_port_write_data(uint8_t *data, int len)
 {
+    if (!data || len <= 0) {
+        AT_PORT_PRINTF("Invalid arguments to at_port_write_data\r\n");
+        return 0;
+    }
     int msg_len;
 
     if (at->fakeoutput) {
@@ -67,10 +75,6 @@ int at_port_write_data(uint8_t *data, int len)
     if (at->fakeoutput) {
         return len;
     }
-    if (!data) {
-    	return 0;
-    }
-
     msg_len = netbus_uart_send(&at_uart, data, len, AT_PORT_WRITE_TIMEOUT);
     if (msg_len > 0) {
         return msg_len;

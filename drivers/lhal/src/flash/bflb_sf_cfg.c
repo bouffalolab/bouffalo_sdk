@@ -2945,7 +2945,7 @@ int ATTR_TCM_SECTION bflb_sf_cfg_init_ext_flash_gpio(uint8_t ext_flash_pin)
 
     for (i = 0; i < sizeof(gpio_pins); i++) {
         bflb_gpio_init(gpio, gpio_pins[i],
-                       BFLB_GPIO_FUNC_SF | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_2);
+                       BFLB_GPIO_FUNC_SF | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_3);
     }
 
     return 0;

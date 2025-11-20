@@ -39,6 +39,8 @@ int at_filesize_get(const char *ph);
 int at_read_file(const char *ph, int offset, char *buf, int len);
 int at_write_file(const char *ph, int offset, const char *buf, int len);
 
+size_t at_fs_stat(const char *path, struct stat *st);
+
 int at_fs_register(void);
 
 #endif

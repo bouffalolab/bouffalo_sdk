@@ -15,12 +15,16 @@
 static TaskHandle_t test_handle;
 #endif
 
+#define TEST_DATA_SIZE (1024 * 32)
+#define TEST_RW_CNT    (1000)
+#define TEST_CYCLE_NUM (5)
+
 FATFS fs;
-__attribute((aligned(64))) static uint32_t workbuf[4096];
+__attribute((aligned(64))) static uint32_t workbuf[FF_MAX_SS * 4];
 
 MKFS_PARM fs_para = {
-    .fmt = FM_ANY,       /* Format option (FM_FAT, FM_FAT32, FM_EXFAT and FM_SFD) */
-    .n_fat = 1,          /* Number of FATs */
+    .fmt = FM_EXFAT,     /* Format option (FM_FAT, FM_FAT32, FM_EXFAT and FM_SFD) */
+    .n_fat = 0,          /* Number of FATs */
     .align = 0,          /* Data area alignment (sector) */
     .n_root = 0,         /* Number of root directory entries */
     .au_size = 512 * 32, /* Cluster size (byte) */
@@ -35,30 +39,35 @@ int filesystem_init(void)
     fatfs_sdh_driver_register();
 
     ret = f_mount(&fs, "/sd", 1);
-    // ret = FR_NO_FILESYSTEM;
 
     if (ret == FR_NO_FILESYSTEM) {
         LOG_W("No filesystem yet, try to be formatted...\r\n");
 
         ret = f_mkfs("/sd", &fs_para, workbuf, sizeof(workbuf));
-
-        if (ret == FR_OK) {
-            LOG_I("done with formatting.\r\n");
-            LOG_I("first start to unmount.\r\n");
-            ret = f_mount(NULL, "/sd", 1);
-            LOG_I("then start to remount.\r\n");
-        } else {
-            LOG_F("fail to make filesystem %d\r\n", ret);
+        if (ret != FR_OK) {
+            LOG_E("fail to make filesystem %d\r\n", ret);
+            return -1;
         }
+
+        LOG_W("The formatting was successful. Try mount again\r\n");
+
+        ret = f_mount(&fs, "/sd", 1);
     }
 
-    if (ret != FR_OK) {
-        LOG_F("fail to mount filesystem,error= %d\r\n", ret);
-        LOG_F("SD card might fail to initialise.\r\n");
-        return -1;
-    } else {
+    if (ret == FR_OK) {
         LOG_D("Succeed to mount filesystem\r\n");
-        LOG_I("FileSystem cluster size:%d-sectors (%d-Byte)\r\n", fs.csize, fs.csize * 512);
+        LOG_I("FileSystem type: %s\r\n", fs.fs_type == 1 ? "FAT12" :
+                                         fs.fs_type == 2 ? "FAT16" :
+                                         fs.fs_type == 3 ? "FAT32" :
+                                         fs.fs_type == 4 ? "exFAT" :
+                                                           "unknown");
+        LOG_I("   Volume  size: %d MByte\r\n", (uint32_t)((uint64_t)(fs.n_fatent - 2) * fs.csize * 512 / 1024 / 1024));
+        LOG_I("   Cluster size: %d-sectors (%d-Byte)\r\n", fs.csize, fs.csize * 512);
+
+    } else {
+        LOG_E("fail to mount filesystem,error= %d\r\n", ret);
+        LOG_E("SD card might fail to initialise.\r\n");
+        return -1;
     }
 
     return 0;
@@ -66,7 +75,7 @@ int filesystem_init(void)
 
 #define SDU_DATA_CHECK 1
 
-char test_data[] =
+char test_data[512] =
     "I've been reading books of old \r\n\
     The legends and the myths \r\n\
     Achilles and his gold \r\n\
@@ -84,9 +93,9 @@ char test_data[] =
     Somebody I can kiss\r\n\
     I want something just like this\r\n\r\n";
 
-__attribute((aligned(64))) BYTE RW_Buffer[32 * 1024] = { 0 };
+__attribute((aligned(64))) BYTE RW_Buffer[TEST_DATA_SIZE] = { 0 };
 #if SDU_DATA_CHECK
-__attribute((aligned(64))) BYTE Check_Buffer[sizeof(RW_Buffer)] = { 0 };
+__attribute((aligned(64))) BYTE Check_Buffer[TEST_DATA_SIZE] = { 0 };
 #endif
 
 int fatfs_write_read_test()
@@ -97,12 +106,10 @@ int fatfs_write_read_test()
 
     uint32_t time_node, i, j;
 
-    /* full test data to buff */
-    for (uint32_t cnt = 0; cnt < (sizeof(RW_Buffer) / sizeof(test_data)); cnt++) {
-        memcpy(&RW_Buffer[cnt * sizeof(test_data)], test_data, sizeof(test_data));
-#if SDU_DATA_CHECK
-        memcpy(&Check_Buffer[cnt * sizeof(test_data)], test_data, sizeof(test_data));
-#endif
+    /* fill test data to buff */
+    for (uint32_t i = 0; i < TEST_DATA_SIZE; i++) {
+        RW_Buffer[i] = test_data[i % sizeof(test_data)];
+        Check_Buffer[i] = test_data[i % sizeof(test_data)];
     }
 
     /* write test */
@@ -113,8 +120,8 @@ int fatfs_write_read_test()
         time_node = (uint32_t)bflb_mtimer_get_time_ms();
         /*write into file*/
         // ret = f_write(&fnew, RW_Buffer, 1024, &fnum);
-        for (i = 0; i < 1024; i++) {
-            ret = f_write(&fnew, RW_Buffer, sizeof(RW_Buffer), &fnum);
+        for (i = 0; i < TEST_RW_CNT; i++) {
+            ret = f_write(&fnew, RW_Buffer, TEST_DATA_SIZE, &fnum);
             if (ret) {
                 break;
             }
@@ -127,14 +134,14 @@ int fatfs_write_read_test()
 
         if (ret == FR_OK) {
             LOG_I("Write Test Succeed! \r\n");
-            LOG_I("Single data size:%d Byte, Write the number:%d, Total size:%d KB\r\n", sizeof(RW_Buffer), i, sizeof(RW_Buffer) * i >> 10);
-            LOG_I("Time:%dms, Write Speed:%d KB/s \r\n", time_node, ((sizeof(RW_Buffer) * i) >> 10) * 1000 / time_node);
+            LOG_I("Single data size:%d Byte, Write the number:%d, Total size:%d KB\r\n", TEST_DATA_SIZE, i, TEST_DATA_SIZE * i / 1024);
+            LOG_I("Time:%dms, Write Speed:%d KB/s \r\n", time_node, (TEST_DATA_SIZE * i / 1024) * 1000 / time_node);
         } else {
-            LOG_F("Fail to write files(%d) num:%d\n", ret, i);
+            LOG_E("Fail to write files(%d) num:%d\n", ret, i);
             return -1;
         }
     } else {
-        LOG_F("Fail to open or create files: %d.\r\n", ret);
+        LOG_E("Fail to open or create files: %d.\r\n", ret);
         return -1;
     }
 
@@ -146,8 +153,8 @@ int fatfs_write_read_test()
         time_node = (uint32_t)bflb_mtimer_get_time_ms();
 
         // ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
-        for (i = 0; i < 1024; i++) {
-            ret = f_read(&fnew, RW_Buffer, sizeof(RW_Buffer), &fnum);
+        for (i = 0; i < TEST_RW_CNT; i++) {
+            ret = f_read(&fnew, RW_Buffer, TEST_DATA_SIZE, &fnum);
             if (ret) {
                 break;
             }
@@ -159,14 +166,14 @@ int fatfs_write_read_test()
 
         if (ret == FR_OK) {
             LOG_I("Read Test Succeed! \r\n");
-            LOG_I("Single data size:%dByte, Read the number:%d, Total size:%d KB\r\n", sizeof(RW_Buffer), i, sizeof(RW_Buffer) * i >> 10);
-            LOG_I("Time:%dms, Read Speed:%d KB/s \r\n", time_node, ((sizeof(RW_Buffer) * i) >> 10) * 1000 / time_node);
+            LOG_I("Single data size:%d Byte, Read the number:%d, Total size:%d KB\r\n", TEST_DATA_SIZE, i, TEST_DATA_SIZE * i / 1024);
+            LOG_I("Time:%dms, Read Speed:%d KB/s \r\n", time_node, (TEST_DATA_SIZE * i / 1024) * 1000 / time_node);
         } else {
-            LOG_F("Fail to read file: (%d), num:%d\n", ret, i);
+            LOG_E("Fail to read file: (%d), num:%d\n", ret, i);
             return -1;
         }
     } else {
-        LOG_F("Fail to open files.\r\n");
+        LOG_E("Fail to open files.\r\n");
         return -1;
     }
 
@@ -177,18 +184,18 @@ int fatfs_write_read_test()
     ret = f_open(&fnew, "/sd/test_file.txt", FA_OPEN_EXISTING | FA_READ);
     if (ret == FR_OK) {
         // ret = f_read(&fnew, RW_Buffer, 1024, &fnum);
-        for (i = 0; i < 1024; i++) {
-            memset(RW_Buffer, 0x55, sizeof(RW_Buffer));
-            ret = f_read(&fnew, RW_Buffer, sizeof(RW_Buffer), &fnum);
+        for (i = 0; i < TEST_RW_CNT; i++) {
+            memset(RW_Buffer, 0x55, TEST_DATA_SIZE);
+            ret = f_read(&fnew, RW_Buffer, TEST_DATA_SIZE, &fnum);
             if (ret) {
                 break;
             }
-            for (j = 0; j < sizeof(RW_Buffer); j++) {
+            for (j = 0; j < TEST_DATA_SIZE; j++) {
                 if (RW_Buffer[j] != Check_Buffer[j]) {
                     break;
                 }
             }
-            if (j < sizeof(RW_Buffer)) {
+            if (j < TEST_DATA_SIZE) {
                 break;
             }
         }
@@ -196,20 +203,33 @@ int fatfs_write_read_test()
         ret |= f_close(&fnew);
 
         if (ret == FR_OK) {
-            if (i < 1024 || j < sizeof(RW_Buffer)) {
+            if (i < TEST_RW_CNT || j < TEST_DATA_SIZE) {
                 LOG_I("Check Test Error! \r\n");
-                LOG_I("Data Error!  Num:%d/1024, Byte:%d/%d", i, j, sizeof(RW_Buffer));
+                LOG_I("Data Error!  Num:%d/%d, Byte:%d/%d, 0x%X(%c)->0x%X(%c) \r\n",
+                      i, TEST_RW_CNT, j, TEST_DATA_SIZE, Check_Buffer[j], Check_Buffer[j], RW_Buffer[j], RW_Buffer[j]);
+
+                uint32_t n = j & (~511);
+                DBG_VALUE(n);
+                LOG_I("Error data offset: 0x%04X\r\n", j - n);
+
+                char *check_data = (char *)&Check_Buffer[n];
+                DBG_HEXDUMP(check_data, 1024);
+
+                char *read_data = (char *)&RW_Buffer[n];
+                DBG_HEXDUMP(read_data, 1024);
+
+                return -1;
             } else {
                 LOG_I("Check Test Succeed! \r\n");
-                LOG_I("All Data Is Good! \r\n");
+                LOG_I("All Data Is Good! \r\n\r\n");
             }
 
         } else {
-            LOG_F("Fail to read file: (%d), num:%d\n", ret, i);
+            LOG_E("Fail to read file: (%d), num:%d\n", ret, i);
             return -1;
         }
     } else {
-        LOG_F("Fail to open files.\r\n");
+        LOG_E("Fail to open files.\r\n");
         return -1;
     }
 #endif
@@ -220,10 +240,9 @@ int fatfs_write_read_test()
 void fatfs_test_main(void *param)
 {
     (void)param;
-    int test_cnt = 0;
 
-    while (1) {
-        LOG_W("test_cnt: %d\r\n", test_cnt++);
+    for (int test_cnt = 1; test_cnt <= TEST_CYCLE_NUM; test_cnt++) {
+        LOG_W("test_cnt: %d\r\n", test_cnt);
 
         if (filesystem_init() < 0) {
             break;
@@ -233,13 +252,15 @@ void fatfs_test_main(void *param)
         }
 
 #if defined(CONFIG_NEWLIB) && CONFIG_NEWLIB && defined(CONFIG_NEWLIB_FATFS) && CONFIG_NEWLIB_FATFS
-    FILE *fp;
-    fp = fopen("/sd/hellotest.txt", "w+");
-    fprintf(fp, "hello world\r\n");
-    fclose(fp);
+        FILE *fp;
+        fp = fopen("/sd/hellotest.txt", "w+");
+        fprintf(fp, "hello world\r\n");
+        fclose(fp);
 #endif
 
         f_unmount("/sd");
+
+        bflb_mtimer_delay_ms(1000);
     }
 
     while (1) {

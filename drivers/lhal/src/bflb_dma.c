@@ -23,7 +23,11 @@ struct bflb_dma_irq_callback dma_callback[3][8];
 const uint32_t dma_base[] = { 0x20081000 };
 struct bflb_dma_irq_callback dma_callback[1][8];
 #elif defined(BL616D)
+#if defined(CPU_MODEL_A0)
 const uint32_t dma_base[] = { 0x20081000, 0x20086000, 0x000C0000 };
+#else
+const uint32_t dma_base[] = { 0x20081000, 0x20021000, 0x000C0000 };
+#endif
 struct bflb_dma_irq_callback dma_callback[3][8];
 #endif
 

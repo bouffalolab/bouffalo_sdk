@@ -84,6 +84,19 @@ int bflb_efuse_read_mac_address(uint8_t mac[6], uint8_t reload);
 uint8_t bflb_efuse_is_mac_address_slot_empty(uint8_t slot, uint8_t reload);
 
 /**
+ * @brief  Efuse write optional MAC address
+ *
+ * @param  slot: MAC address slot
+ * @param  mac[6]: MAC address buffer
+ * @param  program: Whether program
+ *
+ * @return 0 or -1
+ *
+**/
+int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t program);
+
+
+/**
  * @brief  Efuse read optional MAC address
  *
  * @param  slot: MAC address slot

@@ -42,7 +42,7 @@
     LCD_SPI_ST7789V
     LCD_SPI_ST7735
 */
-#define LCD_DBI_ILI9488
+#define LCD_DPI_ILI9488
 
 
 /* dbi gc9307 config */
@@ -473,12 +473,14 @@
     /* Selecting DPI working mode
         1: DPI peripheral (support: bl808)
         2: PEC simulation (support: bl616, bl628)
+        3. DPI v2 peripheral (support: bl616d)
     */
     #define LCD_DPI_INTERFACE_TYPE 1
 
     /* Selecting initialization interface
         0: Not using or custom
-        1: Software spi 9-bit mode, any pin can be used.
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
     */
     #define LCD_DPI_INIT_INTERFACE_TYPE 1
 
@@ -516,12 +518,14 @@
     /* Selecting DPI working mode
         1: DPI peripheral (support: bl808)
         2: PEC simulation (support: bl616, bl628)
+        3. DPI v2 peripheral (support: bl616d)
     */
-    #define LCD_DPI_INTERFACE_TYPE 2
+    #define LCD_DPI_INTERFACE_TYPE 1
 
     /* Selecting initialization interface
         0: Not using or custom
-        1: Software spi 9-bit mode, any pin can be used.
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
     */
     #define LCD_DPI_INIT_INTERFACE_TYPE 1
 
@@ -553,14 +557,16 @@
     /* Selecting DPI working mode
         1: DPI peripheral (support: bl808)
         2: PEC simulation (support: bl616, bl628)
+        3. DPI v2 peripheral (support: bl616d)
     */
     #define LCD_DPI_INTERFACE_TYPE 1
 
     /* Selecting initialization interface
         0: Not using or custom
-        1: Software spi 9-bit mode
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
     */
-    #define LCD_DPI_INIT_INTERFACE_TYPE 1
+    #define LCD_DPI_INIT_INTERFACE_TYPE 2
 
     /* enable the lcd reset function
         0: Does not care about lcd hard reset
@@ -578,18 +584,19 @@
     #define ILI9488_DPI_H 480
 
 
-/* dpi standard config */
-#elif defined LCD_DPI_STANDARD
+#elif defined(LCD_DPI_STANDARD)
 
     /* Selecting DPI working mode
         1: DPI peripheral (support: bl808)
         2: PEC simulation (support: bl616, bl628)
+        3. DPI v2 peripheral (support: bl616d)
     */
     #define LCD_DPI_INTERFACE_TYPE 1
 
     /* Selecting initialization interface
         0: Not using or custom
-        1: Software spi 9-bit mode
+        1: Software spi 3-wires 9-bits mode, any pin can be used.
+        2: Software spi 4-wires 8-bits mode, any pin can be used.
     */
     #define LCD_DPI_INIT_INTERFACE_TYPE 0
 
@@ -601,6 +608,7 @@
 
     /* Selecting pixel format
         1: rgb565 (16-bits)
+        2: nrgb8888 (32-bits)
     */
     #define STANDARD_DPI_PIXEL_FORMAT 1
 
@@ -916,10 +924,17 @@
 
     /* Selecting initialization interface */
     #if (LCD_DPI_INIT_INTERFACE_TYPE == 1)
-        /* Software spi 9-bit mode, any pin can be used. */
+        /* Software spi 3-wires 9-bits mode, any pin can be used. */
         #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CS    GPIO_PIN_0
         #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CLK   GPIO_PIN_1
         #define LCD_DPI_INIT_SPI_SOFT_3_PIN_DAT   GPIO_PIN_3
+
+    #elif (LCD_DPI_INIT_INTERFACE_TYPE == 2)
+        /* Software spi 4-wires 8-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DAT   GPIO_PIN_3
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DC    GPIO_PIN_4
     #endif
 
     /* dma used by sim */
@@ -951,6 +966,57 @@
     /* cache num of dma_lli, >= 2,
         Performance is best when the value is no less than the number of disp_buffs used */
     #define LCD_DPI_SIM_DMA_LLI_CACHE_NUM 3
+#endif
+
+/********** DPI v2 configuration **********/
+#if (defined(LCD_DPI_INTERFACE_TYPE) && (LCD_DPI_INTERFACE_TYPE == 3))
+
+    /* Enable DPI v2 functionality */
+    #define LCD_V2_DPI_ENABLE
+
+    /* Selecting initialization interface */
+    #if (LCD_DPI_INIT_INTERFACE_TYPE == 1)
+        /* Software spi 3-wires 9-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_3_PIN_DAT   GPIO_PIN_3
+
+    #elif (LCD_DPI_INIT_INTERFACE_TYPE == 2)
+        /* Software spi 4-wires 8-bits mode, any pin can be used. */
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CS    GPIO_PIN_0
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_CLK   GPIO_PIN_1
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DAT   GPIO_PIN_3
+        #define LCD_DPI_INIT_SPI_SOFT_4_PIN_DC    GPIO_PIN_4
+    #endif
+
+    /* Interface type selection:
+        0: 24PIN mode (D0 ~ D23)
+        1: 18PIN mode 1 (D0 ~ D17)
+        2: 18PIN mode 2 (D0 ~ D5, D8 ~ D13, D16 ~ D21)
+        3: 16PIN mode 1 (D0 ~ D15)
+        4: 16PIN mode 2 (D0 ~ D4, D8 ~ D13, D16 ~ D20)
+        5: 16PIN mode 3 (D1 ~ D5, D8 ~ D13, D17 ~ D21)
+    */
+    #define LCD_DPI_V2_INTERFACE_TYPE  0
+
+    /* Input source selection:
+        0: Test pattern without OSD
+        1: Test pattern with OSD
+        2: Framebuffer without OSD
+        3: Framebuffer with OSD
+    */
+    #define LCD_DPI_V2_INPUT_SEL       3
+
+    /* Test pattern selection (only valid when input_sel is 0 or 1):
+        0: NULL (no test pattern)
+        1: Black
+        2: Red
+        3: Green
+        4: Yellow
+    */
+    #define LCD_DPI_V2_TEST_PATTERN     0
+
+
 #endif
 
 /********** DBI peripheral configuration ***********/
@@ -1029,7 +1095,11 @@
     #define LCD_SPI_HARD_4_PIXEL_CNT_MAX (800 * 640)
 
     /* spi pin, hardware controlled */
-    #define LCD_SPI_HARD_4_PIN_CLK   GPIO_PIN_13
+    #if defined(BL702)
+        #define LCD_SPI_HARD_4_PIN_CLK   GPIO_PIN_17
+    #else
+        #define LCD_SPI_HARD_4_PIN_CLK   GPIO_PIN_13
+    #endif
     #define LCD_SPI_HARD_4_PIN_DAT   GPIO_PIN_15
     /* cs/dc pin, software controlled */
     #define LCD_SPI_HARD_4_PIN_CS   GPIO_PIN_14

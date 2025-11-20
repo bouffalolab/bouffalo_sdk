@@ -38,9 +38,9 @@
 #endif
 #include "bl616_glb.h"
 //#include "spisync.h"
-#include "app_clock_manager.h"
+#include "clock_manager.h"
+#include "pm_manager.h"
 
-extern int enable_tickless;
 
 #define APP_PM_IELD_TASK_STACK_SIZE (512)
 
@@ -65,15 +65,62 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackTyp
     *pulIdleTaskStackSize = APP_PM_IELD_TASK_STACK_SIZE;
 }
 
+
+#ifdef CONFIG_SHELL
+extern void uart_shell_isr();
+extern struct bflb_device_s *uart_shell;
+extern bl_lp_fw_cfg_t lpfw_cfg;
+
+static void cmd_tickless(int argc, char **argv)
+{
+    int broadcast = 0;
+
+    if (argc > 2) {
+        if (argv[2] != NULL) {
+            broadcast = atoi(argv[2]);
+        } else {
+            broadcast = 0;
+        }
+
+        if (broadcast == 0) {
+            if (argv[1] != NULL) {
+                lpfw_cfg.dtim_origin = atoi(argv[1]);
+            } else {
+                lpfw_cfg.dtim_origin = 10;
+            }
+        }
+    } else if (argc > 1) {
+        broadcast = 0;
+        if (argv[1] != NULL) {
+            lpfw_cfg.dtim_origin = atoi(argv[1]);
+        } else {
+            lpfw_cfg.dtim_origin = 10;
+        }
+    } else {
+        lpfw_cfg.dtim_origin = 10;
+        broadcast = 0;
+    }
+
+    printf("dtim_origin: %d\r\n", lpfw_cfg.dtim_origin);
+    printf("broadcast: %d\r\n", broadcast);
+
+    if (broadcast) {
+        enable_multicast_broadcast = 1;
+        lpfw_cfg.bcmc_dtim_mode = 1;
+    } else {
+        enable_multicast_broadcast = 0;
+        lpfw_cfg.bcmc_dtim_mode = 0;
+    }
+
+    pm_enable_tickless();
+}
+
 GLB_GPIO_Type pinList[4] = {
   GLB_GPIO_PIN_0,
   GLB_GPIO_PIN_1,
   GLB_GPIO_PIN_2,
   GLB_GPIO_PIN_3,
 };
-
-extern void uart_shell_isr();
-extern struct bflb_device_s *uart_shell;
 
 static void set_cpu_bclk_80M_and_gate_clk(void)
 {
@@ -110,6 +157,8 @@ static void set_cpu_bclk_80M_and_gate_clk(void)
 static int lp_exit(void *arg)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    extern TaskHandle_t rxl_process_task_hd; 
+    int wakeup_reason;
 
     nxspi_ps_exit(NULL);
 
@@ -131,198 +180,23 @@ static int lp_exit(void *arg)
 
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 
+    wakeup_reason = bl_lp_get_wake_reason();
+    if (wakeup_reason & LPFW_WAKEUP_WIFI_BROADCAST) {
+        vTaskNotifyGiveFromISR(rxl_process_task_hd, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    } else {
+        pm_alloc_mem_reset();
+    }
+
     //GLB_GPIO_Func_Init(GPIO_FUN_JTAG, pinList, 4);
 
     return 0;
 }
 
-#if 0
-static int lp_exit(void *arg)
-{
-    printf("start board recovery.\r\n");
-    /* recovery system_clock_init\peripheral_clock_init\console_init*/
-    board_recovery();
-    printf("board recovery.\r\n");
-
-    GLB_Set_EM_Sel(GLB_WRAM160KB_EM0KB);
-
-    board_rf_ctl(BRD_CTL_RF_RESET_DEFAULT, 0);
-
-    vPortSetupTimerInterrupt();
-
-    bflb_uart_rxint_mask(uart_shell, false);
-    bflb_irq_attach(uart_shell->irq_num, uart_shell_isr, NULL);
-    bflb_irq_enable(uart_shell->irq_num);
-    printf("init uart.\r\n");
-
-    GLB_GPIO_Func_Init(GPIO_FUN_JTAG, pinList, 4);
-
-    return 0;
-}
-#endif
 
 static int lp_enter(void *arg)
 {
     nxspi_ps_enter(NULL);
-    return 0;
-}
-
-#ifdef CONFIG_SHELL
-int cmd_wifi_lp(int argc, char **argv)
-{
-    int ret = 0;
-    printf("enter wireless low power!\r\n");
-
-    bflb_lp_init();
-    // bflb_lp_fw_init();
-    bflb_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
-
-    while (1) {
-        // lp_exit(0);
-        ret = bflb_lp_fw_enter(&lpfw_cfg);
-        if (ret < 0) {
-            printf("[E]bflb_lpfw_enter Fail,ErrId:%d\r\n", ret);
-        } else {
-            printf("bflb_lpfw_enter Success\r\n");
-        }
-        arch_delay_ms(1000);
-    }
-
-    return 0;
-}
-
-extern bl_lp_fw_cfg_t lpfw_cfg;
-
-void set_dtim_config(int dtim)
-{
-    lpfw_cfg.dtim_origin = dtim;
-    bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
-
-    wifi_mgmr_sta_ps_enter();
-}
-
-void clear_dtim_config(void)
-{
-    wifi_mgmr_sta_ps_exit();
-}
-
-static void cmd_tickless(int argc, char **argv)
-{
-    if ((argc > 1) && (argv[1] != NULL)) {
-        printf("%s\r\n", argv[1]);
-        lpfw_cfg.dtim_origin = atoi(argv[1]);
-    } else {
-        lpfw_cfg.dtim_origin = 10;
-    }
-
-    bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
-    printf("sta_ps %ld\r\n", wifi_mgmr_sta_ps_enter());
-    enable_tickless = 1;
-}
-
-static void cmd_twt(int argc, char **argv)
-{
-    lpfw_cfg.dtim_origin = 0;
-
-    bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
-    printf("sta_ps %ld\r\n", wifi_mgmr_sta_ps_enter());
-
-    enable_tickless = 1;
-}
-
-int pm_status_update(int status)
-{
-    //update status
-    if (status) {
-        enable_tickless = 0;
-    } else {
-        enable_tickless = 1;
-    }
-}
-
-static int test_tcp_keepalive(int argc, char **argv)
-{
-    int sockfd;
-    // uint8_t *recv_buffer;
-    struct sockaddr_in dest, my_addr;
-    char buffer[51];
-    uint32_t pck_cnt = 0;
-    uint32_t pck_total = 0;
-
-    /* Create a socket */
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("Error in socket\r\n");
-        return -1;
-    }
-
-    /*---Initialize server address/port struct---*/
-    memset(&my_addr, 0, sizeof(my_addr));
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_addr.s_addr = INADDR_ANY;
-    my_addr.sin_port = htons(50001);
-
-    memset(&dest, 0, sizeof(dest));
-    dest.sin_family = AF_INET;
-    dest.sin_port = htons(50001);
-    inet_aton(argv[1], &dest.sin_addr);
-
-    if (argc == 4) {
-        pck_cnt = atoi(argv[3]);
-        printf("keep alive pck:%ld\r\n");
-    }
-
-    printf("tcp server ip: %s\r\n", argv[1]);
-
-    if (bind(sockfd, (struct sockaddr *)&my_addr, sizeof(my_addr)) != 0) {
-        printf("Error in bind\r\n");
-        close(sockfd);
-        return -1;
-    }
-
-    /*---Connect to server---*/
-    if (connect(sockfd, (struct sockaddr *)&dest, sizeof(dest)) != 0) {
-        printf("Error in connect\r\n");
-        close(sockfd);
-        return -1;
-    }
-
-    /*---Get "Hello?"---*/
-    memset(buffer, 'A', sizeof(buffer) - 1);
-
-#ifdef LP_APP
-    if (argc > 2) {
-        cmd_tickless(0, NULL);
-    }
-#endif
-
-    int ret = 0;
-
-    while (1) {
-        pck_total++;
-        snprintf(buffer, sizeof(buffer), "SEQ = %ld  ", pck_total);
-
-        buffer[sizeof(buffer) - 2] = '\n';
-        ret = write(sockfd, buffer, sizeof(buffer) - 1);
-        if (ret != sizeof(buffer) - 1) {
-            printf("write error: %d\n", ret);
-            break;
-        }
-        printf("**********************************\n");
-        printf("SEQ:%ld WRITE SUCCESS %d\n", pck_total, ret);
-
-        if (pck_cnt && (pck_total >= pck_cnt)) {
-            bl_pm_event_bit_set(PSM_EVENT_APP);
-            break;
-        }
-#if 0
-        ret = read(sockfd, buffer, sizeof(buffer)-1);
-        buffer[sizeof(buffer) -1] = 0;
-        printf("read ret: %d, %s\r\n", ret, buffer);
-#endif
-        vTaskDelay(pdMS_TO_TICKS(30 * 1000));
-    }
-
-    close(sockfd);
     return 0;
 }
 
@@ -376,64 +250,9 @@ void modify_register_bits_incremental(int increment)
     */
 }
 
-static void cmd_xtal32k_calibration(int argc, char **argv)
-{
-    uint32_t offset;
-
-    offset = atoi(argv[1]);
-    printf("offset:%d\r\n", offset);
-    modify_register_bits_incremental(offset);
-}
-
-static void cmd_xtal32k_calc(int argc, char **argv)
-{
-    uint64_t rtc_us, rtc_cal_us;
-    uint64_t mtimer_us, mtimer_cal_us;
-    uint64_t mius;
-
-
-    uint32_t delay;
-
-    delay = atoi(argv[1]);
-    printf("delay:%ld\r\n", delay);
-
-    //xtal 32k calibration
-    __disable_irq();
-    rtc_us = bflb_rtc_get_time(NULL);
-    mtimer_us = bflb_mtimer_get_time_us();
-    __enable_irq();
-
-    vTaskDelay(delay);
-
-    __disable_irq();
-    rtc_cal_us = bflb_rtc_get_time(NULL);
-    mtimer_cal_us = bflb_mtimer_get_time_us();
-    __enable_irq();
-
-    rtc_us = ((rtc_cal_us - rtc_us) * 1000000) / 32768;
-    mtimer_us = mtimer_cal_us - mtimer_us;
-
-    if (rtc_us > mtimer_us) {
-        mius = rtc_us - mtimer_us;
-    } else {
-        mius = mtimer_us - rtc_us;
-    }
-    printf("mtimer:%llu rtc:%llu minus:%llu\r\n", mtimer_us, rtc_us, mius);
-}
-
 static void lp_io_wakeup_callback(uint64_t wake_up_io_bits)
 {
-    //enable_tickless = 0;
 
-     //TODO ;can not call in interupt context
-    //if (wifi_mgmr_sta_state_get()) {
-    //    wifi_mgmr_sta_ps_exit();
-    //}
-
-    //call resume spi
-    //spisync_wakeuparg_t wakeup_arg;
-    //wakeup_arg.wakeup_reason = 0;
-    //spisync_ps_wakeup(NULL, &wakeup_arg);
 }
 
 static bl_lp_io_cfg_t lp_wake_io_cfg;
@@ -469,8 +288,8 @@ int lp_set_wakeup_by_io(uint8_t io, uint8_t mode)
 
     lp_wake_io_cfg.io_wakeup_unmask |= ((uint64_t)1 << io);
 
-    bflb_lp_io_wakeup_cfg(&lp_wake_io_cfg);
-    bflb_lp_wakeup_io_int_register(lp_io_wakeup_callback);
+    bl_lp_io_wakeup_cfg(&lp_wake_io_cfg);
+    bl_lp_wakeup_io_int_register(lp_io_wakeup_callback);
 
     return 0;
 
@@ -488,7 +307,7 @@ int lp_delete_wakeup_by_io(uint8_t io)
     return 0;
 }
 
-void modify_bit(uint32_t *reg_addr, uint8_t bit_position, uint8_t bit_value) {
+static void modify_bit(uint32_t *reg_addr, uint8_t bit_position, uint8_t bit_value) {
     if (bit_value) {
         *reg_addr |= (1U << bit_position);
     } else {
@@ -587,13 +406,8 @@ static void cmd_delete_arp_timer(int argc, char **argv)
 }
 
 SHELL_CMD_EXPORT_ALIAS(cmd_tickless, tickless, cmd tickless);
-SHELL_CMD_EXPORT_ALIAS(cmd_twt, twt, cmd twt);
-SHELL_CMD_EXPORT_ALIAS(cmd_wifi_lp, wifi_lp_test, wifi low power test);
-SHELL_CMD_EXPORT_ALIAS(test_tcp_keepalive, lpfw_tcp_keepalive, tcp keepalive test);
 SHELL_CMD_EXPORT_ALIAS(cmd_io_dbg, io_debug, cmd io_debug);
 SHELL_CMD_EXPORT_ALIAS(cmd_32k_output, output_32k, cmd 32k output);
-SHELL_CMD_EXPORT_ALIAS(cmd_xtal32k_calibration, xtal_calibration, cmd xtal calibration);
-SHELL_CMD_EXPORT_ALIAS(cmd_xtal32k_calc, calc, cmd xtal32k calc);
 SHELL_CMD_EXPORT_ALIAS(cmd_create_arp_timer, create_arp_timer, cmd create arp timer);
 SHELL_CMD_EXPORT_ALIAS(cmd_delete_arp_timer, delete_arp_timer, cmd delete arp timer);
 #endif
@@ -602,15 +416,8 @@ static TaskHandle_t xtal32k_check_entry_task_hd = NULL;
 
 void timerCallback(TimerHandle_t xTimer)
 {
-    enable_tickless = 0;
+    pm_disable_tickless();
     xTimerDelete(xTimer, portMAX_DELAY);
-
-    //if (wifi_mgmr_sta_state_get()) {
-    //    wifi_mgmr_sta_ps_exit();
-    //}
-    //spisync_wakeuparg_t wakeup_arg;
-    //wakeup_arg.wakeup_reason = 2;
-    //spisync_ps_wakeup(NULL, &wakeup_arg);
 }
 
 void createAndStartTimer(const char* timerName, TickType_t timerPeriod)
@@ -660,13 +467,13 @@ int app_lp_timer_config(int mode, uint32_t ms)
 
 void app_pm_enter_hbn(int level)
 {
-    bflb_lp_hbn_init(0,0,0,0);
+    bl_lp_hbn_init(0,0,0,0);
 
     if (level > 0 && level < 3) {
         hbn_test_cfg.hbn_level=level;
     }
 
-    bflb_lp_hbn_enter(&hbn_test_cfg);
+    bl_lp_hbn_enter(&hbn_test_cfg);
 }
 
 void app_pm_enter_pds15(void)
@@ -681,7 +488,7 @@ void app_pm_enter_pds15(void)
         lp_timerouts_ms = 0;
     }
 
-    enable_tickless = 1;
+    pm_enable_tickless();
 }
 
 TimerHandle_t keepalive_timer = NULL;
@@ -691,13 +498,68 @@ void keepalive_callback(TimerHandle_t xTimer)
     wifi_mgmr_null_data_send();
 }
 
-void app_pm_twt_enter(void)
-{
-    lpfw_cfg.dtim_origin = 0;
 
-    bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
-    printf("sta_ps %ld\r\n", wifi_mgmr_sta_ps_enter());
-    enable_tickless = 1;
+#define TWT_SETUP_REQUEST   0
+#define TWT_SETUP_SUGGEST   1
+#define TWT_SETUP_DEMAND    2
+
+#define TWT_FLOW_ANNOUNCED      0
+#define TWT_FLOW_UNANNOUNCED    1
+
+static int twt_param_validate(int s, int t, int e, int n, int m)
+{
+    /* 1) SetupType */
+    if ((s < TWT_SETUP_REQUEST) || (s > TWT_SETUP_DEMAND)) {
+        printf("[TWT] Invalid setup_type %d (expect 0-2)\n", s);
+        return -1;
+    }
+
+    /* 2) FlowType */
+    if ((t != TWT_FLOW_ANNOUNCED) && (t != TWT_FLOW_UNANNOUNCED)) {
+        printf("[TWT] Invalid flow_type %d (expect 0/1)\n", t);
+        return -2;
+    }
+
+    /* 3) Exponent */
+    if ((e < 0) || (e > 31)) {
+        printf("[TWT] wake_int_exp %d out of range 0-31\n", e);
+        return -3;
+    }
+
+    /* 4) Wake-up window (min_twt_wake_dur) */
+    if ((n < 0) || (n > 255)) {
+        printf("[TWT] min_twt_wake_dur %d out of range 0-255\n", n);
+        return -4;
+    }
+
+    /* 5) Mantissa */
+    if ((m <= 0) || (m > 65535)) {
+        printf("[TWT] wake_int_mantissa %d out of range 1-65535\n", m);
+        return -5;
+    }
+
+    uint64_t interval_us   = (uint64_t)m << (e + 8);   // m*2^e*256
+    uint32_t sp_us         = (uint32_t)n * 256;        // n*256
+    if (sp_us >= interval_us) {
+        printf("[TWT] SP (%u µs) >= Interval (%llu µs) – adjust n/e/m\n",
+               sp_us, (unsigned long long)interval_us);
+        return -6;
+    }
+
+    return 0;
+}
+
+void app_pm_twt_param_set(int s, int t, int e, int n, int m)
+{
+    twt_setup_params_struct_t param;
+    param.setup_type = s;
+    param.flow_type = t;
+    param.wake_int_exp = e;
+    param.wake_dur_unit = 0; 
+    param.min_twt_wake_dur = n;
+    param.wake_int_mantissa = m;
+
+    wifi_mgmr_sta_twt_setup(&param);
 }
 
 int app_create_keepalive_timer(uint32_t periods)
@@ -753,13 +615,44 @@ int app_delete_keepalive_timer(void)
 
 void app_pm_exit_pds15(void)
 {
-    enable_tickless = 0;
+    pm_disable_tickless();
     wifi_mgmr_sta_ps_exit();
 }
 
 int bflb_pm_app_check(void)
 {
     return nxspi_ps_get();
+}
+
+int pwr_info_clear(void)
+{
+    bl_lp_info_clear();
+
+    return 0;
+}
+
+#define SLEEP_PDS_US        80
+#define ACTIVE_LPFW_US      38000
+#define ACTIVE_APP_US       57000
+
+uint64_t pwr_info_get(void)
+{
+    bl_lp_info_t lp_info;
+    bl_lp_info_get(&lp_info);
+
+    printf("\r\nVirtual time: %llu us\r\n", bl_lp_get_virtual_us());
+    printf("Power info dump:\r\n");
+    printf("LPFW try recv bcn: %d, loss %d\r\n", lp_info.lpfw_recv_cnt, lp_info.lpfw_loss_cnt);
+    printf("Total time %lldms\r\n", lp_info.time_total_us / 1000);
+    printf("PDS sleep: %lldms\r\n", lp_info.sleep_pds_us / 1000);
+    printf("LPFW active: %lldms\r\n", lp_info.active_lpfw_us / 1000);
+    printf("APP active: %lldms\r\n", lp_info.active_app_us / 1000);
+
+    uint64_t current = (lp_info.sleep_pds_us * SLEEP_PDS_US + lp_info.active_lpfw_us * ACTIVE_LPFW_US + lp_info.active_app_us * ACTIVE_APP_US) / lp_info.time_total_us;
+
+    printf("Predict current: %llduA\r\n", current);
+
+    return current;
 }
 
 int app_pm_init(void)
@@ -773,11 +666,12 @@ int app_pm_init(void)
     HBN_Enable_RTC_Counter();
     pm_rc32k_auto_cal_init();
 
+    pm_sys_init();
 #ifdef LP_APP
-#if defined(CFG_BFLB_WIFI_PS_ENABLE) || defined(CFG_WIFI_PDS_RESUME)
-    bflb_lp_init();
+#if defined(CFG_BL_WIFI_PS_ENABLE) || defined(CFG_WIFI_PDS_RESUME)
+    bl_lp_init();
 #endif
-    bflb_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
+    bl_lp_sys_callback_register(lp_enter, NULL, lp_exit, NULL);
 #endif
 
     app_clock_init();

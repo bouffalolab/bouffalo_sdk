@@ -138,6 +138,7 @@ void fatfs_write_read_test()
             if (i < 1024 || j < sizeof(RW_Buffer)) {
                 USB_LOG_INFO("Check Test Error! \r\n");
                 USB_LOG_INFO("Data Error!  Num:%d/1024, Byte:%d/%d", i, j, sizeof(RW_Buffer));
+                return;
             } else {
                 USB_LOG_INFO("Check Test Succeed! \r\n");
                 USB_LOG_INFO("All Data Is Good! \r\n");

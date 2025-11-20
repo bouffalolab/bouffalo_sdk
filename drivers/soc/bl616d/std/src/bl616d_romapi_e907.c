@@ -422,6 +422,21 @@ int bflb_efuse_get_chipid(uint8_t chipid[8]) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+uint8_t bflb_efuse_is_mac_address_slot_empty(uint8_t slot, uint8_t reload) {
+    return RomDriver_bflb_efuse_is_mac_address_slot_empty(slot, reload);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+int bflb_efuse_write_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t program) {
+    return RomDriver_bflb_efuse_write_mac_address_opt(slot, mac, program);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+int bflb_efuse_read_mac_address_opt(uint8_t slot, uint8_t mac[6], uint8_t reload) {
+    return RomDriver_bflb_efuse_read_mac_address_opt(slot, mac, reload);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 float bflb_efuse_get_adc_trim(void) {
     return RomDriver_bflb_efuse_get_adc_trim();
 }
@@ -497,8 +512,33 @@ BL_Err_Type GLB_Power_On_CPUPLL(const GLB_CPUPLL_Cfg_Type *const cfg, uint8_t wa
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Power_Off_DSIPLL(void) {
+    return RomDriver_GLB_Power_Off_DSIPLL();
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_DSIPLL_Ref_Clk_Sel(uint8_t refClk) {
+    return RomDriver_GLB_DSIPLL_Ref_Clk_Sel(refClk);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *const cfg, uint8_t waitStable) {
+    return RomDriver_GLB_Power_On_DSIPLL(cfg, waitStable);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Power_On_DSIPLL_Clk(uint8_t xtalType) {
+    return RomDriver_GLB_Power_On_DSIPLL_Clk(xtalType);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_CPUPLL_PostOut(uint8_t enable, uint8_t div) {
     return RomDriver_GLB_Set_CPUPLL_PostOut(enable, div);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Set_WIFIPLL_PostOut(uint8_t enable, uint8_t div) {
+    return RomDriver_GLB_Set_WIFIPLL_PostOut(enable, div);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -534,6 +574,11 @@ BL_Err_Type GLB_Set_WL_MCU_System_CLK(uint8_t clkFreq, uint8_t cpuClkDiv, uint8_
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_WL_XCLK_Sel(uint8_t clkSel) {
     return RomDriver_GLB_Set_WL_XCLK_Sel(clkSel);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+void GLB_Set_WIFIPLL_Fine_Tune(void) {
+    return RomDriver_GLB_Set_WIFIPLL_Fine_Tune();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -599,11 +644,6 @@ BL_Err_Type GLB_Set_I2C_CLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, uint8_t outRef) {
     return RomDriver_GLB_Set_I2S_CLK(refClkEn, refClkDiv, inRef, outRef);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_SPI_CLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
-    return RomDriver_GLB_Set_SPI_CLK(enable, clkSel, div);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -937,11 +977,6 @@ BL_Err_Type GLB_MINI_PER_Software_Reset(uint8_t swrst) {
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type GLB_Set_SPI1_CLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
-    return RomDriver_GLB_Set_SPI1_CLK(enable, clkSel, div);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Set_MINI_FCLK(uint8_t enable, uint8_t clkSel, uint8_t div) {
     return RomDriver_GLB_Set_MINI_FCLK(enable, clkSel, div);
 }
@@ -959,6 +994,11 @@ BL_Err_Type GLB_MINI_PER_Clock_UnGate(uint32_t clk) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Select_LPCPU_Jtag(void) {
     return RomDriver_GLB_Select_LPCPU_Jtag();
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_Select_NPCPU_Jtag(void) {
+    return RomDriver_GLB_Select_NPCPU_Jtag();
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1004,6 +1044,21 @@ uint64_t GLB_Get_NP2MINI_Interrupt_Mask(void) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs) {
     return RomDriver_GLB_Embedded_Flash_Pad_Enable(swapIo2Cs);
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+uint32_t GLB_Get_LP_CPU_Status(void) {
+    return RomDriver_GLB_Get_LP_CPU_Status();
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+uint32_t GLB_Get_Mini_System_Status(void) {
+    return RomDriver_GLB_Get_Mini_System_Status();
+}
+
+__ALWAYS_INLINE ATTR_TCM_SECTION
+BL_Err_Type GLB_SET_JTAG_CHAIN(uint8_t enable) {
+    return RomDriver_GLB_SET_JTAG_CHAIN(enable);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION
@@ -1329,16 +1384,6 @@ BL_Err_Type HBN_Aon_Pad_Cfg(uint8_t aonGpio, HBN_AON_PAD_CFG_Type *aonPadCfg) {
 __ALWAYS_INLINE ATTR_TCM_SECTION
 BL_Err_Type HBN_Aon_Pad_Cfg_Set(uint8_t aonPadHwCtrlEn, uint8_t aonGpio) {
     return RomDriver_HBN_Aon_Pad_Cfg_Set(aonPadHwCtrlEn, aonGpio);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Enable_AComp_IRQ(uint8_t acompId, uint8_t edge) {
-    return RomDriver_HBN_Enable_AComp_IRQ(acompId, edge);
-}
-
-__ALWAYS_INLINE ATTR_TCM_SECTION
-BL_Err_Type HBN_Disable_AComp_IRQ(uint8_t acompId, uint8_t edge) {
-    return RomDriver_HBN_Disable_AComp_IRQ(acompId, edge);
 }
 
 __ALWAYS_INLINE ATTR_TCM_SECTION

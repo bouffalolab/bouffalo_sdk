@@ -24,16 +24,44 @@
 #include "bl616_hbn.h"
 #include "bflb_rtc.h"
 #include "shell.h"
+#include "pm_manager.h"
 
-extern int enable_tickless;
+#define SLEEP_PDS_US        80
+#define ACTIVE_LPFW_US      38000
+#define ACTIVE_APP_US       57000
+
+int pwr_info_clear(void)
+{
+    bl_lp_info_clear();
+
+    return 0;
+}
+
+uint64_t pwr_info_get(void)
+{
+    bl_lp_info_t lp_info;
+    bl_lp_info_get(&lp_info);
+
+    printf("\r\nVirtual time: %llu us\r\n", bl_lp_get_virtual_us());
+    printf("Power info dump:\r\n");
+    printf("LPFW try recv bcn: %d, loss %d\r\n", lp_info.lpfw_recv_cnt, lp_info.lpfw_loss_cnt);
+    printf("Total time %lldms\r\n", lp_info.time_total_us / 1000);
+    printf("PDS sleep: %lldms\r\n", lp_info.sleep_pds_us / 1000);
+    printf("LPFW active: %lldms\r\n", lp_info.active_lpfw_us / 1000);
+    printf("APP active: %lldms\r\n", lp_info.active_app_us / 1000);
+
+    uint64_t current = (lp_info.sleep_pds_us * SLEEP_PDS_US + lp_info.active_lpfw_us * ACTIVE_LPFW_US + lp_info.active_app_us * ACTIVE_APP_US) / lp_info.time_total_us;
+
+    printf("Predict current: %llduA\r\n", current);
+
+    return current;
+}
+
 void timerCallback(TimerHandle_t xTimer)
 {
-    enable_tickless = 0;
+    pwr_info_get();
+    pm_disable_tickless();
     xTimerDelete(xTimer, portMAX_DELAY);
-
-    //if (wifi_mgmr_sta_state_get()) {
-    //    wifi_mgmr_sta_ps_exit();
-    //}
 }
 
 void createAndStartTimer(const char* timerName, TickType_t timerPeriod)
@@ -74,21 +102,43 @@ void app_pm_enter_pds15(uint32_t timeouts_ms)
 int cmd_wakeup_timer(int argc, char **argv)
 {
     uint32_t timeouts_ms;
+    int enable_bcmd = 0;
 
-    if ((argc > 1) && (argv[1] != NULL)) {
+    if ((argc > 2) && (argv[1] != NULL) && (argv[2] != NULL)) {
         printf("%s\r\n", argv[1]);
         timeouts_ms = atoi(argv[1]);
+        enable_bcmd = atoi(argv[2]);
     } else {
         printf("Need timeouts.\r\n");
         return -1;
     }
 
+    enable_multicast_broadcast = enable_bcmd;
     app_pm_enter_pds15(timeouts_ms);
+    pm_enable_tickless();
+    pwr_info_clear();
 
     return 0;
 }
 
+SHELL_CMD_EXPORT_ALIAS(cmd_wakeup_timer, wakeup_timer, wakeup timer);
 
+
+static void cmd_set_dtim(int argc, char **argv)
+{	
+	int dtim = 10;
+    int broadcast = 0;
+
+    if ((argc > 1) && (argv[1] != NULL)) {
+        printf("%s\r\n", argv[1]);
+        dtim = atoi(argv[1]);
+    } else {
+        dtim = 10;
+    }
+    
+    set_dtim_config(dtim);
+}
+SHELL_CMD_EXPORT_ALIAS(cmd_set_dtim, wifi_lp_set_dtim, cmd_set_dtim);
 
 
 #define BUFFER_SIZE 1024
@@ -196,7 +246,6 @@ static void cmd_tcp_client(int argc, char **argv)
 }
 
 SHELL_CMD_EXPORT_ALIAS(cmd_tcp_client, tcp_client, cmd tcp client);
-SHELL_CMD_EXPORT_ALIAS(cmd_wakeup_timer, wakeup_timer, wakeup timer);
 
 int ci_pm_test_init(void)
 {

@@ -14,7 +14,6 @@ if (CONFIG_LPAPP)
                        app/src/app_spiwifi.c
                        app/src/atmodule/app_atmodule.c
                        app/src/pm/app_pm.c
-                       app/src/pm/app_clock_manager.c
                        )
 else ()
 

@@ -104,6 +104,13 @@
         regval |= (1 << 18);                                      \
         putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
     } while (0)
+#elif defined(BL616D) && !defined(CPU_MODEL_A0)
+#define PERIPHERAL_CLOCK_SPI0_2_ENABLE()                            \
+    do {                                                          \
+        volatile uint32_t regval = getreg32(BFLB_GLB_CGEN1_BASE); \
+        regval |= (1 << 18);                                      \
+        putreg32(regval, BFLB_GLB_CGEN1_BASE);                    \
+    } while (0)
 #else
 #define PERIPHERAL_CLOCK_SPI0_ENABLE()                            \
     do {                                                          \
@@ -114,6 +121,7 @@
 #endif
 
 #if defined(BL616D)
+#if defined(CPU_MODEL_A0)
 #define PERIPHERAL_CLOCK_SPI1_ENABLE()                            \
     do {                                                          \
         *(volatile uint32_t *)0x20000548 &= ~(1 << 8);            \
@@ -121,6 +129,15 @@
         regval |= (1 << 1);                                       \
         putreg32(regval, 0x00080024);                             \
     } while (0)
+#else
+#define PERIPHERAL_CLOCK_SPI3_ENABLE()                            \
+    do {                                                          \
+        *(volatile uint32_t *)0x20000548 &= ~(1 << 8);            \
+        volatile uint32_t regval = getreg32(0x00080024);          \
+        regval |= (1 << 1);                                       \
+        putreg32(regval, 0x00080024);                             \
+    } while (0)
+#endif
 #endif
 
 #define PERIPHERAL_CLOCK_I2C0_ENABLE()                            \

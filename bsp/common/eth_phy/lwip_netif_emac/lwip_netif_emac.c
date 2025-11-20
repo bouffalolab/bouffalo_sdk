@@ -308,6 +308,7 @@ static void ethernetif_input(void *argument)
     struct pbuf *p, *q;
     struct bflb_emac_trans_desc_s trans_desc;
     uint32_t byte_copy;
+    uint32_t remaining_len;
 
     while (1) {
         xQueueReceive(rx_process_queue, &trans_desc, portMAX_DELAY);
@@ -316,9 +317,12 @@ static void ethernetif_input(void *argument)
 
         if (p != NULL) {
             byte_copy = 0;
-            for (q = p; q != NULL; q = q->next) {
-                memcpy(q->payload, (char *)trans_desc.buff_addr + byte_copy, q->len);
-                byte_copy += q->len;
+            remaining_len = trans_desc.data_len;
+            for (q = p; q != NULL && remaining_len > 0; q = q->next) {
+                uint32_t copy_len = (q->len < remaining_len) ? q->len : remaining_len;
+                memcpy(q->payload, (char *)trans_desc.buff_addr + byte_copy, copy_len);
+                byte_copy += copy_len;
+                remaining_len -= copy_len;
             }
 
             if (netif->input(p, netif) != ERR_OK) {
@@ -330,7 +334,6 @@ static void ethernetif_input(void *argument)
         bflb_emac_queue_rx_push(emacx, &trans_desc);
     }
 }
-
 /**
   * @brief Should allocate a pbuf and transfer the bytes of the incoming
   * packet from the interface into the pbuf.

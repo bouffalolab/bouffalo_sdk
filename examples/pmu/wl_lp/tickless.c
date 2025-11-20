@@ -21,10 +21,7 @@
 #define tickless_debugf(...)
 #endif
 
-int enable_tickless = 0;
-
-extern int bl_pm_wifi_config_get(bl_lp_fw_cfg_t *pcfg);
-extern void bl_pm_resume_wifi(void);
+static int enable_tickless = 0;
 
 int pds_wakeup_overhead = 0;
 static uint64_t ulLowPowerTimeEnterFunction;
@@ -46,6 +43,17 @@ void tickless_debug_who_wake_me(const char *name, TickType_t ticks)
     wake_next_tick = ticks;
 }
 #endif
+
+int tickless_enter(void)
+{
+    enable_tickless = 1;
+}
+
+int tickless_exit(void)
+{
+    enable_tickless = 0;
+}
+
 
 void lp_hook_pre_user(void *env)
 {
@@ -176,6 +184,12 @@ __enter_connected:
     }
     //TS_RECORD(TS_ALLOW_SLEEP_WIFI_DONE);
 
+    if(bl_lp_fw_enter_check_allow() == 0){
+        tickless_debugf("Sleep Abort! bcn_dtim check %d", __LINE__);
+        __WFI();
+        return;
+    }
+
 __enter_disconnected:
 
     /* 32k clock check */
@@ -248,6 +262,8 @@ __enter_disconnected:
         tickless_debugf("wakeup TIMEOUT\r\n");
     } else if(wake_reason & LPFW_WAKEUP_WIFI) {
         tickless_debugf("wakeup WIFI\r\n");
+    } else if(wake_reason & LPFW_WAKEUP_WIFI_BROADCAST) {
+        tickless_debugf("wakeup BROADCAST\r\n");
     } else if (wake_reason & LPFW_WAKEUP_AP_LOSS) {
         tickless_debugf("wakeup APLOSS\r\n");
     } else if (wake_reason & LPFW_WAKEUP_IO) {
@@ -259,7 +275,7 @@ __enter_disconnected:
     tickless_debugf("E:%ld, R:%ld, O:%ld W:0x%lx", xExpectedIdleTime, real_rtc_tick, pds_wakeup_overhead, wake_reason);
 
     /* resume wifi task must followed by vTaskStepTick */
-    bl_pm_resume_wifi();
+    bl_pm_resume_wifi(1);
 
     tickless_debugf("wifi resume done!");
 

@@ -684,7 +684,7 @@ int bflb_emac_irq_attach(struct bflb_device_s *dev, bflb_emac_irq_cb_t irq_event
     return 0;
 }
 
-static void bflb_emac_isr_cb_rx(struct bflb_device_s *dev)
+ATTR_TCM_SECTION void bflb_emac_isr_cb_rx(struct bflb_device_s *dev)
 {
     uint32_t reg_base = dev->reg_base;
 
@@ -712,7 +712,7 @@ static void bflb_emac_isr_cb_rx(struct bflb_device_s *dev)
 
         struct bflb_emac_trans_desc_s rx_desc = {
             .buff_addr = (void *)(uintptr_t)rx_bd.address,
-            .data_len = rx_bd.length,
+            .data_len = (rx_bd.length < 4) ? 0 : (rx_bd.length - 4),
         };
         /* get err status */
         if (rx_bd.attribute & EMAC_BD_RX_CRC_MASK) {

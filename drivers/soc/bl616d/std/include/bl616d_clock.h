@@ -65,15 +65,24 @@ extern "C" {
  *  @brief System clock type definition
  */
 typedef enum {
-    BL_SYSTEM_CLOCK_MCU_ROOT_CLK, /*!< MCU root clock */
-    BL_SYSTEM_CLOCK_MCU_CLK,      /*!< MCU Fast clock/CPU clock */
-    BL_SYSTEM_CLOCK_MCU_BCLK,     /*!< MCU BUS clock */
-    BL_SYSTEM_CLOCK_MCU_PBCLK,    /*!< MCU peri BUS clock */
-    BL_SYSTEM_CLOCK_F32K,         /*!< F32K clock */
-    BL_SYSTEM_CLOCK_XCLK,         /*!< XCLK:RC32M or XTAL */
-    BL_SYSTEM_CLOCK_XTAL,         /*!< XTAL clock */
-    BL_SYSTEM_CLOCK_WL_XCLK,      /*!< WIFI XCLK:RC32M or XTAL */
-    BL_SYSTEM_CLOCK_MAX,          /*!< MAX type of system clock */
+    BL_SYSTEM_CLOCK_MCU_ROOT_CLK,  /*!< MCU root clock */
+    BL_SYSTEM_CLOCK_MCU_CLK,       /*!< MCU Fast clock/CPU clock */
+    BL_SYSTEM_CLOCK_MCU_BCLK,      /*!< MCU BUS clock */
+    BL_SYSTEM_CLOCK_MCU_PBCLK,     /*!< MCU peri BUS clock */
+    BL_SYSTEM_CLOCK_F32K,          /*!< F32K clock */
+    BL_SYSTEM_CLOCK_XCLK,          /*!< XCLK:RC32M or XTAL */
+    BL_SYSTEM_CLOCK_XTAL,          /*!< XTAL clock */
+    BL_SYSTEM_CLOCK_WL_XCLK,       /*!< wireless part XCLK:RC32M or XTAL */
+    BL_SYSTEM_CLOCK_WL_ROOT_CLK,   /*!< wireless part root clock */
+    BL_SYSTEM_CLOCK_WL_CPU_CLK,    /*!< wireless part fast clock/CPU clock */
+    BL_SYSTEM_CLOCK_WL_BCLK,       /*!< wireless part BUS clock */
+    BL_SYSTEM_CLOCK_WL_PBCLK,      /*!< wireless part peri BUS clock */
+    BL_SYSTEM_CLOCK_MINI_XCLK,     /*!< mini part XCLK:RC32M or XTAL */
+    BL_SYSTEM_CLOCK_MINI_ROOT_CLK, /*!< mini part root clock */
+    BL_SYSTEM_CLOCK_MINI_CPU_CLK,  /*!< mini part fast clock/CPU clock */
+    BL_SYSTEM_CLOCK_MINI_BCLK,     /*!< mini part BUS clock */
+    BL_SYSTEM_CLOCK_MINI_PBCLK,    /*!< mini part peri BUS clock */
+    BL_SYSTEM_CLOCK_MAX,           /*!< MAX type of system clock */
 } BL_System_Clock_Type;
 
 typedef enum {
@@ -105,6 +114,8 @@ typedef enum {
     BL_PERIPHERAL_CLOCK_UART3,    /*!< UART3 clock */
     BL_PERIPHERAL_CLOCK_SPI0,     /*!< SPI0 clock */
     BL_PERIPHERAL_CLOCK_SPI1,     /*!< SPI1 clock */
+    BL_PERIPHERAL_CLOCK_SPI2,     /*!< SPI2 clock */
+    BL_PERIPHERAL_CLOCK_SPI3,     /*!< MINI SPI clock */
     BL_PERIPHERAL_CLOCK_RESERVED, /*!< reserved clock */
     BL_PERIPHERAL_CLOCK_DBI,      /*!< DBI clock */
     BL_PERIPHERAL_CLOCK_EMI,      /*!< EMI clock */

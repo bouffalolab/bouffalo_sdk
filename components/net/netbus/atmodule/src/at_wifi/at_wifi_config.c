@@ -18,17 +18,34 @@
 #include <wifi_mgmr.h>
 #include "at_config.h"
 #include "at_wifi_config.h"
+#include "at_wifi_main.h"
+#include "at_pal.h"
 
 wifi_config *at_wifi_config = NULL;
 
 int at_wifi_config_init(void)
 {
-    at_wifi_config = (wifi_config *)pvPortMalloc(sizeof(wifi_config));
+    at_wifi_config = (wifi_config *)at_malloc(sizeof(wifi_config));
     if (at_wifi_config == NULL) {
+        printf("[WIFI_CONFIG] Error: memory allocation failed\r\n");
         return -1;
     }
 
     memset(at_wifi_config, 0, sizeof(wifi_config));
+    at_wifi_config->dhcp_state.bit.sta_dhcp = 1;
+    at_wifi_config->dhcp_state.bit.ap_dhcp = 1;
+
+    at_wifi_config->scan_option.sort_enable = 1;
+    at_wifi_config->scan_option.max_count = WIFI_MGMR_SCAN_ITEMS_MAX;
+    at_wifi_config->scan_option.rssi_filter = -100;
+    at_wifi_config->scan_option.print_mask = 0x7FF;
+    at_wifi_config->scan_option.authmode_mask = 0xFF;
+
+    at_wifi_config->netmode = 1;
+    at_wifi_config->wevt_enable = 1;
+    wifi_mgmr_ap_mac_get(at_wifi_config->ap_mac.addr);
+    wifi_mgmr_sta_mac_get(at_wifi_config->sta_mac.addr);
+#if CONFIG_ATMODULE_CONFIG_STORAGE
     if (!at_config_read(AT_CONFIG_KEY_WIFI_AP_MAC, &at_wifi_config->ap_mac.addr, sizeof(wifi_mac_addr))) {
         wifi_mgmr_ap_mac_get(at_wifi_config->ap_mac.addr);
     } else {
@@ -59,7 +76,6 @@ int at_wifi_config_init(void)
         at_wifi_config->scan_option.print_mask = 0x7FF;
         at_wifi_config->scan_option.authmode_mask = 0xFF;
     }
-    at_wifi_config->wevt_enable = 1;
     if (!at_config_read(AT_CONFIG_KEY_WIFI_AP_INFO, &at_wifi_config->ap_info, sizeof(wifi_ap_info))) {
         snprintf(at_wifi_config->ap_info.ssid, sizeof(at_wifi_config->ap_info.ssid), "AP_%02X%02X%02X", at_wifi_config->ap_mac.addr[3], at_wifi_config->ap_mac.addr[4], at_wifi_config->ap_mac.addr[5]);
         strlcpy(at_wifi_config->ap_info.pwd, "", sizeof(at_wifi_config->ap_info.pwd));
@@ -81,7 +97,7 @@ int at_wifi_config_init(void)
         at_wifi_config->auto_conn = WIFI_AUTOCONN_ENABLE;
     }
     if (!at_config_read(AT_CONFIG_KEY_WIFI_AP_PROTO, &at_wifi_config->ap_proto, sizeof(wifi_proto))) {
-    } 
+    }
     if (!at_config_read(AT_CONFIG_KEY_WIFI_STA_PROTO, &at_wifi_config->sta_proto, sizeof(wifi_proto))) {
     }
     if (!at_config_read(AT_CONFIG_KEY_WIFI_AP_IP, &at_wifi_config->ap_ip, sizeof(wifi_ip))) {
@@ -99,7 +115,7 @@ int at_wifi_config_init(void)
         at_wifi_config->wifi_country.country_code = WIFI_COUNTRY_CODE_WORLD;
     }
     if (!at_config_read(AT_CONFIG_KEY_WIFI_HOSTNAME, at_wifi_config->hostname, sizeof(at_wifi_config->hostname))) {
-        strlcpy(at_wifi_config->hostname, "bflbWlan", sizeof(at_wifi_config->hostname));
+        strlcpy(at_wifi_config->hostname, "Wlan", sizeof(at_wifi_config->hostname));
     }
     if (!at_config_read(AT_CONFIG_KEY_WIFI_ANTDIV, &at_wifi_config->ant_div, sizeof(at_wifi_config->ant_div))) {
         at_wifi_config->ant_div.static_ant_div_enable = 0;
@@ -109,11 +125,18 @@ int at_wifi_config_init(void)
     if (!at_config_read(AT_CONFIG_KEY_WIFI_NETMODE, &at_wifi_config->netmode, sizeof(at_wifi_config->netmode))) {
         at_wifi_config->netmode = at_port_netmode_get();
     }
+#endif
     return 0;
 }
 
 int at_wifi_config_save(const char *key)
 {
+#if CONFIG_ATMODULE_CONFIG_STORAGE
+    if (!key || !at_wifi_config) {
+        printf("[WIFI_CONFIG] Error: null key or config\r\n");
+        return -1;
+    }
+
     if (strcmp(key, AT_CONFIG_KEY_WIFI_AP_MAC) == 0)
         return at_config_write(key, &at_wifi_config->ap_mac.addr, sizeof(wifi_mac_addr));
     else if (strcmp(key, AT_CONFIG_KEY_WIFI_STA_MAC) == 0)
@@ -150,12 +173,13 @@ int at_wifi_config_save(const char *key)
         return at_config_write(key, &at_wifi_config->ant_div, sizeof(at_wifi_config->ant_div));
     else if (strcmp(key, AT_CONFIG_KEY_WIFI_NETMODE) == 0)
         return at_config_write(key, &at_wifi_config->netmode, sizeof(at_wifi_config->netmode));
-
+#endif
         return -1;
 }
 
 int at_wifi_config_default(void)
 {
+#if CONFIG_ATMODULE_CONFIG_STORAGE
     at_config_delete(AT_CONFIG_KEY_WIFI_AP_MAC);
     at_config_delete(AT_CONFIG_KEY_WIFI_STA_MAC);
     at_config_delete(AT_CONFIG_KEY_WIFI_MODE);
@@ -169,10 +193,11 @@ int at_wifi_config_default(void)
     at_config_delete(AT_CONFIG_KEY_WIFI_STA_PROTO);
     at_config_delete(AT_CONFIG_KEY_WIFI_AP_IP);
     at_config_delete(AT_CONFIG_KEY_WIFI_STA_IP);
-    at_config_delete(AT_CONFIG_KEY_WIFI_COUNTRY_CODE); 
-    at_config_delete(AT_CONFIG_KEY_WIFI_HOSTNAME); 
-    at_config_delete(AT_CONFIG_KEY_WIFI_LAPOPT); 
-    at_config_delete(AT_CONFIG_KEY_WIFI_ANTDIV); 
+    at_config_delete(AT_CONFIG_KEY_WIFI_COUNTRY_CODE);
+    at_config_delete(AT_CONFIG_KEY_WIFI_HOSTNAME);
+    at_config_delete(AT_CONFIG_KEY_WIFI_LAPOPT);
+    at_config_delete(AT_CONFIG_KEY_WIFI_ANTDIV);
+#endif
     return 0;
 }
 

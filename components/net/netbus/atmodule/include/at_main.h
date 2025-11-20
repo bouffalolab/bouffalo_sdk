@@ -16,19 +16,19 @@ extern "C" {
 
 #define AT_CMD_BIN_VERSION "1.0.0"
 
-#define AT_CMD_MAX_NUM 256
+#define AT_CMD_MAX_NUM 12
 #define AT_CMD_MAX_LEN 256
 #define AT_CMD_MAX_PARA 16
 #define AT_CMD_MAX_FUNC 8
 
 typedef struct {
-    char *at_name;                        
-    int (*at_test_cmd)(int argc, const char **argv);      
+    char *at_name;
+    //int (*at_test_cmd)(int argc, const char **argv);
     int (*at_query_cmd)(int argc, const char **argv);
     int (*at_setup_cmd)(int argc, const char **argv);
     int (*at_exe_cmd)(int argc, const char **argv);
-    int para_num_min;
-    int para_num_max;
+    uint16_t para_num_min;
+    uint16_t para_num_max;
 } at_cmd_struct;
 
 typedef enum {
@@ -52,7 +52,7 @@ typedef enum {
 
 typedef struct {
     int (*init_device)(void);
-    int (*deinit_device)(void); 
+    int (*deinit_device)(void);
     int (*read_data) (uint8_t *data, int len);
     int (*write_data) (uint8_t *data, int len);
     int (*f_output_redirect) (void);
@@ -76,12 +76,12 @@ struct at_workq {
 };
 
 struct at_struct {
-    int initialized;
-    int echo;
-    int syslog;
-    int store;
-    int fakeoutput;
-    int exit;
+    uint8_t initialized;
+    uint8_t echo;
+    uint8_t syslog;
+    uint8_t store;
+    uint8_t fakeoutput;
+    uint8_t exit;
     at_work_mode incmd;
     at_device_ops device_ops;
     int function_num;
@@ -102,7 +102,7 @@ uint64_t at_current_ms_get();
 
 int at_register_function(at_func restore, at_func stop);
 
-void at_response_result(int result_code);
+void at_response_result(uint32_t result_code);
 
 void at_response_string(const char *format, ... );
 
@@ -118,10 +118,11 @@ int at_output_redirect_register(int (*output_redirect) (void));
 
 int at_output_is_redirect();
 
+#if CONFIG_ATMODULE_WORK_Q
 int at_workq_send(int eventid, struct at_workq *q, int timeout);
 
 int at_workq_dowork(int eventid, int timeout);
-
+#endif
 #ifdef __cplusplus
 }
 #endif

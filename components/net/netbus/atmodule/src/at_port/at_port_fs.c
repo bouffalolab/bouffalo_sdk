@@ -55,3 +55,7 @@ __attribute__((weak)) int at_fs_register(void)
     return -1;
 }
 
+__attribute__((weak)) size_t at_fs_stat(const char *path, struct stat *st)
+{
+    return -1;
+}

@@ -21,7 +21,7 @@
 #include "avutil/named_straightfifo.h"
 #include <msp_fs.h>
 #include <xav_port.h>
-
+#include "app_player_mixer.h"
 /* Relevant configurations need to be adjusted either in the board or in the app's configuration file. */
 //#define PA_PIN                 4
 //#define INPUT_NEGATIVE_PIN      (28)
@@ -100,7 +100,9 @@ int app_player_init(void)
         smtaudio_register_local_play(20, NULL, 0, 1.0f, 48000);
         smtaudio_register_online_music(20, NULL, 0, 1.0f, 48000);
         // smtaudio_register_bt_a2dp(20, NULL, 0, 1.0f, 48000);
-
+#if defined(CONFIG_PLAYER_MIXER_ENABLE) && CONFIG_PLAYER_MIXER_ENABLE
+        player_mixer_init();
+#endif
         player_init();
 
         inited = 1;
@@ -154,7 +156,7 @@ static void _fifo_task(void *arg)
     /* set write eof */
     nsfifo_set_eof(tts_fifo, 0, 1);
     nsfifo_close(tts_fifo);
-    
+
     msp_task_exit(0);
 }
 

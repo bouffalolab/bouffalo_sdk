@@ -27,7 +27,10 @@ static int g_through_report_tag = 0;
 
 int at_through_input(uint8_t *data, int32_t len)
 {
-#if CONFIG_ATMODULE_NETWORK
+    if (!data || len <= 0) {
+        return -1;
+    }
+#ifdef CONFIG_ATMODULE_NETWORK
     int linkid = 0;
 
     if (len == strlen(AT_THROUGH_EXIT_CMD) && memcmp(data, AT_THROUGH_EXIT_CMD, strlen(AT_THROUGH_EXIT_CMD)) == 0) {

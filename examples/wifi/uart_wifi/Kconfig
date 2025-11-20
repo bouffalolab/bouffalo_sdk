@@ -1,4 +1,47 @@
 mainmenu "SDK Configuration"
 
+# Define default configuration file location
+config DEFCONFIG_DIR
+    string
+    option defconfig_list
+    default "boards/defconfig"
+
 source "$BL_SDK_BASE/Kconfig"
+
+menu "WiFi Stack Configuration"
+
+choice
+    prompt "Select Uart WiFi Stack for Compilation"
+    default FHOST
+    help
+      Choose which WiFi stack to include in compilation.
+      These options are mutually exclusive - only one will be compiled.
+      Default is FHOST if no configuration is specified.
+
+config FHOST
+    bool "FHOST (WiFi Host)"
+    help
+      Compile FHOST (WiFi Host) support. FHOST provides WiFi host functionality
+      for managing wireless connections and network operations.
+
+config WL80211
+    bool "WL80211 (Wireless Layer 802.11)"
+    select BL_WPA_SUPPLICANT
+    help
+      Compile WL80211 wireless driver support. This provides the 802.11
+      wireless protocol implementation for WiFi connectivity.
+      Automatically includes BL_WPA_SUPPLICANT for WPA/WPA2 support.
+
+endchoice
+
+config BL_WPA_SUPPLICANT
+    bool
+    default y if WL80211
+    help
+      Enable Bouffalo WPA Supplicant support. This provides WPA/WPA2
+      authentication and security functions for WiFi connections.
+      This option is automatically enabled when WL80211 is selected
+      and cannot be manually controlled by the user.
+
+endmenu
 

@@ -48,6 +48,7 @@
 #include "at_net_ping.h"
 #include <utils_getopt.h>
 #include <at_utils.h>
+#include "at_pal.h"
 #if CFG_IPV6
 #include <lwip/prot/icmp6.h>
 #endif
@@ -183,6 +184,10 @@ static void ping_send(struct ping_var *env)
         #if CFG_IPV6
         if(IP_IS_V6(&env->dest)){
             ping6_prepare_echo(p, (u16_t)ping_size, env);
+            if (ip_addr_islinklocal(&env->dest)) {
+                printf("linklocal assign to wl1\r\n");
+                ip6_addr_assign_zone(ip_2_ip6(&env->dest), IP6_UNICAST, netif_find("wl1"));
+            }
         }
         else
         #endif
@@ -261,7 +266,7 @@ static void ping_free(void *arg)
     }
     raw_remove(env->pcb);
     utils_memp_deinit(env->pool);
-    vPortFree(env);
+    at_free(env);
 }
 
 static int ping_init(void *arg)
@@ -310,7 +315,7 @@ static int ping_init(void *arg)
 struct ping_var *ping_api_init(u16_t interval, u16_t size, u32_t count, u16_t timeout, ip_addr_t *dest, at_ping_cb_t cb)
 {
     struct ping_var *env = NULL;
-    env = (struct ping_var*)pvPortMalloc(sizeof(struct ping_var));
+    env = (struct ping_var*)at_malloc(sizeof(struct ping_var));
     if (!env){
         printf("mem malloc failed!\r\n");
         return NULL;
@@ -328,7 +333,7 @@ struct ping_var *ping_api_init(u16_t interval, u16_t size, u32_t count, u16_t ti
     env->dest = *dest;
     if (ping_init(env) != 0) {
         printf("ping_init failed\r\n");
-        vPortFree(env);
+        at_free(env);
         env = NULL;
     }
     return env;

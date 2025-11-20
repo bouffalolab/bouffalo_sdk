@@ -42,7 +42,7 @@
 #include "stdio.h"
 
 
-static inline unsigned long long getCycleCounter() {
+static inline unsigned long long getCycleCounter(void) {
 #if __riscv_xlen == 32
   register unsigned int cycle, cycleh, cycleh_tmp;
   do {
@@ -58,9 +58,9 @@ static inline unsigned long long getCycleCounter() {
 #endif
 }
 
-static inline void resetCycleCounter() {
+static inline void resetCycleCounter(void) {
   asm volatile ("csrw mcycle, x0");
-} 
+}
 
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() resetCycleCounter()
 #define portGET_RUN_TIME_COUNTER_VALUE() getCycleCounter()

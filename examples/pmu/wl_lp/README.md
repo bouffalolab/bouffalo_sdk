@@ -132,11 +132,13 @@ static void cmd_io_test(char *buf, int len, int argc, char **argv)
 
 
 #### 进入低功耗
-设置全局变量enable_tickless为1，则开启进入freertos的tickless模式。若处于未联网状态，则可以直接进入低功耗。
+
+调用 pm_enable_tickless 接口，则开启进入freertos的tickless模式。若处于未联网状态，则可以直接进入低功耗。
+
 ```c
-static void cmd_exit_tickless(char *buf, int len, int argc, char **argv)
+static void cmd_tickless(char *buf, int len, int argc, char **argv)
 {
-  enable_tickless = 0;
+  pm_enable_tickless();
 }
 ```
 
@@ -164,7 +166,7 @@ BL616可以配置唤醒的DTIM间隔。beacon的间隔越长，则唤醒频率�
 
 1. **步骤1** - 调用 `wifi_sta_connect` 连接wifi。
 2. **步骤2** - 当产生连接成功，并且拿到IP的事件后，调用 `wifi_mgmr_sta_ps_enter`。
-3. **步骤3** - 设置DITM，并且设置 `enable_tickless` 为1。
+3. **步骤3** - 设置DITM，并且调用 `pm_enable_tickless`。
 
 ```c
 case CODE_WIFI_ON_GOT_IP:
@@ -174,7 +176,7 @@ case CODE_WIFI_ON_GOT_IP:
 
     wifi_sta_ps_enter();
     lpfw_cfg.dtim_origin = 10;
-    enable_tickless = 1;
+    pm_enable_tickless();
 }
 ```
 此时BL616则进入了wifi 低功耗模式。
@@ -183,7 +185,7 @@ case CODE_WIFI_ON_GOT_IP:
 ### 若要退出wifi低功耗模式：
 
 1. **步骤1** - 调用 `wifi_mgmr_sta_ps_exit`。
-2. **步骤2** - 设置 `enable_tickless` 为0。
+2. **步骤2** - 调用 `pm_disable_tickless`。
 
 此时BL616是常电wifi模式。
 
@@ -194,7 +196,7 @@ static void proc_hellow_entry(void *pvParameters)
 
     //exit wifi power save and tickless
     wifi_mgmr_sta_ps_exit();
-    enable_tickless = 0;
+    pm_disable_tickless();
 
     while (1) {
         vTaskDelay(40000);

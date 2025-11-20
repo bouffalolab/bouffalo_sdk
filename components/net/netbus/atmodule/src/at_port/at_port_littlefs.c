@@ -7,6 +7,7 @@
 #include "lfs.h"
 #include "lfs_port.h"
 #include "at_fs.h"
+#include "at_pal.h"
 
 static void *fd_table[FOPEN_MAX] = { NULL };
 static lfs_t *lfs = NULL;
@@ -93,7 +94,7 @@ int at_fs_open(const char *path, int flags)
     int res;
     char dirpath[AT_FILE_NAME_MAX];
 
-    if (lfs == NULL) {
+    if (lfs == NULL || path == NULL) {
         return -1;
     }
 
@@ -109,7 +110,7 @@ int at_fs_open(const char *path, int flags)
         return -1;
     }
 
-    fp = (lfs_file_t *)malloc(sizeof(lfs_file_t));
+    fp = (lfs_file_t *)at_malloc(sizeof(lfs_file_t));
     if (fp == NULL) {
         fd_table[fd] = NULL;
         return -1;
@@ -119,7 +120,7 @@ int at_fs_open(const char *path, int flags)
     res = lfs_file_open(lfs, fp,  dirpath, mode_convert(flags));
 
     if (res != LFS_ERR_OK) {
-        free(fp);
+        at_free(fp);
         fd_table[fd] = NULL;
         return -1;
     }
@@ -139,7 +140,7 @@ at_dir_t at_fs_opendir(const char *path)
         return NULL;
     }
 
-    ldir = malloc(sizeof(lfs_dir_t));
+    ldir = at_malloc(sizeof(lfs_dir_t));
     if (ldir == NULL) {
         return NULL;
     }
@@ -147,7 +148,7 @@ at_dir_t at_fs_opendir(const char *path)
     snprintf(dirpath, sizeof(dirpath), LFS_MOUNTPOINT"/%s", path);
     fresult = lfs_dir_open(lfs, ldir, dirpath); 
     if (fresult != LFS_ERR_OK) {
-        free(ldir);
+        at_free(ldir);
         return NULL;
     }
 
@@ -188,7 +189,7 @@ int at_fs_closedir(at_dir_t dir)
         return fresult;
     }
 
-    free(dir);
+    at_free(dir);
 
     return 0;
 }
@@ -232,7 +233,7 @@ int at_fs_close(int fd)
         return -1;
     }
 
-    free(fp);
+    at_free(fp);
     fd_table[fd] = NULL;
 
     return 0;
@@ -282,6 +283,26 @@ size_t at_fs_write(int fd, const void *ptr, size_t size)
     if (fresult < 0) {
         //reent->_errno = lfs_ret_value_convert(fresult);
     }
+
+    return fresult;
+}
+
+size_t at_fs_stat(const char *path, struct stat *st)
+{
+    int fresult;
+    struct lfs_info fsinfo;
+    char dirpath[AT_FILE_NAME_MAX];
+
+    if (lfs == NULL) {
+        return -1;
+    }
+    
+    snprintf(dirpath, sizeof(dirpath), LFS_MOUNTPOINT"/%s", path);
+    fresult = lfs_stat(lfs, dirpath, &fsinfo);
+    if (fresult < 0) {
+        //reent->_errno = lfs_ret_value_convert(fresult);
+    }
+    st->st_size = fsinfo.size;
 
     return fresult;
 }

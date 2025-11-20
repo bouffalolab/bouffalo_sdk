@@ -253,6 +253,9 @@ static void scan_done_cb(struct wl80211_scan_ops *o) {
     printf("select best rssi %d to connect\n", best->ind.rssi);
   } else {
     printf("network not found\n");
+    WG.status_code = WLAN_FW_SCAN_NO_BSSID_AND_CHANNEL;
+    WG.reason_code = 0;
+    wl80211_post_event(WL80211_EVT_DISCONNECTED, (WG.status_code << 16) | (WG.reason_code));
     goto _EXIT;
   }
 
@@ -369,25 +372,54 @@ static void scan_bss(struct macsw_connect_ctx *ctx) {
   STAILQ_INIT(&ctx->bss_list);
 
   int scan_param_passive = 0;
-  uint32_t scan_param_duration = 0;
+  uint32_t scan_param_duration = 300;
   uint32_t scan_param_probe_cnt = 0;
   int i, probe_interval;
+  uint8_t channel;
+  int freq;
+  struct mac_chan_def *chan;
+  int nb_chans = 0;
 
   // FIXME: SCAN_PASSIVE_DURATION (220000) -> 215*TU
   probe_interval = (scan_param_duration ? scan_param_duration : 215) /
                    (scan_param_probe_cnt ? scan_param_probe_cnt : 2);
   assert(probe_interval >= 20);
 
-  // TODO support 5G
-  memcpy(&req->chan[0], _macsw_chan_def.chan2G4,
-         _macsw_chan_def.chan2G4_cnt * sizeof(struct mac_chan_def));
-#if 0
-  memcpy(&req->chan[chan_def.chan2G4_cnt], _macsw_chan_def.chan5G,
-         _macsw_chan_def.chan5G_cnt * sizeof(struct mac_chan_def));
-  req->chan_cnt = _macsw_chan_def.chan2G4_cnt + _macsw_chan_def.chan5G_cnt;
-#else
-  req->chan_cnt = _macsw_chan_def.chan2G4_cnt;
-#endif
+  if (WG.freq) {
+    if (!wl80211_freq_valid_check(WG.freq)) {
+      chan = wl80211_mac_chan_get(WG.freq);
+      if (chan) {
+        memcpy(&req->chan[nb_chans++], chan, sizeof(struct mac_chan_def));
+      }
+    }
+  } else {
+    uint8_t channel24G_num;
+    uint8_t channel5G_num;
+    uint8_t *channel24G_list;
+    uint8_t *channel5G_list;
+
+    wl80211_get_channel_nums(wl80211_glb.country_code, (uint8_t *)&channel24G_num, (uint8_t *)&channel5G_num);
+    wl80211_get_channel_list(wl80211_glb.country_code, &channel24G_list, &channel5G_list);
+
+    for (i = 0; i < channel24G_num && nb_chans < SCAN_CHANNEL_MAX; i++) {
+      channel = channel24G_list[i];
+      freq = phy_channel_to_freq(PHY_BAND_2G4, channel);
+      chan = wl80211_mac_chan_get(freq);
+      if (chan) {
+        memcpy(&req->chan[nb_chans++], chan, sizeof(struct mac_chan_def));
+      }
+    }
+    for (i = 0; i < channel5G_num && nb_chans < SCAN_CHANNEL_MAX; i++) {
+      channel = channel5G_list[i];
+      freq = phy_channel_to_freq(PHY_BAND_5G, channel);
+      chan = wl80211_mac_chan_get(freq);
+      if (chan) {
+        memcpy(&req->chan[nb_chans++], chan, sizeof(struct mac_chan_def));
+      }
+    }
+  }
+  assert(nb_chans > 0);
+  req->chan_cnt = nb_chans;
 
   if (scan_param_passive) {
     for (i = 0; i < req->chan_cnt; i++)
@@ -418,11 +450,15 @@ static void scan_bss(struct macsw_connect_ctx *ctx) {
   req->scan_only = true;
   req->probe_cnt = scan_param_probe_cnt;
   req->flags = 0;
+  if (WG.pmf_cfg == 2) {
+    req->flags |= MFP_IN_USE;
+  }
 
   ctx->scan_req = req;
   ctx->so.scan_start = scan_start;
   ctx->so.scan_ap_ind = scan_ind_cb;
   ctx->so.scan_done_ind = scan_done_cb;
+  ctx->so.is_connecting_scan = 1;
 
   // add req to scan operation list
   GLOBAL_INT_DISABLE();

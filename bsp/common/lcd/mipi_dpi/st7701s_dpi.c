@@ -28,17 +28,33 @@
 #include "st7701s_dpi.h"
 #include "bflb_mtimer.h"
 #include "bflb_gpio.h"
-#include "bl_mipi_dpi_sim.h"
 
 #if (LCD_DPI_INIT_INTERFACE_TYPE == 1)
+
 #include "bl_dpi_init_spi_soft_3.h"
 
 #define lcd_dpi_init_init              lcd_dpi_init_spi_soft_3_init
 #define lcd_dpi_init_transmit_cmd_para lcd_dpi_init_spi_soft_3_transmit_cmd_para
+
+#elif (LCD_DPI_INIT_INTERFACE_TYPE == 2)
+
+#include "bl_dpi_init_spi_soft_4.h"
+
+#define lcd_dpi_init_init              lcd_dpi_init_spi_soft_4_init
+#define lcd_dpi_init_transmit_cmd_para lcd_dpi_init_spi_soft_4_transmit_cmd_para
 #endif
 
+#if (LCD_DPI_INTERFACE_TYPE == 2)
+#include "bl_mipi_dpi_sim.h"
+#define lcd_mipi_dpi_init                    lcd_mipi_dpi_sim_init
+#define lcd_mipi_dpi_screen_switch           lcd_mipi_dpi_sim_screen_switch
+#define lcd_mipi_dpi_get_screen_using        lcd_mipi_dpi_sim_get_screen_using
+#define lcd_mipi_dpi_frame_callback_register lcd_mipi_dpi_sim_frame_callback_register
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP     LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_SWAP
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE    LCD_MIPI_DPI_SIM_FRAME_INT_TYPE_CYCLE
+
 /* mipi dpi (RGB) paramant (HSW+HBP+HFP >= 4.5us) */
-static lcd_mipi_dpi_init_t dpi_para = {
+static lcd_mipi_dpi_sim_init_t dpi_para = {
     .width = ST7701S_DPI_W,  /* LCD Active Width */
     .height = ST7701S_DPI_H, /* LCD Active Height */
                              /* Total Width = HSW + HBP + Active_Width + HFP */
@@ -53,12 +69,43 @@ static lcd_mipi_dpi_init_t dpi_para = {
     .frame_rate = 60, /* Maximum refresh frame rate per second, Used to automatically calculate the clock frequency */
 
 #if (ST7701S_DPI_PIXEL_FORMAT == 1)
-    .pixel_format = LCD_MIPI_DPI_PIXEL_FORMAT_RGB565,
+    .pixel_format = LCD_MIPI_DPI_SIM_PIXEL_FORMAT_RGB565,
 #endif
     .de_mode_en = 1,
     .frame_buff = NULL,
 };
+#elif (LCD_DPI_INTERFACE_TYPE == 3)
 
+#include "bl_mipi_dpi_v2.h"
+
+#define lcd_mipi_dpi_init                    bl_mipi_dpi_v2_init
+#define lcd_mipi_dpi_screen_switch           bl_mipi_dpi_v2_screen_switch
+#define lcd_mipi_dpi_get_screen_using        bl_mipi_dpi_v2_get_screen_using
+#define lcd_mipi_dpi_frame_callback_register bl_mipi_dpi_v2_frame_callback_register
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_SWAP     LCD_MIPI_DPI_V2_FRAME_INT_TYPE_SWAP
+#define LCD_MIPI_DPI_FRAME_INT_TYPE_CYCLE    LCD_MIPI_DPI_V2_FRAME_INT_TYPE_CYCLE
+
+static lcd_mipi_dpi_v2_init_t dpi_para = {
+    .width = ST7701S_DPI_W,
+    .height = ST7701S_DPI_H,
+                             /* Total Width = HSW + HBP + Active_Width + HFP */
+    .hsw = 20 / 2,           /* LCD HSW (Hsync Pulse Width) */
+    .hbp = 20 / 2,           /* LCD HBP (Hsync Back Porch) */
+    .hfp = 20 / 2,           /* LCD HFP (Hsync Front Porch) */
+                             /* Total Height = VSW + VBP + Active_Height + VFP */
+    .vsw = 4,                /* LCD VSW (Vsync Pulse Width) */
+    .vbp = 8,                /* LCD VBP (Vsync Back Porch) */
+    .vfp = 4,                /* LCD VFP (Vsync Front Porch) */
+
+    .frame_rate = 60, /* Maximum refresh frame rate per second, Used to automatically calculate the clock frequency */
+
+#if (ST7701S_DPI_PIXEL_FORMAT == 1)
+    .pixel_format = LCD_MIPI_DPI_V2_PIXEL_FORMAT_RGB565,
+#endif
+    .de_mode_en = 1,
+    .frame_buff = NULL,
+};
+#endif
 static const st7701s_dpi_init_cmd_t st7701s_dpi_mode_init_cmds[] = {
 
     { 0x00, NULL, 0 },  /* nop */

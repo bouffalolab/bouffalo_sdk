@@ -559,6 +559,11 @@ extern int bl_sys_reset_por(void);
 
 static void reboot_cmd(int argc, char **argv)
 {
+    if(argc > 1){
+        if(strcmp(argv[1],"uart")==0){
+            HBN_Set_User_Boot_Config(1);
+        }
+    }
     bl_sys_reset_por();
 }
 SHELL_CMD_EXPORT_ALIAS(reboot_cmd, reboot, reboot);

@@ -34,8 +34,8 @@ extern uint32_t __psram_limit;
 
 extern uint32_t __psram_data_start__;
 extern uint32_t __psram_data_end__;
-extern uint32_t __psram_noinit_data_start__;
-extern uint32_t __psram_noinit_data_end__;
+extern uint32_t __psram_noinit_start__;
+extern uint32_t __psram_noinit_end__;
 
 #ifdef CONFIG_CONSOLE_WO
 static struct bflb_device_s *wo;
@@ -91,8 +91,13 @@ static void peripheral_clock_init(void)
         PERIPHERAL_CLOCK_DMA0_ENABLE();
         PERIPHERAL_CLOCK_UART0_ENABLE();
         PERIPHERAL_CLOCK_UART1_ENABLE();
+#if defined(CPU_MODEL_A0)
         PERIPHERAL_CLOCK_SPI0_ENABLE();
         PERIPHERAL_CLOCK_SPI1_ENABLE();
+#else
+        PERIPHERAL_CLOCK_SPI0_2_ENABLE();
+        PERIPHERAL_CLOCK_SPI3_ENABLE();
+#endif
         PERIPHERAL_CLOCK_I2C0_ENABLE();
         PERIPHERAL_CLOCK_PWM0_ENABLE();
         PERIPHERAL_CLOCK_TIMER0_1_WDG_ENABLE();
@@ -104,8 +109,14 @@ static void peripheral_clock_init(void)
         PERIPHERAL_CLOCK_PEC_ENABLE();
 
         GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_XCLK, 0);
-        GLB_Set_SPI_CLK(ENABLE, GLB_SPI_CLK_WIFIPLL_160M, 0);
-        GLB_Set_SPI1_CLK(ENABLE, GLB_MINI_SPI1_CLK_WIFIPLL_160M, 0);
+
+#if defined(CPU_MODEL_A0)
+        GLB_Set_SPI1_CLK(ENABLE, GLB_SPI1_CLK_WIFIPLL_160M, 0);
+        GLB_Set_SPI0_CLK(ENABLE, GLB_SPI_CLK_WIFIPLL_160M, 0);
+#else
+        GLB_Set_SPI0_2_CLK(ENABLE, GLB_SPI_CLK_WIFIPLL_160M, 0);
+        GLB_Set_SPI3_CLK(ENABLE, GLB_SPI3_CLK_WIFIPLL_160M, 0);
+#endif
         GLB_Set_DBI_CLK(ENABLE, GLB_DBI_CLK_MCU_MUXPLL_160M, 0);
         GLB_Set_I2C_CLK(ENABLE, GLB_I2C_CLK_XCLK, 0);
         GLB_Set_ADC_CLK(ENABLE, GLB_ADC_CLK_XCLK, 1);
@@ -428,6 +439,11 @@ static void __attribute__((noinline)) boot_up_lp(uint32_t address)
     //Tzc_Sec_Set_CPU_Group(GLB_CORE_ID_LP, 0);
     if (gmini_sysData[0] != 0) {
         GLB_Release_Mini_Sys();
+#if defined(CPU_MODEL_A0)
+        GLB_Set_MINI_FCLK(ENABLE, GLB_MINI_FCLK_XCLK, 0);
+#else
+        GLB_Set_MINI_FCLK(ENABLE, GLB_MINI_FCLK_RC32M, 0);
+#endif
         //GLB_Select_LPCPU_Jtag();
         arch_delay_us(10);
 
@@ -497,14 +513,8 @@ void board_init(void)
     console_init();
 
     /* ram heap init */
-#ifdef CONFIG_HIGH_ISR_STACK
-    extern uint8_t _heap_wifi_start;
-    extern uint8_t _heap_wifi_size;
-    kmem_init(&_heap_wifi_start, (size_t)&_heap_wifi_size);
-#else
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     kmem_init((void *)&__HeapBase, heap_len);
-#endif
 
 
 #ifdef CONFIG_PSRAM
@@ -524,7 +534,7 @@ void board_init(void)
 
 #else
     /* check psram data */
-    if (&__psram_data_end__ - &__psram_data_start__ > 0 || &__psram_noinit_data_end__ - &__psram_noinit_data_start__ > 0) {
+    if (&__psram_data_end__ - &__psram_data_start__ > 0 || &__psram_noinit_end__ - &__psram_noinit_start__ > 0) {
         puts("psram data already exists, please enable CONFIG_PSRAM\r\n");
         while (1) {}
     }
@@ -570,7 +580,10 @@ void board_init(void)
 #ifdef CONFIG_BFLB_MTD
     bflb_mtd_init();
 #endif
+#ifdef CONFIG_DUALCORE_DISABLE
+#else
     boot_up_np();
+#endif
 
     if (GLB_Get_Mini_System_Status() == SET) { //first read the value of the register address,it release
         GLB_Halt_Mini_Sys();
@@ -722,6 +735,11 @@ extern int bl_sys_reset_por(void);
 
 static void reboot_cmd(int argc, char **argv)
 {
+    if(argc > 1){
+        if(strcmp(argv[1],"uart")==0){
+            HBN_Set_User_Boot_Config(1);
+        }
+    }
     bl_sys_reset_por();
 }
 SHELL_CMD_EXPORT_ALIAS(reboot_cmd, reboot, reboot);

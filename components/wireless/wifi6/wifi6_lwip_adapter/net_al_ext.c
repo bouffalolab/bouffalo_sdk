@@ -565,12 +565,44 @@ static void net_quick_dhcp_stop(net_al_if_t net_if)
 }
 
 #ifdef CFG_IPV6
-static void net_al_create_ip6_linklocal_address(void)
+static void net_al_create_ip6_linklocal_address(int ipv6_enable)
 {
-    LOCK_TCPIP_CORE();
-    netif_create_ip6_linklocal_address(fhost_to_net_if(MGMR_VIF_STA), 1);
-    netif_set_ip6_autoconfig_enabled(((struct netif *)fhost_env.vif[MGMR_VIF_STA].net_if), true);
-    UNLOCK_TCPIP_CORE();
+    struct netif *n = fhost_to_net_if(MGMR_VIF_STA);
+
+    if (!n) {
+        printf("Fail to get netif.\r\n");
+
+        return;
+    }
+
+    if (ipv6_enable) {
+        LOCK_TCPIP_CORE();
+#if LWIP_IPV6_MLD
+        netif_set_flags(n, NETIF_FLAG_MLD6);
+#endif
+        netif_create_ip6_linklocal_address(n, 1);
+        netif_set_ip6_autoconfig_enabled(n, true);
+        ipv6_timer_switch(1);
+        UNLOCK_TCPIP_CORE();
+    } else {
+        LOCK_TCPIP_CORE();
+        ipv6_timer_switch(0);
+
+#if LWIP_IPV6_DHCP6
+        dhcp6_disable(n);
+#endif
+        netif_set_ip6_autoconfig_enabled(n, false);
+
+        for (int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
+            netif_ip6_addr_set_state(n, i, IP6_ADDR_INVALID);
+        }
+
+#if LWIP_IPV6_MLD
+        netif_clear_flags(n, NETIF_FLAG_MLD6);
+#endif
+        nd6_cleanup_netif(n);
+        UNLOCK_TCPIP_CORE();
+    }
 }
 #endif
 
@@ -593,8 +625,21 @@ void net_al_ext_dhcp_connect(void)
     }
 
 #ifdef CFG_IPV6
-    net_al_create_ip6_linklocal_address();
+#if !IPV6_TIMER_PRECISE_NEEDED
+    net_al_create_ip6_linklocal_address(1);
 #endif
+#endif
+}
+
+int net_al_set_ipv6_enable(int enable)
+{   
+#ifdef CFG_IPV6
+    net_al_create_ip6_linklocal_address(enable);
+    return 0;
+#else
+    return -1;
+#endif
+
 }
 
 void net_al_ext_dhcp_disconnect(void)

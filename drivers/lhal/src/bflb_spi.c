@@ -27,13 +27,19 @@ void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *co
     uint32_t div;
 
 #if defined(BL616D)
-    uint32_t mini_spi_mode = getreg32(0x200005cc);
-    if (config->role == SPI_ROLE_MASTER) {
-        mini_spi_mode |= (1 << 31);
-    }else{
-        mini_spi_mode &= ~(1 << 31);
+#if defined(CPU_MODEL_A0)
+    if(dev->idx == 1) {
+#else
+    if(dev->idx == 3) {
+#endif
+        uint32_t mini_spi_mode = getreg32(0x200005cc);
+        if (config->role == SPI_ROLE_MASTER) {
+            mini_spi_mode |= (1 << 31);
+        } else {
+            mini_spi_mode &= ~(1 << 31);
+        }
+        putreg32(mini_spi_mode, 0x200005cc);
     }
-    putreg32(mini_spi_mode, 0x200005cc);
 #endif
 
     /* GLB select master or slave mode */
@@ -50,6 +56,28 @@ void bflb_spi_init(struct bflb_device_s *dev, const struct bflb_spi_config_s *co
             regval &= ~(1 << 12);
         } else if (dev->idx == 1) {
             regval &= ~(1 << 16);
+        }
+    }
+#elif defined(BL616D)
+    if (config->role == SPI_ROLE_MASTER) {
+        if (dev->idx == 0) {
+            regval |= (1 << 12);
+#if !defined(CPU_MODEL_A0)
+        } else if (dev->idx == 1) {
+            regval |= (1 << 16);
+        } else if (dev->idx == 2) {
+            regval |= (1 << 18);
+#endif
+        }
+    } else {
+        if (dev->idx == 0) {
+            regval &= ~(1 << 12);
+#if !defined(CPU_MODEL_A0)
+        } else if (dev->idx == 1) {
+            regval &= ~(1 << 16);
+        } else if (dev->idx == 2) {
+            regval &= ~(1 << 18);
+#endif
         }
     }
 #else

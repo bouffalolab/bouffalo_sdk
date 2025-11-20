@@ -34,42 +34,70 @@
 #define VERSION_MACSW_PATCH 10
 
 /// define the force inlining attribute for this compiler
+#ifndef __INLINE
 #define __INLINE static __attribute__((__always_inline__)) inline
+#endif
 
 /// define the IRQ handler attribute for this compiler
+#ifndef __IRQ
 #define __IRQ __attribute__((interrupt))
+#endif
 
 /// function has no side effect and return depends only on arguments
+#ifndef __PURE
 #define __PURE __attribute__((const))
+#endif
 
 /// Align instantiated lvalue or struct member on 4 bytes
+#ifndef __ALIGN4
 #define __ALIGN4 __attribute__((aligned(4)))
+#endif
 
 /// Pack a structure field
+#ifndef __PACKED16
 #define __PACKED16 __attribute__ ((__packed__))
+#endif
 /// Pack a structure field
+#ifndef __PACKED
 #define __PACKED __attribute__ ((__packed__))
+#endif
 /// Weak a symbol
+#ifndef __WEAK
 #define __WEAK __attribute__((weak))
+#endif
 
 /// __MODULE__ comes from the RVDS compiler that supports it
+#ifndef __MODULE__
 #define __MODULE__ __func__
+#endif
 
 /// define a variable as maybe unused, to avoid compiler warnings on it
+#ifndef __MAYBE_UNUSED
 #define __MAYBE_UNUSED __attribute__((unused))
+#endif
 
+#ifndef __FALLTHROUGH
 #define __FALLTHROUGH __attribute__((fallthrough))
+#endif
 
 // Mapping of these different elements is already handled in the map.txt file, so no need
 // to define anything here
 /// SHARED RAM for IPC structure
+#ifndef __SHAREDRAMIPC
 #define __SHAREDRAMIPC __attribute__ ((section("SHAREDRAMIPC")))
+#endif
 /// SHARED RAM
+#ifndef __SHAREDRAM
 #define __SHAREDRAM __attribute__ ((section("SHAREDRAM")))
+#endif
 /// LA RAM
+#ifndef __LARAMMAC
 #define __LARAMMAC __attribute__ ((section("LARAM")))
+#endif
 /// MIB memory
+#ifndef __MIB
 #define __MIB __attribute__ ((section("MACHWMIB")))
+#endif
 
 #define _ZERO_WITH_COMMA_1 0,
 #define _second_arg(__ignored, val, ...) val
@@ -79,8 +107,8 @@
 #define IS_ENABLED(config)            _is_enabled(config)
 
 #define MACSW_HOOK(x, ...) do { \
-  extern int __WEAK macsw_hook_##x (); \
-  if( &macsw_hook_##x ) {macsw_hook_##x(__VA_ARGS__);} \
+  extern int __WEAK macsw_hook_##x (const char *f, ...); \
+  if( &macsw_hook_##x ) {macsw_hook_##x(__func__, ##__VA_ARGS__);} \
 } while(0)
 
 ////////////////////////////////////////////////////
@@ -3641,7 +3669,7 @@ struct rx_info {
 
 /** Number of Payload Buffer Descriptors attached to a packet.
     A packet passed by the TCP/IP stack may be split across TX_PBD_CNT buffers.         */
-#define TX_PBD_CNT            5
+#define TX_PBD_CNT            CFG_TX_PBD_CNT
 
 /// Mask to test if it's a basic rate - BIT(7)
 #define MAC_BASIC_RATE                  0x80
@@ -4017,6 +4045,7 @@ uint8_t mm_vif_to_mfp_key(uint8_t key_idx, uint8_t vif_idx);
 
 void mm_timer_set(struct mm_timer_tag *timer, uint32_t value);
 void mm_timer_clear(struct mm_timer_tag *timer);
+uint32_t mm_env_get(void);
 
 void me_init_chan(struct mac_chan_op *chan);
 
@@ -4035,16 +4064,16 @@ void ke_msg_send(void const *param_ptr);
 // macro to function M2H_
 uint32_t inline_hal_machw_time(void);
 bool inline_hal_machw_time_past(uint32_t time);
-uint8_t inline_macsw_mac_tkip_getf();
-uint8_t inline_macsw_mac_ccmp_getf();
-uint8_t inline_macsw_mac_gcmp_getf();
+uint8_t inline_macsw_mac_tkip_getf(void);
+uint8_t inline_macsw_mac_ccmp_getf(void);
+uint8_t inline_macsw_mac_gcmp_getf(void);
 bool inline_hal_machw_he_support(void);
 
 // wifi statistics functions
-uint8_t export_stats_get_tx_mcs();
-uint8_t export_stats_get_rx_mcs();
-char* export_stats_get_rx_format();
-char* export_stats_get_tx_format();
+uint8_t export_stats_get_tx_mcs(void);
+uint8_t export_stats_get_rx_mcs(void);
+char* export_stats_get_rx_format(void);
+char* export_stats_get_tx_format(void);
 
 
 int8_t export_hal_desc_get_rssi(void *rx_vec_1, int8_t *rx_rssi);

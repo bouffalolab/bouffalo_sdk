@@ -55,34 +55,91 @@ bouffalolab />smta play http://iot-du-home-test.bj.bcebos.com/test/bp_32k_mono_3
 ```
 bouffalolab />smta stop
 ```
-### 3. 播放蓝牙音乐
 
-##### 3.1 开启蓝牙广播
+### 3. 播放多音频
+
+##### 3.1 播放在线音乐
+
+```
+bouffalolab />smta mixer play http://iot-du-home-test.bj.bcebos.com/test/bp_32k_mono_32kbps_03m53s.mp3 [vol]
+```
+
+##### 3.2 播放本地音乐
+
+```
+bouffalolab />smta mixer play file:///romfs/music.mp3 [vol]
+```
+
+##### 3.3 检查播放信息
+
+```
+bouffalolab />smta mixer info
+```
+
+##### 3.4 停止播放
+
+```
+bouffalolab />smta mixer stop [id]
+```
+
+##### 3.5 暂停播放
+
+```
+bouffalolab />smta mixer pause [id]
+```
+
+##### 3.6 恢复播放
+
+```
+bouffalolab />smta mixer resume [id]
+```
+
+##### 3.7 停止所有播放
+
+```
+bouffalolab />smta mixer stop_all [id]
+```
+
+##### 3.8 暂停所有播放
+
+```
+bouffalolab />smta mixer pause_all [id]
+```
+
+##### 3.9 恢复所有播放
+
+```
+bouffalolab />smta mixer resume_all [id]
+```
+
+### 4. 播放蓝牙音乐
+
+##### 4.1 开启蓝牙广播
 
 ```
 bouffalolab />smta a2dp 1
 ```
 
-##### 3.2 手机连接并播放音乐
+##### 4.2 手机连接并播放音乐
 手机打开蓝牙，查找并连接类似BouffaloMSP[XX:XX:XX]这样命名的设备，即可蓝牙播放音乐
 
-##### 3.3 关闭蓝牙广播
+##### 4.3 关闭蓝牙广播
 
 ```
 bouffalolab />smta a2dp 0
 ```
 
-### 4. 网络录音
+### 5. 网络录音
 
 tydb网络录音是基于websocket的局域网环境下传输工具, 开发板将本地录音的数据通过网络发送到局域网的PC端,可在PC端打开查看音频数据。工具tydb在examples/audio/player/tools/tydb 目录下，需要保证我们的板子已经连接到网络，并且需要保证与PC在统一局域网，可以相互Ping通
 
-##### 4.1 服务端
+##### 5.1 服务端
 
 ```
 tydb.exe record web 0.0.0.0:8090 ./
 ```
 
-##### 4.2 设备端
+##### 5.2 设备端
 
 设备端开启录音传输, `<dest_ip>` 表示目标PC的ip地址:
 

@@ -53,15 +53,12 @@ typedef struct {
 }base_sleepwk_cfg;
 
 typedef struct {
-    base_uart_cfg uart_cfg;
     base_sysmsg_cfg sysmsg_cfg;
     base_systime_stamp systime_stamp;
-    base_sleep_mode sleep_mode;
-    base_sleepwk_cfg sleepwk_cfg;
 }base_config;
 
 extern base_config *at_base_config;
-    
+
 int at_base_config_init(void);
 
 int at_base_config_save(const char *key);

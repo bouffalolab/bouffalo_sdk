@@ -93,11 +93,13 @@
 #endif
 #endif
 
-#if CONFIG_IPV6
+#ifdef CONFIG_IPV6
 #define LWIP_IPV6 1
-#endif 
+#endif
 
+#ifndef CONFIG_WL80211
 #define LWIP_HOOK_FILENAME        "lwiphooks.h"
+#endif
 
 #define LWIP_RAW                  1
 #define LWIP_MULTICAST_TX_OPTIONS 1

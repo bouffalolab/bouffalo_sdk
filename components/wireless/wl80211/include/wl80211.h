@@ -2,6 +2,7 @@
 #define __WL80211_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <sys/queue.h>
 #include <sys/tree.h>
 
@@ -18,6 +19,17 @@
 struct iovec {
   void *iov_base;
   size_t iov_len;
+};
+
+struct wl80211_scan_params {
+  uint8_t ssid_length;
+  uint8_t ssid[32];
+  uint8_t bssid[6];
+  int channels_cnt;
+  uint8_t channels[42];
+  uint32_t probe_cnt;
+  uint32_t duration;
+  bool passive;
 };
 
 struct wl80211_scan_ap_ind {
@@ -61,10 +73,15 @@ struct wl80211_scan_ops {
   void (*scan_ap_ind)(struct wl80211_scan_ops *, struct wl80211_scan_ap_ind *,
                       uint8_t *, uint16_t);
   void (*scan_done_ind)(struct wl80211_scan_ops *);
+  int is_connecting_scan;
 };
 
 /* wl80211 global state */
 struct wl80211_global_state {
+  char country_code[3];
+
+  uint16_t status_code;
+  uint16_t reason_code;
   unsigned int scanning : 1;
   unsigned int associated : 1;
   unsigned int authenticating : 1;
@@ -74,8 +91,12 @@ struct wl80211_global_state {
   uint8_t password[65];
   uint8_t bssid[6];
   uint16_t freq;
+  uint8_t chan_band;
+  uint8_t pmf_cfg;
+  uint8_t security;
   uint16_t aid;
   STAILQ_HEAD(, wl80211_scan_ops) scan_ops;
+  struct wl80211_scan_params scan_params;
 };
 extern struct wl80211_global_state wl80211_glb;
 
@@ -96,17 +117,46 @@ void wl80211_post_event(int code1, int code2);
 
 // wl80211 control command
 enum {
-  WL80211_CTRL_SCAN, // TODO add param
+  WL80211_CTRL_SCAN,
+  WL80211_CTRL_SCAN_PARAMS,
   WL80211_CTRL_STA_SET_BSSID,
   WL80211_CTRL_STA_SET_SSID,
   WL80211_CTRL_STA_SET_PSK_PMK,  // PMK Caching
   WL80211_CTRL_STA_SET_PASSWORD, // param akm, passwd, generate pmk
+  WL80211_CTRL_STA_SET_FREQ,
+  WL80211_CTRL_STA_SET_PMF,
   WL80211_CTRL_STA_CONNECT,      // param freq flags
   WL80211_CTRL_STA_SET_PS_MODE,  // set wifi ps mode
   WL80211_CTRL_STA_DISCONNECT,
+  WL80211_CTRL_STA_GET_MAC,
+  WL80211_CTRL_STA_GET_RSSI,
 };
 
 // wl80211 control api
 // return 0 : ok, negative : fail
 int wl80211_cntrl(int cmd, ...);
+
+// wl80211 get channel nums api
+// return 0 : ok, negative : fail
+int wl80211_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint8_t *c5G_cnt);
+
+// wl80211 get channel list api
+// return 0 : ok, negative : fail
+int wl80211_get_channel_list(const char *country_code, uint8_t **c24G_list, uint8_t **c5G_list);
+
+// wl80211 set country code api
+// return 0 : ok, negative : fail
+int wl80211_set_country_code(char *country_code);
+
+// wl80211 get country code api
+// return 0 : ok, negative : fail
+int wl80211_get_country_code(char *country_code);
+
+// wl80211 check channel valid api
+// return 0 : ok, negative : fail
+int wl80211_channel_valid_check(uint16_t channel);
+
+// wl80211 check frequency valid api
+// return 0 : ok, negative : fail
+int wl80211_freq_valid_check(uint16_t freq);
 #endif
