@@ -1,0 +1,39 @@
+# Components
+CONFIG_BFLB_LOG      =n
+CONFIG_FREERTOS      =y
+CONFIG_POSIX         =y
+CONFIG_TLSF          =y
+CONFIG_SHELL         =y
+CONFIG_LWIP          =y
+CONFIG_RF            =y
+CONFIG_MBEDTLS       =y
+CONFIG_DHCPD         =y
+CONFIG_PING          =y
+
+ifeq ($(CHIP),bl602)
+    CONFIG_WIFI4=y
+else
+    CONFIG_WIFI6=y
+    CONFIG_MACSW_SELECT = default
+    ifeq ($(CONFIG_WL80211),y)
+        CONFIG_BL_WPA_SUPPLICANT =y
+    else
+        CONFIG_FHOST=y
+    endif
+endif
+
+ifeq ($(CHIP),bl616d)
+    CONFIG_WRAM_FOR_AP_SIZE = 0x28000
+endif
+
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+CONFIG_VSNPRINTF_LONG_LONG  =y
+
+# mbedtls
+CONFIG_MBEDTLS_AES_USE_HW    =y
+CONFIG_MBEDTLS_BIGNUM_USE_HW =y
+CONFIG_MBEDTLS_ECC_USE_HW    =y
+CONFIG_MBEDTLS_SHA1_USE_HW   =y
+CONFIG_MBEDTLS_SHA256_USE_HW =y
+CONFIG_MBEDTLS_SHA512_USE_HW =y

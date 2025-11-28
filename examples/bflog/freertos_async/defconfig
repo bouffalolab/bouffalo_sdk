@@ -1,0 +1,20 @@
+
+CONFIG_SHELL                        =y
+
+CONFIG_BFLB_LOG                     =y
+
+CONFIG_FREERTOS                     =y
+
+CONFIG_FATFS                        =n
+
+CONFIG_BSP_SDH_SDCARD               =n
+CONFIG_FATFS_SDH_SDCARD             =n
+
+CONFIG_VSNPRINTF_FLOAT              =y
+CONFIG_VSNPRINTF_FLOAT_EX           =y
+CONFIG_VSNPRINTF_LONG_LONG          =y
+
+CONFIG_LOG_DISABLE                  =n
+CONFIG_ASSERT_DISABLE               =n
+CONFIG_LOG_LEVEL                    =3
+CONFIG_LOG_POOL_SIZE                =1024

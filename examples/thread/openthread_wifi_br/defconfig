@@ -1,0 +1,47 @@
+# Components
+CONFIG_NEWLIB                =n
+CONFIG_NEWLIB_STANDARD       =n
+CONFIG_BFLB_LOG                 =n
+CONFIG_FREERTOS              =y
+CONFIG_POSIX                 =n
+CONFIG_TLSF                  =y
+CONFIG_SHELL                 =y
+CONFIG_LWIP                  =y
+CONFIG_FHOST                 =y
+CONFIG_WIFI6                 =y
+CONFIG_RF                    =y
+CONFIG_DHCPD                 =y
+CONFIG_PING                  =y
+
+CONFIG_BFLB_MTD              =y
+CONFIG_PARTITION             =y
+CONFIG_LITTLEFS              =y
+
+CONFIG_VSNPRINTF_NANO        =y
+CONFIG_VSNPRINTF_FLOAT       =n
+CONFIG_VSNPRINTF_FLOAT_EX    =n
+CONFIG_VSNPRINTF_LONG_LONG   =y
+CONFIG_COREDUMP              =y
+
+# mbedtls
+CONFIG_MBEDTLS               =y
+CONFIG_MBEDTLS_AES_USE_HW    =y
+CONFIG_MBEDTLS_BIGNUM_USE_HW =y
+CONFIG_MBEDTLS_ECC_USE_HW    =y
+CONFIG_MBEDTLS_SHA1_USE_HW   =y
+CONFIG_MBEDTLS_SHA256_USE_HW =y
+CONFIG_MBEDTLS_SHA512_USE_HW =y
+
+# thread
+CONFIG_LMAC154               =y
+CONFIG_THREAD                =y
+
+# coex
+CONFIG_COEX                  =y
+CONFIG_COEX_WIFI_MODE        =1
+CONFIG_COEX_THREAD_MODE      =1
+CONFIG_COEX_TDMA_NONE        =2
+
+CONFIG_OTBR                  =y
+CONFIG_IPV6                  =y
+CONFIG_MACSW_SELECT = coex

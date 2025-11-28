@@ -1,0 +1,5 @@
+CONFIG_FREERTOS             =y
+CONFIG_SHELL                =y
+CONFIG_LWIP                 =y
+CONFIG_BSP_ETH_PHY          =y
+CONFIG_BSP_LWIP_NETIF_EMAC  =y

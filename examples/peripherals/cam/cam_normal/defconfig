@@ -1,0 +1,2 @@
+CONFIG_BSP_IMAGE_SENSOR =y
+CONFIG_PSRAM            =y

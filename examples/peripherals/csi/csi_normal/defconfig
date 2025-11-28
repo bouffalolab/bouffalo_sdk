@@ -1,0 +1,3 @@
+CONFIG_BSP_IMAGE_SENSOR =y
+CONFIG_PSRAM            =y
+CONFIG_BSP_CSI          =y

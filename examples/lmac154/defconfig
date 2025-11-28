@@ -1,0 +1,13 @@
+CONFIG_NEWLIB               =n
+CONFIG_NEWLIB_STANDARD      =n
+
+CONFIG_VSNPRINTF_NANO       =n
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+CONFIG_VSNPRINTF_LONG_LONG  =y
+
+CONFIG_BFLB_LOG             =n
+
+CONFIG_RF                   =y
+CONFIG_LMAC154              =y
+CONFIG_FREERTOS             =y

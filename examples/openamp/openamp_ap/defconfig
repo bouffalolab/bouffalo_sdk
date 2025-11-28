@@ -1,0 +1,26 @@
+CONFIG_NEWLIB               =y
+CONFIG_NEWLIB_STANDARD      =n
+
+CONFIG_VSNPRINTF_NANO       =n
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+CONFIG_VSNPRINTF_LONG_LONG  =y
+CONFIG_SCANF_FLOAT          =y
+CONFIG_SCANF_FLOAT_EX       =y
+
+CONFIG_BFLB_MTD                 =y
+CONFIG_PARTITION                =y
+CONFIG_BFLB_LOG                 =n
+CONFIG_FREERTOS                 =y
+CONFIG_SHELL                    =y
+#CONFIG_LOG_DISABLE             =n
+#CONFIG_ASSERT_DISABLE          =n
+#CONFIG_LOG_LEVEL               =3
+#CONFIG_LOG_POOL_SIZE           =1024
+#CONFIG_LOG_NCOLOR              =n
+
+CONFIG_IPC                           =y
+CONFIG_OPENAMP_VIRTIO_DEVICE_SUPPORT =n
+CONFIG_OPENAMP_VIRTIO_DRIVER_SUPPORT =y
+CONFIG_OPENAMP_PROXY                 =y
+CONFIG_RPMSG_SERVICE                 =y

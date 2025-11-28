@@ -1,0 +1,30 @@
+#!/usr/bin/expect
+
+# 设置超时
+set timeout 10
+
+# 配置串口 虚拟的串口暂时不支持配置波特率
+#exec stty -F /dev/ttyHD0 115200 cs8 -cstopb -parenb
+
+# 主程序
+spawn -open [open /dev/ttyHD0 "r+"]
+
+# 保存 spawn_id
+set serial_id $spawn_id
+
+# 等待并判断是否收到 OK 响应
+send -i $serial_id "AT+CWLAP\r\n"
+expect {
+    -i $serial_id "+CW:SCAN_DONE\r\n" {
+    }
+    -i $serial_id timeout {
+        puts "✗ 超时，未收到 OK 响应"
+    }
+    -i $serial_id eof {
+        puts "✗ 设备连接结束"
+    }
+}
+
+# 关闭串口
+close -i $serial_id
+

@@ -1,0 +1,14 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+CONFIG_MACSW_SELECT = bridge
+CONFIG_BFLB_LOG =n
+
+CONFIG_BSP_ETH_PHY            =y
+# CONFIG_BSP_LWIP_NETIF_EMAC  =y
+
+CONFIG_WIFI_ETH_BRIDGE =y
+CONFIG_WIFI_IPERF      =y
+CONFIG_NETIFD_NANO     =y
+CONFIG_NETBUS          =y
+CONFIG_NETIFD_NANO     =y
+CONFIG_COREDUMP        =n

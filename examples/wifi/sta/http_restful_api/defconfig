@@ -1,0 +1,6 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+CONFIG_WIFI_IPERF=y
+CONFIG_HTTPD=y
+# CONFIG_MBEDTLS_V3=y
+# CONFIG_WIFI_GATEWAY=y

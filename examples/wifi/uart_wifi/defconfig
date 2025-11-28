@@ -1,0 +1,9 @@
+#CONFIG_ATMODULE_NANO        =y
+#CONFIG_WL80211              =y
+
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+-include $(BL_SDK_BASE)/examples/wifi/at_defconfig
+
+CONFIG_PS_EXTEND            =y
+CONFIG_ATMODULE_UART        =y

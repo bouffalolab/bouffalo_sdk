@@ -1,0 +1,20 @@
+CONFIG_NEWLIB               =n
+CONFIG_NEWLIB_STANDARD      =n
+CONFIG_NEWLIB_FATFS         =n
+
+CONFIG_VSNPRINTF_NANO       =n
+CONFIG_VSNPRINTF_FLOAT      =y
+CONFIG_VSNPRINTF_FLOAT_EX   =y
+CONFIG_VSNPRINTF_LONG_LONG  =y
+
+CONFIG_FREERTOS             =n
+
+CONFIG_BFLB_LOG             =n
+
+# sdh lhal driver
+CONFIG_BSP_SDH_SD                   =y
+CONFIG_BSP_SDH_OSAL_POLLING_MODE    =n
+# CONFIG_BSP_SDH_LOG_LEVEL          =5
+
+CONFIG_FATFS                =y
+CONFIG_FATFS_SDH_SDCARD     =y

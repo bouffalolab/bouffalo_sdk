@@ -1,0 +1,11 @@
+CONFIG_PSRAM                =n
+
+CONFIG_BSP_LCD              =y
+CONFIG_BSP_TOUCH            =y
+
+CONFIG_FREERTOS             =y
+
+CONFIG_LVGL9                =y
+CONFIG_LVGL9_PORT_DISP      =y
+CONFIG_LVGL9_PORT_INDEV     =n
+CONFIG_LVGL9_PORT_FS        =n

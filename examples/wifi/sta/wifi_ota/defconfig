@@ -1,0 +1,7 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+CONFIG_MQTT          =y
+CONFIG_VFS           =y
+CONFIG_PARTITION     =y
+CONFIG_BFLB_OTA      =y
+CONFIG_BFLB_MTD      =y

@@ -1,0 +1,9 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+CONFIG_WIFI_MAT           =y
+CONFIG_WIFI_MAT_FULL_COPY =n
+CONFIG_NETBUS             =y
+CONFIG_NETIFD_NANO        =y
+
+# wifi
+CONFIG_WIFI_IPERF =y

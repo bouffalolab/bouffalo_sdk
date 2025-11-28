@@ -1,0 +1,104 @@
+# Components
+CONFIG_VLIBC =n
+CONFIG_BFLB_LOG =n
+CONFIG_FREERTOS =y
+CONFIG_POSIX =y
+CONFIG_TLSF =y
+CONFIG_SHELL =y
+CONFIG_LWIP =y
+CONFIG_FHOST =y
+CONFIG_WIFI6 =y
+CONFIG_RF =y
+CONFIG_MBEDTLS =y
+CONFIG_VFS =y
+CONFIG_PSRAM =y
+CONFIG_DHCPD =y
+CONFIG_PING =y
+
+# CherryUSB
+CONFIG_CHERRYUSB =y
+CONFIG_CHERRYUSB_OSAL =freertos
+# CONFIG_CHERRYUSB_DEVICE =y
+CONFIG_CHERRYUSB_HOST =y
+CONFIG_CHERRYUSB_HOST_VIDEO =y
+CONFIG_CHERRYUSB_HOST_AUDIO =y
+
+# psram ld mode
+CONFIG_PSRAM_COPY_CODE =n
+
+CONFIG_BSP_LCD =y
+CONFIG_BSP_IMAGE_SENSOR =y
+
+CONFIG_FATFS                =y
+CONFIG_FATFS_SDH_SDCARD     =y
+# sdh std driver
+# CONFIG_BSP_SDH_SDCARD       =y
+# CONFIG_BSP_SDH_SDCARD_INT   =y
+# sdh lhal driver
+CONFIG_BSP_SDH_SD                   =y
+CONFIG_BSP_SDH_OSAL_POLLING_MODE    =n
+# CONFIG_BSP_SDH_LOG_LEVEL          =5
+
+################### solution_utils config ###################
+CONFIG_SOLUTION_BUILD_FROM_LIB_MODE     =y # lib mode, for public use
+
+################### queue ###################
+CONFIG_SOLUTION_QUEUE_YUYV          =y
+CONFIG_SOLUTION_QUEUE_MJPEG         =y
+CONFIG_SOLUTION_QUEUE_AUDIO_IN      =y
+CONFIG_SOLUTION_QUEUE_AUDIO_OUT     =y
+
+################### audio ##################
+# internal codec
+CONFIG_SOLUTION_FUNC_AUDIO_AUADC    =n
+CONFIG_SOLUTION_FUNC_AUDIO_AUDAC    =n
+## external i2s codec
+CONFIG_SOLUTION_FUNC_AUDIO_I2S_IN   =y
+CONFIG_SOLUTION_FUNC_AUDIO_I2S_OUT  =y
+## external usb codec
+CONFIG_SOLUTION_FUNC_UAC_IN         =n
+CONFIG_SOLUTION_FUNC_UAC_OUT        =n
+## loopback mode
+CONFIG_SOLUTION_FUNC_AUDIO_LOOPBACK =y
+## es8388 codec init
+CONFIG_SOLUTION_FUNC_AUDIO_ES8388   =y
+
+################### video ##################
+## video default size
+CONFIG_SOLUTION_VIDEO_DEFAULT_WIDTH  =640
+CONFIG_SOLUTION_VIDEO_DEFAULT_HIGHT  =480
+## dbi display (yuyv >> dbi_displa=y
+CONFIG_SOLUTION_FUNC_DBI_DISP       =y
+## jpeg compression (yuyv >> jpeg)
+CONFIG_SOLUTION_FUNC_MJPEG          =y
+## dvp sensor (dvp >> yuyv)
+CONFIG_SOLUTION_FUNC_DVP            =y
+## jpeg from dvp (dvp >> yuyv >> jpeg)
+CONFIG_SOLUTION_FUNC_DVP_JPEG       =n
+## uvc yuyv mode (usb >> yuyv)
+CONFIG_SOLUTION_FUNC_UVC_YUYV       =n
+## uvc jpeg mode (usb >> jpeg)
+CONFIG_SOLUTION_FUNC_UVC_JPEG       =n
+
+################### other ##################
+## save to .avi (jpeg >> sd_card .avi)
+CONFIG_SOLUTION_FUNC_SDCARD_AVI_VIDS     =n
+## save to .avi (audio_pcm >> sd_card .avi)
+CONFIG_SOLUTION_FUNC_SDCARD_AVI_AUDS     =n
+
+## image_transmission (jpeg)
+CONFIG_SOLUTION_FUNC_HIBOOSTER      =y
+# CONFIG_HIBOOSTER_SIMU_DATA_TEST     =y
+CONFIG_SOLUTION_FUNC_RTSP           =n
+CONFIG_RTSP                         =n
+################### solution_utils config end ###################
+
+# Config
+## mbedtls
+CONFIG_MBEDTLS_AES_USE_HW =y
+CONFIG_MBEDTLS_BIGNUM_USE_HW =y
+CONFIG_MBEDTLS_ECC_USE_HW =y
+CONFIG_MBEDTLS_SHA1_USE_HW =y
+CONFIG_MBEDTLS_SHA256_USE_HW =y
+CONFIG_MBEDTLS_SHA512_USE_HW =y
+CONFIG_MACSW_SELECT = default

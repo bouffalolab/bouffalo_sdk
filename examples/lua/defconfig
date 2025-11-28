@@ -1,0 +1,15 @@
+CONFIG_NEWLIB               =y
+CONFIG_NEWLIB_STANDARD      =y
+CONFIG_NEWLIB_FATFS         =y
+
+# sdh lhal driver
+CONFIG_BSP_SDH_SD                   =y
+CONFIG_BSP_SDH_OSAL_POLLING_MODE    =n
+# CONFIG_BSP_SDH_LOG_LEVEL          =5
+
+CONFIG_FATFS                =y
+CONFIG_FATFS_SDH_SDCARD     =y
+
+CONFIG_BFLB_LOG             =y
+
+CONFIG_LUA_LHAL             =n

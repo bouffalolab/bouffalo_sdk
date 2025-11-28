@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Auto setup script: Connect to WiFi and configure static IP
+# Usage: ./connect_and_setip <ssid> [password]
+
+EASYAT_PATH="./userspace/easyat/src/easyat"
+INTERFACE="hd_eth0"
+
+# Check command line arguments
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    echo "Usage: $0 <ssid> [password]"
+    echo "Example: $0 ssid password"
+    echo "Example: $0 openssid"
+    exit 1
+fi
+
+SSID="$1"
+PASSWORD="$2"
+
+# Step 0: Check if easyat tool exists, compile if needed
+echo "---> Step 0: Checking easyat tool..."
+if [ ! -f "$EASYAT_PATH" ]; then
+    echo "easyat tool not found, compiling..."
+    cd ./easyat/src
+    if make; then
+        echo "✓ Compilation successful"
+        cd ../..
+    else
+        echo "✗ Compilation failed"
+        exit 1
+    fi
+else
+    echo "✓ easyat tool found"
+fi
+
+echo "---> Step 1: Connect AP"
+echo "Connecting to SSID: $SSID"
+if [ -n "$PASSWORD" ]; then
+    echo "Using password: [hidden]"
+else
+    echo "No password (open network)"
+fi
+
+if $EASYAT_PATH connect "$SSID" "$PASSWORD"; then
+    echo "✓ WiFi connection successful"
+else
+    echo "✗ WiFi connection failed"
+    exit 1
+fi
+
+echo "---> Step 2: Getting IP information from AT module..."
+
+# Get IP information
+IP_INFO=$($EASYAT_PATH get_link_status 2>/dev/null)
+
+# Extract IP, Gateway, Netmask
+IP=$(echo "$IP_INFO" | grep "+CIPSTA:ip:" | sed 's/.*+CIPSTA:ip:"\([^"]*\)".*/\1/')
+GATEWAY=$(echo "$IP_INFO" | grep "+CIPSTA:gateway:" | sed 's/.*+CIPSTA:gateway:"\([^"]*\)".*/\1/')
+NETMASK=$(echo "$IP_INFO" | grep "+CIPSTA:netmask:" | sed 's/.*+CIPSTA:netmask:"\([^"]*\)".*/\1/')
+
+
+# Check if information is complete
+if [ -z "$IP" ] || [ -z "$GATEWAY" ] || [ -z "$NETMASK" ]; then
+    echo "Error: Extracted info, IP:$IP  gw:$GATEWAY  mask:$NETMASK"
+    echo "Error: Failed to get complete IP information"
+    exit 1
+fi
+echo "✓ Extracted info: IP:$IP  gw:$GATEWAY  mask:$NETMASK"
+
+# Configure network interface
+echo "---> Step 3: Configuring $INTERFACE..."
+
+# Set IP address and netmask
+sudo ifconfig $INTERFACE $IP netmask $NETMASK up
+
+# Set default gateway
+# sudo route add default gw $GATEWAY $INTERFACE
+
+echo "✓ Static IP config done! Inf:$INTERFACE IP:$IP gw:$GATEWAY mask: $NETMASK"
+
+# Verify configuration
+echo "---> Step 4 Current config:"
+ip addr show $INTERFACE
+echo ""
+echo "Default gateway:"
+ip route show default
+

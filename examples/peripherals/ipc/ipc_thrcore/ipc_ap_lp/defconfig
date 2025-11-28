@@ -1,0 +1,2 @@
+CONFIG_BFLOG    =n
+CONFIG_SHELL    =y

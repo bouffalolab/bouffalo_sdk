@@ -1,0 +1,5 @@
+-include $(BL_SDK_BASE)/examples/bl616d_dualcore/defconfig
+
+CONFIG_BFLB_LOG    =n
+CONFIG_FREERTOS    =y
+CONFIG_SHELL       =y

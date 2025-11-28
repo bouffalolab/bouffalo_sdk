@@ -1,0 +1,10 @@
+# High-performance mode running on PSRAM, BL618: TCP-TX: 95Mbps; TCP-RX: 88Mbps;
+# CONFIG_PSRAM=y
+# CONFIG_PSRAM_COPY_CODE=y
+
+CONFIG_FREERTOS =y
+CONFIG_IPERF    =y
+CONFIG_SHELL    =y
+CONFIG_LWIP                 =y
+CONFIG_BSP_ETH_PHY          =y
+CONFIG_BSP_LWIP_NETIF_EMAC  =y

@@ -1,0 +1,49 @@
+
+CONFIG_FREERTOS =y
+CONFIG_SHELL =y
+
+CONFIG_CHERRYUSB =y
+CONFIG_CHERRYUSB_OSAL =freertos
+
+# USB Device configuration
+
+# Enable the CherryUSB device mode
+CONFIG_CHERRYUSB_DEVICE =y
+# Enable the CherryUSB device classes
+CONFIG_CHERRYUSB_DEVICE_CDC_ACM =y
+CONFIG_CHERRYUSB_DEVICE_HID =y
+CONFIG_CHERRYUSB_DEVICE_AUDIO =y
+CONFIG_CHERRYUSB_DEVICE_VIDEO =y
+
+# ecm and rndis are supported only on some chips
+ifneq (,$(filter $(CHIP),bl702 bl616 bl616l))
+    CONFIG_CHERRYUSB_DEVICE_CDC_RNDIS =y
+    CONFIG_CHERRYUSB_DEVICE_CDC_ECM =y
+    # Enable the E-PHY support for USB Ethernet Class
+    CONFIG_BSP_ETH_PHY =y
+endif
+
+# USB Host configuration
+# bl702 doesn't have enough ram to support the MSC class
+# Enable the CherryUSB host mode (bl702 only supports device mode)
+ifneq ($(CHIP), bl702)
+    CONFIG_CHERRYUSB_DEVICE_MSC =y
+    CONFIG_CHERRYUSB_HOST =y
+endif
+# Enable the CherryUSB host classes
+CONFIG_CHERRYUSB_HOST_CDC_ACM =y
+CONFIG_CHERRYUSB_HOST_CDC_ECM =y
+CONFIG_CHERRYUSB_HOST_HID =y
+CONFIG_CHERRYUSB_HOST_MSC =y
+
+# Enable the FatFS support for USB Mass Storage Class
+ifeq ($(CONFIG_CHERRYUSB_HOST_MSC),y)
+    CONFIG_FATFS =y
+    CONFIG_FATFS_USBH =y
+endif
+
+# Enable the LWIP support for USB CDC ECM Class
+ifeq ($(CONFIG_CHERRYUSB_HOST_CDC_ECM),y)
+    CONFIG_LWIP     =y
+    CONFIG_IPERF    =y
+endif

@@ -1,0 +1,4 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+CONFIG_HTTP        =y
+CONFIG_HTTP_CLIENT =y

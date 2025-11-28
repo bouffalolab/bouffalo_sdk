@@ -1,0 +1,89 @@
+# ============ Components ============
+CONFIG_NEWLIB                =n
+CONFIG_NEWLIB_STANDARD       =n
+CONFIG_BFLB_LOG                 =n
+CONFIG_FREERTOS              =y
+CONFIG_POSIX                 =y
+CONFIG_TLSF                  =y
+CONFIG_SHELL                 =y
+CONFIG_LWIP                  =y
+CONFIG_FHOST                 =y
+CONFIG_WIFI6                 =y
+CONFIG_RF                    =y
+CONFIG_MBEDTLS               =y
+# CONFIG_PSRAM                =y
+CONFIG_DHCPD                 =y
+CONFIG_PING                  =y
+#CONFIG_MQTT                  =y
+CONFIG_LITTLEFS              =y
+CONFIG_BFLB_MTD              =y
+CONFIG_BFLB_OTA              =y
+CONFIG_PARTITION             =y
+CONFIG_VSNPRINTF_NANO        =n
+CONFIG_VSNPRINTF_FLOAT       =y
+CONFIG_VSNPRINTF_FLOAT_EX    =y
+CONFIG_VSNPRINTF_LONG_LONG   =y
+CONFIG_COREDUMP              =n
+CONFIG_ROMFS                 =y
+
+
+# ============ mbedtls ============
+CONFIG_MBEDTLS_SELF_TEST     =n
+CONFIG_MBEDTLS_AES_USE_HW    =n
+CONFIG_MBEDTLS_BIGNUM_USE_HW =n
+CONFIG_MBEDTLS_ECC_USE_HW    =n
+CONFIG_MBEDTLS_SHA1_USE_HW   =n
+CONFIG_MBEDTLS_SHA256_USE_HW =n
+CONFIG_MBEDTLS_SHA512_USE_HW =n
+
+
+# ============ wifi ============
+CONFIG_IPERF                 =y
+
+
+# ============ BT ============
+CONFIG_BLUETOOTH =y
+CONFIG_BTBLECONTROLLER_LIB =ble1m2s1bredr1
+CONFIG_BLE_USE_MAC2 =n
+CONFIG_BT_STACK_CLI =n
+CONFIG_BT_BREDR              =y
+CONFIG_BT_A2DP               =y
+CONFIG_BT_AVRCP              =y
+CONFIG_BT_A2DP_SOURCE        =y
+CONFIG_BT_A2DP_SINK          =n
+CONFIG_BT_SETTINGS           =y
+
+
+# ============ coex ============
+CONFIG_COEX                  =y
+CONFIG_COEX_WIFI_MODE        =1
+CONFIG_COEX_BT_MODE          =1
+# CONFIG_COEX_THREAD_MODE    =1
+CONFIG_COEX_TDMA_NONE        =2
+
+CONFIG_COEX_LIB_WIFIBTSOURCE =1
+
+# ============ thread ============
+# CONFIG_LMAC154               =y
+# CONFIG_THREAD                =y
+
+
+# ============ lpfw ============
+# CONFIG_SDIO_LPAPP =y
+# CONFIG_LPAPP =y
+# CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW=y
+# CONFIG_PM =y
+# CONFIG_LWIP_LP =y
+CONFIG_POST_BUILDS_GENERATE_ROMFS=y
+
+
+# ============ sdio ============
+# CONFIG_HOSTROUTER =y
+# CONFIG_DHCP_IN_EMB =y
+# #CFG_BL616 =y
+# CONFIG_NETBUS =y
+
+
+# ============ hardware ============
+CONFIG_DCDC_ENABLE =n
+CONFIG_MACSW_SELECT = coex

@@ -1,0 +1,13 @@
+CONFIG_PSRAM        =n
+
+CONFIG_BFLB_LOG     =n
+
+CONFIG_BSP_LCD      =y
+CONFIG_BSP_TOUCH    =y
+
+CONFIG_FREERTOS             =y
+
+CONFIG_LVGL8                =y
+CONFIG_LVGL8_PORT_DISP      =y
+CONFIG_LVGL8_PORT_INDEV     =n
+CONFIG_LVGL8_PORT_FS        =n
