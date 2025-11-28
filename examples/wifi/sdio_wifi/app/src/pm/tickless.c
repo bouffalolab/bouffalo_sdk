@@ -25,7 +25,7 @@
 #define tickless_debugf(...)
 #endif
 
-int enable_tickless = 0;
+static int enable_tickless = 0;
 
 extern int ps_resume_flag;
 
@@ -51,6 +51,18 @@ void tickless_debug_who_wake_me(const char *name, TickType_t ticks)
     wake_next_tick = ticks;
 }
 #endif
+
+
+int tickless_enter(void)
+{
+    enable_tickless = 1;
+}
+
+int tickless_exit(void)
+{
+    enable_tickless = 0;
+}
+
 
 void lp_hook_pre_user(void *env)
 {

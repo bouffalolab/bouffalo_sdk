@@ -1,5 +1,5 @@
 SDK_DEMO_PATH ?= $(abspath .)
-BL_SDK_BASE ?= ./../../..
+BL_SDK_BASE ?= $(abspath  ./../../..)
 
 export BL_SDK_BASE
 
@@ -9,7 +9,6 @@ CONFIG_LMAC154_CMD ?= 0
 CONFIG_LMAC154_LOG ?= 0
 
 CROSS_COMPILE ?= riscv64-unknown-elf-
-MACSW_CONFIG_SELECT = coex
 
 cmake_definition+=-DOT_FTD=1
 cmake_definition+=-DOT_CLI=1
@@ -25,5 +24,4 @@ cmake_definition+=-DCONFIG_OTBR_REST=${OTBR_REST}
 cmake_definition+=-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-proj-config.h\"
 cmake_definition+=-DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-platform-config-check.h\"
 
--include $(SDK_DEMO_PATH)/.config
 include $(BL_SDK_BASE)/project.build

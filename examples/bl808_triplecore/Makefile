@@ -15,5 +15,4 @@ BL_SDK_BASE = ./../..
 
 export BL_SDK_BASE
 
--include $(SDK_DEMO_PATH)/.config
 include $(BL_SDK_BASE)/project.build

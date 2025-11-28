@@ -30,7 +30,7 @@
         /* Restore mstatus to its previous value */                                   \
         __asm__ volatile ("csrw mstatus, %0" : /* no output */ : "r" (irq_rest));     \
         if (etime - btime > 5) {                                                      \
-          printf("disable interrupt time %d ms too long. %s:%d\r\n",                  \
+          printf("disable interrupt time %ld ms too long. %s:%d\r\n",                  \
                   etime - btime, __func__, __LINE__);                                 \
         }                                                                             \
     } while (0);

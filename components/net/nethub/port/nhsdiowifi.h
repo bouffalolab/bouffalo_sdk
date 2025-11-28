@@ -25,9 +25,8 @@ extern const struct nhif_ops nhap_ops;
 /* TCPIPAP interface operation structure */
 extern const struct nhif_ops nhtcpipap_ops;
 
-/* Nethub initialization and registration functions */
-int nhsdiowifi_init(void);
-int nhsdiowifi_register_all_interfaces(void);
-void nhsdiowifi_deinit(void);
+/* Nethub sdiowifi api */
+int nethub_sdiowifi_init(void);
+void nethub_sdiowifi_deinit(void);
 
 #endif /* NHSDIOWIFI_H */

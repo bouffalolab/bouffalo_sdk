@@ -1,5 +1,5 @@
 #include <lwip/tcpip.h>
-#include "macsw/wl80211_mac.h"
+#include "wl80211_mac.h"
 
 _Static_assert(sizeof(struct wl80211_mac_tx_desc) <=
                    PBUF_LINK_ENCAPSULATION_HLEN,

@@ -12,10 +12,14 @@
 #include <bflb_efuse.h>
 #include <bflb_sec_trng.h>
 
+#include "mm.h"
+
 #if defined(BL616)
 #include <bl616_mfg_media.h>
 #elif defined(BL616L)
 #include <bl616l_mfg_media.h>
+#elif defined(BL616D)
+#include <bl616d_mfg_media.h>
 #endif
 
 #ifdef LP_APP
@@ -51,11 +55,9 @@ extern void wifi_event_handler(uint32_t code1, uint32_t code2);
 
 int platform_get_mac(uint8_t *mac)
 {
-#if defined(BL616)
     if (0 == mfg_media_read_macaddr_with_lock(mac, 1)) {
         return 0;
     }
-#endif
     return -1;
 }
 
@@ -87,14 +89,13 @@ void *rtos_malloc(uint32_t size)
 
 void *rtos_calloc(uint32_t nb_elt, uint32_t size)
 {
-    void *res = kcalloc(nb_elt, size);
-    if (res) {
-        memset(res, 0, nb_elt * size);
-    } else {
+    void *ptr;
+
+    ptr = kmalloc(nb_elt * size, MM_FLAG_PROP_ZERO);
+    if (NULL == ptr) {
         abort();
     }
-
-    return res;
+    return ptr;
 }
 
 void rtos_free(void *ptr)

@@ -7,7 +7,6 @@
 
 #if defined(BL616)
 #include "wl_api.h"
-#define WL_API_RMEM_ADDR    0x20010600
 #endif
 
 __attribute__((weak)) void btblecontroller_ble_irq_init(void *handler)

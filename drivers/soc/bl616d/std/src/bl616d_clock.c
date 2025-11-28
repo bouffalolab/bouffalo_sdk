@@ -238,6 +238,7 @@ static inline uint8_t ATTR_CLOCK_SECTION Clock_Get_Muxpll_80M_Sel_Val(void)
 
 static inline uint32_t ATTR_CLOCK_SECTION Clock_MCU_Clk_Mux_Output(uint8_t sel)
 {
+#if defined(CPU_MODEL_A0)
     if (sel == 0) {
         /* cpupll div2 clk */
         return Clock_Get_CPUPLL_Output(CLOCK_CPUPLL_DIV2);
@@ -247,6 +248,17 @@ static inline uint32_t ATTR_CLOCK_SECTION Clock_MCU_Clk_Mux_Output(uint8_t sel)
     } else if (sel == 2) {
         /* wifi pll 240m */
         return Clock_Get_WIFI_PLL_Output(240 * 1000 * 1000);
+#else
+    if (sel == 0) {
+        /* cpupll div1 clk */
+        return Clock_Get_CPUPLL_Output(CLOCK_CPUPLL_DIV1);
+    } else if (sel == 1) {
+        /* cpupll div3 clk */
+        return Clock_Get_CPUPLL_Output(CLOCK_CPUPLL_DIV3);
+    } else if (sel == 2) {
+        /* wifi pll 480m */
+        return Clock_Get_WIFI_PLL_Output(480 * 1000 * 1000);
+#endif
     } else if (sel == 3) {
         /* wifi pll 320m */
         return Clock_Get_WIFI_PLL_Output(320 * 1000 * 1000);
@@ -619,8 +631,12 @@ static inline uint32_t Clock_PKA_Clk_Mux_Output(uint8_t sel)
         /* mcu pbclk */
         return Clock_System_Clock_Get(BL_SYSTEM_CLOCK_MCU_PBCLK);
     } else if (sel == 1) {
+#if defined(CPU_MODEL_A0)
         /* mux 160m */
         return Clock_160M_Clk_Mux_Output(Clock_Get_Muxpll_160M_Sel_Val());
+#else
+        return Clock_Get_WIFI_PLL_Output(320 * 1000 * 1000);
+#endif
     } else {
         return 0;
     }
@@ -876,6 +892,7 @@ static inline uint32_t Clock_GPADC_Clk_Mux_Output(uint8_t sel)
     }
 }
 
+#if defined(CPU_MODEL_A0)
 static inline uint32_t Clock_I2S_Clk_Mux_Output(void)
 {
     /* WIFI pll clk */
@@ -887,6 +904,27 @@ static inline uint32_t Clock_I2S_Clk_Mux_Output(void)
 
     return Clock_Get_WIFI_PLL_Output(960 * 1000 * 1000) / tmpVal;
 }
+#else
+static inline uint32_t Clock_I2S_Clk_Mux_Output(void)
+{
+    /* WIFI pll clk */
+    uint32_t tmpVal;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_I2S_CFG0);
+    tmpVal = BL_GET_REG_BITS_VAL(tmpVal, GLB_REG_AUDIO_PLL_SEL);
+    if (tmpVal) {
+        /* wifipll postdiv */
+        tmpVal = BL_RD_REG(RF_BASE, RF_ANA1_WIFIPLL_CLKTREE_RF);
+        tmpVal = BL_GET_REG_BITS_VAL(tmpVal, RF_ANA1_WIFIPLL_POSTDIV);
+        return Clock_Get_WIFI_PLL_Output(960 * 1000 * 1000) / tmpVal;
+    } else {
+        /* cpupll postdiv */
+        tmpVal = BL_RD_REG(CCI_BASE, CCI_CPUPLL_CLKTREE_RF);
+        tmpVal = BL_GET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_POSTDIV);
+        return Clock_Get_CPUPLL_Output(CLOCK_CPUPLL_DIV1) / tmpVal;
+    }
+}
+#endif
 
 static inline uint8_t Clock_Get_I2S_Div_Val(void)
 {

@@ -17,36 +17,10 @@ const nh_forward_config_t* sdiowifi_get_forward_config(void);
 #endif
 
 /**
- * @brief Initialize nethub framework
- * @return NH_OK for success, other values for failure
- */
-int nhsdiowifi_init(void)
-{
-    EXAMPLE_DEBUG("Starting nethub framework initialization\n");
-
-    /* Initialize nethub framework */
-    int ret = nethub_init(sdiowifi_get_forward_config());
-    if (ret != NH_OK) {
-        EXAMPLE_DEBUG("nethub initialization failed: %d\n", ret);
-        return ret;
-    }
-
-    /* Start nethub framework */
-    ret = nethub_start();
-    if (ret != NH_OK) {
-        EXAMPLE_DEBUG("nethub start failed: %d\n", ret);
-        return ret;
-    }
-
-    EXAMPLE_DEBUG("nethub framework initialization completed\n");
-    return NH_OK;
-}
-
-/**
  * @brief Register all network interfaces
  * @return NH_OK for success, other values for failure
  */
-int nhsdiowifi_register_all_interfaces(void)
+static int nhsdiowifi_register_all_interfaces(void)
 {
     int ret;
 
@@ -97,9 +71,39 @@ int nhsdiowifi_register_all_interfaces(void)
 }
 
 /**
+ * @brief Initialize nethcomponents/net/nethub/port/nhsdiowifi.cub framework
+ * @return NH_OK for success, other values for failure
+ */
+int nethub_sdiowifi_init(void)
+{
+    EXAMPLE_DEBUG("Starting nethub framework initialization\n");
+
+    /* Initialize nethub framework */
+    int ret = nethub_init(sdiowifi_get_forward_config());
+    if (ret != NH_OK) {
+        EXAMPLE_DEBUG("nethub initialization failed: %d\n", ret);
+        return ret;
+    }
+
+    /* Start nethub framework */
+    ret = nethub_start();
+    if (ret != NH_OK) {
+        EXAMPLE_DEBUG("nethub start failed: %d\n", ret);
+        return ret;
+    }
+
+    EXAMPLE_DEBUG("nethub framework initialization completed\n");
+
+    /* Register all network interfaces */
+    nhsdiowifi_register_all_interfaces();
+
+    return NH_OK;
+}
+
+/**
  * @brief Deinitialize nethub framework
  */
-void nhsdiowifi_deinit(void)
+void nethub_sdiowifi_deinit(void)
 {
     EXAMPLE_DEBUG("Starting nethub framework deinitialization\n");
 

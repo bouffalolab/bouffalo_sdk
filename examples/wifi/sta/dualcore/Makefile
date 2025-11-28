@@ -1,23 +1,8 @@
-build_dirs += wifi_ap
-build_dirs += wifi_np
+SDK_DEMO_PATH ?= $(abspath .)
+BL_SDK_BASE ?= $(abspath  ./../../../../)
 
 CHIP ?= bl616d
+BUILD_DIR ?= build
+APP_NAME = wifi
 
-all: $(build_dirs)
-
-$(build_dirs):
-	make -C $@
-
-clean_all:
-	@for dir in $(build_dirs); do \
-		$(MAKE) -C $$dir clean; \
-	done
-
-.PHONY: $(build_dirs) clean_all
-
-BL_SDK_BASE = ./../../../..
-
-export BL_SDK_BASE
-
--include $(SDK_DEMO_PATH)/.config
-include $(BL_SDK_BASE)/project.build
+include $(BL_SDK_BASE)/tools/make/dualcore.mk

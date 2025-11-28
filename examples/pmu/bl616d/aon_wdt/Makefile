@@ -1,5 +1,5 @@
 SDK_DEMO_PATH ?= .
-BL_SDK_BASE ?= $(SDK_DEMO_PATH)/../../../..
+BL_SDK_BASE ?= $(abspath  $(SDK_DEMO_PATH)/../../../..)
 
 export BL_SDK_BASE
 
@@ -13,8 +13,6 @@ CROSS_COMPILE ?= riscv64-unknown-elf-
 
 LDO_KEEP_NURMAL_MODE_EN ?= n
 
-# add custom cmake definition
-#cmake_definition+=-Dxxx=sss
 cmake_definition+= -DLDO_KEEP_NURMAL_MODE_EN=$(LDO_KEEP_NURMAL_MODE_EN)
 
 include $(BL_SDK_BASE)/project.build

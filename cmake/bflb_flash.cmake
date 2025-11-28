@@ -90,23 +90,30 @@ add_custom_target(combine WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} ${combin
 
 # post_build
 set(post_build_cmds)
-foreach(item ${CONFIG_POST_BUILDS})
-    if("${item}" STREQUAL "CONCAT_WITH_LP_FW")
-        list(APPEND post_build_cmds
-            COMMAND ${CMAKE} -E echo "[lp_fw] concate with lp fw bin"
-            COMMAND ${BL_SDK_BASE}/tools/lpfw/patch_lpfw${TOOL_SUFFIX} ${BIN_FILE} ${BL_SDK_BASE}/tools/lpfw/bin/${CHIP}_lp_fw.bin)
+if(CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW)
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[lp_fw] concate with lp fw bin"
+        COMMAND ${BL_SDK_BASE}/tools/lpfw/patch_lpfw${TOOL_SUFFIX} ${BIN_FILE} ${BL_SDK_BASE}/tools/lpfw/bin/${CHIP}_lp_fw.bin)
+endif()
 
-    elseif("${item}" STREQUAL "GENERATE_ROMFS")
-        list(APPEND post_build_cmds
-            COMMAND ${CMAKE} -E echo "[romfs] generate romfs.bin using romfs directory"
-            COMMAND ${BL_SDK_BASE}/tools/genromfs/genromfs${TOOL_SUFFIX} -d romfs/ -f ./${BUILD_DIR}/build_out/romfs.bin)
+if(CONFIG_POST_BUILDS_GENERATE_ROMFS)
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[romfs] generate romfs.bin using romfs directory"
+        COMMAND ${BL_SDK_BASE}/tools/genromfs/genromfs${TOOL_SUFFIX} -d romfs/ -f ./${BUILD_DIR}/build_out/romfs.bin)
+endif()
 
-    elseif("${item}" STREQUAL "GENERATE_LITTLEFS")
-        list(APPEND post_build_cmds
-            COMMAND ${CMAKE} -E echo "[littlefs] generate littlefs.bin using littlefs directory"
-            COMMAND ${BL_SDK_BASE}/tools/genlfs/mklfs${TOOL_SUFFIX} -c lfs -b 4096 -p 256 -r 256 -s 0x71000 -i ./${BUILD_DIR}/build_out/littlefs.bin)
-    endif()
-endforeach()
+if(CONFIG_POST_BUILDS_GENERATE_LITTLEFS)
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[littlefs] generate littlefs.bin using littlefs directory"
+        COMMAND ${BL_SDK_BASE}/tools/genlfs/mklfs${TOOL_SUFFIX} -c lfs -b 4096 -p 256 -r 256 -s 0x71000 -i ./${BUILD_DIR}/build_out/littlefs.bin)
+endif()
+
+if(VSCODE_PARSE_EN AND CMAKE_EXPORT_COMPILE_COMMANDS)
+    list(APPEND post_build_cmds
+        COMMAND ${CMAKE} -E echo "[clangd] update compile_commands.json to .vscode"
+        COMMAND ${CMAKE} -E remove_directory ${BL_SDK_BASE}/.vscode/.cache
+        COMMAND ${CMAKE} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json ${BL_SDK_BASE}/.vscode/compile_commands.json)
+endif()
 
 add_custom_target(post_build WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} ${post_build_cmds})
 

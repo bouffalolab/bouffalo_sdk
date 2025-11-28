@@ -13,7 +13,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
-#include <mem.h>
 
 #include <lmac154.h>
 
@@ -58,9 +57,6 @@
  ****************************************************************************/
 
 static struct bflb_device_s *uart0;
-static wifi_conf_t conf = {
-    .country_code = "CN",
-};
 
 static char otbr_wifi_ssid[33];
 static char otbr_wifi_pass[65];
@@ -118,7 +114,7 @@ void wifi_event_handler(uint32_t code)
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
-            wifi_mgmr_init(&conf);
+            wifi_mgmr_task_start();
 
             if (strlen(otbr_wifi_ssid) > 0) {
                 int iret = wifi_mgmr_sta_quickconnect(otbr_wifi_ssid, otbr_wifi_pass, 0, 0);

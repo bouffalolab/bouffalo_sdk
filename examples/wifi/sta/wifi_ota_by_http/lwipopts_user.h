@@ -77,7 +77,11 @@
 #define MEMP_NUM_REASSDATA            LWIP_MIN((IP_REASS_MAX_PBUFS), 5)
 
 #define TCP_MSS                       (1500 - 40)
+#if (defined(BL602))
+#define TCP_WND                       (3 * TCP_MSS)
+#else
 #define TCP_WND                       (2 * MAC_RXQ_DEPTH * TCP_MSS)
+#endif
 #define TCP_SND_BUF                   (4 * TCP_MSS)
 
 #define TCP_QUEUE_OOSEQ               1
@@ -92,7 +96,8 @@
 #define MEM_MIN                       MEM_MIN_TCP
 #define MEM_ALIGNMENT                 4
 
-#define LWIP_HEAP_SIZE (15 * 1024)
+#define LWIP_HEAP_SIZE (14 * 1024)
+
 #ifdef LWIP_HEAP_SIZE
 #define MEM_SIZE LWIP_HEAP_SIZE
 #else

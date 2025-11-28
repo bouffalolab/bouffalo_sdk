@@ -778,7 +778,6 @@ int32_t rfparam_init(uint32_t base_addr, void *rf_para, uint32_t apply_flag)
     uint32_t xtal_value;
     bflb_ef_ctrl_com_trim_t trim;
 #if defined(WL_API_RMEM_EN) && WL_API_RMEM_EN
-#define WL_API_RMEM_ADDR 0x20010600
     g_rfparam_cfg = wl_cfg_get((uint8_t *)WL_API_RMEM_ADDR);
 #else
     g_rfparam_cfg = wl_cfg_get();

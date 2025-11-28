@@ -10,7 +10,7 @@
 
 #include "bflb_core.h"
 
-#include "mem.h"
+#include "mm.h"
 
 #include <FreeRTOS.h>
 #include <task.h>
@@ -164,7 +164,7 @@ frame_queue_ctrl_t *frame_queue_create(frame_queue_ctrl_init_cfg_t *cfg)
     int ret = 0;
     frame_elem_t *elem_head;
 
-    frame_queue_ctrl_t *ctrl = kmalloc(sizeof(frame_queue_ctrl_t), MM_NORMAL);
+    frame_queue_ctrl_t *ctrl = kmalloc(sizeof(frame_queue_ctrl_t), 0);
     memset(ctrl, 0, sizeof(frame_queue_ctrl_t));
 
     /* Create pool queue (memory block pool management) */

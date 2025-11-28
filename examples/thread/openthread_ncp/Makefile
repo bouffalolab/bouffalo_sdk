@@ -1,5 +1,5 @@
 SDK_DEMO_PATH ?= $(abspath .)
-BL_SDK_BASE ?= ./../../..
+BL_SDK_BASE ?= $(abspath  ./../../..)
 
 export BL_SDK_BASE
 
@@ -22,5 +22,4 @@ cmake_definition+=-DOT_SERIAL_LINE_SIZE=256
 cmake_definition+=-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-proj-config.h\"
 cmake_definition+=-DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-platform-config-check.h\"
 
--include $(SDK_DEMO_PATH)/.config
 include $(BL_SDK_BASE)/project.build

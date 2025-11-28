@@ -1,5 +1,5 @@
 SDK_DEMO_PATH ?= $(abspath .)
-BL_SDK_BASE ?= ./../../..
+BL_SDK_BASE ?= $(abspath  ./../../..)
 
 export BL_SDK_BASE
 

@@ -7,11 +7,7 @@ CHIP ?= bl616d
 BOARD ?= bl616ddk
 CPU_ID ?= ap
 CROSS_COMPILE ?= riscv64-unknown-elf-
-MACSW_CONFIG_SELECT = default
 
-# add custom cmake definition
-#cmake_definition+=-Dxxx=sss
 
 include $(BL_SDK_BASE)/project.build
--include $(SDK_DEMO_PATH)/.config
 

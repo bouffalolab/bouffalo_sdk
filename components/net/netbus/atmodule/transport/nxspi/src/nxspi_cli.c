@@ -4,7 +4,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
-#include <mem.h>
 
 #include "bflb_clock.h"
 #include "bflb_mtimer.h"

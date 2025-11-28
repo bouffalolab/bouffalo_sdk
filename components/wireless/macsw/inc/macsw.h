@@ -33,6 +33,8 @@
 #define VERSION_MACSW_MINOR 7
 #define VERSION_MACSW_PATCH 10
 
+/// Country code string length (ISO 3166-1 alpha-2 code with null terminator)
+#define SCANU_COUNTRY_CODE_LEN 3
 /// define the force inlining attribute for this compiler
 #ifndef __INLINE
 #define __INLINE static __attribute__((__always_inline__)) inline
@@ -1904,6 +1906,15 @@ struct dbg_get_sys_stat_cfm
 };
 #endif
 
+/// Structure containing the parameters of the @ref SCANU_COUNTRY_CODE_IND message
+struct scanu_country_code_ind
+{
+    /// Index of the VIF that received the country code
+    uint8_t vif_idx;
+    /// Country code (ISO 3166-1 alpha-2 code with null terminator)
+    char country_code[SCANU_COUNTRY_CODE_LEN];
+};
+
 /// Structure containing the parameters of the @ref SCANU_GET_SCAN_RESULT_REQ message
 struct scanu_get_scan_result_req
 {
@@ -1991,6 +2002,8 @@ struct apm_start_req
     uint8_t tim_len;
     /// Index of the VIF for which the AP is started
     uint8_t vif_idx;
+    /// Ap mode
+    uint32_t ap_mode;
 };
 
 /// Structure containing the parameters of the @ref APM_START_CFM message.
@@ -3003,6 +3016,8 @@ enum
     SCANU_GET_SCAN_RESULT_REQ,
     /// Scan result confirmation.
     SCANU_GET_SCAN_RESULT_CFM,
+    /// Indicate country code to fhost
+    SCANU_COUNTRY_CODE_IND,
 };
 
 enum mm_msg_tag

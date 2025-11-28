@@ -8,7 +8,7 @@
 #include "bflb_core.h"
 #include "bflb_sdio2.h"
 #include "bflb_sdio3.h"
-#include "mem.h"
+#include "mm.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -409,7 +409,7 @@ bflb_msg_ctrl_t *bflb_msg_ctrl_init(bflb_msg_ctrl_ops_t *sdio_ops)
     frame_queue_ctrl_t *dnld_queue_ctrl = NULL;
     bflb_msg_ctrl_t *msg_ctrl = NULL;
 
-    msg_ctrl = kmalloc(sizeof(bflb_msg_ctrl_t), MM_NORMAL);
+    msg_ctrl = kmalloc(sizeof(bflb_msg_ctrl_t), 0);
     memset(msg_ctrl, 0, sizeof(bflb_msg_ctrl_t));
 
     if (msg_ctrl == NULL) {

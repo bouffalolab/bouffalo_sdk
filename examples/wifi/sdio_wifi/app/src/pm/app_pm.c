@@ -19,13 +19,16 @@
 #include <bl616_glb.h>
 #include <bl616_glb_gpio.h>
 #include <bl616_hbn.h>
+#include "pm_manager.h"
 
 #include <board.h>
 #include <board_rf.h>
 #include <shell.h>
 #include <bl616_glb.h>
 
-extern int enable_tickless;
+
+extern int tickless_enter(void);
+extern int tickless_exit(void);
 
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {
@@ -169,26 +172,48 @@ int cmd_wifi_lp(int argc, char **argv)
 
 extern bl_lp_fw_cfg_t lpfw_cfg;
 
-void set_dtim_config(int dtim)
-{
-    lpfw_cfg.dtim_origin = dtim;
-
-    wifi_mgmr_sta_ps_enter();
-}
-
 static void cmd_tickless(int argc, char **argv)
 {
-    if ((argc > 1) && (argv[1] != NULL)) {
-        printf("%s\r\n", argv[1]);
-        lpfw_cfg.dtim_origin = atoi(argv[1]);
+    int broadcast = 0;
+
+    if (argc > 2) {
+        if (argv[2] != NULL) {
+            broadcast = atoi(argv[2]);
+        } else {
+            broadcast = 0;
+        }
+
+        if (broadcast == 0) {
+            if (argv[1] != NULL) {
+                lpfw_cfg.dtim_origin = atoi(argv[1]);
+            } else {
+                lpfw_cfg.dtim_origin = 10;
+            }
+        }
+    } else if (argc > 1) {
+        broadcast = 0;
+        if (argv[1] != NULL) {
+            lpfw_cfg.dtim_origin = atoi(argv[1]);
+        } else {
+            lpfw_cfg.dtim_origin = 10;
+        }
     } else {
         lpfw_cfg.dtim_origin = 10;
+        broadcast = 0;
     }
 
-    bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
+    printf("dtim_origin: %d\r\n", lpfw_cfg.dtim_origin);
+    printf("broadcast: %d\r\n", broadcast);
 
-    printf("sta_ps %ld\r\n", wifi_mgmr_sta_ps_enter());
-    enable_tickless = 1;
+    if (broadcast) {
+        enable_multicast_broadcast = 1;
+        lpfw_cfg.bcmc_dtim_mode = 1;
+    } else {
+        enable_multicast_broadcast = 0;
+        lpfw_cfg.bcmc_dtim_mode = 0;
+    }
+
+    pm_enable_tickless();
 }
 
 static int test_tcp_keepalive(int argc, char **argv)
@@ -254,7 +279,7 @@ static int test_tcp_keepalive(int argc, char **argv)
         bl_lp_fw_bcn_loss_cfg_dtim_default(lpfw_cfg.dtim_origin);
 
         printf("sta_ps %ld\r\n", wifi_mgmr_sta_ps_enter());
-        enable_tickless = 1;
+        tickless_enter();
     }
 #endif
 
@@ -305,7 +330,7 @@ static void cmd_io_dbg(int argc, char **argv)
 
 static void lp_io_wakeup_callback(uint64_t wake_up_io_bits)
 {
-    enable_tickless = 0;
+    tickless_exit();
 
      //TODO ;can not call in interupt context
     //if (wifi_mgmr_sta_state_get()) {
@@ -609,7 +634,7 @@ static void xtal32k_check_entry_task(void *pvParameters)
 
 void timerCallback(TimerHandle_t xTimer)
 {
-    enable_tickless = 0;
+    tickless_exit();
     xTimerDelete(xTimer, portMAX_DELAY);
 
     //if (wifi_mgmr_sta_state_get()) {
@@ -686,7 +711,7 @@ void app_pm_enter_pds15(void)
         lp_timerouts_ms = 0;
     }
 
-    enable_tickless = 1;
+    tickless_enter();
 }
 
 int app_pm_init(void)
@@ -715,5 +740,5 @@ int app_pm_init(void)
     puts("[OS] Create xtal32k_check_entry task...\r\n");
     xTaskCreate(xtal32k_check_entry_task, (char*)"xtal32k_check_entry", 512, NULL, 31, &xtal32k_check_entry_task_hd);
 
-    return;
+    return 0;
 }

@@ -53,7 +53,6 @@ extern int32_t (*shared_pds_default_level_config)(uint32_t*, uint32_t);
 #define PDS_WAKEUP_DELAY_CNT      (33)
 
 
-#define WL_API_RMEM_ADDR      0x20010600
 #define LP_FW_PRE_JUMP_ADDR   0x20010000
 #define BL616_UART_TX         21
 #define BL616_UART_RX         22

@@ -47,9 +47,6 @@ struct bflb_device_s *gpio;
  ****************************************************************************/
 
 
-static wifi_conf_t conf = {
-    .country_code = "CN",
-};
 
 extern void shell_init_with_task(struct bflb_device_s *shell);
 
@@ -78,7 +75,7 @@ void wifi_event_handler(uint32_t code)
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
-            wifi_mgmr_init(&conf);
+            wifi_mgmr_task_start();
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);

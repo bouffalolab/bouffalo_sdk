@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
+#if CONFIG_CLOCK_SOURCE_EF_PARAM
 #include "easyflash.h"
+#endif
 #include "FreeRTOS.h"
 #include "task.h"
 #include "bl616_glb.h"

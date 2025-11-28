@@ -5,6 +5,7 @@
 |      CHIP        | Remark |
 |:----------------:|:------:|
 |BL616/BL618       |        |
+|BL602             |        |
 
 ## Compile
 
@@ -12,6 +13,12 @@
 
 ```
 make CHIP=bl616 BOARD=bl616dk
+```
+
+- BL602
+
+```
+make CHIP=bl602 BOARD=bl602dk
 ```
 
 ## Program Flash
@@ -35,13 +42,12 @@ make flash COMX=xxx ## xxx is your com name
                     Password:12345678
 ```
 
-### Start simple OTA server
+### Start HTTPS OTA server
 
-Run an http server using the python command in the directory where the OTA bin file is located. like this:
+Run an https server using the python command in the directory where the OTA bin file is located. like this:
 
 ```bash
-$ cd build/build_out
-$ python -m http.server 3365
+$ python https.py --https --cert ./ssl/server_1.crt --key ./ssl/server_1.key
 ```
 
 ### Connect wifi
@@ -53,7 +59,7 @@ When this program is downloaded to the chip, it will automatically search for th
 /* config your wifi ssid and password */
 static const uint8_t wifi_sta_connet[] = "wifi_sta_connect BL_TEST 12345678\r";
 /* config your OTA server and port */
-static const uint8_t wifi_ota_test[] = "wifi_ota_test 192.168.1.2 3365 /wifi_ota_bl616.bin.ota\r";
+static const uint8_t wifi_ota_test[] = "wifi_ota_test https://192.168.31.112:5000/build/build_out/wifi_ota_bl616.bin.ota\r";
 
 ```
 
@@ -62,7 +68,7 @@ On BL616 board, using <wifi_sta_connect> command connect your WiFi router, and s
 
 ```bash
 bouffalolab />wifi_sta_connect BL_TEST 12345678
-bouffalolab />wifi_ota_test 192.168.1.2 3365 /wifi_ota_bl616.bin.ota
+bouffalolab />wifi_ota_test https://192.168.31.112:5000/build/build_out/wifi_ota_bl616.bin.ota
 
 ```
 

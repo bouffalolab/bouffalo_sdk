@@ -167,10 +167,6 @@ TabWidth:	4
 UseTab:	Never
 
 ---
-# C语言特定配置
-Language: C
-
----
 # C++特定配置
 Language: Cpp
 Standard: Cpp03

@@ -1,7 +1,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
-#include <mem.h>
 
 #include <lwip/tcpip.h>
 #include <lwip/sockets.h>
@@ -25,9 +24,6 @@
 #define TASK_PRIORITY_FW (16)
 
 TaskHandle_t wifi_fw_task;
-static wifi_conf_t conf = {
-    .country_code = "CN",
-};
 
 static void hostrouter(void *arg)
 {
@@ -45,7 +41,7 @@ void wifi_event_handler(uint32_t code, uint32_t code1)
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
-            wifi_mgmr_init(&conf);
+            wifi_mgmr_task_start();
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);

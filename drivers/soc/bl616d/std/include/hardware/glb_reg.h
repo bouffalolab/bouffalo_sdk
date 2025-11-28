@@ -617,6 +617,21 @@
 #define GLB_REG_I2S_DO_REF_CLK_SEL_LEN                          (1U)
 #define GLB_REG_I2S_DO_REF_CLK_SEL_MSK                          (((1U<<GLB_REG_I2S_DO_REF_CLK_SEL_LEN)-1)<<GLB_REG_I2S_DO_REF_CLK_SEL_POS)
 #define GLB_REG_I2S_DO_REF_CLK_SEL_UMSK                         (~(((1U<<GLB_REG_I2S_DO_REF_CLK_SEL_LEN)-1)<<GLB_REG_I2S_DO_REF_CLK_SEL_POS))
+#define GLB_REG_AUDIO_PLL_SEL                                   GLB_REG_AUDIO_PLL_SEL
+#define GLB_REG_AUDIO_PLL_SEL_POS                               (15U)
+#define GLB_REG_AUDIO_PLL_SEL_LEN                               (1U)
+#define GLB_REG_AUDIO_PLL_SEL_MSK                               (((1U<<GLB_REG_AUDIO_PLL_SEL_LEN)-1)<<GLB_REG_AUDIO_PLL_SEL_POS)
+#define GLB_REG_AUDIO_PLL_SEL_UMSK                              (~(((1U<<GLB_REG_AUDIO_PLL_SEL_LEN)-1)<<GLB_REG_AUDIO_PLL_SEL_POS))
+#define GLB_REG_I2S_MCLK_DIV                                    GLB_REG_I2S_MCLK_DIV
+#define GLB_REG_I2S_MCLK_DIV_POS                                (16U)
+#define GLB_REG_I2S_MCLK_DIV_LEN                                (6U)
+#define GLB_REG_I2S_MCLK_DIV_MSK                                (((1U<<GLB_REG_I2S_MCLK_DIV_LEN)-1)<<GLB_REG_I2S_MCLK_DIV_POS)
+#define GLB_REG_I2S_MCLK_DIV_UMSK                               (~(((1U<<GLB_REG_I2S_MCLK_DIV_LEN)-1)<<GLB_REG_I2S_MCLK_DIV_POS))
+#define GLB_REG_I2S_MCLK_EN                                     GLB_REG_I2S_MCLK_EN
+#define GLB_REG_I2S_MCLK_EN_POS                                 (22U)
+#define GLB_REG_I2S_MCLK_EN_LEN                                 (1U)
+#define GLB_REG_I2S_MCLK_EN_MSK                                 (((1U<<GLB_REG_I2S_MCLK_EN_LEN)-1)<<GLB_REG_I2S_MCLK_EN_POS)
+#define GLB_REG_I2S_MCLK_EN_UMSK                                (~(((1U<<GLB_REG_I2S_MCLK_EN_LEN)-1)<<GLB_REG_I2S_MCLK_EN_POS))
 
 /* 0x1B0 : spi_cfg0 */
 #define GLB_SPI_CFG0_OFFSET                                     (0x1B0)
@@ -9842,7 +9857,11 @@ struct  glb_reg {
             uint32_t reg_i2s_di_ref_clk_sel         :  1; /* [    6],        r/w,        0x0 */
             uint32_t reg_i2s_ref_clk_en             :  1; /* [    7],        r/w,        0x1 */
             uint32_t reg_i2s_do_ref_clk_sel         :  1; /* [    8],        r/w,        0x0 */
-            uint32_t reserved_9_31                  : 23; /* [31: 9],       rsvd,        0x0 */
+            uint32_t reserved_9_14                  :  6; /* [14: 9],       rsvd,        0x0 */
+            uint32_t reg_audio_pll_sel              :  1; /* [   15],        r/w,        0x0 */
+            uint32_t reg_i2s_mclk_div               :  6; /* [21:16],        r/w,        0x1 */
+            uint32_t reg_i2s_mclk_en                :  1; /* [   22],        r/w,        0x1 */
+            uint32_t reserved_23_31                 :  9; /* [31:23],       rsvd,        0x0 */
         }BF;
         uint32_t WORD;
     } i2s_cfg0;

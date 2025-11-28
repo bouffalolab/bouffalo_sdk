@@ -34,6 +34,7 @@
 
 BL_Sem_t scan_sig = NULL;
 
+extern int wifi_mgmr_internel_init(void);
 extern int bl606a0_wifi_init(wifi_conf_t *conf);
 err_t bl606a0_wifi_netif_init(struct netif *netif);
 static scan_complete_cb_t scan_cb;

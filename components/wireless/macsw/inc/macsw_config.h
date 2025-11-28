@@ -61,8 +61,8 @@
 #define CFG_PLATFORM_DMA_ENABLE 1
 #endif
 
-#if defined(MACSW_CONFIG_SELECT)
-#include MACSW_CONFIG_SELECT
+#if defined(CONFIG_MACSW_SELECT_INCLUDE)
+#include CONFIG_MACSW_SELECT_INCLUDE
 #endif
 
 /* enable ps by default */

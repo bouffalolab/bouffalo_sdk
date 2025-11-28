@@ -15,10 +15,6 @@
 
 #define USER_UNUSED(a) ((void)(a))
 
-#if defined(WL_API_RMEM_EN) && WL_API_RMEM_EN
-#define WL_API_RMEM_ADDR    0x20010600
-#endif
-
 static int ctl_rf_configuration(enum board_ctl_ops ops, va_list args)
 {
   struct wl_cfg_t *wl_cfg;

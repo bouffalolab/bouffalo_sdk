@@ -10,7 +10,7 @@
 #include "bl808_uhs_phy.h"
 #include "board.h"
 
-#include "mem.h"
+#include "mm.h"
 
 #ifdef CONFIG_BSP_SDH_SDCARD
 #include "sdh_sdcard.h"
@@ -228,6 +228,23 @@ static void console_init()
     bflb_uart_set_console(uart0);
 }
 
+void ram_heap_init(void)
+{
+    size_t heap_len;
+
+    /* ram heap init */
+    mem_manager_init();
+
+    /* ocram heap init */
+    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+
+    /* ram info dump */
+    printf("dynamic memory init success\r\n"
+           "  ocram heap size: %d Kbyte \r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+}
+
 #if defined(CPU_M0)
 void board_init(void)
 {
@@ -246,6 +263,9 @@ void board_init(void)
     bflb_irq_initialize();
 
     console_init();
+
+    /* heap init */
+    ram_heap_init();
 
 #ifdef CONFIG_PSRAM
 #ifndef CONFIG_PSRAM_COPY_CODE
@@ -273,16 +293,11 @@ void board_init(void)
     // pmem_init((void *)&__psram_heap_base, heap_len);
 #endif
 
-    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
-
     bl_show_log();
     if (ret != 0) {
         printf("flash init fail!!!\r\n");
     }
     bl_show_flashinfo();
-
-    printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
     printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
     printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));
@@ -324,14 +339,12 @@ void board_init(void)
 
     bflb_irq_initialize();
 
-    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
-
     console_init();
 
-    bl_show_log();
+    /* heap init */
+    ram_heap_init();
 
-    printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+    bl_show_log();
 
     printf("sig1:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG1));
     printf("sig2:%08x\r\n", BL_RD_REG(GLB_BASE, GLB_UART_CFG2));

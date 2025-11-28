@@ -345,9 +345,6 @@ macro(project name)
 
   include(${BL_SDK_BASE}/cmake/bflb_flash.cmake)
   include(${BL_SDK_BASE}/cmake/footprint.cmake)
-  if(VSCODE_PARSE_EN)
-    include(${BL_SDK_BASE}/cmake/gen_c_cpp_properties_json.cmake)
-  endif()
 
   file(REMOVE "${BUILD_DIR}/generated/autoconf_new.h")
   file(APPEND "${BUILD_DIR}/generated/autoconf_new.h"

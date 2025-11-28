@@ -15,14 +15,12 @@
 #include "bl_efuse.h"
 #include "bflb_efuse.h"
 #endif
-#define WL_API_RMEM_ADDR    0x20010600
 #endif
 
 #if defined(BL616D)
 #include "bl616d_glb.h"
 #include "wl_api.h"
 #include "bl616d_pds.h"
-#define WL_API_RMEM_ADDR    0x20010600
 #endif
 
 #if defined(BL616L)

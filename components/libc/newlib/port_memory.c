@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <reent.h>
 
-#include "mem.h"
+#include "mm.h"
 
 /*****************************************************************************
 * @brief        allocates space (disable)
@@ -29,7 +29,7 @@ void *_malloc_r(struct _reent *reent, size_t size)
 {
     void *mem;
 
-    mem = kmalloc(size, 0);
+    mem = kmalloc(size, MM_FLAG_ALIGN_CACHE);
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
@@ -73,7 +73,7 @@ void *_calloc_r(struct _reent *reent, size_t nmenb, size_t size)
 {
     void *mem;
 
-    mem = kcalloc(nmenb, size);
+    mem = kmalloc(size * nmenb, MM_FLAG_ALIGN_CACHE | MM_FLAG_PROP_ZERO);
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;
@@ -95,7 +95,7 @@ void *_memalign_r(struct _reent *reent, size_t align, size_t size)
 {
     void *mem;
 
-    mem = kmemalign(align, size);
+    mem = kmemalign(size, align);
 
     if (mem == NULL) {
         reent->_errno = ENOMEM;

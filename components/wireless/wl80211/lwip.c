@@ -12,7 +12,7 @@
 #include <lwip/pbuf.h>
 #include <lwip/tcpip.h>
 
-#include "macsw/wl80211_mac.h"
+#include "wl80211_mac.h"
 
 struct netif eth_wl80211_netif;
 

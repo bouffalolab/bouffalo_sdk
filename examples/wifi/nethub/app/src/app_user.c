@@ -36,12 +36,8 @@ int app_user_init(void)
     bflb_mtd_init();
     easyflash_init();
 
-    /* nethub */
-    // nethub_init();
-
-    /* nethubsdiowifi init */
-    nhsdiowifi_init();
-    nhsdiowifi_register_all_interfaces();
+    /* nethub init */
+    nethub_sdiowifi_init();
 
     /* AT moudle start */
     app_atmodule_init();

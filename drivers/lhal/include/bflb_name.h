@@ -147,4 +147,6 @@
 #define BFLB_NAME_USB_V2         "usb_v2"
 #define BFLB_NAME_DVP_RASTER     "dvp_raster"
 #define BFLB_NAME_DPI            "dpi"
+#define BFLB_NAME_DSI            "dsi"
+
 #endif

@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "wl80211.h"
-#include "macsw/wl80211_mac.h"
+#include "wl80211_mac.h"
 #include "supplicant_api.h"
 #include "rtos_al.h"
 #include "wifi_mgmr.h"

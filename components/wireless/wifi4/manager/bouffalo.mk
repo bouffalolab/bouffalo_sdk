@@ -32,6 +32,7 @@ COMPONENT_SRCS := bl60x_wifi_driver/ipc_host.c \
 COMPONENT_OBJS := $(patsubst %.c,%.o, $(COMPONENT_SRCS))
 
 COMPONENT_SRCDIRS := bl60x_wifi_driver
+CPPFLAGS += -DBL_IOT_SDK
 
 ifeq ($(CONFIG_CHIP_NAME),BL602)
 CPPFLAGS += -DCFG_TXDESC="2"

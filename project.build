@@ -84,9 +84,16 @@ CONFIG_ANTI_ROLLBACK ?= n
 CONFIG_APP_ANTI_ROLLBACK_VER ?= 0
 CONFIG_XTAL_POWER_TYPE_ACTIVE ?= n
 COMX ?=COM5
+CONFIG_COMX := $(COMX)
 BAUDRATE ?=2000000
 BOARD_DIR ?=
 VSCODE_PARSE_EN ?=y
+COMPILE_COMMANDS ?=n
+
+ifneq ($(wildcard $(SDK_DEMO_PATH)/defconfig),)
+include $(SDK_DEMO_PATH)/defconfig
+endif
+CONFIG_VARS := $(filter CONFIG_%,$(.VARIABLES))
 
 #cmake definition config
 cmake_definition+= -DCROSS_COMPILE=${CROSS_COMPILE}
@@ -95,30 +102,38 @@ cmake_definition+= -DCPU_ID=$(CPU_ID)
 cmake_definition+= -DCPU_MODEL=$(CPU_MODEL)
 cmake_definition+= -DBOARD=$(BOARD)
 cmake_definition+= -DBOARD_DIR=$(BOARD_DIR)
-cmake_definition+= -DCONFIG_DEBUG=$(CONFIG_DEBUG)
-cmake_definition+= -DCONFIG_ROMAPI=$(CONFIG_ROMAPI)
-cmake_definition+= -DCONFIG_COMX=$(COMX)
-cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF
-cmake_definition+= -DCONFIG_TLSF=$(CONFIG_TLSF)
-cmake_definition+= -DCONFIG_COREDUMP=$(CONFIG_COREDUMP)
+cmake_definition+= -DCMAKE_EXPORT_COMPILE_COMMANDS=$(COMPILE_COMMANDS)
 cmake_definition+= -DCMAKE_COLOR_DIAGNOSTICS=ON
-cmake_definition+= -DCONFIG_ANTI_ROLLBACK=$(CONFIG_ANTI_ROLLBACK)
-cmake_definition+= -DCONFIG_APP_ANTI_ROLLBACK_VER=$(CONFIG_APP_ANTI_ROLLBACK_VER)
-cmake_definition+= -DCONFIG_XTAL_POWER_TYPE_ACTIVE=$(CONFIG_XTAL_POWER_TYPE_ACTIVE)
 cmake_definition+= -DBUILD_DIR=$(BUILD_DIR)
 cmake_definition+= -DVSCODE_PARSE_EN=$(VSCODE_PARSE_EN)
 cmake_definition+= -DSDK_DEMO_PATH=$(SDK_DEMO_PATH)
-cmake_definition+= -DMACSW_CONFIG_SELECT=$(MACSW_CONFIG_SELECT)
 
-
-$(BUILD_DIR): Makefile cmake_cache
+$(BUILD_DIR): Makefile cmake_cache library_build
 	$(MAKE) -C $(BUILD_DIR) pre_build
 	$(MAKE) -C $(BUILD_DIR) -j8
 	$(MAKE) -C $(BUILD_DIR) post_build
 	$(MAKE) -C $(BUILD_DIR) combine
 
-cmake_cache:
+cmake_cache: cmake_config
+	$(MAKE) library_cmake_cache
 	$(CMAKE) -S . -B $(BUILD_DIR) -G $(cmake_generator) $(cmake_definition)
+
+cmake_config:
+	$(CMAKE) -E make_directory $(BUILD_DIR)/generated
+	$(CMAKE) -E touch $(BUILD_DIR)/generated/defconfig.cmake
+ifneq ($(CONFIG_VARS),)
+	$(CMAKE) -E rm -rf $(BUILD_DIR)/generated/defconfig.cmake.new
+ifeq ($(OS),Windows_NT)
+	@$(foreach var,$(CONFIG_VARS), \
+	$(CMAKE) -E echo "set($(var) $(value $(var)))" >> $(BUILD_DIR)/generated/defconfig.cmake.new& \
+	)
+else
+	@$(foreach var,$(CONFIG_VARS), \
+	$(CMAKE) -E echo "set($(var) $(value $(var)))" >> $(BUILD_DIR)/generated/defconfig.cmake.new; \
+	)
+endif
+	$(CMAKE) -E rename $(BUILD_DIR)/generated/defconfig.cmake.new $(BUILD_DIR)/generated/defconfig.cmake
+endif
 
 app_deps:
 	@DIR=$(BUILD_DIR) sh -c 'find $${DIR} -mindepth 4 -name CMakeFiles |while read x; do y=$${x##$${DIR}/build_out/}; echo $${y%%CMakeFiles}; done'
@@ -169,7 +184,7 @@ ram:
 whole:
 	$(CMAKE) -E copy flash_prog_cfg.ini $(BUILD_DIR)/flash_prog_cfg.ini
 	sed -i 's/\.\/build/\./g' $(BUILD_DIR)/flash_prog_cfg.ini
-	$(CMAKE) -E chdir $(BUILD_DIR) ../$(command_flash) --build
+	$(CMAKE) -E chdir $(BUILD_DIR) $(command_flash) --build
 	$(CMAKE) -E copy ${BL_SDK_BASE}/tools/bflb_tools/bouffalo_flash_cube/chips/$(CHIP)/img_create/whole_flash_data.bin $(BUILD_DIR)/whole_flash_data.bin
 
 efuse:
@@ -185,3 +200,6 @@ size:
         config-show config-info load-defconfig save-defconfig guiconfig diffconfig
 
 -include $(BL_SDK_BASE)/library.mk
+library_build:
+library_cmake_cache:
+library_clean:

@@ -4,7 +4,7 @@
 /*
  * 本文件用于覆盖默认的 config.h 配置。
  * 编译系统应确保此文件在默认 config.h 之后被包含，
- * 或者通过 MACSW_CONFIG_SELECT 机制包含。
+ * 或者通过 CONFIG_MACSW_SELECT 机制包含。
  *
  * 修正说明：
  * - 仅对默认配置中启用（值为1或无值）的功能进行 #undef 以禁用。

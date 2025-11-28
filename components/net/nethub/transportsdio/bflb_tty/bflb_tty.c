@@ -11,7 +11,6 @@
 #include "bflb_core.h"
 #include "bflb_mtimer.h"
 
-#include "mem.h"
 #include "board.h"
 #include "shell.h"
 

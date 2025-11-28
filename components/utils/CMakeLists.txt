@@ -77,3 +77,9 @@ endif()
 # list
 sdk_add_include_directories(list)
 sdk_library_add_sources(list/utils_list.c)
+
+# async events (yloop)
+if(CONFIG_FREERTOS)
+sdk_library_add_sources(async_event/async_event.c async_event/rtos_al.c)
+sdk_add_include_directories(async_event)
+endif()

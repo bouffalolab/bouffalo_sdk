@@ -18,7 +18,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
-#include <mem.h>
 
 #include "lwip/opt.h"
 #include "lwip/init.h"

@@ -83,7 +83,11 @@ static BL_Err_Type GLB_Get_And_Clr_First_Set_From_U64(uint64_t *val, uint32_t *b
 const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgNormal_32M_38P4M_40M = {
     .refdivRatio = 2,  /*!< refclk divide ratio, Fref=Fxtal/wifipll_refclk_div_ratio */
     .vcoSpeed = 5,     /*!< 5:825M~1.2GHz */
+#if defined(CPU_MODEL_A0)
     .vcoIdacExtra = 2, /*!< wifipll_resv1 */
+#else
+    .vcoIdacExtra = 0, /*!< wifipll_resv1 */
+#endif
     .vco480mEn = 0,    /*!< 1: wifipll enable low power mode */
     .sdmBypass = 1,    /*!< hardware control, 1'b1 bypass sdm, integer-N pll */
     .dtcRSel = 0,      /*!< dtc resolution select, 0: 36.4p~58.8p, 1:43.57p~70.56p */
@@ -130,8 +134,13 @@ const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgNormal_
 
 const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgLowpower_32M_38P4M_40M = {
     .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/wifipll_refclk_div_ratio */
+#if defined(CPU_MODEL_A0)
     .vcoSpeed = 3,     /*!< 5:825M~1.2GHz */
     .vcoIdacExtra = 0, /*!< wifipll_resv1 */
+#else
+    .vcoSpeed = 1,     /*!< 5:825M~1.2GHz */
+    .vcoIdacExtra = 2, /*!< wifipll_resv1 */
+#endif
     .vco480mEn = 1,    /*!< 1: wifipll enable low power mode */
     .sdmBypass = 1,    /*!< hardware control, 1'b1 bypass sdm, integer-N pll */
     .dtcRSel = 3,      /*!< dtc resolution select, 0: 36.4p~58.8p, 1:43.57p~70.56p */
@@ -139,7 +148,11 @@ const GLB_WIFIPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION wifipllBasicCfgLowpowe
     .lfAlphaExp = 2,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
     .lfAlphaFast = 3,  /*!< in fast lock state, alpha can be enlarge by 2^(alpha_fast_sel), could be 0, 1, 2, 3 */
     .lfBetaBase = 3,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
+#if defined(CPU_MODEL_A0)
     .lfBetaExp = 1,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
+#else
+    .lfBetaExp = 2,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
+#endif
     .lfBetaFast = 1,   /*!< in fast lock state, could be 0, 1, enlarge beta by 2^beta_exp_sel */
     .spdGain = 0,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
 };
@@ -252,12 +265,20 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupllBasicCfg_32M_38P4
     .lfAlphaBase = 1,  /*!< change the alpha by 2^alpha_base_sel, could be 0, 1 */
     .lfAlphaExp = 2,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
     .lfAlphaFast = 3,  /*!< in fast lock state, alpha can be enlarge by 2^(alpha_fast_sel), could be 0, 1, 2, 3 */
+#if defined(CPU_MODEL_A0)
     .lfBetaBase = 0,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
+#else
+    .lfBetaBase = 3,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
+#endif
     .lfBetaExp = 2,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
     .lfBetaFast = 1,   /*!< in fast lock state, could be 0, 1, enlarge beta by 2^beta_exp_sel */
     .spdGain = 2,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
     .lmsExtEn = 0,     /*!< 1'b1 enable external lms coe, and disable lms block */
     .lmsExtValue = 35, /*!< tt50 = 0.68 */
+#if !defined(CPU_MODEL_A0)
+    .momUpdatePeriod = 3,
+    .coarseGain = 3,
+#endif
 };
 
 const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll320MCfg_32M_38P4M_40M = {
@@ -268,18 +289,30 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll320MCfg_32M_38P4M
     .lfAlphaBase = 1,  /*!< change the alpha by 2^alpha_base_sel, could be 0, 1 */
     .lfAlphaExp = 2,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
     .lfAlphaFast = 3,  /*!< in fast lock state, alpha can be enlarge by 2^(alpha_fast_sel), could be 0, 1, 2, 3 */
+#if defined(CPU_MODEL_A0)
     .lfBetaBase = 0,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
+#else
+    .lfBetaBase = 3,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
+#endif
     .lfBetaExp = 2,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
     .lfBetaFast = 1,   /*!< in fast lock state, could be 0, 1, enlarge beta by 2^beta_exp_sel */
     .spdGain = 2,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
     .lmsExtEn = 0,     /*!< 1'b1 enable external lms coe, and disable lms block */
     .lmsExtValue = 35, /*!< tt50 = 0.68 */
+#if !defined(CPU_MODEL_A0)
+    .momUpdatePeriod = 3,
+    .coarseGain = 3,
+#endif
 };
 
 const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll640MCfg_32M_38P4M_40M = {
     .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/cpupll_refclk_div_ratio */
     .vcoSpeed = 7,     /*!< 1:640MHz */
+#if defined(CPU_MODEL_A0)
     .vcoIdacExtra = 2, /*!< cpupll_resv0 */
+#else
+    .vcoIdacExtra = 0, /*!< cpupll_resv0 */
+#endif
     .dtcRSel = 1,      /*!< dtc resolution select, 0: 52p~91p, 1:65p~113p, 2:74p~129p, 3: 102p~180p */
     .lfAlphaBase = 0,  /*!< change the alpha by 2^alpha_base_sel, could be 0, 1 */
     .lfAlphaExp = 3,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
@@ -290,6 +323,44 @@ const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll640MCfg_32M_38P4M
     .spdGain = 2,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
     .lmsExtEn = 0,     /*!< 1'b1 enable external lms coe, and disable lms block */
     .lmsExtValue = 40, /*!< tt50 = 0.68 */
+#if !defined(CPU_MODEL_A0)
+    .momUpdatePeriod = 3,
+    .coarseGain = 3,
+#endif
+};
+
+const GLB_CPUPLL_CFG_BASIC_Type ATTR_CLOCK_CONST_SECTION cpupll638p976MCfg_32M_38P4M_40M = {
+    .refdivRatio = 4,  /*!< refclk divide ratio, Fref=Fxtal/cpupll_refclk_div_ratio */
+    .vcoSpeed = 7,     /*!< 1:640MHz */
+#if defined(CPU_MODEL_A0)
+    .vcoIdacExtra = 2, /*!< cpupll_resv0 */
+#else
+    .vcoIdacExtra = 0, /*!< cpupll_resv0 */
+#endif
+    .dtcRSel = 1,      /*!< dtc resolution select, 0: 52p~91p, 1:65p~113p, 2:74p~129p, 3: 102p~180p */
+    .lfAlphaBase = 0,  /*!< change the alpha by 2^alpha_base_sel, could be 0, 1 */
+    .lfAlphaExp = 3,   /*!< change the alpha by 2^(2*alpha_exp_sel),could be 0, 1, 2, 3, 4, 5 */
+    .lfAlphaFast = 3,  /*!< in fast lock state, alpha can be enlarge by 2^(alpha_fast_sel), could be 0, 1, 2, 3 */
+    .lfBetaBase = 3,   /*!< could be 0.5, 0.625, 0.75, 0.875 */
+    .lfBetaExp = 2,    /*!< change the beta by 2^beta_exp_sel, could be 0, 1, 2, 3, 4, 5 */
+    .lfBetaFast = 1,   /*!< in fast lock state, could be 0, 1, enlarge beta by 2^beta_exp_sel */
+    .spdGain = 2,      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
+    .lmsExtEn = 0,     /*!< 1'b1 enable external lms coe, and disable lms block */
+    .lmsExtValue = 40, /*!< tt50 = 0.68 */
+#if !defined(CPU_MODEL_A0)
+    .momUpdatePeriod = 3,
+    .coarseGain = 3,
+#endif
+};
+
+const GLB_CPUPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION cpupllCfg_638p976M[GLB_XTAL_MAX] = {
+    { NULL, 0x0 },                             /*!< XTAL is None */
+    { &cpupll640MCfg_24M_26M, 0x1A9FB },       /*!< XTAL is 24M */
+    { &cpupll640MCfg_32M_38P4M_40M, 0x27EF9 }, /*!< XTAL is 32M */
+    { &cpupll640MCfg_32M_38P4M_40M, 0x2147A }, /*!< XTAL is 38.4M */
+    { &cpupll640MCfg_32M_38P4M_40M, 0x1FF2E }, /*!< XTAL is 40M */
+    { &cpupll640MCfg_24M_26M, 0x18937 },       /*!< XTAL is 26M */
+    { &cpupll640MCfg_32M_38P4M_40M, 0x27EF9 }, /*!< XTAL is RC32M */
 };
 
 const GLB_CPUPLL_Cfg_Type ATTR_CLOCK_CONST_SECTION cpupllCfg_640M[GLB_XTAL_MAX] = {
@@ -502,7 +573,11 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_XTAL_And_PLL_CLK(uint8_t xtalType, u
     if (pllType & GLB_PLL_CPUPLL) {
         GLB_Power_Off_CPUPLL();
         GLB_CPUPLL_Ref_Clk_Sel(refClk);
+#if defined(CPU_MODEL_A0)
         GLB_Power_On_CPUPLL(&cpupllCfg_480M[xtalType], 0);
+#else
+        GLB_Power_On_CPUPLL(&cpupllCfg_638p976M[xtalType], 0);
+#endif
     }
 
     arch_delay_us(75);
@@ -535,9 +610,15 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_Off_WIFIPLL(void)
 {
     uint32_t tmpVal = 0;
 
+#if defined(CPU_MODEL_A0)
     tmpVal = BL_RD_WORD(RF_BASE + RF_ANA1_WIFIPLL_ANA_CTRL_OFFSET);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, RF_ANA1_PU_WIFIPLL, 0);
     BL_WR_WORD(RF_BASE + RF_ANA1_WIFIPLL_ANA_CTRL_OFFSET, tmpVal);
+#else
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_PU_WIFIPLL, 0);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, tmpVal);
+#endif
 
     return SUCCESS;
 }
@@ -559,9 +640,15 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_WIFIPLL_Ref_Clk_Sel(uint8_t refClk)
     CHECK_PARAM(IS_GLB_WIFIPLL_REF_CLK_TYPE(refClk));
 
     /* wifipll_refclk_sel */
+#if defined(CPU_MODEL_A0)
     tmpVal = BL_RD_WORD(RF_BASE + RF_ANA1_WIFIPLL_ANA_CTRL_OFFSET);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, RF_ANA1_WIFIPLL_REFCLK_SEL, refClk);
     BL_WR_WORD(RF_BASE + RF_ANA1_WIFIPLL_ANA_CTRL_OFFSET, tmpVal);
+#else
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_REFCLK_SEL, refClk);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, tmpVal);
+#endif
 
     return SUCCESS;
 }
@@ -575,6 +662,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_WIFIPLL_Ref_Clk_Sel(uint8_t refClk)
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#if defined(CPU_MODEL_A0)
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_WIFIPLL(const GLB_WIFIPLL_Cfg_Type *const cfg, uint8_t waitStable)
 {
     uint32_t val = 0;
@@ -668,6 +756,101 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_WIFIPLL(const GLB_WIFIPLL_Cfg_Type *
 
     return SUCCESS;
 }
+#else
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_WIFIPLL(const GLB_WIFIPLL_Cfg_Type *const cfg, uint8_t waitStable)
+{
+    uint32_t val = 0;
+    uint32_t tmpVal = 0;
+
+    /* Step1:config parameter */
+    /* set refdiv_ratio, vco_480M_en vco_speed, dtc_r_sel */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_REFCLK_DIV_RATIO, cfg->basicCfg->refdivRatio);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_VCO_480M_EN, cfg->basicCfg->vco480mEn);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_VCO_SPEED, cfg->basicCfg->vcoSpeed);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_DTC_R_SEL, cfg->basicCfg->dtcRSel);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, tmpVal);
+
+    /* set spd_gain */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_SPD_FCAL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_SPD_GAIN, cfg->basicCfg->spdGain);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_SPD_FCAL_OFFSET, tmpVal);
+
+    /* set alpha_base, alpha_exp, alpha_fast, beta_base, beta_exp, beta_fast */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_LF_VCTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_LF_ALPHA_BASE, cfg->basicCfg->lfAlphaBase);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_LF_ALPHA_EXP, cfg->basicCfg->lfAlphaExp);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_LF_ALPHA_FAST, cfg->basicCfg->lfAlphaFast);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_LF_BETA_BASE, cfg->basicCfg->lfBetaBase);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_LF_BETA_EXP, cfg->basicCfg->lfBetaExp);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_LF_BETA_FAST, cfg->basicCfg->lfBetaFast);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_LF_VCTRL_OFFSET, tmpVal);
+
+    /* set wifipll_sdmin */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_SDMIN_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_SDM_IN, cfg->sdmin);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_SDMIN_OFFSET, tmpVal);
+
+    /* set sdm_bypass */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_PI_SDM_LMS_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_SDM_BYPASS, cfg->basicCfg->sdmBypass);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_PI_SDM_LMS_OFFSET, tmpVal);
+
+    /* set vco_idac_extra */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_RESERVE_OFFSET);
+    val = BL_GET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_RESV1);
+    val &= ~3;
+    val |= cfg->basicCfg->vcoIdacExtra;
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_RESV1, val);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_RESERVE_OFFSET, tmpVal);
+
+    /* Step2:config pu */
+    /* pu_wifipll=1, wifipll_rstb=1 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_PU_WIFIPLL, 1);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_RSTB, 1);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, tmpVal);
+
+    /* delay > 2us */
+    arch_delay_us(3);
+
+    /* wifipll_rstb=0 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_RSTB, 0);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, tmpVal);
+
+    /* delay > 1us */
+    arch_delay_us(2);
+
+    /* wifipll_rstb=1 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_RSTB, 1);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_ANA_CTRL_OFFSET, tmpVal);
+
+    /* Step3:enable output clock */
+    /* wifipll clock divider enable */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_CLKTREE_DIG_OFFSET);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV1);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV2);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV3);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV4);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV5);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV6);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV8);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV10);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV12);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV20);
+    tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_EN_DIV30);
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_CLKTREE_DIG_OFFSET, tmpVal);
+
+    if (waitStable) {
+        /* Wait 1.5*180us    */
+        arch_delay_us(270);
+    }
+
+    return SUCCESS;
+}
+#endif
 
 /****************************************************************************/ /**
  * @brief  GLB power off cpupll
@@ -738,6 +921,9 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_CPUPLL(const GLB_CPUPLL_Cfg_Type *co
     /* set spd_gain */
     tmpVal = BL_RD_WORD(CCI_BASE + CCI_CPUPLL_SPD_FCAL_OFFSET);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_SPD_GAIN, cfg->basicCfg->spdGain);
+#if !defined(CPU_MODEL_A0)
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_COARSE_GAIN, cfg->basicCfg->coarseGain);
+#endif
     BL_WR_WORD(CCI_BASE + CCI_CPUPLL_SPD_FCAL_OFFSET, tmpVal);
 
     /* set alpha_base, alpha_exp, alpha_fast, beta_base, beta_exp, beta_fast */
@@ -748,6 +934,9 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_CPUPLL(const GLB_CPUPLL_Cfg_Type *co
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_LF_BETA_BASE, cfg->basicCfg->lfBetaBase);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_LF_BETA_EXP, cfg->basicCfg->lfBetaExp);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_LF_BETA_FAST, cfg->basicCfg->lfBetaFast);
+#if !defined(CPU_MODEL_A0)
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_CPUPLL_MOM_UPDATE_PERIOD, cfg->basicCfg->momUpdatePeriod);
+#endif
     BL_WR_WORD(CCI_BASE + CCI_CPUPLL_LF_VCTRL_OFFSET, tmpVal);
 
     /* set cpupll_sdmin */
@@ -1026,6 +1215,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_CPUPLL_PostOut(uint8_t enable, uint8_t di
  * @return SUCCESS or ERROR
  *
 *******************************************************************************/
+#if defined(CPU_MODEL_A0)
 BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_WIFIPLL_PostOut(uint8_t enable, uint8_t div)
 {
     uint32_t tmpVal = 0;
@@ -1048,6 +1238,30 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_WIFIPLL_PostOut(uint8_t enable, uint8_t d
 
     return SUCCESS;
 }
+#else
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_WIFIPLL_PostOut(uint8_t enable, uint8_t div)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(CCI_BASE, CCI_WIFIPLL_CLKTREE_RF);
+    tmpVal = BL_CLR_REG_BIT(tmpVal, CCI_WIFIPLL_POSTDIV_EN);
+    BL_WR_REG(CCI_BASE, CCI_WIFIPLL_CLKTREE_RF, tmpVal);
+
+    tmpVal = BL_RD_REG(CCI_BASE, CCI_WIFIPLL_CLKTREE_RF);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_POSTDIV, div);
+    BL_WR_REG(CCI_BASE, CCI_WIFIPLL_CLKTREE_RF, tmpVal);
+
+    tmpVal = BL_RD_REG(CCI_BASE, CCI_WIFIPLL_CLKTREE_RF);
+    if (enable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, CCI_WIFIPLL_POSTDIV_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, CCI_WIFIPLL_POSTDIV_EN);
+    }
+    BL_WR_REG(CCI_BASE, CCI_WIFIPLL_CLKTREE_RF, tmpVal);
+
+    return SUCCESS;
+}
+#endif
 
 /****************************************************************************/ /**
  * @brief  GLB enable or disable USB clock
@@ -1618,6 +1832,7 @@ void ATTR_CLOCK_SECTION GLB_Set_WIFIPLL_Fine_Tune(void)
 {
     uint32_t tmpVal;
 
+#if defined(CPU_MODEL_A0)
     /* WIFIPLL HW CTRL @ 0x200010D4 */
     tmpVal = BL_RD_WORD(RF_BASE + RF_ANA1_WIFIPLL_HW_CTRL_OFFSET);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, RF_ANA1_WIFIPLL_VCO_RSHT_EN_TX, 0);   /* [12]  = 0 */
@@ -1633,6 +1848,22 @@ void ATTR_CLOCK_SECTION GLB_Set_WIFIPLL_Fine_Tune(void)
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, RF_ANA1_WIFIPLL_SDM_DITH_FORCE_EN, 0);/* [23]  = 0 */
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, RF_ANA1_WIFIPLL_SDM_DITH_EN, 0);      /* [22]  = 0 */
     BL_WR_WORD(RF_BASE + RF_ANA1_WIFIPLL_PI_SDM_LMS_OFFSET, tmpVal);
+#else
+    /* WIFIPLL HW CTRL @ 0x200010D4 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_HW_CTRL_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_VCO_RSHT_EN_TX_BZ, 0);/* [16]  = 0 */
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_PI_BYPASS_RX_BZ, 1);  /* [6]   = 1 */
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_PI_BYPASS_RX, 1);     /* [2]   = 1 */
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_HW_CTRL_OFFSET, tmpVal);
+
+    /* WIFIPLL PI/SDM/LMS @ 0x200010E4 */
+    tmpVal = BL_RD_WORD(CCI_BASE + CCI_WIFIPLL_PI_SDM_LMS_OFFSET);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_PI_BYPASS, 1);        /* [31]  = 1 */
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_SDM_BYPASS, 0);       /* [24]  = 0 */
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_SDM_DITH_FORCE_EN, 0);/* [23]  = 0 */
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, CCI_WIFIPLL_SDM_DITH_EN, 0);      /* [22]  = 0 */
+    BL_WR_WORD(CCI_BASE + CCI_WIFIPLL_PI_SDM_LMS_OFFSET, tmpVal);
+#endif
 #if 0
     /* should be set on system init, not here */
     /* RC32M reserved @ 0x2008F994[25] = 1 (within field [31:24]) */
@@ -2253,13 +2484,26 @@ BL_Err_Type GLB_Set_I2S_CLK(uint8_t refClkEn, uint8_t refClkDiv, uint8_t inRef, 
 
     tmpVal = BL_RD_REG(GLB_BASE, GLB_I2S_CFG0);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_I2S_DO_REF_CLK_SEL, outRef);
+#if defined(CPU_MODEL_A0)
     if (refClkEn) {
         tmpVal = BL_SET_REG_BIT(tmpVal, GLB_REG_I2S_REF_CLK_EN);
     } else {
         tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_REG_I2S_REF_CLK_EN);
     }
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_I2S_DI_REF_CLK_SEL, inRef);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_I2S_REF_CLK_DIV, refClkDiv);
+#else
+    if (refClkEn) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_REG_I2S_REF_CLK_EN);
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_REG_I2S_MCLK_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_REG_I2S_REF_CLK_EN);
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_REG_I2S_MCLK_EN);
+    }
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_I2S_REF_CLK_DIV, refClkDiv);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_I2S_MCLK_DIV, refClkDiv);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_AUDIO_PLL_SEL, 0);
+#endif
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_I2S_DI_REF_CLK_SEL, inRef);
     BL_WR_REG(GLB_BASE, GLB_I2S_CFG0, tmpVal);
 
     return SUCCESS;
@@ -2642,7 +2886,7 @@ BL_Err_Type GLB_Sel_MCU_TMR_GPIO_Clock(uint8_t gpioPin)
  * @param  clkOutType: chip clock out0 output type, this parameter can be one of the following values:
  *           @arg GLB_CHIP_CLK_OUT_0_CAM_REF_CLK
  *           @arg GLB_CHIP_CLK_OUT_0_I2S_REF_CLK
- *           @arg GLB_CHIP_CLK_OUT_0_NONE
+ *           @arg GLB_CHIP_CLK_OUT_0_NONE/GLB_CHIP_CLK_OUT_0_I2S_MCLK
  *           @arg GLB_CHIP_CLK_OUT_0_SOLO_IN_128FS
  *
  * @return SUCCESS or ERROR
@@ -2667,7 +2911,7 @@ BL_Err_Type GLB_Set_Chip_Clock_Out0_Sel(uint8_t clkOutType)
  * @param  clkOutType: chip clock out1 output type, this parameter can be one of the following values:
  *           @arg GLB_CHIP_CLK_OUT_1_CAM_REF_CLK
  *           @arg GLB_CHIP_CLK_OUT_1_I2S_REF_CLK
- *           @arg GLB_CHIP_CLK_OUT_1_NONE
+ *           @arg GLB_CHIP_CLK_OUT_1_NONE/GLB_CHIP_CLK_OUT_1_I2S_MCLK
  *           @arg GLB_CHIP_CLK_OUT_1_SOLO_IN_128FS
  *
  * @return SUCCESS or ERROR
@@ -2717,7 +2961,7 @@ BL_Err_Type GLB_Set_Chip_Clock_Out2_Sel(uint8_t clkOutType)
  * @param  clkOutType: chip clock out3 output type, this parameter can be one of the following values:
  *           @arg GLB_CHIP_CLK_OUT_3_CAM_REF_CLK
  *           @arg GLB_CHIP_CLK_OUT_3_I2S_REF_CLK
- *           @arg GLB_CHIP_CLK_OUT_3_NONE
+ *           @arg GLB_CHIP_CLK_OUT_3_NONE/GLB_CHIP_CLK_OUT_3_I2S_MCLK
  *           @arg GLB_CHIP_CLK_OUT_3_WIFIPLL_48M
  *
  * @return SUCCESS or ERROR
@@ -3801,7 +4045,7 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_PLL_CGEN_Clock_UnGate(uint8_t clk)
  *
  * @param  clkSel: PKA clock selection, this parameter can be one of the following values:
  *           @arg GLB_PKA_CLK_MCU_BCLK
- *           @arg GLB_PKA_CLK_WIFIPLL_160M
+ *           @arg GLB_PKA_CLK_WIFIPLL_160M/GLB_PKA_CLK_WIFIPLL_320M
  *
  * @return SUCCESS or ERROR
  *

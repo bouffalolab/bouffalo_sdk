@@ -279,6 +279,10 @@
 #define BFLB_PERIPHERAL_PEC                    (49)
 #define BFLB_PERIPHERAL_SPI2                   (50)
 #define BFLB_PERIPHERAL_SPI3                   (51)
+#define BFLB_PERIPHERAL_TIMER1                 (52)
+#define BFLB_PERIPHERAL_TIMER2                 (53)
+#define BFLB_PERIPHERAL_TIMER3                 (54)
+#define BFLB_PERIPHERAL_PWM1                   (55)
 #endif
 
 #if defined(BL616L)

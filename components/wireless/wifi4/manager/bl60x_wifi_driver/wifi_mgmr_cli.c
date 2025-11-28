@@ -9,7 +9,11 @@
 #include <utils_getopt.h>
 #include <wifi_mgmr_ext.h>
 #include <bl_defs.h>
-
+#ifdef BL_IOT_SDK
+#include <cli.h>
+#include "utils_string.h"
+#include "utils_hexdump.h"
+#endif
 #define WIFI_AP_DATA_RATE_1Mbps      0x00
 #define WIFI_AP_DATA_RATE_2Mbps      0x01
 #define WIFI_AP_DATA_RATE_5_5Mbps    0x02

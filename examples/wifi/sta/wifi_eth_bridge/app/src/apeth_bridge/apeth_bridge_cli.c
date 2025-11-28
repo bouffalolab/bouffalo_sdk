@@ -1,7 +1,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
-#include "mem.h"
 
 #include <netif/bridgeif.h>
 #include <lwip/tcpip.h>

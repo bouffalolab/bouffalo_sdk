@@ -141,6 +141,30 @@ uint32_t bflb_peripheral_clock_get_by_id(uint8_t peri)
             dev_type = BFLB_DEVICE_TYPE_I2C;
             idx = 2;
             break;
+        case BFLB_PERIPHERAL_TIMER0:
+            dev_type = BFLB_DEVICE_TYPE_TIMER;
+            idx = 0;
+            break;
+        case BFLB_PERIPHERAL_TIMER1:
+            dev_type = BFLB_DEVICE_TYPE_TIMER;
+            idx = 1;
+            break;
+        case BFLB_PERIPHERAL_TIMER2:
+            dev_type = BFLB_DEVICE_TYPE_TIMER;
+            idx = 2;
+            break;
+        case BFLB_PERIPHERAL_TIMER3:
+            dev_type = BFLB_DEVICE_TYPE_TIMER;
+            idx = 3;
+            break;
+        case BFLB_PERIPHERAL_PWM0:
+            dev_type = BFLB_DEVICE_TYPE_PWM;
+            idx = 0;
+            break;
+        case BFLB_PERIPHERAL_PWM1:
+            dev_type = BFLB_DEVICE_TYPE_PWM;
+            idx = 1;
+            break;
         case BFLB_PERIPHERAL_PSRAM1_CTRL:
             dev_type = BFLB_DEVICE_TYPE_PSRAM;
             idx = 1;

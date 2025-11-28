@@ -590,6 +590,9 @@ void at_wifi_event_notify(void *private_data, uint32_t code)
         break;
 
         case AT_WIFI_EVENT_DISCONNECTED: {
+#if CONFIG_ATMODULE_TTY
+            transportsdio_linkdown();
+#endif
             if (g_wifi_sta_is_connected) {
                 if (at_get_work_mode() != AT_WORK_MODE_THROUGHPUT
 #ifdef CONFIG_ATMODULE_BASE
@@ -683,6 +686,18 @@ void at_wifi_event_notify(void *private_data, uint32_t code)
                    ) {
                     if (at_wifi_config->wevt_enable) {
                         at_response_string("+CW:GOTIP\r\n");
+
+#ifdef CONFIG_ATMODULE_BASE
+                        if (at_base_config->sysmsg_cfg.syslog){
+                            ip4_addr_t ipaddr = {0}, gwaddr = {0}, maskaddr = {0}, dns = {0};
+                            at_wifi_sta_ip4_addr_get(&ipaddr.addr, &maskaddr.addr, &gwaddr.addr, &dns.addr);
+
+                            at_response_string("IP:\"%s\"\r\n", ip4addr_ntoa(&ipaddr));
+                            at_response_string("Gateway:\"%s\"\r\n", ip4addr_ntoa(&gwaddr));
+                            at_response_string("Mask:\"%s\"\r\n", ip4addr_ntoa(&maskaddr));
+                            at_response_string("DNS:\"%s\"\r\n", ip4addr_ntoa(&dns));
+                        }
+#endif
                     }
                 }
 

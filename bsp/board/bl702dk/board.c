@@ -10,7 +10,7 @@
 #include "ef_data_reg.h"
 #include "board.h"
 
-#include "mem.h"
+#include "mm.h"
 
 extern void log_start(void);
 
@@ -234,6 +234,23 @@ void board_recovery(void)
     console_init();
 }
 
+void ram_heap_init(void)
+{
+    size_t heap_len;
+
+    /* ram heap init */
+    mem_manager_init();
+
+    /* ocram heap init */
+    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+
+    /* ram info dump */
+    printf("dynamic memory init success\r\n"
+           "  ocram heap size: %d Kbyte \r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+}
+
 void board_init(void)
 {
     int ret = -1;
@@ -249,20 +266,18 @@ void board_init(void)
 
     console_init();
 
+    /* heap init */
+    ram_heap_init();
+
 #ifdef CONFIG_PSRAM
     board_psram_init();
 #endif
-
-    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
 
     bl_show_log();
     if (ret != 0) {
         printf("flash init fail!!!\r\n");
     }
     bl_show_flashinfo();
-
-    printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
 
     printf("cgen1:%08x\r\n", getreg32(BFLB_GLB_CGEN1_BASE));
 

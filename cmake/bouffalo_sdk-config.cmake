@@ -24,6 +24,8 @@ set(PROJECT_BINARY_DIR ${build_dir})
 set(EXECUTABLE_OUTPUT_PATH ${build_dir})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
+include(${CMAKE_CURRENT_BINARY_DIR}/generated/defconfig.cmake)
+
 add_library(sdk_intf_lib INTERFACE)
 add_library(app STATIC)
 target_link_libraries(app sdk_intf_lib)

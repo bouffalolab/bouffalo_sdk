@@ -1,6 +1,6 @@
 #include <string.h>
 #include "at_pal.h"
-#include "mem.h"   /* use kmalloc/kfree from kernel heap */
+#include "mm.h"   /* use kmalloc/kfree from kernel heap */
 
 void *at_malloc(size_t size)
 {

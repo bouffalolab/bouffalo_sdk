@@ -296,6 +296,7 @@ static int at_query_cmd_cipsta(int argc, const char **argv)
     at_response_string("+CIPSTA:%s:\"%s\"\r\n", "ip", ip4addr_ntoa(&ipaddr));
     at_response_string("+CIPSTA:%s:\"%s\"\r\n", "gateway", ip4addr_ntoa(&gwaddr));
     at_response_string("+CIPSTA:%s:\"%s\"\r\n", "netmask", ip4addr_ntoa(&maskaddr));
+    at_response_string("+CIPSTA:%s:\"%s\"\r\n", "dns", ip4addr_ntoa(&dns));
 #if CONFIG_ATMODULE_NETWORK && LWIP_IPV6
     if (at_net_config->ipv6_enable) {
         struct netif *nif = (struct netif *)at_wifi_netif_get(AT_WIFI_VIF_STA);

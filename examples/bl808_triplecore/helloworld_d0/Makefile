@@ -8,8 +8,5 @@ BOARD ?= bl808dk
 CPU_ID ?= d0
 CROSS_COMPILE ?= riscv64-unknown-elf-
 
-# add custom cmake definition
-#cmake_definition+=-Dxxx=sss
 
--include $(SDK_DEMO_PATH)/.config
 include $(BL_SDK_BASE)/project.build

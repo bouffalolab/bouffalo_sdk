@@ -1,7 +1,6 @@
 #include "bflb_core.h"
 #include "bflb_mtimer.h"
 
-#include "mem.h"
 #include "board.h"
 
 #include "FreeRTOS.h"
@@ -10,6 +9,9 @@
 #include <stdlib.h>
 #include "fhost.h"
 
+#ifdef CONFIG_SDIO3_SOFT_RST_INT_USER
+#include <bflb_sdio3.h>
+#endif
 #include "bflb_msg_ctrl.h"
 #include "bflb_frame_buff_ctrl.h"
 #include "transportsdio.h"
@@ -28,6 +30,7 @@
 #define DEBUG_DUMP_WIFIRX_ENABLE (0)// 1-dump wifi rx data. 0-not dump wifi rx data
 
 /* Debug output for example program */
+#define EXAMPLE_PRINTF printf
 #if DEBUG_SDIO_LOG_ENABLE
 #define EXAMPLE_DEBUG       LOG_D//(fmt, ...) printf("[transport debug] " fmt, ##__VA_ARGS__)
 #define EXAMPLE_INFO        LOG_I//(fmt, ...) printf("[TRANSSDIO] " fmt, ##__VA_ARGS__)
@@ -79,6 +82,7 @@ static void frame_free_task(void *arg);
 
 static int msg_dnld_recv_done_cb(frame_elem_t *frame_elem, void *arg);
 static int msg_upld_send_done_cb(frame_elem_t *frame_elem, void *arg);
+static int transportsdio_hwreset(frame_elem_t *frame_elem, void *arg);
 
 /* WiFi TX completion callback */
 static void wifi_tx_done_cb(struct wifi_wifista_priv *priv, frame_elem_t *frame_elem);
@@ -144,7 +148,7 @@ static void wifi_tx_done_cb(struct wifi_wifista_priv *priv, frame_elem_t *frame_
         return;
     }
 
-    //printf("elem:%p, buf:%p\r\n", frame_elem, frame_elem->buff_addr);
+    //EXAMPLE_PRINTF("elem:%p, buf:%p\r\n", frame_elem, frame_elem->buff_addr);
     /* Free frame from message */
     frame_queue_free_elem(frame_elem);
 
@@ -245,7 +249,7 @@ static int msg_dnld_recv_done_cb(frame_elem_t *frame_elem, void *arg)
 
     ret = frame_queue_send(priv->msg_dnld_queue, &frame_elem, 0);
     #if CONFIG_NETHUB_DUMP_DNLDDATA
-    printf("send frame_elem:%p, buf:%p, ret:%d, queue_len:%d\n", frame_elem, frame_elem->buff_addr, ret, frame_queue_messages_waiting(priv->msg_dnld_queue));
+    EXAMPLE_PRINTF("send frame_elem:%p, buf:%p, ret:%d, queue_len:%d\n", frame_elem, frame_elem->buff_addr, ret, frame_queue_messages_waiting(priv->msg_dnld_queue));
     #endif
     if (ret < 0) {
         EXAMPLE_ERR("Failed to send frame to download queue\r\n");
@@ -339,6 +343,11 @@ static int msg_upld_send_done_cb(frame_elem_t *frame_elem, void *arg)
         return frame_queue_free_elem(frame_elem);
     }
     return msg_upld_send_done_customfree(frame_elem);
+}
+
+static int transportsdio_hwreset(frame_elem_t *frame_elem, void *arg)
+{
+    return 0;
 }
 
 /**
@@ -456,7 +465,7 @@ static void wifi_proc_task(void *arg)
             msg_dnld_recv_suspend = false;
             msg_packt = (struct bflb_wifi_msg_packt *)frame_elem->buff_addr;
             #if DEBUG_DUMP_WIFITX_ENABLE
-            printf("recv dnld frame_elem:%p, buf:%p, ret:%d, queue_len:%d\n", frame_elem, frame_elem->buff_addr, ret, frame_queue_messages_waiting(priv->msg_dnld_queue));
+            EXAMPLE_PRINTF("recv dnld frame_elem:%p, buf:%p, ret:%d, queue_len:%d\n", frame_elem, frame_elem->buff_addr, ret, frame_queue_messages_waiting(priv->msg_dnld_queue));
             #endif
         }
 
@@ -650,9 +659,8 @@ int transportsdio_init(wifi_wifista_priv_t *ctx, bflb_msg_ctrl_t *msg_ctrl, uint
     /* Register MSG message callback */
     ret = bflb_msg_cb_register(msg_ctrl, msg_tag,
         msg_dnld_recv_done_cb, priv,
-        //msg_upld2_send_done_cb, priv,
         msg_upld_send_done_cb, priv,
-        NULL, NULL);
+        transportsdio_hwreset, priv);
     if (ret < 0) {
         EXAMPLE_ERR("Failed to register message callbacks: %d\r\n", ret);
         return -1;
@@ -1134,7 +1142,7 @@ int transportsdio_send_upld(const void *data, uint32_t len)
 
 #if 1//ETHSTA_DBGLOG
     if (msg_tx_packt->msg_packt.len >= 14) {
-        printf("Upld[%d] <-----  %02X:%02X:%02X:%02X:%02X:%02X  %02X:%02X:%02X:%02X:%02X:%02X   %02X:%02X .... %02X:%02X\r\n",
+        EXAMPLE_PRINTF("Upld[%d] <-----  %02X:%02X:%02X:%02X:%02X:%02X  %02X:%02X:%02X:%02X:%02X:%02X   %02X:%02X .... %02X:%02X\r\n",
             msg_tx_packt->msg_packt.len,
             msg_tx_packt->data[0], msg_tx_packt->data[1], msg_tx_packt->data[2], msg_tx_packt->data[3],
             msg_tx_packt->data[4], msg_tx_packt->data[5], msg_tx_packt->data[6], msg_tx_packt->data[7],
@@ -1155,4 +1163,166 @@ int transportsdio_send_upld(const void *data, uint32_t len)
     return 0;
 }
 
+#ifdef CONFIG_NETHUB_DEBUG
+/**
+ * @brief Dump g_wifi_priv structure parameters for debugging
+ * @details Print important parameters including queue status, connection state,
+ *          flow control status and other key information
+ */
+void transportsdio_dump_priv(void)
+{
+    if (!g_wifi_priv) {
+        EXAMPLE_PRINTF("g_wifi_priv is NULL - device not initialized\r\n");
+        return;
+    }
+
+    EXAMPLE_PRINTF("=== WiFi Private Structure Dump ===\r\n");
+
+    /* Basic information */
+    EXAMPLE_PRINTF("Basic Info:\r\n");
+    EXAMPLE_PRINTF("  msg_ctrl: %p\r\n", g_wifi_priv->msg_ctrl);
+    EXAMPLE_PRINTF("  msg_tag: %d\r\n", g_wifi_priv->msg_tag);
+    EXAMPLE_PRINTF("  wifi_status: %d\r\n", g_wifi_priv->wifi_status);
+    EXAMPLE_PRINTF("  stop_requested: %s\r\n", g_wifi_priv->stop_requested ? "true" : "false");
+
+    /* MAC address and connection status */
+    EXAMPLE_PRINTF("MAC & Connection:\r\n");
+    EXAMPLE_PRINTF("  mac_addr: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
+          g_wifi_priv->mac_addr[0], g_wifi_priv->mac_addr[1], g_wifi_priv->mac_addr[2],
+          g_wifi_priv->mac_addr[3], g_wifi_priv->mac_addr[4], g_wifi_priv->mac_addr[5]);
+    EXAMPLE_PRINTF("  wifi_connected: %s\r\n", g_wifi_priv->wifi_connected ? "connected" : "disconnected");
+
+    /* Flow control information */
+    EXAMPLE_PRINTF("Flow Control:\r\n");
+    EXAMPLE_PRINTF("  flow_control_enabled: %s\r\n", g_wifi_priv->flow_control_enabled ? "enabled" : "disabled");
+    EXAMPLE_PRINTF("  flow_control_threshold: %d\r\n", g_wifi_priv->flow_control_threshold);
+    EXAMPLE_PRINTF("  device_dnld_credit_limit: %d\r\n", g_wifi_priv->device_dnld_credit_limit);
+    EXAMPLE_PRINTF("  credit_limit_update_last: %d\r\n", g_wifi_priv->credit_limit_update_last);
+    EXAMPLE_PRINTF("  credit_cnt: %d\r\n", g_wifi_priv->credit_cnt);
+    EXAMPLE_PRINTF("  host_upld_credit_limit: %d\r\n", g_wifi_priv->host_upld_credit_limit);
+    EXAMPLE_PRINTF("  device_upld_credit_consumed: %d\r\n", g_wifi_priv->device_upld_credit_consumed);
+
+    /* Task information */
+    EXAMPLE_PRINTF("Tasks:\r\n");
+    EXAMPLE_PRINTF("  wifi_proc_task: %p", g_wifi_priv->wifi_proc_task);
+    if (g_wifi_priv->wifi_proc_task) {
+        EXAMPLE_PRINTF(" (state: %d)",
+              eTaskGetState(g_wifi_priv->wifi_proc_task));
+#if (INCLUDE_uxTaskGetStackHighWaterMark == 1)
+        EXAMPLE_PRINTF(", stack_high_water_mark: %u",
+              uxTaskGetStackHighWaterMark(g_wifi_priv->wifi_proc_task));
+#endif
+    }
+    EXAMPLE_PRINTF("\r\n");
+
+    EXAMPLE_PRINTF("  frame_free_task: %p", g_wifi_priv->frame_free_task);
+    if (g_wifi_priv->frame_free_task) {
+        EXAMPLE_PRINTF(" (state: %d)",
+              eTaskGetState(g_wifi_priv->frame_free_task));
+#if (INCLUDE_uxTaskGetStackHighWaterMark == 1)
+        EXAMPLE_PRINTF(", stack_high_water_mark: %u",
+              uxTaskGetStackHighWaterMark(g_wifi_priv->frame_free_task));
+#endif
+    }
+    EXAMPLE_PRINTF("\r\n");
+
+    /* Queue information */
+    EXAMPLE_PRINTF("Queues:\r\n");
+    if (g_wifi_priv->msg_dnld_queue) {
+        UBaseType_t msg_dnld_count = uxQueueMessagesWaiting(g_wifi_priv->msg_dnld_queue);
+        UBaseType_t msg_dnld_spaces = uxQueueSpacesAvailable(g_wifi_priv->msg_dnld_queue);
+        EXAMPLE_PRINTF("  msg_dnld_queue: %p (used: %lu/%u, free: %lu)\r\n",
+              g_wifi_priv->msg_dnld_queue, msg_dnld_count, WIFI_MSG_QUEUE_DEPTH, msg_dnld_spaces);
+    } else {
+        EXAMPLE_PRINTF("  msg_dnld_queue: NULL\r\n");
+    }
+
+    if (g_wifi_priv->frame_free_queue) {
+        UBaseType_t frame_free_count = uxQueueMessagesWaiting(g_wifi_priv->frame_free_queue);
+        UBaseType_t frame_free_spaces = uxQueueSpacesAvailable(g_wifi_priv->frame_free_queue);
+        EXAMPLE_PRINTF("  frame_free_queue: %p (used: %lu/%u, free: %lu)\r\n",
+              g_wifi_priv->frame_free_queue, frame_free_count, WIFI_MSG_QUEUE_DEPTH, frame_free_spaces);
+    } else {
+        EXAMPLE_PRINTF("  frame_free_queue: NULL\r\n");
+    }
+
+    /* Frame buffer information */
+    EXAMPLE_PRINTF("Frame Buffer:\r\n");
+    EXAMPLE_PRINTF("  rx_frame_ctrl: %p\r\n", g_wifi_priv->rx_frame_ctrl);
+    if (g_wifi_priv->rx_frame_ctrl) {
+        /* More information can be added here according to frame_queue_ctrl_t structure */
+        EXAMPLE_PRINTF("  rx_frame_ctrl is valid\r\n");
+    }
+
+    /* Callback function information */
+    EXAMPLE_PRINTF("Callbacks:\r\n");
+    EXAMPLE_PRINTF("  wifi_send_frame: %p\r\n", g_wifi_priv->wifi_send_frame);
+    EXAMPLE_PRINTF("  wifi_recv_frame: %p\r\n", g_wifi_priv->wifi_recv_frame);
+
+    EXAMPLE_PRINTF("=== End of WiFi Private Structure Dump ===\r\n");
+}
+#endif
+
+#ifdef CONFIG_SDIO3_SOFT_RST_INT_USER
+static void _sdio3_reinit(void)
+{
+    extern struct bflb_device_s *sdio3_hd;
+    struct bflb_sdio3_config_s cfg = {
+        .func_num = 1,                            /*!< function num: 1~2. */
+        .ocr = 0xff0000,                                           /*!< OCR, [14:0]:res, [23:15]:2.7v~3.6v */
+        .cap_flag = SDIO3_CAP_FLAG_SDR50 | SDIO3_CAP_FLAG_RD_WAIT, /*!< capability flag */
+        .func1_dnld_size_max = (512*3),                /* dnld max size */
+        .func2_dnld_size_max = (512*3),                /* dnld max size */
+    };
+
+    /* Initialize SDIO3 */
+    EXAMPLE_PRINTF("bflb_sdio3_init\r\n");
+    bflb_sdio3_init(sdio3_hd, &cfg);
+
+    bflb_sdio3_feature_control(sdio3_hd, SDIO3_CMD_INIT_READY, 0);
+    bflb_sdio3_feature_control(sdio3_hd, SDIO3_CMD_SET_FUNC_CARD_READY, 1);
+}
+void transportsdio3_reset_handler_isr(void *arg)
+{
+    extern uint32_t transportsdio_get_payload_offset(uint8_t *payload);
+    extern volatile bool sdio3_ready_flag;
+    extern struct bflb_device_s *sdio3_hd;
+    bflb_msg_ctrl_t *msg_ctrl;
+    frame_elem_t *frame_elem;
+    int offset;
+
+    printf("SDIO hotplug detected, this feature is not yet supported\r\n");
+    //while(1);
+
+    sdio3_ready_flag = false;
+    bflb_msg_host_reset_cb();
+
+    {
+        bflb_sdio3_trans_desc_t trans_desc;
+
+        while (bflb_sdio3_dnld_pop(sdio3_hd, &trans_desc, 1) == 0) {
+            msg_ctrl = (bflb_msg_ctrl_t *)trans_desc.user_arg;
+            frame_elem = (frame_elem_t *)((uintptr_t)trans_desc.buff - FRAME_BUFF_MSGSTRUCT_OFFSET);
+
+            EXAMPLE_PRINTF("dnld pop:%d\r\n", FRAME_BUFF_MSGSTRUCT_OFFSET);
+            frame_elem->data_size = 0;
+            bflb_msg_dnld_recv_done_cb(msg_ctrl, frame_elem, false);
+        }
+        while (bflb_sdio3_upld_pop(sdio3_hd, &trans_desc, 1) == 0) {
+            msg_ctrl = (bflb_msg_ctrl_t *)trans_desc.user_arg;
+            offset = transportsdio_get_payload_offset((uint8_t *)trans_desc.buff+FRAME_BUFF_MSGSTRUCT);
+            EXAMPLE_PRINTF("upld pop offset:%d\r\n", offset);
+            frame_elem = (frame_elem_t *)((uintptr_t)trans_desc.buff - offset + FRAME_BUFF_MSGSTRUCT);
+
+            bflb_msg_upld_send_done_cb(msg_ctrl, frame_elem, true);
+        }
+    }
+
+    /* Reset SDIO3 queue control */
+    bflb_sdio3_deinit(sdio3_hd);
+
+    /* Re-initialize SDIO3 */
+    _sdio3_reinit();
+}
+#endif
 

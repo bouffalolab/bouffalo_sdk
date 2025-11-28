@@ -25,7 +25,6 @@
 #include "bflb_flash.h"
 #include "bflb_gpio.h"
 #include "at_ota.h"
-#include "mem.h"
 #include "at_through.h"
 #include "bflb_adc.h"
 #include "at_fs.h"

@@ -172,11 +172,18 @@ void sdio3_irq_cb(void *arg, uint32_t irq_event, bflb_sdio3_trans_desc_t *trans_
             sdio3_upld_irq_callback(arg, trans_desc);
             break;
 
-#ifdef SDIO3_SOFT_RST_INT_SUP
         case SDIO3_IRQ_EVENT_SOFT_RESET:
-            sdio3_reset_irq_callback(arg);
-            break;
+#ifdef CONFIG_SDIO3_SOFT_RST_INT_USER
+            // To be removed - use bottom-up callback instead
+            {
+            extern void transportsdio3_reset_handler_isr(void *arg);
+            transportsdio3_reset_handler_isr(arg);
+            }
 #endif
+#ifdef SDIO3_SOFT_RST_INT_SUP
+            sdio3_reset_irq_callback(arg);
+#endif
+            break;
 
         case SDIO3_IRQ_EVENT_ERR_CRC:
             LOG_E("sdio3 error: CRC ERROR!\r\n");

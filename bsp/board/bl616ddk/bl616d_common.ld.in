@@ -1,46 +1,72 @@
-#define CONFIG_FLASH_XIP_ADDRESS 0x80000000
-#define CONFIG_FLASH_XIP_LENGTH 4096 * 1024
+/*
+ * CONFIG_FLASH_XIP_ADDRESS
+ * CONFIG_FLASH_XIP_LENGTH
+ * CONFIG_WRAM_ADDRESS
+ * CONFIG_WRAM_LENGTH
+ * CONFIG_WRAM_FOR_AP_SIZE
+ * CONFIG_RAM_ADDRESS
+ * CONFIG_RAM_LENGTH
+ * CONFIG_RAM_FOR_AP_SIZE
+ * CONFIG_PSRAM_ADDRESS
+ * CONFIG_PSRAM_FOR_AP_SIZE
+ * CONFIG_PSRAM_LENGTH
+ */
 
-/* 25% */
-#ifndef CONFIG_RAM_FOR_WIFI_SIZE
-#define WRAM_LENGTH 160 * 1024
+/* 4M */
+#define CONFIG_FLASH_XIP_ADDRESS 0x80000000
+#ifndef CONFIG_FLASH_XIP_LENGTH
+#define CONFIG_FLASH_XIP_LENGTH 4096 * 1024
+#endif
+
+/* 4M */
+#define CONFIG_PSRAM_ADDRESS 0x88000000
+#ifndef CONFIG_PSRAM_LENGTH
+#define CONFIG_PSRAM_LENGTH 4096 * 1024
+#endif
+
+/* 320K */
+#define CONFIG_WRAM_ADDRESS 0x21050000
+#define CONFIG_WRAM_LENGTH 320 * 1024
+
+/* 320K */
+#define CONFIG_RAM_ADDRESS 0x61000000
+#define CONFIG_RAM_LENGTH 320 * 1024
+
+/* 0K */
+#ifndef CONFIG_WRAM_FOR_AP_SIZE
+#define WRAM_AP_LENGTH 0
 #else
-#define WRAM_LENGTH (CONFIG_RAM_FOR_WIFI_SIZE)
+#define WRAM_AP_LENGTH (CONFIG_WRAM_FOR_AP_SIZE)
 #endif
 
 /* 50% */
 #ifndef CONFIG_RAM_FOR_AP_SIZE
-#define RAM_AP_LENGTH 320 * 1024
+#define RAM_AP_LENGTH 160 * 1024
 #else
 #define RAM_AP_LENGTH (CONFIG_RAM_FOR_AP_SIZE)
 #endif
 
-/* 50% */
+/* at least 2M */
 #ifndef CONFIG_PSRAM_FOR_AP_SIZE
-#define PSRAM_AP_LENGTH 2048 * 1024 * 1024
+#define PSRAM_AP_LENGTH 2 * 1024 * 1024
 #else
 #define PSRAM_AP_LENGTH (CONFIG_PSRAM_FOR_AP_SIZE)
 #endif
 
-#define CONFIG_WRAM_ADDRESS 0x21050000
-#define CONFIG_WRAM_LENGTH WRAM_LENGTH
-
-#if CONFIG_RAM_FOR_AP_PERCENT == 0
+#if RAM_AP_LENGTH == 0
 #define NP_RAM_HOLE 0x400
+#define AP_RAM_HOLE 0x0
 #else
 #define NP_RAM_HOLE 0x0
+#define AP_RAM_HOLE 0x400
 #endif
 
 #ifdef CPU_AP
-    #define CONFIG_RAM_ADDRESS 0x61000000 + 0x400
-    #define CONFIG_RAM_LENGTH RAM_AP_LENGTH - 0x400
-    #define CONFIG_PSRAM_ADDRESS 0x88000000
-    #define CONFIG_PSRAM_LENGTH PSRAM_AP_LENGTH
+    #define RAM_ADDRESS CONFIG_RAM_ADDRESS + AP_RAM_HOLE
+    #define RAM_LENGTH RAM_AP_LENGTH - AP_RAM_HOLE
 #elif defined(CPU_NP)
-    #define CONFIG_RAM_ADDRESS 0x61000000 + RAM_AP_LENGTH + NP_RAM_HOLE
-    #define CONFIG_RAM_LENGTH 640 * 1024 - WRAM_LENGTH - RAM_AP_LENGTH - NP_RAM_HOLE
-    #define CONFIG_PSRAM_ADDRESS 0x88000000 + PSRAM_AP_LENGTH
-    #define CONFIG_PSRAM_LENGTH 4096 * 1024 - PSRAM_AP_LENGTH
+    #define RAM_ADDRESS CONFIG_RAM_ADDRESS + RAM_AP_LENGTH + NP_RAM_HOLE
+    #define RAM_LENGTH CONFIG_RAM_LENGTH - RAM_AP_LENGTH - NP_RAM_HOLE
 #endif
 
 #define GROUP_START(name) __##name##_start__ = ABSOLUTE(ORIGIN(name)); . = ABSOLUTE(ORIGIN(name));
@@ -55,38 +81,65 @@ ENTRY(__start)
 
 MEMORY
 {
-    fw_header_memory  (rx)  : ORIGIN = CONFIG_FLASH_XIP_ADDRESS - 0x1000, LENGTH = 4K
-    rom_header (rx)  : ORIGIN = CONFIG_FLASH_XIP_ADDRESS , LENGTH = 4K
-    rom (rx)  : ORIGIN = CONFIG_FLASH_XIP_ADDRESS + 0x1000, LENGTH = CONFIG_FLASH_XIP_LENGTH
+#if CONFIG_FLASH_XIP_ADDRESS
+    fw_header  (rx)   : ORIGIN = CONFIG_FLASH_XIP_ADDRESS - 0x1000, LENGTH = 4K
+    rom_header (rx)   : ORIGIN = CONFIG_FLASH_XIP_ADDRESS,          LENGTH = 4K
+    rom (rx)          : ORIGIN = CONFIG_FLASH_XIP_ADDRESS + 0x1000, LENGTH = CONFIG_FLASH_XIP_LENGTH
 
-    ram_nocache (!rx) : ORIGIN = (CONFIG_RAM_ADDRESS) & 0x2FFFFFFF, LENGTH = CONFIG_RAM_LENGTH
-    ram  (!rx) : ORIGIN = CONFIG_RAM_ADDRESS, LENGTH = CONFIG_RAM_LENGTH
-
-#ifdef CONFIG_PSRAM
-    ram_psram  (wxa)   : ORIGIN = CONFIG_PSRAM_ADDRESS, LENGTH = CONFIG_PSRAM_LENGTH
+    ram_nocache (!rx) : ORIGIN = (RAM_ADDRESS) & 0x2FFFFFFF,        LENGTH = RAM_LENGTH
+    ram  (!rx)        : ORIGIN = RAM_ADDRESS,                       LENGTH = RAM_LENGTH
 #else
-    ram_psram  (wxa)   : ORIGIN = 0, LENGTH = 0
+    fw_header  (rx)   : ORIGIN = RAM_ADDRESS - (256+16),            LENGTH = 256+16
+    rom_header (rx)   : ORIGIN = RAM_ADDRESS,                       LENGTH = 4K
+
+    ram_nocache (!rx) : ORIGIN = (RAM_ADDRESS + 4K) & 0x2FFFFFFF,   LENGTH = RAM_LENGTH - 4K
+    ram  (!rx)        : ORIGIN = RAM_ADDRESS + 4K,                  LENGTH = CONFIG_RAM_LENGTH
 #endif
 
-#if defined(CPU_AP) || defined(CONFIG_WRAM_ONLY_FOR_NP)
-    ram_wifi  (wxa)   : ORIGIN = CONFIG_WRAM_ADDRESS, LENGTH = CONFIG_WRAM_LENGTH
+#ifdef CPU_AP
+    ram_psram  (wxa)  : ORIGIN = CONFIG_PSRAM_ADDRESS, LENGTH = PSRAM_AP_LENGTH
 #else
-    ram_wifi  (wxa)   : ORIGIN = 0, LENGTH = 0
+    ram_psram  (wxa)  : ORIGIN = CONFIG_PSRAM_ADDRESS + PSRAM_AP_LENGTH, LENGTH = CONFIG_PSRAM_LENGTH - PSRAM_AP_LENGTH
+#endif
+
+#ifdef CPU_AP
+    ram_wifi  (wxa)   : ORIGIN = CONFIG_WRAM_ADDRESS, LENGTH = WRAM_AP_LENGTH
+#else
+    ram_wifi  (wxa)   : ORIGIN = CONFIG_WRAM_ADDRESS + WRAM_AP_LENGTH, LENGTH = CONFIG_WRAM_LENGTH - WRAM_AP_LENGTH
 #endif
 }
+
+#if !CONFIG_FLASH_XIP_ADDRESS
+    REGION_ALIAS("rom", ram);
+#endif
 
 SECTIONS
 {
     .fw_header :
     {
         KEEP(*(.fw_header))
-    } > fw_header_memory
+#if !CONFIG_FLASH_XIP_ADDRESS
+        LONG(CONFIG_RAM_ADDRESS)
+        LONG(0x48474553)
+#endif
+    } > fw_header
 
     GROUP_START(rom_header)
     .init ORIGIN(rom_header):
     {
         KEEP (*(SORT_NONE(.init)))
         KEEP (*(SORT_NONE(.vector)))
+	__dualcore_images__ = ABSOLUTE(.);
+#ifdef CPU_AP
+	LONG(__rom_end__ - __rom_start__ + 4K + 4K)
+#endif
+#ifdef CONFIG_NP_IMAGE_SIZE
+	LONG(CONFIG_NP_IMAGE_SIZE)
+#endif
+#ifdef CONFIG_LP_IMAGE_SIZE
+	LONG(CONFIG_LP_IMAGE_SIZE)
+#endif
+	LONG(0xFFFFFFFF)
     } > rom_header
 
     .rftlv.tool ORIGIN(rom_header) + 1K:
@@ -342,6 +395,7 @@ SECTIONS
         LONG(0xffffffff);                   LONG(0xffffffff);
 
         *(.text*)
+        *(.rodata*)
 
         /* section information for shell */
         . = ALIGN(4);
@@ -378,7 +432,7 @@ SECTIONS
         . = ALIGN(4);
         *(.gcc_except_table.*)
 
-        . = ALIGN(4);
+        . = ALIGN(1024);
     } > rom
     GROUP_END(rom)
 }

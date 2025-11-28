@@ -40,6 +40,10 @@
 #define mgmr_TASK_PRIORITY     (28)
 #define TSEN_RELOAD_MS         (10000)
 
+static wifi_conf_t conf = {
+    .country_code = "CN",
+};
+
 wifi_mgmr_t wifiMgmr;
 extern struct bl_hw wifi_hw;
 static void dump_connect_param(const wifi_mgmr_profile_msg_t *profile_msg, int band, int freq, const uint8_t *bssid);
@@ -1659,6 +1663,11 @@ int wifi_mgmr_init(wifi_conf_t *conf)
 {
     wifi_mgmr_start_background(conf);
     return 0;
+}
+
+int wifi_mgmr_task_start(void)
+{
+    wifi_mgmr_init(&conf);
 }
 
 int wifi_mgmr_internel_init(void)

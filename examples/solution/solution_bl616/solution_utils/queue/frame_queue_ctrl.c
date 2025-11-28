@@ -13,7 +13,7 @@
 
 #include "frame_queue_ctrl.h"
 
-#include "mem.h"
+#include "mm.h"
 
 #if (0)
 #define FRAME_DBG(a, ...) printf("[frame dbg]:" a, ##__VA_ARGS__)
@@ -102,10 +102,10 @@ int frame_queue_create(frame_queue_ctrl_t **ctrl, uint16_t queue_depth, uint16_t
     BaseType_t q_ret;
     int ret = 0;
 
-    frame_queue_ctrl_t *ctrl_ptr = kmalloc(sizeof(frame_queue_ctrl_t));
+    frame_queue_ctrl_t *ctrl_ptr = kmalloc(sizeof(frame_queue_ctrl_t), 0);
     memset(ctrl_ptr, 0, sizeof(frame_queue_ctrl_t));
 
-    uint32_t *elem_status_ptr = kmalloc(queue_depth * sizeof(frame_elem_status_t));
+    uint32_t *elem_status_ptr = kmalloc(queue_depth * sizeof(frame_elem_status_t), 0);
     memset(elem_status_ptr, 0, queue_depth * sizeof(frame_elem_status_t));
 
     /* creat pool queue (memory block pool manage) */

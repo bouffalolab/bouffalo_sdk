@@ -54,6 +54,7 @@
     #error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
 #endif
 
+#include "mm.h"
 /*-----------------------------------------------------------*/
 
 void * pvPortMalloc( size_t xWantedSize )

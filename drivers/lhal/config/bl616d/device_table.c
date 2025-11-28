@@ -593,6 +593,13 @@ const struct bflb_device_s bl616d_device_table[] = {
       .sub_idx = 1,
       .dev_type = BFLB_DEVICE_TYPE_DMA2D,
       .user_data = NULL },
+    { .name = BFLB_NAME_DSI,
+      .reg_base = OSD_BASE,
+      .irq_num = BL616D_IRQ_DSI,
+      .idx = 0,
+      .sub_idx = 0,
+      .dev_type = BFLB_DEVICE_TYPE_DSI,
+      .user_data = NULL },
 #endif
 };
 

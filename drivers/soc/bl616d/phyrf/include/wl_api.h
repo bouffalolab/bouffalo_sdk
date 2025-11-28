@@ -12,6 +12,11 @@
     #define WL_API_RMEM_EN (1)
 #endif
 
+#if defined(WL_API_RMEM_EN) && WL_API_RMEM_EN
+    #ifndef WL_API_RMEM_ADDR
+    #define WL_API_RMEM_ADDR 0x20090600
+    #endif
+#endif
 
 #define NUM_WLAN_CHANNELS           (14)
 #define NUM_BZ_CH_PWRCOMP           (5)

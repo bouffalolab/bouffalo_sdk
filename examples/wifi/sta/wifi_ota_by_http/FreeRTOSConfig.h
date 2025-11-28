@@ -41,7 +41,7 @@
  *----------------------------------------------------------*/
 #include "stdio.h"
 
-#ifdef BL702
+#if defined(BL702) || defined(BL602)
 #define configMTIME_BASE_ADDRESS    (0x02000000UL + 0xBFF8UL)
 #define configMTIMECMP_BASE_ADDRESS (0x02000000UL + 0x4000UL)
 #else

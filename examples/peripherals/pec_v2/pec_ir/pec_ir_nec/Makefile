@@ -1,5 +1,5 @@
 SDK_DEMO_PATH ?= $(abspath .)
-BL_SDK_BASE ?= ./../../../../..
+BL_SDK_BASE ?= $(abspath  ./../../../../..)
 
 export BL_SDK_BASE
 
@@ -7,8 +7,5 @@ CPU_ID ?= ap
 BOARD ?= bl616ddk
 CROSS_COMPILE ?= riscv64-unknown-elf-
 
-# add custom cmake definition
-#cmake_definition+=-Dxxx=sss
 
--include $(SDK_DEMO_PATH)/.config
 include $(BL_SDK_BASE)/project.build

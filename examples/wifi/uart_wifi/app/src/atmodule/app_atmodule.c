@@ -4,7 +4,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>
-#include <mem.h>
 #include <shell.h>
 #include <netbus_uart.h>
 #include "at_main.h"

@@ -10,6 +10,8 @@
 #include "task.h"
 #include "timers.h"
 
+#include "async_event.h"
+
 static TimerHandle_t timeout_tmr;
 
 uint32_t rtos_al_ms2tick(int ms) {
@@ -135,32 +137,11 @@ void rtos_timeouts_start(unsigned int delay) {
   xTimerChangePeriod(timeout_tmr, delay, portMAX_DELAY);
 }
 
-/* User defined wifi event handler */
-extern void wl80211_event_handler(uint32_t code1, uint32_t code2);
-
-/* async event handler */
-static void async_event_handler(void *arg1, uint32_t arg2) {
-  /* XXX: Prevents blocking operations in the Timer context. */
-  vTaskSuspendAll();
-
-  wl80211_event_handler(arg2, (uint32_t)arg1);
-
-  xTaskResumeAll();
-}
-
 /**
 ****************************************************************************************
-* @brief Post Event to upper layer
-*
-* @param[in] catalogue Type of event.
-* @param[in] code Code of event.
+* @brief Post event
 ****************************************************************************************
 */
-
 void wl80211_post_event(int code1, int code2) {
-  BaseType_t xReturn;
-
-  xReturn = xTimerPendFunctionCall(async_event_handler, (void *)code2, code1,
-                                   portMAX_DELAY);
-  configASSERT(xReturn == pdPASS);
+  async_post_event(EV_WIFI, code1, code2);
 }

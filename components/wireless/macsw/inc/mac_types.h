@@ -98,6 +98,10 @@ enum mac_chan_flags
     CHAN_DISABLED = CO_BIT(1),
     /// Radar detection required on this channel
     CHAN_RADAR = CO_BIT(2),
+    /// Disable WiFi5 required by bss mode
+    CHAN_DISABLE_VHT = CO_BIT(6),
+    /// Disable WiFi6 required by bss mode
+    CHAN_DISABLE_HE = CO_BIT(7),
 };
 
 /// Primary Channel definition

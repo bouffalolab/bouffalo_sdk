@@ -295,4 +295,11 @@ int transportsdio_unregister_payload_offset(uint8_t *payload);
  */
 uint32_t transportsdio_get_payload_offset(uint8_t *payload);
 
+/**
+ * @brief Dump g_wifi_priv structure parameters for debugging
+ * @details Print important parameters including queue status, connection state,
+ *          flow control status and other key information
+ */
+void transportsdio_dump_priv(void);
+
 #endif /* __transportsdio_H_ */

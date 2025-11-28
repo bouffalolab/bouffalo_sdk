@@ -85,7 +85,7 @@ lfs_t *lfs_xip_init(struct lfs_context *lfs_xip_ctx, struct lfs_config *cfg)
 
     // reformat if we can't mount the filesystem
     // this should only happen on the first boot
-    if (ret == LFS_ERR_CORRUPT) {
+    if (ret) {
         LOG_W("try to reformat \r\n");
         ret = lfs_format(lfs, cfg);
         if (ret) {

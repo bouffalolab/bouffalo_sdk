@@ -16,7 +16,6 @@
 #include <spisync_port.h>
 #include <spisync_internal.h>
 
-#include "mem.h"
 #include <shell.h>
 
 extern spisync_t *g_spisync_current;

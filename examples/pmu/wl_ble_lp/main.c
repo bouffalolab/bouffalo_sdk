@@ -74,9 +74,6 @@ TaskHandle_t wifi_fw_task;
 static TaskHandle_t app_start_handle;
 struct bt_conn *bleapp_default_conn;
 
-static wifi_conf_t conf = {
-    .country_code = "US",
-};
 #if defined(CFG_BLE_ENABLE)
 static void ble_connected(struct bt_conn *conn, u8_t err)
 {
@@ -203,7 +200,7 @@ void wifi_event_handler(uint32_t code)
     switch (code) {
         case CODE_WIFI_ON_INIT_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
-            wifi_mgmr_init(&conf);
+            wifi_mgmr_task_start();
         } break;
         case CODE_WIFI_ON_MGMR_DONE: {
             LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);

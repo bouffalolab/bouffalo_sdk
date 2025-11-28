@@ -23,7 +23,7 @@
 
 #include "board_flash_psram.h"
 
-#include "mem.h"
+#include "mm.h"
 
 extern void log_start(void);
 
@@ -52,11 +52,13 @@ static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
     if (GLB_CORE_ID_AP == GLB_Get_Core_Type()) {
         /* wifipll/cpupll */
         GLB_Power_On_XTAL_And_PLL_CLK(GLB_XTAL_40M, GLB_PLL_WIFIPLL | GLB_PLL_CPUPLL);
+#if defined(CPU_MODEL_A0)
         GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_TOP_WIFIPLL_320M);
         HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_RC32M);
-#if defined(CPU_MODEL_A0)
         GLB_Set_WL_MCU_System_CLK(GLB_WL_MCU_SYS_CLK_CPUPLL_DIV1, 0, 2);
 #else
+        GLB_Set_MCU_System_CLK(GLB_MCU_SYS_CLK_CPUPLL_DIV1);
+        HBN_Set_MCU_XCLK_Sel(HBN_MCU_XCLK_XTAL);
         GLB_Set_WL_MCU_System_CLK(GLB_WL_MCU_SYS_CLK_WIFIPLL_DIV2, 0, 1);
 #endif
         GLB_Set_WL_XCLK_Sel(GLB_WL_MCU_XCLK_XTAL);
@@ -72,11 +74,9 @@ static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
 
         CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK, Clock_System_Clock_Get(BL_SYSTEM_CLOCK_XCLK) / 1000000 - 1);
 
-#ifdef CONFIG_WIFI6
         /* enable wifi clock */
         GLB_Set_WIFIPLL_Fine_Tune();
         GLB_PER_Clock_UnGate(GLB_AHB_CLOCK_IP_WIFI_PHY | GLB_AHB_CLOCK_IP_WIFI_MAC_PHY | GLB_AHB_CLOCK_IP_WIFI_PLATFORM);
-#endif
     } else if (GLB_CORE_ID_NP == GLB_Get_Core_Type()) {
         CPU_Set_MTimer_CLK(ENABLE, BL_MTIMER_SOURCE_CLOCK_MCU_XCLK, Clock_System_Clock_Get(BL_SYSTEM_CLOCK_WL_XCLK) / 1000000 - 1);
     }
@@ -126,9 +126,11 @@ static void peripheral_clock_init(void)
         GLB_Set_IR_CLK(ENABLE, GLB_IR_CLK_SRC_XCLK, bflb_clk_get_peripheral_clock(BFLB_DEVICE_TYPE_IR, 0) / 2000000 - 1);
         GLB_Set_CAM_CLK(ENABLE, GLB_CAM_CLK_WIFIPLL_96M, 3);
         GLB_Set_PEC_CLK(ENABLE, GLB_PEC_CLK_MUXPLL_160M, 0);
-
+#if defined(CPU_MODEL_A0)
         GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_WIFIPLL_160M);
-
+#else
+        GLB_Set_PKA_CLK_Sel(GLB_PKA_CLK_WIFIPLL_320M);
+#endif
         GLB_Set_USB_CLK_From_WIFIPLL(1);
         GLB_Swap_MCU_SPI_0_MOSI_With_MISO(0);
     }
@@ -419,13 +421,17 @@ void boot_up_np()
     /* AP & NP run in the different code */
     int ret;
     uint32_t boot_addr = 0, boot_len;
-    ret = bflb_boot2_partition_addr_active("FW1", &boot_addr, &boot_len);
+    ret = bflb_boot2_partition_addr_active("FW0", &boot_addr, &boot_len);
     if (ret != 0 || boot_addr == 0x0) {
-        printf("ERROR: FW1 bootaddr not found ret:%d\r\n", ret);
+        printf("ERROR: FW0 bootaddr not found ret:%d\r\n", ret);
         return;
     }
-    printf("CPU1 bootaddr get success 0x%08x\r\n", boot_addr + 0x1000);
-    bflb_sf_ctrl_set_flash_image_offset(boot_addr + 0x1000, 1, 0);
+    extern uint32_t __dualcore_images__;
+    uint32_t image_ap_1Kalign_size = *(uint32_t *)(&__dualcore_images__);
+    boot_addr += image_ap_1Kalign_size + 0x1000; // FW0 header size is 0x1000
+
+    printf("NP bootaddr get success 0x%08x\r\n", boot_addr);
+    bflb_sf_ctrl_set_flash_image_offset(boot_addr, 1, 0);
 #endif
     GLB_Set_CPU_Reset_Address(GLB_CORE_ID_NP, (uint32_t)&__start);
     GLB_Release_CPU(GLB_CORE_ID_NP);
@@ -468,12 +474,56 @@ void bflb_wfa_init(void)
 }
 #endif
 
+void ram_heap_init(void)
+{
+    size_t heap_len;
+
+    /* ram heap init */
+    mem_manager_init();
+
+    /* ocram heap init */
+    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+
+#ifdef CONFIG_PSRAM
+#if defined(CPU_AP)
+    /* psram init */
+    if (board_psram_x8_init() != SUCCESS) {
+        puts("psram init fail !!!\r\n");
+        while (1) {}
+    }
+#endif
+
+    /* psram heap init */
+    heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
+    mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, heap_len);
+
+    /* ram info dump */
+    printf("dynamic memory init success\r\n"
+           "  ocram heap size: %d Kbyte, \r\n"
+           "  psram heap size: %d Kbyte\r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
+           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
+
+#else
+    /* check psram data */
+    if (&__psram_data_end__ - &__psram_data_start__ > 0 || &__psram_noinit_end__ - &__psram_noinit_start__ > 0) {
+        puts("psram data already exists, please enable CONFIG_PSRAM\r\n");
+        while (1) {}
+    }
+
+    /* ram info dump */
+    printf("dynamic memory init success\r\n"
+           "  ocram heap size: %d Kbyte \r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+#endif
+}
+
 #if defined(CPU_AP)
 void board_init(void)
 {
     int ret = -1;
     uintptr_t flag;
-    size_t heap_len;
     uint32_t xtal_value = 0;
 
     flag = bflb_irq_save();
@@ -512,36 +562,8 @@ void board_init(void)
     /* console init (uart or wo) */
     console_init();
 
-    /* ram heap init */
-    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
-
-
-#ifdef CONFIG_PSRAM
-    /* psram init */
-    if (board_psram_x8_init() != SUCCESS) {
-        printf("psram init fail !!!\r\n");
-        while (1) {}
-    }
-    /* psram heap init */
-    heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
-    pmem_init((void *)&__psram_heap_base, heap_len);
-
-    /* ram info dump */
-    printf("dynamic memory init success, ocram heap size = %d Kbyte, psram heap size = %d Kbyte\r\n",
-           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
-           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
-
-#else
-    /* check psram data */
-    if (&__psram_data_end__ - &__psram_data_start__ > 0 || &__psram_noinit_end__ - &__psram_noinit_start__ > 0) {
-        puts("psram data already exists, please enable CONFIG_PSRAM\r\n");
-        while (1) {}
-    }
-
-    /* ram info dump */
-    printf("dynamic memory init success, ocram heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
-#endif
+    /* ram and heap init (including psram) */
+    ram_heap_init();
 
     /* boot info dump */
     bl_show_log();
@@ -601,7 +623,6 @@ void board_init(void)
 void board_init(void)
 {
     uintptr_t flag;
-    size_t heap_len;
 
     flag = bflb_irq_save();
 
@@ -619,21 +640,11 @@ void board_init(void)
     bflb_irq_enable(WIFI_TO_CPU_IRQn);
 #endif
 
-    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
-
     console_init();
 
-#ifdef CONFIG_PSRAM
-    /* psram heap init */
-    heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
-    pmem_init((void *)&__psram_heap_base, heap_len);
+    /* ram and heap init (including psram) */
+    ram_heap_init();
 
-    /* ram info dump */
-    printf("dynamic memory init success, ocram heap size = %d Kbyte, psram heap size = %d Kbyte\r\n",
-           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
-           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
-#endif
     bl_show_log();
 
     printf("uart  sig1:%08x, sig2:%08x\r\n", getreg32(GLB_BASE + GLB_UART_CFG1_OFFSET), getreg32(GLB_BASE + GLB_UART_CFG2_OFFSET));
@@ -654,14 +665,13 @@ void board_init(void)
 
     /* ram heap init */
 
-    size_t heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
-
     console_init();
+
+    /* heap init */
+    heap_init();
 
     bl_show_log();
 
-    printf("dynamic memory init success,heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
     //printf("lp does not use memheap due to little ram \r\n");
 
     printf("uart  sig1:%08x, sig2:%08x\r\n", getreg32(GLB_BASE + GLB_UART_CFG1_OFFSET), getreg32(GLB_BASE + GLB_UART_CFG2_OFFSET));

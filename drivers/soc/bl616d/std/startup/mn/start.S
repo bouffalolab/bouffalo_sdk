@@ -35,9 +35,10 @@ __start:
 
 #ifndef CPU_NP
     /* jump to np */
-    lui a0, 0xF0000 
+    lui a0, 0xF0000
     lw t0, 0(a0)
-    lui t1, 0xE9078
+    lui t1, 0xF9010
+    addi t1, t1, -0x700
     xor t2, t0, t1
     beq t2, x0, cpu_np_start
 #endif

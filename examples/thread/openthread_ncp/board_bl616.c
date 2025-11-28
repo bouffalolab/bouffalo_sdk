@@ -6,7 +6,7 @@
 #include <bflb_flash.h>
 
 #include <FreeRTOS.h>
-#include "mem.h"
+#include "mm.h"
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
@@ -100,8 +100,11 @@ void board_ncp_init(void)
 
     console_ncp_init();
 
+    /* ram heap init */
+    mem_manager_init();
+    /* ocram heap init */
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
+    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
 
     log_start();
 

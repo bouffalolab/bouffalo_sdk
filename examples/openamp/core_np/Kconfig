@@ -1,3 +1,0 @@
-mainmenu "SDK Configuration"
-
-source "$BL_SDK_BASE/Kconfig"

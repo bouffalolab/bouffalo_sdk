@@ -19,7 +19,7 @@ struct ieee80211_dot_d {
     char *code;
     uint8_t channel24G_num;
     uint8_t channel5G_num;
-    uint8_t channel24G_chan[MAC_DOMAINCHANNEL_24G_MAX];
+    uint8_t channel24G_start;
     uint8_t channel5G_chan[MAC_DOMAINCHANNEL_5G_MAX];
 };
 
@@ -70,10 +70,12 @@ typedef struct wifi_mgmr {
     int scan_item_timeout;
     // the all channel nums for some country code include 2.4G & 5G
     uint8_t channel24G_num;
-    uint8_t *channel24G_list;
+    uint8_t channel24G_start;
     uint8_t channel5G_num;
     uint8_t *channel5G_list;
     char country_code[3];
+    char old_country_code[3];
+    bool ieee80211d_enable;
     uint8_t disable_autoreconnect;
     uint8_t ready;
     uint8_t max_sta_supported;
@@ -114,7 +116,7 @@ typedef struct wifi_mgmr {
 } wifi_mgmr_t;
 extern wifi_mgmr_t wifiMgmr;
 
-int wifi_mgmr_init(wifi_conf_t *conf);
+int wifi_mgmr_task_start(void);
 int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint8_t *c5G_cnt);
 char *wifi_mgmr_auth_to_str(uint8_t auth);
 char *wifi_mgmr_cipher_to_str(uint8_t cipher);

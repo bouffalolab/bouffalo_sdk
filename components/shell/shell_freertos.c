@@ -3,7 +3,6 @@
 #include "semphr.h"
 #include "ring_buffer.h"
 #include "bflb_uart.h"
-#include "mem.h"
 
 #if defined(CONFIG_SHELL_EXEC_THREAD) && CONFIG_SHELL_EXEC_THREAD
 static int shell_exec_argc;

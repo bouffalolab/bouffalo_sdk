@@ -1,12 +1,11 @@
 SDK_DEMO_PATH ?= $(abspath .)
-BL_SDK_BASE ?= ./../../../..
+BL_SDK_BASE ?= $(abspath  ./../../../..)
 
 export BL_SDK_BASE
 
 CROSS_COMPILE ?= riscv64-unknown-elf-
 
-# add custom cmake definition
-#cmake_definition+=-Dxxx=sss
+#CONFIG_AES_KEY ?= 0000000000000000000000000000000000000000000000000000000000000000
+#CONFIG_AES_IV ?= 12345678123456781234567800000000
 
--include $(SDK_DEMO_PATH)/.config
 include $(BL_SDK_BASE)/project.build

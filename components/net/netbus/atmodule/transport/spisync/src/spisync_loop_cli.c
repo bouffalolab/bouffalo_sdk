@@ -16,7 +16,6 @@
 #include <spisync_port.h>
 #include <spisync_internal.h>
 
-#include "mem.h"
 #include <shell.h>
 
 #define BUF_SIZE                (1500)

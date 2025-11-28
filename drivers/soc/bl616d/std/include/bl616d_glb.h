@@ -268,6 +268,10 @@ typedef struct {
     uint8_t spdGain;      /*!< 0,1,2,3 for 2/2^6, 3/2^6, 4/2^6, 5/2^6, it is the TDC gain */
     uint8_t lmsExtEn;     /*!< 1'b1 enable external lms coe, and disable lms block */
     uint8_t lmsExtValue;  /*!< tt50 = 0.68 */
+#if !defined(CPU_MODEL_A0)
+    uint8_t momUpdatePeriod;
+    uint8_t coarseGain;
+#endif
 } GLB_CPUPLL_CFG_BASIC_Type;
 
 typedef struct {
@@ -617,7 +621,11 @@ typedef struct {
   * @{
   */
 #define GLB_PKA_CLK_MCU_BCLK        (0) /*!< Select MCU_BCLK as PKA clock */
+#if defined(CPU_MODEL_A0)
 #define GLB_PKA_CLK_WIFIPLL_160M    (1) /*!< Select MCU WIFIPLL 160M as PKA clock */
+#else
+#define GLB_PKA_CLK_WIFIPLL_320M    (1) /*!< Select MCU WIFIPLL 320M as PKA clock */
+#endif
 /**
   * @}
   */
@@ -725,7 +733,11 @@ typedef struct {
   */
 #define GLB_CHIP_CLK_OUT_0_CAM_REF_CLK     (0) /*!< cam_ref_clk */
 #define GLB_CHIP_CLK_OUT_0_I2S_REF_CLK     (1) /*!< i2s_ref_clk out */
+#if defined(CPU_MODEL_A0)
 #define GLB_CHIP_CLK_OUT_0_NONE            (2) /*!< no clock out */
+#else
+#define GLB_CHIP_CLK_OUT_0_I2S_MCLK        (2) /*!< i2s_mclk out */
+#endif
 #define GLB_CHIP_CLK_OUT_0_SOLO_IN_128FS   (3) /*!< clk_solo_in_128fs */
 /**
   * @}
@@ -736,7 +748,11 @@ typedef struct {
   */
 #define GLB_CHIP_CLK_OUT_1_CAM_REF_CLK     (0) /*!< no chip clock out */
 #define GLB_CHIP_CLK_OUT_1_I2S_REF_CLK     (1) /*!< i2s_ref_clk out */
+#if defined(CPU_MODEL_A0)
 #define GLB_CHIP_CLK_OUT_1_NONE            (2) /*!< no clock out */
+#else
+#define GLB_CHIP_CLK_OUT_1_I2S_MCLK        (2) /*!< i2s_mclk out */
+#endif
 #define GLB_CHIP_CLK_OUT_1_SOLO_IN_128FS   (3) /*!< clk_solo_in_128fs */
 /**
   * @}
@@ -758,7 +774,11 @@ typedef struct {
   */
 #define GLB_CHIP_CLK_OUT_3_CAM_REF_CLK     (0) /*!< no chip clock out */
 #define GLB_CHIP_CLK_OUT_3_I2S_REF_CLK     (1) /*!< i2s_ref_clk out */
+#if defined(CPU_MODEL_A0)
 #define GLB_CHIP_CLK_OUT_3_NONE            (2) /*!< no clock out */
+#else
+#define GLB_CHIP_CLK_OUT_3_I2S_MCLK        (2) /*!< i2s_mclk out */
+#endif
 #define GLB_CHIP_CLK_OUT_3_WIFIPLL_48M     (3) /*!< wifipll_48m_clk */
 /**
   * @}
@@ -1483,8 +1503,13 @@ typedef union {
 /** @defgroup  GLB_PKA_CLK_TYPE
  *  @{
  */
+#if defined(CPU_MODEL_A0)
 #define IS_GLB_PKA_CLK_TYPE(type) (((type) == GLB_PKA_CLK_MCU_BCLK) || \
                                    ((type) == GLB_PKA_CLK_WIFIPLL_160M))
+#else
+#define IS_GLB_PKA_CLK_TYPE(type) (((type) == GLB_PKA_CLK_MCU_BCLK) || \
+                                   ((type) == GLB_PKA_CLK_WIFIPLL_320M))
+#endif
 
 /** @defgroup  GLB_MCU_SW_SYSTEM_TYPE
  *  @{
@@ -1555,18 +1580,32 @@ typedef union {
 /** @defgroup  GLB_CHIP_CLK_OUT_0_TYPE
  *  @{
  */
+#if defined(CPU_MODEL_A0)
 #define IS_GLB_CHIP_CLK_OUT_0_TYPE(type) (((type) == GLB_CHIP_CLK_OUT_0_CAM_REF_CLK) || \
                                           ((type) == GLB_CHIP_CLK_OUT_0_I2S_REF_CLK) || \
                                           ((type) == GLB_CHIP_CLK_OUT_0_NONE) ||        \
                                           ((type) == GLB_CHIP_CLK_OUT_0_SOLO_IN_128FS))
+#else
+#define IS_GLB_CHIP_CLK_OUT_0_TYPE(type) (((type) == GLB_CHIP_CLK_OUT_0_CAM_REF_CLK) || \
+                                          ((type) == GLB_CHIP_CLK_OUT_0_I2S_REF_CLK) || \
+                                          ((type) == GLB_CHIP_CLK_OUT_0_I2S_MCLK) ||    \
+                                          ((type) == GLB_CHIP_CLK_OUT_0_SOLO_IN_128FS))
+#endif
 
 /** @defgroup  GLB_CHIP_CLK_OUT_1_TYPE
  *  @{
  */
+#if defined(CPU_MODEL_A0)
 #define IS_GLB_CHIP_CLK_OUT_1_TYPE(type) (((type) == GLB_CHIP_CLK_OUT_1_CAM_REF_CLK) || \
                                           ((type) == GLB_CHIP_CLK_OUT_1_I2S_REF_CLK) || \
                                           ((type) == GLB_CHIP_CLK_OUT_1_NONE) ||        \
                                           ((type) == GLB_CHIP_CLK_OUT_1_SOLO_IN_128FS))
+#else
+#define IS_GLB_CHIP_CLK_OUT_1_TYPE(type) (((type) == GLB_CHIP_CLK_OUT_1_CAM_REF_CLK) || \
+                                          ((type) == GLB_CHIP_CLK_OUT_1_I2S_REF_CLK) || \
+                                          ((type) == GLB_CHIP_CLK_OUT_1_I2S_MCLK) ||    \
+                                          ((type) == GLB_CHIP_CLK_OUT_1_SOLO_IN_128FS))
+#endif
 
 /** @defgroup  GLB_CHIP_CLK_OUT_2_TYPE
  *  @{
@@ -1579,11 +1618,17 @@ typedef union {
 /** @defgroup  GLB_CHIP_CLK_OUT_3_TYPE
  *  @{
  */
+#if defined(CPU_MODEL_A0)
 #define IS_GLB_CHIP_CLK_OUT_3_TYPE(type) (((type) == GLB_CHIP_CLK_OUT_3_CAM_REF_CLK) || \
                                           ((type) == GLB_CHIP_CLK_OUT_3_I2S_REF_CLK) || \
                                           ((type) == GLB_CHIP_CLK_OUT_3_NONE) ||        \
                                           ((type) == GLB_CHIP_CLK_OUT_3_WIFIPLL_48M))
-
+#else
+#define IS_GLB_CHIP_CLK_OUT_3_TYPE(type) (((type) == GLB_CHIP_CLK_OUT_3_CAM_REF_CLK) || \
+                                          ((type) == GLB_CHIP_CLK_OUT_3_I2S_REF_CLK) || \
+                                          ((type) == GLB_CHIP_CLK_OUT_3_I2S_MCLK) ||    \
+                                          ((type) == GLB_CHIP_CLK_OUT_3_WIFIPLL_48M))
+#endif
 /** @defgroup  GLB_DIG_CLK_TYPE
  *  @{
  */

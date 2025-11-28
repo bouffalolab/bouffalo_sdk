@@ -622,6 +622,7 @@ static bool _wpa_macsw_driver_process_multi_bssid_scan_result(struct wpa_macsw_d
         max_bssid_ind = ((uint8_t*)mbssid_ie_addr)[MAC_MULTI_BSSID_MAX_INDICATOR_OFT];
         sub_ies = mbssid_ie_addr + MAC_MULTI_BSSID_SUB_IES_OFT;
         subies_len = mbssid_ie_len - MAC_MULTI_BSSID_SUB_IES_OFT;
+        uint8_t orig_bssid_last_byte = bssid[5];
 
         while (subies_len)
         {
@@ -676,7 +677,7 @@ static bool _wpa_macsw_driver_process_multi_bssid_scan_result(struct wpa_macsw_d
                 // Get BSSID
                 bssid_index = co_read8p(bssid_index_ie_addr + MAC_MULTI_BSSID_INDEX_OFT);
                 bssid[5] &= ~(CO_BIT(max_bssid_ind)-1);
-                bssid[5] |= (bssid[5] + bssid_index) & (CO_BIT(max_bssid_ind)-1);
+                bssid[5] |= (orig_bssid_last_byte + bssid_index) & (CO_BIT(max_bssid_ind)-1);
                 // Save Beacon/Probe_resp
 				if (false == _wpa_macsw_driver_process_scan_result(drv, res, ie, ie_len, is_beacon,
 								bssid_index, bssid, (u8*)ssid_ie_addr, capa)) {

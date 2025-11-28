@@ -82,5 +82,4 @@ memtester.o: memtester.c tests.h conf-cc Makefile compile
 	./compile memtester.c
 
 tests.o: tests.c tests.h conf-cc Makefile compile
--include $(SDK_DEMO_PATH)/.config
 	./compile tests.c

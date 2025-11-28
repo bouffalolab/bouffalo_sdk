@@ -22,6 +22,8 @@ void cmd_wifi_sta_ssid_passphr_get(int argc, char *argv[]);
 void cmd_wifi_sta_mac_get(int argc, char *argv[]);
 void wifi_enable_autoreconnect_cmd(int argc, char *argv[]);
 void wifi_disable_autoreconnect_cmd(int argc, char *argv[]);
+void wifi_country_code_get_cmd(int argc, char **argv);
+void wifi_country_code_set_cmd(int argc, char **argv);
 void wifi_sta_ps_on_cmd(int argc, char *argv[]);
 void wifi_sta_ps_off_cmd(int argc, char *argv[]);
 void wifi_sta_ps_set_cmd(int argc, char **argv);

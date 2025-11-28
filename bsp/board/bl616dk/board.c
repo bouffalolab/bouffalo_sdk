@@ -23,7 +23,7 @@
 
 #include "board_flash_psram.h"
 
-#include "mem.h"
+#include "mm.h"
 
 extern void log_start(void);
 
@@ -357,11 +357,54 @@ void bflb_wfa_init(void)
 }
 #endif
 
+void ram_heap_init(void)
+{
+    size_t heap_len;
+
+    /* ram heap init */
+    mem_manager_init();
+
+    /* ocram heap init */
+    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
+    mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+
+#ifdef CONFIG_PSRAM
+    /* psram init */
+    if (board_psram_x8_init() != SUCCESS) {
+        puts("psram init fail !!!\r\n");
+        while (1) {}
+    }
+
+    /* psram heap init */
+    heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
+    mm_register_heap(MM_HEAP_PSRAM_0, "PSRAM", MM_ALLOCATOR_TLSF, &__psram_heap_base, heap_len);
+
+    /* ram info dump */
+    printf("dynamic memory init success\r\n"
+           "  ocram heap size: %d Kbyte, \r\n"
+           "  psram heap size: %d Kbyte\r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
+           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
+
+#else
+    /* check psram data */
+    if (&__psram_data_end__ - &__psram_data_start__ > 0 || &__psram_noinit_data_end__ - &__psram_noinit_data_start__ > 0) {
+        puts("psram data already exists, please enable CONFIG_PSRAM\r\n");
+        while (1) {}
+    }
+
+    /* ram info dump */
+    printf("dynamic memory init success\r\n"
+           "  ocram heap size: %d Kbyte \r\n",
+           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
+#endif
+}
+
 void board_init(void)
 {
     int ret = -1;
     uintptr_t flag;
-    size_t heap_len;
+
     uint32_t xtal_value = 0;
 
     /* lock */
@@ -399,35 +442,8 @@ void board_init(void)
     /* console init (uart or wo) */
     console_init();
 
-    /* ram heap init */
-    heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
-    kmem_init((void *)&__HeapBase, heap_len);
-
-#ifdef CONFIG_PSRAM
-    /* psram init */
-    if (board_psram_x8_init() != SUCCESS) {
-        printf("psram init fail !!!\r\n");
-        while (1) {}
-    }
-    /* psram heap init */
-    heap_len = ((size_t)&__psram_limit - (size_t)&__psram_heap_base);
-    pmem_init((void *)&__psram_heap_base, heap_len);
-
-    /* ram info dump */
-    printf("dynamic memory init success, ocram heap size = %d Kbyte, psram heap size = %d Kbyte\r\n",
-           ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024,
-           ((size_t)&__psram_limit - (size_t)&__psram_heap_base) / 1024);
-
-#else
-    /* check psram data */
-    if (&__psram_data_end__ - &__psram_data_start__ > 0 || &__psram_noinit_data_end__ - &__psram_noinit_data_start__ > 0) {
-        puts("psram data already exists, please enable CONFIG_PSRAM\r\n");
-        while (1) {}
-    }
-
-    /* ram info dump */
-    printf("dynamic memory init success, ocram heap size = %d Kbyte \r\n", ((size_t)&__HeapLimit - (size_t)&__HeapBase) / 1024);
-#endif
+    /* ram and heap init (including psram) */
+    ram_heap_init();
 
     /* boot info dump */
     bl_show_log();

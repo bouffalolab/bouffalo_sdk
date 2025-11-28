@@ -305,7 +305,7 @@ static int upld_custom_free(void *arg)
 {
     struct pbuf *p = (struct pbuf *)arg;
 #if DEBUG_DUMP_WIFIRX_ENABLE
-    EXAMPLE_DEBUG("%s ------------------------------------ p:%p, p->ref:%d\r\n\r\n", __func__, arg, p->ref);
+    printf("%s ------------------------------------ p:%p, p->ref:%d\r\n\r\n", __func__, arg, p->ref);
 #endif
 
     /* Statistics: UPLD final release */
@@ -354,7 +354,7 @@ static void *eth_input_hook_upld(bool is_sta, void *pkt, void *arg)
         skb.cb_arg = p;
         skb.next = NULL;
 #if DEBUG_DUMP_WIFIRX_ENABLE
-        EXAMPLE_DEBUG("%s ++++++++++++++++++++++++++++++ p=%p\r\n", __func__, skb.cb_arg);
+        printf("%s ++++++++++++++++++++++++++++++ p=%p, pld:%p\r\n", __func__, skb.cb_arg, p->payload);
 #endif
         /* Statistics: UPLD producer - WiFi data enters system */
         g_nethub_stats.upld_producer_count++;

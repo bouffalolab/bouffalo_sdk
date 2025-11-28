@@ -1,7 +1,6 @@
 #include <FreeRTOS.h>
 #include <ring_buffer.h>
 #include <bflb_uart.h>
-#include <mem.h>
 
 #include <openthread_port.h>
 #include <utils/uart.h>
