@@ -394,6 +394,16 @@ SECTIONS
 	LONG(__psram_noinit_start__);       LONG(__psram_noinit_end__);
         LONG(0xffffffff);                   LONG(0xffffffff);
 
+	. = ALIGN(4); _dump_sections = ABSOLUTE(.);
+        LONG(ORIGIN(ram_nocache));          LONG(__ram_nocache_end__ - ORIGIN(ram_nocache));
+        LONG(ORIGIN(ram) + (__ram_nocache_end__ - ORIGIN(ram_nocache)));
+        LONG(LENGTH(ram) - (__ram_nocache_end__ - ORIGIN(ram_nocache)));
+        LONG(ORIGIN(ram_wifi));             LONG(LENGTH(ram_wifi));
+#ifdef CONFIG_PSRAM
+        LONG(ORIGIN(ram_psram));            LONG(LENGTH(ram_psram));
+#endif
+        LONG(0xffffffff);                   LONG(0xffffffff);
+
         *(.text*)
         *(.rodata*)
 

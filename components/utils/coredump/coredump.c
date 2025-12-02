@@ -73,6 +73,9 @@ int coredump_xip_flash_write(uint32_t lma, uint8_t *lma_xip, size_t len)
 
 void coredump_run(void)
 {
+    while (&_dump_sections == 0) {
+        asm("nop");
+    }
     bool coredump_flash_disable = 0;
     uint32_t lma = coredump_flash_addr;
 

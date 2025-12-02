@@ -19,6 +19,6 @@ whole:
 	cmake -E copy $(BL_SDK_BASE)/tools/bflb_tools/bouffalo_flash_cube/chips/$(CHIP)/img_create/whole_flash_data.bin $(BUILD_DIR)/whole_flash_data.bin
 
 flash: whole
-	$(BL_SDK_BASE)/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu --port $(COMX) --whole_chip --firmware $(BUILD_DIR)/whole_flash_data.bin
+	$(BL_SDK_BASE)/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand-ubuntu --chip=$(CHIP) --port $(COMX) --whole_chip --firmware $(BUILD_DIR)/whole_flash_data.bin
 
 .PHONY: clean
