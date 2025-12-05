@@ -22,6 +22,10 @@ __RFTLV_SIZE_HOLE = 2K;
 __RFTLV_HEAD1_H = (0x46524C42); /* BLRF */
 __RFTLV_HEAD1_L = (0x41524150); /* PAPA */
 
+/* Link stage feature control */
+PROVIDE( __macsw_conf_bl_wifi_ps_enable = 0 );
+PROVIDE( __macsw_conf_plat_dma_enable = 1 );
+
 VerOffset = 0xc00;
 
 MEMORY
@@ -303,4 +307,3 @@ SECTIONS
     ASSERT(__HeapLimit - __HeapBase >= HeapMinSize, "heap region overflow")
 
 }
-

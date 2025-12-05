@@ -8,7 +8,9 @@ sdk_add_compile_definitions(-DCONFIG_CLI_CMD_ENABLE)
 # sdk_add_compile_options(-DMQTT_USE_CUSTOM_SOCKET_HANDLE)
 # sdk_add_compile_definitions(-DMBEDTLS_PK_PARSE_C)
 
-sdk_add_compile_options(-DMQTT_USE_MBEDTLS)
+#sdk_add_compile_options(-DMQTT_USE_MBEDTLS)
+
+sdk_add_compile_definitions(-DCONFIG_SHELL)
 
 
 target_sources(app PRIVATE

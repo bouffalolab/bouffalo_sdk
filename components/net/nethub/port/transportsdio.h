@@ -234,7 +234,7 @@ void transportsdio_get_flow_control(bool *enabled, uint8_t *threshold);
  */
 int transportsdio_send_upld(const void *data, uint32_t len);
 int transportsdio_send_upld2(const uint8_t *data, uint32_t offset, uint32_t pld_len, skb_free_cb_t data_free, void *skb);
-int transportsdio_send_upld3(nh_skb_t *skb);
+int transportsdio_send_upld_skb(nh_skb_t *skb);
 
 /**
  * @brief User call interface: receive WiFi data (dnld)

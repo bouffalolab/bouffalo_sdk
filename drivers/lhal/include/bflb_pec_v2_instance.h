@@ -175,4 +175,34 @@ void bflb_pec_i2c_clear_err(struct bflb_device_s *dev);
 uint32_t bflb_pec_i2c_write(struct bflb_device_s *dev, struct bflb_pec_i2c_data_s *data);
 uint32_t bflb_pec_i2c_read(struct bflb_device_s *dev, struct bflb_pec_i2c_data_s *data);
 
+/******************************************************************
+DPI
+******************************************************************/
+struct bflb_pec_dpi_s {
+    uint32_t mem;              /*!< memory address of first instruction */
+    uint16_t div;              /*!< divisor, N = div + 1 */
+    uint8_t dma_enable;        /*!< enable or disable dma */
+    uint8_t fifo_threshold;    /*!< tx fifo threshold */
+    uint8_t pin_data_start[3]; /*!< DPI data pin start index, data pin number is continuous in one group */
+    uint8_t pin_data_count[3]; /*!< DPI data group pin count */
+    uint8_t pin_pclk;          /*!< DPI pixel clock pin */
+    uint8_t pin_vsync;         /*!< DPI vsync pin */
+    uint8_t pin_hsync;         /*!< DPI hsync pin */
+    uint8_t pin_de;            /*!< DPI de pin */
+    uint8_t level_vsync;       /*!< DPI vsync level in vertical synchronization segment */
+    uint8_t level_hsync;       /*!< DPI hsync level in horizontal synchronization segment */
+    uint8_t level_de;          /*!< DPI de level when data is enabled */
+    uint16_t hsync;            /*!< DPI pixel clock count in horizontal synchronization segment, max is 1024 */
+    uint16_t hbp;              /*!< DPI pixel clock count in horizontal back porch segment, max is 2048 */
+    uint16_t hfp;              /*!< DPI pixel clock count in horizontal front porch segment, max is 2048 */
+    uint16_t vsync;            /*!< DPI row count in vertical synchronization segment, max is 1024 */
+    uint16_t vbp;              /*!< DPI row count in vertical back porch segment, max is 2048 */
+    uint16_t vfp;              /*!< DPI row count in vertical front porch segment, max is 2048 */
+    uint16_t width;            /*!< DPI actual picture width, max is 65535 */
+    uint16_t height;           /*!< DPI actual picture height, max is 65535 */
+};
+
+int bflb_pec_dpi_init(struct bflb_device_s *dev, struct bflb_pec_dpi_s *dpi);
+void bflb_pec_dpi_deinit(struct bflb_device_s *dev);
+
 #endif /* __BFLB_PEC_V2_INSTANCE_H__ */

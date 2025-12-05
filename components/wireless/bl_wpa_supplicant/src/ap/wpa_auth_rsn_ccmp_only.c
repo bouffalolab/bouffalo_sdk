@@ -301,8 +301,7 @@ void wpa_auth_sta_deinit(struct wpa_state_machine *sm)
     if (sm == NULL)
         return;
 
-    bl_wifi_timer_disarm(&sm->resend_eapol);
-    bl_wifi_timer_done(&sm->resend_eapol);
+    bl_wifi_timer_stop(&sm->resend_eapol);
 
     if (sm->in_step_loop) {
         /* Must not free state machine while wpa_sm_step() is running.
@@ -579,8 +578,7 @@ continue_processing:
             return;
         }
         sm->MICVerified = TRUE;
-        bl_wifi_timer_disarm(&sm->resend_eapol);
-        bl_wifi_timer_done(&sm->resend_eapol);
+        bl_wifi_timer_stop(&sm->resend_eapol);
         sm->pending_1_of_4_timeout = 0;
     }
 
@@ -823,9 +821,9 @@ static void wpa_send_eapol(struct wpa_authenticator *wpa_auth,
     ctr = pairwise ? sm->TimeoutCtr : sm->GTimeoutCtr;
     if (pairwise && ctr == 1 && !(key_info & WPA_KEY_INFO_MIC))
         sm->pending_1_of_4_timeout = 1;
-    bl_wifi_timer_disarm(&sm->resend_eapol);
+    bl_wifi_timer_stop(&sm->resend_eapol);
     bl_wifi_timer_setfn(&sm->resend_eapol, (bl_wifi_timer_func_t *)resend_eapol_handle, (void*)(sm->index));
-    bl_wifi_timer_arm(&sm->resend_eapol, 1000, 0);
+    bl_wifi_timer_start(&sm->resend_eapol, 1000);
 }
 
 

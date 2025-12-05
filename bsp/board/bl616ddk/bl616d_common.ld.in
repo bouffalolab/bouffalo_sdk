@@ -129,17 +129,33 @@ SECTIONS
     {
         KEEP (*(SORT_NONE(.init)))
         KEEP (*(SORT_NONE(.vector)))
-	__dualcore_images__ = ABSOLUTE(.);
+        __dualcore_images__ = ABSOLUTE(.);
 #ifdef CPU_AP
-	LONG(__rom_end__ - __rom_start__ + 4K + 4K)
+        LONG(__rom_end__ - __rom_start__ + 4K + 4K)
 #endif
 #ifdef CONFIG_NP_IMAGE_SIZE
-	LONG(CONFIG_NP_IMAGE_SIZE)
+        LONG(CONFIG_NP_IMAGE_SIZE)
 #endif
 #ifdef CONFIG_LP_IMAGE_SIZE
-	LONG(CONFIG_LP_IMAGE_SIZE)
+        LONG(CONFIG_LP_IMAGE_SIZE)
 #endif
-	LONG(0xFFFFFFFF)
+        LONG(0xFFFFFFFF)
+
+        *system_bl616d*.o*(.rodata*)
+        *system_bl616d*.o*(.srodata*)
+        *system_bl616d*.o*(.text*)
+
+        *start_load*.o*(.rodata*)
+        *start_load*.o*(.srodata*)
+        *start_load*.o*(.text*)
+
+        *rv_pmp*.o*(.rodata*)
+        *rv_pmp*.o*(.srodata*)
+        *rv_pmp*.o*(.text*)
+
+        *rv_Sv39*.o*(.rodata*)
+        *rv_Sv39*.o*(.srodata*)
+        *rv_Sv39*.o*(.text*)
     } > rom_header
 
     .rftlv.tool ORIGIN(rom_header) + 1K:
@@ -303,7 +319,9 @@ SECTIONS
 #ifdef CONFIG_PSRAM_COPY_CODE
     SECTION_DATA_PROLOGUE(psram_code, ,)
     {
-    }
+        *(.text*)
+        *(.rodata*)
+    } > ram_psram AT > rom
 #endif
 
     SECTION_DATA_PROLOGUE(psram_data, ,)

@@ -33,7 +33,7 @@
 #define LCD_INTERFACE_SPI       1
 #define LCD_INTERFACE_DBI       2
 #define LCD_INTERFACE_DPI       3
-#define LCD_INTERFACE_DSI_VIDIO 4
+#define LCD_INTERFACE_DSI 4
 
 #if defined LCD_DBI_GC9307
 
@@ -165,14 +165,14 @@
 #define LCD_COLOR_DEPTH              STANDARD_DPI_COLOR_DEPTH
 #define _LCD_FUNC_DEFINE(_func, ...) standard_dpi_##_func(__VA_ARGS__)
 
-#elif defined LCD_DSI_VIDIO_ILI9881C
+#elif defined LCD_DSI_ILI9881C
 
-#include "mipi_dsi/ili9881c_dsi_vidio.h"
-#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI_VIDIO
-#define LCD_W                        ILI9881C_DSI_VIDIO_W
-#define LCD_H                        ILI9881C_DSI_VIDIO_H
-#define LCD_COLOR_DEPTH              ILI9881C_DSI_VIDIO_COLOR_DEPTH
-#define _LCD_FUNC_DEFINE(_func, ...) ili9881c_dsi_vidio_##_func(__VA_ARGS__)
+#include "mipi_dsi/ili9881c_dsi.h"
+#define LCD_INTERFACE_TYPE           LCD_INTERFACE_DSI
+#define LCD_W                        ILI9881C_DSI_W
+#define LCD_H                        ILI9881C_DSI_H
+#define LCD_COLOR_DEPTH              ILI9881C_DSI_COLOR_DEPTH
+#define _LCD_FUNC_DEFINE(_func, ...) ili9881c_dsi_##_func(__VA_ARGS__)
 
 #elif defined LCD_SPI_GC9307
 
@@ -275,7 +275,7 @@ int lcd_draw_str_ascii16(uint16_t x, uint16_t y, lcd_color_t color, lcd_color_t 
 #endif
 
 /* RGB LCD Common interface */
-#elif (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_DSI_VIDIO)
+#elif (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_DSI)
 
 /* frame int callback and frame swap int callback */
 #define FRAME_INT_TYPE_CYCLE 0

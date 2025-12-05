@@ -102,10 +102,6 @@
 #define WL_BB_CE 0
 #endif
 
-#ifndef WL_NIC
-#define WL_NIC 0
-#endif
-
 #ifndef BL_RA_EN
 #define BL_RA_EN 0
 #endif

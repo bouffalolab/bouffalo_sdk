@@ -3,12 +3,20 @@
 
 #include <stdint.h>
 
-#if WL_NIC
-    #ifndef WL_API_RMEM_EN
-    #define WL_API_RMEM_EN (1)
-    #endif
-#else
-    #undef WL_API_RMEM_EN
+/**
+ * WL_API_RMEM_EN and WL_API_RMEM_ADDR
+ *
+ * WL_API_RMEM_EN:
+ * - Can't be set to 0 (compile error if you do)
+ * - Must be enabled for consistent behavior across modules
+ *
+ * WL_API_RMEM_ADDR:
+ * - You don't have to use this - pick any address you want - Pass it to wl_cfg_get() via rmem parameter
+ * - Config goes through APIs/structs, not compile options
+ */
+#if defined(WL_API_RMEM_EN) && (WL_API_RMEM_EN == 0)
+    #error "WL_API_RMEM_EN cannot be defined to 0"
+#elif !defined(WL_API_RMEM_EN)
     #define WL_API_RMEM_EN (1)
 #endif
 
@@ -158,10 +166,6 @@ struct wl_param_t
     struct wl_param_pwrcal_t     pwrcal;          // multi source driven (efuse/flash/dts...)
     struct wl_param_pwrlimit_t   pwrlim[NUM_WLAN_CHANNELS];
     struct wl_efuse_t            ef;
-    #if WL_NIC
-    // TODO: Review
-    uint8_t                      pwr_update;      // power update flag
-    #endif
     struct wl_param_tcap_t       tcap;
     struct wl_param_spur_rules_t spur_rules[NUM_WLAN_CHANNELS];
     uint8_t                      spur_rules_en[NUM_WLAN_CHANNELS];
@@ -302,11 +306,8 @@ int8_t wl_init(void);
 void wl_wlan_bb_reset(void);
 void wl_wlan_bb_partial_reset(void);
 void wl_wlan_bb_pre_proc(void* rvec_ptr);
-#if WL_NIC
-void wl_wlan_bb_post_proc(void* rvec_ptr, uint16_t type_subtype, int8_t gainopt);
-#else
 void wl_wlan_bb_post_proc(void* rvec_ptr, uint16_t type_subtype);
-#endif
+
 /* Get power cfg for rate indicated by formatmod and mcs.
  * The return value will be filled in transmit descriptor */
 uint8_t wl_wlan_power_cfg_get(uint8_t formatmod, uint8_t rate);

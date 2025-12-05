@@ -819,6 +819,26 @@
 
 /* 0x25C : dig_clk_cfg3 */
 #define GLB_DIG_CLK_CFG3_OFFSET                                 (0x25C)
+#define GLB_DSI_TXCLKESC_SEL                                    GLB_DSI_TXCLKESC_SEL
+#define GLB_DSI_TXCLKESC_SEL_POS                                (0U)
+#define GLB_DSI_TXCLKESC_SEL_LEN                                (1U)
+#define GLB_DSI_TXCLKESC_SEL_MSK                                (((1U<<GLB_DSI_TXCLKESC_SEL_LEN)-1)<<GLB_DSI_TXCLKESC_SEL_POS)
+#define GLB_DSI_TXCLKESC_SEL_UMSK                               (~(((1U<<GLB_DSI_TXCLKESC_SEL_LEN)-1)<<GLB_DSI_TXCLKESC_SEL_POS))
+#define GLB_CSI_TXCLKESC_SEL                                    GLB_CSI_TXCLKESC_SEL
+#define GLB_CSI_TXCLKESC_SEL_POS                                (1U)
+#define GLB_CSI_TXCLKESC_SEL_LEN                                (1U)
+#define GLB_CSI_TXCLKESC_SEL_MSK                                (((1U<<GLB_CSI_TXCLKESC_SEL_LEN)-1)<<GLB_CSI_TXCLKESC_SEL_POS)
+#define GLB_CSI_TXCLKESC_SEL_UMSK                               (~(((1U<<GLB_CSI_TXCLKESC_SEL_LEN)-1)<<GLB_CSI_TXCLKESC_SEL_POS))
+#define GLB_DSI_TXCLKESC_DIV                                    GLB_DSI_TXCLKESC_DIV
+#define GLB_DSI_TXCLKESC_DIV_POS                                (4U)
+#define GLB_DSI_TXCLKESC_DIV_LEN                                (3U)
+#define GLB_DSI_TXCLKESC_DIV_MSK                                (((1U<<GLB_DSI_TXCLKESC_DIV_LEN)-1)<<GLB_DSI_TXCLKESC_DIV_POS)
+#define GLB_DSI_TXCLKESC_DIV_UMSK                               (~(((1U<<GLB_DSI_TXCLKESC_DIV_LEN)-1)<<GLB_DSI_TXCLKESC_DIV_POS))
+#define GLB_DSI_TXCLKESC_EN                                     GLB_DSI_TXCLKESC_EN
+#define GLB_DSI_TXCLKESC_EN_POS                                 (7U)
+#define GLB_DSI_TXCLKESC_EN_LEN                                 (1U)
+#define GLB_DSI_TXCLKESC_EN_MSK                                 (((1U<<GLB_DSI_TXCLKESC_EN_LEN)-1)<<GLB_DSI_TXCLKESC_EN_POS)
+#define GLB_DSI_TXCLKESC_EN_UMSK                                (~(((1U<<GLB_DSI_TXCLKESC_EN_LEN)-1)<<GLB_DSI_TXCLKESC_EN_POS))
 
 /* 0x260 : rf_cfg0 */
 #define GLB_RF_CFG0_OFFSET                                      (0x260)
@@ -9992,7 +10012,9 @@ struct  glb_reg {
     /* 0x25C : dig_clk_cfg3 */
     union {
         struct {
-            uint32_t reserved_0_31                  : 32; /* [31: 0],       rsvd,        0x0 */
+            uint32_t dsi_txclkesc_sel               :  1; /* [    0],        r/w,        0x0 */
+            uint32_t csi_txclkesc_sel               :  1; /* [    1],        r/w,        0x0 */
+            uint32_t reserved_2_31                  : 30; /* [31: 2],       rsvd,        0x0 */
         }BF;
         uint32_t WORD;
     } dig_clk_cfg3;

@@ -92,7 +92,7 @@
 #define MEM_MIN                       MEM_MIN_TCP
 #define MEM_ALIGNMENT                 4
 
-#define LWIP_HEAP_SIZE (15 * 1024)
+#define LWIP_HEAP_SIZE (14 * 1024)
 #ifdef LWIP_HEAP_SIZE
 #define MEM_SIZE LWIP_HEAP_SIZE
 #else

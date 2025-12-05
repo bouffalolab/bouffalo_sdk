@@ -24,6 +24,10 @@ __RFTLV_SIZE_HOLE = 2K;
 __RFTLV_HEAD1_H = (0x46524C42); /* BLRF */
 __RFTLV_HEAD1_L = (0x41524150); /* PAPA */
 
+/* Link stage feature control */
+PROVIDE( __macsw_conf_bl_wifi_ps_enable = 0 );
+PROVIDE( __macsw_conf_plat_dma_enable = 1 );
+
 MEMORY
 {
     fw_header_memory  (rx)  : ORIGIN = 0x62FC0000 - (256+16), LENGTH = 256+16
@@ -300,4 +304,3 @@ SECTIONS
     PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
 
 }
-

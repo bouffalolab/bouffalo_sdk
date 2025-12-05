@@ -125,6 +125,7 @@ int pds_io_wakeup_test(int argc, char **argv)
         case 1:
             printf("enter PDS1 mode\r\n");
             arch_delay_us(500);
+            pm_pds_irq_register();
             pm_pds_mode_enter(PM_PDS_LEVEL_1, 0);
             printf("PDS1 wakeup\r\n");
             break;

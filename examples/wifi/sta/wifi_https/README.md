@@ -5,9 +5,16 @@
 
 |      CHIP        | Remark |
 |:----------------:|:------:|
+|BL602             |        |
 |BL616/BL618       |        |
 
 ## Compile
+
+- BL602
+
+```
+make CHIP=bl602 BOARD=bl602dk
+```
 
 - BL616/BL618
 

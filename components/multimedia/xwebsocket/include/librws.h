@@ -273,6 +273,7 @@ RWS_API(void) rws_socket_set_path(rws_socket socket, const char * path);
  */
 RWS_API(const char *) rws_socket_get_path(rws_socket socket);
 
+#define WEBSOCKET_SSL_CHECK_HOSTNAME 1
 #define WEBSOCKET_SSL_ENABLE 1
 #ifdef WEBSOCKET_SSL_ENABLE
 /**

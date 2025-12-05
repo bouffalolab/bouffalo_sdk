@@ -8,6 +8,7 @@ file(GLOB_RECURSE SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/bflb_pec_spi.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bflb_pec_uart_rx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bflb_pec_uart_tx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bflb_pec_dpi.c
 )
 sdk_library_add_sources(${SOURCES})
 

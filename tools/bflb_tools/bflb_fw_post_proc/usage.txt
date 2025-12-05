@@ -20,7 +20,7 @@ Examples(examples/wifi/sta/wifi_tcp, bl616):
 step1: sign the helloworld_bl616.bin with privatekey_uecc.pem and convert into base64 format as input imgfile_sign
 step2: sign the publickey_uecc.pem with privatekey_uecc.pem and convert into base64 format as input publickey_sign
 step3: sign the hash(sha256) of publickey_uecc.pem with privatekey_uecc.pem and convert into base64 format as input publickey_hash_sign
-step4: "QConn_Secure --imgfile=helloworld_bl616.bin --publickey_sign=tdZGKpDE0/BysnPH166h86/d4vJOrqxW2ObGuGp+SxpXFJouWQ+8bTVaBbYpVjgEfXE5dlDWz/BC+21hMiMlgg== --publickey_hash_sign=E4U3TCWEezXSRnzVVzsOQtLML0z3VX4FNunVj0tuqf0=  --imgfile_sign=Ft+u9TD6IM7nOf4lqssT4Ed9+KnnRzdUdUgKN1DLIu9doQUAhqVa1yq/Vyz2cvcA2eu1I/cZzFdKCipRTppz2g=="
+step4: "bflb_fw_post_proc --chipname=bl616 --imgfile=helloworld_bl616.bin --publickey_sign=tdZGKpDE0/BysnPH166h86/d4vJOrqxW2ObGuGp+SxpXFJouWQ+8bTVaBbYpVjgEfXE5dlDWz/BC+21hMiMlgg== --publickey_hash_sign=E4U3TCWEezXSRnzVVzsOQtLML0z3VX4FNunVj0tuqf0=  --imgfile_sign=Ft+u9TD6IM7nOf4lqssT4Ed9+KnnRzdUdUgKN1DLIu9doQUAhqVa1yq/Vyz2cvcA2eu1I/cZzFdKCipRTppz2g=="
 
 
 ***No secure boot***
@@ -154,33 +154,33 @@ Other options:
 
   --checkpartition: check partition in whole_flash_data.bin;
   e.g.: bflb_fw_post_proc --chipname=bl616 --checkpartition=whole_flash_data.bin
-  
+
   --add_pincode: add pincode protect for efusedata.bin: true/false;--pincode:8 decimal digits pincode;
   e.g.1: Encrypt efuse data useing pincode
   bflb_fw_post_proc --chipname=bl616 --add_pincode=true --pincode=12345678 --edatafile_in=efusedata.bin
   e.g.2: Decrypt efuse data useing pincode
   bflb_fw_post_proc --chipname=bl616 --dump_data=true --pincode=12345678 --edatafile_in=efusedata_pincode.bin
-  
+
   --eisp_mode: isp mode:open/pswd/close
   e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --edbg_mode=pswd --epswd=12345678223456783234567842345678 --eisp_mode=pswd
-  
+
   --secp384r1: true: use secp384r1 as ecdsa parameter
   e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=wifi_tcp_bl616.bin --privatekey=privatekey_secp384r1.pem --secp384r1=true --appkeys=true
 
   --appignore: ignore app firmware when only deal boot2/mfg
   e.g.: bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --appignore=true
-  
+
   --boot2ignore: ignore boot2 when only deal app/mfg
   e.g.: bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --boot2ignore=true
-  
+
   --mfgignore: ignore mfg when only deal boot2/app
   e.g.: bflb_fw_post_proc --chipname=bl616 --brdcfgdir=bsp/board/bl616dk/config --imgfile=./build/build_out/wifi_tcp_bl616.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --mfgignore=true
-  
+
   --ptfile, --dtsfile, --boot2file, --mfgfile: in the iot burning scenario, select the corresponding bin file to burn
   e.g.: bflb_fw_post_proc --chipname=bl616 --imgfile=./build/build_out/wifi_tcp_bl616.bin --ptfile=bsp/board/bl616dk/config/partition_cfg_4M.toml --dtsfile=bsp/board/bl616dk/config/bl_factory_params_IoTKitA_auto.dts --boot2file=bsp/board/bl616dk/config/boot2_bl616_isp_release_v8.1.6.bin --mfgfile=bsp/board/bl616dk/config/mfg_bl616_gu_ef9d197c5_v2.50.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000
-  
+
   --pkh192: just for bl616l, trim pk hash from 256 bits to 192 bits
   e.g.: bflb_fw_post_proc --chipname=bl616l --imgfile=./build/build_out/wifi_tcp_bl616l.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --appkeys=shared --pkh192=true
-  
+
   --pkh_to_flash_otp: just for bl616l, put publickey hash to flash otp areas, generate pk_hash_to_flash_otp.bin
   e.g.: bflb_fw_post_proc --chipname=bl616l --imgfile=./build/build_out/wifi_tcp_bl616l.bin --key=000102030405060708090A0B0C0D0E0F --iv=100102030405060708090A0B00000000 --privatekey=privatekey_uecc.pem --appkeys=true --pkh_to_flash_otp=true

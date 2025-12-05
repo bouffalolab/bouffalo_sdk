@@ -1156,7 +1156,11 @@ int rws_ssl_conn(rws_socket s)
         goto exit;
     }
 
+#ifdef WEBSOCKET_SSL_CHECK_HOSTNAME
     if ((ret = mbedtls_ssl_set_hostname(&ssl->ssl_ctx, s->host)) != 0) {
+#else
+    if ((ret = mbedtls_ssl_set_hostname(&ssl->ssl_ctx, NULL)) != 0) {
+#endif
         DBG("mbedtls_ssl_set_hostname returned -0x%x", -ret);
         ret = -1;
         goto exit;

@@ -385,6 +385,23 @@ void board_pec_uart_gpio_init(void)
     bflb_gpio_init(gpio, PEC_UART_RX_PIN, GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLUP | GPIO_SMT_EN | GPIO_DRV_1);
 }
 
+void board_pec_dpi_gpio_init(void)
+{
+    struct bflb_device_s *gpio;
+    const uint8_t pins[] = { PEC_DPI_PCLK_PIN, PEC_DPI_VSYNC_PIN, PEC_DPI_HSYNC_PIN, PEC_DPI_DE_PIN,         \
+                             PEC_DPI_DATA0_PIN, PEC_DPI_DATA1_PIN, PEC_DPI_DATA2_PIN, PEC_DPI_DATA3_PIN,     \
+                             PEC_DPI_DATA4_PIN, PEC_DPI_DATA5_PIN, PEC_DPI_DATA6_PIN, PEC_DPI_DATA7_PIN,     \
+                             PEC_DPI_DATA8_PIN, PEC_DPI_DATA9_PIN, PEC_DPI_DATA10_PIN, PEC_DPI_DATA11_PIN,   \
+                             PEC_DPI_DATA12_PIN, PEC_DPI_DATA13_PIN, PEC_DPI_DATA14_PIN, PEC_DPI_DATA15_PIN, \
+                             PEC_DPI_DATA16_PIN, PEC_DPI_DATA17_PIN, PEC_DPI_DATA18_PIN, PEC_DPI_DATA19_PIN, \
+                             PEC_DPI_DATA20_PIN, PEC_DPI_DATA21_PIN, PEC_DPI_DATA22_PIN, PEC_DPI_DATA23_PIN };
+
+    gpio = bflb_device_get_by_name("gpio");
+    for (int i = 0; i < sizeof(pins) / sizeof(pins[0]); i++) {
+        bflb_gpio_init(gpio, pins[i], GPIO_FUNC_PEC | GPIO_ALTERNATE | GPIO_PULLDOWN | GPIO_SMT_EN | GPIO_DRV_1);
+    }
+}
+
 void board_usb_gpio_init(void)
 {
     struct bflb_device_s *gpio;

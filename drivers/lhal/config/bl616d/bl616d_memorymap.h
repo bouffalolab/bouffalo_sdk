@@ -220,7 +220,7 @@
 #define DVP2SRAM1_BASE    ((uint32_t)0x20049000)
 #define OSD0_BASE         ((uint32_t)0x2004A000)
 #define OSD1_BASE         ((uint32_t)0x2004B000)
-#define OSD_BASE          ((uint32_t)0x2004C000)
+#define DSI_BASE          ((uint32_t)0x2004C000)
 
 /* LPSYS */
 #define MINI_MISC         ((uint32_t)0x00080000)

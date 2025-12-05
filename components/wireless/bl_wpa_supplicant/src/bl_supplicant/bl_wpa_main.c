@@ -87,7 +87,7 @@ void wpa_sendto_wrapper(bool is_sta, void *buffer, u16 len,
     memcpy(cfm, tx_cfm, sizeof(*cfm));
   }
 
-  wl80211_output_raw(buffer, len, 0, wpa_pkt_free, cfm);
+  wl80211_output_raw(is_sta, buffer, len, 0, wpa_pkt_free, cfm);
 }
 
 void wpa_deauthenticate(uint8_t sta_idx, u8 reason_code) {
@@ -277,14 +277,12 @@ static const struct wpa_funcs wpa_cb = {
     .wpa_sta_connect = wpa_sta_connect,
     .wpa_sta_disconnected_cb = wpa_sta_disconnected_cb,
 
-#if 0
     .wpa_ap_join             = wpa_ap_join,
     .wpa_ap_sta_associated   = wpa_ap_sta_associated,
     .wpa_ap_remove           = wpa_ap_remove,
     .wpa_ap_rx_eapol         = wpa_ap_rx_eapol,
     .wpa_ap_init             = hostap_init,
     .wpa_ap_deinit           = hostap_deinit,
-#endif
 
     .wpa_parse_wpa_ie = wpa_parse_wpa_ie_wrapper,
 #if 0

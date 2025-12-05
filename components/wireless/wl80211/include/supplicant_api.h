@@ -11,20 +11,20 @@
 
 /** Configuration structure for Protected Management Frame */
 typedef struct {
-    bool capable;            /**< Advertizes support for Protected Management Frame. Device will prefer to connect in PMF mode if other device also advertizes PMF capability. */
-    bool required;           /**< Advertizes that Protected Management Frame is required. Device will not associate to non-PMF capable devices. */
+    bool capable; /**< Advertizes support for Protected Management Frame. Device will prefer to connect in PMF mode if other device also advertizes PMF capability. */
+    bool required; /**< Advertizes that Protected Management Frame is required. Device will not associate to non-PMF capable devices. */
 } wifi_pmf_config_t;
 
 typedef enum {
-    WIFI_CIPHER_TYPE_NONE = 0,   /**< the cipher type is none */
-    WIFI_CIPHER_TYPE_WEP40,      /**< the cipher type is WEP40 */
-    WIFI_CIPHER_TYPE_WEP104,     /**< the cipher type is WEP104 */
-    WIFI_CIPHER_TYPE_TKIP,       /**< the cipher type is TKIP */
-    WIFI_CIPHER_TYPE_CCMP,       /**< the cipher type is CCMP */
-    WIFI_CIPHER_TYPE_TKIP_CCMP,  /**< the cipher type is TKIP and CCMP */
-    WIFI_CIPHER_TYPE_AES_CMAC128,/**< the cipher type is AES-CMAC-128 */
-    WIFI_CIPHER_TYPE_SMS4,       /**< the cipher type is SMS4 */
-    WIFI_CIPHER_TYPE_UNKNOWN,    /**< the cipher type is unknown */
+    WIFI_CIPHER_TYPE_NONE = 0,    /**< the cipher type is none */
+    WIFI_CIPHER_TYPE_WEP40,       /**< the cipher type is WEP40 */
+    WIFI_CIPHER_TYPE_WEP104,      /**< the cipher type is WEP104 */
+    WIFI_CIPHER_TYPE_TKIP,        /**< the cipher type is TKIP */
+    WIFI_CIPHER_TYPE_CCMP,        /**< the cipher type is CCMP */
+    WIFI_CIPHER_TYPE_TKIP_CCMP,   /**< the cipher type is TKIP and CCMP */
+    WIFI_CIPHER_TYPE_AES_CMAC128, /**< the cipher type is AES-CMAC-128 */
+    WIFI_CIPHER_TYPE_SMS4,        /**< the cipher type is SMS4 */
+    WIFI_CIPHER_TYPE_UNKNOWN,     /**< the cipher type is unknown */
 } wifi_cipher_type_t;
 
 typedef enum {
@@ -36,16 +36,16 @@ typedef enum {
 } wifi_appie_t;
 
 typedef enum wpa_alg {
-    WIFI_WPA_ALG_NONE   = 0,
-    WIFI_WPA_ALG_WEP40  = 1,
-    WIFI_WPA_ALG_TKIP   = 2,
-    WIFI_WPA_ALG_CCMP   = 3,
-    WIFI_WAPI_ALG_SMS4  = 4,
+    WIFI_WPA_ALG_NONE = 0,
+    WIFI_WPA_ALG_WEP40 = 1,
+    WIFI_WPA_ALG_TKIP = 2,
+    WIFI_WPA_ALG_CCMP = 3,
+    WIFI_WAPI_ALG_SMS4 = 4,
     WIFI_WPA_ALG_WEP104 = 5,
-    WIFI_WPA_ALG_WEP    = 6,
-    WIFI_WPA_ALG_IGTK   = 7,
-    WIFI_WPA_ALG_PMK    = 8,
-    WIFI_WPA_ALG_GCMP   = 9,
+    WIFI_WPA_ALG_WEP = 6,
+    WIFI_WPA_ALG_IGTK = 7,
+    WIFI_WPA_ALG_PMK = 8,
+    WIFI_WPA_ALG_GCMP = 9,
 } wpa_alg_t;
 
 typedef struct {
@@ -63,54 +63,54 @@ typedef struct {
 #define BIT(x) (1U << (x))
 #endif
 
-#define WPA_PROTO_WPA BIT(0)
-#define WPA_PROTO_RSN BIT(1)
+#define WPA_PROTO_WPA                      BIT(0)
+#define WPA_PROTO_RSN                      BIT(1)
 
-#define WPA_KEY_MGMT_IEEE8021X BIT(0)
-#define WPA_KEY_MGMT_PSK BIT(1)
-#define WPA_KEY_MGMT_NONE BIT(2)
-#define WPA_KEY_MGMT_IEEE8021X_NO_WPA BIT(3)
-#define WPA_KEY_MGMT_WPA_NONE BIT(4)
-#define WPA_KEY_MGMT_FT_IEEE8021X BIT(5)
-#define WPA_KEY_MGMT_FT_PSK BIT(6)
-#define WPA_KEY_MGMT_IEEE8021X_SHA256 BIT(7)
-#define WPA_KEY_MGMT_PSK_SHA256 BIT(8)
-#define WPA_KEY_MGMT_WPS BIT(9)
-#define WPA_KEY_MGMT_SAE BIT(10)
-#define WPA_KEY_MGMT_FT_SAE BIT(11)
-#define WPA_KEY_MGMT_WAPI_PSK BIT(12)
-#define WPA_KEY_MGMT_WAPI_CERT BIT(13)
-#define WPA_KEY_MGMT_CCKM BIT(14)
-#define WPA_KEY_MGMT_OSEN BIT(15)
-#define WPA_KEY_MGMT_IEEE8021X_SUITE_B BIT(16)
+#define WPA_KEY_MGMT_IEEE8021X             BIT(0)
+#define WPA_KEY_MGMT_PSK                   BIT(1)
+#define WPA_KEY_MGMT_NONE                  BIT(2)
+#define WPA_KEY_MGMT_IEEE8021X_NO_WPA      BIT(3)
+#define WPA_KEY_MGMT_WPA_NONE              BIT(4)
+#define WPA_KEY_MGMT_FT_IEEE8021X          BIT(5)
+#define WPA_KEY_MGMT_FT_PSK                BIT(6)
+#define WPA_KEY_MGMT_IEEE8021X_SHA256      BIT(7)
+#define WPA_KEY_MGMT_PSK_SHA256            BIT(8)
+#define WPA_KEY_MGMT_WPS                   BIT(9)
+#define WPA_KEY_MGMT_SAE                   BIT(10)
+#define WPA_KEY_MGMT_FT_SAE                BIT(11)
+#define WPA_KEY_MGMT_WAPI_PSK              BIT(12)
+#define WPA_KEY_MGMT_WAPI_CERT             BIT(13)
+#define WPA_KEY_MGMT_CCKM                  BIT(14)
+#define WPA_KEY_MGMT_OSEN                  BIT(15)
+#define WPA_KEY_MGMT_IEEE8021X_SUITE_B     BIT(16)
 #define WPA_KEY_MGMT_IEEE8021X_SUITE_B_192 BIT(17)
 
 typedef enum {
-    NONE_AUTH            = 0x01,
-    WPA_AUTH_UNSPEC      = 0x02,
-    WPA_AUTH_PSK         = 0x03,
-    WPA2_AUTH_ENT        = 0x04,
-    WPA2_AUTH_PSK        = 0x05,
-    WPA_AUTH_CCKM        = 0x06,
-    WPA2_AUTH_CCKM       = 0x07,
+    NONE_AUTH = 0x01,
+    WPA_AUTH_UNSPEC = 0x02,
+    WPA_AUTH_PSK = 0x03,
+    WPA2_AUTH_ENT = 0x04,
+    WPA2_AUTH_PSK = 0x05,
+    WPA_AUTH_CCKM = 0x06,
+    WPA2_AUTH_CCKM = 0x07,
     WPA2_AUTH_PSK_SHA256 = 0x08,
-    WPA3_AUTH_PSK        = 0x09,
+    WPA3_AUTH_PSK = 0x09,
     WPA2_AUTH_ENT_SHA256 = 0x0a,
-    WAPI_AUTH_PSK        = 0x0b,
-    WAPI_AUTH_CERT       = 0x0c,
-    WPA2_AUTH_INVALID    = 0x0d,
+    WAPI_AUTH_PSK = 0x0b,
+    WAPI_AUTH_CERT = 0x0c,
+    WPA2_AUTH_INVALID = 0x0d,
 } wpa_auth_mode_t;
 
 typedef enum {
-    WIFI_AUTH_OPEN = 0,         /**< authenticate mode : open */
-    WIFI_AUTH_WEP,              /**< authenticate mode : WEP */
-    WIFI_AUTH_WPA_PSK,          /**< authenticate mode : WPA_PSK */
-    WIFI_AUTH_WPA2_PSK,         /**< authenticate mode : WPA2_PSK */
-    WIFI_AUTH_WPA_WPA2_PSK,     /**< authenticate mode : WPA_WPA2_PSK */
-    WIFI_AUTH_WPA2_ENTERPRISE,  /**< authenticate mode : WPA2_ENTERPRISE */
-    WIFI_AUTH_WPA3_PSK,         /**< authenticate mode : WPA3_PSK */
-    WIFI_AUTH_WPA2_WPA3_PSK,    /**< authenticate mode : WPA2_WPA3_PSK */
-    WIFI_AUTH_WAPI_PSK,         /**< authenticate mode : WAPI_PSK */
+    WIFI_AUTH_OPEN = 0,        /**< authenticate mode : open */
+    WIFI_AUTH_WEP,             /**< authenticate mode : WEP */
+    WIFI_AUTH_WPA_PSK,         /**< authenticate mode : WPA_PSK */
+    WIFI_AUTH_WPA2_PSK,        /**< authenticate mode : WPA2_PSK */
+    WIFI_AUTH_WPA_WPA2_PSK,    /**< authenticate mode : WPA_WPA2_PSK */
+    WIFI_AUTH_WPA2_ENTERPRISE, /**< authenticate mode : WPA2_ENTERPRISE */
+    WIFI_AUTH_WPA3_PSK,        /**< authenticate mode : WPA3_PSK */
+    WIFI_AUTH_WPA2_WPA3_PSK,   /**< authenticate mode : WPA2_WPA3_PSK */
+    WIFI_AUTH_WAPI_PSK,        /**< authenticate mode : WAPI_PSK */
     WIFI_AUTH_MAX
 } wifi_auth_mode_t;
 
@@ -118,7 +118,6 @@ struct wifi_ssid {
     int len;
     uint8_t ssid[32];
 };
-
 
 #define WPA_AES_KEY_LEN    16
 #define WPA_TKIP_KEY_LEN   32
@@ -190,20 +189,21 @@ struct wpa_funcs {
     void (*wpa_reg_diag_tlv_cb)(void *tlv_pack_cb);
     // XXX MIC failure countermeasure disabled for now
     /* int (*wpa_michael_mic_failure)(uint16_t is_unicast); */
-    uint8_t *(*wpa3_build_sae_msg)(uint8_t *bssid, uint8_t *mac, uint8_t *passphrase, uint32_t sae_msg_type, size_t *sae_msg_len);
+    uint8_t *(*wpa3_build_sae_msg)(uint8_t *bssid, uint8_t *mac, uint8_t *passphrase, uint32_t sae_msg_type,
+                                   size_t *sae_msg_len);
     int (*wpa3_parse_sae_msg)(uint8_t *buf, size_t len, uint32_t type, uint16_t status);
     void (*wpa3_clear_sae)(void);
 };
 
 struct wps_scan_ie {
-    uint8_t    *bssid;
-    uint8_t    chan;
-    uint16_t   capinfo;
-    uint8_t    *ssid;
-    uint8_t    ssid_len;
-    uint8_t    *wpa;
-    uint8_t    *rsn;
-    uint8_t    *wps;
+    uint8_t *bssid;
+    uint8_t chan;
+    uint16_t capinfo;
+    uint8_t *ssid;
+    uint8_t ssid_len;
+    uint8_t *wpa;
+    uint8_t *rsn;
+    uint8_t *wps;
 };
 
 struct wps_funcs {
@@ -222,11 +222,11 @@ typedef enum wps_status {
 } wps_status_t;
 
 typedef struct bl_wifi_timer {
-  struct timeout_s e;
+    struct timeout_s e;
 } bl_wifi_timer_t;
 
 typedef void bl_wifi_timer_func_t(void *arg);
-typedef void(*wifi_tx_cb_t)(void *);
+typedef void (*wifi_tx_cb_t)(void *);
 
 extern const struct wpa_funcs *wpa_cbs;
 
@@ -246,10 +246,13 @@ int bl_wifi_sta_update_ap_info_internal(void);
 uint8_t bl_wifi_sta_set_reset_param_internal(uint8_t reset_flag);
 bool bl_wifi_sta_is_ap_notify_completed_rsne_internal(void);
 bool bl_wifi_sta_is_running_internal(void);
-int bl_wifi_set_ap_key_internal(uint8_t vif_idx, uint8_t sta_idx, wpa_alg_t alg, int key_idx, uint8_t *key, size_t key_len, bool pairwise);
-int bl_wifi_set_sta_key_internal(uint8_t vif_idx, uint8_t sta_idx, wpa_alg_t alg, int key_idx, int set_tx, uint8_t *seq, size_t seq_len, uint8_t *key, size_t key_len, bool pairwise);
+int bl_wifi_set_ap_key_internal(uint8_t vif_idx, uint8_t sta_idx, wpa_alg_t alg, int key_idx, uint8_t *key,
+                                size_t key_len, bool pairwise);
+int bl_wifi_set_sta_key_internal(uint8_t vif_idx, uint8_t sta_idx, wpa_alg_t alg, int key_idx, int set_tx, uint8_t *seq,
+                                 size_t seq_len, uint8_t *key, size_t key_len, bool pairwise);
 
-int bl_wifi_set_igtk_internal(uint8_t vif_idx, uint8_t sta_idx, uint16_t key_idx, const uint8_t *pn, const uint8_t *key);
+int bl_wifi_set_igtk_internal(uint8_t vif_idx, uint8_t sta_idx, uint16_t key_idx, const uint8_t *pn,
+                              const uint8_t *key);
 int bl_wifi_get_sta_gtk(uint8_t vif_idx, uint8_t *out_buf, uint8_t *out_len);
 int bl_wifi_get_assoc_bssid_internal(uint8_t vif_idx, uint8_t *bssid);
 int bl_wifi_set_wps_cb_internal(const struct wps_funcs *wps_cb);

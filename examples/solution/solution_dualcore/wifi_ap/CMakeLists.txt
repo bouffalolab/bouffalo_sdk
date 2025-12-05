@@ -13,4 +13,4 @@ target_sources(app PRIVATE
 
 sdk_set_main_file(main.c)
 
-project(solution_dualcore)
+project(wifi)

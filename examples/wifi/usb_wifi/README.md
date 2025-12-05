@@ -1,52 +1,59 @@
-# USB WiFi case
+# USB WiFi
 
-## Support CHIP
+**Note**: The USB WiFi example will be replaced by the nethub example. The usb_wifi only supports the network protocol stack running on the host side, while the device side does not run the tcpip protocol stack - the device only acts as a network card function. The nethub example supports the device to simultaneously run the network protocol stack, and supports a wider range of interfaces, including but not limited to SDIO, USB, and SPI.
 
-|      CHIP        | Remark |
+## Supported Chips
+
+|      Chip         | Remark |
 |:----------------:|:------:|
-|BL616/BL618       |        |
+|bl616/bl618/bl616l |        |
 
-## Device Compile
+## Device Compilation and Flashing
 
-
-- BL616/BL618
-
-```
-# 使用编译脚本make, 默认为 ldo 1.1v 模式, lpfw 不带 log:
-make
-# 注意, 如果修改了脚本参数，需要先执行 make clean 清除后再重新执行。
+```bash
+make CHIP=<chip_name> BOARD=<board_name>
+make flash CHIP=chip_name COMX=xxx # xxx is your serial port name
 ```
 
-## Flash
+### bl616 Series
 
+```bash
+make CHIP=bl616 BOARD=bl616dk
+make flash CHIP=bl616 COMX=/dev/ttyUSB0
 ```
-make flash CHIP=chip_name COMX=xxx # xxx is your com name
+
+### bl616l Series
+
+```bash
+make CHIP=bl616l BOARD=bl616ldk
+make flash CHIP=bl616l COMX=/dev/ttyUSB0
 ```
 
-## How USB WiFi STA test
+## USB WiFi STA Testing
 
-When the device is powered on, it will virtualize an ACM serial port and an enxxxx Ethernet network interface.
+When the device powers on, it will create a virtual ACM serial port and an enxxxx Ethernet network interface.
 
-Observe the output from the serial port.
+**Note**: The actual ACM serial port number (e.g., /dev/ttyACM0, /dev/ttyACM1, /dev/ttyACM2) may vary depending on your system. Please check the actual device name on your system.
 
+Observe the output from the serial port:
 
 ```bash
 cat /dev/ttyACM2
 ```
 
-Open another terminal and enter the following commands to control the WiFi network interface card. Configure it in STA mode.
+Open another terminal and enter the following commands to control the WiFi network interface card. Configure it in STA mode:
 
 ```bash
 echo -ne "AT+CWMODE=1\r\n" > /dev/ttyACM2
 ```
 
-Disable the DHCP function of the network interface card, and let the HOST side handle DHCP afterward.
+Disable the DHCP function of the network interface card, and let the HOST handle DHCP afterward:
 
 ```bash
 echo -ne "AT+CWDHCP=0,1\r\n" > /dev/ttyACM2
 ```
 
-We use AT commands to control the network interface card to connect to a specified Access Point (AP).
+Use AT commands to control the network interface card to connect to a specified Access Point (AP):
 
 ```bash
 echo -ne "AT+CWJAP=\"8E88\",\"\"\r\n" > /dev/ttyACM2
@@ -58,11 +65,13 @@ Assuming the current network interface card is named enxc4cc37a06d46, enter the 
 sudo dhclient enxc4cc37a06d46
 ```
 
-Obtain the IP address of the network interface card.
+This will obtain the IP address of the network interface card.
 
-## How USB WiFi AP test
+## USB WiFi AP Testing
 
-- soc
+**Note**: In the following commands, the ACM serial port number and network interface name may vary depending on your system. Please adjust them according to your actual device names.
+
+- On the device:
 
 ```bash
 echo -ne "AT+CWMODE=2\r\n" > /dev/ttyACM1
@@ -70,7 +79,7 @@ echo -ne "AT+CWDHCP=0,2\r\n" > /dev/ttyACM1
 echo -ne "AT+CWSAP=\"zephyr_ap\",\"12345678\",1,2,3,0\r\n" > /dev/ttyACM1
 ```
 
-- pc
+- On the host PC:
 
 ```bash
 sudo apt install dhcpd

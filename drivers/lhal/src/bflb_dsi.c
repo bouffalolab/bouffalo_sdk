@@ -143,8 +143,19 @@ void bflb_dsi_phy_reset(struct bflb_device_s *dev)
     uint32_t reg_val = getreg32(reg_base + DSI_DPHY_CONFIG_14_OFFSET);
     reg_val &= ~DSI_DPHY_RESET_N_MSK;
     putreg32(reg_val, reg_base + DSI_DPHY_CONFIG_14_OFFSET);
+    for (uint32_t i = 0; i < 200; i++){
+            dsi_delay_short();
+    }
     reg_val |= (1U << DSI_DPHY_RESET_N_POS);
     putreg32(reg_val, reg_base + DSI_DPHY_CONFIG_14_OFFSET);
+}
+
+void bflb_dsi_phy_enable(struct bflb_device_s *dev)
+{
+    uint32_t reg_base = DSI_PHY_ADDR_BASE;
+    uint32_t reg_val = getreg32(reg_base + DSI_ANA_CTRL_OFFSET);
+    reg_val |= (1U << DSI_EN_POS);
+    putreg32(reg_val, reg_base + DSI_ANA_CTRL_OFFSET);
 }
 
 void bflb_dsi_phy_config(struct bflb_device_s *dev, const bflb_dsi_dphy_config_t *phy)
@@ -368,8 +379,9 @@ int bflb_dsi_phy_set_clock_lane(struct bflb_device_s *dev, uint32_t operations)
         reg_val |= (1U << DSI_CL_TXULPSEXIT_POS);
         putreg32(reg_val, reg_base + DSI_DPHY_CONFIG_14_OFFSET);
         /* delay 1ms as per original driver */
-        for (volatile uint32_t i = 0; i < 1000; i++)
+        for (uint32_t i = 0; i < 1000; i++){
             dsi_delay_short();
+        }
         reg_val = getreg32(reg_base + DSI_DPHY_CONFIG_14_OFFSET);
         reg_val &= ~(1U << DSI_CL_TXULPSCLK_POS);
     }

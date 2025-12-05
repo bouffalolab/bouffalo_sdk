@@ -3,38 +3,38 @@
 
 #include <stdint.h>
 
-#define MAX_FIXED_CHANNELS_LIMIT (42)
+#define MAX_FIXED_CHANNELS_LIMIT                     (42)
 
-#define MAX_AP_SCAN     50
-#define MGMR_SSID_LEN   32
-#define MGMR_KEY_LEN    64
-#define MGMR_BSSID_LEN  18
-#define MGMR_AKM_LEN    15
+#define MAX_AP_SCAN                                  50
+#define MGMR_SSID_LEN                                32
+#define MGMR_KEY_LEN                                 64
+#define MGMR_BSSID_LEN                               18
+#define MGMR_AKM_LEN                                 15
 
-#define WIFI_EVENT_BEACON_IND_AUTH_OPEN 0
-#define WIFI_EVENT_BEACON_IND_AUTH_WEP 1
-#define WIFI_EVENT_BEACON_IND_AUTH_WPA_PSK 2
-#define WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK 3
-#define WIFI_EVENT_BEACON_IND_AUTH_WPA_WPA2_PSK 4
-#define WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT 5
-#define WIFI_EVENT_BEACON_IND_AUTH_WPA3_SAE 6
+#define WIFI_EVENT_BEACON_IND_AUTH_OPEN              0
+#define WIFI_EVENT_BEACON_IND_AUTH_WEP               1
+#define WIFI_EVENT_BEACON_IND_AUTH_WPA_PSK           2
+#define WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK          3
+#define WIFI_EVENT_BEACON_IND_AUTH_WPA_WPA2_PSK      4
+#define WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT           5
+#define WIFI_EVENT_BEACON_IND_AUTH_WPA3_SAE          6
 #define WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK_WPA3_SAE 7
-#define WIFI_EVENT_BEACON_IND_AUTH_UNKNOWN 0xff
+#define WIFI_EVENT_BEACON_IND_AUTH_UNKNOWN           0xff
 
-#define WIFI_EVENT_BEACON_IND_CIPHER_NONE 0
-#define WIFI_EVENT_BEACON_IND_CIPHER_WEP 1
-#define WIFI_EVENT_BEACON_IND_CIPHER_AES 2
-#define WIFI_EVENT_BEACON_IND_CIPHER_TKIP 3
-#define WIFI_EVENT_BEACON_IND_CIPHER_TKIP_AES 4
+#define WIFI_EVENT_BEACON_IND_CIPHER_NONE            0
+#define WIFI_EVENT_BEACON_IND_CIPHER_WEP             1
+#define WIFI_EVENT_BEACON_IND_CIPHER_AES             2
+#define WIFI_EVENT_BEACON_IND_CIPHER_TKIP            3
+#define WIFI_EVENT_BEACON_IND_CIPHER_TKIP_AES        4
 
 typedef struct mode {
-  char *mode_str;
-  int mode;
+    char *mode_str;
+    int mode;
 } wifimode_t;
 
 struct reason_code {
-  uint16_t reason_code;
-  const char *action;
+    uint16_t reason_code;
+    const char *action;
 };
 
 /// scan params
@@ -58,7 +58,7 @@ typedef struct wifi_mgmr_scan_item {
     uint8_t channel;
     int8_t rssi;
     char ssid[32];
-    char ssid_tail[1];//always put ssid_tail after ssid
+    char ssid_tail[1]; //always put ssid_tail after ssid
     uint8_t bssid[6];
     int8_t ppm_abs;
     int8_t ppm_rel;
@@ -106,7 +106,7 @@ int wifi_mgmr_sta_state_get(void);
 int wifi_mgmr_sta_connect_ind_stat_get(wifi_mgmr_connect_ind_stat_info_t *wifi_mgmr_ind_stat);
 int wifi_mgmr_sta_scan(const wifi_mgmr_scan_params_t *config);
 uint32_t wifi_mgmr_sta_scanlist_nums_get(void);
-uint32_t wifi_mgmr_sta_scanlist_dump(void * results, uint32_t resultNums);
+uint32_t wifi_mgmr_sta_scanlist_dump(void *results, uint32_t resultNums);
 int wifi_mgmr_sta_scanlist_free(void);
 int wifi_mgmr_scan_ap_all(void *env, void *arg, scan_item_cb_t cb);
 uint16_t wifi_mgmr_sta_info_status_code_get(void);

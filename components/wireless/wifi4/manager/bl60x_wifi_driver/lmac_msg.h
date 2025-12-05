@@ -359,6 +359,8 @@ struct mm_sta_del_req
 {
     /// Index of the station to be deleted
     u8_l sta_idx;
+    /// VIF on which remain on channel operation has been started (if roc == 1)
+    u8_l vif_index;
 };
 
 /// Structure containing the parameters of the @ref MM_STA_DEL_CFM message.
@@ -366,8 +368,8 @@ struct mm_sta_del_cfm
 {
     /// Status of the operation (different from 0 if unsuccessful)
     u8_l     status;
-    /// Index of the station to be deleted
-    u8_l sta_idx;
+    /// VIF on which remain on channel operation has been started (if roc == 1)
+    u8_l vif_index;
 };
 
 /// Structure containing the parameters of the SET_POWER_MODE REQ message.

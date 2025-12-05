@@ -211,11 +211,11 @@ void *bflb_get_no_cache_addr(const void *addr)
         return (void *)((a & ~0xF0000000UL) | 0x20000000UL);
     }
     // pSRAM
-    if ((a & 0xF0000000UL) == 0xA0000000UL) {
+    if ((a & 0xFF000000UL) == 0xA8000000UL) {
         return (void *)((a & ~0xF0000000UL) | 0x10000000UL);
     }
 
-    return NULL;
+    return (void *)addr;
 }
 #elif defined(BL616L) || defined(BL628)
 bool bflb_check_cache_addr(const void *addr)
@@ -241,13 +241,13 @@ void *bflb_get_no_cache_addr(const void *addr)
         return (void *)((a & ~0xF0000000UL) | 0x20000000UL);
     }
     // pSRAM
-    if ((a & 0xF0000000UL) == 0x80000000UL) {
+    if ((a & 0xFF000000UL) == 0x88000000UL) {
         return (void *)((a & ~0xF0000000UL) | 0x10000000UL);
     }
 
-    return NULL;
+    return (void *)addr;
 }
-#elif defined(BL616D)
+#elif defined(BL616D) && defined(CPU_MODEL_A0)
 bool bflb_check_cache_addr(const void *addr)
 {
     uintptr_t a = (uintptr_t)addr;
@@ -271,11 +271,40 @@ void *bflb_get_no_cache_addr(const void *addr)
         return (void *)((a & ~0xF0000000UL) | 0x20000000UL);
     }
     // pSRAM
-    if ((a & 0xF0000000UL) == 0x80000000UL) {
+    if ((a & 0xFC000000UL) == 0x88000000UL) {
         return (void *)((a & ~0xF0000000UL) | 0x10000000UL);
     }
 
-    return NULL;
+    return (void *)addr;
+}
+#elif defined(BL616D) && !defined(CPU_MODEL_A0)
+bool bflb_check_cache_addr(const void *addr)
+{
+    uintptr_t a = (uintptr_t)addr;
+
+    if ((a & 0xFFF00000UL) >= 0x80000000UL) {
+        return true;
+    }
+    return false;
+}
+
+void *bflb_get_no_cache_addr(const void *addr)
+{
+    uintptr_t a = (uintptr_t)addr;
+
+    if (!bflb_check_cache_addr(addr)) {
+        return (void *)addr;
+    }
+    // RAM
+    if ((a & 0xF0000000UL) == 0xA0000000UL) {
+        return (void *)((a & ~0xF0000000UL) | 0x20000000UL);
+    }
+    // pSRAM & Flash
+    if ((a & 0xF0000000UL) == 0xB0000000UL) {
+        return (void *)((a & ~0xF0000000UL) | 0x30000000UL);
+    }
+
+    return (void *)addr;
 }
 #elif (defined(BL808) || defined(BL606P)) && defined(CPU_M0)
 bool bflb_check_cache_addr(const void *addr)

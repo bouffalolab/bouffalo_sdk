@@ -7,6 +7,7 @@
 #include <lwip/netdb.h>
 
 #include <board.h>
+#include <board_gpio.h>
 #include <board_rf.h>
 #include <shell.h>
 
@@ -29,6 +30,10 @@ int main(void)
 
 #ifdef LP_APP
     app_pm_init();
+#endif
+
+#ifdef BOARD_USB_VIA_GPIO
+    board_usb_gpio_init();
 #endif
 
     uart0 = bflb_device_get_by_name("uart0");

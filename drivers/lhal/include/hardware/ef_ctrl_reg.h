@@ -297,7 +297,7 @@
 #define EF_CTRL_EF_IF_PROT_CODE_MANUAL_UMASK (~(((1U << EF_CTRL_EF_IF_PROT_CODE_MANUAL_LEN) - 1) << EF_CTRL_EF_IF_PROT_CODE_MANUAL_POS))
 #endif
 
-#if defined(BL606P) || defined(BL808)
+#if defined(BL606P) || defined(BL808) || defined(BL616D)
 /* 0x900 : ef_if_ctrl_1 */
 #define EF_CTRL_EF_IF_CTRL_1_OFFSET      (0x900)
 #define EF_CTRL_EF_IF_1_BUSY             EF_CTRL_EF_IF_1_BUSY

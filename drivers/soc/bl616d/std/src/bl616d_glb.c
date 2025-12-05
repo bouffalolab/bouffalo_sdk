@@ -1175,6 +1175,34 @@ BL_Err_Type ATTR_CLOCK_SECTION GLB_Power_On_DSIPLL_Clk(uint8_t xtalType)
 }
 
 /****************************************************************************/ /**
+ * @brief  GLB set DSI ESC clock
+ *
+ * @param  enable: Enable or disable
+ * @param  div: divider
+ *
+ * @return SUCCESS or ERROR
+ *
+*******************************************************************************/
+BL_Err_Type ATTR_CLOCK_SECTION GLB_Set_DSI_ESC_CLK(uint8_t enable, uint8_t sel, uint8_t div)
+{
+    uint32_t tmpVal = 0;
+
+    tmpVal = BL_RD_REG(GLB_BASE, GLB_DIG_CLK_CFG3);
+
+    if (enable) {
+        tmpVal = BL_SET_REG_BIT(tmpVal, GLB_DSI_TXCLKESC_EN);
+    } else {
+        tmpVal = BL_CLR_REG_BIT(tmpVal, GLB_DSI_TXCLKESC_EN);
+    }
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_DSI_TXCLKESC_DIV, div);
+    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_DSI_TXCLKESC_SEL, sel);
+
+    BL_WR_REG(GLB_BASE, GLB_DIG_CLK_CFG3, tmpVal);
+
+    return SUCCESS;
+}
+
+/****************************************************************************/ /**
  * @brief  GLB set CPUPLL post out
  *
  * @param  enable: Enable or disable
@@ -5135,9 +5163,12 @@ BL_Err_Type GLB_Set_MINI_FCLK(uint8_t enable, uint8_t clkSel, uint8_t div)
     CHECK_PARAM(IS_GLB_MINI_FCLK_TYPE(clkSel));
     CHECK_PARAM((div <= 0x7F));
 
+#if 0
+    /* this feature need to be fixed */
     tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
     tmpVal = BL_CLR_REG_BIT(tmpVal, MINI_MISC_CR_FCLK_EN);
     BL_WR_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0, tmpVal);
+#endif
 
     tmpVal = BL_RD_REG(MINI_MISC, MINI_MISC_MINI_CLOCK_0);
     tmpVal = BL_SET_REG_BITS_VAL(tmpVal, MINI_MISC_CR_FCLK_DIV, div);
@@ -5338,6 +5369,32 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Release_CPU(uint8_t coreID)
     }
 
     return SUCCESS;
+}
+
+/****************************************************************************/ /**
+ * @brief  lock np cpu reset
+ * 
+ * @param  None
+ *
+ * @return NONE
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION  GLB_Lock_NP_Reset(void)
+{
+     *((volatile uint32_t *)0x24000020) |= (1 << 31);
+}
+
+/****************************************************************************/ /**
+ * @brief  unlock np cpu reset
+ * 
+ * @param  None
+ *
+ * @return NONE
+ *
+*******************************************************************************/
+void ATTR_TCM_SECTION  GLB_Unlock_NP_Reset(void)
+{
+    *((volatile uint32_t *)0x24000020) &= (~(1 << 31));
 }
 
 /****************************************************************************/ /**

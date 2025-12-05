@@ -33,7 +33,12 @@
 #elif defined(BL616) || defined(BL628)
 #define EF_CTRL_EFUSE_R0_SIZE 512
 #elif defined(BL616D)
+#if defined(CPU_MODEL_A0)
 #define EF_CTRL_EFUSE_R0_SIZE 256
+#else
+#define EF_CTRL_EFUSE_R0_SIZE 256
+#define EF_CTRL_EFUSE_R1_SIZE 256
+#endif
 #elif defined(BL616L)
 #define EF_CTRL_EFUSE_R0_SIZE 128
 #else
@@ -848,7 +853,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_read_direct(struct bflb_device_s *dev, uint32
         } else {
             bflb_ef_ctrl_switch_ahb_clk_r1(dev);
         }
-        arch_memcpy4(pword, pefuse_start, region0_count);
+        arch_memcpy4(pword, pefuse_start, region1_count);
     }
 #endif
 
@@ -978,7 +983,7 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_common_trim(struct bflb_device_s *dev, 
     uint8_t parity = 0;
     const bflb_ef_ctrl_com_trim_cfg_t *trim_list = NULL;
     uint32_t trim_list_len;
-    uintptr_t irq_stat;    
+    uintptr_t irq_stat;
     uint32_t timeout = EF_CTRL_DFT_TIMEOUT_VAL;
 
     // if (dev == NULL) {

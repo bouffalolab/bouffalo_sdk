@@ -27,6 +27,10 @@ __RFTLV_SIZE_HOLE = 2K;
 __RFTLV_HEAD1_H = (0x46524C42); /* BLRF */
 __RFTLV_HEAD1_L = (0x41524150); /* PAPA */
 
+/* Link stage feature control */
+PROVIDE( __macsw_conf_bl_wifi_ps_enable = 0 );
+PROVIDE( __macsw_conf_plat_dma_enable = 1 );
+
 VerOffset = 0xc00;
 
 MEMORY
@@ -82,7 +86,7 @@ SECTIONS
         *system_bl616*.o*(.rodata*)
         *system_bl616*.o*(.srodata*)
         *system_bl616*.o*(.text*)
-        
+
         *start_load*.o*(.rodata*)
         *start_load*.o*(.srodata*)
         *start_load*.o*(.text*)
@@ -131,7 +135,7 @@ SECTIONS
         . = ALIGN(4);
     } > ram_nocache
 
-    /* Skip the nocache region */ 
+    /* Skip the nocache region */
     .ram_skip_nocache_region (NOLOAD) :
     {
         . += (__nocache_noinit_ram_data_end__ - ORIGIN(ram_nocache));
@@ -265,7 +269,7 @@ SECTIONS
                         *bl616_xip_sflash*.o* \
                         *bl616_ef_ctrl*.o* \
                         *bl616_romapi_patch*.o* ).rodata*) */
-        
+
         *(.srodata)
         *(.srodata.*)
 
@@ -393,7 +397,7 @@ SECTIONS
 
     __psram_limit = ORIGIN(ram_psram) + LENGTH(ram_psram);
     ASSERT(__psram_limit - __psram_heap_base >= psram_heap_min_size, "psram heap region overflow")
- 
+
     .wifibss (NOLOAD) :
     {
       PROVIDE( __wifi_bss_start = ADDR(.wifibss) );

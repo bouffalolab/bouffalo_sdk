@@ -141,6 +141,14 @@ void bflb_dsi_deinit(struct bflb_device_s *dev);
  */
 void bflb_dsi_phy_reset(struct bflb_device_s *dev);
 
+/* PHY control */
+/**
+ * @brief Enable DSI PHY
+ *
+ * @param[in] dev DSI device handle
+ */
+void bflb_dsi_phy_enable(struct bflb_device_s *dev);
+
 /**
  * @brief Configure DSI PHY timing parameters
  *

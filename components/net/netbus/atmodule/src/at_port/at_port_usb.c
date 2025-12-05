@@ -38,17 +38,18 @@ int at_port_read_data(uint8_t *data, int len)
 
     nBytes = netbus_usb_cdcacm_receive(g_usb_cdc, data, len, portMAX_DELAY);
 
-#if 0
-    printf("%s, buf:[%d]\r\n", __func__, nBytes);
-#else
-    if (nBytes > 0) {
-        printf("%s, buf:[%d]", __func__, nBytes);
+#ifdef CONFIG_AT_PORT_USB_DUMP
+    if (nBytes>0) {
+        printf("---> dnld[%d] :", nBytes, data[0], data[0]);// fixme.
         for (int i = 0; i < nBytes; i++) {
             printf(" %02X", data[i]);
         }
-        printf("\r\n");
+        printf(" == %s\r\n", data);
     }
 #endif
+    if (nBytes <= 0) {
+        return 0;
+    }
 
     return nBytes;
 }
@@ -56,7 +57,23 @@ int at_port_read_data(uint8_t *data, int len)
 #define AT_PORT_WRITE_TIMEOUT      (10000)// 10s
 int at_port_write_data(uint8_t *data, int len)
 {
-    return netbus_usb_cdcacm_send(g_usb_cdc, data, len, AT_PORT_WRITE_TIMEOUT);
+    int msg_len;
+
+#ifdef CONFIG_AT_PORT_USB_DUMP
+    if (len) {
+        printf("<--- upld[%d] : ", len, data[0], data[0]);// fixme.
+        for (int i = 0; i < len; i++) {
+            printf(" %02X", data[i]);
+        }
+        printf(" == %s\r\n", data);
+    }
+#endif
+    msg_len = netbus_usb_cdcacm_send(g_usb_cdc, data, len, AT_PORT_WRITE_TIMEOUT);
+    if (msg_len > 0) {
+        return msg_len;
+    }
+
+    return 0;
 }
 
 int at_port_para_set(int baudrate, uint8_t databits, uint8_t stopbits, uint8_t parity, uint8_t flow_control)

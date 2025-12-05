@@ -1011,7 +1011,7 @@ uint32_t transportsdio_get_payload_offset(uint8_t *payload)
  * @retval -3 Memory allocation failed
  * @retval -4 WiFi not connected
  */
-int transportsdio_send_upld3(nh_skb_t *skb)
+int transportsdio_send_upld_skb(nh_skb_t *skb)
 {
     frame_elem_t *frame_elem;
     struct bflb_wifi_msg_packt *msg_tx_packt;

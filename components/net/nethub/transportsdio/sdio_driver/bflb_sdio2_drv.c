@@ -76,8 +76,22 @@ void sdio2_dnld_irq_callback(void *arg, bflb_sdio2_trans_desc_t *trans_desc)
  */
 void sdio2_upld_irq_callback(void *arg, bflb_sdio2_trans_desc_t *trans_desc)
 {
-    bflb_msg_ctrl_t *msg_ctrl = (bflb_msg_ctrl_t *)trans_desc->user_arg;
-    frame_elem_t *frame_elem = (frame_elem_t *)((uintptr_t)trans_desc->buff - FRAME_BUFF_MSGSTRUCT_OFFSET);
+    extern uint32_t transportsdio_get_payload_offset(uint8_t *payload);
+    bflb_msg_ctrl_t *msg_ctrl;
+    int offset;
+    frame_elem_t *frame_elem;
+
+    msg_ctrl = (bflb_msg_ctrl_t *)trans_desc->user_arg;
+    offset = transportsdio_get_payload_offset((uint8_t *)trans_desc->buff+FRAME_BUFF_MSGSTRUCT);
+
+    // offset is payload not msg addr, and trans_desc->buff is msg, so need add FRAME_BUFF_MSGSTRUCT after - offset
+    frame_elem = (frame_elem_t *)((uintptr_t)trans_desc->buff - offset + FRAME_BUFF_MSGSTRUCT);
+
+    //printf("%s elem:%p offset:%d, msg:%p\r\n",
+    //        __func__,
+    //        frame_elem,
+    //        offset,
+    //        trans_desc->buff);
 
     bflb_msg_upld_send_done_cb(msg_ctrl, frame_elem, true);
 

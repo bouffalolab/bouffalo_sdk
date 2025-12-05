@@ -4040,6 +4040,7 @@ struct co_list *mac_vif_get_sta_list(void *macif);
 void mac_vif_get_channel(void *macif, struct mac_chan_op* chan);
 void mac_vif_get_sta_status(void *macif, struct mac_addr *bssid, uint16_t *aid, int8_t *rssi);
 void mac_vif_get_mac_addr(void *macif, struct mac_addr *mac_addr);
+void mac_vif_get_txq_params(void *macif, uint32_t *txq_params);
 
 void macif_rx_buf_ind(void);
 void macif_tx_data_ind(int queue_idx);

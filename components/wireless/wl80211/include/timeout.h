@@ -8,11 +8,11 @@ struct timeout_s;
 typedef void (*timeout_cb_t)(struct timeout_s *);
 
 typedef struct timeout_s {
-  TAILQ_ENTRY(timeout_s) ent;
-  unsigned int wakeup;
+    TAILQ_ENTRY(timeout_s) ent;
+    unsigned int wakeup;
 
-  timeout_cb_t callback;
-  void *opaque;
+    timeout_cb_t callback;
+    void *opaque;
 } *timeout_t;
 
 void timeout_start(timeout_t e, unsigned int delay);

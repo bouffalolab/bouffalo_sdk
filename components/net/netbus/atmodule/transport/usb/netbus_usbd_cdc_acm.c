@@ -8,8 +8,6 @@
 #define DBG_TAG "ECM"
 #include "log.h"
 
-#define CDC_ACM_EVENT_TX    0x1
-
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[512];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[512];
 static netbus_usb_cdc_t *gpctx = NULL;
@@ -98,7 +96,7 @@ static void usbd_cdc_acm_bulk_in(uint8_t busid, uint8_t ep, uint32_t nbytes)
         usbd_ep_start_write(0, CDC_ACM_IN_EP, NULL, 0);
     }
 
-    xEventGroupSetBitsFromISR(gpctx->event, CDC_ACM_EVENT_TX, &xHigherPriorityTaskWoken);
+    xSemaphoreGiveFromISR(gpctx->wdone_sem, &xHigherPriorityTaskWoken);
 
     if (xHigherPriorityTaskWoken) {
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -131,11 +129,11 @@ static void cdc_acm_init(void)
 int netbus_usb_cdcacm_init(netbus_usb_cdc_t *pctx, uint32_t txbuf_size, uint32_t rxbuf_size)
 {
     gpctx = pctx;
-    pctx->event   = xEventGroupCreate();
+    pctx->wdone_sem = xSemaphoreCreateBinary();
     pctx->w_mutex = xSemaphoreCreateMutex();
 	pctx->rxbuf   = xStreamBufferCreate(rxbuf_size, 1);
     cdc_acm_init();
-    xEventGroupSetBits(gpctx->event, CDC_ACM_EVENT_TX);
+    xSemaphoreGive(pctx->wdone_sem);
 	return 0;
 }
 
@@ -158,7 +156,7 @@ int netbus_usb_cdcacm_send(netbus_usb_cdc_t *pctx, const uint8_t *p_data, uint32
 	}
 	while (remain_len) {
 
-        xEventGroupWaitBits(pctx->event, CDC_ACM_EVENT_TX, pdTRUE, pdTRUE, timeout);
+        xSemaphoreTake(pctx->wdone_sem, timeout);
 
         ret = (remain_len > sizeof(write_buffer)) ? sizeof(write_buffer) : remain_len;
         memcpy(write_buffer, p_data, ret);
@@ -184,7 +182,7 @@ int netbus_usb_cdcacm_deinit(netbus_usb_cdc_t *ctx)
 {
 	vStreamBufferDelete(ctx->rxbuf);
     vSemaphoreDelete(ctx->w_mutex);
-    vEventGroupDelete(ctx->event);
+    vSemaphoreDelete(ctx->wdone_sem);
 	return 0;
 }
 

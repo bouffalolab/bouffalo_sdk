@@ -8,7 +8,6 @@
 #include <task.h>
 #include <semphr.h>
 #include <stream_buffer.h>
-#include <event_groups.h>
 #include <stdint.h>
 
 #define CDC_ACM_IN_EP      0x83
@@ -22,7 +21,7 @@ typedef void (*netbus_usb_cdc_func_t)(void *arg, int event);
 typedef struct netbus_usb_cdc {
     StreamBufferHandle_t rxbuf;
     SemaphoreHandle_t w_mutex;
-    EventGroupHandle_t event;
+    SemaphoreHandle_t wdone_sem;
 
     netbus_usb_cdc_func_t cb;
     void *arg;

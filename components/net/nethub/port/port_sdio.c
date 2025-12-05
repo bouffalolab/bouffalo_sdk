@@ -107,7 +107,9 @@ static nh_forward_result_t _sdio_output_callback(nh_skb_t *skb, void *arg)
 #if DEBUG_DUMP_WIFIRX_ENABLE
     printf("@%p:%d\n", skb->data, skb->len);
 #endif
-    ret = transportsdio_send_upld3(skb);
+
+    ret = transportsdio_send_upld_skb(skb);
+
     if (ret != 0) {
         EXAMPLE_DEBUG("ret:%d.\r\n", ret);
     }

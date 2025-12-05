@@ -25,24 +25,9 @@ type = 0
 name = "FW0"
 device = 0
 address0 = 0x10000
-size0 = 0x100000
+size0 = 0x200000
 address1 = 0x210000
-size1 = 0xA0000
-# compressed image must set len,normal image can left it to 0
-len = 0
-# If header is 1, it will add the header.
-header = 1
-# If header is 1 and security is 1, It will be encrypted.
-security= 1
-
-[[pt_entry]]
-type = 1
-name = "FW1"
-device = 0
-address0 = 0x110000
-size0 = 0x100000
-address1 = 0x2B0000
-size1 = 0xC8000
+size1 = 0x168000
 # compressed image must set len,normal image can left it to 0
 len = 0
 # If header is 1, it will add the header.

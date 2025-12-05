@@ -29,6 +29,10 @@ extern void log_start(void);
 
 extern uint32_t __HeapBase;
 extern uint32_t __HeapLimit;
+#ifdef CONFIG_DUALCORE_DISABLE
+extern uint8_t _heap_wifi_start;
+extern uint8_t _heap_wifi_size;
+#endif
 extern uint32_t __psram_heap_base;
 extern uint32_t __psram_limit;
 
@@ -62,10 +66,9 @@ static void ATTR_CLOCK_SECTION __attribute__((noinline)) system_clock_init(void)
         GLB_Set_WL_MCU_System_CLK(GLB_WL_MCU_SYS_CLK_WIFIPLL_DIV2, 0, 1);
 #endif
         GLB_Set_WL_XCLK_Sel(GLB_WL_MCU_XCLK_XTAL);
-#if 0
-        /* RC32M=8M */
-        //AON_Set_RC32M_Speed_As_8M(1);
-        *(volatile uint32_t *)(0x2008F994) = 0x58000000;
+#if !defined(CPU_MODEL_A0)
+        /* RC32M=32M */
+        AON_Set_RC32M_Speed_As_8M(0);
 #else
         /* RC32M=32M */
         //AON_Set_RC32M_Speed_As_8M(0);
@@ -484,6 +487,10 @@ void ram_heap_init(void)
     /* ocram heap init */
     heap_len = ((size_t)&__HeapLimit - (size_t)&__HeapBase);
     mm_register_heap(MM_HEAP_OCRAM_0, "OCRAM", MM_ALLOCATOR_TLSF, &__HeapBase, heap_len);
+
+#ifdef CONFIG_DUALCORE_DISABLE
+    mm_register_heap(MM_HEAP_WRAM_0, "WRAM", MM_ALLOCATOR_TLSF, &_heap_wifi_start, (size_t)&_heap_wifi_size);
+#endif
 
 #ifdef CONFIG_PSRAM
 #if defined(CPU_AP)

@@ -2047,6 +2047,8 @@ BL_Err_Type GLB_Select_NPCPU_Jtag(void);
 BL_Err_Type GLB_SET_JTAG_CHAIN(uint8_t enable);
 BL_Err_Type GLB_Halt_CPU(uint8_t coreID);
 BL_Err_Type GLB_Release_CPU(uint8_t coreID);
+void GLB_Lock_NP_Reset(void);
+void GLB_Unlock_NP_Reset(void);
 BL_Err_Type GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs);
 BL_Err_Type GLB_Set_WL_MCU_System_CLK(uint8_t clkFreq, uint8_t cpuClkDiv, uint8_t BusClkDiv);
 BL_Err_Type GLB_Set_WL_XCLK_Sel(uint8_t clkSel);
@@ -2061,6 +2063,7 @@ uint32_t GLB_Get_Mini_System_Status(void);
 BL_Err_Type GLB_Power_Off_DSIPLL(void);
 BL_Err_Type GLB_DSIPLL_Ref_Clk_Sel(uint8_t refClk);
 BL_Err_Type GLB_Power_On_DSIPLL(const GLB_DSIPLL_Cfg_Type *const cfg, uint8_t waitStable);
+BL_Err_Type GLB_Set_DSI_ESC_CLK(uint8_t enable, uint8_t sel, uint8_t div);
 
 /*@} end of group GLB_Public_Functions */
 

@@ -80,7 +80,7 @@ BreakConstructorInitializersBeforeComma:	false
 BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: false
 # 每行字符的限制，0表示没有限制
-ColumnLimit:	0
+ColumnLimit:	120
 # 描述具有特殊意义的注释的正则表达式，它不应该被分割为多行或以其它方式改变
 CommentPragmas:	'^ IWYU pragma:'
 CompactNamespaces: false
@@ -171,4 +171,3 @@ UseTab:	Never
 Language: Cpp
 Standard: Cpp03
 ...
-

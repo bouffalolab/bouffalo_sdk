@@ -27,6 +27,10 @@ __RFTLV_SIZE_HOLE = 2K;
 __RFTLV_HEAD1_H = (0x46524C42); /* BLRF */
 __RFTLV_HEAD1_L = (0x41524150); /* PAPA */
 
+/* Link stage feature control */
+PROVIDE( __macsw_conf_bl_wifi_ps_enable = 0 );
+PROVIDE( __macsw_conf_plat_dma_enable = 0 );
+
 VerOffset = 0xc00;
 
 MEMORY
@@ -397,4 +401,3 @@ SECTIONS
     PROVIDE(__LD_CONFIG_EM_SEL = __EM_SIZE);
     ASSERT((wifi_ram_max_size + __EM_SIZE) <= 160K,"wifi ram overflow")
 }
-

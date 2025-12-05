@@ -372,7 +372,7 @@ int lcd_draw_str_ascii16(uint16_t x, uint16_t y, lcd_color_t color, lcd_color_t 
 #endif
 
 /* RGB LCD Common interface */
-#elif (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_DSI_VIDIO)
+#elif (LCD_INTERFACE_TYPE == LCD_INTERFACE_DPI) || (LCD_INTERFACE_TYPE == LCD_INTERFACE_DSI)
 
 /**
  * @brief lcd_dpi_init
@@ -582,7 +582,6 @@ int lcd_draw_circle(lcd_color_t *screen_buffer, uint16_t x, uint16_t y, uint16_t
         screen_buffer[(x - b) * LCD_W + (y - a)] = color;
         screen_buffer[(x + b) * LCD_W + (y - a)] = color;
         screen_buffer[(x - a) * LCD_W + (y + b)] = color;
-        screen_buffer[(x - b) * LCD_W + (y - a)] = color;
         screen_buffer[(x - a) * LCD_W + (y - b)] = color;
         screen_buffer[(x + b) * LCD_W + (y + a)] = color;
         screen_buffer[(x + a) * LCD_W + (y - b)] = color;

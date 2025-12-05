@@ -18,6 +18,5 @@ sdk_library_add_sources(nethub/forwardrules/hostless_rules.c
 sdk_add_include_directories(nethub/include port)
 
 sdk_add_compile_definitions(-DCONFIG_NETHUB_DEBUG)
-sdk_add_compile_definitions(-DCONFIG_SDIO3_SOFT_RST_INT_USER)
 
 add_subdirectory(transportsdio)

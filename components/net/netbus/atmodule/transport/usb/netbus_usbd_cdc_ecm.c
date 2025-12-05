@@ -44,9 +44,7 @@
 #define TX_PBUF_FRAME_LEN   (1514)
 #define TX_PBUF_PAYLOAD_LEN (PBUF_LINK_ENCAPSULATION_HLEN + TX_PBUF_FRAME_LEN)
 
-#define ecm_print(...) //
-
-int g_usb_loop = 0;
+#define ecm_print(...)
 
 typedef struct _trans_desc {
     struct pbuf_custom pbuf;
@@ -255,21 +253,12 @@ static void cdc_ecm_init(void)
 
 void usbd_cdc_ecm_data_send_done(uint32_t nbytes)
 {
-    static uint32_t s_cnt = 0;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    s_cnt++;
-    ecm_print("------------ %s, cnt:%d\r\n", __func__, s_cnt);
     g_usbecm.send_cnt++;
-#if 0
-    if (xPortIsInsideInterrupt()) {
-        printf("[%d] up isr over %d\r\n", xTaskGetTickCountFromISR(), g_usbecm.send_cnt);
-    } else {
-        printf("[%d] up over %d\r\n", xTaskGetTickCount(), g_usbecm.send_cnt);
-    }
-#else
-    //printf("[%d] up isr over %d\r\n", xTaskGetTickCountFromISR(), g_usbecm.send_cnt);
-#endif
+
+    ecm_print("    upld over cnt:%d\r\n", g_usbecm.send_cnt);
+
     if (xSemaphoreGiveFromISR(g_usbecm.upsem, &xHigherPriorityTaskWoken) != pdTRUE) {
         ecm_print("usb send done error!\r\n");
     }
@@ -279,48 +268,19 @@ void usbd_cdc_ecm_data_send_done(uint32_t nbytes)
 
 void usbd_cdc_ecm_data_recv_done(uint32_t nbytes)
 {
-    static uint32_t s_cnt = 0;
-    s_cnt++;
-    ecm_print("------------ %s, cnt:%d\r\n", __func__, s_cnt);
-
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     g_usbecm.recv_cnt++;
 
-#if 0
-    if (xPortIsInsideInterrupt()) {
-        printf("[%d] dn isr over %d\r\n", xTaskGetTickCountFromISR(), g_usbecm.recv_cnt);
-    } else {
-        printf("[%d] dn over %d\r\n", xTaskGetTickCount(), g_usbecm.recv_cnt);
-    }
-#else
-    //printf("[%d] dn isr over %d\r\n", xTaskGetTickCountFromISR(), g_usbecm.recv_cnt);
-#endif
+    ecm_print("    dnld over cnt:%d\r\n", g_usbecm.recv_cnt);
 
     if (g_usbecm.dnmsg) {
-        //g_usbecm.dnmsg->payload_len       = nbytes;
         g_usbecm.dnmsg->pbuf.pbuf.len     = nbytes;
         g_usbecm.dnmsg->pbuf.pbuf.tot_len = nbytes;
     }
     if (xSemaphoreGiveFromISR(g_usbecm.dnsem, &xHigherPriorityTaskWoken) != pdTRUE) {
         ecm_print("usb recv done error!\r\n");
     }
-#if 0
-    {
-        static uint32_t interrupt_count = 0;
-        static uint32_t last_print_time = 0;
-
-        interrupt_count++;
-
-        // Print once every 1 second
-        uint32_t current_time = xTaskGetTickCountFromISR();
-        if (current_time - last_print_time >= 1000) {
-            printf("recv : %lu pack\n", interrupt_count);
-            interrupt_count = 0;
-            last_print_time = current_time;
-        }
-    }
-#endif
 
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
@@ -331,70 +291,18 @@ void usbd_cdc_ecm_data_recv_done(uint32_t nbytes)
 #include "lwip/prot/tcp.h"
 #include "lwip/prot/udp.h"
 
-void pbuf_dump(const char *msg, struct pbuf *p)
-{
-    uint8_t eth_header_data[14];  // Reserve sufficient space
-    uint8_t ip_header_data[20];   // The IP header is fixed at 20 bytes.
-    struct eth_hdr *eth_header;
-    struct ip_hdr *ip_header;
-
-    if (msg && strlen(msg) > 0) {
-        printf("\n=== %s ===\n", msg);
-    }
-
-    if (p == NULL) {
-        printf("pbuf is NULL!\n");
-        return;
-    }
-
-    // Securely copy the Ethernet header
-    if (p->len >= sizeof(eth_header_data)) {
-        memcpy(eth_header_data, p->payload, sizeof(eth_header_data));
-        eth_header = (struct eth_hdr*)eth_header_data;
-    } else {
-        printf("Packet too short for Ethernet header\n");
-        return;
-    }
-
-    printf("Ethernet Header:\n");
-    printf("  - Dest MAC:   %02X:%02X:%02X:%02X:%02X:%02X\n",
-           eth_header->dest.addr[0], eth_header->dest.addr[1],
-           eth_header->dest.addr[2], eth_header->dest.addr[3],
-           eth_header->dest.addr[4], eth_header->dest.addr[5]);
-    printf("  - Src MAC:    %02X:%02X:%02X:%02X:%02X:%02X\n",
-           eth_header->src.addr[0], eth_header->src.addr[1],
-           eth_header->src.addr[2], eth_header->src.addr[3],
-           eth_header->src.addr[4], eth_header->src.addr[5]);
-
-    uint16_t ether_type = lwip_htons(eth_header->type);
-    printf("  - EtherType:  0x%04X\n\n", ether_type);
-
-    // Safely handle the IP header
-    if (ether_type == ETHTYPE_IP && p->len >= (sizeof(eth_header_data) + sizeof(ip_header_data))) {
-        memcpy(ip_header_data, (uint8_t*)p->payload + sizeof(eth_header_data), sizeof(ip_header_data));
-        ip_header = (struct ip_hdr*)ip_header_data;
-
-        printf("IP Header:\n");
-        printf("  - Version:    %u\n", (ip_header->_v_hl >> 4));
-        printf("  - Header Len: %u bytes\n", (ip_header->_v_hl & 0x0F) * 4);
-        printf("  - Protocol:   %u\n", ip_header->_proto);
-    }
-}
-
 static void custom_free(struct pbuf *p)
 {
     static uint32_t s_cnt = 0;
     trans_desc_t *msg = (trans_desc_t *)p;
 
-    ecm_print("========================================== custom_free start:%p, s_cnt:%d\r\n", msg, s_cnt);
+    s_cnt++;
     if (msg) {
         while (xQueueSend(g_usbecm.dnfq, &msg, portMAX_DELAY) != pdPASS);
     }
-    ecm_print("dn fq:%d, dnmsg:%p, items:%d\r\n",
-            uxQueueMessagesWaiting(g_usbecm.dnfq),
-            g_usbecm.dnmsg,
-            NXBD_DNLD_ITEMS);
-    ecm_print("========================================== custom_free done:%p, s_cnt:%d\r\n", msg, s_cnt);
+    ecm_print("    dnld free fq/items:%d/%d, dnmsg:%p, s_cnt:%d\r\n",
+            uxQueueMessagesWaiting(g_usbecm.dnfq), NXBD_DNLD_ITEMS,
+            g_usbecm.dnmsg, s_cnt);
 }
 
 int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
@@ -402,16 +310,9 @@ int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
     struct pbuf *p = (struct pbuf *)msg;
     net_al_if_t *net_if;
 
-#if 0
-    if (pbuf_take(p, msg->payload_buf, msg->payload_len) != ERR_OK) {
-        pbuf_free(p);
-        return -1;
-    }
-#else
-#endif
     if (!p) {
         printf("alloc error.\r\n");
-        pbuf_free(p);
+        return -1;
     }
 
     // get intf
@@ -421,27 +322,30 @@ int portwifi_eth_tx(trans_desc_t *msg, bool is_sta)
         net_if = fhost_env.vif[1].net_if;
     }
     if ((!net_if) || (!netif_is_up((struct netif *)net_if))) {
-        ecm_print(" ========================== net_if:%p, free\r\n", net_if);
+        ecm_print("    netif_status - sta:%d ap:%d\r\n",
+                  fhost_env.vif[0].net_if ? netif_is_up((struct netif *)fhost_env.vif[0].net_if) : -1,
+                  fhost_env.vif[1].net_if ? netif_is_up((struct netif *)fhost_env.vif[1].net_if) : -1);
         pbuf_free(p);
-    	return -1;
+        return -1;
     }
 
     {
         static uint32_t g_fhost_tx_cnt = 0;
         g_fhost_tx_cnt++;
-        ecm_print("--------------------------TTT fhost_tx_start cnt:%d msg:%p -> off=(%p-%p)=%d\r\n",
-                g_fhost_tx_cnt, msg, msg->payload_buf, msg->pbuf.pbuf.payload, ((uint32_t)msg->pbuf.pbuf.payload-(uint32_t)msg->payload_buf));
+        ecm_print("dnld <------- cnt:%d msg:%p -> off=(%p-%p)=%d\r\n",
+                    g_fhost_tx_cnt, msg,
+                    msg->payload_buf,
+                    msg->pbuf.pbuf.payload,
+                    ((uint32_t)msg->pbuf.pbuf.payload-(uint32_t)msg->payload_buf));
     }
-    //pbuf_ref(p);
 
-    //pbuf_dump("fhost_tx_start", p);
     if (0 != fhost_tx_start(net_if, p, NULL, NULL)) {
         printf("tx error.\r\n");
         pbuf_free(p);
-    } else {
-        ecm_print("tx ok.\r\n");
+        return -1;
     }
-    //pbuf_free(p);
+
+    return 0;
 }
 
 int usb_dn_task(void *arg)
@@ -478,22 +382,17 @@ int usb_dn_task(void *arg)
         g_usbecm.dbg_dntask_mode = 4;
         result = xSemaphoreTake(g_usbecm.dnsem, portMAX_DELAY);
 
-        if (g_usb_loop) {
-           while (xQueueSend(g_usbecm.dnfq, &g_usbecm.dnmsg, portMAX_DELAY) != pdPASS);
-           g_usbecm.dnmsg = NULL;
-           continue;
-        } else {
-           if (result != pdPASS) {
-               printf("usbd_cdc_ecm_receive ok take isr result:%d.\r\n", result);
-               while (xQueueSend(g_usbecm.dnfq, &g_usbecm.dnmsg, portMAX_DELAY) != pdPASS);
-               continue;
-           }
-           g_usbecm.dbg_dntask_mode = 5;
 
-           // update pbuf
-           portwifi_eth_tx(g_usbecm.dnmsg, 0);
-           g_usbecm.dnmsg = NULL;
+        if (result != pdPASS) {
+            printf("usbd_cdc_ecm_receive ok take isr result:%d.\r\n", result);
+            while (xQueueSend(g_usbecm.dnfq, &g_usbecm.dnmsg, portMAX_DELAY) != pdPASS);
+            continue;
         }
+        g_usbecm.dbg_dntask_mode = 5;
+
+        // update pbuf
+        portwifi_eth_tx(g_usbecm.dnmsg, 1);
+        g_usbecm.dnmsg = NULL;
     }
 }
 
@@ -523,24 +422,14 @@ int usb_up_task(void *arg)
 
     return 0;
 }
-#if 0
-static void usb_pkt_free(void  *msg)
-{
-    struct pbuf *p = msg;
-    pbuf_free(p);
-}
-#endif
+
 int dual_stack_peer_input(void *pkt, void *arg)
 {
     static int s_cnt = 0;
-    trans_desc_t msg;
-
-    //struct usbwifi_rx_env_tag *env = &g_usbwifi.rx_env;
     struct pbuf *p = (struct pbuf *)pkt;
 #if 1
-    //ret = usbwifi_bulk_in(env, p->payload, p->len, USBWIFI_DATA_TYPE_PKT, pkt_free, p);
     s_cnt++;
-    ecm_print("--------------------------RRR %s, cnt:%d, line:%d\r\n", __func__, s_cnt, __LINE__);
+    ecm_print("upld -------> %s, cnt:%d, p:%p\r\n", __func__, s_cnt, p);
     while (xQueueSend(g_usbecm.upvq, &p, portMAX_DELAY) != pdPASS);
 #else
     s_cnt++;
@@ -557,90 +446,27 @@ static void *eth_input_hook(bool is_sta, void *pkt, void *arg)
     if (npf_is_8021X(p)) {
         return pkt;
     }
-#if 0
-    bool input_emb = true;
-    bool input_host = false;
-    struct pbuf *p_dup = NULL;
-    struct pbuf *ret = NULL;
 
-#ifdef DHCP_IN_EMB
-    if (npf_is_arp(p)) {
-        input_emb = true;
-        input_host = true;
-    } else if (npf_is_dhcp4(p)) {
-        input_emb = true;
-        input_host = false;
-    }
-#else
-    input_emb = false;
-    input_host = true;
-#endif
-
-    // TODO Add custom filter here
-    // Example of handling some TCP traffic in emb:
-#if 0
-    if (npf_is_tcp4_port(p, 50001) || npf_is_udp4_port(p, 50001)) {
-        input_emb = true;
-        input_host = false;
-    }
-#endif
-
-    if (npf_is_icmp4(p)) {
-        input_emb = false;
-        input_host = true;
-    }
-
-    if (!input_emb && !input_host) {
+    // XXX distinguish STA/AP
+    int ret = dual_stack_peer_input(p, NULL);
+    if (ret) {
         pbuf_free(p);
         return NULL;
     }
 
-    if (input_emb && input_host) {
-        p_dup = pbuf_alloc(PBUF_RAW, p->tot_len, PBUF_RAM);
-        if (p_dup == NULL) {
-            pbuf_free(p);
-            return NULL;
-        }
-        pbuf_copy(p_dup, p);
-    }
-
-    if (input_host) {
-#endif
-        // XXX distinguish STA/AP
-        int ret = dual_stack_peer_input(p, NULL);
-        if (ret) {
-#if 0
-            if (p_dup) {
-                pbuf_free(p_dup);
-            }
-#endif
-            pbuf_free(p);
-            return NULL;
-        }
-#if 0
-    }
-
-    if (p_dup) {
-        // both emb & host
-        ret = p_dup;
-    } else if (input_emb) {
-        ret = p;
-    } else {
-        ret = NULL;
-    }
-#endif
     return NULL;
 }
 
 static int usbecm_dump(void);
+
 static int usbecm_queue_init(void)
 {
     int i;
 
-    // reset global
+    /* reset global */
     memset(&g_usbecm, 0, sizeof(usbecm_t));
 
-    // init queue sem
+    /* init queue sem */
     g_usbecm.dnfq = xQueueCreate(NXBD_DNLD_ITEMS + 1, sizeof(trans_desc_t *));
     g_usbecm.upvq = xQueueCreate(NXBD_UPLD_ITEMS + 1, sizeof(trans_desc_t *));
     g_usbecm.dnsem = xSemaphoreCreateBinary();
@@ -652,39 +478,29 @@ static int usbecm_queue_init(void)
 
     usbecm_dump();
 
-    // init sem
+    /* init sem */
     for (i = 0; i < NXBD_DNLD_ITEMS; i++) {
         trans_desc_t *msg;
-#if 0
-        struct pbuf_custom *p;
-
-        p = &(dnmsg_desc[i].pbuf);
-        p->custom_free_function = custom_free;
-        p = pbuf_alloced_custom(PBUF_RAW_TX, TX_PBUF_FRAME_LEN,
-                (PBUF_ALLOC_FLAG_DATA_CONTIGUOUS | PBUF_TYPE_ALLOC_SRC_MASK_STD_HEAP),
-                &p->pbuf, p->payload_buf, TX_PBUF_PAYLOAD_LEN);
-#endif
-        dnmsg_desc[i].payload_buf = s_buf + TX_PBUF_PAYLOAD_LEN*i;
+        dnmsg_desc[i].payload_buf = s_buf + TX_PBUF_PAYLOAD_LEN * i;
         msg = &(dnmsg_desc[i]);
         xQueueSend(g_usbecm.dnfq, &msg, portMAX_DELAY);
     }
 
     usbecm_dump();
 
-    for (i = 0; i < NXBD_UPLD_ITEMS; i++) {
-    }
-
     return 0;
 }
+
 static int usbecm_wifi_init(void)
 {
-    bl_pkt_eth_input_hook_register(eth_input_hook, NULL);//&ctx->rx_env);
+    bl_pkt_eth_input_hook_register(eth_input_hook, NULL);
     return 0;
 }
 
 static int usbecm_usb_init(void)
 {
     cdc_ecm_init();
+    return 0;
 }
 
 static int usb_ecm_acm_init(void)
@@ -723,7 +539,7 @@ static int usbecm_dump(void)
 static int cmd_usbecm(int argc, char *argv[])
 {
     if (argc < 2) {
-        return usbecm_dump();
+        usbecm_dump();
         printf("Usage: usbecm <dump|init>\n");
         return -1;
     }
@@ -733,16 +549,14 @@ static int cmd_usbecm(int argc, char *argv[])
     if (strcmp(cmd, "dump") == 0) {
         return usbecm_dump();
     } else if (strcmp(cmd, "init") == 0) {
-        //return usb_ecm_acm_init();
-    } else if (strcmp(cmd, "loop1") == 0) {
-        g_usb_loop = 1;
-    } else if (strcmp(cmd, "loop0") == 0) {
-        g_usb_loop = 0;
+        /* usb_ecm_acm_init(); */  /* commented out, init done elsewhere */
     } else {
         printf("Invalid command: %s\n", cmd);
         printf("Usage: usbecm <dump|init>\n");
         return -1;
     }
+
+    return 0;
 }
 SHELL_CMD_EXPORT_ALIAS(cmd_usbecm, usbecm, USB ECM commands.);
 
@@ -754,4 +568,3 @@ netbus_usb_cdc_t *netbus_usb_cdc_init(void)
     }
     return &g_usbecm.usbacm;
 }
-

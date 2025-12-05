@@ -69,6 +69,11 @@ if(CONFIG_BSP_LCD)
     target_sources(app PRIVATE lcd/mipi_dpi/gc9503v_dpi.c)
     target_sources(app PRIVATE lcd/mipi_dpi/st7701s_dpi.c)
 
+    # MIPI DSI BSP compatibility wrappers and panel drivers
+    target_sources(app PRIVATE lcd/mipi_dsi/mipi_dsi.c)
+    target_sources(app PRIVATE lcd/mipi_dsi/ili9881c_dsi.c)
+    sdk_add_include_directories(lcd/mipi_dsi)
+
     sdk_add_include_directories(lcd)
 endif()
 

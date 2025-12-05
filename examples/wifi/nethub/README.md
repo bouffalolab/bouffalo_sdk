@@ -16,11 +16,11 @@ Nethub is a dual-stack solution example with host support, supporting multiple i
 
 Note: **√** means supported; **×** means not supported; **○** means supported but not tested.
 
-| Interface Type | bl616/bl618 | bl616d/bl618d/bl619d |
-|:--------------:|:-----------:|:----------------------:|
-| SDIO           |      √      |           √            |
-| USB            | In Development |      In Development   |
-| SPI            | In Development |      In Development   |
+| Interface Type | bl616/bl618 | bl616d/bl618d/bl619d | bl616L  |
+|:--------------:|:-----------:|:----------------------:|:-------:|
+| SDIO           |    √(sdio2) |        √(sdio3)        |  √(sdio2)   |
+| USB            | In Development |      In Development   |  In Development |
+| SPI            | In Development |      In Development   |  In Development |
 
 ## Build Instructions
 
@@ -40,6 +40,17 @@ make CHIP=bl616 BOARD=bl616dk
 ```bash
 make CHIP=bl616d BOARD=bl616ddk CPU_ID=ap CONFIG_ROMAPI=n
 ```
+
+## Hardware GPIO Configuration
+
+| Function Pin | bl616/bl618 | bl616d/bl618d/bl619d | bl616L  |
+|:------------:|:-----------:|:--------------------:|:-------:|
+| SDIO_DAT2    |   GPIO10    | GPIO43               | GPIO6  |
+| SDIO_DAT3    |   GPIO11    | GPIO44               | GPIO7  |
+| SDIO_CMD     |   GPIO12    | GPIO45               | GPIO8  |
+| SDIO_CLK     |   GPIO13    | GPIO46               | GPIO9  |
+| SDIO_DATA0   |   GPIO14    | GPIO47               | GPIO10 |
+| SDIO_DATA1   |   GPIO15    | GPIO48               | GPIO11 |
 
 ## Flash Instructions
 
