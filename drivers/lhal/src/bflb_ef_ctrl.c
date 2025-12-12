@@ -98,6 +98,33 @@ int ATTR_TCM_SECTION bflb_ef_ctrl_busy(struct bflb_device_s *dev)
 #endif
 }
 
+#if defined(BL616D) && !defined(CPU_MODEL_A0)
+/****************************************************************************/ /**
+ * @brief  Check efuse region1 busy status
+ *
+ * @param dev  ef control device pointer
+ *
+ * @return 1 for busy 0 for not
+ *
+*******************************************************************************/
+int ATTR_TCM_SECTION bflb_ef_ctrl_busy_r1(struct bflb_device_s *dev)
+{
+#ifdef romapi_bflb_ef_ctrl_busy_r1
+    return romapi_bflb_ef_ctrl_busy_r1(dev);
+#else
+    uint32_t reg_val;
+
+    reg_val = getreg32(BFLB_EF_CTRL_BASE + EF_CTRL_EF_IF_CTRL_1_OFFSET);
+
+    if (reg_val & EF_CTRL_EF_IF_1_BUSY_MASK) {
+        return 1;
+    }
+
+    return 0;
+#endif
+}
+#endif
+
 /****************************************************************************/ /**
  * @brief  Check efuse busy status
  *
@@ -755,7 +782,20 @@ void ATTR_TCM_SECTION bflb_ef_ctrl_write_direct(struct bflb_device_s *dev, uint3
         arch_memcpy4(pefuse_start, pword, region1_count);
 
         if (program) {
+#if defined(BL616D) && !defined(CPU_MODEL_A0)
+            bflb_power_on_efuse();
             bflb_ef_ctrl_program_efuse_r1(dev);
+            while (bflb_ef_ctrl_busy_r1(dev) == 1) {
+                timeout--;
+                if (timeout == 0) {
+                    break;
+                }
+                arch_delay_us(10);
+            }
+            bflb_power_off_efuse();
+#else
+            bflb_ef_ctrl_program_efuse_r1(dev);
+#endif
             arch_delay_us(100);
         }
     }

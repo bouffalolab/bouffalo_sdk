@@ -87,7 +87,7 @@ void wpa_sendto_wrapper(bool is_sta, void *buffer, u16 len,
     memcpy(cfm, tx_cfm, sizeof(*cfm));
   }
 
-  wl80211_output_raw(is_sta, buffer, len, 0, wpa_pkt_free, cfm);
+  wl80211_output_raw(is_sta ? WL80211_VIF_STA : WL80211_VIF_AP, buffer, len, 0, wpa_pkt_free, cfm);
 }
 
 void wpa_deauthenticate(uint8_t sta_idx, u8 reason_code) {
@@ -310,6 +310,8 @@ int bl_supplicant_init(void) {
 #if CONFIG_WPA_WAPI_PSK
   ret = esp_wifi_internal_wapi_init();
 #endif
+
+  wpa_cbs->wpa_sta_init();
 
   return ret;
 }

@@ -65,8 +65,8 @@
 
 #include <string.h>
 
-#ifdef BL_DUAL_STACK
-#include <bl_dual_stack_input.h>
+#ifdef CONFIG_DUAL_STACK
+#include <dual_stack_input.h>
 #endif
 
 #ifndef UDP_LOCAL_PORT_RANGE_START
@@ -415,10 +415,10 @@ udp_input(struct pbuf *p, struct netif *inp)
       LWIP_DEBUGF(UDP_DEBUG | LWIP_DBG_TRACE, ("udp_input: not for us.\n"));
 
 #if LWIP_ICMP || LWIP_ICMP6
-#ifdef BL_DUAL_STACK
+#ifdef CONFIG_DUAL_STACK
       pbuf_header_force(p, (s16_t)(SIZEOF_ETH_HDR + ip_current_header_tot_len() + UDP_HLEN));
       pbuf_ref(p);
-      if (bl_dual_stack_peer_input(p, NULL)) {
+      if (dual_stack_input(p, NULL)) {
         pbuf_free(p);
       }
 #else

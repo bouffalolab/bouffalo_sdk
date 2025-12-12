@@ -166,9 +166,9 @@ uint32_t ping(char *target_name, uint16_t interval, uint16_t size, uint32_t coun
     lwip_setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
     while (1) {
-        int elapsed_time;
+        int elapsed_time, ret;
 
-        if (lwip_ping_send(s, &target_addr, size) == ERR_OK) {
+        if ((ret = lwip_ping_send(s, &target_addr, size)) == ERR_OK) {
             recv_start_tick = sys_now();
             if ((recv_len = lwip_ping_recv(s, &ttl)) >= 0) {
                 recv_times++;
@@ -179,7 +179,7 @@ uint32_t ping(char *target_name, uint16_t interval, uint16_t size, uint32_t coun
                 printf("From %s icmp_seq=%d timeout\n\r", inet_ntoa(ina), send_times);
             }
         } else {
-            printf("Send %s - error\n\r", inet_ntoa(ina));
+            printf("Send %s - error %d\n\r", inet_ntoa(ina), ret);
         }
 
         send_times++;

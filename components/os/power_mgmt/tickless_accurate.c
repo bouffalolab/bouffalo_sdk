@@ -18,6 +18,7 @@
 
 #include "board_rf.h"
 #include "tickless.h"
+#include "pm_manager.h"
 
 //#define TICKLESS_DEBUG 0
 
@@ -382,11 +383,6 @@ void lp_hook_post_sys(iot2lp_para_t *param)
     }
 }
 
-int __attribute__((weak)) bl_pm_app_check(void)
-{
-    return 0;
-}
-
 /* Define the function that is called by portSUPPRESS_TICKS_AND_SLEEP(). */
 void vApplicationSleep(TickType_t xExpectedIdleTime)
 {
@@ -457,7 +453,7 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
     }
 
     /* Check pm stauts */
-    if (bl_pm_event_get() || bl_pm_app_check()) {
+    if (bl_pm_event_get() || pm_sleep_check_dispatch()) {
         portENABLE_INTERRUPTS();
         tickless_info("Sleep Abort! %d", __LINE__);
         ___WFI();

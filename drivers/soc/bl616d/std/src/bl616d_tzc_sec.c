@@ -127,19 +127,111 @@ void Tzc_Sec_Set_Master_Group(TZC_SEC_Master_Type masterType, uint8_t group)
     uint32_t tmpVal;
     uint32_t tmpVal2;
 
-    tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID);
-    tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
+    if (masterType < TZC_SEC_MASTER_MM_GRP1) {
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID);
+        tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
 
-    if (group == 0) {
-        tmpVal &= (~(1 << masterType));
+        if (group == 0) {
+            tmpVal &= (~(1 << masterType));
+        } else {
+            tmpVal |= (1 << masterType);
+        }
+        tmpVal |= (1 << (masterType + 16));
+        tmpVal2 |= (1 << masterType);
+
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID, tmpVal);
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal2);
     } else {
-        tmpVal |= (1 << masterType);
-    }
-    tmpVal |= (1 << (masterType + 16));
-    tmpVal2 |= (1 << masterType);
+        masterType -= TZC_SEC_MASTER_MM_GRP1;
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID);
+        tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID_LOCK);
 
-    BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID, tmpVal);
-    BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal2);
+        if (group == 0) {
+            tmpVal &= (~(1 << masterType));
+        } else {
+            tmpVal |= (1 << masterType);
+        }
+        tmpVal |= (1 << (masterType + TZC_SEC_TZC_MM_GRP1_TZMID_SEL_POS));
+        tmpVal2 |= (1 << masterType);
+
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID, tmpVal);
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID_LOCK, tmpVal2);
+    }
+}
+
+void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_t group)
+{
+    uint32_t tmpVal;
+    uint32_t tmpVal2;
+
+    /* check the parameter */
+    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
+
+    if (dmaType == TZC_SEC_MASTER_TYPE_DMA2) {
+        if (channel_bits > 0xf) {
+            return;
+        }
+    }
+
+    if (dmaType == TZC_SEC_MASTER_TYPE_DMA0) {
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_DMA_TZMID);
+        tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
+
+        if (group == 0) {
+            tmpVal &= (~channel_bits);
+        } else {
+            tmpVal |= channel_bits;
+        }
+
+        tmpVal |= (channel_bits << TZC_SEC_TZC_DMA_TZMID_SEL_POS);
+        tmpVal2 |= (1 << TZC_SEC_TZC_DMA_TZMID_LOCK_POS);
+
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_DMA_TZMID, tmpVal);
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal2);
+    } else if (dmaType == TZC_SEC_MASTER_TYPE_DMA1) {
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID);
+        tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID_LOCK);
+
+        if (group == 0) {
+            tmpVal &= ((~channel_bits) << TZC_SEC_TZC_XDMA_TZMID_POS);
+        } else {
+            tmpVal |= (channel_bits << TZC_SEC_TZC_XDMA_TZMID_POS);
+        }
+
+        tmpVal |= (channel_bits << TZC_SEC_TZC_XDMA_TZMID_SEL_POS);
+        tmpVal2 |= (1 << TZC_SEC_TZC_XDMA_TZMID_LOCK_POS);
+
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID, tmpVal);
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_TZMID_LOCK, tmpVal2);
+    } else if (dmaType == TZC_SEC_MASTER_TYPE_DMA2) {
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID);
+        tmpVal2 = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
+
+        if (group == 0) {
+            tmpVal &= ((~channel_bits) << TZC_SEC_TZC_DMA2_TZMID_POS);
+        } else {
+            tmpVal |= (channel_bits << TZC_SEC_TZC_DMA2_TZMID_POS);
+        }
+
+        tmpVal |= (channel_bits << TZC_SEC_TZC_DMA2_TZMID_SEL_POS);
+        tmpVal2 |= (1 << TZC_SEC_TZC_DMA2_TZMID_LOCK_POS);
+
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID, tmpVal);
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal2);
+    } else {
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK);
+
+        if (group == 0) {
+            tmpVal &= ((~channel_bits) << TZC_SEC_TZC_2DDMA_TZMID_POS);
+        } else {
+            tmpVal |= (channel_bits << TZC_SEC_TZC_2DDMA_TZMID_POS);
+        }
+
+        tmpVal |= (channel_bits << TZC_SEC_TZC_2DDMA_TZMID_SEL_POS);
+
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_TZMID_LOCK, tmpVal);
+    }
+
 }
 
 void Tzc_Sec_Set_Slave_Group(TZC_SEC_Slave_Type slaveType, uint8_t group)
@@ -159,7 +251,7 @@ void Tzc_Sec_Set_Slave_Group(TZC_SEC_Slave_Type slaveType, uint8_t group)
         /* set lock*/
         tmpVal |= (1 << (slaveType + 16));
         BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S0, tmpVal);
-    } else if ((slaveType >= TZC_SEC_SLAVE_S1_GLB) && (slaveType < TZC_SEC_SLAVE_S2_EMI_MISC)) {
+    } else if ((slaveType >= TZC_SEC_SLAVE_S1_GLB) && (slaveType < TZC_SEC_SLAVE_S2_MMCU_ATB2AXI)) {
         slaveType -= TZC_SEC_SLAVE_S1_GLB;
         tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S1);
         /* set group */
@@ -171,8 +263,8 @@ void Tzc_Sec_Set_Slave_Group(TZC_SEC_Slave_Type slaveType, uint8_t group)
         /* set lock */
         tmpVal |= (1 << slaveType);
         BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S_LOCK, tmpVal);
-    } else if ((slaveType >= TZC_SEC_SLAVE_S2_EMI_MISC) && (slaveType < TZC_SEC_SLAVE_S1A_UART0)) {
-        slaveType -= TZC_SEC_SLAVE_S2_EMI_MISC;
+    } else if ((slaveType >= TZC_SEC_SLAVE_S2_MMCU_ATB2AXI) && (slaveType < TZC_SEC_SLAVE_S1A_UART0)) {
+        slaveType -= TZC_SEC_SLAVE_S2_MMCU_ATB2AXI;
 
         tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S2);
         /* set group */
@@ -182,9 +274,9 @@ void Tzc_Sec_Set_Slave_Group(TZC_SEC_Slave_Type slaveType, uint8_t group)
 
         tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S_LOCK);
         /* set lock */
-        tmpVal |= (1 << (slaveType + (TZC_SEC_SLAVE_S2_EMI_MISC - TZC_SEC_SLAVE_S1_GLB)));
+        tmpVal |= (1 << (slaveType + (TZC_SEC_SLAVE_S2_MMCU_ATB2AXI - TZC_SEC_SLAVE_S1_GLB)));
         BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S_LOCK, tmpVal);
-    } else {
+    } else if ((slaveType >= TZC_SEC_SLAVE_S1A_UART0) && (slaveType < TZC_SEC_SLAVE_S3_EMAC_B)) {
         slaveType -= TZC_SEC_SLAVE_S1A_UART0;
 
         tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S1A);
@@ -197,6 +289,29 @@ void Tzc_Sec_Set_Slave_Group(TZC_SEC_Slave_Type slaveType, uint8_t group)
         /* set lock */
         tmpVal |= (1 << slaveType);
         BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S1A_LOCK, tmpVal);
+    } else if ((slaveType >= TZC_SEC_SLAVE_S3_EMAC_B) && (slaveType < TZC_SEC_SLAVE_MM_S0_MISC)) {
+        slaveType -= TZC_SEC_SLAVE_S3_EMAC_B;
+
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S3);
+        /* set group */
+        tmpVal &= (~(3 << (slaveType * 2)));
+        tmpVal |= (group << (slaveType * 2));
+        /* set lock*/
+        tmpVal |= (1 << (slaveType + 16));
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_BMX_S3, tmpVal);
+    } else {
+        slaveType -= TZC_SEC_SLAVE_MM_S0_MISC;
+
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_S0);
+        /* set group */
+        tmpVal &= (~(3 << (slaveType * 2)));
+        tmpVal |= (group << (slaveType * 2));
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_S0, tmpVal);
+
+        tmpVal = BL_RD_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_S_LOCK0);
+        /* set lock */
+        tmpVal |= (1 << slaveType);
+        BL_WR_REG(TZ1_BASE, TZC_SEC_TZC_MM_BMX_S_LOCK0, tmpVal);
     }
 }
 
@@ -405,6 +520,76 @@ void Tzc_Sec_OCRAM_Access_Set_Regionx(uint8_t group)
 }
 
 /****************************************************************************/ /**
+ * @brief  TrustZone Security set TCM region access configuration
+ *
+ * @param  region: TCM region index 0-2
+ * @param  startAddr: TCM region start address
+ * @param  length: TCM region end length
+ * @param  group: TCM region auth group type
+ *
+ * @return None
+ *
+*******************************************************************************/
+void Tzc_Sec_TCM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
+{
+    uint32_t tmpVal = 0;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
+
+    /* check the parameter */
+    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
+    if (region >= 3) {
+        return;
+    }
+    group = group & 0xf;
+
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_TCM_TZSRG_CTRL);
+    tmpVal &= (~(0xf << (region * 4)));
+    tmpVal |= (group << (region * 4));
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_TCM_TZSRG_CTRL, tmpVal);
+
+    tmpVal = (((alignEnd >> 10) & 0xffff) - 1) | (((startAddr >> 10) & 0xffff) << 16);
+    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_TCM_TZSRG_R0_OFFSET + region * 4, tmpVal);
+
+    /* set enable and lock */
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_TCM_TZSRG_CTRL);
+    tmpVal |= 1 << (region + 16);
+    tmpVal |= 1 << (region + 20);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_TCM_TZSRG_CTRL, tmpVal);
+}
+
+/****************************************************************************/ /**
+ * @brief  TrustZone Security set TCM regionx access configuration
+ *
+ * @param  group: TCM region auth group type
+ *
+ * @return None
+ *
+*******************************************************************************/
+void Tzc_Sec_TCM_Access_Set_Regionx(uint8_t group)
+{
+    uint32_t tmpVal = 0;
+    uint8_t region = 3;
+
+    /* check the parameter */
+    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
+    if (group > TZC_SEC_MAX_AUTH_GRP) {
+        return;
+    }
+    group = 1 << (group);
+
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_TCM_TZSRG_CTRL);
+    tmpVal &= (~(0xf << (region * 4)));
+    tmpVal |= (group << (region * 4));
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_TCM_TZSRG_CTRL, tmpVal);
+
+    /* set enable and lock */
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_TCM_TZSRG_CTRL);
+    tmpVal |= 1 << (region + 16);
+    tmpVal |= 1 << (region + 20);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_TCM_TZSRG_CTRL, tmpVal);
+}
+
+/****************************************************************************/ /**
  * @brief  TrustZone Security set WRAM region access configuration
  *
  * @param  region: WRAM region index 0-2
@@ -427,19 +612,19 @@ void Tzc_Sec_WRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_
     }
     group = group & 0xf;
 
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_WRAM_TZSRG_CTRL);
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_W2RAM_TZSRG_CTRL);
     tmpVal &= (~(0xf << (region * 4)));
     tmpVal |= (group << (region * 4));
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_WRAM_TZSRG_CTRL, tmpVal);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_W2RAM_TZSRG_CTRL, tmpVal);
 
     tmpVal = (((alignEnd >> 10) & 0xffff) - 1) | (((startAddr >> 10) & 0xffff) << 16);
-    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_WRAM_TZSRG_R0_OFFSET + region * 4, tmpVal);
+    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_W2RAM_TZSRG_R0_OFFSET + region * 4, tmpVal);
 
     /* set enable and lock */
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_WRAM_TZSRG_CTRL);
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_W2RAM_TZSRG_CTRL);
     tmpVal |= 1 << (region + 16);
-    tmpVal |= 1 << (region + 20);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_WRAM_TZSRG_CTRL, tmpVal);
+    tmpVal |= 1 << (region + 24);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_W2RAM_TZSRG_CTRL, tmpVal);
 }
 
 /****************************************************************************/ /**
@@ -462,42 +647,156 @@ void Tzc_Sec_WRAM_Access_Set_Regionx(uint8_t group)
     }
     group = 1 << (group);
 
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_WRAM_TZSRG_CTRL);
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_W2RAM_TZSRG_CTRL);
     tmpVal &= (~(0xf << (region * 4)));
     tmpVal |= (group << (region * 4));
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_WRAM_TZSRG_CTRL, tmpVal);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_W2RAM_TZSRG_CTRL, tmpVal);
 
     /* set enable and lock */
-    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_WRAM_TZSRG_CTRL);
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_W2RAM_TZSRG_CTRL);
     tmpVal |= 1 << (region + 16);
-    tmpVal |= 1 << (region + 20);
-    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_WRAM_TZSRG_CTRL, tmpVal);
+    tmpVal |= 1 << (region + 24);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_W2RAM_TZSRG_CTRL, tmpVal);
 }
 
 /****************************************************************************/ /**
- * @brief  TrustZone Security set HBNRAM region access configuration
+ * @brief  TrustZone Security set XRAM region access configuration
  *
- * @param  startAddr: HBNRAM region start address
- * @param  length: HBNRAM region end length
+ * @param  region: XRAM region index 0-2
+ * @param  startAddr: XRAM region start address
+ * @param  length: XRAM region end length
+ * @param  group: XRAM region auth group type
  *
  * @return None
  *
 *******************************************************************************/
-void Tzc_Sec_HBNRAM_Access_Set(uint32_t startAddr, uint32_t length)
+void Tzc_Sec_XRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
 {
     uint32_t tmpVal = 0;
-    uint32_t alignEnd = (startAddr + length + 3) & ~0x3;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
 
-    tmpVal = BL_RD_REG(AON_BASE, AON_TZC_HBNRAM_R0);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_TZC_HBNRAM_R0_START, ((startAddr >> 2) & 0xffff));
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_TZC_HBNRAM_R0_END, (((alignEnd >> 2) & 0xffff) - 1));
-    BL_WR_REG(AON_BASE, AON_TZC_HBNRAM_R0, tmpVal);
+    /* check the parameter */
+    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
+    if (region >= 3) {
+        return;
+    }
+    group = group & 0xf;
+
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_XRAM_TZSRG_CTRL);
+    tmpVal &= (~(0xf << (region * 4)));
+    tmpVal |= (group << (region * 4));
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_XRAM_TZSRG_CTRL, tmpVal);
+
+    tmpVal = (((alignEnd >> 10) & 0xffff) - 1) | (((startAddr >> 10) & 0xffff) << 16);
+    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_XRAM_TZSRG_R0_OFFSET + region * 4, tmpVal);
 
     /* set enable and lock */
-    tmpVal = BL_RD_REG(AON_BASE, AON_TZC_HBNRAM_CTRL);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_TZC_HBNRAM_R0_EN, 1);
-    tmpVal = BL_SET_REG_BITS_VAL(tmpVal, AON_TZC_HBNRAM_R0_LOCK, 1);
-    BL_WR_REG(AON_BASE, AON_TZC_HBNRAM_CTRL, tmpVal);
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_XRAM_TZSRG_CTRL);
+    tmpVal |= 1 << (region + 16);
+    tmpVal |= 1 << (region + 24);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_XRAM_TZSRG_CTRL, tmpVal);
+}
+
+/****************************************************************************/ /**
+ * @brief  TrustZone Security set XRAM regionx access configuration
+ *
+ * @param  group: XRAM region auth group type
+ *
+ * @return None
+ *
+*******************************************************************************/
+void Tzc_Sec_XRAM_Access_Set_Regionx(uint8_t group)
+{
+    uint32_t tmpVal = 0;
+    uint8_t region = 3;
+
+    /* check the parameter */
+    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
+    if (group > TZC_SEC_MAX_AUTH_GRP) {
+        return;
+    }
+    group = 1 << (group);
+
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_XRAM_TZSRG_CTRL);
+    tmpVal &= (~(0xf << (region * 4)));
+    tmpVal |= (group << (region * 4));
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_XRAM_TZSRG_CTRL, tmpVal);
+
+    /* set enable and lock */
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_XRAM_TZSRG_CTRL);
+    tmpVal |= 1 << (region + 16);
+    tmpVal |= 1 << (region + 24);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_XRAM_TZSRG_CTRL, tmpVal);
+}
+
+/****************************************************************************/ /**
+ * @brief  TrustZone Security set mini ram region access configuration
+ *
+ * @param  region: Mini ram region index 0-2
+ * @param  startAddr: Mini ram region start address
+ * @param  length: Mini ram region end length
+ * @param  group: Mini ram region auth group type
+ *
+ * @return None
+ *
+*******************************************************************************/
+void Tzc_Sec_Mini_Ram_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group)
+{
+    uint32_t tmpVal = 0;
+    uint32_t alignEnd = (startAddr + length + 1023) & ~0x3FF;
+
+    /* check the parameter */
+    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
+    if (region >= 3) {
+        return;
+    }
+    group = group & 0xf;
+
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_MINI_RAM_TZSRG_CTRL);
+    tmpVal &= (~(0xf << (region * 4)));
+    tmpVal |= (group << (region * 4));
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_MINI_RAM_TZSRG_CTRL, tmpVal);
+
+    tmpVal = (((alignEnd >> 10) & 0xffff) - 1) | (((startAddr >> 10) & 0xffff) << 16);
+    BL_WR_WORD(TZC_SEC_BASE + TZC_SEC_TZC_MINI_RAM_TZSRG_R0_OFFSET + region * 4, tmpVal);
+
+    /* set enable and lock */
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_MINI_RAM_TZSRG_CTRL);
+    tmpVal |= 1 << (region + 16);
+    tmpVal |= 1 << (region + 24);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_MINI_RAM_TZSRG_CTRL, tmpVal);
+}
+
+/****************************************************************************/ /**
+ * @brief  TrustZone Security set mini ram regionx access configuration
+ *
+ * @param  group: Mini ram region auth group type
+ *
+ * @return None
+ *
+*******************************************************************************/
+void Tzc_Sec_Mini_Ram_Access_Set_Regionx(uint8_t group)
+{
+    uint32_t tmpVal = 0;
+    uint8_t region = 3;
+
+    /* check the parameter */
+    CHECK_PARAM(IS_TZC_SEC_GROUP_TYPE(group));
+    if (group > TZC_SEC_MAX_AUTH_GRP) {
+        return;
+    }
+    group = 1 << (group);
+
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_MINI_RAM_TZSRG_CTRL);
+    tmpVal &= (~(0xf << (region * 4)));
+    tmpVal |= (group << (region * 4));
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_MINI_RAM_TZSRG_CTRL, tmpVal);
+
+    /* set enable and lock */
+    tmpVal = BL_RD_REG(TZC_SEC_BASE, TZC_SEC_TZC_MINI_RAM_TZSRG_CTRL);
+    tmpVal |= 1 << (region + 16);
+    tmpVal |= 1 << (region + 24);
+    BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_MINI_RAM_TZSRG_CTRL, tmpVal);
 }
 
 /****************************************************************************/ /**

@@ -5,10 +5,7 @@
 #include "macsw.h"
 
 /* global variable */
-extern uint8_t macsw_sta_vif_idx;
-extern void *macsw_sta_vif;
-extern uint8_t macsw_ap_vif_idx;
-extern void *macsw_ap_vif;
+extern uint8_t wl80211_mac_vif[WL80211_VIF_MAX];
 
 struct macsw_tx_desc {
     /// Information provided by Host
@@ -48,6 +45,7 @@ struct wl80211_mac_rx_desc {
     uint32_t payload[CO_ALIGN4_HI(RX_MAX_AMSDU_SUBFRAME_LEN + 1) / sizeof(uint32_t)];
 };
 
+int wl80211_mac_disconnect(uint16_t reason_code, uint16_t status_code);
 int wl80211_mac_do_scan(void);
 int wl80211_mac_do_connect(void);
 int wl80211_mac_ctrl_port(uint8_t sta_id, int control_port_open);
@@ -65,7 +63,7 @@ void wl80211_mac_ap_assoc_req_handler(void *frame_payload, uint32_t frame_length
 // only for type checker
 struct wl80211_tx_header;
 #define WL80211_MAC_TX_FLAG_MGMT 0x1
-int wl80211_mac_tx(void *vif, struct wl80211_tx_header *desc, unsigned int flags, struct iovec *seg, int seg_cnt,
+int wl80211_mac_tx(wl80211_vif_type vif, struct wl80211_tx_header *desc, unsigned int flags, struct iovec *seg, int seg_cnt,
                    void *txdone_cb, void *opaque);
 
 void wl80211_mac_rx_free(void *info);
@@ -77,7 +75,7 @@ void wl80211_mac_rx_free(void *info);
 extern const struct me_chan_config_req _macsw_chan_def;
 
 void _find_wpa_rsn_ie(uint32_t var_part_addr, uint32_t var_part_len, uint32_t *wpa_ie, uint32_t *rsn_ie);
-uint8_t _macsw_get_staid(void *vif, struct mac_addr *dst_addr, bool mgmt_frame);
+uint8_t _macsw_get_staid(int vif_idx, struct mac_addr *dst_addr, bool mgmt_frame);
 void _sae_send_frame(int auth_seq);
 void _sme_auth_mgmt_rx(uint8_t *frame, size_t len);
 int external_auth_ind(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);

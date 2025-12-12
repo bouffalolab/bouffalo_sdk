@@ -1,12 +1,14 @@
 # USB WiFi
 
-**Note**: The USB WiFi example will be replaced by the nethub example. The usb_wifi only supports the network protocol stack running on the host side, while the device side does not run the tcpip protocol stack - the device only acts as a network card function. The nethub example supports the device to simultaneously run the network protocol stack, and supports a wider range of interfaces, including but not limited to SDIO, USB, and SPI.
+**Note**: The usb_wifi example will be replaced by the nethub example in future releases. usb_wifi only supports the network protocol stack running on the host side, while the device side does not run the TCP/IP protocol stack and only functions as a network card.
+
+The nethub example supports the device running the network protocol stack simultaneously, and supports a wider range of interfaces including but not limited to SDIO, USB, and SPI.
 
 ## Supported Chips
 
-|      Chip         | Remark |
-|:----------------:|:------:|
-|bl616/bl618/bl616l |        |
+|       Chip        | Notes |
+|:-----------------:|:-----:|
+| bl616/bl618/bl616l |       |
 
 ## Device Compilation and Flashing
 
@@ -29,47 +31,54 @@ make CHIP=bl616l BOARD=bl616ldk
 make flash CHIP=bl616l COMX=/dev/ttyUSB0
 ```
 
-## USB WiFi STA Testing
+## How to Perform USB WiFi STA Testing
 
-When the device powers on, it will create a virtual ACM serial port and an enxxxx Ethernet network interface.
+After the device is powered on, it will virtualize an ACM serial port and an enxxxx network interface.
 
-**Note**: The actual ACM serial port number (e.g., /dev/ttyACM0, /dev/ttyACM1, /dev/ttyACM2) may vary depending on your system. Please check the actual device name on your system.
+* Disable device DHCP and connect to the specified WiFi
 
-Observe the output from the serial port:
+    Save the following script as a "connect" script, modify "/dev/ttyACM1" as needed, then execute ./connect ssid password
 
-```bash
-cat /dev/ttyACM2
-```
+    ```expect
+    #!/usr/bin/expect
+    # =========== user config start ===============
+    set timeout 10
+    set tty /dev/ttyACM1       # User modify as needed, use whatever is virtualized
+    # =========== user config end ===============
+    spawn -open [open $tty "r+"]
+    if {$argc < 1} {puts "Usage: $argv0 <ssid> \[password\]"; exit}
+    set ssid [lindex $argv 0]
+    set password [expr {$argc >= 2 ? [lindex $argv 1] : ""}]
+    set serial_id $spawn_id
+    # set mode, disable dhcp
+    send -i $serial_id "AT\r\n"
+    send -i $serial_id "AT+CWMODE=1\r\n"
+    expect -i $serial_id "OK"
+    send -i $serial_id "AT+CWDHCP=0,1\r\n"
+    expect -i $serial_id "OK"
+    # connect
+    send -i $serial_id "AT+CWJAP=\"$ssid\",\"$password\"\r\n"
+    expect {
+        -i $serial_id "+CW:CONNECTED" {
+        }
+        -i $serial_id timeout {
+            puts "✗ Timeout, did not receive expected response"
+        }
+    }
+    close -i $serial_id
+    ```
 
-Open another terminal and enter the following commands to control the WiFi network interface card. Configure it in STA mode:
+* Enable network card dhcp client
 
-```bash
-echo -ne "AT+CWMODE=1\r\n" > /dev/ttyACM2
-```
+    Assuming the current network interface card name is enxc4cc37a06d46, enter the following command on the HOST side:
 
-Disable the DHCP function of the network interface card, and let the HOST handle DHCP afterward:
+    ```bash
+    sudo dhclient enxc4cc37a06d46
+    ```
 
-```bash
-echo -ne "AT+CWDHCP=0,1\r\n" > /dev/ttyACM2
-```
+    Get the IP address of the network interface card.
 
-Use AT commands to control the network interface card to connect to a specified Access Point (AP):
-
-```bash
-echo -ne "AT+CWJAP=\"8E88\",\"\"\r\n" > /dev/ttyACM2
-```
-
-Assuming the current network interface card is named enxc4cc37a06d46, enter the following on the HOST side:
-
-```bash
-sudo dhclient enxc4cc37a06d46
-```
-
-This will obtain the IP address of the network interface card.
-
-## USB WiFi AP Testing
-
-**Note**: In the following commands, the ACM serial port number and network interface name may vary depending on your system. Please adjust them according to your actual device names.
+## How to Perform USB WiFi AP Testing
 
 - On the device:
 

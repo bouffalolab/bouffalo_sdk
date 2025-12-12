@@ -72,6 +72,31 @@
 
 备注：**√** 表示已支持；**×** 表示未支持；**○** 表示已支持但未测试；**-** 表示没有该外设。
 
+# SBOM
+
+| Area       | Component(s)            | Original Repository                                          | Version                           |
+| ---------- | ----------------------- | ------------------------------------------------------------ | --------------------------------- |
+| Multimedia | xwebsocket              | https://github.com/OlehKulykov/librws                        | 9-Jan-19                          |
+| Networking | MQTT-C                  | https://github.com/LiamBindle/MQTT-C                         | 1.1.6                             |
+| Bluetooth  | Zephyr                  | https://github.com/zephyrproject-rtos/zephyr/                | 2.1.0                             |
+| Bluetooth  | sbc                     | https://android.googlesource.com/platform/external/bluetooth/bluedroid/ | UnKnown                           |
+| Networking | LWIP                    | https://github.com/lwip-tcpip/lwip                           | 2.1.2                             |
+| Networking | PPP                     | https://github.com/ppp-project/ppp                           | Unknown. Managed by upstream LWIP |
+| Utils      | cJSON                   | https://github.com/DaveGamble/cJSON                          | 1.7.18                            |
+| WLAN       | hostapd, wpa_supplicant | https://w1.fi/cgit/hostap                                    | v2.10-devel                       |
+| BSP        | CherryUSB               | https://github.com/cherry-embedded/CherryUSB                 | v1.5.2                            |
+| BSP        | FatFS                   | http://elm-chan.org/fsw/ff/                                  | R0.15                             |
+| BSP        | FreeRTOS-Kernel         | https://github.com/FreeRTOS/FreeRTOS-Kernel/                 | V10.6.2                           |
+| BSP        | LittleFS                | https://github.com/littlefs-project/littlefs                 | v2.8.2                            |
+| BSP        | Nuttx                   | https://github.com/apache/nuttx                              | UnKnown                           |
+| BSP        | TLSF                    | https://github.com/mattconte/tlsf                            | Mar 30, 2020                      |
+| Graphics   | LVGL_v8                 | https://github.com/lvgl/lvgl                                 | 8.4.0                             |
+| Graphics   | LVGL_v9                 | https://github.com/lvgl/lvgl                                 | 9.2.0                             |
+| Networking | mbedtls                 | https://github.com/Mbed-TLS/mbedtls                          | 2.28.2                            |
+| Utils      | musl getopt             | https://git.musl-libc.org/cgit/musl                          | UnKnown                           |
+| Utils      | queue                   | https://web.mit.edu/freebsd/head/sys/sys/queue.h             | 8.5                               |
+| Utils      | tree                    | https://ftp.netbsd.org/pub/NetBSD/NetBSD-current/src/sys/sys/tree.h | 1.8 (NetBSD), 1.7 (OpenBSD)       |
+
 # 环境搭建
 
 ## 工具链

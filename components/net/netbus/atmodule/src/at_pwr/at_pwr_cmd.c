@@ -225,6 +225,8 @@ static int at_twt_sleep_cmd(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
+#if 0
+// TODO: wifi_mgmr_sta_twt_statusget and struct twt_status_info not implemented yet
 static int twt_flows_check(uint8_t id)
 {
     struct twt_status_info twt_confs[8]; // Array to hold TWT configurations
@@ -253,6 +255,7 @@ static int twt_flows_check(uint8_t id)
 
     return -1;
 }
+#endif
 
 static int at_twt_teardown_cmd(int argc, const char **argv)
 {
@@ -287,13 +290,18 @@ static int at_twt_teardown_cmd(int argc, const char **argv)
             return AT_RESULT_CODE_ERROR;
         }
         AT_CMD_PARSE_NUMBER(2, &flow_id);
-        ret = twt_flows_check(flow_id);
-        if (ret) { 
+        // TODO: twt_flows_check not available yet
+        // ret = twt_flows_check(flow_id);
+        // if (ret) {
+        //     AT_CMD_PRINTF("Error: <twt_flow_id> must be in 0-7.\r\n");
+        //     return AT_RESULT_CODE_ERROR;
+        // }
+        if (flow_id < 0 || flow_id > 7) {
             AT_CMD_PRINTF("Error: <twt_flow_id> must be in 0-7.\r\n");
             return AT_RESULT_CODE_ERROR;
         }
     } else {
-        flow_id = 0; 
+        flow_id = 0;
     }
 
     AT_CMD_PRINTF("TWT Teardown: neg_type=%d, all_twt=%d", neg_type, all_twt);
@@ -320,6 +328,8 @@ static int at_twt_teardown_cmd(int argc, const char **argv)
 }
 
 
+#if 0
+// TODO: app_set_clock_source and app_get_clock_source not implemented
 static int at_clock_source_set_cmd(int argc, const char **argv)
 {
     int source;
@@ -348,7 +358,9 @@ static int at_clock_source_get_cmd(int argc, const char **argv)
     at_response_string("+GET_CLOCK:%d\r\n", source);
     return AT_RESULT_CODE_OK;
 }
+#endif
 
+#if 0
 static int at_twt_status_cmd(int argc, const char **argv)
 {
     struct twt_status_info twt_confs[8]; // Array to hold TWT configurations
@@ -385,6 +397,7 @@ static int at_twt_status_cmd(int argc, const char **argv)
 
     return AT_RESULT_CODE_OK;
 }
+#endif
 
 static int at_listen_itv_get_cmd(int argc, const char **argv)
 {
@@ -399,6 +412,8 @@ static int at_listen_itv_get_cmd(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
+#if 0
+// TODO: wifi_mgmr_get_dtim not implemented
 static int at_dtim_get_cmd(int argc, const char **argv)
 {
     int dtim = wifi_mgmr_get_dtim();
@@ -411,7 +426,10 @@ static int at_dtim_get_cmd(int argc, const char **argv)
     at_response_string("+DTIM:%d\r\n", dtim);
     return AT_RESULT_CODE_OK;
 }
+#endif
 
+#if 0
+// TODO: wifi_mgmr_twt_support not implemented
 static int at_twt_supported_get_cmd(int argc, const char **argv)
 {
     int support = wifi_mgmr_twt_support();
@@ -424,6 +442,7 @@ static int at_twt_supported_get_cmd(int argc, const char **argv)
     at_response_string("+TWT_SUPPORT:%d\r\n", support);
     return AT_RESULT_CODE_OK;
 }
+#endif
 
 static int at_pwr_clear_cmd(int argc, const char **argv)
 {
@@ -466,11 +485,12 @@ static const at_cmd_struct at_pwr_cmd[] = {
     {"+TWT_PARAM",          NULL, at_twt_param_cmd, NULL, 5, 5},
     {"+TWT_SLEEP",          NULL, NULL, at_twt_sleep_cmd, 0, 0},
     {"+TWT_TEARDOWN",       NULL, at_twt_teardown_cmd, at_twt_teardown_cmd, 0, 3},
-    {"+TWT_STATUS",         at_twt_status_cmd, NULL, NULL, 0, 0},
-    {"+SET_CLOCK",          NULL, at_clock_source_set_cmd, NULL, 1, 1},
-    {"+GET_CLOCK",          NULL, NULL, at_clock_source_get_cmd, 0, 0},
-    {"+GET_AP_DTIM",        at_dtim_get_cmd, NULL, NULL, 0, 1},
-    {"+GET_TWT_SUPPORTED",  at_twt_supported_get_cmd, NULL, NULL, 0, 1},
+    //{"+TWT_STATUS",         at_twt_status_cmd, NULL, NULL, 0, 0},
+    // TODO: Disabled commands due to missing implementations
+    //{"+SET_CLOCK",          NULL, at_clock_source_set_cmd, NULL, 1, 1},
+    //{"+GET_CLOCK",          NULL, NULL, at_clock_source_get_cmd, 0, 0},
+    //{"+GET_AP_DTIM",        at_dtim_get_cmd, NULL, NULL, 0, 1},
+    //{"+GET_TWT_SUPPORTED",  at_twt_supported_get_cmd, NULL, NULL, 0, 1},
     {"+PWR_CLEAR",          NULL, NULL, at_pwr_clear_cmd, 0, 0},
     {"+PWR_GET",            NULL, NULL, at_pwr_get_cmd, 0, 0},
     {"+LP_INTERVAL_GET",    NULL, NULL, at_lp_interval_get_cmd, 0, 0},

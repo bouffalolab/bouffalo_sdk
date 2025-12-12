@@ -34,7 +34,7 @@ target_sources(app PRIVATE
 if(CONFIG_HOSTROUTER)
     sdk_add_compile_definitions(-DBL_HOSTROUTER_ENABLE)
     sdk_add_compile_definitions(-DBL_SDIO_RX_MAX_PORT_NUM=4)
-    sdk_add_compile_definitions(-DBL_DUAL_STACK)
+    sdk_add_compile_definitions(-DCONFIG_DUAL_STACK)
     sdk_add_compile_definitions(-DCONFIG_SDIO_HIGH_PERFORMANCE)
  
     if(CONFIG_SDIOWIFI_HEARTBEAT)

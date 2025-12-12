@@ -5,6 +5,7 @@
 #endif
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "bl616_glb.h"
 #include "bl616_hbn.h"
 #include "bflb_mtimer.h"
@@ -451,8 +452,11 @@ int app_clock_init(void)
 }
 #else
 
+#define CLOCK_INIT_TIMEOUT_MS   (10000)
+
 static TaskHandle_t rc32k_coarse_trim_task_hd = NULL;
 static TaskHandle_t xtal32k_check_entry_task_hd = NULL;
+static SemaphoreHandle_t clock_init_done_sem = NULL;
 
 /**********************************************************
     rc32k coarse trim task func
@@ -470,6 +474,9 @@ static void rc32k_coarse_trim_task(void *pvParameters)
         /* set bl_lp 32k clock ready */
         printf("rc32k_coarse_trim: set lp_32k ready!\r\n");
         bl_lp_set_32k_clock_ready(1);
+        if (clock_init_done_sem) {
+            xSemaphoreGive(clock_init_done_sem);
+        }
     }
 
     printf("rc32k_coarse_trim: rc32k code:%d\r\n", iot2lp_para->rc32k_fr_ext);
@@ -483,7 +490,16 @@ static void rc32k_coarse_trim_task(void *pvParameters)
  **********************************************************/
 static void xtal32k_check_entry_task(void *pvParameters)
 {
+    if (rc32k_coarse_trim_task_hd) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    }
+
     xtal32k_check(1);
+
+    if (clock_init_done_sem) {
+        xSemaphoreGive(clock_init_done_sem);
+    }
+
     printf("xtal32k_check task: vTaskDelete\r\n");
     vTaskDelete(NULL);
 }
@@ -491,6 +507,12 @@ static void xtal32k_check_entry_task(void *pvParameters)
 
 int app_clock_init(void)
 {
+    clock_init_done_sem = xSemaphoreCreateBinary();
+    if (clock_init_done_sem == NULL) {
+        printf("[CLOCK] Error: Failed to create semaphore\r\n");
+        return -1;
+    }
+
     /* coarse trim rc32k */
     printf("[OS] Create rc32k_coarse_trim task...\r\n");
     xTaskCreate(rc32k_coarse_trim_task, (char*)"rc32k_coarse_trim", 512, NULL, 11, &rc32k_coarse_trim_task_hd);
@@ -499,5 +521,18 @@ int app_clock_init(void)
     printf("[OS] Create xtal32k_check_entry task...\r\n");
     xTaskCreate(xtal32k_check_entry_task, (char*)"xtal32k_check_entry", 512, NULL, 10, &xtal32k_check_entry_task_hd);
 
+    printf("[OS] Waiting for clock init to complete...\r\n");
+    if (xSemaphoreTake(clock_init_done_sem, pdMS_TO_TICKS(CLOCK_INIT_TIMEOUT_MS)) != pdTRUE) {
+        printf("[CLOCK] Error: Clock init timeout!\r\n");
+        vSemaphoreDelete(clock_init_done_sem);
+        clock_init_done_sem = NULL;
+        return -1;
+    }
+
+    printf("[OS] Clock init complete!\r\n");
+    vSemaphoreDelete(clock_init_done_sem);
+    clock_init_done_sem = NULL;
+
+    return 0;
 }
 #endif

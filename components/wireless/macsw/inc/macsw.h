@@ -1300,12 +1300,22 @@ enum ME_PARAM_ID_E {
     ME_PARAM_ID_TX_AMPDU_PROTECT_ENABLE,
     ME_PARAM_ID_TX_AMPDU_DROP_TO_SINGLETON_RETRYCNT_THRESHOLD,
     ME_PARAM_ID_TX_POWER,
+    ME_PARAM_ID_LDPC_CONFIG,
     ME_PARAM_ID_MAX,
 };
 
 enum ME_PARAM_CMD_E {
     ME_PARAM_CMD_SET,
     ME_PARAM_CMD_GET,
+};
+
+/// Structure containing the parameters for LDPC configuration
+struct me_ldpc_config_param
+{
+    /// Boolean indicating if LDPC RX should be enabled or not
+    bool ldpc_rx_enable;
+    /// HE MCS configuration (0=MCS0-7, 1=MCS0-9, 2=MCS0-11)
+    uint8_t he_mcs;
 };
 
 /// Structure containing the parameters of the @ref ME_PARAM_REQ message

@@ -62,6 +62,8 @@ sdk_library_add_sources_ifdef(CONFIG_FHOST src/at_wifi/at_wifi_fhost.c)
 #sdk_add_compile_definitions(-DCONFIG_AT_FAST_OTA=1)
 sdk_add_compile_definitions_ifdef(CONFIG_ATMODULE_MQTT           -DMQTT_USE_CUSTOM_SOCKET_HANDLE=1)
 sdk_add_compile_definitions_ifdef(CONFIG_LPAPP                   -DCONFIG_ATMODULE_LP=1)
+# Low Power Mode: need CFG_BL_WIFI_PS_ENABLE to avoid PSM_EVENT redefinition in at_pwr_cmd.c
+sdk_add_compile_definitions_ifdef(CONFIG_LPAPP                   -DCFG_BL_WIFI_PS_ENABLE)
 sdk_add_compile_definitions(-DCONFIG_CHIP_CPUNAME="${BOARD}")
 
 # transport choice

@@ -6,22 +6,17 @@
 
 #include "rtos_al.h"
 
+struct ieee80211_dot_d;
+
 #define MAC_ADDR_LIST(m) (m)[0], (m)[1], (m)[2], (m)[3], (m)[4], (m)[5]
 
 #define WIFI_MGMR_CONFIG_SCAN_ITEM_TIMEOUT    (15000)
 #define WIFI_MGMR_SCAN_ITEMS_MAX (50)
+
 typedef struct mode{
     char* mode_str;
     int mode;
 }wifimode_t;
-
-struct ieee80211_dot_d {
-    char *code;
-    uint8_t channel24G_num;
-    uint8_t channel5G_num;
-    uint8_t channel24G_start;
-    uint8_t channel5G_chan[MAC_DOMAINCHANNEL_5G_MAX];
-};
 
 struct wlan_netif {
     int mode;//0: sta; 1: ap
@@ -115,6 +110,13 @@ typedef struct wifi_mgmr {
     int ap_bcn_timer;
 } wifi_mgmr_t;
 extern wifi_mgmr_t wifiMgmr;
+
+/* Bitmap conversion functions */
+void wifi_mgmr_bitmap_to_chanlist(const uint8_t *bitmap, uint8_t *chan_list, uint8_t *chan_count);
+void wifi_mgmr_chanlist_to_bitmap(const uint8_t *chan_list, uint8_t chan_count, uint8_t *bitmap);
+
+/* Internal initialization function */
+void wifi_mgmr_init_country_bitmaps(void);
 
 int wifi_mgmr_task_start(void);
 int wifi_mgmr_get_channel_nums(const char *country_code, uint8_t *c24G_cnt, uint8_t *c5G_cnt);

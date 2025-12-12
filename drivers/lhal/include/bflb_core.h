@@ -53,8 +53,10 @@
 #define BFLB_PSRAM_BASE 0x50000000
 #elif defined(BL606P)
 #define BFLB_PSRAM_BASE 0x54000000
-#elif defined(BL616D) || defined(BL616L)
+#elif (defined(BL616D) && defined(CPU_MODEL_A0)) || defined(BL616L)
 #define BFLB_PSRAM_BASE 0x88000000
+#elif defined(BL616D) && !defined(CPU_MODEL_A0)
+#define BFLB_PSRAM_BASE 0xB8000000
 #endif
 
 #define BFLB_DEVICE_TYPE_ADC        0

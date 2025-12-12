@@ -5617,7 +5617,7 @@ BL_Err_Type ATTR_TCM_SECTION GLB_Embedded_Flash_Pad_Enable(uint8_t swapIo2Cs)
         tmpVal = BL_RD_WORD(gpioCfgAddress);
         tmpVal = BL_SET_REG_BITS_VAL(tmpVal, GLB_REG_GPIO_0_DRV, 3);
         BL_WR_WORD(gpioCfgAddress, tmpVal);
-    }  
+    }
 
     return SUCCESS;
 }

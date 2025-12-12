@@ -14,6 +14,9 @@
 #define container_of(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
 #endif
 
+/* async event type */
+#define EV_WL80211 ((uintptr_t)wl80211_post_event)
+
 #define ALIGN4_HI(val) (((val) + 3) & ~3)
 
 #define IOVEC_DEFINED
@@ -117,9 +120,22 @@ struct wl80211_global_state {
 };
 extern struct wl80211_global_state wl80211_glb;
 
+typedef enum {
+    WL80211_VIF_STA,
+    WL80211_VIF_AP,
+    WL80211_VIF_MAX,
+} wl80211_vif_type;
+
+/* Input callback function type */
+typedef int (*wl80211_input_cb_t)(void *prv, wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len, uint32_t status);
+
 void wl80211_init(void);
-void wl80211_tcpip_input(void *vif, void *rxhdr, void *buf, uint32_t frm_len, uint32_t status);
-int wl80211_output_raw(bool is_sta, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *), void *opaque);
+void wl80211_tcpip_input(wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len, uint32_t status);
+int wl80211_output_raw(wl80211_vif_type vif, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *), void *opaque);
+
+/* Input callback registration interface - allows external modules to register receive callback */
+int wl80211_register_input_cb(wl80211_input_cb_t cb, void *prv);
+int wl80211_unregister_input_cb(void);
 
 enum {
     WL80211_EVT_SCAN_DONE,
@@ -135,9 +151,19 @@ enum {
     WL80211_CTRL_SCAN,
     WL80211_CTRL_SCAN_PARAMS,
     WL80211_CTRL_STA_SET_BSSID,
+    WL80211_CTRL_STA_GET_BSSID,
+
     WL80211_CTRL_STA_SET_SSID,
-    WL80211_CTRL_STA_SET_PSK_PMK,  // PMK Caching
+    WL80211_CTRL_STA_GET_SSID,
+
     WL80211_CTRL_STA_SET_PASSWORD, // param akm, passwd, generate pmk
+    WL80211_CTRL_STA_GET_PASSWORD,
+
+    WL80211_CTRL_STA_SET_PSK_PMK,  // PMK Caching
+    WL80211_CTRL_STA_GET_PSK_PMK,
+
+    WL80211_CTRL_STA_GET_LAST_STATUS,
+
     WL80211_CTRL_STA_SET_FREQ,
     WL80211_CTRL_STA_SET_PMF,
     WL80211_CTRL_STA_CONNECT,     // param freq flags
@@ -145,6 +171,7 @@ enum {
     WL80211_CTRL_STA_DISCONNECT,
     WL80211_CTRL_STA_GET_MAC,
     WL80211_CTRL_STA_GET_RSSI,
+
     WL80211_CTRL_AP_SET_SSID,
     WL80211_CTRL_AP_SET_PASSWORD,
     WL80211_CTRL_AP_START,

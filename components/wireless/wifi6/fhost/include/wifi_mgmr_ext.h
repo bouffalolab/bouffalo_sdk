@@ -1214,6 +1214,20 @@ int wifi_mgmr_rate_config(uint16_t fixed_rate_cfg);
  */
 int wifi_mgmr_set_ht40_enable(uint8_t value);
 
+/**
+ * wifi_mgmr_set_ldpc_rx_enable
+ * Toggle state of LDPC RX mode
+ * Attention: configuration takes effect only
+ *            before the initiation of the WiFi task.
+ * param:
+ *  value : 1 = enable; 0 = disable
+ * return:
+ *  0 : Success
+ *  -1 : Failed
+ *  Others is Failed
+ */
+int wifi_mgmr_set_ldpc_rx_enable(uint8_t value);
+
 /*
  * wifi_mgmr_sta_ap_tx_power_set
  * Set value of Tx power in unit of 0.5dBm for sta/ap mode

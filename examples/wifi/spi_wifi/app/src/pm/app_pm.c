@@ -157,7 +157,7 @@ static void set_cpu_bclk_80M_and_gate_clk(void)
 static int lp_exit(void *arg)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    extern TaskHandle_t rxl_process_task_hd; 
+    extern TaskHandle_t rxl_process_task_hd;
     int wakeup_reason;
 
     nxspi_ps_exit(NULL);
@@ -555,7 +555,7 @@ void app_pm_twt_param_set(int s, int t, int e, int n, int m)
     param.setup_type = s;
     param.flow_type = t;
     param.wake_int_exp = e;
-    param.wake_dur_unit = 0; 
+    param.wake_dur_unit = 0;
     param.min_twt_wake_dur = n;
     param.wake_int_mantissa = m;
 
@@ -619,7 +619,11 @@ void app_pm_exit_pds15(void)
     wifi_mgmr_sta_ps_exit();
 }
 
-int bflb_pm_app_check(void)
+/**
+ * @brief Sleep check callback for nxspi protocol state
+ * @return nxspi_ps_get() result - 0 if sleep allowed, non-zero to prevent sleep
+ */
+static int nxspi_sleep_check_cb(void)
 {
     return nxspi_ps_get();
 }
@@ -667,6 +671,10 @@ int app_pm_init(void)
     pm_rc32k_auto_cal_init();
 
     pm_sys_init();
+
+    /* Register nxspi sleep check callback */
+    pm_sleep_check_register("nxspi", nxspi_sleep_check_cb, 10);
+
 #ifdef LP_APP
 #if defined(CFG_BL_WIFI_PS_ENABLE) || defined(CFG_WIFI_PDS_RESUME)
     bl_lp_init();

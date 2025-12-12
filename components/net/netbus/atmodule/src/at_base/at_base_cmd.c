@@ -41,7 +41,7 @@
 #define AT_FS_QUERY_LIST      5
 
 #define OTP_PN_ADDR_START               0x100
-#define OTP_QC_PN_LEN                   (24)
+#define OTP_BFLB_PN_LEN                   (24)
 
 #define AT_GPIO_PULL_NONE     0
 #define AT_GPIO_PULL_UP       1
@@ -343,6 +343,7 @@ static int at_setup_cmd_sysstore(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
+#if defined(BL616)
 #define AVERAGE_COUNT 5
 static int at_query_temp(int argc, const char **argv)
 {
@@ -379,6 +380,7 @@ static int at_query_temp(int argc, const char **argv)
 
     return AT_RESULT_CODE_OK;
 }
+#endif
 
 static int str_to_hex(const char* hex_buffer, int nbytes, char* bin_buffer)
 {
@@ -1283,15 +1285,15 @@ static int otp_get_part_number(char *pnstr_buf, int buflen)
 {
     int n, off = 0;
     int is_null = 1;
-    uint32_t pn_value[OTP_QC_PN_LEN / 4];
+    uint32_t pn_value[OTP_BFLB_PN_LEN / 4];
     int i,j;
     char pn_char;
 
-    for (int i = 0; i < (OTP_QC_PN_LEN / 4); i++){
+    for (int i = 0; i < (OTP_BFLB_PN_LEN / 4); i++){
         bflb_ef_ctrl_read_direct(NULL, OTP_PN_ADDR_START + 4*i, &pn_value[i], 1, 1);
     }
 
-    for (i = 0; i < (OTP_QC_PN_LEN / 4); i++){
+    for (i = 0; i < (OTP_BFLB_PN_LEN / 4); i++){
         if (pn_value[i] != 0) {
             is_null = 0;
         }
@@ -1305,12 +1307,11 @@ static int otp_get_part_number(char *pnstr_buf, int buflen)
         goto __end;
     }
 
-    for (i = 0; i < (OTP_QC_PN_LEN / 4); i++){
+    for (i = 0; i < (OTP_BFLB_PN_LEN / 4); i++){
         for (j = 0; j < 4; j++) {
             pn_char = (pn_value[i] >> (j * 8)) & 0xFF;
             if (pn_char == 0x3){ /*end of text*/
                 //mfg_atcmd_print("\n");
-                //return QC_AT_CMD_RESPONSE(result, field_value);
                 goto __end;
             }
             //mfg_atcmd_print("%c", pn_char);
@@ -1373,6 +1374,7 @@ static int at_setup_mfg(int argc, const char **argv)
     return AT_RESULT_CODE_OK;
 }
 
+#if defined(BL616)
 static void adc_vbat_init(void)
 {
     struct bflb_device_s *adc = bflb_device_get_by_name("adc");
@@ -1450,6 +1452,7 @@ static at_base_adc_tsen_init(void)
     bflb_adc_channel_config(adc, &chan, 1);
     bflb_adc_tsen_init(adc, ADC_TSEN_MOD_INTERNAL_DIODE);
 }
+#endif
 
 int at_minidump();
 static const at_cmd_struct at_base_cmd[] = {
@@ -1464,11 +1467,15 @@ static const at_cmd_struct at_base_cmd[] = {
     {"+SYSMSG",         at_query_cmd_sysmsg, at_setup_cmd_sysmsg, NULL, 1, 1},
     {"+SYSLOG",         at_query_cmd_syslog, at_setup_cmd_syslog, NULL, 1, 1},
     {"+SYSSTORE",       at_query_cmd_sysstore, at_setup_cmd_sysstore, NULL, 1, 1},
+#if defined(BL616)
     {"+TEMP",           at_query_temp, NULL, NULL, 0, 0},
+#endif
     {"+GMAC",           at_query_gmac, NULL, NULL, 0, 0},
     {"+PN",             at_query_pn, NULL, NULL, 0, 0},
     {"+MFG",            NULL, NULL, at_setup_mfg, 0, 0},
+#if defined(BL616)
     {"+VBAT",           at_query_vbat, NULL, NULL, 0, 0},
+#endif
     {"+PART",           at_query_part, NULL, NULL, 0, 0},
 #if CONFIG_ATMODULE_EFUSE
     {"+EFUSE-W",        NULL, at_setup_efuse_write, NULL, 2, 3},
@@ -1508,7 +1515,9 @@ bool at_base_cmd_regist(void)
 {
     at_base_config_init();
 
+#if defined(BL616)
     at_base_adc_tsen_init();
+#endif
 
     part_number_dump();
     at_register_function(at_base_config_default, NULL);

@@ -57,50 +57,130 @@ static void Tzc_Sec_ROM_Access_Set_Not_Lock(uint8_t region, uint32_t startAddr, 
     // tmpVal |= 1 << (region + 24);
     BL_WR_REG(TZC_SEC_BASE, TZC_SEC_TZC_ROM_TZSRG_CTRL, tmpVal);
 }
+#endif
+
+#if (!defined(CONFIG_PMP_NO_INIT) && !defined(CONFIG_BOOT2))
+
+const pmp_config pmp_entry_tab[] = {
+    /* 0x00010000 ~ 0x00020000, size:64K, lp_sys.ram, device */
+    {
+        .protection = PMP_L | PMP_R | PMP_W,
+        .base_addr = 0x00010000,
+        .order = 16, /* 2^16 = 64K */
+    },
+    /* 0x00080000 ~ 0x00100000, size:512K, lp_sys.peripherals, device */
+    {
+        .protection = PMP_L | PMP_R | PMP_W,
+        .base_addr = 0x00080000,
+        .order = 19, /* 2^19 = 512K */
+    },
+
+    /* 0x18000000 ~ 0x18400000, size:4M, CPU IREG, device */
+    {
+        .protection = PMP_L | PMP_R | PMP_W,
+        .base_addr = 0x18000000,
+        .order = 22, /* 2^22 = 4M */
+    },
+
+    /* 0x20000000 ~ 0x30000000, size:256M, peripherals/wireless/ram, device */
+    {
+        .protection = PMP_L | PMP_R | PMP_W,
+        .base_addr = 0x20000000,
+        .order = 28, /* 2^28 = 256M */
+    },
+    /* 0x30000000 ~ 0x32000000, size:32M, flash, device */
+    {
+        .protection = PMP_L | PMP_R | PMP_W,
+        .base_addr = 0x30000000,
+        .order = 25, /* 2^25 = 32M */
+    },
+#ifdef CONFIG_PSRAM
+    /* 0x38000000 ~ 0x3A000000, size:32M, psram, device */
+    {
+        .protection = PMP_L | PMP_R | PMP_W,
+        .base_addr = 0x38000000,
+        .order = 25, /* 2^25 = 32M */
+    },
+#endif
+
+    /* 0x40010000 ~ 0x40020000, size:64K, lp_sys.ram, non-cacheable */
+    {
+        .protection = PMP_L | PMP_R | PMP_W | PMP_X,
+        .base_addr = 0x40010000,
+        .order = 16, /* 2^16 = 64K */
+    },
+    /* 0x60000000 ~ 0x62000000, size:32M, rom/ocram/wram, non-cacheable */
+    {
+        .protection = PMP_L | PMP_R | PMP_W | PMP_X,
+        .base_addr = 0x60000000,
+        .order = 25, /* 2^25 = 32M */
+    },
+    /* 0x70000000 ~ 0x72000000, size:32M, flash, non-cacheable */
+    {
+        .protection = PMP_L | PMP_R | PMP_W | PMP_X,
+        .base_addr = 0x70000000,
+        .order = 25, /* 2^25 = 32M */
+    },
+#ifdef CONFIG_PSRAM
+    /* 0x78000000 ~ 0x7A000000, size:32M, psram, non-cacheable */
+    {
+        .protection = PMP_L | PMP_R | PMP_W | PMP_X,
+        .base_addr = 0x78000000,
+        .order = 25, /* 2^25 = 32M */
+    },
+#endif
+
+    /* 0x80010000 ~ 0x80020000, size:64K, lp_sys.ram, cacheable */
+    {
+        .protection = PMP_L | PMP_R | PMP_W | PMP_X,
+        .base_addr = 0x80010000,
+        .order = 16, /* 2^16 = 64K */
+    },
+    /* 0xA0000000 ~ 0xA2000000, size:32M, rom/ocram/wram, cacheable */
+    {
+        .protection = PMP_L | PMP_R | PMP_W | PMP_X,
+        .base_addr = 0xA0000000,
+        .order = 25, /* 2^25 = 32M */
+    },
+    /* 0xB0000000 ~ 0xB2000000, size:32M, flash, cacheable */
+    {
+        .protection = PMP_L | PMP_R | PMP_W | PMP_X,
+        .base_addr = 0xB0000000,
+        .order = 25, /* 2^25 = 32M */
+    },
+#ifdef CONFIG_PSRAM
+    /* 0xB8000000 ~ 0xBA000000, size:32M, psram, cacheable */
+    {
+        .protection = PMP_L | PMP_R | PMP_W | PMP_X,
+        .base_addr = 0xB8000000,
+        .order = 25, /* 2^25 = 32M */
+    },
+#endif
+
+    /* 0xF000000 ~ 0xF000040, size:64Byte, CPU ID, cacheable */
+    {
+        .protection = PMP_L | PMP_R,
+        .base_addr = 0xF000000,
+        .order = 6, /* 2^6 = 64B */
+    },
+
+    /* base:0x00000000, size:4G, All remaining address Spaces */
+    {
+        .protection = PMP_L,
+        .base_addr = 0x00000000,
+        .order = 32, /* 2^32 = 4G */
+    },
+};
 
 static void pmp_init(void)
 {
-    const pmp_config_entry_t pmp_entry_tab[6] = {
-        /* no access 0x00000000-0x20000000*/
-        [0] = {
-            .entry_flag = ENTRY_FLAG_ADDR_NAPOT | ENTRY_FLAG_M_MODE_L,
-            .entry_pa_base = 0x00000000,
-            .entry_pa_length = PMP_REG_SZ_512M,
-        },
-        /* no access 0x40000000-0x60000000*/
-        [1] = {
-            .entry_flag = ENTRY_FLAG_ADDR_NAPOT | ENTRY_FLAG_M_MODE_L,
-            .entry_pa_base = 0x40000000,
-            .entry_pa_length = PMP_REG_SZ_512M,
-        },
-        /* no access 0x70000000-0x80000000*/
-        [2] = {
-            .entry_flag = ENTRY_FLAG_ADDR_NAPOT | ENTRY_FLAG_M_MODE_L,
-            .entry_pa_base = 0x70000000,
-            .entry_pa_length = PMP_REG_SZ_256M,
-        },
-        /* no access 0x80000000-0x90000000*/
-        [3] = {
-            .entry_flag = ENTRY_FLAG_ADDR_NAPOT | ENTRY_FLAG_M_MODE_L,
-            .entry_pa_base = 0x80000000,
-            .entry_pa_length = PMP_REG_SZ_256M,
-        },
-        /* no access 0xB0000000-0xC0000000*/
-        [4] = {
-            .entry_flag = ENTRY_FLAG_ADDR_NAPOT | ENTRY_FLAG_M_MODE_L,
-            .entry_pa_base = 0xB0000000,
-            .entry_pa_length = PMP_REG_SZ_256M,
-        },
-        /* no access 0xC0000000-0xE0000000*/
-        [5] = {
-            .entry_flag = ENTRY_FLAG_ADDR_NAPOT | ENTRY_FLAG_M_MODE_L,
-            .entry_pa_base = 0xC0000000,
-            .entry_pa_length = PMP_REG_SZ_512M,
-        }
-    };
-    rvpmp_init(pmp_entry_tab, sizeof(pmp_entry_tab) / sizeof(pmp_config_entry_t));
+    uint8_t pmp_entry_num = sizeof(pmp_entry_tab) / sizeof(pmp_entry_tab[0]);
+
+    for (int i = __PMP_ENTRY_NUM - pmp_entry_num; i < __PMP_ENTRY_NUM; i++) {
+        __set_PMPENTRYx(i, &pmp_entry_tab[i - (__PMP_ENTRY_NUM - pmp_entry_num)]);
+    }
 }
-#endif
+#endif /* (!defined(CONFIG_PMP_NO_INIT) && !defined(CONFIG_BOOT2)) */
 
 static void flash_bank2_access_init(void)
 {
@@ -128,7 +208,9 @@ static void __cpu_pre_init(void)
 {
     uint32_t i = 0;
 
-    //pmp_init();
+#if (!defined(CONFIG_PMP_NO_INIT) && !defined(CONFIG_BOOT2))
+    pmp_init();
+#endif
 
     /* enable mstatus FS */
     __enable_FPU();

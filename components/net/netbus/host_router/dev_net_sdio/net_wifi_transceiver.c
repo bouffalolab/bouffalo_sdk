@@ -12,7 +12,7 @@
 #include <trcver_sdio.h>
 #include <net_wifi_transceiver.h>
 #include <sdio_msg_ext_frame.h>
-#include "bl_dual_stack_input.h"
+#include "dual_stack_input.h"
 #include "sdiowifi_mgmr_type.h"
 
 #include "sdio_port.h"
@@ -208,7 +208,7 @@ static void sdio_pbuf_cfm_cb(int idx, void *arg)
     pbuf_free(arg);
 }
 
-int bl_dual_stack_peer_input(void *pkt, void *arg)
+int dual_stack_input(void *pkt, void *arg)
 {
     net_wifi_trcver_t *trcver = &g_sdiowifi_mgmr.trcver;
     struct pbuf *p = (struct pbuf *)pkt;
@@ -272,8 +272,9 @@ static void *eth_input_hook(bool is_sta, void *pkt, void *arg)
     }
 
     if (input_host) {
+
         // XXX distinguish STA/AP
-        int ret = bl_dual_stack_peer_input(p, NULL);
+        int ret = dual_stack_input(p, NULL);
         if (ret) {
             /* printf("RX FRM swdesc %p failed, drop\r\n", swdesc); */
             pbuf_free(p);
@@ -299,7 +300,7 @@ static int sdio_eth_output_hook(bool is_sta, void *pkt, void *arg)
 
     struct pbuf *p = (struct pbuf *)pkt;
     // XXX distinguish STA/AP
-    int ret = bl_dual_stack_peer_input(p, NULL);
+    int ret = dual_stack_input(p, NULL);
     if (ret) {
         printf("RX FRM swdesc failed, drop\r\n");
     }

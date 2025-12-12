@@ -37,16 +37,10 @@ int at_ble_config_init(void)
     
     if (!at_config_read(AT_CONFIG_KEY_BLE_NAME, &at_ble_config->ble_name, sizeof(at_ble_config->ble_name))) {
         AT_CMD_PRINTF("BLE name config read failed, using default\r\n");
-        strlcpy(at_ble_config->ble_name, "QCC74x-AT", sizeof(at_ble_config->ble_name));
+        strlcpy(at_ble_config->ble_name, "BFLB-AT", sizeof(at_ble_config->ble_name));
         bt_set_name(at_ble_config->ble_name); 
     }
-    else
-    {
-        AT_CMD_PRINTF("BLE name config not found, using default\r\n");
-        strlcpy(at_ble_config->ble_name, "QCC74x-AT", sizeof(at_ble_config->ble_name));
-        bt_set_name(at_ble_config->ble_name); 
-    }
-
+    
     bt_set_name(at_ble_config->ble_name);
 
     at_ble_config->adv_param.adv_int_min = 0xA0;
@@ -96,7 +90,7 @@ int at_ble_config_default(void)
     }
     memset(at_ble_config, 0, sizeof(ble_config));
     at_ble_config->work_role = BLE_DISABLE;
-    strlcpy(at_ble_config->ble_name, "QCC74x-AT", sizeof(at_ble_config->ble_name));
+    strlcpy(at_ble_config->ble_name, "BFLB-AT", sizeof(at_ble_config->ble_name));
     bt_set_name(at_ble_config->ble_name); 
     at_ble_config->adv_param.adv_int_min = 0xA0;
     at_ble_config->adv_param.adv_int_max = 0xD0;

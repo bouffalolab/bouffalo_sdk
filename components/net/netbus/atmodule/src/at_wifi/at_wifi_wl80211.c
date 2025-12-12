@@ -26,7 +26,7 @@
 #include <lwip/tcpip.h>
 #include "lwip/dns.h"
 
-extern struct netif eth_wl80211_netif;
+extern struct netif vif2netif[WL80211_VIF_MAX];
 
 static void ip_got_cb(struct netif *netif) {
   char *state, *connected;
@@ -53,8 +53,8 @@ static void ip_got_cb(struct netif *netif) {
 
 static void start_dhcp_tsk(void) {
   printf("wl80211 linkup, start dhcp...\n");
-  netif_set_status_callback(&eth_wl80211_netif, ip_got_cb);
-  if (netifapi_dhcp_start(&eth_wl80211_netif) == ERR_OK) {
+  netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
+  if (netifapi_dhcp_start(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
     printf("start dhcp success.\n");
   } else {
     printf("start dhcp fail.\n");
@@ -63,8 +63,8 @@ static void start_dhcp_tsk(void) {
 
 static void disconnect_tsk(void) {
   printf("wl80211 disconnected, stop dhcp...\n");
-  netif_set_status_callback(&eth_wl80211_netif, ip_got_cb);
-  if (netifapi_dhcp_stop(&eth_wl80211_netif) == ERR_OK) {
+  netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
+  if (netifapi_dhcp_stop(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
     printf("stop dhcp success.\n");
   } else {
     printf("stop dhcp fail.\n");
@@ -103,7 +103,11 @@ static void wifi_event_start(uint32_t code)
 
 struct netif *at_wifi_netif_get(uint8_t vif_idx)
 {
-    return (vif_idx == AT_WIFI_VIF_STA) ? &eth_wl80211_netif : NULL;
+    if (vif_idx == AT_WIFI_VIF_STA) {
+        return &(vif2netif[WL80211_VIF_STA]);
+    } else {
+        return &(vif2netif[WL80211_VIF_AP]);
+    }
 }
 
 void wl80211_event_handler(uint32_t code1, uint32_t code2)

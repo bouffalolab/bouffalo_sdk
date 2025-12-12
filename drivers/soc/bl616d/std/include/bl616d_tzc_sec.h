@@ -59,67 +59,127 @@ extern "C" {
  *  @brief TZC_SEC master type definition
  */
 typedef enum {
-    TZC_SEC_MASTER_RSVD,  /*!< TZC Master:Reserved */
-    TZC_SEC_MASTER_RSVD1, /*!< TZC Master:Reserved */
-    TZC_SEC_MASTER_USB,   /*!< TZC Master:USB */
-    TZC_SEC_MASTER_WIFI,  /*!< TZC Master:WIFI */
-    TZC_SEC_MASTER_CCI,   /*!< TZC Master:CCI */
-    TZC_SEC_MASTER_SDH,   /*!< TZC Master:SDH */
-    TZC_SEC_MASTER_EMAC,  /*!< TZC Master:EMAC */
-    TZC_SEC_MASTER_AP,    /*!< TZC Master:AP CPU */
-    TZC_SEC_MASTER_DMA0,  /*!< TZC Master:DMA0 */
-    TZC_SEC_MASTER_RSVD2, /*!< TZC Master:Reserved */
-    TZC_SEC_MASTER_RSVD3, /*!< TZC Master:Reserved */
-    TZC_SEC_MASTER_SDU,   /*!< TZC Master:SDU */
+    TZC_SEC_MASTER_LP,     /*!< TZC Master:PICO */
+    TZC_SEC_MASTER_NP,     /*!< TZC Master:WMCU */
+    TZC_SEC_MASTER_USB,    /*!< TZC Master:USB */
+    TZC_SEC_MASTER_WIFI1,  /*!< TZC Master:WIFI1 */
+    TZC_SEC_MASTER_CCI,    /*!< TZC Master:CCI */
+    TZC_SEC_MASTER_SDH,    /*!< TZC Master:SDH */
+    TZC_SEC_MASTER_EMAC_A, /*!< TZC Master:EMAC_A */
+    TZC_SEC_MASTER_AP,     /*!< TZC Master:AP CPU */
+    TZC_SEC_MASTER_RSVD0,  /*!< TZC Master:Reserved */
+    TZC_SEC_MASTER_WIFI2,  /*!< TZC Master:WIFI2 */
+    TZC_SEC_MASTER_RSVD3,  /*!< TZC Master:Reserved */
+    TZC_SEC_MASTER_SDU,    /*!< TZC Master:SDU */
+    TZC_SEC_MASTER_MM_GRP1, /*!< TZC Master:MM GRP1 */
+    TZC_SEC_MASTER_MM_GRP2, /*!< TZC Master:MM GRP2 */
     TZC_SEC_MASTER_MAX,   /*!< TZC Master max */
 } TZC_SEC_Master_Type;
+
+
+#define TZC_SEC_MASTER_TYPE_DMA0  0
+#define TZC_SEC_MASTER_TYPE_DMA1  1
+#define TZC_SEC_MASTER_TYPE_DMA2  2
+#define TZC_SEC_MASTER_TYPE_2DDMA 3
+
+
+#define TZC_SEC_DMA_BIT_CH0  (1 << 0)
+#define TZC_SEC_DMA_BIT_CH1  (1 << 1)
+#define TZC_SEC_DMA_BIT_CH2  (1 << 2)
+#define TZC_SEC_DMA_BIT_CH3  (1 << 3)
+#define TZC_SEC_DMA_BIT_CH4  (1 << 4)
+#define TZC_SEC_DMA_BIT_CH5  (1 << 5)
+#define TZC_SEC_DMA_BIT_CH6  (1 << 6)
+#define TZC_SEC_DMA_BIT_CH7  (1 << 7)
 
 /**
  *  @brief TZC_SEC slave type definition
  */
 typedef enum {
-    TZC_SEC_SLAVE_S0_RSVD,          /*!< TZC Slave:Reserved */
-    TZC_SEC_SLAVE_S0_DMA,           /*!< TZC Slave:DMA */
-    TZC_SEC_SLAVE_S0_RSVD1,         /*!< TZC Slave:Reserved */
-    TZC_SEC_SLAVE_S0_PWR,           /*!< TZC Slave:PWR */
-    TZC_SEC_SLAVE_S0_SDH,           /*!< TZC Slave:SDH */
-    TZC_SEC_SLAVE_S0_EMAC,          /*!< TZC Slave:EMAC */
-    TZC_SEC_SLAVE_S0_SDU,           /*!< TZC Slave:SDU */
-    TZC_SEC_SLAVE_S1_GLB,           /*!< TZC Slave:GLB */
-    TZC_SEC_SLAVE_S1_MIX,           /*!< TZC Slave:MIX */
-    TZC_SEC_SLAVE_S1_GPIP,          /*!< TZC Slave:GPIP */
-    TZC_SEC_SLAVE_S1_DBG,           /*!< TZC Slave:DBG */
-    TZC_SEC_SLAVE_S1_RSVD2,         /*!< TZC Slave:Reserved */
-    TZC_SEC_SLAVE_S1_TZC1,          /*!< TZC Slave:TZC1 */
-    TZC_SEC_SLAVE_S1_TZC2,          /*!< TZC Slave:TZC2 */
-    TZC_SEC_SLAVE_S1_RSVD3,         /*!< TZC Slave:Reserved */
-    TZC_SEC_SLAVE_S1_CCI,           /*!< TZC Slave:CCI */
-    TZC_SEC_SLAVE_S1_MCU_MISC,      /*!< TZC Slave:MCU_MISC */
-    TZC_SEC_SLAVE_S2_EMI_MISC = 23, /*!< TZC Slave:EMI MISC */
-    TZC_SEC_SLAVE_S2_RSVD4,         /*!< TZC Slave:Reserved */
-    TZC_SEC_SLAVE_S2_PSRAM0,        /*!< TZC Slave:PSRAM0 */
-    TZC_SEC_SLAVE_S2_USB_HS,        /*!< TZC Slave:USB HS */
-    TZC_SEC_SLAVE_S2_RSVD5,         /*!< TZC Slave:Reserved */
-    TZC_SEC_SLAVE_S2_AUDIO,         /*!< TZC Slave:AUDIO */
-    TZC_SEC_SLAVE_S2_EF_CTRL,       /*!< TZC Slave:efuse control*/
-    TZC_SEC_SLAVE_S2_D2XA,          /*!< TZC Slave:D2XA */
-    TZC_SEC_SLAVE_S2_D2XB,          /*!< TZC Slave:D2XB */
-    TZC_SEC_SLAVE_S2_JENC,          /*!< TZC Slave:JENC */
-    TZC_SEC_SLAVE_S1A_UART0 = 39,   /*!< TZC Slave:UART0 */
-    TZC_SEC_SLAVE_S1A_UART1,        /*!< TZC Slave:UART1 */
-    TZC_SEC_SLAVE_S1A_SPI,          /*!< TZC Slave:SPI */
-    TZC_SEC_SLAVE_S1A_I2C0,         /*!< TZC Slave:I2C0 */
-    TZC_SEC_SLAVE_S1A_PWM,          /*!< TZC Slave:PWM */
-    TZC_SEC_SLAVE_S1A_TMR,          /*!< TZC Slave:TMR */
-    TZC_SEC_SLAVE_S1A_IRR,          /*!< TZC Slave:IRR */
-    TZC_SEC_SLAVE_S1A_CKS,          /*!< TZC Slave:CKS */
-    TZC_SEC_SLAVE_S1A_DBI,          /*!< TZC Slave:DBI */
-    TZC_SEC_SLAVE_S1A_I2C1,         /*!< TZC Slave:I2C1 */
-    TZC_SEC_SLAVE_S1A_CAN,          /*!< TZC Slave:CAN */
-    TZC_SEC_SLAVE_S1A_I2S,          /*!< TZC Slave:I2S */
-    TZC_SEC_SLAVE_S1A_PDM,          /*!< TZC Slave:PDM */
-    TZC_SEC_SLAVE_S1A_LZ4,          /*!< TZC Slave:LZ4 */
-    TZC_SEC_SLAVE_MAX,              /*!< TZC slave max*/
+    TZC_SEC_SLAVE_S0_GMAC_A, /*!< TZC Slave:GMAC_A */
+    TZC_SEC_SLAVE_S0_DMA,    /*!< TZC Slave:DMA */
+    TZC_SEC_SLAVE_S0_GMAC_B, /*!< TZC Slave:GMAC_B */
+    TZC_SEC_SLAVE_S0_PWR,    /*!< TZC Slave:PDS/HBN/HBNRAM/TOUCH */
+    TZC_SEC_SLAVE_S0_SDH,    /*!< TZC Slave:SDH */
+    TZC_SEC_SLAVE_S0_EMAC_A, /*!< TZC Slave:EMAC_A */
+    TZC_SEC_SLAVE_S0_SDU,    /*!< TZC Slave:SDU */
+    TZC_SEC_SLAVE_S0_USB,    /*!< TZC Slave:USB */
+
+    TZC_SEC_SLAVE_S1_GLB = 8,  /*!< TZC Slave:GLB */
+    TZC_SEC_SLAVE_S1_RF,       /*!< TZC Slave:RF */
+    TZC_SEC_SLAVE_S1_GPIP,     /*!< TZC Slave:GPIP */
+    TZC_SEC_SLAVE_S1_SEC,      /*!< TZC Slave:SEC */
+    TZC_SEC_SLAVE_S1_RF2,      /*!< TZC Slave:RF2 */
+    TZC_SEC_SLAVE_S1_DMA2D,    /*!< TZC Slave:DMA2D */
+    TZC_SEC_SLAVE_S1_TZC1,     /*!< TZC Slave:TZC1 */
+    TZC_SEC_SLAVE_S1_TZC2,     /*!< TZC Slave:TZC2 */
+    TZC_SEC_SLAVE_S1_CCI,      /*!< TZC Slave:CCI */
+    TZC_SEC_SLAVE_S1_MCU_MISC, /*!< TZC Slave:MCU_MISC */
+    TZC_SEC_SLAVE_S1_U2_PHY,   /*!< TZC Slave:U2_PHY */
+    TZC_SEC_SLAVE_S1_SPI0,     /*!< TZC Slave:SPI0 */
+    TZC_SEC_SLAVE_S1_EFUSE,    /*!< TZC Slave:EFUSE */
+    TZC_SEC_SLAVE_S1_PSRAM,    /*!< TZC Slave:PSRAM */
+    TZC_SEC_SLAVE_S1_CAN0_1,   /*!< TZC Slave:CAN0 and CAN1 */
+    TZC_SEC_SLAVE_S1_CAN2_KYS, /*!< TZC Slave:CAN2 and KYS */
+
+    TZC_SEC_SLAVE_S2_MMCU_ATB2AXI = 24, /*!< TZC Slave:MMCU_ATB2AXI */
+    TZC_SEC_SLAVE_S2_DMA1,              /*!< TZC Slave:DMA1 */
+    TZC_SEC_SLAVE_S2_AUPWM,             /*!< TZC Slave:AUPWM */
+    TZC_SEC_SLAVE_S2_SPI2,              /*!< TZC Slave:SPI2 */
+    TZC_SEC_SLAVE_S2_RSVD28,            /*!< TZC Slave:Reserved */
+    TZC_SEC_SLAVE_S2_RSVD29,            /*!< TZC Slave:Reserved */
+    TZC_SEC_SLAVE_S2_RSVD30,            /*!< TZC Slave:Reserved */
+    TZC_SEC_SLAVE_S2_RSVD31,            /*!< TZC Slave:Reserved */
+    TZC_SEC_SLAVE_S2_MINI_MISC,         /*!< TZC Slave:MINI_MISC */
+    TZC_SEC_SLAVE_S2_PWM1,              /*!< TZC Slave:MINI_PWM */
+    TZC_SEC_SLAVE_S2_I2C2,              /*!< TZC Slave:MINI_I2C */
+    TZC_SEC_SLAVE_S2_TIMER1,            /*!< TZC Slave:MINI_TIMER */
+    TZC_SEC_SLAVE_S2_UART3,             /*!< TZC Slave:MINI_UART */
+    TZC_SEC_SLAVE_S2_SPI3,              /*!< TZC Slave:MINI_SPI */
+    TZC_SEC_SLAVE_S2_RSVD38,            /*!< TZC Slave:Reserved */
+    TZC_SEC_SLAVE_S2_RSVD39,            /*!< TZC Slave:Reserved */
+
+    TZC_SEC_SLAVE_S1A_UART0 = 40, /*!< TZC Slave:UART0 */
+    TZC_SEC_SLAVE_S1A_UART1,      /*!< TZC Slave:UART1 */
+    TZC_SEC_SLAVE_S1A_UART2,      /*!< TZC Slave:UART2 */
+    TZC_SEC_SLAVE_S1A_IPC0,       /*!< TZC Slave:IPC0 */
+    TZC_SEC_SLAVE_S1A_I2C0,       /*!< TZC Slave:I2C0 */
+    TZC_SEC_SLAVE_S1A_I2C1,       /*!< TZC Slave:I2C1 */
+    TZC_SEC_SLAVE_S1A_IPC1,       /*!< TZC Slave:IPC1 */
+    TZC_SEC_SLAVE_S1A_AUSOLO,     /*!< TZC Slave:AUSOLO */
+    TZC_SEC_SLAVE_S1A_SPI1,       /*!< TZC Slave:SPI1 */
+    TZC_SEC_SLAVE_S1A_PWM0,       /*!< TZC Slave:PWM0 */
+    TZC_SEC_SLAVE_S1A_TIMER0,     /*!< TZC Slave:TIMER0 */
+    TZC_SEC_SLAVE_S1A_IRR,        /*!< TZC Slave:IRR */
+    TZC_SEC_SLAVE_S1A_CKS,        /*!< TZC Slave:CKS */
+    TZC_SEC_SLAVE_S1A_DBI,        /*!< TZC Slave:DBI */
+    TZC_SEC_SLAVE_S1A_I2S,        /*!< TZC Slave:I2S */
+    TZC_SEC_SLAVE_S1A_PEC,        /*!< TZC Slave:PEC */
+
+    TZC_SEC_SLAVE_S3_EMAC_B = 56, /*!< TZC Slave:EMAC_B */
+    TZC_SEC_SLAVE_S3_BZ,          /*!< TZC Slave:BZ */
+    TZC_SEC_SLAVE_S3_WIFI,        /*!< TZC Slave:WIFI */
+    TZC_SEC_SLAVE_S3_DMA2,        /*!< TZC Slave:MINI DMA */
+    TZC_SEC_SLAVE_S3_RSVD60,      /*!< TZC Slave:Reserved */
+    TZC_SEC_SLAVE_S3_RSVD61,      /*!< TZC Slave:Reserved */
+    TZC_SEC_SLAVE_S3_RSVD62,      /*!< TZC Slave:Reserved */
+    TZC_SEC_SLAVE_S3_RSVD63,      /*!< TZC Slave:Reserved */
+
+    TZC_SEC_SLAVE_MM_S0_MISC = 64,   /*!< TZC Slave:MM_MISC */
+    TZC_SEC_SLAVE_MM_S0_DVP2AXI_A,   /*!< TZC Slave:MM_DVP2AXI_A */
+    TZC_SEC_SLAVE_MM_S0_DVP2AXI_B,   /*!< TZC Slave:MM_DVP2AXI_B */
+    TZC_SEC_SLAVE_MM_S0_MJENC,       /*!< TZC Slave:MM_MJENC */
+    TZC_SEC_SLAVE_MM_S0_MJDEC,       /*!< TZC Slave:MM_MJDEC */
+    TZC_SEC_SLAVE_MM_S0_DTSRC,       /*!< TZC Slave:MM_DTSRC */
+    TZC_SEC_SLAVE_MM_S0_R2B,         /*!< TZC Slave:MM_R2B */
+    TZC_SEC_SLAVE_MM_S0_B2R,         /*!< TZC Slave:MM_B2R */
+    TZC_SEC_SLAVE_MM_S0_DVP2SRAM_A,  /*!< TZC Slave:MM_DVP2SRAM_A */
+    TZC_SEC_SLAVE_MM_S0_DVP2SRAM_B,  /*!< TZC Slave:MM_DVP2SRAM_B */
+    TZC_SEC_SLAVE_MM_S0_DISP_OSD_L0, /*!< TZC Slave:MM_DISP_OSD_L0 */
+    TZC_SEC_SLAVE_MM_S0_DISP_OSD_L1, /*!< TZC Slave:MM_DISP_OSD_L1 */
+    TZC_SEC_SLAVE_MM_S0_DSI,         /*!< TZC Slave:MM_DSI */
+
+    TZC_SEC_SLAVE_MAX, /*!< TZC slave max*/
 } TZC_SEC_Slave_Type;
 
 /**
@@ -192,11 +252,31 @@ typedef enum {
  *  @brief TZC_SEC Advance Auth group
  */
 typedef enum {
-    TZC_SEC_ADV_AUTH_GRP_0_IBUS = 0x01, /*!< TZC advance auth group 0 IBUS */
-    TZC_SEC_ADV_AUTH_GRP_0_DBUS = 0x02, /*!< TZC advance auth group 0 DBUS */
-    TZC_SEC_ADV_AUTH_GRP_1_IBUS = 0x04, /*!< TZC advance auth group 1 IBUS */
-    TZC_SEC_ADV_AUTH_GRP_1_DBUS = 0x08, /*!< TZC advance auth group 1 DBUS */
+    TZC_SEC_ADV_AUTH_GRP_0_DBUS = 0x01, /*!< TZC advance auth group 0 DBUS */
+    TZC_SEC_ADV_AUTH_GRP_0_IBUS = 0x02, /*!< TZC advance auth group 0 IBUS */
+    TZC_SEC_ADV_AUTH_GRP_1_DBUS = 0x04, /*!< TZC advance auth group 1 DBUS */
+    TZC_SEC_ADV_AUTH_GRP_1_IBUS = 0x08, /*!< TZC advance auth group 1 IBUS */
 } TZC_SEC_Advance_Auth_Group;
+
+/**
+ *  @brief TZC_SEC Mini Ram Advance Auth group
+ */
+typedef enum {
+    TZC_SEC_ADV_AUTH_GRP_MINI_0_IBUS = 0x01, /*!< TZC advance auth group 0 IBUS */
+    TZC_SEC_ADV_AUTH_GRP_MINI_0_DBUS = 0x02, /*!< TZC advance auth group 0 DBUS */
+    TZC_SEC_ADV_AUTH_GRP_MINI_1_IBUS = 0x04, /*!< TZC advance auth group 1 IBUS */
+    TZC_SEC_ADV_AUTH_GRP_MINI_1_DBUS = 0x08, /*!< TZC advance auth group 1 DBUS */
+} TZC_SEC_Advance_Auth_Group_Mini;
+
+/**
+ *  @brief TZC_SEC Flash Advance Auth group
+ */
+typedef enum {
+    TZC_SEC_ADV_AUTH_GRP_FLASH_0_IBUS = 0x01, /*!< TZC advance auth group 0 IBUS */
+    TZC_SEC_ADV_AUTH_GRP_FLASH_0_DBUS = 0x02, /*!< TZC advance auth group 0 DBUS */
+    TZC_SEC_ADV_AUTH_GRP_FLASH_1_IBUS = 0x04, /*!< TZC advance auth group 1 IBUS */
+    TZC_SEC_ADV_AUTH_GRP_FLASH_1_DBUS = 0x08, /*!< TZC advance auth group 1 DBUS */
+} TZC_SEC_Advance_Auth_Group_FLASH;
 
 /*@} end of group TZC_SEC_Public_Types */
 
@@ -219,6 +299,7 @@ typedef enum {
 void Tzc_Sec_Set_Sboot_Done(void);
 void Tzc_Sec_Set_Bus_Remap(uint8_t busRmpEn);
 void Tzc_Sec_Set_Master_Group(TZC_SEC_Master_Type masterType, uint8_t group);
+void Tzc_Sec_Set_Master_DMA_Group(uint8_t dmaType, uint32_t channel_bits, uint8_t group);
 void Tzc_Sec_Set_Codec_Group(uint8_t group);
 void Tzc_Sec_Set_CPU_Group(uint8_t cpu, uint8_t group);
 void Tzc_Sec_Set_Slave_Group(TZC_SEC_Slave_Type slaveType, uint8_t group);
@@ -227,15 +308,20 @@ void Tzc_Sec_ROM_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length,
 void Tzc_Sec_ROM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_OCRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_OCRAM_Access_Set_Regionx(uint8_t group);
+void Tzc_Sec_TCM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
+void Tzc_Sec_TCM_Access_Set_Regionx(uint8_t group);
 void Tzc_Sec_WRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_WRAM_Access_Set_Regionx(uint8_t group);
+void Tzc_Sec_XRAM_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
+void Tzc_Sec_XRAM_Access_Set_Regionx(uint8_t group);
+void Tzc_Sec_Mini_Ram_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
+void Tzc_Sec_Mini_Ram_Access_Set_Regionx(uint8_t group);
 void Tzc_Sec_Flash_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_Flash_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_Flash_Access_Set_Regionx(uint8_t group);
 void Tzc_Sec_PSRAMB_Access_Set(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_PSRAMB_Access_Set_Advance(uint8_t region, uint32_t startAddr, uint32_t length, uint8_t group);
 void Tzc_Sec_PSRAMB_Access_Release(void);
-void Tzc_Sec_HBNRAM_Access_Set(uint32_t startAddr, uint32_t length);
 void Tzc_Sec_Set_Se_Ctrl_Mode(TZC_SEC_SE_Ctrl_Mode mode);
 void Tzc_Sec_Set_Sf_Ctrl_Mode(TZC_SEC_SF_Ctrl_Mode mode);
 void Tzc_Sec_Set_Se_Group(TZC_SEC_SE_Ctrl_Type slaveType, uint8_t group);

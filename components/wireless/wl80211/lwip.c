@@ -14,8 +14,10 @@
 
 #include "wl80211_mac.h"
 
-struct netif eth_wl80211_netif;
-struct netif eth_wl80211_ap_netif;
+#include "async_event.h"
+#include "wifi_mgmr.h" // for async_event
+
+struct netif vif2netif[WL80211_VIF_MAX];
 
 #ifndef CONFIG_WL80211_RX_ZEROCOPY_THRES
 #define CONFIG_WL80211_RX_ZEROCOPY_THRES 500
@@ -24,13 +26,11 @@ struct netif eth_wl80211_ap_netif;
 // FIXME
 extern int mfg_media_read_macaddr_with_lock(uint8_t mac[6], uint8_t reload);
 
-void wl80211_tcpip_input(void *vif, void *rxhdr, void *buf, uint32_t frm_len, uint32_t status /* enum rx_status_bits */)
+void wl80211_tcpip_input(wl80211_vif_type vif, void *rxhdr, void *buf, uint32_t frm_len,
+                         uint32_t status /* enum rx_status_bits */)
 {
     struct pbuf_custom *pc;
     struct pbuf *p;
-    struct netif *net_if = (vif == macsw_sta_vif ? &eth_wl80211_netif : &eth_wl80211_ap_netif);
-
-    assert(net_if != NULL);
 
     // TODO If the current packet is being forwarded to the host, use zerocopy.
     if (frm_len < CONFIG_WL80211_RX_ZEROCOPY_THRES) {
@@ -55,8 +55,8 @@ void wl80211_tcpip_input(void *vif, void *rxhdr, void *buf, uint32_t frm_len, ui
     assert(p != NULL);
     assert(p->ref > 0);
 
-    assert(net_if->input != NULL);
-    if (net_if->input(p, net_if)) {
+    assert(vif2netif[vif].input != NULL);
+    if (vif2netif[vif].input(p, &vif2netif[vif])) {
         pbuf_free(p);
     }
 }
@@ -69,9 +69,6 @@ err_t wl80211_output(struct netif *net_if, struct pbuf *buf)
     int seg_cnt;
     int payload_len = buf->tot_len;
     int remain_len = payload_len;
-    void *vif = (void *)net_if->state;
-
-    assert(vif != NULL);
 
     // first segment record payload
     txseg[0].iov_base = buf->payload;
@@ -102,7 +99,7 @@ err_t wl80211_output(struct netif *net_if, struct pbuf *buf)
     seg_cnt = idx;
     assert(remain_len == 0);
 
-    if (wl80211_mac_tx(vif, txhdr, 0, txseg, seg_cnt, pbuf_free, buf)) {
+    if (wl80211_mac_tx(net_if - vif2netif, txhdr, 0, txseg, seg_cnt, pbuf_free, buf)) {
         pbuf_free(buf);
         return ERR_BUF;
     }
@@ -128,15 +125,13 @@ static void pbuf_custom_raw_free(struct pbuf_custom *pc)
     mem_free(p);
 }
 
-int wl80211_output_raw(bool is_sta, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *), void *opaque)
+int wl80211_output_raw(wl80211_vif_type vif, void *buffer, uint16_t len, unsigned int flags, void (*cb)(void *),
+                       void *opaque)
 {
     struct pbuf *p;
     struct pbuf_custom_raw *pc;
     struct wl80211_tx_header *txhdr;
     struct iovec txseg[1];
-    void *vif = is_sta ? macsw_sta_vif : macsw_ap_vif;
-
-    assert(vif != NULL);
 
     // alloc tx packet in lwip heap (wifi ram)
     uint16_t payload_len = (uint16_t)(LWIP_MEM_ALIGN_SIZE(PBUF_RAW_TX) + LWIP_MEM_ALIGN_SIZE(len));
@@ -219,15 +214,56 @@ int wl80211_lwip_init(void)
     err_t status;
 
     // Add default sta netif
-    status = netifapi_netif_add(&eth_wl80211_netif, (const ip4_addr_t *)NULL, (const ip4_addr_t *)NULL,
-                                (const ip4_addr_t *)NULL, macsw_sta_vif, wl80211_netif_init, tcpip_input);
-
+    status = netifapi_netif_add(&vif2netif[WL80211_VIF_STA], (const ip4_addr_t *)NULL, (const ip4_addr_t *)NULL,
+                                (const ip4_addr_t *)NULL, NULL, wl80211_netif_init, tcpip_input);
     assert(status == ERR_OK);
 
     // Add default ap netif
-    status = netifapi_netif_add(&eth_wl80211_ap_netif, (const ip4_addr_t *)NULL, (const ip4_addr_t *)NULL,
-                                (const ip4_addr_t *)NULL, macsw_ap_vif, wl80211_netif_init, tcpip_input);
-
+    status = netifapi_netif_add(&vif2netif[WL80211_VIF_AP], (const ip4_addr_t *)NULL, (const ip4_addr_t *)NULL,
+                                (const ip4_addr_t *)NULL, NULL, wl80211_netif_init, tcpip_input);
     assert(status == ERR_OK);
+
     return 0;
+}
+
+// for wifi mgmr
+static void ip_got_cb(struct netif *netif)
+{
+    if (!ip_addr_isany_val(netif->ip_addr)) {
+        netifapi_netif_set_default(&vif2netif[WL80211_VIF_STA]);
+        async_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 1);
+    } else {
+        async_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP, 0);
+    }
+}
+
+void _wifi_mgmr_sta_start_dhcpc(void)
+{
+    netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
+
+    if (netifapi_dhcp_start(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
+        printf("start dhcpc success.\n");
+    } else {
+        // system in strange state, abort it.
+        printf("start dhcpc fail.\n");
+        abort();
+    }
+}
+
+void _wifi_mgmr_sta_stop_dhcpc(void)
+{
+    netif_set_status_callback(&vif2netif[WL80211_VIF_STA], ip_got_cb);
+
+    if (netifapi_dhcp_stop(&vif2netif[WL80211_VIF_STA]) == ERR_OK) {
+        printf("stop dhcpc success.\n");
+    } else {
+        // system in strange state, abort it.
+        printf("stop dhcpc fail.\n");
+        abort();
+    }
+}
+
+void *_wifi_mgmr_get_sta_netif(void)
+{
+    return (void *)&vif2netif[WL80211_VIF_STA];
 }

@@ -4,10 +4,263 @@
 #include <string.h>
 
 #include "wl80211.h"
-#include "wl80211_mac.h"
 #include "supplicant_api.h"
 #include "rtos_al.h"
 #include "wifi_mgmr.h"
+#include "async_event.h"
+
+#include <lwip/etharp.h>
+#include <lwip/netdb.h>
+#include <lwip/netifapi.h>
+#include <lwip/sockets.h>
+#include <lwip/tcpip.h>
+
+#define DBG_TAG "WIFI_MGMR"
+#include "log.h"
+
+extern void *_wifi_mgmr_sta_start_dhcpc(void);
+extern void *_wifi_mgmr_sta_stop_dhcpc(void);
+extern void *_wifi_mgmr_get_sta_netif(void);
+
+static void connect_ind_dump(uint16_t status_code, uint16_t ieeetypes_code)
+{
+    printf("=================================================================\r\n");
+    printf("[AT][RX] Connection Status\r\n");
+    printf("[AT][RX]   status_code %u\r\n", status_code);
+    printf("[AT][RX]   reason_code %u\r\n", ieeetypes_code);
+    printf("[AT][RX]   status detail: %s\r\n", wifi_mgmr_get_sm_status_code_str(status_code));
+    printf("=================================================================\r\n");
+}
+
+static void ip_got_cb(struct netif *netif)
+{
+    char *state, *connected;
+
+    if (wifi_mgmr_sta_state_get()) {
+        state = "UP";
+        connected = ",CONNECTED";
+    } else {
+        state = "DOWN";
+        connected = "";
+    }
+
+    extern size_t kfree_size(void);
+    printf("Memory left is %d Bytes\r\n", kfree_size());
+    printf("[%d]  %c%c: MAC=%02x:%02x:%02x:%02x:%02x:%02x ip=%d.%d.%d.%d/%d %s%s\n", netif->num, netif->name[0],
+           netif->name[1], netif->hwaddr[0], netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3], netif->hwaddr[4],
+           netif->hwaddr[5], netif->ip_addr.addr & 0xff, (netif->ip_addr.addr >> 8) & 0xff,
+           (netif->ip_addr.addr >> 16) & 0xff, (netif->ip_addr.addr >> 24) & 0xff,
+           32 - __builtin_clz(netif->netmask.addr), state, connected);
+}
+
+static void start_dhcp_tsk(void)
+{
+    _wifi_mgmr_sta_start_dhcpc();
+}
+
+static void disconnect_tsk(void)
+{
+    _wifi_mgmr_sta_stop_dhcpc();
+}
+
+static int cmp_rssi_desc(const void *a, const void *b)
+{
+    const struct wl80211_scan_result_item *lhs = *(void **)a;
+    const struct wl80211_scan_result_item *rhs = *(void **)b;
+
+    return (rhs->rssi > lhs->rssi) - (rhs->rssi < lhs->rssi);
+}
+
+static void dump_scan_result(void)
+{
+    struct wl80211_scan_result_item *n;
+    struct wl80211_scan_result_item **rssi_sorted = NULL;
+    int i = 0;
+    int auth = -1, cipher = -1;
+    int total = 0;
+
+    /* count APs */
+    RB_FOREACH(n, _scan_result_tree, &wl80211_scan_result)
+    {
+        total++;
+    }
+
+    rssi_sorted = calloc(total, sizeof(struct wl80211_scan_result_item *));
+    assert(rssi_sorted);
+
+    // sort rssi
+    i = 0;
+    RB_FOREACH(n, _scan_result_tree, &wl80211_scan_result)
+    {
+        rssi_sorted[i++] = n;
+    }
+
+    qsort(rssi_sorted, total, sizeof(void *), cmp_rssi_desc);
+
+    printf("cached scan list\r\n");
+    printf("*********************************************************************"
+           "*******************************\r\n");
+
+    for (i = 0; i < total; i++) {
+        n = rssi_sorted[i];
+
+        RB_REMOVE(_scan_result_tree, &wl80211_scan_result, n);
+
+        if (n->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_RSN) {
+            if (n->key_mgmt & (WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256)) {
+                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK;
+                if (n->key_mgmt & WPA_KEY_MGMT_SAE) {
+                    auth = WIFI_EVENT_BEACON_IND_AUTH_WPA2_PSK_WPA3_SAE;
+                }
+            } else if (n->key_mgmt & WPA_KEY_MGMT_SAE) {
+                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA3_SAE;
+            } else if (n->key_mgmt & (WPA_KEY_MGMT_IEEE8021X | WPA_KEY_MGMT_IEEE8021X_SHA256)) {
+                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT;
+            }
+        } else if (n->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPA) {
+            if (n->key_mgmt & (WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256)) {
+                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_PSK;
+            } else if (n->key_mgmt & WPA_KEY_MGMT_IEEE8021X) {
+                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT;
+            }
+        }
+
+#define TEST_WPA_RSN (WL80211_SCAN_AP_RESULT_FLAGS_HAS_RSN | WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPA)
+        if ((n->flags & TEST_WPA_RSN) == TEST_WPA_RSN) {
+            if (auth != WIFI_EVENT_BEACON_IND_AUTH_WPA_ENT) {
+                auth = WIFI_EVENT_BEACON_IND_AUTH_WPA_WPA2_PSK;
+            }
+        } else if ((n->flags & TEST_WPA_RSN) == 0) {
+            auth = WIFI_EVENT_BEACON_IND_AUTH_WEP;
+            cipher = WIFI_EVENT_BEACON_IND_CIPHER_WEP;
+        }
+#undef TEST_WPA_RSN
+
+#define TEST_CCMP_TKIP (WL80211_SCAN_AP_RESULT_FLAGS_HAS_CCMP | WL80211_SCAN_AP_RESULT_FLAGS_HAS_TKIP)
+        if ((n->flags & (TEST_CCMP_TKIP)) == WL80211_SCAN_AP_RESULT_FLAGS_HAS_CCMP) {
+            cipher = WIFI_EVENT_BEACON_IND_CIPHER_AES;
+        }
+        if ((n->flags & (TEST_CCMP_TKIP)) == WL80211_SCAN_AP_RESULT_FLAGS_HAS_TKIP) {
+            cipher = WIFI_EVENT_BEACON_IND_CIPHER_TKIP;
+        }
+        if ((n->flags & (TEST_CCMP_TKIP)) == TEST_CCMP_TKIP) {
+            cipher = WIFI_EVENT_BEACON_IND_CIPHER_TKIP_AES;
+        }
+#undef TEST_CCMP_TKIP
+
+        if (n->key_mgmt == 0) {
+            auth = WIFI_EVENT_BEACON_IND_AUTH_OPEN;
+            cipher = WIFI_EVENT_BEACON_IND_CIPHER_NONE;
+        }
+
+        printf("index[%02d]: channel %3u, bssid %02X:%02X:%02X:%02X:%02X:%02X, "
+               "rssi %3d, ppm abs:rel %3d : %3d, wps %2d, mode %6s, auth %20s, "
+               "cipher:%12s, SSID %s\r\n",
+               i, n->channel, n->bssid[0], n->bssid[1], n->bssid[2], n->bssid[3], n->bssid[4], n->bssid[5], n->rssi, 0,
+               0, !!(n->flags & WL80211_SCAN_AP_RESULT_FLAGS_HAS_WPS), wifi_mgmr_mode_to_str(n->mode),
+               wifi_mgmr_auth_to_str(auth), wifi_mgmr_cipher_to_str(cipher), n->ssid);
+
+        if (n->ssid) {
+            free((void *)n->ssid);
+        }
+        free(n);
+    }
+    printf("index[%02d]: empty\r\n", total);
+    printf("---------------------------------------------------------------------"
+           "-------------------------------\r\n");
+
+    free(rssi_sorted);
+}
+
+static void evt_handler_wrapper(void (*handler)(void))
+{
+    assert(handler != NULL);
+    handler();
+
+    vTaskDelete(NULL);
+}
+
+static void wl80211_event_handler(input_event_t ev, void *priv)
+{
+    void (*handler)(void) = NULL;
+    uint16_t stack_size = 265;
+
+    switch (ev->code) {
+        case WL80211_EVT_CONNECTED:
+            connect_ind_dump(0, 0);
+            async_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED, 0);
+            handler = start_dhcp_tsk;
+            break;
+
+        case WL80211_EVT_SCAN_DONE:
+            async_post_event(EV_WIFI, CODE_WIFI_ON_SCAN_DONE, 0);
+            handler = dump_scan_result;
+            break;
+
+        case WL80211_EVT_DISCONNECTED:
+            connect_ind_dump((ev->value >> 16) & 0xFF, ev->value & 0xFF);
+            async_post_event(EV_WIFI, CODE_WIFI_ON_DISCONNECT, 0);
+            handler = disconnect_tsk;
+            break;
+    }
+
+    if (handler != NULL) {
+        xTaskCreate((void *)evt_handler_wrapper, "evt", stack_size, handler, 20, NULL);
+    }
+}
+
+static void wifi_mgmr_event_handler(input_event_t ev, void *priv)
+{
+    switch (ev->code) {
+        case CODE_WIFI_ON_INIT_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_INIT_DONE\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_MGMR_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_MGMR_DONE\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_SCAN_DONE: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_SCAN_DONE\r\n", __func__);
+            wifi_mgmr_sta_scanlist();
+        } break;
+        case CODE_WIFI_ON_CONNECTED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_CONNECTED\r\n", __func__);
+            void mm_sec_keydump(void);
+            mm_sec_keydump();
+        } break;
+        case CODE_WIFI_ON_GOT_IP: {
+            ip_got_cb(_wifi_mgmr_get_sta_netif());
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_GOT_IP\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_DISCONNECT: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_DISCONNECT\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STARTED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STARTED\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STOPPED: {
+            LOG_I("[APP] [EVT] %s, CODE_WIFI_ON_AP_STOPPED\r\n", __func__);
+        } break;
+        case CODE_WIFI_ON_AP_STA_ADD: {
+            LOG_I("[APP] [EVT] [AP] [ADD] %lld\r\n", xTaskGetTickCount());
+        } break;
+        case CODE_WIFI_ON_AP_STA_DEL: {
+            LOG_I("[APP] [EVT] [AP] [DEL] %lld\r\n", xTaskGetTickCount());
+        } break;
+        default: {
+            LOG_I("[APP] [EVT] Unknown code %u \r\n", ev->code);
+        }
+    }
+}
+
+void wifi_mgmr_init(void)
+{
+    async_register_event_filter(EV_WL80211, wl80211_event_handler, NULL);
+    async_register_event_filter(EV_WIFI, wifi_mgmr_event_handler, NULL);
+
+    /* compat legacy wifi mgmr */
+    async_post_event(EV_WIFI, CODE_WIFI_ON_INIT_DONE, 0);
+    async_post_event(EV_WIFI, CODE_WIFI_ON_MGMR_DONE, 0);
+}
 
 void wifi_mgmr_sta_ps_enter(void)
 {
@@ -363,7 +616,6 @@ int wifi_mgmr_scan_ap_all(void *env, void *arg, scan_item_cb_t cb)
 {
     struct wl80211_scan_result_item *n, *tmp;
     wifi_mgmr_scan_item_t item;
-    ;
 
     RB_FOREACH_SAFE(n, _scan_result_tree, &wl80211_scan_result, tmp)
     {

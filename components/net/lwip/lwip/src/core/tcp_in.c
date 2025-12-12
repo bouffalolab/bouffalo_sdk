@@ -61,9 +61,9 @@
 
 #include <string.h>
 
-#ifdef BL_DUAL_STACK
+#ifdef CONFIG_DUAL_STACK
 #include "lwip/etharp.h"
-#include <bl_dual_stack_input.h>
+#include <dual_stack_input.h>
 #endif
 
 #ifdef LWIP_HOOK_FILENAME
@@ -588,7 +588,7 @@ aborted:
       inseg.p = NULL;
     }
   } else {
-#ifdef BL_DUAL_STACK
+#ifdef CONFIG_DUAL_STACK
     tcphdr->src = lwip_htons(tcphdr->src);
     tcphdr->dest = lwip_htons(tcphdr->dest);
     tcphdr->seqno = lwip_htonl(tcphdr->seqno);
@@ -596,7 +596,7 @@ aborted:
     tcphdr->wnd = lwip_htons(tcphdr->wnd);
     pbuf_header_force(p, (s16_t)(SIZEOF_ETH_HDR + ip_current_header_tot_len() + hdrlen_bytes));
     pbuf_ref(p);
-    if (bl_dual_stack_peer_input(p, NULL)) {
+    if (dual_stack_input(p, NULL)) {
       pbuf_free(p);
     }
 #else

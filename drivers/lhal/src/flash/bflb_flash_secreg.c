@@ -799,6 +799,11 @@ __UNUSED static const ATTR_TCM_CONST_SECTION struct flash_params_s flash_params[
         .jedec_id = 0x174020,
         .param = flash_secreg_param_gd_wq32e_q128e,
     },
+    {
+        /*!< XM25LU16C */
+        .jedec_id = 0x155020,
+        .param = flash_secreg_param_gd_wq32e_q128e,
+    },
 };
 /*@} end of group Flash_Secreg_Private_Variables */
 

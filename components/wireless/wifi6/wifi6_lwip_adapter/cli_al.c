@@ -25,6 +25,12 @@
 #include "wifi_mgmr_ext.h"
 #include "wifi_mgmr.h"
 
+/* Forward declarations for custom country CLI commands */
+void wifi_country_add_custom_cmd(int argc, char **argv);
+void wifi_country_remove_custom_cmd(int argc, char **argv);
+void wifi_country_list_custom_cmd(int argc, char **argv);
+void wifi_country_clear_custom_cmd(int argc, char **argv);
+
 #if defined(CFG_CSIDMA_CLI) && CFG_CSIDMA_CLI
 #include "csidma_cmd.h"
 #endif
@@ -1086,6 +1092,10 @@ SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_mac_get, wifi_ap_mac_get, get wifi ap mac);
 SHELL_CMD_EXPORT_ALIAS(cmd_wifi_ap_conf_max_sta, wifi_ap_conf_max_sta, config AP mac sta);
 SHELL_CMD_EXPORT_ALIAS(wifi_country_code_get_cmd, wifi_country_code_get, Get current country code);
 SHELL_CMD_EXPORT_ALIAS(wifi_country_code_set_cmd, wifi_country_code_set, Set country code (e.g. CN, US, JP));
+SHELL_CMD_EXPORT_ALIAS(wifi_country_add_custom_cmd, wifi_country_add_custom, Add custom country with channel configuration);
+SHELL_CMD_EXPORT_ALIAS(wifi_country_remove_custom_cmd, wifi_country_remove_custom, Remove custom country configuration);
+SHELL_CMD_EXPORT_ALIAS(wifi_country_list_custom_cmd, wifi_country_list_custom, List all custom countries);
+SHELL_CMD_EXPORT_ALIAS(wifi_country_clear_custom_cmd, wifi_country_clear_custom, Clear all custom countries);
 #ifdef CFG_TG
 SHELL_CMD_EXPORT_ALIAS(cmd_tg, tg, wifi tg);
 #endif

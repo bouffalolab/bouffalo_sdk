@@ -3,6 +3,36 @@
 
 #include <stdint.h>
 
+/* WiFi async event */
+#define  EV_WIFI                  ((uintptr_t)wifi_mgmr_init)
+
+#define  CODE_WIFI_ON_INIT_DONE   1
+#define  CODE_WIFI_ON_MGMR_DONE   2
+#define  CODE_WIFI_CMD_RECONNECT  3
+#define  CODE_WIFI_ON_CONNECTED   4
+#define  CODE_WIFI_ON_DISCONNECT  5
+#define  CODE_WIFI_ON_PRE_GOT_IP  6
+#define  CODE_WIFI_ON_GOT_IP      7
+#define  CODE_WIFI_ON_CONNECTING  8
+#define  CODE_WIFI_ON_SCAN_DONE   9
+#define  CODE_WIFI_ON_SCAN_DONE_ONJOIN  10
+#define  CODE_WIFI_ON_AP_STARTED        11
+#define  CODE_WIFI_ON_AP_STOPPED        12
+#define  CODE_WIFI_ON_PROV_SSID         13
+#define  CODE_WIFI_ON_PROV_BSSID        14
+#define  CODE_WIFI_ON_PROV_PASSWD       15
+#define  CODE_WIFI_ON_PROV_CONNECT      16
+#define  CODE_WIFI_ON_PROV_DISCONNECT   17
+#define  CODE_WIFI_ON_PROV_SCAN_START   18
+#define  CODE_WIFI_ON_PROV_STATE_GET    19
+#define  CODE_WIFI_ON_MGMR_DENOISE      20
+#define  CODE_WIFI_ON_AP_STA_ADD        21
+#define  CODE_WIFI_ON_AP_STA_DEL        22
+#define  CODE_WIFI_ON_EMERGENCY_MAC     23
+#define  CODE_WIFI_ON_EXIT_PS           24
+#define  CODE_WIFI_ON_GOT_IP6           25
+#define  CODE_WIFI_ON_SET_PS_DONE       26
+
 #define MAX_FIXED_CHANNELS_LIMIT                     (42)
 
 #define MAX_AP_SCAN                                  50
@@ -94,6 +124,7 @@ typedef struct wifi_mgmr_connect_ind_stat_info {
 
 typedef void (*scan_item_cb_t)(void *env, void *arg, wifi_mgmr_scan_item_t *item);
 
+void wifi_mgmr_init(void);
 void wifi_mgmr_sta_ps_enter(void);
 void wifi_mgmr_sta_ps_exit(void);
 

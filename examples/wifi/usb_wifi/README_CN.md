@@ -33,35 +33,46 @@ make flash CHIP=bl616l COMX=/dev/ttyUSB0
 
 设备上电后，将会虚拟化一个 ACM 串口和一个 enxxxx 网络接口。
 
-观察串口输出。
+* 关闭设备的dhcp同时连接指定wifi
 
-```bash
-cat /dev/ttyACM2
-```
+    将如下脚本保存成 connect 脚本，其中"/dev/ttyACM1"按需修改，然后执行 ./connect ssid password 即可
 
-打开另一个终端并输入以下命令来控制 WiFi 网络接口卡。将其配置为 STA 模式。
+    ```expect
+    #!/usr/bin/expect
+    # =========== user config start ===============
+    set timeout 10
+    set tty /dev/ttyACM1       # 用户按需修改，虚拟出的是什么就用什么
+    # =========== user config end ===============
+    spawn -open [open $tty "r+"]
+    if {$argc < 1} {puts "Usage: $argv0 <ssid> \[password\]"; exit}
+    set ssid [lindex $argv 0]
+    set password [expr {$argc >= 2 ? [lindex $argv 1] : ""}]
+    set serial_id $spawn_id
+    # set mode, disable dhcp
+    send -i $serial_id "AT\r\n"
+    send -i $serial_id "AT+CWMODE=1\r\n"
+    expect -i $serial_id "OK"
+    send -i $serial_id "AT+CWDHCP=0,1\r\n"
+    expect -i $serial_id "OK"
+    # connect
+    send -i $serial_id "AT+CWJAP=\"$ssid\",\"$password\"\r\n"
+    expect {
+        -i $serial_id "+CW:CONNECTED" {
+        }
+        -i $serial_id timeout {
+            puts "✗ 超时，未按照预期收到响应"
+        }
+    }
+    close -i $serial_id
+    ```
 
-```bash
-echo -ne "AT+CWMODE=1\r\n" > /dev/ttyACM2
-```
+* 开启网卡dhcpclient
 
-禁用网络接口卡的 DHCP 功能，让 HOST 端后续处理 DHCP。
+    假设当前网络接口卡名为 enxc4cc37a06d46，在 HOST 端输入以下命令：
 
-```bash
-echo -ne "AT+CWDHCP=0,1\r\n" > /dev/ttyACM2
-```
-
-我们使用 AT 命令控制网络接口卡连接到指定的接入点（AP）。
-
-```bash
-echo -ne "AT+CWJAP=\"8E88\",\"\"\r\n" > /dev/ttyACM2
-```
-
-假设当前网络接口卡名为 enxc4cc37a06d46，在 HOST 端输入以下命令：
-
-```bash
-sudo dhclient enxc4cc37a06d46
-```
+    ```bash
+    sudo dhclient enxc4cc37a06d46
+    ```
 
 获取网络接口卡的 IP 地址。
 

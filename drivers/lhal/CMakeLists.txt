@@ -258,6 +258,9 @@ sdk_add_private_compile_definitions_ifdef(
 
 if(CONFIG_LHAL_ROMAPI)
     sdk_add_compile_definitions(-D CONFIG_LHAL_ROMAPI)
+    if("${CHIP}" STREQUAL "bl616l")
+        sdk_library_add_sources(config/${CHIP}/bflb_lhal_romapi_patch.c)
+    endif()
 endif()
 
 if(CONFIG_LHAL_BOOTROM_ROMDRIVER)

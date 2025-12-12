@@ -4,7 +4,6 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-#include "bl616_glb.h"
 #include "bflb_clock.h"
 #include "bflb_uart.h"
 #include <bflb_gpio.h>

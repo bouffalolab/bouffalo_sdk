@@ -19,7 +19,9 @@
 
 #if defined(BL616D)
 #include "bl616d_glb.h"
+#ifndef CONFIG_DBG_RUN_ON_FPGA
 #include "wl_api.h"
+#endif
 #include "bl616d_pds.h"
 #endif
 
@@ -165,6 +167,7 @@ __attribute__((weak)) void btblecontroller_enable_ble_clk(uint8_t enable)
 
 __attribute__((weak)) void btblecontroller_rf_restore()
 {
+#ifndef CONFIG_DBG_RUN_ON_FPGA
 #if (LE_PDS_ENABLE)
     #if defined(BL616) || defined(BL616D)
     struct wl_cfg_t *wl_cfg;
@@ -183,6 +186,7 @@ __attribute__((weak)) void btblecontroller_rf_restore()
     //616L_todo, Not find definition of struct wl_cfg_t in bl616L fpga
     #endif
 #endif /* LE_PDS_ENABLE */
+#endif
 }
 
 __attribute__((weak)) int btblecontroller_efuse_read_mac(uint8_t mac[6])

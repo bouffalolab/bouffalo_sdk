@@ -337,7 +337,7 @@ void sys_init(void)
 /* Create a new mutex*/
 err_t sys_mutex_new(sys_mutex_t *mutex) {
 
-  *mutex = xSemaphoreCreateMutex();
+  *mutex = xSemaphoreCreateRecursiveMutex();
 		if(*mutex == NULL)
 	{
 #if SYS_STATS
@@ -368,14 +368,14 @@ void sys_mutex_free(sys_mutex_t *mutex)
 /* Lock a mutex*/
 void sys_mutex_lock(sys_mutex_t *mutex)
 {
-	sys_arch_sem_wait(mutex, 0);
+    xSemaphoreTakeRecursive(*mutex, portMAX_DELAY);
 }
 
 /*-----------------------------------------------------------------------------------*/
 /* Unlock a mutex*/
 void sys_mutex_unlock(sys_mutex_t *mutex)
 {
-	xSemaphoreGive(*mutex);
+    xSemaphoreGiveRecursive(*mutex);
 }
 
 /* Mutex is locked */

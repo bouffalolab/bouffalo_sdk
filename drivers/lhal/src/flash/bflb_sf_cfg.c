@@ -2571,6 +2571,11 @@ __UNUSED static const ATTR_TCM_CONST_SECTION flash_info_t flash_infos[] = {
         //.name="boya_q32a_32_18",
         .cfg = &flash_cfg_boya,
     },
+    {
+        .jedec_id = 0x155020,
+        //.name="xm_lu16_16_18",
+        .cfg = &flash_cfg_winb_16jv,
+    },
 #endif
     {
         .jedec_id = 0x176085,

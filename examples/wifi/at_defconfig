@@ -23,6 +23,7 @@ ifeq ($(CONFIG_USE_LPAPP),y)
     CONFIG_ATMODULE_LP       =y
     CONFIG_PWRMGMT           =y
     CONFIG_POST_BUILDS_CONCAT_WITH_LP_FW =y
+    CONFIG_TICKLESS_ACCURATE =y
 else
 #    CONFIG_IPV6 =y
 endif

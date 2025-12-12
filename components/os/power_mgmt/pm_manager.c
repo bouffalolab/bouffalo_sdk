@@ -6,6 +6,8 @@
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 
+#include <string.h>
+
 #include "pm_manager.h"
 #include "bl616_lp.h"
 
@@ -13,6 +15,11 @@
 #define container_of(ptr, type, member) \
     ((type *)((char *)(ptr) - offsetof(type, member)))
 #endif
+
+struct pm_wrap {
+    struct pbuf_custom pc;
+    uint8_t ref;
+};
 
 #define PM_MEM_POOL_SIZE (1460 * 2)
 static linear_allocator pm_mem;
@@ -22,6 +29,9 @@ TaskHandle_t rxl_process_task_hd = NULL;
 extern bl_lp_fw_cfg_t lpfw_cfg;
 
 struct pm_wrap pbufc[LINEAR_ALLOCATOR_MAX_PTRS];
+
+static pm_sleep_check_entry_t pm_sleep_check_registry[PM_SLEEP_CHECK_MAX_CALLBACKS];
+static uint8_t pm_sleep_check_count = 0;
 
 static size_t align_up(size_t ptr, size_t align)
 {
@@ -305,6 +315,96 @@ int pm_sys_init(void)
 
     printf("[OS] Starting process_multicase_broadcast task...\r\n");
     xTaskCreate(process_multicast_broadcast, (char *)"hellow", 384, NULL, 10, &rxl_process_task_hd);
+
+    return 0;
+}
+
+int pm_sleep_check_register(const char *name, pm_sleep_check_cb_t cb, uint8_t priority)
+{
+    if (name == NULL || cb == NULL) {
+        return -1;
+    }
+
+    for (uint8_t i = 0; i < pm_sleep_check_count; i++) {
+        if (pm_sleep_check_registry[i].enabled &&
+            pm_sleep_check_registry[i].name != NULL &&
+            strcmp(pm_sleep_check_registry[i].name, name) == 0) {
+            return -2;
+        }
+    }
+
+    if (pm_sleep_check_count >= PM_SLEEP_CHECK_MAX_CALLBACKS) {
+        return -1;
+    }
+
+    uint8_t insert_idx = pm_sleep_check_count;
+    for (uint8_t i = 0; i < pm_sleep_check_count; i++) {
+        if (priority < pm_sleep_check_registry[i].priority) {
+            insert_idx = i;
+            break;
+        }
+    }
+
+    for (uint8_t i = pm_sleep_check_count; i > insert_idx; i--) {
+        pm_sleep_check_registry[i] = pm_sleep_check_registry[i - 1];
+    }
+
+    pm_sleep_check_registry[insert_idx].name = name;
+    pm_sleep_check_registry[insert_idx].cb = cb;
+    pm_sleep_check_registry[insert_idx].priority = priority;
+    pm_sleep_check_registry[insert_idx].enabled = 1;
+    pm_sleep_check_count++;
+
+    return 0;
+}
+
+int pm_sleep_check_unregister(const char *name)
+{
+    if (name == NULL) {
+        return -1;
+    }
+
+    for (uint8_t i = 0; i < pm_sleep_check_count; i++) {
+        if (pm_sleep_check_registry[i].enabled &&
+            pm_sleep_check_registry[i].name != NULL &&
+            strcmp(pm_sleep_check_registry[i].name, name) == 0) {
+            for (uint8_t j = i; j < pm_sleep_check_count - 1; j++) {
+                pm_sleep_check_registry[j] = pm_sleep_check_registry[j + 1];
+            }
+
+            pm_sleep_check_registry[pm_sleep_check_count - 1].name = NULL;
+            pm_sleep_check_registry[pm_sleep_check_count - 1].cb = NULL;
+            pm_sleep_check_registry[pm_sleep_check_count - 1].priority = 0;
+            pm_sleep_check_registry[pm_sleep_check_count - 1].enabled = 0;
+            pm_sleep_check_count--;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+int pm_sleep_check_dispatch(void)
+{
+    int ret;
+
+    if (pm_sleep_check_count == 0) {
+        return 0;
+    }
+
+    for (uint8_t i = 0; i < pm_sleep_check_count; i++) {
+        if (pm_sleep_check_registry[i].enabled && pm_sleep_check_registry[i].cb != NULL) {
+            ret = pm_sleep_check_registry[i].cb();
+            if (ret != 0) {
+#if 0
+                printf("[PM] Sleep prevented by '%s' (ret=%d)\r\n",
+                       pm_sleep_check_registry[i].name ? pm_sleep_check_registry[i].name : "unknown",
+                       ret);
+#endif
+                return ret;
+            }
+        }
+    }
 
     return 0;
 }

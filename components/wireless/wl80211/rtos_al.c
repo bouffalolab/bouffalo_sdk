@@ -10,6 +10,8 @@
 #include "task.h"
 #include "timers.h"
 
+#include "wl80211.h"
+
 #include "async_event.h"
 
 static TimerHandle_t timeout_tmr;
@@ -166,5 +168,5 @@ void rtos_timeouts_start(unsigned int delay)
 */
 void wl80211_post_event(int code1, int code2)
 {
-    async_post_event(EV_WIFI, code1, code2);
+    async_post_event(EV_WL80211, code1, code2);
 }
