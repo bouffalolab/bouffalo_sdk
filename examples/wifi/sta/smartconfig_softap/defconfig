@@ -1,0 +1,15 @@
+-include $(BL_SDK_BASE)/examples/wifi/defconfig
+
+CONFIG_BFLB_LOG  =n
+
+CONFIG_BFLB_MTD  =y
+CONFIG_PARTITION =y
+CONFIG_LITTLEFS  =y
+
+# Enable HTTPD for web server
+CONFIG_HTTPD=y
+
+ifeq ($(CHIP),bl616d)
+CONFIG_OVERRIDE_PTFILE =partition_cfg_4M.toml
+endif
+
